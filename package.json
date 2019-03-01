@@ -1,0 +1,29 @@
+{
+  "name": "Sentivate",
+  "version": "1.0.0",
+  "description": "Sentivate Network Client, Server Module, & certificate generation. This serves as a network prototype and should be seen as a rough blueprint for Sentivate as a whole.",
+  "main": "index.js",
+  "scripts": {
+    "client": "nodemon client/index.js --watch client/",
+    "cc": "nodemon client/createCertificate/index.js --watch client/createCertificate/",
+    "server": "nodemon server/index.js --watch server/",
+    "root": "nodemon root/index.js --watch root/",
+    "start": "nodemon index.js --watch ./client/ --watch ./server/ --watch index.js"
+  },
+  "author": "Thomas Marchi",
+  "company": "ARITY",
+  "dependencies": {
+    "Lucy": "*",
+    "ajv": "^6.9.1",
+    "babel-eslint": "^10.0.1",
+    "@babel/helpers": "^7.3.1",
+    "chalk": "*",
+    "eslint": "*",
+    "iltorb": "*",
+    "is-json": "*",
+    "json-stable-stringify": "^1.0.1",
+    "lzutf8": "*",
+    "sodium-native": "^2.3.0"
+  },
+  "license": "ISC"
+}

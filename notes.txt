@@ -1,0 +1,17 @@
+Connection-level flow control
+Stream-level flow control
+https://www.npmjs.com/package/work-token
+1) Client requests stream initialization
+2) Server responds with crypto params
+3) Client requests stream start therefore verifying IP origin
+4) Server creates Stream
+
+
+Server sends payloads with chunk, timestamp, and md5 checksum
+  - The timestamp is used to estimate latency with size to later check if more packets have been lost
+  - FPs can also be used in this algorithm to increase estimation accuracy based on network route
+If a chunk is missed it may be re-requested from the server
+
+
+
+Need to make sure we can create a certificate with the new hash setup using Blake2b
