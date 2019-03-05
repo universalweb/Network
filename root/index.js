@@ -25,6 +25,7 @@
   } = state;
   const additionalEphemeral = {
     id: '1',
+    parent: '0',
     version: 1,
     host: 'identity.registrar',
     ip: '192.168.1.1',

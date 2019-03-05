@@ -14,16 +14,16 @@
   "company": "ARITY",
   "dependencies": {
     "Lucy": "*",
-    "ajv": "^6.9.1",
-    "babel-eslint": "^10.0.1",
-    "@babel/helpers": "^7.3.1",
+    "ajv": "*",
+    "babel-eslint": "*",
+    "@babel/helpers": "*",
     "chalk": "*",
     "eslint": "*",
     "iltorb": "*",
     "is-json": "*",
-    "json-stable-stringify": "^1.0.1",
+    "json-stable-stringify": "*",
     "lzutf8": "*",
-    "sodium-native": "^2.3.0"
+    "sodium-native": "*"
   },
   "license": "ISC"
 }
