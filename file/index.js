@@ -1,18 +1,23 @@
 module.exports = async (state) => {
   state.logImprt('FILE', __dirname);
-  const fs = require('fs');
+  const {
+    writeFile,
+    readFile
+  } = require('fs');
   const {
     utility: {
       promise
     },
+    success
   } = state;
-  const fileOperations = {
+  const operations = {
     write(fileName, contents) {
       return promise((accept, reject) => {
-        fs.writeFile(fileName, contents, 'utf8', (error) => {
+        writeFile(fileName, contents, 'utf8', (error) => {
           if (error) {
             reject(error);
           } else {
+            success('SAVED', fileName);
             accept();
           }
         });
@@ -20,7 +25,7 @@ module.exports = async (state) => {
     },
     read(fileName) {
       return promise((accept, reject) => {
-        fs.readFile(fileName, 'utf8', (error, contents) => {
+        readFile(fileName, 'utf8', (error, contents) => {
           if (error) {
             reject(error);
           } else {
@@ -30,5 +35,5 @@ module.exports = async (state) => {
       });
     },
   };
-  state.file = fileOperations;
+  state.file = operations;
 };

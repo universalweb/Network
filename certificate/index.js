@@ -30,7 +30,6 @@ module.exports = async (state) => {
     }
   }
   async function parse(raw, toBufferFlag) {
-    let master;
     certLog('GOT => ', raw);
     const certificate = jsonParse(raw);
     certLog('GOT => ', certificate);
@@ -63,4 +62,6 @@ module.exports = async (state) => {
     parse,
     verify,
   };
+  require('./sign')(state);
+  require('./create')(state);
 };

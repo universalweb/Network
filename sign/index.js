@@ -1,6 +1,5 @@
 /*
-  File for generating a root certificates for the root Identity Registrar servers.
-  Identity Registrar servers provide client certificates that are locked to a specific verified universal messenger account.
+  File for signing certificates
 */
 (async () => {
   const state = {

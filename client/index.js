@@ -21,7 +21,7 @@ module.exports = async () => {
   await require('../pluckBuffer')(state);
   await require('./configuration')(state);
   await require('./status')(state);
-  await require('./file')(state);
+  await require('../file')(state);
   await require('../certificate')(state);
   await require('./coreCertificates')(state);
   await require('./profiles')(state);

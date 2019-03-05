@@ -10,22 +10,26 @@ module.exports = async (state) => {
       eachObjectAsync,
       omit
     },
-    sign,
-    file,
+    certificate: {
+      sign
+    },
+    file: {
+      write,
+    },
     logImprt,
     alert
   } = state;
   const stringify = require('json-stable-stringify');
-  logImprt('Keys', __dirname);
+  logImprt('Certificate Creation', __dirname);
   const api = {
     async save(certificate, directory) {
       await eachObjectAsync(certificate, async (value, key) => {
-        await file.write(`${directory}/${key}.cert`, stringify(value.data));
+        await write(`${directory}/${key}.cert`, stringify(value.data));
       });
       const publicCertificate = stringify(assign({
         ephemeral: omit(certificate.ephemeral.data, 'private')
       }, omit(certificate.master.data, 'private')));
-      await file.write(`${directory}/public.cert`, publicCertificate);
+      await write(`${directory}/public.cert`, publicCertificate);
     },
     async create(directory, additionalEphemeral, additionalMaster) {
       const keypairs = {
@@ -34,7 +38,8 @@ module.exports = async (state) => {
       };
       const certificates = api.build(keypairs, additionalEphemeral, additionalMaster);
       alert('Certificates Built');
-      sign(certificates, keypairs);
+      certificates.ephemeral.signature = sign(certificates.ephemeral.data, keypairs.master);
+      certificates.ephemeral.data.signature = certificates.ephemeral.signature;
       alert('Certificates Signed');
       api.buildPrivate(certificates, keypairs);
       alert('Private Certificates Created');
@@ -90,5 +95,5 @@ module.exports = async (state) => {
       certificates.masterPrivate = masterPrivate;
     }
   };
-  state.api = api;
+  assign(state.certificate, api);
 };

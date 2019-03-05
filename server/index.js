@@ -2,9 +2,25 @@
   * Stream ID: SID
 */
 module.exports = async () => {
-  console.log('-------SERVER INITIALIZING-------');
   const dgram = require('dgram');
   const state = {
+    async initialize() {
+      console.log('-------SERVER INITIALIZING-------');
+      await require('../console')(state);
+      await require('./configuration')(state);
+      await require('../file')(state);
+      await require('../crypto')(state);
+      await require('../pluckBuffer')(state);
+      await require('../certificate')(state);
+      await require('./coreCertificates')(state);
+      await require('./onError')(state);
+      await require('./onMessage')(state);
+      await require('./onListen')(state);
+      await require('./bind')(state);
+      state.status = 1;
+      console.log('-------SERVER INITIALIZED-------');
+      return state;
+    },
     type: 'server',
     statusDescriptions: ['off', 'on', 'failed to initialize'],
     status: 0,
@@ -24,18 +40,5 @@ module.exports = async () => {
     streams: new Map(),
     utility: require('Lucy')
   };
-  await require('../console')(state);
-  await require('./configuration')(state);
-  await require('./file')(state);
-  await require('../crypto')(state);
-  await require('../pluckBuffer')(state);
-  await require('../certificate')(state);
-  await require('./coreCertificates')(state);
-  await require('./onError')(state);
-  await require('./onMessage')(state);
-  await require('./onListen')(state);
-  await require('./bind')(state);
-  state.status = 1;
-  console.log('-------SERVER INITIALIZED-------');
-  return state;
+  return state.initialize();
 };
