@@ -13,16 +13,15 @@
   "author": "Thomas Marchi",
   "company": "ARITY",
   "dependencies": {
+    "@babel/helpers": "*",
     "Lucy": "*",
     "ajv": "*",
     "babel-eslint": "*",
-    "@babel/helpers": "*",
     "chalk": "*",
     "eslint": "*",
     "iltorb": "*",
     "is-json": "*",
     "json-stable-stringify": "*",
-    "lzutf8": "*",
     "sodium-native": "*"
   },
   "license": "ISC"
