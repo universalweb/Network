@@ -2,7 +2,6 @@
   "parser": "babel-eslint",
   "extends": "eslint:recommended",
   "env": {
-    "browser": true,
     "node": true,
     "es6": true,
     "serviceworker": true
@@ -17,11 +16,15 @@
   },
   "rules": {
     "object-curly-newline": ["error", {
-        "ObjectPattern": { "multiline": true },
-        "ImportDeclaration": "never",
-        "ExportDeclaration": { "multiline": true, "minProperties": 3 }
+        "ObjectExpression": { "minProperties": 1 },
+        "ObjectPattern": "always",
+        "ImportDeclaration": "always",
+        "ExportDeclaration": "always"
     }],
-    "object-property-newline": "error",
+    "object-property-newline": ["error", {
+        "allowMultiplePropertiesPerLine": false,
+        "allowAllPropertiesOnSameLine": false
+    }],
     "no-return-await": "error",
     "no-cond-assign": ["error", "always"],
     "no-constant-condition": "error",
@@ -139,9 +142,7 @@
     "array-bracket-spacing": ["error", "never"],
     "block-spacing": ["error", "always"],
     "brace-style": "error",
-    "camelcase": ["error", {
-      "properties": "always"
-    }],
+    "camelcase": "off",
     "comma-spacing": ["error", {
       "before": false,
       "after": true
@@ -266,10 +267,7 @@
     "prefer-spread": "error",
     "prefer-template": "error",
     "require-yield": "error",
-    "sort-keys": ["error", "asc", {
-      "caseSensitive": false,
-      "natural": false
-    }],
+    "sort-keys": "off",
     "sort-imports": ["error", {
       "ignoreCase": true,
       "ignoreMemberSort": false,
