@@ -1,0 +1,99 @@
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+  font-family: Fira Code;
+  transition: all 0.5s ease;
+}
+
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+  display: block;
+}
+
+body {
+  line-height: 1;
+}
+
+ol, ul {
+  list-style: none;
+}
+
+blockquote, q {
+  quotes: none;
+}
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content: '';
+  content: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.browserControls {
+  background-color: #000;
+  height: 50px;
+}
+
+.btn {
+  background: #000;
+  color: #fff;
+  border: none;
+  outline: none;
+  padding: 20px 25px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.5s ease;
+  margin: 0px;
+  height: 100%;
+  float: left;
+}
+
+.btn:hover {
+  color: #fff;
+  background: #ff1744;
+}
+
+.urlBar {
+  margin: 0px;
+  width: calc(100% - 214px);
+  padding: 0px 20px;
+  outline:none;
+  height: 50px;
+  float: left;
+  font-weight: bold;
+  font-size: 16px;
+  border: none;
+}
+
+.right {
+  float: right;
+}
+
+iframe, webview {
+  left: 0px;
+  position: absolute;
+  width: 100%;
+  height: calc(100% - 50px);
+  top: 50px;
+}

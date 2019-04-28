@@ -1,28 +1,34 @@
 {
   "name": "Sentivate",
   "version": "1.0.0",
-  "description": "Sentivate Network Client, Server Module, & certificate generation. This serves as a network prototype and should be seen as a rough blueprint for Sentivate as a whole.",
-  "main": "index.js",
+  "main": "main.js",
+  "description": "Sentivate Network Client, Server Module, UDSP, & certificate generation. This serves as a network & browser prototype.",
   "scripts": {
     "client": "nodemon client/index.js --watch client/",
     "cc": "nodemon client/createCertificate/index.js --watch client/createCertificate/",
-    "server": "nodemon server/index.js --watch server/",
+    "server": "nodemon ./server.js --watch server/ --watch server.js",
     "root": "nodemon root/index.js --watch root/",
-    "start": "nodemon index.js --watch ./client/ --watch ./server/ --watch index.js"
+    "simulate": "nodemon simulate.js --watch ./client/ --watch ./server/ --watch simulate.js",
+		"domainCertificate": "nodemon ./domainCertificate/index.js --watch ./domainCertificate/",
+		"idCert": "nodemon ./idCert/index.js",
+    "start": "electron ."
   },
   "author": "Thomas Marchi",
   "company": "ARITY",
   "dependencies": {
-    "@babel/helpers": "*",
-    "Lucy": "*",
+    "@babel/helpers": "^7.4.4",
+    "Lucy": "^2.2.1",
     "ajv": "*",
     "babel-eslint": "*",
     "chalk": "*",
-    "eslint": "*",
-    "iltorb": "*",
+    "eslint": "^5.16.0",
+    "iltorb": "^2.4.3",
     "is-json": "*",
     "json-stable-stringify": "*",
-    "sodium-native": "*"
+    "sodium-native": "^2.3.0"
   },
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^4.1.5"
+  }
 }

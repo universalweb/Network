@@ -1,0 +1,4 @@
+{
+  "version": 1,
+  "host": "{hostname||subdomain}"
+}

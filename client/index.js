@@ -8,29 +8,29 @@
   * Encryption is done by the ephemeral certificate.
   * Ephemeral certificates also act as a form of identification and as a passwordless login.
 */
-module.exports = async () => {
-  console.log('-------CLIENT INITIALIZING-------\n');
-  const state = {
-    type: 'client',
-    server: require('dgram').createSocket('udp4'),
-    utility: require('Lucy'),
-    stringify: require('json-stable-stringify')
-  };
-  await require('../console')(state);
-  await require('../crypto')(state);
-  await require('../pluckBuffer')(state);
-  await require('./configuration')(state);
-  await require('./status')(state);
-  await require('../file')(state);
-  await require('../certificate')(state);
-  await require('./coreCertificates')(state);
-  await require('./profiles')(state);
-  state.initiate = async () => {
-    await require('./send')(state);
-    await require('./onMessage')(state);
-    await require('./listening')(state);
-    await require('./api')(state);
-  };
-  console.log('-------CLIENT INITIALIZED-------\n');
-  return state;
+module.exports = async (ip = 'localhost', port = '8080') => {
+	console.log('-------CLIENT INITIALIZING-------\n');
+	const state = {
+		type: 'client',
+		server: require('dgram').createSocket('udp4'),
+		utility: require('Lucy'),
+		stringify: require('json-stable-stringify')
+	};
+	await require('../utilities/console/')(state);
+	await require('../utilities/file/')(state);
+	await require('../utilities/crypto/')(state);
+	await require('../utilities/pluckBuffer')(state);
+	await require('./configuration')(state, ip, port);
+	await require('./status')(state);
+	await require('../utilities/certificate/')(state);
+	await require('./coreCertificates')(state);
+	await require('./profiles')(state);
+	state.initiate = async () => {
+		await require('./send')(state);
+		await require('./onMessage')(state);
+		await require('./listening')(state);
+		await require('./api')(state);
+	};
+	console.log('-------CLIENT INITIALIZED-------\n');
+	return state;
 };

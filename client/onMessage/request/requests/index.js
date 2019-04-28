@@ -1,4 +1,4 @@
 module.exports = async (state) => {
-  const requests = new Map();
-  state.requests = requests;
+	const requests = new Map();
+	state.requests = requests;
 };

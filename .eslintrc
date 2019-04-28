@@ -2,14 +2,15 @@
   "parser": "babel-eslint",
   "extends": "eslint:recommended",
   "env": {
-    "browser": true,
+    "browser": false,
     "node": true,
     "es6": true,
-    "serviceworker": true
+    "serviceworker": false,
+    "worker": false
   },
   "parserOptions": {
-    "sourceType": "module",
-    "ecmaVersion": 8,
+    "sourceType": "script",
+    "ecmaVersion": 10,
     "ecmaFeatures": {
       "experimentalObjectRestSpread": true,
       "allowImportExportEverywhere": true
@@ -17,11 +18,15 @@
   },
   "rules": {
     "object-curly-newline": ["error", {
-        "ObjectPattern": { "multiline": true },
-        "ImportDeclaration": "never",
-        "ExportDeclaration": { "multiline": true, "minProperties": 3 }
+        "ObjectExpression": { "minProperties": 1 },
+        "ObjectPattern": "always",
+        "ImportDeclaration": "always",
+        "ExportDeclaration": "always"
     }],
-    "object-property-newline": "error",
+    "object-property-newline": ["error", {
+        "allowMultiplePropertiesPerLine": false,
+        "allowAllPropertiesOnSameLine": false
+    }],
     "no-return-await": "error",
     "no-cond-assign": ["error", "always"],
     "no-constant-condition": "error",
@@ -139,9 +144,7 @@
     "array-bracket-spacing": ["error", "never"],
     "block-spacing": ["error", "always"],
     "brace-style": "error",
-    "camelcase": ["error", {
-      "properties": "always"
-    }],
+    "camelcase": "off",
     "comma-spacing": ["error", {
       "before": false,
       "after": true
@@ -156,7 +159,7 @@
       "min": 1
     }],
     "id-match": "off",
-    "indent": ["error", 2],
+    "indent": ["error", "tab"],
     "key-spacing": ["error", {
       "beforeColon": false,
       "afterColon": true
@@ -177,7 +180,11 @@
       "code": 150,
       "tabWidth": 2,
       "ignoreComments": true,
-      "ignoreUrls": true
+      "ignoreUrls": true,
+      "ignoreTemplateLiterals": true,
+      "ignoreRegExpLiterals": true,
+      "ignoreTrailingComments": true,
+      "ignoreStrings": true
     }],
     "max-nested-callbacks": ["error", 3],
     "max-params": "off",
@@ -192,7 +199,7 @@
     "no-continue": "off",
     "no-inline-comments": "error",
     "no-lonely-if": "error",
-    "no-mixed-spaces-and-tabs": "error",
+    "no-mixed-spaces-and-tabs": ["error", "smart-tabs"],
     "no-multiple-empty-lines": ["error", {
       "max": 0,
       "maxEOF": 1
@@ -266,10 +273,7 @@
     "prefer-spread": "error",
     "prefer-template": "error",
     "require-yield": "error",
-    "sort-keys": ["error", "asc", {
-      "caseSensitive": false,
-      "natural": false
-    }],
+    "sort-keys": "off",
     "sort-imports": ["error", {
       "ignoreCase": true,
       "ignoreMemberSort": false,
