@@ -11,3 +11,8 @@ Client includes Identity Certificate generation examples.
 Node 11 (For building sodium-native)
 NPM
 nodemon (global)
+Xcode for building make sure to stat up xcode to install related command line utilities
+
+
+# START
+After all dependencies are installed make sure to run the server first then test out the browser.
