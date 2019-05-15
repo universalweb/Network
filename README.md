@@ -8,10 +8,10 @@ Root is used to generate root certificates.
 Client includes Identity Certificate generation examples.  
 
 # REQUIREMENTS
-Node 11 (For building sodium-native)
-NPM
-nodemon (global)
-Xcode for building make sure to stat up xcode to install related command line utilities
+Node 11 (For building sodium-native)  
+NPM  
+nodemon (global)  
+Xcode for building make sure to stat up xcode to install related command line utilities  
 
 
 # START
