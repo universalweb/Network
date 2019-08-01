@@ -6,7 +6,7 @@ module.exports = async (state) => {
 		crypto: {
 			decrypt,
 		},
-		private: {
+		api: {
 			onMessage
 		},
 		logReceived,

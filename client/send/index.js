@@ -20,11 +20,7 @@ module.exports = async (state) => {
 			createStreamId,
 			toBase64
 		},
-		profiles: {
-			active: {
-				ephemeralString,
-			}
-		},
+		profiles,
 		buildPacketSize,
 		buildStringSize,
 		error: errorLog,
@@ -59,11 +55,11 @@ module.exports = async (state) => {
 		let messageBuffer;
 		let packetSize;
 		if (stateCode === 0) {
-			const ephemeralCertificate = Buffer.from(ephemeralString);
+			const ephemeralCertificate = Buffer.from(profiles.active.ephemeralString);
 			const ephemeralCertificateLength = ephemeralCertificate.length;
 			const ephemeralCertificateSize = buildStringSize(ephemeralCertificateLength);
 			success(`Ephemeral Certificate Size Flag: ${ephemeralCertificateSize.toString()}`);
-			success(`Ephemeral Certificate:`, ephemeralString);
+			success(`Ephemeral Certificate:`, profiles.active.ephemeralString);
 			const ad = [
 				offFlag,
 				onFlag,
@@ -132,4 +128,5 @@ module.exports = async (state) => {
 		});
 	}
 	state.send = send;
+	await require('./request')(state);
 };

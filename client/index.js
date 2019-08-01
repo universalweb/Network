@@ -25,12 +25,10 @@ module.exports = async (ip = 'localhost', port = '8080') => {
 	await require('../utilities/certificate/')(state);
 	await require('./coreCertificates')(state);
 	await require('./profiles')(state);
-	state.initiate = async () => {
-		await require('./send')(state);
-		await require('./onMessage')(state);
-		await require('./listening')(state);
-		await require('./api')(state);
-	};
+	await require('./send')(state);
+	await require('./onMessage')(state);
+	await require('./listening')(state);
+	await require('./api')(state);
 	console.log('-------CLIENT INITIALIZED-------\n');
 	return state;
 };

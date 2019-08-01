@@ -5,7 +5,8 @@ if (require.main !== module) {
 }
 const path = require('path');
 const {
-	app, BrowserWindow
+	app,
+	BrowserWindow
 } = require('electron');
 if (process.mas) {
 	app.setName('Sentivate Browser');

@@ -1,6 +1,6 @@
 /* eslint-env node, browser */
 (async () => {
-	const ract = window.Ractive;
+	const ract = globalThis.Ractive;
 	const response = await fetch('template.html');
 	const template = await response.text();
 	const ractive = ract({
@@ -8,33 +8,34 @@
 		template,
 		data: {
 			url: 'localhost',
-			port: 8080,
+			port: 8880,
 			udsp: false
 		}
 	});
+	globalThis.addEventListener('uws', (eventObject) => {
+		console.log(eventObject);
+	}, false);
 	async function loadUDSP(url) {
 		console.log('CONNECTING TO UDSP SERVER');
-		const state = await require('./client')(url, 8080);
+		const state = await require('./client')(url, 8880);
 		const {
+			request,
+			connect,
 			profile: {
 				activate: activateProfile
 			},
 		} = state;
 		console.log('CONNECTING TO UDSP SERVER');
 		await activateProfile('default');
-		const {
-			request,
-			api: {
-				connect
-			}
-		} = state;
-		const handshake = await connect('localhost', 8080);
-		console.log(handshake);
-		const indexFile = await request('file', {
-			path: 'index.html'
+		await connect();
+		const defaultState = await request('state', {
+			state: '/'
 		});
-		console.log(indexFile);
-		return indexFile;
+		console.log(defaultState);
+		const iframe = document.querySelector('iframe');
+		iframe.contentWindow.request = request;
+		console.log(defaultState[0]);
+		iframe.contentWindow.eval(defaultState[0].data);
 	}
 	ractive.on({
 		async loadURL() {
@@ -48,10 +49,9 @@
 				await ractive.set('udsp', false);
 			} else {
 				await ractive.set('udsp', true);
-				const returned = await loadUDSP(url);
 				const iframe = document.querySelector('iframe');
-				console.log(returned[0].data);
-				iframe.contentWindow.document.body.innerHTML = returned[0].data;
+				iframe.contentWindow.location.reload(true);
+				await loadUDSP(url);
 			}
 		},
 		async refreshURL() {

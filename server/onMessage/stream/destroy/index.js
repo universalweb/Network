@@ -10,7 +10,7 @@ module.exports = async (state) => {
 	} = state;
 	async function destroy(stream, reason) {
 		if (reason === 1) {
-			logError(`Stream ended from failed handshake
+			logError(`Stream ended from inactivity. Grace period ended.
         ID: ${stream.id}
         Address: ${stream.address}
         Port: ${stream.port}

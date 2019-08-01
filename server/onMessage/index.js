@@ -1,11 +1,8 @@
 module.exports = async (state) => {
-	state.public = {};
-	state.private = {};
 	await require('./parseMessage')(state);
 	await require('./send')(state);
 	await require('./emit')(state);
-	await require('./publicAPI')(state);
-	await require('./privateAPI')(state);
+	await require('./api')(state);
 	await require('./stream')(state);
 	await require('./createStreamMessage')(state);
 	await require('./processMessage')(state);

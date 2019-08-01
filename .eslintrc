@@ -2,11 +2,17 @@
   "parser": "babel-eslint",
   "extends": "eslint:recommended",
   "env": {
-    "browser": false,
+    "browser": true,
     "node": true,
     "es6": true,
     "serviceworker": false,
     "worker": false
+  },
+  "globals": {
+    "globalThis": false,
+    "window": false,
+    "top": false,
+    "Ractive": false
   },
   "parserOptions": {
     "sourceType": "script",
@@ -30,7 +36,7 @@
     "no-return-await": "error",
     "no-cond-assign": ["error", "always"],
     "no-constant-condition": "error",
-    "no-control-regex": "error",
+    "no-control-regex": "off",
     "no-debugger": "error",
     "no-dupe-args": "error",
     "no-dupe-keys": "error",

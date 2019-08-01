@@ -10,8 +10,8 @@ module.exports = async (state) => {
 		}
 	} = state;
 	state.logImprt(`BIND SERVER`, __dirname);
-	state.alert(`SERVER: IP:${ip}  -  PORT:${port}`);
 	await promise((accept) => {
 		server.bind(port, ip, accept);
+		state.alert(`SERVER BOUND: IP:${ip}  -  PORT:${port}`);
 	});
 };

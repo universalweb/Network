@@ -5,15 +5,16 @@
   "description": "Sentivate Network Client, Server Module, UDSP, & certificate generation. This serves as a network & browser prototype.",
   "scripts": {
     "client": "nodemon client/index.js --watch client/",
-    "cc": "nodemon client/createCertificate/index.js --watch client/createCertificate/",
-    "server": "nodemon ./server.js --watch server/ --watch server.js",
+    "cc": "nodemon ./client/createCertificate/index.js --watch ./client/createCertificate/",
+    "server": "nodemon ./serverApp/server.js --watch ./server/ --watch ./serverApp/",
+    "dis": "nodemon ./DIS/index.js --watch ./server/ --watch ./DIS/",
     "root": "nodemon root/index.js --watch root/",
     "simulate": "nodemon simulate.js --watch ./client/ --watch ./server/ --watch simulate.js",
-		"domainCertificate": "nodemon ./domainCertificate/index.js --watch ./domainCertificate/",
-		"idCert": "nodemon ./idCert/index.js",
+    "domainCertificate": "nodemon ./domainCertificate/index.js --watch ./domainCertificate/",
+    "idCert": "nodemon ./idCert/index.js",
     "start": "electron ."
   },
-  "author": "Thomas Marchi",
+  "author": "Sentivate",
   "company": "ARITY",
   "dependencies": {
     "@babel/helpers": "^7.4.4",
@@ -24,11 +25,17 @@
     "eslint": "^5.16.0",
     "iltorb": "^2.4.3",
     "is-json": "*",
+    "is-valid-path": "^0.1.1",
     "json-stable-stringify": "*",
-    "sodium-native": "^2.3.0"
+    "node-watch": "^0.6.2",
+    "sodium-native": "^2.4.2",
+    "truncate-utf8-bytes": "^1.0.2"
   },
   "license": "ISC",
   "devDependencies": {
-    "electron": "^4.1.5"
+    "electron": "^4.1.5",
+    "n": "^4.1.0",
+    "rollup": "^1.17.0",
+    "rollup-plugin-babel-minify": "^9.0.0"
   }
 }

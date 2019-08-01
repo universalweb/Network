@@ -1,15 +1,18 @@
 /*
   * Stream ID: SID
 */
-module.exports = async () => {
+module.exports = async (configure) => {
 	const dgram = require('dgram');
 	const state = {
-		async initialize() {
+		async initialize(serverConfiguration) {
 			console.log('-------SERVER INITIALIZING-------');
 			await require('../utilities/console/')(state);
 			await require('../utilities/file/')(state);
 			await require('../utilities/crypto/')(state);
-			await require('./configuration')(state);
+			await require('../utilities/cleanPath/')(state);
+			await require('../utilities/propertyAccess/')(state);
+			await require('../utilities/watch/')(state);
+			await require('./configuration')(state, serverConfiguration);
 			await require('../utilities/pluckBuffer')(state);
 			await require('../utilities/certificate/')(state);
 			await require('./coreCertificates')(state);
@@ -21,6 +24,10 @@ module.exports = async () => {
 			console.log('-------SERVER INITIALIZED-------');
 			return state;
 		},
+		app: {
+			api: {}
+		},
+		api: {},
 		type: 'server',
 		statusDescriptions: ['off', 'on', 'failed to initialize'],
 		status: 0,
@@ -40,5 +47,5 @@ module.exports = async () => {
 		streams: new Map(),
 		utility: require('Lucy')
 	};
-	return state.initialize();
+	return state.initialize(configure);
 };

@@ -8,15 +8,10 @@ module.exports = async (state) => {
 	logImprt('Simulation', __dirname);
 	await activateProfile('default');
 	const {
-		request,
-		api: {
-			connect
-		}
+		request
 	} = state;
-	const handshake = await connect('localhost', 8080);
-	console.log(handshake);
-	const indexFile = await request('file', {
-		path: 'index.html'
+	const indexFile = await request('sign', {
+		test: 123
 	});
 	console.log(indexFile);
 };

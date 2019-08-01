@@ -69,7 +69,6 @@ module.exports = async (state) => {
 		clientSession(receiveKey, transmitKey, publicKey, privateKey, serverPublicKey);
 		sodium.sodium_mlock(receiveKey);
 		sodium.sodium_mlock(transmitKey);
-		await state.initiate();
 		alert(`Profile activated ${profileName}`);
 	}
 	state.profile = {

@@ -7,7 +7,7 @@ module.exports = async (state) => {
 			decrypt,
 			serverSession,
 		},
-		public: {
+		api: {
 			onMessage
 		},
 		certificates: {
@@ -85,7 +85,7 @@ module.exports = async (state) => {
 				return logError('JSON ERROR', connection);
 			}
 			count++;
-			const stream = await createStream(connection, receiveKey, transmitKey, streamID);
+			const stream = await createStream(connection, receiveKey, transmitKey, streamID, publicCertificate);
 			await onMessage(stream, json);
 			success(`Messages Received: ${count}`);
 		}
