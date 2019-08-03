@@ -65,3 +65,12 @@ iframe, webview {
   height: calc(100% - 50px);
   top: 50px;
 }
+
+.browserControls .input-field {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+.browserControls .btn-floating {
+  margin-top: 7px;
+}

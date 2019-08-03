@@ -14,9 +14,5 @@
     </form>
 </div>
 {{#if load}}
-  {{#if udsp}}
-    <iframe src="blank.html"></iframe>
-  {{else}}
-    <webview src="{{url}}" disablewebsecurity useragent="Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko"></webview>
-  {{/if}}
+  <webview src="{{url}}" disablewebsecurity useragent="Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko"></webview>
 {{/if}}
