@@ -51,7 +51,7 @@
 				title: app.getName(),
 				webPreferences: {
 					webviewTag: true,
-					nodeIntegration: true
+					nodeIntegration: false
 				},
 			};
 			mainWindow = new BrowserWindow(windowOptions);

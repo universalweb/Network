@@ -14,28 +14,27 @@
     "idCert": "nodemon ./idCert/index.js",
     "start": "electron ."
   },
-  "author": "Sentivate",
+  "author": "ARITY",
   "company": "ARITY",
   "dependencies": {
-    "@babel/helpers": "^7.4.4",
-    "Lucy": "^2.2.1",
-    "ajv": "*",
-    "babel-eslint": "*",
+    "@babel/helpers": "^7.5.5",
+    "Lucy": "^2.2.2",
+    "ajv": "^6.10.2",
+    "babel-eslint": "^10.0.2",
     "chalk": "*",
-    "eslint": "^5.16.0",
-    "iltorb": "^2.4.3",
+    "eslint": "^6.1.0",
+    "iltorb": "*",
     "is-json": "*",
-    "is-valid-path": "^0.1.1",
+    "is-valid-path": "*",
     "json-stable-stringify": "*",
-    "node-watch": "^0.6.2",
-    "sodium-native": "^2.4.2",
-    "truncate-utf8-bytes": "^1.0.2"
+    "node-watch": "*",
+    "sodium-native": "^2.4.3",
+    "truncate-utf8-bytes": "*"
   },
   "license": "ISC",
   "devDependencies": {
-    "electron": "^4.1.5",
-    "n": "^4.1.0",
-    "rollup": "^1.17.0",
-    "rollup-plugin-babel-minify": "^9.0.0"
+    "electron": "^4.2.8",
+    "rollup": "^1.18.0",
+    "rollup-plugin-babel-minify": "*"
   }
 }

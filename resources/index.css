@@ -70,7 +70,13 @@ iframe, webview {
   margin-top: 0px;
   margin-bottom: 0px;
 }
-
+.browserControls .col.s12 {
+  padding: 0px;
+}
+.browserControls .col.s12 input{
+  padding-left: 20px;
+  max-width: calc(100% - 20px);
+}
 .browserControls .btn-floating {
   margin-top: 7px;
 }
