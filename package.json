@@ -18,22 +18,18 @@
   "dependencies": {
     "@babel/helpers": "^7.5.5",
     "Lucy": "^2.2.3",
-    "ajv": "^6.10.2",
     "babel-eslint": "^10.0.3",
     "chalk": "*",
-    "eslint": "^6.2.2",
+    "eslint": "^6.3.0",
     "iltorb": "*",
-    "is-json": "*",
     "is-valid-path": "*",
-    "json-stable-stringify": "*",
     "node-watch": "*",
     "sodium-native": "^2.4.5",
-    "truncate-utf8-bytes": "*",
     "what-the-pack": "^2.0.3"
   },
   "license": "ISC",
   "devDependencies": {
-    "electron": "^6.0.5",
+    "electron": "^6.0.7",
     "rollup": "^1.20.3",
     "rollup-plugin-babel-minify": "*"
   }

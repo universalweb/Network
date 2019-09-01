@@ -1,5 +1,4 @@
 module.exports = async (state) => {
-	require('./validateJSONScheme')(state);
 	const {
 		logImprt,
 		success,
