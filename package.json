@@ -1,6 +1,6 @@
 {
   "name": "Sentivate",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "main": "main.js",
   "description": "Sentivate Network Client, Server Module, UDSP, & certificate generation. This serves as a network & browser prototype.",
   "scripts": {
@@ -12,6 +12,12 @@
     "simulate": "nodemon ./scripts/simulate.js --watch ./client/ --watch ./server/ --watch ./scripts/simulate.js --watch utilities/",
     "certificates": "nodemon ./scripts/certificates.js --watch ./scripts/certificates.js --watch ./certificates/ --watch ./utilities/",
     "start": "electron ."
+  },
+  "auto-changelog": {
+    "output": "CHANGELOG.md",
+    "template": "keepachangelog",
+    "unreleased": true,
+    "commitLimit": false
   },
   "author": "ARITY",
   "company": "ARITY",
@@ -29,8 +35,11 @@
   },
   "license": "ISC",
   "devDependencies": {
+    "auto-changelog": "^1.16.0",
+    "docredux": "^2.0.6",
     "electron": "^6.0.7",
     "rollup": "^1.20.3",
-    "rollup-plugin-babel-minify": "*"
+    "rollup-plugin-babel-minify": "*",
+    "testatron": "^2.0.5"
   }
 }
