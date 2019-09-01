@@ -1,4 +1,4 @@
-module.exports = async (state) => {
+module.exports = (state) => {
 	const {
 		error: logError,
 		streams,
@@ -24,6 +24,7 @@ module.exports = async (state) => {
 		success(`MESSAGE SENT TIME: ${sentTime}`);
 		streams.set(streamIdString, stream);
 		stream.id = streamIdString;
+		stream.idRaw = streamId;
 		stream.idBuffer = streamId;
 		stream.address = address;
 		stream.port = port;

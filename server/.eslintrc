@@ -33,6 +33,7 @@
         "allowMultiplePropertiesPerLine": false,
         "allowAllPropertiesOnSameLine": false
     }],
+    "require-atomic-updates": "off",
     "no-return-await": "error",
     "no-cond-assign": ["error", "always"],
     "no-constant-condition": "error",

@@ -1,11 +1,11 @@
 module.exports = async (state) => {
-	await require('./parseMessage')(state);
-	await require('./send')(state);
-	await require('./emit')(state);
+	require('./parseMessage')(state);
+	require('./send')(state);
+	require('./emit')(state);
 	await require('./api')(state);
 	await require('./stream')(state);
-	await require('./createStreamMessage')(state);
-	await require('./processMessage')(state);
+	require('./createStreamMessage')(state);
+	require('./processMessage')(state);
 	const {
 		logImprt,
 		success,
@@ -14,33 +14,44 @@ module.exports = async (state) => {
 		processMessage,
 		logReceived,
 		error: logError,
+		decode,
 	} = state;
 	logImprt('Server onMessage', __dirname);
 	async function onMessage(messageBuffer, connection) {
 		logReceived('Message Received');
-		const packetSize = messageBuffer.slice(0, 4);
-		if (!packetSize) {
-			return logError(`No Packet size -> Invalid Packet`);
+		const additionalDataEndIndex = Number(messageBuffer.slice(0, 3));
+		if (!additionalDataEndIndex) {
+			return logError(`No additionalData size number -> Invalid Packet`);
 		}
-		const packetEndIndex = Number(packetSize);
-		const packet = messageBuffer.slice(4, packetEndIndex + 1);
-		success(`Packet size ${packetSize.toString()}`);
-		const puzzleFlag = packet.slice(0, 1);
-		if (!puzzleFlag) {
-			return logError(`No Puzzle Flag -> Invalid Packet`);
+		success(`Additional Data size ${additionalDataEndIndex - 3}`);
+		const additionalDataBuffer = messageBuffer.slice(3, additionalDataEndIndex);
+		const additionalData = decode(additionalDataBuffer);
+		if (!additionalData) {
+			return logError(`No additionalData -> Invalid Packet`);
 		}
-		success(`Puzzle Flag ${puzzleFlag.toString()}`);
-		const publicKeyFlag = packet.slice(1, 2);
-		if (!publicKeyFlag) {
-			return logError(`No Public Key Flag -> Invalid Packet`);
+		success(`Additional Data`);
+		console.log(additionalData);
+		const packetEndIndex = Number(messageBuffer.slice(additionalDataEndIndex, additionalDataEndIndex + 4));
+		if (!packetEndIndex) {
+			return logError(`No packet size number -> Invalid Packet`);
 		}
-		success(`Public Key Flag ${publicKeyFlag.toString()}`);
-		if (publicKeyFlag.toString() === '0') {
-			success(`No Public Key is given`);
-			await processMessage(connection, packet);
-		} else {
+		success(`Packet size ${packetEndIndex}`);
+		console.log(additionalDataEndIndex + 4, packetEndIndex);
+		const packet = messageBuffer.slice(additionalDataEndIndex + 4, packetEndIndex);
+		if (!packet) {
+			return logError(`No packet -> Invalid Packet`);
+		}
+		success(`Packet`);
+		console.log(packet);
+		const {
+			cert
+		} = additionalData;
+		if (cert && cert.key) {
 			success(`Public Key is given -> Processing handshake`);
-			await createStreamMessage(connection, packet);
+			await createStreamMessage(connection, additionalDataBuffer, additionalData, packet);
+		} else {
+			success(`No Public Key is given`);
+			await processMessage(connection, additionalDataBuffer, additionalData, packet);
 		}
 	}
 	server.on('message', onMessage);

@@ -5,7 +5,7 @@ module.exports = async () => {
 		maxMTU: 1000,
 		encoding: 'utf8',
 		max: 900,
-		certificates: `${__dirname}/certificates`
+		certificates: `${__dirname}/certificates`,
 	});
 	const {
 		status,

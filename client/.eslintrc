@@ -23,6 +23,7 @@
     }
   },
   "rules": {
+    "require-atomic-updates": "off",
     "object-curly-newline": ["error", {
         "ObjectExpression": { "minProperties": 1 },
         "ObjectPattern": "always",
@@ -157,7 +158,7 @@
     }],
     "comma-style": ["error", "last"],
     "computed-property-spacing": ["error", "never"],
-    "consistent-this": "error",
+    "consistent-this": "off",
     "eol-last": "error",
     "func-style": "off",
     "id-blacklist": "off",

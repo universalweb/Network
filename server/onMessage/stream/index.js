@@ -1,14 +1,14 @@
 module.exports = async (state) => {
 	state.streamMethods = {};
-	await require('./events')(state);
-	await require('./connected')(state);
-	await require('./connection')(state);
-	await require('./construct')(state);
-	await require('./created')(state);
-	await require('./destroy')(state);
-	await require('./reKey')(state);
-	await require('./send')(state);
-	await require('./statusUpdate')(state);
+	require('./events')(state);
+	require('./connected')(state);
+	require('./connection')(state);
+	require('./construct')(state);
+	require('./created')(state);
+	require('./destroy')(state);
+	require('./reKey')(state);
+	require('./send')(state);
+	require('./statusUpdate')(state);
 	const {
 		streamMethods: {
 			destroy,

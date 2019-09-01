@@ -770,7 +770,7 @@
 				screenSize: '',
 			};
 		},
-		template: `<div>RENDERED</div>`,
+		template: `{{#components.main:key}}{{>getComponent(key)}}{{/}}`,
 	});
 	const pageTitle = new Ractive({
 		append: true,

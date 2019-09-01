@@ -1,77 +1,55 @@
-module.exports = async (state) => {
-	state.public = {};
-	state.private = {};
-	await require('./parseMessage')(state);
-	await require('./emit')(state);
-	await require('./publicAPI')(state);
+module.exports = (state) => {
+	require('./parseMessage')(state);
+	require('./emit')(state);
+	require('./publicAPI')(state);
 	const {
 		logImprt,
 		success,
 		server,
-		parseMessage,
-		public: {
-			onMessage: publicOnMessage
-		},
+		decode,
+		onMessage: publicOnMessage,
 		error: logError,
-		pluckBuffer,
 		crypto: {
 			decrypt
 		},
-		sessionKeys: {
-			receiveKey
-		}
+		receiveKey,
+		logReceived
 	} = state;
 	logImprt('Server onMessage', __dirname);
 	async function onMessage(messageBuffer, connection) {
-		success('ON MESSAGE');
-		const packetSize = messageBuffer.slice(0, 4);
-		if (!packetSize) {
-			return logError(`No Packet size -> Invalid Packet`);
+		logReceived('Message Received');
+		const additionalDataEndIndex = Number(messageBuffer.slice(0, 3));
+		if (!additionalDataEndIndex) {
+			return logError(`No additionalData size number -> Invalid Packet`);
 		}
-		const packetEndIndex = Number(packetSize);
-		const packet = messageBuffer.slice(4, packetEndIndex + 1);
-		success(`Packet size ${packetSize.toString()}`);
-		const puzzleFlag = packet.slice(0, 1);
-		if (!puzzleFlag) {
-			return logError(`No Puzzle Flag -> Invalid Packet`);
+		success(`Additional Data size ${additionalDataEndIndex - 3}`);
+		const additionalDataBuffer = messageBuffer.slice(3, additionalDataEndIndex);
+		const additionalData = decode(additionalDataBuffer);
+		if (!additionalData) {
+			return logError(`No additionalData -> Invalid Packet`);
 		}
-		success(`Puzzle Flag ${puzzleFlag.toString()}`);
-		if (packet.length) {
-			const streamIDEndIndex = 9;
-			const streamID = pluckBuffer(packet, 1, streamIDEndIndex, `streamID`, 'base64');
-			if (!streamID) {
-				return;
-			}
-			const nonceEndIndex = streamIDEndIndex + 24;
-			const nonce = pluckBuffer(packet, streamIDEndIndex, nonceEndIndex, `nonce`, 'base64');
-			if (!nonce) {
-				return;
-			}
-			const encryptedLengthEndIndex = nonceEndIndex + 4;
-			const encryptedLength = pluckBuffer(packet, nonceEndIndex, encryptedLengthEndIndex, `encrypted`, 'base64');
-			if (!encryptedLength) {
-				return;
-			}
-			const encryptedEndIndex = Number(encryptedLength.toString()) + encryptedLengthEndIndex;
-			const encrypted = pluckBuffer(packet, encryptedLengthEndIndex, encryptedEndIndex, `encrypted Message`, 'base64');
-			if (!encrypted) {
-				return;
-			}
-			const additionalDataBuffer = Buffer.concat([
-				puzzleFlag,
-				streamID,
-				nonce
-			]);
-			const decrypted = decrypt(encrypted, additionalDataBuffer, nonce, receiveKey);
-			if (!decrypted) {
-				return logError(`Decrypt Failed`);
-			}
-			const plainText = decrypted.toString();
-			success(`Decrypted ${plainText}`);
-			const jsonString = plainText;
-			const json = parseMessage(jsonString);
-			publicOnMessage(json, puzzleFlag, packet, connection);
+		success(`Additional Data`);
+		console.log(additionalData);
+		const packetEndIndex = Number(messageBuffer.slice(additionalDataEndIndex, additionalDataEndIndex + 4));
+		if (!packetEndIndex) {
+			return logError(`No packet size number -> Invalid Packet`);
 		}
+		success(`Packet size ${packetEndIndex}`);
+		console.log(additionalDataEndIndex + 4, packetEndIndex);
+		const packet = messageBuffer.slice(additionalDataEndIndex + 4, packetEndIndex);
+		if (!packet) {
+			return logError(`No packet -> Invalid Packet`);
+		}
+		success(`Packet`);
+		console.log(packet);
+		const nonce = additionalData.nonce;
+		const decrypted = decrypt(packet, additionalDataBuffer, nonce, receiveKey);
+		if (!decrypted) {
+			return logError(`Decrypt Failed`);
+		}
+		const message = decode(decrypted);
+		console.log(message);
+		publicOnMessage(message, decrypted, connection);
 	}
 	server.on('message', onMessage);
 };

@@ -1,5 +1,5 @@
-module.exports = async (state) => {
+module.exports = (state) => {
 	state.logImprt('PUBLIC API INDEX', __dirname);
-	await require('./api')(state);
-	await require('./onMessage')(state);
+	require('./api')(state);
+	require('./onMessage')(state);
 };

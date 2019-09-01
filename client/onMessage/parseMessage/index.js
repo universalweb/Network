@@ -1,29 +1,14 @@
 module.exports = async (state) => {
-	await require('./validateJSONScheme')(state);
+	require('./validateJSONScheme')(state);
 	const {
-		error,
 		logImprt,
 		success,
-		validateJSONScheme,
-		utility: {
-			jsonParse
-		}
+		decode
 	} = state;
-	const isJSON = require('is-json');
 	logImprt('PARSE MESSAGE MODULE', __dirname);
-	function parseMessage(jsonString) {
-		if (isJSON(jsonString)) {
-			success('JSON IS VALID');
-			const json = jsonParse(jsonString);
-			if (validateJSONScheme(json)) {
-				success('JSON SCHEME IS VALID');
-				return json;
-			} else {
-				error('JSON SCHEME IS INVALID', json);
-			}
-		} else {
-			error('JSON IS INVALID', jsonString);
-		}
+	function parseMessage(messageRaw) {
+		const message = decode(messageRaw);
+		success('PARSED MESSAGE', message);
 	}
 	state.parseMessage = parseMessage;
 };

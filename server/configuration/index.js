@@ -6,9 +6,13 @@ module.exports = async (state, configure) => {
 		}
 	} = state;
 	console.log(configure);
+	const {
+		ip,
+		port
+	} = state.profile.ephemeral;
 	state.configuration = assign({
-		ip: 'localhost',
-		port: 8080,
+		ip,
+		port,
 		maxMTU: 1000,
 		encoding: 'utf8',
 		max: 1000

@@ -19,9 +19,22 @@
 		protocol,
 		BrowserWindow
 	} = electron;
-	protocol.registerStandardSchemes(['uw', 'local'], {
-		secure: true
-	});
+	protocol.registerSchemesAsPrivileged([
+		{
+			scheme: 'uw',
+			privileges: {
+				standard: true,
+				secure: true
+			}
+		},
+		{
+			scheme: 'local',
+			privileges: {
+				standard: true,
+				secure: true
+			}
+		}
+	]);
 	const dialog = electron.dialog;
 	dialog.showErrorBox = function(title, content) {
 		console.log(`${title}\n${content}`);

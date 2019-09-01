@@ -1,4 +1,4 @@
-module.exports = async (state) => {
+module.exports = (state) => {
 	const {
 		cnsl,
 		logImprt,
@@ -6,9 +6,7 @@ module.exports = async (state) => {
 		error: logError,
 		success,
 		requests,
-		public: {
-			api
-		},
+		api,
 		utility: {
 			stringify,
 			hasValue
@@ -56,5 +54,5 @@ module.exports = async (state) => {
 			return logError(`Invalid message no body was sent. ${stringify(json)}`);
 		}
 	};
-	state.public.onMessage = onMessage;
+	state.onMessage = onMessage;
 };

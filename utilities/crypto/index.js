@@ -18,7 +18,6 @@ const {
 	crypto_kx_client_session_keys,
 	crypto_kx_SESSIONKEYBYTES,
 	crypto_kx_server_session_keys,
-	sodium_mlock
 } = require('sodium-native');
 function hash(message) {
 	const hashed = Buffer.alloc(crypto_generichash_BYTES);
@@ -62,6 +61,7 @@ function keypair() {
 	const publicKey = Buffer.alloc(crypto_kx_PUBLICKEYBYTES);
 	const secretKey = Buffer.alloc(crypto_kx_SECRETKEYBYTES);
 	crypto_kx_keypair(publicKey, secretKey);
+	console.log(crypto_kx_PUBLICKEYBYTES, crypto_kx_SECRETKEYBYTES);
 	return {
 		publicKey,
 		secretKey
@@ -72,7 +72,6 @@ function clientSession(receiveKey, transmissionKey, publicKey, privateKey, serve
 }
 function createSessionKey() {
 	const sessionKey = Buffer.alloc(crypto_kx_SESSIONKEYBYTES);
-	sodium_mlock(sessionKey);
 	return sessionKey;
 }
 function serverSession(serverPublicKey, serverSecretKey, clientPublicKey) {
@@ -94,7 +93,7 @@ function signKeypair() {
 	};
 }
 function toBuffer(value) {
-	return Buffer.from(value, 'base64');
+	return Buffer.from(value);
 }
 function toBase64(value) {
 	return value.toString('base64');
@@ -128,7 +127,7 @@ const methods = {
 	randombytes_buf,
 	hashBytes: crypto_generichash_BYTES
 };
-module.exports = async (state) => {
+module.exports = (state) => {
 	if (state) {
 		state.crypto = methods;
 	}

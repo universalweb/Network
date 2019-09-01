@@ -1,4 +1,4 @@
-module.exports = async (state) => {
+module.exports = (state) => {
 	const {
 		streamEvents: {
 			reKey: reKeyEvent,
@@ -6,12 +6,10 @@ module.exports = async (state) => {
 		crypto: {
 			serverSession
 		},
-		certificates: {
-			active: {
-				ephemeral: {
-					private: serverPrivateKey,
-					key: serverPublicKey
-				}
+		profile: {
+			ephemeral: {
+				private: serverPrivateKey,
+				key: serverPublicKey
 			}
 		},
 		streamMethods,

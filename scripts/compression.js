@@ -1,7 +1,40 @@
 (async () => {
+	const state = {
+		type: 'Domain Certificate Creation',
+		utility: require('Lucy'),
+		msgPack: require('what-the-pack').initialize(2 ** 10),
+		compression: require('iltorb')
+	};
+	await require('../utilities/console/')(state);
+	await require('../utilities/file/')(state);
 	const {
-		compress
-	} = require('iltorb');
-	const input = Buffer.from(`{"end":1649229779549,"ip":"192.168.1.1","key":"jf/Xn9sgjSVbbiyNXkmTc0TAttGFwdh/HfjQCZhOt2Q=","pad":900,"port":80,"signature":"uNH55oX7Ue027rsYSIpC12CBrutVguBj14MOWldnLx6bc0KSJ5R6VIRAXsgBkcSDWS5ZbO0pdTQ1cp/1S7dSAo2suBWSpp2LlTGW4cEyWoxEWtZW2q4uGXlm5wxsn3bC","start":1549229779549,"version":1}`);
-	console.log('lzutf8', input.length, (await compress(input)).length);
+		compression: {
+			compress
+		},
+		file: {
+			read
+		},
+		msgPack: {
+			decode,
+			encode
+		},
+		utility: {
+			stringify
+		}
+	} = state;
+	const file = await read(`${__dirname}/../root/root.cert`);
+	const certObj = decode(file);
+	console.log(certObj);
+	const input = encode(certObj);
+	certObj.ephemeral.signature = certObj.ephemeral.signature.toString('base64');
+	certObj.ephemeral.key = certObj.ephemeral.key.toString('base64');
+	certObj.ephemeral.private = certObj.ephemeral.private.toString('base64');
+	certObj.master.private = certObj.master.private.toString('base64');
+	certObj.master.key = certObj.master.key.toString('base64');
+	console.log('Brotli compression');
+	console.log('MsgPack', input.length);
+	console.log('After with Compression', (await compress(input)).length);
+	const oldCertificate = Buffer.from(stringify(certObj));
+	console.log('Base64 JSON', oldCertificate.length);
+	console.log('Base64 JSON With Compression', (await compress(oldCertificate)).length);
 })();

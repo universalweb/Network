@@ -1,0 +1,11 @@
+{
+  "ephemeral": {
+		"version": 1,
+		"host": "{hostname||subdomain}"
+  },
+  "master": {
+		"version": 1,
+		"algo": "default",
+		"hostname": "{hostname}"
+  }
+}

@@ -1,15 +1,13 @@
-module.exports = async (state) => {
-	await require('./buildPacketSize')(state);
-	await require('./buildStringSize')(state);
+module.exports = (state) => {
 	const {
 		server,
 		logImprt,
 		error: errorLog,
 		logSent,
 		utility: {
-			stringify,
 			promise
 		},
+		encode,
 		crypto: {
 			encrypt,
 			randombytes_buf,
@@ -17,51 +15,48 @@ module.exports = async (state) => {
 		},
 		success,
 		buildPacketSize,
-		puzzleFlag,
+		buildStringSize,
 	} = state;
 	logImprt('Send', __dirname);
 	// StreamID, nonce, encrypted message size, flags, packet size.
-	const packetDefaultsLength = 8 + 24 + 4 + 2 + 4;
-	async function send(messageObject, address, port, nonce, transmitKey, streamId, streamIdBuffer) {
+	async function send(messageObject, address, port, nonce, transmitKey, id) {
 		success(`SENDING MESSAGE:`, messageObject);
-		success(`StreamID: ${streamId}`);
+		success(`StreamID: ${id.toString('base64')}`);
 		success(`Transmit Key ${toBase64(transmitKey)}`);
-		const json = stringify(messageObject);
-		const jsonBuffer = Buffer.from(`${json}`);
+		const message = encode(messageObject);
 		randombytes_buf(nonce);
 		success(`Nonce ${toBase64(nonce)} Size: ${nonce.length}`);
-		const ad = [
-			// Puzzle Flag - Used to challenge the client
-			puzzleFlag,
-			streamIdBuffer,
+		const additionalData = {
+			id,
 			nonce,
-		];
-		const additionalDataBuffer = Buffer.concat(ad);
-		success('Additional Data Buffer', additionalDataBuffer.toString('base64'));
-		const encryptedMessage = encrypt(jsonBuffer, additionalDataBuffer, nonce, transmitKey);
+		};
+		const additionalDataEncoded = encode(additionalData);
+		const additionalDataEndIndex = additionalDataEncoded.length + 3;
+		const additionalDataEndIndexBuffer = buildStringSize(additionalDataEndIndex);
+		console.log(additionalDataEndIndex, additionalData);
+		const additionalDataCompiled = Buffer.concat([additionalDataEndIndexBuffer, additionalDataEncoded]);
+		success('Additional Data Buffer', additionalData);
+		const encryptedMessage = encrypt(message, additionalDataEncoded, nonce, transmitKey);
 		const encryptedLength = encryptedMessage.length;
 		if (!encryptedMessage) {
 			return errorLog('Encryption failed');
 		}
 		success(`Encrypted Message: Size:${encryptedMessage.length} ${encryptedMessage.toString('base64')}`);
-		const encryptedSizePacket = buildPacketSize(encryptedLength);
+		const encryptedDataEndIndex = buildPacketSize(additionalDataEndIndex + 4 + encryptedLength);
+		success(`Encrypted Data End Index: ${encryptedDataEndIndex.toString()}`);
 		const sendBuffer = [
-			...ad,
-			encryptedSizePacket,
+			additionalDataCompiled,
+			encryptedDataEndIndex,
 			encryptedMessage,
 		];
-		const realPacketSize = encryptedLength + packetDefaultsLength + 3;
-		const packetSize = buildPacketSize(realPacketSize);
-		sendBuffer.unshift(packetSize);
-		const buffered = sendBuffer;
+		logSent(sendBuffer.toString('base64'), `Size:${sendBuffer.length}`);
 		return promise((accept, reject) => {
-			server.send(buffered, port, address, (error) => {
+			server.send(sendBuffer, port, address, (error) => {
 				if (error) {
 					reject(error);
 					return errorLog(error);
 				}
 				success('Message Sent');
-				logSent(buffered.toString('base64'), `Size:${buffered.length}`);
 				accept();
 			});
 		});

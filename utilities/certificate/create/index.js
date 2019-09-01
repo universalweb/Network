@@ -3,97 +3,92 @@ module.exports = async (state) => {
 		crypto: {
 			keypair,
 			signKeypair,
-			toBase64
 		},
 		utility: {
 			assign,
-			eachObjectAsync,
-			omit
+			assignDeep,
 		},
 		certificate: {
 			sign
 		},
-		file: {
-			write,
-		},
 		logImprt,
 		alert
 	} = state;
-	const stringify = require('json-stable-stringify');
 	logImprt('Certificate Creation', __dirname);
 	const api = {
-		async save(certificate, directory) {
-			await eachObjectAsync(certificate, async (value, key) => {
-				await write(`${directory}/${key}.cert`, stringify(value.data));
-			});
-			const publicCertificate = stringify(assign({
-				ephemeral: omit(certificate.ephemeral.data, 'private')
-			}, omit(certificate.master.data, 'private')));
-			await write(`${directory}/public.cert`, publicCertificate);
-		},
-		async create(directory, additionalEphemeral, additionalMaster) {
-			const keypairs = {
-				ephemeral: keypair(),
-				master: signKeypair()
-			};
-			const certificates = api.build(keypairs, additionalEphemeral, additionalMaster);
-			alert('Certificates Built');
-			certificates.ephemeral.signature = sign(certificates.ephemeral.data, keypairs.master);
-			certificates.ephemeral.data.signature = certificates.ephemeral.signature;
-			alert('Certificates Signed');
-			api.buildPrivate(certificates, keypairs);
-			alert('Private Certificates Created');
-			if (directory) {
-				await api.save(certificates, directory);
-				alert(`Certificates Saved to ${directory}`);
-			}
-			return {
-				keypairs,
-				certificates
-			};
-		},
-		build(keypairs, additionalEphemeral, additionalMaster) {
+		async createProfile(profileTemplate, certificateName, directory) {
 			const {
-				master: {
-					publicKey: masterKey,
-				},
-				ephemeral: {
-					publicKey: ephemeralKey,
-				},
-			} = keypairs;
-			const ephemeral = {
-				data: assign({
-					start: Date.now(),
-					key: ephemeralKey.toString('base64')
-				}, additionalEphemeral)
-			};
-			const master = {
-				data: assign({
-					start: Date.now(),
-					key: masterKey.toString('base64')
-				}, additionalMaster)
-			};
-			return {
+				ephemeral: ephemeralTemplate,
+				master: masterTemplate
+			} = profileTemplate;
+			const {
+				publicKey: masterKey,
+				secretKey: secretKeyMaster
+			} = signKeypair();
+			const {
+				publicKey: ephemeralKey,
+				secretKey: secretKeyEphemeral
+			} = keypair();
+			const ephemeral = assignDeep({
+				start: Date.now(),
+				key: ephemeralKey
+			}, ephemeralTemplate);
+			const master = assignDeep({
+				start: Date.now(),
+				key: masterKey,
+				private: secretKeyMaster
+			}, masterTemplate);
+			const profile = {
 				ephemeral,
-				master
+				master,
 			};
+			alert('Certificates Built');
+			ephemeral.signature = sign(ephemeral, master);
+			alert('Ephemeral Certificate Signed');
+			ephemeral.private = secretKeyEphemeral;
+			if (directory) {
+				await api.save(profile, directory, certificateName);
+				alert(`Certificates Saved to ${directory}`, certificateName);
+			}
+			console.log('CERTIFICATE BUILT');
+			return profile;
 		},
-		buildPrivate(certificates, keypairs) {
+		async createEphemeral(ephemeralTemplate, master, certificateName, directory) {
 			const {
-				ephemeral: {
-					secretKey: secretKeyEphemeral
-				},
-				master: {
-					secretKey: secretKeyMaster
-				}
-			} = keypairs;
-			const ephemeralPrivate = assign({}, certificates.ephemeral);
-			const masterPrivate = assign({}, certificates.master);
-			ephemeralPrivate.data.private = toBase64(secretKeyEphemeral);
-			masterPrivate.data.private = toBase64(secretKeyMaster);
-			certificates.ephemeralPrivate = ephemeralPrivate;
-			certificates.masterPrivate = masterPrivate;
-		}
+				publicKey,
+				secretKey
+			} = keypair();
+			const ephemeral = assignDeep({
+				start: Date.now(),
+				key: publicKey
+			}, ephemeralTemplate);
+			alert('Ephemeral Certificate Built');
+			ephemeral.signature = sign(ephemeral, master);
+			alert('Ephemeral Certificate Signed');
+			ephemeral.private = secretKey;
+			if (directory) {
+				await api.save(ephemeral, directory, certificateName);
+				alert(`Certificate Saved to ${directory}`, certificateName);
+			}
+			return ephemeral;
+		},
+		async createMaster(masterTemplate, certificateName, directory) {
+			const {
+				publicKey,
+				secretKey
+			} = signKeypair();
+			const master = assignDeep({
+				start: Date.now(),
+				key: publicKey,
+				private: secretKey
+			}, masterTemplate);
+			alert('Master Certificate Built');
+			if (directory) {
+				await api.save(master, directory, certificateName);
+				alert(`Certificate Saved to ${directory}`, certificateName);
+			}
+			return master;
+		},
 	};
 	assign(state.certificate, api);
 };

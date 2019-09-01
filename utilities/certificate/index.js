@@ -1,44 +1,19 @@
-module.exports = async (state) => {
+module.exports = (state) => {
 	const {
 		logImprt,
 		cnsl,
 		alert,
 		certLog,
-		utility: {
-			jsonParse
-		},
+		decode,
 		file: {
-			read
+			read,
+			write,
 		},
-		crypto: {
-			toBuffer
-		}
+		encode,
 	} = state;
 	logImprt('CERTIFICATE', __dirname);
-	function bufferKeypairs(certificate) {
-		if (certificate.key) {
-			certificate.key = toBuffer(certificate.key);
-		}
-		if (certificate.private) {
-			certificate.private = toBuffer(certificate.private);
-		}
-		if (certificate.signature) {
-			certificate.signature = toBuffer(certificate.signature);
-		}
-		if (certificate.print) {
-			certificate.print = toBuffer(certificate.print);
-		}
-	}
-	async function parse(raw, toBufferFlag) {
-		certLog('GOT => ', raw);
-		const certificate = jsonParse(raw);
-		certLog('GOT => ', certificate);
-		if (toBufferFlag) {
-			bufferKeypairs(certificate);
-			if (certificate.ephemeral) {
-				bufferKeypairs(certificate.ephemeral);
-			}
-		}
+	async function parse(raw) {
+		const certificate = decode(raw);
 		return certificate;
 	}
 	async function verify(parent, child) {
@@ -46,21 +21,22 @@ module.exports = async (state) => {
 		const childCertificate = child;
 		cnsl(parentCertificate, childCertificate);
 	}
-	const currentDirectory = __dirname.replace('/certificate', '');
-	async function get(location, toBufferFlag) {
-		certLog('Get => ', location.replace(currentDirectory, ''));
+	async function get(location) {
+		certLog('Get => ', location);
 		const file = await read(location);
 		if (file) {
-			return parse(file, toBufferFlag);
+			return parse(file);
 		} else {
-			alert('FAILED TO LOAD CERT', location.replace(currentDirectory, ''));
+			alert('FAILED TO LOAD CERT', location);
 		}
 	}
-	state.certificates = {};
 	state.certificate = {
 		get,
 		parse,
 		verify,
+		async save(certificate, directory = __dirname, certificateName = 'profile') {
+			await write(`${directory}/${certificateName}.cert`, encode(certificate));
+		},
 	};
 	require('./sign')(state);
 	require('./create')(state);

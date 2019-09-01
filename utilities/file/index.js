@@ -1,4 +1,4 @@
-module.exports = async (state) => {
+module.exports = (state) => {
 	state.logImprt('FILE', __dirname);
 	const {
 		writeFile,
@@ -11,9 +11,9 @@ module.exports = async (state) => {
 		success
 	} = state;
 	const operations = {
-		write(fileName, contents) {
+		write(fileName, contents, encode) {
 			return promise((accept, reject) => {
-				writeFile(fileName, contents, 'utf8', (error) => {
+				writeFile(fileName, contents, encode, (error) => {
 					if (error) {
 						reject(error);
 					} else {
@@ -23,9 +23,9 @@ module.exports = async (state) => {
 				});
 			});
 		},
-		read(fileName) {
+		read(fileName, encode) {
 			return promise((accept, reject) => {
-				readFile(fileName, 'utf8', (error, contents) => {
+				readFile(fileName, encode, (error, contents) => {
 					if (error) {
 						reject(error);
 					} else {

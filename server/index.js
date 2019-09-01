@@ -6,16 +6,18 @@ module.exports = async (configure) => {
 	const state = {
 		async initialize(serverConfiguration) {
 			console.log('-------SERVER INITIALIZING-------');
-			await require('../utilities/console/')(state);
-			await require('../utilities/file/')(state);
-			await require('../utilities/crypto/')(state);
-			await require('../utilities/cleanPath/')(state);
-			await require('../utilities/propertyAccess/')(state);
-			await require('../utilities/watch/')(state);
+			await require('../state')('Server', {
+				bufferSize: configure.bufferSize || 2 ** 30
+			}, state);
+			state.profile = await state.certificate.get(serverConfiguration.profile);
+			console.log(state.profile);
+			require('../utilities/cleanPath/')(state);
+			require('../utilities/propertyAccess/')(state);
+			require('../utilities/watch/')(state);
 			await require('./configuration')(state, serverConfiguration);
-			await require('../utilities/pluckBuffer')(state);
-			await require('../utilities/certificate/')(state);
-			await require('./coreCertificates')(state);
+			require('../utilities/pluckBuffer')(state);
+			require('./buildPacketSize')(state);
+			require('./buildStringSize')(state);
 			await require('./onError')(state);
 			await require('./onMessage')(state);
 			await require('./onListen')(state);
@@ -28,7 +30,6 @@ module.exports = async (configure) => {
 			api: {}
 		},
 		api: {},
-		type: 'server',
 		statusDescriptions: ['off', 'on', 'failed to initialize'],
 		status: 0,
 		/*
@@ -36,7 +37,7 @@ module.exports = async (configure) => {
       * Slow down account creation.
       * Generate crypto currency for the Identity Registrar.
     */
-		puzzleFlag: Buffer.from('0'),
+		puzzleFlag: false,
 		/*
       * IPv6 preferred.
     */

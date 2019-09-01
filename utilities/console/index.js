@@ -1,5 +1,5 @@
 const chalk = require(`chalk`);
-module.exports = async (state) => {
+module.exports = (state) => {
 	const {
 		utility: {
 			stringify,
@@ -32,7 +32,6 @@ module.exports = async (state) => {
 		const header = ` ---------------- Message Sent ----------------  `;
 		const prettyItems = prettyObjects(args);
 		console.log(chalk.hex(`#6200ea`)(`${state.type}: ${header}`, ...prettyItems, `\n`).replace(`${header} `, `${header}\n`));
-		console.log(chalk.hex(`#6200ea`)(state.configuration.ip, state.configuration.port));
 	};
 	state.logReceived = (...args) => {
 		const header = ` ---------------- Message Received ----------------  `;

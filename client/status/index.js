@@ -1,6 +1,6 @@
-module.exports = async (state) => {
+module.exports = async (stream) => {
 	const status = {
 		code: 0
 	};
-	state.status = status;
+	stream.status = status;
 };

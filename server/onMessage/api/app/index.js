@@ -1,4 +1,5 @@
 module.exports = async (state) => {
+	const path = require('path');
 	const {
 		logImprt,
 		cnsl,
@@ -42,9 +43,13 @@ module.exports = async (state) => {
       JSON:  ${stringify(json)}
       BODY:  ${stringify(body)}
       SID:${stream.id}`);
-			const cleanedPath = cleanPath(`${resourceDirectory}/${body.file}`);
+			const cleanedPath = cleanPath(`${resourceDirectory}/${body.location}`);
+			const ext = path.extname(cleanedPath);
 			return {
-				data: await read(cleanedPath)
+				data: {
+					ext,
+					file: await read(cleanedPath)
+				}
 			};
 		},
 		async state(stream, body, json) {
@@ -60,7 +65,7 @@ module.exports = async (state) => {
 					data: ''
 				};
 			}
-			const cleanedPath = cleanPath(`${resourceDirectory}/${fileName}/index.js`);
+			const cleanedPath = cleanPath(`${resourceDirectory}/states/${fileName}/index.js`);
 			const file = await read(cleanedPath);
 			return {
 				data: file

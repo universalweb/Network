@@ -1,4 +1,4 @@
-module.exports = async (state) => {
+module.exports = (state) => {
 	state.logImprt('Server onListen', __dirname);
 	const {
 		server,

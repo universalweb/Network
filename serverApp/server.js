@@ -1,17 +1,15 @@
 (async () => {
 	const server = await require('../server/index.js')({
-		ip: 'localhost',
-		port: 8880,
 		maxMTU: 1000,
 		encoding: 'utf8',
 		max: 900,
-		certificates: `${__dirname}/certificates`,
-		resourceDirectory: `${__dirname}/resource`
+		profile: `${__dirname}/../services/universal.web.cert`,
+		resourceDirectory: `${__dirname}/resources`,
 	});
 	const {
 		status,
 		cnsl,
 	} = server;
-	cnsl('DIS Server Status', status);
+	cnsl('App Server Status', status);
 	console.log('Server Status', server.status);
 })();

@@ -1,4 +1,4 @@
-module.exports = async (state) => {
+module.exports = (state) => {
 	const {
 		streamEvents: {
 			connected: connectedEvent,

@@ -31,17 +31,16 @@ module.exports = async (state) => {
 		}
 	});
 	async function loadURL(url, locationState, callback) {
-		const client = await require('../client')(url, 8880);
+		const client = await require('../client');
+		const service = await client.getCertificate(`${__dirname}/../services/universal.web.cert`);
+		const profile = await client.getCertificate(`${__dirname}/../profiles/default.cert`);
+		const connection = await client.udsp({
+			service,
+			profile
+		});
 		const {
 			request,
-			connect,
-			profile: {
-				activate: activateProfile
-			}
-		} = client;
-		console.log('CONNECTING TO UDSP SERVER');
-		await activateProfile('default');
-		await connect();
+		} = connection;
 		const defaultState = await request('state', {
 			state: '/'
 		});
@@ -50,7 +49,7 @@ module.exports = async (state) => {
 			headers: {
 				'content-type': 'text/html'
 			},
-			data: createStream(`${indexFile}<script type="text/javascript">${defaultState[0].data}</script>`)
+			data: createStream(`${indexFile}<script type="text/javascript">${defaultState[0].data.toString()}</script>`)
 		});
 	}
 	protocol.registerStreamProtocol('uw', (request, callback) => {

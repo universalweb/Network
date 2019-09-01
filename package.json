@@ -5,36 +5,36 @@
   "description": "Sentivate Network Client, Server Module, UDSP, & certificate generation. This serves as a network & browser prototype.",
   "scripts": {
     "client": "nodemon client/index.js --watch client/",
+    "compressionTest": "nodemon scripts/compression.js --watch scripts/compression.js",
     "cc": "nodemon ./client/createCertificate/index.js --watch ./client/createCertificate/",
     "server": "nodemon ./serverApp/server.js --watch ./server/ --watch ./serverApp/",
     "dis": "nodemon ./DIS/index.js --watch ./server/ --watch ./DIS/",
-    "root": "nodemon root/index.js --watch root/",
-    "simulate": "nodemon simulate.js --watch ./client/ --watch ./server/ --watch simulate.js",
-    "domainCertificate": "nodemon ./domainCertificate/index.js --watch ./domainCertificate/",
-    "idCert": "nodemon ./idCert/index.js",
+    "simulate": "nodemon ./scripts/simulate.js --watch ./client/ --watch ./server/ --watch ./scripts/simulate.js --watch utilities/",
+    "certificates": "nodemon ./scripts/certificates.js --watch ./scripts/certificates.js --watch ./certificates/ --watch ./utilities/",
     "start": "electron ."
   },
   "author": "ARITY",
   "company": "ARITY",
   "dependencies": {
     "@babel/helpers": "^7.5.5",
-    "Lucy": "^2.2.2",
+    "Lucy": "^2.2.3",
     "ajv": "^6.10.2",
-    "babel-eslint": "^10.0.2",
+    "babel-eslint": "^10.0.3",
     "chalk": "*",
-    "eslint": "^6.1.0",
+    "eslint": "^6.2.2",
     "iltorb": "*",
     "is-json": "*",
     "is-valid-path": "*",
     "json-stable-stringify": "*",
     "node-watch": "*",
-    "sodium-native": "^2.4.3",
-    "truncate-utf8-bytes": "*"
+    "sodium-native": "^2.4.5",
+    "truncate-utf8-bytes": "*",
+    "what-the-pack": "^2.0.3"
   },
   "license": "ISC",
   "devDependencies": {
-    "electron": "^4.2.8",
-    "rollup": "^1.18.0",
+    "electron": "^6.0.5",
+    "rollup": "^1.20.3",
     "rollup-plugin-babel-minify": "*"
   }
 }

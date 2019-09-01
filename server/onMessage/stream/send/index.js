@@ -1,4 +1,4 @@
-module.exports = async (state) => {
+module.exports = (state) => {
 	const {
 		send: sendClient,
 		streamEvents: {
@@ -8,7 +8,7 @@ module.exports = async (state) => {
 		success
 	} = state;
 	async function send(stream, message) {
-		await sendClient(message, stream.address, stream.port, stream.nonce, stream.transmitKey, stream.id, stream.idBuffer);
+		await sendClient(message, stream.address, stream.port, stream.nonce, stream.transmitKey, stream.idRaw);
 		await sentEvent(stream, message);
 		success(`Stream Sent -> ID: ${stream.id}`);
 	}

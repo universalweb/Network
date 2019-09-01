@@ -1,11 +1,12 @@
-module.exports = async (state) => {
+module.exports = (state) => {
 	const {
 		logImprt,
 		cnsl,
 		alert,
 		utility: {
 			stringify,
-			keys
+			keys,
+			assign
 		}
 	} = state;
 	logImprt('PUBLIC API', __dirname);
@@ -21,5 +22,5 @@ module.exports = async (state) => {
 		}
 	};
 	alert(`LOADED PUBLIC API: COUNT: ${keys(api).length} ||| ${keys(api).join(' , ')}`);
-	state.public.api = api;
+	assign(state.api, api);
 };

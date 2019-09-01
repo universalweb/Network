@@ -1,5 +1,4 @@
-module.exports = async (state) => {
-	await require('./requests')(state);
+module.exports = (state) => {
 	const {
 		send,
 		logImprt,
@@ -19,7 +18,7 @@ module.exports = async (state) => {
 		const rid = uid();
 		const message = {
 			api,
-			t: Date.now,
+			t: Date.now(),
 			rid,
 			body
 		};
