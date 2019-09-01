@@ -6,7 +6,7 @@
 |[Sentivate](https://sentivate.com) - [Twitter](https://twitter.com/sentivate) - [Arity](https://arity.company)|
 ---
 #### Experimental Branch of the Sentivate Network
-- This code base release is focused on the client/server modules & extending into core systems.  
+- This code base release is focused on the client/server modules, extending into core systems, & Browser.  
 - UDSP in this branch does not include reliability and is for local network testing only.  
 - NPM run server starts up a basic Universal Web Server
 - NPM run start will simulate a client to server UDSP connection in the Universal Web Browser (UWB).  
@@ -16,8 +16,7 @@
 - Check the package.json for full list of commands.  
 ---
 # REQUIREMENTS
-- Node 11.15.0 (For building sodium-native) (cryptography library)
+- Node
 - NPM
 - nodemon (global)
-- n (global) (Swap between node versions)
 - Preferred operating systems for development are Mac and then Linux - Expect turbulence in windows
