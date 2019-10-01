@@ -1,45 +1,68 @@
 {
-  "name": "Sentivate",
-  "version": "1.0.5",
+  "name": "@sentivate/sentivate",
+  "version": "1.0.6",
   "main": "main.js",
   "description": "Sentivate Network Client, Server Module, UDSP, & certificate generation. This serves as a network & browser prototype.",
   "scripts": {
     "client": "nodemon client/index.js --watch client/",
+    "update": "node ./maintenance/index.js",
     "compressionTest": "nodemon scripts/compression.js --watch scripts/compression.js",
     "cc": "nodemon ./client/createCertificate/index.js --watch ./client/createCertificate/",
     "server": "nodemon ./serverApp/server.js --watch ./server/ --watch ./serverApp/",
     "dis": "nodemon ./DIS/index.js --watch ./server/ --watch ./DIS/",
+    "components": "nodemon ./browser/components/index.js --watch ./browser/components/source/ --watch ./browser/components/index.js",
     "simulate": "nodemon ./scripts/simulate.js --watch ./client/ --watch ./server/ --watch ./scripts/simulate.js --watch utilities/",
     "certificates": "nodemon ./scripts/certificates.js --watch ./scripts/certificates.js --watch ./certificates/ --watch ./utilities/",
-    "start": "electron ."
+    "start": "nodemon --watch ./index.html --watch ./client/ --watch ./browser/ --watch ./main.js --exec 'electron .'",
+    "electron": "electron ."
   },
   "auto-changelog": {
     "output": "CHANGELOG.md",
-    "template": "keepachangelog",
+    "template": "./maintenance/keepachangelog.hbs",
     "unreleased": true,
     "commitLimit": false
   },
   "author": "ARITY",
   "company": "ARITY",
   "dependencies": {
-    "@babel/helpers": "^7.5.5",
+    "@babel/helpers": "^7.6.0",
     "Lucy": "^2.2.3",
     "babel-eslint": "^10.0.3",
     "chalk": "*",
-    "eslint": "^6.3.0",
+    "eslint": "^6.4.0",
     "iltorb": "*",
     "is-valid-path": "*",
     "node-watch": "*",
     "sodium-native": "^2.4.5",
+    "truncate-utf8-bytes": "^1.0.2",
     "what-the-pack": "^2.0.3"
   },
   "license": "ISC",
   "devDependencies": {
-    "auto-changelog": "^1.16.0",
+    "@ckeditor/ckeditor5-build-inline": "^12.4.0",
+    "auto-changelog": "^1.16.1",
     "docredux": "^2.0.6",
-    "electron": "^6.0.7",
-    "rollup": "^1.20.3",
-    "rollup-plugin-babel-minify": "*",
-    "testatron": "^2.0.5"
-  }
+    "electron": "^6.0.10",
+    "ractive": "^1.3.8",
+    "rollup": "^1.21.4",
+    "rollup-plugin-babel-minify": "^9.1.0",
+    "testatron": "^2.0.5",
+    "uikit": "^3.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sentivate/SentivateAlphaNetwork.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sentivate/SentivateAlphaNetwork/issues"
+  },
+  "homepage": "https://github.com/sentivate/SentivateAlphaNetwork#readme",
+  "engines": {
+    "node": ">=12.9.1"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "windows"
+  ]
 }

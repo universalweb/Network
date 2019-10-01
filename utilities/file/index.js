@@ -34,8 +34,13 @@ module.exports = (state) => {
 				});
 			});
 		},
-		async copy(source, destination) {
-			const file = await operations.read(source);
+		async copy(source, destination, config) {
+			let file = await operations.read(source);
+			if (config) {
+				if (config.prepend) {
+					file = config.prepend + file;
+				}
+			}
 			await operations.write(destination, file);
 		}
 	};

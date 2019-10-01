@@ -1,11 +1,10 @@
 module.exports = async () => {
 	const server = await require('../server/index.js')({
-		ip: 'localhost',
-		port: 8880,
 		maxMTU: 1000,
 		encoding: 'utf8',
 		max: 900,
-		certificates: `${__dirname}/certificates`,
+		profile: `${__dirname}/../services/dis.cert`,
+		resourceDirectory: `${__dirname}/resources`,
 	});
 	const {
 		status,

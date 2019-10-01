@@ -5,7 +5,7 @@ module.exports = (state) => {
 			isString
 		}
 	} = state;
-	state.utility.watch = (item, callback) => {
+	state.watch = (item, callback) => {
 		return nodeWatch(item, {
 			recursive: true
 		}, (evt, filename) => {

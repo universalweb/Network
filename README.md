@@ -1,9 +1,9 @@
 # SNTVT - Experimental Network
 
-| Syntax      |
+| SENTIVATE |
 | :----: |
-| ![Sentivate Logo](https://sentivate.com/wp-content/uploads/brizy/12/assets/images/iW=1200&iH=any/70e94477b15f379a2717c387bf335188.png)|
-|[Sentivate](https://sentivate.com) - [Twitter](https://twitter.com/sentivate) - [Arity](https://arity.company)|
+| ![Sentivate Logo](https://raw.githubusercontent.com/sentivate/SentivateAlphaNetwork/master/resources/logo.png)|
+|[Sentivate](https://sentivate.com) - [Twitter](https://twitter.com/sentivate) - [Instagram](https://instagram.com/sntvt) - [Arity](https://arity.company)  - [Arity Twitter](https://twitter.com/TheRealArity)|
 ---
 #### Experimental Branch of the Sentivate Network
 - This code base release is focused on the client/server modules, extending into core systems, & Browser.  

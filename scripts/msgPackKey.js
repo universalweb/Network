@@ -14,10 +14,8 @@
 			keypair,
 			toBase64
 		},
-		msgPack: {
-			encode,
-			decode
-		},
+		decode,
+		encode,
 		utility: {
 			stringify
 		}

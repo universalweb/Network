@@ -1,14 +1,13 @@
 (async () => {
-	const state = {};
-	await require('../utilities/console/')(state);
-	await require('../utilities/file/')(state);
+	const state = require('../state/')('SIgnature Testing', {
+		bufferSize: 2 ** 20
+	});
 	const {
 		certificate: {
 			get
 		}
 	} = state;
-	const sign = require('../sign/');
-	const signer = get('../root/emphemeral.cert');
-	const certificate = get('../client/profiles/default/emphemeral.cert');
-	console.log(sign(certificate, signer));
+	const idcert = await get('../profiles/default.cert');
+	console.log(idcert);
+	// console.log(sign(certificate, signer));
 })();

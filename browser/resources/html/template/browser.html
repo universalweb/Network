@@ -1,0 +1,11 @@
+<nav class="uk-navbar-container uk-margin" uk-navbar>
+  <div class="uk-navbar-left uk-width-1-1">
+        <div class="uk-inline uk-width-1-1">
+          <a class="uk-form-icon" href="#" uk-icon="icon: world"></a>
+          <input value="{{newURL}}" on-keyup="keyup" class="uk-input" type="text" placeholder="url">
+        </div>
+    </div>
+</nav>
+{{#if load}}
+  <webview src="{{url}}" disablewebsecurity plugins useragent="Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko"></webview>
+{{/if}}

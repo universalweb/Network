@@ -22,17 +22,23 @@ const {
 function hash(message) {
 	const hashed = Buffer.alloc(crypto_generichash_BYTES);
 	crypto_generichash(hashed, message);
+	console.log(hashed.length);
 	return hashed;
 }
 function sign(message, secretKey) {
 	const signedMessage = Buffer.alloc(crypto_sign_BYTES + message.length);
 	crypto_sign(signedMessage, message, secretKey);
+	console.log(signedMessage.length);
 	return signedMessage;
 }
-function signOpen(message, publicKey) {
-	const signedMessage = Buffer.alloc(crypto_sign_BYTES);
+function signOpen(signedMessage, publicKey) {
+	const message = Buffer.alloc(signedMessage.length - crypto_sign_BYTES);
 	crypto_sign_open(message, signedMessage, publicKey);
-	return signedMessage;
+	return message;
+}
+function signVerify(signedMessage, publicKey) {
+	const message = Buffer.alloc(signedMessage.length - crypto_sign_BYTES);
+	return crypto_sign_open(message, signedMessage, publicKey);
 }
 function emptyNonce() {
 	return Buffer.alloc(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
@@ -113,6 +119,7 @@ const methods = {
 	keypair,
 	signKeypair,
 	signOpen,
+	signVerify,
 	toBuffer,
 	toBase64,
 	buff,

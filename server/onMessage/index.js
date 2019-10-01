@@ -2,7 +2,6 @@ module.exports = async (state) => {
 	require('./parseMessage')(state);
 	require('./send')(state);
 	require('./emit')(state);
-	await require('./api')(state);
 	await require('./stream')(state);
 	require('./createStreamMessage')(state);
 	require('./processMessage')(state);

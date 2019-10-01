@@ -5,20 +5,21 @@
 		});
 	}
 	const path = require('path');
-	const electron = require('electron');
-	const uw = require('./protocol/');
-	const utility = require('Lucy');
-	const state = {
-		electron,
-		utility
+	const universalWebSocket = require('./browser/protocol/');
+	const state =	{
+		electron: require('electron'),
 	};
-	await require('./utilities/console/')(state);
-	await require('./utilities/file/')(state);
+	require('./state')('browser', {
+		bufferSize: 2 ** 13
+	}, state);
 	const {
-		app,
-		protocol,
-		BrowserWindow
-	} = electron;
+		electron,
+		electron: {
+			app,
+			protocol,
+			BrowserWindow
+		}
+	} = state;
 	protocol.registerSchemesAsPrivileged([
 		{
 			scheme: 'uw',
@@ -72,9 +73,10 @@
 			mainWindow.on('closed', () => {
 				mainWindow = null;
 			});
+			mainWindow.webContents.openDevTools();
 		}
 		app.on('ready', async () => {
-			await uw(state);
+			await universalWebSocket(state);
 			createWindow();
 		});
 		app.on('window-all-closed', () => {

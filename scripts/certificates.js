@@ -1,8 +1,8 @@
 (async () => {
 	const state = await require('../state')('Server', {
-		bufferSize: 2 ** 10
+		bufferSize: 2 ** 30
 	});
-	await require('../certificates/')(state);
+	await require('../utilities/certificates/')(state);
 	const {
 		certificates: {
 			domain,
@@ -20,7 +20,7 @@
 		  ephemeral: {
 				version: 1,
 				ip: '127.0.0.1',
-				port: '8080',
+				port: '36',
 				host: 'universal.web',
 				locality: {
 					state: 'NJ',
@@ -46,6 +46,37 @@
 		}
 	});
 	console.log('DOMAIN CERTIFICATE', domainCert);
+	const disCert = await domain.create({
+		template: {
+		  ephemeral: {
+				version: 1,
+				ip: '127.0.0.1',
+				port: '36',
+				host: 'main.dis',
+				locality: {
+					state: 'NJ',
+					country: 'US'
+				},
+				start: Date.now(),
+				end: 99999999990,
+		  },
+		  master: {
+				version: 1,
+				algo: 'default',
+				hostname: 'main.dis',
+				organization: {
+					name: 'Arity',
+				},
+				locality: {
+					state: 'NJ',
+					country: 'US'
+				},
+				start: Date.now(),
+				end: 99999999990,
+		  }
+		}
+	});
+	console.log('DIS CERTIFICATE', disCert);
 	const identityCert = await identity.create({
 		template: {
 		  ephemeral: {
@@ -116,4 +147,5 @@
 	console.log('EPHEMERAL CERTIFICATE', ephemeralCert);
 	save(identityCert, `${__dirname}/../profiles`, 'default');
 	save(domainCert, `${__dirname}/../services`, 'universal.web');
+	save(disCert, `${__dirname}/../services`, 'main.dis');
 })();

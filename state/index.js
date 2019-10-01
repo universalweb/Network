@@ -1,5 +1,4 @@
-module.exports = (type, options, stateObject = {}) => {
-	const msgPack = require('what-the-pack').initialize(options.bufferSize);
+module.exports = (type, options = {}, stateObject = {}) => {
 	const utility = require('Lucy');
 	const {
 		assign
@@ -7,11 +6,21 @@ module.exports = (type, options, stateObject = {}) => {
 	const state = assign(stateObject, {
 		type,
 		utility,
-		msgPack
 	});
-	state.encode = msgPack.encode;
-	state.decode = msgPack.decode;
 	require('../utilities/console/')(state);
+	if (options) {
+		const {
+			bufferSize
+		} = options;
+		if (bufferSize) {
+			const {
+				encode,
+				decode
+			} = require('what-the-pack').initialize(bufferSize);
+			state.encode = encode;
+			state.decode = decode;
+		}
+	}
 	require('../utilities/file/')(state);
 	require('../utilities/crypto/')(state);
 	require('../utilities/certificate/')(state);

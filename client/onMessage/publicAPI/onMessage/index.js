@@ -16,7 +16,8 @@ module.exports = (state) => {
 	logImprt('ON PUBLIC MESSAGE', __dirname);
 	const onMessage = async (json, puzzleFlag, packet, connection) => {
 		const body = json.body;
-		if (body) {
+		const requestError = json.error;
+		if (body || requestError) {
 			const rid = json.rid;
 			if (hasValue(rid)) {
 				cnsl(`RequestID: ${rid} ${stringify(json)}`);
@@ -50,8 +51,9 @@ module.exports = (state) => {
 					return logError(`Invalid method name given. ${stringify(json)}`);
 				}
 			}
-		} else {
-			return logError(`Invalid message no body was sent. ${stringify(json)}`);
+		} else if (json.end) {
+			state.close();
+			return logError(`End event sent disconnected stream`);
 		}
 	};
 	state.onMessage = onMessage;

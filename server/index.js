@@ -14,11 +14,13 @@ module.exports = async (configure) => {
 			require('../utilities/cleanPath/')(state);
 			require('../utilities/propertyAccess/')(state);
 			require('../utilities/watch/')(state);
-			await require('./configuration')(state, serverConfiguration);
 			require('../utilities/pluckBuffer')(state);
-			require('./buildPacketSize')(state);
-			require('./buildStringSize')(state);
+			require('../utilities/buildPacketSize')(state);
+			require('../utilities/buildStringSize')(state);
+			await require('./configuration')(state, serverConfiguration);
 			await require('./onError')(state);
+			require('./api')(state);
+			await require('./app')(state);
 			await require('./onMessage')(state);
 			await require('./onListen')(state);
 			await require('./bind')(state);
@@ -30,7 +32,7 @@ module.exports = async (configure) => {
 			api: {}
 		},
 		api: {},
-		statusDescriptions: ['off', 'on', 'failed to initialize'],
+		statusDescriptions: ['initializing', 'initialized', 'failed to initialize'],
 		status: 0,
 		/*
       * A puzzle used to challenge clients to ensure authenticity, connection liveliness, and congestion control.

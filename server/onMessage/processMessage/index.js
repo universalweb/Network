@@ -16,6 +16,9 @@ module.exports = (state) => {
 	async function processMessage(connection, additionalDataBuffer, additionalData, packet) {
 		const streamID = additionalData.id;
 		const stream = streams.get(streamID.toString('base64'));
+		if (!stream) {
+			return false;
+		}
 		const nonce = additionalData.nonce;
 		const decrypted = decrypt(packet, additionalDataBuffer, nonce, stream.receiveKey);
 		if (!decrypted) {

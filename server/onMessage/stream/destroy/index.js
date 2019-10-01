@@ -10,6 +10,9 @@ module.exports = (state) => {
 	} = state;
 	async function destroy(stream, reason) {
 		if (reason === 1) {
+			await stream.send({
+				end: true
+			});
 			logError(`Stream ended from inactivity. Grace period ended.
         ID: ${stream.id}
         Address: ${stream.address}

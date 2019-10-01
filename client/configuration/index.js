@@ -3,7 +3,7 @@ module.exports = (stream) => {
 		ip,
 		port
 	} = stream.service.ephemeral;
-	stream.logImprt('SERVER CONFIGURATION', __dirname);
+	stream.logImprt('CLIENT CONFIGURATION', __dirname);
 	stream.configuration = {
 		ip,
 		port,

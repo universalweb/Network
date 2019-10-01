@@ -14,10 +14,8 @@
 		file: {
 			read
 		},
-		msgPack: {
-			decode,
-			encode
-		},
+		decode,
+		encode,
 		utility: {
 			stringify
 		}

@@ -13,6 +13,7 @@ const {
 	decode
 } = require('what-the-pack').initialize(2 ** 30);
 const utility = require('Lucy');
+const connections = {};
 const {
 	omit
 } = utility;
@@ -48,12 +49,14 @@ class UDSP {
 		const {
 			ephemeral: {
 				key: publicKey,
-				private: privateKey
+				private: privateKey,
+				signature: profileSignature
 			}
 		} = profile;
 		const {
 			ephemeral: {
-				key: serverPublicKey
+				key: serverPublicKey,
+				signature: serviceSignature
 			}
 		} = service;
 		clientSession(receiveKey, transmitKey, publicKey, privateKey, serverPublicKey);
@@ -70,33 +73,73 @@ class UDSP {
 			console.log('-------CLIENT CONNECTING-------\n');
 			await stream.connect();
 			console.log('-------CLIENT CONNECTED-------\n');
+			const serviceKey = serviceSignature.toString('base64');
+			const profileKey = profileSignature.toString('base64');
+			const connectionKey = `${serviceKey}${profileKey}`;
+			connections[connectionKey] = stream;
 			accept(stream);
 		})();
 	}
 	server = require('dgram').createSocket('udp4');
-	stream = new Map();
 	requests = new Map();
+	close() {
+		console.log(this, 'Stream closed down.');
+		this.server.close();
+		const {
+			ephemeral: {
+				signature: profileSignature
+			}
+		} = this.profile;
+		const {
+			ephemeral: {
+				signature: serviceSignature
+			}
+		} = this.service;
+		const serviceKey = serviceSignature.toString('base64');
+		const profileKey = profileSignature.toString('base64');
+		const connectionKey = `${serviceKey}${profileKey}`;
+		connections[connectionKey] = null;
+	}
 }
 const udspPrototype = UDSP.prototype;
-udspPrototype.type = 'Client';
+udspPrototype.type = 'client';
 udspPrototype.encode = encode;
 udspPrototype.decode = decode;
 udspPrototype.utility = utility;
-require('./buildPacketSize')(udspPrototype);
-require('./buildStringSize')(udspPrototype);
+require('../utilities/buildPacketSize')(udspPrototype);
+require('../utilities/buildStringSize')(udspPrototype);
 require('./liquid')(udspPrototype);
 require('../utilities/console/')(udspPrototype);
 require('../utilities/file/')(udspPrototype);
 require('../utilities/crypto/')(udspPrototype);
 require('../utilities/pluckBuffer')(udspPrototype);
 require('../utilities/certificate/')(udspPrototype);
-module.exports = {
-	udsp(configuration) {
-		return new Promise((accept) => {
-		  return new UDSP(configuration, accept);
-		});
-	},
-	getCertificate(location) {
-		return udspPrototype.certificate.get(location);
+require('../utilities/watch/')(udspPrototype);
+function udsp(configuration) {
+	return new Promise((accept) => {
+		return new UDSP(configuration, accept);
+	});
+}
+// UNIVERSAL WEB SOCKET
+async function getStream(configuration) {
+	const serviceKey = configuration.service.ephemeral.signature.toString('base64');
+	const profileKey = configuration.profile.ephemeral.signature.toString('base64');
+	const connectionKey = `${serviceKey}${profileKey}`;
+	const stream = connections[connectionKey];
+	if (stream) {
+		return stream;
 	}
+}
+async function uws(configuration) {
+	const stream = await getStream(configuration);
+	if (stream) {
+		return stream;
+	}
+	return udsp(configuration);
+}
+uws.get = getStream;
+uws.udsp = udsp;
+uws.getCertificate = (location) => {
+	return udspPrototype.certificate.get(location);
 };
+module.exports = uws;
