@@ -39,10 +39,7 @@ module.exports = async (state) => {
 					data: createStream('THIS IS A TEXT')
 				});
 			}
-			const {
-				request,
-			} = clientCache;
-			const fileRequest = await request('file', {
+			const fileRequest = await clientCache.request('file', {
 				url,
 				path: locationState
 			});
@@ -58,11 +55,8 @@ module.exports = async (state) => {
 				service,
 				profile
 			});
-			const {
-				request,
-			} = freshConnection;
 			console.log(freshConnection);
-			const defaultState = await request('state', {
+			const defaultState = await freshConnection.request('state', {
 				state: locationState
 			});
 			if (defaultState[0].error) {

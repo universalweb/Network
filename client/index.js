@@ -1,12 +1,8 @@
 /*
   * Client Module
-  * This is required for proof of Identity on the universal web.
-  * An Identity Certificate allows users to access the Domain Information Service.
-  * Identities are unique and can't be duplicated.
-  * Master Certificates are used for requesting ephemeral certificates and signing them.
-  * TThe ephemeral certificate to prove identity.
-  * Encryption is done by the ephemeral certificate.
-  * Ephemeral certificates also act as a form of identification and as a passwordless login.
+	* UDSP - Universal Data Stream Protocol
+	* UWS Universal Web Socket
+	* Establishes a UDP based bi-directional real-time socket between a client and end service.
 */
 const {
 	encode,
@@ -15,7 +11,8 @@ const {
 const utility = require('Lucy');
 const connections = {};
 const {
-	omit
+	omit,
+	assign
 } = utility;
 class UDSP {
 	constructor(configuration, accept) {
@@ -33,18 +30,17 @@ class UDSP {
 			},
 			alert,
 			success
-		} = this;
-		this.streamId = createStreamId();
-		this.api = {};
+		} = stream;
+		stream.streamId = createStreamId();
 		success(`StreamID:`, this.streamId);
 		alert(`Creating Shared Keys`);
-		const transmitKey = this.transmitKey = createSessionKey();
-		const receiveKey = this.receiveKey = createSessionKey();
-		this.profile = profile;
-		this.service = service;
-		this.ephemeralPublic = omit(profile.ephemeral, ['private']);
+		const transmitKey = stream.transmitKey = createSessionKey();
+		const receiveKey = stream.receiveKey = createSessionKey();
+		stream.profile = profile;
+		stream.service = service;
+		stream.ephemeralPublic = omit(profile.ephemeral, ['private']);
 		if (profile.master) {
-			this.masterPublic = omit(profile.master, ['private']);
+			stream.masterPublic = omit(profile.master, ['private']);
 		}
 		const {
 			ephemeral: {
@@ -64,11 +60,9 @@ class UDSP {
 		console.log(receiveKey, transmitKey);
 		require('./status')(stream);
 		require('./configuration')(stream);
-		require('./send')(stream);
-		require('./onMessage')(stream);
 		require('./listening')(stream);
+		stream.server.on('message', stream.onMessage.bind(stream));
 		(async () => {
-			await require('./api')(stream);
 			console.log('-------CLIENT INITIALIZED-------\n');
 			console.log('-------CLIENT CONNECTING-------\n');
 			await stream.connect();
@@ -102,19 +96,26 @@ class UDSP {
 	}
 }
 const udspPrototype = UDSP.prototype;
-udspPrototype.type = 'client';
-udspPrototype.encode = encode;
-udspPrototype.decode = decode;
-udspPrototype.utility = utility;
+assign(udspPrototype, {
+	type: 'client',
+	description: 'client module for Universal Web Sockets',
+	encode,
+	decode,
+	utility
+});
 require('../utilities/buildPacketSize')(udspPrototype);
 require('../utilities/buildStringSize')(udspPrototype);
-require('./liquid')(udspPrototype);
 require('../utilities/console/')(udspPrototype);
 require('../utilities/file/')(udspPrototype);
 require('../utilities/crypto/')(udspPrototype);
 require('../utilities/pluckBuffer')(udspPrototype);
 require('../utilities/certificate/')(udspPrototype);
 require('../utilities/watch/')(udspPrototype);
+require('./send')(udspPrototype);
+require('./request')(udspPrototype);
+require('./processMessage')(udspPrototype);
+require('./onMessage')(udspPrototype);
+require('./connect/')(udspPrototype);
 function udsp(configuration) {
 	return new Promise((accept) => {
 		return new UDSP(configuration, accept);

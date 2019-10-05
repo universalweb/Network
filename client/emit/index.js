@@ -1,6 +1,5 @@
 module.exports = (state) => {
 	const {
-		send,
 		logImprt,
 		cnsl,
 		utility: {
@@ -16,7 +15,7 @@ module.exports = (state) => {
 			eid,
 			body
 		};
-		return send(message);
+		return this.send(message);
 	}
 	state.emit = emit;
 };

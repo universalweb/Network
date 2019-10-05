@@ -1,9 +1,7 @@
-module.exports = (state) => {
+module.exports = (udspPrototype) => {
 	const {
-		send,
 		logImprt,
 		cnsl,
-		requests,
 		utility: {
 			uid,
 			promise,
@@ -11,9 +9,13 @@ module.exports = (state) => {
 				free
 			}
 		},
-	} = state;
+	} = udspPrototype;
 	logImprt('Request', __dirname);
 	async function request(api, body) {
+		const stream = this;
+		const {
+			requests
+		} = stream;
 		cnsl(`Requested ${api}`);
 		const rid = uid();
 		const message = {
@@ -22,7 +24,7 @@ module.exports = (state) => {
 			rid,
 			body
 		};
-		await send(message);
+		await stream.send(message);
 		return promise((accept) => {
 			requests.set(rid, (bodyResponse, json, streamID) => {
 				accept([bodyResponse, json, streamID]);
@@ -30,5 +32,5 @@ module.exports = (state) => {
 			});
 		});
 	}
-	state.request = request;
+	udspPrototype.request = request;
 };

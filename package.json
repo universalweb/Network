@@ -1,11 +1,10 @@
 {
   "name": "@sentivate/sentivate",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "main": "main.js",
-  "description": "Sentivate Network Client, Server Module, UDSP, & certificate generation. This serves as a network & browser prototype.",
+  "description": "Sentivate Network Client, Server Module, UDSP, Universal Web Socket, & certificate generation. This serves as a service & browser prototype.",
   "scripts": {
     "client": "nodemon client/index.js --watch client/",
-    "update": "node ./maintenance/index.js",
     "compressionTest": "nodemon scripts/compression.js --watch scripts/compression.js",
     "cc": "nodemon ./client/createCertificate/index.js --watch ./client/createCertificate/",
     "server": "nodemon ./serverApp/server.js --watch ./server/ --watch ./serverApp/",

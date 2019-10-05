@@ -1,22 +1,20 @@
-module.exports = (state) => {
-	require('./parseMessage')(state);
-	require('./emit')(state);
-	require('./publicAPI')(state);
+module.exports = (udspPrototype) => {
 	const {
 		logImprt,
 		success,
-		server,
 		decode,
-		onMessage: publicOnMessage,
 		error: logError,
 		crypto: {
 			decrypt
 		},
-		receiveKey,
 		logReceived
-	} = state;
+	} = udspPrototype;
 	logImprt('Server onMessage', __dirname);
 	async function onMessage(messageBuffer, connection) {
+		const stream = this;
+		const {
+			receiveKey,
+		} = stream;
 		logReceived('Message Received');
 		const additionalDataEndIndex = Number(messageBuffer.slice(0, 3));
 		if (!additionalDataEndIndex) {
@@ -49,7 +47,7 @@ module.exports = (state) => {
 		}
 		const message = decode(decrypted);
 		console.log(message);
-		publicOnMessage(message, decrypted, connection);
+		stream.processMessage(message, decrypted, connection);
 	}
-	server.on('message', onMessage);
+	udspPrototype.onMessage = onMessage;
 };

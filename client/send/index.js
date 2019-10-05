@@ -1,16 +1,11 @@
-module.exports = (stream) => {
+module.exports = (udspPrototype) => {
 	const {
-		server,
 		logImprt,
 		error: logError,
 		cnsl,
 		success,
 		utility: {
 			promise,
-		},
-		configuration: {
-			ip,
-			port
 		},
 		crypto: {
 			encrypt,
@@ -22,10 +17,18 @@ module.exports = (stream) => {
 		error: errorLog,
 		logSent,
 		encode
-	} = stream;
+	} = udspPrototype;
 	logImprt('Send', __dirname);
 	// StreamID, nonce, encrypted message size, flags, packet size.
 	async function send(messageOriginal) {
+		const stream = this;
+		const {
+			server,
+			configuration: {
+				ip,
+				port
+			}
+		} = stream;
 		cnsl(`Send to server`);
 		if (!messageOriginal && !messageOriginal.length) {
 			return logError('Message is empty and will not be sent.');
@@ -79,6 +82,5 @@ module.exports = (stream) => {
 			});
 		});
 	}
-	stream.send = send;
-	require('./request')(stream);
+	udspPrototype.send = send;
 };

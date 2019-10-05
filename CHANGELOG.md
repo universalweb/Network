@@ -16,6 +16,7 @@
 ### Commits
 
 - July Push [`b8991e0`](https://github.com/sentivate/SentivateAlphaNetwork/commit/b8991e0ccbd4652d57d14586733f601027184a27)
+- September Update [`28677b0`](https://github.com/sentivate/SentivateAlphaNetwork/commit/28677b0149146e6998ed47d7e4742dd68e6bdc54)
 - Latest Stable with Browser [`6151b50`](https://github.com/sentivate/SentivateAlphaNetwork/commit/6151b501b3461202c86ef6aa063a86906979b951)
 - Network Simulation [`90d69b1`](https://github.com/sentivate/SentivateAlphaNetwork/commit/90d69b14edf0845b718c19fdd3d3e38da66338e6)
 - August Push [`d08b943`](https://github.com/sentivate/SentivateAlphaNetwork/commit/d08b94396817e0c8e00585851d2f51af38664ac8)
@@ -40,3 +41,4 @@
 - Remove certs [`f8455de`](https://github.com/sentivate/SentivateAlphaNetwork/commit/f8455deb8dd1f13afc3853b641d9c4851e133516)
 - Initial commit [`df8e6b2`](https://github.com/sentivate/SentivateAlphaNetwork/commit/df8e6b24cd3cafdb532bf0f30f4a1807366976af)
 - Remove certs [`59bffad`](https://github.com/sentivate/SentivateAlphaNetwork/commit/59bffadfbb3a9c8c4b2b66a9963b9f9d7ccfaf7c)
+- Create logo.png [`2819629`](https://github.com/sentivate/SentivateAlphaNetwork/commit/2819629eeb72ae7ddfb5743054f913572eec132f)
