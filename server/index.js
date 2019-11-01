@@ -1,32 +1,38 @@
 /*
-  * Stream ID: SID
+  * socket ID: SID
 */
 module.exports = async (configure) => {
 	const dgram = require('dgram');
-	const state = {
+	const server = {
 		async initialize(serverConfiguration) {
 			console.log('-------SERVER INITIALIZING-------');
 			await require('../state')('Server', {
 				bufferSize: configure.bufferSize || 2 ** 30
-			}, state);
-			state.profile = await state.certificate.get(serverConfiguration.profile);
-			console.log(state.profile);
-			require('../utilities/cleanPath/')(state);
-			require('../utilities/propertyAccess/')(state);
-			require('../utilities/watch/')(state);
-			require('../utilities/pluckBuffer')(state);
-			require('../utilities/buildPacketSize')(state);
-			require('../utilities/buildStringSize')(state);
-			await require('./configuration')(state, serverConfiguration);
-			await require('./onError')(state);
-			require('./api')(state);
-			await require('./app')(state);
-			await require('./onMessage')(state);
-			await require('./onListen')(state);
-			await require('./bind')(state);
-			state.status = 1;
+			}, server);
+			server.profile = await server.certificate.get(serverConfiguration.profile);
+			console.log(server.profile);
+			require('../utilities/cleanPath/')(server);
+			require('../utilities/propertyAccess/')(server);
+			require('../utilities/watch/')(server);
+			require('../utilities/pluckBuffer')(server);
+			require('../utilities/buildPacketSize')(server);
+			require('../utilities/buildStringSize')(server);
+		  require('./configuration')(server, serverConfiguration);
+			require('./onError')(server);
+			require('./api')(server);
+			await require('./app')(server);
+			require('./parseMessage')(server);
+			require('./send')(server);
+			require('./emit')(server);
+			require('./socket')(server);
+			require('./processSocketCreation')(server);
+			require('./processMessage')(server);
+			require('./onMessage')(server);
+			require('./onListen')(server);
+			await require('./bind')(server);
+			server.status = 1;
 			console.log('-------SERVER INITIALIZED-------');
-			return state;
+			return server;
 		},
 		app: {
 			api: {}
@@ -45,10 +51,10 @@ module.exports = async (configure) => {
     */
 		server: dgram.createSocket('udp4'),
 		/*
-      * All created streams that represent a client to server bi-directional connection.
+      * All created sockets that represent a client to server bi-directional connection.
     */
-		streams: new Map(),
+		sockets: new Map(),
 		utility: require('Lucy')
 	};
-	return state.initialize(configure);
+	return server.initialize(configure);
 };

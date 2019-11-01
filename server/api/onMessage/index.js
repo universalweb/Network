@@ -1,4 +1,4 @@
-module.exports = (state) => {
+module.exports = (server) => {
 	const {
 		cnsl,
 		logImprt,
@@ -9,42 +9,45 @@ module.exports = (state) => {
 			stringify,
 			hasValue
 		}
-	} = state;
+	} = server;
 	logImprt('ON PUBLIC MESSAGE', __dirname);
-	const onMessage = async (stream, json) => {
-		const methodName = json.api;
-		if (!methodName) {
-			return logError(`Invalid no method name given. ${stringify(json)}`);
+	const onMessage = async (socket, message) => {
+		const {
+			body,
+			sid,
+			api
+		} = message;
+		if (!api) {
+			return logError(`Invalid no method name given. ${stringify(message)}`);
 		}
-		const method = app[methodName];
+		const method = app[api];
 		if (method) {
-			const body = json.body;
 			if (body) {
-				const rid = json.rid;
-				if (hasValue(rid)) {
-					cnsl(`Request:${json.api} RequestID: ${rid}`, json.body);
-					const responseBody = await method(stream, body, json);
-					if (responseBody) {
-						stream.send({
-							rid,
-							body: responseBody
-						});
+				if (hasValue(sid)) {
+					cnsl(`Request:${api} RequestID: ${sid}`, message.body);
+					const response = {
+						sid
+					};
+					const hasResponse = await method(socket, message, response);
+					if (hasResponse) {
+						socket.send(response);
 					}
+					return;
 				} else {
-					const eid = json.eid;
+					const eid = message.eid;
 					if (hasValue(eid)) {
-						success(`Request:${method} Emit ID:${eid} ${stringify(json)}`);
-						method(stream, body, json);
+						success(`Request:${method} Emit ID:${eid} ${stringify(message)}`);
+						method(socket, body, message);
 					} else {
-						return logError(`Invalid Request type. No Emit ID or Request ID was given. ${stringify(json)}`);
+						return logError(`Invalid Request type. No Emit ID was given. ${stringify(message)}`);
 					}
 				}
 			} else {
-				return logError(`Invalid Request no body was sent. ${stringify(json)}`);
+				return logError(`Invalid Request no body was sent. ${stringify(message)}`);
 			}
 		} else {
-			return logError(`Invalid method name given. ${stringify(json)}`);
+			return logError(`Invalid method name given. ${stringify(message)}`);
 		}
 	};
-	state.api.onMessage = onMessage;
+	server.api.onMessage = onMessage;
 };

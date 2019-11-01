@@ -11,43 +11,51 @@ module.exports = (udspPrototype) => {
 	} = udspPrototype;
 	logImprt('Server onMessage', __dirname);
 	async function onMessage(messageBuffer, connection) {
-		const stream = this;
+		const socket = this;
 		const {
 			receiveKey,
-		} = stream;
+		} = socket;
 		logReceived('Message Received');
-		const additionalDataEndIndex = Number(messageBuffer.slice(0, 3));
-		if (!additionalDataEndIndex) {
-			return logError(`No additionalData size number -> Invalid Packet`);
+		const headersEndIndex = Number(messageBuffer.slice(0, 3));
+		if (!headersEndIndex) {
+			return logError(`No headers size number -> Invalid Packet`);
 		}
-		success(`Additional Data size ${additionalDataEndIndex - 3}`);
-		const additionalDataBuffer = messageBuffer.slice(3, additionalDataEndIndex);
-		const additionalData = decode(additionalDataBuffer);
-		if (!additionalData) {
-			return logError(`No additionalData -> Invalid Packet`);
+		success(`Additional Data size ${headersEndIndex - 3}`);
+		const headersBuffer = messageBuffer.slice(3, headersEndIndex);
+		const headers = decode(headersBuffer);
+		if (!headers) {
+			return logError(`No headers -> Invalid Packet`);
 		}
 		success(`Additional Data`);
-		console.log(additionalData);
-		const packetEndIndex = Number(messageBuffer.slice(additionalDataEndIndex, additionalDataEndIndex + 4));
+		console.log(headers);
+		const packetEndIndex = Number(messageBuffer.slice(headersEndIndex, headersEndIndex + 4));
 		if (!packetEndIndex) {
 			return logError(`No packet size number -> Invalid Packet`);
 		}
 		success(`Packet size ${packetEndIndex}`);
-		console.log(additionalDataEndIndex + 4, packetEndIndex);
-		const packet = messageBuffer.slice(additionalDataEndIndex + 4, packetEndIndex);
+		console.log(headersEndIndex + 4, packetEndIndex);
+		const packet = messageBuffer.slice(headersEndIndex + 4, packetEndIndex);
 		if (!packet) {
 			return logError(`No packet -> Invalid Packet`);
 		}
 		success(`Packet`);
 		console.log(packet);
-		const nonce = additionalData.nonce;
-		const decrypted = decrypt(packet, additionalDataBuffer, nonce, receiveKey);
+		const nonce = headers.nonce;
+		const decrypted = decrypt(packet, headersBuffer, nonce, receiveKey);
 		if (!decrypted) {
 			return logError(`Decrypt Failed`);
 		}
 		const message = decode(decrypted);
 		console.log(message);
-		stream.processMessage(message, decrypted, connection);
+		if (message.status === 200) {
+			if (message.head) {
+				message.head = decode(message.head);
+			}
+			if (message.body) {
+				message.body = decode(message.body);
+			}
+			socket.processMessage(message, headers, connection);
+		}
 	}
 	udspPrototype.onMessage = onMessage;
 };

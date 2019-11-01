@@ -1,15 +1,15 @@
-module.exports = async (state) => {
-	state.logImprt('Server onListen', __dirname);
+module.exports = (server) => {
+	server.logImprt('Server onListen', __dirname);
 	const {
-		server,
+		server: rawServer,
 		alert,
 		utility: {
 			stringify
 		}
-	} = state;
+	} = server;
 	function onListening() {
-		const connection = server.address();
-		alert(`Universal Data Stream Protocol Listening ${stringify(connection)}`);
+		const connection = rawServer.address();
+		alert(`Universal Web Server Listening ${stringify(connection)}`);
 	}
-	server.on('listening', onListening);
+	rawServer.on('listening', onListening);
 };

@@ -1,4 +1,4 @@
-module.exports = (state) => {
+module.exports = (server) => {
 	const {
 		logImprt,
 		utility: {
@@ -9,7 +9,7 @@ module.exports = (state) => {
 			assign
 		},
 		app
-	} = state;
+	} = server;
 	logImprt('SERVER APP API', __dirname);
 	async function add(method, methodName) {
 		app[methodName] = method;
@@ -33,9 +33,9 @@ module.exports = (state) => {
 		}
 		return remove(methodName);
 	}
-	assign(state.api, {
+	assign(server.api, {
 		add: addApi,
 		remove: removeApi
 	});
-	require('./onMessage')(state);
+	require('./onMessage')(server);
 };

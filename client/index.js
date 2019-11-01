@@ -15,8 +15,8 @@ const {
 	assign
 } = utility;
 class UDSP {
-	constructor(configuration, accept) {
-		const stream = this;
+	constructor(configuration) {
+		const socket = this;
 		console.log('-------CLIENT INITIALIZING-------\n', configuration);
 		const {
 			service,
@@ -26,21 +26,21 @@ class UDSP {
 			crypto: {
 				createSessionKey,
 				clientSession,
-				createStreamId
+				createSocketId
 			},
 			alert,
 			success
-		} = stream;
-		stream.streamId = createStreamId();
-		success(`StreamID:`, this.streamId);
+		} = socket;
+		socket.socketId = createSocketId();
+		success(`socketId:`, this.socketId);
 		alert(`Creating Shared Keys`);
-		const transmitKey = stream.transmitKey = createSessionKey();
-		const receiveKey = stream.receiveKey = createSessionKey();
-		stream.profile = profile;
-		stream.service = service;
-		stream.ephemeralPublic = omit(profile.ephemeral, ['private']);
+		const transmitKey = socket.transmitKey = createSessionKey();
+		const receiveKey = socket.receiveKey = createSessionKey();
+		socket.profile = profile;
+		socket.service = service;
+		socket.ephemeralPublic = omit(profile.ephemeral, ['private']);
 		if (profile.master) {
-			stream.masterPublic = omit(profile.master, ['private']);
+			socket.masterPublic = omit(profile.master, ['private']);
 		}
 		const {
 			ephemeral: {
@@ -58,26 +58,20 @@ class UDSP {
 		clientSession(receiveKey, transmitKey, publicKey, privateKey, serverPublicKey);
 		alert(`Shared Keys Created`);
 		console.log(receiveKey, transmitKey);
-		require('./status')(stream);
-		require('./configuration')(stream);
-		require('./listening')(stream);
-		stream.server.on('message', stream.onMessage.bind(stream));
-		(async () => {
-			console.log('-------CLIENT INITIALIZED-------\n');
-			console.log('-------CLIENT CONNECTING-------\n');
-			await stream.connect();
-			console.log('-------CLIENT CONNECTED-------\n');
-			const serviceKey = serviceSignature.toString('base64');
-			const profileKey = profileSignature.toString('base64');
-			const connectionKey = `${serviceKey}${profileKey}`;
-			connections[connectionKey] = stream;
-			accept(stream);
-		})();
+		require('./status')(socket);
+		require('./configuration')(socket);
+		require('./listening')(socket);
+		socket.server.on('message', socket.onMessage.bind(socket));
+		const serviceKey = serviceSignature.toString('base64');
+		const profileKey = profileSignature.toString('base64');
+		const connectionKey = `${serviceKey}${profileKey}`;
+		connections[connectionKey] = socket;
+		return socket;
 	}
 	server = require('dgram').createSocket('udp4');
 	requests = new Map();
 	close() {
-		console.log(this, 'Stream closed down.');
+		console.log(this, 'socket closed down.');
 		this.server.close();
 		const {
 			ephemeral: {
@@ -117,28 +111,26 @@ require('./processMessage')(udspPrototype);
 require('./onMessage')(udspPrototype);
 require('./connect/')(udspPrototype);
 function udsp(configuration) {
-	return new Promise((accept) => {
-		return new UDSP(configuration, accept);
-	});
+	return new UDSP(configuration);
 }
 // UNIVERSAL WEB SOCKET
-async function getStream(configuration) {
+function getsocket(configuration) {
 	const serviceKey = configuration.service.ephemeral.signature.toString('base64');
 	const profileKey = configuration.profile.ephemeral.signature.toString('base64');
 	const connectionKey = `${serviceKey}${profileKey}`;
-	const stream = connections[connectionKey];
-	if (stream) {
-		return stream;
+	const socket = connections[connectionKey];
+	if (socket) {
+		return socket;
 	}
 }
-async function uws(configuration) {
-	const stream = await getStream(configuration);
-	if (stream) {
-		return stream;
+function uws(configuration) {
+	const socket = getsocket(configuration);
+	if (socket) {
+		return socket;
 	}
 	return udsp(configuration);
 }
-uws.get = getStream;
+uws.get = getsocket;
 uws.udsp = udsp;
 uws.getCertificate = (location) => {
 	return udspPrototype.certificate.get(location);

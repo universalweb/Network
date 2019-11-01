@@ -1,18 +1,19 @@
-module.exports = async (state, configure) => {
-	state.logImprt('SERVER CONFIGURATION', __dirname);
+module.exports = (server, configure) => {
+	server.logImprt('SERVER CONFIGURATION', __dirname);
 	const {
 		utility: {
 			assign
 		}
-	} = state;
+	} = server;
 	console.log(configure);
 	const {
 		ip,
 		port
-	} = state.profile.ephemeral;
-	state.configuration = assign({
+	} = server.profile.ephemeral;
+	server.configuration = assign({
 		ip,
 		port,
+		id: '0',
 		maxMTU: 1000,
 		encoding: 'utf8',
 		max: 1000

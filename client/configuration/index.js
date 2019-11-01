@@ -1,10 +1,10 @@
-module.exports = (stream) => {
+module.exports = (socket) => {
 	const {
 		ip,
 		port
-	} = stream.service.ephemeral;
-	stream.logImprt('CLIENT CONFIGURATION', __dirname);
-	stream.configuration = {
+	} = socket.service.ephemeral;
+	socket.logImprt('CLIENT CONFIGURATION', __dirname);
+	socket.configuration = {
 		ip,
 		port,
 		maxMTU: 1000,

@@ -1,19 +1,26 @@
 module.exports = async (udspPrototype) => {
 	const {
-		utility: {
-			stringify,
-		},
-		alert,
 		cnsl
 	} = udspPrototype;
-	async function connect() {
-		const stream = this;
-		const result = await stream.request('open', {});
-		alert(stringify(result));
-		if (result[0] && result[0].status === 1) {
-			cnsl('Connected');
-			this.status.code = 1;
+	async function connect(requestBody, requestHead) {
+		console.log('-------CLIENT CONNECTING-------\n');
+		const socket = this;
+		const result = await socket.request('open', requestBody, requestHead);
+		console.log(result);
+		const {
+			body,
+			status,
+			time,
+			scid
+		} = result;
+		if (status === 101 && scid) {
+			cnsl('Connected', body);
+			socket.status.code = 1;
+			socket.serverId = scid;
+			socket.lastPacketTime = Date.now();
+			socket.lastPacketGivenTime = time;
 		}
+		console.log('-------CLIENT CONNECTED-------\n');
 		return result;
 	}
 	udspPrototype.connect = connect;

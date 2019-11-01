@@ -3,17 +3,18 @@ module.exports = (async () => {
 	const client = await require('../client');
 	const service = await client.getCertificate(`${__dirname}/../services/universal.web.cert`);
 	const profile = await client.getCertificate(`${__dirname}/../profiles/default.cert`);
-	const connection = await client.udsp({
+	const universalWebSocket = await client.udsp({
 		service,
 		profile
 	});
-	const {
-		request,
-		logImprt,
-	} = connection;
-	logImprt('Simulation', __dirname);
-	const defaultState = await request('state', {
+	console.log(await universalWebSocket.connect({
+		agent: 'node',
+		entity: 'bot'
+	}));
+	return;
+	universalWebSocket.logImprt('Simulation', __dirname);
+	const defaultState = await universalWebSocket.request('state', {
 		state: '/'
 	});
-	console.log(defaultState[0].data.toString());
+	console.log(defaultState);
 })();

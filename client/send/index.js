@@ -19,48 +19,53 @@ module.exports = (udspPrototype) => {
 		encode
 	} = udspPrototype;
 	logImprt('Send', __dirname);
-	// StreamID, nonce, encrypted message size, flags, packet size.
-	async function send(messageOriginal) {
-		const stream = this;
+	// socketId, nonce, encrypted message size, flags, packet size.
+	async function send(message) {
+		const socket = this;
+		const headers = {};
+		if (message.head) {
+			message.head = encode(message.head);
+		}
+		if (message.body) {
+			message.body = encode(message.body);
+		}
 		const {
 			server,
 			configuration: {
 				ip,
 				port
 			}
-		} = stream;
+		} = socket;
 		cnsl(`Send to server`);
-		if (!messageOriginal && !messageOriginal.length) {
-			return logError('Message is empty and will not be sent.');
-		}
-		const additionalData = {};
-		const stateCode = stream.status.code;
-		console.log(messageOriginal);
-		const messageEncoded = encode(messageOriginal);
+		const socketStatusCode = socket.status.code;
+		console.log(message);
+		const messageEncoded = encode(message);
 		const nonce = nonceBox();
 		success(`Nonce Size: ${nonce.length} ${toBase64(nonce)}`);
-		additionalData.id = stream.streamId;
-		additionalData.nonce = nonce;
-		if (stateCode === 0) {
-			additionalData.cert = stream.ephemeralPublic;
+		headers.id = socket.serverId || socket.socketId;
+		headers.nonce = nonce;
+		if (socketStatusCode === 0) {
+			headers.cert = socket.ephemeralPublic;
+			console.log(`socket Status Code is 0 attaching identity certificate`);
 		}
-		const additionalDataEncoded = encode(additionalData);
-		const additionalDataEndIndex = additionalDataEncoded.length + 3;
-		const additionalDataEndIndexBuffer = buildStringSize(additionalDataEndIndex);
-		console.log(additionalDataEndIndex, additionalData);
-		const additionalDataCompiled = Buffer.concat([additionalDataEndIndexBuffer, additionalDataEncoded]);
-		success(`Additional Data End Index ${additionalDataEndIndex.toString()}`);
-		console.log(stream.transmitKey.toString('base64'));
-		const encryptedMessage = encrypt(messageEncoded, additionalDataEncoded, nonce, stream.transmitKey);
+		console.log('PACKET HEADERS', headers);
+		const headersEncoded = encode(headers);
+		const headersEndIndex = headersEncoded.length + 3;
+		const headersEndIndexBuffer = buildStringSize(headersEndIndex);
+		console.log(headersEndIndex, headers);
+		const headersCompiled = Buffer.concat([headersEndIndexBuffer, headersEncoded]);
+		success(`Additional Data End Index ${headersEndIndex.toString()}`);
+		console.log(socket.transmitKey.toString('base64'));
+		const encryptedMessage = encrypt(messageEncoded, headersEncoded, nonce, socket.transmitKey);
 		if (!encryptedMessage) {
 			return errorLog('Encryption failed');
 		}
 		success(`Encrypted Message Size:${encryptedMessage.length} -> ${toBase64(encryptedMessage)}`);
 		const encryptedLength = encryptedMessage.length;
-		const encryptedDataEndIndex = buildPacketSize(additionalDataEndIndex + 4 + encryptedLength);
+		const encryptedDataEndIndex = buildPacketSize(headersEndIndex + 4 + encryptedLength);
 		success(`Encrypted Data End Index: ${encryptedDataEndIndex.toString()}`);
 		const messageBuffer = Buffer.concat([
-			additionalDataCompiled,
+			headersCompiled,
 			encryptedDataEndIndex,
 			encryptedMessage,
 		]);

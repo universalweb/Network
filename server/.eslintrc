@@ -33,7 +33,6 @@
         "allowMultiplePropertiesPerLine": false,
         "allowAllPropertiesOnSameLine": false
     }],
-    "require-atomic-updates": "off",
     "no-return-await": "error",
     "no-cond-assign": ["error", "always"],
     "no-constant-condition": "error",
@@ -152,6 +151,7 @@
     "block-spacing": ["error", "always"],
     "brace-style": "error",
     "camelcase": "off",
+    "require-atomic-updates": "off",
     "comma-spacing": ["error", {
       "before": false,
       "after": true

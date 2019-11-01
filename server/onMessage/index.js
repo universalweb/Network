@@ -1,42 +1,36 @@
-module.exports = async (state) => {
-	require('./parseMessage')(state);
-	require('./send')(state);
-	require('./emit')(state);
-	await require('./stream')(state);
-	require('./createStreamMessage')(state);
-	require('./processMessage')(state);
+module.exports = (server) => {
 	const {
 		logImprt,
 		success,
-		server,
-		createStreamMessage,
+		server: rawServer,
+		processSocketCreation,
 		processMessage,
 		logReceived,
 		error: logError,
 		decode,
-	} = state;
+	} = server;
 	logImprt('Server onMessage', __dirname);
 	async function onMessage(messageBuffer, connection) {
 		logReceived('Message Received');
-		const additionalDataEndIndex = Number(messageBuffer.slice(0, 3));
-		if (!additionalDataEndIndex) {
-			return logError(`No additionalData size number -> Invalid Packet`);
+		const headersEndIndex = Number(messageBuffer.slice(0, 3));
+		if (!headersEndIndex) {
+			return logError(`No headers size number -> Invalid Packet`);
 		}
-		success(`Additional Data size ${additionalDataEndIndex - 3}`);
-		const additionalDataBuffer = messageBuffer.slice(3, additionalDataEndIndex);
-		const additionalData = decode(additionalDataBuffer);
-		if (!additionalData) {
-			return logError(`No additionalData -> Invalid Packet`);
+		success(`Additional Data size ${headersEndIndex - 3}`);
+		const headersBuffer = messageBuffer.slice(3, headersEndIndex);
+		const headers = decode(headersBuffer);
+		if (!headers) {
+			return logError(`No headers -> Invalid Packet`);
 		}
 		success(`Additional Data`);
-		console.log(additionalData);
-		const packetEndIndex = Number(messageBuffer.slice(additionalDataEndIndex, additionalDataEndIndex + 4));
+		console.log(headers);
+		const packetEndIndex = Number(messageBuffer.slice(headersEndIndex, headersEndIndex + 4));
 		if (!packetEndIndex) {
 			return logError(`No packet size number -> Invalid Packet`);
 		}
 		success(`Packet size ${packetEndIndex}`);
-		console.log(additionalDataEndIndex + 4, packetEndIndex);
-		const packet = messageBuffer.slice(additionalDataEndIndex + 4, packetEndIndex);
+		console.log(headersEndIndex + 4, packetEndIndex);
+		const packet = messageBuffer.slice(headersEndIndex + 4, packetEndIndex);
 		if (!packet) {
 			return logError(`No packet -> Invalid Packet`);
 		}
@@ -44,14 +38,14 @@ module.exports = async (state) => {
 		console.log(packet);
 		const {
 			cert
-		} = additionalData;
+		} = headers;
 		if (cert && cert.key) {
 			success(`Public Key is given -> Processing handshake`);
-			await createStreamMessage(connection, additionalDataBuffer, additionalData, packet);
+			await processSocketCreation(connection, headersBuffer, headers, packet);
 		} else {
 			success(`No Public Key is given`);
-			await processMessage(connection, additionalDataBuffer, additionalData, packet);
+			await processMessage(connection, headersBuffer, headers, packet);
 		}
 	}
-	server.on('message', onMessage);
+	rawServer.on('message', onMessage);
 };

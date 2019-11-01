@@ -1,17 +1,17 @@
 const {
 	promise
 } = require('Lucy');
-module.exports = async (state) => {
+module.exports = async (server) => {
 	const {
-		server,
+		server: rawServer,
 		configuration: {
 			port,
 			ip,
 		}
-	} = state;
-	state.logImprt(`BIND SERVER`, __dirname);
+	} = server;
+	server.logImprt(`BIND SERVER`, __dirname);
 	await promise((accept) => {
-		server.bind(port, ip, accept);
-		state.alert(`SERVER BOUND: IP:${ip}  -  PORT:${port}`);
+		rawServer.bind(port, ip, accept);
+		server.alert(`SERVER BOUND: IP:${ip}  -  PORT:${port}`);
 	});
 };

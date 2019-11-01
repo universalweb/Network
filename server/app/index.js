@@ -1,4 +1,4 @@
-module.exports = (state) => {
+module.exports = (server) => {
 	const path = require('path');
 	const {
 		logImprt,
@@ -12,81 +12,90 @@ module.exports = (state) => {
 			isString,
 		},
 		configuration: {
-			resourceDirectory
+			resourceDirectory,
+			cacheMaxAge,
+			allowOrigin,
+			contentSecurityPolicy,
+			serverName,
+			encoding,
+			language,
+			onConnectMessage
 		},
 		crypto: {
-			toBase64
+			toBase64,
 		},
 		file: {
 			read
 		}
-	} = state;
+	} = server;
 	logImprt('APP', __dirname);
 	const isValid = require('is-valid-path');
 	const api = {
-		async open(stream, body, json) {
-			cnsl(`
-      JSON:  ${stringify(json)}
-      BODY:  ${stringify(body)}
-      SID:${stream.id}`);
-			return {
-				status: 1,
-				date: Date.now()
-			};
+		async open(socket, request, response) {
+			cnsl(request);
+			response.head = {};
+			if (cacheMaxAge) {
+				response.head.cacheMaxAge = cacheMaxAge;
+			}
+			if (allowOrigin) {
+				response.head.allowOrigin = allowOrigin;
+			}
+			if (contentSecurityPolicy) {
+				response.head.contentSecurityPolicy = contentSecurityPolicy;
+			}
+			if (serverName) {
+				response.head.server = serverName;
+			}
+			if (encoding) {
+				response.head.encoding = encoding;
+			}
+			if (language) {
+				response.head.language = language;
+			}
+			if (onConnectMessage) {
+				response.body = onConnectMessage;
+			}
+			response.status = 101;
+			response.scid = socket.serverIdRaw;
+			return true;
 		},
-		async reKey(stream, body) {
+		async reKey(socket, body) {
 			cnsl(`${toBase64(body.certificate.key)}`);
-			stream.reKey(body.certificate);
+			socket.reKey(body.certificate);
 		},
-		async file(stream, body, json) {
-			cnsl(`
-      JSON:  ${stringify(json)}
-      BODY:  ${stringify(body)}
-      SID:${stream.id}`);
+		async file(socket, request, responseBody, responseHeaders) {
+			cnsl(request);
 			const {
 				path: location
-			} = body;
+			} = request.body;
 			if (!isString(location) || !location.length || !isValid(location)) {
 				console.log('No valid state request recieved - Returning empty data');
-				return stream.send({
-					api: json.api,
-					rid: json.rid,
-					error: 404
-				});
+				responseHeaders.status = 404;
+				return true;
 			}
 			const cleanedPath = cleanPath(`${resourceDirectory}/${location}`);
 			const ext = path.extname(cleanedPath);
 			console.log(`EXT => ${ext}`);
-			return {
-				data: {
-					file: await read(cleanedPath)
-				}
-			};
+			responseHeaders.file = await read(cleanedPath);
+			return true;
 		},
-		async state(stream, body, json) {
-			cnsl(`
-      JSON:  ${stringify(json)}
-      BODY:  ${stringify(body)}
-      SID:${stream.id}`);
+		async state(socket, request, responseBody, responseHeaders) {
+			cnsl(request);
 			const {
 				state: fileName
-			} = body;
+			} = request.body;
 			if (!isString(fileName) || !isValid(fileName)) {
 				console.log('No valid state request recieved - Returning empty data');
-				return stream.send({
-					api: json.api,
-					rid: json.rid,
-					error: 404
-				});
+				responseHeaders.status = 404;
+				return true;
 			}
 			const cleanedPath = (fileName) ? cleanPath(`${resourceDirectory}/states/${fileName}/index.js`) : cleanPath(`${resourceDirectory}/states/index.js`);
 			const file = await read(cleanedPath);
 			console.log(cleanedPath, file);
-			return {
-				data: file
-			};
+			responseHeaders.data = file;
+			return true;
 		},
 	};
-	assign(state.app, api);
+	assign(server.app, api);
 	alert(`LOADED PUBLIC API: COUNT: ${keys(api).length} ||| ${keys(api).join(' , ')}`);
 };

@@ -6,7 +6,7 @@ module.exports = (state) => {
 	} = state;
 	function onListening() {
 		const connection = server.address();
-		alert(`Universal Data Stream Protocol Listening`, connection);
+		alert(`Universal Web Client Server Listening`, connection);
 	}
 	server.on('listening', onListening);
 };

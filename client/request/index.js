@@ -11,24 +11,27 @@ module.exports = (udspPrototype) => {
 		},
 	} = udspPrototype;
 	logImprt('Request', __dirname);
-	async function request(api, body) {
-		const stream = this;
+	async function request(api, body = null, head = {}) {
+		const socket = this;
 		const {
 			requests
-		} = stream;
+		} = socket;
 		cnsl(`Requested ${api}`);
-		const rid = uid();
-		const message = {
+		const sid = uid();
+		await socket.send({
+			body,
+			head,
 			api,
+			sid,
 			t: Date.now(),
-			rid,
-			body
-		};
-		await stream.send(message);
+		});
 		return promise((accept) => {
-			requests.set(rid, (bodyResponse, json, streamID) => {
-				accept([bodyResponse, json, streamID]);
-				free(rid);
+			requests.set(sid, (response, headers) => {
+				accept({
+					response,
+					headers,
+				});
+				free(sid);
 			});
 		});
 	}

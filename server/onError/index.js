@@ -1,10 +1,10 @@
-module.exports = async (state) => {
-	state.logImprt('Server onError', __dirname);
+module.exports = (server) => {
+	server.logImprt('Server onError', __dirname);
 	const {
-		server
-	} = state;
+		server: rawServer,
+	} = server;
 	async function onError(error) {
 		console.log(`server error:\n${error.stack}`);
 	}
-	server.on('error', onError);
+	rawServer.on('error', onError);
 };

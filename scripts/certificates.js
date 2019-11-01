@@ -20,7 +20,7 @@
 		  ephemeral: {
 				version: 1,
 				ip: '127.0.0.1',
-				port: '36',
+				port: 443,
 				host: 'universal.web',
 				locality: {
 					state: 'NJ',
@@ -51,7 +51,7 @@
 		  ephemeral: {
 				version: 1,
 				ip: '127.0.0.1',
-				port: '36',
+				port: 443,
 				host: 'main.dis',
 				locality: {
 					state: 'NJ',

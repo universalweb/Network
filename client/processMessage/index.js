@@ -9,36 +9,39 @@ module.exports = (udspPrototype) => {
 		},
 	} = udspPrototype;
 	logImprt('ON PUBLIC MESSAGE', __dirname);
-	async function processMessage(json, puzzleFlag, packet, connection) {
-		const stream = this;
+	async function processMessage(response, headers) {
+		const socket = this;
 		const {
 			requests,
-		} = stream;
-		const streamID = stream.streamId;
-		const body = json.body;
-		const requestError = json.error;
-		if (body || requestError) {
-			const rid = json.rid;
-			if (hasValue(rid)) {
-				cnsl(`RequestID: ${rid} ${stringify(json)}`);
-				const method = requests.get(rid);
-				if (method) {
-					const responseBody = await method(body, json, streamID);
-					if (responseBody) {
-						stream.send({
-							rid,
-							body: responseBody
-						}, connection);
-					}
-				} else {
-					return logError(`Invalid request ID given. ${stringify(json)}`);
-				}
-			} else if (json.watcher) {
-				console.log('WATCHER', json);
+		} = socket;
+		const {
+			status,
+			sid,
+		} = response;
+		console.log(`STATUS CODE: ${status}`);
+		if (response) {
+			if (response.status === 580) {
+				socket.close();
+				return logError(`End event sent disconnected socket`);
 			}
-		} else if (json.end) {
-			stream.close();
-			return logError(`End event sent disconnected stream`);
+			if (!response.status || response.status === 200 || response.status === true) {
+				if (hasValue(sid)) {
+					cnsl(`RequestID: ${sid} ${stringify(response)}`);
+					const method = requests.get(sid);
+					if (method) {
+						const responseBody = await method(response, headers);
+						if (responseBody) {
+							socket.send(responseBody, {
+								sid
+							});
+						}
+					} else {
+						return logError(`Invalid Stream Id given. ${stringify(response)}`);
+					}
+				} else if (response.watcher) {
+					console.log('WATCHER', response);
+				}
+			}
 		}
 	}
 	udspPrototype.processMessage = processMessage;
