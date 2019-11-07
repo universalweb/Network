@@ -21,8 +21,8 @@
     "unreleased": true,
     "commitLimit": false
   },
-  "author": "ARITY",
-  "company": "ARITY",
+  "author": "Sentivate",
+  "company": "Sentivate",
   "dependencies": {
     "@babel/helpers": "^7.6.2",
     "Lucy": "^2.2.3",
