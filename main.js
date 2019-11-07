@@ -41,7 +41,7 @@
 		console.log(`${title}\n${content}`);
 	};
 	if (process.mas) {
-		app.setName('Universal Web Browser by Arity');
+		app.setName('Universal Web Browser');
 	}
 	let mainWindow = null;
 	function initialize() {
