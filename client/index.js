@@ -135,4 +135,11 @@ uws.udsp = udsp;
 uws.getCertificate = (location) => {
 	return udspPrototype.certificate.get(location);
 };
+assign(uws, {
+	get utility() {
+		return utility;
+	},
+	encode,
+	decode,
+});
 module.exports = uws;

@@ -63,36 +63,44 @@ module.exports = (server) => {
 			cnsl(`${toBase64(body.certificate.key)}`);
 			socket.reKey(body.certificate);
 		},
-		async file(socket, request, responseBody, responseHeaders) {
+		async file(socket, request, response) {
 			cnsl(request);
 			const {
 				path: location
 			} = request.body;
+			response.head = {};
 			if (!isString(location) || !location.length || !isValid(location)) {
 				console.log('No valid state request recieved - Returning empty data');
-				responseHeaders.status = 404;
+				response.head.status = 404;
 				return true;
 			}
 			const cleanedPath = cleanPath(`${resourceDirectory}/${location}`);
+			const data = await read(cleanedPath);
 			const ext = path.extname(cleanedPath);
 			console.log(`EXT => ${ext}`);
-			responseHeaders.file = await read(cleanedPath);
+			response.body = {
+				ext,
+				data
+			};
 			return true;
 		},
-		async state(socket, request, responseBody, responseHeaders) {
+		async state(socket, request, response) {
 			cnsl(request);
 			const {
 				state: fileName
 			} = request.body;
+			response.head = {};
 			if (!isString(fileName) || !isValid(fileName)) {
 				console.log('No valid state request recieved - Returning empty data');
-				responseHeaders.status = 404;
+				response.head.status = 404;
 				return true;
 			}
 			const cleanedPath = (fileName) ? cleanPath(`${resourceDirectory}/states/${fileName}/index.js`) : cleanPath(`${resourceDirectory}/states/index.js`);
-			const file = await read(cleanedPath);
-			console.log(cleanedPath, file);
-			responseHeaders.data = file;
+			const data = await read(cleanedPath);
+			console.log(cleanedPath, data);
+			response.body = {
+				data
+			};
 			return true;
 		},
 	};

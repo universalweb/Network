@@ -12,7 +12,7 @@ module.exports = async (udspPrototype) => {
 			status,
 			time,
 			scid
-		} = result;
+		} = result.response;
 		if (status === 101 && scid) {
 			cnsl('Connected', body);
 			socket.status.code = 1;

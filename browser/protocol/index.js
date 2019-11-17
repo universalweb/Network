@@ -1,4 +1,4 @@
-module.exports = async (state) => {
+module.exports = async (browserState) => {
 	const {
 		PassThrough
 	} = require('stream');
@@ -9,8 +9,8 @@ module.exports = async (state) => {
 		file: {
 			read
 		}
-	} = state;
-	await require('./local')(state);
+	} = browserState;
+	await require('./local')(browserState);
 	const uws = await require('../../client');
 	const service = await uws.getCertificate(`${__dirname}/../../services/universal.web.cert`);
 	const profile = await uws.getCertificate(`${__dirname}/../../profiles/default.cert`);
@@ -36,36 +36,48 @@ module.exports = async (state) => {
 					headers: {
 						'content-type': 'text/html'
 					},
-					data: createStream('THIS IS A TEXT')
+					data: createStream('')
 				});
 			}
 			const fileRequest = await clientCache.request('file', {
 				url,
 				path: locationState
 			});
-			if (fileRequest[1].error) {
+			const errorHeaders = fileRequest.headers && fileRequest.headers.error;
+			if (errorHeaders) {
 				return callback({
 					statusCode: 404,
 					data: createStream('')
 				});
 			}
-			requestData = fileRequest[0].data.toString();
+			const content = fileRequest.response.body.data.toString();
+			console.log(content);
+			requestData = content;
 		} else {
 			const freshConnection = await uws({
 				service,
 				profile
 			});
+			const connected = await freshConnection.connect({
+				agent: 'node',
+				entity: 'bot'
+			});
+			console.log('Connected', connected);
+			console.log('INTRO =>', connected.response.body);
 			console.log(freshConnection);
-			const defaultState = await freshConnection.request('state', {
+			const state = await freshConnection.request('state', {
 				state: locationState
 			});
-			if (defaultState[0].error) {
+			const errorHeaders = state.headers && state.headers.error;
+			if (errorHeaders) {
 				return callback({
 					statusCode: 404,
 					data: createStream('')
 				});
 			}
-			requestData = `${indexFile}<script type="text/javascript">${defaultState[0].data.toString()}</script>`;
+			const content = state.response.body.data.toString();
+			console.log(content);
+			requestData = `${indexFile}<script type="text/javascript">${content}</script>`;
 		}
 		return callback({
 			statusCode: 200,

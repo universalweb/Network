@@ -47,14 +47,14 @@ module.exports = (udspPrototype) => {
 		}
 		const message = decode(decrypted);
 		console.log(message);
-		if (message.status === 200) {
+		if (message) {
 			if (message.head) {
 				message.head = decode(message.head);
 			}
 			if (message.body) {
 				message.body = decode(message.body);
 			}
-			socket.processMessage(message, headers, connection);
+			socket.processMessage(message, headers);
 		}
 	}
 	udspPrototype.onMessage = onMessage;
