@@ -6,7 +6,7 @@
 	}
 	const path = require('path');
 	const universalWebSocket = require('./browser/protocol/');
-	const state =	{
+	const state = {
 		electron: require('electron'),
 	};
 	require('./state')('browser', {
@@ -20,28 +20,91 @@
 			BrowserWindow
 		}
 	} = state;
-	protocol.registerSchemesAsPrivileged([
-		{
-			scheme: 'uw',
-			privileges: {
-				standard: true,
-				secure: true
-			}
-		},
-		{
-			scheme: 'local',
-			privileges: {
-				standard: true,
-				secure: true
-			}
+	protocol.registerSchemesAsPrivileged([{
+		scheme: 'uw',
+		privileges: {
+			standard: true,
+			secure: true
 		}
+	},
+	{
+		scheme: 'local',
+		privileges: {
+			standard: true,
+			secure: true
+		}
+	},
+	{
+		scheme: 'eth',
+		privileges: {
+			standard: true,
+			secure: true
+		}
+	},
+	{
+		scheme: 'btc',
+		privileges: {
+			standard: true,
+			secure: true
+		}
+	},
+	{
+		scheme: 'bch',
+		privileges: {
+			standard: true,
+			secure: true
+		}
+	},
+	{
+		scheme: 'bsv',
+		privileges: {
+			standard: true,
+			secure: true
+		}
+	},
+	{
+		scheme: 'ltc',
+		privileges: {
+			standard: true,
+			secure: true
+		}
+	},
+	{
+		scheme: 'bnb',
+		privileges: {
+			standard: true,
+			secure: true
+		}
+	},
+	{
+		scheme: 'eos',
+		privileges: {
+			standard: true,
+			secure: true
+		}
+	},
+	{
+		scheme: 'sntvt',
+		privileges: {
+			standard: true,
+			secure: true
+		}
+	}
 	]);
 	const dialog = electron.dialog;
 	dialog.showErrorBox = function(title, content) {
 		console.log(`${title}\n${content}`);
 	};
+	if (process.platform === 'darwin') {
+		console.log('MAC BUILD');
+	} else if (process.platform === 'linux') {
+		console.log('Linux BUILD');
+	} else if (process.platform === 'win32') {
+		console.log('Windows BUILD');
+	}
 	if (process.mas) {
 		app.setName('Universal Web Browser');
+		console.log('MAC OSX STORE BUILD');
 	}
 	let mainWindow = null;
 	function initialize() {
@@ -62,10 +125,10 @@
 				width: 1500,
 				minWidth: 500,
 				height: 900,
-				title: app.getName(),
+				title: app.name,
 				webPreferences: {
 					webviewTag: true,
-					nodeIntegration: false
+					nodeIntegration: true
 				},
 			};
 			mainWindow = new BrowserWindow(windowOptions);

@@ -22,6 +22,7 @@ module.exports = async (configure) => {
 			require('./api')(server);
 			await require('./app')(server);
 			require('./parseMessage')(server);
+			require('./chunkMessage')(server);
 			require('./send')(server);
 			require('./emit')(server);
 			require('./socket')(server);

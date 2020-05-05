@@ -1,7 +1,9 @@
 (async () => {
-	const state = require('../../state/')('Component Library Compiler');
+	const state = require('../../state/')('Universal Web App Environment Compiler');
 	const rollup = require('rollup').rollup;
-	const babel = require('rollup-plugin-babel-minify');
+	const {
+		terser: minify
+	} = require('rollup-plugin-terser');
 	const watch = require('node-watch');
 	const path = require('path');
 	const {
@@ -26,10 +28,7 @@
 		const production = await rollup({
 			input: `${__dirname}/source/index.js`,
 			plugins: [
-				babel({
-					banner: `/* COMPONENTS by ARITY - PROJECT UNIVERSAL WEB */`,
-					comments: false,
-				})
+				minify()
 			]
 		});
 		await production.write({

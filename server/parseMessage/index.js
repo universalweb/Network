@@ -1,4 +1,4 @@
-module.exports = async (server) => {
+module.exports = (server) => {
 	const {
 		logImprt,
 		decode,

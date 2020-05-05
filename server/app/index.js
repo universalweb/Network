@@ -5,7 +5,6 @@ module.exports = (server) => {
 		cnsl,
 		alert,
 		utility: {
-			stringify,
 			keys,
 			assign,
 			cleanPath,

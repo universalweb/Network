@@ -1,79 +1,65 @@
-html, body, div, span, applet, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-a, abbr, acronym, address, big, cite, code,
-del, dfn, em, img, ins, kbd, q, s, samp,
-small, strike, strong, sub, sup, tt, var,
-b, u, i, center,
-dl, dt, dd, ol, ul, li,
-fieldset, form, label, legend,
-table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed,
-figure, figcaption, footer, header, hgroup,
-menu, nav, output, ruby, section, summary,
-time, mark, audio, video {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  font-size: 100%;
-  font: inherit;
-  vertical-align: baseline;
-  font-family: Fira Code;
-  transition: all 0.5s ease;
-}
-
-/* HTML5 display-role reset for older browsers */
-article, aside, details, figcaption, figure,
-footer, header, hgroup, menu, nav, section {
-  display: block;
-}
-
+html,
 body {
-  line-height: 1;
-}
-
-ol, ul {
-  list-style: none;
-}
-
-blockquote, q {
-  quotes: none;
-}
-
-blockquote:before, blockquote:after,
-q:before, q:after {
-  content: '';
-  content: none;
-}
-
-table {
-  border-collapse: collapse;
-  border-spacing: 0;
+  font-family: "Fira Sans", sans-serif;
 }
 
 .browserControls {
+  border-bottom: 1px rgba(0, 0, 0, 0.1) solid;
+}
+
+.browserControls,
+.browserControls .uk-navbar-item,
+.browserControls .uk-navbar-nav,
+.browserControls .uk-input {
   height: 50px;
+  min-eight: 50px;
+}
+
+.browserControls .uk-input {
+  border-bottom: 0px;
+  border-right: 0px;
+  border-top: 0px;
+}
+
+.browserControls .uk-navbar-nav a .uk-icon {
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.browserControls .uk-navbar-nav a:hover .uk-icon {
+  background-color: rgba(0, 0, 0, 0.07);
+}
+
+.browserControls .uk-navbar-nav > li > a {
+  min-height: 50px;
 }
 
 .right {
   float: right;
 }
 
-iframe, webview {
+iframe,
+webview {
   left: 0px;
   position: absolute;
   width: 100%;
-  height: calc(100% - 50px);
-  top: 50px;
+  height: calc(100% - 51px);
+  top: 51px;
 }
 
-.browserControls .input-field {
+.browserControls .urlbar {
   margin-top: 0px;
   margin-bottom: 0px;
+  background-color: #1d1c21;
+  color: #fff;
+  text-shadow: 0 1px 0 #000;
+  border: none;
+  box-shadow: inset 0 -1px 1px rgba(255, 255, 255, 0.1);
 }
 .browserControls .col.s12 {
   padding: 0px;
 }
-.browserControls .col.s12 input{
+.browserControls .col.s12 input {
   padding-left: 20px;
   max-width: calc(100% - 20px);
 }

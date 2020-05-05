@@ -1,40 +1,73 @@
 (async () => {
-	const ract = globalThis.Ractive;
-	const response = await fetch('./browser/resources/html/template/browser.html');
-	const template = await response.text();
-	const ractive = ract({
+	const config = require('./config');
+	const ractive = globalThis.Ractive;
+	const torrent = require('./browser/torrent/');
+	const {
+		readFileSync
+	} = require('fs');
+	const template = readFileSync('./browser/resources/html/template/browser.html').toString();
+	function onrender() {
+		const webview = document.querySelector('webview');
+		const that = this;
+		webview.addEventListener('did-stop-loading', async (e) => {
+			const src = webview.src;
+			console.log(src, e);
+			await that.set('newURL', src);
+			await that.set('url', src);
+		});
+	}
+	const mainComponent = ractive({
 		target: 'body',
 		template,
 		data: {
-			newURL: 'uw://localhost',
-			url: 'uw://localhost',
+			newURL: config.homepage,
+			url: config.homepage,
 			load: true
-		}
+		},
+		onrender
 	});
-	window.view = ractive;
-	ractive.on({
+	window.view = mainComponent;
+	mainComponent.on({
 		async loadURL() {
-			const url = ractive.get('newURL');
-			await ractive.set('url', url);
-			await ractive.set('load', true);
+			const url = mainComponent.get('newURL');
+			await mainComponent.set('url', url);
+			await mainComponent.set('load', true);
 			console.log('LOADING URL');
 			console.log(`URL: ${url}`);
-			setTimeout(() => {
-				document.querySelector('webview').openDevTools();
-			}, 500);
+			if (config.devMode) {
+				setTimeout(() => {
+					document.querySelector('webview').openDevTools();
+				}, 500);
+			}
 		},
-		async refreshURL() {
+		async refresh() {
 			document.querySelector('webview').reload();
 		},
-		keyup(componentEvent) {
+		async forward() {
+			document.querySelector('webview').goForward();
+		},
+		async backward() {
+			document.querySelector('webview').goBack();
+		},
+		async home() {
+			await this.set('newURL', 'https://social.sentivate.com');
+			await this.fire('loadURL');
+		},
+		urlbar(componentEvent) {
 			if (componentEvent.original.keyCode === 13) {
-				ractive.fire('loadURL');
+				this.fire('loadURL');
 				console.log(componentEvent);
 			}
 		}
 	});
-	setTimeout(() => {
-		document.querySelector('webview').openDevTools();
-	}, 500);
-	console.log('MainBrowser Componenet', ractive);
+	mainComponent.observe('url', async (newValue) => {
+		await mainComponent.set('newURL', newValue);
+	});
+	torrent.events(mainComponent);
+	if (config.devMode) {
+		setTimeout(() => {
+			document.querySelector('webview').openDevTools();
+		}, 500);
+	}
+	console.log('MainBrowser Component', ractive);
 })();

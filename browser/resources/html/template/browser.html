@@ -1,11 +1,42 @@
-<nav class="uk-navbar-container uk-margin" uk-navbar>
-  <div class="uk-navbar-left uk-width-1-1">
-        <div class="uk-inline uk-width-1-1">
-          <a class="uk-form-icon" href="#" uk-icon="icon: world"></a>
-          <input value="{{newURL}}" on-keyup="keyup" class="uk-input" type="text" placeholder="url">
-        </div>
-    </div>
+<nav class="uk-navbar-container uk-margin browserControls" uk-navbar>
+  <ul class="uk-navbar-nav">
+    <li>
+      <a href="#"
+        ><span
+          class="uk-icon"
+          uk-icon="icon:  chevron-left"
+          on-click="backward"
+        ></span
+      ></a>
+    </li>
+    <li>
+      <a href="#"
+        ><span
+          class="uk-icon"
+          uk-icon="icon:  chevron-right"
+          on-click="forward"
+        ></span
+      ></a>
+    </li>
+    <li>
+      <a href="#">
+        <span class="uk-icon" uk-icon="icon: refresh" on-click="refresh"></span>
+      </a>
+    </li>
+    <li>
+      <a href="#">
+        <span class="uk-icon" uk-icon="icon: home" on-click="home"></span>
+      </a>
+    </li>
+  </ul>
+  <input
+    class="uk-input uk-width-expand"
+    type="text"
+    placeholder="Website URL"
+    value="{{newURL}}"
+    on-keyup="urlbar"
+  />
 </nav>
 {{#if load}}
-  <webview src="{{url}}" disablewebsecurity plugins useragent="Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko"></webview>
-{{/if}}
+<webview src="{{url}}" disablewebsecurity plugins></webview>
+{{/if}} {{#if torrentMode}} {{/if}}
