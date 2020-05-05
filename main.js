@@ -5,6 +5,7 @@
 		});
 	}
 	const path = require('path');
+	const config = require('./config');
 	const universalWebSocket = require('./browser/protocol/');
 	const state = {
 		electron: require('electron'),
@@ -136,7 +137,9 @@
 			mainWindow.on('closed', () => {
 				mainWindow = null;
 			});
-			mainWindow.webContents.openDevTools();
+			if (config.mainDev) {
+				mainWindow.webContents.openDevTools();
+			}
 		}
 		app.on('ready', async () => {
 			await universalWebSocket(state);

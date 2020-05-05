@@ -1,22 +1,10 @@
 <nav class="uk-navbar-container uk-margin browserControls" uk-navbar>
   <ul class="uk-navbar-nav">
     <li>
-      <a href="#"
-        ><span
-          class="uk-icon"
-          uk-icon="icon:  chevron-left"
-          on-click="backward"
-        ></span
-      ></a>
+      <a href="#"><span class="uk-icon" uk-icon="icon:  chevron-left" on-click="backward"></span></a>
     </li>
     <li>
-      <a href="#"
-        ><span
-          class="uk-icon"
-          uk-icon="icon:  chevron-right"
-          on-click="forward"
-        ></span
-      ></a>
+      <a href="#"><span class="uk-icon" uk-icon="icon:  chevron-right" on-click="forward"></span></a>
     </li>
     <li>
       <a href="#">
@@ -29,14 +17,29 @@
       </a>
     </li>
   </ul>
-  <input
-    class="uk-input uk-width-expand"
-    type="text"
-    placeholder="Website URL"
-    value="{{newURL}}"
-    on-keyup="urlbar"
-  />
+  <input class="uk-input uk-width-expand" type="text" placeholder="Website URL" value="{{newURL}}" on-keyup="urlbar" />
+  <ul class="uk-navbar-nav">
+    <li>
+      <a href="#modal-torrent" uk-toggle><span class="uk-icon" uk-icon="icon:  download"></span></a>
+    </li>
+  </ul>
 </nav>
 {{#if load}}
-<webview src="{{url}}" disablewebsecurity plugins></webview>
-{{/if}} {{#if torrentMode}} {{/if}}
+  <webview src="{{url}}" disablewebsecurity plugins></webview>
+{{/if}}
+<div id="modal-torrent" class="uk-modal-full" uk-modal>
+  <div class="uk-modal-dialog">
+    <button class="uk-modal-close-full uk-close-large" type="button" uk-close></button>
+    <div class="uk-modal-header">
+      <h2 class="uk-modal-title">{{torrent.title}}</h2>
+    </div>
+    <div class="uk-modal-body">
+      <div class="uk-margin">
+        <input value="{{torrent.magnet}}" class="uk-input" type="text" placeholder="Paste magnet link then hit enter"
+          on-keyup="magnetStream">
+      </div>
+      <hr class="uk-divider-icon">
+      <div id="torrentView"></div>
+    </div>
+  </div>
+</div>

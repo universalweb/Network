@@ -70,6 +70,18 @@ const methods = {
 	get ratio() {
 		return client.ratio;
 	},
+	streamPlay(torrentId, domSelector) {
+		return promise((accept) => {
+			client.add(torrentId, (torrent) => {
+				const streamFile = torrent.files.find((file) => {
+					const extCheck = file.name.endsWith('.mp4') || file.name.endsWith('.mkv') || file.name.endsWith('.m4v');
+					return extCheck && !file.name.includes('sample');
+				});
+				streamFile.appendTo(domSelector);
+				accept(torrent);
+			});
+		});
+	},
 	events,
 };
 module.exports = methods;

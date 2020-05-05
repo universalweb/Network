@@ -31,6 +31,7 @@
     "babel-eslint": "*",
     "chalk": "^4.0.0",
     "eslint": "*",
+    "figlet": "^1.4.0",
     "is-valid-path": "*",
     "node-appletv": "^1.1.0",
     "node-watch": "^0.6.4",
