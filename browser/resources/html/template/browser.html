@@ -20,12 +20,15 @@
   <input class="uk-input uk-width-expand" type="text" placeholder="Website URL" value="{{newURL}}" on-keyup="urlbar" />
   <ul class="uk-navbar-nav">
     <li>
-      <a href="#modal-torrent" uk-toggle><span class="uk-icon" uk-icon="icon:  download"></span></a>
+      <a href="#modal-torrent" uk-toggle><span class="uk-icon" uk-icon="icon: fa-solid-magnet"></span></a>
+    </li>
+    <li>
+      <a href="#modal-settings" uk-toggle><span class="uk-icon" uk-icon="icon: settings"></span></a>
     </li>
   </ul>
 </nav>
 {{#if load}}
-  <webview src="{{url}}" disablewebsecurity plugins></webview>
+  <webview src="{{url}}" id="webviewMain" plugins></webview>
 {{/if}}
 <div id="modal-torrent" class="uk-modal-full" uk-modal>
   <div class="uk-modal-dialog">
@@ -40,6 +43,36 @@
       </div>
       <hr class="uk-divider-icon">
       <div id="torrentView"></div>
+    </div>
+  </div>
+</div>
+<div id="modal-settings" class="uk-modal-full" uk-modal>
+  <div class="uk-modal-dialog">
+    <button class="uk-modal-close-full uk-close-large" type="button" uk-close></button>
+    <div class="uk-modal-header">
+      <h2 class="uk-modal-title">SETTINGS</h2>
+    </div>
+    <div class="uk-modal-body">
+      <div uk-grid>
+        <div class="uk-width-auto">
+
+          <ul class="uk-nav uk-nav-default" uk-switcher="connect: #component-nav; animation: uk-animation-fade">
+            <li><a href="#">Main</a></li>
+            <li><a href="#">Development</a></li>
+            <li><a href="#">Torrent</a></li>
+          </ul>
+
+        </div>
+        <div class="uk-width-expand">
+
+          <div id="component-nav" class="uk-switcher">
+            <div>MAIN SETTINGS</div>
+            <div>DEBUG</div>
+            <div>TORRENT</div>
+          </div>
+
+        </div>
+      </div>
     </div>
   </div>
 </div>

@@ -1,0 +1,11 @@
+{
+	"mainDev": true,
+	"browser": {
+		"homepage": "abount:blank",
+		"devMode": false,
+		"bookmarks": []
+	},
+	"torrent": {
+		"downloadDirectory": false
+	}
+}

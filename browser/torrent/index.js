@@ -18,6 +18,18 @@ async function seed(input, options = {}) {
 		client.seed(input, options, accept);
 	});
 }
+async function streamPlay(torrentId, domSelector) {
+	return promise((accept) => {
+		client.add(torrentId, (torrent) => {
+			const streamFile = torrent.files.find((file) => {
+				const extCheck = file.name.endsWith('.mp4') || file.name.endsWith('.mkv') || file.name.endsWith('.m4v');
+				return extCheck && !file.name.includes('sample');
+			});
+			streamFile.appendTo(domSelector);
+			accept(torrent);
+		});
+	});
+}
 async function events(component) {
 	component.on({
 		async torrentStart(a, b, c) {
@@ -43,6 +55,13 @@ async function events(component) {
 		},
 		async torrentSeed(input) {
 			await seed(input);
+		},
+		magnetStream(componentEvent) {
+			if (componentEvent.original.keyCode === 13) {
+				const magnet = this.get('torrent.magnet');
+				streamPlay(magnet, '#torrentView');
+				console.log(magnet, componentEvent);
+			}
 		}
 	});
 	return component;
@@ -71,16 +90,7 @@ const methods = {
 		return client.ratio;
 	},
 	streamPlay(torrentId, domSelector) {
-		return promise((accept) => {
-			client.add(torrentId, (torrent) => {
-				const streamFile = torrent.files.find((file) => {
-					const extCheck = file.name.endsWith('.mp4') || file.name.endsWith('.mkv') || file.name.endsWith('.m4v');
-					return extCheck && !file.name.includes('sample');
-				});
-				streamFile.appendTo(domSelector);
-				accept(torrent);
-			});
-		});
+		return streamPlay(torrentId, domSelector);
 	},
 	events,
 };

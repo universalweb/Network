@@ -1,31 +1,34 @@
 module.exports = (state) => {
-	state.logImprt('FILE', __dirname);
+	if (state && state.logImprt) {
+		state.logImprt('FILE', __dirname);
+	}
 	const {
 		writeFile,
-		readFile
+		readFile,
+		readFileSync
 	} = require('fs');
 	const {
-		utility: {
-			promise
-		},
-		success
-	} = state;
+		promise,
+		jsonParse
+	} = require('Lucy');
+	const {
+		normalize
+	} = require('path');
 	const operations = {
-		write(fileName, contents, encode) {
+		write(filePath, contents, encode) {
 			return promise((accept, reject) => {
-				writeFile(fileName, contents, encode, (error) => {
+				writeFile(normalize(filePath), contents, encode, (error) => {
 					if (error) {
 						reject(error);
 					} else {
-						success('SAVED', fileName);
 						accept();
 					}
 				});
 			});
 		},
-		read(fileName, encode) {
+		read(filePath, encode) {
 			return promise((accept, reject) => {
-				readFile(fileName, encode, (error, contents) => {
+				readFile(normalize(filePath), encode, (error, contents) => {
 					if (error) {
 						reject(error);
 					} else {
@@ -41,8 +44,14 @@ module.exports = (state) => {
 					file = config.prepend + file;
 				}
 			}
-			await operations.write(destination, file);
+			await operations.write(normalize(destination), file);
+		},
+		readJson(filePath) {
+			return jsonParse(readFileSync(normalize(filePath)));
 		}
 	};
-	state.file = operations;
+	if (state) {
+		state.file = operations;
+	}
+	return operations;
 };
