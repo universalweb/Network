@@ -47,7 +47,7 @@ module.exports = (state) => {
 			await operations.write(normalize(destination), file);
 		},
 		readJson(filePath) {
-			return jsonParse(readFileSync(normalize(filePath)));
+			return jsonParse(readFileSync(filePath));
 		}
 	};
 	if (state) {

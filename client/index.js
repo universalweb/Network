@@ -7,7 +7,7 @@
 const {
 	encode,
 	decode
-} = require('what-the-pack').initialize(2 ** 30);
+} = require('msgpackr');
 const utility = require('Lucy');
 const connections = {};
 const {

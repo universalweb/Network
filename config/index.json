@@ -2,7 +2,7 @@
 	"mainDev": true,
 	"browser": {
 		"homepage": "abount:blank",
-		"devMode": false,
+		"devMode": true,
 		"bookmarks": []
 	},
 	"torrent": {

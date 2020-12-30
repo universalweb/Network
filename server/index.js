@@ -6,9 +6,7 @@ module.exports = async (configure) => {
 	const server = {
 		async initialize(serverConfiguration) {
 			console.log('-------SERVER INITIALIZING-------');
-			await require('../state')('Server', {
-				bufferSize: configure.bufferSize || 2 ** 30
-			}, server);
+			await require('../state')('Server', server);
 			server.profile = await server.certificate.get(serverConfiguration.profile);
 			console.log(server.profile);
 			require('../utilities/cleanPath/')(server);

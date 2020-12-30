@@ -1,7 +1,5 @@
 (async () => {
-	const state = await require('../state')('Server', {
-		bufferSize: 2 ** 30
-	});
+	const state = await require('../state')('Server');
 	await require('../utilities/certificates/')(state);
 	const {
 		certificates: {

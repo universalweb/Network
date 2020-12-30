@@ -2,7 +2,7 @@
 	const state = {
 		type: 'Domain Certificate Creation',
 		utility: require('Lucy'),
-		msgPack: require('what-the-pack').initialize(2 ** 10),
+		msgPack: require('msgpackr'),
 		compression: require('iltorb')
 	};
 	await require('../utilities/console/')(state);

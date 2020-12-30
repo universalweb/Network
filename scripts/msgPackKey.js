@@ -3,7 +3,7 @@
 		type: 'msgPack Key Testing',
 		description: 'Testing key generation and size with keys as Binary in msgPack.',
 		utility: require('Lucy'),
-		msgPack: require('what-the-pack').initialize(2 ** 30)
+		msgPack: require('msgpackr')
 	};
 	await require('../utilities/console/')(state);
 	await require('../utilities/file/')(state);

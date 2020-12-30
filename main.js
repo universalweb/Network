@@ -7,8 +7,6 @@ const schemes = require('./schemes/');
 const path = require('path');
 const electron = require('electron');
 const state = require('./state')('browser', {
-	bufferSize: 2 ** 13
-}, {
 	electron
 });
 const {

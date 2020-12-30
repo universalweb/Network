@@ -1,7 +1,5 @@
 (async () => {
-	const state = require('../state/')('SIgnature Testing', {
-		bufferSize: 2 ** 20
-	});
+	const state = require('../state/')('SIgnature Testing');
 	const {
 		certificate: {
 			get
