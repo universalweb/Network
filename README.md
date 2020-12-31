@@ -1,22 +1,67 @@
-# SNTVT - Experimental Network
+<h1 align="center">
+    <a href="https://universalweb.io">UNIVERSAL WEB</a>
+</h1>
+<h4 align="center">
+| <a href="https://github.com/sentivate/Sentivate-Network-White-Paper/blob/master/README.md">WHITEPAPER</a> |
+</h4>
+<hr />
+    <h5 align="center"><a href="https://universalweb.io">SENTIVATE</a></h5>
+<p align="center">
+    <img src="https://sentivate.com/wp-content/uploads/brizy/3443/assets/images/iW=269&iH=274&oX=0&oY=0&cW=269&cH=274/SNTVTbig.png" />
+</p>
 
-| SENTIVATE |
-| :----: |
-| ![Sentivate Logo](https://raw.githubusercontent.com/sentivate/SentivateAlphaNetwork/master/resources/logo.png)|
-|[Sentivate](https://sentivate.com) - [Twitter](https://twitter.com/sentivate) - [Instagram](https://instagram.com/sntvt) |
----
-#### Experimental Branch of the Sentivate Network
-- This code base release is focused on the client/server modules, extending into core systems, & Browser.  
-- UDSP in this branch does not include reliability and is for local network testing only.  
-- NPM run server starts up a basic Universal Web Server
-- NPM run start will simulate a client to server UDSP connection in the Universal Web Browser (UWB).  
-- This code base's core focus is UDSP and a client and server connection.  
-- Root is used to generate root certificates only.  
-- Client includes Identity Certificate generation examples.
-- Check the package.json for full list of commands.  
----
-# REQUIREMENTS
-- Node
-- NPM
-- nodemon (global)
-- Preferred operating systems for development are Mac and then Linux - Expect turbulence in windows
+<h5 align="center"><i>| <a href="https://twitter.com/sentivate">TWITTER</a> | <a href="https://t.me/sentivate">TELEGRAM</a> | <a href="https://discord.com/invite/jChPfgN">DISCORD</a> |</i></h5>
+<hr />
+
+<h4>SUMMARY</h4>
+
+<ul>
+    <li><a href="">SERVER MODULE</a></li>
+    <li><a href="">CLIENT MODULE</a></li>
+    <li><a href="">UNIVERSAL WEB BROWSER</a></li>
+    <li><a href="">FRONT-END ENVIRONMENT JS/CSS</a></li>
+    <li><a href="">DOMAIN INFORMATION SERVER</a></li>
+    <li><a href="">EXAMPLE APPS</a></li>
+    <li><a href="">UDSP</a></li>
+    <li><a href="">UW URI (HIGHER ABSTRACTION PROTOCOL OVER UDSP)</a></li>
+    <li><a href="">VARIOUS HELPER SCRIPTS</a></li>
+</ul>
+
+<br />
+
+<h4>NPM SCRIPTS</h4>
+
+<ul>
+    <li><a href="">NPM start script builds/starts the Universal Web Browser</a></li>
+    <li><a href="">Components must also be compiled for the front-end library</a></li>
+    <li><a href="">Root is used to generate root certificates only</a></li>
+    <li><a href="">Includes Identity Certificate generation examples</a></li>
+    <li><a href="">EXAMPLE APPS</a></li>
+    <li><a href="">UDSP</a></li>
+    <li><a href="">UW URI (HIGHER ABSTRACTION PROTOCOL OVER UDSP)</a></li>
+    <li><a href="">VARIOUS HELPER SCRIPTS</a></li>
+</ul>
+
+<br />
+
+<h5>FULL LIST OF COMMANDS CAN BE FOUND IN THE project.json</h5>
+
+<hr />
+
+<h2>REQUIREMENTS</h2>
+
+<p>
+    <i>Preferred operating systems for development are <b>Mac</b> & <b>Linux</b>.</i>
+    <br>
+    <b>Expect turbulence in Windows.</b>
+</p>
+
+<ul>
+    <li><a href="">NODEJS</a></li>
+    <li><a href="">NPM</a></li>
+    <li><a href="">NODEMON</a></li>
+    <li><a href="">ESLINT</a></li>
+    <li><a href="">VSCODE</a></li>
+</ul>
+
+<small>COPYRIGHT © 2021 <a href="https://universalweb.io">UNIVERSAL WEB, Inc</a></small>
