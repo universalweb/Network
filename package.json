@@ -28,7 +28,7 @@
 	"author": "Sentivate",
 	"company": "Universal Web, Inc",
 	"dependencies": {
-		"Lucy": "^2.2.5",
+		"Lucy": "^2.3.1",
 		"chalk": "^4.1.0",
 		"eslint": "^7.16.0",
 		"figlet": "^1.5.0",
@@ -46,13 +46,13 @@
 		"@septdirworkshop/ukfontawesome": "^5.15.1",
 		"auto-changelog": "*",
 		"babel-eslint": "*",
-		"docredux": "*",
+		"docredux": "^2.1.2",
 		"electron": "^11.1.1",
 		"electron-builder": "^22.9.1",
 		"ractive": "^1.3.14",
 		"rollup": "^2.35.1",
 		"rollup-plugin-terser": "*",
-		"testatron": "*",
+		"testatron": "^2.1.0",
 		"uikit": "^3.6.5"
 	},
 	"repository": {
