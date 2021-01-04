@@ -44,14 +44,14 @@
 	"devDependencies": {
 		"@ckeditor/ckeditor5-build-inline": "^24.0.0",
 		"@septdirworkshop/ukfontawesome": "^5.15.1",
-		"auto-changelog": "*",
+		"auto-changelog": "^2.2.1",
 		"babel-eslint": "*",
 		"docredux": "^2.1.2",
 		"electron": "^11.1.1",
 		"electron-builder": "^22.9.1",
 		"ractive": "^1.3.14",
 		"rollup": "^2.35.1",
-		"rollup-plugin-terser": "*",
+		"rollup-plugin-terser": "^7.0.2",
 		"testatron": "^2.1.0",
 		"uikit": "^3.6.5"
 	},

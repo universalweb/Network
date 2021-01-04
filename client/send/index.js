@@ -10,7 +10,8 @@ module.exports = (udspPrototype) => {
 		crypto: {
 			encrypt,
 			nonceBox,
-			toBase64
+			toBase64,
+			hashSign
 		},
 		buildPacketSize,
 		buildStringSize,
@@ -38,15 +39,17 @@ module.exports = (udspPrototype) => {
 		} = socket;
 		cnsl(`Send to server`);
 		const socketStatusCode = socket.status.code;
-		console.log(message);
-		const messageEncoded = encode(message);
+		console.log(`socket Status Code is ${socketStatusCode}`);
 		const nonce = nonceBox();
 		success(`Nonce Size: ${nonce.length} ${toBase64(nonce)}`);
 		headers.id = socket.serverId || socket.socketId;
 		headers.nonce = nonce;
 		if (socketStatusCode === 0) {
-			headers.cert = socket.ephemeralPublic;
-			console.log(`socket Status Code is 0 attaching identity certificate`);
+			// PERFECT FORWARD SECRECY USE RANDOM EPHEMERAL KEY TO ENCRYPT IDENTITY CERT
+			headers.key = socket.keypair.publicKey;
+			headers.sig = hashSign(socket.keypair.publicKey, socket.keypair.privateKey);
+			message.body.cert = socket.ephemeralPublic;
+			console.log(`Setting ephemeral random public key to header & profile cert to message.body`);
 		}
 		console.log('PACKET HEADERS', headers);
 		const headersEncoded = encode(headers);
@@ -56,6 +59,8 @@ module.exports = (udspPrototype) => {
 		const headersCompiled = Buffer.concat([headersEndIndexBuffer, headersEncoded]);
 		success(`Additional Data End Index ${headersEndIndex.toString()}`);
 		console.log(socket.transmitKey.toString('base64'));
+		console.log(message);
+		const messageEncoded = encode(message);
 		const encryptedMessage = encrypt(messageEncoded, headersEncoded, nonce, socket.transmitKey);
 		if (!encryptedMessage) {
 			return errorLog('Encryption failed');

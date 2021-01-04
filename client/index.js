@@ -26,16 +26,19 @@ class UDSP {
 			crypto: {
 				createSessionKey,
 				clientSession,
-				createSocketId
+				createSocketId,
+				keypair,
 			},
 			alert,
 			success
 		} = socket;
 		socket.socketId = createSocketId();
 		success(`socketId:`, this.socketId);
-		alert(`Creating Shared Keys`);
+		success(`Creating Shared Keys`);
 		const transmitKey = socket.transmitKey = createSessionKey();
 		const receiveKey = socket.receiveKey = createSessionKey();
+		success(`Creating Connection Keypair`);
+		socket.keypair = keypair();
 		socket.profile = profile;
 		socket.service = service;
 		socket.ephemeralPublic = omit(profile.ephemeral, ['private']);
@@ -44,8 +47,6 @@ class UDSP {
 		}
 		const {
 			ephemeral: {
-				key: publicKey,
-				private: privateKey,
 				signature: profileSignature
 			}
 		} = profile;
@@ -55,6 +56,10 @@ class UDSP {
 				signature: serviceSignature
 			}
 		} = service;
+		const {
+			publicKey,
+			secretKey: privateKey,
+		} = socket.keypair;
 		clientSession(receiveKey, transmitKey, publicKey, privateKey, serverPublicKey);
 		alert(`Shared Keys Created`);
 		console.log(receiveKey, transmitKey);
