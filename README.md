@@ -2,7 +2,7 @@
     <a href="https://universalweb.io">UNIVERSAL WEB</a>
 </h1>
 <h4 align="center">
-| <a href="https://github.com/sentivate/Sentivate-Network-White-Paper/blob/master/README.md">WHITEPAPER</a> |
+| <a href="https://github.com/universalweb/Whitepaper">WHITEPAPER</a> |
 </h4>
 <hr />
     <h5 align="center"><a href="https://universalweb.io">SENTIVATE</a></h5>
