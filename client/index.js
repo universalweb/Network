@@ -37,6 +37,8 @@ class UDSP {
 		success(`Creating Shared Keys`);
 		const transmitKey = socket.transmitKey = createSessionKey();
 		const receiveKey = socket.receiveKey = createSessionKey();
+		const ephemeralProfileTransmitKey = socket.ephemeralProfileTransmitKey = createSessionKey();
+		const ephemeralProfileReceiveKey = socket.ephemeralProfileReceiveKey = createSessionKey();
 		success(`Creating Connection Keypair`);
 		socket.keypair = keypair();
 		socket.profile = profile;
@@ -61,6 +63,8 @@ class UDSP {
 			secretKey: privateKey,
 		} = socket.keypair;
 		clientSession(receiveKey, transmitKey, publicKey, privateKey, serverPublicKey);
+		// Can be used to encrypt and authenticate the profile with the server
+		// clientSession(ephemeralProfileReceiveKey, ephemeralProfileTransmitKey, profile.ephemeral.publicKey, profile.ephemeral.secretKey, serverPublicKey);
 		alert(`Shared Keys Created`);
 		console.log(receiveKey, transmitKey);
 		require('./status')(socket);

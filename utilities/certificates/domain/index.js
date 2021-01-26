@@ -25,7 +25,7 @@ module.exports = async (state) => {
 				error,
 			} = state;
 			const profileTemplate = (template || jsonParse(await read(templateLocation || `${__dirname}/template.json`)));
-			const domainCertificate = await certificate.createProfile(profileTemplate);
+			const domainCertificate = await certificate.createDomainProfile(profileTemplate);
 			const {
 				ephemeral,
 				master

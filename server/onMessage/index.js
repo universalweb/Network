@@ -35,15 +35,16 @@ module.exports = (server) => {
 			return logError(`No packet -> Invalid Packet`);
 		}
 		success(`Packet`);
-		console.log(packet);
 		const {
-			cert
+			key,
+			sig
 		} = headers;
-		if (cert && cert.key) {
+		console.log('Headers', headers);
+		if (key && sig) {
 			success(`Public Key is given -> Processing handshake`);
 			await processSocketCreation(connection, headersBuffer, headers, packet);
 		} else {
-			success(`No Public Key is given`);
+			success(`No Public Key is given -> Processing as a message`);
 			await processMessage(connection, headersBuffer, headers, packet);
 		}
 	}

@@ -32,7 +32,7 @@
 				algo: 'default',
 				hostname: 'universal.web',
 				organization: {
-					name: 'Arity',
+					name: 'UW',
 				},
 				locality: {
 					state: 'NJ',
@@ -63,7 +63,7 @@
 				algo: 'default',
 				hostname: 'main.dis',
 				organization: {
-					name: 'Arity',
+					name: 'UW',
 				},
 				locality: {
 					state: 'NJ',

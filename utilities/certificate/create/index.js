@@ -28,6 +28,43 @@ module.exports = async (state) => {
 			const {
 				publicKey: ephemeralKey,
 				secretKey: secretKeyEphemeral
+			} = signKeypair();
+			const ephemeral = assignDeep({
+				start: Date.now(),
+				key: ephemeralKey
+			}, ephemeralTemplate);
+			const master = assignDeep({
+				start: Date.now(),
+				key: masterKey,
+				private: secretKeyMaster
+			}, masterTemplate);
+			const profile = {
+				ephemeral,
+				master,
+			};
+			alert('Certificates Built');
+			ephemeral.signature = sign(ephemeral, master);
+			alert('Ephemeral Certificate Signed');
+			ephemeral.private = secretKeyEphemeral;
+			if (directory) {
+				await api.save(profile, directory, certificateName);
+				alert(`Certificates Saved to ${directory}`, certificateName);
+			}
+			console.log('CERTIFICATE BUILT');
+			return profile;
+		},
+		async createDomainProfile(profileTemplate, certificateName, directory) {
+			const {
+				ephemeral: ephemeralTemplate,
+				master: masterTemplate
+			} = profileTemplate;
+			const {
+				publicKey: masterKey,
+				secretKey: secretKeyMaster
+			} = signKeypair();
+			const {
+				publicKey: ephemeralKey,
+				secretKey: secretKeyEphemeral
 			} = keypair();
 			const ephemeral = assignDeep({
 				start: Date.now(),
@@ -54,6 +91,25 @@ module.exports = async (state) => {
 			return profile;
 		},
 		async createEphemeral(ephemeralTemplate, master, certificateName, directory) {
+			const {
+				publicKey,
+				secretKey
+			} = signKeypair();
+			const ephemeral = assignDeep({
+				start: Date.now(),
+				key: publicKey
+			}, ephemeralTemplate);
+			alert('Ephemeral Certificate Built');
+			ephemeral.signature = sign(ephemeral, master);
+			alert('Ephemeral Certificate Signed');
+			ephemeral.private = secretKey;
+			if (directory) {
+				await api.save(ephemeral, directory, certificateName);
+				alert(`Certificate Saved to ${directory}`, certificateName);
+			}
+			return ephemeral;
+		},
+		async createDomainEphemeral(ephemeralTemplate, master, certificateName, directory) {
 			const {
 				publicKey,
 				secretKey

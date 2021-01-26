@@ -47,7 +47,10 @@ module.exports = (udspPrototype) => {
 		if (socketStatusCode === 0) {
 			// PERFECT FORWARD SECRECY USE RANDOM EPHEMERAL KEY TO ENCRYPT IDENTITY CERT
 			headers.key = socket.keypair.publicKey;
-			headers.sig = hashSign(socket.keypair.publicKey, socket.keypair.privateKey);
+			console.log(socket.profile.ephemeral.private.length);
+			headers.sig = hashSign(socket.keypair.publicKey, socket.profile.ephemeral.private);
+			console.log(`Sig:${headers.sig.toString('base64')}`);
+			console.log(`Sig Size:${headers.sig.length}`);
 			message.body.cert = socket.ephemeralPublic;
 			console.log(`Setting ephemeral random public key to header & profile cert to message.body`);
 		}

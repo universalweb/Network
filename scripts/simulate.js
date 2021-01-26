@@ -1,4 +1,5 @@
 module.exports = (async () => {
+	console.clear();
 	console.log('STARTING CLIENT');
 	const client = await require('../client');
 	const service = await client.getCertificate(`${__dirname}/../services/universal.web.cert`);

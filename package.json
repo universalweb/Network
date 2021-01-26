@@ -8,7 +8,7 @@
 		"client": "nodemon client/index.js --watch client/",
 		"compressionTest": "nodemon scripts/compression.js --watch scripts/compression.js",
 		"cc": "nodemon ./client/createCertificate/index.js --watch ./client/createCertificate/",
-		"server": "nodemon ./serverApp/server.js --watch ./server/ --watch ./serverApp/",
+		"server": "nodemon ./serverApp/index.js --watch ./server/ --watch ./serverApp/",
 		"dis": "nodemon ./DIS/index.js --watch ./server/ --watch ./DIS/",
 		"components": "nodemon ./browser/components/index.js --watch ./browser/components/source/ --watch ./browser/components/index.js",
 		"simulate": "nodemon ./scripts/simulate.js --watch ./client/ --watch ./server/ --watch ./scripts/simulate.js --watch utilities/",
