@@ -6,6 +6,9 @@ module.exports = (server) => {
 		crypto: {
 			decrypt,
 			serverSession,
+			signOpen,
+			hash,
+			signVerify
 		},
 		api: {
 			onMessage
@@ -25,13 +28,13 @@ module.exports = (server) => {
 	// additionalData (ad) are the main UDSP headers. It may be called headers at times or additionalData.
 	async function processSocketCreation(connection, additionalDataBuffer, additionalData, packet) {
 		const signature = additionalData.sig;
-		const ecnryptionKeypair = additionalData.key;
+		const ephemeralKeypair = additionalData.key;
 		success(`Encrypted Message Signature: ${signature.toString('base64')}`);
 		success(`Encrypted Message Signature Size: ${signature.length}`);
 		const socketId = additionalData.id;
 		const nonce = additionalData.nonce;
 		success(`Encrypted Message Size: ${packet.length}`);
-		const sessionKey = serverSession(serverPublicKey, serverPrivateKey, ecnryptionKeypair);
+		const sessionKey = serverSession(serverPublicKey, serverPrivateKey, ephemeralKeypair);
 		const receiveKey = sessionKey.receiveKey;
 		const transmitKey = sessionKey.transmitKey;
 		success(`receiveKey: ${receiveKey.toString('base64')}`);
@@ -48,12 +51,23 @@ module.exports = (server) => {
 			if (!message) {
 				return logError('JSON ERROR', connection);
 			}
-			logReceived(message);
 			count++;
-			console.log(decrypted);
-			const signatureHash = signOpen(sig, ephemeralKeypair.key);
-			const socket = await createsocket(connection, receiveKey, transmitKey, socketId, ephemeralKeypair, message);
-			await onMessage(socket, message);
+			console.log(message);
+			const isValid = signVerify(signature, message.head.cert.key);
+			console.log('SIGNATURE CHECK', isValid);
+			if (!isValid) {
+				return logError(`Signature isn't valid`);
+			}
+			const signatureHash = signOpen(signature, message.head.cert.key);
+			const sigCompare = Buffer.compare(signatureHash, hash(ephemeralKeypair)) === 0;
+			if (sigCompare) {
+				logReceived(`Signature is valid`);
+				const socket = await createsocket(connection, receiveKey, transmitKey, socketId);
+				await onMessage(socket, message);
+			} else {
+				console.log('SIGNATURE FAILED NO SOCKET CREATED');
+				return;
+			}
 			success(`Messages Received: ${count}`);
 		}
 	}

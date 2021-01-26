@@ -24,6 +24,11 @@ module.exports = (udspPrototype) => {
 	async function send(message) {
 		const socket = this;
 		const headers = {};
+		const socketStatusCode = socket.status.code;
+		console.log(`socket Status Code is ${socketStatusCode}`);
+		if (socketStatusCode === 0) {
+			message.head.cert = socket.ephemeralPublic;
+		}
 		if (message.head) {
 			message.head = encode(message.head);
 		}
@@ -38,8 +43,6 @@ module.exports = (udspPrototype) => {
 			}
 		} = socket;
 		cnsl(`Send to server`);
-		const socketStatusCode = socket.status.code;
-		console.log(`socket Status Code is ${socketStatusCode}`);
 		const nonce = nonceBox();
 		success(`Nonce Size: ${nonce.length} ${toBase64(nonce)}`);
 		headers.id = socket.serverId || socket.socketId;
@@ -47,11 +50,9 @@ module.exports = (udspPrototype) => {
 		if (socketStatusCode === 0) {
 			// PERFECT FORWARD SECRECY USE RANDOM EPHEMERAL KEY TO ENCRYPT IDENTITY CERT
 			headers.key = socket.keypair.publicKey;
-			console.log(socket.profile.ephemeral.private.length);
-			headers.sig = hashSign(socket.keypair.publicKey, socket.profile.ephemeral.private);
+			headers.sig = hashSign(headers.key, socket.profile.ephemeral.private);
 			console.log(`Sig:${headers.sig.toString('base64')}`);
 			console.log(`Sig Size:${headers.sig.length}`);
-			message.body.cert = socket.ephemeralPublic;
 			console.log(`Setting ephemeral random public key to header & profile cert to message.body`);
 		}
 		console.log('PACKET HEADERS', headers);
