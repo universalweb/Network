@@ -16,30 +16,28 @@
 <h4>SUMMARY</h4>
 
 <ul>
-    <li><a href="">SERVER MODULE</a></li>
-    <li><a href="">CLIENT MODULE</a></li>
-    <li><a href="">UNIVERSAL WEB BROWSER</a></li>
-    <li><a href="">FRONT-END ENVIRONMENT JS/CSS</a></li>
-    <li><a href="">DOMAIN INFORMATION SERVER</a></li>
-    <li><a href="">EXAMPLE APPS</a></li>
-    <li><a href="">UDSP</a></li>
-    <li><a href="">UW URI (HIGHER ABSTRACTION PROTOCOL OVER UDSP)</a></li>
-    <li><a href="">VARIOUS HELPER SCRIPTS</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/server">SERVER MODULE (UDSP)</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/client">CLIENT MODULE (UDSP)</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/browser">UNIVERSAL WEB BROWSER ASSETS</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/browser/components">FRONT-END ENVIRONMENT JS/CSS</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/DIS">DOMAIN INFORMATION SERVER</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/serverApp">EXAMPLE APPS</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/scripts">VARIOUS HELPER SCRIPTS</a></li>
 </ul>
 
 <br />
 
-<h4>NPM SCRIPTS</h4>
+<h4><a href="https://github.com/universalweb/Network/blob/master/package.json">NPM SCRIPTS</a></h4>
 
 <ul>
-    <li><a href="">NPM start script builds/starts the Universal Web Browser</a></li>
-    <li><a href="">Components must also be compiled for the front-end library</a></li>
-    <li><a href="">Root is used to generate root certificates only</a></li>
-    <li><a href="">Includes Identity Certificate generation examples</a></li>
-    <li><a href="">EXAMPLE APPS</a></li>
-    <li><a href="">UDSP</a></li>
-    <li><a href="">UW URI (HIGHER ABSTRACTION PROTOCOL OVER UDSP)</a></li>
-    <li><a href="">VARIOUS HELPER SCRIPTS</a></li>
+    <li>NPM start script builds/starts the Universal Web Browser</li>
+    <li>Components must also be compiled for the front-end library</li>
+    <li>Root is used to generate root certificates only</li>
+    <li>Includes Identity Certificate generation examples</li>
+    <li>EXAMPLE APPS</li>
+    <li>UDSP</li>
+    <li>UW URI (HIGHER ABSTRACTION PROTOCOL OVER UDSP)</li>
+    <li>VARIOUS HELPER SCRIPTS</li>
 </ul>
 
 <br />
@@ -57,11 +55,11 @@
 </p>
 
 <ul>
-    <li><a href="">NODEJS</a></li>
-    <li><a href="">NPM</a></li>
-    <li><a href="">NODEMON</a></li>
-    <li><a href="">ESLINT</a></li>
-    <li><a href="">VSCODE</a></li>
+    <li><a href="https://nodejs.org/en/">NODEJS</a></li>
+    <li><a href="https://npmjs.com">NPM</a></li>
+    <li><a href="https://npmjs.com/package/nodemon">NODEMON</a></li>
+    <li><a href="https://npmjs.com/package/eslint">ESLINT</a></li>
+    <li><a href="https://code.visualstudio.com/">VSCODE</a></li>
 </ul>
 
 <small>COPYRIGHT © 2021 <a href="https://universalweb.io">UNIVERSAL WEB, Inc</a></small>
