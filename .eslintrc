@@ -23,6 +23,9 @@
 		}
 	},
 	"rules": {
+		"no-setter-return": "error",
+		"no-dupe-else-if": "error",
+		"no-import-assign": "off",
 		"object-curly-newline": [
 			"error",
 			{

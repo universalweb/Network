@@ -10,17 +10,17 @@ module.exports = (server) => {
 			onMessage
 		},
 		logReceived,
-		sockets,
+		clients,
 	} = server;
 	let count = 0;
 	async function processMessage(connection, headersBuffer, headers, packet) {
-		const socketId = headers.id;
-		const socket = sockets.get(socketId.toString('base64'));
-		if (!socket) {
+		const clientId = headers.id;
+		const client = clients.get(clientId.toString('base64'));
+		if (!client) {
 			return false;
 		}
 		const nonce = headers.nonce;
-		const decrypted = decrypt(packet, headersBuffer, nonce, socket.receiveKey);
+		const decrypted = decrypt(packet, headersBuffer, nonce, client.receiveKey);
 		if (!decrypted) {
 			return logError(`Decrypt Failed`);
 		}
@@ -30,7 +30,7 @@ module.exports = (server) => {
 		}
 		logReceived(message);
 		count++;
-		await onMessage(socket, message);
+		await onMessage(client, message);
 		success(`Messages Received: ${count}`);
 	}
 	server.processMessage = processMessage;

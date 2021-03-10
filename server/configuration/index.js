@@ -1,15 +1,19 @@
-module.exports = (server, configure) => {
+module.exports = (server, configuration) => {
 	server.logImprt('SERVER CONFIGURATION', __dirname);
 	const {
 		utility: {
 			assign
 		}
 	} = server;
-	console.log(configure);
+	const {
+		port: configPort
+	} = configuration;
+	console.log(configuration);
 	const {
 		ip,
-		port
+		port: certPort
 	} = server.profile.ephemeral;
+	const port = configPort || certPort;
 	server.configuration = assign({
 		ip,
 		port,
@@ -17,5 +21,5 @@ module.exports = (server, configure) => {
 		maxMTU: 1000,
 		encoding: 'utf8',
 		max: 1000
-	}, configure);
+	}, configuration);
 };

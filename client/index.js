@@ -20,8 +20,9 @@ class UDSP {
 		console.log('-------CLIENT INITIALIZING-------\n', configuration);
 		const {
 			service,
-			profile
+			profile,
 		} = configuration;
+		assign(this, configuration);
 		const {
 			crypto: {
 				createSessionKey,
@@ -37,12 +38,12 @@ class UDSP {
 		success(`Creating Shared Keys`);
 		const transmitKey = socket.transmitKey = createSessionKey();
 		const receiveKey = socket.receiveKey = createSessionKey();
+		// Currently unused but may in the future
 		const ephemeralProfileTransmitKey = socket.ephemeralProfileTransmitKey = createSessionKey();
 		const ephemeralProfileReceiveKey = socket.ephemeralProfileReceiveKey = createSessionKey();
+		console.log(ephemeralProfileTransmitKey, ephemeralProfileReceiveKey);
 		success(`Creating Connection Keypair`);
 		socket.keypair = keypair();
-		socket.profile = profile;
-		socket.service = service;
 		socket.ephemeralPublic = omit(profile.ephemeral, ['private']);
 		if (profile.master) {
 			socket.masterPublic = omit(profile.master, ['private']);
@@ -68,7 +69,7 @@ class UDSP {
 		alert(`Shared Keys Created`);
 		console.log(receiveKey, transmitKey);
 		require('./status')(socket);
-		require('./configuration')(socket);
+		require('./configuration')(socket, configuration);
 		require('./listening')(socket);
 		socket.server.on('message', socket.onMessage.bind(socket));
 		const serviceKey = serviceSignature.toString('base64');

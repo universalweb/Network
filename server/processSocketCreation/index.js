@@ -21,7 +21,7 @@ module.exports = (server) => {
 		},
 		alert,
 		logReceived,
-		createsocket
+		createClient
 	} = server;
 	let count = 0;
 	alert(serverPrivateKey.toString('base64'));
@@ -62,8 +62,8 @@ module.exports = (server) => {
 			const sigCompare = Buffer.compare(signatureHash, hash(ephemeralKeypair)) === 0;
 			if (sigCompare) {
 				logReceived(`Signature is valid`);
-				const socket = await createsocket(connection, receiveKey, transmitKey, socketId);
-				await onMessage(socket, message);
+				const client = await createClient(connection, receiveKey, transmitKey, socketId);
+				await onMessage(client, message);
 			} else {
 				console.log('SIGNATURE FAILED NO SOCKET CREATED');
 				return;

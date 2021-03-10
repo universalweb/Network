@@ -1,4 +1,4 @@
-module.exports = (socket) => {
+module.exports = (socket, configuration) => {
 	const {
 		ip,
 		port
@@ -6,7 +6,7 @@ module.exports = (socket) => {
 	socket.logImprt('CLIENT CONFIGURATION', __dirname);
 	socket.configuration = {
 		ip,
-		port,
+		port: configuration.servicePort || port,
 		maxMTU: 1000,
 		encoding: 'binary',
 		max: 1280,

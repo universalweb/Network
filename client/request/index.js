@@ -6,7 +6,7 @@ module.exports = (udspPrototype) => {
 			uid,
 			promise,
 			uid: {
-				free
+				free: freeUid
 			}
 		},
 	} = udspPrototype;
@@ -31,7 +31,7 @@ module.exports = (udspPrototype) => {
 					response,
 					headers,
 				});
-				free(sid);
+				freeUid(sid);
 			});
 		});
 	}

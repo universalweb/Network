@@ -28,15 +28,16 @@
 	"author": "Sentivate",
 	"company": "Universal Web, Inc",
 	"dependencies": {
-		"Lucy": "^2.3.1",
 		"chalk": "^4.1.0",
 		"eslint": "^7.16.0",
 		"figlet": "^1.5.0",
 		"is-valid-path": "^0.1.1",
+		"Lucy": "^2.3.1",
 		"msgpackr": "^1.0.2",
 		"node-watch": "^0.7.1",
 		"sequential-ids": "*",
 		"sodium-native": "^3.2.0",
+		"stream-chunker": "^1.2.8",
 		"truncate-utf8-bytes": "*",
 		"webtorrent": "^0.112.0"
 	},

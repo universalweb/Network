@@ -21,7 +21,7 @@ module.exports = (server) => {
 			send
 		}
 	} = server;
-	class UDSPSocket {
+	class Client {
 		constructor(connectionInfo, receiveKey, transmitKey, socketId) {
 			construct(this, connectionInfo, receiveKey, transmitKey, socketId);
 		}
@@ -47,10 +47,10 @@ module.exports = (server) => {
 			await destroy(this, destroyCode);
 		}
 	}
-	async function createsocket(connectionInfo, receiveKey, transmitKey, socketId) {
-		const clientsocket = new UDSPSocket(connectionInfo, receiveKey, transmitKey, socketId);
-		await clientsocket.created();
-		return clientsocket;
+	async function createClient(connectionInfo, receiveKey, transmitKey, socketId) {
+		const client = new Client(connectionInfo, receiveKey, transmitKey, socketId);
+		await client.created();
+		return client;
 	}
-	server.createsocket = createsocket;
+	server.createClient = createClient;
 };

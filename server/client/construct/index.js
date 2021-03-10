@@ -1,7 +1,7 @@
 module.exports = (server) => {
 	const {
 		error: logError,
-		sockets,
+		clients,
 		success,
 		socketMethods,
 		crypto: {
@@ -29,13 +29,13 @@ module.exports = (server) => {
 		const serverIdString = toBase64(serverIdBuffer);
 		console.log(`Client Connection ID: ${clientIdString}`);
 		console.log(`Server Connection ID: ${serverIdString}`);
-		if (sockets.has(serverIdString)) {
+		if (clients.has(serverIdString)) {
 			logError('ID IN USE NEED TO MAKE SOME RANDOM BITS - PATCH THIS');
 		} else {
 			success(`Server socket ID is open ${serverIdString}`);
 		}
 		success(`MESSAGE SENT TIME: ${sentTime}`);
-		sockets.set(serverIdString, socket);
+		clients.set(serverIdString, socket);
 		/*
 			Sending to client using this
 			Client connection Ids are smaller than server connection Ids

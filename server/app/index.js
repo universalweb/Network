@@ -1,4 +1,4 @@
-module.exports = (server) => {
+module.exports = async (server) => {
 	const path = require('path');
 	const {
 		logImprt,

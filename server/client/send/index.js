@@ -8,7 +8,7 @@ module.exports = (server) => {
 		success
 	} = server;
 	async function send(socket, message) {
-		await sendClient(message, socket.address, socket.port, socket.nonce, socket.transmitKey, socket.clientIdRaw);
+		await sendClient(socket, message, socket.address, socket.port, socket.nonce, socket.transmitKey, socket.clientIdRaw);
 		await sentEvent(socket, message);
 		success(`socket Sent -> ID: ${socket.id}`);
 	}

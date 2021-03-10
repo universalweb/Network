@@ -4,7 +4,7 @@ module.exports = (server) => {
 		socketEvents: {
 			destroy: destroyEvent,
 		},
-		sockets,
+		clients,
 		attention,
 		socketMethods
 	} = server;
@@ -26,7 +26,7 @@ module.exports = (server) => {
         `);
 		}
 		await destroyEvent(socket, reason);
-		sockets.delete(socket.id);
+		clients.delete(socket.id);
 		socket.address = null;
 		socket.port = null;
 		socket.id = null;

@@ -1,4 +1,4 @@
-module.exports = (udspPrototype) => {
+function clientSendModule(udspPrototype) {
 	const {
 		logImprt,
 		error: logError,
@@ -20,14 +20,18 @@ module.exports = (udspPrototype) => {
 		encode
 	} = udspPrototype;
 	logImprt('Send', __dirname);
-	// socketId, nonce, encrypted message size, flags, packet size.
-	async function send(message) {
-		const socket = this;
+	// clientId, nonce, encrypted message size, flags, packet size.
+	async function send(message, priority) {
+		console.log(`Priority: ${priority}`);
+		const client = this;
 		const headers = {};
-		const socketStatusCode = socket.status.code;
-		console.log(`socket Status Code is ${socketStatusCode}`);
-		if (socketStatusCode === 0) {
-			message.head.cert = socket.ephemeralPublic;
+		const clientStatusCode = client.status.code;
+		console.log(`client Status Code is ${clientStatusCode}`);
+		if (clientStatusCode === 0) {
+			if (!message.head) {
+				message.head = {};
+			}
+			message.head.cert = client.ephemeralPublic;
 		}
 		if (message.head) {
 			message.head = encode(message.head);
@@ -39,18 +43,20 @@ module.exports = (udspPrototype) => {
 			server,
 			configuration: {
 				ip,
-				port
-			}
-		} = socket;
+				port: certificatePort
+			},
+			servicePort
+		} = client;
+		const port = servicePort || certificatePort;
 		cnsl(`Send to server`);
 		const nonce = nonceBox();
 		success(`Nonce Size: ${nonce.length} ${toBase64(nonce)}`);
-		headers.id = socket.serverId || socket.socketId;
+		headers.id = client.serverId || client.clientId;
 		headers.nonce = nonce;
-		if (socketStatusCode === 0) {
+		if (clientStatusCode === 0) {
 			// PERFECT FORWARD SECRECY USE RANDOM EPHEMERAL KEY TO ENCRYPT IDENTITY CERT
-			headers.key = socket.keypair.publicKey;
-			headers.sig = hashSign(headers.key, socket.profile.ephemeral.private);
+			headers.key = client.keypair.publicKey;
+			headers.sig = hashSign(headers.key, client.profile.ephemeral.private);
 			console.log(`Sig:${headers.sig.toString('base64')}`);
 			console.log(`Sig Size:${headers.sig.length}`);
 			console.log(`Setting ephemeral random public key to header & profile cert to message.body`);
@@ -62,10 +68,10 @@ module.exports = (udspPrototype) => {
 		console.log(headersEndIndex, headers);
 		const headersCompiled = Buffer.concat([headersEndIndexBuffer, headersEncoded]);
 		success(`Additional Data End Index ${headersEndIndex.toString()}`);
-		console.log(socket.transmitKey.toString('base64'));
+		console.log(client.transmitKey.toString('base64'));
 		console.log(message);
 		const messageEncoded = encode(message);
-		const encryptedMessage = encrypt(messageEncoded, headersEncoded, nonce, socket.transmitKey);
+		const encryptedMessage = encrypt(messageEncoded, headersEncoded, nonce, client.transmitKey);
 		if (!encryptedMessage) {
 			return errorLog('Encryption failed');
 		}
@@ -83,6 +89,7 @@ module.exports = (udspPrototype) => {
 		success(`Packet End Index ${packetSize}`);
 		success('Message Buffer Size', Buffer.from(messageBuffer).length);
 		if (packetSize >= 1280) {
+			console.log(messageBuffer);
 			errorLog(`WARNING: Packet size is larger than max allowed size -> ${packetSize}`);
 		}
 		return promise((accept, reject) => {
@@ -97,4 +104,5 @@ module.exports = (udspPrototype) => {
 		});
 	}
 	udspPrototype.send = send;
-};
+}
+module.exports = clientSendModule;

@@ -10,7 +10,7 @@ module.exports = (async () => {
 		profile,
 		servicePort: 8888
 	});
-	console.time('Full');
+	console.time('0RTT with app data');
 	const connected = await uws.connect({
 		agent: 'node',
 		entity: 'bot',
@@ -21,13 +21,8 @@ module.exports = (async () => {
 			}
 		}
 	});
+	console.timeEnd('0RTT with app data');
 	console.log('Connected', connected);
 	console.log('INTRO =>', connected.response.body);
-	console.time('Request');
-	const state = await uws.request('state', {
-		state: '/'
-	});
-	console.timeEnd('Request');
-	console.timeEnd('Full');
-	console.log('Request state', state.response.body.data.toString('UTF8'));
+	console.log('Request state', connected.response.body.data.toString('UTF8'));
 })();
