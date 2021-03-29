@@ -1,5 +1,5 @@
 /*
-  * Client Module
+  	* Client Module
 	* UDSP - Universal Data Stream Protocol
 	* UWS Universal Web Socket
 	* Establishes a UDP based bi-directional real-time socket between a client and end service.

@@ -14,8 +14,9 @@ module.exports = (server) => {
 	} = server;
 	logImprt('Send', __dirname);
 	// socketId, nonce, encrypted message size, flags, packet size.
-	async function send(rawMessage, address, port, nonce, transmitKey, id) {
+	async function send(rawMessage, address, port, nonce, transmitKey, id, options) {
 		success(`PROCESSING MESSAGE TO SEND`);
+		console.log(options);
 		console.log(rawMessage);
 		success(`socketId: ${id.toString('base64')}`);
 		success(`Transmit Key ${toBase64(transmitKey)}`);
