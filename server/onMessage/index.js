@@ -12,6 +12,7 @@ module.exports = (server) => {
 	logImprt('Server onMessage', __dirname);
 	async function onMessage(messageBuffer, connection) {
 		logReceived('Message Received');
+		console.log(messageBuffer);
 		const headersEndIndex = Number(messageBuffer.slice(0, 3));
 		if (!headersEndIndex) {
 			return logError(`No headers size number -> Invalid Packet`);

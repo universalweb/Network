@@ -9,6 +9,7 @@ module.exports = (server) => {
 	require('./reKey')(server);
 	require('./send')(server);
 	require('./statusUpdate')(server);
+	require('./createResponse')(server);
 	const {
 		socketMethods: {
 			destroy,
@@ -19,11 +20,14 @@ module.exports = (server) => {
 			connection,
 			reKey,
 			send
+		},
+		crypto: {
+			toBase64
 		}
 	} = server;
 	class Client {
-		constructor(connectionInfo, receiveKey, transmitKey, socketId) {
-			construct(this, connectionInfo, receiveKey, transmitKey, socketId);
+		constructor(connectionInfo, receiveKey, transmitKey, clientId) {
+			construct(this, connectionInfo, receiveKey, transmitKey, clientId);
 		}
 		async created() {
 			await created(this);
@@ -47,9 +51,11 @@ module.exports = (server) => {
 			await destroy(this, destroyCode);
 		}
 	}
-	async function createClient(connectionInfo, receiveKey, transmitKey, socketId) {
-		const client = new Client(connectionInfo, receiveKey, transmitKey, socketId);
+	async function createClient(connectionInfo, receiveKey, transmitKey, clientId) {
+		console.log('Creating Client Object', toBase64(clientId));
+		const client = new Client(connectionInfo, receiveKey, transmitKey, clientId);
 		await client.created();
+		console.log('Client has been created', toBase64(clientId));
 		return client;
 	}
 	server.createClient = createClient;

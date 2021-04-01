@@ -11,7 +11,7 @@
 		resourceDirectory: `${__dirname}/resources`,
 		// Server ID used for load balancing and attaching to the end of connection IDs
 		id: '0',
-		onConnectMessage: `Welcome to the Web beyond the stars.`,
+		onConnectMessage: `Welcome to the Universal Web.`,
 		port: 8888
 	});
 	const {

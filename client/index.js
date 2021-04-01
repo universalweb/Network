@@ -27,14 +27,14 @@ class UDSP {
 			crypto: {
 				createSessionKey,
 				clientSession,
-				createSocketId,
+				createClientId,
 				keypair,
 			},
 			alert,
 			success
 		} = socket;
-		socket.socketId = createSocketId();
-		success(`socketId:`, this.socketId);
+		socket.clientId = createClientId();
+		success(`clientId:`, this.clientId);
 		success(`Creating Shared Keys`);
 		const transmitKey = socket.transmitKey = createSessionKey();
 		const receiveKey = socket.receiveKey = createSessionKey();

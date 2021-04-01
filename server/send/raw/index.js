@@ -18,10 +18,10 @@ module.exports = (server) => {
 		buildStringSize,
 	} = server;
 	logImprt('Send', __dirname);
-	// socketId, nonce, encrypted message size, flags, packet size.
+	// clientId, nonce, encrypted message size, flags, packet size.
 	async function sendRaw(rawMessage, address, port, nonce, transmitKey, id) {
 		success(`SENDING MESSAGE`);
-		success(`socketId: ${id.toString('base64')}`);
+		success(`clientId: ${id.toString('base64')}`);
 		success(`Transmit Key ${toBase64(transmitKey)}`);
 		rawMessage.time = Date.now();
 		console.log('FULL MESSAGE', rawMessage);

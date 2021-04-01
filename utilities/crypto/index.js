@@ -107,10 +107,10 @@ function toBase64(value) {
 function buff(value) {
 	return Buffer.from(value);
 }
-function createSocketId() {
-	const socketId = Buffer.alloc(8);
-	randombytes_buf(socketId);
-	return socketId;
+function createClientId() {
+	const clientId = Buffer.alloc(8);
+	randombytes_buf(clientId);
+	return clientId;
 }
 const methods = {
 	hash,
@@ -125,7 +125,7 @@ const methods = {
 	buff,
 	encrypt,
 	decrypt,
-	createSocketId,
+	createClientId,
 	clientSession,
 	serverSession,
 	nonceBox,

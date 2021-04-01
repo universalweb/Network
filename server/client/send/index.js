@@ -7,10 +7,10 @@ module.exports = (server) => {
 		socketMethods,
 		success
 	} = server;
-	async function send(socket, message) {
-		await sendClient(socket, message, socket.address, socket.port, socket.nonce, socket.transmitKey, socket.clientIdRaw);
-		await sentEvent(socket, message);
-		success(`socket Sent -> ID: ${socket.id}`);
+	async function send(client, message, options) {
+		await sendClient(client, message, options);
+		await sentEvent(client, message);
+		success(`socket Sent -> ID: ${client.id}`);
 	}
 	socketMethods.send = send;
 };

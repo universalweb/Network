@@ -51,7 +51,11 @@ function clientSendModule(udspPrototype) {
 		cnsl(`Send to server`);
 		const nonce = nonceBox();
 		success(`Nonce Size: ${nonce.length} ${toBase64(nonce)}`);
-		headers.id = client.serverId || client.clientId;
+		if (client.serverId || client.clientId) {
+			headers.id = client.serverId || client.clientId;
+		} else {
+			return console.error(`NO CLIENT ID IS'T ASSIGNED`);
+		}
 		headers.nonce = nonce;
 		if (clientStatusCode === 0) {
 			// PERFECT FORWARD SECRECY USE RANDOM EPHEMERAL KEY TO ENCRYPT IDENTITY CERT

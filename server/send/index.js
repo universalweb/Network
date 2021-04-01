@@ -13,23 +13,57 @@ module.exports = (server) => {
 		sendRaw
 	} = server;
 	logImprt('Send', __dirname);
-	// socketId, nonce, encrypted message size, flags, packet size.
-	async function send(rawMessage, address, port, nonce, transmitKey, id, options) {
+	// clientId, nonce, encrypted message size, flags, packet size.
+	async function send(client, rawMessage, options) {
+		const {
+			address,
+			port,
+			nonce,
+			transmitKey,
+			clientIdRaw: id
+		} = client;
+		const {
+			sid
+		} = rawMessage;
 		success(`PROCESSING MESSAGE TO SEND`);
 		console.log(options);
 		console.log(rawMessage);
-		success(`socketId: ${id.toString('base64')}`);
+		success(`clientId: ${id.toString('base64')}`);
 		success(`Transmit Key ${toBase64(transmitKey)}`);
-		if (rawMessage.head) {
-			rawMessage.head = encode(rawMessage.head);
+		let size = 0;
+		let headLength = 0;
+		let bodyLength = 0;
+		let {
+			head,
+			body
+		} = rawMessage;
+		const message = rawMessage;
+		const sendObject = {
+			sid,
+			rawMessage,
+			options
+		};
+		if (head) {
+			head = encode(head);
+			console.log(chunk(head, 100));
+			message.head = head;
+			headLength = head.length;
+			size = size + headLength;
+			success('HEAD PAYLOAD', headLength);
 		}
-		if (rawMessage.body) {
-			rawMessage.body = encode(rawMessage.body);
+		if (body) {
+			body = encode(body);
+			message.body = body;
+			bodyLength = body.length;
+			size = size + bodyLength;
+			success('BODY PAYLOAD', bodyLength);
 		}
-		success('HEAD PAYLOAD');
-		console.log(rawMessage.head.length, chunk());
-		success('BODY PAYLOAD');
-		console.log(rawMessage.body.length);
+		if (size > 1000) {
+			console.log('Send item is too large will need to break down.');
+		}
+		if (sid) {
+			client.sendQueue.set(sid, sendObject);
+		}
 		return sendRaw(rawMessage, address, port, nonce, transmitKey, id);
 	}
 	server.send = send;

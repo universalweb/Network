@@ -62,9 +62,12 @@ module.exports = (server) => {
 				socket.destroy(1);
 			}
 		}, 10000);
-		socket.messageQueue = [];
 		socket.nonce = emptyNonce();
 		socket.publicCertificate = publicCertificate;
+		/*
+			Packets that need to be sent and confirmed
+		*/
+		socket.sendBuffer = new Map();
 		success(`socket Created: ID:${serverIdString} ${address}:${port}`);
 		console.log(socket);
 	}

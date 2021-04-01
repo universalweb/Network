@@ -31,7 +31,7 @@ module.exports = (server) => {
 		const ephemeralKeypair = additionalData.key;
 		success(`Encrypted Message Signature: ${signature.toString('base64')}`);
 		success(`Encrypted Message Signature Size: ${signature.length}`);
-		const socketId = additionalData.id;
+		const clientId = additionalData.id;
 		const nonce = additionalData.nonce;
 		success(`Encrypted Message Size: ${packet.length}`);
 		const sessionKey = serverSession(serverPublicKey, serverPrivateKey, ephemeralKeypair);
@@ -62,7 +62,7 @@ module.exports = (server) => {
 			const sigCompare = Buffer.compare(signatureHash, hash(ephemeralKeypair)) === 0;
 			if (sigCompare) {
 				logReceived(`Signature is valid`);
-				const client = await createClient(connection, receiveKey, transmitKey, socketId);
+				const client = await createClient(connection, receiveKey, transmitKey, clientId);
 				await onMessage(client, message);
 			} else {
 				console.log('SIGNATURE FAILED NO SOCKET CREATED');
