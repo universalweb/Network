@@ -24,7 +24,8 @@ module.exports = (server) => {
 		if (method) {
 			if (body) {
 				if (hasValue(sid)) {
-					cnsl(`Request:${api} RequestID: ${sid}`, message.body);
+					cnsl(`Request:${api} RequestID: ${sid}`);
+					console.log(message.body);
 					const response = {
 						sid
 					};
@@ -37,7 +38,7 @@ module.exports = (server) => {
 					const eid = message.eid;
 					if (hasValue(eid)) {
 						success(`Request:${method} Emit ID:${eid} ${stringify(message)}`);
-						method(socket, body, message);
+						return method(socket, body, message);
 					} else {
 						return logError(`Invalid Request type. No Emit ID was given. ${stringify(message)}`);
 					}

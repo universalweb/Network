@@ -26,8 +26,8 @@ module.exports = (server) => {
 			sid
 		} = rawMessage;
 		success(`PROCESSING MESSAGE TO SEND`);
-		console.log(options);
-		console.log(rawMessage);
+		console.log('Packet Options', options);
+		console.log('Raw Message', rawMessage);
 		success(`clientId: ${id.toString('base64')}`);
 		success(`Transmit Key ${toBase64(transmitKey)}`);
 		let size = 0;
@@ -58,13 +58,14 @@ module.exports = (server) => {
 			size = size + bodyLength;
 			success('BODY PAYLOAD', bodyLength);
 		}
-		if (size > 1000) {
-			console.log('Send item is too large will need to break down.');
-		}
 		if (sid) {
 			client.sendQueue.set(sid, sendObject);
 		}
-		return sendRaw(rawMessage, address, port, nonce, transmitKey, id);
+		if (size > 1000) {
+			console.log('Send item is too large will need to chunk into packets.');
+		} else {
+			return sendRaw(rawMessage, address, port, nonce, transmitKey, id);
+		}
 	}
 	server.send = send;
 };
