@@ -8,7 +8,8 @@ module.exports = (server) => {
 			serverSession,
 			signOpen,
 			hash,
-			signVerify
+			signVerify,
+			toBase64,
 		},
 		api: {
 			onMessage
@@ -24,12 +25,12 @@ module.exports = (server) => {
 		createClient
 	} = server;
 	let count = 0;
-	alert(serverPrivateKey.toString('base64'));
+	alert(toBase64(serverPrivateKey));
 	// additionalData (ad) are the main UDSP headers. It may be called headers at times or additionalData.
 	async function processSocketCreation(connection, additionalDataBuffer, additionalData, packet) {
 		const signature = additionalData.sig;
 		const ephemeralKeypair = additionalData.key;
-		success(`Encrypted Message Signature: ${signature.toString('base64')}`);
+		success(`Encrypted Message Signature: ${toBase64(signature)}`);
 		success(`Encrypted Message Signature Size: ${signature.length}`);
 		const clientId = additionalData.id;
 		const nonce = additionalData.nonce;
@@ -37,10 +38,10 @@ module.exports = (server) => {
 		const sessionKey = serverSession(serverPublicKey, serverPrivateKey, ephemeralKeypair);
 		const receiveKey = sessionKey.receiveKey;
 		const transmitKey = sessionKey.transmitKey;
-		success(`receiveKey: ${receiveKey.toString('base64')}`);
-		success(`transmitKey: ${transmitKey.toString('base64')}`);
-		console.log(packet.toString('base64'));
-		console.log(nonce.toString('base64'));
+		success(`receiveKey: ${toBase64(receiveKey)}`);
+		success(`transmitKey: ${toBase64(transmitKey)}`);
+		console.log(toBase64(packet));
+		console.log(toBase64(nonce));
 		const decrypted = decrypt(packet, additionalDataBuffer, nonce, receiveKey);
 		if (!decrypted) {
 			return logError(`Decrypt Failed`);

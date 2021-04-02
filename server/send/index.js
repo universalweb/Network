@@ -28,7 +28,7 @@ module.exports = (server) => {
 		success(`PROCESSING MESSAGE TO SEND`);
 		console.log('Packet Options', options);
 		console.log('Raw Message', rawMessage);
-		success(`clientId: ${id.toString('base64')}`);
+		success(`clientId: ${toBase64(id)}`);
 		success(`Transmit Key ${toBase64(transmitKey)}`);
 		let size = 0;
 		let headLength = 0;

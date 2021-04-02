@@ -24,6 +24,7 @@ module.exports = (async () => {
 	console.log('Connected', connected);
 	console.log('INTRO =>', connected.response.body);
 	console.time('Request');
+	return;
 	const state = await uws.request('state', {
 		state: '/'
 	});

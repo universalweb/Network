@@ -5,6 +5,7 @@ module.exports = (server) => {
 		parseMessage,
 		crypto: {
 			decrypt,
+			toBase64,
 		},
 		api: {
 			onMessage
@@ -15,7 +16,7 @@ module.exports = (server) => {
 	let count = 0;
 	async function processMessage(connection, headersBuffer, headers, packet) {
 		const clientId = headers.id;
-		const client = clients.get(clientId.toString('base64'));
+		const client = clients.get(toBase64(clientId));
 		if (!client) {
 			return false;
 		}

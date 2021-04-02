@@ -61,7 +61,7 @@ function clientSendModule(udspPrototype) {
 			// PERFECT FORWARD SECRECY USE RANDOM EPHEMERAL KEY TO ENCRYPT IDENTITY CERT
 			headers.key = client.keypair.publicKey;
 			headers.sig = hashSign(headers.key, client.profile.ephemeral.private);
-			console.log(`Sig:${headers.sig.toString('base64')}`);
+			console.log(`Sig:${toBase64(headers.sig)}`);
 			console.log(`Sig Size:${headers.sig.length}`);
 			console.log(`Setting ephemeral random public key to header & profile cert to message.body`);
 		}
@@ -72,7 +72,7 @@ function clientSendModule(udspPrototype) {
 		console.log(headersEndIndex, headers);
 		const headersCompiled = Buffer.concat([headersEndIndexBuffer, headersEncoded]);
 		success(`Additional Data End Index ${headersEndIndex.toString()}`);
-		console.log(client.transmitKey.toString('base64'));
+		console.log(toBase64(client.transmitKey));
 		console.log(message);
 		const messageEncoded = encode(message);
 		const encryptedMessage = encrypt(messageEncoded, headersEncoded, nonce, client.transmitKey);
@@ -88,7 +88,7 @@ function clientSendModule(udspPrototype) {
 			encryptedDataEndIndex,
 			encryptedMessage,
 		]);
-		console.log(encryptedMessage.toString('base64'));
+		console.log(toBase64(encryptedMessage));
 		const packetSize = messageBuffer.length;
 		success(`Packet End Index ${packetSize}`);
 		success('Message Buffer Size', Buffer.from(messageBuffer).length);

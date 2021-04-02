@@ -1,8 +1,8 @@
 /*
   	* Client Module
 	* UDSP - Universal Data Stream Protocol
-	* UWS Universal Web Socket
-	* Establishes a UDP based bi-directional real-time socket between a client and end service.
+	* UWS Universal Web client
+	* Establishes a UDP based bi-directional real-time client between a client and end service.
 */
 const {
 	encode,
@@ -16,7 +16,7 @@ const {
 } = utility;
 class UDSP {
 	constructor(configuration) {
-		const socket = this;
+		const client = this;
 		console.log('-------CLIENT INITIALIZING-------\n', configuration);
 		const {
 			service,
@@ -29,24 +29,25 @@ class UDSP {
 				clientSession,
 				createClientId,
 				keypair,
+				toBase64
 			},
 			alert,
 			success
-		} = socket;
-		socket.clientId = createClientId();
+		} = client;
+		client.clientId = createClientId();
 		success(`clientId:`, this.clientId);
 		success(`Creating Shared Keys`);
-		const transmitKey = socket.transmitKey = createSessionKey();
-		const receiveKey = socket.receiveKey = createSessionKey();
+		const transmitKey = client.transmitKey = createSessionKey();
+		const receiveKey = client.receiveKey = createSessionKey();
 		// Currently unused but may in the future
-		const ephemeralProfileTransmitKey = socket.ephemeralProfileTransmitKey = createSessionKey();
-		const ephemeralProfileReceiveKey = socket.ephemeralProfileReceiveKey = createSessionKey();
+		const ephemeralProfileTransmitKey = client.ephemeralProfileTransmitKey = createSessionKey();
+		const ephemeralProfileReceiveKey = client.ephemeralProfileReceiveKey = createSessionKey();
 		console.log(ephemeralProfileTransmitKey, ephemeralProfileReceiveKey);
 		success(`Creating Connection Keypair`);
-		socket.keypair = keypair();
-		socket.ephemeralPublic = omit(profile.ephemeral, ['private']);
+		client.keypair = keypair();
+		client.ephemeralPublic = omit(profile.ephemeral, ['private']);
 		if (profile.master) {
-			socket.masterPublic = omit(profile.master, ['private']);
+			client.masterPublic = omit(profile.master, ['private']);
 		}
 		const {
 			ephemeral: {
@@ -62,27 +63,33 @@ class UDSP {
 		const {
 			publicKey,
 			secretKey: privateKey,
-		} = socket.keypair;
+		} = client.keypair;
 		clientSession(receiveKey, transmitKey, publicKey, privateKey, serverPublicKey);
-		// Can be used to encrypt and authenticate the profile with the server
+		// Can be used to encrypt-authenticate the profile with the server
 		// clientSession(ephemeralProfileReceiveKey, ephemeralProfileTransmitKey, profile.ephemeral.publicKey, profile.ephemeral.secretKey, serverPublicKey);
 		alert(`Shared Keys Created`);
 		console.log(receiveKey, transmitKey);
-		require('./status')(socket);
-		require('./configuration')(socket, configuration);
-		require('./listening')(socket);
-		socket.server.on('message', socket.onMessage.bind(socket));
-		const serviceKey = serviceSignature.toString('base64');
-		const profileKey = profileSignature.toString('base64');
+		require('./status')(client);
+		require('./configuration')(client, configuration);
+		require('./listening')(client);
+		client.server.on('message', client.onMessage.bind(client));
+		const serviceKey = toBase64(serviceSignature);
+		const profileKey = toBase64(profileSignature);
 		const connectionKey = `${serviceKey}${profileKey}`;
-		connections[connectionKey] = socket;
-		return socket;
+		connections[connectionKey] = client;
+		return client;
 	}
-	server = require('dgram').createSocket('udp4');
+	server = require('dgram').createclient('udp4');
 	requests = new Map();
 	close() {
-		console.log(this, 'socket closed down.');
-		this.server.close();
+		const client = this;
+		const {
+			crypto: {
+				toBase64
+			}
+		} = client;
+		console.log(client, 'client closed down.');
+		client.server.close();
 		const {
 			ephemeral: {
 				signature: profileSignature
@@ -93,8 +100,8 @@ class UDSP {
 				signature: serviceSignature
 			}
 		} = this.service;
-		const serviceKey = serviceSignature.toString('base64');
-		const profileKey = profileSignature.toString('base64');
+		const serviceKey = toBase64(serviceSignature);
+		const profileKey = toBase64(profileSignature);
 		const connectionKey = `${serviceKey}${profileKey}`;
 		connections[connectionKey] = null;
 	}
@@ -102,7 +109,7 @@ class UDSP {
 const udspPrototype = UDSP.prototype;
 assign(udspPrototype, {
 	type: 'client',
-	description: 'client module for Universal Web Sockets',
+	description: 'client module for Universal Web clients',
 	encode,
 	decode,
 	utility
@@ -123,24 +130,24 @@ require('./connect/')(udspPrototype);
 function udsp(configuration) {
 	return new UDSP(configuration);
 }
-// UNIVERSAL WEB SOCKET
-function getsocket(configuration) {
+// UNIVERSAL WEB client
+function getclient(configuration) {
 	const serviceKey = configuration.service.ephemeral.signature.toString('base64');
 	const profileKey = configuration.profile.ephemeral.signature.toString('base64');
 	const connectionKey = `${serviceKey}${profileKey}`;
-	const socket = connections[connectionKey];
-	if (socket) {
-		return socket;
+	const client = connections[connectionKey];
+	if (client) {
+		return client;
 	}
 }
 function uws(configuration) {
-	const socket = getsocket(configuration);
-	if (socket) {
-		return socket;
+	const client = getclient(configuration);
+	if (client) {
+		return client;
 	}
 	return udsp(configuration);
 }
-uws.get = getsocket;
+uws.get = getclient;
 uws.udsp = udsp;
 uws.getCertificate = (location) => {
 	return udspPrototype.certificate.get(location);

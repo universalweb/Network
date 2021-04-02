@@ -21,7 +21,7 @@ module.exports = (server) => {
 	// clientId, nonce, encrypted message size, flags, packet size.
 	async function sendRaw(rawMessage, address, port, nonce, transmitKey, id) {
 		success(`SENDING MESSAGE`);
-		success(`clientId: ${id.toString('base64')}`);
+		success(`clientId: ${toBase64(id)}`);
 		success(`Transmit Key ${toBase64(transmitKey)}`);
 		rawMessage.time = Date.now();
 		console.log('FULL MESSAGE', rawMessage);
@@ -43,7 +43,7 @@ module.exports = (server) => {
 		if (!encryptedMessage) {
 			return errorLog('Encryption failed');
 		}
-		success(`Encrypted Message: Size:${encryptedMessage.length} ${encryptedMessage.toString('base64')}`);
+		success(`Encrypted Message: Size:${encryptedMessage.length} ${toBase64(encryptedMessage)}`);
 		const encryptedDataEndIndex = buildPacketSize(headersEndIndex + 4 + encryptedLength);
 		success(`Encrypted Data End Index: ${encryptedDataEndIndex.toString()}`);
 		const sendBuffer = [
@@ -51,7 +51,7 @@ module.exports = (server) => {
 			encryptedDataEndIndex,
 			encryptedMessage,
 		];
-		logSent(sendBuffer.toString('base64'), `Size:${sendBuffer.length}`);
+		logSent(toBase64(sendBuffer), `Size:${sendBuffer.length}`);
 		return promise((accept, reject) => {
 			rawServer.send(sendBuffer, port, address, (error) => {
 				if (error) {
