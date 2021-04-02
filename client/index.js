@@ -79,7 +79,7 @@ class UDSP {
 		connections[connectionKey] = client;
 		return client;
 	}
-	server = require('dgram').createclient('udp4');
+	server = require('dgram').createSocket('udp4');
 	requests = new Map();
 	close() {
 		const client = this;
@@ -109,7 +109,7 @@ class UDSP {
 const udspPrototype = UDSP.prototype;
 assign(udspPrototype, {
 	type: 'client',
-	description: 'client module for Universal Web clients',
+	description: 'client module for UDSP',
 	encode,
 	decode,
 	utility
