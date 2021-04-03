@@ -1,31 +1,19 @@
 module.exports = async () => {
 	const server = await require('../server/index.js')({
-		maxMTU: 1000,
-		encoding: 'utf8',
+		maxMTU: 1100,
 		max: 900,
-		profile: `${__dirname}/../services/dis.cert`,
+		// DIS server Domain certificate to be loaded used for connection encryption
+		profile: `${__dirname}/../services/universal.web.cert`,
+		// Where to load app resources from
 		resourceDirectory: `${__dirname}/resources`,
+		// DIS Server ID used for load balancing and attaching to the end of connection IDs
+		id: '0',
+		onConnectMessage: `Welcome to the Universal Web.`,
+		port: 8888
 	});
 	const {
 		status,
 		cnsl,
-		utility: {
-			stringify
-		}
 	} = server;
-	cnsl('DIS Server Status', status);
-	await server.api.add({
-		async sign(stream, body, json) {
-			cnsl('SIGN API');
-			cnsl(`
-      JSON:  ${stringify(json)}
-      BODY:  ${stringify(body)}
-      SID:${stream.id}`);
-			cnsl(stream.publicCertificate);
-			return {
-				data: 'THIS IS WHERE THE SIGNED MESSAGE WILL BE'
-			};
-		}
-	});
-	return server;
+	cnsl('DIS Status', status);
 };

@@ -20,6 +20,7 @@ module.exports = (server, configuration) => {
 		id: '0',
 		maxMTU: 1000,
 		encoding: 'utf8',
-		max: 1000
+		max: 1000,
+		maxPayloadSize: 1000
 	}, configuration);
 };

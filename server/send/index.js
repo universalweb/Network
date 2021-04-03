@@ -10,7 +10,8 @@ module.exports = (server) => {
 			chunk,
 		},
 		success,
-		sendRaw
+		sendRaw,
+		maxPayloadSize
 	} = server;
 	logImprt('Send', __dirname);
 	// clientId, nonce, encrypted message size, flags, packet size.
@@ -38,16 +39,19 @@ module.exports = (server) => {
 			body
 		} = rawMessage;
 		const message = rawMessage;
-		const sendObject = {
+		const queued = {
 			sid,
 			rawMessage,
-			options
+			options,
+			headIndex: 0,
+			bodyIndex: 0
 		};
 		if (head) {
 			head = encode(head);
 			console.log(chunk(head, 100));
 			message.head = head;
 			headLength = head.length;
+			queued.headLength = headLength;
 			size = size + headLength;
 			success('HEAD PAYLOAD', headLength);
 		}
@@ -55,14 +59,26 @@ module.exports = (server) => {
 			body = encode(body);
 			message.body = body;
 			bodyLength = body.length;
+			queued.bodyLength = bodyLength;
 			size = size + bodyLength;
 			success('BODY PAYLOAD', bodyLength);
 		}
+		queued.size = size;
 		if (sid) {
-			client.sendQueue.set(sid, sendObject);
+			console.log('Queued Message', queued);
+			client.sendQueue.set(sid, queued);
 		}
-		if (size > 1000) {
-			console.log('Send item is too large will need to chunk into packets.');
+		if (size > maxPayloadSize) {
+			console.log('SEND - Item is too large will need to chunk into packets.');
+			const afterHead = maxPayloadSize - headLength;
+			queued.headEnd = afterHead;
+			/**
+				Both head and body are treated as the same array of data.
+				If the head is 200bytes and the body is 200bytes the total range is 400.
+				At index range 0 it would be at the start of the header data while 201 may be the start of the body.
+				This is used to setup ranges for efficient reliability algorithms & chunking
+			*/
+			console.log('Room left after head size calculated', afterHead);
 		} else {
 			return sendRaw(rawMessage, address, port, nonce, transmitKey, id);
 		}
