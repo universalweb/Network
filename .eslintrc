@@ -1,5 +1,4 @@
 {
-	"parser": "babel-eslint",
 	"extends": "eslint:recommended",
 	"env": {
 		"browser": true,
@@ -16,11 +15,7 @@
 	},
 	"parserOptions": {
 		"sourceType": "script",
-		"ecmaVersion": 12,
-		"ecmaFeatures": {
-			"experimentalObjectRestSpread": true,
-			"allowImportExportEverywhere": true
-		}
+		"ecmaVersion": 12
 	},
 	"rules": {
 		"no-setter-return": "error",
@@ -29,12 +24,15 @@
 		"object-curly-newline": [
 			"error",
 			{
-				"ObjectExpression": {
-					"minProperties": 1
+				"ObjectExpression": "always",
+				"ObjectPattern": {
+					"multiline": true
 				},
-				"ObjectPattern": "always",
-				"ImportDeclaration": "always",
-				"ExportDeclaration": "always"
+				"ImportDeclaration": "never",
+				"ExportDeclaration": {
+					"multiline": true,
+					"minProperties": 3
+				}
 			}
 		],
 		"object-property-newline": [
@@ -188,7 +186,7 @@
 		"no-mixed-requires": "error",
 		"no-new-require": "error",
 		"no-path-concat": "error",
-		"no-process-env": "error",
+		"no-process-env": "off",
 		"no-process-exit": "error",
 		"no-restricted-modules": "off",
 		"no-sync": "off",

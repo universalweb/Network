@@ -10,10 +10,7 @@
 	"parserOptions": {
 		"sourceType": "script",
 		"ecmaVersion": 10,
-		"ecmaFeatures": {
-			"experimentalObjectRestSpread": true,
-			"allowImportExportEverywhere": true
-		}
+		
 	},
 	"rules": {
 		"object-curly-newline": [

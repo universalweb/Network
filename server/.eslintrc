@@ -15,13 +15,12 @@
 	},
 	"parserOptions": {
 		"sourceType": "script",
-		"ecmaVersion": 10,
-		"ecmaFeatures": {
-			"experimentalObjectRestSpread": true,
-			"allowImportExportEverywhere": true
-		}
+		"ecmaVersion": 10	
 	},
 	"rules": {
+		"no-setter-return": "error",
+		"no-dupe-else-if": "error",
+		"no-import-assign": "off",
 		"object-curly-newline": [
 			"error",
 			{

@@ -11,7 +11,7 @@ const state = require('./state')('browser', {
 });
 const {
 	file: {
-		readJson
+		readJson,
 	}
 } = state;
 const config = readJson('./config/index.json');
