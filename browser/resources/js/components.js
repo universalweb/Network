@@ -17,12 +17,12 @@
 
 	const {
 		utility: {
-			isString
+			isString: isString$1
 		}
 	} = app;
 	const component = (config) => {
 		const componentName = config.name;
-		if (isString(componentName) && !config) {
+		if (isString$1(componentName) && !config) {
 			return new Ractive.components[componentName]();
 		} else if (Ractive.components[componentName]) {
 			return new Ractive.components[componentName](config);
@@ -56,16 +56,16 @@
 	const {
 		utility: {
 			findIndex,
-			hasValue,
+			hasValue: hasValue$1,
 			get,
-			isPlainObject,
+			isPlainObject: isPlainObject$1,
 			findItem,
 			assignDeep,
 			ensureArray,
-			assign,
-			each,
+			assign: assign$3,
+			each: each$1,
 			isArray,
-			isEmpty,
+			isEmpty: isEmpty$1,
 			sortNewest,
 			sortOldest,
 			clear,
@@ -74,7 +74,7 @@
 	const extendRactive = {
 		async afterIndex(path, indexMatch, item, indexName = 'id') {
 			const index = findIndex(this.get(path), indexMatch, indexName);
-			if (hasValue(index)) {
+			if (hasValue$1(index)) {
 				await this.splice(path, index + 1, 0, ...ensureArray(item));
 			} else {
 				await this.push(path, item);
@@ -82,7 +82,7 @@
 		},
 		async assign(path, mergeObject) {
 			const item = this.get(path);
-			if (hasValue(item)) {
+			if (hasValue$1(item)) {
 				assignDeep(item, mergeObject);
 				await this.update(path);
 				return item;
@@ -90,7 +90,7 @@
 		},
 		async beforeIndex(path, indexMatch, item, indexName = 'id') {
 			const index = findIndex(this.get(path), indexMatch, indexName);
-			if (hasValue(index)) {
+			if (hasValue$1(index)) {
 				await this.splice(path, index - 1, 0, ...ensureArray(item));
 			} else {
 				await this.push(path, item);
@@ -105,19 +105,19 @@
 		},
 		findItem(path, indexMatch, indexName = 'id') {
 			const item = findItem(this.get(path), indexMatch, indexName);
-			if (hasValue(item)) {
+			if (hasValue$1(item)) {
 				return item;
 			}
 		},
 		getIndex(path, indexMatch, indexName = 'id') {
 			const index = findIndex(this.get(path), indexMatch, indexName);
-			if (hasValue(index)) {
+			if (hasValue$1(index)) {
 				return index;
 			}
 		},
 		async mergeItem(path, indexMatch, newVal, indexName = 'id') {
 			const item = findItem(this.get(path), indexMatch, indexName);
-			if (hasValue(item)) {
+			if (hasValue$1(item)) {
 				assignDeep(item, newVal);
 				await this.update(path);
 				return item;
@@ -125,14 +125,14 @@
 		},
 		async removeIndex(path, indexMatch, indexName = 'id') {
 			const index = findIndex(this.get(path), indexMatch, indexName);
-			if (hasValue(index)) {
+			if (hasValue$1(index)) {
 				await this.splice(path, index, 1);
 			}
 		},
 		async setIndex(path, indexMatch, item, indexName = 'id', optionsArg) {
 			const options = optionsArg || {};
 			const index = findIndex(this.get(path), indexMatch, indexName);
-			if (hasValue(index)) {
+			if (hasValue$1(index)) {
 				const pathSuffix = (options.pathSuffix) ? `.${options.pathSuffix}` : '';
 				await this.set(`${path}.${index}${pathSuffix}`, item);
 			} else if (get('conflict', options) === 'insert') {
@@ -151,14 +151,14 @@
 		},
 		async syncCollection(path, newValArg, type = 'push', indexName = 'id') {
 			const oldVal = this.get(path);
-			if (isPlainObject(oldVal)) {
+			if (isPlainObject$1(oldVal)) {
 				assignDeep(oldVal, newValArg);
 			} else {
 				const newVal = ensureArray(newValArg);
-				each(newVal, (item) => {
+				each$1(newVal, (item) => {
 					const oldValItem = findItem(oldVal, item[indexName], indexName);
-					if (hasValue(oldValItem)) {
-						assign(oldValItem, item);
+					if (hasValue$1(oldValItem)) {
+						assign$3(oldValItem, item);
 					} else {
 						oldVal[type](item);
 					}
@@ -169,43 +169,43 @@
 		async toggleIndex(path, indexMatchArg, pathSuffixArg, indexName = 'id') {
 			let indexMatch;
 			const arrayCheck = isArray(indexMatchArg);
-			if (arrayCheck && !isEmpty(indexMatchArg)) {
+			if (arrayCheck && !isEmpty$1(indexMatchArg)) {
 				indexMatch = indexMatchArg.shift();
 			} else {
 				indexMatch = indexMatchArg;
 			}
 			const index = findIndex(this.get(path), indexMatch, indexName);
-			if (hasValue(index)) {
+			if (hasValue$1(index)) {
 				const pathSuffix = (pathSuffixArg) ? `.${pathSuffixArg}` : '';
 				await this.toggle(`${path}.${index}${pathSuffix}`);
 			}
-			if (arrayCheck && !isEmpty(indexMatchArg)) {
+			if (arrayCheck && !isEmpty$1(indexMatchArg)) {
 				await this.toggleIndex(path, indexMatchArg, pathSuffixArg, indexName);
 			}
 		},
 		async updateItem(path, indexMatch, react, indexName = 'id') {
 			const item = findItem(this.get(path), indexMatch, indexName);
-			if (hasValue(item)) {
+			if (hasValue$1(item)) {
 				react(item);
 				await this.update(path);
 				return item;
 			}
 		}
 	};
-	assign(Ractive.prototype, extendRactive);
+	assign$3(Ractive.prototype, extendRactive);
 
 	const {
 		utility: {
-			assign: assign$1,
+			assign: assign$2,
 			cnsl,
 			compactMapArray,
-			isEmpty: isEmpty$1,
+			isEmpty,
 			eachAsync,
 			eachObject,
 			eachArray,
-			isString: isString$1,
-			isPlainObject: isPlainObject$1,
-			hasValue: hasValue$1,
+			isString,
+			isPlainObject,
+			hasValue,
 			drop
 		},
 	} = app;
@@ -222,12 +222,12 @@
 			this.number = watchersRegex.push(callable) - 1;
 		}
 		start() {
-			if (!hasValue$1(this.number)) {
+			if (!hasValue(this.number)) {
 				this.number = watchersRegex.push(this.callable) - 1;
 			}
 		}
 		stop() {
-			if (hasValue$1(this.number)) {
+			if (hasValue(this.number)) {
 				drop(watchersRegex, this.number);
 				this.number = null;
 			}
@@ -252,12 +252,12 @@
 			this.number = levelObject.push(callable) - 1;
 		}
 		start() {
-			if (!hasValue$1(this.number)) {
+			if (!hasValue(this.number)) {
 				this.number = watchers[this.type].push(this.callable) - 1;
 			}
 		}
 		stop() {
-			if (hasValue$1(this.number)) {
+			if (hasValue(this.number)) {
 				drop(watchersRegex, this.number);
 				this.number = null;
 			}
@@ -296,9 +296,9 @@
 	};
 	const watch = (type, callable) => {
 		let method;
-		if (isString$1(type)) {
+		if (isString(type)) {
 			method = onString;
-		} else if (isPlainObject$1(type)) {
+		} else if (isPlainObject(type)) {
 			method = onCollection;
 		} else {
 			method = onRegex;
@@ -330,7 +330,7 @@
 				return item;
 			}
 		});
-		if (!isEmpty$1(regexSubscribers)) {
+		if (!isEmpty(regexSubscribers)) {
 			subscribers.push(...regexSubscribers);
 		}
 		if (levelObject) {
@@ -343,7 +343,7 @@
 			});
 		}
 	};
-	assign$1(app, {
+	assign$2(app, {
 		watch,
 		watchers,
 		watcherUpdate
@@ -351,15 +351,15 @@
 
 	const {
 		utility: {
-			each: each$1,
-			assign: assign$2,
+			each,
+			assign: assign$1,
 		}
 	} = app;
-	const headNode = document.querySelector('head');
+	document.querySelector('head');
 	const importedCssCount = {};
 	const importedCss = {};
 	const componentsWithCss = {};
-	assign$2(app, {
+	assign$1(app, {
 		componentsWithCss,
 		importedCss,
 		importedCssCount
@@ -723,7 +723,7 @@
 
 	const {
 		utility: {
-			assign: assign$3
+			assign
 		}
 	} = app;
 	const view = new Ractive({
@@ -754,7 +754,7 @@
 		},
 		template: `<title>{{text()}}</title>`,
 	});
-	assign$3(app, {
+	assign(app, {
 		view,
 		pageTitle
 	});
