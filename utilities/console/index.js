@@ -32,11 +32,13 @@ module.exports = (state) => {
 		const header = ` ---------------- Message Sent ----------------  `;
 		const prettyItems = prettyObjects(args);
 		console.log(chalk.hex(`#6200ea`)(`${state.type}: ${header}`, ...prettyItems, `\n`).replace(`${header} `, `${header}\n`));
+		console.log(chalk.hex(`#6200ea`)(` ---------------- Message Sent END ----------------  `, `\n`));
 	};
 	state.logReceived = (...args) => {
 		const header = ` ---------------- Message Received ----------------  `;
 		const prettyItems = prettyObjects(args);
 		console.log(chalk.hex(`#2962ff`)(`${(state.type)}: ${header}`, ...prettyItems, `\n`).replace(`${header} `, `${header}\n`));
+		console.log(chalk.hex(`#2962ff`)(` ---------------- Message Received END ----------------  `, `\n`));
 	};
 	state.logImprt = (value, directory) => {
 		const logValue = (directory) ? `${value} - ${directory}` : value;
