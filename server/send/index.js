@@ -7,7 +7,9 @@ module.exports = (server) => {
 			toBase64
 		},
 		utility: {
+			assign,
 			chunk,
+			omit
 		},
 		success,
 		sendRaw,
@@ -21,7 +23,7 @@ module.exports = (server) => {
 			port,
 			nonce,
 			transmitKey,
-			clientIdRaw: id
+			clientIdRaw: clientId
 		} = client;
 		const {
 			sid
@@ -29,7 +31,7 @@ module.exports = (server) => {
 		success(`PROCESSING MESSAGE TO SEND`);
 		console.log('Packet Options', options);
 		console.log('Raw Message', rawMessage);
-		success(`clientId: ${toBase64(id)}`);
+		success(`clientId: ${toBase64(clientId)}`);
 		success(`Transmit Key ${toBase64(transmitKey)}`);
 		let size = 0;
 		let headLength = 0;
@@ -39,6 +41,7 @@ module.exports = (server) => {
 			body
 		} = rawMessage;
 		const message = rawMessage;
+		const msgTemplate = omit(rawMessage, ['body', 'head']);
 		const queued = {
 			sid,
 			rawMessage,
@@ -70,17 +73,35 @@ module.exports = (server) => {
 		}
 		if (size > maxPayloadSize) {
 			console.log('SEND - Item is too large will need to chunk into packets.');
-			const afterHead = maxPayloadSize - headLength;
-			queued.headEnd = afterHead;
+			const afterHeadMax = maxPayloadSize - headLength;
+			queued.headEnd = afterHeadMax;
+			message.bSize = bodyLength;
+			message.hSize = headLength;
+			if (headLength < maxPayloadSize) {
+				// If the body is larger than the max packet size.
+				if (bodyLength > size) {
+					/*
+						The max body size that can be sent in the first packet
+						is equal to the header size subtracted from the max packet size.
+					*/
+					const firstBody = body.slice(0, afterHeadMax);
+					const firstPacket = assign({
+						head,
+						body: firstBody
+					}, msgTemplate);
+					sendRaw(firstPacket, address, port, nonce, transmitKey, clientId);
+				}
+			} else if (headLength > maxPayloadSize) {
+			}
 			/**
 				Both head and body are treated as the same array of data.
 				If the head is 200bytes and the body is 200bytes the total range is 400.
 				At index range 0 it would be at the start of the header data while 201 may be the start of the body.
 				This is used to setup ranges for efficient reliability algorithms & chunking
 			*/
-			console.log('Room left after head size calculated', afterHead);
+			console.log('Room left after head size calculated', afterHeadMax);
 		} else {
-			return sendRaw(rawMessage, address, port, nonce, transmitKey, id);
+			return sendRaw(rawMessage, address, port, nonce, transmitKey, clientId);
 		}
 	}
 	server.send = send;

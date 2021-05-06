@@ -19,9 +19,9 @@ module.exports = (server) => {
 	} = server;
 	logImprt('Send', __dirname);
 	// clientId, nonce, encrypted message size, flags, packet size.
-	async function sendRaw(rawMessage, address, port, nonce, transmitKey, id) {
+	async function sendRaw(rawMessage, address, port, nonce, transmitKey, clientId) {
 		success(`SENDING MESSAGE`);
-		success(`clientId: ${toBase64(id)}`);
+		success(`clientId: ${toBase64(clientId)}`);
 		success(`Transmit Key ${toBase64(transmitKey)}`);
 		rawMessage.time = Date.now();
 		console.log('FULL MESSAGE', rawMessage);
@@ -29,7 +29,7 @@ module.exports = (server) => {
 		randombytes_buf(nonce);
 		success(`Nonce ${toBase64(nonce)} Size: ${nonce.length}`);
 		const headers = {
-			id,
+			id: clientId,
 			nonce,
 		};
 		const headersEncoded = encode(headers);

@@ -51,8 +51,9 @@ function clientSendModule(udspPrototype) {
 		cnsl(`Send to server`);
 		const nonce = nonceBox();
 		success(`Nonce Size: ${nonce.length} ${toBase64(nonce)}`);
-		if (client.serverId || client.clientId) {
-			headers.id = client.serverId || client.clientId;
+		const transmitID = client.serverId || client.clientId;
+		if (transmitID) {
+			headers.id = transmitID;
 		} else {
 			return console.error(`NO CLIENT ID IS'T ASSIGNED`);
 		}
