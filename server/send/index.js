@@ -46,8 +46,6 @@ module.exports = (server) => {
 			sid,
 			rawMessage,
 			options,
-			headIndex: 0,
-			bodyIndex: 0
 		};
 		if (head) {
 			head = encode(head);
@@ -84,12 +82,28 @@ module.exports = (server) => {
 						The max body size that can be sent in the first packet
 						is equal to the header size subtracted from the max packet size.
 					*/
+					let currentIndex = 0;
 					const firstBody = body.slice(0, afterHeadMax);
 					const firstPacket = assign({
+						// Body start Index to store info correctly
+						bi: 0,
+						bl: bodyLength,
+						// Head State - true means completed within a single packet
+						hs: true,
 						head,
+						hl: headLength,
 						body: firstBody
 					}, msgTemplate);
 					sendRaw(firstPacket, address, port, nonce, transmitKey, clientId);
+					while (currentIndex < bodyLength) {
+						currentIndex = currentIndex + 800;
+						const packetChunk = assign({
+						// Body start Index to store info correctly
+							bi: currentIndex,
+							body: body.slice(currentIndex, currentIndex + 800)
+						}, msgTemplate);
+						sendRaw(packetChunk, address, port, nonce, transmitKey, clientId);
+					}
 				}
 			} else if (headLength > maxPayloadSize) {
 			}
