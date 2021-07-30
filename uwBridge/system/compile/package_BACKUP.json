@@ -1,0 +1,36 @@
+{
+  "name": "sentivate",
+  "version": "1.0.0",
+  "description": "Sentivate is a full stack platform for real-time self constructing web applications.",
+  "author": "Thomas Marchi - Arity",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomekmarchi/Sentivate.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tomekmarchi/Sentivate/issues"
+  },
+  "homepage": "https://github.com/tomekmarchi/Sentivate#readme",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "dependencies": {
+    "Acid": "^2.0.13",
+    "Lucy": "^2.0.12",
+    "babel-core": "*",
+    "babel-eslint": "*",
+    "babel-plugin-minify-empty-function": "*",
+    "babel-preset-babili": "^1.0.0",
+    "babel-preset-es2015": "*",
+    "docredux": "^1.0.2",
+    "esformatter": "*",
+    "eslint": "^4.3.0",
+    "eslint-plugin-jsdoc": "^3.1.2",
+    "node-watch": "*",
+    "rollup": "^0.45.2",
+    "rollup-plugin-babili": "*",
+    "vinyl-fs": "*"
+  }
+}

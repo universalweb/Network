@@ -9,11 +9,7 @@ const electron = require('electron');
 const state = require('./state')('browser', {
 	electron
 });
-const {
-	file: {
-		readJson,
-	}
-} = state;
+const { file: { readJson, } } = state;
 const config = readJson('./config/index.json');
 const universalWebSocket = require('./browser/protocol/');
 const {
