@@ -1,0 +1,24 @@
+.networkFrame {
+  position: relative;
+  display: block;
+  height: calc(100% - 100px);
+  background-color: #fff;
+  box-shadow: 0 0 13px rgba(0, 0, 0, 0.2);
+}
+
+.networkWrap {
+  position: relative;
+  height: calc(100% - 80px);
+  margin-top: -250px;
+  padding: 0 50px;
+}
+
+.networkWrap .menuBar.transparent {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.networkFrameClip {
+  overflow: hidden;
+  border-radius: 3px 3px 0 0;
+}

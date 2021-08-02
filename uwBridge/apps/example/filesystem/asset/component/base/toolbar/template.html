@@ -1,0 +1,26 @@
+<nav class="toolbarComponent">
+	{{#items}}
+		{{#loginStatus() === loginState || loginState === undefined}}
+		<div class="navItem noHL {{icon ? '' : 'textOnly'}} {{right ? 'right' : 'left'}} {{$.has($.compactKeys(classes),this.currentClass) || this.active ? 'active' : ''}} {{dropdown && dropdown.state? 'active dropdownMode': ''}}"
+			on-click="@this.fire('multi',@context,this.click)">
+				{{#icon}}
+					<icon class="{{this.active && .currentIcon ? 'fadeOut hide' : 'fadeIn'}}" name="{{this.icon}}" tooltip="{{this.tooltip}}" />
+					{{#currentIcon}}
+						<icon class="currentIcon {{this.active ? 'fadeIn' : 'fadeOut'}}" name="{{this.currentIcon}}" tooltip="{{this.tooltip}}" />
+					{{/}}
+				{{/}}
+				<div class="effect"></div>
+				{{#sizeStyle != 'mobileScreen' && sizeStyle != 'smallScreen' && text}}
+					<span class="text {{text ? '' : 'hide'}}">{{text}}</span>
+				{{/}}
+		</div>
+    {{#this.dropdown}}
+      {{#this.name.length > 0}}
+          <div class="dropdown slow2x {{this.state? 'fadeInUp': 'hide'}}" on-click="preventDefault">
+            {{>getComponent(this.name)}}
+          </div>
+      {{/}}
+    {{/}}
+		{{/}}
+	{{/}}
+</nav>

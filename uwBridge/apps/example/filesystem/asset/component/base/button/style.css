@@ -1,0 +1,138 @@
+/* btns */
+
+button {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.62s ease-in-out;
+  text-align: center;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 2px;
+  outline: none;
+  background-color: transparent;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+button .title {
+  vertical-align: middle;
+}
+
+button:active {
+  box-shadow: rgba(0, 0, 0, 0.117647) 0 1px 3px, inset rgba(0, 0, 0, 0.25) 0 0 1px, rgba(0, 0, 0, 0.117647) 0 1px 4px;
+}
+
+button.iconOnly {
+  padding: 5px 8px;
+}
+
+button.iconOnly .icon {
+  padding-right: 0;
+}
+
+button .icon {
+  padding-right: 5px;
+  padding-bottom: 0;
+  vertical-align: middle;
+}
+
+button .icon.right {
+  padding-right: 0;
+  padding-left: 5px;
+}
+
+button.full {
+  font-size: 16px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px 25px;
+  border-radius: 0 0 2px 2px;
+}
+
+button.small {
+  font-size: 13px;
+  font-weight: bold;
+  padding: 3px 6px;
+}
+
+button.small .icon {
+  font-size: 16px;
+}
+
+.btnGroup {
+  position: relative;
+}
+
+.btnGroup::after {
+  display: table;
+  clear: both;
+  content: '';
+}
+
+.btnGroup button {
+  float: left;
+  margin-right: 0;
+  border-radius: 0;
+}
+
+.btnGroup.rounded button:first-child {
+  border-radius: 3px 0 0 3px;
+}
+
+.btnGroup.rounded button:last-child {
+  border-radius: 0 3px 3px 0;
+}
+
+.inputGroup {
+  display: flex;
+  height: 37px;
+  margin-bottom: 40px;
+}
+
+.inputGroup button {
+  float: left;
+  border-radius: 0 3px 3px 0;
+}
+
+.inputGroup input {
+  display: inline-block;
+  float: left;
+  margin-bottom: 0;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-right: none;
+  border-radius: 3px 0 0 3px;
+}
+
+.btnGroup {
+  width: 100%;
+}
+
+.btnGroup button {
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+button.negative {
+  color: #fff;
+  background-color: #d50000;
+}
+
+button.negative:hover {
+  background-color: #ff5252;
+}
+
+button.positive {
+  color: #fff;
+  background-color: #43a047;
+}
+
+button.positive:hover {
+  background-color: #66bb6a;
+}

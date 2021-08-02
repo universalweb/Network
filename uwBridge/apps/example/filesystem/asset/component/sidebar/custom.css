@@ -1,0 +1,26 @@
+.navigationSidebar {
+  box-shadow: none;
+  background-color: transparent;
+  background-image: url('/image/atlas.png');
+  background-position: -190px bottom;
+  background-repeat: no-repeat;
+}
+
+.navigationSidebar .navItem.sectionTitle.current .text {
+  color: #000;
+}
+
+.navigationSidebar .navItem {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  text-shadow: none;
+}
+
+.navigationSidebar .navItem:hover {
+  color: white;
+}
+
+.navigationSidebar .scroll{
+  height: 100%;
+  top: 0px;
+}

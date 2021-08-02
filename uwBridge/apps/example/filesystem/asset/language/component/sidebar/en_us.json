@@ -1,0 +1,47 @@
+{
+	dashboard:{
+		label:'Dashboard'
+	},
+	newpost:{
+		label:'New Post'
+	},
+	signup:{
+		label:'Signup'
+	},
+	security:{
+		label:'Security'
+	},
+	notifications:{
+		label:'Notifications'
+	},
+	logout:{
+		label:'Logout'
+	},
+	login:{
+		label:'Login'
+	},
+	menu:{
+		label:'Menu'
+	},
+	about:{
+		label:'About'
+	},
+	faq:{
+		label:'FAQ'
+	},
+	rules:{
+		label:'Rules'
+	},
+	team:{
+		label:'Team'
+	},
+	technology:{
+		label:'Technology'
+	},
+	contact:{
+		label:'Contact'
+	},
+	privacypolicy:{
+		label:'Privacy Policy'
+	}
+}

@@ -1,0 +1,101 @@
+.fullSlidePanel {
+  z-index: 6;
+  width: 100%;
+  height: 100%;
+  background-color: #e9e9e9;
+}
+
+.hud {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  height: 100%;
+  margin-top: 0;
+  background: #eaeaec;
+}
+
+.hud.small {
+  position: absolute;
+  width: 20%;
+  height: auto;
+}
+
+.card .strip {
+  background-color: #f5f5f5;
+}
+
+.exportCard {
+  float: left;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.exportCard .tabs.full .tab,
+.exportCard .tabs.full {
+  border-radius: 0;
+}
+
+.exportCard .tabs.full .tab {
+  text-shadow: none;
+}
+
+.exportCard .tabs.full {
+  color: #212121;
+  background-color: #f5f5f5;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+.exportCard p {
+  margin-bottom: 0;
+}
+
+.exportCard .tag {
+  float: left;
+  margin: 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.exportCard .tag .text {
+  padding: 3px 8px;
+}
+
+.exportCard .tag .count {
+  display: block;
+  float: right;
+  width: auto;
+  margin-left: 5px;
+  padding: 0 5px;
+  text-align: center;
+  border-radius: 0 3px 3px 0;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.exportCard .profileImg {
+  float: left;
+  width: 75px;
+  height: 75px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background-size: cover;
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.15);
+}
+
+.exportCard p:last-child {
+  margin-bottom: 0;
+}
+
+.largeForm input[type='text'] {
+  width: 100%;
+}
+
+.largeForm .left {
+  width: 25%;
+}
+
+.gridWrap {
+  width: 100%;
+  margin: 0 auto;
+}

@@ -1,0 +1,61 @@
+.friendsDropPanelComponent .list .item {
+  height: 40px;
+  position: relative;
+  width: 100%;
+}
+
+.friendsDropPanelComponent .scroll {
+  max-height: 300px;
+}
+
+.friendsDropPanelComponent .list .item .headline{
+  line-height: 40px;
+  float: left;
+  height: 40px;
+  padding-left: 10px;
+}
+
+.friendsDropPanelComponent .list .item:not(.active):nth-child(2n) {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.friendsDropPanelComponent .list .actions {
+  float: right;
+  height: 100%;
+}
+
+.friendsDropPanelComponent .list .actions .action {
+  float: left;
+  height: 100%;
+  width: 34px;
+  line-height: 30px;
+}
+
+.friendsDropPanelComponent .list .item .actionWrap{
+  width: 34px;
+  float: left;
+  height: 100%;
+}
+
+.friendsDropPanelComponent .list .item .action {
+  padding: 5px;
+  text-align: center;
+}
+
+.friendsDropPanelComponent .list .item .action.decline {
+  color: #fff;
+  background-color: #ff4081;
+}
+
+.friendsDropPanelComponent .list .item .action.decline:hover {
+  background-color: #f06292;
+}
+
+.friendsDropPanelComponent .list .item .action.accept {
+  color: #fff;
+  background-color: #3d5afe;
+}
+
+.friendsDropPanelComponent .list .item .action.accept:hover {
+  background-color: #5c6bc0;
+}
