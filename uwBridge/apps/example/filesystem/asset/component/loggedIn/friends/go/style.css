@@ -1,0 +1,30 @@
+.addFriendComponent .overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  cursor: pointer;
+}
+
+.addFriendComponent .contentWrap {
+  width: 300px;
+  max-width: 100%;
+  margin-bottom: 50px;
+  padding: 0;
+  border-radius: 2px;
+  background-color: #fff;
+  box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+.addFriendComponent .contentWrap .box {
+  padding: 30px;
+}
+
+.addFriendComponent .contentWrap .avatar {
+  width: 300px;
+  max-width: 100%;
+}

@@ -1,0 +1,17 @@
+<div class="fill {{this.theme? 'theme'+this.theme : 'themeIndigo'}} scroll">
+	<hero />
+  <div class="networkWrap fill">
+  	<menubar class="transparent" items='{{menuItems}}' />
+  	<iframe class="full fill networkFrame animate" nwdisable nwfaketop nwUserAgent src="{{iframeURL}}"></iframe>
+  	{{#frames:name}}
+  		<iframe class="full fill {{name}} hide" nwdisable nwfaketop nwUserAgent src="{{this}}"></iframe>
+  	{{/}}
+  	{{#sandbox:name}}
+  		<iframe class="full fill {{name}} hide" sandbox nwdisable nwfaketop nwUserAgent src="{{this.url}}"></iframe>
+  	{{/}}
+  	<menubar class="bottom" items='{{controls}}' />
+  </div>
+</div>
+{{#dynamic()}}
+	{{>getComponent(.)}}
+{{/}}

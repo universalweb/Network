@@ -1,0 +1,13 @@
+.alert{
+	background: #F5F5F5;
+	box-shadow: 0 0 3px 0 rgba(0,0,0,0.9);
+	position: absolute;
+	z-index: 7;
+	width: 100%;
+	max-height:100px;
+	padding: calc(8px + 0.1vh) calc(10px + 0.1vw);
+}
+
+.alert p{
+	margin: 0px;
+}

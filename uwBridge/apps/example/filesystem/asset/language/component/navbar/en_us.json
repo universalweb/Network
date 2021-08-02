@@ -1,0 +1,23 @@
+{
+	dashboard:{
+		label:'Dashboard'
+	},
+	newpost:{
+		label:'New Post'
+	},
+	signup:{
+		label:'Signup'
+	},
+	notifications:{
+		label:'Notifications'
+	},
+	logout:{
+		label:'Logout'
+	},
+	login:{
+		label:'Login'
+	},
+	menu:{
+		label:'Menu'
+	}
+}

@@ -1,0 +1,23 @@
+.columnWrap {
+	display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.columnWrap .columnItem {
+	width: 100%;
+	align-self: flex-start;
+	flex-grow: 1;
+	flex-direction: column;
+	align-items: center;
+	display: inline-flex;
+}
+
+.columnWrap .columnItem .card{
+	width:100%;
+	padding:10px 20px;
+}

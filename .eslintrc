@@ -24,9 +24,13 @@
 		"object-curly-newline": [
 			"error",
 			{
-				"ObjectExpression": "always",
+				"ObjectExpression": {
+					"multiline": true,
+					"minProperties": 1
+				},
 				"ObjectPattern": {
-					"multiline": true
+					"multiline": true,
+					"minProperties": 2
 				},
 				"ImportDeclaration": "never",
 				"ExportDeclaration": {
@@ -305,7 +309,7 @@
 		"no-spaced-func": "error",
 		"no-ternary": "off",
 		"no-trailing-spaces": "error",
-		"no-underscore-dangle": "error",
+		"no-underscore-dangle": "off",
 		"no-unneeded-ternary": "error",
 		"no-whitespace-before-property": "error",
 		"object-curly-spacing": [

@@ -1,0 +1,8 @@
+<button class="{{this.class}} {{!this.title? 'iconOnly' : ''}}" on-click="@.fire(click,@context)" as-tooltip='this.tooltip'>
+	{{#this.icon}}
+		<icon name="{{this.icon}}" />
+	{{/}}
+	{{#this.title}}
+		<span class="title">{{this.title}}</span>
+	{{/}}
+</button>

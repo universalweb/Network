@@ -1,0 +1,11 @@
+<div class="item {{active? 'active': ''}} full clearfix" on-click="activateTile">
+  <div class="headline text">
+    <a on-click="routerLoad" data-href="/@{{username}}">@{{username}}</a>
+  </div>
+  {{#status === 0}}
+    <div class="actions">
+      <div class="action green box animate accept" on-click="accept" as-tooltip='"Accept"'><icon name="check" /></div>
+      <div class="action red box animate decline" on-click="decline" as-tooltip='"Decline"'><icon name="cancel" /></div>
+    </div>
+  {{/}}
+</div>

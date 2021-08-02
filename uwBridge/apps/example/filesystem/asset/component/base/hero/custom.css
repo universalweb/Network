@@ -1,0 +1,8 @@
+.hero {
+  background-color: transparent !important;
+}
+
+.navigationSidebar .scroll {
+  height: 100%;
+  top: 0px;
+}

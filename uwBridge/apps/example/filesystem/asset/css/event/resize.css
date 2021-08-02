@@ -1,0 +1,9 @@
+/* Percentages */
+
+.mediumScreen .wm85, .smallScreen .ws85, .mobileScreen .wm85 {
+    width: 85%;
+}
+
+.smallScreen .ws95 {
+    width: 95%;
+}

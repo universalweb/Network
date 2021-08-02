@@ -1,0 +1,16 @@
+{
+	"username": {
+		label: 'Username'
+	},
+	"password": {
+		label: 'Password'
+	},
+	"submit": {
+		label: 'Submit'
+	},
+  "hero": {
+    "headline": 'Login',
+    "description": 'To the future',
+  },
+	pageTitle: ''
+}

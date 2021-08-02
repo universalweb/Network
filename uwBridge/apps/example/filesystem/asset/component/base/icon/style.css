@@ -1,0 +1,720 @@
+.system-icon {
+  font-family: 'Material Icons';
+  font-size: 24px;
+  font-weight: normal;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  line-height: 1;
+  display: inline-block;
+  padding-bottom: 1px;
+  transition: all 0.3s ease;
+  vertical-align: middle;
+  white-space: nowrap;
+  letter-spacing: normal;
+  text-transform: none;
+  word-wrap: normal;
+}
+
+.system-icon.si18 {
+  font-size: 18px;
+}
+
+.system-icon.si24 {
+  font-size: 24px;
+}
+
+.system-icon.si36 {
+  font-size: 36px;
+}
+
+.system-icon.si48 {
+  font-size: 48px;
+}
+
+.system-icon.dark {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.system-icon.dark.inactive {
+  color: rgba(0, 0, 0, 0.26);
+}
+
+.system-icon.light {
+  color: rgba(255, 255, 255, 1);
+}
+
+.system-icon.light.inactive {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.inout,
+.ison .icon {
+  -webkit-animation-name: inout;
+  -moz-animation-name: inout;
+  animation-name: inout;
+  -webkit-animation-duration: 0.4s;
+  -moz-animation-duration: 0.4s;
+  animation-duration: 0.4s;
+  -webkit-animation-timing-function: ease;
+  -moz-animation-timing-function: ease;
+  animation-timing-function: ease;
+}
+
+.icon-spin,
+.desktop .icon-hover-spin:hover {
+  -webkit-animation: spin 2s infinite linear;
+  -moz-animation: spin 2s infinite linear;
+  animation: spin 2s infinite linear;
+  border-color: transparent;
+}
+
+@keyframes inout {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.5);
+  }
+}
+
+@font-face {
+  font-family: 'lnkit';
+  font-weight: normal;
+  font-style: normal;
+  src: url('/font/fontello.eot');
+  src: url('/font/fontello.eot') format('embedded-opentype'), url('/font/fontello.woff') format('woff'), url('/font/fontello.ttf') format('truetype'), url('/font/fontello.svg') format('svg');
+}
+
+.icon::before {
+  font-family: lnkit;
+  font-weight: normal;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -moz-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-smoothing: antialiased;
+  line-height: 1;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  transition: all 0.3s ease;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.icon2xHover:hover .icon2x {
+  font-size: 2em;
+}
+
+.icon3x {
+  font-size: 3em;
+}
+
+.icon4x {
+  font-size: 4em;
+}
+
+.icon5x {
+  font-size: 5em;
+}
+
+.iconFw {
+  width: 1.2857142857143em;
+  text-align: center;
+}
+
+.iconIcon {
+  font-size: 14px;
+  display: block;
+  float: left;
+  width: 20px;
+  margin-right: 5px;
+  padding-right: 2px;
+  text-align: center;
+}
+
+.iconLg {
+  font-size: 1.3333333333333em;
+  line-height: 0.75em;
+  vertical-align: -15%;
+}
+
+.iconNormal.iconIcon {
+  font-size: 18px;
+}
+
+.iconSrt {
+  margin-right: 5px;
+}
+
+.iconRotate90 {
+  display: inline-block;
+  transform: rotate(90deg);
+}
+
+.iconRotate180 {
+  display: inline-block;
+  transform: rotate(180deg);
+}
+
+.iconRotate270 {
+  display: inline-block;
+  transform: rotate(270deg);
+}
+
+.iconFlipHorizontal {
+  transform: scale(-1, 1);
+}
+
+.iconFlipVertical {
+  transform: scale(1, -1);
+}
+
+:root .iconRotate90,
+:root .iconRotate180,
+:root .iconRotate270,
+:root .iconFlipHorizontal,
+:root .iconFlipVertical {
+  filter: none;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(359deg);
+  }
+}
+
+.iconHover:hover .icon-google {
+  color: #b388ff;
+}
+
+.iconHover:hover .icon-instagram {
+  color: #ffd275;
+}
+
+.iconHover:hover .icon-facebook {
+  color: #3765a3;
+}
+
+.iconHover:hover .icon-linkedin {
+  color: #536dfe;
+}
+
+.iconHover:hover .icon-twitter {
+  color: #40c4ff;
+}
+
+.icon-duckduckgo::before {
+  content: '\e800';
+}
+
+.icon-aim::before {
+  content: '\e801';
+}
+
+.icon-delicious::before {
+  content: '\e802';
+}
+
+.icon-paypal::before {
+  content: '\e803';
+}
+
+.icon-flattr::before {
+  content: '\e804';
+}
+
+.icon-android::before {
+  content: '\e805';
+}
+
+.icon-eventful::before {
+  content: '\e806';
+}
+
+.icon-smashmag::before {
+  content: '\e807';
+}
+
+.icon-gplus::before {
+  content: '\e808';
+}
+
+.icon-wikipedia::before {
+  content: '\e809';
+}
+
+.icon-lanyrd::before {
+  content: '\e80a';
+}
+
+.icon-stumbleupon::before {
+  content: '\e80c';
+}
+
+.icon-fivehundredpx::before {
+  content: '\e80d';
+}
+
+.icon-pinterest::before {
+  content: '\e80e';
+}
+
+.icon-bitcoin::before {
+  content: '\e80f';
+}
+
+.icon-w3c::before {
+  content: '\e810';
+}
+
+.icon-foursquare::before {
+  content: '\e811';
+}
+
+.icon-html5::before {
+  content: '\e812';
+}
+
+.icon-ie::before {
+  content: '\e813';
+}
+
+.icon-grooveshark::before {
+  content: '\e815';
+}
+
+.icon-ninetyninedesigns::before {
+  content: '\e816';
+}
+
+.icon-forrst::before {
+  content: '\e817';
+}
+
+.icon-digg::before {
+  content: '\e818';
+}
+
+.icon-spotify::before {
+  content: '\e819';
+}
+
+.icon-reddit::before {
+  content: '\e81a';
+}
+
+.icon-gowalla::before {
+  content: '\e81c';
+}
+
+.icon-appstore::before {
+  content: '\e81d';
+}
+
+.icon-blogger::before {
+  content: '\e81e';
+}
+
+.icon-cc::before {
+  content: '\e81f';
+}
+
+.icon-dribbble::before {
+  content: '\e820';
+}
+
+.icon-evernote::before {
+  content: '\e821';
+}
+
+.icon-flickr::before {
+  content: '\e822';
+}
+
+.icon-google::before {
+  content: '\e823';
+}
+
+.icon-viadeo::before {
+  content: '\e824';
+}
+
+.icon-instapaper::before {
+  content: '\e825';
+}
+
+.icon-weibo::before {
+  content: '\e826';
+}
+
+.icon-klout::before {
+  content: '\e827';
+}
+
+.icon-linkedin::before {
+  content: '\e828';
+}
+
+.icon-meetup::before {
+  content: '\e829';
+}
+
+.icon-vk::before {
+  content: '\e82a';
+}
+
+.icon-plancast::before {
+  content: '\e82b';
+}
+
+.icon-disqus::before {
+  content: '\e82c';
+}
+
+.icon-skype::before {
+  content: '\e82e';
+}
+
+.icon-twitter::before {
+  content: '\e82f';
+}
+
+.icon-youtube::before {
+  content: '\e830';
+}
+
+.icon-vimeo::before {
+  content: '\e831';
+}
+
+.icon-windows::before {
+  content: '\e832';
+}
+
+.icon-xing::before {
+  content: '\e833';
+}
+
+.icon-yahoo::before {
+  content: '\e834';
+}
+
+.icon-chrome::before {
+  content: '\e835';
+}
+
+.icon-macstore::before {
+  content: '\e837';
+}
+
+.icon-myspace::before {
+  content: '\e838';
+}
+
+.icon-podcast::before {
+  content: '\e839';
+}
+
+.icon-amazon::before {
+  content: '\e83a';
+}
+
+.icon-steam::before {
+  content: '\e83b';
+}
+
+.icon-cloudapp::before {
+  content: '\e83c';
+}
+
+.icon-dropbox::before {
+  content: '\e83d';
+}
+
+.icon-ebay::before {
+  content: '\e83e';
+}
+
+.icon-facebook::before {
+  content: '\e83f';
+}
+
+.icon-github::before {
+  content: '\e840';
+}
+
+.icon-github-circled::before {
+  content: '\e841';
+}
+
+.icon-googleplay::before {
+  content: '\e842';
+}
+
+.icon-itunes::before {
+  content: '\e843';
+}
+
+.icon-plurk::before {
+  content: '\e844';
+}
+
+.icon-songkick::before {
+  content: '\e845';
+}
+
+.icon-lastfm::before {
+  content: '\e846';
+}
+
+.icon-gmail::before {
+  content: '\e847';
+}
+
+.icon-pinboard::before {
+  content: '\e848';
+}
+
+.icon-openid::before {
+  content: '\e849';
+}
+
+.icon-quora::before {
+  content: '\e84a';
+}
+
+.icon-soundcloud::before {
+  content: '\e84b';
+}
+
+.icon-tumblr::before {
+  content: '\e84c';
+}
+
+.icon-eventasaurus::before {
+  content: '\e84d';
+}
+
+.icon-wordpress::before {
+  content: '\e84e';
+}
+
+.icon-yelp::before {
+  content: '\e84f';
+}
+
+.icon-intensedebate::before {
+  content: '\e850';
+}
+
+.icon-eventbrite::before {
+  content: '\e851';
+}
+
+.icon-scribd::before {
+  content: '\e852';
+}
+
+.icon-posterous::before {
+  content: '\e853';
+}
+
+.icon-stripe::before {
+  content: '\e854';
+}
+
+.icon-opentable::before {
+  content: '\e855';
+}
+
+.icon-angellist::before {
+  content: '\e858';
+}
+
+.icon-dwolla::before {
+  content: '\e85a';
+}
+
+.icon-appnet::before {
+  content: '\e85b';
+}
+
+.icon-statusnet::before {
+  content: '\e85c';
+}
+
+.icon-acrobat::before {
+  content: '\e85d';
+}
+
+.icon-drupal::before {
+  content: '\e85e';
+}
+
+.icon-buffer::before {
+  content: '\e85f';
+}
+
+.icon-pocket::before {
+  content: '\e860';
+}
+
+.icon-bitbucket::before {
+  content: '\e861';
+}
+
+.icon-lego::before {
+  content: '\e862';
+}
+
+.icon-login::before {
+  content: '\e863';
+}
+
+.icon-stackoverflow::before {
+  content: '\e864';
+}
+
+.icon-hackernews::before {
+  content: '\e865';
+}
+
+.icon-lkdto::before {
+  content: '\e866';
+}
+
+.icon-icq::before {
+  content: '\f304';
+}
+
+.icon-yandex::before {
+  content: '\f305';
+}
+
+.icon-yandex-rect::before {
+  content: '\f306';
+}
+
+.icon-vkontakte-rect::before {
+  content: '\f30a';
+}
+
+.icon-odnoklassniki::before {
+  content: '\f30c';
+}
+
+.icon-odnoklassniki-rect::before {
+  content: '\f30d';
+}
+
+.icon-vimeo-rect::before {
+  content: '\f30e';
+}
+
+.icon-vimeo-1::before {
+  content: '\f30f';
+}
+
+.icon-friendfeed::before {
+  content: '\f312';
+}
+
+.icon-friendfeed-rect::before {
+  content: '\f313';
+}
+
+.icon-deviantart::before {
+  content: '\f316';
+}
+
+.icon-jabber::before {
+  content: '\f317';
+}
+
+.icon-lastfm-1::before {
+  content: '\f318';
+}
+
+.icon-lastfm-rect::before {
+  content: '\f319';
+}
+
+.icon-linkedin-rect::before {
+  content: '\f31b';
+}
+
+.icon-picasa::before {
+  content: '\f31c';
+}
+
+.icon-instagram::before {
+  content: '\f31e';
+}
+
+.icon-instagram-filled::before {
+  content: '\f31f';
+}
+
+.icon-diigo::before {
+  content: '\f320';
+}
+
+.icon-box::before {
+  content: '\f321';
+}
+
+.icon-box-rect::before {
+  content: '\f322';
+}
+
+.icon-tudou::before {
+  content: '\f323';
+}
+
+.icon-youku::before {
+  content: '\f324';
+}
+
+.icon-win8::before {
+  content: '\f325';
+}
+
+.icon-amex::before {
+  content: '\f326';
+}
+
+.icon-discover::before {
+  content: '\f327';
+}
+
+.icon-visa::before {
+  content: '\f328';
+}
+
+.icon-mastercard::before {
+  content: '\f329';
+}
+
+.icon-houzz::before {
+  content: '\f32a';
+}
+
+.icon-bandcamp::before {
+  content: '\f32b';
+}
+
+.icon-codepen::before {
+  content: '\f32c';
+}

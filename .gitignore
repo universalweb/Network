@@ -44,3 +44,6 @@ tests/*
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+
+uwBridge/apps/example/ssl/*.pem
