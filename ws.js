@@ -5,7 +5,7 @@ const app = uWS./* SSL*/App({
 	cert_file_name: 'misc/cert.pem',
 	passphrase: '1234'
 }).get('/*', (res, req) => {
-	res.end('Hello World!');
+	res.writeHeader('IsExample', 'Yes').end('Hello World!');
 })
 	.listen(port, (token) => {
 		if (token) {
