@@ -1,6 +1,6 @@
 | SENTIVATE - CHANGELOG |
 | :----: |
-| ![Sentivate Logo](https://raw.githubusercontent.com/sentivate/SentivateAlphaNetwork/master/resources/logo.png)|
+| ![Sentivate Logo](https://raw.githubusercontent.com/universalweb/network/master/resources/logo.png)|
 |[Sentivate](https://sentivate.com) - [Twitter](https://twitter.com/sentivate)|
 ---
 
@@ -9,8 +9,8 @@
 ---
 ### Merged
 
-- Create LICENSE [`#2`](https://github.com/sentivate/SentivateAlphaNetwork/pull/2)
-- Create CODE_OF_CONDUCT.md [`#1`](https://github.com/sentivate/SentivateAlphaNetwork/pull/1)
+- Create LICENSE [`#2`](https://github.com/universalweb/SentivateAlphaNetwork/pull/2)
+- Create CODE_OF_CONDUCT.md [`#1`](https://github.com/universalweb/SentivateAlphaNetwork/pull/1)
 ---
 
 ### Commits
