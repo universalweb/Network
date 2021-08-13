@@ -46,4 +46,4 @@ ehthumbs.db
 Thumbs.db
 
 
-uwBridge/apps/example/ssl/*.pem
+uwBridge/apps/client/example/ssl/*.pem

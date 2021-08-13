@@ -1,0 +1,24 @@
+{
+	"content": `
+######About
+Hermes gives you back your time without compromising your progress. We know your time is valuable, so Hermes will give you back your time.  Automate Linkedin, Twitter, Instagram and Facebook operations with much more to come. Along with an entire social network to interact with other users on Hermes.
+
+
+######Roadmap
+Our goal is to grow an open community that can learn from each other and further push their brand and presence on social media. Hermes will provide a platform that allows you to do all your social media and digital marketing at home from your desk with no restrictions.
+
+
+######Patronage
+We are gathering support to provide as many features as we can for free. We will start out providing automated features and then develop the social network portion. The support will be put towards creating new features, maintaining features, rolling updates, providing the hardware to run the platform, email server and domain costs.
+https://www.patreon.com/hermesbyarity
+
+With enough backing we would like to supply tutorials & support for free.
+
+Current and future features are listed on http://aritysoftware.com/
+`,
+  "hero": {
+    "headline": 'About',
+  	"description": 'Hermes - Social Currency Augmented',
+  },
+	"pageTitle": 'About'
+}

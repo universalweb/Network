@@ -1,0 +1,17 @@
+{{#!options.hide}}
+<div class="overlayComponent {{options.theme? 'theme'+options.theme : ''}}">
+  <div class="overlay" on-click="toggle">
+  	<div class="contentWrap fadeInDown">
+      <div class="scroll">
+        <div class="avatar"></div>
+          <div class="box">
+            {{>makePartial('overlayContent', options.content)}}
+          </div>
+      </div>
+      {{#options.button}}
+        <btn class="{{.class}}" icon="{{.icon}}" click="{{.click}}" title="{{.title}}" tooltip="{{.tooltip}}" />
+      {{/}}
+    </div>
+  </div>
+</div>
+{{/}}

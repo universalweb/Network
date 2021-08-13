@@ -1,0 +1,28 @@
+<div class="accountNoteDropdownComponent">
+  <div class="headlineWrap headerFont">
+    <span class="headerFont headline">{{title}}</span>
+    <span class="action" on-click="toggleDropdown"><icon name="close" /></span>
+    {{#filters.length}}
+      <div class="full clearfix filters">
+        {{#filters}}
+          <div class="item {{filter === mode? 'active' : ''}}" as-tooltip='tooltip' on-click='filter'>
+            <icon name='{{icon}}' />
+            {{#stats()}}
+              {{#stats()[count] && stats()[count] > 0}}
+                <div class="count">
+                  <span class="text">{{stats()[count]}}</span>
+                </div>
+              {{/}}
+            {{/}}
+          </div>
+        {{/}}
+      </div>
+    {{/}}
+  </div>
+  <div class="list scroll" on-wheel="loadMoreCheck">
+    {{#items}}
+      {{>account}}
+    {{/}}
+  </div>
+  <toolbar items="{{toolbar.items}}" />
+</div>

@@ -1,0 +1,27 @@
+<div id="mainWrap" class="{{$.compactKeys(classes).join(' ')}} {{screenSize ? screenSize() : ''}} absolute fill overflowHidden">
+	<div id="contentWrap" class="absolute fill">
+		{{#componentsLayout():key}}
+			{{#.}}
+				{{>getComponent(key)}}
+		   {{/}}
+		{{/}}
+		<div class="layout fill absolute layoutContainer">
+			{{#alerts.length}}
+				<div class="alert pointer" fly-in='{x:0,y:-100,duration:800}'
+					fly-out='{x:0,y:-200,duration:600}' on-click="closeAlert">
+					<div class="wrap">
+						<p>{{alerts.0.message}}</p>
+					</div>
+				</div>
+			{{/}}
+			{{#navState() === true}}
+				 <navState />
+			{{/}}
+		</div>
+	</div>
+	{{#componentsDynamic():key}}
+		{{#.}}
+		 {{>getComponent(key)}}
+		{{/}}
+	{{/}}
+</div>

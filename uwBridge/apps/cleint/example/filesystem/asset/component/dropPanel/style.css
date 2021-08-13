@@ -1,0 +1,91 @@
+.dropPanelComponent {
+  position: absolute;
+  z-index: 1;
+  top: 65px;
+  right: 10px;
+  overflow: hidden;
+  min-width: 350px;
+  min-height: 30px;
+  border-radius: 3px;
+  background-color: white;
+  box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+.dropPanelComponent .scroll {
+  max-height: 300px;
+}
+
+.dropPanelComponent .headlineWrap {
+  font-size: 24px;
+  color: #fff;
+  border-radius: 3px 3px 0 0;
+  background-color: #90caf9;
+}
+
+.dropPanelComponent .headlineWrap .headline {
+  padding-left: 15px;
+}
+
+.dropPanelComponent .headlineWrap .action {
+  float: right;
+  margin-right: 5px;
+}
+
+.dropPanelComponent .headlineWrap .action:hover {
+  color: #3e2723;
+}
+
+.dropPanelComponent .toolbarComponent {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dropPanelComponent .headlineWrap .filters .item {
+  position: relative;
+  float: left;
+  padding: 2px 13px;
+}
+
+.dropPanelComponent .headlineWrap .filters .item .count {
+  font-size: 14px;
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 3px;
+  display: inline-block;
+  height: auto;
+  color: #fff;
+}
+
+.dropPanelComponent .headlineWrap .filters .item .count .text {
+  padding: 2px 6px;
+  color: #212121;
+  border-radius: 50%;
+  background-color: #fafafa;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.dropPanelComponent .headlineWrap .filters .item::before {
+  position: absolute;
+  z-index: 1;
+  top: auto;
+  right: 50%;
+  bottom: 0;
+  width: 0;
+  height: 3px;
+  content: ' ';
+  transition: all 0.3s ease;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: transparent;
+}
+
+.dropPanelComponent .headlineWrap .filters .item:hover::before {
+  right: 0;
+  width: 100%;
+  background-color: #5d7bf7;
+}
+
+.dropPanelComponent .headlineWrap .filters .item.active::before {
+  right: 0;
+  width: 100%;
+  background-color: #fff;
+}

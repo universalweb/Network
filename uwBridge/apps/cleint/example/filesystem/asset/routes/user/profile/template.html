@@ -1,0 +1,34 @@
+<div class="fill scroll animate profileComponent themeIndigo">
+	<div class="animate wrap maxFull marginAuto fadeInDown">
+		<div class="contentWrap">
+      <div class="avatar"></div>
+        <div class="box">
+          <h5>@{{profile.username}}</h5>
+          {{#profile.email || profile.personal}}
+            <p>{{profile.email}}</p>
+          {{/}}
+          {{#profile.about || profile.personal}}
+            <p>{{profile.about}}</p>
+          {{/}}
+        </div>
+        {{#!profile.personal}}
+          {{#profile.status === 0}}
+            {{#profile.from === $.credit.accountID}}
+              <btn click="deleteFriend" icon="remove" class="full negative" title="Cancel Friend request" tooltip="Cancel friend request" />
+            {{else}}
+              <btn click="accept" icon="person_add" class="full" title="Accept Friend request" tooltip="Accept friend request" />
+            {{/}}
+          {{/}}
+          {{#profile.status === 1}}
+            <btn click="deleteFriend" icon="remove" class="full negative" title="Remove Friend" tooltip="remove friend" />
+          {{/}}
+          {{#!profile.id}}
+            <btn click="addFriend" icon="person_add" class="full" title="Add Friend" tooltip="Send a friend request" />
+          {{/}}
+        {{/}}
+        {{#profile.personal}}
+          <btn click="routerLoad" href="/user/settings" icon="settings" class="full" title="Settings" tooltip="Edit Profile Settings" />
+        {{/}}
+		</div>
+	</div>
+</div>

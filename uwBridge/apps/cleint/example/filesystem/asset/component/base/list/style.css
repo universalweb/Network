@@ -1,0 +1,84 @@
+.list:after {
+  display: table;
+  clear: both;
+  content: '';
+}
+
+.list .item {
+  position: relative;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-top: none;
+}
+
+.list .item.active {
+  color: #fff;
+  background-color: #2979ff;
+}
+
+.list .item::after {
+  display: table;
+  clear: both;
+  content: '';
+}
+
+.list .item:not(.active):nth-child(2n) {
+  background-color: rgba(0,0,0,0.03);
+}
+
+.list .item:last-child {
+  border-top: none;
+}
+
+.list .item:first-child {
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.list .item .text {
+  float: left;
+  padding: 5px 8px;
+}
+
+.list .item .actions {
+  position: absolute;
+  right: 0;
+  height: 100%;
+}
+
+.list .item .action {
+  position: relative;
+  display: block;
+  float: left;
+  height: 100%;
+  padding: 5px 8px;
+  cursor: pointer;
+}
+
+.list .item .action .icon {
+  height: 40px;
+}
+
+.list .item .action .effect {
+  position: absolute;
+  z-index: 0;
+  top: 13px;
+  left: 13px;
+  width: 0;
+  height: 0;
+  transition: all 0.3s ease;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  background-color: transparent;
+}
+
+.list .item .action:hover .effect {
+  top: 4px;
+  left: 7px;
+  width: 26px;
+  height: 26px;
+  background-color: rgba(0,0,0,0.1);
+}
+
+.list input[type='text'].full {
+  margin-bottom: 0;
+  border-bottom: none;
+}

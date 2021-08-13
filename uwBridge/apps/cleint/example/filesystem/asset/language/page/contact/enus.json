@@ -1,0 +1,12 @@
+{
+	"content": `
+- Website: http://aritysoftware.com
+- Twitter: https://twitter.com/aritysoftware
+- Patreon: https://www.patreon.com/hermesbyarity (Donate & Support Hermes)
+- Email: tommarchi@protonmail.com`,
+  "hero": {
+    "headline": 'Contact',
+    "description": 'Information to contact us',
+  },
+	"pageTitle": 'Contact'
+}

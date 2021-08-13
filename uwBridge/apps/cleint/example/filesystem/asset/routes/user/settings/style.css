@@ -1,0 +1,31 @@
+.settingsComponent .wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.settingsComponent .contentWrap {
+  width: 300px;
+  max-width: 100%;
+  margin-bottom: 50px;
+  padding: 0;
+  border-radius: 2px;
+  background-color: #fff;
+  box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+.settingsComponent h5 {
+  text-align: center;
+  display: block;
+}
+
+.settingsComponent .contentWrap .box {
+  padding: 30px;
+}
+
+.settingsComponent .contentWrap .avatar {
+  width: 300px;
+  max-width: 100%;
+}
