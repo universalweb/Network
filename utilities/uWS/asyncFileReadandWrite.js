@@ -1,11 +1,11 @@
 function asyncFileReadandWrite(res, path) {
-	const Buffer = require('buffer');
+	const buffer = require('buffer');
 	const fs = require('fs');
 	res.onData((chunk, isLast) => {
 		const chunks = [];
 		chunks.push(chunk);
 		if (isLast) {
-			const body = Buffer.concat(chunks);
+			const body = buffer.concat(chunks);
 			res.end('Thanks for the data!');
 			fs.writeFile(path, chunks, [encoding], (e) => {
 				if (e) {
