@@ -1,5 +1,5 @@
-const sentivate = require('./index');
-sentivate.build({
+const uwBridgeFront = require('./index');
+uwBridgeFront.build({
   options: {
     enviornment: 'development'
   }

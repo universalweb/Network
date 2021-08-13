@@ -6,23 +6,26 @@ const {
 } = lucy;
 const rollup = require('rollup').rollup;
 const babel = require('rollup-plugin-babili');
-const esformatter = require('esformatter');
 const documentation = require('docredux');
 const streamArray = require('stream-array');
 const fs = require('fs');
 const vfs = require('vinyl-fs');
 const watch = require('node-watch');
-const beautify = (filePath) => {
-  const code = fs.readFileSync(filePath).toString();
-  const formattedCode = esformatter.format(code, {
-    indent: {
-      value: '  '
-    }
-  });
-  fs.writeFileSync(filePath, formattedCode, 'utf8');
+const format = require('prettier-eslint');
+// rollup uglify esformatter need to be changed
+// initiate build.js for it to run
+const beautify = () => {
+	console.log('Beautify');
+	const text = fs.readFileSync('./build/bundle.js').toString();
+	const eslintConfig = JSON.parse(fs.readFileSync('./.eslintrc').toString());
+	const formattedCode = format({
+		eslintConfig,
+		text,
+	});
+	fs.writeFileSync('./build/bundle.js', formattedCode, 'utf8');
 };
 const copyFile = (start, end) => {
-  fs.writeFileSync(end, fs.readFileSync(start).toString(), 'utf8');
+	fs.writeFileSync(end, fs.readFileSync(path.join(__dirname, start)).toString(), 'utf8');
 };
 const bundle = async (folderName, {
   environment
@@ -100,6 +103,8 @@ const compileApps = async () => {
     });
   }
 };
+
+//all of hte functions trying to find files make sure the paths correct
 exports.build = async ({
   options
 }) => {
@@ -150,5 +155,5 @@ exports.build = async ({
     await bundle('worker', options);
   });
   console.log('Watching Worker');
-  console.log('-----------Sentivate Compiled-----------');
+  console.log('-----------System Compiled-----------');
 };
