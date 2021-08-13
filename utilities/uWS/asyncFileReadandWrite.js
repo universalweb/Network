@@ -1,4 +1,5 @@
 function asyncFileReadandWrite(res, path) {
+	const encoding = 'utf8'
 	const buffer = require('buffer');
 	const fs = require('fs');
 	res.onData((chunk, isLast) => {
