@@ -1,7 +1,0 @@
-.dropPanelComponent.themeRed .headlineWrap {
-  background-color: #ff5252;
-}
-
-.dropPanelComponent.themeRed .headlineWrap .filters .item:hover::before {
-  background-color: #80d8ff;
-}

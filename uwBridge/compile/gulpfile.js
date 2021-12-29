@@ -6,7 +6,9 @@ const notify = require('gulp-notify');
 const addsrc = require('gulp-add-src');
 const gulp = require('gulp');
 const compile = () => {
-	const { each, } = $;
+	const {
+		each
+	} = $;
 	const dirname = __dirname.replace('/compile', '');
 	const directory = $.directory;
 	const appsRootLocation = `${dirname}/apps/`;

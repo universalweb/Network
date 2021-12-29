@@ -1,7 +1,5 @@
 module.exports = (utility) => {
 	const socketio = require('socket.io');
-	const WebSocketServer = require('uWebSockets.js')
-		.Server;
 	const {
 		each,
 		eachObject,
@@ -9,13 +7,14 @@ module.exports = (utility) => {
 		promise,
 		assign,
 		eachAsync,
-		stringify
+		stringify,
 	} = utility;
 	const requestSend = async (dataArg, response, socket) => {
 		let data;
 		if (dataArg) {
 			data = assign({}, response);
 			data.data = dataArg;
+			console.log(data);
 		} else {
 			data = response;
 		}
@@ -26,13 +25,11 @@ module.exports = (utility) => {
 	const zeroInt = 0;
 	const killSocket = (data, socket) => {
 		socket.clientValid = false;
-		socket.emit('disconnect');
+		console.log('Websocket Attack', socket.id, data.error);
 		socket.removeAllListeners();
 		socket.disconnect(true);
-		console.log('Websocket Attack', data.error);
 	};
 	const getAPI = async (body, socket, requestProperty, response) => {
-		console.log(requestProperty);
 		const hostAPI = socket.hostAPI;
 		const responseFunction = hostAPI[requestProperty];
 		const rootPropertyString = requestProperty.substring(zeroInt, requestProperty.indexOf('.'));
@@ -42,12 +39,19 @@ module.exports = (utility) => {
 			const request = {
 				body,
 				response,
-				async send(dataArg) {
-					await requestSend(dataArg, response, socket);
+				send(dataArg) {
+					return requestSend(dataArg, response, socket);
 				},
 				socket,
 			};
 			let securityCheck;
+			if (!response.id) {
+				if (body.type) {
+					response.data.type = body.type;
+				} else {
+					response.data.type = requestProperty;
+				}
+			}
 			if (security) {
 				try {
 					securityCheck = await security(request);
@@ -55,15 +59,8 @@ module.exports = (utility) => {
 						console.log('Security Check failed');
 						return;
 					}
-				} catch (errr) {
-					return console.log(errr);
-				}
-			}
-			if (!response.id) {
-				if (body.type) {
-					response.data.type = body.type;
-				} else {
-					response.data.type = requestProperty;
+				} catch (err) {
+					return console.log(err);
 				}
 			}
 			const results = responseFunction(request);
@@ -74,8 +71,9 @@ module.exports = (utility) => {
 				socket.send(response);
 			}
 		} else {
+			console.log('KILLING SOCKET', socket.id);
 			killSocket({
-				error: 'Invalid property entered. Attack made.',
+				error: `Invalid property entered. Attack made. ${requestProperty}`,
 			}, socket);
 		}
 	};
@@ -84,27 +82,29 @@ module.exports = (utility) => {
 			return false;
 		}
 		if (!rawRequestData) {
-			return killSocket({
-				error: 'requestData empty',
-			}, socket);
+			return killSocket(
+				{
+					error: 'requestData empty',
+				},
+				socket,
+			);
 		}
 		const {
-			request,
-			id,
-			data
+			request, id, data
 		} = rawRequestData;
-		console.log(rawRequestData.request);
 		if (!request) {
-			killSocket({
-				error: `Missing request ${stringify(rawRequestData)} ${rawRequestData.request}`,
+			return killSocket({
+				error: `Missing request ${stringify(rawRequestData)} ${rawRequestData.request
+				}`,
 			}, socket);
-		}
-		if (id) {
+		} else if (id) {
+			console.log(id, rawRequestData.request);
 			getAPI(data, socket, request, {
 				data: {},
 				id,
 			});
 		} else {
+			console.log(request);
 			getAPI(data, socket, request, {
 				data: {},
 			});
@@ -115,8 +115,8 @@ module.exports = (utility) => {
 		socket.on('api', (requestData) => {
 			isRequestValid(requestData, socket);
 		});
-		socket.emit('configure', {});
 		socket.on('configure', (requestData) => {
+			console.log('CONFIGURE', requestData);
 			const clientLanguage = requestData.language;
 			let language;
 			if (clientLanguage && socket.app.languages[clientLanguage]) {
@@ -131,16 +131,16 @@ module.exports = (utility) => {
 	};
 	const onConnect = async (socket) => {
 		if (socket) {
-			socket.hostAPI.socketEvent.connect(socket).catch((error) => {
-				killSocket({
-					error
-				}, socket);
-			});
+			console.log('onConnect', socket.id);
 			await socketIsValid(socket);
-			socket.ip = socket.request.websocket._socket.remoteAddress.replace('::ffff:', '');
+			socket.ip = socket.request.websocket._socket.remoteAddress.replace(
+				'::ffff:',
+				'',
+			);
 			socket.groups = [];
 			const onExitListeners = {};
 			socket.onExit = (endPoint, callback) => {
+				console.log(endPoint, 'onExit');
 				if (!callback) {
 					return onExitListeners[endPoint];
 				}
@@ -149,12 +149,12 @@ module.exports = (utility) => {
 			socket.joinGroup = async (...args) => {
 				const endPoint = args[zeroInt];
 				if (!endPoint) {
+					console.log('JOIN GROUP BLANK');
 					return;
 				}
 				socket.groups.push(endPoint);
-				await promise((accept) => {
-					socket.join(endPoint, accept);
-				});
+				console.log('JOIN GROUP CALLBACK', endPoint);
+				socket.join(endPoint);
 				await socket.hostAPI.socketEvent.joinGroup(socket, ...args);
 			};
 			socket.leaveGroup = async (endPoint) => {
@@ -205,7 +205,18 @@ module.exports = (utility) => {
 					data,
 				});
 			};
+			console.log('JOIN GROUP INIT', socket.app.config.name);
 			await socket.joinGroup(socket.app.config.name);
+			console.log('SOCKET EVENT CONNECT INIT');
+			await socket.hostAPI.socketEvent.connect(socket).catch((error) => {
+				killSocket(
+					{
+						error,
+					},
+					socket,
+				);
+			});
+			socket.emit('configure', {});
 		}
 	};
 	const chooseDomainAPI = (server) => {
@@ -225,9 +236,12 @@ module.exports = (utility) => {
 					return next(new Error('No Host API'));
 				}
 			} else {
-				killSocket({
-					error: 'No host header',
-				}, socket);
+				killSocket(
+					{
+						error: 'No host header',
+					},
+					socket,
+				);
 				return next(new Error('No host header'));
 			}
 		});
@@ -241,12 +255,6 @@ module.exports = (utility) => {
 		},
 		create(httpServer) {
 			const server = socketio(httpServer);
-			const engine = new WebSocketServer({
-				clientTracking: false,
-				noServer: true,
-				perMessageDeflate: false,
-			});
-			server.engine.ws = engine;
 			chooseDomainAPI(server);
 			server.on('connection', onConnect);
 			server.push = async (endPoint, data, to) => {

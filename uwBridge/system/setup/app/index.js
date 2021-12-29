@@ -1,23 +1,25 @@
 const utility = require('Lucy');
 const buildConfig = require('../config');
+const cluster = require('cluster');
 const {
-	assign,
-	ifInvoke,
-	promise,
-	eachAsync,
-	right,
+	assign, ifInvoke, promise, eachAsync, right
 } = utility;
 const dirName = `${__dirname}`.split('system/setup/app')[0];
 const dirRoot = `${dirName}system/`;
 const setupApps = async () => {
 	const {
-		service,
-		masterMode
+		service, masterMode
 	} = utility;
-	const type = (masterMode) ? 'master/' : 'client/';
+	const type = masterMode ? 'master/' : 'client/';
 	const dirApp = `${dirName}apps/${type}`;
 	console.log(`Loading Application Directory: ${dirApp}`);
-	console.log(`${masterMode ? 'Master Applications Initializing' : 'Client Applications Initializing'}`);
+	console.log(
+		`${
+			masterMode ?
+				'Master Applications Initializing' :
+				'Client Applications Initializing'
+		}`,
+	);
 	const apps = await utility.shallowRequire(dirApp);
 	if (!apps.length) {
 		if (masterMode) {
@@ -45,7 +47,8 @@ const setupApps = async () => {
 				}
 				servers[portNumber] = server;
 			});
-			server.timeout = utility.http.connectionTimeout || serverTimeoutDefault;
+			server.timeout =
+				utility.http.connectionTimeout || serverTimeoutDefault;
 			server.on('timeout', (socket) => {
 				socket.end(`HTTP/1.1 400 OK\r\nConnection: close\r\n\r\n`);
 				socket.destroy();
@@ -61,7 +64,7 @@ const setupApps = async () => {
 		}
 		return {
 			server,
-			socketServer
+			socketServer,
 		};
 	};
 	const extendNetworkMethods = async (app) => {
@@ -71,11 +74,10 @@ const setupApps = async () => {
 			let sendData = sendDataArg;
 			if (!sendData.data) {
 				sendData = {
-					data: sendDataArg
+					data: sendDataArg,
 				};
 			}
-			socketServer.to(namespace)
-				.emit(endPoint, sendData);
+			socketServer.to(namespace).emit(endPoint, sendData);
 		};
 	};
 	const constructAppObject = async (appIndex) => {
@@ -90,20 +92,28 @@ const setupApps = async () => {
 			utility,
 			view: {},
 		};
-		const { config } = app;
+		const {
+			config
+		} = app;
+		require('../../../../utilities/crypto')(app);
+		require('../../../../utilities/file')(app);
+		require('../../../../utilities/console')(app);
+		require('../../../../utilities/certificate')(app);
+		require('../../../../utilities/certificates')(app);
 		assign(config, {
-			directory: appIndex.directory
+			directory: appIndex.directory,
 		});
-		buildConfig(app);
-		console.log(`Compile app object for ${right(config.directory.split('/'), 1)}`);
+		await buildConfig(app);
+		console.log(
+			`Compile app object for ${right(config.directory.split('/'), 1)}`,
+		);
 		require(masterMode ? '../cluster/master' : '../cluster/worker')(app);
 		service.socket.addDomain(app);
 		assign(service.http.secureContext, config.http.certs);
-		await require('../dynamicIP')(app);
 		const serverPort = config.http.port;
 		assign(app, await setupServer(app, serverPort));
 		await extendNetworkMethods(app);
-		console.log('Load App filesystem');
+		console.log('Load App filesystem', `${dirRoot}filesystem/`);
 		await require(`${dirRoot}filesystem/`)(app);
 		ports.push(config.http.port);
 		compiledApps.push(app);
@@ -112,12 +122,17 @@ const setupApps = async () => {
 		console.log(`${app.config.name} Compiled & Started \n`);
 	};
 	await eachAsync(apps, async (item) => {
-		await constructAppObject(item);
+		if (item.directory.includes('!')) {
+			console.log('IGNORE FOLDER', item);
+			return false;
+		} else {
+			return constructAppObject(item);
+		}
 	});
 	return {
 		apps: compiledApps,
 		ports,
-		servers
+		servers,
 	};
 };
 module.exports = async (configType) => {
@@ -127,4 +142,10 @@ module.exports = async (configType) => {
 	await require('../plugin')(utility);
 	await require('../service')(utility);
 	await setupApps();
+	if (!cluster.isMaster) {
+		process.send({
+			cmd: 'finished'
+		});
+	}
+	console.log('\n---------------------WORKER CLIENT SETUP ENDED---------------------\n');
 };

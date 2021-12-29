@@ -1,5 +1,0 @@
-(async function(){
-// slide
-!function(e,t){"use strict";if("undefined"!=typeof module&&module.exports&&"function"==typeof require)t(require("ractive"));else if("function"==typeof define&&define.amd)define(["ractive"],t);else{if(!e.Ractive)throw new Error("Could not find Ractive! It must be loaded before the ractive-transitions-slide plugin");t(e.Ractive)}}("undefined"!=typeof window?window:this,function(e){"use strict";var t,i,o,n;n={duration:300,easing:"easeInOut"},i=["height","borderTopWidth","borderBottomWidth","paddingTop","paddingBottom","marginTop","marginBottom"],o={height:0,borderTopWidth:0,borderBottomWidth:0,paddingTop:0,paddingBottom:0,marginTop:0,marginBottom:0},t=function(e,t){var d;t=e.processParams(t,n),e.isIntro?(d=e.getStyle(i),e.setStyle(o)):(e.setStyle(e.getStyle(i)),d=o),e.setStyle("overflowY","hidden"),e.animateStyle(d,t).then(e.complete)},e.transitions.slide=t});
-
-})();

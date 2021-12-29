@@ -1,14 +1,14 @@
 import app from './app';
 const {
-  utility: {
-    assign,
-  }
+	utility: {
+		assign,
+	}
 } = app;
 export const post = (id, data, options) => {
-  const responseData = {
-    data,
-    id
-  };
-  assign(responseData, options);
-  postMessage(responseData);
+	const responseData = {
+		data,
+		id
+	};
+	assign(responseData, options);
+	postMessage(responseData);
 };

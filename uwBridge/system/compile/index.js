@@ -5,46 +5,57 @@ const {
 	promise
 } = lucy;
 const rollup = require('rollup').rollup;
-const uglify = require('rollup-plugin-uglify');
-const esformatter = require('esformatter');
+const {
+	terser: minify
+} = require('rollup-plugin-terser');
+const format = require('prettier-eslint');
 const fs = require('fs');
 const watch = require('node-watch');
 const beautify = (filePath) => {
-	const code = fs.readFileSync(filePath).toString();
-	const formattedCode = esformatter.format(code, {
-		indent: {
-			value: '  '
-		}
+	console.log('Beautify');
+	const text = fs.readFileSync(filePath).toString();
+	const eslintConfig = JSON.parse(fs.readFileSync('./.eslintrc').toString());
+	const formattedCode = format({
+		eslintConfig,
+		text,
+		prettierOptions: {
+			parser: 'babel',
+		},
 	});
 	fs.writeFileSync(filePath, formattedCode, 'utf8');
 };
 const copyFile = (start, end) => {
 	fs.writeFileSync(end, fs.readFileSync(start).toString(), 'utf8');
 };
-const bundle = async (folderName, { environment }) => {
+const bundle = async (folderName, {
+	environment
+}) => {
 	console.log(`-----------${folderName}-----------`);
 	console.log(`Bundle Start.`);
 	if (environment === 'production') {
 		const core = await rollup({
-			entry: `./source/${folderName}/core/index.js`,
-			plugins: [uglify()]
+			input: `./source/${folderName}/core/index.js`,
+			plugins: [minify()]
 		});
+		console.log(`production ROLLED`);
 		await core.write({
-			dest: `./build/${folderName}/coreBundle.js`,
+			file: `./build/${folderName}/coreBundle.js`,
 			format: 'iife',
-			moduleName: '$',
-			sourceMap: true,
+			name: '$',
+			sourcemap: false,
 		});
 	} else {
 		console.log(`Development Build Start.`);
 		const core = await rollup({
-			entry: `./source/${folderName}/core/index.js`,
+			input: `./source/${folderName}/core/index.js`,
 		});
+		console.log(`Development ROLLED`);
 		await core.write({
-			dest: `./build/${folderName}/coreBundle.js`,
+			file: `./build/${folderName}/coreBundle.js`,
 			format: 'iife',
-			moduleName: '$',
-			sourceMap: true,
+			name: '$',
+			sourcemap: false,
+			strict: false,
 		});
 		beautify(`./build/${folderName}/coreBundle.js`);
 		console.log(`Development Build Completed.`);
@@ -52,20 +63,21 @@ const bundle = async (folderName, { environment }) => {
 	console.log(`Bundle Dependencies Start.`);
 	const library = await rollup({
 		context: 'window',
-		entry: `./source/${folderName}/libs/index.js`,
+		input: `./source/${folderName}/libs/index.js`,
 	});
+	console.log(`Bundle Dependencies ROLLED`);
 	await library.write({
-		dest: `./build/${folderName}/bundle.js`,
+		file: `./build/${folderName}/bundle.js`,
 		format: 'iife',
-		sourceMap: false,
-		useStrict: false,
+		sourcemap: false,
+		strict: false,
 	});
 	console.log(`Bundle Dependencies Completed.`);
 	console.log(`Bundle Completed.`);
 };
 const getApps = () => {
 	return promise((accept) => {
-		fs.readdir('../../../apps/client/', (err, items) => {
+		fs.readdir('./../../apps/client/', (err, items) => {
 			if (err) {
 				return console.log(err);
 			}
@@ -74,6 +86,7 @@ const getApps = () => {
 					return item;
 				}
 			});
+			console.log(apps);
 			accept(apps);
 		});
 	});
@@ -83,9 +96,9 @@ const compileApps = async () => {
 	if (apps) {
 		each(apps, (item) => {
 			console.log(`Exporting Files to ${item}.`);
-			copyFile(`./build/front/bundle.js`, `../../../apps/client/${item}/filesystem/public/Sentivate.js`);
-			copyFile(`./build/socket/bundle.js`, `../../../apps/client/${item}/filesystem/asset/Sentivate/index.js`);
-			copyFile(`./build/worker/bundle.js`, `../../../apps/client/${item}/filesystem/public/worker.js`);
+			copyFile(`./build/front/bundle.js`, `./../../apps/client/${item}/filesystem/public/Sentivate.js`);
+			copyFile(`./build/socket/bundle.js`, `./../../apps/client/${item}/filesystem/asset/Sentivate/index.js`);
+			copyFile(`./build/worker/bundle.js`, `./../../apps/client/${item}/filesystem/public/worker.js`);
 			console.log(`Exporting Files to ${item} Completed.`);
 		});
 	}
@@ -94,9 +107,9 @@ exports.build = async (options) => {
 	console.log('-----------Sentivate-----------');
 	console.log('Compiling');
 	console.log(`-----------Start IMPORT Libs-----------`);
-	copyFile(`./node_modules/Acid/index.js`, `./source/front/libs/Acid.js`);
+	copyFile(`./../../../node_modules/Acid/index.js`, `./source/front/libs/Acid.js`);
 	console.log('Acid Imported');
-	copyFile(`./node_modules/Lucy/index.js`, `./source/worker/libs/Lucy.js`);
+	copyFile(`./../../../node_modules/Lucy/index.js`, `./source/worker/libs/Lucy.js`);
 	console.log('Lucy Imported');
 	await bundle('front', options);
 	await bundle('socket', options);
@@ -111,7 +124,7 @@ exports.build = async (options) => {
 		await bundle('front', options);
 		each(apps, (item) => {
 			console.log(`Exporting Files to ${item}.`);
-			copyFile(`./build/front/bundle.js`, `../../../apps/client/${item}/filesystem/public/Sentivate.js`);
+			copyFile(`./build/front/bundle.js`, `./../../apps/client/${item}/filesystem/public/Sentivate.js`);
 			console.log(`Exporting Files to ${item} Completed.`);
 		});
 	});
@@ -121,7 +134,7 @@ exports.build = async (options) => {
 	}, async () => {
 		each(apps, (item) => {
 			console.log(`Exporting Files to ${item}.`);
-			copyFile(`./build/socket/bundle.js`, `../../../apps/client/${item}/filesystem/asset/Sentivate/index.js`);
+			copyFile(`./build/socket/bundle.js`, `./../../apps/client/${item}/filesystem/asset/Sentivate/index.js`);
 			console.log(`Exporting Files to ${item} Completed.`);
 		});
 		await bundle('socket', options);
@@ -132,7 +145,7 @@ exports.build = async (options) => {
 	}, async () => {
 		each(apps, (item) => {
 			console.log(`Exporting Files to ${item}.`);
-			copyFile(`./build/worker/bundle.js`, `../../../apps/client/${item}/filesystem/public/worker.js`);
+			copyFile(`./build/worker/bundle.js`, `./../../apps/client/${item}/filesystem/public/worker.js`);
 			console.log(`Exporting Files to ${item} Completed.`);
 		});
 		await bundle('worker', options);

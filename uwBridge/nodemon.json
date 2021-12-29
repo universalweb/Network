@@ -1,6 +1,7 @@
 {
-    "ignore": ["node_modules/**", "./site/**", "./resource/**", "Sentivate/compile/**"],
+    "ignore": ["./apps/client/**/filesystem/**"],
+    "delay": 2500,
     "execMap": {
-        "js": "node --harmony"
+        "js": "node"
     }
 }

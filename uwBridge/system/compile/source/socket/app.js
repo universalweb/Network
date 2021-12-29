@@ -1,2 +1,1 @@
-const app = window.app;
-export default app;
+export default window.app;

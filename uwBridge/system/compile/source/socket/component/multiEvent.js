@@ -1,16 +1,16 @@
 import app from '../app';
 const {
-  utility: {
-    each,
-  }
+	utility: {
+		each,
+	}
 } = app;
-const multiEvent = (view, componentEvent, ...events) => {
-  each(events, (item) => {
-    if (item) {
-      each(item.split(','), (subItem) => {
-        view.fire(subItem.trim(), componentEvent);
-      });
-    }
-  });
+const multiEvent = (currentView, componentEvent, ...events) => {
+	each(events, (item) => {
+		if (item) {
+			each(item.split(','), (subItem) => {
+				currentView.fire(subItem.trim(), componentEvent);
+			});
+		}
+	});
 };
 export default multiEvent;

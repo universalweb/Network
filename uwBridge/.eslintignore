@@ -1,0 +1,7 @@
+**.min.js
+.eslintrc.js
+Sentivate.js
+/lib/**
+/libs/**
+faicons.min.js
+ractive.js
