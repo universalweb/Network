@@ -18,7 +18,20 @@ const {
 	crypto_kx_client_session_keys,
 	crypto_kx_SESSIONKEYBYTES,
 	crypto_kx_server_session_keys,
+	crypto_pwhash_str,
+	crypto_pwhash_OPSLIMIT_MIN,
+	crypto_pwhash_MEMLIMIT_MIN,
+	crypto_pwhash_STRBYTES,
+	crypto_pwhash_str_verify
 } = require('sodium-native');
+function passwordHash(passwd) {
+	const out = Buffer.alloc(crypto_pwhash_STRBYTES);
+	crypto_pwhash_str(out, Buffer.from(passwd), 	crypto_pwhash_OPSLIMIT_MIN, crypto_pwhash_MEMLIMIT_MIN);
+	return out;
+}
+function passwordHashVerify(str, passwd) {
+	return crypto_pwhash_str_verify(str, Buffer.from(passwd));
+}
 function hash(message) {
 	const hashed = Buffer.alloc(crypto_generichash_BYTES);
 	crypto_generichash(hashed, message);
@@ -132,6 +145,8 @@ const methods = {
 	emptyNonce,
 	createSessionKey,
 	randombytes_buf,
+	passwordHashVerify,
+	passwordHash,
 	hashBytes: crypto_generichash_BYTES
 };
 module.exports = (state) => {

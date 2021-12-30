@@ -2,7 +2,8 @@ module.exports = (app) => {
 	const {
 		client,
 		utility: {
-			each
+			each,
+			isFunction
 		},
 	} = app;
 	app.api = {
@@ -12,6 +13,9 @@ module.exports = (app) => {
 			} = options;
 			const safePrefix = prefix ? `${prefix}.` : '';
 			const safeSuffix = suffix ? `.${suffix}` : '';
+			if (isFunction(methods)) {
+				client[prefix] = methods;
+			}
 			each(methods, (value, key) => {
 				let propertyKey;
 				if (key === 'security') {

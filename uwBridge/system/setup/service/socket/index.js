@@ -8,6 +8,7 @@ module.exports = (utility) => {
 		assign,
 		eachAsync,
 		stringify,
+		isFunction
 	} = utility;
 	const requestSend = async (dataArg, response, socket) => {
 		let data;
@@ -34,8 +35,16 @@ module.exports = (utility) => {
 		const responseFunction = hostAPI[requestProperty];
 		const rootPropertyString = requestProperty.substring(zeroInt, requestProperty.indexOf('.'));
 		const rootObject = hostAPI[rootPropertyString];
+		console.log(rootPropertyString, rootObject);
 		if (responseFunction) {
-			const security = responseFunction.security || rootObject;
+			let security = responseFunction.security;
+			if (!security && rootObject) {
+				security = rootObject;
+				if (!isFunction(rootObject)) {
+					security = rootObject.security;
+				}
+			}
+			console.log('Security', security);
 			const request = {
 				body,
 				response,
@@ -55,7 +64,7 @@ module.exports = (utility) => {
 			if (security) {
 				try {
 					securityCheck = await security(request);
-					if (!securityCheck) {
+					if (securityCheck === false) {
 						console.log('Security Check failed');
 						return;
 					}
