@@ -30,6 +30,7 @@
     "company": "Universal Web, Inc",
     "dependencies": {
         "Acid": "^2.3.7",
+        "base64-img": "^1.0.4",
         "compression": "^1.7.4",
         "express": "*",
         "express-content-length-validator": "^1.0.0",
@@ -44,6 +45,7 @@
         "node-watch": "*",
         "qrcode": "^1.5.0",
         "sequential-ids": "^0.0.0",
+        "sharp": "^0.29.3",
         "socket.io": "^4.4.0",
         "sodium-native": "*",
         "truncate-utf8-bytes": "^1.0.2",

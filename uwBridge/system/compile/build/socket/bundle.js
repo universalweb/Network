@@ -499,7 +499,7 @@
 			const sourceRender = componentConfig.onrender;
 			componentConfig.onrender = function(componentEvent) {
 				componentEvent.source = this;
-				ifInvoke(sourceRender, componentEvent);
+				return ifInvoke(sourceRender, componentEvent);
 			};
 		};
 		const {
@@ -724,11 +724,13 @@
 			demandJs,
 			demandLang,
 			utility: {
-				cnsl, assign, each, map, isString, rest, camelCase, omit, last, batch, eventAdd, whileArray
+				cnsl, assign, each, map, isString, rest, camelCase, omit, last, batch, eventAdd
 			}
 		} = app;
 		const router = {};
 		const hostname = window.location.hostname;
+		router.historyIndex = 0;
+		Ractive.sharedSet('historyIndex', router.historyIndex);
 		cnsl('ROUTER ONLINE', 'important');
 		assign(router, {
 			add(item) {
@@ -736,7 +738,7 @@
 			},
 			addObject(item, key) {
 				const reg = new RegExp(key);
-				router.routes.push(() => {
+				router.routes.push(async () => {
 					return router.routeChecker(item, reg);
 				});
 			},
@@ -744,17 +746,17 @@
 				eventAdd(
 					window,
 					'popstate',
-					(eventArg) => {
+					async (eventArg) => {
 						console.log('popstate', eventArg);
 						router.saveState();
 						router.updateLocation();
-						router.loadState();
+						await router.loadState();
 						eventArg.preventDefault();
 					},
 					true
 				);
 			},
-			closeState(previousStateObject) {
+			async closeState(previousStateObject) {
 				console.log('closeState', previousStateObject);
 				if (previousStateObject) {
 					if (!previousStateObject.closed) {
@@ -764,17 +766,18 @@
 					return console.log('Previous State Marked As Closed', previousStateObject);
 				}
 			},
-			forceClose(sourceState) {
+			async forceClose(sourceState) {
 				app.view.set('navState', false);
 				console.log('forceClose', sourceState);
 				if (sourceState) {
 					if (sourceState.watchers) {
 						sourceState.watchers.stop();
 					}
-					sourceState.closed = true;
 					if (sourceState.close) {
-						batch(sourceState.close);
+						console.log('MODEL Close STATE', sourceState);
+						await sourceState.close();
 					}
+					sourceState.closed = true;
 				}
 			},
 			go(route) {
@@ -795,19 +798,25 @@
 				}
 				return check;
 			},
-			loadState() {
+			async loadState() {
 				cnsl('Router Loading State', 'notify');
-				whileArray(router.routes, (item) => {
-					const result = Boolean(item()) === false;
+				const routesLength = router.routes.length;
+				let index = 0;
+				while (index < routesLength) {
+					const item = router.routes[index];
+					const result = Boolean(await item()) === false;
 					console.log('LOAD STATE', item, result);
-					return result;
-				});
+					index++;
+					if (result === false) {
+						break;
+					}
+				}
 			},
 			location: {
 				previous: {}
 			},
 			objectRoutes: {},
-			openState(openModel) {
+			async openState(openModel) {
 				// close event
 				const previousStateObject = router.currentStateObject;
 				if (openModel) {
@@ -815,40 +824,39 @@
 					router.currentStateObject = openModel;
 					if (previousStateObject === openModel) {
 						console.log('STATE IS SAME MODEL', openModel);
-						return (async () => {
-							console.log('NAVSTATE REFRESH COMPONENT');
-							await app.view.set('navState', false);
-							await app.view.set('navState', true);
-						})();
-					}
-					if (!openModel.panel) {
-						router.closeState(previousStateObject);
+						console.log('NAVSTATE REFRESH COMPONENT');
+						await app.view.set('navState', false);
+						await app.view.set('navState', true);
+						return;
 					}
 					console.log('MODEL CLOSED STATE', openModel.closed);
 					if (openModel.closed || openModel.closed === undefined) {
-						if (openModel.open) {
-							console.log('MODEL OPEN STATE BACKUP', openModel.closed);
-							openModel.open();
-						}
-						console.log('MODEL CLOSED STATE SET', false);
+						console.log('MODEL CLOSED', openModel);
 						openModel.closed = false;
+					}
+					if (!openModel.panel) {
+						await router.closeState(previousStateObject);
 					}
 				} else {
 					console.log('CLOSE PREVIOUS PAGE COMPONENT NO CURRENT ONE GIVEN');
 					router.currentStateObject = null;
-					router.closeState(previousStateObject);
+					await router.closeState(previousStateObject);
 				}
 				console.log('CURRENT STATE OBJECT HASH COMPONENT?s', router.currentStateObject, router.currentStateObject.component);
-				if (router.currentStateObject && router.currentStateObject.component) {
-					return (async () => {
-						console.log('NAVSTATE LOAD NEW COMPONENT');
-						await app.view.set('navState', false);
-						Ractive.components.navState = router.currentStateObject.component;
-						await app.view.set('navState', true);
-						if (router.currentStateObject.watchers) {
-							router.currentStateObject.watchers.start();
-						}
-					})();
+				const currentStateObject = router.currentStateObject;
+				if (currentStateObject && currentStateObject.component) {
+					if (currentStateObject.open) {
+						console.log('MODEL OPEN STATE', router.currentStateObject);
+						currentStateObject.open();
+					}
+					console.log('NAVSTATE LOAD NEW COMPONENT');
+					await app.view.set('navState', false);
+					Ractive.components.navState = currentStateObject.component;
+					await app.view.set('navState', true);
+					if (currentStateObject.watchers) {
+						currentStateObject.watchers.start();
+					}
+					return;
 				}
 			},
 			async pushState(url) {
@@ -857,7 +865,7 @@
 					router.saveState();
 					router.setState(url, url);
 					router.updateLocation();
-					router.loadState();
+					await router.loadState();
 				}
 			},
 			reloadState(sourceState) {
@@ -868,7 +876,7 @@
 					}
 				}
 			},
-			routeChecker(data, reg) {
+			async routeChecker(data, reg) {
 				const matching = router.location.pathname.match(reg);
 				console.log('routeChecker', router.location.pathname, matching, reg);
 				if (matching) {
@@ -881,7 +889,7 @@
 					console.log('routeChecker MATCHED', route);
 					console.log(routePath);
 					if (router.objectRoutes[routePath]) {
-						router.go(router.objectRoutes[routePath]);
+						await router.go(router.objectRoutes[routePath]);
 					} else {
 						(async () => {
 							console.log('routeChecker ASYNC', data);
@@ -905,7 +913,7 @@
 								await object.compile();
 							}
 							router.objectRoutes[routePath] = object;
-							router.go(object);
+							await router.go(object);
 							data.loaded = true;
 						})();
 					}
@@ -924,10 +932,10 @@
 					history.pushState(object, title, url);
 				}
 			},
-			setup() {
+			async setup() {
 				router.updateLocation();
 				router.attachEvents();
-				router.loadState();
+				await router.loadState();
 			},
 			updateLocation() {
 				map(top.location, (item, index) => {
@@ -944,6 +952,9 @@
 			componentView.on({
 				'*.routerBack'(eventArg) {
 					console.log('Router back State', eventArg);
+					router.historyIndex--;
+					Ractive.sharedSet('historyIndex', router.historyIndex);
+					console.log(router.historyIndex);
 					if (router.location.previous.hostname) {
 						window.history.back();
 					} else {
@@ -961,6 +972,9 @@
 				'*.routerLoad'(eventArg) {
 					const href = eventArg.get('href');
 					console.log('Router Load State', eventArg.get('href'), eventArg);
+					router.historyIndex++;
+					Ractive.sharedSet('historyIndex', router.historyIndex);
+					console.log(router.historyIndex);
 					if (href) {
 						router.pushState(href);
 					} else {

@@ -22,7 +22,13 @@ const {
 	crypto_pwhash_OPSLIMIT_MIN,
 	crypto_pwhash_MEMLIMIT_MIN,
 	crypto_pwhash_STRBYTES,
-	crypto_pwhash_str_verify
+	crypto_pwhash_str_verify,
+	crypto_shorthash_BYTES,
+	crypto_sign_detached,
+	crypto_sign_verify_detached,
+	crypto_shorthash,
+	crypto_shorthash_KEYBYTES,
+	crypto_generichash_BYTES_MIN
 } = require('sodium-native');
 function passwordHash(passwd) {
 	const out = Buffer.alloc(crypto_pwhash_STRBYTES);
@@ -32,17 +38,44 @@ function passwordHash(passwd) {
 function passwordHashVerify(str, passwd) {
 	return crypto_pwhash_str_verify(str, Buffer.from(passwd));
 }
-function hash(message) {
-	const hashed = Buffer.alloc(crypto_generichash_BYTES);
+function hash(message, amount) {
+	const hashed = Buffer.alloc(amount || crypto_generichash_BYTES);
 	crypto_generichash(hashed, message);
 	console.log(hashed.length);
 	return hashed;
+}
+function hashMin(message) {
+	const hashed = Buffer.alloc(crypto_generichash_BYTES_MIN);
+	crypto_generichash(hashed, message);
+	console.log(hashed.length);
+	return hashed;
+}
+function hashShort(message) {
+	const out = Buffer.alloc(crypto_shorthash_BYTES);
+	crypto_shorthash(out, message, Buffer.alloc(crypto_shorthash_KEYBYTES));
+	console.log(out.length);
+	return out;
 }
 function sign(message, secretKey) {
 	const signedMessage = Buffer.alloc(crypto_sign_BYTES + message.length);
 	crypto_sign(signedMessage, message, secretKey);
 	console.log(signedMessage.length);
 	return signedMessage;
+}
+function signDetached(message, secretKey) {
+	const signedMessage = Buffer.alloc(crypto_sign_BYTES);
+	crypto_sign_detached(signedMessage, message, secretKey);
+	console.log(signedMessage.length);
+	return signedMessage;
+}
+function hashSignDetached(message, secretKey, amount) {
+	return signDetached(hash(message, amount), secretKey);
+}
+function hashSignDetachedMin(message, secretKey) {
+	return signDetached(hashMin(message), secretKey);
+}
+function hashSignDetachedShort(message, secretKey) {
+	return signDetached(hashShort(message), secretKey);
 }
 function signOpen(signedMessage, publicKey) {
 	const message = Buffer.alloc(signedMessage.length - crypto_sign_BYTES);
@@ -52,6 +85,10 @@ function signOpen(signedMessage, publicKey) {
 function signVerify(signedMessage, publicKey) {
 	const message = Buffer.alloc(signedMessage.length - crypto_sign_BYTES);
 	return crypto_sign_open(message, signedMessage, publicKey);
+}
+function signVerifyDetached(signedMessage, publicKey) {
+	const message = Buffer.alloc(crypto_sign_BYTES);
+	return crypto_sign_verify_detached(message, signedMessage, publicKey);
 }
 function emptyNonce() {
 	return Buffer.alloc(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
@@ -147,6 +184,13 @@ const methods = {
 	randombytes_buf,
 	passwordHashVerify,
 	passwordHash,
+	signDetached,
+	signVerifyDetached,
+	hashSignDetached,
+	hashSignDetachedShort,
+	hashShort,
+	hashSignDetachedMin,
+	hashMin,
 	hashBytes: crypto_generichash_BYTES
 };
 module.exports = (state) => {

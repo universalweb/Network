@@ -122,7 +122,7 @@ const onConstruct = (componentConfig) => {
 	const sourceRender = componentConfig.onrender;
 	componentConfig.onrender = function(componentEvent) {
 		componentEvent.source = this;
-		ifInvoke(sourceRender, componentEvent);
+		return ifInvoke(sourceRender, componentEvent);
 	};
 };
 export default onConstruct;
