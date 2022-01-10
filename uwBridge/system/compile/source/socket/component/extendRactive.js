@@ -138,4 +138,4 @@ export const extendRactive = {
 		}
 	}
 };
-assign(Ractive.prototype, extendRactive);
+assign(Ractive.Context, extendRactive);

@@ -7,8 +7,10 @@ const {
 } = app;
 const buildComponent = (componentConfig) => {
 	initializeComponent(componentConfig);
-	const componentName = componentConfig.name;
-	const componentModel = componentConfig.model;
+	const {
+		name: componentName,
+		model
+	} = componentConfig;
 	console.log(componentConfig);
 	const cmpntConfigClean = omit(componentConfig, ['css', 'asset']);
 	if (componentConfig.CSS) {
@@ -19,8 +21,8 @@ const buildComponent = (componentConfig) => {
 	if (componentName) {
 		Ractive.components[componentName] = Component;
 	}
-	if (componentModel) {
-		componentModel.component = Component;
+	if (model) {
+		model.component = Component;
 	}
 	return Component;
 };

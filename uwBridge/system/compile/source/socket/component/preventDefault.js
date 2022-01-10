@@ -3,6 +3,7 @@ const {
 	isEventNode,
 	utility: {
 		isEnter,
+		apply
 	}
 } = app;
 const preventDefault = function(callable) {
@@ -19,8 +20,8 @@ const preventDefault = function(callable) {
 				componentEvent.isEnter = isEnter(original);
 			}
 		}
-		componentEvent.source = componentEvent.ractive;
-		callable(componentEvent, ...args);
+		console.log(this);
+		apply(callable, this, [componentEvent, ...args]);
 		return false;
 	};
 };

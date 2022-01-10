@@ -140,6 +140,9 @@ module.exports = (utility) => {
 	};
 	const onConnect = async (socket) => {
 		if (socket) {
+			if (!socket.hostAPI.socketEvent) {
+				return socket.disconnect(true);
+			}
 			console.log('onConnect', socket.id);
 			await socketIsValid(socket);
 			socket.ip = socket.request.websocket._socket.remoteAddress.replace(
@@ -164,6 +167,9 @@ module.exports = (utility) => {
 				socket.groups.push(endPoint);
 				console.log('JOIN GROUP CALLBACK', endPoint);
 				socket.join(endPoint);
+				if (!socket.hostAPI.socketEvent) {
+					socket.disconnect();
+				}
 				await socket.hostAPI.socketEvent.joinGroup(socket, ...args);
 			};
 			socket.leaveGroup = async (endPoint) => {
@@ -177,6 +183,9 @@ module.exports = (utility) => {
 				});
 			};
 			socket.on('disconnect', async () => {
+				if (!socket.hostAPI.socketEvent) {
+					socket.disconnect();
+				}
 				socket.hostAPI.socketEvent.disconnect(socket);
 				await socket.clean();
 			});

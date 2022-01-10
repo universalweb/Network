@@ -75,6 +75,7 @@ module.exports = async (app) => {
 	};
 	const sendClientUpdate = (filepath) => {
 		if (client.cache) {
+			console.log('SEND NEW VERSION OF FILE');
 			ifInvoke(client.cache.update, filepath);
 		}
 		liveReload(filepath);
@@ -87,6 +88,7 @@ module.exports = async (app) => {
 			cacheFile.push(item);
 		});
 		readableStream.on('end', () => {
+			// console.log('FILE READ COMPLETE LOAD INTO CACHE');
 			cacheSet(filepath, cacheFile, cs);
 			if (updateMode) {
 				sendClientUpdate(filepath);
@@ -95,13 +97,14 @@ module.exports = async (app) => {
 	};
 	const checkIfFileExists = (filepath, updateMode) => {
 		if (filepath && filepath.includes(resourceDir)) {
+			// console.log('Resource Found');
 			fs.stat(filepath, (err, stats) => {
 				if (err) {
-					// console.log(err);
+					console.log(err);
 					return;
 				}
-				// console.log(filepath, 'File found create stream /n');
-				createStream(filepath, stats.ctime.toString(), updateMode);
+				console.log(stats.ctimeMs, filepath, '\nFile found create stream \n\n');
+				createStream(filepath, stats.ctimeMs.toString(), updateMode);
 			});
 		}
 	};

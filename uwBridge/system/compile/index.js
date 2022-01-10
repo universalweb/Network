@@ -122,6 +122,7 @@ exports.build = async (options) => {
 		recursive: true
 	}, async () => {
 		await bundle('front', options);
+		console.log('LIVE CHANGE DETECTED COMPILE FRONT');
 		each(apps, (item) => {
 			console.log(`Exporting Files to ${item}.`);
 			copyFile(`./build/front/bundle.js`, `./../../apps/client/${item}/filesystem/public/Sentivate.js`);
@@ -132,6 +133,7 @@ exports.build = async (options) => {
 	watch('./source/socket', {
 		recursive: true
 	}, async () => {
+		console.log('LIVE CHANGE DETECTED COMPILE socket');
 		each(apps, (item) => {
 			console.log(`Exporting Files to ${item}.`);
 			copyFile(`./build/socket/bundle.js`, `./../../apps/client/${item}/filesystem/asset/Sentivate/index.js`);
@@ -143,6 +145,7 @@ exports.build = async (options) => {
 	watch('./source/worker', {
 		recursive: true
 	}, async () => {
+		console.log('LIVE CHANGE DETECTED COMPILE worker');
 		each(apps, (item) => {
 			console.log(`Exporting Files to ${item}.`);
 			copyFile(`./build/worker/bundle.js`, `./../../apps/client/${item}/filesystem/public/worker.js`);

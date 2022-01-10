@@ -83,7 +83,7 @@
 				findIndex,
 				hasValue,
 				get: get$1,
-				isPlainObject,
+				isPlainObject: isPlainObject$1,
 				findItem,
 				assignDeep,
 				ensureArray: ensureArray$1,
@@ -176,7 +176,7 @@
 			},
 			async syncCollection(path, newValArg, type = 'push', indexName = 'id') {
 				const oldVal = this.get(path);
-				if (isPlainObject(oldVal)) {
+				if (isPlainObject$1(oldVal)) {
 					assignDeep(oldVal, newValArg);
 				} else {
 					const newVal = ensureArray$1(newValArg);
@@ -217,7 +217,7 @@
 				}
 			}
 		};
-		assign$5(Ractive.prototype, extendRactive);
+		assign$5(Ractive.Context, extendRactive);
 		const getComponentName = (componentModel, componentName) => {
 			return componentModel === app.router.currentStateObject ? 'navState' : componentName;
 		};
@@ -291,6 +291,7 @@
 			}
 		} = app;
 		const multiEvent = (currentView, componentEvent, ...events) => {
+			console.log(currentView, componentEvent, events);
 			each$6(events, (item) => {
 				if (item) {
 					each$6(item.split(','), (subItem) => {
@@ -302,7 +303,7 @@
 		const {
 			isEventNode,
 			utility: {
-				isEnter
+				isEnter, apply: apply$1
 			}
 		} = app;
 		const preventDefault = function(callable) {
@@ -319,8 +320,8 @@
 						componentEvent.isEnter = isEnter(original);
 					}
 				}
-				componentEvent.source = componentEvent.ractive;
-				callable(componentEvent, ...args);
+				console.log(this);
+				apply$1(callable, this, [componentEvent, ...args]);
 				return false;
 			};
 		};
@@ -384,7 +385,7 @@
 		const {
 			watch: watch$1,
 			utility: {
-				map: map$1, each: each$4, get, ifInvoke
+				map: map$1, each: each$4, get, apply, isPlainObject
 			}
 		} = app;
 		const createWatchers = (currentView, item, key) => {
@@ -443,25 +444,22 @@
 				});
 			}
 		};
-		const constructEvent = function(componentConfig, componentEvent, sourceConstruct) {
+		const buildComponentEvents = function(componentConfig, componentEvent) {
 			const {
-				css, watchers
+				css, watchers, model: componentModel
 			} = componentConfig;
-			const componentEventRactive = componentEvent.ractive;
-			const componentModel = componentConfig.model;
-			const sourceOn = componentEventRactive.on.bind(componentEventRactive);
-			if (sourceConstruct) {
-				sourceConstruct(componentEvent, componentEventRactive);
-			}
+			const thisComponent = this;
+			const sourceOn = thisComponent.on.bind(this);
+			console.log(thisComponent);
 			if (componentModel) {
 				app.navState = componentEvent.ractive;
 			}
-			componentEventRactive.onRaw = (componentEvt) => {
-				componentEvt.source = componentEvt.ractive;
+			thisComponent.onRaw = function(componentEvt) {
 				return sourceOn(componentEvt);
 			};
-			componentEventRactive.on = (eventName, eventListener) => {
+			thisComponent.on = function(eventName, eventListener) {
 				console.log(eventName, eventListener);
+				console.log(this);
 				if (eventListener) {
 					return sourceOn(eventName, preventDefault(eventListener));
 				} else {
@@ -469,37 +467,42 @@
 				}
 			};
 			each$4(app.componentMethods, (item) => {
-				item(componentEventRactive, componentConfig);
+				item(thisComponent, componentConfig);
 			});
-			componentEventRactive.watchers = watchers ? watchers(componentEventRactive) : {};
-			if (componentEventRactive.watchers) {
-				each$4(componentEventRactive.watchers, (item, key) => {
-					createWatchers(componentEventRactive, item, key);
+			thisComponent.watchers = watchers ? watchers(thisComponent) : {};
+			if (thisComponent.watchers) {
+				each$4(thisComponent.watchers, (item, key) => {
+					createWatchers(thisComponent, item, key);
 				});
 			}
-			componentEventRactive.on({
+			thisComponent.on({
 				multi(cmpntEvent, ...args) {
 					console.log(cmpntEvent, ...args);
-					return multiEvent(componentEventRactive, cmpntEvent, ...args);
+					return multiEvent(this, cmpntEvent, ...args);
 				},
 				render() {
-					onrenderInstance(componentEventRactive, css);
+					return onrenderInstance(this, css);
 				},
 				teardown() {
-					removeInstance(componentEventRactive, css);
+					return removeInstance(this, css);
 				}
 			});
 		};
-		const onConstruct = (componentConfig) => {
+		const onConstruct = function(componentConfig) {
+			console.log(this);
 			const sourceConstruct = componentConfig.onconstruct;
-			componentConfig.onconstruct = function(componentEvent) {
-				componentEvent.source = this;
-				constructEvent(componentConfig, componentEvent, sourceConstruct);
+			console.log(sourceConstruct);
+			componentConfig.onconstruct = function(...args) {
+				apply(buildComponentEvents, this, [componentConfig, ...args]);
+				if (sourceConstruct) {
+					return apply(sourceConstruct, this, args);
+				}
 			};
 			const sourceRender = componentConfig.onrender;
-			componentConfig.onrender = function(componentEvent) {
-				componentEvent.source = this;
-				return ifInvoke(sourceRender, componentEvent);
+			componentConfig.onrender = function(...args) {
+				if (sourceRender) {
+					return apply(sourceRender, this, args);
+				}
 			};
 		};
 		const {
@@ -527,8 +530,9 @@
 		} = app;
 		const buildComponent = (componentConfig) => {
 			initializeComponent(componentConfig);
-			const componentName = componentConfig.name;
-			const componentModel = componentConfig.model;
+			const {
+				name: componentName, model
+			} = componentConfig;
 			console.log(componentConfig);
 			const cmpntConfigClean = omit$1(componentConfig, ['css', 'asset']);
 			if (componentConfig.CSS) {
@@ -539,8 +543,8 @@
 			if (componentName) {
 				Ractive.components[componentName] = Component;
 			}
-			if (componentModel) {
-				componentModel.component = Component;
+			if (model) {
+				model.component = Component;
 			}
 			return Component;
 		};

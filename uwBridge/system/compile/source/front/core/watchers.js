@@ -16,7 +16,7 @@ const {
 	},
 } = app;
 cnsl('Initilizing watchers module.', 'notify');
-const watchers = {};
+export const watchers = {};
 const watchersRegex = [];
 const onRegex = (type, callable) => {
 	const watchObject = {};

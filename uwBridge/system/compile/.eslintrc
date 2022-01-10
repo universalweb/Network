@@ -117,7 +117,7 @@
 		"no-implicit-coercion": "error",
 		"no-implicit-globals": "error",
 		"no-implied-eval": "error",
-		"no-invalid-this": "error",
+		"no-invalid-this": "off",
 		"no-iterator": "error",
 		"no-labels": "error",
 		"no-lone-blocks": "error",
@@ -221,7 +221,7 @@
 			"error",
 			"never"
 		],
-		"consistent-this": "error",
+		"consistent-this": "off",
 		"eol-last": "error",
 		"func-style": "off",
 		"id-blacklist": "off",

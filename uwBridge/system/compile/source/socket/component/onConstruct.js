@@ -8,7 +8,8 @@ const {
 		map,
 		each,
 		get,
-		ifInvoke
+		apply,
+		isPlainObject
 	}
 } = app;
 const createWatchers = (currentView, item, key) => {
@@ -65,26 +66,24 @@ const onrenderInstance = function(currentView, css) {
 		});
 	}
 };
-export const constructEvent = function(componentConfig, componentEvent, sourceConstruct) {
+export const buildComponentEvents = function(componentConfig, componentEvent) {
 	const {
 		css,
 		watchers,
+		model: componentModel
 	} = componentConfig;
-	const componentEventRactive = componentEvent.ractive;
-	const componentModel = componentConfig.model;
-	const sourceOn = componentEventRactive.on.bind(componentEventRactive);
-	if (sourceConstruct) {
-		sourceConstruct(componentEvent, componentEventRactive);
-	}
+	const thisComponent = this;
+	const sourceOn = thisComponent.on.bind(this);
+	console.log(thisComponent);
 	if (componentModel) {
 		app.navState = componentEvent.ractive;
 	}
-	componentEventRactive.onRaw = (componentEvt) => {
-		componentEvt.source = componentEvt.ractive;
+	thisComponent.onRaw = function(componentEvt) {
 		return sourceOn(componentEvt);
 	};
-	componentEventRactive.on = (eventName, eventListener) => {
+	thisComponent.on = function(eventName, eventListener) {
 		console.log(eventName, eventListener);
+		console.log(this);
 		if (eventListener) {
 			return sourceOn(eventName, preventDefault(eventListener));
 		} else {
@@ -92,37 +91,42 @@ export const constructEvent = function(componentConfig, componentEvent, sourceCo
 		}
 	};
 	each(app.componentMethods, (item) => {
-		item(componentEventRactive, componentConfig);
+		item(thisComponent, componentConfig);
 	});
-	componentEventRactive.watchers = (watchers) ? watchers(componentEventRactive) : {};
-	if (componentEventRactive.watchers) {
-		each(componentEventRactive.watchers, (item, key) => {
-			createWatchers(componentEventRactive, item, key);
+	thisComponent.watchers = (watchers) ? watchers(thisComponent) : {};
+	if (thisComponent.watchers) {
+		each(thisComponent.watchers, (item, key) => {
+			createWatchers(thisComponent, item, key);
 		});
 	}
-	componentEventRactive.on({
+	thisComponent.on({
 		multi(cmpntEvent, ...args) {
 			console.log(cmpntEvent, ...args);
-			return multiEvent(componentEventRactive, cmpntEvent, ...args);
+			return multiEvent(this, cmpntEvent, ...args);
 		},
 		render() {
-			onrenderInstance(componentEventRactive, css);
+			return onrenderInstance(this, css);
 		},
 		teardown() {
-			removeInstance(componentEventRactive, css);
+			return removeInstance(this, css);
 		},
 	});
 };
-const onConstruct = (componentConfig) => {
+const onConstruct = function(componentConfig) {
+	console.log(this);
 	const sourceConstruct = componentConfig.onconstruct;
-	componentConfig.onconstruct = function(componentEvent) {
-		componentEvent.source = this;
-		constructEvent(componentConfig, componentEvent, sourceConstruct);
+	console.log(sourceConstruct);
+	componentConfig.onconstruct = function(...args) {
+		apply(buildComponentEvents, this, [componentConfig, ...args]);
+		if (sourceConstruct) {
+			return apply(sourceConstruct, this, args);
+		}
 	};
 	const sourceRender = componentConfig.onrender;
-	componentConfig.onrender = function(componentEvent) {
-		componentEvent.source = this;
-		return ifInvoke(sourceRender, componentEvent);
+	componentConfig.onrender = function(...args) {
+		if (sourceRender) {
+			return apply(sourceRender, this, args);
+		}
 	};
 };
 export default onConstruct;

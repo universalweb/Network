@@ -1,5 +1,5 @@
 {
-    "ignore": ["./apps/client/**/filesystem/**"],
+    "ignore": ["./apps/client/**/filesystem/**", "./system/compile/**"],
     "delay": 2500,
     "execMap": {
         "js": "node"

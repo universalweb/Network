@@ -1,11 +1,11 @@
 import app from './app.js';
 import { fetchFile } from './fetchFile.js';
 import languagePath from './language.js';
+import { watch, watchers } from './watchers.js';
 const {
 	utility: {
 		assign,
 		hasDot,
-		has,
 		promise,
 		last,
 		map,
@@ -13,7 +13,8 @@ const {
 		isPlainObject,
 		each,
 		cnsl,
-		initialString
+		initialString,
+		restString
 	}
 } = app;
 const commaString = ',';
@@ -30,6 +31,16 @@ const buildFilePath = (itemArg) => {
 			item += '.css';
 		}
 		console.log(item);
+	}
+	if (restString(item, -3) === '.js') {
+		console.log(item, watch);
+		if (!watchers[item]) {
+			watch(item, (thing) => {
+				console.log(thing, 'Live Reload');
+				localStorage.removeItem(thing.name);
+				localStorage.removeItem(`cs-${thing.name}`);
+			});
+		}
 	}
 	return item;
 };
