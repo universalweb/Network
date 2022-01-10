@@ -8,8 +8,8 @@ const {
 		model
 	},
 } = app;
-const updateResize = debounce(() => {
-	Ractive.sharedSet(info);
+const updateResize = debounce(async () => {
+	await Ractive.sharedSet(info);
 	const width = info.windowWidth;
 	let screenSize;
 	if (isAgent.mobile) {
@@ -24,12 +24,14 @@ const updateResize = debounce(() => {
 		screenSize = '4kScreen';
 	}
 	console.log(screenSize);
-	Ractive.sharedSet('screenSize', screenSize);
+	await Ractive.sharedSet('screenSize', screenSize);
 }, 250);
-eventAdd(window, 'resize', () => {
+function calculateScreen() {
 	requestAnimationFrame(updateResize);
+}
+eventAdd(window, 'resize', () => {
+	calculateScreen();
 }, true);
-updateResize();
 const smoothScroll = (element, to, duration) => {
 	if (duration <= 0) {
 		return;

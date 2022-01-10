@@ -1,15 +1,12 @@
 import app from '../app';
 import multiEvent from './multiEvent';
-import preventDefault from './preventDefault';
 import { cssRender, cssUnrender } from './css';
 const {
 	watch,
 	utility: {
-		map,
 		each,
 		get,
 		apply,
-		isPlainObject
 	}
 } = app;
 const createWatchers = (currentView, item, key) => {
@@ -37,8 +34,8 @@ const createWatchers = (currentView, item, key) => {
 			await currentView.syncCollection(key, json.item, createMethod);
 			currentView.fire(`${prefix}create${suffix}`, json.item, json);
 		},
-		delete(json) {
-			currentView.removeIndex(key, json.item.id);
+		async delete(json) {
+			await currentView.removeIndex(key, json.item.id);
 			currentView.fire(`${prefix}delete${suffix}`, json.item, json);
 		},
 		async read(json) {
@@ -66,33 +63,13 @@ const onrenderInstance = function(currentView, css) {
 		});
 	}
 };
-export const buildComponentEvents = function(componentConfig, componentEvent) {
+export const buildComponentEvents = function(componentConfig) {
 	const {
 		css,
 		watchers,
-		model: componentModel
 	} = componentConfig;
 	const thisComponent = this;
-	const sourceOn = thisComponent.on.bind(this);
 	console.log(thisComponent);
-	if (componentModel) {
-		app.navState = componentEvent.ractive;
-	}
-	thisComponent.onRaw = function(componentEvt) {
-		return sourceOn(componentEvt);
-	};
-	thisComponent.on = function(eventName, eventListener) {
-		console.log(eventName, eventListener);
-		console.log(this);
-		if (eventListener) {
-			return sourceOn(eventName, preventDefault(eventListener));
-		} else {
-			return sourceOn(map(eventName, preventDefault));
-		}
-	};
-	each(app.componentMethods, (item) => {
-		item(thisComponent, componentConfig);
-	});
 	thisComponent.watchers = (watchers) ? watchers(thisComponent) : {};
 	if (thisComponent.watchers) {
 		each(thisComponent.watchers, (item, key) => {
@@ -113,9 +90,7 @@ export const buildComponentEvents = function(componentConfig, componentEvent) {
 	});
 };
 const onConstruct = function(componentConfig) {
-	console.log(this);
 	const sourceConstruct = componentConfig.onconstruct;
-	console.log(sourceConstruct);
 	componentConfig.onconstruct = function(...args) {
 		apply(buildComponentEvents, this, [componentConfig, ...args]);
 		if (sourceConstruct) {

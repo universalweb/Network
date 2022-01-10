@@ -3,3 +3,4 @@
 .eslintrc.js
 /build/**
 bundle.js
+**/lib/*

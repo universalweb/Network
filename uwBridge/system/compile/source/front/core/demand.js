@@ -33,7 +33,7 @@ const buildFilePath = (itemArg) => {
 		console.log(item);
 	}
 	if (restString(item, -3) === '.js') {
-		console.log(item, watch);
+		// console.log(item, watch);
 		if (!watchers[item]) {
 			watch(item, (thing) => {
 				console.log(thing, 'Live Reload');

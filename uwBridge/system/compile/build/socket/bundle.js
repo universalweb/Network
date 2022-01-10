@@ -14,8 +14,8 @@
 				debounce, eventAdd: eventAdd$1, isAgent, info, model
 			}
 		} = app;
-		const updateResize = debounce(() => {
-			Ractive.sharedSet(info);
+		const updateResize = debounce(async () => {
+			await Ractive.sharedSet(info);
 			const width = info.windowWidth;
 			let screenSize;
 			if (isAgent.mobile) {
@@ -30,17 +30,19 @@
 				screenSize = '4kScreen';
 			}
 			console.log(screenSize);
-			Ractive.sharedSet('screenSize', screenSize);
+			await Ractive.sharedSet('screenSize', screenSize);
 		}, 250);
+		function calculateScreen() {
+			requestAnimationFrame(updateResize);
+		}
 		eventAdd$1(
 			window,
 			'resize',
 			() => {
-				requestAnimationFrame(updateResize);
+				calculateScreen();
 			},
 			true
 		);
-		updateResize();
 		const smoothScroll = (element, to, duration) => {
 			if (duration <= 0) {
 				return;
@@ -83,7 +85,7 @@
 				findIndex,
 				hasValue,
 				get: get$1,
-				isPlainObject: isPlainObject$1,
+				isPlainObject,
 				findItem,
 				assignDeep,
 				ensureArray: ensureArray$1,
@@ -176,7 +178,7 @@
 			},
 			async syncCollection(path, newValArg, type = 'push', indexName = 'id') {
 				const oldVal = this.get(path);
-				if (isPlainObject$1(oldVal)) {
+				if (isPlainObject(oldVal)) {
 					assignDeep(oldVal, newValArg);
 				} else {
 					const newVal = ensureArray$1(newValArg);
@@ -217,7 +219,7 @@
 				}
 			}
 		};
-		assign$5(Ractive.Context, extendRactive);
+		assign$5(Ractive.prototype, extendRactive);
 		const getComponentName = (componentModel, componentName) => {
 			return componentModel === app.router.currentStateObject ? 'navState' : componentName;
 		};
@@ -301,31 +303,6 @@
 			});
 		};
 		const {
-			isEventNode,
-			utility: {
-				isEnter, apply: apply$1
-			}
-		} = app;
-		const preventDefault = function(callable) {
-			return function(componentEvent, ...args) {
-				if (componentEvent) {
-					console.log(componentEvent);
-					if (componentEvent.node && !isEventNode(componentEvent)) {
-						componentEvent.notTarget = false;
-					} else {
-						componentEvent.isTarget = true;
-					}
-					const original = componentEvent.original;
-					if (original && original.keyCode) {
-						componentEvent.isEnter = isEnter(original);
-					}
-				}
-				console.log(this);
-				apply$1(callable, this, [componentEvent, ...args]);
-				return false;
-			};
-		};
-		const {
 			utility: {
 				each: each$5, assign: assign$4, querySelector: querySelector$1
 			}
@@ -385,7 +362,7 @@
 		const {
 			watch: watch$1,
 			utility: {
-				map: map$1, each: each$4, get, apply, isPlainObject
+				each: each$4, get, apply
 			}
 		} = app;
 		const createWatchers = (currentView, item, key) => {
@@ -413,8 +390,8 @@
 						await currentView.syncCollection(key, json.item, createMethod);
 						currentView.fire(`${prefix}create${suffix}`, json.item, json);
 					},
-					delete(json) {
-						currentView.removeIndex(key, json.item.id);
+					async delete(json) {
+						await currentView.removeIndex(key, json.item.id);
 						currentView.fire(`${prefix}delete${suffix}`, json.item, json);
 					},
 					async read(json) {
@@ -444,31 +421,12 @@
 				});
 			}
 		};
-		const buildComponentEvents = function(componentConfig, componentEvent) {
+		const buildComponentEvents = function(componentConfig) {
 			const {
-				css, watchers, model: componentModel
+				css, watchers
 			} = componentConfig;
 			const thisComponent = this;
-			const sourceOn = thisComponent.on.bind(this);
 			console.log(thisComponent);
-			if (componentModel) {
-				app.navState = componentEvent.ractive;
-			}
-			thisComponent.onRaw = function(componentEvt) {
-				return sourceOn(componentEvt);
-			};
-			thisComponent.on = function(eventName, eventListener) {
-				console.log(eventName, eventListener);
-				console.log(this);
-				if (eventListener) {
-					return sourceOn(eventName, preventDefault(eventListener));
-				} else {
-					return sourceOn(map$1(eventName, preventDefault));
-				}
-			};
-			each$4(app.componentMethods, (item) => {
-				item(thisComponent, componentConfig);
-			});
 			thisComponent.watchers = watchers ? watchers(thisComponent) : {};
 			if (thisComponent.watchers) {
 				each$4(thisComponent.watchers, (item, key) => {
@@ -489,9 +447,7 @@
 			});
 		};
 		const onConstruct = function(componentConfig) {
-			console.log(this);
 			const sourceConstruct = componentConfig.onconstruct;
-			console.log(sourceConstruct);
 			componentConfig.onconstruct = function(...args) {
 				apply(buildComponentEvents, this, [componentConfig, ...args]);
 				if (sourceConstruct) {

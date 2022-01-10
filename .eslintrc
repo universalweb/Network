@@ -17,6 +17,7 @@
 		"sourceType": "script",
 		"ecmaVersion": 12
 	},
+	"ignorePatterns": ["**/*.min.js", "bundle.js", "Sentivate.js", "**/lib/*"],
 	"rules": {
 		"no-setter-return": "error",
 		"no-dupe-else-if": "error",
