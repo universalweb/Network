@@ -30,7 +30,7 @@ function calculateScreen() {
 	requestAnimationFrame(updateResize);
 }
 eventAdd(window, 'resize', () => {
-	calculateScreen();
+	calculateScreen(updateResize);
 }, true);
 const smoothScroll = (element, to, duration) => {
 	if (duration <= 0) {

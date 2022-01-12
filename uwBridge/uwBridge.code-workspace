@@ -5,7 +5,70 @@
 		},
 		{
 			"path": ".."
+		},
+		{
+			"path": "apps/client/akerna"
+		},
+		{
+			"path": "system/compile"
+		},
+		{
+			"path": "system/setup"
+		},
+		{
+			"path": "system/filesystem"
 		}
 	],
-    "settings": {}
+	"settings": {
+		"cSpell.enableFiletypes": [
+			"Log",
+			"clojure",
+			"code-runner-output",
+			"code-text-binary",
+			"coffeescript",
+			"csv",
+			"cuda-cpp",
+			"dart",
+			"desktop",
+			"diff",
+			"dockercompose",
+			"dockerfile",
+			"excel",
+			"git-rebase",
+			"gitignore",
+			"groovy",
+			"ignore",
+			"ini",
+			"jinja",
+			"jsx-tags",
+			"julia",
+			"juliamarkdown",
+			"kotlin",
+			"log",
+			"lua",
+			"makefile",
+			"markdown-math",
+			"mustache",
+			"objective-c",
+			"pip-requirements",
+			"powershell",
+			"properties",
+			"quokka-output",
+			"quokka-recent",
+			"r",
+			"raw",
+			"razor",
+			"rst",
+			"ruby",
+			"search-result",
+			"security",
+			"shellscript",
+			"sql",
+			"ssh_config",
+			"tsv",
+			"vb",
+			"xml",
+			"xsl"
+		]
+	}
 }
