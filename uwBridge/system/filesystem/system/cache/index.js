@@ -96,6 +96,9 @@ module.exports = async (app) => {
 		});
 	};
 	const checkIfFileExists = (filepath, updateMode) => {
+		if (filepath.includes('.DS_Store')) {
+			return;
+		}
 		if (filepath && filepath.includes(resourceDir)) {
 			// console.log('Resource Found');
 			fs.stat(filepath, (err, stats) => {

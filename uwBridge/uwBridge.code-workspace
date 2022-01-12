@@ -17,6 +17,24 @@
 		},
 		{
 			"path": "system/filesystem"
+		},
+		{
+			"path": "apps/client/akerna/api"
+		},
+		{
+			"path": "apps/client/akerna/filesystem/asset"
+		},
+		{
+			"path": "apps/client/akerna/filesystem/cache"
+		},
+		{
+			"path": "apps/client/akerna/filesystem/public"
+		},
+		{
+			"path": "apps/client/akerna/filesystem/asset/component"
+		},
+		{
+			"path": "apps/client/akerna/filesystem/asset/routes"
 		}
 	],
 	"settings": {
