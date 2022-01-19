@@ -77,7 +77,9 @@ export const buildComponentEvents = function(componentConfig) {
 	}
 	thisComponent.on({
 		multi(cmpntEvent, ...args) {
-			console.log(cmpntEvent, ...args);
+			if (app.debug) {
+				console.log(cmpntEvent, ...args);
+			}
 			return multiEvent(this, cmpntEvent, ...args);
 		},
 		render() {

@@ -468,7 +468,9 @@
 			}
 			thisComponent.on({
 				multi(cmpntEvent, ...args) {
-					console.log(cmpntEvent, ...args);
+					if (app.debug) {
+						console.log(cmpntEvent, ...args);
+					}
 					return multiEvent(this, cmpntEvent, ...args);
 				},
 				render() {
@@ -937,6 +939,7 @@
 				router.location.pathScored = router.location.pathname.replace(/\//g, '_');
 				router.location.paths = rest(router.location.pathname.split('/'));
 				router.location.pathCamel = camelCase(router.location.paths.join('_'));
+				Ractive.sharedSet('currentPath', router.location.pathname);
 			}
 		});
 		Ractive.routerLoad = (componentView) => {

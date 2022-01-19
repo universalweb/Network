@@ -226,6 +226,7 @@ assign(router, {
 		router.location.pathScored = router.location.pathname.replace(/\//g, '_');
 		router.location.paths = rest(router.location.pathname.split('/'));
 		router.location.pathCamel = camelCase(router.location.paths.join('_'));
+		Ractive.sharedSet('currentPath', router.location.pathname);
 	}
 });
 Ractive.routerLoad = (componentView) => {
