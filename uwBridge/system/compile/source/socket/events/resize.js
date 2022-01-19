@@ -47,3 +47,4 @@ const smoothScroll = (element, to, duration) => {
 	});
 };
 model('smoothScroll', smoothScroll);
+updateResize();

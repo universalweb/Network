@@ -72,7 +72,6 @@ assign(router, {
 	},
 	isCurrentModel(model, success, failure) {
 		const check = (router.currentStateObject) ? router.currentStateObject === model : false;
-		console.log('isCurrentModel', check);
 		if (check) {
 			if (success) {
 				success();
@@ -89,9 +88,9 @@ assign(router, {
 		while (index < routesLength) {
 			const item = router.routes[index];
 			const result = Boolean(await item()) === false;
-			console.log('LOAD STATE', item, result);
 			index++;
 			if (result === false) {
+				console.log('LOAD STATE', item, result);
 				break;
 			}
 		}
@@ -126,7 +125,7 @@ assign(router, {
 			router.currentStateObject = null;
 			await router.closeState(previousStateObject);
 		}
-		console.log('CURRENT STATE OBJECT HASH COMPONENT?s', router.currentStateObject, router.currentStateObject.component);
+		console.log('CURRENT STATE OBJECT HASH COMPONENT?');
 		const currentStateObject = router.currentStateObject;
 		if (currentStateObject && currentStateObject.component) {
 			if (currentStateObject.open) {
@@ -144,7 +143,6 @@ assign(router, {
 		}
 	},
 	async pushState(url) {
-		console.log(url);
 		if (url) {
 			router.saveState();
 			router.setState(url, url);
@@ -162,7 +160,6 @@ assign(router, {
 	},
 	async routeChecker(data, reg) {
 		const matching = router.location.pathname.match(reg);
-		console.log('routeChecker', router.location.pathname, matching, reg);
 		if (matching) {
 			router.match = matching;
 			const route = data.route();
@@ -170,15 +167,14 @@ assign(router, {
 			routePath = (routePath[0] === '/') ? routePath : `/${routePath}`;
 			route.path = routePath;
 			const routeRequire = data.require;
-			console.log('routeChecker MATCHED', route);
-			console.log(routePath);
+			console.log('routeChecker MATCHED', routePath);
 			if (router.objectRoutes[routePath]) {
 				await router.go(router.objectRoutes[routePath]);
 			} else {
 				(async () => {
-					console.log('routeChecker ASYNC', data);
+					console.log('routeChecker ASYNC');
 					if (!data.loaded && routeRequire) {
-						console.log('routeChecker demandJS', data);
+						console.log('routeChecker demandJS');
 						await demandJs(routeRequire);
 					}
 					const object = await demandJs(`routes${routePath}`);

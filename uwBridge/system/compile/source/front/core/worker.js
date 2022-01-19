@@ -47,6 +47,9 @@ const workerMessage = (workerEvent) => {
 	if (!hasValue(generatedId)) {
 		generatedId = '_';
 	}
+	if (!app.events[generatedId]) {
+		console.log(id, generatedId);
+	}
 	app.events[generatedId](data);
 	if (!eventData.keep && !isString(generatedId)) {
 		app.events[generatedId] = null;

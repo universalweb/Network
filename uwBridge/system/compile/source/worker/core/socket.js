@@ -92,12 +92,34 @@ const request = (configObj, workerData) => {
 };
 const socketIsReady = (data) => {
 	console.log('Socket Is Ready');
-	if (!alreadySetup) {
+	if (alreadySetup) {
+		if (app.creditSave) {
+			console.log('Re-authenticating');
+			request({
+				callback() {
+					console.log('Re-authenticated');
+					postMessage({
+						data: {
+							type: 'reconnected',
+						},
+						id: '_',
+					});
+				},
+				data: {
+					data: {
+						credit: $.assign({}, app.creditSave)
+					},
+					request: 'user.loginCredit',
+				},
+			});
+		}
+	} else {
 		post('setupCompleted', {
 			language: data.language,
 		});
+		alreadySetup = 1;
+		console.log('connected');
 	}
-	alreadySetup = 1;
 };
 const upgradeImport = (fileArg, item) => {
 	let locations = item.match(importLocationsRegex);
@@ -257,35 +279,18 @@ const socketInitialize = () => {
 	socket = self.io.connect(serverLocation, {
 		transports: ['websocket'],
 	});
-	socket.on('reconnect', () => {
-		console.log('connected', app.creditSave);
-		if (app.creditSave) {
-			request({
-				callback() {
-					console.log('Re-authenticated');
-					postMessage({
-						data: {
-							type: 'reconnected',
-						},
-						id: '_',
-					});
-				},
-				data: {
-					data: app.creditSave,
-					request: 'user.verify',
-				},
-			});
-		}
-	});
 	// this listens for client API calls
 	socket.on('api', apiClient);
 	socket.on('ready', socketIsReady);
-	socket.on('configure', () => {
-		socket.emit('configure', {
-			language: navigator.language,
-		});
+	socket.on('connect', () => {
+		socket.emit('configure', app.config);
 	});
-	socket.on('disconnected', () => {
+	socket.on('disconnect', (reason) => {
+		console.log('disconnected');
+		if (reason === 'io server disconnect') {
+			// the disconnection was initiated by the server, you need to reconnect manually
+			socket.connect();
+		}
 		postMessage({
 			data: {
 				type: 'disconnected',
@@ -295,7 +300,7 @@ const socketInitialize = () => {
 	});
 };
 app.events.configure = (data) => {
-	console.log('configure', data);
 	assign(config, data);
+	console.log('STARTING');
 	socketInitialize();
 };

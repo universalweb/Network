@@ -10,8 +10,10 @@ const importTemplate = (componentName, componentModel, asset) => {
 		watchHtml(template, (html) => {
 			const realName = getComponentName(componentModel, componentName);
 			if (realName) {
-				app.view.findComponent(realName)
-					.resetTemplate(html);
+				const matchedComponent = app.view.findComponent(realName);
+				if (matchedComponent) {
+					matchedComponent.resetTemplate(html);
+				}
 			}
 		});
 	}

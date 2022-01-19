@@ -21,7 +21,9 @@ self.onmessage = (evnt) => {
 		if (returned) {
 			post(returned, id);
 		}
-		console.log(`Worker api.${requestName}`);
+		if (app.debug) {
+			console.log(`Worker api.${requestName}`);
+		}
 	} else {
 		console.log(`FAILED Worker api.${requestName}`);
 	}

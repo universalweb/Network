@@ -5,3 +5,6 @@ Sentivate.js
 /libs/**
 faicons.min.js
 ractive.js
+*.html
+*.css
+*.json

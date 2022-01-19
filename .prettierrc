@@ -1,0 +1,12 @@
+{
+    "singleQuote": true,
+    "tabWidth": 4,
+    "overrides": [
+        {
+            "files": "*.hbs",
+            "options": {
+                "singleQuote": false
+            }
+        }
+    ]
+}

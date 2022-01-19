@@ -9,8 +9,10 @@ const app = {
 			state: 0
 		},
 		credit(data) {
-			app.creditSave = data;
-			console.log('Credits Saved in worker');
+			if (data.credit) {
+				app.creditSave = $.assign({}, data.credit);
+				console.log('Credits Saved in worker');
+			}
 		},
 		post(id, data, options) {
 			const responseData = {

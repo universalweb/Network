@@ -10,24 +10,32 @@ const {
 const onHtml = async (matchFilename, componentName, json) => {
 	const type = json.type;
 	const filePath = json.name;
-	console.log('WATCH HTML', matchFilename, json);
+	if (app.debug) {
+		console.log('WATCH HTML', matchFilename, json);
+	}
 	if (!filePath.includes(matchFilename)) {
 		return;
 	}
 	const html = await demand(filePath);
 	localStorage[filePath] = html;
-	console.log(type, filePath, html);
+	if (app.debug) {
+		console.log(type, filePath, html);
+	}
 	if (isFunction(componentName)) {
 		componentName(html);
 	} else {
 		each(app.view.findAllComponents(componentName), (item) => {
-			console.log(item);
+			if (app.debug) {
+				console.log(item);
+			}
 			item.resetTemplate(html);
 		});
 	}
 };
 const watchHtml = (matchFilename, componentName) => {
-	console.log('WATCH HTML', matchFilename);
+	if (app.debug) {
+		console.log('WATCH HTML', matchFilename);
+	}
 	return watch(matchFilename, (json) => {
 		onHtml(matchFilename, componentName, json);
 	});

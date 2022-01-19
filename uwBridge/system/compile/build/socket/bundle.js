@@ -58,6 +58,7 @@
 			});
 		};
 		model('smoothScroll', smoothScroll);
+		updateResize();
 		window.Ractive.prototype.data = {
 			$: app.utility,
 			getComponent(partialName) {
@@ -91,7 +92,7 @@
 				ensureArray: ensureArray$1,
 				assign: assign$5,
 				each: each$9,
-				isArray,
+				isArray: isArray$1,
 				isEmpty,
 				sortNewest,
 				sortOldest,
@@ -195,7 +196,7 @@
 			},
 			async toggleIndex(path, indexMatchArg, pathSuffixArg, indexName) {
 				let indexMatch;
-				const arrayCheck = isArray(indexMatchArg);
+				const arrayCheck = isArray$1(indexMatchArg);
 				if (arrayCheck && !isEmpty(indexMatchArg)) {
 					indexMatch = indexMatchArg.shift();
 				} else {
@@ -233,24 +234,32 @@
 		const onHtml = async (matchFilename, componentName, json) => {
 			const type = json.type;
 			const filePath = json.name;
-			console.log('WATCH HTML', matchFilename, json);
+			if (app.debug) {
+				console.log('WATCH HTML', matchFilename, json);
+			}
 			if (!filePath.includes(matchFilename)) {
 				return;
 			}
 			const html = await demand$3(filePath);
 			localStorage[filePath] = html;
-			console.log(type, filePath, html);
+			if (app.debug) {
+				console.log(type, filePath, html);
+			}
 			if (isFunction$1(componentName)) {
 				componentName(html);
 			} else {
 				each$8(app.view.findAllComponents(componentName), (item) => {
-					console.log(item);
+					if (app.debug) {
+						console.log(item);
+					}
 					item.resetTemplate(html);
 				});
 			}
 		};
 		const watchHtml = (matchFilename, componentName) => {
-			console.log('WATCH HTML', matchFilename);
+			if (app.debug) {
+				console.log('WATCH HTML', matchFilename);
+			}
 			return watch$2(matchFilename, (json) => {
 				onHtml(matchFilename, componentName, json);
 			});
@@ -282,25 +291,48 @@
 				watchHtml(template, (html) => {
 					const realName = getComponentName(componentModel, componentName);
 					if (realName) {
-						app.view.findComponent(realName).resetTemplate(html);
+						const matchedComponent = app.view.findComponent(realName);
+						if (matchedComponent) {
+							matchedComponent.resetTemplate(html);
+						}
 					}
 				});
 			}
 		};
 		const {
 			utility: {
-				each: each$6
+				each: each$6, isString: isString$3, isArray
 			}
 		} = app;
-		const multiEvent = (currentView, componentEvent, ...events) => {
+		const multiEvent = (currentView, componentEvent, events, ...args) => {
 			console.log(currentView, componentEvent, events);
-			each$6(events, (item) => {
-				if (item) {
-					each$6(item.split(','), (subItem) => {
-						currentView.fire(subItem.trim(), componentEvent);
+			console.log(args);
+			if (componentEvent && events.length) {
+				const {
+					original
+				} = componentEvent;
+				original.preventDefault();
+				original.stopPropagation();
+			}
+			if (events) {
+				if (isString$3(events)) {
+					each$6(events.split(','), (subItem) => {
+						if (subItem) {
+							currentView.fire(subItem.trim(), componentEvent, ...args);
+						}
+					});
+				} else if (isArray(events)) {
+					each$6(events, (item) => {
+						if (item) {
+							each$6(item.split(','), (subItem) => {
+								if (subItem) {
+									currentView.fire(subItem.trim(), componentEvent, ...args);
+								}
+							});
+						}
 					});
 				}
-			});
+			}
 		};
 		const {
 			utility: {
@@ -426,7 +458,6 @@
 				css, watchers
 			} = componentConfig;
 			const thisComponent = this;
-			console.log(thisComponent);
 			thisComponent.watchers = watchers ? watchers(thisComponent) : {};
 			if (thisComponent.watchers) {
 				each$4(thisComponent.watchers, (item, key) => {
@@ -489,12 +520,10 @@
 			const {
 				name: componentName, model
 			} = componentConfig;
-			console.log(componentConfig);
 			const cmpntConfigClean = omit$1(componentConfig, ['css', 'asset']);
 			if (componentConfig.CSS) {
 				cmpntConfigClean.css = componentConfig.CSS;
 			}
-			console.log(cmpntConfigClean);
 			const Component = Ractive.extend(cmpntConfigClean);
 			if (componentName) {
 				Ractive.components[componentName] = Component;
@@ -748,7 +777,6 @@
 			},
 			isCurrentModel(model, success, failure) {
 				const check = router.currentStateObject ? router.currentStateObject === model : false;
-				console.log('isCurrentModel', check);
 				if (check) {
 					if (success) {
 						success();
@@ -765,9 +793,9 @@
 				while (index < routesLength) {
 					const item = router.routes[index];
 					const result = Boolean(await item()) === false;
-					console.log('LOAD STATE', item, result);
 					index++;
 					if (result === false) {
+						console.log('LOAD STATE', item, result);
 						break;
 					}
 				}
@@ -802,7 +830,7 @@
 					router.currentStateObject = null;
 					await router.closeState(previousStateObject);
 				}
-				console.log('CURRENT STATE OBJECT HASH COMPONENT?s', router.currentStateObject, router.currentStateObject.component);
+				console.log('CURRENT STATE OBJECT HASH COMPONENT?');
 				const currentStateObject = router.currentStateObject;
 				if (currentStateObject && currentStateObject.component) {
 					if (currentStateObject.open) {
@@ -820,7 +848,6 @@
 				}
 			},
 			async pushState(url) {
-				console.log(url);
 				if (url) {
 					router.saveState();
 					router.setState(url, url);
@@ -838,7 +865,6 @@
 			},
 			async routeChecker(data, reg) {
 				const matching = router.location.pathname.match(reg);
-				console.log('routeChecker', router.location.pathname, matching, reg);
 				if (matching) {
 					router.match = matching;
 					const route = data.route();
@@ -846,15 +872,14 @@
 					routePath = routePath[0] === '/' ? routePath : `/${routePath}`;
 					route.path = routePath;
 					const routeRequire = data.require;
-					console.log('routeChecker MATCHED', route);
-					console.log(routePath);
+					console.log('routeChecker MATCHED', routePath);
 					if (router.objectRoutes[routePath]) {
 						await router.go(router.objectRoutes[routePath]);
 					} else {
 						(async () => {
-							console.log('routeChecker ASYNC', data);
+							console.log('routeChecker ASYNC');
 							if (!data.loaded && routeRequire) {
-								console.log('routeChecker demandJS', data);
+								console.log('routeChecker demandJS');
 								await demandJs(routeRequire);
 							}
 							const object = await demandJs(`routes${routePath}`);

@@ -108,7 +108,7 @@
 		"no-empty-function": "off",
 		"no-empty-pattern": "error",
 		"no-eq-null": "off",
-		"no-eval": "error",
+		"no-eval": "off",
 		"no-extend-native": "error",
 		"no-extra-bind": "error",
 		"no-extra-label": "error",

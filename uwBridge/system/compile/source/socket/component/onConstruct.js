@@ -69,7 +69,6 @@ export const buildComponentEvents = function(componentConfig) {
 		watchers,
 	} = componentConfig;
 	const thisComponent = this;
-	console.log(thisComponent);
 	thisComponent.watchers = (watchers) ? watchers(thisComponent) : {};
 	if (thisComponent.watchers) {
 		each(thisComponent.watchers, (item, key) => {

@@ -1,6 +1,10 @@
 .eslintignore
 **.min.js
 .eslintrc.js
+.prettierignore
+.prettierrc
 /build/**
 bundle.js
 **/lib/*
+**/*.html
+**/*.css

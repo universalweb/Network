@@ -110,7 +110,9 @@ exports.build = async (options) => {
 	copyFile(`./../../../node_modules/Acid/index.js`, `./source/front/libs/Acid.js`);
 	console.log('Acid Imported');
 	copyFile(`./../../../node_modules/Lucy/index.js`, `./source/worker/libs/Lucy.js`);
-	console.log('Lucy Imported');
+	console.log('Acid Imported');
+	copyFile(`./../../../node_modules/socket.io/client-dist/socket.io.js`, `./source/worker/libs/socketio.js`);
+	console.log('Socketio Imported');
 	await bundle('front', options);
 	await bundle('socket', options);
 	await bundle('worker', options);

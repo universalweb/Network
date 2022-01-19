@@ -71,7 +71,9 @@ const saveCompleted = async (json, config) => {
 			fileContents = local[filename];
 		}
 	} else if (fileContents !== false) {
-		console.log('SAVE FILE TO LOCAL', fileContents);
+		if (app.debug) {
+			console.log('SAVE FILE TO LOCAL', fileContents);
+		}
 		local[`cs-${filename}`] = cs;
 		local[filename] = fileContents;
 	}

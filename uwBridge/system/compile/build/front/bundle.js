@@ -91,6 +91,9 @@
 			if (!hasValue$2(generatedId)) {
 				generatedId = '_';
 			}
+			if (!app.events[generatedId]) {
+				console.log(id, generatedId);
+			}
 			app.events[generatedId](data);
 			if (!eventData.keep && !isString$3(generatedId)) {
 				app.events[generatedId] = null;
@@ -160,7 +163,9 @@
 					fileContents = local[filename];
 				}
 			} else if (fileContents !== false) {
-				console.log('SAVE FILE TO LOCAL', fileContents);
+				if (app.debug) {
+					console.log('SAVE FILE TO LOCAL', fileContents);
+				}
 				local[`cs-${filename}`] = cs;
 				local[filename] = fileContents;
 			}
@@ -422,13 +427,19 @@
 				} else if (initialString(item, -4) === 'css/') {
 					item += '.css';
 				}
-				console.log(item);
+				if (app.debug) {
+					console.log(item);
+				}
 			}
 			if (restString(item, -3) === '.js') {
-				// console.log(item, watch);
+				if (app.debug) {
+					console.log(item, watch);
+				}
 				if (!watchers[item]) {
 					watch(item, (thing) => {
-						console.log(thing, 'Live Reload');
+						if (app.debug) {
+							console.log('Live Reload', thing);
+						}
 						localStorage.removeItem(thing.name);
 						localStorage.removeItem(`cs-${thing.name}`);
 					});
