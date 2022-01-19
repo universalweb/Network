@@ -38,8 +38,12 @@ view.on({
 			});
 		}
 	},
-	'*.preventDefault'() {
-		return false;
+	'*.preventDefault'(context) {
+		const {
+			original
+		} = context;
+		original.preventDefault();
+		original.stopPropagation();
 	},
 });
 app.importComponent = async (componentName, importURL, type = 'dynamic') => {

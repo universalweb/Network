@@ -20,6 +20,8 @@
 			let screenSize;
 			if (isAgent.mobile) {
 				screenSize = 'mobileScreen';
+			} else if (width < 690) {
+				screenSize = 'tinyScreen';
 			} else if (width < 1024) {
 				screenSize = 'smallScreen';
 			} else if (width < 1920) {
@@ -672,8 +674,12 @@
 					});
 				}
 			},
-			'*.preventDefault'() {
-				return false;
+			'*.preventDefault'(context) {
+				const {
+					original
+				} = context;
+				original.preventDefault();
+				original.stopPropagation();
 			}
 		});
 		app.importComponent = async (componentName, importURL, type = 'dynamic') => {
