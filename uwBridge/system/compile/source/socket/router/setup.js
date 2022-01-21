@@ -14,11 +14,18 @@ const {
 		last,
 		batch,
 		eventAdd,
+		apply
 	},
 } = app;
 const router = {};
 const hostname = window.location.hostname;
 router.historyIndex = 0;
+const logRouter = console;
+function debugRouter(...args) {
+	if (app.debug || app.debugRouter) {
+		apply(logRouter.log, logRouter, args);
+	}
+}
 Ractive.sharedSet('historyIndex', router.historyIndex);
 cnsl('ROUTER ONLINE', 'important');
 assign(router, {
@@ -33,7 +40,7 @@ assign(router, {
 	},
 	attachEvents() {
 		eventAdd(window, 'popstate', async (eventArg) => {
-			console.log('popstate', eventArg);
+			debugRouter('popstate', eventArg);
 			router.saveState();
 			router.updateLocation();
 			await router.loadState();
@@ -41,24 +48,24 @@ assign(router, {
 		}, true);
 	},
 	async closeState(previousStateObject) {
-		console.log('closeState', previousStateObject);
+		debugRouter('closeState', previousStateObject);
 		if (previousStateObject) {
 			if (!previousStateObject.closed) {
-				console.log('forceClose', previousStateObject);
+				debugRouter('forceClose', previousStateObject);
 				return router.forceClose(previousStateObject);
 			}
-			return console.log('Previous State Marked As Closed', previousStateObject);
+			return debugRouter('Previous State Marked As Closed', previousStateObject);
 		}
 	},
 	async forceClose(sourceState) {
 		app.view.set('navState', false);
-		console.log('forceClose', sourceState);
+		debugRouter('forceClose', sourceState);
 		if (sourceState) {
 			if (sourceState.watchers) {
 				sourceState.watchers.stop();
 			}
 			if (sourceState.close) {
-				console.log('MODEL Close STATE', sourceState);
+				debugRouter('MODEL Close STATE', sourceState);
 				await sourceState.close();
 			}
 			sourceState.closed = true;
@@ -90,7 +97,7 @@ assign(router, {
 			const result = Boolean(await item()) === false;
 			index++;
 			if (result === false) {
-				console.log('LOAD STATE', item, result);
+				debugRouter('LOAD STATE', item, result);
 				break;
 			}
 		}
@@ -103,36 +110,38 @@ assign(router, {
 		// close event
 		const previousStateObject = router.currentStateObject;
 		if (openModel) {
-			console.log('OPENING STATE', openModel);
+			debugRouter('OPENING STATE', openModel);
 			router.currentStateObject = openModel;
 			if (previousStateObject === openModel) {
-				console.log('STATE IS SAME MODEL', openModel);
-				console.log('NAVSTATE REFRESH COMPONENT');
+				debugRouter('STATE IS SAME MODEL', openModel);
+				debugRouter('NAVSTATE REFRESH COMPONENT');
 				await app.view.set('navState', false);
 				await app.view.set('navState', true);
 				return;
 			}
-			console.log('MODEL CLOSED STATE', openModel.closed);
+			debugRouter('MODEL CLOSED STATE', openModel.closed);
 			if (openModel.closed || openModel.closed === undefined) {
-				console.log('MODEL CLOSED', openModel);
+				debugRouter('MODEL CLOSED', openModel);
 				openModel.closed = false;
 			}
 			if (!openModel.panel) {
 				await router.closeState(previousStateObject);
 			}
 		} else {
-			console.log('CLOSE PREVIOUS PAGE COMPONENT NO CURRENT ONE GIVEN');
+			debugRouter('CLOSE PREVIOUS PAGE COMPONENT NO CURRENT ONE GIVEN');
 			router.currentStateObject = null;
 			await router.closeState(previousStateObject);
 		}
-		console.log('CURRENT STATE OBJECT HASH COMPONENT?');
+		debugRouter('CURRENT STATE OBJECT HASH COMPONENT?');
 		const currentStateObject = router.currentStateObject;
 		if (currentStateObject && currentStateObject.component) {
 			if (currentStateObject.open) {
-				console.log('MODEL OPEN STATE', router.currentStateObject);
+				debugRouter('MODEL OPEN STATE', router.currentStateObject);
 				currentStateObject.open();
 			}
-			console.log('NAVSTATE LOAD NEW COMPONENT');
+			if (app.debug) {
+				debugRouter('NAVSTATE LOAD NEW COMPONENT');
+			}
 			await app.view.set('navState', false);
 			Ractive.components.navState = currentStateObject.component;
 			await app.view.set('navState', true);
@@ -167,14 +176,14 @@ assign(router, {
 			routePath = (routePath[0] === '/') ? routePath : `/${routePath}`;
 			route.path = routePath;
 			const routeRequire = data.require;
-			console.log('routeChecker MATCHED', routePath);
+			debugRouter('routeChecker MATCHED', routePath);
 			if (router.objectRoutes[routePath]) {
 				await router.go(router.objectRoutes[routePath]);
 			} else {
 				(async () => {
-					console.log('routeChecker ASYNC');
+					debugRouter('routeChecker ASYNC');
 					if (!data.loaded && routeRequire) {
-						console.log('routeChecker demandJS');
+						debugRouter('routeChecker demandJS');
 						await demandJs(routeRequire);
 					}
 					const object = await demandJs(`routes${routePath}`);
@@ -232,10 +241,10 @@ assign(router, {
 Ractive.routerLoad = (componentView) => {
 	componentView.on({
 		'*.routerBack'(eventArg) {
-			console.log('Router back State', eventArg);
+			debugRouter('Router back State', eventArg);
 			router.historyIndex--;
 			Ractive.sharedSet('historyIndex', router.historyIndex);
-			console.log(router.historyIndex);
+			debugRouter(router.historyIndex);
 			if (router.location.previous.hostname) {
 				window.history.back();
 			} else {
@@ -243,7 +252,7 @@ Ractive.routerLoad = (componentView) => {
 			}
 		},
 		'*.routerForward'(eventArg) {
-			console.log('Router forward State', eventArg);
+			debugRouter('Router forward State', eventArg);
 			if (router.location.previous.hostname) {
 				window.history.forward();
 			} else {
@@ -252,10 +261,10 @@ Ractive.routerLoad = (componentView) => {
 		},
 		'*.routerLoad'(eventArg) {
 			const href = eventArg.get('href');
-			console.log('Router Load State', eventArg.get('href'), eventArg);
+			debugRouter('Router Load State', eventArg.get('href'), eventArg);
 			router.historyIndex++;
 			Ractive.sharedSet('historyIndex', router.historyIndex);
-			console.log(router.historyIndex);
+			debugRouter(router.historyIndex);
 			if (href) {
 				router.pushState(href);
 			} else {

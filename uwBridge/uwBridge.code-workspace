@@ -35,6 +35,9 @@
 		},
 		{
 			"path": "apps/client/akerna/filesystem/asset/routes"
+		},
+		{
+			"path": "apps/client/akerna/filesystem/asset/models"
 		}
 	],
 	"settings": {

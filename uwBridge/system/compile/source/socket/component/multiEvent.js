@@ -3,12 +3,19 @@ const {
 	utility: {
 		each,
 		isString,
-		isArray
+		isArray,
+		apply
 	}
 } = app;
+const logMulti = console;
+function debugMultiEvent(...args) {
+	if (app.debug || app.debugMultiEvent) {
+		apply(logMulti.log, logMulti, args);
+	}
+}
 const multiEvent = (currentView, componentEvent, events, ...args) => {
-	console.log(currentView, componentEvent, events);
-	console.log(args);
+	debugMultiEvent(currentView, componentEvent, events);
+	debugMultiEvent(args);
 	if (componentEvent && events.length) {
 		const {
 			original

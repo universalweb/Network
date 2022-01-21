@@ -14,7 +14,7 @@ const updateResize = debounce(async () => {
 	let screenSize;
 	if (isAgent.mobile) {
 		screenSize = 'mobileScreen';
-	} else if (width < 690) {
+	} else if (width < 740) {
 		screenSize = 'tinyScreen';
 	} else if (width < 1024) {
 		screenSize = 'smallScreen';

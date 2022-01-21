@@ -9,8 +9,12 @@ module.exports = async (app) => {
 	const toobusy = require('express-toobusy');
 	const rateLimit = require('express-rate-limit');
 	const {
-		service: { http, },
-		system: { network, },
+		service: {
+			http,
+		},
+		system: {
+			network,
+		},
 		config,
 		utility: {
 			shallowRequire,
