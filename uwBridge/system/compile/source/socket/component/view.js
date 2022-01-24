@@ -10,17 +10,11 @@ const {
 const view = new Ractive({
 	data() {
 		return {
-			components: {
-				dynamic: {},
-				layout: {},
-				main: {},
-			},
 			notification: [],
-			pageTitle: '',
 			screenSize: '',
 		};
 	},
-	template: `{{#components.main:key}}{{>getComponent(key)}}{{/}}`,
+	template: `{{#@shared.components.main:key}}{{>getComponent(key)}}{{/}}`,
 });
 view.on({
 	async '*.loadComponent'(componentEvent) {
@@ -50,24 +44,26 @@ app.importComponent = async (componentName, importURL, type = 'dynamic') => {
 	if (importURL) {
 		await demand(importURL);
 	}
-	await app.view.set(`components.${type}.${componentName}`, true);
-	await view.update('components.${type}');
+	await view.set(`@shared.components.${type}.${componentName}`, true);
+	await view.update('@shared.components.${type}');
 };
-const pageTitleComponent = new Ractive({
+app.title = new Ractive({
+	target: 'head',
 	append: true,
 	data() {
-		return {
-			text() {
-				return view.get('pageTitle');
-			}
-		};
+		return {};
 	},
-	template: `<title>{{text()}}</title>`,
+	template: `<title>{{@shared.pageTitle}}</title>`,
 });
 assign(app, {
 	async render() {
+		await Ractive.sharedSet('components', {
+			dynamic: {},
+			layout: {},
+			main: {},
+		});
+		await app.initializeScreen();
 		await view.render('body');
-		await pageTitleComponent.render('head');
 	},
 	view,
 });

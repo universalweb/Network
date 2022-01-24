@@ -142,9 +142,9 @@ assign(router, {
 			if (app.debug) {
 				debugRouter('NAVSTATE LOAD NEW COMPONENT');
 			}
-			await app.view.set('navState', false);
+			await Ractive.sharedSet('navState', false);
 			Ractive.components.navState = currentStateObject.component;
-			await app.view.set('navState', true);
+			await Ractive.sharedSet('navState', true);
 			if (currentStateObject.watchers) {
 				currentStateObject.watchers.start();
 			}
