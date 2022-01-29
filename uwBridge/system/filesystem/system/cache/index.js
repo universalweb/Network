@@ -75,7 +75,9 @@ module.exports = async (app) => {
 	};
 	const sendClientUpdate = (filepath) => {
 		if (client.cache) {
-			console.log('SEND NEW VERSION OF FILE');
+			if (app.debug) {
+				console.log('SEND NEW VERSION OF FILE');
+			}
 			ifInvoke(client.cache.update, filepath);
 		}
 		liveReload(filepath);
@@ -106,14 +108,18 @@ module.exports = async (app) => {
 					console.log(err);
 					return;
 				}
-				console.log(stats.ctimeMs, filepath, '\nFile found create stream \n\n');
+				if (app.debug) {
+					console.log(stats.ctimeMs, filepath, '\nFile found create stream \n\n');
+				}
 				createStream(filepath, stats.ctimeMs.toString(), updateMode);
 			});
 		}
 	};
 	const dirname = config.resourceDir;
 	watch(dirname, (filepath) => {
-		console.log(filepath);
+		if (app.debug) {
+			console.log(filepath);
+		}
 		checkIfFileExists(filepath, true);
 	});
 	assign(cache, {

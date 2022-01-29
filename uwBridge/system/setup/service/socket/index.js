@@ -8,7 +8,8 @@ module.exports = (utility) => {
 		assign,
 		eachAsync,
 		stringify,
-		isFunction
+		isFunction,
+		hasValue
 	} = utility;
 	const requestSend = async (dataArg, response, socket) => {
 		let data;
@@ -37,14 +38,11 @@ module.exports = (utility) => {
 		const rootObject = hostAPI[rootPropertyString];
 		console.log(rootPropertyString, rootObject);
 		if (responseFunction) {
-			let security = responseFunction.security;
-			if (!security && rootObject) {
-				security = rootObject;
-				if (!isFunction(rootObject)) {
-					security = rootObject.security;
-				}
+			const securityMain = rootObject;
+			const security = responseFunction.security;
+			if (utility.debug) {
+				console.log('Security', Boolean(securityMain), Boolean(security));
 			}
-			console.log('Security', security);
 			const request = {
 				body,
 				response,
@@ -53,7 +51,6 @@ module.exports = (utility) => {
 				},
 				socket,
 			};
-			let securityCheck;
 			if (!response.id) {
 				if (body.type) {
 					response.data.type = body.type;
@@ -61,22 +58,31 @@ module.exports = (utility) => {
 					response.data.type = requestProperty;
 				}
 			}
-			if (security) {
+			let securityCheck;
+			if (isFunction(securityMain) && securityMain !== security) {
 				try {
-					securityCheck = await security(request);
+					securityCheck = await securityMain(request);
 					if (securityCheck === false) {
-						console.log('Security Check failed');
+						console.log('Main Security Check failed');
 						return;
 					}
 				} catch (err) {
 					return console.log(err);
 				}
 			}
-			const results = responseFunction(request);
-			if (results) {
-				await results;
+			if (isFunction(security)) {
+				try {
+					securityCheck = await security(request);
+					if (securityCheck === false) {
+						console.log('Propertry Specific Security Check failed');
+						return;
+					}
+				} catch (err) {
+					return console.log(err);
+				}
 			}
-			if (results && response.id) {
+			const results = await responseFunction(request);
+			if (results && hasValue(response.id)) {
 				socket.send(response);
 			}
 		} else {

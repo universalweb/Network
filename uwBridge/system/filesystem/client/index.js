@@ -8,9 +8,13 @@ module.exports = async (app) => {
 	require('./api')(app);
 	require('./resource')(app);
 	watch(config.apiClientDir, async (filename) => {
-		console.log(filename);
+		if (app.debug) {
+			console.log(filename);
+		}
 		if (filename.includes('.') && !filename.includes('.DS_Store')) {
-			console.log(`${filename} Client Updated`);
+			if (app.debug) {
+				console.log(`${filename} Client Updated`);
+			}
 			const importThis = filename.replace('/index.js', '');
 			if (require.cache[require.resolve(importThis)]) {
 				Reflect.deleteProperty(require.cache, require.resolve(importThis));

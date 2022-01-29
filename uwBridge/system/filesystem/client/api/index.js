@@ -13,7 +13,8 @@ module.exports = (app) => {
 			} = options;
 			const safePrefix = prefix ? `${prefix}.` : '';
 			const safeSuffix = suffix ? `.${suffix}` : '';
-			if (isFunction(methods)) {
+			const isMainFunction = isFunction(methods);
+			if (isMainFunction) {
 				client[prefix] = methods;
 			}
 			each(methods, (value, key) => {
@@ -22,6 +23,9 @@ module.exports = (app) => {
 					propertyKey = safePrefix;
 				} else {
 					propertyKey = `${safePrefix}${key}${safeSuffix}`;
+					if (isMainFunction) {
+						client[`${safePrefix}${key}${safeSuffix}.security`] = isMainFunction;
+					}
 				}
 				client[propertyKey] = value;
 			});

@@ -15,7 +15,8 @@ const {
 		cnsl,
 		initialString,
 		restString
-	}
+	},
+	crate
 } = app;
 const commaString = ',';
 const buildFilePath = (itemArg) => {
@@ -43,8 +44,8 @@ const buildFilePath = (itemArg) => {
 				if (app.debug) {
 					console.log('Live Reload', thing);
 				}
-				localStorage.removeItem(thing.name);
-				localStorage.removeItem(`cs-${thing.name}`);
+				crate.removeItem(thing.name);
+				crate.removeItem(`cs-${thing.name}`);
 			});
 		}
 	}
@@ -135,7 +136,7 @@ assign(app.events, {
 			await demand('app/');
 		} catch (error) {
 			console.log(error);
-			localStorage.clear();
+			crate.clear();
 			window.location.reload();
 		}
 	},

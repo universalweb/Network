@@ -20,6 +20,55 @@
 			utility: window.$
 		};
 		window.app = app;
+		const vStorage = {
+			hasLocal: false,
+			items: {},
+			getItem(key) {
+				return vStorage.items[key];
+			},
+			setItem(key, value) {
+				vStorage.items[key] = value;
+				return;
+			},
+			clear() {
+				vStorage.storage.items = {};
+				return;
+			},
+			removeItem(key) {
+				vStorage.items[key] = null;
+				return;
+			}
+		};
+		function hasStorage(storeCheck) {
+			try {
+				storeCheck().removeItem('TESTING');
+				vStorage.hasLocal = true;
+			} catch (e) {
+				console.log(e);
+				vStorage.hasLocal = false;
+			}
+		}
+		hasStorage(() => {
+			return localStorage;
+		});
+		class Crate {
+			constructor() {
+				this.storage = vStorage.hasLocal ? localStorage : vStorage;
+			}
+			setItem(key, value) {
+				return this.storage.setItem(key, value);
+			}
+			getItem(key) {
+				return this.storage.getItem(key);
+			}
+			clear() {
+				return this.storage.clear();
+			}
+			removeItem(key) {
+				return this.storage.removeItem(key);
+			}
+		}
+		app.crate = new Crate();
 		const isEventNodeMethod = (componentEvent) => {
 			if (!componentEvent || !componentEvent.original || !componentEvent.original.target) {
 				return false;
@@ -76,7 +125,7 @@
 					function(dataCallback) {
 						accept(dataCallback);
 						callback(dataCallback);
-					  } :
+					} :
 					accept;
 				requestObject.id = uniq;
 				mainWorker.postMessage(requestObject);
@@ -107,7 +156,9 @@
 		const {
 			assign: assign$3, querySelector, map: map$1, hasValue: hasValue$1, isString: isString$2
 		} = app.utility;
-		const local = localStorage;
+		const {
+			crate: crate$1
+		} = app;
 		const imported = {};
 		const headNode = querySelector('head');
 		const styleNode = document.createElement('style');
@@ -120,7 +171,7 @@
 		};
 		const isLibRegex = new RegExp(/^js\/lib\//);
 		const checksumReturn = (item) => {
-			return localStorage[`cs-${item}`];
+			return crate$1.getItem(`cs-${item}`);
 		};
 		const constructStyleTagThenAppendToHead = (text, filePath) => {
 			const node = styleNode.cloneNode(false);
@@ -160,14 +211,14 @@
 			let skipCheck;
 			if (fileContents === true) {
 				if (!imported[filename]) {
-					fileContents = local[filename];
+					fileContents = crate$1.getItem(filename);
 				}
 			} else if (fileContents !== false) {
 				if (app.debug) {
 					console.log('SAVE FILE TO LOCAL', fileContents);
 				}
-				local[`cs-${filename}`] = cs;
-				local[filename] = fileContents;
+				crate$1.setItem(`cs-${filename}`, cs);
+				crate$1.setItem(filename, fileContents);
 			}
 			if (!hasValue$1(imported[filename]) || fileContents !== true) {
 				if (!isJs) {
@@ -213,7 +264,11 @@
 			await workerRequest({
 				async callback(json) {
 					if (hasValue$1(json.file)) {
-						await saveCompleted(json, config);
+						try {
+							await saveCompleted(json, config);
+						} catch (err) {
+							console.log(config, json.file);
+						}
 					} else {
 						return checkIfCompleted(config);
 					}
@@ -238,7 +293,7 @@
 				{
 					data: config,
 					request: requestName
-				  } :
+				} :
 				requestName;
 			const workerPackage = {
 				data: {
@@ -412,7 +467,8 @@
 		const {
 			utility: {
 				assign, hasDot, promise, last, map, isString, isPlainObject, each, cnsl, initialString, restString
-			}
+			},
+			crate
 		} = app;
 		const commaString = ',';
 		const buildFilePath = (itemArg) => {
@@ -440,8 +496,8 @@
 						if (app.debug) {
 							console.log('Live Reload', thing);
 						}
-						localStorage.removeItem(thing.name);
-						localStorage.removeItem(`cs-${thing.name}`);
+						crate.removeItem(thing.name);
+						crate.removeItem(`cs-${thing.name}`);
 					});
 				}
 			}
@@ -537,7 +593,7 @@
 					await demand('app/');
 				} catch (error) {
 					console.log(error);
-					localStorage.clear();
+					crate.clear();
 					window.location.reload();
 				}
 			}

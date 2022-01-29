@@ -1,7 +1,19 @@
 {
     "singleQuote": true,
-    "tabWidth": 4,
+    "tabWidth": 2,
+    "useTabs": false,
+    "bracketSpacing": true,
+    "bracketSameLine": true,
+    "jsxBracketSameLine": true,
+    "proseWrap": "never",
+    "htmlWhitespaceSensitivity": "ignore",
     "overrides": [
+        {
+            "files": "*.html",
+            "options": {
+                "singleQuote": false
+            }
+        },
         {
             "files": "*.hbs",
             "options": {

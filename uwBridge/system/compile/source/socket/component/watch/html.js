@@ -5,7 +5,8 @@ const {
 	utility: {
 		each,
 		isFunction,
-	}
+	},
+	crate
 } = app;
 const onHtml = async (matchFilename, componentName, json) => {
 	const type = json.type;
@@ -17,7 +18,7 @@ const onHtml = async (matchFilename, componentName, json) => {
 		return;
 	}
 	const html = await demand(filePath);
-	localStorage[filePath] = html;
+	crate.setItem(filePath, html);
 	if (app.debug) {
 		console.log(type, filePath, html);
 	}
@@ -31,6 +32,7 @@ const onHtml = async (matchFilename, componentName, json) => {
 			item.resetTemplate(html);
 		});
 	}
+	window.UIkit.update(document.body, 'update');
 };
 const watchHtml = (matchFilename, componentName) => {
 	if (app.debug) {

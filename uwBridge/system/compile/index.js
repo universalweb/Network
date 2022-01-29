@@ -113,6 +113,8 @@ exports.build = async (options) => {
 	console.log('Acid Imported');
 	copyFile(`./../../../node_modules/socket.io/client-dist/socket.io.js`, `./source/worker/libs/socketio.js`);
 	console.log('Socketio Imported');
+	copyFile(`./../../../node_modules/ractive/ractive.min.js`, `./source/front/libs/ractive.js`);
+	console.log('ractive Imported');
 	await bundle('front', options);
 	await bundle('socket', options);
 	await bundle('worker', options);

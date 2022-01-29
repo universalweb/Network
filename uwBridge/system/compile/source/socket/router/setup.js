@@ -77,8 +77,8 @@ assign(router, {
 		}
 		return router.openState(route);
 	},
-	isCurrentModel(model, success, failure) {
-		const check = (router.currentStateObject) ? router.currentStateObject === model : false;
+	isCurrentModel(modelSafe, success, failure) {
+		const check = (router.currentStateObject) ? router.currentStateObject === modelSafe : false;
 		if (check) {
 			if (success) {
 				success();
@@ -98,6 +98,7 @@ assign(router, {
 			index++;
 			if (result === false) {
 				debugRouter('LOAD STATE', item, result);
+				app.view.fire('location.update');
 				break;
 			}
 		}

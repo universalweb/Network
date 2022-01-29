@@ -175,8 +175,8 @@
 			}
 		],
 		"no-shadow-restricted-names": "error",
-		"no-undef": "error",
-		"no-undef-init": "error",
+		"no-undef": "off",
+		"no-undef-init": "off",
 		"no-undefined": "off",
 		"no-unused-vars": "error",
 		"no-use-before-define": "error",

@@ -136,7 +136,7 @@
 						data: {
 							credit: $.assign({}, app.creditSave)
 						},
-						request: 'user.loginCredit'
+						request: 'open.loginCredit'
 					}
 				});
 			}

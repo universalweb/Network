@@ -7,7 +7,9 @@ const {
 	hasValue,
 	isString,
 } = app.utility;
-const local = localStorage;
+const {
+	crate
+} = app;
 export const imported = {};
 export const headNode = querySelector('head');
 export const styleNode = document.createElement('style');
@@ -20,7 +22,7 @@ const iJson = (contents) => {
 };
 const isLibRegex = new RegExp(/^js\/lib\//);
 const checksumReturn = (item) => {
-	return localStorage[`cs-${item}`];
+	return crate.getItem(`cs-${item}`);
 };
 const constructStyleTagThenAppendToHead = (text, filePath) => {
 	const node = styleNode.cloneNode(false);
@@ -68,14 +70,14 @@ const saveCompleted = async (json, config) => {
 	let skipCheck;
 	if (fileContents === true) {
 		if (!imported[filename]) {
-			fileContents = local[filename];
+			fileContents = crate.getItem(filename);
 		}
 	} else if (fileContents !== false) {
 		if (app.debug) {
 			console.log('SAVE FILE TO LOCAL', fileContents);
 		}
-		local[`cs-${filename}`] = cs;
-		local[filename] = fileContents;
+		crate.setItem(`cs-${filename}`, cs);
+		crate.setItem(filename, fileContents);
 	}
 	if (!hasValue(imported[filename]) || fileContents !== true) {
 		if (!isJs) {
@@ -121,7 +123,11 @@ export const fetchFile = async (config) => {
 	await workerRequest({
 		async callback(json) {
 			if (hasValue(json.file)) {
-				await saveCompleted(json, config);
+				try {
+					await saveCompleted(json, config);
+				} catch (err) {
+					console.log(config, json.file);
+				}
 			} else {
 				return checkIfCompleted(config);
 			}
