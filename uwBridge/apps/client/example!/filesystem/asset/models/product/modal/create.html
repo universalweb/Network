@@ -1,0 +1,139 @@
+<div id="createProduct" class="uk-flex-top uk-modal-container" uk-modal>
+    <div class="uk-modal-dialog  uk-margin-auto-vertical uk-modal-container">
+        <btn modalCloseDefault="true" />
+        <div class="uk-modal-header">
+            <h2 class="uk-modal-title">Create Product</h2>
+        </div>
+        
+        <div class="uk-modal-body" uk-overflow-auto>
+            
+        <form>
+            <fieldset class="uk-fieldset">
+
+                <ul class="uk-subnav uk-subnav-pill" uk-switcher="connect: .switcher-container-first; animation: uk-animation-fade;">
+                    <li><a class="uk-active">Name</a></li>
+                    <li><a>Website</a></li>
+                    <li><a>Question</a></li>
+                </ul>
+                
+                <div class="uk-switcher uk-margin switcher-container-first">
+                    <div><inpt label="Product Name" placeholder="Example Name" value="{{product.create.name}}" /></div>
+                    <div><inpt label="Product Website" placeholder="https://akerna.com" value="{{product.create.homepage}}" /></div>
+                    <div>
+                        {{#with product.create.questions}}
+                            <ul class="uk-grid-medium uk-child-width-auto uk-child-width-auto@s uk-text-center" data-keypath="{{@keypath}}" on-moved="product.create.moved" uk-sortable="handle: .uk-card" uk-grid>
+                                {{#product.create.questions}}
+                                    <li data-keypath="{{@keypath}}" data-index="{{@index}}">
+                                        <div class="uk-sortable-handle uk-border-rounded uk-card uk-card-default uk-card-body uk-animation-slide-bottom-small uk-text-center">
+                                            <span class="uk-icon-button pointer uk-position-absolute uk-light" 
+                                                style="right: -10px; top: -10px" uk-icon="fa-times" 
+                                                    on-click="['product.create.removeQuestion', @rootpath, @index]"></span>
+
+                                            QUESTION: {{this.title}}
+                                            <div class="uk-child-width-auto uk-grid-small uk-margin-top uk-margin-bottom" uk-grid data-keypath="{{@keypath}}.options" on-moved="product.create.moved" uk-sortable="handle: .uk-tile">
+                                                {{#each this.options: index, key}}
+                                                    <div data-keypath="{{@keypath}}" data-index="{{@index}}">
+                                                        <div class="uk-tile uk-tile-primary uk-dark uk-flex uk-flex-center uk-flex-middle uk-padding-small uk-border-rounded">
+                                                            <span class="uk-icon-button pointer uk-position-absolute uk-light" 
+                                                                style="right: -10px; top: -10px" uk-icon="fa-times" 
+                                                                on-click="['product.create.removeAnswer', @keypath]"></span>
+                                                            {{this.title}}
+                                                        </div>
+                                                    </div>
+                                                {{/each}}
+                                            </div>
+                                            <inpt type="text" keyup="product.create.answer" minlength="3" minlength="80" keypath="{{@keypath}}" 
+                                                placeholder="Type an answer & hit Enter!" value="{{this.value}}"  />
+                                        </div>
+                                    </li>
+                                {{/}}
+                            </ul>
+                        {{/with}}
+                        <inpt label="Type a question & hit Enter" minlength="3" minlength="80"
+                            keyup="product.create.question" placeholder="Question?" value="{{product.create.question}}" />
+                    </div>
+                </div>
+
+                <div class="spacebox spaceboxLarge"></div>
+                <ul class="uk-subnav uk-subnav-pill" uk-switcher="connect: .switcher-container-content; animation: uk-animation-fade;">
+                    <li><a class="uk-active">Text</a></li>
+                    <li><a>HTML</a></li>
+                    <li><a>Display</a></li>
+                </ul>
+                <div class="uk-switcher uk-margin switcher-container-content">
+                    <div><inpt label="description" type="textarea" placeholder="Description of Product" value="{{product.create.description}}" /></div>
+                    <div><inpt label="HTML Content" type="textarea" placeholder="HTML of Product" value="{{product.create.html}}" /></div>
+                    <div>
+                        <div class="uk-panel uk-panel-scrollable">
+                            <ul class="uk-list">
+                                <li><label>Display on Product Page</label></li>
+                                <li>
+                                    <label><input class="uk-checkbox" type="checkbox" checked="{{product.create.display.product.all}}">Product Info</label>
+                                </li>
+                                <li>
+                                    <label><input class="uk-checkbox" type="checkbox" checked="{{product.create.display.batch.all}}">Batch Info</label>
+                                </li>
+                                <li>
+                                    <label><input class="uk-checkbox" type="checkbox" checked="{{product.create.display.organization.all}}">Organization Info</label>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spacebox spaceboxLarge"></div>
+                <ul class="uk-subnav uk-subnav-pill" uk-switcher="; animation: uk-animation-fade;">
+                    <li><a class="uk-active">Product Images</a></li>
+                    <li><a>Attachments</a></li>
+                    <li><a>QR Code</a></li>
+                    <li><a>Label</a></li>
+                </ul>
+                
+                <div class="uk-switcher uk-margin">
+                    <uploadImg items="{{product.create.images}}" loading="{{product.create.loadingImage}}" 
+                        onDrop="product.create.dropImage" onChange="product.create.loadImage"
+                        remove="product.create.removeImage" removeRaw="product.create.removeImageRaw">
+                        Upload product images by dropping it here or
+                    </uploadImg>
+
+                    <uploadImg items="{{product.create.attachments}}" loading="{{product.create.loadingAttachment}}" 
+                        onDrop="product.create.dropAttachment" onChange="product.create.loadAttachment"
+                        remove="product.create.removeAttachment" removeRaw="product.create.removeAttachmentRaw">
+                            Upload image attachments by dropping it here or
+                    </uploadImg>
+
+                    <div>
+                        <inpt label="Matrix Color" type="text" 
+                        placeholder="Color of the dots on the qrcode" value="{{product.create.qrColor}}" />
+                        <inpt label="Background Color" type="text" 
+                        placeholder="Background color of the qrcode" value="{{product.create.qrBackground}}" />
+                        <inpt label="QR Code size" type="text" 
+                        placeholder="Size of the qrcode" value="{{product.create.qrSize}}" />
+                        <uploadImg item="{{product.create.logo}}" loading="{{product.create.loadingLogo}}" 
+                            onDrop="product.create.dropLogo" onChange="product.create.loadLogo"
+                            remove="product.create.removeLogo" removeRaw="product.create.removeLogoRaw">
+                            Upload a logo to go on the QRCode by dropping it here or
+                        </uploadImg>
+                    </div>
+
+                    <div>
+                        <inpt label="X Coordinate" type="text" placeholder="X Coordinate default is 0" value="{{product.create.label.x}}" />
+                        <inpt label="Y Coordinate" type="text" placeholder="Y Coordinate default is 0" value="{{product.create.label.y}}" />
+                        <uploadImg itemPath="{{product.create.label}}" loading="{{product.create.loadingLabel}}" 
+                            onDrop="product.create.dropLabel" onChange="product.create.loadLabel"
+                            remove="product.create.removeLabel" removeRaw="product.create.removeLabelRaw">
+                            Upload labels by dropping it here or
+                        </uploadImg>
+                    </div>
+                </div>
+                
+            </fieldset>
+        </form>
+            
+        </div>
+        <div class="uk-modal-footer uk-text-right">
+            <btn modalClose="true" title="Cancel" />
+            <btn type="primary" icon="check" click="product.create" title="Create" />
+        </div>
+    </div>  
+</div>

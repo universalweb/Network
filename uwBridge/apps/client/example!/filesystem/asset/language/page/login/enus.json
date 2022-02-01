@@ -1,0 +1,14 @@
+{
+    "username": {
+        "label": "Username"
+    },
+    "password": {
+        "label": "Password"
+    },
+    "submit": {
+        "label": "Submit"
+    },
+    "title": "Login",
+    "description": "Welcome to Akerna Codes",
+    "pageTitle": ""
+}

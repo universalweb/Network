@@ -1,0 +1,15 @@
+.mediumScreen .pageComponent .uk-card-default {
+    min-width: 50%;
+}
+.pageComponent .uk-card-default {
+    min-width: 40%;
+    max-width: 50%;
+}
+
+.uk-list li {
+    cursor: pointer;
+}
+
+.uk-list li:hover {
+    color: #1e87f0;
+}

@@ -1,0 +1,10 @@
+{
+	"content": `
+- Website: https://akerna.com
+- Email: support@akerna.com`,
+  "hero": {
+    "headline": 'Support',
+    "description": 'Need help?',
+  },
+	"pageTitle": 'Contact'
+}

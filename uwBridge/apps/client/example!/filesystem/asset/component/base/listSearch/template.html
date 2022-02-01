@@ -1,0 +1,60 @@
+{{#item}}
+    {{#if opened === true}}
+        <div class="uk-card-body uk-padding-remove-top">
+            <div class="uk-container uk-width-1-1 uk-margin-top">
+                {{#actions}}
+                    <btn click="{{click}}" toggle="{{(toggleID)? `#${toggleID}` : ''}}" class="left uk-margin-bottom {{class}}" title="{{title}}" icon="{{icon}}" type="{{type}}" />
+                    {{#modal}}
+                        <modal id="{{toggleID}}" form="{{form}}" modalObject="{{this}}" modalContent="{{content}}" actionBtn="{{actionBtn}}" title="{{title}}">
+                            {{#if modalContent}}
+                                {{>makePartial('modalContent', modalContent)}}
+                            {{/if}}
+                            {{#modalObject.partialsPrepend}}
+                                {{>makePartial(name, body)}}
+                            {{/}}
+                            {{#if form}}
+                                <frm items="{{form}}" />
+                            {{/if}}
+                            {{#modalObject.partialsAppend}}
+                                {{>makePartial(name, body)}}
+                            {{/}}
+                        </modal>
+                    {{/}}
+                {{/}}
+                {{#$.hasValue(search)}}
+                    <div class="uk-search uk-search-default right">
+                        <fieldset class="uk-fieldset">
+                            <span class="uk-search-icon-flip" uk-search-icon></span>
+                            <inpt type="search" value="{{search}}" placeholder="Live Search" keyup="search">
+                        </fieldset>
+                    </div>
+                {{/}}
+            </div>
+            {{#if $.hasValue(search)}}
+                <hr>
+                <ul class="uk-list uk-list-striped">
+                    {{>content}}
+                </ul>
+            {{else}}
+                {{>content}}
+            {{/if}}
+        </div>
+        {{#footer}}
+            <div class="uk-card-footer">
+                {{#actions}}
+                    <btn click="{{click}}" toggle="{{(toggleID)? `#${toggleID}` : ''}}" class="right {{class}}" title="{{title}}" icon="{{icon}}" type="{{type}}" />
+                    {{#modal}}
+                        <modal item="{{item}}" id="{{toggleID}}" form="{{form}}" modalContent="{{{modalContent}}}" actionBtn="{{actionBtn}}" title="{{title}}">
+                            {{#if modalContent}}
+                                {{>makePartial('modalContent', modalContent)}}
+                            {{/if}}
+                            {{#if form}}
+                                <frm items="{{form}}" />
+                            {{/if}}
+                        </modal>
+                    {{/}}
+                {{/}}
+            </div>
+        {{/}}
+    {{/if}}
+{{/}}

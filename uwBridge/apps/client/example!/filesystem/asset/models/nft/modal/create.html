@@ -1,0 +1,22 @@
+<div id="createCode" class="uk-flex-top uk-modal-container" uk-modal>
+    <div class="uk-modal-dialog  uk-margin-auto-vertical uk-modal-container">
+        <btn modalCloseDefault="true" />
+        <div class="uk-modal-header">
+            <h2 class="uk-modal-title">Create Codes</h2>
+        </div>
+        
+        <div class="uk-modal-body" uk-overflow-auto>
+            
+        <form>
+            <fieldset class="uk-fieldset">
+                <div><inpt label="Amount of codes to generate" type="number" placeholder="0" value="{{code.create.amount}}" /></div>
+            </fieldset>
+        </form>
+            
+        </div>
+        <div class="uk-modal-footer uk-text-right">
+            <btn modalClose="true" title="Cancel" />
+            <btn type="primary" icon="check" click="code.create" title="Generate" />
+        </div>
+    </div>  
+</div>

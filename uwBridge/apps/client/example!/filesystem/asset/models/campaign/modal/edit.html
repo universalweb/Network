@@ -1,0 +1,144 @@
+<div id="editCampaign" class="uk-flex-top uk-modal-container" uk-modal>
+    <div class="uk-modal-dialog  uk-margin-auto-vertical uk-modal-container">
+        <btn modalCloseDefault="true" />
+        <div class="uk-modal-header">
+            <h2 class="uk-modal-title">Edit Campaign</h2>
+        </div>
+        
+        <div class="uk-modal-body" uk-overflow-auto>
+            
+            <form class="uk-form-stacked">
+                <fieldset class="uk-fieldset">
+                    
+                    <ul class="uk-subnav uk-subnav-pill" uk-switcher="connect: .switcher-container-first; animation: uk-animation-fade;">
+                        <li><a class="uk-active">Name</a></li>
+                        <li><a>Website</a></li>
+                        <li><a>Question</a></li>
+                    </ul>
+                    
+                    <div class="uk-switcher switcher-container-first uk-padding-small">
+                        <div><inpt class="uk-width-1-1" label="Campaign Name" placeholder="Example Name" value="{{campaign.edit.name}}" /></div>
+                        <div><inpt label="Campaign Website" placeholder="https://akerna.com" value="{{campaign.edit.homepage}}" /></div>
+                        <div>
+                            {{#with campaign.edit.questions}}
+                                <ul class="uk-grid-medium uk-child-width-auto uk-child-width-auto@s uk-text-center" data-keypath="{{@keypath}}" on-moved="campaign.edit.moved" uk-sortable="handle: .uk-card" uk-grid>
+                                    {{#campaign.edit.questions}}
+                                        <li data-keypath="{{@keypath}}" data-index="{{@index}}">
+                                            <div class="uk-sortable-handle uk-border-rounded uk-card uk-card-default uk-card-body uk-animation-slide-bottom-small uk-text-center">
+                                                <span class="uk-icon-button pointer uk-position-absolute uk-light" 
+                                                    style="right: -10px; top: -10px" uk-icon="fa-times" 
+                                                        on-click="['campaign.edit.removeQuestion', @rootpath, @index]"></span>
+
+                                                QUESTION: {{this.title}}
+                                                <div class="uk-child-width-auto uk-grid-small uk-margin-top uk-margin-bottom" uk-grid data-keypath="{{@keypath}}.options" on-moved="campaign.edit.moved" uk-sortable="handle: .uk-tile">
+                                                    {{#each this.options: index, key}}
+                                                        <div data-keypath="{{@keypath}}" data-index="{{@index}}">
+                                                            <div class="uk-tile uk-tile-primary uk-dark uk-flex uk-flex-center uk-flex-middle uk-padding-small uk-border-rounded">
+                                                                <span class="uk-icon-button pointer uk-position-absolute uk-light" 
+                                                                    style="right: -10px; top: -10px" uk-icon="fa-times" 
+                                                                    on-click="['campaign.edit.removeAnswer', @keypath]"></span>
+                                                                {{this.title}}
+                                                            </div>
+                                                        </div>
+                                                    {{/each}}
+                                                </div>
+                                                <inpt type="text" keyup="campaign.edit.answer" minlength="3" minlength="80" keypath="{{@keypath}}" 
+                                                    placeholder="Type an answer & hit Enter!" value="{{this.value}}"  />
+                                            </div>
+                                        </li>
+                                    {{/}}
+                                </ul>
+                            {{/with}}
+                            <inpt label="Type a question & hit Enter" minlength="3" minlength="80"
+                                keyup="campaign.edit.question" placeholder="Question?" value="{{campaign.edit.question}}" />
+                        </div>
+                    </div>
+
+                    <ul class="uk-subnav uk-subnav-pill" uk-switcher="connect: .switcher-container-second; animation: uk-animation-fade;">
+                        <li><a>Start Date</a></li>
+                        <li><a>End Date</a></li>
+                    </ul>
+                    <div class="uk-switcher uk-margin switcher-container-second uk-padding-small">
+                        <div><inpt label="Start Date" type="datetime-local" placeholder="YEAR-MONTH-DAY-HOUR-SECOND" value="{{campaign.edit.startDate}}" /></div>
+                        <div><inpt label="End Date" type="datetime-local" placeholder="YEAR-MONTH-DAY-HOUR-SECOND" value="{{campaign.edit.endDate}}" /></div>
+                    </div>
+
+                    <ul class="uk-subnav uk-subnav-pill" uk-switcher="connect: .switcher-container-third; animation: uk-animation-fade;">
+                        <li><a>Age Range Start</a></li>
+                        <li><a>Age Range End</a></li>
+                    </ul>
+
+                    <div class="uk-switcher uk-margin switcher-container-third uk-padding-small">
+                        <div><inpt label="Age Range Start" type="number" placeholder="18" value="{{campaign.edit.ageStart}}" /></div>
+                        <div><inpt label="Age Range End" type="number" placeholder="26" value="{{campaign.edit.ageEnd}}" /></div>
+                    </div>
+                    
+                    <h5>Products</h5>
+                    <div class="uk-padding-small">
+                        {{#with campaign.edit.products}}
+                            <ul class="uk-grid-medium uk-child-width-auto uk-child-width-auto@s uk-text-center" uk-grid>
+                                {{#campaign.edit.products}}
+                                    <li data-keypath="{{@keypath}}" data-index="{{@index}}">
+                                        <div class="uk-border-rounded uk-card uk-card-default uk-card-body uk-animation-fade uk-text-center">
+                                            <span class="uk-icon-button pointer uk-position-absolute uk-light" 
+                                                style="right: -10px; top: -10px" uk-icon="fa-times" 
+                                                on-click="['campaign.edit.removeProduct', @rootpath, @index]"></span>
+                                            {{this.name}}
+                                        </div>
+                                    </li>
+                                {{/}}
+                            </ul>
+                        {{/with}}
+                        {{#with campaign.edit.productsFeed}}
+                            <ul class="uk-grid-medium uk-child-width-auto uk-child-width-auto@s uk-text-center" uk-grid>
+                                {{#campaign.edit.productsFeed}}
+                                    <li data-keypath="{{@keypath}}" data-index="{{@index}}" on-click="campaign.edit.addProduct">
+                                        <div class="pointer uk-border-rounded uk-padding-small uk-card uk-card-secondary uk-card-body uk-animation-slide-bottom-small uk-text-center">
+                                            {{this.name}}
+                                        </div>
+                                    </li>
+                                {{/}}
+                            </ul>
+                        {{/with}}
+                        <inpt label="Search For a product to add" minlength="3" minlength="80"
+                            keyup="campaign.edit.searchProducts" placeholder="Product name" value="{{campaign.edit.searchProducts}}" />
+                    </div>
+                    <ul class="uk-subnav uk-subnav-pill" uk-switcher="connect: .switcher-container-content; animation: uk-animation-fade;">
+                        <li><a class="uk-active">Text</a></li>
+                        <li><a>HTML</a></li>
+                        <li><a>Message</a></li>
+                    </ul>
+                    <div class="uk-switcher uk-margin switcher-container-content uk-padding-small">
+                        <div><inpt label="description" type="textarea" placeholder="Description of Campaign" value="{{campaign.edit.description}}" /></div>
+                        <div><inpt label="HTML Content" type="textarea" placeholder="HTML of Campaign" value="{{campaign.edit.html}}" /></div>
+                        <div><inpt label="Notification Message" type="textarea" placeholder="Notification Message" value="{{campaign.edit.message}}" /></div>
+                    </div>
+                    <div class="spacebox spaceboxLarge"></div>
+                    <ul class="uk-subnav uk-subnav-pill" uk-switcher="; animation: uk-animation-fade;">
+                        <li><a class="uk-active">Images</a></li>
+                        <li><a>Attachments</a></li>
+                    </ul>
+                    <div class="uk-switcher uk-margin uk-padding-small uk-padding-small">
+                        <uploadImg items="{{campaign.edit.images}}" loading="{{campaign.edit.loadingImage}}" 
+                            onDrop="campaign.edit.dropImage" onChange="campaign.edit.loadImage"
+                            remove="campaign.edit.removeImage" removeRaw="campaign.edit.removeImageRaw">
+                            Upload product images by dropping it here or
+                        </uploadImg>
+
+                        <uploadImg items="{{campaign.edit.attachments}}" loading="{{campaign.edit.loadingAttachment}}" 
+                            onDrop="campaign.edit.dropAttachment" onChange="campaign.edit.loadAttachment"
+                            remove="campaign.edit.removeAttachment" removeRaw="campaign.edit.removeAttachmentRaw">
+                                Upload image attachments by dropping it here or
+                        </uploadImg>
+                    </div>
+                    
+                </fieldset>
+            </form>
+            
+        </div>
+        <div class="uk-modal-footer uk-text-right">
+            <btn modalClose="true" title="Cancel" />
+            <btn type="primary" icon="check" click="campaign.edit" title="edit" />
+        </div>
+    </div>  
+</div>

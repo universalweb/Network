@@ -1,0 +1,32 @@
+<div id="productsCreateModal" class="uk-flex-top uk-modal-container" uk-modal>
+    <div class="uk-modal-dialog  uk-margin-auto-vertical uk-modal-container">
+        <btn modalCloseDefault="true" />
+        <div class="uk-modal-header">
+            <h2 class="uk-modal-title">Bulk Upload</h2>
+        </div>
+        <div class="uk-modal-body" uk-overflow-auto>
+            {{#product.create.csv.readyQueue.length}}
+                <h2 class="uk-modal-title">({{product.create.csv.readyQueue.length}}) Products are in queue</h2>
+            {{/}}
+            <div class="js-upload uk-placeholder uk-text-center" 
+                on-drop="product.create.csv.drop" on-dragover="dragover" on-dragleave="dragleave" on-dragenter="dragenter">
+                <span uk-icon="icon: cloud-upload"></span>
+                <span class="uk-text-middle">Upload a CSV by dropping it here or</span>
+                <div uk-form-custom>
+                    <input type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" on-change="product.create.csv.load" multiple>
+                    <span class="uk-link">select one</span>
+                </div>
+            </div>
+            <a href="/productTemplate.csv">Download the CSV Template</a>
+        </div>
+        <div class="uk-modal-footer uk-text-right">
+            {{#product.create.csv.readyQueue.length}}
+                <btn type="secondary" icon="upload" click="product.create.csv.clear" title="Remove queued items" />
+            {{/}}
+            <btn modalClose="true" title="Cancel" />
+            <btn type="{{(product.create.csv.readyQueue.length)? 'primary' : 'muted'}}" 
+                disabled="{{(product.create.csv.readyQueue.length)? false : true}}" icon="upload" 
+                click="{{(product.create.csv.readyQueue.length)? 'product.create.csv' : 'preventDefault'}}" title="Upload" />
+        </div>
+    </div>  
+</div>

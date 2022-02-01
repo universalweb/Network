@@ -1,0 +1,681 @@
+html {
+  position: absolute;
+  top: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+body .chrome,
+body .mobile,
+body .applewebkti {
+  -webkit-font-smoothing: antialiased;
+  font-smoothing: antialiased;
+}
+
+body {
+  -webkit-font-smoothing: subpixel-antialiased;
+  font-smoothing: subpixel-antialiased;
+  position: absolute;
+  zoom: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  vertical-align: baseline;
+  word-wrap: break-word;
+  word-break: normal;
+  color: #2b2c30;
+  border: 0;
+  outline: none;
+  background: #fafafa;
+  touch-action: manipulation;
+  outline:none;
+}
+
+
+.contentBox {
+  box-sizing: content-box;
+}
+
+/* weight */
+
+.bold,
+.HoverBold:hover {
+  font-weight: 700;
+}
+
+.bolder {
+  font-weight: bolder;
+}
+
+.lighter {
+  font-weight: lighter;
+}
+
+.weight-normal {
+  font-weight: normal;
+}
+
+/* align */
+
+.center {
+  text-align: center;
+}
+
+.alignLeft {
+  text-align: left;
+}
+
+.alignRight {
+  text-align: right;
+}
+
+/* FLOATS */
+
+.left {
+  float: left;
+}
+
+.right {
+  float: right;
+}
+
+/* clears */
+
+.clear {
+  clear: both;
+}
+
+.clearLeft {
+  clear: left;
+}
+
+.clearRight {
+  clear: right;
+}
+
+.clearfix::after {
+  display: table;
+  clear: both;
+  content: '';
+}
+
+.break::after {
+  content: '\a';
+  white-space: pre;
+}
+
+/* radius */
+
+.rounded {
+  border-radius: 3px;
+}
+
+.rounded .roundedList:first-child {
+  border-radius: 3px 3px 0 0;
+}
+
+.rounded .roundedList:last-child {
+  border-radius: 0 0 3px 3px;
+}
+
+.notroundTop {
+  border-radius: 0 0 3px 3px;
+}
+
+.notroundBottom {
+  border-radius: 3px 3px 0 0;
+}
+
+.notround {
+  border-radius: 0;
+}
+
+.circle {
+  border-radius: 50%;
+}
+
+.largeRounded {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.largeRoundedTop {
+  border-radius: 20px 20px 0 0;
+  overflow: hidden;
+}
+
+/* display */
+
+.hidden {
+  visibility: hidden;
+}
+
+.miniScreenShow,
+.smallScreenShow,
+.tinyScreenShow,
+.miniScreen .miniScreenHide,
+.tinyScreen .tinyScreenHide,
+.smallScreen .smallScreenHide,
+.hide {
+  display: none;
+}
+
+.miniScreen .miniScreenShow,
+.tinyScreen .tinyScreenShow,
+.smallScreen .smallScreenShow,
+.show {
+  display: block;
+}
+
+/* GPU acceleration on objects */
+
+.translate {
+  transform: translate3d(0, 0, 0);
+}
+
+.hideLeft,
+.translate.hideLeft {
+  transform: translate3d(-150%, 0, 0);
+}
+
+.hideRight,
+.translate.hideRight {
+  transform: translate3d(150%, 0, 0);
+}
+
+.hideTop,
+.translate.hideTop {
+  transform: translate3d(0, -150%, 0);
+}
+
+.hideBottom,
+.translate.hideBottom {
+  transform: translate3d(0, 150%, 0);
+}
+
+/* Padding */
+
+.padded {
+  padding: 9px;
+}
+
+.paddingNoLeft,
+.padded.paddingNoLeft {
+  padding-left: 0;
+}
+
+.paddingNoRight,
+.padded.paddingNoRight {
+  padding-right: 0;
+}
+
+.padded.halfSides {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.padded.smlX {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.paddedMed {
+  padding: 6px 8px;
+}
+
+.paddedSM {
+  padding: 4px 6px;
+}
+
+.padded.paddedTopBottom,
+.paddedTopBottom {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.padded.paddedNoTop,
+.paddedNoTop {
+  padding-top: 0;
+}
+
+.padded.paddedNoBottom,
+.paddedNoBottom {
+  padding-bottom: 0;
+}
+
+.padded.paddedOnlySides,
+.paddedOnlySides {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.contentPad {
+  padding: calc(1em + 2vw) calc(1em + 2vw);
+}
+
+/* margins */
+
+.marginLeft5 {
+  margin-left: 5px;
+}
+
+.marginRight5 {
+  margin-right: 5px;
+}
+
+.marginTop5 {
+  margin-top: 5px;
+}
+
+.marginBottom5 {
+  margin-bottom: 5px;
+}
+
+.margin5 {
+  margin: 5px;
+}
+
+.marginLeft10 {
+  margin-left: 10px;
+}
+
+.marginRight10 {
+  margin-right: 10px;
+}
+
+.marginTop10 {
+  margin-top: 10px;
+}
+
+.marginBottom10 {
+  margin-bottom: 10px;
+}
+
+.margin10 {
+  margin: 10px;
+}
+
+.noMargin {
+  margin: 0;
+}
+
+.marginNoTop {
+  margin-top: 0;
+}
+
+.marginNoBottom {
+  margin-bottom: 0;
+}
+
+.marginAuto {
+  margin-right: auto;
+  margin-left: auto;
+}
+
+/* spacebox */
+
+.spacebox {
+  float: left;
+  clear: both;
+  width: 100%;
+  height: 5px;
+}
+
+.spacebox.spaceboxLarge {
+  height: 25px;
+}
+
+.spacebox.spaceboxSM {
+  height: 2px;
+}
+
+/* CURSOR */
+
+.pointer {
+  cursor: pointer;
+}
+
+.zoomOut {
+  cursor: -webkit-zoom-out;
+  cursor: -moz-zoom-out;
+  cursor: zoom-out;
+}
+
+.zoomIn {
+  cursor: -webkit-zoom-in;
+  cursor: -moz-zoom-in;
+  cursor: zoom-in;
+}
+
+/* z-index */
+
+.zIndex5 {
+  z-index: 5;
+}
+
+.zIndex4 {
+  z-index: 4;
+}
+
+.zIndex3 {
+  z-index: 3;
+}
+
+.zIndex2 {
+  z-index: 2;
+}
+
+.zIndex1 {
+  z-index: 1;
+}
+
+.zIndex1003 {
+  z-index: 1003;
+}
+
+.zIndex1004 {
+  z-index: 1004;
+}
+
+.zIndex3000 {
+  z-index: 3000;
+}
+
+.zIndex3001 {
+  z-index: 3001;
+}
+
+.zIndex3002 {
+  z-index: 3002;
+}
+
+.zIndexHigh {
+  z-index: 5000;
+}
+
+/* width */
+
+.widthAuto {
+  width: auto;
+}
+
+.full {
+  width: 100%;
+}
+
+.fullHeight {
+  height: 100%;
+}
+
+.maxFull {
+  max-width: 100%;
+}
+
+.w960 {
+  width: 960px;
+}
+
+.w1 {
+  width: 1%;
+}
+
+.w2 {
+  width: 2%;
+}
+
+.w5 {
+  width: 5%;
+}
+
+.w10 {
+  width: 10%;
+}
+
+.w15 {
+  width: 15%;
+}
+
+.w20 {
+  width: 20%;
+}
+
+.w25 {
+  width: 25%;
+}
+
+.w30 {
+  width: 30%;
+}
+
+.w3rd {
+  width: 33.33333%;
+}
+
+.w40 {
+  width: 40%;
+}
+
+.w50 {
+  width: 50%;
+}
+
+.w60 {
+  width: 60%;
+}
+
+.w62 {
+  width: 62%;
+}
+
+.w66 {
+  width: 66%;
+}
+
+.w70 {
+  width: 70%;
+}
+
+.w75 {
+  width: 75%;
+}
+
+.w80 {
+  width: 80%;
+}
+
+.w85 {
+  width: 85%;
+}
+
+/* imgfilters */
+
+.blur {
+  -webkit-filter: blur(1px);
+  filter: blur(1px);
+}
+
+.hoverUnBlur:hover {
+  -webkit-filter: blur(0);
+  filter: blur(0);
+}
+
+/* trans-all */
+input,
+.uk-tab,
+.animate,
+a,
+button {
+  transition: all 0.3s ease !important;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animateOpacity {
+  transition: opacity 0.3s ease;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* opacity */
+
+.opacity0 {
+  opacity: 0;
+}
+
+/* position */
+
+.absolute {
+  position: absolute;
+}
+
+.fixed {
+  position: fixed;
+}
+
+.fixed.right,
+.absolute.right {
+  right: 0;
+  left: auto;
+  float: none;
+}
+
+.fixed.left,
+.absolute.left {
+  right: auto;
+  left: 0;
+  float: none;
+}
+
+.fixed.bottom,
+.absolute.bottom {
+  top: auto;
+  bottom: 0;
+  float: none;
+}
+
+.fixed.top,
+.absolute.top {
+  top: 0;
+  bottom: auto;
+  float: none;
+}
+
+.relative {
+  position: relative;
+}
+
+/* scroll */
+
+.scroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll.scroll-rounded-right::-webkit-scrollbar-thumb {
+  border-radius: 0 3px 3px 0;
+}
+
+.scroll.scroll-rounded-top-right::-webkit-scrollbar-thumb {
+  border-radius: 0 3px 0 0;
+}
+
+.scrollY {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.overflowHidden {
+  overflow: hidden;
+}
+
+/* textselection */
+
+.noHL {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.hl {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+img,
+nav,
+button,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+table,
+.uk-subnav,
+.uk-tab,
+.uk-text-meta,
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; 
+}
+
+/* p mods */
+
+.textshadow,
+.textshadow.white {
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+}
+
+/* borders */
+
+.border-sep {
+  width: 100%;
+  height: 1px;
+}
+
+.border-sep.twopix-line {
+  background: rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 0 0 #fff;
+}
+
+.borderBottom {
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.borderTop {
+  border-top: 1px solid #e7e7e7;
+}
+
+/* text */
+.uppercase {
+  text-transform: uppercase;
+}
+
+a:active, a:focus {
+  outline: 0;
+  border: none;
+  -moz-outline-style: none;
+}
+
+button {
+  outline: none;
+}
+button:focus {outline:0;}
+  
+*:focus {
+  outline: 0 !important;
+}
+
+* {
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+-webkit-tap-highlight-color: transparent;
+}
+
+button:hover, button:focus {
+  outline: none;
+}
+

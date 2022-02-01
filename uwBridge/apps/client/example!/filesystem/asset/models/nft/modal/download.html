@@ -1,0 +1,38 @@
+<div id="downloadCodes" class="uk-flex-top uk-modal-container" uk-modal>
+    <div class="uk-modal-dialog  uk-margin-auto-vertical uk-modal-container">
+        <btn modalCloseDefault="true" />
+        <div class="uk-modal-header">
+            <h2 class="uk-modal-title">Generate Code Download</h2>
+        </div>
+        
+        <div class="uk-modal-body" uk-overflow-auto>
+            
+            <ul class="uk-subnav uk-subnav-pill" uk-switcher="connect: .switcher-container-first; animation: uk-animation-fade;">
+                <li><a class="uk-active">Generate</a></li>
+                <li><a>Previous Archive</a></li>
+            </ul>
+            <div class="uk-switcher uk-margin switcher-container-first">
+                <div>
+                    <h5 class="uk-heading-bullet">Click "Generate Codes" to begin</h5>
+                    {{#if generatingCodes === true}}
+                        <span class="uk-margin-small-right" uk-spinner="ratio: 2"></span>
+                    {{elseif downloadLink}}
+                        <a target="_blank" href="/akernaCode/batch/{{batch.current._id}}.zip">CLICK TO DOWNLOAD</a>
+                    {{/if}}
+                </div>
+                <div>
+                    <h5 class="uk-heading-bullet">Previously Generated Archive</h5>
+                    {{#if batch.current.ziplocal}}
+                        <a target="_blank" href="/akernaCode/batch/{{batch.current._id}}.zip">Download Archive</a>
+                    {{else}}
+                        No previous archive found, first hit generate codes.
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+        <div class="uk-modal-footer uk-text-right">
+            <btn modalClose="true" title="Cancel" />
+            <btn type="primary" icon="check" click="code.generate" title="Generate Codes" />
+        </div>
+    </div>  
+</div>

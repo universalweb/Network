@@ -32,6 +32,7 @@
         "Acid": "^2.3.8",
         "base64-img": "^1.0.4",
         "compression": "^1.7.4",
+        "date-fns": "^2.28.0",
         "docredux": "^2.3.9",
         "express": "^4.17.2",
         "express-content-length-validator": "^1.0.0",
@@ -83,7 +84,14 @@
         "uikit": "^3.10.1"
     },
     "nodemonConfig": {
-        "ignore": ["node_modules/", "./apps/client/**/filesystem/**", "./system/compile/**", "**.json", "**.css", "**.html"],
+        "ignore": [
+            "node_modules/",
+            "./apps/client/**/filesystem/**",
+            "./system/compile/**",
+            "**.json",
+            "**.css",
+            "**.html"
+        ],
         "delay": 2500,
         "execMap": {
             "js": "node"

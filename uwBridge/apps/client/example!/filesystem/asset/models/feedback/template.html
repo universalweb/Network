@@ -1,0 +1,51 @@
+{{#@shared.account && (@shared.account.role === 'operator' || @shared.account.role === 'owner' || @shared.account.role === 'admin')}}
+    <div class="uk-container uk-width-expand">
+        <div class="uk-container-xlarge uk-padding uk-margin-auto">
+
+            <div class="uk-flex-middle uk-container uk-width-expand uk-margin-remove-left uk-margin-bottom">
+                <h1 class="uk-margin-remove-bottom">
+                    Feedback
+                    <icon name="fa-qrfeedback" ratio="1" />
+                </h1>
+                <p class="uk-text-meta uk-margin-remove-top">
+                    <span class="uk-label">Total: {{@shared.stats.results.feedbackCount}}</span>
+                </p>
+            </div>
+
+            <div class="uk-container uk-container-small uk-padding-small"></div>
+            <div class="uk-container uk-width-expand uk-margin-top uk-margin-bottom">
+
+                {{#if @shared.widthLevel <= 1}}
+                    <div class="uk-container uk-flex-middle uk-grid-collapse" uk-grid>
+                        <div class="uk-width-expand@m uk-margin-medium-top uk-search uk-search-default">
+                            <fieldset class="uk-fieldset">
+                                <span class="uk-search-icon-flip" uk-search-icon></span>
+                                <inpt type="search" value="{{feedback.search}}" placeholder="Live Search" keyup="feedback.search">
+                            </fieldset>
+                        </div>
+                    </div>
+                {{else}}
+                    <div class="uk-flex-middle uk-grid-collapse" uk-grid>
+                        <div class="uk-width-expand uk-search uk-search-default">
+                            <fieldset class="uk-fieldset">
+                                <span class="uk-search-icon-flip" uk-search-icon></span>
+                                <inpt class="rounded" type="search" value="{{feedback.search}}" placeholder="Live Search" keyup="feedback.search">
+                            </fieldset>
+                        </div>
+                    </div>
+                {{/if}}
+
+            </div>
+
+            <hr>
+            <div class="uk-container uk-width-expand uk-padding-small spacebox spaceboxLarge clearfix"></div>
+            <div class="uk-container uk-overflow-visible uk-width-expand flexTable">
+                {{>feedback}}
+                {{#feedback.loadMoreId}}
+                    <button class="uk-button uk-button-default uk-width-1-1 uk-margin-medium-top rounded" on-click="feedback.loadMore">LOAD MORE</button>
+                {{/}}
+            </div>
+            
+        </div>
+    </div>
+{{/}}

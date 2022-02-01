@@ -1,0 +1,42 @@
+<div class="uk-container uk-container-expand pageComponent">
+	<div class="animate uk-card uk-card-default {{center ? 'uk-position-center' : ''}} uk-width-*@s marginAuto {{buttonTitle ? 'withButtonBlock' : ''}} {{color ? color : ''}}">
+		<div class="uk-card-header">
+			<div class="uk-grid-small uk-flex-middle" uk-grid>
+				<div class="uk-width-expand">
+					<h3 class="uk-card-title uk-margin-remove-bottom">
+                        {{name}} <icon name="user" ratio=".8" />
+					</h3>
+                    <p class="uk-text-meta uk-margin-remove-top">
+                        <span class="uk-label">USER</span> <span class="uk-label uk-label-success">ROLE {{role}}</span>
+                    </p>
+				</div>
+			</div>
+		</div>
+		<div class="uk-card-body uk-padding-small-top">
+            <dl class="uk-description-list">
+                <dt class="uk-text-emphasis">Name</dt>
+                <dd class="uk-text-large">{{name}}</dd>
+                <dt class="uk-text-emphasis">Email</dt>
+                <dd class="uk-text-large">{{email}}</dd>
+                <dt class="uk-text-emphasis">Role</dt>
+                <dd class="uk-text-large">{{role}}</dd>
+                {{#Organization}}
+                    <dt class="uk-text-emphasis">Organization</dt>
+                    <dd class="uk-text-large"><a on-click="routerLoad" href="/organization/{{organization}}">{{organizationName || 'View'}}</a></dd>
+                {{/}}
+            </dl>
+		</div>
+        <div class="uk-card-footer">
+            <btn toggle="#deleteMain" class="right" title="Delete" icon="trash" type="danger" />
+            <btn toggle="#editMain" class="right left uk-margin-right" title="Edit" icon="plus" type="primary" />
+        </div>
+	</div>
+</div>
+
+<modal id="editMain" items="{{modal.edit.form}}" actionBtn="{{modal.edit.actionBtn}}" title="Edit User">
+    <frm items="{{items}}" />
+</modal>
+
+<modal id="deleteMain" items="{{modal.delete.form}}" actionBtn="{{modal.delete.actionBtn}}" title="Delete Facility">
+    <p>Are you sure you want to delete this account?</p>
+</modal>

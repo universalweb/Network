@@ -1,0 +1,67 @@
+<div class="uk-container uk-width-expand uk-margin-auto-vertical buttonFixedBottom">
+    <div class="uk-margin-auto uk-margin-auto-vertical 
+        {{((@shared.desktop && @shared.widthLevel >= 1) || @shared.tablet)? 'uk-container uk-container-xsmall': ''}}">
+        <div class="animate uk-child-width-1-1@m uk-margin-auto">
+            <div>
+                <div class="{{((@shared.desktop && @shared.widthLevel >= 1) || @shared.tablet)? 'uk-card largeRounded uk-card-default': ''}} 
+                         uk-overflow-hidden uk-grid-collapse uk-flex-middle uk-animation-fade" uk-grid>
+                    <div class="{{((@shared.desktop && @shared.widthLevel >= 1) || @shared.tablet)? 'uk-card-header': ''}} uk-width-1-1 uk-grid-collapse" uk-grid>
+                        <div class="uk-flex-middle uk-width-1-1 uk-padding">
+                            <div class="uk-width-expand uk-width-1-1 uk-text-center">
+                                <div class="uk-width-expand uk-width-1-1">
+                                    <img src="/image/Akerna_Monogram.png" />
+                                    <h4 class="uk-text-center uk-margin-remove-bottom">Create an account</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="uk-card-body uk-width-1-1 uk-grid-collapse" uk-grid>
+                        <div class="uk-width-1-1 uk-padding">
+                            <div class="uk-margin">
+                                <div>
+                                    {{#with signup}}
+                                        <form>
+                                            <fieldset class="uk-fieldset uk-grid-collapse" uk-grid>
+                                                <div class="uk-margin uk-width-1-1">
+                                                    <label class="uk-form-label" for="form-stacked-text">EMAIL</label>
+                                                    <div class="uk-inline uk-form-controls uk-width-1-1">
+                                                        <span class="uk-form-icon" uk-icon="icon: mail"></span>
+                                                        <input class="uk-input uk-width-1-1 uk-form-width-medium uk-form-large" name="signupEmail" placeholder="EMAIL" type="text" id="signupEmail" autocomplete="email" value="{{this.email}}" />
+                                                    </div>
+                                                </div>
+                                                <div class="uk-margin uk-width-1-1">
+                                                    <label class="uk-form-label" for="form-stacked-text">PASSWORD</label>
+                                                    <div class="uk-inline uk-width-1-1 uk-form-controls">
+                                                        <span class="uk-form-icon" uk-icon="icon: lock"></span>
+                                                        <input class="uk-input uk-width-1-1 uk-form-width-medium uk-form-large" name="signupPassword" type="password" id="signupPassword" placeholder="PASSWORD" autocomplete="password" value="{{this.password}}" />
+                                                    </div>
+                                                </div>
+                                                <div class="uk-margin uk-width-1-1">
+                                                    <label class="uk-form-label" for="form-stacked-text">CONFIRM PASSWORD</label>
+                                                    <div class="uk-inline uk-width-1-1 uk-form-controls">
+                                                        <span class="uk-form-icon" uk-icon="icon: lock"></span>
+                                                        <input class="uk-input uk-width-1-1 uk-form-width-medium uk-form-large" name="confirmPassword" type="password" id="confirmPassword" placeholder="CONFIRM PASSWORD" autocomplete="confirm-password" value="{{this.confirmPassword}}" />
+                                                    </div>
+                                                </div>
+                                                {{#with login}}
+                                                    <div class="uk-margin uk-width-1-1">
+                                                        <btn type="secondary" object="{{@context}}" class="uk-border-rounded uk-width-1-1" click="signup">signup</btn>
+                                                    </div>
+                                                {{/with}}
+                                                <div class="uk-margin uk-width-1-1 uk-text-center">
+                                                    <div class="uk-inline uk-expand">
+                                                        <span>Already have an account? </span><a on-click="routerLoad" href="/">Login here.</a>
+                                                    </div>
+                                                </div>
+                                            </fieldset>
+                                        </form>
+                                    {{/with}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

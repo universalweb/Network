@@ -1,0 +1,14 @@
+#mainNavBar {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+    z-index: 10;
+}
+#mainNavBar .uk-navbar-nav>li>a{
+   color: #757575
+}
+#mainNavBar .uk-navbar-nav>li>a:hover{
+   color: #424242
+}
+
+.uk-navbar-center.uk-navbar-item.uk-logo{
+   margin-left: -20px;
+}

@@ -1,0 +1,43 @@
+{{#@shared.loginStatus === this.loginState || this.loginState === undefined}}
+	{{#!this.role || this.role.test(@shared.account.role)}}
+		{{#stateMode === this.mode || this.mode === undefined}}
+			{{#this.section}}
+				<li class="uk-parent noHL {{(this.pathMatch && this.pathMatch.test(@shared.currentPath)) ? 'active' : ''}} {{this.hide ? '' : 'current'}} {{this.icon ? '' : 'textOnly'}} sectionTitle headerFont" on-click="(this.click)? @this.fire('multi', @context, ['sectionToggle',this.click]) : ''">
+					<span class="left">
+						{{#if this.hide}}
+							<icon class="uk-animation-fade" name="chevron-left" ratio="1.5" />
+						{{else}}
+							<icon class="uk-animation-fade" name="chevron-down" ratio="1.5" />
+						{{/if}}
+					</span>
+					{{#this.text}}
+						<a class="text noHL">{{this.text}}</a>
+					{{/}}
+				</li>
+				{{#!this.hide}}
+					<ul class="uk-nav-sub fadeIn">
+						{{#this.options:i}}
+							{{>sidebarItem}}
+						{{/}}
+					</ul>
+				{{/}}
+				<li class="uk-nav-divider"></li>
+			{{else}}
+				{{#this.hide === false || this.hide === undefined}}
+					{{#@shared.loginStatus === this.loginState || this.loginState === undefined}}
+						<li class="uk-parent iconHover noHL {{(this.pathMatch && this.pathMatch.test(@shared.currentPath)) ? 'active' : ''}} {{this.icon ? '' : 'textOnly'}}" uk-tooltip="title: {{this.tooltip}}" on-click="@this.fire('multi',@context,this.click)">
+							{{#this.icon}}
+								<span class="left iconWrap">
+									<icon name="{{this.name}}" ratio="1.2" />
+								</span>
+							{{/}}
+							{{#this.text}}
+								<a class="text noHL">{{this.text}}</a>
+							{{/}}
+						</li>
+					{{/}}
+				{{/}}
+			{{/}}
+		{{/}}
+	{{/}}
+{{/}}

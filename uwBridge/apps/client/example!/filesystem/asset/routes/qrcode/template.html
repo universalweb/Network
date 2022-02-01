@@ -1,0 +1,62 @@
+{{#loginStatus() === true}}
+	<div class="tabs">
+		{{#tabs}}
+			<div class="tab {{active ? 'active' : ''}}" on-click="changeTab">
+				<span class="title">{{this.title}}<span> <icon name='{{this.icon}}' />
+			</div>
+		{{/}}
+	</div>
+	{{#tabState == 'qrcode'}}
+		<div>
+			<label>QR Code Value</label>
+			<input value="{{qrcode.value}}" on-keyup='qrcodeEnter' placeholder="Value" type="text">
+			{{#qrcode.url}}
+				<p class="bold">ENCODED => https://akerna.com/id/{{qrcode.value}}</p>
+				<p class="bold">IMAGE URL => http://localhost{{qrcode.url}}</p>
+				<img src="{{qrcode.url}}" />
+				<hr />
+			{{/}}
+			{{#qrcode.url2}}
+				<p class="bold">ENCODED => https://akerna.com/id/{{qrcode.value}}</p>
+				<p class="bold">IMAGE URL => http://localhost{{qrcode.url2}}</p>
+				<img src="{{qrcode.url2}}" />
+				<hr />
+			{{/}}
+			{{#qrcode.dataURL}}
+				<h6>DATA URL</h6>
+				<p class="bold">{{qrcode.dataURL}}</p>
+				<hr />
+			{{/}}
+			{{#qrcode.utf8}}
+				<h6>utf8 Light on Front End</h6>
+				<pre style="line-height: 15px;white-space: pre-wrap;" class="bold">{{qrcode.utf8}}</pre>
+				<hr />
+			{{/}}
+			{{#qrcode.svg}}
+				<h6>SVG</h6>
+				{{{qrcode.svg}}}
+				<p>SVG CODE</p>
+				<pre style="line-height: 15px;white-space: pre-wrap;" class="bold">{{qrcode.svg}}</pre>
+			{{/}}
+		</div>
+	{{/}}
+	{{#tabState  == 'createUser'}}
+		<div>
+			<label>Name</label>
+			<input value="{{signup.name}}" placeholder="Name" type="text">
+			<label>Email</label>
+			<input value="{{signup.email}}" placeholder="Email" type="text">
+			<label>Password</label>
+			<input value="{{signup.password}}" placeholder="Password" type="password">
+			<label>Confirm Password</label>
+			<input value="{{signup.confirmPassword}}" placeholder="Confirm password" type="password">
+			<label>Role</label>
+			<input value="{{signup.role}}" placeholder="Role" type="password">
+			<label>TERMS AND CONDITIONS OF USE</label>
+			<input type="checkbox" value="{{signup.agreed}}" /> - <span class="bold">By checking this box you are agreeing to the <a on-click="routerLoad" data-href="/page/privacypolicy">Terms and Conditions.</a></span>
+			<hr />
+			<btn title="signup" click="createUser" />
+		</div>
+	{{/}}
+	<br />
+{{/}}

@@ -1,0 +1,32 @@
+<button class="{{(modalCloseDefault) ? 'uk-modal-close-default' : `uk-button uk-button-${(type) ? type : 'default'}` }} 
+    {{(modalClose) ? 'uk-modal-close' : ''}} 
+    {{(size) ? 'uk-button-'+size : ''}} 
+    {{(full) ? 'uk-width-1-1' : ''}} 
+    {{class}} 
+    {{(!this.title) ? 'iconOnly' : ''}}" 
+    {{(toggle) ? 'uk-toggle' : ''}} 
+    {{(close || modalCloseDefault) ? 'uk-close' : ''}} 
+    {{(href|| toggle) ? ` href="${href || toggle}"` : ''}} 
+    on-click="(click && !disabled)? @.fire('multi', @context, click, object) : null"
+    {{(disabled)? 'disabled' : ''}}
+    type="button" 
+    uk-tooltip="title: {{tooltip}}">
+    {{#iconRight}}
+        {{#if $.isString(icon)}}
+            <icon name="{{icon}}" ratio="{{iconRatio || '.8'}}" />
+        {{elseif icon}}
+            <icon name="{{icon.name}}" ratio="{{icon.ratio || '.8'}}" />
+        {{/if}}
+    {{/}}
+    {{>content}}
+	{{#title}}
+    	<span class="title">{{title}}</span>
+    {{/}}
+    {{#!iconRight}}
+        {{#if $.isString(icon)}}
+            <icon name="{{icon}}" ratio="{{iconRatio || '.8'}}" />
+        {{elseif icon}}
+            <icon name="{{icon.name}}" ratio="{{icon.ratio || '.8'}}" />
+        {{/if}}
+    {{/}}
+</button>

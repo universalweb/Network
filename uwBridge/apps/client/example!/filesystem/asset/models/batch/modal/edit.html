@@ -1,0 +1,121 @@
+<div id="editBatch" class="uk-flex-top uk-modal-container" uk-modal>
+    <div class="uk-modal-dialog  uk-margin-auto-vertical uk-modal-container">
+        <btn modalCloseDefault="true" />
+        <div class="uk-modal-header">
+            <h2 class="uk-modal-title">edit Batch</h2>
+        </div>
+        
+        <div class="uk-modal-body" uk-overflow-auto>
+            
+        <form>
+            <fieldset class="uk-fieldset">
+
+                <ul class="uk-subnav uk-subnav-pill" uk-switcher="connect: .switcher-container-first; animation: uk-animation-fade;">
+                    <li><a class="uk-active">Name</a></li>
+                    <li><a>Website</a></li>
+                    <li><a>Question</a></li>
+                </ul>
+                
+                <div class="uk-switcher uk-margin switcher-container-first">
+                    <div><inpt label="Batch Name" placeholder="Example Name" value="{{batch.edit.name}}" /></div>
+                    <div><inpt label="Product Website" placeholder="https://akerna.com" value="{{batch.edit.homepage}}" /></div>
+                    <div>
+                        {{#with batch.edit.questions}}
+                            <ul class="uk-grid-medium uk-child-width-auto uk-child-width-auto@s uk-text-center" data-keypath="{{@keypath}}" on-moved="batch.edit.moved" uk-sortable="handle: .uk-card" uk-grid>
+                                {{#batch.edit.questions}}
+                                    <li data-keypath="{{@keypath}}" data-index="{{@index}}">
+                                        <div class="uk-sortable-handle uk-border-rounded uk-card uk-card-default uk-card-body uk-animation-slide-bottom-small uk-text-center">
+                                            <span class="uk-icon-button pointer uk-position-absolute uk-light" 
+                                                style="right: -10px; top: -10px" uk-icon="fa-times" 
+                                                    on-click="['batch.edit.removeQuestion', @rootpath, @index]"></span>
+
+                                            QUESTION: {{this.title}}
+                                            <div class="uk-child-width-auto uk-grid-small uk-margin-top uk-margin-bottom" uk-grid data-keypath="{{@keypath}}.options" on-moved="batch.edit.moved" uk-sortable="handle: .uk-tile">
+                                                {{#each this.options: index, key}}
+                                                    <div data-keypath="{{@keypath}}" data-index="{{@index}}">
+                                                        <div class="uk-tile uk-tile-primary uk-dark uk-flex uk-flex-center uk-flex-middle uk-padding-small uk-border-rounded">
+                                                            <span class="uk-icon-button pointer uk-position-absolute uk-light" 
+                                                                style="right: -10px; top: -10px" uk-icon="fa-times" 
+                                                                on-click="['batch.edit.removeAnswer', @keypath]"></span>
+                                                            {{this.title}}
+                                                        </div>
+                                                    </div>
+                                                {{/each}}
+                                            </div>
+                                            <inpt type="text" keyup="batch.edit.answer" minlength="3" minlength="80" keypath="{{@keypath}}" 
+                                                placeholder="Type an answer & hit Enter!" value="{{this.value}}"  />
+                                        </div>
+                                    </li>
+                                {{/}}
+                            </ul>
+                        {{/with}}
+                        <inpt label="Type a question & hit Enter" minlength="3" minlength="80"
+                            keyup="batch.edit.question" placeholder="Question?" value="{{batch.edit.question}}" />
+                    </div>
+                </div>
+
+                <div class="spacebox spaceboxLarge"></div>
+                <ul class="uk-subnav uk-subnav-pill" uk-switcher="connect: .switcher-container-content; animation: uk-animation-fade;">
+                    <li><a class="uk-active">Text</a></li>
+                    <li><a>HTML</a></li>
+                </ul>
+                <div class="uk-switcher uk-margin switcher-container-content">
+                    <div><inpt label="description" type="textarea" placeholder="Description of Batch" value="{{batch.edit.description}}" /></div>
+                    <div><inpt label="HTML Content" type="textarea" placeholder="HTML of Batch" value="{{batch.edit.html}}" /></div>
+                </div>
+                <div class="spacebox spaceboxLarge"></div>
+                <ul class="uk-subnav uk-subnav-pill" uk-switcher="; animation: uk-animation-fade;">
+                    <li><a class="uk-active">Batch Images</a></li>
+                    <li><a>Attachments</a></li>
+                    <li><a>QRCode</a></li>
+                    <li><a>Label</a></li>
+                </ul>
+                <div class="uk-switcher uk-margin">
+
+                    <uploadImg items="{{batch.edit.images}}" loading="{{batch.edit.loadingImage}}" 
+                        onDrop="batch.edit.dropImage" onChange="batch.edit.loadImage"
+                        remove="batch.edit.removeImage" removeRaw="batch.edit.removeImageRaw">
+                        Upload product images by dropping it here or
+                    </uploadImg>
+
+                    <uploadImg items="{{batch.edit.attachments}}" loading="{{batch.edit.loadingAttachment}}" 
+                        onDrop="batch.edit.dropAttachment" onChange="batch.edit.loadAttachment"
+                        remove="batch.edit.removeAttachment" removeRaw="batch.edit.removeAttachmentRaw">
+                            Upload image attachments by dropping it here or
+                    </uploadImg>
+
+                    <div>
+                        <inpt label="Matrix Color" type="text" 
+                        placeholder="Color of the dots on the qrcode" value="{{batch.edit.qrColor}}" />
+                        <inpt label="Background Color" type="text" 
+                        placeholder="Background color of the qrcode" value="{{batch.edit.qrBackground}}" />
+                        <inpt label="QR Code size" type="text" 
+                        placeholder="Size of the qrcode" value="{{batch.edit.qrSize}}" />
+                        <uploadImg item="{{batch.edit.logo}}" loading="{{batch.edit.loadingLogo}}" 
+                            onDrop="batch.edit.dropLogo" onChange="batch.edit.loadLogo"
+                            remove="batch.edit.removeLogo" removeRaw="batch.edit.removeLogoRaw">
+                            Upload a logo to go on the QRCode by dropping it here or
+                        </uploadImg>
+                    </div>
+
+                    <div>
+                        <inpt label="X Coordinate" type="text" placeholder="X Coordinate default is 0" value="{{batch.edit.label.x}}" />
+                        <inpt label="Y Coordinate" type="text" placeholder="Y Coordinate default is 0" value="{{batch.edit.label.y}}" />
+                        <uploadImg itemPath="{{batch.edit.label}}" loading="{{batch.edit.loadingLabel}}" 
+                            onDrop="batch.edit.dropLabel" onChange="batch.edit.loadLabel"
+                            remove="batch.edit.removeLabel" removeRaw="batch.edit.removeLabelRaw">
+                            Upload labels by dropping it here or
+                        </uploadImg>
+                    </div>
+                </div>
+                
+            </fieldset>
+        </form>
+            
+        </div>
+        <div class="uk-modal-footer uk-text-right">
+            <btn modalClose="true" title="Cancel" />
+            <btn type="primary" icon="check" click="batch.edit" title="Save" />
+        </div>
+    </div>  
+</div>

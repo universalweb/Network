@@ -1,0 +1,75 @@
+<div class="uk-container uk-container-expand pageComponent">
+	<div class="animate uk-card uk-card-default {{center ? 'uk-position-center' : ''}} uk-container uk-width-*@s marginAuto {{buttonTitle ? 'withButtonBlock' : ''}} {{color ? color : ''}}">
+		<div class="uk-card-header">
+			<div class="uk-grid-small uk-flex-middle" uk-grid>
+				<div class="uk-width-expand">
+					<h2 class="uk-card-title uk-margin-remove-bottom">
+                        {{title}}
+					</h2>
+                    <p class="uk-text-meta uk-margin-remove-top">
+                        <span class="uk-label">ITEM</span> <icon name="fa-tag" ratio=".7" />
+                    </p>
+				</div>
+			</div>
+		</div>
+        <tabs tabs="{{tabViews}}" click="changeTab" />
+        {{#each tabViews as item}}
+            <listSearch item="{{item}}" batchAttachments="{{>batchAttachments}}">
+                {{#item.id === 'info' && item.opened}}
+                    <dl class="uk-description-list">
+                        <dt class="uk-text-emphasis">Batch Name</dt>
+                        <dd class="uk-text-large">{{item.data.name}}</dd>
+                        <dt class="uk-text-emphasis">Batch Description</dt>
+                        <dd class="uk-text-large">{{item.data.description}}</dd>
+                        <dt class="uk-text-emphasis">Batch ID</dt>
+                        <dd class="uk-text-large">{{item.data._id}}</dd>
+                        <dt class="uk-text-emphasis">Batch Creator</dt>
+                        <dd class="uk-text-large"><a on-click="routerLoad" href="/user/{{item.data.creator}}">{{item.data.creatorName}}</a></dd>
+                        <dt class="uk-text-emphasis">Product Name</dt>
+                        <dd class="uk-text-large"><a on-click="routerLoad" href="/product/{{item.data.product}}">{{item.data.productName}}</a></dd>
+                        <dt class="uk-text-emphasis">Product Description</dt>
+                        <dd class="uk-text-large">{{item.data.productDescription}}</dd>
+                        <dt class="uk-text-emphasis">Organization</dt>
+                        <dd class="uk-text-large"><a on-click="routerLoad" href="/organization/{{item.data.organization}}">{{item.data.organizationName || 'View'}} - {{item.data.organizationContact}}</a></dd>
+                        <dt class="uk-text-emphasis">Organization Owner</dt>
+                        <dd class="uk-text-large"><a on-click="routerLoad" href="/user/{{item.data.organizationOwner}}">{{item.data.organizationOwnerName}}</a></dd>
+                        {{#item.data.facility}}
+                            <dt class="uk-text-emphasis">Facility</dt>
+                            <dd class="uk-text-large"><a on-click="routerLoad" href="/facility/{{item.data.facility}}">{{item.data.facilityName}}</a></dd>
+                            <dt class="uk-text-emphasis">Facility Contact</dt>
+                            <dd class="uk-text-large">{{item.data.facilityContact}}</dd>
+                        {{/}}
+                    </dl>
+                    <hr class="uk-divider-icon">
+                    <div class="uk-grid-divider uk-text-uppercase uk-child-width-expand@s uk-text-center" uk-grid>
+                        <div>
+                            <div>Codes<br /> {{item.data.codeCount  || 0}}</div>
+                        </div>
+                        <div>
+                            <div>Feedback<br /> {{item.data.feedbackCount  || 0}}</div>
+                        </div>
+                    </div>
+                {{/}}
+                {{#item.id === 'code' && item.opened}}
+                    {{#list}}
+                        <li class="uk-text-bold" on-click="routerLoad" data-href="/code/{{this._id}}">{{this._id}}</li>
+                    {{/}}
+                {{/}}
+                {{#item.id === 'label' && item.opened}}
+                    <div class="uk-container uk-width-1-1">
+                        <div class="js-upload uk-placeholder uk-text-center" id="labelUpload">
+                            <span uk-icon="icon: cloud-upload"></span>
+                            <span class="uk-text-middle">Attach a label template for this batch only by dropping it here or</span>
+                            <div uk-form-custom>
+                                <input type="file">
+                                <span class="uk-link">select one</span>
+                            </div>
+                        </div>
+                        <progress id="labelProgressbar" class="uk-progress" value="0" max="100" hidden></progress>
+                        <btn click="createLabels" class="left uk-margin-bottom uk-margin-right" title="Create" icon="plus" type="primary" />
+                    </div>
+                {{/}}
+            </listSearch>
+        {{/each}}
+	</div>
+</div>

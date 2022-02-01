@@ -1,0 +1,123 @@
+
+
+<div class="uk-container uk-width-expand uk-margin-auto-vertical buttonFixedBottom">
+    <div class="uk-margin-auto uk-margin-auto-vertical 
+        {{((@shared.desktop && @shared.widthLevel >= 1) || @shared.tablet)? 'uk-container-xsmall uk-padding': ''}}">
+        <div class="animate uk-child-width-1-1@m uk-margin-auto">
+            <div>
+                <div class="{{((@shared.desktop && @shared.widthLevel >= 1) || @shared.tablet)? 'uk-card largeRounded': ''}} 
+                    uk-card-default uk-overflow-hidden uk-grid-collapse uk-flex-middle" uk-grid>
+                    <div class="uk-card-header uk-width-1-1 uk-grid-collapse uk-padding uk-padding-remove-right uk-padding-remove-left" uk-grid>
+                        <div class="uk-flex-middle uk-width-1-1">
+                            <div class="uk-width-expand uk-width-1-1 uk-text-center">
+                                <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom">
+                                    <span>
+                                        Feedback
+                                    </span>
+                                </h1>
+                                <div class="uk-width-expand uk-width-1-1">
+                                    <span class="uk-text-meta uk-margin-remove-bottom">
+                                        CREATED: <time uk-tooltip="title: {{feedback.current.productData.createdAt}}">
+                                            {{@shared.moment(feedback.current.productData.createdAt)}}
+                                        </time>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="uk-card-body uk-width-1-1 uk-grid-collapse uk-padding" uk-grid>
+                        <p class="uk-width-1-1">
+                            USER: <a>{{feedback.current.userData.name}}</a>
+                        </p>
+                        <p class="uk-width-1-1">
+                            EMAIL: <a>{{feedback.current.userData.email}}</a>
+                        </p>
+                        {{#feedback.current.code}}
+                            <p class="uk-width-1-1">
+                                CODE: <a href="/code/{{feedback.current.code}}" on-click="routerLoad">{{feedback.current.code}}</a>
+                            </p>
+                        {{/}}
+                    </div>
+                    {{#feedback.current.productData.questions.length > 0}}
+                        <div class="uk-card-body uk-width-1-1 uk-grid-collapse uk-padding" uk-grid>
+                            <h4 class="uk-heading-line uk-text-center uk-width-1-1 uk-margin-bottom">
+                                <span>Product Answers</span>
+                            </h4>
+                            {{#feedback.current.productData.questions}}
+                                <article class="uk-comment uk-width-1-1 uk-margin-bottom">
+                                    <header class="uk-comment-header">
+                                        <h6 class="uk-margin-remove-bottom">Question: {{title}}</h6>
+                                        <span class="uk-comment-meta uk-margin-remove-top">
+                                            CREATED <time uk-tooltip="title: {{feedback.current.createdAt}}">
+                                            {{@shared.moment(feedback.current.createdAt)}}</time>
+                                        </span>
+                                    </header>
+                                    <div class="uk-comment-body">
+                                        {{#options}}
+                                            {{#active === true}}
+                                                ANSWER: {{this.title}}
+                                            {{/}}
+                                        {{/}}
+                                    </div>
+                                    <hr>
+                                </article>
+                            {{/}}
+                        </div>
+                    {{/}}
+                    {{#feedback.current.batchData.questions.length > 0}}
+                        <div class="uk-card-body uk-width-1-1 uk-grid-collapse uk-padding" uk-grid>
+                            <h4 class="uk-heading-line uk-text-center uk-width-1-1 uk-margin-bottom">
+                                <span>Batch Answers</span>
+                            </h4>
+                            {{#feedback.current.batchData.questions}}
+                                <article class="uk-comment uk-width-1-1 uk-margin-bottom">
+                                    <header class="uk-comment-header">
+                                        <h6 class="uk-margin-remove-bottom">Question: {{title}}</h6>
+                                        <span class="uk-comment-meta uk-margin-remove-top">
+                                            CREATED <time uk-tooltip="title: {{feedback.current.createdAt}}">
+                                            {{@shared.moment(feedback.current.createdAt)}}</time>
+                                        </span>
+                                    </header>
+                                    <div class="uk-comment-body">
+                                        {{#options}}
+                                            {{#active === true}}
+                                                ANSWER: {{this.title}}
+                                            {{/}}
+                                        {{/}}
+                                    </div>
+                                    <hr>
+                                </article>
+                            {{/}}
+                        </div>
+                    {{/}}
+                    {{#feedback.current.organizationData.questions.length > 0 && !feedback.current.product && !feedback.current.batch && !feedback.current.facility}}
+                        <div class="uk-card-body uk-width-1-1 uk-grid-collapse uk-padding" uk-grid>
+                            <h4 class="uk-heading-line uk-text-center uk-width-1-1 uk-margin-bottom">
+                                <span>Organization Answers</span>
+                            </h4>
+                            {{#feedback.current.organizationData.questions}}
+                                <article class="uk-comment uk-width-1-1 uk-margin-bottom">
+                                    <header class="uk-comment-header">
+                                        <h6 class="uk-margin-remove-bottom">Question: {{title}}</h6>
+                                        <span class="uk-comment-meta uk-margin-remove-top">
+                                            CREATED <time uk-tooltip="title: {{feedback.current.createdAt}}">
+                                            {{@shared.moment(feedback.current.createdAt)}}</time>
+                                        </span>
+                                    </header>
+                                    <div class="uk-comment-body">
+                                        {{#options}}
+                                            {{#active === true}}
+                                                ANSWER: {{this.title}}
+                                            {{/}}
+                                        {{/}}
+                                    </div>
+                                    <hr>
+                                </article>
+                            {{/}}
+                        </div>
+                    {{/}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

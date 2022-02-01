@@ -1,0 +1,44 @@
+
+<div class="uk-container uk-width-expand uk-margin-auto-vertical buttonFixedBottom">
+    <div class="uk-margin-auto uk-margin-auto-vertical 
+        {{((@shared.desktop && @shared.widthLevel >= 1) || @shared.tablet)? 'uk-container-xsmall uk-padding': ''}}">
+        <div class="animate uk-child-width-1-1@m uk-margin-auto">
+            <div>
+                <div class="{{((@shared.desktop && @shared.widthLevel >= 1) || @shared.tablet)? 'uk-card largeRounded': ''}} 
+                    uk-card-default uk-overflow-hidden uk-grid-collapse uk-flex-middle" uk-grid>
+                    <slideshow items="{{organization.current.images}}" 
+                        roundedTop="{{((@shared.desktop && @shared.widthLevel >= 1) || @shared.tablet)? true: false}}"></slideshow>
+                    <div class="uk-card-header uk-width-1-1 uk-grid-collapse" uk-grid>
+                        <div class="uk-flex-middle uk-width-1-1 uk-padding uk-padding-remove-right uk-padding-remove-left">
+                            <div class="uk-width-expand uk-width-1-1 uk-text-center">
+                                {{#organization.current.homepage}}
+                                    <div class="uk-margin-remove-bottom uk-width-1-1">
+                                        <a href="{{organization.current.homepage}}" target="_blank" class="uk-width-1-1">WEBSITE</a>
+                                    </div>  
+                                {{/}}
+                                <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom"><span>{{organization.current.name}}</span></h1>
+                                <div class="uk-width-expand uk-width-1-1">
+                                    <span class="uk-text-meta uk-margin-remove-bottom">
+                                        CREATED: <time uk-tooltip="title: {{organization.current.createdAt}}">
+                                            {{@shared.moment(organization.current.createdAt)}}
+                                        </time>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="uk-card-body uk-width-1-1 uk-grid-collapse" uk-grid>
+                        <p class="noHL uk-width-1-1 uk-padding">
+                            {{{organization.current.description && @shared.markdownConvert(organization.current.description)}}}
+                        </p>
+                    </div>
+                    <slideshow items="{{organization.current.attachments}}"></slideshow>
+                    {{#if (/admin|owner/.test(@shared.account.role) && @shared.account.organization === organization.current._id)}}
+                        <btn full="{{true}}" toggle="#editOrganization" type="primary" class="uk-width-1-1">Edit</btn>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{>organizationEditModal}}

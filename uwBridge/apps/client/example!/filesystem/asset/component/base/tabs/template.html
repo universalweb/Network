@@ -1,0 +1,15 @@
+<div>
+<ul class="uk-child-width-expand uk-tab uk-flex-center" uk-tab>
+    {{#each tabs as item}}
+        <li class="{{(item.opened)? 'uk-active' : ''}}" on-click="@.fire('changeTab', @context, item, @key)">
+            <a>{{item.tab.title}} 
+                {{#if $.isString(item.tab.icon)}}
+                    <icon class="uk-margin-small-left" name="{{item.tab.icon}}" ratio="{{item.tab.iconRatio || '.8'}}" />
+                {{elseif item.tab.icon}}
+                    <icon class="uk-margin-small-left" name="{{item.tab.icon.name}}" ratio="{{item.tab.icon.ratio || '.8'}}" />
+                {{/if}}
+            </a>
+        </li>
+    {{/each}}
+</ul>
+</div>

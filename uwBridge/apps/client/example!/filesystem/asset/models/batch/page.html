@@ -1,0 +1,235 @@
+
+
+
+<div class="uk-container uk-width-expand uk-margin-auto-vertical buttonFixedBottom">
+    <div class="uk-margin-auto uk-margin-auto-vertical 
+        {{((@shared.desktop && @shared.widthLevel >= 1) || @shared.tablet)? 'uk-container-xsmall uk-padding': ''}}">
+        <div class="animate uk-child-width-1-1@m uk-margin-auto">
+            <div>
+                <div class="{{((@shared.desktop && @shared.widthLevel >= 1) || @shared.tablet)? 'uk-card largeRounded': ''}} 
+                    uk-card-default uk-overflow-hidden uk-grid-collapse uk-flex-middle" uk-grid>
+                    <slideshow items="{{batch.current.images}}" 
+                        roundedTop="{{((@shared.desktop && @shared.widthLevel >= 1) || @shared.tablet)? true: false}}"></slideshow>
+                    <div class="uk-card-header uk-width-1-1 uk-grid-collapse" uk-grid>
+                        <div class="uk-flex-middle uk-width-1-1 uk-padding uk-padding-remove-bottom uk-padding-remove-left uk-padding-remove-right">
+                            <div class="uk-width-expand uk-width-1-1 uk-text-center">
+                                {{#batch.current.homepage}}
+                                    <div class="uk-margin-remove-bottom uk-width-1-1">
+                                        <a href="{{batch.current.homepage}}" target="_blank" class="uk-width-1-1">WEBSITE</a>
+                                    </div>
+                                {{/}}
+                                <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom">
+                                    <span>
+                                        {{batch.current.name}}
+                                    </span>
+                                </h1>
+                                <div class="uk-width-expand uk-width-1-1">
+                                    <a href="/codes/{{batch.current._id}}" on-click="routerLoad">
+                                        <span class="uk-label">CODES: {{batch.current.codeCount}}</span> 
+                                    </a>
+                                    <a href="/scans/batch/{{batch.current._id}}" on-click="routerLoad">
+                                        <span class="uk-label">SCANS: {{batch.current.scanCount}}</span> 
+                                    </a>
+                                    <a href="/feedback/batch/{{batch.current._id}}" on-click="routerLoad">
+                                        <span class="uk-label">FEEDBACK: {{batch.current.feedbackCount}}</span> 
+                                    </a>
+                                </div>
+                                <div class="uk-width-expand uk-width-1-1">
+                                    <span class="uk-text-meta uk-margin-remove-bottom">
+                                        CREATED: <time uk-tooltip="title: {{batch.current.createdAt}}">
+                                            {{@shared.moment(batch.current.createdAt)}}
+                                        </time>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="uk-card-body uk-width-1-1 uk-grid-collapse" uk-grid>
+                            <p class="noHL uk-width-1-1 uk-padding">
+                                {{{batch.current.description && @shared.markdownConvert(batch.current.description)}}}
+                            </p>
+                        </div>
+                        {{#batch.current.questions.length > 0}}
+                            <div class="uk-card-body uk-width-1-1 uk-grid-collapse uk-padding" uk-grid>
+                                <h5 class="uk-margin-remove">Questions</h5>
+                                <p class="noHL uk-width-1-1 uk-padding">
+                                    <questions items="{{batch.current.questions}}"></questions>
+                                </p>
+                            </div>
+                        {{/}}
+                    </div>
+                    <slideshow items="{{batch.current.attachments}}"></slideshow>
+                    {{#if batch.current.productData}}
+                        <div class="uk-card-header uk-width-1-1 uk-grid-collapse" uk-grid>
+                            <div class="uk-flex-middle uk-width-1-1 uk-padding uk-padding-remove-left uk-padding-remove-right">
+                                <div class="uk-width-expand uk-width-1-1 uk-text-center">
+                                    {{#batch.current.productData.homepage}}
+                                        <div class="uk-margin-remove-bottom uk-width-1-1">
+                                            <a href="{{batch.current.productData.homepage}}" target="_blank" class="uk-width-1-1">WEBSITE</a>
+                                        </div>  
+                                    {{/}}
+                                    <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom">
+                                        <span>
+                                            <a href="/product/{{batch.current.productData._id}}">{{batch.current.productData.name}}</a>
+                                        </span>
+                                    </h1>
+                                    <div class="uk-width-expand uk-width-1-1">
+                                        <span class="uk-text-meta uk-margin-remove-bottom">
+                                            <span class="uk-label">PRODUCT</span> 
+                                            CREATED: <time uk-tooltip="title: {{batch.current.productData.createdAt}}">
+                                                {{@shared.moment(batch.current.productData.createdAt)}}
+                                            </time>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <slideshow items="{{batch.current.productData.images}}"></slideshow>
+                        <div class="uk-card-body uk-width-1-1 uk-grid-collapse" uk-grid>
+                            <p class="noHL uk-width-1-1 uk-padding">
+                                {{{batch.current.productData.description && @shared.markdownConvert(batch.current.productData.description)}}}
+                            </p>
+                        </div>
+                        {{#batch.current.productData.questions.length > 0}}
+                            <div class="uk-card-body uk-width-1-1 uk-grid-collapse uk-padding" uk-grid>
+                                <h5 class="uk-margin-remove">Product Questions</h5>
+                                <p class="noHL uk-width-1-1 uk-padding">
+                                    <questions items="{{batch.current.productData.questions}}"></questions>
+                                </p>
+                            </div>
+                        {{/}}
+                        <slideshow items="{{batch.current.productData.attachments}}"></slideshow>
+                    {{/if}}
+                    {{#if batch.current.batchData}}
+                        <div class="uk-card-header uk-width-1-1 uk-grid-collapse" uk-grid>
+                            <div class="uk-flex-middle uk-width-1-1 uk-padding uk-padding-remove-left uk-padding-remove-right">
+                                <div class="uk-width-expand uk-width-1-1 uk-text-center">
+                                    {{#batch.current.homepage}}
+                                        <div class="uk-margin-remove-bottom uk-width-1-1">
+                                            <a href="{{batch.current.homepage}}" target="_blank" class="uk-width-1-1">WEBSITE</a>
+                                        </div>  
+                                    {{/}}
+                                    <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom"><span>{{batch.current.batchData.name}}</span></h1>
+                                    <div class="uk-width-expand uk-width-1-1">
+                                        <span class="uk-text-meta uk-margin-remove-bottom">
+                                            <span class="uk-label">BATCH</span> 
+                                            CREATED: <time uk-tooltip="title: {{batch.current.batchData.createdAt}}">
+                                                {{@shared.moment(batch.current.batchData.createdAt)}}
+                                            </time>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <slideshow items="{{batch.current.batchData.images}}"></slideshow>
+                        <div class="uk-card-body uk-width-1-1 uk-grid-collapse" uk-grid>
+                            <p class="noHL uk-width-1-1 uk-padding">
+                                {{{batch.current.batchData.description && @shared.markdownConvert(batch.current.batchData.description)}}}
+                            </p>
+                        </div>
+                        {{#batch.current.questions.length > 0}}
+                            <div class="uk-card-body uk-width-1-1 uk-grid-collapse uk-padding" uk-grid>
+                                <h5 class="uk-margin-remove">Batch Questions</h5>
+                                <p class="noHL uk-width-1-1 uk-padding">
+                                    <questions items="{{batch.current.questions}}"></questions>
+                                </p>
+                            </div>
+                        {{/}}
+                        <slideshow items="{{batch.current.batchData.attachments}}"></slideshow>
+                    {{/if}}
+                    {{#if batch.current.facilityData}}
+                        <div class="uk-card-header uk-width-1-1 uk-grid-collapse" uk-grid>
+                            <div class="uk-flex-middle uk-width-1-1 uk-padding uk-padding-remove-right uk-padding-remove-left">
+                                <div class="uk-width-expand uk-width-1-1 uk-text-center">
+                                    {{#batch.current.facilityData.homepage}}
+                                        <div class="uk-margin-remove-bottom uk-width-1-1">
+                                            <a href="{{batch.current.facilityData.homepage}}" target="_blank" class="uk-width-1-1">WEBSITE</a>
+                                        </div>  
+                                    {{/}}
+                                    <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom">
+                                        <span>
+                                            <a href="/facility/{{batch.current.facility}}" on-click="routerLoad">
+                                                {{batch.current.facilityData.name}}
+                                            </a>
+                                        </span>
+                                    </h1>
+                                    <div class="uk-width-expand uk-width-1-1">
+                                        <span class="uk-text-meta uk-margin-remove-bottom">
+                                            <span class="uk-label">FACILITY</span> 
+                                            CREATED: <time uk-tooltip="title: {{batch.current.facilityData.createdAt}}">
+                                                {{@shared.moment(batch.current.facilityData.createdAt)}}
+                                            </time>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <slideshow items="{{batch.current.facilityData.images}}"></slideshow>
+                        <div class="uk-card-body uk-width-1-1 uk-grid-collapse" uk-grid>
+                            <p class="noHL uk-width-1-1 uk-padding">
+                                {{{batch.current.facilityData.description && @shared.markdownConvert(batch.current.facilityData.description)}}}
+                            </p>
+                        </div>
+                        {{#batch.current.facilityData.questions.length > 0}}
+                            <div class="uk-card-body uk-width-1-1 uk-grid-collapse uk-padding" uk-grid>
+                                <h5 class="uk-margin-remove">Facility Questions</h5>
+                                <p class="noHL uk-width-1-1 uk-padding">
+                                    <questions items="{{batch.current.facilityData.questions}}"></questions>
+                                </p>
+                            </div>
+                        {{/}}
+                        <slideshow items="{{batch.current.facilityData.attachments}}"></slideshow>
+                    {{/if}}
+                    {{#if batch.current.organizationData}}
+                        <div class="uk-card-header uk-width-1-1 uk-grid-collapse" uk-grid>
+                            <div class="uk-flex-middle uk-width-1-1 uk-padding uk-padding-remove-right uk-padding-remove-left">
+                                <div class="uk-width-expand uk-width-1-1 uk-text-center">
+                                    {{#batch.current.organizationData.homepage}}
+                                        <div class="uk-margin-remove-bottom uk-width-1-1">
+                                            <a href="{{batch.current.organizationData.homepage}}" target="_blank" class="uk-width-1-1">WEBSITE</a>
+                                        </div>  
+                                    {{/}}
+                                    <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom">
+                                        <span>
+                                            <a href="/organization/{{batch.current.organization}}" on-click="routerLoad">
+                                                {{batch.current.organizationData.name}}
+                                            </a>
+                                        </span>
+                                    </h1>
+                                    <div class="uk-width-expand uk-width-1-1">
+                                        <span class="uk-text-meta uk-margin-remove-bottom">
+                                            <span class="uk-label">ORGANIZATION</span> 
+                                            CREATED: <time uk-tooltip="title: {{batch.current.organizationData.createdAt}}">
+                                                {{@shared.moment(batch.current.organizationData.createdAt)}}
+                                            </time>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <slideshow items="{{batch.current.organizationData.images}}"></slideshow>
+                        <div class="uk-card-body uk-width-1-1 uk-grid-collapse" uk-grid>
+                            <p class="noHL uk-width-1-1 uk-padding">
+                                {{{batch.current.organizationData.description && @shared.markdownConvert(batch.current.organizationData.description)}}}
+                            </p>
+                        </div>
+                        {{#batch.current.organizationData.questions.length > 0}}
+                            <div class="uk-card-body uk-width-1-1 uk-grid-collapse uk-padding" uk-grid>
+                                <h5 class="uk-margin-remove">Organization Questions</h5>
+                                <p class="noHL uk-width-1-1 uk-padding">
+                                    <questions items="{{batch.current.organizationData.questions}}"></questions>
+                                </p>
+                            </div>
+                        {{/}}
+                        <slideshow items="{{batch.current.organizationData.attachments}}"></slideshow>
+                    {{/if}}
+                    <div class="uk-button-group uk-width-1-1">
+                        <btn toggle="#removeBatch" class="uk-width-1-2" type="danger" icon="trash" title="Delete" />
+                        <btn toggle="#editBatch" class="uk-width-1-2" type="primary" icon="pencil" title="Edit" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{>batchEditModal}}
+{{>batchRemoveModal}}

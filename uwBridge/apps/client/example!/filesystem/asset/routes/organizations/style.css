@@ -1,0 +1,52 @@
+.mediumScreen .pageComponent .uk-card-default {
+    min-width: 85%;
+}
+.pageComponent .uk-card-default {
+    min-width: 50%;
+    max-width: 90%;
+}
+
+.uk-list li {
+    cursor: pointer;
+}
+
+.uk-list li:hover {
+    color: #1e87f0;
+}
+
+.uk-table.splitRows {
+    border-collapse: separate;
+    border-spacing: 0 1em;
+    padding: 10px;
+}
+
+.uk-table.splitRows tbody tr {
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.1s linear;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 5%), 0em 0em 1em rgb(0 0 0 / 5%);
+    border-radius: 3px;
+}
+
+.uk-table-hover tbody tr:hover,
+.uk-table-hover > tr:hover {
+    box-shadow: 0 2px 8px rgb(0 0 0 / 8%), 0em 0em 1em rgb(0 0 0 / 15%) , inset .3em 0em 0em #00D7C5;
+}
+
+.uk-table.splitRows th {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.uk-table.splitRows tr td {
+    border-bottom: 1px solid rgba(0 0 0 / 10%);
+}
+
+.uk-table.splitRows tr td:first-child {
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+.uk-table.splitRows tr td:last-child {
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}

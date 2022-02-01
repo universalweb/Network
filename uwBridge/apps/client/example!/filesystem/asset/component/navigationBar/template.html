@@ -1,0 +1,57 @@
+<nav id="mainNavBar" class="uk-navbar-container uk-width-expand uk-position-top uk-grid-collapse" uk-navbar>
+    <div class="uk-navbar-left">
+        <ul class="uk-navbar-nav">
+            {{#items.left}}
+				{{#@shared.loginStatus === this.loginState || this.loginState === undefined}}
+					<li class="{{active ? 'uk-active' : ''}}" on-click="(click)? @.fire('multi', @context, click) : ''" uk-tooltip="title: {{!@shared.mobile && (tooltip || tooltips())}}">
+						<a>
+							{{#icon}}
+								<icon name="{{name}}" ratio="2" />
+							{{/}}
+							{{#if icons}}
+								<icon name="{{icons()}}" ratio="1.5" />
+							{{/if}}
+							{{#if this.text && @global.navigator.userAgentData.mobile}}
+								{{text}}
+							{{/if}}
+							{{#if count && count > 0}}
+								<span class="uk-badge">{{count}}</span>
+							{{/if}}
+						</a>
+					</li>
+				{{/}}
+            {{/}}
+        </ul>
+    </div>
+    <div class="uk-navbar-center uk-navbar-item uk-logo">
+        <a class="uk-navbar-item uk-logo" on-click="routerLoad" href="/"><img width="40" src="{{@shared.logo.image}}">{{@shared.logo.title}}</a>
+    </div>
+    <div class="uk-navbar-right">
+        <ul class="uk-navbar-nav">
+            {{#items.right}}
+				{{#@shared.loginStatus === this.loginState || this.loginState === undefined}}
+					{{#this.hide === false || this.hide === undefined}}
+						{{#ifShow === undefined || ifShow()}}
+							<li class="{{active ? 'uk-active' : ''}}" on-click="(click)? @.fire('multi', @context, click) : ''" uk-tooltip="title: {{(@shared.mobile)?  '' : (icon) ? icon.tooltip : (icons && active) ? icons.open.tooltip : icons.close.tooltip}}">
+								<a>
+									{{#icon}}
+										<icon name="{{icon}}" ratio="2" />
+									{{/}}
+									{{#if icons}}
+										<icon name="{{(this.active)? icons.open.icon : icons.close.icon}}" ratio="1.5" />
+									{{/if}}
+									{{#if this.text && @global.navigator.userAgentData.mobile}}
+										{{text}}
+									{{/if}}
+									{{#if count && count > 0}}
+										<span class="uk-badge">{{count}}</span>
+									{{/if}}
+								</a>
+							</li>
+						{{/}}
+					{{/}}
+				{{/}}
+            {{/}}
+        </ul>
+    </div>
+</nav>

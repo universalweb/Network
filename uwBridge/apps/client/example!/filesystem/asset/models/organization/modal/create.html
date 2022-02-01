@@ -1,0 +1,93 @@
+<div id="editOrganization" class="uk-flex-top uk-modal-container" uk-modal>
+    <div class="uk-modal-dialog  uk-margin-auto-vertical uk-modal-container">
+        <btn modalCloseDefault="true" />
+        <div class="uk-modal-header">
+            <h2 class="uk-modal-title">Edit Organization</h2>
+        </div>
+        
+        <div class="uk-modal-body" uk-overflow-auto>
+            
+            <form class="uk-form-stacked">
+                <fieldset class="uk-fieldset">
+                    
+                    <ul class="uk-subnav uk-subnav-pill" uk-switcher="connect: .switcher-container-first; animation: uk-animation-fade;">
+                        <li><a class="uk-active">Name</a></li>
+                        <li><a>Website</a></li>
+                        <li><a>Question</a></li>
+                    </ul>
+                    
+                    <div class="uk-switcher switcher-container-first uk-padding-small">
+                        <div><inpt class="uk-width-1-1" label="Organization Name" placeholder="Example Name" value="{{organization.create.name}}" /></div>
+                        <div><inpt label="Organization Website" placeholder="https://akerna.com" value="{{organization.create.homepage}}" /></div>
+                        <div>
+                            {{#with organization.create.questions}}
+                                <ul class="uk-grid-medium uk-child-width-auto uk-child-width-auto@s uk-text-center" data-keypath="{{@keypath}}" on-moved="organization.create.moved" uk-sortable="handle: .uk-card" uk-grid>
+                                    {{#organization.create.questions}}
+                                        <li data-keypath="{{@keypath}}" data-index="{{@index}}">
+                                            <div class="uk-sortable-handle uk-border-rounded uk-card uk-card-default uk-card-body uk-animation-slide-bottom-small uk-text-center">
+                                                <span class="uk-icon-button pointer uk-position-absolute uk-light" 
+                                                    style="right: -10px; top: -10px" uk-icon="fa-times" 
+                                                        on-click="['organization.create.removeQuestion', @rootpath, @index]"></span>
+
+                                                QUESTION: {{this.title}}
+                                                <div class="uk-child-width-auto uk-grid-small uk-margin-top uk-margin-bottom" uk-grid data-keypath="{{@keypath}}.options" on-moved="organization.create.moved" uk-sortable="handle: .uk-tile">
+                                                    {{#each this.options: index, key}}
+                                                        <div data-keypath="{{@keypath}}" data-index="{{@index}}">
+                                                            <div class="uk-tile uk-tile-primary uk-dark uk-flex uk-flex-center uk-flex-middle uk-padding-small uk-border-rounded">
+                                                                <span class="uk-icon-button pointer uk-position-absolute uk-light" 
+                                                                    style="right: -10px; top: -10px" uk-icon="fa-times" 
+                                                                    on-click="['organization.create.removeAnswer', @keypath]"></span>
+                                                                {{this.title}}
+                                                            </div>
+                                                        </div>
+                                                    {{/each}}
+                                                </div>
+                                                <inpt type="text" keyup="organization.create.answer" minlength="3" minlength="80" keypath="{{@keypath}}" 
+                                                    placeholder="Type an answer & hit Enter!" value="{{this.value}}"  />
+                                            </div>
+                                        </li>
+                                    {{/}}
+                                </ul>
+                            {{/with}}
+                            <inpt label="Type a question & hit Enter" minlength="3" minlength="80"
+                                keyup="organization.create.question" placeholder="Question?" value="{{organization.create.question}}" />
+                        </div>
+                    </div>
+                    
+                    <ul class="uk-subnav uk-subnav-pill" uk-switcher="connect: .switcher-container-content; animation: uk-animation-fade;">
+                        <li><a class="uk-active">Text</a></li>
+                        <li><a>HTML</a></li>
+                    </ul>
+                    <div class="uk-switcher uk-margin switcher-container-content uk-padding-small">
+                        <div><inpt label="description" type="textarea" placeholder="Description of Organization" value="{{organization.create.description}}" /></div>
+                        <div><inpt label="HTML Content" type="textarea" placeholder="HTML of Organization" value="{{organization.create.html}}" /></div>
+                    </div>
+                    <div class="spacebox spaceboxLarge"></div>
+                    <ul class="uk-subnav uk-subnav-pill" uk-switcher="; animation: uk-animation-fade;">
+                        <li><a class="uk-active">Images</a></li>
+                        <li><a>Attachments</a></li>
+                    </ul>
+                    <div class="uk-switcher uk-margin uk-padding-small uk-padding-small">
+                        <uploadImg items="{{organization.create.images}}" loading="{{organization.create.loadingImage}}" 
+                            onDrop="organization.create.dropImage" onChange="organization.create.loadImage"
+                            remove="organization.create.removeImage" removeRaw="organization.create.removeImageRaw">
+                            Upload product images by dropping it here or
+                        </uploadImg>
+
+                        <uploadImg items="{{organization.create.attachments}}" loading="{{organization.create.loadingAttachment}}" 
+                            onDrop="organization.create.dropAttachment" onChange="organization.create.loadAttachment"
+                            remove="organization.create.removeAttachment" removeRaw="organization.create.removeAttachmentRaw">
+                                Upload image attachments by dropping it here or
+                        </uploadImg>
+                    </div>
+                    
+                </fieldset>
+            </form>
+            
+        </div>
+        <div class="uk-modal-footer uk-text-right">
+            <btn modalClose="true" title="Cancel" />
+            <btn type="primary" icon="check" click="organization.edit" title="edit" />
+        </div>
+    </div>  
+</div>

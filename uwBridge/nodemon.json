@@ -1,6 +1,6 @@
 {
     "ignore": ["node_modules/", "./apps/client/**/filesystem/**", "./system/compile/**", "**.json", "**.css", "**.html"],
-    "watch": ["apps/client/akerna/api/*.js", "system/filesystem/","system/setup/"],
+    "watch": ["apps/client/akerna/api/**", "system/filesystem/**","system/setup/**"],
     "delay": 1000,
     "execMap": {
         "js": "node index.js"

@@ -1,0 +1,63 @@
+<div id="editOrganization" class="uk-flex-top uk-modal-container" uk-modal>
+    <div class="uk-modal-dialog  uk-margin-auto-vertical uk-modal-container">
+        <btn modalCloseDefault="true" />
+        <div class="uk-modal-header">
+            <h2 class="uk-modal-title">Edit Organization</h2>
+        </div>
+        
+        <div class="uk-modal-body" uk-overflow-auto>
+            
+            <form class="uk-form-stacked">
+                <fieldset class="uk-fieldset">
+                    
+                    <ul class="uk-subnav uk-subnav-pill" uk-switcher="connect: .switcher-container-first; animation: uk-animation-fade;">
+                        <li><a class="uk-active">Name</a></li>
+                        <li><a>Website</a></li>
+                        <li><a>Question</a></li>
+                    </ul>
+                    
+                    <div class="uk-switcher switcher-container-first uk-padding-small">
+                        <div><inpt class="uk-width-1-1" label="Organization Name" placeholder="Example Name" value="{{organization.edit.name}}" /></div>
+                        <div><inpt label="Organization Website" placeholder="https://akerna.com" value="{{organization.edit.homepage}}" /></div>
+                        <div>
+                            <question item="{{organization.edit.question}}" />
+                        </div>
+                    </div>
+                    
+                    <ul class="uk-subnav uk-subnav-pill" uk-switcher="connect: .switcher-container-content; animation: uk-animation-fade;">
+                        <li><a class="uk-active">Text</a></li>
+                        <li><a>HTML</a></li>
+                    </ul>
+                    <div class="uk-switcher uk-margin switcher-container-content uk-padding-small">
+                        <div><inpt label="description" type="textarea" placeholder="Description of Organization" value="{{organization.edit.description}}" /></div>
+                        <div><inpt label="HTML Content" type="textarea" placeholder="HTML of Organization" value="{{organization.edit.html}}" /></div>
+                    </div>
+                    <div class="spacebox spaceboxLarge"></div>
+                    <ul class="uk-subnav uk-subnav-pill" uk-switcher="; animation: uk-animation-fade;">
+                        <li><a class="uk-active">Images</a></li>
+                        <li><a>Attachments</a></li>
+                    </ul>
+                    <div class="uk-switcher uk-margin uk-padding-small uk-padding-small">
+                        <uploadImg items="{{organization.edit.images}}" loading="{{organization.edit.loadingImage}}" 
+                            onDrop="organization.edit.dropImage" onChange="organization.edit.loadImage"
+                            remove="organization.edit.removeImage" removeRaw="organization.edit.removeImageRaw">
+                            Upload product images by dropping it here or
+                        </uploadImg>
+
+                        <uploadImg items="{{organization.edit.attachments}}" loading="{{organization.edit.loadingAttachment}}" 
+                            onDrop="organization.edit.dropAttachment" onChange="organization.edit.loadAttachment"
+                            remove="organization.edit.removeAttachment" removeRaw="organization.edit.removeAttachmentRaw">
+                                Upload image attachments by dropping it here or
+                        </uploadImg>
+                    </div>
+                    
+                </fieldset>
+            </form>
+            
+        </div>
+        <div class="uk-modal-footer uk-text-right">
+            <btn modalClose="true" title="Cancel" />
+            <btn type="primary" icon="check" click="organization.edit" title="edit" />
+        </div>
+    </div>  
+</div>

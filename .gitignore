@@ -31,8 +31,7 @@ tests/*
 
 # Example UWBridge #
 ############
-uwBridge/apps/client/*
-!uwBridge/apps/client/example/*
+uwBridge/apps/client/akerna/
 
 # Logs and databases #
 ######################

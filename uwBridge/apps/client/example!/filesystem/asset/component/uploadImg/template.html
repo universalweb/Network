@@ -1,0 +1,53 @@
+<div>
+    <div class="uk-grid-match uk-grid-column-small uk-grid-row-small 
+    uk-text-center uk-text-uppercase uk-flex-left" uk-grid uk-lightbox="animation: fade">
+        {{#items}}
+            <div class="uk-width-1-3@m uk-card uk-animation-fade uk-padding-small">
+                <a class="uk-inline uk-margin-auto-vertical" data-type="image" 
+                    href="{{(this.file || this.includes('data:image'))? (this.file || this) : `/attachment/${this}` }}">
+                    <span class="uk-icon-button uk-position-absolute uk-transform-center uk-light" 
+                    style="right: -25px; top: 10px" uk-icon="fa-times" 
+                        on-click="@.fire(remove, @context, this.file || this , @index)"></span>
+                        <div class="uk-overflow-hidden"><img src="{{(this.file || this.includes('data:image'))? this.file || this : `/attachment/${this}` }}" class="uk-border-rounded" /></div>
+                    
+                </a>
+            </div>
+        {{/}}
+        {{#itemPath && itemPath.path.length > 0}}
+            <div class="uk-width-1-3@m uk-card uk-animation-fade uk-padding-small">
+                <a class="uk-inline uk-margin-auto-vertical" data-type="image" 
+                    href="{{itemPath.path.includes('data:image')? itemPath.path : `/attachment/${itemPath.path}` }}">
+                    <span class="uk-icon-button uk-position-absolute uk-transform-center uk-light" 
+                    style="right: -25px; top: 10px" uk-icon="fa-times" 
+                        on-click="@.fire(remove, @context, itemPath.path, @index)"></span>
+                    <div class="uk-overflow-hidden">
+                        <img src="{{itemPath.path.includes('data:image')? itemPath.path : `/attachment/${itemPath.path}` }}" class="uk-border-rounded" />
+                    </div>
+                </a>
+            </div>
+        {{/}}
+        {{#item && item.length > 0}}
+            <div class="uk-width-1-3@m uk-card uk-animation-fade uk-padding-small">
+                <a class="uk-inline uk-margin-auto-vertical" data-type="image" 
+                    href="{{item.includes('data:image')? item : `/attachment/${item}` }}">
+                    <span class="uk-icon-button uk-position-absolute uk-transform-center uk-light" 
+                    style="right: -25px; top: 10px" uk-icon="fa-times" 
+                        on-click="@.fire(remove, @context, item, @index)"></span>
+                        <div class="uk-overflow-hidden"><img src="{{item.includes('data:image')? item : `/attachment/${item}` }}" class="uk-border-rounded" /></div>
+                </a>
+            </div>
+        {{/}}
+    </div>
+    <div class="js-upload uk-placeholder uk-text-center test" 
+    on-drop="[this.onDrop]" on-dragover="dragover" on-dragleave="dragleave" on-dragenter="dragenter">
+        {{#loading}}
+            <div uk-spinner></div>
+        {{/}}
+        <span uk-icon="icon: cloud-upload"></span>
+        <span class="uk-text-middle">{{message}}{{>content}}</span>
+        <div uk-form-custom>
+            <input type="file" accept="image/*" on-change="[this.onChange]" multiple />
+            <span class="uk-link">click here</span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,112 @@
+<div class="uk-container uk-width-expand uk-margin-auto-vertical uk-animation-fade">
+	<div class="uk-container uk-flex uk-container-expand pageComponent">
+		<div class="animate uk-card uk-card-default uk-margin-auto uk-margin-auto-vertical marginAuto 
+		{{buttonTitle ? 'withButtonBlock' : ''}} {{color ? color : ''}}">
+			<div class="uk-card-header">
+				<div class="uk-grid-small uk-flex-middle" uk-grid>
+					<div class="uk-width-expand">
+						<h3 class="uk-card-title uk-margin-remove-bottom">
+							{{#if tabs}}
+								{{#tabs}}
+									{{#this.active === true}}
+										{{this.title}}
+										{{#this.icon}}
+											<icon name="{{icon.name}}" ratio="1" />
+										{{/}}
+									{{/}}
+								{{/}}
+							{{else}}
+								{{title}} 
+								{{#icon}}
+									<icon name="{{icon.name}}" ratio="1" />
+								{{/}}
+							{{/if}}
+						</h3>
+						<p class="uk-text-meta uk-margin-remove-top">
+							{{#if tabs}}
+								{{#tabs}}
+									{{#this.active === true}}
+										{{this.description}}
+									{{/}}
+								{{/}}
+							{{else}}
+								{{this.description}}
+							{{/if}}
+						</p>
+					</div>
+					{{#headerImage}}
+						<div class="uk-width-auto">
+							<img width="100" src="{{headerImage}}">
+						</div>
+					{{/}}
+				</div>
+			</div>
+			{{#if tabs}}
+					<ul class="uk-child-width-expand uk-tab uk-flex-center" uk-tab>
+						{{#tabs}}
+							<li class="{{active ? 'uk-active' : ''}}" on-click="@.fire('changeTab',@context,@index)">
+								<a>{{this.tab.title}} <icon name='{{this.tab.icon}}' /></a></li>
+						{{/}}
+					</ul>
+				{{/if}}
+			<div class="uk-card-body">
+				{{#if tabs}}
+					{{#tabs}}
+						{{#if active === true && form}}
+							<form>
+								<fieldset class="uk-fieldset">
+								{{#form}}
+									<inpt label="{{label}}" value="{{value}}" description="{{description}}" checked="{{checked}}" tooltip="{{tooltip}}" keyup='keyup' click='click' placeholder="{{placeholder}}" type="{{type || input}}" options="{{options}}" />
+								{{/}}
+								</fieldset>
+							</form>
+						{{/if}}
+					{{/}}
+				{{else}}
+					{{#form}}
+						<form>
+							<fieldset class="uk-fieldset">
+								{{#items}}
+									<inpt label="{{label}}" value="{{value}}" description="{{description}}" checked="{{checked}}" tooltip="{{tooltip}}" keyup='keyup' click='click' placeholder="{{placeholder}}" type="{{type || input}}" options="{{options}}" />
+								{{/}}
+							</fieldset>
+						</form>
+					{{/}}
+				{{/if}}
+				{{#if dynamic}}
+					{{#dynamic:key}}
+						{{#.}}
+							{{>key}}
+						{{/}}
+					{{/}}
+				{{/if}}
+				{{>contentPartial}}
+			</div>
+			{{#if tabs}}
+				{{#tabs}}
+					{{#active === true}}
+						{{#buttons.length}}
+							<div class="uk-card-footer {{noFooterPadding ? 'uk-padding-remove border-remove-top' : ''}}">
+								{{#buttons}}
+									<btn title="{{title}}" full="{{full}}" type="{{type}}" width="{{width}}" size="{{size}}" icon="{{icon}}" click="{{click ? click : ''}}" class="{{class}}" />
+								{{/}}
+							</div>
+						{{/}}
+					{{/}}
+				{{/}}
+			{{elseif footer}}
+				{{#footer}}
+					<div class="uk-card-footer {{noFooterPadding ? 'uk-padding-remove border-remove-top' : ''}}">{{content}}</div>
+				{{/}}
+			{{else}}
+				{{#buttons.length}}
+					<div class="uk-card-footer {{noFooterPadding ? 'uk-padding-remove border-remove-top' : ''}}">
+						{{#buttons}}
+							<btn title="{{title}}" full="{{full}}" type="{{type}}" width="{{width}}" size="{{size}}" icon="{{icon}}" click="{{click ? click : ''}}" class="{{class}}" />
+						{{/}}
+					</div>
+				{{/}}
+			{{/if}}
+		</div>
+	</div>
+</div>

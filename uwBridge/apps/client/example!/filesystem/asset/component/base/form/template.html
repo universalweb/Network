@@ -1,0 +1,10 @@
+<form>
+    <fieldset class="uk-fieldset">
+        {{#legend}}
+            <legend class="uk-legend">{{legend}}</legend>
+        {{/}}
+        {{#items}}
+            <inpt label="{{label}}" value="{{value}}" options="{{options}}" description="{{description}}" checked="{{checked}}" tooltip="{{tooltip}}" keyup='keyup' click='click' placeholder="{{placeholder}}" type="{{type || input}}" />
+        {{/}}
+    </fieldset>
+</form>

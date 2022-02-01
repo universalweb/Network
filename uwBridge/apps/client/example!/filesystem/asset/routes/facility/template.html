@@ -1,0 +1,53 @@
+<div class="uk-container uk-container-expand pageComponent">
+	<div class="animate uk-card uk-card-default uk-container {{center ? 'uk-position-center' : ''}} uk-width-*@s marginAuto {{buttonTitle ? 'withButtonBlock' : ''}} {{color ? color : ''}}">
+		<div class="uk-card-header">
+			<div class="uk-grid-small uk-flex-middle" uk-grid>
+				<div class="uk-width-expand">
+					<h3 class="uk-card-title uk-margin-remove-bottom">
+                        {{title}}
+					</h3>
+                    <p class="uk-text-meta uk-margin-remove-top">
+                        <span class="uk-label">Facility</span> <icon name="fa-building" ratio=".7" />
+                    </p>
+				</div>
+			</div>
+		</div>
+        <tabs tabs="{{tabViews}}" click="changeTab" />
+		{{#each tabViews as item}}
+            <listSearch item="{{item}}">
+                {{#item.id === 'info' && item.opened}}
+                    <dl class="uk-description-list">
+                        <dt class="uk-text-emphasis">Name</dt>
+                        <dd class="uk-text-large">{{item.data.name}}</dd>
+                        <dt class="uk-text-emphasis">Contact</dt>
+                        <dd class="uk-text-large">{{item.data.contact}}</dd>
+                        <dt class="uk-text-emphasis">Phone</dt>
+                        <dd class="uk-text-large"><a href="tel:{{item.data.phone}}">{{item.data.phone}}</a></dd>
+                        <dt class="uk-text-emphasis">Fax</dt>
+                        <dd class="uk-text-large"><a href="tel:{{item.data.fax}}">{{item.data.fax}}</a></dd>
+                        <dt class="uk-text-emphasis">Email</dt>
+                        <dd class="uk-text-large"><a href = "mailto:{{item.data.email}}">{{item.data.email}}</a></dd>
+                        <dt class="uk-text-emphasis">Tax ID</dt>
+                        <dd class="uk-text-large">{{item.data.tax}}</dd>
+                        <dt class="uk-text-emphasis">Organization</dt>
+                        <dd class="uk-text-large"><a on-click="routerLoad" href="/organization/{{item.data.organization}}">{{item.data.organizationName || 'View'}} - {{item.data.organizationContact}}</a></dd>
+                    </dl>
+                    <hr class="uk-divider-icon">
+                    <div class="uk-grid-divider uk-text-uppercase uk-child-width-expand@s uk-text-center" uk-grid>
+                        <div>
+                            <div>Products<br /> {{item.data.productCount  || 0}}</div>
+                        </div>
+                        <div>
+                            <div>codes<br /> {{item.data.codeCount  || 0}}</div>
+                        </div>
+                    </div>
+                {{/}}
+                {{#item.id === 'product' && item.opened}}
+                    {{#list}}
+                        <li class="uk-text-bold" on-click="routerLoad" data-href="/product/{{this._id}}">{{this.name}}</li>
+                    {{/}}
+                {{/}}
+            </listSearch>
+        {{/each}}
+	</div>
+</div>
