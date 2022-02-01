@@ -14,10 +14,9 @@
 		classes: {},
 		logo: {
 			motto: '',
-			title: 'SoloNFT',
-			image: '/image/Akerna_Monogram.png',
+			title: 'EXAMPLE',
 		},
-		pageTitle: 'Akerna',
+		pageTitle: 'EXAMPLE',
 	});
 	await Ractive.sharedSet('moment', (item) => {
 		return $.upperCase(window.moment.utc(item).fromNow());
