@@ -7,7 +7,6 @@
 	import { codeEventsCompile } from 'models/code/index.js';
 	import { eventsCompile } from 'models/universal/index.js';
 	await component({
-		model: exports,
 		asset: {
 			partials: {
 				code: `models/code/list`,
@@ -50,5 +49,4 @@
 			});
 		},
 	});
-	exports.compile = () => {};
 })();

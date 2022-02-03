@@ -5,3 +5,7 @@ import './demand.js';
 import './worker.js';
 import './request.js';
 import './watchers.js';
+import './notifications.js';
+import './resize.js';
+import './component/index.js';
+import './router.js';

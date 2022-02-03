@@ -31,7 +31,7 @@
 
 </div>
 {{#feedback.feed}}
-    <div  data-href="/feedback/{{_id}}" on-click="routerLoad"
+    <div  data-href="/feedback/{{_id}}" on-click="route"
         class="uk-border-rounded uk-overflow-hidden pointer uk-grid-match uk-card 
         uk-box-shadow-small uk-card-default uk-text-center uk-grid-collapse uk-card-row uk-flex " uk-grid>
 
@@ -43,22 +43,22 @@
                 <div class="uk-width-1-1 uk-grid-collapse uk-text-center uk-flex uk-flex-right uk-border-rounded-right uk-button-group" uk-grid>
                     {{#product}}
                         <div>
-                            <btn type="primary" href="/product/{{product}}" click="routerLoad" title="Product" />
+                            <btn type="primary" href="/product/{{product}}" click="route" title="Product" />
                         </div>
                     {{/}}
                     {{#batch}}
                         <div>
-                            <btn type="primary" href="/batch/{{batch}}" click="routerLoad" title="Batch" />
+                            <btn type="primary" href="/batch/{{batch}}" click="route" title="Batch" />
                         </div>
                     {{/}}
                     {{#organization && !product && !batch && !facility}}
                         <div>
-                            <btn type="primary" href="/organization/{{organization}}" click="routerLoad" title="Organization" />
+                            <btn type="primary" href="/organization/{{organization}}" click="route" title="Organization" />
                         </div>
                     {{/}}
                     {{#creator}}
                         <div>
-                            <btn type="primary" href="/user/{{creator}}" click="routerLoad" title="User" />
+                            <btn type="primary" href="/user/{{creator}}" click="route" title="User" />
                         </div>
                     {{/}}
                 </div>
@@ -71,22 +71,22 @@
                 <div class="uk-width-auto uk-grid-collapse uk-text-center uk-flex uk-flex-right" uk-grid>
                     {{#product}}
                         <div>
-                            <btn class="uk-width-auto" type="primary" href="/product/{{product}}" click="routerLoad" title="Product" />
+                            <btn class="uk-width-auto" type="primary" href="/product/{{product}}" click="route" title="Product" />
                         </div>
                     {{/}}
                     {{#batch}}
                         <div>
-                            <btn class="uk-width-auto" type="primary" href="/batch/{{batch}}" click="routerLoad" title="Batch" />
+                            <btn class="uk-width-auto" type="primary" href="/batch/{{batch}}" click="route" title="Batch" />
                         </div>
                     {{/}}
                     {{#organization}}
                         <div>
-                            <btn class="uk-width-auto" type="primary" href="/organization/{{organization}}" click="routerLoad" title="Organization" />
+                            <btn class="uk-width-auto" type="primary" href="/organization/{{organization}}" click="route" title="Organization" />
                         </div>
                     {{/}}
                     {{#creator}}
                         <div>
-                            <btn class="uk-width-auto" type="primary" href="/user/{{creator}}" click="routerLoad" title="User" />
+                            <btn class="uk-width-auto" type="primary" href="/user/{{creator}}" click="route" title="User" />
                         </div>
                     {{/}}
                 </div>

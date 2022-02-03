@@ -36,7 +36,7 @@
 
 </div>
 {{#product.feed}}
-    <div  data-href="/product/{{_id}}" on-click="routerLoad"
+    <div  data-href="/product/{{_id}}" on-click="route"
         class="uk-border-rounded uk-overflow-hidden pointer uk-grid-match uk-card 
         uk-box-shadow-small uk-card-default uk-text-center uk-grid-column-collapse uk-card-row" uk-grid>
 
@@ -51,7 +51,7 @@
                         <div class="uk-margin-auto-vertical">{{this.codeCount || 0}}</div>
                     </div>
                     <div class="uk-child-width-1-1 uk-grid-collapse" uk-grid>
-                        <div class="uk-text-center uk-child-width-1-1" href="/batches/{{_id}}" on-click="routerLoad">
+                        <div class="uk-text-center uk-child-width-1-1" href="/batches/{{_id}}" on-click="route">
                             <a href="#" class="uk-icon-link uk-padding-small" uk-icon="fa-eye"></a>
                         </div>
                     </div>
@@ -72,7 +72,7 @@
                             <btn click="batch.create.load" object="['batch.create.product', {{@context}}, 'createBatch']" type="secondary"  class="uk-width-1-1" title="NEW" />
                         </div>
                         <div>
-                            <btn class="uk-width-1-1 round-right" type="primary" href="/batches/{{_id}}" click="routerLoad" title="View" />
+                            <btn class="uk-width-1-1 round-right" type="primary" href="/batches/{{_id}}" click="route" title="View" />
                         </div>
                     </div>
                 </div>

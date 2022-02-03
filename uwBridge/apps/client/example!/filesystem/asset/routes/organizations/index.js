@@ -11,7 +11,6 @@
 	} = app;
 	const dirname = exports.dirname;
 	await component({
-		model: exports,
 		asset: {
 			partials: {
 				createModal: `${dirname}modalCreate`,

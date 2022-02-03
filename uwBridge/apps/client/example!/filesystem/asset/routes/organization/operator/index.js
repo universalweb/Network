@@ -5,9 +5,7 @@
 	} = app;
 	app.debug = true;
 	import { organizationEventsCompile } from 'models/organization/index.js';
-	
 	await component({
-		model: exports,
 		asset: {
 			partials: {
 				batchEditModal: `models/organization/modal/edit`,
@@ -32,5 +30,4 @@
 			source.on('*.organization.edited', organizationEvents.loadPage);
 		},
 	});
-	exports.compile = () => {};
 })();

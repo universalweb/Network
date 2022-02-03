@@ -52,17 +52,17 @@
                         {{/}}
                         {{#item.id === 'facility' && item.opened}}
                             {{#list}}
-                                <li class="uk-text-bold" on-click="routerLoad" data-href="/facility/{{this._id}}">{{this.name}} - {{this.contact}}</li>
+                                <li class="uk-text-bold" on-click="route" data-href="/facility/{{this._id}}">{{this.name}} - {{this.contact}}</li>
                             {{/}}
                         {{/}}
                         {{#item.id === 'product' && item.opened}}
                             {{#list}}
-                                <li class="uk-text-bold" on-click="routerLoad" data-href="/product/{{this._id}}">{{this.name}}</li>
+                                <li class="uk-text-bold" on-click="route" data-href="/product/{{this._id}}">{{this.name}}</li>
                             {{/}}
                         {{/}}
                         {{#item.id === 'user' && item.opened}}
                             {{#list}}
-                                <li class="uk-text-bold" on-click="routerLoad" data-href="/user/{{this._id}}">{{this.name}} - {{this.role}}</li>
+                                <li class="uk-text-bold" on-click="route" data-href="/user/{{this._id}}">{{this.name}} - {{this.role}}</li>
                             {{/}}
                         {{/}}
                     </listSearch>

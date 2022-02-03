@@ -97,7 +97,6 @@ const compileApps = async () => {
 		each(apps, (item) => {
 			console.log(`Exporting Files to ${item}.`);
 			copyFile(`./build/front/bundle.js`, `./../../apps/client/${item}/filesystem/public/Sentivate.js`);
-			copyFile(`./build/socket/bundle.js`, `./../../apps/client/${item}/filesystem/asset/Sentivate/index.js`);
 			copyFile(`./build/worker/bundle.js`, `./../../apps/client/${item}/filesystem/public/worker.js`);
 			console.log(`Exporting Files to ${item} Completed.`);
 		});
@@ -116,7 +115,6 @@ exports.build = async (options) => {
 	copyFile(`./../../../node_modules/ractive/ractive.min.js`, `./source/front/libs/ractive.js`);
 	console.log('ractive Imported');
 	await bundle('front', options);
-	await bundle('socket', options);
 	await bundle('worker', options);
 	console.log('-----------Export To Apps-----------');
 	const apps = await getApps();
@@ -134,18 +132,6 @@ exports.build = async (options) => {
 		});
 	});
 	console.log('Watching Front');
-	watch('./source/socket', {
-		recursive: true
-	}, async () => {
-		console.log('LIVE CHANGE DETECTED COMPILE socket');
-		each(apps, (item) => {
-			console.log(`Exporting Files to ${item}.`);
-			copyFile(`./build/socket/bundle.js`, `./../../apps/client/${item}/filesystem/asset/Sentivate/index.js`);
-			console.log(`Exporting Files to ${item} Completed.`);
-		});
-		await bundle('socket', options);
-	});
-	console.log('Watching Socket');
 	watch('./source/worker', {
 		recursive: true
 	}, async () => {

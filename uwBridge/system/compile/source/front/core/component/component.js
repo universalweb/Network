@@ -20,6 +20,7 @@ const component = (componentName, componentConfigOption) => {
 	if (isString(componentName)) {
 		componentConfig.name = componentName;
 	}
+	console.log(componentConfig);
 	if (componentConfig.asset) {
 		method = asyncComponent;
 	} else {

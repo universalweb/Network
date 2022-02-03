@@ -123,11 +123,7 @@ export const fetchFile = async (config) => {
 	await workerRequest({
 		async callback(json) {
 			if (hasValue(json.file)) {
-				try {
-					await saveCompleted(json, config);
-				} catch (err) {
-					console.log(config, json.file);
-				}
+				await saveCompleted(json, config);
 			} else {
 				return checkIfCompleted(config);
 			}

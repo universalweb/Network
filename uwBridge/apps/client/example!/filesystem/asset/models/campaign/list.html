@@ -34,7 +34,7 @@
 
 </div>
 {{#campaign.feed}}
-    <div  data-href="/campaign/{{_id}}" on-click="routerLoad" 
+    <div  data-href="/campaign/{{_id}}" on-click="route" 
         class="uk-border-rounded uk-overflow-hidden pointer uk-grid-match uk-card 
         uk-box-shadow-small uk-card-default uk-text-center uk-grid-column-collapse uk-card-row" uk-grid>
 
@@ -49,7 +49,7 @@
                     </div>
                     <div class="uk-child-width-1-1 uk-grid-collapse" uk-grid>
                         <div class="uk-text-center uk-child-width-1-1 " click="batch.create.load" >
-                            <a href="#" class="uk-icon-link uk-padding-small" href="/feeback/{{_id}}" on-click="routerLoad" uk-icon="fa-eye"></a>
+                            <a href="#" class="uk-icon-link uk-padding-small" href="/feeback/{{_id}}" on-click="route" uk-icon="fa-eye"></a>
                         </div>
                     </div>
                 </div>
@@ -65,7 +65,7 @@
                     </div>
                     <div class="uk-child-width-1-1 uk-grid-collapse" uk-grid>
                         <div class="">
-                            <btn class="uk-width-1-1 round-right" type="primary" href="/feeback/{{_id}}" click="routerLoad" title="View" />
+                            <btn class="uk-width-1-1 round-right" type="primary" href="/feeback/{{_id}}" click="route" title="View" />
                         </div>
                     </div>
                 </div>

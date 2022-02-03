@@ -30,7 +30,7 @@
                         <dt class="uk-text-emphasis">Tax ID</dt>
                         <dd class="uk-text-large">{{item.data.tax}}</dd>
                         <dt class="uk-text-emphasis">Organization</dt>
-                        <dd class="uk-text-large"><a on-click="routerLoad" href="/organization/{{item.data.organization}}">{{item.data.organizationName || 'View'}} - {{item.data.organizationContact}}</a></dd>
+                        <dd class="uk-text-large"><a on-click="route" href="/organization/{{item.data.organization}}">{{item.data.organizationName || 'View'}} - {{item.data.organizationContact}}</a></dd>
                     </dl>
                     <hr class="uk-divider-icon">
                     <div class="uk-grid-divider uk-text-uppercase uk-child-width-expand@s uk-text-center" uk-grid>
@@ -44,7 +44,7 @@
                 {{/}}
                 {{#item.id === 'product' && item.opened}}
                     {{#list}}
-                        <li class="uk-text-bold" on-click="routerLoad" data-href="/product/{{this._id}}">{{this.name}}</li>
+                        <li class="uk-text-bold" on-click="route" data-href="/product/{{this._id}}">{{this.name}}</li>
                     {{/}}
                 {{/}}
             </listSearch>

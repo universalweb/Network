@@ -12,7 +12,6 @@
 	} = app;
 	const dirname = exports.dirname;
 	await component({
-		model: exports,
 		asset: {
 			template: `${dirname}template`,
 			css: [`${dirname}style`],
@@ -341,5 +340,4 @@
 			});
 		},
 	});
-	exports.compile = () => {};
 })();

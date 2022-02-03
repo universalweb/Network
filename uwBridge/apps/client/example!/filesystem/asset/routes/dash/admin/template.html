@@ -52,7 +52,7 @@
             <div class="uk-grid-match uk-grid-column-small uk-grid-row-small 
             uk-text-center uk-text-uppercase uk-flex-left" uk-grid>
                 {{#each stats as item}} 
-                    <div {{#if item.href}}on-click="routerLoad" data-href="{{item.href}}"{{/if}} 
+                    <div {{#if item.href}}on-click="route" data-href="{{item.href}}"{{/if}} 
                     class="uk-width-1-5@m uk-animation-fade uk-padding-small {{(item.href)? 'pointer' : ''}}">
                         <div class="uk-card uk-card-small uk-card-default 
                         uk-card-body {{(item.href)? 'uk-card-hover' : ''}} uk-border-rounded">

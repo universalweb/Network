@@ -6,7 +6,6 @@
 	app.debug = true;
 	import { eventsCompile } from 'models/universal/index.js';
 	await component({
-		model: exports,
 		asset: {
 			partials: {
 				feedbackCreateModal: `models/feedback/modal/create`,
@@ -31,5 +30,4 @@
 			source.on('*.code.edited', codeEvents.loadPage);
 		},
 	});
-	exports.compile = () => {};
 })();

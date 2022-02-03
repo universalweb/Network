@@ -6,7 +6,6 @@
 	app.debug = true;
 	import { eventsCompile } from 'models/universal/index.js';
 	await component({
-		model: exports,
 		asset: {
 			partials: {
 				product: `models/product/list`,
@@ -62,5 +61,4 @@
 			await productEvents.loadMain(true);
 		},
 	});
-	exports.compile = () => {};
 })();

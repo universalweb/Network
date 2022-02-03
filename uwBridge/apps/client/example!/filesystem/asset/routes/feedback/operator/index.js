@@ -6,7 +6,6 @@
 	app.debug = true;
 	import { feedbackEventsCompile } from 'models/feedback/index.js';
 	await component({
-		model: exports,
 		asset: {
 			partials: {
 				code: `models/feedback/list`,
@@ -32,5 +31,4 @@
 			});
 		},
 	});
-	exports.compile = () => {};
 })();

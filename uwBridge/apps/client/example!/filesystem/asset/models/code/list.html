@@ -34,7 +34,7 @@
 
 </div>
 {{#code.feed}}
-    <div  data-href="/code/{{_id}}" on-click="routerLoad"
+    <div  data-href="/code/{{_id}}" on-click="route"
         class="uk-border-rounded uk-overflow-hidden pointer uk-grid-match uk-card 
         uk-box-shadow-small uk-card-default uk-text-center uk-grid-collapse uk-card-row" uk-grid>
 
@@ -49,7 +49,7 @@
                     </div>
                     <div class="uk-child-width-1-1 uk-grid-collapse" uk-grid>
                         <div class="">
-                            <btn class="uk-width-1-1 round-right" type="primary" href="/feedback/{{_id}}" click="routerLoad" title="View" />
+                            <btn class="uk-width-1-1 round-right" type="primary" href="/feedback/{{_id}}" click="route" title="View" />
                         </div>
                     </div>
                 </div>
@@ -65,7 +65,7 @@
                     </div>
                     <div class="uk-child-width-1-1 uk-grid-collapse" uk-grid>
                         <div class="uk-text-center uk-child-width-1-1">
-                            <a class="uk-icon-link uk-padding-small" href="/feedback/{{_id}}" on-click="routerLoad" uk-icon="fa-eye"></a>
+                            <a class="uk-icon-link uk-padding-small" href="/feedback/{{_id}}" on-click="route" uk-icon="fa-eye"></a>
                         </div>
                     </div>
                 </div>

@@ -12,7 +12,6 @@
 	cnsl('page Module', 'notify');
 	exports.page = function(pageModule) {
 		let templateUrl;
-		const language = pageModule.assets.language;
 		const config = assignDeep({
 			data: {},
 			partials: {},

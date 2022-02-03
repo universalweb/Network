@@ -3,7 +3,6 @@
 	app.debug = true;
 	import { eventsCompile } from 'models/universal/index.js';
 	await component({
-		model: exports,
 		asset: {
 			partials: {
 				organizationEditModal: `models/organization/modal/edit`,
@@ -28,5 +27,4 @@
 			source.on('*.organization.edited', codeEvents.loadPage);
 		},
 	});
-	exports.compile = () => {};
 })();

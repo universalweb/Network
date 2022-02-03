@@ -3,7 +3,6 @@
 	app.debug = true;
 	import { eventsCompile } from 'models/universal/index.js';
 	await component({
-		model: exports,
 		asset: {
 			partials: {
 				campaign: `models/campaign/list`,
@@ -38,5 +37,4 @@
 			source.on('*.campaign.edited', campaignEvents.loadPage);
 		},
 	});
-	exports.compile = () => {};
 })();

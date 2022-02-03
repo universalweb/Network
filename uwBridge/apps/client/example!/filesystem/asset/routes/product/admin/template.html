@@ -23,10 +23,10 @@
                             <dt class="uk-text-emphasis">Description</dt>
                             <dd class="uk-text-large">{{item.data.description}}</dd>
                             <dt class="uk-text-emphasis">Organization</dt>
-                            <dd class="uk-text-large"><a on-click="routerLoad" href="/organization/{{item.data.organization}}">{{item.data.organizationName || 'View'}} - {{item.data.organizationContact}}</a></dd>
+                            <dd class="uk-text-large"><a on-click="route" href="/organization/{{item.data.organization}}">{{item.data.organizationName || 'View'}} - {{item.data.organizationContact}}</a></dd>
                             {{#item.data.facility}}
                                 <dt class="uk-text-emphasis">Facility</dt>
-                                <dd class="uk-text-large"><a on-click="routerLoad" href="/facility/{{item.data.facility}}">{{item.data.facilityName || 'View'}} - {{item.data.facilityContact}}</a></dd>
+                                <dd class="uk-text-large"><a on-click="route" href="/facility/{{item.data.facility}}">{{item.data.facilityName || 'View'}} - {{item.data.facilityContact}}</a></dd>
                             {{/}}
                             {{#item.data.attachments}}
                                 <img class="right" alt="Akerna Code" src="/attachment/{{this}}" />
@@ -47,7 +47,7 @@
                     {{/}}
                     {{#item.id === 'batch' && item.opened}}
                         {{#list}}
-                            <li class="uk-text-bold" on-click="routerLoad" data-href="/batch/{{this._id}}">{{this.name}} <span class="right">({{this.amount}})</span></li>
+                            <li class="uk-text-bold" on-click="route" data-href="/batch/{{this._id}}">{{this.name}} <span class="right">({{this.amount}})</span></li>
                         {{/}}
                     {{/}}
                     {{#item.id === 'label' && item.opened}}

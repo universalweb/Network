@@ -19,13 +19,13 @@
                                 {{/}}
                                 <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom"><span>{{product.current.name}}</span></h1>
                                 <div class="uk-width-expand uk-width-1-1">
-                                    <a href="/scans/product/{{product.current._id}}" on-click="routerLoad">
+                                    <a href="/scans/product/{{product.current._id}}" on-click="route">
                                         <span class="uk-label">SCANS: {{product.current.scanCount}}</span> 
                                     </a>
-                                    <a href="/feedback/product/{{product.current._id}}" on-click="routerLoad">
+                                    <a href="/feedback/product/{{product.current._id}}" on-click="route">
                                         <span class="uk-label">FEEDBACK: {{product.current.feedbackCount}}</span> 
                                     </a>
-                                    <a href="/batches/{{product.current._id}}" on-click="routerLoad">
+                                    <a href="/batches/{{product.current._id}}" on-click="route">
                                         <span class="uk-label">BATCHES: {{product.current.batchCount}}</span> 
                                     </a>
                                 </div>
@@ -65,7 +65,7 @@
                                     {{/}}
                                     <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom">
                                         <span>
-                                            <a href="/facility/{{product.current.facility}}" on-click="routerLoad">
+                                            <a href="/facility/{{product.current.facility}}" on-click="route">
                                                 {{product.current.facilityData.name}}
                                             </a>
                                         </span>
@@ -108,7 +108,7 @@
                                     {{/}}
                                     <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom">
                                         <span>
-                                            <a href="/organization/{{product.current.organization}}" on-click="routerLoad">
+                                            <a href="/organization/{{product.current.organization}}" on-click="route">
                                                 {{product.current.organizationData.name}}
                                             </a>
                                         </span>

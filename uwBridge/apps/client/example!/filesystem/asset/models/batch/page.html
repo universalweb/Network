@@ -24,13 +24,13 @@
                                     </span>
                                 </h1>
                                 <div class="uk-width-expand uk-width-1-1">
-                                    <a href="/codes/{{batch.current._id}}" on-click="routerLoad">
+                                    <a href="/codes/{{batch.current._id}}" on-click="route">
                                         <span class="uk-label">CODES: {{batch.current.codeCount}}</span> 
                                     </a>
-                                    <a href="/scans/batch/{{batch.current._id}}" on-click="routerLoad">
+                                    <a href="/scans/batch/{{batch.current._id}}" on-click="route">
                                         <span class="uk-label">SCANS: {{batch.current.scanCount}}</span> 
                                     </a>
-                                    <a href="/feedback/batch/{{batch.current._id}}" on-click="routerLoad">
+                                    <a href="/feedback/batch/{{batch.current._id}}" on-click="route">
                                         <span class="uk-label">FEEDBACK: {{batch.current.feedbackCount}}</span> 
                                     </a>
                                 </div>
@@ -147,7 +147,7 @@
                                     {{/}}
                                     <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom">
                                         <span>
-                                            <a href="/facility/{{batch.current.facility}}" on-click="routerLoad">
+                                            <a href="/facility/{{batch.current.facility}}" on-click="route">
                                                 {{batch.current.facilityData.name}}
                                             </a>
                                         </span>
@@ -190,7 +190,7 @@
                                     {{/}}
                                     <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom">
                                         <span>
-                                            <a href="/organization/{{batch.current.organization}}" on-click="routerLoad">
+                                            <a href="/organization/{{batch.current.organization}}" on-click="route">
                                                 {{batch.current.organizationData.name}}
                                             </a>
                                         </span>

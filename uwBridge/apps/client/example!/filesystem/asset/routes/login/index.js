@@ -6,7 +6,6 @@
 	} = app;
 	app.debug = true;
 	await component({
-		model: exports,
 		asset: {
 			template: `models/login/page`,
 		},

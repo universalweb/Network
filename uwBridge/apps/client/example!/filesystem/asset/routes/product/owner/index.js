@@ -6,7 +6,6 @@
 	app.debug = true;
 	import { eventsCompile } from 'models/universal/index.js';
 	await component({
-		model: exports,
 		asset: {
 			partials: {
 				productEditModal: `models/product/modal/edit`,
@@ -39,5 +38,4 @@
 			});
 		},
 	});
-	exports.compile = () => {};
 })();

@@ -3,6 +3,17 @@ const app = {
 	start(data) {
 		return app.workerRequest('configure', data);
 	},
+	log(...args) {
+		if (app.debug) {
+			apply(console.log, console, args);
+		}
+	},
+	security: {
+		clear() {
+			app.log('Cleanup');
+			app.crate.clear();
+		}
+	},
 	utility: window.$,
 };
 window.app = app;

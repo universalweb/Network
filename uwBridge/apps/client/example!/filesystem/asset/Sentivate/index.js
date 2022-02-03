@@ -152,7 +152,7 @@
 				assignDeep,
 				ensureArray: ensureArray$1,
 				assign: assign$5,
-				each: each$9,
+				each: each$8,
 				isArray: isArray$1,
 				isEmpty,
 				sortNewest,
@@ -244,7 +244,7 @@
 					assignDeep(oldVal, newValArg);
 				} else {
 					const newVal = ensureArray$1(newValArg);
-					each$9(newVal, (item) => {
+					each$8(newVal, (item) => {
 						const oldValItem = findItem(oldVal, item[indexName], indexName);
 						if (hasValue(oldValItem)) {
 							assign$5(oldValItem, item);
@@ -289,7 +289,7 @@
 			watch: watch$2,
 			demand: demand$3,
 			utility: {
-				each: each$8, isFunction: isFunction$1
+				each: each$7, isFunction: isFunction$1
 			},
 			crate
 		} = app;
@@ -310,7 +310,7 @@
 			if (isFunction$1(componentName)) {
 				componentName(html);
 			} else {
-				each$8(app.view.findAllComponents(componentName), (item) => {
+				each$7(app.view.findAllComponents(componentName), (item) => {
 					if (app.debug) {
 						console.log(item);
 					}
@@ -330,15 +330,15 @@
 		watch$2.html = watchHtml;
 		const {
 			utility: {
-				each: each$7
+				each: each$6
 			}
 		} = app;
 		const importPartials = (componentName, componentModel, asset) => {
 			if (asset.partials) {
-				each$7(asset.partials, (item, key) => {
+				each$6(asset.partials, (item, key) => {
 					watchHtml(item.includes('.html') ? item : `${item}.html`, (html) => {
 						const realName = getComponentName(componentModel, componentName);
-						each$7(app.view.findAllComponents(realName), (subItem) => {
+						each$6(app.view.findAllComponents(realName), (subItem) => {
 							subItem.resetPartial(key, html);
 						});
 					});
@@ -364,7 +364,7 @@
 		};
 		const {
 			utility: {
-				each: each$6, isString: isString$3, isArray, apply: apply$2
+				each: each$5, isString: isString$3, isArray, apply: apply$2
 			}
 		} = app;
 		const logMulti = console;
@@ -385,15 +385,15 @@
 			}
 			if (events) {
 				if (isString$3(events)) {
-					each$6(events.split(','), (subItem) => {
+					each$5(events.split(','), (subItem) => {
 						if (subItem) {
 							currentView.fire(subItem.trim(), componentEvent, ...args);
 						}
 					});
 				} else if (isArray(events)) {
-					each$6(events, (item) => {
+					each$5(events, (item) => {
 						if (item) {
-							each$6(item.split(','), (subItem) => {
+							each$5(item.split(','), (subItem) => {
 								if (subItem) {
 									currentView.fire(subItem.trim(), componentEvent, ...args);
 								}
@@ -405,7 +405,7 @@
 		};
 		const {
 			utility: {
-				each: each$5, assign: assign$4, querySelector: querySelector$1
+				each: each$4, assign: assign$4, querySelector: querySelector$1
 			}
 		} = app;
 		const headNode = querySelector$1('head');
@@ -435,12 +435,12 @@
 		};
 		const cssRender = (css) => {
 			if (css) {
-				each$5(css, render);
+				each$4(css, render);
 			}
 		};
 		const cssUnrender = (css) => {
 			if (css) {
-				each$5(css, unrender);
+				each$4(css, unrender);
 			}
 		};
 		const componentsWithCss = {};
@@ -448,7 +448,7 @@
 			if (!css) {
 				return;
 			}
-			each$5(css, (item, key) => {
+			each$4(css, (item, key) => {
 				if (!componentsWithCss[key]) {
 					componentsWithCss[key] = [];
 				}
@@ -463,7 +463,7 @@
 		const {
 			watch: watch$1,
 			utility: {
-				each: each$4, get, apply: apply$1
+				each: each$3, get, apply: apply$1
 			}
 		} = app;
 		const createWatchers = (currentView, item, key) => {
@@ -509,7 +509,7 @@
 		};
 		const removeInstance = function(currentView, css) {
 			cssUnrender(css);
-			each$4(currentView.watchers, (item, key) => {
+			each$3(currentView.watchers, (item, key) => {
 				item.stop();
 				item[key] = null;
 			});
@@ -517,7 +517,7 @@
 		const onrenderInstance = function(currentView, css) {
 			cssRender(css);
 			if (currentView.watchers) {
-				each$4(currentView.watchers, (item) => {
+				each$3(currentView.watchers, (item) => {
 					item.start();
 				});
 			}
@@ -529,7 +529,7 @@
 			const thisComponent = this;
 			thisComponent.watchers = watchers ? watchers(thisComponent) : {};
 			if (thisComponent.watchers) {
-				each$4(thisComponent.watchers, (item, key) => {
+				each$3(thisComponent.watchers, (item, key) => {
 					createWatchers(thisComponent, item, key);
 				});
 			}
@@ -609,7 +609,7 @@
 			demandCss,
 			demandHtml,
 			utility: {
-				assign: assign$2, each: each$3, ensureArray, isString: isString$2
+				assign: assign$2, each: each$2, ensureArray, isString: isString$2
 			}
 		} = app;
 		const asyncComponent = async function(componentConfig) {
@@ -637,7 +637,7 @@
 				if (asset.css) {
 					const assetCss = asset.css;
 					const loadCss = await demandCss(assetCss);
-					each$3(ensureArray(loadCss), (item, index) => {
+					each$2(ensureArray(loadCss), (item, index) => {
 						let keyName = assetCss[index];
 						if (!keyName.includes('.css')) {
 							keyName = `${keyName}.css`;
@@ -684,7 +684,7 @@
 			demand: demand$1,
 			watch,
 			utility: {
-				each: each$2, querySelector, isDom
+				each: each$1, querySelector, isDom
 			}
 		} = app;
 		const onCss = async (json) => {
@@ -699,7 +699,7 @@
 					node.innerHTML = content;
 				}
 				if (componentsUsingCss) {
-					each$2(componentsUsingCss, (item) => {
+					each$1(componentsUsingCss, (item) => {
 						console.log(item);
 						item.css[filePath] = content;
 					});
@@ -710,7 +710,7 @@
 		const {
 			demand,
 			utility: {
-				assign: assign$1, each: each$1, isFunction
+				assign: assign$1, each, isFunction
 			}
 		} = app;
 		const view = new Ractive({
@@ -728,7 +728,7 @@
 				const afterDemand = componentEvent.get('afterDemand');
 				if (afterDemand) {
 					const afterDemandEvents = afterDemand[componentEvent.original.type];
-					each$1(afterDemandEvents, (item, key) => {
+					each(afterDemandEvents, (item, key) => {
 						if (isFunction(item)) {
 							item(imported, item, key);
 						} else {
@@ -784,44 +784,11 @@
 			demandJs,
 			demandLang,
 			utility: {
-				cnsl, assign, each, map, isString, rest, camelCase, omit, last, batch, eventAdd, apply
+				cnsl, assign, mapArray, map, isString, rest, camelCase, omit, last, batch, eventAdd, apply, isRegExp, mapWhile
 			}
 		} = app;
-		const router = {};
-		const hostname = window.location.hostname;
-		router.historyIndex = 0;
-		const logRouter = console;
-		function debugRouter(...args) {
-			if (app.debug || app.debugRouter) {
-				apply(logRouter.log, logRouter, args);
-			}
-		}
-		Ractive.sharedSet('historyIndex', router.historyIndex);
 		cnsl('ROUTER ONLINE', 'important');
 		assign(router, {
-			add(item) {
-				each(item, router.addObject);
-			},
-			addObject(item, key) {
-				const reg = new RegExp(key);
-				router.routes.push(async () => {
-					return router.routeChecker(item, reg);
-				});
-			},
-			attachEvents() {
-				eventAdd(
-					window,
-					'popstate',
-					async (eventArg) => {
-						debugRouter('popstate', eventArg);
-						router.saveState();
-						router.updateLocation();
-						await router.loadState();
-						eventArg.preventDefault();
-					},
-					true
-				);
-			},
 			async closeState(previousStateObject) {
 				debugRouter('closeState', previousStateObject);
 				if (previousStateObject) {

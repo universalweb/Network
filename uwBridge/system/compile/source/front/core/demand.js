@@ -131,8 +131,6 @@ assign(app.events, {
 		cnsl('Worker is Ready', 'notify');
 		app.systemLanguage = data.language;
 		try {
-			await demand('Sentivate/');
-			app.translate = await demand('language/global');
 			await demand('app/');
 		} catch (error) {
 			console.log(error);

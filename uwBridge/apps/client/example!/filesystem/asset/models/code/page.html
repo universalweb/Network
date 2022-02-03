@@ -19,12 +19,12 @@
                                 {{/}}
                                 <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom">
                                     <span>
-                                        <a href="/product/{{code.current.productData._id}}" on-click="routerLoad" class="uk-width-1-1">{{code.current.productData.name}}</a>
+                                        <a href="/product/{{code.current.productData._id}}" on-click="route" class="uk-width-1-1">{{code.current.productData.name}}</a>
                                     </span>
                                 </h1>
                                 <div class="uk-width-expand uk-width-1-1">
                                     <span class="uk-label">
-                                        <a href="/nft/{{code.current.hashString}}" on-click="routerLoad" class="uk-link-text">NFT: {{code.current.hashString}}</a>
+                                        <a href="/nft/{{code.current.hashString}}" on-click="route" class="uk-link-text">NFT: {{code.current.hashString}}</a>
                                     </span> 
                                 </div>
                                 <div class="uk-width-expand uk-width-1-1">
@@ -60,7 +60,7 @@
                                     </div>
                                 {{/}}
                                 <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom">
-                                    <a href="/batch/{{code.current.batchData._id}}" on-click="routerLoad" class="uk-width-1-1">{{code.current.batchData.name}}</a>
+                                    <a href="/batch/{{code.current.batchData._id}}" on-click="route" class="uk-width-1-1">{{code.current.batchData.name}}</a>
                                 </h1>
                                 <div class="uk-width-expand uk-width-1-1">
                                     <span class="uk-text-meta uk-margin-remove-bottom">
@@ -101,7 +101,7 @@
                                     {{/}}
                                     <h1 class="uk-heading-line uk-text-center uk-margin-remove-top uk-margin-remove-bottom">
                                         <span>
-                                            <a href="/organization/{{code.current.organization}}" on-click="routerLoad">
+                                            <a href="/organization/{{code.current.organization}}" on-click="route">
                                                 {{code.current.organizationData.name}}
                                             </a>
                                         </span>

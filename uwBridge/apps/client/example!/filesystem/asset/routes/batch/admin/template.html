@@ -24,18 +24,18 @@
                         <dt class="uk-text-emphasis">Batch ID</dt>
                         <dd class="uk-text-large">{{item.data._id}}</dd>
                         <dt class="uk-text-emphasis">Batch Creator</dt>
-                        <dd class="uk-text-large"><a on-click="routerLoad" href="/user/{{item.data.creator}}">{{item.data.creatorName}}</a></dd>
+                        <dd class="uk-text-large"><a on-click="route" href="/user/{{item.data.creator}}">{{item.data.creatorName}}</a></dd>
                         <dt class="uk-text-emphasis">Product Name</dt>
-                        <dd class="uk-text-large"><a on-click="routerLoad" href="/product/{{item.data.product}}">{{item.data.productName}}</a></dd>
+                        <dd class="uk-text-large"><a on-click="route" href="/product/{{item.data.product}}">{{item.data.productName}}</a></dd>
                         <dt class="uk-text-emphasis">Product Description</dt>
                         <dd class="uk-text-large">{{item.data.productDescription}}</dd>
                         <dt class="uk-text-emphasis">Organization</dt>
-                        <dd class="uk-text-large"><a on-click="routerLoad" href="/organization/{{item.data.organization}}">{{item.data.organizationName || 'View'}} - {{item.data.organizationContact}}</a></dd>
+                        <dd class="uk-text-large"><a on-click="route" href="/organization/{{item.data.organization}}">{{item.data.organizationName || 'View'}} - {{item.data.organizationContact}}</a></dd>
                         <dt class="uk-text-emphasis">Organization Owner</dt>
-                        <dd class="uk-text-large"><a on-click="routerLoad" href="/user/{{item.data.organizationOwner}}">{{item.data.organizationOwnerName}}</a></dd>
+                        <dd class="uk-text-large"><a on-click="route" href="/user/{{item.data.organizationOwner}}">{{item.data.organizationOwnerName}}</a></dd>
                         {{#item.data.facility}}
                             <dt class="uk-text-emphasis">Facility</dt>
-                            <dd class="uk-text-large"><a on-click="routerLoad" href="/facility/{{item.data.facility}}">{{item.data.facilityName}}</a></dd>
+                            <dd class="uk-text-large"><a on-click="route" href="/facility/{{item.data.facility}}">{{item.data.facilityName}}</a></dd>
                             <dt class="uk-text-emphasis">Facility Contact</dt>
                             <dd class="uk-text-large">{{item.data.facilityContact}}</dd>
                         {{/}}
@@ -52,7 +52,7 @@
                 {{/}}
                 {{#item.id === 'code' && item.opened}}
                     {{#list}}
-                        <li class="uk-text-bold" on-click="routerLoad" data-href="/code/{{this._id}}">{{this._id}}</li>
+                        <li class="uk-text-bold" on-click="route" data-href="/code/{{this._id}}">{{this._id}}</li>
                     {{/}}
                 {{/}}
                 {{#item.id === 'label' && item.opened}}
