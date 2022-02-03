@@ -983,13 +983,13 @@
 		};
 		const {
 			utility: {
-				each: each$5, isString: isString$3, isArray, apply: apply$3
+				each: each$5, isString: isString$3, isArray, apply: apply$2
 			}
 		} = app;
 		const logMulti = console;
 		function debugMultiEvent(...args) {
 			if (app.debug || app.debugMultiEvent) {
-				apply$3(logMulti.log, logMulti, args);
+				apply$2(logMulti.log, logMulti, args);
 			}
 		}
 		const multiEvent = (currentView, componentEvent, events, ...args) => {
@@ -1082,7 +1082,7 @@
 		const {
 			watch: watch$1,
 			utility: {
-				each: each$3, get, apply: apply$2
+				each: each$3, get, apply: apply$1
 			}
 		} = app;
 		const createWatchers = (currentView, item, key) => {
@@ -1170,15 +1170,15 @@
 		const onConstruct = function(componentConfig) {
 			const sourceConstruct = componentConfig.onconstruct;
 			componentConfig.onconstruct = function(...args) {
-				apply$2(buildComponentEvents, this, [componentConfig, ...args]);
+				apply$1(buildComponentEvents, this, [componentConfig, ...args]);
 				if (sourceConstruct) {
-					return apply$2(sourceConstruct, this, args);
+					return apply$1(sourceConstruct, this, args);
 				}
 			};
 			const sourceRender = componentConfig.onrender;
 			componentConfig.onrender = function(...args) {
 				if (sourceRender) {
-					return apply$2(sourceRender, this, args);
+					return apply$1(sourceRender, this, args);
 				}
 			};
 		};
@@ -1392,11 +1392,10 @@
 			},
 			view
 		});
-		localStorage.clear();
 		const {
 			demandJs,
 			utility: {
-				cnsl, assignDeep, mapArray, map, isString, rest, camelCase, eventAdd, apply: apply$1, isRegExp, mapWhile, ifInvoke, hasValue, last
+				cnsl, assignDeep, mapArray, map, isString, rest, camelCase, eventAdd, isRegExp, mapWhile, ifInvoke, hasValue, last
 			},
 			component
 		} = app;
@@ -1419,7 +1418,7 @@
 	    state;
 	    log(...args) {
 	    	if (this.debug || app.debug) {
-	    		apply$1(console.log, console, args);
+	    		console.log(...args);
 	    	}
 	    }
 	    popstate(popstateEvent) {
@@ -1482,12 +1481,13 @@
 	    	if (this.pathState.path[0] !== '/') {
 	    		this.pathState.path = `/${this.pathState.path}`;
 	    	}
+	    	this.log(this.pathState.path);
 	    	if (secured) {
 	    		const securityCheck = Boolean(await this.methods.security(this.match));
 	    		if (securityCheck) {
 	    			const success = await this.methods.success();
 	    			if (role) {
-	    				this.pathState.path = `${path}${success}/`;
+	    				this.pathState.path = `${this.pathState.path}${success}/`;
 	    			}
 	    		} else {
 	    			this.pathState.path = `/${await this.methods.fail()}/`;
@@ -1508,7 +1508,6 @@
 	    	if (currentComponent) {
 	    		console.log('Close Component', this, currentComponent);
 	    		await app.view.findComponent('navstate').teardown();
-	    		this.component = null;
 	    	}
 	    }
 	    async process() {
@@ -1539,21 +1538,18 @@
 	    		await Ractive.sharedSet('@shared.currentPath', this.pathname);
 	    		await Ractive.sharedSet('navState', false);
 	    		this.log('Checking if Model Loaded', match.model);
-	    		if (!match.model) {
-	    			if (match.assets) {
-	    				if (match.assets.scripts) {
-	    					await demandJs(match.assets.scripts);
-	    				}
+	    		if (match.assets) {
+	    			if (match.assets.scripts) {
+	    				await demandJs(match.assets.scripts);
 	    			}
-	    			this.log('match model', pathState.path);
-	    			match.model = await demandJs(pathState.path);
-	    			this.log(match.model);
 	    		}
-	    		this.state = match;
-	    		const initializeComponent = await component(match.model.component);
+	    		this.log('match model', pathState.path);
+	    		const stateModel = await demandJs(pathState.path);
+	    		this.log(stateModel);
+	    		const initializeComponent = await component(stateModel.component);
 	    		this.log('component made', initializeComponent);
 	    		Ractive.components.navstate = initializeComponent;
-	    		ifInvoke(match.model.open);
+	    		ifInvoke(stateModel.open);
 	    		ifInvoke(this.methods.onLoad);
 	    		await Ractive.sharedSet('navState', true);
 	    	} else {

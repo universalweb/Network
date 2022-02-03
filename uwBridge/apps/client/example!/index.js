@@ -43,38 +43,6 @@ module.exports = async function() {
 				get: [{
 					route: '/',
 				}, {
-					route: '/users/*',
-				}, {
-					route: '/batch/*',
-				}, {
-					route: '/code/*',
-				}, {
-					route: '/nft/*',
-				}, {
-					route: '/codes/*',
-				}, {
-					route: '/feedback/*',
-				}, {
-					route: '/product/*',
-				}, {
-					route: '/products/*',
-				}, {
-					route: '/organizations/',
-				}, {
-					route: '/organization/*',
-				}, {
-					route: '/campaigns/',
-				}, {
-					route: '/batches/*',
-				}, {
-					route: '/campaign/*',
-				}, {
-					route: '/facilities/*',
-				}, {
-					route: '/facility/*',
-				}, {
-					route: '/akernacodes/*',
-				}, {
 					route: '/page/*',
 				}, {
 					route: '/settings/',
@@ -88,9 +56,9 @@ module.exports = async function() {
 			},
 			vHost: ['localhost'],
 		},
-		name: 'akerna',
+		name: 'example',
 		async onStart() {
-			console.log(`Akerna Started`);
+			console.log(`example Started`);
 		},
 		socket: {
 			allowedOrigins: ['localhost', 'cdn.jsdelivr.net', 'fonts.googleapis.com'],

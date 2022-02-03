@@ -1,5 +1,4 @@
 import app from './app.js';
-localStorage.clear();
 const {
 	demandJs,
 	utility: {
@@ -11,7 +10,6 @@ const {
 		rest,
 		camelCase,
 		eventAdd,
-		apply,
 		isRegExp,
 		mapWhile,
 		ifInvoke,
@@ -39,7 +37,7 @@ class Router {
 	state;
 	log(...args) {
 		if (this.debug || app.debug) {
-			apply(console.log, console, args);
+			console.log(...args);
 		}
 	}
 	popstate(popstateEvent) {
@@ -105,12 +103,13 @@ class Router {
 		if (this.pathState.path[0] !== '/') {
 			this.pathState.path = `/${this.pathState.path}`;
 		}
+		this.log(this.pathState.path);
 		if (secured) {
 			const securityCheck = Boolean(await this.methods.security(this.match));
 			if (securityCheck) {
 				const success = await this.methods.success();
 				if (role) {
-					this.pathState.path = `${path}${success}/`;
+					this.pathState.path = `${this.pathState.path}${success}/`;
 				}
 			} else {
 				this.pathState.path = `/${await this.methods.fail()}/`;
@@ -131,7 +130,6 @@ class Router {
 		if (currentComponent) {
 			console.log('Close Component', this, currentComponent);
 			await app.view.findComponent('navstate').teardown();
-			this.component = null;
 		}
 	}
 	async process() {
@@ -163,21 +161,18 @@ class Router {
 			await Ractive.sharedSet('@shared.currentPath', this.pathname);
 			await Ractive.sharedSet('navState', false);
 			this.log('Checking if Model Loaded', match.model);
-			if (!match.model) {
-				if (match.assets) {
-					if (match.assets.scripts) {
-						await demandJs(match.assets.scripts);
-					}
+			if (match.assets) {
+				if (match.assets.scripts) {
+					await demandJs(match.assets.scripts);
 				}
-				this.log('match model', pathState.path);
-				match.model = await demandJs(pathState.path);
-				this.log(match.model);
 			}
-			this.state = match;
-			const initializeComponent = await component(match.model.component);
+			this.log('match model', pathState.path);
+			const stateModel = await demandJs(pathState.path);
+			this.log(stateModel);
+			const initializeComponent = await component(stateModel.component);
 			this.log('component made', initializeComponent);
 			Ractive.components.navstate = initializeComponent;
-			ifInvoke(match.model.open);
+			ifInvoke(stateModel.open);
 			ifInvoke(this.methods.onLoad);
 			await Ractive.sharedSet('navState', true);
 		} else {
