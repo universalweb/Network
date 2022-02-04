@@ -17,11 +17,7 @@
 			start(data) {
 				return app.workerRequest('configure', data);
 			},
-			log(...args) {
-				if (app.debug) {
-					apply(console.log, console, args);
-				}
-			},
+			log: console.log,
 			security: {
 				clear() {
 					app.log('Cleanup');
@@ -983,13 +979,13 @@
 		};
 		const {
 			utility: {
-				each: each$5, isString: isString$3, isArray, apply: apply$2
+				each: each$5, isString: isString$3, isArray, apply: apply$1
 			}
 		} = app;
 		const logMulti = console;
 		function debugMultiEvent(...args) {
 			if (app.debug || app.debugMultiEvent) {
-				apply$2(logMulti.log, logMulti, args);
+				apply$1(logMulti.log, logMulti, args);
 			}
 		}
 		const multiEvent = (currentView, componentEvent, events, ...args) => {
@@ -1082,7 +1078,7 @@
 		const {
 			watch: watch$1,
 			utility: {
-				each: each$3, get, apply: apply$1
+				each: each$3, get, apply
 			}
 		} = app;
 		const createWatchers = (currentView, item, key) => {
@@ -1170,15 +1166,15 @@
 		const onConstruct = function(componentConfig) {
 			const sourceConstruct = componentConfig.onconstruct;
 			componentConfig.onconstruct = function(...args) {
-				apply$1(buildComponentEvents, this, [componentConfig, ...args]);
+				apply(buildComponentEvents, this, [componentConfig, ...args]);
 				if (sourceConstruct) {
-					return apply$1(sourceConstruct, this, args);
+					return apply(sourceConstruct, this, args);
 				}
 			};
 			const sourceRender = componentConfig.onrender;
 			componentConfig.onrender = function(...args) {
 				if (sourceRender) {
-					return apply$1(sourceRender, this, args);
+					return apply(sourceRender, this, args);
 				}
 			};
 		};
@@ -1535,7 +1531,7 @@
 	    		this.pathState = pathState;
 	    		this.match = match;
 	    		await this.compilePath();
-	    		await Ractive.sharedSet('@shared.currentPath', this.pathname);
+	    		await Ractive.sharedSet('currentPath', this.pathname);
 	    		await Ractive.sharedSet('navState', false);
 	    		this.log('Checking if Model Loaded', match.model);
 	    		if (match.assets) {

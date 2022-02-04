@@ -515,6 +515,168 @@ button {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Animations */
+
+.fadeOut {
+  transition-timing-function: cubic-bezier(0.33, 0, 0.62, 1);
+  animation-fill-mode: forwards;
+  backface-visibility: hidden;
+  animation-name: fadeOut;
+  animation-duration: 0.303398875s;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.fadeIn {
+  transition-timing-function: cubic-bezier(0.33, 0, 0.62, 1);
+  animation-fill-mode: forwards;
+  backface-visibility: hidden;
+  animation-name: fadeIn;
+  animation-duration: 0.803398875s;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.expand {
+  transition-timing-function: cubic-bezier(0.33, 0, 0.62, 1);
+  animation-fill-mode: forwards;
+  backface-visibility: hidden;
+  animation-name: expand;
+  animation-duration: 0.803398875s;
+}
+
+@keyframes expand {
+  0% {
+    width: 0;
+    height: 0;
+  }
+  100% {
+    width: inherit;
+    height: inherit;
+  }
+}
+
+.fadeInDown {
+  transition-timing-function: cubic-bezier(0.33, 0, 0.62, 1);
+  animation-fill-mode: forwards;
+  backface-visibility: hidden;
+  animation-name: fadeInDown;
+  animation-duration: 0.803398875s;
+}
+
+@keyframes fadeInDown {
+  0% {
+    transform: translate3d(0, -100px, 0);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+.fadeInUp {
+  transition-timing-function: cubic-bezier(0.33, 0, 0.62, 1);
+  animation-fill-mode: forwards;
+  backface-visibility: hidden;
+  animation-name: fadeInUp;
+  animation-duration: 0.803398875s;
+}
+
+@keyframes fadeInUp {
+  0% {
+    transform: translate3d(0, 20px, 0);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+
+.slow {
+  animation-duration: 1.12s !important;
+}
+
+.slow2x {
+  animation-duration: 1.62s !important;
+}
+
+.fadeInUpText {
+  transition-timing-function: cubic-bezier(0.33, 0, 0.62, 1);
+  animation-fill-mode: forwards;
+  backface-visibility: hidden;
+  animation-name: fadeInUpText;
+  animation-duration: 0.803398875s;
+}
+
+@keyframes fadeInUpText {
+  0% {
+    transform: translate3d(0, 200px, 0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+.shrinkHeight {
+  overflow: hidden;
+  transition-timing-function: cubic-bezier(0.33, 0, 0.62, 1);
+  animation-fill-mode: forwards;
+  backface-visibility: hidden;
+  animation-name: shrinkHeight;
+  animation-duration: 0.3398875s;
+}
+
+@keyframes shrinkHeight {
+  0% {
+    max-height: 100%;
+  }
+  100% {
+    overflow: hidden;
+    max-height: 0;
+  }
+}
+
+.expandHeight {
+  transition-timing-function: cubic-bezier(0.33, 0, 0.62, 1);
+  animation-fill-mode: forwards;
+  backface-visibility: hidden;
+  animation-name: expandHeight;
+  animation-duration: 0.3398875s;
+}
+
+@keyframes expandHeight {
+  0% {
+    overflow: hidden;
+    max-height: 0;
+  }
+  100% {
+    max-height: 100%;
+  }
+}
+
+
 /* opacity */
 
 .opacity0 {

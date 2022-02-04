@@ -158,7 +158,7 @@ class Router {
 			this.pathState = pathState;
 			this.match = match;
 			await this.compilePath();
-			await Ractive.sharedSet('@shared.currentPath', this.pathname);
+			await Ractive.sharedSet('currentPath', this.pathname);
 			await Ractive.sharedSet('navState', false);
 			this.log('Checking if Model Loaded', match.model);
 			if (match.assets) {

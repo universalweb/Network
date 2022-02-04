@@ -3,11 +3,7 @@ const app = {
 	start(data) {
 		return app.workerRequest('configure', data);
 	},
-	log(...args) {
-		if (app.debug) {
-			apply(console.log, console, args);
-		}
-	},
+	log: console.log,
 	security: {
 		clear() {
 			app.log('Cleanup');
