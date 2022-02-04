@@ -8,7 +8,7 @@
 	cnsl('Layout Component', '!important');
 	await component('layout', {
 		asset: {
-			css: [`${dirname}alert`, `${dirname}style`],
+			css: [`${dirname}style`],
 			template: `${dirname}template`,
 		},
 		data() {

@@ -10,7 +10,7 @@
     on-click="(click && !disabled)? @.fire('multi', @context, click, object) : null"
     {{(disabled)? 'disabled' : ''}}
     type="button" 
-    uk-tooltip="title: {{tooltip}}">
+    {{#if !@shared.mobile && tooltip}} uk-tooltip="title: {{tooltip}}" {{/if}}>
     {{#iconRight}}
         {{#if $.isString(icon)}}
             <icon name="{{icon}}" ratio="{{iconRatio || '.8'}}" />

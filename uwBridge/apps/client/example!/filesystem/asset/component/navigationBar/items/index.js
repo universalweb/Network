@@ -21,22 +21,3 @@ exports.items = {
 		right: true
 	}]
 };
-// {
-// 	id: 'back',
-// 	click: 'routerBack',
-// 	icon: 'chevron-left',
-// 	hideIf: '@shared.dash',
-// 	loginState: true,
-// 	right: true,
-// 	hide:
-// 	tooltip: 'Go Back',
-// 	ifShow() {
-// 		const index = app.view.get('@shared.historyIndex');
-// 		console.log(index);
-// 		if (index) {
-// 			return true;
-// 		} else {
-// 			return false;
-// 		}
-// 	}
-// },
