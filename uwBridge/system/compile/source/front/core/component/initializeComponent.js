@@ -6,12 +6,10 @@ import { registerCssComponent } from './css';
 const {
 	utility: {
 		cnsl,
-		assign,
 	}
 } = app;
 cnsl('viewSetup Module', 'notify');
 const initializeComponent = (componentConfig) => {
-	componentConfig.decorators = assign(componentConfig.decorators || {}, {});
 	const {
 		css,
 		model: componentModel,

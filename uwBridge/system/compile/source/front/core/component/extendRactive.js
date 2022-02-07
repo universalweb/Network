@@ -69,10 +69,15 @@ export const extendRactive = {
 			return item;
 		}
 	},
-	async removeIndex(path, indexMatch, indexName) {
+	async removeByIndex(path, indexMatch, indexName) {
 		const index = findIndex(this.get(path), indexMatch, indexName);
 		if (hasValue(index)) {
-			await this.splice(path, index, 1);
+			return this.splice(path, index, 1);
+		}
+	},
+	async removeIndex(path, index) {
+		if (hasValue(index)) {
+			return this.splice(path, index, 1);
 		}
 	},
 	async setIndex(path, indexMatch, item, indexName, optionsArg) {
@@ -95,7 +100,8 @@ export const extendRactive = {
 		sortOldest(array, property, true);
 		await this.update(path);
 	},
-	async syncCollection(path, newValArg, type = 'push', indexName = 'id') {
+	async syncCollection(path, newValArg, type = 'push', indexNameArg) {
+		const indexName = indexNameArg || app.idProperty || 'id';
 		const oldVal = this.get(path);
 		if (isPlainObject(oldVal)) {
 			assignDeep(oldVal, newValArg);

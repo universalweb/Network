@@ -21,6 +21,9 @@ const createWatchers = (currentView, item, key) => {
 		suffix,
 	} = item.options;
 	const {
+		idProperty
+	} = item.options;
+	const {
 		methods,
 	} = item;
 	const createMethod = methods.create || 'push';
@@ -31,19 +34,19 @@ const createWatchers = (currentView, item, key) => {
 	item.suffix = suffix;
 	currentView.watchers[key] = watch({
 		async create(json) {
-			await currentView.syncCollection(key, json.item, createMethod);
+			await currentView.syncCollection(key, json.item, createMethod, idProperty);
 			currentView.fire(`${prefix}create${suffix}`, json.item, json);
 		},
 		async delete(json) {
-			await currentView.removeIndex(key, json.item.id);
+			await currentView.removeByIndex(key, json.item[idProperty], idProperty);
 			currentView.fire(`${prefix}delete${suffix}`, json.item, json);
 		},
 		async read(json) {
-			await currentView.syncCollection(key, json.items, readMethod);
+			await currentView.syncCollection(key, json.items, readMethod, idProperty);
 			currentView.fire(`${prefix}read${suffix}`, json.item, json);
 		},
 		async update(json) {
-			await currentView.syncCollection(key, json.item, createMethod);
+			await currentView.syncCollection(key, json.item, createMethod, idProperty);
 			currentView.fire(`${prefix}update${suffix}`, json.item, json);
 		},
 	}, item.options);

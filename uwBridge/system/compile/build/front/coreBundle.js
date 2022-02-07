@@ -148,7 +148,7 @@
 	};
 	app.workerRequest = workerRequest;
 	const {
-		assign: assign$9, querySelector: querySelector$2, map: map$2, hasValue: hasValue$3, isString: isString$6
+		assign: assign$8, querySelector: querySelector$2, map: map$2, hasValue: hasValue$3, isString: isString$6
 	} = app.utility;
 	const {
 		crate: crate$2
@@ -272,11 +272,11 @@
 			request: 'socket.get'
 		});
 	};
-	assign$9(app, {
+	assign$8(app, {
 		fetchFile
 	});
 	const {
-		assign: assign$8
+		assign: assign$7
 	} = app.utility;
 	const request = async (requestName, config) => {
 		const requestPackage = config ?
@@ -299,12 +299,12 @@
 		const json = await workerRequest(workerPackage);
 		return json;
 	};
-	assign$8(app, {
+	assign$7(app, {
 		request
 	});
 	const {
 		utility: {
-			assign: assign$7,
+			assign: assign$6,
 			cnsl: cnsl$3,
 			compactMapArray,
 			isEmpty: isEmpty$1,
@@ -324,7 +324,7 @@
 		const watchObject = {};
 		callable.regex = type;
 		let number = watchersRegex.push(callable) - 1;
-		assign$7(watchObject, {
+		assign$6(watchObject, {
 			_: {
 				isWatcher: true
 			},
@@ -350,7 +350,7 @@
 		}
 		const levelObject = watchers[type];
 		let number = levelObject.push(callable) - 1;
-		assign$7(watchObject, {
+		assign$6(watchObject, {
 			_: {
 				isWatcher: true
 			},
@@ -444,19 +444,19 @@
 			request: requestName
 		});
 	};
-	assign$7(app.events, {
+	assign$6(app.events, {
 		_(json) {
 			return onUpdate(json.data);
 		}
 	});
-	assign$7(app, {
+	assign$6(app, {
 		push,
 		watch: watch$3,
 		watchers
 	});
 	const {
 		utility: {
-			assign: assign$6,
+			assign: assign$5,
 			hasDot,
 			promise,
 			last: last$1,
@@ -517,7 +517,7 @@
 	const streamAssets = (data, options) => {
 		return promise((accept) => {
 			fetchFile(
-				assign$6(
+				assign$5(
 					{
 						callback(...args) {
 							accept(args);
@@ -583,7 +583,7 @@
 		const files = isString$4(fileList) ? fileList.split(commaString) : fileList;
 		return demand$4(map$1(files, languagePath));
 	};
-	assign$6(app.events, {
+	assign$5(app.events, {
 		async setupCompleted(data) {
 			cnsl$2('Worker is Ready', 'notify');
 			app.systemLanguage = data.language;
@@ -596,7 +596,7 @@
 			}
 		}
 	});
-	assign$6(app, {
+	assign$5(app, {
 		demand: demand$4,
 		demandCss: demandCss$1,
 		demandHtml: demandHtml$1,
@@ -613,7 +613,7 @@
 	};
 	const {
 		utility: {
-			debounce, eventAdd: eventAdd$1, isAgent, info, model, assign: assign$5
+			debounce, eventAdd: eventAdd$1, isAgent, info, model, assign: assign$4
 		}
 	} = app;
 	app.updateResize = async () => {
@@ -641,7 +641,7 @@
 		}
 		console.log(screenSize);
 		await Ractive.sharedSet(
-			assign$5(Ractive.sharedGet(), {
+			assign$4(Ractive.sharedGet(), {
 				tinyScreen: false,
 				smallScreen: false,
 				mediumScreen: false,
@@ -753,7 +753,7 @@
 			findItem,
 			assignDeep: assignDeep$1,
 			ensureArray: ensureArray$1,
-			assign: assign$4,
+			assign: assign$3,
 			each: each$8,
 			isArray: isArray$1,
 			isEmpty,
@@ -814,10 +814,15 @@
 				return item;
 			}
 		},
-		async removeIndex(path, indexMatch, indexName) {
+		async removeByIndex(path, indexMatch, indexName) {
 			const index = findIndex(this.get(path), indexMatch, indexName);
 			if (hasValue$1(index)) {
-				await this.splice(path, index, 1);
+				return this.splice(path, index, 1);
+			}
+		},
+		async removeIndex(path, index) {
+			if (hasValue$1(index)) {
+				return this.splice(path, index, 1);
 			}
 		},
 		async setIndex(path, indexMatch, item, indexName, optionsArg) {
@@ -840,7 +845,8 @@
 			sortOldest(array, property, true);
 			await this.update(path);
 		},
-		async syncCollection(path, newValArg, type = 'push', indexName = 'id') {
+		async syncCollection(path, newValArg, type = 'push', indexNameArg) {
+			const indexName = indexNameArg || app.idProperty || 'id';
 			const oldVal = this.get(path);
 			if (isPlainObject(oldVal)) {
 				assignDeep$1(oldVal, newValArg);
@@ -849,7 +855,7 @@
 				each$8(newVal, (item) => {
 					const oldValItem = findItem(oldVal, item[indexName], indexName);
 					if (hasValue$1(oldValItem)) {
-						assign$4(oldValItem, item);
+						assign$3(oldValItem, item);
 					} else {
 						oldVal[type](item);
 					}
@@ -883,7 +889,7 @@
 			}
 		}
 	};
-	assign$4(Ractive.prototype, extendRactive);
+	assign$3(Ractive.prototype, extendRactive);
 	const getComponentName = (componentModel, componentName) => {
 		return componentModel === app.router.currentStateObject ? 'navState' : componentName;
 	};
@@ -950,11 +956,12 @@
 	const importTemplate = (componentName, componentModel, asset) => {
 		let template = asset.template;
 		if (!template.includes('.html') && !template.includes('.hbs') && !template.includes('.mustache')) {
-			template = asset.template = asset.template = `${template}.html`;
+			template = asset.template = `${template}.html`;
 		}
 		if (template) {
 			watchHtml(template, (html) => {
 				const realName = getComponentName(componentModel, componentName);
+				console.lo(realName);
 				if (realName) {
 					const matchedComponent = app.view.findComponent(realName);
 					if (matchedComponent) {
@@ -1007,7 +1014,7 @@
 	};
 	const {
 		utility: {
-			each: each$4, assign: assign$3, querySelector: querySelector$1
+			each: each$4, assign: assign$2, querySelector: querySelector$1
 		}
 	} = app;
 	const headNode = querySelector$1('head');
@@ -1057,7 +1064,7 @@
 			componentsWithCss[key].push(componentConfig);
 		});
 	};
-	assign$3(app, {
+	assign$2(app, {
 		componentsWithCss,
 		importedCss,
 		importedCssCount
@@ -1079,6 +1086,9 @@
 			prefix, suffix
 		} = item.options;
 		const {
+			idProperty
+		} = item.options;
+		const {
 			methods
 		} = item;
 		const createMethod = methods.create || 'push';
@@ -1090,19 +1100,19 @@
 		currentView.watchers[key] = watch$1(
 			{
 				async create(json) {
-					await currentView.syncCollection(key, json.item, createMethod);
+					await currentView.syncCollection(key, json.item, createMethod, idProperty);
 					currentView.fire(`${prefix}create${suffix}`, json.item, json);
 				},
 				async delete(json) {
-					await currentView.removeIndex(key, json.item.id);
+					await currentView.removeByIndex(key, json.item[idProperty], idProperty);
 					currentView.fire(`${prefix}delete${suffix}`, json.item, json);
 				},
 				async read(json) {
-					await currentView.syncCollection(key, json.items, readMethod);
+					await currentView.syncCollection(key, json.items, readMethod, idProperty);
 					currentView.fire(`${prefix}read${suffix}`, json.item, json);
 				},
 				async update(json) {
-					await currentView.syncCollection(key, json.item, createMethod);
+					await currentView.syncCollection(key, json.item, createMethod, idProperty);
 					currentView.fire(`${prefix}update${suffix}`, json.item, json);
 				}
 			},
@@ -1167,12 +1177,11 @@
 	};
 	const {
 		utility: {
-			cnsl: cnsl$1, assign: assign$2
+			cnsl: cnsl$1
 		}
 	} = app;
 	cnsl$1('viewSetup Module', 'notify');
 	const initializeComponent = (componentConfig) => {
-		componentConfig.decorators = assign$2(componentConfig.decorators || {}, {});
 		const {
 			css, model: componentModel, asset, name: componentName
 		} = componentConfig;
