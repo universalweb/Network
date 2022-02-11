@@ -51,15 +51,17 @@ const createWatchers = (currentView, item, key) => {
 		},
 	}, item.options);
 };
-const removeInstance = function(currentView, css) {
-	cssUnrender(css);
+const removeInstance = function(currentView, styles) {
+	cssUnrender(styles);
 	each(currentView.watchers, (item, key) => {
 		item.stop();
 		item[key] = null;
 	});
+	currentView.styles = null;
+	currentView.asset = null;
 };
-const onrenderInstance = function(currentView, css) {
-	cssRender(css);
+const onrenderInstance = function(currentView, styles) {
+	cssRender(styles);
 	if (currentView.watchers) {
 		each(currentView.watchers, (item) => {
 			item.start();
@@ -68,7 +70,7 @@ const onrenderInstance = function(currentView, css) {
 };
 export const buildComponentEvents = function(componentConfig) {
 	const {
-		css,
+		styles,
 		watchers,
 	} = componentConfig;
 	const thisComponent = this;
@@ -78,18 +80,17 @@ export const buildComponentEvents = function(componentConfig) {
 			createWatchers(thisComponent, item, key);
 		});
 	}
+	thisComponent.asset = componentConfig.asset;
 	thisComponent.on({
 		multi(cmpntEvent, ...args) {
-			if (app.debug) {
-				console.log(cmpntEvent, ...args);
-			}
+			app.log(cmpntEvent, ...args);
 			return multiEvent(this, cmpntEvent, ...args);
 		},
 		render() {
-			return onrenderInstance(this, css);
+			return onrenderInstance(this, styles);
 		},
 		teardown() {
-			return removeInstance(this, css);
+			return removeInstance(this, styles);
 		},
 	});
 };

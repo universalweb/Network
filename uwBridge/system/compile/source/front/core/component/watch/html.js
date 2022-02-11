@@ -3,44 +3,55 @@ const {
 	watch,
 	demand,
 	utility: {
-		each,
-		isFunction,
+		eachObject,
+		eachArray
 	},
 	crate
 } = app;
-const onHtml = async (matchFilename, componentName, json) => {
-	const type = json.type;
+const onHtml = async (matchFilename, json, callback) => {
+	if (callback) {
+		return callback(matchFilename, json);
+	}
 	const filePath = json.name;
-	if (app.debug) {
-		console.log('WATCH HTML', matchFilename, json);
-	}
-	if (!filePath.includes(matchFilename)) {
-		return;
-	}
+	app.log('WATCH HTML', matchFilename, json);
 	const html = await demand(filePath);
 	crate.setItem(filePath, html);
-	if (app.debug) {
-		console.log(type, filePath, html);
-	}
-	if (isFunction(componentName)) {
-		componentName(html);
-	} else {
-		each(app.view.findAllComponents(componentName), (item) => {
-			if (app.debug) {
-				console.log(item);
+	app.log(filePath, html.length);
+	eachObject(Ractive.components, (item, key) => {
+		const asset = item.asset;
+		if (asset.template === filePath) {
+			item.defaults.template = Ractive.parse(html);
+			const matchedComponents = app.view.findAllComponents(key);
+			if (matchedComponents) {
+				eachArray(matchedComponents, (matchedComponent) => {
+					matchedComponent.resetTemplate(html);
+				});
 			}
-			item.resetTemplate(html);
-		});
-	}
+		}
+		if (asset.partials) {
+			eachObject(asset.partials, (partialPath, partialName) => {
+				if (partialPath === filePath) {
+					item.partials[partialName] = Ractive.parse(html);
+					const matchedComponents = app.view.findAllComponents(key);
+					if (matchedComponents) {
+						eachArray(matchedComponents, (matchedComponent) => {
+							// app.log('reset partial', partialName);
+							matchedComponent.resetPartial(partialName, html);
+						});
+					}
+				}
+			});
+		}
+	});
 	window.UIkit.update(document.body, 'update');
 };
-const watchHtml = (matchFilename, componentName) => {
-	if (app.debug) {
-		console.log('WATCH HTML', matchFilename);
-	}
+const watchHtml = (matchFilename, callback) => {
+	app.log('WATCH HTML', matchFilename);
 	return watch(matchFilename, (json) => {
-		onHtml(matchFilename, componentName, json);
+		app.log('HTML FILE CHANGED WATCH EVENT', matchFilename);
+		onHtml(matchFilename, json, callback);
 	});
 };
 watch.html = watchHtml;
+watchHtml(/\.html/);
 export default watchHtml;

@@ -8,7 +8,7 @@
 	await component('frm', {
 		asset: {
 			template: `${dirname}template`,
-			css: [`${dirname}style`]
+			styles: [`${dirname}style`]
 		}
 	});
 })();

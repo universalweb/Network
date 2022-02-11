@@ -181,9 +181,9 @@ export const extendRactive = {
 		await this.update(path);
 	},
 	async syncItem(pathOriginal, newValue, indexName, type = 'push', propertyName, options = {}) {
-		console.log(this, pathOriginal, newValue, indexName);
+		// app.log(this, pathOriginal, newValue, indexName);
 		const path = assemblePath(pathOriginal, options);
-		console.log(path);
+		// app.log(path);
 		const currentValue = getItem(this, path, newValue, indexName, options);
 		if (currentValue) {
 			if (type === 'remove') {
@@ -206,7 +206,7 @@ export const extendRactive = {
 		const [
 			pathOriginal, newValues, indexName, type = 'push', propertyName, options = {}
 		] = args;
-		console.log(source, pathOriginal, newValues, indexName, type, propertyName, options);
+		// app.log(source, pathOriginal, newValues, indexName, type, propertyName, options);
 		if (isArray(newValues)) {
 			return mapAsync(newValues, async (item) => {
 				return source.syncItem(pathOriginal, item, indexName, type, propertyName, options);

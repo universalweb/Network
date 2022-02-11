@@ -90,7 +90,7 @@
 	app.languagePath = languagePath;
 	const {
 		utility: {
-			hasValue: hasValue$4, promise: promise$1, uid, isString: isString$7
+			hasValue: hasValue$5, promise: promise$1, uid, isString: isString$7
 		}
 	} = app;
 	const mainWorker = new Worker('/worker.js');
@@ -131,7 +131,7 @@
 			id, data
 		} = eventData;
 		let generatedId = id;
-		if (!hasValue$4(generatedId)) {
+		if (!hasValue$5(generatedId)) {
 			generatedId = '_';
 		}
 		if (!app.events[generatedId]) {
@@ -148,7 +148,7 @@
 	};
 	app.workerRequest = workerRequest;
 	const {
-		assign: assign$8, querySelector: querySelector$2, map: map$2, hasValue: hasValue$3, isString: isString$6
+		assign: assign$8, querySelector: querySelector$2, map: map$2, hasValue: hasValue$4, isString: isString$6
 	} = app.utility;
 	const {
 		crate: crate$2
@@ -214,7 +214,7 @@
 			crate$2.setItem(`cs-${filename}`, cs);
 			crate$2.setItem(filename, fileContents);
 		}
-		if (!hasValue$3(imported[filename]) || fileContents !== true) {
+		if (!hasValue$4(imported[filename]) || fileContents !== true) {
 			if (!isJs) {
 				if (fileContents === false) {
 					imported[filename] = {};
@@ -257,7 +257,7 @@
 		config.fileCount = config.data.length;
 		await workerRequest({
 			async callback(json) {
-				if (hasValue$3(json.file)) {
+				if (hasValue$4(json.file)) {
 					await saveCompleted(json, config);
 				} else {
 					return checkIfCompleted(config);
@@ -305,19 +305,19 @@
 	const {
 		utility: {
 			assign: assign$6,
-			cnsl: cnsl$3,
+			cnsl: cnsl$2,
 			compactMapArray,
 			isEmpty,
-			eachAsync,
-			eachObject,
-			eachArray,
+			eachAsync: eachAsync$1,
+			eachObject: eachObject$1,
+			eachArray: eachArray$1,
 			isString: isString$5,
 			isPlainObject: isPlainObject$2,
-			hasValue: hasValue$2,
+			hasValue: hasValue$3,
 			drop
 		}
 	} = app;
-	cnsl$3('Initilizing watchers module.', 'notify');
+	cnsl$2('Initilizing watchers module.', 'notify');
 	const watchers = {};
 	const watchersRegex = [];
 	const onRegex = (type, callable) => {
@@ -330,12 +330,12 @@
 			},
 			callable,
 			start() {
-				if (!hasValue$2(number)) {
+				if (!hasValue$3(number)) {
 					number = watchersRegex.push(callable) - 1;
 				}
 			},
 			stop() {
-				if (hasValue$2(number)) {
+				if (hasValue$3(number)) {
 					drop(watchersRegex, number);
 					number = null;
 				}
@@ -356,12 +356,12 @@
 			},
 			callable,
 			start() {
-				if (!hasValue$2(number)) {
+				if (!hasValue$3(number)) {
 					number = levelObject.push(callable) - 1;
 				}
 			},
 			stop() {
-				if (hasValue$2(number)) {
+				if (hasValue$3(number)) {
 					drop(levelObject, number);
 					number = null;
 				}
@@ -378,18 +378,18 @@
 				isWatcher: true
 			},
 			start() {
-				eachArray(watching, (item) => {
+				eachArray$1(watching, (item) => {
 					item.start();
 				});
 			},
 			stop() {
-				eachArray(watching, (item) => {
+				eachArray$1(watching, (item) => {
 					item.stop();
 				});
 			},
 			watching
 		};
-		eachObject(object, (item, key) => {
+		eachObject$1(object, (item, key) => {
 			watching.push(onString(`${prefix}${key}${suffix}`, item));
 		});
 		return watchCollection;
@@ -432,7 +432,7 @@
 		}
 		console.log(subscribers);
 		if (subscribers.length) {
-			eachAsync(subscribers, (watcher) => {
+			eachAsync$1(subscribers, (watcher) => {
 				return watcher(json, watcher);
 			});
 		}
@@ -452,7 +452,8 @@
 	assign$6(app, {
 		push,
 		watch: watch$3,
-		watchers
+		watchers,
+		watchersRegex
 	});
 	const {
 		utility: {
@@ -463,15 +464,16 @@
 			map: map$1,
 			isString: isString$4,
 			isPlainObject: isPlainObject$1,
-			each: each$8,
-			cnsl: cnsl$2,
+			each: each$5,
+			cnsl: cnsl$1,
 			initialString,
-			restString
+			restString,
+			getFileExtension: getFileExtension$1
 		},
 		crate: crate$1
 	} = app;
 	const commaString = ',';
-	const buildFilePath = (itemArg) => {
+	const buildFilePath$1 = (itemArg) => {
 		let item = itemArg;
 		if (!hasDot(item)) {
 			if (initialString(item, -9) === 'language/') {
@@ -538,16 +540,16 @@
 			demandType = objectDemand;
 			arrayToObjectMap = {};
 			let index = 0;
-			each$8(files, (item, key) => {
+			each$5(files, (item, key) => {
 				arrayToObjectMap[key] = index;
 				index++;
-				assets.push(buildFilePath(item));
+				assets.push(buildFilePath$1(item));
 			});
 		} else {
 			files = isString$4(files) ? files.split(commaString) : files;
 			demandType = files.length < 2 ? singleDemand : multiDemand;
-			each$8(files, (item) => {
-				assets.push(buildFilePath(item));
+			each$5(files, (item) => {
+				assets.push(buildFilePath$1(item));
 			});
 		}
 		const results = await streamAssets(assets, options);
@@ -563,11 +565,10 @@
 				optionsFunction(options);
 			}
 			files = map$1(files, (itemArg) => {
-				let item = itemArg;
-				if (type === 'js' && last$1(item) === '/') {
-					item += 'index';
-				}
-				return `${item}.${type}`;
+				const item = itemArg;
+				const itemExt = getFileExtension$1(item);
+				app.log('Demand Type', type, itemExt ? item : `${item}${(last$1(item) === '/' && 'index') || ''}.${type}`);
+				return itemExt ? item : `${item}${(last$1(item) === '/' && 'index') || ''}.${type}`;
 			});
 			return demand$4(files, options);
 		};
@@ -585,7 +586,7 @@
 	};
 	assign$5(app.events, {
 		async setupCompleted(data) {
-			cnsl$2('Worker is Ready', 'notify');
+			cnsl$1('Worker is Ready', 'notify');
 			app.systemLanguage = data.language;
 			try {
 				await demand$4('app/');
@@ -722,7 +723,12 @@
 		await app.updateResize();
 	};
 	model('smoothScroll', smoothScroll);
-	window.Ractive.prototype.data = {
+	const {
+		utility: {
+			assign: assign$3
+		}
+	} = app;
+	const methods = {
 		$: app.utility,
 		getComponent(partialName) {
 			const componentName = partialName;
@@ -744,14 +750,15 @@
 			return key;
 		}
 	};
+	assign$3(Ractive.prototype.data, methods);
 	const {
 		utility: {
 			findIndex,
-			hasValue: hasValue$1,
+			hasValue: hasValue$2,
 			findItem,
 			assignDeep: assignDeep$1,
 			ensureArray: ensureArray$1,
-			assign: assign$3,
+			assign: assign$2,
 			isArray: isArray$1,
 			sortNewest,
 			sortOldest,
@@ -793,7 +800,7 @@
 		const indexMatch = getIndexValue(indexMatchArg, indexNameArg, options);
 		const path = assemblePath(keypath, options);
 		const index = findIndex(context.get(path), indexMatch, indexName);
-		return hasValue$1(index) ? index : null;
+		return hasValue$2(index) ? index : null;
 	}
 	function getOrigin(context, keypath, indexMatchArg, indexNameArg, options = {}) {
 		const indexName = getPropertyName(indexNameArg, options);
@@ -811,7 +818,7 @@
 		const indexName = getPropertyName(indexNameArg, options);
 		const indexMatch = getIndexValue(indexMatchArg, indexNameArg, options);
 		const index = findIndex(path, indexMatch, indexName);
-		if (hasValue$1(index)) {
+		if (hasValue$2(index)) {
 			return context.splice(path, index + addBy, 0, ...ensureArray$1(value));
 		} else {
 			return context.push(path, value);
@@ -822,7 +829,7 @@
 		const indexName = getPropertyName(indexNameArg, options);
 		const indexMatch = getIndexValue(indexMatchArg, indexNameArg, options);
 		const index = findIndex(context.get(path), indexMatch, indexName);
-		if (hasValue$1(index)) {
+		if (hasValue$2(index)) {
 			return context.set(`${path}.${index}`, value);
 		}
 	}
@@ -830,7 +837,7 @@
 		async merge(keypath, source = {}, options) {
 			const path = assemblePath(keypath, options);
 			const target = this.get(keypath);
-			if (hasValue$1(target)) {
+			if (hasValue$2(target)) {
 				assignDeep$1(target, source);
 				await this.update(path);
 			}
@@ -872,13 +879,13 @@
 			const path = assemblePath(keypath, options);
 			const indexName = getPropertyName(indexNameArg, options);
 			const index = getIndex(this, keypath, indexMatchArg, indexName, options);
-			if (hasValue$1(index)) {
+			if (hasValue$2(index)) {
 				return this.splice(path, index, upto);
 			}
 		},
 		async removeIndex(keypath, index, upto = 1, options) {
 			const path = assemblePath(keypath, options);
-			if (hasValue$1(index)) {
+			if (hasValue$2(index)) {
 				return this.splice(path, index, upto);
 			}
 		},
@@ -893,7 +900,7 @@
 		async unshiftByIndex(keypath, item, indexMatchArg, indexNameArg, options) {
 			const indexName = getPropertyName(indexNameArg, options);
 			const index = getIndex(this, keypath, indexMatchArg, indexName, options);
-			if (hasValue$1(index)) {
+			if (hasValue$2(index)) {
 				const path = assemblePath(`${keypath}.${index}`, options);
 				await this.unshift(path, item);
 			}
@@ -901,7 +908,7 @@
 		async shiftByIndex(keypath, indexMatchArg, item, indexNameArg, options) {
 			const indexName = getPropertyName(indexNameArg, options);
 			const index = getIndex(this, keypath, indexMatchArg, indexName, options);
-			if (hasValue$1(index)) {
+			if (hasValue$2(index)) {
 				const path = assemblePath(`${keypath}.${index}`, options);
 				await this.shift(path);
 			}
@@ -909,7 +916,7 @@
 		async popByIndex(keypath, indexMatchArg, item, indexNameArg, options) {
 			const indexName = getPropertyName(indexNameArg, options);
 			const index = getIndex(this, keypath, indexMatchArg, indexName, options);
-			if (hasValue$1(index)) {
+			if (hasValue$2(index)) {
 				const path = assemblePath(`${keypath}.${index}`, options);
 				await this.pop(path);
 			}
@@ -925,9 +932,9 @@
 			await this.update(path);
 		},
 		async syncItem(pathOriginal, newValue, indexName, type = 'push', propertyName, options = {}) {
-			console.log(this, pathOriginal, newValue, indexName);
+			// app.log(this, pathOriginal, newValue, indexName);
 			const path = assemblePath(pathOriginal, options);
-			console.log(path);
+			// app.log(path);
 			const currentValue = getItem(this, path, newValue, indexName, options);
 			if (currentValue) {
 				if (type === 'remove') {
@@ -948,7 +955,7 @@
 		async syncCollection(...args) {
 			const source = this;
 			const [pathOriginal, newValues, indexName, type = 'push', propertyName, options = {}] = args;
-			console.log(source, pathOriginal, newValues, indexName, type, propertyName, options);
+			// app.log(source, pathOriginal, newValues, indexName, type, propertyName, options);
 			if (isArray$1(newValues)) {
 				return mapAsync(newValues, async (item) => {
 					return source.syncItem(pathOriginal, item, indexName, type, propertyName, options);
@@ -960,96 +967,15 @@
 		async toggleByIndex(keypath, indexMatch, indexName, options) {
 			const path = assemblePath(keypath, options);
 			const index = getIndex(keypath, indexMatch, indexName, options);
-			if (hasValue$1(index)) {
+			if (hasValue$2(index)) {
 				await this.toggle(`${path}.${index}`);
 			}
 		}
 	};
-	assign$3(Ractive.prototype, extendRactive);
-	const getComponentName = (componentModel, componentName) => {
-		return componentModel === app.router.currentStateObject ? 'navState' : componentName;
-	};
-	const {
-		watch: watch$2,
-		demand: demand$3,
-		utility: {
-			each: each$7, isFunction: isFunction$1
-		},
-		crate
-	} = app;
-	const onHtml = async (matchFilename, componentName, json) => {
-		const type = json.type;
-		const filePath = json.name;
-		if (app.debug) {
-			console.log('WATCH HTML', matchFilename, json);
-		}
-		if (!filePath.includes(matchFilename)) {
-			return;
-		}
-		const html = await demand$3(filePath);
-		crate.setItem(filePath, html);
-		if (app.debug) {
-			console.log(type, filePath, html);
-		}
-		if (isFunction$1(componentName)) {
-			componentName(html);
-		} else {
-			each$7(app.view.findAllComponents(componentName), (item) => {
-				if (app.debug) {
-					console.log(item);
-				}
-				item.resetTemplate(html);
-			});
-		}
-		window.UIkit.update(document.body, 'update');
-	};
-	const watchHtml = (matchFilename, componentName) => {
-		if (app.debug) {
-			console.log('WATCH HTML', matchFilename);
-		}
-		return watch$2(matchFilename, (json) => {
-			onHtml(matchFilename, componentName, json);
-		});
-	};
-	watch$2.html = watchHtml;
+	assign$2(Ractive.prototype, extendRactive);
 	const {
 		utility: {
-			each: each$6
-		}
-	} = app;
-	const importPartials = (componentName, componentModel, asset) => {
-		if (asset.partials) {
-			each$6(asset.partials, (item, key) => {
-				watchHtml(item.includes('.html') ? item : `${item}.html`, (html) => {
-					const realName = getComponentName(componentModel, componentName);
-					each$6(app.view.findAllComponents(realName), (subItem) => {
-						subItem.resetPartial(key, html);
-					});
-				});
-			});
-		}
-	};
-	const importTemplate = (componentName, componentModel, asset) => {
-		let template = asset.template;
-		if (!template.includes('.html') && !template.includes('.hbs') && !template.includes('.mustache')) {
-			template = asset.template = `${template}.html`;
-		}
-		if (template) {
-			watchHtml(template, (html) => {
-				const realName = getComponentName(componentModel, componentName);
-				console.lo(realName);
-				if (realName) {
-					const matchedComponent = app.view.findComponent(realName);
-					if (matchedComponent) {
-						matchedComponent.resetTemplate(html);
-					}
-				}
-			});
-		}
-	};
-	const {
-		utility: {
-			each: each$5, isString: isString$3, isArray, apply: apply$1
+			each: each$4, isString: isString$3, isArray, apply: apply$1
 		}
 	} = app;
 	const logMulti = console;
@@ -1070,15 +996,15 @@
 		}
 		if (events) {
 			if (isString$3(events)) {
-				each$5(events.split(','), (subItem) => {
+				each$4(events.split(','), (subItem) => {
 					if (subItem) {
 						currentView.fire(subItem.trim(), componentEvent, ...args);
 					}
 				});
 			} else if (isArray(events)) {
-				each$5(events, (item) => {
+				each$4(events, (item) => {
 					if (item) {
-						each$5(item.split(','), (subItem) => {
+						each$4(item.split(','), (subItem) => {
 							if (subItem) {
 								currentView.fire(subItem.trim(), componentEvent, ...args);
 							}
@@ -1090,7 +1016,7 @@
 	};
 	const {
 		utility: {
-			each: each$4, assign: assign$2, querySelector: querySelector$1
+			each: each$3, assign: assign$1, querySelector: querySelector$1
 		}
 	} = app;
 	const headNode = querySelector$1('head');
@@ -1120,12 +1046,12 @@
 	};
 	const cssRender = (css) => {
 		if (css) {
-			each$4(css, render);
+			each$3(css, render);
 		}
 	};
 	const cssUnrender = (css) => {
 		if (css) {
-			each$4(css, unrender);
+			each$3(css, unrender);
 		}
 	};
 	const componentsWithCss = {};
@@ -1133,22 +1059,22 @@
 		if (!css) {
 			return;
 		}
-		each$4(css, (item, key) => {
+		each$3(css, (item, key) => {
 			if (!componentsWithCss[key]) {
 				componentsWithCss[key] = [];
 			}
 			componentsWithCss[key].push(componentConfig);
 		});
 	};
-	assign$2(app, {
+	assign$1(app, {
 		componentsWithCss,
 		importedCss,
 		importedCssCount
 	});
 	const {
-		watch: watch$1,
+		watch: watch$2,
 		utility: {
-			each: each$3, get, apply
+			each: each$2, get, apply
 		}
 	} = app;
 	const createWatchers = (currentView, item, key) => {
@@ -1173,7 +1099,7 @@
 		suffix = suffix ? `.${suffix}` : '';
 		item.prefix = prefix;
 		item.suffix = suffix;
-		currentView.watchers[key] = watch$1(
+		currentView.watchers[key] = watch$2(
 			{
 				async create(json) {
 					await currentView.syncCollection(key, json.item, createMethod, idProperty);
@@ -1195,44 +1121,45 @@
 			item.options
 		);
 	};
-	const removeInstance = function(currentView, css) {
-		cssUnrender(css);
-		each$3(currentView.watchers, (item, key) => {
+	const removeInstance = function(currentView, styles) {
+		cssUnrender(styles);
+		each$2(currentView.watchers, (item, key) => {
 			item.stop();
 			item[key] = null;
 		});
+		currentView.styles = null;
+		currentView.asset = null;
 	};
-	const onrenderInstance = function(currentView, css) {
-		cssRender(css);
+	const onrenderInstance = function(currentView, styles) {
+		cssRender(styles);
 		if (currentView.watchers) {
-			each$3(currentView.watchers, (item) => {
+			each$2(currentView.watchers, (item) => {
 				item.start();
 			});
 		}
 	};
 	const buildComponentEvents = function(componentConfig) {
 		const {
-			css, watchers
+			styles, watchers
 		} = componentConfig;
 		const thisComponent = this;
 		thisComponent.watchers = watchers ? watchers(thisComponent) : {};
 		if (thisComponent.watchers) {
-			each$3(thisComponent.watchers, (item, key) => {
+			each$2(thisComponent.watchers, (item, key) => {
 				createWatchers(thisComponent, item, key);
 			});
 		}
+		thisComponent.asset = componentConfig.asset;
 		thisComponent.on({
 			multi(cmpntEvent, ...args) {
-				if (app.debug) {
-					console.log(cmpntEvent, ...args);
-				}
+				app.log(cmpntEvent, ...args);
 				return multiEvent(this, cmpntEvent, ...args);
 			},
 			render() {
-				return onrenderInstance(this, css);
+				return onrenderInstance(this, styles);
 			},
 			teardown() {
-				return removeInstance(this, css);
+				return removeInstance(this, styles);
 			}
 		});
 	};
@@ -1251,92 +1178,71 @@
 			}
 		};
 	};
-	const {
-		utility: {
-			cnsl: cnsl$1
-		}
-	} = app;
-	cnsl$1('viewSetup Module', 'notify');
-	const initializeComponent = (componentConfig) => {
-		const {
-			css, model: componentModel, asset, name: componentName
-		} = componentConfig;
-		registerCssComponent(css, componentConfig);
-		if (asset && (componentName || componentModel)) {
-			importTemplate(componentName, componentModel, asset);
-			importPartials(componentName, componentModel, asset);
-		}
-		onConstruct(componentConfig);
-	};
-	const {
-		utility: {
-			omit
-		}
-	} = app;
 	const buildComponent = (componentConfig) => {
-		initializeComponent(componentConfig);
 		const {
-			name: componentName, model
+			name: componentName, asset, styles
 		} = componentConfig;
-		const cmpntConfigClean = omit(componentConfig, ['css', 'asset']);
-		if (componentConfig.CSS) {
-			cmpntConfigClean.css = componentConfig.CSS;
-		}
+		registerCssComponent(styles, componentConfig);
+		onConstruct(componentConfig);
+		const cmpntConfigClean = componentConfig;
 		const Component = Ractive.extend(cmpntConfigClean);
 		if (componentName) {
 			Ractive.components[componentName] = Component;
 		}
-		if (model) {
-			model.component = Component;
-		}
+		Component.asset = asset;
 		return Component;
 	};
 	const {
-		demand: demand$2,
+		demand: demand$3,
 		demandCss,
 		demandHtml,
 		utility: {
-			assign: assign$1, each: each$2, ensureArray, isString: isString$2
+			eachAsync, ensureArray, isString: isString$2, getFileExtension, hasValue: hasValue$1, eachObjectAsync
 		}
 	} = app;
+	function buildFilePath(template, extType = 'html') {
+		const templateExt = template && getFileExtension(template);
+		return (!templateExt && `${template}.${extType}`) || template;
+	}
 	const asyncComponent = async function(componentConfig) {
-		const componentModel = componentConfig.model;
+		componentConfig.asset ||= {};
 		let asset = componentConfig.asset || {};
 		if (isString$2(asset)) {
 			asset = {
-				css: [`${asset}style`],
-				template: `${asset}template`
+				template: asset
 			};
 		}
-		componentConfig.asset = asset;
-		componentConfig.css = componentConfig.css || {};
+		componentConfig.styles = componentConfig.styles || {};
 		componentConfig.partials = componentConfig.partials || {};
 		if (asset) {
-			if (asset.template) {
+			const {
+				partials, template, styles
+			} = asset;
+			if (hasValue$1(template)) {
+				asset.template = buildFilePath(template);
+				app.log('Async Template COMPILED URL', asset.template);
 				componentConfig.template = await demandHtml(asset.template);
 			}
 			if (asset.demand) {
-				componentConfig.demand = await demand$2(asset.demand);
+				componentConfig.demand = await demand$3(asset.demand);
 			}
-			if (asset.partials) {
-				assign$1(componentConfig.partials, await demandHtml(asset.partials));
+			if (partials) {
+				await eachObjectAsync(partials, async (item, key) => {
+					const compiledPartialPath = (partials[key] = buildFilePath(item));
+					componentConfig.partials[key] = await demandHtml(compiledPartialPath);
+				});
+				console.log(asset);
 			}
-			if (asset.css) {
-				const assetCss = asset.css;
-				const loadCss = await demandCss(assetCss);
-				each$2(ensureArray(loadCss), (item, index) => {
-					let keyName = assetCss[index];
-					if (!keyName.includes('.css')) {
-						keyName = `${keyName}.css`;
-					}
-					componentConfig.css[keyName] = item;
+			if (styles) {
+				await eachAsync(ensureArray(styles), async (item, key) => {
+					const compiledCssPath = (styles[key] = buildFilePath(item, 'css'));
+					app.log('compiled css path', compiledCssPath);
+					componentConfig.styles[compiledCssPath] = await demandCss(compiledCssPath);
 				});
 			}
 		}
-		const componentPromise = buildComponent(componentConfig);
-		if (componentModel) {
-			componentModel.component = componentPromise;
-		}
+		const componentPromise = await buildComponent(componentConfig);
+		app.log('Async Component Config', componentConfig);
 		return componentPromise;
 	};
 	const {
@@ -1369,8 +1275,8 @@
 	app.component = component$1;
 	app.getComponent = getComponent;
 	const {
-		demand: demand$1,
-		watch,
+		demand: demand$2,
+		watch: watch$1,
 		utility: {
 			each: each$1, querySelector, isDom
 		}
@@ -1382,19 +1288,73 @@
 		console.log('CSS UPDATE', filePath, componentsUsingCss);
 		const node = importedCss[filePath] || importedCss[componentName] || querySelector(`[data-src="${filePath}"]`);
 		if (node || componentsUsingCss) {
-			const content = await demand$1(filePath);
+			const content = await demand$2(filePath);
 			if (isDom(node)) {
 				node.innerHTML = content;
 			}
 			if (componentsUsingCss) {
 				each$1(componentsUsingCss, (item) => {
 					console.log(item);
-					item.css[filePath] = content;
+					item.styles[filePath] = content;
 				});
 			}
 		}
 	};
-	watch(/\.css/, onCss);
+	watch$1(/\.css/, onCss);
+	const {
+		watch,
+		demand: demand$1,
+		utility: {
+			eachObject, eachArray
+		},
+		crate
+	} = app;
+	const onHtml = async (matchFilename, json, callback) => {
+		if (callback) {
+			return callback(matchFilename, json);
+		}
+		const filePath = json.name;
+		app.log('WATCH HTML', matchFilename, json);
+		const html = await demand$1(filePath);
+		crate.setItem(filePath, html);
+		app.log(filePath, html.length);
+		eachObject(Ractive.components, (item, key) => {
+			const asset = item.asset;
+			if (asset.template === filePath) {
+				item.defaults.template = Ractive.parse(html);
+				const matchedComponents = app.view.findAllComponents(key);
+				if (matchedComponents) {
+					eachArray(matchedComponents, (matchedComponent) => {
+						matchedComponent.resetTemplate(html);
+					});
+				}
+			}
+			if (asset.partials) {
+				eachObject(asset.partials, (partialPath, partialName) => {
+					if (partialPath === filePath) {
+						item.partials[partialName] = Ractive.parse(html);
+						const matchedComponents = app.view.findAllComponents(key);
+						if (matchedComponents) {
+							eachArray(matchedComponents, (matchedComponent) => {
+								// app.log('reset partial', partialName);
+								matchedComponent.resetPartial(partialName, html);
+							});
+						}
+					}
+				});
+			}
+		});
+		window.UIkit.update(document.body, 'update');
+	};
+	const watchHtml = (matchFilename, callback) => {
+		app.log('WATCH HTML', matchFilename);
+		return watch(matchFilename, (json) => {
+			app.log('HTML FILE CHANGED WATCH EVENT', matchFilename);
+			onHtml(matchFilename, json, callback);
+		});
+	};
+	watch.html = watchHtml;
+	watchHtml(/\.html/);
 	const {
 		demand,
 		utility: {
@@ -1629,7 +1589,7 @@
     	this.log('Router back State');
     	const navHistory = this.navHistory;
     	if (navHistory.length) {
-    		router.historyIndex--;
+    		app.router.historyIndex--;
     		window.history.back();
     	}
     }
@@ -1637,7 +1597,7 @@
     	this.log('Router forward State');
     	const navHistory = this.navHistory;
     	if (navHistory.length > this.historyIndex) {
-    		router.historyIndex++;
+    		app.router.historyIndex++;
     		window.history.forward();
     	}
     }

@@ -12,7 +12,7 @@
     "globalThis": false,
     "window": false,
     "top": false,
-    "Ractive": true,
+    "Ractive": false,
     "$": true
   },
   "parserOptions": {

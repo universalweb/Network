@@ -12,7 +12,7 @@
 			partials: {
 				sidebarItem: `${dirname}item`
 			},
-			css: [`${dirname}style`]
+			styles: [`${dirname}style`]
 		},
 		data() {
 			return {

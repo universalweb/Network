@@ -150,5 +150,6 @@ assign(app.events, {
 assign(app, {
 	push,
 	watch,
-	watchers
+	watchers,
+	watchersRegex
 });

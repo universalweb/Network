@@ -14,7 +14,8 @@ const {
 		each,
 		cnsl,
 		initialString,
-		restString
+		restString,
+		getFileExtension
 	},
 	crate
 } = app;
@@ -106,11 +107,10 @@ const demandTypeMethod = (type, optionsFunction) => {
 			optionsFunction(options);
 		}
 		files = map(files, (itemArg) => {
-			let item = itemArg;
-			if (type === 'js' && last(item) === '/') {
-				item += 'index';
-			}
-			return `${item}.${type}`;
+			const item = itemArg;
+			const itemExt = getFileExtension(item);
+			app.log('Demand Type', type, (itemExt) ? item : `${item}${last(item) === '/' && 'index' || ''}.${type}`);
+			return (itemExt) ? item : `${item}${last(item) === '/' && 'index' || ''}.${type}`;
 		});
 		return demand(files, options);
 	};

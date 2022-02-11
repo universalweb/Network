@@ -1,5 +1,10 @@
 import app from '../app';
-window.Ractive.prototype.data = {
+const {
+	utility: {
+		assign
+	}
+} = app;
+const methods = {
 	$: app.utility,
 	getComponent(partialName) {
 		const componentName = partialName;
@@ -21,3 +26,4 @@ window.Ractive.prototype.data = {
 		return key;
 	},
 };
+assign(Ractive.prototype.data, methods);

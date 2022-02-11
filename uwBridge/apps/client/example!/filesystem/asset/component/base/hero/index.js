@@ -7,7 +7,7 @@
 	await component('hero', {
 		asset: {
 			template: `${exports.dirname}template`,
-			css: [`${exports.dirname}style`]
+			styles: [`${exports.dirname}style`]
 		}
 	});
 })();

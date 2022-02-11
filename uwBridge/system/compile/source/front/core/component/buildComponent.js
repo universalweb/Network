@@ -1,27 +1,19 @@
-import app from '../app';
-import initializeComponent from './initializeComponent.js';
-const {
-	utility: {
-		omit,
-	}
-} = app;
+import onConstruct from './onConstruct';
+import { registerCssComponent } from './css';
 const buildComponent = (componentConfig) => {
-	initializeComponent(componentConfig);
 	const {
 		name: componentName,
-		model
+		asset,
+		styles
 	} = componentConfig;
-	const cmpntConfigClean = omit(componentConfig, ['css', 'asset']);
-	if (componentConfig.CSS) {
-		cmpntConfigClean.css = componentConfig.CSS;
-	}
+	registerCssComponent(styles, componentConfig);
+	onConstruct(componentConfig);
+	const cmpntConfigClean = componentConfig;
 	const Component = Ractive.extend(cmpntConfigClean);
 	if (componentName) {
 		Ractive.components[componentName] = Component;
 	}
-	if (model) {
-		model.component = Component;
-	}
+	Component.asset = asset;
 	return Component;
 };
 export default buildComponent;

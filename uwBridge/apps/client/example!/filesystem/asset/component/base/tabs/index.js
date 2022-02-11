@@ -8,7 +8,7 @@
 	await component('tabs', {
 		asset: {
 			template: `${dirname}template`,
-			css: [`${dirname}style`]
+			styles: [`${dirname}style`]
 		},
 		onredner() {
 			const source = this;

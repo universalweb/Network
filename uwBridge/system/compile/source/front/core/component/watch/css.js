@@ -23,7 +23,7 @@ export const onCss = async (json) => {
 		if (componentsUsingCss) {
 			each(componentsUsingCss, (item) => {
 				console.log(item);
-				item.css[filePath] = content;
+				item.styles[filePath] = content;
 			});
 		}
 	}

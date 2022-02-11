@@ -13,7 +13,7 @@
 	await component('listSearch', {
 		asset: {
 			template: `${dirname}template`,
-			css: [`${dirname}style`]
+			styles: [`${dirname}style`]
 		},
 		async onrender() {
 			const source = this;

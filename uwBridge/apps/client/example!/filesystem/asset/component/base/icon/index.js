@@ -1,15 +1,13 @@
 (async () => {
 	const {
 		component,
-		utility: {
-			cnsl
-		}
+		utility: { cnsl }
 	} = app;
 	cnsl('icon Component', 'notify');
 	await component('icon', {
 		asset: {
 			template: `${exports.dirname}template`,
-			css: [`${exports.dirname}style`]
+			styles: [`${exports.dirname}style`]
 		}
 	});
 })();

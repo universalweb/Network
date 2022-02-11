@@ -9,7 +9,7 @@
 	await component('navigationbar', {
 		asset: {
 			template: `${dirname}template`,
-			css: [`${dirname}style`]
+			styles: [`${dirname}style`]
 		},
 		data() {
 			return {

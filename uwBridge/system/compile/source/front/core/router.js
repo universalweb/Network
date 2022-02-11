@@ -184,7 +184,7 @@ class Router {
 		this.log('Router back State');
 		const navHistory = this.navHistory;
 		if (navHistory.length) {
-			router.historyIndex--;
+			app.router.historyIndex--;
 			window.history.back();
 		}
 	}
@@ -192,7 +192,7 @@ class Router {
 		this.log('Router forward State');
 		const navHistory = this.navHistory;
 		if (navHistory.length > this.historyIndex) {
-			router.historyIndex++;
+			app.router.historyIndex++;
 			window.history.forward();
 		}
 	}

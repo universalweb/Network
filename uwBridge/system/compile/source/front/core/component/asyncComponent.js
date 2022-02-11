@@ -5,50 +5,59 @@ const {
 	demandCss,
 	demandHtml,
 	utility: {
-		assign,
-		each,
+		eachAsync,
 		ensureArray,
 		isString,
+		getFileExtension,
+		hasValue,
+		eachObjectAsync
 	}
 } = app;
+function buildFilePath(template, extType = 'html') {
+	const templateExt = template && getFileExtension(template);
+	return !templateExt && `${template}.${extType}` || template;
+}
 const asyncComponent = async function(componentConfig) {
-	const componentModel = componentConfig.model;
+	componentConfig.asset ||= {};
 	let asset = componentConfig.asset || {};
 	if (isString(asset)) {
 		asset = {
-			css: [`${asset}style`],
-			template: `${asset}template`,
+			template: asset,
 		};
 	}
-	componentConfig.asset = asset;
-	componentConfig.css = componentConfig.css || {};
+	componentConfig.styles = componentConfig.styles || {};
 	componentConfig.partials = componentConfig.partials || {};
 	if (asset) {
-		if (asset.template) {
+		const {
+			partials,
+			template,
+			styles
+		} = asset;
+		if (hasValue(template)) {
+			asset.template = buildFilePath(template);
+			app.log('Async Template COMPILED URL', asset.template);
 			componentConfig.template = await demandHtml(asset.template);
 		}
 		if (asset.demand) {
 			componentConfig.demand = await demand(asset.demand);
 		}
-		if (asset.partials) {
-			assign(componentConfig.partials, await demandHtml(asset.partials));
+		if (partials) {
+			await eachObjectAsync(partials, async (item, key) => {
+				const compiledPartialPath = partials[key] = buildFilePath(item);
+				componentConfig.partials[key] = await demandHtml(compiledPartialPath);
+			});
+			console.log(asset);
 		}
-		if (asset.css) {
-			const assetCss = asset.css;
-			const loadCss = await demandCss(assetCss);
-			each(ensureArray(loadCss), (item, index) => {
-				let keyName = assetCss[index];
-				if (!keyName.includes('.css')) {
-					keyName = `${keyName}.css`;
-				}
-				componentConfig.css[keyName] = item;
+		if (styles) {
+			await eachAsync(ensureArray(styles), async (item, key) => {
+				const compiledCssPath = styles[key] = buildFilePath(item, 'css');
+				app.log('compiled css path', compiledCssPath);
+				componentConfig.styles[compiledCssPath] = await demandCss(compiledCssPath);
 			});
 		}
 	}
-	const componentPromise = buildComponent(componentConfig);
-	if (componentModel) {
-		componentModel.component = componentPromise;
-	}
+	const componentPromise = await buildComponent(componentConfig);
+	app.log('Async Component Config', componentConfig);
 	return componentPromise;
 };
 export default asyncComponent;
