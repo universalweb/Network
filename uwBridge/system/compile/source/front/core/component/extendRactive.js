@@ -110,8 +110,9 @@ export const extendRactive = {
 	async clearArray(keypath, options) {
 		const path = assemblePath(keypath, options);
 		const target = this.get(path);
-		if (isArray(path)) {
-			clear(path);
+		app.log(path, target);
+		if (isArray(target)) {
+			clear(target);
 			await this.update(path);
 		} else {
 			app.log(`Attempted to clear none array at ${keypath}`);
@@ -197,7 +198,7 @@ export const extendRactive = {
 			}
 		}
 		if (extendRactive[type]) {
-			return this[type](pathOriginal, newValue, indexName, propertyName, options);
+			return this[type](path, newValue, indexName, propertyName, options);
 		}
 		return this[type](path, newValue);
 	},
@@ -206,7 +207,7 @@ export const extendRactive = {
 		const [
 			pathOriginal, newValues, indexName, type = 'push', propertyName, options = {}
 		] = args;
-		// app.log(source, pathOriginal, newValues, indexName, type, propertyName, options);
+		app.log(source, pathOriginal, newValues, indexName, type, propertyName, options);
 		if (isArray(newValues)) {
 			return mapAsync(newValues, async (item) => {
 				return source.syncItem(pathOriginal, item, indexName, type, propertyName, options);

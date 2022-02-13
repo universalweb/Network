@@ -14,6 +14,7 @@ export const imported = {};
 export const headNode = querySelector('head');
 export const styleNode = document.createElement('style');
 const loadScript = window.eval;
+app.imported = imported;
 const iJson = (contents) => {
 	if (contents) {
 		return loadScript(`(${contents})`);

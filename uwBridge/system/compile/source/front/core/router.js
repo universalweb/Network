@@ -14,7 +14,9 @@ const {
 		mapWhile,
 		ifInvoke,
 		hasValue,
-		last
+		last,
+		isFunction,
+		apply
 	},
 	component
 } = app;
@@ -160,6 +162,7 @@ class Router {
 			await this.compilePath();
 			await Ractive.sharedSet('currentPath', this.pathname);
 			await Ractive.sharedSet('navState', false);
+			await ifInvoke(this.methods.beforeLoad);
 			this.log('Checking if Model Loaded', match.model);
 			if (match.assets) {
 				if (match.assets.scripts) {
@@ -168,12 +171,24 @@ class Router {
 			}
 			this.log('match model', pathState.path);
 			const stateModel = await demandJs(pathState.path);
+			if (!stateModel.loaded) {
+				const onrender = stateModel.component.onrender;
+				if (onrender) {
+					stateModel.component.onrender = async function(...args) {
+						await (apply(onrender, this, args));
+						app.view.fire('navComponentRendered');
+						return args;
+					};
+					stateModel.loaded = true;
+				}
+				console.log();
+			}
 			this.log(stateModel);
 			const initializeComponent = await component(stateModel.component);
 			this.log('component made', initializeComponent);
 			Ractive.components.navstate = initializeComponent;
 			ifInvoke(stateModel.open);
-			ifInvoke(this.methods.onLoad);
+			await ifInvoke(this.methods.onLoad);
 			await Ractive.sharedSet('navState', true);
 		} else {
 			return false;
@@ -210,7 +225,8 @@ app.view.on({
 			original,
 			node
 		} = componentEvent;
-		const url = componentEvent.get('href') || node.getAttribute('href') || node.getAttribute('data-href');
+		let url = componentEvent.get('href') || componentEvent.get('url') || node.getAttribute('href') || node.getAttribute('data-href');
+		url = isFunction(url) && url() || url;
 		original.preventDefault();
 		app.router.log(componentEvent, url);
 		app.router.pushState(url);

@@ -14,55 +14,7 @@
 		utility: window.$
 	};
 	window.app = app;
-	const vStorage = {
-		hasLocal: false,
-		items: {},
-		getItem(key) {
-			return vStorage.items[key];
-		},
-		setItem(key, value) {
-			vStorage.items[key] = value;
-			return;
-		},
-		clear() {
-			vStorage.storage.items = {};
-			return;
-		},
-		removeItem(key) {
-			vStorage.items[key] = null;
-			return;
-		}
-	};
-	function hasStorage(storeCheck) {
-		try {
-			storeCheck().removeItem('TESTING');
-			vStorage.hasLocal = true;
-		} catch (e) {
-			console.log(e);
-			vStorage.hasLocal = false;
-		}
-	}
-	hasStorage(() => {
-		return localStorage;
-	});
-	class Crate {
-		constructor() {
-			this.storage = vStorage.hasLocal ? localStorage : vStorage;
-		}
-		setItem(key, value) {
-			return this.storage.setItem(key, value);
-		}
-		getItem(key) {
-			return this.storage.getItem(key);
-		}
-		clear() {
-			return this.storage.clear();
-		}
-		removeItem(key) {
-			return this.storage.removeItem(key);
-		}
-	}
-	app.crate = new Crate();
+	app.crate = app.utility.crate();
 	const isEventNodeMethod = (componentEvent) => {
 		if (!componentEvent || !componentEvent.original || !componentEvent.original.target) {
 			return false;
@@ -157,6 +109,7 @@
 	const headNode$1 = querySelector$2('head');
 	const styleNode = document.createElement('style');
 	const loadScript = window.eval;
+	app.imported = imported;
 	const iJson = (contents) => {
 		if (contents) {
 			return loadScript(`(${contents})`);
@@ -861,8 +814,9 @@
 		async clearArray(keypath, options) {
 			const path = assemblePath(keypath, options);
 			const target = this.get(path);
-			if (isArray$1(path)) {
-				clear(path);
+			app.log(path, target);
+			if (isArray$1(target)) {
+				clear(target);
 				await this.update(path);
 			} else {
 				app.log(`Attempted to clear none array at ${keypath}`);
@@ -948,14 +902,14 @@
 				}
 			}
 			if (extendRactive[type]) {
-				return this[type](pathOriginal, newValue, indexName, propertyName, options);
+				return this[type](path, newValue, indexName, propertyName, options);
 			}
 			return this[type](path, newValue);
 		},
 		async syncCollection(...args) {
 			const source = this;
 			const [pathOriginal, newValues, indexName, type = 'push', propertyName, options = {}] = args;
-			// app.log(source, pathOriginal, newValues, indexName, type, propertyName, options);
+			app.log(source, pathOriginal, newValues, indexName, type, propertyName, options);
 			if (isArray$1(newValues)) {
 				return mapAsync(newValues, async (item) => {
 					return source.syncItem(pathOriginal, item, indexName, type, propertyName, options);
@@ -975,18 +929,12 @@
 	assign$2(Ractive.prototype, extendRactive);
 	const {
 		utility: {
-			each: each$4, isString: isString$3, isArray, apply: apply$1
+			each: each$4, isString: isString$3, isArray, isFunction: isFunction$2
 		}
 	} = app;
-	const logMulti = console;
-	function debugMultiEvent(...args) {
-		if (app.debug || app.debugMultiEvent) {
-			apply$1(logMulti.log, logMulti, args);
-		}
-	}
 	const multiEvent = (currentView, componentEvent, events, ...args) => {
-		debugMultiEvent(currentView, componentEvent, events);
-		debugMultiEvent(args);
+		app.log(currentView, componentEvent, events);
+		app.log(args);
 		if (componentEvent && events.length) {
 			const {
 				original
@@ -1001,14 +949,12 @@
 						currentView.fire(subItem.trim(), componentEvent, ...args);
 					}
 				});
+			} else if (isFunction$2(events)) {
+				events(componentEvent, ...args);
 			} else if (isArray(events)) {
 				each$4(events, (item) => {
 					if (item) {
-						each$4(item.split(','), (subItem) => {
-							if (subItem) {
-								currentView.fire(subItem.trim(), componentEvent, ...args);
-							}
-						});
+						multiEvent(currentView, componentEvent, item, ...args);
 					}
 				});
 			}
@@ -1074,7 +1020,7 @@
 	const {
 		watch: watch$2,
 		utility: {
-			each: each$2, get, apply
+			each: each$2, get, apply: apply$1
 		}
 	} = app;
 	const createWatchers = (currentView, item, key) => {
@@ -1166,15 +1112,15 @@
 	const onConstruct = function(componentConfig) {
 		const sourceConstruct = componentConfig.onconstruct;
 		componentConfig.onconstruct = function(...args) {
-			apply(buildComponentEvents, this, [componentConfig, ...args]);
+			apply$1(buildComponentEvents, this, [componentConfig, ...args]);
 			if (sourceConstruct) {
-				return apply(sourceConstruct, this, args);
+				return apply$1(sourceConstruct, this, args);
 			}
 		};
 		const sourceRender = componentConfig.onrender;
 		componentConfig.onrender = function(...args) {
 			if (sourceRender) {
-				return apply(sourceRender, this, args);
+				return apply$1(sourceRender, this, args);
 			}
 		};
 	};
@@ -1358,7 +1304,7 @@
 	const {
 		demand,
 		utility: {
-			assign, each, isFunction
+			assign, each, isFunction: isFunction$1
 		}
 	} = app;
 	const view = new Ractive({
@@ -1377,7 +1323,7 @@
 			if (afterDemand) {
 				const afterDemandEvents = afterDemand[componentEvent.original.type];
 				each(afterDemandEvents, (item, key) => {
-					if (isFunction(item)) {
+					if (isFunction$1(item)) {
 						item(imported, item, key);
 					} else {
 						app.view.findComponent(key).fire(item);
@@ -1423,7 +1369,21 @@
 	const {
 		demandJs,
 		utility: {
-			cnsl, assignDeep, mapArray, map, isString, rest, camelCase, eventAdd, isRegExp, mapWhile, ifInvoke, hasValue, last
+			cnsl,
+			assignDeep,
+			mapArray,
+			map,
+			isString,
+			rest,
+			camelCase,
+			eventAdd,
+			isRegExp,
+			mapWhile,
+			ifInvoke,
+			hasValue,
+			last,
+			isFunction,
+			apply
 		},
 		component
 	} = app;
@@ -1565,6 +1525,7 @@
     		await this.compilePath();
     		await Ractive.sharedSet('currentPath', this.pathname);
     		await Ractive.sharedSet('navState', false);
+    		await ifInvoke(this.methods.beforeLoad);
     		this.log('Checking if Model Loaded', match.model);
     		if (match.assets) {
     			if (match.assets.scripts) {
@@ -1573,12 +1534,24 @@
     		}
     		this.log('match model', pathState.path);
     		const stateModel = await demandJs(pathState.path);
+    		if (!stateModel.loaded) {
+    			const onrender = stateModel.component.onrender;
+    			if (onrender) {
+    				stateModel.component.onrender = async function(...args) {
+    					await apply(onrender, this, args);
+    					app.view.fire('navComponentRendered');
+    					return args;
+    				};
+    				stateModel.loaded = true;
+    			}
+    			console.log();
+    		}
     		this.log(stateModel);
     		const initializeComponent = await component(stateModel.component);
     		this.log('component made', initializeComponent);
     		Ractive.components.navstate = initializeComponent;
     		ifInvoke(stateModel.open);
-    		ifInvoke(this.methods.onLoad);
+    		await ifInvoke(this.methods.onLoad);
     		await Ractive.sharedSet('navState', true);
     	} else {
     		return false;
@@ -1614,7 +1587,8 @@
 			const {
 				original, node
 			} = componentEvent;
-			const url = componentEvent.get('href') || node.getAttribute('href') || node.getAttribute('data-href');
+			let url = componentEvent.get('href') || componentEvent.get('url') || node.getAttribute('href') || node.getAttribute('data-href');
+			url = (isFunction(url) && url()) || url;
 			original.preventDefault();
 			app.router.log(componentEvent, url);
 			app.router.pushState(url);

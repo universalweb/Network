@@ -4,18 +4,12 @@ const {
 		each,
 		isString,
 		isArray,
-		apply
+		isFunction
 	}
 } = app;
-const logMulti = console;
-function debugMultiEvent(...args) {
-	if (app.debug || app.debugMultiEvent) {
-		apply(logMulti.log, logMulti, args);
-	}
-}
 const multiEvent = (currentView, componentEvent, events, ...args) => {
-	debugMultiEvent(currentView, componentEvent, events);
-	debugMultiEvent(args);
+	app.log(currentView, componentEvent, events);
+	app.log(args);
 	if (componentEvent && events.length) {
 		const {
 			original
@@ -30,14 +24,12 @@ const multiEvent = (currentView, componentEvent, events, ...args) => {
 					currentView.fire(subItem.trim(), componentEvent, ...args);
 				}
 			});
+		} else if (isFunction(events)) {
+			events(componentEvent, ...args);
 		} else if (isArray(events)) {
 			each(events, (item) => {
 				if (item) {
-					each(item.split(','), (subItem) => {
-						if (subItem) {
-							currentView.fire(subItem.trim(), componentEvent, ...args);
-						}
-					});
+					multiEvent(currentView, componentEvent, item, ...args);
 				}
 			});
 		}
