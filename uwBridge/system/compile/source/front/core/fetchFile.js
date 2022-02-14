@@ -21,7 +21,7 @@ const iJson = (contents) => {
 	}
 	return {};
 };
-const isLibRegex = new RegExp(/^js\/lib\//);
+const isLibRegex = /(^js\/lib\/)|(\.min\.js)/;
 const checksumReturn = (item) => {
 	return crate.getItem(`cs-${item}`);
 };

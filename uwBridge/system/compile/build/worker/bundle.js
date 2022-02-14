@@ -4285,23 +4285,19 @@
   	const {
   		config,
   		utility: {
-  			assign, uid, stringify, mapArray, last, isFileJS, isFileJSON, isFileCSS, initial, map, eachArray, zipObject
+  			assign, uid, isFileJS, isFileJSON, isFileCSS, initial, map
   		}
   	} = app;
   	let socket;
   	let alreadySetup;
   	const routerData = self.location;
-  	const tickMark = '`';
-  	const isLib = /^js\/lib\//;
-  	const commaString = ',';
-  	const convertToTemplateString = /:"([^,]*?)"/gm;
-  	const convertToTemplateStringReplace = ':`$1`';
-  	const importRegexGlobal = /\b\w*import\b([^:;=]*?)?(["']*([\w'/$,{}_]+)["'][^\w])/gm;
-  	const importLocationsRegex = /[`'"](.*?)[`'"]/;
-  	const importVarsRegex = /[^$]{([^;]*?)}/;
-  	// const exportRegex = /\b\w*export\b([^:;=]*?)/;
-  	// const exportVars = /{([^;]*?)}/;
-  	// const exportDeafultRegex = /default ([^;]*?)/;
+  	const shouldNotUpgrade = /(^js\/lib\/)|(\.min\.js)/;
+  	const importRegexGlobal = /\b\w*import\b([^:;=]*?){([^;]*?)}(\s\bfrom\b).*(('|"|`).*('|"|`));$/gm;
+  	const importSingleRegexGlobal = /\b\w*import\b([^:;={}]*?)([^;{}]*?)(s\s\bfrom\b).*(('|"|`).*('|"|`));$/gm;
+  	const importEntire = /\b\w*import\b\s(('|"|`).*('|"|`));$/gm;
+  	const importDynamic = /{([^;]*?)}\s\=\simport\((('|"|`).*('|"|`))\);$/gm;
+  	const exportRegexGlobal = /\b\w*export\b([^:;=]*?)[^$]{([^;]*?)}/gm;
+  	const exportSingleRegexGlobal = /\b\w*export\b\s\bconst\b\s/gm;
   	const slashString = '/';
   	const update = function(json) {
   		post$1('_', json);
@@ -4350,7 +4346,7 @@
   			async: configObj.async
   		};
   		if (data.id) {
-  			data.id = undefined;
+  			data.id = null;
   		} else {
   			const uniq = uid().toString();
   			data.id = uniq;
@@ -4391,54 +4387,18 @@
   			console.log('connected');
   		}
   	};
-  	const upgradeImport = (fileArg, item) => {
-  		let locations = item.match(importLocationsRegex);
-  		let replaceString = '';
-  		let appendCSS = '';
-  		let file = fileArg;
-  		let objectString;
-  		if (!locations || !fileArg) {
-  			return;
+  	const replaceImports = function(file) {
+  		let compiled = file.replace(importRegexGlobal, 'const {$2} = await app.demandJs($4);');
+  		compiled = compiled.replace(importSingleRegexGlobal, 'const {$2} = await app.demandJs($4);');
+  		compiled = compiled.replace(importEntire, 'await app.demandJs($1);');
+  		compiled = compiled.replace(exportRegexGlobal, 'app.assign(exports, {$2};);');
+  		compiled = compiled.replace(importDynamic, '{$1} = await app.demandJs($2);');
+  		compiled = compiled.replace(exportSingleRegexGlobal, 'exports.');
+  		console.log(compiled);
+  		if (file !== compiled) {
+  			app.log(compiled);
   		}
-  		locations = locations[1];
-  		let imports = item.match(importVarsRegex);
-  		if (imports) {
-  			imports = mapArray(imports[1].split(commaString), (ImportItemArg) => {
-  				const ImportItem = ImportItemArg.trim();
-  				if (ImportItem.includes(' as ')) {
-  					return last(ImportItem.split(' '));
-  				}
-  				return ImportItem;
-  			});
-  			const fileLocations = locations.split(commaString);
-  			if (fileLocations.length < 2) {
-  				objectString = `${tickMark}${locations}${tickMark}`;
-  			} else {
-  				objectString = stringify(zipObject(imports, fileLocations)).replace(convertToTemplateString, convertToTemplateStringReplace);
-  			}
-  			replaceString = `const{${imports}}= `;
-  		} else {
-  			appendCSS = ',{appendCSS:true}';
-  			objectString = `${tickMark}${locations}${tickMark}`;
-  		}
-  		replaceString = `${replaceString} await _imprt(${objectString}${appendCSS});`;
-  		if (!file) {
-  			return fileArg;
-  		}
-  		file = fileArg.replace(item, replaceString);
-  		return file;
-  	};
-  	const replaceImports = function(fileArg) {
-  		const matches = fileArg.match(importRegexGlobal);
-  		let file = fileArg;
-  		if (matches) {
-  			eachArray(matches, (item) => {
-  				if (item) {
-  					file = upgradeImport(file, item);
-  				}
-  			});
-  		}
-  		return file;
+  		return compiled;
   	};
   	const getCallback = function(jsonData, configObj, workerInfo) {
   		const item = jsonData.file;
@@ -4449,7 +4409,7 @@
   		const filename = fileList.files[key];
   		const completedFiles = configObj.completedFiles;
   		const checksums = configObj.checksum;
-  		const islib = isLib.test(filename);
+  		const isLib = shouldNotUpgrade.test(filename);
   		const isJs = isFileJS(filename);
   		const isJson = isFileJSON(filename);
   		const isCss = isFileCSS(filename);
@@ -4478,8 +4438,8 @@
   		}
   		if (sendNow) {
   			let completedFile = completedFiles[key];
-  			if (completedFile !== true && isJs && !islib && completedFile !== false) {
-  				completedFile = `((exports) => { const _imprt = app.demand; return ${replaceImports(completedFile)}});`;
+  			if (completedFile !== true && isJs && !isLib && completedFile !== false) {
+  				completedFile = `((exports) => {return ${replaceImports(completedFile)}});`;
   			}
   			post$1(
   				workerInfo.id,

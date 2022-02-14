@@ -116,7 +116,7 @@
 			assign: assign$8, querySelector: querySelector$2, map: map$2, hasValue: hasValue$4, isString: isString$6
 		} = app.utility;
 		const {
-			crate: crate$2
+			crate: crate$3
 		} = app;
 		const imported = {};
 		const headNode$1 = querySelector$2('head');
@@ -129,9 +129,9 @@
 			}
 			return {};
 		};
-		const isLibRegex = new RegExp(/^js\/lib\//);
+		const isLibRegex = /(^js\/lib\/)|(\.min\.js)/;
 		const checksumReturn = (item) => {
-			return crate$2.getItem(`cs-${item}`);
+			return crate$3.getItem(`cs-${item}`);
 		};
 		const constructStyleTagThenAppendToHead = (text, filePath) => {
 			const node = styleNode.cloneNode(false);
@@ -171,14 +171,14 @@
 			let skipCheck;
 			if (fileContents === true) {
 				if (!imported[filename]) {
-					fileContents = crate$2.getItem(filename);
+					fileContents = crate$3.getItem(filename);
 				}
 			} else if (fileContents !== false) {
 				if (app.debug) {
 					console.log('SAVE FILE TO LOCAL', fileContents);
 				}
-				crate$2.setItem(`cs-${filename}`, cs);
-				crate$2.setItem(filename, fileContents);
+				crate$3.setItem(`cs-${filename}`, cs);
+				crate$3.setItem(filename, fileContents);
 			}
 			if (!hasValue$4(imported[filename]) || fileContents !== true) {
 				if (!isJs) {
@@ -436,7 +436,7 @@
 				restString,
 				getFileExtension: getFileExtension$1
 			},
-			crate: crate$1
+			crate: crate$2
 		} = app;
 		const commaString = ',';
 		const buildFilePath$1 = (itemArg) => {
@@ -464,8 +464,8 @@
 						if (app.debug) {
 							console.log('Live Reload', thing);
 						}
-						crate$1.removeItem(thing.name);
-						crate$1.removeItem(`cs-${thing.name}`);
+						crate$2.removeItem(thing.name);
+						crate$2.removeItem(`cs-${thing.name}`);
 					});
 				}
 			}
@@ -530,11 +530,11 @@
 				if (optionsFunction) {
 					optionsFunction(options);
 				}
-				files = map$1(files, (itemArg) => {
-					const item = itemArg;
+				files = map$1(files, (item) => {
 					const itemExt = getFileExtension$1(item);
-					app.log('Demand Type', type, itemExt ? item : `${item}${(last$1(item) === '/' && 'index') || ''}.${type}`);
-					return itemExt ? item : `${item}${(last$1(item) === '/' && 'index') || ''}.${type}`;
+					const compiledFileName = itemExt ? item : `${item}${(last$1(item) === '/' && 'index') || ''}.${type}`;
+					app.log('Demand Type', type, compiledFileName);
+					return compiledFileName;
 				});
 				return demand$4(files, options);
 			};
@@ -558,7 +558,7 @@
 					await demand$4('app/');
 				} catch (error) {
 					console.log(error);
-					crate$1.clear();
+					crate$2.clear();
 					window.location.reload();
 				}
 			}
@@ -1266,7 +1266,7 @@
 			utility: {
 				eachObject, eachArray
 			},
-			crate
+			crate: crate$1
 		} = app;
 		const onHtml = async (matchFilename, json, callback) => {
 			if (callback) {
@@ -1275,7 +1275,7 @@
 			const filePath = json.name;
 			app.log('WATCH HTML', matchFilename, json);
 			const html = await demand$1(filePath);
-			crate.setItem(filePath, html);
+			crate$1.setItem(filePath, html);
 			app.log(filePath, html.length);
 			eachObject(Ractive.components, (item, key) => {
 				const asset = item.asset;
@@ -1398,6 +1398,7 @@
 				isFunction,
 				apply
 			},
+			crate,
 			component
 		} = app;
 		cnsl('ROUTER ONLINE', 'important');
@@ -1494,7 +1495,7 @@
 	    			this.pathState.path = `/${await this.methods.fail()}/`;
 	    		}
 	    	}
-	    	this.pathState.path = `/${this.defaults.root}${this.pathState.path}index`;
+	    	this.pathState.path = `/${this.defaults.root}${this.pathState.path}index.js`;
 	    }
 	    checkMatch(routeObject) {
 	    	const check = routeObject.regex.test(app.router.pathname);
@@ -1546,14 +1547,27 @@
 	    			}
 	    		}
 	    		this.log('match model', pathState.path);
-	    		const stateModel = await demandJs(pathState.path);
+	    		let stateModel;
+	    		try {
+	    			stateModel = await demandJs(pathState.path);
+	    		} catch (e) {
+	    			app.log('Error Navigation File Failed to load', pathState.path);
+	    			app.log(e);
+	    			crate.removeItem(pathState.path);
+	    		}
 	    		if (!stateModel.loaded) {
 	    			const onrender = stateModel.component.onrender;
 	    			if (onrender) {
 	    				stateModel.component.onrender = async function(...args) {
-	    					await apply(onrender, this, args);
-	    					app.view.fire('navComponentRendered');
-	    					return args;
+	    					try {
+	    						await apply(onrender, this, args);
+	    						app.view.fire('navComponentRendered');
+	    						return args;
+	    					} catch (e) {
+	    						app.log('Error in Navigation File', pathState.path);
+	    						app.log(e);
+	    						crate.removeItem(pathState.path);
+	    					}
 	    				};
 	    				stateModel.loaded = true;
 	    			}

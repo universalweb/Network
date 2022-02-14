@@ -17,7 +17,7 @@
   },
   "parserOptions": {
     "sourceType": "module",
-    "ecmaVersion": 12
+    "ecmaVersion": "latest"
   },
   "rules": {
     "no-setter-return": "error",
@@ -344,14 +344,7 @@
     "prefer-template": "error",
     "require-yield": "error",
     "sort-keys": "off",
-    "sort-imports": [
-      "error",
-      {
-        "ignoreCase": true,
-        "ignoreMemberSort": false,
-        "memberSyntaxSortOrder": ["single", "multiple", "all", "none"]
-      }
-    ],
+    "sort-imports": "off",
     "template-curly-spacing": ["error", "never"],
     "yield-star-spacing": ["error", "after"],
     "no-template-curly-in-string": "off",

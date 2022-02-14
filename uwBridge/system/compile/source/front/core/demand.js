@@ -106,11 +106,11 @@ const demandTypeMethod = (type, optionsFunction) => {
 		if (optionsFunction) {
 			optionsFunction(options);
 		}
-		files = map(files, (itemArg) => {
-			const item = itemArg;
+		files = map(files, (item) => {
 			const itemExt = getFileExtension(item);
-			app.log('Demand Type', type, (itemExt) ? item : `${item}${last(item) === '/' && 'index' || ''}.${type}`);
-			return (itemExt) ? item : `${item}${last(item) === '/' && 'index' || ''}.${type}`;
+			const compiledFileName = (itemExt) ? item : `${item}${last(item) === '/' && 'index' || ''}.${type}`;
+			app.log('Demand Type', type, compiledFileName);
+			return compiledFileName;
 		});
 		return demand(files, options);
 	};

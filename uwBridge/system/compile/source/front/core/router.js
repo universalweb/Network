@@ -18,6 +18,7 @@ const {
 		isFunction,
 		apply
 	},
+	crate,
 	component
 } = app;
 cnsl('ROUTER ONLINE', 'important');
@@ -117,7 +118,7 @@ class Router {
 				this.pathState.path = `/${await this.methods.fail()}/`;
 			}
 		}
-		this.pathState.path = `/${this.defaults.root}${this.pathState.path}index`;
+		this.pathState.path = `/${this.defaults.root}${this.pathState.path}index.js`;
 	}
 	checkMatch(routeObject) {
 		const check = routeObject.regex.test(app.router.pathname);
@@ -170,14 +171,27 @@ class Router {
 				}
 			}
 			this.log('match model', pathState.path);
-			const stateModel = await demandJs(pathState.path);
+			let stateModel;
+			try {
+				stateModel = await demandJs(pathState.path);
+			} catch (e) {
+				app.log('Error Navigation File Failed to load', pathState.path);
+				app.log(e);
+				crate.removeItem(pathState.path);
+			}
 			if (!stateModel.loaded) {
 				const onrender = stateModel.component.onrender;
 				if (onrender) {
 					stateModel.component.onrender = async function(...args) {
-						await (apply(onrender, this, args));
-						app.view.fire('navComponentRendered');
-						return args;
+						try {
+							await (apply(onrender, this, args));
+							app.view.fire('navComponentRendered');
+							return args;
+						} catch (e) {
+							app.log('Error in Navigation File', pathState.path);
+							app.log(e);
+							crate.removeItem(pathState.path);
+						}
 					};
 					stateModel.loaded = true;
 				}
