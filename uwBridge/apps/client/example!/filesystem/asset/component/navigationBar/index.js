@@ -1,15 +1,14 @@
 (async () => {
-	const dirname = exports.dirname;
 	const {
 		component,
 		utility: { cnsl }
 	} = app;
-	import { items } from '${dirname}items/';
+	import { items } from '${import.meta.path}items/';
 	import 'component/dropPanel/';
 	await component('navigationbar', {
 		asset: {
-			template: `${dirname}template`,
-			styles: [`${dirname}style`]
+			template: `${import.meta.path}template`,
+			styles: [`${import.meta.path}style`]
 		},
 		data() {
 			return {

@@ -16,12 +16,10 @@ let socket;
 let alreadySetup;
 const routerData = self.location;
 const shouldNotUpgrade = /(^js\/lib\/)|(\.min\.js)/;
-const importRegexGlobal = /\b\w*import\b([^:;=]*?){([^;]*?)}(\s\bfrom\b).*(('|"|`).*('|"|`));$/gm;
-const importSingleRegexGlobal = /\b\w*import\b([^:;={}]*?)([^;{}]*?)(s\s\bfrom\b).*(('|"|`).*('|"|`));$/gm;
-const importEntire = /\b\w*import\b\s(('|"|`).*('|"|`));$/gm;
-const importDynamic = /{([^;]*?)}\s\=\simport\((('|"|`).*('|"|`))\);$/gm;
-const exportRegexGlobal = /\b\w*export\b([^:;=]*?)[^$]{([^;]*?)}/gm;
-const exportSingleRegexGlobal = /\b\w*export\b\s\bconst\b\s/gm;
+const importRegexGlobal = /\bimport\b([^:;=]*?){([^;]*?)}(\s\bfrom\b).*(('|"|`).*('|"|`));$/gm;
+const importSingleRegexGlobal = /\bimport\b([^:;={}]*?)([^;{}]*?)(\s\bfrom\b).*(('|"|`).*('|"|`));$/gm;
+const importEntire = /\bimport\b\s(('|"|`).*('|"|`));$/gm;
+const importDynamic = /{([^;]*?)}\s=\simport\((('|"|`).*('|"|`))\);$/gm;
 const slashString = '/';
 const update = function(json) {
 	post('_', json);
@@ -113,16 +111,11 @@ const socketIsReady = (data) => {
 	}
 };
 const replaceImports = function(file) {
-	let compiled = file.replace(importRegexGlobal, 'const {$2} = await app.demandJs($4);');
-	compiled = compiled.replace(importSingleRegexGlobal, 'const {$2} = await app.demandJs($4);');
-	compiled = compiled.replace(importEntire, 'await app.demandJs($1);');
-	compiled = compiled.replace(exportRegexGlobal, 'app.assign(exports, {$2};);');
-	compiled = compiled.replace(importDynamic, '{$1} = await app.demandJs($2);');
-	compiled = compiled.replace(exportSingleRegexGlobal, 'exports.');
-	console.log(compiled);
-	if (file !== compiled) {
-		app.log(compiled);
-	}
+	let compiled = file;
+	compiled = compiled.replace(importRegexGlobal, 'const {$2} = await appGlobal.demandJs($4);');
+	compiled = compiled.replace(importSingleRegexGlobal, 'const $2 = await appGlobal.demandJs($4);');
+	compiled = compiled.replace(importEntire, 'await appGlobal.demandJs($1);');
+	compiled = compiled.replace(importDynamic, '{$1} = await appGlobal.demandJs($2);');
 	return compiled;
 };
 const getCallback = function(jsonData, configObj, workerInfo) {
@@ -165,7 +158,7 @@ const getCallback = function(jsonData, configObj, workerInfo) {
 	if (sendNow) {
 		let completedFile = completedFiles[key];
 		if (completedFile !== true && isJs && !isLib && completedFile !== false) {
-			completedFile = `((exports) => {return ${replaceImports(completedFile)}});`;
+			completedFile = replaceImports(completedFile);
 		}
 		post(workerInfo.id, {
 			cs: checksums[key],

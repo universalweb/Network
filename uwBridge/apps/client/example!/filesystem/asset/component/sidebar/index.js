@@ -1,18 +1,17 @@
 (async () => {
-	const dirname = exports.dirname;
 	const {
 		component,
 		view,
 		utility: { cnsl }
 	} = app;
-	import { items } from '${dirname}items/';
+	import { items } from '${import.meta.path}items/';
 	await component('sidebar', {
 		asset: {
-			template: `${dirname}template`,
+			template: `${import.meta.path}template`,
 			partials: {
-				sidebarItem: `${dirname}item`
+				sidebarItem: `${import.meta.path}item`
 			},
-			styles: [`${dirname}style`]
+			styles: [`${import.meta.path}style`]
 		},
 		data() {
 			return {

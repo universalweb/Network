@@ -15,7 +15,7 @@
     },
     "parserOptions": {
         "sourceType": "script",
-        "ecmaVersion": 12
+        "ecmaVersion": "latest"
     },
     "ignorePatterns": [
         ".prettierignore",

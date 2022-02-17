@@ -1,54 +1,37 @@
 {
-    "name": "universalwebnetwork",
-    "description": "Sentivate Network Client, Server Module, UDSP, Universal Web Socket, & certificate generation. This serves as a service & browser prototype.",
-    "version": "1.3.2",
-    "main": "main.js",
-    "type": "commonjs",
-    "scripts": {
-        "client": "nodemon client/index.js --watch client/",
-        "compressionTest": "nodemon scripts/compression.js --watch scripts/compression.js",
-        "cc": "nodemon ./client/createCertificate/index.js --watch ./client/createCertificate/",
-        "server": "nodemon ./serverApp/index.js --watch ./server/ --watch ./serverApp/",
-        "dis": "nodemon ./DIS/index.js --watch ./server/ --watch ./DIS/",
-        "components": "nodemon ./browser/components/index.js --watch ./browser/components/source/ --watch ./browser/components/index.js",
-        "simulate": "nodemon ./scripts/simulate.js --watch ./client/ --watch ./server/ --watch ./scripts/simulate.js --watch utilities/",
-        "certificates": "nodemon ./scripts/certificates.js --watch ./scripts/certificates.js --watch ./certificates/ --watch ./utilities/",
-        "start": "nodemon --watch ./index.html --watch ./client/ --watch ./browser/ --watch ./main.js --exec 'electron .'",
-        "electron": "electron .",
-        "pack": "electron-builder --dir",
-        "dist": "electron-builder",
-        "version": "auto-changelog -p --sort-commits date-desc && git add CHANGELOG.md",
-        "uwBridge": "nodemon ./uwBridge/index.js --watch ./uwBridge/"
-    },
+    "appId": "universalWeb.browser",
+    "author": "Universal Web",
     "auto-changelog": {
+        "commitLimit": false,
         "output": "CHANGELOG.md",
         "template": "./maintenance/keepachangelog.hbs",
-        "unreleased": true,
-        "commitLimit": false
+        "unreleased": true
     },
-    "author": "Universal Web",
+    "bugs": {
+        "url": "https://github.com/universalweb/Network/issues"
+    },
     "company": "Universal Web, Inc",
     "dependencies": {
-        "Acid": "^2.3.8",
+        "Acid": "^2.4.5",
+        "Lucy": "^2.3.8",
         "base64-img": "^1.0.4",
         "compression": "^1.7.4",
         "date-fns": "^2.28.0",
         "docredux": "^2.3.9",
         "express": "^4.17.2",
         "express-content-length-validator": "^1.0.0",
-        "express-rate-limit": "^6.2.0",
+        "express-rate-limit": "^6.2.1",
         "express-toobusy": "^0.0.3",
         "figlet": "^1.5.2",
         "image-size": "^1.0.1",
         "is-valid-path": "^0.1.1",
-        "Lucy": "^2.3.7",
-        "mongoose": "^6.1.8",
-        "msgpackr": "^1.5.2",
+        "mongoose": "^6.2.1",
+        "msgpackr": "^1.5.4",
         "node-dir": "^0.1.17",
         "node-watch": "^0.7.3",
         "qrcode": "^1.5.0",
         "sequential-ids": "^0.0.0",
-        "sharp": "^0.29.3",
+        "sharp": "^0.30.1",
         "socket.io": "^4.4.1",
         "sodium-native": "^3.3.0",
         "textlint": "^12.1.0",
@@ -56,21 +39,21 @@
         "uuid": "^8.3.2",
         "vhost": "^3.0.2",
         "walk": "^2.3.15",
-        "webtorrent": "^1.7.1",
+        "webtorrent": "^1.8.1",
         "zip-a-folder": "^1.1.3"
     },
-    "license": "ISC",
+    "description": "Sentivate Network Client, Server Module, UDSP, Universal Web Socket, & certificate generation. This serves as a service & browser prototype.",
     "devDependencies": {
-        "@babel/core": "^7.16.12",
-        "@babel/eslint-parser": "^7.16.5",
+        "@babel/core": "^7.17.3",
+        "@babel/eslint-parser": "^7.17.0",
         "@babel/preset-env": "^7.16.11",
-        "@ckeditor/ckeditor5-build-inline": "^31.1.0",
+        "@ckeditor/ckeditor5-build-inline": "^32.0.0",
         "@septdirworkshop/ukfontawesome": "^5.15.1",
-        "auto-changelog": "^2.3.0",
-        "electron": "^16.0.7",
+        "auto-changelog": "^2.4.0",
+        "electron": "^17.0.1",
         "electron-builder": "*",
         "esformatter": "*",
-        "eslint": "^8.7.0",
+        "eslint": "^8.9.0",
         "gulp": "^4.0.2",
         "gulp-add-src": "^1.0.0",
         "gulp-babel": "^8.0.0",
@@ -78,12 +61,26 @@
         "gulp-concat": "^2.6.1",
         "gulp-notify": "^4.0.0",
         "ractive": "^1.3.14",
-        "rollup": "^2.66.1",
+        "rollup": "^2.67.2",
         "rollup-plugin-terser": "^7.0.2",
         "testatron": "^2.1.0",
-        "uikit": "^3.10.1"
+        "uikit": "^3.11.1"
     },
+    "engines": {
+        "node": ">=12.9.1"
+    },
+    "homepage": "https://github.com/universalweb/Network#readme",
+    "license": "ISC",
+    "mac": {
+        "category": "browser"
+    },
+    "main": "main.js",
+    "name": "universalwebnetwork",
     "nodemonConfig": {
+        "delay": 2500,
+        "execMap": {
+            "js": "node"
+        },
         "ignore": [
             "node_modules/",
             "./apps/client/**/filesystem/**",
@@ -91,27 +88,30 @@
             "**.json",
             "**.css",
             "**.html"
-        ],
-        "delay": 2500,
-        "execMap": {
-            "js": "node"
-        }
+        ]
     },
+    "postinstall": "electron-builder install-app-deps",
+    "productName": "Universal Web Browser",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/universalweb/Network.git"
     },
-    "bugs": {
-        "url": "https://github.com/universalweb/Network/issues"
+    "scripts": {
+        "cc": "nodemon ./client/createCertificate/index.js --watch ./client/createCertificate/",
+        "certificates": "nodemon ./scripts/certificates.js --watch ./scripts/certificates.js --watch ./certificates/ --watch ./utilities/",
+        "client": "nodemon client/index.js --watch client/",
+        "components": "nodemon ./browser/components/index.js --watch ./browser/components/source/ --watch ./browser/components/index.js",
+        "compressionTest": "nodemon scripts/compression.js --watch scripts/compression.js",
+        "dis": "nodemon ./DIS/index.js --watch ./server/ --watch ./DIS/",
+        "dist": "electron-builder",
+        "electron": "electron .",
+        "pack": "electron-builder --dir",
+        "server": "nodemon ./serverApp/index.js --watch ./server/ --watch ./serverApp/",
+        "simulate": "nodemon ./scripts/simulate.js --watch ./client/ --watch ./server/ --watch ./scripts/simulate.js --watch utilities/",
+        "start": "nodemon --watch ./index.html --watch ./client/ --watch ./browser/ --watch ./main.js --exec 'electron .'",
+        "uwBridge": "nodemon ./uwBridge/index.js --watch ./uwBridge/",
+        "version": "auto-changelog -p --sort-commits date-desc && git add CHANGELOG.md"
     },
-    "homepage": "https://github.com/universalweb/Network#readme",
-    "engines": {
-        "node": ">=12.9.1"
-    },
-    "appId": "universalWeb.browser",
-    "productName": "Universal Web Browser",
-    "mac": {
-        "category": "browser"
-    },
-    "postinstall": "electron-builder install-app-deps"
+    "type": "commonjs",
+    "version": "1.3.2"
 }

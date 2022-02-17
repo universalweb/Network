@@ -44,7 +44,6 @@
     "object-property-newline": [
       "error",
       {
-        "allowMultiplePropertiesPerLine": false,
         "allowAllPropertiesOnSameLine": false
       }
     ],

@@ -12,11 +12,13 @@ const {
 		eventAdd,
 		isRegExp,
 		mapWhile,
-		ifInvoke,
 		hasValue,
 		last,
 		isFunction,
-		apply
+		apply,
+		eachAsync,
+		isPlainObject,
+		each
 	},
 	crate,
 	component
@@ -33,6 +35,31 @@ class Router {
 	historyIndex = 0;
 	routes = [];
 	methods = {};
+	events = {
+		beforeLoad: [],
+		afterLoad: [],
+		beforeInit: [],
+		afterInit: [],
+		afterRender: [],
+		beforeRender: [],
+		render: []
+	};
+	on(eventNames, callback) {
+		const thisRouter = this;
+		if (isPlainObject(eventNames) && !callback) {
+			return each(eventNames, (eventCallback, eventName) => {
+				thisRouter.on(eventName, eventCallback);
+			});
+		}
+		return this.events[eventNames].push(callback);
+	}
+	async triggerEvents(eventName, optionalBind = this, args = []) {
+		const bindThis = this;
+		console.log(bindThis, this.events[eventName], eventName, args);
+		return eachAsync(this.events[eventName], async (eventItem) => {
+			await (apply(eventItem, optionalBind, args));
+		});
+	}
 	defaults = {
 		protected: false,
 		role: false,
@@ -73,7 +100,6 @@ class Router {
 		assignDeep(this, options);
 		this.log('eventAdd popstate');
 		eventAdd(window, 'popstate', this.popstate, true);
-		await this.process();
 	}
 	async updateLocation() {
 		map(location, (item, index) => {
@@ -92,7 +118,7 @@ class Router {
 			route,
 			secured,
 			role,
-			path
+			path,
 		} = this.pathState;
 		this.log(this.pathState);
 		if (route) {
@@ -106,7 +132,6 @@ class Router {
 		if (this.pathState.path[0] !== '/') {
 			this.pathState.path = `/${this.pathState.path}`;
 		}
-		this.log(this.pathState.path);
 		if (secured) {
 			const securityCheck = Boolean(await this.methods.security(this.match));
 			if (securityCheck) {
@@ -119,6 +144,7 @@ class Router {
 			}
 		}
 		this.pathState.path = `/${this.defaults.root}${this.pathState.path}index.js`;
+		this.log('COMPILED PATH', this.pathState.path);
 	}
 	checkMatch(routeObject) {
 		const check = routeObject.regex.test(app.router.pathname);
@@ -136,6 +162,7 @@ class Router {
 		}
 	}
 	async process() {
+		const routerThis = this;
 		app.view.fire('router.loading');
 		this.log('Router Loading State');
 		this.updateLocation();
@@ -163,7 +190,7 @@ class Router {
 			await this.compilePath();
 			await Ractive.sharedSet('currentPath', this.pathname);
 			await Ractive.sharedSet('navState', false);
-			await ifInvoke(this.methods.beforeLoad);
+			await this.triggerEvents('beforeLoad');
 			this.log('Checking if Model Loaded', match.model);
 			if (match.assets) {
 				if (match.assets.scripts) {
@@ -179,30 +206,38 @@ class Router {
 				app.log(e);
 				crate.removeItem(pathState.path);
 			}
+			if (!stateModel) {
+				return app.log('ROUTER FAILED TO LOAD');
+			}
 			if (!stateModel.loaded) {
+				stateModel.loaded = true;
 				const onrender = stateModel.component.onrender;
-				if (onrender) {
-					stateModel.component.onrender = async function(...args) {
-						try {
-							await (apply(onrender, this, args));
-							app.view.fire('navComponentRendered');
-							return args;
-						} catch (e) {
-							app.log('Error in Navigation File', pathState.path);
-							app.log(e);
-							crate.removeItem(pathState.path);
-						}
-					};
-					stateModel.loaded = true;
-				}
-				console.log();
+				const oninit = stateModel.component.oninit;
+				stateModel.component.onrender = function() {};
+				const compiledRender = async function(...args) {
+					cnsl('onrender', 'notify');
+					onrender && await (apply(onrender, this, args));
+					cnsl('onrender END', 'notify');
+					await routerThis.triggerEvents('render', this, args);
+				};
+				stateModel.component.oninit = async function(...args) {
+					cnsl('oninit', 'notify');
+					await routerThis.triggerEvents('beforeInit', this, args);
+					oninit && await (apply(oninit, this, args));
+					console.log(this.rendered);
+					cnsl('oninit END', 'notify');
+					if (this.rendered) {
+						await (apply(compiledRender, this, args));
+					} else {
+						this.on('onrender', compiledRender);
+					}
+				};
 			}
 			this.log(stateModel);
 			const initializeComponent = await component(stateModel.component);
 			this.log('component made', initializeComponent);
 			Ractive.components.navstate = initializeComponent;
-			ifInvoke(stateModel.open);
-			await ifInvoke(this.methods.onLoad);
+			await routerThis.triggerEvents('afterLoad');
 			await Ractive.sharedSet('navState', true);
 		} else {
 			return false;

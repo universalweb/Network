@@ -1,6 +1,17 @@
+const {
+	isPlainObject,
+	virtualStorage,
+	crate
+} = $;
 const app = {
 	events: {},
-	start(data) {
+	async start(data) {
+		await Ractive.sharedSet('components', {
+			dynamic: {},
+			layout: {},
+			main: {},
+		});
+		Ractive.sharedData.$ = $;
 		return app.workerRequest('configure', data);
 	},
 	log: console.log,
@@ -10,8 +21,23 @@ const app = {
 			app.crate.clear();
 		}
 	},
-	utility: window.$,
+	get app() {
+		return this;
+	},
+	componentStore(keyPath, keyValue) {
+		if (keyValue || isPlainObject(keyPath)) {
+			return Ractive.sharedSet(keyPath, keyValue);
+		}
+		return Ractive.sharedGet(keyPath);
+	},
+	store: virtualStorage(),
+	crate: crate(),
+	utility: $,
 };
-window.app = app;
-app.crate = app.utility.crate();
+app.imported = {
+	get app() {
+		return app;
+	},
+};
+window.appGlobal = app;
 export default app;

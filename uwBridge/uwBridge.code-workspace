@@ -38,6 +38,9 @@
 		},
 		{
 			"path": "apps/client/akerna/filesystem/asset/models"
+		},
+		{
+			"path": "apps/client/akerna/api/client"
 		}
 	],
 	"settings": {

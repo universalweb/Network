@@ -4,10 +4,9 @@ const {
 		drop
 	}
 } = app;
-let notificationStatus;
 const notifications = [];
-const	spawnNotification = (data) => {
-	if (notificationStatus) {
+const spawnNotification = (data) => {
+	if (app.notificationStatus) {
 		const notification = new Notification(data.title, {
 			body: data.body,
 			icon: data.icon
@@ -34,5 +33,5 @@ app.notify = async (data) => {
 	}
 };
 export const setupNotification = async () => {
-	notificationStatus = await Notification.requestPermission();
+	app.notificationStatus = await Notification.requestPermission();
 };

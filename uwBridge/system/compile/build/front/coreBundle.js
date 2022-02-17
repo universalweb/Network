@@ -1,7 +1,16 @@
 (function() {
+	const {
+		isPlainObject: isPlainObject$4, virtualStorage, crate: crate$4
+	} = $;
 	const app = {
 		events: {},
-		start(data) {
+		async start(data) {
+			await Ractive.sharedSet('components', {
+				dynamic: {},
+				layout: {},
+				main: {}
+			});
+			Ractive.sharedData.$ = $;
 			return app.workerRequest('configure', data);
 		},
 		log: console.log,
@@ -11,10 +20,25 @@
 				app.crate.clear();
 			}
 		},
-		utility: window.$
+		get app() {
+			return this;
+		},
+		componentStore(keyPath, keyValue) {
+			if (keyValue || isPlainObject$4(keyPath)) {
+				return Ractive.sharedSet(keyPath, keyValue);
+			}
+			return Ractive.sharedGet(keyPath);
+		},
+		store: virtualStorage(),
+		crate: crate$4(),
+		utility: $
 	};
-	window.app = app;
-	app.crate = app.utility.crate();
+	app.imported = {
+		get app() {
+			return app;
+		}
+	};
+	window.appGlobal = app;
 	const isEventNodeMethod = (componentEvent) => {
 		if (!componentEvent || !componentEvent.original || !componentEvent.original.target) {
 			return false;
@@ -100,19 +124,17 @@
 	};
 	app.workerRequest = workerRequest;
 	const {
-		assign: assign$8, querySelector: querySelector$2, map: map$2, hasValue: hasValue$4, isString: isString$6
-	} = app.utility;
-	const {
-		crate: crate$3
+		imported: imported$1,
+		crate: crate$3,
+		utility: {
+			assign: assign$8, querySelector: querySelector$2, map: map$2, hasValue: hasValue$4, isString: isString$6, jsonParse
+		}
 	} = app;
-	const imported = {};
 	const headNode$1 = querySelector$2('head');
 	const styleNode = document.createElement('style');
-	const loadScript = window.eval;
-	app.imported = imported;
 	const iJson = (contents) => {
 		if (contents) {
-			return loadScript(`(${contents})`);
+			return jsonParse(contents);
 		}
 		return {};
 	};
@@ -131,7 +153,7 @@
 	When all the required items have been downloaded
 	*/
 	const getLoadedAssets = (item) => {
-		return imported[item];
+		return imported$1[item];
 	};
 	const getCompleted = async (config) => {
 		const {
@@ -155,9 +177,8 @@
 		} = config;
 		const filename = data[key];
 		let fileContents = file;
-		let skipCheck;
 		if (fileContents === true) {
-			if (!imported[filename]) {
+			if (!imported$1[filename]) {
 				fileContents = crate$3.getItem(filename);
 			}
 		} else if (fileContents !== false) {
@@ -167,39 +188,48 @@
 			crate$3.setItem(`cs-${filename}`, cs);
 			crate$3.setItem(filename, fileContents);
 		}
-		if (!hasValue$4(imported[filename]) || fileContents !== true) {
+		if (!hasValue$4(imported$1[filename]) || fileContents !== true) {
 			if (!isJs) {
 				if (fileContents === false) {
-					imported[filename] = {};
+					imported$1[filename] = {};
 				} else {
-					imported[filename] = isJson ? iJson(fileContents) : fileContents;
+					imported$1[filename] = isJson ? iJson(fileContents) : fileContents;
 				}
 			} else if (fileContents) {
 				if (isLibRegex.test(filename)) {
-					loadScript(fileContents);
-					imported[filename] = true;
+					let scriptRaw = new File([fileContents], filename, {
+						type: 'text/javascript'
+					});
+					let fileBlob = URL.createObjectURL(scriptRaw);
+					imported$1[filename] = await import(fileBlob);
+					URL.revokeObjectURL(fileBlob);
+					fileBlob = null;
+					scriptRaw = null;
 				} else {
-					if (imported[filename]) {
+					if (imported$1[filename]) {
 						config.filesLoaded++;
 						return checkIfCompleted(config);
 					}
-					skipCheck = true;
-					const moduleExports = {
-						dirname: `${dirname}/`,
-						name: filename
-					};
-					await loadScript(fileContents)(moduleExports);
+					const emulateImport = `Object.assign(import.meta, {path:'${dirname}/',filename:'${filename}'});\n`;
+					let scriptRaw = new File([emulateImport, fileContents], filename, {
+						type: 'text/javascript'
+					});
+					let fileBlob = URL.createObjectURL(scriptRaw);
+					const moduleExports = Object.assign({}, await import(fileBlob));
+					URL.revokeObjectURL(fileBlob);
 					config.filesLoaded++;
-					imported[filename] = moduleExports;
+					imported$1[filename] = moduleExports;
+					fileBlob = null;
+					scriptRaw = null;
 					return checkIfCompleted(config);
 				}
 			}
 		}
-		if (isCss && appendCSS && isString$6(imported[filename])) {
-			constructStyleTagThenAppendToHead(imported[filename], filename);
-			imported[filename] = true;
+		if (isCss && appendCSS && isString$6(imported$1[filename])) {
+			constructStyleTagThenAppendToHead(imported$1[filename], filename);
+			imported$1[filename] = true;
 		}
-		if (!skipCheck) {
+		{
 			config.filesLoaded++;
 			return checkIfCompleted(config);
 		}
@@ -261,13 +291,13 @@
 			cnsl: cnsl$2,
 			compactMapArray,
 			isEmpty,
-			eachAsync: eachAsync$1,
+			eachAsync: eachAsync$2,
 			eachObject: eachObject$1,
 			eachArray: eachArray$1,
 			isString: isString$5,
-			isPlainObject: isPlainObject$2,
+			isPlainObject: isPlainObject$3,
 			hasValue: hasValue$3,
-			drop
+			drop: drop$1
 		}
 	} = app;
 	cnsl$2('Initilizing watchers module.', 'notify');
@@ -289,7 +319,7 @@
 			},
 			stop() {
 				if (hasValue$3(number)) {
-					drop(watchersRegex, number);
+					drop$1(watchersRegex, number);
 					number = null;
 				}
 			}
@@ -315,7 +345,7 @@
 			},
 			stop() {
 				if (hasValue$3(number)) {
-					drop(levelObject, number);
+					drop$1(levelObject, number);
 					number = null;
 				}
 			}
@@ -351,7 +381,7 @@
 		let method;
 		if (isString$5(type)) {
 			method = onString;
-		} else if (isPlainObject$2(type)) {
+		} else if (isPlainObject$3(type)) {
 			method = onCollection;
 		} else {
 			method = onRegex;
@@ -385,7 +415,7 @@
 		}
 		console.log(subscribers);
 		if (subscribers.length) {
-			eachAsync$1(subscribers, (watcher) => {
+			eachAsync$2(subscribers, (watcher) => {
 				return watcher(json, watcher);
 			});
 		}
@@ -416,13 +446,14 @@
 			last: last$1,
 			map: map$1,
 			isString: isString$4,
-			isPlainObject: isPlainObject$1,
-			each: each$5,
+			isPlainObject: isPlainObject$2,
+			each: each$6,
 			cnsl: cnsl$1,
 			initialString,
 			restString,
 			getFileExtension: getFileExtension$1
 		},
+		imported,
 		crate: crate$2
 	} = app;
 	const commaString = ',';
@@ -438,14 +469,10 @@
 			} else if (initialString(item, -4) === 'css/') {
 				item += '.css';
 			}
-			if (app.debug) {
-				console.log(item);
-			}
+			app.log(item);
 		}
 		if (restString(item, -3) === '.js') {
-			if (app.debug) {
-				console.log(item, watch$3);
-			}
+			app.log(item, watch$3);
 			if (!watchers[item]) {
 				watch$3(item, (thing) => {
 					if (app.debug) {
@@ -489,11 +516,11 @@
 		let demandType;
 		let arrayToObjectMap;
 		let files = filesArg;
-		if (isPlainObject$1(files)) {
+		if (isPlainObject$2(files)) {
 			demandType = objectDemand;
 			arrayToObjectMap = {};
 			let index = 0;
-			each$5(files, (item, key) => {
+			each$6(files, (item, key) => {
 				arrayToObjectMap[key] = index;
 				index++;
 				assets.push(buildFilePath$1(item));
@@ -501,11 +528,12 @@
 		} else {
 			files = isString$4(files) ? files.split(commaString) : files;
 			demandType = files.length < 2 ? singleDemand : multiDemand;
-			each$5(files, (item) => {
+			each$6(files, (item) => {
 				assets.push(buildFilePath$1(item));
 			});
 		}
 		const results = await streamAssets(assets, options);
+		app.log(results);
 		return demandType(results, arrayToObjectMap);
 	};
 	const demandTypeMethod = (type, optionsFunction) => {
@@ -518,6 +546,9 @@
 				optionsFunction(options);
 			}
 			files = map$1(files, (item) => {
+				if (imported[item]) {
+					return item;
+				}
 				const itemExt = getFileExtension$1(item);
 				const compiledFileName = itemExt ? item : `${item}${(last$1(item) === '/' && 'index') || ''}.${type}`;
 				app.log('Demand Type', type, compiledFileName);
@@ -557,12 +588,41 @@
 		demandJs: demandJs$1,
 		demandLang
 	});
-	const spawnNotification = (data) => {};
+	const {
+		utility: {
+			drop
+		}
+	} = app;
+	const notifications = [];
+	const spawnNotification = (data) => {
+		if (app.notificationStatus) {
+			const notification = new Notification(
+				data.title,
+				{
+					body: data.body,
+					icon: data.icon
+				},
+				data.options
+			);
+			const number = notifications.push(notification) - 1;
+			setTimeout(() => {
+				notification.close();
+				drop(notifications, number, 1);
+			}, data.time || 4000);
+			return notification;
+		}
+	};
 	app.notify = async (data) => {
 		if (Notification.permission === 'granted') {
-			return spawnNotification();
+			return spawnNotification(data);
 		} else if (Notification.permission !== 'denied') {
-			await Notification.requestPermission();
+			const permission = await Notification.requestPermission();
+			if (permission === 'granted') {
+				spawnNotification({
+					body: 'enabled',
+					title: 'Notifications'
+				});
+			}
 		}
 	};
 	const {
@@ -716,7 +776,7 @@
 			sortNewest,
 			sortOldest,
 			clear,
-			isPlainObject,
+			isPlainObject: isPlainObject$1,
 			mapAsync
 		}
 	} = app;
@@ -738,7 +798,7 @@
 	}
 	function getIndexValue(indexMatchArg, indexNameArg, options) {
 		const indexName = getPropertyName(indexNameArg, options);
-		const indexMatch = isPlainObject(indexMatchArg) ? indexMatchArg[indexName] : indexMatchArg;
+		const indexMatch = isPlainObject$1(indexMatchArg) ? indexMatchArg[indexName] : indexMatchArg;
 		return indexMatch;
 	}
 	function getItem(context, keypath, indexMatchArg, indexNameArg, options = {}) {
@@ -929,7 +989,7 @@
 	assign$2(Ractive.prototype, extendRactive);
 	const {
 		utility: {
-			each: each$4, isString: isString$3, isArray, isFunction: isFunction$2
+			each: each$5, isString: isString$3, isArray, isFunction: isFunction$2
 		}
 	} = app;
 	const multiEvent = (currentView, componentEvent, events, ...args) => {
@@ -944,7 +1004,7 @@
 		}
 		if (events) {
 			if (isString$3(events)) {
-				each$4(events.split(','), (subItem) => {
+				each$5(events.split(','), (subItem) => {
 					if (subItem) {
 						currentView.fire(subItem.trim(), componentEvent, ...args);
 					}
@@ -952,7 +1012,7 @@
 			} else if (isFunction$2(events)) {
 				events(componentEvent, ...args);
 			} else if (isArray(events)) {
-				each$4(events, (item) => {
+				each$5(events, (item) => {
 					if (item) {
 						multiEvent(currentView, componentEvent, item, ...args);
 					}
@@ -962,7 +1022,7 @@
 	};
 	const {
 		utility: {
-			each: each$3, assign: assign$1, querySelector: querySelector$1
+			each: each$4, assign: assign$1, querySelector: querySelector$1
 		}
 	} = app;
 	const headNode = querySelector$1('head');
@@ -992,12 +1052,12 @@
 	};
 	const cssRender = (css) => {
 		if (css) {
-			each$3(css, render);
+			each$4(css, render);
 		}
 	};
 	const cssUnrender = (css) => {
 		if (css) {
-			each$3(css, unrender);
+			each$4(css, unrender);
 		}
 	};
 	const componentsWithCss = {};
@@ -1005,7 +1065,7 @@
 		if (!css) {
 			return;
 		}
-		each$3(css, (item, key) => {
+		each$4(css, (item, key) => {
 			if (!componentsWithCss[key]) {
 				componentsWithCss[key] = [];
 			}
@@ -1020,7 +1080,7 @@
 	const {
 		watch: watch$2,
 		utility: {
-			each: each$2, get, apply: apply$1
+			each: each$3, get, apply: apply$1
 		}
 	} = app;
 	const createWatchers = (currentView, item, key) => {
@@ -1069,7 +1129,7 @@
 	};
 	const removeInstance = function(currentView, styles) {
 		cssUnrender(styles);
-		each$2(currentView.watchers, (item, key) => {
+		each$3(currentView.watchers, (item, key) => {
 			item.stop();
 			item[key] = null;
 		});
@@ -1079,7 +1139,7 @@
 	const onrenderInstance = function(currentView, styles) {
 		cssRender(styles);
 		if (currentView.watchers) {
-			each$2(currentView.watchers, (item) => {
+			each$3(currentView.watchers, (item) => {
 				item.start();
 			});
 		}
@@ -1091,7 +1151,7 @@
 		const thisComponent = this;
 		thisComponent.watchers = watchers ? watchers(thisComponent) : {};
 		if (thisComponent.watchers) {
-			each$2(thisComponent.watchers, (item, key) => {
+			each$3(thisComponent.watchers, (item, key) => {
 				createWatchers(thisComponent, item, key);
 			});
 		}
@@ -1143,7 +1203,7 @@
 		demandCss,
 		demandHtml,
 		utility: {
-			eachAsync, ensureArray, isString: isString$2, getFileExtension, hasValue: hasValue$1, eachObjectAsync
+			eachAsync: eachAsync$1, ensureArray, isString: isString$2, getFileExtension, hasValue: hasValue$1, eachObjectAsync
 		}
 	} = app;
 	function buildFilePath(template, extType = 'html') {
@@ -1180,7 +1240,7 @@
 				console.log(asset);
 			}
 			if (styles) {
-				await eachAsync(ensureArray(styles), async (item, key) => {
+				await eachAsync$1(ensureArray(styles), async (item, key) => {
 					const compiledCssPath = (styles[key] = buildFilePath(item, 'css'));
 					app.log('compiled css path', compiledCssPath);
 					componentConfig.styles[compiledCssPath] = await demandCss(compiledCssPath);
@@ -1224,7 +1284,7 @@
 		demand: demand$2,
 		watch: watch$1,
 		utility: {
-			each: each$1, querySelector, isDom
+			each: each$2, querySelector, isDom
 		}
 	} = app;
 	const onCss = async (json) => {
@@ -1239,7 +1299,7 @@
 				node.innerHTML = content;
 			}
 			if (componentsUsingCss) {
-				each$1(componentsUsingCss, (item) => {
+				each$2(componentsUsingCss, (item) => {
 					console.log(item);
 					item.styles[filePath] = content;
 				});
@@ -1304,16 +1364,10 @@
 	const {
 		demand,
 		utility: {
-			assign, each, isFunction: isFunction$1
+			assign, each: each$1, isFunction: isFunction$1
 		}
 	} = app;
 	const view = new Ractive({
-		data() {
-			return {
-				notification: [],
-				screenSize: ''
-			};
-		},
 		template: `{{#@shared.components.main:key}}{{>getComponent(key)}}{{/}}`
 	});
 	view.on({
@@ -1322,7 +1376,7 @@
 			const afterDemand = componentEvent.get('afterDemand');
 			if (afterDemand) {
 				const afterDemandEvents = afterDemand[componentEvent.original.type];
-				each(afterDemandEvents, (item, key) => {
+				each$1(afterDemandEvents, (item, key) => {
 					if (isFunction$1(item)) {
 						item(imported, item, key);
 					} else {
@@ -1356,11 +1410,6 @@
 	});
 	assign(app, {
 		async render() {
-			await Ractive.sharedSet('components', {
-				dynamic: {},
-				layout: {},
-				main: {}
-			});
 			await app.initializeScreen();
 			await view.render('body');
 		},
@@ -1379,11 +1428,13 @@
 			eventAdd,
 			isRegExp,
 			mapWhile,
-			ifInvoke,
 			hasValue,
 			last,
 			isFunction,
-			apply
+			apply,
+			eachAsync,
+			isPlainObject,
+			each
 		},
 		crate,
 		component
@@ -1400,6 +1451,31 @@
     historyIndex = 0;
     routes = [];
     methods = {};
+    events = {
+    	beforeLoad: [],
+    	afterLoad: [],
+    	beforeInit: [],
+    	afterInit: [],
+    	afterRender: [],
+    	beforeRender: [],
+    	render: []
+    };
+    on(eventNames, callback) {
+    	const thisRouter = this;
+    	if (isPlainObject(eventNames) && !callback) {
+    		return each(eventNames, (eventCallback, eventName) => {
+    			thisRouter.on(eventName, eventCallback);
+    		});
+    	}
+    	return this.events[eventNames].push(callback);
+    }
+    async triggerEvents(eventName, optionalBind = this, args = []) {
+    	const bindThis = this;
+    	console.log(bindThis, this.events[eventName], eventName, args);
+    	return eachAsync(this.events[eventName], async (eventItem) => {
+    		await apply(eventItem, optionalBind, args);
+    	});
+    }
     defaults = {
     	protected: false,
     	role: false
@@ -1440,7 +1516,6 @@
     	assignDeep(this, options);
     	this.log('eventAdd popstate');
     	eventAdd(window, 'popstate', this.popstate, true);
-    	await this.process();
     }
     async updateLocation() {
     	map(location, (item, index) => {
@@ -1470,7 +1545,6 @@
     	if (this.pathState.path[0] !== '/') {
     		this.pathState.path = `/${this.pathState.path}`;
     	}
-    	this.log(this.pathState.path);
     	if (secured) {
     		const securityCheck = Boolean(await this.methods.security(this.match));
     		if (securityCheck) {
@@ -1483,6 +1557,7 @@
     		}
     	}
     	this.pathState.path = `/${this.defaults.root}${this.pathState.path}index.js`;
+    	this.log('COMPILED PATH', this.pathState.path);
     }
     checkMatch(routeObject) {
     	const check = routeObject.regex.test(app.router.pathname);
@@ -1500,6 +1575,7 @@
     	}
     }
     async process() {
+    	const routerThis = this;
     	app.view.fire('router.loading');
     	this.log('Router Loading State');
     	this.updateLocation();
@@ -1526,7 +1602,7 @@
     		await this.compilePath();
     		await Ractive.sharedSet('currentPath', this.pathname);
     		await Ractive.sharedSet('navState', false);
-    		await ifInvoke(this.methods.beforeLoad);
+    		await this.triggerEvents('beforeLoad');
     		this.log('Checking if Model Loaded', match.model);
     		if (match.assets) {
     			if (match.assets.scripts) {
@@ -1542,30 +1618,38 @@
     			app.log(e);
     			crate.removeItem(pathState.path);
     		}
+    		if (!stateModel) {
+    			return app.log('ROUTER FAILED TO LOAD');
+    		}
     		if (!stateModel.loaded) {
+    			stateModel.loaded = true;
     			const onrender = stateModel.component.onrender;
-    			if (onrender) {
-    				stateModel.component.onrender = async function(...args) {
-    					try {
-    						await apply(onrender, this, args);
-    						app.view.fire('navComponentRendered');
-    						return args;
-    					} catch (e) {
-    						app.log('Error in Navigation File', pathState.path);
-    						app.log(e);
-    						crate.removeItem(pathState.path);
-    					}
-    				};
-    				stateModel.loaded = true;
-    			}
-    			console.log();
+    			const oninit = stateModel.component.oninit;
+    			stateModel.component.onrender = function() {};
+    			const compiledRender = async function(...args) {
+    				cnsl('onrender', 'notify');
+    				onrender && (await apply(onrender, this, args));
+    				cnsl('onrender END', 'notify');
+    				await routerThis.triggerEvents('render', this, args);
+    			};
+    			stateModel.component.oninit = async function(...args) {
+    				cnsl('oninit', 'notify');
+    				await routerThis.triggerEvents('beforeInit', this, args);
+    				oninit && (await apply(oninit, this, args));
+    				console.log(this.rendered);
+    				cnsl('oninit END', 'notify');
+    				if (this.rendered) {
+    					await apply(compiledRender, this, args);
+    				} else {
+    					this.on('onrender', compiledRender);
+    				}
+    			};
     		}
     		this.log(stateModel);
     		const initializeComponent = await component(stateModel.component);
     		this.log('component made', initializeComponent);
     		Ractive.components.navstate = initializeComponent;
-    		ifInvoke(stateModel.open);
-    		await ifInvoke(this.methods.onLoad);
+    		await routerThis.triggerEvents('afterLoad');
     		await Ractive.sharedSet('navState', true);
     	} else {
     		return false;

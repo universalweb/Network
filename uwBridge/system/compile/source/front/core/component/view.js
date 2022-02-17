@@ -8,12 +8,6 @@ const {
 	}
 } = app;
 const view = new Ractive({
-	data() {
-		return {
-			notification: [],
-			screenSize: '',
-		};
-	},
 	template: `{{#@shared.components.main:key}}{{>getComponent(key)}}{{/}}`,
 });
 view.on({
@@ -57,11 +51,6 @@ app.title = new Ractive({
 });
 assign(app, {
 	async render() {
-		await Ractive.sharedSet('components', {
-			dynamic: {},
-			layout: {},
-			main: {},
-		});
 		await app.initializeScreen();
 		await view.render('body');
 	},

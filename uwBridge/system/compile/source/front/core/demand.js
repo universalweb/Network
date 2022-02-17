@@ -17,6 +17,7 @@ const {
 		restString,
 		getFileExtension
 	},
+	imported,
 	crate
 } = app;
 const commaString = ',';
@@ -32,14 +33,10 @@ const buildFilePath = (itemArg) => {
 		} else if (initialString(item, -4) === 'css/') {
 			item += '.css';
 		}
-		if (app.debug) {
-			console.log(item);
-		}
+		app.log(item);
 	}
 	if (restString(item, -3) === '.js') {
-		if (app.debug) {
-			console.log(item, watch);
-		}
+		app.log(item, watch);
 		if (!watchers[item]) {
 			watch(item, (thing) => {
 				if (app.debug) {
@@ -95,6 +92,7 @@ export const demand = async (filesArg, options) => {
 		});
 	}
 	const results = await streamAssets(assets, options);
+	app.log(results);
 	return demandType(results, arrayToObjectMap);
 };
 const demandTypeMethod = (type, optionsFunction) => {
@@ -107,6 +105,9 @@ const demandTypeMethod = (type, optionsFunction) => {
 			optionsFunction(options);
 		}
 		files = map(files, (item) => {
+			if (imported[item]) {
+				return item;
+			}
 			const itemExt = getFileExtension(item);
 			const compiledFileName = (itemExt) ? item : `${item}${last(item) === '/' && 'index' || ''}.${type}`;
 			app.log('Demand Type', type, compiledFileName);

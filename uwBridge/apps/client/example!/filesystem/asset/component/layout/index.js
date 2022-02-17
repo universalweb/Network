@@ -1,5 +1,4 @@
 (async () => {
-	const dirname = exports.dirname;
 	const {
 		component,
 		utility: { cnsl },
@@ -8,8 +7,8 @@
 	cnsl('Layout Component', '!important');
 	await component('layout', {
 		asset: {
-			styles: [`${dirname}style`],
-			template: `${dirname}template`,
+			styles: [`${import.meta.path}style`],
+			template: `${import.meta.path}template`,
 		},
 		data() {
 			return {

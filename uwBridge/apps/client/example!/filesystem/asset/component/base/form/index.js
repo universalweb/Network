@@ -4,11 +4,10 @@
 		utility: { cnsl }
 	} = app;
 	cnsl('Form Component', 'notify');
-	const dirname = exports.dirname;
 	await component('frm', {
 		asset: {
-			template: `${dirname}template`,
-			styles: [`${dirname}style`]
+			template: `${import.meta.path}template`,
+			styles: [`${import.meta.path}style`]
 		}
 	});
 })();

@@ -1,23 +1,22 @@
 import app from './app.js';
 import { workerRequest } from './worker';
 const {
-	assign,
-	querySelector,
-	map,
-	hasValue,
-	isString,
-} = app.utility;
-const {
-	crate
+	imported,
+	crate,
+	utility: {
+		assign,
+		querySelector,
+		map,
+		hasValue,
+		isString,
+		jsonParse
+	}
 } = app;
-export const imported = {};
 export const headNode = querySelector('head');
 export const styleNode = document.createElement('style');
-const loadScript = window.eval;
-app.imported = imported;
 const iJson = (contents) => {
 	if (contents) {
-		return loadScript(`(${contents})`);
+		return jsonParse(contents);
 	}
 	return {};
 };
@@ -89,21 +88,30 @@ const saveCompleted = async (json, config) => {
 			}
 		} else if (fileContents) {
 			if (isLibRegex.test(filename)) {
-				loadScript(fileContents);
-				imported[filename] = true;
+				let scriptRaw = new File([fileContents], filename, {
+					type: 'text/javascript'
+				});
+				let fileBlob = URL.createObjectURL(scriptRaw);
+				imported[filename] = await import(fileBlob);
+				URL.revokeObjectURL(fileBlob);
+				fileBlob = null;
+				scriptRaw = null;
 			} else {
 				if (imported[filename]) {
 					config.filesLoaded++;
 					return checkIfCompleted(config);
 				}
-				skipCheck = true;
-				const moduleExports = {
-					dirname: `${dirname}/`,
-					name: filename
-				};
-				await loadScript(fileContents)(moduleExports);
+				const emulateImport = `Object.assign(import.meta, {path:'${dirname}/',filename:'${filename}'});\n`;
+				let scriptRaw = new File([emulateImport, fileContents], filename, {
+					type: 'text/javascript'
+				});
+				let fileBlob = URL.createObjectURL(scriptRaw);
+				const moduleExports = Object.assign({}, await import(fileBlob));
+				URL.revokeObjectURL(fileBlob);
 				config.filesLoaded++;
 				imported[filename] = moduleExports;
+				fileBlob = null;
+				scriptRaw = null;
 				return checkIfCompleted(config);
 			}
 		}
