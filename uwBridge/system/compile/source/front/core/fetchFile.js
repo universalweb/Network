@@ -9,7 +9,7 @@ const {
 		map,
 		hasValue,
 		isString,
-		jsonParse
+		jsonParse,
 	}
 } = app;
 export const headNode = querySelector('head');
@@ -106,7 +106,7 @@ const saveCompleted = async (json, config) => {
 					type: 'text/javascript'
 				});
 				let fileBlob = URL.createObjectURL(scriptRaw);
-				const moduleExports = Object.assign({}, await import(fileBlob));
+				const moduleExports = assign({}, await import(fileBlob));
 				URL.revokeObjectURL(fileBlob);
 				config.filesLoaded++;
 				imported[filename] = moduleExports;

@@ -33,10 +33,10 @@ const buildFilePath = (itemArg) => {
 		} else if (initialString(item, -4) === 'css/') {
 			item += '.css';
 		}
-		app.log(item);
+		// app.log(item);
 	}
 	if (restString(item, -3) === '.js') {
-		app.log(item, watch);
+		// app.log(item, watch);
 		if (!watchers[item]) {
 			watch(item, (thing) => {
 				if (app.debug) {
@@ -92,7 +92,7 @@ export const demand = async (filesArg, options) => {
 		});
 	}
 	const results = await streamAssets(assets, options);
-	app.log(results);
+	// app.log(results);
 	return demandType(results, arrayToObjectMap);
 };
 const demandTypeMethod = (type, optionsFunction) => {
@@ -110,7 +110,7 @@ const demandTypeMethod = (type, optionsFunction) => {
 			}
 			const itemExt = getFileExtension(item);
 			const compiledFileName = (itemExt) ? item : `${item}${last(item) === '/' && 'index' || ''}.${type}`;
-			app.log('Demand Type', type, compiledFileName);
+			// app.log('Demand Type', type, compiledFileName);
 			return compiledFileName;
 		});
 		return demand(files, options);

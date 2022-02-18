@@ -35,7 +35,7 @@ const asyncComponent = async function(componentConfig) {
 		} = asset;
 		if (hasValue(template)) {
 			asset.template = buildFilePath(template);
-			app.log('Async Template COMPILED URL', asset.template);
+			// app.log('Async Template COMPILED URL', asset.template);
 			componentConfig.template = await demandHtml(asset.template);
 		}
 		if (asset.demand) {
@@ -51,13 +51,13 @@ const asyncComponent = async function(componentConfig) {
 		if (styles) {
 			await eachAsync(ensureArray(styles), async (item, key) => {
 				const compiledCssPath = styles[key] = buildFilePath(item, 'css');
-				app.log('compiled css path', compiledCssPath);
+				// app.log('compiled css path', compiledCssPath);
 				componentConfig.styles[compiledCssPath] = await demandCss(compiledCssPath);
 			});
 		}
 	}
 	const componentPromise = await buildComponent(componentConfig);
-	app.log('Async Component Config', componentConfig);
+	// app.log('Async Component Config', componentConfig);
 	return componentPromise;
 };
 export default asyncComponent;

@@ -31,7 +31,8 @@
 		},
 		store: virtualStorage(),
 		crate: crate$4(),
-		utility: $
+		utility: $,
+		modules: {}
 	};
 	app.imported = {
 		get app() {
@@ -215,7 +216,7 @@
 						type: 'text/javascript'
 					});
 					let fileBlob = URL.createObjectURL(scriptRaw);
-					const moduleExports = Object.assign({}, await import(fileBlob));
+					const moduleExports = assign$8({}, await import(fileBlob));
 					URL.revokeObjectURL(fileBlob);
 					config.filesLoaded++;
 					imported$1[filename] = moduleExports;
@@ -258,9 +259,7 @@
 	assign$8(app, {
 		fetchFile
 	});
-	const {
-		assign: assign$7
-	} = app.utility;
+	const { assign: assign$7 } = app.utility;
 	const request = async (requestName, config) => {
 		const requestPackage = config ?
 			{
@@ -450,7 +449,7 @@
 			each: each$6,
 			cnsl: cnsl$1,
 			initialString,
-			restString,
+			restString: restString$1,
 			getFileExtension: getFileExtension$1
 		},
 		imported,
@@ -469,10 +468,10 @@
 			} else if (initialString(item, -4) === 'css/') {
 				item += '.css';
 			}
-			app.log(item);
+			// app.log(item);
 		}
-		if (restString(item, -3) === '.js') {
-			app.log(item, watch$3);
+		if (restString$1(item, -3) === '.js') {
+			// app.log(item, watch);
 			if (!watchers[item]) {
 				watch$3(item, (thing) => {
 					if (app.debug) {
@@ -533,7 +532,7 @@
 			});
 		}
 		const results = await streamAssets(assets, options);
-		app.log(results);
+		// app.log(results);
 		return demandType(results, arrayToObjectMap);
 	};
 	const demandTypeMethod = (type, optionsFunction) => {
@@ -551,7 +550,7 @@
 				}
 				const itemExt = getFileExtension$1(item);
 				const compiledFileName = itemExt ? item : `${item}${(last$1(item) === '/' && 'index') || ''}.${type}`;
-				app.log('Demand Type', type, compiledFileName);
+				// app.log('Demand Type', type, compiledFileName);
 				return compiledFileName;
 			});
 			return demand$4(files, options);
@@ -588,11 +587,7 @@
 		demandJs: demandJs$1,
 		demandLang
 	});
-	const {
-		utility: {
-			drop
-		}
-	} = app;
+	const { utility: { drop } } = app;
 	const notifications = [];
 	const spawnNotification = (data) => {
 		if (app.notificationStatus) {
@@ -627,12 +622,16 @@
 	};
 	const {
 		utility: {
-			debounce, eventAdd: eventAdd$1, isAgent, info, model, assign: assign$4
+			debounce, eventAdd: eventAdd$1, isAgent, model, assign: assign$4
 		}
 	} = app;
 	app.updateResize = async () => {
+		app.utility.saveDimensions();
+		const info = app.utility.info;
 		await Ractive.sharedSet(info);
+		const orientation = (screen.orientation || {}).type || screen.mozOrientation || screen.msOrientation;
 		const width = info.windowWidth;
+		const height = info.windowHeight;
 		let widthLevel = 0;
 		let screenSize;
 		if (width < 640) {
@@ -666,6 +665,16 @@
 		await Ractive.sharedSet('screenSize', screenSize);
 		await Ractive.sharedSet(screenSize, true);
 		await Ractive.sharedSet('widthLevel', widthLevel);
+		if (orientation) {
+			await Ractive.sharedSet('orientation', orientation);
+		}
+		if (height > width) {
+			await Ractive.sharedSet('orientationBasic', 'portrait');
+		} else if (width > height) {
+			await Ractive.sharedSet('orientationBasic', 'landscape');
+		} else if (width === height) {
+			await Ractive.sharedSet('orientationBasic', 'perfectSquare');
+		}
 	};
 	const updateResize = debounce(app.updateResize, 250);
 	function calculateScreen() {
@@ -736,11 +745,7 @@
 		await app.updateResize();
 	};
 	model('smoothScroll', smoothScroll);
-	const {
-		utility: {
-			assign: assign$3
-		}
-	} = app;
+	const { utility: { assign: assign$3 } } = app;
 	const methods = {
 		$: app.utility,
 		getComponent(partialName) {
@@ -777,7 +782,9 @@
 			sortOldest,
 			clear,
 			isPlainObject: isPlainObject$1,
-			mapAsync
+			mapAsync,
+			isFunction: isFunction$3,
+			apply: apply$2
 		}
 	} = app;
 	function assemblePath(keypath, options = {}) {
@@ -793,83 +800,90 @@
 	// 	} = options;
 	// 	return (beforeIndex && `${beforeIndex}.`) + keypath + (afterIndex && `.${afterIndex}`);
 	// }
-	function getPropertyName(indexName, options = {}) {
-		return indexName || app.idProperty || options.idProperty || 'id';
+	function getPropertyName(propertyName, options = {}) {
+		return propertyName || options.id || app.idProperty || 'id';
 	}
-	function getIndexValue(indexMatchArg, indexNameArg, options) {
-		const indexName = getPropertyName(indexNameArg, options);
-		const indexMatch = isPlainObject$1(indexMatchArg) ? indexMatchArg[indexName] : indexMatchArg;
-		return indexMatch;
+	function getIndexValue(item, propertyName) {
+		const indexValue = isPlainObject$1(item) ? item[propertyName] : item;
+		return indexValue;
 	}
-	function getItem(context, keypath, indexMatchArg, indexNameArg, options = {}) {
-		const indexName = getPropertyName(indexNameArg, options);
-		const indexMatch = getIndexValue(indexMatchArg, indexNameArg, options);
-		const path = assemblePath(keypath, options);
-		const item = findItem(context.get(path), indexMatch, indexName);
+	function getItem(context, keypath, indexValue, propertyName) {
+		const item = findItem(context.get(keypath), indexValue, propertyName);
 		return item;
 	}
-	function getIndex(context, keypath, indexMatchArg, indexNameArg, options = {}) {
-		const indexName = getPropertyName(indexNameArg, options);
-		const indexMatch = getIndexValue(indexMatchArg, indexNameArg, options);
-		const path = assemblePath(keypath, options);
-		const index = findIndex(context.get(path), indexMatch, indexName);
-		return hasValue$2(index) ? index : null;
+	function getIndex(context, keypath, indexValue, propertyName) {
+		const index = findIndex(context.get(keypath), indexValue, propertyName);
+		return index;
 	}
-	function getOrigin(context, keypath, indexMatchArg, indexNameArg, options = {}) {
-		const indexName = getPropertyName(indexNameArg, options);
-		const indexMatch = getIndexValue(indexMatchArg, indexNameArg, options);
-		const path = assemblePath(keypath, options);
-		const item = context.get(path);
-		const index = findIndex(item, indexMatch, indexName);
-		return {
-			index,
-			path
-		};
+	function getIndexPath(context, keypath, indexValue, propertyName) {
+		const index = findIndex(context.get(keypath), indexValue, propertyName);
+		return index ? `${keypath}.${index}` : false;
 	}
-	async function putByIndex(context, keypath, value, indexMatchArg, indexNameArg, options, addBy = 1) {
-		const path = assemblePath(keypath, options);
-		const indexName = getPropertyName(indexNameArg, options);
-		const indexMatch = getIndexValue(indexMatchArg, indexNameArg, options);
-		const index = findIndex(path, indexMatch, indexName);
+	// drop dropRight removeBy right
+	async function setByIndex(context, keypath, item, indexValue, propertyName, addBy = 1) {
+		const index = findIndex(context.get(keypath), indexValue, propertyName);
 		if (hasValue$2(index)) {
-			return context.splice(path, index + addBy, 0, ...ensureArray$1(value));
+			return context.splice(`${keypath}.${index}`, index + addBy, 0, ...ensureArray$1(item));
 		} else {
-			return context.push(path, value);
+			return context.push(keypath, item);
 		}
 	}
-	async function setAtIndex(context, keypath, value, indexMatchArg, indexNameArg, options) {
-		const path = assemblePath(keypath, options);
-		const indexName = getPropertyName(indexNameArg, options);
-		const indexMatch = getIndexValue(indexMatchArg, indexNameArg, options);
-		const index = findIndex(context.get(path), indexMatch, indexName);
-		if (hasValue$2(index)) {
-			return context.set(`${path}.${index}`, value);
+	async function setAtIndex(context, keypath, item, indexValue, propertyName) {
+		const indexPath = getIndexPath(context.get(keypath), indexValue, propertyName);
+		if (hasValue$2(indexPath)) {
+			return context.set(indexPath, item);
 		}
+	}
+	async function syncItem(context, collection, item, addMethod = 'push', propertyName, mergeArrays, removeMethod) {
+		const indexValue = getIndexValue(item, propertyName);
+		const index = findIndex(collection, indexValue, propertyName);
+		if (index) {
+			if (addMethod === 'remove') {
+				if (isFunction$3(removeMethod)) {
+					return apply$2(removeMethod, context, [index, item]);
+				}
+				return collection.splice(index, 1);
+			} else {
+				assignDeep$1(collection[index], item, mergeArrays);
+			}
+		}
+		return collection[addMethod](item);
 	}
 	const extendRactive = {
 		async merge(keypath, source = {}, options) {
 			const path = assemblePath(keypath, options);
-			const target = this.get(keypath);
+			const target = this.get(path);
 			if (hasValue$2(target)) {
 				assignDeep$1(target, source);
 				await this.update(path);
 			}
 			return target;
 		},
-		putByIndex(keypath, value, indexMatch, indexName, options, addBy) {
-			return putByIndex(this, keypath, value, indexMatch, indexName, options, addBy);
+		async setAtIndex(keypath, item, propertyNameArg, options) {
+			const path = assemblePath(keypath, options);
+			const propertyName = getPropertyName(propertyNameArg, options);
+			const indexValue = getIndexValue(item, propertyName);
+			return setAtIndex(this, path, item, indexValue, propertyName);
 		},
-		setAtIndex(keypath, value, indexMatch, indexName, options, addBy) {
-			return setAtIndex(this, keypath, value, indexMatch, indexName, options);
+		async setByIndex(keypath, item, propertyNameArg, positionMod, options) {
+			const path = assemblePath(keypath, options);
+			const propertyName = getPropertyName(propertyNameArg, options);
+			const indexValue = getIndexValue(item, propertyName);
+			return setByIndex(this, path, item, indexValue, propertyName, positionMod);
 		},
-		getOrigin(keypath, indexMatch, indexNameArg, options) {
-			return getOrigin(this, keypath, indexMatch, indexNameArg, options);
+		async removeByIndex(keypath, item, propertyNameArg, upto = 1, options) {
+			const path = assemblePath(keypath, options);
+			const propertyName = getPropertyName(propertyNameArg, options);
+			const index = getIndex(this, keypath, item, propertyName);
+			if (hasValue$2(index)) {
+				return this.splice(path, index, upto);
+			}
 		},
-		appendAtIndex(keypath, indexMatch, value, indexName, amount = 1, options) {
-			return putByIndex(this, keypath, value, indexMatch, indexName, options, amount);
-		},
-		prependAtIndex(keypath, indexMatch, value, indexName, amount = -1, options) {
-			return putByIndex(this, keypath, value, indexMatch, indexName, options, amount);
+		getIndexPath(keypath, item, propertyNameArg, options) {
+			const path = assemblePath(keypath, options);
+			const propertyName = getPropertyName(propertyNameArg, options);
+			const indexValue = getIndexValue(item, propertyName);
+			return getIndexPath(this, path, indexValue, propertyName);
 		},
 		async clearArray(keypath, options) {
 			const path = assemblePath(keypath, options);
@@ -883,57 +897,17 @@
 			}
 			return target;
 		},
-		getItem(keypath, indexMatch, indexName, options) {
-			return getItem(this, keypath, indexMatch, indexName, options);
-		},
-		getIndex(keypath, indexMatch, indexName, options) {
-			return getIndex(this, keypath, indexMatch, indexName, options);
-		},
-		async removeByIndex(keypath, indexMatchArg, indexNameArg, upto = 1, options) {
+		getItem(keypath, indexMatch, propertyNameArg, options) {
 			const path = assemblePath(keypath, options);
-			const indexName = getPropertyName(indexNameArg, options);
-			const index = getIndex(this, keypath, indexMatchArg, indexName, options);
-			if (hasValue$2(index)) {
-				return this.splice(path, index, upto);
-			}
+			const propertyName = getPropertyName(propertyNameArg, options);
+			const indexValue = getIndexValue(indexMatch, propertyName);
+			return getItem(this, path, indexValue, propertyName);
 		},
-		async removeIndex(keypath, index, upto = 1, options) {
+		getIndex(keypath, indexMatch, propertyNameArg, options) {
 			const path = assemblePath(keypath, options);
-			if (hasValue$2(index)) {
-				return this.splice(path, index, upto);
-			}
-		},
-		async pushByIndex(keypath, value, indexMatch, indexName, options) {
-			const path = assemblePath(keypath, options);
-			const item = getItem(this, path, indexMatch, indexName, options);
-			if (isArray$1(item)) {
-				item.push(value);
-			}
-			this.update(path);
-		},
-		async unshiftByIndex(keypath, item, indexMatchArg, indexNameArg, options) {
-			const indexName = getPropertyName(indexNameArg, options);
-			const index = getIndex(this, keypath, indexMatchArg, indexName, options);
-			if (hasValue$2(index)) {
-				const path = assemblePath(`${keypath}.${index}`, options);
-				await this.unshift(path, item);
-			}
-		},
-		async shiftByIndex(keypath, indexMatchArg, item, indexNameArg, options) {
-			const indexName = getPropertyName(indexNameArg, options);
-			const index = getIndex(this, keypath, indexMatchArg, indexName, options);
-			if (hasValue$2(index)) {
-				const path = assemblePath(`${keypath}.${index}`, options);
-				await this.shift(path);
-			}
-		},
-		async popByIndex(keypath, indexMatchArg, item, indexNameArg, options) {
-			const indexName = getPropertyName(indexNameArg, options);
-			const index = getIndex(this, keypath, indexMatchArg, indexName, options);
-			if (hasValue$2(index)) {
-				const path = assemblePath(`${keypath}.${index}`, options);
-				await this.pop(path);
-			}
+			const propertyName = getPropertyName(propertyNameArg, options);
+			const indexValue = getIndexValue(indexMatch, propertyName);
+			return getIndex(this, path, indexValue, propertyName);
 		},
 		async sortNewest(path, property) {
 			const array = this.get(path);
@@ -945,44 +919,45 @@
 			sortOldest(array, property, true);
 			await this.update(path);
 		},
-		async syncItem(pathOriginal, newValue, indexName, type = 'push', propertyName, options = {}) {
-			// app.log(this, pathOriginal, newValue, indexName);
-			const path = assemblePath(pathOriginal, options);
-			// app.log(path);
-			const currentValue = getItem(this, path, newValue, indexName, options);
-			if (currentValue) {
-				if (type === 'remove') {
-					return this.removeByIndex(pathOriginal, newValue, propertyName, indexName);
-				} else {
-					const {
-						mergeArrays = false
-					} = options;
-					assignDeep$1(currentValue, newValue, mergeArrays);
-					return this.update(path);
-				}
-			}
-			if (extendRactive[type]) {
-				return this[type](path, newValue, indexName, propertyName, options);
-			}
-			return this[type](path, newValue);
+		async syncItem(keypath, item, options = {}) {
+			const {
+				addMethod, id, mergeArrays, removeMethod
+			} = options;
+			const path = assemblePath(keypath, options);
+			const collection = this.get(path);
+			const propertyName = getPropertyName(id, options);
+			app.log(item, path, collection, propertyName);
+			await syncItem(this, collection, item, addMethod, propertyName, mergeArrays, removeMethod);
+			return this.update(path);
 		},
-		async syncCollection(...args) {
+		async syncCollection(keypath, items, options = {}) {
 			const source = this;
-			const [pathOriginal, newValues, indexName, type = 'push', propertyName, options = {}] = args;
-			app.log(source, pathOriginal, newValues, indexName, type, propertyName, options);
-			if (isArray$1(newValues)) {
-				return mapAsync(newValues, async (item) => {
-					return source.syncItem(pathOriginal, item, indexName, type, propertyName, options);
+			app.log(keypath, items, options);
+			const {
+				addMethod, id, mergeArrays, removeMethod
+			} = options;
+			const path = assemblePath(keypath, options);
+			const propertyName = getPropertyName(id, options);
+			const collection = this.get(path);
+			let results;
+			console.log(source, path, collection, items, addMethod, propertyName, mergeArrays, removeMethod);
+			if (isArray$1(items)) {
+				results = await mapAsync(items, async (item) => {
+					return syncItem(source, collection, item, addMethod, propertyName, mergeArrays, removeMethod);
 				});
 			} else {
-				return source.syncItem(pathOriginal, newValues, indexName, type, propertyName, options);
+				results = await syncItem(source, collection, items, addMethod, propertyName, mergeArrays, removeMethod);
 			}
+			this.update(path);
+			return results;
 		},
-		async toggleByIndex(keypath, indexMatch, indexName, options) {
+		async toggleByIndex(keypath, item, propertyNameArg, options) {
 			const path = assemblePath(keypath, options);
-			const index = getIndex(keypath, indexMatch, indexName, options);
-			if (hasValue$2(index)) {
-				await this.toggle(`${path}.${index}`);
+			const propertyName = getPropertyName(propertyNameArg, options);
+			const indexValue = getIndexValue(item, propertyName);
+			const indexPath = getIndexPath(this, path, indexValue, propertyName);
+			if (hasValue$2(indexPath)) {
+				await this.toggle(indexPath);
 			}
 		}
 	};
@@ -996,9 +971,7 @@
 		app.log(currentView, componentEvent, events);
 		app.log(args);
 		if (componentEvent && events.length) {
-			const {
-				original
-			} = componentEvent;
+			const { original } = componentEvent;
 			original.preventDefault();
 			original.stopPropagation();
 		}
@@ -1093,12 +1066,8 @@
 		let {
 			prefix, suffix
 		} = item.options;
-		const {
-			idProperty
-		} = item.options;
-		const {
-			methods
-		} = item;
+		const { idProperty } = item.options;
+		const { methods } = item;
 		const createMethod = methods.create || 'push';
 		const readMethod = methods.read || 'push';
 		prefix = prefix ? `${prefix}.` : '';
@@ -1226,7 +1195,7 @@
 			} = asset;
 			if (hasValue$1(template)) {
 				asset.template = buildFilePath(template);
-				app.log('Async Template COMPILED URL', asset.template);
+				// app.log('Async Template COMPILED URL', asset.template);
 				componentConfig.template = await demandHtml(asset.template);
 			}
 			if (asset.demand) {
@@ -1242,20 +1211,16 @@
 			if (styles) {
 				await eachAsync$1(ensureArray(styles), async (item, key) => {
 					const compiledCssPath = (styles[key] = buildFilePath(item, 'css'));
-					app.log('compiled css path', compiledCssPath);
+					// app.log('compiled css path', compiledCssPath);
 					componentConfig.styles[compiledCssPath] = await demandCss(compiledCssPath);
 				});
 			}
 		}
 		const componentPromise = await buildComponent(componentConfig);
-		app.log('Async Component Config', componentConfig);
+		// app.log('Async Component Config', componentConfig);
 		return componentPromise;
 	};
-	const {
-		utility: {
-			isString: isString$1
-		}
-	} = app;
+	const { utility: { isString: isString$1 } } = app;
 	const components = {};
 	const generateComponent = (ComponentView, config) => {
 		return new ComponentView(config);
@@ -1270,7 +1235,7 @@
 		if (isString$1(componentName)) {
 			componentConfig.name = componentName;
 		}
-		console.log(componentConfig);
+		// app.log(componentConfig);
 		if (componentConfig.asset) {
 			method = asyncComponent;
 		} else {
@@ -1386,9 +1351,7 @@
 			}
 		},
 		'*.preventDefault'(context) {
-			const {
-				original
-			} = context;
+			const { original } = context;
 			original.preventDefault();
 			original.stopPropagation();
 		}
@@ -1434,7 +1397,8 @@
 			apply,
 			eachAsync,
 			isPlainObject,
-			each
+			each,
+			restString
 		},
 		crate,
 		component
@@ -1471,10 +1435,30 @@
     }
     async triggerEvents(eventName, optionalBind = this, args = []) {
     	const bindThis = this;
-    	console.log(bindThis, this.events[eventName], eventName, args);
-    	return eachAsync(this.events[eventName], async (eventItem) => {
+    	// console.log(bindThis, this.events[eventName], eventName, args);
+    	return eachAsync(bindThis.events[eventName], async (eventItem) => {
     		await apply(eventItem, optionalBind, args);
     	});
+    }
+    safePathAdd(baseArg) {
+    	let fullPath = baseArg;
+    	if (last(fullPath) !== '/') {
+    		fullPath = `${fullPath}/`;
+    	}
+    	if (fullPath[0] === '/') {
+    		fullPath = restString(fullPath);
+    	}
+    	return fullPath;
+    }
+    url(baseArg, addPath) {
+    	let fullPath = baseArg;
+    	if (last(fullPath) !== '/') {
+    		fullPath = `${fullPath}/`;
+    	}
+    	if (fullPath[0] !== '/') {
+    		fullPath = `/${fullPath}`;
+    	}
+    	return baseArg + this.safePathAdd(addPath);
     }
     defaults = {
     	protected: false,
@@ -1496,17 +1480,15 @@
     	app.router.process();
     }
     installRoute(routeModel) {
-    	app.router.log('Install Route', routeModel);
-    	const {
-    		match
-    	} = routeModel;
+    	// app.router.log('Install Route', routeModel);
+    	const { match } = routeModel;
     	if (match) {
     		routeModel.regex = isRegExp(match) ? match : new RegExp(match);
     	}
     	return app.router.routes.push(routeModel);
     }
     add(item) {
-    	this.log('add routes', item);
+    	// this.log('add routes', item);
     	return mapArray(item, this.installRoute);
     }
     async setup(options) {
@@ -1564,7 +1546,7 @@
     	if (check) {
     		app.router.routeState = routeObject;
     	}
-    	app.router.log(check, app.router.pathname, routeObject.regex);
+    	// app.router.log(check, app.router.pathname, routeObject.regex);
     	return !check;
     }
     async close() {
@@ -1577,9 +1559,9 @@
     async process() {
     	const routerThis = this;
     	app.view.fire('router.loading');
-    	this.log('Router Loading State');
+    	this.log('Router Loading State', location.pathname);
     	this.updateLocation();
-    	this.log(this.routes);
+    	// this.log(this.routes);
     	mapWhile(this.routes, this.checkMatch);
     	const match = app.router.routeState;
     	this.log('Match found', match);
@@ -1636,7 +1618,6 @@
     				cnsl('oninit', 'notify');
     				await routerThis.triggerEvents('beforeInit', this, args);
     				oninit && (await apply(oninit, this, args));
-    				console.log(this.rendered);
     				cnsl('oninit END', 'notify');
     				if (this.rendered) {
     					await apply(compiledRender, this, args);
@@ -1645,9 +1626,9 @@
     				}
     			};
     		}
-    		this.log(stateModel);
+    		// this.log(stateModel);
     		const initializeComponent = await component(stateModel.component);
-    		this.log('component made', initializeComponent);
+    		// this.log('component made', initializeComponent);
     		Ractive.components.navstate = initializeComponent;
     		await routerThis.triggerEvents('afterLoad');
     		await Ractive.sharedSet('navState', true);

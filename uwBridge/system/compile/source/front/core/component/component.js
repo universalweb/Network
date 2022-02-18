@@ -1,11 +1,7 @@
 import app from '../app';
 import asyncComponent from './asyncComponent';
 import buildComponent from './buildComponent';
-const {
-	utility: {
-		isString
-	}
-} = app;
+const { utility: { isString } } = app;
 const components = {};
 const generateComponent = (ComponentView, config) => {
 	return new ComponentView(config);
@@ -20,7 +16,7 @@ const component = (componentName, componentConfigOption) => {
 	if (isString(componentName)) {
 		componentConfig.name = componentName;
 	}
-	console.log(componentConfig);
+	// app.log(componentConfig);
 	if (componentConfig.asset) {
 		method = asyncComponent;
 	} else {

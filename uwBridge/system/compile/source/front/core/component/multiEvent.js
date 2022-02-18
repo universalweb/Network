@@ -11,9 +11,7 @@ const multiEvent = (currentView, componentEvent, events, ...args) => {
 	app.log(currentView, componentEvent, events);
 	app.log(args);
 	if (componentEvent && events.length) {
-		const {
-			original
-		} = componentEvent;
+		const { original } = componentEvent;
 		original.preventDefault();
 		original.stopPropagation();
 	}

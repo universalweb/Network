@@ -4242,9 +4242,7 @@
   }));
 
   (function() {
-  	const {
-  		assign: assign$2
-  	} = self.$;
+  	const { assign: assign$2 } = self.$;
   	const app = {
   		config: {},
   		utility: self.$,
@@ -4269,11 +4267,7 @@
   			socket: {}
   		}
   	};
-  	const {
-  		utility: {
-  			assign: assign$1
-  		}
-  	} = app;
+  	const { utility: { assign: assign$1 } } = app;
   	const post$1 = (id, data, options) => {
   		const responseData = {
   			data,
@@ -4530,13 +4524,9 @@
   		socketInitialize();
   	};
   	const {
-  		utility: {
-  			get
-  		},
+  		utility: { get },
   		events,
-  		events: {
-  			post
-  		}
+  		events: { post }
   	} = app;
   	self.onmessage = (evnt) => {
   		const data = evnt.data;

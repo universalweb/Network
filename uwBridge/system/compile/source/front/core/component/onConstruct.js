@@ -20,12 +20,8 @@ const createWatchers = (currentView, item, key) => {
 		prefix,
 		suffix,
 	} = item.options;
-	const {
-		idProperty
-	} = item.options;
-	const {
-		methods,
-	} = item;
+	const { idProperty } = item.options;
+	const { methods, } = item;
 	const createMethod = methods.create || 'push';
 	const readMethod = methods.read || 'push';
 	prefix = (prefix) ? `${prefix}.` : '';

@@ -33,6 +33,7 @@ const app = {
 	store: virtualStorage(),
 	crate: crate(),
 	utility: $,
+	modules: {},
 };
 app.imported = {
 	get app() {

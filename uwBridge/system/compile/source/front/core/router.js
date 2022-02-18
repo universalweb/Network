@@ -18,7 +18,8 @@ const {
 		apply,
 		eachAsync,
 		isPlainObject,
-		each
+		each,
+		restString
 	},
 	crate,
 	component
@@ -55,10 +56,30 @@ class Router {
 	}
 	async triggerEvents(eventName, optionalBind = this, args = []) {
 		const bindThis = this;
-		console.log(bindThis, this.events[eventName], eventName, args);
-		return eachAsync(this.events[eventName], async (eventItem) => {
+		// console.log(bindThis, this.events[eventName], eventName, args);
+		return eachAsync(bindThis.events[eventName], async (eventItem) => {
 			await (apply(eventItem, optionalBind, args));
 		});
+	}
+	safePathAdd(baseArg) {
+		let fullPath = baseArg;
+		if (last(fullPath) !== '/') {
+			fullPath = `${fullPath}/`;
+		}
+		if (fullPath[0] === '/') {
+			fullPath = restString(fullPath);
+		}
+		return fullPath;
+	}
+	url(baseArg, addPath) {
+		let fullPath = baseArg;
+		if (last(fullPath) !== '/') {
+			fullPath = `${fullPath}/`;
+		}
+		if (fullPath[0] !== '/') {
+			fullPath = `/${fullPath}`;
+		}
+		return baseArg + this.safePathAdd(addPath);
 	}
 	defaults = {
 		protected: false,
@@ -80,17 +101,15 @@ class Router {
 		app.router.process();
 	}
 	installRoute(routeModel) {
-		app.router.log('Install Route', routeModel);
-		const {
-			match
-		} = routeModel;
+		// app.router.log('Install Route', routeModel);
+		const { match } = routeModel;
 		if (match) {
 			routeModel.regex = isRegExp(match) ? match : new RegExp(match);
 		}
 		return app.router.routes.push(routeModel);
 	}
 	add(item) {
-		this.log('add routes', item);
+		// this.log('add routes', item);
 		return mapArray(item, this.installRoute);
 	}
 	async setup(options) {
@@ -151,7 +170,7 @@ class Router {
 		if (check) {
 			app.router.routeState = routeObject;
 		}
-		app.router.log(check, app.router.pathname, routeObject.regex);
+		// app.router.log(check, app.router.pathname, routeObject.regex);
 		return !check;
 	}
 	async close() {
@@ -164,9 +183,9 @@ class Router {
 	async process() {
 		const routerThis = this;
 		app.view.fire('router.loading');
-		this.log('Router Loading State');
+		this.log('Router Loading State', location.pathname);
 		this.updateLocation();
-		this.log(this.routes);
+		// this.log(this.routes);
 		mapWhile(this.routes, this.checkMatch);
 		const match = app.router.routeState;
 		this.log('Match found', match);
@@ -224,7 +243,6 @@ class Router {
 					cnsl('oninit', 'notify');
 					await routerThis.triggerEvents('beforeInit', this, args);
 					oninit && await (apply(oninit, this, args));
-					console.log(this.rendered);
 					cnsl('oninit END', 'notify');
 					if (this.rendered) {
 						await (apply(compiledRender, this, args));
@@ -233,9 +251,9 @@ class Router {
 					}
 				};
 			}
-			this.log(stateModel);
+			// this.log(stateModel);
 			const initializeComponent = await component(stateModel.component);
-			this.log('component made', initializeComponent);
+			// this.log('component made', initializeComponent);
 			Ractive.components.navstate = initializeComponent;
 			await routerThis.triggerEvents('afterLoad');
 			await Ractive.sharedSet('navState', true);

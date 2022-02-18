@@ -4,14 +4,17 @@ const {
 		debounce,
 		eventAdd,
 		isAgent,
-		info,
 		model,
 		assign
 	},
 } = app;
 app.updateResize = async () => {
+	app.utility.saveDimensions();
+	const info = app.utility.info;
 	await Ractive.sharedSet(info);
+	const orientation = (screen.orientation || {}).type || screen.mozOrientation || screen.msOrientation;
 	const width = info.windowWidth;
+	const height = info.windowHeight;
 	let widthLevel = 0;
 	let screenSize;
 	if (width < 640) {
@@ -43,6 +46,16 @@ app.updateResize = async () => {
 	await Ractive.sharedSet('screenSize', screenSize);
 	await Ractive.sharedSet(screenSize, true);
 	await Ractive.sharedSet('widthLevel', widthLevel);
+	if (orientation) {
+		await Ractive.sharedSet('orientation', orientation);
+	}
+	if (height > width) {
+		await Ractive.sharedSet('orientationBasic', 'portrait');
+	} else if (width > height) {
+		await Ractive.sharedSet('orientationBasic', 'landscape');
+	} else if (width === height) {
+		await Ractive.sharedSet('orientationBasic', 'perfectSquare');
+	}
 };
 const updateResize = debounce(app.updateResize, 250);
 function calculateScreen() {

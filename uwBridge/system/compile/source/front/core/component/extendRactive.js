@@ -12,7 +12,9 @@ const {
 		sortOldest,
 		clear,
 		isPlainObject,
-		mapAsync
+		mapAsync,
+		isFunction,
+		apply
 	}
 } = app;
 function assemblePath(keypath, options = {}) {
@@ -29,83 +31,90 @@ function assemblePath(keypath, options = {}) {
 // 	} = options;
 // 	return (beforeIndex && `${beforeIndex}.`) + keypath + (afterIndex && `.${afterIndex}`);
 // }
-function getPropertyName(indexName, options = {}) {
-	return indexName || app.idProperty || options.idProperty || 'id';
+function getPropertyName(propertyName, options = {}) {
+	return propertyName || options.id || app.idProperty || 'id';
 }
-function getIndexValue(indexMatchArg, indexNameArg, options) {
-	const indexName = getPropertyName(indexNameArg, options);
-	const indexMatch = isPlainObject(indexMatchArg) ? indexMatchArg[indexName] : indexMatchArg;
-	return indexMatch;
+function getIndexValue(item, propertyName) {
+	const indexValue = isPlainObject(item) ? item[propertyName] : item;
+	return indexValue;
 }
-function getItem(context, keypath, indexMatchArg, indexNameArg, options = {}) {
-	const indexName = getPropertyName(indexNameArg, options);
-	const indexMatch = getIndexValue(indexMatchArg, indexNameArg, options);
-	const path = assemblePath(keypath, options);
-	const item = findItem(context.get(path), indexMatch, indexName);
+function getItem(context, keypath, indexValue, propertyName) {
+	const item = findItem(context.get(keypath), indexValue, propertyName);
 	return item;
 }
-function getIndex(context, keypath, indexMatchArg, indexNameArg, options = {}) {
-	const indexName = getPropertyName(indexNameArg, options);
-	const indexMatch = getIndexValue(indexMatchArg, indexNameArg, options);
-	const path = assemblePath(keypath, options);
-	const index = findIndex(context.get(path), indexMatch, indexName);
-	return hasValue(index) ? index : null;
+function getIndex(context, keypath, indexValue, propertyName) {
+	const index = findIndex(context.get(keypath), indexValue, propertyName);
+	return index;
 }
-function getOrigin(context, keypath, indexMatchArg, indexNameArg, options = {}) {
-	const indexName = getPropertyName(indexNameArg, options);
-	const indexMatch = getIndexValue(indexMatchArg, indexNameArg, options);
-	const path = assemblePath(keypath, options);
-	const item = context.get(path);
-	const index = findIndex(item, indexMatch, indexName);
-	return {
-		index,
-		path
-	};
+function getIndexPath(context, keypath, indexValue, propertyName) {
+	const index = findIndex(context.get(keypath), indexValue, propertyName);
+	return (index) ? `${keypath}.${index}` : false;
 }
-async function putByIndex(context, keypath, value, indexMatchArg, indexNameArg, options, addBy = 1) {
-	const path = assemblePath(keypath, options);
-	const indexName = getPropertyName(indexNameArg, options);
-	const indexMatch = getIndexValue(indexMatchArg, indexNameArg, options);
-	const index = findIndex(path, indexMatch, indexName);
+// drop dropRight removeBy right
+async function setByIndex(context, keypath, item, indexValue, propertyName, addBy = 1) {
+	const index = findIndex(context.get(keypath), indexValue, propertyName);
 	if (hasValue(index)) {
-		return context.splice(path, index + addBy, 0, ...ensureArray(value));
+		return context.splice(`${keypath}.${index}`, index + addBy, 0, ...ensureArray(item));
 	} else {
-		return context.push(path, value);
+		return context.push(keypath, item);
 	}
 }
-async function setAtIndex(context, keypath, value, indexMatchArg, indexNameArg, options) {
-	const path = assemblePath(keypath, options);
-	const indexName = getPropertyName(indexNameArg, options);
-	const indexMatch = getIndexValue(indexMatchArg, indexNameArg, options);
-	const index = findIndex(context.get(path), indexMatch, indexName);
-	if (hasValue(index)) {
-		return context.set(`${path}.${index}`, value);
+async function setAtIndex(context, keypath, item, indexValue, propertyName) {
+	const indexPath = getIndexPath(context.get(keypath), indexValue, propertyName);
+	if (hasValue(indexPath)) {
+		return context.set(indexPath, item);
 	}
+}
+async function syncItem(context, collection, item, addMethod = 'push', propertyName, mergeArrays, removeMethod) {
+	const indexValue = getIndexValue(item, propertyName);
+	const index = findIndex(collection, indexValue, propertyName);
+	if (index) {
+		if (addMethod === 'remove') {
+			if (isFunction(removeMethod)) {
+				return apply(removeMethod, context, [index, item]);
+			}
+			return collection.splice(index, 1);
+		} else {
+			assignDeep(collection[index], item, mergeArrays);
+		}
+	}
+	return collection[addMethod](item);
 }
 export const extendRactive = {
 	async merge(keypath, source = {}, options) {
 		const path = assemblePath(keypath, options);
-		const target = this.get(keypath);
+		const target = this.get(path);
 		if (hasValue(target)) {
 			assignDeep(target, source);
 			await this.update(path);
 		}
 		return target;
 	},
-	putByIndex(keypath, value, indexMatch, indexName, options, addBy) {
-		return putByIndex(this, keypath, value, indexMatch, indexName, options, addBy);
+	async setAtIndex(keypath, item, propertyNameArg, options) {
+		const path = assemblePath(keypath, options);
+		const propertyName = getPropertyName(propertyNameArg, options);
+		const indexValue = getIndexValue(item, propertyName);
+		return setAtIndex(this, path, item, indexValue, propertyName, options);
 	},
-	setAtIndex(keypath, value, indexMatch, indexName, options, addBy) {
-		return setAtIndex(this, keypath, value, indexMatch, indexName, options, addBy);
+	async setByIndex(keypath, item, propertyNameArg, positionMod, options) {
+		const path = assemblePath(keypath, options);
+		const propertyName = getPropertyName(propertyNameArg, options);
+		const indexValue = getIndexValue(item, propertyName);
+		return setByIndex(this, path, item, indexValue, propertyName, positionMod, options);
 	},
-	getOrigin(keypath, indexMatch, indexNameArg, options) {
-		return getOrigin(this, keypath, indexMatch, indexNameArg, options);
+	async removeByIndex(keypath, item, propertyNameArg, upto = 1, options) {
+		const path = assemblePath(keypath, options);
+		const propertyName = getPropertyName(propertyNameArg, options);
+		const index = getIndex(this, keypath, item, propertyName, options);
+		if (hasValue(index)) {
+			return this.splice(path, index, upto);
+		}
 	},
-	appendAtIndex(keypath, indexMatch, value, indexName, amount = 1, options) {
-		return putByIndex(this, keypath, value, indexMatch, indexName, options, amount);
-	},
-	prependAtIndex(keypath, indexMatch, value, indexName, amount = -1, options) {
-		return putByIndex(this, keypath, value, indexMatch, indexName, options, amount);
+	getIndexPath(keypath, item, propertyNameArg, options) {
+		const path = assemblePath(keypath, options);
+		const propertyName = getPropertyName(propertyNameArg, options);
+		const indexValue = getIndexValue(item, propertyName);
+		return getIndexPath(this, path, indexValue, propertyName, options);
 	},
 	async clearArray(keypath, options) {
 		const path = assemblePath(keypath, options);
@@ -119,57 +128,17 @@ export const extendRactive = {
 		}
 		return target;
 	},
-	getItem(keypath, indexMatch, indexName, options) {
-		return getItem(this, keypath, indexMatch, indexName, options);
-	},
-	getIndex(keypath, indexMatch, indexName, options) {
-		return getIndex(this, keypath, indexMatch, indexName, options);
-	},
-	async removeByIndex(keypath, indexMatchArg, indexNameArg, upto = 1, options) {
+	getItem(keypath, indexMatch, propertyNameArg, options) {
 		const path = assemblePath(keypath, options);
-		const indexName = getPropertyName(indexNameArg, options);
-		const index = getIndex(this, keypath, indexMatchArg, indexName, options);
-		if (hasValue(index)) {
-			return this.splice(path, index, upto);
-		}
+		const propertyName = getPropertyName(propertyNameArg, options);
+		const indexValue = getIndexValue(indexMatch, propertyName);
+		return getItem(this, path, indexValue, propertyName, options);
 	},
-	async removeIndex(keypath, index, upto = 1, options) {
+	getIndex(keypath, indexMatch, propertyNameArg, options) {
 		const path = assemblePath(keypath, options);
-		if (hasValue(index)) {
-			return this.splice(path, index, upto);
-		}
-	},
-	async pushByIndex(keypath, value, indexMatch, indexName, options) {
-		const path = assemblePath(keypath, options);
-		const item = getItem(this, path, indexMatch, indexName, options);
-		if (isArray(item)) {
-			item.push(value);
-		}
-		this.update(path);
-	},
-	async unshiftByIndex(keypath, item, indexMatchArg, indexNameArg, options) {
-		const indexName = getPropertyName(indexNameArg, options);
-		const index = getIndex(this, keypath, indexMatchArg, indexName, options);
-		if (hasValue(index)) {
-			const path = assemblePath(`${keypath}.${index}`, options);
-			await this.unshift(path, item);
-		}
-	},
-	async shiftByIndex(keypath, indexMatchArg, item, indexNameArg, options) {
-		const indexName = getPropertyName(indexNameArg, options);
-		const index = getIndex(this, keypath, indexMatchArg, indexName, options);
-		if (hasValue(index)) {
-			const path = assemblePath(`${keypath}.${index}`, options);
-			await this.shift(path);
-		}
-	},
-	async popByIndex(keypath, indexMatchArg, item, indexNameArg, options) {
-		const indexName = getPropertyName(indexNameArg, options);
-		const index = getIndex(this, keypath, indexMatchArg, indexName, options);
-		if (hasValue(index)) {
-			const path = assemblePath(`${keypath}.${index}`, options);
-			await this.pop(path);
-		}
+		const propertyName = getPropertyName(propertyNameArg, options);
+		const indexValue = getIndexValue(indexMatch, propertyName);
+		return getIndex(this, path, indexValue, propertyName, options);
 	},
 	async sortNewest(path, property) {
 		const array = this.get(path);
@@ -181,46 +150,51 @@ export const extendRactive = {
 		sortOldest(array, property, true);
 		await this.update(path);
 	},
-	async syncItem(pathOriginal, newValue, indexName, type = 'push', propertyName, options = {}) {
-		// app.log(this, pathOriginal, newValue, indexName);
-		const path = assemblePath(pathOriginal, options);
-		// app.log(path);
-		const currentValue = getItem(this, path, newValue, indexName, options);
-		if (currentValue) {
-			if (type === 'remove') {
-				return this.removeByIndex(pathOriginal, newValue, propertyName, indexName);
-			} else {
-				const {
-					mergeArrays = false
-				} = options;
-				assignDeep(currentValue, newValue, mergeArrays);
-				return this.update(path);
-			}
-		}
-		if (extendRactive[type]) {
-			return this[type](path, newValue, indexName, propertyName, options);
-		}
-		return this[type](path, newValue);
+	async syncItem(keypath, item, options = {}) {
+		const {
+			addMethod,
+			id,
+			mergeArrays,
+			removeMethod
+		} = options;
+		const path = assemblePath(keypath, options);
+		const collection = this.get(path);
+		const propertyName = getPropertyName(id, options);
+		app.log(item, path, collection, propertyName);
+		await syncItem(this, collection, item, addMethod, propertyName, mergeArrays, removeMethod);
+		return this.update(path);
 	},
-	async syncCollection(...args) {
+	async syncCollection(keypath, items, options = {}) {
 		const source = this;
-		const [
-			pathOriginal, newValues, indexName, type = 'push', propertyName, options = {}
-		] = args;
-		app.log(source, pathOriginal, newValues, indexName, type, propertyName, options);
-		if (isArray(newValues)) {
-			return mapAsync(newValues, async (item) => {
-				return source.syncItem(pathOriginal, item, indexName, type, propertyName, options);
+		app.log(keypath, items, options);
+		const {
+			addMethod,
+			id,
+			mergeArrays,
+			removeMethod
+		} = options;
+		const path = assemblePath(keypath, options);
+		const propertyName = getPropertyName(id, options);
+		const collection = this.get(path);
+		let results;
+		console.log(source, path, collection, items, addMethod, propertyName, mergeArrays, removeMethod);
+		if (isArray(items)) {
+			results = await mapAsync(items, async (item) => {
+				return syncItem(source, collection, item, addMethod, propertyName, mergeArrays, removeMethod);
 			});
 		} else {
-			return source.syncItem(pathOriginal, newValues, indexName, type, propertyName, options);
+			results = await syncItem(source, collection, items, addMethod, propertyName, mergeArrays, removeMethod);
 		}
+		this.update(path);
+		return results;
 	},
-	async toggleByIndex(keypath, indexMatch, indexName, options) {
+	async toggleByIndex(keypath, item, propertyNameArg, options) {
 		const path = assemblePath(keypath, options);
-		const index = getIndex(keypath, indexMatch, indexName, options);
-		if (hasValue(index)) {
-			await this.toggle(`${path}.${index}`);
+		const propertyName = getPropertyName(propertyNameArg, options);
+		const indexValue = getIndexValue(item, propertyName);
+		const indexPath = getIndexPath(this, path, indexValue, propertyName);
+		if (hasValue(indexPath)) {
+			await this.toggle(indexPath);
 		}
 	}
 };
