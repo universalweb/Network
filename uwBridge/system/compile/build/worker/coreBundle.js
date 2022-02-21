@@ -251,9 +251,13 @@
 	});
 	const socketInitialize = () => {
 		console.log('Worker Socket Module', 'notify');
-		const serverLocation = `${routerData.protocol}//${app.config.socketHostname || routerData.hostname}:${app.config.port}`;
+		let serverLocation = `${routerData.protocol}//${app.config.socketHostname || routerData.hostname}`;
+		if (app.config.port) {
+			serverLocation = `${serverLocation}:${app.config.port}`;
+		}
 		socket = self.io.connect(serverLocation, {
-			transports: ['websocket']
+			transports: ['websocket'],
+			secure: true
 		});
 		// this listens for client API calls
 		socket.on('api', apiClient);

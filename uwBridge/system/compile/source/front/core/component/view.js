@@ -5,23 +5,29 @@ const {
 		assign,
 		each,
 		isFunction,
-		compactKeys,
-		pluckObject
+		cnsl
 	},
-	componentStore
 } = app;
 Ractive.sharedData.classes = {};
 Ractive.sharedData.classList = {};
 const view = new Ractive({
 	template: `{{#@shared.components.main:key}}{{>getComponent(key)}}{{/}}`,
-	onrender() {
+	async oninit() {
+		cnsl('App Initialize Component', 'warning');
 		const source = this;
-		source.observe('@shared.classes', () => {
-			const classes = compactKeys(componentStore('classes'));
-			const classList = componentStore('classList');
-			classes.push(...pluckObject(classList, compactKeys(classList)));
-			document.body.className = classes.join(' ');
+		await app.initializeScreen();
+		source.on('@shared.sizeTrigger', () => {
+			app.computeLayoutClasses();
 		});
+		source.observe('@shared.classes', () => {
+			app.computeLayoutClasses();
+		});
+		source.observe('@shared.classList', () => {
+			app.computeLayoutClasses();
+		});
+	},
+	async onrender() {
+		app.computeLayoutClasses();
 	}
 });
 view.on({
@@ -63,7 +69,6 @@ app.title = new Ractive({
 });
 assign(app, {
 	async render() {
-		await app.initializeScreen();
 		await view.render('body');
 	},
 	view,

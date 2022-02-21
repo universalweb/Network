@@ -9,7 +9,7 @@ module.exports = (utility) => {
 	const createdServer = http.createServer(app);
 	const createdServerSecure = https.createServer({
 		SNICallback(domain, cb) {
-			cb(null, tls.createSecureContext(secureContext[domain]));
+			cb(null, tls.createSecureContext(secureContext));
 		}
 	}, appSecure);
 	appSecure.disable('x-powered-by');

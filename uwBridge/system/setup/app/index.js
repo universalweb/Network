@@ -41,6 +41,7 @@ const setupApps = async () => {
 		} else {
 			await promise((accept) => {
 				if (app.config.http.certs) {
+					console.log('ENCRYPTED CONTEXT');
 					server = service.http.createdServerSecure.listen(portNumber, accept);
 				} else {
 					server = createdServer.listen(portNumber, accept);

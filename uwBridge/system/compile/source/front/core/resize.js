@@ -4,6 +4,8 @@ const {
 		debounce,
 		eventAdd,
 		isAgent,
+		compactKeys,
+		pluckObject
 	},
 	componentStore
 } = app;
@@ -47,6 +49,7 @@ async function updateResize() {
 	} else if (width === height) {
 		await componentStore('classList.orientationBasic', 'perfectSquare');
 	}
+	app.view.fire('classTrigger');
 }
 const updateResizeAnimationFrame = () => {
 	requestAnimationFrame(updateResize);
@@ -86,8 +89,14 @@ app.initializeScreen = async () => {
 	await componentStore('classes.linux', isAgent.linux);
 	await componentStore('classes.mozilla', isAgent.mozilla);
 	await componentStore('classes.applewebkit', isAgent.applewebkit);
+	app.computeLayoutClasses();
 	await app.updateResize();
-	eventAdd(window, 'resize', () => {
-		requestAnimationFrame(updateResizeDebounce);
-	}, true);
+	eventAdd(window, 'resize', updateResizeDebounce, true);
+};
+app.computeLayoutClasses = function() {
+	console.log('INFO UPDATED');
+	const classes = compactKeys(componentStore('classes'));
+	const classList = componentStore('classList');
+	classes.push(...pluckObject(classList, compactKeys(classList)));
+	document.body.className = classes.join(' ');
 };

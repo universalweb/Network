@@ -1,6 +1,6 @@
 (function() {
 	const {
-		isPlainObject: isPlainObject$4, virtualStorage, crate: crate$4
+		isPlainObject: isPlainObject$4, virtualStorage, crate: crate$4, hasValue: hasValue$6
 	} = $;
 	const app = {
 		events: {},
@@ -24,8 +24,10 @@
 			return this;
 		},
 		componentStore(keyPath, keyValue) {
-			if (keyValue || isPlainObject$4(keyPath)) {
+			if (hasValue$6(keyValue)) {
 				return Ractive.sharedSet(keyPath, keyValue);
+			} else if (isPlainObject$4(keyPath)) {
+				return Ractive.sharedSet(keyPath);
 			}
 			return Ractive.sharedGet(keyPath);
 		},
@@ -287,7 +289,7 @@
 	const {
 		utility: {
 			assign: assign$5,
-			cnsl: cnsl$2,
+			cnsl: cnsl$3,
 			compactMapArray,
 			isEmpty,
 			eachAsync: eachAsync$2,
@@ -299,7 +301,7 @@
 			drop: drop$1
 		}
 	} = app;
-	cnsl$2('Initilizing watchers module.', 'notify');
+	cnsl$3('Initilizing watchers module.', 'notify');
 	const watchers = {};
 	const watchersRegex = [];
 	const onRegex = (type, callable) => {
@@ -447,7 +449,7 @@
 			isString: isString$4,
 			isPlainObject: isPlainObject$2,
 			each: each$6,
-			cnsl: cnsl$1,
+			cnsl: cnsl$2,
 			initialString,
 			restString: restString$1,
 			getFileExtension: getFileExtension$1
@@ -569,7 +571,7 @@
 	};
 	assign$4(app.events, {
 		async setupCompleted(data) {
-			cnsl$1('Worker is Ready', 'notify');
+			cnsl$2('Worker is Ready', 'notify');
 			app.systemLanguage = data.language;
 			try {
 				await demand$4('app/');
@@ -622,14 +624,14 @@
 	};
 	const {
 		utility: {
-			debounce, eventAdd: eventAdd$1, isAgent
+			debounce, eventAdd: eventAdd$1, isAgent, compactKeys, pluckObject
 		},
-		componentStore: componentStore$1
+		componentStore
 	} = app;
 	async function updateResize() {
 		app.utility.saveDimensions();
 		const info = app.utility.info;
-		await componentStore$1(info);
+		await componentStore(info);
 		const orientation = (screen.orientation || {}).type || screen.mozOrientation || screen.msOrientation;
 		const width = info.windowWidth;
 		const height = info.windowHeight;
@@ -654,18 +656,19 @@
 			widthLevel = 5;
 		}
 		console.log(screenSize);
-		await componentStore$1('classList.screenSize', screenSize);
-		await componentStore$1('widthLevel', widthLevel);
+		await componentStore('classList.screenSize', screenSize);
+		await componentStore('widthLevel', widthLevel);
 		if (orientation) {
-			await componentStore$1('classList.orientation', orientation);
+			await componentStore('classList.orientation', orientation);
 		}
 		if (height > width) {
-			await componentStore$1('classList.orientationBasic', 'portrait');
+			await componentStore('classList.orientationBasic', 'portrait');
 		} else if (width > height) {
-			await componentStore$1('classList.orientationBasic', 'landscape');
+			await componentStore('classList.orientationBasic', 'landscape');
 		} else if (width === height) {
-			await componentStore$1('classList.orientationBasic', 'perfectSquare');
+			await componentStore('classList.orientationBasic', 'perfectSquare');
 		}
+		app.view.fire('classTrigger');
 	}
 	const updateResizeAnimationFrame = () => {
 		requestAnimationFrame(updateResize);
@@ -698,31 +701,32 @@
 		const isMobile = mobileCheck();
 		const isTablet = tabletCheck();
 		if (isMobile) {
-			await componentStore$1('classes.mobile', true);
-			await componentStore$1('mobile', true);
+			await componentStore('classes.mobile', true);
+			await componentStore('mobile', true);
 		}
 		if (isTablet) {
-			await componentStore$1('classes.tablet', true);
-			await componentStore$1('tablet', true);
+			await componentStore('classes.tablet', true);
+			await componentStore('tablet', true);
 		}
 		if (!isMobile && !isTablet) {
-			await componentStore$1('classes.desktop', true);
-			await componentStore$1('desktop', true);
+			await componentStore('classes.desktop', true);
+			await componentStore('desktop', true);
 		}
-		await componentStore$1('classes.chrome', isAgent.chrome);
-		await componentStore$1('classes.android', isAgent.android);
-		await componentStore$1('classes.linux', isAgent.linux);
-		await componentStore$1('classes.mozilla', isAgent.mozilla);
-		await componentStore$1('classes.applewebkit', isAgent.applewebkit);
+		await componentStore('classes.chrome', isAgent.chrome);
+		await componentStore('classes.android', isAgent.android);
+		await componentStore('classes.linux', isAgent.linux);
+		await componentStore('classes.mozilla', isAgent.mozilla);
+		await componentStore('classes.applewebkit', isAgent.applewebkit);
+		app.computeLayoutClasses();
 		await app.updateResize();
-		eventAdd$1(
-			window,
-			'resize',
-			() => {
-				requestAnimationFrame(updateResizeDebounce);
-			},
-			true
-		);
+		eventAdd$1(window, 'resize', updateResizeDebounce, true);
+	};
+	app.computeLayoutClasses = function() {
+		console.log('INFO UPDATED');
+		const classes = compactKeys(componentStore('classes'));
+		const classList = componentStore('classList');
+		classes.push(...pluckObject(classList, compactKeys(classList)));
+		document.body.className = classes.join(' ');
 	};
 	const { utility: { assign: assign$3 } } = app;
 	const methods = {
@@ -1308,22 +1312,29 @@
 	const {
 		demand,
 		utility: {
-			assign, each: each$1, isFunction: isFunction$1, compactKeys, pluckObject
-		},
-		componentStore
+			assign, each: each$1, isFunction: isFunction$1, cnsl: cnsl$1
+		}
 	} = app;
 	Ractive.sharedData.classes = {};
 	Ractive.sharedData.classList = {};
 	const view = new Ractive({
 		template: `{{#@shared.components.main:key}}{{>getComponent(key)}}{{/}}`,
-		onrender() {
+		async oninit() {
+			cnsl$1('App Initialize Component', 'warning');
 			const source = this;
-			source.observe('@shared.classes', () => {
-				const classes = compactKeys(componentStore('classes'));
-				const classList = componentStore('classList');
-				classes.push(...pluckObject(classList, compactKeys(classList)));
-				document.body.className = classes.join(' ');
+			await app.initializeScreen();
+			source.on('@shared.sizeTrigger', () => {
+				app.computeLayoutClasses();
 			});
+			source.observe('@shared.classes', () => {
+				app.computeLayoutClasses();
+			});
+			source.observe('@shared.classList', () => {
+				app.computeLayoutClasses();
+			});
+		},
+		async onrender() {
+			app.computeLayoutClasses();
 		}
 	});
 	view.on({
@@ -1364,7 +1375,6 @@
 	});
 	assign(app, {
 		async render() {
-			await app.initializeScreen();
 			await view.render('body');
 		},
 		view

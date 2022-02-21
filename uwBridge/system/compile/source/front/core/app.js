@@ -1,7 +1,8 @@
 const {
 	isPlainObject,
 	virtualStorage,
-	crate
+	crate,
+	hasValue
 } = $;
 const app = {
 	events: {},
@@ -25,8 +26,10 @@ const app = {
 		return this;
 	},
 	componentStore(keyPath, keyValue) {
-		if (keyValue || isPlainObject(keyPath)) {
+		if (hasValue(keyValue)) {
 			return Ractive.sharedSet(keyPath, keyValue);
+		} else if (isPlainObject(keyPath)) {
+			return Ractive.sharedSet(keyPath);
 		}
 		return Ractive.sharedGet(keyPath);
 	},
