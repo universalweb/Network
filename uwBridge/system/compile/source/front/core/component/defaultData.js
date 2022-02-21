@@ -1,9 +1,5 @@
 import app from '../app';
-const {
-	utility: {
-		assign
-	}
-} = app;
+const { utility: { assign } } = app;
 const methods = {
 	$: app.utility,
 	getComponent(partialName) {

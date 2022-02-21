@@ -128,7 +128,7 @@
 		imported: imported$1,
 		crate: crate$3,
 		utility: {
-			assign: assign$8, querySelector: querySelector$2, map: map$2, hasValue: hasValue$4, isString: isString$6, jsonParse
+			assign: assign$7, querySelector: querySelector$2, map: map$2, hasValue: hasValue$4, isString: isString$6, jsonParse
 		}
 	} = app;
 	const headNode$1 = querySelector$2('head');
@@ -216,7 +216,7 @@
 						type: 'text/javascript'
 					});
 					let fileBlob = URL.createObjectURL(scriptRaw);
-					const moduleExports = assign$8({}, await import(fileBlob));
+					const moduleExports = assign$7({}, await import(fileBlob));
 					URL.revokeObjectURL(fileBlob);
 					config.filesLoaded++;
 					imported$1[filename] = moduleExports;
@@ -256,10 +256,10 @@
 			request: 'socket.get'
 		});
 	};
-	assign$8(app, {
+	assign$7(app, {
 		fetchFile
 	});
-	const { assign: assign$7 } = app.utility;
+	const { assign: assign$6 } = app.utility;
 	const request = async (requestName, config) => {
 		const requestPackage = config ?
 			{
@@ -281,12 +281,12 @@
 		const json = await workerRequest(workerPackage);
 		return json;
 	};
-	assign$7(app, {
+	assign$6(app, {
 		request
 	});
 	const {
 		utility: {
-			assign: assign$6,
+			assign: assign$5,
 			cnsl: cnsl$2,
 			compactMapArray,
 			isEmpty,
@@ -306,7 +306,7 @@
 		const watchObject = {};
 		callable.regex = type;
 		let number = watchersRegex.push(callable) - 1;
-		assign$6(watchObject, {
+		assign$5(watchObject, {
 			_: {
 				isWatcher: true
 			},
@@ -332,7 +332,7 @@
 		}
 		const levelObject = watchers[type];
 		let number = levelObject.push(callable) - 1;
-		assign$6(watchObject, {
+		assign$5(watchObject, {
 			_: {
 				isWatcher: true
 			},
@@ -426,12 +426,12 @@
 			request: requestName
 		});
 	};
-	assign$6(app.events, {
+	assign$5(app.events, {
 		_(json) {
 			return onUpdate(json.data);
 		}
 	});
-	assign$6(app, {
+	assign$5(app, {
 		push,
 		watch: watch$3,
 		watchers,
@@ -439,7 +439,7 @@
 	});
 	const {
 		utility: {
-			assign: assign$5,
+			assign: assign$4,
 			hasDot,
 			promise,
 			last: last$1,
@@ -498,7 +498,7 @@
 	const streamAssets = (data, options) => {
 		return promise((accept) => {
 			fetchFile(
-				assign$5(
+				assign$4(
 					{
 						callback(...args) {
 							accept(args);
@@ -567,7 +567,7 @@
 		const files = isString$4(fileList) ? fileList.split(commaString) : fileList;
 		return demand$4(map$1(files, languagePath));
 	};
-	assign$5(app.events, {
+	assign$4(app.events, {
 		async setupCompleted(data) {
 			cnsl$1('Worker is Ready', 'notify');
 			app.systemLanguage = data.language;
@@ -580,7 +580,7 @@
 			}
 		}
 	});
-	assign$5(app, {
+	assign$4(app, {
 		demand: demand$4,
 		demandCss: demandCss$1,
 		demandHtml: demandHtml$1,
@@ -622,13 +622,14 @@
 	};
 	const {
 		utility: {
-			debounce, eventAdd: eventAdd$1, isAgent, model, assign: assign$4
-		}
+			debounce, eventAdd: eventAdd$1, isAgent
+		},
+		componentStore: componentStore$1
 	} = app;
-	app.updateResize = async () => {
+	async function updateResize() {
 		app.utility.saveDimensions();
 		const info = app.utility.info;
-		await Ractive.sharedSet(info);
+		await componentStore$1(info);
 		const orientation = (screen.orientation || {}).type || screen.mozOrientation || screen.msOrientation;
 		const width = info.windowWidth;
 		const height = info.windowHeight;
@@ -653,55 +654,26 @@
 			widthLevel = 5;
 		}
 		console.log(screenSize);
-		await Ractive.sharedSet(
-			assign$4(Ractive.sharedGet(), {
-				tinyScreen: false,
-				smallScreen: false,
-				mediumScreen: false,
-				hdScreen: false,
-				'4kScreen': false
-			})
-		);
-		await Ractive.sharedSet('screenSize', screenSize);
-		await Ractive.sharedSet(screenSize, true);
-		await Ractive.sharedSet('widthLevel', widthLevel);
+		await componentStore$1('classList.screenSize', screenSize);
+		await componentStore$1('widthLevel', widthLevel);
 		if (orientation) {
-			await Ractive.sharedSet('orientation', orientation);
+			await componentStore$1('classList.orientation', orientation);
 		}
 		if (height > width) {
-			await Ractive.sharedSet('orientationBasic', 'portrait');
+			await componentStore$1('classList.orientationBasic', 'portrait');
 		} else if (width > height) {
-			await Ractive.sharedSet('orientationBasic', 'landscape');
+			await componentStore$1('classList.orientationBasic', 'landscape');
 		} else if (width === height) {
-			await Ractive.sharedSet('orientationBasic', 'perfectSquare');
+			await componentStore$1('classList.orientationBasic', 'perfectSquare');
 		}
-	};
-	const updateResize = debounce(app.updateResize, 250);
-	function calculateScreen() {
-		requestAnimationFrame(updateResize);
 	}
-	eventAdd$1(
-		window,
-		'resize',
-		() => {
-			calculateScreen();
-		},
-		true
-	);
-	const smoothScroll = (element, to, duration) => {
-		if (duration <= 0) {
-			return;
-		}
-		const difference = to - element.scrollTop;
-		const perTick = (difference / duration) * 10;
-		requestAnimationFrame(() => {
-			element.scrollTop = element.scrollTop + perTick;
-			if (element.scrollTop === to) {
-				return;
-			}
-			smoothScroll(element, to, duration - 10);
-		});
+	const updateResizeAnimationFrame = () => {
+		requestAnimationFrame(updateResize);
 	};
+	app.updateResizeAnimationFrame = updateResizeAnimationFrame;
+	const updateResizeDebounce = debounce(app.updateResizeAnimationFrame, 250);
+	app.updateResizeDebounce = updateResizeDebounce;
+	app.updateResize = updateResize;
 	const mobileCheck = () => {
 		let check = false;
 		const a = navigator.userAgent || navigator.vendor || window.opera;
@@ -726,25 +698,32 @@
 		const isMobile = mobileCheck();
 		const isTablet = tabletCheck();
 		if (isMobile) {
-			await Ractive.sharedSet('classes.mobile', true);
-			await Ractive.sharedSet('mobile', true);
+			await componentStore$1('classes.mobile', true);
+			await componentStore$1('mobile', true);
 		}
 		if (isTablet) {
-			await Ractive.sharedSet('classes.tablet', true);
-			await Ractive.sharedSet('tablet', true);
+			await componentStore$1('classes.tablet', true);
+			await componentStore$1('tablet', true);
 		}
 		if (!isMobile && !isTablet) {
-			await Ractive.sharedSet('classes.desktop', true);
-			await Ractive.sharedSet('desktop', true);
+			await componentStore$1('classes.desktop', true);
+			await componentStore$1('desktop', true);
 		}
-		await Ractive.sharedSet('classes.chrome', isAgent.chrome);
-		await Ractive.sharedSet('classes.android', isAgent.android);
-		await Ractive.sharedSet('classes.linux', isAgent.linux);
-		await Ractive.sharedSet('classes.mozilla', isAgent.mozilla);
-		await Ractive.sharedSet('classes.applewebkit', isAgent.applewebkit);
+		await componentStore$1('classes.chrome', isAgent.chrome);
+		await componentStore$1('classes.android', isAgent.android);
+		await componentStore$1('classes.linux', isAgent.linux);
+		await componentStore$1('classes.mozilla', isAgent.mozilla);
+		await componentStore$1('classes.applewebkit', isAgent.applewebkit);
 		await app.updateResize();
+		eventAdd$1(
+			window,
+			'resize',
+			() => {
+				requestAnimationFrame(updateResizeDebounce);
+			},
+			true
+		);
 	};
-	model('smoothScroll', smoothScroll);
 	const { utility: { assign: assign$3 } } = app;
 	const methods = {
 		$: app.utility,
@@ -1329,11 +1308,23 @@
 	const {
 		demand,
 		utility: {
-			assign, each: each$1, isFunction: isFunction$1
-		}
+			assign, each: each$1, isFunction: isFunction$1, compactKeys, pluckObject
+		},
+		componentStore
 	} = app;
+	Ractive.sharedData.classes = {};
+	Ractive.sharedData.classList = {};
 	const view = new Ractive({
-		template: `{{#@shared.components.main:key}}{{>getComponent(key)}}{{/}}`
+		template: `{{#@shared.components.main:key}}{{>getComponent(key)}}{{/}}`,
+		onrender() {
+			const source = this;
+			source.observe('@shared.classes', () => {
+				const classes = compactKeys(componentStore('classes'));
+				const classList = componentStore('classList');
+				classes.push(...pluckObject(classList, compactKeys(classList)));
+				document.body.className = classes.join(' ');
+			});
+		}
 	});
 	view.on({
 		async '*.loadComponent'(componentEvent) {

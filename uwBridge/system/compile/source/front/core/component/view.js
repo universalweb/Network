@@ -4,11 +4,25 @@ const {
 	utility: {
 		assign,
 		each,
-		isFunction
-	}
+		isFunction,
+		compactKeys,
+		pluckObject
+	},
+	componentStore
 } = app;
+Ractive.sharedData.classes = {};
+Ractive.sharedData.classList = {};
 const view = new Ractive({
 	template: `{{#@shared.components.main:key}}{{>getComponent(key)}}{{/}}`,
+	onrender() {
+		const source = this;
+		source.observe('@shared.classes', () => {
+			const classes = compactKeys(componentStore('classes'));
+			const classList = componentStore('classList');
+			classes.push(...pluckObject(classList, compactKeys(classList)));
+			document.body.className = classes.join(' ');
+		});
+	}
 });
 view.on({
 	async '*.loadComponent'(componentEvent) {
@@ -27,9 +41,7 @@ view.on({
 		}
 	},
 	'*.preventDefault'(context) {
-		const {
-			original
-		} = context;
+		const { original } = context;
 		original.preventDefault();
 		original.stopPropagation();
 	},

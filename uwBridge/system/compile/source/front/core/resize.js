@@ -4,14 +4,13 @@ const {
 		debounce,
 		eventAdd,
 		isAgent,
-		model,
-		assign
 	},
+	componentStore
 } = app;
-app.updateResize = async () => {
+async function updateResize() {
 	app.utility.saveDimensions();
 	const info = app.utility.info;
-	await Ractive.sharedSet(info);
+	await componentStore(info);
 	const orientation = (screen.orientation || {}).type || screen.mozOrientation || screen.msOrientation;
 	const width = info.windowWidth;
 	const height = info.windowHeight;
@@ -36,48 +35,26 @@ app.updateResize = async () => {
 		widthLevel = 5;
 	}
 	console.log(screenSize);
-	await Ractive.sharedSet(assign(Ractive.sharedGet(), {
-		tinyScreen: false,
-		smallScreen: false,
-		mediumScreen: false,
-		hdScreen: false,
-		'4kScreen': false,
-	}));
-	await Ractive.sharedSet('screenSize', screenSize);
-	await Ractive.sharedSet(screenSize, true);
-	await Ractive.sharedSet('widthLevel', widthLevel);
+	await componentStore('classList.screenSize', screenSize);
+	await componentStore('widthLevel', widthLevel);
 	if (orientation) {
-		await Ractive.sharedSet('orientation', orientation);
+		await componentStore('classList.orientation', orientation);
 	}
 	if (height > width) {
-		await Ractive.sharedSet('orientationBasic', 'portrait');
+		await componentStore('classList.orientationBasic', 'portrait');
 	} else if (width > height) {
-		await Ractive.sharedSet('orientationBasic', 'landscape');
+		await componentStore('classList.orientationBasic', 'landscape');
 	} else if (width === height) {
-		await Ractive.sharedSet('orientationBasic', 'perfectSquare');
+		await componentStore('classList.orientationBasic', 'perfectSquare');
 	}
-};
-const updateResize = debounce(app.updateResize, 250);
-function calculateScreen() {
-	requestAnimationFrame(updateResize);
 }
-eventAdd(window, 'resize', () => {
-	calculateScreen(updateResize);
-}, true);
-const smoothScroll = (element, to, duration) => {
-	if (duration <= 0) {
-		return;
-	}
-	const difference = to - element.scrollTop;
-	const perTick = difference / duration * 10;
-	requestAnimationFrame(() => {
-		element.scrollTop = element.scrollTop + perTick;
-		if (element.scrollTop === to) {
-			return;
-		}
-		smoothScroll(element, to, duration - 10);
-	});
+const updateResizeAnimationFrame = () => {
+	requestAnimationFrame(updateResize);
 };
+app.updateResizeAnimationFrame = updateResizeAnimationFrame;
+const updateResizeDebounce = debounce(app.updateResizeAnimationFrame, 250);
+app.updateResizeDebounce = updateResizeDebounce;
+app.updateResize = updateResize;
 const mobileCheck = () => {
 	let check = false;
 	const a = navigator.userAgent || navigator.vendor || window.opera;
@@ -93,22 +70,24 @@ app.initializeScreen = async () => {
 	const isMobile = mobileCheck();
 	const isTablet = tabletCheck();
 	if (isMobile) {
-		await Ractive.sharedSet('classes.mobile', true);
-		await Ractive.sharedSet('mobile', true);
+		await componentStore('classes.mobile', true);
+		await componentStore('mobile', true);
 	}
 	if (isTablet) {
-		await Ractive.sharedSet('classes.tablet', true);
-		await Ractive.sharedSet('tablet', true);
+		await componentStore('classes.tablet', true);
+		await componentStore('tablet', true);
 	}
 	if (!isMobile && !isTablet) {
-		await Ractive.sharedSet('classes.desktop', true);
-		await Ractive.sharedSet('desktop', true);
+		await componentStore('classes.desktop', true);
+		await componentStore('desktop', true);
 	}
-	await Ractive.sharedSet('classes.chrome', isAgent.chrome);
-	await Ractive.sharedSet('classes.android', isAgent.android);
-	await Ractive.sharedSet('classes.linux', isAgent.linux);
-	await Ractive.sharedSet('classes.mozilla', isAgent.mozilla);
-	await Ractive.sharedSet('classes.applewebkit', isAgent.applewebkit);
+	await componentStore('classes.chrome', isAgent.chrome);
+	await componentStore('classes.android', isAgent.android);
+	await componentStore('classes.linux', isAgent.linux);
+	await componentStore('classes.mozilla', isAgent.mozilla);
+	await componentStore('classes.applewebkit', isAgent.applewebkit);
 	await app.updateResize();
+	eventAdd(window, 'resize', () => {
+		requestAnimationFrame(updateResizeDebounce);
+	}, true);
 };
-model('smoothScroll', smoothScroll);
