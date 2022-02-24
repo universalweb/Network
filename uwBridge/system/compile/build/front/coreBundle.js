@@ -1155,7 +1155,7 @@
 		demandCss,
 		demandHtml,
 		utility: {
-			eachAsync: eachAsync$1, ensureArray, isString: isString$2, getFileExtension, hasValue: hasValue$1, eachObjectAsync
+			eachAsync: eachAsync$1, ensureArray, isString: isString$2, getFileExtension, hasValue: hasValue$1, eachObjectAsync, isKindAsync
 		}
 	} = app;
 	function buildFilePath(template, extType = 'html') {
@@ -1163,6 +1163,7 @@
 		return (!templateExt && `${template}.${extType}`) || template;
 	}
 	const asyncComponent = async function(componentConfig) {
+		const { data } = componentConfig;
 		componentConfig.asset ||= {};
 		let asset = componentConfig.asset || {};
 		if (isString$2(asset)) {
@@ -1198,6 +1199,9 @@
 					componentConfig.styles[compiledCssPath] = await demandCss(compiledCssPath);
 				});
 			}
+		}
+		if (data && isKindAsync(data)) {
+			componentConfig.data = await data(componentConfig);
 		}
 		const componentPromise = await buildComponent(componentConfig);
 		// app.log('Async Component Config', componentConfig);
@@ -1423,7 +1427,8 @@
     	afterInit: [],
     	afterRender: [],
     	beforeRender: [],
-    	render: []
+    	render: [],
+    	compile: []
     };
     on(eventNames, callback) {
     	const thisRouter = this;
@@ -1585,7 +1590,6 @@
     		await this.compilePath();
     		await Ractive.sharedSet('currentPath', this.pathname);
     		await Ractive.sharedSet('navState', false);
-    		await this.triggerEvents('beforeLoad');
     		this.log('Checking if Model Loaded', match.model);
     		if (match.assets) {
     			if (match.assets.scripts) {
@@ -1604,31 +1608,31 @@
     		if (!stateModel) {
     			return app.log('ROUTER FAILED TO LOAD');
     		}
-    		if (!stateModel.loaded) {
-    			stateModel.loaded = true;
-    			const onrender = stateModel.component.onrender;
-    			const oninit = stateModel.component.oninit;
-    			stateModel.component.onrender = function() {};
-    			const compiledRender = async function(...args) {
-    				cnsl('onrender', 'notify');
-    				onrender && (await apply(onrender, this, args));
-    				cnsl('onrender END', 'notify');
-    				await routerThis.triggerEvents('render', this, args);
-    			};
-    			stateModel.component.oninit = async function(...args) {
-    				cnsl('oninit', 'notify');
-    				await routerThis.triggerEvents('beforeInit', this, args);
-    				oninit && (await apply(oninit, this, args));
-    				cnsl('oninit END', 'notify');
-    				if (this.rendered) {
-    					await apply(compiledRender, this, args);
-    				} else {
-    					this.on('onrender', compiledRender);
-    				}
-    			};
-    		}
+    		const stateComponent = assignDeep({}, stateModel.component);
+    		await this.triggerEvents('beforeLoad', stateComponent);
+    		const onrender = stateComponent.onrender;
+    		const oninit = stateComponent.oninit;
+    		stateComponent.onrender = function() {};
+    		const compiledRender = async function(...args) {
+    			cnsl('onrender', 'notify');
+    			onrender && (await apply(onrender, this, args));
+    			cnsl('onrender END', 'notify');
+    			await routerThis.triggerEvents('render', this, args);
+    		};
+    		stateComponent.oninit = async function(...args) {
+    			cnsl('oninit', 'notify');
+    			await routerThis.triggerEvents('beforeInit', this, args);
+    			oninit && (await apply(oninit, this, args));
+    			cnsl('oninit END', 'notify');
+    			if (this.rendered) {
+    				await apply(compiledRender, this, args);
+    			} else {
+    				this.on('onrender', compiledRender);
+    			}
+    		};
+    		await this.triggerEvents('compile', stateComponent);
     		// this.log(stateModel);
-    		const initializeComponent = await component(stateModel.component);
+    		const initializeComponent = await component(stateComponent);
     		// this.log('component made', initializeComponent);
     		Ractive.components.navstate = initializeComponent;
     		await routerThis.triggerEvents('afterLoad');

@@ -10,7 +10,8 @@ const {
 		isString,
 		getFileExtension,
 		hasValue,
-		eachObjectAsync
+		eachObjectAsync,
+		isKindAsync
 	}
 } = app;
 function buildFilePath(template, extType = 'html') {
@@ -18,6 +19,7 @@ function buildFilePath(template, extType = 'html') {
 	return !templateExt && `${template}.${extType}` || template;
 }
 const asyncComponent = async function(componentConfig) {
+	const { data } = componentConfig;
 	componentConfig.asset ||= {};
 	let asset = componentConfig.asset || {};
 	if (isString(asset)) {
@@ -55,6 +57,9 @@ const asyncComponent = async function(componentConfig) {
 				componentConfig.styles[compiledCssPath] = await demandCss(compiledCssPath);
 			});
 		}
+	}
+	if (data && isKindAsync(data)) {
+		componentConfig.data = await data(componentConfig);
 	}
 	const componentPromise = await buildComponent(componentConfig);
 	// app.log('Async Component Config', componentConfig);
