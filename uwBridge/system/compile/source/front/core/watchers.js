@@ -4,137 +4,74 @@ const {
 	utility: {
 		assign,
 		cnsl,
-		compactMapArray,
-		isEmpty,
 		eachAsync,
-		eachObject,
-		eachArray,
 		isString,
-		isPlainObject,
 		hasValue,
-		drop
+		isRegExp,
+		drop,
 	},
 } = app;
-cnsl('Initilizing watchers module.', 'notify');
-export const watchers = {};
-const watchersRegex = [];
-const onRegex = (type, callable) => {
-	const watchObject = {};
-	callable.regex = type;
-	let number = watchersRegex.push(callable) - 1;
-	assign(watchObject, {
-		_: {
-			isWatcher: true,
-		},
-		callable,
-		start() {
-			if (!hasValue(number)) {
-				number = watchersRegex.push(callable) - 1;
-			}
-		},
-		stop() {
-			if (hasValue(number)) {
-				drop(watchersRegex, number);
-				number = null;
-			}
-		},
-	});
-	return watchObject;
-};
-const onString = (type, callable) => {
-	const watchObject = {};
-	if (!watchers[type]) {
-		watchers[type] = [];
+cnsl('Initializing watchers module.', 'notify');
+export class Watcher {
+	static containerRegex = [];
+	static containerPrimary = {};
+	static status = true;
+	static start() {
+		Watcher.status = true;
 	}
-	const levelObject = watchers[type];
-	let number = levelObject.push(callable) - 1;
-	assign(watchObject, {
-		_: {
-			isWatcher: true,
-		},
-		callable,
-		start() {
-			if (!hasValue(number)) {
-				number = levelObject.push(callable) - 1;
-			}
-		},
-		stop() {
-			if (hasValue(number)) {
-				drop(levelObject, number);
-				number = null;
-			}
-		},
-	});
-	return watchObject;
-};
-const onCollection = (object, settings) => {
-	const watching = [];
-	const prefix = (settings.prefix) ? `${settings.prefix}.` : '';
-	const suffix = (settings.suffix) ? `.${settings.suffix}` : '';
-	const watchCollection = {
-		_: {
-			isWatcher: true,
-		},
-		start() {
-			eachArray(watching, (item) => {
-				item.start();
-			});
-		},
-		stop() {
-			eachArray(watching, (item) => {
-				item.stop();
-			});
-		},
-		watching,
-	};
-	eachObject(object, (item, key) => {
-		watching.push(onString(`${prefix}${key}${suffix}`, item, settings));
-	});
-	return watchCollection;
-};
-export const watch = (type, callable) => {
-	let method;
-	if (isString(type)) {
-		method = onString;
-	} else if (isPlainObject(type)) {
-		method = onCollection;
-	} else {
-		method = onRegex;
+	static stop() {
+		Watcher.status = false;
 	}
-	return method(type, callable);
-};
-watch.status = true;
-watch.start = () => {
-	watch.status = true;
-};
-watch.stop = () => {
-	watch.status = null;
-};
-const onUpdate = async (json) => {
-	if (!watch.status || !json) {
-		return;
-	}
-	const type = json.type;
-	const subscribers = [];
-	const levelObject = watchers[type] || watchers[json.name];
-	const regexSubscribers = compactMapArray(watchersRegex, (item) => {
-		if (item.regex.test(type)) {
-			return item;
+	static async update(json) {
+		console.log(json);
+		if (!Watcher.status || !json) {
+			return;
 		}
-	});
-	if (!isEmpty(regexSubscribers)) {
-		subscribers.push(...regexSubscribers);
-	}
-	if (levelObject) {
-		subscribers.push(...levelObject);
-	}
-	console.log(subscribers);
-	if (subscribers.length) {
-		eachAsync(subscribers, (watcher) => {
-			return watcher(json, watcher);
+		const type = json.type;
+		const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[json.name];
+		await eachAsync(Watcher.containerRegex, async (watcher) => {
+			if (watcher.regex.test(type)) {
+				return watcher(json);
+			}
+		});
+		await eachAsync(levelObject, async (watcher) => {
+			return watcher(json);
 		});
 	}
-};
+	constructor(eventName, callback) {
+		if (isString(eventName)) {
+			if (!Watcher.containerPrimary[eventName]) {
+				Watcher.containerPrimary[eventName] = [];
+			}
+			this.container = Watcher.containerPrimary[eventName];
+		} else if (isRegExp(eventName)) {
+			this.container = Watcher.containerRegex;
+		}
+		this.callback = callback.bind(this);
+		this.start();
+	}
+	isWatcher = true;
+	callback;
+	id;
+	active;
+	container;
+	start() {
+		if (!hasValue(this.id)) {
+			this.id = this.container.push(this) - 1;
+			this.active = true;
+		}
+	}
+	stop() {
+		if (hasValue(this.id)) {
+			drop(this.container, this.id);
+			this.id = null;
+			this.active = false;
+		}
+	}
+}
+export function watch(...args) {
+	return new Watcher(...args);
+}
 export const push = (requestName, data) => {
 	return request({
 		data,
@@ -144,12 +81,14 @@ export const push = (requestName, data) => {
 };
 assign(app.events, {
 	_(json) {
-		return onUpdate(json.data);
+		return Watcher.update(json.data);
 	}
 });
 assign(app, {
 	push,
 	watch,
-	watchers,
-	watchersRegex
+	Watcher
+});
+watch('connection', (responseData) => {
+	console.log(responseData);
 });

@@ -1,9 +1,5 @@
 import app from './app.js';
-const {
-	utility: {
-		drop
-	}
-} = app;
+const { utility: { drop } } = app;
 const notifications = [];
 const spawnNotification = (data) => {
 	if (app.notificationStatus) {

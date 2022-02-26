@@ -85,7 +85,7 @@
 		"valid-jsdoc": 1,
 		"valid-typeof": "error",
 		"accessor-pairs": "error",
-		"array-callback-return": "error",
+		"array-callback-return": "off",
 		"block-scoped-var": "error",
 		"complexity": "off",
 		"curly": [
@@ -182,14 +182,7 @@
 		"no-undefined": "off",
 		"no-unused-vars": "error",
 		"no-use-before-define": "error",
-		"callback-return": [
-			"error",
-			[
-				"callback",
-				"cb",
-				"next"
-			]
-		],
+		"callback-return": "off",
 		"handle-callback-err": "error",
 		"no-mixed-requires": "error",
 		"no-new-require": "error",

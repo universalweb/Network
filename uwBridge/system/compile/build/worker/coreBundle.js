@@ -1,5 +1,5 @@
 (function() {
-	const { assign: assign$2 } = self.$;
+	const { assign: assign$1 } = self.$;
 	const app = {
 		config: {},
 		utility: self.$,
@@ -7,41 +7,26 @@
 			appStatus: {
 				state: 0
 			},
-			credit(data) {
-				if (data.credit) {
-					app.creditSave = $.assign({}, data.credit);
-					console.log('Credits Saved in worker');
-				}
-			},
 			post(id, data, options) {
 				const responseData = {
 					data,
 					id
 				};
-				assign$2(responseData, options);
+				assign$1(responseData, options);
 				postMessage(responseData);
 			},
 			socket: {}
 		}
 	};
-	const { utility: { assign: assign$1 } } = app;
-	const post$1 = (id, data, options) => {
-		const responseData = {
-			data,
-			id
-		};
-		assign$1(responseData, options);
-		postMessage(responseData);
-	};
 	const {
 		config,
 		utility: {
-			assign, uid, isFileJS, isFileJSON, isFileCSS, initial, map
-		}
+			assign, uid, isFileJS, isFileJSON, isFileCSS, initial, map, promise
+		},
+		events: { post: post$1 }
 	} = app;
 	let socket;
 	let alreadySetup;
-	const routerData = self.location;
 	const shouldNotUpgrade = /(^js\/lib\/)|(\.min\.js)/;
 	const importRegexGlobal = /\bimport\b([^:;=]*?){([^;]*?)}(\s\bfrom\b).*(('|"|`).*('|"|`));$/gm;
 	const importSingleRegexGlobal = /\bimport\b([^:;={}]*?)([^;{}]*?)(\s\bfrom\b).*(('|"|`).*('|"|`));$/gm;
@@ -63,73 +48,40 @@
 			return callback(data);
 		}
 	};
-	const mainCallback = function(data, uniq, callable, options) {
-		const callbackData = {};
-		let cleanup = true;
-		callbackData.data = data.data;
-		const returned = callable(callbackData);
-		if (options.async) {
-			if (returned === true) {
-				cleanup = false;
-			}
-		}
-		if (cleanup) {
-			callbacks[uniq] = null;
-			uid.free(uniq);
-		}
-	};
 	// emit function with synthetic callback system
-	const request = (configObj, workerData) => {
-		const data = configObj.data;
-		const callback = (json) => {
-			let result;
-			const workerCallback = configObj.callback;
-			if (workerCallback) {
-				result = workerCallback(json.data);
-			} else if (workerData) {
-				result = post$1(workerData.id, json.data);
+	const request = async (configObj) => {
+		const results = await promise((accept) => {
+			const {
+				data, callback
+			} = configObj;
+			if (data.id) {
+				data.id = null;
+			} else {
+				const uuid = uid().toString();
+				data.id = uuid;
+				callbacks[uuid] = async function(requestData) {
+					if (callback) {
+						const returned = await callback(requestData.data);
+						if (returned) {
+							callbacks[uuid] = null;
+							uid.free(uuid);
+							accept(returned);
+						}
+					} else {
+						accept(requestData.data);
+					}
+				};
 			}
-			return result;
-		};
-		const options = {
-			async: configObj.async
-		};
-		if (data.id) {
-			data.id = null;
-		} else {
-			const uniq = uid().toString();
-			data.id = uniq;
-			callbacks[uniq] = function(callbackData) {
-				mainCallback(callbackData, uniq, callback, options);
-			};
-		}
-		socket.emit('api', data);
+			socket.emit('api', data);
+		});
+		return results;
 	};
 	const socketIsReady = (data) => {
 		console.log('Socket Is Ready');
 		if (alreadySetup) {
-			if (app.creditSave) {
-				console.log('Re-authenticating');
-				request({
-					callback() {
-						console.log('Re-authenticated');
-						postMessage({
-							data: {
-								type: 'reconnected'
-							},
-							id: '_'
-						});
-					},
-					data: {
-						data: {
-							credit: $.assign({}, app.creditSave)
-						},
-						request: 'open.loginCredit'
-					}
-				});
-			}
+			update('_');
 		} else {
-			post$1('setupCompleted', {
+			post$1('ready', {
 				language: data.language
 			});
 			alreadySetup = 1;
@@ -144,7 +96,7 @@
 		compiled = compiled.replace(importDynamic, '{$1} = await appGlobal.demandJs($2);');
 		return compiled;
 	};
-	const getCallback = function(jsonData, configObj, workerInfo) {
+	const getCallback = async function(jsonData, configObj, workerInfo) {
 		const item = jsonData.file;
 		const checksum = jsonData.cs;
 		const cacheCheck = jsonData.cache;
@@ -159,7 +111,6 @@
 		const isCss = isFileCSS(filename);
 		const dirname = initial(filename.split(slashString)).join(slashString);
 		let sendNow;
-		let requestStatus = true;
 		/*
 	    During an active stream data is compiled.
 	    Based on Key coming in.
@@ -203,55 +154,48 @@
 			);
 		}
 		if (configObj.filesLoaded === configObj.fileListLength) {
-			const returned = {};
-			if (configObj.callback) {
-				configObj.callback(returned);
-			} else {
-				post$1(workerInfo.id, returned);
-			}
-			requestStatus = false;
+			const returned = {
+				loaded: configObj.filesLoaded
+			};
+			return returned;
 		}
-		return requestStatus;
+		return false;
 	};
 	/*
 	This async streams required filesLoadedfrom socket
 	or from cache.
 	*/
 	assign(app.events.socket, {
-		get(options, workerInfo) {
-			/*
-	    Config for stream callback function
-	    */
-			const dataProp = options.data;
-			const fileList = dataProp.files;
+		async get(options, workerInfo) {
+			const { data } = options;
+			const fileList = data.files;
 			const configObj = {
-				callback: options.callback,
 				checksum: [],
 				completedFiles: map(fileList, () => {
 					return '';
 				}),
-				fileList: dataProp,
+				fileList: data,
 				fileListLength: fileList.length,
 				filesLoaded: 0,
 				progress: options.progress
 			};
 			const body = {
-				async: true,
-				callback(json) {
+				async callback(json) {
 					return getCallback(json, configObj, workerInfo);
 				},
 				data: {
-					request: 'file.get'
+					request: 'file.get',
+					data
 				}
 			};
-			body.data.data = dataProp;
-			request(body);
+			const results = await request(body);
+			post$1(workerInfo.id, results);
 		},
 		request
 	});
 	const socketInitialize = () => {
 		console.log('Worker Socket Module', 'notify');
-		let serverLocation = `${routerData.protocol}//${app.config.socketHostname || routerData.hostname}`;
+		let serverLocation = `${location.protocol}//${app.config.socketHostname || location.hostname}`;
 		if (app.config.port) {
 			serverLocation = `${serverLocation}:${app.config.port}`;
 		}
@@ -268,15 +212,9 @@
 		socket.on('disconnect', (reason) => {
 			console.log('disconnected');
 			if (reason === 'io server disconnect') {
-				// the disconnection was initiated by the server, you need to reconnect manually
 				socket.connect();
 			}
-			postMessage({
-				data: {
-					type: 'disconnected'
-				},
-				id: '_'
-			});
+			update('_');
 		});
 	};
 	app.events.configure = (data) => {
@@ -289,21 +227,21 @@
 		events,
 		events: { post }
 	} = app;
-	self.onmessage = (evnt) => {
-		const data = evnt.data;
-		const requestName = data.request;
-		const id = data.id;
-		const body = data.data;
-		const eventCallback = get(requestName, events);
+	self.onmessage = async (workerEvent) => {
+		const {
+			request, id, data
+		} = workerEvent.data;
+		const eventCallback = get(request, events);
+		console.log(request, data);
 		if (eventCallback) {
-			const returned = eventCallback(body, {
+			const results = await eventCallback(data, {
 				id
 			});
-			if (returned) {
-				post(returned, id);
+			if (results) {
+				post(id, results);
 			}
 		} else {
-			console.log(`FAILED Worker api.${requestName}`);
+			console.log(`FAILED Worker api.${request}`);
 		}
 	};
 })();

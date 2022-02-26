@@ -1,30 +1,28 @@
 import app from './app';
 const {
-	utility: {
-		get
-	},
+	utility: { get },
 	events,
-	events: {
-		post
-	}
+	events: { post }
 } = app;
-self.onmessage = (evnt) => {
-	const data = evnt.data;
-	const requestName = data.request;
-	const id = data.id;
-	const body = data.data;
-	const eventCallback = get(requestName, events);
+self.onmessage = async (workerEvent) => {
+	const {
+		request,
+		id,
+		data
+	} = workerEvent.data;
+	const eventCallback = get(request, events);
+	console.log(request, data);
 	if (eventCallback) {
-		const returned = eventCallback(body, {
+	  const results = await eventCallback(data, {
 			id
 		});
-		if (returned) {
-			post(returned, id);
+		if (results) {
+			post(id, results);
 		}
 		if (app.debug) {
-			console.log(`Worker api.${requestName}`);
+			console.log(`Worker api.${request}`);
 		}
 	} else {
-		console.log(`FAILED Worker api.${requestName}`);
+		console.log(`FAILED Worker api.${request}`);
 	}
 };

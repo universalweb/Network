@@ -9,8 +9,9 @@ const {
 } = app;
 export const mainWorker = new Worker('/worker.js');
 export const workerRequest = async (requestName, dataArg) => {
+	console.log(requestName, dataArg);
 	let compiledRequest;
-	let callback;
+	let callbackOptional;
 	if (dataArg) {
 		compiledRequest = {
 			data: dataArg,
@@ -18,7 +19,7 @@ export const workerRequest = async (requestName, dataArg) => {
 		};
 	} else {
 		compiledRequest = requestName;
-		callback = requestName.callback;
+		callbackOptional = requestName.callback;
 	}
 	const requestObject = {
 		data: compiledRequest.data,
@@ -27,17 +28,21 @@ export const workerRequest = async (requestName, dataArg) => {
 	if (requestObject.data.id) {
 		return mainWorker.postMessage(requestObject);
 	}
+	const uniq = uid();
+	console.log(uniq, callbackOptional);
+	requestObject.id = uniq;
 	return promise((accept) => {
-		const uniq = uid();
-		app.events[uniq] = (callback) ? function(dataCallback) {
-			accept(dataCallback);
-			callback(dataCallback);
-		} : accept;
-		requestObject.id = uniq;
+		app.events[uniq] = async function(responseData) {
+			if (callbackOptional) {
+				await callbackOptional(responseData);
+			}
+			accept(responseData);
+		};
 		mainWorker.postMessage(requestObject);
 	});
 };
 const workerMessage = (workerEvent) => {
+	console.log(workerEvent.data);
 	const eventData = workerEvent.data;
 	const {
 		id,
@@ -48,10 +53,12 @@ const workerMessage = (workerEvent) => {
 		generatedId = '_';
 	}
 	if (!app.events[generatedId]) {
-		console.log(id, generatedId);
+		console.log(generatedId);
 	}
+	console.log(app.events[generatedId], data);
 	app.events[generatedId](data);
 	if (!eventData.keep && !isString(generatedId)) {
+		console.log('DONT KEEP', eventData, generatedId);
 		app.events[generatedId] = null;
 		uid.free(generatedId);
 	}

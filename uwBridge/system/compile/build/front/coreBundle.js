@@ -1,6 +1,6 @@
 (function() {
 	const {
-		isPlainObject: isPlainObject$4, virtualStorage, crate: crate$4, hasValue: hasValue$6
+		isPlainObject: isPlainObject$3, virtualStorage, crate: crate$4, hasValue: hasValue$6
 	} = $;
 	const app = {
 		events: {},
@@ -26,7 +26,7 @@
 		componentStore(keyPath, keyValue) {
 			if (hasValue$6(keyValue)) {
 				return Ractive.sharedSet(keyPath, keyValue);
-			} else if (isPlainObject$4(keyPath)) {
+			} else if (isPlainObject$3(keyPath)) {
 				return Ractive.sharedSet(keyPath);
 			}
 			return Ractive.sharedGet(keyPath);
@@ -74,8 +74,9 @@
 	} = app;
 	const mainWorker = new Worker('/worker.js');
 	const workerRequest = async (requestName, dataArg) => {
+		console.log(requestName, dataArg);
 		let compiledRequest;
-		let callback;
+		let callbackOptional;
 		if (dataArg) {
 			compiledRequest = {
 				data: dataArg,
@@ -83,7 +84,7 @@
 			};
 		} else {
 			compiledRequest = requestName;
-			callback = requestName.callback;
+			callbackOptional = requestName.callback;
 		}
 		const requestObject = {
 			data: compiledRequest.data,
@@ -92,19 +93,21 @@
 		if (requestObject.data.id) {
 			return mainWorker.postMessage(requestObject);
 		}
+		const uniq = uid();
+		console.log(uniq, callbackOptional);
+		requestObject.id = uniq;
 		return promise$1((accept) => {
-			const uniq = uid();
-			app.events[uniq] = callback ?
-				function(dataCallback) {
-					accept(dataCallback);
-					callback(dataCallback);
-				} :
-				accept;
-			requestObject.id = uniq;
+			app.events[uniq] = async function(responseData) {
+				if (callbackOptional) {
+					await callbackOptional(responseData);
+				}
+				accept(responseData);
+			};
 			mainWorker.postMessage(requestObject);
 		});
 	};
 	const workerMessage = (workerEvent) => {
+		console.log(workerEvent.data);
 		const eventData = workerEvent.data;
 		const {
 			id, data
@@ -114,10 +117,12 @@
 			generatedId = '_';
 		}
 		if (!app.events[generatedId]) {
-			console.log(id, generatedId);
+			console.log(generatedId);
 		}
+		console.log(app.events[generatedId], data);
 		app.events[generatedId](data);
 		if (!eventData.keep && !isString$7(generatedId)) {
+			console.log('DONT KEEP', eventData, generatedId);
 			app.events[generatedId] = null;
 			uid.free(generatedId);
 		}
@@ -262,10 +267,10 @@
 		fetchFile
 	});
 	const { assign: assign$6 } = app.utility;
-	const request = async (requestName, config) => {
-		const requestPackage = config ?
+	const request = async (requestName, data) => {
+		const requestPackage = data ?
 			{
-				data: config,
+				data,
 				request: requestName
 			} :
 			requestName;
@@ -278,10 +283,8 @@
 		};
 		if (requestPackage.id) {
 			workerPackage.data.id = requestPackage.id;
-			return workerRequest(workerPackage);
 		}
-		const json = await workerRequest(workerPackage);
-		return json;
+		return workerRequest(workerPackage);
 	};
 	assign$6(app, {
 		request
@@ -290,137 +293,74 @@
 		utility: {
 			assign: assign$5,
 			cnsl: cnsl$3,
-			compactMapArray,
-			isEmpty,
 			eachAsync: eachAsync$2,
-			eachObject: eachObject$1,
-			eachArray: eachArray$1,
 			isString: isString$5,
-			isPlainObject: isPlainObject$3,
 			hasValue: hasValue$3,
+			isRegExp: isRegExp$1,
 			drop: drop$1
 		}
 	} = app;
-	cnsl$3('Initilizing watchers module.', 'notify');
-	const watchers = {};
-	const watchersRegex = [];
-	const onRegex = (type, callable) => {
-		const watchObject = {};
-		callable.regex = type;
-		let number = watchersRegex.push(callable) - 1;
-		assign$5(watchObject, {
-			_: {
-				isWatcher: true
-			},
-			callable,
-			start() {
-				if (!hasValue$3(number)) {
-					number = watchersRegex.push(callable) - 1;
-				}
-			},
-			stop() {
-				if (hasValue$3(number)) {
-					drop$1(watchersRegex, number);
-					number = null;
-				}
-			}
-		});
-		return watchObject;
-	};
-	const onString = (type, callable) => {
-		const watchObject = {};
-		if (!watchers[type]) {
-			watchers[type] = [];
-		}
-		const levelObject = watchers[type];
-		let number = levelObject.push(callable) - 1;
-		assign$5(watchObject, {
-			_: {
-				isWatcher: true
-			},
-			callable,
-			start() {
-				if (!hasValue$3(number)) {
-					number = levelObject.push(callable) - 1;
-				}
-			},
-			stop() {
-				if (hasValue$3(number)) {
-					drop$1(levelObject, number);
-					number = null;
-				}
-			}
-		});
-		return watchObject;
-	};
-	const onCollection = (object, settings) => {
-		const watching = [];
-		const prefix = settings.prefix ? `${settings.prefix}.` : '';
-		const suffix = settings.suffix ? `.${settings.suffix}` : '';
-		const watchCollection = {
-			_: {
-				isWatcher: true
-			},
-			start() {
-				eachArray$1(watching, (item) => {
-					item.start();
-				});
-			},
-			stop() {
-				eachArray$1(watching, (item) => {
-					item.stop();
-				});
-			},
-			watching
-		};
-		eachObject$1(object, (item, key) => {
-			watching.push(onString(`${prefix}${key}${suffix}`, item));
-		});
-		return watchCollection;
-	};
-	const watch$3 = (type, callable) => {
-		let method;
-		if (isString$5(type)) {
-			method = onString;
-		} else if (isPlainObject$3(type)) {
-			method = onCollection;
-		} else {
-			method = onRegex;
-		}
-		return method(type, callable);
-	};
-	watch$3.status = true;
-	watch$3.start = () => {
-		watch$3.status = true;
-	};
-	watch$3.stop = () => {
-		watch$3.status = null;
-	};
-	const onUpdate = async (json) => {
-		if (!watch$3.status || !json) {
-			return;
-		}
-		const type = json.type;
-		const subscribers = [];
-		const levelObject = watchers[type] || watchers[json.name];
-		const regexSubscribers = compactMapArray(watchersRegex, (item) => {
-			if (item.regex.test(type)) {
-				return item;
-			}
-		});
-		if (!isEmpty(regexSubscribers)) {
-			subscribers.push(...regexSubscribers);
-		}
-		if (levelObject) {
-			subscribers.push(...levelObject);
-		}
-		console.log(subscribers);
-		if (subscribers.length) {
-			eachAsync$2(subscribers, (watcher) => {
-				return watcher(json, watcher);
-			});
-		}
-	};
+	cnsl$3('Initializing watchers module.', 'notify');
+	class Watcher {
+    static containerRegex = [];
+    static containerPrimary = {};
+    static status = true;
+    static start() {
+    	Watcher.status = true;
+    }
+    static stop() {
+    	Watcher.status = false;
+    }
+    static async update(json) {
+    	console.log(json);
+    	if (!Watcher.status || !json) {
+    		return;
+    	}
+    	const type = json.type;
+    	const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[json.name];
+    	await eachAsync$2(Watcher.containerRegex, async (watcher) => {
+    		if (watcher.regex.test(type)) {
+    			return watcher(json);
+    		}
+    	});
+    	await eachAsync$2(levelObject, async (watcher) => {
+    		return watcher(json);
+    	});
+    }
+    constructor(eventName, callback) {
+    	if (isString$5(eventName)) {
+    		if (!Watcher.containerPrimary[eventName]) {
+    			Watcher.containerPrimary[eventName] = [];
+    		}
+    		this.container = Watcher.containerPrimary[eventName];
+    	} else if (isRegExp$1(eventName)) {
+    		this.container = Watcher.containerRegex;
+    	}
+    	this.callback = callback.bind(this);
+    	this.start();
+    }
+    isWatcher = true;
+    callback;
+    id;
+    active;
+    container;
+    start() {
+    	if (!hasValue$3(this.id)) {
+    		this.id = this.container.push(this) - 1;
+    		this.active = true;
+    	}
+    }
+    stop() {
+    	if (hasValue$3(this.id)) {
+    		drop$1(this.container, this.id);
+    		this.id = null;
+    		this.active = false;
+    	}
+    }
+	}
+	function watch$3(...args) {
+		return new Watcher(...args);
+	}
 	const push = (requestName, data) => {
 		return request({
 			data,
@@ -430,14 +370,16 @@
 	};
 	assign$5(app.events, {
 		_(json) {
-			return onUpdate(json.data);
+			return Watcher.update(json.data);
 		}
 	});
 	assign$5(app, {
 		push,
 		watch: watch$3,
-		watchers,
-		watchersRegex
+		Watcher
+	});
+	watch$3('connection', (responseData) => {
+		console.log(responseData);
 	});
 	const {
 		utility: {
@@ -451,7 +393,6 @@
 			each: each$6,
 			cnsl: cnsl$2,
 			initialString,
-			restString: restString$1,
 			getFileExtension: getFileExtension$1
 		},
 		imported,
@@ -472,9 +413,9 @@
 			}
 			// app.log(item);
 		}
-		if (restString$1(item, -3) === '.js') {
+		if (getFileExtension$1(item) === 'js') {
 			// app.log(item, watch);
-			if (!watchers[item]) {
+			if (!Watcher.containerPrimary[item]) {
 				watch$3(item, (thing) => {
 					if (app.debug) {
 						console.log('Live Reload', thing);
@@ -570,7 +511,7 @@
 		return demand$4(map$1(files, languagePath));
 	};
 	assign$4(app.events, {
-		async setupCompleted(data) {
+		async ready(data) {
 			cnsl$2('Worker is Ready', 'notify');
 			app.systemLanguage = data.language;
 			try {
@@ -730,7 +671,9 @@
 	};
 	const { utility: { assign: assign$3 } } = app;
 	const methods = {
-		$: app.utility,
+		get $() {
+			return app.utility;
+		},
 		getComponent(partialName) {
 			const componentName = partialName;
 			const partial = `<${partialName} />`;

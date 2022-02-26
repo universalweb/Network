@@ -1,7 +1,7 @@
 import app from './app.js';
 import { fetchFile } from './fetchFile.js';
 import languagePath from './language.js';
-import { watch, watchers } from './watchers.js';
+import { watch, Watcher } from './watchers.js';
 const {
 	utility: {
 		assign,
@@ -14,7 +14,6 @@ const {
 		each,
 		cnsl,
 		initialString,
-		restString,
 		getFileExtension
 	},
 	imported,
@@ -35,9 +34,9 @@ const buildFilePath = (itemArg) => {
 		}
 		// app.log(item);
 	}
-	if (restString(item, -3) === '.js') {
+	if (getFileExtension(item) === 'js') {
 		// app.log(item, watch);
-		if (!watchers[item]) {
+		if (!Watcher.containerPrimary[item]) {
 			watch(item, (thing) => {
 				if (app.debug) {
 					console.log('Live Reload', thing);
@@ -128,7 +127,7 @@ const demandLang = (fileList) => {
 	return demand(map(files, languagePath));
 };
 assign(app.events, {
-	async setupCompleted(data) {
+	async ready(data) {
 		cnsl('Worker is Ready', 'notify');
 		app.systemLanguage = data.language;
 		try {

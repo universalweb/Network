@@ -2,7 +2,7 @@
 
   self.window = self;
 
-  !function(t,e){"object"==typeof exports&&"undefined"!=typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):(t="undefined"!=typeof globalThis?globalThis:t||self).$=e();}(window,(function(){let t;const e=(...e)=>t(...e);e.superMethod=e=>{t=e;};const n=Object,r=n.keys,s=n.is,c=n.assign,o=n.getOwnPropertyDescriptor,i=n.defineProperty,l=n.getOwnPropertyNames,a=t=>r(t).length;c(e,{assign:c,defineProperty:i,getOwnPropertyDescriptor:o,getOwnPropertyNames:l,is:s,keys:r,objectSize:a});const u=Array.from;c(e,{toArray:u});const p=Reflect.apply;c(e,{apply:p});const h=function(t){return void 0===t},f=t=>null===t,g=t=>!h(t)&&!f(t),y=t=>e=>!!g(e)&&e.constructor===t,m=/\.|\+/,d=Array.isArray,A=y(String),b=y(Number),w=t=>!!g(t)&&"Object("===t.constructor.toString().trim().slice(9,16),O=t=>!!g(t)&&t instanceof Function,j=t=>Boolean(t.length),v=t=>e=>!!g(e)&&t.test(e),S=v(/\.css$/),C=v(/\.json$/),M=v(/\.js$/),k=v(/\.html$/),R=v(/\./),F=/\.([0-9a-z]+)/,E=t=>t instanceof Promise,x=t=>"AsyncFunction"===t.constructor.name;c(e,{getFileExtension:t=>{const e=t.match(F);if(e)return e[1]},has:(t,...e)=>t.includes(...e),hasDot:R,hasLength:j,hasValue:g,isArray:d,isBoolean:t=>"Boolean"===t.constructor.name,isDate:t=>t instanceof Date,isDecimal:t=>m.test(t.toString()),isEmpty:t=>A(t)||d(t)?!j(t):w(t)?!a(t):!g(t),isFileCSS:S,isFileHTML:k,isFileJS:M,isFileJSON:C,isFunction:O,isNull:f,isNumber:b,isPlainObject:w,isRegExp:t=>t instanceof RegExp,isString:A,isUndefined:h,isAsync:x,isPromise:E,isKindAsync:t=>E(t)||x(t)});const I=(t,e)=>{const n=t.length;for(let r=0;r<n;r++)e(t[r],r,t,n);return t},N=(t,e)=>{const n=t.length;for(let r=n-1;r>=0;r--)e(t[r],r,t,n);return t},T=(t,e)=>{const n=t.length;for(let r=0;r<n;r++)if(!1===e(t[r],r,t,n))return !1;return !0},P=(t,e,n=[])=>(I(t,((t,r,s,c)=>{!0===e(t,r,n,s,c)&&n.push(t);})),n),U=($=I,(t,e,n=[])=>($(t,((t,r,s,c)=>{n[r]=e(t,r,n,s,c);})),n));var $;const L=(t,e,n=[])=>(I(t,((t,r,s,c)=>{const o=e(t,r,n,s,c);g(o)&&n.push(o);})),n);c(e,{compactMapArray:L,eachArray:I,eachArrayRight:N,filterArray:P,mapArray:U,mapArrayRight:(t,e,n=[])=>{let r=0;const s=t.length;for(let c=s-1;c>=0;c--)n[r]=e(t[c],c,t,s),r++;return n},mapWhile:(t,e,n=[])=>{const r=t.length;for(let s=0;s<r;s++){const c=e(t[s],s,n,t,r);if(!1===c)break;n[s]=c;}return n},whileArray:T,whileEachArray:(t,e)=>{let n=0;for(;n<t.length;)e(t[n],n,t,t.length),n++;return t},whileMapArray:(t,e,n=[])=>{let r=0;for(;r<t.length;)n.push(e(t[r],r,t,t.length)),r++;return t},whileCompactMap:(t,e,n=[])=>{let r=0;for(;r<t.length;){const s=n.push(e(t[r],r,t,t.length));r++,g(s)&&n.push(s);}return t}});I(["Arguments","Map","Set","WeakMap"],(t=>{var n;e[`is${t}`]=(n=`[object ${t}]`,t=>!!g(t)&&t.toString()===n);}));I(["ArrayBuffer","Float32Array","Float64Array","Int8Array","Int16Array","Int32Array","Uint8Array","Uint8ClampedArray","Uint16Array","Uint32Array"],(t=>{e[`is${t}`]=e=>!!g(e)&&e.constructor.name===t;}));c(e,{asyncEach:async(t,e)=>{const n=t.length;for(let r=0;r<n;r++){const s=t[r];await s(e,r,t,n);}return t}});const B=t=>d(t)?t:[t];c(e,{ensureArray:B});const D=t=>t.flat(1/0);c(e,{flatten:(t,e=1)=>{let n=t;for(let t=0;t<e;t++)n=n.reduce(((t,e)=>t.concat(B(e))),[]);return n},flattenDeep:D});c(e,{remove:(t,e)=>{let n=t.length;for(let r=0;r<n;r++){const s=t[r];e.includes(s)&&(t.splice(r,1),r--,n--);}return t},removeBy:(t,e)=>{let n=t.length;for(let r=0;r<n;r++){e(t[r],r)&&(t.splice(r,1),r--,n--);}return t}});c(e,{chunk:(t,e=1)=>{const n=[];let r=0;return t.forEach(((t,s)=>{s%e||(n.push([]),s&&r++),n[r].push(t);})),n}});c(e,{rest:t=>t.slice(1,t.length)});const z=t=>(t.length=0,t);c(e,{clear:z});c(e,{right:(t,e)=>t[t.length-1-e]});c(e,{cloneArray:t=>t.slice()});const K=Math,q=K.floor,W=K.random,J=(t,e=0)=>q(W()*(t-e))+e;c(e,{add:(t,e)=>t+e,deduct:t=>t-1,divide:(t,e)=>t/e,increment:t=>t+1,minus:(t,e)=>t-e,multiply:(t,e)=>t*e,randomArbitrary:(t,e=0)=>W()*(t-e)+e,randomInt:J,remainder:(t,e)=>t%e});const Z=(t,e=t.length)=>{if(t.length<=1)return u(t);const n=u(t);let r,s,c=0;for(;c<e;)r=J(n.length-1,0),s=n[c],n[c]=n[r],n[r]=s,c++;return n};c(e,{shuffle:Z});c(e,{sample:(t,e=1)=>{if(!t)return !1;const n=t.length;if(n===e||e>n)return Z(t);if(1===e)return [t[J(n-1,0)]];const r=[],s={};let c,o=0;for(;o<e;)c=J(t.length-1,0),s[c]||(r.push(t[c]),s[c]=!0,o++);return r}});c(e,{compact:t=>t.filter((t=>!(A(t)&&!t.length)&&t))});c(e,{initial:t=>t.slice(0,t.length-1)});const V=Math.min;c(e,{smallest:t=>V(...t)});c(e,{range:(t,e,n=1)=>t<e?((t,e,n)=>{const r=[];let s=t;for(;s<e;)r.push(s),s+=n;return r})(t,e,n):((t,e,n)=>{const r=n<0?-1*n:n,s=[];let c=t;for(;c>e;)s.push(c),c-=r;return s})(t,e,n)});c(e,{intersect:(t,...e)=>L(t,(t=>{if(T(e,(e=>e.includes(t))))return t}))});c(e,{difference:(t,...e)=>{const n=D(e);return L(t,(t=>{if(!n.includes(t))return t}))}});const _=(t,e,n=t.length)=>t.splice(e,n);c(e,{drop:_,dropRight:(t,e,n=t.length)=>_(t,0,n-e)});const H=(t,e)=>t.length===e.length&&T(t,((t,n)=>e[n]===t));c(e,{isMatchArray:H});c(e,{sortedIndex:(t,e)=>{let n=0;return T(t,((t,r)=>(n=r,e>t))),n}});const G=Math.max;c(e,{largest:t=>G(...t)});c(e,{sum:t=>t.reduce(((t,e)=>t+e),0)});const Q=async(t,e)=>{const n=t.length;for(let r=0;r<n;r++)await e(t[r],r,t,n);return t},X=async(t,e)=>{const n=t.length;for(let r=n-1;r>=0;r--)await e(t[r],r,t,n);return t};c(e,{eachAsync:Q,eachAsyncRight:X});c(e,{last:(t,e)=>{const n=t.length;return e?t.slice(n-e,n):t[n-1]}});c(e,{take:(t,e=1)=>t.slice(0,e),takeRight:(t,e=1)=>{const n=t.length;return t.slice(n-e,n)}});const Y=async(t,e)=>{const n=[];return await Q(t,(async(t,r,s)=>{n[r]=await e(t,r,s);})),n};c(e,{mapAsync:Y});const tt=(t,e,n)=>n.indexOf(t)===e,et=(t,e,n)=>t!==n[e-1],nt=(t,e)=>e?t.filter(et):t.filter(tt);c(e,{unique:nt});c(e,{union:(...t)=>nt(D(t))});c(e,{compactMapAsync:async(t,e)=>{const n=[];let r;return await Q(t,(async(t,s,c)=>{r=await e(t,s,n,c),g(r)&&n.push(r);})),n}});const rt=(t,e)=>t-e;c(e,{numSort:t=>t.sort(rt)});c(e,{arrayToObject:(t,e)=>{const n={};return I(t,((t,r)=>{n[e[r]]=t;})),n}});c(e,{without:(t,e)=>t.filter((t=>!e.includes(t)))});c(e,{partition:(t,e)=>{const n=[];return [L(t,(t=>{if(e(t))return t;n.push(t);})),n]}});c(e,{xor:(...t)=>{const e=[];return I(t,(t=>{I(nt(t),(t=>{e.includes(t)?e.splice(e.indexOf(t),1):e.push(t);}));})),e}});c(e,{unZip:t=>t[0].map(((e,n)=>t.map((t=>t[n])))),zip:(...t)=>t[0].map(((e,n)=>t.map((t=>t[n]))))});c(e,{first:(t,e)=>e?t.slice(0,e):t[0]});const st=(t,e)=>e-t;c(e,{rNumSort:t=>t.sort(st)});const ct=(t,e,n)=>{const r=n?t:0,s=n?e:t,c=n||e;for(let t=r;t<s;t++)c(t,r,s);};c(e,{times:ct,timesMap:(t,e,n,r=[])=>{const s=n?t:0,c=n?e:t,o=n||e;let i;return ct(s,c,(t=>{i=o(t,s,c,r),g(i)&&r.push(i);})),r}});const ot=(t,e,n=!0)=>(n?t:[...t]).sort(((t,n)=>n[e]?t[e]?t[e]<n[e]?1:t[e]>n[e]?-1:0:1:-1));c(e,{getNewest:(t,e)=>ot(t,e,!1)[0],sortNewest:ot});const it=(t,e="id",n=!0)=>(n?t:[...t]).sort(((t,n)=>n[e]?t[e]?t[e]<n[e]?-1:t[e]>n[e]?1:0:-1:1));c(e,{getOldest:(t,e="id")=>it(t,e)[0],sortOldest:it});c(e,{groupBy:(t,e)=>{const n={};return I(t,(t=>{const r=e(t);n[r]||(n[r]=[]),n[r].push(t);})),n}});c(e,{countBy:(t,e)=>{const n={};let r;return I(t,(t=>{r=e(t),n[r]||(n[r]=0),n[r]++;})),n},countKey:(t,e)=>{let n=0;return I(t,(t=>{t[e]&&n++;})),n},countWithoutKey:(t,e)=>{let n=0;return I(t,(t=>{t[e]||n++;})),n}});c(e,{indexBy:(t,e="id")=>{const n={};return I(t,(t=>{n[t[e]]=t;})),n}});c(e,{pluck:(t,e)=>U(t,(t=>t[e]))});const lt=(t,e)=>U(e,(e=>t[e]));c(e,{pluckObject:lt});c(e,{pluckValues:(t,e)=>U(t,(t=>lt(t,e)))});c(e,{invoke:(t,e,n)=>U(t,((t,r)=>t[e](n,r)))});c(e,{invokeAsync:(t,e,n)=>Y(t,(async(t,r)=>t[e](n,r)))});const at=(t,e,n,r,s)=>{if(t[s]===r)return !0};c(e,{findIndex:(t,e,n="id")=>{const r=t.findIndex(((t,r)=>at(t,0,0,e,n)));return -1!==r&&r},findItem:(t,e,n="id")=>{const r=t.find(((t,r)=>at(t,0,0,e,n)));return -1!==r&&r}});c(e,{sortAlphabetical:(t,e)=>t.sort(((t,n)=>{const r=t[e],s=n[e];return r<s?-1:r>s?1:0}))});c(e,{ary:(t,e)=>(...n)=>t(...n.splice(0,e))});c(e,{curry:(t,e=t.length)=>{const n=[],r=(...s)=>{if(n.push(...s),n.length===e){const e=t(...n);return z(n),e}return r};return r},curryRight:(t,e=t.length)=>{const n=[],r=(...s)=>{if(n.unshift(...s),n.length===e){const e=t(...n);return z(n),e}return r};return r}});c(e,{after:(t,e)=>{let n,r=t;return (...t)=>(null!==r&&r--,r<=0&&(n=e(...t),r=null),n)},before:(t,e)=>{let n,r=t;return (...t)=>(null!==r&&r--,r>=1?n=e(...t):r=null,n)},once:t=>{let e;return (...n)=>(g(e)||(e=t(...n)),e)}});c(e,{noop:()=>{},stubArray:()=>[],stubFalse:()=>!1,stubObject:()=>({}),stubString:()=>"",stubTrue:()=>!0});const ut=(t,e)=>{const n=r(t);I(n,((r,s,c,o)=>{e(t[r],r,t,o,n);}));},pt=(t,e)=>{const n=r(t);return T(n,((n,r,s,c)=>e(t[n],n,t,c,s)))},ht=(t,e,n={})=>(ut(t,((t,r,s,c,o)=>{!0===e(t,r,n,s,c,o)&&(n[r]=t);})),n),ft=(t,e,n={})=>(ut(t,((t,r,s,c,o)=>{n[r]=e(t,r,n,s,c,o);})),n),gt=(t,e,n={})=>(ut(t,((t,r,s,c,o)=>{const i=e(t,r,n,c,o);g(i)&&(n[r]=i);})),n);c(e,{compactMapObject:gt,eachObject:ut,filterObject:ht,mapObject:ft,whileObject:pt});const yt=(t,e)=>t.forEach(e),mt=(t,e)=>(n,r,s)=>{let c;if(g(n))return c=d(n)?t:w(n)||O(n)?e:n.forEach?yt:e,c(n,r,s)},dt=mt(T,pt),At=mt(I,ut),bt=mt(P,ht),wt=mt(U,ft),Ot=mt(L,gt);c(e,{compactMap:Ot,each:At,eachWhile:dt,filter:bt,map:wt});c(e,{bindAll:(t,e)=>wt(t,(t=>O(t)?t.bind(e):t))});c(e,{ifInvoke:(t,...e)=>{if(O(t))return t(...e)}});c(e,{negate:t=>(...e)=>!t(...e)});c(e,{every:dt});c(e,{over:t=>(...e)=>wt(t,(t=>t(...e))),overEvery:t=>(...e)=>dt(t,(t=>t(...e)))});const jt=(t,e)=>setTimeout(t,e),vt=(t,e)=>setInterval(t,e),St=(t,e)=>()=>{ct(0,t((()=>{}),0),(t=>{e(t);}));},Ct=St(jt,clearTimeout),Mt=St(vt,clearInterval);c(e,{clearIntervals:Mt,clearTimers:Ct,debounce:(t,e)=>{let n=!1;const r=(...r)=>{!1!==n&&clearTimeout(n),n=jt((()=>{t(...r),n=!1;}),e);};return r.clear=()=>{n&&(clearTimeout(n),n=!1);},r},interval:vt,throttle:(t,e)=>{let n,r=!1;const s=(...s)=>{r?n=!0:(t(...s),r=jt((()=>{n&&t(...s),r=!1;}),e));};return s.clear=()=>{clearTimeout(r),r=!1;},s},timer:jt});c(e,{chain:t=>{const e=t=>(e.value=t,e.methods);return c(e,{add:t=>((t,e)=>(At(e,((e,n)=>{t.methods[n]=(...n)=>(e(t.value,...n),t.methods);})),t))(e,t),done(){const t=e.value;return e.value=null,t},methods:{}}),e.add(t),e}});c(e,{inAsync:async(t,e)=>Q(t,(async t=>{await t(e);})),inSync:(t,e)=>At(t,(t=>{t(e);}))});c(e,{nthArg:(t=0)=>(...e)=>e[t]});c(e,{reArg:(t,e)=>(...n)=>t(...e.map((t=>n[t])))});c(e,{wrap:(t,e)=>(...n)=>e(t,...n)});c(e,{isNumberEqual:(t,e)=>t===e,isNumberInRange:(t,e,n)=>t>e&&t<n,isZero:t=>0===t});const kt=(t,e)=>{const n=r(t);return T(e,(t=>n.includes(t)))};c(e,{hasAnyKeys:(t,e)=>{const n=r(t);return Boolean(e.find((t=>n.includes(t))))},hasKeys:kt});c(e,{pick:(t,e,n={})=>(I(e,(e=>{n[e]=t[e];})),n)});c(e,{compactKeys:t=>{const e=[];return ut(t,((t,n)=>{t&&e.push(n);})),e}});c(e,{isMatchObject:(t,e)=>{const n=r(t);return !!H(n,r(e))&&T(n,(n=>t[n]===e[n]))}});c(e,{unZipObject:t=>{const e=[],n=[];return ut(t,((t,r)=>{e.push(r),n.push(t);})),[e,n]},zipObject:(t,e)=>{const n={};return I(t,((t,r)=>{n[t]=e[r];})),n}});c(e,{invert:(t,e={})=>(ut(t,((t,n)=>{e[t]=n;})),e)});c(e,{omit:(t,e)=>ht(t,((t,n)=>!e.includes(n)))});const Rt=async(t,e)=>{const n=r(t);return await Q(n,((r,s,c,o)=>e(t[r],r,t,o,n))),t};c(e,{eachObjectAsync:Rt});c(e,{compactMapObjectAsync:async(t,e,n={})=>(await Rt(t,(async(t,r,s,c,o)=>{const i=await e(t,r,n,c,o);g(i)&&(n[r]=i);})),n),mapObjectAsync:async(t,e,n={})=>(await Rt(t,(async(t,r,s,c,o)=>{n[r]=await e(t,r,n,s,c,o);})),n)});const Ft=/[-_]/g,Et=/ (.)/g;c(e,{camelCase:t=>t.toLowerCase().replace(Et,(t=>t.toUpperCase().replace(/ /g,""))),kebabCase:t=>t.replace(Ft," ").trim().toLowerCase().replace(Et,"-$1"),snakeCase:t=>t.replace(Ft," ").trim().toLowerCase().replace(Et,"_$1"),upperCase:t=>t.replace(Ft," ").trim().toUpperCase()});const xt=(t,e=1)=>t.substr(e);c(e,{chunkString:(t,e)=>t.match(new RegExp(`(.|[\r\n]){1,${e}}`,"g")),initialString:(t,e=1)=>t.slice(0,-1*e),insertInRange:(t,e,n)=>t.slice(0,e)+n+t.slice(e,t.length),restString:xt,rightString:(t,e=1)=>t[t.length-e]});c(e,{replaceList:(t,e,n)=>t.replace(new RegExp("\\b"+e.join("|")+"\\b","gi"),n)});const It=/%(?![\da-f]{2})/gi,Nt=/&/g,Tt=/</g,Pt=/>/g,Ut=/"/g,$t=t=>decodeURIComponent(t.replace(It,(()=>"%25"))),Lt=t=>t.replace(Nt,"&amp;").replace(Tt,"&lt;").replace(Pt,"&gt;").replace(Ut,"&quot;");c(e,{htmlEntities:Lt,rawURLDecode:$t,sanitize:t=>Lt($t(t))});const Bt=/\S+/g,Dt=/\w+/g;c(e,{tokenize:t=>t.match(Bt)||[],words:t=>t.match(Dt)||[]});c(e,{truncate:(t,e)=>{const n=t.length;return n>e?((t,e,n)=>{const r=t.split(""),s=r.length;let c,o=n-e;for(;o<s&&o>=0&&(c=r[o]," "!==c);o--);return t.slice(0,o).trim()})(t,e,n):t},truncateRight:(t,e)=>{const n=t.length;return n>e?((t,e,n)=>{const r=t.split(""),s=r.length;let c,o=e;for(;o<s&&o>0&&(c=r[o]," "!==c);o++);return t.substr(o,n).trim()})(t,e,n):t}});const zt=/ (.)/g,Kt=t=>t[0].toUpperCase(),qt=t=>Kt(t)+xt(t).toLowerCase();c(e,{upperFirst:t=>Kt(t)+xt(t),upperFirstAll:t=>t.replace(zt,(t=>t.toUpperCase())),upperFirstLetter:Kt,upperFirstOnly:qt,upperFirstOnlyAll:t=>qt(t.toLowerCase()).replace(zt,(t=>t.toUpperCase()))});const Wt=Object.create,Jt=(t,e,n=!1,s,c,o)=>{if(t){if(!d(t)&&!w(t))return e;if(o){const r=o.pop();if(r){const s=e[r];t[r]=Jt(t[r],s,n);}else if(!c)return t;if(c){let r=s||0;if(r++,r<c)return Jt(t,e,n,r,c,o)}return Jt(t,e,n,null,null,o)}if(c){if(s<c){let r=s||0;const i=e[r];if(i){const s=t[r];if(n?t.push(Jt(s,i,n)):t[r]=Jt(s,i,n),r++,r<c)return Jt(t,e,n,r,c,o)}}}else {if(d(e))return 0===c?t:Jt(t,e,n,0,e.length);if(w(e)){const s=r(e);return Jt(t,e,n,null,null,s)}}}else {if(w(e))return o?Jt({},e,n,null,null,o):Jt({},e,n);if(d(e))return s<c?Jt([],e,n,s,c,o):Jt([],e,n)}return t||e};let Zt;Zt=globalThis.structuredClone?t=>globalThis.structuredClone(t):t=>w(t)?Jt({},t):d(t)?Jt([],t):Wt(t),c(e,{assignDeep:Jt,clone:Zt});const Vt=Function.prototype;c(e,{cacheNativeMethod:function(t){return Vt.call.bind(t)}});c(e,{ifNotEqual:(t,e,n)=>(e&&!g(t[e])&&(t[e]=n),t)});const _t=(t,e)=>{if(t===e)return !0;if(t.toString()===e.toString())if(w(t)){const n=r(t);if(kt(e,n))return T(n,(n=>_t(t[n],e[n])))}else if(d(t)&&t.length===e.length)return T(t,((t,n)=>_t(t,e[n])));return !1};c(e,{isEqual:_t});c(e,{propertyMatch:(t,e,n=r(t))=>T(n,(n=>_t(t[n],e[n])))});const Ht=/\.|\[/,Gt=/]/g,Qt=t=>t.replace(Gt,"").split(Ht);c(e,{toPath:Qt});let Xt=0;const Yt=[],te={},ee=()=>{let t=Yt.shift(Yt);return g(t)||(t=Xt,te[t]=!0,Xt++),t};ee.free=t=>{te[t]=null,Yt.push(t);},c(e,{uid:ee});const ne=(t,n=e)=>{let r=n;return T(Qt(t),(t=>(r=r[t],g(r)))),r};c(e,{get:ne});const re=JSON,se=re.parse,ce=re.stringify;c(e,{jsonParse:se,stringify:ce});const oe=(t,e)=>(g(e)&&(oe[t]=e),ne(t,oe));e.superMethod(oe),c(e,{model:oe});c(e,{promise:t=>new Promise(t)});c(e,{toggle:(t,e=!0,n=!1)=>_t(e,t)?n:e});const ie=t=>(...e)=>n=>{let r=n;return t(e,(t=>{r=t(r);})),r},le=ie(I),ae=ie(N);c(e,{flow:le,flowRight:ae});const ue=t=>(...e)=>async n=>{let r=n;return await t(e,(async t=>{r=await t(r);})),r},pe=ue(Q),he=ue(X);return c(e,{flowAsync:pe,flowAsyncRight:he}),e}));
+  !function(t,e){"object"==typeof exports&&"undefined"!=typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):(t="undefined"!=typeof globalThis?globalThis:t||self).$=e();}(window,(function(){let t;const e=(...e)=>t(...e);e.superMethod=e=>{t=e;};const n=Object,r=n.keys,s=n.is,c=n.assign,o=n.getOwnPropertyDescriptor,i=n.defineProperty,l=n.getOwnPropertyNames,a=t=>r(t).length;c(e,{assign:c,defineProperty:i,getOwnPropertyDescriptor:o,getOwnPropertyNames:l,is:s,keys:r,objectSize:a});const u=Array.from;c(e,{toArray:u});const p=Reflect.apply;c(e,{apply:p});const h=function(t){return void 0===t},f=t=>null===t,g=t=>!h(t)&&!f(t),y=t=>e=>!!g(e)&&e.constructor===t,m=/\.|\+/,d=Array.isArray,A=y(String),b=y(Number),w=t=>!!g(t)&&"Object("===t.constructor.toString().trim().slice(9,16),O=t=>!!g(t)&&t instanceof Function,j=t=>Boolean(t.length),v=t=>e=>!!g(e)&&t.test(e),S=v(/\.css$/),C=v(/\.json$/),M=v(/\.js$/),k=v(/\.html$/),R=v(/\./),F=/\.([0-9a-z]+)/,E=t=>!!t&&t instanceof Promise,x=t=>!!t&&"AsyncFunction"===t.constructor?.name;c(e,{isPrimitive:t=>"__proto__"!==t&&"constructor"!==t&&"prototype"!==t,getFileExtension:t=>{const e=t.match(F);if(e)return e[1]},has:(t,...e)=>t.includes(...e),hasDot:R,hasLength:j,hasValue:g,isArray:d,isBoolean:t=>"Boolean"===t.constructor.name,isDate:t=>t instanceof Date,isDecimal:t=>m.test(t.toString()),isEmpty:t=>A(t)||d(t)?!j(t):w(t)?!a(t):!g(t),isFileCSS:S,isFileHTML:k,isFileJS:M,isFileJSON:C,isFunction:O,isNull:f,isNumber:b,isPlainObject:w,isRegExp:t=>t instanceof RegExp,isString:A,isUndefined:h,isAsync:x,isPromise:E,isKindAsync:t=>!!t&&(E(t)||x(t))});const I=(t,e)=>{const n=t.length;for(let r=0;r<n;r++)e(t[r],r,t,n);return t},N=(t,e)=>{const n=t.length;for(let r=n-1;r>=0;r--)e(t[r],r,t,n);return t},P=(t,e)=>{const n=t.length;for(let r=0;r<n;r++)if(!1===e(t[r],r,t,n))return !1;return !0},T=(t,e,n=[])=>(I(t,((t,r,s,c)=>{!0===e(t,r,n,s,c)&&n.push(t);})),n),U=($=I,(t,e,n=[])=>($(t,((t,r,s,c)=>{n[r]=e(t,r,n,s,c);})),n));var $;const L=(t,e,n=[])=>(I(t,((t,r,s,c)=>{const o=e(t,r,n,s,c);g(o)&&n.push(o);})),n);c(e,{compactMapArray:L,eachArray:I,eachArrayRight:N,filterArray:T,mapArray:U,mapArrayRight:(t,e,n=[])=>{let r=0;const s=t.length;for(let c=s-1;c>=0;c--)n[r]=e(t[c],c,t,s),r++;return n},mapWhile:(t,e,n=[])=>{const r=t.length;for(let s=0;s<r;s++){const c=t[s];if(!1===e(c,s,n,t,r))break;n[s]=c;}return n},whileArray:P,whileEachArray:(t,e)=>{let n=0;for(;n<t.length;)e(t[n],n,t,t.length),n++;return t},whileMapArray:(t,e,n=[])=>{let r=0;for(;r<t.length;)n.push(e(t[r],r,t,t.length)),r++;return t},whileCompactMap:(t,e,n=[])=>{let r=0;for(;r<t.length;){const s=n.push(e(t[r],r,t,t.length));r++,g(s)&&n.push(s);}return t}});I(["Arguments","Map","Set","WeakMap"],(t=>{var n;e[`is${t}`]=(n=`[object ${t}]`,t=>!!g(t)&&t.toString()===n);}));I(["ArrayBuffer","Float32Array","Float64Array","Int8Array","Int16Array","Int32Array","Uint8Array","Uint8ClampedArray","Uint16Array","Uint32Array"],(t=>{e[`is${t}`]=e=>!!g(e)&&e.constructor.name===t;}));c(e,{asyncEach:async(t,e)=>{const n=t.length;for(let r=0;r<n;r++){const s=t[r];await s(e,r,t,n);}return t}});const B=t=>d(t)?t:[t];c(e,{ensureArray:B});const D=t=>t.flat(1/0);c(e,{flatten:(t,e=1)=>{let n=t;for(let t=0;t<e;t++)n=n.reduce(((t,e)=>t.concat(B(e))),[]);return n},flattenDeep:D});c(e,{remove:(t,e)=>{let n=t.length;for(let r=0;r<n;r++){const s=t[r];e.includes(s)&&(t.splice(r,1),r--,n--);}return t},removeBy:(t,e)=>{let n=t.length;for(let r=0;r<n;r++){e(t[r],r)&&(t.splice(r,1),r--,n--);}return t}});c(e,{chunk:(t,e=1)=>{const n=[];let r=0;return t.forEach(((t,s)=>{s%e||(n.push([]),s&&r++),n[r].push(t);})),n}});c(e,{rest:t=>t.slice(1,t.length)});const z=t=>(t.length=0,t);c(e,{clear:z});c(e,{right:(t,e)=>t[t.length-1-e]});c(e,{cloneArray:t=>t.slice()});const K=Math,_=K.floor,q=K.random,W=(t,e=0)=>_(q()*(t-e))+e;c(e,{add:(t,e)=>t+e,deduct:t=>t-1,divide:(t,e)=>t/e,increment:t=>t+1,minus:(t,e)=>t-e,multiply:(t,e)=>t*e,randomArbitrary:(t,e=0)=>q()*(t-e)+e,randomInt:W,remainder:(t,e)=>t%e});const J=(t,e=t.length)=>{if(t.length<=1)return u(t);const n=u(t);let r,s,c=0;for(;c<e;)r=W(n.length-1,0),s=n[c],n[c]=n[r],n[r]=s,c++;return n};c(e,{shuffle:J});c(e,{sample:(t,e=1)=>{if(!t)return !1;const n=t.length;if(n===e||e>n)return J(t);if(1===e)return [t[W(n-1,0)]];const r=[],s={};let c,o=0;for(;o<e;)c=W(t.length-1,0),s[c]||(r.push(t[c]),s[c]=!0,o++);return r}});c(e,{compact:t=>t.filter((t=>!(A(t)&&!t.length)&&t))});c(e,{initial:t=>t.slice(0,t.length-1)});const Z=Math.min;c(e,{smallest:t=>Z(...t)});c(e,{range:(t,e,n=1)=>t<e?((t,e,n)=>{const r=[];let s=t;for(;s<e;)r.push(s),s+=n;return r})(t,e,n):((t,e,n)=>{const r=n<0?-1*n:n,s=[];let c=t;for(;c>e;)s.push(c),c-=r;return s})(t,e,n)});c(e,{intersect:(t,...e)=>L(t,(t=>{if(P(e,(e=>e.includes(t))))return t}))});c(e,{difference:(t,...e)=>{const n=D(e);return L(t,(t=>{if(!n.includes(t))return t}))}});const V=(t,e,n=t.length)=>t.splice(e,n);c(e,{drop:V,dropRight:(t,e,n=t.length)=>V(t,0,n-e)});const H=(t,e)=>t.length===e.length&&P(t,((t,n)=>e[n]===t));c(e,{isMatchArray:H});c(e,{sortedIndex:(t,e)=>{let n=0;return P(t,((t,r)=>(n=r,e>t))),n}});const G=Math.max;c(e,{largest:t=>G(...t)});c(e,{sum:t=>t.reduce(((t,e)=>t+e),0)});const Q=async(t,e)=>{const n=t.length;for(let r=0;r<n;r++)await e(t[r],r,t,n);return t},X=async(t,e)=>{const n=t.length;for(let r=n-1;r>=0;r--)await e(t[r],r,t,n);return t};c(e,{eachAsync:Q,eachAsyncRight:X});c(e,{last:(t,e)=>{const n=t.length;return e?t.slice(n-e,n):t[n-1]}});c(e,{take:(t,e=1)=>t.slice(0,e),takeRight:(t,e=1)=>{const n=t.length;return t.slice(n-e,n)}});const Y=async(t,e)=>{const n=[];return await Q(t,(async(t,r,s)=>{n[r]=await e(t,r,s);})),n};c(e,{mapAsync:Y});const tt=(t,e,n)=>n.indexOf(t)===e,et=(t,e,n)=>t!==n[e-1],nt=(t,e)=>e?t.filter(et):t.filter(tt);c(e,{unique:nt});c(e,{union:(...t)=>nt(D(t))});c(e,{compactMapAsync:async(t,e)=>{const n=[];let r;return await Q(t,(async(t,s,c)=>{r=await e(t,s,n,c),g(r)&&n.push(r);})),n}});const rt=(t,e)=>t-e;c(e,{numSort:t=>t.sort(rt)});c(e,{arrayToObject:(t,e)=>{const n={};return I(t,((t,r)=>{n[e[r]]=t;})),n}});c(e,{without:(t,e)=>t.filter((t=>!e.includes(t)))});c(e,{partition:(t,e)=>{const n=[];return [L(t,(t=>{if(e(t))return t;n.push(t);})),n]}});c(e,{xor:(...t)=>{const e=[];return I(t,(t=>{I(nt(t),(t=>{e.includes(t)?e.splice(e.indexOf(t),1):e.push(t);}));})),e}});c(e,{unZip:t=>t[0].map(((e,n)=>t.map((t=>t[n])))),zip:(...t)=>t[0].map(((e,n)=>t.map((t=>t[n]))))});c(e,{first:(t,e)=>e?t.slice(0,e):t[0]});const st=(t,e)=>e-t;c(e,{rNumSort:t=>t.sort(st)});const ct=(t,e,n)=>{const r=n?t:0,s=n?e:t,c=n||e;for(let t=r;t<s;t++)c(t,r,s);};c(e,{times:ct,timesMap:(t,e,n,r=[])=>{const s=n?t:0,c=n?e:t,o=n||e;let i;return ct(s,c,(t=>{i=o(t,s,c,r),g(i)&&r.push(i);})),r}});const ot=(t,e,n=!0)=>(n?t:[...t]).sort(((t,n)=>n[e]?t[e]?t[e]<n[e]?1:t[e]>n[e]?-1:0:1:-1));c(e,{getNewest:(t,e)=>ot(t,e,!1)[0],sortNewest:ot});const it=(t,e="id",n=!0)=>(n?t:[...t]).sort(((t,n)=>n[e]?t[e]?t[e]<n[e]?-1:t[e]>n[e]?1:0:-1:1));c(e,{getOldest:(t,e="id")=>it(t,e)[0],sortOldest:it});c(e,{groupBy:(t,e)=>{const n={};return I(t,(t=>{const r=e(t);n[r]||(n[r]=[]),n[r].push(t);})),n}});c(e,{countBy:(t,e)=>{const n={};let r;return I(t,(t=>{r=e(t),n[r]||(n[r]=0),n[r]++;})),n},countKey:(t,e)=>{let n=0;return I(t,(t=>{t[e]&&n++;})),n},countWithoutKey:(t,e)=>{let n=0;return I(t,(t=>{t[e]||n++;})),n}});c(e,{indexBy:(t,e="id")=>{const n={};return I(t,(t=>{n[t[e]]=t;})),n}});c(e,{pluck:(t,e)=>U(t,(t=>t[e]))});const lt=(t,e)=>U(e,(e=>t[e]));c(e,{pluckObject:lt});c(e,{pluckValues:(t,e)=>U(t,(t=>lt(t,e)))});c(e,{invoke:(t,e,n)=>U(t,((t,r)=>t[e](n,r)))});c(e,{invokeAsync:(t,e,n)=>Y(t,(async(t,r)=>t[e](n,r)))});const at=(t,e,n,r,s)=>{if(t[s]===r)return !0};c(e,{findIndex:(t,e,n="id")=>{const r=t.findIndex(((t,r)=>at(t,0,0,e,n)));return -1!==r&&r},findItem:(t,e,n="id")=>{const r=t.find(((t,r)=>at(t,0,0,e,n)));return -1!==r&&r}});c(e,{sortAlphabetical:(t,e)=>t.sort(((t,n)=>{const r=t[e],s=n[e];return r<s?-1:r>s?1:0}))});c(e,{ary:(t,e)=>(...n)=>t(...n.splice(0,e))});c(e,{curry:(t,e=t.length)=>{const n=[],r=(...s)=>{if(n.push(...s),n.length===e){const e=t(...n);return z(n),e}return r};return r},curryRight:(t,e=t.length)=>{const n=[],r=(...s)=>{if(n.unshift(...s),n.length===e){const e=t(...n);return z(n),e}return r};return r}});c(e,{after:(t,e)=>{let n,r=t;return (...t)=>(null!==r&&r--,r<=0&&(n=e(...t),r=null),n)},before:(t,e)=>{let n,r=t;return (...t)=>(null!==r&&r--,r>=1?n=e(...t):r=null,n)},once:t=>{let e;return (...n)=>(g(e)||(e=t(...n)),e)}});c(e,{noop:()=>{},stubArray:()=>[],stubFalse:()=>!1,stubObject:()=>({}),stubString:()=>"",stubTrue:()=>!0});const ut=(t,e)=>{const n=r(t);I(n,((r,s,c,o)=>{e(t[r],r,t,o,n);}));},pt=(t,e)=>{const n=r(t);return P(n,((n,r,s,c)=>e(t[n],n,t,c,s)))},ht=(t,e,n={})=>(ut(t,((t,r,s,c,o)=>{!0===e(t,r,n,s,c,o)&&(n[r]=t);})),n),ft=(t,e,n={})=>(ut(t,((t,r,s,c,o)=>{n[r]=e(t,r,n,s,c,o);})),n),gt=(t,e,n={})=>(ut(t,((t,r,s,c,o)=>{const i=e(t,r,n,c,o);g(i)&&(n[r]=i);})),n);c(e,{compactMapObject:gt,eachObject:ut,filterObject:ht,mapObject:ft,whileObject:pt});const yt=(t,e)=>t.forEach(e),mt=(t,e)=>(n,r,s)=>{let c;if(g(n))return c=d(n)?t:w(n)||O(n)?e:n.forEach?yt:e,c(n,r,s)},dt=mt(P,pt),At=mt(I,ut),bt=mt(T,ht),wt=mt(U,ft),Ot=mt(L,gt);c(e,{compactMap:Ot,each:At,eachWhile:dt,filter:bt,map:wt});c(e,{bindAll:(t,e)=>wt(t,(t=>O(t)?t.bind(e):t))});c(e,{ifInvoke:(t,...e)=>{if(O(t))return t(...e)}});c(e,{negate:t=>(...e)=>!t(...e)});c(e,{every:dt});c(e,{over:t=>(...e)=>wt(t,(t=>t(...e))),overEvery:t=>(...e)=>dt(t,(t=>t(...e)))});const jt=(t,e)=>setTimeout(t,e),vt=(t,e)=>setInterval(t,e),St=(t,e)=>()=>{ct(0,t((()=>{}),0),(t=>{e(t);}));},Ct=St(jt,clearTimeout),Mt=St(vt,clearInterval);c(e,{clearIntervals:Mt,clearTimers:Ct,debounce:(t,e)=>{let n=!1;const r=(...r)=>{!1!==n&&clearTimeout(n),n=jt((()=>{t(...r),n=!1;}),e);};return r.clear=()=>{n&&(clearTimeout(n),n=!1);},r},interval:vt,throttle:(t,e)=>{let n,r=!1;const s=(...s)=>{r?n=!0:(t(...s),r=jt((()=>{n&&t(...s),r=!1;}),e));};return s.clear=()=>{clearTimeout(r),r=!1;},s},timer:jt});c(e,{chain:t=>{const e=t=>(e.value=t,e.methods);return c(e,{add:t=>((t,e)=>(At(e,((e,n)=>{t.methods[n]=(...n)=>(e(t.value,...n),t.methods);})),t))(e,t),done(){const t=e.value;return e.value=null,t},methods:{}}),e.add(t),e}});c(e,{inAsync:async(t,e)=>Q(t,(async t=>{await t(e);})),inSync:(t,e)=>At(t,(t=>{t(e);}))});c(e,{nthArg:(t=0)=>(...e)=>e[t]});c(e,{reArg:(t,e)=>(...n)=>t(...e.map((t=>n[t])))});c(e,{wrap:(t,e)=>(...n)=>e(t,...n)});c(e,{isNumberEqual:(t,e)=>t===e,isNumberInRange:(t,e,n)=>t>e&&t<n,isZero:t=>0===t});const kt=(t,e)=>{const n=r(t);return P(e,(t=>n.includes(t)))};c(e,{hasAnyKeys:(t,e)=>{const n=r(t);return Boolean(e.find((t=>n.includes(t))))},hasKeys:kt});c(e,{pick:(t,e,n={})=>(I(e,(e=>{n[e]=t[e];})),n)});c(e,{compactKeys:t=>{const e=[];return ut(t,((t,n)=>{t&&e.push(n);})),e}});c(e,{isMatchObject:(t,e)=>{const n=r(t);return !!H(n,r(e))&&P(n,(n=>t[n]===e[n]))}});c(e,{unZipObject:t=>{const e=[],n=[];return ut(t,((t,r)=>{e.push(r),n.push(t);})),[e,n]},zipObject:(t,e)=>{const n={};return I(t,((t,r)=>{n[t]=e[r];})),n}});c(e,{invert:(t,e={})=>(ut(t,((t,n)=>{e[t]=n;})),e)});c(e,{omit:(t,e)=>ht(t,((t,n)=>!e.includes(n)))});const Rt=async(t,e)=>{const n=r(t);return await Q(n,((r,s,c,o)=>e(t[r],r,t,o,n))),t};c(e,{eachObjectAsync:Rt});c(e,{compactMapObjectAsync:async(t,e,n={})=>(await Rt(t,(async(t,r,s,c,o)=>{const i=await e(t,r,n,c,o);g(i)&&(n[r]=i);})),n),mapObjectAsync:async(t,e,n={})=>(await Rt(t,(async(t,r,s,c,o)=>{n[r]=await e(t,r,n,s,c,o);})),n)});const Ft=/[-_]/g,Et=/ (.)/g;c(e,{camelCase:t=>t.toLowerCase().replace(Et,(t=>t.toUpperCase().replace(/ /g,""))),kebabCase:t=>t.replace(Ft," ").trim().toLowerCase().replace(Et,"-$1"),snakeCase:t=>t.replace(Ft," ").trim().toLowerCase().replace(Et,"_$1"),upperCase:t=>t.replace(Ft," ").trim().toUpperCase()});const xt=(t,e=1)=>t.substr(e);c(e,{chunkString:(t,e)=>t.match(new RegExp(`(.|[\r\n]){1,${e}}`,"g")),initialString:(t,e=1)=>t.slice(0,-1*e),insertInRange:(t,e,n)=>t.slice(0,e)+n+t.slice(e,t.length),restString:xt,rightString:(t,e=1)=>t[t.length-e]});c(e,{replaceList:(t,e,n)=>t.replace(new RegExp("\\b"+e.join("|")+"\\b","gi"),n)});const It=/%(?![\da-f]{2})/gi,Nt=/&/g,Pt=/</g,Tt=/>/g,Ut=/"/g,$t=t=>decodeURIComponent(t.replace(It,(()=>"%25"))),Lt=t=>t.replace(Nt,"&amp;").replace(Pt,"&lt;").replace(Tt,"&gt;").replace(Ut,"&quot;");c(e,{htmlEntities:Lt,rawURLDecode:$t,sanitize:t=>Lt($t(t))});const Bt=/\S+/g,Dt=/\w+/g;c(e,{tokenize:t=>t.match(Bt)||[],words:t=>t.match(Dt)||[]});c(e,{truncate:(t,e)=>{const n=t.length;return n>e?((t,e,n)=>{const r=t.split(""),s=r.length;let c,o=n-e;for(;o<s&&o>=0&&(c=r[o]," "!==c);o--);return t.slice(0,o).trim()})(t,e,n):t},truncateRight:(t,e)=>{const n=t.length;return n>e?((t,e,n)=>{const r=t.split(""),s=r.length;let c,o=e;for(;o<s&&o>0&&(c=r[o]," "!==c);o++);return t.substr(o,n).trim()})(t,e,n):t}});const zt=/ (.)/g,Kt=t=>t[0].toUpperCase(),_t=t=>Kt(t)+xt(t).toLowerCase();c(e,{upperFirst:t=>Kt(t)+xt(t),upperFirstAll:t=>t.replace(zt,(t=>t.toUpperCase())),upperFirstLetter:Kt,upperFirstOnly:_t,upperFirstOnlyAll:t=>_t(t.toLowerCase()).replace(zt,(t=>t.toUpperCase()))});const qt=Object.create,Wt=(t,e,n=!1,s,c,o)=>{if(t){if(o){const r=o.pop();if(r){const s=e[r];t[r]=Wt(t[r],s,n);}else if(!c)return t;if(c){let r=s||0;if(r++,r<c)return Wt(t,e,n,r,c,o)}return Wt(t,e,n,null,null,o)}if(c){if(s<c){let r=s||0;const i=e[r];if(i){const s=t[r];if(n?t.push(Wt(s,i,n)):t[r]=Wt(s,i,n),r++,r<c)return Wt(t,e,n,r,c,o)}}}else {if(d(e))return 0===c?t:Wt(t,e,n,0,e.length);if(w(e)){const s=r(e);return Wt(t,e,n,null,null,s)}}}else {if(w(e))return o?Wt({},e,n,null,null,o):Wt({},e,n);if(d(e))return s<c?Wt([],e,n,s,c,o):Wt([],e,n)}return t||e};let Jt;Jt=globalThis.structuredClone?t=>globalThis.structuredClone(t):t=>w(t)?Wt({},t):d(t)?Wt([],t):qt(t),c(e,{assignDeep:Wt,clone:Jt});const Zt=Function.prototype;c(e,{cacheNativeMethod:function(t){return Zt.call.bind(t)}});c(e,{ifNotEqual:(t,e,n)=>(e&&!g(t[e])&&(t[e]=n),t)});const Vt=(t,e)=>{if(t===e)return !0;if(t.toString()===e.toString())if(w(t)){const n=r(t);if(kt(e,n))return P(n,(n=>Vt(t[n],e[n])))}else if(d(t)&&t.length===e.length)return P(t,((t,n)=>Vt(t,e[n])));return !1};c(e,{isEqual:Vt});c(e,{propertyMatch:(t,e,n=r(t))=>P(n,(n=>Vt(t[n],e[n])))});const Ht=/\.|\[/,Gt=/]/g,Qt=t=>t.replace(Gt,"").split(Ht);c(e,{toPath:Qt});let Xt=0;const Yt=[],te={},ee=()=>{let t=Yt.shift(Yt);return g(t)||(t=Xt,te[t]=!0,Xt++),t};ee.free=t=>{te[t]=null,Yt.push(t);},c(e,{uid:ee});const ne=(t,n=e)=>{let r=n;return P(Qt(t),(t=>(r=r[t],g(r)))),r};c(e,{get:ne});const re=JSON,se=re.parse,ce=re.stringify;c(e,{jsonParse:se,stringify:ce});const oe=(t,e)=>(g(e)&&(oe[t]=e),ne(t,oe));e.superMethod(oe),c(e,{model:oe});c(e,{promise:t=>new Promise(t)});c(e,{toggle:(t,e=!0,n=!1)=>Vt(e,t)?n:e});const ie=t=>(...e)=>n=>{let r=n;return t(e,(t=>{r=t(r);})),r},le=ie(I),ae=ie(N);c(e,{flow:le,flowRight:ae});const ue=t=>(...e)=>async n=>{let r=n;return await t(e,(async t=>{r=await t(r);})),r},pe=ue(Q),he=ue(X);return c(e,{flowAsync:pe,flowAsyncRight:he}),e}));
 
   /*!
    * Socket.IO v4.4.1
@@ -4242,7 +4242,7 @@
   }));
 
   (function() {
-  	const { assign: assign$2 } = self.$;
+  	const { assign: assign$1 } = self.$;
   	const app = {
   		config: {},
   		utility: self.$,
@@ -4250,41 +4250,26 @@
   			appStatus: {
   				state: 0
   			},
-  			credit(data) {
-  				if (data.credit) {
-  					app.creditSave = $.assign({}, data.credit);
-  					console.log('Credits Saved in worker');
-  				}
-  			},
   			post(id, data, options) {
   				const responseData = {
   					data,
   					id
   				};
-  				assign$2(responseData, options);
+  				assign$1(responseData, options);
   				postMessage(responseData);
   			},
   			socket: {}
   		}
   	};
-  	const { utility: { assign: assign$1 } } = app;
-  	const post$1 = (id, data, options) => {
-  		const responseData = {
-  			data,
-  			id
-  		};
-  		assign$1(responseData, options);
-  		postMessage(responseData);
-  	};
   	const {
   		config,
   		utility: {
-  			assign, uid, isFileJS, isFileJSON, isFileCSS, initial, map
-  		}
+  			assign, uid, isFileJS, isFileJSON, isFileCSS, initial, map, promise
+  		},
+  		events: { post: post$1 }
   	} = app;
   	let socket;
   	let alreadySetup;
-  	const routerData = self.location;
   	const shouldNotUpgrade = /(^js\/lib\/)|(\.min\.js)/;
   	const importRegexGlobal = /\bimport\b([^:;=]*?){([^;]*?)}(\s\bfrom\b).*(('|"|`).*('|"|`));$/gm;
   	const importSingleRegexGlobal = /\bimport\b([^:;={}]*?)([^;{}]*?)(\s\bfrom\b).*(('|"|`).*('|"|`));$/gm;
@@ -4306,73 +4291,40 @@
   			return callback(data);
   		}
   	};
-  	const mainCallback = function(data, uniq, callable, options) {
-  		const callbackData = {};
-  		let cleanup = true;
-  		callbackData.data = data.data;
-  		const returned = callable(callbackData);
-  		if (options.async) {
-  			if (returned === true) {
-  				cleanup = false;
-  			}
-  		}
-  		if (cleanup) {
-  			callbacks[uniq] = null;
-  			uid.free(uniq);
-  		}
-  	};
   	// emit function with synthetic callback system
-  	const request = (configObj, workerData) => {
-  		const data = configObj.data;
-  		const callback = (json) => {
-  			let result;
-  			const workerCallback = configObj.callback;
-  			if (workerCallback) {
-  				result = workerCallback(json.data);
-  			} else if (workerData) {
-  				result = post$1(workerData.id, json.data);
+  	const request = async (configObj) => {
+  		const results = await promise((accept) => {
+  			const {
+  				data, callback
+  			} = configObj;
+  			if (data.id) {
+  				data.id = null;
+  			} else {
+  				const uuid = uid().toString();
+  				data.id = uuid;
+  				callbacks[uuid] = async function(requestData) {
+  					if (callback) {
+  						const returned = await callback(requestData.data);
+  						if (returned) {
+  							callbacks[uuid] = null;
+  							uid.free(uuid);
+  							accept(returned);
+  						}
+  					} else {
+  						accept(requestData.data);
+  					}
+  				};
   			}
-  			return result;
-  		};
-  		const options = {
-  			async: configObj.async
-  		};
-  		if (data.id) {
-  			data.id = null;
-  		} else {
-  			const uniq = uid().toString();
-  			data.id = uniq;
-  			callbacks[uniq] = function(callbackData) {
-  				mainCallback(callbackData, uniq, callback, options);
-  			};
-  		}
-  		socket.emit('api', data);
+  			socket.emit('api', data);
+  		});
+  		return results;
   	};
   	const socketIsReady = (data) => {
   		console.log('Socket Is Ready');
   		if (alreadySetup) {
-  			if (app.creditSave) {
-  				console.log('Re-authenticating');
-  				request({
-  					callback() {
-  						console.log('Re-authenticated');
-  						postMessage({
-  							data: {
-  								type: 'reconnected'
-  							},
-  							id: '_'
-  						});
-  					},
-  					data: {
-  						data: {
-  							credit: $.assign({}, app.creditSave)
-  						},
-  						request: 'open.loginCredit'
-  					}
-  				});
-  			}
+  			update('_');
   		} else {
-  			post$1('setupCompleted', {
+  			post$1('ready', {
   				language: data.language
   			});
   			alreadySetup = 1;
@@ -4387,7 +4339,7 @@
   		compiled = compiled.replace(importDynamic, '{$1} = await appGlobal.demandJs($2);');
   		return compiled;
   	};
-  	const getCallback = function(jsonData, configObj, workerInfo) {
+  	const getCallback = async function(jsonData, configObj, workerInfo) {
   		const item = jsonData.file;
   		const checksum = jsonData.cs;
   		const cacheCheck = jsonData.cache;
@@ -4402,7 +4354,6 @@
   		const isCss = isFileCSS(filename);
   		const dirname = initial(filename.split(slashString)).join(slashString);
   		let sendNow;
-  		let requestStatus = true;
   		/*
   	    During an active stream data is compiled.
   	    Based on Key coming in.
@@ -4446,55 +4397,48 @@
   			);
   		}
   		if (configObj.filesLoaded === configObj.fileListLength) {
-  			const returned = {};
-  			if (configObj.callback) {
-  				configObj.callback(returned);
-  			} else {
-  				post$1(workerInfo.id, returned);
-  			}
-  			requestStatus = false;
+  			const returned = {
+  				loaded: configObj.filesLoaded
+  			};
+  			return returned;
   		}
-  		return requestStatus;
+  		return false;
   	};
   	/*
   	This async streams required filesLoadedfrom socket
   	or from cache.
   	*/
   	assign(app.events.socket, {
-  		get(options, workerInfo) {
-  			/*
-  	    Config for stream callback function
-  	    */
-  			const dataProp = options.data;
-  			const fileList = dataProp.files;
+  		async get(options, workerInfo) {
+  			const { data } = options;
+  			const fileList = data.files;
   			const configObj = {
-  				callback: options.callback,
   				checksum: [],
   				completedFiles: map(fileList, () => {
   					return '';
   				}),
-  				fileList: dataProp,
+  				fileList: data,
   				fileListLength: fileList.length,
   				filesLoaded: 0,
   				progress: options.progress
   			};
   			const body = {
-  				async: true,
-  				callback(json) {
+  				async callback(json) {
   					return getCallback(json, configObj, workerInfo);
   				},
   				data: {
-  					request: 'file.get'
+  					request: 'file.get',
+  					data
   				}
   			};
-  			body.data.data = dataProp;
-  			request(body);
+  			const results = await request(body);
+  			post$1(workerInfo.id, results);
   		},
   		request
   	});
   	const socketInitialize = () => {
   		console.log('Worker Socket Module', 'notify');
-  		let serverLocation = `${routerData.protocol}//${app.config.socketHostname || routerData.hostname}`;
+  		let serverLocation = `${location.protocol}//${app.config.socketHostname || location.hostname}`;
   		if (app.config.port) {
   			serverLocation = `${serverLocation}:${app.config.port}`;
   		}
@@ -4511,15 +4455,9 @@
   		socket.on('disconnect', (reason) => {
   			console.log('disconnected');
   			if (reason === 'io server disconnect') {
-  				// the disconnection was initiated by the server, you need to reconnect manually
   				socket.connect();
   			}
-  			postMessage({
-  				data: {
-  					type: 'disconnected'
-  				},
-  				id: '_'
-  			});
+  			update('_');
   		});
   	};
   	app.events.configure = (data) => {
@@ -4532,21 +4470,21 @@
   		events,
   		events: { post }
   	} = app;
-  	self.onmessage = (evnt) => {
-  		const data = evnt.data;
-  		const requestName = data.request;
-  		const id = data.id;
-  		const body = data.data;
-  		const eventCallback = get(requestName, events);
+  	self.onmessage = async (workerEvent) => {
+  		const {
+  			request, id, data
+  		} = workerEvent.data;
+  		const eventCallback = get(request, events);
+  		console.log(request, data);
   		if (eventCallback) {
-  			const returned = eventCallback(body, {
+  			const results = await eventCallback(data, {
   				id
   			});
-  			if (returned) {
-  				post(returned, id);
+  			if (results) {
+  				post(id, results);
   			}
   		} else {
-  			console.log(`FAILED Worker api.${requestName}`);
+  			console.log(`FAILED Worker api.${request}`);
   		}
   	};
   })();
