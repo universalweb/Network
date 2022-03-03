@@ -68,9 +68,11 @@ const request = async (configObj) => {
 const socketIsReady = (data) => {
 	console.log('Socket Is Ready');
 	if (alreadySetup) {
-		update('_', {
-			type: 'connection.reconnected',
-			data: {}
+		update({
+			type: 'connection',
+			data: {
+				type: 'reconnected'
+			}
 		});
 	} else {
 		post('ready', {
@@ -150,10 +152,6 @@ const getCallback = async function(jsonData, configObj, workerInfo) {
 	}
 	return false;
 };
-/*
-This async streams required filesLoadedfrom socket
-or from cache.
-*/
 assign(app.events.socket, {
 	async get(options, workerInfo) {
 		const { data } = options;
@@ -203,9 +201,11 @@ const socketInitialize = () => {
 		if (reason === 'io server disconnect') {
 			socket.connect();
 		}
-		update('_', {
-			type: 'connection.disconnected',
-			data: {}
+		update({
+			type: 'connection',
+			data: {
+				type: 'disconnected'
+			}
 		});
 	});
 };

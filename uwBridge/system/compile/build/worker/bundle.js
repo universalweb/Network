@@ -4322,7 +4322,12 @@
   	const socketIsReady = (data) => {
   		console.log('Socket Is Ready');
   		if (alreadySetup) {
-  			update('_');
+  			update({
+  				type: 'connection',
+  				data: {
+  					type: 'reconnected'
+  				}
+  			});
   		} else {
   			post$1('ready', {
   				language: data.language
@@ -4404,10 +4409,6 @@
   		}
   		return false;
   	};
-  	/*
-  	This async streams required filesLoadedfrom socket
-  	or from cache.
-  	*/
   	assign(app.events.socket, {
   		async get(options, workerInfo) {
   			const { data } = options;
@@ -4457,7 +4458,12 @@
   			if (reason === 'io server disconnect') {
   				socket.connect();
   			}
-  			update('_');
+  			update({
+  				type: 'connection',
+  				data: {
+  					type: 'disconnected'
+  				}
+  			});
   		});
   	};
   	app.events.configure = (data) => {

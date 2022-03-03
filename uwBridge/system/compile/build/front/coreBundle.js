@@ -316,10 +316,12 @@
     	if (!Watcher.status || !json) {
     		return;
     	}
-    	const type = json.type;
+    	const {
+    		type, name: dataName
+    	} = json;
     	const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[json.name];
     	await eachAsync$2(Watcher.containerRegex, async (watcher) => {
-    		if (watcher.regex.test(type)) {
+    		if (watcher.regex.test(type) || watcher.regex.test(dataName)) {
     			return watcher(json);
     		}
     	});
