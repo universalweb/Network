@@ -17,7 +17,7 @@ module.exports = (utility) => {
 	cluster.on('exit', (worker, code, signal) => {
 		console.log(`Worker ${worker.process.pid} died with code: ${code}, and signal: ${signal}`);
 	});
-	const firstThread = cluster.fork();
+	const thread = cluster.fork();
 	// threads[workerCount] = firstThread;
 	// firstThread.on('online', () => {
 	// 	console.log();

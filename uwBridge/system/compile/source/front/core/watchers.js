@@ -31,42 +31,49 @@ export class Watcher {
 			type,
 			name: dataName
 		} = json;
-		const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[json.name];
+		const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[dataName];
 		await eachAsync(Watcher.containerRegex, async (watcher) => {
-			if (watcher.regex.test(type) || watcher.regex.test(dataName)) {
-				return watcher(json);
+			if (watcher.eventName.test(type) || watcher.eventName.test(dataName)) {
+				return watcher.eventAction(json);
 			}
 		});
 		await eachAsync(levelObject, async (watcher) => {
-			return watcher(json);
+			return watcher.eventAction(json);
 		});
 	}
-	constructor(eventName, callback) {
+	constructor(eventName, eventAction) {
 		if (isString(eventName)) {
 			if (!Watcher.containerPrimary[eventName]) {
 				Watcher.containerPrimary[eventName] = [];
 			}
-			this.container = Watcher.containerPrimary[eventName];
+			this.eventType = 'string';
 		} else if (isRegExp(eventName)) {
-			this.container = Watcher.containerRegex;
+			this.eventType = 'regex';
 		}
-		this.callback = callback.bind(this);
+		this.eventName = eventName;
+		this.eventAction = eventAction.bind(this);
 		this.start();
 	}
+	container() {
+		if (this.eventType === 'string') {
+			return Watcher.containerPrimary[this.eventName];
+		} else if (this.eventType === 'regex') {
+			return Watcher.containerRegex;
+		}
+	}
 	isWatcher = true;
-	callback;
+	eventAction;
 	id;
 	active;
-	container;
 	start() {
 		if (!hasValue(this.id)) {
-			this.id = this.container.push(this) - 1;
+			this.id = this.container().push(this) - 1;
 			this.active = true;
 		}
 	}
 	stop() {
 		if (hasValue(this.id)) {
-			drop(this.container, this.id);
+			drop(this.container(), this.id);
 			this.id = null;
 			this.active = false;
 		}
@@ -91,7 +98,4 @@ assign(app, {
 	push,
 	watch,
 	Watcher
-});
-watch('connection', (responseData) => {
-	console.log(responseData);
 });

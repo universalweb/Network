@@ -1,7 +1,5 @@
 module.exports = (utility) => {
 	const socketio = require('socket.io');
-	// const uWS = require('../uWebSockets');
-	// const { StringDecoder } = require('string_decoder');
 	const {
 		each,
 		eachObject,

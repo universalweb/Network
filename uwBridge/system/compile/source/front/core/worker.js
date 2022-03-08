@@ -29,7 +29,7 @@ export const workerRequest = async (requestName, dataArg) => {
 		return mainWorker.postMessage(requestObject);
 	}
 	const uniq = uid();
-	console.log(uniq, callbackOptional);
+	// console.log(uniq, callbackOptional);
 	requestObject.id = uniq;
 	return promise((accept) => {
 		app.events[uniq] = async function(responseData) {

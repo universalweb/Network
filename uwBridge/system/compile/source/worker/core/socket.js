@@ -69,9 +69,9 @@ const socketIsReady = (data) => {
 	console.log('Socket Is Ready');
 	if (alreadySetup) {
 		update({
-			type: 'connection',
 			data: {
-				type: 'reconnected'
+				type: 'connection',
+				status: 'reconnected'
 			}
 		});
 	} else {
@@ -202,9 +202,9 @@ const socketInitialize = () => {
 			socket.connect();
 		}
 		update({
-			type: 'connection',
 			data: {
-				type: 'disconnected'
+				type: 'connection',
+				status: 'disconnected'
 			}
 		});
 	});

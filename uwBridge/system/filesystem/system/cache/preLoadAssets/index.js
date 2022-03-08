@@ -8,6 +8,9 @@ module.exports = async (app) => {
 	} = app;
 	const resourceDir = `${initialString(config.resourceDir)}`;
 	const walk = require('walk');
+	const {
+		resolve
+	} = require('path');
 	const files = [];
 	await promise((accept) => {
 		const walker = walk.walk(resourceDir, {
@@ -15,6 +18,7 @@ module.exports = async (app) => {
 		});
 		walker.on('file', (rootPath, stat, next) => {
 			files.push(`${rootPath}/${stat.name}`);
+			console.log(`${rootPath}/${stat.name}`);
 			return next();
 		});
 		walker.on('end', () => {

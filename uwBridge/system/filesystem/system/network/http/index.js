@@ -129,7 +129,7 @@ module.exports = async (app) => {
 	}
 	const items = await shallowRequire(`${__dirname}/plugin`);
 	await eachAsync(items, async (item) => {
-		await item.module(app, configureServerMethods);
+		await item(app, configureServerMethods);
 	});
 	setupHTTP();
 };

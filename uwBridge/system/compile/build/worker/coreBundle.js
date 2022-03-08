@@ -80,9 +80,9 @@
 		console.log('Socket Is Ready');
 		if (alreadySetup) {
 			update({
-				type: 'connection',
 				data: {
-					type: 'reconnected'
+					type: 'connection',
+					status: 'reconnected'
 				}
 			});
 		} else {
@@ -216,9 +216,9 @@
 				socket.connect();
 			}
 			update({
-				type: 'connection',
 				data: {
-					type: 'disconnected'
+					type: 'connection',
+					status: 'disconnected'
 				}
 			});
 		});
@@ -245,6 +245,9 @@
 			});
 			if (results) {
 				post(id, results);
+			}
+			if (app.debug) {
+				console.log(`Worker api.${request}`);
 			}
 		} else {
 			console.log(`FAILED Worker api.${request}`);

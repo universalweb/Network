@@ -115,8 +115,7 @@ module.exports = async (app) => {
 			});
 		}
 	};
-	const dirname = config.resourceDir;
-	watch(dirname, (filepath) => {
+	watch(config.resourceDir, (filepath) => {
 		if (app.debug) {
 			console.log(filepath);
 		}

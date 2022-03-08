@@ -294,7 +294,7 @@ module.exports = {
 		'newline-before-return': 'off',
 		'newline-per-chained-call': 'error',
 		'no-array-constructor': 'error',
-		'no-bitwise': 'error',
+		'no-bitwise': 'off',
 		'no-continue': 'off',
 		'no-inline-comments': 'error',
 		'no-lonely-if': 'error',

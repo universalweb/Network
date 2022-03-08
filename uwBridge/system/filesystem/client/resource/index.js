@@ -6,6 +6,7 @@ module.exports = (app) => {
 			hasDot,
 		},
 		api,
+		config,
 		config: {
 			resourceDir,
 		},
@@ -15,11 +16,14 @@ module.exports = (app) => {
 	} = app;
 	const isValid = require('is-valid-path');
 	const fs = require('fs');
-	const path = require('path');
+	const {
+		join: pathJoin,
+		resolve,
+		normalize
+	} = require('path');
 	const truncate = require('truncate-utf8-bytes');
 	const cacheSet = cache.set;
 	const cacheGet = cache.get;
-	const pathNormalize = path.normalize;
 	const defaultStreamSettings = {
 		autoClose: true,
 		encoding: 'utf-8',
@@ -48,7 +52,9 @@ module.exports = (app) => {
 		let checksum;
 		if (cacheFile) {
 			if (cacheFile.item) {
-				// console.log('Loading fresh file', filePath);
+				if (config.debug) {
+					console.log('Loading cache file', filePath);
+				}
 				cached = cacheFile;
 			} else {
 				cached = cacheSet(filePath, cacheFile, checksumArg);
@@ -98,7 +104,7 @@ module.exports = (app) => {
 	const reservedRe = /^\.+$/;
 	const windowsReservedRe = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
 	const normalizeFilePatch = (filepath) => {
-		return truncate(pathNormalize(resourceDir + filepath)
+		return truncate(normalize(resolve(pathJoin(resourceDir, filepath)))
 			.replace(illegalRe, '')
 			.replace(controlRe, '')
 			.replace(reservedRe, '')
@@ -117,7 +123,9 @@ module.exports = (app) => {
 				onEndCallback(socket, response, index, filePath, cacheItem);
 			}
 		} else {
-			// console.log('Loading fresh file', filePath);
+			if (config.debug) {
+				console.log('Loading fresh file', filePath);
+			}
 			fs.stat(filePath, (err, stats) => {
 				fsStat(socket, response, filePath, index, err, stats);
 			});

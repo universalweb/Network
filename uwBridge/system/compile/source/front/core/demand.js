@@ -109,7 +109,7 @@ const demandTypeMethod = (type, optionsFunction) => {
 			}
 			const itemExt = getFileExtension(item);
 			const compiledFileName = (itemExt) ? item : `${item}${last(item) === '/' && 'index' || ''}.${type}`;
-			// app.log('Demand Type', type, compiledFileName);
+			app.log('Demand Type', type, compiledFileName);
 			return compiledFileName;
 		});
 		return demand(files, options);

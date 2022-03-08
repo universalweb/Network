@@ -94,7 +94,7 @@
 			return mainWorker.postMessage(requestObject);
 		}
 		const uniq = uid();
-		console.log(uniq, callbackOptional);
+		// console.log(uniq, callbackOptional);
 		requestObject.id = uniq;
 		return promise$1((accept) => {
 			app.events[uniq] = async function(responseData) {
@@ -319,42 +319,49 @@
     	const {
     		type, name: dataName
     	} = json;
-    	const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[json.name];
+    	const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[dataName];
     	await eachAsync$2(Watcher.containerRegex, async (watcher) => {
-    		if (watcher.regex.test(type) || watcher.regex.test(dataName)) {
-    			return watcher(json);
+    		if (watcher.eventName.test(type) || watcher.eventName.test(dataName)) {
+    			return watcher.eventAction(json);
     		}
     	});
     	await eachAsync$2(levelObject, async (watcher) => {
-    		return watcher(json);
+    		return watcher.eventAction(json);
     	});
     }
-    constructor(eventName, callback) {
+    constructor(eventName, eventAction) {
     	if (isString$5(eventName)) {
     		if (!Watcher.containerPrimary[eventName]) {
     			Watcher.containerPrimary[eventName] = [];
     		}
-    		this.container = Watcher.containerPrimary[eventName];
+    		this.eventType = 'string';
     	} else if (isRegExp$1(eventName)) {
-    		this.container = Watcher.containerRegex;
+    		this.eventType = 'regex';
     	}
-    	this.callback = callback.bind(this);
+    	this.eventName = eventName;
+    	this.eventAction = eventAction.bind(this);
     	this.start();
     }
+    container() {
+    	if (this.eventType === 'string') {
+    		return Watcher.containerPrimary[this.eventName];
+    	} else if (this.eventType === 'regex') {
+    		return Watcher.containerRegex;
+    	}
+    }
     isWatcher = true;
-    callback;
+    eventAction;
     id;
     active;
-    container;
     start() {
     	if (!hasValue$3(this.id)) {
-    		this.id = this.container.push(this) - 1;
+    		this.id = this.container().push(this) - 1;
     		this.active = true;
     	}
     }
     stop() {
     	if (hasValue$3(this.id)) {
-    		drop$1(this.container, this.id);
+    		drop$1(this.container(), this.id);
     		this.id = null;
     		this.active = false;
     	}
@@ -379,9 +386,6 @@
 		push,
 		watch: watch$3,
 		Watcher
-	});
-	watch$3('connection', (responseData) => {
-		console.log(responseData);
 	});
 	const {
 		utility: {
@@ -495,7 +499,7 @@
 				}
 				const itemExt = getFileExtension$1(item);
 				const compiledFileName = itemExt ? item : `${item}${(last$1(item) === '/' && 'index') || ''}.${type}`;
-				// app.log('Demand Type', type, compiledFileName);
+				app.log('Demand Type', type, compiledFileName);
 				return compiledFileName;
 			});
 			return demand$4(files, options);
