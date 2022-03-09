@@ -1,5 +1,5 @@
 const utility = require('Acid');
-const socketio = require('socket.io');
+const websocketSever = require('socket.io');
 const {
 	resolve
 } = require('path');
@@ -17,7 +17,6 @@ const {
 	each,
 	ifInvoke,
 	right,
-	assignDeep,
 	stringify,
 	isFunction,
 	hasValue,
@@ -43,6 +42,7 @@ class uwBridge {
 	scheme = {};
 	system = {};
 	serverApp = serverApp;
+	express = express;
 	createWebSocketServer() {
 		const {
 			config: {
@@ -51,7 +51,10 @@ class uwBridge {
 				}
 			}
 		} = this;
-		const socketServer = socketio(this.server);
+		const socketServer = websocketSever(this.server, {
+			transports: ['websocket']
+		});
+		this.socketServer = socketServer;
 		socketServer.use((socket, next) => {
 			const host = socket.request.headers.host;
 			console.log(host, allowedOrigins.test(host));
@@ -410,7 +413,7 @@ class uwBridge {
 			socket.destroy();
 		});
 		console.log(`Webserver Listening on ${port}`);
-		this.socketServer = this.createWebSocketServer();
+		this.createWebSocketServer();
 		console.log(`Websocket server Listening on ${port}`);
 	}
 }

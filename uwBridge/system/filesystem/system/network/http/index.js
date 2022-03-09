@@ -1,6 +1,5 @@
 module.exports = async (uwApp) => {
-	const express = require('express');
-	const vhost = require('vhost');
+	const express = uwApp.express;
 	const path = require('path');
 	const fs = require('fs');
 	const watch = require('node-watch');
@@ -12,7 +11,6 @@ module.exports = async (uwApp) => {
 		shallowRequire,
 		config,
 		utility: {
-			each,
 			mapObject,
 			eachAsync
 		}
@@ -26,13 +24,13 @@ module.exports = async (uwApp) => {
 			res.sendFile(indexLocation);
 		}
 	};
-	const serverApp = uwApp.virtualApp = express();
+	// const serverApp = uwApp.virtualApp = express();
 	// Server configuration methods used to apply settings to express
 	const configureServerMethods = {};
 	const buildRoutes = () => {
 		mapObject(config.http.routes.get, (item) => {
 			const callback = item.callback || indexPage;
-			serverApp.get(item.route, callback);
+			uwApp.serverApp.get(item.route, callback);
 		});
 	};
 	const setupHTTP = () => {
@@ -44,13 +42,13 @@ module.exports = async (uwApp) => {
       CPU lag time
       */
 		if (config.http.maxLagTime) {
-			serverApp.use(toobusy(config.http.maxLagTime));
+			uwApp.serverApp.use(toobusy(config.http.maxLagTime));
 		}
 		/*
       Rate Limit Function
       */
 		if (config.http.rateLimt) {
-			serverApp.use(rateLimit(config.http.rateLimt));
+			uwApp.serverApp.use(rateLimit(config.http.rateLimt));
 		}
 		/*
       Security Plugins must be of higher order
@@ -60,7 +58,7 @@ module.exports = async (uwApp) => {
 			if (item) {
 				const funct = configureServerMethods[key];
 				if (funct) {
-					serverApp.use(funct);
+					uwApp.serverApp.use(funct);
 				}
 			}
 		});
@@ -68,7 +66,7 @@ module.exports = async (uwApp) => {
       Max size accepted for the content-length
       */
 		if (config.http.maxContentLength) {
-			serverApp.use(contentLength.validateMax({
+			uwApp.serverApp.use(contentLength.validateMax({
 				max: config.http.maxContentLength,
 				message: 'Service is Busy',
 				status: 200,
@@ -82,20 +80,17 @@ module.exports = async (uwApp) => {
       threshold: 0
       }
       */
-		serverApp.use(compression({
+		uwApp.serverApp.use(compression({
 			threshold: 0
 		}));
 		// remove headers security fix
-		serverApp.disable('x-powered-by');
+		uwApp.serverApp.disable('x-powered-by');
 		// Setup Routing
 		buildRoutes();
 		// set static folder
-		serverApp.use(express.static(path.join(config.siteDir, 'public'), {
+		uwApp.serverApp.use(express.static(path.join(config.siteDir, 'public'), {
 			dotfiles: 'allow'
 		}));
-		each(config.http.vHost, (item) => {
-			uwApp.serverApp.use(vhost(item, serverApp));
-		});
 	};
 	const updateIndexCache = () => {
 		fs.readFile(indexLocation, {

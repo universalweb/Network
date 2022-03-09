@@ -153,7 +153,7 @@ module.exports = {
 		'no-throw-literal': 'error',
 		'no-unmodified-loop-condition': 'error',
 		'no-unused-expressions': [
-			'error',
+			'off',
 			{
 				'allowShortCircuit': true,
 				'allowTernary': true
@@ -182,7 +182,7 @@ module.exports = {
 		'no-shadow-restricted-names': 'error',
 		'no-undef': 'error',
 		'no-undef-init': 'error',
-		'no-undefined': 'off',
+		'no-undefined': 'error',
 		'no-unused-vars': 'error',
 		'no-use-before-define': 'error',
 		'callback-return': [

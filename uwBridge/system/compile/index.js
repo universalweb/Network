@@ -1,9 +1,9 @@
-const lucy = require('Acid');
+const utility = require('Acid');
 const {
 	each,
 	compactMap,
 	promise
-} = lucy;
+} = utility;
 const rollup = require('rollup').rollup;
 const { terser: minify } = require('rollup-plugin-terser');
 const format = require('prettier-eslint');
@@ -73,7 +73,7 @@ const bundle = async (folderName, { environment }) => {
 };
 const getApps = () => {
 	return promise((accept) => {
-		fs.readdir('./../../apps/client/', (err, items) => {
+		fs.readdir('./../../apps/', (err, items) => {
 			if (err) {
 				return console.log(err);
 			}
@@ -92,20 +92,21 @@ const compileApps = async () => {
 	if (apps) {
 		each(apps, (item) => {
 			console.log(`Exporting Files to ${item}.`);
-			copyFile(`./build/front/bundle.js`, `./../../apps/client/${item}/filesystem/public/Sentivate.js`);
-			copyFile(`./build/worker/bundle.js`, `./../../apps/client/${item}/filesystem/public/worker.js`);
+			copyFile(`./build/front/bundle.js`, `./../../apps/${item}/filesystem/public/main.js`);
+			copyFile(`./build/worker/bundle.js`, `./../../apps/${item}/filesystem/public/worker.js`);
 			console.log(`Exporting Files to ${item} Completed.`);
 		});
 	}
 };
 exports.build = async (options) => {
-	console.log('-----------Sentivate-----------');
+	console.log('-----------uwbridge-----------');
 	console.log('Compiling');
 	console.log(`-----------Start IMPORT Libs-----------`);
-	copyFile(`./../../../node_modules/Acid/index.js`, `./source/front/libs/Acid.js`);
-	console.log('Acid Imported');
-	copyFile(`./../../../node_modules/Lucy/index.js`, `./source/worker/libs/Lucy.js`);
-	console.log('Acid Imported');
+	copyFile(`./../../../node_modules/Acid/browser.js`, `./source/front/libs/Acid.js`);
+	console.log('Acid Browser Imported');
+	copyFile(`./../../../node_modules/Acid/index.js`, `./source/worker/libs/Acid.js`);
+	console.log('Acid Primary Imported');
+	// Replace with low level Websockets & msgPack then disable built-in compression on websockets
 	copyFile(`./../../../node_modules/socket.io/client-dist/socket.io.js`, `./source/worker/libs/socketio.js`);
 	console.log('Socketio Imported');
 	copyFile(`./../../../node_modules/ractive/ractive.min.js`, `./source/front/libs/ractive.js`);
@@ -123,7 +124,7 @@ exports.build = async (options) => {
 		console.log('LIVE CHANGE DETECTED COMPILE FRONT');
 		each(apps, (item) => {
 			console.log(`Exporting Files to ${item}.`);
-			copyFile(`./build/front/bundle.js`, `./../../apps/client/${item}/filesystem/public/Sentivate.js`);
+			copyFile(`./build/front/bundle.js`, `./../../apps/${item}/filesystem/public/uwbridge.js`);
 			console.log(`Exporting Files to ${item} Completed.`);
 		});
 	});
@@ -134,11 +135,11 @@ exports.build = async (options) => {
 		console.log('LIVE CHANGE DETECTED COMPILE worker');
 		each(apps, (item) => {
 			console.log(`Exporting Files to ${item}.`);
-			copyFile(`./build/worker/bundle.js`, `./../../apps/client/${item}/filesystem/public/worker.js`);
+			copyFile(`./build/worker/bundle.js`, `./../../apps/${item}/filesystem/public/worker.js`);
 			console.log(`Exporting Files to ${item} Completed.`);
 		});
 		await bundle('worker', options);
 	});
 	console.log('Watching Worker');
-	console.log('-----------Sentivate Compiled-----------');
+	console.log('-----------uwbridge Compiled-----------');
 };

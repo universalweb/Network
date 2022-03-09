@@ -7,31 +7,16 @@
 			"path": ".."
 		},
 		{
-			"path": "apps/client/akerna"
-		},
-		{
 			"path": "system/setup"
 		},
 		{
-			"path": "apps/client/akerna/filesystem/asset"
-		},
-		{
-			"path": "apps/client/akerna/filesystem/public"
-		},
-		{
-			"path": "apps/client/akerna/filesystem/asset/component"
-		},
-		{
-			"path": "apps/client/akerna/filesystem/asset/routes"
-		},
-		{
-			"path": "apps/client/akerna/filesystem/asset/models"
-		},
-		{
-			"path": "apps/client/akerna/api/client"
-		},
-		{
 			"path": "system/compile/source"
+		},
+		{
+			"path": "apps/akerna"
+		},
+		{
+			"path": "apps/akerna/filesystem/asset"
 		}
 	],
 	"settings": {
