@@ -1,8 +1,6 @@
 const WebTorrent = require('webtorrent');
 const client = new WebTorrent();
-const {
-	promise
-} = require('Lucy');
+const { promise } = require('Acid');
 async function download(magnetURI, options = {}) {
 	return promise((accept) => {
 		client.add(magnetURI, options, accept);

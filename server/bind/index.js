@@ -1,6 +1,6 @@
 const {
 	promise
-} = require('Lucy');
+} = require('Acid');
 module.exports = async (server) => {
 	const {
 		server: rawServer,

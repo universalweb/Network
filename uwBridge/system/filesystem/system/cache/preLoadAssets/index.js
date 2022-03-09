@@ -1,11 +1,11 @@
-module.exports = async (app) => {
+module.exports = async (uwApp) => {
 	const {
 		config,
 		utility: {
 			promise,
 			initialString
 		}
-	} = app;
+	} = uwApp;
 	const resourceDir = `${initialString(config.resourceDir)}`;
 	const walk = require('walk');
 	const {
@@ -17,8 +17,8 @@ module.exports = async (app) => {
 			followLinks: false
 		});
 		walker.on('file', (rootPath, stat, next) => {
-			files.push(`${rootPath}/${stat.name}`);
-			console.log(`${rootPath}/${stat.name}`);
+			files.push(resolve(rootPath, `/${stat.name}`));
+			console.log(resolve(rootPath, `/${stat.name}`));
 			return next();
 		});
 		walker.on('end', () => {

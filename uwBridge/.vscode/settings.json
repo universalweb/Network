@@ -51,6 +51,7 @@
         "shellscript",
         "sql",
         "ssh_config",
+        "socketio",
         "toml",
         "tsv",
         "vb",

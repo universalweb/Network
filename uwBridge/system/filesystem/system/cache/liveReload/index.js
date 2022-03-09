@@ -1,8 +1,8 @@
-module.exports = (app) => {
+module.exports = (uwApp) => {
 	const {
 		config,
 		sendAll,
-	} = app;
+	} = uwApp;
 	const resourceDir = config.resourceDir;
 	const regexReplace = /\//g;
 	const assetUpdate = (filepath) => {

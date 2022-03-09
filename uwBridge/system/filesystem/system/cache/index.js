@@ -1,11 +1,12 @@
-module.exports = async (app) => {
+module.exports = async (uwApp) => {
 	const fs = require('fs');
 	const cryptoRequire = require('crypto');
-	const liveReload = require('./liveReload')(app);
+	const liveReload = require('./liveReload')(uwApp);
 	const {
 		config,
 		system,
 		client,
+		watch,
 		utility: {
 			isArray,
 			isString,
@@ -13,9 +14,8 @@ module.exports = async (app) => {
 			assign,
 			eachArray,
 			last,
-			watch,
 		}
-	} = app;
+	} = uwApp;
 	const hashObject = {};
 	const defaultStreamSettings = {
 		autoClose: true,
@@ -75,7 +75,7 @@ module.exports = async (app) => {
 	};
 	const sendClientUpdate = (filepath) => {
 		if (client.cache) {
-			if (app.debug) {
+			if (uwApp.debug) {
 				console.log('SEND NEW VERSION OF FILE');
 			}
 			ifInvoke(client.cache.update, filepath);
@@ -108,7 +108,7 @@ module.exports = async (app) => {
 					console.log(err);
 					return;
 				}
-				if (app.debug) {
+				if (uwApp.debug) {
 					console.log(stats.ctimeMs, filepath, '\nFile found create stream \n\n');
 				}
 				createStream(filepath, stats.ctimeMs.toString(), updateMode);
@@ -116,7 +116,7 @@ module.exports = async (app) => {
 		}
 	};
 	watch(config.resourceDir, (filepath) => {
-		if (app.debug) {
+		if (uwApp.debug) {
 			console.log(filepath);
 		}
 		checkIfFileExists(filepath, true);
@@ -127,7 +127,7 @@ module.exports = async (app) => {
 		loadFile: checkIfFileExists,
 		set: cacheSet,
 	});
-	const files = await require('./preLoadAssets')(app);
+	const files = await require('./preLoadAssets')(uwApp);
 	eachArray(files, (item) => {
 		checkIfFileExists(item, false);
 	});

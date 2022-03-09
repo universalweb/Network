@@ -1,8 +1,10 @@
-module.exports = async (app, extend) => {
+module.exports = async (uwApp, extend) => {
 	const {
 		config,
-		utility: { isFunction }
-	} = app;
+		utility: {
+			isFunction
+		}
+	} = uwApp;
 	const contentSecurityPolicyCache = config.http.plugins.contentSecurityPolicy;
 	const isFunct = isFunction(contentSecurityPolicyCache);
 	const contentSecurityPolicy = (req, res, next) => {

@@ -47,10 +47,9 @@ class Router {
 		compile: []
 	};
 	on(eventNames, callback) {
-		const thisRouter = this;
 		if (isPlainObject(eventNames) && !callback) {
 			return each(eventNames, (eventCallback, eventName) => {
-				thisRouter.on(eventName, eventCallback);
+				this.on(eventName, eventCallback);
 			});
 		}
 		return this.events[eventNames].push(callback);

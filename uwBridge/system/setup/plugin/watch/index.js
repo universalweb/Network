@@ -1,9 +1,9 @@
-module.exports = (utility) => {
+module.exports = (uwApp) => {
 	const nodeWatch = require('node-watch');
 	const {
 		isString
-	} = utility;
-	utility.watch = (item, callback) => {
+	} = uwApp.utility;
+	uwApp.watch = (item, callback) => {
 		return nodeWatch(item, {
 			recursive: true
 		}, (evt, filename) => {

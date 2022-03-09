@@ -10,7 +10,7 @@ module.exports = (state) => {
 	const {
 		promise,
 		jsonParse
-	} = require('Lucy');
+	} = require('Acid');
 	const {
 		normalize
 	} = require('path');

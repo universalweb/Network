@@ -1,8 +1,6 @@
 module.exports = async (app) => {
 	const {
-		utility: {
-			watch,
-		},
+		watch,
 		config
 	} = app;
 	require('./api')(app);

@@ -1,9 +1,9 @@
-module.exports = (utility) => {
+module.exports = (uwApp) => {
 	const {
 		compactMap,
 		mapAsync,
 		promise,
-	} = utility;
+	} = uwApp.utility;
 	const dir = require('node-dir');
 	const {
 		access: fileAccess
@@ -56,7 +56,7 @@ module.exports = (utility) => {
 		});
 		return imported;
 	};
-	utility.shallow = shallow;
-	utility.shallowRequire = shallowRequire;
-	utility.fileExists = fileExists;
+	uwApp.shallow = shallow;
+	uwApp.shallowRequire = shallowRequire;
+	uwApp.fileExists = fileExists;
 };

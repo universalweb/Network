@@ -1,8 +1,8 @@
-module.exports = async (app) => {
+module.exports = async (uwApp) => {
 	const cryptoLib = require('crypto');
 	const {
 		system,
-	} = app;
+	} = uwApp;
 	const checksum = (str, algorithm, encoding) => {
 		return cryptoLib.createHash(algorithm || 'md5')
 			.update(str, 'utf8')

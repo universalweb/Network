@@ -1,13 +1,11 @@
-const lucy = require('Lucy');
+const lucy = require('Acid');
 const {
 	each,
 	compactMap,
 	promise
 } = lucy;
 const rollup = require('rollup').rollup;
-const {
-	terser: minify
-} = require('rollup-plugin-terser');
+const { terser: minify } = require('rollup-plugin-terser');
 const format = require('prettier-eslint');
 const fs = require('fs');
 const watch = require('node-watch');
@@ -27,9 +25,7 @@ const beautify = (filePath) => {
 const copyFile = (start, end) => {
 	fs.writeFileSync(end, fs.readFileSync(start).toString(), 'utf8');
 };
-const bundle = async (folderName, {
-	environment
-}) => {
+const bundle = async (folderName, { environment }) => {
 	console.log(`-----------${folderName}-----------`);
 	console.log(`Bundle Start.`);
 	if (environment === 'production') {

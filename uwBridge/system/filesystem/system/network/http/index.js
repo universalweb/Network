@@ -1,4 +1,4 @@
-module.exports = async (app) => {
+module.exports = async (uwApp) => {
 	const express = require('express');
 	const vhost = require('vhost');
 	const path = require('path');
@@ -9,20 +9,14 @@ module.exports = async (app) => {
 	const toobusy = require('express-toobusy');
 	const rateLimit = require('express-rate-limit');
 	const {
-		service: {
-			http,
-		},
-		system: {
-			network,
-		},
+		shallowRequire,
 		config,
 		utility: {
-			shallowRequire,
 			each,
 			mapObject,
 			eachAsync
 		}
-	} = app;
+	} = uwApp;
 	let indexFileCached;
 	const indexLocation = config.http.indexLocation;
 	const indexPage = function(req, res) {
@@ -32,7 +26,7 @@ module.exports = async (app) => {
 			res.sendFile(indexLocation);
 		}
 	};
-	const serverApp = network.app = express();
+	const serverApp = uwApp.virtualApp = express();
 	// Server configuration methods used to apply settings to express
 	const configureServerMethods = {};
 	const buildRoutes = () => {
@@ -99,15 +93,9 @@ module.exports = async (app) => {
 		serverApp.use(express.static(path.join(config.siteDir, 'public'), {
 			dotfiles: 'allow'
 		}));
-		if (config.http.port === 443) {
-			each(config.http.vHost, (item) => {
-				http.appSecure.use(vhost(item, serverApp));
-			});
-		} else {
-			each(config.http.vHost, (item) => {
-				http.app.use(vhost(item, serverApp));
-			});
-		}
+		each(config.http.vHost, (item) => {
+			uwApp.serverApp.use(vhost(item, serverApp));
+		});
 	};
 	const updateIndexCache = () => {
 		fs.readFile(indexLocation, {
@@ -129,7 +117,7 @@ module.exports = async (app) => {
 	}
 	const items = await shallowRequire(`${__dirname}/plugin`);
 	await eachAsync(items, async (item) => {
-		await item(app, configureServerMethods);
+		await item(uwApp, configureServerMethods);
 	});
 	setupHTTP();
 };

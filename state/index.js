@@ -1,6 +1,6 @@
 module.exports = (type, state = {}) => {
 	state.type = type;
-	state.utility = require('Lucy');
+	state.utility = require('Acid');
 	state.getUtil = (names) => {
 		names.forEach((item) => {
 			require(`../utilities/${item}/`)(state);

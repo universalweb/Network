@@ -1,7 +1,7 @@
-module.exports = async (app, extend) => {
+module.exports = async (uwApp, extend) => {
 	const {
 		config,
-	} = app;
+	} = uwApp;
 	const allowedCORSDomainsCache = config.http.plugins.allowedCORSDomains;
 	const allowedCORSDomains = (req, res, next) => {
 		res.header('Access-Control-Allow-Origin', allowedCORSDomainsCache);

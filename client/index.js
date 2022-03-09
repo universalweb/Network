@@ -8,7 +8,7 @@ const {
 	encode,
 	decode
 } = require('msgpackr');
-const utility = require('Lucy');
+const utility = require('Acid');
 const connections = {};
 const {
 	omit,
