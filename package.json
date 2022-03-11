@@ -59,6 +59,7 @@
     "gulp-beautify": "^3.0.0",
     "gulp-concat": "^2.6.1",
     "gulp-notify": "^4.0.0",
+    "nodemon": "^2.0.15",
     "ractive": "^1.4.0",
     "rollup": "^2.70.0",
     "rollup-plugin-terser": "^7.0.2",
