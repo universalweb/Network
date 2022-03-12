@@ -1,5 +1,5 @@
 {
-	"extends": "eslint:recommended",
+	"extends": ["eslint:recommended", "plugin:json/recommended"],
 	"env": {
 		"browser": true,
 		"node": true,
@@ -17,8 +17,12 @@
 		"sourceType": "script",
 		"ecmaVersion": "latest"
 	},
+	"plugins": [
+        "json"
+    ],
 	"ignorePatterns": ["**/*.min.js", "bundle.js", "Sentivate.js", "**/lib/*"],
 	"rules": {
+		"json/undefined": "error",
 		"no-setter-return": "error",
 		"no-dupe-else-if": "error",
 		"no-import-assign": "off",
@@ -95,10 +99,6 @@
 			"property"
 		],
 		"dot-notation": "error",
-		"eqeqeq": [
-			"error",
-			"smart"
-		],
 		"guard-for-in": "error",
 		"no-alert": "error",
 		"no-caller": "error",

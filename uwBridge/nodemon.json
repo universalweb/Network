@@ -1,8 +1,10 @@
 {
-    "ignore": ["node_modules/", "./apps/client/**/filesystem/**", "./system/compile/**", "**.json", "**.css", "**.html"],
-    "watch": ["apps/client/akerna/api/**", "system/filesystem/**","system/setup/**"],
-    "delay": 1000,
+    "ignore": ["node_modules/", "./apps/**/filesystem/**", "./system/compile/**", "**.json", "**.css", "**.html"],
+    "watch": ["./apps/**/api/**", "./system/filesystem/**","./system/setup/**", "./index.js",  "./system/plugin/**/*.js", "./system/client/*.js"],
+    "ext": "js, json, ts, proto",
+    "verbose": true,
+    "delay": 500,
     "execMap": {
-        "js": "node index.js"
+        "js": "node ./apps/akerna/index.js"
     }
 }

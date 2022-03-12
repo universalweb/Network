@@ -72,7 +72,7 @@
 			hasValue: hasValue$5, promise: promise$1, uid, isString: isString$7
 		}
 	} = app;
-	const mainWorker = new Worker('/worker.js');
+	const mainWorker = new Worker('/assets/worker.js');
 	const workerRequest = async (requestName, dataArg) => {
 		console.log(requestName, dataArg);
 		let compiledRequest;
@@ -94,7 +94,7 @@
 			return mainWorker.postMessage(requestObject);
 		}
 		const uniq = uid();
-		// console.log(uniq, callbackOptional);
+		console.log(uniq);
 		requestObject.id = uniq;
 		return promise$1((accept) => {
 			app.events[uniq] = async function(responseData) {
@@ -255,7 +255,7 @@
 				}
 			},
 			data: {
-				data: {
+				body: {
 					cs: map$2(configData, checksumReturn),
 					files: configData
 				}
@@ -267,17 +267,16 @@
 		fetchFile
 	});
 	const { assign: assign$6 } = app.utility;
-	const request = async (requestName, data) => {
-		const requestPackage = data ?
+	const request = async (requestName, body) => {
+		const requestPackage = body ?
 			{
-				data,
+				body,
 				request: requestName
 			} :
 			requestName;
 		const workerPackage = {
 			data: {
-				data: requestPackage,
-				name: 'api'
+				data: requestPackage
 			},
 			request: 'socket.request'
 		};
@@ -317,17 +316,19 @@
     		return;
     	}
     	const {
-    		type, name: dataName
+    		type, path
     	} = json;
-    	const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[dataName];
+    	const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[path];
     	await eachAsync$2(Watcher.containerRegex, async (watcher) => {
-    		if (watcher.eventName.test(type) || watcher.eventName.test(dataName)) {
+    		if (watcher.eventName.test(type) || watcher.eventName.test(path)) {
     			return watcher.eventAction(json);
     		}
     	});
-    	await eachAsync$2(levelObject, async (watcher) => {
-    		return watcher.eventAction(json);
-    	});
+    	if (levelObject) {
+    		await eachAsync$2(levelObject, async (watcher) => {
+    			return watcher.eventAction(json);
+    		});
+    	}
     }
     constructor(eventName, eventAction) {
     	if (isString$5(eventName)) {
@@ -370,16 +371,16 @@
 	function watch$3(...args) {
 		return new Watcher(...args);
 	}
-	const push = (requestName, data) => {
+	const push = (requestName, body) => {
 		return request({
-			data,
+			body,
 			id: '_',
 			request: requestName
 		});
 	};
 	assign$5(app.events, {
 		_(json) {
-			return Watcher.update(json.data);
+			return Watcher.update(json.body);
 		}
 	});
 	assign$5(app, {

@@ -1,12 +1,13 @@
 module.exports = (uwApp) => {
 	const {
-		config,
-		sendAll,
+		send,
+		config: {
+			resourceDir
+		}
 	} = uwApp;
-	const resourceDir = config.resourceDir;
 	const regexReplace = /\//g;
 	const assetUpdate = (filepath) => {
-		sendAll({
+		send({
 			name: filepath.replace(resourceDir, ''),
 			type: filepath.replace(resourceDir, '')
 				.replace(regexReplace, '.'),

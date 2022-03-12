@@ -30,7 +30,7 @@ module.exports = (app) => {
 	};
 	const sendChunks = (socket, response, cached, index) => {
 		eachArray(cached, async (item) => {
-			response.data = {
+			response.body = {
 				file: item,
 				key: index,
 			};
@@ -41,7 +41,7 @@ module.exports = (app) => {
 		if (cached) {
 			sendChunks(socket, response, cached, index);
 		}
-		response.data = {
+		response.body = {
 			cs: checksum,
 			key: index,
 		};
@@ -79,7 +79,7 @@ module.exports = (app) => {
 		});
 	};
 	const sendFalse = (socket, response, index) => {
-		response.data = {
+		response.body = {
 			file: false,
 			key: index,
 		};
@@ -93,7 +93,7 @@ module.exports = (app) => {
 		}
 	};
 	const sendValidChecksum = async (socket, response, index) => {
-		response.data = {
+		response.body = {
 			cache: true,
 			key: index,
 		};

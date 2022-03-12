@@ -17,4 +17,5 @@ const app = {
 		socket: {}
 	}
 };
+console.log(app.$);
 export default app;

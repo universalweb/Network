@@ -7,7 +7,7 @@ const {
 		isString
 	}
 } = app;
-export const mainWorker = new Worker('/worker.js');
+export const mainWorker = new Worker('/assets/worker.js');
 export const workerRequest = async (requestName, dataArg) => {
 	console.log(requestName, dataArg);
 	let compiledRequest;
@@ -29,7 +29,7 @@ export const workerRequest = async (requestName, dataArg) => {
 		return mainWorker.postMessage(requestObject);
 	}
 	const uniq = uid();
-	// console.log(uniq, callbackOptional);
+	console.log(uniq);
 	requestObject.id = uniq;
 	return promise((accept) => {
 		app.events[uniq] = async function(responseData) {

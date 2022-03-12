@@ -92,23 +92,20 @@ const compileApps = async () => {
 	if (apps) {
 		each(apps, (item) => {
 			console.log(`Exporting Files to ${item}.`);
-			copyFile(`./build/front/bundle.js`, `./../../apps/${item}/filesystem/public/main.js`);
-			copyFile(`./build/worker/bundle.js`, `./../../apps/${item}/filesystem/public/worker.js`);
+			copyFile(`./build/front/bundle.js`, `./../../apps/${item}/filesystem/public/assets/main.js`);
+			copyFile(`./build/worker/bundle.js`, `./../../apps/${item}/filesystem/public/assets/worker.js`);
 			console.log(`Exporting Files to ${item} Completed.`);
 		});
 	}
 };
 exports.build = async (options) => {
-	console.log('-----------uwbridge-----------');
+	console.log('----------- uwbridge -----------');
 	console.log('Compiling');
 	console.log(`-----------Start IMPORT Libs-----------`);
 	copyFile(`./../../../node_modules/Acid/browser.js`, `./source/front/libs/Acid.js`);
 	console.log('Acid Browser Imported');
 	copyFile(`./../../../node_modules/Acid/index.js`, `./source/worker/libs/Acid.js`);
 	console.log('Acid Primary Imported');
-	// Replace with low level Websockets & msgPack then disable built-in compression on websockets
-	copyFile(`./../../../node_modules/socket.io/client-dist/socket.io.js`, `./source/worker/libs/socketio.js`);
-	console.log('Socketio Imported');
 	copyFile(`./../../../node_modules/ractive/ractive.min.js`, `./source/front/libs/ractive.js`);
 	console.log('ractive Imported');
 	await bundle('front', options);
@@ -124,7 +121,7 @@ exports.build = async (options) => {
 		console.log('LIVE CHANGE DETECTED COMPILE FRONT');
 		each(apps, (item) => {
 			console.log(`Exporting Files to ${item}.`);
-			copyFile(`./build/front/bundle.js`, `./../../apps/${item}/filesystem/public/uwbridge.js`);
+			copyFile(`./build/front/bundle.js`, `./../../apps/${item}/filesystem/public/assets/main.js`);
 			console.log(`Exporting Files to ${item} Completed.`);
 		});
 	});
@@ -135,7 +132,7 @@ exports.build = async (options) => {
 		console.log('LIVE CHANGE DETECTED COMPILE worker');
 		each(apps, (item) => {
 			console.log(`Exporting Files to ${item}.`);
-			copyFile(`./build/worker/bundle.js`, `./../../apps/${item}/filesystem/public/worker.js`);
+			copyFile(`./build/worker/bundle.js`, `./../../apps/${item}/filesystem/public/assets/worker.js`);
 			console.log(`Exporting Files to ${item} Completed.`);
 		});
 		await bundle('worker', options);

@@ -1,4 +1,3 @@
 import './pre';
-import './Lucy';
-import './socketio';
+import './Acid';
 import '../../../build/worker/coreBundle';

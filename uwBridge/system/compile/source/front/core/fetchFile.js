@@ -138,7 +138,7 @@ export const fetchFile = async (config) => {
 			}
 		},
 		data: {
-			data: {
+			body: {
 				cs: map(configData, checksumReturn),
 				files: configData,
 			},

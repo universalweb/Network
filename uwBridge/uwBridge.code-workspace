@@ -7,9 +7,6 @@
 			"path": ".."
 		},
 		{
-			"path": "system/setup"
-		},
-		{
 			"path": "system/compile/source"
 		},
 		{

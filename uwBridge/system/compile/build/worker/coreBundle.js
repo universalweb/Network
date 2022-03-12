@@ -18,81 +18,20 @@
 			socket: {}
 		}
 	};
+	console.log(app.$);
 	const {
 		config,
 		utility: {
-			assign, uid, isFileJS, isFileJSON, isFileCSS, initial, map, promise
+			assign, uid, isFileJS, isFileJSON, isFileCSS, initial, map, promise, construct, isPlainObject, isString, stringify, jsonParse
 		},
 		events: { post: post$1 }
 	} = app;
-	let socket;
-	let alreadySetup;
 	const shouldNotUpgrade = /(^js\/lib\/)|(\.min\.js)/;
 	const importRegexGlobal = /\bimport\b([^:;=]*?){([^;]*?)}(\s\bfrom\b).*(('|"|`).*('|"|`));$/gm;
 	const importSingleRegexGlobal = /\bimport\b([^:;={}]*?)([^;{}]*?)(\s\bfrom\b).*(('|"|`).*('|"|`));$/gm;
 	const importEntire = /\bimport\b\s(('|"|`).*('|"|`));$/gm;
 	const importDynamic = /{([^;]*?)}\s=\simport\((('|"|`).*('|"|`))\);$/gm;
 	const slashString = '/';
-	const update = function(json) {
-		post$1('_', json);
-	};
-	const callbacks = {
-		update
-	};
-	const apiClient = function(data) {
-		if (!data.id) {
-			return update(data);
-		}
-		const callback = callbacks[data.id];
-		if (callback) {
-			return callback(data);
-		}
-	};
-	// emit function with synthetic callback system
-	const request = async (configObj) => {
-		const results = await promise((accept) => {
-			const {
-				data, callback
-			} = configObj;
-			if (data.id) {
-				data.id = null;
-			} else {
-				const uuid = uid().toString();
-				data.id = uuid;
-				callbacks[uuid] = async function(requestData) {
-					if (callback) {
-						const returned = await callback(requestData.data);
-						if (returned) {
-							callbacks[uuid] = null;
-							uid.free(uuid);
-							accept(returned);
-						}
-					} else {
-						accept(requestData.data);
-					}
-				};
-			}
-			socket.emit('api', data);
-		});
-		return results;
-	};
-	const socketIsReady = (data) => {
-		console.log('Socket Is Ready');
-		if (alreadySetup) {
-			update({
-				data: {
-					type: 'connection',
-					status: 'reconnected'
-				}
-			});
-		} else {
-			post$1('ready', {
-				language: data.language
-			});
-			alreadySetup = 1;
-			console.log('connected');
-		}
-	};
 	const replaceImports = function(file) {
 		let compiled = file;
 		compiled = compiled.replace(importRegexGlobal, 'const {$2} = await appGlobal.demandJs($4);');
@@ -101,11 +40,12 @@
 		compiled = compiled.replace(importDynamic, '{$1} = await appGlobal.demandJs($2);');
 		return compiled;
 	};
-	const getCallback = async function(jsonData, configObj, workerInfo) {
-		const item = jsonData.file;
-		const checksum = jsonData.cs;
-		const cacheCheck = jsonData.cache;
-		const key = jsonData.key;
+	const getCallback = async function(response, configObj, workerInfo) {
+		const { body } = response;
+		const item = body.file;
+		const checksum = body.cs;
+		const cacheCheck = body.cache;
+		const key = body.key;
 		const fileList = configObj.fileList;
 		const filename = fileList.files[key];
 		const completedFiles = configObj.completedFiles;
@@ -166,67 +106,161 @@
 		}
 		return false;
 	};
+	class client {
+		update(json) {
+			post$1('_', json);
+		}
+    callbacks = {
+    	update(json) {
+    		return this.update(json);
+    	}
+    };
+    status = 0;
+    ready() {
+    	console.log('Socket Is Ready');
+    	if (this.status) {
+    		this.update({
+    			data: {
+    				type: 'connection',
+    				status: 'reconnected'
+    			}
+    		});
+    	} else {
+    		post$1('ready', {
+    			type: 'connection',
+    			status: 'connected'
+    		});
+    		this.status = 1;
+    		console.log('connected');
+    	}
+    }
+    process(response) {
+    	const compiledResponse = jsonParse(response);
+    	console.log(compiledResponse);
+    	if (!compiledResponse.id) {
+    		return this.update(compiledResponse);
+    	}
+    	const callback = this.callbacks[compiledResponse.id];
+    	if (callback) {
+    		return callback(compiledResponse);
+    	}
+    }
+    connect() {
+    	this.socket = construct(WebSocket, [this.hostDomain]);
+    	this.socket.addEventListener('open', () => {
+    		this.ready();
+    	});
+    	// Listen for messages
+    	this.socket.addEventListener('message', (socketEvent) => {
+    		console.log('Message from server ', socketEvent.data);
+    		this.process(socketEvent.data);
+    	});
+    	this.socket.addEventListener('disconnect', (reason) => {
+    		console.log('disconnected');
+    		if (reason === 'io server disconnect') {
+    			this.connect();
+    		}
+    		this.update({
+    			data: {
+    				type: 'connection',
+    				status: 'disconnected'
+    			}
+    		});
+    	});
+    	this.socket.addEventListener('close', (reason) => {
+    		console.log('disconnected');
+    		if (reason === 'io server disconnect') {
+    			this.socket.connect();
+    		}
+    		this.update({
+    			data: {
+    				type: 'connection',
+    				status: 'closed'
+    			}
+    		});
+    	});
+    }
+    send(data) {
+    	if (isPlainObject(data)) {
+    		this.socket.send(stringify(data));
+    	} else if (isString(data)) {
+    		this.socket.send(data);
+    	} else {
+    		this.socket.send(data);
+    	}
+    }
+    async request(configObj) {
+    	const results = await promise((accept) => {
+    		const {
+    			data, callback
+    		} = configObj;
+    		if (data.id) {
+    			data.id = null;
+    		} else {
+    			const uuid = uid().toString();
+    			data.id = uuid;
+    			this.callbacks[uuid] = async (requestData) => {
+    				if (callback) {
+    					const returned = await callback(requestData);
+    					if (returned) {
+    						this.callbacks[uuid] = null;
+    						uid.free(uuid);
+    						accept(returned);
+    					}
+    				} else {
+    					accept(requestData.data);
+    				}
+    			};
+    		}
+    		this.send(data);
+    	});
+    	return results;
+    }
+    constructor() {
+    	console.log('Worker Socket Module', 'notify');
+    	this.hostDomain = `${app.config.socketHostname || location.hostname}`;
+    	if (app.config.port) {
+    		this.hostDomain = `${this.hostDomain}:${app.config.port}`;
+    	}
+    	console.log(this.hostDomain);
+    	this.connect();
+    }
+	}
+	let socketObject;
 	assign(app.events.socket, {
 		async get(options, workerInfo) {
-			const { data } = options;
-			const fileList = data.files;
+			const { body } = options;
+			const fileList = body.files;
 			const configObj = {
 				checksum: [],
 				completedFiles: map(fileList, () => {
 					return '';
 				}),
-				fileList: data,
+				fileList: body,
 				fileListLength: fileList.length,
 				filesLoaded: 0,
 				progress: options.progress
 			};
-			const body = {
+			const requestConfig = {
 				async callback(json) {
 					return getCallback(json, configObj, workerInfo);
 				},
 				data: {
 					request: 'file.get',
-					data
+					body
 				}
 			};
-			const results = await request(body);
+			const results = await socketObject.request(requestConfig);
 			post$1(workerInfo.id, results);
 		},
-		request
-	});
-	const socketInitialize = () => {
-		console.log('Worker Socket Module', 'notify');
-		let serverLocation = `${location.protocol}//${app.config.socketHostname || location.hostname}`;
-		if (app.config.port) {
-			serverLocation = `${serverLocation}:${app.config.port}`;
+		request(data) {
+			socketObject.request(data);
 		}
-		socket = self.io.connect(serverLocation, {
-			transports: ['websocket'],
-			secure: true
-		});
-		// this listens for client API calls
-		socket.on('api', apiClient);
-		socket.on('ready', socketIsReady);
-		socket.on('connect', () => {
-			socket.emit('configure', app.config);
-		});
-		socket.on('disconnect', (reason) => {
-			console.log('disconnected');
-			if (reason === 'io server disconnect') {
-				socket.connect();
-			}
-			update({
-				data: {
-					type: 'connection',
-					status: 'disconnected'
-				}
-			});
-		});
-	};
+	});
 	app.events.configure = (data) => {
 		assign(config, data);
 		console.log('STARTING');
-		socketInitialize();
+		socketObject = construct(client, []);
 	};
 	const {
 		utility: { get },

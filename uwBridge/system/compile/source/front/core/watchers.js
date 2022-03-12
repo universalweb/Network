@@ -29,17 +29,19 @@ export class Watcher {
 		}
 		const {
 			type,
-			name: dataName
+			path
 		} = json;
-		const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[dataName];
+		const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[path];
 		await eachAsync(Watcher.containerRegex, async (watcher) => {
-			if (watcher.eventName.test(type) || watcher.eventName.test(dataName)) {
+			if (watcher.eventName.test(type) || watcher.eventName.test(path)) {
 				return watcher.eventAction(json);
 			}
 		});
-		await eachAsync(levelObject, async (watcher) => {
-			return watcher.eventAction(json);
-		});
+		if (levelObject) {
+			await eachAsync(levelObject, async (watcher) => {
+				return watcher.eventAction(json);
+			});
+		}
 	}
 	constructor(eventName, eventAction) {
 		if (isString(eventName)) {
@@ -82,16 +84,16 @@ export class Watcher {
 export function watch(...args) {
 	return new Watcher(...args);
 }
-export const push = (requestName, data) => {
+export const push = (requestName, body) => {
 	return request({
-		data,
+		body,
 		id: '_',
 		request: requestName,
 	});
 };
 assign(app.events, {
 	_(json) {
-		return Watcher.update(json.data);
+		return Watcher.update(json.body);
 	}
 });
 assign(app, {
