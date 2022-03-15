@@ -85,10 +85,11 @@ export class Watcher {
 export function watch(...args) {
 	return new Watcher(...args);
 }
+const pushID = '_';
 export const push = (task, body) => {
 	return request({
 		body,
-		id: '_',
+		id: pushID,
 		task,
 	});
 };

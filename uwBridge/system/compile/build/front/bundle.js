@@ -385,10 +385,11 @@
 		function watch$3(...args) {
 			return new Watcher(...args);
 		}
+		const pushID = '_';
 		const push = (task, body) => {
 			return request({
 				body,
-				id: '_',
+				id: pushID,
 				task
 			});
 		};
