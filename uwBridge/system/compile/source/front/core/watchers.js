@@ -22,24 +22,25 @@ export class Watcher {
 	static stop() {
 		Watcher.status = false;
 	}
-	static async update(json) {
-		console.log(json);
-		if (!Watcher.status || !json) {
+	static async update(pushUpdate) {
+		console.log(pushUpdate);
+		const { body } = pushUpdate;
+		if (!Watcher.status || !body) {
 			return;
 		}
 		const {
 			type,
 			path
-		} = json;
+		} = body;
 		const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[path];
 		await eachAsync(Watcher.containerRegex, async (watcher) => {
 			if (watcher.eventName.test(type) || watcher.eventName.test(path)) {
-				return watcher.eventAction(json);
+				return watcher.eventAction(body);
 			}
 		});
 		if (levelObject) {
 			await eachAsync(levelObject, async (watcher) => {
-				return watcher.eventAction(json);
+				return watcher.eventAction(body);
 			});
 		}
 	}
@@ -92,8 +93,8 @@ export const push = (requestName, body) => {
 	});
 };
 assign(app.events, {
-	_(json) {
-		return Watcher.update(json.body);
+	_(pushUpdate) {
+		return Watcher.update(pushUpdate);
 	}
 });
 assign(app, {

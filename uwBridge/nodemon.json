@@ -1,7 +1,7 @@
 {
-    "ignore": ["node_modules/", "./apps/**/filesystem/**", "./system/compile/**", "**.json", "**.css", "**.html"],
-    "watch": ["./apps/**/api/**", "./system/filesystem/**","./system/setup/**", "./index.js",  "./system/plugin/**/*.js", "./system/client/*.js"],
-    "ext": "js, json, ts, proto",
+  "ignore": ["node_modules/", "./apps/**/filesystem/**", "./system/compile/**", "**.json", "**.css", "**.html"],
+  "watch": ["./api/**", "../system/filesystem/**","../system/setup/**", "./index.js",  "../system/plugin/**/*.js", "../system/client/*.js"],
+    "ext": "js, json, ts",
     "verbose": true,
     "delay": 500,
     "execMap": {

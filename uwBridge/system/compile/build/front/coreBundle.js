@@ -73,22 +73,22 @@
 		}
 	} = app;
 	const mainWorker = new Worker('/assets/worker.js');
-	const workerRequest = async (requestName, dataArg) => {
-		console.log(requestName, dataArg);
+	const workerRequest = async (task, dataArg) => {
+		console.log(task, dataArg);
 		let compiledRequest;
 		let callbackOptional;
 		if (dataArg) {
 			compiledRequest = {
 				data: dataArg,
-				request: requestName
+				task
 			};
 		} else {
-			compiledRequest = requestName;
-			callbackOptional = requestName.callback;
+			compiledRequest = task;
+			callbackOptional = task.callback;
 		}
 		const requestObject = {
 			data: compiledRequest.data,
-			request: compiledRequest.request
+			task: compiledRequest.task
 		};
 		if (requestObject.data.id) {
 			return mainWorker.postMessage(requestObject);
@@ -260,25 +260,25 @@
 					files: configData
 				}
 			},
-			request: 'socket.get'
+			task: 'socket.get'
 		});
 	};
 	assign$7(app, {
 		fetchFile
 	});
 	const { assign: assign$6 } = app.utility;
-	const request = async (requestName, body) => {
+	const request = async (task, body) => {
 		const requestPackage = body ?
 			{
 				body,
-				request: requestName
+				task
 			} :
-			requestName;
+			task;
 		const workerPackage = {
 			data: {
 				data: requestPackage
 			},
-			request: 'socket.request'
+			task: 'socket.request'
 		};
 		if (requestPackage.id) {
 			workerPackage.data.id = requestPackage.id;
@@ -310,23 +310,24 @@
     static stop() {
     	Watcher.status = false;
     }
-    static async update(json) {
-    	console.log(json);
-    	if (!Watcher.status || !json) {
+    static async update(pushUpdate) {
+    	console.log(pushUpdate);
+    	const { body } = pushUpdate;
+    	if (!Watcher.status || !body) {
     		return;
     	}
     	const {
     		type, path
-    	} = json;
+    	} = body;
     	const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[path];
     	await eachAsync$2(Watcher.containerRegex, async (watcher) => {
     		if (watcher.eventName.test(type) || watcher.eventName.test(path)) {
-    			return watcher.eventAction(json);
+    			return watcher.eventAction(body);
     		}
     	});
     	if (levelObject) {
     		await eachAsync$2(levelObject, async (watcher) => {
-    			return watcher.eventAction(json);
+    			return watcher.eventAction(body);
     		});
     	}
     }
@@ -379,8 +380,8 @@
 		});
 	};
 	assign$5(app.events, {
-		_(json) {
-			return Watcher.update(json.body);
+		_(pushUpdate) {
+			return Watcher.update(pushUpdate);
 		}
 	});
 	assign$5(app, {
@@ -400,7 +401,9 @@
 			each: each$6,
 			cnsl: cnsl$2,
 			initialString,
-			getFileExtension: getFileExtension$1
+			getFileExtension: getFileExtension$1,
+			isArray: isArray$2,
+			isNumber
 		},
 		imported,
 		crate: crate$2
@@ -432,6 +435,9 @@
 				});
 			}
 		}
+		if (item[0] !== '/') {
+			item = `/${item}`;
+		}
 		return item;
 	};
 	const singleDemand = (items) => {
@@ -439,6 +445,9 @@
 	};
 	const objectDemand = (items, arrayToObjectMap) => {
 		return map$1(arrayToObjectMap, (item) => {
+			if (isPlainObject$2(item)) {
+				return item;
+			}
 			return items[item];
 		});
 	};
@@ -460,49 +469,84 @@
 			);
 		});
 	};
-	const demand$4 = async (filesArg, options) => {
-		const assets = [];
+	const demand$4 = async (files, options) => {
+		const remoteImport = [];
+		const localImport = [];
+		const compiledImports = [];
+		let results;
 		let demandType;
 		let arrayToObjectMap;
-		let files = filesArg;
 		if (isPlainObject$2(files)) {
 			demandType = objectDemand;
 			arrayToObjectMap = {};
-			let index = 0;
 			each$6(files, (item, key) => {
-				arrayToObjectMap[key] = index;
-				index++;
-				assets.push(buildFilePath$1(item));
+				if (isPlainObject$2(item)) {
+					arrayToObjectMap[key] = item;
+				} else {
+					arrayToObjectMap[key] = remoteImport.push(buildFilePath$1(item)) - 1;
+				}
 			});
-		} else {
-			files = isString$4(files) ? files.split(commaString) : files;
-			demandType = files.length < 2 ? singleDemand : multiDemand;
+		} else if (isString$4(files)) {
+			demandType = singleDemand;
+			if (isPlainObject$2(files)) {
+				localImport.push(files);
+			} else {
+				localImport.push(remoteImport.push(buildFilePath$1(files)) - 1);
+			}
+		} else if (isArray$2(files)) {
+			demandType = multiDemand;
 			each$6(files, (item) => {
-				assets.push(buildFilePath$1(item));
+				if (isPlainObject$2(item)) {
+					localImport.push(item);
+				} else {
+					localImport.push(remoteImport.push(buildFilePath$1(item)) - 1);
+				}
 			});
 		}
-		const results = await streamAssets(assets, options);
-		// app.log(results);
-		return demandType(results, arrayToObjectMap);
+		if (remoteImport.length) {
+			results = await streamAssets(remoteImport, options);
+		}
+		cnsl$2('importing', 'notify');
+		if (!arrayToObjectMap) {
+			each$6(localImport, (item, index) => {
+				if (isNumber(item)) {
+					compiledImports[index] = results[item];
+				} else {
+					compiledImports[index] = item;
+				}
+			});
+		}
+		console.log(results, demandType, compiledImports, localImport, remoteImport);
+		return demandType(compiledImports, arrayToObjectMap);
 	};
 	const demandTypeMethod = (type, optionsFunction) => {
 		return function(filesArg, options) {
 			let files = filesArg;
-			if (isString$4(files)) {
-				files = files.split(commaString);
-			}
 			if (optionsFunction) {
 				optionsFunction(options);
 			}
-			files = map$1(files, (item) => {
-				if (imported[item]) {
-					return item;
+			if (isString$4(files)) {
+				if (imported[files]) {
+					return imported[files];
 				}
-				const itemExt = getFileExtension$1(item);
-				const compiledFileName = itemExt ? item : `${item}${(last$1(item) === '/' && 'index') || ''}.${type}`;
-				app.log('Demand Type', type, compiledFileName);
-				return compiledFileName;
-			});
+				files = hasDot(files) ? files : `${files}${(last$1(files) === '/' && 'index') || ''}.${type}`;
+				if (imported[files]) {
+					return imported[files];
+				}
+			} else {
+				files = map$1(files, (item) => {
+					if (imported[item]) {
+						return imported[item];
+					}
+					const itemHasExt = hasDot(item);
+					const compiledFileName = itemHasExt ? item : `${item}${(last$1(item) === '/' && 'index') || ''}.${type}`;
+					if (imported[compiledFileName]) {
+						return imported[compiledFileName];
+					}
+					app.log('Demand Type', type, compiledFileName);
+					return compiledFileName;
+				});
+			}
 			return demand$4(files, options);
 		};
 	};
@@ -522,7 +566,7 @@
 			cnsl$2('Worker is Ready', 'notify');
 			app.systemLanguage = data.language;
 			try {
-				await demand$4('app/');
+				await demand$4('app/index.js');
 			} catch (error) {
 				console.log(error);
 				crate$2.clear();

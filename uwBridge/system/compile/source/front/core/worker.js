@@ -8,22 +8,22 @@ const {
 	}
 } = app;
 export const mainWorker = new Worker('/assets/worker.js');
-export const workerRequest = async (requestName, dataArg) => {
-	console.log(requestName, dataArg);
+export const workerRequest = async (task, dataArg) => {
+	console.log(task, dataArg);
 	let compiledRequest;
 	let callbackOptional;
 	if (dataArg) {
 		compiledRequest = {
 			data: dataArg,
-			request: requestName,
+			task,
 		};
 	} else {
-		compiledRequest = requestName;
-		callbackOptional = requestName.callback;
+		compiledRequest = task;
+		callbackOptional = task.callback;
 	}
 	const requestObject = {
 		data: compiledRequest.data,
-		request: compiledRequest.request,
+		task: compiledRequest.task,
 	};
 	if (requestObject.data.id) {
 		return mainWorker.postMessage(requestObject);

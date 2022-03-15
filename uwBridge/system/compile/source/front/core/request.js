@@ -1,16 +1,16 @@
 import app from './app.js';
 import { workerRequest } from './worker';
 const { assign } = app.utility;
-export const request = async (requestName, body) => {
+export const request = async (task, body) => {
 	const requestPackage = (body) ? {
 		body,
-		request: requestName
-	} : requestName;
+		task
+	} : task;
 	const workerPackage = {
 		data: {
 			data: requestPackage,
 		},
-		request: 'socket.request'
+		task: 'socket.request'
 	};
 	if (requestPackage.id) {
 		workerPackage.data.id = requestPackage.id;

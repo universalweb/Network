@@ -3,6 +3,4 @@ module.exports = async (app) => {
 	console.log('cache loaded');
 	await require('./security')(app);
 	console.log('security loaded');
-	await require('./network')(app);
-	console.log('network loaded');
 };

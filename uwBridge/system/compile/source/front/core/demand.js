@@ -14,7 +14,9 @@ const {
 		each,
 		cnsl,
 		initialString,
-		getFileExtension
+		getFileExtension,
+		isArray,
+		isNumber
 	},
 	imported,
 	crate
@@ -46,6 +48,9 @@ const buildFilePath = (itemArg) => {
 			});
 		}
 	}
+	if (item[0] !== '/') {
+		item = `/${item}`;
+	}
 	return item;
 };
 const singleDemand = (items) => {
@@ -53,6 +58,9 @@ const singleDemand = (items) => {
 };
 const objectDemand = (items, arrayToObjectMap) => {
 	return map(arrayToObjectMap, (item) => {
+		if (isPlainObject(item)) {
+			return item;
+		}
 		return items[item];
 	});
 };
@@ -69,49 +77,84 @@ const streamAssets = (data, options) => {
 		}, options));
 	});
 };
-export const demand = async (filesArg, options) => {
-	const assets = [];
+export const demand = async (files, options) => {
+	const remoteImport = [];
+	const localImport = [];
+	const compiledImports = [];
+	let results;
 	let demandType;
 	let arrayToObjectMap;
-	let files = filesArg;
 	if (isPlainObject(files)) {
 		demandType = objectDemand;
 		arrayToObjectMap = {};
-		let index = 0;
 		each(files, (item, key) => {
-			arrayToObjectMap[key] = index;
-			index++;
-			assets.push(buildFilePath(item));
+			if (isPlainObject(item)) {
+				arrayToObjectMap[key] = item;
+			} else {
+				arrayToObjectMap[key] = remoteImport.push(buildFilePath(item)) - 1;
+			}
 		});
-	} else {
-		files = (isString(files)) ? files.split(commaString) : files;
-		demandType = (files.length < 2) ? singleDemand : multiDemand;
+	} else if (isString(files)) {
+		demandType = singleDemand;
+		if (isPlainObject(files)) {
+			localImport.push(files);
+		} else {
+			localImport.push(remoteImport.push(buildFilePath(files)) - 1);
+		}
+	} else if (isArray(files)) {
+		demandType = multiDemand;
 		each(files, (item) => {
-			assets.push(buildFilePath(item));
+			if (isPlainObject(item)) {
+				localImport.push(item);
+			} else {
+				localImport.push(remoteImport.push(buildFilePath(item)) - 1);
+			}
 		});
 	}
-	const results = await streamAssets(assets, options);
-	// app.log(results);
-	return demandType(results, arrayToObjectMap);
+	if (remoteImport.length) {
+		results = await streamAssets(remoteImport, options);
+	}
+	cnsl('importing', 'notify');
+	if (!arrayToObjectMap) {
+		each(localImport, (item, index) => {
+			if (isNumber(item)) {
+				compiledImports[index] = results[item];
+			} else {
+				compiledImports[index] = item;
+			}
+		});
+	}
+	console.log(results, demandType, compiledImports, localImport, remoteImport);
+	return demandType(compiledImports, arrayToObjectMap);
 };
 const demandTypeMethod = (type, optionsFunction) => {
 	return function(filesArg, options) {
 		let files = filesArg;
-		if (isString(files)) {
-			files = files.split(commaString);
-		}
 		if (optionsFunction) {
 			optionsFunction(options);
 		}
-		files = map(files, (item) => {
-			if (imported[item]) {
-				return item;
+		if (isString(files)) {
+			if (imported[files]) {
+				return imported[files];
 			}
-			const itemExt = getFileExtension(item);
-			const compiledFileName = (itemExt) ? item : `${item}${last(item) === '/' && 'index' || ''}.${type}`;
-			app.log('Demand Type', type, compiledFileName);
-			return compiledFileName;
-		});
+			files = (hasDot(files)) ? files : `${files}${last(files) === '/' && 'index' || ''}.${type}`;
+			if (imported[files]) {
+				return imported[files];
+			}
+		} else {
+			files = map(files, (item) => {
+				if (imported[item]) {
+					return imported[item];
+				}
+				const itemHasExt = hasDot(item);
+				const compiledFileName = (itemHasExt) ? item : `${item}${last(item) === '/' && 'index' || ''}.${type}`;
+				if (imported[compiledFileName]) {
+					return imported[compiledFileName];
+				}
+				app.log('Demand Type', type, compiledFileName);
+				return compiledFileName;
+			});
+		}
 		return demand(files, options);
 	};
 };
@@ -131,7 +174,7 @@ assign(app.events, {
 		cnsl('Worker is Ready', 'notify');
 		app.systemLanguage = data.language;
 		try {
-			await demand('app/');
+			await demand('app/index.js');
 		} catch (error) {
 			console.log(error);
 			crate.clear();

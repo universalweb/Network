@@ -143,7 +143,7 @@ export const fetchFile = async (config) => {
 				files: configData,
 			},
 		},
-		request: 'socket.get',
+		task: 'socket.get',
 	});
 };
 assign(app, {

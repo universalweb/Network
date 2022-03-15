@@ -16,6 +16,7 @@ const {
 	each,
 	ifInvoke,
 	right,
+	stringify,
 } = utility;
 const root = __dirname;
 const systemDirectory = resolve(root, './system/');
@@ -24,6 +25,7 @@ const fileUtility = require('../utilities/file');
 const consoleUtility = require('../utilities/console');
 const certificateUtility = require('../utilities/certificate');
 const certificatesUtility = require('../utilities/certificates');
+const assetsRegex = RegExp('/assets/');
 class uwBridge {
 	constructor(config) {
 		return promise(async (accept) => {
@@ -53,19 +55,16 @@ class uwBridge {
 	scheme = {};
 	system = {};
 	serverCreator = serverCreator;
-	push(channel = 'api', message, is_binary, compress) {
-		return this.server.publish(channel, message, is_binary, compress);
+	push(body, channel = 'all', is_binary, compress) {
+		const message = {
+			body
+		};
+		const messageCompiled = stringify(message);
+		return this.server.publish(channel, messageCompiled, is_binary, compress);
 	}
-	send(channel = 'api', data, is_binary, compress) {
-		let message;
-		if (data.body) {
-			message = data;
-		} else {
-			message = {
-				body: message,
-			};
-		}
-		return this.server.publish(channel, message, is_binary, compress);
+	send(message, channel = 'all', is_binary, compress) {
+		const messageCompiled = stringify(message);
+		return this.server.publish(channel, messageCompiled, is_binary, compress);
 	}
 	service = {
 		http: {},
@@ -87,7 +86,17 @@ class uwBridge {
 		}
 		return thisBind.events[eventNames].push(callback);
 	}
-	httpCreate() {
+	addIndexRoutes(indexPage) {
+		const routes = this.config.http?.routes;
+		if (routes) {
+			each(routes, (routeObject) => {
+				this.router.get(routeObject.route, (request, response) => {
+					response.type('html').send(indexPage);
+				});
+			});
+		}
+	}
+	async httpCreate() {
 		const {
 			config
 		} = this;
@@ -97,9 +106,7 @@ class uwBridge {
 		console.log(config.http.indexLocation);
 		const indexPage = fs.readFileSync(config.http.indexLocation);
 		console.log(indexPage);
-		this.server.get('/', (request, response) => {
-			response.type('html').send(indexPage);
-		});
+		// this.addIndexRoutes(indexPage);
 		const liveAssets = new LiveDirectory({
 			path: config.publicDir,
 			keep: {
@@ -109,23 +116,26 @@ class uwBridge {
 				return path.startsWith('.');
 			}
 		});
+		await liveAssets.ready();
 		this.LiveAssets = liveAssets;
-		// liveAssets.on('file_reload', (file) => {
-		// 	console.log(file.content.toString('utf8'));
-		// });
-		// Create static serve route to serve frontend assets
-		this.server.get('/assets/*', (request, response) => {
-			// Strip away '/assets' from the request path to get asset relative path
-			// Lookup LiveFile instance from our LiveDirectory instance.
-			const path = request.path;
-			const file = liveAssets.get(path);
-			console.log(path, file);
-			// Return a 404 if no asset/file exists on the derived path
-			if (file === undefined) {
-				return response.status(404).send();
+		this.server.get('/*', (request, response) => {
+			console.log(request.path);
+			const requestPath = request.path;
+			if (requestPath === '/') {
+				return response.type('html').send(indexPage);
 			}
-			// Set appropriate mime-type and serve file buffer as response body
-			return response.type(file.extension).send(file.buffer);
+			if (assetsRegex.test(requestPath)) {
+				const file = liveAssets.get(requestPath);
+				console.log(requestPath, file);
+				// Return a 404 if no asset/file exists on the derived path
+				if (file === undefined) {
+					return response.status(404).send();
+				}
+				// Set appropriate mime-type and serve file buffer as response body
+				return response.type(file.extension).send(file.buffer);
+			} else {
+				return response.type('html').send(indexPage);
+			}
 		});
 		console.log('http service');
 	}
@@ -181,6 +191,7 @@ class uwBridge {
 			this.serverListen = serverListen;
 			console.log(`server Listening on ${port}`);
 			this.setupWebSocketServer();
+			this.server.use('/', this.router);
 			console.log(`Websocket server Listening on ${port}`);
 		} catch (errorMessage) {
 			console.log('Server Failed to start');
@@ -195,7 +206,6 @@ class uwBridge {
 			console.log(`user ${clientSocket.context} has connected to consume news events`);
 			client(clientSocket, this);
 		});
-		this.server.use('/', this.router);
 	}
 }
 module.exports = async function(config) {

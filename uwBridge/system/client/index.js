@@ -18,7 +18,7 @@ class ClientRequest {
 	constructor(socket, requested) {
 		this.socket = socket;
 		this.body = requested.body;
-		this.request = requested.request;
+		this.task = requested.task;
 		this.response = {
 			body: {},
 		};
@@ -61,10 +61,10 @@ class Client {
 			}
 		} = this;
 		const {
-			request
+			task
 		} = clientRequest;
-		if (hasDot(request)) {
-			const rootProperty = request.substring(zeroInt, request.indexOf('.'));
+		if (hasDot(task)) {
+			const rootProperty = task.substring(zeroInt, task.indexOf('.'));
 			if (apply(hasProperty, client, [rootProperty])) {
 				const security = client[rootProperty];
 				if (isFunction(security)) {
@@ -82,8 +82,8 @@ class Client {
 				}
 			}
 		}
-		if (apply(hasProperty, client, [request])) {
-			const requestFunction = client[request];
+		if (apply(hasProperty, client, [task])) {
+			const requestFunction = client[task];
 			if (isFunction(requestFunction)) {
 				const requestFunctionSecurity = requestFunction.security;
 				if (isFunction(requestFunctionSecurity)) {
@@ -107,13 +107,15 @@ class Client {
 					return;
 				}
 			} else {
-				console.log(`Invalid property entered. Attack made. ${request}`, this.socket.id);
+				console.log(`Invalid property entered. Attack made. ${task}`, this.socket.id);
 				return false;
 			}
 		}
 	}
 	onClose() {
 		console.log(`use ${this.socket.context} is no longer listening for news events.`);
+		this.socket.unsubscribe('all');
+		this.app.clients.delete(this.id);
 		return console.log(`${this.socket.ip} has now disconnected!`);
 	}
 	constructor(socket, app) {
@@ -127,6 +129,8 @@ class Client {
 		socket.on('close', () => {
 			this.onClose();
 		});
+		socket.subscribe('all');
+		app.clients.set(this.id, this);
 	}
 	send(message, is_binary, compress) {
 		const {

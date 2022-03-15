@@ -1,3 +1,3 @@
-import './app';
-import './socket';
-import './onMessage';
+const { construct } = self.$;
+import { AppWorker } from './app';
+construct(AppWorker, []);

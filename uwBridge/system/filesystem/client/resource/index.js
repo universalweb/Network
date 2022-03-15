@@ -4,80 +4,12 @@ module.exports = (app) => {
 			eachArray,
 			isString,
 			hasDot,
+			isArray
 		},
 		api,
-		config,
-		config: {
-			resourceDir,
-		},
-		system: {
-			cache,
-		},
+		serverCache
 	} = app;
 	const isValid = require('is-valid-path');
-	const fs = require('fs');
-	const {
-		join: pathJoin,
-		resolve,
-		normalize
-	} = require('path');
-	const truncate = require('truncate-utf8-bytes');
-	const cacheSet = cache.set;
-	const cacheGet = cache.get;
-	const defaultStreamSettings = {
-		autoClose: true,
-		encoding: 'utf-8',
-	};
-	const sendChunks = (socket, response, cached, index) => {
-		eachArray(cached, async (item) => {
-			response.body = {
-				file: item,
-				key: index,
-			};
-			socket.send(response);
-		});
-	};
-	const streamOnEnd = (socket, response, index, checksum, cached) => {
-		if (cached) {
-			sendChunks(socket, response, cached, index);
-		}
-		response.body = {
-			cs: checksum,
-			key: index,
-		};
-		socket.send(response);
-	};
-	const onEndCallback = (socket, response, index, filePath, cacheFile, checksumArg) => {
-		let cached;
-		let checksum;
-		if (cacheFile) {
-			if (cacheFile.item) {
-				if (config.debug) {
-					console.log('Loading cache file', filePath);
-				}
-				cached = cacheFile;
-			} else {
-				cached = cacheSet(filePath, cacheFile, checksumArg);
-			}
-			checksum = cached.checksum;
-			cached = cached.item;
-		} else {
-			checksum = cacheGet(filePath)
-				.checksum;
-		}
-		streamOnEnd(socket, response, index, checksum, cached);
-	};
-	const createStream = (socket, response, filePath, index, checksum) => {
-		const readableStream = fs.createReadStream(filePath, defaultStreamSettings);
-		const cacheFile = [];
-		readableStream.setEncoding('utf8');
-		readableStream.on('data', (chunk) => {
-			cacheFile.push(chunk);
-		});
-		readableStream.on('end', () => {
-			onEndCallback(socket, response, index, filePath, cacheFile, checksum);
-		});
-	};
 	const sendFalse = (socket, response, index) => {
 		response.body = {
 			file: false,
@@ -85,53 +17,37 @@ module.exports = (app) => {
 		};
 		socket.send(response);
 	};
-	const fsStat = (socket, response, filePath, index, err, stats) => {
-		if (err) {
-			sendFalse(socket, response, index);
+	const sendFile = (socket, response, filePath, key, checksum) => {
+		const cacheItem = serverCache.get(filePath);
+		console.log(filePath);
+		if (cacheItem) {
+			const cacheChecksum = cacheItem.checksum;
+			if (checksum === cacheChecksum) {
+				response.body = {
+					cache: true,
+					key,
+				};
+			} else {
+				response.body = {
+					file: cacheItem.item,
+					cs: cacheItem.checksum,
+					key,
+				};
+			}
 		} else {
-			createStream(socket, response, filePath, index, stats.ctime.toString());
+			response.body = {
+				file: false,
+				key,
+			};
 		}
-	};
-	const sendValidChecksum = async (socket, response, index) => {
-		response.body = {
-			cache: true,
-			key: index,
-		};
 		socket.send(response);
 	};
-	const illegalRe = /[?<>\\:*|":]/g;
-	const controlRe = /[\x00-\x1f\x80-\x9f]/g;
-	const reservedRe = /^\.+$/;
-	const windowsReservedRe = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
-	const normalizeFilePatch = (filepath) => {
-		return truncate(normalize(resolve(pathJoin(resourceDir, filepath)))
-			.replace(illegalRe, '')
-			.replace(controlRe, '')
-			.replace(reservedRe, '')
-			.replace(windowsReservedRe, ''), 255);
-	};
-	const checkIfFileExists = (socket, response, item, index, checksums) => {
-		const filePath = normalizeFilePatch(item);
-		const cacheItem = cacheGet(filePath);
-		const cacheChecksum = cacheItem.checksum;
-		if (cacheChecksum) {
-			const checksum = checksums[index];
-			// console.log(checksum, cacheChecksum, checksum === cacheChecksum, filePath);
-			if (checksum === cacheChecksum) {
-				sendValidChecksum(socket, response, index);
-			} else {
-				onEndCallback(socket, response, index, filePath, cacheItem);
-			}
-		} else {
-			if (config.debug) {
-				console.log('Loading fresh file', filePath);
-			}
-			fs.stat(filePath, (err, stats) => {
-				fsStat(socket, response, filePath, index, err, stats);
-			});
+	function processFile(socket, response, file, index, hasChecksums, cs) {
+		if (!isString(file) || !file.length || !hasDot(file) || !isValid(file)) {
+			return sendFalse(socket, response, index);
 		}
-	};
-	const authRegex = /auth\//;
+		sendFile(socket, response, file, index, hasChecksums && cs[index]);
+	}
 	const getFiles = (request) => {
 		const {
 			body,
@@ -142,18 +58,9 @@ module.exports = (app) => {
 			files,
 			cs,
 		} = body;
-		const loginStatus = socket.credit;
+		const hasChecksums = isArray(cs);
 		eachArray(files, async (file, index) => {
-			if (authRegex.test(file)) {
-				if (!loginStatus || !socket.account || !socket.account.auth || !socket.account.auth.file.test(file)) {
-					console.log(`Auth Access ${file} ${socket.id}`);
-					return sendFalse(socket, response, index);
-				}
-			}
-			if (!isString(file) || !file.length || !hasDot(file) || !isValid(file)) {
-				return sendFalse(socket, response, index);
-			}
-			checkIfFileExists(socket, response, file, index, cs);
+			processFile(socket, response, file, index, hasChecksums, cs);
 		});
 	};
 	api.extend({
