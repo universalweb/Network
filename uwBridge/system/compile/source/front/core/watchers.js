@@ -85,11 +85,11 @@ export class Watcher {
 export function watch(...args) {
 	return new Watcher(...args);
 }
-export const push = (requestName, body) => {
+export const push = (task, body) => {
 	return request({
 		body,
 		id: '_',
-		request: requestName,
+		task,
 	});
 };
 assign(app.events, {
