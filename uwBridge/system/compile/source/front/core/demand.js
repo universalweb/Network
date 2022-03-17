@@ -1,7 +1,5 @@
 import app from './app.js';
 import { fetchFile } from './fetchFile.js';
-import languagePath from './language.js';
-import { watch, Watcher } from './watchers.js';
 const {
 	utility: {
 		assign,
@@ -13,43 +11,24 @@ const {
 		isPlainObject,
 		each,
 		cnsl,
-		initialString,
-		getFileExtension,
 		isArray,
-		isNumber
+		isNumber,
+		mapAsync
 	},
 	imported,
-	crate
+	crate,
+	checksumData,
+	hotloadJS
 } = app;
-const commaString = ',';
 const buildFilePath = (itemArg) => {
 	let item = itemArg;
-	if (!hasDot(item)) {
-		if (initialString(item, -9) === 'language/') {
-			item = languagePath(item);
-		} else if (last(item) === '/') {
-			item += 'index.js';
-		} else if (initialString(item, -3) === 'js/') {
-			item += '.js';
-		} else if (initialString(item, -4) === 'css/') {
-			item += '.css';
-		}
-		// app.log(item);
-	}
-	if (getFileExtension(item) === 'js') {
-		// app.log(item, watch);
-		if (!Watcher.containerPrimary[item]) {
-			watch(item, (thing) => {
-				if (app.debug) {
-					console.log('Live Reload', thing);
-				}
-				crate.removeItem(thing.name);
-				crate.removeItem(`cs-${thing.name}`);
-			});
-		}
-	}
 	if (item[0] !== '/') {
 		item = `/${item}`;
+	}
+	if (!hasDot(item)) {
+		if (last(item) === '/') {
+			item += 'index.js';
+		}
 	}
 	return item;
 };
@@ -127,8 +106,51 @@ export const demand = async (files, options) => {
 	console.log(results, demandType, compiledImports, localImport, remoteImport);
 	return demandType(compiledImports, arrayToObjectMap);
 };
-const demandTypeMethod = (type, optionsFunction) => {
-	return function(filesArg, options) {
+function buildFilePathType(item, type) {
+	let filePath = item;
+	if (filePath[0] !== '/') {
+		filePath = `/${filePath}`;
+	}
+	if (!hasDot(filePath)) {
+		if (last(filePath) === '/') {
+			filePath += `index.${type}`;
+		} else {
+			filePath += `.${type}`;
+		}
+	}
+	return filePath;
+}
+async function getCacheFromLocal(filePath, type) {
+	const crateCache = crate.storage.items[filePath];
+	if (type.match(/css|html/)) {
+		if (crateCache) {
+			return crateCache;
+		} else {
+			const cacheTimeElapsed = checksumData(filePath);
+			if (cacheTimeElapsed) {
+				const timeElapsed = Date.now() - cacheTimeElapsed.time;
+				if (timeElapsed >= app.cacheExpire) {
+					const localstoredCache = crate.getItem(filePath);
+					return localstoredCache;
+				}
+			}
+		}
+	} else {
+		const localstoredCache = crate.getItem(filePath);
+		console.log(filePath, localstoredCache);
+		if (localstoredCache && isString(localstoredCache)) {
+			const cacheTimeElapsed = checksumData(filePath);
+			if (cacheTimeElapsed) {
+				const hotModule = await hotloadJS(localstoredCache, filePath);
+				if (hotModule) {
+					return hotModule;
+				}
+			}
+		}
+	}
+}
+function demandTypeMethod(type, optionsFunction) {
+	return async function(filesArg, options) {
 		let files = filesArg;
 		if (optionsFunction) {
 			optionsFunction(options);
@@ -137,19 +159,28 @@ const demandTypeMethod = (type, optionsFunction) => {
 			if (imported[files]) {
 				return imported[files];
 			}
-			files = (hasDot(files)) ? files : `${files}${last(files) === '/' && 'index' || ''}.${type}`;
+			files = buildFilePathType(files, type);
 			if (imported[files]) {
 				return imported[files];
+			} else {
+				const localstoredCache = await getCacheFromLocal(files, type);
+				if (localstoredCache) {
+					return localstoredCache;
+				}
 			}
 		} else {
-			files = map(files, (item) => {
+			files = await mapAsync(files, async (item) => {
 				if (imported[item]) {
 					return imported[item];
 				}
-				const itemHasExt = hasDot(item);
-				const compiledFileName = (itemHasExt) ? item : `${item}${last(item) === '/' && 'index' || ''}.${type}`;
+				const compiledFileName = buildFilePathType(item, type);
 				if (imported[compiledFileName]) {
 					return imported[compiledFileName];
+				} else {
+					const localstoredCache = await getCacheFromLocal(compiledFileName, type);
+					if (localstoredCache) {
+						return localstoredCache;
+					}
 				}
 				app.log('Demand Type', type, compiledFileName);
 				return compiledFileName;
@@ -157,7 +188,7 @@ const demandTypeMethod = (type, optionsFunction) => {
 		}
 		return demand(files, options);
 	};
-};
+}
 export const demandCss = demandTypeMethod('css', (appendCSS) => {
 	return {
 		appendCSS
@@ -165,16 +196,12 @@ export const demandCss = demandTypeMethod('css', (appendCSS) => {
 });
 const demandJs = demandTypeMethod('js');
 const demandHtml = demandTypeMethod('html');
-const demandLang = (fileList) => {
-	const files = (isString(fileList)) ? fileList.split(commaString) : fileList;
-	return demand(map(files, languagePath));
-};
 assign(app.events, {
 	async ready(data) {
 		cnsl('Worker is Ready', 'notify');
 		app.systemLanguage = data.language;
 		try {
-			await demand('app/index.js');
+			await demandJs('/app/index.js');
 		} catch (error) {
 			console.log(error);
 			crate.clear();
@@ -187,5 +214,4 @@ assign(app, {
 	demandCss,
 	demandHtml,
 	demandJs,
-	demandLang,
 });

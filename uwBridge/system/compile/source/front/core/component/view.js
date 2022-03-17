@@ -1,6 +1,7 @@
 import app from '../app';
 const {
 	demand,
+	demandJs,
 	utility: {
 		assign,
 		each,
@@ -54,7 +55,7 @@ view.on({
 });
 app.importComponent = async (componentName, importURL, type = 'dynamic') => {
 	if (importURL) {
-		await demand(importURL);
+		await demandJs(importURL);
 	}
 	await view.set(`@shared.components.${type}.${componentName}`, true);
 	await view.update('@shared.components.${type}');

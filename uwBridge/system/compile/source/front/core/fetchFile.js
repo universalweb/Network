@@ -21,8 +21,24 @@ const iJson = (contents) => {
 	return {};
 };
 const isLibRegex = /(^js\/lib\/)|(\.min\.js)/;
+const checksumData = (item) => {
+	const checksumString = crate.getItem(`cs-${item}`);
+	if (checksumString) {
+		const checksum = jsonParse(checksumString);
+		if (checksum) {
+			return checksum;
+		}
+	}
+};
+app.checksumData = checksumData;
 const checksumReturn = (item) => {
-	return crate.getItem(`cs-${item}`);
+	const checksumString = crate.getItem(`cs-${item}`);
+	if (checksumString) {
+		const checksum = jsonParse(checksumString);
+		if (checksum?.cs) {
+			return checksum.cs;
+		}
+	}
 };
 const constructStyleTagThenAppendToHead = (text, filePath) => {
 	const node = styleNode.cloneNode(false);
@@ -51,6 +67,30 @@ const checkIfCompleted = (config) => {
 		getCompleted(config);
 	}
 };
+async function hotloadJS(fileContents, filepath) {
+	const lastSlash = filepath.lastIndexOf('/') + 1;
+	const filename = filepath.substring(lastSlash);
+	const dirname = filepath.substring(0, lastSlash);
+	const emulateImport = `Object.assign(import.meta, {path:'${dirname}',filename:'${filename}'});\n`;
+	let scriptRaw = new File([emulateImport, fileContents], filename, {
+		type: 'text/javascript'
+	});
+	let fileBlob = URL.createObjectURL(scriptRaw);
+	const moduleExports = assign({}, await import(fileBlob));
+	URL.revokeObjectURL(fileBlob);
+	imported[filename] = moduleExports;
+	fileBlob = null;
+	scriptRaw = null;
+	return moduleExports;
+}
+app.hotloadJS = hotloadJS;
+async function hotloadLocalJS(dirname) {
+	const fileContents = crate.getItem(dirname);
+	if (fileContents) {
+		return hotloadJS(fileContents, dirname);
+	}
+}
+app.hotloadLocalJS = hotloadLocalJS;
 const saveCompleted = async (json, config) => {
 	const {
 		file,
@@ -76,7 +116,10 @@ const saveCompleted = async (json, config) => {
 		if (app.debug) {
 			console.log('SAVE FILE TO LOCAL', fileContents);
 		}
-		crate.setItem(`cs-${filename}`, cs);
+		crate.setItem(`cs-${filename}`, {
+			cs,
+			time: Date.now()
+		});
 		crate.setItem(filename, fileContents);
 	}
 	if (!hasValue(imported[filename]) || fileContents !== true) {

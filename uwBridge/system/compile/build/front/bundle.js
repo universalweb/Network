@@ -160,8 +160,24 @@
 			return {};
 		};
 		const isLibRegex = /(^js\/lib\/)|(\.min\.js)/;
+		const checksumData$1 = (item) => {
+			const checksumString = crate$3.getItem(`cs-${item}`);
+			if (checksumString) {
+				const checksum = jsonParse(checksumString);
+				if (checksum) {
+					return checksum;
+				}
+			}
+		};
+		app.checksumData = checksumData$1;
 		const checksumReturn = (item) => {
-			return crate$3.getItem(`cs-${item}`);
+			const checksumString = crate$3.getItem(`cs-${item}`);
+			if (checksumString) {
+				const checksum = jsonParse(checksumString);
+				if (checksum?.cs) {
+					return checksum.cs;
+				}
+			}
 		};
 		const constructStyleTagThenAppendToHead = (text, filePath) => {
 			const node = styleNode.cloneNode(false);
@@ -189,6 +205,30 @@
 				getCompleted(config);
 			}
 		};
+		async function hotloadJS$1(fileContents, filepath) {
+			const lastSlash = filepath.lastIndexOf('/') + 1;
+			const filename = filepath.substring(lastSlash);
+			const dirname = filepath.substring(0, lastSlash);
+			const emulateImport = `Object.assign(import.meta, {path:'${dirname}',filename:'${filename}'});\n`;
+			let scriptRaw = new File([emulateImport, fileContents], filename, {
+				type: 'text/javascript'
+			});
+			let fileBlob = URL.createObjectURL(scriptRaw);
+			const moduleExports = assign$7({}, await import(fileBlob));
+			URL.revokeObjectURL(fileBlob);
+			imported$1[filename] = moduleExports;
+			fileBlob = null;
+			scriptRaw = null;
+			return moduleExports;
+		}
+		app.hotloadJS = hotloadJS$1;
+		async function hotloadLocalJS(dirname) {
+			const fileContents = crate$3.getItem(dirname);
+			if (fileContents) {
+				return hotloadJS$1(fileContents, dirname);
+			}
+		}
+		app.hotloadLocalJS = hotloadLocalJS;
 		const saveCompleted = async (json, config) => {
 			const {
 				file, cs, key, isJs, isJson, isCss, dirname
@@ -206,7 +246,10 @@
 				if (app.debug) {
 					console.log('SAVE FILE TO LOCAL', fileContents);
 				}
-				crate$3.setItem(`cs-${filename}`, cs);
+				crate$3.setItem(`cs-${filename}`, {
+					cs,
+					time: Date.now()
+				});
 				crate$3.setItem(filename, fileContents);
 			}
 			if (!hasValue$4(imported$1[filename]) || fileContents !== true) {
@@ -279,7 +322,227 @@
 		assign$7(app, {
 			fetchFile
 		});
-		const { assign: assign$6 } = app.utility;
+		const {
+			utility: {
+				assign: assign$6,
+				hasDot,
+				promise,
+				last: last$1,
+				map: map$1,
+				isString: isString$5,
+				isPlainObject: isPlainObject$2,
+				each: each$6,
+				cnsl: cnsl$3,
+				isArray: isArray$2,
+				isNumber,
+				mapAsync: mapAsync$1
+			},
+			imported,
+			crate: crate$2,
+			checksumData,
+			hotloadJS
+		} = app;
+		const buildFilePath$1 = (itemArg) => {
+			let item = itemArg;
+			if (item[0] !== '/') {
+				item = `/${item}`;
+			}
+			if (!hasDot(item)) {
+				if (last$1(item) === '/') {
+					item += 'index.js';
+				}
+			}
+			return item;
+		};
+		const singleDemand = (items) => {
+			return items[0];
+		};
+		const objectDemand = (items, arrayToObjectMap) => {
+			return map$1(arrayToObjectMap, (item) => {
+				if (isPlainObject$2(item)) {
+					return item;
+				}
+				return items[item];
+			});
+		};
+		const multiDemand = (items) => {
+			return items;
+		};
+		const streamAssets = (data, options) => {
+			return promise((accept) => {
+				fetchFile(
+					assign$6(
+						{
+							callback(...args) {
+								accept(args);
+							},
+							data
+						},
+						options
+					)
+				);
+			});
+		};
+		const demand$4 = async (files, options) => {
+			const remoteImport = [];
+			const localImport = [];
+			const compiledImports = [];
+			let results;
+			let demandType;
+			let arrayToObjectMap;
+			if (isPlainObject$2(files)) {
+				demandType = objectDemand;
+				arrayToObjectMap = {};
+				each$6(files, (item, key) => {
+					if (isPlainObject$2(item)) {
+						arrayToObjectMap[key] = item;
+					} else {
+						arrayToObjectMap[key] = remoteImport.push(buildFilePath$1(item)) - 1;
+					}
+				});
+			} else if (isString$5(files)) {
+				demandType = singleDemand;
+				if (isPlainObject$2(files)) {
+					localImport.push(files);
+				} else {
+					localImport.push(remoteImport.push(buildFilePath$1(files)) - 1);
+				}
+			} else if (isArray$2(files)) {
+				demandType = multiDemand;
+				each$6(files, (item) => {
+					if (isPlainObject$2(item)) {
+						localImport.push(item);
+					} else {
+						localImport.push(remoteImport.push(buildFilePath$1(item)) - 1);
+					}
+				});
+			}
+			if (remoteImport.length) {
+				results = await streamAssets(remoteImport, options);
+			}
+			cnsl$3('importing', 'notify');
+			if (!arrayToObjectMap) {
+				each$6(localImport, (item, index) => {
+					if (isNumber(item)) {
+						compiledImports[index] = results[item];
+					} else {
+						compiledImports[index] = item;
+					}
+				});
+			}
+			console.log(results, demandType, compiledImports, localImport, remoteImport);
+			return demandType(compiledImports, arrayToObjectMap);
+		};
+		function buildFilePathType(item, type) {
+			let filePath = item;
+			if (filePath[0] !== '/') {
+				filePath = `/${filePath}`;
+			}
+			if (!hasDot(filePath)) {
+				if (last$1(filePath) === '/') {
+					filePath += `index.${type}`;
+				} else {
+					filePath += `.${type}`;
+				}
+			}
+			return filePath;
+		}
+		async function getCacheFromLocal(filePath, type) {
+			const crateCache = crate$2.storage.items[filePath];
+			if (type.match(/css|html/)) {
+				if (crateCache) {
+					return crateCache;
+				} else {
+					const cacheTimeElapsed = checksumData(filePath);
+					if (cacheTimeElapsed) {
+						const timeElapsed = Date.now() - cacheTimeElapsed.time;
+						if (timeElapsed >= app.cacheExpire) {
+							const localstoredCache = crate$2.getItem(filePath);
+							return localstoredCache;
+						}
+					}
+				}
+			} else {
+				const localstoredCache = crate$2.getItem(filePath);
+				console.log(filePath, localstoredCache);
+				if (localstoredCache && isString$5(localstoredCache)) {
+					const cacheTimeElapsed = checksumData(filePath);
+					if (cacheTimeElapsed) {
+						const hotModule = await hotloadJS(localstoredCache, filePath);
+						if (hotModule) {
+							return hotModule;
+						}
+					}
+				}
+			}
+		}
+		function demandTypeMethod(type, optionsFunction) {
+			return async function(filesArg, options) {
+				let files = filesArg;
+				if (optionsFunction) {
+					optionsFunction(options);
+				}
+				if (isString$5(files)) {
+					if (imported[files]) {
+						return imported[files];
+					}
+					files = buildFilePathType(files, type);
+					if (imported[files]) {
+						return imported[files];
+					} else {
+						const localstoredCache = await getCacheFromLocal(files, type);
+						if (localstoredCache) {
+							return localstoredCache;
+						}
+					}
+				} else {
+					files = await mapAsync$1(files, async (item) => {
+						if (imported[item]) {
+							return imported[item];
+						}
+						const compiledFileName = buildFilePathType(item, type);
+						if (imported[compiledFileName]) {
+							return imported[compiledFileName];
+						} else {
+							const localstoredCache = await getCacheFromLocal(compiledFileName, type);
+							if (localstoredCache) {
+								return localstoredCache;
+							}
+						}
+						app.log('Demand Type', type, compiledFileName);
+						return compiledFileName;
+					});
+				}
+				return demand$4(files, options);
+			};
+		}
+		const demandCss$1 = demandTypeMethod('css', (appendCSS) => {
+			return {
+				appendCSS
+			};
+		});
+		const demandJs$2 = demandTypeMethod('js');
+		const demandHtml$1 = demandTypeMethod('html');
+		assign$6(app.events, {
+			async ready(data) {
+				cnsl$3('Worker is Ready', 'notify');
+				app.systemLanguage = data.language;
+				try {
+					await demandJs$2('/app/index.js');
+				} catch (error) {
+					console.log(error);
+					crate$2.clear();
+					window.location.reload();
+				}
+			}
+		});
+		assign$6(app, {
+			demand: demand$4,
+			demandCss: demandCss$1,
+			demandHtml: demandHtml$1,
+			demandJs: demandJs$2
+		});
+		const { assign: assign$5 } = app.utility;
 		const request = async (task, body) => {
 			const requestPackage = body ?
 				{
@@ -298,21 +561,21 @@
 			}
 			return workerRequest(workerPackage);
 		};
-		assign$6(app, {
+		assign$5(app, {
 			request
 		});
 		const {
 			utility: {
-				assign: assign$5,
-				cnsl: cnsl$3,
+				assign: assign$4,
+				cnsl: cnsl$2,
 				eachAsync: eachAsync$2,
-				isString: isString$5,
+				isString: isString$4,
 				hasValue: hasValue$3,
 				isRegExp: isRegExp$1,
 				drop: drop$1
 			}
 		} = app;
-		cnsl$3('Initializing watchers module.', 'notify');
+		cnsl$2('Initializing watchers module.', 'notify');
 		class Watcher {
 	    static containerRegex = [];
 	    static containerPrimary = {};
@@ -345,7 +608,7 @@
 	    	}
 	    }
 	    constructor(eventName, eventAction) {
-	    	if (isString$5(eventName)) {
+	    	if (isString$4(eventName)) {
 	    		if (!Watcher.containerPrimary[eventName]) {
 	    			Watcher.containerPrimary[eventName] = [];
 	    		}
@@ -393,207 +656,15 @@
 				task
 			});
 		};
-		assign$5(app.events, {
+		assign$4(app.events, {
 			_(pushUpdate) {
 				return Watcher.update(pushUpdate);
 			}
 		});
-		assign$5(app, {
+		assign$4(app, {
 			push,
 			watch: watch$3,
 			Watcher
-		});
-		const {
-			utility: {
-				assign: assign$4,
-				hasDot,
-				promise,
-				last: last$1,
-				map: map$1,
-				isString: isString$4,
-				isPlainObject: isPlainObject$2,
-				each: each$6,
-				cnsl: cnsl$2,
-				initialString,
-				getFileExtension: getFileExtension$1,
-				isArray: isArray$2,
-				isNumber
-			},
-			imported,
-			crate: crate$2
-		} = app;
-		const commaString = ',';
-		const buildFilePath$1 = (itemArg) => {
-			let item = itemArg;
-			if (!hasDot(item)) {
-				if (initialString(item, -9) === 'language/') {
-					item = languagePath(item);
-				} else if (last$1(item) === '/') {
-					item += 'index.js';
-				} else if (initialString(item, -3) === 'js/') {
-					item += '.js';
-				} else if (initialString(item, -4) === 'css/') {
-					item += '.css';
-				}
-				// app.log(item);
-			}
-			if (getFileExtension$1(item) === 'js') {
-				// app.log(item, watch);
-				if (!Watcher.containerPrimary[item]) {
-					watch$3(item, (thing) => {
-						if (app.debug) {
-							console.log('Live Reload', thing);
-						}
-						crate$2.removeItem(thing.name);
-						crate$2.removeItem(`cs-${thing.name}`);
-					});
-				}
-			}
-			if (item[0] !== '/') {
-				item = `/${item}`;
-			}
-			return item;
-		};
-		const singleDemand = (items) => {
-			return items[0];
-		};
-		const objectDemand = (items, arrayToObjectMap) => {
-			return map$1(arrayToObjectMap, (item) => {
-				if (isPlainObject$2(item)) {
-					return item;
-				}
-				return items[item];
-			});
-		};
-		const multiDemand = (items) => {
-			return items;
-		};
-		const streamAssets = (data, options) => {
-			return promise((accept) => {
-				fetchFile(
-					assign$4(
-						{
-							callback(...args) {
-								accept(args);
-							},
-							data
-						},
-						options
-					)
-				);
-			});
-		};
-		const demand$4 = async (files, options) => {
-			const remoteImport = [];
-			const localImport = [];
-			const compiledImports = [];
-			let results;
-			let demandType;
-			let arrayToObjectMap;
-			if (isPlainObject$2(files)) {
-				demandType = objectDemand;
-				arrayToObjectMap = {};
-				each$6(files, (item, key) => {
-					if (isPlainObject$2(item)) {
-						arrayToObjectMap[key] = item;
-					} else {
-						arrayToObjectMap[key] = remoteImport.push(buildFilePath$1(item)) - 1;
-					}
-				});
-			} else if (isString$4(files)) {
-				demandType = singleDemand;
-				if (isPlainObject$2(files)) {
-					localImport.push(files);
-				} else {
-					localImport.push(remoteImport.push(buildFilePath$1(files)) - 1);
-				}
-			} else if (isArray$2(files)) {
-				demandType = multiDemand;
-				each$6(files, (item) => {
-					if (isPlainObject$2(item)) {
-						localImport.push(item);
-					} else {
-						localImport.push(remoteImport.push(buildFilePath$1(item)) - 1);
-					}
-				});
-			}
-			if (remoteImport.length) {
-				results = await streamAssets(remoteImport, options);
-			}
-			cnsl$2('importing', 'notify');
-			if (!arrayToObjectMap) {
-				each$6(localImport, (item, index) => {
-					if (isNumber(item)) {
-						compiledImports[index] = results[item];
-					} else {
-						compiledImports[index] = item;
-					}
-				});
-			}
-			console.log(results, demandType, compiledImports, localImport, remoteImport);
-			return demandType(compiledImports, arrayToObjectMap);
-		};
-		const demandTypeMethod = (type, optionsFunction) => {
-			return function(filesArg, options) {
-				let files = filesArg;
-				if (optionsFunction) {
-					optionsFunction(options);
-				}
-				if (isString$4(files)) {
-					if (imported[files]) {
-						return imported[files];
-					}
-					files = hasDot(files) ? files : `${files}${(last$1(files) === '/' && 'index') || ''}.${type}`;
-					if (imported[files]) {
-						return imported[files];
-					}
-				} else {
-					files = map$1(files, (item) => {
-						if (imported[item]) {
-							return imported[item];
-						}
-						const itemHasExt = hasDot(item);
-						const compiledFileName = itemHasExt ? item : `${item}${(last$1(item) === '/' && 'index') || ''}.${type}`;
-						if (imported[compiledFileName]) {
-							return imported[compiledFileName];
-						}
-						app.log('Demand Type', type, compiledFileName);
-						return compiledFileName;
-					});
-				}
-				return demand$4(files, options);
-			};
-		};
-		const demandCss$1 = demandTypeMethod('css', (appendCSS) => {
-			return {
-				appendCSS
-			};
-		});
-		const demandJs$1 = demandTypeMethod('js');
-		const demandHtml$1 = demandTypeMethod('html');
-		const demandLang = (fileList) => {
-			const files = isString$4(fileList) ? fileList.split(commaString) : fileList;
-			return demand$4(map$1(files, languagePath));
-		};
-		assign$4(app.events, {
-			async ready(data) {
-				cnsl$2('Worker is Ready', 'notify');
-				app.systemLanguage = data.language;
-				try {
-					await demand$4('app/index.js');
-				} catch (error) {
-					console.log(error);
-					crate$2.clear();
-					window.location.reload();
-				}
-			}
-		});
-		assign$4(app, {
-			demand: demand$4,
-			demandCss: demandCss$1,
-			demandHtml: demandHtml$1,
-			demandJs: demandJs$1,
-			demandLang
 		});
 		const { utility: { drop } } = app;
 		const notifications = [];
@@ -1323,6 +1394,7 @@
 		watchHtml(/\.html/);
 		const {
 			demand,
+			demandJs: demandJs$1,
 			utility: {
 				assign, each: each$1, isFunction: isFunction$1, cnsl: cnsl$1
 			}
@@ -1372,7 +1444,7 @@
 		});
 		app.importComponent = async (componentName, importURL, type = 'dynamic') => {
 			if (importURL) {
-				await demand(importURL);
+				await demandJs$1(importURL);
 			}
 			await view.set(`@shared.components.${type}.${componentName}`, true);
 			await view.update('@shared.components.${type}');

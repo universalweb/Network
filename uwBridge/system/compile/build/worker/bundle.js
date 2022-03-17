@@ -131,6 +131,7 @@
         reconnect() {
         	const thisContext = this;
         	if (!hasValue(thisContext.connectInterval)) {
+        		this.socket.close();
         		thisContext.connectInterval = setInterval(() => {
         			thisContext.connect();
         		}, 2000);

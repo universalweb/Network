@@ -15,7 +15,7 @@ module.exports = async (uwApp) => {
 				const char = contents.charCodeAt(i);
 				hash = (hash ^ ((char + hash) << char));
 			}
-			return hash;
+			return hash.toString();
 		}
 		set(cacheName, item, checksum) {
 			const computedChecksum = checksum || this.checksum(item);
