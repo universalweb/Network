@@ -88,21 +88,67 @@ class uwBridge {
 		}
 		return thisBind.events[eventNames].push(callback);
 	}
+	async handleRequest(indexPage, liveAssets, publicDir, request, response) {
+		const requestPath = request.path;
+		console.log(request.headers['cf-connecting-ip'], requestPath);
+		if (!request.headers['cf-connecting-ip']) {
+			console.log('No CF header');
+			return response.status(200).send();
+		}
+		if (requestPath === '/') {
+			return response.type('html').send(`${indexPage}<script>_realip='${request.headers['cf-connecting-ip']}'</script>`);
+		}
+		if (assetsRegex.test(requestPath)) {
+			const file = liveAssets.get(requestPath);
+			if (file === undefined) {
+				return response.status(200).send();
+			}
+			return response.type(file.extension).send(file.buffer);
+		} else if (rawRegex.test(requestPath)) {
+			console.log(publicDir + requestPath);
+			const fileCheck = await promise((accept) => {
+				fs.stat(publicDir + requestPath, (err, stats) => {
+					if (err) {
+						return accept(false);
+					}
+					return accept(stats);
+				  });
+			});
+			console.log('STREAMING FILE');
+			if (fileCheck) {
+				response.header('x-is-streamed', 'true');
+				const use_chunked_encoding = request.headers['x-chunked-encoding'] === 'true';
+				const stream = fs.createReadStream(publicDir + requestPath);
+				return response.stream(stream, use_chunked_encoding ? undefined : fileCheck.size);
+			} else {
+				return response.status(404).send();
+			}
+		} else {
+			return response.type('html').send(`${indexPage}<script>_realip='${request.headers['cf-connecting-ip']}'</script>`);
+		}
+	}
 	async httpCreate() {
 		const {
-			config
+			config: {
+				publicDir,
+				server,
+				http: {
+					indexLocation
+				}
+			}
 		} = this;
-		console.log(config.server);
-		this.server = new serverCreator.Server(config.server);
+		console.log(server);
+		this.server = new serverCreator.Server(server);
 		this.router = new serverCreator.Router();
-		console.log(config.http.indexLocation);
-		let indexPage = fs.readFileSync(config.http.indexLocation);
-		watch(config.http.indexLocation, {}, async () => {
-			indexPage = fs.readFileSync(config.http.indexLocation);
+		console.log(indexLocation);
+		let indexPage = fs.readFileSync(indexLocation);
+		this.indexPage = indexPage;
+		watch(indexLocation, {}, async () => {
+			indexPage = fs.readFileSync(indexLocation);
 		});
 		console.log(indexPage);
 		const liveAssets = new LiveDirectory({
-			path: config.publicDir,
+			path: publicDir,
 			keep: {
 				extensions: ['.css', '.html', '.js', '.json', '.csv', '.png', '.jpg', '.svg', '.woff2', '.woff', '.otf']
 			},
@@ -112,28 +158,8 @@ class uwBridge {
 		});
 		await liveAssets.ready();
 		this.LiveAssets = liveAssets;
-		this.server.get('/*', (request, response) => {
-			const requestPath = request.path;
-			console.log(request.headers['cf-connecting-ip'], requestPath);
-			if (!request.headers['cf-connecting-ip']) {
-				console.log('No CF header');
-				return response.status(200).send();
-			}
-			if (requestPath === '/') {
-				return response.type('html').send(`${indexPage}<script>_realip='${request.headers['cf-connecting-ip']}'</script>`);
-			}
-			if (assetsRegex.test(requestPath)) {
-				const file = liveAssets.get(requestPath);
-				if (file === undefined) {
-					return response.status(200).send();
-				}
-				return response.type(file.extension).send(file.buffer);
-			} else if (rawRegex.test(requestPath)) {
-				console.log(config.publicDir + requestPath);
-				return response.stream(fs.createReadStream(config.publicDir + requestPath));
-			} else {
-				return response.type('html').send(`${indexPage}<script>_realip='${request.headers['cf-connecting-ip']}'</script>`);
-			}
+		this.server.get('/*', async (request, response) => {
+			return this.handleRequest(indexPage, liveAssets, publicDir, request, response);
 		});
 		console.log('http service');
 	}
@@ -203,7 +229,7 @@ class uwBridge {
 		});
 		this.router.ws('/ws', {
 			idle_timeout: 60,
-			max_payload_length: 32 * 1024
+			max_payload_length: 32 * 10024
 		}, (clientSocket) => {
 			if (!clientSocket.context?.ip) {
 				console.log('No CF header');
