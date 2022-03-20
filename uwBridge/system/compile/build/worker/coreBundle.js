@@ -1,19 +1,17 @@
 (function() {
-	const {
-		isFileJS, isFileJSON, isFileCSS, initial
-	} = self.$;
+	const { isFileJS } = self.$;
 	const shouldNotUpgrade = /(^js\/lib\/)|(\.min\.js)/;
 	const importRegexGlobal = /\bimport\b([^:;=]*?){([^;]*?)}(\s\bfrom\b).*(('|"|`).*('|"|`));$/gm;
 	const importSingleRegexGlobal = /\bimport\b([^:;={}]*?)([^;{}]*?)(\s\bfrom\b).*(('|"|`).*('|"|`));$/gm;
 	const importEntire = /\bimport\b\s(('|"|`).*('|"|`));$/gm;
 	const importDynamic = /{([^;]*?)}\s=\simport\((('|"|`).*('|"|`))\);$/gm;
-	const slashString = '/';
 	const replaceImports = function(file) {
 		let compiled = file;
-		compiled = compiled.replace(importRegexGlobal, 'const {$2} = await appGlobal.demandJs($4);');
-		compiled = compiled.replace(importSingleRegexGlobal, 'const $2 = await appGlobal.demandJs($4);');
-		compiled = compiled.replace(importEntire, 'await appGlobal.demandJs($1);');
-		compiled = compiled.replace(importDynamic, '{$1} = await appGlobal.demandJs($2);');
+		const dirnameOptions = `import.meta`;
+		compiled = compiled.replace(importRegexGlobal, `const {$2} = await appGlobal.demandJs($4, ${dirnameOptions});`);
+		compiled = compiled.replace(importSingleRegexGlobal, `const $2 = await appGlobal.demandJs($4, ${dirnameOptions});`);
+		compiled = compiled.replace(importEntire, `await appGlobal.demandJs($1, ${dirnameOptions});`);
+		compiled = compiled.replace(importDynamic, `{$1} = await appGlobal.demandJs($2, ${dirnameOptions});`);
 		return compiled;
 	};
 	const keepObject = {
@@ -26,19 +24,11 @@
 		} = body;
 		const key = body.key;
 		const fileList = configObj.fileList;
-		const filename = fileList.files[key];
+		const filepath = fileList.files[key];
 		const completedFiles = configObj.completedFiles;
 		const checksums = configObj.checksum;
-		const isLib = shouldNotUpgrade.test(filename);
-		// Remove this can just get ext on other end and check if needed
-		const isJs = isFileJS(filename);
-		const isJson = isFileJSON(filename);
-		const isCss = isFileCSS(filename);
-		const dirname = initial(filename.split(slashString)).join(slashString);
-		/*
-	    During an active stream data is compiled.
-	    Based on Key coming in.
-	    */
+		const isLib = shouldNotUpgrade.test(filepath);
+		const isJs = isFileJS(filepath);
 		if (file) {
 			completedFiles[key] = file;
 			checksums[key] = cs;
@@ -56,11 +46,6 @@
 			completedFile = replaceImports(completedFile);
 		}
 		const message = {
-			dirname,
-			isCss,
-			isJs,
-			isJson,
-			isLib,
 			key
 		};
 		if (cs) {
@@ -117,6 +102,7 @@
     	if (!compiledResponse.id) {
     		return this.app.update(compiledResponse);
     	}
+    	console.log(compiledResponse.id, this.callbacks[compiledResponse.id]);
     	const callback = this.callbacks[compiledResponse.id];
     	if (callback) {
     		return callback(compiledResponse);
@@ -175,6 +161,10 @@
     		this.socket.send(data);
     	}
     }
+    taskCleanup(id) {
+    	this.callbacks[id] = null;
+    	uid.free(id);
+    }
     async request(configObj) {
     	const results = await promise((accept) => {
     		const {
@@ -186,15 +176,16 @@
     			const uuid = uid().toString();
     			data.id = uuid;
     			this.callbacks[uuid] = async (requestData) => {
+    				console.log(callback);
     				if (callback) {
     					const returned = await callback(requestData);
     					if (returned) {
-    						this.callbacks[uuid] = null;
-    						uid.free(uuid);
+    						this.taskCleanup(uuid);
     						accept(returned);
     					}
     				} else {
-    					accept(requestData.data);
+    					this.taskCleanup(uuid);
+    					accept(requestData);
     				}
     			};
     		}
@@ -291,10 +282,11 @@
     				}
     			};
     			const results = await this.socket.request(requestConfig);
-    			this.post(workerInfo.id, results);
+    			return results;
     		},
-    		request(data) {
-    			this.socket.request(data);
+    		async request(data) {
+    			const results = await this.socket.request(data);
+    			return results;
     		}
     	}
     };

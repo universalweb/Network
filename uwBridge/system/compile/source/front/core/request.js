@@ -15,7 +15,11 @@ export const request = async (task, body) => {
 	if (requestPackage.id) {
 		workerPackage.data.id = requestPackage.id;
 	}
-	return workerRequest(workerPackage);
+	const results = await workerRequest(workerPackage);
+	console.log('request', results.body);
+	if (results) {
+		return results.body || results;
+	}
 };
 assign(app, {
 	request,

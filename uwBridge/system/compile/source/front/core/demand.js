@@ -13,7 +13,8 @@ const {
 		cnsl,
 		isArray,
 		isNumber,
-		mapAsync
+		mapAsync,
+		compact
 	},
 	imported,
 	crate,
@@ -103,13 +104,26 @@ export const demand = async (files, options) => {
 			}
 		});
 	}
-	console.log(results, demandType, compiledImports, localImport, remoteImport);
+	// console.log(results, demandType, compiledImports, localImport, remoteImport);
 	return demandType(compiledImports, arrayToObjectMap);
 };
-function buildFilePathType(item, type) {
+function buildFilePathType(item, type, options) {
 	let filePath = item;
 	if (filePath[0] !== '/') {
 		filePath = `/${filePath}`;
+	}
+	console.log('BUILD PATH DEMAND', item, type, options);
+	if (options) {
+		const { path } = options;
+		const pathArray = compact(path.split('/'));
+		const pathArrayLength = pathArray.length - 1;
+		const matches = filePath.match(/\.\.\//g);
+		if (matches) {
+			filePath = pathArray.slice(0, pathArrayLength - matches.length + 1).join('/') + filePath.replace(/\.\.\//g, '');
+		}
+		if (filePath.substring(0, 3) === '/./') {
+			filePath = path + filePath.substring(3);
+		}
 	}
 	if (!hasDot(filePath)) {
 		if (last(filePath) === '/') {
@@ -118,32 +132,49 @@ function buildFilePathType(item, type) {
 			filePath += `.${type}`;
 		}
 	}
+	if (options) {
+		console.log('BUILT PATH', filePath, options);
+	}
 	return filePath;
 }
 async function getCacheFromLocal(filePath, type) {
-	const crateCache = crate.storage.items[filePath];
+	if (imported[filePath]) {
+		return imported[filePath];
+	}
 	if (type.match(/css|html/)) {
+		const crateCache = imported[filePath];
 		if (crateCache) {
 			return crateCache;
 		} else {
 			const cacheTimeElapsed = checksumData(filePath);
 			if (cacheTimeElapsed) {
 				const timeElapsed = Date.now() - cacheTimeElapsed.time;
-				if (timeElapsed >= app.cacheExpire) {
+				// console.log(timeElapsed, app.cacheExpire);
+				if (timeElapsed <= app.cacheExpire) {
 					const localstoredCache = crate.getItem(filePath);
-					return localstoredCache;
+					if (localstoredCache) {
+						imported[filePath] = localstoredCache;
+						return localstoredCache;
+					}
 				}
 			}
 		}
 	} else {
 		const localstoredCache = crate.getItem(filePath);
-		console.log(filePath, localstoredCache);
+		// console.log(filePath, localstoredCache);
 		if (localstoredCache && isString(localstoredCache)) {
 			const cacheTimeElapsed = checksumData(filePath);
 			if (cacheTimeElapsed) {
-				const hotModule = await hotloadJS(localstoredCache, filePath);
-				if (hotModule) {
-					return hotModule;
+				const timeElapsed = Date.now() - cacheTimeElapsed.time;
+				if (timeElapsed <= app.cacheExpire) {
+					try {
+						const hotModule = await hotloadJS(localstoredCache, filePath);
+						if (hotModule) {
+							return hotModule;
+						}
+					} catch (err) {
+						crate.removeItem(filePath);
+					}
 				}
 			}
 		}
@@ -159,30 +190,22 @@ function demandTypeMethod(type, optionsFunction) {
 			if (imported[files]) {
 				return imported[files];
 			}
-			files = buildFilePathType(files, type);
-			if (imported[files]) {
-				return imported[files];
-			} else {
-				const localstoredCache = await getCacheFromLocal(files, type);
-				if (localstoredCache) {
-					return localstoredCache;
-				}
+			files = buildFilePathType(files, type, options);
+			const localstoredCache = await getCacheFromLocal(files, type);
+			if (localstoredCache) {
+				return localstoredCache;
 			}
 		} else {
 			files = await mapAsync(files, async (item) => {
 				if (imported[item]) {
 					return imported[item];
 				}
-				const compiledFileName = buildFilePathType(item, type);
-				if (imported[compiledFileName]) {
-					return imported[compiledFileName];
-				} else {
-					const localstoredCache = await getCacheFromLocal(compiledFileName, type);
-					if (localstoredCache) {
-						return localstoredCache;
-					}
+				const compiledFileName = buildFilePathType(item, type, options);
+				const localstoredCache = await getCacheFromLocal(compiledFileName, type);
+				if (localstoredCache) {
+					return localstoredCache;
 				}
-				app.log('Demand Type', type, compiledFileName);
+				app.log('Demand Type', type, compiledFileName, options);
 				return compiledFileName;
 			});
 		}

@@ -7,15 +7,15 @@ module.exports = async (uwApp) => {
 	class ServerCache extends VirtualStorage {
 		checksum(contents) {
 			const contentsLength = contents.length;
-			let hash = 0;
-			if (contentsLength.length === 0) {
+			let hash = contentsLength;
+			if (contentsLength === 0) {
 				return hash;
 			}
 			for (let i = 0; i < contentsLength; i++) {
 				const char = contents.charCodeAt(i);
 				hash = (hash ^ ((char + hash) << char));
 			}
-			return hash.toString();
+			return (hash - contentsLength).toString();
 		}
 		set(cacheName, item, checksum) {
 			const computedChecksum = checksum || this.checksum(item);

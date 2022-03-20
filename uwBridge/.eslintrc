@@ -267,7 +267,7 @@
 			"error",
 			{
 				"code": 150,
-				"tabWidth": 2,
+				"tabWidth": 4,
 				"ignoreComments": true,
 				"ignoreUrls": true,
 				"ignoreTemplateLiterals": true,

@@ -6,6 +6,7 @@ const {
 const {
 	resolve
 } = require('path');
+const watch = require('node-watch');
 const serverCreator = require('hyper-express');
 const LiveDirectory = require('live-directory');
 const {
@@ -26,6 +27,7 @@ const consoleUtility = require('../utilities/console');
 const certificateUtility = require('../utilities/certificate');
 const certificatesUtility = require('../utilities/certificates');
 const assetsRegex = RegExp('/assets/');
+const rawRegex = RegExp('/raw/');
 class uwBridge {
 	constructor(config) {
 		return promise(async (accept) => {
@@ -86,16 +88,6 @@ class uwBridge {
 		}
 		return thisBind.events[eventNames].push(callback);
 	}
-	addIndexRoutes(indexPage) {
-		const routes = this.config.http?.routes;
-		if (routes) {
-			each(routes, (routeObject) => {
-				this.router.get(routeObject.route, (request, response) => {
-					response.type('html').send(indexPage);
-				});
-			});
-		}
-	}
 	async httpCreate() {
 		const {
 			config
@@ -104,9 +96,11 @@ class uwBridge {
 		this.server = new serverCreator.Server(config.server);
 		this.router = new serverCreator.Router();
 		console.log(config.http.indexLocation);
-		const indexPage = fs.readFileSync(config.http.indexLocation);
+		let indexPage = fs.readFileSync(config.http.indexLocation);
+		watch(config.http.indexLocation, {}, async () => {
+			indexPage = fs.readFileSync(config.http.indexLocation);
+		});
 		console.log(indexPage);
-		// this.addIndexRoutes(indexPage);
 		const liveAssets = new LiveDirectory({
 			path: config.publicDir,
 			keep: {
@@ -119,22 +113,26 @@ class uwBridge {
 		await liveAssets.ready();
 		this.LiveAssets = liveAssets;
 		this.server.get('/*', (request, response) => {
-			console.log(request.path);
 			const requestPath = request.path;
+			console.log(request.headers['cf-connecting-ip'], requestPath);
+			if (!request.headers['cf-connecting-ip']) {
+				console.log('No CF header');
+				return response.status(200).send();
+			}
 			if (requestPath === '/') {
-				return response.type('html').send(indexPage);
+				return response.type('html').send(`${indexPage}<script>_realip='${request.headers['cf-connecting-ip']}'</script>`);
 			}
 			if (assetsRegex.test(requestPath)) {
 				const file = liveAssets.get(requestPath);
-				console.log(requestPath, file);
-				// Return a 404 if no asset/file exists on the derived path
 				if (file === undefined) {
-					return response.status(404).send();
+					return response.status(200).send();
 				}
-				// Set appropriate mime-type and serve file buffer as response body
 				return response.type(file.extension).send(file.buffer);
+			} else if (rawRegex.test(requestPath)) {
+				console.log(config.publicDir + requestPath);
+				return response.stream(fs.createReadStream(config.publicDir + requestPath));
 			} else {
-				return response.type('html').send(indexPage);
+				return response.type('html').send(`${indexPage}<script>_realip='${request.headers['cf-connecting-ip']}'</script>`);
 			}
 		});
 		console.log('http service');
@@ -198,11 +196,20 @@ class uwBridge {
 		}
 	}
 	setupWebSocketServer() {
+		this.router.upgrade('/ws', (request, response) => {
+			response.upgrade({
+				ip: request.headers['cf-connecting-ip'],
+			});
+		});
 		this.router.ws('/ws', {
 			idle_timeout: 60,
 			max_payload_length: 32 * 1024
 		}, (clientSocket) => {
-			console.log(clientSocket, `${clientSocket.ip} is now connected using websockets!`);
+			if (!clientSocket.context?.ip) {
+				console.log('No CF header');
+				return clientSocket.close();
+			}
+			console.log(clientSocket, `${clientSocket.context?.ip || clientSocket.ip} is now connected using websockets!`);
 			console.log(`user ${clientSocket.context} has connected to consume news events`);
 			client(clientSocket, this);
 		});

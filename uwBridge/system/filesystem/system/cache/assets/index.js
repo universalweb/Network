@@ -16,7 +16,7 @@ module.exports = async (uwApp) => {
 		keep: {
 			extensions: ['.css', '.html', '.js', '.json']
 		},
-		ignore: (path) => {
+		ignore(path) {
 			if (hasDot(path) && path.includes('.eslintrc.js')) {
 				return true;
 			}
@@ -26,7 +26,9 @@ module.exports = async (uwApp) => {
 	await websocketAssets.ready();
 	const assetUpdate = (file) => {
 		const filePath = file.path.replace(resourceFolder, '');
+		console.log(serverCache.get(filePath)?.checksum);
 		const cached = serverCache.set(filePath, file.content);
+		console.log(cached.checksum);
 		uwApp.push({
 			type: 'file',
 			path: assetUpdate,
@@ -34,6 +36,7 @@ module.exports = async (uwApp) => {
 		});
 	};
 	websocketAssets.on('file_reload', (file) => {
+		console.log('UPDATE', file);
 		assetUpdate(file);
 	});
 	console.log(websocketAssets.files);

@@ -74,7 +74,7 @@
 	} = app;
 	const mainWorker = new Worker('/assets/worker.js');
 	const workerRequest = async (task, dataArg) => {
-		console.log(task, dataArg);
+		// console.log(task, dataArg);
 		let compiledRequest;
 		let callbackOptional;
 		if (dataArg) {
@@ -96,8 +96,9 @@
 		const uniq = uid();
 		console.log(uniq);
 		requestObject.id = uniq;
-		return promise$1((accept) => {
+		const results = await promise$1((accept) => {
 			app.events[uniq] = async function(responseData) {
+				console.log(responseData);
 				if (callbackOptional) {
 					await callbackOptional(responseData);
 				}
@@ -105,9 +106,11 @@
 			};
 			mainWorker.postMessage(requestObject);
 		});
+		// console.log('workerRequest', results);
+		return results;
 	};
 	const workerMessage = (workerEvent) => {
-		console.log(workerEvent.data);
+		// console.log(workerEvent.data);
 		const eventData = workerEvent.data;
 		const {
 			id, data
@@ -117,12 +120,12 @@
 			generatedId = '_';
 		}
 		if (!app.events[generatedId]) {
-			console.log(generatedId);
+			console.log('Event Missing', generatedId);
 		}
-		console.log(app.events[generatedId], data);
+		// console.log(app.events[generatedId], data);
 		app.events[generatedId](data);
 		if (!eventData.keep && !isString$7(generatedId)) {
-			console.log('DONT KEEP', eventData, generatedId);
+			// console.log('DONT KEEP', eventData, generatedId);
 			app.events[generatedId] = null;
 			uid.free(generatedId);
 		}
@@ -135,7 +138,15 @@
 		imported: imported$1,
 		crate: crate$3,
 		utility: {
-			assign: assign$7, querySelector: querySelector$2, map: map$2, hasValue: hasValue$4, isString: isString$6, jsonParse
+			assign: assign$7,
+			querySelector: querySelector$2,
+			map: map$2,
+			hasValue: hasValue$4,
+			isString: isString$6,
+			jsonParse,
+			isFileJS,
+			isFileJSON,
+			isFileCSS
 		}
 	} = app;
 	const headNode$1 = querySelector$2('head');
@@ -192,18 +203,18 @@
 			getCompleted(config);
 		}
 	};
-	async function hotloadJS$1(fileContents, filepath) {
-		const lastSlash = filepath.lastIndexOf('/') + 1;
-		const filename = filepath.substring(lastSlash);
-		const dirname = filepath.substring(0, lastSlash);
-		const emulateImport = `Object.assign(import.meta, {path:'${dirname}',filename:'${filename}'});\n`;
-		let scriptRaw = new File([emulateImport, fileContents], filename, {
+	async function hotloadJS$1(fileContents, filePath) {
+		const lastSlash = filePath.lastIndexOf('/') + 1;
+		const filename = filePath.substring(lastSlash, filePath.length);
+		const dirname = filePath.substring(0, lastSlash);
+		const emulateImport = `Object.assign(import.meta, {path:'${dirname}',filePath:'${filePath}', filename:'${filename}'});\n`;
+		let scriptRaw = new File([emulateImport, fileContents], filePath, {
 			type: 'text/javascript'
 		});
 		let fileBlob = URL.createObjectURL(scriptRaw);
 		const moduleExports = assign$7({}, await import(fileBlob));
 		URL.revokeObjectURL(fileBlob);
-		imported$1[filename] = moduleExports;
+		imported$1[filePath] = moduleExports;
 		fileBlob = null;
 		scriptRaw = null;
 		return moduleExports;
@@ -218,67 +229,73 @@
 	app.hotloadLocalJS = hotloadLocalJS;
 	const saveCompleted = async (json, config) => {
 		const {
-			file, cs, key, isJs, isJson, isCss, dirname
+			file, cs, key
 		} = json;
 		const {
 			appendCSS, data
 		} = config;
-		const filename = data[key];
+		const filePath = data[key];
+		const isJs = isFileJS(filePath);
+		const isCss = isFileCSS(filePath);
+		const isJson = isFileJSON(filePath);
 		let fileContents = file;
 		if (fileContents === true) {
-			if (!imported$1[filename]) {
-				fileContents = crate$3.getItem(filename);
+			if (!imported$1[filePath]) {
+				fileContents = crate$3.getItem(filePath);
 			}
 		} else if (fileContents !== false) {
 			if (app.debug) {
-				console.log('SAVE FILE TO LOCAL', fileContents);
+				console.log('SAVE FILE TO LOCAL', filePath);
 			}
-			crate$3.setItem(`cs-${filename}`, {
+			crate$3.setItem(`cs-${filePath}`, {
 				cs,
 				time: Date.now()
 			});
-			crate$3.setItem(filename, fileContents);
+			crate$3.setItem(filePath, fileContents);
 		}
-		if (!hasValue$4(imported$1[filename]) || fileContents !== true) {
+		if (!hasValue$4(imported$1[filePath]) || fileContents !== true) {
 			if (!isJs) {
 				if (fileContents === false) {
-					imported$1[filename] = {};
+					imported$1[filePath] = {};
 				} else {
-					imported$1[filename] = isJson ? iJson(fileContents) : fileContents;
+					imported$1[filePath] = isJson ? iJson(fileContents) : fileContents;
 				}
 			} else if (fileContents) {
-				if (isLibRegex.test(filename)) {
-					let scriptRaw = new File([fileContents], filename, {
+				if (isLibRegex.test(filePath)) {
+					let scriptRaw = new File([fileContents], filePath, {
 						type: 'text/javascript'
 					});
 					let fileBlob = URL.createObjectURL(scriptRaw);
-					imported$1[filename] = await import(fileBlob);
+					imported$1[filePath] = await import(fileBlob);
 					URL.revokeObjectURL(fileBlob);
 					fileBlob = null;
 					scriptRaw = null;
 				} else {
-					if (imported$1[filename]) {
+					if (imported$1[filePath]) {
 						config.filesLoaded++;
 						return checkIfCompleted(config);
 					}
-					const emulateImport = `Object.assign(import.meta, {path:'${dirname}/',filename:'${filename}'});\n`;
-					let scriptRaw = new File([emulateImport, fileContents], filename, {
+					const lastSlash = filePath.lastIndexOf('/') + 1;
+					const filename = filePath.substring(lastSlash, filePath.length);
+					const dirname = filePath.substring(0, lastSlash);
+					const emulateImport = `Object.assign(import.meta, {path:'${dirname}',filePath:'${filePath}',filename:'${filename}'});\n`;
+					let scriptRaw = new File([emulateImport, fileContents], filePath, {
 						type: 'text/javascript'
 					});
 					let fileBlob = URL.createObjectURL(scriptRaw);
 					const moduleExports = assign$7({}, await import(fileBlob));
 					URL.revokeObjectURL(fileBlob);
 					config.filesLoaded++;
-					imported$1[filename] = moduleExports;
+					imported$1[filePath] = moduleExports;
 					fileBlob = null;
 					scriptRaw = null;
 					return checkIfCompleted(config);
 				}
 			}
 		}
-		if (isCss && appendCSS && isString$6(imported$1[filename])) {
-			constructStyleTagThenAppendToHead(imported$1[filename], filename);
-			imported$1[filename] = true;
+		if (isCss && appendCSS && isString$6(imported$1[filePath])) {
+			constructStyleTagThenAppendToHead(imported$1[filePath], filePath);
+			imported$1[filePath] = true;
 		}
 		{
 			config.filesLoaded++;
@@ -322,7 +339,8 @@
 			cnsl: cnsl$3,
 			isArray: isArray$2,
 			isNumber,
-			mapAsync: mapAsync$1
+			mapAsync: mapAsync$1,
+			compact
 		},
 		imported,
 		crate: crate$2,
@@ -417,13 +435,26 @@
 				}
 			});
 		}
-		console.log(results, demandType, compiledImports, localImport, remoteImport);
+		// console.log(results, demandType, compiledImports, localImport, remoteImport);
 		return demandType(compiledImports, arrayToObjectMap);
 	};
-	function buildFilePathType(item, type) {
+	function buildFilePathType(item, type, options) {
 		let filePath = item;
 		if (filePath[0] !== '/') {
 			filePath = `/${filePath}`;
+		}
+		console.log('BUILD PATH DEMAND', item, type, options);
+		if (options) {
+			const { path } = options;
+			const pathArray = compact(path.split('/'));
+			const pathArrayLength = pathArray.length - 1;
+			const matches = filePath.match(/\.\.\//g);
+			if (matches) {
+				filePath = pathArray.slice(0, pathArrayLength - matches.length + 1).join('/') + filePath.replace(/\.\.\//g, '');
+			}
+			if (filePath.substring(0, 3) === '/./') {
+				filePath = path + filePath.substring(3);
+			}
 		}
 		if (!hasDot(filePath)) {
 			if (last$1(filePath) === '/') {
@@ -432,32 +463,49 @@
 				filePath += `.${type}`;
 			}
 		}
+		if (options) {
+			console.log('BUILT PATH', filePath, options);
+		}
 		return filePath;
 	}
 	async function getCacheFromLocal(filePath, type) {
-		const crateCache = crate$2.storage.items[filePath];
+		if (imported[filePath]) {
+			return imported[filePath];
+		}
 		if (type.match(/css|html/)) {
+			const crateCache = imported[filePath];
 			if (crateCache) {
 				return crateCache;
 			} else {
 				const cacheTimeElapsed = checksumData(filePath);
 				if (cacheTimeElapsed) {
 					const timeElapsed = Date.now() - cacheTimeElapsed.time;
-					if (timeElapsed >= app.cacheExpire) {
+					// console.log(timeElapsed, app.cacheExpire);
+					if (timeElapsed <= app.cacheExpire) {
 						const localstoredCache = crate$2.getItem(filePath);
-						return localstoredCache;
+						if (localstoredCache) {
+							imported[filePath] = localstoredCache;
+							return localstoredCache;
+						}
 					}
 				}
 			}
 		} else {
 			const localstoredCache = crate$2.getItem(filePath);
-			console.log(filePath, localstoredCache);
+			// console.log(filePath, localstoredCache);
 			if (localstoredCache && isString$5(localstoredCache)) {
 				const cacheTimeElapsed = checksumData(filePath);
 				if (cacheTimeElapsed) {
-					const hotModule = await hotloadJS(localstoredCache, filePath);
-					if (hotModule) {
-						return hotModule;
+					const timeElapsed = Date.now() - cacheTimeElapsed.time;
+					if (timeElapsed <= app.cacheExpire) {
+						try {
+							const hotModule = await hotloadJS(localstoredCache, filePath);
+							if (hotModule) {
+								return hotModule;
+							}
+						} catch (err) {
+							crate$2.removeItem(filePath);
+						}
 					}
 				}
 			}
@@ -473,30 +521,22 @@
 				if (imported[files]) {
 					return imported[files];
 				}
-				files = buildFilePathType(files, type);
-				if (imported[files]) {
-					return imported[files];
-				} else {
-					const localstoredCache = await getCacheFromLocal(files, type);
-					if (localstoredCache) {
-						return localstoredCache;
-					}
+				files = buildFilePathType(files, type, options);
+				const localstoredCache = await getCacheFromLocal(files, type);
+				if (localstoredCache) {
+					return localstoredCache;
 				}
 			} else {
 				files = await mapAsync$1(files, async (item) => {
 					if (imported[item]) {
 						return imported[item];
 					}
-					const compiledFileName = buildFilePathType(item, type);
-					if (imported[compiledFileName]) {
-						return imported[compiledFileName];
-					} else {
-						const localstoredCache = await getCacheFromLocal(compiledFileName, type);
-						if (localstoredCache) {
-							return localstoredCache;
-						}
+					const compiledFileName = buildFilePathType(item, type, options);
+					const localstoredCache = await getCacheFromLocal(compiledFileName, type);
+					if (localstoredCache) {
+						return localstoredCache;
 					}
-					app.log('Demand Type', type, compiledFileName);
+					app.log('Demand Type', type, compiledFileName, options);
 					return compiledFileName;
 				});
 			}
@@ -546,7 +586,11 @@
 		if (requestPackage.id) {
 			workerPackage.data.id = requestPackage.id;
 		}
-		return workerRequest(workerPackage);
+		const results = await workerRequest(workerPackage);
+		console.log('request', results.body);
+		if (results) {
+			return results.body || results;
+		}
 	};
 	assign$5(app, {
 		request
@@ -1410,13 +1454,13 @@
 	});
 	view.on({
 		async '*.loadComponent'(componentEvent) {
-			const imported = await demand(componentEvent.get('demand'));
+			const loadedComponent = await demand(componentEvent.get('demand'));
 			const afterDemand = componentEvent.get('afterDemand');
 			if (afterDemand) {
 				const afterDemandEvents = afterDemand[componentEvent.original.type];
 				each$1(afterDemandEvents, (item, key) => {
 					if (isFunction$1(item)) {
-						item(imported, item, key);
+						item(loadedComponent, item, key);
 					} else {
 						app.view.findComponent(key).fire(item);
 					}

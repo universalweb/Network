@@ -69,7 +69,11 @@
 		],
 		"cSpell.words": [
 			"socketio"
-		]
+		],
+		"workbench.colorCustomizations": {
+			"editor.lineHighlightBackground": "#1073cf2d",
+			"editor.lineHighlightBorder": "#9fced11f"
+		}
 	},
 	"launch": {
 		"configurations": [

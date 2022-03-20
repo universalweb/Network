@@ -33,13 +33,13 @@ const view = new Ractive({
 });
 view.on({
 	async '*.loadComponent'(componentEvent) {
-		const imported = await demand(componentEvent.get('demand'));
+		const loadedComponent = await demand(componentEvent.get('demand'));
 		const afterDemand = componentEvent.get('afterDemand');
 		if (afterDemand) {
 			const afterDemandEvents = afterDemand[componentEvent.original.type];
 			each(afterDemandEvents, (item, key) => {
 				if (isFunction(item)) {
-					item(imported, item, key);
+					item(loadedComponent, item, key);
 				} else {
 					app.view.findComponent(key)
 						.fire(item);

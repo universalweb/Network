@@ -17,11 +17,11 @@
     "compression": "^1.7.4",
     "docredux": "^3.0.0",
     "figlet": "^1.5.2",
-    "hyper-express": "^5.8.6",
+    "hyper-express": "^5.9.1",
     "image-size": "^1.0.1",
     "is-valid-path": "^0.1.1",
     "live-directory": "^2.3.2",
-    "mongoose": "^6.2.6",
+    "mongoose": "^6.2.7",
     "msgpackr": "^1.5.5",
     "node-dir": "^0.1.17",
     "node-watch": "^0.7.3",
@@ -38,7 +38,7 @@
   },
   "description": "Sentivate Network Client, Server Module, UDSP, Universal Web Socket, & certificate generation. This serves as a service & browser prototype.",
   "devDependencies": {
-    "@babel/core": "^7.17.7",
+    "@babel/core": "^7.17.8",
     "@babel/eslint-parser": "^7.17.0",
     "@babel/preset-env": "^7.16.11",
     "@septdirworkshop/ukfontawesome": "^5.15.1",
@@ -47,12 +47,15 @@
     "electron-builder": "*",
     "esformatter": "*",
     "eslint": "^8.11.0",
+    "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-json": "^3.1.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.6.0",
     "ractive": "^1.4.0",
     "rollup": "^2.70.1",
     "rollup-plugin-terser": "^7.0.2",
     "testatron": "^2.1.0",
-    "uikit": "^3.12.2"
+    "uikit": "^3.13.1"
   },
   "engines": {
     "node": ">=12.9.1"

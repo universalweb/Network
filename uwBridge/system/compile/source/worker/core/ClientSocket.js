@@ -44,6 +44,7 @@ export class ClientSocket {
 		if (!compiledResponse.id) {
 			return this.app.update(compiledResponse);
 		}
+		console.log(compiledResponse.id, this.callbacks[compiledResponse.id]);
 		const callback = this.callbacks[compiledResponse.id];
 		if (callback) {
 			return callback(compiledResponse);
@@ -102,6 +103,10 @@ export class ClientSocket {
 			this.socket.send(data);
 		}
 	}
+	taskCleanup(id) {
+		this.callbacks[id] = null;
+		uid.free(id);
+	}
 	async request(configObj) {
 		const results = await promise((accept) => {
 			const {
@@ -114,15 +119,16 @@ export class ClientSocket {
 				const uuid = uid().toString();
 				data.id = uuid;
 				this.callbacks[uuid] = async (requestData) => {
+					console.log(callback);
 					if (callback) {
 						const returned = await callback(requestData);
 						if (returned) {
-							this.callbacks[uuid] = null;
-							uid.free(uuid);
+							this.taskCleanup(uuid);
 							accept(returned);
 						}
 					} else {
-						accept(requestData.data);
+						this.taskCleanup(uuid);
+						accept(requestData);
 					}
 				};
 			}

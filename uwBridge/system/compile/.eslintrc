@@ -263,7 +263,7 @@
 			"error",
 			{
 				"code": 150,
-				"tabWidth": 2,
+				"tabWidth": 4,
 				"ignoreComments": true,
 				"ignoreUrls": true,
 				"ignoreTemplateLiterals": true,
@@ -288,10 +288,7 @@
 		"no-continue": "off",
 		"no-inline-comments": "error",
 		"no-lonely-if": "error",
-		"no-mixed-spaces-and-tabs": [
-			"error",
-			"smart-tabs"
-		],
+		"no-mixed-spaces-and-tabs": "error",
 		"no-multiple-empty-lines": [
 			"error",
 			{

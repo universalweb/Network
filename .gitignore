@@ -38,6 +38,7 @@ uwBridge/apps/akerna/
 *.log
 *.sql
 *.sqlite
+*.heapsnapshot
 
 # OS generated files #
 ######################

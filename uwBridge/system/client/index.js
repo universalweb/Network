@@ -40,6 +40,26 @@ class ClientRequest {
 }
 const zeroInt = 0;
 class Client {
+	constructor(socket, app) {
+		this.socket = socket;
+		this.app = app;
+		this.status = 1;
+		this.id = uuid();
+		socket.on('message', (message) => {
+			this.onMessage(message);
+		});
+		socket.on('close', () => {
+			this.onClose();
+		});
+		socket.subscribe('all');
+		app.clients.set(this.id, this);
+		if (socket.context?.ip) {
+			this.ip = socket.context?.ip;
+		} else {
+			this.ip = socket.ip;
+		}
+		console.log(this.id, this.ip);
+	}
 	status = 0;
 	async onMessage(requested) {
 		console.log(`user ${this.id} message`);
@@ -113,24 +133,10 @@ class Client {
 		}
 	}
 	onClose() {
-		console.log(`use ${this.socket.context} is no longer listening for news events.`);
+		console.log(`user ID:${this.id} - IP:${this.ip} is no longer listening for new events.`);
 		this.socket.unsubscribe('all');
 		this.app.clients.delete(this.id);
-		return console.log(`${this.socket.ip} has now disconnected!`);
-	}
-	constructor(socket, app) {
-		this.socket = socket;
-		this.app = app;
-		this.status = 1;
-		this.id = uuid();
-		socket.on('message', (message) => {
-			this.onMessage(message);
-		});
-		socket.on('close', () => {
-			this.onClose();
-		});
-		socket.subscribe('all');
-		app.clients.set(this.id, this);
+		return console.log(`ID:${this.id} - IP:${this.ip} has now disconnected!`);
 	}
 	send(message, is_binary, compress) {
 		const {

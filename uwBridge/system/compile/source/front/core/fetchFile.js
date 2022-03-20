@@ -10,6 +10,9 @@ const {
 		hasValue,
 		isString,
 		jsonParse,
+		isFileJS,
+		isFileJSON,
+		isFileCSS
 	}
 } = app;
 export const headNode = querySelector('head');
@@ -67,18 +70,18 @@ const checkIfCompleted = (config) => {
 		getCompleted(config);
 	}
 };
-async function hotloadJS(fileContents, filepath) {
-	const lastSlash = filepath.lastIndexOf('/') + 1;
-	const filename = filepath.substring(lastSlash);
-	const dirname = filepath.substring(0, lastSlash);
-	const emulateImport = `Object.assign(import.meta, {path:'${dirname}',filename:'${filename}'});\n`;
-	let scriptRaw = new File([emulateImport, fileContents], filename, {
+async function hotloadJS(fileContents, filePath) {
+	const lastSlash = filePath.lastIndexOf('/') + 1;
+	const filename = filePath.substring(lastSlash, filePath.length);
+	const dirname = filePath.substring(0, lastSlash);
+	const emulateImport = `Object.assign(import.meta, {path:'${dirname}',filePath:'${filePath}', filename:'${filename}'});\n`;
+	let scriptRaw = new File([emulateImport, fileContents], filePath, {
 		type: 'text/javascript'
 	});
 	let fileBlob = URL.createObjectURL(scriptRaw);
 	const moduleExports = assign({}, await import(fileBlob));
 	URL.revokeObjectURL(fileBlob);
-	imported[filename] = moduleExports;
+	imported[filePath] = moduleExports;
 	fileBlob = null;
 	scriptRaw = null;
 	return moduleExports;
@@ -96,72 +99,74 @@ const saveCompleted = async (json, config) => {
 		file,
 		cs,
 		key,
-		isJs,
-		isJson,
-		isCss,
-		dirname,
 	} = json;
 	const {
 		appendCSS,
 		data,
 	} = config;
-	const filename = data[key];
+	const filePath = data[key];
+	const isJs = isFileJS(filePath);
+	const isCss = isFileCSS(filePath);
+	const isJson = isFileJSON(filePath);
 	let fileContents = file;
 	let skipCheck;
 	if (fileContents === true) {
-		if (!imported[filename]) {
-			fileContents = crate.getItem(filename);
+		if (!imported[filePath]) {
+			fileContents = crate.getItem(filePath);
 		}
 	} else if (fileContents !== false) {
 		if (app.debug) {
-			console.log('SAVE FILE TO LOCAL', fileContents);
+			console.log('SAVE FILE TO LOCAL', filePath);
 		}
-		crate.setItem(`cs-${filename}`, {
+		crate.setItem(`cs-${filePath}`, {
 			cs,
 			time: Date.now()
 		});
-		crate.setItem(filename, fileContents);
+		crate.setItem(filePath, fileContents);
 	}
-	if (!hasValue(imported[filename]) || fileContents !== true) {
+	if (!hasValue(imported[filePath]) || fileContents !== true) {
 		if (!isJs) {
 			if (fileContents === false) {
-				imported[filename] = {};
+				imported[filePath] = {};
 			} else {
-				imported[filename] = (isJson) ? iJson(fileContents) : fileContents;
+				imported[filePath] = (isJson) ? iJson(fileContents) : fileContents;
 			}
 		} else if (fileContents) {
-			if (isLibRegex.test(filename)) {
-				let scriptRaw = new File([fileContents], filename, {
+			if (isLibRegex.test(filePath)) {
+				let scriptRaw = new File([fileContents], filePath, {
 					type: 'text/javascript'
 				});
 				let fileBlob = URL.createObjectURL(scriptRaw);
-				imported[filename] = await import(fileBlob);
+				imported[filePath] = await import(fileBlob);
 				URL.revokeObjectURL(fileBlob);
 				fileBlob = null;
 				scriptRaw = null;
 			} else {
-				if (imported[filename]) {
+				if (imported[filePath]) {
 					config.filesLoaded++;
 					return checkIfCompleted(config);
 				}
-				const emulateImport = `Object.assign(import.meta, {path:'${dirname}/',filename:'${filename}'});\n`;
-				let scriptRaw = new File([emulateImport, fileContents], filename, {
+				const lastSlash = filePath.lastIndexOf('/') + 1;
+				const filename = filePath.substring(lastSlash, filePath.length);
+				const dirname = filePath.substring(0, lastSlash);
+				const emulateImport = `Object.assign(import.meta, {path:'${dirname}',filePath:'${filePath}',filename:'${filename}'});\n`;
+				let scriptRaw = new File([emulateImport, fileContents], filePath, {
 					type: 'text/javascript'
 				});
 				let fileBlob = URL.createObjectURL(scriptRaw);
 				const moduleExports = assign({}, await import(fileBlob));
 				URL.revokeObjectURL(fileBlob);
 				config.filesLoaded++;
-				imported[filename] = moduleExports;
+				imported[filePath] = moduleExports;
 				fileBlob = null;
 				scriptRaw = null;
 				return checkIfCompleted(config);
 			}
 		}
 	}
-	if (isCss && appendCSS && isString(imported[filename])) {
-		constructStyleTagThenAppendToHead(imported[filename], filename);
-		imported[filename] = true;
+	if (isCss && appendCSS && isString(imported[filePath])) {
+		constructStyleTagThenAppendToHead(imported[filePath], filePath);
+		imported[filePath] = true;
 	}
 	if (!skipCheck) {
 		config.filesLoaded++;

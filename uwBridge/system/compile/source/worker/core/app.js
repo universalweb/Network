@@ -91,10 +91,11 @@ export class AppWorker {
 					},
 				};
 				const results = await this.socket.request(requestConfig);
-				this.post(workerInfo.id, results);
+				return results;
 			},
-			request(data) {
-				this.socket.request(data);
+			async request(data) {
+				const results = await this.socket.request(data);
+				return results;
 			},
 		}
 	};
