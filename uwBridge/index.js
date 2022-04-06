@@ -1,10 +1,15 @@
 const utility = require('Acid');
 const fs = require('fs');
 const {
+	open: openStream
+} = require('fs/promises');
+const {
 	client
 } = require('./system/client');
 const {
-	resolve
+	resolve,
+	join,
+	normalize
 } = require('path');
 const watch = require('node-watch');
 const serverCreator = require('hyper-express');
@@ -18,6 +23,7 @@ const {
 	ifInvoke,
 	right,
 	stringify,
+	getFileExtension
 } = utility;
 const root = __dirname;
 const systemDirectory = resolve(root, './system/');
@@ -88,12 +94,15 @@ class uwBridge {
 		}
 		return thisBind.events[eventNames].push(callback);
 	}
-	async handleRequest(indexPage, liveAssets, publicDir, request, response) {
+	async handleRequest(host, indexPage, liveAssets, publicDir, request, response) {
 		const requestPath = request.path;
 		console.log(request.headers['cf-connecting-ip'], requestPath);
 		if (!request.headers['cf-connecting-ip']) {
 			console.log('No CF header');
 			return response.status(200).send();
+		}
+		if (request.headers.host !== host) {
+			return response.status(403).send();
 		}
 		if (requestPath === '/') {
 			return response.type('html').send(`${indexPage}<script>_realip='${request.headers['cf-connecting-ip']}'</script>`);
@@ -105,7 +114,12 @@ class uwBridge {
 			}
 			return response.type(file.extension).send(file.buffer);
 		} else if (rawRegex.test(requestPath)) {
-			console.log(publicDir + requestPath);
+			const fileLocation = normalize(join(publicDir, requestPath));
+			console.log(publicDir, fileLocation);
+			if (!fileLocation.includes(publicDir)) {
+				return response.status(404).send();
+			}
+			console.log('PASSED', fileLocation);
 			const fileCheck = await promise((accept) => {
 				fs.stat(publicDir + requestPath, (err, stats) => {
 					if (err) {
@@ -114,12 +128,18 @@ class uwBridge {
 					return accept(stats);
 				  });
 			});
-			console.log('STREAMING FILE');
+			console.log('STREAMING FILE', fileCheck);
 			if (fileCheck) {
-				response.header('x-is-streamed', 'true');
-				const use_chunked_encoding = request.headers['x-chunked-encoding'] === 'true';
-				const stream = fs.createReadStream(publicDir + requestPath);
-				return response.stream(stream, use_chunked_encoding ? undefined : fileCheck.size);
+				try {
+					// response.header('x-is-streamed', 'true');
+					// const use_chunked_encoding = request.headers['x-chunked-encoding'] === 'true';
+					const file = fs.readFileSync(fileLocation);
+					console.log(file);
+					return response.type(getFileExtension(fileLocation)).send(file);
+					// return response.stream(stream, use_chunked_encoding ? undefined : fileCheck.size);
+				} catch {
+					return response.status(404).send();
+				}
 			} else {
 				return response.status(404).send();
 			}
@@ -130,6 +150,7 @@ class uwBridge {
 	async httpCreate() {
 		const {
 			config: {
+				host,
 				publicDir,
 				server,
 				http: {
@@ -159,7 +180,7 @@ class uwBridge {
 		await liveAssets.ready();
 		this.LiveAssets = liveAssets;
 		this.server.get('/*', async (request, response) => {
-			return this.handleRequest(indexPage, liveAssets, publicDir, request, response);
+			return this.handleRequest(host, indexPage, liveAssets, publicDir, request, response);
 		});
 		console.log('http service');
 	}
@@ -222,17 +243,35 @@ class uwBridge {
 		}
 	}
 	setupWebSocketServer() {
+		const {
+			config: {
+				websocket: {
+					idle_timeout,
+					max_payload_length
+				}
+			}
+		} = this;
 		this.router.upgrade('/ws', (request, response) => {
-			response.upgrade({
+			console.log('query_parameters', request.query_parameters);
+			const context = {
 				ip: request.headers['cf-connecting-ip'],
-			});
+				userAgent: request.headers['User-Agent']
+			};
+			if (request.query_parameters?.uuid) {
+				context.uuid = request.query_parameters.uuid;
+			}
+			response.upgrade(context);
 		});
 		this.router.ws('/ws', {
-			idle_timeout: 60,
-			max_payload_length: 32 * 10024
+			idle_timeout,
+			max_payload_length
 		}, (clientSocket) => {
 			if (!clientSocket.context?.ip) {
 				console.log('No CF header');
+				return clientSocket.close();
+			}
+			if (!clientSocket.context?.uuid) {
+				console.log('No uuid param given');
 				return clientSocket.close();
 			}
 			console.log(clientSocket, `${clientSocket.context?.ip || clientSocket.ip} is now connected using websockets!`);

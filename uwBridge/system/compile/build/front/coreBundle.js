@@ -104,6 +104,7 @@
 				}
 				accept(responseData);
 			};
+			app.events[uniq].requestObject = requestObject;
 			mainWorker.postMessage(requestObject);
 		});
 		// console.log('workerRequest', results);
@@ -455,6 +456,9 @@
 			if (filePath.substring(0, 3) === '/./') {
 				filePath = path + filePath.substring(3);
 			}
+			if (filePath[0] !== '/') {
+				filePath = `/${filePath}`;
+			}
 		}
 		if (!hasDot(filePath)) {
 			if (last$1(filePath) === '/') {
@@ -480,13 +484,17 @@
 				const cacheTimeElapsed = checksumData(filePath);
 				if (cacheTimeElapsed) {
 					const timeElapsed = Date.now() - cacheTimeElapsed.time;
-					// console.log(timeElapsed, app.cacheExpire);
+					console.log(filePath, timeElapsed, app.cacheExpire);
 					if (timeElapsed <= app.cacheExpire) {
 						const localstoredCache = crate$2.getItem(filePath);
 						if (localstoredCache) {
 							imported[filePath] = localstoredCache;
 							return localstoredCache;
 						}
+					} else {
+						const hotLoadAsset = await demand$4(filePath);
+						console.log('HOTLOAD STATIC ASSET', filePath);
+						return hotLoadAsset;
 					}
 				}
 			}
@@ -567,7 +575,8 @@
 		demand: demand$4,
 		demandCss: demandCss$1,
 		demandHtml: demandHtml$1,
-		demandJs: demandJs$2
+		demandJs: demandJs$2,
+		streamAssets
 	});
 	const { assign: assign$5 } = app.utility;
 	const request = async (task, body) => {
@@ -575,7 +584,7 @@
 			{
 				body,
 				task
-			} :
+			  } :
 			task;
 		const workerPackage = {
 			data: {
@@ -608,73 +617,73 @@
 	} = app;
 	cnsl$2('Initializing watchers module.', 'notify');
 	class Watcher {
-    static containerRegex = [];
-    static containerPrimary = {};
-    static status = true;
-    static start() {
-    	Watcher.status = true;
-    }
-    static stop() {
-    	Watcher.status = false;
-    }
-    static async update(pushUpdate) {
-    	console.log(pushUpdate);
-    	const { body } = pushUpdate;
-    	if (!Watcher.status || !body) {
-    		return;
-    	}
-    	const {
-    		type, path
-    	} = body;
-    	const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[path];
-    	await eachAsync$2(Watcher.containerRegex, async (watcher) => {
-    		if (watcher.eventName.test(type) || watcher.eventName.test(path)) {
-    			return watcher.eventAction(body);
-    		}
-    	});
-    	if (levelObject) {
-    		await eachAsync$2(levelObject, async (watcher) => {
-    			return watcher.eventAction(body);
-    		});
-    	}
-    }
-    constructor(eventName, eventAction) {
-    	if (isString$4(eventName)) {
-    		if (!Watcher.containerPrimary[eventName]) {
-    			Watcher.containerPrimary[eventName] = [];
-    		}
-    		this.eventType = 'string';
-    	} else if (isRegExp$1(eventName)) {
-    		this.eventType = 'regex';
-    	}
-    	this.eventName = eventName;
-    	this.eventAction = eventAction.bind(this);
-    	this.start();
-    }
-    container() {
-    	if (this.eventType === 'string') {
-    		return Watcher.containerPrimary[this.eventName];
-    	} else if (this.eventType === 'regex') {
-    		return Watcher.containerRegex;
-    	}
-    }
-    isWatcher = true;
-    eventAction;
-    id;
-    active;
-    start() {
-    	if (!hasValue$3(this.id)) {
-    		this.id = this.container().push(this) - 1;
-    		this.active = true;
-    	}
-    }
-    stop() {
-    	if (hasValue$3(this.id)) {
-    		drop$1(this.container(), this.id);
-    		this.id = null;
-    		this.active = false;
-    	}
-    }
+		static containerRegex = [];
+		static containerPrimary = {};
+		static status = true;
+		static start() {
+			Watcher.status = true;
+		}
+		static stop() {
+			Watcher.status = false;
+		}
+		static async update(pushUpdate) {
+			console.log(pushUpdate);
+			const { body } = pushUpdate;
+			if (!Watcher.status || !body) {
+				return;
+			}
+			const {
+				type, path
+			} = body;
+			const levelObject = Watcher.containerPrimary[type] || Watcher.containerPrimary[path];
+			await eachAsync$2(Watcher.containerRegex, async (watcher) => {
+				if (watcher.eventName.test(type) || watcher.eventName.test(path)) {
+					return watcher.eventAction(body);
+				}
+			});
+			if (levelObject) {
+				await eachAsync$2(levelObject, async (watcher) => {
+					return watcher.eventAction(body);
+				});
+			}
+		}
+		constructor(eventName, eventAction) {
+			if (isString$4(eventName)) {
+				if (!Watcher.containerPrimary[eventName]) {
+					Watcher.containerPrimary[eventName] = [];
+				}
+				this.eventType = 'string';
+			} else if (isRegExp$1(eventName)) {
+				this.eventType = 'regex';
+			}
+			this.eventName = eventName;
+			this.eventAction = eventAction.bind(this);
+			this.start();
+		}
+		container() {
+			if (this.eventType === 'string') {
+				return Watcher.containerPrimary[this.eventName];
+			} else if (this.eventType === 'regex') {
+				return Watcher.containerRegex;
+			}
+		}
+		isWatcher = true;
+		eventAction;
+		id;
+		active;
+		start() {
+			if (!hasValue$3(this.id)) {
+				this.id = this.container().push(this) - 1;
+				this.active = true;
+			}
+		}
+		stop() {
+			if (hasValue$3(this.id)) {
+				drop$1(this.container(), this.id);
+				this.id = null;
+				this.active = false;
+			}
+		}
 	}
 	function watch$3(...args) {
 		return new Watcher(...args);
@@ -792,9 +801,9 @@
 			(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i).test(
 				a
 			) ||
-      (/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw(n|u)|c55\/|capi|ccwa|cdm|cell|chtm|cldc|cmd|co(mp|nd)|craw|da(it|ll|ng)|dbte|dcs|devi|dica|dmob|do(c|p)o|ds(12|d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(|_)|g1 u|g560|gene|gf5|gmo|go(\.w|od)|gr(ad|un)|haie|hcit|hd(m|p|t)|hei|hi(pt|ta)|hp( i|ip)|hsc|ht(c(| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i(20|go|ma)|i230|iac( ||\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|[a-w])|libw|lynx|m1w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|mcr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|([1-8]|c))|phil|pire|pl(ay|uc)|pn2|po(ck|rt|se)|prox|psio|ptg|qaa|qc(07|12|21|32|60|[2-7]|i)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h|oo|p)|sdk\/|se(c(|0|1)|47|mc|nd|ri)|sgh|shar|sie(|m)|sk0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h|v|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl|tdg|tel(i|m)|tim|tmo|to(pl|sh)|ts(70|m|m3|m5)|tx9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas|your|zeto|zte/i).test(
-      	a.substr(0, 4)
-      )
+			(/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw(n|u)|c55\/|capi|ccwa|cdm|cell|chtm|cldc|cmd|co(mp|nd)|craw|da(it|ll|ng)|dbte|dcs|devi|dica|dmob|do(c|p)o|ds(12|d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(|_)|g1 u|g560|gene|gf5|gmo|go(\.w|od)|gr(ad|un)|haie|hcit|hd(m|p|t)|hei|hi(pt|ta)|hp( i|ip)|hsc|ht(c(| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i(20|go|ma)|i230|iac( ||\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|[a-w])|libw|lynx|m1w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|mcr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|([1-8]|c))|phil|pire|pl(ay|uc)|pn2|po(ck|rt|se)|prox|psio|ptg|qaa|qc(07|12|21|32|60|[2-7]|i)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h|oo|p)|sdk\/|se(c(|0|1)|47|mc|nd|ri)|sgh|shar|sie(|m)|sk0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h|v|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl|tdg|tel(i|m)|tim|tmo|to(pl|sh)|ts(70|m|m3|m5)|tx9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas|your|zeto|zte/i).test(
+				a.substr(0, 4)
+			)
 		) {
 			check = true;
 		}
@@ -946,7 +955,17 @@
 		async merge(keypath, source = {}, options) {
 			const path = assemblePath(keypath, options);
 			const target = this.get(path);
-			if (hasValue$2(target)) {
+			if (isPlainObject$1(target)) {
+				assignDeep$1(target, source);
+				await this.update(path);
+			}
+			return target;
+		},
+		async mergeItem(keypath, source = {}, indexValue, propertyNameArg, options) {
+			const path = assemblePath(keypath, options);
+			const propertyName = getPropertyName(propertyNameArg, options);
+			const target = getItem(this, path, indexValue, propertyName);
+			if (isPlainObject$1(target)) {
 				assignDeep$1(target, source);
 				await this.update(path);
 			}
@@ -1524,250 +1543,250 @@
 		constructor() {
 			return this;
 		}
-    debug = false;
-    hostname = location.hostname;
-    pathname = location.pathname;
-    navHistory = [];
-    historyIndex = 0;
-    routes = [];
-    methods = {};
-    events = {
-    	beforeLoad: [],
-    	afterLoad: [],
-    	beforeInit: [],
-    	afterInit: [],
-    	afterRender: [],
-    	beforeRender: [],
-    	render: [],
-    	compile: []
-    };
-    on(eventNames, callback) {
-    	if (isPlainObject(eventNames) && !callback) {
-    		return each(eventNames, (eventCallback, eventName) => {
-    			this.on(eventName, eventCallback);
-    		});
-    	}
-    	return this.events[eventNames].push(callback);
-    }
-    async triggerEvents(eventName, optionalBind = this, args = []) {
-    	const bindThis = this;
-    	// console.log(bindThis, this.events[eventName], eventName, args);
-    	return eachAsync(bindThis.events[eventName], async (eventItem) => {
-    		await apply(eventItem, optionalBind, args);
-    	});
-    }
-    safePathAdd(baseArg) {
-    	let fullPath = baseArg;
-    	if (last(fullPath) !== '/') {
-    		fullPath = `${fullPath}/`;
-    	}
-    	if (fullPath[0] === '/') {
-    		fullPath = restString(fullPath);
-    	}
-    	return fullPath;
-    }
-    url(baseArg, addPath) {
-    	let fullPath = baseArg;
-    	if (last(fullPath) !== '/') {
-    		fullPath = `${fullPath}/`;
-    	}
-    	if (fullPath[0] !== '/') {
-    		fullPath = `/${fullPath}`;
-    	}
-    	return baseArg + this.safePathAdd(addPath);
-    }
-    defaults = {
-    	protected: false,
-    	role: false
-    };
-    state;
-    log(...args) {
-    	if (this.debug || app.debug) {
-    		console.log(...args);
-    	}
-    }
-    popstate(popstateEvent) {
-    	app.router.log('popstate', popstateEvent);
-    	popstateEvent.preventDefault();
-    	app.router.process();
-    }
-    pushState(url) {
-    	history.pushState({}, url, url);
-    	app.router.process();
-    }
-    installRoute(routeModel) {
-    	// app.router.log('Install Route', routeModel);
-    	const { match } = routeModel;
-    	if (match) {
-    		routeModel.regex = isRegExp(match) ? match : new RegExp(match);
-    	}
-    	return app.router.routes.push(routeModel);
-    }
-    add(item) {
-    	// this.log('add routes', item);
-    	return mapArray(item, this.installRoute);
-    }
-    async setup(options) {
-    	this.log('setup router');
-    	this.add(options.routes);
-    	this.log('assign options');
-    	assignDeep(this, options);
-    	this.log('eventAdd popstate');
-    	eventAdd(window, 'popstate', this.popstate, true);
-    }
-    async updateLocation() {
-    	map(location, (item, index) => {
-    		if (isString(item)) {
-    			this[index] = item;
-    		}
-    	});
-    	this.pathScored = this.pathname.replace(/\//g, '_');
-    	this.paths = rest(this.pathname.split('/'));
-    	this.pathCamel = camelCase(this.paths.join('_'));
-    	this.navHistory.push(this.pathname);
-    	this.historyIndex++;
-    }
-    async compilePath() {
-    	const {
-    		route, secured, role, path
-    	} = this.pathState;
-    	this.log(this.pathState);
-    	if (route) {
-    		this.pathState.path = route();
-    	} else if (!path) {
-    		this.pathState.path = this.pathname;
-    	}
-    	if (last(this.pathState.path) !== '/') {
-    		this.pathState.path = `${this.pathState.path}/`;
-    	}
-    	if (this.pathState.path[0] !== '/') {
-    		this.pathState.path = `/${this.pathState.path}`;
-    	}
-    	if (secured) {
-    		const securityCheck = Boolean(await this.methods.security(this.match));
-    		if (securityCheck) {
-    			const success = await this.methods.success();
-    			if (role) {
-    				this.pathState.path = `${this.pathState.path}${success}/`;
-    			}
-    		} else {
-    			this.pathState.path = `/${await this.methods.fail()}/`;
-    		}
-    	}
-    	this.pathState.path = `/${this.defaults.root}${this.pathState.path}index.js`;
-    	this.log('COMPILED PATH', this.pathState.path);
-    }
-    checkMatch(routeObject) {
-    	const check = routeObject.regex.test(app.router.pathname);
-    	if (check) {
-    		app.router.routeState = routeObject;
-    	}
-    	// app.router.log(check, app.router.pathname, routeObject.regex);
-    	return !check;
-    }
-    async close() {
-    	const currentComponent = this.component;
-    	if (currentComponent) {
-    		console.log('Close Component', this, currentComponent);
-    		await app.view.findComponent('navstate').teardown();
-    	}
-    }
-    async process() {
-    	const routerThis = this;
-    	app.view.fire('router.loading');
-    	this.log('Router Loading State', location.pathname);
-    	this.updateLocation();
-    	// this.log(this.routes);
-    	mapWhile(this.routes, this.checkMatch);
-    	const match = app.router.routeState;
-    	this.log('Match found', match);
-    	if (match) {
-    		await this.close();
-    		const {
-    			path, route
-    		} = match;
-    		const secured = hasValue(match.secured) ? match.secured : this.defaults.secured;
-    		const role = hasValue(match.role) ? match.role : this.defaults.role;
-    		const pathState = {
-    			match,
-    			secured,
-    			role,
-    			path,
-    			route
-    		};
-    		this.pathState = pathState;
-    		this.match = match;
-    		await this.compilePath();
-    		await Ractive.sharedSet('currentPath', this.pathname);
-    		await Ractive.sharedSet('navState', false);
-    		this.log('Checking if Model Loaded', match.model);
-    		if (match.assets) {
-    			if (match.assets.scripts) {
-    				await demandJs(match.assets.scripts);
-    			}
-    		}
-    		this.log('match model', pathState.path);
-    		let stateModel;
-    		try {
-    			stateModel = await demandJs(pathState.path);
-    		} catch (e) {
-    			app.log('Error Navigation File Failed to load', pathState.path);
-    			app.log(e);
-    			crate.removeItem(pathState.path);
-    		}
-    		if (!stateModel) {
-    			return app.log('ROUTER FAILED TO LOAD');
-    		}
-    		const stateComponent = assignDeep({}, stateModel.component);
-    		await this.triggerEvents('beforeLoad', stateComponent);
-    		const onrender = stateComponent.onrender;
-    		const oninit = stateComponent.oninit;
-    		stateComponent.onrender = function() {};
-    		const compiledRender = async function(...args) {
-    			cnsl('onrender', 'notify');
-    			onrender && (await apply(onrender, this, args));
-    			cnsl('onrender END', 'notify');
-    			await routerThis.triggerEvents('render', this, args);
-    		};
-    		stateComponent.oninit = async function(...args) {
-    			cnsl('oninit', 'notify');
-    			await routerThis.triggerEvents('beforeInit', this, args);
-    			oninit && (await apply(oninit, this, args));
-    			cnsl('oninit END', 'notify');
-    			if (this.rendered) {
-    				await apply(compiledRender, this, args);
-    			} else {
-    				this.on('onrender', compiledRender);
-    			}
-    		};
-    		await this.triggerEvents('compile', stateComponent);
-    		// this.log(stateModel);
-    		const initializeComponent = await component(stateComponent);
-    		// this.log('component made', initializeComponent);
-    		Ractive.components.navstate = initializeComponent;
-    		await routerThis.triggerEvents('afterLoad');
-    		await Ractive.sharedSet('navState', true);
-    	} else {
-    		return false;
-    	}
-    	this.log('Finished processing');
-    }
-    back() {
-    	this.log('Router back State');
-    	const navHistory = this.navHistory;
-    	if (navHistory.length) {
-    		app.router.historyIndex--;
-    		window.history.back();
-    	}
-    }
-    forward() {
-    	this.log('Router forward State');
-    	const navHistory = this.navHistory;
-    	if (navHistory.length > this.historyIndex) {
-    		app.router.historyIndex++;
-    		window.history.forward();
-    	}
-    }
+		debug = false;
+		hostname = location.hostname;
+		pathname = location.pathname;
+		navHistory = [];
+		historyIndex = 0;
+		routes = [];
+		methods = {};
+		events = {
+			beforeLoad: [],
+			afterLoad: [],
+			beforeInit: [],
+			afterInit: [],
+			afterRender: [],
+			beforeRender: [],
+			render: [],
+			compile: []
+		};
+		on(eventNames, callback) {
+			if (isPlainObject(eventNames) && !callback) {
+				return each(eventNames, (eventCallback, eventName) => {
+					this.on(eventName, eventCallback);
+				});
+			}
+			return this.events[eventNames].push(callback);
+		}
+		async triggerEvents(eventName, optionalBind = this, args = []) {
+			const bindThis = this;
+			// console.log(bindThis, this.events[eventName], eventName, args);
+			return eachAsync(bindThis.events[eventName], async (eventItem) => {
+				await apply(eventItem, optionalBind, args);
+			});
+		}
+		safePathAdd(baseArg) {
+			let fullPath = baseArg;
+			if (last(fullPath) !== '/') {
+				fullPath = `${fullPath}/`;
+			}
+			if (fullPath[0] === '/') {
+				fullPath = restString(fullPath);
+			}
+			return fullPath;
+		}
+		url(baseArg, addPath) {
+			let fullPath = baseArg;
+			if (last(fullPath) !== '/') {
+				fullPath = `${fullPath}/`;
+			}
+			if (fullPath[0] !== '/') {
+				fullPath = `/${fullPath}`;
+			}
+			return baseArg + this.safePathAdd(addPath);
+		}
+		defaults = {
+			protected: false,
+			role: false
+		};
+		state;
+		log(...args) {
+			if (this.debug || app.debug) {
+				console.log(...args);
+			}
+		}
+		popstate(popstateEvent) {
+			app.router.log('popstate', popstateEvent);
+			popstateEvent.preventDefault();
+			app.router.process();
+		}
+		pushState(url) {
+			history.pushState({}, url, url);
+			app.router.process();
+		}
+		installRoute(routeModel) {
+			// app.router.log('Install Route', routeModel);
+			const { match } = routeModel;
+			if (match) {
+				routeModel.regex = isRegExp(match) ? match : new RegExp(match);
+			}
+			return app.router.routes.push(routeModel);
+		}
+		add(item) {
+			// this.log('add routes', item);
+			return mapArray(item, this.installRoute);
+		}
+		async setup(options) {
+			this.log('setup router');
+			this.add(options.routes);
+			this.log('assign options');
+			assignDeep(this, options);
+			this.log('eventAdd popstate');
+			eventAdd(window, 'popstate', this.popstate, true);
+		}
+		async updateLocation() {
+			map(location, (item, index) => {
+				if (isString(item)) {
+					this[index] = item;
+				}
+			});
+			this.pathScored = this.pathname.replace(/\//g, '_');
+			this.paths = rest(this.pathname.split('/'));
+			this.pathCamel = camelCase(this.paths.join('_'));
+			this.navHistory.push(this.pathname);
+			this.historyIndex++;
+		}
+		async compilePath() {
+			const {
+				route, secured, role, path
+			} = this.pathState;
+			this.log(this.pathState);
+			if (route) {
+				this.pathState.path = route();
+			} else if (!path) {
+				this.pathState.path = this.pathname;
+			}
+			if (last(this.pathState.path) !== '/') {
+				this.pathState.path = `${this.pathState.path}/`;
+			}
+			if (this.pathState.path[0] !== '/') {
+				this.pathState.path = `/${this.pathState.path}`;
+			}
+			if (secured) {
+				const securityCheck = Boolean(await this.methods.security(this.match));
+				if (securityCheck) {
+					const success = await this.methods.success();
+					if (role) {
+						this.pathState.path = `${this.pathState.path}${success}/`;
+					}
+				} else {
+					this.pathState.path = `/${await this.methods.fail()}/`;
+				}
+			}
+			this.pathState.path = `/${this.defaults.root}${this.pathState.path}index.js`;
+			this.log('COMPILED PATH', this.pathState.path);
+		}
+		checkMatch(routeObject) {
+			const check = routeObject.regex.test(app.router.pathname);
+			if (check) {
+				app.router.routeState = routeObject;
+			}
+			// app.router.log(check, app.router.pathname, routeObject.regex);
+			return !check;
+		}
+		async close() {
+			const currentComponent = this.component;
+			if (currentComponent) {
+				console.log('Close Component', this, currentComponent);
+				await app.view.findComponent('navstate').teardown();
+			}
+		}
+		async process() {
+			const routerThis = this;
+			app.view.fire('router.loading');
+			this.log('Router Loading State', location.pathname);
+			this.updateLocation();
+			// this.log(this.routes);
+			mapWhile(this.routes, this.checkMatch);
+			const match = app.router.routeState;
+			this.log('Match found', match);
+			if (match) {
+				await this.close();
+				const {
+					path, route
+				} = match;
+				const secured = hasValue(match.secured) ? match.secured : this.defaults.secured;
+				const role = hasValue(match.role) ? match.role : this.defaults.role;
+				const pathState = {
+					match,
+					secured,
+					role,
+					path,
+					route
+				};
+				this.pathState = pathState;
+				this.match = match;
+				await this.compilePath();
+				await Ractive.sharedSet('currentPath', this.pathname);
+				await Ractive.sharedSet('navState', false);
+				this.log('Checking if Model Loaded', match.model);
+				if (match.assets) {
+					if (match.assets.scripts) {
+						await demandJs(match.assets.scripts);
+					}
+				}
+				this.log('match model', pathState.path);
+				let stateModel;
+				try {
+					stateModel = await demandJs(pathState.path);
+				} catch (e) {
+					app.log('Error Navigation File Failed to load', pathState.path);
+					app.log(e);
+					crate.removeItem(pathState.path);
+				}
+				if (!stateModel) {
+					return app.log('ROUTER FAILED TO LOAD');
+				}
+				const stateComponent = assignDeep({}, stateModel.component);
+				await this.triggerEvents('beforeLoad', stateComponent);
+				const onrender = stateComponent.onrender;
+				const oninit = stateComponent.oninit;
+				stateComponent.onrender = function() {};
+				const compiledRender = async function(...args) {
+					cnsl('onrender', 'notify');
+					onrender && (await apply(onrender, this, args));
+					cnsl('onrender END', 'notify');
+					await routerThis.triggerEvents('render', this, args);
+				};
+				stateComponent.oninit = async function(...args) {
+					cnsl('oninit', 'notify');
+					await routerThis.triggerEvents('beforeInit', this, args);
+					oninit && (await apply(oninit, this, args));
+					cnsl('oninit END', 'notify');
+					if (this.rendered) {
+						await apply(compiledRender, this, args);
+					} else {
+						this.on('onrender', compiledRender);
+					}
+				};
+				await this.triggerEvents('compile', stateComponent);
+				// this.log(stateModel);
+				const initializeComponent = await component(stateComponent);
+				// this.log('component made', initializeComponent);
+				Ractive.components.navstate = initializeComponent;
+				await routerThis.triggerEvents('afterLoad');
+				await Ractive.sharedSet('navState', true);
+			} else {
+				return false;
+			}
+			this.log('Finished processing');
+		}
+		back() {
+			this.log('Router back State');
+			const navHistory = this.navHistory;
+			if (navHistory.length) {
+				app.router.historyIndex--;
+				window.history.back();
+			}
+		}
+		forward() {
+			this.log('Router forward State');
+			const navHistory = this.navHistory;
+			if (navHistory.length > this.historyIndex) {
+				app.router.historyIndex++;
+				window.history.forward();
+			}
+		}
 	}
 	app.router = new Router();
 	app.view.on({

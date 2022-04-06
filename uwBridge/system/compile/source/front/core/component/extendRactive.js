@@ -84,7 +84,17 @@ export const extendRactive = {
 	async merge(keypath, source = {}, options) {
 		const path = assemblePath(keypath, options);
 		const target = this.get(path);
-		if (hasValue(target)) {
+		if (isPlainObject(target)) {
+			assignDeep(target, source);
+			await this.update(path);
+		}
+		return target;
+	},
+	async mergeItem(keypath, source = {}, indexValue, propertyNameArg, options) {
+		const path = assemblePath(keypath, options);
+		const propertyName = getPropertyName(propertyNameArg, options);
+		const target = getItem(this, path, indexValue, propertyName);
+		if (isPlainObject(target)) {
 			assignDeep(target, source);
 			await this.update(path);
 		}

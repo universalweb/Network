@@ -124,6 +124,9 @@ function buildFilePathType(item, type, options) {
 		if (filePath.substring(0, 3) === '/./') {
 			filePath = path + filePath.substring(3);
 		}
+		if (filePath[0] !== '/') {
+			filePath = `/${filePath}`;
+		}
 	}
 	if (!hasDot(filePath)) {
 		if (last(filePath) === '/') {
@@ -149,13 +152,17 @@ async function getCacheFromLocal(filePath, type) {
 			const cacheTimeElapsed = checksumData(filePath);
 			if (cacheTimeElapsed) {
 				const timeElapsed = Date.now() - cacheTimeElapsed.time;
-				// console.log(timeElapsed, app.cacheExpire);
+				console.log(filePath, timeElapsed, app.cacheExpire);
 				if (timeElapsed <= app.cacheExpire) {
 					const localstoredCache = crate.getItem(filePath);
 					if (localstoredCache) {
 						imported[filePath] = localstoredCache;
 						return localstoredCache;
 					}
+				} else {
+					const hotLoadAsset = await demand(filePath);
+					console.log('HOTLOAD STATIC ASSET', filePath);
+					return hotLoadAsset;
 				}
 			}
 		}
@@ -237,4 +244,5 @@ assign(app, {
 	demandCss,
 	demandHtml,
 	demandJs,
+	streamAssets,
 });

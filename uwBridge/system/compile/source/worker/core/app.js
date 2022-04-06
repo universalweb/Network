@@ -53,10 +53,13 @@ export class AppWorker {
 	state = 1;
 	config = {};
 	tasks = {
-		configure(data) {
+		async configure(data) {
 			assign(this.config, data);
 			console.log('STARTING');
-			this.socket = construct(ClientSocket, [this]);
+			this.socket = await construct(ClientSocket, [this, data]);
+			return {
+				status: true
+			};
 		},
 		post(id, data, options) {
 			const responseData = {

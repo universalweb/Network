@@ -58,6 +58,7 @@ class Client {
 		} else {
 			this.ip = socket.ip;
 		}
+		this.uuid = socket.context?.uuid;
 		console.log(this.id, this.ip);
 	}
 	status = 0;
@@ -123,7 +124,7 @@ class Client {
 						clientRequest.send();
 					}
 				} catch (errorMessage) {
-					console.log('Failed to complete client request');
+					console.log(errorMessage, 'Failed to complete client request');
 					return;
 				}
 			} else {

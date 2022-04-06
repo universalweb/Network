@@ -13,7 +13,7 @@ module.exports = async (uwApp) => {
 			}
 			for (let i = 0; i < contentsLength; i++) {
 				const char = contents.charCodeAt(i);
-				hash = (hash ^ ((char + hash) << char));
+				hash = (hash ^ ((char + hash) << char)) - i;
 			}
 			return (hash - contentsLength).toString();
 		}

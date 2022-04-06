@@ -39,6 +39,7 @@ export const workerRequest = async (task, dataArg) => {
 			}
 			accept(responseData);
 		};
+		app.events[uniq].requestObject = requestObject;
 		mainWorker.postMessage(requestObject);
 	});
 	// console.log('workerRequest', results);

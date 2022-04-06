@@ -6,19 +6,22 @@ const {
 	isString,
 	stringify,
 	jsonParse,
-	hasValue
+	hasValue,
+	apply
 } = self.$;
 export class ClientSocket {
-	constructor(app) {
+	constructor(app, configData) {
 		this.app = app;
 		console.log('Worker Socket Module', 'notify');
 		this.hostDomain = `${(app.config.socketHostname || location.hostname)}`;
 		if (app.config.port) {
 			this.hostDomain = `${this.hostDomain}:${app.config.port}`;
 		}
+		if (app.config.uuid) {
+			this.hostDomain = `${this.hostDomain}?uuid=${app.config.uuid}`;
+		}
 		console.log(this.hostDomain);
-		this.connect();
-		clearInterval();
+		return this.connect(configData);
 	}
 	callbacks = {};
 	status = 0;
@@ -51,56 +54,72 @@ export class ClientSocket {
 		}
 	}
 	reconnect() {
+		console.log('RECONNECT CALLED');
 		const thisContext = this;
 		if (!hasValue(thisContext.connectInterval)) {
-			this.socket.close();
+			thisContext.socket.onopen = null;
+			thisContext.socket.onmessage = null;
+			thisContext.socket.onclose = null;
+			thisContext.socket.onerror = null;
+			thisContext.socket.close();
 			thisContext.connectInterval = setInterval(() => {
-				thisContext.connect();
+				console.log('RECONNECT INTERVAL CALLED');
+				return thisContext.connect();
 			}, 2000);
+			console.log('RECONNECT INTERVAL STARTED');
 		}
 	}
 	connect() {
 		const thisContext = this;
-		thisContext.socket = construct(WebSocket, [thisContext.hostDomain]);
-		thisContext.socket.addEventListener('open', () => {
-			if (hasValue(thisContext.connectInterval)) {
-			  clearInterval(thisContext.connectInterval);
-			}
-			this.ready();
-		});
-		// Listen for messages
-		thisContext.socket.addEventListener('message', (socketEvent) => {
-			console.log('Message from server ', socketEvent.data);
-			thisContext.process(socketEvent.data);
-		});
-		thisContext.socket.addEventListener('disconnect', () => {
-			console.log('disconnected');
-			if (!hasValue(thisContext.connectInterval)) {
-				thisContext.app.update({
-					type: 'connection',
-					status: 'disconnected'
-				});
-			}
-			thisContext.reconnect();
-		});
-		thisContext.socket.addEventListener('close', () => {
-			console.log('close');
-			if (!hasValue(thisContext.connectInterval)) {
-				thisContext.app.update({
-					type: 'connection',
-					status: 'closed'
-				});
-			}
-			thisContext.reconnect();
+		return promise((accept) => {
+			thisContext.socket = construct(WebSocket, [thisContext.hostDomain]);
+			thisContext.socket.onopen = () => {
+				if (hasValue(thisContext.connectInterval)) {
+					console.log('Reconnect Cleared', thisContext.connectInterval);
+					clearInterval(thisContext.connectInterval);
+					thisContext.connectInterval = null;
+				}
+				thisContext.socket.onmessage = (socketEvent) => {
+					console.log('Message from server ', socketEvent.data);
+					apply(thisContext.process, thisContext, [socketEvent.data]);
+				};
+				thisContext.socket.onclose = () => {
+					console.log('close', thisContext.connectInterval, !hasValue(thisContext.connectInterval));
+					if (!hasValue(thisContext.connectInterval)) {
+						thisContext.app.update({
+							type: 'connection',
+							status: 'closed'
+						});
+						thisContext.reconnect();
+					}
+				};
+				thisContext.ready();
+				accept(thisContext);
+			};
+			thisContext.socket.onerror = () => {
+				console.log('error', thisContext.connectInterval, !hasValue(thisContext.connectInterval));
+				if (!hasValue(thisContext.connectInterval)) {
+					thisContext.app.update({
+						type: 'connection',
+						status: 'error'
+					});
+					thisContext.reconnect();
+				}
+			};
 		});
 	}
 	send(data) {
-		if (isPlainObject(data)) {
-			this.socket.send(stringify(data));
-		} else if (isString(data)) {
-			this.socket.send(data);
+		if (this.socket.readyState === 1) {
+			if (isPlainObject(data)) {
+				this.socket.send(stringify(data));
+			} else if (isString(data)) {
+				this.socket.send(data);
+			} else {
+				this.socket.send(data);
+			}
 		} else {
-			this.socket.send(data);
+			console.log(this, this.socket);
+			this.reconnect();
 		}
 	}
 	taskCleanup(id) {
