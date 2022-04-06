@@ -9,7 +9,9 @@ const {
 } = app;
 export const mainWorker = new Worker('/assets/worker.js');
 export const workerRequest = async (task, dataArg) => {
-	// console.log(task, dataArg);
+	if (app.debug) {
+		console.log(task, dataArg);
+	}
 	let compiledRequest;
 	let callbackOptional;
 	if (dataArg) {
@@ -29,17 +31,23 @@ export const workerRequest = async (task, dataArg) => {
 		return mainWorker.postMessage(requestObject);
 	}
 	const uniq = uid();
-	console.log(uniq);
+	if (app.debug) {
+		console.log(uniq);
+	}
 	requestObject.id = uniq;
 	const results = await promise((accept) => {
 		app.events[uniq] = async function(responseData) {
-			console.log(responseData);
+			if (app.debug) {
+				console.log(responseData);
+			}
 			if (callbackOptional) {
 				await callbackOptional(responseData);
 			}
 			accept(responseData);
 		};
-		app.events[uniq].requestObject = requestObject;
+		if (app.debug) {
+			app.events[uniq].requestObject = requestObject;
+		}
 		mainWorker.postMessage(requestObject);
 	});
 	// console.log('workerRequest', results);
@@ -57,12 +65,14 @@ const workerMessage = (workerEvent) => {
 		generatedId = '_';
 	}
 	if (!app.events[generatedId]) {
-		console.log('Event Missing', generatedId);
+		console.warn('Event Missing', generatedId);
 	}
-	// console.log(app.events[generatedId], data);
+	if (app.debug) {
+		console.log(app.events[generatedId], data);
+	}
 	app.events[generatedId](data);
 	if (!eventData.keep && !isString(generatedId)) {
-		// console.log('DONT KEEP', eventData, generatedId);
+		console.log('DONT KEEP', eventData, generatedId);
 		app.events[generatedId] = null;
 		uid.free(generatedId);
 	}
