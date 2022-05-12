@@ -1,6 +1,6 @@
 (function() {
 	const {
-		isPlainObject: isPlainObject$3, virtualStorage, crate: crate$4, hasValue: hasValue$6
+		isPlainObject: isPlainObject$4, virtualStorage, crate: crate$4, hasValue: hasValue$6
 	} = $;
 	const app = {
 		events: {},
@@ -25,8 +25,10 @@
 		},
 		componentStore(keyPath, keyValue) {
 			if (hasValue$6(keyValue)) {
-				return Ractive.sharedSet(keyPath, keyValue);
-			} else if (isPlainObject$3(keyPath)) {
+				if (Ractive.sharedGet(keyPath) !== keyValue) {
+					return Ractive.sharedSet(keyPath, keyValue);
+				}
+			} else if (isPlainObject$4(keyPath)) {
 				return Ractive.sharedSet(keyPath);
 			}
 			return Ractive.sharedGet(keyPath);
@@ -157,7 +159,8 @@
 			jsonParse,
 			isFileJS,
 			isFileJSON,
-			isFileCSS
+			isFileCSS,
+			isPlainObject: isPlainObject$3
 		}
 	} = app;
 	const headNode$1 = querySelector$2('head');
@@ -172,6 +175,9 @@
 	const checksumData$1 = (item) => {
 		const checksumString = crate$3.getItem(`cs-${item}`);
 		if (checksumString) {
+			if (isPlainObject$3(checksumString)) {
+				return checksumString;
+			}
 			const checksum = jsonParse(checksumString);
 			if (checksum) {
 				return checksum;
@@ -180,9 +186,8 @@
 	};
 	app.checksumData = checksumData$1;
 	const checksumReturn = (item) => {
-		const checksumString = crate$3.getItem(`cs-${item}`);
-		if (checksumString) {
-			const checksum = jsonParse(checksumString);
+		const checksum = checksumData$1(item);
+		if (checksum) {
 			if (checksum?.cs) {
 				return checksum.cs;
 			}
@@ -253,6 +258,14 @@
 		if (fileContents === true) {
 			if (!imported$1[filePath]) {
 				fileContents = crate$3.getItem(filePath);
+				if (fileContents) {
+					console.log(filePath);
+					const checksumUpdate = checksumData$1(filePath);
+					if (checksumUpdate) {
+						checksumUpdate.time = Date.now();
+						crate$3.setItem(`cs-${filePath}`, checksumUpdate);
+					}
+				}
 			}
 		} else if (fileContents !== false) {
 			if (app.debug) {
@@ -510,11 +523,14 @@
 			}
 		} else {
 			const localstoredCache = crate$2.getItem(filePath);
-			// console.log(filePath, localstoredCache);
+			// console.log('Local File Cache check', filePath, localstoredCache?.length);
 			if (localstoredCache && isString$5(localstoredCache)) {
+				console.log(filePath);
 				const cacheTimeElapsed = checksumData(filePath);
+				// console.log('Local File Cache check time elapsed', filePath, cacheTimeElapsed);
 				if (cacheTimeElapsed) {
 					const timeElapsed = Date.now() - cacheTimeElapsed.time;
+					// console.log('Local File Cache check time elapsed compute', filePath, timeElapsed, timeElapsed <= app.cacheExpire);
 					if (timeElapsed <= app.cacheExpire) {
 						try {
 							const hotModule = await hotloadJS(localstoredCache, filePath);

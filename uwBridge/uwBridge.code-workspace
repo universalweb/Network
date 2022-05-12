@@ -17,6 +17,9 @@
 		},
 		{
 			"path": "apps/akerna/api/client"
+		},
+		{
+			"path": "apps/akerna/filesystem/public"
 		}
 	],
 	"settings": {

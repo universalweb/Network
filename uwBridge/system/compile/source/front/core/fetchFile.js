@@ -12,7 +12,8 @@ const {
 		jsonParse,
 		isFileJS,
 		isFileJSON,
-		isFileCSS
+		isFileCSS,
+		isPlainObject
 	}
 } = app;
 export const headNode = querySelector('head');
@@ -27,6 +28,9 @@ const isLibRegex = /(^js\/lib\/)|(\.min\.js)/;
 const checksumData = (item) => {
 	const checksumString = crate.getItem(`cs-${item}`);
 	if (checksumString) {
+		if (isPlainObject(checksumString)) {
+			return checksumString;
+		}
 		const checksum = jsonParse(checksumString);
 		if (checksum) {
 			return checksum;
@@ -35,9 +39,8 @@ const checksumData = (item) => {
 };
 app.checksumData = checksumData;
 const checksumReturn = (item) => {
-	const checksumString = crate.getItem(`cs-${item}`);
-	if (checksumString) {
-		const checksum = jsonParse(checksumString);
+	const checksum = checksumData(item);
+	if (checksum) {
 		if (checksum?.cs) {
 			return checksum.cs;
 		}
@@ -113,6 +116,14 @@ const saveCompleted = async (json, config) => {
 	if (fileContents === true) {
 		if (!imported[filePath]) {
 			fileContents = crate.getItem(filePath);
+			if (fileContents) {
+				console.log(filePath);
+				const checksumUpdate = checksumData(filePath);
+				if (checksumUpdate) {
+					checksumUpdate.time = Date.now();
+					crate.setItem(`cs-${filePath}`, checksumUpdate);
+				}
+			}
 		}
 	} else if (fileContents !== false) {
 		if (app.debug) {

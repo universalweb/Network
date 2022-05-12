@@ -27,7 +27,9 @@ const app = {
 	},
 	componentStore(keyPath, keyValue) {
 		if (hasValue(keyValue)) {
-			return Ractive.sharedSet(keyPath, keyValue);
+			if (Ractive.sharedGet(keyPath) !== keyValue) {
+				return Ractive.sharedSet(keyPath, keyValue);
+			}
 		} else if (isPlainObject(keyPath)) {
 			return Ractive.sharedSet(keyPath);
 		}

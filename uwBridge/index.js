@@ -1,8 +1,6 @@
 const utility = require('Acid');
 const fs = require('fs');
-const {
-	open: openStream
-} = require('fs/promises');
+const fsAsync = require('fs').promises;
 const {
 	client
 } = require('./system/client');
@@ -32,8 +30,11 @@ const fileUtility = require('../utilities/file');
 const consoleUtility = require('../utilities/console');
 const certificateUtility = require('../utilities/certificate');
 const certificatesUtility = require('../utilities/certificates');
-const assetsRegex = RegExp('/assets/');
-const rawRegex = RegExp('/raw/');
+const startsWithAssets = '/assets/';
+const startsWithAssetsReplace = '/assets';
+const startsWithWellKnown = '/.well-known/';
+const startsWithWellKnownReplace = '/.well-known';
+const startsWithRaw = '/raw/';
 class uwBridge {
 	constructor(config) {
 		return promise(async (accept) => {
@@ -94,7 +95,10 @@ class uwBridge {
 		}
 		return thisBind.events[eventNames].push(callback);
 	}
-	async handleRequest(host, indexPage, liveAssets, publicDir, request, response) {
+	async notFound(response) {
+		return response.status(404).send();
+	}
+	async handleRequest(host, indexPage, liveAssets, liveAssetsWellKnown, staticAssetsDirectory, publicDir, request, response) {
 		const requestPath = request.path;
 		console.log(request.headers['cf-connecting-ip'], requestPath);
 		if (!request.headers['cf-connecting-ip']) {
@@ -107,54 +111,47 @@ class uwBridge {
 		if (requestPath === '/') {
 			return response.type('html').send(`${indexPage}<script>_realip='${request.headers['cf-connecting-ip']}'</script>`);
 		}
-		if (assetsRegex.test(requestPath)) {
-			const file = liveAssets.get(requestPath);
+		if (requestPath.startsWith(startsWithWellKnown)) {
+			const file = liveAssetsWellKnown.get(requestPath.replace(startsWithWellKnownReplace, ''));
 			if (file === undefined) {
-				return response.status(200).send();
+				return this.notFound(response);
+			}
+			console.log(file.name === 'apple-app-site-association');
+			response.header('content-type', 'application/json');
+			return response.send(file.buffer);
+		}
+		if (requestPath.startsWith(startsWithAssets)) {
+			const file = liveAssets.get(requestPath.replace(startsWithAssetsReplace, ''));
+			if (file === undefined) {
+				return this.notFound(response);
 			}
 			return response.type(file.extension).send(file.buffer);
-		} else if (rawRegex.test(requestPath)) {
-			const fileLocation = normalize(join(publicDir, requestPath));
-			console.log(publicDir, fileLocation);
-			if (!fileLocation.includes(publicDir)) {
-				return response.status(404).send();
-			}
-			console.log('PASSED', fileLocation);
-			const fileCheck = await promise((accept) => {
-				fs.stat(publicDir + requestPath, (err, stats) => {
-					if (err) {
-						return accept(false);
-					}
-					return accept(stats);
-				  });
-			});
-			console.log('STREAMING FILE', fileCheck);
-			if (fileCheck) {
-				try {
-					// response.header('x-is-streamed', 'true');
-					// const use_chunked_encoding = request.headers['x-chunked-encoding'] === 'true';
-					const file = fs.readFileSync(fileLocation);
-					console.log(file);
-					return response.type(getFileExtension(fileLocation)).send(file);
-					// return response.stream(stream, use_chunked_encoding ? undefined : fileCheck.size);
-				} catch {
-					return response.status(404).send();
-				}
-			} else {
-				return response.status(404).send();
-			}
-		} else {
-			return response.type('html').send(`${indexPage}<script>_realip='${request.headers['cf-connecting-ip']}'</script>`);
 		}
+		if (requestPath.startsWith(startsWithRaw)) {
+			const fileLocation = normalize(join(publicDir, requestPath));
+			if (!fileLocation.includes(publicDir)) {
+				return this.notFound(response);
+			}
+			try {
+				const file = await fsAsync.readFile(fileLocation);
+				console.log('SENDING', fileLocation);
+				return response.type(getFileExtension(fileLocation)).send(file);
+			} catch {
+				return this.notFound(response);
+			}
+		}
+		return response.type('html').send(`${indexPage}<script>_realip='${request.headers['cf-connecting-ip']}'</script>`);
 	}
 	async httpCreate() {
 		const {
 			config: {
 				host,
+				staticAssetsDirectory,
 				publicDir,
+				wellknownDirectory,
 				server,
 				http: {
-					indexLocation
+					indexLocation,
 				}
 			}
 		} = this;
@@ -168,8 +165,16 @@ class uwBridge {
 			indexPage = fs.readFileSync(indexLocation);
 		});
 		console.log(indexPage);
+		const liveAssetsWellKnown = new LiveDirectory({
+			path: wellknownDirectory,
+			keep() {
+				return true;
+			}
+		});
+		await liveAssetsWellKnown.ready();
+		console.log(liveAssetsWellKnown.files);
 		const liveAssets = new LiveDirectory({
-			path: publicDir,
+			path: staticAssetsDirectory,
 			keep: {
 				extensions: ['.css', '.html', '.js', '.json', '.csv', '.png', '.jpg', '.svg', '.woff2', '.woff', '.otf']
 			},
@@ -179,8 +184,9 @@ class uwBridge {
 		});
 		await liveAssets.ready();
 		this.LiveAssets = liveAssets;
+		this.liveAssetsWellKnown = liveAssetsWellKnown;
 		this.server.get('/*', async (request, response) => {
-			return this.handleRequest(host, indexPage, liveAssets, publicDir, request, response);
+			return this.handleRequest(host, indexPage, liveAssets, liveAssetsWellKnown, staticAssetsDirectory, publicDir, request, response);
 		});
 		console.log('http service');
 	}
@@ -205,7 +211,9 @@ class uwBridge {
 		config.apiSystemDir = resolve(config.apiDir, `./system/`);
 		config.siteDir = resolve(directory, `./filesystem/`);
 		config.publicDir = resolve(config.siteDir, `./public/`);
+		config.staticAssetsDirectory = resolve(config.publicDir, `./assets/`);
 		config.resourceDir = resolve(directory, `./filesystem/asset/`);
+		config.wellknownDirectory = resolve(config.siteDir, `./public/.well-known/`);
 		config.http.indexLocation = resolve(config.siteDir, `./public/index.html`);
 		config.http.indexErrorLocation = resolve(config.siteDir, `./public/error.html`);
 	}
@@ -275,7 +283,7 @@ class uwBridge {
 				return clientSocket.close();
 			}
 			console.log(clientSocket, `${clientSocket.context?.ip || clientSocket.ip} is now connected using websockets!`);
-			console.log(`user ${clientSocket.context} has connected to consume news events`);
+			console.log(`USER:${stringify(clientSocket.context)} is connected to the websocket`);
 			client(clientSocket, this);
 		});
 	}

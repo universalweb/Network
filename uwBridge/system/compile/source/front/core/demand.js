@@ -168,11 +168,14 @@ async function getCacheFromLocal(filePath, type) {
 		}
 	} else {
 		const localstoredCache = crate.getItem(filePath);
-		// console.log(filePath, localstoredCache);
+		// console.log('Local File Cache check', filePath, localstoredCache?.length);
 		if (localstoredCache && isString(localstoredCache)) {
+			console.log(filePath);
 			const cacheTimeElapsed = checksumData(filePath);
+			// console.log('Local File Cache check time elapsed', filePath, cacheTimeElapsed);
 			if (cacheTimeElapsed) {
 				const timeElapsed = Date.now() - cacheTimeElapsed.time;
+				// console.log('Local File Cache check time elapsed compute', filePath, timeElapsed, timeElapsed <= app.cacheExpire);
 				if (timeElapsed <= app.cacheExpire) {
 					try {
 						const hotModule = await hotloadJS(localstoredCache, filePath);
