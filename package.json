@@ -21,7 +21,7 @@
     "image-size": "^1.0.1",
     "is-valid-path": "^0.1.1",
     "live-directory": "^2.3.2",
-    "mongoose": "^6.3.2",
+    "mongoose": "^6.4.6",
     "msgpackr": "^1.5.7",
     "node-dir": "^0.1.17",
     "node-watch": "^0.7.3",
