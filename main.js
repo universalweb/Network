@@ -1,17 +1,18 @@
-if (require.main !== module) {
-	require('update-electron-app')({
-		logger: require('electron-log')
-	});
-}
-const schemes = require('./schemes/');
-const path = require('path');
-const electron = require('electron');
-const state = require('./state')('browser', {
+// if (require.main !== module) {
+// 	import('update-electron-app')({
+// 		logger: require('electron-log')
+// 	});
+// }
+import schemes from './schemes/index.js';
+import path from 'path';
+import electron from 'electron';
+import stateFactory from './state/index.js';
+const state = stateFactory('browser', {
 	electron
 });
 const { file: { readJson, } } = state;
 const config = readJson('./config/index.json');
-const universalWebSocket = require('./browser/protocol/');
+import universalWebSocket from './browser/protocol/';
 const {
 	app,
 	BrowserWindow,

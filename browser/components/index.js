@@ -1,11 +1,10 @@
 (async () => {
-	const state = require('../../state/')('Universal Web App Environment Compiler');
-	const rollup = require('rollup').rollup;
-	const {
-		terser: minify
-	} = require('rollup-plugin-terser');
-	const watch = require('node-watch');
-	const path = require('path');
+import stateFactory from "../../state/index.js';
+import { rollup as rollup } from "rollup";
+import { terser as minify } from "rollup-plugin-terser";
+import watch from "node-watch";
+import path from "path";
+const state = stateFactory('Universal Web App Environment Compiler');
 	const {
 		file: {
 			copy
@@ -42,7 +41,7 @@
 		};
 		success('Begin copy of all modules required in the browser from the node_modules folder');
 		await copy(`${__dirname}/build/bundle.js`, `${resources}js/components.js`, copyFileConfig);
-		await copy(`${dirRootModules}Lucy/index.js`, `${resources}js/utility.js`, copyFileConfig);
+		await copy(`${dirRootModules}Acid/index.js`, `${resources}js/utility.js`, copyFileConfig);
 		await copy(`${dirRootModules}ractive/ractive.min.js`, `${resources}js/ractive.js`, copyFileConfig);
 		await copy(`${dirRootModules}uikit/dist/js/uikit.min.js`, `${resources}js/uikit.js`, copyFileConfig);
 		await copy(`${dirRootModules}uikit/dist/js/uikit-icons.min.js`, `${resources}js/uikitIcons.js`, copyFileConfig);
