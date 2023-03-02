@@ -1,11 +1,20 @@
-module.exports = (type, state = {}) => {
-	state.type = type;
-	state.utility = require('Acid');
-	state.getUtil = (names) => {
-		names.forEach((item) => {
-			require(`../utilities/${item}/`)(state);
+import { eachAsyncArray, construct } from 'Acid';
+class State {
+	constructor(type, existingState) {
+		this.type = type;
+		this.utility = require('Acid');
+	}
+	modules = ['console', 'msgpack', 'file', 'crypto', 'certificate'];
+	getUtil() {
+		const thisClass = this;
+		eachAsyncArray(this.modules, async (item) => {
+			const imported = await import(`../utilities/${item}/`);
+			await imported(thisClass);
 		});
-	};
-	state.getUtil(['console', 'msgpack', 'file', 'crypto', 'certificate']);
-	return state;
-};
+	}
+}
+function state(...args) {
+	return construct(State, args);
+}
+export { State };
+export default state;
