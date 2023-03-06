@@ -1,8 +1,5 @@
-module.exports = async (state) => {
-	state.certificates = {};
-	await require('./master')(state);
-	await require('./ephemeral')(state);
-	await require('./domain')(state);
-	await require('./identity')(state);
-	await require('./root')(state);
-};
+export * from './master/index.js';
+export * from './ephemeral/index.js';
+export * from './domain/index.js';
+export * from './identity/index.js';
+export * from './root/index.js';

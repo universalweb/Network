@@ -1,43 +1,24 @@
-module.exports = (state) => {
-	const {
-		logImprt,
-		cnsl,
-		alert,
-		certLog,
-		decode,
-		file: {
-			read,
-			write,
-		},
-		encode,
-	} = state;
-	logImprt('CERTIFICATE', __dirname);
-	async function parse(raw) {
-		const certificate = decode(raw);
-		return certificate;
+import cnsl from '../logs/index.js';
+import { read, write } from '../file/index.js';
+import { decode, encode } from '../crypto/index.js';
+cnsl.imported('CERTIFICATE');
+export async function parseCertificate(raw) {
+	const certificate = decode(raw);
+	return certificate;
+}
+export async function verifyCertificate(parentCertificate, child) {
+	const parentCertificateCertificate = parentCertificate;
+	const childCertificate = child;
+	cnsl.info(parentCertificateCertificate, childCertificate);
+}
+export async function getCertificate(filepath) {
+	cnsl.certificate('Get => ', filepath);
+	const file = await read(filepath);
+	if (file) {
+		return parseCertificate(file);
+	} else {
+		cnsl.failed('FAILED TO LOAD CERT', filepath);
 	}
-	async function verify(parent, child) {
-		const parentCertificate = parent;
-		const childCertificate = child;
-		cnsl(parentCertificate, childCertificate);
-	}
-	async function get(location) {
-		certLog('Get => ', location);
-		const file = await read(location);
-		if (file) {
-			return parse(file);
-		} else {
-			alert('FAILED TO LOAD CERT', location);
-		}
-	}
-	state.certificate = {
-		get,
-		parse,
-		verify,
-		async save(certificate, directory = __dirname, certificateName = 'profile') {
-			await write(`${directory}/${certificateName}.cert`, encode(certificate));
-		},
-	};
-	require('./sign')(state);
-	require('./create')(state);
-};
+}
+export * from './sign.js';
+export * from './create.js';

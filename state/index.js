@@ -1,15 +1,18 @@
-import { eachAsyncArray, construct } from 'Acid';
+import { eachAsyncObject, construct, assign } from 'Acid';
+import logs from '../utilities/logs/index.js';
+import msgpack from '../utilities/msgpack/index.js';
+import cryptoLib from '../utilities/crypto/index.js';
+import certificate from '../utilities/certificate/index.js';
+import file from '../utilities/file/index.js';
 class State {
 	constructor(type, existingState) {
 		this.type = type;
 		this.utility = require('Acid');
 	}
-	modules = ['console', 'msgpack', 'file', 'crypto', 'certificate'];
-	getUtil() {
+	getUtil(modules) {
 		const thisClass = this;
-		eachAsyncArray(this.modules, async (item) => {
-			const imported = await import(`../utilities/${item}/`);
-			await imported(thisClass);
+		eachAsyncObject(modules, async (item, key) => {
+			thisClass[key] = await import(`../utilities/${item}/`);
 		});
 	}
 }

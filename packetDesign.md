@@ -1,30 +1,30 @@
-## Universal Web Socket - PACKET DESIGN
+# Universal Web Socket - PACKET DESIGN
 
 #### PACKET HEADERS (MSGPack Object)(OPTIONAL ENCRYPTION)
 
--   Nonce
--   Identity Certificate (OPTIONAL)(REQUIRED AT START)
--   Socket ID (CLIENT/SERVER)
-    -   May indicate which server to send to for load balancing
-    -   May indicate which domain to send to for virtual hosts
-    -   May be entirely random
+- Nonce
+- Identity Certificate (OPTIONAL)(REQUIRED AT START)
+- Socket ID (CLIENT/SERVER)
+  - May indicate which server to send to for load balancing
+  - May indicate which domain to send to for virtual hosts
+  - May be entirely random
 
 ---
 
 #### PROPERTY NAMES & MEANINGS
 
--   id - Connection ID (MANDATORY)
--   api - API function that is requested (OPTIONAL)
--   Watcher (OPTIONAL)
--   Head (OPTIONAL)
--   Body (OPTIONAL) (MSGPack Object)
--   Pid - Packet ID (MANDATORY)
--   Status - Status Code (OPTIONAL)
-    -   If status is left blank it defaults to 200 or is considered a success
--   end - Kill connection (OPTIONAL)
--   Puzzle - Solve a puzzle to continue (OPTIONAL)
--   ReKey (OPTIONAL)
--   scid - Server connection ID (OPTIONAL)
+- id - Connection ID (MANDATORY)
+- api - API function that is requested (OPTIONAL)
+- Watcher (OPTIONAL)
+- Head (OPTIONAL)
+- Body (OPTIONAL) (MSGPack Object)
+- Pid - Packet ID (MANDATORY)
+- Status - Status Code (OPTIONAL)
+  - If status is left blank it defaults to 200 or is considered a success
+- end - Kill connection (OPTIONAL)
+- Puzzle - Solve a puzzle to continue (OPTIONAL)
+- ReKey (OPTIONAL)
+- scid - Server connection ID (OPTIONAL)
 
 ---
 
@@ -39,23 +39,23 @@
 
 ##### IPv6 HEADERS
 
--   Version
--   Traffic Class
--   Flow Label
--   Payload Length
--   Next Header
--   Hop Limit
--   Source Address
--   Destination Address
+- Version
+- Traffic Class
+- Flow Label
+- Payload Length
+- Next Header
+- Hop Limit
+- Source Address
+- Destination Address
 
 ##### UDP HEADERS
 
 These are the standard UDP headers sent over:
 
--   Source Port Number
--   Destination Port Number
--   Length
--   Checksum
+- Source Port Number
+- Destination Port Number
+- Length
+- Checksum
 
 ##### MAIN HEADERS
 
