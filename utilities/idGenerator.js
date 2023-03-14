@@ -1,6 +1,4 @@
-const {
-	fromCharCode
-} = String;
+const { fromCharCode } = String;
 function incrementLetter(letter) {
 	if (letter === 'Z') {
 		return null;
@@ -143,9 +141,7 @@ class Generator {
 			numbers,
 			options
 		} = this;
-		const {
-			id
-		} = generateId(letters, options.letters, numbers, options.digits);
+		const { id } = generateId(letters, options.letters, numbers, options.digits);
 		return id;
 	}
 	generate() {
@@ -160,7 +156,6 @@ class Generator {
 		return id;
 	}
 }
-function idGenerator(options) {
+export function idGenerator(options) {
 	return new Generator(options);
 }
-module.exports = idGenerator;

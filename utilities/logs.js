@@ -35,4 +35,5 @@ export const imported = logFactory(null, '#f50057', 'IMPORTED');
 export const cert = logFactory(null, '#ffab00', 'CERTIFICATE', true);
 export const attention = logFactory(null, '#FF0000', 'ATTENTION');
 export const success = logFactory(null, '#00e676', 'SUCCESS');
+export const connected = logFactory(null, '#00e636', 'CONNECTED');
 imported(`Console`);

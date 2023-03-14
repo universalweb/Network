@@ -2,7 +2,7 @@ import {
 	isNumber,
 	isPlainObject
 } from 'Acid';
-import getCertificateKeys from './getCertificateKeys.js';
+import getCertificateKeys from './certificate/getCertificateKeys.js';
 export default function pluckCertificate(certificate, exclude, pluckedValuesArray = []) {
 	const certKeys = getCertificateKeys(certificate, exclude);
 	const certKeysLength = certKeys.length;

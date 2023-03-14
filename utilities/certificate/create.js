@@ -1,6 +1,6 @@
-import cnsl from '../logs/index.js';
-import { read, write } from '../file/index.js';
-import { keypair, signKeypair } from '../crypto/index.js';
+import cnsl from '../logs.js';
+import { read, write } from '../file.js';
+import { keypair, signKeypair } from '../crypto.js';
 import { sign } from './sign.js';
 import { save } from './save.js';
 import { assign, assignDeep } from 'Acid';

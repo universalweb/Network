@@ -4,36 +4,67 @@
 	* UWS Universal Web client
 	* Establishes a UDP based bi-directional real-time client between a client and end service.
 */
-const {
+// Default System imports
+import {
 	encode,
 	decode
-} = require('msgpackr');
-const utility = require('Acid');
-const connections = {};
-const {
+} from 'msgpackr';
+import {
 	omit,
-	assign
-} = utility;
-class UDSP {
+	assign,
+	construct
+} from 'Acid';
+import dgram from 'dgram';
+// Default utility imports
+import { success, configure } from '../utilities/logs.js';
+import { buildPacketSize } from '../utilities/buildPacketSize.js';
+import { buildStringSize } from '../utilities/buildStringSize.js';
+import { file } from '../utilities/file.js';
+import {
+	createSessionKey,
+	clientSession,
+	createClientId,
+	keypair,
+	toBase64
+} from '../utilities/crypto.js';
+import { pluckBuffer } from '../utilities/pluckBuffer.js';
+import { certificate } from '../utilities/certificate/index.js';
+import { watch } from '../utilities/watch.js';
+// Client specific imports
+import { getClient } from './getClient.js';
+// Client specific imports to extend class
+import { send } from './send/index.js';
+import { request } from './request/index.js';
+import { processMessage } from './processMessage/index.js';
+import { onMessage } from './onMessage/index.js';
+import { connect } from './connect/index.js';
+import { listening } from './listening/index.js';
+export class UDSP {
+	type = 'client';
+	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
+	descriptor = 'UDSP_CLIENT';
 	constructor(configuration) {
 		const client = this;
 		console.log('-------CLIENT INITIALIZING-------\n', configuration);
 		const {
 			service,
 			profile,
+			server
 		} = configuration;
-		assign(this, configuration);
+		this.service = service;
+		this.profile = profile;
 		const {
-			crypto: {
-				createSessionKey,
-				clientSession,
-				createClientId,
-				keypair,
-				toBase64
-			},
-			alert,
-			success
-		} = client;
+			ip,
+			port
+		} = this.service.ephemeral;
+		configure.logImprt('CLIENT CONFIGURATION');
+		this.endpoint = {
+			ip: server.ip || ip,
+			port: server.port || port,
+			maxMTU: 1000,
+			encoding: 'binary',
+			max: 1280,
+		};
 		client.clientId = createClientId();
 		success(`clientId:`, this.clientId);
 		success(`Creating Shared Keys`);
@@ -49,11 +80,7 @@ class UDSP {
 		if (profile.master) {
 			client.masterPublic = omit(profile.master, ['private']);
 		}
-		const {
-			ephemeral: {
-				signature: profileSignature
-			}
-		} = profile;
+		const { ephemeral: { signature: profileSignature } } = profile;
 		const {
 			ephemeral: {
 				key: serverPublicKey,
@@ -67,96 +94,39 @@ class UDSP {
 		clientSession(receiveKey, transmitKey, publicKey, privateKey, serverPublicKey);
 		// Can be used to encrypt-authenticate the profile with the server
 		// clientSession(ephemeralProfileReceiveKey, ephemeralProfileTransmitKey, profile.ephemeral.publicKey, profile.ephemeral.secretKey, serverPublicKey);
-		alert(`Shared Keys Created`);
+		configure(`Shared Keys Created`);
 		console.log(receiveKey, transmitKey);
-		require('./status')(client);
-		require('./configuration')(client, configuration);
-		require('./listening')(client);
 		client.server.on('message', client.onMessage.bind(client));
 		const serviceKey = toBase64(serviceSignature);
 		const profileKey = toBase64(profileSignature);
+		// Needs to be more complex if forcing no connection with the same credentials
 		const connectionKey = `${serviceKey}${profileKey}`;
-		connections[connectionKey] = client;
+		this.connectionKey = connectionKey;
+		UDSP.connections.set(connectionKey, client);
 		return client;
 	}
-	server = require('dgram').createSocket('udp4');
+	static connections = new Map();
+	status = {
+		code: 0
+	};
+	server = dgram.createSocket('udp4');
 	requests = new Map();
 	close() {
-		const client = this;
-		const {
-			crypto: {
-				toBase64
-			}
-		} = client;
-		console.log(client, 'client closed down.');
-		client.server.close();
-		const {
-			ephemeral: {
-				signature: profileSignature
-			}
-		} = this.profile;
-		const {
-			ephemeral: {
-				signature: serviceSignature
-			}
-		} = this.service;
-		const serviceKey = toBase64(serviceSignature);
-		const profileKey = toBase64(profileSignature);
-		const connectionKey = `${serviceKey}${profileKey}`;
-		connections[connectionKey] = null;
+		console.log(this, 'client closed down.');
+		this.server.close();
+		UDSP.connections.delete(this.connectionKey);
 	}
+	connect = connect;
 }
-const udspPrototype = UDSP.prototype;
-assign(udspPrototype, {
-	type: 'client',
-	description: 'client module for UDSP',
-	encode,
-	decode,
-	utility
-});
-require('../utilities/buildPacketSize')(udspPrototype);
-require('../utilities/buildStringSize')(udspPrototype);
-require('../utilities/console/')(udspPrototype);
-require('../utilities/file/')(udspPrototype);
-require('../utilities/crypto/')(udspPrototype);
-require('../utilities/pluckBuffer')(udspPrototype);
-require('../utilities/certificate/')(udspPrototype);
-require('../utilities/watch/')(udspPrototype);
-require('./send')(udspPrototype);
-require('./request')(udspPrototype);
-require('./processMessage')(udspPrototype);
-require('./onMessage')(udspPrototype);
-require('./connect/')(udspPrototype);
-function udsp(configuration) {
-	return new UDSP(configuration);
+export function udsp(configuration, ignoreConnections) {
+	const client = getClient(configuration);
+	if (client) {
+		return client;
+	}
+	return construct(UDSP, configuration);
 }
 // UNIVERSAL WEB client
-function getclient(configuration) {
-	const serviceKey = configuration.service.ephemeral.signature.toString('base64');
-	const profileKey = configuration.profile.ephemeral.signature.toString('base64');
-	const connectionKey = `${serviceKey}${profileKey}`;
-	const client = connections[connectionKey];
-	if (client) {
-		return client;
-	}
+export function getCertificate(certificateLocation) {
+	return certificate.get(certificateLocation);
 }
-function uws(configuration) {
-	const client = getclient(configuration);
-	if (client) {
-		return client;
-	}
-	return udsp(configuration);
-}
-uws.get = getclient;
-uws.udsp = udsp;
-uws.getCertificate = (location) => {
-	return udspPrototype.certificate.get(location);
-};
-assign(uws, {
-	get utility() {
-		return utility;
-	},
-	encode,
-	decode,
-});
-module.exports = uws;
+export { getClient };

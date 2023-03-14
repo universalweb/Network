@@ -1,6 +1,6 @@
-import cnsl from '../logs/index.js';
-import { read, write } from '../file/index.js';
-import { decode, encode } from '../crypto/index.js';
+import cnsl from '../logs.js';
+import { read, write } from '../file.js';
+import { decode, encode } from '../crypto.js';
 cnsl.imported('CERTIFICATE');
 export async function parseCertificate(raw) {
 	const certificate = decode(raw);
