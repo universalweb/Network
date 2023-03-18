@@ -33,12 +33,12 @@ import { watch } from '../utilities/watch.js';
 // Client specific imports
 import { getClient } from './getClient.js';
 // Client specific imports to extend class
-import { send } from './send/index.js';
-import { request } from './request/index.js';
-import { processMessage } from './processMessage/index.js';
-import { onMessage } from './onMessage/index.js';
-import { connect } from './connect/index.js';
-import { listening } from './listening/index.js';
+import { send } from './send.js';
+import { request } from './request.js';
+import { processMessage } from './processMessage.js';
+import { onMessage } from './onMessage.js';
+import { connect } from './connect.js';
+import { listening } from './listening.js';
 export class UDSP {
 	type = 'client';
 	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;

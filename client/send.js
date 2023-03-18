@@ -1,8 +1,8 @@
 import {
 	success, failed, imported, msgSent, info
-} from '../../utilities/logs.js';
-import { buildPacketSize } from '../../utilities/buildPacketSize.js';
-import { buildStringSize } from '../../utilities/buildStringSize.js';
+} from '../utilities/logs.js';
+import { buildPacketSize } from '../utilities/buildPacketSize.js';
+import { buildStringSize } from '../utilities/buildStringSize.js';
 import {
 	encode,
 	decode
@@ -13,7 +13,7 @@ import {
 	nonceBox,
 	toBase64,
 	hashSign
-} from '../../utilities/crypto.js';
+} from '../utilities/crypto.js';
 imported('Client Send');
 async function send(message, priority) {
 	console.log(`Priority: ${priority}`);

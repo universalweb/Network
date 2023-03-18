@@ -1,4 +1,4 @@
-import { connected } from '../../utilities/logs.js';
+import { connected } from '../utilities/logs.js';
 export async function connect(requestBody, requestHead) {
 	console.log('-------CLIENT CONNECTING-------\n');
 	const thisClient = this;
