@@ -4,12 +4,12 @@ function buildConfiguration(configuration) {
 		ip,
 		port
 	} = this.service.ephemeral;
-	configure.logImprt('CLIENT CONFIGURATION');
+	configure('CLIENT CONFIGURATION');
 	this.configuration = {
 		ip,
 		port: configuration.servicePort || port,
-		maxMTU: 1000,
-		encoding: 'binary',
-		max: 1280,
+		maxMTU: configuration.maxMTU || 1000,
+		encoding: configuration.encoding || 'binary',
+		max: configuration.max || 1280,
 	};
 }

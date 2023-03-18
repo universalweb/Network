@@ -1,12 +1,10 @@
-module.exports = (state) => {
-	state.logImprt('Server onListen', __dirname);
-	const {
-		server,
-		alert,
-	} = state;
-	function onListening() {
-		const connection = server.address();
-		alert(`Universal Web Client Server Listening`, connection);
-	}
-	server.on('listening', onListening);
-};
+import {
+	success, failed, imported, msgSent, info
+} from '../utilities/logs.js';	imported('Server onListen');
+export function onListening() {
+	const connection = this.server.address();
+	success(`Universal Web Client Server Listening`, connection);
+}
+export function listen() {
+	this.server.on('listening', onListening);
+}

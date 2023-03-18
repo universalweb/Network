@@ -12,7 +12,8 @@ import {
 import {
 	omit,
 	assign,
-	construct
+	construct,
+	UniqID
 } from 'Acid';
 import dgram from 'dgram';
 // Default utility imports
@@ -34,17 +35,18 @@ import { watch } from '../utilities/watch.js';
 import { getClient } from './getClient.js';
 // Client specific imports to extend class
 import { send } from './send.js';
+import { emit } from './emit.js';
 import { request } from './request.js';
 import { processMessage } from './processMessage.js';
 import { onMessage } from './onMessage.js';
 import { connect } from './connect.js';
-import { listening } from './listening.js';
+import { listening, listen } from './listening.js';
 export class UDSP {
 	type = 'client';
 	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
 	descriptor = 'UDSP_CLIENT';
 	constructor(configuration) {
-		const client = this;
+		const thisContext = this;
 		console.log('-------CLIENT INITIALIZING-------\n', configuration);
 		const {
 			service,
@@ -65,20 +67,20 @@ export class UDSP {
 			encoding: 'binary',
 			max: 1280,
 		};
-		client.clientId = createClientId();
+		thisContext.clientId = createClientId();
 		success(`clientId:`, this.clientId);
 		success(`Creating Shared Keys`);
-		const transmitKey = client.transmitKey = createSessionKey();
-		const receiveKey = client.receiveKey = createSessionKey();
+		const transmitKey = thisContext.transmitKey = createSessionKey();
+		const receiveKey = thisContext.receiveKey = createSessionKey();
 		// Currently unused but may in the future
-		const ephemeralProfileTransmitKey = client.ephemeralProfileTransmitKey = createSessionKey();
-		const ephemeralProfileReceiveKey = client.ephemeralProfileReceiveKey = createSessionKey();
+		const ephemeralProfileTransmitKey = thisContext.ephemeralProfileTransmitKey = createSessionKey();
+		const ephemeralProfileReceiveKey = thisContext.ephemeralProfileReceiveKey = createSessionKey();
 		console.log(ephemeralProfileTransmitKey, ephemeralProfileReceiveKey);
 		success(`Creating Connection Keypair`);
-		client.keypair = keypair();
-		client.ephemeralPublic = omit(profile.ephemeral, ['private']);
+		thisContext.keypair = keypair();
+		thisContext.ephemeralPublic = omit(profile.ephemeral, ['private']);
 		if (profile.master) {
-			client.masterPublic = omit(profile.master, ['private']);
+			thisContext.masterPublic = omit(profile.master, ['private']);
 		}
 		const { ephemeral: { signature: profileSignature } } = profile;
 		const {
@@ -90,23 +92,24 @@ export class UDSP {
 		const {
 			publicKey,
 			secretKey: privateKey,
-		} = client.keypair;
+		} = thisContext.keypair;
 		clientSession(receiveKey, transmitKey, publicKey, privateKey, serverPublicKey);
 		// Can be used to encrypt-authenticate the profile with the server
 		// clientSession(ephemeralProfileReceiveKey, ephemeralProfileTransmitKey, profile.ephemeral.publicKey, profile.ephemeral.secretKey, serverPublicKey);
 		configure(`Shared Keys Created`);
 		console.log(receiveKey, transmitKey);
-		client.server.on('message', client.onMessage.bind(client));
+		this.listen();
+		thisContext.server.on('message', thisContext.onMessage.bind(thisContext));
 		const serviceKey = toBase64(serviceSignature);
 		const profileKey = toBase64(profileSignature);
 		// Needs to be more complex if forcing no connection with the same credentials
 		const connectionKey = `${serviceKey}${profileKey}`;
 		this.connectionKey = connectionKey;
-		UDSP.connections.set(connectionKey, client);
-		return client;
+		UDSP.connections.set(connectionKey, thisContext);
+		return thisContext;
 	}
 	static connections = new Map();
-	status = {
+	state = {
 		code: 0
 	};
 	server = dgram.createSocket('udp4');
@@ -116,8 +119,21 @@ export class UDSP {
 		this.server.close();
 		UDSP.connections.delete(this.connectionKey);
 	}
+	buildPacketSize(encryptedLength) {
+		return buildPacketSize(encryptedLength, this.maxPacketSizeLength);
+	}
+	buildStringSize(encryptedLength) {
+		return buildStringSize(encryptedLength, this.maxStringSizeLength);
+	}
 	connect = connect;
 	send = send;
+	request = request;
+	processMessage = processMessage;
+	emit = emit;
+	listening = listening;
+	listen = listen;
+	onMessage = onMessage;
+	packetIdGenerator = construct(UniqID);
 }
 export function udsp(configuration, ignoreConnections) {
 	const client = getClient(configuration);

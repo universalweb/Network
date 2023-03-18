@@ -1,50 +1,44 @@
-module.exports = (udspPrototype) => {
+import {
+	success, failed, imported, msgSent, info
+} from '../utilities/logs.js';
+import {
+	stringify,
+	hasValue
+} from 'Acid';
+imported('Client ProcessMessage');
+export async function processMessage(response, headers) {
+	const thisContext = this;
+	const { requests, } = thisContext;
 	const {
-		cnsl,
-		logImprt,
-		error: logError,
-		utility: {
-			stringify,
-			hasValue
-		},
-	} = udspPrototype;
-	logImprt('ON PUBLIC MESSAGE', __dirname);
-	async function processMessage(response, headers) {
-		const socket = this;
-		const {
-			requests,
-		} = socket;
-		const {
-			status,
-			sid,
-		} = response;
-		if (status) {
-			console.log(`STATUS CODE: ${status}`);
-		}
-		if (response) {
-			if (response.status === 580) {
-				socket.close();
-				return logError(`End event sent disconnected socket`);
-			}
-			if (hasValue(sid)) {
-				cnsl(`RequestID: ${sid} ${stringify(response)}`);
-				const method = requests.get(sid);
-				if (method) {
-					const responseBody = await method(response, headers);
-					if (responseBody) {
-						socket.send(responseBody, {
-							sid
-						});
-					}
-				} else {
-					return logError(`Invalid Stream Id given. ${stringify(response)}`);
-				}
-			} else if (response.watcher) {
-				console.log('WATCHER', response);
-			}
-		} else {
-			console.log('NO RESPONSE OBJECT', response);
-		}
+		state,
+		sid,
+	} = response;
+	if (state) {
+		console.log(`STATE CODE: ${state}`);
 	}
-	udspPrototype.processMessage = processMessage;
-};
+	if (response) {
+		if (response.state === 580) {
+			thisContext.close();
+			return failed(`End event sent disconnected socket`);
+		}
+		if (hasValue(sid)) {
+			info(`RequestID: ${sid} ${stringify(response)}`);
+			const method = requests.get(sid);
+			if (method) {
+				const responseBody = await method(response, headers);
+				if (responseBody) {
+					thisContext.send(responseBody, {
+						sid
+					});
+				}
+			} else {
+				return failed(`Invalid Stream Id given. ${stringify(response)}`);
+			}
+		} else if (response.watcher) {
+			console.log('WATCHER', response);
+		}
+	} else {
+		console.log('NO RESPONSE OBJECT', response);
+	}
+}
+

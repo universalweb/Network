@@ -1,21 +1,16 @@
-module.exports = (state) => {
-	const {
-		logImprt,
-		cnsl,
-		utility: {
-			uid
-		},
-	} = state;
-	logImprt('Emit', __dirname);
-	async function emit(api, body) {
-		cnsl(`Emited`);
-		const eid = uid();
-		const message = {
-			api,
-			eid,
-			body
-		};
-		return this.send(message);
-	}
-	state.emit = emit;
-};
+import {
+	success, failed, imported, msgSent, info
+} from '../utilities/logs.js';
+imported('Emit');
+async function emit(api, body) {
+	const thisContext = this;
+	const { packetIdGenerator } = thisContext;
+	info(`Emitted`);
+	const eid = packetIdGenerator.get();
+	const message = {
+		api,
+		eid,
+		body
+	};
+	return thisContext.send(message);
+}
