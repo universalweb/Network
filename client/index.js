@@ -117,6 +117,7 @@ export class UDSP {
 		UDSP.connections.delete(this.connectionKey);
 	}
 	connect = connect;
+	send = send;
 }
 export function udsp(configuration, ignoreConnections) {
 	const client = getClient(configuration);

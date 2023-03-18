@@ -1,7 +1,8 @@
 import { connected } from '../../utilities/logs.js';
 export async function connect(requestBody, requestHead) {
 	console.log('-------CLIENT CONNECTING-------\n');
-	const result = await this.request('open', requestBody, requestHead);
+	const thisClient = this;
+	const result = await thisClient.request('open', requestBody, requestHead);
 	console.log(result);
 	const {
 		body,
@@ -11,10 +12,10 @@ export async function connect(requestBody, requestHead) {
 	} = result.response;
 	if (stage === 101 && scid) {
 		connected(body);
-		this.stage.code = 1;
-		this.serverId = scid;
-		this.lastPacketTime = Date.now();
-		this.lastPacketGivenTime = time;
+		thisClient.stage.code = 1;
+		thisClient.serverId = scid;
+		thisClient.lastPacketTime = Date.now();
+		thisClient.lastPacketGivenTime = time;
 	}
 	console.log('-------CLIENT CONNECTED-------\n');
 	return result;
