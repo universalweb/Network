@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"baseUrl": ".",
+		"module": "ESNext",
+		"moduleResolution": "nodenext",
+		"target": "ESNext",
+		"jsx": "react",
+		"strictNullChecks": true,
+		"experimentalDecorators": true
+	},
+	"exclude": [
+		"**/build/*",
+		"**/docSource/*",
+		"**/docs/*",
+		"**/examples/*",
+		"**/node_modules/*",
+		"**/npm/*",
+		"**/package/*",
+		"**/target/*",
+		"node_modules"
+	]
+}

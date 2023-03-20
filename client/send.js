@@ -15,10 +15,17 @@ import {
 	hashSign
 } from '../utilities/crypto.js';
 imported('Client Send');
-async function send(message, priority) {
+export async function send(message, priority) {
 	console.log(`Priority: ${priority}`);
 	const thisContext = this;
-	const client = this;
+	const {
+		server,
+		configuration: {
+			ip,
+			port: certificatePort
+		},
+		servicePort
+	} = thisContext;
 	const headers = {};
 	const clientStatusCode = thisContext.status.code;
 	console.log(`client Status Code is ${clientStatusCode}`);
@@ -34,14 +41,6 @@ async function send(message, priority) {
 	if (message.body) {
 		message.body = encode(message.body);
 	}
-	const {
-		server,
-		configuration: {
-			ip,
-			port: certificatePort
-		},
-		servicePort
-	} = client;
 	const port = servicePort || certificatePort;
 	info(`Send to server`);
 	const nonce = nonceBox();

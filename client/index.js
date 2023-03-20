@@ -17,7 +17,7 @@ import {
 } from 'Acid';
 import dgram from 'dgram';
 // Default utility imports
-import { success, configure } from '../utilities/logs.js';
+import { success, configure } from 'utilities/logs.js';
 import { buildPacketSize } from '../utilities/buildPacketSize.js';
 import { buildStringSize } from '../utilities/buildStringSize.js';
 import { file } from '../utilities/file.js';
@@ -41,7 +41,7 @@ import { processMessage } from './processMessage.js';
 import { onMessage } from './onMessage.js';
 import { connect } from './connect.js';
 import { listening, listen } from './listening.js';
-export class UDSP {
+export class Client {
 	type = 'client';
 	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
 	descriptor = 'UDSP_CLIENT';
@@ -59,7 +59,7 @@ export class UDSP {
 			ip,
 			port
 		} = this.service.ephemeral;
-		configure.logImprt('CLIENT CONFIGURATION');
+		configure('CLIENT CONFIGURATION');
 		this.endpoint = {
 			ip: server.ip || ip,
 			port: server.port || port,
@@ -105,7 +105,7 @@ export class UDSP {
 		// Needs to be more complex if forcing no connection with the same credentials
 		const connectionKey = `${serviceKey}${profileKey}`;
 		this.connectionKey = connectionKey;
-		UDSP.connections.set(connectionKey, thisContext);
+		Client.connections.set(connectionKey, thisContext);
 		return thisContext;
 	}
 	static connections = new Map();
@@ -117,7 +117,7 @@ export class UDSP {
 	close() {
 		console.log(this, 'client closed down.');
 		this.server.close();
-		UDSP.connections.delete(this.connectionKey);
+		Client.connections.delete(this.connectionKey);
 	}
 	buildPacketSize(encryptedLength) {
 		return buildPacketSize(encryptedLength, this.maxPacketSizeLength);
@@ -135,12 +135,12 @@ export class UDSP {
 	onMessage = onMessage;
 	packetIdGenerator = construct(UniqID);
 }
-export function udsp(configuration, ignoreConnections) {
-	const client = getClient(configuration);
-	if (client) {
-		return client;
+export function client(configuration, ignoreConnections) {
+	const result = getClient(configuration);
+	if (result) {
+		return result;
 	}
-	return construct(UDSP, configuration);
+	return construct(Client, configuration);
 }
 // UNIVERSAL WEB client
 export function getCertificate(certificateLocation) {
