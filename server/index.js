@@ -11,7 +11,7 @@ import { onListen } from './onListen.js';
 import { sendPacket } from './sendPacket.js';
 import { processSocket } from './processSocket.js';
 import { processMessage } from './processMessage.js';
-import { bind } from './bind.js';
+import { bindServer } from './bind.js';
 import { parseMessage } from './parseMessage.js';
 import { chunkMessage } from './chunkMessage.js';
 import { emit } from './emit.js';
@@ -30,6 +30,7 @@ class Server {
 	onMessage = onMessage;
 	onListen = onListen;
 	sendPacket = sendPacket;
+	bindServer = bindServer;
 	async initialize(serverConfiguration) {
 		console.log('-------SERVER INITIALIZING-------');
 		this.configure(serverConfiguration);
@@ -39,6 +40,7 @@ class Server {
 		this.server.on('error', this.onError.bind(this));
 		this.server.on('listening', this.onListen.bind(this));
 		this.server.on('message', this.onMessage.bind(this));
+		await this.bindServer();
 		console.log('-------SERVER INITIALIZED-------');
 		return this;
 	}

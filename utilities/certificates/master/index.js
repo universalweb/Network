@@ -1,30 +1,21 @@
 /*
   Module for quickly generating identity certificates
 */
-module.exports = async (state) => {
-	state.certificates.master = {
-		async create(config) {
-			const {
-				template,
-				templateLocation
-			} = config;
-			const {
-				certificate,
-				utility: {
-					jsonParse,
-				},
-				file: {
-					read
-				},
-				encode,
-				cnsl,
-				success,
-			} = state;
-			const masterTemplate = (template || jsonParse(await read(templateLocation || `${__dirname}/template.json`)));
-			const master = await certificate.createMaster(masterTemplate);
-			cnsl('------------MASTER KEY------------');
-			success('Master Certificate', `SIZE: ${encode(master).length}bytes`);
-			return master;
-		}
-	};
-};
+import { createMaster } from 'utilities/certificate/create.js';
+import { signCertificate } from 'utilities/certificate/sign.js';
+import { signVerify } from 'utilities/crypto.js';
+import { success, info, failed } from 'utilities/logs.js';
+import { encode } from 'msgpackr';
+import { jsonParse } from 'Acid';
+import { read } from 'utilities/file.js';
+async function createMasterCertificate(config) {
+	const {
+		template,
+		templateLocation
+	} = config;
+	const masterTemplate = (template || jsonParse(await read(templateLocation || `${__dirname}/template.json`)));
+	const masterCertificate = await createMaster(masterTemplate);
+	info('------------MASTER KEY------------');
+	success('Master Certificate', `SIZE: ${encode(masterCertificate).length}bytes`);
+	return masterCertificate;
+}

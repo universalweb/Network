@@ -11,7 +11,7 @@ import {
 } from 'Acid';
 cnsl.imported('Certificate Signing');
 import pluckCertificate from '../pluckCertificate.js';
-export default function signCertificate(certificate, authority, exclude) {
+export function signCertificate(certificate, authority, exclude) {
 	console.log('Sign Certificate');
 	const concatValues = pluckCertificate(certificate, exclude);
 	return hashSign(concatValues, authority.private);

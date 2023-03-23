@@ -1,15 +1,17 @@
-module.exports = async (server) => {
-	const path = require('path');
+import {
+	keys,
+	assign,
+	cleanPath,
+	isString,
+} from 'Acid';
+import {
+	success, failed, imported, msgSent, info
+} from 'utilities/logs.js';
+import { toBase64 } from 'utilities/crypto.js';
+import { read } from 'utilities/file.js';
+import path from 'path';
+export async function app() {
 	const {
-		logImprt,
-		cnsl,
-		alert,
-		utility: {
-			keys,
-			assign,
-			cleanPath,
-			isString,
-		},
 		configuration: {
 			resourceDirectory,
 			cacheMaxAge,
@@ -20,18 +22,12 @@ module.exports = async (server) => {
 			language,
 			onConnectMessage
 		},
-		crypto: {
-			toBase64,
-		},
-		file: {
-			read
-		}
-	} = server;
-	logImprt('APP', __dirname);
+	} = this;
+	imported('APP', __dirname);
 	const isValid = require('is-valid-path');
 	const api = {
 		async open(socket, request, response) {
-			cnsl(request);
+			info(request);
 			response.head = {};
 			if (cacheMaxAge) {
 				response.head.cacheMaxAge = cacheMaxAge;
@@ -59,21 +55,19 @@ module.exports = async (server) => {
 			return true;
 		},
 		async reKey(socket, body) {
-			cnsl(`${toBase64(body.certificate.key)}`);
+			info(`${toBase64(body.certificate.key)}`);
 			socket.reKey(body.certificate);
 		},
 		async file(socket, request, response) {
-			cnsl(request);
-			const {
-				path: location
-			} = request.body;
+			info(request);
+			const { path: requestPath } = request.body;
 			response.head = {};
-			if (!isString(location) || !location.length || !isValid(location)) {
+			if (!isString(requestPath) || !requestPath.length || !isValid(requestPath)) {
 				console.log('No valid state request recieved - Returning empty data');
 				response.head.status = 404;
 				return true;
 			}
-			const cleanedPath = cleanPath(`${resourceDirectory}/${location}`);
+			const cleanedPath = cleanPath(`${resourceDirectory}/${requestPath}`);
 			const data = await read(cleanedPath);
 			const ext = path.extname(cleanedPath);
 			console.log(`EXT => ${ext}`);
@@ -84,10 +78,8 @@ module.exports = async (server) => {
 			return true;
 		},
 		async state(socket, request, response) {
-			cnsl(request);
-			const {
-				state: fileName
-			} = request.body;
+			info(request);
+			const { state: fileName } = request.body;
 			response.head = {};
 			if (!isString(fileName) || !isValid(fileName)) {
 				console.log('No valid state request recieved - Returning empty data');
@@ -103,6 +95,6 @@ module.exports = async (server) => {
 			return true;
 		},
 	};
-	assign(server.app, api);
-	alert(`LOADED PUBLIC API: COUNT: ${keys(api).length} ||| ${keys(api).join(' , ')}`);
-};
+	assign(this.app, api);
+	success(`LOADED PUBLIC API: COUNT: ${keys(api).length} ||| ${keys(api).join(' , ')}`);
+}

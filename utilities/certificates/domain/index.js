@@ -1,13 +1,13 @@
 /*
   Module for quickly generating domain certificates you must contact the team for official registration/signing.
 */
-import cnsl from '../../logs/index.js';
-import { read } from '../../file/index.js';
-import { signVerify, encode } from '../../crypto/index.js';
+import { read } from 'utilities/file/index.js';
+import { signVerify, encode } from 'utilities/crypto/index.js';
 import { jsonParse } from 'Acid';
-import { createDomainProfile } from '../../certificate/createDomainProfile.js';
-import { signCertificate } from '../../certificate/sign.js';
-export default async function create(config) {
+import { createDomainProfile } from 'utilities/certificate/createDomainProfile.js';
+import { signCertificate } from 'utilities/certificate/sign.js';
+import { success, cnsl } from 'utilities/logs.js';
+export async function createDomain(config) {
 	const {
 		template,
 		templateLocation
@@ -32,4 +32,17 @@ export default async function create(config) {
 	cnsl.success('Master Certificate', `SIZE: ${encode(master).length}bytes`);
 	cnsl.success(`TOTAL KEYPAIR SIZE: ${encode(ephemeral).length + encode(master).length}bytes`);
 	return domainCertificate;
+}
+export async function createDomainEphemeral(config) {
+	const {
+		template,
+		templateLocation,
+		master
+	} = config;
+	console.log(master);
+	const ephemeralTemplate = (template || jsonParse(await read(templateLocation || `${__dirname}/template.json`)));
+	const ephemeral = await createDomainEphemeral(ephemeralTemplate, master);
+	cnsl('------------MASTER KEY------------');
+	success('Ephemeral Certificate', `SIZE: ${encode(master).length}bytes`);
+	return ephemeral;
 }

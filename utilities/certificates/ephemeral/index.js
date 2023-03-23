@@ -1,57 +1,23 @@
 /*
   Module for quickly generating identity certificates
 */
-module.exports = async (state) => {
-	state.certificates.ephemeral = {
-		async create(config) {
-			const {
-				template,
-				templateLocation,
-				master
-			} = config;
-			const {
-				certificate,
-				utility: {
-					jsonParse,
-				},
-				file: {
-					read
-				},
-				encode,
-				cnsl,
-				success,
-			} = state;
-			console.log(master);
-			const ephemeralTemplate = (template || jsonParse(await read(templateLocation || `${__dirname}/template.json`)));
-			const ephemeral = await certificate.createEphemeral(ephemeralTemplate, master);
-			cnsl('------------MASTER KEY------------');
-			success('Ephemeral Certificate', `SIZE: ${encode(master).length}bytes`);
-			return ephemeral;
-		},
-		async createDomain(config) {
-			const {
-				template,
-				templateLocation,
-				master
-			} = config;
-			const {
-				certificate,
-				utility: {
-					jsonParse,
-				},
-				file: {
-					read
-				},
-				encode,
-				cnsl,
-				success,
-			} = state;
-			console.log(master);
-			const ephemeralTemplate = (template || jsonParse(await read(templateLocation || `${__dirname}/template.json`)));
-			const ephemeral = await certificate.createDomainEphemeral(ephemeralTemplate, master);
-			cnsl('------------MASTER KEY------------');
-			success('Ephemeral Certificate', `SIZE: ${encode(master).length}bytes`);
-			return ephemeral;
-		}
-	};
-};
+import { createEphemeral } from 'utilities/certificate/create.js';
+import { signCertificate } from 'utilities/certificate/sign.js';
+import { signVerify } from 'utilities/crypto.js';
+import { success, info, failed } from 'utilities/logs.js';
+import { encode } from 'msgpackr';
+import { jsonParse } from 'Acid';
+import { read } from 'utilities/file.js';
+async function createEphemeralCertificate(config) {
+	const {
+		template,
+		templateLocation,
+		master
+	} = config;
+	console.log(master);
+	const ephemeralTemplate = (template || jsonParse(await read(templateLocation || `${__dirname}/template.json`)));
+	const ephemeral = await createEphemeral(ephemeralTemplate, master);
+	info('------------MASTER KEY------------');
+	success('Ephemeral Certificate', `SIZE: ${encode(master).length}bytes`);
+	return ephemeral;
+}
