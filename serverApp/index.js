@@ -1,7 +1,9 @@
 /*
 		* App server example
 */
-const server = await require('../server/index.js')({
+import { createServer } from '../server/index.js';
+import { info } from 'utilities/logs.js';
+const appServer = await createServer({
 	// Max size of packets
 	maxMTU: 1100,
 	// Max size of body and head data sections in packets
@@ -16,8 +18,4 @@ const server = await require('../server/index.js')({
 	onConnectMessage: `Welcome to the Universal Web.`,
 	port: 8888
 });
-const {
-	state,
-	cnsl,
-} = server;
-cnsl('App Server Status', status);
+info('App Server Status', appServer);

@@ -135,7 +135,7 @@ export class Client {
 	onMessage = onMessage;
 	packetIdGenerator = construct(UniqID);
 }
-export function client(configuration, ignoreConnections) {
+export function createClient(configuration, ignoreConnections) {
 	const result = getClient(configuration);
 	if (result) {
 		return result;

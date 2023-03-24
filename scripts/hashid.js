@@ -1,7 +1,2 @@
-const state = require('../state/')('hashID check');
-const {
-	crypto: {
-		hash
-	}
-} = state;
+import { hash } from 'utilities/crypto.js';
 console.log(hash(Buffer.from('sjfhhjfhdshfjhkdfshkjfhjdsfhjkhkfjdfjhkfhsdhfjskh')).toString('base64'));

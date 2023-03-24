@@ -7,7 +7,7 @@ import { jsonParse } from 'Acid';
 import { createDomainProfile } from 'utilities/certificate/createDomainProfile.js';
 import { signCertificate } from 'utilities/certificate/sign.js';
 import { success, cnsl } from 'utilities/logs.js';
-export async function createDomain(config) {
+export async function createDomainCertificate(config) {
 	const {
 		template,
 		templateLocation

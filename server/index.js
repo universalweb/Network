@@ -21,7 +21,7 @@ import { emit } from './emit.js';
 // require('./api/index.js')(server);
 // require('./app/index.js')(server);
 // require('./clients/index.js')(server);
-class Server {
+export class Server {
 	constructor(serverConfiguration) {
 		return this.initialize(serverConfiguration);
 	}
@@ -68,4 +68,7 @@ class Server {
 	clients = new Map();
 	packetIdGenerator = construct(UniqID);
 	streamIdGenerator = construct(UniqID);
+}
+export async function createServer(...args) {
+	return construct(Server, ...args);
 }

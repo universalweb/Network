@@ -1,11 +1,11 @@
 console.clear();
 console.log('STARTING CLIENT');
 console.time('FULL');
-import { client } from '../client/index.js';
-const service = await client.getCertificate(`${__dirname}/../services/universal.web.cert`);
-const profile = await client.getCertificate(`${__dirname}/../profiles/default.cert`);
+import { createClient, getCertificate } from '../client/index.js';
+const service = await getCertificate(`${__dirname}/../services/universal.web.cert`);
+const profile = await getCertificate(`${__dirname}/../profiles/default.cert`);
 // Universal Web Socket
-const uws = await client({
+const uws = await createClient({
 	service,
 	profile,
 	server: {
