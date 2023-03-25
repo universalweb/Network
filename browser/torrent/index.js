@@ -1,6 +1,6 @@
-const WebTorrent = require('webtorrent');
+import WebTorrent from 'webtorrent';
 const client = new WebTorrent();
-const { promise } = require('Acid');
+import { promise } from 'Acid';
 async function download(magnetURI, options = {}) {
 	return promise((accept) => {
 		client.add(magnetURI, options, accept);
@@ -64,7 +64,7 @@ async function events(component) {
 	});
 	return component;
 }
-const methods = {
+export const methods = {
 	client,
 	download,
 	remove,
@@ -92,4 +92,3 @@ const methods = {
 	},
 	events,
 };
-module.exports = methods;
