@@ -10,7 +10,8 @@ import {
 	toBase64,
 	decrypt
 } from '../utilities/crypto.js';
-export async function processMessage(connection, headersBuffer, headers, packet) {
+import { parsePacket } from './parsePacket.js';
+export async function processPacket(server, connection, headersBuffer, headers, packet) {
 	const clientId = headers.id;
 	const client = clients.get(toBase64(clientId));
 	if (!client) {
@@ -21,12 +22,12 @@ export async function processMessage(connection, headersBuffer, headers, packet)
 	if (!decrypted) {
 		return failed(`Decrypt Failed`);
 	}
-	const message = this.parseMessage(decrypted);
+	const message = parsePacket(decrypted);
 	if (!message) {
 		return failed('MSGPack ERROR', connection);
 	}
 	msgReceived(message);
-	this.count++;
-	await this.api.onMessage(client, message);
-	success(`Messages Received: ${this.count}`);
+	server.packetCount++;
+	await server.events.onMessage(client, message);
+	success(`Messages Received: ${server.packetCount}`);
 }

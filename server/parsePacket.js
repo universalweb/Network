@@ -2,7 +2,7 @@ import {
 	encode,
 	decode
 } from 'msgpackr';
-export function parseMessage(msgPack) {
+export function parsePacket(msgPack) {
 	const request = decode(msgPack);
 	if (request.head) {
 		request.head = decode(request.head);

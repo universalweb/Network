@@ -13,8 +13,10 @@ import {
 	signVerify,
 	toBase64,
 } from '../utilities/crypto.js';
+import { createClient } from './createClient.js';
+import { parsePacket } from './parsePacket.js';
 // additionalData (ad) are the main UDSP headers. It may be called headers at times or additionalData.
-export async function processSocket(connection, additionalDataBuffer, additionalData, packet) {
+export async function processSocket(server, connection, additionalDataBuffer, additionalData, packet) {
 	const {
 		profile: {
 			ephemeral: {
@@ -22,7 +24,7 @@ export async function processSocket(connection, additionalDataBuffer, additional
 				key: serverPublicKey
 			}
 		},
-	} = this;
+	} = server;
 	const signature = additionalData.sig;
 	const ephemeralKeypair = additionalData.key;
 	success(`Encrypted Message Signature: ${toBase64(signature)}`);
@@ -43,11 +45,11 @@ export async function processSocket(connection, additionalDataBuffer, additional
 	}
 	success(`Decrypted`);
 	if (decrypted) {
-		const message = this.parseMessage(decrypted);
+		const message = parsePacket(server, decrypted);
 		if (!message) {
 			return failed('JSON ERROR', connection);
 		}
-		this.socketCount++;
+		server.socketCount++;
 		console.log(message);
 		const isValid = signVerify(signature, message.head.cert.key);
 		console.log('SIGNATURE CHECK', isValid);
@@ -58,12 +60,12 @@ export async function processSocket(connection, additionalDataBuffer, additional
 		const sigCompare = Buffer.compare(signatureHash, hash(ephemeralKeypair)) === 0;
 		if (sigCompare) {
 			msgReceived(`Signature is valid`);
-			const client = await this.createClient(connection, receiveKey, transmitKey, clientId);
-			await this.api.onMessage(client, message);
+			const client = await createClient(server, connection, receiveKey, transmitKey, clientId);
+			await server.api.onMessage(client, message);
 		} else {
 			console.log('SIGNATURE FAILED NO SOCKET CREATED');
 			return;
 		}
-		success(`Messages Received: ${this.socketCount}`);
+		success(`Messages Received: ${server.socketCount}`);
 	}
 }

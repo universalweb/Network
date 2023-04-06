@@ -1,71 +1,101 @@
-import { construct, UniqID } from 'Acid';
+import { construct, each, UniqID } from 'Acid';
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '../utilities/logs.js';
 import { currentPath } from '../utilities/directory.js';
 import dgram from 'dgram';
-import { configure } from './configure.js';
-import { onError } from './onError.js';
-import { onMessage } from './onMessage.js';
-import { onListen } from './onListen.js';
-import { sendPacket } from './sendPacket.js';
-import { processSocket } from './processSocket.js';
-import { processMessage } from './processMessage.js';
+import { addApi, removeAPi } from './api.js';
 import { bindServer } from './bind.js';
-import { parseMessage } from './parseMessage.js';
 import { chunkMessage } from './chunkMessage.js';
+import { configure } from './configure.js';
 import { emit } from './emit.js';
+import { onError } from './onError.js';
+import { onListen } from './onListen.js';
+import { onPacket } from './onPacket.js';
+import { sendPacket } from './sendPacket.js';
+import actions from './actions/index.js';
 /*
   * socket ID: SID
 */
-// require('./api/index.js')(server);
-// require('./app/index.js')(server);
-// require('./clients/index.js')(server);
 export class Server {
 	constructor(serverConfiguration) {
 		return this.initialize(serverConfiguration);
 	}
-	configure = configure;
-	onError = onError;
-	onMessage = onMessage;
-	onListen = onListen;
-	sendPacket = sendPacket;
-	bindServer = bindServer;
+	bindMethods(methods) {
+		const thisContext = this;
+		each(methods, (methodName, method) => {
+			thisContext[methodName] = method.bind(thisContext);
+		});
+	}
+	bindActions(methods) {
+		const thisContext = this;
+		each(methods, (methodName, method) => {
+			thisContext.actions[methodName] = method.bind(thisContext);
+		});
+	}
 	async initialize(serverConfiguration) {
 		console.log('-------SERVER INITIALIZING-------');
-		this.configure(serverConfiguration);
+		// convert some to just using them as modules with arguments instead of bind/this
+		this.bindMethods({
+			addApi,
+			bindServer,
+			configure,
+			onError,
+			onListen,
+			onPacket,
+			removeAPi,
+			sendPacket,
+			emit,
+		});
+		this.bindActions(actions);
 		this.profile = await this.certificate.get(serverConfiguration.profile);
+		this.configure(serverConfiguration);
 		console.log(this.profile);
 		this.status = 1;
-		this.server.on('error', this.onError.bind(this));
-		this.server.on('listening', this.onListen.bind(this));
-		this.server.on('message', this.onMessage.bind(this));
-		await this.bindServer();
+		this.server.on('error', this.onError);
+		this.server.on('listening', this.onListen);
+		this.server.on('message', this.onPacket);
+		await this.bindServer(actions);
 		console.log('-------SERVER INITIALIZED-------');
 		return this;
 	}
 	serverPath = currentPath(import.meta);
 	app = {
-		api: {}
+		api: new Map()
 	};
-	count = 0;
-	api = {};
+	packetCount = 0;
+	messageCount = 0;
+	socketCount = 0;
+	clientCount = 0;
+	actions = {};
 	statusDescriptions = ['initializing', 'initialized', 'failed to initialize'];
 	state = 0;
 	/*
-      		* A puzzle used to challenge clients to ensure authenticity, connection liveliness, and congestion control.
-      		* Slow down account creation.
-      		* Generate crypto currency for the Identity Registrar.
-    	*/
+      	* A puzzle used to challenge clients to ensure authenticity, connection liveliness, and congestion control.
+      	* Slow down account creation.
+      	* Generate crypto currency for the Identity Registrar.
+    */
 	puzzleFlag = false;
 	/*
-			* IPv6 preferred.
-		*/
+		* IPv6 preferred.
+	*/
 	server = dgram.createSocket('udp4');
 	/*
-			* All created clients represent a client to server bi-directional connection.
-		*/
-	clients = new Map();
+		* All created clients (nodes) represent a client to server bi-directional connection until it is closed by either party.
+	*/
+	nodes = construct(Map);
+	nodeEvents = construct(Map);
+	setNodeEvent(eventName, callback) {
+		this.nodeEvents.set(eventName, callback);
+	}
+	nodeEvent(eventName, socket) {
+		success(`Client Node Event: ${eventName} -> SocketID: ${socket.id}`);
+		const foundEvent = this.nodeEvents.get(eventName);
+		if (foundEvent) {
+			foundEvent(this, socket);
+		}
+	}
+	events = {};
 	packetIdGenerator = construct(UniqID);
 	streamIdGenerator = construct(UniqID);
 }

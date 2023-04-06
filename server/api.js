@@ -1,4 +1,3 @@
-import { onMessage } from './onMessage.js';
 import {
 	isPlainObject,
 	eachObjectAsync,
@@ -8,33 +7,33 @@ import {
 } from 'Acid';
 import { imported } from 'utilities/logs.js';
 imported('SERVER APP API');
-async function add(app, methodName, method) {
-	app.set(methodName, method);
+async function add(api, methodName, method) {
+	api.set(methodName, method);
 	console.log('Extended App API', methodName);
 }
 export async function addApi(methodName, method) {
-	const { app } = this;
+	const { app: { api } } = this;
 	if (isPlainObject(methodName)) {
 		return eachObjectAsync(methodName, (childMethod, childMethodName) => {
-			add(app, childMethodName, childMethod);
+			add(api, childMethodName, childMethod);
 		});
 	}
-	return add(app, methodName, method);
+	return add(api, methodName, method);
 }
-async function remove(app, method, methodName) {
-	app.delete(methodName);
+async function remove(api, method, methodName) {
+	api.delete(methodName);
 }
 export async function removeApi(methods) {
-	const { app } = this;
+	const { app: { api } } = this;
 	if (isPlainObject(methods)) {
 		return eachObjectAsync(methods, (method, methodName) => {
-			remove(app, methodName);
+			remove(api, methodName);
 		});
 	}
 	if (isArray(methods)) {
 		return eachAsync(methods, (methodName) => {
-			remove(app, methodName);
+			remove(api, methodName);
 		});
 	}
-	return remove(app, methods);
+	return remove(api, methods);
 }
