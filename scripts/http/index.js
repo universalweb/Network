@@ -4,8 +4,8 @@ const hostname = '127.0.0.1';
 const port = 8888;
 import fs from 'fs';
 const options = {
-	key: fs.readFileSync('/home/main/MEGAsync/Github/Network/scripts/http/key.pem'),
-	cert: fs.readFileSync('/home/main/MEGAsync/Github/Network/scripts/http/cert.pem')
+	key: fs.readFileSync(`${__dirname}/key.pem`),
+	cert: fs.readFileSync(`${__dirname}/cert.pem`)
 };
 const server = http.createServer(options, (req, res) => {
 	res.statusCode = 200;
