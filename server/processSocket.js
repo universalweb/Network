@@ -12,7 +12,7 @@ import {
 	hash,
 	signVerify,
 	toBase64,
-} from '#utilities/crypto.js';
+} from '#crypto';
 import { createClient } from './createClient.js';
 import { parsePacket } from './parsePacket.js';
 // additionalData (ad) are the main UDSP headers. It may be called headers at times or additionalData.

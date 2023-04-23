@@ -5,7 +5,7 @@ import {
 	encode,
 	decode
 } from 'msgpackr';
-import { decrypt } from '#utilities/crypto.js';
+import { decrypt } from '#crypto';
 imported('Server onMessage');
 export async function onMessage(messageBuffer, connection) {
 	const thisContext = this;

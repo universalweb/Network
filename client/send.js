@@ -13,7 +13,7 @@ import {
 	nonceBox,
 	toBase64,
 	hashSign
-} from '#utilities/crypto.js';
+} from '#crypto';
 imported('Client Send');
 export async function send(message, priority) {
 	console.log(`Priority: ${priority}`);

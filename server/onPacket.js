@@ -5,7 +5,7 @@ import {
 	encode,
 	decode
 } from 'msgpackr';
-import { decrypt } from '#utilities/crypto.js';
+import { decrypt } from '#crypto';
 import { processPacket } from './processPacket.js';
 import { processSocket } from './processSocket.js';
 export async function onPacket(messageBuffer, connection) {

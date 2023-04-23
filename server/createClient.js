@@ -4,7 +4,7 @@ import { Client } from './clients/index.js';
 import {
 	toBase64,
 	decrypt
-} from '#utilities/crypto.js';
+} from '#crypto';
 // make client creation an async non-blocking process
 export async function createClient(connectionInfo, receiveKey, transmitKey, clientId) {
 	console.log('Creating Client Object', toBase64(clientId));

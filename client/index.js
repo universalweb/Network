@@ -27,7 +27,7 @@ import {
 	createClientId,
 	keypair,
 	toBase64
-} from '#utilities/crypto.js';
+} from '#crypto';
 import { pluckBuffer } from '#utilities/pluckBuffer.js';
 import { certificate } from '#utilities/certificate/index.js';
 import { watch } from '#utilities/watch.js';

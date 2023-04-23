@@ -1,7 +1,7 @@
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-import { serverSession } from '#utilities/crypto.js';
+import { serverSession } from '#crypto';
 export async function reKey(client, certificate, server) {
 	const {
 		profile: {

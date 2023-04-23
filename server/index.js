@@ -13,7 +13,7 @@ import { onError } from './onError.js';
 import { onListen } from './onListen.js';
 import { onPacket } from './onPacket.js';
 import { sendPacket } from './sendPacket.js';
-import actions from './actions/index.js';
+import { actions } from './actions/index.js';
 /*
   * socket ID: SID
 */
@@ -39,7 +39,6 @@ export class Server {
 		this.bindMethods({
 			addApi,
 			bindServer,
-			configure,
 			onError,
 			onListen,
 			onPacket,
@@ -49,7 +48,7 @@ export class Server {
 		});
 		this.bindActions(actions);
 		this.profile = await this.certificate.get(serverConfiguration.profile);
-		this.configure(serverConfiguration);
+		configure(this);
 		console.log(this.profile);
 		this.status = 1;
 		this.server.on('error', this.onError);
@@ -59,6 +58,7 @@ export class Server {
 		console.log('-------SERVER INITIALIZED-------');
 		return this;
 	}
+	configuration = {};
 	serverPath = currentPath(import.meta);
 	app = {
 		api: new Map()

@@ -5,7 +5,7 @@ import { info } from '#utilities/console.js';
 import {
 	keypair,
 	toBase64
-} from '#utilities/crypto.js';
+} from '#crypto';
 const keys = keypair();
 const cert = {
 	publicKey: keys.publicKey,

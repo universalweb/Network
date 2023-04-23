@@ -14,7 +14,7 @@ import {
 	toBase64,
 	hashSign,
 	randombytes_buf
-} from '#utilities/crypto.js';
+} from '#crypto';
 // clientId, nonce, encrypted message size, flags, packet size.
 export async function sendPacket(rawMessage, address, port, nonce, transmitKey, clientId) {
 	success(`SENDING MESSAGE`);

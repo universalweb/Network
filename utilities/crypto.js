@@ -1,4 +1,4 @@
-const sodium = import('sodium-native');
+const sodium = await import('sodium-native');
 const {
 	crypto_aead_xchacha20poly1305_ietf_ABYTES,
 	crypto_aead_xchacha20poly1305_ietf_decrypt,
@@ -31,7 +31,6 @@ const {
 	crypto_sign_verify_detached,
 	randombytes_buf
 } = sodium;
-console.log(sodium);
 export function passwordHash(passwd) {
 	const out = Buffer.alloc(crypto_pwhash_STRBYTES);
 	crypto_pwhash_str(out, Buffer.from(passwd), 	crypto_pwhash_OPSLIMIT_MIN, crypto_pwhash_MEMLIMIT_MIN);

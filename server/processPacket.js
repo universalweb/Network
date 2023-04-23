@@ -9,7 +9,7 @@ import { promise } from 'Acid';
 import {
 	toBase64,
 	decrypt
-} from '#utilities/crypto.js';
+} from '#crypto';
 import { parsePacket } from './parsePacket.js';
 export async function processPacket(server, connection, headersBuffer, headers, packet) {
 	const clientId = headers.id;

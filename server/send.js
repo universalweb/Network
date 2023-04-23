@@ -17,7 +17,7 @@ import {
 	nonceBox,
 	toBase64,
 	hashSign
-} from '#utilities/crypto.js';
+} from '#crypto';
 // clientId, nonce, encrypted message size, flags, packet size.
 async function send(client, rawMessage, options) {
 	const {

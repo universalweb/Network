@@ -2,7 +2,8 @@ import { assign } from 'Acid';
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-export function configure(configuration) {
+export function configure(source) {
+	const { configuration } = source;
 	info('SERVER CONFIGURATION');
 	const { port: configPort } = configuration;
 	console.log(configuration);
@@ -11,7 +12,7 @@ export function configure(configuration) {
 		port: certPort
 	} = this.profile.ephemeral;
 	const port = configPort || certPort;
-	this.configuration = assign({
+	assign(configuration, {
 		ip,
 		port,
 		id: '0',
@@ -19,5 +20,5 @@ export function configure(configuration) {
 		encoding: 'utf8',
 		max: 1000,
 		maxPayloadSize: 1000
-	}, configuration);
+	});
 }
