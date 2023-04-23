@@ -1,10 +1,10 @@
 /*
   Module for generating a root certificates for the root Identity Registrar servers.
 */
-import { createProfile } from 'utilities/certificate/create.js';
-import { signCertificate } from 'utilities/certificate/sign.js';
-import { signVerify } from 'utilities/crypto.js';
-import { success, info, failed } from 'utilities/logs.js';
+import { createProfile } from '#utilities/certificate/create.js';
+import { signCertificate } from '#utilities/certificate/sign.js';
+import { signVerify } from '#utilities/crypto.js';
+import { success, info, failed } from '#logs';
 import { encode } from 'msgpackr';
 async function createRootCertificate(config) {
 	const template = config.template;

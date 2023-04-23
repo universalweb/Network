@@ -1,6 +1,6 @@
 import path from 'path';
 import { protocol } from 'electron';
-import { currentPath } from 'utilities/directory.js';
+import { currentPath } from '#utilities/directory.js';
 const resourcesDirectory = path.normalize(`${currentPath(import.meta)}/../../resources/`);
 console.log(resourcesDirectory);
 const resourceWhiteList = ['css/index.css', 'css/uikit-rtl.css', 'css/uikit-rtl.css', 'css/uikit.css',

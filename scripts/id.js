@@ -1,4 +1,4 @@
-import { idGenerator } from '../utilities/idGenerator.js';
+import { idGenerator } from '#utilities/idGenerator.js';
 const generator = idGenerator({
 	digits: 1,
 	letters: 1,

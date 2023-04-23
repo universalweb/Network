@@ -1,8 +1,8 @@
 import {
 	success, failed, imported, msgSent, info
-} from '../utilities/logs.js';
-import { buildPacketSize } from '../utilities/buildPacketSize.js';
-import { buildStringSize } from '../utilities/buildStringSize.js';
+} from '#logs';
+import buildPacketSize from '#buildPacketSize';
+import buildStringSize from '#buildStringSize';
 import {
 	encode,
 	decode
@@ -14,7 +14,7 @@ import {
 	toBase64,
 	hashSign,
 	randombytes_buf
-} from '../utilities/crypto.js';
+} from '#utilities/crypto.js';
 // clientId, nonce, encrypted message size, flags, packet size.
 export async function sendPacket(rawMessage, address, port, nonce, transmitKey, clientId) {
 	success(`SENDING MESSAGE`);

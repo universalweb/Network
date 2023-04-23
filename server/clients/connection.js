@@ -1,7 +1,7 @@
 import {
 	success, failed, imported, msgSent, info, msgReceived
-} from '../utilities/logs.js';
-async function connection(client, connectionInfo, server) {
+} from '#logs';
+export async function connection(client, connectionInfo, server) {
 	const {
 		address,
 		port

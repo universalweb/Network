@@ -1,8 +1,9 @@
 /*
 		* App server example
 */
-import { createServer } from 'server/index.js';
-import { info } from 'utilities/logs.js';
+import { createServer } from '#server/index.js';
+import { info } from '#logs';
+import { currentPath } from '#directory';
 const appServer = await createServer({
 	// realtime mode - to keep the connection alive for bidirectional communication
 	realtime: true,
@@ -23,9 +24,9 @@ const appServer = await createServer({
 	// max data size in a singular packet
 	maxFileSize: 900,
 	// Domain certificate to be loaded used for connection encryption
-	profile: `${__dirname}/../services/universal.web.cert`,
+	profile: `${currentPath(import.meta)}/../services/universal.web.cert`,
 	// Where to load app resources from
-	resourceDirectory: `${__dirname}/resources`,
+	resourceDirectory: `${currentPath(import.meta)}/resources`,
 	// Server ID used for load balancing and attaching to the end of connection IDs
 	id: '0',
 	// on connect message to respond with when a connection is established

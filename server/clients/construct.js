@@ -1,8 +1,8 @@
-import { created } from '../created.js';
-import { toBase64, emptyNonce, randombytes_buf } from 'utilities/crypto.js';
+import { created } from './created.js';
+import { toBase64, emptyNonce, randombytes_buf } from '#utilities/crypto.js';
 import {
 	success, failed, imported, msgSent, info, msgReceived
-} from '../utilities/logs.js';
+} from '#logs';
 export async function construct(client, server, connection, receiveKey, transmitKey, clientId) {
 	const {
 		nodes,

@@ -1,6 +1,7 @@
-import { cleanPath, isString, isEmpty } from 'Acid';
-import { info } from 'utilities/logs.js';
-import { read } from 'utilities/file.js';
+import { isString, isEmpty } from 'Acid';
+import cleanPath from '#cleanPath';
+import { info } from '#logs';
+import { read } from '#utilities/file.js';
 import path from 'path';
 export async function file(socket, request, response) {
 	const { configuration: { resourceDirectory, }, } = this;

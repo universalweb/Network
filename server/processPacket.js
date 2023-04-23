@@ -1,6 +1,6 @@
 import {
 	success, failed, imported, msgReceived, info
-} from '../utilities/logs.js';
+} from '#logs';
 import {
 	encode,
 	decode
@@ -9,7 +9,7 @@ import { promise } from 'Acid';
 import {
 	toBase64,
 	decrypt
-} from '../utilities/crypto.js';
+} from '#utilities/crypto.js';
 import { parsePacket } from './parsePacket.js';
 export async function processPacket(server, connection, headersBuffer, headers, packet) {
 	const clientId = headers.id;

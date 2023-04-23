@@ -31,6 +31,7 @@
 		"mongoose": "^7.0.1",
 		"msgpackr": "^1.8.5",
 		"node-watch": "^0.7.3",
+		"nodemon": "^2.0.22",
 		"prettier": "^2.8.4",
 		"qrcode": "^1.5.1",
 		"rollup": "^3.19.0",
@@ -40,6 +41,13 @@
 		"webtorrent": "^2.0.14"
 	},
 	"description": "Sentivate Network Client, Server Module, UDSP, Universal Web Socket, & certificate generation. This serves as a service & browser prototype.",
+	"esm": {
+		"cjs": true,
+		"mode": "auto",
+		"await": true,
+		"wasm": true,
+		"force": false
+	},
 	"engines": {
 		"node": ">=12.9.1"
 	},
@@ -63,6 +71,24 @@
 			"**.css",
 			"**.html"
 		]
+	},
+	"imports": {
+		"#server/*": "./server/*",
+		"#serverApp/*": "./serverApp/*",
+		"#utilities/*": "./utilities/*",
+		"#state/*": "./state/*",
+		"#client/*": "./server/*",
+		"#config/*": "./config/*",
+		"#sodium": "./sodium.js",
+		"#crypto": "./utilities/crypto.js",
+		"#logs": "./utilities/logs.js",
+		"#buildPacketSize": "./utilities/buildPacketSize.js",
+		"#buildStringSize": "./utilities/buildStringSize.js",
+		"#cleanPath": "./utilities/cleanPath.js",
+		"#file": "./utilities/file.js",
+		"#propertyAccess": "./utilities/propertyAccess.js",
+		"#pluckBuffer": "./utilities/pluckBuffer.js",
+		"#directory": "./utilities/directory.js"
 	},
 	"postinstall": "electron-builder install-app-deps",
 	"productName": "Universal Web Browser",

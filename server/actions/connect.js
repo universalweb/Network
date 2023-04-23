@@ -1,4 +1,4 @@
-import { info } from 'utilities/logs.js';
+import { info } from '#logs';
 export async function connect(socket, request, response) {
 	const {
 		configuration: {

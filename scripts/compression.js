@@ -1,8 +1,8 @@
 // 'Domain Certificate Creation'
 import { decode, encode } from 'msgpackr';
 import { stringify } from 'Acid';
-import { read } from 'utilities/file.js';
-import { info } from 'utilities/console.js';
+import { read } from '#utilities/file.js';
+import { info } from '#utilities/console.js';
 import { compress } from 'iltorb';
 const file = await read(`${__dirname}/../root/root.cert`);
 const certObj = decode(file);

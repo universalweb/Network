@@ -1,6 +1,6 @@
 import {
 	success, failed, imported, msgSent, info, msgReceived
-} from '../utilities/logs.js';
+} from '#logs';
 export async function state(client, server) {
 	client.stateTime = Date.now();
 	await server.nodeEvent('state', client);

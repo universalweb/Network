@@ -1,11 +1,10 @@
 import {
 	isPlainObject,
-	eachObjectAsync,
+	each,
 	isArray,
-	eachAsync,
 	assign
 } from 'Acid';
-import { imported } from 'utilities/logs.js';
+import { imported } from '#logs';
 imported('SERVER APP API');
 async function add(api, methodName, method) {
 	api.set(methodName, method);
@@ -14,7 +13,7 @@ async function add(api, methodName, method) {
 export async function addApi(methodName, method) {
 	const { app: { api } } = this;
 	if (isPlainObject(methodName)) {
-		return eachObjectAsync(methodName, (childMethod, childMethodName) => {
+		return each(methodName, (childMethod, childMethodName) => {
 			add(api, childMethodName, childMethod);
 		});
 	}
@@ -26,12 +25,12 @@ async function remove(api, method, methodName) {
 export async function removeApi(methods) {
 	const { app: { api } } = this;
 	if (isPlainObject(methods)) {
-		return eachObjectAsync(methods, (method, methodName) => {
+		return each(methods, (method, methodName) => {
 			remove(api, methodName);
 		});
 	}
 	if (isArray(methods)) {
-		return eachAsync(methods, (methodName) => {
+		return each(methods, (methodName) => {
 			remove(api, methodName);
 		});
 	}

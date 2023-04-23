@@ -1,6 +1,6 @@
 import {
 	success, failed, imported, msgSent, info, msgReceived
-} from '../utilities/logs.js';
+} from '#logs';
 export async function destroy(client, reason, server) {
 	if (reason === 1) {
 		await client.send({

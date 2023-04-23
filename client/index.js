@@ -17,20 +17,20 @@ import {
 } from 'Acid';
 import dgram from 'dgram';
 // Default utility imports
-import { success, configure } from 'utilities/logs.js';
-import { buildPacketSize } from '../utilities/buildPacketSize.js';
-import { buildStringSize } from '../utilities/buildStringSize.js';
-import { file } from '../utilities/file.js';
+import { success, configure } from '#logs';
+import { buildPacketSize } from '#utilities/buildPacketSize.js';
+import { buildStringSize } from '#utilities/buildStringSize.js';
+import { file } from '#utilities/file.js';
 import {
 	createSessionKey,
 	clientSession,
 	createClientId,
 	keypair,
 	toBase64
-} from '../utilities/crypto.js';
-import { pluckBuffer } from '../utilities/pluckBuffer.js';
-import { certificate } from '../utilities/certificate/index.js';
-import { watch } from '../utilities/watch.js';
+} from '#utilities/crypto.js';
+import { pluckBuffer } from '#utilities/pluckBuffer.js';
+import { certificate } from '#utilities/certificate/index.js';
+import { watch } from '#utilities/watch.js';
 // Client specific imports
 import { getClient } from './getClient.js';
 // Client specific imports to extend class

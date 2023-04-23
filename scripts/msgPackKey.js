@@ -1,11 +1,11 @@
 import { decode, encode } from 'msgpackr';
 import { stringify } from 'Acid';
-import { read } from 'utilities/file.js';
-import { info } from 'utilities/console.js';
+import { read } from '#utilities/file.js';
+import { info } from '#utilities/console.js';
 import {
 	keypair,
 	toBase64
-} from 'utilities/crypto.js';
+} from '#utilities/crypto.js';
 const keys = keypair();
 const cert = {
 	publicKey: keys.publicKey,

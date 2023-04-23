@@ -1,4 +1,4 @@
-import { configure } from '../utilities/logs.js';
+import { configure } from '#logs';
 function buildConfiguration(configuration) {
 	const {
 		ip,

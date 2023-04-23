@@ -1,7 +1,7 @@
 import {
 	success, failed, imported, msgSent, info, msgReceived
-} from '../utilities/logs.js';
-async function emit(api, body) {
+} from '#logs';
+export async function emit(api, body) {
 	info(`Emitted ${api}`);
 	const eid = this.packetIdGenerator.get();
 	const message = {

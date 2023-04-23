@@ -1,6 +1,6 @@
 import {
 	success, failed, imported, msgSent, info
-} from '../utilities/logs.js';
+} from '#logs';
 import { promise, } from 'Acid';
 imported('Request');
 export async function request(api, body = null, head = {}) {

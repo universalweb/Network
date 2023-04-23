@@ -1,4 +1,5 @@
-import {
+const sodium = import('sodium-native');
+const {
 	crypto_aead_xchacha20poly1305_ietf_ABYTES,
 	crypto_aead_xchacha20poly1305_ietf_decrypt,
 	crypto_aead_xchacha20poly1305_ietf_encrypt,
@@ -29,7 +30,8 @@ import {
 	crypto_sign_SECRETKEYBYTES,
 	crypto_sign_verify_detached,
 	randombytes_buf
-} from 'sodium-native';
+} = sodium;
+console.log(sodium);
 export function passwordHash(passwd) {
 	const out = Buffer.alloc(crypto_pwhash_STRBYTES);
 	crypto_pwhash_str(out, Buffer.from(passwd), 	crypto_pwhash_OPSLIMIT_MIN, crypto_pwhash_MEMLIMIT_MIN);
@@ -163,3 +165,35 @@ export function createClientId() {
 	return clientId;
 }
 export const hashBytes = crypto_generichash_BYTES;
+export {
+	crypto_aead_xchacha20poly1305_ietf_ABYTES,
+	crypto_aead_xchacha20poly1305_ietf_decrypt,
+	crypto_aead_xchacha20poly1305_ietf_encrypt,
+	crypto_aead_xchacha20poly1305_ietf_NPUBBYTES,
+	crypto_generichash,
+	crypto_generichash_BYTES,
+	crypto_generichash_BYTES_MIN,
+	crypto_kx_client_session_keys,
+	crypto_kx_keypair,
+	crypto_kx_PUBLICKEYBYTES,
+	crypto_kx_SECRETKEYBYTES,
+	crypto_kx_server_session_keys,
+	crypto_kx_SESSIONKEYBYTES,
+	crypto_pwhash_MEMLIMIT_MIN,
+	crypto_pwhash_OPSLIMIT_MIN,
+	crypto_pwhash_str,
+	crypto_pwhash_str_verify,
+	crypto_pwhash_STRBYTES,
+	crypto_shorthash,
+	crypto_shorthash_BYTES,
+	crypto_shorthash_KEYBYTES,
+	crypto_sign,
+	crypto_sign_BYTES,
+	crypto_sign_detached,
+	crypto_sign_keypair,
+	crypto_sign_open,
+	crypto_sign_PUBLICKEYBYTES,
+	crypto_sign_SECRETKEYBYTES,
+	crypto_sign_verify_detached,
+	randombytes_buf
+};

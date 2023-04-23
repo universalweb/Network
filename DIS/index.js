@@ -1,5 +1,5 @@
 import { createServer } from '../server/index.js';
-import { info } from 'utilities/logs.js';
+import { info } from '#logs';
 const server = await createServer({
 	maxMTU: 1100,
 	max: 900,

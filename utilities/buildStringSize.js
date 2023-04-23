@@ -1,4 +1,4 @@
-function buildStringSize(encryptedLength, maxStringSizeLength = 3) {
+export function buildStringSize(encryptedLength, maxStringSizeLength = 3) {
 	const encryptedLengthSize = encryptedLength.toString().length;
 	let encryptedSizePacket;
 	if (encryptedLengthSize < maxStringSizeLength) {
@@ -8,5 +8,5 @@ function buildStringSize(encryptedLength, maxStringSizeLength = 3) {
 	}
 	return Buffer.from(encryptedSizePacket);
 }
-export { buildStringSize };
+export default buildStringSize;
 

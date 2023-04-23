@@ -1,11 +1,11 @@
 import {
 	success, failed, imported, msgSent, info, msgReceived
-} from '../utilities/logs.js';
+} from '#logs';
 import {
 	encode,
 	decode
 } from 'msgpackr';
-import { decrypt } from '../utilities/crypto.js';
+import { decrypt } from '#utilities/crypto.js';
 import { processPacket } from './processPacket.js';
 import { processSocket } from './processSocket.js';
 export async function onPacket(messageBuffer, connection) {

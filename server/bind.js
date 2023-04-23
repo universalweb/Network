@@ -1,5 +1,5 @@
 import { promise } from 'Acid';
-import { info } from '../utilities/logs.js';
+import { info } from '#logs';
 export async function bindServer() {
 	const {
 		server,

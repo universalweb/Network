@@ -5,7 +5,7 @@ import {
 } from 'Acid';
 import {
 	success, failed, imported, msgSent, info
-} from 'utilities/logs.js';
+} from '#logs';
 imported('ON PUBLIC MESSAGE');
 export async function onMessage(socket, message) {
 	const { app, } = this;

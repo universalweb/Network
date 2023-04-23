@@ -1,6 +1,6 @@
 import {
 	success, failed, imported, msgSent, info, msgReceived
-} from '../utilities/logs.js';
+} from '#logs';
 export async function respond(client, response, request, server) {
 	client.lastRespond = Date.now();
 	response.sid = request.sid;

@@ -1,6 +1,19 @@
 {
 	"compilerOptions": {
 		"baseUrl": ".",
+		"paths": {
+            "#utilities/*": ["./utilities/*"],
+            "#server/*": ["./server/*"],
+			"#client/*": ["./server/*"],
+			"#profile/*": ["./profile/*"],
+			"#serverApp/*": ["./serverApp/*"],
+			"#schemes/*": ["./schemes/*"],
+			"#resources/*": ["./resources/*"],
+			"#scripts/*": ["./scripts/*"],
+			"#state/*": ["./state/*"],
+			"#config/*": ["./config/*"],
+			"#udsp/*": ["./udsp/*"],
+        },
 		"module": "ESNext",
 		"moduleResolution": "nodenext",
 		"target": "ESNext",

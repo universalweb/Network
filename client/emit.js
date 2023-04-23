@@ -1,6 +1,6 @@
 import {
 	success, failed, imported, msgSent, info
-} from '../utilities/logs.js';
+} from '#logs';
 imported('Emit');
 async function emit(api, body) {
 	const thisContext = this;

@@ -1,6 +1,6 @@
 import {
 	success, failed, imported, msgSent, info, msgReceived
-} from '../utilities/logs.js';
+} from '#logs';
 export async function connected(client, server) {
 	client.lastAct = Date.now();
 	clearTimeout(client.gracePeriod);

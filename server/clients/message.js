@@ -3,3 +3,4 @@ class Message {
 	}
 	data = {};
 }
+export { Message };

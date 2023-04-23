@@ -1,4 +1,4 @@
-function buildPacketSize(encryptedLength, maxPacketSizeLength = 4) {
+export function buildPacketSize(encryptedLength, maxPacketSizeLength = 4) {
 	const encryptedLengthSize = encryptedLength.toString().length;
 	let encryptedSizePacket;
 	if (encryptedLengthSize < maxPacketSizeLength) {

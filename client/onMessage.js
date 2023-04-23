@@ -1,11 +1,11 @@
 import {
 	success, failed, imported, msgSent, info, msgReceived
-} from '../utilities/logs.js';
+} from '#logs';
 import {
 	encode,
 	decode
 } from 'msgpackr';
-import { decrypt } from '../utilities/crypto.js';
+import { decrypt } from '#utilities/crypto.js';
 imported('Server onMessage');
 export async function onMessage(messageBuffer, connection) {
 	const thisContext = this;

@@ -1,10 +1,10 @@
 import { construct, each, UniqID } from 'Acid';
 import {
 	success, failed, imported, msgSent, info, msgReceived
-} from '../utilities/logs.js';
-import { currentPath } from '../utilities/directory.js';
+} from '#logs';
+import { currentPath } from '#utilities/directory.js';
 import dgram from 'dgram';
-import { addApi, removeAPi } from './api.js';
+import { addApi, removeApi } from './api.js';
 import { bindServer } from './bind.js';
 import { chunkMessage } from './chunkMessage.js';
 import { configure } from './configure.js';
@@ -43,7 +43,7 @@ export class Server {
 			onError,
 			onListen,
 			onPacket,
-			removeAPi,
+			removeApi,
 			sendPacket,
 			emit,
 		});

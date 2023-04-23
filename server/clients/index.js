@@ -6,11 +6,11 @@ import { destroy } from './destroy.js';
 import { reKey } from './reKey.js';
 import { send } from './send.js';
 import { state } from './state.js';
-import { createResponse } from './message.js';
+// import { createResponse } from './message.js';
 import { received } from './received.js';
 import {
 	success, failed, imported, msgSent, info, msgReceived
-} from '../utilities/logs.js';
+} from '#logs';
 export class Client {
 	descriptor = 'client';
 	client = true;

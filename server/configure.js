@@ -1,7 +1,7 @@
 import { assign } from 'Acid';
 import {
 	success, failed, imported, msgSent, info, msgReceived
-} from '../utilities/logs.js';
+} from '#logs';
 export function configure(configuration) {
 	info('SERVER CONFIGURATION');
 	const { port: configPort } = configuration;

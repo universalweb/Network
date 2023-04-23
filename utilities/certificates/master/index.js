@@ -1,13 +1,13 @@
 /*
   Module for quickly generating identity certificates
 */
-import { createMaster } from 'utilities/certificate/create.js';
-import { signCertificate } from 'utilities/certificate/sign.js';
-import { signVerify } from 'utilities/crypto.js';
-import { success, info, failed } from 'utilities/logs.js';
+import { createMaster } from '#utilities/certificate/create.js';
+import { signCertificate } from '#utilities/certificate/sign.js';
+import { signVerify } from '#utilities/crypto.js';
+import { success, info, failed } from '#logs';
 import { encode } from 'msgpackr';
 import { jsonParse } from 'Acid';
-import { read } from 'utilities/file.js';
+import { read } from '#utilities/file.js';
 async function createMasterCertificate(config) {
 	const {
 		template,
