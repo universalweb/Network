@@ -14,6 +14,7 @@ import { onListen } from './onListen.js';
 import { onPacket } from './onPacket.js';
 import { sendPacket } from './sendPacket.js';
 import { actions } from './actions/index.js';
+import { getCertificate } from '#certificate';
 /*
   * socket ID: SID
 */
@@ -23,13 +24,15 @@ export class Server {
 	}
 	bindMethods(methods) {
 		const thisContext = this;
-		each(methods, (methodName, method) => {
+		console.log(methods);
+		each(methods, (method, methodName) => {
+			console.log();
 			thisContext[methodName] = method.bind(thisContext);
 		});
 	}
 	bindActions(methods) {
 		const thisContext = this;
-		each(methods, (methodName, method) => {
+		each(methods, (method, methodName) => {
 			thisContext.actions[methodName] = method.bind(thisContext);
 		});
 	}
@@ -47,8 +50,8 @@ export class Server {
 			emit,
 		});
 		this.bindActions(actions);
-		this.profile = await this.certificate.get(serverConfiguration.profile);
-		configure(this);
+		console.log(serverConfiguration);
+		this.profile = await getCertificate(serverConfiguration.profile);
 		console.log(this.profile);
 		this.status = 1;
 		this.server.on('error', this.onError);
@@ -100,5 +103,5 @@ export class Server {
 	streamIdGenerator = construct(UniqID);
 }
 export async function createServer(...args) {
-	return construct(Server, ...args);
+	return construct(Server, args);
 }

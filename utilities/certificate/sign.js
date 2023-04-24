@@ -1,7 +1,7 @@
-import cnsl from '../logs.js';
-import { read, write } from '../file.js';
-import { hashSign } from '../crypto.js';
-import saveCertificate from './save.js';
+import { logCert, imported } from '#logs';
+import { read, write } from '#file';
+import { hashSign } from '#crypto';
+import { saveCertificate } from './save.js';
 import {
 	assign,
 	keys,
@@ -9,10 +9,10 @@ import {
 	isNumber,
 	isPlainObject
 } from 'Acid';
-cnsl.imported('Certificate Signing');
+imported('Certificate Signing');
 import pluckCertificate from '../pluckCertificate.js';
 export function signCertificate(certificate, authority, exclude) {
-	console.log('Sign Certificate');
+	logCert('Sign Certificate');
 	const concatValues = pluckCertificate(certificate, exclude);
 	return hashSign(concatValues, authority.private);
 }

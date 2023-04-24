@@ -88,6 +88,7 @@
 		"#file": "./utilities/file.js",
 		"#propertyAccess": "./utilities/propertyAccess.js",
 		"#pluckBuffer": "./utilities/pluckBuffer.js",
+		"#certificate": "./utilities/certificate/index.js",
 		"#directory": "./utilities/directory.js"
 	},
 	"postinstall": "electron-builder install-app-deps",

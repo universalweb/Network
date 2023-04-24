@@ -1,7 +1,7 @@
-import cnsl from '../logs.js';
-import { read, write } from '../file.js';
-import { decode, encode } from '../crypto.js';
-cnsl.imported('CERTIFICATE');
+import { logCert, imported } from '#logs';
+import { read, write } from '#file';
+import { decode, encode } from 'msgpackr';
+imported('CERTIFICATE');
 export async function parseCertificate(raw) {
 	const certificate = decode(raw);
 	return certificate;
@@ -9,16 +9,19 @@ export async function parseCertificate(raw) {
 export async function verifyCertificate(parentCertificate, child) {
 	const parentCertificateCertificate = parentCertificate;
 	const childCertificate = child;
-	cnsl.info(parentCertificateCertificate, childCertificate);
+	logCert(parentCertificateCertificate, childCertificate);
 }
 export async function getCertificate(filepath) {
-	cnsl.certificate('Get => ', filepath);
+	logCert('Get => ', filepath);
 	const file = await read(filepath);
 	if (file) {
 		return parseCertificate(file);
 	} else {
-		cnsl.failed('FAILED TO LOAD CERT', filepath);
+		logCert('FAILED TO LOAD CERT', filepath);
 	}
 }
+export * from './createDomainProfile.js';
 export * from './sign.js';
 export * from './create.js';
+export * from './save.js';
+export * from './getCertificateKeys.js';

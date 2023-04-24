@@ -1,14 +1,14 @@
-import cnsl from '../logs/index.js';
-import { read, write } from '../file/index.js';
-import { keypair, signKeypair } from '../crypto/index.js';
-import { sign } from './sign.js';
-import { save } from './save.js';
-import { assign, assignDeep } from 'Acid';
+import { logCert } from '#logs';
+import { read, write } from '#file';
+import { keypair, signKeypair } from '#crypto';
+import { signCertificate } from './sign.js';
+import { saveCertificate } from './save.js';
+import { assign, merge, clone } from 'Acid';
 export async function createDomainProfile(profileTemplate, certificateName, directory) {
 	const {
 		ephemeral: ephemeralTemplate,
 		master: masterTemplate
-	} = profileTemplate;
+	} = clone(profileTemplate);
 	const {
 		publicKey: masterKey,
 		secretKey: secretKeyMaster
@@ -17,27 +17,28 @@ export async function createDomainProfile(profileTemplate, certificateName, dire
 		publicKey: ephemeralKey,
 		secretKey: secretKeyEphemeral
 	} = keypair();
-	const ephemeral = assignDeep({
+	const ephemeral = merge(ephemeralTemplate, {
 		start: Date.now(),
 		key: ephemeralKey
-	}, ephemeralTemplate);
-	const master = assignDeep({
+	});
+	const master = merge(masterTemplate, {
 		start: Date.now(),
 		key: masterKey,
 		private: secretKeyMaster
-	}, masterTemplate);
+	});
 	const profile = {
 		ephemeral,
 		master,
 	};
-	cnsl.warning('Certificates Built');
-	ephemeral.signature = sign(ephemeral, master);
-	cnsl.warning('Ephemeral Certificate Signed');
+	logCert.warning('Certificates Built');
+	ephemeral.signature = signCertificate(ephemeral, master);
+	logCert.warning('Ephemeral Certificate Signed');
 	ephemeral.private = secretKeyEphemeral;
 	if (directory) {
-		await save(profile, directory, certificateName);
-		cnsl.warning(`Certificates Saved to ${directory}`, certificateName);
+		await saveCertificate(profile, directory, certificateName);
+		logCert.warning(`Certificates Saved to ${directory}`, certificateName);
 	}
 	console.log('CERTIFICATE BUILT');
 	return profile;
 }
+export default createDomainProfile;

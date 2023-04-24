@@ -1,15 +1,15 @@
-import cnsl from '../logs.js';
-import { read, write } from '../file.js';
-import { keypair, signKeypair } from '../crypto.js';
-import { sign } from './sign.js';
-import { save } from './save.js';
-import { assign, assignDeep } from 'Acid';
-cnsl.imported('Certificate Creation');
+import { logCert, imported } from '#logs';
+import { read, write } from '#file';
+import { keypair, signKeypair } from '#crypto';
+import { signCertificate } from './sign.js';
+import { saveCertificate } from './save.js';
+import { assign, merge, clone } from 'Acid';
+imported('Certificate Creation');
 export async function createProfile(profileTemplate, certificateName, directory) {
 	const {
 		ephemeral: ephemeralTemplate,
 		master: masterTemplate
-	} = profileTemplate;
+	} = clone(profileTemplate);
 	const {
 		publicKey: masterKey,
 		secretKey: secretKeyMaster
@@ -18,26 +18,26 @@ export async function createProfile(profileTemplate, certificateName, directory)
 		publicKey: ephemeralKey,
 		secretKey: secretKeyEphemeral
 	} = signKeypair();
-	const ephemeral = assignDeep({
+	const ephemeral = merge(ephemeralTemplate, {
 		start: Date.now(),
 		key: ephemeralKey
-	}, ephemeralTemplate);
-	const master = assignDeep({
+	});
+	const master = merge(masterTemplate, {
 		start: Date.now(),
 		key: masterKey,
 		private: secretKeyMaster
-	}, masterTemplate);
+	});
 	const profile = {
 		ephemeral,
 		master,
 	};
-	cnsl.warning('Certificates Built');
-	ephemeral.signature = sign(ephemeral, master);
-	cnsl.warning('Ephemeral Certificate Signed');
+	logCert('Certificates Built');
+	ephemeral.signature = signCertificate(ephemeral, master);
+	logCert('Ephemeral Certificate Signed');
 	ephemeral.private = secretKeyEphemeral;
 	if (directory) {
-		await save(profile, directory, certificateName);
-		cnsl.warning(`Certificates Saved to ${directory}`, certificateName);
+		await saveCertificate(profile, directory, certificateName);
+		logCert(`Certificates Saved to ${directory}`, certificateName);
 	}
 	console.log('CERTIFICATE BUILT');
 	return profile;
@@ -47,17 +47,17 @@ export async function createEphemeralCertificate(ephemeralTemplate, master, cert
 		publicKey,
 		secretKey
 	} = signKeypair();
-	const ephemeral = assignDeep({
+	const ephemeral = merge(ephemeralTemplate, {
 		start: Date.now(),
 		key: publicKey
-	}, ephemeralTemplate);
-	cnsl.warning('Ephemeral Certificate Built');
-	ephemeral.signature = sign(ephemeral, master);
-	cnsl.warning('Ephemeral Certificate Signed');
+	});
+	logCert('Ephemeral Certificate Built');
+	ephemeral.signature = signCertificate(ephemeral, master);
+	logCert('Ephemeral Certificate Signed');
 	ephemeral.private = secretKey;
 	if (directory) {
-		await save(ephemeral, directory, certificateName);
-		cnsl.warning(`Certificate Saved to ${directory}`, certificateName);
+		await saveCertificate(ephemeral, directory, certificateName);
+		logCert(`Certificate Saved to ${directory}`, certificateName);
 	}
 	return ephemeral;
 }
@@ -66,17 +66,17 @@ export async function createDomainEphemeralCertificate(ephemeralTemplate, master
 		publicKey,
 		secretKey
 	} = keypair();
-	const ephemeral = assignDeep({
+	const ephemeral = merge(ephemeralTemplate, {
 		start: Date.now(),
 		key: publicKey
-	}, ephemeralTemplate);
-	cnsl.warning('Ephemeral Certificate Built');
-	ephemeral.signature = sign(ephemeral, master);
-	cnsl.warning('Ephemeral Certificate Signed');
+	});
+	logCert('Ephemeral Certificate Built');
+	ephemeral.signature = signCertificate(ephemeral, master);
+	logCert('Ephemeral Certificate Signed');
 	ephemeral.private = secretKey;
 	if (directory) {
-		await save(ephemeral, directory, certificateName);
-		cnsl.warning(`Certificate Saved to ${directory}`, certificateName);
+		await saveCertificate(ephemeral, directory, certificateName);
+		logCert(`Certificate Saved to ${directory}`, certificateName);
 	}
 	return ephemeral;
 }
@@ -85,15 +85,15 @@ export async function createMasterCertificate(masterTemplate, certificateName, d
 		publicKey,
 		secretKey
 	} = signKeypair();
-	const master = assignDeep({
+	const master = merge(masterTemplate, {
 		start: Date.now(),
 		key: publicKey,
 		private: secretKey
-	}, masterTemplate);
-	cnsl.warning('Master Certificate Built');
+	});
+	logCert('Master Certificate Built');
 	if (directory) {
-		await save(master, directory, certificateName);
-		cnsl.warning(`Certificate Saved to ${directory}`, certificateName);
+		await saveCertificate(master, directory, certificateName);
+		logCert(`Certificate Saved to ${directory}`, certificateName);
 	}
 	return master;
 }
