@@ -3,22 +3,16 @@ import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 export function configure(source) {
-	const { configuration } = source;
 	info('SERVER CONFIGURATION');
-	const { port: configPort } = configuration;
-	console.log(configuration);
+	console.log('Server provided config', source.configuration);
 	const {
-		ip,
+		ip: certIp,
 		port: certPort
-	} = this.profile.ephemeral;
-	const port = configPort || certPort;
-	assign(configuration, {
+	} = source.profile.ephemeral;
+	const port = source.configuration.port || certPort;
+	const ip = source.configuration.ip || certIp;
+	assign(source, {
 		ip,
 		port,
-		id: '0',
-		maxMTU: 1000,
-		encoding: 'utf8',
-		max: 1000,
-		maxPayloadSize: 1000
 	});
 }

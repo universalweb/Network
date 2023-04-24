@@ -1,4 +1,6 @@
-import { construct, each, UniqID } from 'Acid';
+import {
+	construct, each, assign, UniqID
+} from 'Acid';
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
@@ -36,8 +38,9 @@ export class Server {
 			thisContext.actions[methodName] = method.bind(thisContext);
 		});
 	}
-	async initialize(serverConfiguration) {
+	async initialize(configuration) {
 		console.log('-------SERVER INITIALIZING-------');
+		this.configuration = assign(this, configuration);
 		// convert some to just using them as modules with arguments instead of bind/this
 		this.bindMethods({
 			addApi,
@@ -50,18 +53,21 @@ export class Server {
 			emit,
 		});
 		this.bindActions(actions);
-		console.log(serverConfiguration);
-		this.profile = await getCertificate(serverConfiguration.profile);
-		console.log(this.profile);
+		this.profile = await getCertificate(configuration.profile);
+		configure(this);
 		this.status = 1;
 		this.server.on('error', this.onError);
 		this.server.on('listening', this.onListen);
 		this.server.on('message', this.onPacket);
-		await this.bindServer(actions);
+		await this.bindServer();
 		console.log('-------SERVER INITIALIZED-------');
 		return this;
 	}
-	configuration = {};
+	id = '0';
+	maxMTU = 1000;
+	encoding = 'utf8';
+	max = 1000;
+	maxPayloadSize = 1000;
 	serverPath = currentPath(import.meta);
 	app = {
 		api: new Map()
