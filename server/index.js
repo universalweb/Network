@@ -15,6 +15,7 @@ import { onError } from './onError.js';
 import { onListen } from './onListen.js';
 import { onPacket } from './onPacket.js';
 import { sendPacket } from './sendPacket.js';
+import { send } from './send.js';
 import { actions } from './actions/index.js';
 import { getCertificate } from '#certificate';
 /*
@@ -52,6 +53,7 @@ export class Server {
 			removeApi,
 			sendPacket,
 			emit,
+			send
 		});
 		this.bindActions(actions);
 		this.profile = await getCertificate(configuration.profile);

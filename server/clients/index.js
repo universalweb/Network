@@ -50,6 +50,7 @@ export class Client {
 	}
 	async send(message, frameHeaders) {
 		const server = this.server();
+		console.log(server);
 		await send(this, message, frameHeaders, server);
 		info(`socket EVENT -> send - ID:${this.id}`);
 	}

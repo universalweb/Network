@@ -19,7 +19,7 @@ import {
 	hashSign
 } from '#crypto';
 // clientId, nonce, encrypted message size, flags, packet size.
-async function send(client, rawMessage, options) {
+export async function send(client, rawMessage, options) {
 	const {
 		address,
 		port,
