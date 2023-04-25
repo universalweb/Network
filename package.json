@@ -81,6 +81,7 @@
 		"#config/*": "./config/*",
 		"#sodium": "./sodium.js",
 		"#crypto": "./utilities/crypto.js",
+		"#watch": "./utilities/watch.js",
 		"#logs": "./utilities/logs.js",
 		"#buildPacketSize": "./utilities/buildPacketSize.js",
 		"#buildStringSize": "./utilities/buildStringSize.js",
@@ -109,6 +110,7 @@
 		"pack": "electron-builder --dir",
 		"server": "nodemon ./serverApp/index.js --watch ./server/ --watch ./serverApp/",
 		"simulate": "nodemon ./scripts/simulate.js --watch ./client/ --watch ./server/ --watch ./scripts/simulate.js --watch utilities/",
+		"simc": "nodemon ./scripts/simulateClient.js --watch ./client/ --watch ./server/ --watch ./scripts/simulateClient.js --watch utilities/",
 		"start": "nodemon --watch ./index.html --watch ./client/ --watch ./browser/ --watch ./main.js --exec 'electron .'",
 		"uwBridge": "nodemon ./uwBridge/index.js --watch ./uwBridge/",
 		"version": "auto-changelog -p --sort-commits date-desc && git add CHANGELOG.md"

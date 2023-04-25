@@ -40,7 +40,8 @@ export class Server {
 	}
 	async initialize(configuration) {
 		console.log('-------SERVER INITIALIZING-------');
-		this.configuration = assign(this, configuration);
+		this.configuration = configuration;
+		console.log(this.configuration);
 		// convert some to just using them as modules with arguments instead of bind/this
 		this.bindMethods({
 			addApi,

@@ -20,14 +20,11 @@ export async function send(message, priority) {
 	const thisContext = this;
 	const {
 		server,
-		configuration: {
-			ip,
-			port: certificatePort
-		},
-		servicePort
+		ip,
+		port,
 	} = thisContext;
 	const headers = {};
-	const clientStatusCode = thisContext.status.code;
+	const clientStatusCode = thisContext.state.code;
 	console.log(`client Status Code is ${clientStatusCode}`);
 	if (clientStatusCode === 0) {
 		if (!message.head) {
@@ -41,7 +38,6 @@ export async function send(message, priority) {
 	if (message.body) {
 		message.body = encode(message.body);
 	}
-	const port = servicePort || certificatePort;
 	info(`Send to server`);
 	const nonce = nonceBox();
 	success(`Nonce Size: ${nonce.length} ${toBase64(nonce)}`);

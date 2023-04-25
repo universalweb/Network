@@ -20,6 +20,7 @@ export class Client {
 		this.server = function() {
 			return server;
 		};
+		console.log(server);
 		return construct(this, server, connectionInfo, receiveKey, transmitKey, clientId);
 	}
 	async created() {

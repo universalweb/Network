@@ -1,27 +1,27 @@
 import chalk from 'chalk';
 import {
 	stringify,
-	mapArray,
+	each,
 	isPlainObject
 } from 'Acid';
-export function prettyObjects(values) {
-	return mapArray(values, (item) => {
-		return (isPlainObject(item)) ? stringify(item, null, `  `) : item;
+export function prettyObjects(args, consoleBase) {
+	return each(args, (item) => {
+		console.log(consoleBase((isPlainObject(item)) ? stringify(item, null, `  `) : item));
 	});
 }
 function logFactory(bg, color, header, footer) {
 	const consoleBase = (bg) ? chalk[bg].hex(color) : chalk.hex(color);
 	return function(...args) {
 		const descriptor = this?.descriptor || '';
-		const prettyItems = prettyObjects(args);
 		if (footer) {
 			const fullHeader = (descriptor) ? ` ---------------- ${descriptor}: ${header} START ---------------- ` : ` ---------------- ${header} START ---------------- `;
 			console.log(consoleBase(fullHeader, `\n`));
-			console.log(consoleBase(...prettyItems, `\n`));
+			prettyObjects(args, consoleBase);
 			console.log(consoleBase(` ---------------- ${header} END ---------------- `, `\n`));
 		} else {
 			const fullHeader = (descriptor) ? `${descriptor}: ${header}   =>  ` : `${header}  =>  `;
-			console.log(consoleBase(fullHeader, ...prettyItems, `\n`));
+			console.log(consoleBase(fullHeader));
+			prettyObjects(args, consoleBase);
 		}
 	};
 }

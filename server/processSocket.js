@@ -15,6 +15,7 @@ import {
 } from '#crypto';
 import { createClient } from './createClient.js';
 import { parsePacket } from './parsePacket.js';
+import { processPacketEvent } from './processPacketEvent.js';
 // additionalData (ad) are the main UDSP headers. It may be called headers at times or additionalData.
 export async function processSocket(server, connection, additionalDataBuffer, additionalData, packet) {
 	const {
@@ -45,7 +46,7 @@ export async function processSocket(server, connection, additionalDataBuffer, ad
 	}
 	success(`Decrypted`);
 	if (decrypted) {
-		const message = parsePacket(server, decrypted);
+		const message = parsePacket(decrypted);
 		if (!message) {
 			return failed('JSON ERROR', connection);
 		}
@@ -61,7 +62,7 @@ export async function processSocket(server, connection, additionalDataBuffer, ad
 		if (sigCompare) {
 			msgReceived(`Signature is valid`);
 			const client = await createClient(server, connection, receiveKey, transmitKey, clientId);
-			await server.api.onMessage(client, message);
+			await processPacketEvent(server, client, message);
 		} else {
 			console.log('SIGNATURE FAILED NO SOCKET CREATED');
 			return;

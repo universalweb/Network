@@ -7,8 +7,8 @@ import {
 	success, failed, imported, msgSent, info
 } from '#logs';
 imported('ON PUBLIC MESSAGE');
-export async function onMessage(socket, message) {
-	const { app, } = this;
+export async function processPacketEvent(server, socket, message) {
+	const { app, } = server;
 	const {
 		body,
 		sid,
@@ -18,7 +18,7 @@ export async function onMessage(socket, message) {
 	if (!api && !act) {
 		return failed(`Invalid no API (api) or Action (act) name given. ${stringify(message)}`);
 	}
-	const method = (act) ? app.get(act) : app.get(api);
+	const method = (act) ? app.get(act) : app.api.get(api);
 	if (method) {
 		if (body) {
 			if (hasValue(sid)) {

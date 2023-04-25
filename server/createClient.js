@@ -6,9 +6,9 @@ import {
 	decrypt
 } from '#crypto';
 // make client creation an async non-blocking process
-export async function createClient(connectionInfo, receiveKey, transmitKey, clientId) {
+export async function createClient(server, connectionInfo, receiveKey, transmitKey, clientId) {
 	console.log('Creating Client Object', toBase64(clientId));
-	const client = await construct(Client, [this, connectionInfo, receiveKey, transmitKey, clientId]);
+	const client = await construct(Client, [server, connectionInfo, receiveKey, transmitKey, clientId]);
 	console.log('Client has been created', toBase64(clientId));
 	return client;
 }

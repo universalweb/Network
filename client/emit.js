@@ -2,7 +2,7 @@ import {
 	success, failed, imported, msgSent, info
 } from '#logs';
 imported('Emit');
-async function emit(api, body) {
+export async function emit(api, body) {
 	const thisContext = this;
 	const { packetIdGenerator } = thisContext;
 	info(`Emitted`);

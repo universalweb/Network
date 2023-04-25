@@ -18,9 +18,8 @@ import {
 import dgram from 'dgram';
 // Default utility imports
 import { success, configure } from '#logs';
-import { buildPacketSize } from '#utilities/buildPacketSize.js';
-import { buildStringSize } from '#utilities/buildStringSize.js';
-import { file } from '#utilities/file.js';
+import { buildPacketSize } from '#buildPacketSize';
+import { buildStringSize } from '#buildStringSize';
 import {
 	createSessionKey,
 	clientSession,
@@ -28,11 +27,9 @@ import {
 	keypair,
 	toBase64
 } from '#crypto';
-import { pluckBuffer } from '#utilities/pluckBuffer.js';
-import { certificate } from '#utilities/certificate/index.js';
-import { watch } from '#utilities/watch.js';
-// Client specific imports
-import { getClient } from './getClient.js';
+import { pluckBuffer } from '#pluckBuffer';
+import { getCertificate } from '#certificate';
+import { watch } from '#watch';
 // Client specific imports to extend class
 import { send } from './send.js';
 import { emit } from './emit.js';
@@ -40,7 +37,8 @@ import { request } from './request.js';
 import { processMessage } from './processMessage.js';
 import { onMessage } from './onMessage.js';
 import { connect } from './connect.js';
-import { listening, listen } from './listening.js';
+import { onListening, listen } from './listening.js';
+// UNIVERSAL WEB Client Class
 export class Client {
 	type = 'client';
 	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
@@ -48,25 +46,32 @@ export class Client {
 	constructor(configuration) {
 		const thisContext = this;
 		console.log('-------CLIENT INITIALIZING-------\n', configuration);
+		this.configuration = configuration;
 		const {
 			service,
 			profile,
-			server
+			ip: configIP,
+			port: configPort
 		} = configuration;
-		this.service = service;
-		this.profile = profile;
 		const {
 			ip,
 			port
-		} = this.service.ephemeral;
+		} = service.ephemeral;
 		configure('CLIENT CONFIGURATION');
-		this.endpoint = {
-			ip: server.ip || ip,
-			port: server.port || port,
-			maxMTU: 1000,
-			encoding: 'binary',
-			max: 1280,
-		};
+		assign(this, {
+			ip: configIP || ip,
+			port: configPort || port,
+			service,
+			profile,
+		});
+		this.connect = connect.bind(this);
+		this.send = send.bind(this);
+		this.request = request.bind(this);
+		this.processMessage = processMessage.bind(this);
+		this.emit = emit.bind(this);
+		this.onListening = onListening.bind(this);
+		this.listen = listen.bind(this);
+		this.onMessage = onMessage.bind(this);
 		thisContext.clientId = createClientId();
 		success(`clientId:`, this.clientId);
 		success(`Creating Shared Keys`);
@@ -108,6 +113,9 @@ export class Client {
 		Client.connections.set(connectionKey, thisContext);
 		return thisContext;
 	}
+	maxMTU = 1000;
+	encoding = 'binary';
+	max = 1280;
 	static connections = new Map();
 	state = {
 		code: 0
@@ -125,25 +133,23 @@ export class Client {
 	buildStringSize(encryptedLength) {
 		return buildStringSize(encryptedLength, this.maxStringSizeLength);
 	}
-	connect = connect;
-	send = send;
-	request = request;
-	processMessage = processMessage;
-	emit = emit;
-	listening = listening;
-	listen = listen;
-	onMessage = onMessage;
 	packetIdGenerator = construct(UniqID);
 }
+export function getClient(configuration) {
+	const serviceKey = configuration.service.ephemeral.signature.toString('base64');
+	const profileKey = configuration.profile.ephemeral.signature.toString('base64');
+	const connectionKey = `${serviceKey}${profileKey}`;
+	const client = Client.connections.get(connectionKey);
+	if (client) {
+		return client;
+	}
+}
 export function createClient(configuration, ignoreConnections) {
-	const result = getClient(configuration);
+	console.log(configuration);
+	const result = getClient(configuration, Client);
 	if (result) {
 		return result;
 	}
-	return construct(Client, configuration);
+	return construct(Client, [configuration]);
 }
-// UNIVERSAL WEB client
-export function getCertificate(certificateLocation) {
-	return certificate.get(certificateLocation);
-}
-export { getClient };
+export { getCertificate };

@@ -6,5 +6,5 @@ export function onListening() {
 	success(`Universal Web Client Server Listening`, connection);
 }
 export function listen() {
-	this.server.on('listening', onListening);
+	this.server.on('listening', this.onListening);
 }

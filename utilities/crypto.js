@@ -30,7 +30,7 @@ const {
 	crypto_sign_SECRETKEYBYTES,
 	crypto_sign_verify_detached,
 	randombytes_buf
-} = sodium;
+} = sodium.default;
 export function passwordHash(passwd) {
 	const out = Buffer.alloc(crypto_pwhash_STRBYTES);
 	crypto_pwhash_str(out, Buffer.from(passwd), 	crypto_pwhash_OPSLIMIT_MIN, crypto_pwhash_MEMLIMIT_MIN);
@@ -128,6 +128,7 @@ export function clientSession(receiveKey, transmissionKey, publicKey, privateKey
 	crypto_kx_client_session_keys(receiveKey, transmissionKey, publicKey, privateKey, serverPublicKey);
 }
 export function createSessionKey() {
+	console.log(crypto_kx_SESSIONKEYBYTES);
 	const sessionKey = Buffer.alloc(crypto_kx_SESSIONKEYBYTES);
 	return sessionKey;
 }
