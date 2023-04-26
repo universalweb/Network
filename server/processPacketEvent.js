@@ -8,21 +8,24 @@ import {
 } from '#logs';
 imported('ON PUBLIC MESSAGE');
 export async function processPacketEvent(server, socket, message) {
-	const { app, } = server;
+	const {
+		events,
+		actions
+	} = server;
 	const {
 		body,
 		sid,
-		api,
+		evnt,
 		act
 	} = message;
-	if (!api && !act) {
-		return failed(`Invalid no API (api) or Action (act) name given. ${stringify(message)}`);
+	if (!evnt && !act) {
+		return failed(`Invalid no EVNT (evnt) or Action (act) name given. ${stringify(message)}`);
 	}
-	const method = (act) ? app.get(act) : app.api.get(api);
+	const method = (act) ? actions.get(act) : events.get(evnt);
 	if (method) {
 		if (body) {
 			if (hasValue(sid)) {
-				info(`Request:${api} RequestID: ${sid}`);
+				info(`Request:${evnt} RequestID: ${sid}`);
 				console.log(message.body);
 				const response = {
 					sid

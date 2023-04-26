@@ -6,7 +6,7 @@ import {
 } from '#logs';
 import { currentPath } from '#utilities/directory.js';
 import dgram from 'dgram';
-import { addApi, removeApi } from './api.js';
+import { on, off } from './events.js';
 import { bindServer } from './bind.js';
 import { chunkMessage } from './chunkMessage.js';
 import { configure } from './configure.js';
@@ -43,14 +43,15 @@ export class Server {
 		console.log('-------SERVER INITIALIZING-------');
 		this.configuration = configuration;
 		console.log(this.configuration);
+		this.server = dgram.createSocket(this.ipVersion);
 		// convert some to just using them as modules with arguments instead of bind/this
 		this.bindMethods({
-			addApi,
+			on,
 			bindServer,
 			onError,
 			onListen,
 			onPacket,
-			removeApi,
+			off,
 			sendPacket,
 			emit,
 			send
@@ -72,9 +73,6 @@ export class Server {
 	max = 1000;
 	maxPayloadSize = 1000;
 	serverPath = currentPath(import.meta);
-	app = {
-		api: new Map()
-	};
 	packetCount = 0;
 	messageCount = 0;
 	socketCount = 0;
@@ -91,10 +89,11 @@ export class Server {
 	/*
 		* IPv6 preferred.
 	*/
-	server = dgram.createSocket('udp4');
+	ipVersion = 'udp4';
 	/*
 		* All created clients (nodes) represent a client to server bi-directional connection until it is closed by either party.
 	*/
+	// clients are referred to as nodes
 	nodes = construct(Map);
 	nodeEvents = construct(Map);
 	setNodeEvent(eventName, callback) {

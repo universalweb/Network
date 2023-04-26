@@ -3,16 +3,16 @@ import {
 } from '#logs';
 import { promise, } from 'Acid';
 imported('Request');
-export async function request(api, body = null, head = {}) {
+export async function request(evnt, body = null, head = {}) {
 	const thisContext = this;
 	const { packetIdGenerator } = this;
 	const { requests } = thisContext;
-	info(`Requested ${api}`);
+	info(`Requested ${evnt}`);
 	const sid = packetIdGenerator.get();
 	await thisContext.send({
 		body,
 		head,
-		api,
+		evnt,
 		sid,
 		t: Date.now(),
 	});
