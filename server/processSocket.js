@@ -62,6 +62,7 @@ export async function processSocket(server, connection, additionalDataBuffer, ad
 		if (sigCompare) {
 			msgReceived(`Signature is valid`);
 			const client = await createClient(server, connection, receiveKey, transmitKey, clientId);
+			console.log(client);
 			await processPacketEvent(server, client, message);
 		} else {
 			console.log('SIGNATURE FAILED NO SOCKET CREATED');

@@ -36,7 +36,7 @@ export class Server {
 	bindActions(methods) {
 		const thisContext = this;
 		each(methods, (method, methodName) => {
-			thisContext.actions[methodName] = method.bind(thisContext);
+			thisContext.actions.set(methodName, method.bind(thisContext));
 		});
 	}
 	async initialize(configuration) {
@@ -77,7 +77,7 @@ export class Server {
 	messageCount = 0;
 	socketCount = 0;
 	clientCount = 0;
-	actions = {};
+	actions = construct(Map);
 	statusDescriptions = ['initializing', 'initialized', 'failed to initialize'];
 	state = 0;
 	/*
@@ -106,7 +106,7 @@ export class Server {
 			foundEvent(this, socket);
 		}
 	}
-	events = {};
+	events = construct(Map);
 	packetIdGenerator = construct(UniqID);
 	streamIdGenerator = construct(UniqID);
 }

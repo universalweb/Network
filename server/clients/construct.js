@@ -64,4 +64,5 @@ export async function construct(client, server, connection, receiveKey, transmit
 	console.log(client);
 	await server.nodeEvent('constructed', client);
 	await client.created();
+	return client;
 }

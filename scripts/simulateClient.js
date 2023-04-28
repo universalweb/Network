@@ -14,21 +14,22 @@ const uwClient = await createClient({
 });
 console.time('CONNECTING');
 const connectRequest = await uwClient.connect({
-	agent: 'node',
-	entity: 'bot',
-	req: {
-		n: 'state',
-		d: {
-			state: '/'
-		}
+	// evnt: 'state',
+	body: {
+		agent: 'node',
+		entity: 'bot',
+		state: '/'
 	}
 });
 console.timeEnd('CONNECTING');
 console.log('Connected', uwClient);
 console.log('INTRO =>', connectRequest.response.body);
 console.time('Request');
-const stateRequest = await uwClient.request('state', {
-	state: '/'
+const stateRequest = await uwClient.request({
+	act: 'file',
+	body: {
+		path: '/'
+	}
 });
 console.timeEnd('Request');
 console.timeEnd('Full');

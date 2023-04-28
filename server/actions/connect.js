@@ -1,16 +1,14 @@
 import { info } from '#logs';
-export async function connect(socket, request, response) {
+export async function opn(socket, request, response) {
 	const {
-		configuration: {
-			resourceDirectory,
-			cacheMaxAge,
-			allowOrigin,
-			contentSecurityPolicy,
-			serverName,
-			encoding,
-			language,
-			onConnectMessage
-		},
+		resourceDirectory,
+		cacheMaxAge,
+		allowOrigin,
+		contentSecurityPolicy,
+		serverName,
+		encoding,
+		language,
+		onConnectMessage
 	} = this;
 	info(socket.id, request);
 	response.head = {};

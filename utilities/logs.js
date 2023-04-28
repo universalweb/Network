@@ -15,7 +15,7 @@ function logFactory(bg, color, header, footer) {
 		const descriptor = this?.descriptor || '';
 		if (footer) {
 			const fullHeader = (descriptor) ? ` ---------------- ${descriptor}: ${header} START ---------------- ` : ` ---------------- ${header} START ---------------- `;
-			console.log(consoleBase(fullHeader, `\n`));
+			console.log(consoleBase(fullHeader));
 			prettyObjects(args, consoleBase);
 			console.log(consoleBase(` ---------------- ${header} END ---------------- `, `\n`));
 		} else {

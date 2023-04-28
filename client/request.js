@@ -3,19 +3,16 @@ import {
 } from '#logs';
 import { promise, } from 'Acid';
 imported('Request');
-export async function request(evnt, body = null, head = {}) {
+export async function request(requestObject) {
 	const thisContext = this;
 	const { packetIdGenerator } = this;
 	const { requests } = thisContext;
-	info(`Requested ${evnt}`);
+	// sid is a Stream ID
 	const sid = packetIdGenerator.get();
-	await thisContext.send({
-		body,
-		head,
-		evnt,
-		sid,
-		t: Date.now(),
-	});
+	requestObject.sid = sid;
+	requestObject.t = Date.now();
+	info(`Requested ${requestObject}`);
+	await thisContext.send(requestObject);
 	return promise((accept) => {
 		requests.set(sid, (response, headers) => {
 			accept({
