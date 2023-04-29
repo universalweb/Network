@@ -2,33 +2,20 @@ console.clear();
 console.log('STARTING CLIENT');
 console.time('FULL');
 import { currentPath } from '#directory';
-import { createClient, getCertificate } from '../client/index.js';
-const service = await getCertificate(`${currentPath(import.meta)}/../services/universal.web.cert`);
-const profile = await getCertificate(`${currentPath(import.meta)}/../profiles/default.cert`);
+import { udsp } from '../client/index.js';
 // Universal Web Socket
-const uwClient = await createClient({
-	service,
-	profile,
+const uwClient = await udsp({
+	service: `${currentPath(import.meta)}/../services/universal.web.cert`,
+	profile: `${currentPath(import.meta)}/../profiles/default.cert`,
 	ip: 'localhost',
 	port: 8888
 });
-console.time('CONNECTING');
-const connectRequest = await uwClient.connect({
-	// evnt: 'state',
-	body: {
-		agent: 'node',
-		entity: 'bot',
-		state: '/'
-	}
-});
-console.timeEnd('CONNECTING');
-console.log('Connected', uwClient);
-console.log('INTRO =>', connectRequest.response.body);
+console.log('INTRO =>', uwClient);
 console.time('Request');
 const stateRequest = await uwClient.request({
 	act: 'file',
 	body: {
-		path: '/'
+		path: 'index.js'
 	}
 });
 console.timeEnd('Request');

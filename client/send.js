@@ -24,7 +24,7 @@ export async function send(message, priority) {
 		port,
 	} = thisContext;
 	const headers = {};
-	const clientStatusCode = thisContext.state.code;
+	const clientStatusCode = thisContext.state;
 	console.log(`client Status Code is ${clientStatusCode}`);
 	if (clientStatusCode === 0) {
 		if (!message.head) {

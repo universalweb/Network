@@ -2,11 +2,19 @@ import chalk from 'chalk';
 import {
 	stringify,
 	each,
-	isPlainObject
+	isPlainObject,
+	initialString
 } from 'Acid';
+const arrayNumberRegex = /\[([\d\s,]*?)\]/gm;
+function truncateArray(match) {
+	return match.replace(/\s/gm, '');
+}
+function shortenArrays(item) {
+	return item.replace(arrayNumberRegex, truncateArray);
+}
 export function prettyObjects(args, consoleBase) {
 	return each(args, (item) => {
-		console.log(consoleBase((isPlainObject(item)) ? stringify(item, null, `  `) : item));
+		console.log(consoleBase((isPlainObject(item)) ? shortenArrays(stringify(item, null, `  `)) : item));
 	});
 }
 function logFactory(bg, color, header, footer) {

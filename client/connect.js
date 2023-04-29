@@ -8,13 +8,13 @@ export async function connect(requestObject) {
 	console.log(result);
 	const {
 		body,
-		stage,
+		state,
 		time,
 		scid
 	} = result.response;
-	if (stage === 101 && scid) {
+	if (state === 1 && scid) {
 		connected(body);
-		thisClient.stage.code = 1;
+		thisClient.state = 1;
 		thisClient.serverId = scid;
 		thisClient.lastPacketTime = Date.now();
 		thisClient.lastPacketGivenTime = time;

@@ -59,7 +59,6 @@ export class Server {
 		this.bindActions(actions);
 		this.profile = await getCertificate(configuration.profile);
 		configure(this);
-		this.status = 1;
 		this.server.on('error', this.onError);
 		this.server.on('listening', this.onListen);
 		this.server.on('message', this.onPacket);
@@ -78,7 +77,7 @@ export class Server {
 	socketCount = 0;
 	clientCount = 0;
 	actions = construct(Map);
-	statusDescriptions = ['initializing', 'initialized', 'failed to initialize'];
+	stateCodeDescriptions = ['initializing', 'initialized', 'failed to initialize'];
 	state = 0;
 	/*
       	* A puzzle used to challenge clients to ensure authenticity, connection liveliness, and congestion control.

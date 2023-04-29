@@ -4,7 +4,7 @@ import {
 export async function destroy(client, reason, server) {
 	if (reason === 1) {
 		await client.send({
-			status: 580
+			status: 3
 		});
 		failed(`client ended from inactivity. Grace period ended.
 			ID: ${client.id}

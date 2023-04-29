@@ -17,7 +17,7 @@ export async function processMessage(response, headers) {
 		console.log(`STATE CODE: ${state}`);
 	}
 	if (response) {
-		if (response.state === 580) {
+		if (response.state === 3) {
 			thisContext.close();
 			return failed(`End event sent disconnected socket`);
 		}

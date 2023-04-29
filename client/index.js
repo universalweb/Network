@@ -13,7 +13,8 @@ import {
 	omit,
 	assign,
 	construct,
-	UniqID
+	UniqID,
+	isString
 } from 'Acid';
 import dgram from 'dgram';
 // Default utility imports
@@ -38,6 +39,7 @@ import { processMessage } from './processMessage.js';
 import { onMessage } from './onMessage.js';
 import { connect } from './connect.js';
 import { onListening, listen } from './listening.js';
+import { currentPath } from '#directory';
 // UNIVERSAL WEB Client Class
 export class Client {
 	type = 'client';
@@ -117,9 +119,7 @@ export class Client {
 	encoding = 'binary';
 	max = 1280;
 	static connections = new Map();
-	state = {
-		code: 0
-	};
+	state = 0;
 	server = dgram.createSocket('udp4');
 	requests = new Map();
 	close() {
@@ -144,12 +144,25 @@ export function getClient(configuration) {
 		return client;
 	}
 }
-export function createClient(configuration, ignoreConnections) {
+export async function createClient(configuration, ignoreConnections) {
 	console.log(configuration);
+	if (isString(configuration.service)) {
+		configuration.service = await getCertificate(configuration.service);
+	}
+	if (isString(configuration.profile)) {
+		configuration.profile = await getCertificate(configuration.profile);
+	}
 	const result = getClient(configuration, Client);
 	if (result) {
 		return result;
 	}
 	return construct(Client, [configuration]);
+}
+export async function udsp(configuration, ignoreConnections) {
+	const uwClient = await createClient(configuration);
+	console.time('CONNECTING');
+	const connectRequest = await uwClient.connect({});
+	console.timeEnd('CONNECTING');
+	return uwClient;
 }
 export { getCertificate };

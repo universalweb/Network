@@ -34,7 +34,7 @@ export async function opn(socket, request, response) {
 		response.body = onConnectMessage;
 	}
 	// connection status - backwards compatibility
-	response.status = 101;
+	response.state = 1;
 	// Server connection id
 	response.scid = socket.serverIdRaw;
 	return true;

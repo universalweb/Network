@@ -30,30 +30,26 @@ export async function processPacketEvent(server, socket, message) {
 	const eventName = act || evnt;
 	const method = (act) ? actions.get(act) : events.get(evnt);
 	if (method) {
-		if (body) {
-			if (hasValue(sid)) {
-				info(`Request:${eventName} RequestID: ${sid}`);
-				console.log(message.body);
-				const response = {
-					sid
-				};
-				console.log(socket);
-				const hasResponse = await method(socket, message, response);
-				if (hasResponse) {
-					socket.send(response);
-				}
-				return;
-			} else {
-				const eid = message.eid;
-				if (hasValue(eid)) {
-					success(`Request:${method} Emit ID:${eid} ${stringify(message)}`);
-					return method(socket, body, message);
-				} else {
-					return failed(`Invalid Request type. No Emit ID was given. ${stringify(message)}`);
-				}
+		if (hasValue(sid)) {
+			info(`Request:${eventName} RequestID: ${sid}`);
+			console.log(message);
+			const response = {
+				sid
+			};
+			console.log(socket);
+			const hasResponse = await method(socket, message, response);
+			if (hasResponse) {
+				socket.send(response);
 			}
+			return;
 		} else {
-			return failed(`Invalid Request no body was sent. ${stringify(message)}`);
+			const eid = message.eid;
+			if (hasValue(eid)) {
+				success(`Request:${method} Emit ID:${eid} ${stringify(message)}`);
+				return method(socket, body, message);
+			} else {
+				return failed(`Invalid Request type. No Emit ID was given. ${stringify(message)}`);
+			}
 		}
 	} else {
 		return failed(`Invalid method name given. ${stringify(message)}`);
