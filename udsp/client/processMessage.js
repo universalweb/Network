@@ -31,6 +31,9 @@ export async function processMessage(response, headers) {
 						sid
 					});
 				}
+				if (askObject.state === 2) {
+					requestQueue.delete(sid);
+				}
 			} else {
 				return failed(`Invalid Stream Id given. ${stringify(response)}`);
 			}
