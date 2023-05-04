@@ -25,7 +25,8 @@ export async function send(client, rawMessage, options) {
 		port,
 		nonce,
 		transmitKey,
-		clientIdRaw: clientId
+		clientIdRaw: clientId,
+		server
 	} = client;
 	const { sid } = rawMessage;
 	success(`PROCESSING MESSAGE TO SEND`);
@@ -67,7 +68,7 @@ export async function send(client, rawMessage, options) {
 	queued.size = size;
 	if (sid) {
 		console.log('Queued Message', queued);
-		client.sendQueue.set(sid, queued);
+		server().responseQueue.set(sid, queued);
 	}
 	if (size > this.maxPayloadSize) {
 		console.log('SEND - Item is too large will need to chunk into packets.');

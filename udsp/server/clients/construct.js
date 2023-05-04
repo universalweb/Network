@@ -6,12 +6,13 @@ import {
 export async function construct(client, server, connection, receiveKey, transmitKey, clientId) {
 	const {
 		nodes,
-		configuration: { id: serverId }
+		configuration: { id: serverIdRaw }
 	} = server;
 	const {
 		address,
 		port
 	} = connection;
+	const serverId = String(serverIdRaw);
 	const clientIdString = toBase64(clientId);
 	const serverConnectionUUID = Buffer.alloc(8);
 	randombytes_buf(serverConnectionUUID);

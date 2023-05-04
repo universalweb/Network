@@ -120,7 +120,7 @@ export class Client {
 	max = 1280;
 	static connections = new Map();
 	state = 0;
-	server = dgram.createSocket('udp4');
+	server = dgram.createSocket('udp6');
 	requestQueue = new Map();
 	close() {
 		console.log(this, 'client closed down.');

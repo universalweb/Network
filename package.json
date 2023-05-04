@@ -112,9 +112,9 @@
 		"dist": "electron-builder",
 		"electron": "electron .",
 		"pack": "electron-builder --dir",
-		"server": "nodemon ./serverApp/index.js --watch ./udsp/ --watch ./serverApp/",
+		"server": "nodemon ./serverApp/index.js --watch ./udsp/ --watch ./serverApp/  --watch ./utilities/",
 		"simulate": "nodemon ./scripts/simulate.js --watch ./client/ --watch ./server/ --watch ./scripts/simulate.js --watch utilities/",
-		"simc": "nodemon ./scripts/simulateClient.js --watch ./udsp/ --watch ./scripts/simulateClient.js --watch utilities/",
+		"simc": "nodemon ./scripts/simulateClient.js --watch ./udsp/ --watch ./scripts/simulateClient.js --watch ./utilities/ --delay 3",
 		"start": "nodemon --watch ./index.html --watch ./client/ --watch ./browser/ --watch ./main.js --exec 'electron .'",
 		"uwBridge": "nodemon ./uwBridge/index.js --watch ./uwBridge/",
 		"version": "auto-changelog -p --sort-commits date-desc && git add CHANGELOG.md"

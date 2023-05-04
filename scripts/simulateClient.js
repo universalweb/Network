@@ -1,24 +1,26 @@
 console.clear();
 console.log('STARTING CLIENT');
-console.time('FULL');
+console.time('Full script runtime');
 import { currentPath } from '#directory';
 import { client } from '#udsp';
+console.time('Connected');
 // Universal Web Socket
 const uwClient = await client({
 	service: `${currentPath(import.meta)}/../services/universal.web.cert`,
 	profile: `${currentPath(import.meta)}/../profiles/default.cert`,
-	ip: 'localhost',
+	ip: '::1',
 	port: 8888
 });
+console.timeEnd('Connected');
 console.log('INTRO =>', uwClient);
-console.time('Request');
+console.time('File Request');
 const stateRequest = await uwClient.request({
 	act: 'file',
 	body: {
-		path: 'index.js'
+		path: 'index.html'
 	}
 });
-console.timeEnd('Request');
-console.timeEnd('Full');
+console.timeEnd('File Request');
+console.timeEnd('Full script runtime');
 console.log('Request state', stateRequest, stateRequest.response.body.data.toString('UTF8'));
 

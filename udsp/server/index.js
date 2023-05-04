@@ -43,6 +43,7 @@ export class Server {
 		console.log('-------SERVER INITIALIZING-------');
 		this.configuration = configuration;
 		console.log(this.configuration);
+		assign(this, this.configuration);
 		this.server = dgram.createSocket(this.ipVersion);
 		// convert some to just using them as modules with arguments instead of bind/this
 		this.bindMethods({
@@ -57,7 +58,9 @@ export class Server {
 			send
 		});
 		this.bindActions(actions);
-		this.profile = await getCertificate(configuration.profile);
+		if (configuration.profile) {
+			this.profile = await getCertificate(configuration.profile);
+		}
 		configure(this);
 		this.server.on('error', this.onError);
 		this.server.on('listening', this.onListen);
@@ -66,7 +69,7 @@ export class Server {
 		console.log('-------SERVER INITIALIZED-------');
 		return this;
 	}
-	id = '0';
+	id = 0;
 	maxMTU = 1000;
 	encoding = 'utf8';
 	max = 1000;
@@ -88,7 +91,7 @@ export class Server {
 	/*
 		* IPv6 preferred.
 	*/
-	ipVersion = 'udp4';
+	ipVersion = 'udp6';
 	/*
 		* All created clients (nodes) represent a client to server bi-directional connection until it is closed by either party.
 	*/
@@ -106,8 +109,13 @@ export class Server {
 		}
 	}
 	events = construct(Map);
+	responseQueue = construct(Map);
 	packetIdGenerator = construct(UniqID);
 	streamIdGenerator = construct(UniqID);
+	// default file extension default is .js but WWW default is www
+	defaultExtension = 'js';
+	port = 80;
+	ip = '::1';
 }
 export async function createServer(...args) {
 	return construct(Server, args);

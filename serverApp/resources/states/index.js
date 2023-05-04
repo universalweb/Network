@@ -1,4 +1,4 @@
 (async () => {
 	console.log('TESTING');
-	globalThis.alert('SCRIPT LOADED');
+	window.document.body.innerHTML = 'Hellow World!';
 })();

@@ -1,6 +1,6 @@
 console.clear();
 console.log('STARTING CLIENT');
-console.time('FULL');
+console.time('Full script runtime');
 import '../serverApp/index.js';
 import { createClient, getCertificate } from '../udsp/client/index.js';
 const service = await getCertificate(`${__dirname}/../services/universal.web.cert`);
@@ -31,6 +31,6 @@ const stateRequest = await uwClient.request('state', {
 	state: '/'
 });
 console.timeEnd('Request');
-console.timeEnd('Full');
+console.timeEnd('Full script runtime');
 console.log('Request state', stateRequest, stateRequest.response.body.data.toString('UTF8'));
 
