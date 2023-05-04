@@ -51,11 +51,13 @@ export async function construct(client, server, connection, receiveKey, transmit
 	client.port = port;
 	client.transmitKey = transmitKey;
 	client.receiveKey = receiveKey;
-	client.gracePeriod = setTimeout(() => {
-		if (client.pending === false) {
-			client.destroy(1);
-		}
-	}, 10000);
+	if (!server.realtime && server.gracePeriod) {
+		client.gracePeriod = setTimeout(() => {
+			if (client.pending === false) {
+				client.destroy(1);
+			}
+		}, 30000);
+	}
 	client.nonce = emptyNonce();
 	// client.publicCertificate = publicCertificate;
 	/*

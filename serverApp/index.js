@@ -6,7 +6,8 @@ import { info } from '#logs';
 import { currentPath } from '#directory';
 const appServer = await createServer({
 	// realtime mode - to keep the connection alive for bidirectional communication
-	realtime: true,
+	realtime: false,
+	gracePeriod: 30000,
 	// Source Verification to ensure that data coming from a client is coming from that source
 	sourceVerification: true,
 	// Max packet retries for a singular request before restarting the request

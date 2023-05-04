@@ -69,6 +69,8 @@ export class Server {
 		console.log('-------SERVER INITIALIZED-------');
 		return this;
 	}
+	realTime = true;
+	gracePeriod = 30000;
 	id = 0;
 	maxMTU = 1000;
 	encoding = 'utf8';

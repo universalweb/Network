@@ -5,6 +5,7 @@ import {
 	stringify,
 	hasValue
 } from 'Acid';
+import { closeRequest } from '../closeRequest.js';
 imported('Client ProcessMessage');
 export async function processMessage(response, headers) {
 	const thisContext = this;
