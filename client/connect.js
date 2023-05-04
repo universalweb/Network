@@ -1,10 +1,10 @@
 import { connected } from '#logs';
-export async function connect(requestObject) {
+export async function connect(payload = {}) {
 	console.log('-------CLIENT CONNECTING-------\n');
 	const thisClient = this;
 	// opn stands for open meaning connect to a server
-	requestObject.act = 'opn';
-	const result = await thisClient.request(requestObject);
+	payload.act = 'opn';
+	const result = await thisClient.request(payload);
 	console.log(result);
 	const {
 		body,

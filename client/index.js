@@ -121,7 +121,7 @@ export class Client {
 	static connections = new Map();
 	state = 0;
 	server = dgram.createSocket('udp4');
-	requests = new Map();
+	requestQueue = new Map();
 	close() {
 		console.log(this, 'client closed down.');
 		this.server.close();
@@ -161,7 +161,7 @@ export async function createClient(configuration, ignoreConnections) {
 export async function udsp(configuration, ignoreConnections) {
 	const uwClient = await createClient(configuration);
 	console.time('CONNECTING');
-	const connectRequest = await uwClient.connect({});
+	const connectRequest = await uwClient.connect();
 	console.timeEnd('CONNECTING');
 	return uwClient;
 }

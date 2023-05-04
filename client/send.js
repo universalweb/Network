@@ -16,7 +16,9 @@ import {
 } from '#crypto';
 imported('Client Send');
 export async function send(message, priority) {
-	console.log(`Priority: ${priority}`);
+	if (priority) {
+		console.log(`Priority: ${priority}`);
+	}
 	const thisContext = this;
 	const {
 		server,

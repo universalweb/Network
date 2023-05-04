@@ -8,7 +8,7 @@ import {
 imported('Client ProcessMessage');
 export async function processMessage(response, headers) {
 	const thisContext = this;
-	const { requests, } = thisContext;
+	const { requestQueue, } = thisContext;
 	const {
 		state,
 		sid,
@@ -22,10 +22,10 @@ export async function processMessage(response, headers) {
 			return failed(`End event sent disconnected socket`);
 		}
 		if (hasValue(sid)) {
-			info(`RequestID: ${sid} ${stringify(response)}`);
-			const method = requests.get(sid);
-			if (method) {
-				const responseBody = await method(response, headers);
+			info(`Stream ID: ${sid} ${stringify(response)}`);
+			const askObject = requestQueue.get(sid);
+			if (askObject) {
+				const responseBody = await askObject.callback(response, headers);
 				if (responseBody) {
 					thisContext.send(responseBody, {
 						sid
