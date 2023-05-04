@@ -1,7 +1,7 @@
 /*
 		* App server example
 */
-import { createServer } from '#server/index.js';
+import { createServer } from '#udsp';
 import { info } from '#logs';
 import { currentPath } from '#directory';
 const appServer = await createServer({

@@ -1,7 +1,7 @@
 import { isString, isEmpty } from 'Acid';
 import cleanPath from '#cleanPath';
 import { info } from '#logs';
-import { read } from '#utilities/file.js';
+import { read } from '#utilities/file';
 import path from 'path';
 export async function file(socket, request, response) {
 	const { resourceDirectory } = this;

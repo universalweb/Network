@@ -1,10 +1,10 @@
 import { each, construct, assign } from 'Acid';
-import logs from '#utilities/logs/index.js';
-import msgpack from '#utilities/msgpack/index.js';
-import cryptoLib from '#utilities/crypto/index.js';
-import certificate from '#utilities/certificate/index.js';
-import certificates from '#utilities/certificates/index.js';
-import file from '#utilities/file/index.js';
+import logs from '#utilities/logs/index';
+import msgpack from '#utilities/msgpack/index';
+import cryptoLib from '#utilities/crypto/index';
+import certificate from '#utilities/certificate/index';
+import certificates from '#utilities/certificates/index';
+import file from '#utilities/file/index';
 export class State {
 	constructor(type, existingState) {
 		this.type = type;

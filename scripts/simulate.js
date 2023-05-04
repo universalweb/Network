@@ -2,7 +2,7 @@ console.clear();
 console.log('STARTING CLIENT');
 console.time('FULL');
 import '../serverApp/index.js';
-import { createClient, getCertificate } from '../client/index.js';
+import { createClient, getCertificate } from '../udsp/client/index.js';
 const service = await getCertificate(`${__dirname}/../services/universal.web.cert`);
 const profile = await getCertificate(`${__dirname}/../profiles/default.cert`);
 // Universal Web Socket

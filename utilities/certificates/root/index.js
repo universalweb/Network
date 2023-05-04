@@ -1,8 +1,8 @@
 /*
   Module for generating a root certificates for the root Identity Registrar servers.
 */
-import { createProfile } from '#utilities/certificate/create.js';
-import { signCertificate } from '#utilities/certificate/sign.js';
+import { createProfile } from '#utilities/certificate/create';
+import { signCertificate } from '#utilities/certificate/sign';
 import { signVerify } from '#crypto';
 import { success, info, failed } from '#logs';
 import { encode } from 'msgpackr';

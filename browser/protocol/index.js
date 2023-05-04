@@ -1,9 +1,9 @@
 import { PassThrough } from 'stream';
 import { protocol } from 'electron';
-import { read } from '#utilities/file.js';
-import { currentPath } from '#utilities/directory.js';
+import { read } from '#utilities/file';
+import { currentPath } from '#utilities/directory';
 export * from './local/index.js';
-import uws from 'client/index.js';
+import uws from '#udsp/client/index';
 const service = await uws.getCertificate(`${currentPath(import.meta)}/../../services/universal.web.cert`);
 const profile = await uws.getCertificate(`${currentPath(import.meta)}/../../profiles/default.cert`);
 const indexFile = await read(`${currentPath(import.meta)}/../resources/html/blank.html`);

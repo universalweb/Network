@@ -1,11 +1,11 @@
 /*
   Module for quickly generating domain certificates you must contact the team for official registration/signing.
 */
-import { read } from '#utilities/file/index.js';
-import { signVerify, encode } from '#utilities/crypto/index.js';
+import { read } from '#utilities/file/index';
+import { signVerify, encode } from '#utilities/crypto/index';
 import { jsonParse } from 'Acid';
-import { createDomainProfile } from '#utilities/certificate/createDomainProfile.js';
-import { signCertificate } from '#utilities/certificate/sign.js';
+import { createDomainProfile } from '#utilities/certificate/createDomainProfile';
+import { signCertificate } from '#utilities/certificate/sign';
 import { success, cnsl } from '#logs';
 export async function createDomainCertificate(config) {
 	const {

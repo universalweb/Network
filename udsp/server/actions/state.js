@@ -1,7 +1,7 @@
 import { isString, isEmpty } from 'Acid';
 import cleanPath from '#cleanPath';
 import { info } from '#logs';
-import { read } from '#utilities/file.js';
+import { read } from '#utilities/file';
 export async function state(socket, request, response) {
 	const { configuration: { resourceDirectory, }, } = this;
 	info(request);

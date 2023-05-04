@@ -2,9 +2,9 @@ console.clear();
 console.log('STARTING CLIENT');
 console.time('FULL');
 import { currentPath } from '#directory';
-import { udsp } from '../client/index.js';
+import { client } from '#udsp';
 // Universal Web Socket
-const uwClient = await udsp({
+const uwClient = await client({
 	service: `${currentPath(import.meta)}/../services/universal.web.cert`,
 	profile: `${currentPath(import.meta)}/../profiles/default.cert`,
 	ip: 'localhost',

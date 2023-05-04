@@ -2,18 +2,85 @@
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {
-            "#utilities/*": ["./utilities/*"],
-            "#server/*": ["./server/*"],
-			"#client/*": ["./server/*"],
-			"#profile/*": ["./profile/*"],
-			"#serverApp/*": ["./serverApp/*"],
-			"#schemes/*": ["./schemes/*"],
-			"#resources/*": ["./resources/*"],
-			"#scripts/*": ["./scripts/*"],
-			"#state/*": ["./state/*"],
-			"#config/*": ["./config/*"],
-			"#udsp/*": ["./udsp/*"],
-        },
+			"#utilities/*": [
+				"./utilities/*.js"
+			],
+			"#server/*": [
+				"udsp/server/*.js"
+			],
+			"#client/*": [
+				"udsp/server/*.js"
+			],
+			"#server*": [
+				"udsp/server/index.js"
+			],
+			"#client*": [
+				"udsp/server/index.js"
+			],
+			"#profile/*": [
+				"./profile/*.js"
+			],
+			"#serverApp/*": [
+				"./serverApp/*.js"
+			],
+			"#schemes/*": [
+				"./schemes/*.js"
+			],
+			"#resources/*": [
+				"./resources/*"
+			],
+			"#scripts/*": [
+				"./scripts/*.js"
+			],
+			"#state/*": [
+				"./state/*.js"
+			],
+			"#config/*": [
+				"./config/*.js"
+			],
+			"#udsp/*": [
+				"./udsp/*.js"
+			],
+			"#sodium": [
+				"./sodium.js"
+			],
+			"#crypto": [
+				"./utilities/crypto.js"
+			],
+			"#watch": [
+				"./utilities/watch.js"
+			],
+			"#logs": [
+				"./utilities/logs.js"
+			],
+			"#buildPacketSize": [
+				"./utilities/buildPacketSize.js"
+			],
+			"#buildStringSize": [
+				"./utilities/buildStringSize.js"
+			],
+			"#cleanPath": [
+				"./utilities/cleanPath.js"
+			],
+			"#file": [
+				"./utilities/file.js"
+			],
+			"#propertyAccess": [
+				"./utilities/propertyAccess.js"
+			],
+			"#pluckBuffer": [
+				"./utilities/pluckBuffer.js"
+			],
+			"#certificate": [
+				"./utilities/certificate/index.js"
+			],
+			"#directory": [
+				"./utilities/directory.js"
+			],
+			"#udsp": [
+				"./udsp/index.js"
+			]
+		},
 		"module": "ESNext",
 		"moduleResolution": "nodenext",
 		"target": "ESNext",

@@ -34,7 +34,7 @@ import { watch } from '#watch';
 // Client specific imports to extend class
 import { send } from './send.js';
 import { emit } from './emit.js';
-import { request } from './request.js';
+import { request } from '#udsp/request';
 import { processMessage } from './processMessage.js';
 import { onMessage } from './onMessage.js';
 import { connect } from './connect.js';
@@ -139,13 +139,16 @@ export function getClient(configuration) {
 	const serviceKey = configuration.service.ephemeral.signature.toString('base64');
 	const profileKey = configuration.profile.ephemeral.signature.toString('base64');
 	const connectionKey = `${serviceKey}${profileKey}`;
-	const client = Client.connections.get(connectionKey);
-	if (client) {
-		return client;
+	const clientFound = Client.connections.get(connectionKey);
+	if (clientFound) {
+		return clientFound;
 	}
 }
 export async function createClient(configuration, ignoreConnections) {
 	console.log(configuration);
+	return construct(Client, [configuration]);
+}
+export async function client(configuration, ignoreConnections) {
 	if (isString(configuration.service)) {
 		configuration.service = await getCertificate(configuration.service);
 	}
@@ -156,9 +159,6 @@ export async function createClient(configuration, ignoreConnections) {
 	if (result) {
 		return result;
 	}
-	return construct(Client, [configuration]);
-}
-export async function udsp(configuration, ignoreConnections) {
 	const uwClient = await createClient(configuration);
 	console.time('CONNECTING');
 	const connectRequest = await uwClient.connect();

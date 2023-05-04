@@ -1,4 +1,4 @@
-import { createServer } from '../server/index.js';
+import { createServer } from '../udsp/server/index.js';
 import { info } from '#logs';
 const server = await createServer({
 	maxMTU: 1100,

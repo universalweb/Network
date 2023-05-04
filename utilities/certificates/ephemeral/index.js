@@ -1,13 +1,13 @@
 /*
   Module for quickly generating identity certificates
 */
-import { createEphemeral } from '#utilities/certificate/create.js';
-import { signCertificate } from '#utilities/certificate/sign.js';
+import { createEphemeral } from '#utilities/certificate/create';
+import { signCertificate } from '#utilities/certificate/sign';
 import { signVerify } from '#crypto';
 import { success, info, failed } from '#logs';
 import { encode } from 'msgpackr';
 import { jsonParse } from 'Acid';
-import { read } from '#utilities/file.js';
+import { read } from '#utilities/file';
 async function createEphemeralCertificate(config) {
 	const {
 		template,

@@ -4,7 +4,7 @@ import {
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-import { currentPath } from '#utilities/directory.js';
+import { currentPath } from '#utilities/directory';
 import dgram from 'dgram';
 import { on, off } from './events.js';
 import { bindServer } from './bind.js';

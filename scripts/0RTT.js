@@ -1,6 +1,6 @@
 console.clear();
 console.log('STARTING CLIENT');
-import { client } from 'client/index.js';
+import { client } from '#udsp/client/index';
 const service = await client.getCertificate(`${__dirname}/../services/universal.web.cert`);
 const profile = await client.getCertificate(`${__dirname}/../profiles/default.cert`);
 // Universal Web Socket

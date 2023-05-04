@@ -1,8 +1,8 @@
 import {
 	success, failed, imported, msgSent, info
 } from '#logs';
-import { buildPacketSize } from '#utilities/buildPacketSize.js';
-import { buildStringSize } from '#utilities/buildStringSize.js';
+import { buildPacketSize } from '#utilities/buildPacketSize';
+import { buildStringSize } from '#utilities/buildStringSize';
 import {
 	encode,
 	decode
