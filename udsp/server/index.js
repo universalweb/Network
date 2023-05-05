@@ -18,34 +18,35 @@ import { sendPacket } from './sendPacket.js';
 import { send } from './send.js';
 import { actions } from './actions/index.js';
 import { getCertificate } from '#certificate';
+const { seal } = Object;
 /*
   * socket ID: SID
 */
 export class Server {
+	description = 'Server';
 	constructor(serverConfiguration) {
 		return this.initialize(serverConfiguration);
 	}
 	bindMethods(methods) {
-		const thisContext = this;
-		console.log(methods);
+		const thisServer = this;
 		each(methods, (method, methodName) => {
-			console.log();
-			thisContext[methodName] = method.bind(thisContext);
+			thisServer[methodName] = method.bind(thisServer);
 		});
 	}
 	bindActions(methods) {
-		const thisContext = this;
+		const thisServer = this;
 		each(methods, (method, methodName) => {
-			thisContext.actions.set(methodName, method.bind(thisContext));
+			thisServer.actions.set(methodName, method.bind(thisServer));
 		});
 	}
 	async initialize(configuration) {
 		console.log('-------SERVER INITIALIZING-------');
-		this.configuration = configuration;
+		this.configuration = seal(assign({}, configuration));
 		console.log(this.configuration);
 		assign(this, this.configuration);
 		this.server = dgram.createSocket(this.ipVersion);
 		// convert some to just using them as modules with arguments instead of bind/this
+		console.log(this.description);
 		this.bindMethods({
 			on,
 			bindServer,
@@ -107,12 +108,10 @@ export class Server {
 		success(`Client Node Event: ${eventName} -> SocketID: ${socket.id}`);
 		const foundEvent = this.nodeEvents.get(eventName);
 		if (foundEvent) {
-			foundEvent(this, socket);
+			// foundEvent(this, socket);
 		}
 	}
 	events = construct(Map);
-	responseQueue = construct(Map);
-	packetIdGenerator = construct(UniqID);
 	streamIdGenerator = construct(UniqID);
 	// default file extension default is .js but WWW default is www
 	defaultExtension = 'js';

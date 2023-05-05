@@ -14,11 +14,12 @@ import {
 	assign,
 	construct,
 	UniqID,
-	isString
+	isString,
+	promise
 } from 'Acid';
 import dgram from 'dgram';
 // Default utility imports
-import { success, configure } from '#logs';
+import { success, configure, info } from '#logs';
 import { buildPacketSize } from '#buildPacketSize';
 import { buildStringSize } from '#buildStringSize';
 import {
@@ -38,7 +39,7 @@ import { request } from '#udsp/request';
 import { processMessage } from './processMessage.js';
 import { onMessage } from './onMessage.js';
 import { connect } from './connect.js';
-import { onListening, listen } from './listening.js';
+import { onListening } from './listening.js';
 import { currentPath } from '#directory';
 // UNIVERSAL WEB Client Class
 export class Client {
@@ -46,7 +47,7 @@ export class Client {
 	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
 	descriptor = 'UDSP_CLIENT';
 	constructor(configuration) {
-		const thisContext = this;
+		const thisClient = this;
 		console.log('-------CLIENT INITIALIZING-------\n', configuration);
 		this.configuration = configuration;
 		const {
@@ -72,22 +73,20 @@ export class Client {
 		this.processMessage = processMessage.bind(this);
 		this.emit = emit.bind(this);
 		this.onListening = onListening.bind(this);
-		this.listen = listen.bind(this);
 		this.onMessage = onMessage.bind(this);
-		thisContext.clientId = createClientId();
+		thisClient.clientId = createClientId();
 		success(`clientId:`, this.clientId);
 		success(`Creating Shared Keys`);
-		const transmitKey = thisContext.transmitKey = createSessionKey();
-		const receiveKey = thisContext.receiveKey = createSessionKey();
+		const transmitKey = thisClient.transmitKey = createSessionKey();
+		const receiveKey = thisClient.receiveKey = createSessionKey();
 		// Currently unused but may in the future
-		const ephemeralProfileTransmitKey = thisContext.ephemeralProfileTransmitKey = createSessionKey();
-		const ephemeralProfileReceiveKey = thisContext.ephemeralProfileReceiveKey = createSessionKey();
-		console.log(ephemeralProfileTransmitKey, ephemeralProfileReceiveKey);
+		const ephemeralProfileTransmitKey = thisClient.ephemeralProfileTransmitKey = createSessionKey();
+		const ephemeralProfileReceiveKey = thisClient.ephemeralProfileReceiveKey = createSessionKey();
 		success(`Creating Connection Keypair`);
-		thisContext.keypair = keypair();
-		thisContext.ephemeralPublic = omit(profile.ephemeral, ['private']);
+		thisClient.keypair = keypair();
+		thisClient.ephemeralPublic = omit(profile.ephemeral, ['private']);
 		if (profile.master) {
-			thisContext.masterPublic = omit(profile.master, ['private']);
+			thisClient.masterPublic = omit(profile.master, ['private']);
 		}
 		const { ephemeral: { signature: profileSignature } } = profile;
 		const {
@@ -99,21 +98,21 @@ export class Client {
 		const {
 			publicKey,
 			secretKey: privateKey,
-		} = thisContext.keypair;
+		} = thisClient.keypair;
 		clientSession(receiveKey, transmitKey, publicKey, privateKey, serverPublicKey);
 		// Can be used to encrypt-authenticate the profile with the server
 		// clientSession(ephemeralProfileReceiveKey, ephemeralProfileTransmitKey, profile.ephemeral.publicKey, profile.ephemeral.secretKey, serverPublicKey);
 		configure(`Shared Keys Created`);
 		console.log(receiveKey, transmitKey);
-		this.listen();
-		thisContext.server.on('message', thisContext.onMessage.bind(thisContext));
 		const serviceKey = toBase64(serviceSignature);
 		const profileKey = toBase64(profileSignature);
 		// Needs to be more complex if forcing no connection with the same credentials
 		const connectionKey = `${serviceKey}${profileKey}`;
 		this.connectionKey = connectionKey;
-		Client.connections.set(connectionKey, thisContext);
-		return thisContext;
+		Client.connections.set(connectionKey, thisClient);
+		thisClient.server.on('message', thisClient.onMessage.bind(thisClient));
+		thisClient.server.on('listening', thisClient.onListening);
+		return this;
 	}
 	maxMTU = 1000;
 	encoding = 'binary';

@@ -68,7 +68,7 @@ export async function send(client, rawMessage, options) {
 	queued.size = size;
 	if (sid) {
 		console.log('Queued Message', queued);
-		server().responseQueue.set(sid, queued);
+		// server().responseQueue.set(sid, queued);
 	}
 	if (size > this.maxPayloadSize) {
 		console.log('SEND - Item is too large will need to chunk into packets.');

@@ -1,5 +1,5 @@
 /*
-		* App server example
+	* App server example
 */
 import { createServer } from '#udsp';
 import { info } from '#logs';
@@ -18,14 +18,16 @@ const appServer = await createServer({
 	maxResponseRetries: 3,
 	// Max size of packets
 	maxPacketSize: 1100,
-	// Max size of a message
-	maxMessageSize: 10000,
+	// Max size of body and head data sections in a single packet
+	maxPacketPayloadSize: 1000,
+	// max file size
+	maxFileSize: 9000,
+	// Max size of a Response
+	maxResponseSize: 10000,
+	// Max size of a Packet for Responses
+	maxResponsePacketSize: 10000,
 	// default file extension default is .js but WWW default is www
 	defaultExtension: 'html',
-	// Max size of body and head data sections in packets
-	maxPayloadSize: 1000,
-	// max data size in a singular packet
-	maxFileSize: 900,
 	// Domain certificate to be loaded used for connection encryption
 	profile: `${currentPath(import.meta)}../services/universal.web.cert`,
 	// Where to load app resources from

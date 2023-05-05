@@ -10,6 +10,5 @@ export async function createClient(server, connectionInfo, receiveKey, transmitK
 	console.log('Creating Client Object', toBase64(clientId));
 	const client = await construct(Client, [server, connectionInfo, receiveKey, transmitKey, clientId]);
 	console.log('Client has been created', toBase64(clientId));
-	console.log(client);
 	return client;
 }

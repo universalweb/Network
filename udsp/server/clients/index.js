@@ -1,6 +1,6 @@
 import { connected } from './connected.js';
 import { connection } from './connection.js';
-import { construct } from './construct.js';
+import { initialize } from './initialize.js';
 import { created } from './created.js';
 import { destroy } from './destroy.js';
 import { reKey } from './reKey.js';
@@ -11,17 +11,18 @@ import { received } from './received.js';
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
+import { UniqID, construct } from 'Acid';
 export class Client {
 	descriptor = 'client';
 	client = true;
 	pending = false;
-	messageQueue = new Map();
+	responseQueue = construct(Map);
+	packetIdGenerator = construct(UniqID);
 	constructor(server, connectionInfo, receiveKey, transmitKey, clientId) {
 		this.server = function() {
 			return server;
 		};
-		console.log(server);
-		return construct(this, server, connectionInfo, receiveKey, transmitKey, clientId);
+		return initialize(this, server, connectionInfo, receiveKey, transmitKey, clientId);
 	}
 	async created() {
 		const server = this.server();
@@ -33,7 +34,7 @@ export class Client {
 		await connected(this, server);
 		success(`socket EVENT -> connected - ID:${this.id}`);
 	}
-	async state() {
+	async status() {
 		const server = this.server();
 		await state(this);
 		info(`socket EVENT -> statusUpdate - ID:${this.id}`);

@@ -17,7 +17,7 @@ import { createClient } from './createClient.js';
 import { parsePacket } from './parsePacket.js';
 import { processPacketEvent } from './processPacketEvent.js';
 // additionalData (ad) are the main UDSP headers. It may be called headers at times or additionalData.
-export async function processSocket(server, connection, additionalDataBuffer, additionalData, packet) {
+export async function processSocket(server, connection, additionalDataBuffer, additionalData, messageBuffer) {
 	const {
 		profile: {
 			ephemeral: {
@@ -26,21 +26,19 @@ export async function processSocket(server, connection, additionalDataBuffer, ad
 			}
 		},
 	} = server;
-	const signature = additionalData.sig;
 	const ephemeralKeypair = additionalData.key;
-	success(`Encrypted Message Signature: ${toBase64(signature)}`);
-	success(`Encrypted Message Signature Size: ${signature.length}`);
 	const clientId = additionalData.id;
 	const nonce = additionalData.nonce;
-	success(`Encrypted Message Size: ${packet.length}`);
+	success(`Encrypted Message Size: ${messageBuffer.length}`);
 	const sessionKey = serverSession(serverPublicKey, serverPrivateKey, ephemeralKeypair);
 	const receiveKey = sessionKey.receiveKey;
 	const transmitKey = sessionKey.transmitKey;
-	success(`receiveKey: ${toBase64(receiveKey)}`);
-	success(`transmitKey: ${toBase64(transmitKey)}`);
-	console.log(toBase64(packet));
+	info(`receiveKey: ${toBase64(receiveKey)}`);
+	info(`transmitKey: ${toBase64(transmitKey)}`);
+	console.log(toBase64(messageBuffer));
 	console.log(toBase64(nonce));
-	const decrypted = decrypt(packet, additionalDataBuffer, nonce, receiveKey);
+	console.log(additionalDataBuffer.length);
+	const decrypted = decrypt(messageBuffer, additionalDataBuffer, nonce, receiveKey);
 	if (!decrypted) {
 		return failed(`Decrypt Failed`);
 	}
@@ -48,16 +46,32 @@ export async function processSocket(server, connection, additionalDataBuffer, ad
 	if (decrypted) {
 		const message = parsePacket(decrypted);
 		if (!message) {
-			return failed('JSON ERROR', connection);
+			return failed('MSGPACK ERROR', connection);
 		}
+		console.log(message);
+		if (!message.idc) {
+			return failed('No Identity Provided', connection);
+		}
+		if (!message.sig) {
+			return failed('No Sig Provided', connection);
+		}
+		const {
+			idc,
+			sig
+		} = message;
 		server.socketCount++;
 		console.log(message);
-		const isValid = signVerify(signature, message.head.cert.key);
+		success(`Encrypted Message Signature: ${toBase64(sig)}`);
+		success(`Encrypted Message Signature Size: ${sig.length}`);
+		const isValid = signVerify(sig, idc.key);
 		console.log('SIGNATURE CHECK', isValid);
 		if (!isValid) {
 			return failed(`Signature isn't valid`);
 		}
-		const signatureHash = signOpen(signature, message.head.cert.key);
+		const signatureHash = signOpen(sig, idc.key);
+		if (!signatureHash) {
+			return failed(`Signature open failed`);
+		}
 		const sigCompare = Buffer.compare(signatureHash, hash(ephemeralKeypair)) === 0;
 		if (sigCompare) {
 			msgReceived(`Signature is valid`);
@@ -68,6 +82,6 @@ export async function processSocket(server, connection, additionalDataBuffer, ad
 			console.log('SIGNATURE FAILED NO SOCKET CREATED');
 			return;
 		}
-		success(`Messages Received: ${server.socketCount}`);
+		success(`Socket Count: ${server.socketCount}`);
 	}
 }

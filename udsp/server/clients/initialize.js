@@ -3,7 +3,7 @@ import { toBase64, emptyNonce, randombytes_buf } from '#crypto';
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-export async function construct(client, server, connection, receiveKey, transmitKey, clientId) {
+export async function initialize(client, server, connection, receiveKey, transmitKey, clientId) {
 	const {
 		nodes,
 		configuration: { id: serverIdRaw }
@@ -53,7 +53,7 @@ export async function construct(client, server, connection, receiveKey, transmit
 	client.receiveKey = receiveKey;
 	if (!server.realtime && server.gracePeriod) {
 		client.gracePeriod = setTimeout(() => {
-			if (client.pending === false) {
+			if (client.state === 1) {
 				client.destroy(1);
 			}
 		}, 30000);

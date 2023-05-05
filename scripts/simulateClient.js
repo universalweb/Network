@@ -22,5 +22,6 @@ const stateRequest = await uwClient.request({
 });
 console.timeEnd('File Request');
 console.timeEnd('Full script runtime');
-console.log('Request state', stateRequest, stateRequest.response.body.data.toString('UTF8'));
+console.log('Request state', stateRequest);
+console.log(stateRequest.response.body.data.toString('UTF8'));
 

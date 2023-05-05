@@ -104,6 +104,7 @@ export function encrypt(message, ad, nonce, secretKey) {
 	crypto_aead_xchacha20poly1305_ietf_encrypt(cipher, message, ad, null, nonce, secretKey);
 	return cipher;
 }
+export const encryptABytes = crypto_aead_xchacha20poly1305_ietf_ABYTES;
 export function decrypt(cipher, ad, nonce, secretKey) {
 	const message = Buffer.alloc(cipher.length - crypto_aead_xchacha20poly1305_ietf_ABYTES);
 	const verify = crypto_aead_xchacha20poly1305_ietf_decrypt(message, null, cipher, ad, nonce, secretKey);
@@ -128,7 +129,6 @@ export function clientSession(receiveKey, transmissionKey, publicKey, privateKey
 	crypto_kx_client_session_keys(receiveKey, transmissionKey, publicKey, privateKey, serverPublicKey);
 }
 export function createSessionKey() {
-	console.log(crypto_kx_SESSIONKEYBYTES);
 	const sessionKey = Buffer.alloc(crypto_kx_SESSIONKEYBYTES);
 	return sessionKey;
 }

@@ -14,13 +14,15 @@
 #### PROPERTY NAMES & MEANINGS
 
 - id - Connection ID (MANDATORY)
-- api - API function that is requested (OPTIONAL)
+- act - primary action related to primary protocol functions only (OPTIONAL)
 - Watcher (OPTIONAL)
-- Head (OPTIONAL)
-- Body (OPTIONAL) (MSGPack Object)
+- Head (OPTIONAL) (Chunked MSGPack Object)
+  - evnt (Event related to application level events)
+- Body (OPTIONAL) (Chunked MSGPack Object)
 - Pid - Packet ID (MANDATORY)
-- Status - Status Code (OPTIONAL)
-  - If status is left blank it defaults to 200 or is considered a success
+- sid - Stream ID (MANDATORY)
+- State - State Code (OPTIONAL)
+  - If state is left blank it defaults to 200 or is considered a success
 - end - Kill connection (OPTIONAL)
 - Puzzle - Solve a puzzle to continue (OPTIONAL)
 - ReKey (OPTIONAL)

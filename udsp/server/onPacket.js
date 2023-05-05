@@ -8,42 +8,35 @@ import {
 import { decrypt } from '#crypto';
 import { processPacket } from './processPacket.js';
 import { processSocket } from './processSocket.js';
-export async function onPacket(messageBuffer, connection) {
+import { isEmpty } from 'Acid';
+export async function onPacket(packet, connection) {
+	const thisServer = this;
 	msgReceived('Message Received');
-	console.log(messageBuffer);
-	const headersEndIndex = Number(messageBuffer.slice(0, 3));
-	if (!headersEndIndex) {
-		return failed(`No headers size number -> Invalid Packet`);
+	console.log(packet);
+	const packetDecoded = decode(packet);
+	if (isEmpty(packetDecoded)) {
+		return failed(`No header buffer -> Invalid Packet`);
 	}
-	success(`Additional Data size ${headersEndIndex - 3}`);
-	const headersBuffer = messageBuffer.slice(3, headersEndIndex);
+	const headersBuffer = packetDecoded[0];
+	if (!headersBuffer) {
+		return failed(`No header buffer -> Invalid Packet`);
+	}
+	const messageBuffer = packetDecoded[1];
+	if (!packet) {
+		return failed(`No packet -> Invalid Packet`);
+	}
 	const headers = decode(headersBuffer);
 	if (!headers) {
 		return failed(`No headers -> Invalid Packet`);
 	}
-	success(`Additional Data`);
-	console.log(headers);
-	const packetEndIndex = Number(messageBuffer.slice(headersEndIndex, headersEndIndex + 4));
-	if (!packetEndIndex) {
-		return failed(`No packet size number -> Invalid Packet`);
-	}
-	success(`Packet size ${packetEndIndex}`);
-	console.log(headersEndIndex + 4, packetEndIndex);
-	const packet = messageBuffer.slice(headersEndIndex + 4, packetEndIndex);
-	if (!packet) {
-		return failed(`No packet -> Invalid Packet`);
-	}
 	success(`Packet`);
-	const {
-		key,
-		sig
-	} = headers;
+	const { key, } = headers;
 	console.log('Headers', headers);
-	if (key && sig) {
+	if (key) {
 		success(`Public Key is given -> Processing handshake`);
-		await processSocket(this, connection, headersBuffer, headers, packet);
+		await processSocket(thisServer, connection, headersBuffer, headers, messageBuffer);
 	} else {
 		success(`No Public Key is given -> Processing as a message`);
-		await processPacket(this, connection, headersBuffer, headers, packet);
+		await processPacket(thisServer, connection, headersBuffer, headers, messageBuffer);
 	}
 }

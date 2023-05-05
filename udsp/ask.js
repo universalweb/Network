@@ -1,22 +1,22 @@
 import { promise } from 'Acid';
 export class Ask {
-	constructor(payload, thisContext) {
-		const askContext = this;
+	constructor(payload, thisClient) {
+		const thisAsk = this;
 		const timeStamp = Date.now();
 		const {
 			requestQueue,
 			packetIdGenerator
-		} = thisContext;
+		} = thisClient;
 		// sid is a Stream ID
 		const sid = packetIdGenerator.get();
 		payload.sid = sid;
 		payload.t = timeStamp;
-		askContext.payload = payload;
+		thisAsk.payload = payload;
 		const awaitingResult = promise((accept) => {
-			askContext.accept = accept;
+			thisAsk.accept = accept;
 		});
-		requestQueue.set(sid, askContext);
-		thisContext.send(payload);
+		requestQueue.set(sid, thisAsk);
+		thisClient.send(payload);
 		return awaitingResult;
 	}
 	/* `completedChunks = [];` is initializing an empty array called `completedChunks` as a property of

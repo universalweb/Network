@@ -32,5 +32,5 @@ export async function processPacket(server, connection, headersBuffer, headers, 
 	server.packetCount++;
 	info(`Packet Count: ${server.packetCount}`);
 	await processPacketEvent(server, client, message);
-	success(`Messages Received: ${server.packetCount}`);
+	success(`Packet Count: ${server.packetCount}`);
 }

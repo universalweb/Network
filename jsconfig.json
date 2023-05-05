@@ -9,13 +9,13 @@
 				"udsp/server/*.js"
 			],
 			"#client/*": [
-				"udsp/server/*.js"
+				"udsp/client/*.js"
 			],
 			"#server*": [
 				"udsp/server/index.js"
 			],
 			"#client*": [
-				"udsp/server/index.js"
+				"udsp/client/index.js"
 			],
 			"#profile/*": [
 				"./profile/*.js"

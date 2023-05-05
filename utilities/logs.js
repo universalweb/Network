@@ -2,8 +2,10 @@ import chalk from 'chalk';
 import {
 	stringify,
 	each,
-	isPlainObject,
-	initialString
+	isPrimitive,
+	initialString,
+	isArray,
+	isBuffer
 } from 'Acid';
 const arrayNumberRegex = /\[([\d\s,]*?)\]/gm;
 function truncateArray(match) {
@@ -14,20 +16,19 @@ function shortenArrays(item) {
 }
 export function prettyObjects(args, consoleBase) {
 	return each(args, (item) => {
-		console.log(consoleBase((isPlainObject(item)) ? shortenArrays(stringify(item, null, `  `)) : item));
+		console.log(consoleBase((isPrimitive(item) || isArray(item) || isBuffer(item)) ? item : shortenArrays(stringify(item, null, `  `))));
 	});
 }
 function logFactory(bg, color, header, footer) {
 	const consoleBase = (bg) ? chalk[bg].hex(color) : chalk.hex(color);
 	return function(...args) {
-		const descriptor = this?.descriptor || '';
 		if (footer) {
-			const fullHeader = (descriptor) ? ` ---------------- ${descriptor}: ${header} START ---------------- ` : ` ---------------- ${header} START ---------------- `;
+			const fullHeader = ` ---------------- ${header} START ---------------- `;
 			console.log(consoleBase(fullHeader));
 			prettyObjects(args, consoleBase);
 			console.log(consoleBase(` ---------------- ${header} END ---------------- `, `\n`));
 		} else {
-			const fullHeader = (descriptor) ? `${descriptor}: ${header}   =>  ` : `${header}  =>  `;
+			const fullHeader = `${header}  =>  `;
 			console.log(consoleBase(fullHeader));
 			prettyObjects(args, consoleBase);
 		}
