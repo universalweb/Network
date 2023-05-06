@@ -1,62 +1,19 @@
 import {
 	success, failed, imported, msgSent, info
 } from '#logs';
-import buildPacketSize from '#buildPacketSize';
-import buildStringSize from '#buildStringSize';
-import {
-	encode,
-	decode
-} from 'msgpackr';
 import { promise } from 'Acid';
-import {
-	encrypt,
-	nonceBox,
-	toBase64,
-	hashSign,
-	randombytes_buf
-} from '#crypto';
 // clientId, nonce, encrypted message size, flags, packet size.
-export async function sendPacket(rawMessage, address, port, nonce, transmitKey, clientId) {
+export async function sendPacket(message, address, port) {
 	success(`SENDING MESSAGE`);
-	success(`clientId: ${toBase64(clientId)}`);
-	success(`Transmit Key ${toBase64(transmitKey)}`);
-	const thisContext = this;
-	rawMessage.time = Date.now();
-	console.log('FULL MESSAGE', rawMessage);
-	const message = encode(rawMessage);
-	randombytes_buf(nonce);
-	success(`Nonce ${toBase64(nonce)} Size: ${nonce.length}`);
-	const headers = {
-		id: clientId,
-		nonce,
-	};
-	const headersEncoded = encode(headers);
-	const headersEndIndex = headersEncoded.length + 3;
-	const headersEndIndexBuffer = buildStringSize(headersEndIndex);
-	const headersCompiled = Buffer.concat([headersEndIndexBuffer, headersEncoded]);
-	success('Additional Data Buffer');
-	console.log(headersEndIndex, headers);
-	const encryptedMessage = encrypt(message, headersEncoded, nonce, transmitKey);
-	const encryptedLength = encryptedMessage.length;
-	if (!encryptedMessage) {
-		return failed('Encryption failed');
-	}
-	success(`Encrypted Message: Size:${encryptedMessage.length} ${toBase64(encryptedMessage)}`);
-	const encryptedDataEndIndex = buildPacketSize(headersEndIndex + 4 + encryptedLength);
-	success(`Encrypted Data End Index: ${encryptedDataEndIndex.toString()}`);
-	const sendBuffer = [
-		headersCompiled,
-		encryptedDataEndIndex,
-		encryptedMessage,
-	];
-	msgSent(toBase64(sendBuffer), `Size:${sendBuffer.length}`);
+	const thisServer = this;
+	console.log(message);
 	return promise((accept, reject) => {
-		thisContext.server.send(sendBuffer, port, address, (error) => {
+		thisServer.server.send(message, port, address, (error) => {
 			if (error) {
 				reject(error);
 				return failed(error);
 			}
-			success('Message Sent');
+			msgSent('Message Sent', message.length);
 			accept();
 		});
 	});

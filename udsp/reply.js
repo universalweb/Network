@@ -94,7 +94,7 @@ export class Reply {
 			tp
 		} = message;
 		if (tp) {
-			thisReply.totalIncomingPackets = pid;
+			thisReply.totalIncomingPackets = tp;
 		}
 		if (pid) {
 			if (!thisReply.packets[pid]) {

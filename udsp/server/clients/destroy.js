@@ -6,7 +6,7 @@ export async function destroy(client, reason, server) {
 		await client.send({
 			status: 3
 		});
-		failed(`client ended from inactivity. Grace period ended.
+		info(`client ended from inactivity. Grace period ended.
 			ID: ${client.id}
 			Address: ${client.address}
 			Port: ${client.port}
@@ -18,8 +18,8 @@ export async function destroy(client, reason, server) {
 			Port: ${client.port}
 			`);
 	}
-	await server.nodeEvent('destroy', client);
-	server.nodes.delete(client.id);
+	await server.clientEvent('destroy', client);
+	server.clients.delete(client.id);
 	client.address = null;
 	client.port = null;
 	client.id = null;

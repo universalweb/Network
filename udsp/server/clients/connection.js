@@ -8,7 +8,7 @@ export async function connection(client, connectionInfo, server) {
 	} = connectionInfo;
 	client.address = connection.address;
 	client.port = connection.port;
-	await server.nodeEvent('connected', client);
+	await server.clientEvent('connected', client);
 	success(`client Connection -> ID: ${client.id}
       address: ${address}
       port: ${port}`);

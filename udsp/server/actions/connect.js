@@ -12,6 +12,7 @@ export async function opn(socket, request, response) {
 	} = this;
 	info(socket.id, request);
 	response.head = {};
+	response.body = {};
 	if (cacheMaxAge) {
 		response.head.cacheMaxAge = cacheMaxAge;
 	}
@@ -24,14 +25,14 @@ export async function opn(socket, request, response) {
 	if (serverName) {
 		response.head.server = serverName;
 	}
-	if (encoding) {
-		response.head.encoding = encoding;
-	}
+	// if (encoding) {
+	// 	response.head.encoding = encoding;
+	// }
 	if (language) {
 		response.head.language = language;
 	}
 	if (onConnectMessage) {
-		response.body = onConnectMessage;
+		response.body.message = onConnectMessage;
 	}
 	// connection status - backwards compatibility
 	response.state = 1;

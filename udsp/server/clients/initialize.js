@@ -5,7 +5,7 @@ import {
 } from '#logs';
 export async function initialize(client, server, connection, receiveKey, transmitKey, clientId) {
 	const {
-		nodes,
+		clients,
 		configuration: { id: serverIdRaw }
 	} = server;
 	const {
@@ -24,13 +24,13 @@ export async function initialize(client, server, connection, receiveKey, transmi
 	const serverIdString = toBase64(serverIdBuffer);
 	console.log(`Client Connection ID: ${clientIdString}`);
 	console.log(`Server Connection ID: ${serverIdString}`);
-	if (nodes.has(serverIdString)) {
+	if (clients.has(serverIdString)) {
 		failed('ID IN USE NEED TO MAKE SOME RANDOM BITS - PATCH THIS');
 	} else {
 		success(`Server client ID is open ${serverIdString}`);
 	}
 	// success(`MESSAGE SENT TIME: ${sentTime}`);
-	nodes.set(serverIdString, client);
+	clients.set(serverIdString, client);
 	/*
 		Sending to client using this
 		Client connection Ids are smaller than server connection Ids
@@ -43,7 +43,6 @@ export async function initialize(client, server, connection, receiveKey, transmi
 		Server IDs can be random with some actionable info
 		The client ID can be used as the base of the server ID and then generate the rest to form a unique server specific ID
 	*/
-	client.serverId = serverIdString;
 	client.id = serverIdString;
 	client.clientIdRaw = clientId;
 	client.serverIdRaw = serverIdBuffer;
@@ -53,7 +52,8 @@ export async function initialize(client, server, connection, receiveKey, transmi
 	client.receiveKey = receiveKey;
 	if (!server.realtime && server.gracePeriod) {
 		client.gracePeriod = setTimeout(() => {
-			if (client.state === 1) {
+			const lastActive = (Date.now() - client.lastActive) / 1000;
+			if (client.state === 1 || lastActive > 30) {
 				client.destroy(1);
 			}
 		}, 30000);
@@ -64,8 +64,7 @@ export async function initialize(client, server, connection, receiveKey, transmi
 		Packets that need to be sent and confirmed
 	*/
 	success(`client Created: ID:${serverIdString} ${address}:${port}`);
-	console.log(client);
-	await server.nodeEvent('constructed', client);
+	await server.clientEvent('constructed', `SID${client.id}`, `CID${client.clientIdString}`);
 	await client.created();
 	return client;
 }

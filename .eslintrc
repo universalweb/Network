@@ -16,7 +16,9 @@
         "window": "readonly",
         "top": "readonly",
         "$": "off",
-        "Client": "off"
+        "Client": "off",
+        "client": "off",
+        "clients": "off"
     },
     "parserOptions": {
         "sourceType": "module",
@@ -309,7 +311,15 @@
         "no-spaced-func": "error",
         "no-ternary": "off",
         "no-trailing-spaces": "error",
-        "no-underscore-dangle": ["error", { "allow": ["__dirname", "__filename"] }],
+        "no-underscore-dangle": [
+            "error",
+            {
+                "allow": [
+                    "__dirname",
+                    "__filename"
+                ]
+            }
+        ],
         "no-unneeded-ternary": "error",
         "no-constant-binary-expression": "error",
         "no-whitespace-before-property": "error",

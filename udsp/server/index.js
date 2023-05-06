@@ -96,19 +96,19 @@ export class Server {
 	*/
 	ipVersion = 'udp6';
 	/*
-		* All created clients (nodes) represent a client to server bi-directional connection until it is closed by either party.
+		* All created clients (clients) represent a client to server bi-directional connection until it is closed by either party.
 	*/
-	// clients are referred to as nodes
-	nodes = construct(Map);
-	nodeEvents = construct(Map);
-	setNodeEvent(eventName, callback) {
-		this.nodeEvents.set(eventName, callback);
+	// clients are referred to as clients
+	clients = construct(Map);
+	clientEvents = construct(Map);
+	setClientEvent(eventName, callback) {
+		this.clientEvents.set(eventName, callback);
 	}
-	nodeEvent(eventName, socket) {
-		success(`Client Node Event: ${eventName} -> SocketID: ${socket.id}`);
-		const foundEvent = this.nodeEvents.get(eventName);
+	clientEvent(eventName, client) {
+		success(`Client Client Event: ${eventName} -> SocketID: ${client.id}`);
+		const foundEvent = this.clientEvents.get(eventName);
 		if (foundEvent) {
-			// foundEvent(this, socket);
+			foundEvent(this, client);
 		}
 	}
 	events = construct(Map);

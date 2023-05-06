@@ -94,8 +94,8 @@ export function signVerifyDetached(signedMessage, publicKey) {
 export function emptyNonce() {
 	return Buffer.alloc(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
 }
-export function nonceBox() {
-	const nonce = Buffer.alloc(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
+export function nonceBox(nonceBuffer) {
+	const nonce = nonceBuffer || Buffer.alloc(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
 	randombytes_buf(nonce);
 	return nonce;
 }

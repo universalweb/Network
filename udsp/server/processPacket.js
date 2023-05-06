@@ -14,8 +14,8 @@ import { parsePacket } from './parsePacket.js';
 import { processPacketEvent } from './processPacketEvent.js';
 export async function processPacket(server, connection, headersBuffer, headers, packet) {
 	const clientId = headers.id;
-	const { nodes } = server;
-	const client = nodes.get(toBase64(clientId));
+	const { clients } = server;
+	const client = clients.get(toBase64(clientId));
 	if (!client) {
 		return false;
 	}

@@ -13,6 +13,6 @@ export async function reKey(client, certificate, server) {
 	} = server;
 	serverSession(serverPublicKey, serverPrivateKey, certificate.key);
 	client.lastReKey = Date.now();
-	await server.nodeEvent('reKey', client);
+	await server.clientEvent('reKey', client);
 	success(`client reKeyed -> ID: ${client.id}`);
 }

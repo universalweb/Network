@@ -20,14 +20,8 @@ import {
 import dgram from 'dgram';
 // Default utility imports
 import { success, configure, info } from '#logs';
-import { buildPacketSize } from '#buildPacketSize';
-import { buildStringSize } from '#buildStringSize';
 import {
-	createSessionKey,
-	clientSession,
-	createClientId,
-	keypair,
-	toBase64
+	createSessionKey, clientSession, createClientId, keypair, toBase64, emptyNonce
 } from '#crypto';
 import { pluckBuffer } from '#pluckBuffer';
 import { getCertificate } from '#certificate';
@@ -114,6 +108,7 @@ export class Client {
 		thisClient.server.on('listening', thisClient.onListening);
 		return this;
 	}
+	nonce = emptyNonce();
 	maxMTU = 1000;
 	encoding = 'binary';
 	max = 1280;
@@ -125,12 +120,6 @@ export class Client {
 		console.log(this, 'client closed down.');
 		this.server.close();
 		Client.connections.delete(this.connectionKey);
-	}
-	buildPacketSize(encryptedLength) {
-		return buildPacketSize(encryptedLength, this.maxPacketSizeLength);
-	}
-	buildStringSize(encryptedLength) {
-		return buildStringSize(encryptedLength, this.maxStringSizeLength);
 	}
 	packetIdGenerator = construct(UniqID);
 }

@@ -7,7 +7,8 @@ import {
 } from 'Acid';
 import { closeRequest } from '../closeRequest.js';
 imported('Client ProcessMessage');
-export async function processMessage(response, headers) {
+export async function processMessage(data) {
+	const [headers, response, footer] = data;
 	const thisContext = this;
 	const { requestQueue, } = thisContext;
 	const {
