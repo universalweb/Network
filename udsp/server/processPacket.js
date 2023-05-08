@@ -10,7 +10,6 @@ import {
 	toBase64,
 	decrypt
 } from '#crypto';
-import { parsePacket } from './parsePacket.js';
 import { processPacketEvent } from './processPacketEvent.js';
 export async function processPacket(server, connection, headersBuffer, headers, packet) {
 	const clientId = headers.id;
@@ -24,7 +23,7 @@ export async function processPacket(server, connection, headersBuffer, headers, 
 	if (!decrypted) {
 		return failed(`Decrypt Failed`);
 	}
-	const message = parsePacket(decrypted);
+	const message = decode(decrypted);
 	if (!message) {
 		return failed('MSGPack ERROR', connection);
 	}

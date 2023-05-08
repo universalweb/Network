@@ -14,7 +14,6 @@ import {
 	toBase64,
 } from '#crypto';
 import { createClient } from './createClient.js';
-import { parsePacket } from './parsePacket.js';
 import { processPacketEvent } from './processPacketEvent.js';
 // additionalData (ad) are the main UDSP headers. It may be called headers at times or additionalData.
 export async function processSocket(server, connection, additionalDataBuffer, additionalData, messageBuffer) {
@@ -44,7 +43,7 @@ export async function processSocket(server, connection, additionalDataBuffer, ad
 	}
 	success(`Decrypted`);
 	if (decrypted) {
-		const message = parsePacket(decrypted);
+		const message = decode(decrypted);
 		if (!message) {
 			return failed('MSGPACK ERROR', connection);
 		}
