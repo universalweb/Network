@@ -34,11 +34,9 @@ export async function decodePacket(config) {
 	}
 	const message = decode(encryptedMessage);
 	if (message.head) {
-		message.head = decode(message.head);
 		success('head PAYLOAD', message.head.length);
 	}
 	if (message.body) {
-		message.body = decode(message.body);
 		success('body PAYLOAD', message.body.length);
 	}
 	info('Raw Message', message);

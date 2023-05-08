@@ -6,8 +6,9 @@ import {
 import {
 	success, failed, imported, msgSent, msgReceived, info
 } from '#logs';
+import { Reply, createReply } from '#udsp/reply';
 imported('ON PUBLIC MESSAGE');
-export async function processPacketEvent(server, socket, message) {
+export async function processPacketEvent(server, client, message) {
 	const {
 		events,
 		actions
@@ -27,31 +28,5 @@ export async function processPacketEvent(server, socket, message) {
 	} else {
 		msgReceived(`Event (Higher level application event) received ${evnt}`);
 	}
-	const eventName = act || evnt;
-	const method = (act) ? actions.get(act) : events.get(evnt);
-	if (method) {
-		if (hasValue(sid)) {
-			info(`Request:${eventName} RequestID: ${sid}`);
-			console.log(message);
-			const response = {
-				sid
-			};
-			console.log(socket);
-			const hasResponse = await method(socket, message, response);
-			if (hasResponse) {
-				socket.send(response);
-			}
-			return;
-		} else {
-			const eid = message.eid;
-			if (hasValue(eid)) {
-				success(`Request:${method} Emit ID:${eid} ${stringify(message)}`);
-				return method(socket, body, message);
-			} else {
-				return failed(`Invalid Request type. No Emit ID was given. ${stringify(message)}`);
-			}
-		}
-	} else {
-		return failed(`Invalid method name given. ${stringify(message)}`);
-	}
+	createReply(message, client);
 }

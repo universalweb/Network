@@ -3,6 +3,7 @@ console.log('STARTING CLIENT');
 console.time('Full script runtime');
 import { currentPath } from '#directory';
 import { client } from '#udsp';
+import { decode } from 'msgpackr';
 console.time('Connected');
 // Universal Web Socket
 const uwClient = await client({
@@ -23,5 +24,5 @@ const stateRequest = await uwClient.request({
 console.timeEnd('File Request');
 console.timeEnd('Full script runtime');
 console.log('Request state', stateRequest);
-console.log(stateRequest.response.body.data.toString('UTF8'));
+console.log(stateRequest.response.body.toString());
 

@@ -53,14 +53,6 @@ export async function encodePacket(data) {
 	if (options) {
 		console.log('Packet Options', options);
 	}
-	if (message.head) {
-		message.head = encode(message.head);
-		success('head PAYLOAD', message.head.length);
-	}
-	if (message.body) {
-		message.body = encode(message.body);
-		success('body PAYLOAD', message.body.length);
-	}
 	const headersEncoded = encode(headers);
 	const messageEncoded = encode(message);
 	const ad = (footer) ? Buffer.concat(headersEncoded, footer) : headersEncoded;

@@ -18,7 +18,8 @@
         "$": "off",
         "Client": "off",
         "client": "off",
-        "clients": "off"
+        "clients": "off",
+        "opn": "off"
     },
     "parserOptions": {
         "sourceType": "module",

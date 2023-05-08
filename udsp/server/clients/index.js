@@ -16,7 +16,7 @@ export class Client {
 	descriptor = 'client';
 	client = true;
 	pending = false;
-	responseQueue = construct(Map);
+	replyQueue = construct(Map);
 	packetIdGenerator = construct(UniqID);
 	constructor(server, connectionInfo, receiveKey, transmitKey, clientId) {
 		this.server = function() {

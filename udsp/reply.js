@@ -1,25 +1,39 @@
-import { isEmpty, promise, eachArray } from 'Acid';
+import {
+	isEmpty, promise, eachArray, assign, construct, stringify, hasValue, get
+} from 'Acid';
 import { processPacketEvent } from './server/processPacketEvent.js';
+import { decode, encode } from 'msgpackr';
+import {
+	success, failed, info, msgReceived, msgSent
+} from '#logs';
+const chunkSize = 700;
+const transferEncodingTypesChunked = /stream|file|image|string/;
 export class Reply {
-	constructor(message, thisServer) {
+	constructor(message, client) {
 		const thisReply = this;
 		const {
 			replyQueue,
 			packetIdGenerator
-		} = thisServer;
+		} = client;
 		const timeStamp = Date.now();
 		thisReply.created = timeStamp;
+		thisReply.client = function() {
+			return client;
+		};
+		const server = client.server();
 		thisReply.server = function() {
-			return thisServer;
+			return server;
 		};
 		const { sid } = message;
 		thisReply.sid = sid;
+		thisReply.response.sid = sid;
 		replyQueue.set(sid, thisReply);
 		thisReply.received(message);
 		return thisReply;
 	}
 	// Incoming
-	incomingPayload = {};
+	message = {};
+	response = {};
 	incomingPackets = [];
 	incomingChunks = [];
 	totalIncomingPackets = 0;
@@ -41,7 +55,7 @@ export class Reply {
 		5 Acknowledged
 	*/
 	state = 0;
-	// Flush Ask Data to Free Memory
+	// Flush Ask Body to Free Memory
 	flushAsk() {
 		this.incomingPayload = {};
 		this.incomingPackets = [];
@@ -49,7 +63,7 @@ export class Reply {
 		this.totalIncomingPackets = 0;
 		this.totalIncomingPayloadSize = 0;
 	}
-	// Flush Reply Data to Free Memory
+	// Flush Reply Body to Free Memory
 	flushReply() {
 		this.outgoingPayload = {};
 		this.outgoingPackets = [];
@@ -57,30 +71,85 @@ export class Reply {
 		this.totalOutgoingPackets = 0;
 		this.totalOutgoingPayloadSize = 0;
 	}
-	// Flush all data
+	// Flush all body
 	flush() {
 		this.flushReply();
 		this.flushAsk();
 	}
-	// Flush All data and remove this reply from the map
+	// Flush All body and remove this reply from the map
 	destroy() {
 		this.flush();
 		this.server().replyQueue.delete(this.sid);
 	}
 	// Raw Send Packet
-	send(message) {
-		this.server().send(message);
+	sendPacket(message, serverArg, client) {
+		if (serverArg) {
+			return serverArg.send(client, message);
+		}
+		const server = this.server();
+		server.send(server.client(), message);
 	}
-	reply(packetIDs) {
+	chunk(body) {
+		const chunks = [];
+		const packetLength = body.length;
+		for (let index = 0; index < packetLength;index += chunkSize) {
+			const chunk = body.slice(index, index + chunkSize);
+			chunks.push(chunk);
+		}
+		return chunks;
+	}
+	sendChunked(packet, transferEncoding) {
 		const thisReply = this;
+		if (packet.body && packet.body.length > 700) {
+			const chunks = thisReply.chunk(packet.body);
+			const packetLength = chunks.length;
+			thisReply.totalOutgoingPackets = packetLength;
+			eachArray(chunks, (item, id) => {
+				const outgoingPacket = assign({}, packet);
+				if (id === 0) {
+					outgoingPacket.te = transferEncoding;
+					outgoingPacket.pt = packetLength;
+				}
+				outgoingPacket.pid = id;
+				outgoingPacket.body = item;
+				thisReply.outgoingPackets[id] = outgoingPacket;
+			});
+		} else {
+			packet.en = transferEncoding;
+			packet.pt = 0;
+			thisReply.outgoingPackets[0] = packet;
+		}
+	}
+	// transferEncoding types: json, stream, file,
+	send(transferEncoding) {
+		const response = this.response;
+		const thisReply = this;
+		msgSent('REPLY.SEND', response);
+		if (response.body) {
+			if (transferEncodingTypesChunked.test(transferEncoding)) {
+				this.sendChunked(response, transferEncoding);
+			} else if (transferEncoding === 'struct' || transferEncoding === 'json') {
+				response.body = encode(response.body);
+				this.sendChunked(response, transferEncoding);
+			}
+		}
+		thisReply.replyAll();
+	}
+	replyIDs(packetIDs) {
+		const thisReply = this;
+		const server = this.server();
+		const client = this.client();
 		eachArray(packetIDs, (id) => {
-			thisReply.send(thisReply.outgoingPackets[id]);
+			server.send(client, thisReply.outgoingPackets[id]);
 		});
 	}
 	replyAll() {
 		const thisReply = this;
+		const server = this.server();
+		const client = this.client();
+		console.log('Reply.replyAll', thisReply.outgoingPackets);
 		eachArray(thisReply.outgoingPackets, (packet) => {
-			thisReply.send(packet);
+			server.send(client, packet);
 		});
 	}
 	received(message) {
@@ -91,26 +160,91 @@ export class Reply {
 			sid,
 			pid,
 			act,
-			tp
+			pt,
+			te,
+			cmplt,
+			finale,
+			ack
 		} = message;
-		if (tp) {
-			thisReply.totalIncomingPackets = tp;
+		if (cmplt) {
+			return thisReply.destroy();
+		}
+		if (pt) {
+			thisReply.totalIncomingPackets = pt;
+		}
+		if (te) {
+			thisReply.transferEncoding = te;
 		}
 		if (pid) {
-			if (!thisReply.packets[pid]) {
-				thisReply.packets[pid] = message;
+			if (!thisReply.incomingPackets[pid]) {
+				thisReply.incomingPackets[pid] = message;
 				thisReply.totalReceivedPackets++;
 			}
+		} else {
+			thisReply.incomingPackets[0] = message;
+			thisReply.totalReceivedPackets = 1;
+			thisReply.totalIncomingPackets = 1;
 		}
 		if (thisReply.totalIncomingPackets === thisReply.totalReceivedPackets) {
 			thisReply.state = 2;
 		}
 		if (thisReply.state === 2) {
-			thisReply.process();
+			thisReply.assemble();
 		}
 	}
-	// Incoming Packets have been received begin to process response by first providing the Reply for API processing
-	process() {
-		processPacketEvent(this);
+	assemble() {
+		const thisReply = this;
+		const { transferEncoding } = thisReply;
+		if (thisReply.totalIncomingPackets === 1) {
+			thisReply.message = thisReply.incomingPackets[0];
+			return thisReply.process();
+		}
+		const packet = thisReply.incomingPackets[0];
+		eachArray(thisReply.incomingPackets, (item) => {
+			if (item.body) {
+				Buffer.concat(packet.body, item.body);
+			}
+		});
+		if (transferEncoding === 'struct' || !transferEncoding) {
+			msgReceived(thisReply.message);
+			if (thisReply.message.body) {
+				thisReply.message.body = decode(thisReply.message.body);
+			}
+		}
 	}
+	async process() {
+		const message = this.message;
+		const {
+			body,
+			sid,
+			evnt,
+			act
+		} = message;
+		const {
+			events,
+			actions
+		} = this.server();
+		const reply = this;
+		const eventName = act || evnt;
+		const method = (act) ? actions.get(act) : events.get(evnt);
+		if (method) {
+			info(`Request:${eventName} RequestID: ${sid}`);
+			console.log(message);
+			const hasResponse = await method(message, this);
+			return;
+		} else {
+			return failed(`Invalid method name given. ${stringify(message)}`);
+		}
+	}
+}
+export function createReply(message, client) {
+	const { replyQueue } = client;
+	const { sid } = message;
+	msgReceived(`Stream ID: ${sid}`);
+	if (replyQueue.has(sid)) {
+		msgReceived(`REPLY FOUND: ${sid}`);
+		return replyQueue.get(sid);
+	}
+	msgReceived(`CREATE REPLY: ${sid}`, message);
+	return construct(Reply, [message, client]);
 }
