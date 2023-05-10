@@ -1,38 +1,36 @@
 import {
 	isEmpty, promise, eachArray, assign, construct, stringify, hasValue, get
 } from 'Acid';
-import { processPacketEvent } from './server/processPacketEvent.js';
 import { decode, encode } from 'msgpackr';
 import {
 	success, failed, info, msgReceived, msgSent
 } from '#logs';
 const chunkSize = 700;
 const transferEncodingTypesChunked = /stream|file|image|string/;
-export class Reply {
-	constructor(packet, client) {
-		const thisReply = this;
+export class Ask {
+	constructor(request, client) {
+		const thisAsk = this;
 		const {
-			replyQueue,
+			askQueue,
 			packetIdGenerator
 		} = client;
+		const sid = packetIdGenerator.get();
 		const timeStamp = Date.now();
-		thisReply.created = timeStamp;
-		thisReply.client = function() {
+		thisAsk.created = timeStamp;
+		thisAsk.client = function() {
 			return client;
 		};
-		const server = client.server();
-		thisReply.server = function() {
-			return server;
-		};
-		const { sid } = packet;
-		thisReply.sid = sid;
-		thisReply.response.sid = sid;
-		replyQueue.set(sid, thisReply);
-		thisReply.received(packet);
-		return thisReply;
+		thisAsk.sid = sid;
+		thisAsk.request.sid = sid;
+		askQueue.set(sid, thisAsk);
+		thisAsk.received(request);
+		return thisAsk;
 	}
 	// Incoming
+	message = {};
+	// Outgoing origin Request
 	request = {};
+	// Response from destination
 	response = {};
 	incomingPackets = [];
 	incomingChunks = [];
@@ -66,7 +64,7 @@ export class Reply {
 		this.totalIncomingPackets = 0;
 		this.totalIncomingPayloadSize = 0;
 	}
-	// Flush Reply Body to Free Memory
+	// Flush Ask Body to Free Memory
 	flushOut() {
 		this.outgoingPayload = {};
 		this.outgoingPackets = [];
@@ -76,21 +74,21 @@ export class Reply {
 	}
 	// Flush all body
 	flush() {
+		this.flushIn();
 		this.flushOut();
-		this.flushAsk();
 	}
-	// Flush All body and remove this reply from the map
+	// Flush All body and remove this ask from the map
 	destroy() {
 		this.flush();
-		this.server().replyQueue.delete(this.sid);
+		this.server().askQueue.delete(this.sid);
 	}
 	// Raw Send Packet
-	sendPacket(request, serverArg, client) {
+	sendPacket(message, serverArg, client) {
 		if (serverArg) {
-			return serverArg.send(client, request);
+			return serverArg.send(client, message);
 		}
 		const server = this.server();
-		server.send(server.client(), request);
+		server.send(server.client(), message);
 	}
 	chunk(body) {
 		const chunks = [];
@@ -102,11 +100,11 @@ export class Reply {
 		return chunks;
 	}
 	sendChunked(packet, transferEncoding) {
-		const thisReply = this;
+		const thisAsk = this;
 		if (packet.body && packet.body.length > 700) {
-			const chunks = thisReply.chunk(packet.body);
+			const chunks = thisAsk.chunk(packet.body);
 			const packetLength = chunks.length;
-			thisReply.totalOutgoingPackets = packetLength;
+			thisAsk.totalOutgoingPackets = packetLength;
 			eachArray(chunks, (item, id) => {
 				const outgoingPacket = assign({}, packet);
 				if (id === 0) {
@@ -115,48 +113,54 @@ export class Reply {
 				}
 				outgoingPacket.pid = id;
 				outgoingPacket.body = item;
-				thisReply.outgoingPackets[id] = outgoingPacket;
+				thisAsk.outgoingPackets[id] = outgoingPacket;
 			});
 		} else {
 			packet.en = transferEncoding;
 			packet.pt = 0;
-			thisReply.outgoingPackets[0] = packet;
+			thisAsk.outgoingPackets[0] = packet;
 		}
 	}
 	// transferEncoding types: json, stream, file,
 	send(transferEncoding) {
-		const response = this.response;
-		const thisReply = this;
-		msgSent('REPLY.SEND', response);
-		if (response.body) {
+		const request = this.request;
+		const thisAsk = this;
+		msgSent('ASK.SEND', request);
+		if (request.body) {
 			if (transferEncodingTypesChunked.test(transferEncoding)) {
-				this.sendChunked(response, transferEncoding);
+				this.sendChunked(request, transferEncoding);
 			} else if (transferEncoding === 'struct' || transferEncoding === 'json') {
-				response.body = encode(response.body);
-				this.sendChunked(response, transferEncoding);
+				request.body = encode(request.body);
+				this.sendChunked(request, transferEncoding);
 			}
 		}
-		thisReply.replyAll();
+		thisAsk.askAll();
 	}
-	replyIDs(packetIDs) {
-		const thisReply = this;
+	askIDs(packetIDs) {
+		const thisAsk = this;
 		const server = this.server();
 		const client = this.client();
 		eachArray(packetIDs, (id) => {
-			server.send(client, thisReply.outgoingPackets[id]);
+			server.send(client, thisAsk.outgoingPackets[id]);
 		});
 	}
-	replyAll() {
-		const thisReply = this;
+	askAll() {
+		const thisAsk = this;
 		const server = this.server();
 		const client = this.client();
-		console.log('Reply.replyAll', thisReply.outgoingPackets);
-		eachArray(thisReply.outgoingPackets, (packet) => {
+		console.log('Ask.askAll', thisAsk.outgoingPackets);
+		eachArray(thisAsk.outgoingPackets, (packet) => {
 			server.send(client, packet);
 		});
 	}
+	ack(packet) {
+		msgReceived('ACK', packet);
+	}
+	nack(packet) {
+		msgReceived('NACK', packet);
+	}
 	received(packet) {
-		const thisReply = this;
+		const thisAsk = this;
 		const {
 			body,
 			head,
@@ -171,85 +175,85 @@ export class Reply {
 			nack
 		} = packet;
 		if (cmplt) {
-			return thisReply.destroy();
+			return thisAsk.destroy();
 		}
 		if (pt) {
-			thisReply.totalIncomingPackets = pt;
+			thisAsk.totalIncomingPackets = pt;
 		}
 		if (te) {
-			thisReply.transferEncoding = te;
+			thisAsk.transferEncoding = te;
 		}
 		if (pid) {
-			if (!thisReply.incomingPackets[pid]) {
-				thisReply.incomingPackets[pid] = packet;
-				thisReply.totalReceivedPackets++;
+			if (!thisAsk.incomingPackets[pid]) {
+				thisAsk.incomingPackets[pid] = packet;
+				thisAsk.totalReceivedPackets++;
 			}
 		} else {
-			thisReply.incomingPackets[0] = packet;
-			thisReply.totalReceivedPackets = 1;
-			thisReply.totalIncomingPackets = 1;
+			thisAsk.incomingPackets[0] = packet;
+			thisAsk.totalReceivedPackets = 1;
+			thisAsk.totalIncomingPackets = 1;
 		}
-		if (thisReply.totalIncomingPackets === thisReply.totalReceivedPackets) {
-			thisReply.state = 2;
+		if (thisAsk.totalIncomingPackets === thisAsk.totalReceivedPackets) {
+			thisAsk.state = 2;
 		}
-		if (thisReply.state === 2) {
-			thisReply.assemble();
+		if (thisAsk.state === 2) {
+			thisAsk.assemble();
 		}
 	}
 	assemble() {
-		const thisReply = this;
-		const { transferEncoding } = thisReply;
-		if (thisReply.totalIncomingPackets === 1) {
-			thisReply.request = thisReply.incomingPackets[0];
-			return thisReply.process();
+		const thisAsk = this;
+		const { transferEncoding } = thisAsk;
+		if (thisAsk.totalIncomingPackets === 1) {
+			thisAsk.response = thisAsk.incomingPackets[0];
+			return thisAsk.process();
 		}
-		const packet = thisReply.incomingPackets[0];
-		eachArray(thisReply.incomingPackets, (item) => {
+		const packet = thisAsk.incomingPackets[0];
+		eachArray(thisAsk.incomingPackets, (item) => {
 			if (item.body) {
 				Buffer.concat([packet.body, item.body]);
 			}
 		});
 		if (transferEncoding === 'struct' || !transferEncoding) {
-			msgReceived(thisReply.request);
-			if (thisReply.request.body) {
-				thisReply.request.body = decode(thisReply.request.body);
+			msgReceived(thisAsk.response);
+			if (thisAsk.response.body) {
+				thisAsk.response.body = decode(thisAsk.response.body);
 			}
 		}
-		thisReply.flushOut();
+		thisAsk.flushIn();
 	}
 	async process() {
-		const thisReply = this;
-		const request = thisReply.request;
+		const response = this.response;
 		const {
 			body,
 			sid,
 			evnt,
 			act
-		} = request;
+		} = response;
 		const {
 			events,
 			actions
-		} = thisReply.server();
+		} = this.server();
+		const thisAsk = this;
 		const eventName = act || evnt;
 		const method = (act) ? actions.get(act) : events.get(evnt);
 		if (method) {
 			info(`Request:${eventName} RequestID: ${sid}`);
-			console.log(request);
-			const hasResponse = await method(request, thisReply);
+			console.log(response);
+			const hasRequest = await method(response, this);
 			return;
 		} else {
-			return failed(`Invalid method name given. ${stringify(request)}`);
+			return failed(`Invalid method name given. ${stringify(response)}`);
 		}
 	}
 }
-export function reply(request, client) {
-	const { replyQueue } = client;
-	const { sid } = request;
+export function ask(message, client) {
+	const { askQueue } = client;
+	const { sid } = message;
 	msgReceived(`Stream ID: ${sid}`);
-	if (replyQueue.has(sid)) {
-		msgReceived(`REPLY FOUND: ${sid}`);
-		return replyQueue.get(sid);
+	if (askQueue.has(sid)) {
+		msgReceived(`ASK FOUND: ${sid}`);
+		return askQueue.get(sid);
 	}
-	msgReceived(`CREATE REPLY: ${sid}`, request);
-	return construct(Reply, [request, client]);
+	msgReceived(`CREATE ASK: ${sid}`, message);
+	return construct(Ask, [message, client]);
 }

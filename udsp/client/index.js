@@ -85,20 +85,23 @@ export class Client {
 		const { ephemeral: { signature: profileSignature } } = profile;
 		const {
 			ephemeral: {
-				key: serverPublicKey,
-				signature: serviceSignature
+				key: destinationPublicKey,
+				signature: destinationSignature
 			}
 		} = service;
+		thisClient.destination = {
+			publicKey: destinationPublicKey,
+		};
 		const {
 			publicKey,
 			secretKey: privateKey,
 		} = thisClient.keypair;
-		clientSession(receiveKey, transmitKey, publicKey, privateKey, serverPublicKey);
+		clientSession(receiveKey, transmitKey, publicKey, privateKey, destinationPublicKey);
 		// Can be used to encrypt-authenticate the profile with the server
-		// clientSession(ephemeralProfileReceiveKey, ephemeralProfileTransmitKey, profile.ephemeral.publicKey, profile.ephemeral.secretKey, serverPublicKey);
+		// clientSession(ephemeralProfileReceiveKey, ephemeralProfileTransmitKey, profile.ephemeral.publicKey, profile.ephemeral.secretKey, destinationPublicKey);
 		configure(`Shared Keys Created`);
 		console.log(receiveKey, transmitKey);
-		const serviceKey = toBase64(serviceSignature);
+		const serviceKey = toBase64(destinationSignature);
 		const profileKey = toBase64(profileSignature);
 		// Needs to be more complex if forcing no connection with the same credentials
 		const connectionKey = `${serviceKey}${profileKey}`;

@@ -5,13 +5,13 @@ import {
 	encode,
 	decode
 } from 'msgpackr';
-import { decrypt } from '#crypto';
+import { boxUnseal, decrypt } from '#crypto';
 import { processPacket } from './processPacket.js';
 import { processSocket } from './processSocket.js';
 import { isEmpty } from 'Acid';
 export async function onPacket(packet, connection) {
 	const thisServer = this;
-	msgReceived('Message Received');
+	msgReceived(`Message Received Total packet size: ${packet.length}`);
 	console.log(packet);
 	const packetDecoded = decode(packet);
 	if (isEmpty(packetDecoded)) {
@@ -28,6 +28,17 @@ export async function onPacket(packet, connection) {
 	const headers = decode(headersBuffer);
 	if (!headers) {
 		return failed(`No headers -> Invalid Packet`);
+	}
+	const { profile: { ephemeral } } = thisServer;
+	if (headers.key) {
+		console.log('HEADERS SEALED', headers);
+		console.log(ephemeral);
+		const unsealedKey = boxUnseal(headers.key, ephemeral.key, ephemeral.private);
+		console.log(headers.key, '\n', ephemeral.key, '\n', ephemeral.private);
+		if (!unsealedKey) {
+			return new Error('UNSEALED KEY BROKEN');
+		}
+		headers.key = unsealedKey;
 	}
 	const footer = packetDecoded[2];
 	if (!footer) {

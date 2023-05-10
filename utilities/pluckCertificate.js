@@ -22,6 +22,6 @@ export default function pluckCertificate(certificate, exclude, pluckedValuesArra
 		pluckedValuesArray.push(buffered);
 		pluckedValuesLength += buffered.length;
 	}
-	const pluckedValues = Buffer.concat(pluckedValuesArray, pluckedValuesLength);
+	const pluckedValues = Buffer.concat([pluckedValuesArray, pluckedValuesLength]);
 	return pluckedValues;
 }

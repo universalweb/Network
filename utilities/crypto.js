@@ -29,7 +29,13 @@ const {
 	crypto_sign_PUBLICKEYBYTES,
 	crypto_sign_SECRETKEYBYTES,
 	crypto_sign_verify_detached,
-	randombytes_buf
+	randombytes_buf,
+	crypto_box_seal,
+	crypto_box_SEALBYTES,
+	crypto_box_seal_open,
+	crypto_box_keypair,
+	crypto_box_PUBLICKEYBYTES,
+	crypto_box_SECRETKEYBYTES
 } = sodium.default;
 export function passwordHash(passwd) {
 	const out = Buffer.alloc(crypto_pwhash_STRBYTES);
@@ -42,31 +48,26 @@ export function passwordHashVerify(str, passwd) {
 export function hash(message, amount) {
 	const hashed = Buffer.alloc(amount || crypto_generichash_BYTES);
 	crypto_generichash(hashed, message);
-	console.log(hashed.length);
 	return hashed;
 }
 export function hashMin(message) {
 	const hashed = Buffer.alloc(crypto_generichash_BYTES_MIN);
 	crypto_generichash(hashed, message);
-	console.log(hashed.length);
 	return hashed;
 }
 export function hashShort(message) {
 	const out = Buffer.alloc(crypto_shorthash_BYTES);
 	crypto_shorthash(out, message, Buffer.alloc(crypto_shorthash_KEYBYTES));
-	console.log(out.length);
 	return out;
 }
 export function sign(message, secretKey) {
 	const signedMessage = Buffer.alloc(crypto_sign_BYTES + message.length);
 	crypto_sign(signedMessage, message, secretKey);
-	console.log(signedMessage.length);
 	return signedMessage;
 }
 export function signDetached(message, secretKey) {
 	const signedMessage = Buffer.alloc(crypto_sign_BYTES);
 	crypto_sign_detached(signedMessage, message, secretKey);
-	console.log(signedMessage.length);
 	return signedMessage;
 }
 export function hashSignDetached(message, secretKey, amount) {
@@ -80,16 +81,14 @@ export function hashSignDetachedShort(message, secretKey) {
 }
 export function signOpen(signedMessage, publicKey) {
 	const message = Buffer.alloc(signedMessage.length - crypto_sign_BYTES);
-	crypto_sign_open(message, signedMessage, publicKey);
-	return message;
+	const verify = crypto_sign_open(message, signedMessage, publicKey);
+	return verify && message;
 }
-export function signVerify(signedMessage, publicKey) {
-	const message = Buffer.alloc(signedMessage.length - crypto_sign_BYTES);
-	return crypto_sign_open(message, signedMessage, publicKey);
+export function signVerify(signedMessage, message, publicKey) {
+	return crypto_sign_verify_detached(signedMessage, signedMessage, publicKey);
 }
-export function signVerifyDetached(signedMessage, publicKey) {
-	const message = Buffer.alloc(crypto_sign_BYTES);
-	return crypto_sign_verify_detached(message, signedMessage, publicKey);
+export function signVerifyHash(signedMessage, message, publicKey, amount) {
+	return crypto_sign_verify_detached(signedMessage, hash(message, amount), publicKey);
 }
 export function emptyNonce() {
 	return Buffer.alloc(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
@@ -119,7 +118,6 @@ export function keypair() {
 	const publicKey = Buffer.alloc(crypto_kx_PUBLICKEYBYTES);
 	const secretKey = Buffer.alloc(crypto_kx_SECRETKEYBYTES);
 	crypto_kx_keypair(publicKey, secretKey);
-	console.log(crypto_kx_PUBLICKEYBYTES, crypto_kx_SECRETKEYBYTES);
 	return {
 		publicKey,
 		secretKey
@@ -149,6 +147,16 @@ export function signKeypair() {
 		publicKey,
 		secretKey
 	};
+}
+export function boxSeal(message, publicKey) {
+	const encrypted = Buffer.alloc(message.length + crypto_box_SEALBYTES);
+	crypto_box_seal(encrypted, message, publicKey);
+	return encrypted;
+}
+export function boxUnseal(encrypted, publicKey, secretKey) {
+	const message = Buffer.alloc(encrypted.length - crypto_box_SEALBYTES);
+	const isValid = crypto_box_seal_open(message, encrypted, publicKey, secretKey);
+	return isValid && message;
 }
 export function toBuffer(value) {
 	return Buffer.from(value);
@@ -195,5 +203,8 @@ export {
 	crypto_sign_PUBLICKEYBYTES,
 	crypto_sign_SECRETKEYBYTES,
 	crypto_sign_verify_detached,
-	randombytes_buf
+	randombytes_buf,
+	crypto_box_keypair,
+	crypto_box_PUBLICKEYBYTES,
+	crypto_box_SECRETKEYBYTES
 };

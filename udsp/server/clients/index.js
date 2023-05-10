@@ -18,11 +18,11 @@ export class Client {
 	pending = false;
 	replyQueue = construct(Map);
 	packetIdGenerator = construct(UniqID);
-	constructor(server, connectionInfo, receiveKey, transmitKey, clientId) {
+	constructor(server, connectionInfo, receiveKey, transmitKey, ephemeralKeypair, clientId) {
 		this.server = function() {
 			return server;
 		};
-		return initialize(this, server, connectionInfo, receiveKey, transmitKey, clientId);
+		return initialize(this, server, connectionInfo, receiveKey, transmitKey, ephemeralKeypair, clientId);
 	}
 	async created() {
 		const server = this.server();

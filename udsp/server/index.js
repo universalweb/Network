@@ -49,13 +49,12 @@ export class Server {
 	}
 	async initialize(configuration) {
 		console.log('-------SERVER INITIALIZING-------');
-		this.configuration = seal(assign({}, configuration));
-		console.log(this.configuration);
-		assign(this, this.configuration);
-		this.server = dgram.createSocket(this.ipVersion);
-		// convert some to just using them as modules with arguments instead of bind/this
-		console.log(this.description);
-		this.bindMethods({
+		const thisServer = this;
+		thisServer.configuration = seal(assign({}, configuration));
+		console.log(thisServer.configuration);
+		assign(thisServer, thisServer.configuration);
+		thisServer.server = dgram.createSocket(thisServer.ipVersion);
+		thisServer.bindMethods({
 			on,
 			bindServer,
 			onError,
@@ -66,17 +65,23 @@ export class Server {
 			emit,
 			send
 		});
-		this.bindActions(actions);
+		thisServer.bindActions(actions);
 		if (configuration.profile) {
-			this.profile = await getCertificate(configuration.profile);
+			thisServer.profile = await getCertificate(configuration.profile);
 		}
-		configure(this);
-		this.server.on('error', this.onError);
-		this.server.on('listening', this.onListen);
-		this.server.on('message', this.onPacket);
-		await this.bindServer();
+		configure(thisServer);
+		thisServer.server.on('error', thisServer.onError);
+		thisServer.server.on('listening', thisServer.onListen);
+		thisServer.server.on('message', thisServer.onPacket);
+		await thisServer.bindServer();
+		process.on('beforeExit', (code) => {
+			thisServer.server.close();
+		});
+		process.on('exit', (code) => {
+			thisServer.server.close();
+		});
 		console.log('-------SERVER INITIALIZED-------');
-		return this;
+		return thisServer;
 	}
 	realTime = true;
 	gracePeriod = 30000;

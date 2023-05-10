@@ -8,7 +8,9 @@ export async function send(client, message, options) {
 		port,
 		nonce,
 		transmitKey,
-		clientId: id,		state
+		clientId: id,
+		ephemeralKeypair: destination,
+		state,
 	} = client;
 	const packet = await encodePacket({
 		nonce,
@@ -16,7 +18,8 @@ export async function send(client, message, options) {
 		id,
 		state,
 		message,
-		options
+		options,
+		destination
 	});
 	return this.sendPacket(packet, address, port, nonce, transmitKey, id);
 }

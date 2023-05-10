@@ -10,13 +10,13 @@ import {
 	serverSession,
 	signOpen,
 	hash,
-	signVerify,
+	signVerifyHash,
 	toBase64,
 } from '#crypto';
 import { createClient } from './createClient.js';
 import { processPacketEvent } from './processPacketEvent.js';
-// additionalData (ad) are the main UDSP headers. It may be called headers at times or additionalData.
-export async function processSocket(server, connection, additionalDataBuffer, additionalData, messageBuffer) {
+// headers (ad) are the main UDSP headers. It may be called headers at times or headers.
+export async function processSocket(server, connection, headersBuffer, headers, messageBuffer) {
 	const {
 		profile: {
 			ephemeral: {
@@ -25,9 +25,9 @@ export async function processSocket(server, connection, additionalDataBuffer, ad
 			}
 		},
 	} = server;
-	const ephemeralKeypair = additionalData.key;
-	const clientId = additionalData.id;
-	const nonce = additionalData.nonce;
+	const ephemeralKeypair = headers.key;
+	const clientId = headers.id;
+	const nonce = headers.nonce;
 	success(`Encrypted Message Size: ${messageBuffer.length}`);
 	const sessionKey = serverSession(serverPublicKey, serverPrivateKey, ephemeralKeypair);
 	const receiveKey = sessionKey.receiveKey;
@@ -36,8 +36,8 @@ export async function processSocket(server, connection, additionalDataBuffer, ad
 	info(`transmitKey: ${toBase64(transmitKey)}`);
 	console.log(toBase64(messageBuffer));
 	console.log(toBase64(nonce));
-	console.log(additionalDataBuffer.length);
-	const decrypted = decrypt(messageBuffer, additionalDataBuffer, nonce, receiveKey);
+	console.log(headersBuffer.length);
+	const decrypted = decrypt(messageBuffer, headersBuffer, nonce, receiveKey);
 	if (!decrypted) {
 		return failed(`Decrypt Failed`);
 	}
@@ -62,23 +62,20 @@ export async function processSocket(server, connection, additionalDataBuffer, ad
 		console.log(message);
 		success(`Encrypted Message Signature: ${toBase64(sig)}`);
 		success(`Encrypted Message Signature Size: ${sig.length}`);
-		const isValid = signVerify(sig, idc.key);
-		console.log('SIGNATURE CHECK', isValid);
-		if (!isValid) {
-			return failed(`Signature isn't valid`);
-		}
-		const signatureHash = signOpen(sig, idc.key);
-		if (!signatureHash) {
-			return failed(`Signature open failed`);
-		}
-		const sigCompare = Buffer.compare(signatureHash, hash(ephemeralKeypair)) === 0;
-		if (sigCompare) {
+		const destination = {
+			publicKey: ephemeralKeypair
+		};
+		const sigVerify = signVerifyHash(sig, Buffer.concat([nonce, ephemeralKeypair]), idc.key);
+		console.log('Concat Sig', Buffer.concat([nonce, ephemeralKeypair]));
+		console.log('SIGNature Hash', sig);
+		console.log('Ephemeral Key', ephemeralKeypair);
+		if (sigVerify) {
 			msgReceived(`Signature is valid`);
-			const client = await createClient(server, connection, receiveKey, transmitKey, clientId);
+			const client = await createClient(server, connection, receiveKey, transmitKey, destination, clientId);
 			console.log(client);
 			await processPacketEvent(server, client, message);
 		} else {
-			console.log('SIGNATURE FAILED NO SOCKET CREATED');
+			console.log('SIGNATURE FAILED NO SOCKET CREATED', sigVerify);
 			return;
 		}
 		success(`Socket Count: ${server.socketCount}`);

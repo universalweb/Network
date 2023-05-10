@@ -1,5 +1,5 @@
 import {
-	success, failed, imported, msgSent, info
+	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 import { decode, } from 'msgpackr';
 import { assign, } from 'Acid';
@@ -8,7 +8,8 @@ import {
 	nonceBox,
 	toBase64,
 	hashSign,
-	decrypt
+	decrypt,
+	boxUnseal
 } from '#crypto';
 export async function decodePacket(config) {
 	const {
@@ -17,17 +18,23 @@ export async function decodePacket(config) {
 		options,
 		client,
 		packetEncoded,
+		source
 	} = config;
+	msgReceived(`Packet Size ${packetEncoded.length}`);
 	const packet = decode(packetEncoded);
 	const headers = decode(packet[0]);
 	if (!headers) {
-		return failed(`No headers -> Invalid Packet`);
+		return failed(`No headersEncrypted -> Invalid Packet`);
+	}
+	if (headers.key) {
+		headers.key = boxUnseal(headers.key, source.publicKey, source.secretKey);
 	}
 	const {
-		id, nonce
+		id,
+		nonce
 	} = headers;
 	const footer = packet[2] && decode(packet[2]);
-	const ad = (footer) ? Buffer.concat(packet[0], packet[2]) : packet[0];
+	const ad = (footer) ? Buffer.concat([packet[0], packet[2]]) : packet[0];
 	const encryptedMessage = decrypt(packet[1], ad, nonce, receiveKey);
 	if (!encryptedMessage) {
 		return failed('Encryption failed');

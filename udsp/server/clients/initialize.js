@@ -3,7 +3,7 @@ import { toBase64, emptyNonce, randombytes_buf } from '#crypto';
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-export async function initialize(client, server, connection, receiveKey, transmitKey, clientId) {
+export async function initialize(client, server, connection, receiveKey, transmitKey, ephemeralKeypair, clientId) {
 	const {
 		clients,
 		configuration: { id: serverIdRaw }
@@ -43,6 +43,7 @@ export async function initialize(client, server, connection, receiveKey, transmi
 		Server IDs can be random with some actionable info
 		The client ID can be used as the base of the server ID and then generate the rest to form a unique server specific ID
 	*/
+	client.ephemeralKeypair = ephemeralKeypair;
 	client.id = serverIdString;
 	client.clientIdRaw = clientId;
 	client.serverIdRaw = serverIdBuffer;

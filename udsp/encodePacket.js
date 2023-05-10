@@ -14,7 +14,12 @@ import {
 	encrypt,
 	nonceBox,
 	toBase64,
-	hashSign
+	hashSignDetached,
+	boxSeal,
+	boxUnseal,
+	crypto_box_keypair,
+	crypto_box_PUBLICKEYBYTES,
+	crypto_box_SECRETKEYBYTES
 } from '#crypto';
 export async function encodePacket(data) {
 	const {
@@ -29,7 +34,8 @@ export async function encodePacket(data) {
 		client,
 		keypair,
 		profile,
-		ephemeralPublic
+		ephemeralPublic,
+		destination
 	} = data;
 	const nonce = nonceBox(nonceBuffer);
 	if (id) {
@@ -41,8 +47,9 @@ export async function encodePacket(data) {
 	message.time = Date.now();
 	if (client) {
 		if (state === 0) {
-			headers.key = keypair.publicKey;
-			const profileKeypairSignature = hashSign(headers.key, profile.ephemeral.private);
+			console.log('DESTINATION PUBLIC KEY', destination.publicKey);
+			headers.key = boxSeal(keypair.publicKey, destination.publicKey);
+			const profileKeypairSignature = hashSignDetached(Buffer.concat([nonce, keypair.publicKey]), profile.ephemeral.private);
 			message.sig = profileKeypairSignature;
 			message.idc = ephemeralPublic;
 			console.log(`Sig Size:${message.sig.length}`);
@@ -55,7 +62,7 @@ export async function encodePacket(data) {
 	}
 	const headersEncoded = encode(headers);
 	const messageEncoded = encode(message);
-	const ad = (footer) ? Buffer.concat(headersEncoded, footer) : headersEncoded;
+	const ad = (footer) ? Buffer.concat([headersEncoded, footer]) : headersEncoded;
 	const encryptedMessage = encrypt(messageEncoded, ad, nonce, transmitKey);
 	if (!encryptedMessage) {
 		return failed('Encryption failed');
@@ -69,7 +76,7 @@ export async function encodePacket(data) {
 	info(`Transmit Key ${toBase64(transmitKey)}`);
 	info(`Nonce Size: ${headers.nonce.length} ${toBase64(headers.nonce)}`);
 	const packetSize = packet.length;
-	success(`Packet Size ${packetSize}`);
+	msgSent(`Packet Size ${packetSize}`);
 	if (packetSize >= 1280) {
 		console.log(packet);
 		failed(`WARNING: Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
