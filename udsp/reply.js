@@ -43,20 +43,23 @@ export class Reply {
 	// Outgoing
 	outgoingPayload = {};
 	outgoingPackets = [];
+	outgoingAcks = [];
+	outgoingNacks = [];
 	outgoingChunks = [];
 	totalOutgoingPackets = 0;
 	totalOutgoingPayloadSize = 0;
 	/*
 		0 Created
 		1 Receiving
-		2 Completed
+		2 Received
 		3 Sending
 		4 Sent
 		5 Acknowledged
+		6 Completed
 	*/
 	state = 0;
 	// Flush Ask Body to Free Memory
-	flushAsk() {
+	flushIn() {
 		this.incomingPayload = {};
 		this.incomingPackets = [];
 		this.incomingChunks = [];
@@ -64,7 +67,7 @@ export class Reply {
 		this.totalIncomingPayloadSize = 0;
 	}
 	// Flush Reply Body to Free Memory
-	flushReply() {
+	flushOut() {
 		this.outgoingPayload = {};
 		this.outgoingPackets = [];
 		this.outgoingChunks = [];
@@ -73,7 +76,7 @@ export class Reply {
 	}
 	// Flush all body
 	flush() {
-		this.flushReply();
+		this.flushOut();
 		this.flushAsk();
 	}
 	// Flush All body and remove this reply from the map
@@ -164,7 +167,8 @@ export class Reply {
 			te,
 			cmplt,
 			finale,
-			ack
+			ack,
+			nack
 		} = message;
 		if (cmplt) {
 			return thisReply.destroy();
@@ -211,9 +215,11 @@ export class Reply {
 				thisReply.message.body = decode(thisReply.message.body);
 			}
 		}
+		thisReply.flushOut();
 	}
 	async process() {
-		const message = this.message;
+		const thisReply = this;
+		const message = thisReply.message;
 		const {
 			body,
 			sid,
@@ -223,21 +229,20 @@ export class Reply {
 		const {
 			events,
 			actions
-		} = this.server();
-		const reply = this;
+		} = thisReply.server();
 		const eventName = act || evnt;
 		const method = (act) ? actions.get(act) : events.get(evnt);
 		if (method) {
 			info(`Request:${eventName} RequestID: ${sid}`);
 			console.log(message);
-			const hasResponse = await method(message, this);
+			const hasResponse = await method(message, thisReply);
 			return;
 		} else {
 			return failed(`Invalid method name given. ${stringify(message)}`);
 		}
 	}
 }
-export function createReply(message, client) {
+export function reply(message, client) {
 	const { replyQueue } = client;
 	const { sid } = message;
 	msgReceived(`Stream ID: ${sid}`);

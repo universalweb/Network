@@ -23,7 +23,7 @@ export async function file(message, reply) {
 	}
 	console.log(cleanedPath);
 	const data = await read(cleanedPath);
-	const ext = path.extname(cleanedPath);
+	const ext = path.extname(cleanedPath).replace('.', '');
 	console.log(`EXT => ${ext}`);
 	response.ext = ext;
 	response.body = data;

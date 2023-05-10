@@ -9,11 +9,6 @@ import { decrypt } from '#crypto';
 import { processPacket } from './processPacket.js';
 import { processSocket } from './processSocket.js';
 import { isEmpty } from 'Acid';
-/**
-	* @todo Do not encode head only body.
-	* @todo Move SID and others to head.
-	* @todo Move priority info to head.
- */
 export async function onPacket(packet, connection) {
 	const thisServer = this;
 	msgReceived('Message Received');

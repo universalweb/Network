@@ -6,7 +6,7 @@ import {
 import {
 	success, failed, imported, msgSent, msgReceived, info
 } from '#logs';
-import { Reply, createReply } from '#udsp/reply';
+import { reply } from '#udsp/reply';
 imported('ON PUBLIC MESSAGE');
 export async function processPacketEvent(server, client, message) {
 	const {
@@ -28,5 +28,5 @@ export async function processPacketEvent(server, client, message) {
 	} else {
 		msgReceived(`Event (Higher level application event) received ${evnt}`);
 	}
-	createReply(message, client);
+	reply(message, client);
 }
