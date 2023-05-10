@@ -153,7 +153,13 @@ export class Ask {
 			server.send(client, packet);
 		});
 	}
-	received(message) {
+	ack(packet) {
+		msgReceived('ACK', packet);
+	}
+	nack(packet) {
+		msgReceived('NACK', packet);
+	}
+	received(packet) {
 		const thisAsk = this;
 		const {
 			body,
@@ -167,7 +173,7 @@ export class Ask {
 			finale,
 			ack,
 			nack
-		} = message;
+		} = packet;
 		if (cmplt) {
 			return thisAsk.destroy();
 		}
@@ -179,11 +185,11 @@ export class Ask {
 		}
 		if (pid) {
 			if (!thisAsk.incomingPackets[pid]) {
-				thisAsk.incomingPackets[pid] = message;
+				thisAsk.incomingPackets[pid] = packet;
 				thisAsk.totalReceivedPackets++;
 			}
 		} else {
-			thisAsk.incomingPackets[0] = message;
+			thisAsk.incomingPackets[0] = packet;
 			thisAsk.totalReceivedPackets = 1;
 			thisAsk.totalIncomingPackets = 1;
 		}
@@ -198,7 +204,7 @@ export class Ask {
 		const thisAsk = this;
 		const { transferEncoding } = thisAsk;
 		if (thisAsk.totalIncomingPackets === 1) {
-			thisAsk.message = thisAsk.incomingPackets[0];
+			thisAsk.response = thisAsk.incomingPackets[0];
 			return thisAsk.process();
 		}
 		const packet = thisAsk.incomingPackets[0];
@@ -208,21 +214,21 @@ export class Ask {
 			}
 		});
 		if (transferEncoding === 'struct' || !transferEncoding) {
-			msgReceived(thisAsk.message);
-			if (thisAsk.message.body) {
-				thisAsk.message.body = decode(thisAsk.message.body);
+			msgReceived(thisAsk.response);
+			if (thisAsk.response.body) {
+				thisAsk.response.body = decode(thisAsk.response.body);
 			}
 		}
 		thisAsk.flushIn();
 	}
 	async process() {
-		const message = this.message;
+		const response = this.response;
 		const {
 			body,
 			sid,
 			evnt,
 			act
-		} = message;
+		} = response;
 		const {
 			events,
 			actions
@@ -232,11 +238,11 @@ export class Ask {
 		const method = (act) ? actions.get(act) : events.get(evnt);
 		if (method) {
 			info(`Request:${eventName} RequestID: ${sid}`);
-			console.log(message);
-			const hasRequest = await method(message, this);
+			console.log(response);
+			const hasRequest = await method(response, this);
 			return;
 		} else {
-			return failed(`Invalid method name given. ${stringify(message)}`);
+			return failed(`Invalid method name given. ${stringify(response)}`);
 		}
 	}
 }

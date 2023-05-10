@@ -9,7 +9,7 @@ import {
 const chunkSize = 700;
 const transferEncodingTypesChunked = /stream|file|image|string/;
 export class Reply {
-	constructor(message, client) {
+	constructor(packet, client) {
 		const thisReply = this;
 		const {
 			replyQueue,
@@ -24,15 +24,15 @@ export class Reply {
 		thisReply.server = function() {
 			return server;
 		};
-		const { sid } = message;
+		const { sid } = packet;
 		thisReply.sid = sid;
 		thisReply.response.sid = sid;
 		replyQueue.set(sid, thisReply);
-		thisReply.received(message);
+		thisReply.received(packet);
 		return thisReply;
 	}
 	// Incoming
-	message = {};
+	request = {};
 	response = {};
 	incomingPackets = [];
 	incomingChunks = [];
@@ -85,12 +85,12 @@ export class Reply {
 		this.server().replyQueue.delete(this.sid);
 	}
 	// Raw Send Packet
-	sendPacket(message, serverArg, client) {
+	sendPacket(request, serverArg, client) {
 		if (serverArg) {
-			return serverArg.send(client, message);
+			return serverArg.send(client, request);
 		}
 		const server = this.server();
-		server.send(server.client(), message);
+		server.send(server.client(), request);
 	}
 	chunk(body) {
 		const chunks = [];
@@ -155,7 +155,7 @@ export class Reply {
 			server.send(client, packet);
 		});
 	}
-	received(message) {
+	received(packet) {
 		const thisReply = this;
 		const {
 			body,
@@ -169,7 +169,7 @@ export class Reply {
 			finale,
 			ack,
 			nack
-		} = message;
+		} = packet;
 		if (cmplt) {
 			return thisReply.destroy();
 		}
@@ -181,11 +181,11 @@ export class Reply {
 		}
 		if (pid) {
 			if (!thisReply.incomingPackets[pid]) {
-				thisReply.incomingPackets[pid] = message;
+				thisReply.incomingPackets[pid] = packet;
 				thisReply.totalReceivedPackets++;
 			}
 		} else {
-			thisReply.incomingPackets[0] = message;
+			thisReply.incomingPackets[0] = packet;
 			thisReply.totalReceivedPackets = 1;
 			thisReply.totalIncomingPackets = 1;
 		}
@@ -200,7 +200,7 @@ export class Reply {
 		const thisReply = this;
 		const { transferEncoding } = thisReply;
 		if (thisReply.totalIncomingPackets === 1) {
-			thisReply.message = thisReply.incomingPackets[0];
+			thisReply.request = thisReply.incomingPackets[0];
 			return thisReply.process();
 		}
 		const packet = thisReply.incomingPackets[0];
@@ -210,22 +210,22 @@ export class Reply {
 			}
 		});
 		if (transferEncoding === 'struct' || !transferEncoding) {
-			msgReceived(thisReply.message);
-			if (thisReply.message.body) {
-				thisReply.message.body = decode(thisReply.message.body);
+			msgReceived(thisReply.request);
+			if (thisReply.request.body) {
+				thisReply.request.body = decode(thisReply.request.body);
 			}
 		}
 		thisReply.flushOut();
 	}
 	async process() {
 		const thisReply = this;
-		const message = thisReply.message;
+		const request = thisReply.request;
 		const {
 			body,
 			sid,
 			evnt,
 			act
-		} = message;
+		} = request;
 		const {
 			events,
 			actions
@@ -234,22 +234,22 @@ export class Reply {
 		const method = (act) ? actions.get(act) : events.get(evnt);
 		if (method) {
 			info(`Request:${eventName} RequestID: ${sid}`);
-			console.log(message);
-			const hasResponse = await method(message, thisReply);
+			console.log(request);
+			const hasResponse = await method(request, thisReply);
 			return;
 		} else {
-			return failed(`Invalid method name given. ${stringify(message)}`);
+			return failed(`Invalid method name given. ${stringify(request)}`);
 		}
 	}
 }
-export function reply(message, client) {
+export function reply(request, client) {
 	const { replyQueue } = client;
-	const { sid } = message;
+	const { sid } = request;
 	msgReceived(`Stream ID: ${sid}`);
 	if (replyQueue.has(sid)) {
 		msgReceived(`REPLY FOUND: ${sid}`);
 		return replyQueue.get(sid);
 	}
-	msgReceived(`CREATE REPLY: ${sid}`, message);
-	return construct(Reply, [message, client]);
+	msgReceived(`CREATE REPLY: ${sid}`, request);
+	return construct(Reply, [request, client]);
 }
