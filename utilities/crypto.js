@@ -130,10 +130,10 @@ export function createSessionKey() {
 	const sessionKey = Buffer.alloc(crypto_kx_SESSIONKEYBYTES);
 	return sessionKey;
 }
-export function serverSession(serverPublicKey, serverSecretKey, clientPublicKey) {
+export function sessionKeys(sourcePublicKey, sourceSecretKey, targetPublicKey) {
 	const receiveKey = createSessionKey();
 	const transmitKey = createSessionKey();
-	crypto_kx_server_session_keys(receiveKey, transmitKey, serverPublicKey, serverSecretKey, clientPublicKey);
+	crypto_kx_server_session_keys(receiveKey, transmitKey, sourcePublicKey, sourceSecretKey, targetPublicKey);
 	return {
 		transmitKey,
 		receiveKey

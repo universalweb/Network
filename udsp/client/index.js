@@ -21,7 +21,7 @@ import dgram from 'dgram';
 // Default utility imports
 import { success, configure, info } from '#logs';
 import {
-	createSessionKey, clientSession, createClientId, keypair, toBase64, emptyNonce
+	createSessionKey, clientSession, createClientId, keypair, toBase64, emptyNonce, sessionKeys
 } from '#crypto';
 import { pluckBuffer } from '#pluckBuffer';
 import { getCertificate } from '#certificate';
@@ -110,6 +110,20 @@ export class Client {
 		thisClient.server.on('message', thisClient.onMessage.bind(thisClient));
 		thisClient.server.on('listening', thisClient.onListening);
 		return this;
+	}
+	reKey(targetPublicKey) {
+		const thisClient = this;
+		const {
+			publicKey,
+			secretKey
+		} = thisClient.keypair;
+		thisClient.destination.publicKey = targetPublicKey;
+		const newSessionKeys = sessionKeys(publicKey, secretKey, targetPublicKey);
+		thisClient.ephemeralKeypair = thisClient.reKey;
+		thisClient.transmitKey = newSessionKeys.transmitKey;
+		thisClient.receiveKey = newSessionKeys.receiveKey;
+		thisClient.lastReKey = Date.now();
+		success(`client reKeyed -> ID: ${thisClient.connectionKey}`);
 	}
 	nonce = emptyNonce();
 	maxMTU = 1000;

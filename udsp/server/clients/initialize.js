@@ -1,5 +1,7 @@
 import { created } from './created.js';
-import { toBase64, emptyNonce, randombytes_buf } from '#crypto';
+import {
+	toBase64, emptyNonce, randombytes_buf, keypair
+} from '#crypto';
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';

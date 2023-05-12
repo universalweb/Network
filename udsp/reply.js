@@ -1,5 +1,5 @@
 import {
-	isEmpty, promise, eachArray, assign, construct, stringify, hasValue, get
+	isEmpty, promise, eachArray, assign, construct, stringify, hasValue, get, objectSize
 } from 'Acid';
 import { processPacketEvent } from './server/processPacketEvent.js';
 import { decode, encode } from 'msgpackr';
@@ -31,6 +31,8 @@ export class Reply {
 		thisReply.received(packet);
 		return thisReply;
 	}
+	headers = {};
+	options = {};
 	// Incoming
 	request = {};
 	response = {};
@@ -85,12 +87,17 @@ export class Reply {
 		this.server().replyQueue.delete(this.sid);
 	}
 	// Raw Send Packet
-	sendPacket(request, serverArg, client) {
-		if (serverArg) {
-			return serverArg.send(client, request);
+	sendPacket(request, server, client) {
+		const options = this.options;
+		const headers = this.headers;
+		if (this.options) {
+			console.log(`Sending msg with options var`, options, `this.options`, this.options);
 		}
-		const server = this.server();
-		server.send(server.client(), request);
+		if (this.headers) {
+			console.log(`Sending msg with headers var`, headers, `this.headers`, this.headers);
+		}
+		console.log('Handover to Server Reply Packet to Send', request, headers, options);
+		server.send(client, request, headers, options);
 	}
 	chunk(body) {
 		const chunks = [];
@@ -143,7 +150,7 @@ export class Reply {
 		const server = this.server();
 		const client = this.client();
 		eachArray(packetIDs, (id) => {
-			server.send(client, thisReply.outgoingPackets[id]);
+			thisReply.sendPacket(thisReply.outgoingPackets[id], server, client);
 		});
 	}
 	replyAll() {
@@ -152,7 +159,7 @@ export class Reply {
 		const client = this.client();
 		console.log('Reply.replyAll', thisReply.outgoingPackets);
 		eachArray(thisReply.outgoingPackets, (packet) => {
-			server.send(client, packet);
+			thisReply.sendPacket(packet, server, client);
 		});
 	}
 	received(packet) {

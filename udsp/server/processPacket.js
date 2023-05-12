@@ -19,6 +19,9 @@ export async function processPacket(server, connection, headersBuffer, headers, 
 		return false;
 	}
 	const nonce = headers.nonce;
+	if (headers.reKeyed) {
+		client.reKey();
+	}
 	const decrypted = decrypt(packet, headersBuffer, nonce, client.receiveKey);
 	if (!decrypted) {
 		return failed(`Decrypt Failed`);

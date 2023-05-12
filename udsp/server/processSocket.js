@@ -6,12 +6,7 @@ import {
 	decode
 } from 'msgpackr';
 import {
-	decrypt,
-	serverSession,
-	signOpen,
-	hash,
-	signVerifyHash,
-	toBase64,
+	decrypt, sessionKeys, signOpen, hash, signVerifyHash, toBase64, boxUnseal
 } from '#crypto';
 import { createClient } from './createClient.js';
 import { processPacketEvent } from './processPacketEvent.js';
@@ -25,11 +20,21 @@ export async function processSocket(server, connection, headersBuffer, headers, 
 			}
 		},
 	} = server;
+	if (headers.key) {
+		console.log('HEADERS SEALED', headers);
+		console.log(serverPublicKey);
+		const unsealedKey = boxUnseal(headers.key, serverPublicKey, serverPrivateKey);
+		console.log(headers.key, '\n', serverPublicKey, '\n', serverPrivateKey);
+		if (!unsealedKey) {
+			return new Error('UNSEALED KEY BROKEN');
+		}
+		headers.key = unsealedKey;
+	}
 	const ephemeralKeypair = headers.key;
 	const clientId = headers.id;
 	const nonce = headers.nonce;
 	success(`Encrypted Message Size: ${messageBuffer.length}`);
-	const sessionKey = serverSession(serverPublicKey, serverPrivateKey, ephemeralKeypair);
+	const sessionKey = sessionKeys(serverPublicKey, serverPrivateKey, ephemeralKeypair);
 	const receiveKey = sessionKey.receiveKey;
 	const transmitKey = sessionKey.transmitKey;
 	info(`receiveKey: ${toBase64(receiveKey)}`);

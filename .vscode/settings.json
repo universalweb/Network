@@ -72,5 +72,8 @@
             "addWords": true,
             "scope": "workspace"
         }
-    }
+    },
+    "docwriter.style": "JSDoc",
+    "diffEditor.codeLens": true,
+    "MutableAI.upsell": false
 }

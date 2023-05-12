@@ -12,6 +12,7 @@ import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 import { UniqID, construct } from 'Acid';
+import { sessionKeys, keypair } from '#crypto';
 export class Client {
 	descriptor = 'client';
 	client = true;
@@ -44,9 +45,10 @@ export class Client {
 		await connection(this, connectionInfo, server);
 		info(`socket EVENT -> connection - ID:${this.id}`);
 	}
-	async reKey(clientKeypair) {
+	async reKey() {
 		const server = this.server();
-		await reKey(this, clientKeypair, server);
+		const newKeypair = keypair();
+		this.newKeys = newKeypair;
 		info(`socket EVENT -> reKey - ID:${this.id}`);
 	}
 	async send(message, frameHeaders) {

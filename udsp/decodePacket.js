@@ -26,9 +26,6 @@ export async function decodePacket(config) {
 	if (!headers) {
 		return failed(`No headersEncrypted -> Invalid Packet`);
 	}
-	if (headers.key) {
-		headers.key = boxUnseal(headers.key, source.publicKey, source.secretKey);
-	}
 	const {
 		id,
 		nonce
@@ -46,7 +43,7 @@ export async function decodePacket(config) {
 	if (message.body) {
 		success('body PAYLOAD', message.body.length);
 	}
-	info('Raw Message', message);
+	info('Raw Message', headers, message);
 	info(`clientId: ${headers.id}`);
 	info(`Transmit Key ${toBase64(receiveKey)}`);
 	info(`Nonce Size: ${headers.nonce.length} ${toBase64(headers.nonce)}`);

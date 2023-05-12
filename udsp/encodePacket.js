@@ -35,7 +35,8 @@ export async function encodePacket(data) {
 		keypair,
 		profile,
 		ephemeralPublic,
-		destination
+		destination,
+		destinationPublicKey
 	} = data;
 	const nonce = nonceBox(nonceBuffer);
 	if (id) {
@@ -71,7 +72,7 @@ export async function encodePacket(data) {
 	if (footer) {
 		packet[2] = encode(footer);
 	}
-	info('Raw Message', message);
+	info('Raw Message', headers, message);
 	info(`clientId: ${headers.id}`);
 	info(`Transmit Key ${toBase64(transmitKey)}`);
 	info(`Nonce Size: ${headers.nonce.length} ${toBase64(headers.nonce)}`);

@@ -1,4 +1,5 @@
 import { info } from '#logs';
+import { keypair, boxSeal } from '#crypto';
 export async function opn(message, reply) {
 	const {
 		resourceDirectory,
@@ -15,6 +16,7 @@ export async function opn(message, reply) {
 	info(`Client ID${client.id}`, `Stream ID${response.sid}`);
 	response.head = {};
 	response.body = {};
+	client.newKey = true;
 	if (cacheMaxAge) {
 		response.head.cacheMaxAge = cacheMaxAge;
 	}
@@ -40,5 +42,7 @@ export async function opn(message, reply) {
 	response.state = 1;
 	// Server connection id
 	response.scid = client.serverIdRaw;
+	client.reKey = keypair();
+	response.body.reKey = boxSeal(client.reKey.publicKey, client.ephemeralKeypair.publicKey);
 	reply.send('struct');
 }

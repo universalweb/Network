@@ -1,4 +1,5 @@
 import { connected } from '#logs';
+import { decode } from 'msgpackr';
 export async function connect(payload = {}) {
 	console.log('-------CLIENT CONNECTING-------\n');
 	const thisClient = this;
@@ -18,6 +19,11 @@ export async function connect(payload = {}) {
 		thisClient.serverId = scid;
 		thisClient.lastPacketTime = Date.now();
 		thisClient.lastPacketGivenTime = time;
+		const bodyDecoded = decode(body);
+		console.log(bodyDecoded);
+		if (bodyDecoded.reKey) {
+			// thisClient.reKey(bodyDecoded.reKey);
+		}
 	}
 	console.log('-------CLIENT CONNECTED-------\n');
 	return result;

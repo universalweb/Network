@@ -29,17 +29,6 @@ export async function onPacket(packet, connection) {
 	if (!headers) {
 		return failed(`No headers -> Invalid Packet`);
 	}
-	const { profile: { ephemeral } } = thisServer;
-	if (headers.key) {
-		console.log('HEADERS SEALED', headers);
-		console.log(ephemeral);
-		const unsealedKey = boxUnseal(headers.key, ephemeral.key, ephemeral.private);
-		console.log(headers.key, '\n', ephemeral.key, '\n', ephemeral.private);
-		if (!unsealedKey) {
-			return new Error('UNSEALED KEY BROKEN');
-		}
-		headers.key = unsealedKey;
-	}
 	const footer = packetDecoded[2];
 	if (!footer) {
 		info(`No footer`);
