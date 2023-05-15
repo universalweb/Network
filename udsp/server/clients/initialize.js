@@ -1,11 +1,54 @@
 import { created } from './created.js';
 import {
-	toBase64, emptyNonce, randombytes_buf, keypair
+	toBase64, emptyNonce, randombytes_buf, keypair, signVerifyHash, decrypt, sessionKeys
 } from '#crypto';
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-export async function initialize(client, server, connection, receiveKey, transmitKey, ephemeralKeypair, clientId) {
+import { construct } from 'Acid';
+import { Client } from './index.js';
+export async function initialize(config) {
+	const {
+		client,
+		packet,
+		server,
+		connection
+	} = config;
+	const {
+		profile: {
+			ephemeral: {
+				private: serverPrivateKey,
+				key: serverPublicKey
+			}
+		},
+	} = server;
+	const ephemeralKeypair = packet.key;
+	const clientId = packet.id;
+	const nonce = packet.nonce;
+	success(`Encrypted Message Size: ${packet.length}`);
+	const sessionKey = sessionKeys(serverPublicKey, serverPrivateKey, ephemeralKeypair);
+	const receiveKey = sessionKey.receiveKey;
+	const transmitKey = sessionKey.transmitKey;
+	info(`receiveKey: ${toBase64(receiveKey)}`);
+	info(`transmitKey: ${toBase64(transmitKey)}`);
+	console.log(toBase64(packet));
+	console.log(toBase64(nonce));
+	const idc = packet.message.idc;
+	const sig = packet.message.sig;
+	if (!idc) {
+		return failed('No Identity Provided', connection);
+	}
+	if (!sig) {
+		return failed('No Sig Provided', connection);
+	}
+	success(`Decrypted`);
+	const destination = {
+		publicKey: ephemeralKeypair
+	};
+	const sigVerify = signVerifyHash(sig, Buffer.concat([nonce, ephemeralKeypair]), idc.key);
+	console.log('Concat Sig', Buffer.concat([nonce, ephemeralKeypair]));
+	console.log('SIGNature Hash', sig);
+	console.log('Ephemeral Key', ephemeralKeypair);
 	const {
 		clients,
 		configuration: { id: serverIdRaw }
@@ -71,3 +114,4 @@ export async function initialize(client, server, connection, receiveKey, transmi
 	await client.created();
 	return client;
 }
+

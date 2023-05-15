@@ -12,7 +12,7 @@ import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 import { UniqID, construct } from 'Acid';
-import { sessionKeys, keypair } from '#crypto';
+import { sessionKeys, keypair, toBase64 } from '#crypto';
 export class Client {
 	descriptor = 'client';
 	client = true;
@@ -71,4 +71,10 @@ export class Client {
 		await destroy(this, destroyCode, server);
 		info(`socket EVENT -> destroy - ID:${this.id}`);
 	}
+}
+export async function createClient(server, connectionInfo, receiveKey, transmitKey, ephemeralKeypair, clientId) {
+	console.log('Creating Client Object', toBase64(clientId));
+	const client = await construct(Client, [server, connectionInfo, receiveKey, transmitKey, ephemeralKeypair, clientId]);
+	console.log('Client has been created', toBase64(clientId));
+	return client;
 }

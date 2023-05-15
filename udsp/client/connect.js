@@ -28,3 +28,9 @@ export async function connect(payload = {}) {
 	console.log('-------CLIENT CONNECTED-------\n');
 	return result;
 }
+// const [headers] = packet;
+// if (headers?.key) {
+// 	msgReceived(`New PublicKey received ${headers.key.length}`);
+// 	this.destination.publicKey = headers.key;
+// 	reKey(this.transmitKey, this.receiveKey, keypair.publicKey, keypair.privateKey, headers.key);
+// }

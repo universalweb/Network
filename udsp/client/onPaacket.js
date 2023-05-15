@@ -18,12 +18,6 @@ export async function onMessage(packetEncoded) {
 		nonce,
 		packetEncoded
 	});
-	const [headers] = packet;
-	if (headers?.key) {
-		msgReceived(`New PublicKey received ${headers.key.length}`);
-		this.destination.publicKey = headers.key;
-		reKey(this.transmitKey, this.receiveKey, keypair.publicKey, keypair.privateKey, headers.key);
-	}
 	this.processMessage(packet);
 }
 

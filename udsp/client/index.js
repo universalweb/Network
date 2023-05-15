@@ -31,7 +31,7 @@ import { send } from './send.js';
 import { emit } from './emit.js';
 import { request } from '#udsp/request';
 import { processMessage } from './processMessage.js';
-import { onMessage } from './onMessage.js';
+import { onMessage } from './onPaacket.js';
 import { connect } from './connect.js';
 import { onListening } from './listening.js';
 import { currentPath } from '#directory';

@@ -31,6 +31,8 @@ export class Ask {
 	to keep track of the state of the request, where `0` represents an unsent request, `1` represents a
 	request that is currently being sent, and `2` represents a completed request. */
 	state = 0;
+	recieve() {
+	}
 	callback(response, headers) {
 		this.accept({
 			response,

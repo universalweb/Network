@@ -22,15 +22,22 @@ export async function decodePacket(config) {
 	} = config;
 	msgReceived(`Packet Size ${packetEncoded.length}`);
 	const packet = decode(packetEncoded);
-	const headers = decode(packet[0]);
+	const headersEncoded = packet[0];
+	if (!headersEncoded) {
+		return failed(`No headers -> Invalid Packet`);
+	}
+	const headers = decode(headersEncoded);
 	if (!headers) {
-		return failed(`No headersEncrypted -> Invalid Packet`);
+		return failed(`No headers -> Invalid Packet`);
 	}
 	const {
 		id,
 		nonce
 	} = headers;
 	const footer = packet[2] && decode(packet[2]);
+	if (packet[2] && !footer) {
+		return failed(`Footer failed to decode -> Invalid Packet`);
+	}
 	const ad = (footer) ? Buffer.concat([packet[0], packet[2]]) : packet[0];
 	const encryptedMessage = decrypt(packet[1], ad, nonce, receiveKey);
 	if (!encryptedMessage) {
@@ -53,5 +60,9 @@ export async function decodePacket(config) {
 		console.log(packet);
 		failed(`WARNING: Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
 	}
-	return [headers, message, footer];
+	return {
+		headers,
+		message,
+		footer
+	};
 }
