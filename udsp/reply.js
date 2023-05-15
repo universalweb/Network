@@ -250,6 +250,25 @@ export class Reply {
 	}
 }
 export function reply(request, client) {
+		const {
+		events,
+		actions
+	} = server;
+	const {
+		body,
+		sid,
+		evnt,
+		act
+	} = message;
+	if (!evnt && !act) {
+		return failed(`Invalid no EVNT (evnt) or Action (act) name given. ${stringify(message)}`);
+	} else if (evnt && act) {
+		msgReceived(`Action & Event received ${act} & ${evnt}`);
+	} else if (act) {
+		msgReceived(`Action (Lower level event protocol action) received ${act}`);
+	} else {
+		msgReceived(`Event (Higher level application event) received ${evnt}`);
+	}
 	const { replyQueue } = client;
 	const { sid } = request;
 	msgReceived(`Stream ID: ${sid}`);

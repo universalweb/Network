@@ -11,15 +11,20 @@ import {
 	decrypt,
 	boxUnseal
 } from '#crypto';
+import { createClient } from './server/clients/index.js';
 export async function decodePacket(config) {
 	const {
 		receiveKey,
 		state,
 		options,
-		client,
+		isClient,
 		packetEncoded,
-		source
+		source,
+		server,
+		isServer,
+		connection
 	} = config;
+	const target = {};
 	msgReceived(`Packet Size ${packetEncoded.length}`);
 	const packet = decode(packetEncoded);
 	const headersEncoded = packet[0];
@@ -32,8 +37,18 @@ export async function decodePacket(config) {
 	}
 	const {
 		id,
-		nonce
+		nonce,
+		key
 	} = headers;
+	if (isServer) {
+		const { clients } = server;
+		target.client = clients.get(toBase64(id));
+		if (key) {
+			msgReceived(`Signature is valid`);
+			target.client = await createClient(server, connection);
+			console.log('CLIENT CREATED', target.client);
+		}
+	}
 	const footer = packet[2] && decode(packet[2]);
 	if (packet[2] && !footer) {
 		return failed(`Footer failed to decode -> Invalid Packet`);
@@ -60,9 +75,8 @@ export async function decodePacket(config) {
 		console.log(packet);
 		failed(`WARNING: Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
 	}
-	return {
-		headers,
-		message,
-		footer
-	};
+	target.headers = headers;
+	target.message = message;
+	target.footer = footer;
+	return target;
 }
