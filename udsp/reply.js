@@ -250,18 +250,18 @@ export class Reply {
 	}
 }
 export function reply(request, client) {
-		const {
+	const {
 		events,
 		actions
-	} = server;
+	} = request.server;
 	const {
 		body,
 		sid,
 		evnt,
 		act
-	} = message;
+	} = request.message;
 	if (!evnt && !act) {
-		return failed(`Invalid no EVNT (evnt) or Action (act) name given. ${stringify(message)}`);
+		return failed(`Invalid no EVNT (evnt) or Action (act) name given. ${stringify(request.message)}`);
 	} else if (evnt && act) {
 		msgReceived(`Action & Event received ${act} & ${evnt}`);
 	} else if (act) {
@@ -270,7 +270,6 @@ export function reply(request, client) {
 		msgReceived(`Event (Higher level application event) received ${evnt}`);
 	}
 	const { replyQueue } = client;
-	const { sid } = request;
 	msgReceived(`Stream ID: ${sid}`);
 	if (replyQueue.has(sid)) {
 		msgReceived(`REPLY FOUND: ${sid}`);
