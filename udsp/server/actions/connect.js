@@ -43,6 +43,6 @@ export async function opn(message, reply) {
 	// Server connection id
 	response.scid = client.serverIdRaw;
 	client.reKey = keypair();
-	response.body.reKey = boxSeal(client.reKey.publicKey, client.ephemeralKeypair.publicKey);
+	response.body.reKey = boxSeal(client.reKey.publicKey, client.publicKey);
 	reply.send('struct');
 }

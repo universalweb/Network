@@ -1,5 +1,4 @@
 import { connected } from './connected.js';
-import { connection } from './connection.js';
 import { initialize } from './initialize.js';
 import { created } from './created.js';
 import { destroy } from './destroy.js';
@@ -19,11 +18,13 @@ export class Client {
 	pending = false;
 	replyQueue = construct(Map);
 	packetIdGenerator = construct(UniqID);
-	constructor(server, connectionInfo, receiveKey, transmitKey, ephemeralKeypair, clientId) {
+	constructor(config) {
+		const { server } = config;
 		this.server = function() {
 			return server;
 		};
-		return initialize(this, server, connectionInfo, receiveKey, transmitKey, ephemeralKeypair, clientId);
+		config.client = this;
+		return initialize(config);
 	}
 	async created() {
 		const server = this.server();
@@ -39,11 +40,6 @@ export class Client {
 		const server = this.server();
 		await state(this);
 		info(`socket EVENT -> statusUpdate - ID:${this.id}`);
-	}
-	async connection(connectionInfo) {
-		const server = this.server();
-		await connection(this, connectionInfo, server);
-		info(`socket EVENT -> connection - ID:${this.id}`);
 	}
 	async reKey() {
 		const server = this.server();
@@ -72,9 +68,10 @@ export class Client {
 		info(`socket EVENT -> destroy - ID:${this.id}`);
 	}
 }
-export async function createClient(server, connectionInfo, receiveKey, transmitKey, ephemeralKeypair, clientId) {
-	console.log('Creating Client Object', toBase64(clientId));
-	const client = await construct(Client, [server, connectionInfo, receiveKey, transmitKey, ephemeralKeypair, clientId]);
-	console.log('Client has been created', toBase64(clientId));
+export async function createClient(config) {
+	const { id } = config;
+	console.log('Creating Client Object', toBase64(id));
+	const client = await construct(Client, [config]);
+	console.log('Client has been created', toBase64(id));
 	return client;
 }

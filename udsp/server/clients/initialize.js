@@ -5,14 +5,16 @@ import {
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-import { construct } from 'Acid';
+import { construct, keys } from 'Acid';
 import { Client } from './index.js';
 export async function initialize(config) {
 	const {
 		client,
 		packet,
 		server,
-		connection
+		connection,
+		receiveKey,
+		transmitKey
 	} = config;
 	const {
 		profile: {
@@ -22,17 +24,15 @@ export async function initialize(config) {
 			}
 		},
 	} = server;
-	const ephemeralKeypair = packet.key;
-	const clientId = packet.id;
-	const nonce = packet.nonce;
-	success(`Encrypted Message Size: ${packet.length}`);
-	const sessionKey = sessionKeys(serverPublicKey, serverPrivateKey, ephemeralKeypair);
-	const receiveKey = sessionKey.receiveKey;
-	const transmitKey = sessionKey.transmitKey;
-	info(`receiveKey: ${toBase64(receiveKey)}`);
-	info(`transmitKey: ${toBase64(transmitKey)}`);
-	console.log(toBase64(packet));
-	console.log(toBase64(nonce));
+	const publicKey = packet.headers.key;
+	const clientId = packet.headers.id;
+	const nonce = packet.headers.nonce;
+	success(`key: ${toBase64(publicKey)}`);
+	success(`receiveKey: ${toBase64(receiveKey)}`);
+	success(`transmitKey: ${toBase64(transmitKey)}`);
+	success(`nonce: ${toBase64(nonce)}`);
+	success(`idc: ${toBase64(packet.message.idc)}`);
+	success(`sig: ${toBase64(packet.message.sig)}`);
 	const idc = packet.message.idc;
 	const sig = packet.message.sig;
 	if (!idc) {
@@ -42,13 +42,10 @@ export async function initialize(config) {
 		return failed('No Sig Provided', connection);
 	}
 	success(`Decrypted`);
-	const destination = {
-		publicKey: ephemeralKeypair
-	};
-	const sigVerify = signVerifyHash(sig, Buffer.concat([nonce, ephemeralKeypair]), idc.key);
-	console.log('Concat Sig', Buffer.concat([nonce, ephemeralKeypair]));
+	const sigVerify = signVerifyHash(sig, Buffer.concat([nonce, publicKey]), idc.key);
+	console.log('Concat Sig', Buffer.concat([nonce, publicKey]));
 	console.log('SIGNature Hash', sig);
-	console.log('Ephemeral Key', ephemeralKeypair);
+	console.log('Ephemeral Key', publicKey);
 	const {
 		clients,
 		configuration: { id: serverIdRaw }
@@ -88,7 +85,7 @@ export async function initialize(config) {
 		Server IDs can be random with some actionable info
 		The client ID can be used as the base of the server ID and then generate the rest to form a unique server specific ID
 	*/
-	client.ephemeralKeypair = ephemeralKeypair;
+	client.publicKey = publicKey;
 	client.id = serverIdString;
 	client.clientIdRaw = clientId;
 	client.serverIdRaw = serverIdBuffer;

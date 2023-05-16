@@ -1,7 +1,6 @@
 import {
 	isEmpty, promise, eachArray, assign, construct, stringify, hasValue, get, objectSize
 } from 'Acid';
-import { processPacketEvent } from './server/processPacketEvent.js';
 import { decode, encode } from 'msgpackr';
 import {
 	success, failed, info, msgReceived, msgSent
@@ -9,8 +8,9 @@ import {
 const chunkSize = 700;
 const transferEncodingTypesChunked = /stream|file|image|string/;
 export class Reply {
-	constructor(packet, client) {
+	constructor(request, client) {
 		const thisReply = this;
+		const { message } = request;
 		const {
 			replyQueue,
 			packetIdGenerator
@@ -24,11 +24,11 @@ export class Reply {
 		thisReply.server = function() {
 			return server;
 		};
-		const { sid } = packet;
+		const { sid } = message;
 		thisReply.sid = sid;
 		thisReply.response.sid = sid;
 		replyQueue.set(sid, thisReply);
-		thisReply.received(packet);
+		thisReply.received(message);
 		return thisReply;
 	}
 	headers = {};
@@ -226,6 +226,7 @@ export class Reply {
 	}
 	async process() {
 		const thisReply = this;
+		console.log(thisReply);
 		const request = thisReply.request;
 		const {
 			body,
@@ -239,8 +240,8 @@ export class Reply {
 		} = thisReply.server();
 		const eventName = act || evnt;
 		const method = (act) ? actions.get(act) : events.get(evnt);
+		info(`Request:${eventName} RequestID: ${sid}`);
 		if (method) {
-			info(`Request:${eventName} RequestID: ${sid}`);
 			console.log(request);
 			const hasResponse = await method(request, thisReply);
 			return;
@@ -250,31 +251,5 @@ export class Reply {
 	}
 }
 export function reply(request, client) {
-	const {
-		events,
-		actions
-	} = request.server;
-	const {
-		body,
-		sid,
-		evnt,
-		act
-	} = request.message;
-	if (!evnt && !act) {
-		return failed(`Invalid no EVNT (evnt) or Action (act) name given. ${stringify(request.message)}`);
-	} else if (evnt && act) {
-		msgReceived(`Action & Event received ${act} & ${evnt}`);
-	} else if (act) {
-		msgReceived(`Action (Lower level event protocol action) received ${act}`);
-	} else {
-		msgReceived(`Event (Higher level application event) received ${evnt}`);
-	}
-	const { replyQueue } = client;
-	msgReceived(`Stream ID: ${sid}`);
-	if (replyQueue.has(sid)) {
-		msgReceived(`REPLY FOUND: ${sid}`);
-		return replyQueue.get(sid);
-	}
-	msgReceived(`CREATE REPLY: ${sid}`, request);
 	return construct(Reply, [request, client]);
 }

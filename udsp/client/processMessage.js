@@ -8,28 +8,33 @@ import {
 import { closeRequest } from '../closeRequest.js';
 imported('Client ProcessMessage');
 export async function processMessage(data) {
-	const [headers, response, footer] = data;
+	const { packet } = data;
+	const {
+		headers,
+		message,
+		footer
+	} = packet;
 	const thisContext = this;
 	const { requestQueue, } = thisContext;
 	const {
 		state,
 		sid,
-	} = response;
+	} = message;
 	if (state) {
 		console.log(`STATE CODE: ${state}`);
 	}
-	if (response) {
-		if (response.state === 3) {
+	if (message) {
+		if (message.state === 3) {
 			thisContext.close();
 			return failed(`End event sent disconnected socket`);
 		}
 		if (hasValue(sid)) {
-			info(`Stream ID: ${sid} ${stringify(response)}`);
+			info(`Stream ID: ${sid} ${stringify(message)}`);
 			const askObject = requestQueue.get(sid);
 			if (askObject) {
-				const responseBody = await askObject.callback(response, headers);
-				if (responseBody) {
-					thisContext.send(responseBody, {
+				const messageBody = await askObject.callback(message, headers);
+				if (messageBody) {
+					thisContext.send(messageBody, {
 						sid
 					});
 				}
@@ -37,13 +42,13 @@ export async function processMessage(data) {
 					requestQueue.delete(sid);
 				}
 			} else {
-				return failed(`Invalid Stream Id given. ${stringify(response)}`);
+				return failed(`Invalid Stream Id given. ${stringify(message)}`);
 			}
-		} else if (response.watcher) {
-			console.log('WATCHER', response);
+		} else if (message.watcher) {
+			console.log('WATCHER', message);
 		}
 	} else {
-		console.log('NO RESPONSE OBJECT', response);
+		console.log('NO MESSAGE OBJECT', message);
 	}
 }
 

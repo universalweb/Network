@@ -14,9 +14,11 @@ export async function onMessage(packetEncoded) {
 	} = this;
 	msgReceived('Message Received');
 	const packet = await decodePacket({
+		client: this,
 		receiveKey,
 		nonce,
-		packetEncoded
+		packetEncoded,
+		isClient: true
 	});
 	this.processMessage(packet);
 }
