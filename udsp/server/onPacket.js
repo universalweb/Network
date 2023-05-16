@@ -21,7 +21,7 @@ export async function onPacket(packetEncoded, connection) {
 		packetEncoded,
 		connection,
 		server: thisServer,
-		isServer
+		isServer: true
 	});
 	await reply(packetCompiled.packet, packetCompiled.client);
 }

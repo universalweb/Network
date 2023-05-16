@@ -12,6 +12,7 @@ export async function opn(message, reply) {
 		onConnectResponse
 	} = this;
 	const client = reply.client();
+	const server = reply.server();
 	const response = reply.response;
 	info(`Client ID${client.id}`, `Stream ID${response.sid}`);
 	response.head = {};
@@ -41,7 +42,8 @@ export async function opn(message, reply) {
 	// connection status - backwards compatibility
 	response.state = 1;
 	// Server connection id
-	response.scid = client.serverIdRaw;
+	response.cid = client.id;
+	response.sid = server.id;
 	client.reKey = keypair();
 	response.body.reKey = boxSeal(client.reKey.publicKey, client.publicKey);
 	reply.send('struct');

@@ -8,7 +8,7 @@ export async function send(client, message, headers, options) {
 		port,
 		nonce,
 		transmitKey,
-		clientId: id,
+		id,
 		ephemeralKeypair: destination,
 		state,
 	} = client;

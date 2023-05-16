@@ -11,12 +11,13 @@ export async function connect(payload = {}) {
 		body,
 		state,
 		time,
-		scid
+		cid
 	} = result.response;
-	if (state === 1 && scid) {
+	if (state === 1 && cid) {
 		connected(body);
 		thisClient.state = 1;
-		thisClient.serverId = scid;
+		thisClient.cid = cid;
+		thisClient.id = cid;
 		thisClient.lastPacketTime = Date.now();
 		thisClient.lastPacketGivenTime = time;
 		const bodyDecoded = decode(body);

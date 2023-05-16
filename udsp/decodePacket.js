@@ -36,6 +36,7 @@ export async function decodePacket(config) {
 		success(`Public Key is given -> Processing as create client`);
 	} else {
 		success(`No Public Key is given -> Processing as a message`);
+		console.log(headers);
 	}
 	const {
 		id,
@@ -66,8 +67,9 @@ export async function decodePacket(config) {
 		} else if (client) {
 			transmitKey = client.transmitKey;
 			receiveKey = client.receiveKey;
+			target.client = client;
 		} else {
-			return failed('Invalid Client id given');
+			return failed('Invalid Client id given', toBase64(id), clients.keys());
 		}
 	} else {
 		transmitKey = client.transmitKey;
@@ -95,7 +97,7 @@ export async function decodePacket(config) {
 		success('body PAYLOAD', message.body.length);
 	}
 	info('Raw Message', headers, message);
-	info(`clientId: ${headers.id}`);
+	info(`clientId: ${toBase64(headers.id)}`);
 	info(`Transmit Key ${toBase64(receiveKey)}`);
 	info(`Nonce Size: ${headers.nonce.length} ${toBase64(headers.nonce)}`);
 	const packetSize = packet.length;
@@ -106,7 +108,9 @@ export async function decodePacket(config) {
 	}
 	target.packet.headers = headers;
 	target.packet.message = message;
-	target.packet.footer = footer;
+	if (footer) {
+		target.packet.footer = footer;
+	}
 	success(`Encrypted Message Size: ${packetEncoded.length}`);
 	if (isServer && !client) {
 		msgReceived(`Signature is valid`);

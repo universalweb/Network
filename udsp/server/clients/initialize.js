@@ -1,6 +1,13 @@
 import { created } from './created.js';
 import {
-	toBase64, emptyNonce, randombytes_buf, keypair, signVerifyHash, decrypt, sessionKeys
+	decrypt,
+	emptyNonce,
+	keypair,
+	randombytes_buf,
+	randomId,
+	sessionKeys,
+	signVerifyHash,
+	toBase64
 } from '#crypto';
 import {
 	success, failed, imported, msgSent, info, msgReceived
@@ -48,36 +55,29 @@ export async function initialize(config) {
 	console.log('Ephemeral Key', publicKey);
 	const {
 		clients,
-		configuration: { id: serverIdRaw }
+		configuration: { id: serverId }
 	} = server;
 	const {
 		address,
 		port
 	} = connection;
-	const serverId = String(serverIdRaw);
 	const clientIdString = toBase64(clientId);
-	const serverConnectionUUID = Buffer.alloc(8);
-	randombytes_buf(serverConnectionUUID);
+	console.log(`Client Connection ID: ${clientIdString}`);
+	const serverConnectionUUID = randomId();
 	/*
 		Concatenating the serverConnectionUUID and the Server ID is used for loadbalancing or
 		for forwarding requests to the correct server.
 	*/
-	const serverIdBuffer = Buffer.concat([serverConnectionUUID, Buffer.from(serverId)]);
+	const serverIdBuffer = serverConnectionUUID;
 	const serverIdString = toBase64(serverIdBuffer);
-	console.log(`Client Connection ID: ${clientIdString}`);
 	console.log(`Server Connection ID: ${serverIdString}`);
 	if (clients.has(serverIdString)) {
-		failed('ID IN USE NEED TO MAKE SOME RANDOM BITS - PATCH THIS');
+		failed('ID IN USE NEED TO RE-CHECK FOR A NEW ID');
 	} else {
 		success(`Server client ID is open ${serverIdString}`);
 	}
 	// success(`MESSAGE SENT TIME: ${sentTime}`);
 	clients.set(serverIdString, client);
-	/*
-		Sending to client using this
-		Client connection Ids are smaller than server connection Ids
-	*/
-	client.clientId = clientIdString;
 	/*
 		When the client sends to server it must use this
 		This also validates origin as any following requests must use this Server Connection ID
@@ -86,8 +86,8 @@ export async function initialize(config) {
 		The client ID can be used as the base of the server ID and then generate the rest to form a unique server specific ID
 	*/
 	client.publicKey = publicKey;
-	client.id = serverIdString;
-	client.clientIdRaw = clientId;
+	client.id = serverIdBuffer;
+	client.clientId = clientId;
 	client.serverIdRaw = serverIdBuffer;
 	client.address = address;
 	client.port = port;

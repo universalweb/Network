@@ -21,7 +21,7 @@ import dgram from 'dgram';
 // Default utility imports
 import { success, configure, info } from '#logs';
 import {
-	createSessionKey, clientSession, createClientId, keypair, toBase64, emptyNonce, sessionKeys
+	createSessionKey, clientSession, keypair, randomId, toBase64, emptyNonce, sessionKeys
 } from '#crypto';
 import { pluckBuffer } from '#pluckBuffer';
 import { getCertificate } from '#certificate';
@@ -68,8 +68,9 @@ export class Client {
 		this.emit = emit.bind(this);
 		this.onListening = onListening.bind(this);
 		this.onMessage = onMessage.bind(this);
-		thisClient.clientId = createClientId();
-		success(`clientId:`, this.clientId);
+		thisClient.id = randomId();
+		thisClient.clientId = thisClient.id;
+		success(`clientId:`, toBase64(this.id));
 		success(`Creating Shared Keys`);
 		const transmitKey = thisClient.transmitKey = createSessionKey();
 		const receiveKey = thisClient.receiveKey = createSessionKey();

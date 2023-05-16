@@ -11,6 +11,7 @@ export class Reply {
 	constructor(request, client) {
 		const thisReply = this;
 		const { message } = request;
+		console.log(client);
 		const {
 			replyQueue,
 			packetIdGenerator
@@ -162,7 +163,7 @@ export class Reply {
 			thisReply.sendPacket(packet, server, client);
 		});
 	}
-	received(packet) {
+	received(message) {
 		const thisReply = this;
 		const {
 			body,
@@ -176,7 +177,7 @@ export class Reply {
 			finale,
 			ack,
 			nack
-		} = packet;
+		} = message;
 		if (cmplt) {
 			return thisReply.destroy();
 		}
@@ -188,11 +189,11 @@ export class Reply {
 		}
 		if (pid) {
 			if (!thisReply.incomingPackets[pid]) {
-				thisReply.incomingPackets[pid] = packet;
+				thisReply.incomingPackets[pid] = message;
 				thisReply.totalReceivedPackets++;
 			}
 		} else {
-			thisReply.incomingPackets[0] = packet;
+			thisReply.incomingPackets[0] = message;
 			thisReply.totalReceivedPackets = 1;
 			thisReply.totalIncomingPackets = 1;
 		}
@@ -250,6 +251,7 @@ export class Reply {
 		}
 	}
 }
-export function reply(request, client) {
-	return construct(Reply, [request, client]);
+export function reply(packet, client) {
+	console.log(client);
+	return construct(Reply, [packet, client]);
 }

@@ -36,7 +36,8 @@ export async function encodePacket(data) {
 		profile,
 		ephemeralPublic,
 		destination,
-		destinationPublicKey
+		destinationPublicKey,
+		isClient
 	} = data;
 	const nonce = nonceBox(nonceBuffer);
 	if (id) {
@@ -46,7 +47,7 @@ export async function encodePacket(data) {
 	}
 	headers.nonce = nonce;
 	message.time = Date.now();
-	if (client) {
+	if (isClient) {
 		if (state === 0) {
 			console.log('DESTINATION PUBLIC KEY', destination.publicKey);
 			headers.key = boxSeal(keypair.publicKey, destination.publicKey);
@@ -73,7 +74,7 @@ export async function encodePacket(data) {
 		packet[2] = encode(footer);
 	}
 	info('Raw Message', headers, message);
-	info(`clientId: ${headers.id}`);
+	info(`clientId: ${toBase64(headers.id)}`);
 	info(`Transmit Key ${toBase64(transmitKey)}`);
 	info(`Nonce Size: ${headers.nonce.length} ${toBase64(headers.nonce)}`);
 	const packetSize = packet.length;

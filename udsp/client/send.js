@@ -17,10 +17,9 @@ export async function send(message, priority) {
 		transmitKey,
 		serverId,
 		keypair,
-		clientId,
+		id,
 		destination
 	} = this;
-	const id = serverId || clientId;
 	const packet = await encodePacket({
 		nonce,
 		transmitKey,
@@ -30,7 +29,7 @@ export async function send(message, priority) {
 		ephemeralPublic,
 		profile,
 		keypair,
-		client: true,
+		isClient: true,
 		destination
 	});
 	return promise((accept, reject) => {

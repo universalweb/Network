@@ -167,8 +167,8 @@ export function toBase64(value) {
 export function buff(value) {
 	return Buffer.from(value);
 }
-export function createClientId() {
-	const clientId = Buffer.alloc(8);
+export function randomId(size = 8) {
+	const clientId = Buffer.alloc(size);
 	randombytes_buf(clientId);
 	return clientId;
 }
