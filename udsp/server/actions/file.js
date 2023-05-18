@@ -4,6 +4,10 @@ import { info } from '#logs';
 import { read } from '#utilities/file';
 import path from 'path';
 const dots = /\./g;
+/**
+ *
+ * @todo Include file size, extension, & other metadata as mandatory single packet data.
+ */
 export async function file(message, reply) {
 	const {
 		resourceDirectory,

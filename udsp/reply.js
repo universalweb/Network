@@ -5,8 +5,12 @@ import { decode, encode } from 'msgpackr';
 import {
 	success, failed, info, msgReceived, msgSent
 } from '#logs';
+import { processEvent } from '#udsp/processEvent';
 const chunkSize = 700;
 const transferEncodingTypesChunked = /stream|file|image|string/;
+/**
+	* @todo Add promise to send use the method that Ask uses assign the accept, return it, and when completed execute.
+*/
 export class Reply {
 	constructor(request, client) {
 		const thisReply = this;
@@ -17,7 +21,7 @@ export class Reply {
 			packetIdGenerator
 		} = client;
 		const timeStamp = Date.now();
-		thisReply.created = timeStamp;
+		thisReply.t = timeStamp;
 		thisReply.client = function() {
 			return client;
 		};
@@ -62,7 +66,7 @@ export class Reply {
 	*/
 	state = 0;
 	// Flush Ask Body to Free Memory
-	flushIn() {
+	async flushIn() {
 		this.incomingPayload = {};
 		this.incomingPackets = [];
 		this.incomingChunks = [];
@@ -70,7 +74,7 @@ export class Reply {
 		this.totalIncomingPayloadSize = 0;
 	}
 	// Flush Reply Body to Free Memory
-	flushOut() {
+	async flushOut() {
 		this.outgoingPayload = {};
 		this.outgoingPackets = [];
 		this.outgoingChunks = [];
@@ -78,17 +82,17 @@ export class Reply {
 		this.totalOutgoingPayloadSize = 0;
 	}
 	// Flush all body
-	flush() {
+	async flush() {
 		this.flushOut();
 		this.flushAsk();
 	}
 	// Flush All body and remove this reply from the map
-	destroy() {
+	async destroy() {
 		this.flush();
 		this.server().replyQueue.delete(this.sid);
 	}
 	// Raw Send Packet
-	sendPacket(request, server, client) {
+	async sendPacket(request, client) {
 		const options = this.options;
 		const headers = this.headers;
 		if (this.options) {
@@ -98,9 +102,9 @@ export class Reply {
 			console.log(`Sending msg with headers var`, headers, `this.headers`, this.headers);
 		}
 		console.log('Handover to Server Reply Packet to Send', request, headers, options);
-		server.send(client, request, headers, options);
+		client.send(request, headers, options);
 	}
-	chunk(body) {
+	async chunk(body) {
 		const chunks = [];
 		const packetLength = body.length;
 		for (let index = 0; index < packetLength;index += chunkSize) {
@@ -151,7 +155,7 @@ export class Reply {
 		const server = this.server();
 		const client = this.client();
 		eachArray(packetIDs, (id) => {
-			thisReply.sendPacket(thisReply.outgoingPackets[id], server, client);
+			thisReply.sendPacket(thisReply.outgoingPackets[id]);
 		});
 	}
 	replyAll() {
@@ -160,10 +164,10 @@ export class Reply {
 		const client = this.client();
 		console.log('Reply.replyAll', thisReply.outgoingPackets);
 		eachArray(thisReply.outgoingPackets, (packet) => {
-			thisReply.sendPacket(packet, server, client);
+			thisReply.sendPacket(packet);
 		});
 	}
-	received(message) {
+	async received(message) {
 		const thisReply = this;
 		const {
 			body,
@@ -201,15 +205,15 @@ export class Reply {
 			thisReply.state = 2;
 		}
 		if (thisReply.state === 2) {
-			thisReply.assemble();
+			await thisReply.assemble();
 		}
 	}
-	assemble() {
+	async assemble() {
 		const thisReply = this;
 		const { transferEncoding } = thisReply;
 		if (thisReply.totalIncomingPackets === 1) {
 			thisReply.request = thisReply.incomingPackets[0];
-			return thisReply.process();
+			return thisReply.processRequest();
 		}
 		const packet = thisReply.incomingPackets[0];
 		eachArray(thisReply.incomingPackets, (item) => {
@@ -223,32 +227,12 @@ export class Reply {
 				thisReply.request.body = decode(thisReply.request.body);
 			}
 		}
-		thisReply.flushOut();
+		await thisReply.flushOut();
 	}
-	async process() {
+	async processRequest() {
 		const thisReply = this;
-		console.log(thisReply);
 		const request = thisReply.request;
-		const {
-			body,
-			sid,
-			evnt,
-			act
-		} = request;
-		const {
-			events,
-			actions
-		} = thisReply.server();
-		const eventName = act || evnt;
-		const method = (act) ? actions.get(act) : events.get(evnt);
-		info(`Request:${eventName} RequestID: ${sid}`);
-		if (method) {
-			console.log(request);
-			const hasResponse = await method(request, thisReply);
-			return;
-		} else {
-			return failed(`Invalid method name given. ${stringify(request)}`);
-		}
+		processEvent(request, thisReply);
 	}
 }
 export function reply(packet, client) {

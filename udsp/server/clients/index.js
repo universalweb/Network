@@ -3,7 +3,6 @@ import { initialize } from './initialize.js';
 import { created } from './created.js';
 import { destroy } from './destroy.js';
 import { reKey } from './reKey.js';
-import { send } from './send.js';
 import { state } from './state.js';
 // import { createResponse } from './message.js';
 import { received } from './received.js';
@@ -47,11 +46,12 @@ export class Client {
 		this.newKeys = newKeypair;
 		info(`socket EVENT -> reKey - ID:${this.id}`);
 	}
-	async send(message, frameHeaders) {
+	async send(message, headers, options) {
 		const server = this.server();
-		console.log(server);
-		await send(this, message, frameHeaders, server);
-		info(`socket EVENT -> send - ID:${this.id}`);
+		const client = this;
+		await server.send(message, headers, options, client);
+		await server.clientEvent('send', client);
+		msgSent(`socket Sent -> ID: ${client.id}`);
 	}
 	async received(message, frameHeaders) {
 		const server = this.server();

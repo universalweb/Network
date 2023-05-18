@@ -32,23 +32,16 @@ export async function processMessage(data) {
 			info(`Stream ID: ${sid} ${stringify(message)}`);
 			const askObject = requestQueue.get(sid);
 			if (askObject) {
-				const messageBody = await askObject.callback(message, headers);
-				if (messageBody) {
-					thisContext.send(messageBody, {
-						sid
-					});
-				}
+				const messageBody = await askObject.accept(packet);
 				if (askObject.state === 2) {
-					requestQueue.delete(sid);
+					askObject.delete();
 				}
 			} else {
 				return failed(`Invalid Stream Id given. ${stringify(message)}`);
 			}
-		} else if (message.watcher) {
-			console.log('WATCHER', message);
 		}
 	} else {
-		console.log('NO MESSAGE OBJECT', message);
+		console.log('NO MESSAGE OBJECT', packet);
 	}
 }
 

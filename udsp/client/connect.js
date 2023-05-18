@@ -5,6 +5,9 @@ export async function connect(payload = {}) {
 	const thisClient = this;
 	// opn stands for open meaning connect to a server
 	payload.act = 'opn';
+	payload.body = {
+		intro: 'Hello World!'
+	};
 	const result = await thisClient.request(payload);
 	console.log(result);
 	const {

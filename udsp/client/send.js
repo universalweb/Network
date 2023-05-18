@@ -4,34 +4,40 @@ import {
 import { promise } from 'Acid';
 import { encodePacket } from '#udsp/encodePacket';
 imported('Client Send');
-export async function send(message, priority) {
+export async function send(message, headers, footer, options) {
 	info(`Send to server`);
+	const client = this;
 	const {
-		server,
+		destination,
+		ephemeralPublic,
+		id,
 		ip,
+		keypair,
+		nonce,
 		port,
-		nonce,
-		state,
-		ephemeralPublic,
 		profile,
-		transmitKey,
+		server,
 		serverId,
-		keypair,
-		id,
-		destination
-	} = this;
-	const packet = await encodePacket({
-		nonce,
-		transmitKey,
-		id,
 		state,
-		message,
+		transmitKey
+	} = client;
+	const packet = await encodePacket({
+		client,
+		destination,
 		ephemeralPublic,
-		profile,
-		keypair,
+		footer,
+		headers,
+		id,
 		isClient: true,
-		destination
+		keypair,
+		message,
+		nonce,
+		options,
+		profile,
+		state,
+		transmitKey
 	});
+	msgSent(`Packet Size ${packet.length}`);
 	return promise((accept, reject) => {
 		server.send(packet, port, ip, (error) => {
 			if (error) {

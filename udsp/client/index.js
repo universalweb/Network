@@ -1,8 +1,9 @@
 /*
   	* Client Module
 	* UDSP - Universal Data Stream Protocol
-	* UWS Universal Web client
-	* Establishes a UDP based bi-directional real-time client between a client and end service.
+	* UW Universal Web
+	* UWP Universal Web Protocol
+	* Establishes a UDP based bi-directional real-time connection between client and server.
 */
 // Default System imports
 import {

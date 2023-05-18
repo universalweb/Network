@@ -4,9 +4,10 @@ import {
 import { promise, construct } from 'Acid';
 import { Ask } from './ask.js';
 imported('Request');
-export async function request(message, sendAsIs) {
-	const thisClient = this;
+export async function request(message, options = {}) {
+	const client = this;
+	options.client = client;
 	info(`Requested Body`, message);
-	const ask = await (construct(Ask, [message, thisClient]));
+	const ask = await (construct(Ask, [message, options]));
 	return ask;
 }

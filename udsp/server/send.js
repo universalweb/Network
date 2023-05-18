@@ -2,7 +2,7 @@ import {
 	success, failed, imported, msgSent, info
 } from '#logs';
 import { encodePacket } from '#udsp/encodePacket';
-export async function send(client, message, headers, options) {
+export async function send(message, headers, options, client) {
 	const {
 		address,
 		port,
