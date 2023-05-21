@@ -1,13 +1,33 @@
 import {
 	success, failed, imported, msgSent, info
 } from '#logs';
-import { promise, construct } from 'Acid';
+import { promise, construct, omit } from 'Acid';
 import { Ask } from './ask.js';
 imported('Request');
-export async function request(message, options = {}) {
+export async function request(act, body, options = {}) {
 	const client = this;
-	options.client = client;
-	info(`Requested Body`, message);
-	const ask = await (construct(Ask, [message, options]));
-	return ask;
+	const {
+		headers,
+		footer,
+		head
+	} = options;
+	info(`Requested Body`, body);
+	const message = {
+		act
+	};
+	if (body) {
+		message.body = body;
+	}
+	if (head) {
+		message.head = head;
+	}
+	const ask = construct(Ask, [{
+		message,
+		headers,
+		footer,
+		options: omit(options, ['footer', 'headers']),
+		isClient: true,
+		client
+	}]);
+	return ask.fetch();
 }

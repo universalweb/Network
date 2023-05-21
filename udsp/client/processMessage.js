@@ -5,17 +5,14 @@ import {
 	stringify,
 	hasValue
 } from 'Acid';
-import { closeRequest } from '../closeRequest.js';
 imported('Client ProcessMessage');
-export async function processMessage(data) {
-	const { packet } = data;
+export async function processMessage(packet, client) {
 	const {
 		headers,
 		message,
 		footer
 	} = packet;
-	const thisContext = this;
-	const { requestQueue, } = thisContext;
+	const { requestQueue } = client;
 	const {
 		state,
 		sid,
@@ -25,7 +22,7 @@ export async function processMessage(data) {
 	}
 	if (message) {
 		if (message.state === 3) {
-			thisContext.close();
+			client.close();
 			return failed(`End event sent disconnected socket`);
 		}
 		if (hasValue(sid)) {

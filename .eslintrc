@@ -235,7 +235,11 @@
         "id-match": "off",
         "indent": [
             "error",
-            "tab"
+            "tab",
+            {
+                "ObjectExpression": 1,
+                "ImportDeclaration": 1
+            }
         ],
         "key-spacing": [
             "error",
@@ -295,8 +299,7 @@
         "no-inline-comments": "error",
         "no-lonely-if": "error",
         "no-mixed-spaces-and-tabs": [
-            "error",
-            "smart-tabs"
+            "error"
         ],
         "no-multiple-empty-lines": [
             "error",

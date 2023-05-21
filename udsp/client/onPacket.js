@@ -3,9 +3,10 @@ import {
 } from '#logs';
 import { decode } from 'msgpackr';
 import { decrypt, createSessionKey } from '#crypto';
-import { decodePacket } from '#udsp/decodePacket';
+import { decodePacket, decodePacketHeaders } from '#udsp/decodePacket';
 imported('Server onMessage');
 import { reKey } from '#udsp/reKey';
+import { processMessage } from './processMessage.js';
 export async function onMessage(packetEncoded) {
 	const {
 		receiveKey,
@@ -13,13 +14,16 @@ export async function onMessage(packetEncoded) {
 		keypair
 	} = this;
 	msgReceived('Message Received');
-	const packet = await decodePacket({
+	const config = {
 		client: this,
 		receiveKey,
 		nonce,
 		packetEncoded,
 		isClient: true
-	});
-	this.processMessage(packet);
+	};
+	const headers = decodePacketHeaders(config);
+	const packet = await decodePacket(config);
+	console.log(packet);
+	processMessage(packet, this);
 }
 

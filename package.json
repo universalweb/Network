@@ -65,8 +65,6 @@
 		},
 		"ignore": [
 			"node_modules/",
-			"./apps/client/**/filesystem/**",
-			"./system/compile/**",
 			"**.json",
 			"**.css",
 			"**.html"

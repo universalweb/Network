@@ -1,5 +1,9 @@
 import {
-	promise, assign, omit, eachArray, stringify, get, isBuffer, isPlainObject, isArray, isMap
+	promise, assign, omit,
+	eachArray, stringify,
+	get,
+	isBuffer, isPlainObject,
+	isArray, isMap, construct
 } from 'Acid';
 import { decode, encode } from 'msgpackr';
 import {
@@ -15,35 +19,57 @@ const dataEncodingTypesStructured = /json|msgpack|struct|/;
  * @todo
  */
 export class Ask {
-	constructor(request, options) {
-		const thisAsk = this;
-		this.request = request;
-		const timeStamp = Date.now();
+	constructor(config) {
 		const {
+			message,
+			head,
+			body,
+			options,
 			client,
-			header,
-			footer
-		} = options;
+			headers,
+			footer,
+			sourceContext,
+			isClient
+		} = config;
+		const thisAsk = this;
 		const {
 			requestQueue,
 			packetIdGenerator
 		} = client;
+		let request;
+		if (message) {
+			console.log('Message Ask', message);
+			request = message;
+		} else {
+			request = {};
+			if (head) {
+				request.head = head;
+			}
+			if (body) {
+				request.body = body;
+			}
+		}
+		if (headers) {
+			thisAsk.headers = headers;
+		}
+		if (footer) {
+			thisAsk.footer = footer;
+		}
+		const timeStamp = Date.now();
+		thisAsk.created = timeStamp;
 		// sid is a Stream ID
 		const sid = packetIdGenerator.get();
 		request.sid = sid;
-		thisAsk.created = timeStamp;
+		this.request = request;
+		this.id = sid;
 		if (options.dataEncoding) {
 			this.dataEncoding = options.dataEncoding;
 		}
 		this.client = function() {
 			return client;
 		};
-		const awaitingResult = promise((accept) => {
-			thisAsk.accept = accept;
-		});
 		requestQueue.set(sid, thisAsk);
-		thisAsk.proccessRequest(request);
-		return awaitingResult;
+		return thisAsk;
 	}
 	request = {};
 	response = {};
@@ -84,22 +110,28 @@ export class Ask {
 		this.flush();
 		this.client().requestQueue.delete(this.sid);
 	}
-	async sendPacket(request) {
+	async sendPacket(arg) {
+		const {
+			message,
+			options,
+			headers,
+			footer
+		} = arg;
 		const client = this.client();
-		const options = this.options;
-		const headers = this.headers;
-		const footer = this.footer;
-		if (this.options) {
-			console.log(`Sending msg with options var`, options);
+		if (options) {
+			console.log(`Sending msg with options var`);
 		}
-		if (this.headers) {
-			console.log(`Sending msg with headers var`, headers);
+		if (headers) {
+			console.log(`Sending msg with headers var`);
 		}
-		if (this.footer) {
-			console.log(`Sending msg with footer var`, footer);
+		if (footer) {
+			console.log(`Sending msg with footer var`);
 		}
-		console.log('Handover to Server Reply Packet to Send', request, headers, options);
-		client.send(request, headers, footer, options);
+		console.log('Handover to Server Reply Packet to Send');
+		if (message.act) {
+			console.log(message.act);
+		}
+		await client.send(arg);
 	}
 	async chunk(body) {
 		const chunks = [];
@@ -114,8 +146,8 @@ export class Ask {
 		const thisReply = this;
 		const { request } = thisReply;
 		const { sid } = request;
-		console.log(request.body.length);
 		if (request.body && request.body.length > chunkSize) {
+			console.log(request.body.length);
 			const chunks = await thisReply.chunk(request.body);
 			const packetLength = chunks.length;
 			thisReply.totalOutgoingPackets = packetLength;
@@ -153,15 +185,19 @@ export class Ask {
 		const server = this.server();
 		const client = this.client();
 		eachArray(packetIDs, (id) => {
-			thisReply.sendPacket(thisReply.outgoingPackets[id]);
+			thisReply.sendPacket({
+				message: thisReply.outgoingPackets[id]
+			});
 		});
 	}
 	async sendAll() {
 		const thisReply = this;
 		const client = this.client();
 		console.log('Ask.sendAll', thisReply.outgoingPackets);
-		eachArray(thisReply.outgoingPackets, (packet) => {
-			thisReply.sendPacket(packet);
+		eachArray(thisReply.outgoingPackets, (message) => {
+			thisReply.sendPacket({
+				message
+			});
 		});
 	}
 	received(message) {
@@ -169,14 +205,23 @@ export class Ask {
 		const {
 			body,
 			head,
+			// Stream ID
 			sid,
+			// Packet ID
 			pid,
+			// Action
 			act,
+			// Packet total
 			pt,
-			te,
+			// Data Encoding
+			de,
+			// Complete
 			cmplt,
+			// Finale Packet
 			finale,
+			// Acknowledgement
 			ack,
+			// Negative Acknowledgement
 			nack
 		} = message;
 		if (cmplt) {
@@ -185,8 +230,8 @@ export class Ask {
 		if (pt) {
 			thisReply.totalIncomingPackets = pt;
 		}
-		if (te) {
-			thisReply.dataEncoding = te;
+		if (de) {
+			thisReply.incomingDataEncoding = de;
 		}
 		if (pid) {
 			if (!thisReply.incomingPackets[pid]) {
@@ -207,10 +252,9 @@ export class Ask {
 	}
 	assemble() {
 		const thisReply = this;
-		const { dataEncoding } = thisReply;
+		const { incomingDataEncoding } = thisReply;
 		if (thisReply.totalIncomingPackets === 1) {
 			thisReply.request = thisReply.incomingPackets[0];
-			return thisReply.process();
 		}
 		const packet = thisReply.incomingPackets[0];
 		eachArray(thisReply.incomingPackets, (item) => {
@@ -218,19 +262,28 @@ export class Ask {
 				Buffer.concat([packet.body, item.body]);
 			}
 		});
-		if (dataEncoding === 'struct' || !dataEncoding) {
+		if (incomingDataEncoding === 'struct' || !incomingDataEncoding) {
 			msgReceived(thisReply.request);
 			if (thisReply.request.body) {
 				thisReply.request.body = decode(thisReply.request.body);
 			}
 		}
+		thisReply.process();
 		thisReply.flushOut();
 	}
-	async proccessRequest() {
+	async fetch() {
+		const thisAsk = this;
 		await this.buildRequest();
+		const awaitingResult = promise((accept) => {
+			thisAsk.accept = accept;
+		});
+		return awaitingResult;
 	}
 	callback(results) {
 		console.log('Request Results', results);
 		this.accept(results);
 	}
+}
+export async function ask(source) {
+	return construct(Ask, omit);
 }

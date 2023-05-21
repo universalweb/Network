@@ -4,7 +4,13 @@ import {
 import { promise } from 'Acid';
 import { encodePacket } from '#udsp/encodePacket';
 imported('Client Send');
-export async function send(message, headers, footer, options) {
+export async function send(config) {
+	const {
+		message,
+		headers,
+		footer,
+		options
+	} = config;
 	info(`Send to server`);
 	const client = this;
 	const {
@@ -37,7 +43,7 @@ export async function send(message, headers, footer, options) {
 		state,
 		transmitKey
 	});
-	msgSent(`Packet Size ${packet.length}`);
+	msgSent(`Packet Size ${packet.length}`, message);
 	return promise((accept, reject) => {
 		server.send(packet, port, ip, (error) => {
 			if (error) {

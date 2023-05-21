@@ -1,24 +1,26 @@
-import { stringify, get } from 'Acid';
+import { stringify, get, hasValue } from 'Acid';
 import { failed, info } from '#logs';
-export async function processEvent(request, eventSource, source) {
+export async function processEvent(reply) {
+	console.log(reply);
 	const {
-		body,
 		sid,
-		evnt,
 		act
-	} = request;
+	} = reply.request;
 	const {
 		events,
 		actions
-	} = eventSource;
-	const eventName = act || evnt;
-	const method = (act) ? actions.get(act) : events.get(evnt);
-	info(`Request:${eventName} RequestID: ${sid}`);
+	} = reply.server();
+	const method = actions.get(act);
+	if (hasValue(sid)) {
+		if (act) {
+			info(`Action:${act} RequestID: ${sid}`);
+		}
+	}
 	if (method) {
-		console.log(request);
-		const hasResponse = await method(request, source);
+		console.log(reply);
+		const hasResponse = await method(reply);
 		return;
 	} else {
-		return failed(`Invalid method name given. ${stringify(request)}`);
+		return failed(`Invalid method name given.`, reply);
 	}
 }

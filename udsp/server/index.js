@@ -22,8 +22,7 @@ import { emit } from './emit.js';
 import { onError } from './onError.js';
 import { onListen } from './onListen.js';
 import { onPacket } from './onPacket.js';
-import { sendPacket } from './sendPacket.js';
-import { send } from './send.js';
+import { sendPacket } from '#udsp/sendPacket';
 import { actions } from './actions/index.js';
 import { getCertificate } from '#certificate';
 const { seal } = Object;
@@ -54,6 +53,7 @@ export class Server {
 		console.log(thisServer.configuration);
 		assign(thisServer, thisServer.configuration);
 		thisServer.server = dgram.createSocket(thisServer.ipVersion);
+		const server = thisServer.server;
 		thisServer.bindMethods({
 			on,
 			bindServer,
@@ -61,9 +61,7 @@ export class Server {
 			onListen,
 			onPacket,
 			off,
-			sendPacket,
-			emit,
-			send
+			emit
 		});
 		thisServer.bindActions(actions);
 		if (configuration.profile) {
@@ -75,11 +73,16 @@ export class Server {
 		thisServer.server.on('message', thisServer.onPacket);
 		await thisServer.bindServer();
 		process.on('beforeExit', (code) => {
-			thisServer.server.close();
+			server.close();
 		});
 		process.on('exit', (code) => {
-			thisServer.server.close();
+			server.close();
 		});
+		thisServer.send = async function(packetConfig) {
+			packetConfig.server = thisServer;
+			packetConfig.isServer = true;
+			return sendPacket(packetConfig, server);
+		};
 		console.log('-------SERVER INITIALIZED-------');
 		return thisServer;
 	}

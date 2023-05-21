@@ -7,7 +7,7 @@ import {
 } from '#logs';
 import { processEvent } from '#udsp/processEvent';
 const chunkSize = 700;
-const transferEncodingTypesChunked = /stream|file|image|string/;
+const incomingDataEncodingTypesChunked = /stream|file|image|string/;
 /**
 	* @todo Add promise to send use the method that Ask uses assign the accept, return it, and when completed execute.
 */
@@ -33,6 +33,14 @@ export class Reply {
 		thisReply.sid = sid;
 		thisReply.response.sid = sid;
 		replyQueue.set(sid, thisReply);
+		thisReply.sendPacket = function(config) {
+			return client.send(config);
+		};
+		thisReply.processRequest = function() {
+			console.log(thisReply.request);
+			console.log(thisReply);
+			processEvent(thisReply);
+		};
 		thisReply.received(message);
 		return thisReply;
 	}
@@ -91,19 +99,6 @@ export class Reply {
 		this.flush();
 		this.server().replyQueue.delete(this.sid);
 	}
-	// Raw Send Packet
-	async sendPacket(request, client) {
-		const options = this.options;
-		const headers = this.headers;
-		if (this.options) {
-			console.log(`Sending msg with options var`, options, `this.options`, this.options);
-		}
-		if (this.headers) {
-			console.log(`Sending msg with headers var`, headers, `this.headers`, this.headers);
-		}
-		console.log('Handover to Server Reply Packet to Send', request, headers, options);
-		client.send(request, headers, options);
-	}
 	async chunk(body) {
 		const chunks = [];
 		const packetLength = body.length;
@@ -113,7 +108,7 @@ export class Reply {
 		}
 		return chunks;
 	}
-	sendChunked(packet, transferEncoding) {
+	sendChunked(packet, incomingDataEncoding) {
 		const thisReply = this;
 		if (packet.body && packet.body.length > 700) {
 			const chunks = thisReply.chunk(packet.body);
@@ -122,7 +117,7 @@ export class Reply {
 			eachArray(chunks, (item, id) => {
 				const outgoingPacket = assign({}, packet);
 				if (id === 0) {
-					outgoingPacket.te = transferEncoding;
+					outgoingPacket.te = incomingDataEncoding;
 					outgoingPacket.pt = packetLength;
 				}
 				outgoingPacket.pid = id;
@@ -130,41 +125,41 @@ export class Reply {
 				thisReply.outgoingPackets[id] = outgoingPacket;
 			});
 		} else {
-			packet.en = transferEncoding;
+			packet.en = incomingDataEncoding;
 			packet.pt = 0;
 			thisReply.outgoingPackets[0] = packet;
 		}
 	}
-	// transferEncoding types: json, stream, file,
-	send(transferEncoding) {
+	// incomingDataEncoding types: json, stream, file,
+	send(incomingDataEncoding) {
 		const response = this.response;
 		const thisReply = this;
 		msgSent('REPLY.SEND', response);
 		if (response.body) {
-			if (transferEncodingTypesChunked.test(transferEncoding)) {
-				this.sendChunked(response, transferEncoding);
-			} else if (transferEncoding === 'struct' || transferEncoding === 'json') {
+			if (incomingDataEncodingTypesChunked.test(incomingDataEncoding)) {
+				this.sendChunked(response, incomingDataEncoding);
+			} else if (incomingDataEncoding === 'struct' || incomingDataEncoding === 'json') {
 				response.body = encode(response.body);
-				this.sendChunked(response, transferEncoding);
+				this.sendChunked(response, incomingDataEncoding);
 			}
 		}
 		thisReply.replyAll();
 	}
 	replyIDs(packetIDs) {
 		const thisReply = this;
-		const server = this.server();
-		const client = this.client();
 		eachArray(packetIDs, (id) => {
-			thisReply.sendPacket(thisReply.outgoingPackets[id]);
+			thisReply.sendPacket({
+				message: thisReply.outgoingPackets[id]
+			});
 		});
 	}
 	replyAll() {
 		const thisReply = this;
-		const server = this.server();
-		const client = this.client();
 		console.log('Reply.replyAll', thisReply.outgoingPackets);
 		eachArray(thisReply.outgoingPackets, (packet) => {
-			thisReply.sendPacket(packet);
+			thisReply.sendPacket({
+				message: packet
+			});
 		});
 	}
 	async received(message) {
@@ -189,7 +184,7 @@ export class Reply {
 			thisReply.totalIncomingPackets = pt;
 		}
 		if (te) {
-			thisReply.transferEncoding = te;
+			thisReply.incomingDataEncoding = te;
 		}
 		if (pid) {
 			if (!thisReply.incomingPackets[pid]) {
@@ -210,10 +205,9 @@ export class Reply {
 	}
 	async assemble() {
 		const thisReply = this;
-		const { transferEncoding } = thisReply;
+		const { incomingDataEncoding } = thisReply;
 		if (thisReply.totalIncomingPackets === 1) {
 			thisReply.request = thisReply.incomingPackets[0];
-			return thisReply.processRequest();
 		}
 		const packet = thisReply.incomingPackets[0];
 		eachArray(thisReply.incomingPackets, (item) => {
@@ -221,18 +215,14 @@ export class Reply {
 				Buffer.concat([packet.body, item.body]);
 			}
 		});
-		if (transferEncoding === 'struct' || !transferEncoding) {
+		if (incomingDataEncoding === 'struct' || !incomingDataEncoding) {
 			msgReceived(thisReply.request);
 			if (thisReply.request.body) {
 				thisReply.request.body = decode(thisReply.request.body);
 			}
 		}
+		thisReply.processRequest();
 		await thisReply.flushOut();
-	}
-	async processRequest() {
-		const thisReply = this;
-		const request = thisReply.request;
-		processEvent(request, thisReply);
 	}
 }
 export function reply(packet, client) {

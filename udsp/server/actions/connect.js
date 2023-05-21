@@ -1,6 +1,6 @@
 import { info } from '#logs';
 import { keypair, boxSeal } from '#crypto';
-export async function opn(message, reply) {
+export async function opn(reply) {
 	const {
 		resourceDirectory,
 		cacheMaxAge,

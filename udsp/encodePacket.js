@@ -36,7 +36,6 @@ export async function encodePacket(data) {
 		profile,
 		ephemeralPublic,
 		destination,
-		destinationPublicKey,
 		isClient
 	} = data;
 	const nonce = nonceBox(nonceBuffer);
@@ -46,7 +45,7 @@ export async function encodePacket(data) {
 		return console.error(`ID IS'T ASSIGNED`);
 	}
 	headers.nonce = nonce;
-	message.time = Date.now();
+	message.t = Date.now();
 	if (isClient) {
 		if (state === 0) {
 			console.log('DESTINATION PUBLIC KEY', destination.publicKey);
@@ -73,12 +72,11 @@ export async function encodePacket(data) {
 	if (footer) {
 		packet[2] = encode(footer);
 	}
-	info('Raw Message', headers, message);
 	info(`clientId: ${toBase64(headers.id)}`);
 	info(`Transmit Key ${toBase64(transmitKey)}`);
 	info(`Nonce Size: ${headers.nonce.length} ${toBase64(headers.nonce)}`);
 	const packetSize = packet.length;
-	msgSent(`Packet Size ${packetSize}`);
+	info(`encode Packet Size ${packetSize}`);
 	if (packetSize >= 1280) {
 		console.log(packet);
 		failed(`WARNING: Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);

@@ -1,21 +1,18 @@
 import { connected } from '#logs';
 import { decode } from 'msgpackr';
-export async function connect(payload = {}) {
+export async function connect(message = {}) {
 	console.log('-------CLIENT CONNECTING-------\n');
 	const thisClient = this;
 	// opn stands for open meaning connect to a server
-	payload.act = 'opn';
-	payload.body = {
-		intro: 'Hello World!'
-	};
-	const result = await thisClient.request(payload);
+	message.intro = 'Hello World!';
+	const result = await thisClient.request('opn', message);
 	console.log(result);
 	const {
 		body,
 		state,
 		time,
 		cid
-	} = result.response;
+	} = result;
 	if (state === 1 && cid) {
 		connected(body);
 		thisClient.state = 1;

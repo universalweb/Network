@@ -1,13 +1,6 @@
 import { created } from './created.js';
 import {
-	decrypt,
-	emptyNonce,
-	keypair,
-	randombytes_buf,
-	randomId,
-	sessionKeys,
-	signVerifyHash,
-	toBase64
+	decrypt, emptyNonce, keypair, randombytes_buf, randomId, sessionKeys, signVerifyHash, toBase64, boxUnseal
 } from '#crypto';
 import {
 	success, failed, imported, msgSent, info, msgReceived
@@ -17,11 +10,11 @@ import { Client } from './index.js';
 export async function initialize(config) {
 	const {
 		client,
-		packet,
 		server,
 		connection,
-		receiveKey,
-		transmitKey
+		nonce,
+		id,
+		key
 	} = config;
 	const {
 		profile: {
@@ -31,27 +24,19 @@ export async function initialize(config) {
 			}
 		},
 	} = server;
-	const publicKey = packet.headers.key;
-	const clientId = packet.headers.id;
-	const nonce = packet.headers.nonce;
+	const publicKey = boxUnseal(key, serverPublicKey, serverPrivateKey);
+	if (!publicKey) {
+		return failed(publicKey, 'Client Key Decrypt Failed');
+	}
+	const sessionKey = sessionKeys(serverPublicKey, serverPrivateKey, publicKey);
+	const {
+		receiveKey,
+		transmitKey,
+	} = sessionKey;
 	success(`key: ${toBase64(publicKey)}`);
 	success(`receiveKey: ${toBase64(receiveKey)}`);
 	success(`transmitKey: ${toBase64(transmitKey)}`);
 	success(`nonce: ${toBase64(nonce)}`);
-	success(`idc: ${toBase64(packet.message.idc)}`);
-	success(`sig: ${toBase64(packet.message.sig)}`);
-	const idc = packet.message.idc;
-	const sig = packet.message.sig;
-	if (!idc) {
-		return failed('No Identity Provided', connection);
-	}
-	if (!sig) {
-		return failed('No Sig Provided', connection);
-	}
-	success(`Decrypted`);
-	const sigVerify = signVerifyHash(sig, Buffer.concat([nonce, publicKey]), idc.key);
-	console.log('Concat Sig', Buffer.concat([nonce, publicKey]));
-	console.log('SIGNature Hash', sig);
 	console.log('Ephemeral Key', publicKey);
 	const {
 		clients,
@@ -61,7 +46,7 @@ export async function initialize(config) {
 		address,
 		port
 	} = connection;
-	const clientIdString = toBase64(clientId);
+	const clientIdString = toBase64(id);
 	console.log(`Client Connection ID: ${clientIdString}`);
 	const serverConnectionUUID = randomId();
 	/*
@@ -87,7 +72,7 @@ export async function initialize(config) {
 	*/
 	client.publicKey = publicKey;
 	client.id = serverIdBuffer;
-	client.clientId = clientId;
+	client.clientId = id;
 	client.serverIdRaw = serverIdBuffer;
 	client.address = address;
 	client.port = port;
@@ -109,6 +94,7 @@ export async function initialize(config) {
 	success(`client Created: ID:${serverIdString} ${address}:${port}`);
 	await server.clientEvent('constructed', `SID${client.id}`, `CID${client.clientIdString}`);
 	await client.created();
+	client.cachePacketSendConfig();
 	return client;
 }
 

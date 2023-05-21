@@ -8,14 +8,17 @@ const dots = /\./g;
  *
  * @todo Include file size, extension, & other metadata as mandatory single packet data.
  */
-export async function file(message, reply) {
+export async function file(reply) {
 	const {
 		resourceDirectory,
 		defaultExtension
 	} = this;
-	const { response } = reply;
-	info(message.body);
-	const { path: requestPath } = message.body;
+	const {
+		response,
+		request
+	} = reply;
+	info(request.body);
+	const { path: requestPath } = request.body;
 	if (!isString(requestPath) || isEmpty(requestPath) || requestPath.match(dots).length > 1) {
 		console.log('No valid state request received - Returning empty data');
 		response.code = 404;
