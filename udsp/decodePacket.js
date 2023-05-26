@@ -4,7 +4,7 @@ import {
 import { decode, } from 'msgpackr';
 import { assign, } from 'Acid';
 import {
-	encrypt, nonceBox, toBase64, hashSign, decrypt, boxUnseal, sessionKeys
+	encrypt, nonceBox, toBase64, hashSign, decrypt, boxUnseal, sessionKeys, getConnectionIdData
 } from '#crypto';
 import { createClient } from './server/clients/index.js';
 export function decodePacketHeaders(config) {
@@ -16,7 +16,8 @@ export function decodePacketHeaders(config) {
 		packetEncoded,
 		server,
 		source,
-		state
+		state,
+		connectionIdKey
 	} = config;
 	const client = config.client;
 	info(`Packet Encoded Size ${packetEncoded.length}`);
@@ -29,10 +30,17 @@ export function decodePacketHeaders(config) {
 	if (!headers) {
 		return failed(`No headers -> Invalid Packet`);
 	}
+	info(`clientId: ${toBase64(headers.id)}`);
 	if (headers.key) {
 		success(`Public Key is given -> Processing as create client`);
 	} else {
 		success(`No Public Key is given -> Processing as a message`);
+		headers.id = getConnectionIdData(headers.id, connectionIdKey);
+		if (headers.id) {
+			success('Server Connection ID Decrypted');
+		} else {
+			return failed(`No ID -> Invalid Packet`);
+		}
 		console.log(headers);
 	}
 	config.headers = headers;
@@ -73,7 +81,6 @@ export async function decodePacket(config, result) {
 	if (message.body) {
 		success('body PAYLOAD', message.body.length);
 	}
-	info(`clientId: ${toBase64(headers.id)}`);
 	info(`Transmit Key ${toBase64(receiveKey)}`);
 	info(`Nonce Size: ${headers.nonce.length} ${toBase64(headers.nonce)}`);
 	const packetSize = packet.length;

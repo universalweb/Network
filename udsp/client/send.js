@@ -25,7 +25,8 @@ export async function send(config) {
 		server,
 		serverId,
 		state,
-		transmitKey
+		transmitKey,
+		connectionIdKey
 	} = client;
 	const packet = await encodePacket({
 		client,
@@ -33,7 +34,7 @@ export async function send(config) {
 		ephemeralPublic,
 		footer,
 		headers,
-		id,
+		id: serverId || id,
 		isClient: true,
 		keypair,
 		message,
@@ -41,7 +42,8 @@ export async function send(config) {
 		options,
 		profile,
 		state,
-		transmitKey
+		transmitKey,
+		connectionIdKey
 	});
 	msgSent(`Packet Size ${packet.length}`, message);
 	return promise((accept, reject) => {

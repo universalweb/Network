@@ -13,6 +13,7 @@ import {
 import {
 	encrypt,
 	nonceBox,
+	randomize,
 	toBase64,
 	hashSignDetached,
 	boxSeal,
@@ -38,7 +39,7 @@ export async function encodePacket(data) {
 		destination,
 		isClient
 	} = data;
-	const nonce = nonceBox(nonceBuffer);
+	const nonce = randomize(nonceBuffer);
 	if (id) {
 		headers.id = id;
 	} else {

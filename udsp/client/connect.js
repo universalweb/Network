@@ -4,20 +4,19 @@ export async function connect(message = {}) {
 	console.log('-------CLIENT CONNECTING-------\n');
 	const thisClient = this;
 	// opn stands for open meaning connect to a server
-	message.intro = 'Hello World!';
+	message.intro = 'Hello Server!';
 	const result = await thisClient.request('opn', message);
 	console.log(result);
 	const {
 		body,
 		state,
 		time,
-		cid
+		sid
 	} = result;
-	if (state === 1 && cid) {
+	if (state === 1 && sid) {
 		connected(body);
 		thisClient.state = 1;
-		thisClient.cid = cid;
-		thisClient.id = cid;
+		thisClient.serverId = sid;
 		thisClient.lastPacketTime = Date.now();
 		thisClient.lastPacketGivenTime = time;
 		const bodyDecoded = decode(body);

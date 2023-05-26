@@ -11,13 +11,17 @@ import { reply } from '#udsp/reply';
 const isServer = true;
 export async function onPacket(packetEncoded, connection) {
 	const thisServer = this;
-	const { keypair } = thisServer;
+	const {
+		keypair,
+		connectionIdKey
+	} = thisServer;
 	msgReceived('Message Received');
 	const config = {
 		packetEncoded,
 		connection,
 		server: thisServer,
-		isServer: true
+		isServer: true,
+		connectionIdKey,
 	};
 	const headers = await decodePacketHeaders(config);
 	const {

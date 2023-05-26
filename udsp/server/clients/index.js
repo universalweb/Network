@@ -66,7 +66,7 @@ export class Client {
 			port,
 			nonce,
 			transmitKey,
-			id,
+			clientId,
 			state,
 		} = client;
 		this.packetConfig = {
@@ -74,7 +74,7 @@ export class Client {
 			port,
 			nonce,
 			transmitKey,
-			id,
+			id: clientId,
 			state,
 		};
 	}

@@ -14,9 +14,11 @@ export async function opn(reply) {
 	const client = reply.client();
 	const server = reply.server();
 	const response = reply.response;
-	info(`Client ID${client.id}`, `Stream ID${response.sid}`);
+	info(`Server ID${client.idString}`, `Client ID${client.clientIdString}`, `Stream ID${response.sid}`);
 	response.head = {};
-	response.body = {};
+	response.body = {
+		sid: server.id
+	};
 	client.newKey = true;
 	if (cacheMaxAge) {
 		response.head.cacheMaxAge = cacheMaxAge;
@@ -42,9 +44,7 @@ export async function opn(reply) {
 	// connection status - backwards compatibility
 	response.state = 1;
 	// Server connection id
-	response.cid = client.id;
-	response.sid = server.id;
-	client.reKey = keypair();
-	response.body.reKey = boxSeal(client.reKey.publicKey, client.publicKey);
+	// client.reKey = keypair();
+	// response.body.reKey = boxSeal(client.reKey.publicKey, client.publicKey);
 	reply.send('struct');
 }

@@ -94,7 +94,7 @@ export class Ask {
 		const chunks = [];
 		const packetLength = body.length;
 		for (let index = 0; index < packetLength;index += chunkSize) {
-			const chunk = body.slice(index, index + chunkSize);
+			const chunk = body.subarray(index, index + chunkSize);
 			chunks.push(chunk);
 		}
 		return chunks;

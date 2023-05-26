@@ -33,7 +33,7 @@ const appServer = await createServer({
 	// Where to load app resources from
 	resourceDirectory: `${currentPath(import.meta)}resources/`,
 	// Server ID used for load balancing and attaching to the end of connection IDs
-	id: 0,
+	// id: Buffer.from('alpha'),
 	// on connect message to respond with when a connection is established
 	onConnectMessage: `Welcome to the Universal Web.`,
 	// Port to listen on for connections

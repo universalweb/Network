@@ -11,7 +11,8 @@ export async function onMessage(packetEncoded) {
 	const {
 		receiveKey,
 		nonce,
-		keypair
+		keypair,
+		connectionIdKey
 	} = this;
 	msgReceived('Message Received');
 	const config = {
@@ -19,7 +20,8 @@ export async function onMessage(packetEncoded) {
 		receiveKey,
 		nonce,
 		packetEncoded,
-		isClient: true
+		isClient: true,
+		connectionIdKey
 	};
 	const headers = decodePacketHeaders(config);
 	const packet = await decodePacket(config);

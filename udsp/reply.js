@@ -108,7 +108,16 @@ export class Reply {
 		}
 		return chunks;
 	}
-	sendChunked(packet, incomingDataEncoding) {
+	async chunkBuffer(body) {
+		const chunks = [];
+		const packetLength = body.length;
+		for (let index = 0; index < packetLength;index += chunkSize) {
+			const chunk = body.subarray(index, index + chunkSize);
+			chunks.push(chunk);
+		}
+		return chunks;
+	}
+	buildReplyPackets(packet, incomingDataEncoding) {
 		const thisReply = this;
 		if (packet.body && packet.body.length > 700) {
 			const chunks = thisReply.chunk(packet.body);
@@ -137,10 +146,10 @@ export class Reply {
 		msgSent('REPLY.SEND', response);
 		if (response.body) {
 			if (incomingDataEncodingTypesChunked.test(incomingDataEncoding)) {
-				this.sendChunked(response, incomingDataEncoding);
+				this.buildReplyPackets(response, incomingDataEncoding);
 			} else if (incomingDataEncoding === 'struct' || incomingDataEncoding === 'json') {
 				response.body = encode(response.body);
-				this.sendChunked(response, incomingDataEncoding);
+				this.buildReplyPackets(response, incomingDataEncoding);
 			}
 		}
 		thisReply.replyAll();

@@ -22,7 +22,8 @@ import dgram from 'dgram';
 // Default utility imports
 import { success, configure, info } from '#logs';
 import {
-	createSessionKey, clientSession, keypair, randomId, toBase64, emptyNonce, sessionKeys
+	createSessionKey, clientSession, keypair, toBase64, emptyNonce, sessionKeys,
+	createConnectionIdKey, encodeConnectionId, randomConnectionId
 } from '#crypto';
 import { pluckBuffer } from '#pluckBuffer';
 import { getCertificate } from '#certificate';
@@ -38,9 +39,6 @@ import { onListening } from './listening.js';
 import { currentPath } from '#directory';
 // UNIVERSAL WEB Client Class
 export class Client {
-	type = 'client';
-	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
-	descriptor = 'UDSP_CLIENT';
 	constructor(configuration) {
 		const thisClient = this;
 		console.log('-------CLIENT INITIALIZING-------\n', configuration);
@@ -69,7 +67,9 @@ export class Client {
 		this.emit = emit.bind(this);
 		this.onListening = onListening.bind(this);
 		this.onMessage = onMessage.bind(this);
-		thisClient.id = randomId();
+		thisClient.baseId = randomConnectionId();
+		thisClient.id = encodeConnectionId(thisClient.baseId, thisClient.connectionIdKey);
+		thisClient.idString = toBase64(thisClient.baseId);
 		thisClient.clientId = thisClient.id;
 		success(`clientId:`, toBase64(this.id));
 		success(`Creating Shared Keys`);
@@ -105,10 +105,10 @@ export class Client {
 		console.log(receiveKey, transmitKey);
 		const serviceKey = toBase64(destinationSignature);
 		const profileKey = toBase64(profileSignature);
+		success(`serviceKey:`, serviceKey);
+		success(`profileKey:`, profileKey);
 		// Needs to be more complex if forcing no connection with the same credentials
-		const connectionKey = `${serviceKey}${profileKey}`;
-		this.connectionKey = connectionKey;
-		Client.connections.set(connectionKey, thisClient);
+		Client.connections.set(thisClient.idString, thisClient);
 		thisClient.server.on('message', thisClient.onMessage.bind(thisClient));
 		thisClient.server.on('listening', thisClient.onListening);
 		return this;
@@ -125,8 +125,12 @@ export class Client {
 		thisClient.transmitKey = newSessionKeys.transmitKey;
 		thisClient.receiveKey = newSessionKeys.receiveKey;
 		thisClient.lastReKey = Date.now();
-		success(`client reKeyed -> ID: ${thisClient.connectionKey}`);
+		success(`client reKeyed -> ID: ${thisClient.idString}`);
 	}
+	type = 'client';
+	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
+	descriptor = 'UDSP_CLIENT';
+	connectionIdKey = createConnectionIdKey();
 	nonce = emptyNonce();
 	maxMTU = 1000;
 	encoding = 'binary';
