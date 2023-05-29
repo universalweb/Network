@@ -22,8 +22,7 @@ import dgram from 'dgram';
 // Default utility imports
 import { success, configure, info } from '#logs';
 import {
-	createSessionKey, clientSession, keypair, toBase64, emptyNonce, sessionKeys,
-	createConnectionIdKey, encodeConnectionId, randomConnectionId
+	createSessionKey, clientSession, keypair, toBase64, emptyNonce, sessionKeys, randomConnectionId, ed25519ToCurve25519PublicKey
 } from '#crypto';
 import { pluckBuffer } from '#pluckBuffer';
 import { getCertificate } from '#certificate';
@@ -37,7 +36,6 @@ import { onMessage } from './onPacket.js';
 import { connect } from './connect.js';
 import { onListening } from './listening.js';
 import { currentPath } from '#directory';
-import { encrypt } from '../../utilities/crypto';
 // UNIVERSAL WEB Client Class
 export class Client {
 	constructor(configuration) {
@@ -48,20 +46,34 @@ export class Client {
 			service,
 			profile,
 			ip: configIP,
-			port: configPort,
-			encryptConnectionId
+			port: configPort
 		} = configuration;
 		const {
 			ip,
 			port
-		} = service.ephemeral;
-		configure('CLIENT CONFIGURATION');
+		} = service;
+		configure('CLIENT CONFIGURATION', service);
 		assign(this, {
 			ip: configIP || ip,
 			port: configPort || port,
 			service,
 			profile,
 		});
+		thisClient.keypair = keypair();
+		thisClient.destinationPublicKey = service.publicKey;
+		thisClient.destinationBoxPublicKey = ed25519ToCurve25519PublicKey(service.publicKey);
+		const {
+			publicKey,
+			privateKey,
+		} = thisClient.keypair;
+		const clientSessionKeys = sessionKeys(publicKey, privateKey, thisClient.destinationPublicKey);
+		const {
+			transmitKey,
+			receiveKey
+		} = clientSessionKeys;
+		thisClient.transmitKey = transmitKey;
+		thisClient.receiveKey = receiveKey;
+		configure(`Shared Keys Created`);
 		this.connect = connect.bind(this);
 		this.send = send.bind(this);
 		this.request = request.bind(this);
@@ -69,49 +81,15 @@ export class Client {
 		this.emit = emit.bind(this);
 		this.onListening = onListening.bind(this);
 		this.onMessage = onMessage.bind(this);
-		thisClient.baseId = randomConnectionId();
-		thisClient.id = encodeConnectionId(thisClient.baseId, thisClient.connectionIdKey);
-		thisClient.idString = toBase64(thisClient.baseId);
+		thisClient.id = randomConnectionId();
+		thisClient.idString = toBase64(thisClient.id);
 		thisClient.clientId = thisClient.id;
 		success(`clientId:`, toBase64(this.id));
 		success(`Creating Shared Keys`);
-		const transmitKey = thisClient.transmitKey = createSessionKey();
-		const receiveKey = thisClient.receiveKey = createSessionKey();
-		// Currently unused but may in the future
-		const ephemeralProfileTransmitKey = thisClient.ephemeralProfileTransmitKey = createSessionKey();
-		const ephemeralProfileReceiveKey = thisClient.ephemeralProfileReceiveKey = createSessionKey();
 		success(`Creating Connection Keypair`);
-		thisClient.keypair = keypair();
-		if (encryptConnectionId) {
+		if (service.encryptConnectionId) {
 			thisClient.connectionIdKeypair = thisClient.keypair;
 		}
-		thisClient.keypair = keypair();
-		thisClient.ephemeralPublic = omit(profile.ephemeral, ['private']);
-		if (profile.master) {
-			thisClient.masterPublic = omit(profile.master, ['private']);
-		}
-		const { ephemeral: { signature: profileSignature } } = profile;
-		const {
-			ephemeral: {
-				key: destinationPublicKey,
-				signature: destinationSignature
-			}
-		} = service;
-		thisClient.destination = {
-			publicKey: destinationPublicKey,
-		};
-		const {
-			publicKey,
-			privateKey,
-		} = thisClient.keypair;
-		clientSession(receiveKey, transmitKey, publicKey, privateKey, destinationPublicKey);
-		configure(`Shared Keys Created`);
-		console.log(receiveKey, transmitKey);
-		const serviceKey = toBase64(destinationSignature);
-		const profileKey = toBase64(profileSignature);
-		success(`serviceKey:`, serviceKey);
-		success(`profileKey:`, profileKey);
-		// Needs to be more complex if forcing no connection with the same credentials
 		Client.connections.set(thisClient.idString, thisClient);
 		thisClient.server.on('message', thisClient.onMessage.bind(thisClient));
 		thisClient.server.on('listening', thisClient.onListening);
@@ -149,15 +127,6 @@ export class Client {
 	}
 	packetIdGenerator = construct(UniqID);
 }
-export function getClient(configuration) {
-	const serviceKey = configuration.service.ephemeral.signature.toString('base64');
-	const profileKey = configuration.profile.ephemeral.signature.toString('base64');
-	const connectionId = `${serviceKey}${profileKey}`;
-	const clientFound = Client.connections.get(connectionId);
-	if (clientFound) {
-		return clientFound;
-	}
-}
 export async function createClient(configuration, ignoreConnections) {
 	console.log(configuration);
 	return construct(Client, [configuration]);
@@ -168,10 +137,6 @@ export async function client(configuration, ignoreConnections) {
 	}
 	if (isString(configuration.profile)) {
 		configuration.profile = await getCertificate(configuration.profile);
-	}
-	const result = getClient(configuration, Client);
-	if (result) {
-		return result;
 	}
 	const uwClient = await createClient(configuration);
 	console.time('CONNECTING');

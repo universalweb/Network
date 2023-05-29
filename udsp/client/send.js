@@ -14,8 +14,6 @@ export async function send(config) {
 	info(`Send to server`);
 	const client = this;
 	const {
-		destination,
-		ephemeralPublic,
 		id,
 		ip,
 		keypair,
@@ -26,12 +24,13 @@ export async function send(config) {
 		serverId,
 		state,
 		transmitKey,
-		connectionIdKey
+		connectionIdKeypair,
+		service,
+		service: { encryptConnectionId },
+		destinationBoxPublicKey
 	} = client;
 	const packet = await encodePacket({
 		client,
-		destination,
-		ephemeralPublic,
 		footer,
 		headers,
 		id: serverId || id,
@@ -43,9 +42,12 @@ export async function send(config) {
 		profile,
 		state,
 		transmitKey,
-		connectionIdKey
+		destination: service,
+		connectionIdKeypair,
+		encryptConnectionId,
+		destinationBoxPublicKey
 	});
-	msgSent(`Packet Size ${packet.length}`, message);
+	msgSent(`Packet Size ${packet.length}`, message, port, ip);
 	return promise((accept, reject) => {
 		server.send(packet, port, ip, (error) => {
 			if (error) {

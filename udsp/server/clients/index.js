@@ -9,9 +9,7 @@ import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 import { UniqID, construct, assign } from 'Acid';
-import {
-	sessionKeys, keypair, toBase64, signVerifyHash
-} from '#crypto';
+import { sessionKeys, keypair, toBase64 } from '#crypto';
 export class Client {
 	descriptor = 'client';
 	client = true;

@@ -4,7 +4,7 @@ import {
 import { decode, } from 'msgpackr';
 import { assign, } from 'Acid';
 import {
-	encrypt, nonceBox, toBase64, hashSign, decrypt, boxUnseal, sessionKeys
+	encrypt, nonceBox, toBase64, decrypt, boxUnseal, sessionKeys
 } from '#crypto';
 import { createClient } from './server/clients/index.js';
 export function decodePacketHeaders(config) {
@@ -15,7 +15,6 @@ export function decodePacketHeaders(config) {
 		options,
 		packetEncoded,
 		server,
-		source,
 		state,
 		connectionIdKeypair,
 		keypair,
@@ -34,6 +33,7 @@ export function decodePacketHeaders(config) {
 	info(`clientId: ${toBase64(headers.id)}`);
 	if (headers.key) {
 		success(`Public Key is given -> Processing as create client`);
+		console.log(keypair);
 		const publicKey = boxUnseal(headers.key, keypair.publicKey, keypair.privateKey);
 		if (!publicKey) {
 			return failed(publicKey, 'Client Key Decrypt Failed');
@@ -66,7 +66,6 @@ export async function decodePacket(config, result) {
 		options,
 		packetEncoded,
 		server,
-		source,
 		state,
 		headers,
 		client,

@@ -13,7 +13,8 @@ export async function onPacket(packetEncoded, connection) {
 	const thisServer = this;
 	const {
 		keypair,
-		connectionIdKeypair
+		connectionIdKeypair,
+		encryptConnectionId
 	} = thisServer;
 	msgReceived('Message Received');
 	const config = {
@@ -22,6 +23,7 @@ export async function onPacket(packetEncoded, connection) {
 		server: thisServer,
 		isServer: true,
 		keypair,
+		encryptConnectionId,
 		connectionIdKeypair
 	};
 	const headers = await decodePacketHeaders(config);

@@ -30,8 +30,8 @@ function certificateFactory(config, options = {}) {
 		certificateWrapper.publicKey = publicKey;
 	}
 	if (options.master) {
-		certificate.masterSignature = signDetached(certificate.publicKey, options.master.privateKey);
-		certificate.masterPublicKey = options.master.certificate.publicKey;
+		certificate.masterSignature = signDetached(Buffer.concat([certificate.start, certificate.publicKey]), options.master.privateKey);
+		certificate.masterPublicKey = options.master.publicKey;
 	}
 	certificateWrapper.certificate = encode(certificateWrapper.certificate);
 	if (options.master) {

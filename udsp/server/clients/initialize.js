@@ -1,9 +1,8 @@
 import { created } from './created.js';
 import {
-	decrypt, emptyNonce, keypair, randombytes_buf,
-	sessionKeys, signVerifyHash, toBase64, boxUnseal,
-	encodeConnectionId, randomConnectionId,
-	getConnectionId,
+	decrypt, emptyNonce, keypair,
+	sessionKeys, toBase64, boxUnseal,
+	randomConnectionId,
 	randomBuffer
 } from '#crypto';
 import {

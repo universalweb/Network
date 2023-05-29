@@ -42,7 +42,9 @@ const {
 	crypto_secretbox_easy,
 	crypto_secretbox_MACBYTES,
 	crypto_secretbox_NONCEBYTES,
-	crypto_secretbox_KEYBYTES
+	crypto_secretbox_KEYBYTES,
+	crypto_sign_ed25519_pk_to_curve25519,
+	crypto_sign_ed25519_sk_to_curve25519
 } = sodiumLib;
 import { isBuffer, assign } from 'Acid';
 import { encode, decode } from 'msgpackr';
@@ -157,12 +159,19 @@ export function sessionKeys(sourcePublicKey, sourcePrivateKey, targetPublicKey) 
 		receiveKey
 	};
 }
-/* console.log(crypto_kx_SECRETKEYBYTES, crypto_sign_SECRETKEYBYTES);
- */
 export function signKeypair() {
 	const publicKey = bufferAlloc(crypto_sign_PUBLICKEYBYTES);
 	const privateKey = bufferAlloc(crypto_sign_SECRETKEYBYTES);
 	crypto_sign_keypair(publicKey, privateKey);
+	return {
+		publicKey,
+		privateKey
+	};
+}
+export function boxKeypair() {
+	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);
+	const privateKey = bufferAlloc(crypto_box_SECRETKEYBYTES);
+	crypto_box_keypair(publicKey, privateKey);
 	return {
 		publicKey,
 		privateKey
@@ -177,6 +186,26 @@ export function boxUnseal(encrypted, publicKey, privateKey) {
 	const message = bufferAlloc(encrypted.length - crypto_box_SEALBYTES);
 	const isValid = crypto_box_seal_open(message, encrypted, publicKey, privateKey);
 	return isValid && message;
+}
+export function ed25519ToCurve25519PublicKey(originalPublicKey) {
+	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);
+	crypto_sign_ed25519_pk_to_curve25519(publicKey, originalPublicKey);
+	return publicKey;
+}
+export function ed25519ToCurve25519PrivateKey(originalPrivateKey) {
+	const privateKey = bufferAlloc(crypto_box_SECRETKEYBYTES);
+	crypto_sign_ed25519_sk_to_curve25519(privateKey, originalPrivateKey);
+	return privateKey;
+}
+export function ed25519ToCurve25519(originalKeypair) {
+	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);
+	const privateKey = bufferAlloc(crypto_box_SECRETKEYBYTES);
+	crypto_sign_ed25519_pk_to_curve25519(publicKey, originalKeypair.publicKey);
+	crypto_sign_ed25519_sk_to_curve25519(privateKey, originalKeypair.privateKey);
+	return {
+		publicKey,
+		privateKey
+	};
 }
 export function toBuffer(value) {
 	return Buffer.from(value);

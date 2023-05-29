@@ -17,8 +17,6 @@ import { currentPath } from '#utilities/directory';
 import dgram from 'dgram';
 import { on, off } from './events.js';
 import { bindServer } from './bind.js';
-import { chunkMessage } from './chunkMessage.js';
-import { configure } from './configure.js';
 import { emit } from './emit.js';
 import { onError } from './onError.js';
 import { onListen } from './onListen.js';
@@ -90,22 +88,24 @@ export class Server {
 			emit
 		});
 		thisServer.bindActions(actions);
-		if (configuration.certificate) {
-			thisServer.certificate = await getCertificate(configuration.certificate);
+		if (thisServer.certificate) {
+			thisServer.certificate = await getCertificate(thisServer.certificate);
+			thisServer.publicCertificate = thisServer.certificate.certificateDecoded;
 			thisServer.keypair = {
-				publicKey: thisServer.certificate.publicKey || thisServer.certificate.ephemeral.publicKey,
-				privateKey: thisServer.certificate.privateKey || thisServer.certificate.ephemeral.privateKey,
+				publicKey: thisServer.certificate.publicKey,
+				privateKey: thisServer.certificate.privateKey,
 			};
 		}
-		if (configuration.connectionIdCertificate) {
-			thisServer.connectionIdCertificate = await getCertificate(configuration.connectionIdCertificate);
-		} else if (configuration.encryptConnectionId) {
+		if (thisServer.connectionIdCertificate) {
+			thisServer.connectionIdCertificate = await getCertificate(thisServer.connectionIdCertificate);
+		} else if (thisServer.publicCertificate.encryptConnectionId) {
 			thisServer.connectionIdKeypair = thisServer.certificate;
 		}
 		if (thisServer.connectionIdKeypair) {
+			thisServer.encryptConnectionId = true;
 			thisServer.connectionIdKeypair = {
-				publicKey: thisServer.connectionIdKeypair.publicKey || thisServer.connectionIdKeypair.ephemeral.publicKey,
-				privateKey: thisServer.connectionIdKeypair.privateKey || thisServer.connectionIdKeypair.ephemeral.privateKey,
+				publicKey: thisServer.connectionIdKeypair.publicKey,
+				privateKey: thisServer.connectionIdKeypair.privateKey,
 			};
 		}
 		if (configuration.randomId || !thisServer.id) {
@@ -114,7 +114,17 @@ export class Server {
 		if (isFunction(thisServer.id)) {
 			thisServer.id = await thisServer.id();
 		}
-		configure(thisServer);
+		if (thisServer.publicCertificate) {
+			const {
+				ip: certIp,
+				port: certPort
+			} = thisServer.publicCertificate;
+			const port = configuration.port || certPort;
+			const ip = configuration.ip || certIp;
+			console.log(thisServer.certificate, ip, port);
+			this.ip = ip;
+			this.port = port;
+		}
 		thisServer.server.on('error', thisServer.onError);
 		thisServer.server.on('listening', thisServer.onListen);
 		thisServer.server.on('message', thisServer.onPacket);

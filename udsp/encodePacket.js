@@ -15,12 +15,9 @@ import {
 	nonceBox,
 	randomize,
 	toBase64,
-	hashSignDetached,
+	signDetached,
 	boxSeal,
 	boxUnseal,
-	crypto_box_keypair,
-	crypto_box_PUBLICKEYBYTES,
-	crypto_box_SECRETKEYBYTES
 } from '#crypto';
 export async function encodePacket(data) {
 	const {
@@ -35,13 +32,19 @@ export async function encodePacket(data) {
 		client,
 		keypair,
 		profile,
-		ephemeralPublic,
 		destination,
-		isClient
+		connectionIdKeypair,
+		encryptConnectionId,
+		isClient,
+		destinationBoxPublicKey
 	} = data;
 	const nonce = randomize(nonceBuffer);
 	if (id) {
-		headers.id = boxSeal(id, destination.publicKey);
+		if (encryptConnectionId) {
+			headers.id = boxSeal(id, destination.publicKey);
+		} else {
+			headers.id = id;
+		}
 	} else {
 		return console.error(`ID IS'T ASSIGNED`);
 	}
@@ -51,9 +54,12 @@ export async function encodePacket(data) {
 		if (state === 0) {
 			console.log('DESTINATION PUBLIC KEY', destination.publicKey);
 			headers.key = boxSeal(keypair.publicKey, destination.publicKey);
-			const profileKeypairSignature = hashSignDetached(Buffer.concat([nonce, keypair.publicKey]), profile.ephemeral.private);
+			const timeBuffer = Buffer.from(message.t.toString());
+			// This can be seperated out as an authentication request to the service or it can be done here
+			const authenticationBuffer = Buffer.concat([timeBuffer, destination.publicKey, keypair.publicKey]);
+			const profileKeypairSignature = signDetached(authenticationBuffer, profile.privateKey);
 			message.sig = profileKeypairSignature;
-			message.idc = ephemeralPublic;
+			message.idc = profile.publicKey;
 			console.log(`Sig Size:${message.sig.length}`);
 			console.log(`Setting ephemeral random public key to header & profile cert to message.body`);
 		}
@@ -77,7 +83,7 @@ export async function encodePacket(data) {
 	info(`Transmit Key ${toBase64(transmitKey)}`);
 	info(`Nonce Size: ${headers.nonce.length} ${toBase64(headers.nonce)}`);
 	const packetSize = packet.length;
-	info(`encode Packet Size ${packetSize}`);
+	info(`encoded Packet Size ${packetSize}`);
 	if (packetSize >= 1280) {
 		console.log(packet);
 		failed(`WARNING: Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);

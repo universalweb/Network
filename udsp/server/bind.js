@@ -6,8 +6,7 @@ export async function bindServer() {
 		port,
 		ip,
 	} = this;
-	info(`BIND SERVER`);
-	console.log(this);
+	info(`BIND SERVER`, ip, port);
 	await promise((accept) => {
 		server.bind(port, ip, accept);
 		info(`SERVER BOUND: IP:${ip}  -  PORT:${port}`);
