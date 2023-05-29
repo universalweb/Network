@@ -2,7 +2,8 @@ import {
 	construct,
 	each,
 	assign,
-	UniqID
+	UniqID,
+	isFunction
 } from 'Acid';
 import {
 	success,
@@ -41,8 +42,6 @@ export class Server {
 	ip = '::1';
 	realTime = true;
 	gracePeriod = 30000;
-	// ServerIDs can be incremented or they can be checked for uniqueness below is just a random buffer.
-	id = randomBuffer(4);
 	maxMTU = 1000;
 	encoding = 'utf8';
 	max = 1000;
@@ -92,8 +91,23 @@ export class Server {
 			emit
 		});
 		thisServer.bindActions(actions);
-		if (configuration.profile) {
-			thisServer.profile = await getCertificate(configuration.profile);
+		if (configuration.certificate) {
+			thisServer.certificate = await getCertificate(configuration.certificate);
+			thisServer.keypair = thisServer.certificate.ephemeral;
+		}
+		if (configuration.connectionIdCertificate) {
+			thisServer.connectionIdCertificate = await getCertificate(configuration.connectionIdCertificate);
+			thisServer.connectionIdKeypair = thisServer.connectionIdCertificate.ephemeral;
+		} else if (configuration.encryptConnectionId) {
+			thisServer.connectionIdKeypair = thisServer.keypair;
+		}
+		if (configuration.randomId) {
+			thisServer.id = randomBuffer(4);
+		} else if (!thisServer.id) {
+			thisServer.id = randomBuffer(4);
+		}
+		if (isFunction(thisServer.id)) {
+			thisServer.id = await thisServer.id();
 		}
 		configure(thisServer);
 		thisServer.server.on('error', thisServer.onError);

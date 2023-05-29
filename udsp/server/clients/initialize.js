@@ -17,17 +17,14 @@ export async function initialize(config) {
 		server,
 		connection,
 		nonce,
-		id,
-		key
+		id: clientId,
+		key: publicKey
 	} = config;
 	const {
-		profile: {
-			ephemeral: {
-				private: serverPrivateKey,
-				key: serverPublicKey
-			}
+		keypair: {
+			private: serverPrivateKey,
+			key: serverPublicKey
 		},
-		connectionIdKey,
 		clients,
 		configuration: { id: serverId }
 	} = server;
@@ -35,11 +32,10 @@ export async function initialize(config) {
 		address,
 		port
 	} = connection;
-	const publicKey = boxUnseal(key, serverPublicKey, serverPrivateKey);
-	if (!publicKey) {
-		return failed(publicKey, 'Client Key Decrypt Failed');
-	}
 	const sessionKey = sessionKeys(serverPublicKey, serverPrivateKey, publicKey);
+	if (!sessionKey) {
+		return failed('Session Key Failed');
+	}
 	const {
 		receiveKey,
 		transmitKey,
@@ -56,7 +52,7 @@ export async function initialize(config) {
 		Server IDs can be random with some actionable info
 		The client ID can be used as the base of the server ID and then generate the rest to form a unique server specific ID
 	*/
-	success(`Client Connection ID: ${toBase64(id)}`);
+	success(`Client Connection ID: ${toBase64(clientId)}`);
 	/*
 		The server's connection ID is used for loadbalancing, internal packet analysis,
 		client/server privacy, client/server security, congestion control, connection migration, and external analysis obfuscation.
@@ -68,7 +64,6 @@ export async function initialize(config) {
 	*/
 	// The connection id header is the full value that is found in the id field for packets leaving the server.
 	const serverConnectionId = Buffer.concat([server.id, randomBuffer(4)]);
-	const serverConnectionIdHeader = encodeConnectionId(serverConnectionId, connectionIdKey);
 	// The server connection id is the value that is used to identify the client to the server.
 	const serverConnectionIdString = toBase64(serverConnectionId);
 	console.log(`Server Connection ID: ${toBase64(serverConnectionId)}`);
@@ -78,11 +73,10 @@ export async function initialize(config) {
 		success(`Server client ID is open ${serverConnectionIdString}`);
 	}
 	clients.set(serverConnectionIdString, client);
+	client.id = serverConnectionId;
 	client.idString = serverConnectionIdString;
-	client.serverConnectionId = serverConnectionId;
-	client.id = serverConnectionIdHeader;
-	client.clientId = id;
-	client.clientIdString = toBase64(id);
+	client.clientId = clientId;
+	client.clientIdString = toBase64(clientId);
 	client.publicKey = publicKey;
 	client.address = address;
 	client.port = port;
@@ -97,10 +91,6 @@ export async function initialize(config) {
 		}, 30000);
 	}
 	client.nonce = emptyNonce();
-	// client.publicCertificate = publicCertificate;
-	/*
-		Packets that need to be sent and confirmed
-	*/
 	success(`client Created: ID:${serverConnectionIdString} ${address}:${port}`);
 	await server.clientEvent('constructed', `SID${serverConnectionIdString}`, `CID${client.clientIdString}`);
 	await client.created();

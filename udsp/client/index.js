@@ -37,6 +37,7 @@ import { onMessage } from './onPacket.js';
 import { connect } from './connect.js';
 import { onListening } from './listening.js';
 import { currentPath } from '#directory';
+import { encrypt } from '../../utilities/crypto';
 // UNIVERSAL WEB Client Class
 export class Client {
 	constructor(configuration) {
@@ -47,7 +48,8 @@ export class Client {
 			service,
 			profile,
 			ip: configIP,
-			port: configPort
+			port: configPort,
+			encryptConnectionId
 		} = configuration;
 		const {
 			ip,
@@ -79,6 +81,10 @@ export class Client {
 		const ephemeralProfileTransmitKey = thisClient.ephemeralProfileTransmitKey = createSessionKey();
 		const ephemeralProfileReceiveKey = thisClient.ephemeralProfileReceiveKey = createSessionKey();
 		success(`Creating Connection Keypair`);
+		thisClient.keypair = keypair();
+		if (encryptConnectionId) {
+			thisClient.connectionIdKeypair = thisClient.keypair;
+		}
 		thisClient.keypair = keypair();
 		thisClient.ephemeralPublic = omit(profile.ephemeral, ['private']);
 		if (profile.master) {
@@ -130,7 +136,6 @@ export class Client {
 	type = 'client';
 	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
 	descriptor = 'UDSP_CLIENT';
-	connectionIdKey = createConnectionIdKey();
 	nonce = emptyNonce();
 	maxMTU = 1000;
 	encoding = 'binary';
@@ -142,15 +147,15 @@ export class Client {
 	close() {
 		console.log(this, 'client closed down.');
 		this.server.close();
-		Client.connections.delete(this.connectionKey);
+		Client.connections.delete(this.id);
 	}
 	packetIdGenerator = construct(UniqID);
 }
 export function getClient(configuration) {
 	const serviceKey = configuration.service.ephemeral.signature.toString('base64');
 	const profileKey = configuration.profile.ephemeral.signature.toString('base64');
-	const connectionKey = `${serviceKey}${profileKey}`;
-	const clientFound = Client.connections.get(connectionKey);
+	const connectionId = `${serviceKey}${profileKey}`;
+	const clientFound = Client.connections.get(connectionId);
 	if (clientFound) {
 		return clientFound;
 	}

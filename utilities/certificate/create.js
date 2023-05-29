@@ -1,99 +1,71 @@
 import { logCert, imported } from '#logs';
 import { read, write } from '#file';
-import { keypair, signKeypair } from '#crypto';
-import { signCertificate } from './sign.js';
+import { signKeypair, signDetached } from '#crypto';
 import { saveCertificate } from './save.js';
 import { assign, merge, clone } from 'Acid';
+import { encode } from 'msgpackr';
 imported('Certificate Creation');
-export async function createProfile(profileTemplate, certificateName, directory) {
+function certificateFactory(config, options = {}) {
+	const currentDate = new Date();
+	const certificate = {
+		start: currentDate.toUTCString(),
+	};
+	if (config) {
+		assign(certificate, config);
+	}
+	if (!certificate.end) {
+		const endDate = currentDate.setUTCMonth(currentDate.getUTCMonth() + 3);
+		certificate.end = currentDate.toUTCString();
+	}
+	const certificateWrapper = {
+		certificate,
+	};
+	if (!certificate.publicKey) {
+		const {
+			publicKey,
+			privateKey
+		} = signKeypair();
+		certificate.publicKey = publicKey;
+		certificateWrapper.privateKey = privateKey;
+	}
+	if (options.master) {
+		certificate.masterSignature = signDetached(certificate.publicKey, options.master.privateKey);
+		certificate.masterPublicKey = options.master.certificate.publicKey;
+	}
+	certificateWrapper.certificate = encode(certificateWrapper.certificate);
+	if (options.master) {
+		certificateWrapper.masterSignature = signDetached(certificateWrapper.certificate, options.master.privateKey);
+		console.log(`masterSignature: ${certificateWrapper.masterSignature.length}bytes`);
+	}
+	return certificateWrapper;
+}
+export async function createProfile(config) {
 	const {
-		ephemeral: ephemeralTemplate,
-		master: masterTemplate
-	} = clone(profileTemplate);
-	const {
-		publicKey: masterKey,
-		secretKey: secretKeyMaster
-	} = signKeypair();
-	const {
-		publicKey: ephemeralKey,
-		secretKey: secretKeyEphemeral
-	} = signKeypair();
-	const ephemeral = merge(ephemeralTemplate, {
-		start: Date.now(),
-		key: ephemeralKey
-	});
-	const master = merge(masterTemplate, {
-		start: Date.now(),
-		key: masterKey,
-		private: secretKeyMaster
+		template: {
+			ephemeral: ephemeralTemplate,
+			master: masterTemplate
+		}
+	} = config;
+	const master = certificateFactory(masterTemplate);
+	const ephemeral = certificateFactory(ephemeralTemplate, {
+		master
 	});
 	const profile = {
 		ephemeral,
 		master,
 	};
-	logCert('Certificates Built');
-	ephemeral.signature = signCertificate(ephemeral, master);
-	logCert('Ephemeral Certificate Signed');
-	ephemeral.private = secretKeyEphemeral;
-	if (directory) {
-		await saveCertificate(profile, directory, certificateName);
-		logCert(`Certificates Saved to ${directory}`, certificateName);
+	console.log(`ephemeral: ${ephemeral.certificate.length}bytes`);
+	console.log(`master: ${master.certificate.length}bytes`);
+	if (config.savePath) {
+		await saveCertificate(profile, config.savePath, config.certificateName);
 	}
 	console.log('CERTIFICATE BUILT');
 	return profile;
 }
-export async function createEphemeralCertificate(ephemeralTemplate, master, certificateName, directory) {
-	const {
-		publicKey,
-		secretKey
-	} = signKeypair();
-	const ephemeral = merge(ephemeralTemplate, {
-		start: Date.now(),
-		key: publicKey
-	});
-	logCert('Ephemeral Certificate Built');
-	ephemeral.signature = signCertificate(ephemeral, master);
-	logCert('Ephemeral Certificate Signed');
-	ephemeral.private = secretKey;
-	if (directory) {
-		await saveCertificate(ephemeral, directory, certificateName);
-		logCert(`Certificate Saved to ${directory}`, certificateName);
+export async function createCertificate(config, options) {
+	const certificate = certificateFactory(config.template, options);
+	if (config.savePath) {
+		await saveCertificate(certificate, config.savePath, config.certificateName);
 	}
-	return ephemeral;
-}
-export async function createDomainEphemeralCertificate(ephemeralTemplate, master, certificateName, directory) {
-	const {
-		publicKey,
-		secretKey
-	} = keypair();
-	const ephemeral = merge(ephemeralTemplate, {
-		start: Date.now(),
-		key: publicKey
-	});
-	logCert('Ephemeral Certificate Built');
-	ephemeral.signature = signCertificate(ephemeral, master);
-	logCert('Ephemeral Certificate Signed');
-	ephemeral.private = secretKey;
-	if (directory) {
-		await saveCertificate(ephemeral, directory, certificateName);
-		logCert(`Certificate Saved to ${directory}`, certificateName);
-	}
-	return ephemeral;
-}
-export async function createMasterCertificate(masterTemplate, certificateName, directory) {
-	const {
-		publicKey,
-		secretKey
-	} = signKeypair();
-	const master = merge(masterTemplate, {
-		start: Date.now(),
-		key: publicKey,
-		private: secretKey
-	});
-	logCert('Master Certificate Built');
-	if (directory) {
-		await saveCertificate(master, directory, certificateName);
-		logCert(`Certificate Saved to ${directory}`, certificateName);
-	}
-	return master;
+	return certificate;
 }

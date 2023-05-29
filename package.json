@@ -83,8 +83,6 @@
 		"#crypto": "./utilities/crypto.js",
 		"#watch": "./utilities/watch.js",
 		"#logs": "./utilities/logs.js",
-		"#buildPacketSize": "./utilities/buildPacketSize.js",
-		"#buildStringSize": "./utilities/buildStringSize.js",
 		"#cleanPath": "./utilities/cleanPath.js",
 		"#file": "./utilities/file.js",
 		"#propertyAccess": "./utilities/propertyAccess.js",

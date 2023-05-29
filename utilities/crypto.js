@@ -65,7 +65,7 @@ export function nonceBox(nonceBuffer) {
 	const nonce = randomize(emptyNonce());
 	return nonce;
 }
-export function createConnectionIdKey() {
+export function createSecretKey() {
 	const secretKey = bufferAlloc(crypto_aead_xchacha20poly1305_ietf_KEYBYTES);
 	crypto_aead_xchacha20poly1305_ietf_keygen(secretKey);
 	return secretKey;
@@ -91,85 +91,6 @@ export function decrypt(cipher, ad, nonce, secretKey) {
 		return false;
 	}
 }
-/*
-	Generates either short connection ID or a long structured & encrypted connection ID.
-	The long IDs are used for loadbalancing and are encrypted with a secret key & if a randomBytesSize is given, a random buffer is concatenated to the source.
- */
-export function encodeConnectionId(source, secretKey, randomBytesSize) {
-	if (secretKey) {
-		const nonce = nonceBox();
-		const sourceBuffer = (isBuffer(source)) ? source : Buffer.from(source);
-		const sourceArray = [sourceBuffer];
-		if (randomBytesSize) {
-			sourceArray[1] = randomBuffer(randomBytesSize);
-		}
-		const sourceBufferConcat = Buffer.concat(sourceArray);
-		const encryptedSource = encrypt(sourceBufferConcat, null, nonce, secretKey);
-		return Buffer.concat([encryptedSource, nonce]);
-	} else {
-		return randomConnectionId();
-	}
-}
-export function getConnectionIdData(source, secretKey) {
-	const sourceLength = source.length;
-	if (!sourceLength) {
-		return console.error('No source length');
-	}
-	if (!secretKey || sourceLength < crypto_aead_xchacha20poly1305_ietf_NPUBBYTES) {
-		return source;
-	}
-	const sourceLengthMinusNonce = sourceLength - crypto_aead_xchacha20poly1305_ietf_NPUBBYTES;
-	if (sourceLengthMinusNonce < 0 || sourceLengthMinusNonce > sourceLength) {
-		return console.error('Error in nonce+source length');
-	}
-	const connectionIdEncrypted = source.subarray(0, sourceLengthMinusNonce);
-	/* 	console.log('Connection ID Encrypted', connectionIdEncrypted.toString('base64')); */
-	const nonce = source.subarray(sourceLengthMinusNonce, sourceLength);
-	return decrypt(connectionIdEncrypted, null, nonce, secretKey);
-}
-export function getConnectionIdNonce(source, secretKey) {
-	const sourceLength = source.length;
-	if (!sourceLength) {
-		return console.error('No source length');
-	}
-	if (!secretKey || sourceLength < crypto_aead_xchacha20poly1305_ietf_NPUBBYTES) {
-		return source;
-	}
-	const sourceLengthMinusNonce = sourceLength - crypto_aead_xchacha20poly1305_ietf_NPUBBYTES;
-	if (sourceLengthMinusNonce < 0 || sourceLengthMinusNonce > sourceLength) {
-		return console.error('Error in nonce+source length');
-	}
-	const connectionIdEncrypted = source.subarray(0, sourceLengthMinusNonce);
-	/* 	console.log('Connection ID Encrypted', connectionIdEncrypted.toString('base64')); */
-	const nonce = source.subarray(sourceLengthMinusNonce, sourceLength);
-	return decrypt(connectionIdEncrypted, null, nonce, secretKey);
-}
-export function getConnectionId(source, secretKey) {
-	const sourceLength = source.length;
-	if (!sourceLength) {
-		return console.error('No source length');
-	}
-	if (!secretKey) {
-		return source;
-	}
-	const sourceLengthMinusNonce = sourceLength - crypto_aead_xchacha20poly1305_ietf_NPUBBYTES;
-	if (sourceLengthMinusNonce < 0 || sourceLengthMinusNonce > sourceLength) {
-		return console.error('Error in nonce+source length');
-	}
-	const connectionIdEncrypted = source.subarray(0, sourceLengthMinusNonce);
-	const nonce = source.subarray(sourceLengthMinusNonce, sourceLength);
-	const decrypted = decrypt(connectionIdEncrypted, null, nonce, secretKey);
-	if (decrypted) {
-		return [decrypted, nonce];
-	}
-}
-// Example of Connection ID Encryption
-// const connectionId = Buffer.concat([randomConnectionId(4), randomConnectionId(8)]);
-// const key = createConnectionIdKey();
-// console.log(connectionId.toString('base64'));
-// const encryptedA = encodeConnectionId(connectionId, key);
-// console.log(encryptedA, encryptedA.length);
-// console.log(getConnectionIdData(encryptedA, key).toString('base64'));
 export function passwordHash(password) {
 	const out = bufferAlloc(crypto_pwhash_STRBYTES);
 	crypto_pwhash_str(out, (isBuffer(password)) ? password : Buffer.from(password), 	crypto_pwhash_OPSLIMIT_MIN, crypto_pwhash_MEMLIMIT_MIN);
@@ -193,46 +114,31 @@ export function hashShort(message) {
 	crypto_shorthash(out, message, bufferAlloc(crypto_shorthash_KEYBYTES));
 	return out;
 }
-export function sign(message, secretKey) {
+export function sign(message, privateKey) {
 	const signedMessage = bufferAlloc(crypto_sign_BYTES + message.length);
-	crypto_sign(signedMessage, message, secretKey);
+	crypto_sign(signedMessage, message, privateKey);
 	return signedMessage;
 }
-export function signDetached(message, secretKey) {
+export function signDetached(message, privateKey) {
 	const signedMessage = bufferAlloc(crypto_sign_BYTES);
-	crypto_sign_detached(signedMessage, message, secretKey);
+	crypto_sign_detached(signedMessage, message, privateKey);
 	return signedMessage;
 }
-export function hashSignDetached(message, secretKey, amount) {
-	return signDetached(hash(message, amount), secretKey);
-}
-export function hashSignDetachedMin(message, secretKey) {
-	return signDetached(hashMin(message), secretKey);
-}
-export function hashSignDetachedShort(message, secretKey) {
-	return signDetached(hashShort(message), secretKey);
-}
-export function signOpen(signedMessage, publicKey) {
+export function signVerify(signedMessage, publicKey) {
 	const message = bufferAlloc(signedMessage.length - crypto_sign_BYTES);
 	const verify = crypto_sign_open(message, signedMessage, publicKey);
 	return verify && message;
 }
-export function signVerify(signedMessage, message, publicKey) {
-	return crypto_sign_verify_detached(signedMessage, signedMessage, publicKey);
-}
-export function signVerifyHash(signedMessage, message, publicKey, amount) {
-	return crypto_sign_verify_detached(signedMessage, hash(message, amount), publicKey);
-}
-export function hashSign(message, secretKey) {
-	return sign(hash(message), secretKey);
+export function signVerifyDetached(signedMessage, message, publicKey) {
+	return crypto_sign_verify_detached(signedMessage, message, publicKey);
 }
 export function keypair() {
 	const publicKey = bufferAlloc(crypto_kx_PUBLICKEYBYTES);
-	const secretKey = bufferAlloc(crypto_kx_SECRETKEYBYTES);
-	crypto_kx_keypair(publicKey, secretKey);
+	const privateKey = bufferAlloc(crypto_kx_SECRETKEYBYTES);
+	crypto_kx_keypair(publicKey, privateKey);
 	return {
 		publicKey,
-		secretKey
+		privateKey
 	};
 }
 export function clientSession(receiveKey, transmissionKey, publicKey, privateKey, serverPublicKey) {
@@ -242,10 +148,10 @@ export function createSessionKey() {
 	const sessionKey = bufferAlloc(crypto_kx_SESSIONKEYBYTES);
 	return sessionKey;
 }
-export function sessionKeys(sourcePublicKey, sourceSecretKey, targetPublicKey) {
+export function sessionKeys(sourcePublicKey, sourcePrivateKey, targetPublicKey) {
 	const receiveKey = createSessionKey();
 	const transmitKey = createSessionKey();
-	crypto_kx_server_session_keys(receiveKey, transmitKey, sourcePublicKey, sourceSecretKey, targetPublicKey);
+	crypto_kx_server_session_keys(receiveKey, transmitKey, sourcePublicKey, sourcePrivateKey, targetPublicKey);
 	return {
 		transmitKey,
 		receiveKey
@@ -255,11 +161,11 @@ export function sessionKeys(sourcePublicKey, sourceSecretKey, targetPublicKey) {
  */
 export function signKeypair() {
 	const publicKey = bufferAlloc(crypto_sign_PUBLICKEYBYTES);
-	const secretKey = bufferAlloc(crypto_sign_SECRETKEYBYTES);
-	crypto_sign_keypair(publicKey, secretKey);
+	const privateKey = bufferAlloc(crypto_sign_SECRETKEYBYTES);
+	crypto_sign_keypair(publicKey, privateKey);
 	return {
 		publicKey,
-		secretKey
+		privateKey
 	};
 }
 export function boxSeal(message, publicKey) {
@@ -267,9 +173,9 @@ export function boxSeal(message, publicKey) {
 	crypto_box_seal(encrypted, message, publicKey);
 	return encrypted;
 }
-export function boxUnseal(encrypted, publicKey, secretKey) {
+export function boxUnseal(encrypted, publicKey, privateKey) {
 	const message = bufferAlloc(encrypted.length - crypto_box_SEALBYTES);
-	const isValid = crypto_box_seal_open(message, encrypted, publicKey, secretKey);
+	const isValid = crypto_box_seal_open(message, encrypted, publicKey, privateKey);
 	return isValid && message;
 }
 export function toBuffer(value) {

@@ -1,6 +1,6 @@
 import { success, failed } from './logs.js';
 export function pluckBuffer(messageBuffer, startIndex, endIndex, bufferName, charFormat) {
-	const plucked = messageBuffer.slice(startIndex, endIndex);
+	const plucked = messageBuffer.subarray(startIndex, endIndex);
 	if (!plucked) {
 		failed(`${bufferName}`);
 		return;
@@ -9,7 +9,7 @@ export function pluckBuffer(messageBuffer, startIndex, endIndex, bufferName, cha
 	return plucked;
 }
 export function pluckBuffer64(messageBuffer, startIndex, endIndex, bufferName) {
-	const plucked = messageBuffer.slice(startIndex, endIndex);
+	const plucked = messageBuffer.subarray(startIndex, endIndex);
 	if (!plucked) {
 		failed(`${bufferName}`);
 		return;

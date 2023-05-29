@@ -1,9 +1,0 @@
-{
-  "ephemeral": {
-    "version": 1
-  },
-  "master": {
-    "version": 1,
-    "algo": "default"
-  }
-}

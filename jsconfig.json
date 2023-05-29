@@ -53,12 +53,6 @@
 			"#logs": [
 				"./utilities/logs.js"
 			],
-			"#buildPacketSize": [
-				"./utilities/buildPacketSize.js"
-			],
-			"#buildStringSize": [
-				"./utilities/buildStringSize.js"
-			],
 			"#cleanPath": [
 				"./utilities/cleanPath.js"
 			],

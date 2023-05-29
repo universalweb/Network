@@ -19,7 +19,7 @@ export async function destroy(client, reason, server) {
 			`);
 	}
 	await server.clientEvent('destroy', client);
-	server.clients.delete(client.id);
+	server.clients.delete(client.idString);
 	client.address = null;
 	client.port = null;
 	client.id = null;

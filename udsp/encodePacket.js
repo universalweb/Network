@@ -41,7 +41,7 @@ export async function encodePacket(data) {
 	} = data;
 	const nonce = randomize(nonceBuffer);
 	if (id) {
-		headers.id = id;
+		headers.id = boxSeal(id, destination.publicKey);
 	} else {
 		return console.error(`ID IS'T ASSIGNED`);
 	}
