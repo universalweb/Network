@@ -1,7 +1,7 @@
 import { logCert, imported } from '#logs';
 import { read, write } from '#file';
 import { signKeypair, signDetached } from '#crypto';
-import { saveCertificate } from './save.js';
+import { saveCertificate, saveProfile } from './save.js';
 import { assign, merge, clone } from 'Acid';
 import { encode } from 'msgpackr';
 imported('Certificate Creation');
@@ -27,6 +27,7 @@ function certificateFactory(config, options = {}) {
 		} = signKeypair();
 		certificate.publicKey = publicKey;
 		certificateWrapper.privateKey = privateKey;
+		certificateWrapper.publicKey = publicKey;
 	}
 	if (options.master) {
 		certificate.masterSignature = signDetached(certificate.publicKey, options.master.privateKey);
@@ -44,7 +45,9 @@ export async function createProfile(config) {
 		template: {
 			ephemeral: ephemeralTemplate,
 			master: masterTemplate
-		}
+		},
+		savePath,
+		certificateName
 	} = config;
 	const master = certificateFactory(masterTemplate);
 	const ephemeral = certificateFactory(ephemeralTemplate, {
@@ -57,15 +60,27 @@ export async function createProfile(config) {
 	console.log(`ephemeral: ${ephemeral.certificate.length}bytes`);
 	console.log(`master: ${master.certificate.length}bytes`);
 	if (config.savePath) {
-		await saveCertificate(profile, config.savePath, config.certificateName);
+		await saveProfile({
+			profile,
+			savePath,
+			certificateName
+		});
 	}
 	console.log('CERTIFICATE BUILT');
 	return profile;
 }
 export async function createCertificate(config, options) {
 	const certificate = certificateFactory(config.template, options);
+	const {
+		savePath,
+		certificateName
+	} = config;
 	if (config.savePath) {
-		await saveCertificate(certificate, config.savePath, config.certificateName);
+		await saveCertificate({
+			certificate,
+			savePath,
+			certificateName
+		});
 	}
 	return certificate;
 }

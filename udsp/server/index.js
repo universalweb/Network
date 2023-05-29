@@ -26,7 +26,7 @@ import { onPacket } from './onPacket.js';
 import { sendPacket } from '#udsp/sendPacket';
 import { actions } from './actions/index.js';
 import { getCertificate } from '#certificate';
-import { createConnectionIdKey, randomBuffer } from '#crypto';
+import { randomConnectionId } from '#crypto';
 const { seal } = Object;
 /*
   * socket ID: SID
@@ -36,7 +36,6 @@ export class Server {
 		return this.initialize(serverConfiguration);
 	}
 	description = 'Server';
-	connectionIdKey = createConnectionIdKey();
 	defaultExtension = 'js';
 	port = 80;
 	ip = '::1';
@@ -93,18 +92,24 @@ export class Server {
 		thisServer.bindActions(actions);
 		if (configuration.certificate) {
 			thisServer.certificate = await getCertificate(configuration.certificate);
-			thisServer.keypair = thisServer.certificate.ephemeral;
+			thisServer.keypair = {
+				publicKey: thisServer.certificate.publicKey || thisServer.certificate.ephemeral.publicKey,
+				privateKey: thisServer.certificate.privateKey || thisServer.certificate.ephemeral.privateKey,
+			};
 		}
 		if (configuration.connectionIdCertificate) {
 			thisServer.connectionIdCertificate = await getCertificate(configuration.connectionIdCertificate);
-			thisServer.connectionIdKeypair = thisServer.connectionIdCertificate.ephemeral;
 		} else if (configuration.encryptConnectionId) {
-			thisServer.connectionIdKeypair = thisServer.keypair;
+			thisServer.connectionIdKeypair = thisServer.certificate;
 		}
-		if (configuration.randomId) {
-			thisServer.id = randomBuffer(4);
-		} else if (!thisServer.id) {
-			thisServer.id = randomBuffer(4);
+		if (thisServer.connectionIdKeypair) {
+			thisServer.connectionIdKeypair = {
+				publicKey: thisServer.connectionIdKeypair.publicKey || thisServer.connectionIdKeypair.ephemeral.publicKey,
+				privateKey: thisServer.connectionIdKeypair.privateKey || thisServer.connectionIdKeypair.ephemeral.privateKey,
+			};
+		}
+		if (configuration.randomId || !thisServer.id) {
+			thisServer.id = randomConnectionId(4);
 		}
 		if (isFunction(thisServer.id)) {
 			thisServer.id = await thisServer.id();

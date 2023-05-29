@@ -5,9 +5,9 @@ import { sessionKeys } from '#crypto';
 export async function reKey(client, certificate, server) {
 	const {
 		publicKey,
-		secretKey
+		privateKey
 	} = client.reKey;
-	const newSessionKeys = sessionKeys(publicKey, secretKey, certificate.key);
+	const newSessionKeys = sessionKeys(publicKey, privateKey, certificate.key);
 	client.ephemeralKeypair = client.reKey;
 	client.transmitKey = newSessionKeys.transmitKey;
 	client.receiveKey = newSessionKeys.receiveKey;

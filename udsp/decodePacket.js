@@ -17,7 +17,7 @@ export function decodePacketHeaders(config) {
 		server,
 		source,
 		state,
-		connectionIdkeypair,
+		connectionIdKeypair,
 		keypair,
 	} = config;
 	const client = config.client;
@@ -45,8 +45,7 @@ export function decodePacketHeaders(config) {
 	info(`headers.id: ${toBase64(headers.id)}`);
 	if (headers.id.length > 24) {
 		success('Server Connection ID Decrypted');
-		const connectionIdkeypair = (connectionIdkeypair);
-		const headerId = boxUnseal(headers.key, connectionIdkeypair || serverPublicKey, connectionIdPrivateKey || serverPrivateKey);
+		const headerId = boxUnseal(headers.key, connectionIdKeypair.publicKey, connectionIdKeypair.privateKey);
 		if (!headers.id) {
 			return failed(headers.id, 'Packet ID Decrypt Failed');
 		}

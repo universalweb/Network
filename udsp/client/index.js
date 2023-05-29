@@ -102,11 +102,9 @@ export class Client {
 		};
 		const {
 			publicKey,
-			secretKey: privateKey,
+			privateKey,
 		} = thisClient.keypair;
 		clientSession(receiveKey, transmitKey, publicKey, privateKey, destinationPublicKey);
-		// Can be used to encrypt-authenticate the profile with the server
-		// clientSession(ephemeralProfileReceiveKey, ephemeralProfileTransmitKey, profile.ephemeral.publicKey, profile.ephemeral.secretKey, destinationPublicKey);
 		configure(`Shared Keys Created`);
 		console.log(receiveKey, transmitKey);
 		const serviceKey = toBase64(destinationSignature);
@@ -123,10 +121,10 @@ export class Client {
 		const thisClient = this;
 		const {
 			publicKey,
-			secretKey
+			privateKey
 		} = thisClient.keypair;
 		thisClient.destination.publicKey = targetPublicKey;
-		const newSessionKeys = sessionKeys(publicKey, secretKey, targetPublicKey);
+		const newSessionKeys = sessionKeys(publicKey, privateKey, targetPublicKey);
 		thisClient.ephemeralKeypair = thisClient.reKey;
 		thisClient.transmitKey = newSessionKeys.transmitKey;
 		thisClient.receiveKey = newSessionKeys.receiveKey;

@@ -1,31 +1,18 @@
+import { readFileSync } from 'fs';
 import {
 	writeFile,
 	readFile,
-	readFileSync
-} from 'fs';
+} from 'node:fs/promises';
 import { promise, jsonParse } from 'Acid';
 import { normalize } from 'path';
-export function write(filePath, contents, encode) {
-	return promise((accept, reject) => {
-		writeFile(normalize(filePath), contents, encode, (error) => {
-			if (error) {
-				reject(error);
-			} else {
-				accept();
-			}
-		});
-	});
+import { decode } from 'msgpackr';
+export async function write(filePath, contents, encode) {
+	const pathNormalized = normalize(filePath);
+	console.log('FILE WRITE', pathNormalized, contents.length, encode);
+	return writeFile(pathNormalized, contents, encode);
 }
-export function read(filePath, encode) {
-	return promise((accept, reject) => {
-		readFile(normalize(filePath), encode, (error, contents) => {
-			if (error) {
-				reject(error);
-			} else {
-				accept(contents);
-			}
-		});
-	});
+export async function read(filePath, encode) {
+	return readFile(normalize(filePath), encode);
 }
 export async function copy(source, destination, config) {
 	let file = await read(source);
@@ -38,4 +25,7 @@ export async function copy(source, destination, config) {
 }
 export function readJson(filePath) {
 	return jsonParse(readFileSync(filePath));
+}
+export function readMsgpack(filePath) {
+	return decode(readFileSync(filePath));
 }
