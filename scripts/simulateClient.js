@@ -7,7 +7,7 @@ import { decode } from 'msgpackr';
 console.time('Connected');
 // Universal Web Socket
 const uwClient = await client({
-	service: `${currentPath(import.meta)}/../services/universal.web.cert`,
+	service: `${currentPath(import.meta)}/../services/universal.web-Ephemeral.cert`,
 	profile: `${currentPath(import.meta)}/../profiles/default.cert`,
 	ip: '::1',
 	port: 8888
