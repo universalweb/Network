@@ -31,7 +31,7 @@ const appServer = await createServer({
 	// default file extension default is .js but WWW default is www
 	defaultExtension: 'html',
 	// Domain certificate to be loaded used for connection encryption
-	certificate: `${currentPath(import.meta)}../services/universal.web.cert`,
+	certificate: `${currentPath(import.meta)}../services/universal.web-Profile.cert`,
 	// Where to load app resources from
 	resourceDirectory: `${currentPath(import.meta)}resources/`,
 	// Server ID used for load balancing and attaching to the end of connection IDs

@@ -10,7 +10,7 @@ export async function saveCertificate(config) {
 	const savePathRoot = `${resolve(`${savePath}`)}/${certificateName}`;
 	const publicCertificate = certificate.certificate;
 	const encodedCertificate = encode(certificate);
-	await write(`${savePathRoot}-Public.cert`, publicCertificate);
+	await write(`${savePathRoot}Public.cert`, publicCertificate);
 	await write(`${savePathRoot}.cert`, encodedCertificate);
 }
 export async function saveProfile(config) {
@@ -27,13 +27,13 @@ export async function saveProfile(config) {
 	const ephemeral = {
 		certificate: ephemeralCertificate,
 		savePath,
-		certificateName: `${certificateName}Ephemeral`
+		certificateName: `${certificateName}-Ephemeral`
 	};
 	await saveCertificate(ephemeral);
 	const master = {
 		certificate: masterCertificate,
 		savePath,
-		certificateName: `${certificateName}Master`
+		certificateName: `${certificateName}-Master`
 	};
 	await saveCertificate(master);
 	const savePathRoot = `${resolve(`${savePath}`)}/${certificateName}-Profile.cert`;
