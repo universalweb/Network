@@ -1,5 +1,4 @@
 import { info } from '#logs';
-import { keypair, boxSeal } from '#crypto';
 export async function opn(reply) {
 	const {
 		resourceDirectory,
@@ -43,8 +42,6 @@ export async function opn(reply) {
 	}
 	// connection status - backwards compatibility
 	response.state = 1;
-	// Server connection id
-	// client.reKey = keypair();
-	// response.body.reKey = boxSeal(client.reKey.publicKey, client.publicKey);
+	// REKEY THE CLIENT BEFORE SENDING BACK
 	reply.send('struct');
 }

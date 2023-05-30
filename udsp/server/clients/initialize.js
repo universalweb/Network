@@ -1,7 +1,7 @@
 import { created } from './created.js';
 import {
 	decrypt, emptyNonce, keypair,
-	sessionKeys, toBase64, boxUnseal,
+	serverSessionKeys, toBase64,
 	randomConnectionId,
 	randomBuffer
 } from '#crypto';
@@ -20,9 +20,9 @@ export async function initialize(config) {
 		key: publicKey
 	} = config;
 	const {
-		keypair: {
-			private: serverPrivateKey,
-			key: serverPublicKey
+		encryptKeypair: {
+			privateKey: serverPrivateKey,
+			publicKey: serverPublicKey
 		},
 		clients,
 		configuration: { id: serverId }
@@ -31,7 +31,7 @@ export async function initialize(config) {
 		address,
 		port
 	} = connection;
-	const sessionKey = sessionKeys(serverPublicKey, serverPrivateKey, publicKey);
+	const sessionKey = serverSessionKeys(serverPublicKey, serverPrivateKey, publicKey);
 	if (!sessionKey) {
 		return failed('Session Key Failed');
 	}
@@ -39,6 +39,8 @@ export async function initialize(config) {
 		receiveKey,
 		transmitKey,
 	} = sessionKey;
+	client.transmitKey = transmitKey;
+	client.receiveKey = receiveKey;
 	success(`key: ${toBase64(publicKey)}`);
 	success(`receiveKey: ${toBase64(receiveKey)}`);
 	success(`transmitKey: ${toBase64(transmitKey)}`);
@@ -79,8 +81,6 @@ export async function initialize(config) {
 	client.publicKey = publicKey;
 	client.address = address;
 	client.port = port;
-	client.transmitKey = transmitKey;
-	client.receiveKey = receiveKey;
 	if (!server.realtime && server.gracePeriod) {
 		client.gracePeriod = setTimeout(() => {
 			const lastActive = (Date.now() - client.lastActive) / 1000;

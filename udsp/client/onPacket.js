@@ -5,7 +5,6 @@ import { decode } from 'msgpackr';
 import { decrypt, createSessionKey } from '#crypto';
 import { decodePacket, decodePacketHeaders } from '#udsp/decodePacket';
 imported('Server onMessage');
-import { reKey } from '#udsp/reKey';
 import { processMessage } from './processMessage.js';
 export async function onMessage(packetEncoded) {
 	const {

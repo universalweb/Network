@@ -17,7 +17,6 @@ import {
 	toBase64,
 	signDetached,
 	boxSeal,
-	boxUnseal,
 } from '#crypto';
 export async function encodePacket(data) {
 	const {
@@ -36,12 +35,12 @@ export async function encodePacket(data) {
 		connectionIdKeypair,
 		encryptConnectionId,
 		isClient,
-		destinationBoxPublicKey
+		destinationPublicKey
 	} = data;
 	const nonce = randomize(nonceBuffer);
 	if (id) {
 		if (encryptConnectionId) {
-			headers.id = boxSeal(id, destination.publicKey);
+			headers.id = boxSeal(id, destinationPublicKey);
 		} else {
 			headers.id = id;
 		}
@@ -52,11 +51,12 @@ export async function encodePacket(data) {
 	message.t = Date.now();
 	if (isClient) {
 		if (state === 0) {
-			console.log('DESTINATION PUBLIC KEY', destination.publicKey);
-			headers.key = boxSeal(keypair.publicKey, destination.publicKey);
+			console.log('DESTINATION PUBLIC KEY', toBase64(destinationPublicKey));
+			headers.key = boxSeal(keypair.publicKey, destinationPublicKey);
 			const timeBuffer = Buffer.from(message.t.toString());
 			// This can be seperated out as an authentication request to the service or it can be done here
-			const authenticationBuffer = Buffer.concat([timeBuffer, destination.publicKey, keypair.publicKey]);
+			// It's for the client to confirm to the server that it is indeed who it says it is
+			const authenticationBuffer = Buffer.concat([timeBuffer, destinationPublicKey]);
 			const profileKeypairSignature = signDetached(authenticationBuffer, profile.privateKey);
 			message.sig = profileKeypairSignature;
 			message.idc = profile.publicKey;

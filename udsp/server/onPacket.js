@@ -1,9 +1,7 @@
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-import {
-	boxUnseal, decrypt, toBase64, sessionKeys
-} from '#crypto';
+import { toBase64 } from '#crypto';
 import { isEmpty } from 'Acid';
 import { decodePacket, decodePacketHeaders } from '#udsp/decodePacket';
 import { createClient } from './clients/index.js';
@@ -14,7 +12,8 @@ export async function onPacket(packetEncoded, connection) {
 	const {
 		keypair,
 		connectionIdKeypair,
-		encryptConnectionId
+		encryptConnectionId,
+		encryptKeypair
 	} = thisServer;
 	msgReceived('Message Received');
 	const config = {
@@ -24,9 +23,13 @@ export async function onPacket(packetEncoded, connection) {
 		isServer: true,
 		keypair,
 		encryptConnectionId,
-		connectionIdKeypair
+		connectionIdKeypair,
+		encryptKeypair
 	};
 	const headers = await decodePacketHeaders(config);
+	if (!headers) {
+		return failed('Invalid Packet Headers');
+	}
 	const {
 		id,
 		key,

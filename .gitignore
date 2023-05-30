@@ -29,9 +29,9 @@ node_modules
 ############
 tests/*
 
-# Example UWBridge #
+# Testing #
 ############
-uwBridge/apps/akerna/
+tempCodeRunnerFile.js
 
 # Logs and databases #
 ######################

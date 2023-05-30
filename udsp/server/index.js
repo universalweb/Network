@@ -24,7 +24,7 @@ import { onPacket } from './onPacket.js';
 import { sendPacket } from '#udsp/sendPacket';
 import { actions } from './actions/index.js';
 import { getCertificate } from '#certificate';
-import { randomConnectionId } from '#crypto';
+import { randomConnectionId, signKeypairToEncryptKeypair } from '#crypto';
 const { seal } = Object;
 /*
   * socket ID: SID
@@ -96,6 +96,9 @@ export class Server {
 				privateKey: thisServer.certificate.privateKey,
 			};
 		}
+		if (thisServer.keypair) {
+			thisServer.encryptKeypair = signKeypairToEncryptKeypair(thisServer.keypair);
+		}
 		if (thisServer.connectionIdCertificate) {
 			thisServer.connectionIdCertificate = await getCertificate(thisServer.connectionIdCertificate);
 		} else if (thisServer.publicCertificate.encryptConnectionId) {
@@ -138,6 +141,9 @@ export class Server {
 		thisServer.send = async function(packetConfig) {
 			packetConfig.server = thisServer;
 			packetConfig.isServer = true;
+			if (!packetConfig.encryptKeypair) {
+				packetConfig.encryptKeypair = thisServer.encryptKeypair;
+			}
 			return sendPacket(packetConfig, server);
 		};
 		console.log('-------SERVER INITIALIZED-------');

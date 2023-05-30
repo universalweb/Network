@@ -23,7 +23,7 @@ export async function saveProfile(config) {
 			master: masterCertificate
 		}
 	} = config;
-	console.log(config);
+	// console.log(config);
 	const ephemeral = {
 		certificate: ephemeralCertificate,
 		savePath,

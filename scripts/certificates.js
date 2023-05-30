@@ -1,7 +1,8 @@
 import { createProfile } from '#certificate';
 import { currentPath } from '#directory';
+import { decode } from 'msgpackr';
 const dirname = currentPath(import.meta);
-const domainCert = await createProfile({
+const domainProfile = await createProfile({
 	template: {
 		ephemeral: {
 			version: 1,
@@ -25,8 +26,8 @@ const domainCert = await createProfile({
 	savePath: `${dirname}/../services`,
 	certificateName: 'universal.web'
 });
-console.log('DOMAIN CERTIFICATE CREATED');
-const identityCert = await createProfile({
+console.log('DOMAIN Profile created (Master & IDENTITY CERTIFICATEs)', decode(domainProfile.ephemeral.certificate));
+const profile = await createProfile({
 	template: {
 		ephemeral: {
 			version: 1,
@@ -38,4 +39,4 @@ const identityCert = await createProfile({
 	savePath: `${dirname}/../profiles`,
 	certificateName: 'default'
 });
-console.log('IDENTITY CERTIFICATE CREATED');
+console.log('Profile created (Master & IDENTITY CERTIFICATEs)', decode(profile.ephemeral.certificate));

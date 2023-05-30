@@ -22,7 +22,12 @@ import dgram from 'dgram';
 // Default utility imports
 import { success, configure, info } from '#logs';
 import {
-	createSessionKey, clientSession, keypair, toBase64, emptyNonce, sessionKeys, randomConnectionId, ed25519ToCurve25519PublicKey
+	keypair,
+	toBase64,
+	emptyNonce,
+	randomConnectionId,
+	clientSessionKeys,
+	signPublicKeyToEncryptPublicKey
 } from '#crypto';
 import { pluckBuffer } from '#pluckBuffer';
 import { getCertificate } from '#certificate';
@@ -60,20 +65,20 @@ export class Client {
 			profile,
 		});
 		thisClient.keypair = keypair();
-		thisClient.destinationPublicKey = service.publicKey;
-		thisClient.destinationBoxPublicKey = ed25519ToCurve25519PublicKey(service.publicKey);
+		thisClient.destinationPublicKey = signPublicKeyToEncryptPublicKey(service.publicKey);
 		const {
 			publicKey,
 			privateKey,
 		} = thisClient.keypair;
-		const clientSessionKeys = sessionKeys(publicKey, privateKey, thisClient.destinationPublicKey);
+		const sessionKeys = clientSessionKeys(publicKey, privateKey, thisClient.destinationPublicKey);
 		const {
 			transmitKey,
 			receiveKey
-		} = clientSessionKeys;
+		} = sessionKeys;
 		thisClient.transmitKey = transmitKey;
 		thisClient.receiveKey = receiveKey;
-		configure(`Shared Keys Created`);
+		success(`receiveKey: ${toBase64(receiveKey)}`);
+		success(`transmitKey: ${toBase64(transmitKey)}`);
 		this.connect = connect.bind(this);
 		this.send = send.bind(this);
 		this.request = request.bind(this);
@@ -102,7 +107,7 @@ export class Client {
 			privateKey
 		} = thisClient.keypair;
 		thisClient.destination.publicKey = targetPublicKey;
-		const newSessionKeys = sessionKeys(publicKey, privateKey, targetPublicKey);
+		const newSessionKeys = clientSessionKeys(publicKey, privateKey, targetPublicKey);
 		thisClient.ephemeralKeypair = thisClient.reKey;
 		thisClient.transmitKey = newSessionKeys.transmitKey;
 		thisClient.receiveKey = newSessionKeys.receiveKey;

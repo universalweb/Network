@@ -27,7 +27,7 @@ export async function send(config) {
 		connectionIdKeypair,
 		service,
 		service: { encryptConnectionId },
-		destinationBoxPublicKey
+		destinationPublicKey
 	} = client;
 	const packet = await encodePacket({
 		client,
@@ -45,7 +45,7 @@ export async function send(config) {
 		destination: service,
 		connectionIdKeypair,
 		encryptConnectionId,
-		destinationBoxPublicKey
+		destinationPublicKey
 	});
 	msgSent(`Packet Size ${packet.length}`, message, port, ip);
 	return promise((accept, reject) => {

@@ -44,10 +44,27 @@ const {
 	crypto_secretbox_NONCEBYTES,
 	crypto_secretbox_KEYBYTES,
 	crypto_sign_ed25519_pk_to_curve25519,
-	crypto_sign_ed25519_sk_to_curve25519
+	crypto_sign_ed25519_sk_to_curve25519,
+	crypto_sign_ed25519_sk_to_pk,
+	crypto_sign_ed25519_sk_to_seed,
+	crypto_sign_SEEDBYTES,
+	crypto_kx_seed_keypair,
+	crypto_box_easy,
+	crypto_box_open_easy,
+	crypto_box_NONCEBYTES,
+	crypto_box_MACBYTES
 } = sodiumLib;
 import { isBuffer, assign } from 'Acid';
 import { encode, decode } from 'msgpackr';
+export function toBuffer(value) {
+	return Buffer.from(value);
+}
+export function toBase64(value) {
+	return value.toString('base64');
+}
+export function buff(value) {
+	return Buffer.from(value);
+}
 export function bufferAlloc(size) {
 	return Buffer.alloc(size);
 }
@@ -64,6 +81,9 @@ export function emptyNonce() {
 	return bufferAlloc(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
 }
 export function nonceBox(nonceBuffer) {
+	if (nonceBuffer) {
+		return randomize(nonceBuffer);
+	}
 	const nonce = randomize(emptyNonce());
 	return nonce;
 }
@@ -75,7 +95,7 @@ export function createSecretKey() {
 export function randomConnectionId(size = 8) {
 	return randomBuffer(size);
 }
-export function secretBoxNonce(source) {
+export function secretBoxNonce() {
 	return randomBuffer(crypto_secretbox_NONCEBYTES);
 }
 export function encrypt(message, ad, nonce, secretKey) {
@@ -83,7 +103,6 @@ export function encrypt(message, ad, nonce, secretKey) {
 	crypto_aead_xchacha20poly1305_ietf_encrypt(cipher, message, ad, null, nonce, secretKey);
 	return cipher;
 }
-export const encryptABytes = crypto_aead_xchacha20poly1305_ietf_ABYTES;
 export function decrypt(cipher, ad, nonce, secretKey) {
 	const message = bufferAlloc(cipher.length - crypto_aead_xchacha20poly1305_ietf_ABYTES);
 	const verify = crypto_aead_xchacha20poly1305_ietf_decrypt(message, null, cipher, ad, nonce, secretKey);
@@ -143,17 +162,32 @@ export function keypair() {
 		privateKey
 	};
 }
-export function clientSession(receiveKey, transmissionKey, publicKey, privateKey, serverPublicKey) {
-	crypto_kx_client_session_keys(receiveKey, transmissionKey, publicKey, privateKey, serverPublicKey);
+export function keypairSeed(seed) {
+	const publicKey = bufferAlloc(crypto_kx_PUBLICKEYBYTES);
+	const privateKey = bufferAlloc(crypto_kx_SECRETKEYBYTES);
+	crypto_kx_seed_keypair(publicKey, privateKey, seed);
+	return {
+		publicKey,
+		privateKey
+	};
 }
 export function createSessionKey() {
 	const sessionKey = bufferAlloc(crypto_kx_SESSIONKEYBYTES);
 	return sessionKey;
 }
-export function sessionKeys(sourcePublicKey, sourcePrivateKey, targetPublicKey) {
-	const receiveKey = createSessionKey();
-	const transmitKey = createSessionKey();
-	crypto_kx_server_session_keys(receiveKey, transmitKey, sourcePublicKey, sourcePrivateKey, targetPublicKey);
+export function clientSessionKeys(clientPublicKey, clientPrivateKey, serverPublicKey, transmitKeySource, receiveKeySource) {
+	const receiveKey = receiveKeySource || createSessionKey();
+	const transmitKey = transmitKeySource || createSessionKey();
+	crypto_kx_client_session_keys(receiveKey, transmitKey, clientPublicKey, clientPrivateKey, serverPublicKey);
+	return {
+		transmitKey,
+		receiveKey
+	};
+}
+export function serverSessionKeys(serverPublicKey, serverPrivateKey, clientPublicKey, transmitKeySource, receiveKeySource) {
+	const receiveKey = receiveKeySource || createSessionKey();
+	const transmitKey = transmitKeySource || createSessionKey();
+	crypto_kx_server_session_keys(receiveKey, transmitKey, serverPublicKey, serverPrivateKey, clientPublicKey);
 	return {
 		transmitKey,
 		receiveKey
@@ -168,7 +202,7 @@ export function signKeypair() {
 		privateKey
 	};
 }
-export function boxKeypair() {
+export function encryptKeypair() {
 	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);
 	const privateKey = bufferAlloc(crypto_box_SECRETKEYBYTES);
 	crypto_box_keypair(publicKey, privateKey);
@@ -176,6 +210,20 @@ export function boxKeypair() {
 		publicKey,
 		privateKey
 	};
+}
+export function authenticatedBox(message, targetPublicKey, sourcePrivateKey) {
+	const nonce = secretBoxNonce();
+	const encrypted = bufferAlloc(message.length + crypto_box_MACBYTES);
+	crypto_box_easy(encrypted, message, nonce, targetPublicKey, sourcePrivateKey);
+	return Buffer.concat([nonce, encrypted]);
+}
+export function authenticatedBoxOpen(encryptedPayload, sourcePublicKey, targetPrivateKey) {
+	const encryptedPayloadLength = encryptedPayload.length;
+	const nonce = Buffer.subarray(encryptedPayloadLength - crypto_box_NONCEBYTES, encryptedPayloadLength);
+	const encryptedMessage = Buffer.subarray(0, encryptedPayloadLength - crypto_box_NONCEBYTES);
+	const message = bufferAlloc(encryptedMessage.length - crypto_box_MACBYTES);
+	crypto_box_easy(encryptedMessage, message, sourcePublicKey, targetPrivateKey);
+	return message;
 }
 export function boxSeal(message, publicKey) {
 	const encrypted = bufferAlloc(message.length + crypto_box_SEALBYTES);
@@ -187,17 +235,24 @@ export function boxUnseal(encrypted, publicKey, privateKey) {
 	const isValid = crypto_box_seal_open(message, encrypted, publicKey, privateKey);
 	return isValid && message;
 }
-export function ed25519ToCurve25519PublicKey(originalPublicKey) {
+// Demonstrats that authenticatedBox is smaller than boxSeal
+// const en2 = encryptKeypair();
+// const en = encryptKeypair();
+// const enc = authenticatedBox(Buffer.from('TEST'), en.publicKey, en.privateKey);
+// console.log(enc.length);
+// const enc2 = boxSeal(Buffer.from('TEST'), en2.publicKey);
+// console.log(enc2.length);
+export function signPublicKeyToEncryptPublicKey(originalPublicKey) {
 	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);
 	crypto_sign_ed25519_pk_to_curve25519(publicKey, originalPublicKey);
 	return publicKey;
 }
-export function ed25519ToCurve25519PrivateKey(originalPrivateKey) {
+export function signPrivateKeyToEncryptPrivateKey(originalPrivateKey) {
 	const privateKey = bufferAlloc(crypto_box_SECRETKEYBYTES);
 	crypto_sign_ed25519_sk_to_curve25519(privateKey, originalPrivateKey);
 	return privateKey;
 }
-export function ed25519ToCurve25519(originalKeypair) {
+export function signKeypairToEncryptKeypair(originalKeypair) {
 	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);
 	const privateKey = bufferAlloc(crypto_box_SECRETKEYBYTES);
 	crypto_sign_ed25519_pk_to_curve25519(publicKey, originalKeypair.publicKey);
@@ -207,15 +262,21 @@ export function ed25519ToCurve25519(originalKeypair) {
 		privateKey
 	};
 }
-export function toBuffer(value) {
-	return Buffer.from(value);
+export function getSignPublicKeyFromPrivateKey(privateKey) {
+	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);
+	crypto_sign_ed25519_sk_to_pk(publicKey, privateKey);
+	return publicKey;
 }
-export function toBase64(value) {
-	return value.toString('base64');
-}
-export function buff(value) {
-	return Buffer.from(value);
-}
+// const signn = signKeypairToEncryptKeypair(signKeypair());
+// const gg = keypair();
+// const sessionKeyss = clientSession(gg.publicKey, gg.privateKey, signn.publicKey);
+// const sessionKeysBox = serverSession(signn.publicKey, signn.privateKey, gg.publicKey);
+// console.log(sessionKeyss.transmitKey.toString('base64'), sessionKeyss.receiveKey.toString('base64'));
+// console.log(sessionKeysBox.transmitKey.toString('base64'), sessionKeysBox.receiveKey.toString('base64'));
+// const nonced = nonceBox();
+// const encryptedd = encrypt(Buffer.from('test'), null, nonced, sessionKeyss.transmitKey);
+// const decr = decrypt(encryptedd, null, nonced, sessionKeyss.transmitKey);
+// console.log(decr.toString());
 export const hashBytes = crypto_generichash_BYTES;
 export {
 	crypto_aead_xchacha20poly1305_ietf_ABYTES,

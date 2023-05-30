@@ -4,7 +4,7 @@ import {
 import { decode, } from 'msgpackr';
 import { assign, } from 'Acid';
 import {
-	encrypt, nonceBox, toBase64, decrypt, boxUnseal, sessionKeys
+	encrypt, nonceBox, toBase64, decrypt, boxUnseal
 } from '#crypto';
 import { createClient } from './server/clients/index.js';
 export function decodePacketHeaders(config) {
@@ -18,6 +18,7 @@ export function decodePacketHeaders(config) {
 		state,
 		connectionIdKeypair,
 		keypair,
+		encryptKeypair
 	} = config;
 	const client = config.client;
 	info(`Packet Encoded Size ${packetEncoded.length}`);
@@ -27,14 +28,17 @@ export function decodePacketHeaders(config) {
 		return failed(`No headers -> Invalid Packet`);
 	}
 	const headers = decode(headersEncoded);
+	console.log(headers);
 	if (!headers) {
 		return failed(`No headers -> Invalid Packet`);
 	}
+	const boxPublicKey = encryptKeypair?.publicKey || keypair.publicKey;
+	const boxPrivateKey = encryptKeypair?.privateKey || keypair.privateKey;
 	info(`clientId: ${toBase64(headers.id)}`);
 	if (headers.key) {
 		success(`Public Key is given -> Processing as create client`);
-		console.log(keypair);
-		const publicKey = boxUnseal(headers.key, keypair.publicKey, keypair.privateKey);
+		console.log(toBase64(encryptKeypair.publicKey));
+		const publicKey = boxUnseal(headers.key, boxPublicKey, boxPrivateKey);
 		if (!publicKey) {
 			return failed(publicKey, 'Client Key Decrypt Failed');
 		}
@@ -45,7 +49,7 @@ export function decodePacketHeaders(config) {
 	info(`headers.id: ${toBase64(headers.id)}`);
 	if (headers.id.length > 24) {
 		success('Server Connection ID Decrypted');
-		const headerId = boxUnseal(headers.key, connectionIdKeypair.publicKey, connectionIdKeypair.privateKey);
+		const headerId = boxUnseal(headers.id, boxPublicKey, boxPrivateKey);
 		if (!headers.id) {
 			return failed(headers.id, 'Packet ID Decrypt Failed');
 		}
