@@ -1,9 +1,12 @@
 import { logCert, imported } from '#logs';
 import { read, write } from '#file';
-import { signKeypair, signDetached } from '#crypto';
+import { signKeypair, signDetached, toBase64 } from '#crypto';
+import { keychainSave } from '#keychain';
 import { saveCertificate, saveProfile } from './save.js';
-import { assign, merge, clone } from 'Acid';
-import { encode } from 'msgpackr';
+import {
+	assign, merge, clone, promise, isBuffer
+} from 'Acid';
+import { encode, decode } from 'msgpackr';
 imported('Certificate Creation');
 function certificateFactory(config, options = {}) {
 	const currentDate = new Date();
@@ -47,7 +50,10 @@ export async function createProfile(config) {
 			master: masterTemplate
 		},
 		savePath,
-		certificateName
+		certificateName,
+		saveProfileToKeychain,
+		saveEphemeralToKeychain,
+		saveToKeychain,
 	} = config;
 	const master = certificateFactory(masterTemplate);
 	const ephemeral = certificateFactory(ephemeralTemplate, {
@@ -63,7 +69,16 @@ export async function createProfile(config) {
 		await saveProfile({
 			profile,
 			savePath,
-			certificateName
+			certificateName,
+			saveProfileToKeychain,
+			saveEphemeralToKeychain
+		});
+	}
+	if (saveToKeychain) {
+		console.log('Saving to Keychain');
+		await keychainSave({
+			certificate: profile,
+			account: saveToKeychain?.account || certificateName,
 		});
 	}
 	console.log('CERTIFICATE BUILT');

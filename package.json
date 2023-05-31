@@ -29,6 +29,7 @@
 		"eslint-plugin-json": "^3.1.0",
 		"eslint-plugin-prettier": "^4.2.1",
 		"esm": "^3.2.25",
+		"keychain": "^1.4.0",
 		"mongoose": "^7.0.1",
 		"msgpackr": "^1.8.5",
 		"node-watch": "^0.7.3",
@@ -90,7 +91,8 @@
 		"#certificate": "./utilities/certificate/index.js",
 		"#directory": "./utilities/directory.js",
 		"#udsp/*": "./udsp/*.js",
-		"#udsp": "./udsp/index.js"
+		"#udsp": "./udsp/index.js",
+		"#keychain": "./utilities/keychain.js"
 	},
 	"postinstall": "electron-builder install-app-deps",
 	"productName": "Universal Web Browser",

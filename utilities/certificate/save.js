@@ -21,7 +21,7 @@ export async function saveProfile(config) {
 		profile: {
 			ephemeral: ephemeralCertificate,
 			master: masterCertificate
-		}
+		},
 	} = config;
 	// console.log(config);
 	const ephemeral = {

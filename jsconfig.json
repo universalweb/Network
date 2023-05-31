@@ -73,6 +73,9 @@
 			],
 			"#udsp": [
 				"./udsp/index.js"
+			],
+			"#keychain": [
+				"./utilities/keychain.js"
 			]
 		},
 		"module": "ESNext",

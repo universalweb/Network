@@ -37,6 +37,9 @@ const profile = await createProfile({
 		}
 	},
 	savePath: `${dirname}/../profiles`,
-	certificateName: 'default'
+	certificateName: 'default',
+	saveToKeychain: {
+		account: 'Universal Web Profile'
+	}
 });
 console.log('Profile created (Master & IDENTITY CERTIFICATEs)', decode(profile.ephemeral.certificate));
