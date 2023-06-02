@@ -20,6 +20,7 @@ const domainProfile = await createProfile({
 			encryptConnectionId: true,
 			compression: true,
 			headerCompression: true,
+			autologin: true,
 		},
 		master: {},
 	},

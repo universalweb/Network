@@ -20,27 +20,26 @@ import {
 } from '#crypto';
 export async function encodePacket(data) {
 	const {
-		nonce: nonceBuffer,
-		transmitKey,
+		source,
+		destination,
+		packet: {
+			headers = {},
+			message,
+			footer,
+			options
+		}
+	} = data;
+	const {
 		id,
 		state,
-		options,
-		message,
-		headers = {},
-		footer,
-		client,
-		keypair,
-		profile,
-		destination,
-		connectionIdKeypair,
-		encryptConnectionId,
 		isClient,
-		destinationPublicKey
-	} = data;
-	const nonce = randomize(nonceBuffer);
+		isServer,
+	} = source;
+	const nonce = nonceBox();
+	const encryptConnectionId = (isServer) ? source.certificate.encryptConnectionId : destination.encryptConnectionId;
 	if (id) {
 		if (encryptConnectionId) {
-			headers.id = boxSeal(id, destinationPublicKey);
+			headers.id = boxSeal(id, destination.encryptKeypair.publicKey);
 		} else {
 			headers.id = id;
 		}
@@ -51,17 +50,8 @@ export async function encodePacket(data) {
 	message.t = Date.now();
 	if (isClient) {
 		if (state === 0) {
-			console.log('DESTINATION PUBLIC KEY', toBase64(destinationPublicKey));
-			headers.key = boxSeal(keypair.publicKey, destinationPublicKey);
-			const timeBuffer = Buffer.from(message.t.toString());
-			// This can be seperated out as an authentication request to the service or it can be done here
-			// It's for the client to confirm to the server that it is indeed who it says it is
-			const authenticationBuffer = Buffer.concat([timeBuffer, destinationPublicKey]);
-			const profileKeypairSignature = signDetached(authenticationBuffer, profile.privateKey);
-			message.sig = profileKeypairSignature;
-			message.idc = profile.publicKey;
-			console.log(`Sig Size:${message.sig.length}`);
-			console.log(`Setting ephemeral random public key to header & profile cert to message.body`);
+			console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(destination.encryptKeypair.publicKey));
+			headers.key = boxSeal(source.keypair.publicKey, destination.encryptKeypair.publicKey);
 		}
 	}
 	success(`PROCESSING MESSAGE TO SEND`);
@@ -71,7 +61,7 @@ export async function encodePacket(data) {
 	const headersEncoded = encode(headers);
 	const messageEncoded = encode(message);
 	const ad = (footer) ? Buffer.concat([headersEncoded, footer]) : headersEncoded;
-	const encryptedMessage = encrypt(messageEncoded, ad, nonce, transmitKey);
+	const encryptedMessage = encrypt(messageEncoded, ad, nonce, source.sessionKeys.transmitKey);
 	if (!encryptedMessage) {
 		return failed('Encryption failed');
 	}
@@ -80,7 +70,7 @@ export async function encodePacket(data) {
 		packet[2] = encode(footer);
 	}
 	info(`clientId: ${toBase64(headers.id)}`);
-	info(`Transmit Key ${toBase64(transmitKey)}`);
+	info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
 	info(`Nonce Size: ${headers.nonce.length} ${toBase64(headers.nonce)}`);
 	const packetSize = packet.length;
 	info(`encoded Packet Size ${packetSize}`);

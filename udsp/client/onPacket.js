@@ -6,24 +6,16 @@ import { decrypt, createSessionKey } from '#crypto';
 import { decodePacket, decodePacketHeaders } from '#udsp/decodePacket';
 imported('Server onMessage');
 import { processMessage } from './processMessage.js';
-export async function onMessage(packetEncoded) {
-	const {
-		receiveKey,
-		nonce,
-		keypair,
-	} = this;
+export async function onMessage(packet) {
+	const { destination: source } = this;
 	msgReceived('Message Received');
 	const config = {
-		client: this,
-		receiveKey,
-		nonce,
-		packetEncoded,
-		isClient: true,
-		keypair
+		destination: this,
+		source,
+		packet,
 	};
-	const headers = decodePacketHeaders(config);
-	const packet = await decodePacket(config);
-	console.log(packet);
-	processMessage(packet, this);
+	const headers = await decodePacketHeaders(config);
+	const decodedPacket = await decodePacket(config);
+	processMessage(decodedPacket, this);
 }
 

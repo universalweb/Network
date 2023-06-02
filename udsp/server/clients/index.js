@@ -11,7 +11,8 @@ import {
 import { UniqID, construct, assign } from 'Acid';
 import { keypair, toBase64 } from '#crypto';
 export class Client {
-	descriptor = 'client';
+	descriptor = `Server's client`;
+	type = 'serverClient';
 	client = true;
 	pending = false;
 	replyQueue = construct(Map);
@@ -86,21 +87,6 @@ export class Client {
 		info(`socket EVENT -> send - ID:${this.id}`);
 	}
 	async authenticate(packet) {
-		// const nonce = packet.headers.nonce;
-		// success(`idc: ${toBase64(packet.message.idc)}`);
-		// success(`sig: ${toBase64(packet.message.sig)}`);
-		// const idc = packet.message.idc;
-		// const sig = packet.message.sig;
-		// if (!idc) {
-		// 	return failed('No Identity Provided', this.id);
-		// }
-		// if (!sig) {
-		// 	return failed('No Sig Provided', this.id);
-		// }
-		// const sigVerify = signVerifyHash(sig, Buffer.concat([nonce, this.publicKey]), idc.key);
-		// console.log('Concat Sig', Buffer.concat([nonce, this.publicKey]));
-		// console.log('SIGNature Hash', sig);
-		// info(`socket EVENT -> identity - ID:${this.id}`);
 	}
 	async destroy(destroyCode) {
 		const server = this.server();

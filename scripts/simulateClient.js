@@ -7,8 +7,11 @@ import { decode } from 'msgpackr';
 console.time('Connected');
 // Universal Web Socket
 const uwClient = await client({
-	service: `${currentPath(import.meta)}/../services/universal.web-EphemeralPublic.cert`,
-	profile: `${currentPath(import.meta)}/../profiles/default-Ephemeral.cert`,
+	destinationCertificate: `${currentPath(import.meta)}/../services/universal.web-EphemeralPublic.cert`,
+	// Load Profile Certificate from Keychain
+	keychain: 'Universal Web Profile',
+	// Load Profile Certificate from file
+	// certificate: `${currentPath(import.meta)}/../profiles/default-Ephemeral.cert`,
 });
 console.timeEnd('Connected');
 console.log('INTRO =>', uwClient);

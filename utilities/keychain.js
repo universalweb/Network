@@ -2,7 +2,8 @@ import { decode, encode } from 'msgpackr';
 import { toBase64 } from '#crypto';
 import keychain from 'keychain';
 import { promise, isBuffer } from 'Acid';
-export function keychainGet(account, accept, reject) {
+export function keychainGetPromise(account, accept, reject) {
+	console.log(account);
 	keychain.getPassword({
 		account,
 		service: 'Universal Web'
@@ -14,6 +15,11 @@ export function keychainGet(account, accept, reject) {
 		const dataBuffer = Buffer.from(data, 'base64');
 		const dataDecoded = decode(dataBuffer);
 		accept(dataDecoded);
+	});
+}
+export function keychainGet(account) {
+	return promise((accept, reject) => {
+		keychainGetPromise(account, accept, reject);
 	});
 }
 export function keychainPromise(config, accept, reject) {

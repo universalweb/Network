@@ -33,7 +33,9 @@ export class Server {
 	constructor(serverConfiguration) {
 		return this.initialize(serverConfiguration);
 	}
-	description = 'Server';
+	description = `The Universal Web's UDSP server module.`;
+	descriptor = 'UWServer';
+	isServer = true;
 	defaultExtension = 'js';
 	port = 80;
 	ip = '::1';
