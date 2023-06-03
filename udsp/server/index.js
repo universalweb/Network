@@ -23,15 +23,127 @@ import { onListen } from './onListen.js';
 import { onPacket } from './onPacket.js';
 import { sendPacket } from '#udsp/sendPacket';
 import { actions } from './actions/index.js';
-import { getCertificate } from '#certificate';
+import { getCertificate, parseCertificate } from '#certificate';
 import { randomConnectionId, signKeypairToEncryptKeypair } from '#crypto';
 const { seal } = Object;
 /*
   * socket ID: SID
 */
 export class Server {
-	constructor(serverConfiguration) {
-		return this.initialize(serverConfiguration);
+	constructor(configuration) {
+		return this.initialize(configuration);
+	}
+	attachEvents() {
+		this.bindMethods({
+			on,
+			bindServer,
+			onError,
+			onListen,
+			onPacket,
+			off,
+			emit
+		});
+		this.bindActions(actions);
+		this.server.on('error', this.onError);
+		this.server.on('listening', this.onListen);
+		this.server.on('message', this.onPacket);
+	}
+	async setCertificate() {
+		const { certificate } = this.configuration;
+		if (certificate) {
+			this.certificate = await parseCertificate(certificate);
+			console.log(this.certificate);
+			this.keypair = {
+				publicKey: this.certificate.publicKey,
+				privateKey: this.certificate.privateKey,
+			};
+			this.encryptKeypair = signKeypairToEncryptKeypair(this.keypair);
+			if (this.certificate.ipVersion) {
+				this.ipVersion = this.certificate.ipVersion;
+			}
+		}
+		if (this.connectionIdCertificate) {
+			this.connectionIdCertificate = await getCertificate(this.connectionIdCertificate);
+		} else if (this.certificate.encryptConnectionId) {
+			this.connectionIdKeypair = this.certificate.connectionIdKeypair;
+		}
+		if (this.connectionIdKeypair) {
+			this.encryptConnectionId = true;
+			this.connectionIdKeypair = {
+				publicKey: this.connectionIdKeypair.publicKey,
+				privateKey: this.connectionIdKeypair.privateKey,
+			};
+		}
+	}
+	async configureNetwork() {
+		const { configuration } = this;
+		const {
+			ip: certIp,
+			port: certPort
+		} = this.certificate;
+		const port = configuration.port || certPort;
+		const ip = configuration.ip || certIp;
+		console.log('Config Network', ip, port);
+		this.ip = ip;
+		this.port = port;
+	}
+	async setupServer() {
+		const ipVersion = this.ipVersion;
+		const server = dgram.createSocket(ipVersion);
+		this.server = server;
+		process.on('beforeExit', (code) => {
+			server.close();
+		});
+		process.on('exit', (code) => {
+			server.close();
+		});
+	}
+	async initialize(configuration) {
+		console.log('-------SERVER INITIALIZING-------');
+		assign(this, configuration);
+		this.configuration = seal(assign({}, configuration));
+		info(this.configuration);
+		if (!this.id) {
+			this.id = randomConnectionId(4);
+		} else if (isFunction(this.id)) {
+			this.id = await this.id();
+		}
+		await this.setCertificate();
+		await this.configureNetwork();
+		await this.setupServer();
+		await this.attachEvents();
+		await this.bindServer();
+		console.log('-------SERVER INITIALIZED-------');
+		return this;
+	}
+	async send(packet) {
+		const config = {
+			source: this,
+			packet
+		};
+		return sendPacket(config, this.server);
+	}
+	bindMethods(methods) {
+		const thisServer = this;
+		each(methods, (method, methodName) => {
+			thisServer[methodName] = method.bind(thisServer);
+		});
+	}
+	bindActions(methods) {
+		const thisServer = this;
+		each(methods, (method, methodName) => {
+			thisServer.actions.set(methodName, method.bind(thisServer));
+		});
+	}
+	setClientEvent(eventName, callback) {
+		this.clientEvents.set(eventName, callback);
+	}
+	clientEvent(eventName, client) {
+		success(`Client Client Event: ${eventName} -> SocketID: ${client.id}`);
+		const foundEvent = this.clientEvents.get(eventName);
+		if (foundEvent) {
+			foundEvent(this, client);
+		}
 	}
 	description = `The Universal Web's UDSP server module.`;
 	descriptor = 'UWServer';
@@ -72,107 +184,6 @@ export class Server {
 	events = construct(Map);
 	streamIdGenerator = construct(UniqID);
 	// default file extension default is .js but WWW default is www
-	async initialize(configuration) {
-		console.log('-------SERVER INITIALIZING-------');
-		const thisServer = this;
-		thisServer.configuration = seal(assign({}, configuration));
-		console.log(thisServer.configuration);
-		assign(thisServer, thisServer.configuration);
-		thisServer.server = dgram.createSocket(thisServer.ipVersion);
-		const server = thisServer.server;
-		thisServer.bindMethods({
-			on,
-			bindServer,
-			onError,
-			onListen,
-			onPacket,
-			off,
-			emit
-		});
-		thisServer.bindActions(actions);
-		if (thisServer.certificate) {
-			thisServer.certificate = await getCertificate(thisServer.certificate);
-			thisServer.publicCertificate = thisServer.certificate.certificateDecoded;
-			thisServer.keypair = {
-				publicKey: thisServer.certificate.publicKey,
-				privateKey: thisServer.certificate.privateKey,
-			};
-		}
-		if (thisServer.keypair) {
-			thisServer.encryptKeypair = signKeypairToEncryptKeypair(thisServer.keypair);
-		}
-		if (thisServer.connectionIdCertificate) {
-			thisServer.connectionIdCertificate = await getCertificate(thisServer.connectionIdCertificate);
-		} else if (thisServer.publicCertificate.encryptConnectionId) {
-			thisServer.connectionIdKeypair = thisServer.certificate;
-		}
-		if (thisServer.connectionIdKeypair) {
-			thisServer.encryptConnectionId = true;
-			thisServer.connectionIdKeypair = {
-				publicKey: thisServer.connectionIdKeypair.publicKey,
-				privateKey: thisServer.connectionIdKeypair.privateKey,
-			};
-		}
-		if (configuration.randomId || !thisServer.id) {
-			thisServer.id = randomConnectionId(4);
-		}
-		if (isFunction(thisServer.id)) {
-			thisServer.id = await thisServer.id();
-		}
-		if (thisServer.publicCertificate) {
-			const {
-				ip: certIp,
-				port: certPort
-			} = thisServer.publicCertificate;
-			const port = configuration.port || certPort;
-			const ip = configuration.ip || certIp;
-			console.log(thisServer.certificate, ip, port);
-			this.ip = ip;
-			this.port = port;
-		}
-		thisServer.server.on('error', thisServer.onError);
-		thisServer.server.on('listening', thisServer.onListen);
-		thisServer.server.on('message', thisServer.onPacket);
-		await thisServer.bindServer();
-		process.on('beforeExit', (code) => {
-			server.close();
-		});
-		process.on('exit', (code) => {
-			server.close();
-		});
-		thisServer.send = async function(packetConfig) {
-			packetConfig.server = thisServer;
-			packetConfig.isServer = true;
-			if (!packetConfig.encryptKeypair) {
-				packetConfig.encryptKeypair = thisServer.encryptKeypair;
-			}
-			return sendPacket(packetConfig, server);
-		};
-		console.log('-------SERVER INITIALIZED-------');
-		return thisServer;
-	}
-	bindMethods(methods) {
-		const thisServer = this;
-		each(methods, (method, methodName) => {
-			thisServer[methodName] = method.bind(thisServer);
-		});
-	}
-	bindActions(methods) {
-		const thisServer = this;
-		each(methods, (method, methodName) => {
-			thisServer.actions.set(methodName, method.bind(thisServer));
-		});
-	}
-	setClientEvent(eventName, callback) {
-		this.clientEvents.set(eventName, callback);
-	}
-	clientEvent(eventName, client) {
-		success(`Client Client Event: ${eventName} -> SocketID: ${client.id}`);
-		const foundEvent = this.clientEvents.get(eventName);
-		if (foundEvent) {
-			foundEvent(this, client);
-		}
-	}
 }
 export async function createServer(...args) {
 	return construct(Server, args);

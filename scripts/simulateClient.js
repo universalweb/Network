@@ -9,9 +9,9 @@ console.time('Connected');
 const uwClient = await client({
 	destinationCertificate: `${currentPath(import.meta)}/../services/universal.web-EphemeralPublic.cert`,
 	// Load Profile Certificate from Keychain
-	keychain: 'Universal Web Profile',
+	// keychain: 'Universal Web Profile',
 	// Load Profile Certificate from file
-	// certificate: `${currentPath(import.meta)}/../profiles/default-Ephemeral.cert`,
+	certificate: `${currentPath(import.meta)}/../profiles/default-Ephemeral.cert`,
 });
 console.timeEnd('Connected');
 console.log('INTRO =>', uwClient);

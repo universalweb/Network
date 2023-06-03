@@ -1,6 +1,7 @@
 import { logCert, imported } from '#logs';
 import { read, write } from '#file';
 import { decode, encode } from 'msgpackr';
+import { assign } from 'Acid';
 imported('CERTIFICATE');
 // Add certificate verification via DIS
 export async function verifyCertificate(parentCertificate, childCertificate) {
@@ -12,8 +13,11 @@ export async function getCertificate(filepath) {
 	if (original) {
 		const certificate = {
 			original,
-			decoded: decode(original)
 		};
+		assign(certificate, decode(original));
+		if (certificate.certificate) {
+			assign(certificate, decode(certificate.certificate));
+		}
 		return certificate;
 	} else {
 		logCert('FAILED TO LOAD CERT', filepath);
@@ -21,22 +25,18 @@ export async function getCertificate(filepath) {
 }
 export async function parseCertificate(filepath) {
 	logCert('Get => ', filepath);
-	const original = getCertificate(filepath);
-	if (original) {
-		const decoded = decode(original);
-		const certificate = {
-			original,
-			decoded
-		};
+	const certificate = await getCertificate(filepath);
+	if (certificate) {
 		const {
 			ephemeral,
-			master
-		} = decoded;
+			master,
+			decoded
+		} = certificate;
 		if (ephemeral) {
-			decoded.ephemeral = decode(ephemeral);
+			certificate.ephemeral = decode(ephemeral);
 		}
 		if (master) {
-			decoded.master = decode(master);
+			certificate.master = decode(master);
 		}
 		return certificate;
 	} else {
