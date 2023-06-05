@@ -193,18 +193,18 @@ export function serverSessionKeys(server, clientPublicKey, sessionKeys) {
 		receiveKey
 	};
 }
-export function signKeypair() {
-	const publicKey = bufferAlloc(crypto_sign_PUBLICKEYBYTES);
-	const privateKey = bufferAlloc(crypto_sign_SECRETKEYBYTES);
+export function signKeypair(config) {
+	const publicKey = config?.publicKey || bufferAlloc(crypto_sign_PUBLICKEYBYTES);
+	const privateKey = config?.privateKey || bufferAlloc(crypto_sign_SECRETKEYBYTES);
 	crypto_sign_keypair(publicKey, privateKey);
 	return {
 		publicKey,
 		privateKey
 	};
 }
-export function encryptKeypair() {
-	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);
-	const privateKey = bufferAlloc(crypto_box_SECRETKEYBYTES);
+export function encryptKeypair(config) {
+	const publicKey = config?.publicKey || bufferAlloc(crypto_box_PUBLICKEYBYTES);
+	const privateKey = config?.privateKey || bufferAlloc(crypto_box_SECRETKEYBYTES);
 	crypto_box_keypair(publicKey, privateKey);
 	return {
 		publicKey,

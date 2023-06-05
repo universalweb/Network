@@ -74,7 +74,10 @@ export async function initialize(config, client) {
 	client.idString = serverConnectionIdString;
 	if (isBoolean(server.encryptClientConnectionId)) {
 		this.encryptConnectionId = true;
-	} else if (message.encryptClientConnectionId) {
+	} else if (message.encryptConnectionId) {
+		// allow a public key to be given to encrypt the connection id?
+		// Useful when two large apps are speaking to each other but want to reduce MiM analysis
+		// could also ask for the session keys to be used instead?
 		this.encryptConnectionId = true;
 	}
 	client.destination = {
