@@ -41,6 +41,10 @@ import { connect as clientConnect } from './connect.js';
 import { onListening } from './listening.js';
 import { currentPath } from '#directory';
 import { keychainGet } from '#keychain';
+import { on } from '../server/events.js';
+import { onError } from '../server/onError.js';
+import { onListen } from '../server/onListen.js';
+import { onPacket } from '../server/onPacket.js';
 // UNIVERSAL WEB Client Class
 export class Client {
 	constructor(configuration) {
@@ -48,8 +52,8 @@ export class Client {
 		return this.initialize(configuration);
 	}
 	configDefaults() {
-		const { connect } = this.configuration;
-		this.connect = connect;
+		const { autoConnect } = this.configuration;
+		this.autoConnect = autoConnect;
 	}
 	async setDestination() {
 		const {
@@ -114,16 +118,25 @@ export class Client {
 			this.destination.connectionIdKeypair = this.keypair;
 		}
 	}
+	connect = clientConnect;
+	send = send;
+	request = request;
+	processMessage = processMessage;
+	emit = emit;
+	onListening = onListening;
+	onMessage = onMessage;
 	async attachEvents() {
-		this.connect = clientConnect.bind(this);
-		this.send = send.bind(this);
-		this.request = request.bind(this);
-		this.processMessage = processMessage.bind(this);
-		this.emit = emit.bind(this);
-		this.onListening = onListening.bind(this);
-		this.onMessage = onMessage.bind(this);
-		this.server.on('message', this.onMessage);
-		this.server.on('listening', this.onListening);
+		const thisClient = this;
+		this.server.on('error', () => {
+			console.log('CLIENT UDP SERVER ERROR');
+			return thisClient.onError && thisClient.onError();
+		});
+		this.server.on('listening', () => {
+			return thisClient.onListening();
+		});
+		this.server.on('message', () => {
+			return thisClient.onMessage();
+		});
 	}
 	async initialize(configuration) {
 		const thisClient = this;
@@ -138,7 +151,7 @@ export class Client {
 		await this.configCryptography();
 		await this.attachEvents();
 		Client.connections.set(this.idString, this);
-		if (this.connect) {
+		if (this.autoConnect) {
 			console.time('CONNECTING');
 			const connectRequest = await this.connect();
 			console.log('Client Connect Response', connectRequest);
@@ -148,16 +161,6 @@ export class Client {
 	}
 	reKey(targetPublicKey) {
 		const thisClient = this;
-		const {
-			publicKey,
-			privateKey
-		} = thisClient.keypair;
-		thisClient.destination.publicKey = targetPublicKey;
-		const newSessionKeys = clientSessionKeys(publicKey, privateKey, targetPublicKey);
-		thisClient.ephemeralKeypair = thisClient.reKey;
-		thisClient.transmitKey = newSessionKeys.transmitKey;
-		thisClient.receiveKey = newSessionKeys.receiveKey;
-		thisClient.lastReKey = Date.now();
 		success(`client reKeyed -> ID: ${thisClient.idString}`);
 	}
 	close() {
@@ -166,7 +169,7 @@ export class Client {
 		Client.connections.delete(this.id);
 	}
 	destination = {};
-	connect = true;
+	autoConnect = true;
 	type = 'client';
 	isClient = true;
 	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;

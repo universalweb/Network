@@ -33,20 +33,25 @@ export class Server {
 	constructor(configuration) {
 		return this.initialize(configuration);
 	}
+	on = on;
+	bindServer = bindServer;
+	onError = onError;
+	onListen = onListen;
+	onPacket = onPacket;
+	off = off;
+	emit = emit;
 	attachEvents() {
-		this.bindMethods({
-			on,
-			bindServer,
-			onError,
-			onListen,
-			onPacket,
-			off,
-			emit
-		});
+		const thisServer = this;
 		this.bindActions(actions);
-		this.server.on('error', this.onError);
-		this.server.on('listening', this.onListen);
-		this.server.on('message', this.onPacket);
+		this.server.on('error', () => {
+			return thisServer.onError();
+		});
+		this.server.on('listening', () => {
+			return thisServer.onListen();
+		});
+		this.server.on('message', () => {
+			return thisServer.onPacket();
+		});
 	}
 	async setCertificate() {
 		const { certificate } = this.configuration;
@@ -116,12 +121,13 @@ export class Server {
 		console.log('-------SERVER INITIALIZED-------');
 		return this;
 	}
-	async send(packet) {
+	async send(packet, destination) {
 		const config = {
 			source: this,
+			destination,
 			packet
 		};
-		return sendPacket(config, this.server);
+		return sendPacket(config);
 	}
 	bindMethods(methods) {
 		const thisServer = this;
@@ -168,7 +174,7 @@ export class Server {
 	/*
       	* A puzzle used to challenge clients to ensure authenticity, connection liveliness, and congestion control.
       	* Slow down account creation.
-      	* Generate crypto currency for the Identity Registrar.
+      	* Generate crypto currency or compute work.
     */
 	puzzleFlag = false;
 	/*
@@ -178,12 +184,10 @@ export class Server {
 	/*
 		* All created clients (clients) represent a client to server bi-directional connection until it is closed by either party.
 	*/
-	// clients are referred to as clients
 	clients = construct(Map);
 	clientEvents = construct(Map);
 	events = construct(Map);
 	streamIdGenerator = construct(UniqID);
-	// default file extension default is .js but WWW default is www
 }
 export async function createServer(...args) {
 	return construct(Server, args);

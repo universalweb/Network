@@ -7,48 +7,35 @@ import { decodePacket, decodePacketHeaders } from '#udsp/decodePacket';
 import { createClient } from './clients/index.js';
 import { reply } from '#udsp/reply';
 const isServer = true;
-export async function onPacket(packetEncoded, connection) {
+export async function onPacket(packet, connection) {
 	const thisServer = this;
-	const {
-		keypair,
-		connectionIdKeypair,
-		encryptConnectionId,
-		encryptKeypair
-	} = thisServer;
 	msgReceived('Message Received');
 	const config = {
-		packetEncoded,
+		packet,
 		connection,
-		server: thisServer,
-		isServer: true,
-		keypair,
-		encryptConnectionId,
-		connectionIdKeypair,
-		encryptKeypair
+		destination: thisServer,
 	};
-	const headers = await decodePacketHeaders(config);
-	if (!headers) {
+	const wasHeadersDecoded = await decodePacketHeaders(config);
+	if (!wasHeadersDecoded || !config.decodePacket.headers) {
 		return failed('Invalid Packet Headers');
 	}
+	const wasDecoded = await decodePacket(config);
+	if (!wasDecoded) {
+		return failed('When decoding the packet but headers passed');
+	}
 	const {
-		id,
-		key,
-		nonce
-	} = headers;
-	console.log(headers);
+		id, key
+	} = config.packetDecoded.headers;
 	let client = thisServer.clients.get(toBase64(id));
 	if (key && !client) {
 		client = await createClient({
 			server: thisServer,
 			connection,
-			id,
-			nonce,
-			key
+			packet: config.packetDecoded
 		});
-		config.receiveKey = client.receiveKey;
-	} else if (!client) {
+	}
+	if (!client) {
 		return failed('Invalid Client id given', toBase64(id));
 	}
-	const packet = await decodePacket(config);
-	await reply(packet, client);
+	await reply(config.packetDecoded, client);
 }

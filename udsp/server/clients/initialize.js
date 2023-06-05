@@ -1,6 +1,6 @@
 import { created } from './created.js';
 import {
-	decrypt, emptyNonce, keypair,
+	decrypt, keypair,
 	serverSessionKeys, toBase64,
 	randomConnectionId,
 	randomBuffer
@@ -8,43 +8,43 @@ import {
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-import { construct, keys } from 'Acid';
+import { construct, keys, isBoolean } from 'Acid';
 import { Client } from './index.js';
-export async function initialize(config) {
+export async function initialize(config, client) {
 	const {
-		client,
-		server,
+		packet: {
+			headers: {
+				id: clientId,
+				key: publicKey
+			},
+			message
+		},
+		destination: server,
 		connection,
-		nonce,
-		id: clientId,
-		key: publicKey
 	} = config;
 	const {
 		encryptKeypair: {
-			privateKey: serverPrivateKey,
-			publicKey: serverPublicKey
+			publicKey: serverPublicKey,
+			privateKey: serverPrivateKey
 		},
 		clients,
+		sessionKeys,
 		configuration: { id: serverId }
 	} = server;
 	const {
-		address,
+		address: ip,
 		port
 	} = connection;
-	const sessionKey = serverSessionKeys(serverPublicKey, serverPrivateKey, publicKey);
-	if (!sessionKey) {
-		return failed('Session Key Failed');
-	}
-	const {
-		receiveKey,
-		transmitKey,
-	} = sessionKey;
-	client.transmitKey = transmitKey;
-	client.receiveKey = receiveKey;
+	// When changing to a new sessionKeys you must first create new keys from scratch to replace these.
+	client.sessionKeys = sessionKeys;
+	// When changing to a new key you must first create new keys from scratch to replace these.
+	client.keypair = {
+		publicKey: serverPublicKey,
+		privateKey: serverPrivateKey
+	};
 	success(`key: ${toBase64(publicKey)}`);
-	success(`receiveKey: ${toBase64(receiveKey)}`);
-	success(`transmitKey: ${toBase64(transmitKey)}`);
-	success(`nonce: ${toBase64(nonce)}`);
+	success(`receiveKey: ${toBase64(sessionKeys.receiveKey)}`);
+	success(`transmitKey: ${toBase64(sessionKeys.transmitKey)}`);
 	success(`Ephemeral Key: ${toBase64(publicKey)}`);
 	/*
 		When the client sends to server it includes the client ID in the header
@@ -57,30 +57,32 @@ export async function initialize(config) {
 	/*
 		The server's connection ID is used for loadbalancing, internal packet analysis,
 		client/server privacy, client/server security, congestion control, connection migration, and external analysis obfuscation.
-		It should be typically encrypted and contain a random value plus a nonce. This encryption is the same thats used for packets.
-		Encrypting the connection ID allows for the server to be able to identify the client without leaking any internal network information.
-		The nonce is used to identify the client on the end server.
-		The loadbalancer can use the
-		This strategy is effective for replay attacks
+		The connection ID can be encrypted when being sent to the client it uses the clientID when client sends to the server it uses the provided Server ID. Both are in the same location in the header with a property with the name "id".
+		Encrypting the connection ID allows for the server to be able to identify the client without leaking any internal network information & protect it from further analysis & certain attacks.
 	*/
-	// The connection id header is the full value that is found in the id field for packets leaving the server.
-	const serverConnectionId = Buffer.concat([server.id, randomBuffer(4)]);
-	// The server connection id is the value that is used to identify the client to the server.
-	const serverConnectionIdString = toBase64(serverConnectionId);
-	console.log(`Server Connection ID: ${toBase64(serverConnectionId)}`);
+	// The server's connection id is a value that is used to identify a specific client to the server.
+	const serverClientId = Buffer.concat([server.id, randomBuffer(4)]);
+	const serverConnectionIdString = toBase64(serverClientId);
+	console.log(`Server Connection ID: ${toBase64(serverClientId)}`);
 	if (clients.has(serverConnectionIdString)) {
 		failed('ID IN USE NEED TO RE-CHECK FOR A NEW ID');
 	} else {
 		success(`Server client ID is open ${serverConnectionIdString}`);
 	}
 	clients.set(serverConnectionIdString, client);
-	client.id = serverConnectionId;
+	client.id = serverClientId;
 	client.idString = serverConnectionIdString;
-	client.clientId = clientId;
-	client.clientIdString = toBase64(clientId);
-	client.publicKey = publicKey;
-	client.address = address;
-	client.port = port;
+	if (isBoolean(server.encryptClientConnectionId)) {
+		this.encryptConnectionId = true;
+	} else if (message.encryptClientConnectionId) {
+		this.encryptConnectionId = true;
+	}
+	client.destination = {
+		publicKey,
+		ip,
+		port,
+		id: clientId
+	};
 	if (!server.realtime && server.gracePeriod) {
 		client.gracePeriod = setTimeout(() => {
 			const lastActive = (Date.now() - client.lastActive) / 1000;
@@ -89,8 +91,7 @@ export async function initialize(config) {
 			}
 		}, 30000);
 	}
-	client.nonce = emptyNonce();
-	success(`client Created: ID:${serverConnectionIdString} ${address}:${port}`);
+	success(`client Created: ID:${serverConnectionIdString} ${ip}:${port}`);
 	await server.clientEvent('constructed', `SID${serverConnectionIdString}`, `CID${client.clientIdString}`);
 	await client.created();
 	client.cachePacketSendConfig();

@@ -18,27 +18,36 @@ import {
 	signDetached,
 	boxSeal,
 } from '#crypto';
-export async function encodePacket(data) {
+export async function encodePacket(config) {
 	const {
 		source,
-		destination,
 		packet: {
 			headers = {},
 			message,
 			footer,
 			options
 		}
-	} = data;
+	} = config;
 	const {
-		id,
 		state,
 		isClient,
 		isServer,
+		isServerClient
 	} = source;
+	const destination = source.destination || config.destination;
+	const id = destination.id || source.id;
 	const nonce = nonceBox();
-	const encryptConnectionId = (isServer) ? source.certificate.encryptConnectionId : destination.encryptConnectionId;
+	let encryptConnectionId;
+	if (isServer) {
+		encryptConnectionId = source.certificate.encryptConnectionId;
+	} else if (isClient) {
+		encryptConnectionId = destination.encryptConnectionId;
+	} else if (isServerClient) {
+		encryptConnectionId = source.encryptConnectionId;
+	}
 	if (id) {
 		if (encryptConnectionId) {
+			// Would be interesting to see if none-deterministic signatures could be a better fit
 			headers.id = boxSeal(id, destination.encryptKeypair.publicKey);
 		} else {
 			headers.id = id;

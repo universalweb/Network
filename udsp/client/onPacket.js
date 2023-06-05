@@ -8,14 +8,20 @@ imported('Server onMessage');
 import { processMessage } from './processMessage.js';
 export async function onMessage(packet) {
 	const { destination: source } = this;
-	msgReceived('Message Received');
+	msgReceived('Packet Received');
 	const config = {
 		destination: this,
 		source,
 		packet,
 	};
-	const headers = await decodePacketHeaders(config);
-	const decodedPacket = await decodePacket(config);
-	processMessage(decodedPacket, this);
+	const wasHeadersDecoded = await decodePacketHeaders(config);
+	if (!wasHeadersDecoded || !config.decodePacket.headers) {
+		return failed('Invalid Packet Headers');
+	}
+	const wasDecoded = await decodePacket(config);
+	if (!wasDecoded) {
+		return failed('When decoding the packet but headers passed');
+	}
+	processMessage(config.packetDecoded, this);
 }
 

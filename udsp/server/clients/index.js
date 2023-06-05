@@ -8,30 +8,20 @@ import { received } from './received.js';
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-import { UniqID, construct, assign } from 'Acid';
+import {
+	UniqID, construct, assign, promise
+} from 'Acid';
 import { keypair, toBase64 } from '#crypto';
+import { encodePacket } from '#udsp/encodePacket';
+import { sendPacket } from '#udsp/sendPacket';
 export class Client {
-	descriptor = `Server's client`;
-	type = 'serverClient';
-	client = true;
-	pending = false;
-	replyQueue = construct(Map);
-	packetIdGenerator = construct(UniqID);
-	state = 0;
 	constructor(config) {
 		const { server } = config;
 		const client = this;
 		this.server = function() {
 			return server;
 		};
-		config.client = client;
-		this.sendPacket = async function(packetConfigObject) {
-			packetConfigObject.client = client;
-			await server.send(packetConfigObject);
-			await server.clientEvent('send', client);
-			msgSent(`socket Sent -> ID: ${client.id}`);
-		};
-		return initialize(config);
+		return initialize(config, client);
 	}
 	async created() {
 		const server = this.server();
@@ -56,30 +46,20 @@ export class Client {
 	}
 	updateState(state) {
 		this.state = state;
-		this.cachePacketSendConfig();
 	}
-	cachePacketSendConfig() {
-		const client = this;
-		const {
-			address,
-			port,
-			nonce,
-			transmitKey,
-			clientId,
-			state,
-		} = client;
-		this.packetConfig = {
-			address,
-			port,
-			nonce,
-			transmitKey,
-			id: clientId,
-			state,
+	async sendPacket(packet) {
+		msgSent(`socket Sent -> ID: ${this.id}`);
+		const { destination } = this;
+		const config = {
+			destination,
+			source: this,
+			packet
 		};
+		return sendPacket(config);
+		// await this.server().clientEvent('send', this);
 	}
 	async send(packetConfig) {
-		const preparePacketObject = assign(packetConfig, this.packetConfig);
-		return this.sendPacket(preparePacketObject);
+		return this.sendPacket(packetConfig);
 	}
 	async received(message, frameHeaders) {
 		const server = this.server();
@@ -93,11 +73,19 @@ export class Client {
 		await destroy(this, destroyCode, server);
 		info(`socket EVENT -> destroy - ID:${this.id}`);
 	}
+	descriptor = `Server's client`;
+	type = 'serverClient';
+	isServerClient = true;
+	pending = false;
+	replyQueue = construct(Map);
+	packetIdGenerator = construct(UniqID);
+	state = 0;
+	encryptConnectionId = false;
 }
 export async function createClient(config) {
 	const { id } = config;
-	console.log('Creating Client Object', toBase64(id));
+	console.log('Creating Client with id', toBase64(id));
 	const client = await construct(Client, [config]);
-	console.log('Client has been created', toBase64(id));
+	console.log('Client has been created with sever connection id', toBase64(client.id));
 	return client;
 }

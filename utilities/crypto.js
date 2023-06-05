@@ -153,19 +153,19 @@ export function signVerify(signedMessage, publicKey) {
 export function signVerifyDetached(signedMessage, message, publicKey) {
 	return crypto_sign_verify_detached(signedMessage, message, publicKey);
 }
-export function keypair() {
-	const publicKey = bufferAlloc(crypto_kx_PUBLICKEYBYTES);
-	const privateKey = bufferAlloc(crypto_kx_SECRETKEYBYTES);
+export function keypair(config) {
+	const publicKey = config?.publicKey || bufferAlloc(crypto_kx_PUBLICKEYBYTES);
+	const privateKey = config?.privateKey || bufferAlloc(crypto_kx_SECRETKEYBYTES);
 	crypto_kx_keypair(publicKey, privateKey);
 	return {
 		publicKey,
 		privateKey
 	};
 }
-export function keypairSeed(seed) {
-	const publicKey = bufferAlloc(crypto_kx_PUBLICKEYBYTES);
-	const privateKey = bufferAlloc(crypto_kx_SECRETKEYBYTES);
-	crypto_kx_seed_keypair(publicKey, privateKey, seed);
+export function keypairSeed(config) {
+	const publicKey = config?.publicKey || bufferAlloc(crypto_kx_PUBLICKEYBYTES);
+	const privateKey = config?.privateKey || bufferAlloc(crypto_kx_SECRETKEYBYTES);
+	crypto_kx_seed_keypair(publicKey, privateKey, config.seed);
 	return {
 		publicKey,
 		privateKey
@@ -230,9 +230,9 @@ export function boxSeal(message, publicKey) {
 	crypto_box_seal(encrypted, message, publicKey);
 	return encrypted;
 }
-export function boxUnseal(encrypted, publicKey, privateKey) {
+export function boxUnseal(encrypted, destinationKeypair) {
 	const message = bufferAlloc(encrypted.length - crypto_box_SEALBYTES);
-	const isValid = crypto_box_seal_open(message, encrypted, publicKey, privateKey);
+	const isValid = crypto_box_seal_open(message, encrypted, destinationKeypair.publicKey, destinationKeypair.privateKey);
 	return isValid && message;
 }
 // Demonstrats that authenticatedBox is smaller than boxSeal

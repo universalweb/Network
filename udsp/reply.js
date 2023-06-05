@@ -36,14 +36,15 @@ export class Reply {
 		thisReply.sendPacket = function(config) {
 			return client.send(config);
 		};
-		thisReply.processRequest = function() {
-			console.log(thisReply.request);
-			console.log(thisReply);
-			processEvent(thisReply);
-		};
+		if (client.lastActive) {
+			client.lastActive = Date.now();
+		}
 		thisReply.received(message);
 		return thisReply;
 	}
+	processRequest = function() {
+		processEvent(this);
+	};
 	headers = {};
 	options = {};
 	// Incoming
