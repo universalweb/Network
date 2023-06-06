@@ -8,19 +8,19 @@ export async function destroy(client, reason, server) {
 		});
 		info(`client ended from inactivity. Grace period ended.
 			ID: ${client.id}
-			Address: ${client.address}
+			Address: ${client.ip}
 			Port: ${client.port}
 			`);
 	} else if (reason === 0) {
 		info(`client ended due to natural causes
 			ID: ${client.id}
-			Address: ${client.address}
+			Address: ${client.ip}
 			Port: ${client.port}
 			`);
 	}
 	await server.clientEvent('destroy', client);
 	server.clients.delete(client.idString);
-	client.address = null;
+	client.ip = null;
 	client.port = null;
 	client.id = null;
 	client.nonce = null;

@@ -9,14 +9,14 @@ export async function sendPacket(packetConfig) {
 	const { source: { server } } = packetConfig;
 	const destination = packetConfig.destination || packetConfig.source.destination;
 	const {
-		address,
+		ip,
 		port,
 	} = destination;
 	const packet = await encodePacket(packetConfig);
-	console.log(`Packet Encoded Size ${packet.length} Sending to Address: ${address} Port: ${port}`);
+	console.log(`Packet Encoded Size ${packet.length} Sending to ip: ${ip} Port: ${port}`);
 	const rawServer = isFunction(server) ? server() : server;
 	return promise((accept, reject) => {
-		rawServer.send(packet, port, address, (error) => {
+		rawServer.send(packet, port, ip, (error) => {
 			if (error) {
 				reject(error);
 				return failed(error);

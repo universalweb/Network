@@ -16,7 +16,8 @@ import {
 	construct,
 	UniqID,
 	isString,
-	promise
+	promise,
+	isTrue
 } from 'Acid';
 import dgram from 'dgram';
 // Default utility imports
@@ -67,13 +68,14 @@ export class Client {
 		if (isString(destinationCertificate)) {
 			console.log('Loading Destination Certificate', destinationCertificate);
 			const certificate = await getCertificate(destinationCertificate);
-			destination.certificate = certificate.original;
-			assign(destination, certificate.decoded);
+			assign(destination, certificate);
 		}
-		if (!destination.certificate) {
+		if (!destination.publicKey) {
 			console.log('No destination certificate provided.');
 		}
 		console.log(destination);
+		if (isTrue(destination.encryptKeypair)) {
+		}
 		destination.encryptKeypair = {
 			publicKey: signPublicKeyToEncryptPublicKey(destination.publicKey),
 		};
@@ -82,6 +84,16 @@ export class Client {
 		}
 		if (port) {
 			destination.port = port;
+		}
+		this.encryptConnectionId = destination.encryptConnectionId;
+		this.encryptClientId = destination.encryptClientId;
+		this.encryptServerId = destination.encryptServerId;
+		this.compression = destination.compression;
+		this.headerCompression = destination.headerCompression;
+		this.crypto = destination.crypto;
+		this.cryptography = destination.cryptography;
+		if (destination.autoLogin && this.login) {
+			this.autoLogin = true;
 		}
 	}
 	async getKeychainSave(keychain) {
@@ -114,7 +126,7 @@ export class Client {
 		success(`Created Shared Keys`);
 		success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);
 		success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
-		if (this.destination.encryptConnectionId) {
+		if (this.encryptConnectionId) {
 			this.destination.connectionIdKeypair = this.keypair;
 		}
 	}

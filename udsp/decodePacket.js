@@ -10,15 +10,15 @@ import { createClient } from './server/clients/index.js';
 export async function decodePacketHeaders(config) {
 	const {
 		source,
+		destination,
 		packet: packetEncoded
 	} = config;
-	const destination = source.destination || config.destination;
 	const { encryptKeypair } = destination;
 	if (packetEncoded.length >= 1350) {
 		console.log(packetEncoded);
 		failed(`WARNING: Packet size is larger than max allowed size 1350 -> ${packetEncoded.length} over by ${packetEncoded.length - 1350}`);
 	}
-	const encryptConnectionId = (destination.isClient) ? destination.destination.encryptConnectionId : source.encryptConnectionId;
+	const encryptConnectionId = destination.encryptConnectionId;
 	info(`encryptConnectionId ${encryptConnectionId}`);
 	const client = config.client;
 	info(`Packet Encoded Size ${packetEncoded.length}`);
