@@ -9,7 +9,7 @@ import {
 	assign,
 	chunk,
 	omit
-} from 'Acid';
+} from '@universalweb/acid';
 import {
 	encrypt,
 	nonceBox,

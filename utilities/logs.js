@@ -6,7 +6,7 @@ import {
 	initialString,
 	isArray,
 	isBuffer
-} from 'Acid';
+} from '@universalweb/acid';
 const arrayNumberRegex = /\[([\d\s,]*?)\]/gm;
 function truncateArray(match) {
 	return match.replace(/\s/gm, '');

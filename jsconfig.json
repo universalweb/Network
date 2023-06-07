@@ -68,9 +68,6 @@
 			"#certificate": [
 				"./utilities/certificate/index.js"
 			],
-			"#directory": [
-				"./utilities/directory.js"
-			],
 			"#udsp": [
 				"./udsp/index.js"
 			],

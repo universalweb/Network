@@ -10,7 +10,7 @@ import {
 } from '#logs';
 import {
 	UniqID, construct, assign, promise
-} from 'Acid';
+} from '@universalweb/acid';
 import { keypair, toBase64 } from '#crypto';
 import { encodePacket } from '#udsp/encodePacket';
 import { sendPacket } from '#udsp/sendPacket';
@@ -49,9 +49,7 @@ export class Client {
 	}
 	async sendPacket(packet) {
 		msgSent(`socket Sent -> ID: ${this.id}`);
-		const { destination } = this;
 		const config = {
-			destination,
 			source: this,
 			packet
 		};
@@ -83,8 +81,6 @@ export class Client {
 	encryptConnectionId = false;
 }
 export async function createClient(config) {
-	const { id } = config;
-	console.log('Creating Client with id', toBase64(id));
 	const client = await construct(Client, [config]);
 	console.log('Client has been created with sever connection id', toBase64(client.id));
 	return client;

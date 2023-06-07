@@ -1,4 +1,4 @@
-import { promise } from 'Acid';
+import { promise } from '@universalweb/acid';
 import { info } from '#logs';
 export async function bindServer() {
 	const {

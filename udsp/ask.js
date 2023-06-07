@@ -4,7 +4,7 @@ import {
 	get,
 	isBuffer, isPlainObject,
 	isArray, isMap, construct
-} from 'Acid';
+} from '@universalweb/acid';
 import { decode, encode } from 'msgpackr';
 import {
 	failed, info, msgReceived, msgSent

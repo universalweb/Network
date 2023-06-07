@@ -2,7 +2,7 @@ import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 import { decode, } from 'msgpackr';
-import { assign, isBuffer, } from 'Acid';
+import { assign, isBuffer, } from '@universalweb/acid';
 import {
 	encrypt, nonceBox, toBase64, decrypt, boxUnseal
 } from '#crypto';
@@ -49,7 +49,7 @@ export async function decodePacketHeaders(config) {
 	let headerId;
 	if (headerIdEncoded.length > 24) {
 		success('Server Connection ID Decrypted');
-		headerId = boxUnseal(headerIdEncoded, encryptKeypair.publicKey, encryptKeypair.privateKey);
+		headerId = boxUnseal(headerIdEncoded, encryptKeypair);
 		if (!headerId) {
 			return failed(headerIdEncoded, 'Packet ID Decrypt Failed');
 		}
@@ -63,7 +63,7 @@ export async function decodePacketHeaders(config) {
 	if (headers.key) {
 		success(`Public Key is given -> Processing as create client`);
 		console.log(toBase64(encryptKeypair.publicKey));
-		const publicKey = boxUnseal(headers.key, destination.encryptKeypair.publicKey, destination.encryptKeypair.privateKey);
+		const publicKey = boxUnseal(headers.key, destination.encryptKeypair);
 		if (!publicKey) {
 			return failed(publicKey, 'Client Key Decrypt Failed');
 		}
@@ -76,6 +76,7 @@ export async function decodePacketHeaders(config) {
 		headers
 	};
 	config.packet = packet;
+	return true;
 }
 export async function decodePacket(config) {
 	const {
@@ -112,4 +113,5 @@ export async function decodePacket(config) {
 		success('body PAYLOAD', message.body.length);
 	}
 	packetDecoded.message = message;
+	return true;
 }

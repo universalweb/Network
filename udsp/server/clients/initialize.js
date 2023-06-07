@@ -8,7 +8,7 @@ import {
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-import { construct, keys, isBoolean } from 'Acid';
+import { construct, keys, isBoolean } from '@universalweb/acid';
 import { Client } from './index.js';
 export async function initialize(config, client) {
 	const {
@@ -17,18 +17,13 @@ export async function initialize(config, client) {
 				id: clientId,
 				key: publicKey
 			},
-			message
 		},
-		destination: server,
+		server,
 		connection,
 	} = config;
 	const {
-		encryptKeypair: {
-			publicKey: serverPublicKey,
-			privateKey: serverPrivateKey
-		},
+		encryptKeypair,
 		clients,
-		sessionKeys,
 		configuration: { id: serverId }
 	} = server;
 	const {
@@ -36,15 +31,12 @@ export async function initialize(config, client) {
 		port
 	} = connection;
 	// When changing to a new sessionKeys you must first create new keys from scratch to replace these.
-	client.sessionKeys = sessionKeys;
+	client.sessionKeys = serverSessionKeys(encryptKeypair, publicKey);
 	// When changing to a new key you must first create new keys from scratch to replace these.
-	client.keypair = {
-		publicKey: serverPublicKey,
-		privateKey: serverPrivateKey
-	};
+	client.keypair = encryptKeypair;
 	success(`key: ${toBase64(publicKey)}`);
-	success(`receiveKey: ${toBase64(sessionKeys.receiveKey)}`);
-	success(`transmitKey: ${toBase64(sessionKeys.transmitKey)}`);
+	success(`receiveKey: ${toBase64(client.sessionKeys.receiveKey)}`);
+	success(`transmitKey: ${toBase64(client.sessionKeys.transmitKey)}`);
 	success(`Ephemeral Key: ${toBase64(publicKey)}`);
 	/*
 		When the client sends to server it includes the client ID in the header
@@ -74,11 +66,6 @@ export async function initialize(config, client) {
 	client.idString = serverConnectionIdString;
 	if (isBoolean(server.encryptClientConnectionId)) {
 		this.encryptConnectionId = true;
-	} else if (message.encryptConnectionId) {
-		// allow a public key to be given to encrypt the connection id?
-		// Useful when two large apps are speaking to each other but want to reduce MiM analysis
-		// could also ask for the session keys to be used instead?
-		this.encryptConnectionId = true;
 	}
 	client.destination = {
 		publicKey,
@@ -97,7 +84,6 @@ export async function initialize(config, client) {
 	success(`client Created: ID:${serverConnectionIdString} ${ip}:${port}`);
 	await server.clientEvent('constructed', `SID${serverConnectionIdString}`, `CID${client.clientIdString}`);
 	await client.created();
-	client.cachePacketSendConfig();
 	return client;
 }
 

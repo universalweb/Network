@@ -1,6 +1,6 @@
 // 'Domain Certificate Creation'
 import { decode, encode } from 'msgpackr';
-import { stringify } from 'Acid';
+import { stringify } from '@universalweb/acid';
 import { read } from '#utilities/file';
 import { info } from '#utilities/console';
 import { compress } from 'iltorb';

@@ -17,10 +17,10 @@ import {
 	UniqID,
 	isString,
 	promise,
-	isTrue
-} from 'Acid';
+	isTrue,
+	currentPath
+} from '@universalweb/acid';
 import dgram from 'dgram';
-// Default utility imports
 import { success, configure, info } from '#logs';
 import {
 	keypair,
@@ -40,12 +40,7 @@ import { processMessage } from './processMessage.js';
 import { onMessage } from './onPacket.js';
 import { connect as clientConnect } from './connect.js';
 import { onListening } from './listening.js';
-import { currentPath } from '#directory';
 import { keychainGet } from '#keychain';
-import { on } from '../server/events.js';
-import { onError } from '../server/onError.js';
-import { onListen } from '../server/onListen.js';
-import { onPacket } from '../server/onPacket.js';
 // UNIVERSAL WEB Client Class
 export class Client {
 	constructor(configuration) {
@@ -74,11 +69,15 @@ export class Client {
 			console.log('No destination certificate provided.');
 		}
 		console.log(destination);
-		if (isTrue(destination.encryptKeypair)) {
+		if (isTrue(destination.encryptPublicKey)) {
+			destination.encryptKeypair = {
+				publicKey: destination.encryptKeypair,
+			};
+		} else {
+			destination.encryptKeypair = {
+				publicKey: signPublicKeyToEncryptPublicKey(destination.publicKey),
+			};
 		}
-		destination.encryptKeypair = {
-			publicKey: signPublicKeyToEncryptPublicKey(destination.publicKey),
-		};
 		if (ip) {
 			destination.ip = ip;
 		}
@@ -139,15 +138,15 @@ export class Client {
 	onMessage = onMessage;
 	async attachEvents() {
 		const thisClient = this;
-		this.server.on('error', () => {
+		this.server.on('error', (err) => {
 			console.log('CLIENT UDP SERVER ERROR');
-			return thisClient.onError && thisClient.onError();
+			return thisClient.onError && thisClient.onError(err);
 		});
 		this.server.on('listening', () => {
 			return thisClient.onListening();
 		});
-		this.server.on('message', () => {
-			return thisClient.onMessage();
+		this.server.on('message', (packet, rinfo) => {
+			return thisClient.onMessage(packet, rinfo);
 		});
 	}
 	async initialize(configuration) {
@@ -196,6 +195,7 @@ export class Client {
 	packetIdGenerator = construct(UniqID);
 }
 export async function client(configuration, ignoreConnections) {
+	console.log('Create Client');
 	const uwClient = await construct(Client, [configuration]);
 	return uwClient;
 }

@@ -1,6 +1,6 @@
 import WebTorrent from 'webtorrent';
 const client = new WebTorrent();
-import { promise } from 'Acid';
+import { promise } from '@universalweb/acid';
 async function download(magnetURI, options = {}) {
 	return promise((accept) => {
 		client.add(magnetURI, options, accept);

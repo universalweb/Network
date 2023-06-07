@@ -2,7 +2,7 @@ import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 import { toBase64 } from '#crypto';
-import { isEmpty } from 'Acid';
+import { isEmpty } from '@universalweb/acid';
 import { decodePacket, decodePacketHeaders } from '#udsp/decodePacket';
 import { createClient } from './clients/index.js';
 import { reply } from '#udsp/reply';
@@ -16,20 +16,14 @@ export async function onPacket(packet, connection) {
 		destination: thisServer,
 	};
 	const wasHeadersDecoded = await decodePacketHeaders(config);
-	if (!wasHeadersDecoded || !config.decodePacket.headers) {
+	if (!wasHeadersDecoded || !config.packetDecoded.headers) {
 		return failed('Invalid Packet Headers');
 	}
 	const {
-		id, key
+		id,
+		key
 	} = config.packetDecoded.headers;
 	let client = thisServer.clients.get(toBase64(id));
-	if (client) {
-		config.destination = client;
-	}
-	const wasDecoded = await decodePacket(config);
-	if (!wasDecoded) {
-		return failed('When decoding the packet but headers passed');
-	}
 	if (key && !client) {
 		client = await createClient({
 			server: thisServer,
@@ -40,6 +34,13 @@ export async function onPacket(packet, connection) {
 			return failed('Failed to create client', toBase64(id));
 		}
 		config.destination = client;
+	}
+	if (!client) {
+		return failed('Invalid Client id given', toBase64(id));
+	}
+	const wasDecoded = await decodePacket(config);
+	if (!wasDecoded) {
+		return failed('When decoding the packet but headers passed');
 	}
 	await reply(config.packetDecoded, client);
 }

@@ -1,5 +1,5 @@
 import nodeWatch from 'node-watch';
-import { isString } from 'Acid';
+import { isString } from '@universalweb/acid';
 export function watch(item, callback) {
 	return nodeWatch(item, {
 		recursive: true

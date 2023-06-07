@@ -3,7 +3,7 @@ import {
 	writeFile,
 	readFile,
 } from 'node:fs/promises';
-import { promise, jsonParse } from 'Acid';
+import { promise, jsonParse } from '@universalweb/acid';
 import { normalize } from 'path';
 import { decode } from 'msgpackr';
 export async function write(filePath, contents, encode) {

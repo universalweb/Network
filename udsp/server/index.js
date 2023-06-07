@@ -3,8 +3,9 @@ import {
 	each,
 	assign,
 	UniqID,
-	isFunction
-} from 'Acid';
+	isFunction,
+	currentPath
+} from '@universalweb/acid';
 import {
 	success,
 	failed,
@@ -13,7 +14,6 @@ import {
 	info,
 	msgReceived
 } from '#logs';
-import { currentPath } from '#utilities/directory';
 import dgram from 'dgram';
 import { on, off } from './events.js';
 import { bindServer } from './bind.js';
@@ -43,14 +43,14 @@ export class Server {
 	attachEvents() {
 		const thisServer = this;
 		this.bindActions(actions);
-		this.server.on('error', () => {
-			return thisServer.onError();
+		this.server.on('error', (err) => {
+			return thisServer.onError(err);
 		});
 		this.server.on('listening', () => {
 			return thisServer.onListen();
 		});
-		this.server.on('message', () => {
-			return thisServer.onPacket();
+		this.server.on('message', (packet, rinfo) => {
+			return thisServer.onPacket(packet, rinfo);
 		});
 	}
 	async setCertificate() {
@@ -163,7 +163,6 @@ export class Server {
 	encoding = 'utf8';
 	max = 1000;
 	maxPayloadSize = 1000;
-	serverPath = currentPath(import.meta);
 	packetCount = 0;
 	messageCount = 0;
 	socketCount = 0;

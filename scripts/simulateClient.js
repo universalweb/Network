@@ -1,7 +1,7 @@
 console.clear();
 console.log('STARTING CLIENT');
 console.time('Full script runtime');
-import { currentPath } from '#directory';
+import { currentPath } from '@universalweb/acid';
 import { client } from '#udsp';
 import { decode } from 'msgpackr';
 console.time('Connected');

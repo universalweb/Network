@@ -1,4 +1,4 @@
-import { isString, isEmpty, hasDot } from 'Acid';
+import { isString, isEmpty, hasDot } from '@universalweb/acid';
 import cleanPath from '#cleanPath';
 import { info } from '#logs';
 import { read } from '#utilities/file';

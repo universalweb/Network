@@ -1,7 +1,7 @@
 import { PassThrough } from 'stream';
 import { protocol } from 'electron';
 import { read } from '#utilities/file';
-import { currentPath } from '#utilities/directory';
+import { currentPath } from '@universalweb/acid';
 export * from './local/index.js';
 import uws from '#udsp/client/index';
 const service = await uws.getCertificate(`${currentPath(import.meta)}/../../services/universal.web.cert`);

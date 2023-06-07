@@ -15,7 +15,7 @@ export async function onMessage(packet) {
 		packet,
 	};
 	const wasHeadersDecoded = await decodePacketHeaders(config);
-	if (!wasHeadersDecoded || !config.decodePacket.headers) {
+	if (!wasHeadersDecoded || !config.packetDecoded.headers) {
 		return failed('Invalid Packet Headers');
 	}
 	const wasDecoded = await decodePacket(config);

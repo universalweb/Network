@@ -1,7 +1,7 @@
 import { logCert, imported } from '#logs';
 import { read, write } from '#file';
 import { decode, encode } from 'msgpackr';
-import { assign } from 'Acid';
+import { assign } from '@universalweb/acid';
 imported('CERTIFICATE');
 // Add certificate verification via DIS
 export async function verifyCertificate(parentCertificate, childCertificate) {

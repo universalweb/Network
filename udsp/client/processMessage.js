@@ -4,7 +4,7 @@ import {
 import {
 	stringify,
 	hasValue
-} from 'Acid';
+} from '@universalweb/acid';
 imported('Client ProcessMessage');
 export async function processMessage(packet, client) {
 	const {

@@ -3,7 +3,7 @@ import {
 	each,
 	isArray,
 	assign
-} from 'Acid';
+} from '@universalweb/acid';
 import { imported } from '#logs';
 imported('SERVER Events');
 async function addEvent(events, eventName, evntName, evnt) {

@@ -1,7 +1,7 @@
 import {
 	success, failed, imported, msgSent, info
 } from '#logs';
-import { promise, construct, omit } from 'Acid';
+import { promise, construct, omit } from '@universalweb/acid';
 import { Ask } from './ask.js';
 imported('Request');
 export async function request(act, body, options = {}) {

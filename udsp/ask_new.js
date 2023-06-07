@@ -1,6 +1,6 @@
 import {
 	isEmpty, promise, eachArray, assign, construct, stringify, hasValue, get
-} from 'Acid';
+} from '@universalweb/acid';
 import { decode, encode } from 'msgpackr';
 import {
 	success, failed, info, msgReceived, msgSent

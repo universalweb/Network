@@ -1,5 +1,5 @@
 import { createProfile } from '#certificate';
-import { currentPath } from '#directory';
+import { currentPath } from '@universalweb/acid';
 import { decode } from 'msgpackr';
 const dirname = currentPath(import.meta);
 const domainProfile = createProfile({

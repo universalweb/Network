@@ -3,7 +3,8 @@
 */
 import { createServer } from '#udsp';
 import { info } from '#logs';
-import { currentPath } from '#directory';
+import { currentPath } from '@universalweb/acid';
+import path from 'path';
 const appServer = await createServer({
 	encryptConnectionId: true,
 	randomId: true,
@@ -31,9 +32,9 @@ const appServer = await createServer({
 	// default file extension default is .js but WWW default is www
 	defaultExtension: 'html',
 	// Domain certificate to be loaded used for connection encryption
-	certificate: `${currentPath(import.meta)}../services/universal.web-Ephemeral.cert`,
+	certificate: path.join(currentPath(import.meta), '../services/universal.web-Ephemeral.cert'),
 	// Where to load app resources from
-	resourceDirectory: `${currentPath(import.meta)}resources/`,
+	resourceDirectory: path.join(currentPath(import.meta), 'resources'),
 	// Server ID used for load balancing and attaching to the end of connection IDs
 	// id: Buffer.from('alpha'),
 	// on connect message to respond with when a connection is established
@@ -41,5 +42,6 @@ const appServer = await createServer({
 	// Port to listen on for connections
 	// port: 8888,
 	// ip: '::1'
+	rootDirectory: currentPath(import.meta)
 });
 // info('App Server Status', appServer);

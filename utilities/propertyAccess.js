@@ -2,7 +2,7 @@ import {
 	apply,
 	hasValue,
 	mapWhile,
-} from 'Acid';
+} from '@universalweb/acid';
 const regEx = /^([a-zA-Z0-9.]+)$/;
 const sensitiveWords = /(constructor|prototype|window|self|top|alert|confirm|eval|function|Object|Array)/;
 const errorNoneExistentProperty = 'None existent property';

@@ -1,4 +1,4 @@
-import { stringify, get, hasValue } from 'Acid';
+import { stringify, get, hasValue } from '@universalweb/acid';
 import { failed, info } from '#logs';
 export async function processEvent(reply) {
 	console.log(reply);

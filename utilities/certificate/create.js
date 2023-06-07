@@ -5,7 +5,7 @@ import { keychainSave } from '#keychain';
 import { saveCertificate, saveProfile } from './save.js';
 import {
 	assign, merge, clone, promise, isBuffer
-} from 'Acid';
+} from '@universalweb/acid';
 import { encode, decode } from 'msgpackr';
 imported('Certificate Creation');
 function certificateFactory(config, options = {}) {
