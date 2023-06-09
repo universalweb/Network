@@ -18,6 +18,7 @@
 		"@babel/eslint-parser": "^7.19.1",
 		"@babel/preset-env": "^7.20.2",
 		"@microsoft/eslint-formatter-sarif": "^3.0.0",
+		"@noble/curves": "^1.1.0",
 		"@rollup/plugin-terser": "^0.4.0",
 		"@universalweb/acid": "^3.0.39",
 		"@universalweb/docredux": "^3.2.2",

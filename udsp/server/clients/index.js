@@ -47,17 +47,13 @@ export class Client {
 	updateState(state) {
 		this.state = state;
 	}
-	async sendPacket(packet) {
+	async send(packet) {
 		msgSent(`socket Sent -> ID: ${this.id}`);
 		const config = {
 			source: this,
 			packet
 		};
 		return sendPacket(config);
-		// await this.server().clientEvent('send', this);
-	}
-	async send(packetConfig) {
-		return this.sendPacket(packetConfig);
 	}
 	async received(message, frameHeaders) {
 		const server = this.server();

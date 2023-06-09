@@ -8,7 +8,7 @@ const domainProfile = createProfile({
 			version: 1,
 			// Crypto can be explicit or use shorthand like this algo: 'default' The default is listed below
 			// Encryption algorithm must be an AEAD algorithm (Authenticated Encryption with Associated Data) such as xchacha20poly1305
-			// AES, SHA, MD5, RSA are not permitted
+			// AES (please God no xchacha exists), SHA (fine if found essential to an existing algorithm but not as a standalone function), MD5 (Not for crypto), RSA (Just stop using RSA) are not permitted
 			cryptography: {
 				aead: 'xchacha20poly1305',
 				hash: 'blake2b',

@@ -129,13 +129,6 @@ export class Client {
 			this.destination.connectionIdKeypair = this.keypair;
 		}
 	}
-	connect = clientConnect;
-	send = send;
-	request = request;
-	processMessage = processMessage;
-	emit = emit;
-	onListening = onListening;
-	onMessage = onMessage;
 	async attachEvents() {
 		const thisClient = this;
 		this.server.on('error', (err) => {
@@ -179,6 +172,13 @@ export class Client {
 		this.server.close();
 		Client.connections.delete(this.id);
 	}
+	connect = clientConnect;
+	send = send;
+	request = request;
+	processMessage = processMessage;
+	emit = emit;
+	onListening = onListening;
+	onMessage = onMessage;
 	destination = {};
 	autoConnect = true;
 	type = 'client';
