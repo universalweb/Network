@@ -4,7 +4,7 @@ import {
 import { decode, } from 'msgpackr';
 import { assign, isBuffer, } from '@universalweb/acid';
 import {
-	encrypt, nonceBox, toBase64, decrypt, boxUnseal
+	encrypt, toBase64, decrypt, boxUnseal
 } from '#crypto';
 import { createClient } from './server/clients/index.js';
 export async function decodePacketHeaders(config) {
@@ -53,13 +53,16 @@ export async function decodePacketHeaders(config) {
 		if (!headerId) {
 			return failed(headerIdEncoded, 'Packet ID Decrypt Failed');
 		}
-		if (!isHeadersBuffer) {
+		info(`clientId: ${toBase64(headerId)}`);
+		if (isHeadersBuffer) {
+			config.packetDecoded.headers = headerId;
+			return true;
+		} else {
 			headers.id = headerId;
 		}
-	} else if (!headers.id) {
+	} else if (!headers?.id && !headers) {
 		return failed(`No ID -> Invalid Packet`);
 	}
-	info(`clientId: ${toBase64(headers.id)}`);
 	if (headers.key) {
 		success(`Public Key is given -> Processing as create client`);
 		console.log(toBase64(encryptKeypair.publicKey));
@@ -86,7 +89,6 @@ export async function decodePacket(config) {
 		packetDecoded,
 		packetDecoded: { headers, }
 	} = config;
-	const { nonce, } = headers;
 	const footer = packet[2] && decode(packet[2]);
 	if (packet[2] && !footer) {
 		return failed(`Footer failed to decode -> Invalid Packet`);
@@ -95,12 +97,11 @@ export async function decodePacket(config) {
 	}
 	const ad = (footer) ? Buffer.concat([packet[0], packet[2]]) : packet[0];
 	info(`Transmit Key ${toBase64(destination.sessionKeys.receiveKey)}`);
-	info(`nonce ${toBase64(nonce)}`);
 	if (!packet[1]) {
 		return failed(`No Encrypted Message - failed to decode -> Invalid Packet`);
 	}
 	info(`encryptedMessage ${packet[1].length} bytes`);
-	const decryptedMessage = decrypt(packet[1], ad, nonce, destination.sessionKeys.receiveKey);
+	const decryptedMessage = decrypt(packet[1], destination.sessionKeys, ad);
 	if (!decryptedMessage) {
 		return failed('Encryption failed');
 	}

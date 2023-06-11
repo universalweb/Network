@@ -10,10 +10,15 @@ const domainProfile = createProfile({
 			// Encryption algorithm must be an AEAD algorithm (Authenticated Encryption with Associated Data) such as xchacha20poly1305
 			// AES (please God no xchacha exists), SHA (fine if found essential to an existing algorithm but not as a standalone function), MD5 (Not for crypto), RSA (Just stop using RSA) are not permitted
 			cryptography: {
+				// default and only currently supported/allowed
 				aead: 'xchacha20poly1305',
 				hash: 'blake2b',
 				signature: 'ed25519',
 				exchange: 'x25519',
+				connectionID: {
+					// anonymous encryption
+					encrypt: 'sealedbox',
+				}
 			},
 			ip: '::1',
 			port: 8888,

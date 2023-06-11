@@ -98,14 +98,18 @@ export function randomConnectionId(size = 8) {
 export function secretBoxNonce() {
 	return randomBuffer(crypto_secretbox_NONCEBYTES);
 }
-export function encrypt(message, ad, nonce, secretKey) {
-	const cipher = bufferAlloc(message.length + crypto_aead_xchacha20poly1305_ietf_ABYTES);
-	crypto_aead_xchacha20poly1305_ietf_encrypt(cipher, message, ad, null, nonce, secretKey);
-	return cipher;
+export function encrypt(message, sessionkeys, ad, nonceArg) {
+	const encrypted = bufferAlloc(message.length + crypto_aead_xchacha20poly1305_ietf_ABYTES);
+	const nonce = nonceBox(nonceArg);
+	crypto_aead_xchacha20poly1305_ietf_encrypt(encrypted, message, ad, null, nonce, sessionkeys?.transmitKey || sessionkeys);
+	return Buffer.concat([nonce, encrypted]);
 }
-export function decrypt(cipher, ad, nonce, secretKey) {
-	const message = bufferAlloc(cipher.length - crypto_aead_xchacha20poly1305_ietf_ABYTES);
-	const verify = crypto_aead_xchacha20poly1305_ietf_decrypt(message, null, cipher, ad, nonce, secretKey);
+export function decrypt(encrypted, sessionkeys, ad, nonceArg) {
+	const encryptedPayloadLength = encrypted.length;
+	const nonce = nonceArg || encrypted.subarray(0, crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
+	const encryptedMessage = (nonceArg && encrypted) || encrypted.subarray(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES, encryptedPayloadLength);
+	const message = (nonceArg && encrypted) || bufferAlloc(encryptedMessage.length - crypto_aead_xchacha20poly1305_ietf_ABYTES);
+	const verify = crypto_aead_xchacha20poly1305_ietf_decrypt(message, null, encryptedMessage, ad, nonce, sessionkeys?.receiveKey || sessionkeys);
 	if (verify) {
 		return message;
 	} else {
@@ -211,23 +215,23 @@ export function encryptKeypair(config) {
 		privateKey
 	};
 }
-export function authenticatedBox(message, targetPublicKey, sourcePrivateKey) {
+export function authenticatedBox(message, sourceKeypair, destinationKeypair) {
 	const nonce = secretBoxNonce();
 	const encrypted = bufferAlloc(message.length + crypto_box_MACBYTES);
-	crypto_box_easy(encrypted, message, nonce, targetPublicKey, sourcePrivateKey);
+	crypto_box_easy(encrypted, message, nonce, sourceKeypair.publicKey, destinationKeypair?.privateKey || destinationKeypair);
 	return Buffer.concat([nonce, encrypted]);
 }
-export function authenticatedBoxOpen(encryptedPayload, sourcePublicKey, targetPrivateKey) {
-	const encryptedPayloadLength = encryptedPayload.length;
-	const nonce = Buffer.subarray(encryptedPayloadLength - crypto_box_NONCEBYTES, encryptedPayloadLength);
-	const encryptedMessage = Buffer.subarray(0, encryptedPayloadLength - crypto_box_NONCEBYTES);
-	const message = bufferAlloc(encryptedMessage.length - crypto_box_MACBYTES);
-	crypto_box_easy(encryptedMessage, message, sourcePublicKey, targetPrivateKey);
+export function authenticatedBoxOpen(encrypted, destinationKeypair, sourceKeypair) {
+	const encryptedPayloadLength = encrypted.length;
+	const nonce = encrypted.subarray(0, crypto_box_NONCEBYTES);
+	const encryptedMessage = encrypted.subarray(crypto_box_NONCEBYTES, encryptedPayloadLength);
+	const message = bufferAlloc(encryptedPayloadLength - crypto_box_MACBYTES);
+	crypto_box_easy(encryptedMessage, message, destinationKeypair?.publicKey || destinationKeypair, sourceKeypair?.privateKey || sourceKeypair);
 	return message;
 }
-export function boxSeal(message, publicKey) {
+export function boxSeal(message, destinationKeypair) {
 	const encrypted = bufferAlloc(message.length + crypto_box_SEALBYTES);
-	crypto_box_seal(encrypted, message, publicKey);
+	crypto_box_seal(encrypted, message, destinationKeypair?.publicKey || destinationKeypair);
 	return encrypted;
 }
 export function boxUnseal(encrypted, destinationKeypair) {

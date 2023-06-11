@@ -8,7 +8,8 @@ import {
 import {
 	assign,
 	chunk,
-	omit
+	omit,
+	objectSize
 } from '@universalweb/acid';
 import {
 	encrypt,
@@ -19,6 +20,7 @@ import {
 	boxSeal,
 } from '#crypto';
 export async function encodePacket(config) {
+	success(`PROCESSING ENCODE PACKET`);
 	const {
 		source,
 		packet: {
@@ -35,42 +37,29 @@ export async function encodePacket(config) {
 		isServerClient
 	} = source;
 	const destination = source.destination || config.destination;
-	const id = destination.id || source.id;
-	const nonce = nonceBox();
-	let encryptConnectionId;
-	if (isServer) {
-		encryptConnectionId = source.certificate.encryptConnectionId;
-	} else if (isClient) {
-		encryptConnectionId = destination.encryptConnectionId;
-	} else if (isServerClient) {
-		encryptConnectionId = source.encryptConnectionId;
-	}
-	if (id) {
-		if (encryptConnectionId) {
-			// Would be interesting to see if none-deterministic signatures could be a better fit
-			headers.id = boxSeal(id, destination.encryptKeypair.publicKey);
-		} else {
-			headers.id = id;
-		}
-	} else {
+	let id = destination.id || source.id;
+	const encryptConnectionId = (isServer || isServerClient) ? source.encryptConnectionId : destination.encryptConnectionId;
+	if (!id) {
 		return console.error(`ID IS'T ASSIGNED`);
 	}
-	headers.nonce = nonce;
+	if (encryptConnectionId) {
+		id = boxSeal(id, destination.encryptKeypair);
+	}
+	headers.id = id;
 	message.t = Date.now();
 	if (isClient) {
 		if (state === 0) {
 			console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(destination.encryptKeypair.publicKey));
-			headers.key = boxSeal(source.keypair.publicKey, destination.encryptKeypair.publicKey);
+			headers.key = boxSeal(source.keypair.publicKey, destination.encryptKeypair);
 		}
 	}
-	success(`PROCESSING MESSAGE TO SEND`);
 	if (options) {
 		console.log('Packet Options', options);
 	}
-	const headersEncoded = encode(headers);
+	const headersEncoded = (objectSize(headers) === 1 && headers.id) ? encode(id) : encode(headers);
 	const messageEncoded = encode(message);
 	const ad = (footer) ? Buffer.concat([headersEncoded, footer]) : headersEncoded;
-	const encryptedMessage = encrypt(messageEncoded, ad, nonce, source.sessionKeys.transmitKey);
+	const encryptedMessage = encrypt(messageEncoded, source.sessionKeys, ad);
 	if (!encryptedMessage) {
 		return failed('Encryption failed');
 	}
@@ -80,12 +69,12 @@ export async function encodePacket(config) {
 	}
 	info(`clientId: ${toBase64(headers.id)}`);
 	info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
-	info(`Nonce Size: ${headers.nonce.length} ${toBase64(headers.nonce)}`);
 	const packetSize = packet.length;
 	info(`encoded Packet Size ${packetSize}`);
 	if (packetSize >= 1280) {
 		console.log(packet);
 		failed(`WARNING: Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
 	}
+	success(`PROCESSED ENCODE PACKET`);
 	return packet;
 }
