@@ -33,12 +33,21 @@ import {
 	encrypt, decrypt, nonceBox, sign, signVerify, createSecretKey,
 	signKeypair, encryptKeypair, createSessionKey, clientSessionKeys,
 	serverSessionKeys, signPrivateKeyToEncryptPrivateKey, signPublicKeyToEncryptPublicKey,
-	signKeypairToEncryptKeypair, getSignPublicKeyFromPrivateKey, keypair
+	signKeypairToEncryptKeypair, getSignPublicKeyFromPrivateKey, keypair,
+	boxUnseal, boxSeal
 } from '#crypto';
 class Cryptography {
 	constructor(config) {
 		this.configuration = seal(config);
-		if (config.aead === 'xchacha20poly1305') {
+		const {
+			aead,
+			nonce,
+			hash,
+			signature,
+			exchange,
+			connectionID
+		} = config;
+		if (aead === 'xchacha20poly1305') {
 			this.encryptMethod = encrypt;
 			this.encryptMethod = decrypt;
 			this.nonceMethod = nonceBox;
@@ -47,7 +56,7 @@ class Cryptography {
 			this.clientSessionKeys = clientSessionKeys;
 			this.serverSessionKeys = serverSessionKeys;
 		}
-		if (config.signature === 'ed25519') {
+		if (signature === 'ed25519') {
 			this.signMethod = sign;
 			this.signVerifyMethod = signVerify;
 			this.signKeypairMethod = signKeypair;
@@ -56,10 +65,16 @@ class Cryptography {
 			this.signKeypairToEncryptKeypair = signKeypairToEncryptKeypair;
 			this.getSignPublicKeyFromPrivateKey = getSignPublicKeyFromPrivateKey;
 		}
-		if (config.exchange === 'x25519') {
+		if (exchange === 'x25519') {
 			this.signMethod = sign;
 			this.encryptKeypairMethod = encryptKeypair;
 			this.keypairMethod = keypair;
+		}
+		if (connectionID) {
+			if (connectionID.encrypt === 'sealedbox') {
+				this.boxSeal = boxSeal;
+				this.boxUnseal = boxUnseal;
+			}
 		}
 		return this.initialize();
 	}
