@@ -6,7 +6,7 @@ import { encodePacket } from '#udsp/encodePacket';
 // clientId, nonce, encrypted message size, flags, packet size.
 export async function sendPacket(packetConfig) {
 	success(`SENDING MESSAGE`);
-	console.log(packetConfig);
+	// console.log(packetConfig);
 	const { source: { server } } = packetConfig;
 	const destination = packetConfig.destination || packetConfig.source.destination;
 	const {

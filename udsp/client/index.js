@@ -36,6 +36,7 @@ import { watch } from '#watch';
 import { send } from './send.js';
 import { emit } from './emit.js';
 import { request } from '#udsp/request';
+import { cryptography } from '#udsp/crypto';
 import { processMessage } from './processMessage.js';
 import { onMessage } from './onPacket.js';
 import { connect as clientConnect } from './connect.js';
@@ -61,22 +62,12 @@ export class Client {
 			}
 		} = this;
 		if (isString(destinationCertificate)) {
-			console.log('Loading Destination Certificate', destinationCertificate);
+			// console.log('Loading Destination Certificate', destinationCertificate);
 			const certificate = await getCertificate(destinationCertificate);
 			assign(destination, certificate);
 		}
 		if (!destination.publicKey) {
 			console.log('No destination certificate provided.');
-		}
-		console.log(destination);
-		if (isTrue(destination.encryptPublicKey)) {
-			destination.encryptKeypair = {
-				publicKey: destination.encryptKeypair,
-			};
-		} else {
-			destination.encryptKeypair = {
-				publicKey: signPublicKeyToEncryptPublicKey(destination.publicKey),
-			};
 		}
 		if (ip) {
 			destination.ip = ip;
@@ -84,14 +75,30 @@ export class Client {
 		if (port) {
 			destination.port = port;
 		}
+		// console.log('Destination', destination.cryptography);
+		if (destination.cryptography) {
+			const cryptoConfig = assign({
+				generate: {
+					keypair: true,
+					connectionIdKeypair: true,
+					clientSessionKeys: true,
+				}
+			}, destination);
+			this.crypto = await cryptography(cryptoConfig);
+			console.log(this.crypto);
+		}
+		if (this.crypto) {
+			this.destination.encryptKeypair = this.crypto.generated.encryptKeypair;
+			if (this.encryptConnectionId) {
+				this.destination.connectionIdKeypair = this.crypto.generated.connectionIdKeypair;
+			}
+		}
 		this.encryptConnectionId = destination.encryptConnectionId;
 		this.encryptClientId = destination.encryptClientId;
 		this.encryptServerId = destination.encryptServerId;
 		this.compression = destination.compression;
 		this.headerCompression = destination.headerCompression;
-		this.crypto = destination.crypto;
-		this.cryptography = destination.cryptography;
-		if (destination.autoLogin && this.login) {
+		if (destination.autoLogin && this.autoLogin) {
 			this.autoLogin = true;
 		}
 	}
@@ -117,17 +124,15 @@ export class Client {
 		}
 	}
 	async configCryptography() {
+		console.log(this.crypto);
 		if (!this.keyPair) {
-			this.keypair = keypair();
+			this.keypair = this.crypto.generated.keypair;
 		}
 		success(`Created Connection Keypair`);
-		this.sessionKeys = clientSessionKeys(this.keypair, this.destination.encryptKeypair.publicKey);
+		this.sessionKeys = this.crypto.generated.sessionKeys;
 		success(`Created Shared Keys`);
 		success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);
 		success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
-		if (this.encryptConnectionId) {
-			this.destination.connectionIdKeypair = this.keypair;
-		}
 	}
 	async attachEvents() {
 		const thisClient = this;

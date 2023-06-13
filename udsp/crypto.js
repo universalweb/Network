@@ -4,7 +4,8 @@ import {
 	assign,
 	UniqID,
 	isFunction,
-	currentPath
+	currentPath,
+	isTrue
 } from '@universalweb/acid';
 import {
 	success,
@@ -18,9 +19,7 @@ import { secp256k1, schnorr } from '@noble/curves/secp256k1';
 import {
 	ed25519, ed25519ph, ed25519ctx, x25519, RistrettoPoint
 } from '@noble/curves/ed25519';
-import {
-	ed448, ed448ph, ed448ctx, x448
-} from '@noble/curves/ed448';
+import { ed448, ed448ph, x448 } from '@noble/curves/ed448';
 import { p256 } from '@noble/curves/p256';
 import { p384 } from '@noble/curves/p384';
 import { p521 } from '@noble/curves/p521';
@@ -37,16 +36,28 @@ import {
 	boxUnseal, boxSeal
 } from '#crypto';
 class Cryptography {
-	constructor(config) {
-		this.configuration = seal(config);
-		const {
+	constructor(destination) {
+		this.config = destination;
+		console.log(destination);
+		let {
 			aead,
-			nonce,
-			hash,
 			signature,
 			exchange,
-			connectionID
-		} = config;
+		} = destination.cryptography;
+		const {
+			connectionID = {
+				encrypt: 'sealedbox'
+			},
+			nonce,
+			hash,
+			alias,
+		} = destination.cryptography;
+		const { generate } = destination;
+		if (alias === 'default') {
+			aead = 'xchacha20poly1305';
+			signature = 'ed25519';
+			exchange = 'x25519';
+		}
 		if (aead === 'xchacha20poly1305') {
 			this.encryptMethod = encrypt;
 			this.encryptMethod = decrypt;
@@ -64,20 +75,41 @@ class Cryptography {
 			this.signPublicKeyToEncryptPublicKey = signPublicKeyToEncryptPublicKey;
 			this.signKeypairToEncryptKeypair = signKeypairToEncryptKeypair;
 			this.getSignPublicKeyFromPrivateKey = getSignPublicKeyFromPrivateKey;
+			this.safeMath = RistrettoPoint;
+			if (isTrue(destination.encryptKeypair)) {
+				this.generated.encryptKeypair = {
+					publicKey: this.signPublicKeyToEncryptPublicKey(destination.publicKey),
+				};
+			} else if (destination.encryptKeypair) {
+				this.generated.encryptKeypair = {
+					publicKey: destination.publicKey,
+				};
+			}
 		}
 		if (exchange === 'x25519') {
 			this.signMethod = sign;
 			this.encryptKeypairMethod = encryptKeypair;
 			this.keypairMethod = keypair;
+			if (generate.keypair) {
+				this.generated.keypair = this.keypair();
+			}
 		}
 		if (connectionID) {
 			if (connectionID.encrypt === 'sealedbox') {
 				this.boxSeal = boxSeal;
 				this.boxUnseal = boxUnseal;
+				if (generate.connectionIdKeypair) {
+					this.generated.connectionIdKeypair = this.generated.keypair;
+				}
 			}
+		}
+		if (generate.clientSessionKeys) {
+			console.log(this.generated);
+			this.generated.sessionKeys = this.clientSessionKeys(this.generated.keypair, this.generated.encryptKeypair.publicKey);
 		}
 		return this.initialize();
 	}
+	generated = {};
 	signKeypair(...args) {
 		return this.signKeypairMethod(...args);
 	}
@@ -105,7 +137,10 @@ class Cryptography {
 	convertSignKeypair(...args) {
 		return this.convertSignKeypairMethod(...args);
 	}
-	initialize() {
+	async initialize() {
 		return this;
 	}
+}
+export function cryptography(...args) {
+	return construct(Cryptography, args);
 }

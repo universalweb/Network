@@ -63,10 +63,11 @@ export async function encodePacket(config) {
 	if (!encryptedMessage) {
 		return failed('Encryption failed');
 	}
-	const packet = encode([headersEncoded, encryptedMessage]);
+	const packetStructure = [headersEncoded, encryptedMessage];
 	if (footer) {
-		packet[2] = encode(footer);
+		packetStructure[2] = encode(footer);
 	}
+	const packet = encode(packetStructure);
 	info(`clientId: ${toBase64(headers.id)}`);
 	info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
 	const packetSize = packet.length;

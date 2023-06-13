@@ -2,7 +2,7 @@ import { createProfile } from '#certificate';
 import { currentPath } from '@universalweb/acid';
 import { decode } from 'msgpackr';
 const dirname = currentPath(import.meta);
-const domainProfile = createProfile({
+const domainProfile = await createProfile({
 	template: {
 		ephemeral: {
 			version: 1,
@@ -10,6 +10,8 @@ const domainProfile = createProfile({
 			// Encryption algorithm must be an AEAD algorithm (Authenticated Encryption with Associated Data) such as xchacha20poly1305
 			// AES (please God no xchacha exists), SHA (fine if found essential to an existing algorithm but not as a standalone function), MD5 (Not for crypto), RSA (Just stop using RSA) are not permitted
 			cryptography: {
+				// below is the default algorithm options
+				// alias: 'default',
 				// default and only currently supported/allowed
 				aead: 'xchacha20poly1305',
 				hash: 'blake2b',
@@ -68,4 +70,4 @@ const profile = await createProfile({
 		account: 'Universal Web Profile'
 	}
 });
-console.log('Profile created (Master & IDENTITY CERTIFICATEs)', decode(profile.ephemeral.certificate));
+console.log('Profile created (Master & IDENTITY CERTIFICATEs)', decode(domainProfile.ephemeral.certificate));

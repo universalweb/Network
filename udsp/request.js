@@ -11,7 +11,7 @@ export async function request(act, body, options = {}) {
 		footer,
 		head
 	} = options;
-	info(`Requested Body`, body);
+	info(`Request Function: ${act}`);
 	const message = {
 		act
 	};

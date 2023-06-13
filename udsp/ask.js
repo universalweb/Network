@@ -11,7 +11,7 @@ import {
 } from '#logs';
 const chunkSize = 700;
 const dataEncodingTypesChunked = /stream|file|image|string/;
-const dataEncodingTypesStructured = /json|msgpack|struct|/;
+const dataEncodingTypesStructured = /json|Packetpack|struct|/;
 /**
  * @todo Prepare Request into singular object.
  * @todo Chunk body data while adding packit number to it.
@@ -119,17 +119,19 @@ export class Ask {
 		} = arg;
 		const client = this.client();
 		if (options) {
-			console.log(`Sending msg with options var`);
+			info(`Sending Packet with options`);
 		}
 		if (headers) {
-			console.log(`Sending msg with headers var`);
+			info(`Sending Packet with headers`);
 		}
 		if (footer) {
-			console.log(`Sending msg with footer var`);
+			info(`Sending Packet with footer`);
 		}
-		console.log('Handover to Server Reply Packet to Send');
+		if (footer) {
+			info(`Sending Packet with footer`);
+		}
 		if (message.act) {
-			console.log(message.act);
+			info(`Sending Packet with act ${message.act}`);
 		}
 		await client.send(arg);
 	}
