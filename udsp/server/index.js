@@ -4,7 +4,8 @@ import {
 	assign,
 	UniqID,
 	isFunction,
-	currentPath
+	currentPath,
+	isTrue
 } from '@universalweb/acid';
 import {
 	success,
@@ -25,6 +26,7 @@ import { sendPacket } from '#udsp/sendPacket';
 import { actions } from './actions/index.js';
 import { getCertificate, parseCertificate } from '#certificate';
 import { randomConnectionId, signKeypairToEncryptKeypair } from '#crypto';
+import { cryptography } from '#udsp/crypto';
 const { seal } = Object;
 /*
   * socket ID: SID
@@ -62,10 +64,18 @@ export class Server {
 				publicKey: this.certificate.publicKey,
 				privateKey: this.certificate.privateKey,
 			};
-			this.encryptKeypair = signKeypairToEncryptKeypair(this.keypair);
+			if (isTrue(this.certificate.encryptKeypair)) {
+				this.encryptKeypair = signKeypairToEncryptKeypair(this.keypair);
+			}
 			if (this.certificate.ipVersion) {
 				this.ipVersion = this.certificate.ipVersion;
 			}
+		}
+		if (this.certificate.cryptography) {
+			const cryptoConfig = assign({
+				convertEd25519ToX25519: true,
+			}, this.certificate);
+			this.cryptography = await cryptography(cryptoConfig);
 		}
 		if (this.connectionIdCertificate) {
 			this.connectionIdCertificate = await getCertificate(this.connectionIdCertificate);

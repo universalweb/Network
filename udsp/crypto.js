@@ -27,6 +27,25 @@ import { pallas, vesta } from '@noble/curves/pasta';
 import { bls12_381 } from '@noble/curves/bls12-381';
 import { bn254 } from '@noble/curves/bn254';
 import { jubjub } from '@noble/curves/jubjub';
+import { sha512, sha512_256, sha384 } from '@noble/hashes/sha512';
+import {
+	sha3_224, sha3_256, sha3_384, sha3_512,
+	keccak_224, keccak_256, keccak_384, keccak_512,
+	shake128, shake256
+} from '@noble/hashes/sha3';
+import {
+	cshake128, cshake256, kmac128, kmac256,
+	k12, m14,
+	tuplehash256, parallelhash256, keccakprg
+} from '@noble/hashes/sha3-addons';
+import { ripemd160 } from '@noble/hashes/ripemd160';
+import { blake3 } from '@noble/hashes/blake3';
+import { blake2b } from '@noble/hashes/blake2b';
+import { blake2s } from '@noble/hashes/blake2s';
+import { hmac } from '@noble/hashes/hmac';
+import { hkdf } from '@noble/hashes/hkdf';
+import { pbkdf2, pbkdf2Async } from '@noble/hashes/pbkdf2';
+import { scrypt, scryptAsync } from '@noble/hashes/scrypt';
 const { seal } = Object;
 import {
 	encrypt, decrypt, nonceBox, sign, signVerify, createSecretKey,
@@ -40,23 +59,35 @@ class Cryptography {
 		this.config = destination;
 		console.log(destination);
 		let {
-			aead,
-			signature,
-			exchange,
+			aead = 'xchacha20poly1305',
+			hash = 'blake2b',
+			signature = 'ed25519',
+			exchange = 'x25519',
 		} = destination.cryptography;
 		const {
-			connectionID = {
-				encrypt: 'sealedbox'
-			},
+			connectionID,
 			nonce,
-			hash,
 			alias,
+			curve,
+			convertEd25519ToX25519
 		} = destination.cryptography;
 		const { generate } = destination;
 		if (alias === 'default') {
 			aead = 'xchacha20poly1305';
 			signature = 'ed25519';
 			exchange = 'x25519';
+			hash = 'blake2b';
+		}
+		if (curve === '25519') {
+			if (!exchange) {
+				exchange = 'x25519';
+			}
+			if (!signature) {
+				signature = 'ed25519';
+			}
+		}
+		if (isTrue(connectionID?.encrypt)) {
+			connectionID.encrypt = 'sealedbox';
 		}
 		if (aead === 'xchacha20poly1305') {
 			this.encryptMethod = encrypt;
@@ -90,20 +121,28 @@ class Cryptography {
 			this.signMethod = sign;
 			this.encryptKeypairMethod = encryptKeypair;
 			this.keypairMethod = keypair;
-			if (generate.keypair) {
+			if (generate?.keypair) {
 				this.generated.keypair = this.keypair();
 			}
+		}
+		if (isTrue(convertEd25519ToX25519)) {
+			this.generated.encryptKeypair = {
+				publicKey: this.signPublicKeyToEncryptPublicKey(destination.publicKey),
+			};
 		}
 		if (connectionID) {
 			if (connectionID.encrypt === 'sealedbox') {
 				this.boxSeal = boxSeal;
 				this.boxUnseal = boxUnseal;
-				if (generate.connectionIdKeypair) {
+				if (generate?.connectionIdKeypair) {
 					this.generated.connectionIdKeypair = this.generated.keypair;
 				}
 			}
 		}
-		if (generate.clientSessionKeys) {
+		if (hash === 'blake3') {
+			this.hashMethod = blake3;
+		}
+		if (generate?.clientSessionKeys) {
 			console.log(this.generated);
 			this.generated.sessionKeys = this.clientSessionKeys(this.generated.keypair, this.generated.encryptKeypair.publicKey);
 		}

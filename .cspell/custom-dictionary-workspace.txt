@@ -1,8 +1,13 @@
 # Custom Dictionary Words
 Acks
 brotli
+cshake
 jubjub
+keccak
+keccakprg
+kmac
 Nacks
+ripemd
 Ristretto
 schnorr
 secp

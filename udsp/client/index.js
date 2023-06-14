@@ -84,13 +84,12 @@ export class Client {
 					clientSessionKeys: true,
 				}
 			}, destination);
-			this.crypto = await cryptography(cryptoConfig);
-			console.log(this.crypto);
+			this.cryptography = await cryptography(cryptoConfig);
 		}
-		if (this.crypto) {
-			this.destination.encryptKeypair = this.crypto.generated.encryptKeypair;
+		if (this.cryptography) {
+			this.destination.encryptKeypair = this.cryptography.generated.encryptKeypair;
 			if (this.encryptConnectionId) {
-				this.destination.connectionIdKeypair = this.crypto.generated.connectionIdKeypair;
+				this.destination.connectionIdKeypair = this.cryptography.generated.connectionIdKeypair;
 			}
 		}
 		this.encryptConnectionId = destination.encryptConnectionId;
@@ -124,12 +123,12 @@ export class Client {
 		}
 	}
 	async configCryptography() {
-		console.log(this.crypto);
+		console.log(this.cryptography);
 		if (!this.keyPair) {
-			this.keypair = this.crypto.generated.keypair;
+			this.keypair = this.cryptography.generated.keypair;
 		}
 		success(`Created Connection Keypair`);
-		this.sessionKeys = this.crypto.generated.sessionKeys;
+		this.sessionKeys = this.cryptography.generated.sessionKeys;
 		success(`Created Shared Keys`);
 		success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);
 		success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);

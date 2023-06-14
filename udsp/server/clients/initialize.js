@@ -24,6 +24,7 @@ export async function initialize(config, client) {
 	const {
 		encryptKeypair,
 		clients,
+		cryptography,
 		configuration: { id: serverId }
 	} = server;
 	const {
@@ -31,7 +32,7 @@ export async function initialize(config, client) {
 		port
 	} = connection;
 	// When changing to a new sessionKeys you must first create new keys from scratch to replace these.
-	client.sessionKeys = serverSessionKeys(encryptKeypair, publicKey);
+	client.sessionKeys = cryptography.serverSessionKeys(encryptKeypair, publicKey);
 	// When changing to a new key you must first create new keys from scratch to replace these.
 	client.keypair = encryptKeypair;
 	success(`key: ${toBase64(publicKey)}`);
