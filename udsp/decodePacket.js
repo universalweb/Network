@@ -92,7 +92,7 @@ export async function decodePacketHeaders(config) {
 			encryptClientKey,
 			encryptServerKey
 		} = cryptography.config;
-		let publicKey;
+		let publicKey = headers.key;
 		if (isClient) {
 			if (encryptClientKey === 'sealedbox') {
 				publicKey = cryptography.decryptServerKey(headers.key, destination.encryptKeypair);

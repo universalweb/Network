@@ -75,7 +75,7 @@ export class Client {
 		if (port) {
 			destination.port = port;
 		}
-		console.log('Destination', destination.cryptography);
+		// console.log('Destination', destination.cryptography);
 		const cryptoConfig = assign({
 			isClient: true,
 			generate: {
@@ -109,7 +109,7 @@ export class Client {
 			this.certificate = await parseCertificate(certificate);
 		}
 		if (keychain) {
-			console.log('Loading Keychain', keychain);
+			// console.log('Loading Keychain', keychain);
 			this.certificate = await this.getKeychainSave(keychain);
 		}
 		if (this.certificate.ephemeral) {
@@ -119,7 +119,7 @@ export class Client {
 		}
 	}
 	async configCryptography() {
-		console.log(this.cryptography);
+		// console.log(this.cryptography);
 		if (!this.keyPair) {
 			this.keypair = this.cryptography.generated.keypair;
 			this.encryptKeypair = this.cryptography.generated.encryptKeypair;
@@ -160,7 +160,6 @@ export class Client {
 		if (this.autoConnect) {
 			console.time('CONNECTING');
 			const connectRequest = await this.connect();
-			console.log('Client Connect Response', connectRequest);
 			console.timeEnd('CONNECTING');
 		}
 		return this;
@@ -169,8 +168,8 @@ export class Client {
 		const thisClient = this;
 		success(`client reKeyed -> ID: ${thisClient.idString}`);
 	}
-	close() {
-		console.log(this, 'client closed down.');
+	close(statusCode) {
+		console.log(toBase64(this.id), `client closed. code ${statusCode}`);
 		this.server.close();
 		Client.connections.delete(this.id);
 	}

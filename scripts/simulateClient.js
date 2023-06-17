@@ -1,6 +1,6 @@
 console.clear();
 console.log('STARTING CLIENT');
-console.time('Full script runtime');
+console.time('Full');
 import { currentPath } from '@universalweb/acid';
 import { client } from '#udsp';
 import { decode } from 'msgpackr';
@@ -14,13 +14,13 @@ const uwClient = await client({
 	certificate: `${currentPath(import.meta)}/../profiles/default-Ephemeral.cert`,
 });
 console.timeEnd('Connected');
-console.log('INTRO =>', uwClient);
-console.time('File Request');
+// console.log('INTRO =>', uwClient);
+console.time('FileRequest');
 const fileRequest = await uwClient.request('file', {
 	path: 'index.html'
 });
-console.timeEnd('File Request');
-console.timeEnd('Full script runtime');
+console.timeEnd('FileRequest');
+console.timeEnd('Full');
 console.log('Request state', fileRequest);
 console.log(fileRequest.message.body.toString());
 /** */

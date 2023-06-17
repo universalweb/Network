@@ -6,7 +6,7 @@ export async function connect(message = {}) {
 	// opn stands for open meaning connect to a server
 	message.intro = 'Hello Server!';
 	const result = await thisClient.request('opn', message);
-	console.log(result);
+	// console.log(result);
 	const {
 		body,
 		state,

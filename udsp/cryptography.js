@@ -57,7 +57,7 @@ import {
 class Cryptography {
 	constructor(config) {
 		this.config = config;
-		console.log(config);
+		// console.log(config);
 		const { cryptography: cryptographyConfig } = config;
 		let {
 			encryptClientConnectionId,
@@ -176,7 +176,7 @@ class Cryptography {
 			this.generated.encryptKeypair = this.generated.keypair;
 		}
 		if (generate?.clientSessionKeys) {
-			console.log(this.encryptionKeypair);
+			// console.log(this.encryptionKeypair);
 			this.generated.sessionKeys = this.clientSessionKeys(this.generated.keypair, this.encryptionKeypair.publicKey);
 		}
 		assign(this.config, {
