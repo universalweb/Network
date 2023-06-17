@@ -26,7 +26,7 @@ import { sendPacket } from '#udsp/sendPacket';
 import { actions } from './actions/index.js';
 import { getCertificate, parseCertificate } from '#certificate';
 import { randomConnectionId, signKeypairToEncryptKeypair } from '#crypto';
-import { cryptography } from '#udsp/crypto';
+import { cryptography } from '#udsp/cryptography';
 const { seal } = Object;
 /*
   * socket ID: SID
@@ -64,30 +64,22 @@ export class Server {
 				publicKey: this.certificate.publicKey,
 				privateKey: this.certificate.privateKey,
 			};
-			if (isTrue(this.certificate.encryptKeypair)) {
-				this.encryptKeypair = signKeypairToEncryptKeypair(this.keypair);
-			}
 			if (this.certificate.ipVersion) {
 				this.ipVersion = this.certificate.ipVersion;
 			}
 		}
 		if (this.certificate.cryptography) {
 			const cryptoConfig = assign({
-				convertEd25519ToX25519: true,
+				keypair: this.keypair,
+				connectionIdKeypair: this.connectionIdKeypair,
 			}, this.certificate);
 			this.cryptography = await cryptography(cryptoConfig);
-		}
-		if (this.connectionIdCertificate) {
-			this.connectionIdCertificate = await getCertificate(this.connectionIdCertificate);
-		} else if (this.certificate.encryptConnectionId) {
-			this.connectionIdKeypair = this.certificate.connectionIdKeypair;
-		}
-		if (this.connectionIdKeypair) {
-			this.encryptConnectionId = true;
-			this.connectionIdKeypair = {
-				publicKey: this.connectionIdKeypair.publicKey,
-				privateKey: this.connectionIdKeypair.privateKey,
-			};
+			if (this.cryptography.encryptionKeypair) {
+				this.encryptKeypair = this.cryptography.encryptionKeypair;
+			}
+			if (this.cryptography.connectionIdKeypair) {
+				this.connectionIdKeypair = this.cryptography.connectionIdKeypair;
+			}
 		}
 	}
 	async configureNetwork() {
@@ -164,6 +156,7 @@ export class Server {
 	description = `The Universal Web's UDSP server module.`;
 	descriptor = 'UWServer';
 	isServer = true;
+	isServerEnd = true;
 	defaultExtension = 'js';
 	port = 80;
 	ip = '::1';

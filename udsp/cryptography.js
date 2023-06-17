@@ -52,26 +52,34 @@ import {
 	signKeypair, encryptKeypair, createSessionKey, clientSessionKeys,
 	serverSessionKeys, signPrivateKeyToEncryptPrivateKey, signPublicKeyToEncryptPublicKey,
 	signKeypairToEncryptKeypair, getSignPublicKeyFromPrivateKey, keypair,
-	boxUnseal, boxSeal
+	boxUnseal, boxSeal, randomConnectionId
 } from '#crypto';
 class Cryptography {
-	constructor(destination) {
-		this.config = destination;
-		console.log(destination);
+	constructor(config) {
+		this.config = config;
+		console.log(config);
+		const { cryptography: cryptographyConfig } = config;
 		let {
+			encryptClientConnectionId,
+			encryptServerConnectionId,
+			encryptServerKey,
+			encryptClientKey,
 			aead = 'xchacha20poly1305',
 			hash = 'blake2b',
 			signature = 'ed25519',
 			exchange = 'x25519',
-		} = destination.cryptography;
+		} = cryptographyConfig;
 		const {
-			connectionID,
+			maxConnectionIdLength,
+			encryptConnectionId,
+			encryptKey,
 			nonce,
 			alias,
 			curve,
-			convertEd25519ToX25519
-		} = destination.cryptography;
-		const { generate } = destination;
+			convertEd25519ToX25519,
+			connectionIdKeypair
+		} = cryptographyConfig;
+		const { generate } = config;
 		if (alias === 'default') {
 			aead = 'xchacha20poly1305';
 			signature = 'ed25519';
@@ -86,12 +94,9 @@ class Cryptography {
 				signature = 'ed25519';
 			}
 		}
-		if (isTrue(connectionID?.encrypt)) {
-			connectionID.encrypt = 'sealedbox';
-		}
 		if (aead === 'xchacha20poly1305') {
 			this.encryptMethod = encrypt;
-			this.encryptMethod = decrypt;
+			this.decryptMethod = decrypt;
 			this.nonceMethod = nonceBox;
 			this.createSecretKey = createSecretKey;
 			this.createSessionKey = createSessionKey;
@@ -107,48 +112,88 @@ class Cryptography {
 			this.signKeypairToEncryptKeypair = signKeypairToEncryptKeypair;
 			this.getSignPublicKeyFromPrivateKey = getSignPublicKeyFromPrivateKey;
 			this.safeMath = RistrettoPoint;
-			if (isTrue(destination.encryptKeypair)) {
-				this.generated.encryptKeypair = {
-					publicKey: this.signPublicKeyToEncryptPublicKey(destination.publicKey),
-				};
-			} else if (destination.encryptKeypair) {
-				this.generated.encryptKeypair = {
-					publicKey: destination.publicKey,
-				};
+			if (isTrue(cryptographyConfig.encryptKeypair)) {
+				if (config.privateKey) {
+					this.encryptionKeypair = signKeypairToEncryptKeypair({
+						publicKey: config.publicKey,
+						privateKey: config.privateKey
+					});
+				} else {
+					this.encryptionKeypair = signKeypairToEncryptKeypair({
+						publicKey: config.publicKey
+					});
+				}
+			} else if (cryptographyConfig.encryptKeypair) {
+				this.encryptionKeypair = config.encryptionKeypair;
 			}
 		}
 		if (exchange === 'x25519') {
 			this.signMethod = sign;
 			this.encryptKeypairMethod = encryptKeypair;
 			this.keypairMethod = keypair;
-			if (generate?.keypair) {
-				this.generated.keypair = this.keypair();
+		}
+		if (encryptConnectionId) {
+			if (!encryptClientConnectionId) {
+				encryptClientConnectionId = encryptConnectionId;
+			}
+			if (!encryptServerConnectionId) {
+				encryptServerConnectionId = encryptConnectionId;
 			}
 		}
-		if (isTrue(convertEd25519ToX25519)) {
-			this.generated.encryptKeypair = {
-				publicKey: this.signPublicKeyToEncryptPublicKey(destination.publicKey),
-			};
+		if (encryptClientConnectionId === 'sealedbox') {
+			this.encryptClientConnectionId = boxSeal;
+			this.decryptClientConnectionId = boxUnseal;
 		}
-		if (connectionID) {
-			if (connectionID.encrypt === 'sealedbox') {
-				this.boxSeal = boxSeal;
-				this.boxUnseal = boxUnseal;
-				if (generate?.connectionIdKeypair) {
-					this.generated.connectionIdKeypair = this.generated.keypair;
-				}
+		if (encryptServerConnectionId === 'sealedbox') {
+			this.encryptServerConnectionId = boxSeal;
+			this.decryptServerConnectionId = boxUnseal;
+		}
+		if (encryptClientConnectionId || encryptServerConnectionId) {
+			if (isTrue(connectionIdKeypair)) {
+				this.connectionIdKeypair = this.encryptionKeypair;
+			} else if (connectionIdKeypair) {
+				this.connectionIdKeypair = connectionIdKeypair;
 			}
+		}
+		if (encryptKey) {
+			encryptClientKey = encryptKey;
+			encryptServerKey = encryptKey;
+		}
+		if (encryptClientKey === 'sealedbox') {
+			this.encryptClientKey = boxSeal;
+			this.decryptClientKey = boxUnseal;
+		}
+		if (encryptServerKey === 'sealedbox') {
+			this.encryptServerKey = boxSeal;
+			this.decryptServerKey = boxUnseal;
 		}
 		if (hash === 'blake3') {
 			this.hashMethod = blake3;
 		}
-		if (generate?.clientSessionKeys) {
-			console.log(this.generated);
-			this.generated.sessionKeys = this.clientSessionKeys(this.generated.keypair, this.generated.encryptKeypair.publicKey);
+		if (generate?.keypair) {
+			this.generated.keypair = this.keypair();
+			this.generated.connectionIdKeypair = this.generated.keypair;
+			this.generated.encryptKeypair = this.generated.keypair;
 		}
+		if (generate?.clientSessionKeys) {
+			console.log(this.encryptionKeypair);
+			this.generated.sessionKeys = this.clientSessionKeys(this.generated.keypair, this.encryptionKeypair.publicKey);
+		}
+		assign(this.config, {
+			encryptClientConnectionId,
+			encryptServerConnectionId,
+			encryptConnectionId,
+			encryptClientKey,
+			encryptServerKey
+		});
 		return this.initialize();
 	}
-	generated = {};
+	generated = {
+		destination: {}
+	};
+	generateConnectionID() {
+		const randomPortion = randomConnectionId(16);
+	}
 	signKeypair(...args) {
 		return this.signKeypairMethod(...args);
 	}
@@ -170,8 +215,8 @@ class Cryptography {
 	encrypt(...args) {
 		return this.encryptMethod(...args);
 	}
-	dencrypt(...args) {
-		return this.dencryptMethod(...args);
+	decrypt(...args) {
+		return this.decryptMethod(...args);
 	}
 	convertSignKeypair(...args) {
 		return this.convertSignKeypairMethod(...args);

@@ -19,12 +19,22 @@ const domainProfile = await createProfile({
 				signature: 'ed25519',
 				exchange: 'x25519',
 				curve: '25519',
+				// The cryptographic algo used, intended, and or generated with the provided public key
+				publicKeyType: 'ed25519',
 				// The purpose of encrypting connection IDs is to eliminate CID tracking and to constantly change how the CID looks.
 				// Encrypting CIDs protects against leaking smart CID routing information which show the endpoint server/process.
-				connectionID: {
-					// anonymous encryption of connectionIDs
-					encrypt: 'sealedbox',
-				}
+				// encryptConnectionId: 'sealedbox', Applies to both client and server connection ID
+				encryptClientConnectionId: 'sealedbox',
+				encryptServerConnectionId: 'sealedbox',
+				connectionIdKeypair: true,
+				// Max connection id size in bytes
+				maxConnectionIdSize: 64,
+				// Min connection id size in bytes
+				minConnectionIdSize: 64,
+				// Encrypt public key sent in the packet
+				encryptClientKey: 'sealedbox',
+				encryptServerKey: 'sealedbox',
+				encryptKeypair: true
 			},
 			ip: '::1',
 			port: 8888,
@@ -47,11 +57,6 @@ const domainProfile = await createProfile({
 				// When publicKey is set to true it will use the public key in the certificate as the main Viat wallet for the domain. If a string is provided then it would be the main wallet for the domain.
 				publicKey: true
 			},
-			// Must use either encryptConnectionId or (encryptClientId & encryptServerConnectionId)
-			encryptConnectionId: true,
-			encryptClientConnectionId: true,
-			encryptServerConnectionId: true,
-			encryptKeypair: true,
 			compression: true,
 			headerCompression: true,
 			autoLogin: true,

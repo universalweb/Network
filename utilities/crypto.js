@@ -258,13 +258,16 @@ export function signPrivateKeyToEncryptPrivateKey(originalPrivateKey) {
 }
 export function signKeypairToEncryptKeypair(originalKeypair) {
 	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);
-	const privateKey = bufferAlloc(crypto_box_SECRETKEYBYTES);
 	crypto_sign_ed25519_pk_to_curve25519(publicKey, originalKeypair.publicKey);
-	crypto_sign_ed25519_sk_to_curve25519(privateKey, originalKeypair.privateKey);
-	return {
-		publicKey,
-		privateKey
+	const result = {
+		publicKey
 	};
+	if (originalKeypair.privateKey) {
+		const privateKey = bufferAlloc(crypto_box_SECRETKEYBYTES);
+		crypto_sign_ed25519_sk_to_curve25519(privateKey, originalKeypair.privateKey);
+		result.privateKey = privateKey;
+	}
+	return result;
 }
 export function getSignPublicKeyFromPrivateKey(privateKey) {
 	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);

@@ -70,6 +70,7 @@ export class Client {
 	descriptor = `Server's client`;
 	type = 'serverClient';
 	isServerClient = true;
+	isServerEnd = true;
 	pending = false;
 	replyQueue = construct(Map);
 	packetIdGenerator = construct(UniqID);

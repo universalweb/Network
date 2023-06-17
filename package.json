@@ -105,12 +105,7 @@
 		"access": "public"
 	},
 	"scripts": {
-		"cc": "nodemon ./client/createCertificate/index.js --watch ./client/createCertificate/",
 		"certificates": "nodemon ./scripts/certificates.js --watch ./scripts/certificates.js --watch ./certificates/ --watch ./utilities/",
-		"client": "nodemon udsp/client/index.js --watch client/",
-		"components": "nodemon ./browser/components/index.js --watch ./browser/components/source/ --watch ./browser/components/index.js",
-		"compressionTest": "nodemon scripts/compression.js --watch scripts/compression.js",
-		"dis": "nodemon ./DIS/index.js --watch ./server/ --watch ./DIS/",
 		"dist": "electron-builder",
 		"electron": "electron .",
 		"pack": "electron-builder --dir",
@@ -118,7 +113,6 @@
 		"simulate": "nodemon ./scripts/simulate.js --watch ./client/ --watch ./server/ --watch ./scripts/simulate.js --watch utilities/",
 		"simc": "nodemon ./scripts/simulateClient.js --watch ./udsp/ --watch ./scripts/simulateClient.js --watch ./utilities/ --delay 3",
 		"start": "nodemon --watch ./index.html --watch ./client/ --watch ./browser/ --watch ./main.js --exec 'electron .'",
-		"uwBridge": "nodemon ./uwBridge/index.js --watch ./uwBridge/",
 		"changelog": "auto-changelog -p --sort-commits date-desc && git add CHANGELOG.md",
 		"bumpVersion": "npm version patch --force && cd ./package/ && npm version patch --force"
 	},

@@ -31,10 +31,13 @@ export async function initialize(config, client) {
 		address: ip,
 		port
 	} = connection;
+	client.cryptography = cryptography;
 	// When changing to a new sessionKeys you must first create new keys from scratch to replace these.
 	client.sessionKeys = cryptography.serverSessionKeys(encryptKeypair, publicKey);
 	// When changing to a new key you must first create new keys from scratch to replace these.
-	client.keypair = encryptKeypair;
+	client.keypair = server.keypair;
+	client.encryptKeypair = server.encryptKeypair;
+	client.connectionIdKeypair = server.connectionIdKeypair;
 	success(`key: ${toBase64(publicKey)}`);
 	success(`receiveKey: ${toBase64(client.sessionKeys.receiveKey)}`);
 	success(`transmitKey: ${toBase64(client.sessionKeys.transmitKey)}`);
@@ -69,7 +72,12 @@ export async function initialize(config, client) {
 		this.encryptConnectionId = true;
 	}
 	client.destination = {
-		publicKey,
+		encryptKeypair: {
+			publicKey
+		},
+		connectionIdKeypair: {
+			publicKey
+		},
 		ip,
 		port,
 		id: clientId
