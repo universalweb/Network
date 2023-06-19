@@ -7,7 +7,11 @@ import { encodePacket } from '#udsp/encodePacket';
 export async function sendPacket(packetConfig) {
 	success(`SENDING MESSAGE`);
 	// console.log(packetConfig);
-	const { source: { server } } = packetConfig;
+	const {
+		source, source: {
+			server, isClient, isServer, isServerClient
+		}
+	} = packetConfig;
 	const destination = packetConfig.destination || packetConfig.source.destination;
 	const {
 		ip,
@@ -15,9 +19,15 @@ export async function sendPacket(packetConfig) {
 	} = destination;
 	const packet = await encodePacket(packetConfig);
 	console.log(`Packet Encoded Size ${packet.length} Sending to ip: ${ip} Port: ${port}`);
-	const rawServer = isFunction(server) ? server().server : server;
+	let rawSocket;
+	if (isServerClient) {
+		rawSocket = source.server().socket;
+	} else {
+		rawSocket = source.socket;
+	}
 	return promise((accept, reject) => {
-		rawServer.send(packet, port, ip, (error) => {
+		console.log(source);
+		rawSocket.send(packet, port, ip, (error) => {
 			if (error) {
 				reject(error);
 				return failed(error);

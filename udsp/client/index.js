@@ -133,14 +133,14 @@ export class Client {
 	}
 	async attachEvents() {
 		const thisClient = this;
-		this.server.on('error', (err) => {
+		this.socket.on('error', (err) => {
 			console.log('CLIENT UDP SERVER ERROR');
 			return thisClient.onError && thisClient.onError(err);
 		});
-		this.server.on('listening', () => {
+		this.socket.on('listening', () => {
 			return thisClient.onListening();
 		});
-		this.server.on('message', (packet, rinfo) => {
+		this.socket.on('message', (packet, rinfo) => {
 			return thisClient.onMessage(packet, rinfo);
 		});
 	}
@@ -170,7 +170,7 @@ export class Client {
 	}
 	close(statusCode) {
 		console.log(toBase64(this.id), `client closed. code ${statusCode}`);
-		this.server.close();
+		this.socket.close();
 		Client.connections.delete(this.id);
 	}
 	connect = clientConnect;
@@ -191,7 +191,7 @@ export class Client {
 	max = 1280;
 	static connections = new Map();
 	state = 0;
-	server = dgram.createSocket('udp6');
+	socket = dgram.createSocket('udp6');
 	requestQueue = new Map();
 	packetIdGenerator = construct(UniqID);
 }

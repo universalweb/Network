@@ -45,13 +45,13 @@ export class Server {
 	attachEvents() {
 		const thisServer = this;
 		this.bindActions(actions);
-		this.server.on('error', (err) => {
+		this.socket.on('error', (err) => {
 			return thisServer.onError(err);
 		});
-		this.server.on('listening', () => {
+		this.socket.on('listening', () => {
 			return thisServer.onListen();
 		});
-		this.server.on('message', (packet, rinfo) => {
+		this.socket.on('message', (packet, rinfo) => {
 			return thisServer.onPacket(packet, rinfo);
 		});
 	}
@@ -96,13 +96,12 @@ export class Server {
 	}
 	async setupServer() {
 		const ipVersion = this.ipVersion;
-		const server = dgram.createSocket(ipVersion);
-		this.server = server;
+		const serverThis = this;
+		const socket = dgram.createSocket(ipVersion);
+		this.socket = socket;
+		// Make sure there is as graceful as possible shutdown
 		process.on('beforeExit', (code) => {
-			server.close();
-		});
-		process.on('exit', (code) => {
-			server.close();
+			socket.close();
 		});
 	}
 	async initialize(configuration) {
@@ -191,6 +190,6 @@ export class Server {
 	events = construct(Map);
 	streamIdGenerator = construct(UniqID);
 }
-export async function createServer(...args) {
+export async function server(...args) {
 	return construct(Server, args);
 }

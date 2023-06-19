@@ -1,11 +1,11 @@
 /*
 	* App server example
 */
-import { createServer } from '#udsp';
+import { server } from '#udsp';
 import { info } from '#logs';
 import { currentPath } from '@universalweb/acid';
 import path from 'path';
-const appServer = await createServer({
+const appServer = await server({
 	encryptConnectionId: true,
 	randomId: true,
 	// realtime mode - to keep the connection alive for bidirectional communication
