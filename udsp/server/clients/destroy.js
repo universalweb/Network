@@ -2,6 +2,7 @@ import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 export async function destroy(client, reason, server) {
+	console.log(`client destroyed: ${client.idString}`);
 	if (reason === 1) {
 		await client.send({
 			status: 3

@@ -12,7 +12,7 @@ export async function processMessage(packet, client) {
 		message,
 		footer
 	} = packet;
-	const { requestQueue } = client;
+	const { queue } = client;
 	const {
 		state,
 		sid,
@@ -27,12 +27,10 @@ export async function processMessage(packet, client) {
 		}
 		if (hasValue(sid)) {
 			info(`Stream ID: ${sid} ${stringify(message)}`);
-			const askObject = requestQueue.get(sid);
+			console.log(queue.keys());
+			const askObject = queue.get(sid);
 			if (askObject) {
-				const messageBody = await askObject.accept(packet);
-				if (askObject.state === 2) {
-					askObject.delete();
-				}
+				askObject.onPacket(packet);
 			} else {
 				return failed(`Invalid Stream Id given. ${stringify(message)}`);
 			}

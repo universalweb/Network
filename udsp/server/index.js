@@ -162,7 +162,6 @@ export class Server {
 	realTime = true;
 	gracePeriod = 30000;
 	maxMTU = 1000;
-	encoding = 'utf8';
 	max = 1000;
 	maxPayloadSize = 1000;
 	packetCount = 0;

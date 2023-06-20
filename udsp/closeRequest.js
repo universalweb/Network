@@ -1,6 +1,6 @@
 // packetIdGenerator.free(sid);
-export function closeRequest(askObject, requestQueue) {
+export function closeRequest(askObject, queue) {
 	if (askObject.state === 2) {
-		requestQueue.delete(askObject.sid);
+		queue.delete(askObject.sid);
 	}
 }

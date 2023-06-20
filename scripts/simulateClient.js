@@ -18,11 +18,15 @@ console.timeEnd('Connected');
 console.time('FileRequest');
 const fileRequest = await uwClient.request('file', {
 	path: 'index.html'
+}, {
+	onData(data) {
+		console.log('onData', data);
+	}
 });
 console.timeEnd('FileRequest');
 console.timeEnd('Full');
-console.log('Request state', fileRequest);
-console.log(fileRequest.message.body.toString());
+// console.log('Request state', fileRequest);
+console.log(fileRequest.response.body.toString());
 /** */
 // await uwClient.request('event', {
 // 	head: {

@@ -11,7 +11,7 @@ export class Ask {
 	constructor(request, client) {
 		const thisAsk = this;
 		const {
-			askQueue,
+			queue,
 			packetIdGenerator
 		} = client;
 		const sid = packetIdGenerator.get();
@@ -22,7 +22,7 @@ export class Ask {
 		};
 		thisAsk.sid = sid;
 		thisAsk.request.sid = sid;
-		askQueue.set(sid, thisAsk);
+		queue.set(sid, thisAsk);
 		thisAsk.received(request);
 		return thisAsk;
 	}
@@ -80,7 +80,7 @@ export class Ask {
 	// Flush All body and remove this ask from the map
 	destroy() {
 		this.flush();
-		this.server().askQueue.delete(this.sid);
+		this.server().queue.delete(this.sid);
 	}
 	// Raw Send Packet
 	sendPacket(message, serverArg, client) {
@@ -247,12 +247,12 @@ export class Ask {
 	}
 }
 export function ask(message, client) {
-	const { askQueue } = client;
+	const { queue } = client;
 	const { sid } = message;
 	msgReceived(`Stream ID: ${sid}`);
-	if (askQueue.has(sid)) {
+	if (queue.has(sid)) {
 		msgReceived(`ASK FOUND: ${sid}`);
-		return askQueue.get(sid);
+		return queue.get(sid);
 	}
 	msgReceived(`CREATE ASK: ${sid}`, message);
 	return construct(Ask, [message, client]);

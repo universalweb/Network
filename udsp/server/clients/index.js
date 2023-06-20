@@ -72,7 +72,7 @@ export class Client {
 	isServerClient = true;
 	isServerEnd = true;
 	pending = false;
-	replyQueue = construct(Map);
+	queue = construct(Map);
 	packetIdGenerator = construct(UniqID);
 	state = 0;
 	encryptConnectionId = false;

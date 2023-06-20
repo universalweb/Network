@@ -3,7 +3,9 @@ import {
 	eachArray, stringify,
 	get,
 	isBuffer, isPlainObject,
-	isArray, isMap, construct
+	isArray, isMap, construct,
+	each, hasLength,
+	hasValue
 } from '@universalweb/acid';
 import { decode, encode } from 'msgpackr';
 import {
@@ -33,7 +35,7 @@ export class Ask {
 		} = config;
 		const thisAsk = this;
 		const {
-			requestQueue,
+			queue,
 			packetIdGenerator
 		} = client;
 		let request;
@@ -68,47 +70,41 @@ export class Ask {
 		this.client = function() {
 			return client;
 		};
-		requestQueue.set(sid, thisAsk);
+		const { onData, } = options;
+		this.on({
+			onData,
+		});
+		queue.set(sid, thisAsk);
 		return thisAsk;
 	}
-	request = {};
-	response = {};
-	headers = {};
-	options = {};
-	outgoingPackets = [];
-	incomingPackets = [];
-	incomingAks = [];
-	incomingNacks = [];
-	outgoingAcks = [];
-	outgoingNacks = [];
-	totalOutgoingPackets = 0;
-	totalOutgoingPayloadSize = 0;
-	// Must be checked for uniqueness
-	totalSentConfirmedPackets = 0;
-	totalIncomingPackets = 0;
-	totalIncomingPayloadSize = 0;
-	// Must be checked for uniqueness
-	totalReceivedPackets = 0;
-	/* `state = 0;` is initializing the `state` property of the `Ask` class to `0`. This property is used
-	to keep track of the state of the request, where `0` represents an unsent request, `1` represents a
-	request that is currently being sent, and `2` represents a completed request. */
-	state = 0;
-	flushOut() {
-		this.outgoingPayload = {};
-		this.outgoingPackets = [];
-		this.outgoingChunks = [];
-		this.totalOutgoingPackets = 0;
-		this.totalOutgoingPayloadSize = 0;
+	flushOutgoing() {
+		this.outgoingAcks = null;
+		this.outgoingNacks = null;
+		this.outgoingPayload = null;
+		this.outgoingPackets = null;
+		this.outgoingChunks = null;
+		this.totalSentConfirmedPackets = null;
+		this.totalOutgoingPayloadSize = null;
+	}
+	flushIncoming() {
+		this.incomingPackets = null;
+		this.incomingAks = null;
+		this.incomingNacks = null;
+		this.totalOutgoingPackets = null;
+		this.totalOutgoingPayloadSize = null;
+		this.totalReceivedPackets = null;
 	}
 	// Flush all body
 	flush() {
-		this.flushOut();
-		this.flushAsk();
+		this.flushOutgoing();
+		this.flushIncoming();
+		this.completed = Date.now();
 	}
 	// Flush All body and remove this reply from the map
 	destroy() {
+		console.log(`Destroying Ask ${this.id}`);
 		this.flush();
-		this.client().requestQueue.delete(this.sid);
+		this.client().queue.delete(this.id);
 	}
 	async sendPacket(arg) {
 		const {
@@ -202,21 +198,22 @@ export class Ask {
 			});
 		});
 	}
-	received(message) {
+	async onPacket(packet) {
 		const thisReply = this;
+		const { message } = packet;
 		const {
 			body,
 			head,
 			// Stream ID
-			sid,
+			sid: streamId,
 			// Packet ID
-			pid,
+			pid: packetId,
 			// Action
 			act,
 			// Packet total
-			pt,
+			pt: totalIncomingUniquePackets,
 			// Data Encoding
-			de,
+			de: incomingDataEncoding,
 			// Complete
 			cmplt,
 			// Finale Packet
@@ -226,52 +223,66 @@ export class Ask {
 			// Negative Acknowledgement
 			nack
 		} = message;
-		if (cmplt) {
-			return thisReply.destroy();
+		console.log(`Stream Id ${streamId}`);
+		if (hasValue(totalIncomingUniquePackets)) {
+			thisReply.totalIncomingUniquePackets = totalIncomingUniquePackets;
 		}
-		if (pt) {
-			thisReply.totalIncomingPackets = pt;
+		if (incomingDataEncoding) {
+			thisReply.incomingDataEncoding = incomingDataEncoding;
 		}
-		if (de) {
-			thisReply.incomingDataEncoding = de;
-		}
-		if (pid) {
-			if (!thisReply.incomingPackets[pid]) {
-				thisReply.incomingPackets[pid] = message;
-				thisReply.totalReceivedPackets++;
+		thisReply.totalReceivedPackets++;
+		if (hasValue(packetId)) {
+			if (!thisReply.incomingPackets[packetId]) {
+				thisReply.incomingPackets[packetId] = message;
+				if (body) {
+					await this.onData(message);
+				}
+				thisReply.totalReceivedUniquePackets++;
 			}
 		} else {
 			thisReply.incomingPackets[0] = message;
-			thisReply.totalReceivedPackets = 1;
-			thisReply.totalIncomingPackets = 1;
+			thisReply.totalReceivedUniquePackets = 1;
+			thisReply.totalIncomingUniquePackets = 1;
 		}
-		if (thisReply.totalIncomingPackets === thisReply.totalReceivedPackets) {
+		if (thisReply.totalIncomingUniquePackets === thisReply.totalReceivedUniquePackets) {
 			thisReply.state = 2;
 		}
-		if (thisReply.state === 2) {
+		if (thisReply.state === 2 || cmplt) {
 			thisReply.assemble();
 		}
+		console.log('On Packet event', thisReply);
 	}
-	assemble() {
+	async onData(message) {
+		console.log('On Data event');
+		const {
+			pid,
+			body
+		} = message;
+		this.data[pid] = body;
+		if (this.events.data) {
+			this.events.data(body, pid);
+		}
+	}
+	async assemble() {
 		const thisReply = this;
-		const { incomingDataEncoding } = thisReply;
-		if (thisReply.totalIncomingPackets === 1) {
-			thisReply.request = thisReply.incomingPackets[0];
-		}
-		const packet = thisReply.incomingPackets[0];
-		eachArray(thisReply.incomingPackets, (item) => {
-			if (item.body) {
-				Buffer.concat([packet.body, item.body]);
+		if (hasLength(thisReply.data)) {
+			const { incomingDataEncoding } = thisReply;
+			thisReply.response.body = Buffer.concat(thisReply.data);
+			if (incomingDataEncoding === 'struct' || !incomingDataEncoding) {
+				thisReply.response.body = decode(thisReply.response.body);
 			}
+		}
+		console.log('Assemble', thisReply.response.body);
+		thisReply.accept(thisReply);
+		thisReply.destroy();
+	}
+	on(events) {
+		const thisReply = this;
+		each(events, (item, propertyName) => {
+			thisReply.events[propertyName] = (data) => {
+				return item.call(thisReply, data);
+			};
 		});
-		if (incomingDataEncoding === 'struct' || !incomingDataEncoding) {
-			msgReceived(thisReply.request);
-			if (thisReply.request.body) {
-				thisReply.request.body = decode(thisReply.request.body);
-			}
-		}
-		thisReply.process();
-		thisReply.flushOut();
 	}
 	async fetch() {
 		const thisAsk = this;
@@ -281,10 +292,35 @@ export class Ask {
 		});
 		return awaitingResult;
 	}
-	callback(results) {
-		console.log('Request Results', results);
-		this.accept(results);
-	}
+	isAsk = true;
+	request = {};
+	response = {};
+	// this is the data in order may have missing packets at times but will remain in order
+	data = [];
+	// This is as the data came in over the wire out of order
+	stream = [];
+	events = {};
+	headers = {};
+	options = {};
+	outgoingPackets = [];
+	incomingPackets = [];
+	incomingAks = [];
+	incomingNacks = [];
+	outgoingAcks = [];
+	outgoingNacks = [];
+	totalReceivedUniquePackets = 0;
+	totalOutgoingPackets = 0;
+	totalOutgoingPayloadSize = 0;
+	// Must be checked for uniqueness
+	totalSentConfirmedPackets = 0;
+	totalIncomingUniquePackets = 1;
+	totalIncomingPayloadSize = 0;
+	// Must be checked for uniqueness
+	totalReceivedPackets = 0;
+	/* `state = 0;` is initializing the `state` property of the `Ask` class to `0`. This property is used
+	to keep track of the state of the request, where `0` represents an unsent request, `1` represents a
+	request that is currently being sent, and `2` represents a completed request. */
+	state = 0;
 }
 export async function ask(source) {
 	return construct(Ask, omit);

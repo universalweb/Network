@@ -26,7 +26,6 @@ export async function sendPacket(packetConfig) {
 		rawSocket = source.socket;
 	}
 	return promise((accept, reject) => {
-		console.log(source);
 		rawSocket.send(packet, port, ip, (error) => {
 			if (error) {
 				reject(error);

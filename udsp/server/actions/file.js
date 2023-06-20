@@ -34,5 +34,5 @@ export async function file(reply) {
 	console.log(`EXT => ${ext}`);
 	response.ext = ext;
 	response.body = data;
-	reply.send('file');
+	reply.send('binary');
 }

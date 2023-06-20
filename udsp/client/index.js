@@ -192,7 +192,7 @@ export class Client {
 	static connections = new Map();
 	state = 0;
 	socket = dgram.createSocket('udp6');
-	requestQueue = new Map();
+	queue = new Map();
 	packetIdGenerator = construct(UniqID);
 }
 export async function client(configuration, ignoreConnections) {
