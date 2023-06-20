@@ -186,9 +186,8 @@ export class Client {
 	isClient = true;
 	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
 	descriptor = 'UWClient';
-	maxMTU = 1000;
 	encoding = 'binary';
-	max = 1280;
+	maxPacketSize = 1328;
 	static connections = new Map();
 	state = 0;
 	socket = dgram.createSocket('udp6');

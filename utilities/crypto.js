@@ -104,6 +104,7 @@ export function encrypt(message, sessionkeys, ad, nonceArg) {
 	crypto_aead_xchacha20poly1305_ietf_encrypt(encrypted, message, ad, null, nonce, sessionkeys?.transmitKey || sessionkeys);
 	return Buffer.concat([nonce, encrypted]);
 }
+encrypt.overhead = crypto_aead_xchacha20poly1305_ietf_ABYTES + crypto_aead_xchacha20poly1305_ietf_NPUBBYTES;
 export function decrypt(encrypted, sessionkeys, ad, nonceArg) {
 	const encryptedPayloadLength = encrypted.length;
 	const nonce = nonceArg || encrypted.subarray(0, crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);

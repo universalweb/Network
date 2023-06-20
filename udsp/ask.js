@@ -60,10 +60,10 @@ export class Ask {
 		const timeStamp = Date.now();
 		thisAsk.created = timeStamp;
 		// sid is a Stream ID
-		const sid = packetIdGenerator.get();
-		request.sid = sid;
+		const streamId = packetIdGenerator.get();
+		request.sid = streamId;
 		this.request = request;
-		this.id = sid;
+		this.id = streamId;
 		if (options.dataEncoding) {
 			this.dataEncoding = options.dataEncoding;
 		}
@@ -74,7 +74,7 @@ export class Ask {
 		this.on({
 			onData,
 		});
-		queue.set(sid, thisAsk);
+		queue.set(streamId, thisAsk);
 		return thisAsk;
 	}
 	flushOutgoing() {
@@ -105,6 +105,16 @@ export class Ask {
 		console.log(`Destroying Ask ${this.id}`);
 		this.flush();
 		this.client().queue.delete(this.id);
+	}
+	sendCompleted() {
+		const thisAsk = this;
+		const { id: sid } = thisAsk;
+		thisAsk.sendPacket({
+			message: {
+				sid,
+				cmplt: true
+			}
+		});
 	}
 	async sendPacket(arg) {
 		const {
@@ -141,14 +151,16 @@ export class Ask {
 		return chunks;
 	}
 	async buildRequestPackets() {
-		const thisReply = this;
-		const { request } = thisReply;
-		const { sid } = request;
+		const thisAsk = this;
+		const {
+			request,
+			id: sid
+		} = thisAsk;
 		if (request.body && request.body.length > chunkSize) {
 			console.log(request.body.length);
-			const chunks = await thisReply.chunk(request.body);
+			const chunks = await thisAsk.chunk(request.body);
 			const packetLength = chunks.length;
-			thisReply.totalOutgoingPackets = packetLength;
+			thisAsk.totalOutgoingPackets = packetLength;
 			eachArray(chunks, (item, pid) => {
 				const outgoingPacket = {
 					pid,
@@ -159,47 +171,47 @@ export class Ask {
 					assign(outgoingPacket, omit(request, ['body']));
 				}
 				outgoingPacket.body = item;
-				thisReply.outgoingPackets[pid] = outgoingPacket;
+				thisAsk.outgoingPackets[pid] = outgoingPacket;
 			});
 		} else {
 			request.pt = 0;
-			thisReply.outgoingPackets[0] = request;
+			thisAsk.outgoingPackets[0] = request;
 		}
 	}
 	async buildRequest() {
 		const dataEncoding = this.dataEncoding;
 		const request = this.request;
-		const thisReply = this;
+		const thisAsk = this;
 		if (request.body) {
 			if (!isBuffer(request.body)) {
 				request.body = encode(request.body);
 			}
 		}
 		await this.buildRequestPackets(request);
-		thisReply.sendAll();
+		thisAsk.sendAll();
 	}
 	sendIDs(packetIDs) {
-		const thisReply = this;
+		const thisAsk = this;
 		const server = this.server();
 		const client = this.client();
 		eachArray(packetIDs, (id) => {
-			thisReply.sendPacket({
-				message: thisReply.outgoingPackets[id]
+			thisAsk.sendPacket({
+				message: thisAsk.outgoingPackets[id]
 			});
 		});
 	}
 	async sendAll() {
-		const thisReply = this;
+		const thisAsk = this;
 		const client = this.client();
-		console.log('Ask.sendAll', thisReply.outgoingPackets);
-		eachArray(thisReply.outgoingPackets, (message) => {
-			thisReply.sendPacket({
+		console.log('Ask.sendAll', thisAsk.outgoingPackets);
+		eachArray(thisAsk.outgoingPackets, (message) => {
+			thisAsk.sendPacket({
 				message
 			});
 		});
 	}
 	async onPacket(packet) {
-		const thisReply = this;
+		const thisAsk = this;
 		const { message } = packet;
 		const {
 			body,
@@ -225,32 +237,32 @@ export class Ask {
 		} = message;
 		console.log(`Stream Id ${streamId}`);
 		if (hasValue(totalIncomingUniquePackets)) {
-			thisReply.totalIncomingUniquePackets = totalIncomingUniquePackets;
+			thisAsk.totalIncomingUniquePackets = totalIncomingUniquePackets;
 		}
 		if (incomingDataEncoding) {
-			thisReply.incomingDataEncoding = incomingDataEncoding;
+			thisAsk.incomingDataEncoding = incomingDataEncoding;
 		}
-		thisReply.totalReceivedPackets++;
+		thisAsk.totalReceivedPackets++;
 		if (hasValue(packetId)) {
-			if (!thisReply.incomingPackets[packetId]) {
-				thisReply.incomingPackets[packetId] = message;
+			if (!thisAsk.incomingPackets[packetId]) {
+				thisAsk.incomingPackets[packetId] = message;
 				if (body) {
 					await this.onData(message);
 				}
-				thisReply.totalReceivedUniquePackets++;
+				thisAsk.totalReceivedUniquePackets++;
 			}
 		} else {
-			thisReply.incomingPackets[0] = message;
-			thisReply.totalReceivedUniquePackets = 1;
-			thisReply.totalIncomingUniquePackets = 1;
+			thisAsk.incomingPackets[0] = message;
+			thisAsk.totalReceivedUniquePackets = 1;
+			thisAsk.totalIncomingUniquePackets = 1;
 		}
-		if (thisReply.totalIncomingUniquePackets === thisReply.totalReceivedUniquePackets) {
-			thisReply.state = 2;
+		if (thisAsk.totalIncomingUniquePackets === thisAsk.totalReceivedUniquePackets) {
+			thisAsk.state = 2;
 		}
-		if (thisReply.state === 2 || cmplt) {
-			thisReply.assemble();
+		if (thisAsk.state === 2 || cmplt) {
+			thisAsk.assemble();
 		}
-		console.log('On Packet event', thisReply);
+		console.log('On Packet event', thisAsk);
 	}
 	async onData(message) {
 		console.log('On Data event');
@@ -264,23 +276,23 @@ export class Ask {
 		}
 	}
 	async assemble() {
-		const thisReply = this;
-		if (hasLength(thisReply.data)) {
-			const { incomingDataEncoding } = thisReply;
-			thisReply.response.body = Buffer.concat(thisReply.data);
+		const thisAsk = this;
+		if (hasLength(thisAsk.data)) {
+			const { incomingDataEncoding } = thisAsk;
+			thisAsk.response.body = Buffer.concat(thisAsk.data);
 			if (incomingDataEncoding === 'struct' || !incomingDataEncoding) {
-				thisReply.response.body = decode(thisReply.response.body);
+				thisAsk.response.body = decode(thisAsk.response.body);
 			}
 		}
-		console.log('Assemble', thisReply.response.body);
-		thisReply.accept(thisReply);
-		thisReply.destroy();
+		console.log('Assemble', thisAsk.response.body);
+		thisAsk.accept(thisAsk);
+		thisAsk.destroy();
 	}
 	on(events) {
-		const thisReply = this;
+		const thisAsk = this;
 		each(events, (item, propertyName) => {
-			thisReply.events[propertyName] = (data) => {
-				return item.call(thisReply, data);
+			thisAsk.events[propertyName] = (data) => {
+				return item.call(thisAsk, data);
 			};
 		});
 	}

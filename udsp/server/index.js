@@ -104,6 +104,14 @@ export class Server {
 			socket.close();
 		});
 	}
+	async calculatePacketOverhead() {
+		const packetOverhead = 2;
+		this.encryptOverhead = this.cryptography.encryptOverhead;
+		this.connectionIdOverhead = this.cryptography.config.cryptography.connectionIdSize;
+		this.packetOverhead = packetOverhead + this.encryptOverhead + this.connectionIdOverhead;
+		this.packetMaxPayload = this.maxPacketSize - this.packetOverhead;
+		console.log(`Packet Overhead: ${this.packetOverhead} bytes`);
+	}
 	async initialize(configuration) {
 		console.log('-------SERVER INITIALIZING-------');
 		assign(this, configuration);
@@ -116,6 +124,7 @@ export class Server {
 		}
 		await this.setCertificate();
 		await this.configureNetwork();
+		await this.calculatePacketOverhead();
 		await this.setupServer();
 		await this.attachEvents();
 		await this.bindServer();
@@ -161,9 +170,7 @@ export class Server {
 	ip = '::1';
 	realTime = true;
 	gracePeriod = 30000;
-	maxMTU = 1000;
-	max = 1000;
-	maxPayloadSize = 1000;
+	maxPacketSize = 1328;
 	packetCount = 0;
 	messageCount = 0;
 	socketCount = 0;

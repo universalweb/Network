@@ -28,9 +28,7 @@ const domainProfile = await createProfile({
 				encryptServerConnectionId: 'sealedbox',
 				connectionIdKeypair: true,
 				// Max connection id size in bytes
-				maxConnectionIdSize: 64,
-				// Min connection id size in bytes
-				minConnectionIdSize: 64,
+				connectionIdSize: 56,
 				// Encrypt public key sent in the packet
 				encryptClientKey: 'sealedbox',
 				encryptServerKey: 'sealedbox',

@@ -29,8 +29,11 @@ export class Reply {
 		thisReply.server = function() {
 			return server;
 		};
+		thisReply.packetOverhead = server.packetOverhead;
+		thisReply.maxPacketSize = server.maxPacketSize;
 		const { sid } = message;
 		thisReply.sid = sid;
+		thisReply.responsePacketTemplate.sid = sid;
 		thisReply.response.sid = sid;
 		queue.set(sid, thisReply);
 		thisReply.sendPacket = function(config) {
@@ -51,6 +54,7 @@ export class Reply {
 	// Incoming
 	request = {};
 	response = {};
+	responsePacketTemplate = {};
 	incomingPackets = [];
 	incomingChunks = [];
 	totalIncomingPackets = 0;
@@ -112,6 +116,11 @@ export class Reply {
 	}
 	async buildReplyPackets(response, incomingDataEncoding) {
 		const thisReply = this;
+		const {
+			responsePacketTemplate,
+			packetOverhead,
+			maxPacketSize
+		} = thisReply;
 		console.log('Body size', response.body.length);
 		if (response.body && response.body.length > 700) {
 			const chunks = await thisReply.chunk(response.body);
@@ -120,13 +129,16 @@ export class Reply {
 			eachArray(chunks, (item, id) => {
 				const outgoingPacket = assign({
 					pid: id
-				}, response);
+				}, responsePacketTemplate);
 				if (id === 0) {
 					if (incomingDataEncoding) {
 						outgoingPacket.de = incomingDataEncoding;
 					}
 					outgoingPacket.pt = packetLength;
 				}
+				const thisPacketsOverhead = (thisReply.packetOverhead + encode([null, outgoingPacket]).length);
+				const thisPacketsFreeSpace = maxPacketSize - thisPacketsOverhead;
+				console.log('This packets overhead', thisPacketsOverhead, thisPacketsFreeSpace);
 				outgoingPacket.body = item;
 				thisReply.outgoingPackets[id] = outgoingPacket;
 			});

@@ -99,10 +99,11 @@ export async function encodePacket(config) {
 	info(`clientId: ${toBase64(headers.id)}`);
 	info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
 	const packetSize = packet.length;
+	console.log('Size Unencrypted', encode([headersEncoded, messageEncoded]).length);
 	info(`encoded Packet Size ${packetSize}`);
-	if (packetSize >= 1280) {
+	if (packetSize >= 1328) {
 		console.log(packet);
-		failed(`WARNING: Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
+		failed(`WARNING: Packet size is larger than max allowed size 1328 -> ${packetSize} over by ${packetSize - 1328}`);
 	}
 	success(`PROCESSED ENCODE PACKET`);
 	return packet;

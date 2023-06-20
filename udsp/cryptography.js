@@ -70,7 +70,7 @@ class Cryptography {
 			exchange = 'x25519',
 		} = cryptographyConfig;
 		const {
-			maxConnectionIdLength,
+			connectionIdSize,
 			encryptConnectionId,
 			encryptKey,
 			nonce,
@@ -186,6 +186,9 @@ class Cryptography {
 			encryptClientKey,
 			encryptServerKey
 		});
+		if (this.encryptMethod.overhead) {
+			this.encryptOverhead = this.encryptMethod.overhead;
+		}
 		return this.initialize();
 	}
 	generated = {
