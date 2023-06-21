@@ -47,13 +47,14 @@ import { hkdf } from '@noble/hashes/hkdf';
 import { pbkdf2, pbkdf2Async } from '@noble/hashes/pbkdf2';
 import { scrypt, scryptAsync } from '@noble/hashes/scrypt';
 const { seal } = Object;
-import {
+import * as defaultCrypto from '#crypto';
+const {
 	encrypt, decrypt, nonceBox, sign, signVerify, createSecretKey,
 	signKeypair, encryptKeypair, createSessionKey, clientSessionKeys,
 	serverSessionKeys, signPrivateKeyToEncryptPrivateKey, signPublicKeyToEncryptPublicKey,
 	signKeypairToEncryptKeypair, getSignPublicKeyFromPrivateKey, keypair,
-	boxUnseal, boxSeal, randomConnectionId
-} from '#crypto';
+	boxUnseal, boxSeal, randomConnectionId, hashMin: defaultHashMin, hash: defaultHash,
+} = defaultCrypto;
 class Cryptography {
 	constructor(config) {
 		this.config = config;
@@ -70,7 +71,6 @@ class Cryptography {
 			exchange = 'x25519',
 		} = cryptographyConfig;
 		const {
-			connectionIdSize,
 			encryptConnectionId,
 			encryptKey,
 			nonce,
@@ -79,7 +79,9 @@ class Cryptography {
 			convertEd25519ToX25519,
 			connectionIdKeypair
 		} = cryptographyConfig;
-		const { generate } = config;
+		const {
+			generate, connectionIdSize
+		} = config;
 		if (alias === 'default') {
 			aead = 'xchacha20poly1305';
 			signature = 'ed25519';
@@ -169,6 +171,9 @@ class Cryptography {
 		}
 		if (hash === 'blake3') {
 			this.hashMethod = blake3;
+		} else if (hash === 'blake2b') {
+			this.hashMethod = defaultHash;
+			this.hashMinMethod = defaultHashMin;
 		}
 		if (generate?.keypair) {
 			this.generated.keypair = this.keypair();
@@ -194,8 +199,15 @@ class Cryptography {
 	generated = {
 		destination: {}
 	};
+	hash(...args) {
+		return this.hashMethod(...args);
+	}
+	hashMin(...args) {
+		return this.hashMinMethod(...args);
+	}
 	generateConnectionID() {
-		const randomPortion = randomConnectionId(16);
+		const target = randomConnectionId(this.conifg.connectionIdSize || 8);
+		return target;
 	}
 	signKeypair(...args) {
 		return this.signKeypairMethod(...args);

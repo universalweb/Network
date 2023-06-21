@@ -56,7 +56,10 @@ export class Server {
 		});
 	}
 	async setCertificate() {
-		const { certificate } = this.configuration;
+		const {
+			certificate,
+			connectionIdSize
+		} = this.configuration;
 		if (certificate) {
 			this.certificate = await parseCertificate(certificate);
 			console.log(this.certificate);
@@ -68,9 +71,15 @@ export class Server {
 				this.ipVersion = this.certificate.ipVersion;
 			}
 		}
+		if (!connectionIdSize) {
+			if (this.certificate.connectionIdSize) {
+				this.connectionIdSize = this.certificate.connectionIdSize;
+			}
+		}
 		if (this.certificate.cryptography) {
 			const cryptoConfig = assign({
 				keypair: this.keypair,
+				connectionIdSize: this.connectionIdSize,
 				connectionIdKeypair: this.connectionIdKeypair,
 			}, this.certificate);
 			this.cryptography = await cryptography(cryptoConfig);
@@ -107,10 +116,11 @@ export class Server {
 	async calculatePacketOverhead() {
 		const packetOverhead = 2;
 		this.encryptOverhead = this.cryptography.encryptOverhead;
-		this.connectionIdOverhead = this.cryptography.config.cryptography.connectionIdSize;
-		this.packetOverhead = packetOverhead + this.encryptOverhead + this.connectionIdOverhead;
+		this.packetOverhead = packetOverhead + this.encryptOverhead + this.connectionIdSize;
 		this.packetMaxPayload = this.maxPacketSize - this.packetOverhead;
+		this.packetMaxPayloadSafeEstimate = this.packetMaxPayload - 52;
 		console.log(`Packet Overhead: ${this.packetOverhead} bytes`);
+		console.log(`connectionIdSize Overhead: ${this.connectionIdSize} bytes`);
 	}
 	async initialize(configuration) {
 		console.log('-------SERVER INITIALIZING-------');
@@ -171,6 +181,7 @@ export class Server {
 	realTime = true;
 	gracePeriod = 30000;
 	maxPacketSize = 1328;
+	connectionIdSize = 8;
 	packetCount = 0;
 	messageCount = 0;
 	socketCount = 0;

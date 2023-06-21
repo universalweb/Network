@@ -27,13 +27,15 @@ const domainProfile = await createProfile({
 				encryptClientConnectionId: 'sealedbox',
 				encryptServerConnectionId: 'sealedbox',
 				connectionIdKeypair: true,
-				// Max connection id size in bytes
-				connectionIdSize: 56,
 				// Encrypt public key sent in the packet
 				encryptClientKey: 'sealedbox',
 				encryptServerKey: 'sealedbox',
 				encryptKeypair: true
 			},
+			// Max connection id size in bytes
+			connectionIdSize: 56,
+			// Max Payload size
+			maxPayloadSize: 900,
 			ip: '::1',
 			port: 8888,
 			domain: 'universal.web',

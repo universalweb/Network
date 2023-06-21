@@ -6,12 +6,15 @@ import path from 'path';
 const dots = /\./g;
 /**
  *
- * @todo Include file size, extension, & other metadata as mandatory single packet data.
+ * @todo Include file size & other metadata as mandatory single packet data.
  */
+const cache = {};
+// This is for small static resource files only which could be loaded into memory or could be loaded in on the fly and then discarded or cached.
 export async function file(reply) {
 	const {
 		resourceDirectory,
-		defaultExtension
+		defaultExtension,
+		cryptography
 	} = this;
 	const {
 		response,
@@ -34,5 +37,6 @@ export async function file(reply) {
 	console.log(`EXT => ${ext}`);
 	response.ext = ext;
 	response.body = data;
+	// checksum: cryptography.hash(data)
 	reply.send('binary');
 }

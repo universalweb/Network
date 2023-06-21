@@ -11,7 +11,6 @@ import { decode, encode } from 'msgpackr';
 import {
 	failed, info, msgReceived, msgSent
 } from '#logs';
-const chunkSize = 700;
 const dataEncodingTypesChunked = /stream|file|image|string/;
 const dataEncodingTypesStructured = /json|Packetpack|struct|/;
 /**
@@ -36,7 +35,8 @@ export class Ask {
 		const thisAsk = this;
 		const {
 			queue,
-			packetIdGenerator
+			packetIdGenerator,
+			maxPacketSize
 		} = client;
 		let request;
 		if (message) {
@@ -74,6 +74,7 @@ export class Ask {
 		this.on({
 			onData,
 		});
+		this.maxPacketSize = maxPacketSize;
 		queue.set(streamId, thisAsk);
 		return thisAsk;
 	}
@@ -101,7 +102,11 @@ export class Ask {
 		this.completed = Date.now();
 	}
 	// Flush All body and remove this reply from the map
-	destroy() {
+	destroy(err) {
+		this.state = 2;
+		if (err) {
+			this.err = err;
+		}
 		console.log(`Destroying Ask ${this.id}`);
 		this.flush();
 		this.client().queue.delete(this.id);
@@ -144,8 +149,9 @@ export class Ask {
 	async chunk(body) {
 		const chunks = [];
 		const packetLength = body.length;
-		for (let index = 0; index < packetLength;index += chunkSize) {
-			const chunk = body.subarray(index, index + chunkSize);
+		const { maxPacketSize } = this;
+		for (let index = 0; index < packetLength;index += maxPacketSize) {
+			const chunk = body.subarray(index, index + maxPacketSize);
 			chunks.push(chunk);
 		}
 		return chunks;
@@ -212,6 +218,7 @@ export class Ask {
 	}
 	async onPacket(packet) {
 		const thisAsk = this;
+		thisAsk.lastPacketTime = Date.now();
 		const { message } = packet;
 		const {
 			body,
@@ -224,6 +231,8 @@ export class Ask {
 			act,
 			// Packet total
 			pt: totalIncomingUniquePackets,
+			// Dat payload size
+			tps: totalIncomingPayloadSize,
 			// Data Encoding
 			de: incomingDataEncoding,
 			// Complete
@@ -233,11 +242,15 @@ export class Ask {
 			// Acknowledgement
 			ack,
 			// Negative Acknowledgement
-			nack
+			nack,
+			err
 		} = message;
 		console.log(`Stream Id ${streamId}`);
 		if (hasValue(totalIncomingUniquePackets)) {
 			thisAsk.totalIncomingUniquePackets = totalIncomingUniquePackets;
+		}
+		if (hasValue(totalIncomingPayloadSize)) {
+			thisAsk.totalIncomingPayloadSize = totalIncomingPayloadSize;
 		}
 		if (incomingDataEncoding) {
 			thisAsk.incomingDataEncoding = incomingDataEncoding;
@@ -256,8 +269,11 @@ export class Ask {
 			thisAsk.totalReceivedUniquePackets = 1;
 			thisAsk.totalIncomingUniquePackets = 1;
 		}
-		if (thisAsk.totalIncomingUniquePackets === thisAsk.totalReceivedUniquePackets) {
+		if (cmplt) {
 			thisAsk.state = 2;
+		}
+		if (err) {
+			return this.destroy(err);
 		}
 		if (thisAsk.state === 2 || cmplt) {
 			thisAsk.assemble();
@@ -271,6 +287,11 @@ export class Ask {
 			body
 		} = message;
 		this.data[pid] = body;
+		this.currentPayloadSize += body.length;
+		if (this.totalIncomingPayloadSize) {
+			this.progress = this.totalIncomingPayloadSize / this.currentPayloadSize;
+			console.log('Progress', this.progress);
+		}
 		if (this.events.data) {
 			this.events.data(body, pid);
 		}
@@ -281,7 +302,11 @@ export class Ask {
 			const { incomingDataEncoding } = thisAsk;
 			thisAsk.response.body = Buffer.concat(thisAsk.data);
 			if (incomingDataEncoding === 'struct' || !incomingDataEncoding) {
-				thisAsk.response.body = decode(thisAsk.response.body);
+				try {
+					thisAsk.response.body = decode(thisAsk.response.body);
+				} catch (err) {
+					return this.destroy('Failed to decode incoming data');
+				}
 			}
 		}
 		console.log('Assemble', thisAsk.response.body);
@@ -304,6 +329,8 @@ export class Ask {
 		});
 		return awaitingResult;
 	}
+	currentPayloadSize = 0;
+	progress = 0;
 	isAsk = true;
 	request = {};
 	response = {};
@@ -325,7 +352,6 @@ export class Ask {
 	totalOutgoingPayloadSize = 0;
 	// Must be checked for uniqueness
 	totalSentConfirmedPackets = 0;
-	totalIncomingUniquePackets = 1;
 	totalIncomingPayloadSize = 0;
 	// Must be checked for uniqueness
 	totalReceivedPackets = 0;

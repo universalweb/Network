@@ -188,6 +188,7 @@ export class Client {
 	descriptor = 'UWClient';
 	encoding = 'binary';
 	maxPacketSize = 1328;
+	connectionIdSize = 8;
 	static connections = new Map();
 	state = 0;
 	socket = dgram.createSocket('udp6');

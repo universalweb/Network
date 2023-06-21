@@ -6,7 +6,6 @@ import {
 	success, failed, info, msgReceived, msgSent
 } from '#logs';
 import { processEvent } from '#udsp/processEvent';
-const chunkSize = 700;
 const incomingDataEncodingTypesChunked = /stream|file|image|binary|string/;
 /**
 	* @todo Add promise to send use the method that Ask uses assign the accept, return it, and when completed execute.
@@ -15,6 +14,7 @@ export class Reply {
 	constructor(request, client) {
 		const thisReply = this;
 		const { message } = request;
+		const { sid } = message;
 		console.log(client);
 		const {
 			queue,
@@ -29,9 +29,8 @@ export class Reply {
 		thisReply.server = function() {
 			return server;
 		};
-		thisReply.packetOverhead = server.packetOverhead;
-		thisReply.maxPacketSize = server.maxPacketSize;
-		const { sid } = message;
+		thisReply.packetMaxPayload = server.packetMaxPayload;
+		thisReply.packetMaxPayloadSafeEstimate = server.packetMaxPayloadSafeEstimate;
 		thisReply.sid = sid;
 		thisReply.responsePacketTemplate.sid = sid;
 		thisReply.response.sid = sid;
@@ -105,11 +104,12 @@ export class Reply {
 		this.flush();
 		this.server().queue.delete(this.sid);
 	}
-	async chunk(body) {
+	async chunk(packetOverhead, body) {
 		const chunks = [];
 		const packetLength = body.length;
-		for (let index = 0; index < packetLength;index += chunkSize) {
-			const chunk = body.subarray(index, index + chunkSize);
+		const { packetMaxPayloadSafeEstimate } = this;
+		for (let index = 0; index < packetLength;index += packetMaxPayloadSafeEstimate) {
+			const chunk = body.subarray(index, index + packetMaxPayloadSafeEstimate);
 			chunks.push(chunk);
 		}
 		return chunks;
@@ -118,15 +118,21 @@ export class Reply {
 		const thisReply = this;
 		const {
 			responsePacketTemplate,
-			packetOverhead,
-			maxPacketSize
+			packetMaxPayload,
+			packetMaxPayloadSafeEstimate
 		} = thisReply;
-		console.log('Body size', response.body.length);
-		if (response.body && response.body.length > 700) {
-			const chunks = await thisReply.chunk(response.body);
-			const packetLength = chunks.length;
-			thisReply.totalOutgoingPackets = packetLength;
-			eachArray(chunks, (item, id) => {
+		const { body } = response;
+		console.log('Body size', body.length);
+		const totalPayloadSize = body?.length;
+		thisReply.totalReplyDataSize = totalPayloadSize;
+		let currentBytePosition = 0;
+		let id = 0;
+		if (totalPayloadSize > packetMaxPayloadSafeEstimate) {
+			while (currentBytePosition < totalPayloadSize) {
+				const endIndex = currentBytePosition + packetMaxPayloadSafeEstimate;
+				const safeEndIndex = endIndex > totalPayloadSize ? totalPayloadSize : endIndex;
+				const chunk = body.subarray(currentBytePosition, safeEndIndex);
+				console.log('chunksize', chunk.length, currentBytePosition, endIndex);
 				const outgoingPacket = assign({
 					pid: id
 				}, responsePacketTemplate);
@@ -134,22 +140,27 @@ export class Reply {
 					if (incomingDataEncoding) {
 						outgoingPacket.de = incomingDataEncoding;
 					}
-					outgoingPacket.pt = packetLength;
+					outgoingPacket.tps = totalPayloadSize;
 				}
-				const thisPacketsOverhead = (thisReply.packetOverhead + encode([null, outgoingPacket]).length);
-				const thisPacketsFreeSpace = maxPacketSize - thisPacketsOverhead;
-				console.log('This packets overhead', thisPacketsOverhead, thisPacketsFreeSpace);
-				outgoingPacket.body = item;
+				outgoingPacket.body = chunk;
 				thisReply.outgoingPackets[id] = outgoingPacket;
-			});
+				if (endIndex >= totalPayloadSize) {
+					outgoingPacket.cmplt = true;
+					break;
+				}
+				currentBytePosition = currentBytePosition + packetMaxPayloadSafeEstimate;
+				id++;
+			}
 		} else {
 			if (incomingDataEncoding) {
 				response.de = incomingDataEncoding;
 			}
 			response.pid = 0;
 			response.pt = 1;
+			response.cmplt = true;
 			thisReply.outgoingPackets[0] = response;
 		}
+		console.log('buildReplyPackets', thisReply.outgoingPackets);
 	}
 	// incomingDataEncoding types: json, stream, file,
 	async send(incomingDataEncoding) {
@@ -185,6 +196,7 @@ export class Reply {
 	}
 	async received(message) {
 		const thisReply = this;
+		thisReply.lastPacketTime = Date.now();
 		const {
 			body,
 			head,
