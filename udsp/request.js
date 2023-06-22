@@ -5,7 +5,7 @@ import { promise, construct, omit } from '@universalweb/acid';
 import { Ask } from './ask.js';
 imported('Request');
 export async function request(act, body, options = {}) {
-	const client = this;
+	const source = this;
 	const {
 		headers,
 		footer,
@@ -26,8 +26,7 @@ export async function request(act, body, options = {}) {
 		headers,
 		footer,
 		options: omit(options, ['footer', 'headers']),
-		isClient: true,
-		client
+		source
 	}]);
 	return ask.fetch();
 }

@@ -6,7 +6,7 @@ import path from 'path';
 const dots = /\./g;
 /**
  *
- * @todo Include file size & other metadata as mandatory single packet data.
+ * @todo Include file size & other metadata as mandatory single packet data. In the head section first so that it can be built and prepared before the data begins sending. After head completes it can then proceed with the data.
  */
 const cache = {};
 // This is for small static resource files only which could be loaded into memory or could be loaded in on the fly and then discarded or cached.

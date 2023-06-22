@@ -8,8 +8,12 @@ export async function sendPacket(packetConfig) {
 	success(`SENDING MESSAGE`);
 	// console.log(packetConfig);
 	const {
-		source, source: {
-			server, isClient, isServer, isServerClient
+		source,
+		source: {
+			server,
+			isClient,
+			isServer,
+			isServerClient
 		}
 	} = packetConfig;
 	const destination = packetConfig.destination || packetConfig.source.destination;

@@ -24,8 +24,8 @@ const domainProfile = await createProfile({
 				// The purpose of encrypting connection IDs is to eliminate CID tracking and to constantly change how the CID looks.
 				// Encrypting CIDs protects against leaking smart CID routing information which show the endpoint server/process.
 				// encryptConnectionId: 'sealedbox', Applies to both client and server connection ID
-				encryptClientConnectionId: 'sealedbox',
-				encryptServerConnectionId: 'sealedbox',
+				// encryptClientConnectionId: 'sealedbox',
+				// encryptServerConnectionId: 'sealedbox',
 				connectionIdKeypair: true,
 				// Encrypt public key sent in the packet
 				encryptClientKey: 'sealedbox',
@@ -33,7 +33,7 @@ const domainProfile = await createProfile({
 				encryptKeypair: true
 			},
 			// Max connection id size in bytes
-			connectionIdSize: 56,
+			// connectionIdSize: 56,
 			// Max Payload size
 			maxPayloadSize: 900,
 			ip: '::1',
