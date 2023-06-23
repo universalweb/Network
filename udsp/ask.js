@@ -11,23 +11,20 @@ import { decode, encode } from 'msgpackr';
 import {
 	failed, info, msgReceived, msgSent
 } from '#logs';
-import { flushOutgoing, flushIncoming, flush } from './request/flush.js';
-import { sendPacket } from './request/sendPacket';
 import { destroy } from './request/destory';
-import { bufferToOutgoingPackets } from './request/bufferToOutgoingPackets';
-import { sendCompleted } from './request/sendCompleted';
-import { on } from './request/on';
-import { initiate } from './request/fetch';
+import { assembleData } from './request/assembleData';
+import { Base } from './request/base';
 const dataEncodingTypesChunked = /stream|file|image|string/;
-const dataEncodingTypesStructured = /json|Packetpack|struct|/;
+const dataEncodingTypesStructured = /json|msgpack|struct|/;
 /**
  * @todo Prepare Request into singular object.
  * @todo Chunk body data while adding packit number to it.
  * @todo Send all chunks (consider sending pkt1 twice).
  * @todo
  */
-export class Ask {
+export class Ask extends Base {
 	constructor(config) {
+		super(config);
 		const {
 			message,
 			head,
@@ -37,13 +34,13 @@ export class Ask {
 			headers,
 			footer,
 			sourceContext,
+			isClient
 		} = config;
 		const thisAsk = this;
 		const {
 			queue,
 			packetIdGenerator,
-			maxPacketSize,
-			isClient
+			maxPacketSize
 		} = source;
 		let request;
 		if (message) {
@@ -59,10 +56,10 @@ export class Ask {
 			}
 		}
 		if (headers) {
-			thisAsk.headers = headers;
+			this.headers = headers;
 		}
 		if (footer) {
-			thisAsk.footer = footer;
+			this.footer = footer;
 		}
 		const timeStamp = Date.now();
 		thisAsk.created = timeStamp;
@@ -82,46 +79,17 @@ export class Ask {
 			onData,
 		});
 		this.maxPacketSize = maxPacketSize;
-		queue.set(streamId, thisAsk);
-		return thisAsk;
+		queue.set(streamId, this);
 	}
-	destroy = destroy;
-	sendCompleted = sendCompleted;
-	sendPacket = sendPacket;
-	bufferToOutgoingPackets = bufferToOutgoingPackets;
-	on = on;
-	fetch = initiate;
-	currentPayloadSize = 0;
-	progress = 0;
+	async assemble() {
+		const { incomingDataEncoding } = this;
+		await assembleData(this.data, this.response, incomingDataEncoding);
+		console.log('Assemble', this.response.body);
+		await this.accept(this);
+		this.destroy();
+	}
 	isAsk = true;
 	type = 'ask';
-	request = {};
-	response = {};
-	// this is the data in order may have missing packets at times but will remain in order
-	data = [];
-	// This is as the data came in over the wire out of order
-	stream = [];
-	events = {};
-	headers = {};
-	options = {};
-	outgoingPackets = [];
-	incomingPackets = [];
-	incomingAks = [];
-	incomingNacks = [];
-	outgoingAcks = [];
-	outgoingNacks = [];
-	totalReceivedUniquePackets = 0;
-	totalOutgoingPackets = 0;
-	totalOutgoingPayloadSize = 0;
-	// Must be checked for uniqueness
-	totalSentConfirmedPackets = 0;
-	totalIncomingPayloadSize = 0;
-	// Must be checked for uniqueness
-	totalReceivedPackets = 0;
-	/* `state = 0;` is initializing the `state` property of the `Ask` class to `0`. This property is used
-	to keep track of the state of the request, where `0` represents an unsent request, `1` represents a
-	request that is currently being sent, and `2` represents a completed request. */
-	state = 0;
 }
 export async function ask(source) {
 	return construct(Ask, omit);

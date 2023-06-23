@@ -3,14 +3,17 @@ import http from 'https';
 const hostname = '127.0.0.1';
 const port = 8888;
 import fs from 'fs';
+import { currentPath } from '@universalweb/acid';
+const dirname = currentPath(import.meta);
 const options = {
-	key: fs.readFileSync(`${__dirname}/key.pem`),
-	cert: fs.readFileSync(`${__dirname}/cert.pem`)
+	key: fs.readFileSync(`${currentPath(import.meta)}/key.pem`),
+	cert: fs.readFileSync(`${currentPath(import.meta)}/cert.pem`)
 };
+const indexFile = fs.readFileSync(`${currentPath(import.meta)}/../../serverApp/resources/index.html`);
 const server = http.createServer(options, (req, res) => {
 	res.statusCode = 200;
 	res.setHeader('Content-Type', 'text/plain');
-	res.end(`TESTING`);
+	res.end(indexFile);
 });
 server.listen(port, hostname, () => {
 	console.log(`Server running at https://${hostname}:${port}/`);

@@ -8,18 +8,13 @@ import {
 import { processEvent } from '#udsp/processEvent';
 const incomingDataEncodingTypesChunked = /stream|file|image|binary|string/;
 import { flushOutgoing, flushIncoming, flush } from './request/flush.js';
-import { destroy } from './request/destory';
-import { bufferToArrayChunks } from './request/bufferToArrayChunks';
-import { buildReplyPackets } from './request/bufferToPackets';
-import { send } from './request/sendPackets';
-import { sendPacketsById } from './request/sendPacketsById';
-import { sendOutgoing } from './request/sendOutgoing';
-import { onPacket } from './request/onPacket';
+import { Base } from './request/base.js';
 /**
 	* @todo Add promise to send use the method that Ask uses assign the accept, return it, and when completed execute.
 */
-export class Reply {
+export class Reply extends Base {
 	constructor(request, source) {
+		super(request, source);
 		const thisReply = this;
 		const { message } = request;
 		const { sid } = message;
@@ -56,44 +51,6 @@ export class Reply {
 		processEvent(this);
 	};
 	isReply = true;
-	headers = {};
-	options = {};
-	// Incoming
-	request = {};
-	response = {};
-	responsePacketTemplate = {};
-	incomingPackets = [];
-	incomingChunks = [];
-	totalIncomingPackets = 0;
-	totalIncomingPayloadSize = 0;
-	// Must be checked for uniqueness
-	totalReceivedPackets = 0;
-	// Outgoing
-	outgoingPayload = {};
-	outgoingPackets = [];
-	outgoingAcks = [];
-	outgoingNacks = [];
-	outgoingChunks = [];
-	totalOutgoingPackets = 0;
-	totalOutgoingPayloadSize = 0;
-	/*
-		0 Created
-		1 Receiving
-		2 Received
-		3 Sending
-		4 Sent
-		5 Acknowledged
-		6 Completed
-	*/
-	state = 0;
-	flushIncoming = flushIncoming;
-	flush = flush;
-	destroy = destroy;
-	// incomingDataEncoding types: json, stream, file,
-	send = send;
-	sendPacketsById = sendPacketsById;
-	sendOutgoing = sendOutgoing;
-	onPacket = onPacket;
 	async assemble() {
 		const thisReply = this;
 		const { incomingDataEncoding } = thisReply;
