@@ -8,7 +8,7 @@ import {
 imported('Client ProcessMessage');
 export async function processMessage(packet, client) {
 	const {
-		headers,
+		header,
 		message,
 		footer
 	} = packet;

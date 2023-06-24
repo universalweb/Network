@@ -15,7 +15,7 @@ export async function opn(reply) {
 	const response = reply.response;
 	info(`Server ID${client.idString}`, `Client ID${client.clientIdString}`, `Stream ID${response.sid}`);
 	response.head = {};
-	response.body = {
+	response.data = {
 		sid: server.id
 	};
 	client.newKey = true;
@@ -38,7 +38,7 @@ export async function opn(reply) {
 		response.head.language = language;
 	}
 	if (onConnectResponse) {
-		response.body.response = onConnectResponse;
+		response.data.response = onConnectResponse;
 	}
 	// connection status - backwards compatibility
 	response.state = 1;

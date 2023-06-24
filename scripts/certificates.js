@@ -57,6 +57,11 @@ const domainProfile = await createProfile({
 				// When publicKey is set to true it will use the public key in the certificate as the main Viat wallet for the domain. If a string is provided then it would be the main wallet for the domain.
 				publicKey: true
 			},
+			// This allows a browser or connection to use the realtime mode for the UDSP connection
+			realtime: true,
+			// blocked methods mean methods the server doesn't permit
+			// blockedMethods: ['open'],
+			allowedMethods: ['get', 'connect', 'open', 'close'],
 			compression: true,
 			headerCompression: true,
 			autoLogin: true,

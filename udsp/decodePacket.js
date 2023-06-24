@@ -36,27 +36,27 @@ export async function decodePacketHeaders(config) {
 	const packet = decode(packetEncoded);
 	config.packet = packet;
 	info(`Packet Decoded Array Size ${packet.length}`);
-	const headersEncoded = packet[0];
-	info(`headersEncoded Size ${headersEncoded.length}`);
-	if (!headersEncoded) {
-		return failed(`No headers -> Invalid Packet`);
+	const headerEncoded = packet[0];
+	info(`headerEncoded Size ${headerEncoded.length}`);
+	if (!headerEncoded) {
+		return failed(`No header -> Invalid Packet`);
 	}
 	// Add single header support which holds only the binary data of the packet.id
-	const headers = decode(headersEncoded);
-	if (!headers) {
-		return failed(`No headers -> Invalid Packet`);
+	const header = decode(headerEncoded);
+	if (!header) {
+		return failed(`No header -> Invalid Packet`);
 	}
 	let headerIdEncoded;
-	const isHeadersBuffer = isBuffer(headers);
+	const isHeadersBuffer = isBuffer(header);
 	if (isHeadersBuffer) {
-		headerIdEncoded = headers;
+		headerIdEncoded = header;
 		info('Headers are in single header format');
 	} else {
-		headerIdEncoded = headers.id;
-		info(`headers.id: ${toBase64(headers.id)}`);
+		headerIdEncoded = header.id;
+		info(`header.id: ${toBase64(header.id)}`);
 	}
 	if (!headerIdEncoded) {
-		return failed(`No connection id in headers -> Invalid Packet`);
+		return failed(`No connection id in header -> Invalid Packet`);
 	}
 	let headerId;
 	if (encryptConnectionId) {
@@ -75,43 +75,43 @@ export async function decodePacketHeaders(config) {
 		info(`clientId: ${toBase64(headerId)}`);
 		if (isHeadersBuffer) {
 			config.packetDecoded = {
-				headers: headerId
+				header: headerId
 			};
 			return true;
 		} else {
-			headers.id = headerId;
+			header.id = headerId;
 		}
-	} else if (!headers?.id && !headers) {
+	} else if (!header?.id && !header) {
 		return failed(`No ID -> Invalid Packet`);
 	}
-	if (headers.key) {
+	if (header.key) {
 		success(`Public Key is given -> Processing as create client`);
 		console.log(toBase64(encryptKeypair.publicKey));
 		const {
 			encryptClientKey,
 			encryptServerKey
 		} = cryptography.config;
-		let publicKey = headers.key;
+		let publicKey = header.key;
 		if (isClient) {
 			if (encryptClientKey === 'sealedbox') {
-				publicKey = cryptography.decryptServerKey(headers.key, destination.encryptKeypair);
+				publicKey = cryptography.decryptServerKey(header.key, destination.encryptKeypair);
 			}
 		}
 		if (isServerEnd) {
 			if (encryptServerKey === 'sealedbox') {
-				publicKey = cryptography.decryptClientKey(headers.key, destination.encryptKeypair);
+				publicKey = cryptography.decryptClientKey(header.key, destination.encryptKeypair);
 			}
 		}
 		if (!publicKey) {
 			return failed('Client Key Decrypt Failed');
 		}
-		headers.key = publicKey;
+		header.key = publicKey;
 	} else {
 		success(`No Public Key is given -> Processing as a message`);
 	}
-	// console.log(headers);
+	// console.log(header);
 	config.packetDecoded = {
-		headers
+		header
 	};
 	return true;
 }
@@ -121,7 +121,7 @@ export async function decodePacket(config) {
 		destination,
 		packet,
 		packetDecoded,
-		packetDecoded: { headers, }
+		packetDecoded: { header, }
 	} = config;
 	const { cryptography, } = destination;
 	const footer = packet[2] && decode(packet[2]);
@@ -145,8 +145,8 @@ export async function decodePacket(config) {
 	if (message.head) {
 		console.log('head PAYLOAD', message.head);
 	}
-	if (message.body) {
-		success('body PAYLOAD', message.body.length);
+	if (message.data) {
+		success('data PAYLOAD', message.data.length);
 	}
 	packetDecoded.message = message;
 	return true;

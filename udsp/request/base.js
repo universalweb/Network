@@ -1,24 +1,43 @@
 import { sendPacket } from './sendPacket.js';
 import { destroy } from './destory.js';
-import { bufferToOutgoingPackets } from './bufferToOutgoingPackets.js';
-import { sendCompleted } from './sendCompleted.js';
+import { bufferPacketization } from './bufferPacketization.js';
+import { sendEnd } from './sendEnd.js';
 import { on } from './on.js';
-import { initiate } from './fetch.js';
-import { flushOutgoing, flushIncoming, flush } from './request/flush.js';
+import { flushOutgoing, flushIncoming, flush } from './flush.js';
 import { sendPacketsById } from './sendPacketsById.js';
-import { sendOutgoing } from './sendOutgoing.js';
+import { sendAll } from './sendAll.js';
 import { onPacket } from './onPacket.js';
 export class Base {
+	constructor(config, source) {
+		const { events } = config;
+		const timeStamp = Date.now();
+		this.created = timeStamp;
+		this.source = function() {
+			return source;
+		};
+		const {
+			queue,
+			packetIdGenerator,
+			maxPacketSize
+		} = source;
+		if (events) {
+			this.on(events);
+		}
+		if (maxPacketSize) {
+			this.maxPacketSize = maxPacketSize;
+		}
+	}
 	destroy = destroy;
-	sendCompleted = sendCompleted;
+	sendEnd = sendEnd;
 	sendPacketsById = sendPacketsById;
-	sendOutgoing = sendOutgoing;
+	sendAll = sendAll;
 	onPacket = onPacket;
 	sendPacket = sendPacket;
-	bufferToOutgoingPackets = bufferToOutgoingPackets;
+	bufferPacketization = bufferPacketization;
 	on = on;
-	fetch = initiate;
 	currentPayloadSize = 0;
+	totalReceivedUniquePackets = 0;
+	totalIncomingUniquePackets = 0;
 	progress = 0;
 	request = {};
 	response = {};
@@ -27,7 +46,7 @@ export class Base {
 	// This is as the data came in over the wire out of order
 	stream = [];
 	events = {};
-	headers = {};
+	header = {};
 	options = {};
 	outgoingPackets = [];
 	incomingPackets = [];
@@ -35,7 +54,6 @@ export class Base {
 	incomingNacks = [];
 	outgoingAcks = [];
 	outgoingNacks = [];
-	totalReceivedUniquePackets = 0;
 	totalOutgoingPackets = 0;
 	totalOutgoingPayloadSize = 0;
 	// Must be checked for uniqueness

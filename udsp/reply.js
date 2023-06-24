@@ -7,7 +7,6 @@ import {
 } from '#logs';
 import { processEvent } from '#udsp/processEvent';
 const incomingDataEncodingTypesChunked = /stream|file|image|binary|string/;
-import { flushOutgoing, flushIncoming, flush } from './request/flush.js';
 import { Base } from './request/base.js';
 /**
 	* @todo Add promise to send use the method that Ask uses assign the accept, return it, and when completed execute.
@@ -23,8 +22,6 @@ export class Reply extends Base {
 			queue,
 			packetIdGenerator
 		} = source;
-		const timeStamp = Date.now();
-		thisReply.t = timeStamp;
 		thisReply.source = function() {
 			return source;
 		};
@@ -47,9 +44,6 @@ export class Reply extends Base {
 		thisReply.received(message);
 		return thisReply;
 	}
-	processRequest = function() {
-		processEvent(this);
-	};
 	isReply = true;
 	async assemble() {
 		const thisReply = this;
@@ -59,17 +53,17 @@ export class Reply extends Base {
 		}
 		const packet = thisReply.incomingPackets[0];
 		eachArray(thisReply.incomingPackets, (item) => {
-			if (item.body) {
-				Buffer.concat([packet.body, item.body]);
+			if (item.data) {
+				Buffer.concat([packet.data, item.data]);
 			}
 		});
 		if (incomingDataEncoding === 'struct' || !incomingDataEncoding) {
 			msgReceived(thisReply.request);
-			if (thisReply.request.body) {
-				thisReply.request.body = decode(thisReply.request.body);
+			if (thisReply.request.data) {
+				thisReply.request.data = decode(thisReply.request.data);
 			}
 		}
-		await thisReply.processRequest();
+		await processEvent(this);
 	}
 }
 export function reply(packet, client) {

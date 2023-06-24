@@ -20,8 +20,8 @@ export async function file(reply) {
 		response,
 		request
 	} = reply;
-	info(request.body);
-	const { path: requestPath } = request.body;
+	info(request.data);
+	const { path: requestPath } = request.data;
 	if (!isString(requestPath) || isEmpty(requestPath) || requestPath.match(dots).length > 1) {
 		console.log('No valid state request received - Returning empty data');
 		response.code = 404;
@@ -36,7 +36,7 @@ export async function file(reply) {
 	const ext = path.extname(cleanedPath).replace('.', '');
 	console.log(`EXT => ${ext}`);
 	response.ext = ext;
-	response.body = data;
+	response.data = data;
 	// checksum: cryptography.hash(data)
 	reply.send('binary');
 }

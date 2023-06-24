@@ -2,15 +2,17 @@ export async function onData(message) {
 	console.log('On Data event');
 	const {
 		pid,
-		body
+		data
 	} = message;
-	this.data[pid] = body;
-	this.currentPayloadSize += body.length;
+	this.data[pid] = data;
+	this.currentPayloadSize += data.length;
 	if (this.totalIncomingPayloadSize) {
-		this.progress = this.totalIncomingPayloadSize / this.currentPayloadSize;
+		if (this.currentPayloadSize > 0) {
+			this.progress = (this.currentPayloadSize / this.totalIncomingPayloadSize) * 100;
+		}
 		console.log('Progress', this.progress);
 	}
 	if (this.events.data) {
-		this.events.data(body, pid);
+		this.events.data(data, pid);
 	}
 }

@@ -1,9 +1,16 @@
-import { each } from '@universalweb/acid';
-export async function on(events) {
-	const thisAsk = this;
-	each(events, (item, propertyName) => {
-		thisAsk.events[propertyName] = (data) => {
-			return item.call(thisAsk, data);
+import { each, isString } from '@universalweb/acid';
+export async function on(events, eventMethod) {
+	const thisObject = this;
+	if (isString(events)) {
+		this.events[events] = (data) => {
+			return eventMethod.call(thisObject, data);
 		};
-	});
+	} else {
+		each(events, (item, propertyName) => {
+			thisObject.events[propertyName] = (data) => {
+				return item.call(thisObject, data);
+			};
+		});
+	}
+	return this;
 }

@@ -38,10 +38,12 @@ import { emit } from './emit.js';
 import { request } from '#udsp/request';
 import { cryptography } from '#udsp/cryptography';
 import { processMessage } from './processMessage.js';
-import { onMessage } from './onPacket.js';
+import { onPacket } from './onPacket.js';
 import { connect as clientConnect } from './connect.js';
 import { onListening } from './listening.js';
 import { keychainGet } from '#keychain';
+import { Ask } from '../ask.js';
+import { fetchRequest } from '../fetch.js';
 // UNIVERSAL WEB Client Class
 export class Client {
 	constructor(configuration) {
@@ -141,7 +143,7 @@ export class Client {
 			return thisClient.onListening();
 		});
 		this.socket.on('message', (packet, rinfo) => {
-			return thisClient.onMessage(packet, rinfo);
+			return thisClient.onPacket(packet, rinfo);
 		});
 	}
 	async initialize(configuration) {
@@ -173,20 +175,24 @@ export class Client {
 		this.socket.close();
 		Client.connections.delete(this.id);
 	}
+	ask(message) {
+		const ask = construct(Ask, [message, this]);
+		return ask;
+	}
 	connect = clientConnect;
 	send = send;
 	request = request;
+	fetch = fetchRequest;
 	processMessage = processMessage;
 	emit = emit;
 	onListening = onListening;
-	onMessage = onMessage;
+	onPacket = onPacket;
 	destination = {};
 	autoConnect = true;
 	type = 'client';
 	isClient = true;
 	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
 	descriptor = 'UWClient';
-	encoding = 'binary';
 	maxPacketSize = 1328;
 	connectionIdSize = 8;
 	static connections = new Map();
@@ -195,9 +201,10 @@ export class Client {
 	queue = new Map();
 	packetIdGenerator = construct(UniqID);
 }
-export async function client(configuration, ignoreConnections) {
+export async function client(configuration) {
 	console.log('Create Client');
 	const uwClient = await construct(Client, [configuration]);
 	return uwClient;
 }
+// Add the request export here for simple auto connect and then just grab contents to return
 export { getCertificate };

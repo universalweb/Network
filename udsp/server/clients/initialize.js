@@ -13,7 +13,7 @@ import { Client } from './index.js';
 export async function initialize(config, client) {
 	const {
 		packet: {
-			headers: {
+			header: {
 				id: clientId,
 				key: publicKey
 			},

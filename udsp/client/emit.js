@@ -2,7 +2,7 @@ import {
 	success, failed, imported, msgSent, info
 } from '#logs';
 imported('Emit');
-export async function emit(evnt, body) {
+export async function emit(evnt, data) {
 	const thisContext = this;
 	const { packetIdGenerator } = thisContext;
 	info(`Emitted`);
@@ -10,7 +10,7 @@ export async function emit(evnt, body) {
 	const message = {
 		evnt,
 		eid,
-		body
+		data
 	};
 	return thisContext.send(message);
 }

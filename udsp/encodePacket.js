@@ -17,7 +17,7 @@ export async function encodePacket(config) {
 	const {
 		source,
 		packet: {
-			headers = {},
+			header = {},
 			message,
 			footer,
 			options
@@ -55,51 +55,51 @@ export async function encodePacket(config) {
 			return console.error(`Connection ID Encrypt failed method given ${encryptConnectionId}`);
 		}
 	}
-	headers.id = id;
+	header.id = id;
 	message.t = Date.now();
 	if (isClient) {
 		if (state === 0) {
 			console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(destination.encryptKeypair.publicKey));
-			if (!headers.key) {
-				headers.key = source.encryptKeypair.publicKey;
+			if (!header.key) {
+				header.key = source.encryptKeypair.publicKey;
 			}
 		}
 	}
-	if (headers.key) {
+	if (header.key) {
 		const {
 			encryptClientKey,
 			encryptServerKey
 		} = cryptography.config;
 		if (isClient) {
 			if (encryptClientKey === 'sealedbox') {
-				headers.key = cryptography.encryptClientKey(headers.key, destination.encryptKeypair);
+				header.key = cryptography.encryptClientKey(header.key, destination.encryptKeypair);
 			}
 		}
 		if (isServerEnd) {
 			if (encryptServerKey === 'sealedbox') {
-				headers.key = cryptography.encryptServerKey(headers.key, destination.encryptKeypair);
+				header.key = cryptography.encryptServerKey(header.key, destination.encryptKeypair);
 			}
 		}
 	}
 	if (options) {
 		console.log('Packet Options', options);
 	}
-	const headersEncoded = (objectSize(headers) === 1 && headers.id) ? encode(id) : encode(headers);
+	const headerEncoded = (objectSize(header) === 1 && header.id) ? encode(id) : encode(header);
 	const messageEncoded = encode(message);
-	const ad = (footer) ? Buffer.concat([headersEncoded, footer]) : headersEncoded;
+	const ad = (footer) ? Buffer.concat([headerEncoded, footer]) : headerEncoded;
 	const encryptedMessage = cryptography.encrypt(messageEncoded, source.sessionKeys, ad);
 	if (!encryptedMessage) {
 		return failed('Encryption failed');
 	}
-	const packetStructure = [headersEncoded, encryptedMessage];
+	const packetStructure = [headerEncoded, encryptedMessage];
 	if (footer) {
 		packetStructure[2] = encode(footer);
 	}
 	const packet = encode(packetStructure);
-	info(`clientId: ${toBase64(headers.id)}`);
+	info(`clientId: ${toBase64(header.id)}`);
 	info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
 	const packetSize = packet.length;
-	console.log('Size Unencrypted', encode([headersEncoded, messageEncoded]).length);
+	console.log('Size Unencrypted', encode([headerEncoded, messageEncoded]).length);
 	info(`encoded Packet Size ${packetSize}`);
 	if (packetSize >= 1328) {
 		console.log(packet);

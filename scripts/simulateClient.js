@@ -16,17 +16,25 @@ const uwClient = await client({
 console.timeEnd('Connected');
 // console.log('INTRO =>', uwClient);
 console.time('FileRequest');
-const fileRequest = await uwClient.request('file', {
-	path: 'index.html'
-}, {
-	onData(data) {
-		console.log('onData', data);
+const fileRequest = await uwClient.request({
+	method: 'get',
+	data: {
+		path: 'index.html'
 	}
 });
+// Get Method
+fileRequest.on({
+	data(...args) {
+		console.log('onData for simulate client', ...args);
+	}
+});
+const response = await fileRequest.fetch();
+console.log(response.data);
 console.timeEnd('FileRequest');
+const fileFetch = await uwClient.fetch('index.html');
+console.log(fileFetch.toString());
 console.timeEnd('Full');
 // console.log('Request state', fileRequest);
-console.log(fileRequest.response.body.toString());
 /** */
 // await uwClient.request('event', {
 // 	head: {

@@ -1,11 +1,11 @@
 import { hasValue } from '@universalweb/acid';
-import { destroy } from './destory';
+import { destroy } from './destory.js';
 export async function onPacket(packet) {
 	const source = this;
 	source.lastPacketTime = Date.now();
 	const { message } = packet;
 	const {
-		body,
+		data,
 		head,
 		// Stream ID
 		sid: streamId,
@@ -20,14 +20,15 @@ export async function onPacket(packet) {
 		// Data Encoding
 		de: incomingDataEncoding,
 		// Complete
-		cmplt,
+		done,
 		// Finale Packet
 		finale,
 		// Acknowledgement
 		ack,
 		// Negative Acknowledgement
 		nack,
-		err
+		err,
+		end
 	} = message;
 	console.log(`Stream Id ${streamId}`);
 	if (hasValue(totalIncomingUniquePackets)) {
@@ -39,27 +40,25 @@ export async function onPacket(packet) {
 	if (incomingDataEncoding) {
 		source.incomingDataEncoding = incomingDataEncoding;
 	}
-	source.totalReceivedPackets++;
+	source.totalIncomingPackets++;
 	if (hasValue(packetId)) {
 		if (!source.incomingPackets[packetId]) {
 			source.incomingPackets[packetId] = message;
-			if (body) {
+			if (data) {
 				await this.onData(message);
 			}
 			source.totalReceivedUniquePackets++;
 		}
-	} else {
-		source.incomingPackets[0] = message;
-		source.totalReceivedUniquePackets = 1;
-		source.totalIncomingUniquePackets = 1;
 	}
-	if (cmplt) {
-		source.state = 2;
+	if (end) {
+		if (source.totalIncomingUniquePackets === source.totalReceivedUniquePackets) {
+			source.state = 2;
+		}
 	}
 	if (err) {
 		return this.destroy(err);
 	}
-	if (source.state === 2 || cmplt) {
+	if (source.state === 2 || end) {
 		source.assemble();
 	}
 	console.log('On Packet event', source);

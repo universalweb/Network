@@ -206,7 +206,7 @@ class Cryptography {
 		return this.hashMinMethod(...args);
 	}
 	generateConnectionID() {
-		const target = randomConnectionId(this.conifg.connectionIdSize || 8);
+		const target = randomConnectionId(this.config.connectionIdSize || 8);
 		return target;
 	}
 	signKeypair(...args) {

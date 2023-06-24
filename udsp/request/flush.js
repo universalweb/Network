@@ -15,7 +15,7 @@ export function flushIncoming() {
 	this.totalOutgoingPayloadSize = null;
 	this.totalReceivedPackets = null;
 }
-// Flush all body
+// Flush all data
 export function flush() {
 	this.flushOutgoing();
 	this.flushIncoming();
