@@ -7,6 +7,9 @@ import { flushOutgoing, flushIncoming, flush } from './flush.js';
 import { sendPacketsById } from './sendPacketsById.js';
 import { sendAll } from './sendAll.js';
 import { onPacket } from './onPacket.js';
+import { isBuffer, isPlainObject, isString } from '@universalweb/acid';
+import { encode } from 'msgpackr';
+import { request } from '#udsp/request';
 export class Base {
 	constructor(config, source) {
 		const { events } = config;
@@ -27,6 +30,39 @@ export class Base {
 			this.maxPacketSize = maxPacketSize;
 		}
 	}
+	code(codeNumber) {
+		if (this.isAsk) {
+			this.request.head.code = codeNumber;
+		} else {
+			this.response.head.code = codeNumber;
+		}
+	}
+	setHeader(headerName, headerValue) {
+		if (this.isAsk) {
+			if (!this.request.head) {
+				this.request.head = {};
+			}
+			this.request.head[headerName] = headerValue;
+		}
+	}
+	writeHeader(headerName, headerValue) {
+		if (this.isReply) {
+			if (!this.response.head) {
+				this.response.head = {};
+			}
+			this.response.head[headerName] = headerValue;
+		}
+	}
+	dataToBuffer(data) {
+		if (isBuffer(data)) {
+			return data;
+		}
+		if (isPlainObject(data)) {
+			this.contentType = 1;
+			return encode(data);
+		}
+		return Buffer.from(data);
+	}
 	destroy = destroy;
 	sendEnd = sendEnd;
 	sendPacketsById = sendPacketsById;
@@ -39,8 +75,14 @@ export class Base {
 	totalReceivedUniquePackets = 0;
 	totalIncomingUniquePackets = 0;
 	progress = 0;
-	request = {};
-	response = {};
+	request = {
+		head: {},
+		body: {}
+	};
+	response = {
+		head: {},
+		body: {}
+	};
 	// this is the data in order may have missing packets at times but will remain in order
 	data = [];
 	// This is as the data came in over the wire out of order

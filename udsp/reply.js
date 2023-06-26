@@ -6,7 +6,6 @@ import {
 	success, failed, info, msgReceived, msgSent
 } from '#logs';
 import { processEvent } from '#udsp/processEvent';
-const incomingDataEncodingTypesChunked = /stream|file|image|binary|string/;
 import { Base } from './request/base.js';
 /**
 	* @todo Add promise to send use the method that Ask uses assign the accept, return it, and when completed execute.
@@ -47,7 +46,7 @@ export class Reply extends Base {
 	isReply = true;
 	async assemble() {
 		const thisReply = this;
-		const { incomingDataEncoding } = thisReply;
+		const { contentType } = thisReply;
 		if (thisReply.totalIncomingPackets === 1) {
 			thisReply.request = thisReply.incomingPackets[0];
 		}
@@ -57,7 +56,7 @@ export class Reply extends Base {
 				Buffer.concat([packet.data, item.data]);
 			}
 		});
-		if (incomingDataEncoding === 'struct' || !incomingDataEncoding) {
+		if (contentType === 'struct' || !contentType) {
 			msgReceived(thisReply.request);
 			if (thisReply.request.data) {
 				thisReply.request.data = decode(thisReply.request.data);

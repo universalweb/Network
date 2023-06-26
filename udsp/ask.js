@@ -15,8 +15,6 @@ import { assembleData } from './request/assembleData.js';
 import { Base } from './request/base.js';
 import { bufferPacketization } from './request/bufferPacketization.js';
 import { request } from '#udsp/request';
-const dataEncodingTypesChunked = /stream|file|image|string/;
-const dataEncodingTypesStructured = /json|msgpack|struct|/;
 export class Ask extends Base {
 	constructor(config, source) {
 		super(config, source);
@@ -38,34 +36,40 @@ export class Ask extends Base {
 		queue.set(streamId, this);
 	}
 	async assemble() {
-		const { incomingDataEncoding } = this;
+		const { contentType } = this;
 		if (this.data) {
-			this.data = await assembleData(this.data, this.response, incomingDataEncoding);
+			this.data = await assembleData(this.data, this.response, contentType);
 			console.log('Assembled', this.data);
 		}
 		this.destroy();
 		await this.accept(this);
 	}
-	async send() {
+	async send(data) {
 		const thisAsk = this;
 		const {
 			packetTemplate,
-			dataEncoding,
+			contentType,
 			maxPacketSize,
 			sid
 		} = this;
+		if (data) {
+			this.request.data = data;
+		}
 		console.log('Reply.send', this.response);
-		if (this.response.data) {
-			if (!isBuffer(this.response.data)) {
-				this.response.data = encode(this.response.data);
+		if (this.request.data) {
+			if (!isBuffer(this.request.data)) {
+				this.request.data = this.dataToBuffer(this.request.data);
 			}
 			this.totalReplyDataSize = request.data?.length;
 		}
-		await bufferPacketization(this.request.data, sid, this.outgoingPackets, maxPacketSize, dataEncoding);
-		thisAsk.sendAll();
+		if (this.contentType) {
+			this.request.head.contentType = this.contentType;
+		}
+		await bufferPacketization(this.request.data, sid, this.outgoingPackets, maxPacketSize, contentType);
 		const awaitingResult = promise((accept) => {
 			thisAsk.accept = accept;
 		});
+		thisAsk.sendAll();
 		return awaitingResult;
 	}
 	isAsk = true;

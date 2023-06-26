@@ -2,7 +2,7 @@ import { hasValue } from '@universalweb/acid';
 import { destroy } from './destory.js';
 export async function onPacket(packet) {
 	const source = this;
-	source.lastPacketTime = Date.now();
+	this.lastPacketTime = Date.now();
 	const { message } = packet;
 	const {
 		data,
@@ -17,8 +17,8 @@ export async function onPacket(packet) {
 		pt: totalIncomingUniquePackets,
 		// Dat payload size
 		tps: totalIncomingPayloadSize,
-		// Data Encoding
-		de: incomingDataEncoding,
+		// contentType
+		ct: contentType,
 		// Complete
 		done,
 		// Finale Packet
@@ -32,34 +32,34 @@ export async function onPacket(packet) {
 	} = message;
 	console.log(`Stream Id ${streamId}`);
 	if (hasValue(totalIncomingUniquePackets)) {
-		source.totalIncomingUniquePackets = totalIncomingUniquePackets;
+		this.totalIncomingUniquePackets = totalIncomingUniquePackets;
 	}
 	if (hasValue(totalIncomingPayloadSize)) {
-		source.totalIncomingPayloadSize = totalIncomingPayloadSize;
+		this.totalIncomingPayloadSize = totalIncomingPayloadSize;
 	}
-	if (incomingDataEncoding) {
-		source.incomingDataEncoding = incomingDataEncoding;
+	if (contentType) {
+		this.contentType = contentType;
 	}
-	source.totalIncomingPackets++;
+	this.totalIncomingPackets++;
 	if (hasValue(packetId)) {
-		if (!source.incomingPackets[packetId]) {
-			source.incomingPackets[packetId] = message;
+		if (!this.incomingPackets[packetId]) {
+			this.incomingPackets[packetId] = message;
 			if (data) {
 				await this.onData(message);
 			}
-			source.totalReceivedUniquePackets++;
+			this.totalReceivedUniquePackets++;
 		}
 	}
 	if (end) {
-		if (source.totalIncomingUniquePackets === source.totalReceivedUniquePackets) {
-			source.state = 2;
+		if (this.totalIncomingUniquePackets === this.totalReceivedUniquePackets) {
+			this.state = 2;
 		}
 	}
 	if (err) {
 		return this.destroy(err);
 	}
-	if (source.state === 2 || end) {
-		source.assemble();
+	if (this.state === 2 || end) {
+		this.assemble();
 	}
-	console.log('On Packet event', source);
+	console.log('On Packet event', this);
 }

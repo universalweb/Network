@@ -4,19 +4,19 @@ export async function processEvent(reply) {
 	console.log(reply);
 	const {
 		sid,
-		act
+		method
 	} = reply.request;
 	const {
 		events,
 		actions
 	} = reply.server();
-	const method = actions.get(act);
+	const methodFunction = actions.get(method) || 'api';
 	if (hasValue(sid)) {
-		if (act) {
-			info(`Action:${act} RequestID: ${sid}`);
+		if (methodFunction) {
+			info(`Action:${methodFunction} RequestID: ${sid}`);
 		}
 	}
-	if (method) {
+	if (methodFunction) {
 		console.log(reply);
 		const hasResponse = await method(reply);
 		return;

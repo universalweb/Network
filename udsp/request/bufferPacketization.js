@@ -1,5 +1,5 @@
 import { assign } from '@universalweb/acid';
-export async function bufferPacketization(data, sid, packets = [], maxPacketSize, dataEncoding) {
+export async function bufferPacketization(data, sid, packets = [], maxPacketSize, contentType) {
 	const totalPayloadSize = data?.length;
 	let currentBytePosition = 0;
 	let packetId = 0;
@@ -15,8 +15,8 @@ export async function bufferPacketization(data, sid, packets = [], maxPacketSize
 				sid
 			});
 			if (packetId === 0) {
-				if (dataEncoding) {
-					packet.de = dataEncoding;
+				if (contentType) {
+					packet.de = contentType;
 				}
 				packet.tps = totalPayloadSize;
 			}
@@ -34,8 +34,8 @@ export async function bufferPacketization(data, sid, packets = [], maxPacketSize
 			pid: 0,
 			end: true
 		};
-		if (dataEncoding) {
-			packet.de = dataEncoding;
+		if (contentType) {
+			packet.de = contentType;
 		}
 		packets[0] = packet;
 	}
