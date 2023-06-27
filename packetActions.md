@@ -1,6 +1,6 @@
-# Packet Actions numbers and their meanings
+# UDSP Methods
 
-Packet Actions have two formats one which is numerical for compression and one which is string based. Preferred is numerical its smaller & faster.
+Methods have two formats one which is numerical for compression and one which is string based. Preferred is numerical but not standard or implimented yet. Some of these are planned but not implimented but are reserved and planned as part of a feature.
 
 - open
 - connect
@@ -11,11 +11,19 @@ Packet Actions have two formats one which is numerical for compression and one w
 - delete
 - save
 - update
+- notification
+- event
+- payment
+- push
+- emit
 - api (abstract request for application specific API like a websites functions)
 - head
 - post
 - put
-- stream
+- stream (buffer streaming)
+- media (media streaming)
+- vstream (Video Streaming)
+- mstream (Music Streaming)
 - download
 - upload
 - patch
@@ -25,3 +33,6 @@ Packet Actions have two formats one which is numerical for compression and one w
 - login
 - logout
 - rekey
+- fsync (filesystem sync)
+- live (live stream)
+- vlive (video game live stream)
