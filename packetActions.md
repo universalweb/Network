@@ -35,4 +35,4 @@ Methods have two formats one which is numerical for compression and one which is
 - rekey
 - fsync (filesystem sync)
 - live (live stream)
-- vlive (video game live stream)
+- vglive (video game live stream)
