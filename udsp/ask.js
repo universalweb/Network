@@ -11,66 +11,35 @@ import { decode, encode } from 'msgpackr';
 import {
 	failed, info, msgReceived, msgSent
 } from '#logs';
-import { assembleData } from './request/assembleData.js';
 import { Base } from './request/base.js';
-import { bufferPacketization } from './request/bufferPacketization.js';
-import { request } from '#udsp/request';
 export class Ask extends Base {
-	constructor(config, source) {
-		super(config, source);
-		const {
-			message,
-			options,
-		} = config;
+	constructor(requestObject, options = {}, source) {
+		super(options, source);
 		const {
 			queue,
 			packetIdGenerator,
-			maxPacketSize
+			maxPacketSize,
 		} = source;
-		assign(this.request, message);
-		// sid is a Stream ID
+		const {
+			data,
+			head,
+			method
+		} = requestObject;
+		console.log('Ask', requestObject);
 		const streamId = packetIdGenerator.get();
 		this.request.sid = streamId;
 		this.packetTemplate.sid = streamId;
 		this.id = streamId;
-		queue.set(streamId, this);
-	}
-	async assemble() {
-		const { contentType } = this;
-		if (this.data) {
-			this.data = await assembleData(this.data, this.response, contentType);
-			console.log('Assembled', this.data);
-		}
-		this.destroy();
-		await this.accept(this);
-	}
-	async send(data) {
-		const thisAsk = this;
-		const {
-			packetTemplate,
-			contentType,
-			maxPacketSize,
-			sid
-		} = this;
 		if (data) {
 			this.request.data = data;
 		}
-		console.log('Reply.send', this.response);
-		if (this.request.data) {
-			if (!isBuffer(this.request.data)) {
-				this.request.data = this.dataToBuffer(this.request.data);
-			}
-			this.totalReplyDataSize = request.data?.length;
+		if (head) {
+			this.request.head = head;
 		}
-		if (this.contentType) {
-			this.request.head.contentType = this.contentType;
+		if (method) {
+			this.request.method = method;
 		}
-		await bufferPacketization(this.request.data, sid, this.outgoingPackets, maxPacketSize, contentType);
-		const awaitingResult = promise((accept) => {
-			thisAsk.accept = accept;
-		});
-		thisAsk.sendAll();
-		return awaitingResult;
+		queue.set(streamId, this);
 	}
 	isAsk = true;
 	type = 'ask';

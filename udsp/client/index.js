@@ -175,8 +175,8 @@ export class Client {
 		this.socket.close();
 		Client.connections.delete(this.id);
 	}
-	ask(message) {
-		const ask = construct(Ask, [message, this]);
+	ask(message, options) {
+		const ask = construct(Ask, [message, options, this]);
 		return ask;
 	}
 	connect = clientConnect;

@@ -7,22 +7,21 @@ import { flushOutgoing, flushIncoming, flush } from './flush.js';
 import { sendPacketsById } from './sendPacketsById.js';
 import { sendAll } from './sendAll.js';
 import { onPacket } from './onPacket.js';
-import { isBuffer, isPlainObject, isString } from '@universalweb/acid';
+import {
+	isBuffer, isPlainObject, isString, promise, assign
+} from '@universalweb/acid';
 import { encode } from 'msgpackr';
 import { request } from '#udsp/request';
+import { assembleData } from './assembleData.js';
 export class Base {
-	constructor(config, source) {
-		const { events } = config;
+	constructor(options = {}, source) {
+		const { events, } = options;
 		const timeStamp = Date.now();
 		this.created = timeStamp;
 		this.source = function() {
 			return source;
 		};
-		const {
-			queue,
-			packetIdGenerator,
-			maxPacketSize
-		} = source;
+		const { maxPacketSize } = source;
 		if (events) {
 			this.on(events);
 		}
@@ -31,27 +30,23 @@ export class Base {
 		}
 	}
 	code(codeNumber) {
+		const source = (this.isAsk) ? this.request : this.response;
 		if (this.isAsk) {
-			this.request.head.code = codeNumber;
+			source.head.code = codeNumber;
 		} else {
-			this.response.head.code = codeNumber;
+			source.head.code = codeNumber;
 		}
 	}
-	setHeader(headerName, headerValue) {
-		if (this.isAsk) {
-			if (!this.request.head) {
-				this.request.head = {};
-			}
-			this.request.head[headerName] = headerValue;
-		}
+	setHeader(target) {
+		const source = (this.isAsk) ? this.request : this.response;
+		assign(source.head, target);
 	}
 	writeHeader(headerName, headerValue) {
-		if (this.isReply) {
-			if (!this.response.head) {
-				this.response.head = {};
-			}
-			this.response.head[headerName] = headerValue;
+		const source = (this.isAsk) ? this.request : this.response;
+		if (!source.head) {
+			source.head = {};
 		}
+		source.head[headerName] = headerValue;
 	}
 	dataToBuffer(data) {
 		if (isBuffer(data)) {
@@ -62,6 +57,44 @@ export class Base {
 			return encode(data);
 		}
 		return Buffer.from(data);
+	}
+	async assemble() {
+		const { contentType } = this;
+		if (this.data) {
+			this.data = await assembleData(this.data, this.response, contentType);
+			console.log('Assembled', this.data);
+		}
+		this.destroy();
+		await this.accept(this);
+	}
+	async send() {
+		const thisSource = this;
+		const {
+			packetTemplate,
+			contentType,
+			maxPacketSize,
+			sid,
+			isAsk,
+			isReply
+		} = this;
+		const message = (isAsk) ? this.request : this.response;
+		console.log(`${this.type}.send`, message);
+		if (message.data) {
+			if (!isBuffer(message.data)) {
+				message.data = this.dataToBuffer(message.data);
+			}
+			this.totalReplyDataSize = request.data?.length;
+		}
+		if (this.contentType) {
+			message.head.contentType = this.contentType;
+		}
+		// await bufferPacketization(this);
+		const awaitingResult = promise((accept) => {
+			thisSource.accept = accept;
+		});
+		console.log(`BASE ${this.type}`, this);
+		this.sendAll();
+		return awaitingResult;
 	}
 	destroy = destroy;
 	sendEnd = sendEnd;

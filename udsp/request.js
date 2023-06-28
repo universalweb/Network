@@ -3,15 +3,16 @@ import {
 } from '#logs';
 import { promise, construct, isString } from '@universalweb/acid';
 imported('Request');
-export async function request(source, options) {
-	if (options) {
-		if (isString(options)) {
-			source.method = options;
-		}
-		source.method = options.method;
+export function request(data, options) {
+	let target = data;
+	if (isString(options)) {
+		target = {
+			method: options,
+			data
+		};
 	}
-	info(`Request Function: ${source.method}`);
-	const ask = this.ask(source, options);
-	console.log(ask);
+	info(`Request Function: ${target.method}`);
+	const ask = this.ask(target, options);
+	console.log(target, ask);
 	return ask;
 }

@@ -1,28 +1,44 @@
 import { assign } from '@universalweb/acid';
-export async function bufferPacketization(data, sid, packets = [], maxPacketSize, contentType) {
-	const totalPayloadSize = data?.length;
+import { buildMessage } from './buildMessage.js';
+import { request } from '#udsp/request';
+export async function bufferPacketization(source) {
+	const {
+		maxPacketSize,
+		contentType,
+		method,
+		id: sid,
+		isAsk,
+		outgoingPackets
+	} = source;
+	const message = (isAsk) ? this.request : this.response;
+	const data = message.data;
+	const dataSize = data?.length;
 	let currentBytePosition = 0;
 	let packetId = 0;
-	if (totalPayloadSize > maxPacketSize) {
+	if (dataSize > maxPacketSize) {
 		console.log('Body size', data.length);
-		while (currentBytePosition < totalPayloadSize) {
+		while (currentBytePosition < dataSize) {
 			const endIndex = currentBytePosition + maxPacketSize;
-			const safeEndIndex = endIndex > totalPayloadSize ? totalPayloadSize : endIndex;
+			const safeEndIndex = endIndex > dataSize ? dataSize : endIndex;
 			const chunk = data.subarray(currentBytePosition, safeEndIndex);
 			console.log('chunksize', chunk.length, currentBytePosition, endIndex);
-			const packet = assign({
+			const packet = {
 				pid: packetId,
-				sid
-			});
+				endIndex: safeEndIndex,
+				sid,
+				head: {}
+			};
 			if (packetId === 0) {
-				if (contentType) {
-					packet.de = contentType;
-				}
-				packet.tps = totalPayloadSize;
+				buildMessage({
+					method,
+					contentType,
+					dataSize,
+					packet
+				});
 			}
 			packet.data = chunk;
-			packets[packetId] = packets;
-			if (endIndex >= totalPayloadSize) {
+			outgoingPackets[packetId] = outgoingPackets;
+			if (endIndex >= dataSize) {
 				packet.end = true;
 				break;
 			}
@@ -32,13 +48,17 @@ export async function bufferPacketization(data, sid, packets = [], maxPacketSize
 	} else {
 		const packet = {
 			pid: 0,
-			end: true
+			end: true,
+			data
 		};
-		if (contentType) {
-			packet.de = contentType;
-		}
-		packets[0] = packet;
+		buildMessage({
+			method,
+			contentType,
+			dataSize,
+			packet
+		});
+		console.log(source);
+		outgoingPackets[0] = packet;
 	}
-	console.log('bufferToPackets', packets);
-	return packets;
+	console.log('bufferToPackets', outgoingPackets);
 }
