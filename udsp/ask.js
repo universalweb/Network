@@ -38,6 +38,8 @@ export class Ask extends Base {
 		}
 		if (method) {
 			this.request.method = method;
+		} else {
+			this.method = 'get';
 		}
 		queue.set(streamId, this);
 	}
