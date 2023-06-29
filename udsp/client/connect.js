@@ -1,12 +1,12 @@
 import { connected } from '#logs';
 import { decode } from 'msgpackr';
-export async function connect(message = {}) {
+import { randomBuffer } from '#utilities/crypto';
+export async function connect(message) {
 	console.log('-------CLIENT CONNECTING-------\n');
 	const thisClient = this;
 	// opn stands for open meaning connect to a server
-	message.intro = 'Hello Server!';
 	const connectRequest = thisClient.request({
-		message
+		message: randomBuffer()
 	}, 'connect');
 	console.log('Connect request', connectRequest);
 	const connectResponse = await connectRequest.send();

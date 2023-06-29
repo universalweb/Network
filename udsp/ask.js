@@ -22,8 +22,8 @@ export class Ask extends Base {
 		} = source;
 		const {
 			data,
-			head,
-			method
+			head = {},
+			method = 'get'
 		} = requestObject;
 		console.log('Ask', requestObject);
 		const streamId = packetIdGenerator.get();
@@ -39,7 +39,7 @@ export class Ask extends Base {
 		if (method) {
 			this.request.method = method;
 		} else {
-			this.method = 'get';
+			this.request.method = 'get';
 		}
 		queue.set(streamId, this);
 	}

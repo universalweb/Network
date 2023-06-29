@@ -1,11 +1,11 @@
 export function buildMessage({
 	method,
-	contentType,
+	serialization,
 	dataSize,
 	packet
 }) {
-	if (contentType) {
-		packet.head.contentType = contentType;
+	if (serialization) {
+		packet.head.serialization = serialization;
 	}
 	if (dataSize) {
 		packet.head.dataSize = dataSize;

@@ -16,10 +16,9 @@
   }
 ]
 
-#### PACKET HEADERS (MSGPack Object)(OPTIONAL ENCRYPTION)
+#### UDSP HEADERS (MSGPack Object)(OPTIONAL ENCRYPTION)
 
 - Nonce
-- Identity Certificate (OPTIONAL)(REQUIRED AT START)
 - Socket ID (CLIENT/SERVER)
   - May indicate which server to send to for load balancing
   - May indicate which domain to send to for virtual hosts
@@ -52,8 +51,8 @@
 | :------------: |
 |      UDP       |
 |  UDSP HEADERS  |
-|   UDSP BODY    |
-|  UDSP FOOTER  |
+|  UDSP MESSAGE  |
+|  UDSP FOOTER   |
 
 The UDSP Header, Body, & Footer are all part of one array structure encoded with msgpack.
 ##### IPv6 HEADERS

@@ -46,7 +46,7 @@ export class Reply extends Base {
 	isReply = true;
 	async assemble() {
 		const thisReply = this;
-		const { contentType } = thisReply;
+		const { serialization } = thisReply;
 		if (thisReply.totalIncomingPackets === 1) {
 			thisReply.request = thisReply.incomingPackets[0];
 		}
@@ -56,7 +56,7 @@ export class Reply extends Base {
 				Buffer.concat([packet.data, item.data]);
 			}
 		});
-		if (contentType === 'struct' || !contentType) {
+		if (serialization === 'struct' || !serialization) {
 			msgReceived(thisReply.request);
 			if (thisReply.request.data) {
 				thisReply.request.data = decode(thisReply.request.data);

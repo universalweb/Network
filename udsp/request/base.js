@@ -1,6 +1,6 @@
 import { sendPacket } from './sendPacket.js';
 import { destroy } from './destory.js';
-import { bufferPacketization } from './bufferPacketization.js';
+import { dataPacketization } from './dataPacketization.js';
 import { sendEnd } from './sendEnd.js';
 import { on } from './on.js';
 import { flushOutgoing, flushIncoming, flush } from './flush.js';
@@ -8,11 +8,13 @@ import { sendPacketsById } from './sendPacketsById.js';
 import { sendAll } from './sendAll.js';
 import { onPacket } from './onPacket.js';
 import {
-	isBuffer, isPlainObject, isString, promise, assign
+	isBuffer, isPlainObject, isString, promise, assign,
+	objectSize
 } from '@universalweb/acid';
 import { encode } from 'msgpackr';
 import { request } from '#udsp/request';
 import { assembleData } from './assembleData.js';
+const singlePacketMethods = /^(connect|open)$/i;
 export class Base {
 	constructor(options = {}, source) {
 		const { events, } = options;
@@ -53,25 +55,60 @@ export class Base {
 			return data;
 		}
 		if (isPlainObject(data)) {
-			this.contentType = 1;
+			this.serialization = 1;
 			return encode(data);
 		}
 		return Buffer.from(data);
 	}
 	async assemble() {
-		const { contentType } = this;
+		const { serialization } = this;
 		if (this.data) {
-			this.data = await assembleData(this.data, this.response, contentType);
+			this.data = await assembleData(this.data, this.response, serialization);
 			console.log('Assembled', this.data);
 		}
 		this.destroy();
 		await this.accept(this);
 	}
+	buildSetupPacket() {
+		const {
+			packetTemplate,
+			maxPacketSize,
+			sid,
+			isAsk,
+			isReply
+		} = this;
+		const message = (isAsk) ? this.request : this.response;
+		const method = message.method;
+		const packet = assign({
+			method
+		}, packetTemplate);
+		if (objectSize(message.head)) {
+			packet.headerSize = message.head.length;
+		}
+		this.outgoingPackets[0] = packet;
+	}
+	async packetization() {
+		const {
+			packetTemplate,
+			maxPacketSize,
+			sid,
+			isAsk,
+			isReply
+		} = this;
+		const message = (isAsk) ? this.request : this.response;
+		if (message.data) {
+			if (!isBuffer(message.data)) {
+				this.writeHeader('serialization', 'struct');
+				message.data = this.dataToBuffer(message.data);
+			}
+			this.dataSize = request.data?.length;
+		}
+		await dataPacketization(this);
+	}
 	async send() {
 		const thisSource = this;
 		const {
 			packetTemplate,
-			contentType,
 			maxPacketSize,
 			sid,
 			isAsk,
@@ -79,16 +116,13 @@ export class Base {
 		} = this;
 		const message = (isAsk) ? this.request : this.response;
 		console.log(`${this.type}.send`, message);
-		if (message.data) {
-			if (!isBuffer(message.data)) {
-				message.data = this.dataToBuffer(message.data);
-			}
-			this.totalReplyDataSize = request.data?.length;
+		if (singlePacketMethods.test(message.method)) {
+			message.end = true;
+			message.pid = 0;
+			this.outgoingPackets[0] = message;
+		} else {
+			this.packetization();
 		}
-		if (this.contentType) {
-			message.head.contentType = this.contentType;
-		}
-		// await bufferPacketization(this);
 		const awaitingResult = promise((accept) => {
 			thisSource.accept = accept;
 		});
@@ -102,20 +136,13 @@ export class Base {
 	sendAll = sendAll;
 	onPacket = onPacket;
 	sendPacket = sendPacket;
-	bufferPacketization = bufferPacketization;
 	on = on;
 	currentPayloadSize = 0;
 	totalReceivedUniquePackets = 0;
 	totalIncomingUniquePackets = 0;
 	progress = 0;
-	request = {
-		head: {},
-		body: {}
-	};
-	response = {
-		head: {},
-		body: {}
-	};
+	request = {};
+	response = {};
 	// this is the data in order may have missing packets at times but will remain in order
 	data = [];
 	// This is as the data came in over the wire out of order

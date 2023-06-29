@@ -1,22 +1,20 @@
 import { assign } from '@universalweb/acid';
 import { buildMessage } from './buildMessage.js';
 import { request } from '#udsp/request';
-export async function bufferPacketization(source) {
+export async function dataPacketization(source) {
 	const {
 		maxPacketSize,
-		contentType,
-		method,
 		id: sid,
 		isAsk,
 		outgoingPackets
 	} = source;
-	const message = (isAsk) ? this.request : this.response;
+	const message = (isAsk) ? source.request : source.response;
 	const data = message.data;
 	const dataSize = data?.length;
 	let currentBytePosition = 0;
-	let packetId = 0;
+	let packetId = outgoingPackets.length;
 	if (dataSize > maxPacketSize) {
-		console.log('Body size', data.length);
+		console.log('data size', data.length);
 		while (currentBytePosition < dataSize) {
 			const endIndex = currentBytePosition + maxPacketSize;
 			const safeEndIndex = endIndex > dataSize ? dataSize : endIndex;
@@ -25,17 +23,8 @@ export async function bufferPacketization(source) {
 			const packet = {
 				pid: packetId,
 				endIndex: safeEndIndex,
-				sid,
-				head: {}
+				sid
 			};
-			if (packetId === 0) {
-				buildMessage({
-					method,
-					contentType,
-					dataSize,
-					packet
-				});
-			}
 			packet.data = chunk;
 			outgoingPackets[packetId] = outgoingPackets;
 			if (endIndex >= dataSize) {
@@ -51,12 +40,6 @@ export async function bufferPacketization(source) {
 			end: true,
 			data
 		};
-		buildMessage({
-			method,
-			contentType,
-			dataSize,
-			packet
-		});
 		console.log(source);
 		outgoingPackets[0] = packet;
 	}
