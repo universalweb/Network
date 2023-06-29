@@ -12,6 +12,7 @@ import {
 	failed, info, msgReceived, msgSent
 } from '#logs';
 import { Base } from './request/base.js';
+import { request } from '#udsp/request';
 export class Ask extends Base {
 	constructor(requestObject, options = {}, source) {
 		super(options, source);
@@ -22,13 +23,15 @@ export class Ask extends Base {
 		} = source;
 		const {
 			data,
-			head = {},
 			method = 'get'
 		} = requestObject;
+		const head = requestObject.head || requestObject.headers || {};
 		console.log('Ask', requestObject);
 		const streamId = packetIdGenerator.get();
 		this.request.sid = streamId;
 		this.packetTemplate.sid = streamId;
+		this.outgoingSetupPacket.sid = streamId;
+		this.outgoingSetupPacket.method = method;
 		this.id = streamId;
 		if (data) {
 			this.request.data = data;

@@ -17,12 +17,6 @@ export async function onPacket(packet) {
 		pt: totalIncomingUniquePackets,
 		// Dat payload size
 		tps: totalIncomingPayloadSize,
-		// serialization
-		ct: serialization,
-		// Complete
-		done,
-		// Finale Packet
-		finale,
 		// Acknowledgement
 		ack,
 		// Negative Acknowledgement
@@ -36,9 +30,6 @@ export async function onPacket(packet) {
 	}
 	if (hasValue(totalIncomingPayloadSize)) {
 		this.totalIncomingPayloadSize = totalIncomingPayloadSize;
-	}
-	if (serialization) {
-		this.serialization = serialization;
 	}
 	this.totalIncomingPackets++;
 	if (hasValue(packetId)) {
