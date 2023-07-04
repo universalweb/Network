@@ -19,13 +19,12 @@ export class Ask extends Base {
 		const {
 			queue,
 			packetIdGenerator,
-			maxPacketSize,
 		} = source;
 		const {
 			data,
 			method = 'get'
 		} = requestObject;
-		const head = requestObject.head || requestObject.headers || {};
+		const head = requestObject.head || requestObject.headers || options.head || options.headers || {};
 		console.log('Ask', requestObject);
 		const streamId = packetIdGenerator.get();
 		this.request.sid = streamId;
@@ -45,6 +44,10 @@ export class Ask extends Base {
 			this.request.method = 'get';
 		}
 		queue.set(streamId, this);
+	}
+	complete() {
+		console.log('Ask complete', this);
+		this.accept(this);
 	}
 	isAsk = true;
 	type = 'ask';

@@ -9,7 +9,7 @@ import { sendAll } from './sendAll.js';
 import { onPacket } from './onPacket.js';
 import {
 	isBuffer, isPlainObject, isString, promise, assign,
-	objectSize, eachArray, jsonParse
+	objectSize, eachArray, jsonParse, construct
 } from '@universalweb/acid';
 import { encode, decode } from 'msgpackr';
 import { request } from '#udsp/request';
@@ -23,12 +23,22 @@ export class Base {
 		this.source = function() {
 			return source;
 		};
-		const { maxPacketSize } = source;
+		const {
+			maxPacketSize,
+			maxPayloadSize,
+			packetMaxPayloadSafeEstimate
+		} = source;
 		if (events) {
 			this.on(events);
 		}
 		if (maxPacketSize) {
 			this.maxPacketSize = maxPacketSize;
+		}
+		if (maxPayloadSize) {
+			this.maxPayloadSize = maxPayloadSize;
+		}
+		if (packetMaxPayloadSafeEstimate) {
+			this.packetMaxPayloadSafeEstimate = packetMaxPayloadSafeEstimate;
 		}
 	}
 	setHeaders(target) {
@@ -45,10 +55,26 @@ export class Base {
 		}
 		source.head[headerName] = headerValue;
 	}
+	async assembleHead() {
+		const incomingPackets = this.incomingPackets;
+		const head = [];
+		eachArray(incomingPackets, (item, index) => {
+			if (!item) {
+				this.missingHeadPackets.set(index);
+			}
+			if (item.head) {
+				head.push(item.head);
+			}
+		});
+		this.head = decode(Buffer.concat(head));
+	}
 	async assembleData() {
 		const incomingPackets = this.incomingPackets;
 		const data = [];
-		eachArray(incomingPackets, (item) => {
+		eachArray(incomingPackets, (item, index) => {
+			if (!item) {
+				this.missingDataPackets.set(index);
+			}
 			if (item.data) {
 				data.push(item.data);
 			}
@@ -59,16 +85,7 @@ export class Base {
 		} else if (this.head.serialization === 'json') {
 			this.data = jsonParse(this.data);
 		}
-	}
-	async assembleHead() {
-		const incomingPackets = this.incomingPackets;
-		const head = [];
-		eachArray(incomingPackets, (item) => {
-			if (item.head) {
-				head.push(item.head);
-			}
-		});
-		this.head = decode(Buffer.concat(head));
+		this.complete();
 	}
 	toString() {
 		return this.data.toString();
@@ -93,20 +110,35 @@ export class Base {
 			isAsk,
 			isReply
 		} = this;
-		this.outgoingSetupPacket.headerSize = this.outgoingHead.length;
+		const message = (this.isAsk) ? this.request : this.response;
+		this.outgoingHead = encode(message.head);
+		this.outgoingHeadSize = this.outgoingHead.length;
+		this.outgoingSetupPacket.headerSize = this.outgoingHeadSize;
 	}
 	async headPacketization() {
 		const {
-			maxPacketSize,
+			packetMaxPayloadSafeEstimate,
 			id: sid,
 			isAsk,
-			outgoingPackets
+			outgoingHeadPackets
 		} = this;
 		const message = (this.isAsk) ? this.request : this.response;
-		this.outgoingHead = encode(message.head);
+		let currentBytePosition = 0;
+		let packetId = 0;
+		while (currentBytePosition < this.outgoingHeadSize) {
+			const packet = assign({}, this.packetTemplate);
+			packet.sid = sid;
+			packet.pid = packetId;
+			packet.head = this.outgoingHead.subarray(currentBytePosition, currentBytePosition + packetMaxPayloadSafeEstimate);
+			packet.headSize = packet.head.length;
+			packetId++;
+			currentBytePosition += packetMaxPayloadSafeEstimate;
+			outgoingHeadPackets.push(packet);
+		}
 	}
 	async dataPacketization() {
 		const {
+			packetMaxPayloadSafeEstimate,
 			packetTemplate,
 			maxPacketSize,
 			sid,
@@ -131,9 +163,9 @@ export class Base {
 			message.pid = 0;
 			this.outgoingPackets[0] = message;
 		} else {
+			await this.buildSetupPacket();
 			await this.headPacketization();
 			await this.dataPacketization();
-			await this.buildSetupPacket();
 		}
 	}
 	async send() {
@@ -162,22 +194,38 @@ export class Base {
 	onPacket = onPacket;
 	sendPacket = sendPacket;
 	on = on;
-	currentPayloadSize = 0;
+	outgoingHead;
+	outgoingData;
+	incomingHeadState = false;
+	incomingDataState = false;
+	currentIncomingDataSize = 0;
+	currentIncomingHeadSize = 0;
+	currentOutgoingDataSize = 0;
 	totalReceivedUniquePackets = 0;
 	totalIncomingUniquePackets = 0;
 	progress = 0;
-	request = {};
-	response = {};
+	request = {
+		head: {}
+	};
+	response = {
+		head: {}
+	};
 	// this is the data in order may have missing packets at times but will remain in order
 	data = [];
 	// This is as the data came in over the wire out of order
 	stream = [];
+	missingHeadPackets = construct(Map);
+	missingDataPackets = construct(Map);
 	events = {};
 	header = {};
 	options = {};
 	outgoingSetupPacket = {
 		pid: 0,
 		setup: true,
+	};
+	setupConfirmationPacket = {
+		pid: 0,
+		authorize: true,
 	};
 	outgoingDataPackets = [];
 	outgoingHeadPackets = [];
