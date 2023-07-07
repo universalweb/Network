@@ -15,7 +15,6 @@ import {
 	info,
 	msgReceived
 } from '#logs';
-import dgram from 'dgram';
 import { on, off } from './events.js';
 import { bindServer } from './bind.js';
 import { emit } from './emit.js';
@@ -27,14 +26,20 @@ import { actions } from './actions/index.js';
 import { getCertificate, parseCertificate } from '#certificate';
 import { randomConnectionId, signKeypairToEncryptKeypair } from '#crypto';
 import { cryptography } from '#udsp/cryptography';
+import { UDSP } from '#udsp/base.js';
 const { seal } = Object;
 /*
   * socket ID: SID
 */
-export class Server {
+export class Server extends UDSP {
 	constructor(configuration) {
+		super();
 		return this.initialize(configuration);
 	}
+	description = `The Universal Web's UDSP server module.`;
+	type = 'server';
+	isServer = true;
+	isServerEnd = true;
 	on = on;
 	bindServer = bindServer;
 	onError = onError;
@@ -103,25 +108,6 @@ export class Server {
 		this.ip = ip;
 		this.port = port;
 	}
-	async setupServer() {
-		const ipVersion = this.ipVersion;
-		const serverThis = this;
-		const socket = dgram.createSocket(ipVersion);
-		this.socket = socket;
-		// Make sure there is as graceful as possible shutdown
-		process.on('beforeExit', (code) => {
-			socket.close();
-		});
-	}
-	async calculatePacketOverhead() {
-		const packetOverhead = 2;
-		this.encryptOverhead = this.cryptography.encryptOverhead;
-		this.packetOverhead = packetOverhead + this.encryptOverhead + this.connectionIdSize;
-		this.packetMaxPayload = this.maxPacketSize - this.packetOverhead;
-		this.packetMaxPayloadSafeEstimate = this.packetMaxPayload - 52;
-		console.log(`Packet Overhead: ${this.packetOverhead} bytes`);
-		console.log(`connectionIdSize Overhead: ${this.connectionIdSize} bytes`);
-	}
 	async initialize(configuration) {
 		console.log('-------SERVER INITIALIZING-------');
 		assign(this, configuration);
@@ -135,7 +121,7 @@ export class Server {
 		await this.setCertificate();
 		await this.configureNetwork();
 		await this.calculatePacketOverhead();
-		await this.setupServer();
+		await this.setupSocket();
 		await this.attachEvents();
 		await this.bindServer();
 		console.log('-------SERVER INITIALIZED-------');
@@ -171,41 +157,16 @@ export class Server {
 			foundEvent(this, client);
 		}
 	}
-	description = `The Universal Web's UDSP server module.`;
-	descriptor = 'UWServer';
-	isServer = true;
-	isServerEnd = true;
-	defaultExtension = 'js';
-	port = 80;
-	ip = '::1';
 	realTime = true;
-	gracePeriod = 30000;
-	maxPacketSize = 1328;
-	connectionIdSize = 8;
-	packetCount = 0;
-	messageCount = 0;
 	socketCount = 0;
 	clientCount = 0;
-	actions = construct(Map);
-	stateCodeDescriptions = ['initializing', 'initialized', 'failed to initialize'];
-	state = 0;
-	/*
-      	* A puzzle used to challenge clients to ensure authenticity, connection liveliness, and congestion control.
-      	* Slow down account creation.
-      	* Generate crypto currency or compute work.
-    */
-	puzzleFlag = false;
-	/*
-		* IPv6 preferred.
-	*/
-	ipVersion = 'udp6';
+	port = 80;
+	ip = '::1';
 	/*
 		* All created clients (clients) represent a client to server bi-directional connection until it is closed by either party.
 	*/
 	clients = construct(Map);
 	clientEvents = construct(Map);
-	events = construct(Map);
-	streamIdGenerator = construct(UniqID);
 }
 export async function server(...args) {
 	return construct(Server, args);

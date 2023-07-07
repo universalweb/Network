@@ -9,7 +9,7 @@ import { sendAll } from './sendAll.js';
 import { onPacket } from './onPacket.js';
 import {
 	isBuffer, isPlainObject, isString, promise, assign,
-	objectSize, eachArray, jsonParse, construct
+	objectSize, eachArray, jsonParse, construct, isArray
 } from '@universalweb/acid';
 import { encode, decode } from 'msgpackr';
 import { request } from '#udsp/request';
@@ -66,7 +66,12 @@ export class Base {
 				head.push(item.head);
 			}
 		});
-		this.head = decode(Buffer.concat(head));
+		this.setHead(head);
+	}
+	setHead(headArg) {
+		let head = (isArray(headArg)) ? Buffer.concat(headArg) : headArg;
+		head = (isBuffer(head)) ? decode(head) : head;
+		this.head = head;
 	}
 	async assembleData() {
 		const incomingPackets = this.incomingPackets;
@@ -96,11 +101,14 @@ export class Base {
 	serialize() {
 		return decode(this.data);
 	}
-	headers() {
-		return this.head;
-	}
 	sendSetup() {
 		this.send(this.outgoingSetupPacket);
+	}
+	get headers() {
+		return this.head;
+	}
+	get body() {
+		return this.data;
 	}
 	buildSetupPacket() {
 		const {

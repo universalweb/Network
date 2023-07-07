@@ -2,7 +2,8 @@
   	* Client Module
 	* UDSP - Universal Data Stream Protocol
 	* UW Universal Web
-	* UWP Universal Web Protocol
+	* uw:// Universal Web Protocol preferred
+	* udsp:// UDSP Protocol
 	* Establishes a UDP based bi-directional real-time connection between client and server.
 */
 // Default System imports
@@ -44,12 +45,17 @@ import { onListening } from './listening.js';
 import { keychainGet } from '#keychain';
 import { Ask } from '../ask.js';
 import { fetchRequest } from '../fetch.js';
+import { UDSP } from '#udsp/base.js';
 // UNIVERSAL WEB Client Class
-export class Client {
+export class Client extends UDSP {
 	constructor(configuration) {
+		super();
 		console.log('-------CLIENT INITIALIZING-------\n');
 		return this.initialize(configuration);
 	}
+	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
+	type = 'client';
+	isClient = true;
 	configDefaults() {
 		const { autoConnect } = this.configuration;
 		this.autoConnect = autoConnect;
@@ -156,7 +162,9 @@ export class Client {
 		success(`clientId:`, this.idString);
 		await this.setDestination();
 		await this.setCertificate();
+		await this.calculatePacketOverhead();
 		await this.configCryptography();
+		await this.setupSocket();
 		await this.attachEvents();
 		Client.connections.set(this.idString, this);
 		if (this.autoConnect) {
@@ -189,15 +197,7 @@ export class Client {
 	onPacket = onPacket;
 	destination = {};
 	autoConnect = true;
-	type = 'client';
-	isClient = true;
-	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
-	descriptor = 'UWClient';
-	maxPacketSize = 1328;
-	connectionIdSize = 8;
 	static connections = new Map();
-	state = 0;
-	socket = dgram.createSocket('udp6');
 	queue = new Map();
 	packetIdGenerator = construct(UniqID);
 }
@@ -206,5 +206,7 @@ export async function client(configuration) {
 	const uwClient = await construct(Client, [configuration]);
 	return uwClient;
 }
-// Add the request export here for simple auto connect and then just grab contents to return
+// Add the request export here for simple auto connect and then just grab contents to return called UDSP
+// client is for a longer stateful connection request to a remote server
+// udsp is for a single request to a remote server then closes after response
 export { getCertificate };

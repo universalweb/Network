@@ -16,9 +16,11 @@ const uwClient = await client({
 console.timeEnd('Connected');
 // console.log('INTRO =>', uwClient);
 console.time('FileRequest');
-const fileRequest = await uwClient.request({
-	path: 'index.html'
-});
+const fileRequest = await uwClient.request('index.html');
+// const fileRequest = await uwClient.request({
+// 	path: 'index.html'
+// });
+// const fileRequest = await uwClient.file('index.html');
 // Get Method
 fileRequest.on({
 	data(...args) {
@@ -33,17 +35,4 @@ const fileFetch = await uwClient.fetch('index.html');
 console.log(fileFetch.toString());
 console.timeEnd('Full');
 // console.log('Request state', fileRequest);
-/** */
-// await uwClient.request('event', {
-// 	head: {
-// 		name: 'like.post',
-// 	},
-// 	data: {}
-// });
-// await uwClient.request({
-// 	head: {
-// 		name: 'like.post',
-// 	},
-// 	data: {}
-// });
 

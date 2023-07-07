@@ -33,9 +33,13 @@ const domainProfile = await createProfile({
 				encryptKeypair: true
 			},
 			// Max connection id size in bytes
-			// connectionIdSize: 56,
+			connectionIdSize: 8,
+			// Max payload (head or data) size in bytes
+			// maxPayloadSize: 1200,
 			// Max Payload size
-			maxPayloadSize: 900,
+			// maxDataSize: 1200,
+			// Max size of the header payload
+			// maxHeadSize: 1200,
 			ip: '::1',
 			port: 8888,
 			domain: 'universal.web',

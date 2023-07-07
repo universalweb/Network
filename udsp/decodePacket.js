@@ -146,7 +146,7 @@ export async function decodePacket(config) {
 		console.log('head PAYLOAD', message.head);
 	}
 	if (message.data) {
-		success('data PAYLOAD', message.data.length);
+		success('data PAYLOAD', message.data?.length || message.data);
 	}
 	packetDecoded.message = message;
 	return true;
