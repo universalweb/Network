@@ -5,6 +5,11 @@ const dirname = currentPath(import.meta);
 const domainProfile = await createProfile({
 	template: {
 		ephemeral: {
+			// udsp is the version number of udsp
+			// if left blank or true it would automatically select the most recent version of the UW/UDSP protocol
+			// version numbers can be used for the udsp property
+			udsp: 1,
+			// certificate version
 			version: 1,
 			// Crypto can be explicit or use shorthand like this algo: 'default' The default is listed below
 			// Encryption algorithm must be an AEAD algorithm (Authenticated Encryption with Associated Data) such as xchacha20poly1305
@@ -32,7 +37,7 @@ const domainProfile = await createProfile({
 				// encryptServerKey: 'sealedbox',
 				encryptKeypair: true
 			},
-			// Max connection id size in bytes
+			// Max connection id size in bytes usually randomly generated and checked but used to calculate max packet payload size
 			connectionIdSize: 8,
 			// Max payload (head or data) size in bytes
 			// maxPayloadSize: 1200,
@@ -40,6 +45,8 @@ const domainProfile = await createProfile({
 			// maxDataSize: 1200,
 			// Max size of the header payload
 			// maxHeadSize: 1200,
+			// heartbeat is an interval check for when a client must send something to the server to remain connected
+			heartbeat: 30000,
 			ip: '::1',
 			port: 8888,
 			domain: 'universal.web',
@@ -52,11 +59,15 @@ const domainProfile = await createProfile({
 			},
 			locality: {
 				state: 'FL',
-				country: 'US'
+				country: 'US',
+				zip: '00000',
+				town: 'UW Township',
+				county: 'UW County',
 			},
 			crypto: {
 				type: 'viat',
-				puzzles: 'enabled',
+				// enable viat puzzles as a form of congestion control
+				puzzles: true,
 				curve: '25519',
 				// When publicKey is set to true it will use the public key in the certificate as the main Viat wallet for the domain. If a string is provided then it would be the main wallet for the domain.
 				publicKey: true
@@ -65,7 +76,7 @@ const domainProfile = await createProfile({
 			realtime: true,
 			// blocked methods mean methods the server doesn't permit
 			// blockedMethods: ['open'],
-			allowedMethods: ['get', 'connect', 'open', 'close'],
+			allowedMethods: ['get', 'connect', 'open', 'file', 'stream', 'close'],
 			compression: true,
 			headerCompression: true,
 			autoLogin: true,

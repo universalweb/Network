@@ -13,21 +13,31 @@ const uwClient = await client({
 	// Load Profile Certificate from file
 	certificate: `${currentPath(import.meta)}/../profiles/default-Ephemeral.cert`,
 });
+//  await client('universalweb.io', {keychain: 'Universal Web Profile'});
+// await request('universalweb.io/index.html');
 console.timeEnd('Connected');
 // console.log('INTRO =>', uwClient);
 console.time('FileRequest');
+// short hand get request
 const fileRequest = await uwClient.request('index.html');
+// medium hand
 // const fileRequest = await uwClient.request({
 // 	path: 'index.html'
 // });
-// const fileRequest = await uwClient.file('index.html');
-// Get Method
 fileRequest.on({
 	data(...args) {
-		console.log('onData for simulate client', ...args);
+		console.log('custom onData event', ...args);
+	},
+	head(...args) {
+		console.log('custom onHead event', ...args);
 	}
 });
 const response = await fileRequest.send();
+// const response = await uwClient.request('index.html').on({
+// 	data(...args) {
+// 		console.log('onData for simulate client', ...args);
+// 	}
+// }).send();
 console.log('head', response.head);
 console.log('data', response.data);
 console.timeEnd('FileRequest');

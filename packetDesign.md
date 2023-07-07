@@ -3,11 +3,11 @@
 [
   // HEAD
   {
-    cert,
     connectionID
   },
   // BODY
   {
+    method
     data
   },
   // FOOTER

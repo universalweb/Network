@@ -79,9 +79,7 @@ class Cryptography {
 			convertEd25519ToX25519,
 			connectionIdKeypair
 		} = cryptographyConfig;
-		const {
-			generate, connectionIdSize
-		} = config;
+		const { generate } = config;
 		if (alias === 'default') {
 			aead = 'xchacha20poly1305';
 			signature = 'ed25519';
@@ -204,10 +202,6 @@ class Cryptography {
 	}
 	hashMin(...args) {
 		return this.hashMinMethod(...args);
-	}
-	generateConnectionID() {
-		const target = randomConnectionId(this.config.connectionIdSize || 8);
-		return target;
 	}
 	signKeypair(...args) {
 		return this.signKeypairMethod(...args);

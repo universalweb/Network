@@ -162,8 +162,8 @@ export class Client extends UDSP {
 		success(`clientId:`, this.idString);
 		await this.setDestination();
 		await this.setCertificate();
-		await this.calculatePacketOverhead();
 		await this.configCryptography();
+		await this.calculatePacketOverhead();
 		await this.setupSocket();
 		await this.attachEvents();
 		Client.connections.set(this.idString, this);

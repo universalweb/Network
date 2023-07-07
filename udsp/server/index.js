@@ -24,7 +24,7 @@ import { onPacket } from './onPacket.js';
 import { sendPacket } from '#udsp/sendPacket';
 import { actions } from './actions/index.js';
 import { getCertificate, parseCertificate } from '#certificate';
-import { randomConnectionId, signKeypairToEncryptKeypair } from '#crypto';
+import { randomBuffer } from '#crypto';
 import { cryptography } from '#udsp/cryptography';
 import { UDSP } from '#udsp/base.js';
 const { seal } = Object;
@@ -62,9 +62,15 @@ export class Server extends UDSP {
 	}
 	async setCertificate() {
 		const {
-			certificate,
-			connectionIdSize
-		} = this.configuration;
+			configuration,
+			configuration: {
+				certificate,
+				connectionIdSize,
+				maxPayloadSize,
+				maxDataSize,
+				maxHeadSize
+			}
+		} = this;
 		if (certificate) {
 			this.certificate = await parseCertificate(certificate);
 			console.log(this.certificate);
@@ -79,6 +85,21 @@ export class Server extends UDSP {
 		if (!connectionIdSize) {
 			if (this.certificate.connectionIdSize) {
 				this.connectionIdSize = this.certificate.connectionIdSize;
+			}
+		}
+		if (!maxPayloadSize) {
+			if (this.certificate.maxPayloadSize) {
+				this.maxPayloadSize = this.certificate.maxPayloadSize;
+			}
+		}
+		if (!maxDataSize) {
+			if (this.certificate.maxDataSize) {
+				this.maxDataSize = this.certificate.maxDataSize;
+			}
+		}
+		if (!maxHeadSize) {
+			if (this.certificate.maxHeadSize) {
+				this.maxHeadSize = this.certificate.maxHeadSize;
 			}
 		}
 		if (this.certificate.cryptography) {
@@ -114,7 +135,7 @@ export class Server extends UDSP {
 		this.configuration = seal(assign({}, configuration));
 		info(this.configuration);
 		if (!this.id) {
-			this.id = randomConnectionId(4);
+			this.id = randomBuffer(4);
 		} else if (isFunction(this.id)) {
 			this.id = await this.id();
 		}

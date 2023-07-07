@@ -2,18 +2,46 @@ import { construct, UniqID } from '@universalweb/acid';
 import { actions } from './server/actions/index.js';
 import { cryptography } from '#udsp/cryptography';
 import dgram from 'dgram';
+import { randomConnectionId } from '#crypto';
 class UDSP {
 	constructor() {
 		return this.initialize();
 	}
 	async calculatePacketOverhead() {
-		const packetOverhead = 2;
-		this.encryptPacketOverhead = this.cryptography.encryptOverhead;
-		this.packetOverhead = packetOverhead + this.encryptPacketOverhead + this.connectionIdSize;
-		this.packetMaxPayload = this.maxPacketSize - this.packetOverhead;
-		this.packetMaxPayloadSafeEstimate = this.packetMaxPayload - 10;
+		const {
+			connectionIdSize,
+			maxPayloadSize,
+			maxDataSize,
+			maxHeadSize
+		} = this;
+		if (maxPayloadSize) {
+			if (!maxDataSize) {
+				this.maxDataSize = maxPayloadSize;
+			}
+			if (!maxHeadSize) {
+				this.maxHeadSize = maxPayloadSize;
+			}
+		} else {
+			const packetInitialOverhead = 2;
+			this.encryptPacketOverhead = this.cryptography.encryptOverhead;
+			this.packetOverhead = packetInitialOverhead + this.encryptPacketOverhead + this.connectionIdSize;
+			this.maxPayloadSize = this.maxPacketSize - this.packetOverhead;
+			this.maxPayloadSizeSafeEstimate = this.maxPayloadSize - 10;
+			if (!maxDataSize) {
+				this.maxDataSize = this.packetMaxPayload;
+			}
+			if (!maxHeadSize) {
+				this.maxHeadSize = this.packetMaxPayload;
+			}
+		}
+		console.log(`Max Packet Size: ${this.maxPacketSize} bytes`);
+		console.log(`Max Payload Size: ${this.maxPayloadSize} bytes`);
 		console.log(`Packet Overhead: ${this.packetOverhead} bytes`);
 		console.log(`connectionIdSize Overhead: ${this.connectionIdSize} bytes`);
+	}
+	generateConnectionID() {
+		const target = randomConnectionId(this.connectionIdSize || 8);
+		return target;
 	}
 	async setupSocket() {
 		const ipVersion = this.ipVersion;

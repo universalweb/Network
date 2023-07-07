@@ -125,7 +125,7 @@ export class Base {
 	}
 	async headPacketization() {
 		const {
-			packetMaxPayloadSafeEstimate,
+			maxHeadSize,
 			id: sid,
 			isAsk,
 			outgoingHeadPackets
@@ -133,22 +133,25 @@ export class Base {
 		const message = (this.isAsk) ? this.request : this.response;
 		let currentBytePosition = 0;
 		let packetId = 0;
+		const headSize = this.outgoingHeadSize;
 		while (currentBytePosition < this.outgoingHeadSize) {
 			const packet = assign({}, this.packetTemplate);
 			packet.sid = sid;
 			packet.pid = packetId;
-			packet.head = this.outgoingHead.subarray(currentBytePosition, currentBytePosition + packetMaxPayloadSafeEstimate);
+			const endIndex = currentBytePosition + maxHeadSize;
+			const safeEndIndex = endIndex > headSize ? headSize : endIndex;
+			packet.head = this.outgoingHead.subarray(currentBytePosition, safeEndIndex);
 			packet.headSize = packet.head.length;
 			packetId++;
-			currentBytePosition += packetMaxPayloadSafeEstimate;
-			outgoingHeadPackets.push(packet);
+			currentBytePosition += maxHeadSize;
+			outgoingHeadPackets[packetId] = packet;
 		}
 	}
 	async dataPacketization() {
 		const {
 			packetMaxPayloadSafeEstimate,
 			packetTemplate,
-			maxPacketSize,
+			maxDataSize,
 			sid,
 			isAsk,
 			isReply

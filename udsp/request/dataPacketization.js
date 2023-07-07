@@ -3,20 +3,20 @@ import { buildMessage } from './buildMessage.js';
 import { request } from '#udsp/request';
 export async function dataPacketization(source) {
 	const {
-		maxPacketSize,
+		maxDataSize,
 		id: sid,
 		isAsk,
-		outgoingPackets
+		outgoingDataPackets
 	} = source;
 	const message = (isAsk) ? source.request : source.response;
 	const data = message.data;
 	const dataSize = data?.length;
 	let currentBytePosition = 0;
-	let packetId = outgoingPackets.length;
-	if (dataSize > maxPacketSize) {
+	let packetId = outgoingDataPackets.length;
+	if (dataSize > maxDataSize) {
 		console.log('data size', data.length);
 		while (currentBytePosition < dataSize) {
-			const endIndex = currentBytePosition + maxPacketSize;
+			const endIndex = currentBytePosition + maxDataSize;
 			const safeEndIndex = endIndex > dataSize ? dataSize : endIndex;
 			const chunk = data.subarray(currentBytePosition, safeEndIndex);
 			console.log('chunksize', chunk.length, currentBytePosition, endIndex);
@@ -26,12 +26,12 @@ export async function dataPacketization(source) {
 				sid
 			};
 			packet.data = chunk;
-			outgoingPackets[packetId] = outgoingPackets;
+			outgoingDataPackets[packetId] = outgoingDataPackets;
 			if (endIndex >= dataSize) {
 				packet.end = true;
 				break;
 			}
-			currentBytePosition = currentBytePosition + maxPacketSize;
+			currentBytePosition = currentBytePosition + maxDataSize;
 			packetId++;
 		}
 	} else {
@@ -41,7 +41,7 @@ export async function dataPacketization(source) {
 			data
 		};
 		console.log(source);
-		outgoingPackets[0] = packet;
+		outgoingDataPackets[0] = packet;
 	}
-	console.log('bufferToPackets', outgoingPackets);
+	console.log('bufferToPackets', outgoingDataPackets);
 }
