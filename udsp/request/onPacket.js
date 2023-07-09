@@ -1,11 +1,15 @@
 import { hasValue } from '@universalweb/acid';
 import { destroy } from './destory.js';
+import { processEvent } from '#udsp/processEvent';
+import { singlePacketMethods } from '#udsp/request/singlePacketMethods';
 export async function onPacket(packet) {
 	const source = this;
 	this.lastPacketTime = Date.now();
 	const { message } = packet;
 	const {
+		// main data payload
 		data,
+		// header payload
 		head,
 		// Stream ID
 		sid: streamId,
@@ -14,7 +18,8 @@ export async function onPacket(packet) {
 		// Action
 		method,
 		// Packet total
-		pt: totalIncomingUniquePackets,
+		hpt: totalIncomingUniqueHeadPackets,
+		dpt: totalIncomingUniqueDataPackets,
 		headerSize,
 		// Data payload size
 		dataSize,
@@ -24,59 +29,77 @@ export async function onPacket(packet) {
 		nack,
 		err,
 		end,
-		setup
+		setup,
+		headReady,
+		dataReady,
+		last
 	} = message;
 	console.log(`Stream Id ${streamId}`);
-	if (hasValue(totalIncomingUniquePackets)) {
-		this.totalIncomingUniquePackets = totalIncomingUniquePackets;
-	}
-	if (hasValue(dataSize)) {
-		this.totalIncomingDataSize = dataSize;
-	}
-	if (hasValue(headerSize)) {
-		this.totalIncomingHeadSize = headerSize;
-	}
 	this.totalIncomingPackets++;
+	if (this.ok) {
+		return;
+	}
 	if (hasValue(packetId)) {
 		if (head && !this.incomingHeadPackets[packetId]) {
 			this.totalReceivedUniquePackets++;
-			this.incomingHeadPackets[packetId] = message;
+			this.incomingHeadPackets[packetId] = message.head;
 			this.totalReceivedUniqueHeadPackets++;
 			this.currentIncomingHeadSize += head.length;
+			if (this.missingHeadPackets.has(packetId)) {
+				this.missingHeadPackets.delete(packetId);
+			}
 			if (this.onHead) {
 				await this.onHead(message);
+			}
+			if (this.totalIncomingUniqueHeadPackets === this.totalReceivedUniqueHeadPackets) {
+				this.assembleHead();
 			}
 		}
 		if (data && !this.incomingDataPackets[packetId]) {
 			this.totalReceivedUniquePackets++;
-			this.incomingDataPackets[packetId] = message;
+			this.incomingDataPackets[packetId] = message.data;
 			this.totalReceivedUniqueDataPackets++;
 			this.currentIncomingDataSize += data.length;
+			if (this.missingDataPackets.has(packetId)) {
+				this.missingDataPackets.delete(packetId);
+			}
 			if (this.onData) {
 				await this.onData(message);
 			}
+			if (last) {
+				this.totalIncomingUniqueDataPackets = packetId;
+				this.checkData();
+			}
 		}
-	}
-	if (end) {
-		if (data) {
-			this.totalIncomingUniqueDataPackets = packetId;
+	} else if (setup) {
+		this.receivedSetupPacket = true;
+		console.log('Setup Packet Received');
+		if (hasValue(headerSize)) {
+			this.totalIncomingHeadSize = headerSize;
 		}
-		if (head) {
-			this.totalIncomingUniqueHeadPackets = packetId;
+		if (method) {
+			this.method = method;
 		}
-		if (this.totalIncomingUniqueHeadPackets === this.totalReceivedUniqueHeadPackets) {
-			this.assembleHead();
+		if (hasValue(totalIncomingUniqueHeadPackets)) {
+			this.totalIncomingUniqueHeadPackets = totalIncomingUniqueHeadPackets;
 		}
-		if (this.totalIncomingUniqueDataPackets === this.totalReceivedUniqueDataPackets) {
-			this.assembleData();
+		this.sendHeadReady();
+	} else if (headReady) {
+		this.receivedHeadReadyPacket = true;
+		console.log('Head Ready Packet Received');
+		if (hasValue(totalIncomingUniqueDataPackets)) {
+			this.totalIncomingUniqueDataPackets = totalIncomingUniqueDataPackets;
 		}
-	}
-	if (err) {
+		this.sendHead();
+	} else if (dataReady) {
+		this.receivedDataReadyPacket = true;
+		console.log('Data Ready Packet Received');
+		this.sendData();
+	} else if (end) {
+		console.log('End Packet Received');
+		// this.check(); && this.cleanup();
+	} else if (err) {
 		return this.destroy(err);
 	}
-	if (setup) {
-		console.log('Setup Packet Received');
-		this.send(this.setupConfirmationPacket);
-	}
-	console.log('On Packet event', this);
+	console.log('On Packet event', this.id);
 }

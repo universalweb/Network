@@ -16,52 +16,27 @@ export class Reply extends Base {
 		const thisReply = this;
 		const { message } = request;
 		const { sid } = message;
-		console.log(source);
+		// console.log(source);
+		// // console.log(message);
 		const {
 			queue,
 			packetIdGenerator
 		} = source;
-		thisReply.source = function() {
-			return source;
-		};
 		const server = source.server();
-		thisReply.server = function() {
+		this.server = function() {
 			return server;
 		};
-		thisReply.packetMaxPayload = server.packetMaxPayload;
-		thisReply.packetMaxPayloadSafeEstimate = server.packetMaxPayloadSafeEstimate;
-		thisReply.sid = sid;
-		thisReply.responsePacketTemplate.sid = sid;
-		thisReply.response.sid = sid;
-		queue.set(sid, thisReply);
-		thisReply.sendPacket = function(config) {
-			return source.send(config);
-		};
-		if (source.lastActive) {
-			source.lastActive = Date.now();
-		}
-		thisReply.received(message);
-		return thisReply;
+		this.sid = sid;
+		this.id = sid;
+		this.packetTemplate.sid = sid;
+		this.response.sid = sid;
+		source.lastActive = Date.now();
+		queue.set(sid, this);
+		this.onPacket(message);
 	}
 	isReply = true;
-	async assemble() {
-		const thisReply = this;
-		const { serialization } = thisReply;
-		if (thisReply.totalIncomingPackets === 1) {
-			thisReply.request = thisReply.incomingPackets[0];
-		}
-		const packet = thisReply.incomingPackets[0];
-		eachArray(thisReply.incomingPackets, (item) => {
-			if (item.data) {
-				Buffer.concat([packet.data, item.data]);
-			}
-		});
-		if (serialization === 'struct' || !serialization) {
-			msgReceived(thisReply.request);
-			if (thisReply.request.data) {
-				thisReply.request.data = decode(thisReply.request.data);
-			}
-		}
+	async complete() {
+		this.state = 1;
 		await processEvent(this);
 	}
 }

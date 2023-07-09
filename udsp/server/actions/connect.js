@@ -1,5 +1,5 @@
 import { info } from '#logs';
-export async function opn(reply) {
+export async function connect(reply) {
 	const {
 		resourceDirectory,
 		cacheMaxAge,
@@ -8,11 +8,12 @@ export async function opn(reply) {
 		serverName,
 		encoding,
 		language,
-		onConnectResponse
+		onConnectResponse,
+		response
 	} = this;
 	const client = reply.client();
 	const server = reply.server();
-	const response = reply.response;
+	const request = reply.data;
 	info(`Server ID${client.idString}`, `Client ID${client.clientIdString}`, `Stream ID${response.sid}`);
 	response.head = {};
 	response.data = {
@@ -42,6 +43,7 @@ export async function opn(reply) {
 	}
 	// connection status - backwards compatibility
 	response.state = 1;
+	reply.head.serialization = 'struct';
 	// REKEY THE CLIENT BEFORE SENDING BACK
-	reply.send('struct');
+	reply.send();
 }

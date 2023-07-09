@@ -1,7 +1,6 @@
 import { sendPacket } from './sendPacket.js';
 import { destroy } from './destory.js';
 import { dataPacketization } from './dataPacketization.js';
-import { sendEnd } from './sendEnd.js';
 import { on } from './on.js';
 import { flushOutgoing, flushIncoming, flush } from './flush.js';
 import { sendPacketsById } from './sendPacketsById.js';
@@ -9,12 +8,11 @@ import { sendAll } from './sendAll.js';
 import { onPacket } from './onPacket.js';
 import {
 	isBuffer, isPlainObject, isString, promise, assign,
-	objectSize, eachArray, jsonParse, construct, isArray
+	objectSize, eachArray, jsonParse, construct, isArray, clear
 } from '@universalweb/acid';
 import { encode, decode } from 'msgpackr';
 import { request } from '#udsp/request';
 import { assembleData } from './assembleData.js';
-const singlePacketMethods = /^(connect|open)$/i;
 export class Base {
 	constructor(options = {}, source) {
 		const { events, } = options;
@@ -48,49 +46,75 @@ export class Base {
 		}
 		assign(source.head, target);
 	}
-	writeHeader(headerName, headerValue) {
+	setHeader(headerName, headerValue) {
 		const source = (this.isAsk) ? this.request : this.response;
 		if (!source.head) {
 			source.head = {};
 		}
 		source.head[headerName] = headerValue;
 	}
-	async assembleHead() {
-		const incomingPackets = this.incomingPackets;
-		const head = [];
-		eachArray(incomingPackets, (item, index) => {
-			if (!item) {
-				this.missingHeadPackets.set(index);
-			}
-			if (item.head) {
-				head.push(item.head);
-			}
-		});
-		this.setHead(head);
-	}
 	setHead(headArg) {
-		let head = (isArray(headArg)) ? Buffer.concat(headArg) : headArg;
-		head = (isBuffer(head)) ? decode(head) : head;
+		const headBuffer = Buffer.concat(headArg);
+		clear(headArg);
+		const head = decode(headBuffer);
+		headBuffer.fill(0);
 		this.head = head;
+		this.headAssembled = true;
 	}
-	async assembleData() {
-		const incomingPackets = this.incomingPackets;
-		const data = [];
-		eachArray(incomingPackets, (item, index) => {
+	async assembleHead() {
+		if (this.headAssembled) {
+			return;
+		}
+		const head = this.head;
+		const { missingHeadPackets } = this;
+		eachArray(this.incomingHeadPackets, (item, index) => {
 			if (!item) {
-				this.missingDataPackets.set(index);
+				if (!missingHeadPackets.has(index)) {
+					missingHeadPackets.set(index, true);
+				}
 			}
-			if (item.data) {
-				data.push(item.data);
+			if (item.head && !head[index]) {
+				head[index] = item.head;
 			}
 		});
-		this.data = Buffer.concat(data);
+		if (this.totalIncomingHeadSize === this.currentIncomingHeadSize) {
+			this.setHead(head);
+			this.sendDataReady();
+		}
+	}
+	async checkData() {
+		const { missingDataPackets } = this;
+		if (this.compiledData) {
+			return;
+		}
+		let lastKnownEndIndex = 0;
+		eachArray(this.incomingDataPackets, (item, index) => {
+			if (item) {
+				lastKnownEndIndex = item.endIndex;
+			} else if (missingDataPackets.has(index)) {
+				missingDataPackets.set(index, true);
+			}
+		});
+		if (missingDataPackets.size !== 0) {
+			console.log('Missing packets: ', missingDataPackets);
+			console.log('Last known EndIndex: ', lastKnownEndIndex);
+		} else if (this.head.dataSize === this.currentIncomingDataSize) {
+			this.ok = true;
+			this.complete();
+		}
+	}
+	get data() {
+		if (this.compiledData) {
+			return this.compiledData;
+		}
+		const data = Buffer.concat(this.incomingDataPackets);
 		if (this.head.serialization === 'struct') {
 			this.data = decode(this.data);
 		} else if (this.head.serialization === 'json') {
 			this.data = jsonParse(this.data);
 		}
-		this.complete();
+		this.compiledData = data;
+		return data;
 	}
 	toString() {
 		return this.data.toString();
@@ -102,7 +126,34 @@ export class Base {
 		return decode(this.data);
 	}
 	sendSetup() {
-		this.send(this.outgoingSetupPacket);
+		if (this.state === 0) {
+			this.state = 1;
+		}
+		const packet = this.getPacketTemplate();
+		packet.setup = true;
+		packet.headerSize = this.outgoingHeadSize;
+		this.sendPacket(packet);
+	}
+	sendHeadReady() {
+		if (this.state === 1) {
+			this.state = 2;
+		}
+		const packet = this.getPacketTemplate();
+		packet.headReady = true;
+		this.sendPacket(packet);
+	}
+	sendDataReady() {
+		if (this.state === 2) {
+			this.state = 3;
+		}
+		const packet = this.getPacketTemplate();
+		packet.dataReady = true;
+		this.sendPacket(packet);
+	}
+	async sendEnd() {
+		const packet = this.getPacketTemplate();
+		packet.end = true;
+		this.sendPacket(packet);
 	}
 	get headers() {
 		return this.head;
@@ -110,18 +161,14 @@ export class Base {
 	get body() {
 		return this.data;
 	}
-	buildSetupPacket() {
+	buildPacket() {
 		const {
-			packetTemplate,
-			maxPacketSize,
-			sid,
 			isAsk,
 			isReply
 		} = this;
 		const message = (this.isAsk) ? this.request : this.response;
 		this.outgoingHead = encode(message.head);
 		this.outgoingHeadSize = this.outgoingHead.length;
-		this.outgoingSetupPacket.headerSize = this.outgoingHeadSize;
 	}
 	async headPacketization() {
 		const {
@@ -135,56 +182,48 @@ export class Base {
 		let packetId = 0;
 		const headSize = this.outgoingHeadSize;
 		while (currentBytePosition < this.outgoingHeadSize) {
-			const packet = assign({}, this.packetTemplate);
+			const packet = this.getPacketTemplate();
 			packet.sid = sid;
 			packet.pid = packetId;
 			const endIndex = currentBytePosition + maxHeadSize;
 			const safeEndIndex = endIndex > headSize ? headSize : endIndex;
 			packet.head = this.outgoingHead.subarray(currentBytePosition, safeEndIndex);
 			packet.headSize = packet.head.length;
+			outgoingHeadPackets[packetId] = packet;
+			if (safeEndIndex === headSize) {
+				packet.last = true;
+				break;
+			}
 			packetId++;
 			currentBytePosition += maxHeadSize;
-			outgoingHeadPackets[packetId] = packet;
 		}
 	}
 	async dataPacketization() {
 		const {
-			packetMaxPayloadSafeEstimate,
-			packetTemplate,
-			maxDataSize,
-			sid,
 			isAsk,
 			isReply
 		} = this;
 		const message = (isAsk) ? this.request : this.response;
 		if (message.data) {
-			this.outgoingBody = message.data;
+			this.outgoingData = message.data;
 			if (!isBuffer(message.data)) {
-				this.writeHeader('serialization', 'struct');
-				this.outgoingBody = encode(message.data);
+				this.setHeader('serialization', 'struct');
+				this.outgoingData = encode(message.data);
 			}
-			this.writeHeader('dataSize', this.outgoingBody.length);
+			this.outgoingDataSize = this.outgoingData.length;
+			this.setHeader('dataSize', this.outgoingData.length);
 			await dataPacketization(this);
 		}
 	}
 	async packetization() {
 		const message = (this.isAsk) ? this.request : this.response;
-		if (singlePacketMethods.test(message.method)) {
-			message.end = true;
-			message.pid = 0;
-			this.outgoingPackets[0] = message;
-		} else {
-			await this.buildSetupPacket();
-			await this.headPacketization();
-			await this.dataPacketization();
-		}
+		await this.buildPacket();
+		await this.dataPacketization();
+		await this.headPacketization();
 	}
 	async send() {
 		const thisSource = this;
 		const {
-			packetTemplate,
-			maxPacketSize,
-			sid,
 			isAsk,
 			isReply,
 		} = this;
@@ -198,10 +237,53 @@ export class Base {
 		this.sendSetup();
 		return awaitingResult;
 	}
+	async sendHead() {
+		const thisReply = this;
+		console.log('outgoingHeadPackets', this.outgoingHeadPackets);
+		this.sendPackets(this.outgoingHeadPackets);
+	}
+	async sendData() {
+		const thisReply = this;
+		console.log('outgoingDataPackets', this.outgoingDataPackets);
+		this.sendPackets(this.outgoingDataPackets);
+	}
+	sendPackets(packetArray) {
+		const thisReply = this;
+		eachArray(packetArray, (packet) => {
+			thisReply.sendPacket({
+				message: packet
+			});
+		});
+	}
+	toObject() {
+		const {
+			head,
+			data,
+			sid,
+			method,
+		} = this;
+		const target = {
+			head: this.head,
+			data: this.data,
+			sid: this.id,
+			method: this.method
+		};
+		return target;
+	}
+	sendHeadPacketsById(id) {
+		return sendPacketsById(this.outgoingHeadPackets, id);
+	}
+	sendDataPacketsById(id) {
+		return sendPacketsById(this.outgoingDataPackets, id);
+	}
+	getPacketTemplate() {
+		const { sid, } = this;
+		const packet = {
+			sid
+		};
+		return packet;
+	}
 	destroy = destroy;
-	sendEnd = sendEnd;
-	sendPacketsById = sendPacketsById;
-	sendAll = sendAll;
 	onPacket = onPacket;
 	sendPacket = sendPacket;
 	on = on;
@@ -221,26 +303,22 @@ export class Base {
 	response = {
 		head: {}
 	};
-	// this is the data in order may have missing packets at times but will remain in order
-	data = [];
-	// This is as the data came in over the wire out of order
+	head = [];
+	dataOrdered = [];
 	stream = [];
 	missingHeadPackets = construct(Map);
 	missingDataPackets = construct(Map);
 	events = {};
 	header = {};
 	options = {};
-	outgoingSetupPacket = {
-		pid: 0,
-		setup: true,
-	};
 	setupConfirmationPacket = {
 		pid: 0,
 		authorize: true,
 	};
 	outgoingDataPackets = [];
 	outgoingHeadPackets = [];
-	incomingPackets = [];
+	incomingHeadPackets = [];
+	incomingDataPackets = [];
 	incomingAks = [];
 	incomingNacks = [];
 	outgoingAcks = [];

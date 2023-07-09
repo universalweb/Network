@@ -29,8 +29,8 @@ export class Ask extends Base {
 		const streamId = packetIdGenerator.get();
 		this.request.sid = streamId;
 		this.packetTemplate.sid = streamId;
-		this.outgoingSetupPacket.sid = streamId;
-		this.outgoingSetupPacket.method = method;
+		this.request.method = method;
+		this.method = method;
 		this.id = streamId;
 		if (data) {
 			this.request.data = data;
@@ -38,15 +38,13 @@ export class Ask extends Base {
 		if (head) {
 			this.request.head = head;
 		}
-		if (method) {
-			this.request.method = method;
-		} else {
-			this.request.method = 'get';
-		}
 		queue.set(streamId, this);
 	}
 	complete() {
 		console.log('Ask complete', this);
+		if (this.state === 3) {
+			this.state = 4;
+		}
 		this.accept(this);
 	}
 	isAsk = true;

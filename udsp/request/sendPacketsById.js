@@ -1,15 +1,15 @@
 import { eachArray, isArray } from '@universalweb/acid';
-export async function sendPacketsById(indexes) {
+export async function sendPacketsById(packetArray, indexes) {
 	const thisReply = this;
 	if (isArray(indexes)) {
 		eachArray(indexes, (id) => {
-			const message = thisReply.outgoingPackets[id];
+			const message = packetArray[id];
 			thisReply.sendPacket({
 				message
 			});
 		});
 	} else {
-		const message = thisReply.outgoingPackets[indexes];
+		const message = packetArray[indexes];
 		thisReply.sendPacket({
 			message
 		});
