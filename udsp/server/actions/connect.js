@@ -6,7 +6,7 @@ export async function connect(reply) {
 		allowOrigin,
 		contentSecurityPolicy,
 		serverName,
-		encoding,
+		textEncoding,
 		language,
 		onConnectResponse,
 		response
@@ -15,35 +15,30 @@ export async function connect(reply) {
 	const server = reply.server();
 	const request = reply.data;
 	info(`Server ID${client.idString}`, `Client ID${client.clientIdString}`, `Stream ID${response.sid}`);
-	response.head = {};
 	response.data = {
-		sid: server.id
+		sid: response.sid
 	};
-	client.newKey = true;
 	if (cacheMaxAge) {
-		response.head.cacheMaxAge = cacheMaxAge;
+		reply.setHeader('cacheMaxAge', cacheMaxAge);
 	}
 	if (allowOrigin) {
-		response.head.allowOrigin = allowOrigin;
+		reply.setHeader('allowOrigin', allowOrigin);
 	}
 	if (contentSecurityPolicy) {
-		response.head.contentSecurityPolicy = contentSecurityPolicy;
+		reply.setHeader('contentSecurityPolicy', contentSecurityPolicy);
 	}
 	if (serverName) {
-		response.head.server = serverName;
+		reply.setHeader('serverName', serverName);
 	}
-	if (encoding) {
-		response.head.encoding = encoding;
+	if (textEncoding) {
+		reply.setHeader('encoding', textEncoding);
 	}
 	if (language) {
-		response.head.language = language;
+		reply.setHeader('language', language);
 	}
 	if (onConnectResponse) {
-		response.data.response = onConnectResponse;
+		response.data.message = onConnectResponse;
 	}
-	// connection status - backwards compatibility
-	response.state = 1;
-	reply.head.serialization = 'struct';
-	// REKEY THE CLIENT BEFORE SENDING BACK
+	reply.setHeader('serialization', 'struct');
 	reply.send();
 }
