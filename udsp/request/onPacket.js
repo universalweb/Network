@@ -1,7 +1,6 @@
 import { hasValue } from '@universalweb/acid';
 import { destroy } from './destory.js';
 import { processEvent } from '#udsp/processEvent';
-import { singlePacketMethods } from '#udsp/request/singlePacketMethods';
 export async function onPacket(packet) {
 	const source = this;
 	this.lastPacketTime = Date.now();

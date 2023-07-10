@@ -10,6 +10,6 @@ export async function send(packet) {
 		source: this,
 		packet,
 	};
-	msgSent(`Client Sending to Server`, this.destination.port, this.destination.ip);
+	console.log(`client.send to Server`, this.destination.port, this.destination.ip);
 	return sendPacket(packetConfig);
 }

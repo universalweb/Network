@@ -26,7 +26,7 @@ import { actions } from './actions/index.js';
 import { getCertificate, parseCertificate } from '#certificate';
 import { randomBuffer } from '#crypto';
 import { cryptography } from '#udsp/cryptography';
-import { UDSP } from '#udsp/base.js';
+import { UDSP } from '#udsp/base';
 const { seal } = Object;
 /*
   * socket ID: SID

@@ -21,6 +21,7 @@ export async function sendPacket(packetConfig) {
 		ip,
 		port,
 	} = destination;
+	console.log(packetConfig.packet);
 	const packet = await encodePacket(packetConfig);
 	console.log(`Packet Encoded Size ${packet.length} Sending to ip: ${ip} Port: ${port}`);
 	let rawSocket;

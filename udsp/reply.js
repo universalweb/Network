@@ -28,9 +28,7 @@ export class Reply extends Base {
 		};
 		this.sid = sid;
 		this.id = sid;
-		this.packetTemplate.sid = sid;
 		this.response.sid = sid;
-		source.lastActive = Date.now();
 		queue.set(sid, this);
 		this.onPacket(message);
 	}
@@ -39,6 +37,9 @@ export class Reply extends Base {
 		this.state = 1;
 		await processEvent(this);
 	}
+	response = {
+		head: {}
+	};
 }
 export function reply(packet, client) {
 	console.log(client);

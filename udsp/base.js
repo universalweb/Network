@@ -3,9 +3,9 @@ import { actions } from './server/actions/index.js';
 import { cryptography } from '#udsp/cryptography';
 import dgram from 'dgram';
 import { randomConnectionId } from '#crypto';
-class UDSP {
-	constructor() {
-		return this.initialize();
+export class UDSP {
+	constructor(config) {
+		// return this.initialize(config);
 	}
 	async calculatePacketOverhead() {
 		const {
@@ -34,10 +34,10 @@ class UDSP {
 				this.maxHeadSize = this.packetMaxPayload;
 			}
 		}
-		console.log(`Max Packet Size: ${this.maxPacketSize} bytes`);
-		console.log(`Max Payload Size: ${this.maxPayloadSize} bytes`);
 		console.log(`Packet Overhead: ${this.packetOverhead} bytes`);
 		console.log(`connectionIdSize Overhead: ${this.connectionIdSize} bytes`);
+		console.log(`Max Packet Size: ${this.maxPacketSize} bytes`);
+		console.log(`Max Payload Size: ${this.maxPayloadSize} bytes`);
 	}
 	generateConnectionID() {
 		const target = randomConnectionId(this.connectionIdSize || 8);

@@ -28,7 +28,6 @@ export class Ask extends Base {
 		console.log('Ask', requestObject);
 		const streamId = packetIdGenerator.get();
 		this.request.sid = streamId;
-		this.packetTemplate.sid = streamId;
 		this.request.method = method;
 		this.method = method;
 		this.id = streamId;
@@ -49,6 +48,9 @@ export class Ask extends Base {
 	}
 	isAsk = true;
 	type = 'ask';
+	request = {
+		head: {}
+	};
 }
 export async function ask(source) {
 	return construct(Ask, omit);

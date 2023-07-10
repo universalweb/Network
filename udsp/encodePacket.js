@@ -1,5 +1,9 @@
 import {
-	success, failed, imported, msgSent, info
+	success,
+	failed,
+	imported,
+	msgSent,
+	info
 } from '#logs';
 import {
 	encode,
@@ -16,12 +20,8 @@ export async function encodePacket(config) {
 	success(`PROCESSING ENCODE PACKET`);
 	const {
 		source,
-		packet: {
-			header = {},
-			message,
-			footer,
-			options
-		}
+		options,
+		packet: message
 	} = config;
 	const {
 		state,
@@ -30,6 +30,8 @@ export async function encodePacket(config) {
 		isServerEnd,
 		isServerClient
 	} = source;
+	const header = options?.header || {};
+	const footer = options?.footer;
 	const destination = source.destination || config.destination;
 	let id = destination.id || source.id;
 	const { cryptography } = source;
@@ -56,6 +58,7 @@ export async function encodePacket(config) {
 		}
 	}
 	header.id = id;
+	// console.log(config);
 	message.t = Date.now();
 	if (isClient) {
 		if (state === 0) {

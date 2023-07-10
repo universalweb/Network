@@ -45,7 +45,7 @@ import { onListening } from './listening.js';
 import { keychainGet } from '#keychain';
 import { Ask } from '../ask.js';
 import { fetchRequest } from '../fetch.js';
-import { UDSP } from '#udsp/base.js';
+import { UDSP } from '#udsp/base';
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
 	constructor(configuration) {

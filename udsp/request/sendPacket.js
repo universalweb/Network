@@ -15,12 +15,12 @@ export async function sendPacket(packet) {
 	}
 	if (message) {
 		info(`Sending Packet with message`);
+		if (message.method) {
+			info(`Sending Packet with act ${message.method}`);
+		}
 	}
 	if (footer) {
 		info(`Sending Packet with footer`);
-	}
-	if (message.method) {
-		info(`Sending Packet with act ${message.method}`);
 	}
 	await source.send(packet);
 }

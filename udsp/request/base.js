@@ -4,7 +4,6 @@ import { dataPacketization } from './dataPacketization.js';
 import { on } from './on.js';
 import { flushOutgoing, flushIncoming, flush } from './flush.js';
 import { sendPacketsById } from './sendPacketsById.js';
-import { sendAll } from './sendAll.js';
 import { onPacket } from './onPacket.js';
 import {
 	isBuffer, isPlainObject, isString, promise, assign,
@@ -21,6 +20,7 @@ export class Base {
 		this.source = function() {
 			return source;
 		};
+		source.lastActive = Date.now();
 		const {
 			maxPacketSize,
 			maxPayloadSize,
@@ -53,12 +53,11 @@ export class Base {
 		}
 		source.head[headerName] = headerValue;
 	}
-	setHead(headArg) {
-		const headBuffer = Buffer.concat(headArg);
-		clear(headArg);
-		const head = decode(headBuffer);
-		headBuffer.fill(0);
-		this.head = head;
+	setHead() {
+		if (this.head?.length) {
+			this.head = Buffer.concat(this.head);
+			this.head = decode(this.head);
+		}
 		this.headAssembled = true;
 	}
 	async assembleHead() {
@@ -78,7 +77,7 @@ export class Base {
 			}
 		});
 		if (this.totalIncomingHeadSize === this.currentIncomingHeadSize) {
-			this.setHead(head);
+			this.setHead();
 			this.sendDataReady();
 		}
 	}
@@ -277,9 +276,9 @@ export class Base {
 		return sendPacketsById(this.outgoingDataPackets, id);
 	}
 	getPacketTemplate() {
-		const { sid, } = this;
+		const { id, } = this;
 		const packet = {
-			sid
+			sid: id
 		};
 		return packet;
 	}
@@ -297,12 +296,6 @@ export class Base {
 	totalReceivedUniquePackets = 0;
 	totalIncomingUniquePackets = 0;
 	progress = 0;
-	request = {
-		head: {}
-	};
-	response = {
-		head: {}
-	};
 	head = [];
 	dataOrdered = [];
 	stream = [];
@@ -334,5 +327,4 @@ export class Base {
 	to keep track of the state of the request, where `0` represents an unsent request, `1` represents a
 	request that is currently being sent, and `2` represents a completed request. */
 	state = 0;
-	packetTemplate = {};
 }
