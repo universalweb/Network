@@ -1,5 +1,5 @@
 import { info } from '#logs';
-export async function connect(reply) {
+export async function intro(reply) {
 	const {
 		resourceDirectory,
 		cacheMaxAge,
@@ -40,5 +40,7 @@ export async function connect(reply) {
 		response.data.message = onConnectResponse;
 	}
 	reply.setHeader('serialization', 'struct');
-	reply.send();
+	// swap to new key but only for the specific request?
+	const clientResponse = await reply.send();
+	console.log(clientResponse);
 }

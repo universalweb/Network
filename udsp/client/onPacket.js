@@ -22,6 +22,11 @@ export async function onPacket(packet) {
 	if (!wasDecoded) {
 		return failed('When decoding the packet but header passed');
 	}
+	if (this.state === 0) {
+		if (!config.packetDecoded.error) {
+			this.state = 1;
+		}
+	}
 	processMessage(config.packetDecoded, this);
 }
 

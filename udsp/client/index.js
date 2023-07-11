@@ -40,7 +40,7 @@ import { request } from '#udsp/request';
 import { cryptography } from '#udsp/cryptography';
 import { processMessage } from './processMessage.js';
 import { onPacket } from './onPacket.js';
-import { connect as clientConnect } from './connect.js';
+import { intro } from './intro.js';
 import { onListening } from './listening.js';
 import { keychainGet } from '#keychain';
 import { Ask } from '../ask.js';
@@ -169,7 +169,7 @@ export class Client extends UDSP {
 		Client.connections.set(this.idString, this);
 		if (this.autoConnect) {
 			console.time('CONNECTING');
-			const connectRequest = await this.connect();
+			this.handshake = await this.intro();
 			console.timeEnd('CONNECTING');
 		}
 		return this;
@@ -187,7 +187,12 @@ export class Client extends UDSP {
 		const ask = construct(Ask, [message, options, this]);
 		return ask;
 	}
-	connect = clientConnect;
+	intro(ask) {
+		if (!this.handshake) {
+			this.handshake = intro.call(this, ask);
+		}
+		return this.handshake;
+	}
 	send = send;
 	request = request;
 	fetch = fetchRequest;
@@ -196,9 +201,8 @@ export class Client extends UDSP {
 	onListening = onListening;
 	onPacket = onPacket;
 	destination = {};
-	autoConnect = true;
+	autoConnect = false;
 	static connections = new Map();
-	queue = new Map();
 	packetIdGenerator = construct(UniqID);
 }
 export async function client(configuration) {

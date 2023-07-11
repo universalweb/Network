@@ -4,9 +4,6 @@ import { cryptography } from '#udsp/cryptography';
 import dgram from 'dgram';
 import { randomConnectionId } from '#crypto';
 export class UDSP {
-	constructor(config) {
-		// return this.initialize(config);
-	}
 	async calculatePacketOverhead() {
 		const {
 			connectionIdSize,
@@ -78,4 +75,5 @@ export class UDSP {
 	heapSize = 0;
 	throttle = false;
 	debounce = false;
+	requestQueue = [];
 }

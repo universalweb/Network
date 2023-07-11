@@ -7,7 +7,7 @@ import { sendPacketsById } from './sendPacketsById.js';
 import { onPacket } from './onPacket.js';
 import {
 	isBuffer, isPlainObject, isString, promise, assign,
-	objectSize, eachArray, jsonParse, construct, isArray, clear
+	objectSize, eachArray, jsonParse, construct, isArray, clear, isFalse
 } from '@universalweb/acid';
 import { encode, decode } from 'msgpackr';
 import { request } from '#udsp/request';
@@ -37,6 +37,9 @@ export class Base {
 		}
 		if (packetMaxPayloadSafeEstimate) {
 			this.packetMaxPayloadSafeEstimate = packetMaxPayloadSafeEstimate;
+		}
+		if (this.isAsk) {
+			this.handshake = source.handshake;
 		}
 	}
 	setHeaders(target) {
@@ -98,7 +101,6 @@ export class Base {
 			console.log('Missing packets: ', missingDataPackets);
 			console.log('Last known EndIndex: ', lastKnownEndIndex);
 		} else if (this.head.dataSize === this.currentIncomingDataSize) {
-			this.ok = true;
 			this.complete();
 		}
 	}
@@ -131,6 +133,19 @@ export class Base {
 		const packet = this.getPacketTemplate();
 		packet.setup = true;
 		packet.headerSize = this.outgoingHeadSize;
+		this.sendPacket(packet);
+	}
+	sendIntro() {
+		const packet = this.getPacketTemplate();
+		packet.intro = true;
+		this.sendPacket(packet);
+	}
+	sendFinished() {
+		if (this.state === 0) {
+			this.state = 1;
+		}
+		const packet = this.getPacketTemplate();
+		packet.intro = true;
 		this.sendPacket(packet);
 	}
 	sendHeadReady() {
@@ -222,10 +237,24 @@ export class Base {
 	}
 	async send() {
 		const thisSource = this;
+		if (isFalse(this.handshake)) {
+			if (this.method !== 'intro') {
+				if (!this.waitingOnIntro) {
+					console.log('Handshake not complete.');
+					this.waitingOnIntro = true;
+				}
+				await this.source().intro(this);
+				this.handshake = this.source().handshake;
+			}
+		}
+		if (this.sent) {
+			return this.accept;
+		}
 		const {
 			isAsk,
 			isReply,
 		} = this;
+		this.sent = true;
 		const message = (isAsk) ? this.request : this.response;
 		console.log(`${this.type}.send`, message);
 		const awaitingResult = promise((accept) => {
@@ -327,4 +356,6 @@ export class Base {
 	to keep track of the state of the request, where `0` represents an unsent request, `1` represents a
 	request that is currently being sent, and `2` represents a completed request. */
 	state = 0;
+	handshake = false;
+	inRequestQueue = false;
 }

@@ -36,7 +36,7 @@ export async function sendPacket(packetConfig) {
 				reject(error);
 				return failed(error);
 			}
-			msgSent('Message Sent', packet.length);
+			success('Packet Sent Out', packet.length);
 			accept();
 		});
 	});

@@ -130,24 +130,35 @@ export async function decodePacket(config) {
 	} else if (footer) {
 		packetDecoded.footer = footer;
 	}
+	const messageEncoded = packet[1];
+	if (header.error) {
+		console.log('Critical Error', header.error);
+		// can be returned if a server so chooses to respond to bad/mal/incorrect requests
+		// can return unencrypted data
+		if (messageEncoded) {
+			packetDecoded.message = decode(messageEncoded);
+		}
+		return true;
+	}
 	const ad = (footer) ? Buffer.concat([packet[0], packet[2]]) : packet[0];
 	info(`Transmit Key ${toBase64(destination.sessionKeys.receiveKey)}`);
-	if (!packet[1]) {
-		return failed(`No Encrypted Message - failed to decode -> Invalid Packet`);
+	if (messageEncoded) {
+		info(`encryptedMessage ${messageEncoded.length} bytes`);
+		const decryptedMessage = cryptography.decrypt(packet[1], destination.sessionKeys, ad);
+		if (!decryptedMessage) {
+			return failed('Encryption failed');
+		}
+		info(`encryptedMessage ${decryptedMessage.length} bytes`);
+		const message = decode(decryptedMessage);
+		if (message.head) {
+			console.log('head PAYLOAD', message.head);
+		}
+		if (message.data) {
+			success('data PAYLOAD', message.data?.length || message.data);
+		}
+		packetDecoded.message = message;
+	} else {
+		failed(`No Encrypted Message - failed to decode -> Invalid Packet`);
 	}
-	info(`encryptedMessage ${packet[1].length} bytes`);
-	const decryptedMessage = cryptography.decrypt(packet[1], destination.sessionKeys, ad);
-	if (!decryptedMessage) {
-		return failed('Encryption failed');
-	}
-	info(`encryptedMessage ${decryptedMessage.length} bytes`);
-	const message = decode(decryptedMessage);
-	if (message.head) {
-		console.log('head PAYLOAD', message.head);
-	}
-	if (message.data) {
-		success('data PAYLOAD', message.data?.length || message.data);
-	}
-	packetDecoded.message = message;
 	return true;
 }
