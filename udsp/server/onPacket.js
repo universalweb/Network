@@ -24,6 +24,13 @@ export async function onPacket(packet, connection) {
 		key
 	} = config.packetDecoded.header;
 	let client = thisServer.clients.get(toBase64(id));
+	if (client) {
+		config.destination = client;
+	}
+	const wasDecoded = await decodePacket(config);
+	if (!wasDecoded) {
+		return failed('When decoding the packet but header passed');
+	}
 	if (key && !client) {
 		client = await createClient({
 			server: thisServer,
@@ -36,11 +43,8 @@ export async function onPacket(packet, connection) {
 		config.destination = client;
 	}
 	if (!client) {
+		// Send error message back to origin or not
 		return failed('Invalid Client id given', toBase64(id));
-	}
-	const wasDecoded = await decodePacket(config);
-	if (!wasDecoded) {
-		return failed('When decoding the packet but header passed');
 	}
 	await reply(config.packetDecoded, client);
 }

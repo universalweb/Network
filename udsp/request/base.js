@@ -140,6 +140,12 @@ export class Base {
 		packet.intro = true;
 		this.sendPacket(packet);
 	}
+	sendIntroReply() {
+		const packet = this.getPacketTemplate();
+		packet.introReply = true;
+		packet.scid = this.client().id;
+		this.sendPacket(packet);
+	}
 	sendFinished() {
 		if (this.state === 0) {
 			this.state = 1;

@@ -11,4 +11,5 @@ Packetization
 ripemd
 Ristretto
 schnorr
+scid
 secp

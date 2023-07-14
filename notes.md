@@ -1,5 +1,7 @@
 # Notes
 
-If you wanted to process parts of the packet first like the header you could first read the messagePack encoding and process as you go. This is useful for reading the headers or parts of it first before the entire packet.
+The packet based approach in the ASK for the new handshake is the first step but it must be done in combination with a larger open request so that any larger additional information may be included in the response.
 
-For new global server/client base class add a method for  optional padding.
+Client Hello
+Server Hello Server Connection ID Packet Sent to Client
+Client responds with new server connection ID - connection is established (if fails at this step just re-transmit next packets)

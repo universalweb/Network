@@ -14,14 +14,14 @@ export async function intro(message) {
 		state,
 		time,
 		// server connection ID
-		sid
+		scid: serverConnectionId
 	} = connectResponse;
-	if (state === 1 && sid) {
+	if (state === 1 && serverConnectionId) {
 		connectedLog(data);
 		this.handshake = true;
 		this.state = 1;
 		this.connected = true;
-		this.destination.id = sid;
+		this.destination.id = serverConnectionId;
 		if (data.key) {
 			console.log('New Key Provided for Perfect Forward Secrecy');
 		}

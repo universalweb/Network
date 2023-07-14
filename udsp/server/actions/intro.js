@@ -16,7 +16,7 @@ export async function intro(reply) {
 	const request = reply.data;
 	info(`Server ID${client.idString}`, `Client ID${client.clientIdString}`, `Stream ID${response.sid}`);
 	response.data = {
-		sid: response.sid
+		scid: client.id
 	};
 	if (cacheMaxAge) {
 		reply.setHeader('cacheMaxAge', cacheMaxAge);
