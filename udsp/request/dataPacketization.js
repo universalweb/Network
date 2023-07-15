@@ -19,15 +19,18 @@ export async function dataPacketization(source) {
 			const safeEndIndex = endIndex > dataSize ? dataSize : endIndex;
 			const chunk = outgoingData.subarray(currentBytePosition, safeEndIndex);
 			console.log('chunksize', chunk.length, currentBytePosition, endIndex);
-			const packet = {
+			const message = {
 				pid: packetId,
 				endIndex: safeEndIndex,
 				sid
 			};
-			packet.data = chunk;
-			outgoingDataPackets[packetId] = outgoingDataPackets;
+			message.data = chunk;
+			const packet = {
+				message
+			};
+			outgoingDataPackets[packetId] = packet;
 			if (safeEndIndex === dataSize) {
-				packet.last = true;
+				message.last = true;
 				break;
 			}
 			currentBytePosition += maxDataSize;
@@ -35,9 +38,11 @@ export async function dataPacketization(source) {
 		}
 	} else {
 		const packet = {
-			pid: 0,
-			end: true,
-			data: outgoingData
+			message: {
+				pid: 0,
+				end: true,
+				data: outgoingData
+			}
 		};
 		console.log(source);
 		outgoingDataPackets[0] = packet;

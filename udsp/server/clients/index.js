@@ -21,6 +21,9 @@ export class Client {
 		this.server = function() {
 			return server;
 		};
+		this.socket = function() {
+			return server.socket;
+		};
 		return initialize(config, client);
 	}
 	async created() {
@@ -49,11 +52,7 @@ export class Client {
 	}
 	async send(packet) {
 		msgSent(`socket Sent -> ID: ${this.id}`);
-		const config = {
-			source: this,
-			packet
-		};
-		return sendPacket(config);
+		return sendPacket(packet, this, this.socket());
 	}
 	async received(message, frameHeaders) {
 		const server = this.server();

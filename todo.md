@@ -1,6 +1,5 @@
 # TODO
 
-Swap to simple binary IDs instead of UTF8 strings
-Swap to simple binary Codes
+Swap to simple numerical Codes
 Minify property names for packets
 Minify property names for certificates

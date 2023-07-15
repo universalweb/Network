@@ -35,7 +35,7 @@ const domainProfile = await createProfile({
 				// Encrypt public key sent in the packet
 				// encryptClientKey: 'sealedbox',
 				// encryptServerKey: 'sealedbox',
-				encryptKeypair: true
+				// encryptKeypair: true
 			},
 			// Max connection id size in bytes usually randomly generated and checked but used to calculate max packet payload size
 			connectionIdSize: 8,
@@ -47,11 +47,18 @@ const domainProfile = await createProfile({
 			// maxHeadSize: 1200,
 			// heartbeat is an interval check for when a client must send something to the server to remain connected
 			heartbeat: 30000,
+			url: 'universal.web',
+			domain: 'universal',
+			extension: 'web',
 			ip: '::1',
 			port: 8888,
-			domain: 'universal.web',
-			hostname: 'universal',
-			extension: 'web',
+			// Used when a custom Domain name server is used to resolve the domain name locations still provides valid certificates else will be warned of invalid certificate
+			// domainInfoServer: {
+			// 	url: 'dis.universal.web',
+			// 	subdomain: 'dis',
+			// 	domain: 'universal',
+			// 	extension: 'web',
+			// },
 			// Shows the browser how to display the domain name for humans correctly
 			encoding: 'utf8',
 			entity: {
@@ -73,12 +80,16 @@ const domainProfile = await createProfile({
 				publicKey: true
 			},
 			// This allows a browser or connection to use the realtime mode for the UDSP connection
+			// Allowing it to act like a webtransport, websocket, and or traditional HTTP like connection
 			realtime: true,
 			// blocked methods mean methods the server doesn't permit
 			// blockedMethods: ['open'],
 			allowedMethods: ['get', 'connect', 'open', 'file', 'stream', 'close'],
+			// deafult compression of payload data only
 			compression: true,
-			headerCompression: true,
+			// packetCompression: true,
+			// headerCompression: true,
+			// footerCompression: true,
 			autoLogin: true,
 		},
 		master: {},

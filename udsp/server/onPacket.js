@@ -5,7 +5,7 @@ import { toBase64 } from '#crypto';
 import { isEmpty } from '@universalweb/acid';
 import { decodePacket, decodePacketHeaders } from '#udsp/decodePacket';
 import { createClient } from './clients/index.js';
-import { reply } from '#udsp/reply';
+import { reply } from '#udsp/request/reply';
 const isServer = true;
 export async function onPacket(packet, connection) {
 	const thisServer = this;

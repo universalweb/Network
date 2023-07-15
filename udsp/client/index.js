@@ -43,7 +43,7 @@ import { onPacket } from './onPacket.js';
 import { intro } from './intro.js';
 import { onListening } from './listening.js';
 import { keychainGet } from '#keychain';
-import { Ask } from '../ask.js';
+import { Ask } from '../request/ask.js';
 import { fetchRequest } from '../fetch.js';
 import { UDSP } from '#udsp/base';
 // UNIVERSAL WEB Client Class

@@ -11,7 +11,7 @@ import { decode, encode } from 'msgpackr';
 import {
 	failed, info, msgReceived, msgSent
 } from '#logs';
-import { Base } from './request/base.js';
+import { Base } from './base.js';
 import { request } from '#udsp/request';
 export class Ask extends Base {
 	constructor(requestObject, options = {}, source) {
@@ -24,7 +24,7 @@ export class Ask extends Base {
 			data,
 			method = 'get'
 		} = requestObject;
-		const head = requestObject.head || requestObject.headers || options.head || options.headers || {};
+		const head = requestObject.head || options.head;
 		console.log('Ask', requestObject);
 		const streamId = packetIdGenerator.get();
 		this.request.sid = streamId;
@@ -48,9 +48,7 @@ export class Ask extends Base {
 	}
 	isAsk = true;
 	type = 'ask';
-	request = {
-		head: {}
-	};
+	request = {};
 }
 export async function ask(source) {
 	return construct(Ask, omit);

@@ -3,15 +3,11 @@ export async function sendPacketsById(packetArray, indexes) {
 	const thisReply = this;
 	if (isArray(indexes)) {
 		eachArray(indexes, (id) => {
-			const message = packetArray[id];
-			thisReply.sendPacket({
-				message
-			});
+			const packet = packetArray[id];
+			thisReply.sendPacket(packet);
 		});
 	} else {
-		const message = packetArray[indexes];
-		thisReply.sendPacket({
-			message
-		});
+		const packet = packetArray[indexes];
+		thisReply.sendPacket(packet);
 	}
 }

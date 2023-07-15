@@ -6,9 +6,9 @@ import {
 	success, failed, info, msgReceived, msgSent
 } from '#logs';
 import { processEvent } from '#udsp/processEvent';
-import { Base } from './request/base.js';
+import { Base } from './base.js';
 /**
-	* @todo Add promise to send use the method that Ask uses assign the accept, return it, and when completed execute.
+	* @todo
 */
 export class Reply extends Base {
 	constructor(request, source) {
@@ -22,10 +22,6 @@ export class Reply extends Base {
 			queue,
 			packetIdGenerator
 		} = source;
-		const server = source.server();
-		this.server = function() {
-			return server;
-		};
 		this.sid = sid;
 		this.id = sid;
 		this.response.sid = sid;
@@ -37,11 +33,9 @@ export class Reply extends Base {
 		this.state = 1;
 		await processEvent(this);
 	}
-	response = {
-		head: {}
-	};
+	response = {};
 }
 export function reply(packet, client) {
-	console.log(client);
+	// console.log(client);
 	return construct(Reply, [packet, client]);
 }

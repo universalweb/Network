@@ -149,12 +149,7 @@ export class Server extends UDSP {
 		return this;
 	}
 	async send(packet, destination) {
-		const config = {
-			source: this,
-			destination,
-			packet
-		};
-		return sendPacket(config);
+		return sendPacket(packet, this, this.socket, destination);
 	}
 	bindMethods(methods) {
 		const thisServer = this;
