@@ -131,50 +131,39 @@ export class Base {
 		if (this.state === 0) {
 			this.state = 1;
 		}
-		const packet = this.getPacketTemplate();
-		packet.message.setup = true;
-		packet.message.headerSize = this.outgoingHeadSize;
-		this.sendPacket(packet);
-	}
-	sendIntro() {
-		const packet = this.getPacketTemplate();
-		packet.message.intro = true;
-		this.sendPacket(packet);
-	}
-	sendIntroReply() {
-		const packet = this.getPacketTemplate();
-		packet.message.introReply = true;
-		packet.message.scid = this.client().id;
-		this.sendPacket(packet);
+		const message = this.getPacketTemplate();
+		message.setup = true;
+		message.headerSize = this.outgoingHeadSize;
+		this.sendPacket(message);
 	}
 	sendFinished() {
 		if (this.state === 0) {
 			this.state = 1;
 		}
-		const packet = this.getPacketTemplate();
-		packet.message.intro = true;
-		this.sendPacket(packet);
+		const message = this.getPacketTemplate();
+		message.intro = true;
+		this.sendPacket(message);
 	}
 	sendHeadReady() {
 		if (this.state === 1) {
 			this.state = 2;
 		}
-		const packet = this.getPacketTemplate();
-		packet.message.headReady = true;
-		this.sendPacket(packet);
+		const message = this.getPacketTemplate();
+		message.headReady = true;
+		this.sendPacket(message);
 	}
 	sendDataReady() {
 		if (this.state === 2) {
 			this.state = 3;
 		}
-		const packet = this.getPacketTemplate();
-		packet.message.dataReady = true;
-		this.sendPacket(packet);
+		const message = this.getPacketTemplate();
+		message.dataReady = true;
+		this.sendPacket(message);
 	}
 	async sendEnd() {
-		const packet = this.getPacketTemplate();
-		packet.message.end = true;
-		this.sendPacket(packet);
+		const message = this.getPacketTemplate();
+		message.end = true;
+		this.sendPacket(message);
 	}
 	get headers() {
 		return this.head;
@@ -198,21 +187,20 @@ export class Base {
 			isAsk,
 			outgoingHeadPackets
 		} = this;
-		const message = (this.isAsk) ? this.request : this.response;
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const headSize = this.outgoingHeadSize;
 		while (currentBytePosition < this.outgoingHeadSize) {
-			const packet = this.getPacketTemplate();
-			packet.message.sid = sid;
-			packet.message.pid = packetId;
+			const message = this.getPacketTemplate();
+			message.sid = sid;
+			message.pid = packetId;
 			const endIndex = currentBytePosition + maxHeadSize;
 			const safeEndIndex = endIndex > headSize ? headSize : endIndex;
-			packet.message.head = this.outgoingHead.subarray(currentBytePosition, safeEndIndex);
-			packet.message.headSize = packet.head.length;
-			outgoingHeadPackets[packetId] = packet;
+			message.head = this.outgoingHead.subarray(currentBytePosition, safeEndIndex);
+			message.headSize = message.head.length;
+			outgoingHeadPackets[packetId] = message;
 			if (safeEndIndex === headSize) {
-				packet.last = true;
+				message.last = true;
 				break;
 			}
 			packetId++;
@@ -284,10 +272,8 @@ export class Base {
 	}
 	sendPackets(packetArray) {
 		const thisReply = this;
-		eachArray(packetArray, (packet) => {
-			thisReply.sendPacket({
-				message: packet
-			});
+		eachArray(packetArray, (message) => {
+			thisReply.sendPacket(message);
 		});
 	}
 	toObject() {
@@ -313,29 +299,15 @@ export class Base {
 	}
 	getPacketTemplate() {
 		const { id, } = this;
-		const packet = {
-			message: {
-				sid: id
-			}
+		const message = {
+			sid: id
 		};
-		return packet;
+		return message;
 	}
 	destroy = destroy;
 	onPacket = onPacket;
-	sendPacket(packet, options) {
-		this.source().send(packet, options);
-	}
-	addUDSPHeader(packet, headerName, headerValue) {
-		if (!packet.header) {
-			packet.header = {};
-		}
-		packet.header[headerName] = headerValue;
-	}
-	addPublicKeyHeader(packet) {
-		const source = this.source();
-		const key = source.encryptKeypair.publicKey;
-		console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(key));
-		this.addUDSPHeader(packet, 'key', key);
+	sendPacket(message, headers, footer) {
+		this.source().send(message, headers, footer);
 	}
 	on = on;
 	outgoingHead;

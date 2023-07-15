@@ -17,18 +17,15 @@ export async function dataPacketization(source) {
 		while (currentBytePosition < dataSize) {
 			const endIndex = currentBytePosition + maxDataSize;
 			const safeEndIndex = endIndex > dataSize ? dataSize : endIndex;
-			const chunk = outgoingData.subarray(currentBytePosition, safeEndIndex);
-			console.log('chunksize', chunk.length, currentBytePosition, endIndex);
+			const data = outgoingData.subarray(currentBytePosition, safeEndIndex);
+			console.log('chunksize', data.length, currentBytePosition, endIndex);
 			const message = {
 				pid: packetId,
 				endIndex: safeEndIndex,
-				sid
+				sid,
+				data
 			};
-			message.data = chunk;
-			const packet = {
-				message
-			};
-			outgoingDataPackets[packetId] = packet;
+			outgoingDataPackets[packetId] = message;
 			if (safeEndIndex === dataSize) {
 				message.last = true;
 				break;
@@ -37,15 +34,13 @@ export async function dataPacketization(source) {
 			packetId++;
 		}
 	} else {
-		const packet = {
-			message: {
-				pid: 0,
-				end: true,
-				data: outgoingData
-			}
+		const message = {
+			pid: 0,
+			end: true,
+			data: outgoingData
 		};
-		console.log(source);
-		outgoingDataPackets[0] = packet;
+		// console.log(source);
+		outgoingDataPackets[0] = message;
 	}
 	console.log('bufferToPackets', outgoingDataPackets);
 }

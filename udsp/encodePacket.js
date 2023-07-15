@@ -16,13 +16,8 @@ import {
 	objectSize
 } from '@universalweb/acid';
 import { toBase64 } from '#crypto';
-export async function encodePacket(packet, source, destination) {
+export async function encodePacket(message, source, destination, headers, footer) {
 	success(`PROCESSING ENCODE PACKET`);
-	const {
-		message,
-		header: headers,
-		footer
-	} = packet;
 	const {
 		state,
 		isClient,

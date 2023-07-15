@@ -46,6 +46,7 @@ import { keychainGet } from '#keychain';
 import { Ask } from '../request/ask.js';
 import { fetchRequest } from '../fetch.js';
 import { UDSP } from '#udsp/base';
+import { sendPacket } from '../request/sendPacket.js';
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
 	constructor(configuration) {
@@ -187,11 +188,20 @@ export class Client extends UDSP {
 		const ask = construct(Ask, [message, options, this]);
 		return ask;
 	}
-	intro(ask) {
-		if (!this.handshake) {
-			this.handshake = intro.call(this, ask);
-		}
-		return this.handshake;
+	sendIntro(ask) {
+		const header = this.setPublicKeyHeader();
+		const message = {
+			intro: true
+		};
+		this.send(message, header);
+	}
+	receivedIntro(message) {
+	}
+	setPublicKeyHeader(header = {}) {
+		const source = this.source();
+		const key = source.encryptKeypair.publicKey;
+		console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(key));
+		header.key = key;
 	}
 	send = send;
 	request = request;

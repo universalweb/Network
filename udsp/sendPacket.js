@@ -3,7 +3,7 @@ import {
 } from '#logs';
 import { promise, isFunction } from '@universalweb/acid';
 import { encodePacket } from '#udsp/encodePacket';
-export async function sendPacket(packet, source, socket, destination = source.destination) {
+export async function sendPacket(message, source, socket, destination = source.destination, headers, footer) {
 	success(`SENDING MESSAGE`);
 	// console.log(packetConfig);
 	const {
@@ -13,16 +13,11 @@ export async function sendPacket(packet, source, socket, destination = source.de
 		isServerClient
 	} = source;
 	const {
-		message,
-		header,
-		footer
-	} = packet;
-	const {
 		ip,
 		port,
 	} = destination;
 	// console.log(packetConfig.packet);
-	if (header) {
+	if (headers) {
 		info(`Sending Packet with header`);
 	}
 	if (message) {
@@ -34,7 +29,7 @@ export async function sendPacket(packet, source, socket, destination = source.de
 	if (footer) {
 		info(`Sending Packet with footer`);
 	}
-	const packetEncoded = await encodePacket(packet, source, destination);
+	const packetEncoded = await encodePacket(headers, source, destination, headers, footer);
 	console.log(`Packet Encoded Size ${packetEncoded.length} Sending to ip: ${ip} Port: ${port}`);
 	return promise((accept, reject) => {
 		socket.send(packetEncoded, port, ip, (error) => {

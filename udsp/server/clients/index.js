@@ -41,7 +41,7 @@ export class Client {
 		await connectionStatus(this);
 		info(`socket EVENT -> statusUpdate - ID:${this.id}`);
 	}
-	async reKey() {
+	async generateNewSessionKeys() {
 		const server = this.server();
 		const newKeypair = keypair();
 		this.newKeys = newKeypair;
@@ -50,9 +50,9 @@ export class Client {
 	updateState(state) {
 		this.state = state;
 	}
-	async send(packet) {
+	async send(message, headers, footer) {
 		msgSent(`socket Sent -> ID: ${this.id}`);
-		return sendPacket(packet, this, this.socket());
+		return sendPacket(message, this, this.socket(), this.destination, headers, footer);
 	}
 	async received(message, frameHeaders) {
 		const server = this.server();
@@ -66,7 +66,27 @@ export class Client {
 		await destroy(this, destroyCode, server);
 		info(`socket EVENT -> destroy - ID:${this.id}`);
 	}
-	descriptor = `Server's client`;
+	sendIntroReply() {
+		this.generateNewSessionKeys();
+		const message = {
+			serverIntro: true,
+			scid: this.client().id,
+			reKey: this.newKeys.publicKey
+		};
+		this.send(message);
+	}
+	confirmRekey() {
+		console.log('Rekey Confirmed');
+		this.encryptKeypair = this.newKeys;
+		this.endHandShake();
+	}
+	endHandShake() {
+		const message = {
+			handshakeCompleted: true,
+		};
+		this.send(message);
+	}
+	description = `Server's client`;
 	type = 'serverClient';
 	isServerClient = true;
 	isServerEnd = true;

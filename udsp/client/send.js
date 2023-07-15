@@ -4,8 +4,7 @@ import {
 import { promise } from '@universalweb/acid';
 import { encodePacket } from '#udsp/encodePacket';
 import { sendPacket } from '#udsp/sendPacket';
-imported('Client Send');
-export async function send(packet, options) {
+export async function send(message, headers, footer) {
 	console.log(`client.send to Server`, this.destination.port, this.destination.ip);
-	return sendPacket(packet, this, this.socket);
+	return sendPacket(message, this, this.socket, this.destination, headers, footer);
 }
