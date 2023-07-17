@@ -14,6 +14,7 @@ import {
 import { keypair, toBase64 } from '#crypto';
 import { encodePacket } from '#udsp/encodePacket';
 import { sendPacket } from '#udsp/sendPacket';
+import { cryptography } from '#udsp/cryptography';
 export class Client {
 	constructor(config) {
 		const { server } = config;
@@ -85,6 +86,16 @@ export class Client {
 			handshakeCompleted: true,
 		};
 		this.send(message);
+	}
+	decodePublicKeyHeader(header) {
+		const key = this.encryptKeypair.publicKey;
+		console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(key));
+		header.key = key;
+		const { encryptClientKey, } = cryptography.config;
+		if (encryptClientKey) {
+			header.key = cryptography.decryptClientKey(header.key, this.destination.encryptKeypair);
+		}
+		return header;
 	}
 	description = `Server's client`;
 	type = 'serverClient';

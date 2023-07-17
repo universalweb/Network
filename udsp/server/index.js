@@ -24,7 +24,7 @@ import { onPacket } from './onPacket.js';
 import { sendPacket } from '#udsp/sendPacket';
 import { actions } from './actions/index.js';
 import { getCertificate, parseCertificate } from '#certificate';
-import { randomBuffer } from '#crypto';
+import { randomBuffer, toBase64 } from '#crypto';
 import { cryptography } from '#udsp/cryptography';
 import { UDSP } from '#udsp/base';
 const { seal } = Object;
@@ -172,6 +172,16 @@ export class Server extends UDSP {
 		if (foundEvent) {
 			foundEvent(this, client);
 		}
+	}
+	decodePublicKeyHeader(header, destination) {
+		const key = this.encryptKeypair.publicKey;
+		console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(key));
+		header.key = key;
+		const { encryptClientKey, } = cryptography.config;
+		if (encryptClientKey) {
+			header.key = cryptography.decryptClientKey(header.key, destination.encryptKeypair);
+		}
+		return header;
 	}
 	realTime = true;
 	socketCount = 0;

@@ -86,26 +86,10 @@ export async function decodePacketHeaders(config) {
 	}
 	if (header.key) {
 		success(`Public Key is given -> Processing as create client`);
-		console.log(toBase64(encryptKeypair.publicKey));
-		const {
-			encryptClientKey,
-			encryptServerKey
-		} = cryptography.config;
-		let publicKey = header.key;
-		if (isClient) {
-			if (encryptClientKey === 'sealedbox') {
-				publicKey = cryptography.decryptServerKey(header.key, destination.encryptKeypair);
-			}
+		destination.decodePublicKeyHeader(header);
+		if (!header.key) {
+			return failed('Client Key Decode Failed');
 		}
-		if (isServerEnd) {
-			if (encryptServerKey === 'sealedbox') {
-				publicKey = cryptography.decryptClientKey(header.key, destination.encryptKeypair);
-			}
-		}
-		if (!publicKey) {
-			return failed('Client Key Decrypt Failed');
-		}
-		header.key = publicKey;
 	} else {
 		success(`No Public Key is given -> Processing as a message`);
 	}

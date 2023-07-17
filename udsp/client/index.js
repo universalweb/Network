@@ -197,11 +197,15 @@ export class Client extends UDSP {
 	}
 	receivedIntro(message) {
 	}
-	setPublicKeyHeader(header = {}) {
-		const source = this.source();
-		const key = source.encryptKeypair.publicKey;
+	encodePublicKeyHeader(header = {}) {
+		const key = this.encryptKeypair.publicKey;
 		console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(key));
 		header.key = key;
+		const { encryptClientKey, } = cryptography.config;
+		if (encryptClientKey) {
+			header.key = cryptography.encryptClientKey(header.key, this.destination.encryptKeypair);
+		}
+		return header;
 	}
 	send = send;
 	request = request;

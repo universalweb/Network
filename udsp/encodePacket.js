@@ -58,22 +58,6 @@ export async function encodePacket(message, source, destination, headers, footer
 	}
 	// console.log(config);
 	message.t = Date.now();
-	if (header.key) {
-		const {
-			encryptClientKey,
-			encryptServerKey
-		} = cryptography.config;
-		if (isClient) {
-			if (encryptClientKey) {
-				header.key = cryptography.encryptClientKey(header.key, destination.encryptKeypair);
-			}
-		}
-		if (isServerEnd) {
-			if (encryptServerKey) {
-				header.key = cryptography.encryptServerKey(header.key, destination.encryptKeypair);
-			}
-		}
-	}
 	const headerEncoded = encode(header);
 	const messageEncoded = encode(message);
 	const ad = (footer) ? Buffer.concat([headerEncoded, footer]) : headerEncoded;
