@@ -86,7 +86,11 @@ export async function decodePacketHeaders(config) {
 	}
 	if (header.key) {
 		success(`Public Key is given -> Processing as create client`);
-		destination.decodePublicKeyHeader(header);
+		const { encryptClientKey } = cryptography.config;
+		if (encryptClientKey) {
+			header.key = cryptography.decryptClientKey(header.key, encryptKeypair);
+		}
+		console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(header.key));
 		if (!header.key) {
 			return failed('Client Key Decode Failed');
 		}

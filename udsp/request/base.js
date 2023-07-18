@@ -291,11 +291,27 @@ export class Base {
 		};
 		return target;
 	}
-	sendHeadPacketsById(id) {
-		return sendPacketsById(this.outgoingHeadPackets, id);
+	sendHeadPacketsById(indexes) {
+		const source = this.outgoingHeadPackets;
+		const thisContext = this;
+		eachArray(indexes, (id) => {
+			thisContext.sendHeadPacketById(id, source);
+		});
 	}
-	sendDataPacketsById(id) {
-		return sendPacketsById(this.outgoingDataPackets, id);
+	sendDataPacketsById(indexes) {
+		const source = this.outgoingDataPackets;
+		const thisContext = this;
+		eachArray(indexes, (id) => {
+			thisContext.sendDataPacketById(id, source);
+		});
+	}
+	sendHeadPacketById(id, source = this.outgoingHeadPackets) {
+		const message = source[id];
+		this.sendPacket(message);
+	}
+	sendDataPacketById(id, source = this.outgoingDataPackets) {
+		const message = source[id];
+		this.sendPacket(message);
 	}
 	getPacketTemplate() {
 		const { id, } = this;

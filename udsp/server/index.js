@@ -173,16 +173,6 @@ export class Server extends UDSP {
 			foundEvent(this, client);
 		}
 	}
-	decodePublicKeyHeader(header, destination) {
-		const key = this.encryptKeypair.publicKey;
-		console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(key));
-		header.key = key;
-		const { encryptClientKey, } = cryptography.config;
-		if (encryptClientKey) {
-			header.key = cryptography.decryptClientKey(header.key, destination.encryptKeypair);
-		}
-		return header;
-	}
 	realTime = true;
 	socketCount = 0;
 	clientCount = 0;

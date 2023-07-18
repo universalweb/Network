@@ -87,16 +87,6 @@ export class Client {
 		};
 		this.send(message);
 	}
-	decodePublicKeyHeader(header) {
-		const key = this.encryptKeypair.publicKey;
-		console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(key));
-		header.key = key;
-		const { encryptClientKey, } = cryptography.config;
-		if (encryptClientKey) {
-			header.key = cryptography.decryptClientKey(header.key, this.destination.encryptKeypair);
-		}
-		return header;
-	}
 	description = `Server's client`;
 	type = 'serverClient';
 	isServerClient = true;
