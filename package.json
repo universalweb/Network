@@ -33,7 +33,7 @@
 		"eslint-plugin-prettier": "^4.2.1",
 		"esm": "^3.2.25",
 		"keychain": "^1.4.0",
-		"mongoose": "^7.0.1",
+		"mongoose": "^7.3.3",
 		"msgpackr": "^1.8.5",
 		"node-watch": "^0.7.3",
 		"nodemon": "^2.0.22",
