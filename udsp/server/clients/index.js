@@ -83,7 +83,7 @@ export class Client {
 	}
 	endHandShake() {
 		const message = {
-			handshakeCompleted: true,
+			handshake: true,
 		};
 		this.send(message);
 	}

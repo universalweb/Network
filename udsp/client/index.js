@@ -208,6 +208,7 @@ export class Client extends UDSP {
 			publicKey: reKey
 		};
 		this.destination.sessionKeys = this.cryptography.clientSessionKeys(this.encryptKeypair, this.destination.encryptKeypair);
+		this.confirmReKey();
 	}
 	confirmReKey() {
 		const header = this.setPublicKeyHeader();
@@ -219,6 +220,7 @@ export class Client extends UDSP {
 	}
 	finishedHandshake(message) {
 		const { handshake } = message;
+		console.log('Handshake Finished', handshake);
 		this.connected = true;
 	}
 	encodePublicKeyHeader(header = {}) {
