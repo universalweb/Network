@@ -222,6 +222,8 @@ export class Client extends UDSP {
 		const { handshake } = message;
 		console.log('Handshake Finished', handshake);
 		this.connected = true;
+		// Trigger the handshake completed event
+		this.handshakeCompleted();
 	}
 	encodePublicKeyHeader(header = {}) {
 		const key = this.encryptKeypair.publicKey;
@@ -232,6 +234,20 @@ export class Client extends UDSP {
 			header.key = cryptography.encryptClientKey(header.key, this.destination.encryptKeypair);
 		}
 		return header;
+	}
+	launchHandshake() {
+		promise((accept) => {
+			this.handshakeCompleted = accept;
+		});
+		this.sendIntro();
+	}
+	ensureHandshake() {
+		if (this.connected === true) {
+			return true;
+		} else if (!this.handshakeCompleted) {
+			this.launchHandshake();
+		}
+		return this.handshakeCompleted;
 	}
 	send = send;
 	request = request;

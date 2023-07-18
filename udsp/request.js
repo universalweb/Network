@@ -3,7 +3,7 @@ import {
 } from '#logs';
 import { promise, construct, isString } from '@universalweb/acid';
 imported('Request');
-export function request(dataArg, options) {
+export async function request(dataArg, options) {
 	const data = (isString(dataArg)) ? {
 		path: dataArg
 	} : dataArg;

@@ -232,16 +232,7 @@ export class Base {
 	}
 	async send() {
 		const thisSource = this;
-		if (isFalse(this.handshake)) {
-			if (this.method !== 'intro') {
-				if (!this.waitingOnIntro) {
-					console.log('Handshake not complete.');
-					this.waitingOnIntro = true;
-				}
-				await this.source().intro(this);
-				this.handshake = this.source().handshake;
-			}
-		}
+		await this.source().ensureHandshake();
 		if (this.sent) {
 			return this.accept;
 		}
