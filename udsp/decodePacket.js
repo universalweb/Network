@@ -42,48 +42,29 @@ export async function decodePacketHeaders(config) {
 		return failed(`No header -> Invalid Packet`);
 	}
 	// Add single header support which holds only the binary data of the packet.id
-	const header = decode(headerEncoded);
-	if (!header) {
+	const headerDecoded = decode(headerEncoded);
+	if (!headerDecoded) {
 		return failed(`No header -> Invalid Packet`);
 	}
-	let headerIdEncoded;
-	const isHeadersBuffer = isBuffer(header);
-	if (isHeadersBuffer) {
-		headerIdEncoded = header;
-		info('Headers are in single header format');
-	} else {
-		headerIdEncoded = header.id;
-		info(`header.id: ${toBase64(header.id)}`);
-	}
-	if (!headerIdEncoded) {
+	const header = isBuffer(headerDecoded) ? {
+		id: headerDecoded
+	} : headerDecoded;
+	if (!header.id) {
 		return failed(`No connection id in header -> Invalid Packet`);
 	}
-	let headerId;
 	if (encryptConnectionId) {
 		success('Server Connection ID Decrypted');
 		// console.log(destination);
-		if (encryptConnectionId === 'sealedbox') {
-			if (isServerEnd) {
-				headerId = cryptography.decryptServerConnectionId(headerIdEncoded, connectionIdKeypair);
-			} else {
-				headerId = cryptography.decryptClientConnectionId(headerIdEncoded, connectionIdKeypair);
-			}
+		if (isServerEnd) {
+			header.id = cryptography.decryptServerConnectionId(header.id, connectionIdKeypair);
+		} else {
+			header.id = cryptography.decryptClientConnectionId(header.id, connectionIdKeypair);
 		}
-		if (!headerId) {
+		if (!header.id) {
 			return failed(`Packet ID Decrypt Failed method given:${encryptConnectionId}`);
 		}
-		info(`clientId: ${toBase64(headerId)}`);
-		if (isHeadersBuffer) {
-			config.packetDecoded = {
-				header: headerId
-			};
-			return true;
-		} else {
-			header.id = headerId;
-		}
-	} else if (!header?.id && !header) {
-		return failed(`No ID -> Invalid Packet`);
 	}
+	info(`clientId: ${toBase64(header.id)}`);
 	if (header.key) {
 		success(`Public Key is given -> Processing as create client`);
 		const { encryptClientKey } = cryptography.config;
@@ -129,6 +110,7 @@ export async function decodePacket(config) {
 		return true;
 	}
 	const ad = (footer) ? Buffer.concat([packet[0], packet[2]]) : packet[0];
+	console.log(destination);
 	info(`Transmit Key ${toBase64(destination.sessionKeys.receiveKey)}`);
 	if (messageEncoded) {
 		info(`encryptedMessage ${messageEncoded.length} bytes`);

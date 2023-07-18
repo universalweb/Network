@@ -71,7 +71,7 @@ export class Client {
 		this.generateNewSessionKeys();
 		const message = {
 			serverIntro: true,
-			scid: this.client().id,
+			scid: this.id,
 			reKey: this.newKeys.publicKey
 		};
 		this.send(message);
@@ -86,6 +86,23 @@ export class Client {
 			handshake: true,
 		};
 		this.send(message);
+	}
+	proccessProtocolPacket(message) {
+		const {
+			intro,
+			serverIntro,
+			confirmClientReKey,
+			handshake
+		} = message;
+		if (intro) {
+			this.sendServerIntro(message);
+		} else if (serverIntro) {
+			this.serverIntro(message);
+		} else if (confirmClientReKey) {
+			this.confirmRekey(message);
+		} else if (handshake) {
+			this.endHandshake(message);
+		}
 	}
 	description = `Server's client`;
 	type = 'serverClient';

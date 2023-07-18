@@ -57,7 +57,7 @@ export async function encodePacket(message, source, destination, headers, footer
 		header = id;
 	}
 	console.log(message, headers, header);
-	info(`clientId: ${toBase64(header.id)}`);
+	info(`clientId: ${toBase64(id)}`);
 	info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
 	message.t = Date.now();
 	const headerEncoded = encode(header);

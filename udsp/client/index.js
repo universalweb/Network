@@ -39,7 +39,6 @@ import { request } from '#udsp/request';
 import { cryptography } from '#udsp/cryptography';
 import { processMessage } from './processMessage.js';
 import { onPacket } from './onPacket.js';
-import { intro } from './intro.js';
 import { onListening } from './listening.js';
 import { keychainGet } from '#keychain';
 import { Ask } from '../request/ask.js';
@@ -197,7 +196,7 @@ export class Client extends UDSP {
 		this.send(message, header);
 	}
 	serverIntro(message) {
-		console.log('Got server Intro');
+		console.log('Got server Intro', message);
 		this.state = 1;
 		const {
 			scid: serverConnectionId,
@@ -208,13 +207,12 @@ export class Client extends UDSP {
 		this.destination.encryptKeypair = {
 			publicKey: reKey
 		};
-		this.destination.sessionKeys = this.cryptography.clientSessionKeys(this.encryptKeypair, this.destination.encryptKeypair);
+		this.destination.sessionKeys = this.cryptography.clientSessionKeys(this.encryptKeypair, reKey);
 		this.confirmReKey();
 	}
 	confirmReKey() {
 		console.log('Sending rekey confirmation');
 		const header = {};
-		this.setPublicKeyHeader(header);
 		const message = {
 			confirmClientReKey: true
 		};
@@ -258,6 +256,23 @@ export class Client extends UDSP {
 	async send(message, headers, footer) {
 		console.log(`client.send to Server`, this.destination.port, this.destination.ip);
 		return sendPacket(message, this, this.socket, this.destination, headers, footer);
+	}
+	proccessProtocolPacket(message) {
+		const {
+			intro,
+			serverIntro,
+			confirmClientReKey,
+			handshake
+		} = message;
+		if (intro) {
+			this.sendServerIntro(message);
+		} else if (serverIntro) {
+			this.serverIntro(message);
+		} else if (confirmClientReKey) {
+			this.confirmClientReKey(message);
+		} else if (handshake) {
+			this.endHandshake(message);
+		}
 	}
 	request = request;
 	fetch = fetchRequest;
