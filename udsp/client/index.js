@@ -193,9 +193,33 @@ export class Client extends UDSP {
 		const message = {
 			intro: true
 		};
+		this.introSent = true;
 		this.send(message, header);
 	}
-	receivedIntro(message) {
+	serverIntro(message) {
+		this.state = 1;
+		const {
+			scid: serverConnectionId,
+			reKey
+		} = message;
+		this.serverIntroReceived = true;
+		this.destination.id = serverConnectionId;
+		this.destination.encryptKeypair = {
+			publicKey: reKey
+		};
+		this.destination.sessionKeys = this.cryptography.clientSessionKeys(this.encryptKeypair, this.destination.encryptKeypair);
+	}
+	confirmReKey() {
+		const header = this.setPublicKeyHeader();
+		const message = {
+			confirmClientReKey: true
+		};
+		this.confirmRekey = true;
+		this.send(message, header);
+	}
+	finishedHandshake(message) {
+		const { handshake } = message;
+		this.connected = true;
 	}
 	encodePublicKeyHeader(header = {}) {
 		const key = this.encryptKeypair.publicKey;

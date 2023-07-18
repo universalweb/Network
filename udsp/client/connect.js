@@ -13,12 +13,9 @@ export async function connect(message) {
 		data,
 		state,
 		time,
-		// server connection ID
-		sid
 	} = connectResponse;
-	if (state === 1 && sid) {
+	if (state === 1) {
 		connectedLog(data);
-		this.state = 1;
 		this.realtime = true;
 	}
 	console.log('-------CLIENT CONNECTED-------\n');

@@ -13,18 +13,10 @@ export async function intro(message) {
 		data,
 		state,
 		time,
-		// server connection ID
-		scid: serverConnectionId
 	} = connectResponse;
-	if (state === 1 && serverConnectionId) {
+	if (state === 1) {
 		connectedLog(data);
-		this.handshake = true;
-		this.state = 1;
 		this.connected = true;
-		this.destination.id = serverConnectionId;
-		if (data.key) {
-			console.log('New Key Provided for Perfect Forward Secrecy');
-		}
 	}
 	console.log('-------CLIENT HANDSHAKE CONNECTED-------\n');
 	return connectResponse;
