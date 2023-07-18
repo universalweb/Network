@@ -22,7 +22,7 @@ export async function request(dataArg, options) {
 			}
 		}
 	}
-	info(`Request Function: ${target.method}`);
+	info(`Request Function: ${target.method || 'get'} ${target.data.path}`);
 	const ask = this.ask(target, options);
 	console.log(target, ask);
 	return ask;

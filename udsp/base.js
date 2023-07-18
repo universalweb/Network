@@ -49,6 +49,23 @@ export class UDSP {
 			socket.close();
 		});
 	}
+	proccessProtocolPacket(message) {
+		const {
+			intro,
+			serverIntro,
+			confirmClientReKey,
+			handshake
+		} = message;
+		if (intro) {
+			this.sendServerIntro(message);
+		} else if (serverIntro) {
+			this.serverIntro(message);
+		} else if (confirmClientReKey) {
+			this.confirmClientReKey(message);
+		} else if (handshake) {
+			this.endHandshake(message);
+		}
+	}
 	gracePeriod = 30000;
 	maxPacketSize = 1328;
 	connectionIdSize = 8;
@@ -75,4 +92,5 @@ export class UDSP {
 	heapSize = 0;
 	throttle = false;
 	debounce = false;
+	requestQueue = construct(Map);
 }

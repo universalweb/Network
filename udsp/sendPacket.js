@@ -4,8 +4,7 @@ import {
 import { promise, isFunction } from '@universalweb/acid';
 import { encodePacket } from '#udsp/encodePacket';
 export async function sendPacket(message, source, socket, destination = source.destination, headers, footer) {
-	success(`SENDING MESSAGE`);
-	// console.log(packetConfig);
+	success(`sendPacket`);
 	const {
 		server,
 		isClient,
@@ -16,7 +15,6 @@ export async function sendPacket(message, source, socket, destination = source.d
 		ip,
 		port,
 	} = destination;
-	// console.log(packetConfig.packet);
 	if (headers) {
 		info(`Sending Packet with header`);
 	}
@@ -29,7 +27,8 @@ export async function sendPacket(message, source, socket, destination = source.d
 	if (footer) {
 		info(`Sending Packet with footer`);
 	}
-	const packetEncoded = await encodePacket(headers, source, destination, headers, footer);
+	// console.log('sendPacket', message, headers);
+	const packetEncoded = await encodePacket(message, source, destination, headers, footer);
 	console.log(`Packet Encoded Size ${packetEncoded.length} Sending to ip: ${ip} Port: ${port}`);
 	return promise((accept, reject) => {
 		socket.send(packetEncoded, port, ip, (error) => {

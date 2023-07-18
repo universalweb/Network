@@ -1,9 +1,7 @@
-import { sendPacket } from './sendPacket.js';
 import { destroy } from './destory.js';
 import { dataPacketization } from './dataPacketization.js';
 import { on } from './on.js';
 import { flushOutgoing, flushIncoming, flush } from './flush.js';
-import { sendPacketsById } from './sendPacketsById.js';
 import { onPacket } from './onPacket.js';
 import {
 	isBuffer, isPlainObject, isString, promise, assign,
@@ -232,7 +230,8 @@ export class Base {
 	}
 	async send() {
 		const thisSource = this;
-		await this.source().ensureHandshake();
+		const handshake = await this.source().ensureHandshake();
+		console.log('handshake', this.source().handshakeCompleted.constructor);
 		if (this.sent) {
 			return this.accept;
 		}

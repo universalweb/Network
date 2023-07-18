@@ -17,7 +17,7 @@ export class Ask extends Base {
 	constructor(requestObject, options = {}, source) {
 		super(options, source);
 		const {
-			queue,
+			requestQueue,
 			packetIdGenerator,
 		} = source;
 		const {
@@ -37,7 +37,7 @@ export class Ask extends Base {
 		if (head) {
 			this.request.head = head;
 		}
-		queue.set(streamId, this);
+		requestQueue.set(streamId, this);
 	}
 	complete() {
 		console.log('Ask complete', this);

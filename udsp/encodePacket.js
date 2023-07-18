@@ -56,7 +56,9 @@ export async function encodePacket(message, source, destination, headers, footer
 	} else {
 		header = id;
 	}
-	// console.log(config);
+	console.log(message, headers, header);
+	info(`clientId: ${toBase64(header.id)}`);
+	info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
 	message.t = Date.now();
 	const headerEncoded = encode(header);
 	const messageEncoded = encode(message);
@@ -70,8 +72,6 @@ export async function encodePacket(message, source, destination, headers, footer
 		packetStructure[2] = encode(footer);
 	}
 	const packetEncoded = encode(packetStructure);
-	info(`clientId: ${toBase64(header.id)}`);
-	info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
 	const packetSize = packetEncoded.length;
 	console.log('Size Unencrypted', encode([headerEncoded, messageEncoded]).length);
 	info(`encoded Packet Size ${packetSize}`);

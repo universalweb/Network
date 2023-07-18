@@ -67,7 +67,7 @@ export class Client {
 		await destroy(this, destroyCode, server);
 		info(`socket EVENT -> destroy - ID:${this.id}`);
 	}
-	sendIntroReply() {
+	sendServerIntro() {
 		this.generateNewSessionKeys();
 		const message = {
 			serverIntro: true,
