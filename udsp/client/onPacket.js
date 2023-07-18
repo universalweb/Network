@@ -27,6 +27,14 @@ export async function onPacket(packet) {
 			this.state = 1;
 		}
 	}
-	processMessage(config.packetDecoded, this);
+	const {
+		header,
+		message
+	} = config.packetDecoded;
+	if (message.sid) {
+		processMessage(config.packetDecoded, this);
+	} else {
+		this.proccessProtocolPacket(message, header);
+	}
 }
 

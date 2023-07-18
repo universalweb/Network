@@ -6,6 +6,7 @@ import { isEmpty } from '@universalweb/acid';
 import { decodePacket, decodePacketHeaders } from '#udsp/decodePacket';
 import { createClient } from './clients/index.js';
 import { reply } from '#udsp/request/reply';
+import { processMessage } from '../client/processMessage.js';
 const isServer = true;
 export async function onPacket(packet, connection) {
 	const thisServer = this;
@@ -46,5 +47,13 @@ export async function onPacket(packet, connection) {
 		// Send error message back to origin or not
 		return failed('Invalid Client id given', toBase64(id));
 	}
-	await reply(config.packetDecoded, client);
+	const {
+		header,
+		message
+	} = config.packetDecoded;
+	if (message.sid) {
+		reply(config.packetDecoded, client);
+	} else {
+		client.proccessProtocolPacket(message, header);
+	}
 }
