@@ -58,8 +58,11 @@ const {
 class Cryptography {
 	constructor(config) {
 		this.config = config;
+		return this.initialize();
+	}
+	initialize(config) {
 		// console.log(config);
-		const { cryptography: cryptographyConfig } = config;
+		const { cryptography: cryptographyConfig = {} } = config;
 		let {
 			encryptClientConnectionId,
 			encryptServerConnectionId,
@@ -178,7 +181,7 @@ class Cryptography {
 			this.generated.connectionIdKeypair = this.generated.keypair;
 			this.generated.encryptKeypair = this.generated.keypair;
 		}
-		if (generate?.clientSessionKeys) {
+		if (generate?.clientSessionKeys && this.encryptionKeypair.publicKey) {
 			// console.log(this.encryptionKeypair);
 			this.generated.sessionKeys = this.clientSessionKeys(this.generated.keypair, this.encryptionKeypair.publicKey);
 		}
@@ -192,7 +195,6 @@ class Cryptography {
 		if (this.encryptMethod.overhead) {
 			this.encryptOverhead = this.encryptMethod.overhead;
 		}
-		return this.initialize();
 	}
 	generated = {
 		destination: {}
@@ -229,9 +231,6 @@ class Cryptography {
 	}
 	convertSignKeypair(...args) {
 		return this.convertSignKeypairMethod(...args);
-	}
-	async initialize() {
-		return this;
 	}
 }
 export function cryptography(...args) {

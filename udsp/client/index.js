@@ -83,6 +83,26 @@ export class Client extends UDSP {
 			destination.port = port;
 		}
 		// console.log('Destination', destination.cryptography);
+	}
+	async getKeychainSave(keychain) {
+		return keychainGet(keychain);
+	}
+	async setCertificate() {
+		const {
+			keychain,
+			certificate
+		} = this.configuration;
+		if (isString(certificate)) {
+			this.certificate = await parseCertificate(certificate);
+		}
+		if (keychain) {
+			// console.log('Loading Keychain', keychain);
+			this.certificate = await this.getKeychainSave(keychain);
+		}
+	}
+	async configCryptography() {
+		// console.log(this.cryptography);
+		const { destination, } = this;
 		const cryptoConfig = assign({
 			isClient: true,
 			generate: {
@@ -103,40 +123,18 @@ export class Client extends UDSP {
 		if (destination.autoLogin && this.autoLogin) {
 			this.autoLogin = true;
 		}
-	}
-	async getKeychainSave(keychain) {
-		return keychainGet(keychain);
-	}
-	async setCertificate() {
-		const {
-			keychain,
-			certificate
-		} = this.configuration;
-		if (isString(certificate)) {
-			this.certificate = await parseCertificate(certificate);
-		}
-		if (keychain) {
-			// console.log('Loading Keychain', keychain);
-			this.certificate = await this.getKeychainSave(keychain);
-		}
-		if (this.certificate.ephemeral) {
-			this.activeCertificate = this.certificate.ephemeral;
-		} else if (this.certificate.master) {
-			this.activeCertificate = this.certificate.ephemeral;
-		}
-	}
-	async configCryptography() {
-		// console.log(this.cryptography);
 		if (!this.keyPair) {
 			this.keypair = this.cryptography.generated.keypair;
 			this.encryptKeypair = this.cryptography.generated.encryptKeypair;
 			this.connectionIdKeypair = this.cryptography.generated.connectionIdKeypair;
+			success(`Created Connection Keypair`);
 		}
-		success(`Created Connection Keypair`);
 		this.sessionKeys = this.cryptography.generated.sessionKeys;
-		success(`Created Shared Keys`);
-		success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);
-		success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
+		if (this.sessionKeys) {
+			success(`Created Shared Keys`);
+			success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);
+			success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
+		}
 	}
 	async attachEvents() {
 		const thisClient = this;
@@ -273,6 +271,10 @@ export class Client extends UDSP {
 		} else if (handshake) {
 			this.endHandshake(message);
 		}
+	}
+	loadCertificate(certificate) {
+		this.certificates = certificate;
+		this.configCryptography();
 	}
 	request = request;
 	fetch = fetchRequest;
