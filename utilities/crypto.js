@@ -183,7 +183,7 @@ export function createSessionKey() {
 export function clientSessionKeys(client, serverPublicKey, sessionKeys) {
 	const receiveKey = sessionKeys?.receiveKey || createSessionKey();
 	const transmitKey = sessionKeys?.transmitKey || createSessionKey();
-	crypto_kx_client_session_keys(receiveKey, transmitKey, client.publicKey, client.privateKey, serverPublicKey);
+	crypto_kx_client_session_keys(receiveKey, transmitKey, client.publicKey, client.privateKey, serverPublicKey?.publicKey || serverPublicKey);
 	return {
 		transmitKey,
 		receiveKey
@@ -192,7 +192,7 @@ export function clientSessionKeys(client, serverPublicKey, sessionKeys) {
 export function serverSessionKeys(server, clientPublicKey, sessionKeys) {
 	const receiveKey = sessionKeys?.receiveKey || createSessionKey();
 	const transmitKey = sessionKeys?.transmitKey || createSessionKey();
-	crypto_kx_server_session_keys(receiveKey, transmitKey, server.publicKey, server.privateKey, clientPublicKey);
+	crypto_kx_server_session_keys(receiveKey, transmitKey, server.publicKey, server.privateKey, clientPublicKey?.publicKey || clientPublicKey);
 	return {
 		transmitKey,
 		receiveKey

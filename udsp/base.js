@@ -25,16 +25,21 @@ export class UDSP {
 			this.maxPayloadSize = this.maxPacketSize - this.packetOverhead;
 			this.maxPayloadSizeSafeEstimate = this.maxPayloadSize - 10;
 			if (!maxDataSize) {
-				this.maxDataSize = this.packetMaxPayload;
+				this.maxDataSize = this.maxPayloadSize;
 			}
 			if (!maxHeadSize) {
-				this.maxHeadSize = this.packetMaxPayload;
+				this.maxHeadSize = this.maxPayloadSize;
 			}
+			console.log(`packetInitialOverhead: ${packetInitialOverhead} bytes`);
 		}
+		console.log(`encryptPacketOverhead: ${this.encryptPacketOverhead} bytes`);
 		console.log(`Packet Overhead: ${this.packetOverhead} bytes`);
 		console.log(`connectionIdSize Overhead: ${this.connectionIdSize} bytes`);
-		console.log(`Max Packet Size: ${this.maxPacketSize} bytes`);
+		console.log(`Max Payload Size Safe Estimate: ${this.maxPayloadSizeSafeEstimate} bytes`);
 		console.log(`Max Payload Size: ${this.maxPayloadSize} bytes`);
+		console.log(`Max Data Size: ${this.maxDataSize} bytes`);
+		console.log(`Max Head Size: ${this.maxHeadSize} bytes`);
+		console.log(`Max Packet Size: ${this.maxPacketSize} bytes`);
 	}
 	generateConnectionID() {
 		const target = randomConnectionId(this.connectionIdSize || 8);

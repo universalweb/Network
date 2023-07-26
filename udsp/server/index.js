@@ -23,7 +23,7 @@ import { onListen } from './onListen.js';
 import { onPacket } from './onPacket.js';
 import { sendPacket } from '#udsp/sendPacket';
 import { actions } from './actions/index.js';
-import { getCertificate, parseCertificate } from '#certificate';
+import { getCertificate, parseCertificate, loadCertificate } from '#certificate';
 import { randomBuffer, toBase64 } from '#crypto';
 import { cryptography } from '#udsp/cryptography';
 import { UDSP } from '#udsp/base';
@@ -60,11 +60,35 @@ export class Server extends UDSP {
 			return thisServer.onPacket(packet, rinfo);
 		});
 	}
+	chunkCertificate() {
+		const certificate = this.publicCertificate;
+		let currentBytePosition = 0;
+		let index = 0;
+		const size = this.publicCertificateSize;
+		const chunks = [];
+		const maxSize = 1000;
+		while (currentBytePosition < size) {
+			const message = {};
+			const endIndex = currentBytePosition + maxSize;
+			const safeEndIndex = endIndex > size ? size : endIndex;
+			message.head = certificate.subarray(currentBytePosition, safeEndIndex);
+			message.headSize = message.head.length;
+			chunks[index] = message;
+			if (safeEndIndex === size) {
+				message.last = true;
+				break;
+			}
+			index++;
+			currentBytePosition += maxSize;
+		}
+		this.certificateChunks = chunks;
+	}
 	async setCertificate() {
 		const {
 			configuration,
 			configuration: {
 				certificate,
+				certificatePublic,
 				connectionIdSize,
 				maxPayloadSize,
 				maxDataSize,
@@ -81,6 +105,11 @@ export class Server extends UDSP {
 			if (this.certificate.ipVersion) {
 				this.ipVersion = this.certificate.ipVersion;
 			}
+		}
+		if (certificatePublic) {
+			this.certificatePublic = await loadCertificate(certificatePublic);
+			this.certificatePublicSize = this.certificatePublic.length;
+			this.chunkCertificate();
 		}
 		if (!connectionIdSize) {
 			if (this.certificate.connectionIdSize) {

@@ -60,8 +60,9 @@ class Cryptography {
 		this.config = config;
 		return this.initialize();
 	}
-	initialize(config) {
+	initialize() {
 		// console.log(config);
+		const config = this.config;
 		const { cryptography: cryptographyConfig = {} } = config;
 		let {
 			encryptClientConnectionId,
@@ -80,7 +81,7 @@ class Cryptography {
 			alias,
 			curve,
 			convertEd25519ToX25519,
-			connectionIdKeypair
+			connectionIdKeypair,
 		} = cryptographyConfig;
 		const { generate } = config;
 		if (alias === 'default') {
@@ -115,7 +116,12 @@ class Cryptography {
 			this.signKeypairToEncryptKeypair = signKeypairToEncryptKeypair;
 			this.getSignPublicKeyFromPrivateKey = getSignPublicKeyFromPrivateKey;
 			this.safeMath = RistrettoPoint;
-			if (isTrue(cryptographyConfig.encryptKeypair)) {
+		}
+		console.log('cryptographyConfig.encryptKeypair', cryptographyConfig.encryptKeypair);
+		if (!config.encryptKeypair) {
+			console.log('keypairType', config.keypairType);
+			console.log('exchange', exchange);
+			if (config.keypairType === 'ed25519' && exchange === 'x25519') {
 				if (config.privateKey) {
 					this.encryptionKeypair = signKeypairToEncryptKeypair({
 						publicKey: config.publicKey,
@@ -126,9 +132,9 @@ class Cryptography {
 						publicKey: config.publicKey
 					});
 				}
-			} else if (cryptographyConfig.encryptKeypair) {
-				this.encryptionKeypair = config.encryptionKeypair;
 			}
+		} else if (cryptographyConfig.encryptKeypair) {
+			this.encryptionKeypair = cryptographyConfig.encryptionKeypair;
 		}
 		if (exchange === 'x25519') {
 			this.signMethod = sign;
@@ -151,7 +157,7 @@ class Cryptography {
 			this.encryptServerConnectionId = boxSeal;
 			this.decryptServerConnectionId = boxUnseal;
 		}
-		if (encryptClientConnectionId || encryptServerConnectionId) {
+		if (encryptClientConnectionId || encryptServerConnectionId || encryptConnectionId) {
 			if (isTrue(connectionIdKeypair)) {
 				this.connectionIdKeypair = this.encryptionKeypair;
 			} else if (connectionIdKeypair) {
@@ -181,8 +187,8 @@ class Cryptography {
 			this.generated.connectionIdKeypair = this.generated.keypair;
 			this.generated.encryptKeypair = this.generated.keypair;
 		}
+		console.log(this.encryptionKeypair);
 		if (generate?.clientSessionKeys && this.encryptionKeypair.publicKey) {
-			// console.log(this.encryptionKeypair);
 			this.generated.sessionKeys = this.clientSessionKeys(this.generated.keypair, this.encryptionKeypair.publicKey);
 		}
 		assign(this.config, {

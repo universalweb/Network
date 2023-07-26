@@ -21,8 +21,8 @@ export async function decodePacketHeaders(config) {
 		isServerEnd,
 		isServerClient
 	} = destination;
-	if (packetEncoded.length >= 1350) {
-		failed(`WARNING: Packet size is larger than max allowed size 1350 -> ${packetEncoded.length} over by ${packetEncoded.length - 1350}`);
+	if (packetEncoded.length > 1350) {
+		failed(`WARNING: Packet size is larger than max allowed size 1350 -> ${packetEncoded.length}bytes over by ${packetEncoded.length - 1350}bytes`);
 	}
 	let encryptConnectionId;
 	if (isServerEnd) {
@@ -110,15 +110,15 @@ export async function decodePacket(config) {
 		return true;
 	}
 	const ad = (footer) ? Buffer.concat([packet[0], packet[2]]) : packet[0];
-	console.log(destination);
-	info(`Transmit Key ${toBase64(destination.sessionKeys.receiveKey)}`);
+	// console.log(destination);
+	info(`Receive Key ${toBase64(destination.sessionKeys.receiveKey)}`);
 	if (messageEncoded) {
-		info(`encryptedMessage ${messageEncoded.length} bytes`);
+		info(`encrypted Message size ${messageEncoded.length}bytes`);
 		const decryptedMessage = cryptography.decrypt(packet[1], destination.sessionKeys, ad);
 		if (!decryptedMessage) {
 			return failed('Encryption failed');
 		}
-		info(`encryptedMessage ${decryptedMessage.length} bytes`);
+		info(`decrypted Message size ${decryptedMessage.length}bytes`);
 		const message = decode(decryptedMessage);
 		if (message.head) {
 			console.log('head PAYLOAD', message.head);

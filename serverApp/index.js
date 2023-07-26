@@ -20,9 +20,9 @@ const appServer = await server({
 	// Max retries for a singular request before giving up
 	maxResponseRetries: 3,
 	// Max size of packets
-	maxPacketSize: 1100,
+	// maxPacketSize: 1100,
 	// Max size of body and head data sections in a single packet
-	maxPacketPayloadSize: 1000,
+	// maxPayloadSize: 1000,
 	// max file size
 	maxFileSize: 9000,
 	// Max size of a Response
@@ -33,6 +33,8 @@ const appServer = await server({
 	defaultExtension: 'html',
 	// Domain certificate to be loaded used for connection encryption
 	certificate: path.join(currentPath(import.meta), '../services/universal.web-Ephemeral.cert'),
+	// Public Domain certificate to be sent in its raw format for validation when a client connects but doesn't have a certificate
+	certificatePublic: path.join(currentPath(import.meta), '../services/universal.web-EphemeralPublic.cert'),
 	// Where to load app resources from
 	resourceDirectory: path.join(currentPath(import.meta), 'resources'),
 	// Server ID used for load balancing and attaching to the end of connection IDs

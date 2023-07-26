@@ -5,7 +5,6 @@ import {
 	stringify,
 	hasValue
 } from '@universalweb/acid';
-imported('Client ProcessMessage');
 export async function processMessage(packet, client) {
 	const {
 		header,
@@ -14,29 +13,25 @@ export async function processMessage(packet, client) {
 	} = packet;
 	const { queue } = client;
 	const {
+		connectionClose,
 		state,
 		sid,
 	} = message;
+	info(`Packet Received Stream ID: ${sid}`);
 	if (state) {
 		console.log(`STATE CODE: ${state}`);
 	}
-	if (message) {
-		if (message.state === 3) {
-			client.close();
-			return failed(`End event sent disconnected socket`);
-		}
-		if (hasValue(sid)) {
-			info(`Stream ID: ${sid} ${stringify(message)}`);
-			console.log(queue.keys());
-			const askObject = queue.get(sid);
-			if (askObject) {
-				askObject.onPacket(packet);
-			} else {
-				return failed(`Invalid Stream Id given. ${stringify(message)}`);
-			}
-		}
+	if (state === 3 || connectionClose) {
+		client.close();
+		return failed(`End event received from server disconnected closing client`);
+	}
+	// console.log(queue.keys());
+	const askObject = queue.get(sid);
+	if (askObject) {
+		askObject.onPacket(packet);
 	} else {
-		console.log('NO MESSAGE OBJECT', packet);
+		failed(`Invalid Stream Id given no ask object with that ID. ${sid}`);
+		console.log(message);
 	}
 }
 

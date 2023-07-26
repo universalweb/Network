@@ -67,41 +67,28 @@ export class Client {
 		await destroy(this, destroyCode, server);
 		info(`socket EVENT -> destroy - ID:${this.id}`);
 	}
-	sendServerIntro() {
+	async sendIntro() {
+		info(`Client Intro Sent -> - ID:${this.id}`);
 		this.generateNewSessionKeys();
 		const message = {
-			serverIntro: true,
+			intro: true,
 			scid: this.id,
 			reKey: this.newKeys.publicKey
 		};
-		this.send(message);
-	}
-	confirmRekey() {
-		console.log('Rekey Confirmed');
+		await this.send(message);
 		this.encryptKeypair = this.newKeys;
-		this.endHandShake();
 	}
-	endHandShake() {
-		const message = {
-			handshake: true,
-		};
-		this.send(message);
+	chunkCertificate(certificate) {
 	}
 	proccessProtocolPacket(message) {
+		info(`Client Intro -> - ID:${this.id}`);
 		const {
 			intro,
-			serverIntro,
-			confirmClientReKey,
-			handshake
+			certRequest
 		} = message;
 		if (intro) {
-			this.sendServerIntro(message);
-		} else if (serverIntro) {
-			this.serverIntro(message);
-		} else if (confirmClientReKey) {
-			this.confirmRekey(message);
-		} else if (handshake) {
-			this.endHandshake(message);
+			this.state = 1;
+			this.sendIntro(message);
 		}
 	}
 	description = `Server's client`;

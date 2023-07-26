@@ -24,8 +24,6 @@ const domainProfile = await createProfile({
 				signature: 'ed25519',
 				exchange: 'x25519',
 				curve: '25519',
-				// The cryptographic algo used, intended, and or generated with the provided public key
-				publicKeyType: 'ed25519',
 				// The purpose of encrypting connection IDs is to eliminate CID tracking and to constantly change how the CID looks.
 				// Encrypting CIDs protects against leaking smart CID routing information which show the endpoint server/process.
 				// encryptConnectionId: 'sealedbox', Applies to both client and server connection ID
@@ -91,6 +89,8 @@ const domainProfile = await createProfile({
 			// headerCompression: true,
 			// footerCompression: true,
 			autoLogin: true,
+			// The cryptographic algo used, intended, and or generated with the provided public key
+			keypairType: 'ed25519',
 		},
 		master: {},
 	},

@@ -13,7 +13,7 @@ export async function dataPacketization(source) {
 	let currentBytePosition = 0;
 	let packetId = outgoingDataPackets.length;
 	if (dataSize > maxDataSize) {
-		console.log('data size', outgoingData.length);
+		console.log('data size', dataSize);
 		while (currentBytePosition < dataSize) {
 			const endIndex = currentBytePosition + maxDataSize;
 			const safeEndIndex = endIndex > dataSize ? dataSize : endIndex;

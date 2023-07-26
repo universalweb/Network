@@ -22,7 +22,8 @@ export class Base {
 		source.lastActive = Date.now();
 		const {
 			maxPacketSize,
-			maxPayloadSize,
+			maxDataSize,
+			maxHeadSize,
 			packetMaxPayloadSafeEstimate
 		} = source;
 		if (events) {
@@ -31,8 +32,11 @@ export class Base {
 		if (maxPacketSize) {
 			this.maxPacketSize = maxPacketSize;
 		}
-		if (maxPayloadSize) {
-			this.maxPayloadSize = maxPayloadSize;
+		if (maxDataSize) {
+			this.maxDataSize = maxDataSize;
+		}
+		if (maxHeadSize) {
+			this.maxHeadSize = maxHeadSize;
 		}
 		if (packetMaxPayloadSafeEstimate) {
 			this.packetMaxPayloadSafeEstimate = packetMaxPayloadSafeEstimate;
@@ -188,7 +192,7 @@ export class Base {
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const headSize = this.outgoingHeadSize;
-		while (currentBytePosition < this.outgoingHeadSize) {
+		while (currentBytePosition < headSize) {
 			const message = this.getPacketTemplate();
 			message.sid = sid;
 			message.pid = packetId;
@@ -231,7 +235,6 @@ export class Base {
 	async send() {
 		const thisSource = this;
 		const handshake = await this.source().ensureHandshake();
-		console.log('handshake', this.source().handshakeCompleted.constructor);
 		if (this.sent) {
 			return this.accept;
 		}

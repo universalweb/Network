@@ -4,34 +4,28 @@ import {
 import { decode } from 'msgpackr';
 import { decrypt, createSessionKey } from '#crypto';
 import { decodePacket, decodePacketHeaders } from '#udsp/decodePacket';
-imported('Server onMessage');
 import { processMessage } from './processMessage.js';
+import { hasValue } from '@universalweb/acid';
 export async function onPacket(packet) {
-	const { destination: source } = this;
 	msgReceived('Packet Received');
 	const config = {
 		destination: this,
-		source,
+		source: this.destination,
 		packet,
 	};
 	const wasHeadersDecoded = await decodePacketHeaders(config);
 	if (!wasHeadersDecoded || !config.packetDecoded.header) {
-		return failed('Invalid Packet Headers');
+		return failed('Error failed to decode packet headers');
 	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {
-		return failed('When decoding the packet but header passed');
-	}
-	if (this.state === 0) {
-		if (!config.packetDecoded.error) {
-			this.state = 1;
-		}
+		return failed('Error when decoding the packet but header was decoded');
 	}
 	const {
 		header,
 		message
 	} = config.packetDecoded;
-	if (message.sid) {
+	if (hasValue(message?.sid)) {
 		processMessage(config.packetDecoded, this);
 	} else {
 		this.proccessProtocolPacket(message, header);

@@ -20,6 +20,15 @@ export async function getCertificate(filepath) {
 		}
 		return certificate;
 	} else {
+		logCert('FAILED TO GET CERT', filepath);
+	}
+}
+export async function loadCertificate(filepath) {
+	logCert('Get => ', filepath);
+	const certificate = await read(filepath);
+	if (certificate) {
+		return certificate;
+	} else {
 		logCert('FAILED TO LOAD CERT', filepath);
 	}
 }
@@ -40,7 +49,7 @@ export async function parseCertificate(filepath) {
 		}
 		return certificate;
 	} else {
-		logCert('FAILED TO LOAD CERT', filepath);
+		logCert('FAILED TO PARSE CERT', filepath);
 	}
 }
 export * from './create.js';
