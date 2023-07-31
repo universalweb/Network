@@ -2,7 +2,9 @@ import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 import { decode, } from 'msgpackr';
-import { assign, isBuffer, isArray } from '@universalweb/acid';
+import {
+	assign, isBuffer, isArray, isTrue, isUndefined, isString
+} from '@universalweb/acid';
 import { toBase64 } from '#crypto';
 import { createClient } from './server/clients/index.js';
 export async function decodePacketHeaders(config) {
@@ -52,7 +54,7 @@ export async function decodePacketHeaders(config) {
 	if (!header.id) {
 		return failed(`No connection id in header -> Invalid Packet`);
 	}
-	if (encryptConnectionId) {
+	if (connectionIdKeypair && encryptConnectionId) {
 		success('Server Connection ID Decrypted');
 		// console.log(destination);
 		if (isServerEnd) {
@@ -68,13 +70,17 @@ export async function decodePacketHeaders(config) {
 	if (header.key) {
 		success(`Public Key is given -> Processing as create client`);
 		const { encryptClientKey } = cryptography.config;
-		if (encryptClientKey) {
-			header.key = cryptography.decryptClientKey(header.key, encryptKeypair);
+		if (encryptKeypair) {
+			if (isString(encryptClientKey)) {
+				console.log('Decrypting Public Key in UDSP Header');
+				const { key } = header;
+				header.key = cryptography.decryptClientKey(key, encryptKeypair);
+				if (!header.key) {
+					return failed('Client Key Decode Failed', toBase64(key));
+				}
+			}
 		}
 		console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(header.key));
-		if (!header.key) {
-			return failed('Client Key Decode Failed');
-		}
 	} else {
 		success(`No Public Key is given -> Processing as a message`);
 	}

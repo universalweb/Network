@@ -32,16 +32,11 @@ export async function initialize(config, client) {
 		port
 	} = connection;
 	client.cryptography = cryptography;
-	// When changing to a new sessionKeys you must first create new keys from scratch to replace these.
-	client.sessionKeys = cryptography.serverSessionKeys(encryptKeypair, publicKey);
 	// When changing to a new key you must first create new keys from scratch to replace these.
 	client.keypair = server.keypair;
 	client.encryptKeypair = server.encryptKeypair;
 	client.connectionIdKeypair = server.connectionIdKeypair;
 	success(`key: ${toBase64(publicKey)}`);
-	success(`receiveKey: ${toBase64(client.sessionKeys.receiveKey)}`);
-	success(`transmitKey: ${toBase64(client.sessionKeys.transmitKey)}`);
-	success(`Ephemeral Key: ${toBase64(publicKey)}`);
 	/*
 		When the client sends to server it includes the client ID in the header
 		This also validates origin as any following requests must use this Server Connection ID
@@ -69,7 +64,7 @@ export async function initialize(config, client) {
 	client.id = serverClientId;
 	client.idString = serverConnectionIdString;
 	if (isBoolean(server.encryptClientConnectionId)) {
-		this.encryptConnectionId = true;
+		client.encryptConnectionId = true;
 	}
 	client.destination = {
 		encryptKeypair: {
@@ -82,6 +77,7 @@ export async function initialize(config, client) {
 		port,
 		id: clientId
 	};
+	await client.setSessionKeys();
 	if (!server.realtime && server.gracePeriod) {
 		client.gracePeriod = setTimeout(() => {
 			const lastActive = (Date.now() - client.lastActive) / 1000;

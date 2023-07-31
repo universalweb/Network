@@ -2,19 +2,22 @@ import { connected } from './connected.js';
 import { initialize } from './initialize.js';
 import { created } from './created.js';
 import { destroy } from './destroy.js';
-import { reKey } from './reKey.js';
 import { connectionStatus } from './connectionStatus.js';
 import { received } from './received.js';
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 import {
-	UniqID, construct, assign, promise
+	UniqID, construct, assign, promise, isFalse, isUndefined, isFalsy
 } from '@universalweb/acid';
-import { keypair, toBase64 } from '#crypto';
+import {
+	keypair,
+	toBase64,
+	serverSessionKeys,
+	randomBuffer
+} from '#crypto';
 import { encodePacket } from '#udsp/encodePacket';
 import { sendPacket } from '#udsp/sendPacket';
-import { cryptography } from '#udsp/cryptography';
 export class Client {
 	constructor(config) {
 		const { server } = config;
@@ -42,11 +45,19 @@ export class Client {
 		await connectionStatus(this);
 		info(`socket EVENT -> statusUpdate - ID:${this.id}`);
 	}
-	async generateNewSessionKeys() {
-		const server = this.server();
-		const newKeypair = keypair();
-		this.newKeys = newKeypair;
+	async generateSessionKeypair() {
+		const newKeypair = this.cryptography.keypair();
+		this.newKeypair = newKeypair;
 		info(`socket EVENT -> reKey - ID:${this.id}`);
+	}
+	async setSessionKeys() {
+		console.log(this.destination);
+		const sessionKeys = this.cryptography.serverSessionKeys(this.encryptKeypair, this.destination.encryptKeypair, this.sessionKeys);
+		if (isUndefined(this.sessionKeys)) {
+			this.sessionKeys = sessionKeys;
+		}
+		success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);
+		success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
 	}
 	updateState(state) {
 		this.state = state;
@@ -67,16 +78,42 @@ export class Client {
 		await destroy(this, destroyCode, server);
 		info(`socket EVENT -> destroy - ID:${this.id}`);
 	}
-	async sendIntro() {
+	async intro(message) {
+		this.sendIntro(message);
+	}
+	// server intro to client with connection id and new keypair
+	async sendIntro(introMessage) {
 		info(`Client Intro Sent -> - ID:${this.id}`);
-		this.generateNewSessionKeys();
+		if (isFalsy(this.newKeypairGenerated)) {
+			this.generateSessionKeypair();
+			this.newKeypairGenerated = true;
+		}
 		const message = {
 			intro: true,
 			scid: this.id,
-			reKey: this.newKeys.publicKey
+			reKey: this.newKeypair.publicKey,
+			randomId: this.randomId
 		};
 		await this.send(message);
-		this.encryptKeypair = this.newKeys;
+	}
+	// client confirmation of server intro
+	async handshake(message) {
+		if (isFalsy(this.newSessionKeysAssigned)) {
+			await this.attachNewKey();
+		}
+		this.sendHandshake();
+	}
+	async attachNewKey() {
+		this.encryptKeypair = this.newKeypair;
+		await this.setSessionKeys();
+		this.newSessionKeysAssigned = true;
+	}
+	// server confirmation of handshake to client
+	async sendHandshake(originalMessage) {
+		const message = {
+			handshake: true
+		};
+		await this.send(message);
 	}
 	chunkCertificate(certificate) {
 	}
@@ -84,11 +121,15 @@ export class Client {
 		info(`Client Intro -> - ID:${this.id}`);
 		const {
 			intro,
-			certRequest
+			certRequest,
+			handshake,
+			handshakeFinale
 		} = message;
 		if (intro) {
 			this.state = 1;
-			this.sendIntro(message);
+			this.intro(message);
+		} else if (handshake) {
+			this.handshake(message);
 		}
 	}
 	description = `Server's client`;
@@ -99,9 +140,10 @@ export class Client {
 	packetIdGenerator = construct(UniqID);
 	state = 0;
 	encryptConnectionId = false;
+	randomId = randomBuffer(8);
 }
 export async function createClient(config) {
 	const client = await construct(Client, [config]);
-	console.log('Client has been created with sever connection id', toBase64(client.id));
+	success(`Client has been created with sever connection id ${toBase64(client.id)}`);
 	return client;
 }

@@ -23,12 +23,13 @@ export async function onPacket(packet) {
 	}
 	const {
 		header,
-		message
+		message,
+		footer
 	} = config.packetDecoded;
 	if (hasValue(message?.sid)) {
 		processMessage(config.packetDecoded, this);
 	} else {
-		this.proccessProtocolPacket(message, header);
+		this.proccessProtocolPacket(message, header, footer);
 	}
 }
 

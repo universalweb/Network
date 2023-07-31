@@ -20,7 +20,8 @@ import {
 	promise,
 	isTrue,
 	currentPath,
-	hasValue
+	hasValue,
+	isUndefined
 } from '@universalweb/acid';
 import dgram from 'dgram';
 import { success, configure, info } from '#logs';
@@ -43,6 +44,7 @@ import { Ask } from '../request/ask.js';
 import { fetchRequest } from '../fetch.js';
 import { UDSP } from '#udsp/base';
 import { sendPacket } from '../sendPacket.js';
+import { connect } from './connect.js';
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
 	constructor(configuration) {
@@ -54,8 +56,12 @@ export class Client extends UDSP {
 	type = 'client';
 	isClient = true;
 	configDefaults() {
-		const { autoConnect } = this.configuration;
+		const {
+			autoConnect,
+			realtime
+		} = this.configuration;
 		this.autoConnect = autoConnect;
+		this.realtime = realtime;
 	}
 	async setDestination() {
 		const {
@@ -129,7 +135,7 @@ export class Client extends UDSP {
 			this.connectionIdKeypair = this.cryptography.generated.connectionIdKeypair;
 			success(`Created Connection Keypair`);
 		}
-		this.setSessionKeys(this.cryptography.generated.sessionKeys);
+		await this.setSessionKeys(this.cryptography.generated.sessionKeys);
 	}
 	async attachEvents() {
 		const thisClient = this;
@@ -161,12 +167,15 @@ export class Client extends UDSP {
 		Client.connections.set(this.idString, this);
 		if (this.autoConnect) {
 			console.time('CONNECTING');
-			this.handshake = await this.intro();
+			const { realtime } = this;
+			this.handshake = await this.connect({
+				realtime
+			});
 			console.timeEnd('CONNECTING');
 		}
 		return this;
 	}
-	reKey(targetPublicKey) {
+	reKey() {
 		const thisClient = this;
 		success(`client reKeyed -> ID: ${thisClient.idString}`);
 	}
@@ -192,10 +201,10 @@ export class Client extends UDSP {
 		this.certChunks[pid] = cert;
 		if (last) {
 			this.loadCertificate(Buffer.concat(this.certChunks));
-			this.handshakeCompletedEvent(message);
+			this.sendHandshake(message);
 		}
 	}
-	setSessionKeys(generatedKeys) {
+	async setSessionKeys(generatedKeys) {
 		this.sessionKeys = generatedKeys || this.cryptography.clientSessionKeys(this.encryptKeypair, this.destination.encryptKeypair);
 		if (this.sessionKeys) {
 			success(`Created Shared Keys`);
@@ -203,14 +212,7 @@ export class Client extends UDSP {
 			success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
 		}
 	}
-	handshakeCompletedEvent(message) {
-		console.log('Handshake Completed');
-		this.connected = true;
-		this.state = 2;
-		// Resolve the handshake promise
-		this.handshakeCompleted(message);
-	}
-	serverIntro(message) {
+	intro(message) {
 		console.log('Got server Intro', message);
 		const {
 			scid: serverConnectionId,
@@ -220,10 +222,7 @@ export class Client extends UDSP {
 		} = message;
 		this.serverIntroReceived = true;
 		this.destination.id = serverConnectionId;
-		this.destination.encryptKeypair = {
-			publicKey: reKey
-		};
-		this.setSessionKeys();
+		this.newKeypair = reKey;
 		if (cert) {
 			this.certChunks[0] = cert;
 			this.loadCertificate(Buffer.concat(this.certChunks));
@@ -232,17 +231,45 @@ export class Client extends UDSP {
 			this.certSize = certSize;
 		}
 		if (!certSize) {
-			this.handshakeCompletedEvent(message);
+			this.sendHandshake(message);
 		}
+	}
+	async setNewKeys() {
+		if (isUndefined(this.handshakeSet)) {
+			this.destination.encryptKeypair = {
+				publicKey: this.newKeypair
+			};
+			await this.setSessionKeys();
+			this.handshakeSet = true;
+		}
+	}
+	async sendHandshake(originalMessage) {
+		await this.setNewKeys();
+		const headers = {
+			reKey: true,
+		};
+		const message = {
+			handshake: true
+		};
+		this.send(message, headers);
+	}
+	handshaked(message) {
+		console.log('Handshake Completed with new keys');
+		this.connected = true;
+		this.state = 2;
+		// Resolve the handshake promise
+		this.handshakeCompleted(message);
 	}
 	setPublicKeyHeader(header = {}) {
 		const key = this.encryptKeypair.publicKey;
 		console.log('Setting Public Key in UDSP Header', toBase64(key));
 		const { encryptClientKey } = this.cryptography.config;
 		header.key = key;
-		if (encryptClientKey) {
-			console.log('Encrypting Public Key in UDSP Header');
-			header.key = cryptography.encryptClientKey(header.key, this.destination.encryptKeypair);
+		if (this.destination.encryptKeypair) {
+			if (isString(encryptClientKey)) {
+				console.log('Encrypting Public Key in UDSP Header');
+				header.key = cryptography.encryptClientKey(header.key, this.destination.encryptKeypair);
+			}
 		}
 		return header;
 	}
@@ -252,7 +279,8 @@ export class Client extends UDSP {
 		const header = this.setPublicKeyHeader();
 		const requestCertificate = Boolean(this.hasCertificate);
 		const message = {
-			intro: true
+			intro: true,
+			random: this.randomId
 		};
 		this.introSent = true;
 		this.send(message, header);
@@ -276,14 +304,17 @@ export class Client extends UDSP {
 		const {
 			intro,
 			certIndex,
+			handshake
 		} = message;
 		console.log('Processing Protocol Packet');
 		if (intro) {
 			if (certIndex) {
 				this.proccessCertificateChunk(message);
 			} else {
-				this.serverIntro(message);
+				this.intro(message);
 			}
+		} else if (handshake) {
+			this.handshaked(message);
 		}
 	}
 	request = request;
@@ -294,6 +325,7 @@ export class Client extends UDSP {
 	onPacket = onPacket;
 	destination = {};
 	autoConnect = false;
+	connect = connect;
 	static connections = new Map();
 	packetIdGenerator = construct(UniqID);
 	certChunks = [];

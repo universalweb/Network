@@ -2,7 +2,7 @@ import { construct, UniqID } from '@universalweb/acid';
 import { actions } from './server/actions/index.js';
 import { cryptography } from '#udsp/cryptography';
 import dgram from 'dgram';
-import { randomConnectionId } from '#crypto';
+import { randomConnectionId, randomBuffer } from '#crypto';
 export class UDSP {
 	async calculatePacketOverhead() {
 		const {
@@ -81,4 +81,5 @@ export class UDSP {
 	throttle = false;
 	debounce = false;
 	requestQueue = construct(Map);
+	randomId = randomBuffer(8);
 }

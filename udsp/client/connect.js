@@ -1,6 +1,6 @@
 import { connectedLog } from '#logs';
 import { decode } from 'msgpackr';
-import { randomBuffer } from '#utilities/crypto';
+import { randomBuffer } from '#crypto';
 export async function connect(message) {
 	console.log('-------CLIENT CONNECTING-------\n');
 	// opn stands for open meaning connect to a server

@@ -22,11 +22,15 @@ export async function onPacket(packet, connection) {
 	}
 	const {
 		id,
-		key
+		key,
+		reKey
 	} = config.packetDecoded.header;
 	let client = thisServer.clients.get(toBase64(id));
 	if (client) {
 		config.destination = client;
+		if (reKey) {
+			client.attachNewKey();
+		}
 	}
 	if (key && !client) {
 		client = await createClient({
