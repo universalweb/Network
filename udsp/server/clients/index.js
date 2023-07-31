@@ -11,9 +11,7 @@ import {
 	UniqID, construct, assign, promise, isFalse, isUndefined, isFalsy
 } from '@universalweb/acid';
 import {
-	keypair,
 	toBase64,
-	serverSessionKeys,
 	randomBuffer
 } from '#crypto';
 import { encodePacket } from '#udsp/encodePacket';
