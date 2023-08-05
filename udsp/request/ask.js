@@ -1,11 +1,5 @@
 import {
-	promise, assign, omit,
-	eachArray, stringify,
-	get,
-	isBuffer, isPlainObject,
-	isArray, isMap, construct,
-	each, hasLength,
-	hasValue
+	promise, assign, omit, eachArray, stringify, get, isBuffer, isPlainObject, isArray, isMap, construct, each, hasLength, hasValue, UniqID
 } from '@universalweb/acid';
 import { decode, encode } from 'msgpackr';
 import {
@@ -18,7 +12,7 @@ export class Ask extends Base {
 		super(options, source);
 		const {
 			requestQueue,
-			packetIdGenerator,
+			streamIdGenerator,
 		} = source;
 		const {
 			data,
@@ -26,7 +20,7 @@ export class Ask extends Base {
 		} = requestObject;
 		const head = requestObject.head || options.head;
 		console.log('Ask', requestObject);
-		const streamId = packetIdGenerator.get();
+		const streamId = streamIdGenerator.get();
 		this.request.sid = streamId;
 		this.request.method = method;
 		this.method = method;

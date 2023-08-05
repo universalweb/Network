@@ -332,7 +332,6 @@ export class Client extends UDSP {
 	autoConnect = false;
 	connect = connect;
 	static connections = new Map();
-	packetIdGenerator = construct(UniqID);
 	certChunks = [];
 }
 export async function client(configuration) {

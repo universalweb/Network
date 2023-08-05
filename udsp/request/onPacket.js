@@ -5,6 +5,7 @@ export async function onPacket(packet) {
 	const source = this;
 	this.lastPacketTime = Date.now();
 	const { message } = packet;
+	console.log(packet);
 	const {
 		// main data payload
 		data,
@@ -33,7 +34,7 @@ export async function onPacket(packet) {
 		dataReady,
 		last
 	} = message;
-	console.log(`Stream Id ${streamId}`);
+	console.log(`onPacket Stream Id ${streamId}`);
 	this.totalIncomingPackets++;
 	if (this.ok) {
 		return;

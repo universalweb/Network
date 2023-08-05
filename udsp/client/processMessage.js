@@ -11,7 +11,7 @@ export async function processMessage(packet, client) {
 		message,
 		footer
 	} = packet;
-	const { queue } = client;
+	const { requestQueue } = client;
 	const {
 		connectionClose,
 		state,
@@ -26,7 +26,7 @@ export async function processMessage(packet, client) {
 		return failed(`End event received from server disconnected closing client`);
 	}
 	// console.log(queue.keys());
-	const askObject = queue.get(sid);
+	const askObject = requestQueue.get(sid);
 	if (askObject) {
 		askObject.onPacket(packet);
 	} else {

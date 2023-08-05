@@ -18,15 +18,12 @@ export class Reply extends Base {
 		const { sid } = message;
 		// console.log(source);
 		// // console.log(message);
-		const {
-			queue,
-			packetIdGenerator
-		} = source;
+		const { requestQueue, } = source;
 		this.sid = sid;
 		this.id = sid;
 		this.response.sid = sid;
-		queue.set(sid, this);
-		this.onPacket(message);
+		requestQueue.set(sid, this);
+		this.onPacket(request);
 	}
 	isReply = true;
 	async complete() {

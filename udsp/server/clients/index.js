@@ -86,7 +86,7 @@ export class Client {
 	}
 	// server intro to client with connection id and new keypair
 	async sendIntro(introMessage) {
-		info(`Client Intro Sent -> - ID:${this.idString}`);
+		info(`Client Intro Sent -> - ID:${this.idString}`, introMessage);
 		if (isFalsy(this.newKeypairGenerated)) {
 			this.generateSessionKeypair();
 			this.newKeypairGenerated = true;
@@ -122,6 +122,7 @@ export class Client {
 	}
 	proccessProtocolPacket(message) {
 		info(`Client Intro -> - ID:${this.idString}`);
+		console.log(message);
 		const {
 			intro,
 			certRequest,
@@ -140,11 +141,11 @@ export class Client {
 	isServerClient = true;
 	isServerEnd = true;
 	pending = false;
-	packetIdGenerator = construct(UniqID);
 	state = 0;
 	encryptConnectionId = false;
 	randomId = randomBuffer(8);
 	privateData = {};
+	requestQueue = construct(Map);
 }
 export async function createClient(config) {
 	const client = await construct(Client, [config]);

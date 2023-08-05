@@ -29,10 +29,8 @@ export async function decodePacketHeaders(config) {
 	let encryptConnectionId;
 	if (isServerEnd) {
 		encryptConnectionId = cryptography.config.encryptServerConnectionId;
-		info(`encrypt server ConnectionId ${encryptConnectionId}`);
 	} else {
 		encryptConnectionId = cryptography.config.encryptClientConnectionId;
-		info(`encrypt client ConnectionId ${encryptConnectionId}`);
 	}
 	const client = config.client;
 	info(`Packet Encoded Size ${packetEncoded.length}`);
@@ -56,7 +54,7 @@ export async function decodePacketHeaders(config) {
 		return failed(`No connection id in header -> Invalid Packet`);
 	}
 	if (connectionIdKeypair && encryptConnectionId) {
-		success('Server Connection ID Decrypted');
+		success('Connection ID Decrypted');
 		// console.log(destination);
 		if (isServerEnd) {
 			header.id = cryptography.decryptServerConnectionId(header.id, connectionIdKeypair);

@@ -2,7 +2,7 @@ import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 import { toBase64 } from '#crypto';
-import { isEmpty } from '@universalweb/acid';
+import { isEmpty, hasValue } from '@universalweb/acid';
 import { decodePacket, decodePacketHeaders } from '#udsp/decodePacket';
 import { createClient } from './clients/index.js';
 import { reply } from '#udsp/request/reply';
@@ -55,7 +55,7 @@ export async function onPacket(packet, connection) {
 		header,
 		message
 	} = config.packetDecoded;
-	if (message.sid) {
+	if (hasValue(message?.sid)) {
 		reply(config.packetDecoded, client);
 	} else {
 		client.proccessProtocolPacket(message, header);
