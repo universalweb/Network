@@ -95,14 +95,14 @@ export class Base {
 		let lastKnownEndIndex = 0;
 		eachArray(this.incomingDataPackets, (item, index) => {
 			if (item) {
-				lastKnownEndIndex = item.endIndex;
+				lastKnownEndIndex = item.dataIndex;
 			} else if (missingDataPackets.has(index)) {
 				missingDataPackets.set(index, true);
 			}
 		});
 		if (missingDataPackets.size !== 0) {
 			console.log('Missing packets: ', missingDataPackets);
-			console.log('Last known EndIndex: ', lastKnownEndIndex);
+			console.log('Last known dataIndex: ', lastKnownEndIndex);
 		} else if (this.head.dataSize === this.currentIncomingDataSize) {
 			this.complete();
 		}
