@@ -5,7 +5,10 @@ export async function onPacket(packet) {
 	const source = this;
 	this.lastPacketTime = Date.now();
 	const { message } = packet;
-	console.log(packet);
+	if (!message) {
+		return this.destroy('No Message in Packet');
+	}
+	// console.log(packet);
 	const {
 		// main data payload
 		data,
