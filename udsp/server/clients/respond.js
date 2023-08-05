@@ -6,5 +6,5 @@ export async function respond(client, response, request, server) {
 	response.sid = request.sid;
 	await client.send(response);
 	await server.clientEvent('respond', client);
-	success(`client status check/update (state) -> ID: ${client.id}`);
+	success(`client state check/update (state) -> ID: ${client.id}`);
 }

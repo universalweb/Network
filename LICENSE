@@ -1,14 +1,10 @@
-Business Source License 1.1
+Universal Web License based on Business Source License 1.1
 
-Licensor:  Universal Web, Inc
+Licensor:  Universal Web, Thomas Marchi
 
-Software: Universal Web
+Software: Universal Web, Thomas Marchi
 
-The Software is © 2021 Universal Web, Inc
-
-Use Limitation: Usage of the software is free for use when your application doesn't use the Network as a whole, isn't a Web, isn't equivalent to the Universal Web, and or isn't creating a similar or modified protocol as UDSP.
-
-Change Date: 2027-01-01
+The Software is © 2023 Universal Web, Thomas Marchi
 
 Change License:  Creative Commons Zero v1.0 Universal license.
 
@@ -17,8 +13,12 @@ License text copyright © 2017 MariaDB Corporation Ab, All Rights Reserved.
 
 Terms
 
+Use Limitation: Usage of the software is free for use when your application doesn't use the Network as a whole to create another one, isn't a Web, isn't equivalent to the Universal Web or Viat, and or isn't creating a similar or modified protocol as UDSP or other primary components of the universal web either in part or as a whole. Otherwise if it's a Universal Web application, script, and or tool using the Universal Web and or which contributes to it then the software is free to use & modify. There can be exceptions to this rule by the Licensor but the Licensor must be contacted and the request must then have a written approval by the Licensor so long as the user remains within relative restrictions within this document unless otherwise stipulated. Such an approval may be revoked if the user is found to be in violation of the terms of this license or the terms of the approval.
+
+Commercial use is allowed for the software so long as the user remains within relative restrictions within this document unless otherwise stipulated. All Universal Apps, Websites, scripts, modules, and or code which exist on or for the Universal Web are permitted. Such an approval may be revoked if the user is found to be in violation of the terms of this license or the terms of the approval.
+
 The Licensor hereby grants you the right to copy, modify, create derivative
-works, redistribute, and make non-production use of the Licensed Work. The
+works, redistribute, and make non-production use of the Licensed Work if out of the scope of the usage limitations. The
 Licensor may make an Additional Use Grant, above, permitting limited
 production use.
 

@@ -29,10 +29,11 @@ export async function decodePacketHeaders(config) {
 	let encryptConnectionId;
 	if (isServerEnd) {
 		encryptConnectionId = cryptography.config.encryptServerConnectionId;
+		info(`encrypt server ConnectionId ${encryptConnectionId}`);
 	} else {
 		encryptConnectionId = cryptography.config.encryptClientConnectionId;
+		info(`encrypt client ConnectionId ${encryptConnectionId}`);
 	}
-	info(`encryptConnectionId ${encryptConnectionId}`);
 	const client = config.client;
 	info(`Packet Encoded Size ${packetEncoded.length}`);
 	const packet = decode(packetEncoded);

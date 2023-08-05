@@ -28,7 +28,7 @@
     "rules": {
         "no-setter-return": "error",
         "no-dupe-else-if": "error",
-        "no-import-assign": "off",
+        "no-import-assign": "error",
         "object-curly-newline": [
             "error",
             {

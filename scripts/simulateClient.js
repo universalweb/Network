@@ -34,6 +34,7 @@ fileRequest.on({
 	}
 });
 const response = await fileRequest.send();
+console.log(response);
 // const response = await uwClient.request('index.html').on({
 // 	data(...args) {
 // 		console.log('onData for simulate client', ...args);

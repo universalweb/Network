@@ -179,10 +179,10 @@ export class Client extends UDSP {
 		const thisClient = this;
 		success(`client reKeyed -> ID: ${thisClient.idString}`);
 	}
-	close(statusCode) {
-		console.log(toBase64(this.id), `client closed. code ${statusCode}`);
+	close(message) {
+		console.log(this.idString, `client closed. code ${message.state}`);
 		this.socket.close();
-		Client.connections.delete(this.id);
+		Client.connections.delete(this.idString);
 	}
 	ask(message, options) {
 		const ask = construct(Ask, [message, options, this]);
@@ -304,9 +304,10 @@ export class Client extends UDSP {
 		const {
 			intro,
 			certIndex,
-			handshake
+			handshake,
+			state
 		} = message;
-		console.log('Processing Protocol Packet');
+		console.log('Processing Protocol Packet', message);
 		if (intro) {
 			if (certIndex) {
 				this.proccessCertificateChunk(message);
@@ -315,6 +316,10 @@ export class Client extends UDSP {
 			}
 		} else if (handshake) {
 			this.handshaked(message);
+		} else if (state) {
+			if (state === 3) {
+				this.close(message);
+			}
 		}
 	}
 	request = request;

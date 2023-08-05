@@ -2,13 +2,23 @@ import { connected } from './connected.js';
 import { initialize } from './initialize.js';
 import { created } from './created.js';
 import { destroy } from './destroy.js';
-import { connectionStatus } from './connectionStatus.js';
 import { received } from './received.js';
 import {
-	success, failed, imported, msgSent, info, msgReceived
+	success,
+	failed,
+	imported,
+	msgSent,
+	info,
+	msgReceived
 } from '#logs';
 import {
-	UniqID, construct, assign, promise, isFalse, isUndefined, isFalsy
+	UniqID,
+	construct,
+	assign,
+	promise,
+	isFalse,
+	isUndefined,
+	isFalsy
 } from '@universalweb/acid';
 import {
 	toBase64,
@@ -31,22 +41,17 @@ export class Client {
 	async created() {
 		const server = this.server();
 		await created(this, server);
-		info(`socket EVENT -> created - ID:${this.id}`);
+		info(`socket EVENT -> created - ID:${this.idString}`);
 	}
 	async connected() {
 		const server = this.server();
 		await connected(this, server);
-		success(`socket EVENT -> connected - ID:${this.id}`);
-	}
-	async status() {
-		const server = this.server();
-		await connectionStatus(this);
-		info(`socket EVENT -> statusUpdate - ID:${this.id}`);
+		success(`socket EVENT -> connected - ID:${this.idString}`);
 	}
 	async generateSessionKeypair() {
 		const newKeypair = this.cryptography.keypair();
 		this.newKeypair = newKeypair;
-		info(`socket EVENT -> reKey - ID:${this.id}`);
+		info(`socket EVENT -> reKey - ID:${this.idString}`);
 	}
 	async setSessionKeys() {
 		console.log(this.destination);
@@ -61,27 +66,27 @@ export class Client {
 		this.state = state;
 	}
 	async send(message, headers, footer) {
-		msgSent(`socket Sent -> ID: ${this.id}`);
+		msgSent(`socket Sent -> ID: ${this.idString}`);
 		return sendPacket(message, this, this.socket(), this.destination, headers, footer);
 	}
 	async received(message, frameHeaders) {
 		const server = this.server();
 		await received(this, message, frameHeaders, server);
-		info(`socket EVENT -> send - ID:${this.id}`);
+		info(`socket EVENT -> send - ID:${this.idString}`);
 	}
 	async authenticate(packet) {
 	}
 	async destroy(destroyCode) {
 		const server = this.server();
 		await destroy(this, destroyCode, server);
-		info(`socket EVENT -> destroy - ID:${this.id}`);
+		info(`socket EVENT -> destroy - ID:${this.idString}`);
 	}
 	async intro(message) {
 		this.sendIntro(message);
 	}
 	// server intro to client with connection id and new keypair
 	async sendIntro(introMessage) {
-		info(`Client Intro Sent -> - ID:${this.id}`);
+		info(`Client Intro Sent -> - ID:${this.idString}`);
 		if (isFalsy(this.newKeypairGenerated)) {
 			this.generateSessionKeypair();
 			this.newKeypairGenerated = true;
@@ -116,7 +121,7 @@ export class Client {
 	chunkCertificate(certificate) {
 	}
 	proccessProtocolPacket(message) {
-		info(`Client Intro -> - ID:${this.id}`);
+		info(`Client Intro -> - ID:${this.idString}`);
 		const {
 			intro,
 			certRequest,
@@ -139,6 +144,7 @@ export class Client {
 	state = 0;
 	encryptConnectionId = false;
 	randomId = randomBuffer(8);
+	privateData = {};
 }
 export async function createClient(config) {
 	const client = await construct(Client, [config]);

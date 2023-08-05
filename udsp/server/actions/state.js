@@ -9,7 +9,7 @@ export async function state(socket, request, response) {
 	response.head = {};
 	if (!isString(fileName) || isEmpty(fileName)) {
 		console.log('No valid state request received - Returning empty data');
-		response.head.status = 404;
+		response.head.state = 404;
 		return true;
 	}
 	if (!isPathAllowed(fileName)) {

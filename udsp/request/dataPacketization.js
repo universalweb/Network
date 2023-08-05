@@ -15,16 +15,14 @@ export async function dataPacketization(source) {
 	if (dataSize > maxDataSize) {
 		console.log('data size', dataSize);
 		while (currentBytePosition < dataSize) {
+			const message = this.getPacketTemplate();
 			const endIndex = currentBytePosition + maxDataSize;
 			const safeEndIndex = endIndex > dataSize ? dataSize : endIndex;
 			const data = outgoingData.subarray(currentBytePosition, safeEndIndex);
 			console.log('chunksize', data.length, currentBytePosition, endIndex);
-			const message = {
-				pid: packetId,
-				endIndex: safeEndIndex,
-				sid,
-				data
-			};
+			message.pid = packetId;
+			message.dataIndex = safeEndIndex;
+			message.data = data;
 			outgoingDataPackets[packetId] = message;
 			if (safeEndIndex === dataSize) {
 				message.last = true;

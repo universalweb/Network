@@ -39,6 +39,7 @@ export async function onPacket(packet) {
 		return;
 	}
 	if (hasValue(packetId)) {
+		source.lastActive = Date.now();
 		if (head && !this.incomingHeadPackets[packetId]) {
 			this.totalReceivedUniquePackets++;
 			this.incomingHeadPackets[packetId] = message.head;

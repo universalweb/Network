@@ -194,13 +194,12 @@ export class Base {
 		const headSize = this.outgoingHeadSize;
 		while (currentBytePosition < headSize) {
 			const message = this.getPacketTemplate();
-			message.sid = sid;
 			message.pid = packetId;
 			const endIndex = currentBytePosition + maxHeadSize;
 			const safeEndIndex = endIndex > headSize ? headSize : endIndex;
 			message.head = this.outgoingHead.subarray(currentBytePosition, safeEndIndex);
-			message.headSize = message.head.length;
 			outgoingHeadPackets[packetId] = message;
+			message.dataIndex = safeEndIndex;
 			if (safeEndIndex === headSize) {
 				message.last = true;
 				break;

@@ -51,7 +51,7 @@ export class UDSP {
 		this.socket = socket;
 		// Make sure there is as graceful as possible shutdown
 		process.on('beforeExit', (code) => {
-			socket.close();
+			console.log('Before Exit', code);
 		});
 	}
 	gracePeriod = 30000;
