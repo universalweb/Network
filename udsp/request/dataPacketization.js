@@ -15,7 +15,7 @@ export async function dataPacketization(source) {
 	if (dataSize > maxDataSize) {
 		console.log('data size', dataSize);
 		while (currentBytePosition < dataSize) {
-			const message = this.getPacketTemplate();
+			const message = source.getPacketTemplate();
 			const endIndex = currentBytePosition + maxDataSize;
 			const safeEndIndex = endIndex > dataSize ? dataSize : endIndex;
 			const data = outgoingData.subarray(currentBytePosition, safeEndIndex);
@@ -32,11 +32,10 @@ export async function dataPacketization(source) {
 			packetId++;
 		}
 	} else {
-		const message = {
-			pid: 0,
-			end: true,
-			data: outgoingData
-		};
+		const message = source.getPacketTemplate();
+		message.pid = 0;
+		message.last = true;
+		message.data = outgoingData;
 		// console.log(source);
 		outgoingDataPackets[0] = message;
 	}

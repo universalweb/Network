@@ -17,7 +17,7 @@ import {
 } from '@universalweb/acid';
 import { toBase64 } from '#crypto';
 export async function encodePacket(message, source, destination, headers, footer) {
-	success(`PROCESSING ENCODE PACKET`);
+	success(`PROCESSING TO ENCODE PACKET`);
 	const {
 		state,
 		isClient,

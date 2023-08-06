@@ -60,29 +60,41 @@ export class Base {
 		source.head[headerName] = headerValue;
 	}
 	setHead() {
-		if (this.head?.length) {
-			this.head = Buffer.concat(this.head);
+		if (this.incomingHeadData?.length) {
+			this.head = Buffer.concat(this.incomingHeadData);
+			console.log(this.head, decode(this.head));
 			this.head = decode(this.head);
+			console.log('HEAD SET', this.head);
 		}
 		this.headAssembled = true;
 	}
+	setData() {
+		if (this.incomingData?.length) {
+			this.data = Buffer.concat(this.incomingData);
+			this.data = decode(this.data);
+		}
+		this.dataAssembled = true;
+	}
 	async assembleHead() {
 		if (this.headAssembled) {
-			return;
+			return console.log('Head already assembled');
 		}
-		const head = this.head;
-		const { missingHeadPackets } = this;
-		console.log(this.incomingHeadPackets);
+		const {
+			missingHeadPackets,
+			incomingHeadData
+		} = this;
+		console.log('incomingHeadPackets', this.incomingHeadPackets);
 		eachArray(this.incomingHeadPackets, (item, index) => {
 			if (!item) {
 				if (!missingHeadPackets.has(index)) {
 					missingHeadPackets.set(index, true);
 				}
 			}
-			if (item.head && !head[index]) {
-				head[index] = item.head;
+			if (item.head && !incomingHeadData[index]) {
+				incomingHeadData[index] = item.head;
 			}
 		});
+		console.log('incomingHeadData', incomingHeadData);
 		if (this.totalIncomingHeadSize === this.currentIncomingHeadSize) {
 			this.setHead();
 			this.sendDataReady();
@@ -174,15 +186,6 @@ export class Base {
 	get body() {
 		return this.data;
 	}
-	buildPacket() {
-		const {
-			isAsk,
-			isReply
-		} = this;
-		const message = (this.isAsk) ? this.request : this.response;
-		this.outgoingHead = encode(message.head);
-		this.outgoingHeadSize = this.outgoingHead.length;
-	}
 	async headPacketization() {
 		const {
 			maxHeadSize,
@@ -190,6 +193,10 @@ export class Base {
 			isAsk,
 			outgoingHeadPackets
 		} = this;
+		const source = (this.isAsk) ? this.request : this.response;
+		console.log('headPacketization', source.head);
+		this.outgoingHead = encode(source.head);
+		this.outgoingHeadSize = this.outgoingHead.length;
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const headSize = this.outgoingHeadSize;
@@ -228,7 +235,6 @@ export class Base {
 	}
 	async packetization() {
 		const message = (this.isAsk) ? this.request : this.response;
-		await this.buildPacket();
 		await this.dataPacketization();
 		await this.headPacketization();
 	}
@@ -332,7 +338,6 @@ export class Base {
 	totalReceivedUniquePackets = 0;
 	totalIncomingUniquePackets = 0;
 	progress = 0;
-	head = [];
 	dataOrdered = [];
 	stream = [];
 	missingHeadPackets = construct(Map);
@@ -340,6 +345,7 @@ export class Base {
 	events = {};
 	header = {};
 	options = {};
+	head = {};
 	setupConfirmationPacket = {
 		pid: 0,
 		authorize: true,
@@ -347,6 +353,7 @@ export class Base {
 	outgoingDataPackets = [];
 	outgoingHeadPackets = [];
 	incomingHeadPackets = [];
+	incomingHeadData = [];
 	incomingDataPackets = [];
 	incomingAks = [];
 	incomingNacks = [];

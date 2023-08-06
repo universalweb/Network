@@ -123,7 +123,7 @@ export class Client {
 	chunkCertificate(certificate) {
 	}
 	proccessProtocolPacket(message) {
-		info(`Client Intro -> - ID:${this.idString}`);
+		info(`Server:Client proccessProtocolPacket -> - ID:${this.idString}`);
 		console.log(message);
 		const {
 			intro,

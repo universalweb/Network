@@ -8,6 +8,7 @@ export async function onPacket(packet) {
 	if (!message) {
 		return this.destroy('No Message in Packet');
 	}
+	console.log('On Packet event', message);
 	// console.log(packet);
 	const {
 		// main data payload
@@ -46,7 +47,7 @@ export async function onPacket(packet) {
 		source.lastActive = Date.now();
 		if (head && !this.incomingHeadPackets[packetId]) {
 			this.totalReceivedUniquePackets++;
-			this.incomingHeadPackets[packetId] = message.head;
+			this.incomingHeadPackets[packetId] = message;
 			this.totalReceivedUniqueHeadPackets++;
 			this.currentIncomingHeadSize += head.length;
 			if (this.missingHeadPackets.has(packetId)) {
@@ -62,7 +63,7 @@ export async function onPacket(packet) {
 		}
 		if (data && !this.incomingDataPackets[packetId]) {
 			this.totalReceivedUniquePackets++;
-			this.incomingDataPackets[packetId] = message.data;
+			this.incomingDataPackets[packetId] = message;
 			this.totalReceivedUniqueDataPackets++;
 			this.currentIncomingDataSize += data.length;
 			if (this.missingDataPackets.has(packetId)) {
@@ -72,6 +73,7 @@ export async function onPacket(packet) {
 				await this.onData(message);
 			}
 			if (last) {
+				console.log(this);
 				this.totalIncomingUniqueDataPackets = packetId;
 				this.checkData();
 			}
@@ -82,7 +84,6 @@ export async function onPacket(packet) {
 		this.incomingSetupPacket = message;
 		if (hasValue(headerSize)) {
 			this.totalIncomingHeadSize = headerSize;
-			this.headerSize = headerSize;
 		}
 		if (method) {
 			this.method = method;
@@ -93,14 +94,14 @@ export async function onPacket(packet) {
 		this.sendHeadReady();
 	} else if (headReady) {
 		this.receivedHeadReadyPacket = true;
-		console.log('Head Ready Packet Received');
+		console.log('Head Ready Packet Received', this.type);
 		if (hasValue(totalIncomingUniqueDataPackets)) {
 			this.totalIncomingUniqueDataPackets = totalIncomingUniqueDataPackets;
 		}
 		this.sendHead();
 	} else if (dataReady) {
 		this.receivedDataReadyPacket = true;
-		console.log('Data Ready Packet Received');
+		console.log('Data Ready Packet Received', this.type);
 		this.sendData();
 	} else if (end) {
 		console.log('End Packet Received');
@@ -108,5 +109,4 @@ export async function onPacket(packet) {
 	} else if (err) {
 		return this.destroy(err);
 	}
-	console.log('On Packet event', this.id, message);
 }
