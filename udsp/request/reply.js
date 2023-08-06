@@ -13,18 +13,19 @@ import { Base } from './base.js';
 export class Reply extends Base {
 	constructor(request, source) {
 		super(request, source);
+		console.log('Setting up new reply');
 		const thisReply = this;
 		const { message } = request;
 		const { sid } = message;
 		// console.log(source);
 		// // console.log(message);
-		const { requestQueue, } = source;
+		const { replyQueue, } = source;
 		this.sid = sid;
 		this.id = sid;
 		this.response.sid = sid;
-		requestQueue.set(sid, this);
-		this.onPacket(request);
+		replyQueue.set(sid, this);
 	}
+	type = 'reply';
 	isReply = true;
 	async complete() {
 		this.state = 1;

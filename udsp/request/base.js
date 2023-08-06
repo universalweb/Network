@@ -72,6 +72,7 @@ export class Base {
 		}
 		const head = this.head;
 		const { missingHeadPackets } = this;
+		console.log(this.incomingHeadPackets);
 		eachArray(this.incomingHeadPackets, (item, index) => {
 			if (!item) {
 				if (!missingHeadPackets.has(index)) {
@@ -95,14 +96,14 @@ export class Base {
 		let lastKnownEndIndex = 0;
 		eachArray(this.incomingDataPackets, (item, index) => {
 			if (item) {
-				lastKnownEndIndex = item.dataIndex;
+				lastKnownEndIndex = item.index;
 			} else if (missingDataPackets.has(index)) {
 				missingDataPackets.set(index, true);
 			}
 		});
 		if (missingDataPackets.size !== 0) {
 			console.log('Missing packets: ', missingDataPackets);
-			console.log('Last known dataIndex: ', lastKnownEndIndex);
+			console.log('Last known index: ', lastKnownEndIndex);
 		} else if (this.head.dataSize === this.currentIncomingDataSize) {
 			this.complete();
 		}
@@ -199,7 +200,7 @@ export class Base {
 			const safeEndIndex = endIndex > headSize ? headSize : endIndex;
 			message.head = this.outgoingHead.subarray(currentBytePosition, safeEndIndex);
 			outgoingHeadPackets[packetId] = message;
-			message.dataIndex = safeEndIndex;
+			message.index = safeEndIndex;
 			if (safeEndIndex === headSize) {
 				message.last = true;
 				break;
@@ -317,6 +318,9 @@ export class Base {
 	sendPacket(message, headers, footer) {
 		this.source().send(message, headers, footer);
 	}
+	flushOutgoing = flushOutgoing;
+	flushIncoming = flushIncoming;
+	flush = flush;
 	on = on;
 	outgoingHead;
 	outgoingData;
@@ -355,6 +359,7 @@ export class Base {
 	totalIncomingPayloadSize = 0;
 	// Must be checked for uniqueness
 	totalReceivedPackets = 0;
+	totalReceivedUniqueHeadPackets = 0;
 	/* `state = 0;` is initializing the `state` property of the `Ask` class to `0`. This property is used
 	to keep track of the state of the request, where `0` represents an unsent request, `1` represents a
 	request that is currently being sent, and `2` represents a completed request. */

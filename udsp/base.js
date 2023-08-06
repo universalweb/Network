@@ -80,6 +80,5 @@ export class UDSP {
 	heapSize = 0;
 	throttle = false;
 	debounce = false;
-	requestQueue = construct(Map);
 	randomId = randomBuffer(8);
 }

@@ -333,6 +333,7 @@ export class Client extends UDSP {
 	connect = connect;
 	static connections = new Map();
 	certChunks = [];
+	requestQueue = construct(Map);
 }
 export async function client(configuration) {
 	console.log('Create Client');

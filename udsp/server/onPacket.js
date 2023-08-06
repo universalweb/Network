@@ -56,7 +56,7 @@ export async function onPacket(packet, connection) {
 		message
 	} = config.packetDecoded;
 	if (hasValue(message?.sid)) {
-		reply(config.packetDecoded, client);
+		client.reply(config.packetDecoded);
 	} else {
 		client.proccessProtocolPacket(message, header);
 	}

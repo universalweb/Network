@@ -1,9 +1,9 @@
-import { hasValue } from '@universalweb/acid';
+import { hasValue, isFalse } from '@universalweb/acid';
 import { destroy } from './destory.js';
 import { processEvent } from '#udsp/processEvent';
 export async function onPacket(packet) {
 	const source = this;
-	this.lastPacketTime = Date.now();
+	this.lastActive = Date.now();
 	const { message } = packet;
 	if (!message) {
 		return this.destroy('No Message in Packet');
@@ -38,11 +38,11 @@ export async function onPacket(packet) {
 		last
 	} = message;
 	console.log(`onPacket Stream Id ${streamId}`);
-	this.totalIncomingPackets++;
-	if (this.ok) {
-		return;
-	}
+	this.totalReceivedPackets++;
 	if (hasValue(packetId)) {
+		if (!this.receivedSetupPacket) {
+			return this.destroy('Setup packet not received');
+		}
 		source.lastActive = Date.now();
 		if (head && !this.incomingHeadPackets[packetId]) {
 			this.totalReceivedUniquePackets++;
@@ -55,7 +55,8 @@ export async function onPacket(packet) {
 			if (this.onHead) {
 				await this.onHead(message);
 			}
-			if (this.totalIncomingUniqueHeadPackets === this.totalReceivedUniqueHeadPackets) {
+			console.log(this, this.currentIncomingHeadSize);
+			if (this.totalIncomingHeadSize === this.currentIncomingHeadSize) {
 				this.assembleHead();
 			}
 		}
@@ -77,9 +78,11 @@ export async function onPacket(packet) {
 		}
 	} else if (setup) {
 		this.receivedSetupPacket = true;
-		console.log('Setup Packet Received');
+		console.log('Setup Packet Received', headerSize);
+		this.incomingSetupPacket = message;
 		if (hasValue(headerSize)) {
 			this.totalIncomingHeadSize = headerSize;
+			this.headerSize = headerSize;
 		}
 		if (method) {
 			this.method = method;
@@ -105,5 +108,5 @@ export async function onPacket(packet) {
 	} else if (err) {
 		return this.destroy(err);
 	}
-	console.log('On Packet event', this.id);
+	console.log('On Packet event', this.id, message);
 }

@@ -3,7 +3,11 @@ export async function destroy(err) {
 	if (err) {
 		this.err = err;
 	}
-	console.log(`Destroying ${this.type} ${this.id}`);
+	console.log(`Destroying ${this.type} ID:${this.id} ->`, err);
 	this.flush();
-	this.source().queue.delete(this.id);
+	if (this.isAsk) {
+		this.source().requestQueue.delete(this.id);
+	} else {
+		this.source().replyQueue.delete(this.id);
+	}
 }

@@ -18,7 +18,8 @@ import {
 	promise,
 	isFalse,
 	isUndefined,
-	isFalsy
+	isFalsy,
+	hasValue
 } from '@universalweb/acid';
 import {
 	toBase64,
@@ -26,6 +27,7 @@ import {
 } from '#crypto';
 import { encodePacket } from '#udsp/encodePacket';
 import { sendPacket } from '#udsp/sendPacket';
+import { reply } from '#udsp/request/reply';
 export class Client {
 	constructor(config) {
 		const { server } = config;
@@ -145,7 +147,17 @@ export class Client {
 	encryptConnectionId = false;
 	randomId = randomBuffer(8);
 	privateData = {};
-	requestQueue = construct(Map);
+	replyQueue = construct(Map);
+	reply(packet) {
+		const { message: { sid } } = packet;
+		console.log('Reply Client', this.replyQueue, this.replyQueue.has(sid), packet);
+		if (hasValue(sid)) {
+			if (this.replyQueue.has(sid)) {
+				return this.replyQueue.get(sid).onPacket(packet);
+			}
+		}
+		reply(packet, this).onPacket(packet);
+	}
 }
 export async function createClient(config) {
 	const client = await construct(Client, [config]);

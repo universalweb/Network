@@ -21,7 +21,7 @@ export async function dataPacketization(source) {
 			const data = outgoingData.subarray(currentBytePosition, safeEndIndex);
 			console.log('chunksize', data.length, currentBytePosition, endIndex);
 			message.pid = packetId;
-			message.dataIndex = safeEndIndex;
+			message.index = safeEndIndex;
 			message.data = data;
 			outgoingDataPackets[packetId] = message;
 			if (safeEndIndex === dataSize) {
