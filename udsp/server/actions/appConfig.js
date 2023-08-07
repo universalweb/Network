@@ -39,7 +39,7 @@ export async function intro(reply) {
 	if (onConnectResponse) {
 		response.data.message = onConnectResponse;
 	}
-	reply.setHeader('serialization', 'struct');
+	reply.setHeader('serialize', true);
 	// swap to new key but only for the specific request?
 	const clientResponse = await reply.send();
 	console.log(clientResponse);

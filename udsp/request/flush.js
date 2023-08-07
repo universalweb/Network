@@ -8,6 +8,7 @@ export function flushOutgoing() {
 	this.totalOutgoingPayloadSize = null;
 }
 export function flushIncoming() {
+	this.compiledData = null;
 	this.incomingPackets = null;
 	this.incomingAks = null;
 	this.incomingNacks = null;
@@ -17,6 +18,12 @@ export function flushIncoming() {
 }
 // Flush all data
 export function flush() {
+	if (this.compiledData) {
+		this.compiledData.fill(0);
+	}
+	if (this.headCompiled) {
+		this.headCompiled.fill(0);
+	}
 	this.flushOutgoing();
 	this.flushIncoming();
 	this.completed = Date.now();

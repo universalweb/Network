@@ -5,11 +5,10 @@ import { flushOutgoing, flushIncoming, flush } from './flush.js';
 import { onPacket } from './onPacket.js';
 import {
 	isBuffer, isPlainObject, isString, promise, assign,
-	objectSize, eachArray, jsonParse, construct, isArray, clear, isFalse
+	objectSize, eachArray, jsonParse, construct, isArray, clear, isFalse, isTrue
 } from '@universalweb/acid';
 import { encode, decode } from 'msgpackr';
 import { request } from '#udsp/request';
-import { assembleData } from './assembleData.js';
 import { toBase64 } from '#crypto';
 export class Base {
 	constructor(options = {}, source) {
@@ -60,20 +59,17 @@ export class Base {
 		source.head[headerName] = headerValue;
 	}
 	setHead() {
-		if (this.incomingHeadData?.length) {
-			this.head = Buffer.concat(this.incomingHeadData);
-			console.log(this.head, decode(this.head));
-			this.head = decode(this.head);
+		this.incomingHeadPackets = null;
+		if (this.incomingHead?.length) {
+			const headCompiled = Buffer.concat(this.incomingHead);
+			this.incomingHead = null;
+			this.head = decode(headCompiled);
+			headCompiled.fill(0);
 			console.log('HEAD SET', this.head);
+		} else {
+			this.head = {};
 		}
 		this.headAssembled = true;
-	}
-	setData() {
-		if (this.incomingData?.length) {
-			this.data = Buffer.concat(this.incomingData);
-			this.data = decode(this.data);
-		}
-		this.dataAssembled = true;
 	}
 	async assembleHead() {
 		if (this.headAssembled) {
@@ -81,66 +77,121 @@ export class Base {
 		}
 		const {
 			missingHeadPackets,
-			incomingHeadData
+			incomingHead
 		} = this;
 		console.log('incomingHeadPackets', this.incomingHeadPackets);
-		eachArray(this.incomingHeadPackets, (item, index) => {
-			if (!item) {
-				if (!missingHeadPackets.has(index)) {
-					missingHeadPackets.set(index, true);
-				}
-			}
-			if (item.head && !incomingHeadData[index]) {
-				incomingHeadData[index] = item.head;
-			}
-		});
-		console.log('incomingHeadData', incomingHeadData);
 		if (this.totalIncomingHeadSize === this.currentIncomingHeadSize) {
 			this.setHead();
 			this.sendDataReady();
+		} else {
+			eachArray(this.incomingHeadPackets, (item, index) => {
+				if (!item) {
+					if (!missingHeadPackets.has(index)) {
+						missingHeadPackets.set(index, true);
+					}
+				}
+			});
 		}
+		console.log('incomingHead', incomingHead);
 	}
 	async checkData() {
 		const { missingDataPackets } = this;
-		if (this.compiledData) {
-			return;
+		if (this.compiledDataAlready) {
+			return true;
 		}
-		let lastKnownEndIndex = 0;
 		eachArray(this.incomingDataPackets, (item, index) => {
-			if (item) {
-				lastKnownEndIndex = item.index;
-			} else if (missingDataPackets.has(index)) {
+			if (missingDataPackets.has(index)) {
 				missingDataPackets.set(index, true);
 			}
 		});
 		if (missingDataPackets.size !== 0) {
 			console.log('Missing packets: ', missingDataPackets);
-			console.log('Last known index: ', lastKnownEndIndex);
 		} else if (this.head.dataSize === this.currentIncomingDataSize) {
-			this.complete();
+			this.completeReceived();
 		}
 	}
 	get data() {
-		if (this.compiledData) {
+		if (this.compiledDataAlready) {
 			return this.compiledData;
 		}
-		const data = Buffer.concat(this.incomingDataPackets);
-		if (this.head.serialization === 'struct') {
-			this.data = decode(this.data);
-		} else if (this.head.serialization === 'json') {
-			this.data = jsonParse(this.data);
+		this.incomingDataPackets = null;
+		const { head: { serialize } } = this;
+		const dataConcatinated = Buffer.concat(this.incomingData);
+		this.incomingData.fill(0);
+		this.incomingData = null;
+		if (serialize) {
+			if (isTrue(serialize)) {
+				this.compiledData = decode(dataConcatinated);
+			} else if (serialize === 1) {
+				this.compiledData = jsonParse(dataConcatinated);
+			}
+			dataConcatinated.fill(0);
+		} else {
+			this.compiledData = dataConcatinated;
 		}
-		this.compiledData = data;
-		return data;
+		this.compiledDataAlready = true;
+		return this.compiledData;
 	}
-	toString() {
+	toString(cache) {
+		if (cache) {
+			if (this.toStringCached) {
+				return this.toStringCached;
+			}
+			this.toStringCached = this.data.toString();
+			return this.toStringCached;
+		}
 		return this.data.toString();
 	}
-	toJSON() {
+	toJSON(cache) {
+		if (cache) {
+			if (this.toJSONCached) {
+				return this.toJSONCached;
+			}
+			this.toJSONCached = jsonParse(this.data);
+			return this.toJSONCached;
+		}
 		return jsonParse(this.data);
 	}
-	serialize() {
+	serialize(cache) {
+		if (cache) {
+			if (this.serializeCached) {
+				return this.serializeCached;
+			}
+			this.serializeCached = decode(this.data);
+			return this.serializeCached;
+		}
 		return decode(this.data);
+	}
+	toObjectRaw() {
+		const {
+			head,
+			data,
+			sid,
+			method,
+		} = this;
+		const target = {
+			head: this.head,
+			data: this.data,
+			sid: this.id,
+			method: this.method
+		};
+		return target;
+	}
+	toObject(cache) {
+		if (cache) {
+			if (this.toObjectCached) {
+				return this.toObjectCached;
+			}
+			this.toObjectCached = this.toObjectRaw();
+			return this.toObjectCached;
+		}
+		return this.toObjectRaw();
+	}
+	get headers() {
+		return this.head;
+	}
+	get body() {
+		return this.data;
 	}
 	sendSetup() {
 		if (this.state === 0) {
@@ -149,14 +200,7 @@ export class Base {
 		const message = this.getPacketTemplate();
 		message.setup = true;
 		message.headerSize = this.outgoingHeadSize;
-		this.sendPacket(message);
-	}
-	sendFinished() {
-		if (this.state === 0) {
-			this.state = 1;
-		}
-		const message = this.getPacketTemplate();
-		message.intro = true;
+		message.method = this.method;
 		this.sendPacket(message);
 	}
 	sendHeadReady() {
@@ -180,12 +224,6 @@ export class Base {
 		message.end = true;
 		this.sendPacket(message);
 	}
-	get headers() {
-		return this.head;
-	}
-	get body() {
-		return this.data;
-	}
 	async headPacketization() {
 		const {
 			maxHeadSize,
@@ -197,9 +235,11 @@ export class Base {
 		console.log('headPacketization', source.head);
 		this.outgoingHead = encode(source.head);
 		this.outgoingHeadSize = this.outgoingHead.length;
+		console.log('outgoingHeadSize', source.outgoingHeadSize);
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const headSize = this.outgoingHeadSize;
+		console.log('maxHeadSize', maxHeadSize);
 		while (currentBytePosition < headSize) {
 			const message = this.getPacketTemplate();
 			message.pid = packetId;
@@ -215,6 +255,7 @@ export class Base {
 			packetId++;
 			currentBytePosition += maxHeadSize;
 		}
+		console.log('outgoingHeadSize', source.outgoingHeadSize);
 	}
 	async dataPacketization() {
 		const {
@@ -225,7 +266,7 @@ export class Base {
 		if (message.data) {
 			this.outgoingData = message.data;
 			if (!isBuffer(message.data)) {
-				this.setHeader('serialization', 'struct');
+				this.setHeader('serialize', true);
 				this.outgoingData = encode(message.data);
 			}
 			this.outgoingDataSize = this.outgoingData.length;
@@ -240,14 +281,22 @@ export class Base {
 	}
 	async send() {
 		const thisSource = this;
-		const handshake = await this.source().ensureHandshake();
-		if (this.sent) {
-			return this.accept;
+		if (this.compiledData) {
+			if (isBuffer(this.compiledData)) {
+				this.compiledData.fill(0);
+			}
+			this.compiledData = null;
 		}
 		const {
 			isAsk,
 			isReply,
 		} = this;
+		if (isAsk) {
+			const handshake = await this.source().ensureHandshake();
+			if (this.sent) {
+				return this.accept;
+			}
+		}
 		this.sent = true;
 		const message = (isAsk) ? this.request : this.response;
 		console.log(`${this.type}.send`, message);
@@ -274,21 +323,6 @@ export class Base {
 		eachArray(packetArray, (message) => {
 			thisReply.sendPacket(message);
 		});
-	}
-	toObject() {
-		const {
-			head,
-			data,
-			sid,
-			method,
-		} = this;
-		const target = {
-			head: this.head,
-			data: this.data,
-			sid: this.id,
-			method: this.method
-		};
-		return target;
 	}
 	sendHeadPacketsById(indexes) {
 		const source = this.outgoingHeadPackets;
@@ -353,8 +387,9 @@ export class Base {
 	outgoingDataPackets = [];
 	outgoingHeadPackets = [];
 	incomingHeadPackets = [];
-	incomingHeadData = [];
+	incomingHead = [];
 	incomingDataPackets = [];
+	incomingData = [];
 	incomingAks = [];
 	incomingNacks = [];
 	outgoingAcks = [];
@@ -373,4 +408,5 @@ export class Base {
 	state = 0;
 	handshake = false;
 	inRequestQueue = false;
+	statusCode = 0;
 }

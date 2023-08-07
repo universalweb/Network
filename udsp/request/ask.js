@@ -33,7 +33,7 @@ export class Ask extends Base {
 		}
 		requestQueue.set(streamId, this);
 	}
-	complete() {
+	completeReceived() {
 		console.log('Ask complete', this);
 		if (this.state === 3) {
 			this.state = 4;

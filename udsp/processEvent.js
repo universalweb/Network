@@ -1,25 +1,20 @@
 import { stringify, get, hasValue } from '@universalweb/acid';
 import { failed, info } from '#logs';
 export async function processEvent(reply) {
-	console.log(reply);
 	const {
-		sid,
-		method
-	} = reply.request;
-	const {
+		method = 'api',
 		events,
 		actions
-	} = reply.server();
-	const methodFunction = actions.get(method) || 'api';
-	if (hasValue(sid)) {
-		if (methodFunction) {
-			info(`Action:${methodFunction} RequestID: ${sid}`);
-		}
-	}
+	} = reply;
+	console.log('processEvent', method);
+	console.log('processEvent head', reply.head);
+	console.log('processEvent data', reply.data);
+	// console.log(actions);
+	const methodFunction = actions.get(method);
 	if (methodFunction) {
-		console.log(reply);
-		const hasResponse = await method(reply);
-		return;
+		console.log('methodFunction', methodFunction);
+		const hasResponse = methodFunction(reply);
+		return hasResponse;
 	} else {
 		return failed(`Invalid method name given.`, reply);
 	}

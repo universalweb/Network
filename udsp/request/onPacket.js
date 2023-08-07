@@ -36,7 +36,8 @@ export async function onPacket(packet) {
 		setup,
 		headReady,
 		dataReady,
-		last
+		last,
+		index
 	} = message;
 	console.log(`onPacket Stream Id ${streamId}`);
 	this.totalReceivedPackets++;
@@ -48,6 +49,7 @@ export async function onPacket(packet) {
 		if (head && !this.incomingHeadPackets[packetId]) {
 			this.totalReceivedUniquePackets++;
 			this.incomingHeadPackets[packetId] = message;
+			this.incomingHead[packetId] = message.head;
 			this.totalReceivedUniqueHeadPackets++;
 			this.currentIncomingHeadSize += head.length;
 			if (this.missingHeadPackets.has(packetId)) {
@@ -64,6 +66,7 @@ export async function onPacket(packet) {
 		if (data && !this.incomingDataPackets[packetId]) {
 			this.totalReceivedUniquePackets++;
 			this.incomingDataPackets[packetId] = message;
+			this.incomingData[packetId] = message.data;
 			this.totalReceivedUniqueDataPackets++;
 			this.currentIncomingDataSize += data.length;
 			if (this.missingDataPackets.has(packetId)) {

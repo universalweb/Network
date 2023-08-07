@@ -88,11 +88,7 @@ export class Server extends UDSP {
 			configuration,
 			configuration: {
 				certificate,
-				certificatePublic,
-				connectionIdSize,
-				maxPayloadSize,
-				maxDataSize,
-				maxHeadSize
+				certificatePublic
 			}
 		} = this;
 		if (certificate) {
@@ -110,26 +106,6 @@ export class Server extends UDSP {
 			this.certificatePublic = await loadCertificate(certificatePublic);
 			this.certificatePublicSize = this.certificatePublic.length;
 			this.chunkCertificate();
-		}
-		if (!connectionIdSize) {
-			if (this.certificate.connectionIdSize) {
-				this.connectionIdSize = this.certificate.connectionIdSize;
-			}
-		}
-		if (!maxPayloadSize) {
-			if (this.certificate.maxPayloadSize) {
-				this.maxPayloadSize = this.certificate.maxPayloadSize;
-			}
-		}
-		if (!maxDataSize) {
-			if (this.certificate.maxDataSize) {
-				this.maxDataSize = this.certificate.maxDataSize;
-			}
-		}
-		if (!maxHeadSize) {
-			if (this.certificate.maxHeadSize) {
-				this.maxHeadSize = this.certificate.maxHeadSize;
-			}
 		}
 		if (this.certificate.cryptography) {
 			const cryptoConfig = assign({

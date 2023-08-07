@@ -25,14 +25,14 @@ const fileRequest = await uwClient.request('index.html');
 // const fileRequest = await uwClient.request({
 // 	path: 'index.html'
 // });
-fileRequest.on({
-	data(...args) {
-		console.log('custom onData event', ...args);
-	},
-	head(...args) {
-		console.log('custom onHead event', ...args);
-	}
-});
+// fileRequest.on({
+// 	data(...args) {
+// 		console.log('custom onData event', ...args);
+// 	},
+// 	head(...args) {
+// 		console.log('custom onHead event', ...args);
+// 	}
+// });
 const response = await fileRequest.send();
 console.log(response);
 // const response = await uwClient.request('index.html').on({
@@ -41,10 +41,10 @@ console.log(response);
 // 	}
 // }).send();
 console.log('head', response.head);
-console.log('data', response.data);
+console.log('data', response.toString());
 console.timeEnd('FileRequest');
-const fileFetch = await uwClient.fetch('index.html');
-console.log(fileFetch.toString());
+// const fileFetch = await uwClient.fetch('index.html');
+// console.log(fileFetch.toString());
 console.timeEnd('Full');
 // console.log('Request state', fileRequest);
 

@@ -17,6 +17,8 @@ export class Reply extends Base {
 		const thisReply = this;
 		const { message } = request;
 		const { sid } = message;
+		this.events = source.events;
+		this.actions = source.actions;
 		// console.log(source);
 		// // console.log(message);
 		const { replyQueue, } = source;
@@ -27,7 +29,7 @@ export class Reply extends Base {
 	}
 	type = 'reply';
 	isReply = true;
-	async complete() {
+	async completeReceived() {
 		this.state = 1;
 		await processEvent(this);
 	}

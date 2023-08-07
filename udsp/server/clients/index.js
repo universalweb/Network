@@ -38,6 +38,26 @@ export class Client {
 		this.socket = function() {
 			return server.socket;
 		};
+		this.events = server.events;
+		this.actions = server.actions;
+		const {
+			maxPacketSize,
+			maxDataSize,
+			maxHeadSize,
+			packetMaxPayloadSafeEstimate
+		} = server;
+		if (maxPacketSize) {
+			this.maxPacketSize = maxPacketSize;
+		}
+		if (maxDataSize) {
+			this.maxDataSize = maxDataSize;
+		}
+		if (maxHeadSize) {
+			this.maxHeadSize = maxHeadSize;
+		}
+		if (packetMaxPayloadSafeEstimate) {
+			this.packetMaxPayloadSafeEstimate = packetMaxPayloadSafeEstimate;
+		}
 		return initialize(config, client);
 	}
 	async created() {

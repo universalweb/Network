@@ -8,7 +8,7 @@ const dots = /\./g;
  * @todo
  */
 const cache = {};
-export async function file(reply) {
+export async function get(reply) {
 	const {
 		resourceDirectory,
 		defaultExtension,
@@ -16,10 +16,9 @@ export async function file(reply) {
 	} = this;
 	const {
 		response,
-		request
+		data
 	} = reply;
-	info(request.data);
-	const { path: requestPath } = request.data;
+	const { path: requestPath } = data;
 	if (!isString(requestPath) || isEmpty(requestPath) || requestPath.match(dots).length > 1) {
 		console.log('No valid state request received - Returning empty data');
 		response.code = 404;
@@ -30,11 +29,11 @@ export async function file(reply) {
 		cleanedPath = cleanedPath + defaultExtension;
 	}
 	console.log(cleanedPath);
-	const data = await read(cleanedPath);
+	const fileData = await read(cleanedPath);
 	const ext = path.extname(cleanedPath).replace('.', '');
 	console.log(`EXT => ${ext}`);
-	response.ext = ext;
-	response.data = data;
+	reply.setHeader('contentType', ext);
+	response.data = fileData;
 	// checksum: cryptography.hash(data)
-	reply.send('binary');
+	reply.send();
 }
