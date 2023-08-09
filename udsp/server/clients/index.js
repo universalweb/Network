@@ -166,7 +166,7 @@ export class Client {
 	state = 0;
 	encryptConnectionId = false;
 	randomId = randomBuffer(8);
-	privateData = {};
+	data = construct(Map);
 	replyQueue = construct(Map);
 	reply(packet) {
 		const { message: { sid } } = packet;
