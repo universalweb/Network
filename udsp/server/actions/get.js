@@ -20,8 +20,9 @@ export async function get(reply) {
 	} = reply;
 	const { path: requestPath } = data;
 	if (!isString(requestPath) || isEmpty(requestPath) || requestPath.match(dots).length > 1) {
-		console.log('No valid state request received - Returning empty data');
-		response.code = 404;
+		console.log('No fileName - Returning empty data');
+		reply.setHeader('statusCode', 404);
+		reply.send();
 		return true;
 	}
 	let cleanedPath = cleanPath(`${resourceDirectory}/${requestPath}`);

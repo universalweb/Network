@@ -1,30 +1,47 @@
+import { clear, clearBuffer } from '@universalweb/acid';
 export function flushOutgoing() {
-	this.outgoingAcks = null;
-	this.outgoingNacks = null;
-	this.outgoingPayload = null;
-	this.outgoingPackets = null;
-	this.outgoingChunks = null;
+	if (this.outgoingHead) {
+		clearBuffer(this.outgoingHead);
+	}
+	if (this.outgoingData) {
+		clearBuffer(this.outgoingData);
+	}
+	clear(this.outgoingAck);
+	clear(this.outgoingNacks);
+	clear(this.outgoingHeadPackets);
+	clear(this.outgoingDataPackets);
+	this.response = null;
 	this.totalSentConfirmedPackets = null;
 	this.totalOutgoingPayloadSize = null;
 }
 export function flushIncoming() {
-	this.compiledData = null;
-	this.incomingPackets = null;
-	this.incomingAks = null;
-	this.incomingNacks = null;
-	this.totalOutgoingPackets = null;
-	this.totalOutgoingPayloadSize = null;
+	if (this.incomingHead) {
+		clearBuffer(this.outgoingHead);
+	}
+	if (this.incomingData) {
+		clearBuffer(this.outgoingData);
+	}
+	clear(this.incomingAks);
+	clear(this.incomingNacks);
+	clear(this.outgoingNacks);
+	clear(this.incomingHead);
+	clear(this.incomingDataPackets);
+	this.request = null;
+	this.incomingSetupPacket = null;
+	this.currentIncomingHeadSize = null;
+	this.currentIncomingDataSize = null;
+	this.totalReceivedUniquePackets = null;
+	this.totalIncomingHeadSize = null;
 	this.totalReceivedPackets = null;
 }
 // Flush all data
 export function flush() {
-	if (this.compiledData) {
-		this.compiledData.fill(0);
-	}
-	if (this.headCompiled) {
-		this.headCompiled.fill(0);
-	}
+	clear(this.missingHeadPackets);
+	clear(this.missingDataPackets);
+	this.lastActive = null;
+	this.setupConfirmationPacket = null;
+	this.created = null;
+	this.headAssembled = null;
 	this.flushOutgoing();
 	this.flushIncoming();
-	this.completed = Date.now();
 }

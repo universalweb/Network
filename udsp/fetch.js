@@ -3,16 +3,9 @@ import {
 } from '#logs';
 import { promise, construct, isString } from '@universalweb/acid';
 imported('Request');
-export async function fetchRequest(source, options) {
-	const method = options?.method || (isString(options) && options) || 'get';
-	const payload = (isString(source)) ? {
-		path: source
-	} : source;
-	info(`Request then Fetch Function ${method}`);
-	const requestObject = {
-		method,
-		data: payload
-	};
-	const request = await this.request(requestObject, options);
+export async function fetchRequest(source, options = {}) {
+	info(`FETCH => ${source}`);
+	options.method = 'get';
+	const request = await this.request(source, options);
 	return request.send();
 }

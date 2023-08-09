@@ -8,7 +8,7 @@ export async function state(socket, request, response) {
 	const { state: fileName } = request.data;
 	response.head = {};
 	if (!isString(fileName) || isEmpty(fileName)) {
-		console.log('No valid state request received - Returning empty data');
+		console.log('No fileName - Returning empty data');
 		response.head.state = 404;
 		return true;
 	}

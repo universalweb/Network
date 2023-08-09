@@ -33,18 +33,19 @@ const fileRequest = await uwClient.request('index.html');
 // 		console.log('custom onHead event', ...args);
 // 	}
 // });
-const response = await fileRequest.send();
-console.log(response);
+// const response = await fileRequest.send();
+// console.log(response);
 // const response = await uwClient.request('index.html').on({
 // 	data(...args) {
 // 		console.log('onData for simulate client', ...args);
 // 	}
 // }).send();
-console.log('head', response.head);
-console.log('data', response.toString());
+// console.log('head', response.head);
+// console.log('data', response.toString());
 console.timeEnd('FileRequest');
-// const fileFetch = await uwClient.fetch('index.html');
-// console.log(fileFetch.toString());
+const fileFetch = await uwClient.fetch('index.html');
+console.log(fileFetch.head);
+console.log('data', fileFetch.toString());
 console.timeEnd('Full');
 // console.log('Request state', fileRequest);
 

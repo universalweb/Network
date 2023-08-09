@@ -5,7 +5,7 @@ import { flushOutgoing, flushIncoming, flush } from './flush.js';
 import { onPacket } from './onPacket.js';
 import {
 	isBuffer, isPlainObject, isString, promise, assign,
-	objectSize, eachArray, jsonParse, construct, isArray, clear, isFalse, isTrue
+	objectSize, eachArray, jsonParse, construct, isArray, clear, isFalse, isTrue, clearBuffer
 } from '@universalweb/acid';
 import { encode, decode } from 'msgpackr';
 import { request } from '#udsp/request';
@@ -59,10 +59,10 @@ export class Base {
 		source.head[headerName] = headerValue;
 	}
 	setHead() {
-		this.incomingHeadPackets = null;
+		clear(this.incomingHeadPackets);
 		if (this.incomingHead?.length) {
 			const headCompiled = Buffer.concat(this.incomingHead);
-			this.incomingHead = null;
+			clearBuffer(this.incomingHead);
 			this.head = decode(headCompiled);
 			headCompiled.fill(0);
 			console.log('HEAD SET', this.head);
@@ -82,7 +82,11 @@ export class Base {
 		console.log('incomingHeadPackets', this.incomingHeadPackets);
 		if (this.totalIncomingHeadSize === this.currentIncomingHeadSize) {
 			this.setHead();
-			this.sendDataReady();
+			if (this.head.dataSize === this.currentIncomingDataSize) {
+				this.completeReceived();
+			} else {
+				this.sendDataReady();
+			}
 		} else {
 			eachArray(this.incomingHeadPackets, (item, index) => {
 				if (!item) {
@@ -272,6 +276,8 @@ export class Base {
 			this.outgoingDataSize = this.outgoingData.length;
 			this.setHeader('dataSize', this.outgoingData.length);
 			await dataPacketization(this);
+		} else {
+			this.setHeader('dataSize', 0);
 		}
 	}
 	async packetization() {

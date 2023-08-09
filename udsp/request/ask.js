@@ -8,18 +8,17 @@ import {
 import { Base } from './base.js';
 import { request } from '#udsp/request';
 export class Ask extends Base {
-	constructor(requestObject, options = {}, source) {
+	constructor(data, options = {}, source) {
 		super(options, source);
 		const {
 			requestQueue,
 			streamIdGenerator,
 		} = source;
 		const {
-			data,
-			method = 'get'
-		} = requestObject;
-		const head = requestObject.head || options.head;
-		console.log('Ask', requestObject);
+			method = 'get',
+			head
+		} = options;
+		console.log('Ask', data);
 		const streamId = streamIdGenerator.get();
 		this.request.sid = streamId;
 		this.request.method = method;
