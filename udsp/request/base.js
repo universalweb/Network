@@ -10,6 +10,9 @@ import {
 import { encode, decode } from 'msgpackr';
 import { request } from '#udsp/request';
 import { toBase64 } from '#crypto';
+/**
+	* @todo Adjust packet size to account for other packet data.
+*/
 export class Base {
 	constructor(options = {}, source) {
 		const { events, } = options;
@@ -113,6 +116,18 @@ export class Base {
 		} else if (this.head.dataSize === this.currentIncomingDataSize) {
 			this.completeReceived();
 		}
+	}
+	get path() {
+		const { path } = (this.isAsk) ? this.request : this.response;
+		return path;
+	}
+	get method() {
+		const { method } = (this.isAsk) ? this.request : this.response;
+		return method;
+	}
+	get id() {
+		const { sid } = (this.isAsk) ? this.request : this.response;
+		return sid;
 	}
 	get data() {
 		if (this.compiledDataAlready) {
@@ -251,7 +266,7 @@ export class Base {
 			const safeEndIndex = endIndex > headSize ? headSize : endIndex;
 			message.head = this.outgoingHead.subarray(currentBytePosition, safeEndIndex);
 			outgoingHeadPackets[packetId] = message;
-			message.index = safeEndIndex;
+			message.offset = safeEndIndex;
 			if (safeEndIndex === headSize) {
 				message.last = true;
 				break;

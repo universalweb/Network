@@ -3,18 +3,9 @@ import {
 } from '#logs';
 import { promise, construct, isString } from '@universalweb/acid';
 imported('Request');
-export async function request(dataArg, optionsArg = {}) {
-	const data = (isString(dataArg)) ? {
-		path: dataArg
-	} : dataArg;
-	const options = isString(optionsArg) ? {
-		method: optionsArg
-	} : optionsArg;
-	if (!options.method) {
-		options.method = 'get';
-	}
-	info(`Request Function: ${options.method || 'get'} ${data.path}`);
-	const ask = this.ask(data, options);
+export async function request(method = 'get', endpoint, data, options = {}) {
+	info(`Request Function: ${method || 'get'} ${data.path}`);
+	const ask = this.ask(method, endpoint, data, options);
 	console.log(data, ask);
 	return ask;
 }

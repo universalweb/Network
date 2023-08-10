@@ -17,13 +17,11 @@ export class Reply extends Base {
 		const thisReply = this;
 		const { message } = request;
 		const { sid } = message;
+		const { replyQueue, } = source;
 		this.events = source.events;
 		this.actions = source.actions;
 		// console.log(source);
 		// // console.log(message);
-		const { replyQueue, } = source;
-		this.sid = sid;
-		this.id = sid;
 		this.response.sid = sid;
 		replyQueue.set(sid, this);
 	}

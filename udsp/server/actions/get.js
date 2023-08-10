@@ -16,16 +16,16 @@ export async function get(reply) {
 	} = this;
 	const {
 		response,
-		data
+		data,
+		head: { path: filePath }
 	} = reply;
-	const { path: requestPath } = data;
-	if (!isString(requestPath) || isEmpty(requestPath) || requestPath.match(dots).length > 1) {
+	if (!isString(filePath) || isEmpty(filePath) || filePath.match(dots).length > 1) {
 		console.log('No fileName - Returning empty data');
 		reply.setHeader('statusCode', 404);
 		reply.send();
 		return true;
 	}
-	let cleanedPath = cleanPath(`${resourceDirectory}/${requestPath}`);
+	let cleanedPath = cleanPath(`${resourceDirectory}/${filePath}`);
 	if (!hasDot(cleanedPath)) {
 		cleanedPath = cleanedPath + defaultExtension;
 	}

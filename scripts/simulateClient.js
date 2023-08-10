@@ -15,12 +15,11 @@ const uwClient = await client({
 });
 // const connection = await uwClient.connect();
 //  await client('universalweb.io', {keychain: 'Universal Web Profile'});
-// await request('universalweb.io/index.html');
 console.timeEnd('Connected');
 // console.log('INTRO =>', uwClient);
 console.time('FileRequest');
 // short hand get request
-const fileRequest = await uwClient.request('index.html');
+const fileRequest = await uwClient.request('get', 'index.html');
 // medium hand
 // const fileRequest = await uwClient.request({
 // 	path: 'index.html'

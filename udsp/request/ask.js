@@ -8,22 +8,19 @@ import {
 import { Base } from './base.js';
 import { request } from '#udsp/request';
 export class Ask extends Base {
-	constructor(data, options = {}, source) {
+	constructor(method = 'get', path, data, options = {}, source) {
 		super(options, source);
 		const {
 			requestQueue,
 			streamIdGenerator,
 		} = source;
-		const {
-			method = 'get',
-			head
-		} = options;
+		const { head } = options;
 		console.log('Ask', data);
 		const streamId = streamIdGenerator.get();
+		const methodSanitized = method.toLowerCase();
 		this.request.sid = streamId;
-		this.request.method = method;
-		this.method = method;
-		this.id = streamId;
+		this.request.method = methodSanitized;
+		this.request.path = path;
 		if (data) {
 			this.request.data = data;
 		}

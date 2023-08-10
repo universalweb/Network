@@ -37,7 +37,7 @@ export async function onPacket(packet) {
 		headReady,
 		dataReady,
 		last,
-		index
+		offset
 	} = message;
 	console.log(`onPacket Stream Id ${streamId}`);
 	this.totalReceivedPackets++;
