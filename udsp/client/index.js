@@ -45,6 +45,7 @@ import { fetchRequest } from '../fetch.js';
 import { UDSP } from '#udsp/base';
 import { sendPacket } from '../sendPacket.js';
 import { connect } from './connect.js';
+import { post } from '../post';
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
 	constructor(configuration) {
@@ -324,6 +325,7 @@ export class Client extends UDSP {
 	}
 	request = request;
 	fetch = fetchRequest;
+	post = post;
 	processMessage = processMessage;
 	emit = emit;
 	onListening = onListening;
