@@ -33,7 +33,7 @@ import {
 import { getCertificate, parseCertificate } from '#certificate';
 import { watch } from '#watch';
 // Client specific imports to extend class
-import { emit } from './emit.js';
+import { emit } from '../emit.js';
 import { request } from '#udsp/request';
 import { cryptography } from '#udsp/cryptography';
 import { processMessage } from './processMessage.js';
