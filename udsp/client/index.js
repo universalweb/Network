@@ -33,19 +33,19 @@ import {
 import { getCertificate, parseCertificate } from '#certificate';
 import { watch } from '#watch';
 // Client specific imports to extend class
-import { emit } from '../emit.js';
-import { request } from '#udsp/request';
+import { emit } from '../requestTypes/emit.js';
+import { request } from '#udsp/requestTypes/request';
 import { cryptography } from '#udsp/cryptography';
 import { processMessage } from './processMessage.js';
 import { onPacket } from './onPacket.js';
 import { onListening } from './listening.js';
 import { keychainGet } from '#keychain';
 import { Ask } from '../request/ask.js';
-import { fetchRequest } from '../fetch.js';
+import { fetchRequest } from '../requestTypes/fetch.js';
 import { UDSP } from '#udsp/base';
 import { sendPacket } from '../sendPacket.js';
 import { connect } from './connect.js';
-import { post } from '../post.js';
+import { post } from '../requestTypes/post.js';
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
 	constructor(configuration) {
@@ -258,6 +258,7 @@ export class Client extends UDSP {
 		console.log('Handshake Completed with new keys');
 		this.connected = true;
 		this.state = 2;
+		this.readyState = 1;
 		// Resolve the handshake promise
 		this.handshakeCompleted(message);
 	}

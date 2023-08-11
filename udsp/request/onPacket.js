@@ -69,6 +69,9 @@ export async function onPacket(packet) {
 			this.incomingData[packetId] = message.data;
 			this.totalReceivedUniqueDataPackets++;
 			this.currentIncomingDataSize += data.length;
+			if (this.readyState === 2) {
+				this.readyState = 3;
+			}
 			if (this.missingDataPackets.has(packetId)) {
 				this.missingDataPackets.delete(packetId);
 			}

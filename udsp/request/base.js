@@ -8,7 +8,7 @@ import {
 	objectSize, eachArray, jsonParse, construct, isArray, clear, isFalse, isTrue, clearBuffer
 } from '@universalweb/acid';
 import { encode, decode } from 'msgpackr';
-import { request } from '#udsp/request';
+import { request } from '#udsp/requestTypes/request';
 import { toBase64 } from '#crypto';
 /**
 	* @todo Adjust packet size to account for other packet data.
@@ -61,6 +61,9 @@ export class Base {
 		}
 		source.head[headerName] = headerValue;
 	}
+	setRequestHeader(headerName, headerValue) {
+		return this.setHeader(headerName, headerValue);
+	}
 	setHead() {
 		clear(this.incomingHeadPackets);
 		if (this.incomingHead?.length) {
@@ -72,6 +75,7 @@ export class Base {
 		} else {
 			this.head = {};
 		}
+		this.readyState = 2;
 		this.headAssembled = true;
 	}
 	async assembleHead() {
@@ -300,7 +304,7 @@ export class Base {
 		await this.dataPacketization();
 		await this.headPacketization();
 	}
-	async send() {
+	async send(data) {
 		const thisSource = this;
 		if (this.compiledData) {
 			if (isBuffer(this.compiledData)) {
@@ -317,9 +321,13 @@ export class Base {
 			if (this.sent) {
 				return this.accept;
 			}
+			this.readyState = 1;
 		}
 		this.sent = true;
 		const message = (isAsk) ? this.request : this.response;
+		if (data) {
+			message.data = data;
+		}
 		console.log(`${this.type}.send`, message);
 		const awaitingResult = promise((accept) => {
 			thisSource.accept = accept;
@@ -393,6 +401,8 @@ export class Base {
 	totalReceivedUniquePackets = 0;
 	totalIncomingUniquePackets = 0;
 	progress = 0;
+	progressHead = 0;
+	progressData = 0;
 	dataOrdered = [];
 	stream = [];
 	missingHeadPackets = construct(Map);
@@ -429,5 +439,6 @@ export class Base {
 	state = 0;
 	handshake = false;
 	inRequestQueue = false;
-	statusCode = 0;
+	status = 0;
+	readyState = 0;
 }

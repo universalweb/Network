@@ -6,15 +6,14 @@ import {
 	failed, info, msgReceived, msgSent
 } from '#logs';
 import { Base } from './base.js';
-import { request } from '#udsp/request';
+import { request } from '#udsp/requestTypes/request';
 export class Ask extends Base {
-	constructor(method = 'get', path, data, options = {}, source) {
+	constructor(method = 'get', path, data, head, options = {}, source) {
 		super(options, source);
 		const {
 			requestQueue,
 			streamIdGenerator,
 		} = source;
-		const { head } = options;
 		console.log('Ask', data);
 		const streamId = streamIdGenerator.get();
 		const methodSanitized = method.toLowerCase();
@@ -34,6 +33,7 @@ export class Ask extends Base {
 		if (this.state === 3) {
 			this.state = 4;
 		}
+		this.readyState = 4;
 		this.accept(this);
 	}
 	isAsk = true;

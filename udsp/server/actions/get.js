@@ -21,7 +21,7 @@ export async function get(reply) {
 	} = reply;
 	if (!isString(filePath) || isEmpty(filePath) || filePath.match(dots).length > 1) {
 		console.log('No fileName - Returning empty data');
-		reply.setHeader('statusCode', 404);
+		reply.setHeader('status', 404);
 		reply.send();
 		return true;
 	}
