@@ -44,7 +44,6 @@ import { Ask } from '../request/ask.js';
 import { fetchRequest } from '../requestTypes/fetch.js';
 import { UDSP } from '#udsp/base';
 import { sendPacket } from '../sendPacket.js';
-import { connect } from './connect.js';
 import { post } from '../requestTypes/post.js';
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
@@ -185,8 +184,8 @@ export class Client extends UDSP {
 		this.socket.close();
 		Client.connections.delete(this.idString);
 	}
-	ask(message, options) {
-		const ask = construct(Ask, [message, options, this]);
+	ask(method, path, data, head, options) {
+		const ask = construct(Ask, [method, path, data, head, options, this]);
 		return ask;
 	}
 	loadCertificate(certificate) {
@@ -333,7 +332,6 @@ export class Client extends UDSP {
 	onPacket = onPacket;
 	destination = {};
 	autoConnect = false;
-	connect = connect;
 	static connections = new Map();
 	certChunks = [];
 	requestQueue = construct(Map);

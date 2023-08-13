@@ -87,7 +87,7 @@ export async function initialize(config, client) {
 		}, 30000);
 	}
 	success(`client Created: ID:${serverConnectionIdString} ${ip}:${port}`);
-	await server.clientEvent('constructed', `SID${serverConnectionIdString}`, `CID${client.clientIdString}`);
+	await server.clientEvent('constructed', `Server CID${serverConnectionIdString}`, `Client CID${client.clientIdString}`);
 	await client.created();
 	return client;
 }

@@ -24,11 +24,12 @@ export class UDSP {
 			this.packetOverhead = packetInitialOverhead + this.encryptPacketOverhead + this.connectionIdSize;
 			this.maxPayloadSize = this.maxPacketSize - this.packetOverhead;
 			this.maxPayloadSizeSafeEstimate = this.maxPayloadSize - 10;
+			this.emptyPayloadOverHeadSize = 16;
 			if (!maxDataSize) {
-				this.maxDataSize = this.maxPayloadSize;
+				this.maxDataSize = this.maxPayloadSize - this.emptyPayloadOverHeadSize;
 			}
 			if (!maxHeadSize) {
-				this.maxHeadSize = this.maxPayloadSize;
+				this.maxHeadSize = this.maxPayloadSize - this.emptyPayloadOverHeadSize;
 			}
 			console.log(`packetInitialOverhead: ${packetInitialOverhead} bytes`);
 		}
@@ -55,7 +56,7 @@ export class UDSP {
 		});
 	}
 	gracePeriod = 30000;
-	maxPacketSize = 1328;
+	maxPacketSize = 1280;
 	connectionIdSize = 8;
 	actions = construct(Map);
 	stateCodeDescriptions = ['initializing', 'initialized', 'failed to initialize'];

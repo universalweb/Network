@@ -17,7 +17,7 @@ export async function request(methodArg, pathArg, dataArg, headersArg, optionsAr
 		method = methodArg.method;
 		head = methodArg.head || methodArg.headers;
 	}
-	info(`Request Function: ${method || 'get'} ${data.path}`);
+	info(`Request Function: ${method || 'get'} ${path}`);
 	const ask = this.ask(method, path, data, head, options);
 	console.log(data, ask);
 	return ask;

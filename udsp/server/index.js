@@ -28,9 +28,6 @@ import { randomBuffer, toBase64 } from '#crypto';
 import { cryptography } from '#udsp/cryptography';
 import { UDSP } from '#udsp/base';
 const { seal } = Object;
-/*
-  * socket ID: SID
-*/
 export class Server extends UDSP {
 	constructor(configuration) {
 		super();

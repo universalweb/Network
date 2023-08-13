@@ -169,11 +169,12 @@ export class Client {
 	data = construct(Map);
 	replyQueue = construct(Map);
 	reply(packet) {
-		const { message: { sid } } = packet;
-		console.log('Reply Client', this.replyQueue, this.replyQueue.has(sid), packet);
-		if (hasValue(sid)) {
-			if (this.replyQueue.has(sid)) {
-				return this.replyQueue.get(sid).onPacket(packet);
+		const { message } = packet;
+		const id = message?.frame[0];
+		console.log('Reply Client', this.replyQueue, this.replyQueue.has(id), packet);
+		if (hasValue(id)) {
+			if (this.replyQueue.has(id)) {
+				return this.replyQueue.get(id).onPacket(packet);
 			}
 		}
 		reply(packet, this).onPacket(packet);

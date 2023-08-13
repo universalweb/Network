@@ -16,14 +16,15 @@ export class Reply extends Base {
 		console.log('Setting up new reply');
 		const thisReply = this;
 		const { message } = request;
-		const { sid } = message;
+		const id = message?.frame[0];
+		this.id = id;
 		const { replyQueue, } = source;
 		this.events = source.events;
 		this.actions = source.actions;
 		// console.log(source);
 		// // console.log(message);
-		this.response.sid = sid;
-		replyQueue.set(sid, this);
+		this.response.streamId = id;
+		replyQueue.set(id, this);
 	}
 	type = 'reply';
 	isReply = true;
@@ -32,6 +33,7 @@ export class Reply extends Base {
 		await processEvent(this);
 	}
 	response = {};
+	request = {};
 }
 export function reply(packet, client) {
 	// console.log(client);

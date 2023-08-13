@@ -80,9 +80,9 @@ export async function encodePacket(message, source, destination, headers, footer
 	const packetSize = packetEncoded.length;
 	console.log('Size Unencrypted', encode([headerEncoded, messageEncoded]).length);
 	info(`encoded Packet Size ${packetSize}`);
-	if (packetSize >= 1328) {
+	if (packetSize >= 1280) {
 		console.log(packetEncoded);
-		failed(`WARNING: Packet size is larger than max allowed size 1328 -> ${packetSize} over by ${packetSize - 1328}`);
+		failed(`WARNING: Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
 	}
 	success(`PROCESSED ENCODE PACKET`);
 	return packetEncoded;

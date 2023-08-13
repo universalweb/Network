@@ -13,24 +13,24 @@ export async function processMessage(packet, client) {
 	} = packet;
 	const { requestQueue } = client;
 	const {
-		connectionClose,
+		kill,
 		state,
-		sid,
 	} = message;
-	info(`Packet Received Stream ID: ${sid}`);
+	const id = message?.frame[0];
+	info(`Packet Received Stream ID: ${id}`);
 	if (state) {
 		console.log(`STATE CODE: ${state}`);
 	}
-	if (state === 3 || connectionClose) {
+	if (state === 3 || kill) {
 		client.close();
 		return failed(`End event received from server disconnected closing client`);
 	}
 	// console.log(queue.keys());
-	const askObject = requestQueue.get(sid);
+	const askObject = requestQueue.get(id);
 	if (askObject) {
 		askObject.onPacket(packet);
 	} else {
-		failed(`Invalid Stream Id given no ask object with that ID. ${sid}`);
+		failed(`Invalid Stream Id given no ask object with that ID. ${id}`);
 		console.log(message);
 	}
 }

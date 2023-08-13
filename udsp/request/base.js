@@ -5,7 +5,7 @@ import { flushOutgoing, flushIncoming, flush } from './flush.js';
 import { onPacket } from './onPacket.js';
 import {
 	isBuffer, isPlainObject, isString, promise, assign,
-	objectSize, eachArray, jsonParse, construct, isArray, clear, isFalse, isTrue, clearBuffer
+	objectSize, eachArray, jsonParse, construct, isArray, clear, isFalse, isTrue, clearBuffer, hasValue
 } from '@universalweb/acid';
 import { encode, decode } from 'msgpackr';
 import { request } from '#udsp/requestTypes/request';
@@ -121,18 +121,6 @@ export class Base {
 			this.completeReceived();
 		}
 	}
-	get path() {
-		const { path } = (this.isAsk) ? this.request : this.response;
-		return path;
-	}
-	get method() {
-		const { method } = (this.isAsk) ? this.request : this.response;
-		return method;
-	}
-	get id() {
-		const { sid } = (this.isAsk) ? this.request : this.response;
-		return sid;
-	}
 	get data() {
 		if (this.compiledDataAlready) {
 			return this.compiledData;
@@ -185,18 +173,17 @@ export class Base {
 		}
 		return decode(this.data);
 	}
-	toObjectRaw() {
+	toObjectRaw(cache) {
 		const {
 			head,
 			data,
-			sid,
+			id,
 			method,
 		} = this;
 		const target = {
-			head: this.head,
-			data: this.data,
-			sid: this.id,
-			method: this.method
+			head,
+			data,
+			method
 		};
 		return target;
 	}
@@ -221,9 +208,10 @@ export class Base {
 			this.state = 1;
 		}
 		const message = this.getPacketTemplate();
-		message.setup = true;
-		message.headerSize = this.outgoingHeadSize;
-		message.method = this.method;
+		message.setup = [this.method, this.pathSize, this.paramSize, this.outgoingHeadSize];
+		if (hasValue(this.outgoingDataSize)) {
+			message.setup[3] = this.outgoingDataSize;
+		}
 		this.sendPacket(message);
 	}
 	sendHeadReady() {
@@ -250,7 +238,6 @@ export class Base {
 	async headPacketization() {
 		const {
 			maxHeadSize,
-			id: sid,
 			isAsk,
 			outgoingHeadPackets
 		} = this;
@@ -265,12 +252,12 @@ export class Base {
 		console.log('maxHeadSize', maxHeadSize);
 		while (currentBytePosition < headSize) {
 			const message = this.getPacketTemplate();
-			message.pid = packetId;
+			message.frame.push(packetId);
 			const endIndex = currentBytePosition + maxHeadSize;
 			const safeEndIndex = endIndex > headSize ? headSize : endIndex;
 			message.head = this.outgoingHead.subarray(currentBytePosition, safeEndIndex);
 			outgoingHeadPackets[packetId] = message;
-			message.offset = safeEndIndex;
+			// message.offset = safeEndIndex;
 			if (safeEndIndex === headSize) {
 				message.last = true;
 				break;
@@ -378,7 +365,7 @@ export class Base {
 	getPacketTemplate() {
 		const { id, } = this;
 		const message = {
-			sid: id
+			frame: [id]
 		};
 		return message;
 	}
@@ -441,4 +428,6 @@ export class Base {
 	inRequestQueue = false;
 	status = 0;
 	readyState = 0;
+	pathSize = 0;
+	paramSize = 0;
 }

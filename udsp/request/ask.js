@@ -17,9 +17,15 @@ export class Ask extends Base {
 		console.log('Ask', data);
 		const streamId = streamIdGenerator.get();
 		const methodSanitized = method.toLowerCase();
-		this.request.sid = streamId;
+		this.request.streamId = streamId;
 		this.request.method = methodSanitized;
-		this.request.path = path;
+		this.method = methodSanitized;
+		this.id = streamId;
+		if (path) {
+			this.request.path = path;
+			this.path = path;
+			this.pathSize = path.length;
+		}
 		if (data) {
 			this.request.data = data;
 		}

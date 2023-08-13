@@ -26,7 +26,7 @@ export async function onPacket(packet) {
 		message,
 		footer
 	} = config.packetDecoded;
-	if (hasValue(message?.sid)) {
+	if (hasValue(message?.frame)) {
 		processMessage(config.packetDecoded, this);
 	} else {
 		this.proccessProtocolPacket(message, header, footer);

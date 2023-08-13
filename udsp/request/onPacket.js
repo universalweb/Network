@@ -15,18 +15,10 @@ export async function onPacket(packet) {
 		data,
 		// header payload
 		head,
-		// Stream ID
-		sid: streamId,
-		// Packet ID
-		pid: packetId,
-		// Action
-		method,
+		frame,
 		// Packet total
 		hpt: totalIncomingUniqueHeadPackets,
 		dpt: totalIncomingUniqueDataPackets,
-		headerSize,
-		// Data payload size
-		dataSize,
 		// Acknowledgement
 		ack,
 		// Negative Acknowledgement
@@ -36,9 +28,13 @@ export async function onPacket(packet) {
 		setup,
 		headReady,
 		dataReady,
-		last,
-		offset
 	} = message;
+	let streamId;
+	let packetId;
+	let offset;
+	if (frame) {
+		[streamId, packetId, offset] = frame;
+	}
 	console.log(`onPacket Stream Id ${streamId}`);
 	this.totalReceivedPackets++;
 	if (hasValue(packetId)) {
@@ -68,7 +64,8 @@ export async function onPacket(packet) {
 			this.incomingDataPackets[packetId] = message;
 			this.incomingData[packetId] = message.data;
 			this.totalReceivedUniqueDataPackets++;
-			this.currentIncomingDataSize += data.length;
+			const dataLength = data.length;
+			this.currentIncomingDataSize += dataLength;
 			if (this.readyState === 2) {
 				this.readyState = 3;
 			}
@@ -78,16 +75,27 @@ export async function onPacket(packet) {
 			if (this.onData) {
 				await this.onData(message);
 			}
-			if (last) {
-				console.log(this);
+			if (dataLength + offset === this.totalIncomingDataSize) {
+				console.log('Last packet received');
+				message.last = true;
+			}
+			if (this.currentIncomingDataSize === this.totalIncomingDataSize) {
+				// console.log(this);
 				this.totalIncomingUniqueDataPackets = packetId;
 				this.checkData();
 			}
 		}
 	} else if (setup) {
 		this.receivedSetupPacket = true;
+		const [method, pathSize, paramSize, headerSize, dataSize] = setup;
 		console.log('Setup Packet Received', headerSize);
 		this.incomingSetupPacket = message;
+		if (hasValue(pathSize)) {
+			this.pathSize = pathSize;
+		}
+		if (hasValue(paramSize)) {
+			this.paramSize = paramSize;
+		}
 		if (hasValue(headerSize)) {
 			this.totalIncomingHeadSize = headerSize;
 		}
