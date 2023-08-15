@@ -244,23 +244,39 @@ export class Base {
 			this.state = 1;
 		}
 		const message = this.getPacketTemplate();
-		message.setup = [this.method, this.pathSize, this.paramSize, this.outgoingHeadSize];
+		message.setup = [this.method, this.pathSize || 0, this.paramSize || 0, this.outgoingHeadSize || 0];
 		if (hasValue(this.outgoingDataSize)) {
 			message.setup[3] = this.outgoingDataSize;
 		}
 		this.sendPacket(message);
 	}
-	sendHeadReady() {
+	sendPathReady() {
 		if (this.state === 1) {
 			this.state = 2;
+		}
+		const message = this.getPacketTemplate();
+		message.pathReady = true;
+		this.sendPacket(message);
+	}
+	sendParametersReady() {
+		if (this.state === 2) {
+			this.state = 3;
+		}
+		const message = this.getPacketTemplate();
+		message.parametersReady = true;
+		this.sendPacket(message);
+	}
+	sendHeadReady() {
+		if (this.state === 3) {
+			this.state = 4;
 		}
 		const message = this.getPacketTemplate();
 		message.headReady = true;
 		this.sendPacket(message);
 	}
 	sendDataReady() {
-		if (this.state === 2) {
-			this.state = 3;
+		if (this.state === 4) {
+			this.state = 5;
 		}
 		const message = this.getPacketTemplate();
 		message.dataReady = true;

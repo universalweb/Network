@@ -54,6 +54,8 @@ export class UDSP {
 		console.log(`Max Payload Size: ${this.maxPayloadSize} bytes`);
 		console.log(`Max Data Size: ${this.maxDataSize} bytes`);
 		console.log(`Max Head Size: ${this.maxHeadSize} bytes`);
+		console.log(`Max Path Size: ${this.maxPathSize} bytes`);
+		console.log(`Max Paraneters Size: ${this.maxParamsSize} bytes`);
 		console.log(`Max Packet Size: ${this.maxPacketSize} bytes`);
 	}
 	generateConnectionID() {

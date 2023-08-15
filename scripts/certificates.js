@@ -43,6 +43,8 @@ const domainProfile = await createProfile({
 			// maxDataSize: 1200,
 			// Max size of the header payload
 			// maxHeadSize: 1200,
+			// maxPathSize: 1200,
+			// maxParametersSize: 1200,
 			// heartbeat is an interval check for when a client must send something to the server to remain connected
 			heartbeat: 30000,
 			url: 'universal.web',
@@ -89,7 +91,7 @@ const domainProfile = await createProfile({
 			// headerCompression: true,
 			// footerCompression: true,
 			// pathCompression: true,
-			// parameter Compression: true,
+			// parameterCompression: true,
 			autoLogin: true,
 			// The cryptographic algo used, intended, and or generated with the provided public key
 			keypairType: 'ed25519',
