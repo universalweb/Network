@@ -1,5 +1,5 @@
 import {
-	isEmpty, isBuffer, promise, eachArray, assign, construct, stringify, hasValue, get, objectSize
+	isEmpty, isBuffer, promise, eachArray, assign, construct, stringify, hasValue, get, objectSize, isArray
 } from '@universalweb/acid';
 import { decode, encode } from 'msgpackr';
 import {
@@ -16,7 +16,10 @@ export class Reply extends Base {
 		console.log('Setting up new reply');
 		const thisReply = this;
 		const { message } = request;
-		const id = message?.frame[0];
+		if (!message.frame) {
+			return this.destroy('No frame in message');
+		}
+		const id = (isArray(message?.frame)) ? message.frame[0] : message.frame;
 		this.id = id;
 		const { replyQueue, } = source;
 		this.events = source.events;

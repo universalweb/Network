@@ -26,6 +26,8 @@ export class Base {
 			maxPacketSize,
 			maxDataSize,
 			maxHeadSize,
+			maxPathSize,
+			maxParamsSize,
 			packetMaxPayloadSafeEstimate
 		} = source;
 		if (events) {
@@ -39,6 +41,12 @@ export class Base {
 		}
 		if (maxHeadSize) {
 			this.maxHeadSize = maxHeadSize;
+		}
+		if (maxPathSize) {
+			this.maxPathSize = maxPathSize;
+		}
+		if (maxParamsSize) {
+			this.maxParamsSize = maxParamsSize;
 		}
 		if (packetMaxPayloadSafeEstimate) {
 			this.packetMaxPayloadSafeEstimate = packetMaxPayloadSafeEstimate;
@@ -77,6 +85,34 @@ export class Base {
 		}
 		this.readyState = 2;
 		this.headAssembled = true;
+	}
+	setParams() {
+		clear(this.incomingParamsPackets);
+		if (this.incomingParams?.length) {
+			const paramsCompiled = Buffer.concat(this.incomingParams);
+			clearBuffer(this.incomingParams);
+			this.params = decode(paramsCompiled);
+			paramsCompiled.fill(0);
+			console.log('HEAD SET', this.params);
+		} else {
+			this.params = {};
+		}
+		this.readyState = 2;
+		this.paramsAssembled = true;
+	}
+	setPath() {
+		clear(this.incomingPathPackets);
+		if (this.incomingPath?.length) {
+			const pathCompiled = Buffer.concat(this.incomingPath);
+			clearBuffer(this.incomingPath);
+			this.path = decode(pathCompiled);
+			pathCompiled.fill(0);
+			console.log('HEAD SET', this.path);
+		} else {
+			this.path = {};
+		}
+		this.readyState = 2;
+		this.pathAssembled = true;
 	}
 	async assembleHead() {
 		if (this.headAssembled) {
@@ -259,13 +295,43 @@ export class Base {
 			outgoingHeadPackets[packetId] = message;
 			// message.offset = safeEndIndex;
 			if (safeEndIndex === headSize) {
-				message.last = true;
 				break;
 			}
 			packetId++;
 			currentBytePosition += maxHeadSize;
 		}
 		console.log('outgoingHeadSize', source.outgoingHeadSize);
+	}
+	async pathPacketization() {
+		const {
+			maxPathSize,
+			isAsk,
+			outgoingPathPackets
+		} = this;
+		const source = (this.isAsk) ? this.request : this.response;
+		console.log('pathPacketization', source.path);
+		this.outgoingPath = encode(source.path);
+		this.outgoingPathSize = this.outgoingPath.length;
+		console.log('outgoingPathSize', source.outgoingPathSize);
+		let currentBytePosition = 0;
+		let packetId = 0;
+		const pathSize = this.outgoingPathSize;
+		console.log('maxPathSize', maxPathSize);
+		while (currentBytePosition < pathSize) {
+			const message = this.getPacketTemplate();
+			message.frame.push(packetId);
+			const endIndex = currentBytePosition + maxPathSize;
+			const safeEndIndex = endIndex > pathSize ? pathSize : endIndex;
+			message.path = this.outgoingPath.subarray(currentBytePosition, safeEndIndex);
+			outgoingPathPackets[packetId] = message;
+			// message.offset = safeEndIndex;
+			if (safeEndIndex === pathSize) {
+				break;
+			}
+			packetId++;
+			currentBytePosition += maxPathSize;
+		}
+		console.log('outgoingPathSize', source.outgoingPathSize);
 	}
 	async dataPacketization() {
 		const {
@@ -404,8 +470,14 @@ export class Base {
 	};
 	outgoingDataPackets = [];
 	outgoingHeadPackets = [];
+	outgoingPathPackets = [];
+	outgoingParamsPackets = [];
 	incomingHeadPackets = [];
+	incomingPathPackets = [];
+	incomingParamsPackets = [];
 	incomingHead = [];
+	incomingPath = [];
+	incomingParams = [];
 	incomingDataPackets = [];
 	incomingData = [];
 	incomingAks = [];

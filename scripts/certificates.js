@@ -88,6 +88,8 @@ const domainProfile = await createProfile({
 			// packetCompression: true,
 			// headerCompression: true,
 			// footerCompression: true,
+			// pathCompression: true,
+			// parameter Compression: true,
 			autoLogin: true,
 			// The cryptographic algo used, intended, and or generated with the provided public key
 			keypairType: 'ed25519',

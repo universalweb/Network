@@ -8,7 +8,7 @@ import {
 import { Base } from './base.js';
 import { request } from '#udsp/requestTypes/request';
 export class Ask extends Base {
-	constructor(method = 'get', path, data, head, options = {}, source) {
+	constructor(method = 'get', path, params, data, head, options = {}, source) {
 		super(options, source);
 		const {
 			requestQueue,
@@ -25,6 +25,10 @@ export class Ask extends Base {
 			this.request.path = path;
 			this.path = path;
 			this.pathSize = path.length;
+		}
+		if (params) {
+			this.request.params = params;
+			this.params = params;
 		}
 		if (data) {
 			this.request.data = data;

@@ -44,6 +44,8 @@ export class Client {
 			maxPacketSize,
 			maxDataSize,
 			maxHeadSize,
+			maxPathSize,
+			maxParamsSize,
 			packetMaxPayloadSafeEstimate
 		} = server;
 		if (maxPacketSize) {
@@ -54,6 +56,12 @@ export class Client {
 		}
 		if (maxHeadSize) {
 			this.maxHeadSize = maxHeadSize;
+		}
+		if (maxPathSize) {
+			this.maxPathSize = maxPathSize;
+		}
+		if (maxParamsSize) {
+			this.maxHeadSize = maxParamsSize;
 		}
 		if (packetMaxPayloadSafeEstimate) {
 			this.packetMaxPayloadSafeEstimate = packetMaxPayloadSafeEstimate;

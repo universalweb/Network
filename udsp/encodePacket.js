@@ -58,6 +58,9 @@ export async function encodePacket(message, source, destination, headers, footer
 	}
 	if (message) {
 		console.log(message);
+		if (message?.frame?.length === 1) {
+			message.frame = message.frame[0];
+		}
 	}
 	if (headers) {
 		console.log(headers);

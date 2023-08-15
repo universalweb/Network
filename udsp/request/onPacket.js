@@ -11,11 +11,15 @@ export async function onPacket(packet) {
 	console.log('On Packet event', message);
 	// console.log(packet);
 	const {
-		// main data payload
-		data,
+		// URL or Path Endpoint for API or dynamic path related usage
+		path,
+		// Path parameters
+		params,
 		// header payload
 		head,
 		frame,
+		// main data payload
+		data,
 		// Packet total
 		hpt: totalIncomingUniqueHeadPackets,
 		dpt: totalIncomingUniqueDataPackets,
@@ -57,6 +61,40 @@ export async function onPacket(packet) {
 			console.log(this, this.currentIncomingHeadSize);
 			if (this.totalIncomingHeadSize === this.currentIncomingHeadSize) {
 				this.assembleHead();
+			}
+		}
+		if (path && !this.incomingPathPackets[packetId]) {
+			this.totalReceivedUniquePackets++;
+			this.incomingPathPackets[packetId] = message;
+			this.incomingPath[packetId] = message.path;
+			this.totalReceivedUniquePathPackets++;
+			this.currentIncomingPathSize += path.length;
+			if (this.missingPathPackets.has(packetId)) {
+				this.missingPathPackets.delete(packetId);
+			}
+			if (this.onPath) {
+				await this.onPath(message);
+			}
+			console.log(this, this.currentIncomingPathSize);
+			if (this.totalIncomingPathSize === this.currentIncomingPathSize) {
+				this.assemblePath();
+			}
+		}
+		if (params && !this.incomingParamsPackets[packetId]) {
+			this.totalReceivedUniquePackets++;
+			this.incomingParamsPackets[packetId] = message;
+			this.incomingParams[packetId] = message.params;
+			this.totalReceivedUniqueParamsPackets++;
+			this.currentIncomingParamsSize += params.length;
+			if (this.missingParamsPackets.has(packetId)) {
+				this.missingParamsPackets.delete(packetId);
+			}
+			if (this.onParams) {
+				await this.onParams(message);
+			}
+			console.log(this, this.currentIncomingParamsSize);
+			if (this.totalIncomingParamsSize === this.currentIncomingParamsSize) {
+				this.assembleParams();
 			}
 		}
 		if (data && !this.incomingDataPackets[packetId]) {

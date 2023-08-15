@@ -9,7 +9,9 @@ export class UDSP {
 			connectionIdSize,
 			maxPayloadSize,
 			maxDataSize,
-			maxHeadSize
+			maxHeadSize,
+			maxPathSize,
+			maxParamsSize
 		} = this;
 		if (maxPayloadSize) {
 			if (!maxDataSize) {
@@ -17,6 +19,12 @@ export class UDSP {
 			}
 			if (!maxHeadSize) {
 				this.maxHeadSize = maxPayloadSize;
+			}
+			if (!maxParamsSize) {
+				this.maxParamsSize = maxPayloadSize;
+			}
+			if (!maxPathSize) {
+				this.maxPathSize = maxPayloadSize;
 			}
 		} else {
 			const packetInitialOverhead = 2;
@@ -30,6 +38,12 @@ export class UDSP {
 			}
 			if (!maxHeadSize) {
 				this.maxHeadSize = this.maxPayloadSize - this.emptyPayloadOverHeadSize;
+			}
+			if (!maxParamsSize) {
+				this.maxParamsSize = this.maxPayloadSize - this.emptyPayloadOverParamsSize;
+			}
+			if (!maxPathSize) {
+				this.maxPathSize = this.maxPayloadSize - this.emptyPayloadOverPathSize;
 			}
 			console.log(`packetInitialOverhead: ${packetInitialOverhead} bytes`);
 		}
