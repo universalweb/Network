@@ -13,8 +13,10 @@ export async function onPacket(packet) {
 	const {
 		// URL or Path Endpoint for API or dynamic path related usage
 		path,
+		pathReady,
 		// Path parameters
 		params,
+		parametersReady,
 		// header payload
 		head,
 		frame,
@@ -125,25 +127,29 @@ export async function onPacket(packet) {
 		}
 	} else if (setup) {
 		this.receivedSetupPacket = true;
-		const [method, pathSize, paramSize, headerSize, dataSize] = setup;
+		const [method, pathSize, parametersSize, headerSize, dataSize] = setup;
 		console.log('Setup Packet Received', headerSize);
 		this.incomingSetupPacket = message;
 		if (hasValue(pathSize)) {
 			this.pathSize = pathSize;
 		}
-		if (hasValue(paramSize)) {
-			this.paramSize = paramSize;
+		if (hasValue(parametersSize)) {
+			this.parametersSize = parametersSize;
 		}
 		if (hasValue(headerSize)) {
 			this.totalIncomingHeadSize = headerSize;
 		}
-		if (method) {
+		if (hasValue(method)) {
 			this.method = method;
 		}
 		if (hasValue(totalIncomingUniqueHeadPackets)) {
 			this.totalIncomingUniqueHeadPackets = totalIncomingUniqueHeadPackets;
 		}
-		this.sendHeadReady();
+		this.sendPathReady();
+	} else if (dataReady) {
+		this.receivedDataReadyPacket = true;
+		console.log('Data Ready Packet Received', this.type);
+		this.sendData();
 	} else if (headReady) {
 		this.receivedHeadReadyPacket = true;
 		console.log('Head Ready Packet Received', this.type);
@@ -151,10 +157,14 @@ export async function onPacket(packet) {
 			this.totalIncomingUniqueDataPackets = totalIncomingUniqueDataPackets;
 		}
 		this.sendHead();
-	} else if (dataReady) {
-		this.receivedDataReadyPacket = true;
-		console.log('Data Ready Packet Received', this.type);
-		this.sendData();
+	} else if (pathReady) {
+		this.receivedPathReadyPacket = true;
+		console.log('Path Ready Packet Received', this.type);
+		this.sendPath();
+	} else if (parametersReady) {
+		this.receivedParametersReadyPacket = true;
+		console.log('Parameters Ready Packet Received', this.type);
+		this.sendParameters();
 	} else if (end) {
 		console.log('End Packet Received');
 		// this.check(); && this.cleanup();

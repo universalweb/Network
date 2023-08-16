@@ -27,7 +27,7 @@ export class Base {
 			maxDataSize,
 			maxHeadSize,
 			maxPathSize,
-			maxParamsSize,
+			maxParametersSize,
 			packetMaxPayloadSafeEstimate
 		} = source;
 		if (events) {
@@ -45,8 +45,8 @@ export class Base {
 		if (maxPathSize) {
 			this.maxPathSize = maxPathSize;
 		}
-		if (maxParamsSize) {
-			this.maxParamsSize = maxParamsSize;
+		if (maxParametersSize) {
+			this.maxParametersSize = maxParametersSize;
 		}
 		if (packetMaxPayloadSafeEstimate) {
 			this.packetMaxPayloadSafeEstimate = packetMaxPayloadSafeEstimate;
@@ -86,19 +86,19 @@ export class Base {
 		this.readyState = 2;
 		this.headAssembled = true;
 	}
-	setParams() {
-		clear(this.incomingParamsPackets);
-		if (this.incomingParams?.length) {
-			const paramsCompiled = Buffer.concat(this.incomingParams);
-			clearBuffer(this.incomingParams);
-			this.params = decode(paramsCompiled);
-			paramsCompiled.fill(0);
-			console.log('HEAD SET', this.params);
+	setParameters() {
+		clear(this.incomingParametersPackets);
+		if (this.incomingParameters?.length) {
+			const parametersCompiled = Buffer.concat(this.incomingParameters);
+			clearBuffer(this.incomingParameters);
+			this.parameters = decode(parametersCompiled);
+			parametersCompiled.fill(0);
+			console.log('Parameters SET', this.parameters);
 		} else {
-			this.params = {};
+			this.parameters = {};
 		}
 		this.readyState = 2;
-		this.paramsAssembled = true;
+		this.parametersAssembled = true;
 	}
 	setPath() {
 		clear(this.incomingPathPackets);
@@ -107,9 +107,9 @@ export class Base {
 			clearBuffer(this.incomingPath);
 			this.path = decode(pathCompiled);
 			pathCompiled.fill(0);
-			console.log('HEAD SET', this.path);
+			console.log('Path SET', this.path);
 		} else {
-			this.path = {};
+			this.path = '';
 		}
 		this.readyState = 2;
 		this.pathAssembled = true;
@@ -140,6 +140,56 @@ export class Base {
 			});
 		}
 		console.log('incomingHead', incomingHead);
+	}
+	async assemblePath() {
+		if (this.pathAssembled) {
+			return console.log('Path already assembled');
+		}
+		const {
+			missingPathPackets,
+			incomingPath
+		} = this;
+		console.log('incomingPathPackets', this.incomingPathPackets);
+		if (this.totalIncomingPathSize === this.currentIncomingPathSize) {
+			this.setPath();
+			if (this.path.parametersSize === this.currentIncomingParametersSize) {
+				this.sendHeadReady();
+			} else {
+				this.sendParametersReady();
+			}
+		} else {
+			eachArray(this.incomingPathPackets, (item, index) => {
+				if (!item) {
+					if (!missingPathPackets.has(index)) {
+						missingPathPackets.set(index, true);
+					}
+				}
+			});
+		}
+		console.log('incomingPath', incomingPath);
+	}
+	async assembleParameters() {
+		if (this.parametersAssembled) {
+			return console.log('Parameters already assembled');
+		}
+		const {
+			missingParametersPackets,
+			incomingParameters
+		} = this;
+		console.log('incomingParametersPackets', this.incomingParametersPackets);
+		if (this.totalIncomingParametersSize === this.currentIncomingParametersSize) {
+			this.setParameters();
+			this.sendHeadReady();
+		} else {
+			eachArray(this.incomingParametersPackets, (item, index) => {
+				if (!item) {
+					if (!missingParametersPackets.has(index)) {
+						missingParametersPackets.set(index, true);
+					}
+				}
+			});
+		}
+		console.log('incomingParameters', incomingParameters);
 	}
 	async checkData() {
 		const { missingDataPackets } = this;
@@ -179,72 +229,12 @@ export class Base {
 		this.compiledDataAlready = true;
 		return this.compiledData;
 	}
-	toString(cache) {
-		if (cache) {
-			if (this.toStringCached) {
-				return this.toStringCached;
-			}
-			this.toStringCached = this.data.toString();
-			return this.toStringCached;
-		}
-		return this.data.toString();
-	}
-	toJSON(cache) {
-		if (cache) {
-			if (this.toJSONCached) {
-				return this.toJSONCached;
-			}
-			this.toJSONCached = jsonParse(this.data);
-			return this.toJSONCached;
-		}
-		return jsonParse(this.data);
-	}
-	serialize(cache) {
-		if (cache) {
-			if (this.serializeCached) {
-				return this.serializeCached;
-			}
-			this.serializeCached = decode(this.data);
-			return this.serializeCached;
-		}
-		return decode(this.data);
-	}
-	toObjectRaw(cache) {
-		const {
-			head,
-			data,
-			id,
-			method,
-		} = this;
-		const target = {
-			head,
-			data,
-			method
-		};
-		return target;
-	}
-	toObject(cache) {
-		if (cache) {
-			if (this.toObjectCached) {
-				return this.toObjectCached;
-			}
-			this.toObjectCached = this.toObjectRaw();
-			return this.toObjectCached;
-		}
-		return this.toObjectRaw();
-	}
-	get headers() {
-		return this.head;
-	}
-	get body() {
-		return this.data;
-	}
 	sendSetup() {
 		if (this.state === 0) {
 			this.state = 1;
 		}
 		const message = this.getPacketTemplate();
-		message.setup = [this.method, this.pathSize || 0, this.paramSize || 0, this.outgoingHeadSize || 0];
+		message.setup = [this.method, this.pathSize || 0, this.parametersSize || 0, this.outgoingHeadSize || 0];
 		if (hasValue(this.outgoingDataSize)) {
 			message.setup[3] = this.outgoingDataSize;
 		}
@@ -326,6 +316,10 @@ export class Base {
 		} = this;
 		const source = (this.isAsk) ? this.request : this.response;
 		console.log('pathPacketization', source.path);
+		if (!source.path || !objectSize(source.path)) {
+			this.emptyPath = true;
+			return;
+		}
 		this.outgoingPath = encode(source.path);
 		this.outgoingPathSize = this.outgoingPath.length;
 		console.log('outgoingPathSize', source.outgoingPathSize);
@@ -348,6 +342,41 @@ export class Base {
 			currentBytePosition += maxPathSize;
 		}
 		console.log('outgoingPathSize', source.outgoingPathSize);
+	}
+	async parametersPacketization() {
+		const {
+			maxParametersSize,
+			isAsk,
+			outgoingParametersPackets
+		} = this;
+		const source = (this.isAsk) ? this.request : this.response;
+		console.log('parametersPacketization', source.parameters);
+		if (!source.parameters || !objectSize(source.parameters)) {
+			this.emptyParameters = true;
+			return;
+		}
+		this.outgoingParameters = encode(source.parameters);
+		this.outgoingParametersSize = this.outgoingParameters.length;
+		console.log('outgoingParameterSize', source.outgoingParametersSize);
+		let currentBytePosition = 0;
+		let packetId = 0;
+		const parametersSize = this.outgoingParametersSize;
+		console.log('maxParametersSize', maxParametersSize);
+		while (currentBytePosition < parametersSize) {
+			const message = this.getPacketTemplate();
+			message.frame.push(packetId);
+			const endIndex = currentBytePosition + outgoingParametersPackets;
+			const safeEndIndex = endIndex > parametersSize ? parametersSize : endIndex;
+			message.params = this.outgoingParameter.subarray(currentBytePosition, safeEndIndex);
+			outgoingParametersPackets[packetId] = message;
+			// message.offset = safeEndIndex;
+			if (safeEndIndex === parametersSize) {
+				break;
+			}
+			packetId++;
+			currentBytePosition += maxParametersSize;
+		}
+		console.log('outgoingParameterSize', source.outgoingParameterSize);
 	}
 	async dataPacketization() {
 		const {
@@ -372,6 +401,8 @@ export class Base {
 		const message = (this.isAsk) ? this.request : this.response;
 		await this.dataPacketization();
 		await this.headPacketization();
+		await this.pathPacketization();
+		await this.parametersPacketization();
 	}
 	async send(data) {
 		const thisSource = this;
@@ -451,6 +482,66 @@ export class Base {
 		};
 		return message;
 	}
+	toString(cache) {
+		if (cache) {
+			if (this.toStringCached) {
+				return this.toStringCached;
+			}
+			this.toStringCached = this.data.toString();
+			return this.toStringCached;
+		}
+		return this.data.toString();
+	}
+	toJSON(cache) {
+		if (cache) {
+			if (this.toJSONCached) {
+				return this.toJSONCached;
+			}
+			this.toJSONCached = jsonParse(this.data);
+			return this.toJSONCached;
+		}
+		return jsonParse(this.data);
+	}
+	serialize(cache) {
+		if (cache) {
+			if (this.serializeCached) {
+				return this.serializeCached;
+			}
+			this.serializeCached = decode(this.data);
+			return this.serializeCached;
+		}
+		return decode(this.data);
+	}
+	toObjectRaw(cache) {
+		const {
+			head,
+			data,
+			id,
+			method,
+		} = this;
+		const target = {
+			head,
+			data,
+			method
+		};
+		return target;
+	}
+	toObject(cache) {
+		if (cache) {
+			if (this.toObjectCached) {
+				return this.toObjectCached;
+			}
+			this.toObjectCached = this.toObjectRaw();
+			return this.toObjectCached;
+		}
+		return this.toObjectRaw();
+	}
+	get headers() {
+		return this.head;
+	}
+	get body() {
+		return this.data;
+	}
 	destroy = destroy;
 	onPacket = onPacket;
 	sendPacket(message, headers, footer) {
@@ -466,7 +557,8 @@ export class Base {
 	incomingDataState = false;
 	currentIncomingDataSize = 0;
 	currentIncomingHeadSize = 0;
-	currentOutgoingDataSize = 0;
+	currentIncomingParametersSize = 0;
+	currentIncomingPathSize = 0;
 	totalReceivedUniquePackets = 0;
 	totalIncomingUniquePackets = 0;
 	progress = 0;
@@ -487,13 +579,13 @@ export class Base {
 	outgoingDataPackets = [];
 	outgoingHeadPackets = [];
 	outgoingPathPackets = [];
-	outgoingParamsPackets = [];
+	outgoingParametersPackets = [];
 	incomingHeadPackets = [];
-	incomingPathPackets = [];
-	incomingParamsPackets = [];
 	incomingHead = [];
+	incomingPathPackets = [];
 	incomingPath = [];
-	incomingParams = [];
+	incomingParametersPackets = [];
+	incomingParameters = [];
 	incomingDataPackets = [];
 	incomingData = [];
 	incomingAks = [];
@@ -508,14 +600,12 @@ export class Base {
 	// Must be checked for uniqueness
 	totalReceivedPackets = 0;
 	totalReceivedUniqueHeadPackets = 0;
-	/* `state = 0;` is initializing the `state` property of the `Ask` class to `0`. This property is used
-	to keep track of the state of the request, where `0` represents an unsent request, `1` represents a
-	request that is currently being sent, and `2` represents a completed request. */
+	// Request Specific UDSP State
 	state = 0;
 	handshake = false;
 	inRequestQueue = false;
 	status = 0;
 	readyState = 0;
 	pathSize = 0;
-	paramSize = 0;
+	parametersSize = 0;
 }

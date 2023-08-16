@@ -120,7 +120,7 @@ class Cryptography {
 		console.log('cryptographyConfig.encryptKeypair', cryptographyConfig.encryptKeypair);
 		if (!config.encryptKeypair) {
 			console.log('keypairType', config.keypairType);
-			console.log('exchange', exchange);
+			console.log('Keypair exchange', exchange);
 			if (config.keypairType === 'ed25519' && exchange === 'x25519') {
 				if (config.privateKey) {
 					this.encryptionKeypair = signKeypairToEncryptKeypair({

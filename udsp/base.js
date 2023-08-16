@@ -11,7 +11,7 @@ export class UDSP {
 			maxDataSize,
 			maxHeadSize,
 			maxPathSize,
-			maxParamsSize
+			maxParametersSize
 		} = this;
 		if (maxPayloadSize) {
 			if (!maxDataSize) {
@@ -20,8 +20,8 @@ export class UDSP {
 			if (!maxHeadSize) {
 				this.maxHeadSize = maxPayloadSize;
 			}
-			if (!maxParamsSize) {
-				this.maxParamsSize = maxPayloadSize;
+			if (!maxParametersSize) {
+				this.maxParametersSize = maxPayloadSize;
 			}
 			if (!maxPathSize) {
 				this.maxPathSize = maxPayloadSize;
@@ -39,11 +39,11 @@ export class UDSP {
 			if (!maxHeadSize) {
 				this.maxHeadSize = this.maxPayloadSize - this.emptyPayloadOverHeadSize;
 			}
-			if (!maxParamsSize) {
-				this.maxParamsSize = this.maxPayloadSize - this.emptyPayloadOverParamsSize;
+			if (!maxParametersSize) {
+				this.maxParametersSize = this.maxPayloadSize - this.emptyPayloadOverHeadSize;
 			}
 			if (!maxPathSize) {
-				this.maxPathSize = this.maxPayloadSize - this.emptyPayloadOverPathSize;
+				this.maxPathSize = this.maxPayloadSize - this.emptyPayloadOverHeadSize;
 			}
 			console.log(`packetInitialOverhead: ${packetInitialOverhead} bytes`);
 		}
@@ -55,7 +55,7 @@ export class UDSP {
 		console.log(`Max Data Size: ${this.maxDataSize} bytes`);
 		console.log(`Max Head Size: ${this.maxHeadSize} bytes`);
 		console.log(`Max Path Size: ${this.maxPathSize} bytes`);
-		console.log(`Max Paraneters Size: ${this.maxParamsSize} bytes`);
+		console.log(`Max Paraneters Size: ${this.maxParametersSize} bytes`);
 		console.log(`Max Packet Size: ${this.maxPacketSize} bytes`);
 	}
 	generateConnectionID() {
