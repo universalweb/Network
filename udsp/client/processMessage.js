@@ -3,7 +3,8 @@ import {
 } from '#logs';
 import {
 	stringify,
-	hasValue
+	hasValue,
+	isArray
 } from '@universalweb/acid';
 export async function processMessage(packet, client) {
 	const {
@@ -12,11 +13,15 @@ export async function processMessage(packet, client) {
 		footer
 	} = packet;
 	const { requestQueue } = client;
+	if (!message) {
+		return failed(`Invalid Message Received`);
+	}
 	const {
 		kill,
 		state,
+		frame,
+		id
 	} = message;
-	const id = message?.frame[0];
 	info(`Packet Received Stream ID: ${id}`);
 	if (state) {
 		console.log(`STATE CODE: ${state}`);

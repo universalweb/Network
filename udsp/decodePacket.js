@@ -3,7 +3,7 @@ import {
 } from '#logs';
 import { decode, } from 'msgpackr';
 import {
-	assign, isBuffer, isArray, isTrue, isUndefined, isString
+	assign, isBuffer, isArray, isTrue, isUndefined, isString, hasValue
 } from '@universalweb/acid';
 import { toBase64 } from '#crypto';
 import { createClient } from './server/clients/index.js';
@@ -125,11 +125,35 @@ export async function decodePacket(config) {
 		}
 		info(`decrypted Message size ${decryptedMessage.length}bytes`);
 		const message = decode(decryptedMessage);
+		if (!hasValue(message)) {
+			return failed('No Message -> Invalid Packet');
+		}
 		if (message.head) {
 			console.log('head PAYLOAD', message.head);
 		}
 		if (message.data) {
 			success('data PAYLOAD', message.data?.length || message.data);
+		}
+		const frame = message?.frame;
+		if (frame) {
+			let streamId;
+			let packetId;
+			let offset;
+			if (isArray(frame)) {
+				[streamId, packetId, offset] = message.frame;
+			} else {
+				streamId = frame;
+			}
+			if (!hasValue(streamId)) {
+				return failed('No streamId in message -> Invalid Packet');
+			}
+			message.id = streamId;
+			if (hasValue(packetId)) {
+				message.packetId = packetId;
+			}
+			if (hasValue(offset)) {
+				message.offset = offset;
+			}
 		}
 		packetDecoded.message = message;
 	} else {

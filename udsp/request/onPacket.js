@@ -1,8 +1,9 @@
-import { hasValue, isFalse } from '@universalweb/acid';
+import { hasValue, isArray, isFalse } from '@universalweb/acid';
 import { destroy } from './destory.js';
 import { processEvent } from '#udsp/processEvent';
 export async function onPacket(packet) {
 	const source = this;
+	const { isAsk } = this;
 	this.lastActive = Date.now();
 	const { message } = packet;
 	if (!message) {
@@ -22,9 +23,6 @@ export async function onPacket(packet) {
 		frame,
 		// main data payload
 		data,
-		// Packet total
-		hpt: totalIncomingUniqueHeadPackets,
-		dpt: totalIncomingUniqueDataPackets,
 		// Acknowledgement
 		ack,
 		// Negative Acknowledgement
@@ -34,14 +32,11 @@ export async function onPacket(packet) {
 		setup,
 		headReady,
 		dataReady,
+		id,
+		packetId,
+		offset
 	} = message;
-	let streamId;
-	let packetId;
-	let offset;
-	if (frame) {
-		[streamId, packetId, offset] = frame;
-	}
-	console.log(`onPacket Stream Id ${streamId}`);
+	console.log(`onPacket Stream Id ${id}`);
 	this.totalReceivedPackets++;
 	if (hasValue(packetId)) {
 		if (!this.receivedSetupPacket) {
@@ -87,15 +82,15 @@ export async function onPacket(packet) {
 			this.incomingParamsPackets[packetId] = message;
 			this.incomingParams[packetId] = message.params;
 			this.totalReceivedUniqueParamsPackets++;
-			this.currentIncomingParamsSize += params.length;
+			this.currentIncomingParametersSize += params.length;
 			if (this.missingParamsPackets.has(packetId)) {
 				this.missingParamsPackets.delete(packetId);
 			}
 			if (this.onParams) {
 				await this.onParams(message);
 			}
-			console.log(this, this.currentIncomingParamsSize);
-			if (this.totalIncomingParamsSize === this.currentIncomingParamsSize) {
+			console.log(this, this.currentIncomingParametersSize);
+			if (this.totalIncomingParametersSize === this.currentIncomingParametersSize) {
 				this.assembleParams();
 			}
 		}
@@ -127,14 +122,23 @@ export async function onPacket(packet) {
 		}
 	} else if (setup) {
 		this.receivedSetupPacket = true;
-		const [method, pathSize, parametersSize, headerSize, dataSize] = setup;
-		console.log('Setup Packet Received', headerSize);
-		this.incomingSetupPacket = message;
-		if (hasValue(pathSize)) {
-			this.pathSize = pathSize;
+		let method;
+		let headerSize;
+		let dataSize;
+		let totalIncomingPathSize;
+		let totalIncomingParametersSize;
+		if (isAsk) {
+			[headerSize, dataSize] = setup;
+		} else {
+			[method, totalIncomingPathSize, totalIncomingParametersSize, headerSize, dataSize] = setup;
 		}
-		if (hasValue(parametersSize)) {
-			this.parametersSize = parametersSize;
+		console.log(`Setup Packet Received HEADER:${headerSize} DATA:${dataSize}`);
+		this.incomingSetupPacket = message;
+		if (hasValue(totalIncomingPathSize)) {
+			this.totalIncomingPathSize = totalIncomingPathSize;
+		}
+		if (hasValue(totalIncomingParametersSize)) {
+			this.totalIncomingParametersSize = totalIncomingParametersSize;
 		}
 		if (hasValue(headerSize)) {
 			this.totalIncomingHeadSize = headerSize;
@@ -142,10 +146,11 @@ export async function onPacket(packet) {
 		if (hasValue(method)) {
 			this.method = method;
 		}
-		if (hasValue(totalIncomingUniqueHeadPackets)) {
-			this.totalIncomingUniqueHeadPackets = totalIncomingUniqueHeadPackets;
+		if (isAsk) {
+			this.sendHeadReady();
+		} else {
+			this.sendPathReady();
 		}
-		this.sendPathReady();
 	} else if (dataReady) {
 		this.receivedDataReadyPacket = true;
 		console.log('Data Ready Packet Received', this.type);
@@ -153,9 +158,6 @@ export async function onPacket(packet) {
 	} else if (headReady) {
 		this.receivedHeadReadyPacket = true;
 		console.log('Head Ready Packet Received', this.type);
-		if (hasValue(totalIncomingUniqueDataPackets)) {
-			this.totalIncomingUniqueDataPackets = totalIncomingUniqueDataPackets;
-		}
 		this.sendHead();
 	} else if (pathReady) {
 		this.receivedPathReadyPacket = true;

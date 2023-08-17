@@ -24,7 +24,6 @@ export class Ask extends Base {
 		if (path) {
 			this.request.path = path;
 			this.path = path;
-			this.pathSize = path.length;
 		}
 		if (parameters) {
 			this.request.parameters = parameters;

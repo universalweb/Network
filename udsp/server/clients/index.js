@@ -178,8 +178,8 @@ export class Client {
 	replyQueue = construct(Map);
 	reply(packet) {
 		const { message } = packet;
-		const id = message?.frame[0];
-		console.log('Reply Client', this.replyQueue, this.replyQueue.has(id), packet);
+		const id = message.id;
+		console.log('Reply Client', id, this.replyQueue.has(id), packet);
 		if (hasValue(id)) {
 			if (this.replyQueue.has(id)) {
 				return this.replyQueue.get(id).onPacket(packet);

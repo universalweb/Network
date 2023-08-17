@@ -17,7 +17,7 @@ export async function get(reply) {
 	const {
 		response,
 		data,
-		head: { path: filePath }
+		path: filePath
 	} = reply;
 	if (!isString(filePath) || isEmpty(filePath) || filePath.match(dots).length > 1) {
 		console.log('No fileName - Returning empty data');

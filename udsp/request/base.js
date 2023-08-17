@@ -95,7 +95,7 @@ export class Base {
 			parametersCompiled.fill(0);
 			console.log('Parameters SET', this.parameters);
 		} else {
-			this.parameters = {};
+			this.parameters = null;
 		}
 		this.readyState = 2;
 		this.parametersAssembled = true;
@@ -152,7 +152,7 @@ export class Base {
 		console.log('incomingPathPackets', this.incomingPathPackets);
 		if (this.totalIncomingPathSize === this.currentIncomingPathSize) {
 			this.setPath();
-			if (this.path.parametersSize === this.currentIncomingParametersSize) {
+			if (this.totalIncomingParametersSize === this.currentIncomingParametersSize) {
 				this.sendHeadReady();
 			} else {
 				this.sendParametersReady();
@@ -230,13 +230,19 @@ export class Base {
 		return this.compiledData;
 	}
 	sendSetup() {
+		const { isAsk } = this;
 		if (this.state === 0) {
 			this.state = 1;
 		}
 		const message = this.getPacketTemplate();
-		message.setup = [this.method, this.pathSize || 0, this.parametersSize || 0, this.outgoingHeadSize || 0];
+		if (isAsk) {
+			message.setup = [this.method, this.outgoingPathSize, this.outgoingParametersSize,
+				this.outgoingHeadSize];
+		} else {
+			message.setup = [this.outgoingHeadSize];
+		}
 		if (hasValue(this.outgoingDataSize)) {
-			message.setup[3] = this.outgoingDataSize;
+			message.setup.push(this.outgoingDataSize);
 		}
 		this.sendPacket(message);
 	}
@@ -325,17 +331,17 @@ export class Base {
 		console.log('outgoingPathSize', source.outgoingPathSize);
 		let currentBytePosition = 0;
 		let packetId = 0;
-		const pathSize = this.outgoingPathSize;
+		const outgoingPathSize = this.outgoingPathSize;
 		console.log('maxPathSize', maxPathSize);
-		while (currentBytePosition < pathSize) {
+		while (currentBytePosition < outgoingPathSize) {
 			const message = this.getPacketTemplate();
 			message.frame.push(packetId);
 			const endIndex = currentBytePosition + maxPathSize;
-			const safeEndIndex = endIndex > pathSize ? pathSize : endIndex;
+			const safeEndIndex = endIndex > outgoingPathSize ? outgoingPathSize : endIndex;
 			message.path = this.outgoingPath.subarray(currentBytePosition, safeEndIndex);
 			outgoingPathPackets[packetId] = message;
 			// message.offset = safeEndIndex;
-			if (safeEndIndex === pathSize) {
+			if (safeEndIndex === outgoingPathSize) {
 				break;
 			}
 			packetId++;
@@ -360,17 +366,17 @@ export class Base {
 		console.log('outgoingParameterSize', source.outgoingParametersSize);
 		let currentBytePosition = 0;
 		let packetId = 0;
-		const parametersSize = this.outgoingParametersSize;
+		const outgoingParametersSize = this.outgoingParametersSize;
 		console.log('maxParametersSize', maxParametersSize);
-		while (currentBytePosition < parametersSize) {
+		while (currentBytePosition < outgoingParametersSize) {
 			const message = this.getPacketTemplate();
 			message.frame.push(packetId);
 			const endIndex = currentBytePosition + outgoingParametersPackets;
-			const safeEndIndex = endIndex > parametersSize ? parametersSize : endIndex;
+			const safeEndIndex = endIndex > outgoingParametersSize ? outgoingParametersSize : endIndex;
 			message.params = this.outgoingParameter.subarray(currentBytePosition, safeEndIndex);
 			outgoingParametersPackets[packetId] = message;
 			// message.offset = safeEndIndex;
-			if (safeEndIndex === parametersSize) {
+			if (safeEndIndex === outgoingParametersSize) {
 				break;
 			}
 			packetId++;
@@ -398,11 +404,14 @@ export class Base {
 		}
 	}
 	async packetization() {
-		const message = (this.isAsk) ? this.request : this.response;
+		const { isAsk } = this;
+		const message = (isAsk) ? this.request : this.response;
 		await this.dataPacketization();
 		await this.headPacketization();
-		await this.pathPacketization();
-		await this.parametersPacketization();
+		if (isAsk) {
+			await this.pathPacketization();
+			await this.parametersPacketization();
+		}
 	}
 	async send(data) {
 		const thisSource = this;
@@ -441,6 +450,16 @@ export class Base {
 		const thisReply = this;
 		console.log('outgoingHeadPackets', this.outgoingHeadPackets);
 		this.sendPackets(this.outgoingHeadPackets);
+	}
+	async sendPath() {
+		const thisReply = this;
+		console.log('outgoingPathPackets', this.outgoingPathPackets);
+		this.sendPackets(this.outgoingPathPackets);
+	}
+	async sendParameters() {
+		const thisReply = this;
+		console.log('outgoingParametersPackets', this.outgoingParametersPackets);
+		this.sendPackets(this.outgoingParametersPackets);
 	}
 	async sendData() {
 		const thisReply = this;
@@ -566,16 +585,14 @@ export class Base {
 	progressData = 0;
 	dataOrdered = [];
 	stream = [];
+	missingPathPackets = construct(Map);
+	missingParametersPackets = construct(Map);
 	missingHeadPackets = construct(Map);
 	missingDataPackets = construct(Map);
 	events = {};
 	header = {};
 	options = {};
 	head = {};
-	setupConfirmationPacket = {
-		pid: 0,
-		authorize: true,
-	};
 	outgoingDataPackets = [];
 	outgoingHeadPackets = [];
 	outgoingPathPackets = [];
@@ -600,12 +617,18 @@ export class Base {
 	// Must be checked for uniqueness
 	totalReceivedPackets = 0;
 	totalReceivedUniqueHeadPackets = 0;
+	totalReceivedUniquePathPackets = 0;
+	totalReceivedUniqueParametersPackets = 0;
+	totalIncomingParametersSize = 0;
 	// Request Specific UDSP State
 	state = 0;
 	handshake = false;
 	inRequestQueue = false;
 	status = 0;
 	readyState = 0;
-	pathSize = 0;
 	parametersSize = 0;
+	outgoingPathSize = 0;
+	outgoingParametersSize = 0;
+	outgoingHeadSize = 0;
+	outgoingDataSize = 0;
 }

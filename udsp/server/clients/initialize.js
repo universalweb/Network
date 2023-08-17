@@ -78,8 +78,8 @@ export async function initialize(config, client) {
 		id: clientId
 	};
 	await client.setSessionKeys();
-	if (!server.realtime && server.gracePeriod) {
-		client.gracePeriod = setTimeout(() => {
+	if (!server.realtime && server.connectionGracePeriod) {
+		client.connectionGracePeriod = setTimeout(() => {
 			const lastActive = (Date.now() - client.lastActive) / 1000;
 			if (client.state === 1 || lastActive > 30) {
 				client.destroy(1);

@@ -39,7 +39,6 @@ export function flush() {
 	clear(this.missingHeadPackets);
 	clear(this.missingDataPackets);
 	this.lastActive = null;
-	this.setupConfirmationPacket = null;
 	this.created = null;
 	this.headAssembled = null;
 	this.flushOutgoing();

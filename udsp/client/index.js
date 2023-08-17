@@ -184,8 +184,8 @@ export class Client extends UDSP {
 		this.socket.close();
 		Client.connections.delete(this.idString);
 	}
-	ask(method, path, data, head, options) {
-		const ask = construct(Ask, [method, path, data, head, options, this]);
+	ask(method, path, parameters, data, head, options) {
+		const ask = construct(Ask, [method, path, parameters, data, head, options, this]);
 		return ask;
 	}
 	loadCertificate(certificate) {

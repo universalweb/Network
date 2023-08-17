@@ -13,20 +13,20 @@ import { Base } from './base.js';
 export class Reply extends Base {
 	constructor(request, source) {
 		super(request, source);
-		console.log('Setting up new reply');
+		console.log('Setting up new reply', request);
 		const thisReply = this;
 		const { message } = request;
 		if (!message.frame) {
 			return this.destroy('No frame in message');
 		}
-		const id = (isArray(message?.frame)) ? message.frame[0] : message.frame;
+		const id = request.message.id;
 		this.id = id;
 		const { replyQueue, } = source;
 		this.events = source.events;
 		this.actions = source.actions;
 		// console.log(source);
 		// // console.log(message);
-		this.response.streamId = id;
+		this.response.id = id;
 		replyQueue.set(id, this);
 	}
 	type = 'reply';

@@ -3,8 +3,8 @@ import {
 } from '#logs';
 import { promise, construct, isString } from '@universalweb/acid';
 // To send a request but only receive AN ACKNOWLEDGEMENT
-export async function emit(endpoint, data, headers, options) {
+export async function emit(endpoint, data, parameters, headers, options) {
 	info(`emit => ${endpoint}`);
-	const request = await this.request('post', endpoint, data, headers, options);
+	const request = await this.request('post', endpoint, parameters, data, headers, options);
 	return request.send();
 }

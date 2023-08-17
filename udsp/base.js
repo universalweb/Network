@@ -71,7 +71,7 @@ export class UDSP {
 			console.log('Before Exit', code);
 		});
 	}
-	gracePeriod = 30000;
+	connectionGracePeriod = 30000;
 	maxPacketSize = 1280;
 	connectionIdSize = 8;
 	actions = construct(Map);
