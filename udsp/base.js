@@ -1,5 +1,4 @@
-import { construct, UniqID } from '@universalweb/acid';
-import { actions } from './server/actions/index.js';
+import { construct, UniqID, each } from '@universalweb/acid';
 import { cryptography } from '#udsp/cryptography';
 import dgram from 'dgram';
 import { randomConnectionId, randomBuffer } from '#crypto';
@@ -32,9 +31,9 @@ export class UDSP {
 			this.packetOverhead = packetInitialOverhead + this.encryptPacketOverhead + this.connectionIdSize;
 			this.maxPayloadSize = this.maxPacketSize - this.packetOverhead;
 			this.maxPayloadSizeSafeEstimate = this.maxPayloadSize - 10;
-			this.emptyPayloadOverHeadSize = 16;
+			this.emptyPayloadOverHeadSize = 16 + 19;
 			if (!maxDataSize) {
-				this.maxDataSize = this.maxPayloadSize - this.emptyPayloadOverHeadSize;
+				this.maxDataSize = this.maxPayloadSize - this.emptyPayloadOverHeadSize - 7;
 			}
 			if (!maxHeadSize) {
 				this.maxHeadSize = this.maxPayloadSize - this.emptyPayloadOverHeadSize;
@@ -71,10 +70,16 @@ export class UDSP {
 			console.log('Before Exit', code);
 		});
 	}
+	addMethod(methods) {
+		const thisContext = this;
+		each(methods, (method, methodName) => {
+			thisContext[methodName] = method.bind(thisContext);
+		});
+		return this;
+	}
 	connectionGracePeriod = 30000;
 	maxPacketSize = 1280;
 	connectionIdSize = 8;
-	actions = construct(Map);
 	stateCodeDescriptions = ['initializing', 'initialized', 'failed to initialize'];
 	state = 0;
 	/*

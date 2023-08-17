@@ -23,8 +23,10 @@ export async function decodePacketHeaders(config) {
 		isServerEnd,
 		isServerClient
 	} = destination;
-	if (packetEncoded.length > 1350) {
-		failed(`WARNING: Packet size is larger than max allowed size 1350 -> ${packetEncoded.length}bytes over by ${packetEncoded.length - 1350}bytes`);
+	const packetSize = packetEncoded.length;
+	if (packetSize > 1280) {
+		console.log(packetEncoded);
+		failed(`WARNING: DECODE Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
 	}
 	let encryptConnectionId;
 	if (isServerEnd) {
@@ -33,7 +35,7 @@ export async function decodePacketHeaders(config) {
 		encryptConnectionId = cryptography.config.encryptClientConnectionId;
 	}
 	const client = config.client;
-	info(`Packet Encoded Size ${packetEncoded.length}`);
+	info(`Packet Encoded Size ${packetSize}`);
 	const packet = decode(packetEncoded);
 	config.packet = packet;
 	info(`Packet Decoded Array Size ${packet.length}`);

@@ -7,6 +7,7 @@ import {
 } from '#logs';
 import { processEvent } from '#udsp/processEvent';
 import { Base } from './base.js';
+import { numberEncodedSize } from './numberEncodedSize.js';
 /**
 	* @todo
 */
@@ -23,10 +24,11 @@ export class Reply extends Base {
 		this.id = id;
 		const { replyQueue, } = source;
 		this.events = source.events;
-		this.actions = source.actions;
+		this.requestMethods = source.requestMethods;
 		// console.log(source);
 		// // console.log(message);
 		this.response.id = id;
+		this.streamIdSize = numberEncodedSize(id);
 		replyQueue.set(id, this);
 	}
 	type = 'reply';

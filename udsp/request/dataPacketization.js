@@ -7,27 +7,31 @@ export async function dataPacketization(source) {
 		isAsk,
 		outgoingDataPackets,
 		outgoingData,
-		sidSize
+		streamIdSize
 	} = source;
 	const dataSize = outgoingData?.length;
+	const numberEncodedSizeMax = numberEncodedSize(dataSize);
 	let currentBytePosition = 0;
-	let packetId = outgoingDataPackets.length;
-	if (dataSize > maxDataSize) {
+	let packetId = 0;
+	const maxSafeDataSize = maxDataSize - numberEncodedSizeMax - streamIdSize;
+	if (dataSize > maxSafeDataSize) {
 		console.log('data size', dataSize);
 		while (currentBytePosition < dataSize) {
 			const message = source.getPacketTemplate();
 			message.frame.push(packetId, currentBytePosition);
 			const frameSize = numberEncodedSize(packetId) + numberEncodedSize(currentBytePosition);
-			const endIndex = currentBytePosition + maxDataSize - frameSize - sidSize;
+			const endIndex = currentBytePosition + (maxSafeDataSize - frameSize);
 			const safeEndIndex = endIndex > dataSize ? dataSize : endIndex;
 			const data = outgoingData.subarray(currentBytePosition, safeEndIndex);
-			console.log('chunksize', data.length, currentBytePosition, endIndex);
+			console.log('chunksize', currentBytePosition, safeEndIndex, data.length);
 			message.data = data;
+			message.offset = currentBytePosition;
 			outgoingDataPackets[packetId] = message;
 			if (safeEndIndex === dataSize) {
+				message.last = true;
 				break;
 			}
-			currentBytePosition += maxDataSize;
+			currentBytePosition = safeEndIndex;
 			packetId++;
 		}
 	} else {

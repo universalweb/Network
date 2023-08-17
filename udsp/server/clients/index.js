@@ -39,7 +39,7 @@ export class Client {
 			return server.socket;
 		};
 		this.events = server.events;
-		this.actions = server.actions;
+		this.requestMethods = server.requestMethods;
 		const {
 			maxPacketSize,
 			maxDataSize,

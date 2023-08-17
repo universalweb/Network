@@ -72,6 +72,12 @@ export class Base {
 	setRequestHeader(headerName, headerValue) {
 		return this.setHeader(headerName, headerValue);
 	}
+	setHeaderDetails() {
+		const { head: { dataSize } } = this;
+		if (dataSize) {
+			this.totalIncomingDataSize = dataSize;
+		}
+	}
 	setHead() {
 		clear(this.incomingHeadPackets);
 		if (this.incomingHead?.length) {
@@ -79,6 +85,9 @@ export class Base {
 			clearBuffer(this.incomingHead);
 			this.head = decode(headCompiled);
 			headCompiled.fill(0);
+			if (isPlainObject(this.head)) {
+				this.setHeaderDetails();
+			}
 			console.log('HEAD SET', this.head);
 		} else {
 			this.head = {};
@@ -283,37 +292,6 @@ export class Base {
 		message.end = true;
 		this.sendPacket(message);
 	}
-	async headPacketization() {
-		const {
-			maxHeadSize,
-			isAsk,
-			outgoingHeadPackets
-		} = this;
-		const source = (this.isAsk) ? this.request : this.response;
-		console.log('headPacketization', source.head);
-		this.outgoingHead = encode(source.head);
-		this.outgoingHeadSize = this.outgoingHead.length;
-		console.log('outgoingHeadSize', source.outgoingHeadSize);
-		let currentBytePosition = 0;
-		let packetId = 0;
-		const headSize = this.outgoingHeadSize;
-		console.log('maxHeadSize', maxHeadSize);
-		while (currentBytePosition < headSize) {
-			const message = this.getPacketTemplate();
-			message.frame.push(packetId);
-			const endIndex = currentBytePosition + maxHeadSize;
-			const safeEndIndex = endIndex > headSize ? headSize : endIndex;
-			message.head = this.outgoingHead.subarray(currentBytePosition, safeEndIndex);
-			outgoingHeadPackets[packetId] = message;
-			// message.offset = safeEndIndex;
-			if (safeEndIndex === headSize) {
-				break;
-			}
-			packetId++;
-			currentBytePosition += maxHeadSize;
-		}
-		console.log('outgoingHeadSize', source.outgoingHeadSize);
-	}
 	async pathPacketization() {
 		const {
 			maxPathSize,
@@ -342,10 +320,11 @@ export class Base {
 			outgoingPathPackets[packetId] = message;
 			// message.offset = safeEndIndex;
 			if (safeEndIndex === outgoingPathSize) {
+				message.last = true;
 				break;
 			}
 			packetId++;
-			currentBytePosition += maxPathSize;
+			currentBytePosition = safeEndIndex;
 		}
 		console.log('outgoingPathSize', source.outgoingPathSize);
 	}
@@ -371,18 +350,51 @@ export class Base {
 		while (currentBytePosition < outgoingParametersSize) {
 			const message = this.getPacketTemplate();
 			message.frame.push(packetId);
-			const endIndex = currentBytePosition + outgoingParametersPackets;
+			const endIndex = currentBytePosition + maxParametersSize;
 			const safeEndIndex = endIndex > outgoingParametersSize ? outgoingParametersSize : endIndex;
 			message.params = this.outgoingParameter.subarray(currentBytePosition, safeEndIndex);
 			outgoingParametersPackets[packetId] = message;
 			// message.offset = safeEndIndex;
 			if (safeEndIndex === outgoingParametersSize) {
+				message.last = true;
 				break;
 			}
 			packetId++;
-			currentBytePosition += maxParametersSize;
+			currentBytePosition = safeEndIndex;
 		}
 		console.log('outgoingParameterSize', source.outgoingParameterSize);
+	}
+	async headPacketization() {
+		const {
+			maxHeadSize,
+			isAsk,
+			outgoingHeadPackets
+		} = this;
+		const source = (this.isAsk) ? this.request : this.response;
+		console.log('headPacketization', source.head);
+		this.outgoingHead = encode(source.head);
+		this.outgoingHeadSize = this.outgoingHead.length;
+		console.log('outgoingHeadSize', source.outgoingHeadSize);
+		let currentBytePosition = 0;
+		let packetId = 0;
+		const headSize = this.outgoingHeadSize;
+		console.log('maxHeadSize', maxHeadSize);
+		while (currentBytePosition < headSize) {
+			const message = this.getPacketTemplate();
+			message.frame.push(packetId);
+			const endIndex = currentBytePosition + maxHeadSize;
+			const safeEndIndex = endIndex > headSize ? headSize : endIndex;
+			message.head = this.outgoingHead.subarray(currentBytePosition, safeEndIndex);
+			outgoingHeadPackets[packetId] = message;
+			// message.offset = safeEndIndex;
+			if (safeEndIndex === headSize) {
+				message.last = true;
+				break;
+			}
+			packetId++;
+			currentBytePosition = safeEndIndex;
+		}
+		console.log('outgoingHeadSize', source.outgoingHeadSize);
 	}
 	async dataPacketization() {
 		const {

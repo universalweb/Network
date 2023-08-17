@@ -77,21 +77,21 @@ export async function onPacket(packet) {
 				this.assemblePath();
 			}
 		}
-		if (params && !this.incomingParamsPackets[packetId]) {
+		if (params && !this.incomingParametersPackets[packetId]) {
 			this.totalReceivedUniquePackets++;
-			this.incomingParamsPackets[packetId] = message;
-			this.incomingParams[packetId] = message.params;
-			this.totalReceivedUniqueParamsPackets++;
+			this.incomingParametersPackets[packetId] = message;
+			this.incomingParameters[packetId] = message.params;
+			this.totalReceivedUniqueParametersPackets++;
 			this.currentIncomingParametersSize += params.length;
-			if (this.missingParamsPackets.has(packetId)) {
-				this.missingParamsPackets.delete(packetId);
+			if (this.missingParametersPackets.has(packetId)) {
+				this.missingParametersPackets.delete(packetId);
 			}
-			if (this.onParams) {
-				await this.onParams(message);
+			if (this.onParameters) {
+				await this.onParameters(message);
 			}
 			console.log(this, this.currentIncomingParametersSize);
 			if (this.totalIncomingParametersSize === this.currentIncomingParametersSize) {
-				this.assembleParams();
+				this.assembleParameters();
 			}
 		}
 		if (data && !this.incomingDataPackets[packetId]) {
@@ -110,12 +110,11 @@ export async function onPacket(packet) {
 			if (this.onData) {
 				await this.onData(message);
 			}
-			if (dataLength + offset === this.totalIncomingDataSize) {
+			console.log(`DATA PROGRESS current:${this.currentIncomingDataSize}`, this.totalIncomingDataSize);
+			if (this.currentIncomingDataSize === this.totalIncomingDataSize) {
+				console.log(this);
 				console.log('Last packet received');
 				message.last = true;
-			}
-			if (this.currentIncomingDataSize === this.totalIncomingDataSize) {
-				// console.log(this);
 				this.totalIncomingUniqueDataPackets = packetId;
 				this.checkData();
 			}
@@ -123,16 +122,16 @@ export async function onPacket(packet) {
 	} else if (setup) {
 		this.receivedSetupPacket = true;
 		let method;
-		let headerSize;
-		let dataSize;
+		let totalIncomingHeadSize;
+		let totalIncomingDataSize;
 		let totalIncomingPathSize;
 		let totalIncomingParametersSize;
 		if (isAsk) {
-			[headerSize, dataSize] = setup;
+			[totalIncomingHeadSize, totalIncomingDataSize] = setup;
 		} else {
-			[method, totalIncomingPathSize, totalIncomingParametersSize, headerSize, dataSize] = setup;
+			[method, totalIncomingPathSize, totalIncomingParametersSize, totalIncomingHeadSize, totalIncomingDataSize] = setup;
 		}
-		console.log(`Setup Packet Received HEADER:${headerSize} DATA:${dataSize}`);
+		console.log(`Setup Packet Received HEADER:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
 		this.incomingSetupPacket = message;
 		if (hasValue(totalIncomingPathSize)) {
 			this.totalIncomingPathSize = totalIncomingPathSize;
@@ -140,8 +139,11 @@ export async function onPacket(packet) {
 		if (hasValue(totalIncomingParametersSize)) {
 			this.totalIncomingParametersSize = totalIncomingParametersSize;
 		}
-		if (hasValue(headerSize)) {
-			this.totalIncomingHeadSize = headerSize;
+		if (hasValue(totalIncomingHeadSize)) {
+			this.totalIncomingHeadSize = totalIncomingHeadSize;
+		}
+		if (totalIncomingDataSize) {
+			this.totalIncomingDataSize = totalIncomingDataSize;
 		}
 		if (hasValue(method)) {
 			this.method = method;

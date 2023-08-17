@@ -1,13 +1,13 @@
-# UDSP Methods
+# UDSP Request Methods
 
-Methods have two formats one which is numerical for compression and one which is string based. Preferred is numerical but not standard or implimented yet. Some of these are planned but not implimented but are reserved and planned as part of a feature.
+Methods have two formats one which is numerical for compression and one which is string based. Preferred is numerical but isn't standard nor is it implimented yet. Some of these are planned but not implimented. However, they're reserved and planned.
 
 - open
 - connect
 - close
-- subscribe
+- subscribe (sub)
 - leave
-- publish
+- publish (pub)
 - delete
 - save
 - update
@@ -32,6 +32,7 @@ Methods have two formats one which is numerical for compression and one which is
 - alive
 - login
 - logout
+- auth (authenticate)
 - rekey
 - fsync (filesystem sync)
 - live (live stream)

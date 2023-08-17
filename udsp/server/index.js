@@ -22,7 +22,7 @@ import { onError } from './onError.js';
 import { onListen } from './onListen.js';
 import { onPacket } from './onPacket.js';
 import { sendPacket } from '#udsp/sendPacket';
-import { actions } from './actions/index.js';
+import { requestMethods } from './methods/index.js';
 import { getCertificate, parseCertificate, loadCertificate } from '#certificate';
 import { randomBuffer, toBase64 } from '#crypto';
 import { cryptography } from '#udsp/cryptography';
@@ -46,7 +46,7 @@ export class Server extends UDSP {
 	emit = emit;
 	attachEvents() {
 		const thisServer = this;
-		this.bindActions(actions);
+		this.addRequestMethod(requestMethods);
 		this.socket.on('error', (err) => {
 			return thisServer.onError(err);
 		});
@@ -153,16 +153,10 @@ export class Server extends UDSP {
 	async send(packet, destination) {
 		return sendPacket(packet, this, this.socket, destination);
 	}
-	bindMethods(methods) {
+	addRequestMethod(methods) {
 		const thisServer = this;
 		each(methods, (method, methodName) => {
-			thisServer[methodName] = method.bind(thisServer);
-		});
-	}
-	bindActions(methods) {
-		const thisServer = this;
-		each(methods, (method, methodName) => {
-			thisServer.actions.set(methodName, method.bind(thisServer));
+			thisServer.requestMethods.set(methodName, method.bind(thisServer));
 		});
 	}
 	setClientEvent(eventName, callback) {
@@ -175,6 +169,7 @@ export class Server extends UDSP {
 			foundEvent(this, client);
 		}
 	}
+	requestMethods = construct(Map);
 	realTime = true;
 	socketCount = 0;
 	clientCount = 0;

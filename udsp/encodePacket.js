@@ -41,8 +41,10 @@ export async function encodePacket(message, source, destination, headers, footer
 	if (encryptConnectionId) {
 		// console.log(destination);
 		if (isServerEnd) {
+			console.log('Encrypting Client Connection ID on Server End');
 			id = cryptography.encryptClientConnectionId(id, destination.connectionIdKeypair);
 		} else {
+			console.log('Encrypting Server Connection ID on Client End');
 			id = cryptography.encryptServerConnectionId(id, destination.connectionIdKeypair);
 		}
 		if (!id) {
@@ -83,7 +85,7 @@ export async function encodePacket(message, source, destination, headers, footer
 	const packetSize = packetEncoded.length;
 	console.log('Size Unencrypted', encode([headerEncoded, messageEncoded]).length);
 	info(`encoded Packet Size ${packetSize}`);
-	if (packetSize >= 1280) {
+	if (packetSize > 1280) {
 		console.log(packetEncoded);
 		failed(`WARNING: Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
 	}

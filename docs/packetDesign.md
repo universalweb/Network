@@ -1,84 +1,80 @@
-## Universal Web Socket - PACKET DESIGN
+# Universal Web Socket: PACKET DESIGN
 
-Keep in mind packet design is in flux and is subject to constant changes until v1 RC.
+[
+  // HEAD
+  {
+    connectionID
+  },
+  // BODY
+  {
+    method
+    data
+  },
+  // FOOTER
+  {
 
-Definitions
-Multiple - Emplies that the property name may be used more than once inside a single packet. This is expected to change as property single character names are chosen.
+  }
+]
 
-#### PACKET OVERVIEW
+#### UDSP HEADERS (MSGPack Object)(OPTIONAL ENCRYPTION)
 
-|          ARRAY           |
-| :----------------------: |
-|         Headers          |
-| Encrypted Data End Index |
-|      Encrypted Data      |
-
-#### Additional Data
-
--   Nonce
--   Socket ID (CLIENT/SERVER)
-    -   May indicate which server to send to for load balancing
-    -   May indicate which domain to send to for virtual hosts
-    -   May be entirely random
-
----
-
-#### ENCRYPTED DATA
-
--   id - Connection ID (MANDATORY)
--   api - API function that is requested (OPTIONAL)
--   Watcher (OPTIONAL)
--   Identity Certificate (OPTIONAL)(REQUIRED FOR HANDSHAKE)
--   Head (OPTIONAL Multiple)
--   Body (OPTIONAL Multiple) (MSGPack Object)
--   Pid - Packet ID (MANDATORY)
--   Status - Status Code (OPTIONAL)
-    -   If status is left blank it defaults to 200 or is considered a success
--   end - Kill connection (OPTIONAL)
--   Puzzle - Solve a puzzle to continue (OPTIONAL)
--   ReKey (OPTIONAL)
--   scid - Server connection ID (OPTIONAL)
--   cid - Client connection ID (OPTIONAL)
+- Nonce
+- Socket ID (CLIENT/SERVER)
+ : May indicate which server to send to for load balancing
+ : May indicate which domain to send to for virtual hosts
+ : May be entirely random
 
 ---
 
-#### HEADER LAYERS
+#### PROPERTY NAMES & MEANINGS
+
+- id: Connection ID
+- ccid: Client Connection ID
+- scid: Server Connection ID
+- method: Request methods such as GET, PUT, DELETE but in lowercase
+- Watcher: Something used to watch completed data as it comes over the wire
+- Head: UDSP Headers or Request/Response headers in a message
+- evnt: (Event related to application level events)
+- Body/Message: Is the main payload of a packet or the full data from a request
+- Pid: Packet ID
+- sid: Stream ID Essentially a Request ID unique to each request
+- State: Connection/Request UDSP State Code
+- Status: status Code similar to HTTP
+- readyState: request readystate similar to XHR/HTTP requests
+- end: Kill connection
+- last: the last packet
+- Puzzle: Solve a puzzle to continue
+- ReKey
+- scid: Server connection ID
+
+---
+
+#### UDSP LAYERS
 
 |  IPv6 HEADERS  |
 | :------------: |
-|  UDP HEADERS   |
+|      UDP       |
 |  UDSP HEADERS  |
-| PACKET HEADERS |
-| STREAM HEADERS |
+|  UDSP MESSAGE  |
+|  UDSP FOOTER   |
 
+The UDSP Header, Body, & Footer are all part of one array structure encoded with msgpack.
 ##### IPv6 HEADERS
 
--   Version
--   Traffic Class
--   Flow Label
--   Payload Length
--   Next Header
--   Hop Limit
--   Source Address
--   Destination Address
+- Version
+- Traffic Class
+- Flow Label
+- Payload Length
+- Next Header
+- Hop Limit
+- Source Address
+- Destination Address
 
 ##### UDP HEADERS
 
 These are the standard UDP headers sent over:
 
--   Source Port Number
--   Destination Port Number
--   Length
--   Checksum
-
-##### MAIN HEADERS
-
-Main Headers are public and typically none encrypted but the application can choose to encrypt certain headers such as connection IDs.
-
-##### PACKET HEADERS
-
-Packet headers are encrypted and are typically sent only once and are considered priority data they must fit into a single UDSP packet. An example of packet headers that would be sent once are security related headers such as content origin policy. If in a browser this header is attached to all other requests or placed as a meta tag in the head. This avoids the constant re-sending of these headers when they only need to be sent once. This also avoids processing on the server and client for redundant security headers.
-
-##### STREAM HEADERS
-
-STREAM headers are request specific and may be sent over first prior to the encrypted body being sent over. Headers are treated as priority data in terms of execution of the request.
+- Source Port Number
+- Destination Port Number
+- Length
+- Checksum
