@@ -643,4 +643,5 @@ export class Base {
 	outgoingParametersSize = 0;
 	outgoingHeadSize = 0;
 	outgoingDataSize = 0;
+	bg = 0;
 }

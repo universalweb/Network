@@ -43,8 +43,13 @@ const fileRequest = await uwClient.request('get', 'index.html');
 // console.log('data', response.toString());
 console.timeEnd('FileRequest');
 const fileFetch = await uwClient.fetch('index.html');
+// Missing file example
+// const fileFetch = await uwClient.fetch('missing.file');
+// const fileFetch = await uwClient.fetch('images/test.gif');
 console.log(fileFetch.head);
+// console.log(fileFetch.data.toString('base64'));
 console.log('data', fileFetch.toString());
+// console.log(fileFetch);
 console.timeEnd('Full');
 // console.log('Request state', fileRequest);
 

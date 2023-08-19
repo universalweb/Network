@@ -37,6 +37,7 @@ export async function dataPacketization(source) {
 	} else {
 		const message = source.getPacketTemplate();
 		message.frame.push(0, 0);
+		message.data = outgoingData;
 		// console.log(source);
 		outgoingDataPackets[0] = message;
 	}

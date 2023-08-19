@@ -43,6 +43,7 @@ export class Ask extends Base {
 			this.state = 4;
 		}
 		this.readyState = 4;
+		this.flush();
 		this.accept(this);
 	}
 	isAsk = true;

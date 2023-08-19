@@ -120,33 +120,36 @@ export async function onPacket(packet) {
 			}
 		}
 	} else if (setup) {
-		this.receivedSetupPacket = true;
-		let method;
-		let totalIncomingHeadSize;
-		let totalIncomingDataSize;
-		let totalIncomingPathSize;
-		let totalIncomingParametersSize;
-		if (isAsk) {
-			[totalIncomingHeadSize, totalIncomingDataSize] = setup;
-		} else {
-			[method, totalIncomingPathSize, totalIncomingParametersSize, totalIncomingHeadSize, totalIncomingDataSize] = setup;
-		}
-		console.log(`Setup Packet Received HEADER:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
-		this.incomingSetupPacket = message;
-		if (hasValue(totalIncomingPathSize)) {
-			this.totalIncomingPathSize = totalIncomingPathSize;
-		}
-		if (hasValue(totalIncomingParametersSize)) {
-			this.totalIncomingParametersSize = totalIncomingParametersSize;
-		}
-		if (hasValue(totalIncomingHeadSize)) {
-			this.totalIncomingHeadSize = totalIncomingHeadSize;
-		}
-		if (totalIncomingDataSize) {
-			this.totalIncomingDataSize = totalIncomingDataSize;
-		}
-		if (hasValue(method)) {
-			this.method = method;
+		if (!this.receivedSetupPacket) {
+			this.totalReceivedUniquePackets++;
+			this.receivedSetupPacket = true;
+			let method;
+			let totalIncomingHeadSize;
+			let totalIncomingDataSize;
+			let totalIncomingPathSize;
+			let totalIncomingParametersSize;
+			if (isAsk) {
+				[totalIncomingHeadSize, totalIncomingDataSize] = setup;
+			} else {
+				[method, totalIncomingPathSize, totalIncomingParametersSize, totalIncomingHeadSize, totalIncomingDataSize] = setup;
+			}
+			console.log(`Setup Packet Received HEADER:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
+			this.incomingSetupPacket = message;
+			if (hasValue(totalIncomingPathSize)) {
+				this.totalIncomingPathSize = totalIncomingPathSize;
+			}
+			if (hasValue(totalIncomingParametersSize)) {
+				this.totalIncomingParametersSize = totalIncomingParametersSize;
+			}
+			if (hasValue(totalIncomingHeadSize)) {
+				this.totalIncomingHeadSize = totalIncomingHeadSize;
+			}
+			if (totalIncomingDataSize) {
+				this.totalIncomingDataSize = totalIncomingDataSize;
+			}
+			if (hasValue(method)) {
+				this.method = method;
+			}
 		}
 		if (isAsk) {
 			this.sendHeadReady();
@@ -154,19 +157,31 @@ export async function onPacket(packet) {
 			this.sendPathReady();
 		}
 	} else if (dataReady) {
-		this.receivedDataReadyPacket = true;
+		if (this.receivedDataReadyPacket) {
+			this.totalReceivedUniquePackets++;
+			this.receivedDataReadyPacket = true;
+		}
 		console.log('Data Ready Packet Received', this.type);
 		this.sendData();
 	} else if (headReady) {
-		this.receivedHeadReadyPacket = true;
+		if (this.receivedHeadReadyPacket) {
+			this.totalReceivedUniquePackets++;
+			this.receivedHeadReadyPacket = true;
+		}
 		console.log('Head Ready Packet Received', this.type);
 		this.sendHead();
 	} else if (pathReady) {
-		this.receivedPathReadyPacket = true;
+		if (this.receivedPathReadyPacket) {
+			this.totalReceivedUniquePackets++;
+			this.receivedPathReadyPacket = true;
+		}
 		console.log('Path Ready Packet Received', this.type);
 		this.sendPath();
 	} else if (parametersReady) {
-		this.receivedParametersReadyPacket = true;
+		if (this.receivedParametersReadyPacket) {
+			this.totalReceivedUniquePackets++;
+			this.receivedParametersReadyPacket = true;
+		}
 		console.log('Parameters Ready Packet Received', this.type);
 		this.sendParameters();
 	} else if (end) {

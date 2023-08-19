@@ -1,30 +1,17 @@
 import { clear, clearBuffer } from '@universalweb/acid';
 export function flushOutgoing() {
-	if (this.outgoingHead) {
-		clearBuffer(this.outgoingHead);
-	}
-	if (this.outgoingData) {
-		clearBuffer(this.outgoingData);
-	}
 	clear(this.outgoingAck);
 	clear(this.outgoingNacks);
 	clear(this.outgoingHeadPackets);
 	clear(this.outgoingDataPackets);
+	clear(this.outgoingPathPackets);
 	this.response = null;
 	this.totalSentConfirmedPackets = null;
 	this.totalOutgoingPayloadSize = null;
 }
 export function flushIncoming() {
-	if (this.incomingHead) {
-		clearBuffer(this.outgoingHead);
-	}
-	if (this.incomingData) {
-		clearBuffer(this.outgoingData);
-	}
 	clear(this.incomingAks);
 	clear(this.incomingNacks);
-	clear(this.outgoingNacks);
-	clear(this.incomingHead);
 	clear(this.incomingDataPackets);
 	this.request = null;
 	this.incomingSetupPacket = null;
@@ -33,6 +20,11 @@ export function flushIncoming() {
 	this.totalReceivedUniquePackets = null;
 	this.totalIncomingHeadSize = null;
 	this.totalReceivedPackets = null;
+	this.incomingSetupPacket = null;
+	this.totalReceivedUniquePathPackets = null;
+	this.totalReceivedUniqueParametersPackets = null;
+	this.totalReceivedUniqueHeadPackets = null;
+	this.totalReceivedUniqueDataPackets = null;
 }
 // Flush all data
 export function flush() {
