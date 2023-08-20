@@ -20,36 +20,19 @@ console.timeEnd('Connected');
 console.time('FileRequest');
 // short hand get request
 const fileRequest = await uwClient.request('get', 'index.html');
-// medium hand
-// const fileRequest = await uwClient.request({
-// 	path: 'index.html'
-// });
-// fileRequest.on({
-// 	data(...args) {
-// 		console.log('custom onData event', ...args);
-// 	},
-// 	head(...args) {
-// 		console.log('custom onHead event', ...args);
-// 	}
-// });
-// const response = await fileRequest.send();
-// console.log(response);
-// const response = await uwClient.request('index.html').on({
-// 	data(...args) {
-// 		console.log('onData for simulate client', ...args);
-// 	}
-// }).send();
+console.log(fileRequest);
+const response = await fileRequest.send();
 // console.log('head', response.head);
-// console.log('data', response.toString());
-console.timeEnd('FileRequest');
-const fileFetch = await uwClient.fetch('index.html');
+console.log('data', response.toString());
+// const fileFetch = await uwClient.fetch('index.html');
 // Missing file example
 // const fileFetch = await uwClient.fetch('missing.file');
 // const fileFetch = await uwClient.fetch('images/test.gif');
-console.log(fileFetch.head);
+// console.log(fileRequest.head);
 // console.log(fileFetch.data.toString('base64'));
-console.log('data', fileFetch.toString());
+// console.log('data', fileRequest.toString());
 // console.log(fileFetch);
+console.timeEnd('FileRequest');
 console.timeEnd('Full');
 // console.log('Request state', fileRequest);
 

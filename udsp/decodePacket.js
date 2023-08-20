@@ -137,7 +137,7 @@ export async function decodePacket(config) {
 			success('data PAYLOAD', message.data?.length || message.data);
 		}
 		const frame = message?.frame;
-		if (frame) {
+		if (hasValue(frame)) {
 			let streamId;
 			let packetId;
 			let offset;

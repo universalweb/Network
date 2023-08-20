@@ -17,7 +17,7 @@ export class Reply extends Base {
 		console.log('Setting up new reply', request);
 		const thisReply = this;
 		const { message } = request;
-		if (!message.frame) {
+		if (!hasValue(message.frame)) {
 			return this.destroy('No frame in message');
 		}
 		const id = request.message.id;

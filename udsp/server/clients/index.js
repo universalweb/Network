@@ -127,16 +127,15 @@ export class Client {
 			reKey: this.newKeypair.publicKey,
 			randomId: this.randomId
 		};
+		this.state = 1;
 		await this.send(message);
 	}
 	// client confirmation of server intro
 	async handshake(message) {
-		if (isFalsy(this.newSessionKeysAssigned)) {
-			await this.attachNewKey();
-		}
 		this.sendHandshake();
 	}
-	async attachNewKey() {
+	async attachNewClientKeys() {
+		this.state = 2;
 		this.encryptKeypair = this.newKeypair;
 		await this.setSessionKeys();
 		this.newSessionKeysAssigned = true;
@@ -160,7 +159,6 @@ export class Client {
 			handshakeFinale
 		} = message;
 		if (intro) {
-			this.state = 1;
 			this.intro(message);
 		} else if (handshake) {
 			this.handshake(message);

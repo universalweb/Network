@@ -198,9 +198,9 @@ export class Client extends UDSP {
 			cert,
 			last
 		} = message;
-		this.certChunks[pid] = cert;
+		this.certificateChunks[pid] = cert;
 		if (last) {
-			this.loadCertificate(Buffer.concat(this.certChunks));
+			this.loadCertificate(Buffer.concat(this.certificateChunks));
 			this.sendHandshake(message);
 		}
 	}
@@ -212,30 +212,8 @@ export class Client extends UDSP {
 			success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
 		}
 	}
-	intro(message) {
-		console.log('Got server Intro', message);
-		const {
-			scid: serverConnectionId,
-			reKey,
-			certSize,
-			cert
-		} = message;
-		this.serverIntroReceived = true;
-		this.destination.id = serverConnectionId;
-		this.newKeypair = reKey;
-		if (cert) {
-			this.certChunks[0] = cert;
-			this.loadCertificate(Buffer.concat(this.certChunks));
-		}
-		if (hasValue(certSize)) {
-			this.certSize = certSize;
-		}
-		if (!certSize) {
-			this.sendHandshake(message);
-		}
-	}
-	async setNewKeys() {
-		if (isUndefined(this.handshakeSet)) {
+	async setNewDestinationKeys() {
+		if (!(this.handshakeSet)) {
 			this.destination.encryptKeypair = {
 				publicKey: this.newKeypair
 			};
@@ -243,15 +221,28 @@ export class Client extends UDSP {
 			this.handshakeSet = true;
 		}
 	}
+	async intro(message) {
+		console.log('Got server Intro', message);
+		const {
+			scid: serverConnectionId,
+			reKey,
+			certSize,
+		} = message;
+		this.destinationIntroReceived = true;
+		this.destination.id = serverConnectionId;
+		this.newKeypair = reKey;
+		await this.setNewDestinationKeys();
+		if (hasValue(certSize)) {
+			this.certSize = certSize;
+		} else {
+			this.sendHandshake(message);
+		}
+	}
 	async sendHandshake(originalMessage) {
-		await this.setNewKeys();
-		const headers = {
-			reKey: true,
-		};
 		const message = {
 			handshake: true
 		};
-		this.send(message, headers);
+		this.send(message);
 	}
 	handshaked(message) {
 		console.log('Handshake Completed with new keys');
@@ -333,7 +324,7 @@ export class Client extends UDSP {
 	destination = {};
 	autoConnect = false;
 	static connections = new Map();
-	certChunks = [];
+	certificateChunks = [];
 	requestQueue = construct(Map);
 	data = construct(Map);
 }

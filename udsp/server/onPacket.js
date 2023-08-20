@@ -23,13 +23,12 @@ export async function onPacket(packet, connection) {
 	const {
 		id,
 		key,
-		reKey
 	} = config.packetDecoded.header;
 	let client = thisServer.clients.get(toBase64(id));
 	if (client) {
 		config.destination = client;
-		if (reKey) {
-			client.attachNewKey();
+		if (client.state === 1) {
+			client.attachNewClientKeys();
 		}
 	}
 	if (key && !client) {
@@ -58,6 +57,7 @@ export async function onPacket(packet, connection) {
 	if (!message) {
 		return failed('Error failed to decode packet headers');
 	}
+	console.log(config.packetDecoded);
 	if (hasValue(message.id)) {
 		client.reply(config.packetDecoded);
 	} else {
