@@ -25,7 +25,7 @@
     <li><a href="https://github.com/universalweb/Network/tree/master/scripts/simulateClient.js">SIMILATE CLIENT REQUEST (npm run simc) (ONLY RUN WHEN DEMO IN A STABLE COMMIT NOT LATEST UNLESS SPECIFIED)</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/scripts">VARIOUS HELPER SCRIPTS</a></li>
 </ul>
-
+<b>ONLY RUN NPM COMMANDS WHEN COMMIT DESCRIPTION SAYS DEMO STABLE OR DEMO ENABLED</b>
 <br />
 
 <h4><a href="https://github.com/universalweb/Network/blob/master/package.json">NPM SCRIPTS</a></h4>
