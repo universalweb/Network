@@ -6,7 +6,7 @@ import {
 	failed, info, msgReceived, msgSent
 } from '#logs';
 import { Base } from './base.js';
-import { request } from '#udsp/requestTypes/request';
+import { request } from '#udsp/requestMethods/request';
 export class Ask extends Base {
 	constructor(method = 'get', path, parameters, data, head, options = {}, source) {
 		super(options, source);

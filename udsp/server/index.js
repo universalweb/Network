@@ -25,7 +25,7 @@ import { sendPacket } from '#udsp/sendPacket';
 import { requestMethods } from './methods/index.js';
 import { getCertificate, parseCertificate, loadCertificate } from '#certificate';
 import { randomBuffer, toBase64 } from '#crypto';
-import { cryptography } from '#udsp/cryptography';
+import { cryptography } from '#udsp/crypto/cryptography';
 import { UDSP } from '#udsp/base';
 const { seal } = Object;
 export class Server extends UDSP {
@@ -107,7 +107,6 @@ export class Server extends UDSP {
 		if (this.certificate.cryptography) {
 			const cryptoConfig = assign({
 				keypair: this.keypair,
-				connectionIdSize: this.connectionIdSize,
 				connectionIdKeypair: this.connectionIdKeypair,
 			}, this.certificate);
 			this.cryptography = await cryptography(cryptoConfig);

@@ -1,5 +1,5 @@
 import { construct, UniqID, each } from '@universalweb/acid';
-import { cryptography } from '#udsp/cryptography';
+import { cryptography } from '#udsp/crypto/cryptography';
 import dgram from 'dgram';
 import { randomConnectionId, randomBuffer } from '#crypto';
 export class UDSP {

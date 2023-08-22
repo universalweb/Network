@@ -8,7 +8,7 @@ import {
 	objectSize, eachArray, jsonParse, construct, isArray, clear, isFalse, isTrue, clearBuffer, hasValue
 } from '@universalweb/acid';
 import { encode, decode } from 'msgpackr';
-import { request } from '#udsp/requestTypes/request';
+import { request } from '#udsp/requestMethods/request';
 import { toBase64 } from '#crypto';
 /**
 	* @todo Adjust packet size to account for other packet data.
