@@ -16,8 +16,8 @@
 <h4>SUMMARY</h4>
 
 <ul>
-    <li><a href="https://github.com/universalweb/Network/tree/master/server">SERVER MODULE (UDSP)</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/client">CLIENT MODULE (UDSP)</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">SERVER MODULE (UDSP)</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/udsp/client">CLIENT MODULE (UDSP)</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/browser">UNIVERSAL WEB BROWSER ASSETS</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/browser/components">FRONT-END ENVIRONMENT JS/CSS</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/DIS">DOMAIN INFORMATION SERVER</a></li>
