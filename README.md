@@ -21,7 +21,7 @@
     <li><a href="https://github.com/universalweb/Network/tree/master/udsp/client">CLIENT MODULE (CHECK THE UDSP FOLDER & IMPORTS FOR FULL CODE)</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/browser">BROWSER (ourdated)</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/serverApp">EXAMPLE APP (npm run server)</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/scripts/certificate.js">BUILD DOMAIN & IDENTITY CERTIFICATES THAT ARE ALSO VIAT WALLETS (npm run certificates)</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/scripts/certificates.js">BUILD DOMAIN & IDENTITY CERTIFICATES THAT ARE ALSO VIAT WALLETS (npm run certificates)</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/scripts/simulateClient.js">SIMILATE CLIENT REQUEST (npm run simc) (ONLY RUN WHEN DEMO IN A STABLE COMMIT NOT LATEST UNLESS SPECIFIED)</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/scripts">VARIOUS HELPER SCRIPTS</a></li>
 </ul>
