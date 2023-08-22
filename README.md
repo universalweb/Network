@@ -17,8 +17,8 @@
 
 <ul>
     <li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">UDSP MODULE (CONTAINS SERVER & CLIENT MODULE)</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">SERVER MODULE (CHECK THE UDSP FOLDER FOR FULL SCRIPTS)</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/udsp/client">CLIENT MODULE (CHECK THE UDSP FOLDER FOR FULL SCRIPTS)</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">SERVER MODULE (CHECK THE UDSP FOLDER & IMPORTS FOR FULL CODE)</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/udsp/client">CLIENT MODULE (CHECK THE UDSP FOLDER & IMPORTS FOR FULL CODE)</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/browser">BROWSER (ourdated)</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/serverApp">EXAMPLE APPS</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/scripts">VARIOUS HELPER SCRIPTS</a></li>
