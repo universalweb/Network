@@ -16,11 +16,10 @@
 <h4>SUMMARY</h4>
 
 <ul>
-    <li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">SERVER MODULE (UDSP)</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/udsp/client">CLIENT MODULE (UDSP)</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/browser">UNIVERSAL WEB BROWSER ASSETS</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/browser/components">FRONT-END ENVIRONMENT JS/CSS</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/DIS">DOMAIN INFORMATION SERVER</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">UDSP MODULE (CONTAINS SERVER & CLIENT MODULE)</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">SERVER MODULE (CHECK THE UDSP FOLDER FOR FULL SCRIPTS)</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/udsp/client">CLIENT MODULE (CHECK THE UDSP FOLDER FOR FULL SCRIPTS)</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/browser">BROWSER (ourdated)</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/serverApp">EXAMPLE APPS</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/scripts">VARIOUS HELPER SCRIPTS</a></li>
 </ul>
