@@ -8,14 +8,20 @@ import {
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-import { construct, keys, isBoolean } from '@universalweb/acid';
+import {
+	construct, keys, isBoolean, intersection
+} from '@universalweb/acid';
 import { Client } from './index.js';
+import { UWCrypto } from '../../crypto/availableCryptography.js';
 export async function initialize(config, client) {
 	const {
 		packet: {
 			header: {
 				id: clientId,
-				key: publicKey
+				key: publicKey,
+				cs: cipherSuite,
+				css: cipherSuites,
+				v: version
 			},
 		},
 		server,
@@ -31,7 +37,18 @@ export async function initialize(config, client) {
 		address: ip,
 		port
 	} = connection;
-	client.cryptography = cryptography;
+	let selectedCipherSuite = cipherSuite;
+	if (cipherSuites) {
+		const cipherSelection = intersection(cipherSuites, keys(server.ciphers));
+		if (cipherSelection.length) {
+			selectedCipherSuite = cipherSelection[0];
+		}
+	}
+	if (selectedCipherSuite) {
+		client.cryptography = server.ciphers[selectedCipherSuite];
+	} else {
+		client.cryptography = server.ciphers[server.cipherSuite];
+	}
 	// When changing to a new key you must first create new keys from scratch to replace these.
 	client.keypair = server.keypair;
 	client.encryptKeypair = server.encryptKeypair;

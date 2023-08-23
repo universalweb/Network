@@ -21,7 +21,9 @@ import {
 	isTrue,
 	currentPath,
 	hasValue,
-	isUndefined
+	isUndefined,
+	has,
+	intersection
 } from '@universalweb/acid';
 import dgram from 'dgram';
 import { success, configure, info } from '#logs';
@@ -108,34 +110,36 @@ export class Client extends UDSP {
 	async configCryptography() {
 		// console.log(this.cryptography);
 		const { destination, } = this;
-		const cryptoConfig = assign({
-			isClient: true,
-			generate: {
-				keypair: true,
-				connectionIdKeypair: true,
-				clientSessionKeys: true,
+		const {
+			encryptClientConnectionId,
+			encryptServerConnectionId,
+			encryptConnectionId
+		} = destination;
+		if (!has(destination.cipherSuites, this.cipherSuite)) {
+			console.log('Default ciphersuite not available');
+			this.cipherSuite = intersection(this.cipherSuites, destination.cipherSuites)[0];
+			if (!this.cipherSuite) {
+				console.log('No matching cipher suite found.');
+				return false;
 			}
-		}, destination);
-		console.log(cryptoConfig);
-		this.cryptography = await cryptography(cryptoConfig);
-		if (this.cryptography.encryptionKeypair) {
-			this.destination.encryptKeypair = this.cryptography.encryptionKeypair;
 		}
-		if (this.cryptography.connectionIdKeypair) {
-			this.destination.connectionIdKeypair = this.cryptography.connectionIdKeypair;
-		}
+		this.cryptography = await cryptography(this.cipherSuite, destination);
 		this.compression = destination.compression;
 		this.headerCompression = destination.headerCompression;
 		if (destination.autoLogin && this.autoLogin) {
 			this.autoLogin = true;
 		}
 		if (!this.keypair) {
-			this.keypair = this.cryptography.generated.keypair;
-			this.encryptKeypair = this.cryptography.generated.encryptKeypair;
-			this.connectionIdKeypair = this.cryptography.generated.connectionIdKeypair;
+			this.keypair = this.cryptography.keypair();
 			success(`Created Connection Keypair`);
 		}
-		await this.setSessionKeys(this.cryptography.generated.sessionKeys);
+		if (!this.encryptKeypair) {
+			this.encryptKeypair = this.keypair;
+		}
+		if (encryptClientConnectionId || encryptServerConnectionId || encryptConnectionId) {
+			this.connectionIdKeypair = this.keypair;
+		}
+		await this.setSessionKeys();
 	}
 	async attachEvents() {
 		const thisClient = this;

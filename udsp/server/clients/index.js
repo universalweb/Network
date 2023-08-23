@@ -40,6 +40,7 @@ export class Client {
 		};
 		this.events = server.events;
 		this.requestMethods = server.requestMethods;
+		this.cipherSuites = server.cipherSuites;
 		const {
 			maxPacketSize,
 			maxDataSize,

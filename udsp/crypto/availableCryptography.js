@@ -70,15 +70,18 @@ const xsalsa20Algo = {
 	boxUnseal
 };
 export class UWCrypto {
-	construct(config) {
+	construct(cipherSuite = 'x25519-xchacha20-poly1305', config) {
 		const {
 			version = this.version,
 			publicKeyAlgorithm = 'ed25519',
-			cipherSuite = 'x25519-xchacha20-poly1305',
 			publicKeyEncryption,
 		} = config;
-		assign(this, this.algorithms[version][publicKeyAlgorithm]);
-		assign(this, this.algorithms[version][cipherSuite]);
+		if (publicKeyAlgorithm) {
+			assign(this, this.algorithms[version][publicKeyAlgorithm]);
+		}
+		if (cipherSuite) {
+			assign(this, this.algorithms[version][cipherSuite]);
+		}
 		if (publicKeyEncryption) {
 			assign(this, this.algorithms[version][publicKeyEncryption]);
 		}

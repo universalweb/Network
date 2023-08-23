@@ -2,6 +2,7 @@ import { construct, UniqID, each } from '@universalweb/acid';
 import { cryptography } from '#udsp/crypto/cryptography';
 import dgram from 'dgram';
 import { randomConnectionId, randomBuffer } from '#crypto';
+import { UWCrypto } from './crypto/availableCryptography.js';
 export class UDSP {
 	async calculatePacketOverhead() {
 		const {
@@ -103,4 +104,7 @@ export class UDSP {
 	throttle = false;
 	debounce = false;
 	randomId = randomBuffer(8);
+	cipherSuite = 'x25519-xchacha20-poly1305';
+	cipherSuites = ['x25519-xchacha20-poly1305'];
+	ciphers = {};
 }
