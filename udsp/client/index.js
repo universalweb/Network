@@ -47,6 +47,7 @@ import { UDSP } from '#udsp/base';
 import { sendPacket } from '../sendPacket.js';
 import { post } from '../requestMethods/post.js';
 import { getAlgorithm } from '../cryptoMiddleware/index.js';
+import { processPublicKey } from '../cryptoMiddleware/index';
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
 	constructor(configuration) {
@@ -89,6 +90,28 @@ export class Client extends UDSP {
 		if (port) {
 			destination.port = port;
 		}
+		const convertSignKeypairToEncryptionKeypair = processPublicKey(this.destination);
+		if (convertSignKeypairToEncryptionKeypair) {
+			this.destination.encryptionKeypair = convertSignKeypairToEncryptionKeypair;
+		}
+		const {
+			encryptConnectionId,
+			encryptClientConnectionId,
+			encryptServerConnectionId,
+			encryptClientKey
+		} = this.destination;
+		this.encryptClientKey = encryptClientKey;
+		if (encryptConnectionId) {
+			this.encryptClientConnectionId = true;
+			this.encryptServerConnectionId = true;
+		} else if (encryptClientConnectionId) {
+			this.encryptClientConnectionId = true;
+		} else if (encryptServerConnectionId) {
+			this.encryptServerConnectionId = true;
+		}
+		if (this.cryptography.connectionIdKeypair) {
+			this.connectionIdKeypair = this.cryptography.connectionIdKeypair;
+		}
 		// console.log('Destination', destination.cryptography);
 	}
 	async getKeychainSave(keychain) {
@@ -126,7 +149,9 @@ export class Client extends UDSP {
 		}
 		this.publicKeyCryptography = getAlgorithm(publicKeyAlgorithm);
 		this.cipherSuite = getAlgorithm(this.cipherSuiteName);
-		this.boxCryptography = getAlgorithm('x25519-xsalsa20-poly1305');
+		if (destination.boxCryptography) {
+			this.boxCryptography = getAlgorithm(destination.boxCryptography);
+		}
 		this.compression = destination.compression;
 		this.headerCompression = destination.headerCompression;
 		if (destination.autoLogin && this.autoLogin) {

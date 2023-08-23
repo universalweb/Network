@@ -22,18 +22,14 @@ export async function decodePacketHeaders(config) {
 		isClient,
 		isServer,
 		isServerEnd,
-		isServerClient
+		isServerClient,
+		boxCryptography,
+		encryptClientKey
 	} = destination;
 	const packetSize = packetEncoded.length;
 	if (packetSize > 1280) {
 		console.log(packetEncoded);
 		failed(`WARNING: DECODE Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
-	}
-	let encryptConnectionId;
-	if (isServerEnd) {
-		encryptConnectionId = publicKeyCryptography.config.encryptServerConnectionId;
-	} else {
-		encryptConnectionId = cryptography.config.encryptClientConnectionId;
 	}
 	const client = config.client;
 	info(`Packet Encoded Size ${packetSize}`);
@@ -56,27 +52,28 @@ export async function decodePacketHeaders(config) {
 	if (!header.id) {
 		return failed(`No connection id in header -> Invalid Packet`);
 	}
-	if (connectionIdKeypair && encryptConnectionId) {
+	if (connectionIdKeypair) {
 		success('Connection ID Decrypted');
 		// console.log(destination);
 		if (isServerEnd) {
-			header.id = cryptography.decryptServerConnectionId(header.id, connectionIdKeypair);
-		} else {
-			header.id = cryptography.decryptClientConnectionId(header.id, connectionIdKeypair);
+			if (source.encryptConnectionId) {
+				header.id = boxCryptography.boxUnseal(header.id, destination.connectionIdKeypair);
+			}
+		} else if (source.encryptServerConnectionId) {
+			header.id = boxCryptography.boxUnseal(header.id, destination.connectionIdKeypair);
 		}
 		if (!header.id) {
-			return failed(`Packet ID Decrypt Failed method given:${encryptConnectionId}`);
+			return failed(`Packet ID Decrypt Failed`);
 		}
 	}
 	info(`clientId: ${toBase64(header.id)}`);
 	if (header.key) {
 		success(`Public Key is given -> Processing as create client`);
-		const { encryptClientKey } = cryptography.config;
 		if (encryptionKeypair) {
-			if (isString(encryptClientKey)) {
+			if (encryptClientKey) {
 				console.log('Decrypting Public Key in UDSP Header');
 				const { key } = header;
-				header.key = cryptography.decryptClientKey(key, encryptionKeypair);
+				header.key = boxCryptography.boxUnseal(key, encryptionKeypair);
 				if (!header.key) {
 					return failed('Client Key Decode Failed', toBase64(key));
 				}
@@ -100,7 +97,7 @@ export async function decodePacket(config) {
 		packetDecoded,
 		packetDecoded: { header, }
 	} = config;
-	const { cryptography, } = destination;
+	const { cipherSuite, } = destination;
 	const footer = packet[2] && decode(packet[2]);
 	if (packet[2] && !footer) {
 		return failed(`Footer failed to decode -> Invalid Packet`);
@@ -122,7 +119,7 @@ export async function decodePacket(config) {
 	info(`Receive Key ${toBase64(destination.sessionKeys.receiveKey)}`);
 	if (messageEncoded) {
 		info(`encrypted Message size ${messageEncoded.length}bytes`);
-		const decryptedMessage = cryptography.decrypt(packet[1], destination.sessionKeys, ad);
+		const decryptedMessage = cipherSuite.decrypt(packet[1], destination.sessionKeys, ad);
 		if (!decryptedMessage) {
 			return failed('Encryption failed');
 		}

@@ -24,7 +24,6 @@ export async function encodePacket(message, source, destination, headers, footer
 		isServer,
 		isServerEnd,
 		isServerClient,
-		certificate,
 		publicKeyCryptography,
 		cipherSuite,
 		boxCryptography
