@@ -12,7 +12,7 @@ import {
 	construct, keys, isBoolean, intersection
 } from '@universalweb/acid';
 import { Client } from './index.js';
-import { UWCrypto } from '../../crypto/availableCryptography.js';
+import { getAlgorithm } from '../../cryptoMiddleware/index.js';
 export async function initialize(config, client) {
 	const {
 		packet: {
@@ -28,7 +28,7 @@ export async function initialize(config, client) {
 		connection,
 	} = config;
 	const {
-		encryptKeypair,
+		encryptionKeypair,
 		clients,
 		cryptography,
 		configuration: { id: serverId }
@@ -45,13 +45,14 @@ export async function initialize(config, client) {
 		}
 	}
 	if (selectedCipherSuite) {
-		client.cryptography = server.ciphers[selectedCipherSuite];
+		client.cipherSuite = getAlgorithm(selectedCipherSuite);
 	} else {
-		client.cryptography = server.ciphers[server.cipherSuite];
+		client.cipherSuite = getAlgorithm(server.cipherSuite);
 	}
+	client.certificate = server.certificate;
 	// When changing to a new key you must first create new keys from scratch to replace these.
 	client.keypair = server.keypair;
-	client.encryptKeypair = server.encryptKeypair;
+	client.encryptionKeypair = server.encryptionKeypair;
 	client.connectionIdKeypair = server.connectionIdKeypair;
 	success(`key: ${toBase64(publicKey)}`);
 	/*
@@ -84,7 +85,7 @@ export async function initialize(config, client) {
 		client.encryptConnectionId = true;
 	}
 	client.destination = {
-		encryptKeypair: {
+		encryptionKeypair: {
 			publicKey
 		},
 		connectionIdKeypair: {

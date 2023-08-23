@@ -27,7 +27,7 @@ import { getCertificate, parseCertificate, loadCertificate } from '#certificate'
 import { randomBuffer, toBase64 } from '#crypto';
 import { cryptography } from '#udsp/crypto/cryptography';
 import { UDSP } from '#udsp/base';
-import { UWCrypto } from '../crypto/availableCryptography.js';
+import { UWCrypto } from '../cryptoMiddleware/index.js';
 const { seal } = Object;
 export class Server extends UDSP {
 	constructor(configuration) {
@@ -106,18 +106,14 @@ export class Server extends UDSP {
 			this.chunkCertificate();
 		}
 		if (this.certificate) {
-			this.cryptography = await cryptography(this.certificate);
+			this.publicKeyUtilities = await cryptography(this.certificate);
 			if (this.cryptography.encryptionKeypair) {
-				this.encryptKeypair = this.cryptography.encryptionKeypair;
+				this.encryptionKeypair = this.cryptography.encryptionKeypair;
 			}
 			if (this.cryptography.connectionIdKeypair) {
 				this.connectionIdKeypair = this.cryptography.connectionIdKeypair;
 			}
 		}
-		each(this.certificate.cipherSuites, (value, key) => {
-			console.log(`Cipher Suite: ${value}`);
-			this.ciphers[value] = new UWCrypto(value);
-		});
 	}
 	async configureNetwork() {
 		const { configuration } = this;

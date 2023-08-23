@@ -23,33 +23,29 @@ export async function encodePacket(message, source, destination, headers, footer
 		isClient,
 		isServer,
 		isServerEnd,
-		isServerClient
+		isServerClient,
+		certificate,
+		publicKeyCryptography,
+		cipherSuite
 	} = source;
 	let id = destination.id || source.id;
 	if (!id) {
 		return console.error(`ID IS'T ASSIGNED`);
 	}
-	const { cryptography } = source;
-	let encryptConnectionId = cryptography.config.encryptConnectionId;
-	if (!encryptConnectionId) {
-		if (isServerEnd) {
-			encryptConnectionId = cryptography.config.encryptClientConnectionId;
-		} else {
-			encryptConnectionId = cryptography.config.encryptServerConnectionId;
+	let encryptConnectionId;
+	if (isServerEnd) {
+		encryptConnectionId = certificate.encryptConnectionId || certificate.encryptClientConnectionId;
+		if (encryptConnectionId) {
+			id = publicKeyCryptography.encryptClientConnectionId(id, destination.connectionIdKeypair);
+		}
+	} else {
+		encryptConnectionId = certificate.encryptConnectionId || certificate.encryptServerConnectionId;
+		if (encryptConnectionId) {
+			id = publicKeyCryptography.encryptServerConnectionId(id, destination.connectionIdKeypair);
 		}
 	}
-	if (encryptConnectionId) {
-		// console.log(destination);
-		if (isServerEnd) {
-			console.log('Encrypting Client Connection ID on Server End');
-			id = cryptography.encryptClientConnectionId(id, destination.connectionIdKeypair);
-		} else {
-			console.log('Encrypting Server Connection ID on Client End');
-			id = cryptography.encryptServerConnectionId(id, destination.connectionIdKeypair);
-		}
-		if (!id) {
-			return console.error(`Connection ID Encrypt failed method given ${encryptConnectionId}`);
-		}
+	if (!id) {
+		return console.error(`Connection ID missing`);
 	}
 	let header;
 	if (headers && objectSize(headers)) {
@@ -73,7 +69,7 @@ export async function encodePacket(message, source, destination, headers, footer
 	const headerEncoded = encode(header);
 	const messageEncoded = encode(message);
 	const ad = (footer) ? Buffer.concat([headerEncoded, footer]) : headerEncoded;
-	const encryptedMessage = cryptography.encrypt(messageEncoded, source.sessionKeys, ad);
+	const encryptedMessage = cipherSuite.encrypt(messageEncoded, source.sessionKeys, ad);
 	if (!encryptedMessage) {
 		return failed('Encryption failed');
 	}

@@ -2,7 +2,7 @@ import { construct, UniqID, each } from '@universalweb/acid';
 import { cryptography } from '#udsp/crypto/cryptography';
 import dgram from 'dgram';
 import { randomConnectionId, randomBuffer } from '#crypto';
-import { UWCrypto } from './crypto/availableCryptography.js';
+import { UWCrypto } from './cryptoMiddleware/index.js';
 export class UDSP {
 	async calculatePacketOverhead() {
 		const {
@@ -11,8 +11,13 @@ export class UDSP {
 			maxDataSize,
 			maxHeadSize,
 			maxPathSize,
-			maxParametersSize
+			maxParametersSize,
+			cipherSuite
 		} = this;
+		const encryptOverhead = cipherSuite?.encrypt?.overhead;
+		if (encryptOverhead) {
+			this.encryptOverhead = encryptOverhead;
+		}
 		if (maxPayloadSize) {
 			if (!maxDataSize) {
 				this.maxDataSize = maxPayloadSize;
@@ -28,7 +33,7 @@ export class UDSP {
 			}
 		} else {
 			const packetInitialOverhead = 2;
-			this.encryptPacketOverhead = this.cryptography.encryptOverhead;
+			this.encryptPacketOverhead = this.encryptOverhead;
 			this.packetOverhead = packetInitialOverhead + this.encryptPacketOverhead + this.connectionIdSize;
 			this.maxPayloadSize = this.maxPacketSize - this.packetOverhead;
 			this.maxPayloadSizeSafeEstimate = this.maxPayloadSize - 10;
@@ -90,12 +95,12 @@ export class UDSP {
     */
 	puzzleFlag = false;
 	/*
-		* IPv6 preferred.
+		* IPv6 enforced
 	*/
 	ipVersion = 'udp6';
 	events = construct(Map);
 	streamIdGenerator = construct(UniqID);
-	defaultExtension = 'js';
+	defaultExtension = 'html';
 	packetCount = 0;
 	dataPacketCount = 0;
 	headPacketCount = 0;
@@ -104,7 +109,7 @@ export class UDSP {
 	throttle = false;
 	debounce = false;
 	randomId = randomBuffer(8);
-	cipherSuite = 'x25519-xchacha20-poly1305';
-	cipherSuites = ['x25519-xchacha20-poly1305'];
-	ciphers = {};
+	cipherSuiteName = 'x25519-xchacha20-poly1305';
+	cipherSuiteNames = ['x25519-xchacha20-poly1305'];
+	cipherSuites = {};
 }

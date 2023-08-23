@@ -37,7 +37,6 @@ import { watch } from '#watch';
 // Client specific imports to extend class
 import { emit } from '../requestMethods/emit.js';
 import { request } from '#udsp/requestMethods/request';
-import { cryptography } from '#udsp/crypto/cryptography';
 import { processMessage } from './processMessage.js';
 import { onPacket } from './onPacket.js';
 import { onListening } from './listening.js';
@@ -47,6 +46,7 @@ import { fetchRequest } from '../requestMethods/fetch.js';
 import { UDSP } from '#udsp/base';
 import { sendPacket } from '../sendPacket.js';
 import { post } from '../requestMethods/post.js';
+import { getAlgorithm } from '../cryptoMiddleware/index.js';
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
 	constructor(configuration) {
@@ -113,28 +113,30 @@ export class Client extends UDSP {
 		const {
 			encryptClientConnectionId,
 			encryptServerConnectionId,
-			encryptConnectionId
+			encryptConnectionId,
+			publicKeyAlgorithm,
 		} = destination;
-		if (!has(destination.cipherSuites, this.cipherSuite)) {
+		if (!has(destination.cipherSuites, this.cipherSuiteName)) {
 			console.log('Default ciphersuite not available');
-			this.cipherSuite = intersection(this.cipherSuites, destination.cipherSuites)[0];
-			if (!this.cipherSuite) {
+			this.cipherSuiteName = intersection(this.cipherSuites, destination.cipherSuites)[0];
+			if (!this.cipherSuiteName) {
 				console.log('No matching cipher suite found.');
 				return false;
 			}
 		}
-		this.cryptography = await cryptography(this.cipherSuite, destination);
+		this.publicKeyCryptography = getAlgorithm(publicKeyAlgorithm);
+		this.cipherSuite = getAlgorithm(this.cipherSuiteNam);
 		this.compression = destination.compression;
 		this.headerCompression = destination.headerCompression;
 		if (destination.autoLogin && this.autoLogin) {
 			this.autoLogin = true;
 		}
 		if (!this.keypair) {
-			this.keypair = this.cryptography.keypair();
+			this.keypair = this.publicKeyCryptography.keypair();
 			success(`Created Connection Keypair`);
 		}
-		if (!this.encryptKeypair) {
-			this.encryptKeypair = this.keypair;
+		if (!this.encryptionKeypair) {
+			this.encryptionKeypair = this.keypair;
 		}
 		if (encryptClientConnectionId || encryptServerConnectionId || encryptConnectionId) {
 			this.connectionIdKeypair = this.keypair;
@@ -209,7 +211,7 @@ export class Client extends UDSP {
 		}
 	}
 	async setSessionKeys(generatedKeys) {
-		this.sessionKeys = generatedKeys || this.cryptography.clientSessionKeys(this.encryptKeypair, this.destination.encryptKeypair);
+		this.sessionKeys = generatedKeys || this.publicKeyCryptography.clientSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair);
 		if (this.sessionKeys) {
 			success(`Created Shared Keys`);
 			success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);
@@ -218,7 +220,7 @@ export class Client extends UDSP {
 	}
 	async setNewDestinationKeys() {
 		if (!(this.handshakeSet)) {
-			this.destination.encryptKeypair = {
+			this.destination.encryptionKeypair = {
 				publicKey: this.newKeypair
 			};
 			await this.setSessionKeys();
@@ -257,14 +259,14 @@ export class Client extends UDSP {
 		this.handshakeCompleted(message);
 	}
 	setPublicKeyHeader(header = {}) {
-		const key = this.encryptKeypair.publicKey;
+		const key = this.encryptionKeypair.publicKey;
 		console.log('Setting Public Key in UDSP Header', toBase64(key));
-		const { encryptClientKey } = this.cryptography.config;
+		const { encryptClientKey } = this.certificate;
 		header.key = key;
-		if (this.destination.encryptKeypair) {
+		if (this.destination.encryptionKeypair) {
 			if (isString(encryptClientKey)) {
 				console.log('Encrypting Public Key in UDSP Header');
-				header.key = cryptography.encryptClientKey(header.key, this.destination.encryptKeypair);
+				header.key = this.cipherSuite.boxSeal(header.key, this.destination.encryptionKeypair);
 			}
 		}
 		return header;

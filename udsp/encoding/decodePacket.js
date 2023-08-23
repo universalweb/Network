@@ -6,7 +6,7 @@ import {
 	assign, isBuffer, isArray, isTrue, isUndefined, isString, hasValue
 } from '@universalweb/acid';
 import { toBase64 } from '#crypto';
-import { createClient } from './server/clients/index.js';
+import { createClient } from '../server/clients/index.js';
 export async function decodePacketHeaders(config) {
 	const {
 		source,
@@ -14,7 +14,7 @@ export async function decodePacketHeaders(config) {
 		packet: packetEncoded
 	} = config;
 	const {
-		encryptKeypair,
+		encryptionKeypair,
 		connectionIdKeypair,
 		cryptography,
 		state,
@@ -71,11 +71,11 @@ export async function decodePacketHeaders(config) {
 	if (header.key) {
 		success(`Public Key is given -> Processing as create client`);
 		const { encryptClientKey } = cryptography.config;
-		if (encryptKeypair) {
+		if (encryptionKeypair) {
 			if (isString(encryptClientKey)) {
 				console.log('Decrypting Public Key in UDSP Header');
 				const { key } = header;
-				header.key = cryptography.decryptClientKey(key, encryptKeypair);
+				header.key = cryptography.decryptClientKey(key, encryptionKeypair);
 				if (!header.key) {
 					return failed('Client Key Decode Failed', toBase64(key));
 				}

@@ -3,7 +3,7 @@ import {
 } from '#logs';
 import { toBase64 } from '#crypto';
 import { isEmpty, hasValue, isArray } from '@universalweb/acid';
-import { decodePacket, decodePacketHeaders } from '#udsp/decodePacket';
+import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { createClient } from './clients/index.js';
 import { reply } from '#udsp/request/reply';
 import { processMessage } from '../client/processMessage.js';

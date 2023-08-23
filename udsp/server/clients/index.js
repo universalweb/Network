@@ -25,7 +25,7 @@ import {
 	toBase64,
 	randomBuffer
 } from '#crypto';
-import { encodePacket } from '#udsp/encodePacket';
+import { encodePacket } from '#udsp/encoding/encodePacket';
 import { sendPacket } from '#udsp/sendPacket';
 import { reply } from '#udsp/request/reply';
 export class Client {
@@ -86,7 +86,7 @@ export class Client {
 	}
 	async setSessionKeys() {
 		console.log(this.destination);
-		const sessionKeys = this.cryptography.serverSessionKeys(this.encryptKeypair, this.destination.encryptKeypair, this.sessionKeys);
+		const sessionKeys = this.cryptography.serverSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair, this.sessionKeys);
 		if (isUndefined(this.sessionKeys)) {
 			this.sessionKeys = sessionKeys;
 		}
@@ -137,7 +137,7 @@ export class Client {
 	}
 	async attachNewClientKeys() {
 		this.state = 2;
-		this.encryptKeypair = this.newKeypair;
+		this.encryptionKeypair = this.newKeypair;
 		await this.setSessionKeys();
 		this.newSessionKeysAssigned = true;
 	}

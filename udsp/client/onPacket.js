@@ -3,7 +3,7 @@ import {
 } from '#logs';
 import { decode } from 'msgpackr';
 import { decrypt, createSessionKey } from '#crypto';
-import { decodePacket, decodePacketHeaders } from '#udsp/decodePacket';
+import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { processMessage } from './processMessage.js';
 import { hasValue } from '@universalweb/acid';
 export async function onPacket(packet) {

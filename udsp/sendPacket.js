@@ -2,7 +2,7 @@ import {
 	success, failed, imported, msgSent, info
 } from '#logs';
 import { promise, isFunction } from '@universalweb/acid';
-import { encodePacket } from '#udsp/encodePacket';
+import { encodePacket } from '#udsp/encoding/encodePacket';
 export async function sendPacket(message, source, socket, destination = source.destination, headers, footer) {
 	success(`sendPacket`);
 	const {

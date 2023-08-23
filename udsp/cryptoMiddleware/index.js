@@ -45,15 +45,9 @@ const x25519XChaChaPoly1305Algo = {
 	nonceBox,
 	encryptKeypair,
 	createSessionKey,
-	clientSessionKeys,
-	serverSessionKeys,
 	keypair,
 	decrypt,
 	encrypt,
-	id: 0,
-	weight: 9,
-	signature: 4,
-	aead: 5,
 };
 const ed25519Algo = {
 	signKeypair,
@@ -64,39 +58,58 @@ const ed25519Algo = {
 	signKeypairToEncryptKeypair,
 	getSignPublicKeyFromPrivateKey,
 	safeMath: RistrettoPoint,
+	clientSessionKeys,
+	serverSessionKeys,
 };
 const xsalsa20Algo = {
 	boxSeal,
 	boxUnseal
 };
-export class UWCrypto {
-	construct(cipherSuite = 'x25519-xchacha20-poly1305', config) {
-		const {
-			version = this.version,
-			publicKeyAlgorithm = 'ed25519',
-			publicKeyEncryption,
-		} = config;
-		if (publicKeyAlgorithm) {
-			assign(this, this.algorithms[version][publicKeyAlgorithm]);
-		}
-		if (cipherSuite) {
-			assign(this, this.algorithms[version][cipherSuite]);
-		}
-		if (publicKeyEncryption) {
-			assign(this, this.algorithms[version][publicKeyEncryption]);
+export const algorithms = {
+	x25519XChaChaPoly1305: x25519XChaChaPoly1305Algo,
+	version: {
+		1: {
+			0: x25519XChaChaPoly1305Algo,
+			default: x25519XChaChaPoly1305Algo,
+			'x25519-xchacha20-poly1305': x25519XChaChaPoly1305Algo,
+			ed25519: ed25519Algo,
+			xsalsa20: xsalsa20Algo
 		}
 	}
-	version = 1;
-	algorithms = {
-		x25519XChaChaPoly1305: x25519XChaChaPoly1305Algo,
-		version: {
-			1: {
-				0: null,
-				default: null,
-				'x25519-xchacha20-poly1305': x25519XChaChaPoly1305Algo,
-				ed25519: ed25519Algo,
-				xsalsa20: xsalsa20Algo
+};
+const currentVersion = 1;
+export function getAlgorithm(cipherSuite, version) {
+	if (!cipherSuite) {
+		return false;
+	}
+	const algo = algorithms[version || currentVersion][cipherSuite];
+	if (algo) {
+		return algo;
+	}
+}
+export function processPublicKey(source) {
+	const {
+		publicKeyAlgorithm,
+		publicKeyCryptography,
+		encryptionKeypair,
+		keypair: {
+			privateKey,
+			publicKey
+		},
+	} = source;
+	console.log('keypairType', publicKeyAlgorithm);
+	if (!encryptionKeypair && publicKeyAlgorithm === 'ed25519') {
+		if (publicKeyAlgorithm === 'ed25519') {
+			if (privateKey) {
+				return publicKeyCryptography.signKeypairToEncryptionKeypair({
+					publicKey,
+					privateKey
+				});
+			} else {
+				return publicKeyCryptography.signKeypairToEncryptionKeypair({
+					publicKey
+				});
 			}
 		}
-	};
+	}
 }
