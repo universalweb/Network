@@ -25,9 +25,9 @@ import { sendPacket } from '#udsp/sendPacket';
 import { requestMethods } from './methods/index.js';
 import { getCertificate, parseCertificate, loadCertificate } from '#certificate';
 import { randomBuffer, toBase64 } from '#crypto';
-import { cryptography } from '#udsp/crypto/cryptography';
 import { UDSP } from '#udsp/base';
 import { UWCrypto } from '../cryptoMiddleware/index.js';
+import { processPublicKey, getAlgorithm } from '../cryptoMiddleware/index';
 const { seal } = Object;
 export class Server extends UDSP {
 	constructor(configuration) {
@@ -106,9 +106,25 @@ export class Server extends UDSP {
 			this.chunkCertificate();
 		}
 		if (this.certificate) {
-			this.publicKeyUtilities = await cryptography(this.certificate);
-			if (this.cryptography.encryptionKeypair) {
-				this.encryptionKeypair = this.cryptography.encryptionKeypair;
+			this.publicKeyCryptography = getAlgorithm(this.certificate.publicKeyAlgorithm);
+			const convertSignKeypairToEncryptionKeypair = processPublicKey(this.certificate);
+			if (convertSignKeypairToEncryptionKeypair) {
+				this.encryptionKeypair = convertSignKeypairToEncryptionKeypair;
+			}
+			const {
+				encryptConnectionId,
+				encryptClientConnectionId,
+				encryptServerConnectionId,
+				encryptClientKey
+			} = this.certificate;
+			this.encryptClientKey = encryptClientKey;
+			if (encryptConnectionId) {
+				this.encryptClientConnectionId = true;
+				this.encryptServerConnectionId = true;
+			} else if (encryptClientConnectionId) {
+				this.encryptClientConnectionId = true;
+			} else if (encryptServerConnectionId) {
+				this.encryptServerConnectionId = true;
 			}
 			if (this.cryptography.connectionIdKeypair) {
 				this.connectionIdKeypair = this.cryptography.connectionIdKeypair;

@@ -16,7 +16,8 @@ export async function decodePacketHeaders(config) {
 	const {
 		encryptionKeypair,
 		connectionIdKeypair,
-		cryptography,
+		publicKeyCryptography,
+		cipherSuite,
 		state,
 		isClient,
 		isServer,
@@ -30,7 +31,7 @@ export async function decodePacketHeaders(config) {
 	}
 	let encryptConnectionId;
 	if (isServerEnd) {
-		encryptConnectionId = cryptography.config.encryptServerConnectionId;
+		encryptConnectionId = publicKeyCryptography.config.encryptServerConnectionId;
 	} else {
 		encryptConnectionId = cryptography.config.encryptClientConnectionId;
 	}

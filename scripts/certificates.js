@@ -17,13 +17,14 @@ const domainProfile = await createProfile({
 			publicKeyAlgorithm: 'ed25519',
 			// The purpose of encrypting connection IDs (CIDs) is to eliminate connection ID tracking and to constantly change how the connection id looks from those observing packets.
 			// Encrypting CIDs protects against leaking smart CID routing information which show the endpoint server/process.
-			// encryptConnectionId: 'xsalsa20', Applies to both client and server connection ID
-			// encryptClientConnectionId: 'xsalsa20',
-			// encryptServerConnectionId: 'xsalsa20',
+			// boxCryptography: 'xsalsa20',
+			// encryptConnectionId: true, Applies to both client and server connection ID
+			// encryptClientConnectionId: true,
+			// encryptServerConnectionId: true,
 			// connectionIdKeypair: UNIQUE KEYPAIR FOR CONNECTION IDs,
 			// Encrypt public key sent in the packet
-			// encryptClientKey: 'xsalsa20',
-			// encryptServerKey: 'xsalsa20',
+			// encryptClientKey: true,
+			// encryptServerKey: true,
 			// encryptKeypair: true
 			// Max connection id size in bytes usually randomly generated and checked but used to calculate max packet payload size
 			connectionIdSize: 8,

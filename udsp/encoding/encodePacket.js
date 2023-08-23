@@ -26,23 +26,19 @@ export async function encodePacket(message, source, destination, headers, footer
 		isServerClient,
 		certificate,
 		publicKeyCryptography,
-		cipherSuite
+		cipherSuite,
+		boxCryptography
 	} = source;
 	let id = destination.id || source.id;
 	if (!id) {
 		return console.error(`ID IS'T ASSIGNED`);
 	}
-	let encryptConnectionId;
 	if (isServerEnd) {
-		encryptConnectionId = certificate.encryptConnectionId || certificate.encryptClientConnectionId;
-		if (encryptConnectionId) {
-			id = publicKeyCryptography.encryptClientConnectionId(id, destination.connectionIdKeypair);
+		if (source.encryptConnectionId) {
+			id = boxCryptography.boxSeal(id, destination.connectionIdKeypair);
 		}
-	} else {
-		encryptConnectionId = certificate.encryptConnectionId || certificate.encryptServerConnectionId;
-		if (encryptConnectionId) {
-			id = publicKeyCryptography.encryptServerConnectionId(id, destination.connectionIdKeypair);
-		}
+	} else if (source.encryptServerConnectionId) {
+		id = boxCryptography.boxSeal(id, destination.connectionIdKeypair);
 	}
 	if (!id) {
 		return console.error(`Connection ID missing`);

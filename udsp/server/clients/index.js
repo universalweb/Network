@@ -41,6 +41,9 @@ export class Client {
 		this.events = server.events;
 		this.requestMethods = server.requestMethods;
 		this.cipherSuites = server.cipherSuites;
+		this.publicKeyCryptography = server.publicKeyCryptography;
+		this.encryptClientConnectionId = server.encryptClientConnectionId;
+		this.encryptServerConnectionId = server.encryptServerConnectionId;
 		const {
 			maxPacketSize,
 			maxDataSize,
@@ -86,7 +89,7 @@ export class Client {
 	}
 	async setSessionKeys() {
 		console.log(this.destination);
-		const sessionKeys = this.cryptography.serverSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair, this.sessionKeys);
+		const sessionKeys = this.publicKeyCryptography.serverSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair, this.sessionKeys);
 		if (isUndefined(this.sessionKeys)) {
 			this.sessionKeys = sessionKeys;
 		}

@@ -30,7 +30,6 @@ export async function initialize(config, client) {
 	const {
 		encryptionKeypair,
 		clients,
-		cryptography,
 		configuration: { id: serverId }
 	} = server;
 	const {

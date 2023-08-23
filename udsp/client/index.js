@@ -125,7 +125,8 @@ export class Client extends UDSP {
 			}
 		}
 		this.publicKeyCryptography = getAlgorithm(publicKeyAlgorithm);
-		this.cipherSuite = getAlgorithm(this.cipherSuiteNam);
+		this.cipherSuite = getAlgorithm(this.cipherSuiteName);
+		this.boxCryptography = getAlgorithm('x25519-xsalsa20-poly1305');
 		this.compression = destination.compression;
 		this.headerCompression = destination.headerCompression;
 		if (destination.autoLogin && this.autoLogin) {
@@ -264,9 +265,9 @@ export class Client extends UDSP {
 		const { encryptClientKey } = this.certificate;
 		header.key = key;
 		if (this.destination.encryptionKeypair) {
-			if (isString(encryptClientKey)) {
+			if (encryptClientKey) {
 				console.log('Encrypting Public Key in UDSP Header');
-				header.key = this.cipherSuite.boxSeal(header.key, this.destination.encryptionKeypair);
+				header.key = this.boxCryptography.boxSeal(header.key, this.destination.encryptionKeypair);
 			}
 		}
 		return header;
