@@ -1,8 +1,8 @@
-import { construct, UniqID, each } from '@universalweb/acid';
-import { cryptography } from '#udsp/crypto/cryptography';
+import {
+	construct, UniqID, each, hasValue
+} from '@universalweb/acid';
 import dgram from 'dgram';
 import { randomConnectionId, randomBuffer } from '#crypto';
-import { UWCrypto } from './cryptoMiddleware/index.js';
 export class UDSP {
 	async calculatePacketOverhead() {
 		const {
@@ -14,8 +14,8 @@ export class UDSP {
 			maxParametersSize,
 			cipherSuite
 		} = this;
-		const encryptOverhead = cipherSuite?.encrypt?.overhead;
-		if (encryptOverhead) {
+		const encryptOverhead = cipherSuite?.encrypt?.overhead || 0;
+		if (hasValue(encryptOverhead)) {
 			this.encryptOverhead = encryptOverhead;
 		}
 		if (maxPayloadSize) {
@@ -111,5 +111,5 @@ export class UDSP {
 	randomId = randomBuffer(8);
 	cipherSuiteName = 'x25519-xchacha20-poly1305';
 	cipherSuiteNames = ['x25519-xchacha20-poly1305'];
-	cipherSuites = {};
+	version = 1;
 }

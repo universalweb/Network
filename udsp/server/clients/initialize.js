@@ -13,7 +13,7 @@ import {
 } from '@universalweb/acid';
 import { Client } from './index.js';
 import { getAlgorithm } from '../../cryptoMiddleware/index.js';
-export async function initialize(config, client) {
+export async function initialize(config) {
 	const {
 		packet: {
 			header: {
@@ -36,6 +36,7 @@ export async function initialize(config, client) {
 		address: ip,
 		port
 	} = connection;
+	const client = this;
 	let selectedCipherSuite = cipherSuite;
 	if (cipherSuites) {
 		const cipherSelection = intersection(cipherSuites, keys(server.ciphers));
@@ -48,6 +49,7 @@ export async function initialize(config, client) {
 	} else {
 		client.cipherSuite = getAlgorithm(server.cipherSuite);
 	}
+	client.calculatePacketOverhead();
 	client.certificate = server.certificate;
 	// When changing to a new key you must first create new keys from scratch to replace these.
 	client.keypair = server.keypair;

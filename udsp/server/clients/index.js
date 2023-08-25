@@ -44,6 +44,10 @@ export class Client {
 		this.publicKeyCryptography = server.publicKeyCryptography;
 		this.encryptClientConnectionId = server.encryptClientConnectionId;
 		this.encryptServerConnectionId = server.encryptServerConnectionId;
+		return this.initialize(config);
+	}
+	initialize = initialize;
+	async calculatePacketOverhead() {
 		const {
 			maxPacketSize,
 			maxDataSize,
@@ -51,7 +55,9 @@ export class Client {
 			maxPathSize,
 			maxParametersSize,
 			packetMaxPayloadSafeEstimate
-		} = server;
+		} = this.server();
+		const cipherSuite = this.cipherSuite;
+		const encryptOverhead = cipherSuite?.encrypt?.overhead || 0;
 		if (maxPacketSize) {
 			this.maxPacketSize = maxPacketSize;
 		}
@@ -70,7 +76,6 @@ export class Client {
 		if (packetMaxPayloadSafeEstimate) {
 			this.packetMaxPayloadSafeEstimate = packetMaxPayloadSafeEstimate;
 		}
-		return initialize(config, client);
 	}
 	async created() {
 		const server = this.server();
@@ -83,7 +88,7 @@ export class Client {
 		success(`socket EVENT -> connected - ID:${this.idString}`);
 	}
 	async generateSessionKeypair() {
-		const newKeypair = this.cryptography.keypair();
+		const newKeypair = this.cipherSuite.keypair();
 		this.newKeypair = newKeypair;
 		info(`socket EVENT -> reKey - ID:${this.idString}`);
 	}

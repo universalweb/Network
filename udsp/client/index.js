@@ -46,8 +46,7 @@ import { fetchRequest } from '../requestMethods/fetch.js';
 import { UDSP } from '#udsp/base';
 import { sendPacket } from '../sendPacket.js';
 import { post } from '../requestMethods/post.js';
-import { getAlgorithm } from '../cryptoMiddleware/index.js';
-import { processPublicKey } from '../cryptoMiddleware/index';
+import { getAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
 	constructor(configuration) {
@@ -109,9 +108,6 @@ export class Client extends UDSP {
 		} else if (encryptServerConnectionId) {
 			this.encryptServerConnectionId = true;
 		}
-		if (this.cryptography.connectionIdKeypair) {
-			this.connectionIdKeypair = this.cryptography.connectionIdKeypair;
-		}
 		// console.log('Destination', destination.cryptography);
 	}
 	async getKeychainSave(keychain) {
@@ -149,6 +145,7 @@ export class Client extends UDSP {
 		}
 		this.publicKeyCryptography = getAlgorithm(publicKeyAlgorithm);
 		this.cipherSuite = getAlgorithm(this.cipherSuiteName);
+		console.log(this.cipherSuiteName);
 		if (destination.boxCryptography) {
 			this.boxCryptography = getAlgorithm(destination.boxCryptography);
 		}
@@ -158,7 +155,7 @@ export class Client extends UDSP {
 			this.autoLogin = true;
 		}
 		if (!this.keypair) {
-			this.keypair = this.publicKeyCryptography.keypair();
+			this.keypair = this.cipherSuite.keypair();
 			success(`Created Connection Keypair`);
 		}
 		if (!this.encryptionKeypair) {
@@ -295,6 +292,16 @@ export class Client extends UDSP {
 				header.key = this.boxCryptography.boxSeal(header.key, this.destination.encryptionKeypair);
 			}
 		}
+		return header;
+	}
+	setCryptographyHeaders(header = {}) {
+		const key = this.encryptionKeypair.publicKey;
+		console.log('Setting Cryptography in UDSP Header', toBase64(key));
+		const {
+			cipherSuiteName, version
+		} = this;
+		header.cs = cipherSuiteName;
+		header.v = version;
 		return header;
 	}
 	sendIntro() {

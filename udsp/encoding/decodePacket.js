@@ -119,6 +119,7 @@ export async function decodePacket(config) {
 	info(`Receive Key ${toBase64(destination.sessionKeys.receiveKey)}`);
 	if (messageEncoded) {
 		info(`encrypted Message size ${messageEncoded.length}bytes`);
+		console.log(destination);
 		const decryptedMessage = cipherSuite.decrypt(packet[1], destination.sessionKeys, ad);
 		if (!decryptedMessage) {
 			return failed('Encryption failed');

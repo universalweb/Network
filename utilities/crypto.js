@@ -257,7 +257,7 @@ export function signPrivateKeyToEncryptPrivateKey(originalPrivateKey) {
 	crypto_sign_ed25519_sk_to_curve25519(privateKey, originalPrivateKey);
 	return privateKey;
 }
-export function signKeypairToEncryptKeypair(originalKeypair) {
+export function signKeypairToEncryptionKeypair(originalKeypair) {
 	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);
 	crypto_sign_ed25519_pk_to_curve25519(publicKey, originalKeypair.publicKey);
 	const result = {

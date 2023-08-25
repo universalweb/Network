@@ -31,12 +31,12 @@ import { pbkdf2, pbkdf2Async } from '@noble/hashes/pbkdf2';
 import { scrypt, scryptAsync } from '@noble/hashes/scrypt';
 const { seal } = Object;
 import * as defaultCrypto from '#crypto';
-import { assign } from '@universalweb/acid';
+import { assign, hasValue } from '@universalweb/acid';
 const {
 	encrypt, decrypt, nonceBox, sign, signVerify, createSecretKey,
 	signKeypair, encryptKeypair, createSessionKey, clientSessionKeys,
 	serverSessionKeys, signPrivateKeyToEncryptPrivateKey, signPublicKeyToEncryptPublicKey,
-	signKeypairToEncryptKeypair, getSignPublicKeyFromPrivateKey, keypair,
+	signKeypairToEncryptionKeypair, getSignPublicKeyFromPrivateKey, keypair,
 	boxUnseal, boxSeal, randomConnectionId, hashMin: defaultHashMin, hash: defaultHash,
 } = defaultCrypto;
 const x25519XChaChaPoly1305Algo = {
@@ -55,7 +55,7 @@ const ed25519Algo = {
 	signVerify,
 	signPrivateKeyToEncryptPrivateKey,
 	signPublicKeyToEncryptPublicKey,
-	signKeypairToEncryptKeypair,
+	signKeypairToEncryptionKeypair,
 	getSignPublicKeyFromPrivateKey,
 	safeMath: RistrettoPoint,
 	clientSessionKeys,
@@ -66,7 +66,9 @@ const xsalsa20Algo = {
 	boxUnseal
 };
 export const algorithms = {
-	x25519XChaChaPoly1305: x25519XChaChaPoly1305Algo,
+	'x25519-xchacha20-poly1305': x25519XChaChaPoly1305Algo,
+	ed25519: ed25519Algo,
+	xsalsa20: xsalsa20Algo,
 	version: {
 		1: {
 			0: x25519XChaChaPoly1305Algo,
@@ -82,24 +84,22 @@ export function getAlgorithm(cipherSuite, version) {
 	if (!cipherSuite) {
 		return false;
 	}
-	const algo = algorithms[version || currentVersion][cipherSuite];
-	if (algo) {
-		return algo;
+	if (hasValue(version)) {
+		return algorithms.version[version || currentVersion][cipherSuite];
+	} else {
+		return algorithms[cipherSuite];
 	}
 }
-export function processPublicKey(source) {
+export function processPublicKey(certificate) {
+	console.log('keypairType', certificate);
 	const {
-		publicKeyAlgorithm,
-		publicKeyCryptography,
-		encryptionKeypair,
-		keypair: {
-			privateKey,
-			publicKey
-		},
-	} = source;
-	console.log('keypairType', publicKeyAlgorithm);
+		publicKeyAlgorithm,		encryptionKeypair,
+		privateKey,
+		publicKey
+	} = certificate;
 	if (!encryptionKeypair && publicKeyAlgorithm === 'ed25519') {
 		if (publicKeyAlgorithm === 'ed25519') {
+			const publicKeyCryptography = getAlgorithm(publicKeyAlgorithm);
 			if (privateKey) {
 				return publicKeyCryptography.signKeypairToEncryptionKeypair({
 					publicKey,
