@@ -48,6 +48,7 @@ export class Client {
 	}
 	initialize = initialize;
 	async calculatePacketOverhead() {
+		const server = this.server();
 		const {
 			maxPacketSize,
 			maxDataSize,
@@ -55,26 +56,37 @@ export class Client {
 			maxPathSize,
 			maxParametersSize,
 			packetMaxPayloadSafeEstimate
-		} = this.server();
-		const cipherSuite = this.cipherSuite;
+		} = server;
+		const {
+			cipherSuite,
+			cipherSuiteName,
+		} = this;
+		const cachedCipherSuitePacketOverhead = server.cachedPacketSizes[cipherSuiteName];
+		if (cachedCipherSuitePacketOverhead) {
+			return assign(this, cachedCipherSuitePacketOverhead);
+		}
 		const encryptOverhead = cipherSuite?.encrypt?.overhead || 0;
+		console.log('encryptOverhead', encryptOverhead);
+		if (hasValue(encryptOverhead)) {
+			this.encryptOverhead = encryptOverhead;
+		}
 		if (maxPacketSize) {
-			this.maxPacketSize = maxPacketSize;
+			this.maxPacketSize = maxPacketSize - encryptOverhead;
 		}
 		if (maxDataSize) {
-			this.maxDataSize = maxDataSize;
+			this.maxDataSize = maxDataSize - encryptOverhead;
 		}
 		if (maxHeadSize) {
-			this.maxHeadSize = maxHeadSize;
+			this.maxHeadSize = maxHeadSize - encryptOverhead;
 		}
 		if (maxPathSize) {
-			this.maxPathSize = maxPathSize;
+			this.maxPathSize = maxPathSize - encryptOverhead;
 		}
 		if (maxParametersSize) {
-			this.maxHeadSize = maxParametersSize;
+			this.maxHeadSize = maxParametersSize - encryptOverhead;
 		}
 		if (packetMaxPayloadSafeEstimate) {
-			this.packetMaxPayloadSafeEstimate = packetMaxPayloadSafeEstimate;
+			this.packetMaxPayloadSafeEstimate = packetMaxPayloadSafeEstimate - encryptOverhead;
 		}
 	}
 	async created() {
@@ -94,6 +106,7 @@ export class Client {
 	}
 	async setSessionKeys() {
 		console.log(this.destination);
+		console.log(this);
 		const sessionKeys = this.publicKeyCryptography.serverSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair, this.sessionKeys);
 		if (isUndefined(this.sessionKeys)) {
 			this.sessionKeys = sessionKeys;

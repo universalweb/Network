@@ -1,5 +1,5 @@
 import {
-	construct, UniqID, each, hasValue
+	construct, UniqID, each, hasValue, assign
 } from '@universalweb/acid';
 import dgram from 'dgram';
 import { randomConnectionId, randomBuffer } from '#crypto';
@@ -12,7 +12,8 @@ export class UDSP {
 			maxHeadSize,
 			maxPathSize,
 			maxParametersSize,
-			cipherSuite
+			cipherSuite,
+			cipherSuiteName
 		} = this;
 		const encryptOverhead = cipherSuite?.encrypt?.overhead || 0;
 		if (hasValue(encryptOverhead)) {
@@ -112,4 +113,5 @@ export class UDSP {
 	cipherSuiteName = 'x25519-xchacha20-poly1305';
 	cipherSuiteNames = ['x25519-xchacha20-poly1305'];
 	version = 1;
+	cachedPacketSizes = {};
 }

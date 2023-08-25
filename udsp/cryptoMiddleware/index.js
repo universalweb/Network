@@ -41,7 +41,8 @@ const {
 } = defaultCrypto;
 const x25519XChaChaPoly1305Algo = {
 	name: 'x25519-xchacha20-poly1305',
-	shortname: 'default',
+	alias: 'default',
+	id: 0,
 	nonceBox,
 	encryptKeypair,
 	createSessionKey,
@@ -50,6 +51,9 @@ const x25519XChaChaPoly1305Algo = {
 	encrypt,
 };
 const ed25519Algo = {
+	name: 'ed25519',
+	alias: 'default',
+	id: 0,
 	signKeypair,
 	sign,
 	signVerify,
@@ -65,20 +69,46 @@ const xsalsa20Algo = {
 	boxSeal,
 	boxUnseal
 };
-export const algorithms = {
-	'x25519-xchacha20-poly1305': x25519XChaChaPoly1305Algo,
+export const publicKeyAlgorithms = {
 	ed25519: ed25519Algo,
-	xsalsa20: xsalsa20Algo,
+	0: ed25519Algo,
+	default: ed25519Algo,
 	version: {
 		1: {
-			0: x25519XChaChaPoly1305Algo,
-			default: x25519XChaChaPoly1305Algo,
-			'x25519-xchacha20-poly1305': x25519XChaChaPoly1305Algo,
 			ed25519: ed25519Algo,
-			xsalsa20: xsalsa20Algo
+			0: ed25519Algo,
+			default: ed25519Algo
 		}
 	}
 };
+export const cipherSuites = {
+	'x25519-xchacha20-poly1305': x25519XChaChaPoly1305Algo,
+	0: x25519XChaChaPoly1305Algo,
+	default: x25519XChaChaPoly1305Algo,
+	version: {
+		1: {
+			'x25519-xchacha20-poly1305': x25519XChaChaPoly1305Algo,
+			0: x25519XChaChaPoly1305Algo,
+			default: x25519XChaChaPoly1305Algo
+		}
+	}
+};
+export const boxAlgorithms = {
+	xsalsa20: xsalsa20Algo,
+	0: xsalsa20Algo,
+	default: xsalsa20Algo,
+	version: {
+		1: {
+			xsalsa20: xsalsa20Algo,
+			0: xsalsa20Algo,
+			default: xsalsa20Algo,
+		}
+	}
+};
+export const algorithms = {};
+assign(algorithms, publicKeyAlgorithms);
+assign(algorithms, boxAlgorithms);
+assign(algorithms, cipherSuites);
 const currentVersion = 1;
 export function getAlgorithm(cipherSuite, version) {
 	if (!cipherSuite) {
@@ -90,10 +120,31 @@ export function getAlgorithm(cipherSuite, version) {
 		return algorithms[cipherSuite];
 	}
 }
+export function getCipherSuite(cipherSuite, version) {
+	if (!cipherSuite) {
+		return false;
+	}
+	if (hasValue(version)) {
+		return cipherSuites.version[version || currentVersion][cipherSuite];
+	} else {
+		return cipherSuites[cipherSuite];
+	}
+}
+export function getPublicKeyAlgorithm(cipherSuite, version) {
+	if (!cipherSuite) {
+		return false;
+	}
+	if (hasValue(version)) {
+		return publicKeyAlgorithms.version[version || currentVersion][cipherSuite];
+	} else {
+		return publicKeyAlgorithms[cipherSuite];
+	}
+}
 export function processPublicKey(certificate) {
 	console.log('keypairType', certificate);
 	const {
-		publicKeyAlgorithm,		encryptionKeypair,
+		publicKeyAlgorithm,
+		encryptionKeypair,
 		privateKey,
 		publicKey
 	} = certificate;

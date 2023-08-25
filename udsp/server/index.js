@@ -26,7 +26,7 @@ import { requestMethods } from './methods/index.js';
 import { getCertificate, parseCertificate, loadCertificate } from '#certificate';
 import { randomBuffer, toBase64 } from '#crypto';
 import { UDSP } from '#udsp/base';
-import { processPublicKey, getAlgorithm } from '../cryptoMiddleware/index.js';
+import { processPublicKey, getAlgorithm, getPublicKeyAlgorithm } from '../cryptoMiddleware/index.js';
 const { seal } = Object;
 export class Server extends UDSP {
 	constructor(configuration) {
@@ -105,7 +105,7 @@ export class Server extends UDSP {
 			this.chunkCertificate();
 		}
 		if (this.certificate) {
-			this.publicKeyCryptography = getAlgorithm(this.certificate.publicKeyAlgorithm, this.certificate.version);
+			this.publicKeyCryptography = getPublicKeyAlgorithm(this.certificate.publicKeyAlgorithm);
 			const convertSignKeypairToEncryptionKeypair = processPublicKey(this.certificate);
 			if (convertSignKeypairToEncryptionKeypair) {
 				this.encryptionKeypair = convertSignKeypairToEncryptionKeypair;
@@ -129,6 +129,7 @@ export class Server extends UDSP {
 				this.connectionIdKeypair = this.certificate.connectionIdKeypair;
 			}
 		}
+		console.log('publicKeyCryptography', this.publicKeyCryptography);
 	}
 	async configureNetwork() {
 		const { configuration } = this;

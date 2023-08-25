@@ -78,7 +78,7 @@ export async function encodePacket(message, source, destination, headers, footer
 	info(`encoded Packet Size ${packetSize}`);
 	if (packetSize > 1280) {
 		console.log(packetEncoded);
-		failed(`WARNING: Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
+		failed(`WARNING: Encode Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
 	}
 	success(`PROCESSED ENCODE PACKET`);
 	return packetEncoded;

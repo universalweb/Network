@@ -45,8 +45,10 @@ export async function initialize(config) {
 		}
 	}
 	if (selectedCipherSuite) {
+		this.cipherSuiteName = selectedCipherSuite;
 		client.cipherSuite = getAlgorithm(selectedCipherSuite);
 	} else {
+		this.cipherSuiteName = server.cipherSuite;
 		client.cipherSuite = getAlgorithm(server.cipherSuite);
 	}
 	client.calculatePacketOverhead();

@@ -308,6 +308,7 @@ export class Client extends UDSP {
 		console.log('Sending Intro');
 		this.state = 1;
 		const header = this.setPublicKeyHeader();
+		this.setCryptographyHeaders(header);
 		const requestCertificate = Boolean(this.hasCertificate);
 		const message = {
 			intro: true,
