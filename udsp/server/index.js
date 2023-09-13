@@ -17,7 +17,6 @@ import {
 } from '#logs';
 import { on, off } from './events.js';
 import { bindServer } from './bind.js';
-import { emit } from './emit.js';
 import { onError } from './onError.js';
 import { onListen } from './onListen.js';
 import { onPacket } from './onPacket.js';
@@ -43,7 +42,6 @@ export class Server extends UDSP {
 	onListen = onListen;
 	onPacket = onPacket;
 	off = off;
-	emit = emit;
 	attachEvents() {
 		const thisServer = this;
 		this.addRequestMethod(requestMethods);

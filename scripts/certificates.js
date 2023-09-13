@@ -5,6 +5,11 @@ const dirname = currentPath(import.meta);
 const domainProfile = await createProfile({
 	template: {
 		ephemeral: {
+			nft: {
+				network: 'eth',
+				contract: '0x0000000',
+				id: '0x0000000',
+			},
 			// version is the version number of uw://
 			// certificate version
 			version: 1,
