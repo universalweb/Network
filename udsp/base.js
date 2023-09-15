@@ -7,11 +7,11 @@ export class UDSP {
 	async calculatePacketOverhead() {
 		const {
 			connectionIdSize,
-			maxPayloadSize,
-			maxDataSize,
-			maxHeadSize,
-			maxPathSize,
-			maxParametersSize,
+			maxPacketPayloadSize,
+			maxPacketDataSize,
+			maxPacketHeadSize,
+			maxPacketPathSize,
+			maxPacketParametersSize,
 			cipherSuite,
 			cipherSuiteName
 		} = this;
@@ -19,37 +19,37 @@ export class UDSP {
 		if (hasValue(encryptOverhead)) {
 			this.encryptOverhead = encryptOverhead;
 		}
-		if (maxPayloadSize) {
-			if (!maxDataSize) {
-				this.maxDataSize = maxPayloadSize;
+		if (maxPacketPayloadSize) {
+			if (!maxPacketDataSize) {
+				this.maxPacketDataSize = maxPacketPayloadSize;
 			}
-			if (!maxHeadSize) {
-				this.maxHeadSize = maxPayloadSize;
+			if (!maxPacketHeadSize) {
+				this.maxPacketHeadSize = maxPacketPayloadSize;
 			}
-			if (!maxParametersSize) {
-				this.maxParametersSize = maxPayloadSize;
+			if (!maxPacketParametersSize) {
+				this.maxPacketParametersSize = maxPacketPayloadSize;
 			}
-			if (!maxPathSize) {
-				this.maxPathSize = maxPayloadSize;
+			if (!maxPacketPathSize) {
+				this.maxPacketPathSize = maxPacketPayloadSize;
 			}
 		} else {
 			const packetInitialOverhead = 2;
 			this.encryptPacketOverhead = this.encryptOverhead;
 			this.packetOverhead = packetInitialOverhead + this.encryptPacketOverhead + this.connectionIdSize;
-			this.maxPayloadSize = this.maxPacketSize - this.packetOverhead;
-			this.maxPayloadSizeSafeEstimate = this.maxPayloadSize - 10;
+			this.maxPacketPayloadSize = this.maxPacketSize - this.packetOverhead;
+			this.maxPayloadSizeSafeEstimate = this.maxPacketPayloadSize - 10;
 			this.emptyPayloadOverHeadSize = 16 + 19;
-			if (!maxDataSize) {
-				this.maxDataSize = this.maxPayloadSize - this.emptyPayloadOverHeadSize - 7;
+			if (!maxPacketDataSize) {
+				this.maxPacketDataSize = this.maxPacketPayloadSize - this.emptyPayloadOverHeadSize - 7;
 			}
-			if (!maxHeadSize) {
-				this.maxHeadSize = this.maxPayloadSize - this.emptyPayloadOverHeadSize;
+			if (!maxPacketHeadSize) {
+				this.maxPacketHeadSize = this.maxPacketPayloadSize - this.emptyPayloadOverHeadSize;
 			}
-			if (!maxParametersSize) {
-				this.maxParametersSize = this.maxPayloadSize - this.emptyPayloadOverHeadSize;
+			if (!maxPacketParametersSize) {
+				this.maxPacketParametersSize = this.maxPacketPayloadSize - this.emptyPayloadOverHeadSize;
 			}
-			if (!maxPathSize) {
-				this.maxPathSize = this.maxPayloadSize - this.emptyPayloadOverHeadSize;
+			if (!maxPacketPathSize) {
+				this.maxPacketPathSize = this.maxPacketPayloadSize - this.emptyPayloadOverHeadSize;
 			}
 			console.log(`packetInitialOverhead: ${packetInitialOverhead} bytes`);
 		}
@@ -57,11 +57,11 @@ export class UDSP {
 		console.log(`Packet Overhead: ${this.packetOverhead} bytes`);
 		console.log(`connectionIdSize Overhead: ${this.connectionIdSize} bytes`);
 		console.log(`Max Payload Size Safe Estimate: ${this.maxPayloadSizeSafeEstimate} bytes`);
-		console.log(`Max Payload Size: ${this.maxPayloadSize} bytes`);
-		console.log(`Max Data Size: ${this.maxDataSize} bytes`);
-		console.log(`Max Head Size: ${this.maxHeadSize} bytes`);
-		console.log(`Max Path Size: ${this.maxPathSize} bytes`);
-		console.log(`Max Paraneters Size: ${this.maxParametersSize} bytes`);
+		console.log(`Max Payload Size: ${this.maxPacketPayloadSize} bytes`);
+		console.log(`Max Data Size: ${this.maxPacketDataSize} bytes`);
+		console.log(`Max Head Size: ${this.maxPacketHeadSize} bytes`);
+		console.log(`Max Path Size: ${this.maxPacketPathSize} bytes`);
+		console.log(`Max Paraneters Size: ${this.maxPacketParametersSize} bytes`);
 		console.log(`Max Packet Size: ${this.maxPacketSize} bytes`);
 	}
 	generateConnectionID() {

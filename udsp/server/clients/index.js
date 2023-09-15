@@ -51,10 +51,10 @@ export class Client {
 		const server = this.server();
 		const {
 			maxPacketSize,
-			maxDataSize,
-			maxHeadSize,
-			maxPathSize,
-			maxParametersSize,
+			maxPacketDataSize,
+			maxPacketHeadSize,
+			maxPacketPathSize,
+			maxPacketParametersSize,
 			packetMaxPayloadSafeEstimate
 		} = server;
 		const {
@@ -73,17 +73,17 @@ export class Client {
 		if (maxPacketSize) {
 			this.maxPacketSize = maxPacketSize - encryptOverhead;
 		}
-		if (maxDataSize) {
-			this.maxDataSize = maxDataSize - encryptOverhead;
+		if (maxPacketDataSize) {
+			this.maxPacketDataSize = maxPacketDataSize - encryptOverhead;
 		}
-		if (maxHeadSize) {
-			this.maxHeadSize = maxHeadSize - encryptOverhead;
+		if (maxPacketHeadSize) {
+			this.maxPacketHeadSize = maxPacketHeadSize - encryptOverhead;
 		}
-		if (maxPathSize) {
-			this.maxPathSize = maxPathSize - encryptOverhead;
+		if (maxPacketPathSize) {
+			this.maxPacketPathSize = maxPacketPathSize - encryptOverhead;
 		}
-		if (maxParametersSize) {
-			this.maxHeadSize = maxParametersSize - encryptOverhead;
+		if (maxPacketParametersSize) {
+			this.maxPacketHeadSize = maxPacketParametersSize - encryptOverhead;
 		}
 		if (packetMaxPayloadSafeEstimate) {
 			this.packetMaxPayloadSafeEstimate = packetMaxPayloadSafeEstimate - encryptOverhead;

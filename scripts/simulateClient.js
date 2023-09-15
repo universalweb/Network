@@ -1,4 +1,6 @@
 console.clear();
+// const logFunction = console.log;
+// console.log = () => {};
 console.log('STARTING CLIENT');
 console.time('Full');
 import { currentPath } from '@universalweb/acid';
@@ -17,12 +19,15 @@ const uwClient = await client({
 //  await client('universalweb.io', {keychain: 'Universal Web Profile'});
 console.timeEnd('Connected');
 // console.log('INTRO =>', uwClient);
-console.time('FileRequest');
 // short hand get request
 const fileRequest = await uwClient.request('get', 'index.html');
-console.log(fileRequest);
+// console.log(fileRequest);
+console.time('FileRequest');
 const response = await fileRequest.send();
-// console.log('head', response.head);
+// console.log = logFunction;
+console.timeEnd('FileRequest');
+console.timeEnd('Full');
+console.log('headers', response.headers);
 console.log('data', response.toString());
 // const fileFetch = await uwClient.fetch('index.html');
 // Missing file example
@@ -32,7 +37,4 @@ console.log('data', response.toString());
 // console.log(fileFetch.data.toString('base64'));
 // console.log('data', fileRequest.toString());
 // console.log(fileFetch);
-console.timeEnd('FileRequest');
-console.timeEnd('Full');
-// console.log('Request state', fileRequest);
 

@@ -22,7 +22,7 @@ const appServer = await server({
 	// Max size of packets
 	// maxPacketSize: 1100,
 	// Max size of body and head data sections in a single packet
-	// maxPayloadSize: 1000,
+	// maxPacketPayloadSize: 1000,
 	// max file size
 	maxFileSize: 9000,
 	// Max size of a Response

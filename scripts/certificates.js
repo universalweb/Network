@@ -34,13 +34,13 @@ const domainProfile = await createProfile({
 			// Max connection id size in bytes usually randomly generated and checked but used to calculate max packet payload size
 			connectionIdSize: 8,
 			// Max payload (head or data) size in bytes
-			// maxPayloadSize: 1200,
+			// maxPacketPayloadSize: 1200,
 			// Max Payload size
-			// maxDataSize: 1200,
+			// maxPacketDataSize: 1200,
 			// Max size of the header payload
-			// maxHeadSize: 1200,
-			// maxPathSize: 1200,
-			// maxParametersSize: 1200,
+			// maxPacketHeadSize: 1200,
+			// maxPacketPathSize: 1200,
+			// maxPacketParametersSize: 1200,
 			// heartbeat is an interval check for when a client must send something to the server to remain connected
 			heartbeat: 30000,
 			url: 'universal.web',
@@ -55,8 +55,11 @@ const domainProfile = await createProfile({
 			// 	domain: 'universal',
 			// 	extension: 'web',
 			// },
+			// Max sizes of the body/data/payload for upload and download
+			// maxUploadSize: 1024,
+			// maxDownloadSize: 1024,
 			// Shows the browser how to display the domain name for humans correctly
-			encoding: 'utf8',
+			domainTextEncoding: 'utf8',
 			entity: {
 				name: 'Universal Web',
 			},

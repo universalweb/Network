@@ -28,7 +28,7 @@ export async function get(reply) {
 		data,
 		path: filePath
 	} = reply;
-	if (!isString(filePath) || isEmpty(filePath) || filePath.match(dots).length > 1) {
+	if (!isString(filePath) || isEmpty(filePath)) {
 		console.log('No fileName - Returning empty data');
 		reply.setHeader('status', 404);
 		reply.send();

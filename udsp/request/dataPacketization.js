@@ -3,7 +3,7 @@ import { encode } from 'msgpackr';
 import { numberEncodedSize } from './numberEncodedSize.js';
 export async function dataPacketization(source) {
 	const {
-		maxDataSize,
+		maxPacketDataSize,
 		isAsk,
 		outgoingDataPackets,
 		outgoingData,
@@ -13,14 +13,14 @@ export async function dataPacketization(source) {
 	const numberEncodedSizeMax = numberEncodedSize(dataSize);
 	let currentBytePosition = 0;
 	let packetId = 0;
-	const maxSafeDataSize = maxDataSize - numberEncodedSizeMax - streamIdSize;
-	if (dataSize > maxSafeDataSize) {
+	const maxSafePacketDataSize = maxPacketDataSize - numberEncodedSizeMax - streamIdSize;
+	if (dataSize > maxSafePacketDataSize) {
 		console.log('data size', dataSize);
 		while (currentBytePosition < dataSize) {
 			const message = source.getPacketTemplate();
 			message.frame.push(packetId, currentBytePosition);
 			const frameSize = numberEncodedSize(packetId) + numberEncodedSize(currentBytePosition);
-			const endIndex = currentBytePosition + (maxSafeDataSize - frameSize);
+			const endIndex = currentBytePosition + (maxSafePacketDataSize - frameSize);
 			const safeEndIndex = endIndex > dataSize ? dataSize : endIndex;
 			const data = outgoingData.subarray(currentBytePosition, safeEndIndex);
 			console.log('chunksize', currentBytePosition, safeEndIndex, data.length);

@@ -24,10 +24,10 @@ export class Base {
 		source.lastActive = Date.now();
 		const {
 			maxPacketSize,
-			maxDataSize,
-			maxHeadSize,
-			maxPathSize,
-			maxParametersSize,
+			maxPacketDataSize,
+			maxPacketHeadSize,
+			maxPacketPathSize,
+			maxPacketParametersSize,
 			packetMaxPayloadSafeEstimate
 		} = source;
 		if (events) {
@@ -36,17 +36,17 @@ export class Base {
 		if (maxPacketSize) {
 			this.maxPacketSize = maxPacketSize;
 		}
-		if (maxDataSize) {
-			this.maxDataSize = maxDataSize;
+		if (maxPacketDataSize) {
+			this.maxPacketDataSize = maxPacketDataSize;
 		}
-		if (maxHeadSize) {
-			this.maxHeadSize = maxHeadSize;
+		if (maxPacketHeadSize) {
+			this.maxPacketHeadSize = maxPacketHeadSize;
 		}
-		if (maxPathSize) {
-			this.maxPathSize = maxPathSize;
+		if (maxPacketPathSize) {
+			this.maxPacketPathSize = maxPacketPathSize;
 		}
-		if (maxParametersSize) {
-			this.maxParametersSize = maxParametersSize;
+		if (maxPacketParametersSize) {
+			this.maxPacketParametersSize = maxPacketParametersSize;
 		}
 		if (packetMaxPayloadSafeEstimate) {
 			this.packetMaxPayloadSafeEstimate = packetMaxPayloadSafeEstimate;
@@ -294,7 +294,7 @@ export class Base {
 	}
 	async pathPacketization() {
 		const {
-			maxPathSize,
+			maxPacketPathSize,
 			isAsk,
 			outgoingPathPackets
 		} = this;
@@ -310,11 +310,11 @@ export class Base {
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const outgoingPathSize = this.outgoingPathSize;
-		console.log('maxPathSize', maxPathSize);
+		console.log('maxPacketPathSize', maxPacketPathSize);
 		while (currentBytePosition < outgoingPathSize) {
 			const message = this.getPacketTemplate();
 			message.frame.push(packetId);
-			const endIndex = currentBytePosition + maxPathSize;
+			const endIndex = currentBytePosition + maxPacketPathSize;
 			const safeEndIndex = endIndex > outgoingPathSize ? outgoingPathSize : endIndex;
 			message.path = this.outgoingPath.subarray(currentBytePosition, safeEndIndex);
 			outgoingPathPackets[packetId] = message;
@@ -330,7 +330,7 @@ export class Base {
 	}
 	async parametersPacketization() {
 		const {
-			maxParametersSize,
+			maxPacketParametersSize,
 			isAsk,
 			outgoingParametersPackets
 		} = this;
@@ -346,11 +346,11 @@ export class Base {
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const outgoingParametersSize = this.outgoingParametersSize;
-		console.log('maxParametersSize', maxParametersSize);
+		console.log('maxPacketParametersSize', maxPacketParametersSize);
 		while (currentBytePosition < outgoingParametersSize) {
 			const message = this.getPacketTemplate();
 			message.frame.push(packetId);
-			const endIndex = currentBytePosition + maxParametersSize;
+			const endIndex = currentBytePosition + maxPacketParametersSize;
 			const safeEndIndex = endIndex > outgoingParametersSize ? outgoingParametersSize : endIndex;
 			message.params = this.outgoingParameter.subarray(currentBytePosition, safeEndIndex);
 			outgoingParametersPackets[packetId] = message;
@@ -366,7 +366,7 @@ export class Base {
 	}
 	async headPacketization() {
 		const {
-			maxHeadSize,
+			maxPacketHeadSize,
 			isAsk,
 			outgoingHeadPackets
 		} = this;
@@ -378,11 +378,11 @@ export class Base {
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const headSize = this.outgoingHeadSize;
-		console.log('maxHeadSize', maxHeadSize);
+		console.log('maxPacketHeadSize', maxPacketHeadSize);
 		while (currentBytePosition < headSize) {
 			const message = this.getPacketTemplate();
 			message.frame.push(packetId);
-			const endIndex = currentBytePosition + maxHeadSize;
+			const endIndex = currentBytePosition + maxPacketHeadSize;
 			const safeEndIndex = endIndex > headSize ? headSize : endIndex;
 			message.head = this.outgoingHead.subarray(currentBytePosition, safeEndIndex);
 			outgoingHeadPackets[packetId] = message;
@@ -518,18 +518,22 @@ export class Base {
 			if (this.toStringCached) {
 				return this.toStringCached;
 			}
-			this.toStringCached = this.data.toString();
-			return this.toStringCached;
 		}
-		return this.data.toString();
+		const target = this.data.toString();
+		if (cache) {
+			this.toStringCached = target;
+		}
+		return target;
 	}
 	toJSON(cache) {
 		if (cache) {
 			if (this.toJSONCached) {
 				return this.toJSONCached;
 			}
-			this.toJSONCached = jsonParse(this.data);
-			return this.toJSONCached;
+		}
+		const target = jsonParse(this.data);
+		if (cache) {
+			this.toJSONCached = target;
 		}
 		return jsonParse(this.data);
 	}
@@ -538,12 +542,19 @@ export class Base {
 			if (this.serializeCached) {
 				return this.serializeCached;
 			}
-			this.serializeCached = decode(this.data);
-			return this.serializeCached;
 		}
-		return decode(this.data);
+		const target = decode(this.data);
+		if (cache) {
+			this.serializeCached = target;
+		}
+		return target;
 	}
-	toObjectRaw(cache) {
+	toObject(cache) {
+		if (cache) {
+			if (this.toObjectRawCached) {
+				return this.toObjectRawCached;
+			}
+		}
 		const {
 			head,
 			data,
@@ -555,17 +566,10 @@ export class Base {
 			data,
 			method
 		};
-		return target;
-	}
-	toObject(cache) {
 		if (cache) {
-			if (this.toObjectCached) {
-				return this.toObjectCached;
-			}
-			this.toObjectCached = this.toObjectRaw();
-			return this.toObjectCached;
+			this.toObjectRawCached = target;
 		}
-		return this.toObjectRaw();
+		return target;
 	}
 	get headers() {
 		return this.head;
