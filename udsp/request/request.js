@@ -5,47 +5,51 @@ import { decode, encode } from 'msgpackr';
 import {
 	failed, info, msgReceived, msgSent
 } from '#logs';
-import { Base } from './base.js';
-import { request } from '#udsp/requestMethods/request';
-export class Ask extends Base {
-	constructor(method = 'get', path, parameters, data, head, options = {}, source) {
-		super(options, source);
+export class UWRequest {
+	constructor(path, options = {}) {
 		const {
-			requestQueue,
-			streamIdGenerator,
-		} = source;
-		console.log('Ask', data);
-		const methodSanitized = method.toLowerCase();
-		this.request.method = methodSanitized;
-		this.method = methodSanitized;
-		if (path) {
-			this.request.path = path;
-			this.path = path;
+			method = 'get',
+			parameters,
+			data,
+			body,
+			head,
+			headers,
+			priority,
+			credentials,
+			mode,
+			cache,
+			redirect,
+			referrer,
+			referrerPolicy,
+			integrity,
+			keepalive,
+			signal,
+			domainCertificate,
+			profileCertificate,
+		} = options;
+		this.method = method;
+		if (hasValue(data)) {
+			this.data = data;
+		} else if (hasValue(body)) {
+			this.data = body;
 		}
-		if (parameters) {
-			this.request.parameters = parameters;
-			this.parameters = parameters;
-		}
-		if (data) {
-			this.request.data = data;
-		}
-		if (head) {
-			this.request.head = head;
+		if (hasValue(head)) {
+			this.head = head;
+		} else if (hasValue(headers)) {
+			this.head = headers;
 		}
 	}
-	completeReceived() {
-		console.log('Ask complete', this);
-		if (this.state === 3) {
-			this.state = 4;
-		}
-		this.readyState = 4;
-		this.flush();
-		this.accept(this);
+	get headers() {
+		return this.head;
+	}
+	get body() {
+		return this.data;
+	}
+	get url() {
+		return this.path;
 	}
 	isRequest = true;
-	type = 'request';
-	request = {};
 }
-export async function ask(source) {
-	return construct(Ask, omit);
+export async function uwRequest(source) {
+	return construct(UWRequest, omit);
 }

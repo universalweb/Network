@@ -51,5 +51,5 @@ export class Ask extends Base {
 	request = {};
 }
 export async function ask(source) {
-	return construct(Ask, omit);
+	return construct(Ask, source);
 }

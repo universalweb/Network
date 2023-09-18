@@ -5,7 +5,6 @@ export function flushOutgoing() {
 	clear(this.outgoingHeadPackets);
 	clear(this.outgoingDataPackets);
 	clear(this.outgoingPathPackets);
-	this.response = null;
 	this.totalSentConfirmedPackets = null;
 	this.totalOutgoingPayloadSize = null;
 }
@@ -13,7 +12,6 @@ export function flushIncoming() {
 	clear(this.incomingAks);
 	clear(this.incomingNacks);
 	clear(this.incomingDataPackets);
-	this.request = null;
 	this.incomingSetupPacket = null;
 	this.currentIncomingHeadSize = null;
 	this.currentIncomingDataSize = null;
