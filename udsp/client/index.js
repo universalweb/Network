@@ -36,7 +36,7 @@ import { getCertificate, parseCertificate } from '#certificate';
 import { watch } from '#watch';
 // Client specific imports to extend class
 import { emit } from '../requestMethods/emit.js';
-import { request } from '#udsp/requestMethods/request';
+import { uwRequest } from '#udsp/requestMethods/request';
 import { processMessage } from './processMessage.js';
 import { onPacket } from './onPacket.js';
 import { onListening } from './listening.js';
@@ -354,7 +354,7 @@ export class Client extends UDSP {
 			}
 		}
 	}
-	request = request;
+	request = uwRequest;
 	fetch = fetchRequest;
 	post = post;
 	processMessage = processMessage;

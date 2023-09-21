@@ -6,7 +6,7 @@ import {
 } from '@universalweb/acid';
 // If path arg has params in it then paramArg becomes dataArg
 // params support both Complex Data Binary Supported Params and simple traditional URL percent encoded params
-export async function request(methodArg, pathArg, paramArg, dataArg, headersArg, optionsArg) {
+export async function uwRequest(methodArg, pathArg, paramArg, dataArg, headersArg, optionsArg) {
 	let method = methodArg;
 	let path = pathArg;
 	let params = paramArg;

@@ -1,13 +1,67 @@
-import { jsonParse, isTrue } from '@universalweb/acid';
+import {
+	jsonParse, isTrue, construct, hasValue, noValue
+} from '@universalweb/acid';
 import { decode } from 'msgpackr';
 export class UWResponse {
-	constructor(head, data, options) {
-		this.head = head;
-		this.dataBuffer = data;
+	constructor(source, options) {
+		if (source.isAsk) {
+			const {
+				head,
+				method,
+				parameters,
+				path,
+				incomingData,
+				status,
+				type,
+			} = source;
+			return this.construct(incomingData, {
+				head,
+				method,
+				parameters,
+				path,
+				status,
+				type,
+			});
+		} else {
+			return this.construct(source, options);
+		}
+	}
+	construct(data, options = {}) {
+		const {
+			head,
+			headers,
+			params,
+			parameters = params,
+			method,
+			status,
+			type,
+			url,
+			path = url
+		} = options;
+		this.head = head || {};
+		if (hasValue(data)) {
+			this.dataBuffer = data;
+		}
+		this.method = method;
+		if (hasValue(status)) {
+			this.status = status;
+		}
+		if (hasValue(path)) {
+			this.path = path;
+		}
+		if (hasValue(type)) {
+			this.type = type;
+		}
+		if (hasValue(parameters)) {
+			this.parameters = parameters;
+		}
 	}
 	get data() {
 		if (this.compiledDataAlready) {
 			return this.compiledData;
+		}
+		if (noValue(this.dataBuffer)) {
+			return undefined;
 		}
 		const { head: { serialize } } = this;
 		const dataConcatinated = Buffer.concat(this.dataBuffer);
@@ -30,11 +84,17 @@ export class UWResponse {
 	get body() {
 		return this.data;
 	}
+	get url() {
+		return this.path;
+	}
 	toString(cache) {
 		if (cache) {
 			if (this.toStringCached) {
 				return this.toStringCached;
 			}
+		}
+		if (noValue(this.dataBuffer)) {
+			return;
 		}
 		const target = this.data.toString();
 		if (cache) {
@@ -48,6 +108,9 @@ export class UWResponse {
 				return this.toJSONCached;
 			}
 		}
+		if (noValue(this.dataBuffer)) {
+			return;
+		}
 		const target = jsonParse(this.data);
 		if (cache) {
 			this.toJSONCached = target;
@@ -60,6 +123,9 @@ export class UWResponse {
 				return this.serializeCached;
 			}
 		}
+		if (noValue(this.dataBuffer)) {
+			return;
+		}
 		const target = decode(this.data);
 		if (cache) {
 			this.serializeCached = target;
@@ -71,6 +137,9 @@ export class UWResponse {
 			if (this.toObjectRawCached) {
 				return this.toObjectRawCached;
 			}
+		}
+		if (noValue(this.dataBuffer)) {
+			return;
 		}
 		const {
 			head,
@@ -89,4 +158,7 @@ export class UWResponse {
 		return target;
 	}
 	isResponse = true;
+}
+export function uwResponseObject(...args) {
+	return construct(UWResponse, args);
 }

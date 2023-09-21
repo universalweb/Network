@@ -27,6 +27,7 @@ const response = await fileRequest.send();
 // console.log = logFunction;
 console.timeEnd('FileRequest');
 console.timeEnd('Full');
+console.log(response);
 console.log('headers', response.headers);
 console.log('data', response.toString());
 // const fileFetch = await uwClient.fetch('index.html');

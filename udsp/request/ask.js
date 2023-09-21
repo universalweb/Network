@@ -6,7 +6,7 @@ import {
 	failed, info, msgReceived, msgSent
 } from '#logs';
 import { Base } from './base.js';
-import { request } from '#udsp/requestMethods/request';
+import { uwResponseObject } from './response.js';
 export class Ask extends Base {
 	constructor(method = 'get', path, parameters, data, head, options = {}, source) {
 		super(options, source);
@@ -44,7 +44,8 @@ export class Ask extends Base {
 		}
 		this.readyState = 4;
 		this.flush();
-		this.accept(this);
+		const response = uwResponseObject(this);
+		this.accept(response);
 	}
 	isAsk = true;
 	type = 'ask';

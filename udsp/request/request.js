@@ -50,6 +50,6 @@ export class UWRequest {
 	}
 	isRequest = true;
 }
-export async function uwRequest(source) {
+export async function uwRequestObject(source) {
 	return construct(UWRequest, omit);
 }

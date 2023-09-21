@@ -8,7 +8,6 @@ import {
 	objectSize, eachArray, jsonParse, construct, isArray, clear, isFalse, isTrue, clearBuffer, hasValue
 } from '@universalweb/acid';
 import { encode, decode } from 'msgpackr';
-import { request } from '#udsp/requestMethods/request';
 import { toBase64 } from '#crypto';
 /**
 	* @todo Adjust packet size to account for other packet data.
@@ -306,7 +305,7 @@ export class Base {
 		}
 		this.outgoingPath = encode(source.path);
 		this.outgoingPathSize = this.outgoingPath.length;
-		console.log('outgoingPathSize', source.outgoingPathSize);
+		console.log('outgoingPathSize', this.outgoingPathSize);
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const outgoingPathSize = this.outgoingPathSize;
@@ -498,12 +497,12 @@ export class Base {
 			thisContext.sendDataPacketById(id, source);
 		});
 	}
-	sendHeadPacketById(id, source = this.outgoingHeadPackets) {
-		const message = source[id];
+	sendHeadPacketById(id) {
+		const message = this.outgoingHeadPackets[id];
 		this.sendPacket(message);
 	}
-	sendDataPacketById(id, source = this.outgoingDataPackets) {
-		const message = source[id];
+	sendDataPacketById(id) {
+		const message = this.outgoingDataPackets[id];
 		this.sendPacket(message);
 	}
 	getPacketTemplate() {
