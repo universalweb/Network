@@ -17,21 +17,20 @@ async function checkFileExists(filePath) {
 		console.error('File does not exist');
 	}
 }
-export async function get(reply) {
+export async function get(req, resp) {
 	const {
 		resourceDirectory,
 		defaultExtension,
 		cryptography
 	} = this;
 	const {
-		response,
 		data,
 		path: filePath
-	} = reply;
+	} = req;
 	if (!isString(filePath) || isEmpty(filePath)) {
 		console.log('No fileName - Returning empty data');
-		reply.setHeader('status', 404);
-		reply.send();
+		resp.setHeader('status', 404);
+		resp.send();
 		return true;
 	}
 	let cleanedPath = cleanPath(`${resourceDirectory}/${filePath}`);
@@ -43,13 +42,13 @@ export async function get(reply) {
 		const fileData = await read(cleanedPath);
 		const ext = path.extname(cleanedPath).replace('.', '');
 		console.log(`EXT => ${ext}`);
-		reply.setHeader('contentType', ext);
-		response.data = fileData;
+		resp.setHeader('contentType', ext);
+		resp.data = fileData;
 	} catch {
-		reply.setHeader('status', 404);
+		resp.setHeader('status', 404);
 	} finally {
-		reply.send();
+		resp.send();
 	}
 	// checksum: cryptography.hash(data)
-	reply.send();
+	resp.send();
 }

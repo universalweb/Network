@@ -1,3 +1,7 @@
+/*
+	* Client side request
+	* Client sends a request to the server & awaits a response if there is one
+*/
 import {
 	promise, assign, omit, eachArray, stringify, get, isBuffer, isPlainObject, isArray, isMap, construct, each, hasLength, hasValue, UniqID
 } from '@universalweb/acid';
@@ -6,7 +10,7 @@ import {
 	failed, info, msgReceived, msgSent
 } from '#logs';
 import { Base } from './base.js';
-import { uwResponseObject } from './response.js';
+import { clientResponse } from './client/clientResponse.js';
 export class Ask extends Base {
 	constructor(method = 'get', path, parameters, data, head, options = {}, source) {
 		super(options, source);
@@ -44,7 +48,7 @@ export class Ask extends Base {
 		}
 		this.readyState = 4;
 		this.flush();
-		const response = uwResponseObject(this);
+		const response = clientResponse(this);
 		this.accept(response);
 	}
 	isAsk = true;

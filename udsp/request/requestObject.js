@@ -3,7 +3,10 @@ import {
 } from '@universalweb/acid';
 import { decode, encode } from 'msgpackr';
 import {
-	failed, info, msgReceived, msgSent
+	failed,
+	info,
+	msgReceived,
+	msgSent
 } from '#logs';
 export class UWRequest {
 	constructor(path, options = {}) {
@@ -26,8 +29,11 @@ export class UWRequest {
 			signal,
 			domainCertificate,
 			profileCertificate,
+			params
 		} = options;
-		this.method = method;
+		if (method) {
+			this.method = method;
+		}
 		if (hasValue(data)) {
 			this.data = data;
 		} else if (hasValue(body)) {
@@ -38,6 +44,14 @@ export class UWRequest {
 		} else if (hasValue(headers)) {
 			this.head = headers;
 		}
+		if (path) {
+			this.path = path;
+		}
+		if (hasValue(parameters)) {
+			this.parameters = parameters;
+		} else if (hasValue(params)) {
+			this.parameters = params;
+		}
 	}
 	get headers() {
 		return this.head;
@@ -47,6 +61,21 @@ export class UWRequest {
 	}
 	get url() {
 		return this.path;
+	}
+	get params() {
+		return this.parameters;
+	}
+	set headers(value) {
+		this.head = value;
+	}
+	set body(value) {
+		this.data = value;
+	}
+	set url(value) {
+		this.path = value;
+	}
+	set params(value) {
+		this.parameters = value;
 	}
 	isRequest = true;
 }

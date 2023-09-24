@@ -2,7 +2,7 @@ import {
 	jsonParse, isTrue, construct, hasValue, noValue
 } from '@universalweb/acid';
 import { decode } from 'msgpackr';
-export class UWResponse {
+export class ClientResponse {
 	constructor(source, options) {
 		if (source.isAsk) {
 			const {
@@ -159,6 +159,6 @@ export class UWResponse {
 	}
 	isResponse = true;
 }
-export function uwResponseObject(...args) {
-	return construct(UWResponse, args);
+export function clientResponse(...args) {
+	return construct(ClientResponse, args);
 }

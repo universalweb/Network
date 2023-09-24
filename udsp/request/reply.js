@@ -1,3 +1,7 @@
+/*
+	* Server side client request
+	* Server receives a request from a client & creates a request and response object to pass along to the endpoint
+*/
 import {
 	isEmpty, isBuffer, promise, eachArray, assign, construct, stringify, hasValue, get, objectSize, isArray
 } from '@universalweb/acid';
@@ -8,6 +12,8 @@ import {
 import { processEvent } from '#udsp/processEvent';
 import { Base } from './base.js';
 import { numberEncodedSize } from './numberEncodedSize.js';
+import { flushOutgoing } from './flush.js';
+import { uwRequestObject } from './requestObject.js';
 /**
 	* @todo
 */
@@ -29,13 +35,14 @@ export class Reply extends Base {
 		// // console.log(message);
 		this.response.id = id;
 		this.streamIdSize = numberEncodedSize(id);
+		this.request = uwRequestObject(this);
 		replyQueue.set(id, this);
 	}
 	type = 'reply';
 	isReply = true;
 	async completeReceived() {
 		this.state = 1;
-		await processEvent(this);
+		await processEvent(this.request, this);
 	}
 	response = {};
 	request = {};

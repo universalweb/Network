@@ -2,7 +2,7 @@ import {
 	success, failed, imported, msgSent, info
 } from '#logs';
 import { promise, construct, isString } from '@universalweb/acid';
-import { UWResponse } from '../request/response.js';
+import { UWResponse } from '../request/client/clientResponse.js';
 // If path arg has params in it then paramArg becomes dataArg
 // params support both Complex Data Binary Supported Params and simple traditional URL percent encoded params
 export async function fetchRequest(path, config = {}) {
