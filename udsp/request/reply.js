@@ -13,7 +13,7 @@ import { processEvent } from '#udsp/processEvent';
 import { Base } from './base.js';
 import { numberEncodedSize } from './numberEncodedSize.js';
 import { flushOutgoing } from './flush.js';
-import { uwRequestObject } from './requestObject.js';
+import { uwRequestObject } from './objects/client/request';
 /**
 	* @todo
 */
@@ -36,16 +36,15 @@ export class Reply extends Base {
 		this.response.id = id;
 		this.streamIdSize = numberEncodedSize(id);
 		this.request = uwRequestObject(this);
+		this.response = uwRequestObject(this);
 		replyQueue.set(id, this);
 	}
 	type = 'reply';
 	isReply = true;
 	async completeReceived() {
 		this.state = 1;
-		await processEvent(this.request, this);
+		await processEvent(this.request, this.response, this);
 	}
-	response = {};
-	request = {};
 }
 export function reply(packet, client) {
 	// console.log(client);

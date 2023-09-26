@@ -10,7 +10,9 @@ import {
 	failed, info, msgReceived, msgSent
 } from '#logs';
 import { Base } from './base.js';
-import { clientResponse } from './client/clientResponse.js';
+import { clientResponse } from './objects/client/response.js';
+import { objectGetSetMethods } from './objects/objectGetSetMethods.js';
+import { ClientRequest } from './objects/client/request.js';
 export class Ask extends Base {
 	constructor(method = 'get', path, parameters, data, head, options = {}, source) {
 		super(options, source);
@@ -25,20 +27,14 @@ export class Ask extends Base {
 		this.request.method = methodSanitized;
 		this.method = methodSanitized;
 		this.id = streamId;
-		if (path) {
-			this.request.path = path;
-			this.path = path;
-		}
-		if (parameters) {
-			this.request.parameters = parameters;
-			this.parameters = parameters;
-		}
-		if (data) {
-			this.request.data = data;
-		}
-		if (head) {
-			this.request.head = head;
-		}
+		this.request = new ClientRequest(path, {
+			method,
+			parameters,
+			data,
+			head,
+			source: this
+		});
+		this.response = clientResponse(this);
 		requestQueue.set(streamId, this);
 	}
 	completeReceived() {
@@ -48,8 +44,7 @@ export class Ask extends Base {
 		}
 		this.readyState = 4;
 		this.flush();
-		const response = clientResponse(this);
-		this.accept(response);
+		this.accept(this.response);
 	}
 	isAsk = true;
 	type = 'ask';

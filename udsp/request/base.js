@@ -4,8 +4,14 @@ import { on } from './on.js';
 import { flushOutgoing, flushIncoming, flush } from './flush.js';
 import { onPacket } from './onPacket.js';
 import {
-	isBuffer, isPlainObject, isString, promise, assign,
-	objectSize, eachArray, jsonParse, construct, isArray, clear, isFalse, isTrue, clearBuffer, hasValue
+	isBuffer,
+	isPlainObject,
+	isString,
+	promise,
+	assign,
+	objectSize, eachArray, jsonParse,
+	construct, isArray, clear, isFalse,
+	isTrue, clearBuffer, hasValue
 } from '@universalweb/acid';
 import { encode, decode } from 'msgpackr';
 import { toBase64 } from '#crypto';
@@ -91,6 +97,11 @@ export class Base {
 		} else {
 			this.head = {};
 		}
+		if (this.isAsk) {
+			this.response.head = this.head;
+		} else {
+			this.request.head = this.head;
+		}
 		this.readyState = 2;
 		this.headAssembled = true;
 	}
@@ -105,6 +116,11 @@ export class Base {
 		} else {
 			this.parameters = null;
 		}
+		if (this.isAsk) {
+			this.response.parameters = this.parameters;
+		} else {
+			this.request.parameters = this.parameters;
+		}
 		this.readyState = 2;
 		this.parametersAssembled = true;
 	}
@@ -118,6 +134,11 @@ export class Base {
 			console.log('Path SET', this.path);
 		} else {
 			this.path = '';
+		}
+		if (this.isAsk) {
+			this.response.path = this.path;
+		} else {
+			this.request.path = this.path;
 		}
 		this.readyState = 2;
 		this.pathAssembled = true;
@@ -213,29 +234,12 @@ export class Base {
 			console.log('Missing packets: ', missingDataPackets);
 		} else if (this.head.dataSize === this.currentIncomingDataSize) {
 			this.completeReceived();
-		}
-	}
-	get data() {
-		if (this.compiledDataAlready) {
-			return this.compiledData;
-		}
-		this.incomingDataPackets = null;
-		const { head: { serialize } } = this;
-		const dataConcatinated = Buffer.concat(this.incomingData);
-		this.incomingData.fill(0);
-		this.incomingData = null;
-		if (serialize) {
-			if (isTrue(serialize)) {
-				this.compiledData = decode(dataConcatinated);
-			} else if (serialize === 1) {
-				this.compiledData = jsonParse(dataConcatinated);
+			if (this.isAsk) {
+				this.response.dataBuffer = this.incomingData;
+			} else {
+				this.request.dataBuffer = this.incomingData;
 			}
-			dataConcatinated.fill(0);
-		} else {
-			this.compiledData = dataConcatinated;
 		}
-		this.compiledDataAlready = true;
-		return this.compiledData;
 	}
 	sendSetup() {
 		const { isAsk } = this;
@@ -512,70 +516,6 @@ export class Base {
 		};
 		return message;
 	}
-	toString(cache) {
-		if (cache) {
-			if (this.toStringCached) {
-				return this.toStringCached;
-			}
-		}
-		const target = this.data.toString();
-		if (cache) {
-			this.toStringCached = target;
-		}
-		return target;
-	}
-	toJSON(cache) {
-		if (cache) {
-			if (this.toJSONCached) {
-				return this.toJSONCached;
-			}
-		}
-		const target = jsonParse(this.data);
-		if (cache) {
-			this.toJSONCached = target;
-		}
-		return jsonParse(this.data);
-	}
-	serialize(cache) {
-		if (cache) {
-			if (this.serializeCached) {
-				return this.serializeCached;
-			}
-		}
-		const target = decode(this.data);
-		if (cache) {
-			this.serializeCached = target;
-		}
-		return target;
-	}
-	toObject(cache) {
-		if (cache) {
-			if (this.toObjectRawCached) {
-				return this.toObjectRawCached;
-			}
-		}
-		const {
-			head,
-			data,
-			id,
-			method,
-		} = this;
-		const target = {
-			head,
-			data,
-			method
-		};
-		if (cache) {
-			this.toObjectRawCached = target;
-		}
-		return target;
-	}
-	get headers() {
-		return this.head;
-	}
-	get body() {
-		return this.data;
-	}
 	destroy = destroy;
 	onPacket = onPacket;
 	sendPacket(message, headers, footer) {
@@ -646,5 +586,4 @@ export class Base {
 	outgoingParametersSize = 0;
 	outgoingHeadSize = 0;
 	outgoingDataSize = 0;
-	bg = 0;
 }
