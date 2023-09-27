@@ -1,6 +1,6 @@
 import { hasValue, isArray, isFalse } from '@universalweb/acid';
 import { destroy } from './destory.js';
-import { processEvent } from '#udsp/processEvent';
+import { processEvent } from '#server/processEvent';
 export async function onPacket(packet) {
 	const source = this;
 	const { isAsk } = this;
@@ -113,7 +113,7 @@ export async function onPacket(packet) {
 			console.log(`DATA PROGRESS current:${this.currentIncomingDataSize}`, this.totalIncomingDataSize);
 			if (this.currentIncomingDataSize === this.totalIncomingDataSize) {
 				console.log(this);
-				console.log('Last packet received');
+				console.log('Last packet received', this.currentIncomingDataSize, this.totalIncomingDataSize);
 				message.last = true;
 				this.totalIncomingUniqueDataPackets = packetId;
 				this.checkData();

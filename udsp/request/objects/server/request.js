@@ -13,14 +13,16 @@ import {
 } from '#logs';
 import { Base } from '../base.js';
 import { objectGetSetMethods } from '../objectGetSetMethods.js';
+import { objectDataMethods } from '../dataMethods.js';
 export class ServerRequest extends Base {
-	constructor(path, options = {}) {
-		super(path, options);
+	constructor(config) {
+		super(config);
 	}
 	isRequest = true;
 	isServerRequest = true;
 }
 objectGetSetMethods.attachMethods(ServerRequest);
-export async function uwServerRequestObject(source) {
-	return construct(ServerRequest, omit);
+objectDataMethods.attachMethods(ServerRequest);
+export function serverRequestObject(source) {
+	return construct(ServerRequest, [source]);
 }

@@ -10,9 +10,9 @@ import {
 	failed, info, msgReceived, msgSent
 } from '#logs';
 import { Base } from './base.js';
-import { clientResponse } from './objects/client/response.js';
+import { clientResponseObject } from './objects/client/response.js';
+import { clientRequestObject } from './objects/client/request.js';
 import { objectGetSetMethods } from './objects/objectGetSetMethods.js';
-import { ClientRequest } from './objects/client/request.js';
 export class Ask extends Base {
 	constructor(method = 'get', path, parameters, data, head, options = {}, source) {
 		super(options, source);
@@ -21,21 +21,25 @@ export class Ask extends Base {
 			streamIdGenerator,
 		} = source;
 		console.log('Ask', data);
-		const streamId = streamIdGenerator.get();
+		const id = streamIdGenerator.get();
 		const methodSanitized = method.toLowerCase();
-		this.request.streamId = streamId;
-		this.request.method = methodSanitized;
-		this.method = methodSanitized;
-		this.id = streamId;
-		this.request = new ClientRequest(path, {
-			method,
-			parameters,
+		this.id = id;
+		this.method = method;
+		if (parameters) {
+			this.parameters = parameters;
+		}
+		if (path) {
+			this.path = path;
+		}
+		this.request = clientRequestObject({
 			data,
 			head,
-			source: this
+			source: this,
 		});
-		this.response = clientResponse(this);
-		requestQueue.set(streamId, this);
+		this.response = clientResponseObject({
+			source: this,
+		});
+		requestQueue.set(id, this);
 	}
 	completeReceived() {
 		console.log('Ask complete', this);
@@ -48,7 +52,6 @@ export class Ask extends Base {
 	}
 	isAsk = true;
 	type = 'ask';
-	request = {};
 }
 export async function ask(source) {
 	return construct(Ask, source);

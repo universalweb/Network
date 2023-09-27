@@ -14,13 +14,13 @@ import {
 import { Base } from '../base.js';
 import { objectGetSetMethods } from '../objectGetSetMethods.js';
 export class ClientRequest extends Base {
-	constructor(path, options = {}) {
-		super(path, options);
+	constructor(config) {
+		super(config);
 	}
 	isRequest = true;
 	isServerRequest = true;
 }
 objectGetSetMethods.attachMethods(ClientRequest);
-export async function uwClientRequestObject(source) {
-	return construct(ClientRequest, omit);
+export function clientRequestObject(source) {
+	return construct(ClientRequest, [source]);
 }

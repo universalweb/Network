@@ -9,11 +9,12 @@ import { decode, encode } from 'msgpackr';
 import {
 	success, failed, info, msgReceived, msgSent
 } from '#logs';
-import { processEvent } from '#udsp/processEvent';
+import { processEvent } from '#server/processEvent';
 import { Base } from './base.js';
 import { numberEncodedSize } from './numberEncodedSize.js';
 import { flushOutgoing } from './flush.js';
-import { uwRequestObject } from './objects/client/request';
+import { serverRequestObject } from './objects/server/request.js';
+import { serverResponseObject } from './objects/server/response.js';
 /**
 	* @todo
 */
@@ -33,10 +34,13 @@ export class Reply extends Base {
 		this.requestMethods = source.requestMethods;
 		// console.log(source);
 		// // console.log(message);
-		this.response.id = id;
 		this.streamIdSize = numberEncodedSize(id);
-		this.request = uwRequestObject(this);
-		this.response = uwRequestObject(this);
+		this.request = serverRequestObject({
+			source: this,
+		});
+		this.response = serverResponseObject({
+			source: this,
+		});
 		replyQueue.set(id, this);
 	}
 	type = 'reply';

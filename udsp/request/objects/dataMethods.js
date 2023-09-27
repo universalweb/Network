@@ -1,5 +1,5 @@
 import {
-	eachObject, jsonParse, isTrue, noValue, assign
+	eachObject, jsonParse, isTrue, noValue, assign, clear
 } from '@universalweb/acid';
 import { decode } from 'msgpackr';
 export const objectDataMethods = {
@@ -21,6 +21,7 @@ export const objectDataMethods = {
 				}
 				dataConcatinated.fill(0);
 			} else {
+				clear(this.dataBuffer);
 				this.compiledData = dataConcatinated;
 			}
 			this.compiledDataAlready = true;
@@ -29,7 +30,7 @@ export const objectDataMethods = {
 	},
 	setters: {
 		data(data) {
-			this.compiledData = data;
+			this.dataBuffer = data;
 		},
 	},
 	methods: {
@@ -106,7 +107,7 @@ export const objectDataMethods = {
 	},
 	attachMethods(target) {
 		assign(target.prototype, objectDataMethods.methods);
-		eachObject(objectDataMethods.getters, (key, value) => {
+		eachObject(objectDataMethods.getters, (value, key) => {
 			Object.defineProperty(target.prototype, key, {
 				get: value,
 				set: objectDataMethods.setters[key]

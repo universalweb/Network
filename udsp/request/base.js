@@ -74,33 +74,31 @@ export class Base {
 		}
 		source.head[headerName] = headerValue;
 	}
-	setRequestHeader(headerName, headerValue) {
-		return this.setHeader(headerName, headerValue);
-	}
-	setHeaderDetails() {
-		const { head: { dataSize } } = this;
+	setHeaderDetails(head) {
+		const { dataSize } = head;
 		if (dataSize) {
 			this.totalIncomingDataSize = dataSize;
 		}
 	}
 	setHead() {
 		clear(this.incomingHeadPackets);
+		let head;
 		if (this.incomingHead?.length) {
 			const headCompiled = Buffer.concat(this.incomingHead);
 			clearBuffer(this.incomingHead);
-			this.head = decode(headCompiled);
+			head = decode(headCompiled);
 			headCompiled.fill(0);
-			if (isPlainObject(this.head)) {
-				this.setHeaderDetails();
+			if (isPlainObject(head)) {
+				this.setHeaderDetails(head);
 			}
-			console.log('HEAD SET', this.head);
+			console.log('HEAD SET', head);
 		} else {
-			this.head = {};
+			head = {};
 		}
 		if (this.isAsk) {
-			this.response.head = this.head;
+			this.response.head = head;
 		} else {
-			this.request.head = this.head;
+			this.request.head = head;
 		}
 		this.readyState = 2;
 		this.headAssembled = true;
@@ -116,11 +114,6 @@ export class Base {
 		} else {
 			this.parameters = null;
 		}
-		if (this.isAsk) {
-			this.response.parameters = this.parameters;
-		} else {
-			this.request.parameters = this.parameters;
-		}
 		this.readyState = 2;
 		this.parametersAssembled = true;
 	}
@@ -134,11 +127,6 @@ export class Base {
 			console.log('Path SET', this.path);
 		} else {
 			this.path = '';
-		}
-		if (this.isAsk) {
-			this.response.path = this.path;
-		} else {
-			this.request.path = this.path;
 		}
 		this.readyState = 2;
 		this.pathAssembled = true;
@@ -154,11 +142,7 @@ export class Base {
 		console.log('incomingHeadPackets', this.incomingHeadPackets);
 		if (this.totalIncomingHeadSize === this.currentIncomingHeadSize) {
 			this.setHead();
-			if (this.head.dataSize === this.currentIncomingDataSize) {
-				this.completeReceived();
-			} else {
-				this.sendDataReady();
-			}
+			this.sendDataReady();
 		} else {
 			eachArray(this.incomingHeadPackets, (item, index) => {
 				if (!item) {
@@ -181,11 +165,7 @@ export class Base {
 		console.log('incomingPathPackets', this.incomingPathPackets);
 		if (this.totalIncomingPathSize === this.currentIncomingPathSize) {
 			this.setPath();
-			if (this.totalIncomingParametersSize === this.currentIncomingParametersSize) {
-				this.sendHeadReady();
-			} else {
-				this.sendParametersReady();
-			}
+			this.sendParametersReady();
 		} else {
 			eachArray(this.incomingPathPackets, (item, index) => {
 				if (!item) {
@@ -221,6 +201,7 @@ export class Base {
 		console.log('incomingParameters', incomingParameters);
 	}
 	async checkData() {
+		console.log('Checking Data');
 		const { missingDataPackets } = this;
 		if (this.compiledDataAlready) {
 			return true;
@@ -232,13 +213,14 @@ export class Base {
 		});
 		if (missingDataPackets.size !== 0) {
 			console.log('Missing packets: ', missingDataPackets);
-		} else if (this.head.dataSize === this.currentIncomingDataSize) {
-			this.completeReceived();
+		} else if (this.totalIncomingDataSize === this.currentIncomingDataSize) {
+			clear(this.incomingDataPackets);
 			if (this.isAsk) {
 				this.response.dataBuffer = this.incomingData;
 			} else {
 				this.request.dataBuffer = this.incomingData;
 			}
+			this.completeReceived();
 		}
 	}
 	sendSetup() {
@@ -270,6 +252,9 @@ export class Base {
 		if (this.state === 2) {
 			this.state = 3;
 		}
+		if (this.totalIncomingParametersSize === 0) {
+			return this.sendHeadReady();
+		}
 		const message = this.getPacketTemplate();
 		message.parametersReady = true;
 		this.sendPacket(message);
@@ -278,6 +263,9 @@ export class Base {
 		if (this.state === 3) {
 			this.state = 4;
 		}
+		if (this.totalIncomingHeadSize === 0) {
+			return this.sendDataReady();
+		}
 		const message = this.getPacketTemplate();
 		message.headReady = true;
 		this.sendPacket(message);
@@ -285,6 +273,9 @@ export class Base {
 	sendDataReady() {
 		if (this.state === 4) {
 			this.state = 5;
+		}
+		if (this.totalIncomingDataSize === 0) {
+			return this.completeReceived();
 		}
 		const message = this.getPacketTemplate();
 		message.dataReady = true;
@@ -329,7 +320,7 @@ export class Base {
 			packetId++;
 			currentBytePosition = safeEndIndex;
 		}
-		console.log('outgoingPathSize', source.outgoingPathSize);
+		console.log('outgoingPathSize', this.outgoingPathSize);
 	}
 	async parametersPacketization() {
 		const {
@@ -345,7 +336,7 @@ export class Base {
 		}
 		this.outgoingParameters = encode(source.parameters);
 		this.outgoingParametersSize = this.outgoingParameters.length;
-		console.log('outgoingParameterSize', source.outgoingParametersSize);
+		console.log('outgoingParameterSize', this.outgoingParametersSize);
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const outgoingParametersSize = this.outgoingParametersSize;
@@ -365,7 +356,7 @@ export class Base {
 			packetId++;
 			currentBytePosition = safeEndIndex;
 		}
-		console.log('outgoingParameterSize', source.outgoingParameterSize);
+		console.log('outgoingParameterSize', this.outgoingParameterSize);
 	}
 	async headPacketization() {
 		const {
@@ -374,10 +365,15 @@ export class Base {
 			outgoingHeadPackets
 		} = this;
 		const source = (this.isAsk) ? this.request : this.response;
+		if (!source.head || !objectSize(source.head)) {
+			this.emptyHead = true;
+			console.log('Empty Head');
+			return;
+		}
 		console.log('headPacketization', source.head);
 		this.outgoingHead = encode(source.head);
 		this.outgoingHeadSize = this.outgoingHead.length;
-		console.log('outgoingHeadSize', source.outgoingHeadSize);
+		console.log('outgoingHeadSize', this.outgoingHeadSize);
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const headSize = this.outgoingHeadSize;
@@ -397,30 +393,27 @@ export class Base {
 			packetId++;
 			currentBytePosition = safeEndIndex;
 		}
-		console.log('outgoingHeadSize', source.outgoingHeadSize);
+		console.log('outgoingHeadSize', this.outgoingHeadSize);
 	}
 	async dataPacketization() {
 		const {
 			isAsk,
 			isReply
 		} = this;
-		const message = (isAsk) ? this.request : this.response;
-		if (message.data) {
-			this.outgoingData = message.data;
-			if (!isBuffer(message.data)) {
+		const source = (isAsk) ? this.request : this.response;
+		if (source.data) {
+			this.outgoingData = source.data;
+			if (!isBuffer(source.data)) {
 				this.setHeader('serialize', true);
-				this.outgoingData = encode(message.data);
+				this.outgoingData = encode(source.data);
 			}
 			this.outgoingDataSize = this.outgoingData.length;
 			this.setHeader('dataSize', this.outgoingData.length);
 			await dataPacketization(this);
-		} else {
-			this.setHeader('dataSize', 0);
 		}
 	}
 	async packetization() {
 		const { isAsk } = this;
-		const message = (isAsk) ? this.request : this.response;
 		await this.dataPacketization();
 		await this.headPacketization();
 		if (isAsk) {
@@ -534,7 +527,6 @@ export class Base {
 	currentIncomingParametersSize = 0;
 	currentIncomingPathSize = 0;
 	totalReceivedUniquePackets = 0;
-	totalIncomingUniquePackets = 0;
 	progress = 0;
 	progressHead = 0;
 	progressData = 0;
@@ -586,4 +578,8 @@ export class Base {
 	outgoingParametersSize = 0;
 	outgoingHeadSize = 0;
 	outgoingDataSize = 0;
+	totalIncomingDataSize = 0;
+	totalIncomingHeadSize = 0;
+	totalIncomingPathSize = 0;
+	totalReceivedUniqueDataPackets = 0;
 }

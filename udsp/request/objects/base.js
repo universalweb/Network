@@ -12,39 +12,13 @@ import {
 	msgSent
 } from '#logs';
 export class Base {
-	constructor(source, options) {
-		this.processConfig(source, options);
-	}
-	processConfig(source, options) {
-		if (source.isAsk || source.isReply) {
-			const {
-				head,
-				method,
-				parameters,
-				path,
-				incomingData,
-				status,
-				type,
-			} = source;
-			this.source = function() {
-				return source;
-			};
-			return this.construct(incomingData, {
-				head,
-				method,
-				parameters,
-				path,
-				status,
-				type,
-			});
-		} else {
-			return this.construct(source, options);
+	constructor(config) {
+		if (config) {
+			this.construct(config);
 		}
 	}
-	construct(path, options = {}) {
+	construct(config) {
 		const {
-			method = 'get',
-			parameters,
 			data,
 			body,
 			head,
@@ -61,12 +35,8 @@ export class Base {
 			signal,
 			domainCertificate,
 			profileCertificate,
-			params,
-			url
-		} = options;
-		if (method) {
-			this.method = method;
-		}
+			source,
+		} = config;
 		if (hasValue(data)) {
 			this.data = data;
 		} else if (hasValue(body)) {
@@ -77,15 +47,10 @@ export class Base {
 		} else if (hasValue(headers)) {
 			this.head = headers;
 		}
-		if (hasValue(path)) {
-			this.path = path;
-		} else if (hasValue(url)) {
-			this.path = url;
-		}
-		if (hasValue(parameters)) {
-			this.parameters = parameters;
-		} else if (hasValue(params)) {
-			this.parameters = params;
+		if (source) {
+			this.source = function() {
+				return source;
+			};
 		}
 	}
 }

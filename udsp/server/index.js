@@ -30,6 +30,7 @@ const { seal } = Object;
 export class Server extends UDSP {
 	constructor(configuration) {
 		super();
+		// console.log = () => {};
 		return this.initialize(configuration);
 	}
 	description = `The Universal Web's UDSP server module.`;

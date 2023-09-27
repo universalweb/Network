@@ -24,5 +24,5 @@ import fetchIt from 'node-fetch';
 console.time('http');
 const response = await fetchIt('https://[::1]:8888/');
 const body = await response.text();
-console.log(body);
 console.timeEnd('http');
+console.log(body);
