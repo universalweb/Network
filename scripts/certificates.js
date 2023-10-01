@@ -47,6 +47,12 @@ const domainProfile = await createProfile({
 			domain: 'universal',
 			extension: 'web',
 			ip: '::1',
+			ipv4: 'localhost',
+			ipv6: '::1',
+			records: {
+				aaaa: '::1',
+				a: 'localhost'
+			},
 			port: 8888,
 			// Used when a custom Domain name server is used to resolve the domain name locations still provides valid certificates else will be warned of invalid certificate
 			// domainInfoServer: {
