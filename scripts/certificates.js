@@ -46,12 +46,45 @@ const domainProfile = await createProfile({
 			url: 'universal.web',
 			domain: 'universal',
 			extension: 'web',
+			// The ip, ipv4, & ipv6 properties are used to determine the IP address of the server.
+			// The ip property can be either ipv4 or ipv6.
+			// ipv4/ipv6 can also be used as a form of backup ips or the primary ips for their respective versions. Similar to A & AAAA records.
 			ip: '::1',
-			ipv4: 'localhost',
+			// This allows for IPv4 and IPv6 to use specific details that is more fitting for that endpoint.
+			// This is not intended to be used when IPv6 becomes the standard.
+			ipv4: '127.0.0.1',
 			ipv6: '::1',
+			// Another format for IPv4 and ipv6 is an object with specific details that can override the initial certificate's details.
+			// ipv4: {
+			// 	ip: '127.0.0.1',
+			// 	keypair: {}
+			// },
+			// Records can be attached to this domain certificate in their own certificate or included in this certificate.
+			// If multiple A or AAAA records are provided in addition to the ips listed above then they will be used as backup ips.
 			records: {
-				aaaa: '::1',
-				a: 'localhost'
+				aaaa: [{
+					name: '@',
+					content: '::1',
+					priority: 0,
+					ttl: 'auto'
+				}],
+				a: [{
+					name: '@',
+					content: '127.0.0.1',
+					priority: 0,
+					ttl: 'auto'
+				}],
+				mx: [{
+					name: '@',
+					content: 'email.universal.web',
+					priority: 0,
+					ttl: 'auto'
+				}, {
+					name: '@',
+					content: 'email2.universal.web',
+					priority: 1,
+					ttl: 'auto'
+				}],
 			},
 			port: 8888,
 			// Used when a custom Domain name server is used to resolve the domain name locations still provides valid certificates else will be warned of invalid certificate
