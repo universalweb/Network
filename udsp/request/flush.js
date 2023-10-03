@@ -12,13 +12,11 @@ export function flushIncoming() {
 	clear(this.incomingAks);
 	clear(this.incomingNacks);
 	clear(this.incomingDataPackets);
-	this.incomingSetupPacket = null;
 	this.currentIncomingHeadSize = null;
 	this.currentIncomingDataSize = null;
 	this.totalReceivedUniquePackets = null;
 	this.totalIncomingHeadSize = null;
 	this.totalReceivedPackets = null;
-	this.incomingSetupPacket = null;
 	this.totalReceivedUniquePathPackets = null;
 	this.totalReceivedUniqueParametersPackets = null;
 	this.totalReceivedUniqueHeadPackets = null;

@@ -132,9 +132,12 @@ export async function onPacket(packet) {
 				[totalIncomingHeadSize, totalIncomingDataSize] = setup;
 			} else {
 				[method, totalIncomingPathSize, totalIncomingParametersSize, totalIncomingHeadSize, totalIncomingDataSize] = setup;
+				if (!hasValue(method)) {
+					method = 'GET';
+				}
+				this.method = method;
 			}
 			console.log(`Setup Packet Received HEADER:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
-			this.incomingSetupPacket = message;
 			if (hasValue(totalIncomingPathSize)) {
 				this.totalIncomingPathSize = totalIncomingPathSize;
 			}
@@ -146,9 +149,6 @@ export async function onPacket(packet) {
 			}
 			if (totalIncomingDataSize) {
 				this.totalIncomingDataSize = totalIncomingDataSize;
-			}
-			if (hasValue(method)) {
-				this.method = method;
 			}
 		}
 		if (isAsk) {

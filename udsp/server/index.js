@@ -137,10 +137,12 @@ export class Server extends UDSP {
 			port: certPort
 		} = this.certificate;
 		const port = configuration.port || certPort;
-		const ip = configuration.ip || certIp;
-		console.log('Config Network', ip, port);
-		this.ip = ip;
+		const ip = configuration.ip;
+		if (configuration.ip) {
+			this.ip = ip;
+		}
 		this.port = port;
+		console.log('Config Network', this.ip, this.port);
 	}
 	async initialize(configuration) {
 		console.log('-------SERVER INITIALIZING-------');

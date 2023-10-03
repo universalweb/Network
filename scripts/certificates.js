@@ -49,11 +49,11 @@ const domainProfile = await createProfile({
 			// The ip, ipv4, & ipv6 properties are used to determine the IP address of the server.
 			// The ip property can be either ipv4 or ipv6.
 			// ipv4/ipv6 can also be used as a form of backup ips or the primary ips for their respective versions. Similar to A & AAAA records.
-			ip: '::1',
+			ip: ['::1', '127.0.0.1'],
 			// This allows for IPv4 and IPv6 to use specific details that is more fitting for that endpoint.
 			// This is not intended to be used when IPv6 becomes the standard.
-			ipv4: '127.0.0.1',
-			ipv6: '::1',
+			// ipv4: '127.0.0.1',
+			// ipv6: '::1',
 			// Another format for IPv4 and ipv6 is an object with specific details that can override the initial certificate's details.
 			// ipv4: {
 			// 	ip: '127.0.0.1',
@@ -64,24 +64,24 @@ const domainProfile = await createProfile({
 			records: {
 				aaaa: [{
 					name: '@',
-					content: '::1',
+					value: '::1',
 					priority: 0,
 					ttl: 'auto'
 				}],
 				a: [{
 					name: '@',
-					content: '127.0.0.1',
+					value: '127.0.0.1',
 					priority: 0,
 					ttl: 'auto'
 				}],
 				mx: [{
 					name: '@',
-					content: 'email.universal.web',
+					value: 'email.universal.web',
 					priority: 0,
 					ttl: 'auto'
 				}, {
 					name: '@',
-					content: 'email2.universal.web',
+					value: 'email2.universal.web',
 					priority: 1,
 					ttl: 'auto'
 				}],

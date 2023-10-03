@@ -6,29 +6,34 @@ import { info } from '#logs';
 import { currentPath } from '@universalweb/acid';
 import path from 'path';
 const appServer = await server({
+	// Cluster Mode
+	// The main server will be the only server that will be able to accept new connections and will forward them to the relevant server in the cluster acting in part as a load balancer
+	// However, the load balancer mode can be turned off and only the clusters will be setup
+	cluster: {
+		// Each server in the cluster will have a unique port that is incremented by 1 but starting at the clusterPort number connection IDs are modified to include the relevant cluster
+		port: 8000,
+		// The amount of servers to spawn in the cluster
+		size: 2,
+		// use the default port for the cluster's main point of contact & as the loadbalancer/router
+		// default is true when cluster mode is enabled
+		loadbalancer: true,
+	},
 	encryptConnectionId: true,
 	randomId: true,
-	// realtime mode - to keep the connection alive for bidirectional communication
-	realtime: false,
+	// will listen on ipv4 and ipv6 default is '::1'
+	ip: '::1',
+	// default port or the loadbalancer port
+	port: 8888,
+	// realtime mode - permits establishing a bidirectional real-time connection to clients
+	// Must be requested so that it can be denied if the client doesn't meet the requirements
+	realtime: true,
 	gracePeriod: 30000,
-	// Source Verification to ensure that data coming from a client is coming from that source
-	sourceVerification: true,
 	// Max packet retries for a singular request before restarting the request
 	maxPacketRetries: 5,
-	// Max retries for a singular request before giving up
-	maxRequestRetries: 3,
-	// Max retries for a singular request before giving up
-	maxResponseRetries: 3,
-	// Max size of packets
-	// maxPacketSize: 1100,
-	// Max size of body and head data sections in a single packet
-	// maxPacketPayloadSize: 1000,
-	// max file size
+	// max file size in bytes
 	maxFileSize: 9000,
 	// Max size of a Response
 	maxResponseSize: 10000,
-	// Max size of a Packet for Responses
-	maxResponsePacketSize: 10000,
 	// default file extension default is .js but WWW default is www
 	defaultExtension: 'html',
 	// Domain certificate to be loaded used for connection encryption
@@ -37,13 +42,6 @@ const appServer = await server({
 	certificatePublic: path.join(currentPath(import.meta), '../services/universal.web-EphemeralPublic.cert'),
 	// Where to load app resources from
 	resourceDirectory: path.join(currentPath(import.meta), 'resources'),
-	// Server ID used for load balancing and attaching to the end of connection IDs
-	// id: Buffer.from('alpha'),
-	// on connect message to respond with when a connection is established
-	onConnectMessage: `Welcome to the Universal Web.`,
-	// Port to listen on for connections
-	// port: 8888,
-	// ip: '::1'
 	rootDirectory: currentPath(import.meta)
 });
 // info('App Server Status', appServer);
