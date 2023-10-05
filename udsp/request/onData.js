@@ -8,6 +8,6 @@ export async function onData(message) {
 		console.log('Incoming Progress', this.incomingProgress);
 	}
 	if (this.events.data) {
-		this.events.data(message.data, message.pid);
+		this.events.data(message.data, message.packetId);
 	}
 }

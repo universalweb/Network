@@ -43,6 +43,7 @@
 		"rollup": "^3.19.0",
 		"sodium-native": "^4.0.1",
 		"testatron": "^2.1.0",
+		"textlint": "^13.3.3",
 		"webtorrent": "^2.0.14"
 	},
 	"description": "Sentivate Network Client, Server Module, UDSP, Universal Web Socket, & certificate generation. This serves as a service & browser prototype.",

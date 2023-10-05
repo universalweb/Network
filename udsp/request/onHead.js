@@ -8,6 +8,6 @@ export async function onHead(message) {
 		console.log('Incoming Progress', this.incomingProgress);
 	}
 	if (this.events.head) {
-		this.events.head(message.head, message.pid);
+		this.events.head(message.head, message.packetId);
 	}
 }

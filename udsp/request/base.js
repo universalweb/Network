@@ -582,4 +582,8 @@ export class Base {
 	totalIncomingHeadSize = 0;
 	totalIncomingPathSize = 0;
 	totalReceivedUniqueDataPackets = 0;
+	onPathCurrentId = 0;
+	onParametersCurrentId = 0;
+	onHeadCurrentId = 0;
+	onDataCurrentId = 0;
 }

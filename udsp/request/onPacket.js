@@ -1,4 +1,6 @@
-import { hasValue, isArray, isFalse } from '@universalweb/acid';
+import {
+	hasValue, isArray, isFalse, isNumber,
+} from '@universalweb/acid';
 import { destroy } from './destory.js';
 import { processEvent } from '#server/processEvent';
 export async function onPacket(packet) {
@@ -112,7 +114,6 @@ export async function onPacket(packet) {
 			}
 			console.log(`DATA PROGRESS current:${this.currentIncomingDataSize}`, this.totalIncomingDataSize);
 			if (this.currentIncomingDataSize === this.totalIncomingDataSize) {
-				console.log(this);
 				console.log('Last packet received', this.currentIncomingDataSize, this.totalIncomingDataSize);
 				message.last = true;
 				this.totalIncomingUniqueDataPackets = packetId;
@@ -138,16 +139,16 @@ export async function onPacket(packet) {
 				this.method = method;
 			}
 			console.log(`Setup Packet Received HEADER:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
-			if (hasValue(totalIncomingPathSize)) {
+			if (hasValue(totalIncomingPathSize) && isNumber(totalIncomingPathSize)) {
 				this.totalIncomingPathSize = totalIncomingPathSize;
 			}
-			if (hasValue(totalIncomingParametersSize)) {
+			if (hasValue(totalIncomingParametersSize) && isNumber(totalIncomingParametersSize)) {
 				this.totalIncomingParametersSize = totalIncomingParametersSize;
 			}
-			if (hasValue(totalIncomingHeadSize)) {
+			if (hasValue(totalIncomingHeadSize) && isNumber(totalIncomingHeadSize)) {
 				this.totalIncomingHeadSize = totalIncomingHeadSize;
 			}
-			if (totalIncomingDataSize) {
+			if (hasValue(totalIncomingDataSize) && isNumber(totalIncomingDataSize)) {
 				this.totalIncomingDataSize = totalIncomingDataSize;
 			}
 		}
