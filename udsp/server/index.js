@@ -132,11 +132,7 @@ export class Server extends UDSP {
 	}
 	async configureNetwork() {
 		const { configuration } = this;
-		const {
-			ip: certIp,
-			port: certPort
-		} = this.certificate;
-		const port = configuration.port || certPort;
+		const port = configuration.port;
 		const ip = configuration.ip;
 		if (configuration.ip) {
 			this.ip = ip;

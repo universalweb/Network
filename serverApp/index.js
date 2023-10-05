@@ -17,6 +17,7 @@ const appServer = await server({
 		// use the default port for the cluster's main point of contact & as the loadbalancer/router
 		// default is true when cluster mode is enabled
 		loadbalancer: true,
+		exclusive: true,
 	},
 	encryptConnectionId: true,
 	randomId: true,
