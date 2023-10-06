@@ -4,17 +4,17 @@ import { on } from './on.js';
 import { flushOutgoing, flushIncoming, flush } from './flush.js';
 import { onPacket } from './onPacket.js';
 import {
-	isBuffer,
-	isPlainObject,
-	isString,
-	promise,
-	assign,
-	objectSize, eachArray, jsonParse,
-	construct, isArray, clear, isFalse,
-	isTrue, clearBuffer, hasValue
+	isBuffer, isPlainObject, isString, promise,
+	assign, objectSize, eachArray, jsonParse, construct,
+	isArray, clear, isFalse, isTrue, clearBuffer, hasValue, calcProgress
 } from '@universalweb/acid';
 import { encode, decode } from 'msgpackr';
 import { toBase64 } from '#crypto';
+import { onDataSync, callOnDataSyncEvent } from './onDataSync.js';
+import { onData } from './onData.js';
+import { onPath } from './onPath.js';
+import { onHead } from './onHead.js';
+import { onParameters } from './onParameters.js';
 /**
 	* @todo Adjust packet size to account for other packet data.
 */
@@ -518,6 +518,48 @@ export class Base {
 	flushIncoming = flushIncoming;
 	flush = flush;
 	on = on;
+	onDataSync = onDataSync;
+	callOnDataSyncEvent = callOnDataSyncEvent;
+	onData = onData;
+	onPath = onPath;
+	onParameters = onParameters;
+	onHead = onHead;
+	onDataProgress() {
+		if (this.totalIncomingDataSize) {
+			if (this.currentIncomingDataSize > 0) {
+				this.incomingDataProgress = calcProgress(this.totalIncomingDataSize, this.currentIncomingDataSize);
+			}
+			console.log(`DATA PROGRESS current:${this.currentIncomingDataSize}`, this.totalIncomingDataSize);
+			console.log('Incoming Progress', this.incomingDataProgress);
+		}
+	}
+	onHeadProgress() {
+		if (this.totalIncomingHeadSize) {
+			if (this.currentIncomingHeadSize > 0) {
+				this.incomingHeadProgress = calcProgress(this.currentIncomingHeadSize, this.currentIncomingHeadSize);
+			}
+			console.log(`Head PROGRESS current:${this.currentIncomingHeadSize}`, this.currentIncomingHeadSize);
+			console.log('Incoming Progress', this.incomingHeadProgress);
+		}
+	}
+	onPathProgress() {
+		if (this.totalIncomingPathSize) {
+			if (this.currentIncomingPathSize > 0) {
+				this.incomingPathProgress = calcProgress(this.currentIncomingPathSize, this.currentIncomingPathSize);
+			}
+			console.log(`Path PROGRESS current:${this.currentIncomingPathSize}`, this.currentIncomingPathSize);
+			console.log('Incoming Progress', this.incomingPathProgress);
+		}
+	}
+	onParamatersProgress() {
+		if (this.totalIncomingParamatersSize) {
+			if (this.currentIncomingParamatersSize > 0) {
+				this.incomingParamatersProgress = calcProgress(this.currentIncomingParamatersSize, this.currentIncomingParamatersSize);
+			}
+			console.log(`Paramaters PROGRESS current:${this.currentIncomingParamatersSize}`, this.currentIncomingParamatersSize);
+			console.log('Incoming Progress', this.incomingParamatersProgress);
+		}
+	}
 	outgoingHead;
 	outgoingData;
 	incomingHeadState = false;
@@ -527,7 +569,7 @@ export class Base {
 	currentIncomingParametersSize = 0;
 	currentIncomingPathSize = 0;
 	totalReceivedUniquePackets = 0;
-	progress = 0;
+	calcProgress = 0;
 	progressHead = 0;
 	progressData = 0;
 	dataOrdered = [];

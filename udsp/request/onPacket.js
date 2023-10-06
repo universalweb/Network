@@ -54,6 +54,7 @@ export async function onPacket(packet) {
 			if (this.missingHeadPackets.has(packetId)) {
 				this.missingHeadPackets.delete(packetId);
 			}
+			this.onHeadProgress();
 			if (this.onHead) {
 				await this.onHead(message);
 			}
@@ -71,6 +72,7 @@ export async function onPacket(packet) {
 			if (this.missingPathPackets.has(packetId)) {
 				this.missingPathPackets.delete(packetId);
 			}
+			this.onPathProgress();
 			if (this.onPath) {
 				await this.onPath(message);
 			}
@@ -88,10 +90,8 @@ export async function onPacket(packet) {
 			if (this.missingParametersPackets.has(packetId)) {
 				this.missingParametersPackets.delete(packetId);
 			}
-			if (this.onParameters) {
-				await this.onParameters(message);
-			}
-			console.log(this, this.currentIncomingParametersSize);
+			this.onParametersProgress();
+			await this.onParameters(message);
 			if (this.totalIncomingParametersSize === this.currentIncomingParametersSize) {
 				this.assembleParameters();
 			}
@@ -109,14 +109,14 @@ export async function onPacket(packet) {
 			if (this.missingDataPackets.has(packetId)) {
 				this.missingDataPackets.delete(packetId);
 			}
-			if (this.onData) {
-				await this.onData(message);
-			}
-			console.log(`DATA PROGRESS current:${this.currentIncomingDataSize}`, this.totalIncomingDataSize);
 			if (this.currentIncomingDataSize === this.totalIncomingDataSize) {
 				console.log('Last packet received', this.currentIncomingDataSize, this.totalIncomingDataSize);
 				message.last = true;
-				this.totalIncomingUniqueDataPackets = packetId;
+			}
+			this.onDataProgress();
+			this.onData(message);
+			this.onDataSync(message);
+			if (message.last) {
 				this.checkData();
 			}
 		}
