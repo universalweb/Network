@@ -11,18 +11,18 @@ const appServer = await server({
 	// However, the load balancer mode can be turned off and only the clusters will be setup
 	cluster: {
 		// Each server in the cluster will have a unique port that is incremented by 1 but starting at the clusterPort number connection IDs are modified to include the relevant cluster
-		port: 8000,
+		port: 8888,
 		// The amount of servers to spawn in the cluster
 		size: 2,
 		// use the default port for the cluster's main point of contact & as the loadbalancer/router
 		// default is true when cluster mode is enabled
-		loadbalancer: true,
-		exclusive: true,
+		// exclusive roundrobin loadbalancer
+		loadbalancer: 'exclusive',
 	},
 	encryptConnectionId: true,
 	randomId: true,
 	// will listen on ipv4 and ipv6 default is '::1'
-	ip: '::1',
+	ip: '::',
 	// default port or the loadbalancer port
 	port: 8888,
 	// realtime mode - permits establishing a bidirectional real-time connection to clients

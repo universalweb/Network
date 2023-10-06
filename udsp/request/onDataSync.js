@@ -1,6 +1,6 @@
 export async function callOnDataSyncEvent(message) {
 	console.log('callOnDataSyncEvent', message.packetId);
-	this.events.dataSync(message.data, message.packetId);
+	this.fire('dataSync', message.data, message.packetId);
 }
 export async function onDataSync(message) {
 	const source = this;

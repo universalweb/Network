@@ -12,7 +12,7 @@
 				"udsp/client/*.js"
 			],
 			"#server*": [
-				"udsp/server/index.js"
+				"udsp/server/init.js"
 			],
 			"#client*": [
 				"udsp/client/index.js"

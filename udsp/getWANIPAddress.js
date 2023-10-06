@@ -14,7 +14,7 @@ async function fetchFromAPI(url) {
 		// console.error('Error fetching WAN IP address:', error.message);
 	}
 }
-async function getWANIPAddress(getBoth) {
+export async function getWANIPAddress(getBoth) {
 	const ip6length = ipv6Servers.length;
 	const ip4length = ipv4Servers.length;
 	let globalIP;
@@ -42,4 +42,3 @@ async function getWANIPAddress(getBoth) {
 	}
 	return results;
 }
-console.log(await getWANIPAddress());

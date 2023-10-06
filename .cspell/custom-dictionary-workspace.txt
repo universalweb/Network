@@ -1,5 +1,6 @@
 # Custom Dictionary Words
 Acks
+beuracratic
 brotli
 cshake
 jubjub

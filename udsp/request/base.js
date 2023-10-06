@@ -1,6 +1,6 @@
 import { destroy } from './destory.js';
 import { dataPacketization } from './dataPacketization.js';
-import { on } from './on.js';
+import { on } from './events/on.js';
 import { flushOutgoing, flushIncoming, flush } from './flush.js';
 import { onPacket } from './onPacket.js';
 import {
@@ -15,6 +15,7 @@ import { onData } from './onData.js';
 import { onPath } from './onPath.js';
 import { onHead } from './onHead.js';
 import { onParameters } from './onParameters.js';
+import { fire } from './events/fire.js';
 /**
 	* @todo Adjust packet size to account for other packet data.
 */
@@ -518,6 +519,7 @@ export class Base {
 	flushIncoming = flushIncoming;
 	flush = flush;
 	on = on;
+	fire = fire;
 	onDataSync = onDataSync;
 	callOnDataSyncEvent = callOnDataSyncEvent;
 	onData = onData;

@@ -23,7 +23,8 @@ import {
 	hasValue,
 	isUndefined,
 	has,
-	intersection
+	intersection,
+	isArray
 } from '@universalweb/acid';
 import dgram from 'dgram';
 import { success, configure, info } from '#logs';
@@ -47,6 +48,8 @@ import { UDSP } from '#udsp/base';
 import { sendPacket } from '../sendPacket.js';
 import { post } from '../requestMethods/post.js';
 import { getAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
+import { getWANIPAddress } from '../getWANIPAddress.js';
+import { getLocalIpVersion } from '../getLocalIP.js';
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
 	constructor(configuration) {
@@ -72,7 +75,8 @@ export class Client extends UDSP {
 				ip,
 				port,
 				destinationCertificate
-			}
+			},
+			ipVersion
 		} = this;
 		if (isString(destinationCertificate)) {
 			// console.log('Loading Destination Certificate', destinationCertificate);
@@ -85,6 +89,21 @@ export class Client extends UDSP {
 		}
 		if (ip) {
 			destination.ip = ip;
+		}
+		if (isArray(destination.ip)) {
+			if (ipVersion === 'udp6') {
+				destination.ip = destination.ip.find((item) => {
+					return item.includes(':') ? item : false;
+				});
+			}
+			if (!destination.ip) {
+				destination.ip = destination.ip.find((item) => {
+					return item.includes('.') ? item : false;
+				});
+			}
+		}
+		if (destination.ip.includes(':')) {
+			this.ipVersion = 'udp6';
 		}
 		if (port) {
 			destination.port = port;
@@ -179,6 +198,28 @@ export class Client extends UDSP {
 			return thisClient.onPacket(packet, rinfo);
 		});
 	}
+	async getIPDetails() {
+		try {
+			const ipInfo = await getWANIPAddress();
+			this.globalIP = ipInfo.ip;
+		} catch (error) {
+			console.log('NO global IP might be local network only');
+		}
+		if (this.globalIP) {
+			this.globalIpVersion = this.globalIP.includes(':') ? 'udp6' : 'udp4';
+		} else {
+			this.globalIpVersion = 'udp4';
+		}
+		getLocalIpVersion();
+		if (this.globalIP) {
+			this.destinationIpVersion = this.destination.ip.includes(':') ? 'udp6' : 'udp4';
+			this.bothSupportIpv6 = this.destinationIpVersion === 'udp6' && this.globalIpVersion === 'udp6';
+			this.ipVersion = (this.bothSupportIpv6) ? 'udp6' : 'udp4';
+		} else {
+			this.ipVersion = 'udp4';
+		}
+		this.ipVersion = this.destination.ip.includes(':') ? 'udp6' : 'udp4';
+	}
 	async initialize(configuration) {
 		const thisClient = this;
 		this.configuration = configuration;
@@ -189,6 +230,8 @@ export class Client extends UDSP {
 		success(`clientId:`, this.idString);
 		await this.setDestination();
 		await this.setCertificate();
+		console.log('ipVersion', this.ipVersion);
+		console.log('destination', this.destination);
 		await this.configCryptography();
 		await this.calculatePacketOverhead();
 		await this.setupSocket();
@@ -367,6 +410,7 @@ export class Client extends UDSP {
 	certificateChunks = [];
 	requestQueue = construct(Map);
 	data = construct(Map);
+	ipVersion = 'udp4';
 }
 export async function client(configuration) {
 	console.log('Create Client');
