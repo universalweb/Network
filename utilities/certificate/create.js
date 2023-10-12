@@ -6,8 +6,7 @@ import { saveCertificate, saveProfile } from './save.js';
 import {
 	assign, merge, clone, promise, isBuffer
 } from '@universalweb/acid';
-import { encode, decode } from 'msgpackr';
-imported('Certificate Creation');
+import { encode, decode } from '#utilities/serialize';
 function certificateFactory(config, options = {}) {
 	const currentDate = new Date();
 	const certificate = {

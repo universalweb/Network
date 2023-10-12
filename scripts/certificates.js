@@ -1,6 +1,6 @@
 import { createProfile } from '#certificate';
 import { currentPath } from '@universalweb/acid';
-import { decode } from 'msgpackr';
+import { decode } from '#utilities/serialize';
 const dirname = currentPath(import.meta);
 const domainProfile = await createProfile({
 	template: {
@@ -33,6 +33,7 @@ const domainProfile = await createProfile({
 			// encryptKeypair: true
 			// Max connection id size in bytes usually randomly generated and checked but used to calculate max packet payload size
 			connectionIdSize: 8,
+			clientConnectionIdSize: 4,
 			// Max payload (head or data) size in bytes
 			// maxPacketPayloadSize: 1200,
 			// Max Payload size

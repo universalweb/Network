@@ -55,7 +55,6 @@ const {
 	crypto_box_MACBYTES
 } = sodiumLib;
 import { isBuffer, assign } from '@universalweb/acid';
-import { encode, decode } from 'msgpackr';
 export function toBuffer(value) {
 	return Buffer.from(value);
 }

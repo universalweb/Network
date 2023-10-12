@@ -29,7 +29,7 @@ export async function sendPacket(message, source, socket, destination = source.d
 	}
 	// console.log('sendPacket', message, headers);
 	const packetEncoded = await encodePacket(message, source, destination, headers, footer);
-	console.log(`Packet Encoded Size ${packetEncoded.length} Worker ${process.id} sending to ip: ${ip} Port: ${port}`);
+	console.log(`Packet Encoded Size ${packetEncoded.length} Worker ${source.workerId || 'Master'} sending to ip: ${ip} Port: ${port}`);
 	return promise((accept, reject) => {
 		socket.send(packetEncoded, port, ip, (error) => {
 			if (error) {

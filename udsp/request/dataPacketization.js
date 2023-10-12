@@ -1,5 +1,5 @@
 import { assign } from '@universalweb/acid';
-import { encode } from 'msgpackr';
+import { encode } from '#utilities/serialize';
 import { numberEncodedSize } from './numberEncodedSize.js';
 export async function dataPacketization(source) {
 	const {

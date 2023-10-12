@@ -5,7 +5,7 @@ import {
 } from 'node:fs/promises';
 import { promise, jsonParse } from '@universalweb/acid';
 import { normalize } from 'path';
-import { decode } from 'msgpackr';
+import { decode } from '#utilities/serialize';
 export async function write(filePath, contents, encode) {
 	const pathNormalized = normalize(filePath);
 	console.log('FILE WRITE', pathNormalized, contents.length, encode);

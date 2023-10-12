@@ -1,4 +1,4 @@
-import { decode, encode } from 'msgpackr';
+import { decode, encode } from '#utilities/serialize';
 import { toBase64 } from '#crypto';
 import keychain from 'keychain';
 import { promise, isBuffer } from '@universalweb/acid';

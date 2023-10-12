@@ -1,12 +1,22 @@
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-import { decode, } from 'msgpackr';
+import { decode, } from '#utilities/serialize';
 import {
-	assign, isBuffer, isArray, isTrue, isUndefined, isString, hasValue
+	assign, isBuffer, isArray, isTrue, isUndefined, isString, hasValue, eachArray
 } from '@universalweb/acid';
 import { toBase64 } from '#crypto';
 import { createClient } from '../server/clients/index.js';
+function headerArray(item, index) {
+	const header = this;
+	if (isArray(item)) {
+		header[item[0]] = item[1];
+	} else if (index === 0) {
+		header.id = item;
+	} else if (index === 1) {
+		header.key = item;
+	}
+}
 export async function decodePacketHeaders(config) {
 	const {
 		source,
@@ -36,19 +46,44 @@ export async function decodePacketHeaders(config) {
 	const packet = decode(packetEncoded);
 	config.packet = packet;
 	info(`Packet Decoded Array Size ${packet.length}`);
-	const headerEncoded = packet[0];
+	console.log(packet);
+	const isShortHeaderMode = isBuffer(packet);
+	if (isShortHeaderMode) {
+		info(`isShortHeaderMode Size ${packet.length}`);
+	}
+	let headerEncoded;
+	if (isShortHeaderMode) {
+		config.isShortHeaderMode = true;
+		headerEncoded = packet.subarray(0, 8);
+	} else {
+		headerEncoded = packet[0];
+	}
 	info(`headerEncoded Size ${headerEncoded.length}`);
 	if (!headerEncoded) {
-		return failed(`No header -> Invalid Packet`);
+		return console.trace(`No header encoded -> Invalid Packet`);
 	}
+	config.headerEncoded = headerEncoded;
 	// Add single header support which holds only the binary data of the packet.id
-	const headerDecoded = decode(headerEncoded);
+	const headerDecoded = (isShortHeaderMode) ? headerEncoded : decode(headerEncoded);
 	if (!headerDecoded) {
-		return failed(`No header -> Invalid Packet`);
+		return console.trace(`No header from decode -> Invalid Packet`);
 	}
-	const header = isBuffer(headerDecoded) ? {
-		id: headerDecoded
-	} : headerDecoded;
+	let header = headerDecoded;
+	if (isBuffer(headerDecoded)) {
+		header = {
+			id: headerDecoded
+		};
+	} else if (isArray(headerDecoded)) {
+		header = {};
+		if (headerDecoded.length <= 2) {
+			header.id = headerDecoded[0];
+			if (headerDecoded[1]) {
+				header.id = headerDecoded[1];
+			}
+		} else {
+			eachArray(headerDecoded, headerArray, header);
+		}
+	}
 	if (!header.id) {
 		return failed(`No connection id in header -> Invalid Packet`);
 	}
@@ -63,7 +98,7 @@ export async function decodePacketHeaders(config) {
 			header.id = boxCryptography.boxUnseal(header.id, destination.connectionIdKeypair);
 		}
 		if (!header.id) {
-			return failed(`Packet ID Decrypt Failed`);
+			return console.trace(`Packet ID Decrypt Failed`);
 		}
 	}
 	info(`clientId: ${toBase64(header.id)}`);
@@ -95,16 +130,20 @@ export async function decodePacket(config) {
 		destination,
 		packet,
 		packetDecoded,
-		packetDecoded: { header, }
+		packetDecoded: { header, },
+		headerEncoded,
+		isShortHeaderMode,
 	} = config;
 	const { cipherSuite, } = destination;
-	const footer = packet[2] && decode(packet[2]);
-	if (packet[2] && !footer) {
-		return failed(`Footer failed to decode -> Invalid Packet`);
-	} else if (footer) {
-		packetDecoded.footer = footer;
+	let footer;
+	let footerEncoded;
+	let messageEncoded;
+	if (isShortHeaderMode) {
+		messageEncoded = packet.subarray(8);
+	} else {
+		footerEncoded = packet[2];
+		messageEncoded = packet[1];
 	}
-	const messageEncoded = packet[1];
 	if (header.error) {
 		console.log('Critical Error', header.error);
 		// can be returned if a server so chooses to respond to bad/mal/incorrect requests
@@ -114,13 +153,14 @@ export async function decodePacket(config) {
 		}
 		return true;
 	}
-	const ad = (footer) ? Buffer.concat([packet[0], packet[2]]) : packet[0];
+	const ad = (footer) ? Buffer.concat([headerEncoded, footerEncoded]) : headerEncoded;
 	// console.log(destination);
 	info(`Receive Key ${toBase64(destination.sessionKeys.receiveKey)}`);
 	if (messageEncoded) {
+		console.log(packet, packetDecoded);
 		info(`encrypted Message size ${messageEncoded.length}bytes`);
-		console.log(cipherSuite);
-		const decryptedMessage = cipherSuite.decrypt(packet[1], destination.sessionKeys, ad);
+		console.log('cipherSuite', cipherSuite);
+		const decryptedMessage = cipherSuite.decrypt(messageEncoded, destination.sessionKeys, ad);
 		if (!decryptedMessage) {
 			return failed('Encryption failed');
 		}
@@ -157,6 +197,14 @@ export async function decodePacket(config) {
 			}
 		}
 		packetDecoded.message = message;
+		if (footerEncoded) {
+			footer = footerEncoded && decode(footerEncoded);
+			if (!footer) {
+				return failed(`Footer failed to decode -> Invalid Packet`);
+			} else if (footer) {
+				packetDecoded.footer = footer;
+			}
+		}
 	} else {
 		failed(`No Encrypted Message - failed to decode -> Invalid Packet`);
 	}

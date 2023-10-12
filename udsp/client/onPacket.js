@@ -1,7 +1,7 @@
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-import { decode } from 'msgpackr';
+import { decode } from '#utilities/serialize';
 import { decrypt, createSessionKey } from '#crypto';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { processMessage } from './processMessage.js';
@@ -15,11 +15,12 @@ export async function onPacket(packet) {
 	};
 	const wasHeadersDecoded = await decodePacketHeaders(config);
 	if (!wasHeadersDecoded || !config.packetDecoded.header) {
-		return failed('Error failed to decode packet headers');
+		console.log(config.packet);
+		return console.trace('Error failed to decode packet headers');
 	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {
-		return failed('Error when decoding the packet but header was decoded');
+		return console.trace('Error when decoding the packet but header was decoded');
 	}
 	const {
 		header,

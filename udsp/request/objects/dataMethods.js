@@ -1,7 +1,7 @@
 import {
 	eachObject, jsonParse, isTrue, noValue, assign, clear
 } from '@universalweb/acid';
-import { decode } from 'msgpackr';
+import { decode } from '#utilities/serialize';
 export const objectDataMethods = {
 	getters: {
 		data() {

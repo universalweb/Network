@@ -5,7 +5,7 @@
 import {
 	isEmpty, isBuffer, promise, eachArray, assign, construct, stringify, hasValue, get, objectSize, isArray
 } from '@universalweb/acid';
-import { decode, encode } from 'msgpackr';
+import { decode, encode } from '#utilities/serialize';
 import {
 	success, failed, info, msgReceived, msgSent
 } from '#logs';

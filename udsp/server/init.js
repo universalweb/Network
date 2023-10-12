@@ -26,22 +26,21 @@ import { getCertificate, parseCertificate, loadCertificate } from '#certificate'
 import { randomBuffer, toBase64 } from '#crypto';
 import { UDSP } from '#udsp/base';
 import { processPublicKey, getAlgorithm, getPublicKeyAlgorithm } from '../cryptoMiddleware/index.js';
+import { decode } from '#utilities/serialize';
 const { seal } = Object;
+// The Universal Web's UDSP server module.
 export class Server extends UDSP {
 	constructor(configuration) {
-		super();
+		super(configuration);
 		// console.log = () => {};
 		return this.initialize(configuration);
 	}
-	description = `The Universal Web's UDSP server module.`;
-	type = 'server';
-	isServer = true;
-	isServerEnd = true;
-	on = on;
-	bindServer = bindServer;
-	onError = onError;
-	onListen = onListen;
-	onPacket = onPacket;
+	onLoadbalancer(packet, addressInfo) {
+		const message = decode(packet);
+		if (message) {
+			console.log(message, decode(message[0]), addressInfo);
+		}
+	}
 	off = off;
 	attachEvents() {
 		const thisServer = this;
@@ -52,9 +51,16 @@ export class Server extends UDSP {
 		this.socket.on('listening', () => {
 			return thisServer.onListen();
 		});
-		this.socket.on('message', (packet, rinfo) => {
-			return thisServer.onPacket(packet, rinfo);
-		});
+		if (this.isPrimary) {
+			this.socket.on('message', (packet, rinfo) => {
+				// return thisServer.onLoadbalancer(packet, rinfo);
+				return thisServer.onPacket(packet, rinfo);
+			});
+		} else {
+			this.socket.on('message', (packet, rinfo) => {
+				return thisServer.onPacket(packet, rinfo);
+			});
+		}
 	}
 	chunkCertificate() {
 		const certificate = this.publicCertificate;
@@ -83,12 +89,12 @@ export class Server extends UDSP {
 		const {
 			configuration,
 			configuration: {
-				certificate,
-				certificatePublic
+				certificatePath,
+				certificatePublicPath
 			}
 		} = this;
-		if (certificate) {
-			this.certificate = await parseCertificate(certificate);
+		if (certificatePath) {
+			this.certificate = await parseCertificate(certificatePath);
 			console.log(this.certificate);
 			this.keypair = {
 				publicKey: this.certificate.publicKey,
@@ -98,8 +104,8 @@ export class Server extends UDSP {
 				this.ipVersion = this.certificate.ipVersion;
 			}
 		}
-		if (certificatePublic) {
-			this.certificatePublic = await loadCertificate(certificatePublic);
+		if (certificatePublicPath) {
+			this.certificatePublic = await loadCertificate(certificatePublicPath);
 			this.certificatePublicSize = this.certificatePublic.length;
 			this.chunkCertificate();
 		}
@@ -140,16 +146,29 @@ export class Server extends UDSP {
 		this.port = port;
 		console.log('Config Network', this.ip, this.port);
 	}
+	configConnectionId() {
+		const {
+			reservedConnectionIdSize,
+			isWorker,
+			coreCount
+		} = this;
+		if (isWorker) {
+			if (!reservedConnectionIdSize) {
+				this.reservedConnectionIdSize = (coreCount);
+			}
+		}
+		if (!this.id) {
+			this.id = randomBuffer(4);
+		} else if (isFunction(this.id)) {
+			this.id = this.id();
+		}
+	}
 	async initialize(configuration) {
 		console.log('-------SERVER INITIALIZING-------');
 		assign(this, configuration);
 		this.configuration = seal(assign({}, configuration));
 		info(this.configuration);
-		if (!this.id) {
-			this.id = randomBuffer(4);
-		} else if (isFunction(this.id)) {
-			this.id = await this.id();
-		}
+		this.configConnectionId();
 		await this.setCertificate();
 		await this.configureNetwork();
 		await this.calculatePacketOverhead();
@@ -178,6 +197,13 @@ export class Server extends UDSP {
 			foundEvent(this, client);
 		}
 	}
+	on = on;
+	bindServer = bindServer;
+	onError = onError;
+	onListen = onListen;
+	onPacket = onPacket;
+	isServer = true;
+	isServerEnd = true;
 	requestMethods = construct(Map);
 	realTime = true;
 	socketCount = 0;

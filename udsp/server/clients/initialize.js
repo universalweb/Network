@@ -9,7 +9,7 @@ import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 import {
-	construct, keys, isBoolean, intersection
+	construct, keys, isBoolean, intersection, hasValue
 } from '@universalweb/acid';
 import { Client } from './index.js';
 import { getAlgorithm } from '../../cryptoMiddleware/index.js';
@@ -30,7 +30,9 @@ export async function initialize(config) {
 	const {
 		encryptionKeypair,
 		clients,
-		configuration: { id: serverId }
+		id: serverId,
+		realtime,
+		gracePeriod
 	} = server;
 	const {
 		address: ip,
@@ -39,17 +41,18 @@ export async function initialize(config) {
 	const client = this;
 	let selectedCipherSuite = cipherSuite;
 	if (cipherSuites) {
-		const cipherSelection = intersection(cipherSuites, keys(server.ciphers));
+		const cipherSelection = intersection(cipherSuites, keys(server.cipherSuites));
 		if (cipherSelection.length) {
 			selectedCipherSuite = cipherSelection[0];
 		}
 	}
-	if (selectedCipherSuite) {
+	if (hasValue(selectedCipherSuite)) {
 		this.cipherSuiteName = selectedCipherSuite;
-		client.cipherSuite = getAlgorithm(selectedCipherSuite);
+		client.cipherSuite = getAlgorithm(selectedCipherSuite, this.version);
 	} else {
+		console.log(`No cipher suite found going to default ${selectedCipherSuite}`);
 		this.cipherSuiteName = server.cipherSuite;
-		client.cipherSuite = getAlgorithm(server.cipherSuite);
+		client.cipherSuite = getAlgorithm(server.cipherSuite, this.version);
 	}
 	client.calculatePacketOverhead();
 	client.certificate = server.certificate;
@@ -99,13 +102,14 @@ export async function initialize(config) {
 		id: clientId
 	};
 	await client.setSessionKeys();
-	if (!server.realtime && server.connectionGracePeriod) {
-		client.connectionGracePeriod = setTimeout(() => {
+	if (!realtime && gracePeriod) {
+		client.gracePeriod = setTimeout(() => {
 			const lastActive = (Date.now() - client.lastActive) / 1000;
+			console.log('Client Grace Period reached', gracePeriod, client);
 			if (client.state === 1 || lastActive > 30) {
 				client.destroy(1);
 			}
-		}, 30000);
+		}, gracePeriod);
 	}
 	success(`client Created: ID:${serverConnectionIdString} ${ip}:${port}`);
 	await server.clientEvent('constructed', `Server CID${serverConnectionIdString}`, `Client CID${client.clientIdString}`);

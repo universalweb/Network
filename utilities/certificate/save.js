@@ -1,5 +1,5 @@
 import { write } from '#file';
-import { encode } from 'msgpackr';
+import { encode } from '#utilities/serialize';
 import { resolve, normalize } from 'path';
 export async function saveCertificate(config) {
 	const {

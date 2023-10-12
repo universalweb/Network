@@ -5,7 +5,6 @@ import {
 	assign
 } from '@universalweb/acid';
 import { imported } from '#logs';
-imported('SERVER Events');
 async function addEvent(events, eventName, evntName, evnt) {
 	events.set(evntName, evnt);
 	console.log('Added Event', evntName);

@@ -1,7 +1,7 @@
 import {
 	jsonParse, isTrue, construct, hasValue, noValue
 } from '@universalweb/acid';
-import { decode } from 'msgpackr';
+import { decode } from '#utilities/serialize';
 import { objectGetSetMethods } from '../objectGetSetMethods.js';
 import { Base } from '../base.js';
 import { objectDataMethods } from '../dataMethods.js';

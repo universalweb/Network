@@ -8,7 +8,7 @@ import {
 	assign, objectSize, eachArray, jsonParse, construct,
 	isArray, clear, isFalse, isTrue, clearBuffer, hasValue, calcProgress
 } from '@universalweb/acid';
-import { encode, decode } from 'msgpackr';
+import { encode, decode } from '#utilities/serialize';
 import { toBase64 } from '#crypto';
 import { onDataSync, callOnDataSyncEvent } from './onDataSync.js';
 import { onData } from './onData.js';

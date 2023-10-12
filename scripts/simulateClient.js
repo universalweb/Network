@@ -5,7 +5,7 @@ console.log('STARTING CLIENT');
 console.time('Full');
 import { currentPath } from '@universalweb/acid';
 import { client } from '#udsp';
-import { decode } from 'msgpackr';
+import { decode } from '#utilities/serialize';
 console.time('Connected');
 // Universal Web Socket
 const uwClient = await client({
@@ -13,7 +13,7 @@ const uwClient = await client({
 	// Load Profile Certificate from Keychain
 	// keychain: 'Universal Web Profile',
 	// Load Profile Certificate from file
-	certificate: `${currentPath(import.meta)}/../profiles/default-Ephemeral.cert`,
+	certificate: `${currentPath(import.meta)}/../profiles/default-Ephemeral.cert`
 });
 // const connection = await uwClient.connect();
 //  await client('universalweb.io', {keychain: 'Universal Web Profile'});

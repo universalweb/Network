@@ -91,6 +91,9 @@ export const cipherSuites = {
 			0: x25519XChaChaPoly1305Algo,
 			default: x25519XChaChaPoly1305Algo
 		}
+	},
+	available: {
+		1: ['x25519-xchacha20-poly1305']
 	}
 };
 export const boxAlgorithms = {
@@ -111,34 +114,25 @@ assign(algorithms, boxAlgorithms);
 assign(algorithms, cipherSuites);
 const currentVersion = 1;
 export function getAlgorithm(cipherSuite, version) {
-	if (!cipherSuite) {
+	if (!hasValue(cipherSuite)) {
 		return false;
 	}
-	if (hasValue(version)) {
-		return algorithms.version[version || currentVersion][cipherSuite];
-	} else {
-		return algorithms[cipherSuite];
-	}
+	const result = algorithms.version[version || currentVersion][cipherSuite];
+	return result || algorithms[cipherSuite];
 }
 export function getCipherSuite(cipherSuite, version) {
-	if (!cipherSuite) {
+	if (!hasValue(cipherSuite)) {
 		return false;
 	}
-	if (hasValue(version)) {
-		return cipherSuites.version[version || currentVersion][cipherSuite];
-	} else {
-		return cipherSuites[cipherSuite];
-	}
+	const result = cipherSuites.version[version || currentVersion][cipherSuite];
+	return result || cipherSuites[cipherSuite];
 }
 export function getPublicKeyAlgorithm(cipherSuite, version) {
-	if (!cipherSuite) {
+	if (!hasValue(cipherSuite)) {
 		return false;
 	}
-	if (hasValue(version)) {
-		return publicKeyAlgorithms.version[version || currentVersion][cipherSuite];
-	} else {
-		return publicKeyAlgorithms[cipherSuite];
-	}
+	const result = publicKeyAlgorithms.version[version || currentVersion][cipherSuite];
+	return result || publicKeyAlgorithms[cipherSuite];
 }
 export function processPublicKey(certificate) {
 	console.log('keypairType', certificate);

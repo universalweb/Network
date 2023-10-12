@@ -12,10 +12,10 @@ export function cleanPath(filepath) {
 }
 export function isPathAllowed(filepath) {
 	const checkingRegex = illegalRe.test() === 0 &&
-	 controlRe.test() === 0 &&
-	  controlRe.test() === 0 &&
-	  reservedRe.test() === 0 &&
-	   windowsReservedRe.test() === 0;
+			controlRe.test() === 0 &&
+			controlRe.test() === 0 &&
+			reservedRe.test() === 0 &&
+			windowsReservedRe.test() === 0;
 	return checkingRegex;
 }
 export default cleanPath;

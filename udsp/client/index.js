@@ -10,7 +10,7 @@
 import {
 	encode,
 	decode
-} from 'msgpackr';
+} from '#utilities/serialize';
 import {
 	omit,
 	assign,
@@ -48,12 +48,12 @@ import { UDSP } from '#udsp/base';
 import { sendPacket } from '../sendPacket.js';
 import { post } from '../requestMethods/post.js';
 import { getAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
-import { getWANIPAddress } from '../getWANIPAddress.js';
-import { getLocalIpVersion } from '../getLocalIP.js';
+import { getWANIPAddress } from '../../utilities/network/getWANIPAddress.js';
+import { getLocalIpVersion } from '../../utilities/network/getLocalIP.js';
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
 	constructor(configuration) {
-		super();
+		super(configuration);
 		console.log('-------CLIENT INITIALIZING-------\n');
 		return this.initialize(configuration);
 	}
@@ -154,6 +154,9 @@ export class Client extends UDSP {
 			encryptConnectionId,
 			publicKeyAlgorithm,
 		} = destination;
+		if (!destination.cipherSuites) {
+			destination.cipherSuites = this.cipherSuites;
+		}
 		if (!has(destination.cipherSuites, this.cipherSuiteName)) {
 			console.log('Default ciphersuite not available');
 			this.cipherSuiteName = intersection(this.cipherSuites, destination.cipherSuites)[0];
@@ -162,11 +165,11 @@ export class Client extends UDSP {
 				return false;
 			}
 		}
-		this.publicKeyCryptography = getAlgorithm(publicKeyAlgorithm);
-		this.cipherSuite = getAlgorithm(this.cipherSuiteName);
+		this.publicKeyCryptography = getAlgorithm(publicKeyAlgorithm, this.version);
+		this.cipherSuite = getAlgorithm(this.cipherSuiteName, this.version);
 		console.log(this.cipherSuiteName);
 		if (destination.boxCryptography) {
-			this.boxCryptography = getAlgorithm(destination.boxCryptography);
+			this.boxCryptography = getAlgorithm(destination.boxCryptography, this.version);
 		}
 		this.compression = destination.compression;
 		this.headerCompression = destination.headerCompression;
@@ -195,6 +198,7 @@ export class Client extends UDSP {
 			return thisClient.onListening();
 		});
 		this.socket.on('message', (packet, rinfo) => {
+			console.log(rinfo);
 			return thisClient.onPacket(packet, rinfo);
 		});
 	}
@@ -227,6 +231,7 @@ export class Client extends UDSP {
 		this.id = id || randomConnectionId();
 		this.idString = toBase64(this.id);
 		this.clientId = this.id;
+		this.idSize = this.id.length;
 		success(`clientId:`, this.idString);
 		await this.setDestination();
 		await this.setCertificate();
@@ -302,6 +307,8 @@ export class Client extends UDSP {
 		} = message;
 		this.destinationIntroReceived = true;
 		this.destination.id = serverConnectionId;
+		this.destination.idSize = serverConnectionId.length;
+		console.log('New Server Connection ID', toBase64(serverConnectionId));
 		this.newKeypair = reKey;
 		await this.setNewDestinationKeys();
 		if (hasValue(certSize)) {
@@ -341,9 +348,11 @@ export class Client extends UDSP {
 		const key = this.encryptionKeypair.publicKey;
 		console.log('Setting Cryptography in UDSP Header', toBase64(key));
 		const {
-			cipherSuiteName, version
+			cipherSuiteName,
+			cipherSuite,
+			version
 		} = this;
-		header.cs = cipherSuiteName;
+		header.cs = cipherSuite.id;
 		header.v = version;
 		return header;
 	}
@@ -372,7 +381,7 @@ export class Client extends UDSP {
 		return this.awaitHandshake;
 	}
 	async send(message, headers, footer) {
-		console.log(`client.send to Server`, this.destination.port, this.destination.ip);
+		console.log(`client.send to Server`, this.destination.ip, this.destination.port);
 		return sendPacket(message, this, this.socket, this.destination, headers, footer);
 	}
 	proccessProtocolPacket(message) {

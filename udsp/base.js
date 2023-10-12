@@ -3,7 +3,13 @@ import {
 } from '@universalweb/acid';
 import dgram from 'dgram';
 import { randomConnectionId, randomBuffer } from '#crypto';
+import { cipherSuites } from './cryptoMiddleware/index.js';
 export class UDSP {
+	constructor(configuration) {
+		this.cipherSuiteName = cipherSuites.version[this.version][0].name;
+		this.cipherSuiteId = cipherSuites.version[this.version][0].id;
+		this.cipherSuites = cipherSuites.available[this.version];
+	}
 	async calculatePacketOverhead() {
 		const {
 			connectionIdSize,
@@ -64,6 +70,14 @@ export class UDSP {
 		console.log(`Max Paraneters Size: ${this.maxPacketParametersSize} bytes`);
 		console.log(`Max Packet Size: ${this.maxPacketSize} bytes`);
 	}
+	calculateReservedConnectionIdSize() {
+		const { coreCount } = this;
+		if (coreCount < 9) {
+			this.reservedConnectionIdSize = 1;
+		} else {
+			this.reservedConnectionIdSize = 2;
+		}
+	}
 	generateConnectionID() {
 		const target = randomConnectionId(this.connectionIdSize || 8);
 		return target;
@@ -110,8 +124,6 @@ export class UDSP {
 	throttle = false;
 	debounce = false;
 	randomId = randomBuffer(8);
-	cipherSuiteName = 'x25519-xchacha20-poly1305';
-	cipherSuiteNames = ['x25519-xchacha20-poly1305'];
 	version = 1;
 	cachedPacketSizes = {};
 }

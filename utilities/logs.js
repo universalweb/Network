@@ -14,23 +14,23 @@ function truncateArray(match) {
 function shortenArrays(item) {
 	return item.replace(arrayNumberRegex, truncateArray);
 }
-export function prettyObjects(args, consoleBase) {
+export function prettyObjects(args, consoleBase, isError) {
 	return each(args, (item) => {
-		console.log(consoleBase((isPrimitive(item) || isArray(item) || isBuffer(item)) ? item : shortenArrays(stringify(item, null, `  `))));
+		console[(isError) ? 'trace' : 'log'](consoleBase((isPrimitive(item) || isArray(item) || isBuffer(item)) ? item : shortenArrays(stringify(item, null, `  `))));
 	});
 }
-function logFactory(bg, color, header, footer) {
+function logFactory(bg, color, header, footer, isError = false) {
 	const consoleBase = (bg) ? chalk[bg].hex(color) : chalk.hex(color);
 	return function(...args) {
 		if (footer) {
 			const fullHeader = ` ---------------- ${header} START ---------------- `;
 			console.log(consoleBase(fullHeader));
-			prettyObjects(args, consoleBase);
+			prettyObjects(args, consoleBase, isError);
 			console.log(consoleBase(` ---------------- ${header} END ---------------- `, `\n`));
 		} else {
 			const fullHeader = `${header}  =>  `;
 			console.log(consoleBase(fullHeader));
-			prettyObjects(args, consoleBase);
+			prettyObjects(args, consoleBase, isError);
 		}
 	};
 }
@@ -45,4 +45,3 @@ export const logCert = logFactory(null, '#ffab00', 'CERTIFICATE', true);
 export const attention = logFactory(null, '#FF0000', 'ATTENTION');
 export const success = logFactory(null, '#00e676', 'SUCCESS');
 export const connectedLog = logFactory(null, '#00e636', 'CONNECTED');
-imported(`Console`);
