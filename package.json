@@ -118,7 +118,7 @@
 		"changelog": "auto-changelog -p --sort-commits date-desc && git add CHANGELOG.md",
 		"bumpVersion": "npm version patch --force"
 	},
-	"version": "1.3.3",
+	"version": "3.0.0",
 	"devDependencies": {
 		"@electron-forge/cli": "^6.0.5"
 	}
