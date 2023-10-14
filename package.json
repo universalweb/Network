@@ -116,9 +116,9 @@
 		"simc": "nodemon ./scripts/simulateClient.js --watch ./udsp/ --watch ./scripts/simulateClient.js --watch ./utilities/ --delay 3",
 		"start": "nodemon --watch ./index.html --watch ./client/ --watch ./browser/ --watch ./main.js --exec 'electron .'",
 		"changelog": "auto-changelog -p --sort-commits date-desc && git add CHANGELOG.md",
-		"bumpVersion": "npm version patch --force && cd ./package/ && npm version patch --force"
+		"bumpVersion": "npm version patch --force"
 	},
-	"version": "1.3.2",
+	"version": "1.3.3",
 	"devDependencies": {
 		"@electron-forge/cli": "^6.0.5"
 	}
