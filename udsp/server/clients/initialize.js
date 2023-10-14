@@ -15,81 +15,83 @@ import { Client } from './index.js';
 import { getAlgorithm } from '../../cryptoMiddleware/index.js';
 export async function initialize(config) {
 	const {
-		packet: {
-			header: {
-				id: clientId,
-				key: publicKey,
-				cs: cipherSuite,
-				css: cipherSuites,
-				v: version
-			},
-		},
+		packet,
 		server,
-		connection,
+		server: {
+			encryptionKeypair,
+			clients,
+			id: serverId,
+			realtime,
+			gracePeriod,
+			cipherSuites: serverCipherSuites,
+			cipherSuite: serverCipherSuite,
+			keypair: serverKeypair,
+			encryptionKeypair: serverEncryptionKeypair,
+			connectionIdKeypair: serverConnectionIdKeypair,
+			encryptClientConnectionId,
+			encryptServerConnectionId,
+			publicKeySize
+		},
+		connection: {
+			address: ip,
+			port
+		},
 	} = config;
-	const {
-		encryptionKeypair,
-		clients,
-		id: serverId,
-		realtime,
-		gracePeriod
-	} = server;
-	const {
-		address: ip,
-		port
-	} = connection;
-	const client = this;
-	let selectedCipherSuite = cipherSuite;
-	if (cipherSuites) {
-		const cipherSelection = intersection(cipherSuites, keys(server.cipherSuites));
-		if (cipherSelection.length) {
-			selectedCipherSuite = cipherSelection[0];
-		}
+	const header = packet.header;
+	const clientId = packet.id;
+	if (!clientId) {
+		console.trace('Client ID is missing');
+		return;
 	}
+	const publicKey = header[2];
+	if (!publicKey) {
+		console.trace('Client Public Key is missing');
+		return;
+	}
+	const client = this;
+	let selectedCipherSuite = header[3];
+	const version = header[4];
+	const cipherSuites = header[5];
 	if (hasValue(selectedCipherSuite)) {
 		this.cipherSuiteName = selectedCipherSuite;
 		client.cipherSuite = getAlgorithm(selectedCipherSuite, this.version);
+	} else if (cipherSuites) {
+		const cipherSelection = intersection(cipherSuites, keys(serverCipherSuites));
+		if (cipherSelection.length) {
+			selectedCipherSuite = cipherSelection[0];
+		}
 	} else {
 		console.log(`No cipher suite found going to default ${selectedCipherSuite}`);
-		this.cipherSuiteName = server.cipherSuite;
-		client.cipherSuite = getAlgorithm(server.cipherSuite, this.version);
+		this.cipherSuiteName = serverCipherSuite;
+		client.cipherSuite = getAlgorithm(serverCipherSuite, this.version);
 	}
+	client.publicKeySize = publicKeySize;
 	client.calculatePacketOverhead();
-	client.certificate = server.certificate;
 	// When changing to a new key you must first create new keys from scratch to replace these.
-	client.keypair = server.keypair;
-	client.encryptionKeypair = server.encryptionKeypair;
-	client.connectionIdKeypair = server.connectionIdKeypair;
+	client.keypair = serverKeypair;
+	client.encryptionKeypair = serverEncryptionKeypair;
+	if (serverConnectionIdKeypair) {
+		client.connectionIdKeypair = serverConnectionIdKeypair;
+		if (isBoolean(encryptClientConnectionId)) {
+			client.encryptClientConnectionId = encryptClientConnectionId;
+		}
+		if (isBoolean(encryptServerConnectionId)) {
+			client.encryptServerConnectionId = encryptServerConnectionId;
+		}
+	}
 	success(`key: ${toBase64(publicKey)}`);
-	/*
-		When the client sends to server it includes the client ID in the header
-		This also validates origin as any following requests must use this Server Connection ID
-		Server IDs are typically larger encrypted
-		Server IDs can be random with some actionable info
-		The client ID can be used as the base of the server ID and then generate the rest to form a unique server specific ID
-	*/
 	success(`Client Connection ID: ${toBase64(clientId)}`);
-	/*
-		The server's connection ID is used for loadbalancing, internal packet analysis,
-		client/server privacy, client/server security, congestion control, connection migration, and external analysis obfuscation.
-		The connection ID can be encrypted when being sent to the client it uses the clientID when client sends to the server it uses the provided Server ID. Both are in the same location in the header with a property with the name "id".
-		Encrypting the connection ID allows for the server to be able to identify the client without leaking any internal network information & protect it from further analysis & certain attacks.
-	*/
-	// The server's connection id is a value that is used to identify a specific client to the server.
-	const serverClientId = Buffer.concat([server.id, randomBuffer(4)]);
+	const serverClientId = Buffer.concat([serverId, randomBuffer(4)]);
 	const serverConnectionIdString = toBase64(serverClientId);
 	console.log(`Server Connection ID: ${toBase64(serverClientId)}`);
 	if (clients.has(serverConnectionIdString)) {
-		failed('ID IN USE NEED TO RE-CHECK FOR A NEW ID');
+		console.trace('ID IN USE NEED TO RE-CHECK FOR A NEW ID');
 	} else {
 		success(`Server client ID is open ${serverConnectionIdString}`);
 	}
 	clients.set(serverConnectionIdString, client);
 	client.id = serverClientId;
 	client.idString = serverConnectionIdString;
-	if (isBoolean(server.encryptClientConnectionId)) {
-		client.encryptConnectionId = true;
-	}
 	client.destination = {
 		encryptionKeypair: {
 			publicKey

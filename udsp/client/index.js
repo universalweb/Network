@@ -257,7 +257,7 @@ export class Client extends UDSP {
 		success(`client reKeyed -> ID: ${thisClient.idString}`);
 	}
 	close(message) {
-		console.log(this.idString, `client closed. code ${message.state}`);
+		console.trace(this.idString, `client closed. code ${message?.state || message}`);
 		this.socket.close();
 		Client.connections.delete(this.idString);
 	}
@@ -300,18 +300,20 @@ export class Client extends UDSP {
 	}
 	async intro(message) {
 		console.log('Got server Intro', message);
-		const {
-			scid: serverConnectionId,
-			reKey,
-			certSize,
-		} = message;
+		const intro = message?.i;
+		const certSize = message?.c;
+		if (!intro || !isArray(intro)) {
+			this.close('No intro message');
+			return;
+		}
+		const [serverConnectionId, reKey, randomId] = intro;
 		this.destinationIntroReceived = true;
 		this.destination.id = serverConnectionId;
 		this.destination.idSize = serverConnectionId.length;
 		console.log('New Server Connection ID', toBase64(serverConnectionId));
 		this.newKeypair = reKey;
 		await this.setNewDestinationKeys();
-		if (hasValue(certSize)) {
+		if (certSize) {
 			this.certSize = certSize;
 		} else {
 			this.sendHandshake(message);
@@ -331,20 +333,19 @@ export class Client extends UDSP {
 		// Resolve the handshake promise
 		this.handshakeCompleted(message);
 	}
-	setPublicKeyHeader(header = {}) {
+	setPublicKeyHeader(header = [0, 0, 0]) {
 		const key = this.encryptionKeypair.publicKey;
 		console.log('Setting Public Key in UDSP Header', toBase64(key));
 		const { encryptClientKey } = this.certificate;
-		header.key = key;
-		if (this.destination.encryptionKeypair) {
-			if (encryptClientKey) {
-				console.log('Encrypting Public Key in UDSP Header');
-				header.key = this.boxCryptography.boxSeal(header.key, this.destination.encryptionKeypair);
-			}
+		if (encryptClientKey) {
+			console.log('Encrypting Public Key in UDSP Header');
+			header.push(this.boxCryptography.boxSeal(header.key, this.destination.encryptionKeypair));
+		} else {
+			header.push(key);
 		}
 		return header;
 	}
-	setCryptographyHeaders(header = {}) {
+	setCryptographyHeaders(header = []) {
 		const key = this.encryptionKeypair.publicKey;
 		console.log('Setting Cryptography in UDSP Header', toBase64(key));
 		const {
@@ -352,19 +353,18 @@ export class Client extends UDSP {
 			cipherSuite,
 			version
 		} = this;
-		header.cs = cipherSuite.id;
-		header.v = version;
+		header.push(cipherSuite.id, version);
 		return header;
 	}
 	sendIntro() {
 		console.log('Sending Intro');
 		this.state = 1;
-		const header = this.setPublicKeyHeader();
+		const header = [0];
+		this.setPublicKeyHeader(header);
 		this.setCryptographyHeaders(header);
 		const requestCertificate = Boolean(this.hasCertificate);
 		const message = {
-			intro: true,
-			random: this.randomId
+			i: true
 		};
 		this.introSent = true;
 		this.send(message, header);
@@ -386,7 +386,7 @@ export class Client extends UDSP {
 	}
 	proccessProtocolPacket(message) {
 		const {
-			intro,
+			i: intro,
 			certIndex,
 			handshake,
 			state

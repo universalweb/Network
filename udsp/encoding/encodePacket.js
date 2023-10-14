@@ -25,7 +25,8 @@ import { toBase64 } from '#crypto';
 	 * Allow complex headers being objects long header mode
 	 * Way for packet to be as a whole buffer First check the first 8 bytes for connection id if not then parse whole packet.
  */
-export async function encodePacket(message, source, destination, headers, footer) {
+// [id, RPC, (...[] || {})] (Arrays are flattened while objects are not)
+export async function encodePacket(message = Buffer.from(0), source, destination, headers, footer) {
 	success(`PROCESSING TO ENCODE PACKET`);
 	const {
 		state,
@@ -39,52 +40,44 @@ export async function encodePacket(message, source, destination, headers, footer
 	} = source;
 	let id = destination.id || source.id;
 	if (!id) {
-		return console.error(`ID IS'T ASSIGNED`);
+		console.trace(`ID is missing`);
+		return;
 	}
-	if (isServerEnd) {
-		if (source.encryptConnectionId) {
-			id = boxCryptography.boxSeal(id, destination.connectionIdKeypair);
-		}
-	} else if (source.encryptServerConnectionId) {
+	const shouldEncryptConnectionId = (isServerEnd) ? source.encryptClientConnectionId : source.encryptServerConnectionId;
+	if (shouldEncryptConnectionId) {
 		id = boxCryptography.boxSeal(id, destination.connectionIdKeypair);
-	}
-	if (!id) {
-		return console.error(`Connection ID missing`);
+		if (!id) {
+			console.trace(`Connection failed to encrypt`);
+			return;
+		}
 	}
 	let header = id;
 	let shortHeaderMode = true;
 	if (headers) {
-		const isHeadersAnObject = isPlainObject(headers);
-		const isHeadersAnArray = isArray(headers);
-		header = headers;
+		const isHeadersAnArray = isArray(headers) && headers.length > 0;
 		shortHeaderMode = false;
-		if (isHeadersAnArray && headers.length) {
-			header.unshift(id);
-		} else if (isHeadersAnObject && objectSize(headers)) {
-			header.id = id;
+		if (isHeadersAnArray) {
+			headers.unshift(id);
+			header = headers;
 		} else {
-			header = id;
-			shortHeaderMode = true;
+			header = [id, headers];
 		}
+		console.log('HEADERS GIVEN', isHeadersAnArray, headers);
 	}
 	if (message) {
 		console.log(message);
-		if (message?.frame?.length === 1) {
+		if (message.frame?.length === 1) {
 			message.frame = message.frame[0];
 		}
 	}
-	if (headers) {
-		console.log(headers);
-	}
 	info(`clientId: ${toBase64(id)}`);
 	info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
-	message.t = Date.now();
 	const headerEncoded = (shortHeaderMode) ? header : encode(header);
 	const messageEncoded = encode(message);
 	const ad = (footer) ? Buffer.concat([headerEncoded, footer]) : headerEncoded;
 	const encryptedMessage = cipherSuite.encrypt(messageEncoded, source.sessionKeys, ad);
 	if (!encryptedMessage) {
-		return failed('Encryption failed');
+		return console.trace('Encryption failed');
 	}
 	let packetStructure = [headerEncoded, encryptedMessage];
 	if (shortHeaderMode) {
@@ -98,7 +91,7 @@ export async function encodePacket(message, source, destination, headers, footer
 	info(`encoded Packet Size ${packetSize}`);
 	if (packetSize > 1280) {
 		console.log(packetEncoded);
-		failed(`WARNING: Encode Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
+		console.trace(`WARNING: Encode Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
 	}
 	success(`PROCESSED ENCODE PACKET`);
 	return packetEncoded;

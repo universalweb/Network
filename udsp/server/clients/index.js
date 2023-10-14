@@ -144,12 +144,9 @@ export class Client {
 			this.newKeypairGenerated = true;
 		}
 		const message = {
-			intro: true,
-			scid: this.id,
-			reKey: this.newKeypair.publicKey,
-			randomId: this.randomId
+			i: [this.id, this.newKeypair.publicKey, this.randomId],
 		};
-		this.state = 1;
+		this.updateState(1);
 		await this.send(message);
 	}
 	// client confirmation of server intro
@@ -175,7 +172,7 @@ export class Client {
 		info(`Server:Client proccessProtocolPacket -> - ID:${this.idString}`);
 		console.log(message);
 		const {
-			intro,
+			i: intro,
 			certRequest,
 			handshake,
 			handshakeFinale

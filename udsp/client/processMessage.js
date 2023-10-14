@@ -14,7 +14,7 @@ export async function processMessage(packet, client) {
 	} = packet;
 	const { requestQueue } = client;
 	if (!message) {
-		return failed(`Invalid Message Received`);
+		return console.trace(`Invalid Message Received`);
 	}
 	const {
 		kill,
@@ -28,14 +28,14 @@ export async function processMessage(packet, client) {
 	}
 	if (state === 3 || kill) {
 		client.close();
-		return failed(`End event received from server disconnected closing client`);
+		return console.trace(`End event received from server disconnected closing client`);
 	}
 	// console.log(queue.keys());
 	const askObject = requestQueue.get(id);
 	if (askObject) {
 		askObject.onPacket(packet);
 	} else {
-		failed(`Invalid Stream Id given no ask object with that ID. ${id}`);
+		console.trace(`Invalid Stream Id given no ask object with that ID. ${id}`);
 		console.log(message);
 	}
 }

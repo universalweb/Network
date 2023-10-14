@@ -2,6 +2,6 @@ import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 export async function onError(error) {
-	failed(`server error:\n${error.stack}`);
+	console.trace(`server error:\n${error.stack}`);
 	this.server.disconnect();
 }

@@ -18,12 +18,9 @@ export async function onPacket(packet, connection) {
 	};
 	const wasHeadersDecoded = await decodePacketHeaders(config);
 	if (!wasHeadersDecoded || !config.packetDecoded.header) {
-		return failed('Invalid Packet Headers');
+		return console.trace('Invalid Packet Headers');
 	}
-	const {
-		id,
-		key,
-	} = config.packetDecoded.header;
+	const id = config.packetDecoded.id;
 	let client = thisServer.clients.get(toBase64(id));
 	if (client) {
 		config.destination = client;
@@ -31,31 +28,31 @@ export async function onPacket(packet, connection) {
 			client.attachNewClientKeys();
 		}
 	}
-	if (key && !client) {
+	if (!client) {
 		client = await createClient({
 			server: thisServer,
 			connection,
 			packet: config.packetDecoded
 		});
 		if (!client) {
-			return failed('Failed to create client', toBase64(id));
+			return console.trace('Failed to create client', toBase64(id));
 		}
 		config.destination = client;
 	}
 	if (!client) {
 		// Send error message back to origin or not
-		return failed('Invalid Client id given', toBase64(id));
+		return console.trace('Invalid Client id given', toBase64(id));
 	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {
-		return failed('When decoding the packet but header passed');
+		return console.trace('When decoding the packet but header passed');
 	}
 	const {
 		header,
 		message
 	} = config.packetDecoded;
 	if (!message) {
-		return failed('Error failed to decode packet headers');
+		return console.trace('Error failed to decode packet headers');
 	}
 	console.log(config.packetDecoded);
 	if (hasValue(message.id)) {

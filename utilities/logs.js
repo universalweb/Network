@@ -16,7 +16,7 @@ function shortenArrays(item) {
 }
 export function prettyObjects(args, consoleBase, isError) {
 	return each(args, (item) => {
-		console[(isError) ? 'trace' : 'log'](consoleBase((isPrimitive(item) || isArray(item) || isBuffer(item)) ? item : shortenArrays(stringify(item, null, `  `))));
+		console.log(consoleBase((isPrimitive(item) || isArray(item) || isBuffer(item)) ? item : shortenArrays(stringify(item, null, `  `))));
 	});
 }
 function logFactory(bg, color, header, footer, isError = false) {
@@ -26,10 +26,16 @@ function logFactory(bg, color, header, footer, isError = false) {
 			const fullHeader = ` ---------------- ${header} START ---------------- `;
 			console.log(consoleBase(fullHeader));
 			prettyObjects(args, consoleBase, isError);
+			if (isError) {
+				console.trace(`Error`);
+			}
 			console.log(consoleBase(` ---------------- ${header} END ---------------- `, `\n`));
 		} else {
 			const fullHeader = `${header}  =>  `;
 			console.log(consoleBase(fullHeader));
+			if (isError) {
+				console.trace(`Error`);
+			}
 			prettyObjects(args, consoleBase, isError);
 		}
 	};

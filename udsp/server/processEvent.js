@@ -16,6 +16,6 @@ export async function processEvent(request, response, source) {
 		const hasResponse = requestMethod(request, response, source);
 		return hasResponse;
 	} else {
-		return failed(`Invalid method name given.`, source);
+		return console.trace(`Invalid method name given.`, source);
 	}
 }

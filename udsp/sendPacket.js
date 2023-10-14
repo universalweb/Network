@@ -34,7 +34,7 @@ export async function sendPacket(message, source, socket, destination = source.d
 		socket.send(packetEncoded, port, ip, (error) => {
 			if (error) {
 				reject(error);
-				return failed(error);
+				return console.trace(error);
 			}
 			success('Packet Sent Out', packetEncoded.length);
 			accept();

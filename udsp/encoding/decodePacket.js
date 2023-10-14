@@ -7,16 +7,6 @@ import {
 } from '@universalweb/acid';
 import { toBase64 } from '#crypto';
 import { createClient } from '../server/clients/index.js';
-function headerArray(item, index) {
-	const header = this;
-	if (isArray(item)) {
-		header[item[0]] = item[1];
-	} else if (index === 0) {
-		header.id = item;
-	} else if (index === 1) {
-		header.key = item;
-	}
-}
 export async function decodePacketHeaders(config) {
 	const {
 		source,
@@ -39,7 +29,7 @@ export async function decodePacketHeaders(config) {
 	const packetSize = packetEncoded.length;
 	if (packetSize > 1280) {
 		console.log(packetEncoded);
-		failed(`WARNING: DECODE Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
+		console.trace(`WARNING: DECODE Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
 	}
 	const client = config.client;
 	info(`Packet Encoded Size ${packetSize}`);
@@ -68,61 +58,54 @@ export async function decodePacketHeaders(config) {
 	if (!headerDecoded) {
 		return console.trace(`No header from decode -> Invalid Packet`);
 	}
-	let header = headerDecoded;
-	if (isBuffer(headerDecoded)) {
-		header = {
-			id: headerDecoded
-		};
-	} else if (isArray(headerDecoded)) {
-		header = {};
-		if (headerDecoded.length <= 2) {
-			header.id = headerDecoded[0];
-			if (headerDecoded[1]) {
-				header.id = headerDecoded[1];
-			}
-		} else {
-			eachArray(headerDecoded, headerArray, header);
-		}
-	}
-	if (!header.id) {
-		return failed(`No connection id in header -> Invalid Packet`);
-	}
+	let id = (isShortHeaderMode) ? headerDecoded : headerDecoded[0];
 	if (connectionIdKeypair) {
 		success('Connection ID Decrypted');
+		const shouldDecryptConnectionId = (isServerEnd) ? destination.encryptServerConnectionId : destination.encryptClientConnectionId;
 		// console.log(destination);
-		if (isServerEnd) {
-			if (source.encryptConnectionId) {
-				header.id = boxCryptography.boxUnseal(header.id, destination.connectionIdKeypair);
+		if (shouldDecryptConnectionId) {
+			id = boxCryptography.boxUnseal(id, destination.connectionIdKeypair);
+			if (!id) {
+				console.trace(`Packet ID Decrypt Failed`);
+				return;
 			}
-		} else if (source.encryptServerConnectionId) {
-			header.id = boxCryptography.boxUnseal(header.id, destination.connectionIdKeypair);
-		}
-		if (!header.id) {
-			return console.trace(`Packet ID Decrypt Failed`);
 		}
 	}
-	info(`clientId: ${toBase64(header.id)}`);
-	if (header.key) {
-		success(`Public Key is given -> Processing as create client`);
-		if (encryptionKeypair) {
-			if (encryptClientKey) {
-				console.log('Decrypting Public Key in UDSP Header');
-				const { key } = header;
-				header.key = boxCryptography.boxUnseal(key, encryptionKeypair);
-				if (!header.key) {
-					return failed('Client Key Decode Failed', toBase64(key));
+	info(`clientId: ${toBase64(id)}`);
+	if (!isShortHeaderMode) {
+		const headerRPC = headerDecoded[1];
+		if (headerRPC) {
+			config.headerRPC = headerRPC;
+		}
+		if (headerRPC === 0) {
+			success(`Public Key is given -> Processing as create client`);
+			let key = headerDecoded[2];
+			if (!key) {
+				return console.trace('No Client Key provided', headerDecoded);
+			}
+			// Add check for length of key before processing further and just kill the connection
+			if (encryptionKeypair) {
+				if (headerDecoded[2] && encryptClientKey) {
+					console.log('Decrypting Public Key in UDSP Header');
+					key = boxCryptography.boxUnseal(key, encryptionKeypair);
+					if (key) {
+						headerDecoded[2] = key;
+					} else {
+						return console.trace('Client Key Decode Failed', toBase64(key));
+					}
 				}
 			}
+			console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(key));
+		} else {
+			success(`Invalid RPC given`);
 		}
-		console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(header.key));
-	} else {
-		success(`No Public Key is given -> Processing as a message`);
 	}
 	// console.log(header);
 	config.packetDecoded = {
-		header
+		header: headerDecoded,
+		id
 	};
-	return true;
+	return config;
 }
 export async function decodePacket(config) {
 	const {
@@ -146,8 +129,6 @@ export async function decodePacket(config) {
 	}
 	if (header.error) {
 		console.log('Critical Error', header.error);
-		// can be returned if a server so chooses to respond to bad/mal/incorrect requests
-		// can return unencrypted data
 		if (messageEncoded) {
 			packetDecoded.message = decode(messageEncoded);
 		}
@@ -162,12 +143,12 @@ export async function decodePacket(config) {
 		console.log('cipherSuite', cipherSuite);
 		const decryptedMessage = cipherSuite.decrypt(messageEncoded, destination.sessionKeys, ad);
 		if (!decryptedMessage) {
-			return failed('Encryption failed');
+			return console.trace('Encryption failed');
 		}
 		info(`decrypted Message size ${decryptedMessage.length}bytes`);
 		const message = decode(decryptedMessage);
 		if (!hasValue(message)) {
-			return failed('No Message -> Invalid Packet');
+			return console.trace('No Message -> Invalid Packet');
 		}
 		if (message.head) {
 			console.log('head PAYLOAD', message.head);
@@ -186,7 +167,7 @@ export async function decodePacket(config) {
 				streamId = frame;
 			}
 			if (!hasValue(streamId)) {
-				return failed('No streamId in message -> Invalid Packet');
+				return console.trace('No streamId in message -> Invalid Packet');
 			}
 			message.id = streamId;
 			if (hasValue(packetId)) {
@@ -200,13 +181,13 @@ export async function decodePacket(config) {
 		if (footerEncoded) {
 			footer = footerEncoded && decode(footerEncoded);
 			if (!footer) {
-				return failed(`Footer failed to decode -> Invalid Packet`);
+				return console.trace(`Footer failed to decode -> Invalid Packet`);
 			} else if (footer) {
 				packetDecoded.footer = footer;
 			}
 		}
 	} else {
-		failed(`No Encrypted Message - failed to decode -> Invalid Packet`);
+		console.trace(`No Encrypted Message - failed to decode -> Invalid Packet`);
 	}
 	return true;
 }
