@@ -19,7 +19,7 @@ const appServer = await server({
 		// exclusive roundrobin loadbalancer
 		mode: 'exclusive',
 	},
-	encryptConnectionId: true,
+	encryptConnectionId: false,
 	randomId: true,
 	// will listen on ipv4 and ipv6 default is '::1'
 	ip: '::',

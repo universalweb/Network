@@ -1,11 +1,5 @@
 import {
-	construct,
-	each,
-	assign,
-	UniqID,
-	isFunction,
-	currentPath,
-	isTrue
+	construct, each, assign, UniqID, isFunction, currentPath, isTrue, hasValue
 } from '@universalweb/acid';
 import {
 	success,
@@ -35,6 +29,10 @@ export class Server extends UDSP {
 		// console.log = () => {};
 		return this.initialize(configuration);
 	}
+	static description = 'UW Server Module';
+	static type = 'server';
+	isServer = true;
+	isServerEnd = true;
 	onLoadbalancer(packet, addressInfo) {
 		const message = decode(packet);
 		if (message) {
@@ -115,23 +113,31 @@ export class Server extends UDSP {
 			if (convertSignKeypairToEncryptionKeypair) {
 				this.encryptionKeypair = convertSignKeypairToEncryptionKeypair;
 			}
-			const {
-				encryptConnectionId,
-				encryptClientConnectionId,
-				encryptServerConnectionId,
-				encryptClientKey
-			} = this.certificate;
-			this.encryptClientKey = encryptClientKey;
+			const { encryptConnectionId } = this.certificate;
 			if (encryptConnectionId) {
-				this.encryptClientConnectionId = true;
-				this.encryptServerConnectionId = true;
-			} else if (encryptClientConnectionId) {
-				this.encryptClientConnectionId = true;
-			} else if (encryptServerConnectionId) {
-				this.encryptServerConnectionId = true;
-			}
-			if (this.certificate.connectionIdKeypair) {
-				this.connectionIdKeypair = this.certificate.connectionIdKeypair;
+				const {
+					server: encryptServerCid,
+					client: encryptClientCid,
+					keypair: connectionIdKeypair
+				} = encryptConnectionId;
+				let encryptServer = hasValue(encryptServerCid);
+				let encryptClient = hasValue(encryptClientCid);
+				if (!encryptServer && !encryptClient) {
+					encryptServer = true;
+					encryptClient = true;
+				}
+				if (encryptServer) {
+					this.encryptServerConnectionId = true;
+					if (connectionIdKeypair) {
+						this.connectionIdKeypair = connectionIdKeypair;
+					} else {
+						this.connectionIdKeypair = this.encryptionKeypair;
+					}
+				}
+				if (encryptClient) {
+					this.encryptClientConnectionId = true;
+				}
+				console.log(`Encrypt Connection ID Server ${encryptServer} Client ${encryptClient}`);
 			}
 		}
 		console.log('publicKeyCryptography', this.publicKeyCryptography);
@@ -202,8 +208,6 @@ export class Server extends UDSP {
 	onError = onError;
 	onListen = onListen;
 	onPacket = onPacket;
-	isServer = true;
-	isServerEnd = true;
 	requestMethods = construct(Map);
 	realTime = true;
 	socketCount = 0;

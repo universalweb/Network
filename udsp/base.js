@@ -4,6 +4,9 @@ import {
 import dgram from 'dgram';
 import { randomConnectionId, randomBuffer } from '#crypto';
 import { cipherSuites } from './cryptoMiddleware/index.js';
+/* TODO
+	Calculate encrypted connection ID overhead - add to existing overhead or force to specify in config the size encrypted
+*/
 export class UDSP {
 	constructor(configuration) {
 		this.cipherSuiteName = cipherSuites.version[this.version][0].name;
@@ -12,7 +15,6 @@ export class UDSP {
 	}
 	async calculatePacketOverhead() {
 		const {
-			connectionIdSize,
 			maxPacketPayloadSize,
 			maxPacketDataSize,
 			maxPacketHeadSize,
@@ -40,8 +42,9 @@ export class UDSP {
 			}
 		} else {
 			const packetInitialOverhead = 2;
+			const connectionIdSize = (this.isClient) ? this.clientConnectionIdSize : this.connectionIdSize;
 			this.encryptPacketOverhead = this.encryptOverhead;
-			this.packetOverhead = packetInitialOverhead + this.encryptPacketOverhead + this.connectionIdSize;
+			this.packetOverhead = packetInitialOverhead + this.encryptPacketOverhead + connectionIdSize;
 			this.maxPacketPayloadSize = this.maxPacketSize - this.packetOverhead;
 			this.maxPayloadSizeSafeEstimate = this.maxPacketPayloadSize - 10;
 			this.emptyPayloadOverHeadSize = 16 + 19;

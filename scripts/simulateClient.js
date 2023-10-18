@@ -13,7 +13,7 @@ const uwClient = await client({
 	// Load Profile Certificate from Keychain
 	// keychain: 'Universal Web Profile',
 	// Load Profile Certificate from file
-	certificate: `${currentPath(import.meta)}/../profiles/default-Ephemeral.cert`
+	profile: `${currentPath(import.meta)}/../profiles/default-Ephemeral.cert`
 });
 // const connection = await uwClient.connect();
 //  await client('universalweb.io', {keychain: 'Universal Web Profile'});

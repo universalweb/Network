@@ -19,7 +19,9 @@ import {
 	isFalse,
 	isUndefined,
 	isFalsy,
-	hasValue
+	hasValue,
+	isArray,
+	eachArray
 } from '@universalweb/acid';
 import {
 	toBase64,
@@ -28,6 +30,11 @@ import {
 import { encodePacket } from '#udsp/encoding/encodePacket';
 import { sendPacket } from '#udsp/sendPacket';
 import { reply } from '#udsp/request/reply';
+/* TODO
+	- Add support for changing connection id sizes for clients (char type limits int, string, both)
+	- smaller cid size for clients
+	- New stream id generation to keep them small but need better way to handle large amounts of ids for fatser selection
+*/
 export class Client {
 	constructor(config) {
 		const { server } = config;
@@ -38,12 +45,24 @@ export class Client {
 		this.socket = function() {
 			return server.socket;
 		};
-		this.events = server.events;
-		this.requestMethods = server.requestMethods;
-		this.cipherSuites = server.cipherSuites;
-		this.publicKeyCryptography = server.publicKeyCryptography;
-		this.encryptClientConnectionId = server.encryptClientConnectionId;
-		this.encryptServerConnectionId = server.encryptServerConnectionId;
+		const {
+			events,
+			requestMethods,
+			cipherSuites,
+			publicKeyCryptography,
+			encryptClientConnectionId,
+			encryptServerConnectionId
+		} = server;
+		this.events = events;
+		this.requestMethods = requestMethods;
+		this.cipherSuites = cipherSuites;
+		this.publicKeyCryptography = publicKeyCryptography;
+		if (hasValue(encryptClientConnectionId)) {
+			this.encryptClientConnectionId = encryptClientConnectionId;
+		}
+		if (hasValue(encryptServerConnectionId)) {
+			this.encryptServerConnectionId = encryptServerConnectionId;
+		}
 		return this.initialize(config);
 	}
 	initialize = initialize;
@@ -115,6 +134,7 @@ export class Client {
 		success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
 	}
 	updateState(state) {
+		console.log(`State Updated -> ${this.state}`);
 		this.state = state;
 	}
 	async send(message, headers, footer) {
@@ -133,54 +153,40 @@ export class Client {
 		await destroy(this, destroyCode, server);
 		info(`socket EVENT -> destroy - ID:${this.idString}`);
 	}
-	async intro(message) {
+	// CLIENT HELLO
+	async processIntro(message) {
+		info(`Client Intro -> - ID:${this.idString}`, message);
 		this.sendIntro(message);
 	}
-	// server intro to client with connection id and new keypair
-	async sendIntro(introMessage) {
-		info(`Client Intro Sent -> - ID:${this.idString}`, introMessage);
-		if (isFalsy(this.newKeypairGenerated)) {
+	// SERVER HELLO
+	async sendIntro() {
+		if (!this.newKeypair) {
 			this.generateSessionKeypair();
-			this.newKeypairGenerated = true;
 		}
-		const message = {
-			i: [this.id, this.newKeypair.publicKey, this.randomId],
-		};
+		const message = [0, this.id, this.newKeypair.publicKey, this.randomId];
 		this.updateState(1);
 		await this.send(message);
 	}
-	// client confirmation of server intro
-	async handshake(message) {
-		this.sendHandshake();
-	}
 	async attachNewClientKeys() {
-		this.state = 2;
+		this.updateState(2);
 		this.encryptionKeypair = this.newKeypair;
 		await this.setSessionKeys();
 		this.newSessionKeysAssigned = true;
 	}
-	// server confirmation of handshake to client
-	async sendHandshake(originalMessage) {
-		const message = {
-			handshake: true
-		};
-		await this.send(message);
-	}
-	chunkCertificate(certificate) {
-	}
 	proccessProtocolPacket(message) {
 		info(`Server:Client proccessProtocolPacket -> - ID:${this.idString}`);
 		console.log(message);
-		const {
-			i: intro,
-			certRequest,
-			handshake,
-			handshakeFinale
-		} = message;
-		if (intro) {
-			this.intro(message);
-		} else if (handshake) {
-			this.handshake(message);
+		if (!message || !isArray(message)) {
+			console.trace('No message given');
+			return;
+		}
+		const [streamid, rpc] = message;
+		if (rpc === 0) {
+			this.processIntro(message);
+		} else {
+			console.log(message);
+			console.trace('RPC Code missing or incorrect');
+			return;
 		}
 	}
 	description = `Server's client`;
@@ -193,16 +199,15 @@ export class Client {
 	randomId = randomBuffer(8);
 	data = construct(Map);
 	replyQueue = construct(Map);
-	reply(packet) {
-		const { message } = packet;
-		const id = message.id;
-		console.log('Reply Client', id, this.replyQueue.has(id), packet);
+	async reply(frame, header) {
+		const id = frame.id;
+		console.log('Reply Client', id, this.replyQueue.has(id), frame);
 		if (hasValue(id)) {
 			if (this.replyQueue.has(id)) {
-				return this.replyQueue.get(id).onPacket(packet);
+				return this.replyQueue.get(id).onFrame(frame, header);
 			}
 		}
-		reply(packet, this).onPacket(packet);
+		reply(frame, this).onFrame(frame, header);
 	}
 }
 export async function createClient(config) {

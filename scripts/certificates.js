@@ -20,19 +20,26 @@ const domainProfile = await createProfile({
 			// There is however a default ciphersuite assigned to each version of UW://
 			cipherSuites: ['x25519-xchacha20-poly1305'],
 			publicKeyAlgorithm: 'ed25519',
-			// The purpose of encrypting connection IDs (CIDs) is to eliminate connection ID tracking and to constantly change how the connection id looks from those observing packets.
-			// Encrypting CIDs protects against leaking smart CID routing information which show the endpoint server/process.
-			// boxCryptography: 'xsalsa20',
-			// encryptConnectionId: true, Applies to both client and server connection ID
-			// encryptClientConnectionId: true,
-			// encryptServerConnectionId: true,
-			// connectionIdKeypair: UNIQUE KEYPAIR FOR CONNECTION IDs,
-			// Encrypt public key sent in the packet
-			// encryptClientKey: true,
-			// encryptServerKey: true,
-			// encryptKeypair: true
-			// Max connection id size in bytes usually randomly generated and checked but used to calculate max packet payload size
+			// The purpose of encrypting connection IDs (CIDs) is to eliminate connection ID tracking and to constantly change how the connection id looks from those observing packets. This is for constant changing of the server ID and or client ID.
+			// Encrypting CIDs protects against leaking smart CID routing information - Typically this is overkill and should be avoided
+			// encryptConnectionId: {
+			// 	size: 8, // size of the connection id in bytes
+			// clientSize: 24,
+			// serverSize; 24,
+			// 	keypair: Buffer,  // UNIQUE KEYPAIR FOR Encrypting or none to use the certificate keypair
+			// 	server: true, // or none to default to true if encryptConnectionId is defined
+			// 	client: true, // or none to default to true if encryptConnectionId is defined Encrypts client with its own keypair from server side
+			// },
+			// Encrypt the client's public key when sending to server for handshake
+			// encryptKeypair: {
+			// 	size: 42,
+			// 	keypair: UNIQUE KEYPAIR FOR Encrypting or none to use the certificate keypair,
+			// 	server: true,
+			// 	client: true,
+			// }
+			// Connection ID size in bytes
 			connectionIdSize: 8,
+			// client connection id size enforced on the server
 			clientConnectionIdSize: 4,
 			// Max payload (head or data) size in bytes
 			// maxPacketPayloadSize: 1200,
@@ -43,7 +50,7 @@ const domainProfile = await createProfile({
 			// maxPacketPathSize: 1200,
 			// maxPacketParametersSize: 1200,
 			// heartbeat is an interval check for when a client must send something to the server to remain connected
-			heartbeat: 30000,
+			heartbeat: 5000,
 			url: 'universal.web',
 			domain: 'universal',
 			extension: 'web',

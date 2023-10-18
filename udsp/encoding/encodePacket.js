@@ -66,9 +66,6 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 	}
 	if (message) {
 		console.log(message);
-		if (message.frame?.length === 1) {
-			message.frame = message.frame[0];
-		}
 	}
 	info(`clientId: ${toBase64(id)}`);
 	info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);

@@ -15,7 +15,6 @@ export async function decodePacketHeaders(config) {
 	} = config;
 	const {
 		encryptionKeypair,
-		connectionIdKeypair,
 		publicKeyCryptography,
 		cipherSuite,
 		state,
@@ -24,7 +23,7 @@ export async function decodePacketHeaders(config) {
 		isServerEnd,
 		isServerClient,
 		boxCryptography,
-		encryptClientKey
+		connectionIdKeypair
 	} = destination;
 	const packetSize = packetEncoded.length;
 	if (packetSize > 1280) {
@@ -85,7 +84,7 @@ export async function decodePacketHeaders(config) {
 			}
 			// Add check for length of key before processing further and just kill the connection
 			if (encryptionKeypair) {
-				if (headerDecoded[2] && encryptClientKey) {
+				if (headerDecoded[2] && connectionIdKeypair) {
 					console.log('Decrypting Public Key in UDSP Header');
 					key = boxCryptography.boxUnseal(key, encryptionKeypair);
 					if (key) {
@@ -97,7 +96,7 @@ export async function decodePacketHeaders(config) {
 			}
 			console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(key));
 		} else {
-			success(`Invalid RPC given`);
+			success(`Invalid Code given`);
 		}
 	}
 	// console.log(header);
@@ -148,42 +147,15 @@ export async function decodePacket(config) {
 		info(`decrypted Message size ${decryptedMessage.length}bytes`);
 		const message = decode(decryptedMessage);
 		if (!hasValue(message)) {
-			return console.trace('No Message -> Invalid Packet');
-		}
-		if (message.head) {
-			console.log('head PAYLOAD', message.head);
-		}
-		if (message.data) {
-			success('data PAYLOAD', message.data?.length || message.data);
-		}
-		const frame = message?.frame;
-		if (hasValue(frame)) {
-			let streamId;
-			let packetId;
-			let offset;
-			if (isArray(frame)) {
-				[streamId, packetId, offset] = message.frame;
-			} else {
-				streamId = frame;
-			}
-			if (!hasValue(streamId)) {
-				return console.trace('No streamId in message -> Invalid Packet');
-			}
-			message.id = streamId;
-			if (hasValue(packetId)) {
-				message.packetId = packetId;
-			}
-			if (hasValue(offset)) {
-				message.offset = offset;
-			}
+			return console.trace('No Message in Packet');
 		}
 		packetDecoded.message = message;
 		if (footerEncoded) {
 			footer = footerEncoded && decode(footerEncoded);
-			if (!footer) {
-				return console.trace(`Footer failed to decode -> Invalid Packet`);
-			} else if (footer) {
+			if (footer) {
 				packetDecoded.footer = footer;
+			} else {
+				return console.trace(`Footer failed to decode -> Invalid Packet`);
 			}
 		}
 	} else {

@@ -3,40 +3,20 @@ import {
 } from '@universalweb/acid';
 import { destroy } from './destory.js';
 import { processEvent } from '#server/processEvent';
-export async function onPacket(packet) {
+export async function onFrame(packet) {
 	const source = this;
 	const { isAsk } = this;
 	this.lastActive = Date.now();
 	const { message } = packet;
 	if (!message) {
-		return this.destroy('No Message in Packet');
+		return this.destroy('No Message i:n Packet');
 	}
 	console.log('On Packet event', message);
-	// console.log(packet);
+	console.log(packet);
 	const {
-		// URL or Path Endpoint for API or dynamic path related usage
-		path,
-		pathReady,
-		// Path parameters
-		params,
-		parametersReady,
-		// header payload
-		head,
-		frame,
-		// main data payload
-		data,
-		// Acknowledgement
-		ack,
-		// Negative Acknowledgement
-		nack,
-		err,
-		end,
-		setup,
-		headReady,
-		dataReady,
 		id,
-		packetId,
-		offset
+		rpc,
+		data
 	} = message;
 	console.log(`onPacket Stream Id ${id}`);
 	this.totalReceivedPackets++;
@@ -60,7 +40,7 @@ export async function onPacket(packet) {
 			}
 			console.log(this, this.currentIncomingHeadSize);
 			if (this.totalIncomingHeadSize === this.currentIncomingHeadSize) {
-				this.assembleHead();
+				this.processHead();
 			}
 		}
 		if (path && !this.incomingPathPackets[packetId]) {
@@ -78,7 +58,7 @@ export async function onPacket(packet) {
 			}
 			console.log(this, this.currentIncomingPathSize);
 			if (this.totalIncomingPathSize === this.currentIncomingPathSize) {
-				this.assemblePath();
+				this.processPath();
 			}
 		}
 		if (params && !this.incomingParametersPackets[packetId]) {
@@ -93,7 +73,7 @@ export async function onPacket(packet) {
 			this.onParametersProgress();
 			await this.onParameters(message);
 			if (this.totalIncomingParametersSize === this.currentIncomingParametersSize) {
-				this.assembleParameters();
+				this.processParameters();
 			}
 		}
 		if (data && !this.incomingDataPackets[packetId]) {
@@ -117,7 +97,7 @@ export async function onPacket(packet) {
 			this.onData(message);
 			this.onDataSync(message);
 			if (message.last) {
-				this.checkData();
+				this.processData();
 			}
 		}
 	} else if (setup) {

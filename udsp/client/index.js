@@ -57,8 +57,8 @@ export class Client extends UDSP {
 		console.log('-------CLIENT INITIALIZING-------\n');
 		return this.initialize(configuration);
 	}
-	description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
-	type = 'client';
+	static description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
+	static type = 'client';
 	isClient = true;
 	configDefaults() {
 		const {
@@ -82,6 +82,10 @@ export class Client extends UDSP {
 			// console.log('Loading Destination Certificate', destinationCertificate);
 			const certificate = await getCertificate(destinationCertificate);
 			assign(destination, certificate);
+		} else {
+			assign(destination, destinationCertificate);
+		}
+		if (destination.publicKey) {
 			this.hasCertificate = true;
 		}
 		if (!destination.publicKey) {
@@ -108,49 +112,28 @@ export class Client extends UDSP {
 		if (port) {
 			destination.port = port;
 		}
-		const convertSignKeypairToEncryptionKeypair = processPublicKey(this.destination);
-		if (convertSignKeypairToEncryptionKeypair) {
-			this.destination.encryptionKeypair = convertSignKeypairToEncryptionKeypair;
-		}
-		const {
-			encryptConnectionId,
-			encryptClientConnectionId,
-			encryptServerConnectionId,
-			encryptClientKey
-		} = this.destination;
-		this.encryptClientKey = encryptClientKey;
-		if (encryptConnectionId) {
-			this.encryptClientConnectionId = true;
-			this.encryptServerConnectionId = true;
-		} else if (encryptClientConnectionId) {
-			this.encryptClientConnectionId = true;
-		} else if (encryptServerConnectionId) {
-			this.encryptServerConnectionId = true;
-		}
 		// console.log('Destination', destination.cryptography);
 	}
 	async getKeychainSave(keychain) {
 		return keychainGet(keychain);
 	}
-	async setCertificate() {
+	async setProfile() {
 		const {
 			keychain,
-			certificate
+			profile
 		} = this.configuration;
-		if (isString(certificate)) {
-			this.certificate = await parseCertificate(certificate);
+		if (isString(profile)) {
+			this.profile = await parseCertificate(profile);
 		}
 		if (keychain) {
-			// console.log('Loading Keychain', keychain);
-			this.certificate = await this.getKeychainSave(keychain);
+			console.log('Loading Keychain', keychain);
+			this.profile = await this.getKeychainSave(keychain);
 		}
 	}
 	async configCryptography() {
 		// console.log(this.cryptography);
 		const { destination, } = this;
 		const {
-			encryptClientConnectionId,
-			encryptServerConnectionId,
 			encryptConnectionId,
 			publicKeyAlgorithm,
 		} = destination;
@@ -183,10 +166,36 @@ export class Client extends UDSP {
 		if (!this.encryptionKeypair) {
 			this.encryptionKeypair = this.keypair;
 		}
-		if (encryptClientConnectionId || encryptServerConnectionId || encryptConnectionId) {
-			this.connectionIdKeypair = this.keypair;
-		}
 		await this.setSessionKeys();
+		const convertSignKeypairToEncryptionKeypair = processPublicKey(this.destination);
+		if (convertSignKeypairToEncryptionKeypair) {
+			this.destination.encryptionKeypair = convertSignKeypairToEncryptionKeypair;
+		}
+		if (encryptConnectionId) {
+			const {
+				server: encryptServerCid,
+				client: encryptClientCid,
+				keypair: connectionIdKeypair
+			} = encryptConnectionId;
+			let encryptServer = hasValue(encryptServerCid);
+			let encryptClient = hasValue(encryptClientCid);
+			if (!encryptServer && !encryptClient) {
+				encryptServer = true;
+				encryptClient = true;
+			}
+			if (encryptServer) {
+				this.encryptServerConnectionId = true;
+				if (connectionIdKeypair) {
+					this.destination.connectionIdKeypair = connectionIdKeypair;
+				} else {
+					this.destination.connectionIdKeypair = this.destination.encryptionKeypair;
+				}
+			}
+			if (encryptClient) {
+				this.encryptClientConnectionId = true;
+			}
+			console.log(`Encrypt Connection ID Server ${encryptServer} Client ${encryptClient}`);
+		}
 	}
 	async attachEvents() {
 		const thisClient = this;
@@ -256,7 +265,10 @@ export class Client extends UDSP {
 		const thisClient = this;
 		success(`client reKeyed -> ID: ${thisClient.idString}`);
 	}
-	close(message) {
+	close(message, obj) {
+		if (obj) {
+			console.log(obj);
+		}
 		console.trace(this.idString, `client closed. code ${message?.state || message}`);
 		this.socket.close();
 		Client.connections.delete(this.idString);
@@ -294,36 +306,35 @@ export class Client extends UDSP {
 			this.destination.encryptionKeypair = {
 				publicKey: this.newKeypair
 			};
+			if (this.destination.connectionIdKeypair) {
+				this.destination.connectionIdKeypair = {
+					publicKey: this.newConnectionKeypair || this.newKeypair
+				};
+			}
 			await this.setSessionKeys();
 			this.handshakeSet = true;
 		}
 	}
 	async intro(message) {
 		console.log('Got server Intro', message);
-		const intro = message?.i;
-		const certSize = message?.c;
-		if (!intro || !isArray(intro)) {
+		if (!message || !isArray(message)) {
 			this.close('No intro message');
 			return;
 		}
-		const [serverConnectionId, reKey, randomId] = intro;
-		this.destinationIntroReceived = true;
+		const [streamid_undefined, rpc, serverConnectionId, reKey, serverRandomToken, certSize] = message;
 		this.destination.id = serverConnectionId;
 		this.destination.idSize = serverConnectionId.length;
-		console.log('New Server Connection ID', toBase64(serverConnectionId));
 		this.newKeypair = reKey;
 		await this.setNewDestinationKeys();
+		console.log('New Server Connection ID', toBase64(serverConnectionId));
+		if (serverRandomToken) {
+			this.serverRandomToken = serverRandomToken;
+			console.log('Server Random Token', toBase64(serverConnectionId));
+		}
 		if (certSize) {
 			this.certSize = certSize;
-		} else {
-			this.sendHandshake(message);
 		}
-	}
-	async sendHandshake(originalMessage) {
-		const message = {
-			handshake: true
-		};
-		this.send(message);
+		return this.handshaked();
 	}
 	handshaked(message) {
 		console.log('Handshake Completed with new keys');
@@ -333,13 +344,13 @@ export class Client extends UDSP {
 		// Resolve the handshake promise
 		this.handshakeCompleted(message);
 	}
-	setPublicKeyHeader(header = [0, 0, 0]) {
+	setPublicKeyHeader(header = []) {
 		const key = this.encryptionKeypair.publicKey;
 		console.log('Setting Public Key in UDSP Header', toBase64(key));
-		const { encryptClientKey } = this.certificate;
-		if (encryptClientKey) {
+		const { encryptServerConnectionId } = this;
+		if (encryptServerConnectionId) {
 			console.log('Encrypting Public Key in UDSP Header');
-			header.push(this.boxCryptography.boxSeal(header.key, this.destination.encryptionKeypair));
+			header.push(this.boxCryptography.boxSeal(header.key, this.destination.connectionIdKeypair));
 		} else {
 			header.push(key);
 		}
@@ -354,6 +365,10 @@ export class Client extends UDSP {
 			version
 		} = this;
 		header.push(cipherSuite.id, version);
+		const requestCertificate = this.hasCertificate === false;
+		if (requestCertificate) {
+			header.push(requestCertificate);
+		}
 		return header;
 	}
 	sendIntro() {
@@ -362,10 +377,7 @@ export class Client extends UDSP {
 		const header = [0];
 		this.setPublicKeyHeader(header);
 		this.setCryptographyHeaders(header);
-		const requestCertificate = Boolean(this.hasCertificate);
-		const message = {
-			i: true
-		};
+		const message = [false, 0];
 		this.introSent = true;
 		this.send(message, header);
 	}

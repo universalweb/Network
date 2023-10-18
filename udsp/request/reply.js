@@ -19,15 +19,14 @@ import { serverResponseObject } from './objects/server/response.js';
 	* @todo
 */
 export class Reply extends Base {
-	constructor(request, source) {
-		super(request, source);
-		console.log('Setting up new reply', request);
+	constructor(frame, header, source) {
+		super(frame, source);
+		console.log('Setting up new reply', frame);
 		const thisReply = this;
-		const { message } = request;
-		if (!hasValue(message.frame)) {
-			return this.destroy('No frame in message');
+		const id = frame.id;
+		if (!hasValue(frame.id)) {
+			return this.destroy('No stream id in frame');
 		}
-		const id = request.message.id;
 		this.id = id;
 		const { replyQueue, } = source;
 		this.events = source.events;

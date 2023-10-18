@@ -2,7 +2,7 @@ import { destroy } from './destory.js';
 import { dataPacketization } from './dataPacketization.js';
 import { on } from './events/on.js';
 import { flushOutgoing, flushIncoming, flush } from './flush.js';
-import { onPacket } from './onPacket.js';
+import { onFrame } from './onFrame.js';
 import {
 	isBuffer, isPlainObject, isString, promise,
 	assign, objectSize, eachArray, jsonParse, construct,
@@ -132,9 +132,18 @@ export class Base {
 		this.readyState = 2;
 		this.pathAssembled = true;
 	}
-	async assembleHead() {
+	processStates = [this.processPath, this.processParameters, this.processHead, this.processData];
+	processState = 0;
+	async getProcessState() {
+		const {
+			processState,
+			processStates
+		} = this;
+		return processStates[processState]();
+	}
+	async processHead() {
 		if (this.headAssembled) {
-			return console.log('Head already assembled');
+			return console.log('Head already processed');
 		}
 		const {
 			missingHeadPackets,
@@ -155,9 +164,9 @@ export class Base {
 		}
 		console.log('incomingHead', incomingHead);
 	}
-	async assemblePath() {
+	async processPath() {
 		if (this.pathAssembled) {
-			return console.log('Path already assembled');
+			return console.log('Path already processed');
 		}
 		const {
 			missingPathPackets,
@@ -178,9 +187,9 @@ export class Base {
 		}
 		console.log('incomingPath', incomingPath);
 	}
-	async assembleParameters() {
+	async processParameters() {
 		if (this.parametersAssembled) {
-			return console.log('Parameters already assembled');
+			return console.log('Parameters already processed');
 		}
 		const {
 			missingParametersPackets,
@@ -201,11 +210,20 @@ export class Base {
 		}
 		console.log('incomingParameters', incomingParameters);
 	}
-	async checkData() {
+	async processData() {
 		console.log('Checking Data');
 		const { missingDataPackets } = this;
 		if (this.compiledDataAlready) {
 			return true;
+		}
+		if (this.totalIncomingDataSize === this.currentIncomingDataSize) {
+			clear(this.incomingDataPackets);
+			if (this.isAsk) {
+				this.response.dataBuffer = this.incomingData;
+			} else {
+				this.request.dataBuffer = this.incomingData;
+			}
+			return this.completeReceived();
 		}
 		eachArray(this.incomingDataPackets, (item, index) => {
 			if (missingDataPackets.has(index)) {
@@ -214,14 +232,6 @@ export class Base {
 		});
 		if (missingDataPackets.size !== 0) {
 			console.log('Missing packets: ', missingDataPackets);
-		} else if (this.totalIncomingDataSize === this.currentIncomingDataSize) {
-			clear(this.incomingDataPackets);
-			if (this.isAsk) {
-				this.response.dataBuffer = this.incomingData;
-			} else {
-				this.request.dataBuffer = this.incomingData;
-			}
-			this.completeReceived();
 		}
 	}
 	sendSetup() {
@@ -229,15 +239,15 @@ export class Base {
 		if (this.state === 0) {
 			this.state = 1;
 		}
-		const message = this.getPacketTemplate();
+		const message = this.getPacketTemplate(0);
 		if (isAsk) {
-			message.setup = [this.method, this.outgoingPathSize, this.outgoingParametersSize,
-				this.outgoingHeadSize];
+			message.push(this.method, this.outgoingPathSize, this.outgoingParametersSize,
+				this.outgoingHeadSize);
 		} else {
-			message.setup = [this.outgoingHeadSize];
+			message.push(this.outgoingHeadSize);
 		}
 		if (hasValue(this.outgoingDataSize)) {
-			message.setup.push(this.outgoingDataSize);
+			message.push(this.outgoingDataSize);
 		}
 		this.sendPacket(message);
 	}
@@ -308,7 +318,7 @@ export class Base {
 		console.log('maxPacketPathSize', maxPacketPathSize);
 		while (currentBytePosition < outgoingPathSize) {
 			const message = this.getPacketTemplate();
-			message.frame.push(packetId);
+			message.f.push(packetId);
 			const endIndex = currentBytePosition + maxPacketPathSize;
 			const safeEndIndex = endIndex > outgoingPathSize ? outgoingPathSize : endIndex;
 			message.path = this.outgoingPath.subarray(currentBytePosition, safeEndIndex);
@@ -344,7 +354,7 @@ export class Base {
 		console.log('maxPacketParametersSize', maxPacketParametersSize);
 		while (currentBytePosition < outgoingParametersSize) {
 			const message = this.getPacketTemplate();
-			message.frame.push(packetId);
+			message.f.push(packetId);
 			const endIndex = currentBytePosition + maxPacketParametersSize;
 			const safeEndIndex = endIndex > outgoingParametersSize ? outgoingParametersSize : endIndex;
 			message.params = this.outgoingParameter.subarray(currentBytePosition, safeEndIndex);
@@ -381,7 +391,7 @@ export class Base {
 		console.log('maxPacketHeadSize', maxPacketHeadSize);
 		while (currentBytePosition < headSize) {
 			const message = this.getPacketTemplate();
-			message.frame.push(packetId);
+			message.f.push(packetId);
 			const endIndex = currentBytePosition + maxPacketHeadSize;
 			const safeEndIndex = endIndex > headSize ? headSize : endIndex;
 			message.head = this.outgoingHead.subarray(currentBytePosition, safeEndIndex);
@@ -503,15 +513,13 @@ export class Base {
 		const message = this.outgoingDataPackets[id];
 		this.sendPacket(message);
 	}
-	getPacketTemplate() {
+	getPacketTemplate(rpc, ...items) {
 		const { id, } = this;
-		const message = {
-			frame: [id]
-		};
+		const message = [rpc, id, ...items];
 		return message;
 	}
 	destroy = destroy;
-	onPacket = onPacket;
+	onFrame = onFrame;
 	sendPacket(message, headers, footer) {
 		this.source().send(message, headers, footer);
 	}

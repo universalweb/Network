@@ -19,7 +19,7 @@ export async function processMessage(packet, client) {
 	const {
 		kill,
 		state,
-		frame,
+		f: frame,
 		id
 	} = message;
 	info(`Packet Received Stream ID: ${id}`);
