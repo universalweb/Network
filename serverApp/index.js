@@ -29,6 +29,8 @@ const appServer = await server({
 	// Must be requested so that it can be denied if the client doesn't meet the requirements
 	// realtime: true,
 	gracePeriod: 30000,
+	// heartbeat is an interval check for when a client must send something to the server to remain connected
+	heartbeat: 5000,
 	// Max packet retries for a singular request before restarting the request
 	maxPacketRetries: 5,
 	// max file size in bytes

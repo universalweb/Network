@@ -49,8 +49,6 @@ const domainProfile = await createProfile({
 			// maxPacketHeadSize: 1200,
 			// maxPacketPathSize: 1200,
 			// maxPacketParametersSize: 1200,
-			// heartbeat is an interval check for when a client must send something to the server to remain connected
-			heartbeat: 5000,
 			url: 'universal.web',
 			domain: 'universal',
 			extension: 'web',
@@ -125,11 +123,11 @@ const domainProfile = await createProfile({
 				publicKey: true
 			},
 			// This allows a browser or connection to use the realtime mode for the UDSP connection
-			// Allowing it to act like a webtransport, websocket, and or traditional HTTP like connection
+			// Permits it to act similar to a web transport and or a websocket connection
 			realtime: true,
 			// blocked methods mean methods the server doesn't permit
-			// blockedMethods: ['open'],
-			allowedMethods: ['get', 'connect', 'open', 'file', 'stream', 'close'],
+			// blockedMethods: ['delete'],
+			allowedMethods: ['get', 'connect', 'file', 'stream', 'close'],
 			// deafult compression of payload data only
 			compression: true,
 			// packetCompression: true,

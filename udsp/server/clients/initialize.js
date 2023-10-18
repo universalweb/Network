@@ -30,7 +30,8 @@ export async function initialize(config) {
 			connectionIdKeypair: serverConnectionIdKeypair,
 			encryptClientConnectionId,
 			encryptServerConnectionId,
-			publicKeySize
+			publicKeySize,
+			heartbeat
 		},
 		connection: {
 			address: ip,
@@ -106,9 +107,9 @@ export async function initialize(config) {
 	await client.setSessionKeys();
 	if (!realtime && gracePeriod) {
 		client.gracePeriod = setTimeout(() => {
-			const lastActive = (Date.now() - client.lastActive) / 1000;
-			console.log('Client Grace Period reached killing connection', gracePeriod, client);
-			if (client.state <= 1 || lastActive > 30) {
+			const lastActive = Date.now() - client.lastActive;
+			console.log('Client Grace Period reached killing connection', lastActive > gracePeriod, client);
+			if (client.state <= 1 || lastActive > heartbeat) {
 				client.destroy(1);
 			}
 		}, gracePeriod);
