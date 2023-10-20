@@ -15,12 +15,12 @@ import { clientRequestObject } from './objects/client/request.js';
 import { objectGetSetMethods } from './objects/objectGetSetMethods.js';
 export class Ask extends Base {
 	constructor(method = 'get', path, parameters, data, head, options = {}, source) {
-		super(options, source);
+		super(source);
 		const {
 			requestQueue,
 			streamIdGenerator,
 		} = source;
-		console.log('Ask', data);
+		console.log('Ask', path);
 		const id = streamIdGenerator.get();
 		const methodSanitized = method.toLowerCase();
 		this.id = id;

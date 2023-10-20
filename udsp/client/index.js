@@ -38,7 +38,7 @@ import { watch } from '#watch';
 // Client specific imports to extend class
 import { emit } from '../requestMethods/emit.js';
 import { uwRequest } from '#udsp/requestMethods/request';
-import { processMessage } from './processMessage.js';
+import { processFrame } from './processFrame.js';
 import { onPacket } from './onPacket.js';
 import { onListening } from './listening.js';
 import { keychainGet } from '#keychain';
@@ -79,7 +79,7 @@ export class Client extends UDSP {
 			ipVersion
 		} = this;
 		if (isString(destinationCertificate)) {
-			// console.log('Loading Destination Certificate', destinationCertificate);
+			console.log('Loading Destination Certificate', destinationCertificate);
 			const certificate = await getCertificate(destinationCertificate);
 			assign(destination, certificate);
 		} else {
@@ -111,6 +111,9 @@ export class Client extends UDSP {
 		}
 		if (port) {
 			destination.port = port;
+		}
+		if (this.destination.clientConnectionIdSize) {
+			this.connectionIdSize = this.destination.clientConnectionIdSize;
 		}
 		// console.log('Destination', destination.cryptography);
 	}
@@ -166,11 +169,11 @@ export class Client extends UDSP {
 		if (!this.encryptionKeypair) {
 			this.encryptionKeypair = this.keypair;
 		}
-		await this.setSessionKeys();
 		const convertSignKeypairToEncryptionKeypair = processPublicKey(this.destination);
 		if (convertSignKeypairToEncryptionKeypair) {
 			this.destination.encryptionKeypair = convertSignKeypairToEncryptionKeypair;
 		}
+		await this.setSessionKeys();
 		if (encryptConnectionId) {
 			const {
 				server: encryptServerCid,
@@ -243,7 +246,7 @@ export class Client extends UDSP {
 		this.idSize = this.id.length;
 		success(`clientId:`, this.idString);
 		await this.setDestination();
-		await this.setCertificate();
+		await this.setProfile();
 		console.log('ipVersion', this.ipVersion);
 		console.log('destination', this.destination);
 		await this.configCryptography();
@@ -294,6 +297,7 @@ export class Client extends UDSP {
 		}
 	}
 	async setSessionKeys(generatedKeys) {
+		console.log(this.destination.encryptionKeypair);
 		this.sessionKeys = generatedKeys || this.publicKeyCryptography.clientSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair);
 		if (this.sessionKeys) {
 			success(`Created Shared Keys`);
@@ -315,13 +319,13 @@ export class Client extends UDSP {
 			this.handshakeSet = true;
 		}
 	}
-	async intro(message) {
-		console.log('Got server Intro', message);
-		if (!message || !isArray(message)) {
-			this.close('No intro message');
+	async intro(frame, header) {
+		if (!frame || !isArray(frame)) {
+			this.close('No intro message', frame);
 			return;
 		}
-		const [streamid_undefined, rpc, serverConnectionId, reKey, serverRandomToken, certSize] = message;
+		console.log('Got server Intro', frame);
+		const [streamid_undefined, rpc, serverConnectionId, reKey, serverRandomToken, certSize, dataSize] = frame;
 		this.destination.id = serverConnectionId;
 		this.destination.idSize = serverConnectionId.length;
 		this.newKeypair = reKey;
@@ -329,7 +333,7 @@ export class Client extends UDSP {
 		console.log('New Server Connection ID', toBase64(serverConnectionId));
 		if (serverRandomToken) {
 			this.serverRandomToken = serverRandomToken;
-			console.log('Server Random Token', toBase64(serverConnectionId));
+			console.log('Server Random Token', toBase64(serverRandomToken));
 		}
 		if (certSize) {
 			this.certSize = certSize;
@@ -342,7 +346,8 @@ export class Client extends UDSP {
 		this.state = 2;
 		this.readyState = 1;
 		// Resolve the handshake promise
-		this.handshakeCompleted(message);
+		console.log(this.handshakeCompleted);
+		this.handshakeCompleted();
 	}
 	setPublicKeyHeader(header = []) {
 		const key = this.encryptionKeypair.publicKey;
@@ -383,9 +388,11 @@ export class Client extends UDSP {
 	}
 	ensureHandshake() {
 		if (this.connected === true) {
+			console.log('ALREADY CONNECTED');
 			return true;
 		} else if (!this.handshakeCompleted) {
 			this.awaitHandshake = promise((accept) => {
+				console.log('HANDSHAKE AWAITING');
 				this.handshakeCompleted = accept;
 			});
 			this.sendIntro();
@@ -396,32 +403,17 @@ export class Client extends UDSP {
 		console.log(`client.send to Server`, this.destination.ip, this.destination.port);
 		return sendPacket(message, this, this.socket, this.destination, headers, footer);
 	}
-	proccessProtocolPacket(message) {
-		const {
-			i: intro,
-			certIndex,
-			handshake,
-			state
-		} = message;
-		console.log('Processing Protocol Packet', message);
-		if (intro) {
-			if (certIndex) {
-				this.proccessCertificateChunk(message);
-			} else {
-				this.intro(message);
-			}
-		} else if (handshake) {
-			this.handshaked(message);
-		} else if (state) {
-			if (state === 3) {
-				this.close(message);
-			}
+	proccessProtocolPacket(frame, header) {
+		const rpc = frame[1];
+		console.log('Processing Protocol Packet', frame);
+		if (rpc === 0) {
+			this.intro(frame, header);
 		}
 	}
 	request = uwRequest;
 	fetch = fetchRequest;
 	post = post;
-	processMessage = processMessage;
+	processFrame = processFrame;
 	emit = emit;
 	onListening = onListening;
 	onPacket = onPacket;

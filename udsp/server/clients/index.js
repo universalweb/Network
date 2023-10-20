@@ -137,13 +137,13 @@ export class Client {
 		console.log(`State Updated -> ${this.state}`);
 		this.state = state;
 	}
-	async send(message, headers, footer) {
+	async send(frame, headers, footer) {
 		msgSent(`socket Sent -> ID: ${this.idString}`);
-		return sendPacket(message, this, this.socket(), this.destination, headers, footer);
+		return sendPacket(frame, this, this.socket(), this.destination, headers, footer);
 	}
-	async received(message, frameHeaders) {
+	async received(frame, frameHeaders) {
 		const server = this.server();
-		await received(this, message, frameHeaders, server);
+		await received(this, frame, frameHeaders, server);
 		info(`socket EVENT -> send - ID:${this.idString}`);
 	}
 	async authenticate(packet) {
@@ -154,18 +154,18 @@ export class Client {
 		info(`socket EVENT -> destroy - ID:${this.idString}`);
 	}
 	// CLIENT HELLO
-	async processIntro(message) {
-		info(`Client Intro -> - ID:${this.idString}`, message);
-		this.sendIntro(message);
+	async processIntro(frame) {
+		info(`Client Intro -> - ID:${this.idString}`, frame);
+		this.sendIntro(frame);
 	}
 	// SERVER HELLO
 	async sendIntro() {
 		if (!this.newKeypair) {
 			this.generateSessionKeypair();
 		}
-		const message = [0, this.id, this.newKeypair.publicKey, this.randomId];
+		const frame = [false, 0, this.id, this.newKeypair.publicKey, this.randomId];
 		this.updateState(1);
-		await this.send(message);
+		await this.send(frame);
 	}
 	async attachNewClientKeys() {
 		this.updateState(2);
@@ -173,18 +173,18 @@ export class Client {
 		await this.setSessionKeys();
 		this.newSessionKeysAssigned = true;
 	}
-	proccessProtocolPacket(message) {
+	proccessProtocolPacket(frame) {
 		info(`Server:Client proccessProtocolPacket -> - ID:${this.idString}`);
-		console.log(message);
-		if (!message || !isArray(message)) {
-			console.trace('No message given');
+		console.log(frame);
+		if (!frame || !isArray(frame)) {
+			console.trace('No frame given');
 			return;
 		}
-		const [streamid, rpc] = message;
+		const [streamid, rpc] = frame;
 		if (rpc === 0) {
-			this.processIntro(message);
+			this.processIntro(frame);
 		} else {
-			console.log(message);
+			console.log(frame);
 			console.trace('RPC Code missing or incorrect');
 			return;
 		}
@@ -200,14 +200,14 @@ export class Client {
 	data = construct(Map);
 	replyQueue = construct(Map);
 	async reply(frame, header) {
-		const id = frame.id;
+		const id = frame[0];
 		console.log('Reply Client', id, this.replyQueue.has(id), frame);
 		if (hasValue(id)) {
 			if (this.replyQueue.has(id)) {
 				return this.replyQueue.get(id).onFrame(frame, header);
 			}
 		}
-		reply(frame, this).onFrame(frame, header);
+		reply(frame, header, this).onFrame(frame, header);
 	}
 }
 export async function createClient(config) {

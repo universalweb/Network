@@ -20,11 +20,11 @@ import { serverResponseObject } from './objects/server/response.js';
 */
 export class Reply extends Base {
 	constructor(frame, header, source) {
-		super(frame, source);
+		super(source);
 		console.log('Setting up new reply', frame);
 		const thisReply = this;
-		const id = frame.id;
-		if (!hasValue(frame.id)) {
+		const id = frame[0];
+		if (!hasValue(id)) {
 			return this.destroy('No stream id in frame');
 		}
 		this.id = id;
@@ -49,7 +49,7 @@ export class Reply extends Base {
 		await processEvent(this.request, this.response, this);
 	}
 }
-export function reply(packet, client) {
+export function reply(...args) {
 	// console.log(client);
-	return construct(Reply, [packet, client]);
+	return construct(Reply, args);
 }

@@ -42,7 +42,7 @@ export class UDSP {
 			}
 		} else {
 			const packetInitialOverhead = 2;
-			const connectionIdSize = (this.isClient) ? this.clientConnectionIdSize : this.connectionIdSize;
+			const connectionIdSize = this.connectionIdSize;
 			this.encryptPacketOverhead = this.encryptOverhead;
 			this.packetOverhead = packetInitialOverhead + this.encryptPacketOverhead + connectionIdSize;
 			this.maxPacketPayloadSize = this.maxPacketSize - this.packetOverhead;

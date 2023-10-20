@@ -20,8 +20,7 @@ import { fire } from './events/fire.js';
 	* @todo Adjust packet size to account for other packet data.
 */
 export class Base {
-	constructor(options = {}, source) {
-		const { events, } = options;
+	constructor(source) {
 		const timeStamp = Date.now();
 		this.created = timeStamp;
 		this.source = function() {
@@ -36,9 +35,6 @@ export class Base {
 			maxPacketParametersSize,
 			packetMaxPayloadSafeEstimate
 		} = source;
-		if (events) {
-			this.on(events);
-		}
 		if (maxPacketSize) {
 			this.maxPacketSize = maxPacketSize;
 		}
@@ -121,6 +117,7 @@ export class Base {
 	setPath() {
 		clear(this.incomingPathPackets);
 		if (this.incomingPath?.length) {
+			console.log('Assemble Path', this.incomingPath);
 			const pathCompiled = Buffer.concat(this.incomingPath);
 			clearBuffer(this.incomingPath);
 			this.path = decode(pathCompiled);
@@ -239,7 +236,7 @@ export class Base {
 		if (this.state === 0) {
 			this.state = 1;
 		}
-		const message = this.getPacketTemplate(0);
+		const message = this.getPacketTemplate(1);
 		if (isAsk) {
 			message.push(this.method, this.outgoingPathSize, this.outgoingParametersSize,
 				this.outgoingHeadSize);
@@ -255,8 +252,7 @@ export class Base {
 		if (this.state === 1) {
 			this.state = 2;
 		}
-		const message = this.getPacketTemplate();
-		message.pathReady = true;
+		const message = this.getPacketTemplate(2);
 		this.sendPacket(message);
 	}
 	sendParametersReady() {
@@ -266,8 +262,7 @@ export class Base {
 		if (this.totalIncomingParametersSize === 0) {
 			return this.sendHeadReady();
 		}
-		const message = this.getPacketTemplate();
-		message.parametersReady = true;
+		const message = this.getPacketTemplate(3);
 		this.sendPacket(message);
 	}
 	sendHeadReady() {
@@ -277,8 +272,7 @@ export class Base {
 		if (this.totalIncomingHeadSize === 0) {
 			return this.sendDataReady();
 		}
-		const message = this.getPacketTemplate();
-		message.headReady = true;
+		const message = this.getPacketTemplate(4);
 		this.sendPacket(message);
 	}
 	sendDataReady() {
@@ -288,13 +282,11 @@ export class Base {
 		if (this.totalIncomingDataSize === 0) {
 			return this.completeReceived();
 		}
-		const message = this.getPacketTemplate();
-		message.dataReady = true;
+		const message = this.getPacketTemplate(5);
 		this.sendPacket(message);
 	}
 	async sendEnd() {
-		const message = this.getPacketTemplate();
-		message.end = true;
+		const message = this.getPacketTemplate(10);
 		this.sendPacket(message);
 	}
 	async pathPacketization() {
@@ -317,15 +309,15 @@ export class Base {
 		const outgoingPathSize = this.outgoingPathSize;
 		console.log('maxPacketPathSize', maxPacketPathSize);
 		while (currentBytePosition < outgoingPathSize) {
-			const message = this.getPacketTemplate();
-			message.f.push(packetId);
+			const message = this.getPacketTemplate(6);
+			message.push(packetId);
 			const endIndex = currentBytePosition + maxPacketPathSize;
 			const safeEndIndex = endIndex > outgoingPathSize ? outgoingPathSize : endIndex;
-			message.path = this.outgoingPath.subarray(currentBytePosition, safeEndIndex);
+			message.push(this.outgoingPath.subarray(currentBytePosition, safeEndIndex));
 			outgoingPathPackets[packetId] = message;
 			// message.offset = safeEndIndex;
 			if (safeEndIndex === outgoingPathSize) {
-				message.last = true;
+				message.push(true);
 				break;
 			}
 			packetId++;
@@ -353,15 +345,14 @@ export class Base {
 		const outgoingParametersSize = this.outgoingParametersSize;
 		console.log('maxPacketParametersSize', maxPacketParametersSize);
 		while (currentBytePosition < outgoingParametersSize) {
-			const message = this.getPacketTemplate();
-			message.f.push(packetId);
+			const message = this.getPacketTemplate(7);
+			message.push(packetId);
 			const endIndex = currentBytePosition + maxPacketParametersSize;
 			const safeEndIndex = endIndex > outgoingParametersSize ? outgoingParametersSize : endIndex;
-			message.params = this.outgoingParameter.subarray(currentBytePosition, safeEndIndex);
+			message.push(this.outgoingParameter.subarray(currentBytePosition, safeEndIndex));
 			outgoingParametersPackets[packetId] = message;
-			// message.offset = safeEndIndex;
 			if (safeEndIndex === outgoingParametersSize) {
-				message.last = true;
+				message.push(true);
 				break;
 			}
 			packetId++;
@@ -390,15 +381,14 @@ export class Base {
 		const headSize = this.outgoingHeadSize;
 		console.log('maxPacketHeadSize', maxPacketHeadSize);
 		while (currentBytePosition < headSize) {
-			const message = this.getPacketTemplate();
-			message.f.push(packetId);
+			const message = this.getPacketTemplate(8);
+			message.push(packetId);
 			const endIndex = currentBytePosition + maxPacketHeadSize;
 			const safeEndIndex = endIndex > headSize ? headSize : endIndex;
-			message.head = this.outgoingHead.subarray(currentBytePosition, safeEndIndex);
+			message.push(this.outgoingHead.subarray(currentBytePosition, safeEndIndex));
 			outgoingHeadPackets[packetId] = message;
-			// message.offset = safeEndIndex;
 			if (safeEndIndex === headSize) {
-				message.last = true;
+				message.push(true);
 				break;
 			}
 			packetId++;
@@ -445,7 +435,9 @@ export class Base {
 			isReply,
 		} = this;
 		if (isAsk) {
+			console.log('WAIT FOR HANDSHAKE');
 			const handshake = await this.source().ensureHandshake();
+			console.log('HANDSHAKE DONE');
 			if (this.sent) {
 				return this.accept;
 			}
@@ -461,7 +453,7 @@ export class Base {
 			thisSource.accept = accept;
 		});
 		await this.packetization();
-		console.log(`BASE ${this.type}`, this);
+		console.log(`SENDING FROM A ${this.type}`);
 		this.sendSetup();
 		return awaitingResult;
 	}
@@ -515,12 +507,16 @@ export class Base {
 	}
 	getPacketTemplate(rpc, ...items) {
 		const { id, } = this;
-		const message = [rpc, id, ...items];
+		const message = [id, rpc];
+		if (items) {
+			message.push(...items);
+		}
 		return message;
 	}
 	destroy = destroy;
 	onFrame = onFrame;
 	sendPacket(message, headers, footer) {
+		console.log(this.source());
 		this.source().send(message, headers, footer);
 	}
 	flushOutgoing = flushOutgoing;

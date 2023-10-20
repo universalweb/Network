@@ -8,10 +8,6 @@ import {
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { createClient } from './clients/index.js';
 import { reply } from '#udsp/request/reply';
-import { processMessage } from '../client/processMessage.js';
-import { decodeFrame } from '#udsp/frames/decodeFrame';
-import { decodeSameIdFrames } from '#udsp/frames/decodeSameIdFrames';
-import { decodeFrames } from '#udsp/frames/decodeFrames';
 export async function onPacket(packet, connection) {
 	const thisServer = this;
 	msgReceived('Message Received');
@@ -59,23 +55,14 @@ export async function onPacket(packet, connection) {
 		return console.trace('Error no message found in packet');
 	}
 	if (isArray(message)) {
-		if (message[0] === false) {
+		if (message[1] === 0) {
 			client.proccessProtocolPacket(message, header);
 		} else if (isArray(message[0])) {
-			const messageFrames = decodeFrames(config.packetDecoded);
-			eachArray(messageFrames, (frame) => {
-				client.reply(frame, header);
-			});
-		} else if (isArray(message[1])) {
-			const messageFrames = decodeSameIdFrames(config.packetDecoded);
-			eachArray(messageFrames, (frame) => {
+			eachArray(message, (frame) => {
 				client.reply(frame, header);
 			});
 		} else {
-			const frame = decodeFrame(config.packetDecoded);
-			if (hasValue(message.id)) {
-				client.reply(frame, header);
-			}
+			client.reply(message, header);
 		}
 	}
 }

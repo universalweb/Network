@@ -5,11 +5,11 @@ const dirname = currentPath(import.meta);
 const domainProfile = await createProfile({
 	template: {
 		ephemeral: {
-			nft: {
-				network: 'eth',
-				contract: '0x0000000',
-				id: '0x0000000',
-			},
+			// nft: {
+			// 	network: 'eth',
+			// 	contract: '0x0000000',
+			// 	id: '0x0000000',
+			// },
 			// version is the version number of uw://
 			// certificate version
 			version: 1,
@@ -50,12 +50,13 @@ const domainProfile = await createProfile({
 			// maxPacketPathSize: 1200,
 			// maxPacketParametersSize: 1200,
 			url: 'universal.web',
-			domain: 'universal',
-			extension: 'web',
+			// domain: 'universal',
+			// extension: 'web',
 			// The ip, ipv4, & ipv6 properties are used to determine the IP address of the server.
 			// The ip property can be either ipv4 or ipv6.
 			// ipv4/ipv6 can also be used as a form of backup ips or the primary ips for their respective versions. Similar to A & AAAA records.
-			ip: ['::1', '127.0.0.1'],
+			// ip: ['::1', '127.0.0.1'],
+			ip: '::1',
 			// This allows for IPv4 and IPv6 to use specific details that is more fitting for that endpoint.
 			// This is not intended to be used when IPv6 becomes the standard.
 			// ipv4: '127.0.0.1',
@@ -103,8 +104,28 @@ const domainProfile = await createProfile({
 			// Max sizes of the body/data/payload for upload and download
 			// maxUploadSize: 1024,
 			// maxDownloadSize: 1024,
-			// Shows the browser how to display the domain name for humans correctly
-			domainTextEncoding: 'utf8',
+			// crypto: {
+			// type: 'viat',
+			// enable viat puzzles as a form of congestion control
+			// puzzles: true,
+			// When publicKey is set to true it will use the public key in the certificate as the main Viat wallet for the domain. If a string is provided then it would be the main wallet for the domain.
+			// publicKey: true
+			// },
+			// This allows a browser or connection to use the realtime mode for the UDSP connection
+			// Permits it to act similar to a web transport and or a websocket connection
+			// realtime: true,
+			// blocked methods mean methods the server doesn't permit
+			// blockedMethods: ['delete'],
+			// allowedMethods: ['get', 'connect', 'file', 'stream', 'close'],
+			// deafult compression of payload data only
+			// compression: true,
+			// packetCompression: true,
+			// headerCompression: true,
+			// footerCompression: true,
+			// messageCompression: true,
+			// autoLogin: true,
+		},
+		whois: {
 			entity: {
 				name: 'Universal Web',
 			},
@@ -115,27 +136,6 @@ const domainProfile = await createProfile({
 				town: 'UW Township',
 				county: 'UW County',
 			},
-			crypto: {
-				type: 'viat',
-				// enable viat puzzles as a form of congestion control
-				puzzles: true,
-				// When publicKey is set to true it will use the public key in the certificate as the main Viat wallet for the domain. If a string is provided then it would be the main wallet for the domain.
-				publicKey: true
-			},
-			// This allows a browser or connection to use the realtime mode for the UDSP connection
-			// Permits it to act similar to a web transport and or a websocket connection
-			realtime: true,
-			// blocked methods mean methods the server doesn't permit
-			// blockedMethods: ['delete'],
-			allowedMethods: ['get', 'connect', 'file', 'stream', 'close'],
-			// deafult compression of payload data only
-			compression: true,
-			// packetCompression: true,
-			// headerCompression: true,
-			// footerCompression: true,
-			// pathCompression: true,
-			// parameterCompression: true,
-			autoLogin: true,
 		},
 		master: {},
 	},

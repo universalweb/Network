@@ -1,11 +1,11 @@
 import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
-import { decode } from '#utilities/serialize';
+import { decode, encode } from '#utilities/serialize';
 import { decrypt, createSessionKey } from '#crypto';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
-import { processMessage } from './processMessage.js';
-import { hasValue } from '@universalweb/acid';
+import { processFrame } from './processFrame.js';
+import { hasValue, isArray } from '@universalweb/acid';
 export async function onPacket(packet) {
 	msgReceived('Packet Received');
 	const config = {
@@ -27,10 +27,13 @@ export async function onPacket(packet) {
 		message,
 		footer,
 	} = config.packetDecoded;
-	if (hasValue(message?.id)) {
-		processMessage(config.packetDecoded, this);
-	} else {
-		this.proccessProtocolPacket(message, header, footer);
+	if (isArray(message)) {
+		const rpc = message[1];
+		if (rpc === 0) {
+			this.proccessProtocolPacket(message, header);
+		} else {
+			processFrame(message, header, this);
+		}
 	}
 }
 
