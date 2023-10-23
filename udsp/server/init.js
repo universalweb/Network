@@ -10,7 +10,7 @@ import {
 	msgReceived
 } from '#logs';
 import { on, off } from './events.js';
-import { bindServer } from './bind.js';
+import { listen } from './listen.js';
 import { onError } from './onError.js';
 import { onListen } from './onListen.js';
 import { onPacket } from './onPacket.js';
@@ -180,7 +180,6 @@ export class Server extends UDSP {
 		await this.calculatePacketOverhead();
 		await this.setupSocket();
 		await this.attachEvents();
-		await this.bindServer();
 		console.log('-------SERVER INITIALIZED-------');
 		return this;
 	}
@@ -204,7 +203,7 @@ export class Server extends UDSP {
 		}
 	}
 	on = on;
-	bindServer = bindServer;
+	listen = listen;
 	onError = onError;
 	onListen = onListen;
 	onPacket = onPacket;
@@ -214,6 +213,7 @@ export class Server extends UDSP {
 	clientCount = 0;
 	port = 80;
 	ip = '::1';
+	connectionIdSize = 8;
 	/*
 		* All created clients (clients) represent a client to server bi-directional connection until it is closed by either party.
 	*/

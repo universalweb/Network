@@ -240,10 +240,8 @@ export class Client extends UDSP {
 		const thisClient = this;
 		this.configuration = configuration;
 		const { id } = this.configuration;
-		this.id = id || randomConnectionId();
-		this.idString = toBase64(this.id);
+		this.assignId();
 		this.clientId = this.id;
-		this.idSize = this.id.length;
 		success(`clientId:`, this.idString);
 		await this.setDestination();
 		await this.setProfile();
@@ -423,6 +421,7 @@ export class Client extends UDSP {
 	certificateChunks = [];
 	requestQueue = construct(Map);
 	data = construct(Map);
+	connectionIdSize = 4;
 	ipVersion = 'udp4';
 }
 export async function client(configuration) {

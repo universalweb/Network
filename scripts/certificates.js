@@ -55,17 +55,7 @@ const domainProfile = await createProfile({
 			// The ip, ipv4, & ipv6 properties are used to determine the IP address of the server.
 			// The ip property can be either ipv4 or ipv6.
 			// ipv4/ipv6 can also be used as a form of backup ips or the primary ips for their respective versions. Similar to A & AAAA records.
-			// ip: ['::1', '127.0.0.1'],
-			ip: '::1',
-			// This allows for IPv4 and IPv6 to use specific details that is more fitting for that endpoint.
-			// This is not intended to be used when IPv6 becomes the standard.
-			// ipv4: '127.0.0.1',
-			// ipv6: '::1',
-			// Another format for IPv4 and ipv6 is an object with specific details that can override the initial certificate's details.
-			// ipv4: {
-			// 	ip: '127.0.0.1',
-			// 	keypair: {}
-			// },
+			ip: ['::1', '127.0.0.1'],
 			// Records can be attached to this domain certificate in their own certificate or included in this certificate.
 			// If multiple A or AAAA records are provided in addition to the ips listed above then they will be used as backup ips.
 			records: {
@@ -125,7 +115,7 @@ const domainProfile = await createProfile({
 			// messageCompression: true,
 			// autoLogin: true,
 		},
-		whois: {
+		master: {
 			entity: {
 				name: 'Universal Web',
 			},
@@ -137,7 +127,6 @@ const domainProfile = await createProfile({
 				county: 'UW County',
 			},
 		},
-		master: {},
 	},
 	savePath: `${dirname}/../services`,
 	certificateName: 'universal.web'
@@ -145,11 +134,7 @@ const domainProfile = await createProfile({
 console.log('DOMAIN Profile created (Master & IDENTITY CERTIFICATEs)', decode(domainProfile.ephemeral.certificate));
 const profile = await createProfile({
 	template: {
-		ephemeral: {
-			version: 1,
-			// Setting Viat to true means this certificate is being used as a viat wallet
-			viat: true
-		},
+		ephemeral: {},
 		master: {
 			version: 1,
 			viat: true

@@ -5,6 +5,7 @@ import { server } from '#udsp';
 import { info } from '#logs';
 import { currentPath } from '@universalweb/acid';
 import path from 'path';
+import { listen } from '../udsp/server/listen.js';
 const appServer = await server({
 	// Cluster Mode
 	// The main server will be the only server that will be able to accept new connections and will forward them to the relevant server in the cluster acting in part as a load balancer
@@ -17,7 +18,8 @@ const appServer = await server({
 		// use the default port for the cluster's main point of contact & as the loadbalancer/router
 		// default is true when cluster mode is enabled
 		// exclusive roundrobin loadbalancer
-		mode: 'exclusive',
+		// ipc or proxy
+		mode: 'proxy',
 	},
 	encryptConnectionId: false,
 	randomId: true,
@@ -47,6 +49,10 @@ const appServer = await server({
 	resourceDirectory: path.join(currentPath(import.meta), 'resources'),
 	rootDirectory: currentPath(import.meta),
 	// Reserve the first two bytes of the connection ID for smart routing on the server such as for load balancing and internal routing
-	// reservedConnectionIdSize: 2
+	reservedConnectionIdSize: 2,
+	clientConnectionIdSize: 4,
 });
+if (appServer) {
+	appServer.listen();
+}
 // info('App Server Status', appServer);

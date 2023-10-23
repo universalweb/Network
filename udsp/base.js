@@ -2,11 +2,9 @@ import {
 	construct, UniqID, each, hasValue, assign
 } from '@universalweb/acid';
 import dgram from 'dgram';
-import { randomConnectionId, randomBuffer } from '#crypto';
+import { randomConnectionId, randomBuffer, toBase64 } from '#crypto';
 import { cipherSuites } from './cryptoMiddleware/index.js';
-/* TODO
-	Calculate encrypted connection ID overhead - add to existing overhead or force to specify in config the size encrypted
-*/
+import { calculatePacketOverhead } from './calculatePacketOverhead.js';
 export class UDSP {
 	constructor(configuration) {
 		this.cipherSuiteName = cipherSuites.version[this.version][0].name;
@@ -14,64 +12,7 @@ export class UDSP {
 		this.cipherSuites = cipherSuites.available[this.version];
 	}
 	async calculatePacketOverhead() {
-		const {
-			maxPacketPayloadSize,
-			maxPacketDataSize,
-			maxPacketHeadSize,
-			maxPacketPathSize,
-			maxPacketParametersSize,
-			cipherSuite,
-			cipherSuiteName
-		} = this;
-		const encryptOverhead = cipherSuite?.encrypt?.overhead || 0;
-		if (hasValue(encryptOverhead)) {
-			this.encryptOverhead = encryptOverhead;
-		}
-		if (maxPacketPayloadSize) {
-			if (!maxPacketDataSize) {
-				this.maxPacketDataSize = maxPacketPayloadSize;
-			}
-			if (!maxPacketHeadSize) {
-				this.maxPacketHeadSize = maxPacketPayloadSize;
-			}
-			if (!maxPacketParametersSize) {
-				this.maxPacketParametersSize = maxPacketPayloadSize;
-			}
-			if (!maxPacketPathSize) {
-				this.maxPacketPathSize = maxPacketPayloadSize;
-			}
-		} else {
-			const packetInitialOverhead = 2;
-			const connectionIdSize = this.connectionIdSize;
-			this.encryptPacketOverhead = this.encryptOverhead;
-			this.packetOverhead = packetInitialOverhead + this.encryptPacketOverhead + connectionIdSize;
-			this.maxPacketPayloadSize = this.maxPacketSize - this.packetOverhead;
-			this.maxPayloadSizeSafeEstimate = this.maxPacketPayloadSize - 10;
-			this.emptyPayloadOverHeadSize = 16 + 19;
-			if (!maxPacketDataSize) {
-				this.maxPacketDataSize = this.maxPacketPayloadSize - this.emptyPayloadOverHeadSize - 7;
-			}
-			if (!maxPacketHeadSize) {
-				this.maxPacketHeadSize = this.maxPacketPayloadSize - this.emptyPayloadOverHeadSize;
-			}
-			if (!maxPacketParametersSize) {
-				this.maxPacketParametersSize = this.maxPacketPayloadSize - this.emptyPayloadOverHeadSize;
-			}
-			if (!maxPacketPathSize) {
-				this.maxPacketPathSize = this.maxPacketPayloadSize - this.emptyPayloadOverHeadSize;
-			}
-			console.log(`packetInitialOverhead: ${packetInitialOverhead} bytes`);
-		}
-		console.log(`encryptPacketOverhead: ${this.encryptPacketOverhead} bytes`);
-		console.log(`Packet Overhead: ${this.packetOverhead} bytes`);
-		console.log(`connectionIdSize Overhead: ${this.connectionIdSize} bytes`);
-		console.log(`Max Payload Size Safe Estimate: ${this.maxPayloadSizeSafeEstimate} bytes`);
-		console.log(`Max Payload Size: ${this.maxPacketPayloadSize} bytes`);
-		console.log(`Max Data Size: ${this.maxPacketDataSize} bytes`);
-		console.log(`Max Head Size: ${this.maxPacketHeadSize} bytes`);
-		console.log(`Max Path Size: ${this.maxPacketPathSize} bytes`);
-		console.log(`Max Paraneters Size: ${this.maxPacketParametersSize} bytes`);
-		console.log(`Max Packet Size: ${this.maxPacketSize} bytes`);
+		return calculatePacketOverhead(this);
 	}
 	calculateReservedConnectionIdSize() {
 		const { coreCount } = this;
@@ -81,8 +22,8 @@ export class UDSP {
 			this.reservedConnectionIdSize = 2;
 		}
 	}
-	generateConnectionID() {
-		const target = randomConnectionId(this.connectionIdSize || 8);
+	generateConnectionID(size) {
+		const target = randomConnectionId(size || this.connectionIdSize || 8);
 		return target;
 	}
 	async setupSocket() {
@@ -101,9 +42,13 @@ export class UDSP {
 		});
 		return this;
 	}
+	assignId(size, start, end) {
+		this.id = randomConnectionId(size);
+		this.idString = toBase64(this.id);
+		this.idSize = this.id.length;
+	}
 	connectionGracePeriod = 30000;
 	maxPacketSize = 1280;
-	connectionIdSize = 8;
 	stateCodeDescriptions = ['initializing', 'initialized', 'failed to initialize'];
 	state = 0;
 	/*

@@ -102,7 +102,8 @@ export async function initialize(config) {
 		},
 		ip,
 		port,
-		id: clientId
+		id: clientId,
+		connectionIdSize: clientId.length || 4
 	};
 	await client.setSessionKeys();
 	if (!realtime && gracePeriod) {
