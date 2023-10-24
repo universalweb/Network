@@ -30,6 +30,7 @@ import {
 import { encodePacket } from '#udsp/encoding/encodePacket';
 import { sendPacket } from '#udsp/sendPacket';
 import { reply } from '#udsp/request/reply';
+import { calculatePacketOverhead } from '../../calculatePacketOverhead.js';
 /* TODO
 	- Add support for changing connection id sizes for clients (char type limits int, string, both)
 	- smaller cid size for clients
@@ -51,12 +52,14 @@ export class Client {
 			cipherSuites,
 			publicKeyCryptography,
 			encryptClientConnectionId,
-			encryptServerConnectionId
+			encryptServerConnectionId,
+			connectionIdSize,
 		} = server;
 		this.events = events;
 		this.requestMethods = requestMethods;
 		this.cipherSuites = cipherSuites;
 		this.publicKeyCryptography = publicKeyCryptography;
+		this.connectionIdSize = connectionIdSize;
 		if (hasValue(encryptClientConnectionId)) {
 			this.encryptClientConnectionId = encryptClientConnectionId;
 		}
@@ -65,48 +68,16 @@ export class Client {
 		}
 		return this.initialize(config);
 	}
+	description = `Server's client`;
+	type = 'serverClient';
+	isServerClient = true;
+	isServerEnd = true;
 	initialize = initialize;
 	async calculatePacketOverhead() {
 		const server = this.server();
-		const {
-			maxPacketSize,
-			maxPacketDataSize,
-			maxPacketHeadSize,
-			maxPacketPathSize,
-			maxPacketParametersSize,
-			packetMaxPayloadSafeEstimate
-		} = server;
-		const {
-			cipherSuite,
-			cipherSuiteName,
-		} = this;
-		const cachedCipherSuitePacketOverhead = server.cachedPacketSizes[cipherSuiteName];
-		if (cachedCipherSuitePacketOverhead) {
-			return assign(this, cachedCipherSuitePacketOverhead);
-		}
-		const encryptOverhead = cipherSuite?.encrypt?.overhead || 0;
-		console.log('encryptOverhead', encryptOverhead);
-		if (hasValue(encryptOverhead)) {
-			this.encryptOverhead = encryptOverhead;
-		}
-		if (maxPacketSize) {
-			this.maxPacketSize = maxPacketSize - encryptOverhead;
-		}
-		if (maxPacketDataSize) {
-			this.maxPacketDataSize = maxPacketDataSize - encryptOverhead;
-		}
-		if (maxPacketHeadSize) {
-			this.maxPacketHeadSize = maxPacketHeadSize - encryptOverhead;
-		}
-		if (maxPacketPathSize) {
-			this.maxPacketPathSize = maxPacketPathSize - encryptOverhead;
-		}
-		if (maxPacketParametersSize) {
-			this.maxPacketHeadSize = maxPacketParametersSize - encryptOverhead;
-		}
-		if (packetMaxPayloadSafeEstimate) {
-			this.packetMaxPayloadSafeEstimate = packetMaxPayloadSafeEstimate - encryptOverhead;
-		}
+		const { overhead } = server;
+		assign(this, overhead);
+		await calculatePacketOverhead(this.destination);
 	}
 	async created() {
 		const server = this.server();
@@ -189,16 +160,6 @@ export class Client {
 			return;
 		}
 	}
-	description = `Server's client`;
-	type = 'serverClient';
-	isServerClient = true;
-	isServerEnd = true;
-	pending = false;
-	state = 0;
-	encryptConnectionId = false;
-	randomId = randomBuffer(8);
-	data = construct(Map);
-	replyQueue = construct(Map);
 	async reply(frame, header) {
 		const id = frame[0];
 		console.log('Reply Client', id, this.replyQueue.has(id), frame);
@@ -209,6 +170,15 @@ export class Client {
 		}
 		reply(frame, header, this).onFrame(frame, header);
 	}
+	pending = false;
+	state = 0;
+	encryptConnectionId = false;
+	randomId = randomBuffer(8);
+	data = construct(Map);
+	replyQueue = construct(Map);
+	destination = {
+		overhead: {},
+	};
 }
 export async function createClient(config) {
 	const client = await construct(Client, [config]);

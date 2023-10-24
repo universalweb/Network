@@ -27,31 +27,9 @@ export class Base {
 			return source;
 		};
 		source.lastActive = Date.now();
-		const {
-			maxPacketSize,
-			maxPacketDataSize,
-			maxPacketHeadSize,
-			maxPacketPathSize,
-			maxPacketParametersSize,
-			packetMaxPayloadSafeEstimate
-		} = source;
-		if (maxPacketSize) {
-			this.maxPacketSize = maxPacketSize;
-		}
-		if (maxPacketDataSize) {
-			this.maxPacketDataSize = maxPacketDataSize;
-		}
-		if (maxPacketHeadSize) {
-			this.maxPacketHeadSize = maxPacketHeadSize;
-		}
-		if (maxPacketPathSize) {
-			this.maxPacketPathSize = maxPacketPathSize;
-		}
-		if (maxPacketParametersSize) {
-			this.maxPacketParametersSize = maxPacketParametersSize;
-		}
-		if (packetMaxPayloadSafeEstimate) {
-			this.packetMaxPayloadSafeEstimate = packetMaxPayloadSafeEstimate;
+		const { maxFrameSize, } = source;
+		if (maxFrameSize) {
+			this.maxFrameSize = maxFrameSize;
 		}
 		if (this.isAsk) {
 			this.handshake = source.handshake;

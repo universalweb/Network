@@ -336,15 +336,14 @@ export class Client extends UDSP {
 		if (certSize) {
 			this.certSize = certSize;
 		}
-		return this.handshaked();
+		this.handshaked();
 	}
-	handshaked(message) {
+	async handshaked(message) {
 		console.log('Handshake Completed with new keys');
 		this.connected = true;
 		this.state = 2;
 		this.readyState = 1;
-		// Resolve the handshake promise
-		console.log(this.handshakeCompleted);
+		await this.calculatePacketOverhead();
 		this.handshakeCompleted();
 	}
 	setPublicKeyHeader(header = []) {
@@ -415,7 +414,9 @@ export class Client extends UDSP {
 	emit = emit;
 	onListening = onListening;
 	onPacket = onPacket;
-	destination = {};
+	destination = {
+		overhead: {}
+	};
 	autoConnect = false;
 	static connections = new Map();
 	certificateChunks = [];

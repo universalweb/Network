@@ -23,7 +23,8 @@ export async function decodePacketHeaders(config) {
 		isServerEnd,
 		isServerClient,
 		boxCryptography,
-		connectionIdKeypair
+		connectionIdKeypair,
+		connectionIdSize
 	} = destination;
 	const packetSize = packetEncoded.length;
 	if (packetSize > 1280) {
@@ -43,7 +44,7 @@ export async function decodePacketHeaders(config) {
 	let headerEncoded;
 	if (isShortHeaderMode) {
 		config.isShortHeaderMode = true;
-		headerEncoded = packet.subarray(0, 8);
+		headerEncoded = packet.subarray(0, connectionIdSize);
 	} else {
 		headerEncoded = packet[0];
 	}
@@ -116,12 +117,15 @@ export async function decodePacket(config) {
 		headerEncoded,
 		isShortHeaderMode,
 	} = config;
-	const { cipherSuite, } = destination;
+	const {
+		cipherSuite,
+		connectionIdSize
+	} = destination;
 	let footer;
 	let footerEncoded;
 	let messageEncoded;
 	if (isShortHeaderMode) {
-		messageEncoded = packet.subarray(8);
+		messageEncoded = packet.subarray(connectionIdSize);
 	} else {
 		footerEncoded = packet[2];
 		messageEncoded = packet[1];

@@ -9,7 +9,7 @@ import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 import {
-	construct, keys, isBoolean, intersection, hasValue
+	construct, keys, isBoolean, intersection, hasValue, assert
 } from '@universalweb/acid';
 import { Client } from './index.js';
 import { getAlgorithm } from '../../cryptoMiddleware/index.js';
@@ -31,7 +31,7 @@ export async function initialize(config) {
 			encryptClientConnectionId,
 			encryptServerConnectionId,
 			publicKeySize,
-			heartbeat
+			heartbeat,
 		},
 		connection: {
 			address: ip,
@@ -67,7 +67,6 @@ export async function initialize(config) {
 		client.cipherSuite = getAlgorithm(serverCipherSuite, this.version);
 	}
 	client.publicKeySize = publicKeySize;
-	client.calculatePacketOverhead();
 	// When changing to a new key you must first create new keys from scratch to replace these.
 	client.keypair = serverKeypair;
 	client.encryptionKeypair = serverEncryptionKeypair;
@@ -93,7 +92,7 @@ export async function initialize(config) {
 	clients.set(serverConnectionIdString, client);
 	client.id = serverClientId;
 	client.idString = serverConnectionIdString;
-	client.destination = {
+	assert(client.destination, {
 		encryptionKeypair: {
 			publicKey
 		},
@@ -103,8 +102,10 @@ export async function initialize(config) {
 		ip,
 		port,
 		id: clientId,
-		connectionIdSize: clientId.length || 4
-	};
+		connectionIdSize: clientId.length,
+		cipherSuite: client.cipherSuite
+	});
+	client.calculatePacketOverhead();
 	await client.setSessionKeys();
 	if (!realtime && gracePeriod) {
 		client.gracePeriod = setTimeout(() => {

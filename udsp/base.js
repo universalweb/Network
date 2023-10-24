@@ -48,7 +48,6 @@ export class UDSP {
 		this.idSize = this.id.length;
 	}
 	connectionGracePeriod = 30000;
-	maxPacketSize = 1280;
 	stateCodeDescriptions = ['initializing', 'initialized', 'failed to initialize'];
 	state = 0;
 	/*
@@ -73,5 +72,4 @@ export class UDSP {
 	debounce = false;
 	randomId = randomBuffer(8);
 	version = 1;
-	cachedPacketSizes = {};
 }
