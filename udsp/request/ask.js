@@ -19,6 +19,7 @@ export class Ask extends Base {
 		const {
 			requestQueue,
 			streamIdGenerator,
+			destination
 		} = source;
 		console.log('Ask', path);
 		const id = streamIdGenerator.get();
@@ -31,6 +32,7 @@ export class Ask extends Base {
 		if (path) {
 			this.path = path;
 		}
+		this.maxFrameSize = destination.maxFrameSize;
 		this.request = clientRequestObject({
 			data,
 			head,

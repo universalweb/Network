@@ -3,32 +3,29 @@ import { assign, hasValue } from '@universalweb/acid';
 const cache = {};
 const maxDefaultPacketSize = 1280;
 const packetInitialOverhead = 6;
-export async function calculatePacketOverhead(source, assignTo) {
-	const {
-		cipherSuite,
-		connectionIdSize
-	} = source;
-	const cached = cache[cipherSuite];
+const zero = 0;
+const seven = 7;
+export async function calculatePacketOverhead(cipherSuite, connectionIdSize, assignTo) {
+	const cacheId = `${cipherSuite.id}-${connectionIdSize}`;
+	const cached = cache[cacheId];
 	if (cached) {
-		assign(assignTo, cached);
-		return;
+		return assign(assignTo || {}, cached);
 	}
 	const target = {};
-	const encryptOverhead = cipherSuite?.encrypt?.overhead || 0;
+	const encryptOverhead = cipherSuite?.encrypt?.overhead || zero;
 	if (hasValue(encryptOverhead)) {
 		target.encryptOverhead = encryptOverhead;
 	}
-	target.encryptPacketOverhead = source.encryptOverhead;
-	target.packetOverhead = packetInitialOverhead + source.encryptPacketOverhead + connectionIdSize;
-	target.maxPacketPayloadSize = maxDefaultPacketSize - source.packetOverhead;
-	target.maxFrameSize = target.maxPacketPayloadSize - 7;
+	target.packetOverhead = packetInitialOverhead + encryptOverhead + connectionIdSize;
+	target.maxPacketPayloadSize = maxDefaultPacketSize - target.packetOverhead;
+	target.maxFrameSize = target.maxPacketPayloadSize - seven;
 	console.log(`Max Packet Size: ${maxDefaultPacketSize} bytes`);
 	console.log(`packetInitialOverhead: ${packetInitialOverhead} bytes`);
-	console.log(`encryptPacketOverhead: ${source.encryptPacketOverhead} bytes`);
-	console.log(`Packet Overhead: ${source.packetOverhead} bytes`);
-	console.log(`connectionIdSize Overhead: ${source.connectionIdSize} bytes`);
-	console.log(`Max Payload Size: ${source.maxPacketPayloadSize} bytes`);
-	console.log(`Max Frame Size: ${source.maxFrameSize} bytes`);
-	cache[cipherSuite] = target;
-	assign(assignTo, target);
+	console.log(`encryption Overhead: ${target.packetOverhead} bytes`);
+	console.log(`Packet Overhead: ${target.packetOverhead} bytes`);
+	console.log(`connectionIdSize Overhead: ${connectionIdSize} bytes`);
+	console.log(`Max Payload Size: ${target.maxPacketPayloadSize} bytes`);
+	console.log(`Max Frame Size: ${target.maxFrameSize} bytes`);
+	cache[cacheId] = target;
+	return assign(assignTo || {}, target);
 }

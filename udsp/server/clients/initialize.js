@@ -9,7 +9,7 @@ import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 import {
-	construct, keys, isBoolean, intersection, hasValue, assert
+	construct, keys, isBoolean, intersection, hasValue, assign
 } from '@universalweb/acid';
 import { Client } from './index.js';
 import { getAlgorithm } from '../../cryptoMiddleware/index.js';
@@ -44,11 +44,14 @@ export async function initialize(config) {
 		console.trace('Client ID is missing');
 		return;
 	}
+	success(`Client Connection ID: ${toBase64(clientId)}`);
 	const publicKey = header[2];
+	console.log(packet.header);
 	if (!publicKey) {
 		console.trace('Client Public Key is missing');
 		return;
 	}
+	success(`key: ${toBase64(publicKey)}`);
 	const client = this;
 	let selectedCipherSuite = header[3];
 	const version = header[4];
@@ -79,20 +82,13 @@ export async function initialize(config) {
 			client.encryptServerConnectionId = encryptServerConnectionId;
 		}
 	}
-	success(`key: ${toBase64(publicKey)}`);
-	success(`Client Connection ID: ${toBase64(clientId)}`);
-	const serverClientId = Buffer.concat([serverId, randomBuffer(4)]);
+	const serverClientId = randomConnectionId(8);
 	const serverConnectionIdString = toBase64(serverClientId);
-	console.log(`Server Connection ID: ${toBase64(serverClientId)}`);
-	if (clients.has(serverConnectionIdString)) {
-		console.trace('ID IN USE NEED TO RE-CHECK FOR A NEW ID');
-	} else {
-		success(`Server client ID is open ${serverConnectionIdString}`);
-	}
 	clients.set(serverConnectionIdString, client);
+	console.log(`Server Connection ID: ${toBase64(serverClientId)}`);
 	client.id = serverClientId;
 	client.idString = serverConnectionIdString;
-	assert(client.destination, {
+	assign(client.destination, {
 		encryptionKeypair: {
 			publicKey
 		},
@@ -103,7 +99,6 @@ export async function initialize(config) {
 		port,
 		id: clientId,
 		connectionIdSize: clientId.length,
-		cipherSuite: client.cipherSuite
 	});
 	client.calculatePacketOverhead();
 	await client.setSessionKeys();

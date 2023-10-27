@@ -74,10 +74,7 @@ export class Client {
 	isServerEnd = true;
 	initialize = initialize;
 	async calculatePacketOverhead() {
-		const server = this.server();
-		const { overhead } = server;
-		assign(this, overhead);
-		await calculatePacketOverhead(this.destination);
+		return calculatePacketOverhead(this.cipherSuite, this.destination.connectionIdSize, this.destination);
 	}
 	async created() {
 		const server = this.server();
@@ -181,6 +178,8 @@ export class Client {
 	};
 }
 export async function createClient(config) {
+	info('Creating Client');
+	console.log(config.packet?.id?.toString('base64'));
 	const client = await construct(Client, [config]);
 	success(`Client has been created with sever connection id ${toBase64(client.id)}`);
 	return client;

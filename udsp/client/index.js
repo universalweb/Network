@@ -50,6 +50,20 @@ import { post } from '../requestMethods/post.js';
 import { getAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
 import { getWANIPAddress } from '../../utilities/network/getWANIPAddress.js';
 import { getLocalIpVersion } from '../../utilities/network/getLocalIP.js';
+import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
+let ipInfo;
+let globalIpVersion;
+try {
+	ipInfo = await getWANIPAddress();
+	if (ipInfo?.ip) {
+		globalIpVersion = ipInfo?.ip.includes(':') ? 'udp6' : 'udp4';
+	} else {
+		globalIpVersion = 'udp4';
+	}
+} catch (error) {
+	console.log('NO GLOBAL IP');
+}
+console.log('IP Version', globalIpVersion);
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
 	constructor(configuration) {
@@ -114,6 +128,9 @@ export class Client extends UDSP {
 		}
 		if (this.destination.clientConnectionIdSize) {
 			this.connectionIdSize = this.destination.clientConnectionIdSize;
+		}
+		if (!this.destination.connectionIdSize) {
+			this.destination.connectionIdSize = 8;
 		}
 		// console.log('Destination', destination.cryptography);
 	}
@@ -215,43 +232,45 @@ export class Client extends UDSP {
 		});
 	}
 	async getIPDetails() {
-		try {
-			const ipInfo = await getWANIPAddress();
-			this.globalIP = ipInfo.ip;
-		} catch (error) {
-			console.log('NO global IP might be local network only');
-		}
-		if (this.globalIP) {
-			this.globalIpVersion = this.globalIP.includes(':') ? 'udp6' : 'udp4';
+		const destinationIp = this.destination.ip;
+		if (isArray(destinationIp)) {
+			if (globalIpVersion === 'udp4') {
+				const ipv4ip = this.destination.ip.find((item) => {
+					return item.includes(':') ? false : item;
+				});
+				if (ipv4ip) {
+					this.destination.ip = ipv4ip;
+					this.ipVersion = 'udp4';
+				}
+			} else {
+				const ipv6ip = this.destination.ip.find((item) => {
+					return item.includes(':') ? item : false;
+				});
+				if (ipv6ip) {
+					this.destination.ip = ipv6ip;
+					this.ipVersion = 'udp6';
+				} else {
+					this.destination.ip = [0];
+					this.ipVersion = 'udp4';
+				}
+			}
 		} else {
-			this.globalIpVersion = 'udp4';
+			this.ipVersion = this.destination.ip.includes(':') ? 'udp6' : 'udp4';
 		}
-		getLocalIpVersion();
-		if (this.globalIP) {
-			this.destinationIpVersion = this.destination.ip.includes(':') ? 'udp6' : 'udp4';
-			this.bothSupportIpv6 = this.destinationIpVersion === 'udp6' && this.globalIpVersion === 'udp6';
-			this.ipVersion = (this.bothSupportIpv6) ? 'udp6' : 'udp4';
-		} else {
-			this.ipVersion = 'udp4';
-		}
-		this.ipVersion = this.destination.ip.includes(':') ? 'udp6' : 'udp4';
 	}
 	async initialize(configuration) {
 		const thisClient = this;
 		this.configuration = configuration;
-		const { id } = this.configuration;
-		this.assignId();
-		this.clientId = this.id;
-		success(`clientId:`, this.idString);
 		await this.setDestination();
+		await this.getIPDetails();
 		await this.setProfile();
 		console.log('ipVersion', this.ipVersion);
 		console.log('destination', this.destination);
 		await this.configCryptography();
+		this.assignId();
 		await this.calculatePacketOverhead();
 		await this.setupSocket();
 		await this.attachEvents();
-		Client.connections.set(this.idString, this);
 		if (this.autoConnect) {
 			console.time('CONNECTING');
 			const { realtime } = this;
@@ -261,6 +280,16 @@ export class Client extends UDSP {
 			console.timeEnd('CONNECTING');
 		}
 		return this;
+	}
+	assignId() {
+		this.id = randomConnectionId(this.destination.clientConnectionIdSize || 4);
+		this.connectionIdSize = this.id.length;
+		this.idString = this.id.toString('base64');
+		success(`Assigned ClientId ${this.idString}`);
+		Client.connections.set(this.idString, this);
+	}
+	async calculatePacketOverhead() {
+		return calculatePacketOverhead(this.cipherSuite, this.destination.connectionIdSize, this.destination);
 	}
 	reKey() {
 		const thisClient = this;
@@ -273,6 +302,10 @@ export class Client extends UDSP {
 		console.trace(this.idString, `client closed. code ${message?.state || message}`);
 		this.socket.close();
 		Client.connections.delete(this.idString);
+	}
+	async send(message, headers, footer) {
+		console.log(`client.send to Server`, this.destination.ip, this.destination.port);
+		return sendPacket(message, this, this.socket, this.destination, headers, footer);
 	}
 	ask(method, path, parameters, data, head, options) {
 		const ask = construct(Ask, [method, path, parameters, data, head, options, this]);
@@ -325,7 +358,7 @@ export class Client extends UDSP {
 		console.log('Got server Intro', frame);
 		const [streamid_undefined, rpc, serverConnectionId, reKey, serverRandomToken, certSize, dataSize] = frame;
 		this.destination.id = serverConnectionId;
-		this.destination.idSize = serverConnectionId.length;
+		this.destination.connectionIdSize = serverConnectionId.length;
 		this.newKeypair = reKey;
 		await this.setNewDestinationKeys();
 		console.log('New Server Connection ID', toBase64(serverConnectionId));
@@ -337,14 +370,6 @@ export class Client extends UDSP {
 			this.certSize = certSize;
 		}
 		this.handshaked();
-	}
-	async handshaked(message) {
-		console.log('Handshake Completed with new keys');
-		this.connected = true;
-		this.state = 2;
-		this.readyState = 1;
-		await this.calculatePacketOverhead();
-		this.handshakeCompleted();
 	}
 	setPublicKeyHeader(header = []) {
 		const key = this.encryptionKeypair.publicKey;
@@ -396,9 +421,13 @@ export class Client extends UDSP {
 		}
 		return this.awaitHandshake;
 	}
-	async send(message, headers, footer) {
-		console.log(`client.send to Server`, this.destination.ip, this.destination.port);
-		return sendPacket(message, this, this.socket, this.destination, headers, footer);
+	async handshaked(message) {
+		console.log('Handshake Completed with new keys');
+		this.connected = true;
+		this.state = 2;
+		this.readyState = 1;
+		await this.calculatePacketOverhead();
+		this.handshakeCompleted();
 	}
 	proccessProtocolPacket(frame, header) {
 		const rpc = frame[1];

@@ -3,7 +3,7 @@ import { encode } from '#utilities/serialize';
 import { numberEncodedSize } from './numberEncodedSize.js';
 export async function dataPacketization(source) {
 	const {
-		maxPacketDataSize,
+		maxFrameSize,
 		isAsk,
 		outgoingDataPackets,
 		outgoingData,
@@ -13,7 +13,7 @@ export async function dataPacketization(source) {
 	const numberEncodedSizeMax = numberEncodedSize(dataSize);
 	let currentBytePosition = 0;
 	let packetId = 0;
-	const maxSafePacketDataSize = maxPacketDataSize - numberEncodedSizeMax - streamIdSize;
+	const maxSafePacketDataSize = maxFrameSize - numberEncodedSizeMax - streamIdSize;
 	if (dataSize > maxSafePacketDataSize) {
 		console.log('data size', dataSize);
 		while (currentBytePosition < dataSize) {

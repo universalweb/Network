@@ -38,7 +38,7 @@ export async function server(config, ...args) {
 					if (msg === 'ready') {
 						workers.set(worker.id, worker);
 						worker.port = port + worker.id;
-						worker.process.send('world');
+						worker.process.send('registered');
 						console.log('worker is registered:', worker.id);
 					}
 				});
@@ -59,6 +59,9 @@ export async function server(config, ...args) {
 			config.workerId = cluster.worker.id;
 			config.isWorker = true;
 			process.on('message', (message) => {
+				if (message === 'registered') {
+					return console.log('Worker ACK REG', config.workerId);
+				}
 				console.log('MESSAGE FROM MAIN', message);
 			});
 			process.send('ready');

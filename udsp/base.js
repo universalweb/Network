@@ -11,9 +11,6 @@ export class UDSP {
 		this.cipherSuiteId = cipherSuites.version[this.version][0].id;
 		this.cipherSuites = cipherSuites.available[this.version];
 	}
-	async calculatePacketOverhead() {
-		return calculatePacketOverhead(this);
-	}
 	calculateReservedConnectionIdSize() {
 		const { coreCount } = this;
 		if (coreCount < 9) {
@@ -41,11 +38,6 @@ export class UDSP {
 			thisContext[methodName] = method.bind(thisContext);
 		});
 		return this;
-	}
-	assignId(size, start, end) {
-		this.id = randomConnectionId(size);
-		this.idString = toBase64(this.id);
-		this.idSize = this.id.length;
 	}
 	connectionGracePeriod = 30000;
 	stateCodeDescriptions = ['initializing', 'initialized', 'failed to initialize'];

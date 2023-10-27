@@ -177,7 +177,6 @@ export class Server extends UDSP {
 		this.configConnectionId();
 		await this.setCertificate();
 		await this.configureNetwork();
-		await this.calculatePacketOverhead();
 		await this.setupSocket();
 		await this.attachEvents();
 		console.log('-------SERVER INITIALIZED-------');

@@ -21,6 +21,7 @@ export async function onPacket(packet, connection) {
 		return console.trace('Invalid Packet Headers');
 	}
 	const id = config.packetDecoded.id;
+	console.log(thisServer.clients, toBase64(id));
 	let client = thisServer.clients.get(toBase64(id));
 	if (client) {
 		config.destination = client;

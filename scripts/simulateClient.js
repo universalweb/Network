@@ -1,6 +1,6 @@
 console.clear();
 const logFunction = console.log;
-console.log = () => {};
+// console.log = () => {};
 console.log('STARTING CLIENT');
 console.time('Full');
 import { currentPath } from '@universalweb/acid';
@@ -24,13 +24,13 @@ const fileRequest = await uwClient.request('get', 'index.html');
 // console.log(fileRequest);
 console.time('FileRequest');
 const response = await fileRequest.send();
-console.log = logFunction;
+// console.log = logFunction;
 console.timeEnd('FileRequest');
 console.timeEnd('Full');
 // console.log('fileRequest', fileRequest);
 // console.log(response);
-// console.log('headers', response.headers);
-// console.log('data', response.toString());
+console.log('headers', response.headers);
+console.log('data', response.toString());
 // const fileFetch = await uwClient.fetch('index.html');
 // Missing file example
 // const fileFetch = await uwClient.fetch('missing.file');

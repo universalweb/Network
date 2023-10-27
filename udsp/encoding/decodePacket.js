@@ -39,7 +39,7 @@ export async function decodePacketHeaders(config) {
 	console.log(packet);
 	const isShortHeaderMode = isBuffer(packet);
 	if (isShortHeaderMode) {
-		info(`isShortHeaderMode Size ${packet.length}`);
+		info(`ShortHeaderMode Size ${packet.length}`);
 	}
 	let headerEncoded;
 	if (isShortHeaderMode) {

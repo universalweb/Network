@@ -34,6 +34,7 @@ export class Reply extends Base {
 		// console.log(source);
 		// // console.log(message);
 		this.streamIdSize = numberEncodedSize(id);
+		this.maxFrameSize = source.destination.maxFrameSize;
 		this.request = serverRequestObject({
 			source: this,
 		});

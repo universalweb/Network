@@ -27,10 +27,6 @@ export class Base {
 			return source;
 		};
 		source.lastActive = Date.now();
-		const { maxFrameSize, } = source;
-		if (maxFrameSize) {
-			this.maxFrameSize = maxFrameSize;
-		}
 		if (this.isAsk) {
 			this.handshake = source.handshake;
 		}
@@ -269,7 +265,7 @@ export class Base {
 	}
 	async pathPacketization() {
 		const {
-			maxPacketPathSize,
+			maxFrameSize,
 			isAsk,
 			outgoingPathPackets
 		} = this;
@@ -285,11 +281,11 @@ export class Base {
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const outgoingPathSize = this.outgoingPathSize;
-		console.log('maxPacketPathSize', maxPacketPathSize);
+		console.log('maxFrameSize', maxFrameSize);
 		while (currentBytePosition < outgoingPathSize) {
 			const message = this.getPacketTemplate(6);
 			message.push(packetId);
-			const endIndex = currentBytePosition + maxPacketPathSize;
+			const endIndex = currentBytePosition + maxFrameSize;
 			const safeEndIndex = endIndex > outgoingPathSize ? outgoingPathSize : endIndex;
 			message.push(this.outgoingPath.subarray(currentBytePosition, safeEndIndex));
 			outgoingPathPackets[packetId] = message;
@@ -305,7 +301,7 @@ export class Base {
 	}
 	async parametersPacketization() {
 		const {
-			maxPacketParametersSize,
+			maxFrameSize,
 			isAsk,
 			outgoingParametersPackets
 		} = this;
@@ -321,11 +317,11 @@ export class Base {
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const outgoingParametersSize = this.outgoingParametersSize;
-		console.log('maxPacketParametersSize', maxPacketParametersSize);
+		console.log('maxFrameSize', maxFrameSize);
 		while (currentBytePosition < outgoingParametersSize) {
 			const message = this.getPacketTemplate(7);
 			message.push(packetId);
-			const endIndex = currentBytePosition + maxPacketParametersSize;
+			const endIndex = currentBytePosition + maxFrameSize;
 			const safeEndIndex = endIndex > outgoingParametersSize ? outgoingParametersSize : endIndex;
 			message.push(this.outgoingParameter.subarray(currentBytePosition, safeEndIndex));
 			outgoingParametersPackets[packetId] = message;
@@ -340,7 +336,7 @@ export class Base {
 	}
 	async headPacketization() {
 		const {
-			maxPacketHeadSize,
+			maxFrameSize,
 			isAsk,
 			outgoingHeadPackets
 		} = this;
@@ -357,11 +353,11 @@ export class Base {
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const headSize = this.outgoingHeadSize;
-		console.log('maxPacketHeadSize', maxPacketHeadSize);
+		console.log('maxFrameSize', maxFrameSize);
 		while (currentBytePosition < headSize) {
 			const message = this.getPacketTemplate(8);
 			message.push(packetId);
-			const endIndex = currentBytePosition + maxPacketHeadSize;
+			const endIndex = currentBytePosition + maxFrameSize;
 			const safeEndIndex = endIndex > headSize ? headSize : endIndex;
 			message.push(this.outgoingHead.subarray(currentBytePosition, safeEndIndex));
 			outgoingHeadPackets[packetId] = message;
