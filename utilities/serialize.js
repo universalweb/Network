@@ -1,11 +1,12 @@
 import * as msgPack from 'msgpackr';
+import { noValue } from '@universalweb/acid';
 const {
 	encode: encodeRaw,
 	decode: decodeRaw
 } = msgPack;
 export function decode(data) {
-	if (!data) {
-		return false;
+	if (noValue(data)) {
+		return;
 	}
 	try {
 		return decodeRaw(data);
@@ -15,8 +16,8 @@ export function decode(data) {
 	}
 }
 export function encode(data) {
-	if (!data) {
-		return false;
+	if (noValue(data)) {
+		return;
 	}
 	try {
 		return encodeRaw(data);

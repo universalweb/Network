@@ -3,7 +3,7 @@ import {
 } from '#logs';
 import { toBase64 } from '#crypto';
 import {
-	isEmpty, hasValue, isArray, eachAsyncArray, eachArray
+	isEmpty, hasValue, isArray, eachAsyncArray, eachArray, isUndefined
 } from '@universalweb/acid';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { createClient } from './clients/index.js';
@@ -22,7 +22,7 @@ export async function onPacket(packet, connection) {
 		destination: thisServer,
 	};
 	const wasHeadersDecoded = await decodePacketHeaders(config);
-	if (!wasHeadersDecoded || !config.packetDecoded.header) {
+	if (isUndefined(wasHeadersDecoded)) {
 		return console.trace('Invalid Packet Headers');
 	}
 	const id = config.packetDecoded.id;

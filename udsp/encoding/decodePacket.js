@@ -39,6 +39,10 @@ export async function decodePacketHeaders(config) {
 	const client = config.client;
 	info(`Packet Encoded Size ${packetSize}`);
 	const packet = decode(packetEncoded);
+	if (isUndefined(packet)) {
+		console.trace('Packet decode failed');
+		return;
+	}
 	config.packet = packet;
 	info(`Packet Decoded Array Size ${packet.length}`);
 	console.log(packet);
@@ -60,7 +64,7 @@ export async function decodePacketHeaders(config) {
 	config.headerEncoded = headerEncoded;
 	// Add single header support which holds only the binary data of the packet.id
 	const headerDecoded = (isShortHeaderMode) ? headerEncoded : decode(headerEncoded);
-	if (!headerDecoded) {
+	if (isUndefined(headerDecoded)) {
 		return console.trace(`No header from decode -> Invalid Packet`);
 	}
 	let id = (isShortHeaderMode) ? headerDecoded : headerDecoded[0];
@@ -144,6 +148,10 @@ export async function decodePacket(config) {
 		console.log('Critical Error', header.error);
 		if (messageEncoded) {
 			packetDecoded.message = decode(messageEncoded);
+			if (isUndefined(packetDecoded.message)) {
+				console.trace('Packet message decode failed');
+				return;
+			}
 		}
 		return true;
 	}
@@ -155,22 +163,24 @@ export async function decodePacket(config) {
 		info(`encrypted Message size ${messageEncoded.length}bytes`);
 		console.log('cipherSuite', cipherSuite);
 		const decryptedMessage = cipherSuite.decrypt(messageEncoded, destination.sessionKeys, ad);
-		if (!decryptedMessage) {
-			return console.trace('Encryption failed');
+		if (isUndefined(decryptedMessage)) {
+			console.trace('Encryption failed');
+			return;
 		}
 		info(`decrypted Message size ${decryptedMessage.length} BYTES`);
 		const message = decode(decryptedMessage);
-		if (!hasValue(message)) {
-			return console.trace('No Message in Packet');
+		if (isUndefined(message)) {
+			console.trace('No Message in Packet');
+			return;
 		}
 		packetDecoded.message = message;
 		if (footerEncoded) {
-			footer = footerEncoded && decode(footerEncoded);
-			if (footer) {
-				packetDecoded.footer = footer;
-			} else {
-				return console.trace(`Footer failed to decode -> Invalid Packet`);
+			footer = decode(footerEncoded);
+			if (isUndefined(footer)) {
+				console.trace(`Footer failed to decode -> Invalid Packet`);
+				return;
 			}
+			packetDecoded.footer = footer;
 		}
 	} else {
 		console.trace(`No Encrypted Message - failed to decode -> Invalid Packet`);

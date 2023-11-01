@@ -30,7 +30,7 @@ console.timeEnd('Full');
 // console.log('fileRequest', fileRequest);
 // console.log(response);
 console.log('headers', response.headers);
-console.log('data', response.toString());
+console.log('data', response.text());
 // const fileFetch = await uwClient.fetch('index.html');
 // Missing file example
 // const fileFetch = await uwClient.fetch('missing.file');

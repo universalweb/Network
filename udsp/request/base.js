@@ -6,7 +6,7 @@ import { onFrame } from './onFrame.js';
 import {
 	isBuffer, isPlainObject, isString, promise,
 	assign, objectSize, eachArray, jsonParse, construct,
-	isArray, clear, isFalse, isTrue, clearBuffer, hasValue, calcProgress
+	isArray, clear, isFalse, isTrue, clearBuffer, hasValue, calcProgress, isUndefined
 } from '@universalweb/acid';
 import { encode, decode } from '#utilities/serialize';
 import { toBase64 } from '#crypto';
@@ -45,7 +45,7 @@ export class Base {
 		if (!source.head) {
 			source.head = {};
 		}
-		source.head[headerName] = headerValue;
+		source.head[headerName] = (hasValue(headerValue)) ? headerValue : 0;
 	}
 	setHeaderDetails(head) {
 		const { dataSize } = head;
@@ -61,6 +61,10 @@ export class Base {
 			clearBuffer(this.incomingHead);
 			head = decode(headCompiled);
 			headCompiled.fill(0);
+			if (isUndefined(head)) {
+				console.trace('Header decode failed');
+				return this.destroy('Header decode failed');
+			}
 			if (isPlainObject(head)) {
 				this.setHeaderDetails(head);
 			}
@@ -83,6 +87,10 @@ export class Base {
 			clearBuffer(this.incomingParameters);
 			this.parameters = decode(parametersCompiled);
 			parametersCompiled.fill(0);
+			if (isUndefined(this.parameters)) {
+				console.trace('parameters decode failed');
+				return this.destroy('parameters decode failed');
+			}
 			console.log('Parameters SET', this.parameters);
 		} else {
 			this.parameters = null;
@@ -98,6 +106,10 @@ export class Base {
 			clearBuffer(this.incomingPath);
 			this.path = decode(pathCompiled);
 			pathCompiled.fill(0);
+			if (isUndefined(this.path)) {
+				console.trace('path decode failed');
+				return this.destroy('path decode failed');
+			}
 			console.log('Path SET', this.path);
 		} else {
 			this.path = '';
@@ -192,9 +204,11 @@ export class Base {
 		if (this.totalIncomingDataSize === this.currentIncomingDataSize) {
 			clear(this.incomingDataPackets);
 			if (this.isAsk) {
-				this.response.dataBuffer = this.incomingData;
-			} else {
-				this.request.dataBuffer = this.incomingData;
+				if (this.incomingData.length) {
+					this.response.dataBuffer = Buffer.concat(this.incomingData);
+				}
+			} else if (this.incomingData.length) {
+				this.request.dataBuffer = Buffer.concat(this.incomingData);
 			}
 			return this.completeReceived();
 		}
@@ -381,7 +395,7 @@ export class Base {
 		if (source.data) {
 			this.outgoingData = source.data;
 			if (!isBuffer(source.data)) {
-				this.setHeader('serialize', 0);
+				this.setHeader('serialize');
 				this.outgoingData = encode(source.data);
 			}
 			this.outgoingDataSize = this.outgoingData.length;

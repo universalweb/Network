@@ -1,5 +1,5 @@
 import {
-	construct, each, assign, UniqID, isFunction, currentPath, isTrue, hasValue
+	construct, each, assign, UniqID, isFunction, currentPath, isTrue, hasValue, isUndefined
 } from '@universalweb/acid';
 import {
 	success,
@@ -21,6 +21,7 @@ import { randomBuffer, toBase64 } from '#crypto';
 import { UDSP } from '#udsp/base';
 import { processPublicKey, getAlgorithm, getPublicKeyAlgorithm } from '../cryptoMiddleware/index.js';
 import { decode } from '#utilities/serialize';
+import { destroy } from '../request/destory.js';
 const { seal } = Object;
 // The Universal Web's UDSP server module.
 export class Server extends UDSP {
@@ -35,6 +36,10 @@ export class Server extends UDSP {
 	isServerEnd = true;
 	onLoadbalancer(packet, addressInfo) {
 		const message = decode(packet);
+		if (isUndefined(message)) {
+			console.trace('message decode failed');
+			return;
+		}
 		if (message) {
 			console.log(message, decode(message[0]), addressInfo);
 		}
