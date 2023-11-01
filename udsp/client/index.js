@@ -51,6 +51,7 @@ import { getAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
 import { getWANIPAddress } from '../../utilities/network/getWANIPAddress.js';
 import { getLocalIpVersion } from '../../utilities/network/getLocalIP.js';
 import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
+import { generateConnectionId, connectionIdToBuffer } from '#udsp/connectionId';
 let ipInfo;
 let globalIpVersion;
 try {
@@ -282,26 +283,27 @@ export class Client extends UDSP {
 		return this;
 	}
 	assignId() {
-		this.id = randomConnectionId(this.destination.clientConnectionIdSize || 4);
-		this.connectionIdSize = this.id.length;
-		this.idString = this.id.toString('base64');
-		success(`Assigned ClientId ${this.idString}`);
-		Client.connections.set(this.idString, this);
+		const connectionIdString = generateConnectionId(this.connectionIdSize);
+		this.connectionIdSize = this.destination.clientConnectionIdSize || 4;
+		this.id = connectionIdToBuffer(connectionIdString);
+		this.connectionIdString = connectionIdString;
+		success(`Assigned ClientId ${connectionIdString}`);
+		Client.connections.set(connectionIdString, this);
 	}
 	async calculatePacketOverhead() {
 		return calculatePacketOverhead(this.cipherSuite, this.destination.connectionIdSize, this.destination);
 	}
 	reKey() {
 		const thisClient = this;
-		success(`client reKeyed -> ID: ${thisClient.idString}`);
+		success(`client reKeyed -> ID: ${thisClient.connectionIdString}`);
 	}
 	close(message, obj) {
 		if (obj) {
 			console.log(obj);
 		}
-		console.trace(this.idString, `client closed. code ${message?.state || message}`);
+		console.trace(this.connectionIdString, `client closed. code ${message?.state || message}`);
 		this.socket.close();
-		Client.connections.delete(this.idString);
+		Client.connections.delete(this.connectionIdString);
 	}
 	async send(message, headers, footer) {
 		console.log(`client.send to Server`, this.destination.ip, this.destination.port);

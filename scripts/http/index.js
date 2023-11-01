@@ -5,6 +5,7 @@ const hostname = `[${serverIp}]`;
 const port = 8888;
 import fs from 'fs';
 import { currentPath } from '@universalweb/acid';
+import fetchIt from 'node-fetch';
 const dirname = currentPath(import.meta);
 const options = {
 	key: fs.readFileSync(`${currentPath(import.meta)}/key.pem`),
@@ -20,7 +21,6 @@ const server = https.createServer(options, (req, res) => {
 server.listen(port, serverIp, () => {
 	console.log(`Server running at ${serverIp}:${port}`);
 });
-import fetchIt from 'node-fetch';
 console.time('http');
 const response = await fetchIt('https://[::1]:8888/');
 const body = await response.text();

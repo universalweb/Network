@@ -31,10 +31,8 @@ import { encodePacket } from '#udsp/encoding/encodePacket';
 import { sendPacket } from '#udsp/sendPacket';
 import { reply } from '#udsp/request/reply';
 import { calculatePacketOverhead } from '../../calculatePacketOverhead.js';
-/* TODO
-	- Add support for changing connection id sizes for clients (char type limits int, string, both)
-	- smaller cid size for clients
-	- New stream id generation to keep them small but need better way to handle large amounts of ids for fatser selection
+/**
+	* @TODO
 */
 export class Client {
 	constructor(config) {
@@ -79,17 +77,17 @@ export class Client {
 	async created() {
 		const server = this.server();
 		await created(this, server);
-		info(`socket EVENT -> created - ID:${this.idString}`);
+		info(`socket EVENT -> created - ID:${this.connectionIdString}`);
 	}
 	async connected() {
 		const server = this.server();
 		await connected(this, server);
-		success(`socket EVENT -> connected - ID:${this.idString}`);
+		success(`socket EVENT -> connected - ID:${this.connectionIdString}`);
 	}
 	async generateSessionKeypair() {
 		const newKeypair = this.cipherSuite.keypair();
 		this.newKeypair = newKeypair;
-		info(`socket EVENT -> reKey - ID:${this.idString}`);
+		info(`socket EVENT -> reKey - ID:${this.connectionIdString}`);
 	}
 	async setSessionKeys() {
 		console.log(this.destination);
@@ -106,24 +104,24 @@ export class Client {
 		this.state = state;
 	}
 	async send(frame, headers, footer) {
-		msgSent(`socket Sent -> ID: ${this.idString}`);
+		msgSent(`socket Sent -> ID: ${this.connectionIdString}`);
 		return sendPacket(frame, this, this.socket(), this.destination, headers, footer);
 	}
 	async received(frame, frameHeaders) {
 		const server = this.server();
 		await received(this, frame, frameHeaders, server);
-		info(`socket EVENT -> send - ID:${this.idString}`);
+		info(`socket EVENT -> send - ID:${this.connectionIdString}`);
 	}
 	async authenticate(packet) {
 	}
 	async destroy(destroyCode) {
 		const server = this.server();
 		await destroy(this, destroyCode, server);
-		info(`socket EVENT -> destroy - ID:${this.idString}`);
+		info(`socket EVENT -> destroy - ID:${this.connectionIdString}`);
 	}
 	// CLIENT HELLO
 	async processIntro(frame) {
-		info(`Client Intro -> - ID:${this.idString}`, frame);
+		info(`Client Intro -> - ID:${this.connectionIdString}`, frame);
 		this.sendIntro(frame);
 	}
 	// SERVER HELLO
@@ -142,7 +140,7 @@ export class Client {
 		this.newSessionKeysAssigned = true;
 	}
 	proccessProtocolPacket(frame) {
-		info(`Server:Client proccessProtocolPacket -> - ID:${this.idString}`);
+		info(`Server:Client proccessProtocolPacket -> - ID:${this.connectionIdString}`);
 		console.log(frame);
 		if (!frame || !isArray(frame)) {
 			console.trace('No frame given');

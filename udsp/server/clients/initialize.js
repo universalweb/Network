@@ -13,6 +13,7 @@ import {
 } from '@universalweb/acid';
 import { Client } from './index.js';
 import { getAlgorithm } from '../../cryptoMiddleware/index.js';
+import { generateConnectionId, connectionIdToBuffer } from '#udsp/connectionId';
 export async function initialize(config) {
 	const {
 		packet,
@@ -32,6 +33,7 @@ export async function initialize(config) {
 			encryptServerConnectionId,
 			publicKeySize,
 			heartbeat,
+			connectionIdSize
 		},
 		connection: {
 			address: ip,
@@ -44,7 +46,7 @@ export async function initialize(config) {
 		console.trace('Client ID is missing');
 		return;
 	}
-	success(`Client Connection ID: ${toBase64(clientId)}`);
+	success(`Client Connection ID: ${clientId.toString('hex')}`);
 	const publicKey = header[2];
 	console.log(packet.header);
 	if (!publicKey) {
@@ -82,12 +84,12 @@ export async function initialize(config) {
 			client.encryptServerConnectionId = encryptServerConnectionId;
 		}
 	}
-	const serverClientId = randomConnectionId(8);
-	const serverConnectionIdString = toBase64(serverClientId);
+	const serverConnectionIdString = generateConnectionId(connectionIdSize);
+	const serverClientId = connectionIdToBuffer(serverConnectionIdString);
 	clients.set(serverConnectionIdString, client);
-	console.log(`Server Connection ID: ${toBase64(serverClientId)}`);
+	console.log(`Server Connection ID: ${serverClientId} SIZE: ${connectionIdSize} CLIENT: ${clientId.toString('hex')}`);
 	client.id = serverClientId;
-	client.idString = serverConnectionIdString;
+	client.connectionIdString = serverConnectionIdString;
 	assign(client.destination, {
 		encryptionKeypair: {
 			publicKey

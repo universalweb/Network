@@ -2,25 +2,25 @@ import {
 	success, failed, imported, msgSent, info, msgReceived
 } from '#logs';
 export async function destroy(client, reason, server) {
-	console.log(`client destroyed: ${client.idString}`);
+	console.log(`client destroyed: ${client.connectionIdString}`);
 	if (reason === 1) {
 		await client.send({
 			state: 3
 		});
 		info(`client ended from inactivity. Grace period ended.
-			ID: ${client.idString}
+			ID: ${client.connectionIdString}
 			Address: ${client.destination.ip}
 			Port: ${client.destination.port}
 		`);
 	} else if (reason === 0) {
 		info(`client ended due to natural causes.
-			ID: ${client.idString}
+			ID: ${client.connectionIdString}
 			Address: ${client.destination.ip}
 			Port: ${client.destination.port}
 		`);
 	}
 	await server.clientEvent('destroy', client);
-	server.clients.delete(client.idString);
+	server.clients.delete(client.connectionIdString);
 	// Clear all client data
 	client.ip = null;
 	client.port = null;

@@ -19,13 +19,11 @@ import {
 } from '@universalweb/acid';
 import { toBase64 } from '#crypto';
 /**
- * @todo
-	 * Set Smart Id Routing up
-	 * Set up short headers with array of headers key then id alone in array applicable at startup only
-	 * Allow complex headers being objects long header mode
-	 * Way for packet to be as a whole buffer First check the first 8 bytes for connection id if not then parse whole packet.
+ 	* @todo
+	* - Set Smart Id Routing up.
+	* - If the packet is a request, then it should be sent to the server.
  */
-// [id, RPC, (...[] || {})] (Arrays are flattened while objects are not)
+// [id, RPC, ...Args]
 export async function encodePacket(message = Buffer.from(0), source, destination, headers, footer) {
 	success(`PROCESSING TO ENCODE PACKET`);
 	const {
@@ -67,7 +65,11 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 	if (message) {
 		console.log(message);
 	}
-	info(`clientId: ${toBase64(id)}`);
+	if (isClient) {
+		info(`Encode client side with id: ${id.toString('hex')}`);
+	} else {
+		info(`Decode Server side with Server-Client-id: ${id.toString('hex')}`);
+	}
 	info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
 	const headerEncoded = (shortHeaderMode) ? header : encode(header);
 	const messageEncoded = encode(message);

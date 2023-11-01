@@ -17,7 +17,9 @@ import { onHead } from './onHead.js';
 import { onParameters } from './onParameters.js';
 import { fire } from './events/fire.js';
 /**
-	* @todo Adjust packet size to account for other packet data.
+	* @todo
+	* Add support for headers which indicate the headers content encoding?
+	* Add convertor for serialize header so to convert their normal string names to their numerical ids.
 */
 export class Base {
 	constructor(source) {
@@ -379,7 +381,7 @@ export class Base {
 		if (source.data) {
 			this.outgoingData = source.data;
 			if (!isBuffer(source.data)) {
-				this.setHeader('serialize', true);
+				this.setHeader('serialize', 0);
 				this.outgoingData = encode(source.data);
 			}
 			this.outgoingDataSize = this.outgoingData.length;

@@ -164,7 +164,7 @@ export class Server extends UDSP {
 			}
 		}
 		if (!this.id) {
-			this.id = randomBuffer(4);
+			this.id = 0;
 		} else if (isFunction(this.id)) {
 			this.id = this.id();
 		}
@@ -195,7 +195,7 @@ export class Server extends UDSP {
 		this.clientEvents.set(eventName, callback);
 	}
 	clientEvent(eventName, client) {
-		success(`Client Client Event: ${eventName} -> SocketID: ${client.idString}`);
+		success(`Client Client Event: ${eventName} -> SocketID: ${client.connectionIdString}`);
 		const foundEvent = this.clientEvents.get(eventName);
 		if (foundEvent) {
 			foundEvent(this, client);

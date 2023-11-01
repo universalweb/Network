@@ -7,6 +7,11 @@ import {
 } from '@universalweb/acid';
 import { toBase64 } from '#crypto';
 import { createClient } from '../server/clients/index.js';
+/**
+	* @TODO
+	* Add support to block connection Ids that are too large
+	* Add support to block connection Ids that are too small
+ */
 export async function decodePacketHeaders(config) {
 	const {
 		source,
@@ -71,7 +76,12 @@ export async function decodePacketHeaders(config) {
 			}
 		}
 	}
-	info(`clientId: ${toBase64(id)}`);
+	if (isClient) {
+		console.log(`Decode client side with id: ${destination.id.toString('hex')}`);
+		console.log(`Decode client side with Server-Client-id: ${source?.id?.toString('hex')}`);
+	} else {
+		console.log(`Decode Server side packet with id: ${id.toString('hex')}`);
+	}
 	if (!isShortHeaderMode) {
 		const headerRPC = headerDecoded[1];
 		if (headerRPC) {
@@ -148,7 +158,7 @@ export async function decodePacket(config) {
 		if (!decryptedMessage) {
 			return console.trace('Encryption failed');
 		}
-		info(`decrypted Message size ${decryptedMessage.length}bytes`);
+		info(`decrypted Message size ${decryptedMessage.length} BYTES`);
 		const message = decode(decryptedMessage);
 		if (!hasValue(message)) {
 			return console.trace('No Message in Packet');

@@ -8,6 +8,11 @@ import {
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { createClient } from './clients/index.js';
 import { reply } from '#udsp/request/reply';
+/*
+	* TODO:
+ 	* - Add flood protection for spamming new connections with the same connection id
+ 	* - Add flood protection for spamming new connections from the same origin
+ */
 export async function onPacket(packet, connection) {
 	const thisServer = this;
 	msgReceived('Message Received');
@@ -21,8 +26,9 @@ export async function onPacket(packet, connection) {
 		return console.trace('Invalid Packet Headers');
 	}
 	const id = config.packetDecoded.id;
-	console.log(thisServer.clients, toBase64(id));
-	let client = thisServer.clients.get(toBase64(id));
+	const idString = id.toString('hex');
+	console.log(thisServer.clients, idString);
+	let client = thisServer.clients.get(idString);
 	if (client) {
 		config.destination = client;
 		if (client.state === 1) {
@@ -36,13 +42,13 @@ export async function onPacket(packet, connection) {
 			packet: config.packetDecoded
 		});
 		if (!client) {
-			return console.trace('Failed to create client', toBase64(id));
+			return console.trace('Failed to create client', idString);
 		}
 		config.destination = client;
 	}
 	if (!client) {
 		// Send error message back to origin or not
-		return console.trace('Invalid Client id given', toBase64(id));
+		return console.trace('Invalid Client id given', idString);
 	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {

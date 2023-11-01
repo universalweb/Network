@@ -1,7 +1,7 @@
 import {
-	eachObject, jsonParse, isTrue, noValue, assign, clear
+	eachObject, jsonParse, isTrue, noValue, assign, clear, hasValue
 } from '@universalweb/acid';
-import { decode } from '#utilities/serialize';
+import { decode, encode } from '#utilities/serialize';
 export const objectDataMethods = {
 	getters: {
 		data() {
@@ -11,12 +11,12 @@ export const objectDataMethods = {
 			if (noValue(this.dataBuffer)) {
 				return undefined;
 			}
-			const { head: { serialize } } = this;
+			const serialize = this.head?.serialize;
 			const dataConcatinated = Buffer.concat(this.dataBuffer);
-			if (serialize) {
-				if (isTrue(serialize) || serialize === 0) {
+			if (hasValue(serialize)) {
+				if (serialize === 0) {
 					this.compiledData = decode(dataConcatinated);
-				} else if (serialize === 1 || serialize === 'json') {
+				} else if (serialize === 1) {
 					this.compiledData = jsonParse(dataConcatinated);
 				}
 				dataConcatinated.fill(0);
@@ -43,7 +43,8 @@ export const objectDataMethods = {
 			if (noValue(this.dataBuffer)) {
 				return;
 			}
-			const target = this.data.toString();
+			const encodingHeader = this.head?.charset;
+			const target = this.data.toString(encodingHeader || 'utf8');
 			if (cache) {
 				this.toStringCached = target;
 			}
@@ -64,20 +65,15 @@ export const objectDataMethods = {
 			}
 			return jsonParse(this.data);
 		},
-		serialize(cache) {
-			if (cache) {
-				if (this.serializeCached) {
-					return this.serializeCached;
-				}
+		decode(cache) {
+			const encodingHeader = this.head?.charset;
+			if (encodingHeader) {
+				return this.toString(cache);
 			}
-			if (noValue(this.dataBuffer)) {
-				return;
+			const serialize = this.head?.serialize;
+			if (serialize) {
+				return this.data;
 			}
-			const target = decode(this.data);
-			if (cache) {
-				this.serializeCached = target;
-			}
-			return target;
 		},
 		toObject(cache) {
 			if (cache) {
@@ -115,4 +111,3 @@ export const objectDataMethods = {
 		});
 	}
 };
-
