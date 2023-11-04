@@ -86,6 +86,7 @@ export async function decodePacketHeaders(config) {
 	} else {
 		console.log(`Decode Server side packet with id: ${id.toString('hex')}`);
 	}
+	let key;
 	if (!isShortHeaderMode) {
 		const headerRPC = headerDecoded[1];
 		if (headerRPC) {
@@ -93,7 +94,7 @@ export async function decodePacketHeaders(config) {
 		}
 		if (headerRPC === 0) {
 			success(`Public Key is given -> Processing as create client`);
-			let key = headerDecoded[2];
+			key = headerDecoded[2];
 			if (!key) {
 				return console.trace('No Client Key provided', headerDecoded);
 			}
@@ -119,6 +120,9 @@ export async function decodePacketHeaders(config) {
 		header: headerDecoded,
 		id
 	};
+	if (key) {
+		config.packetDecoded.key = key;
+	}
 	return config;
 }
 export async function decodePacket(config) {

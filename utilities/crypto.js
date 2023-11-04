@@ -105,15 +105,19 @@ export function encrypt(message, sessionkeys, ad, nonceArg) {
 }
 encrypt.overhead = crypto_aead_xchacha20poly1305_ietf_ABYTES + crypto_aead_xchacha20poly1305_ietf_NPUBBYTES;
 export function decrypt(encrypted, sessionkeys, ad, nonceArg) {
-	const encryptedPayloadLength = encrypted.length;
-	const nonce = nonceArg || encrypted.subarray(0, crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
-	const encryptedMessage = (nonceArg && encrypted) || encrypted.subarray(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES, encryptedPayloadLength);
-	const message = (nonceArg && encrypted) || bufferAlloc(encryptedMessage.length - crypto_aead_xchacha20poly1305_ietf_ABYTES);
-	const verify = crypto_aead_xchacha20poly1305_ietf_decrypt(message, null, encryptedMessage, ad, nonce, sessionkeys?.receiveKey || sessionkeys);
-	if (verify) {
-		return message;
-	} else {
-		return false;
+	try {
+		const encryptedPayloadLength = encrypted.length;
+		const nonce = nonceArg || encrypted.subarray(0, crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
+		const encryptedMessage = (nonceArg && encrypted) || encrypted.subarray(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES, encryptedPayloadLength);
+		const message = (nonceArg && encrypted) || bufferAlloc(encryptedMessage.length - crypto_aead_xchacha20poly1305_ietf_ABYTES);
+		const verify = crypto_aead_xchacha20poly1305_ietf_decrypt(message, null, encryptedMessage, ad, nonce, sessionkeys?.receiveKey || sessionkeys);
+		if (verify) {
+			return message;
+		} else {
+			return;
+		}
+	} catch (e) {
+		return;
 	}
 }
 export function passwordHash(password) {

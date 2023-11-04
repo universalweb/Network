@@ -1,12 +1,13 @@
 import cluster from 'node:cluster';
-import { construct } from '@universalweb/acid';
+import { construct, hasValue } from '@universalweb/acid';
 import { getCoreCount } from '#utilities/hardware/cpu';
 import { Server } from './init.js';
+import { decode } from '#utilities/serialize';
+import { onPacket } from './onPacket.js';
 const numCPUs = getCoreCount();
 export async function server(config, ...args) {
 	if (config.scale) {
 		const {
-			reservedConnectionIdSize,
 			scale,
 			scale: { size, }
 		} = config;
@@ -28,6 +29,7 @@ export async function server(config, ...args) {
 			cluster.settings.serialization = 'advanced';
 			console.log(`Primary ${process.pid} is running spawning ${coreCount} instances.`);
 			config.isPrimary = true;
+			config.workerId = String(0);
 			const masterLoadBalancer = await new Server(config, ...args);
 			const workers = new Map();
 			masterLoadBalancer.workers = workers;
@@ -55,18 +57,24 @@ export async function server(config, ...args) {
 		} else {
 			console.log(`Worker ${cluster.worker.id} started`);
 			config.isPrimary = false;
-			config.port = scale.port + cluster.worker.id;
-			config.workerId = cluster.worker.id;
+			config.port = (scale.port || (config.port + 1)) + cluster.worker.id;
+			config.workerId = String(cluster.worker.id);
 			config.isWorker = true;
+			const serverWorker = await new Server(config, ...args);
 			process.on('message', (message) => {
 				if (message === 'registered') {
 					return console.log('Worker ACK REG', config.workerId);
 				}
-				console.log('MESSAGE FROM MAIN', message);
+				const messageDecoded = decode(message);
+				console.log('MESSAGE FROM LOAD BALANCER');
+				if (hasValue(message)) {
+					return serverWorker.onPacket(messageDecoded[0], messageDecoded[1]);
+				} else {
+					console.log('Invalid Message decode failed from load balancer');
+				}
 			});
 			process.send('ready');
-			// const serverWorker = await new Server(config, ...args);
-			// return serverWorker;
+			return serverWorker;
 		}
 	} else {
 		return new Server(config, ...args);

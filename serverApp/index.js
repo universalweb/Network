@@ -12,14 +12,16 @@ const appServer = await server({
 	// However, the load balancer mode can be turned off and only the clusters will be setup
 	scale: {
 		// Each server in the cluster will have a unique port that is incremented by 1 but starting at the clusterPort number connection IDs are modified to include the relevant cluster
-		// port: 8888,
+		port: 8000,
 		// The amount of servers to spawn in the cluster
-		// size: 2,
+		size: 2,
+		// Amount of connections per server
+		connections: 5000,
 		// use the default port for the cluster's main point of contact & as the loadbalancer/router
 		// default is true when cluster mode is enabled
 		// exclusive roundrobin loadbalancer
 		// ipc or proxy
-		mode: 'proxy',
+		// mode: 'proxy',
 	},
 	encryptConnectionId: false,
 	randomId: true,
@@ -48,8 +50,6 @@ const appServer = await server({
 	// Where to load app resources from
 	resourceDirectory: path.join(currentPath(import.meta), 'resources'),
 	rootDirectory: currentPath(import.meta),
-	// Reserve the first two bytes of the connection ID for smart routing on the server such as for load balancing and internal routing
-	reservedConnectionIdSize: 2,
 	clientConnectionIdSize: 4,
 });
 if (appServer) {

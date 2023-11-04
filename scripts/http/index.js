@@ -23,6 +23,6 @@ server.listen(port, serverIp, () => {
 });
 console.time('http');
 const response = await fetchIt('https://[::1]:8888/');
-const body = await response.text();
 console.timeEnd('http');
+const body = await response.text();
 console.log(body);

@@ -1,3 +1,4 @@
+// The Universal Web's UDSP server module.
 import {
 	construct, each, assign, UniqID, isFunction, currentPath, isTrue, hasValue, isUndefined
 } from '@universalweb/acid';
@@ -20,28 +21,49 @@ import { getCertificate, parseCertificate, loadCertificate } from '#certificate'
 import { randomBuffer, toBase64 } from '#crypto';
 import { UDSP } from '#udsp/base';
 import { processPublicKey, getAlgorithm, getPublicKeyAlgorithm } from '../cryptoMiddleware/index.js';
-import { decode } from '#utilities/serialize';
+import { decode, encode } from '#utilities/serialize';
 import { destroy } from '../request/destory.js';
+import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 const { seal } = Object;
-// The Universal Web's UDSP server module.
+/*
+	* TODO:
+ 	* - Add flood protection for spamming new connections with the same connection id
+ 	* - Add flood protection for spamming new connections from the same origin
+	* - Add new loadbalancer algo to distribute connections to servers equally
+ */
 export class Server extends UDSP {
 	constructor(configuration) {
-		super(configuration);
 		// console.log = () => {};
+		super(configuration);
 		return this.initialize(configuration);
 	}
 	static description = 'UW Server Module';
 	static type = 'server';
 	isServer = true;
 	isServerEnd = true;
-	onLoadbalancer(packet, addressInfo) {
-		const message = decode(packet);
-		if (isUndefined(message)) {
-			console.trace('message decode failed');
-			return;
+	async onLoadbalancer(packet, connection) {
+		msgReceived('Message Received');
+		const config = {
+			packet,
+			connection,
+			destination: this,
+		};
+		const wasHeadersDecoded = await decodePacketHeaders(config);
+		if (isUndefined(wasHeadersDecoded)) {
+			return console.trace('Invalid Packet Headers');
 		}
-		if (message) {
-			console.log(message, decode(message[0]), addressInfo);
+		const id = config.packetDecoded.id;
+		const key = config.packetDecoded.key;
+		const idString = id.toString('hex');
+		const reservedSmartRoute = idString.substring(0, this.reservedConnectionIdSize);
+		console.log(`Loadbalancer got an id ${idString}`);
+		if (key) {
+			console.log(`Loadbalancer has a new client ${idString}`);
+		}
+		const worker = this.workers.get(1);
+		const passMessage = encode([packet, connection]);
+		if (worker && passMessage) {
+			worker.process.send(passMessage);
 		}
 	}
 	off = off;
@@ -56,8 +78,8 @@ export class Server extends UDSP {
 		});
 		if (this.isPrimary) {
 			this.socket.on('message', (packet, rinfo) => {
-				// return thisServer.onLoadbalancer(packet, rinfo);
-				return thisServer.onPacket(packet, rinfo);
+				return thisServer.onLoadbalancer(packet, rinfo);
+				// return thisServer.onPacket(packet, rinfo);
 			});
 		} else {
 			this.socket.on('message', (packet, rinfo) => {
@@ -159,20 +181,21 @@ export class Server extends UDSP {
 	}
 	configConnectionId() {
 		const {
-			reservedConnectionIdSize,
 			isWorker,
 			coreCount
 		} = this;
-		if (isWorker) {
-			if (!reservedConnectionIdSize) {
-				this.reservedConnectionIdSize = (coreCount);
-			}
+		if (isFunction(this.id)) {
+			this.id = this.id(this);
+			return;
 		}
-		if (!this.id) {
-			this.id = 0;
-		} else if (isFunction(this.id)) {
-			this.id = this.id();
+		if (coreCount && this.workerId) {
+			const reservedConnectionIdSize = String(coreCount).length;
+			this.reservedConnectionIdSize = reservedConnectionIdSize;
+			const compiledId = this.workerId.padStart(reservedConnectionIdSize, '0');
+		} else if (!this.id) {
+			this.id = '0';
 		}
+		console.log('Config Server ID', this.id);
 	}
 	async initialize(configuration) {
 		console.log('-------SERVER INITIALIZING-------');

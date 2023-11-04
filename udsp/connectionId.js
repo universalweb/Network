@@ -13,6 +13,7 @@ export function generateConnectionId(size = eight, prepend) {
 	}
 	if (hasValue(prepend)) {
 		result = `${prepend}${result.substring(prepend.length)}`;
+		console.log('ConnectionID Prepend', result);
 	}
 	return result;
 }
@@ -28,5 +29,5 @@ export function getConnectionIdReservedSpace(source, size) {
 export function getConnectionIdReservedSpaceString(source, size) {
 	return source.subarray(0, size).toString('hex');
 }
-// const serverConnectionIdString = generateConnectionId(8, '01');
-// console.log(connectionIdToBuffer(serverConnectionIdString).toString('hex'), connectionIdToBuffer(serverConnectionIdString).length);
+// const serverConnectionIdString = generateConnectionId(4, '01');
+// console.log(connectionIdToBuffer(serverConnectionIdString).toString('hex'));

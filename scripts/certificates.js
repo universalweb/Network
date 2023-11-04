@@ -50,6 +50,8 @@ const domainProfile = await createProfile({
 			// maxPacketPathSize: 1200,
 			// maxPacketParametersSize: 1200,
 			url: 'universal.web',
+			// Top level name domain
+			name: 'UniversalWeb',
 			// domain: 'universal',
 			// extension: 'web',
 			// The ip, ipv4, & ipv6 properties are used to determine the IP address of the server.

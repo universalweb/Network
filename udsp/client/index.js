@@ -47,6 +47,7 @@ import { fetchRequest } from '../requestMethods/fetch.js';
 import { UDSP } from '#udsp/base';
 import { sendPacket } from '../sendPacket.js';
 import { post } from '../requestMethods/post.js';
+import { get } from '../requestMethods/get.js';
 import { getAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
 import { getWANIPAddress } from '../../utilities/network/getWANIPAddress.js';
 import { getLocalIpVersion } from '../../utilities/network/getLocalIP.js';
@@ -273,14 +274,12 @@ export class Client extends UDSP {
 		await this.setupSocket();
 		await this.attachEvents();
 		if (this.autoConnect) {
-			console.time('CONNECTING');
-			const { realtime } = this;
-			this.handshake = await this.connect({
-				realtime
-			});
-			console.timeEnd('CONNECTING');
+			await this.connect();
 		}
 		return this;
+	}
+	connect() {
+		return this.ensureHandshake();
 	}
 	assignId() {
 		const connectionIdString = generateConnectionId(this.connectionIdSize);
@@ -441,6 +440,7 @@ export class Client extends UDSP {
 	request = uwRequest;
 	fetch = fetchRequest;
 	post = post;
+	get = get;
 	processFrame = processFrame;
 	emit = emit;
 	onListening = onListening;

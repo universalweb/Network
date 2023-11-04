@@ -8,11 +8,6 @@ import {
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { createClient } from './clients/index.js';
 import { reply } from '#udsp/request/reply';
-/*
-	* TODO:
- 	* - Add flood protection for spamming new connections with the same connection id
- 	* - Add flood protection for spamming new connections from the same origin
- */
 export async function onPacket(packet, connection) {
 	const thisServer = this;
 	msgReceived('Message Received');

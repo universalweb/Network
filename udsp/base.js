@@ -11,14 +11,6 @@ export class UDSP {
 		this.cipherSuiteId = cipherSuites.version[this.version][0].id;
 		this.cipherSuites = cipherSuites.available[this.version];
 	}
-	calculateReservedConnectionIdSize() {
-		const { coreCount } = this;
-		if (coreCount < 9) {
-			this.reservedConnectionIdSize = 1;
-		} else {
-			this.reservedConnectionIdSize = 2;
-		}
-	}
 	generateConnectionID(size) {
 		const target = randomConnectionId(size || this.connectionIdSize || 8);
 		return target;

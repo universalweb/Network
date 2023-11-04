@@ -33,7 +33,7 @@ export async function initialize(config) {
 			encryptServerConnectionId,
 			publicKeySize,
 			heartbeat,
-			connectionIdSize
+			connectionIdSize,
 		},
 		connection: {
 			address: ip,
@@ -84,7 +84,7 @@ export async function initialize(config) {
 			client.encryptServerConnectionId = encryptServerConnectionId;
 		}
 	}
-	const serverConnectionIdString = generateConnectionId(connectionIdSize);
+	const serverConnectionIdString = generateConnectionId(connectionIdSize, serverId);
 	const serverClientId = connectionIdToBuffer(serverConnectionIdString);
 	clients.set(serverConnectionIdString, client);
 	console.log(`Server Connection ID: ${serverClientId} SIZE: ${connectionIdSize} CLIENT: ${clientId.toString('hex')}`);
