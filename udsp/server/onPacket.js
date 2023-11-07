@@ -40,6 +40,9 @@ export async function onPacket(packet, connection) {
 			return console.trace('Failed to create client', idString);
 		}
 		config.destination = client;
+		if (this.isWorker) {
+			this.updateWorkerState(client);
+		}
 	}
 	if (!client) {
 		// Send error message back to origin or not

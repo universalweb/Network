@@ -1,10 +1,28 @@
 import cluster from 'node:cluster';
-import { construct, hasValue } from '@universalweb/acid';
+import { assign, construct, hasValue } from '@universalweb/acid';
 import { getCoreCount } from '#utilities/hardware/cpu';
 import { Server } from './init.js';
 import { decode } from '#utilities/serialize';
 import { onPacket } from './onPacket.js';
 const numCPUs = getCoreCount();
+function workerReady(worker) {
+	worker.ready = true;
+	worker.process.send('registered');
+	console.log('worker is READY:', worker.id);
+}
+function workerOnMessage(workers, worker, msg) {
+	const decodedMessage = decode(msg);
+	const [eventName, data] = decodedMessage;
+	console.log('Worker Message Received', eventName, data);
+	switch (eventName) {
+	case 'state':
+		assign(worker.state, data);
+		console.log('Worker State Update', worker.state);
+		break;
+	default:
+		break;
+	}
+}
 export async function server(config, ...args) {
 	if (config.scale) {
 		const {
@@ -31,18 +49,19 @@ export async function server(config, ...args) {
 			config.isPrimary = true;
 			config.workerId = String(0);
 			const masterLoadBalancer = await new Server(config, ...args);
-			const workers = new Map();
+			const workers = [];
 			masterLoadBalancer.workers = workers;
 			for (let index = 0; index < coreCount; index++) {
 				const worker = cluster.fork();
-				workers.set(worker.id, worker);
+				worker.state = {};
+				worker.port = port + worker.id;
+				workers[worker.id] = worker;
 				worker.on('message', (msg) => {
 					if (msg === 'ready') {
-						workers.set(worker.id, worker);
-						worker.port = port + worker.id;
-						worker.process.send('registered');
-						console.log('worker is registered:', worker.id);
+						workerReady(worker);
+						return;
 					}
+					workerOnMessage(workers, worker, msg);
 				});
 			}
 			cluster.on('online', (worker) => {
@@ -50,7 +69,7 @@ export async function server(config, ...args) {
 			});
 			cluster.on('exit', (worker, code, signal) => {
 				console.log('worker is dead:', worker.isDead(), code);
-				workers.delete(worker.id, worker);
+				workers[worker.id] = null;
 			});
 			// console.log(cluster.settings);
 			return masterLoadBalancer;

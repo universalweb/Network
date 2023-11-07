@@ -21,6 +21,7 @@ export async function destroy(client, reason, server) {
 	}
 	await server.clientEvent('destroy', client);
 	server.clients.delete(client.connectionIdString);
+	server.updateWorkerState();
 	// Clear all client data
 	client.ip = null;
 	client.port = null;

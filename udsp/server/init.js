@@ -60,7 +60,7 @@ export class Server extends UDSP {
 		if (key) {
 			console.log(`Loadbalancer has a new client ${idString}`);
 		}
-		const worker = this.workers.get(1);
+		const worker = this.workers[1];
 		const passMessage = encode([packet, connection]);
 		if (worker && passMessage) {
 			worker.process.send(passMessage);
@@ -228,6 +228,16 @@ export class Server extends UDSP {
 		if (foundEvent) {
 			foundEvent(this, client);
 		}
+	}
+	updateWorkerState() {
+		this.clientCount = this.clients.size;
+		this.syncWorkerState();
+	}
+	syncWorkerState() {
+		const { clientCount } = this;
+		process.send(encode(['state', {
+			clientCount
+		}]));
 	}
 	on = on;
 	listen = listen;

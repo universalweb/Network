@@ -4,10 +4,28 @@
 |[Sentivate](https://sentivate.com) - [Twitter](https://twitter.com/sentivate)|
 ---
 
-## [v3.0.0](https://github.com/universalweb/Network/compare/v1.3.3...v3.0.0)
+## [v3.0.1](https://github.com/universalweb/Network/compare/v3.0.1...v3.0.1)
 
 ---
 ---
+
+## [v3.0.1](https://github.com/universalweb/Network/compare/v1.3.3...v3.0.1) - 2023-11-07
+
+---
+---
+
+### Commits
+
+- Initial Multithreading support [`348e18a`](https://github.com/universalweb/Network/commit/348e18a5b8664be996f4d7c0c0bffc427a5c3074)
+- Security fixes [`e9bd907`](https://github.com/universalweb/Network/commit/e9bd90792d6e4cb46b7f86b5b813c4f1bb7f566c)
+- Hex Based Ids [`cf212dc`](https://github.com/universalweb/Network/commit/cf212dc8abe436b606388b113dd4c11db3302dea)
+- New Math Algo for chunking [`16eb39d`](https://github.com/universalweb/Network/commit/16eb39d0a8a38f0b8e59c1b55281bcdc0fd1670a)
+- Chunking math changes [`f266b4a`](https://github.com/universalweb/Network/commit/f266b4aff382d2d42ede20510d18a1fd093ec7a2)
+- smart ids in progress [`a0c35ac`](https://github.com/universalweb/Network/commit/a0c35ac67364071310942017158b55d2b66954f1)
+- Demo 99% Restored [`15787ad`](https://github.com/universalweb/Network/commit/15787ad109172abee7e2bc5797a8fdc745a45b11)
+- certificate changes [`7397a14`](https://github.com/universalweb/Network/commit/7397a14cf9345208c61dce45a1ebb66b469e5d75)
+- DO NOT RUN DEMO [`9c8bdb1`](https://github.com/universalweb/Network/commit/9c8bdb11558d5ee0b34f6a21275cf4dd39d63bdd)
+- Version change to v3 [`19ca7d0`](https://github.com/universalweb/Network/commit/19ca7d079a84e93ae50e230fe1fe2f98e76eb2c9)
 
 ## v1.3.3 - 2023-10-14
 
