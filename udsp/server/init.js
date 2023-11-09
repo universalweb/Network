@@ -113,14 +113,12 @@ export class Server extends UDSP {
 	async setCertificate() {
 		const {
 			configuration,
-			configuration: {
-				certificatePath,
-				certificatePublicPath
-			}
+			configuration: { certificatePath, }
 		} = this;
 		if (certificatePath) {
 			this.certificate = await parseCertificate(certificatePath);
 			console.log(this.certificate);
+			this.certificatePublic = this.certificate.certificate;
 			this.keypair = {
 				publicKey: this.certificate.publicKey,
 				privateKey: this.certificate.privateKey,
@@ -128,11 +126,6 @@ export class Server extends UDSP {
 			if (this.certificate.ipVersion) {
 				this.ipVersion = this.certificate.ipVersion;
 			}
-		}
-		if (certificatePublicPath) {
-			this.certificatePublic = await loadCertificate(certificatePublicPath);
-			this.certificatePublicSize = this.certificatePublic.length;
-			this.chunkCertificate();
 		}
 		if (this.certificate) {
 			this.publicKeyCryptography = getPublicKeyAlgorithm(this.certificate.publicKeyAlgorithm);

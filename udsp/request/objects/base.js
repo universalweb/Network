@@ -36,6 +36,7 @@ export class Base {
 			domainCertificate,
 			profileCertificate,
 			source,
+			method
 		} = config;
 		if (hasValue(data)) {
 			this.data = data;

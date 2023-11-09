@@ -31,8 +31,6 @@ export class Reply extends Base {
 		const { replyQueue, } = source;
 		this.events = source.events;
 		this.requestMethods = source.requestMethods;
-		// console.log(source);
-		// // console.log(message);
 		this.streamIdSize = numberEncodedSize(id);
 		this.maxFrameSize = source.destination.maxFrameSize;
 		this.request = serverRequestObject({

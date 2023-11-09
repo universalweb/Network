@@ -33,11 +33,16 @@ export class Ask extends Base {
 			this.path = path;
 		}
 		this.maxFrameSize = destination.maxFrameSize;
-		this.request = clientRequestObject({
-			data,
-			head,
-			source: this,
-		});
+		const requestObject = {
+			source: this
+		};
+		if (data) {
+			requestObject.data = data;
+		}
+		if (head) {
+			requestObject.head = head;
+		}
+		this.request = clientRequestObject(requestObject);
 		this.response = clientResponseObject({
 			source: this,
 		});

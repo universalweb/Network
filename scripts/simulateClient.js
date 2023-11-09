@@ -5,7 +5,6 @@ console.log('STARTING CLIENT');
 console.time('Full');
 import { currentPath } from '@universalweb/acid';
 import { client } from '#udsp';
-import { decode } from '#utilities/serialize';
 console.time('Connected');
 // Universal Web Socket
 const uwClient = await client({

@@ -39,7 +39,7 @@ class UWRL {
 			this.params = urlObject.search;
 			this.parameters = urlObject.searchParams;
 		}
-		this.href = url;
+		this.url = url;
 		this.origin = `${urlObject.protocol}//${urlObject.host}`;
 		this.port = urlObject.port;
 		this.host = urlObject.host;
@@ -52,13 +52,17 @@ class UWRL {
 	get searchParams() {
 		return this.parameters;
 	}
+	get href() {
+		return this.url;
+	}
 	hash = '';
 	isUWRL = true;
+}
+export function uwrl(...args) {
+	return new UWRL(...args);
 }
 // Supports Username Password and URL Fragments
 // Server can opt in to get the URL fragments
 // fragments are turned into client side state tracking
 // const uwri = new UWRL('uw://example.com:8080/path/to/resource{"query":"value", "#": "fragment", ":": ["username", "password"]}');
 // console.log(uwri);
-const uwri2 = new UWRL('https://example.com/?query=1#wow');
-console.log(uwri2);

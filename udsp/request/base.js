@@ -16,6 +16,7 @@ import { onPath } from './onPath.js';
 import { onHead } from './onHead.js';
 import { onParameters } from './onParameters.js';
 import { fire } from './events/fire.js';
+const noPayloadMethods = /get|head|ping/;
 /**
 	* @todo
 	* Add support for headers which indicate the headers content encoding?
@@ -32,6 +33,7 @@ export class Base {
 		if (this.isAsk) {
 			this.handshake = source.handshake;
 		}
+		this.noData = noPayloadMethods.test(this.method);
 	}
 	setHeaders(target) {
 		const source = (this.isAsk) ? this.request : this.response;
@@ -117,15 +119,7 @@ export class Base {
 		this.readyState = 2;
 		this.pathAssembled = true;
 	}
-	processStates = [this.processPath, this.processParameters, this.processHead, this.processData];
 	processState = 0;
-	async getProcessState() {
-		const {
-			processState,
-			processStates
-		} = this;
-		return processStates[processState]();
-	}
 	async processHead() {
 		if (this.headAssembled) {
 			return console.log('Head already processed');
@@ -268,6 +262,9 @@ export class Base {
 	sendDataReady() {
 		if (this.state === 4) {
 			this.state = 5;
+		}
+		if (this.isReply && this.noData) {
+			return this.completeReceived();
 		}
 		if (this.totalIncomingDataSize === 0) {
 			return this.completeReceived();

@@ -1,14 +1,34 @@
-import { readFileSync } from 'fs';
+import fs from 'node:fs';
+const { readFileSync } = fs;
 import {
 	writeFile,
 	readFile,
 } from 'node:fs/promises';
 import { promise, jsonParse } from '@universalweb/acid';
-import { normalize } from 'path';
+import path from 'path';
+const { normalize } = path;
 import { decode } from '#utilities/serialize';
-export async function write(filePath, contents, encode) {
+function createFoldersIfNotExist(folderPath) {
+	const directories = path.normalize(folderPath).split(path.sep);
+	let currentPath = `${path.sep}`;
+	console.log(directories);
+	for (const dir of directories) {
+		if (dir.length) {
+			currentPath = path.join(currentPath, dir);
+			const pathExists = fs.existsSync(currentPath);
+			console.log(pathExists, currentPath);
+			if (!pathExists) {
+				fs.mkdirSync(currentPath);
+			}
+		}
+	}
+}
+export async function write(filePath, contents, encode, createPathFlag) {
 	const pathNormalized = normalize(filePath);
 	console.log('FILE WRITE', pathNormalized, contents.length, encode);
+	if (createPathFlag) {
+		createFoldersIfNotExist(path.dirname(pathNormalized));
+	}
 	return writeFile(pathNormalized, contents, encode);
 }
 export async function read(filePath, encode) {

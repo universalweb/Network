@@ -44,9 +44,7 @@ const appServer = await server({
 	// default file extension default is .js but WWW default is www
 	defaultExtension: 'html',
 	// Domain certificate to be loaded used for connection encryption
-	certificatePath: path.join(currentPath(import.meta), '../services/universal.web-Ephemeral.cert'),
-	// Public Domain certificate to be sent in its raw format for validation when a client connects but doesn't have a certificate
-	certificatePublicPath: path.join(currentPath(import.meta), '../services/universal.web-EphemeralPublic.cert'),
+	certificatePath: path.join(currentPath(import.meta), '/universal_web-Ephemeral/universal.web-Ephemeral.cert'),
 	// Where to load app resources from
 	resourceDirectory: path.join(currentPath(import.meta), 'resources'),
 	rootDirectory: currentPath(import.meta),

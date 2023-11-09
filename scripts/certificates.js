@@ -130,7 +130,7 @@ const domainProfile = await createProfile({
 			},
 		},
 	},
-	savePath: `${dirname}/../services`,
+	savePath: `${dirname}/../serverApp/certs`,
 	certificateName: 'universal.web'
 });
 console.log('DOMAIN Profile created (Master & IDENTITY CERTIFICATEs)', decode(domainProfile.ephemeral.certificate));
@@ -142,7 +142,8 @@ const profile = await createProfile({
 			viat: true
 		}
 	},
-	savePath: `${dirname}/../profiles`,
+	savePath: `${dirname}/../profiles/default`,
+	folder: 'default',
 	certificateName: 'default',
 	saveToKeychain: {
 		account: 'Universal Web Profile'

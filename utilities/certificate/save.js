@@ -5,13 +5,14 @@ export async function saveCertificate(config) {
 	const {
 		certificate,
 		savePath,
-		certificateName
+		certificateName,
 	} = config;
-	const savePathRoot = `${resolve(`${savePath}`)}/${certificateName}`;
+	const folderName = certificateName.replace(/\./g, '_');
+	const savePathRoot = `${resolve(`${savePath}`)}/${folderName}/${certificateName}`;
 	const publicCertificate = certificate.certificate;
 	const encodedCertificate = encode(certificate);
-	await write(`${savePathRoot}Public.cert`, publicCertificate);
-	await write(`${savePathRoot}.cert`, encodedCertificate);
+	await write(`${savePathRoot}Public.cert`, publicCertificate, 'binary', true);
+	await write(`${savePathRoot}.cert`, encodedCertificate, 'binary', true);
 }
 export async function saveProfile(config) {
 	const {
@@ -36,6 +37,7 @@ export async function saveProfile(config) {
 		certificateName: `${certificateName}-Master`
 	};
 	await saveCertificate(master);
-	const savePathRoot = `${resolve(`${savePath}`)}/${certificateName}-Profile.cert`;
-	await write(savePathRoot, encode(profile));
+	const folderName = certificateName.replace(/\./g, '_');
+	const savePathRoot = `${resolve(`${savePath}`)}/${folderName}-Profile/${certificateName}-Profile.cert`;
+	await write(savePathRoot, encode(profile), 'binary', true);
 }
