@@ -1,8 +1,8 @@
 import { encode } from '#utilities/serialize';
 import { assign, hasValue } from '@universalweb/acid';
 const cache = {};
-const maxDefaultPacketSize = 1280;
-const packetInitialOverhead = 6;
+export const maxDefaultPacketSize = 1280;
+export const packetInitialOverhead = 6;
 const zero = 0;
 const seven = 7;
 export async function calculatePacketOverhead(cipherSuite, connectionIdSize, assignTo) {

@@ -53,6 +53,7 @@ import { getWANIPAddress } from '../../utilities/network/getWANIPAddress.js';
 import { getLocalIpVersion } from '../../utilities/network/getLocalIP.js';
 import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
 import { generateConnectionId, connectionIdToBuffer } from '#udsp/connectionId';
+import { uwrl } from '#udsp/UWRL/index';
 let ipInfo;
 let globalIpVersion;
 try {
@@ -88,12 +89,23 @@ export class Client extends UDSP {
 		const {
 			destination,
 			configuration: {
+				url,
 				ip,
 				port,
 				destinationCertificate
 			},
 			ipVersion
 		} = this;
+		if (url) {
+			const urlObject = uwrl(url);
+			this.destination.uwrl = urlObject;
+			if (urlObject.ip) {
+				this.destination.ip = urlObject.ip;
+			}
+			if (urlObject.port) {
+				this.destination.port = urlObject.port;
+			}
+		}
 		if (isString(destinationCertificate)) {
 			console.log('Loading Destination Certificate', destinationCertificate);
 			const certificate = await getCertificate(destinationCertificate);
@@ -162,12 +174,14 @@ export class Client extends UDSP {
 		if (!destination.cipherSuites) {
 			destination.cipherSuites = this.cipherSuites;
 		}
-		if (!has(destination.cipherSuites, this.cipherSuiteName)) {
-			console.log('Default ciphersuite not available');
-			this.cipherSuiteName = intersection(this.cipherSuites, destination.cipherSuites)[0];
-			if (!this.cipherSuiteName) {
-				console.log('No matching cipher suite found.');
-				return false;
+		if (destination.cipherSuites) {
+			if (!has(destination.cipherSuites, this.cipherSuiteName)) {
+				console.log('Default ciphersuite not available');
+				this.cipherSuiteName = intersection(this.cipherSuites, destination.cipherSuites)[0];
+				if (!this.cipherSuiteName) {
+					console.log('No matching cipher suite found.');
+					return false;
+				}
 			}
 		}
 		this.publicKeyCryptography = getAlgorithm(publicKeyAlgorithm, this.version);
@@ -235,29 +249,31 @@ export class Client extends UDSP {
 	}
 	async getIPDetails() {
 		const destinationIp = this.destination.ip;
-		if (isArray(destinationIp)) {
-			if (globalIpVersion === 'udp4') {
-				const ipv4ip = this.destination.ip.find((item) => {
-					return item.includes(':') ? false : item;
-				});
-				if (ipv4ip) {
-					this.destination.ip = ipv4ip;
-					this.ipVersion = 'udp4';
+		if (destinationIp) {
+			if (isArray(destinationIp)) {
+				if (globalIpVersion === 'udp4') {
+					const ipv4ip = this.destination.ip.find((item) => {
+						return item.includes(':') ? false : item;
+					});
+					if (ipv4ip) {
+						this.destination.ip = ipv4ip;
+						this.ipVersion = 'udp4';
+					}
+				} else {
+					const ipv6ip = this.destination.ip.find((item) => {
+						return item.includes(':') ? item : false;
+					});
+					if (ipv6ip) {
+						this.destination.ip = ipv6ip;
+						this.ipVersion = 'udp6';
+					} else {
+						this.destination.ip = [0];
+						this.ipVersion = 'udp4';
+					}
 				}
 			} else {
-				const ipv6ip = this.destination.ip.find((item) => {
-					return item.includes(':') ? item : false;
-				});
-				if (ipv6ip) {
-					this.destination.ip = ipv6ip;
-					this.ipVersion = 'udp6';
-				} else {
-					this.destination.ip = [0];
-					this.ipVersion = 'udp4';
-				}
+				this.ipVersion = this.destination.ip.includes(':') ? 'udp6' : 'udp4';
 			}
-		} else {
-			this.ipVersion = this.destination.ip.includes(':') ? 'udp6' : 'udp4';
 		}
 	}
 	async initialize(configuration) {
@@ -330,11 +346,13 @@ export class Client extends UDSP {
 	}
 	async setSessionKeys(generatedKeys) {
 		console.log(this.destination.encryptionKeypair);
-		this.sessionKeys = generatedKeys || this.publicKeyCryptography.clientSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair);
-		if (this.sessionKeys) {
-			success(`Created Shared Keys`);
-			success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);
-			success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
+		if (this.destination.encryptionKeypair || generatedKeys) {
+			this.sessionKeys = generatedKeys || this.publicKeyCryptography.clientSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair);
+			if (this.sessionKeys) {
+				success(`Created Shared Keys`);
+				success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);
+				success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
+			}
 		}
 	}
 	async setNewDestinationKeys() {
@@ -405,9 +423,16 @@ export class Client extends UDSP {
 		const header = [0];
 		this.setPublicKeyHeader(header);
 		this.setCryptographyHeaders(header);
-		const message = [false, 0];
+		const message = [false];
 		this.introSent = true;
 		this.send(message, header);
+	}
+	sendDiscovery() {
+		console.log('Sending Intro');
+		this.state = 1;
+		const header = [1];
+		this.introSent = true;
+		this.send(null, header);
 	}
 	ensureHandshake() {
 		if (this.connected === true) {
@@ -446,6 +471,7 @@ export class Client extends UDSP {
 	onListening = onListening;
 	onPacket = onPacket;
 	destination = {
+		connectionIdSize: 8,
 		overhead: {}
 	};
 	autoConnect = false;

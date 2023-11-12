@@ -3,7 +3,7 @@ import {
 } from '#logs';
 import { decode, } from '#utilities/serialize';
 import {
-	assign, isBuffer, isArray, isTrue, isUndefined, isString, hasValue, eachArray
+	assign, isBuffer, isArray, isTrue, isUndefined, isString, hasValue, eachArray, noValue
 } from '@universalweb/acid';
 import { toBase64 } from '#crypto';
 import { createClient } from '../server/clients/index.js';
@@ -148,15 +148,8 @@ export async function decodePacket(config) {
 		footerEncoded = packet[2];
 		messageEncoded = packet[1];
 	}
-	if (header.error) {
-		console.log('Critical Error', header.error);
-		if (messageEncoded) {
-			packetDecoded.message = decode(messageEncoded);
-			if (isUndefined(packetDecoded.message)) {
-				console.trace('Packet message decode failed');
-				return;
-			}
-		}
+	if (noValue(messageEncoded)) {
+		console.log('No message encoded');
 		return true;
 	}
 	const ad = (footer) ? Buffer.concat([headerEncoded, footerEncoded]) : headerEncoded;

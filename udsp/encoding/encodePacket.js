@@ -18,6 +18,7 @@ import {
 	isArray
 } from '@universalweb/acid';
 import { toBase64 } from '#crypto';
+import { maxDefaultPacketSize } from '../calculatePacketOverhead.js';
 /**
  	* @todo
 	* - Set Smart Id Routing up.
@@ -62,35 +63,38 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 		}
 		console.log('HEADERS GIVEN', isHeadersAnArray, headers);
 	}
-	if (message) {
-		console.log(message);
-	}
 	if (isClient) {
 		info(`Encode client side with id: ${id.toString('hex')}`);
 	} else {
 		info(`Decode Server side with Server-Client-id: ${id.toString('hex')}`);
 	}
-	info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
 	const headerEncoded = (shortHeaderMode) ? header : encode(header);
-	const messageEncoded = encode(message);
-	const ad = (footer) ? Buffer.concat([headerEncoded, footer]) : headerEncoded;
-	const encryptedMessage = cipherSuite.encrypt(messageEncoded, source.sessionKeys, ad);
-	if (!encryptedMessage) {
-		return console.trace('Encryption failed');
+	let packetEncoded;
+	if (message && source.sessionKeys && source.sessionKeys?.transmitKey) {
+		info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
+		const messageEncoded = encode(message);
+		const ad = (footer) ? Buffer.concat([headerEncoded, footer]) : headerEncoded;
+		const encryptedMessage = cipherSuite.encrypt(messageEncoded, source.sessionKeys, ad);
+		if (!encryptedMessage) {
+			return console.trace('Encryption failed');
+		}
+		let packetStructure = [headerEncoded, encryptedMessage];
+		if (shortHeaderMode) {
+			packetStructure = Buffer.concat(packetStructure);
+		}
+		if (footer) {
+			packetStructure[2] = encode(footer);
+		}
+		packetEncoded = encode(packetStructure);
+	} else {
+		packetEncoded = encode([headerEncoded]);
+		console.log('No message given sending as header only');
 	}
-	let packetStructure = [headerEncoded, encryptedMessage];
-	if (shortHeaderMode) {
-		packetStructure = Buffer.concat(packetStructure);
-	} else if (footer) {
-		packetStructure[2] = encode(footer);
-	}
-	const packetEncoded = encode(packetStructure);
 	const packetSize = packetEncoded.length;
-	console.log('Size Unencrypted', encode([headerEncoded, messageEncoded]).length);
 	info(`encoded Packet Size ${packetSize}`);
 	if (packetSize > 1280) {
 		console.log(packetEncoded);
-		console.trace(`WARNING: Encode Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - 1280}`);
+		console.trace(`WARNING: Encode Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - maxDefaultPacketSize}`);
 	}
 	success(`PROCESSED ENCODE PACKET`);
 	return packetEncoded;

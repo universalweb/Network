@@ -6,8 +6,8 @@ RPC Codes are numbers that correspond to methods, functions, and or procedures.
 
 ### Header RPC Codes
 
-- INTRO [0 Setup, cipher Suite (ID: INT, NAME: STRING, AVAILABLE SUITES: ARRAY(IDs)), version, requestCertificate]
-- 1
+- INTRO [0 Setup, publicKey, cipher Suite INT, version INT, requestCertificate]
+- MANUAL DISCOVERY [1, ]
 - 2
 - 3
 - 4

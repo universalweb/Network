@@ -1,9 +1,10 @@
 import {
 	initialString, isPlainObject, isString, jsonParse, restString, stringify
 } from '@universalweb/acid';
+const ipRegex = /^\b(?:\d{1,3}\.){3}\d{1,3}\b$/;
 class UWRL {
 	constructor(urlOriginal, paramaters) {
-		let url = urlOriginal;
+		let url = (urlOriginal.includes('uw://')) ? urlOriginal : `uw://${urlOriginal}`;
 		if (paramaters) {
 			if (isPlainObject(paramaters)) {
 				this.paramaters = paramaters;
@@ -44,6 +45,9 @@ class UWRL {
 		this.port = urlObject.port;
 		this.host = urlObject.host;
 		this.hostname = urlObject.hostname;
+		if (ipRegex.test(this.hostname)) {
+			this.ip = this.hostname;
+		}
 		this.protocol = urlObject.protocol;
 	}
 	get search() {
@@ -64,5 +68,5 @@ export function uwrl(...args) {
 // Supports Username Password and URL Fragments
 // Server can opt in to get the URL fragments
 // fragments are turned into client side state tracking
-// const uwri = new UWRL('uw://example.com:8080/path/to/resource{"query":"value", "#": "fragment", ":": ["username", "password"]}');
-// console.log(uwri);
+const uwri = new UWRL('uw://localhost:8080/path/to/resource{"query":"value", "#": "fragment", ":": ["username", "password"]}');
+console.log(uwri);

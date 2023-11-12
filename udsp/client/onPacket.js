@@ -5,7 +5,7 @@ import { decode, encode } from '#utilities/serialize';
 import { decrypt, createSessionKey } from '#crypto';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { processFrame } from './processFrame.js';
-import { hasValue, isArray } from '@universalweb/acid';
+import { hasValue, isArray, isNumber } from '@universalweb/acid';
 export async function onPacket(packet) {
 	msgReceived('Packet Received');
 	const config = {
@@ -27,12 +27,16 @@ export async function onPacket(packet) {
 		message,
 		footer,
 	} = config.packetDecoded;
-	if (isArray(message)) {
-		const rpc = message[1];
-		if (rpc === 0) {
-			this.proccessProtocolPacket(message, header);
-		} else {
-			processFrame(message, header, this);
+	if (header && isArray(header)) {
+		const headerRPC = header[1];
+		if (isNumber(headerRPC)) {
+			await this.proccessProtocolPacket(message, header);
+		}
+	}
+	if (message && isArray(message)) {
+		const messageRPC = message[1];
+		if (hasValue(messageRPC)) {
+			return processFrame(message, header, this);
 		}
 	}
 }
