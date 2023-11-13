@@ -14,7 +14,7 @@ const appServer = await server({
 		// Each server in the cluster will have a unique port that is incremented by 1 but starting at the clusterPort number connection IDs are modified to include the relevant cluster
 		port: 8000,
 		// The amount of servers to spawn in the cluster
-		size: 2,
+		size: 1,
 		// Amount of connections per server
 		connections: 5000,
 		// use the default port for the cluster's main point of contact & as the loadbalancer/router

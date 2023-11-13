@@ -3,7 +3,7 @@ import {
 } from '#logs';
 import { toBase64 } from '#crypto';
 import {
-	isEmpty, hasValue, isArray, eachAsyncArray, eachArray, isUndefined
+	isEmpty, hasValue, isArray, eachAsyncArray, eachArray, isUndefined, isNumber
 } from '@universalweb/acid';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { createClient } from './clients/index.js';
@@ -59,15 +59,17 @@ export async function onPacket(packet, connection) {
 	if (!hasValue(message)) {
 		return console.trace('Error no message found in packet');
 	}
-	if (isArray(message)) {
-		if (message[1] === 0) {
-			client.proccessProtocolPacket(message, header);
-		} else if (isArray(message[0])) {
-			eachArray(message, (frame) => {
-				client.reply(frame, header);
-			});
-		} else {
-			client.reply(message, header);
+	if (header && isArray(header)) {
+		const headerRPC = header[1];
+		if (isNumber(headerRPC)) {
+			await client.proccessProtocolPacket(message, header);
 		}
+	}
+	if (isArray(message)) {
+		if (isUndefined(message[0])) {
+			return;
+		}
+		console.log('Message Client.reply', message, header);
+		client.reply(message, header);
 	}
 }

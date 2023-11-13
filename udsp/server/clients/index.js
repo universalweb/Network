@@ -21,7 +21,8 @@ import {
 	isFalsy,
 	hasValue,
 	isArray,
-	eachArray
+	eachArray,
+	isPromise
 } from '@universalweb/acid';
 import {
 	toBase64,
@@ -29,7 +30,7 @@ import {
 } from '#crypto';
 import { encodePacket } from '#udsp/encoding/encodePacket';
 import { sendPacket } from '#udsp/sendPacket';
-import { reply } from '#udsp/request/reply';
+import { Reply } from '#udsp/request/reply';
 import { calculatePacketOverhead } from '../../calculatePacketOverhead.js';
 /**
 	* @TODO
@@ -139,15 +140,15 @@ export class Client {
 		await this.setSessionKeys();
 		this.newSessionKeysAssigned = true;
 	}
-	proccessProtocolPacket(frame) {
+	proccessProtocolPacket(frame, header) {
 		info(`Server:Client proccessProtocolPacket -> - ID:${this.connectionIdString}`);
 		console.log(frame);
 		if (!frame || !isArray(frame)) {
 			console.trace('No frame given');
 			return;
 		}
-		const [streamid, rpc] = frame;
-		if (rpc === 0) {
+		const [connectionID, headerRPC] = header;
+		if (headerRPC === 0) {
 			this.processIntro(frame);
 		} else {
 			console.log(frame);
@@ -163,7 +164,14 @@ export class Client {
 				return this.replyQueue.get(id).onFrame(frame, header);
 			}
 		}
-		reply(frame, header, this).onFrame(frame, header);
+		const replyObject = new Reply(frame, header, this);
+		console.log('reply object', replyObject);
+		if (isPromise(replyObject)) {
+			failed('Reply object is a promise something went wrong');
+			console.trace();
+			return;
+		}
+		replyObject.onFrame(frame, header);
 	}
 	pending = false;
 	state = 0;

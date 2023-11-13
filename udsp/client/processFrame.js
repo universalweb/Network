@@ -11,8 +11,12 @@ export async function processFrame(frame, header, client) {
 	if (!frame) {
 		return console.trace(`Invalid Frame Received`);
 	}
-	if (isArray(frame)) {
-		const [id, rpc] = frame;
+	if (isArray(frame) && frame.length) {
+		const id = frame[0];
+		if (id === false) {
+			return;
+		}
+		const rpc = frame[1];
 		console.log(frame);
 		info(`Packet Received Stream ID: ${id}`);
 		if (rpc) {

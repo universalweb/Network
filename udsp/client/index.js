@@ -423,7 +423,7 @@ export class Client extends UDSP {
 		const header = [0];
 		this.setPublicKeyHeader(header);
 		this.setCryptographyHeaders(header);
-		const message = [false];
+		const message = [];
 		this.introSent = true;
 		this.send(message, header);
 	}
@@ -455,8 +455,15 @@ export class Client extends UDSP {
 		await this.calculatePacketOverhead();
 		this.handshakeCompleted();
 	}
-	proccessProtocolPacket(frame, header) {
+	proccessProtocolPacketFrame(frame, header) {
 		const rpc = frame[1];
+		console.log('Processing Protocol Packet', frame);
+		if (rpc === 0) {
+			this.intro(frame, header);
+		}
+	}
+	proccessProtocolPacketHeader(frame, header) {
+		const rpc = header[1];
 		console.log('Processing Protocol Packet', frame);
 		if (rpc === 0) {
 			this.intro(frame, header);

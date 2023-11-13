@@ -168,7 +168,6 @@ export async function decodePacket(config) {
 		const message = decode(decryptedMessage);
 		if (isUndefined(message)) {
 			console.trace('No Message in Packet');
-			return;
 		}
 		packetDecoded.message = message;
 		if (footerEncoded) {

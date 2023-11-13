@@ -25,6 +25,7 @@ export class Reply extends Base {
 		const thisReply = this;
 		const id = frame[0];
 		if (!hasValue(id)) {
+			console.trace('Catastrophic error no stream id in frame');
 			return this.destroy('No stream id in frame');
 		}
 		this.id = id;

@@ -216,7 +216,7 @@ export class Server extends UDSP {
 		this.clientEvents.set(eventName, callback);
 	}
 	clientEvent(eventName, client) {
-		success(`Client Client Event: ${eventName} -> SocketID: ${client.connectionIdString}`);
+		success(`Client Client Event: ${eventName} -> SocketID: ${client.idString}`);
 		const foundEvent = this.clientEvents.get(eventName);
 		if (foundEvent) {
 			foundEvent(this, client);
