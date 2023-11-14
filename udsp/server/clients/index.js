@@ -121,7 +121,7 @@ export class Client {
 		info(`socket EVENT -> destroy - ID:${this.connectionIdString}`);
 	}
 	// CLIENT HELLO
-	async processIntro(frame) {
+	async intro(frame) {
 		info(`Client Intro -> - ID:${this.connectionIdString}`, frame);
 		this.sendIntro(frame);
 	}
@@ -140,21 +140,25 @@ export class Client {
 		await this.setSessionKeys();
 		this.newSessionKeysAssigned = true;
 	}
-	proccessProtocolPacket(frame, header) {
-		info(`Server:Client proccessProtocolPacket -> - ID:${this.connectionIdString}`);
-		console.log(frame);
-		if (!frame || !isArray(frame)) {
-			console.trace('No frame given');
-			return;
+	proccessProtocol(rpc, frame, header) {
+		switch (rpc) {
+		case 0:
+			this.intro(frame, header);
+			break;
+		default:
+			console.trace('Unknown Protocol Packet', frame, header);
+			break;
 		}
-		const [connectionID, headerRPC] = header;
-		if (headerRPC === 0) {
-			this.processIntro(frame);
-		} else {
-			console.log(frame);
-			console.trace('RPC Code missing or incorrect');
-			return;
-		}
+	}
+	proccessProtocolPacketFrame(frame, header) {
+		const rpc = frame[1];
+		console.log('Processing Protocol Packet Frame', frame);
+		this.proccessProtocol(rpc, frame, header);
+	}
+	proccessProtocolPacketHeader(frame, header) {
+		const rpc = header[1];
+		console.log('Processing Protocol Packet Header', header);
+		this.proccessProtocol(rpc, frame, header);
 	}
 	async reply(frame, header) {
 		const id = frame[0];

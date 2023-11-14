@@ -455,19 +455,25 @@ export class Client extends UDSP {
 		await this.calculatePacketOverhead();
 		this.handshakeCompleted();
 	}
+	proccessProtocol(rpc, frame, header) {
+		switch (rpc) {
+		case 0:
+			this.intro(frame, header);
+			break;
+		default:
+			console.trace('Unknown Protocol Packet', frame, header);
+			break;
+		}
+	}
 	proccessProtocolPacketFrame(frame, header) {
 		const rpc = frame[1];
-		console.log('Processing Protocol Packet', frame);
-		if (rpc === 0) {
-			this.intro(frame, header);
-		}
+		console.log('Processing Protocol Packet Frame', frame);
+		this.proccessProtocol(rpc, frame, header);
 	}
 	proccessProtocolPacketHeader(frame, header) {
 		const rpc = header[1];
-		console.log('Processing Protocol Packet', frame);
-		if (rpc === 0) {
-			this.intro(frame, header);
-		}
+		console.log('Processing Protocol Packet Header', header);
+		this.proccessProtocol(rpc, frame, header);
 	}
 	request = uwRequest;
 	fetch = fetchRequest;

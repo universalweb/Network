@@ -47,12 +47,12 @@ export async function decodePacketHeaders(config) {
 	info(`Packet Decoded Array Size ${packet.length}`);
 	console.log(packet);
 	const isShortHeaderMode = isBuffer(packet);
+	config.isShortHeaderMode = isShortHeaderMode;
 	if (isShortHeaderMode) {
 		info(`ShortHeaderMode Size ${packet.length}`);
 	}
 	let headerEncoded;
 	if (isShortHeaderMode) {
-		config.isShortHeaderMode = true;
 		headerEncoded = packet.subarray(0, connectionIdSize);
 	} else {
 		headerEncoded = packet[0];

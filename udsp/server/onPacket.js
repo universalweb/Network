@@ -3,11 +3,12 @@ import {
 } from '#logs';
 import { toBase64 } from '#crypto';
 import {
-	isEmpty, hasValue, isArray, eachAsyncArray, eachArray, isUndefined, isNumber
+	isEmpty, hasValue, isArray, eachAsyncArray, eachArray, isUndefined, isNumber, isFalse
 } from '@universalweb/acid';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { createClient } from './clients/index.js';
 import { reply } from '#udsp/request/reply';
+import { processFrame } from '../client/processFrame.js';
 export async function onPacket(packet, connection) {
 	const thisServer = this;
 	msgReceived('Message Received');
@@ -59,17 +60,26 @@ export async function onPacket(packet, connection) {
 	if (!hasValue(message)) {
 		return console.trace('Error no message found in packet');
 	}
-	if (header && isArray(header)) {
-		const headerRPC = header[1];
-		if (isNumber(headerRPC)) {
-			await client.proccessProtocolPacket(message, header);
+	console.log(config);
+	if (isFalse(config.isShortHeaderMode)) {
+		if (header && isArray(header)) {
+			const headerRPC = header[1];
+			if (isNumber(headerRPC)) {
+				await client.proccessProtocolPacketHeader(message, header);
+			}
 		}
 	}
-	if (isArray(message)) {
-		if (isUndefined(message[0])) {
-			return;
+	if (message && isArray(message)) {
+		const streamId = message[0];
+		const messageRPC = message[1];
+		if (hasValue(streamId)) {
+			if (streamId === false) {
+				return client.proccessProtocolPacketFrame(message, header);
+			}
+			if (isNumber(messageRPC)) {
+				console.log('Message Client.reply', message, header);
+				return client.reply(message, header);
+			}
 		}
-		console.log('Message Client.reply', message, header);
-		client.reply(message, header);
 	}
 }
