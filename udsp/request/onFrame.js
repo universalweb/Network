@@ -1,176 +1,214 @@
+/**
+ * 0 Intro Packet.
+ * 1 Setup Packet.
+ * 2 Path Ready Packet.
+ * 3 Parameters Ready Packet.
+ * 4 Head Ready Packet.
+ * 5 Data Ready Packet.
+ * 6 Path Packet.
+ * 7 Parameters Packet.
+ * 8 Head Packet.
+ * 9 Data Packet.
+ * 10 End Packet.
+ * 11 Error Packet.
+*/
 import {
 	hasValue, isArray, isFalse, isNumber,
 } from '@universalweb/acid';
 import { destroy } from './destory.js';
 import { processEvent } from '#server/processEvent';
+async function onSetup(id, rpc, packetId, data, frame, source) {
+	if (source.receivedSetupPacket) {
+		return;
+	}
+	const { isAsk } = source;
+	source.totalReceivedUniquePackets++;
+	source.receivedSetupPacket = true;
+	let method;
+	let totalIncomingHeadSize;
+	let totalIncomingDataSize;
+	let totalIncomingPathSize;
+	let totalIncomingParametersSize;
+	if (isAsk) {
+		[, , totalIncomingHeadSize, totalIncomingDataSize] = frame;
+	} else {
+		[, , method = 'GET', totalIncomingPathSize, totalIncomingParametersSize, totalIncomingHeadSize, totalIncomingDataSize] = frame;
+		source.method = method;
+	}
+	console.log(`Setup Packet Received HEADER:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
+	if (hasValue(totalIncomingPathSize) && isNumber(totalIncomingPathSize)) {
+		source.totalIncomingPathSize = totalIncomingPathSize;
+	}
+	if (hasValue(totalIncomingParametersSize) && isNumber(totalIncomingParametersSize)) {
+		source.totalIncomingParametersSize = totalIncomingParametersSize;
+	}
+	if (hasValue(totalIncomingHeadSize) && isNumber(totalIncomingHeadSize)) {
+		source.totalIncomingHeadSize = totalIncomingHeadSize;
+	}
+	if (hasValue(totalIncomingDataSize) && isNumber(totalIncomingDataSize)) {
+		source.totalIncomingDataSize = totalIncomingDataSize;
+	}
+	if (isAsk) {
+		source.sendHeadReady();
+	} else {
+		source.sendPathReady();
+	}
+}
+async function onPathReady(id, rpc, packetId, data, frame, source) {
+	if (!source.receivedPathReadyPacket) {
+		source.totalReceivedUniquePackets++;
+		source.receivedPathReadyPacket = true;
+	}
+	console.log('Path Ready Packet Received', source.type);
+	source.sendPath();
+}
+async function onParametersReady(id, rpc, packetId, data, frame, source) {
+	if (!source.receivedParametersReadyPacket) {
+		source.totalReceivedUniquePackets++;
+		source.receivedParametersReadyPacket = true;
+	}
+	console.log('Parameters Ready Packet Received', source.type);
+	source.sendParameters();
+}
+async function onHeadReady(id, rpc, packetId, data, frame, source) {
+	if (!source.receivedHeadReadyPacket) {
+		source.totalReceivedUniquePackets++;
+		source.receivedHeadReadyPacket = true;
+	}
+	source.sendHead();
+}
+async function onDataReady(id, rpc, packetId, data, frame, source) {
+	if (!source.receivedDataReadyPacket) {
+		source.totalReceivedUniquePackets++;
+		source.receivedDataReadyPacket = true;
+	}
+	console.log('Data Ready Packet Received', source.type);
+	source.sendData();
+}
+async function onPath(id, rpc, packetId, data, frame, source) {
+	if (!source.receivedSetupPacket || source.incomingPathPackets[packetId]) {
+		return;
+	}
+	source.totalReceivedUniquePackets++;
+	source.incomingPathPackets[packetId] = frame;
+	source.incomingPath[packetId] = data;
+	source.totalReceivedUniquePathPackets++;
+	source.currentIncomingPathSize += data.length;
+	if (source.missingPathPackets.has(packetId)) {
+		source.missingPathPackets.delete(packetId);
+	}
+	source.onPathProgress();
+	if (source.onPath) {
+		await source.onPath(frame);
+	}
+	console.log(source, source.currentIncomingPathSize);
+	if (source.totalIncomingPathSize === source.currentIncomingPathSize) {
+		source.processPath();
+	}
+}
+async function onParameters(id, rpc, packetId, data, frame, source) {
+	if (!source.receivedSetupPacket || source.incomingParametersPackets[packetId]) {
+		return;
+	}
+	source.totalReceivedUniquePackets++;
+	source.incomingParametersPackets[packetId] = frame;
+	source.incomingParameters[packetId] = data;
+	source.totalReceivedUniqueParametersPackets++;
+	source.currentIncomingParametersSize += data.length;
+	if (source.missingParametersPackets.has(packetId)) {
+		source.missingParametersPackets.delete(packetId);
+	}
+	source.onParametersProgress();
+	await source.onParameters(frame);
+	if (source.totalIncomingParametersSize === source.currentIncomingParametersSize) {
+		source.processParameters();
+	}
+}
+async function onHead(id, rpc, packetId, data, frame, source) {
+	if (!source.receivedSetupPacket || source.incomingHeadPackets[packetId]) {
+		return;
+	}
+	source.totalReceivedUniquePackets++;
+	source.incomingHeadPackets[packetId] = frame;
+	source.incomingHead[packetId] = data;
+	source.totalReceivedUniqueHeadPackets++;
+	source.currentIncomingHeadSize += data.length;
+	if (source.missingHeadPackets.has(packetId)) {
+		source.missingH1eadPackets.delete(packetId);
+	}
+	source.onHeadProgress();
+	if (source.onHead) {
+		await source.onHead(frame);
+	}
+	console.log(source, source.currentIncomingHeadSize);
+	if (source.totalIncomingHeadSize === source.currentIncomingHeadSize) {
+		source.processHead();
+	}
+}
+async function onData(id, rpc, packetId, data, frame, source) {
+	if (!source.receivedSetupPacket || source.incomingDataPackets[packetId]) {
+		return;
+	}
+	console.log('data frame', data);
+	source.totalReceivedUniquePackets++;
+	source.incomingDataPackets[packetId] = frame;
+	source.incomingData[packetId] = data;
+	source.totalReceivedUniqueDataPackets++;
+	const dataLength = data.length;
+	source.currentIncomingDataSize += dataLength;
+	if (source.readyState === 2) {
+		source.readyState = 3;
+	}
+	if (source.missingDataPackets.has(packetId)) {
+		source.missingDataPackets.delete(packetId);
+	}
+	if (source.currentIncomingDataSize === source.totalIncomingDataSize) {
+		console.log('Last packet received', source.currentIncomingDataSize, source.totalIncomingDataSize);
+		frame.last = true;
+	}
+	source.onDataProgress();
+	source.onData(frame);
+	source.onDataSync(frame);
+	if (frame.last) {
+		source.processData();
+	}
+}
+async function onEnd(id, rpc, packetId, data, frame, source) {
+	console.log('End Packet Received');
+	source.end();
+}
+async function onError(id, rpc, packetId, data, frame, source) {
+	source.destroy(data);
+	return;
+}
+const rpcFunctions = [() => {}, onSetup, onPathReady, onParametersReady, onHeadReady, onDataReady,
+	onPath, onParameters, onHead, onData, onEnd, onError];
 export async function onFrame(frame, header) {
 	const source = this;
-	const { isAsk } = this;
-	this.lastActive = Date.now();
+	const { isAsk } = source;
+	source.lastActive = Date.now();
 	if (!frame) {
 		console.log(frame);
-		return this.destroy('No Frame in Frame -> Packet');
+		return source.destroy('No Frame in Frame -> Packet');
 	}
 	console.log('On Packet event frame:', frame);
 	const [
 		id,
 		rpc,
-		packetId
+		packetId,
+		data
 	] = frame;
 	console.log(`onPacket Stream Id ${id}`);
-	this.totalReceivedPackets++;
-	if (rpc === 1) {
-		if (!this.receivedSetupPacket) {
-			this.totalReceivedUniquePackets++;
-			this.receivedSetupPacket = true;
-			let method;
-			let totalIncomingHeadSize;
-			let totalIncomingDataSize;
-			let totalIncomingPathSize;
-			let totalIncomingParametersSize;
-			if (isAsk) {
-				[, , totalIncomingHeadSize, totalIncomingDataSize] = frame;
-			} else {
-				[, , method = 'GET', totalIncomingPathSize, totalIncomingParametersSize, totalIncomingHeadSize, totalIncomingDataSize] = frame;
-				this.method = method;
-			}
-			console.log(`Setup Packet Received HEADER:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
-			if (hasValue(totalIncomingPathSize) && isNumber(totalIncomingPathSize)) {
-				this.totalIncomingPathSize = totalIncomingPathSize;
-			}
-			if (hasValue(totalIncomingParametersSize) && isNumber(totalIncomingParametersSize)) {
-				this.totalIncomingParametersSize = totalIncomingParametersSize;
-			}
-			if (hasValue(totalIncomingHeadSize) && isNumber(totalIncomingHeadSize)) {
-				this.totalIncomingHeadSize = totalIncomingHeadSize;
-			}
-			if (hasValue(totalIncomingDataSize) && isNumber(totalIncomingDataSize)) {
-				this.totalIncomingDataSize = totalIncomingDataSize;
-			}
-		}
-		if (isAsk) {
-			this.sendHeadReady();
-		} else {
-			this.sendPathReady();
-		}
-		return;
-	} else if (rpc === 2) {
-		if (this.receivedPathReadyPacket) {
-			this.totalReceivedUniquePackets++;
-			this.receivedPathReadyPacket = true;
-		}
-		console.log('Path Ready Packet Received', this.type);
-		this.sendPath();
-		return;
-	} else if (rpc === 3) {
-		console.log('Head Ready Packet Received', this.type);
-		if (this.receivedParametersReadyPacket) {
-			this.totalReceivedUniquePackets++;
-			this.receivedParametersReadyPacket = true;
-		}
-		console.log('Parameters Ready Packet Received', this.type);
-		this.sendParameters();
-		return;
-	} else if (rpc === 4) {
-		if (this.receivedHeadReadyPacket) {
-			this.totalReceivedUniquePackets++;
-			this.receivedHeadReadyPacket = true;
-		}
-		this.sendHead();
-		return;
-	} else if (rpc === 5) {
-		if (this.receivedDataReadyPacket) {
-			this.totalReceivedUniquePackets++;
-			this.receivedDataReadyPacket = true;
-		}
-		console.log('Data Ready Packet Received', this.type);
-		this.sendData();
-		return;
-	} else if (rpc === 10) {
-		console.log('End Packet Received');
-		// this.check(); && this.cleanup();
-	} else if (rpc === 11) {
-		const [,,, err] = frame;
-		return this.destroy(err);
+	source.totalReceivedPackets++;
+	if (!isNumber(rpc)) {
+		return source.destroy('Invalid RPC Not a Number');
 	}
-	if (!this.receivedSetupPacket) {
-		console.log(this);
-		return this.destroy('Setup packet not received');
-	} else if (rpc === 6 && !this.incomingPathPackets[packetId]) {
-		const [,,, path] = frame;
-		this.totalReceivedUniquePackets++;
-		this.incomingPathPackets[packetId] = frame;
-		this.incomingPath[packetId] = path;
-		this.totalReceivedUniquePathPackets++;
-		this.currentIncomingPathSize += path.length;
-		if (this.missingPathPackets.has(packetId)) {
-			this.missingPathPackets.delete(packetId);
-		}
-		this.onPathProgress();
-		if (this.onPath) {
-			await this.onPath(frame);
-		}
-		console.log(this, this.currentIncomingPathSize);
-		if (this.totalIncomingPathSize === this.currentIncomingPathSize) {
-			this.processPath();
-		}
-	} else if (rpc === 7 && !this.incomingParametersPackets[packetId]) {
-		const [,,, params] = frame;
-		this.totalReceivedUniquePackets++;
-		this.incomingParametersPackets[packetId] = frame;
-		this.incomingParameters[packetId] = params;
-		this.totalReceivedUniqueParametersPackets++;
-		this.currentIncomingParametersSize += params.length;
-		if (this.missingParametersPackets.has(packetId)) {
-			this.missingParametersPackets.delete(packetId);
-		}
-		this.onParametersProgress();
-		await this.onParameters(frame);
-		if (this.totalIncomingParametersSize === this.currentIncomingParametersSize) {
-			this.processParameters();
-		}
-	} else if (rpc === 8 && !this.incomingHeadPackets[packetId]) {
-		const [,,, head] = frame;
-		this.totalReceivedUniquePackets++;
-		this.incomingHeadPackets[packetId] = frame;
-		this.incomingHead[packetId] = head;
-		this.totalReceivedUniqueHeadPackets++;
-		this.currentIncomingHeadSize += head.length;
-		if (this.missingHeadPackets.has(packetId)) {
-			this.missingH1eadPackets.delete(packetId);
-		}
-		this.onHeadProgress();
-		if (this.onHead) {
-			await this.onHead(frame);
-		}
-		console.log(this, this.currentIncomingHeadSize);
-		if (this.totalIncomingHeadSize === this.currentIncomingHeadSize) {
-			this.processHead();
-		}
-	} else if (rpc === 9 && !this.incomingDataPackets[packetId]) {
-		const [,,, data] = frame;
-		console.log('data frame', data);
-		this.totalReceivedUniquePackets++;
-		this.incomingDataPackets[packetId] = frame;
-		this.incomingData[packetId] = data;
-		this.totalReceivedUniqueDataPackets++;
-		const dataLength = data.length;
-		this.currentIncomingDataSize += dataLength;
-		if (this.readyState === 2) {
-			this.readyState = 3;
-		}
-		if (this.missingDataPackets.has(packetId)) {
-			this.missingDataPackets.delete(packetId);
-		}
-		if (this.currentIncomingDataSize === this.totalIncomingDataSize) {
-			console.log('Last packet received', this.currentIncomingDataSize, this.totalIncomingDataSize);
-			frame.last = true;
-		}
-		this.onDataProgress();
-		this.onData(frame);
-		this.onDataSync(frame);
-		if (frame.last) {
-			this.processData();
-		}
+	if (rpc < 0 || rpc > 11) {
+		return source.destroy('Invalid RPC Not a valid RPC Number');
 	}
+	const rpcFunction = rpcFunctions[Number(rpc)];
+	if (!rpcFunction) {
+		return source.destroy('Invalid RPC Not a Function');
+	}
+	rpcFunction(id, rpc, packetId, data, frame, source);
 }
