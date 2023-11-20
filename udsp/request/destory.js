@@ -11,9 +11,5 @@ export async function destroy(err) {
 	if (this.headCompiled) {
 		this.headCompiled.fill(0);
 	}
-	if (this.isAsk) {
-		this.source().requestQueue.delete(this.id);
-	} else {
-		this.source().replyQueue.delete(this.id);
-	}
+	this.source().requestQueue.delete(this.id);
 }

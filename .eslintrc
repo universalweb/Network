@@ -238,6 +238,7 @@
             "error",
             "tab",
             {
+                "SwitchCase": 1,
                 "ObjectExpression": 1,
                 "ImportDeclaration": 1
             }

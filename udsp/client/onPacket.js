@@ -4,10 +4,11 @@ import {
 import { decode, encode } from '#utilities/serialize';
 import { decrypt, createSessionKey } from '#crypto';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
-import { processFrame } from './processFrame.js';
+import { processFrame } from '../processFrame.js';
 import {
 	hasValue, isArray, isFalse, isNumber
 } from '@universalweb/acid';
+import { proccessProtocolPacketHeader } from '#udsp/proccessProtocolPacket';
 export async function onPacket(packet) {
 	msgReceived('Packet Received');
 	const config = {
@@ -31,24 +32,9 @@ export async function onPacket(packet) {
 	} = config.packetDecoded;
 	console.log(config);
 	if (isFalse(config.isShortHeaderMode)) {
-		if (header && isArray(header)) {
-			const headerRPC = header[1];
-			if (isNumber(headerRPC)) {
-				await this.proccessProtocolPacketHeader(message, header);
-			}
-		}
+		await proccessProtocolPacketHeader(this, message, header);
 	}
-	if (message && isArray(message)) {
-		const streamId = message[0];
-		const messageRPC = message[1];
-		if (hasValue(streamId)) {
-			if (streamId === false) {
-				return this.proccessProtocolPacketFrame(message, header);
-			}
-			if (isNumber(messageRPC)) {
-				return processFrame(message, header, this);
-			}
-		}
-	}
+	processFrame(message, header, this, this.requestQueue);
+	return;
 }
 

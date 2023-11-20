@@ -31,7 +31,8 @@ import {
 import { encodePacket } from '#udsp/encoding/encodePacket';
 import { sendPacket } from '#udsp/sendPacket';
 import { Reply } from '#udsp/request/reply';
-import { calculatePacketOverhead } from '../../calculatePacketOverhead.js';
+import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
+import { processFrame } from '#udsp/processFrame';
 /**
 	* @TODO
 */
@@ -140,49 +141,25 @@ export class Client {
 		await this.setSessionKeys();
 		this.newSessionKeysAssigned = true;
 	}
-	proccessProtocol(rpc, frame, header) {
-		switch (rpc) {
-		case 0:
-			this.intro(frame, header);
-			break;
-		default:
-			console.trace('Unknown Protocol Packet', frame, header);
-			break;
-		}
-	}
-	proccessProtocolPacketFrame(frame, header) {
-		const rpc = frame[1];
-		console.log('Processing Protocol Packet Frame', frame);
-		this.proccessProtocol(rpc, frame, header);
-	}
-	proccessProtocolPacketHeader(frame, header) {
-		const rpc = header[1];
-		console.log('Processing Protocol Packet Header', header);
-		this.proccessProtocol(rpc, frame, header);
-	}
 	async reply(frame, header) {
-		const id = frame[0];
-		console.log('Reply Client', id, this.replyQueue.has(id), frame);
-		if (hasValue(id)) {
-			if (this.replyQueue.has(id)) {
-				return this.replyQueue.get(id).onFrame(frame, header);
+		const processingFrame = await processFrame(frame, header, this, this.requestQueue);
+		if (processingFrame === false) {
+			const replyObject = new Reply(frame, header, this);
+			console.log('New reply object created', replyObject);
+			if (isFalse(replyObject)) {
+				failed('Reply creation failed');
+				console.trace();
+				return;
 			}
+			replyObject.onFrame(frame, header);
 		}
-		const replyObject = new Reply(frame, header, this);
-		console.log('reply object', replyObject);
-		if (isPromise(replyObject)) {
-			failed('Reply object is a promise something went wrong');
-			console.trace();
-			return;
-		}
-		replyObject.onFrame(frame, header);
 	}
 	pending = false;
 	state = 0;
 	encryptConnectionId = false;
 	randomId = randomBuffer(8);
 	data = construct(Map);
-	replyQueue = construct(Map);
+	requestQueue = construct(Map);
 	destination = {
 		overhead: {},
 	};

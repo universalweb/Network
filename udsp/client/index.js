@@ -38,7 +38,7 @@ import { watch } from '#watch';
 // Client specific imports to extend class
 import { emit } from '../requestMethods/emit.js';
 import { uwRequest } from '#udsp/requestMethods/request';
-import { processFrame } from './processFrame.js';
+import { processFrame } from '../processFrame.js';
 import { onPacket } from './onPacket.js';
 import { onListening } from './listening.js';
 import { keychainGet } from '#keychain';
@@ -455,26 +455,6 @@ export class Client extends UDSP {
 		await this.calculatePacketOverhead();
 		this.handshakeCompleted();
 	}
-	proccessProtocol(rpc, frame, header) {
-		switch (rpc) {
-		case 0:
-			this.intro(frame, header);
-			break;
-		default:
-			console.trace('Unknown Protocol Packet', frame, header);
-			break;
-		}
-	}
-	proccessProtocolPacketFrame(frame, header) {
-		const rpc = frame[1];
-		console.log('Processing Protocol Packet Frame', frame);
-		this.proccessProtocol(rpc, frame, header);
-	}
-	proccessProtocolPacketHeader(frame, header) {
-		const rpc = header[1];
-		console.log('Processing Protocol Packet Header', header);
-		this.proccessProtocol(rpc, frame, header);
-	}
 	request = uwRequest;
 	fetch = fetchRequest;
 	post = post;
@@ -502,5 +482,4 @@ export async function client(configuration) {
 }
 // Add the request export here for simple auto connect and then just grab contents to return called UDSP
 // client is for a longer stateful connection request to a remote server
-// udsp is for a single request to a remote server then closes after response
 export { getCertificate };

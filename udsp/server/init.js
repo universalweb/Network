@@ -223,8 +223,11 @@ export class Server extends UDSP {
 		}
 	}
 	updateWorkerState() {
-		this.clientCount = this.clients.size;
-		this.syncWorkerState();
+		const size = this.clients.size;
+		if (this.clientCount !== size) {
+			this.clientCount = this.clients.size;
+			this.syncWorkerState();
+		}
 	}
 	syncWorkerState() {
 		const { clientCount } = this;

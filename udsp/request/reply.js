@@ -26,10 +26,11 @@ export class Reply extends Base {
 		const id = frame[0];
 		if (!hasValue(id)) {
 			console.trace('Catastrophic error no stream id in frame');
-			return this.destroy('No stream id in frame');
+			this.destroy('No stream id in frame');
+			return false;
 		}
 		this.id = id;
-		const { replyQueue, } = source;
+		const { requestQueue, } = source;
 		this.events = source.events;
 		this.requestMethods = source.requestMethods;
 		this.streamIdSize = numberEncodedSize(id);
@@ -40,7 +41,7 @@ export class Reply extends Base {
 		this.response = serverResponseObject({
 			source: this,
 		});
-		replyQueue.set(id, this);
+		requestQueue.set(id, this);
 	}
 	type = 'reply';
 	isReply = true;
