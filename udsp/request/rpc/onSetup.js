@@ -1,4 +1,4 @@
-import { hasValue, isNumber } from '@universalweb/acid';
+import { hasValue, isNumber, isNotNumber } from '@universalweb/acid';
 export async function onSetup(id, rpc, packetId, data, frame, source) {
 	if (source.receivedSetupPacket) {
 		return;
@@ -14,7 +14,11 @@ export async function onSetup(id, rpc, packetId, data, frame, source) {
 	if (isAsk) {
 		[, , totalIncomingHeadSize, totalIncomingDataSize] = frame;
 	} else {
-		[, , method = 'GET', totalIncomingPathSize, totalIncomingParametersSize, totalIncomingHeadSize, totalIncomingDataSize] = frame;
+		[, , method = 0, totalIncomingPathSize, totalIncomingParametersSize, totalIncomingHeadSize, totalIncomingDataSize] = frame;
+		if (isNotNumber(method) || method < 0 || method > 10) {
+			source.close();
+			return;
+		}
 		source.method = method;
 	}
 	console.log(`Setup Packet Received HEADER:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);

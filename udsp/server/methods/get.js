@@ -44,11 +44,9 @@ export async function get(req, resp) {
 		console.log(`EXT => ${ext}`);
 		resp.setHeader('contentType', ext);
 		resp.data = fileData;
-	} catch {
+	} catch (err) {
 		resp.setHeader('status', 404);
 	} finally {
 		resp.send();
 	}
-	// checksum: cryptography.hash(data)
-	resp.send();
 }

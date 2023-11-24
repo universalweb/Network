@@ -61,6 +61,9 @@ export function toBuffer(value) {
 export function toBase64(value) {
 	return value.toString('base64');
 }
+export function toHex(value) {
+	return value.toString('hex');
+}
 export function buff(value) {
 	return Buffer.from(value);
 }

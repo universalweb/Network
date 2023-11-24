@@ -11,7 +11,6 @@ import {
 import {
 	construct, keys, isBoolean, intersection, hasValue, assign
 } from '@universalweb/acid';
-import { Client } from './index.js';
 import { getAlgorithm } from '../../cryptoMiddleware/index.js';
 import { generateConnectionId, connectionIdToBuffer } from '#udsp/connectionId';
 export async function initialize(config) {
@@ -113,8 +112,7 @@ export async function initialize(config) {
 			}
 		}, gracePeriod);
 	}
-	success(`client Created: ID:${serverConnectionIdString} ${ip}:${port}`);
-	await server.clientEvent('constructed', `Server CID${serverConnectionIdString}`, `Client CID${client.clientIdString}`);
+	success(`client Created: ID:${serverConnectionIdString} - Client CID${client.clientIdString} => ${ip}:${port}`);
 	await client.created();
 	return client;
 }

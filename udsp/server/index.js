@@ -15,12 +15,12 @@ function workerOnMessage(workers, worker, msg) {
 	const [eventName, data] = decodedMessage;
 	console.log('Worker Message Received', eventName, data);
 	switch (eventName) {
-	case 'state':
-		assign(worker.state, data);
-		console.log('Worker State Update', worker.state);
-		break;
-	default:
-		break;
+		case 'state':
+			assign(worker.state, data);
+			console.log('Worker State Update', worker.state);
+			break;
+		default:
+			break;
 	}
 }
 export async function server(config, ...args) {

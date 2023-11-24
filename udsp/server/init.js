@@ -69,7 +69,6 @@ export class Server extends UDSP {
 	off = off;
 	attachEvents() {
 		const thisServer = this;
-		this.addRequestMethod(requestMethods);
 		this.socket.on('error', (err) => {
 			return thisServer.onError(err);
 		});
@@ -207,20 +206,6 @@ export class Server extends UDSP {
 		return sendPacket(packet, this, this.socket, destination);
 	}
 	addRequestMethod(methods) {
-		const thisServer = this;
-		each(methods, (method, methodName) => {
-			thisServer.requestMethods.set(methodName, method.bind(thisServer));
-		});
-	}
-	setClientEvent(eventName, callback) {
-		this.clientEvents.set(eventName, callback);
-	}
-	clientEvent(eventName, client) {
-		success(`Client Client Event: ${eventName} -> SocketID: ${client.idString}`);
-		const foundEvent = this.clientEvents.get(eventName);
-		if (foundEvent) {
-			foundEvent(this, client);
-		}
 	}
 	updateWorkerState() {
 		const size = this.clients.size;
@@ -240,7 +225,10 @@ export class Server extends UDSP {
 	onError = onError;
 	onListen = onListen;
 	onPacket = onPacket;
-	requestMethods = construct(Map);
+	requestMethods = [...requestMethods];
+	routes = {};
+	get(route, method) {
+	}
 	realTime = true;
 	socketCount = 0;
 	clientCount = 0;
@@ -251,7 +239,6 @@ export class Server extends UDSP {
 		* All created clients (clients) represent a client to server bi-directional connection until it is closed by either party.
 	*/
 	clients = construct(Map);
-	clientEvents = construct(Map);
 }
 export async function server(...args) {
 	return construct(Server, args);

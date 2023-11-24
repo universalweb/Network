@@ -16,8 +16,8 @@ import { flushOutgoing } from './flush.js';
 import { serverRequestObject } from './objects/server/request.js';
 import { serverResponseObject } from './objects/server/response.js';
 /**
-	* @todo
-*/
+ * @todo
+ */
 export class Reply extends Base {
 	constructor(frame, header, source) {
 		super(source);
@@ -31,8 +31,6 @@ export class Reply extends Base {
 		}
 		this.id = id;
 		const { requestQueue, } = source;
-		this.events = source.events;
-		this.requestMethods = source.requestMethods;
 		this.streamIdSize = numberEncodedSize(id);
 		this.maxFrameSize = source.destination.maxFrameSize;
 		this.request = serverRequestObject({
@@ -47,7 +45,7 @@ export class Reply extends Base {
 	isReply = true;
 	async completeReceived() {
 		this.state = 1;
-		await processEvent(this.request, this.response, this);
+		await processEvent(this.request, this.response, this.source().server());
 	}
 }
 export function reply(...args) {

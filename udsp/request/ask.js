@@ -13,8 +13,9 @@ import { Base } from './base.js';
 import { clientResponseObject } from './objects/client/response.js';
 import { clientRequestObject } from './objects/client/request.js';
 import { objectGetSetMethods } from './objects/objectGetSetMethods.js';
+import { getMethodId } from '../methods.js';
 export class Ask extends Base {
-	constructor(method = 'get', path, parameters, data, head, options = {}, source) {
+	constructor(method = 0, path, parameters, data, head, options = {}, source) {
 		super(source);
 		const {
 			requestQueue,
@@ -23,9 +24,8 @@ export class Ask extends Base {
 		} = source;
 		console.log('Ask', path);
 		const id = streamIdGenerator.get();
-		const methodSanitized = method.toLowerCase();
 		this.id = id;
-		this.method = method;
+		this.method = getMethodId(method);
 		if (parameters) {
 			this.parameters = parameters;
 		}

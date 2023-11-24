@@ -34,20 +34,13 @@ import { Reply } from '#udsp/request/reply';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
 import { processFrame } from '#udsp/processFrame';
 /**
-	* @TODO
-*/
+ * @TODO
+ */
 export class Client {
 	constructor(config) {
 		const { server } = config;
 		const client = this;
-		this.server = function() {
-			return server;
-		};
-		this.socket = function() {
-			return server.socket;
-		};
 		const {
-			events,
 			requestMethods,
 			cipherSuites,
 			publicKeyCryptography,
@@ -55,8 +48,11 @@ export class Client {
 			encryptServerConnectionId,
 			connectionIdSize,
 		} = server;
-		this.events = events;
+		this.server = function() {
+			return server;
+		};
 		this.requestMethods = requestMethods;
+		this.socket = server.socket;
 		this.cipherSuites = cipherSuites;
 		this.publicKeyCryptography = publicKeyCryptography;
 		this.connectionIdSize = connectionIdSize;
@@ -107,19 +103,19 @@ export class Client {
 	}
 	async send(frame, headers, footer) {
 		msgSent(`socket Sent -> ID: ${this.connectionIdString}`);
-		return sendPacket(frame, this, this.socket(), this.destination, headers, footer);
+		return sendPacket(frame, this, this.socket, this.destination, headers, footer);
 	}
 	async received(frame, frameHeaders) {
 		const server = this.server();
-		await received(this, frame, frameHeaders, server);
 		info(`socket EVENT -> send - ID:${this.connectionIdString}`);
+		return received(this, frame, frameHeaders, server);
 	}
 	async authenticate(packet) {
 	}
 	async destroy(destroyCode) {
 		const server = this.server();
-		await destroy(this, destroyCode, server);
 		info(`socket EVENT -> destroy - ID:${this.connectionIdString}`);
+		return destroy(this, destroyCode, server);
 	}
 	// CLIENT HELLO
 	async intro(frame) {

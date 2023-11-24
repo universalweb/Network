@@ -1,5 +1,2 @@
 import { get } from './get.js';
-export const requestMethods = {
-	get,
-	0: get
-};
+export const requestMethods = [get];

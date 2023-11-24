@@ -3,7 +3,7 @@ import {
 } from '@universalweb/acid';
 import { destroy } from './destory.js';
 import { processEvent } from '#server/processEvent';
-import { onSetup } from './rpc/setup.js';
+import { onSetup } from './rpc/onSetup.js';
 import { onPathReady, onPath } from './rpc/onPath.js';
 import { onParametersReady, onParameters } from './rpc/onParameters.js';
 import { onHeadReady, onHead } from './rpc/onHead.js';
@@ -23,7 +23,7 @@ import { onError } from './rpc/onError.js';
  * 9 Data Packet.
  * 10 End Packet.
  * 11 Error Packet.
-*/
+ */
 const rpcFunctions = [() => {}, onSetup, onPathReady, onParametersReady, onHeadReady, onDataReady,
 	onPath, onParameters, onHead, onData, onEnd, onError];
 export async function onFrame(frame, header) {

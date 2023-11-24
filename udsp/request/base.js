@@ -1,6 +1,7 @@
 import { destroy } from './destory.js';
 import { dataPacketization } from './dataPacketization.js';
 import { on } from './events/on.js';
+import { fire } from './events/fire.js';
 import { flushOutgoing, flushIncoming, flush } from './flush.js';
 import { onFrame } from './onFrame.js';
 import {
@@ -15,13 +16,12 @@ import { onData } from './onData.js';
 import { onPath } from './onPath.js';
 import { onHead } from './onHead.js';
 import { onParameters } from './onParameters.js';
-import { fire } from './events/fire.js';
-const noPayloadMethods = /get|head|ping/;
+const noPayloadMethods = /0/;
 /**
-	* @todo
-	* Add support for headers which indicate the headers content encoding?
-	* Add convertor for serialize header so to convert their normal string names to their numerical ids.
-*/
+ * @todo
+ * Add support for headers which indicate the headers content encoding?
+ * Add convertor for serialize header so to convert their normal string names to their numerical ids.
+ */
 export class Base {
 	constructor(source) {
 		const timeStamp = Date.now();
@@ -222,8 +222,7 @@ export class Base {
 		}
 		const message = this.getPacketTemplate(1);
 		if (isAsk) {
-			message.push(this.method, this.outgoingPathSize, this.outgoingParametersSize,
-				this.outgoingHeadSize);
+			message.push(this.method, this.outgoingPathSize, this.outgoingParametersSize, this.outgoingHeadSize);
 		} else {
 			message.push(this.outgoingHeadSize);
 		}
