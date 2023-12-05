@@ -10,7 +10,7 @@ import {
 	info,
 	msgReceived
 } from '#logs';
-import { on, off } from './events.js';
+import { createEvent, removeEvent, triggerEvent } from './events.js';
 import { listen } from './listen.js';
 import { onError } from './onError.js';
 import { onListen } from './onListen.js';
@@ -66,7 +66,6 @@ export class Server extends UDSP {
 			worker.process.send(passMessage);
 		}
 	}
-	off = off;
 	attachEvents() {
 		const thisServer = this;
 		this.socket.on('error', (err) => {
@@ -220,7 +219,16 @@ export class Server extends UDSP {
 			clientCount
 		}]));
 	}
-	on = on;
+	on(eventName, eventMethod) {
+		return createEvent(this.events, eventName, eventMethod);
+	}
+	off(eventName, eventMethod) {
+		return removeEvent(this.events, eventName, eventMethod);
+	}
+	triggerEvent(eventName, arg) {
+		success(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
+		return triggerEvent(this.events, eventName, this, arg);
+	}
 	listen = listen;
 	onError = onError;
 	onListen = onListen;
@@ -235,6 +243,7 @@ export class Server extends UDSP {
 	port = 80;
 	ip = '::1';
 	connectionIdSize = 8;
+	events = new Map();
 	/*
 		* All created clients (clients) represent a client to server bi-directional connection until it is closed by either party.
 	*/

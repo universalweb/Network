@@ -2,36 +2,52 @@ import {
 	isPlainObject,
 	each,
 	isArray,
-	assign
+	assign,
+	invokeArray,
+	eachArray
 } from '@universalweb/acid';
 import { imported } from '#logs';
-async function addEvent(events, eventName, evntName, evnt) {
-	events.set(evntName, evnt);
-	console.log('Added Event', evntName);
+export async function triggerEvent(events, eventName, thisBind, arg) {
+	const eventArray = events.get(eventName);
+	if (eventArray) {
+		invokeArray(eventArray, arg, thisBind);
+	}
 }
-export async function on(evntName, evnt) {
-	const { events } = this;
-	if (isPlainObject(evntName)) {
-		return each(evntName, (childEvnt, childEvntName) => {
-			addEvent(events, childEvntName, childEvnt);
+async function addListener(events, eventName, eventMethod) {
+	const eventArray = events.get(eventName);
+	if (eventArray) {
+		eventArray.push(eventMethod);
+	} else {
+		events.set(eventName, [eventMethod]);
+	}
+	console.log('Added Event', eventName);
+}
+export async function createEvent(events, eventName, eventMethod) {
+	if (isPlainObject(eventName)) {
+		return each(eventName, (childEventMethod, childEventName) => {
+			addListener(events, childEventName, childEventMethod);
 		});
 	}
-	return addEvent(events, evntName, evnt);
+	return addListener(events, eventName, eventMethod);
 }
-async function removeEvent(events, evnt, evntName) {
-	events.delete(evntName);
+async function removeListener(events, eventName, eventMethod) {
+	const eventArray = events.get(eventName);
+	if (eventArray) {
+		if (eventArray.length) {
+			const index = eventArray.indexOf(eventMethod);
+			if (index > -1) {
+				eventArray.splice(index, 1);
+			}
+		} else {
+			events.delete(eventName);
+		}
+	}
 }
-export async function off(evnts) {
-	const { events } = this;
-	if (isPlainObject(evnts)) {
-		return each(evnts, (evnt, evntName) => {
-			removeEvent(events, evntName);
+export async function removeEvent(events, eventName, eventMethod) {
+	if (isPlainObject(eventName)) {
+		return each(eventName, (childEvnt, childEvntName) => {
+			removeListener(events, childEvntName, childEvnt);
 		});
 	}
-	if (isArray(evnts)) {
-		return each(evnts, (evntName) => {
-			removeEvent(events, evntName);
-		});
-	}
-	return removeEvent(events, evnts);
+	return removeListener(events, eventName, eventMethod);
 }

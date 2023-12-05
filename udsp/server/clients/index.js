@@ -33,6 +33,7 @@ import { sendPacket } from '#udsp/sendPacket';
 import { Reply } from '#udsp/request/reply';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
 import { processFrame } from '#udsp/processFrame';
+import { createEvent, removeEvent, triggerEvent } from '../events.js';
 /**
  * @TODO
  */
@@ -72,20 +73,26 @@ export class Client {
 	async calculatePacketOverhead() {
 		return calculatePacketOverhead(this.cipherSuite, this.destination.connectionIdSize, this.destination);
 	}
+	on(eventName, eventMethod) {
+		return createEvent(this.events, eventName, eventMethod);
+	}
+	off(eventName, eventMethod) {
+		return removeEvent(this.events, eventName, eventMethod);
+	}
+	triggerEvent(eventName, arg) {
+		success(`CLIENT EVENT -> ${eventName} - ID:${this.connectionIdString}`);
+		return triggerEvent(this.events, eventName, this, arg);
+	}
 	async created() {
-		const server = this.server();
-		await created(this, server);
-		info(`socket EVENT -> created - ID:${this.connectionIdString}`);
+		await created(this);
 	}
 	async connected() {
-		const server = this.server();
-		await connected(this, server);
-		success(`socket EVENT -> connected - ID:${this.connectionIdString}`);
+		await connected(this);
 	}
 	async generateSessionKeypair() {
 		const newKeypair = this.cipherSuite.keypair();
 		this.newKeypair = newKeypair;
-		info(`socket EVENT -> reKey - ID:${this.connectionIdString}`);
+		info(`CLIENT EVENT -> reKey - ID:${this.connectionIdString}`);
 	}
 	async setSessionKeys() {
 		console.log(this.destination);
@@ -98,7 +105,7 @@ export class Client {
 		success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
 	}
 	updateState(state) {
-		console.log(`State Updated -> ${this.state}`);
+		console.log(`CLIENT State Updated -> ${this.state}`);
 		this.state = state;
 	}
 	async send(frame, headers, footer) {
@@ -106,16 +113,14 @@ export class Client {
 		return sendPacket(frame, this, this.socket, this.destination, headers, footer);
 	}
 	async received(frame, frameHeaders) {
-		const server = this.server();
 		info(`socket EVENT -> send - ID:${this.connectionIdString}`);
-		return received(this, frame, frameHeaders, server);
+		return received(this, frame, frameHeaders);
 	}
 	async authenticate(packet) {
 	}
 	async destroy(destroyCode) {
-		const server = this.server();
 		info(`socket EVENT -> destroy - ID:${this.connectionIdString}`);
-		return destroy(this, destroyCode, server);
+		return destroy(this, destroyCode);
 	}
 	// CLIENT HELLO
 	async intro(frame) {
@@ -131,6 +136,7 @@ export class Client {
 		this.updateState(1);
 		await this.send(frame);
 	}
+	// PFS
 	async attachNewClientKeys() {
 		this.updateState(2);
 		this.encryptionKeypair = this.newKeypair;
@@ -152,7 +158,6 @@ export class Client {
 	}
 	pending = false;
 	state = 0;
-	encryptConnectionId = false;
 	randomId = randomBuffer(8);
 	data = construct(Map);
 	requestQueue = construct(Map);

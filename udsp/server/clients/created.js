@@ -1,2 +1,2 @@
-export async function created(client, server) {
+export async function created(client) {
 }
