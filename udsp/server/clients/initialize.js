@@ -85,7 +85,6 @@ export async function initialize(config) {
 	}
 	const serverConnectionIdString = generateConnectionId(connectionIdSize, serverId);
 	const serverClientId = connectionIdToBuffer(serverConnectionIdString);
-	clients.set(serverConnectionIdString, client);
 	console.log(`Server Connection ID: ${serverClientId} SIZE: ${connectionIdSize} CLIENT: ${clientId.toString('hex')}`);
 	client.id = serverClientId;
 	client.connectionIdString = serverConnectionIdString;
@@ -113,6 +112,7 @@ export async function initialize(config) {
 		}, gracePeriod);
 	}
 	success(`client Created: ID:${serverConnectionIdString} - Client CID${client.clientIdString} => ${ip}:${port}`);
+	clients.set(serverConnectionIdString, client);
 	await client.created();
 	return client;
 }

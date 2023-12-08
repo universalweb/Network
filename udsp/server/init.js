@@ -229,6 +229,14 @@ export class Server extends UDSP {
 		success(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
 		return triggerEvent(this.events, eventName, this, arg);
 	}
+	clientCreated(client) {
+		this.clientCount++;
+		console.log('Client Created', this.clientCount);
+	}
+	clientRemoved(client) {
+		this.clientCount--;
+		console.log('Client Removed', this.clientCount);
+	}
 	listen = listen;
 	onError = onError;
 	onListen = onListen;
@@ -238,7 +246,6 @@ export class Server extends UDSP {
 	get(route, method) {
 	}
 	realTime = true;
-	socketCount = 0;
 	clientCount = 0;
 	port = 80;
 	ip = '::1';
