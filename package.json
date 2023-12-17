@@ -119,7 +119,7 @@
 		"publish": "npm run bumpVersion && npm run changelog",
 		"varmemtest": "nodemon -expose-gc --watch 'memoryTests.js' memoryTests.js"
 	},
-	"version": "3.0.2",
+	"version": "3.0.3",
 	"devDependencies": {
 		"@electron-forge/cli": "^6.0.5",
 		"daisyui": "^4.4.19",

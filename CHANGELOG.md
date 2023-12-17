@@ -4,10 +4,36 @@
 |[Sentivate](https://sentivate.com) - [Twitter](https://twitter.com/sentivate)|
 ---
 
-## [v3.0.1](https://github.com/universalweb/Network/compare/v3.0.1...v3.0.1)
+## [v3.0.2](https://github.com/universalweb/Network/compare/v3.0.2...v3.0.2)
 
 ---
 ---
+
+## [v3.0.2](https://github.com/universalweb/Network/compare/v3.0.1...v3.0.2) - 2023-12-17
+
+---
+---
+
+### Commits
+
+- Moving in Docs [`97ffb88`](https://github.com/universalweb/Network/commit/97ffb88f7686bd11ae37d7c5548f202600d9c806)
+- Update index.html [`533a3ed`](https://github.com/universalweb/Network/commit/533a3ed3f6a815c7a8cd3ba716d271121b840e9f)
+- Create CNAME [`16db0e4`](https://github.com/universalweb/Network/commit/16db0e40da67dad8e66b0f9c45ccf1282925df44)
+- Create index.html [`bfdf6cb`](https://github.com/universalweb/Network/commit/bfdf6cb245371285c41aa5ea511b2f850fb624c2)
+- Create CNAME [`d3ae4d4`](https://github.com/universalweb/Network/commit/d3ae4d47cb55213ccfa974c24a419d1360fad9f6)
+- New Events [`c4b3300`](https://github.com/universalweb/Network/commit/c4b3300a1a44ef7421bf7fe4b1be0797584c2bfc)
+- Methods are now used internally as strictly Numbers [`b16b980`](https://github.com/universalweb/Network/commit/b16b980c1f6e0cfd688cafcc493896374c3e56fa)
+- Memory Tests [`d6d7acd`](https://github.com/universalweb/Network/commit/d6d7acd254bba3a6ba67c67a15c677fd03a4ce8a)
+- Cleanup all on Packet events [`b382b43`](https://github.com/universalweb/Network/commit/b382b43add6327f953415db89cfb4f9f8377ed58)
+- New onFrame Event & Docs [`9f6e3c4`](https://github.com/universalweb/Network/commit/9f6e3c49ea48cc7f562cdb921e066cfac528107a)
+- Updated Index example page [`023d546`](https://github.com/universalweb/Network/commit/023d546c105aec24f3de8769f173b5730e698057)
+- Protocol Packet Handler cleanup [`639ebd1`](https://github.com/universalweb/Network/commit/639ebd1f96f8c6d364aaf5cbe02e08f68d91a741)
+- Demo re-enabled [`2f639ee`](https://github.com/universalweb/Network/commit/2f639eefdb0dd274d87a853276ebb8ec90777feb)
+- Don't run demo major merge in progress [`1073c60`](https://github.com/universalweb/Network/commit/1073c60fe502aa34d9df7a672853750a77e7e4cb)
+- Re-Enable Demo new paths [`c219453`](https://github.com/universalweb/Network/commit/c219453ba889de7554c3ceda6e8547c58aed7071)
+- certificate cleanup & patches [`97e931b`](https://github.com/universalweb/Network/commit/97e931bcd0fee64fcc1e7aa235032795ff3a639a)
+- Update CODE_OF_CONDUCT.md [`57eb01b`](https://github.com/universalweb/Network/commit/57eb01bef257c118ba0d2d4d810688a8769443de)
+- changelog [`4309416`](https://github.com/universalweb/Network/commit/4309416820ed23a4c167d21d01723edd96faaa32)
 
 ## [v3.0.1](https://github.com/universalweb/Network/compare/v1.3.3...v3.0.1) - 2023-11-07
 
