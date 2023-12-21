@@ -5,9 +5,6 @@ export async function destroy(client, reason) {
 	const server = client.server();
 	console.log(`client destroyed: ${client.connectionIdString}`);
 	if (reason === 1) {
-		await client.send({
-			state: 3
-		});
 		info(`client ended from inactivity. Grace period ended.
 			ID: ${client.connectionIdString}
 			Address: ${client.destination.ip}
@@ -20,8 +17,7 @@ export async function destroy(client, reason) {
 			Port: ${client.destination.port}
 		`);
 	}
-	server.clients.delete(client.connectionIdString);
-	server.updateWorkerState();
+	server.clientRemoved(client.connectionIdString);
 	// Clear all client data
 	client.ip = null;
 	client.port = null;
@@ -32,6 +28,7 @@ export async function destroy(client, reason) {
 	client.keypair = null;
 	client.lastAct = null;
 	client.server = null;
+	client.source = null;
 	client.destination = null;
 	client.socket = null;
 	client.source = null;

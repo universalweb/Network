@@ -1,3 +1,20 @@
+import {
+	UniqID,
+	assign,
+	construct,
+	currentPath,
+	has,
+	hasValue,
+	intersection,
+	isArray,
+	isString,
+	isTrue,
+	isUndefined,
+	omit,
+	promise
+} from '@universalweb/acid';
+import { configure, info, success } from '#logs';
+import { connectionIdToBuffer, generateConnectionId } from '#udsp/connectionId';
 /*
   	* Client Module
 	* UDSP - Universal Data Stream Protocol
@@ -8,145 +25,73 @@
 */
 // Default System imports
 import {
-	encode,
-	decode
+	decode,
+	encode
 } from '#utilities/serialize';
 import {
-	omit,
-	assign,
-	construct,
-	UniqID,
-	isString,
-	promise,
-	isTrue,
-	currentPath,
-	hasValue,
-	isUndefined,
-	has,
-	intersection,
-	isArray
-} from '@universalweb/acid';
-import dgram from 'dgram';
-import { success, configure, info } from '#logs';
-import {
-	toBase64,
 	emptyNonce,
 	randomConnectionId,
+	toBase64,
 } from '#crypto';
+import { getAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
 import { getCertificate, parseCertificate } from '#certificate';
-import { watch } from '#watch';
+import { Ask } from '../request/ask.js';
+import { UDSP } from '#udsp/base';
+import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
+import { configCryptography } from './configCryptography.js';
+import dgram from 'dgram';
 // Client specific imports to extend class
 import { emit } from '../requestMethods/emit.js';
-import { uwRequest } from '#udsp/requestMethods/request';
-import { processFrame } from '../processFrame.js';
-import { onPacket } from './onPacket.js';
-import { onListening } from './listening.js';
-import { keychainGet } from '#keychain';
-import { Ask } from '../request/ask.js';
 import { fetchRequest } from '../requestMethods/fetch.js';
-import { UDSP } from '#udsp/base';
-import { sendPacket } from '../sendPacket.js';
-import { post } from '../requestMethods/post.js';
 import { get } from '../requestMethods/get.js';
-import { getAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
-import { getWANIPAddress } from '../../utilities/network/getWANIPAddress.js';
+import { getIPDetails } from './getIPDetails.js';
 import { getLocalIpVersion } from '../../utilities/network/getLocalIP.js';
-import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
-import { generateConnectionId, connectionIdToBuffer } from '#udsp/connectionId';
-import { uwrl } from '#udsp/UWRL/index';
-let ipInfo;
-let globalIpVersion;
-try {
-	ipInfo = await getWANIPAddress();
-	if (ipInfo?.ip) {
-		globalIpVersion = ipInfo?.ip.includes(':') ? 'udp6' : 'udp4';
-	} else {
-		globalIpVersion = 'udp4';
-	}
-} catch (error) {
-	console.log('NO GLOBAL IP');
-}
-console.log('IP Version', globalIpVersion);
+import { getWANIPAddress } from '../../utilities/network/getWANIPAddress.js';
+import { keychainGet } from '#keychain';
+import { onListening } from './listening.js';
+import { onPacket } from './onPacket.js';
+import { post } from '../requestMethods/post.js';
+import { processFrame } from '../processFrame.js';
+import { sendPacket } from '../sendPacket.js';
+import { setDestination } from './setDestination.js';
+import { uwRequest } from '#udsp/requestMethods/request';
+import { watch } from '#watch';
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
-	constructor(configuration) {
-		super(configuration);
+	constructor(options) {
+		super(options);
 		console.log('-------CLIENT INITIALIZING-------\n');
-		return this.initialize(configuration);
+		return this.initialize(options);
 	}
 	static description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
 	static type = 'client';
 	isClient = true;
-	configDefaults() {
+	async initialize(options) {
+		const thisClient = this;
+		this.options = options;
+		await this.configDefaults();
+		await this.setDestination();
+		await this.getIPDetails();
+		await this.setProfile();
+		console.log('ipVersion', this.ipVersion);
+		console.log('destination', this.destination);
+		await this.configCryptography();
+		this.assignId();
+		await this.calculatePacketOverhead();
+		await this.setupSocket();
+		await this.attachEvents();
+		if (this.autoConnect) {
+			await this.connect();
+		}
+		return this;
+	}
+	async configDefaults() {
 		const {
 			autoConnect,
 			realtime
-		} = this.configuration;
+		} = this.options;
 		this.autoConnect = autoConnect;
 		this.realtime = realtime;
-	}
-	async setDestination() {
-		const {
-			destination,
-			configuration: {
-				url,
-				ip,
-				port,
-				destinationCertificate
-			},
-			ipVersion
-		} = this;
-		if (url) {
-			const urlObject = uwrl(url);
-			this.destination.uwrl = urlObject;
-			if (urlObject.ip) {
-				this.destination.ip = urlObject.ip;
-			}
-			if (urlObject.port) {
-				this.destination.port = urlObject.port;
-			}
-		}
-		if (isString(destinationCertificate)) {
-			console.log('Loading Destination Certificate', destinationCertificate);
-			const certificate = await getCertificate(destinationCertificate);
-			assign(destination, certificate);
-		} else {
-			assign(destination, destinationCertificate);
-		}
-		if (destination.publicKey) {
-			this.hasCertificate = true;
-		}
-		if (!destination.publicKey) {
-			console.log('No destination certificate provided.');
-		}
-		if (ip) {
-			destination.ip = ip;
-		}
-		if (isArray(destination.ip)) {
-			if (ipVersion === 'udp6') {
-				destination.ip = destination.ip.find((item) => {
-					return item.includes(':') ? item : false;
-				});
-			}
-			if (!destination.ip) {
-				destination.ip = destination.ip.find((item) => {
-					return item.includes('.') ? item : false;
-				});
-			}
-		}
-		if (destination.ip.includes(':')) {
-			this.ipVersion = 'udp6';
-		}
-		if (port) {
-			destination.port = port;
-		}
-		if (this.destination.clientConnectionIdSize) {
-			this.connectionIdSize = this.destination.clientConnectionIdSize;
-		}
-		if (!this.destination.connectionIdSize) {
-			this.destination.connectionIdSize = 8;
-		}
-		// console.log('Destination', destination.cryptography);
 	}
 	async getKeychainSave(keychain) {
 		return keychainGet(keychain);
@@ -155,82 +100,13 @@ export class Client extends UDSP {
 		const {
 			keychain,
 			profile
-		} = this.configuration;
+		} = this.options;
 		if (isString(profile)) {
 			this.profile = await parseCertificate(profile);
 		}
 		if (keychain) {
 			console.log('Loading Keychain', keychain);
 			this.profile = await this.getKeychainSave(keychain);
-		}
-	}
-	async configCryptography() {
-		// console.log(this.cryptography);
-		const { destination, } = this;
-		const {
-			encryptConnectionId,
-			publicKeyAlgorithm,
-		} = destination;
-		if (!destination.cipherSuites) {
-			destination.cipherSuites = this.cipherSuites;
-		}
-		if (destination.cipherSuites) {
-			if (!has(destination.cipherSuites, this.cipherSuiteName)) {
-				console.log('Default ciphersuite not available');
-				this.cipherSuiteName = intersection(this.cipherSuites, destination.cipherSuites)[0];
-				if (!this.cipherSuiteName) {
-					console.log('No matching cipher suite found.');
-					return false;
-				}
-			}
-		}
-		this.publicKeyCryptography = getAlgorithm(publicKeyAlgorithm, this.version);
-		this.cipherSuite = getAlgorithm(this.cipherSuiteName, this.version);
-		console.log(this.cipherSuiteName);
-		if (destination.boxCryptography) {
-			this.boxCryptography = getAlgorithm(destination.boxCryptography, this.version);
-		}
-		this.compression = destination.compression;
-		this.headerCompression = destination.headerCompression;
-		if (destination.autoLogin && this.autoLogin) {
-			this.autoLogin = true;
-		}
-		if (!this.keypair) {
-			this.keypair = this.cipherSuite.keypair();
-			success(`Created Connection Keypair`);
-		}
-		if (!this.encryptionKeypair) {
-			this.encryptionKeypair = this.keypair;
-		}
-		const convertSignKeypairToEncryptionKeypair = processPublicKey(this.destination);
-		if (convertSignKeypairToEncryptionKeypair) {
-			this.destination.encryptionKeypair = convertSignKeypairToEncryptionKeypair;
-		}
-		await this.setSessionKeys();
-		if (encryptConnectionId) {
-			const {
-				server: encryptServerCid,
-				client: encryptClientCid,
-				keypair: connectionIdKeypair
-			} = encryptConnectionId;
-			let encryptServer = hasValue(encryptServerCid);
-			let encryptClient = hasValue(encryptClientCid);
-			if (!encryptServer && !encryptClient) {
-				encryptServer = true;
-				encryptClient = true;
-			}
-			if (encryptServer) {
-				this.encryptServerConnectionId = true;
-				if (connectionIdKeypair) {
-					this.destination.connectionIdKeypair = connectionIdKeypair;
-				} else {
-					this.destination.connectionIdKeypair = this.destination.encryptionKeypair;
-				}
-			}
-			if (encryptClient) {
-				this.encryptClientConnectionId = true;
-			}
-			console.log(`Encrypt Connection ID Server ${encryptServer} Client ${encryptClient}`);
 		}
 	}
 	async attachEvents() {
@@ -246,53 +122,6 @@ export class Client extends UDSP {
 			console.log(rinfo);
 			return thisClient.onPacket(packet, rinfo);
 		});
-	}
-	async getIPDetails() {
-		const destinationIp = this.destination.ip;
-		if (destinationIp) {
-			if (isArray(destinationIp)) {
-				if (globalIpVersion === 'udp4') {
-					const ipv4ip = this.destination.ip.find((item) => {
-						return item.includes(':') ? false : item;
-					});
-					if (ipv4ip) {
-						this.destination.ip = ipv4ip;
-						this.ipVersion = 'udp4';
-					}
-				} else {
-					const ipv6ip = this.destination.ip.find((item) => {
-						return item.includes(':') ? item : false;
-					});
-					if (ipv6ip) {
-						this.destination.ip = ipv6ip;
-						this.ipVersion = 'udp6';
-					} else {
-						this.destination.ip = [0];
-						this.ipVersion = 'udp4';
-					}
-				}
-			} else {
-				this.ipVersion = this.destination.ip.includes(':') ? 'udp6' : 'udp4';
-			}
-		}
-	}
-	async initialize(configuration) {
-		const thisClient = this;
-		this.configuration = configuration;
-		await this.setDestination();
-		await this.getIPDetails();
-		await this.setProfile();
-		console.log('ipVersion', this.ipVersion);
-		console.log('destination', this.destination);
-		await this.configCryptography();
-		this.assignId();
-		await this.calculatePacketOverhead();
-		await this.setupSocket();
-		await this.attachEvents();
-		if (this.autoConnect) {
-			await this.connect();
-		}
-		return this;
 	}
 	connect() {
 		return this.ensureHandshake();
@@ -342,31 +171,6 @@ export class Client extends UDSP {
 		if (last) {
 			this.loadCertificate(Buffer.concat(this.certificateChunks));
 			this.sendHandshake(message);
-		}
-	}
-	async setSessionKeys(generatedKeys) {
-		console.log(this.destination.encryptionKeypair);
-		if (this.destination.encryptionKeypair || generatedKeys) {
-			this.sessionKeys = generatedKeys || this.publicKeyCryptography.clientSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair);
-			if (this.sessionKeys) {
-				success(`Created Shared Keys`);
-				success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);
-				success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
-			}
-		}
-	}
-	async setNewDestinationKeys() {
-		if (!(this.handshakeSet)) {
-			this.destination.encryptionKeypair = {
-				publicKey: this.newKeypair
-			};
-			if (this.destination.connectionIdKeypair) {
-				this.destination.connectionIdKeypair = {
-					publicKey: this.newConnectionKeypair || this.newKeypair
-				};
-			}
-			await this.setSessionKeys();
-			this.handshakeSet = true;
 		}
 	}
 	async intro(frame, header) {
@@ -455,6 +259,31 @@ export class Client extends UDSP {
 		await this.calculatePacketOverhead();
 		this.handshakeCompleted();
 	}
+	async setSessionKeys(generatedKeys) {
+		console.log(this.destination.encryptionKeypair);
+		if (this.destination.encryptionKeypair || generatedKeys) {
+			this.sessionKeys = generatedKeys || this.publicKeyCryptography.clientSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair);
+			if (this.sessionKeys) {
+				success(`Created Shared Keys`);
+				success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);
+				success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
+			}
+		}
+	}
+	async setNewDestinationKeys() {
+		if (!(this.handshakeSet)) {
+			this.destination.encryptionKeypair = {
+				publicKey: this.newKeypair
+			};
+			if (this.destination.connectionIdKeypair) {
+				this.destination.connectionIdKeypair = {
+					publicKey: this.newConnectionKeypair || this.newKeypair
+				};
+			}
+			await this.setSessionKeys();
+			this.handshakeSet = true;
+		}
+	}
 	request = uwRequest;
 	fetch = fetchRequest;
 	post = post;
@@ -463,6 +292,9 @@ export class Client extends UDSP {
 	emit = emit;
 	onListening = onListening;
 	onPacket = onPacket;
+	setDestination = setDestination;
+	configCryptography = configCryptography;
+	getIPDetails = getIPDetails;
 	destination = {
 		connectionIdSize: 8,
 		overhead: {}
@@ -475,9 +307,9 @@ export class Client extends UDSP {
 	connectionIdSize = 4;
 	ipVersion = 'udp4';
 }
-export async function client(configuration) {
+export async function client(options) {
 	console.log('Create Client');
-	const uwClient = await construct(Client, [configuration]);
+	const uwClient = await construct(Client, [options]);
 	return uwClient;
 }
 // Add the request export here for simple auto connect and then just grab contents to return called UDSP

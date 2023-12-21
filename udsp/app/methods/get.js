@@ -17,12 +17,12 @@ async function checkFileExists(filePath) {
 		console.error('File does not exist');
 	}
 }
-export async function get(req, resp) {
+export async function get(req, resp, client) {
 	const {
 		resourceDirectory,
 		defaultExtension,
 		cryptography
-	} = this;
+	} = client;
 	const {
 		data,
 		path: filePath

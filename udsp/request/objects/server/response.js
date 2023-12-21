@@ -12,6 +12,7 @@ export class ServerResponse extends Base {
 	isClientResponse = true;
 	send(data) {
 		console.log(this.source());
+		this.sent = true;
 		return this.source().send(data);
 	}
 	setHeader(headerName, headerValue) {

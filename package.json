@@ -116,7 +116,7 @@
 		"start": "nodemon --watch ./index.html --watch ./client/ --watch ./browser/ --watch ./main.js --exec 'electron .'",
 		"changelog": "auto-changelog -p --sort-commits date-desc && git add CHANGELOG.md",
 		"bumpVersion": "npm version patch --force",
-		"publish": "npm run bumpVersion && npm run changelog",
+		"publish": "npm update && npm run bumpVersion && npm run changelog",
 		"varmemtest": "nodemon -expose-gc --watch 'memoryTests.js' memoryTests.js"
 	},
 	"version": "3.0.3",

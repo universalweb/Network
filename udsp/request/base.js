@@ -1,7 +1,5 @@
 import { destroy } from './destory.js';
 import { dataPacketization } from './dataPacketization.js';
-import { on } from './events/on.js';
-import { fire } from './events/fire.js';
 import { flushOutgoing, flushIncoming, flush } from './flush.js';
 import { onFrame } from './onFrame.js';
 import {
@@ -16,6 +14,8 @@ import { onData } from './onData.js';
 import { onPath } from './onPath.js';
 import { onHead } from './onHead.js';
 import { onParameters } from './onParameters.js';
+import { success } from '#logs';
+import { createEvent, removeEvent, triggerEvent } from '../events.js';
 const noPayloadMethods = /0/;
 /**
  * @todo
@@ -499,6 +499,16 @@ export class Base {
 		}
 		return message;
 	}
+	on(eventName, eventMethod) {
+		return createEvent(this.events, eventName, eventMethod);
+	}
+	off(eventName, eventMethod) {
+		return removeEvent(this.events, eventName, eventMethod);
+	}
+	triggerEvent(eventName, arg) {
+		success(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
+		return triggerEvent(this.events, eventName, this, arg);
+	}
 	destroy = destroy;
 	onFrame = onFrame;
 	sendPacket(message, headers, footer) {
@@ -508,8 +518,6 @@ export class Base {
 	flushOutgoing = flushOutgoing;
 	flushIncoming = flushIncoming;
 	flush = flush;
-	on = on;
-	fire = fire;
 	onDataSync = onDataSync;
 	callOnDataSyncEvent = callOnDataSyncEvent;
 	onData = onData;
@@ -570,7 +578,7 @@ export class Base {
 	missingParametersPackets = construct(Map);
 	missingHeadPackets = construct(Map);
 	missingDataPackets = construct(Map);
-	events = {};
+	events = new Map();
 	header = {};
 	options = {};
 	head = {};

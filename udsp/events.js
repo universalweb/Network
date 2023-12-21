@@ -7,10 +7,10 @@ import {
 	eachArray
 } from '@universalweb/acid';
 import { imported } from '#logs';
-export async function triggerEvent(events, eventName, thisBind, arg) {
+export async function triggerEvent(events, eventName, primaryObject, arg) {
 	const eventArray = events.get(eventName);
 	if (eventArray) {
-		invokeArray(eventArray, arg, thisBind);
+		invokeArray(eventArray, primaryObject, arg);
 	}
 }
 async function addListener(events, eventName, eventMethod) {

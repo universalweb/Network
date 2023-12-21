@@ -1,7 +1,8 @@
+import babelParser from '@babel/eslint-parser';
 import globals from 'globals';
 import jsdoc from 'eslint-plugin-jsdoc';
-import babelParser from '@babel/eslint-parser';
-const globalsObject = {};
+const globalsObject = {
+};
 const customGlobals = {
 	globalThis: 'readonly',
 	window: 'readonly',
@@ -43,6 +44,8 @@ export default [{
 		'object-curly-newline': [
 			'error',
 			{
+				multiline: false,
+				consistent: true,
 				ObjectExpression: {
 					multiline: true,
 					minProperties: 1
@@ -253,11 +256,16 @@ export default [{
 				ImportDeclaration: 1
 			}
 		],
+		'switch-colon-spacing': ['error', {
+			after: true,
+			before: false
+		}],
 		'key-spacing': [
 			'error',
 			{
 				beforeColon: false,
-				afterColon: true
+				afterColon: true,
+				mode: 'strict'
 			}
 		],
 		'keyword-spacing': [
@@ -473,7 +481,13 @@ export default [{
 		'prefer-template': 'error',
 		'require-yield': 'error',
 		'sort-keys': 'off',
-		'sort-imports': 'off',
+		'sort-imports': ['error', {
+			ignoreCase: false,
+			ignoreDeclarationSort: false,
+			ignoreMemberSort: false,
+			memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
+			allowSeparatedGroups: false
+		}],
 		'template-curly-spacing': [
 			'error',
 			'never'

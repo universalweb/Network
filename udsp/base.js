@@ -6,7 +6,7 @@ import { randomConnectionId, randomBuffer, toBase64 } from '#crypto';
 import { cipherSuites } from './cryptoMiddleware/index.js';
 import { calculatePacketOverhead } from './calculatePacketOverhead.js';
 export class UDSP {
-	constructor(configuration) {
+	constructor(options) {
 		this.cipherSuiteName = cipherSuites.version[this.version][0].name;
 		this.cipherSuiteId = cipherSuites.version[this.version][0].id;
 		this.cipherSuites = cipherSuites.available[this.version];
@@ -46,6 +46,7 @@ export class UDSP {
 	ipVersion = 'udp6';
 	events = construct(Map);
 	streamIdGenerator = construct(UniqID);
+	// Eventually make this like .js or something in-between of JS/HTML/CSS maybe single modular files or ones that are similar to JSX
 	defaultExtension = 'html';
 	packetCount = 0;
 	dataPacketCount = 0;

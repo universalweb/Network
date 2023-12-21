@@ -68,5 +68,5 @@ export function uwrl(...args) {
 // Supports Username Password and URL Fragments
 // Server can opt in to get the URL fragments
 // fragments are turned into client side state tracking
-const uwri = new UWRL('uw://localhost:8080/path/to/resource{"query":"value", "#": "fragment", ":": ["username", "password"]}');
-console.log(uwri);
+// const uwri = new UWRL('uw://localhost:8080/path/to/resource{"query":"value", "#": "fragment", ":": ["username", "password"]}');
+// console.log(uwri);
