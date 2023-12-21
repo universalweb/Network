@@ -1,11 +1,12 @@
+import * as routers from '../router/index.js';
 import { Server, server } from '#server';
 import { assign, hasValue } from '@universalweb/acid';
-
 import cluster from 'node:cluster';
 import { decode } from '#utilities/serialize';
 import { getCoreCount } from '#utilities/hardware/cpu';
 import { onPacket } from '../server/onPacket.js';
 import { requestMethods } from './methods/index.js';
+const { router: createRouter } = routers;
 const numCPUs = getCoreCount();
 function workerReady(worker) {
 	worker.ready = true;
@@ -34,20 +35,25 @@ export class App {
 			server: serverOptions,
 			router: routerOptions
 		} = options;
-		this.server = server(serverOptions);
+		if (server) {
+			this.server = server(serverOptions);
+		}
+		if (routerOptions) {
+			this.router = createRouter(routerOptions);
+		}
 	}
 	data = new Map();
-	get(key) {
-		return this.data.get(key);
-	}
-	set(key, value) {
-		return this.data.set(key, value);
-	}
-	delete(key) {
-		return this.data.delete(key);
-	}
 	listen(port) {
 		return this.server.listen(port);
+	}
+	all(...args) {
+		return this.router.all(...args);
+	}
+	get(...args) {
+		return this.router.get(...args);
+	}
+	post(...args) {
+		return this.router.post(...args);
 	}
 }
 export async function app(config, ...args) {

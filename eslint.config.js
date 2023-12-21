@@ -1,8 +1,7 @@
 import babelParser from '@babel/eslint-parser';
 import globals from 'globals';
 import jsdoc from 'eslint-plugin-jsdoc';
-const globalsObject = {
-};
+const globalsObject = {};
 const customGlobals = {
 	globalThis: 'readonly',
 	window: 'readonly',
@@ -44,8 +43,6 @@ export default [{
 		'object-curly-newline': [
 			'error',
 			{
-				multiline: false,
-				consistent: true,
 				ObjectExpression: {
 					multiline: true,
 					minProperties: 1

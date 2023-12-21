@@ -24,7 +24,6 @@ import {
 	randomBuffer,
 	toBase64
 } from '#crypto';
-
 import { Reply } from '#udsp/request/reply';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
 import { connected } from './connected.js';
@@ -40,10 +39,10 @@ import { sendPacket } from '#udsp/sendPacket';
  */
 export class Client {
 	constructor(config) {
-		const { 
+		const {
 			server,
 			app
-		 } = config;
+		} = config;
 		const client = this;
 		const {
 			requestMethods,

@@ -2,11 +2,7 @@ import {
 	isArray,
 	isNotNumber
 } from '@universalweb/acid';
-
-import {
-	destroy
-} from './request/destory.js';
-
+import { destroy } from './request/destory.js';
 export async function proccessProtocol(source, rpc, frame, header) {
 	console.log(`Processing Protocol Packet RPC ${rpc}`);
 	if (isNotNumber(rpc)) {

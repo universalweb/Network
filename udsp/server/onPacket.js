@@ -1,15 +1,27 @@
-import {
-	success, failed, imported, msgSent, info, msgReceived
-} from '#logs';
-import { toBase64 } from '#crypto';
-import {
-	isEmpty, hasValue, isArray, eachAsyncArray, eachArray, isUndefined, isNumber, isFalse
-} from '@universalweb/acid';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
+import {
+	eachArray,
+	eachAsyncArray,
+	hasValue,
+	isArray,
+	isEmpty,
+	isFalse,
+	isNumber,
+	isUndefined
+} from '@universalweb/acid';
+import {
+	failed,
+	imported,
+	info,
+	msgReceived,
+	msgSent,
+	success
+} from '#logs';
 import { createClient } from './clients/index.js';
-import { reply } from '#udsp/request/reply';
-import { processFrame } from '../processFrame.js';
 import { proccessProtocolPacketHeader } from '#udsp/proccessProtocolPacket';
+import { processFrame } from '../processFrame.js';
+import { reply } from '#udsp/request/reply';
+import { toBase64 } from '#crypto';
 export async function onPacket(packet, connection) {
 	const thisServer = this;
 	msgReceived('Message Received');

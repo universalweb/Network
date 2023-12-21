@@ -16,7 +16,7 @@ export class Router {
 		}
 		return routes;
 	}
-	async executeMatchedRoutes(routes, req, res, client) {
+	async executeRoutes(routes, path, req, res, client) {
 		const routesLength = routes.length;
 		for (let i = 0; i < routesLength; i++) {
 			if (!res.sent) {
@@ -28,16 +28,21 @@ export class Router {
 			res.send();
 		}
 	}
-	processRouteArray(routeArray, fullPath, req, res, client) {
+	async processRouteArray(routeArray, fullPath, req, res, client) {
 		const routes = this.matchRoute(routeArray, fullPath);
 		return this.executeRoutes(routes, req, res, client);
 	}
-	processRoute(route, fullPath, req, res, client) {
-		const routes = this.matchRoute([route], fullPath);
+	async processByMethod(method, path, req, res, client) {
+		const routes = this.matchRoute(this.routesMethods[method], path);
 		return this.executeRoutes(routes, req, res, client);
 	}
-	processAllRoutes(fullPath, req, res, client) {
-		return this.executeRoutes(this.routes.all, req, res, client);
+	async processRoute(req, res, client) {
+		const {
+			path,
+			method
+		} = req;
+		await this.executeRoutes(this.routes.all, req, res, client);
+		return this.processByMethod(method, path, req, res, client);
 	}
 	all(method) {
 		this.routes.all.push(method);
@@ -58,6 +63,6 @@ export class Router {
 		this.routes.update.push([route, method]);
 	}
 }
-export function app(...args) {
-	return new App(...args);
+export function router(...args) {
+	return new Router(...args);
 }
