@@ -1,18 +1,17 @@
-import { stringify, get, hasValue } from '@universalweb/acid';
 import { failed, info } from '#logs';
+import { get, hasValue, stringify } from '@universalweb/acid';
 export async function processEvent(request, response, source) {
-	const { requestMethods } = source;
-	const { method } = request;
-	console.log(request.path);
-	console.log('processEvent', method);
+	const { onRequest } = source;
+	console.log('processEvent method', request.method);
+	console.log('processEvent path', request.path);
+	console.log('processEvent parameters', request.parameters);
 	console.log('processEvent head', request.head);
 	console.log('processEvent data', request.data);
 	// console.log(actions);
-	const requestMethod = requestMethods[method];
-	if (requestMethod) {
-		const hasResponse = requestMethod.call(source, request, response);
-		return hasResponse;
+	if (onRequest) {
+		onRequest(request, response, source);
 	} else {
-		return console.trace(`Invalid method name given.`, source);
+		response.setHeader('status', 404);
+		response.send();
 	}
 }

@@ -4,7 +4,12 @@
 |[Sentivate](https://sentivate.com) - [Twitter](https://twitter.com/sentivate)|
 ---
 
-## [v3.0.2](https://github.com/universalweb/Network/compare/v3.0.2...v3.0.2)
+## [v3.0.3](https://github.com/universalweb/Network/compare/v3.0.3...v3.0.3)
+
+---
+---
+
+## [v3.0.3](https://github.com/universalweb/Network/compare/v3.0.2...v3.0.3) - 2023-12-17
 
 ---
 ---

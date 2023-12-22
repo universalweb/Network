@@ -1,11 +1,17 @@
 import Benchmark from 'benchmark';
-// Define the functions
-function work() {
-	return;
+const array = new Array(100);
+function fn(i) {
+	return array[i];
 }
-function test1() {
+// Define the functions
+function test1(arg) {
+	const arrayLength = array.length;
+	for (let i = 0; i < arrayLength; i++) {
+		fn(i);
+	}
 }
 function test2() {
+	array.forEach(fn);
 }
 // Create a benchmark suite
 const suite = new Benchmark.Suite();

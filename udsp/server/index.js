@@ -1,102 +1,233 @@
-import cluster from 'node:cluster';
-import { assign, construct, hasValue } from '@universalweb/acid';
-import { getCoreCount } from '#utilities/hardware/cpu';
-import { Server } from './init.js';
-import { decode } from '#utilities/serialize';
+// The Universal Web's UDSP server module.
+import {
+	UniqID,
+	assign,
+	construct,
+	currentPath,
+	each,
+	hasValue,
+	isFunction,
+	isTrue,
+	isUndefined
+} from '@universalweb/acid';
+import { createEvent, removeEvent, triggerEvent } from '../events.js';
+import { decode, encode } from '#utilities/serialize';
+import {
+	failed,
+	imported,
+	info,
+	msgReceived,
+	msgSent,
+	success
+} from '#logs';
+import { getAlgorithm, getPublicKeyAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
+import { getCertificate, loadCertificate, parseCertificate } from '#certificate';
+import { randomBuffer, toBase64 } from '#crypto';
+import { UDSP } from '#udsp/base';
+import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
+import { destroy } from '../request/destory.js';
+import { listen } from './listen.js';
+import { onError } from './onError.js';
+import { onListen } from './onListen.js';
 import { onPacket } from './onPacket.js';
-const numCPUs = getCoreCount();
-function workerReady(worker) {
-	worker.ready = true;
-	worker.process.send('registered');
-	console.log('worker is READY:', worker.id);
-}
-function workerOnMessage(workers, worker, msg) {
-	const decodedMessage = decode(msg);
-	const [eventName, data] = decodedMessage;
-	console.log('Worker Message Received', eventName, data);
-	switch (eventName) {
-		case 'state':
-			assign(worker.state, data);
-			console.log('Worker State Update', worker.state);
-			break;
-		default:
-			break;
+import { requestMethods } from '../app/methods/index.js';
+import { sendPacket } from '#udsp/sendPacket';
+const { seal } = Object;
+/*
+	* TODO:
+ 	* - Add flood protection for spamming new connections with the same connection id
+ 	* - Add flood protection for spamming new connections from the same origin
+	* - Add new loadbalancer algo to distribute connections to servers equally
+ */
+export class Server extends UDSP {
+	constructor(options) {
+		// console.log = () => {};
+		super(options);
+		return this.initialize(options);
 	}
-}
-export async function server(config, ...args) {
-	if (config.scale) {
-		const {
-			scale,
-			scale: { size, }
-		} = config;
-		let {
-			ip,
-			port
-		} = scale;
-		if (!ip) {
-			ip = '::1';
-			scale.ip = ip;
-		}
-		if (!port) {
-			port = '::1';
-			scale.port = port + 1;
-		}
-		const coreCount = (size && size <= numCPUs) ? size : numCPUs;
-		config.coreCount = coreCount;
-		if (cluster.isPrimary) {
-			cluster.settings.serialization = 'advanced';
-			console.log(`Primary ${process.pid} is running spawning ${coreCount} instances.`);
-			config.isPrimary = true;
-			config.workerId = String(0);
-			const masterLoadBalancer = await new Server(config, ...args);
-			const workers = [];
-			masterLoadBalancer.workers = workers;
-			for (let index = 0; index < coreCount; index++) {
-				const worker = cluster.fork();
-				worker.state = {};
-				worker.port = port + worker.id;
-				workers[worker.id] = worker;
-				worker.on('message', (msg) => {
-					if (msg === 'ready') {
-						workerReady(worker);
-						return;
-					}
-					workerOnMessage(workers, worker, msg);
-				});
+	static description = 'UW Server Module';
+	static type = 'server';
+	isServer = true;
+	isServerEnd = true;
+	attachEvents() {
+		const thisServer = this;
+		this.socket.on('error', (err) => {
+			return thisServer.onError(err);
+		});
+		this.socket.on('listening', () => {
+			return thisServer.onListen();
+		});
+		this.socket.on('message', (packet, rinfo) => {
+			return thisServer.onPacket(packet, rinfo);
+		});
+	}
+	chunkCertificate() {
+		const certificate = this.publicCertificate;
+		let currentBytePosition = 0;
+		let index = 0;
+		const size = this.publicCertificateSize;
+		const chunks = [];
+		const maxSize = 1000;
+		while (currentBytePosition < size) {
+			const message = {};
+			const endIndex = currentBytePosition + maxSize;
+			const safeEndIndex = endIndex > size ? size : endIndex;
+			message.head = certificate.subarray(currentBytePosition, safeEndIndex);
+			message.headSize = message.head.length;
+			chunks[index] = message;
+			if (safeEndIndex === size) {
+				message.last = true;
+				break;
 			}
-			cluster.on('online', (worker) => {
-				console.log('worker is online:', worker.id);
-			});
-			cluster.on('exit', (worker, code, signal) => {
-				console.log('worker is dead:', worker.isDead(), code);
-				workers[worker.id] = null;
-			});
-			// console.log(cluster.settings);
-			return masterLoadBalancer;
-		} else {
-			console.log(`Worker ${cluster.worker.id} started`);
-			config.isPrimary = false;
-			config.port = (scale.port || (config.port + 1)) + cluster.worker.id;
-			config.workerId = String(cluster.worker.id);
-			config.isWorker = true;
-			const serverWorker = await new Server(config, ...args);
-			process.on('message', (message) => {
-				if (message === 'registered') {
-					return console.log('Worker ACK REG', config.workerId);
-				}
-				const messageDecoded = decode(message);
-				console.log('MESSAGE FROM LOAD BALANCER');
-				if (hasValue(message)) {
-					return serverWorker.onPacket(messageDecoded[0], messageDecoded[1]);
-				} else {
-					console.log('Invalid Message decode failed from load balancer');
-				}
-			});
-			process.send('ready');
-			return serverWorker;
+			index++;
+			currentBytePosition += maxSize;
 		}
-	} else {
-		return new Server(config, ...args);
+		this.certificateChunks = chunks;
 	}
+	async setCertificate() {
+		const {
+			options,
+			options: { certificatePath, }
+		} = this;
+		if (certificatePath) {
+			this.certificate = await parseCertificate(certificatePath);
+			console.log(this.certificate);
+			this.certificatePublic = this.certificate.certificate;
+			this.keypair = {
+				publicKey: this.certificate.publicKey,
+				privateKey: this.certificate.privateKey,
+			};
+			if (this.certificate.ipVersion) {
+				this.ipVersion = this.certificate.ipVersion;
+			}
+		}
+		if (this.certificate) {
+			this.publicKeyCryptography = getPublicKeyAlgorithm(this.certificate.publicKeyAlgorithm);
+			const convertSignKeypairToEncryptionKeypair = processPublicKey(this.certificate);
+			if (convertSignKeypairToEncryptionKeypair) {
+				this.encryptionKeypair = convertSignKeypairToEncryptionKeypair;
+			}
+			const { encryptConnectionId } = this.certificate;
+			if (encryptConnectionId) {
+				const {
+					server: encryptServerCid,
+					client: encryptClientCid,
+					keypair: connectionIdKeypair
+				} = encryptConnectionId;
+				let encryptServer = hasValue(encryptServerCid);
+				let encryptClient = hasValue(encryptClientCid);
+				if (!encryptServer && !encryptClient) {
+					encryptServer = true;
+					encryptClient = true;
+				}
+				if (encryptServer) {
+					this.encryptServerConnectionId = true;
+					if (connectionIdKeypair) {
+						this.connectionIdKeypair = connectionIdKeypair;
+					} else {
+						this.connectionIdKeypair = this.encryptionKeypair;
+					}
+				}
+				if (encryptClient) {
+					this.encryptClientConnectionId = true;
+				}
+				console.log(`Encrypt Connection ID Server ${encryptServer} Client ${encryptClient}`);
+			}
+		}
+		console.log('publicKeyCryptography', this.publicKeyCryptography);
+	}
+	async configureNetwork() {
+		const { options } = this;
+		const port = options.port;
+		const ip = options.ip;
+		if (options.ip) {
+			this.ip = ip;
+		}
+		this.port = port;
+		console.log('Config Network', this.ip, this.port);
+	}
+	configConnectionId() {
+		const {
+			isWorker,
+			coreCount
+		} = this;
+		if (isFunction(this.id)) {
+			this.id = this.id(this);
+			return;
+		}
+		if (coreCount && this.workerId) {
+			const reservedConnectionIdSize = String(coreCount).length;
+			this.reservedConnectionIdSize = reservedConnectionIdSize;
+			const compiledId = this.workerId.padStart(reservedConnectionIdSize, '0');
+		} else if (!this.id) {
+			this.id = '0';
+		}
+		console.log('Config Server ID', this.id);
+	}
+	async initialize(options) {
+		console.log('-------SERVER INITIALIZING-------');
+		assign(this, options);
+		this.options = seal(assign({}, options));
+		info(this.options);
+		this.configConnectionId();
+		await this.setCertificate();
+		await this.configureNetwork();
+		await this.setupSocket();
+		await this.attachEvents();
+		console.log('-------SERVER INITIALIZED-------');
+		return this;
+	}
+	async send(packet, destination) {
+		return sendPacket(packet, this, this.socket, destination);
+	}
+	addRequestMethod(methods) {
+	}
+	updateWorkerState() {
+		this.syncWorkerState();
+	}
+	syncWorkerState() {
+		const { clientCount } = this;
+		process.send(encode(['state', {
+			clientCount
+		}]));
+	}
+	on(eventName, eventMethod) {
+		return createEvent(this.events, eventName, eventMethod);
+	}
+	off(eventName, eventMethod) {
+		return removeEvent(this.events, eventName, eventMethod);
+	}
+	triggerEvent(eventName, arg) {
+		success(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
+		return triggerEvent(this.events, eventName, this, arg);
+	}
+	clientCreated(client) {
+		this.clientCount++;
+		this.updateWorkerState();
+		console.log('Client Created', this.clientCount);
+	}
+	clientRemoved(connectionIdString) {
+		this.clients.delete(connectionIdString);
+		this.clientCount--;
+		this.updateWorkerState();
+		console.log('Client Removed', this.clientCount);
+	}
+	listen = listen;
+	onError = onError;
+	onListen = onListen;
+	onPacket = onPacket;
+	data = new Map();
+	realTime = true;
+	clientCount = 0;
+	port = 80;
+	ip = '::1';
+	connectionIdSize = 8;
+	events = new Map();
+	/*
+		* All created clients (clients) represent a client to server bi-directional connection until it is closed by either party.
+	*/
+	clients = construct(Map);
 }
-export { Server };
+export async function server(...args) {
+	return construct(Server, args);
+}

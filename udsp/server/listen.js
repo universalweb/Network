@@ -1,11 +1,11 @@
-import { promise } from '@universalweb/acid';
+import { hasValue, promise } from '@universalweb/acid';
 import { info } from '#logs';
-export async function listen() {
+export async function listen(portArg) {
 	const {
 		socket,
-		port,
 		ip,
 	} = this;
+	const port = hasValue(portArg) ? portArg : this.port;
 	info(`BIND SERVER`, ip, port);
 	await promise((accept) => {
 		socket.bind(port, ip, accept);

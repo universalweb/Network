@@ -1,18 +1,30 @@
-import { created } from './created.js';
 import {
-	decrypt, keypair,
-	serverSessionKeys, toBase64,
+	assign,
+	construct,
+	hasValue,
+	intersection,
+	isBoolean,
+	keys
+} from '@universalweb/acid';
+import { connectionIdToBuffer, generateConnectionId } from '#udsp/connectionId';
+import {
+	decrypt,
+	keypair,
+	randomBuffer,
 	randomConnectionId,
-	randomBuffer
+	serverSessionKeys,
+	toBase64
 } from '#crypto';
 import {
-	success, failed, imported, msgSent, info, msgReceived
+	failed,
+	imported,
+	info,
+	msgReceived,
+	msgSent,
+	success
 } from '#logs';
-import {
-	construct, keys, isBoolean, intersection, hasValue, assign
-} from '@universalweb/acid';
+import { created } from './created.js';
 import { getAlgorithm } from '../../cryptoMiddleware/index.js';
-import { generateConnectionId, connectionIdToBuffer } from '#udsp/connectionId';
 export async function initialize(config) {
 	const {
 		packet,
@@ -47,7 +59,7 @@ export async function initialize(config) {
 	}
 	success(`Client Connection ID: ${clientId.toString('hex')}`);
 	const publicKey = header[2];
-	console.log(packet.header);
+	console.log('Client initialize Packet Header', packet.header);
 	if (!publicKey) {
 		console.trace('Client Public Key is missing');
 		return;

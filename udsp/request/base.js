@@ -1,21 +1,35 @@
-import { destroy } from './destory.js';
-import { dataPacketization } from './dataPacketization.js';
-import { on } from './events/on.js';
-import { fire } from './events/fire.js';
-import { flushOutgoing, flushIncoming, flush } from './flush.js';
-import { onFrame } from './onFrame.js';
 import {
-	isBuffer, isPlainObject, isString, promise,
-	assign, objectSize, eachArray, jsonParse, construct,
-	isArray, clear, isFalse, isTrue, clearBuffer, hasValue, calcProgress, isUndefined
+	assign,
+	calcProgress,
+	clear,
+	clearBuffer,
+	construct,
+	eachArray,
+	hasValue,
+	isArray,
+	isBuffer,
+	isFalse,
+	isPlainObject,
+	isString,
+	isTrue,
+	isUndefined,
+	jsonParse,
+	objectSize,
+	promise
 } from '@universalweb/acid';
-import { encode, decode } from '#utilities/serialize';
-import { toBase64 } from '#crypto';
-import { onDataSync, callOnDataSyncEvent } from './onDataSync.js';
+import { callOnDataSyncEvent, onDataSync } from './onDataSync.js';
+import { createEvent, removeEvent, triggerEvent } from '../events.js';
+import { decode, encode } from '#utilities/serialize';
+import { flush, flushIncoming, flushOutgoing } from './flush.js';
+import { dataPacketization } from './dataPacketization.js';
+import { destroy } from './destory.js';
 import { onData } from './onData.js';
-import { onPath } from './onPath.js';
+import { onFrame } from './onFrame.js';
 import { onHead } from './onHead.js';
 import { onParameters } from './onParameters.js';
+import { onPath } from './onPath.js';
+import { success } from '#logs';
+import { toBase64 } from '#crypto';
 const noPayloadMethods = /0/;
 /**
  * @todo
@@ -152,6 +166,7 @@ export class Base {
 			incomingPath
 		} = this;
 		console.log('incomingPathPackets', this.incomingPathPackets);
+		console.log('incomingPath', incomingPath);
 		if (this.totalIncomingPathSize === this.currentIncomingPathSize) {
 			this.setPath();
 			this.sendParametersReady();
@@ -164,7 +179,6 @@ export class Base {
 				}
 			});
 		}
-		console.log('incomingPath', incomingPath);
 	}
 	async processParameters() {
 		if (this.parametersAssembled) {
@@ -231,14 +245,14 @@ export class Base {
 		}
 		this.sendPacket(message);
 	}
-	sendPathReady() {
+	async sendPathReady() {
 		if (this.state === 1) {
 			this.state = 2;
 		}
 		const message = this.getPacketTemplate(2);
 		this.sendPacket(message);
 	}
-	sendParametersReady() {
+	async sendParametersReady() {
 		if (this.state === 2) {
 			this.state = 3;
 		}
@@ -248,7 +262,7 @@ export class Base {
 		const message = this.getPacketTemplate(3);
 		this.sendPacket(message);
 	}
-	sendHeadReady() {
+	async sendHeadReady() {
 		if (this.state === 3) {
 			this.state = 4;
 		}
@@ -499,17 +513,25 @@ export class Base {
 		}
 		return message;
 	}
+	on(eventName, eventMethod) {
+		return createEvent(this.events, eventName, eventMethod);
+	}
+	off(eventName, eventMethod) {
+		return removeEvent(this.events, eventName, eventMethod);
+	}
+	triggerEvent(eventName, arg) {
+		success(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
+		return triggerEvent(this.events, eventName, this, arg);
+	}
 	destroy = destroy;
 	onFrame = onFrame;
-	sendPacket(message, headers, footer) {
-		console.log(this.source());
+	async sendPacket(message, headers, footer) {
+		// console.log('sendPacket this.source()', this.source());
 		this.source().send(message, headers, footer);
 	}
 	flushOutgoing = flushOutgoing;
 	flushIncoming = flushIncoming;
 	flush = flush;
-	on = on;
-	fire = fire;
 	onDataSync = onDataSync;
 	callOnDataSyncEvent = callOnDataSyncEvent;
 	onData = onData;
@@ -570,7 +592,7 @@ export class Base {
 	missingParametersPackets = construct(Map);
 	missingHeadPackets = construct(Map);
 	missingDataPackets = construct(Map);
-	events = {};
+	events = new Map();
 	header = {};
 	options = {};
 	head = {};

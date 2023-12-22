@@ -1,45 +1,48 @@
-import { connected } from './connected.js';
-import { initialize } from './initialize.js';
-import { created } from './created.js';
-import { destroy } from './destroy.js';
-import { received } from './received.js';
-import {
-	success,
-	failed,
-	imported,
-	msgSent,
-	info,
-	msgReceived
-} from '#logs';
 import {
 	UniqID,
-	construct,
 	assign,
-	promise,
-	isFalse,
-	isUndefined,
-	isFalsy,
+	construct,
+	eachArray,
 	hasValue,
 	isArray,
-	eachArray,
-	isPromise
+	isFalse,
+	isFalsy,
+	isPromise,
+	isUndefined,
+	promise
 } from '@universalweb/acid';
+import { createEvent, removeEvent, triggerEvent } from '../../events.js';
 import {
-	toBase64,
-	randomBuffer
+	failed,
+	imported,
+	info,
+	msgReceived,
+	msgSent,
+	success
+} from '#logs';
+import {
+	randomBuffer,
+	toBase64
 } from '#crypto';
-import { encodePacket } from '#udsp/encoding/encodePacket';
-import { sendPacket } from '#udsp/sendPacket';
 import { Reply } from '#udsp/request/reply';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
+import { connected } from './connected.js';
+import { created } from './created.js';
+import { destroy } from './destroy.js';
+import { encodePacket } from '#udsp/encoding/encodePacket';
+import { initialize } from './initialize.js';
 import { processFrame } from '#udsp/processFrame';
-import { createEvent, removeEvent, triggerEvent } from '../events.js';
+import { received } from './received.js';
+import { sendPacket } from '#udsp/sendPacket';
 /**
  * @TODO
  */
 export class Client {
 	constructor(config) {
-		const { server } = config;
+		const {
+			server,
+			app
+		} = config;
 		const client = this;
 		const {
 			requestMethods,
@@ -51,6 +54,9 @@ export class Client {
 		} = server;
 		this.server = function() {
 			return server;
+		};
+		this.app = function() {
+			return app;
 		};
 		this.requestMethods = requestMethods;
 		this.socket = server.socket;
@@ -95,8 +101,7 @@ export class Client {
 		info(`CLIENT EVENT -> reKey - ID:${this.connectionIdString}`);
 	}
 	async setSessionKeys() {
-		console.log(this.destination);
-		console.log(this);
+		console.log('Set session keys');
 		const sessionKeys = this.publicKeyCryptography.serverSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair, this.sessionKeys);
 		if (isUndefined(this.sessionKeys)) {
 			this.sessionKeys = sessionKeys;
@@ -116,7 +121,7 @@ export class Client {
 		info(`socket EVENT -> send - ID:${this.connectionIdString}`);
 		return received(this, frame, frameHeaders);
 	}
-	async authenticate(packet) {
+	async authenticate(frame, frameHeaders) {
 	}
 	async destroy(destroyCode) {
 		info(`socket EVENT -> destroy - ID:${this.connectionIdString}`);

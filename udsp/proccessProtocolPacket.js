@@ -1,4 +1,7 @@
-import { isNotNumber, isArray } from '@universalweb/acid';
+import {
+	isArray,
+	isNotNumber
+} from '@universalweb/acid';
 import { destroy } from './request/destory.js';
 export async function proccessProtocol(source, rpc, frame, header) {
 	console.log(`Processing Protocol Packet RPC ${rpc}`);
@@ -7,12 +10,14 @@ export async function proccessProtocol(source, rpc, frame, header) {
 		return;
 	}
 	switch (rpc) {
-		case 0:
+		case 0: {
 			source.intro(frame, header);
 			break;
-		default:
+		}
+		default: {
 			console.trace('Unknown Protocol Packet', frame, header);
 			break;
+		}
 	}
 }
 export async function proccessProtocolPacketFrame(source, frame, header) {

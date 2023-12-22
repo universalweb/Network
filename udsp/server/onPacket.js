@@ -1,15 +1,27 @@
-import {
-	success, failed, imported, msgSent, info, msgReceived
-} from '#logs';
-import { toBase64 } from '#crypto';
-import {
-	isEmpty, hasValue, isArray, eachAsyncArray, eachArray, isUndefined, isNumber, isFalse
-} from '@universalweb/acid';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
+import {
+	eachArray,
+	eachAsyncArray,
+	hasValue,
+	isArray,
+	isEmpty,
+	isFalse,
+	isNumber,
+	isUndefined
+} from '@universalweb/acid';
+import {
+	failed,
+	imported,
+	info,
+	msgReceived,
+	msgSent,
+	success
+} from '#logs';
 import { createClient } from './clients/index.js';
-import { reply } from '#udsp/request/reply';
-import { processFrame } from '../processFrame.js';
 import { proccessProtocolPacketHeader } from '#udsp/proccessProtocolPacket';
+import { processFrame } from '../processFrame.js';
+import { reply } from '#udsp/request/reply';
+import { toBase64 } from '#crypto';
 export async function onPacket(packet, connection) {
 	const thisServer = this;
 	msgReceived('Message Received');
@@ -25,6 +37,9 @@ export async function onPacket(packet, connection) {
 	const id = config.packetDecoded.id;
 	const idString = id.toString('hex');
 	console.log(thisServer.clients, idString);
+	if (!idString) {
+		return console.trace('Invalid Client id given', idString);
+	}
 	let client = thisServer.clients.get(idString);
 	if (client) {
 		config.destination = client;

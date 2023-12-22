@@ -1,10 +1,14 @@
 import {
-	success, failed, imported, msgSent, info
+	failed,
+	imported,
+	info,
+	msgSent,
+	success
 } from '#logs';
-import { promise, isFunction } from '@universalweb/acid';
+import { isFunction, promise } from '@universalweb/acid';
 import { encodePacket } from '#udsp/encoding/encodePacket';
 export async function sendPacket(message, source, socket, destination = source.destination, headers, footer) {
-	success(`sendPacket`);
+	// console.log(`sendPacket`, source);
 	const {
 		server,
 		isClient,
