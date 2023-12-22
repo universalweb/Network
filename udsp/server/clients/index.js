@@ -101,8 +101,7 @@ export class Client {
 		info(`CLIENT EVENT -> reKey - ID:${this.connectionIdString}`);
 	}
 	async setSessionKeys() {
-		console.log(this.destination);
-		console.log(this);
+		console.log('Set session keys');
 		const sessionKeys = this.publicKeyCryptography.serverSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair, this.sessionKeys);
 		if (isUndefined(this.sessionKeys)) {
 			this.sessionKeys = sessionKeys;

@@ -1,15 +1,18 @@
 import {
-	hasValue, isArray, isFalse, isNumber,
+	hasValue,
+	isArray,
+	isFalse,
+	isNumber,
 } from '@universalweb/acid';
+import { onData, onDataReady } from './rpc/onData.js';
+import { onHead, onHeadReady } from './rpc/onHead.js';
+import { onParameters, onParametersReady } from './rpc/onParameters.js';
+import { onPath, onPathReady } from './rpc/onPath.js';
 import { destroy } from './destory.js';
-import { processEvent } from '#server/processEvent';
-import { onSetup } from './rpc/onSetup.js';
-import { onPathReady, onPath } from './rpc/onPath.js';
-import { onParametersReady, onParameters } from './rpc/onParameters.js';
-import { onHeadReady, onHead } from './rpc/onHead.js';
-import { onDataReady, onData } from './rpc/onData.js';
 import { onEnd } from './rpc/onEnd.js';
 import { onError } from './rpc/onError.js';
+import { onSetup } from './rpc/onSetup.js';
+import { processEvent } from '#server/processEvent';
 /**
  * 0 Intro Packet.
  * 1 Setup Packet.

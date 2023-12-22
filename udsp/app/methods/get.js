@@ -1,9 +1,9 @@
-import { isString, isEmpty, hasDot } from '@universalweb/acid';
+import { hasDot, isEmpty, isString } from '@universalweb/acid';
 import cleanPath from '#cleanPath';
-import { info } from '#logs';
-import { read } from '#utilities/file';
 import { promises as fs } from 'fs';
+import { info } from '#logs';
 import path from 'path';
+import { read } from '#utilities/file';
 const dots = /\./g;
 /**
  * @todo

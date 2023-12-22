@@ -1,5 +1,8 @@
 import {
-	eachObject, jsonParse, isTrue, noValue
+	eachObject,
+	isTrue,
+	jsonParse,
+	noValue
 } from '@universalweb/acid';
 import { decode } from '#utilities/serialize';
 const requestMethods = {
@@ -46,7 +49,6 @@ export const objectGetSetMethods = {
 			return this.source().parameters;
 		},
 		path() {
-			console.log(this);
 			return this.source().path;
 		}
 	},

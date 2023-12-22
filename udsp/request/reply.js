@@ -3,16 +3,30 @@
 	* Server receives a request from a client & creates a request and response object to pass along to the endpoint
 */
 import {
-	isEmpty, isBuffer, promise, eachArray, assign, construct, stringify, hasValue, get, objectSize, isArray
+	assign,
+	construct,
+	eachArray,
+	get,
+	hasValue,
+	isArray,
+	isBuffer,
+	isEmpty,
+	objectSize,
+	promise,
+	stringify
 } from '@universalweb/acid';
 import { decode, encode } from '#utilities/serialize';
 import {
-	success, failed, info, msgReceived, msgSent
+	failed,
+	info,
+	msgReceived,
+	msgSent,
+	success
 } from '#logs';
-import { processEvent } from '#server/processEvent';
 import { Base } from './base.js';
-import { numberEncodedSize } from './numberEncodedSize.js';
 import { flushOutgoing } from './flush.js';
+import { numberEncodedSize } from './numberEncodedSize.js';
+import { processEvent } from '#server/processEvent';
 import { serverRequestObject } from './objects/server/request.js';
 import { serverResponseObject } from './objects/server/response.js';
 /**

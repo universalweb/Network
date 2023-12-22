@@ -49,31 +49,6 @@ export class Server extends UDSP {
 	static type = 'server';
 	isServer = true;
 	isServerEnd = true;
-	async onLoadbalancer(packet, connection) {
-		msgReceived('Message Received');
-		const config = {
-			packet,
-			connection,
-			destination: this,
-		};
-		const wasHeadersDecoded = await decodePacketHeaders(config);
-		if (isUndefined(wasHeadersDecoded)) {
-			return console.trace('Invalid Packet Headers');
-		}
-		const id = config.packetDecoded.id;
-		const key = config.packetDecoded.key;
-		const idString = id.toString('hex');
-		const reservedSmartRoute = idString.substring(0, this.reservedConnectionIdSize);
-		console.log(`Loadbalancer got an id ${idString}`);
-		if (key) {
-			console.log(`Loadbalancer has a new client ${idString}`);
-		}
-		const worker = this.workers[1];
-		const passMessage = encode([packet, connection]);
-		if (worker && passMessage) {
-			worker.process.send(passMessage);
-		}
-	}
 	attachEvents() {
 		const thisServer = this;
 		this.socket.on('error', (err) => {
@@ -82,16 +57,9 @@ export class Server extends UDSP {
 		this.socket.on('listening', () => {
 			return thisServer.onListen();
 		});
-		if (this.isPrimary) {
-			this.socket.on('message', (packet, rinfo) => {
-				return thisServer.onLoadbalancer(packet, rinfo);
-				// return thisServer.onPacket(packet, rinfo);
-			});
-		} else {
-			this.socket.on('message', (packet, rinfo) => {
-				return thisServer.onPacket(packet, rinfo);
-			});
-		}
+		this.socket.on('message', (packet, rinfo) => {
+			return thisServer.onPacket(packet, rinfo);
+		});
 	}
 	chunkCertificate() {
 		const certificate = this.publicCertificate;
@@ -233,8 +201,7 @@ export class Server extends UDSP {
 		success(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
 		return triggerEvent(this.events, eventName, this, arg);
 	}
-	clientCreated(client, connectionIdString) {
-		this.clients.set(connectionIdString, client);
+	clientCreated(client) {
 		this.clientCount++;
 		this.updateWorkerState();
 		console.log('Client Created', this.clientCount);

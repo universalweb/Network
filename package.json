@@ -25,6 +25,7 @@
 		"@universalweb/acid": "^3.0.63",
 		"@universalweb/docredux": "^3.2.2",
 		"auto-changelog": "^2.4.0",
+		"axios": "^1.6.2",
 		"benchmark": "^2.1.4",
 		"cbor-x": "^1.5.6",
 		"electron": "^23.1.3",

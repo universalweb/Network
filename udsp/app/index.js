@@ -1,12 +1,22 @@
 import * as routers from '../router/index.js';
-import { Server, server } from '#server';
-import { assign, hasValue } from '@universalweb/acid';
+import * as servers from '#server';
+import { assign, hasValue, isUndefined } from '@universalweb/acid';
+import { decode, encode } from '#utilities/serialize';
 import cluster from 'node:cluster';
-import { decode } from '#utilities/serialize';
+import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { getCoreCount } from '#utilities/hardware/cpu';
+import { initialize } from '#server/clients/initialize';
+import { msgReceived } from '#logs';
 import { onPacket } from '../server/onPacket.js';
 import { requestMethods } from './methods/index.js';
-const { router: createRouter } = routers;
+const {
+	router: createRouter,
+	Router
+} = routers;
+const {
+	Server,
+	server: createServer,
+} = servers;
 const numCPUs = getCoreCount();
 function workerReady(worker) {
 	worker.ready = true;
@@ -31,29 +41,125 @@ function workerOnMessage(workers, worker, msg) {
 }
 export class App {
 	constructor(options) {
-		const {
-			server: serverOptions,
-			router: routerOptions
-		} = options;
-		if (server) {
-			this.server = server(serverOptions);
+		return this.initialize(options);
+	}
+	async initialize(options) {
+		const { router: routerOptions } = options;
+		if (options) {
+			if (options.constructor === Server) {
+				this.use(options);
+			} else {
+				this.server = await createServer(options);
+				this.useServer(this.server);
+			}
 		}
 		if (routerOptions) {
-			this.router = createRouter(routerOptions);
+			if (routerOptions.constructor === Router) {
+				this.use(routerOptions);
+			} else {
+				this.router = await createRouter(routerOptions);
+			}
+		}
+		return this;
+	}
+	async onLoadbalancer(packet, connection) {
+		msgReceived('Message Received');
+		const config = {
+			packet,
+			connection,
+			destination: this,
+		};
+		const wasHeadersDecoded = await decodePacketHeaders(config);
+		if (isUndefined(wasHeadersDecoded)) {
+			return console.trace('Invalid Packet Headers');
+		}
+		const id = config.packetDecoded.id;
+		const key = config.packetDecoded.key;
+		const idString = id.toString('hex');
+		const reservedSmartRoute = idString.substring(0, this.reservedConnectionIdSize);
+		console.log(`Loadbalancer got an id ${idString}`);
+		if (key) {
+			console.log(`Loadbalancer has a new client ${idString}`);
+		}
+		const worker = this.workers[1];
+		const passMessage = encode([packet, connection]);
+		if (worker && passMessage) {
+			worker.process.send(passMessage);
+		}
+	}
+	async onPacket(packet, connection) {
+		return this.server.onPacket(packet, connection);
+	}
+	use(primaryArg, ...args) {
+		if (primaryArg.constructor === Router) {
+			this.router = primaryArg;
+		} else if (primaryArg.constructor === Server) {
+			this.useServer(primaryArg);
+		} else {
+			this.router.all(primaryArg, ...args);
+		}
+		return this;
+	}
+	addMiddleware() {
+	}
+	useServer(createdServer) {
+		this.server = createdServer;
+		const thisApp = this;
+		createdServer.onRequest = function(request, response, client) {
+			return thisApp.onRequest(request, response, client);
+		};
+	}
+	async onRequest(request, response, client) {
+		const {
+			rootRouter,
+			router,
+		} = this;
+		if (rootRouter) {
+			console.log('Root Router Running');
+			await rootRouter.handle(request, response, client);
+		}
+		if (router) {
+			console.log('Router Running');
+			return router.handle(request, response, client);
 		}
 	}
 	data = new Map();
+	rootRouter = new Router();
 	listen(port) {
 		return this.server.listen(port);
 	}
-	all(...args) {
-		return this.router.all(...args);
+	all(path, callback) {
+		return this.rootRouter.all(path, callback);
 	}
-	get(...args) {
-		return this.router.get(...args);
+	get(path, callback) {
+		return this.rootRouter.get(path, callback);
 	}
-	post(...args) {
-		return this.router.post(...args);
+	post(path, callback) {
+		return this.rootRouter.post(path, callback);
+	}
+	api(path, callback) {
+		return this.rootRouter.api(path, callback);
+	}
+	getItem(key) {
+		return this.data.get(key);
+	}
+	hasItem(key) {
+		return this.data.has(key);
+	}
+	has(...args) {
+		return this.hasItem();
+	}
+	setItem(key, item) {
+		return this.data.set(key, item);
+	}
+	set(key, item) {
+		return this.setItem(key, item);
+	}
+	deleteItem(key) {
+		return this.server.delete(key);
+	}
+	delete(key) {
+		return this.deleteItem(key);
 	}
 }
 export async function app(config, ...args) {
@@ -81,7 +187,10 @@ export async function app(config, ...args) {
 			console.log(`Primary ${process.pid} is running spawning ${coreCount} instances.`);
 			config.isPrimary = true;
 			config.workerId = String(0);
-			const masterLoadBalancer = await new Server(config, ...args);
+			const masterLoadBalancer = await new App(config, ...args);
+			masterLoadBalancer.server.onPacket = function(packet, connection) {
+				return masterLoadBalancer.onLoadbalancer(packet, connection);
+			};
 			const workers = [];
 			masterLoadBalancer.workers = workers;
 			for (let index = 0; index < coreCount; index++) {
@@ -112,7 +221,7 @@ export async function app(config, ...args) {
 			config.port = (scale.port || (config.port + 1)) + cluster.worker.id;
 			config.workerId = String(cluster.worker.id);
 			config.isWorker = true;
-			const serverWorker = await new Server(config, ...args);
+			const serverWorker = await new App(config, ...args);
 			process.on('message', (message) => {
 				if (message === 'registered') {
 					return console.log('Worker ACK REG', config.workerId);
@@ -129,6 +238,6 @@ export async function app(config, ...args) {
 			return serverWorker;
 		}
 	} else {
-		return new Server(config, ...args);
+		return new App(config, ...args);
 	}
 }

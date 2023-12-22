@@ -1,5 +1,12 @@
 import {
-	eachObject, jsonParse, isTrue, noValue, assign, clear, hasValue, isUndefined
+	assign,
+	clear,
+	eachObject,
+	hasValue,
+	isTrue,
+	isUndefined,
+	jsonParse,
+	noValue
 } from '@universalweb/acid';
 import { decode, encode } from '#utilities/serialize';
 export const objectDataMethods = {

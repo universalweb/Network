@@ -2,10 +2,11 @@
 	* App server example
 */
 import { app } from '#udsp';
-import { info } from '#logs';
 import { currentPath } from '@universalweb/acid';
-import path from 'path';
+import { get } from '../udsp/app/methods/get.js';
+import { info } from '#logs';
 import { listen } from '../udsp/server/listen.js';
+import path from 'node:path';
 const uwApp = await app({
 	// Cluster Mode
 	// The main server will be the only server that will be able to accept new connections and will forward them to the relevant server in the cluster acting in part as a load balancer
@@ -52,7 +53,8 @@ const uwApp = await app({
 });
 if (uwApp) {
 	uwApp.get((req, resp, client) => {
-		info('Client Connected', client.id);
+		info('GET REQUEST APP LEVEL');
+		return get(req, resp, client);
 	});
 	uwApp.listen();
 }

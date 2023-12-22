@@ -37,6 +37,9 @@ export async function onPacket(packet, connection) {
 	const id = config.packetDecoded.id;
 	const idString = id.toString('hex');
 	console.log(thisServer.clients, idString);
+	if (!idString) {
+		return console.trace('Invalid Client id given', idString);
+	}
 	let client = thisServer.clients.get(idString);
 	if (client) {
 		config.destination = client;

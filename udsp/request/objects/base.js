@@ -1,8 +1,19 @@
 import {
-	promise, assign, omit, eachArray,
-	stringify, get, isBuffer,
-	isPlainObject, isArray, isMap, construct,
-	each, hasLength, hasValue, UniqID
+	UniqID,
+	assign,
+	construct,
+	each,
+	eachArray,
+	get,
+	hasLength,
+	hasValue,
+	isArray,
+	isBuffer,
+	isMap,
+	isPlainObject,
+	omit,
+	promise,
+	stringify
 } from '@universalweb/acid';
 import { decode, encode } from '#utilities/serialize';
 import {

@@ -1,17 +1,20 @@
 import {
-	jsonParse, isTrue, construct, hasValue, noValue
+	construct,
+	hasValue,
+	isTrue,
+	jsonParse,
+	noValue
 } from '@universalweb/acid';
-import { decode } from '#utilities/serialize';
 import { Base } from '../base.js';
+import { decode } from '#utilities/serialize';
 import { objectGetSetMethods } from '../objectGetSetMethods.js';
 export class ServerResponse extends Base {
-	constructor(config) {
-		super(config);
-	}
+	// constructor(config) {
+	// 	super(config);
+	// }
 	isResponse = true;
 	isClientResponse = true;
 	send(data) {
-		console.log(this.source());
 		this.sent = true;
 		return this.source().send(data);
 	}
