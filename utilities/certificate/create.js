@@ -1,12 +1,16 @@
-import { logCert, imported } from '#logs';
-import { read, write } from '#file';
-import { signKeypair, signDetached, toBase64 } from '#crypto';
-import { keychainSave } from '#keychain';
-import { saveCertificate, saveProfile } from './save.js';
 import {
-	assign, merge, clone, promise, isBuffer
+	assign,
+	clone,
+	isBuffer,
+	merge,
+	promise
 } from '@universalweb/acid';
-import { encode, decode } from '#utilities/serialize';
+import { decode, encode } from '#utilities/serialize';
+import { imported, logCert } from '#logs';
+import { read, write } from '#file';
+import { saveCertificate, saveProfile } from './save.js';
+import { signDetached, signKeypair, toBase64 } from '#crypto';
+import { keychainSave } from '#keychain';
 function certificateFactory(config, options = {}) {
 	const currentDate = new Date();
 	const certificate = {

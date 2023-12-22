@@ -1,7 +1,11 @@
+import { construct, isString, promise } from '@universalweb/acid';
 import {
-	success, failed, imported, msgSent, info
+	failed,
+	imported,
+	info,
+	msgSent,
+	success
 } from '#logs';
-import { promise, construct, isString } from '@universalweb/acid';
 import { clientResponseObject } from '../request/objects/client/response.js';
 // If path arg has params in it then paramArg becomes dataArg
 // params support both Complex Data Binary Supported Params and simple traditional URL percent encoded params

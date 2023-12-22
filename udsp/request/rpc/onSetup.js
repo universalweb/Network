@@ -1,4 +1,4 @@
-import { hasValue, isNumber, isNotNumber } from '@universalweb/acid';
+import { hasValue, isNotNumber, isNumber } from '@universalweb/acid';
 export async function onSetup(id, rpc, packetId, data, frame, source) {
 	if (source.receivedSetupPacket) {
 		return;

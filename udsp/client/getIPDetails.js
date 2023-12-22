@@ -1,5 +1,5 @@
-import { isArray } from '@universalweb/acid';
 import { getWANIPAddress } from '../../utilities/network/getWANIPAddress.js';
+import { isArray } from '@universalweb/acid';
 let ipInfo;
 let globalIpVersion;
 try {

@@ -1,6 +1,6 @@
-import { write } from '#file';
+import { normalize, resolve } from 'path';
 import { encode } from '#utilities/serialize';
-import { resolve, normalize } from 'path';
+import { write } from '#file';
 export async function saveCertificate(config) {
 	const {
 		certificate,

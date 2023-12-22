@@ -1,7 +1,11 @@
+import { construct, isString, promise } from '@universalweb/acid';
 import {
-	success, failed, imported, msgSent, info
+	failed,
+	imported,
+	info,
+	msgSent,
+	success
 } from '#logs';
-import { promise, construct, isString } from '@universalweb/acid';
 export async function post(path, data, parameters, headers, options) {
 	info(`POST => ${path}`);
 	const request = await this.request(1, path, parameters, data, headers, options);

@@ -1,12 +1,12 @@
-import chalk from 'chalk';
 import {
-	stringify,
 	each,
-	isPrimitive,
 	initialString,
 	isArray,
-	isBuffer
+	isBuffer,
+	isPrimitive,
+	stringify
 } from '@universalweb/acid';
+import chalk from 'chalk';
 const arrayNumberRegex = /\[([\d\s,]*?)\]/gm;
 function truncateArray(match) {
 	return match.replace(/\s/gm, '');

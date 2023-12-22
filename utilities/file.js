@@ -1,13 +1,13 @@
-import fs from 'node:fs';
-const { readFileSync } = fs;
+import { jsonParse, promise } from '@universalweb/acid';
 import {
-	writeFile,
 	readFile,
+	writeFile,
 } from 'node:fs/promises';
-import { promise, jsonParse } from '@universalweb/acid';
-import path from 'path';
-const { normalize } = path;
 import { decode } from '#utilities/serialize';
+import fs from 'node:fs';
+import path from 'path';
+const { readFileSync } = fs;
+const { normalize } = path;
 function createFoldersIfNotExist(folderPath) {
 	const directories = path.normalize(folderPath).split(path.sep);
 	let currentPath = `${path.sep}`;

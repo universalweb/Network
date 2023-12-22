@@ -1,7 +1,9 @@
 import {
-	success, failed,
-	imported, msgSent,
-	info
+	failed,
+	imported,
+	info,
+	msgSent,
+	success
 } from '#logs';
 import { promise, stringify } from '@universalweb/acid';
 export function onListening() {
