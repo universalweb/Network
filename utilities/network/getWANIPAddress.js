@@ -1,5 +1,5 @@
-import { forEachAsync } from '@universalweb/acid';
 import axios from 'axios';
+import { forEachAsync } from '@universalweb/acid';
 const ipv6Servers = ['https://api64.ipify.org?format=json'];
 const ipv4Servers = ['https://api.ipify.org?format=json'];
 async function fetchFromAPI(url) {

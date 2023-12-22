@@ -1,9 +1,16 @@
 import {
-	success, failed, imported, msgSent, info
-} from '#logs';
-import {
-	promise, construct, isString, isPlainObject
+	construct,
+	isPlainObject,
+	isString,
+	promise
 } from '@universalweb/acid';
+import {
+	failed,
+	imported,
+	info,
+	msgSent,
+	success
+} from '#logs';
 import { getMethodId } from '../methods.js';
 // If path arg has params in it then paramArg becomes dataArg
 // params support both Complex Data Binary Supported Params and simple traditional URL percent encoded params

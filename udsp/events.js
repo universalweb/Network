@@ -1,10 +1,10 @@
 import {
-	isPlainObject,
-	each,
-	isArray,
 	assign,
+	each,
+	eachArray,
 	invokeArray,
-	eachArray
+	isArray,
+	isPlainObject
 } from '@universalweb/acid';
 import { imported } from '#logs';
 export async function triggerEvent(events, eventName, primaryObject, arg) {

@@ -1,4 +1,4 @@
 import { decode } from '#utilities/serialize';
-import { readMsgpack } from './file.js';
 import { parseCertificate } from '#certificate';
+import { readMsgpack } from './file.js';
 // console.log(decode(readMsgpack('').certificate));

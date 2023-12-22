@@ -1,11 +1,11 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
+import { currentPath } from '@universalweb/acid';
+import fetchIt from 'node-fetch';
+import fs from 'fs';
 import https from 'https';
 const serverIp = '::1';
 const hostname = `[${serverIp}]`;
 const port = 8888;
-import fs from 'fs';
-import { currentPath } from '@universalweb/acid';
-import fetchIt from 'node-fetch';
 const dirname = currentPath(import.meta);
 const options = {
 	key: fs.readFileSync(`${currentPath(import.meta)}/key.pem`),

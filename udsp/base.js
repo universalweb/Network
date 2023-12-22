@@ -1,10 +1,14 @@
 import {
-	construct, UniqID, each, hasValue, assign
+	UniqID,
+	assign,
+	construct,
+	each,
+	hasValue
 } from '@universalweb/acid';
-import dgram from 'dgram';
-import { randomConnectionId, randomBuffer, toBase64 } from '#crypto';
-import { cipherSuites } from './cryptoMiddleware/index.js';
+import { randomBuffer, randomConnectionId, toBase64 } from '#crypto';
 import { calculatePacketOverhead } from './calculatePacketOverhead.js';
+import { cipherSuites } from './cryptoMiddleware/index.js';
+import dgram from 'dgram';
 export class UDSP {
 	constructor(options) {
 		this.cipherSuiteName = cipherSuites.version[this.version][0].name;

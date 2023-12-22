@@ -1,6 +1,6 @@
-import { hasValue, has, intersection } from '@universalweb/acid';
-import { success } from '#logs';
 import { getAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
+import { has, hasValue, intersection } from '@universalweb/acid';
+import { success } from '#logs';
 export async function configCryptography() {
 	// console.log(this.cryptography);
 	const { destination, } = this;

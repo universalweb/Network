@@ -1,14 +1,22 @@
-import {
-	success, failed, imported, msgSent, info, msgReceived
-} from '#logs';
+import { createSessionKey, decrypt } from '#crypto';
 import { decode, encode } from '#utilities/serialize';
-import { decrypt, createSessionKey } from '#crypto';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
-import { processFrame } from '../processFrame.js';
 import {
-	hasValue, isArray, isFalse, isNumber
+	failed,
+	imported,
+	info,
+	msgReceived,
+	msgSent,
+	success
+} from '#logs';
+import {
+	hasValue,
+	isArray,
+	isFalse,
+	isNumber
 } from '@universalweb/acid';
 import { proccessProtocolPacketHeader } from '#udsp/proccessProtocolPacket';
+import { processFrame } from '../processFrame.js';
 export async function onPacket(packet) {
 	msgReceived('Packet Received');
 	const config = {

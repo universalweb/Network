@@ -1,7 +1,11 @@
+import { construct, isString, promise } from '@universalweb/acid';
 import {
-	success, failed, imported, msgSent, info
+	failed,
+	imported,
+	info,
+	msgSent,
+	success
 } from '#logs';
-import { promise, construct, isString } from '@universalweb/acid';
 // To send a request but only receive AN ACKNOWLEDGEMENT
 export async function emit(endpoint, data, parameters, headers, options) {
 	info(`emit => ${endpoint}`);
