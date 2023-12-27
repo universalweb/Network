@@ -1,4 +1,4 @@
-export async function created(client) {
-	const server = client.server();
-	server.clientCreated(client);
+export async function created() {
+	const server = this.server();
+	server.clientCreated(this);
 }

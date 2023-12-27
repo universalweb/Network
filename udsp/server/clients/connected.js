@@ -6,8 +6,8 @@ import {
 	msgSent,
 	success
 } from '#logs';
-export async function connected(client) {
-	client.lastAct = Date.now();
-	clearTimeout(client.connectionGracePeriod);
-	success(`client Connected -> ID: ${client.id}`);
+export async function connected() {
+	this.lastAct = Date.now();
+	clearTimeout(this.connectionGracePeriod);
+	success(`client Connected -> ID: ${this.id}`);
 }
