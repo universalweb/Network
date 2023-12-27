@@ -1,5 +1,5 @@
-import { isString } from '@universalweb/acid';
 import { client } from './client/index.js';
+import { isString } from '@universalweb/acid';
 import { uwrl } from './UWRL/index.js';
 export async function request(method = 0, url, params, data) {
 	const uwrlObject = isString(url) ? uwrl(url) : url;

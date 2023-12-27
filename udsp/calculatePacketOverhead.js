@@ -1,5 +1,5 @@
-import { encode } from '#utilities/serialize';
 import { assign, hasValue } from '@universalweb/acid';
+import { encode } from '#utilities/serialize';
 const cache = {};
 export const maxDefaultPacketSize = 1280;
 export const packetInitialOverhead = 6;

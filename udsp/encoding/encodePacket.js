@@ -1,28 +1,28 @@
 import {
-	success,
-	failed,
-	imported,
-	msgSent,
-	info
-} from '#logs';
-import {
-	encode,
-	decode
-} from '#utilities/serialize';
-import {
 	assign,
 	chunk,
-	omit,
-	objectSize,
+	isArray,
 	isPlainObject,
-	isArray
+	objectSize,
+	omit
 } from '@universalweb/acid';
-import { toBase64 } from '#crypto';
+import {
+	decode,
+	encode
+} from '#utilities/serialize';
+import {
+	failed,
+	imported,
+	info,
+	msgSent,
+	success
+} from '#logs';
 import { maxDefaultPacketSize } from '../calculatePacketOverhead.js';
+import { toBase64 } from '#crypto';
 /**
- 	* @todo
-	* - Set Smart Id Routing up.
-	* - If the packet is a request, then it should be sent to the server.
+ * @todo
+ * - Set Smart Id Routing up.
+ * - If the packet is a request, then it should be sent to the server.
  */
 // [id, RPC, ...Args]
 export async function encodePacket(message = Buffer.from(0), source, destination, headers, footer) {

@@ -1,5 +1,10 @@
 import {
-	initialString, isPlainObject, isString, jsonParse, restString, stringify
+	initialString,
+	isPlainObject,
+	isString,
+	jsonParse,
+	restString,
+	stringify
 } from '@universalweb/acid';
 const ipRegex = /^\b(?:\d{1,3}\.){3}\d{1,3}\b$/;
 class UWRL {
