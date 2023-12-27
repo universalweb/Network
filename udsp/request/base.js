@@ -234,7 +234,7 @@ export class Base {
 		if (this.state === 0) {
 			this.state = 1;
 		}
-		const message = this.getPacketTemplate(1);
+		const message = this.getPacketTemplate(0);
 		if (isAsk) {
 			message.push(this.method, this.outgoingPathSize, this.outgoingParametersSize, this.outgoingHeadSize);
 		} else {
@@ -249,7 +249,7 @@ export class Base {
 		if (this.state === 1) {
 			this.state = 2;
 		}
-		const message = this.getPacketTemplate(2);
+		const message = this.getPacketTemplate(1);
 		this.sendPacket(message);
 	}
 	async sendParametersReady() {
@@ -269,7 +269,7 @@ export class Base {
 		if (this.totalIncomingHeadSize === 0) {
 			return this.sendDataReady();
 		}
-		const message = this.getPacketTemplate(4);
+		const message = this.getPacketTemplate(5);
 		this.sendPacket(message);
 	}
 	sendDataReady() {
@@ -282,11 +282,11 @@ export class Base {
 		if (this.totalIncomingDataSize === 0) {
 			return this.completeReceived();
 		}
-		const message = this.getPacketTemplate(5);
+		const message = this.getPacketTemplate(7);
 		this.sendPacket(message);
 	}
 	async sendEnd() {
-		const message = this.getPacketTemplate(10);
+		const message = this.getPacketTemplate(9);
 		this.sendPacket(message);
 	}
 	async pathPacketization() {
@@ -309,7 +309,7 @@ export class Base {
 		const outgoingPathSize = this.outgoingPathSize;
 		console.log('maxFrameSize', maxFrameSize);
 		while (currentBytePosition < outgoingPathSize) {
-			const message = this.getPacketTemplate(6);
+			const message = this.getPacketTemplate(2);
 			message.push(packetId);
 			const endIndex = currentBytePosition + maxFrameSize;
 			const safeEndIndex = endIndex > outgoingPathSize ? outgoingPathSize : endIndex;
@@ -345,7 +345,7 @@ export class Base {
 		const outgoingParametersSize = this.outgoingParametersSize;
 		console.log('maxFrameSize', maxFrameSize);
 		while (currentBytePosition < outgoingParametersSize) {
-			const message = this.getPacketTemplate(7);
+			const message = this.getPacketTemplate(4);
 			message.push(packetId);
 			const endIndex = currentBytePosition + maxFrameSize;
 			const safeEndIndex = endIndex > outgoingParametersSize ? outgoingParametersSize : endIndex;
@@ -381,7 +381,7 @@ export class Base {
 		const headSize = this.outgoingHeadSize;
 		console.log('maxFrameSize', maxFrameSize);
 		while (currentBytePosition < headSize) {
-			const message = this.getPacketTemplate(8);
+			const message = this.getPacketTemplate(6);
 			message.push(packetId);
 			const endIndex = currentBytePosition + maxFrameSize;
 			const safeEndIndex = endIndex > headSize ? headSize : endIndex;

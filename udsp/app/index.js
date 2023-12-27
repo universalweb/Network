@@ -110,35 +110,28 @@ export class App {
 		};
 	}
 	async onRequest(request, response, client) {
-		const {
-			rootRouter,
-			router,
-		} = this;
-		if (rootRouter) {
-			console.log('Root Router Running');
-			await rootRouter.handle(request, response, client);
-		}
+		const { router, } = this;
 		if (router) {
-			console.log('Router Running');
-			return router.handle(request, response, client);
+			console.log('Root Router Running');
+			await router.handle(request, response, client);
 		}
 	}
 	data = new Map();
-	rootRouter = new Router();
+	router = new Router();
 	listen(port) {
 		return this.server.listen(port);
 	}
 	all(path, callback) {
-		return this.rootRouter.all(path, callback);
+		return this.router.all(path, callback);
 	}
 	get(path, callback) {
-		return this.rootRouter.get(path, callback);
+		return this.router.get(path, callback);
 	}
 	post(path, callback) {
-		return this.rootRouter.post(path, callback);
+		return this.router.post(path, callback);
 	}
 	api(path, callback) {
-		return this.rootRouter.api(path, callback);
+		return this.router.api(path, callback);
 	}
 	getItem(key) {
 		return this.data.get(key);

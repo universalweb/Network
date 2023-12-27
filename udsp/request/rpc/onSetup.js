@@ -1,12 +1,14 @@
 import { hasValue, isNotNumber, isNumber } from '@universalweb/acid';
+import { isMethodCodeValid } from '../../isMethodCodeValid.js';
 export async function onSetup(id, rpc, packetId, data, frame, source) {
 	if (source.receivedSetupPacket) {
+		console.log('Received Setup Packet Already');
 		return;
 	}
 	const { isAsk } = source;
 	source.totalReceivedUniquePackets++;
 	source.receivedSetupPacket = true;
-	let method;
+	let rpcMethod;
 	let totalIncomingHeadSize;
 	let totalIncomingDataSize;
 	let totalIncomingPathSize;
@@ -14,12 +16,12 @@ export async function onSetup(id, rpc, packetId, data, frame, source) {
 	if (isAsk) {
 		[, , totalIncomingHeadSize, totalIncomingDataSize] = frame;
 	} else {
-		[, , method = 0, totalIncomingPathSize, totalIncomingParametersSize, totalIncomingHeadSize, totalIncomingDataSize] = frame;
-		if (isNotNumber(method) || method < 0 || method > 10) {
+		[, , rpcMethod, totalIncomingPathSize, totalIncomingParametersSize, totalIncomingHeadSize, totalIncomingDataSize] = frame;
+		if (isMethodCodeValid(rpcMethod) === false) {
 			source.close();
 			return;
 		}
-		source.method = method;
+		source.method = rpcMethod;
 	}
 	console.log(`Setup Packet Received HEADER:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
 	if (hasValue(totalIncomingPathSize) && isNumber(totalIncomingPathSize)) {
