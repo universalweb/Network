@@ -231,24 +231,19 @@ export class Client extends UDSP {
 		this.introSent = true;
 		this.send(message, header);
 	}
-	sendDiscovery() {
-		console.log('Sending Intro');
-		this.state = 1;
-		const header = [1];
-		this.introSent = true;
-		this.send(null, header);
-	}
 	ensureHandshake() {
 		if (this.connected === true) {
 			console.log('ALREADY CONNECTED');
 			return true;
-		} else if (!this.handshakeCompleted) {
-			this.awaitHandshake = promise((accept) => {
-				console.log('HANDSHAKE AWAITING');
-				this.handshakeCompleted = accept;
-			});
-			this.sendIntro();
 		}
+		if (this.handshakeCompleted) {
+			return this.awaitHandshake;
+		}
+		this.awaitHandshake = promise((accept) => {
+			console.log('HANDSHAKE AWAITING');
+			this.handshakeCompleted = accept;
+		});
+		this.sendIntro();
 		return this.awaitHandshake;
 	}
 	async handshaked(message) {

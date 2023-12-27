@@ -1,18 +1,18 @@
+import electron from 'electron';
+import path from 'path';
 // if (require.main !== module) {
 // 	import('update-electron-app')({
 // 		logger: require('electron-log')
 // 	});
 // }
 import schemes from './schemes/index.js';
-import path from 'path';
-import electron from 'electron';
 import stateFactory from './state/index.js';
+import universalWebSocket from './browser/protocol/';
 const state = stateFactory('browser', {
 	electron
 });
 const { file: { readJson, } } = state;
 const config = readJson('./config/index.json');
-import universalWebSocket from './browser/protocol/';
 const {
 	app,
 	BrowserWindow,

@@ -24,7 +24,12 @@ export class Router {
 		for (let i = 0; i < routesLength; i++) {
 			if (!res.sent) {
 				const route = routes[i];
-				const result = await route(req, res, client);
+				if (route.handle) {
+					await route.handle(req, res, client);
+					continue;
+				}
+				await route(req, res, client);
+				continue;
 			}
 		}
 		if (!res.sent) {

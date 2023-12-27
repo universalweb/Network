@@ -1,17 +1,22 @@
 import Benchmark from 'benchmark';
+import { noop } from '@universalweb/acid';
 const array = new Array(100);
-function fn(i) {
-	return array[i];
-}
-// Define the functions
-function test1(arg) {
-	const arrayLength = array.length;
-	for (let i = 0; i < arrayLength; i++) {
-		fn(i);
+const routesLength = array.length;
+function test1() {
+	for (let i = 0; i < routesLength; i++) {
+		if (i === routesLength) {
+			noop();
+			break;
+		}
 	}
 }
 function test2() {
-	array.forEach(fn);
+	for (let i = 0; i < routesLength; i++) {
+		if (i === routesLength) {
+			noop();
+			return;
+		}
+	}
 }
 // Create a benchmark suite
 const suite = new Benchmark.Suite();

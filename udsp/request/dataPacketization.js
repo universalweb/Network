@@ -17,7 +17,7 @@ export async function dataPacketization(source) {
 	if (dataSize > maxSafePacketDataSize) {
 		console.log('data size', dataSize);
 		while (currentBytePosition < dataSize) {
-			const message = source.getPacketTemplate(9);
+			const message = source.getPacketTemplate(8);
 			message.push(packetId);
 			const frameSize = numberEncodedSize(packetId) + numberEncodedSize(currentBytePosition);
 			const endIndex = currentBytePosition + (maxSafePacketDataSize - frameSize);
