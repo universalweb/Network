@@ -89,12 +89,8 @@ export class Client {
 		success(`CLIENT EVENT -> ${eventName} - ID:${this.connectionIdString}`);
 		return triggerEvent(this.events, eventName, this, arg);
 	}
-	async created() {
-		await created(this);
-	}
-	async connected() {
-		await connected(this);
-	}
+	created = created;
+	connected = connected;
 	async generateSessionKeypair() {
 		const newKeypair = this.cipherSuite.keypair();
 		this.newKeypair = newKeypair;
@@ -160,6 +156,10 @@ export class Client {
 			}
 			replyObject.onFrame(frame, header);
 		}
+	}
+	close(statusCode, reason) {
+		this.sendClose();
+		this.destroy(statusCode);
 	}
 	pending = false;
 	state = 0;

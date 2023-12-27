@@ -457,6 +457,17 @@ export class Base {
 		this.sendSetup();
 		return awaitingResult;
 	}
+	end(statusCode) {
+		const {
+			isAsk, isReply
+		} = this;
+		if (isReply) {
+			if (statusCode) {
+				this.setHeader('status', statusCode);
+			}
+		}
+		this.sendEnd();
+	}
 	async sendHead() {
 		const thisReply = this;
 		console.log('outgoingHeadPackets', this.outgoingHeadPackets);

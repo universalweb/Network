@@ -55,7 +55,6 @@ export class Reply extends Base {
 		});
 		requestQueue.set(id, this);
 	}
-	type = 'reply';
 	isReply = true;
 	async completeReceived() {
 		this.state = 1;

@@ -75,7 +75,6 @@ export class Ask extends Base {
 		this.accept(this.response);
 	}
 	isAsk = true;
-	type = 'ask';
 }
 export async function ask(source) {
 	return construct(Ask, source);

@@ -1,5 +1,10 @@
 import {
-	success, failed, imported, msgSent, info, msgReceived
+	failed,
+	imported,
+	info,
+	msgReceived,
+	msgSent,
+	success
 } from '#logs';
 export async function destroy(client, reason) {
 	const server = client.server();
