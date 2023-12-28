@@ -31,7 +31,7 @@
 		"qrcode": "^1.5.1",
 		"sodium-native": "^4.0.1"
 	},
-	"description": "Sentivate Network Client, Server Module, UDSP, Universal Web Socket, & certificate generation. This serves as a service & browser prototype.",
+	"description": "UW:// modules for Client, Server, VIAT, DIS, Browser, Crypto, Modules, & certificates. This is the main repo for all Universal Web & VIAT related modules, scripts, and code.",
 	"esm": {
 		"cjs": true,
 		"mode": "auto",

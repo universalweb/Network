@@ -1,7 +1,7 @@
-| UNIVERSAL WEB Network - CHANGELOG |
-| :----: |
-| ![Sentivate Logo](https://raw.githubusercontent.com/sentivate/SentivateAlphaNetwork/master/resources/logo.png)|
-|[Sentivate](https://sentivate.com) - [Twitter](https://twitter.com/sentivate)|
+|                                         UNIVERSAL WEB Network - CHANGELOG                                          |
+| :----------------------------------------------------------------------------------------------------------------: |
+| ![Universal Web Logo](https://raw.githubusercontent.com/sentivate/SentivateAlphaNetwork/master/resources/logo.png) |
+|                [Universal Web](https://universalweb.io) - [Twitter](https://twitter.com/tommarchi)                 |
 ---
 
 ## [v3.0.3](https://github.com/universalweb/Network/compare/v3.0.3...v3.0.3)
