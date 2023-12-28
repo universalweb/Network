@@ -6,9 +6,9 @@ RPC Codes are numbers that correspond to methods, functions, and or procedures.
 
 ### Header RPC Codes
 
-- INTRO [0 Setup, publicKey, cipher Suite INT, version INT, requestCertificate]
-- MANUAL DISCOVERY [1, ]
-- 2
+- 0 INTRO [0 rpc, publicKey, cipher Suite INT, version INT]
+- 1 End [1 rpc]
+- 2 MANUAL DISCOVERY [2 rpc, publicKey, preferred, cipher Suites INTs, version INT]
 - 3
 - 4
 - 5
@@ -23,18 +23,17 @@ RPC Codes are numbers that correspond to methods, functions, and or procedures.
 
 ### Message RPC Codes
 
-- 0 INTRO [false, 0]
-- 1 SETUP [1]
-- 2 PATH READY [2]
-- 3 PARAMETERS READY [3]
-- 4 HEAD READY [4]
-- 5 DATA READY [5]
-- 6 PATH
-- 7 PARAMETERS
-- 8 HEAD
-- 9 DATA
-- 10 Close - END
-- 11 Error
+- 0 Setup Packet.
+- 1 Path Ready Packet.
+- 2 Path Packet.
+- 3 Parameters Ready Packet.
+- 4 Parameters Packet.
+- 5 Head Ready Packet.
+- 6 Head Packet.
+- 7 Data Ready Packet.
+- 8 Data Packet.
+- 9 End Packet.
+- 10 Error Packet.
 
 ### Message & Frame Format
 

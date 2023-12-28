@@ -142,12 +142,13 @@ export class Client extends UDSP {
 		success(`client reKeyed -> ID: ${thisClient.connectionIdString}`);
 	}
 	close(message, obj) {
-		if (obj) {
-			console.log(obj);
-		}
-		console.trace(this.connectionIdString, `client closed. code ${message?.state || message}`);
-		this.socket.close();
+		console.trace(this.connectionIdString, `client closed. ${message?.state || message}`);
 		Client.connections.delete(this.connectionIdString);
+		this.socket.close();
+		this.setDisconnected();
+	}
+	destory() {
+		console.log('Destory Client Object - buffer cleanup');
 	}
 	async send(message, headers, footer) {
 		console.log(`client.send to Server`, this.destination.ip, this.destination.port);
@@ -194,6 +195,11 @@ export class Client extends UDSP {
 		}
 		this.handshaked();
 	}
+	discovery(frame, header) {
+	}
+	end(frame, header) {
+		this.close('Server Ended Connection');
+	}
 	setPublicKeyHeader(header = []) {
 		const key = this.encryptionKeypair.publicKey;
 		console.log('Setting Public Key in UDSP Header', toBase64(key));
@@ -231,6 +237,16 @@ export class Client extends UDSP {
 		this.introSent = true;
 		this.send(message, header);
 	}
+	sendDiscovery() {
+		console.log('Sending Discovery');
+		this.state = 0;
+		const header = [2];
+		this.setPublicKeyHeader(header);
+		this.setCryptographyOptionsHeaders(header);
+		const message = [];
+		this.discoverySent = true;
+		this.send(message, header);
+	}
 	ensureHandshake() {
 		if (this.connected === true) {
 			console.log('ALREADY CONNECTED');
@@ -246,11 +262,19 @@ export class Client extends UDSP {
 		this.sendIntro();
 		return this.awaitHandshake;
 	}
-	async handshaked(message) {
-		console.log('Handshake Completed with new keys');
+	setConnected() {
 		this.connected = true;
 		this.state = 2;
 		this.readyState = 1;
+	}
+	setDisconnected() {
+		this.connected = false;
+		this.state = 0;
+		this.readyState = 0;
+	}
+	async handshaked(message) {
+		console.log('Handshake Completed with new keys');
+		this.setConnected();
 		await this.calculatePacketOverhead();
 		this.handshakeCompleted();
 	}

@@ -57,8 +57,6 @@ export class UDSP {
 	headPacketCount = 0;
 	maxPacketFlood = 0;
 	heapSize = 0;
-	throttle = false;
-	debounce = false;
 	randomId = randomBuffer(8);
 	version = 1;
 }

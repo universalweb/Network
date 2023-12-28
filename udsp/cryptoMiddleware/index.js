@@ -56,8 +56,8 @@ const {
 	signKeypairToEncryptionKeypair, getSignPublicKeyFromPrivateKey, keypair,
 	boxUnseal, boxSeal, randomConnectionId, hashMin: defaultHashMin, hash: defaultHash,
 } = defaultCrypto;
-const x25519XChaChaPoly1305Algo = {
-	name: 'x25519-xchacha20-poly1305',
+const ed25119_x25519_xchacha20_poly1305 = {
+	name: 'ed25119_x25519_xchacha20_poly1305',
 	alias: 'default',
 	id: 0,
 	nonceBox,
@@ -66,6 +66,16 @@ const x25519XChaChaPoly1305Algo = {
 	keypair,
 	decrypt,
 	encrypt,
+	signKeypair,
+	sign,
+	signVerify,
+	signPrivateKeyToEncryptPrivateKey,
+	signPublicKeyToEncryptPublicKey,
+	signKeypairToEncryptionKeypair,
+	getSignPublicKeyFromPrivateKey,
+	safeMath: RistrettoPoint,
+	clientSessionKeys,
+	serverSessionKeys,
 };
 const ed25519Algo = {
 	name: 'ed25519',
@@ -99,18 +109,18 @@ export const publicKeyAlgorithms = {
 	}
 };
 export const cipherSuites = {
-	'x25519-xchacha20-poly1305': x25519XChaChaPoly1305Algo,
-	0: x25519XChaChaPoly1305Algo,
-	default: x25519XChaChaPoly1305Algo,
+	ed25119_x25519_xchacha20_poly1305,
+	0: ed25119_x25519_xchacha20_poly1305,
+	default: ed25119_x25519_xchacha20_poly1305,
 	version: {
 		1: {
-			'x25519-xchacha20-poly1305': x25519XChaChaPoly1305Algo,
-			0: x25519XChaChaPoly1305Algo,
-			default: x25519XChaChaPoly1305Algo
+			ed25119_x25519_xchacha20_poly1305,
+			0: ed25119_x25519_xchacha20_poly1305,
+			default: ed25119_x25519_xchacha20_poly1305
 		}
 	},
 	available: {
-		1: ['x25519-xchacha20-poly1305']
+		1: ['ed25119_x25519_xchacha20_poly1305']
 	}
 };
 export const boxAlgorithms = {
