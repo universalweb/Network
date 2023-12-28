@@ -7,7 +7,7 @@
 <hr />
 <h1 align="center">UW://</h1>
 <p align="center">
-    REIMAGINE|REMAKE|REBUILD - THE WEB
+    REIMAGINE|REMAKE|REBUILD --> THE WEB
 </p>
 
 <h5 align="center">| <a href="https://twitter.com/tommarchi">LEAD DEV TWITTER</a> |</h5>
@@ -27,14 +27,13 @@
 <p>The objective of the Universal Web is to create a viable modern replacement for the Web today.</p>
 
 <h4>Is it Web3?</h4>
-<p>Not exactly. If the definition of Web3 is a fully decentralized Web then The Universal Web is not Web3. If Web3 is the World Wide Web plus some decentralized apps then the UW is not Web3. If Web3 is just the general idea of mixing something like the Web with optional and or native integration of decentralized parts then it’s much closer to what the UW is.</p>
+<p>Depends on your definition. If the definition of Web3 is a fully decentralized Web then The Universal Web is not Web3. If Web3 is the World Wide Web plus some decentralized apps then the UW is not Web3. If Web3 is just the general idea of mixing something like the Web with optional and or native integration of decentralized parts then it’s much closer to what the UW is.</p>
 
 <h4>Where's the name from?</h4>
 <p>The Universal Web's name was chosen because of its natural evolution of the name The World Wide Web.</p>
 
 <h4>Internet vs Web</h4>
 <p>The Web is all the software bits that sits on-top of the Internet. The Universal Web at least for now is only concerned with software no special hardware is required. Users just need software to access the Universal Web and Servers just need software to setup a Universal Web server.</p>
-
 
 <h4>SUMMARY</h4>
 <ul>
