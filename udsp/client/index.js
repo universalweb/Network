@@ -221,6 +221,17 @@ export class Client extends UDSP {
 			version
 		} = this;
 		header.push(cipherSuite.id, version);
+		return header;
+	}
+	setDiscoveryHeaders(header = []) {
+		const key = this.encryptionKeypair.publicKey;
+		console.log('Setting Cryptography in UDSP Header', toBase64(key));
+		const {
+			cipherSuiteName,
+			cipherSuite,
+			version
+		} = this;
+		header.push(cipherSuite.id, version);
 		const requestCertificate = this.hasCertificate === false;
 		if (requestCertificate) {
 			header.push(requestCertificate);
@@ -234,7 +245,6 @@ export class Client extends UDSP {
 		this.setPublicKeyHeader(header);
 		this.setCryptographyHeaders(header);
 		const message = [];
-		this.introSent = true;
 		this.send(message, header);
 	}
 	sendDiscovery() {
@@ -246,6 +256,12 @@ export class Client extends UDSP {
 		const message = [];
 		this.discoverySent = true;
 		this.send(message, header);
+	}
+	sendEnd() {
+		console.log('Sending Intro');
+		this.state = 0;
+		const header = [1];
+		this.send(null, header);
 	}
 	ensureHandshake() {
 		if (this.connected === true) {

@@ -73,21 +73,18 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 	if (message && source.sessionKeys && source.sessionKeys?.transmitKey) {
 		info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
 		const messageEncoded = encode(message);
-		const ad = (footer) ? Buffer.concat([headerEncoded, footer]) : headerEncoded;
+		const ad = headerEncoded;
 		const encryptedMessage = cipherSuite.encrypt(messageEncoded, source.sessionKeys, ad);
 		if (!encryptedMessage) {
 			return console.trace('Encryption failed');
 		}
-		let packetStructure = [headerEncoded, encryptedMessage];
+		let packetStructure = [header, encryptedMessage];
 		if (shortHeaderMode) {
 			packetStructure = Buffer.concat(packetStructure);
 		}
-		if (footer) {
-			packetStructure[2] = encode(footer);
-		}
 		packetEncoded = encode(packetStructure);
 	} else {
-		packetEncoded = encode([headerEncoded]);
+		packetEncoded = encode([header]);
 		console.log('No message given sending as header only');
 	}
 	const packetSize = packetEncoded.length;

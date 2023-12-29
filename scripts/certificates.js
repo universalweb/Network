@@ -18,7 +18,7 @@ const domainProfile = await createProfile({
 			// AES (please God no, xchacha exists), SHA, MD5 (Not for crypto), RSA (Just stop using RSA TY) are not permitted
 			// The default option is the first option listed in cipherSuites
 			// There is however a default ciphersuite assigned to each version of UW://
-			cipherSuites: ['x25519-xchacha20-poly1305'],
+			cipherSuites: ['ed25119_x25519_xchacha20_poly1305'],
 			publicKeyAlgorithm: 'ed25519',
 			// The purpose of encrypting connection IDs (CIDs) is to eliminate connection ID tracking and to constantly change how the connection id looks from those observing packets. This is for constant changing of the server ID and or client ID.
 			// Encrypting CIDs protects against leaking smart CID routing information - Typically this is overkill and should be avoided

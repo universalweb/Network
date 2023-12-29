@@ -124,9 +124,9 @@ export class Client {
 		return destroy(this, destroyCode);
 	}
 	// CLIENT HELLO
-	async intro(frame) {
-		info(`Client Intro -> - ID:${this.connectionIdString}`, frame);
-		this.sendIntro(frame);
+	async intro(frame, header) {
+		info(`Client Intro -> - ID:${this.connectionIdString}`, frame, header);
+		this.sendIntro(frame, header);
 	}
 	// SERVER HELLO
 	async sendIntro() {
@@ -134,6 +134,20 @@ export class Client {
 			this.generateSessionKeypair();
 		}
 		const frame = [false, 0, this.id, this.newKeypair.publicKey, this.randomId];
+		this.updateState(1);
+		await this.send(frame);
+	}
+	// CLIENT DISCOVERY
+	async discovery(frame, header) {
+		info(`Client Discovery -> - ID:${this.connectionIdString}`, frame, header);
+		this.sendDiscovery(frame, header);
+	}
+	// SERVER DISCOVERY
+	async sendDiscovery() {
+		if (!this.newKeypair) {
+			this.generateSessionKeypair();
+		}
+		const frame = [false, 2, this.id, this.newKeypair.publicKey, this.randomId];
 		this.updateState(1);
 		await this.send(frame);
 	}

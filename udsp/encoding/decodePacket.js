@@ -1,6 +1,7 @@
 import {
 	assign,
 	eachArray,
+	hasLength,
 	hasValue,
 	isArray,
 	isBuffer,
@@ -9,6 +10,7 @@ import {
 	isUndefined,
 	noValue
 } from '@universalweb/acid';
+import { decode, encode, } from '#utilities/serialize';
 import {
 	failed,
 	imported,
@@ -18,7 +20,6 @@ import {
 	success
 } from '#logs';
 import { createClient } from '../server/clients/index.js';
-import { decode, } from '#utilities/serialize';
 import { toBase64 } from '#crypto';
 /**
 	* @TODO
@@ -76,7 +77,7 @@ export async function decodePacketHeaders(config) {
 	}
 	config.headerEncoded = headerEncoded;
 	// Add single header support which holds only the binary data of the packet.id
-	const headerDecoded = (isShortHeaderMode) ? headerEncoded : decode(headerEncoded);
+	const headerDecoded = headerEncoded;
 	if (isUndefined(headerDecoded)) {
 		return console.trace(`No header from decode -> Invalid Packet`);
 	}
@@ -150,49 +151,41 @@ export async function decodePacket(config) {
 	} = config;
 	const {
 		cipherSuite,
-		connectionIdSize
+		connectionIdSize,
+		sessionKeys
 	} = destination;
-	let footer;
-	let footerEncoded;
 	let messageEncoded;
 	if (isShortHeaderMode) {
 		messageEncoded = packet.subarray(connectionIdSize);
 	} else {
-		footerEncoded = packet[2];
 		messageEncoded = packet[1];
 	}
 	if (noValue(messageEncoded)) {
 		console.log('No message encoded');
 		return true;
 	}
-	const ad = (footer) ? Buffer.concat([headerEncoded, footerEncoded]) : headerEncoded;
 	// console.log(destination);
-	info(`Receive Key ${toBase64(destination.sessionKeys.receiveKey)}`);
-	if (messageEncoded) {
+	info(`Receive Key ${toBase64(sessionKeys.receiveKey)}`);
+	if (messageEncoded && hasLength(messageEncoded)) {
 		console.log(packet, packetDecoded);
-		info(`encrypted Message size ${messageEncoded.length}bytes`);
-		console.log('cipherSuite', cipherSuite);
-		const decryptedMessage = cipherSuite.decrypt(messageEncoded, destination.sessionKeys, ad);
-		if (isUndefined(decryptedMessage)) {
-			console.trace('Encryption failed');
-			return;
-		}
-		info(`decrypted Message size ${decryptedMessage.length} BYTES`);
-		const message = decode(decryptedMessage);
-		if (isUndefined(message)) {
-			console.trace('No Message in Packet');
-		}
-		packetDecoded.message = message;
-		if (footerEncoded) {
-			footer = decode(footerEncoded);
-			if (isUndefined(footer)) {
-				console.trace(`Footer failed to decode -> Invalid Packet`);
+		if (sessionKeys) {
+			info(`encrypted Message size ${messageEncoded.length}bytes`);
+			console.log('cipherSuite', cipherSuite);
+			const ad = (isShortHeaderMode) ? headerEncoded : encode(headerEncoded);
+			const decryptedMessage = cipherSuite.decrypt(messageEncoded, sessionKeys, ad);
+			if (isUndefined(decryptedMessage)) {
+				console.trace('Encryption failed');
 				return;
 			}
-			packetDecoded.footer = footer;
+			info(`decrypted Message size ${decryptedMessage.length} BYTES`);
+			const message = decode(decryptedMessage);
+			if (isUndefined(message)) {
+				console.trace('No Message in Packet');
+			}
+			packetDecoded.message = message;
 		}
 	} else {
-		console.trace(`No Encrypted Message - failed to decode -> Invalid Packet`);
+		console.trace(`No Message in Packet`);
 	}
 	return true;
 }
