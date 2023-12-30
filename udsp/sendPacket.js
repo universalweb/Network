@@ -7,7 +7,25 @@ import {
 } from '#logs';
 import { isFunction, promise } from '@universalweb/acid';
 import { encodePacket } from '#udsp/encoding/encodePacket';
-export async function sendPacket(message, source, socket, destination = source.destination, headers, footer) {
+export async function sendEncodedPacket(socket, packetEncoded, port, ip, destroyed) {
+	if (destroyed) {
+		return;
+	}
+	return promise((accept, reject) => {
+		socket.send(packetEncoded, port, ip, (error) => {
+			if (error) {
+				reject(error);
+				return console.trace(error);
+			}
+			success('Packet Sent Out', packetEncoded.length);
+			accept();
+		});
+	});
+}
+export async function sendPacket(message, source, socket, destination = source.destination, headers, footer, repeat) {
+	if (source.destroyed) {
+		return;
+	}
 	// console.log(`sendPacket`, source);
 	const {
 		server,
@@ -34,14 +52,9 @@ export async function sendPacket(message, source, socket, destination = source.d
 	// console.log('sendPacket', message, headers);
 	const packetEncoded = await encodePacket(message, source, destination, headers, footer);
 	console.log(`Packet Encoded Size ${packetEncoded.length} Worker ${source.workerId || 'Master'} sending to ip: ${ip} Port: ${port}`);
-	return promise((accept, reject) => {
-		socket.send(packetEncoded, port, ip, (error) => {
-			if (error) {
-				reject(error);
-				return console.trace(error);
-			}
-			success('Packet Sent Out', packetEncoded.length);
-			accept();
-		});
-	});
+	if (repeat) {
+		return Promise.all([sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed),
+			sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed)]);
+	}
+	return sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed);
 }

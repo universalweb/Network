@@ -111,6 +111,9 @@ export class Client {
 	}
 	async send(frame, headers, footer) {
 		msgSent(`socket Sent -> ID: ${this.connectionIdString}`);
+		if (this.destroyed) {
+			return;
+		}
 		return sendPacket(frame, this, this.socket, this.destination, headers, footer);
 	}
 	async received(frame, frameHeaders) {

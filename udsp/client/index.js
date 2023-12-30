@@ -69,7 +69,6 @@ export class Client extends UDSP {
 	async initialize(options) {
 		const thisClient = this;
 		this.options = options;
-		await this.configDefaults();
 		await this.setDestination();
 		await this.getIPDetails();
 		await this.setProfile();
@@ -80,18 +79,10 @@ export class Client extends UDSP {
 		await this.calculatePacketOverhead();
 		await this.setupSocket();
 		await this.attachEvents();
-		if (this.autoConnect) {
+		if (this.options.autoConnect) {
 			await this.connect();
 		}
 		return this;
-	}
-	async configDefaults() {
-		const {
-			autoConnect,
-			realtime
-		} = this.options;
-		this.autoConnect = autoConnect;
-		this.realtime = realtime;
 	}
 	async getKeychainSave(keychain) {
 		return keychainGet(keychain);
@@ -150,9 +141,9 @@ export class Client extends UDSP {
 	destory() {
 		console.log('Destory Client Object - buffer cleanup');
 	}
-	async send(message, headers, footer) {
+	async send(message, headers, footer, repeat) {
 		console.log(`client.send to Server`, this.destination.ip, this.destination.port);
-		return sendPacket(message, this, this.socket, this.destination, headers, footer);
+		return sendPacket(message, this, this.socket, this.destination, headers, footer, repeat);
 	}
 	ask(method, path, parameters, data, head, options) {
 		const ask = construct(Ask, [method, path, parameters, data, head, options, this]);
@@ -245,8 +236,15 @@ export class Client extends UDSP {
 		this.setPublicKeyHeader(header);
 		this.setCryptographyHeaders(header);
 		const message = [];
-		this.send(message, header);
+		return this.send(message, header);
 	}
+	/*
+		* Send Discovery
+		* Generate & sign a random nonce include it in the header then send it to the server
+		* Server verifies client most likely has the private key
+		* sends cert chunked with one time encryption using client public key
+		* Client saves cert and restarts the connection with the new data
+	*/
 	sendDiscovery() {
 		console.log('Sending Discovery');
 		this.state = 0;
@@ -255,13 +253,13 @@ export class Client extends UDSP {
 		this.setCryptographyOptionsHeaders(header);
 		const message = [];
 		this.discoverySent = true;
-		this.send(message, header);
+		return this.send(message, header);
 	}
 	sendEnd() {
 		console.log('Sending Intro');
 		this.state = 0;
 		const header = [1];
-		this.send([false, 9], header);
+		return this.send([false, 9], header, null, true);
 	}
 	ensureHandshake() {
 		if (this.connected === true) {
@@ -292,7 +290,7 @@ export class Client extends UDSP {
 		console.log('Handshake Completed with new keys');
 		this.setConnected();
 		await this.calculatePacketOverhead();
-		this.handshakeCompleted();
+		this.handshakeCompleted(this);
 	}
 	async setSessionKeys(generatedKeys) {
 		console.log(this.destination.encryptionKeypair);

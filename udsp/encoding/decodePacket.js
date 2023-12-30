@@ -166,7 +166,7 @@ export async function decodePacket(config) {
 	}
 	// console.log(destination);
 	info(`Receive Key ${toBase64(sessionKeys.receiveKey)}`);
-	if (messageEncoded && hasLength(messageEncoded)) {
+	if (messageEncoded && isBuffer(messageEncoded) && hasLength(messageEncoded)) {
 		console.log(packet, packetDecoded);
 		if (sessionKeys) {
 			info(`encrypted Message size ${messageEncoded.length}bytes`);

@@ -243,14 +243,14 @@ export class Base {
 		if (hasValue(this.outgoingDataSize)) {
 			message.push(this.outgoingDataSize);
 		}
-		this.sendPacket(message);
+		return this.sendPacket(message);
 	}
 	async sendPathReady() {
 		if (this.state === 1) {
 			this.state = 2;
 		}
 		const message = this.getPacketTemplate(1);
-		this.sendPacket(message);
+		return this.sendPacket(message);
 	}
 	async sendParametersReady() {
 		if (this.state === 2) {
@@ -260,7 +260,7 @@ export class Base {
 			return this.sendHeadReady();
 		}
 		const message = this.getPacketTemplate(3);
-		this.sendPacket(message);
+		return this.sendPacket(message);
 	}
 	async sendHeadReady() {
 		if (this.state === 3) {
@@ -270,7 +270,7 @@ export class Base {
 			return this.sendDataReady();
 		}
 		const message = this.getPacketTemplate(5);
-		this.sendPacket(message);
+		return this.sendPacket(message);
 	}
 	sendDataReady() {
 		if (this.state === 4) {
@@ -283,11 +283,11 @@ export class Base {
 			return this.completeReceived();
 		}
 		const message = this.getPacketTemplate(7);
-		this.sendPacket(message);
+		return this.sendPacket(message);
 	}
 	async sendEnd() {
 		const message = this.getPacketTemplate(9);
-		this.sendPacket(message);
+		return this.sendPacket(message);
 	}
 	async pathPacketization() {
 		const {
@@ -457,16 +457,16 @@ export class Base {
 		this.sendSetup();
 		return awaitingResult;
 	}
-	end(statusCode) {
+	async end(statusCode) {
 		const {
 			isAsk, isReply
 		} = this;
 		if (isReply) {
 			if (statusCode) {
-				this.setHeader('status', statusCode);
+				await this.sendEnd();
+				this.destroy();
 			}
 		}
-		this.sendEnd();
 	}
 	async sendHead() {
 		const thisReply = this;
@@ -510,11 +510,11 @@ export class Base {
 	}
 	sendHeadPacketById(id) {
 		const message = this.outgoingHeadPackets[id];
-		this.sendPacket(message);
+		return this.sendPacket(message);
 	}
 	sendDataPacketById(id) {
 		const message = this.outgoingDataPackets[id];
-		this.sendPacket(message);
+		return this.sendPacket(message);
 	}
 	getPacketTemplate(rpc, ...items) {
 		const { id, } = this;

@@ -7,6 +7,7 @@ import {
 	success
 } from '#logs';
 export async function destroy(client, reason) {
+	client.destroyed = true;
 	const server = client.server();
 	console.log(`client destroyed: ${client.connectionIdString}`);
 	if (reason === 1) {
