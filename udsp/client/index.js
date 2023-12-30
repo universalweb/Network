@@ -261,7 +261,7 @@ export class Client extends UDSP {
 		console.log('Sending Intro');
 		this.state = 0;
 		const header = [1];
-		this.send(null, header);
+		this.send([false, 9], header);
 	}
 	ensureHandshake() {
 		if (this.connected === true) {
