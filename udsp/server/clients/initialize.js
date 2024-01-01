@@ -23,7 +23,6 @@ import {
 	msgSent,
 	success
 } from '#logs';
-import { created } from './created.js';
 import { getAlgorithm } from '../../cryptoMiddleware/index.js';
 export async function initialize(config) {
 	const {
@@ -115,7 +114,7 @@ export async function initialize(config) {
 	client.calculatePacketOverhead();
 	await client.setSessionKeys();
 	if (!realtime && gracePeriod) {
-		client.gracePeriod = setTimeout(() => {
+		client.gracePeriodTimeout = setTimeout(() => {
 			const lastActive = Date.now() - client.lastActive;
 			console.log('Client Grace Period reached killing connection', lastActive > gracePeriod, client);
 			if (client.state <= 1 || lastActive > heartbeat) {
@@ -124,8 +123,6 @@ export async function initialize(config) {
 		}, gracePeriod);
 	}
 	success(`client Created: ID:${serverConnectionIdString} - Client CID${client.clientIdString} => ${ip}:${port}`);
-	clients.set(serverConnectionIdString, client);
-	await client.created();
 	return client;
 }
 

@@ -132,11 +132,13 @@ export class Client extends UDSP {
 		const thisClient = this;
 		success(`client reKeyed -> ID: ${thisClient.connectionIdString}`);
 	}
-	close(message, obj) {
-		console.trace(this.connectionIdString, `client closed. ${message?.state || message}`);
+	async close(message) {
+		console.log(`Client CLOSING. ${this.connectionIdString}`);
 		Client.connections.delete(this.connectionIdString);
-		this.socket.close();
-		this.setDisconnected();
+		await this.sendEnd();
+		await this.setDisconnected();
+		await this.socket.close();
+		console.log(`Client CLOSED. ${this.connectionIdString}`);
 	}
 	destory() {
 		console.log('Destory Client Object - buffer cleanup');
@@ -256,10 +258,12 @@ export class Client extends UDSP {
 		return this.send(message, header);
 	}
 	sendEnd() {
-		console.log('Sending Intro');
+		if (this.state === 0) {
+			return;
+		}
+		console.log('Sending CLIENT END');
 		this.state = 0;
-		const header = [1];
-		return this.send([false, 9], header, null, true);
+		return this.send([false, 1], false, null, true);
 	}
 	ensureHandshake() {
 		if (this.connected === true) {

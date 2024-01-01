@@ -26,11 +26,10 @@ import {
 } from '#crypto';
 import { Reply } from '#udsp/request/reply';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
-import { connected } from './connected.js';
-import { created } from './created.js';
 import { destroy } from './destroy.js';
 import { encodePacket } from '#udsp/encoding/encodePacket';
 import { initialize } from './initialize.js';
+import { onConnected } from './onConnected.js';
 import { processFrame } from '#udsp/processFrame';
 import { received } from './received.js';
 import { sendPacket } from '#udsp/sendPacket';
@@ -89,8 +88,7 @@ export class Client {
 		success(`CLIENT EVENT -> ${eventName} - ID:${this.connectionIdString}`);
 		return triggerEvent(this.events, eventName, this, arg);
 	}
-	created = created;
-	connected = connected;
+	onConnected = onConnected;
 	async generateSessionKeypair() {
 		const newKeypair = this.cipherSuite.keypair();
 		this.newKeypair = newKeypair;
@@ -125,6 +123,10 @@ export class Client {
 	async destroy(destroyCode) {
 		info(`socket EVENT -> destroy - ID:${this.connectionIdString}`);
 		return destroy(this, destroyCode);
+	}
+	async end(frame, header) {
+		console.log(`Destroying client ${this.connectionIdString}`, frame, header);
+		await this.destroy(0);
 	}
 	// CLIENT HELLO
 	async intro(frame, header) {

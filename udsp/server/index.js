@@ -24,8 +24,8 @@ import { getAlgorithm, getPublicKeyAlgorithm, processPublicKey } from '../crypto
 import { getCertificate, loadCertificate, parseCertificate } from '#certificate';
 import { randomBuffer, toBase64 } from '#crypto';
 import { UDSP } from '#udsp/base';
+import { createClient } from './clients/index.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
-import { destroy } from '../request/destory.js';
 import { listen } from './listen.js';
 import { onError } from './onError.js';
 import { onListen } from './onListen.js';
@@ -187,6 +187,7 @@ export class Server extends UDSP {
 	}
 	syncWorkerState() {
 		const { clientCount } = this;
+		console.log(`Client count ${clientCount}`);
 		process.send(encode(['state', {
 			clientCount
 		}]));
@@ -201,16 +202,52 @@ export class Server extends UDSP {
 		success(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
 		return triggerEvent(this.events, eventName, this, arg);
 	}
-	clientCreated(client) {
+	addClientCount() {
 		this.clientCount++;
 		this.updateWorkerState();
-		console.log('Client Created', this.clientCount);
 	}
-	clientRemoved(connectionIdString) {
-		this.clients.delete(connectionIdString);
+	subtractClientCount() {
 		this.clientCount--;
 		this.updateWorkerState();
-		console.log('Client Removed', this.clientCount);
+	}
+	async createClient(config, idString, connection) {
+		const client = await createClient({
+			server: this,
+			connection,
+			packet: config.packetDecoded
+		});
+		if (!client) {
+			return console.trace(`Failed to create client for client connection id with ${idString}`);
+		}
+		config.destination = client;
+		this.clients.set(client.connectionIdString, client);
+		if (this.isWorker) {
+			this.addClientCount();
+		}
+		console.log('Client Created', this.clientCount);
+		return client;
+	}
+	async client(config, id, idString, connection) {
+		if (id.length === this.connectionIdSize) {
+			const existingClient = this.clients.get(idString);
+			if (existingClient) {
+				config.destination = existingClient;
+				if (existingClient.state === 1) {
+					await existingClient.attachNewClientKeys();
+				}
+				return existingClient;
+			}
+			if (config.headerRPC === 0) {
+				return this.createClient(config, idString, connection);
+			}
+			return false;
+		}
+		return this.createClient(config, idString, connection);
+	}
+	async removeClient(client) {
+		const { connectionIdString } = client;
+		this.clients.delete(connectionIdString);
+		this.subtractClientCount();
 	}
 	listen = listen;
 	onError = onError;

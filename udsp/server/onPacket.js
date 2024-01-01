@@ -35,46 +35,25 @@ export async function onPacket(packet, connection) {
 		return console.trace('Invalid Packet Headers');
 	}
 	const id = config.packetDecoded.id;
+	if (!id) {
+		return console.log('Invalid Client id given', id);
+	}
 	const idString = id.toString('hex');
-	console.log(thisServer.clients, idString);
-	if (!idString) {
-		return console.trace('Invalid Client id given', idString);
-	}
-	let client = thisServer.clients.get(idString);
-	if (client) {
-		config.destination = client;
-		if (client.state === 1) {
-			client.attachNewClientKeys();
-		}
-	}
-	if (!client) {
-		client = await createClient({
-			server: thisServer,
-			connection,
-			packet: config.packetDecoded
-		});
-		if (!client) {
-			return console.trace('Failed to create client', idString);
-		}
-		config.destination = client;
-		if (this.isWorker) {
-			this.updateWorkerState(client);
-		}
-	}
+	const client = await this.client(config, id, idString, connection);
 	if (!client) {
 		// Send error message back to origin or not
-		return console.trace('Invalid Client id given', idString);
+		return console.log('No matching Client id given', idString);
 	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {
-		return console.trace('When decoding the packet but header passed');
+		return console.log('When decoding the packet but header passed');
 	}
 	const {
 		header,
 		message
 	} = config.packetDecoded;
 	if (!hasValue(message)) {
-		return console.trace('Error no message found in packet');
+		return console.log('Error no message found in packet');
 	}
 	console.log(config);
 	if (isFalse(config.isShortHeaderMode)) {

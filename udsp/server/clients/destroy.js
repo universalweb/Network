@@ -8,6 +8,10 @@ import {
 } from '#logs';
 export async function destroy(client, reason) {
 	client.destroyed = true;
+	if (client.destroyed) {
+		return;
+	}
+	clearTimeout(client.gracePeriodTimeout);
 	const server = client.server();
 	console.log(`client destroyed: ${client.connectionIdString}`);
 	if (reason === 1) {
@@ -23,7 +27,7 @@ export async function destroy(client, reason) {
 			Port: ${client.destination.port}
 		`);
 	}
-	server.clientRemoved(client.connectionIdString);
+	await server.removeClient(client);
 	// Clear all client data
 	client.ip = null;
 	client.port = null;
