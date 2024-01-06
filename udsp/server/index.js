@@ -199,7 +199,7 @@ export class Server extends UDSP {
 	off(eventName, eventMethod) {
 		return removeEvent(this.events, eventName, eventMethod);
 	}
-	triggerEvent(eventName, arg) {
+	trigger(eventName, arg) {
 		success(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
 		return triggerEvent(this.events, eventName, this, arg);
 	}

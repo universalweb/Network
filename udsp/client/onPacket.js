@@ -46,7 +46,7 @@ export async function onPacket(packet) {
 		await proccessProtocolPacketHeader(this, message, header);
 	}
 	await processFrame(message, header, this, this.requestQueue);
-	this.triggerEvent(this.events, 'socket.onPacket', this);
+	this.trigger(this.events, 'socket.onPacket', this);
 	return;
 }
 

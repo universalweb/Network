@@ -55,6 +55,7 @@ import { post } from '../requestMethods/post.js';
 import { processFrame } from '../processFrame.js';
 import { sendPacket } from '../sendPacket.js';
 import { setDestination } from './setDestination.js';
+import { socketOnError } from './socketOnError';
 import { uwRequest } from '#udsp/requestMethods/request';
 import { watch } from '#watch';
 // UNIVERSAL WEB Client Class
@@ -105,20 +106,18 @@ export class Client extends UDSP {
 		}
 	}
 	async attachEvents() {
-		const thisClient = this;
-		this.socket.on('error', (err) => {
-			console.log('CLIENT UDP SERVER ERROR');
-			thisClient.triggerEvent(thisClient.events, 'socket.error', this);
-			return thisClient.onError && thisClient.onError(err);
+		const source = this;
+		this.socket.on('error', (...args) => {
+			return source.socketOnError(...args);
 		});
-		this.socket.on('listening', () => {
-			return thisClient.onListening();
+		this.socket.on('listening', (...args) => {
+			return source.onListening(...args);
 		});
 		this.socket.on('message', (packet, rinfo) => {
-			console.log(rinfo);
-			return thisClient.onPacket(packet, rinfo);
+			return source.onPacket(packet, rinfo);
 		});
 	}
+	socketOnError = socketOnError;
 	connect() {
 		return this.ensureHandshake();
 	}
@@ -143,12 +142,12 @@ export class Client extends UDSP {
 		await this.sendEnd();
 		await this.setDisconnected();
 		await this.socket.close();
-		this.triggerEvent(this.events, 'closed', this);
+		this.trigger(this.events, 'closed', this);
 		console.log(`Client CLOSED. ${this.connectionIdString}`);
 	}
 	destory() {
 		console.log('Destory Client Object - buffer cleanup');
-		this.triggerEvent(this.events, 'destroyed', this);
+		this.trigger(this.events, 'destroyed', this);
 		this.close();
 	}
 	async send(message, headers, footer, repeat) {
@@ -299,13 +298,13 @@ export class Client extends UDSP {
 		this.connected = true;
 		this.state = 2;
 		this.readyState = 1;
-		this.triggerEvent(this.events, 'connected', this);
+		this.trigger(this.events, 'connected', this);
 	}
 	setDisconnected() {
 		this.connected = null;
 		this.state = 0;
 		this.readyState = 0;
-		this.triggerEvent(this.events, 'disconnected', this);
+		this.trigger(this.events, 'disconnected', this);
 	}
 	async handshaked(message) {
 		console.log('Handshake Completed with new keys');
@@ -334,13 +333,13 @@ export class Client extends UDSP {
 			await this.setSessionKeys();
 		}
 	}
-	createEvent(...args) {
+	on(...args) {
 		return createEvent(this.events, ...args);
 	}
-	removeEvent(...args) {
+	off(...args) {
 		removeEvent(this.events, ...args);
 	}
-	triggerEvent(...args) {
+	trigger(...args) {
 		triggerEvent(this.events, ...args);
 	}
 	request = uwRequest;

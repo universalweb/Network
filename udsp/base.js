@@ -9,6 +9,7 @@ import { randomBuffer, randomConnectionId, toBase64 } from '#crypto';
 import { calculatePacketOverhead } from './calculatePacketOverhead.js';
 import { cipherSuites } from './cryptoMiddleware/index.js';
 import dgram from 'dgram';
+import { triggerEvent } from '#udsp/events';
 export class UDSP {
 	initializeBase(options) {
 		this.connectionGracePeriod = 30000;
@@ -43,12 +44,14 @@ export class UDSP {
 		return target;
 	}
 	async setupSocket() {
+		const source = this;
 		const ipVersion = this.ipVersion;
 		const socket = dgram.createSocket(ipVersion);
 		this.socket = socket;
 		// Make sure there is as graceful as possible shutdown
 		process.on('beforeExit', (code) => {
 			console.log('Before Exit', code);
+			source.trigger(source.events, 'socket.error', this);
 		});
 	}
 	addMethod(methods) {
