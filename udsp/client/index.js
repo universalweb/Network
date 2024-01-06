@@ -55,7 +55,7 @@ import { post } from '../requestMethods/post.js';
 import { processFrame } from '../processFrame.js';
 import { sendPacket } from '../sendPacket.js';
 import { setDestination } from './setDestination.js';
-import { socketOnError } from './socketOnError';
+import { socketOnError } from './socketOnError.js';
 import { uwRequest } from '#udsp/requestMethods/request';
 import { watch } from '#watch';
 // UNIVERSAL WEB Client Class
