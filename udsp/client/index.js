@@ -15,6 +15,7 @@ import {
 } from '@universalweb/acid';
 import { configure, info, success } from '#logs';
 import { connectionIdToBuffer, generateConnectionId } from '#udsp/connectionId';
+import { createEvent, removeEvent, triggerEvent } from '#udsp/events';
 /*
   	* Client Module
 	* UDSP - Universal Data Stream Protocol
@@ -107,6 +108,7 @@ export class Client extends UDSP {
 		const thisClient = this;
 		this.socket.on('error', (err) => {
 			console.log('CLIENT UDP SERVER ERROR');
+			thisClient.triggerEvent(thisClient.events, 'socket.error', this);
 			return thisClient.onError && thisClient.onError(err);
 		});
 		this.socket.on('listening', () => {
@@ -141,10 +143,12 @@ export class Client extends UDSP {
 		await this.sendEnd();
 		await this.setDisconnected();
 		await this.socket.close();
+		this.triggerEvent(this.events, 'closed', this);
 		console.log(`Client CLOSED. ${this.connectionIdString}`);
 	}
 	destory() {
 		console.log('Destory Client Object - buffer cleanup');
+		this.triggerEvent(this.events, 'destroyed', this);
 		this.close();
 	}
 	async send(message, headers, footer, repeat) {
@@ -181,6 +185,9 @@ export class Client extends UDSP {
 	async intro(frame, header) {
 		if (!frame || !isArray(frame)) {
 			this.close('No intro message', frame);
+			return;
+		}
+		if (this.newKeypair) {
 			return;
 		}
 		console.log('Got server Intro', frame);
@@ -292,17 +299,21 @@ export class Client extends UDSP {
 		this.connected = true;
 		this.state = 2;
 		this.readyState = 1;
+		this.triggerEvent(this.events, 'connected', this);
 	}
 	setDisconnected() {
 		this.connected = null;
 		this.state = 0;
 		this.readyState = 0;
+		this.triggerEvent(this.events, 'disconnected', this);
 	}
 	async handshaked(message) {
 		console.log('Handshake Completed with new keys');
-		this.setConnected();
 		await this.calculatePacketOverhead();
-		this.handshakeCompleted(this);
+		this.setConnected();
+		if (this.handshakeCompleted) {
+			this.handshakeCompleted(this);
+		}
 	}
 	async setSessionKeys(generatedKeys) {
 		// console.log(this.destination.encryptionKeypair);
@@ -322,6 +333,15 @@ export class Client extends UDSP {
 			};
 			await this.setSessionKeys();
 		}
+	}
+	createEvent(...args) {
+		return createEvent(this.events, ...args);
+	}
+	removeEvent(...args) {
+		removeEvent(this.events, ...args);
+	}
+	triggerEvent(...args) {
+		triggerEvent(this.events, ...args);
 	}
 	request = uwRequest;
 	fetch = fetchRequest;

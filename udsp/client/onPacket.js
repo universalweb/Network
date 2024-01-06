@@ -45,7 +45,8 @@ export async function onPacket(packet) {
 	if (isFalse(config.isShortHeaderMode)) {
 		await proccessProtocolPacketHeader(this, message, header);
 	}
-	processFrame(message, header, this, this.requestQueue);
+	await processFrame(message, header, this, this.requestQueue);
+	this.triggerEvent(this.events, 'socket.onPacket', this);
 	return;
 }
 
