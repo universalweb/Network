@@ -12,6 +12,9 @@ const uwApp = await app({
 	// The main server will be the only server that will be able to accept new connections and will forward them to the relevant server in the cluster acting in part as a load balancer
 	// However, the load balancer mode can be turned off and only the clusters will be setup
 	scale: {
+		// Include thread's ip & port in intro (this ensures the client directly contacts the server instead of the loadbalancer which avoids the need for smart ids)
+		updateAddress: true,
+		smartIds: true,
 		// Each server in the cluster will have a unique port that is incremented by 1 but starting at the clusterPort number connection IDs are modified to include the relevant cluster
 		port: 8000,
 		// The amount of servers to spawn in the cluster

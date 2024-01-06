@@ -203,8 +203,18 @@ export class Client extends UDSP {
 				this.destination.ip = rinfo.address;
 				this.destination.port = rinfo.port;
 			} else if (isArray(changeDestinationAddress)) {
-				this.destination.ip = changeDestinationAddress[0];
-				this.destination.port = changeDestinationAddress[1];
+				if (changeDestinationAddress[1]) {
+					this.destination.ip = changeDestinationAddress[1];
+				}
+				if (changeDestinationAddress[0]) {
+					this.destination.port = changeDestinationAddress[0];
+				}
+			} else if (isString(changeDestinationAddress)) {
+				if (changeDestinationAddress.has(/:|\./)) {
+					this.destination.ip = changeDestinationAddress;
+				} else {
+					this.destination.port = changeDestinationAddress;
+				}
 			}
 			console.log('Destination changed in INTRO', this.destination.ip, destination.port);
 		}
