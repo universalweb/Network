@@ -166,6 +166,7 @@ export class Server extends UDSP {
 	}
 	async initialize(options) {
 		console.log('-------SERVER INITIALIZING-------');
+		this.initializeBase(options);
 		assign(this, options);
 		this.options = seal(assign({}, options));
 		info(this.options);
@@ -237,7 +238,7 @@ export class Server extends UDSP {
 				}
 				return existingClient;
 			}
-			if (config.headerRPC === 0) {
+			if (config.packetDecoded.headerRPC === 0) {
 				return this.createClient(config, idString, connection);
 			}
 			return false;

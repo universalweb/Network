@@ -3,7 +3,14 @@
     "ignorePaths": [],
     "dictionaryDefinitions": [],
     "dictionaries": [],
-    "words": [],
+    "words": [
+        "cbor",
+        "cldmv",
+        "daisyui",
+        "sarif",
+        "simc",
+        "uwrl"
+    ],
     "ignoreWords": [],
     "import": []
 }

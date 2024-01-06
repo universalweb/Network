@@ -44,7 +44,6 @@ export class Client {
 		} = config;
 		const client = this;
 		const {
-			requestMethods,
 			cipherSuites,
 			publicKeyCryptography,
 			encryptClientConnectionId,
@@ -57,7 +56,6 @@ export class Client {
 		this.app = function() {
 			return app;
 		};
-		this.requestMethods = requestMethods;
 		this.socket = server.socket;
 		this.cipherSuites = cipherSuites;
 		this.publicKeyCryptography = publicKeyCryptography;

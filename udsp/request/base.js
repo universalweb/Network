@@ -296,11 +296,11 @@ export class Base {
 			outgoingPathPackets
 		} = this;
 		const source = (this.isAsk) ? this.request : this.response;
-		console.log('pathPacketization', source.path);
 		if (!source.path || !objectSize(source.path)) {
 			this.emptyPath = true;
 			return;
 		}
+		console.log('pathPacketization', source.path);
 		this.outgoingPath = encode(source.path);
 		this.outgoingPathSize = this.outgoingPath.length;
 		console.log('outgoingPathSize', this.outgoingPathSize);
@@ -332,11 +332,11 @@ export class Base {
 			outgoingParametersPackets
 		} = this;
 		const source = (this.isAsk) ? this.request : this.response;
-		console.log('parametersPacketization', source.parameters);
 		if (!source.parameters || !objectSize(source.parameters)) {
 			this.emptyParameters = true;
 			return;
 		}
+		console.log('parametersPacketization', source.parameters);
 		this.outgoingParameters = encode(source.parameters);
 		this.outgoingParametersSize = this.outgoingParameters.length;
 		console.log('outgoingParameterSize', this.outgoingParametersSize);
@@ -448,12 +448,12 @@ export class Base {
 		if (data) {
 			message.data = data;
 		}
-		console.log(`${this.type}.send`, message);
+		console.log(`${this.constructor.name}.send`, message);
 		const awaitingResult = promise((accept) => {
 			thisSource.accept = accept;
 		});
 		await this.packetization();
-		console.log(`SENDING FROM A ${this.type}`);
+		console.log(`SENDING FROM A ${this.constructor.name}`);
 		this.sendSetup();
 		return awaitingResult;
 	}

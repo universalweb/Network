@@ -95,47 +95,42 @@ export async function decodePacketHeaders(config) {
 		}
 	}
 	if (isClient) {
-		console.log(`Decode client side with id: ${destination.id.toString('hex')}`);
-		console.log(`Decode client side with Server-Client-id: ${source?.id?.toString('hex')}`);
+		console.log(`Decode destination ID: ${destination.id.toString('hex')}`);
+		console.log(`Decode source ID: ${source?.id?.toString('hex')}`);
 	} else {
 		console.log(`Decode Server side packet with id: ${id.toString('hex')}`);
 	}
-	let key;
+	config.packetDecoded = {
+		header: headerDecoded,
+		id
+	};
 	if (!isShortHeaderMode) {
 		const headerRPC = headerDecoded[1];
 		if (headerRPC) {
-			config.headerRPC = headerRPC;
+			config.packetDecoded.headerRPC = headerRPC;
 		}
 		if (headerRPC === 0) {
 			success(`Public Key is given -> Processing as create client`);
-			key = headerDecoded[2];
+			const key = headerDecoded[2];
 			if (!key) {
 				return console.trace('No Client Key provided', headerDecoded);
 			}
+			config.packetDecoded.key = key;
 			// Add check for length of key before processing further and just kill the connection
 			if (encryptionKeypair) {
-				if (headerDecoded[2] && connectionIdKeypair) {
+				if (connectionIdKeypair) {
 					console.log('Decrypting Public Key in UDSP Header');
-					key = boxCryptography.boxUnseal(key, encryptionKeypair);
-					if (key) {
-						headerDecoded[2] = key;
+					const decryptedKey = boxCryptography.boxUnseal(key, encryptionKeypair);
+					if (decryptedKey) {
+						headerDecoded[2] = decryptedKey;
+						config.packetDecoded.key = decryptedKey;
+						console.log('DESTINATION DECRYPT PUBLIC KEY', toBase64(key));
 					} else {
 						return console.trace('Client Key Decode Failed', toBase64(key));
 					}
 				}
 			}
-			console.log('DESTINATION ENCRYPT PUBLIC KEY', toBase64(key));
-		} else {
-			success(`Invalid Code given`);
 		}
-	}
-	// console.log(header);
-	config.packetDecoded = {
-		header: headerDecoded,
-		id
-	};
-	if (key) {
-		config.packetDecoded.key = key;
 	}
 	return config;
 }

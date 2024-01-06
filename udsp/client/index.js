@@ -67,8 +67,11 @@ export class Client extends UDSP {
 	static type = 'client';
 	isClient = true;
 	async initialize(options) {
-		const thisClient = this;
-		this.options = options;
+		this.initializeBase(options);
+		await this.setDefaults();
+		if (options) {
+			this.options = options;
+		}
 		await this.setDestination();
 		await this.getIPDetails();
 		await this.setProfile();
@@ -142,12 +145,20 @@ export class Client extends UDSP {
 	}
 	destory() {
 		console.log('Destory Client Object - buffer cleanup');
+		this.close();
 	}
 	async send(message, headers, footer, repeat) {
 		console.log(`client.send to Server`, this.destination.ip, this.destination.port);
 		return sendPacket(message, this, this.socket, this.destination, headers, footer, repeat);
 	}
-	ask(method, path, parameters, data, head, options) {
+	async reconnect() {
+		await this.initialize();
+		await this.connect();
+	}
+	async ask(method, path, parameters, data, head, options) {
+		if (!this.connected) {
+			await this.reconnect();
+		}
 		const ask = construct(Ask, [method, path, parameters, data, head, options, this]);
 		return ask;
 	}
@@ -173,7 +184,7 @@ export class Client extends UDSP {
 			return;
 		}
 		console.log('Got server Intro', frame);
-		const [streamid_undefined, rpc, serverConnectionId, reKey, serverRandomToken, certSize, dataSize] = frame;
+		const [streamid_undefined, rpc, serverConnectionId, reKey, serverRandomToken] = frame;
 		this.destination.id = serverConnectionId;
 		this.destination.connectionIdSize = serverConnectionId.length;
 		this.newKeypair = reKey;
@@ -182,9 +193,6 @@ export class Client extends UDSP {
 		if (serverRandomToken) {
 			this.serverRandomToken = serverRandomToken;
 			console.log('Server Random Token', toBase64(serverRandomToken));
-		}
-		if (certSize) {
-			this.certSize = certSize;
 		}
 		this.handshaked();
 	}
@@ -286,7 +294,7 @@ export class Client extends UDSP {
 		this.readyState = 1;
 	}
 	setDisconnected() {
-		this.connected = false;
+		this.connected = null;
 		this.state = 0;
 		this.readyState = 0;
 	}
@@ -297,7 +305,7 @@ export class Client extends UDSP {
 		this.handshakeCompleted(this);
 	}
 	async setSessionKeys(generatedKeys) {
-		console.log(this.destination.encryptionKeypair);
+		// console.log(this.destination.encryptionKeypair);
 		if (this.destination.encryptionKeypair || generatedKeys) {
 			this.sessionKeys = generatedKeys || this.publicKeyCryptography.clientSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair);
 			if (this.sessionKeys) {
@@ -308,17 +316,11 @@ export class Client extends UDSP {
 		}
 	}
 	async setNewDestinationKeys() {
-		if (!(this.handshakeSet)) {
+		if (this.newKeypair) {
 			this.destination.encryptionKeypair = {
 				publicKey: this.newKeypair
 			};
-			if (this.destination.connectionIdKeypair) {
-				this.destination.connectionIdKeypair = {
-					publicKey: this.newConnectionKeypair || this.newKeypair
-				};
-			}
 			await this.setSessionKeys();
-			this.handshakeSet = true;
 		}
 	}
 	request = uwRequest;
@@ -332,17 +334,23 @@ export class Client extends UDSP {
 	setDestination = setDestination;
 	configCryptography = configCryptography;
 	getIPDetails = getIPDetails;
-	destination = {
-		connectionIdSize: 8,
-		overhead: {}
-	};
-	autoConnect = false;
 	static connections = new Map();
-	certificateChunks = [];
-	requestQueue = construct(Map);
-	data = construct(Map);
-	connectionIdSize = 4;
-	ipVersion = 'udp4';
+	async setDefaults() {
+		this.newKeypair = null;
+		this.serverRandomToken = null;
+		this.handshakeCompleted = null;
+		this.awaitHandshake = null;
+		this.destination = {
+			connectionIdSize: 8,
+			overhead: {}
+		};
+		this.autoConnect = false;
+		this.certificateChunks = [];
+		this.requestQueue = construct(Map);
+		this.data = construct(Map);
+		this.connectionIdSize = 4;
+		this.ipVersion = 'udp4';
+	}
 }
 export async function client(options) {
 	console.log('Create Client');

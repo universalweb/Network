@@ -30,7 +30,7 @@ export async function uwRequest(methodArg, pathArg, paramArg, dataArg, headersAr
 		params = methodArg.param || methodArg.params;
 	}
 	info(`Request Function: ${method} ${path}`);
-	const ask = this.ask(method, path, params, data, head, options);
+	const ask = await this.ask(method, path, params, data, head, options);
 	console.log(data, ask);
 	return ask;
 }

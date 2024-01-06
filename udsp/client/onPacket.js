@@ -38,7 +38,7 @@ export async function onPacket(packet) {
 		message,
 		footer,
 	} = config.packetDecoded;
-	console.log(config);
+	// console.log(config);
 	if (!hasValue(message)) {
 		return console.trace('Error no message found in packet');
 	}
