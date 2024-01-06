@@ -118,7 +118,7 @@ export async function initialize(config) {
 			const lastActive = Date.now() - client.lastActive;
 			console.log('Client Grace Period reached killing connection', lastActive > gracePeriod, client);
 			if (client.state <= 1 || lastActive > heartbeat) {
-				client.destroy(1);
+				client.close(1);
 			}
 		}, gracePeriod);
 	}

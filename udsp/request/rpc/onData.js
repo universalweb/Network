@@ -1,4 +1,4 @@
-export async function onDataReady(id, rpc, packetId, data, frame, source) {
+export async function onDataReady(id, rpc, packetId, data, frame, source, rinfo) {
 	if (!source.receivedDataReadyPacket) {
 		source.totalReceivedUniquePackets++;
 		source.receivedDataReadyPacket = true;
@@ -6,7 +6,7 @@ export async function onDataReady(id, rpc, packetId, data, frame, source) {
 	console.log('Data Ready Packet Received', source.type);
 	source.sendData();
 }
-export async function onData(id, rpc, packetId, data, frame, source) {
+export async function onData(id, rpc, packetId, data, frame, source, rinfo) {
 	if (!source.receivedSetupPacket || source.incomingDataPackets[packetId]) {
 		return;
 	}

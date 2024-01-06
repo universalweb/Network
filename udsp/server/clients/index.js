@@ -26,6 +26,7 @@ import {
 } from '#crypto';
 import { Reply } from '#udsp/request/reply';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
+import cluster from 'node:cluster';
 import { destroy } from './destroy.js';
 import { encodePacket } from '#udsp/encoding/encodePacket';
 import { initialize } from './initialize.js';
@@ -137,8 +138,11 @@ export class Client {
 			this.generateSessionKeypair();
 		}
 		const frame = [false, 0, this.id, this.newKeypair.publicKey, this.randomId];
+		if (cluster.worker) {
+			frame.push(true);
+		}
 		this.updateState(1);
-		await this.send(frame);
+		this.send(frame);
 	}
 	// CLIENT DISCOVERY
 	async discovery(frame, header) {
@@ -161,7 +165,7 @@ export class Client {
 		await this.setSessionKeys();
 		this.newSessionKeysAssigned = true;
 	}
-	async reply(frame, header) {
+	async reply(frame, header, rinfo) {
 		const processingFrame = await processFrame(frame, header, this, this.requestQueue);
 		if (processingFrame === false) {
 			const replyObject = new Reply(frame, header, this);
@@ -171,12 +175,12 @@ export class Client {
 				console.trace();
 				return;
 			}
-			replyObject.onFrame(frame, header);
+			replyObject.onFrame(frame, header, rinfo);
 		}
 	}
-	close(statusCode, reason) {
-		this.sendClose();
-		this.destroy(statusCode);
+	close(reason) {
+		// this.sendClose();
+		this.destroy(reason);
 	}
 	pending = false;
 	state = 0;

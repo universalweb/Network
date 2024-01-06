@@ -26,3 +26,4 @@ console.timeEnd('FileRequest');
 console.timeEnd('Full');
 console.log('headers', response.headers);
 console.log('data', response.text());
+console.log(uwClient.destination);

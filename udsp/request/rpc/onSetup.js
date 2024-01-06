@@ -1,6 +1,6 @@
 import { hasValue, isNotNumber, isNumber } from '@universalweb/acid';
 import { isMethodCodeValid } from '../../isMethodCodeValid.js';
-export async function onSetup(id, rpc, packetId, data, frame, source) {
+export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 	if (source.receivedSetupPacket) {
 		console.log('Received Setup Packet Already');
 		return;

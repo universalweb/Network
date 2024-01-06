@@ -34,7 +34,7 @@ const rpcFunctions = [onSetup,
 	onHeadReady, onHead,
 	onDataReady, onData,
 	onEnd, onError];
-export async function onFrame(frame, header) {
+export async function onFrame(frame, header, rinfo) {
 	const source = this;
 	const { isAsk } = source;
 	source.lastActive = Date.now();
@@ -60,5 +60,5 @@ export async function onFrame(frame, header) {
 		source.destroy('Invalid RPC Not a Function');
 		return;
 	}
-	rpcFunction(id, rpc, packetId, data, frame, source);
+	rpcFunction(id, rpc, packetId, data, frame, source, rinfo);
 }

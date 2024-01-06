@@ -114,6 +114,7 @@ export class Client extends UDSP {
 			return source.onListening(...args);
 		});
 		this.socket.on('message', (packet, rinfo) => {
+			// console.log('ORIGIN', rinfo);
 			return source.onPacket(packet, rinfo);
 		});
 	}
@@ -181,7 +182,7 @@ export class Client extends UDSP {
 			this.sendHandshake(message);
 		}
 	}
-	async intro(frame, header) {
+	async intro(frame, header, rinfo) {
 		if (!frame || !isArray(frame)) {
 			this.close('No intro message', frame);
 			return;
@@ -189,13 +190,24 @@ export class Client extends UDSP {
 		if (this.newKeypair) {
 			return;
 		}
+		const { destination } = this;
 		console.log('Got server Intro', frame);
-		const [streamid_undefined, rpc, serverConnectionId, reKey, serverRandomToken] = frame;
+		const [streamid_undefined, rpc, serverConnectionId, reKey, serverRandomToken, changeDestinationAddress] = frame;
 		this.destination.id = serverConnectionId;
 		this.destination.connectionIdSize = serverConnectionId.length;
 		this.newKeypair = reKey;
 		await this.setNewDestinationKeys();
 		console.log('New Server Connection ID', toBase64(serverConnectionId));
+		if (changeDestinationAddress) {
+			if (changeDestinationAddress === true) {
+				this.destination.ip = rinfo.address;
+				this.destination.port = rinfo.port;
+			} else if (isArray(changeDestinationAddress)) {
+				this.destination.ip = changeDestinationAddress[0];
+				this.destination.port = changeDestinationAddress[1];
+			}
+			console.log('Destination changed in INTRO', this.destination.ip, destination.port);
+		}
 		if (serverRandomToken) {
 			this.serverRandomToken = serverRandomToken;
 			console.log('Server Random Token', toBase64(serverRandomToken));

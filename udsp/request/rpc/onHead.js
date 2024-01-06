@@ -1,11 +1,11 @@
-export async function onHeadReady(id, rpc, packetId, data, frame, source) {
+export async function onHeadReady(id, rpc, packetId, data, frame, source, rinfo) {
 	if (!source.receivedHeadReadyPacket) {
 		source.totalReceivedUniquePackets++;
 		source.receivedHeadReadyPacket = true;
 	}
 	source.sendHead();
 }
-export async function onHead(id, rpc, packetId, data, frame, source) {
+export async function onHead(id, rpc, packetId, data, frame, source, rinfo) {
 	if (!source.receivedSetupPacket || source.incomingHeadPackets[packetId]) {
 		return;
 	}

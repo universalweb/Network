@@ -17,7 +17,7 @@ import {
 } from '@universalweb/acid';
 import { proccessProtocolPacketHeader } from '#udsp/proccessProtocolPacket';
 import { processFrame } from '../processFrame.js';
-export async function onPacket(packet) {
+export async function onPacket(packet, rinfo) {
 	msgReceived('Packet Received');
 	const config = {
 		destination: this,
@@ -43,10 +43,10 @@ export async function onPacket(packet) {
 		return console.trace('Error no message found in packet');
 	}
 	if (isFalse(config.isShortHeaderMode)) {
-		await proccessProtocolPacketHeader(this, message, header);
+		await proccessProtocolPacketHeader(this, message, header, rinfo);
 	}
-	await processFrame(message, header, this, this.requestQueue);
-	this.trigger(this.events, 'socket.onPacket', this);
+	await processFrame(message, header, this, this.requestQueue, rinfo);
+	this.trigger(this.events, 'socket.onPacket', this, [message, header, rinfo]);
 	return;
 }
 

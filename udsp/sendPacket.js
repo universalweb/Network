@@ -22,7 +22,7 @@ export async function sendEncodedPacket(socket, packetEncoded, port, ip, destroy
 		});
 	});
 }
-export async function sendPacket(message, source, socket, destination = source.destination, headers, footer, repeat) {
+export async function sendPacket(message, source, socket, destination = source.destination, headers, footer, repeat, rinfo) {
 	if (source.destroyed) {
 		return;
 	}
@@ -33,10 +33,8 @@ export async function sendPacket(message, source, socket, destination = source.d
 		isServer,
 		isServerClient
 	} = source;
-	const {
-		ip,
-		port,
-	} = destination;
+	const ip = (rinfo) ? rinfo.address : destination.ip;
+	const port = (rinfo) ? rinfo.port : destination.port;
 	if (headers) {
 		info(`Sending Packet with header`);
 	}

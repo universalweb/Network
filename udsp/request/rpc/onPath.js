@@ -1,4 +1,4 @@
-export async function onPathReady(id, rpc, packetId, data, frame, source) {
+export async function onPathReady(id, rpc, packetId, data, frame, source, rinfo) {
 	if (!source.receivedPathReadyPacket) {
 		source.totalReceivedUniquePackets++;
 		source.receivedPathReadyPacket = true;
@@ -6,7 +6,7 @@ export async function onPathReady(id, rpc, packetId, data, frame, source) {
 	console.log('Path Ready Packet Received', source.type);
 	source.sendPath();
 }
-export async function onPath(id, rpc, packetId, data, frame, source) {
+export async function onPath(id, rpc, packetId, data, frame, source, rinfo) {
 	if (!source.receivedSetupPacket || source.incomingPathPackets[packetId]) {
 		return;
 	}

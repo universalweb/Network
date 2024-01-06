@@ -1,4 +1,4 @@
-export async function onParametersReady(id, rpc, packetId, data, frame, source) {
+export async function onParametersReady(id, rpc, packetId, data, frame, source, rinfo) {
 	if (!source.receivedParametersReadyPacket) {
 		source.totalReceivedUniquePackets++;
 		source.receivedParametersReadyPacket = true;
@@ -6,7 +6,7 @@ export async function onParametersReady(id, rpc, packetId, data, frame, source) 
 	console.log('Parameters Ready Packet Received', source.type);
 	source.sendParameters();
 }
-export async function onParameters(id, rpc, packetId, data, frame, source) {
+export async function onParameters(id, rpc, packetId, data, frame, source, rinfo) {
 	if (!source.receivedSetupPacket || source.incomingParametersPackets[packetId]) {
 		return;
 	}
