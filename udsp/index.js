@@ -1,6 +1,8 @@
 import { client } from './client/index.js';
 import { isString } from '@universalweb/acid';
+import { logSystemInfo } from '../utilities/systemInfo.js';
 import { uwrl } from './UWRL/index.js';
+await logSystemInfo();
 export async function request(method = 0, url, params, data) {
 	const uwrlObject = isString(url) ? uwrl(url) : url;
 	const uwClient = await client({

@@ -27,8 +27,6 @@ const uwApp = await app({
 		// ipc or proxy
 		// mode: 'proxy',
 	},
-	encryptConnectionId: false,
-	randomId: true,
 	// will listen on ipv4 and ipv6 default is '::1'
 	ip: '::',
 	// default port or the loadbalancer port

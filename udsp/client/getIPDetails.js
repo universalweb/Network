@@ -13,6 +13,7 @@ try {
 	console.log('NO GLOBAL IP');
 }
 console.log('IP Version', globalIpVersion);
+export { globalIpVersion };
 export async function getIPDetails() {
 	const destinationIp = this.destination.ip;
 	if (destinationIp) {

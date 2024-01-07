@@ -1,3 +1,11 @@
+/*
+	* Client Module
+	* UDSP - Universal Data Stream Protocol
+	* Universal Web (UW)
+	* uw:// Universal Web Protocol
+	* udsp:// UDSP Protocol
+	* Establishes a UDP based bi-directional real-time connection between client and server.
+*/
 import {
 	UniqID,
 	assign,
@@ -16,15 +24,6 @@ import {
 import { configure, info, success } from '#logs';
 import { connectionIdToBuffer, generateConnectionId } from '#udsp/connectionId';
 import { createEvent, removeEvent, triggerEvent } from '#udsp/events';
-/*
-  	* Client Module
-	* UDSP - Universal Data Stream Protocol
-	* UW Universal Web
-	* uw:// Universal Web Protocol preferred
-	* udsp:// UDSP Protocol
-	* Establishes a UDP based bi-directional real-time connection between client and server.
-*/
-// Default System imports
 import {
 	decode,
 	encode

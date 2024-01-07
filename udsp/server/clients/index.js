@@ -119,6 +119,10 @@ export class Client {
 	}
 	async authenticate(frame, frameHeaders) {
 	}
+	close(reason) {
+		// this.sendClose();
+		this.destroy(reason);
+	}
 	async destroy(destroyCode) {
 		info(`socket EVENT -> destroy - ID:${this.connectionIdString}`);
 		return destroy(this, destroyCode);
@@ -177,10 +181,6 @@ export class Client {
 			}
 			replyObject.onFrame(frame, header, rinfo);
 		}
-	}
-	close(reason) {
-		// this.sendClose();
-		this.destroy(reason);
 	}
 	pending = false;
 	state = 0;

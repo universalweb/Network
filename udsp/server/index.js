@@ -159,6 +159,7 @@ export class Server extends UDSP {
 			const reservedConnectionIdSize = String(coreCount).length;
 			this.reservedConnectionIdSize = reservedConnectionIdSize;
 			const compiledId = this.workerId.padStart(reservedConnectionIdSize, '0');
+			this.id = compiledId;
 		} else if (!this.id) {
 			this.id = '0';
 		}
@@ -169,7 +170,7 @@ export class Server extends UDSP {
 		this.initializeBase(options);
 		assign(this, options);
 		this.options = seal(assign({}, options));
-		info(this.options);
+		console.log('OPTIONS', this.options);
 		this.configConnectionId();
 		await this.setCertificate();
 		await this.configureNetwork();
