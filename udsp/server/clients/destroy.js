@@ -7,25 +7,38 @@ import {
 	success
 } from '#logs';
 export async function destroy(client, reason) {
-	client.destroyed = true;
 	if (client.destroyed) {
 		return;
 	}
+	client.destroyed = true;
 	clearTimeout(client.gracePeriodTimeout);
 	const server = client.server();
 	console.log(`client destroyed: ${client.connectionIdString}`);
-	if (reason === 1) {
-		info(`client ended from inactivity. Grace period ended.
+	switch (reason) {
+		case 0: {
+			info(`client ended due to natural causes.
 			ID: ${client.connectionIdString}
 			Address: ${client.destination.ip}
 			Port: ${client.destination.port}
 		`);
-	} else if (reason === 0) {
-		info(`client ended due to natural causes.
+			break;
+		}
+		case 1: {
+			info(`client ended from inactivity. Grace period ended.
 			ID: ${client.connectionIdString}
 			Address: ${client.destination.ip}
-			Port: ${client.destination.port}
-		`);
+			Port: ${client.destination.port}`);
+			break;
+		}
+		case 2: {
+			info(`client ended from invalid RPC given.
+			ID: ${client.connectionIdString}
+			Address: ${client.destination.ip}
+			Port: ${client.destination.port}`);
+			break;
+		}
+		default:
+			break;
 	}
 	await server.removeClient(client);
 	// Clear all client data

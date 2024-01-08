@@ -36,7 +36,6 @@ export class Reply extends Base {
 	constructor(frame, header, source) {
 		super(source);
 		console.log('Setting up new reply', frame);
-		const thisReply = this;
 		const id = frame[0];
 		if (!hasValue(id)) {
 			console.trace('Catastrophic error no stream id in frame');

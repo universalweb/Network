@@ -38,6 +38,7 @@ import { getCertificate, parseCertificate } from '#certificate';
 import { Ask } from '../request/ask.js';
 import { UDSP } from '#udsp/base';
 import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
+import { clientStates } from '../states.js';
 import { configCryptography } from './configCryptography.js';
 import dgram from 'dgram';
 // Client specific imports to extend class
@@ -51,12 +52,22 @@ import { keychainGet } from '#keychain';
 import { onListening } from './listening.js';
 import { onPacket } from './onPacket.js';
 import { post } from '../requestMethods/post.js';
-import { processFrame } from '../processFrame.js';
 import { sendPacket } from '../sendPacket.js';
 import { setDestination } from './setDestination.js';
 import { socketOnError } from './socketOnError.js';
 import { uwRequest } from '#udsp/requestMethods/request';
 import { watch } from '#watch';
+const {
+	inactiveState,
+	discoveringState,
+	discoveredState,
+	connectingState,
+	connectedState,
+	closingState,
+	closedState,
+	destroyingState,
+	destroyedState
+} = clientStates;
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
 	constructor(options) {
@@ -118,9 +129,6 @@ export class Client extends UDSP {
 		});
 	}
 	socketOnError = socketOnError;
-	connect() {
-		return this.ensureHandshake();
-	}
 	assignId() {
 		const connectionIdString = generateConnectionId(this.connectionIdSize);
 		this.connectionIdSize = this.destination.clientConnectionIdSize || 4;
@@ -136,27 +144,9 @@ export class Client extends UDSP {
 		const thisClient = this;
 		success(`client reKeyed -> ID: ${thisClient.connectionIdString}`);
 	}
-	async close(message) {
-		console.log(`Client CLOSING. ${this.connectionIdString}`);
-		Client.connections.delete(this.connectionIdString);
-		await this.sendEnd();
-		await this.setDisconnected();
-		await this.socket.close();
-		this.trigger(this.events, 'closed', this);
-		console.log(`Client CLOSED. ${this.connectionIdString}`);
-	}
-	destory() {
-		console.log('Destory Client Object - buffer cleanup');
-		this.trigger(this.events, 'destroyed', this);
-		this.close();
-	}
 	async send(message, headers, footer, repeat) {
 		console.log(`client.send to Server`, this.destination.ip, this.destination.port);
 		return sendPacket(message, this, this.socket, this.destination, headers, footer, repeat);
-	}
-	async reconnect() {
-		await this.initialize();
-		await this.connect();
 	}
 	async ask(method, path, parameters, data, head, options) {
 		if (!this.connected) {
@@ -178,12 +168,106 @@ export class Client extends UDSP {
 		this.certificateChunks[pid] = cert;
 		if (last) {
 			this.loadCertificate(Buffer.concat(this.certificateChunks));
-			this.sendHandshake(message);
+			this.connect(message);
 		}
+	}
+	updateState(state) {
+		console.log(`CLIENT State Updated -> ${this.state}`);
+		this.state = state;
+		this.trigger(this.events, 'state', this);
+	}
+	updateReadyState(state) {
+		console.log(`CLIENT READYState Updated -> ${this.state}`);
+		this.readyState = state;
+		this.trigger(this.events, 'readyState', this);
+	}
+	setDiscoveryHeaders(header = []) {
+		const key = this.encryptionKeypair.publicKey;
+		console.log('Setting Cryptography in UDSP Header', toBase64(key));
+		const {
+			cipherSuiteName,
+			cipherSuite,
+			version
+		} = this;
+		header.push(cipherSuite.id, version);
+		return header;
+	}
+	/*
+		* Send Discovery
+		* Generate & sign a random nonce include it in the header then send it to the server
+		* Server verifies client most likely has the private key
+		* sends cert chunked with one time encryption using client public key
+		* Client saves cert and restarts the connection with the new data
+	*/
+	async sendDiscovery() {
+		if (this.state === inactiveState) {
+			console.log('Sending Discovery');
+			this.updateState(discoveringState);
+			const header = [2];
+			this.setPublicKeyHeader(header);
+			this.setCryptographyOptionsHeaders(header);
+			const message = [];
+			this.discoverySent = true;
+			return this.send(message, header);
+		}
+	}
+	discovered() {
+		console.log('Discovery Completed - certificate loaded');
+		this.updateState(discoveredState);
+	}
+	discovery(frame, header) {
+		this.discovered();
+	}
+	setPublicKeyHeader(header = []) {
+		const key = this.encryptionKeypair.publicKey;
+		console.log('Setting Public Key in UDSP Header', toBase64(key));
+		const { encryptServerConnectionId } = this;
+		if (encryptServerConnectionId) {
+			console.log('Encrypting Public Key in UDSP Header');
+			header.push(this.boxCryptography.boxSeal(header.key, this.destination.connectionIdKeypair));
+		} else {
+			header.push(key);
+		}
+		return header;
+	}
+	setCryptographyHeaders(header = []) {
+		const key = this.encryptionKeypair.publicKey;
+		console.log('Setting Cryptography in UDSP Header', toBase64(key));
+		const {
+			cipherSuiteName,
+			cipherSuite,
+			version
+		} = this;
+		header.push(cipherSuite.id, version);
+		return header;
+	}
+	connect() {
+		if (this.state === 4) {
+			console.log('ALREADY CONNECTED');
+			return this;
+		}
+		if (this.handshakeCompleted) {
+			return this.awaitHandshake;
+		}
+		this.awaitHandshake = promise((accept) => {
+			console.log('HANDSHAKE AWAITING');
+			this.handshakeCompleted = accept;
+		});
+		this.sendIntro();
+		return this.awaitHandshake;
+	}
+	sendIntro() {
+		console.log('Sending Intro');
+		this.updateState(connectingState);
+		const header = [0];
+		this.setPublicKeyHeader(header);
+		this.setCryptographyHeaders(header);
+		const message = [];
+		return this.send(message, header);
 	}
 	async intro(frame, header, rinfo) {
 		if (!frame || !isArray(frame)) {
-			this.close('No intro message', frame);
+			this.close(frame);
 			return;
 		}
 		if (this.newKeypair) {
@@ -191,10 +275,10 @@ export class Client extends UDSP {
 		}
 		const { destination } = this;
 		console.log('Got server Intro', frame);
-		const [streamid_undefined, rpc, serverConnectionId, reKey, serverRandomToken, changeDestinationAddress] = frame;
+		const [streamid_undefined, rpc, serverConnectionId, newKeypair, serverRandomToken, changeDestinationAddress] = frame;
 		this.destination.id = serverConnectionId;
 		this.destination.connectionIdSize = serverConnectionId.length;
-		this.newKeypair = reKey;
+		this.newKeypair = newKeypair;
 		await this.setNewDestinationKeys();
 		console.log('New Server Connection ID', toBase64(serverConnectionId));
 		if (changeDestinationAddress) {
@@ -223,118 +307,6 @@ export class Client extends UDSP {
 		}
 		this.handshaked();
 	}
-	discovery(frame, header) {
-	}
-	end(frame, header) {
-		this.close('Server Ended Connection');
-	}
-	setPublicKeyHeader(header = []) {
-		const key = this.encryptionKeypair.publicKey;
-		console.log('Setting Public Key in UDSP Header', toBase64(key));
-		const { encryptServerConnectionId } = this;
-		if (encryptServerConnectionId) {
-			console.log('Encrypting Public Key in UDSP Header');
-			header.push(this.boxCryptography.boxSeal(header.key, this.destination.connectionIdKeypair));
-		} else {
-			header.push(key);
-		}
-		return header;
-	}
-	setCryptographyHeaders(header = []) {
-		const key = this.encryptionKeypair.publicKey;
-		console.log('Setting Cryptography in UDSP Header', toBase64(key));
-		const {
-			cipherSuiteName,
-			cipherSuite,
-			version
-		} = this;
-		header.push(cipherSuite.id, version);
-		return header;
-	}
-	setDiscoveryHeaders(header = []) {
-		const key = this.encryptionKeypair.publicKey;
-		console.log('Setting Cryptography in UDSP Header', toBase64(key));
-		const {
-			cipherSuiteName,
-			cipherSuite,
-			version
-		} = this;
-		header.push(cipherSuite.id, version);
-		const requestCertificate = this.hasCertificate === false;
-		if (requestCertificate) {
-			header.push(requestCertificate);
-		}
-		return header;
-	}
-	sendIntro() {
-		console.log('Sending Intro');
-		this.state = 1;
-		const header = [0];
-		this.setPublicKeyHeader(header);
-		this.setCryptographyHeaders(header);
-		const message = [];
-		return this.send(message, header);
-	}
-	/*
-		* Send Discovery
-		* Generate & sign a random nonce include it in the header then send it to the server
-		* Server verifies client most likely has the private key
-		* sends cert chunked with one time encryption using client public key
-		* Client saves cert and restarts the connection with the new data
-	*/
-	sendDiscovery() {
-		console.log('Sending Discovery');
-		this.state = 0;
-		const header = [2];
-		this.setPublicKeyHeader(header);
-		this.setCryptographyOptionsHeaders(header);
-		const message = [];
-		this.discoverySent = true;
-		return this.send(message, header);
-	}
-	sendEnd() {
-		if (this.state === 0) {
-			return;
-		}
-		console.log('Sending CLIENT END');
-		this.state = 0;
-		return this.send([false, 1], false, null, true);
-	}
-	ensureHandshake() {
-		if (this.connected === true) {
-			console.log('ALREADY CONNECTED');
-			return true;
-		}
-		if (this.handshakeCompleted) {
-			return this.awaitHandshake;
-		}
-		this.awaitHandshake = promise((accept) => {
-			console.log('HANDSHAKE AWAITING');
-			this.handshakeCompleted = accept;
-		});
-		this.sendIntro();
-		return this.awaitHandshake;
-	}
-	setConnected() {
-		this.connected = true;
-		this.state = 2;
-		this.readyState = 1;
-		this.trigger(this.events, 'connected', this);
-	}
-	setDisconnected() {
-		this.connected = null;
-		this.state = 0;
-		this.readyState = 0;
-		this.trigger(this.events, 'disconnected', this);
-	}
-	async handshaked(message) {
-		console.log('Handshake Completed with new keys');
-		await this.calculatePacketOverhead();
-		this.setConnected();
-		if (this.handshakeCompleted) {
-			this.handshakeCompleted(this);
-		}
-	}
 	async setSessionKeys(generatedKeys) {
 		// console.log(this.destination.encryptionKeypair);
 		if (this.destination.encryptionKeypair || generatedKeys) {
@@ -354,20 +326,79 @@ export class Client extends UDSP {
 			await this.setSessionKeys();
 		}
 	}
+	async handshaked(message) {
+		console.log('Handshake Completed with new keys');
+		await this.calculatePacketOverhead();
+		await this.setConnected();
+		if (this.handshakeCompleted) {
+			this.handshakeCompleted(this);
+		}
+	}
+	async setConnected() {
+		this.connected = true;
+		this.updateState(connectedState);
+		this.updateReadyState(1);
+		this.trigger(this.events, 'connected', this);
+	}
+	async sendEnd() {
+		if (this.state === connectingState || this.state === connectedState || this.state === closingState) {
+			console.log('Sending CLIENT END');
+			return this.send([false, 1], false, null, true);
+		}
+	}
+	end(frame, header) {
+		this.close('Server Ended Connection');
+	}
+	async close(message) {
+		if (this.state === connectingState || this.state === connectedState) {
+			console.log(`Client CLOSING. ${this.connectionIdString}`);
+			Client.connections.delete(this.connectionIdString);
+			this.updateState(closingState);
+			this.updateReadyState(2);
+			await this.sendEnd();
+			await this.setDisconnected();
+			await this.socket.close();
+			this.updateState(closedState);
+			this.updateReadyState(3);
+			this.trigger(this.events, 'closed', this);
+			console.log(`Client CLOSED. ${this.connectionIdString}`);
+		}
+	}
+	async setDisconnected() {
+		this.connected = null;
+		this.updateState(closedState);
+		this.updateReadyState(3);
+		this.trigger(this.events, 'disconnected', this);
+	}
+	async reconnect() {
+		if (this.state === closedState) {
+			await this.initialize();
+			await this.connect();
+		}
+	}
+	async destory() {
+		if (this.state !== destroyedState) {
+			console.log('Destory Client Object - buffer cleanup');
+			await this.close();
+			this.updateState(destroyingState);
+			// FLUSH DATA TEARDOWN NEEDED
+			this.updateState(destroyedState);
+			this.trigger(this.events, 'destroyed', this);
+		}
+	}
 	on(...args) {
 		return createEvent(this.events, ...args);
 	}
 	off(...args) {
 		removeEvent(this.events, ...args);
 	}
-	trigger(...args) {
-		triggerEvent(this.events, ...args);
+	trigger(primaryObject, eventObject, bindPrimaryObject) {
+		triggerEvent(this.events, primaryObject, eventObject, this.bindAllEvents || bindPrimaryObject);
 	}
 	request = uwRequest;
 	fetch = fetchRequest;
 	post = post;
 	get = get;
-	processFrame = processFrame;
 	emit = emit;
 	onListening = onListening;
 	onPacket = onPacket;

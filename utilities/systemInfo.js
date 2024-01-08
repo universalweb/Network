@@ -38,7 +38,7 @@ function memInfo() {
 	});
 }
 export function logSystemInfo() {
-	console.log(`-------OS INFORMATION START-------`);
+	console.log(`-------SYSTEM INFORMATION START-------`);
 	console.log(`Platform: ${os.platform()}`);
 	console.log(`Type: ${os.type()}`);
 	console.log(`Release: ${os.release()}`);
@@ -64,5 +64,5 @@ export function logSystemInfo() {
 	// 	await cpuUsageInfo();
 	// 	await cpuFreeInfo();
 	// 	await memInfo();
-	console.log(`-------OS INFORMATION END-------`);
+	console.log(`-------SYSTEM INFORMATION END-------`);
 }

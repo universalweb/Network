@@ -44,7 +44,7 @@ export async function setDestination() {
 		assign(destination, destinationCertificate);
 	}
 	if (destination.publicKey) {
-		this.hasCertificate = true;
+		await this.discovered();
 	}
 	if (!destination.publicKey) {
 		console.log('No destination certificate provided.');

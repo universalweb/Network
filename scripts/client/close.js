@@ -3,7 +3,7 @@ console.log('STARTING CLIENT');
 console.time('Full');
 import { client } from '#udsp';
 import { currentPath } from '@universalweb/acid';
-console.time('Connected');
+console.time('Benchmark');
 // Universal Web Client Socket
 const uwClient = await client({
 	destinationCertificate: `${currentPath(import.meta)}/../../serverApp/certs/universal_web-Ephemeral/universal.web-EphemeralPublic.cert`,
@@ -14,4 +14,4 @@ const uwClient = await client({
 });
 const connection = await uwClient.connect();
 await uwClient.close();
-console.timeEnd('Connected');
+console.timeEnd('Benchmark');

@@ -6,7 +6,7 @@ import { destroy } from './request/destory.js';
 export async function proccessProtocol(source, rpc, frame, header, rinfo) {
 	console.log(`Processing Protocol Packet RPC ${rpc}`);
 	if (isNotNumber(rpc)) {
-		source.destroy('Invalid RPC Not a Number');
+		source.destroy(3);
 		return;
 	}
 	switch (rpc) {
@@ -17,6 +17,7 @@ export async function proccessProtocol(source, rpc, frame, header, rinfo) {
 		}
 		// End Connection Packet
 		case 1: {
+			console.log('END RECEIVED');
 			source.end(frame, header, rinfo);
 			break;
 		}

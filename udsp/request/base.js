@@ -435,9 +435,9 @@ export class Base {
 			isReply,
 		} = this;
 		if (isAsk) {
-			console.log('WAIT FOR HANDSHAKE');
-			const handshake = await this.source().ensureHandshake();
-			console.log('HANDSHAKE DONE');
+			console.log('CHECKING CONNECTION');
+			const connect = await this.source().connect();
+			console.log('CONNECTED');
 			if (this.sent) {
 				return this.accept;
 			}

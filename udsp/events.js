@@ -7,10 +7,19 @@ import {
 	isPlainObject
 } from '@universalweb/acid';
 import { imported } from '#logs';
-export async function triggerEvent(events, eventName, primaryObject, arg) {
+export async function triggerEvent(events, eventName, primaryObject, eventObject, bindPrimaryObject) {
 	const eventArray = events.get(eventName);
 	if (eventArray) {
-		invokeArray(eventArray, primaryObject, arg);
+		const eventArrayLength = eventArray.length;
+		if (bindPrimaryObject) {
+			for (let index = 0; index < eventArrayLength; index++) {
+				eventArray[index].call(primaryObject, eventObject);
+			}
+		} else {
+			for (let index = 0; index < eventArrayLength; index++) {
+				eventArray[index](primaryObject, eventObject);
+			}
+		}
 	}
 }
 async function addListener(events, eventName, eventMethod) {

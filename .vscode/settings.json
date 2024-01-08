@@ -74,5 +74,6 @@
 	},
 	"docwriter.style": "JSDoc",
 	"diffEditor.codeLens": true,
-	"MutableAI.upsell": false
+	"MutableAI.upsell": false,
+	"todo-tree.tree.scanMode": "workspace only"
 }

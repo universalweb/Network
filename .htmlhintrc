@@ -8,5 +8,6 @@
     "id-unique": true,
     "src-not-empty": true,
     "attr-no-duplication": true,
-    "title-require": false
+    "title-require": false,
+    "space-tab-mixed-disabled": "tab"
 }

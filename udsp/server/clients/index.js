@@ -32,7 +32,6 @@ import { encodePacket } from '#udsp/encoding/encodePacket';
 import { initialize } from './initialize.js';
 import { onConnected } from './onConnected.js';
 import { processFrame } from '#udsp/processFrame';
-import { received } from './received.js';
 import { sendPacket } from '#udsp/sendPacket';
 /**
  * @TODO
@@ -103,6 +102,9 @@ export class Client {
 		success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
 	}
 	updateState(state) {
+		if (this.destroyed) {
+			return;
+		}
 		console.log(`CLIENT State Updated -> ${this.state}`);
 		this.state = state;
 	}
@@ -113,22 +115,27 @@ export class Client {
 		}
 		return sendPacket(frame, this, this.socket, this.destination, headers, footer);
 	}
-	async received(frame, frameHeaders) {
-		info(`socket EVENT -> send - ID:${this.connectionIdString}`);
-		return received(this, frame, frameHeaders);
-	}
 	async authenticate(frame, frameHeaders) {
 	}
-	close(reason) {
-		// this.sendClose();
-		this.destroy(reason);
+	close(destroyCode) {
+		this.sendEnd();
+		this.destroy(destroyCode);
 	}
 	async destroy(destroyCode) {
 		info(`socket EVENT -> destroy - ID:${this.connectionIdString}`);
 		return destroy(this, destroyCode);
 	}
+	sendEnd() {
+		if (this.state === 0) {
+			return;
+		}
+		console.log('Sending CLIENT END');
+		this.updateState(0);
+		return this.send([false, 1], false, null, true);
+	}
 	async end(frame, header) {
 		console.log(`Destroying client ${this.connectionIdString}`, frame, header);
+		await this.sendEnd();
 		await this.destroy(0);
 	}
 	// CLIENT HELLO

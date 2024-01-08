@@ -3,19 +3,13 @@ import { noop } from '@universalweb/acid';
 const array = new Array(100);
 const routesLength = array.length;
 function test1() {
-	for (let i = 0; i < routesLength; i++) {
-		if (i === routesLength) {
-			noop();
-			break;
-		}
+	if (routesLength > 0 && routesLength < 4) {
+		return;
 	}
 }
 function test2() {
-	for (let i = 0; i < routesLength; i++) {
-		if (i === routesLength) {
-			noop();
-			return;
-		}
+	if (routesLength === 1 || routesLength === 2 || routesLength === 3) {
+		return;
 	}
 }
 // Create a benchmark suite
