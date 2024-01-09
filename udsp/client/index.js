@@ -172,13 +172,13 @@ export class Client extends UDSP {
 		}
 	}
 	updateState(state) {
-		console.log(`CLIENT State Updated -> ${this.state}`);
 		this.state = state;
+		console.log(`CLIENT State Updated -> ${this.state}`);
 		this.trigger(this.events, 'state', this);
 	}
 	updateReadyState(state) {
-		console.log(`CLIENT READYState Updated -> ${this.state}`);
 		this.readyState = state;
+		console.log(`CLIENT READYState Updated -> ${this.readyState}`);
 		this.trigger(this.events, 'readyState', this);
 	}
 	setDiscoveryHeaders(header = []) {
@@ -327,10 +327,10 @@ export class Client extends UDSP {
 		}
 	}
 	async handshaked(message) {
-		console.log('Handshake Completed with new keys');
 		await this.calculatePacketOverhead();
 		await this.setConnected();
 		if (this.handshakeCompleted) {
+			console.log('Handshake Completed with new keys');
 			this.handshakeCompleted(this);
 		}
 	}
