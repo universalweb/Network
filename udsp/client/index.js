@@ -159,7 +159,7 @@ export class Client extends UDSP {
 		this.destination.certificate = parseCertificate(certificate);
 		this.configCryptography();
 	}
-	proccessCertificateChunk(message) {
+	async proccessCertificateChunk(message) {
 		const {
 			pid,
 			cert,
@@ -167,19 +167,19 @@ export class Client extends UDSP {
 		} = message;
 		this.certificateChunks[pid] = cert;
 		if (last) {
-			this.loadCertificate(Buffer.concat(this.certificateChunks));
+			await this.loadCertificate(Buffer.concat(this.certificateChunks));
 			this.connect(message);
 		}
 	}
-	updateState(state) {
+	async updateState(state) {
 		this.state = state;
 		console.log(`CLIENT State Updated -> ${this.state}`);
-		this.trigger(this.events, 'state', this);
+		await this.fire(this.events, 'state', this);
 	}
-	updateReadyState(state) {
+	async updateReadyState(state) {
 		this.readyState = state;
 		console.log(`CLIENT READYState Updated -> ${this.readyState}`);
-		this.trigger(this.events, 'readyState', this);
+		await this.fire(this.events, 'readyState', this);
 	}
 	setDiscoveryHeaders(header = []) {
 		const key = this.encryptionKeypair.publicKey;
@@ -202,7 +202,7 @@ export class Client extends UDSP {
 	async sendDiscovery() {
 		if (this.state === inactiveState) {
 			console.log('Sending Discovery');
-			this.updateState(discoveringState);
+			await this.updateState(discoveringState);
 			const header = [2];
 			this.setPublicKeyHeader(header);
 			this.setCryptographyOptionsHeaders(header);
@@ -211,9 +211,9 @@ export class Client extends UDSP {
 			return this.send(message, header);
 		}
 	}
-	discovered() {
+	async discovered() {
 		console.log('Discovery Completed - certificate loaded');
-		this.updateState(discoveredState);
+		await this.updateState(discoveredState);
 	}
 	discovery(frame, header) {
 		this.discovered();
@@ -256,14 +256,14 @@ export class Client extends UDSP {
 		this.sendIntro();
 		return this.awaitHandshake;
 	}
-	sendIntro() {
+	async sendIntro() {
 		console.log('Sending Intro');
-		this.updateState(connectingState);
+		await this.updateState(connectingState);
 		const header = [0];
 		this.setPublicKeyHeader(header);
 		this.setCryptographyHeaders(header);
 		const message = [];
-		return this.send(message, header);
+		await this.send(message, header);
 	}
 	async intro(frame, header, rinfo) {
 		if (!frame || !isArray(frame)) {
@@ -336,9 +336,9 @@ export class Client extends UDSP {
 	}
 	async setConnected() {
 		this.connected = true;
-		this.updateState(connectedState);
-		this.updateReadyState(1);
-		this.trigger(this.events, 'connected', this);
+		await this.updateState(connectedState);
+		await this.updateReadyState(1);
+		this.fire(this.events, 'connected', this);
 	}
 	async sendEnd() {
 		if (this.state === connectingState || this.state === connectedState || this.state === closingState) {
@@ -353,22 +353,22 @@ export class Client extends UDSP {
 		if (this.state === connectingState || this.state === connectedState) {
 			console.log(`Client CLOSING. ${this.connectionIdString}`);
 			Client.connections.delete(this.connectionIdString);
-			this.updateState(closingState);
-			this.updateReadyState(2);
+			await this.updateState(closingState);
+			await this.updateReadyState(2);
 			await this.sendEnd();
 			await this.setDisconnected();
 			await this.socket.close();
-			this.updateState(closedState);
-			this.updateReadyState(3);
-			this.trigger(this.events, 'closed', this);
+			await this.updateState(closedState);
+			await this.updateReadyState(3);
+			this.fire(this.events, 'closed', this);
 			console.log(`Client CLOSED. ${this.connectionIdString}`);
 		}
 	}
 	async setDisconnected() {
 		this.connected = null;
-		this.updateState(closedState);
-		this.updateReadyState(3);
-		this.trigger(this.events, 'disconnected', this);
+		await this.updateState(closedState);
+		await this.updateReadyState(3);
+		this.fire(this.events, 'disconnected', this);
 	}
 	async reconnect() {
 		if (this.state === closedState) {
@@ -380,20 +380,20 @@ export class Client extends UDSP {
 		if (this.state !== destroyedState) {
 			console.log('Destory Client Object - buffer cleanup');
 			await this.close();
-			this.updateState(destroyingState);
+			await this.updateState(destroyingState);
 			// FLUSH DATA TEARDOWN NEEDED
-			this.updateState(destroyedState);
-			this.trigger(this.events, 'destroyed', this);
+			await this.updateState(destroyedState);
+			this.fire(this.events, 'destroyed', this);
 		}
 	}
 	on(...args) {
 		return createEvent(this.events, ...args);
 	}
 	off(...args) {
-		removeEvent(this.events, ...args);
+		return removeEvent(this.events, ...args);
 	}
-	trigger(primaryObject, eventObject, bindPrimaryObject) {
-		triggerEvent(this.events, primaryObject, eventObject, this.bindAllEvents || bindPrimaryObject);
+	fire(eventName, ...args) {
+		return triggerEvent(this.events, eventName, this, ...args);
 	}
 	request = uwRequest;
 	fetch = fetchRequest;

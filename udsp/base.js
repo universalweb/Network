@@ -9,7 +9,6 @@ import { randomBuffer, randomConnectionId, toBase64 } from '#crypto';
 import { calculatePacketOverhead } from './calculatePacketOverhead.js';
 import { cipherSuites } from './cryptoMiddleware/index.js';
 import dgram from 'dgram';
-import { triggerEvent } from '#udsp/events';
 export class UDSP {
 	initializeBase(options) {
 		this.connectionGracePeriod = 30000;

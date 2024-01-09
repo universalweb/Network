@@ -8,5 +8,5 @@ import {
 import { promise, stringify } from '@universalweb/acid';
 export function socketOnError() {
 	console.log('CLIENT SOCKET SERVER ERROR');
-	this.trigger(this.events, 'socket.error', this);
+	this.fire(this.events, 'socket.error', this);
 }

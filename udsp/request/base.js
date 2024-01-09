@@ -530,9 +530,9 @@ export class Base {
 	off(eventName, eventMethod) {
 		return removeEvent(this.events, eventName, eventMethod);
 	}
-	triggerEvent(eventName, arg) {
+	fire(eventName, ...args) {
 		success(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
-		return triggerEvent(this.events, eventName, this, arg);
+		return triggerEvent(this.events, eventName, this, ...args);
 	}
 	destroy = destroy;
 	onFrame = onFrame;
