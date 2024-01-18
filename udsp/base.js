@@ -60,5 +60,9 @@ export class UDSP {
 		});
 		return this;
 	}
-	stateCodeDescriptions = ['initializing', 'initialized', 'failed to initialize'];
+	stateCodeDescriptions = [
+		'initializing',
+		'initialized',
+		'failed to initialize'
+	];
 }

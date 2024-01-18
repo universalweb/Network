@@ -46,7 +46,11 @@ export async function onPacket(packet, rinfo) {
 		await proccessProtocolPacketHeader(this, message, header, rinfo);
 	}
 	await processFrame(message, header, this, this.requestQueue, rinfo);
-	this.fire(this.events, 'socket.onPacket', this, [message, header, rinfo]);
+	this.fire(this.events, 'socket.onPacket', this, [
+		message,
+		header,
+		rinfo
+	]);
 	return;
 }
 

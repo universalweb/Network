@@ -9,7 +9,7 @@ import {
 const ipRegex = /^\b(?:\d{1,3}\.){3}\d{1,3}\b$/;
 class UWRL {
 	constructor(urlOriginal, paramaters) {
-		let url = (urlOriginal.includes('uw://')) ? urlOriginal : `uw://${urlOriginal}`;
+		let url = urlOriginal.includes('uw://') ? urlOriginal : `uw://${urlOriginal}`;
 		if (paramaters) {
 			if (isPlainObject(paramaters)) {
 				this.paramaters = paramaters;

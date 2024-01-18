@@ -3,7 +3,10 @@ export const methods = {
 	get: 0,
 	post: 1,
 };
-export const methodsArray = ['get', 'post'];
+export const methodsArray = [
+	'get',
+	'post'
+];
 export function getMethod(method) {
 	if (isString(method)) {
 		return methods[method.toLowerCase()];

@@ -11,8 +11,10 @@ import { clientResponseObject } from '../request/objects/client/response.js';
 // params support both Complex Data Binary Supported Params and simple traditional URL percent encoded params
 export async function fetchRequest(path, config = {}) {
 	info(`FETCH => ${path}`);
-	const request = await this.request(config.method, path, config.params || config.param,
-		config.data || config.body, config.head || config.headers, config.options);
+	const params = config.params || config.param;
+	const data = config.data || config.body;
+	const head = config.head || config.headers;
+	const request = await this.request(config.method, path, params, data, head, config.options);
 	const askObject = await request.send();
 	if (askObject) {
 		const response = clientResponseObject(askObject);

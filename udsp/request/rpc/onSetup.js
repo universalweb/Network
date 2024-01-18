@@ -14,9 +14,18 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 	let totalIncomingPathSize;
 	let totalIncomingParametersSize;
 	if (isAsk) {
-		[, , totalIncomingHeadSize, totalIncomingDataSize] = frame;
+		[
+			, , totalIncomingHeadSize,
+			totalIncomingDataSize
+		] = frame;
 	} else {
-		[, , rpcMethod, totalIncomingPathSize, totalIncomingParametersSize, totalIncomingHeadSize, totalIncomingDataSize] = frame;
+		[
+			, , rpcMethod,
+			totalIncomingPathSize,
+			totalIncomingParametersSize,
+			totalIncomingHeadSize,
+			totalIncomingDataSize
+		] = frame;
 		if (isMethodCodeValid(rpcMethod) === false) {
 			source.close();
 			return;

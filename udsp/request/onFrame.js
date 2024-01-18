@@ -28,12 +28,19 @@ import { processEvent } from '#server/processEvent';
  * 9 End Packet.
  * 10 Error Packet.
  */
-const rpcFunctions = [onSetup,
-	onPathReady, onPath,
-	onParametersReady, onParameters,
-	onHeadReady, onHead,
-	onDataReady, onData,
-	onEnd, onError];
+const rpcFunctions = [
+	onSetup,
+	onPathReady,
+	onPath,
+	onParametersReady,
+	onParameters,
+	onHeadReady,
+	onHead,
+	onDataReady,
+	onData,
+	onEnd,
+	onError
+];
 export async function onFrame(frame, header, rinfo) {
 	const source = this;
 	const { isAsk } = source;

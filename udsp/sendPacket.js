@@ -33,8 +33,8 @@ export async function sendPacket(message, source, socket, destination = source.d
 		isServer,
 		isServerClient
 	} = source;
-	const ip = (rinfo) ? rinfo.address : destination.ip;
-	const port = (rinfo) ? rinfo.port : destination.port;
+	const ip = rinfo ? rinfo.address : destination.ip;
+	const port = rinfo ? rinfo.port : destination.port;
 	if (headers) {
 		info(`Sending Packet with header`);
 	}
@@ -51,8 +51,10 @@ export async function sendPacket(message, source, socket, destination = source.d
 	const packetEncoded = await encodePacket(message, source, destination, headers, footer);
 	console.log(`Packet Encoded Size ${packetEncoded.length} Worker ${source.workerId || 'Master'} sending to ip: ${ip} Port: ${port}`);
 	if (repeat) {
-		return Promise.all([sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed),
-			sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed)]);
+		return Promise.all([
+			sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed),
+			sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed)
+		]);
 	}
 	return sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed);
 }

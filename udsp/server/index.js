@@ -190,9 +190,12 @@ export class Server extends UDSP {
 	syncWorkerState() {
 		const { clientCount } = this;
 		console.log(`Client count ${clientCount}`);
-		process.send(encode(['state', {
-			clientCount
-		}]));
+		process.send(encode([
+			'state',
+			{
+				clientCount
+			}
+		]));
 	}
 	on(eventName, eventMethod) {
 		return createEvent(this.events, eventName, eventMethod);

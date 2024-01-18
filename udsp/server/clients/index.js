@@ -131,7 +131,10 @@ export class Client {
 		}
 		console.log('Sending CLIENT END');
 		this.updateState(0);
-		return this.send([false, 1], false, null, true);
+		return this.send([
+			false,
+			1
+		], false, null, true);
 	}
 	async end(frame, header) {
 		console.log(`Destroying client ${this.connectionIdString}`, frame, header);
@@ -148,7 +151,13 @@ export class Client {
 		if (!this.newKeypair) {
 			this.generateSessionKeypair();
 		}
-		const frame = [false, 0, this.id, this.newKeypair.publicKey, this.randomId];
+		const frame = [
+			false,
+			0,
+			this.id,
+			this.newKeypair.publicKey,
+			this.randomId
+		];
 		if (cluster.worker) {
 			frame.push(true);
 		}
@@ -165,7 +174,13 @@ export class Client {
 		if (!this.newKeypair) {
 			this.generateSessionKeypair();
 		}
-		const frame = [false, 2, this.id, this.newKeypair.publicKey, this.randomId];
+		const frame = [
+			false,
+			2,
+			this.id,
+			this.newKeypair.publicKey,
+			this.randomId
+		];
 		this.updateState(1);
 		await this.send(frame);
 	}

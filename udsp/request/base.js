@@ -50,18 +50,18 @@ export class Base {
 		this.noData = noPayloadMethods.test(this.method);
 	}
 	setHeaders(target) {
-		const source = (this.isAsk) ? this.request : this.response;
+		const source = this.isAsk ? this.request : this.response;
 		if (!source.head) {
 			source.head = {};
 		}
 		assign(source.head, target);
 	}
 	setHeader(headerName, headerValue) {
-		const source = (this.isAsk) ? this.request : this.response;
+		const source = this.isAsk ? this.request : this.response;
 		if (!source.head) {
 			source.head = {};
 		}
-		source.head[headerName] = (hasValue(headerValue)) ? headerValue : 0;
+		source.head[headerName] = hasValue(headerValue) ? headerValue : 0;
 	}
 	setHeaderDetails(head) {
 		const { dataSize } = head;
@@ -295,7 +295,7 @@ export class Base {
 			isAsk,
 			outgoingPathPackets
 		} = this;
-		const source = (this.isAsk) ? this.request : this.response;
+		const source = this.isAsk ? this.request : this.response;
 		if (!source.path || !objectSize(source.path)) {
 			this.emptyPath = true;
 			return;
@@ -331,7 +331,7 @@ export class Base {
 			isAsk,
 			outgoingParametersPackets
 		} = this;
-		const source = (this.isAsk) ? this.request : this.response;
+		const source = this.isAsk ? this.request : this.response;
 		if (!source.parameters || !objectSize(source.parameters)) {
 			this.emptyParameters = true;
 			return;
@@ -366,7 +366,7 @@ export class Base {
 			isAsk,
 			outgoingHeadPackets
 		} = this;
-		const source = (this.isAsk) ? this.request : this.response;
+		const source = this.isAsk ? this.request : this.response;
 		if (!source.head || !objectSize(source.head)) {
 			this.emptyHead = true;
 			console.log('Empty Head');
@@ -401,7 +401,7 @@ export class Base {
 			isAsk,
 			isReply
 		} = this;
-		const source = (isAsk) ? this.request : this.response;
+		const source = isAsk ? this.request : this.response;
 		if (source.data) {
 			this.outgoingData = source.data;
 			if (!isBuffer(source.data)) {
@@ -444,7 +444,7 @@ export class Base {
 			this.readyState = 1;
 		}
 		this.sent = true;
-		const message = (isAsk) ? this.request : this.response;
+		const message = isAsk ? this.request : this.response;
 		if (data) {
 			message.data = data;
 		}
@@ -518,7 +518,10 @@ export class Base {
 	}
 	getPacketTemplate(rpc, ...items) {
 		const { id, } = this;
-		const message = [id, rpc];
+		const message = [
+			id,
+			rpc
+		];
 		if (items) {
 			message.push(...items);
 		}

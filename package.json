@@ -14,9 +14,6 @@
 	},
 	"company": "Universal Web, Inc",
 	"dependencies": {
-		"@babel/core": "^7.21.0",
-		"@babel/eslint-parser": "^7.19.1",
-		"@babel/preset-env": "^7.20.2",
 		"@cldmv/sizeofvar": "^1.0.4",
 		"@noble/curves": "^1.1.0",
 		"@noble/hashes": "^1.3.1",
@@ -41,7 +38,7 @@
 		"force": false
 	},
 	"engines": {
-		"node": ">=12.9.1"
+		"node": ">=21.2.0"
 	},
 	"homepage": "https://github.com/universalweb/Network#readme",
 	"license": "ISC",
@@ -112,9 +109,13 @@
 	},
 	"version": "3.0.3",
 	"devDependencies": {
+		"@babel/core": "^7.23.7",
+		"@babel/eslint-parser": "^7.23.3",
+		"@babel/preset-env": "^7.23.8",
 		"@electron-forge/cli": "^6.0.5",
 		"@microsoft/eslint-formatter-sarif": "^3.0.0",
 		"@rollup/plugin-terser": "^0.4.4",
+		"@stylistic/eslint-plugin": "^1.5.4",
 		"@universalweb/docredux": "^3.2.7",
 		"auto-changelog": "^2.4.0",
 		"axios": "^1.6.3",

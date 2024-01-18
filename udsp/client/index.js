@@ -152,7 +152,15 @@ export class Client extends UDSP {
 		if (!this.connected) {
 			await this.reconnect();
 		}
-		const ask = construct(Ask, [method, path, parameters, data, head, options, this]);
+		const ask = construct(Ask, [
+			method,
+			path,
+			parameters,
+			data,
+			head,
+			options,
+			this
+		]);
 		return ask;
 	}
 	loadCertificate(certificate) {
@@ -275,7 +283,14 @@ export class Client extends UDSP {
 		}
 		const { destination } = this;
 		console.log('Got server Intro', frame);
-		const [streamid_undefined, rpc, serverConnectionId, newKeypair, serverRandomToken, changeDestinationAddress] = frame;
+		const [
+			streamid_undefined,
+			rpc,
+			serverConnectionId,
+			newKeypair,
+			serverRandomToken,
+			changeDestinationAddress
+		] = frame;
 		this.destination.id = serverConnectionId;
 		this.destination.connectionIdSize = serverConnectionId.length;
 		this.newKeypair = newKeypair;
@@ -343,7 +358,10 @@ export class Client extends UDSP {
 	async sendEnd() {
 		if (this.state === connectingState || this.state === connectedState || this.state === closingState) {
 			console.log('Sending CLIENT END');
-			return this.send([false, 1], false, null, true);
+			return this.send([
+				false,
+				1
+			], false, null, true);
 		}
 	}
 	end(frame, header) {

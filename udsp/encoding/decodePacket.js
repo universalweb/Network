@@ -81,10 +81,10 @@ export async function decodePacketHeaders(config) {
 	if (isUndefined(headerDecoded)) {
 		return console.trace(`No header from decode -> Invalid Packet`);
 	}
-	let id = (isShortHeaderMode) ? headerDecoded : headerDecoded[0];
+	let id = isShortHeaderMode ? headerDecoded : headerDecoded[0];
 	if (connectionIdKeypair) {
 		success('Connection ID Decrypted');
-		const shouldDecryptConnectionId = (isServerEnd) ? destination.encryptServerConnectionId : destination.encryptClientConnectionId;
+		const shouldDecryptConnectionId = isServerEnd ? destination.encryptServerConnectionId : destination.encryptClientConnectionId;
 		// console.log(destination);
 		if (shouldDecryptConnectionId) {
 			id = boxCryptography.boxUnseal(id, destination.connectionIdKeypair);
@@ -166,7 +166,7 @@ export async function decodePacket(config) {
 		if (sessionKeys) {
 			info(`encrypted Message size ${messageEncoded.length}bytes`);
 			console.log('cipherSuite', cipherSuite);
-			const ad = (isShortHeaderMode) ? headerEncoded : encode(headerEncoded);
+			const ad = isShortHeaderMode ? headerEncoded : encode(headerEncoded);
 			const decryptedMessage = cipherSuite.decrypt(messageEncoded, sessionKeys, ad);
 			if (isUndefined(decryptedMessage)) {
 				console.trace('Encryption failed');

@@ -42,7 +42,7 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 		console.trace(`ID is missing`);
 		return;
 	}
-	const shouldEncryptConnectionId = (isServerEnd) ? source.encryptClientConnectionId : source.encryptServerConnectionId;
+	const shouldEncryptConnectionId = isServerEnd ? source.encryptClientConnectionId : source.encryptServerConnectionId;
 	if (shouldEncryptConnectionId) {
 		id = boxCryptography.boxSeal(id, destination.connectionIdKeypair);
 		if (!id) {
@@ -53,13 +53,16 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 	let header = id;
 	let shortHeaderMode = true;
 	if (headers) {
-		const isHeadersAnArray = isArray(headers) && headers.length > 0;
+		const isHeadersAnArray = isArray(headers) && (headers.length > 0);
 		shortHeaderMode = false;
 		if (isHeadersAnArray) {
 			headers.unshift(id);
 			header = headers;
 		} else {
-			header = [id, headers];
+			header = [
+				id,
+				headers
+			];
 		}
 		console.log('HEADERS GIVEN', isHeadersAnArray, headers);
 	}
@@ -68,7 +71,7 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 	} else {
 		info(`Decode Server side with Server-Client-id: ${id.toString('hex')}`);
 	}
-	const headerEncoded = (shortHeaderMode) ? header : encode(header);
+	const headerEncoded = shortHeaderMode ? header : encode(header);
 	let packetEncoded;
 	if (message && source.sessionKeys && source.sessionKeys?.transmitKey) {
 		info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
@@ -78,7 +81,10 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 		if (!encryptedMessage) {
 			return console.trace('Encryption failed');
 		}
-		let packetStructure = [header, encryptedMessage];
+		let packetStructure = [
+			header,
+			encryptedMessage
+		];
 		if (shortHeaderMode) {
 			packetStructure = Buffer.concat(packetStructure);
 		}

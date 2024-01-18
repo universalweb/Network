@@ -30,7 +30,7 @@ const uwApp = await app({
 	// will listen on ipv4 and ipv6 default is '::1'
 	ip: '::',
 	// default port or the loadbalancer port
-	port: 8888,
+	port: 443,
 	// realtime mode - permits establishing a bidirectional real-time connection to clients
 	// Must be requested so that it can be denied if the client doesn't meet the requirements
 	// realtime: true,
