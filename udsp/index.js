@@ -6,12 +6,21 @@ await logSystemInfo();
 export async function request(method = 0, url, params, data) {
 	const uwrlObject = isString(url) ? uwrl(url) : url;
 	const uwClient = await client({
-		url: uwrlObject
+		url: uwrlObject,
+		autoConnect:true
 	});
 	return uwClient.request(method, uwrlObject, params, data).send();
 }
 export async function get(url, params) {
 	return request(0, url, params);
+}
+export async function uwfetch(url, config) {
+	const uwrlObject = isString(url) ? uwrl(url) : url;
+	const uwClient = await client({
+		url: uwrlObject,
+		autoConnect:true
+	});
+	return uwClient.fetch(uwrlObject, config).send();
 }
 export * from './client/index.js';
 export * from './server/index.js';

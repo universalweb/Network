@@ -36,7 +36,10 @@ function certificateFactory(config, options = {}) {
 		certificateWrapper.publicKey = publicKey;
 	}
 	if (options.master) {
-		certificate.masterSignature = signDetached(Buffer.concat([Buffer.from(certificate.start), certificate.publicKey]), options.master.privateKey);
+		certificate.masterSignature = signDetached(Buffer.concat([
+			Buffer.from(certificate.start),
+			certificate.publicKey
+		]), options.master.privateKey);
 		certificate.masterPublicKey = options.master.publicKey;
 	}
 	certificateWrapper.certificate = encode(certificateWrapper.certificate);
@@ -45,6 +48,35 @@ function certificateFactory(config, options = {}) {
 		console.log(`masterSignature: ${certificateWrapper.masterSignature.length}bytes`);
 	}
 	return certificateWrapper;
+}
+function createDomainCertificate(options) {
+	const {
+		version,
+		cipherSuites,
+		publicKeyAlgorithm,
+		connectionIdSize,
+		clientConnectionIdSize,
+		url,
+		ip,
+		records,
+		endDate,
+		startDate,
+		port
+	} = options;
+	const certificate = [];
+	this.certificate = certificate;
+	const keypair = options.keypair || signKeypair();
+	const {
+		publicKey,
+		privateKey
+	} = signKeypair();
+	certificate[0] = version || 1;
+	certificate[1] = startDate || Date.now();
+	certificate[2] = keypair.publicKey;
+	certificate[3] = publicKeyAlgorithm;
+	certificate[4] = cipherSuites;
+	certificate[5] = publicKey;
+	certificate.push(privateKey);
 }
 export async function createProfile(config) {
 	const {

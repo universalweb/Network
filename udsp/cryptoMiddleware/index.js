@@ -41,6 +41,7 @@ import { blake2s } from '@noble/hashes/blake2s';
 import { blake3 } from '@noble/hashes/blake3';
 import { bls12_381 } from '@noble/curves/bls12-381';
 import { bn254 } from '@noble/curves/bn254';
+import { currentVersion } from '../defaults.js';
 import { hkdf } from '@noble/hashes/hkdf';
 import { hmac } from '@noble/hashes/hmac';
 import { jubjub } from '@noble/curves/jubjub';
@@ -96,70 +97,48 @@ const xsalsa20Algo = {
 	boxSeal,
 	boxUnseal
 };
-export const publicKeyAlgorithms = {
-	ed25519: ed25519Algo,
-	0: ed25519Algo,
-	default: ed25519Algo,
-	version: {
-		1: {
-			ed25519: ed25519Algo,
-			0: ed25519Algo,
-			default: ed25519Algo
-		}
-	}
-};
-export const cipherSuites = {
-	ed25119_x25519_xchacha20_poly1305,
-	0: ed25119_x25519_xchacha20_poly1305,
-	default: ed25119_x25519_xchacha20_poly1305,
-	version: {
-		1: {
-			ed25119_x25519_xchacha20_poly1305,
-			0: ed25119_x25519_xchacha20_poly1305,
-			default: ed25119_x25519_xchacha20_poly1305
-		}
-	},
-	available: {
-		1: ['ed25119_x25519_xchacha20_poly1305']
-	}
-};
-export const boxAlgorithms = {
-	xsalsa20: xsalsa20Algo,
-	0: xsalsa20Algo,
-	default: xsalsa20Algo,
-	version: {
-		1: {
-			xsalsa20: xsalsa20Algo,
-			0: xsalsa20Algo,
-			default: xsalsa20Algo,
-		}
-	}
-};
+export const publicKeyAlgorithms = new Map();
+const publicKeyAlgorithmVersion1 = new Map();
+publicKeyAlgorithms.set('1', publicKeyAlgorithmVersion1);
+publicKeyAlgorithmVersion1.set('ed25519', ed25519Algo);
+publicKeyAlgorithmVersion1.set(0, ed25519Algo);
+publicKeyAlgorithmVersion1.set('default', ed25519Algo);
+publicKeyAlgorithmVersion1.set('available', ['ed25119_x25519_xchacha20_poly1305']);
+export const cipherSuites = new Map();
+const cipherSuitesVersion1 = new Map();
+cipherSuites.set('1', cipherSuitesVersion1);
+cipherSuitesVersion1.set('ed25119_x25519_xchacha20_poly1305', ed25119_x25519_xchacha20_poly1305);
+cipherSuitesVersion1.set(0, ed25119_x25519_xchacha20_poly1305);
+cipherSuitesVersion1.set('default', ed25119_x25519_xchacha20_poly1305);
+cipherSuitesVersion1.set('available', ['ed25119_x25519_xchacha20_poly1305']);
+export const boxAlgorithms = new Map();
+const boxAlgorithmsVersion1 = new Map();
+boxAlgorithms.set('1', boxAlgorithmsVersion1);
+boxAlgorithmsVersion1.set('xsalsa20', xsalsa20Algo);
+boxAlgorithmsVersion1.set(0, xsalsa20Algo);
+boxAlgorithmsVersion1.set('default', xsalsa20Algo);
+boxAlgorithmsVersion1.set('available', ['xsalsa20Algo']);
 export const algorithms = {};
 assign(algorithms, publicKeyAlgorithms);
 assign(algorithms, boxAlgorithms);
 assign(algorithms, cipherSuites);
-const currentVersion = 1;
-export function getAlgorithm(cipherSuite, version) {
-	if (!hasValue(cipherSuite)) {
+export function getCipherSuite(cipherSuiteName, version = currentVersion) {
+	if (!hasValue(cipherSuiteName)) {
 		return false;
 	}
-	const result = algorithms.version[version || currentVersion][cipherSuite];
-	return result || algorithms[cipherSuite];
+	const cipherVersion = cipherSuites.get(version);
+	if (cipherVersion) {
+		return cipherVersion.get(cipherSuiteName);
+	}
 }
-export function getCipherSuite(cipherSuite, version) {
-	if (!hasValue(cipherSuite)) {
+export function getPublicKeyAlgorithm(publicKeyAlgorithmName, version = currentVersion) {
+	if (!hasValue(publicKeyAlgorithmName)) {
 		return false;
 	}
-	const result = cipherSuites.version[version || currentVersion][cipherSuite];
-	return result || cipherSuites[cipherSuite];
-}
-export function getPublicKeyAlgorithm(cipherSuite, version) {
-	if (!hasValue(cipherSuite)) {
-		return false;
+	const algoVersion = cipherSuites.get(version);
+	if (algoVersion) {
+		return algoVersion.get(publicKeyAlgorithmName);
 	}
-	const result = publicKeyAlgorithms.version[version || currentVersion][cipherSuite];
-	return result || publicKeyAlgorithms[cipherSuite];
 }
 export function processPublicKey(certificate) {
 	console.log('keypairType', certificate);
@@ -171,7 +150,7 @@ export function processPublicKey(certificate) {
 	} = certificate;
 	if (!encryptionKeypair && publicKeyAlgorithm === 'ed25519') {
 		if (publicKeyAlgorithm === 'ed25519') {
-			const publicKeyCryptography = getAlgorithm(publicKeyAlgorithm);
+			const publicKeyCryptography = getPublicKeyAlgorithm(publicKeyAlgorithm);
 			if (privateKey) {
 				return publicKeyCryptography.signKeypairToEncryptionKeypair({
 					publicKey,

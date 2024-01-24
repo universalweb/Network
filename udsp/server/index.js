@@ -102,7 +102,7 @@ export class Server extends UDSP {
 			}
 		}
 		if (this.certificate) {
-			this.publicKeyCryptography = getPublicKeyAlgorithm(this.certificate.publicKeyAlgorithm);
+			this.publicKeyCryptography = getPublicKeyAlgorithm(this.certificate.publicKeyAlgorithm, this.version);
 			const convertSignKeypairToEncryptionKeypair = processPublicKey(this.certificate);
 			if (convertSignKeypairToEncryptionKeypair) {
 				this.encryptionKeypair = convertSignKeypairToEncryptionKeypair;

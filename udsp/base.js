@@ -8,6 +8,7 @@ import {
 import { randomBuffer, randomConnectionId, toBase64 } from '#crypto';
 import { calculatePacketOverhead } from './calculatePacketOverhead.js';
 import { cipherSuites } from './cryptoMiddleware/index.js';
+import { currentVersion } from './defaults.js';
 import dgram from 'dgram';
 export class UDSP {
 	initializeBase(options) {
@@ -33,7 +34,7 @@ export class UDSP {
 		this.maxPacketFlood = 0;
 		this.heapSize = 0;
 		this.randomId = randomBuffer(8);
-		this.version = 1;
+		this.version = currentVersion;
 		this.cipherSuiteName = cipherSuites.version[this.version][0].name;
 		this.cipherSuiteId = cipherSuites.version[this.version][0].id;
 		this.cipherSuites = cipherSuites.available[this.version];

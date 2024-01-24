@@ -1,10 +1,11 @@
-import { createProfile } from '#certificate';
+import { createDomainCertificate, createProfile } from '#certificate';
 import { currentPath } from '@universalweb/acid';
 import { decode } from '#utilities/serialize';
 const dirname = currentPath(import.meta);
-const domainProfile = await createProfile({
+const domainProfile = await createDomainCertificate({
 	template: {
 		ephemeral: {
+			endDate: new Date().setUTCMonth(new Date().getUTCMonth() + 3),
 			// nft: {
 			// 	network: 'eth',
 			// 	contract: '0x0000000',
@@ -18,7 +19,7 @@ const domainProfile = await createProfile({
 			// AES (please God no, xchacha exists), SHA, MD5 (Not for crypto), RSA (Just stop using RSA TY) are not permitted
 			// The default option is the first option listed in cipherSuites
 			// There is however a default ciphersuite assigned to each version of UW://
-			cipherSuites: ['ed25119_x25519_xchacha20_poly1305'],
+			cipherSuites: ['x25519_xchacha20_poly1305'],
 			publicKeyAlgorithm: 'ed25519',
 			// The purpose of encrypting connection IDs (CIDs) is to eliminate connection ID tracking and to constantly change how the connection id looks from those observing packets. This is for constant changing of the server ID and or client ID.
 			// Encrypting CIDs protects against leaking smart CID routing information - Typically this is overkill and should be avoided
@@ -57,33 +58,43 @@ const domainProfile = await createProfile({
 			// The ip, ipv4, & ipv6 properties are used to determine the IP address of the server.
 			// The ip property can be either ipv4 or ipv6.
 			// ipv4/ipv6 can also be used as a form of backup ips or the primary ips for their respective versions. Similar to A & AAAA records.
-			ip: ['::1', '127.0.0.1'],
+			ip: [
+				'::1',
+				'127.0.0.1'
+			],
 			// Records can be attached to this domain certificate in their own certificate or included in this certificate.
 			// If multiple A or AAAA records are provided in addition to the ips listed above then they will be used as backup ips.
 			records: {
-				aaaa: [{
-					name: '@',
-					value: '::1',
-					priority: 0,
-					ttl: 'auto'
-				}],
-				a: [{
-					name: '@',
-					value: '127.0.0.1',
-					priority: 0,
-					ttl: 'auto'
-				}],
-				mx: [{
-					name: '@',
-					value: 'email.universal.web',
-					priority: 0,
-					ttl: 'auto'
-				}, {
-					name: '@',
-					value: 'email2.universal.web',
-					priority: 1,
-					ttl: 'auto'
-				}],
+				aaaa: [
+					{
+						name: '@',
+						value: '::1',
+						priority: 0,
+						ttl: 'auto'
+					}
+				],
+				a: [
+					{
+						name: '@',
+						value: '127.0.0.1',
+						priority: 0,
+						ttl: 'auto'
+					}
+				],
+				mx: [
+					{
+						name: '@',
+						value: 'email.universal.web',
+						priority: 0,
+						ttl: 'auto'
+					},
+					{
+						name: '@',
+						value: 'email2.universal.web',
+						priority: 1,
+						ttl: 'auto'
+					}
+				],
 			},
 			port: 8888,
 			// Used when a custom Domain name server is used to resolve the domain name locations still provides valid certificates else will be warned of invalid certificate
@@ -135,18 +146,11 @@ const domainProfile = await createProfile({
 });
 console.log('DOMAIN Profile created (Master & IDENTITY CERTIFICATEs)', decode(domainProfile.ephemeral.certificate));
 const profile = await createProfile({
-	template: {
-		ephemeral: {},
-		master: {
-			version: 1,
-			viat: true
-		}
-	},
 	savePath: `${dirname}/../profiles/default`,
 	folder: 'default',
 	certificateName: 'default',
 	saveToKeychain: {
-		account: 'Universal Web Profile'
+		account: 'Default Profile'
 	}
 });
 console.log('Profile created (Master & IDENTITY CERTIFICATEs)', decode(domainProfile.ephemeral.certificate));
