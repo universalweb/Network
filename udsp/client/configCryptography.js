@@ -39,10 +39,7 @@ export async function configCryptography() {
 	if (!this.encryptionKeypair) {
 		this.encryptionKeypair = this.keypair;
 	}
-	const convertSignKeypairToEncryptionKeypair = processPublicKey(this.destination);
-	if (convertSignKeypairToEncryptionKeypair) {
-		this.destination.encryptionKeypair = convertSignKeypairToEncryptionKeypair;
-	}
+	this.destination.encryptionKeypair = this.destination.encryptionKeypair;
 	await this.setSessionKeys();
 	if (encryptConnectionId) {
 		const {

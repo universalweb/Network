@@ -54,7 +54,7 @@ const {
 	crypto_box_NONCEBYTES,
 	crypto_box_MACBYTES
 } = sodiumLib;
-import { isBuffer, assign } from '@universalweb/acid';
+import { assign, isBuffer } from '@universalweb/acid';
 export function toBuffer(value) {
 	return Buffer.from(value);
 }
@@ -100,11 +100,17 @@ export function randomConnectionId(size = 8) {
 export function secretBoxNonce() {
 	return randomBuffer(crypto_secretbox_NONCEBYTES);
 }
+export function authBoxNonce() {
+	return randomBuffer(crypto_box_NONCEBYTES);
+}
 export function encrypt(message, sessionkeys, ad, nonceArg) {
 	const encrypted = bufferAlloc(message.length + crypto_aead_xchacha20poly1305_ietf_ABYTES);
 	const nonce = nonceBox(nonceArg);
 	crypto_aead_xchacha20poly1305_ietf_encrypt(encrypted, message, ad, null, nonce, sessionkeys?.transmitKey || sessionkeys);
-	return Buffer.concat([nonce, encrypted]);
+	return Buffer.concat([
+		nonce,
+		encrypted
+	]);
 }
 encrypt.overhead = crypto_aead_xchacha20poly1305_ietf_ABYTES + crypto_aead_xchacha20poly1305_ietf_NPUBBYTES;
 export function decrypt(encrypted, sessionkeys, ad, nonceArg) {
@@ -125,11 +131,11 @@ export function decrypt(encrypted, sessionkeys, ad, nonceArg) {
 }
 export function passwordHash(password) {
 	const out = bufferAlloc(crypto_pwhash_STRBYTES);
-	crypto_pwhash_str(out, (isBuffer(password)) ? password : Buffer.from(password), 	crypto_pwhash_OPSLIMIT_MIN, crypto_pwhash_MEMLIMIT_MIN);
+	crypto_pwhash_str(out, isBuffer(password) ? password : Buffer.from(password), crypto_pwhash_OPSLIMIT_MIN, crypto_pwhash_MEMLIMIT_MIN);
 	return out;
 }
 export function passwordHashVerify(source, password) {
-	return crypto_pwhash_str_verify(source, (isBuffer(password)) ? password : Buffer.from(password));
+	return crypto_pwhash_str_verify(source, isBuffer(password) ? password : Buffer.from(password));
 }
 export function hash(message, amount) {
 	const hashed = bufferAlloc(amount || crypto_generichash_BYTES);
@@ -222,18 +228,25 @@ export function encryptKeypair(config) {
 		privateKey
 	};
 }
-export function authenticatedBox(message, sourceKeypair, destinationKeypair) {
-	const nonce = secretBoxNonce();
+export function authenticatedBox(message, receiverKeypair, senderKeypair) {
+	const nonce = authBoxNonce();
 	const encrypted = bufferAlloc(message.length + crypto_box_MACBYTES);
-	crypto_box_easy(encrypted, message, nonce, sourceKeypair.publicKey, destinationKeypair?.privateKey || destinationKeypair);
-	return Buffer.concat([nonce, encrypted]);
+	const sender = senderKeypair?.publicKey || senderKeypair;
+	const receiver = receiverKeypair?.privateKey || receiverKeypair;
+	crypto_box_easy(encrypted, message, nonce, receiver, sender);
+	return Buffer.concat([
+		nonce,
+		encrypted
+	]);
 }
-export function authenticatedBoxOpen(encrypted, destinationKeypair, sourceKeypair) {
+export function authenticatedBoxOpen(encrypted, receiverKeypair, senderKeypair) {
 	const encryptedPayloadLength = encrypted.length;
 	const nonce = encrypted.subarray(0, crypto_box_NONCEBYTES);
 	const encryptedMessage = encrypted.subarray(crypto_box_NONCEBYTES, encryptedPayloadLength);
-	const message = bufferAlloc(encryptedPayloadLength - crypto_box_MACBYTES);
-	crypto_box_easy(encryptedMessage, message, destinationKeypair?.publicKey || destinationKeypair, sourceKeypair?.privateKey || sourceKeypair);
+	const message = bufferAlloc(encryptedMessage.length - crypto_box_MACBYTES);
+	const sender = senderKeypair?.publicKey || senderKeypair;
+	const receiver = receiverKeypair?.privateKey || receiverKeypair;
+	crypto_box_open_easy(message, encryptedMessage, nonce, receiver, sender);
 	return message;
 }
 export function boxSeal(message, destinationKeypair) {

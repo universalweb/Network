@@ -140,27 +140,3 @@ export function getPublicKeyAlgorithm(publicKeyAlgorithmName, version = currentV
 		return algoVersion.get(publicKeyAlgorithmName);
 	}
 }
-export function processPublicKey(certificate) {
-	console.log('keypairType', certificate);
-	const {
-		publicKeyAlgorithm,
-		encryptionKeypair,
-		privateKey,
-		publicKey
-	} = certificate;
-	if (!encryptionKeypair && publicKeyAlgorithm === 'ed25519') {
-		if (publicKeyAlgorithm === 'ed25519') {
-			const publicKeyCryptography = getPublicKeyAlgorithm(publicKeyAlgorithm);
-			if (privateKey) {
-				return publicKeyCryptography.signKeypairToEncryptionKeypair({
-					publicKey,
-					privateKey
-				});
-			} else {
-				return publicKeyCryptography.signKeypairToEncryptionKeypair({
-					publicKey
-				});
-			}
-		}
-	}
-}
