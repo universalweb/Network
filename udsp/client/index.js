@@ -34,7 +34,7 @@ import {
 	toBase64,
 } from '#crypto';
 import { getAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
-import { getCertificate, parseCertificate } from '#certificate';
+import { getCertificate, parseCertificate } from '#udsp/certificate/index';
 import { Ask } from '../request/ask.js';
 import { UDSP } from '#udsp/base';
 import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
@@ -48,7 +48,7 @@ import { get } from '../requestMethods/get.js';
 import { getIPDetails } from './getIPDetails.js';
 import { getLocalIpVersion } from '../../utilities/network/getLocalIP.js';
 import { getWANIPAddress } from '../../utilities/network/getWANIPAddress.js';
-import { keychainGet } from '#keychain';
+import { keychainGet } from '#udsp/certificate/keychain';
 import { onListening } from './listening.js';
 import { onPacket } from './onPacket.js';
 import { post } from '../requestMethods/post.js';

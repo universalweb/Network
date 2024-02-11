@@ -21,7 +21,7 @@ import {
 	success
 } from '#logs';
 import { getAlgorithm, getPublicKeyAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
-import { getCertificate, loadCertificate, parseCertificate } from '#certificate';
+import { getCertificate, loadCertificate, parseCertificate } from '#udsp/certificate/index';
 import { randomBuffer, toBase64 } from '#crypto';
 import { UDSP } from '#udsp/base';
 import { createClient } from './clients/index.js';

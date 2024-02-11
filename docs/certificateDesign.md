@@ -2,9 +2,12 @@
 
 - cert version
 - domain
+- start date
+- end date
 - protocol info
-- sign-publickey or ARRAY[sign pubkey, encrypt pubkey]
-- sign-publickey algorithm (NUMERICAL ID) or ARRAY[sign algo, encrypt pubkey algo]
+- sign-publickey or ARRAY[sign pubkey, key exchange pubkey, encapsulation keypair]
+- sign-publickey algorithm (NUMERICAL ID) or ARRAY[sign algo, key exchange pubkey algo, encapsulation algo]
+- encryption algos [Numerical array based on protocol version]
 - records or null or true (has specific records separate from THIS cert)
   - ([type, name, value])SIGNED-BY-PARENT-CERT-PUBLICKEY
 - contact information or null or true (if true whois info cert is separate from THIS cert)
@@ -17,7 +20,10 @@
   - BTC (associated BTC wallet address)
   - ETH (associated ETH wallet address)
   - BNB (associated BNB wallet address)
-- SIGNATURE of cert data using signpublic key
+  - certificate authority name
+  - App Binary (UW App Code binary to run on page load)
+  - App Data (App data that is stored within the cert made available to Web App)
+- SIGNATURE of cert data using sign-public key
 
 ID of cert is a hash of its contents and is computed not stored within the cert. The ID can be used to request a cert by its ID , stored related information to that ID, whitelist, blacklist, and or use the ID as a primary key store.
 

@@ -78,8 +78,7 @@
 		"#pluckBuffer": "./utilities/pluckBuffer.js",
 		"#certificate": "./utilities/certificate/index.js",
 		"#udsp/*": "./udsp/*.js",
-		"#udsp": "./udsp/index.js",
-		"#keychain": "./utilities/keychain.js"
+		"#udsp": "./udsp/index.js"
 	},
 	"postinstall": "electron-builder install-app-deps",
 	"productName": "Universal Web Browser",

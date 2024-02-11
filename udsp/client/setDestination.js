@@ -13,7 +13,7 @@ import {
 	omit,
 	promise
 } from '@universalweb/acid';
-import { getCertificate, parseCertificate } from '#certificate';
+import { getCertificate, parseCertificate } from '#udsp/certificate/index';
 import { uwrl } from '#udsp/UWRL/index';
 export async function setDestination() {
 	const {

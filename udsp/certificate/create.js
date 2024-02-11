@@ -5,15 +5,23 @@ import {
 	merge,
 	promise
 } from '@universalweb/acid';
+import { certificateVersion, currentVersion } from '../defaults.js';
 import { decode, encode } from '#utilities/serialize';
 import { imported, logCert } from '#logs';
+import {
+	keypair,
+	signDetached,
+	signKeypair,
+	toBase64
+} from '#crypto';
 import { read, write } from '#file';
 import { saveCertificate, saveProfile } from './save.js';
-import { signDetached, signKeypair, toBase64 } from '#crypto';
-import { keychainSave } from '#keychain';
-function certificateFactory(config, options = {}) {
+import { keychainSave } from '#udsp/certificate/keychain';
+function certificateObjectCreate(config, options = {}) {
 	const currentDate = new Date();
 	const certificate = {
+		protocolVersion: currentVersion,
+		certificateVersion,
 		start: currentDate.toUTCString(),
 	};
 	if (config) {
@@ -23,36 +31,40 @@ function certificateFactory(config, options = {}) {
 		const endDate = currentDate.setUTCMonth(currentDate.getUTCMonth() + 3);
 		certificate.end = currentDate.toUTCString();
 	}
-	const certificateWrapper = {
-		certificate,
-	};
-	if (!certificate.publicKey) {
+	if (!certificate.signPublicKey) {
 		const {
 			publicKey,
 			privateKey
 		} = signKeypair();
-		certificate.publicKey = publicKey;
-		certificateWrapper.privateKey = privateKey;
-		certificateWrapper.publicKey = publicKey;
+		certificate.signPublicKey = publicKey;
+		certificate.signPrivateKey = privateKey;
 	}
-	if (options.master) {
-		certificate.masterSignature = signDetached(Buffer.concat([
-			Buffer.from(certificate.start),
-			certificate.publicKey
-		]), options.master.privateKey);
-		certificate.masterPublicKey = options.master.publicKey;
+	if (!certificate.encryptPublicKey) {
+		const {
+			publicKey,
+			privateKey
+		} = keypair();
+		certificate.encryptPublicKey = publicKey;
+		certificate.encryptPrivateKey = privateKey;
 	}
-	certificateWrapper.certificate = encode(certificateWrapper.certificate);
-	if (options.master) {
-		certificateWrapper.masterSignature = signDetached(certificateWrapper.certificate, options.master.privateKey);
-		console.log(`masterSignature: ${certificateWrapper.masterSignature.length}bytes`);
+	if (!certificate.signatureAlgorithm) {
+		certificate.signatureAlgorithm = 0;
 	}
-	return certificateWrapper;
+	if (!certificate.keyExchangeAlgorithm) {
+		certificate.keyExchangeAlgorithm = 0;
+	}
+	if (!certificate.cipherSuites) {
+		certificate.cipherSuites = 0;
+	}
+	return certificate;
 }
-function createDomainCertificate(options) {
+// Only send cipher suite if you already have a certificate
+export function convertObjectCertificate(certificateObject) {
 	const {
 		version,
 		cipherSuites,
+		keyExchangeAlgorithm,
+		signatureAlgorithm,
 		publicKeyAlgorithm,
 		connectionIdSize,
 		clientConnectionIdSize,
@@ -62,10 +74,9 @@ function createDomainCertificate(options) {
 		endDate,
 		startDate,
 		port
-	} = options;
+	} = certificateObject;
 	const certificate = [];
 	this.certificate = certificate;
-	const keypair = options.keypair || signKeypair();
 	const {
 		publicKey,
 		privateKey
