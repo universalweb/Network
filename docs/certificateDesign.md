@@ -1,13 +1,13 @@
 # Certificate Template & Wire Frame
 
 - cert version
-- domain
 - start date
 - end date
 - protocol info
 - sign-publickey or ARRAY[sign pubkey, key exchange pubkey, encapsulation keypair]
 - sign-publickey algorithm (NUMERICAL ID) or ARRAY[sign algo, key exchange pubkey algo, encapsulation algo]
 - encryption algos [Numerical array based on protocol version]
+- domain
 - records or null or true (has specific records separate from THIS cert)
   - ([type, name, value])SIGNED-BY-PARENT-CERT-PUBLICKEY
 - contact information or null or true (if true whois info cert is separate from THIS cert)

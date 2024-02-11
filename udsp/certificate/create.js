@@ -61,19 +61,20 @@ function certificateObjectCreate(config, options = {}) {
 // Only send cipher suite if you already have a certificate
 export function convertObjectCertificate(certificateObject) {
 	const {
-		version,
+		domain,
 		cipherSuites,
 		keyExchangeAlgorithm,
 		signatureAlgorithm,
 		publicKeyAlgorithm,
 		connectionIdSize,
 		clientConnectionIdSize,
-		url,
-		ip,
 		records,
 		endDate,
 		startDate,
-		port
+		protocolVersion,
+		encryptPublicKeypair,
+		signPublicKeypair,
+		options
 	} = certificateObject;
 	const certificate = [];
 	this.certificate = certificate;
@@ -81,13 +82,24 @@ export function convertObjectCertificate(certificateObject) {
 		publicKey,
 		privateKey
 	} = signKeypair();
-	certificate[0] = version || 1;
+	certificate[0] = certificateVersion;
 	certificate[1] = startDate || Date.now();
-	certificate[2] = keypair.publicKey;
-	certificate[3] = publicKeyAlgorithm;
-	certificate[4] = cipherSuites;
-	certificate[5] = publicKey;
-	certificate.push(privateKey);
+	certificate[2] = endDate;
+	certificate[3] = protocolVersion;
+	certificate[4] = [
+		signPublicKeypair.publicKey,
+		encryptPublicKeypair.publicKey
+	];
+	certificate[5] = [
+		signatureAlgorithm,
+		keyExchangeAlgorithm
+	];
+	certificate[6] = cipherSuites;
+	certificate[7] = domain;
+	certificate[8] = records;
+	if (options) {
+		certificate[9] = options;
+	}
 }
 export async function createProfile(config) {
 	const {
