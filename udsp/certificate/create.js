@@ -7,6 +7,7 @@ import {
 } from '@universalweb/acid';
 import { certificateVersion, currentVersion } from '../defaults.js';
 import { decode, encode } from '#utilities/serialize';
+import { getCipherSuite, getPublicKeyAlgorithm } from '../cryptoMiddleware/index.js';
 import { imported, logCert } from '#logs';
 import {
 	keypair,
@@ -19,61 +20,60 @@ import { saveCertificate, saveProfile } from './save.js';
 import { keychainSave } from '#udsp/certificate/keychain';
 function certificateObjectCreate(config, options = {}) {
 	const currentDate = new Date();
+	const {
+		domain,
+		records,
+		end,
+		version = certificateVersion,
+		signatureAlgorithm = 0,
+		keyExchangeAlgorithm = 0,
+		contact,
+		protocolInfo = [config.protocolVersion || currentVersion],
+		cipherSuites,
+		encryptPublicKeypair
+	} = config;
 	const certificate = {
-		protocolVersion: currentVersion,
-		certificateVersion,
+		protocolInfo,
+		version,
+		signatureAlgorithm,
+		keyExchangeAlgorithm,
+		cipherSuites,
+		encryptPublicKeypair,
 		start: currentDate.toUTCString(),
+		end: end || currentDate.setUTCMonth(currentDate.getUTCMonth() + 3)
 	};
-	if (config) {
-		assign(certificate, config);
+	if (domain) {
+		certificate.domain = domain;
 	}
-	if (!certificate.end) {
-		const endDate = currentDate.setUTCMonth(currentDate.getUTCMonth() + 3);
-		certificate.end = currentDate.toUTCString();
+	if (records) {
+		certificate.records = records;
 	}
-	if (!certificate.signPublicKey) {
-		const {
-			publicKey,
-			privateKey
-		} = signKeypair();
-		certificate.signPublicKey = publicKey;
-		certificate.signPrivateKey = privateKey;
+	if (contact) {
+		certificate.contact = contact;
 	}
-	if (!certificate.encryptPublicKey) {
-		const {
-			publicKey,
-			privateKey
-		} = keypair();
-		certificate.encryptPublicKey = publicKey;
-		certificate.encryptPrivateKey = privateKey;
+	if (protocolInfo) {
+		certificate.protocolInfo = protocolInfo;
 	}
-	if (!certificate.signatureAlgorithm) {
-		certificate.signatureAlgorithm = 0;
+	const signatureMethod = getPublicKeyAlgorithm(certificate.signatureAlgorithm, certificate.protocolVersion);
+	if (!certificate.signatureKeypair) {
+		certificate.signatureKeypair = signatureMethod();
 	}
-	if (!certificate.keyExchangeAlgorithm) {
-		certificate.keyExchangeAlgorithm = 0;
-	}
-	if (!certificate.cipherSuites) {
-		certificate.cipherSuites = 0;
+	const keyExchangeMethod = getPublicKeyAlgorithm(certificate.signatureMethodAlgorithm, certificate.protocolVersion);
+	if (!certificate.keyExchangeKeypair) {
+		certificate.keyExchangeKeypair = keyExchangeMethod();
 	}
 	return certificate;
 }
-// Only send cipher suite if you already have a certificate
-export function convertObjectCertificate(certificateObject) {
+export function ObjectToRawCertificate(certificateObject) {
 	const {
 		domain,
 		cipherSuites,
-		keyExchangeAlgorithm,
-		signatureAlgorithm,
-		publicKeyAlgorithm,
-		connectionIdSize,
-		clientConnectionIdSize,
+		keyExchangeKeypair,
+		signatureKeypair,
+		protocolInfo,
 		records,
 		endDate,
 		startDate,
-		protocolVersion,
-		encryptPublicKeypair,
-		signPublicKeypair,
 		options
 	} = certificateObject;
 	const certificate = [];
@@ -85,18 +85,12 @@ export function convertObjectCertificate(certificateObject) {
 	certificate[0] = certificateVersion;
 	certificate[1] = startDate || Date.now();
 	certificate[2] = endDate;
-	certificate[3] = protocolVersion;
-	certificate[4] = [
-		signPublicKeypair.publicKey,
-		encryptPublicKeypair.publicKey
-	];
-	certificate[5] = [
-		signatureAlgorithm,
-		keyExchangeAlgorithm
-	];
-	certificate[6] = cipherSuites;
 	certificate[7] = domain;
 	certificate[8] = records;
+	certificate[3] = protocolInfo;
+	certificate[4] = signatureKeypair;
+	certificate[5] = keyExchangeKeypair;
+	certificate[6] = cipherSuites;
 	if (options) {
 		certificate[9] = options;
 	}
@@ -113,8 +107,8 @@ export async function createProfile(config) {
 		saveEphemeralToKeychain,
 		saveToKeychain,
 	} = config;
-	const master = certificateFactory(masterTemplate);
-	const ephemeral = certificateFactory(ephemeralTemplate, {
+	const master = certificateObjectCreate(masterTemplate);
+	const ephemeral = certificateObjectCreate(ephemeralTemplate, {
 		master
 	});
 	const profile = {
@@ -143,7 +137,7 @@ export async function createProfile(config) {
 	return profile;
 }
 export async function createCertificate(config, options) {
-	const certificate = certificateFactory(config.template, options);
+	const certificate = certificateObjectCreate(config.template, options);
 	const {
 		savePath,
 		certificateName
