@@ -30,7 +30,9 @@ function certificateObjectCreate(config, options = {}) {
 		contact,
 		protocolInfo = [config.protocolVersion || currentVersion],
 		cipherSuites,
-		encryptPublicKeypair
+		encryptPublicKeypair,
+		serverConnectionIdSize,
+		clientConnectionIdSize
 	} = config;
 	const certificate = {
 		protocolInfo,
@@ -74,7 +76,11 @@ export function ObjectToRawCertificate(certificateObject) {
 		records,
 		endDate,
 		startDate,
-		options
+		protocolVersion,
+		options,
+		encryptPublicKeypair,
+		serverConnectionIdSize,
+		clientConnectionIdSize
 	} = certificateObject;
 	const certificate = [];
 	this.certificate = certificate;
@@ -85,14 +91,23 @@ export function ObjectToRawCertificate(certificateObject) {
 	certificate[0] = certificateVersion;
 	certificate[1] = startDate || Date.now();
 	certificate[2] = endDate;
-	certificate[7] = domain;
-	certificate[8] = records;
-	certificate[3] = protocolInfo;
-	certificate[4] = signatureKeypair;
-	certificate[5] = keyExchangeKeypair;
-	certificate[6] = cipherSuites;
+	certificate[3] = domain;
+	certificate[4] = records;
+	certificate[5] = signatureKeypair;
+	certificate[6] = [
+		protocolVersion,
+		keyExchangeKeypair,
+		encryptPublicKeypair,
+		cipherSuites,
+	];
+	if (serverConnectionIdSize) {
+		certificate[6].push(serverConnectionIdSize);
+	}
+	if (clientConnectionIdSize) {
+		certificate[6].push(clientConnectionIdSize);
+	}
 	if (options) {
-		certificate[9] = options;
+		certificate[7] = options;
 	}
 }
 export async function createProfile(config) {
