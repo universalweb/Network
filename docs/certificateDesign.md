@@ -3,10 +3,13 @@
 - cert version
 - start date
 - end date
+- sign-keypair (public key only when public)
 - protocol info
-- sign-publickey or ARRAY[sign pubkey, key exchange pubkey, encapsulation keypair]
-- sign-publickey algorithm (NUMERICAL ID) or ARRAY[sign algo, key exchange pubkey algo, encapsulation algo]
-- encryption algos [Numerical array based on protocol version]
+  - protocol version
+  - keyexchange keypair
+  - keyExchange Algorithm
+  - cipher Suites [Numerical array based on protocol version]
+  - encrypt handshake public keypair
 - domain
 - records or null or true (has specific records separate from THIS cert)
   - ([type, name, value])SIGNED-BY-PARENT-CERT-PUBLICKEY
