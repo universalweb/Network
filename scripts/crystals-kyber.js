@@ -2,56 +2,34 @@ import { Kyber1024, Kyber512, Kyber768 } from 'crystals-kyber-js';
 import {
 	authenticatedBox,
 	authenticatedBoxOpen,
+	createSessionKey,
 	decrypt,
 	encrypt,
-	encryptKeypair,
-	signKeypair,
+	keypair,
+	signKeypair
 } from '#utilities/crypto';
 import { decode, encode } from 'msgpackr';
+import { x25519 } from '@noble/curves/ed25519';
+import zlib from 'node:zlib';
 async function doKyber() {
 	// A recipient generates a key pair.
-	const recipient = new Kyber768();
+	const recipient = new Kyber512();
 	const [
 		pkR,
 		skR
 	] = await recipient.generateKeyPair();
-	/// / Deterministic key generation is also supported
-	// const seed = new Uint8Array(64);
-	// globalThis.crypto.getRandomValues(seed); // node >= 19
-	// const [pkR, skR] = await recipient.deriveKeyPair(seed);
-	// A sender generates a ciphertext and a shared secret with pkR.
-	const sender = new Kyber768();
+	const sender = new Kyber512();
 	console.log(sender);
 	const [
 		ct,
 		ssS
 	] = await sender.encap(pkR);
-	const sen = encryptKeypair();
-	const rec = encryptKeypair();
-	const a = authenticatedBox(encode([
-		1,
-		0,
-		sen.publicKey
-	]), rec, sen);
-	const h = encode([
+	console.log(encode([
 		ct,
-		encrypt(a, ssS),
-	]);
-	console.log(h.length, pkR.length, ssS.length);
-	// console.log(encode([
-	// 	ct,
-	// 	encrypt(authenticatedBox(encode([
-	// 		1,
-	// 		0,
-	// 		encryptKeypair().publicKey
-	// 	]), encryptKeypair(), encryptKeypair()), ssS),
-	// ]).length, pkR.length, ssS.length);
-	// The recipient decapsulates the ciphertext and generates the same shared secret with skR.
+		ssS
+	]).length);
 	const ssR = await recipient.decap(ct, skR);
-	console.log(ssR, ssS);
-	const m = decrypt(decode(h)[1], ssR);
-	console.log(m.length);
-	console.log(decode(authenticatedBoxOpen(a, rec, sen)));
+	console.log(ssR.length, createSessionKey().length, ssS);
 	return;
 }
 try {
@@ -59,3 +37,7 @@ try {
 } catch (err) {
 	console.log('failed: ', err.message);
 }
+// Hybrid Post Quantum Key Exchange ckx25519
+// C-K KeyExchange 0-RTT Initial (data encrypted with shared post quantum key)
+// x25519 Forward Secrecy Response Re-Key Event
+// Alternative - Encrypt with 0-RTT the x25519 publicKey - throw away the first CK key
