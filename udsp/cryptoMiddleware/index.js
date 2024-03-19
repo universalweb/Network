@@ -57,8 +57,8 @@ const {
 	signKeypairToEncryptionKeypair, getSignPublicKeyFromPrivateKey, keypair,
 	boxUnseal, boxSeal, randomConnectionId, hashMin: defaultHashMin, hash: defaultHash,
 } = defaultCrypto;
-const ed25119_x25519_xchacha20_poly1305 = {
-	name: 'ed25119_x25519_xchacha20_poly1305',
+const x25519_xchacha20_poly1305 = {
+	name: 'x25519_xchacha20_poly1305',
 	alias: 'default',
 	id: 0,
 	nonceBox,
@@ -100,25 +100,22 @@ const xsalsa20Algo = {
 export const publicKeyAlgorithms = new Map();
 const publicKeyAlgorithmVersion1 = new Map();
 publicKeyAlgorithms.set(1, publicKeyAlgorithmVersion1);
-publicKeyAlgorithmVersion1.set('ed25519', ed25519Algo);
-publicKeyAlgorithmVersion1.set(0, ed25519Algo);
-publicKeyAlgorithmVersion1.set('default', ed25519Algo);
-publicKeyAlgorithmVersion1.set('available', ['ed25119_x25519_xchacha20_poly1305']);
+publicKeyAlgorithmVersion1.set(ed25519Algo.name, ed25519Algo);
+publicKeyAlgorithmVersion1.set(ed25519Algo.id, ed25519Algo);
+publicKeyAlgorithmVersion1.set(ed25519Algo.alias, ed25519Algo);
 export const cipherSuites = new Map();
 const cipherSuitesVersion1 = new Map();
 cipherSuites.set(1, cipherSuitesVersion1);
-cipherSuitesVersion1.set('ed25119_x25519_xchacha20_poly1305', ed25119_x25519_xchacha20_poly1305);
-cipherSuitesVersion1.set(0, ed25119_x25519_xchacha20_poly1305);
-cipherSuitesVersion1.set('default', ed25119_x25519_xchacha20_poly1305);
-cipherSuitesVersion1.set('available', ['ed25119_x25519_xchacha20_poly1305']);
+cipherSuitesVersion1.set(x25519_xchacha20_poly1305.name, x25519_xchacha20_poly1305);
+cipherSuitesVersion1.set(x25519_xchacha20_poly1305.id, x25519_xchacha20_poly1305);
+cipherSuitesVersion1.set(x25519_xchacha20_poly1305.alias, x25519_xchacha20_poly1305);
 export const boxAlgorithms = new Map();
 const boxAlgorithmsVersion1 = new Map();
 boxAlgorithms.set(1, boxAlgorithmsVersion1);
-boxAlgorithmsVersion1.set('xsalsa20', xsalsa20Algo);
-boxAlgorithmsVersion1.set(0, xsalsa20Algo);
-boxAlgorithmsVersion1.set('default', xsalsa20Algo);
-boxAlgorithmsVersion1.set('available', ['xsalsa20Algo']);
-export function getCipherSuite(cipherSuiteName, version = currentVersion) {
+boxAlgorithmsVersion1.set(xsalsa20Algo.name, xsalsa20Algo);
+boxAlgorithmsVersion1.set(xsalsa20Algo.id, xsalsa20Algo);
+boxAlgorithmsVersion1.set(xsalsa20Algo.alias, xsalsa20Algo);
+export function getCipherSuite(cipherSuiteName = 0, version = currentVersion) {
 	if (!hasValue(cipherSuiteName)) {
 		return false;
 	}
@@ -127,7 +124,7 @@ export function getCipherSuite(cipherSuiteName, version = currentVersion) {
 		return cipherVersion.get(cipherSuiteName);
 	}
 }
-export function getPublicKeyAlgorithm(publicKeyAlgorithmName, version = currentVersion) {
+export function getPublicKeyAlgorithm(publicKeyAlgorithmName = 0, version = currentVersion) {
 	if (!hasValue(publicKeyAlgorithmName)) {
 		return false;
 	}

@@ -7,7 +7,7 @@ export async function request(method = 0, url, params, data) {
 	const uwrlObject = isString(url) ? uwrl(url) : url;
 	const uwClient = await client({
 		url: uwrlObject,
-		autoConnect:true
+		autoConnect: true
 	});
 	return uwClient.request(method, uwrlObject, params, data).send();
 }
@@ -18,7 +18,7 @@ export async function uwfetch(url, config) {
 	const uwrlObject = isString(url) ? uwrl(url) : url;
 	const uwClient = await client({
 		url: uwrlObject,
-		autoConnect:true
+		autoConnect: true
 	});
 	return uwClient.fetch(uwrlObject, config).send();
 }

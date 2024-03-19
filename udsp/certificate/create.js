@@ -1,11 +1,17 @@
 import {
 	assign,
 	clone,
+	hasValue,
 	isBuffer,
 	merge,
 	promise
 } from '@universalweb/acid';
-import { certificateVersion, currentVersion } from '../defaults.js';
+import {
+	currentCertificateVersion,
+	currentProtocolVersion,
+	defaultClientConnectionIdSize,
+	defaultServerConnectionIdSize
+} from '../defaults.js';
 import { decode, encode } from '#utilities/serialize';
 import { getCipherSuite, getPublicKeyAlgorithm } from '../cryptoMiddleware/index.js';
 import { imported, logCert } from '#logs';
@@ -18,34 +24,37 @@ import {
 import { read, write } from '#file';
 import { saveCertificate, saveProfile } from './save.js';
 import { keychainSave } from '#udsp/certificate/keychain';
-function certificateObjectCreate(config, options = {}) {
+// Types: 0: domain, 1: client,  ?2: dis, 3: email, 4: store, 5: product, 6: school, 7: government?
+export function createDomainCertificateObject(config = {}, options = {}) {
 	const currentDate = new Date();
+	const type = 0;
 	const {
-		domain,
+		entity,
 		records,
 		end,
-		version = certificateVersion,
-		signatureAlgorithm = 0,
-		keyExchangeAlgorithm = 0,
+		version = currentCertificateVersion,
+		signatureAlgorithm,
+		signatureKeypair,
+		keyExchangeAlgorithm,
 		contact,
-		protocolInfo = [config.protocolVersion || currentVersion],
 		cipherSuites,
-		encryptPublicKeypair,
-		serverConnectionIdSize,
-		clientConnectionIdSize
+		keyExchangeKeypair,
+		protocolOptions,
 	} = config;
 	const certificate = {
-		protocolInfo,
 		version,
-		signatureAlgorithm,
-		keyExchangeAlgorithm,
-		cipherSuites,
-		encryptPublicKeypair,
-		start: currentDate.toUTCString(),
-		end: end || currentDate.setUTCMonth(currentDate.getUTCMonth() + 3)
+		signatureKeypair,
+		keyExchangeKeypair,
+		start: currentDate.getTime(),
+		end: end || currentDate.setUTCMonth(currentDate.getUTCMonth() + 3),
+		type,
+		protocolOptions
 	};
-	if (domain) {
-		certificate.domain = domain;
+	if (certificate.start > certificate.end) {
+		certificate.end = currentDate.setUTCMonth(currentDate.getUTCMonth() + 3);
+	}
+	if (entity) {
+		certificate.entity = entity;
 	}
 	if (records) {
 		certificate.records = records;
@@ -53,116 +62,235 @@ function certificateObjectCreate(config, options = {}) {
 	if (contact) {
 		certificate.contact = contact;
 	}
-	if (protocolInfo) {
-		certificate.protocolInfo = protocolInfo;
+	const protocolVersion = hasValue(protocolOptions?.version) ? protocolOptions.version : currentProtocolVersion;
+	if (hasValue(signatureAlgorithm) && signatureAlgorithm !== 0) {
+		certificate.signatureAlgorithm = signatureAlgorithm;
 	}
-	const signatureMethod = getPublicKeyAlgorithm(certificate.signatureAlgorithm, certificate.protocolVersion);
-	if (!certificate.signatureKeypair) {
-		certificate.signatureKeypair = signatureMethod();
+	if (hasValue(keyExchangeAlgorithm) && keyExchangeAlgorithm !== 0) {
+		certificate.keyExchangeAlgorithm = keyExchangeAlgorithm;
 	}
-	const keyExchangeMethod = getPublicKeyAlgorithm(certificate.signatureMethodAlgorithm, certificate.protocolVersion);
-	if (!certificate.keyExchangeKeypair) {
-		certificate.keyExchangeKeypair = keyExchangeMethod();
+	if (hasValue(cipherSuites) && cipherSuites !== 0) {
+		certificate.cipherSuites = cipherSuites;
+	}
+	const signatureMethod = getPublicKeyAlgorithm(certificate.signatureAlgorithm, protocolVersion);
+	if (!signatureKeypair) {
+		certificate.signatureKeypair = signatureMethod.signKeypair();
+	}
+	const keyExchangeMethod = getCipherSuite(certificate.keyExchangeAlgorithm, protocolVersion);
+	if (!keyExchangeKeypair) {
+		certificate.keyExchangeKeypair = keyExchangeMethod.keypair();
 	}
 	return certificate;
 }
-export function ObjectToRawCertificate(certificateObject) {
+export function objectToRawDomainCertificate(certificateObject) {
 	const {
 		keyExchangeAlgorithm,
-		domain,
+		entity,
 		cipherSuites,
-		keyExchangeKeypair,
 		signatureKeypair,
-		protocolInfo,
+		signatureAlgorithm,
+		protocol,
 		records,
-		endDate,
-		startDate,
-		protocolVersion,
+		end,
+		start,
+		protocolOptions,
 		options,
-		encryptPublicKeypair,
-		serverConnectionIdSize,
-		clientConnectionIdSize,
+		keyExchangeKeypair,
 		contact,
 	} = certificateObject;
 	const certificate = [];
-	this.certificate = certificate;
-	certificate[0] = certificateVersion;
-	certificate[1] = startDate || Date.now();
-	certificate[2] = endDate;
-	certificate[3] = signatureKeypair;
-	certificate[4] = domain;
-	certificate[5] = records;
-	certificate[6] = [
-		protocolVersion,
-		keyExchangeKeypair,
-		keyExchangeAlgorithm,
-		cipherSuites,
-		encryptPublicKeypair,
+	certificate[0] = 0;
+	certificate[1] = currentCertificateVersion;
+	certificate[2] = start;
+	certificate[3] = end;
+	certificate[4] = [
+		[
+			signatureKeypair.publicKey,
+			signatureKeypair.privateKey
+		],
 	];
-	certificate[7] = contact;
-	if (serverConnectionIdSize) {
-		certificate[6].push(serverConnectionIdSize);
+	if (hasValue(signatureAlgorithm)) {
+		certificate[4][1] = signatureAlgorithm;
 	}
-	if (clientConnectionIdSize) {
-		certificate[6].push(clientConnectionIdSize);
+	certificate[5] = [
+		[
+			keyExchangeKeypair.publicKey,
+			keyExchangeKeypair.privateKey
+		],
+	];
+	if (hasValue(keyExchangeAlgorithm)) {
+		certificate[5][1] = keyExchangeAlgorithm;
+	}
+	if (hasValue(cipherSuites)) {
+		certificate[5][2] = cipherSuites;
+	}
+	if (entity) {
+		certificate[6] = entity;
+	}
+	if (records) {
+		certificate[7] = records;
+	}
+	if (contact) {
+		certificate[8] = contact;
+	}
+	if (protocolOptions) {
+		const {
+			protocolVersion,
+			serverConnectionIdSize,
+			clientConnectionIdSize,
+		} = protocolOptions;
+		certificate[9] = [protocolVersion];
+		if (hasValue(serverConnectionIdSize)) {
+			certificate[9][1] = serverConnectionIdSize;
+		}
+		if (hasValue(clientConnectionIdSize))	{
+			certificate[9][2] = clientConnectionIdSize;
+		}
 	}
 	if (options) {
-		certificate[8] = options;
-	}
-}
-export async function createProfile(config) {
-	const {
-		template: {
-			ephemeral: ephemeralTemplate,
-			master: masterTemplate
-		},
-		savePath,
-		certificateName,
-		saveProfileToKeychain,
-		saveEphemeralToKeychain,
-		saveToKeychain,
-	} = config;
-	const master = certificateObjectCreate(masterTemplate);
-	const ephemeral = certificateObjectCreate(ephemeralTemplate, {
-		master
-	});
-	const profile = {
-		ephemeral,
-		master,
-	};
-	console.log(`ephemeral: ${ephemeral.certificate.length}bytes`);
-	console.log(`master: ${master.certificate.length}bytes`);
-	if (config.savePath) {
-		await saveProfile({
-			profile,
-			savePath,
-			certificateName,
-			saveProfileToKeychain,
-			saveEphemeralToKeychain
-		});
-	}
-	if (saveToKeychain) {
-		console.log('Saving to Keychain');
-		await keychainSave({
-			certificate: profile,
-			account: saveToKeychain?.account || certificateName,
-		});
-	}
-	console.log('CERTIFICATE BUILT');
-	return profile;
-}
-export async function createCertificate(config, options) {
-	const certificate = certificateObjectCreate(config.template, options);
-	const {
-		savePath,
-		certificateName
-	} = config;
-	if (config.savePath) {
-		await saveCertificate({
-			certificate,
-			savePath,
-			certificateName
-		});
+		certificate[9] = options;
 	}
 	return certificate;
 }
+export function convertToDomainCertificateObject(rawObject) {
+	const [
+		type,
+		version,
+		start,
+		end,
+		[
+			signatureKeypair,
+			signatureAlgorithm = 0,
+		],
+		[
+			keyExchangeKeypair,
+			keyExchangeAlgorithm = 0,
+			cipherSuites = 0,
+		],
+		entity,
+		records,
+		contact,
+		protocolOptions = []
+	] = rawObject;
+	const certificate = {
+		type,
+		version,
+		start,
+		end,
+		signatureKeypair: {
+			publicKey: signatureKeypair[0],
+			privateKey: signatureKeypair[1],
+			signatureAlgorithm,
+			cipherSuites,
+		},
+		keyExchangeKeypair: {
+			publicKey: keyExchangeKeypair[0],
+			privateKey: keyExchangeKeypair[1],
+			keyExchangeAlgorithm,
+		},
+	};
+	const [
+		protocolVersion = currentProtocolVersion,
+		serverConnectionIdSize = defaultServerConnectionIdSize,
+		clientConnectionIdSize = defaultClientConnectionIdSize,
+	] = protocolOptions;
+	certificate.protocolOptions = {
+		protocolVersion,
+		serverConnectionIdSize,
+		clientConnectionIdSize,
+	};
+	if (records) {
+		certificate.records = records;
+	}
+	if (contact) {
+		certificate.contact = contact;
+	}
+	return certificate;
+}
+export async function parseRawCertificate(rawCertificate) {
+	const [type,] = rawCertificate;
+	if (type === 0) {
+		return convertToDomainCertificateObject(rawCertificate);
+	}
+}
+export async function createProfile(config) {
+	// const {
+	// 	template: {
+	// 		ephemeral: ephemeralTemplate,
+	// 		master: masterTemplate
+	// 	},
+	// 	savePath,
+	// 	certificateName,
+	// 	saveProfileToKeychain,
+	// 	saveEphemeralToKeychain,
+	// 	saveToKeychain,
+	// } = config;
+	// const master = certificateObjectCreate(masterTemplate);
+	// const ephemeral = certificateObjectCreate(ephemeralTemplate, {
+	// 	master
+	// });
+	// const profile = {
+	// 	ephemeral,
+	// 	master,
+	// };
+	// console.log(`ephemeral: ${ephemeral.certificate.length}bytes`);
+	// console.log(`master: ${master.certificate.length}bytes`);
+	// if (config.savePath) {
+	// 	await saveProfile({
+	// 		profile,
+	// 		savePath,
+	// 		certificateName,
+	// 		saveProfileToKeychain,
+	// 		saveEphemeralToKeychain
+	// 	});
+	// }
+	// if (saveToKeychain) {
+	// 	console.log('Saving to Keychain');
+	// 	await keychainSave({
+	// 		certificate: profile,
+	// 		account: saveToKeychain?.account || certificateName,
+	// 	});
+	// }
+	// console.log('CERTIFICATE BUILT');
+	// return profile;
+}
+export async function createCertificate(config, options) {
+	// const certificateObject = certificateObjectCreate(config.template, options);
+	// const rawCertificate = objectToRawCertificate(certificateObject);
+	// const {
+	// 	savePath,
+	// 	certificateName
+	// } = config;
+	// if (config.savePath) {
+	// 	await saveCertificate({
+	// 		certificate,
+	// 		savePath,
+	// 		certificateName
+	// 	});
+	// }
+	// return certificate;
+}
+const exampleCert = createDomainCertificateObject({
+	entity: 'universalweb.io',
+	records: [
+		[
+			'a',
+			'@',
+			'127.0.0.1',
+			8888
+		],
+		[
+			'aaaa',
+			'@',
+			'::1',
+			8888
+		],
+	],
+	// records: [
+	// 	'::1',
+	// 	8888
+	// ],
+});
+const exampleRawCert = objectToRawDomainCertificate(exampleCert);
+const exampleCertObject = convertToDomainCertificateObject(exampleRawCert);
+console.log(exampleRawCert, exampleCertObject, encode(exampleRawCert).length - 120);
