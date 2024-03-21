@@ -56,6 +56,7 @@ const {
 	serverSessionKeys, signPrivateKeyToEncryptPrivateKey, signPublicKeyToEncryptPublicKey,
 	signKeypairToEncryptionKeypair, getSignPublicKeyFromPrivateKey, keypair,
 	boxUnseal, boxSeal, randomConnectionId, hashMin: defaultHashMin, hash: defaultHash,
+	signVerifyDetached, signDetached
 } = defaultCrypto;
 const x25519_xchacha20_poly1305 = {
 	name: 'x25519_xchacha20_poly1305',
@@ -85,6 +86,7 @@ const ed25519Algo = {
 	signKeypair,
 	sign,
 	signVerify,
+	signDetached,
 	signPrivateKeyToEncryptPrivateKey,
 	signPublicKeyToEncryptPublicKey,
 	signKeypairToEncryptionKeypair,
@@ -92,6 +94,7 @@ const ed25519Algo = {
 	safeMath: RistrettoPoint,
 	clientSessionKeys,
 	serverSessionKeys,
+	signVerifyDetached
 };
 const xsalsa20Algo = {
 	boxSeal,

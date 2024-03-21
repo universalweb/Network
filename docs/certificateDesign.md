@@ -1,5 +1,8 @@
 # Certificate Template & Wire Frame
 
+Certificate Blockchain Diagram
+[Original Certificate, [CA-certificate , CA-signature (sign both original & CA info)], Original Certificate Signature (Signature of original certificate, CA certificate, & CA Signature)]
+
 - type
 - cert version
 - start date

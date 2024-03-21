@@ -14,17 +14,20 @@ import {
 } from '../defaults.js';
 import { decode, encode } from '#utilities/serialize';
 import { getCipherSuite, getPublicKeyAlgorithm } from '../cryptoMiddleware/index.js';
-import { imported, logCert } from '#logs';
 import {
+	hash,
 	keypair,
 	signDetached,
 	signKeypair,
+	signVerifyDetached,
 	toBase64
 } from '#crypto';
+import { imported, logCert } from '#logs';
 import { read, write } from '#file';
 import { saveCertificate, saveProfile } from './save.js';
 import { keychainSave } from '#udsp/certificate/keychain';
 // Types: 0: domain, 1: client,  ?2: dis, 3: email, 4: store, 5: product, 6: school, 7: government?
+// TODO: Change Public Cert to remove private keys and replace array with publickey?
 export function createDomainCertificateObject(config = {}, options = {}) {
 	const currentDate = new Date();
 	const type = 0;
@@ -133,9 +136,9 @@ export function objectToRawDomainCertificate(certificateObject) {
 	if (contact) {
 		certificate[8] = contact;
 	}
+	const protocolVersion = hasValue(protocolOptions?.version) ? protocolOptions.version : currentProtocolVersion;
 	if (protocolOptions) {
 		const {
-			protocolVersion,
 			serverConnectionIdSize,
 			clientConnectionIdSize,
 		} = protocolOptions;
@@ -148,9 +151,15 @@ export function objectToRawDomainCertificate(certificateObject) {
 		}
 	}
 	if (options) {
-		certificate[9] = options;
+		certificate[10] = options;
 	}
-	return certificate;
+	// const encodedCertificate = encode(certificate);
+	// const signatureMethod = getPublicKeyAlgorithm(certificate.signatureAlgorithm, protocolVersion);
+	// const signature = signatureMethod.signDetached(encodedCertificate, signatureKeypair);
+	// console.log(certificate[6], signVerifyDetached(certificate[6], encodedCertificate, signatureKeypair));
+	return [certificate];
+	// Certificate Blockchain
+	// [raw, [CA-certificate , signature], rawSignature]
 }
 export function convertToDomainCertificateObject(rawObject) {
 	const [
@@ -171,7 +180,7 @@ export function convertToDomainCertificateObject(rawObject) {
 		records,
 		contact,
 		protocolOptions = []
-	] = rawObject;
+	] = rawObject[0];
 	const certificate = {
 		type,
 		version,
@@ -254,21 +263,21 @@ export async function createProfile(config) {
 	// console.log('CERTIFICATE BUILT');
 	// return profile;
 }
-export async function createCertificate(config, options) {
-	// const certificateObject = certificateObjectCreate(config.template, options);
-	// const rawCertificate = objectToRawCertificate(certificateObject);
-	// const {
-	// 	savePath,
-	// 	certificateName
-	// } = config;
-	// if (config.savePath) {
-	// 	await saveCertificate({
-	// 		certificate,
-	// 		savePath,
-	// 		certificateName
-	// 	});
-	// }
-	// return certificate;
+export async function createDomainCertificate(config, options) {
+	const certificateObject = objectToRawDomainCertificate(config, options);
+	const certificate = convertToDomainCertificateObject(certificateObject);
+	const {
+		savePath,
+		certificateName
+	} = config;
+	if (config.savePath) {
+		await saveCertificate({
+			certificate,
+			savePath,
+			certificateName
+		});
+	}
+	return certificate;
 }
 const exampleCert = createDomainCertificateObject({
 	entity: 'universalweb.io',

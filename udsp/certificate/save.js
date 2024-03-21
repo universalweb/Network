@@ -9,7 +9,7 @@ export async function saveCertificate(config) {
 	} = config;
 	const folderName = certificateName.replace(/\./g, '_');
 	const savePathRoot = `${resolve(`${savePath}`)}/${folderName}/${certificateName}`;
-	const publicCertificate = certificate.certificate;
+	const publicCertificate = certificate;
 	const encodedCertificate = encode(certificate);
 	await write(`${savePathRoot}Public.cert`, publicCertificate, 'binary', true);
 	await write(`${savePathRoot}.cert`, encodedCertificate, 'binary', true);

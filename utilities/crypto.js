@@ -148,27 +148,27 @@ export function hashMin(message) {
 	return hashed;
 }
 export function hashShort(message) {
-	const out = bufferAlloc(crypto_shorthash_BYTES);
-	crypto_shorthash(out, message, bufferAlloc(crypto_shorthash_KEYBYTES));
-	return out;
+	const hashed = bufferAlloc(crypto_shorthash_BYTES);
+	crypto_shorthash(hashed, message, bufferAlloc(crypto_shorthash_KEYBYTES));
+	return hashed;
 }
 export function sign(message, privateKey) {
 	const signedMessage = bufferAlloc(crypto_sign_BYTES + message.length);
-	crypto_sign(signedMessage, message, privateKey);
+	crypto_sign(signedMessage, message, privateKey?.privateKey || privateKey);
 	return signedMessage;
 }
 export function signDetached(message, privateKey) {
-	const signedMessage = bufferAlloc(crypto_sign_BYTES);
-	crypto_sign_detached(signedMessage, message, privateKey);
-	return signedMessage;
+	const signature = bufferAlloc(crypto_sign_BYTES);
+	crypto_sign_detached(signature, message, privateKey?.privateKey || privateKey);
+	return signature;
 }
 export function signVerify(signedMessage, publicKey) {
 	const message = bufferAlloc(signedMessage.length - crypto_sign_BYTES);
-	const verify = crypto_sign_open(message, signedMessage, publicKey);
+	const verify = crypto_sign_open(message, signedMessage, publicKey?.publicKey || publicKey);
 	return verify && message;
 }
 export function signVerifyDetached(signedMessage, message, publicKey) {
-	return crypto_sign_verify_detached(signedMessage, message, publicKey);
+	return crypto_sign_verify_detached(signedMessage, message, publicKey?.publicKey || publicKey);
 }
 export function keypair(config) {
 	const publicKey = config?.publicKey || bufferAlloc(crypto_kx_PUBLICKEYBYTES);
