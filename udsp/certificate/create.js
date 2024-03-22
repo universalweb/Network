@@ -25,6 +25,7 @@ import {
 import { imported, logCert } from '#logs';
 import { read, write } from '#file';
 import { saveCertificate, saveProfile } from './save.js';
+import { blake3 } from '@noble/hashes/blake3';
 import { keychainSave } from '#udsp/certificate/keychain';
 // Types: 0: domain, 1: client,  ?2: dis, 3: email, 4: store, 5: product, 6: school, 7: government?
 // TODO: Change Public Cert to remove private keys and replace array with publickey?
@@ -153,13 +154,12 @@ export function objectToRawDomainCertificate(certificateObject) {
 	if (options) {
 		certificate[10] = options;
 	}
-	// const encodedCertificate = encode(certificate);
-	// const signatureMethod = getPublicKeyAlgorithm(certificate.signatureAlgorithm, protocolVersion);
-	// const signature = signatureMethod.signDetached(encodedCertificate, signatureKeypair);
-	// console.log(certificate[6], signVerifyDetached(certificate[6], encodedCertificate, signatureKeypair));
-	return [certificate];
-	// Certificate Blockchain
-	// [raw, [CA-certificate , signature], rawSignature]
+	const encodedCertificate = blake3(encode(certificate));
+	const signatureMethod = getPublicKeyAlgorithm(certificate.signatureAlgorithm, protocolVersion);
+	const signature = signatureMethod.signDetached(encodedCertificate, signatureKeypair);
+	console.log(signature.length);
+	certificate.push(signature);
+	return certificate;
 }
 export function convertToDomainCertificateObject(rawObject) {
 	const [
@@ -180,7 +180,7 @@ export function convertToDomainCertificateObject(rawObject) {
 		records,
 		contact,
 		protocolOptions = []
-	] = rawObject[0];
+	] = rawObject;
 	const certificate = {
 		type,
 		version,

@@ -14,12 +14,12 @@ import zlib from 'node:zlib';
 // TODO: Implement Kyber1024, Kyber512, Kyber768 into one option for encryption
 async function doKyber() {
 	// A recipient generates a key pair.
-	const recipient = new Kyber512();
+	const recipient = new Kyber768();
 	const [
 		pkR,
 		skR
 	] = await recipient.generateKeyPair();
-	const sender = new Kyber512();
+	const sender = new Kyber768();
 	console.log(sender);
 	const [
 		ct,
@@ -28,7 +28,7 @@ async function doKyber() {
 	const encoded = encode([ct]);
 	const ssR = await recipient.decap(ct, skR);
 	const encrypted = encrypt(Buffer.from('0812784807chnefjhkljwehgflkfuefhksdjdfglj'), ssS);
-	console.log(encrypted.length + encoded.length + encrypted.length, ssS.length, createSessionKey().length, ssS);
+	console.log(encrypted.length + encoded.length + encrypted.length, ct.length, createSessionKey().length, ssS);
 	return;
 }
 try {
