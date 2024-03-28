@@ -1,9 +1,9 @@
+import { convertToDomainCertificateObject, createDomainCertificateObject, objectToRawDomainCertificate } from './domain.js';
+import { convertToProfileCertificateObject, createProfileCertificateObject, objectToRawProfileCertificate } from './profile.js';
 import { decode, encode } from '#utilities/serialize';
 import { imported, logCert } from '#logs';
 import { read, write } from '#file';
 import { assign } from '@universalweb/acid';
-import { convertToDomainCertificateObject } from './domain.js';
-import { convertToProfileCertificateObject } from './profile.js';
 // Add certificate verification via DIS
 export async function verifyCertificate(parentCertificate, childCertificate) {
 	logCert(parentCertificate, childCertificate);
@@ -41,5 +41,19 @@ export async function parseCertificate(filepath) {
 		logCert('FAILED TO PARSE CERT', filepath);
 	}
 }
-export * from './domain.js';
+export async function createCertificate(config, options) {
+	const { type } = config;
+	if (type) {
+		if (type === 0) {
+			const certObject = createDomainCertificateObject(config, options);
+			return objectToRawDomainCertificate(certObject);
+		} else if (type === 1) {
+			const certObject = createProfileCertificateObject(config, options);
+			return objectToRawProfileCertificate(certObject);
+		}
+		console.log('Certificate Type Incorrect');
+	} else {
+		console.log('Certificate Type Required');
+	}
+}
 export * from './save.js';
