@@ -27,23 +27,20 @@ import { read, write } from '#file';
 import { saveCertificate, saveProfile } from './save.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { keychainSave } from '#udsp/certificate/keychain';
-// Types: 0: domain, 1: client,  ?2: dis, 3: email, 4: store, 5: product, 6: school, 7: government?
-// TODO: Change Public Cert to remove private keys and replace array with publickey?
-export function createDomainCertificateObject(config = {}, options = {}) {
+export function createProfileCertificateObject(config = {}, options = {}) {
 	const currentDate = new Date();
-	const type = 0;
+	const type = 1;
 	const {
-		entity,
-		records,
 		end,
 		version = currentCertificateVersion,
 		signatureAlgorithm,
 		signatureKeypair,
 		keyExchangeAlgorithm,
-		contact,
 		cipherSuites,
 		keyExchangeKeypair,
 		protocolOptions,
+		account,
+		hashAlgorithm
 	} = config;
 	const certificate = {
 		version,
@@ -57,14 +54,8 @@ export function createDomainCertificateObject(config = {}, options = {}) {
 	if (certificate.start > certificate.end) {
 		certificate.end = currentDate.setUTCMonth(currentDate.getUTCMonth() + 3);
 	}
-	if (entity) {
-		certificate.entity = entity;
-	}
-	if (records) {
-		certificate.records = records;
-	}
-	if (contact) {
-		certificate.contact = contact;
+	if (account) {
+		certificate.account = account;
 	}
 	const protocolVersion = hasValue(protocolOptions?.version) ? protocolOptions.version : currentProtocolVersion;
 	if (hasValue(signatureAlgorithm) && signatureAlgorithm !== 0) {
@@ -72,6 +63,9 @@ export function createDomainCertificateObject(config = {}, options = {}) {
 	}
 	if (hasValue(keyExchangeAlgorithm) && keyExchangeAlgorithm !== 0) {
 		certificate.keyExchangeAlgorithm = keyExchangeAlgorithm;
+	}
+	if (hasValue(hashAlgorithm) && hashAlgorithm !== 0) {
+		certificate.hashAlgorithm = hashAlgorithm;
 	}
 	if (hasValue(cipherSuites) && cipherSuites !== 0) {
 		certificate.cipherSuites = cipherSuites;
@@ -86,21 +80,18 @@ export function createDomainCertificateObject(config = {}, options = {}) {
 	}
 	return certificate;
 }
-export function objectToRawDomainCertificate(certificateObject) {
+export function objectToRawProfileCertificate(certificateObject) {
 	const {
-		keyExchangeAlgorithm,
-		entity,
+		account,
 		cipherSuites,
 		signatureKeypair,
 		signatureAlgorithm,
 		protocol,
-		records,
 		end,
 		start,
 		protocolOptions,
-		options,
+		hashAlgorithm,
 		keyExchangeKeypair,
-		contact,
 	} = certificateObject;
 	const certificate = [];
 	certificate[0] = 0;
@@ -116,26 +107,20 @@ export function objectToRawDomainCertificate(certificateObject) {
 	if (hasValue(signatureAlgorithm)) {
 		certificate[4][1] = signatureAlgorithm;
 	}
+	if (hasValue(hashAlgorithm)) {
+		certificate[4][2] = hashAlgorithm;
+	}
 	certificate[5] = [
 		[
 			keyExchangeKeypair.publicKey,
 			keyExchangeKeypair.privateKey
 		],
 	];
-	if (hasValue(keyExchangeAlgorithm)) {
-		certificate[5][1] = keyExchangeAlgorithm;
-	}
 	if (hasValue(cipherSuites)) {
-		certificate[5][2] = cipherSuites;
+		certificate[5][1] = cipherSuites;
 	}
-	if (entity) {
-		certificate[6] = entity;
-	}
-	if (records) {
-		certificate[7] = records;
-	}
-	if (contact) {
-		certificate[8] = contact;
+	if (account) {
+		certificate[6] = account;
 	}
 	const protocolVersion = hasValue(protocolOptions?.version) ? protocolOptions.version : currentProtocolVersion;
 	if (protocolOptions) {
@@ -143,37 +128,37 @@ export function objectToRawDomainCertificate(certificateObject) {
 			serverConnectionIdSize,
 			clientConnectionIdSize,
 		} = protocolOptions;
-		certificate[9] = [protocolVersion];
+		certificate[10] = [protocolVersion];
 		if (hasValue(serverConnectionIdSize)) {
-			certificate[9][1] = serverConnectionIdSize;
+			certificate[10][1] = serverConnectionIdSize;
 		}
 		if (hasValue(clientConnectionIdSize))	{
-			certificate[9][2] = clientConnectionIdSize;
+			certificate[10][2] = clientConnectionIdSize;
 		}
 	}
-	if (options) {
-		certificate[10] = options;
-	}
-	const encodedCertificate = blake3(encode(certificate));
+	const encodedCertificate = encode(certificate);
 	const signatureMethod = getPublicKeyAlgorithm(certificate.signatureAlgorithm, protocolVersion);
 	const signature = signatureMethod.signDetached(encodedCertificate, signatureKeypair);
 	console.log(signature.length);
 	certificate.push(signature);
 	return certificate;
 }
-export function convertToDomainCertificateObject(rawObject) {
+export function convertToProfileCertificateObject(rawObject) {
+	const rawObjectLength = rawObject.length;
+	const signature = rawObject.pop();
 	const [
 		type,
 		version,
 		start,
 		end,
+		ownerHash,
 		[
 			signatureKeypair,
 			signatureAlgorithm = 0,
+			hashAlgorithm = 0,
 		],
 		[
 			keyExchangeKeypair,
-			keyExchangeAlgorithm = 0,
 			cipherSuites = 0,
 		],
 		entity,
@@ -190,13 +175,14 @@ export function convertToDomainCertificateObject(rawObject) {
 			publicKey: signatureKeypair[0],
 			privateKey: signatureKeypair[1],
 			signatureAlgorithm,
-			cipherSuites,
+			hashAlgorithm,
 		},
 		keyExchangeKeypair: {
 			publicKey: keyExchangeKeypair[0],
 			privateKey: keyExchangeKeypair[1],
-			keyExchangeAlgorithm,
+			cipherSuites,
 		},
+		signature
 	};
 	const [
 		protocolVersion = currentProtocolVersion,
@@ -216,56 +202,9 @@ export function convertToDomainCertificateObject(rawObject) {
 	}
 	return certificate;
 }
-export async function parseRawCertificate(rawCertificate) {
-	const [type,] = rawCertificate;
-	if (type === 0) {
-		return convertToDomainCertificateObject(rawCertificate);
-	}
-}
-export async function createProfile(config) {
-	// const {
-	// 	template: {
-	// 		ephemeral: ephemeralTemplate,
-	// 		master: masterTemplate
-	// 	},
-	// 	savePath,
-	// 	certificateName,
-	// 	saveProfileToKeychain,
-	// 	saveEphemeralToKeychain,
-	// 	saveToKeychain,
-	// } = config;
-	// const master = certificateObjectCreate(masterTemplate);
-	// const ephemeral = certificateObjectCreate(ephemeralTemplate, {
-	// 	master
-	// });
-	// const profile = {
-	// 	ephemeral,
-	// 	master,
-	// };
-	// console.log(`ephemeral: ${ephemeral.certificate.length}bytes`);
-	// console.log(`master: ${master.certificate.length}bytes`);
-	// if (config.savePath) {
-	// 	await saveProfile({
-	// 		profile,
-	// 		savePath,
-	// 		certificateName,
-	// 		saveProfileToKeychain,
-	// 		saveEphemeralToKeychain
-	// 	});
-	// }
-	// if (saveToKeychain) {
-	// 	console.log('Saving to Keychain');
-	// 	await keychainSave({
-	// 		certificate: profile,
-	// 		account: saveToKeychain?.account || certificateName,
-	// 	});
-	// }
-	// console.log('CERTIFICATE BUILT');
-	// return profile;
-}
-export async function createDomainCertificate(config, options) {
-	const certificateObject = objectToRawDomainCertificate(config, options);
-	const certificate = convertToDomainCertificateObject(certificateObject);
+export async function createProfileCertificate(config, options) {
+	const certificateObject = objectToRawProfileCertificate(config, options);
+	const certificate = convertToProfileCertificateObject(certificateObject);
 	const {
 		savePath,
 		certificateName
@@ -279,7 +218,7 @@ export async function createDomainCertificate(config, options) {
 	}
 	return certificate;
 }
-const exampleCert = createDomainCertificateObject({
+const exampleCert = createProfileCertificateObject({
 	entity: 'universalweb.io',
 	records: [
 		[
@@ -300,6 +239,6 @@ const exampleCert = createDomainCertificateObject({
 	// 	8888
 	// ],
 });
-const exampleRawCert = objectToRawDomainCertificate(exampleCert);
-const exampleCertObject = convertToDomainCertificateObject(exampleRawCert);
+const exampleRawCert = objectToRawProfileCertificate(exampleCert);
+const exampleCertObject = convertToProfileCertificateObject(exampleRawCert);
 console.log(exampleRawCert, exampleCertObject, encode(exampleRawCert).length - 120);

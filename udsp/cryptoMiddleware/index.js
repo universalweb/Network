@@ -118,6 +118,18 @@ boxAlgorithms.set(1, boxAlgorithmsVersion1);
 boxAlgorithmsVersion1.set(xsalsa20Algo.name, xsalsa20Algo);
 boxAlgorithmsVersion1.set(xsalsa20Algo.id, xsalsa20Algo);
 boxAlgorithmsVersion1.set(xsalsa20Algo.alias, xsalsa20Algo);
+const blake3Hash = {
+	name: 'blake3',
+	alias: 'default',
+	id: 0,
+	hash: blake3,
+};
+export const hashAlgorithms = new Map();
+const hashAlgorithmsVersion1 = new Map();
+boxAlgorithms.set(1, hashAlgorithmsVersion1);
+hashAlgorithmsVersion1.set(blake3Hash.name, blake3Hash);
+hashAlgorithmsVersion1.set(blake3Hash.id, blake3Hash);
+hashAlgorithmsVersion1.set(blake3Hash.alias, blake3Hash);
 export function getCipherSuite(cipherSuiteName = 0, version = currentVersion) {
 	if (!hasValue(cipherSuiteName)) {
 		return false;
@@ -134,5 +146,14 @@ export function getPublicKeyAlgorithm(publicKeyAlgorithmName = 0, version = curr
 	const algoVersion = publicKeyAlgorithms.get(version);
 	if (algoVersion) {
 		return algoVersion.get(publicKeyAlgorithmName);
+	}
+}
+export function getHashAlgorithm(hashAlgorithmName = 0, version = currentVersion) {
+	if (!hasValue(hashAlgorithmName)) {
+		return false;
+	}
+	const algoVersion = hashAlgorithms.get(version);
+	if (algoVersion) {
+		return algoVersion.get(hashAlgorithmName);
 	}
 }
