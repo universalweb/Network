@@ -20,7 +20,7 @@ export function prettyObjects(args, consoleBase, isError) {
 	});
 }
 function logFactory(bg, color, header, footer, isError = false) {
-	const consoleBase = (bg) ? chalk[bg].hex(color) : chalk.hex(color);
+	const consoleBase = bg ? chalk[bg].hex(color) : chalk.hex(color);
 	return function(...args) {
 		if (footer) {
 			const fullHeader = ` ---------------- ${header} START ---------------- `;

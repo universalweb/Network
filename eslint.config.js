@@ -205,7 +205,8 @@ export default [
 					enforceForSequenceExpressions: false,
 					nestedBinaryExpressions: false,
 					returnAssign: false,
-					ternaryOperandBinaryExpressions: false
+					ternaryOperandBinaryExpressions: false,
+					enforceForFunctionPrototypeMethods: false,
 				}
 			],
 			'@stylistic/no-extra-semi': 'error',
