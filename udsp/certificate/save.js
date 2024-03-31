@@ -1,5 +1,6 @@
 import { normalize, resolve } from 'path';
 import { encode } from '#utilities/serialize';
+import { isBuffer } from '@universalweb/acid';
 import { write } from '#file';
 export async function saveCertificate(config) {
 	const {
@@ -7,12 +8,8 @@ export async function saveCertificate(config) {
 		savePath,
 		certificateName,
 	} = config;
-	const folderName = certificateName.replace(/\./g, '_');
-	const savePathRoot = `${resolve(`${savePath}`)}/${folderName}/${certificateName}`;
-	const publicCertificate = certificate;
-	const encodedCertificate = encode(certificate);
-	await write(`${savePathRoot}Public.cert`, publicCertificate, 'binary', true);
-	await write(`${savePathRoot}.cert`, encodedCertificate, 'binary', true);
+	const savePathRoot = `${resolve(`${savePath}`)}/${certificateName}`;
+	await write(`${savePathRoot}.cert`, isBuffer(certificate) ? certificate : encode(certificate), 'binary', true);
 }
 export async function saveProfile(config) {
 	const {

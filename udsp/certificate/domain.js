@@ -28,12 +28,13 @@ import {
 import { imported, logCert } from '#logs';
 import { read, write } from '#file';
 import { saveCertificate, saveProfile } from './save.js';
+import { UWCertificate } from './UWCertificate.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { keychainSave } from '#udsp/certificate/keychain';
-export function createSignature(certificate) {
+export function createSignature(certificate, privateKey) {
 	const encodedCertificate = encode(certificate);
 	const signatureMethod = getPublicKeyAlgorithm(certificate.signatureAlgorithm, certificate[10]?.[0]);
-	const signature = signatureMethod.signDetached(encodedCertificate, certificate[5]);
+	const signature = signatureMethod.signDetached(encodedCertificate, privateKey);
 	return signature;
 }
 export function createDomainCertificateObject(config = {}, options = {}) {
@@ -42,7 +43,6 @@ export function createDomainCertificateObject(config = {}, options = {}) {
 	const {
 		entity,
 		records,
-		end,
 		version = currentCertificateVersion,
 		signatureAlgorithm,
 		signatureKeypair,
@@ -51,14 +51,16 @@ export function createDomainCertificateObject(config = {}, options = {}) {
 		cipherSuites,
 		keyExchangeKeypair,
 		protocolOptions,
-		hashAlgorithm
+		hashAlgorithm,
+		start = currentDate.getTime(),
+		end = currentDate.setUTCMonth(currentDate.getUTCMonth() + 3)
 	} = config;
 	const certificate = {
 		version,
 		signatureKeypair,
 		keyExchangeKeypair,
-		start: currentDate.getTime(),
-		end: end || currentDate.setUTCMonth(currentDate.getUTCMonth() + 3),
+		start,
+		end,
 		type,
 		protocolOptions
 	};
@@ -167,11 +169,11 @@ export function objectToRawDomainCertificate(certificateObject) {
 	}
 	return certificate;
 }
-export function getPublicCertificate(certificate) {
-	const publicCertificate = cloneArray(certificate);
-	publicCertificate[5] = publicCertificate[5][0][0];
-	publicCertificate[6] = publicCertificate[6][0][0];
-	return certificate;
+export function getPublicDomainCertificate(certificate) {
+	const publicCertificate = clone(certificate);
+	publicCertificate[5][0] = publicCertificate[5][0][0];
+	publicCertificate[6][0] = publicCertificate[6][0][0];
+	return publicCertificate;
 }
 export function rawToObjectDomainCertificate(rawObject) {
 	const rawObjectLength = rawObject.length;
@@ -258,7 +260,30 @@ export async function createDomainCertificate(config, options) {
 	}
 	return certificate;
 }
-const exampleCert = createDomainCertificateObject({
+class DomainCertificate extends UWCertificate {
+	constructor(config) {
+		super(config);
+		this.type = 0;
+	}
+	initialize(config) {
+		this.object = createDomainCertificateObject(config);
+		this.update();
+	}
+	update(config) {
+		this.array = objectToRawDomainCertificate(this.object);
+	}
+	getPublic() {
+		this.publicCertificate = getPublicDomainCertificate(this.array);
+		const signature = this.getSignature();
+		this.publicCertificate.push(signature);
+		return this.publicCertificate;
+	}
+	sign() {
+		const signature = createSignature(this.publicCertificate, this.object.signatureKeypair.privateKey);
+		return signature;
+	}
+}
+const exampleCert = new DomainCertificate({
 	entity: 'universalweb.io',
 	records: [
 		[
@@ -274,41 +299,5 @@ const exampleCert = createDomainCertificateObject({
 			8888
 		],
 	],
-	// records: [
-	// 	'::1',
-	// 	8888
-	// ],
 });
-class DomainCertificate {
-	constructor(config) {
-		return this.initialize(config);
-	}
-	async initialize(config) {
-		if (isArray(config)) {
-			this.raw = config;
-			this.object = await rawToObjectDomainCertificate(this.raw);
-		} else if (isPlainObject(config)) {
-			this.object = await createDomainCertificateObject(this.config);
-			this.raw = objectToRawDomainCertificate(this.object);
-		}
-	}
-	async update(config) {
-		this.config = merge(this.config, config);
-		await this.generate();
-	}
-	async generate() {
-		this.object = await createDomainCertificateObject(this.config);
-		this.raw = objectToRawDomainCertificate(this.object);
-	}
-	async save(certificateName, savePath) {
-		const saved = await saveCertificate({
-			certificate: this.certificate,
-			savePath,
-			certificateName
-		});
-		return saved;
-	}
-}
-const exampleRawCert = objectToRawDomainCertificate(exampleCert);
-const exampleCertObject = rawToObjectDomainCertificate(exampleRawCert);
-console.log(exampleRawCert, exampleCertObject, encode(exampleRawCert).length - 120);
+console.log(exampleCert.getPublic());
