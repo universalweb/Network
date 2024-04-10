@@ -12,7 +12,7 @@ const state = stateFactory('browser', {
 	electron
 });
 const { file: { readJson, } } = state;
-const config = readJson('./config/index.json');
+const config = await readJson('./config/index.json');
 const {
 	app,
 	BrowserWindow,

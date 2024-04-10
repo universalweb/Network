@@ -13,7 +13,7 @@ import {
 	defaultServerConnectionIdSize
 } from '../defaults.js';
 import { decode, encode } from '#utilities/serialize';
-import { getCipherSuite, getPublicKeyAlgorithm } from '../cryptoMiddleware/index.js';
+import { getCipherSuite, getSignatureAlgorithm } from '../cryptoMiddleware/index.js';
 import {
 	hash,
 	keypair,
@@ -70,7 +70,7 @@ export function createProfileCertificateObject(config = {}, options = {}) {
 	if (hasValue(cipherSuites) && cipherSuites !== 0) {
 		certificate.cipherSuites = cipherSuites;
 	}
-	const signatureMethod = getPublicKeyAlgorithm(certificate.signatureAlgorithm, protocolVersion);
+	const signatureMethod = getSignatureAlgorithm(certificate.signatureAlgorithm, protocolVersion);
 	if (!signatureKeypair) {
 		certificate.signatureKeypair = signatureMethod.signKeypair();
 	}
@@ -137,7 +137,7 @@ export function objectToRawProfileCertificate(certificateObject) {
 		}
 	}
 	const encodedCertificate = encode(certificate);
-	const signatureMethod = getPublicKeyAlgorithm(certificate.signatureAlgorithm, protocolVersion);
+	const signatureMethod = getSignatureAlgorithm(certificate.signatureAlgorithm, protocolVersion);
 	const signature = signatureMethod.signDetached(encodedCertificate, signatureKeypair);
 	console.log(signature.length);
 	certificate.push(signature);

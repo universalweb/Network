@@ -1,8 +1,8 @@
 // SET FOR REMOVAL
 const ractive = globalThis.Ractive;
-import { readJson } from '../../utilities/file/index.js';
-const config = readJson('./config/index.json');
 import { readFileSync } from 'fs';
+import { readJson } from '../../utilities/file/index.js';
+const config = await readJson('./config/index.json');
 const template = readFileSync('./browser/resources/html/template/browser.html').toString();
 const {
 	homepage,

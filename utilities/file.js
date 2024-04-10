@@ -1,24 +1,28 @@
 import { jsonParse, promise } from '@universalweb/acid';
 import {
+	mkdir,
 	readFile,
-	writeFile,
+	stat,
+	writeFile
 } from 'node:fs/promises';
 import { decode } from '#utilities/serialize';
 import fs from 'node:fs';
 import path from 'path';
-const { readFileSync } = fs;
 const { normalize } = path;
-function createFoldersIfNotExist(folderPath) {
-	const directories = path.normalize(folderPath).split(path.sep);
+async function createFoldersIfNotExist(folderPath) {
+	const directories = normalize(folderPath).split(path.sep);
 	let currentPath = `${path.sep}`;
-	console.log(directories);
 	for (const dir of directories) {
 		if (dir.length) {
 			currentPath = path.join(currentPath, dir);
-			const pathExists = fs.existsSync(currentPath);
-			console.log(pathExists, currentPath);
-			if (!pathExists) {
-				fs.mkdirSync(currentPath);
+			try {
+				await stat(currentPath);
+			} catch {
+				try {
+					await mkdir(currentPath);
+				} catch {
+					console.log('Error creating folder', currentPath);
+				}
 			}
 		}
 	}
@@ -27,7 +31,7 @@ export async function write(filePath, contents, encode, createPathFlag) {
 	const pathNormalized = normalize(filePath);
 	console.log('FILE WRITE', pathNormalized, contents.length, encode);
 	if (createPathFlag) {
-		createFoldersIfNotExist(path.dirname(pathNormalized));
+		await createFoldersIfNotExist(path.dirname(pathNormalized));
 	}
 	return writeFile(pathNormalized, contents, encode);
 }
@@ -43,9 +47,19 @@ export async function copy(source, destination, config) {
 	}
 	await write(normalize(destination), file);
 }
-export function readJson(filePath) {
-	return jsonParse(readFileSync(filePath));
+export async function readJson(filePath) {
+	try {
+		return jsonParse(await readFile(filePath));
+	} catch (err) {
+		console.log('Read JSON Error', err);
+		return;
+	}
 }
-export function readMsgpack(filePath) {
-	return decode(readFileSync(filePath));
+export async function readStructure(filePath) {
+	try {
+		return decode(await readFile(filePath));
+	} catch (err) {
+		console.log('Read JSON Error', err);
+		return;
+	}
 }

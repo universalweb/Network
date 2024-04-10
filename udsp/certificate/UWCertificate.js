@@ -7,15 +7,21 @@ export class UWCertificate {
 	encodePublic() {
 		return encode(this.getPublic());
 	}
+	getCertificate() {
+		return [
+			this.array,
+			this.getSignature()
+		];
+	}
 	encode() {
-		return encode(this.array);
+		return encode(this.getCertificate());
 	}
 	encodeStructured() {
 		return encode(this.object);
 	}
 	async save(certificateName, savePath) {
 		const saved = await saveCertificate({
-			certificate: this.certificate,
+			certificate: this.encode(),
 			savePath,
 			certificateName
 		});
@@ -23,7 +29,7 @@ export class UWCertificate {
 	}
 	async savePublic(certificateName, savePath) {
 		const saved = await saveCertificate({
-			certificate: this.publicCertificate,
+			certificate: this.encodePublic(),
 			savePath,
 			certificateName
 		});

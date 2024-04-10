@@ -9,7 +9,8 @@ export async function saveCertificate(config) {
 		certificateName,
 	} = config;
 	const savePathRoot = `${resolve(`${savePath}`)}/${certificateName}`;
-	await write(`${savePathRoot}.cert`, isBuffer(certificate) ? certificate : encode(certificate), 'binary', true);
+	const result = await write(`${savePathRoot}.cert`, isBuffer(certificate) ? certificate : encode(certificate), 'binary', true);
+	return result;
 }
 export async function saveProfile(config) {
 	const {

@@ -20,7 +20,7 @@ import {
 	msgSent,
 	success
 } from '#logs';
-import { getAlgorithm, getPublicKeyAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
+import { getAlgorithm, getSignatureAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
 import { getCertificate, loadCertificate, parseCertificate } from '#udsp/certificate/index';
 import { randomBuffer, toBase64 } from '#crypto';
 import { UDSP } from '#udsp/base';
@@ -102,7 +102,7 @@ export class Server extends UDSP {
 			}
 		}
 		if (this.certificate) {
-			this.publicKeyCryptography = getPublicKeyAlgorithm(this.certificate.publicKeyAlgorithm, this.version);
+			this.publicKeyCryptography = getSignatureAlgorithm(this.certificate.publicKeyAlgorithm, this.version);
 			const convertSignKeypairToEncryptionKeypair = processPublicKey(this.certificate);
 			if (convertSignKeypairToEncryptionKeypair) {
 				this.encryptionKeypair = convertSignKeypairToEncryptionKeypair;

@@ -94,7 +94,8 @@ const ed25519Algo = {
 	safeMath: RistrettoPoint,
 	clientSessionKeys,
 	serverSessionKeys,
-	signVerifyDetached
+	signVerifyDetached,
+	hash: blake3,
 };
 const xsalsa20Algo = {
 	boxSeal,
@@ -139,7 +140,7 @@ export function getCipherSuite(cipherSuiteName = 0, version = currentVersion) {
 		return cipherVersion.get(cipherSuiteName);
 	}
 }
-export function getPublicKeyAlgorithm(publicKeyAlgorithmName = 0, version = currentVersion) {
+export function getSignatureAlgorithm(publicKeyAlgorithmName = 0, version = currentVersion) {
 	if (!hasValue(publicKeyAlgorithmName)) {
 		return false;
 	}
