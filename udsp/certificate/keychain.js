@@ -23,15 +23,15 @@ export function keychainGet(account) {
 	});
 }
 export function keychainPromise(config, accept, reject) {
-	if (!isBuffer(config.certificate)) {
-		config.certificate = encode(config.certificate);
+	if (!isBuffer(config.profile)) {
+		config.profile = encode(config.profile);
 	}
-	config.certificate = toBase64(config.certificate);
+	const password = toBase64(config.profile);
 	keychain.setPassword({
 		account: config.account,
 		service: 'Universal Web',
 		type: 'generic',
-		password: config.certificate
+		password
 	}, (err) => {
 		if (err) {
 			return console.log('Keychain Access Save Failed', err);

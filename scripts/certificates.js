@@ -2,28 +2,27 @@ import { DomainCertificate, createDomainCertificate, createProfile } from '#udsp
 import { currentPath } from '@universalweb/acid';
 import { decode } from '#utilities/serialize';
 const dirname = currentPath(import.meta);
-const profile = new UWProfile({
-	savePath: `${dirname}/../profiles/default`,
-	certificateName: 'default',
-	saveToKeychain: {
-		account: 'Default Profile'
-	}
-});
+const profile = new UWProfile();
+profile.save('profile', `${dirname}/../profiles/default`);
 const domainCertificate = new DomainCertificate({
 	entity: 'universalweb.io',
 	owner: profile.getSignature(),
 	records: [
 		[
-			'a',
-			'@',
-			'127.0.0.1',
-			8888
-		],
-		[
 			'aaaa',
 			'@',
 			'::1',
-			8888
+			8888,
+			0, // PRIORITY
+			'27.950575 -82.457176' // GEOLOCATION FEATURE
+		],
+		[
+			'a',
+			'@',
+			'127.0.0.1',
+			8888,
+			0, // PRIORITY
+			'27.950575 -82.457176' // GEOLOCATION FEATURE
 		],
 	],
 });

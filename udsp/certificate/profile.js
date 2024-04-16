@@ -1,19 +1,25 @@
 import {
 	assign,
 	clone,
+	cloneArray,
+	currentPath,
 	hasValue,
+	isArray,
 	isBuffer,
+	isPlainObject,
+	isString,
 	merge,
 	promise
 } from '@universalweb/acid';
 import {
+	certificateTypes,
 	currentCertificateVersion,
 	currentProtocolVersion,
 	defaultClientConnectionIdSize,
 	defaultServerConnectionIdSize
 } from '../defaults.js';
 import { decode, encode } from '#utilities/serialize';
-import { getCipherSuite, getSignatureAlgorithm } from '../cryptoMiddleware/index.js';
+import { getCipherSuite, getSignatureAlgorithm, getSignatureAlgorithmByCertificate } from '../cryptoMiddleware/index.js';
 import {
 	hash,
 	keypair,
@@ -23,78 +29,73 @@ import {
 	toBase64
 } from '#crypto';
 import { imported, logCert } from '#logs';
-import { read, write } from '#file';
+import { read, readStructure, write } from '#file';
 import { saveCertificate, saveProfile } from './save.js';
+import { UWCertificate } from './UWCertificate.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { keychainSave } from '#udsp/certificate/keychain';
-export function createProfileCertificateObject(config = {}, options = {}) {
+const type = certificateTypes.get('profile');
+export function createSignature(certificate, privateKey) {
+	const encodedCertificate = encode(certificate);
+	const signatureMethod = getSignatureAlgorithmByCertificate(certificate.signatureAlgorithm, certificate[1]);
+	const signature = signatureMethod.signDetached(encodedCertificate, privateKey);
+	return signature;
+}
+export function createUWProfileObject(config = {}, options = {}) {
 	const currentDate = new Date();
-	const type = 1;
 	const {
-		end,
 		version = currentCertificateVersion,
 		signatureAlgorithm,
 		signatureKeypair,
-		keyExchangeAlgorithm,
+		encryptionKeypairAlgorithm,
+		contact,
 		cipherSuites,
-		keyExchangeKeypair,
-		protocolOptions,
-		account,
-		hashAlgorithm
+		encryptionKeypair,
+		start = currentDate.getTime()
 	} = config;
 	const certificate = {
 		version,
 		signatureKeypair,
-		keyExchangeKeypair,
-		start: currentDate.getTime(),
-		end: end || currentDate.setUTCMonth(currentDate.getUTCMonth() + 3),
-		type,
-		protocolOptions
+		encryptionKeypair,
+		start,
+		type
 	};
-	if (certificate.start > certificate.end) {
-		certificate.end = currentDate.setUTCMonth(currentDate.getUTCMonth() + 3);
+	if (contact) {
+		certificate.contact = contact;
 	}
-	if (account) {
-		certificate.account = account;
-	}
-	const protocolVersion = hasValue(protocolOptions?.version) ? protocolOptions.version : currentProtocolVersion;
+	const protocolVersion = hasValue(version) ? version : currentProtocolVersion;
 	if (hasValue(signatureAlgorithm) && signatureAlgorithm !== 0) {
 		certificate.signatureAlgorithm = signatureAlgorithm;
 	}
-	if (hasValue(keyExchangeAlgorithm) && keyExchangeAlgorithm !== 0) {
-		certificate.keyExchangeAlgorithm = keyExchangeAlgorithm;
-	}
-	if (hasValue(hashAlgorithm) && hashAlgorithm !== 0) {
-		certificate.hashAlgorithm = hashAlgorithm;
-	}
-	if (hasValue(cipherSuites) && cipherSuites !== 0) {
-		certificate.cipherSuites = cipherSuites;
+	if (hasValue(encryptionKeypairAlgorithm) && encryptionKeypairAlgorithm !== 0) {
+		certificate.encryptionKeypairAlgorithm = encryptionKeypairAlgorithm;
 	}
 	const signatureMethod = getSignatureAlgorithm(certificate.signatureAlgorithm, protocolVersion);
 	if (!signatureKeypair) {
 		certificate.signatureKeypair = signatureMethod.signKeypair();
 	}
-	const keyExchangeMethod = getCipherSuite(certificate.keyExchangeAlgorithm, protocolVersion);
-	if (!keyExchangeKeypair) {
-		certificate.keyExchangeKeypair = keyExchangeMethod.keypair();
+	const keyExchangeMethod = getCipherSuite(certificate.encryptionKeypairAlgorithm, protocolVersion);
+	if (!encryptionKeypair) {
+		certificate.encryptionKeypair = keyExchangeMethod.keypair();
 	}
 	return certificate;
 }
-export function objectToRawProfileCertificate(certificateObject) {
+export function objectToRawUWProfile(certificateObject) {
+	const currentDate = new Date();
 	const {
-		account,
 		cipherSuites,
 		signatureKeypair,
-		signatureAlgorithm,
-		protocol,
-		end,
+		signatureAlgorithm = 0,
+		end = currentDate.setUTCMonth(currentDate.getUTCMonth() + 3),
 		start,
 		protocolOptions,
-		hashAlgorithm,
-		keyExchangeKeypair,
+		options,
+		encryptionKeypair,
+		cipherSuite,
+		contact
 	} = certificateObject;
 	const certificate = [];
-	certificate[0] = 0;
+	certificate[0] = 2;
 	certificate[1] = currentCertificateVersion;
 	certificate[2] = start;
 	certificate[3] = end;
@@ -103,142 +104,151 @@ export function objectToRawProfileCertificate(certificateObject) {
 			signatureKeypair.publicKey,
 			signatureKeypair.privateKey
 		],
-	];
-	if (hasValue(signatureAlgorithm)) {
-		certificate[4][1] = signatureAlgorithm;
-	}
-	if (hasValue(hashAlgorithm)) {
-		certificate[4][2] = hashAlgorithm;
-	}
-	certificate[5] = [
 		[
-			keyExchangeKeypair.publicKey,
-			keyExchangeKeypair.privateKey
+			encryptionKeypair.publicKey,
+			encryptionKeypair.privateKey
 		],
 	];
-	if (hasValue(cipherSuites)) {
-		certificate[5][1] = cipherSuites;
+	if (contact) {
+		certificate[5] = contact;
 	}
-	if (account) {
-		certificate[6] = account;
+	if (options) {
+		certificate[6] = options;
 	}
-	const protocolVersion = hasValue(protocolOptions?.version) ? protocolOptions.version : currentProtocolVersion;
-	if (protocolOptions) {
-		const {
-			serverConnectionIdSize,
-			clientConnectionIdSize,
-		} = protocolOptions;
-		certificate[10] = [protocolVersion];
-		if (hasValue(serverConnectionIdSize)) {
-			certificate[10][1] = serverConnectionIdSize;
-		}
-		if (hasValue(clientConnectionIdSize))	{
-			certificate[10][2] = clientConnectionIdSize;
-		}
-	}
-	const encodedCertificate = encode(certificate);
-	const signatureMethod = getSignatureAlgorithm(certificate.signatureAlgorithm, protocolVersion);
-	const signature = signatureMethod.signDetached(encodedCertificate, signatureKeypair);
-	console.log(signature.length);
-	certificate.push(signature);
 	return certificate;
 }
-export function convertToProfileCertificateObject(rawObject) {
+export function getPublicProfileCertificate(certificate) {
+	const publicCertificate = clone(certificate);
+	publicCertificate[4][0] = publicCertificate[4][0][0];
+	publicCertificate[4][1] = publicCertificate[4][1][0];
+	return publicCertificate;
+}
+export function rawToObjectUWProfile(rawObject, signature) {
 	const rawObjectLength = rawObject.length;
-	const signature = rawObject.pop();
+	console.log(rawObject);
 	const [
-		type,
+		certificateType,
 		version,
 		start,
 		end,
-		ownerHash,
 		[
 			signatureKeypair,
-			signatureAlgorithm = 0,
-			hashAlgorithm = 0,
+			encryptionKeypair,
+			signatureAlgorithm,
+			cipherSuites,
 		],
-		[
-			keyExchangeKeypair,
-			cipherSuites = 0,
-		],
-		entity,
-		records,
 		contact,
-		protocolOptions = []
+		options,
 	] = rawObject;
 	const certificate = {
 		type,
 		version,
 		start,
 		end,
-		signatureKeypair: {
+	};
+	if (isArray(signatureKeypair)) {
+		certificate.signatureKeypair = {
 			publicKey: signatureKeypair[0],
 			privateKey: signatureKeypair[1],
-			signatureAlgorithm,
-			hashAlgorithm,
-		},
-		keyExchangeKeypair: {
-			publicKey: keyExchangeKeypair[0],
-			privateKey: keyExchangeKeypair[1],
-			cipherSuites,
-		},
-		signature
-	};
-	const [
-		protocolVersion = currentProtocolVersion,
-		serverConnectionIdSize = defaultServerConnectionIdSize,
-		clientConnectionIdSize = defaultClientConnectionIdSize,
-	] = protocolOptions;
-	certificate.protocolOptions = {
-		protocolVersion,
-		serverConnectionIdSize,
-		clientConnectionIdSize,
-	};
-	if (records) {
-		certificate.records = records;
+		};
+	} else {
+		certificate.signatureKeypair = signatureKeypair;
+	}
+	if (isArray(encryptionKeypair)) {
+		certificate.encryptionKeypair = {
+			publicKey: encryptionKeypair[0],
+			privateKey: encryptionKeypair[1],
+		};
+	} else {
+		certificate.encryptionKeypair = encryptionKeypair;
+	}
+	if (signature) {
+		certificate.signature = signature;
+	}
+	if (signatureAlgorithm) {
+		certificate.signatureAlgorithm = signatureAlgorithm;
+	}
+	if (cipherSuites) {
+		certificate.cipherSuites = cipherSuites;
+	}
+	if (signature) {
+		certificate.signature = signature;
 	}
 	if (contact) {
 		certificate.contact = contact;
 	}
 	return certificate;
 }
-export async function createProfileCertificate(config, options) {
-	const certificateObject = objectToRawProfileCertificate(config, options);
-	const certificate = convertToProfileCertificateObject(certificateObject);
-	const {
-		savePath,
-		certificateName
-	} = config;
-	if (config.savePath) {
-		await saveCertificate({
-			certificate,
-			savePath,
-			certificateName
-		});
+export class UWProfile extends UWCertificate {
+	async initialize(config = {}) {
+		if (isPlainObject(config)) {
+			this.object = createUWProfileObject(config);
+			this.update();
+		} else if (isString(config)) {
+			const source = await readStructure(config);
+			this.object = source;
+		} else if (isArray(config)) {
+			this.array = config;
+			this.object = rawToObjectUWProfile(config);
+		} else if (isBuffer(config)) {
+			const source = decode(config);
+			if (isPlainObject(source)) {
+				this.object = source;
+			} else if (isArray(source[0])) {
+				this.array = source;
+				this.object = rawToObjectUWProfile(source);
+			} else {
+				this.array = source[0];
+				this.object = rawToObjectUWProfile(source[0], source[1]);
+			}
+		}
+		return this;
 	}
-	return certificate;
+	update(config) {
+		this.array = objectToRawUWProfile(this.object);
+	}
+	getSignatureAlgorithm() {
+		return getSignatureAlgorithmByCertificate(this.object.encryptionKeypairAlgorithm, this.getCertificateVersion());
+	}
+	generatePublic() {
+		this.publicCertificate = getPublicProfileCertificate(this.array);
+	}
+	getSignature() {
+		if (!this.publicCertificate) {
+			this.generatePublic();
+		}
+		const signature = createSignature(this.publicCertificate, this.object.signatureKeypair.privateKey);
+		return signature;
+	}
+	saveToKeychain(account) {
+		const profile = this.encode();
+		const keychainConfig = {
+			account,
+			profile
+		};
+		return keychainSave(keychainConfig);
+	}
 }
-const exampleCert = createProfileCertificateObject({
-	entity: 'universalweb.io',
-	records: [
-		[
-			'a',
-			'@',
-			'127.0.0.1',
-			8888
-		],
-		[
-			'aaaa',
-			'@',
-			'::1',
-			8888
-		],
-	],
-	// records: [
-	// 	'::1',
-	// 	8888
-	// ],
-});
-const exampleRawCert = objectToRawProfileCertificate(exampleCert);
-const exampleCertObject = convertToProfileCertificateObject(exampleRawCert);
-console.log(exampleRawCert, exampleCertObject, encode(exampleRawCert).length - 120);
+export async function uwProfile(...args) {
+	return new UWProfile(...args);
+}
+export class UWPublicProfile extends UWCertificate {
+	async initialize(config) {
+		const source = isString(config) ? await readStructure(config) : config;
+		this.array = source[0];
+		this.object = rawToObjectUWProfile(source[0], source[1]);
+		return this;
+	}
+}
+export async function uwPublicProfile(...args) {
+	return new UWPublicProfile(...args);
+}
+const example = await new UWProfile();
+await example.saveToKeychain('uwProfile');
+const pubCert = example.getPublic();
+const thisPath = currentPath(import.meta);
+console.log(example);
+await example.savePublic('profilePublicCert', `${thisPath}/certificates/`);
+await example.save('profile', `${thisPath}/certificates/`);
+console.log(await new UWPublicProfile(`${thisPath}/certificates/profilePublicCert.cert`));
+console.log(await new UWProfile(`${thisPath}/certificates/profile.cert`));

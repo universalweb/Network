@@ -1,9 +1,9 @@
-import electron from 'electron';
++import electron from 'electron';
 import path from 'path';
 // if (require.main !== module) {
 // 	import('update-electron-app')({
 // 		logger: require('electron-log')
-// 	});
+// 	});KKK
 // }
 import schemes from './schemes/index.js';
 import stateFactory from './state/index.js';

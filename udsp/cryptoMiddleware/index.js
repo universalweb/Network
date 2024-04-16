@@ -1,3 +1,4 @@
+/* TODO: Add Mobile/Embedded Preferred option & algorithms. */
 import * as defaultCrypto from '#crypto';
 import {
 	RistrettoPoint,
@@ -6,7 +7,14 @@ import {
 	ed25519ph,
 	x25519
 } from '@noble/curves/ed25519';
-import { assign, hasValue } from '@universalweb/acid';
+import {
+	assign,
+	compactMapArray,
+	eachArray,
+	hasValue,
+	isArray,
+	isNumber
+} from '@universalweb/acid';
 import {
 	cshake128,
 	cshake256,
@@ -18,6 +26,7 @@ import {
 	parallelhash256,
 	tuplehash256
 } from '@noble/hashes/sha3-addons';
+import { currentCertificateVersion, currentVersion } from '../defaults.js';
 import { ed448, ed448ph, x448 } from '@noble/curves/ed448';
 import {
 	keccak_224,
@@ -41,7 +50,6 @@ import { blake2s } from '@noble/hashes/blake2s';
 import { blake3 } from '@noble/hashes/blake3';
 import { bls12_381 } from '@noble/curves/bls12-381';
 import { bn254 } from '@noble/curves/bn254';
-import { currentVersion } from '../defaults.js';
 import { hkdf } from '@noble/hashes/hkdf';
 import { hmac } from '@noble/hashes/hmac';
 import { jubjub } from '@noble/curves/jubjub';
@@ -60,6 +68,7 @@ const {
 } = defaultCrypto;
 const x25519_xchacha20_poly1305 = {
 	name: 'x25519_xchacha20_poly1305',
+	short: 'x25519',
 	alias: 'default',
 	id: 0,
 	nonceBox,
@@ -78,6 +87,8 @@ const x25519_xchacha20_poly1305 = {
 	safeMath: RistrettoPoint,
 	clientSessionKeys,
 	serverSessionKeys,
+	preferred: true,
+	hash: blake3,
 };
 const ed25519Algo = {
 	name: 'ed25519',
@@ -96,10 +107,15 @@ const ed25519Algo = {
 	serverSessionKeys,
 	signVerifyDetached,
 	hash: blake3,
+	preferred: true
 };
 const xsalsa20Algo = {
+	name: 'xsalsa20Algo',
+	alias: 'default',
+	id: 0,
 	boxSeal,
-	boxUnseal
+	boxUnseal,
+	preferred: true
 };
 export const publicKeyAlgorithms = new Map();
 const publicKeyAlgorithmVersion1 = new Map();
@@ -107,12 +123,26 @@ publicKeyAlgorithms.set(1, publicKeyAlgorithmVersion1);
 publicKeyAlgorithmVersion1.set(ed25519Algo.name, ed25519Algo);
 publicKeyAlgorithmVersion1.set(ed25519Algo.id, ed25519Algo);
 publicKeyAlgorithmVersion1.set(ed25519Algo.alias, ed25519Algo);
+export const publicKeyCertificateAlgorithms = new Map();
+const publicKeyCertificateAlgorithmsVersion1 = new Map();
+publicKeyCertificateAlgorithms.set(1, publicKeyCertificateAlgorithmsVersion1);
+publicKeyCertificateAlgorithmsVersion1.set(ed25519Algo.name, ed25519Algo);
+publicKeyCertificateAlgorithmsVersion1.set(ed25519Algo.id, ed25519Algo);
+publicKeyCertificateAlgorithmsVersion1.set(ed25519Algo.alias, ed25519Algo);
 export const cipherSuites = new Map();
 const cipherSuitesVersion1 = new Map();
 cipherSuites.set(1, cipherSuitesVersion1);
+cipherSuitesVersion1.set('all', [x25519_xchacha20_poly1305]);
 cipherSuitesVersion1.set(x25519_xchacha20_poly1305.name, x25519_xchacha20_poly1305);
 cipherSuitesVersion1.set(x25519_xchacha20_poly1305.id, x25519_xchacha20_poly1305);
 cipherSuitesVersion1.set(x25519_xchacha20_poly1305.alias, x25519_xchacha20_poly1305);
+export const cipherSuitesCertificates = new Map();
+const cipherSuitesCertificatesVersion1 = new Map();
+cipherSuitesCertificates.set(1, cipherSuitesCertificatesVersion1);
+cipherSuitesCertificatesVersion1.set('all', [x25519_xchacha20_poly1305]);
+cipherSuitesCertificatesVersion1.set(x25519_xchacha20_poly1305.short, x25519_xchacha20_poly1305);
+cipherSuitesCertificatesVersion1.set(x25519_xchacha20_poly1305.id, x25519_xchacha20_poly1305);
+cipherSuitesCertificatesVersion1.set(x25519_xchacha20_poly1305.alias, x25519_xchacha20_poly1305);
 export const boxAlgorithms = new Map();
 const boxAlgorithmsVersion1 = new Map();
 boxAlgorithms.set(1, boxAlgorithmsVersion1);
@@ -124,6 +154,7 @@ const blake3Hash = {
 	alias: 'default',
 	id: 0,
 	hash: blake3,
+	preferred: true
 };
 export const hashAlgorithms = new Map();
 const hashAlgorithmsVersion1 = new Map();
@@ -131,6 +162,15 @@ boxAlgorithms.set(1, hashAlgorithmsVersion1);
 hashAlgorithmsVersion1.set(blake3Hash.name, blake3Hash);
 hashAlgorithmsVersion1.set(blake3Hash.id, blake3Hash);
 hashAlgorithmsVersion1.set(blake3Hash.alias, blake3Hash);
+export function getEncryptionKeypairAlgorithm(algo = 0, version = currentCertificateVersion) {
+	if (!hasValue(algo)) {
+		return false;
+	}
+	const cipherVersion = cipherSuitesCertificates.get(version);
+	if (cipherVersion) {
+		return cipherVersion.get(algo);
+	}
+}
 export function getCipherSuite(cipherSuiteName = 0, version = currentVersion) {
 	if (!hasValue(cipherSuiteName)) {
 		return false;
@@ -140,11 +180,36 @@ export function getCipherSuite(cipherSuiteName = 0, version = currentVersion) {
 		return cipherVersion.get(cipherSuiteName);
 	}
 }
+export function getCipherSuites(indexes, version = currentVersion) {
+	if (indexes) {
+		if (isNumber(indexes)) {
+			return getCipherSuite(indexes, version);
+		} else if (isArray(indexes)) {
+			const cipherSuitesArray = compactMapArray(indexes, (value) => {
+				const cipherSuite = getCipherSuite(value, version);
+				if (cipherSuite) {
+					cipherSuitesArray.push(cipherSuite);
+				}
+			});
+			return cipherSuitesArray;
+		}
+	}
+	return getCipherSuite('all', version);
+}
 export function getSignatureAlgorithm(publicKeyAlgorithmName = 0, version = currentVersion) {
 	if (!hasValue(publicKeyAlgorithmName)) {
 		return false;
 	}
 	const algoVersion = publicKeyAlgorithms.get(version);
+	if (algoVersion) {
+		return algoVersion.get(publicKeyAlgorithmName);
+	}
+}
+export function getSignatureAlgorithmByCertificate(publicKeyAlgorithmName = 0, version = currentCertificateVersion) {
+	if (!hasValue(publicKeyAlgorithmName)) {
+		return false;
+	}
+	const algoVersion = publicKeyCertificateAlgorithms.get(version);
 	if (algoVersion) {
 		return algoVersion.get(publicKeyAlgorithmName);
 	}
