@@ -1,10 +1,10 @@
-import { DomainCertificate, createDomainCertificate, uwProfile } from '#udsp/certificate/index';
+import { domainCertificate, uwProfile } from '#udsp/certificate/index';
 import { currentPath } from '@universalweb/acid';
 import { decode } from '#utilities/serialize';
 const dirname = currentPath(import.meta);
 const profile = uwProfile();
 profile.save('profile', `${dirname}/../profiles/default`);
-const domainCertificate = new DomainCertificate({
+const UWCertificate = domainCertificate({
 	entity: 'universalweb.io',
 	backupHash: profile.getSignature(),
 	records: [

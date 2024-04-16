@@ -30,17 +30,10 @@ import {
 } from '#crypto';
 import { imported, logCert } from '#logs';
 import { read, readStructure, write } from '#file';
-import { saveCertificate, saveProfile } from './save.js';
 import { UWCertificate } from './UWCertificate.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { keychainSave } from '#udsp/certificate/keychain';
 const type = certificateTypes.get('profile');
-export function createSignature(certificate, privateKey) {
-	const encodedCertificate = encode(certificate);
-	const signatureMethod = getSignatureAlgorithmByCertificate(certificate.signatureAlgorithm, certificate[1]);
-	const signature = signatureMethod.signDetached(encodedCertificate, privateKey);
-	return signature;
-}
 export function createUWProfileObject(config = {}, options = {}) {
 	const currentDate = new Date();
 	const {
@@ -186,23 +179,26 @@ export class UWProfile extends UWCertificate {
 			this.update();
 		} else if (isString(config)) {
 			const source = await readStructure(config);
-			this.object = source;
+			this.processAsObject(source);
 		} else if (isArray(config)) {
 			this.array = config;
 			this.object = rawToObjectUWProfile(config);
 		} else if (isBuffer(config)) {
 			const source = decode(config);
-			if (isPlainObject(source)) {
-				this.object = source;
-			} else if (isArray(source[0])) {
-				this.array = source;
-				this.object = rawToObjectUWProfile(source);
-			} else {
-				this.array = source[0];
-				this.object = rawToObjectUWProfile(source[0], source[1]);
-			}
+			this.processAsObject(source);
 		}
 		return this;
+	}
+	processAsObject(source) {
+		if (isPlainObject(source)) {
+			this.object = source;
+		} else if (isArray(source[0])) {
+			this.array = source[0];
+			this.object = rawToObjectUWProfile(this.array, source[1]);
+		} else {
+			this.array = source;
+			this.object = rawToObjectUWProfile(source);
+		}
 	}
 	update(config) {
 		this.array = objectToRawUWProfile(this.object);
@@ -217,7 +213,7 @@ export class UWProfile extends UWCertificate {
 		if (!this.publicCertificate) {
 			this.generatePublic();
 		}
-		const signature = createSignature(this.publicCertificate, this.object.signatureKeypair.privateKey);
+		const signature = this.createSignature(this.publicCertificate, this.object.signatureKeypair.privateKey);
 		return signature;
 	}
 	saveToKeychain(account) {

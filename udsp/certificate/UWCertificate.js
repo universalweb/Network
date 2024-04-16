@@ -5,7 +5,10 @@ import {
 	getSignatureAlgorithm
 } from '../cryptoMiddleware/index.js';
 import { encode } from '#utilities/serialize';
-import { saveCertificate } from './save.js';
+import { isBuffer } from '@universalweb/acid';
+import { resolve } from 'path';
+import { signDetached } from '#crypto';
+import { write } from '#utilities/file';
 export class UWCertificate {
 	constructor(config) {
 		return this.initialize(config);
@@ -38,9 +41,6 @@ export class UWCertificate {
 	getCipherSuites() {
 		return getCipherSuites(this.object.cipherSuites, this.getProtocolVersion());
 	}
-	encodePublic() {
-		return encode(this.getPublic());
-	}
 	getHash() {
 		if (this?.object?.signature) {
 			return this.object.signature;
@@ -52,11 +52,14 @@ export class UWCertificate {
 			this.getSignature()
 		];
 	}
+	encodePublic() {
+		return encode(this.getPublic());
+	}
 	encode() {
 		return encode(this.object);
 	}
 	async save(certificateName, savePath) {
-		const saved = await saveCertificate({
+		const saved = await this.saveToFile({
 			certificate: this.encode(),
 			savePath,
 			certificateName
@@ -64,12 +67,18 @@ export class UWCertificate {
 		return saved;
 	}
 	async savePublic(certificateName, savePath) {
-		const saved = await saveCertificate({
+		const saved = await this.saveToFile({
 			certificate: this.encodePublic(),
 			savePath,
 			certificateName
 		});
 		return saved;
+	}
+	createSignature() {
+		const encodedCertificate = encode(this.array);
+		const signatureMethod = getSignatureAlgorithm(this.get('signatureAlgorithm'), this.get('version'));
+		const signature = signatureMethod.signDetached(encodedCertificate, this.get('signatureKeypair'));
+		return signature;
 	}
 	getPublic() {
 		this.generatePublic();
@@ -78,5 +87,15 @@ export class UWCertificate {
 			this.publicCertificate,
 			signature
 		];
+	}
+	async saveToFile(config) {
+		const {
+			certificate,
+			savePath,
+			certificateName,
+		} = config;
+		const savePathRoot = `${resolve(`${savePath}`)}/${certificateName}`;
+		const result = await write(`${savePathRoot}.cert`, isBuffer(certificate) ? certificate : encode(certificate), 'binary', true);
+		return result;
 	}
 }

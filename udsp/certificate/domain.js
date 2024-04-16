@@ -30,17 +30,10 @@ import {
 } from '#crypto';
 import { imported, logCert } from '#logs';
 import { read, readStructure, write } from '#file';
-import { saveCertificate, saveProfile } from './save.js';
 import { UWCertificate } from './UWCertificate.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { keychainSave } from '#udsp/certificate/keychain';
 import { uwProfile } from './profile.js';
-export function createSignature(certificate, privateKey) {
-	const encodedCertificate = encode(certificate);
-	const signatureMethod = getSignatureAlgorithm(certificate.signatureAlgorithm, certificate[10]?.[0]);
-	const signature = signatureMethod.signDetached(encodedCertificate, privateKey);
-	return signature;
-}
 const type = certificateTypes.get('domain');
 export function createDomainCertificateObject(config = {}, options = {}) {
 	const currentDate = new Date();
@@ -135,10 +128,10 @@ export function objectToRawDomainCertificate(certificateObject) {
 		],
 	];
 	if (hasValue(cipherSuites)) {
-		certificate[5][2] = cipherSuites;
+		certificate[5][1] = cipherSuites;
 	}
 	if (hasValue(signatureAlgorithm)) {
-		certificate[5][3] = signatureAlgorithm;
+		certificate[5][2] = signatureAlgorithm;
 	}
 	if (entity) {
 		certificate[6] = entity;
@@ -260,23 +253,26 @@ export class DomainCertificate extends UWCertificate {
 			this.update();
 		} else if (isString(config)) {
 			const source = await readStructure(config);
-			this.object = source;
+			this.processAsObject(source);
 		} else if (isArray(config)) {
 			this.array = config;
 			this.object = rawToObjectDomainCertificate(config);
 		} else if (isBuffer(config)) {
 			const source = decode(config);
-			if (isPlainObject(source)) {
-				this.object = source;
-			} else if (isArray(source[0])) {
-				this.array = source;
-				this.object = rawToObjectDomainCertificate(source);
-			} else {
-				this.array = source[0];
-				this.object = rawToObjectDomainCertificate(source[0], source[1]);
-			}
+			this.processAsObject(source);
 		}
 		return this;
+	}
+	processAsObject(source) {
+		if (isPlainObject(source)) {
+			this.object = source;
+		} else if (isArray(source[0])) {
+			this.array = source[0];
+			this.object = rawToObjectDomainCertificate(this.array, source[1]);
+		} else {
+			this.array = source;
+			this.object = rawToObjectDomainCertificate(source);
+		}
 	}
 	update(config) {
 		this.array = objectToRawDomainCertificate(this.object);
@@ -288,7 +284,7 @@ export class DomainCertificate extends UWCertificate {
 		if (!this.publicCertificate) {
 			this.generatePublic();
 		}
-		const signature = createSignature(this.publicCertificate, this.object.signatureKeypair.privateKey);
+		const signature = this.createSignature();
 		return signature;
 	}
 }
@@ -327,8 +323,9 @@ const exampleCert = await new DomainCertificate({
 	],
 });
 const pubCert = exampleCert.getPublic();
+// console.log(profileCert, profileCert.get('signature').length);
 await exampleCert.savePublic('domainPublicCert', `${thisPath}/certificates/`);
 await exampleCert.save('domain', `${thisPath}/certificates/`);
-console.log(exampleCert);
+// console.log(exampleCert);
 console.log(await new PublicDomainCertificate(`${thisPath}/certificates/domainPublicCert.cert`));
 console.log(await new DomainCertificate(`${thisPath}/certificates/domain.cert`));
