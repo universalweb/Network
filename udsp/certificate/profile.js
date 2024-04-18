@@ -239,12 +239,12 @@ export class UWPublicProfile extends UWCertificate {
 export async function uwPublicProfile(...args) {
 	return new UWPublicProfile(...args);
 }
-const example = await new UWProfile();
-await example.saveToKeychain('uwProfile');
-const pubCert = example.getPublic();
-const thisPath = currentPath(import.meta);
-console.log(example);
-await example.savePublic('profilePublicCert', `${thisPath}/certificates/`);
-await example.save('profile', `${thisPath}/certificates/`);
-console.log(await new UWPublicProfile(`${thisPath}/certificates/profilePublicCert.cert`));
-console.log(await new UWProfile(`${thisPath}/certificates/profile.cert`));
+// const example = await new UWProfile();
+// await example.saveToKeychain('uwProfile');
+// const pubCert = example.getPublic();
+// const thisPath = currentPath(import.meta);
+// console.log(example);
+// await example.savePublic('profilePublicCert', `${thisPath}/certificates/`);
+// await example.save('profile', `${thisPath}/certificates/`);
+// console.log(await new UWPublicProfile(`${thisPath}/certificates/profilePublicCert.cert`));
+// console.log(await new UWProfile(`${thisPath}/certificates/profile.cert`));

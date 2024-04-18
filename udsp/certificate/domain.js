@@ -128,10 +128,10 @@ export function objectToRawDomainCertificate(certificateObject) {
 		],
 	];
 	if (hasValue(cipherSuites)) {
-		certificate[5][1] = cipherSuites;
+		certificate[5][2] = cipherSuites;
 	}
 	if (hasValue(signatureAlgorithm)) {
-		certificate[5][2] = signatureAlgorithm;
+		certificate[5][3] = signatureAlgorithm;
 	}
 	if (entity) {
 		certificate[6] = entity;
@@ -296,36 +296,37 @@ export class PublicDomainCertificate extends UWCertificate {
 		const source = isString(config) ? await readStructure(config) : config;
 		this.array = source[0];
 		this.object = rawToObjectDomainCertificate(source[0], source[1]);
+		this.getCipherSuiteMethods();
 		return this;
 	}
 }
 export async function publicDomainCertificate(...args) {
 	return new PublicDomainCertificate(...args);
 }
-const thisPath = currentPath(import.meta);
-const profileCert = await uwProfile(`${thisPath}/certificates/profilePublicCert.cert`);
-const exampleCert = await new DomainCertificate({
-	backupHash: profileCert.get('signature'),
-	entity: 'universalweb.io',
-	records: [
-		[
-			'a',
-			'@',
-			'127.0.0.1',
-			8888
-		],
-		[
-			'aaaa',
-			'@',
-			'::1',
-			8888
-		],
-	],
-});
-const pubCert = exampleCert.getPublic();
+// const thisPath = currentPath(import.meta);
+// const profileCert = await uwProfile(`${thisPath}/certificates/profilePublicCert.cert`);
+// const exampleCert = await new DomainCertificate({
+// 	backupHash: profileCert.get('signature'),
+// 	entity: 'universalweb.io',
+// 	records: [
+// 		[
+// 			'a',
+// 			'@',
+// 			'127.0.0.1',
+// 			8888
+// 		],
+// 		[
+// 			'aaaa',
+// 			'@',
+// 			'::1',
+// 			8888
+// 		],
+// 	],
+// });
+// const pubCert = exampleCert.getPublic();
 // console.log(profileCert, profileCert.get('signature').length);
-await exampleCert.savePublic('domainPublicCert', `${thisPath}/certificates/`);
-await exampleCert.save('domain', `${thisPath}/certificates/`);
+// await exampleCert.savePublic('domainPublicCert', `${thisPath}/certificates/`);
+// await exampleCert.save('domain', `${thisPath}/certificates/`);
 // console.log(exampleCert);
-console.log(await new PublicDomainCertificate(`${thisPath}/certificates/domainPublicCert.cert`));
-console.log(await new DomainCertificate(`${thisPath}/certificates/domain.cert`));
+// console.log(await new PublicDomainCertificate(`${thisPath}/certificates/domainPublicCert.cert`));
+// console.log(await new DomainCertificate(`${thisPath}/certificates/domain.cert`));

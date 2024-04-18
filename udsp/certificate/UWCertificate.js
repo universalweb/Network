@@ -1,3 +1,4 @@
+import { get, hasDot, isBuffer } from '@universalweb/acid';
 import {
 	getCipherSuite,
 	getCipherSuites,
@@ -5,7 +6,6 @@ import {
 	getSignatureAlgorithm
 } from '../cryptoMiddleware/index.js';
 import { encode } from '#utilities/serialize';
-import { isBuffer } from '@universalweb/acid';
 import { resolve } from 'path';
 import { signDetached } from '#crypto';
 import { write } from '#utilities/file';
@@ -19,7 +19,7 @@ export class UWCertificate {
 	}
 	get(key) {
 		if (key) {
-			return this.object[key];
+			return get(this.object, key);
 		}
 		return this.object;
 	}
@@ -40,6 +40,14 @@ export class UWCertificate {
 	}
 	getCipherSuites() {
 		return getCipherSuites(this.object.cipherSuites, this.getProtocolVersion());
+	}
+	getCipherSuiteMethods() {
+		this.cipherSuiteMethods = this.getCipherSuites();
+	}
+	selectCipherSuite() {
+		const cipherSuiteMethods = this.cipherSuiteMethods;
+		const selected = cipherSuiteMethods[0];
+		return selected;
 	}
 	getHash() {
 		if (this?.object?.signature) {
@@ -95,7 +103,8 @@ export class UWCertificate {
 			certificateName,
 		} = config;
 		const savePathRoot = `${resolve(`${savePath}`)}/${certificateName}`;
-		const result = await write(`${savePathRoot}.cert`, isBuffer(certificate) ? certificate : encode(certificate), 'binary', true);
+		const fileName = hasDot(savePathRoot) ? savePathRoot : `${savePathRoot}.cert`;
+		const result = await write(fileName, isBuffer(certificate) ? certificate : encode(certificate), 'binary', true);
 		return result;
 	}
 }

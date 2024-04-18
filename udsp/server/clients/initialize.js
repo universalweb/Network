@@ -23,7 +23,7 @@ import {
 	msgSent,
 	success
 } from '#logs';
-import { getAlgorithm } from '../../cryptoMiddleware/index.js';
+import { getCipherSuite } from '../../cryptoMiddleware/index.js';
 export async function initialize(config) {
 	const {
 		packet,
@@ -44,6 +44,7 @@ export async function initialize(config) {
 			publicKeySize,
 			heartbeat,
 			connectionIdSize,
+			certificate
 		},
 		connection: {
 			address: ip,
@@ -65,21 +66,19 @@ export async function initialize(config) {
 	}
 	success(`key: ${toBase64(publicKey)}`);
 	const client = this;
-	let selectedCipherSuite = header[3];
+	let cipherSuiteId = header[3];
 	const version = header[4];
 	const cipherSuites = header[5];
-	if (hasValue(selectedCipherSuite)) {
-		this.cipherSuiteName = selectedCipherSuite;
-		client.cipherSuite = getAlgorithm(selectedCipherSuite, this.version);
+	if (hasValue(cipherSuiteId)) {
+		client.cipherSuite = certificate.getCipherSuite(cipherSuiteId);
 	} else if (cipherSuites) {
 		const cipherSelection = intersection(cipherSuites, keys(serverCipherSuites));
 		if (cipherSelection.length) {
-			selectedCipherSuite = cipherSelection[0];
+			cipherSuiteId = cipherSelection[0];
 		}
 	} else {
-		console.log(`No cipher suite found going to default ${selectedCipherSuite}`);
-		this.cipherSuiteName = serverCipherSuite;
-		client.cipherSuite = getAlgorithm(serverCipherSuite, this.version);
+		console.log(`No cipher suite found going to default ${cipherSuiteId}`);
+		client.cipherSuite = certificate.getCipherSuite(serverCipherSuite);
 	}
 	client.publicKeySize = publicKeySize;
 	// When changing to a new key you must first create new keys from scratch to replace these.

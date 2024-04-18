@@ -2,9 +2,9 @@ import { domainCertificate, uwProfile } from '#udsp/certificate/index';
 import { currentPath } from '@universalweb/acid';
 import { decode } from '#utilities/serialize';
 const dirname = currentPath(import.meta);
-const profile = uwProfile();
-profile.save('profile', `${dirname}/../profiles/default`);
-const UWCertificate = domainCertificate({
+const profile = await uwProfile();
+await profile.save('profile', `${dirname}/../profiles/default`);
+const UWCertificate = await domainCertificate({
 	entity: 'universalweb.io',
 	backupHash: profile.getSignature(),
 	records: [
@@ -30,5 +30,5 @@ const UWCertificate = domainCertificate({
 		],
 	],
 });
-domainCertificate.save('universal.web', `${dirname}/../serverApp/certs`);
-console.log(domainCertificate);
+await UWCertificate.save('universalWeb.cert', `${dirname}/../serverApp/certs`);
+await UWCertificate.savePublic('universalWebPublic.cert', `${dirname}/../serverApp/certs`);

@@ -34,7 +34,6 @@ import {
 	toBase64,
 } from '#crypto';
 import { getAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
-import { getCertificate, parseCertificate } from '#udsp/certificate/index';
 import { Ask } from '../request/ask.js';
 import { UDSP } from '#udsp/base';
 import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
@@ -52,9 +51,11 @@ import { keychainGet } from '#udsp/certificate/keychain';
 import { onListening } from './listening.js';
 import { onPacket } from './onPacket.js';
 import { post } from '../requestMethods/post.js';
+import { publicDomainCertificate } from '../certificate/domain.js';
 import { sendPacket } from '../sendPacket.js';
 import { setDestination } from './setDestination.js';
 import { socketOnError } from './socketOnError.js';
+import { uwProfile } from '../certificate/profile.js';
 import { uwRequest } from '#udsp/requestMethods/request';
 import { watch } from '#watch';
 const {
@@ -108,7 +109,7 @@ export class Client extends UDSP {
 			profile
 		} = this.options;
 		if (isString(profile)) {
-			this.profile = await parseCertificate(profile);
+			this.profile = await uwProfile(profile);
 		}
 		if (keychain) {
 			console.log('Loading Keychain', keychain);
@@ -163,8 +164,8 @@ export class Client extends UDSP {
 		]);
 		return ask;
 	}
-	loadCertificate(certificate) {
-		this.destination.certificate = parseCertificate(certificate);
+	async loadCertificate(certificate) {
+		this.destination.certificate = await publicDomainCertificate(certificate);
 		this.configCryptography();
 	}
 	async proccessCertificateChunk(message) {
@@ -448,4 +449,3 @@ export async function client(options) {
 }
 // Add the request export here for simple auto connect and then just grab contents to return called UDSP
 // client is for a longer stateful connection request to a remote server
-export { getCertificate };

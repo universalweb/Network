@@ -13,7 +13,7 @@ import {
 	omit,
 	promise
 } from '@universalweb/acid';
-import { getCertificate, parseCertificate } from '#udsp/certificate/index';
+import { publicDomainCertificate } from '#udsp/certificate/domain.js';
 import { uwrl } from '#udsp/UWRL/index';
 export async function setDestination() {
 	const {
@@ -36,13 +36,10 @@ export async function setDestination() {
 			this.destination.port = urlObject.port;
 		}
 	}
-	if (isString(destinationCertificate)) {
-		console.log('Loading Destination Certificate', destinationCertificate);
-		const certificate = await getCertificate(destinationCertificate);
-		assign(destination, certificate);
-	} else {
-		assign(destination, destinationCertificate);
-	}
+	console.log('Loading Destination Certificate', destinationCertificate);
+	const certificate = await publicDomainCertificate(destinationCertificate);
+	this.certificate = certificate;
+	assign(destination, certificate.get());
 	if (destination.publicKey) {
 		await this.discovered();
 	}

@@ -1,4 +1,8 @@
-// The Universal Web's UDSP server module.
+import {
+	DomainCertificate,
+	PublicDomainCertificate
+} from '../certificate/domain.js';
+// The Universal Web's UDSP server module
 import {
 	UniqID,
 	assign,
@@ -21,7 +25,6 @@ import {
 	success
 } from '#logs';
 import { getAlgorithm, getSignatureAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
-import { getCertificate, loadCertificate, parseCertificate } from '#udsp/certificate/index';
 import { randomBuffer, toBase64 } from '#crypto';
 import { UDSP } from '#udsp/base';
 import { createClient } from './clients/index.js';
@@ -87,52 +90,22 @@ export class Server extends UDSP {
 	async setCertificate() {
 		const {
 			options,
-			options: { certificatePath, }
+			options: {
+				certificatePath,
+				publicCertificatePath
+			}
 		} = this;
 		if (certificatePath) {
-			this.certificate = await parseCertificate(certificatePath);
+			this.certificate = await new DomainCertificate(certificatePath);
 			console.log(this.certificate);
-			this.certificatePublic = this.certificate.certificate;
-			this.keypair = {
-				publicKey: this.certificate.publicKey,
-				privateKey: this.certificate.privateKey,
-			};
-			if (this.certificate.ipVersion) {
-				this.ipVersion = this.certificate.ipVersion;
-			}
+			this.certificatePublic = await new PublicDomainCertificate(publicCertificatePath);
 		}
 		if (this.certificate) {
-			this.publicKeyCryptography = getSignatureAlgorithm(this.certificate.publicKeyAlgorithm, this.version);
-			const convertSignKeypairToEncryptionKeypair = processPublicKey(this.certificate);
-			if (convertSignKeypairToEncryptionKeypair) {
-				this.encryptionKeypair = convertSignKeypairToEncryptionKeypair;
-			}
-			const { encryptConnectionId } = this.certificate;
-			if (encryptConnectionId) {
-				const {
-					server: encryptServerCid,
-					client: encryptClientCid,
-					keypair: connectionIdKeypair
-				} = encryptConnectionId;
-				let encryptServer = hasValue(encryptServerCid);
-				let encryptClient = hasValue(encryptClientCid);
-				if (!encryptServer && !encryptClient) {
-					encryptServer = true;
-					encryptClient = true;
-				}
-				if (encryptServer) {
-					this.encryptServerConnectionId = true;
-					if (connectionIdKeypair) {
-						this.connectionIdKeypair = connectionIdKeypair;
-					} else {
-						this.connectionIdKeypair = this.encryptionKeypair;
-					}
-				}
-				if (encryptClient) {
-					this.encryptClientConnectionId = true;
-				}
-				console.log(`Encrypt Connection ID Server ${encryptServer} Client ${encryptClient}`);
-			}
+			this.keypair = {
+				...this.certificate.get('encryptionKeypair')
+			};
+			this.version = this.certificate.get('version');
+			this.publicKeyCryptography = this.certificate.getSignatureAlgorithm();
 		}
 		console.log('publicKeyCryptography', this.publicKeyCryptography);
 	}
@@ -269,6 +242,35 @@ export class Server extends UDSP {
 		* All created clients (clients) represent a client to server bi-directional connection until it is closed by either party.
 	*/
 	clients = construct(Map);
+	// TBA
+	connectionIdEncryption() {
+		const encryptConnectionId = this.certificate.get('encryptConnectionId');
+		if (encryptConnectionId) {
+			const {
+				server: encryptServerCid,
+				client: encryptClientCid,
+				keypair: connectionIdKeypair
+			} = encryptConnectionId;
+			let encryptServer = hasValue(encryptServerCid);
+			let encryptClient = hasValue(encryptClientCid);
+			if (!encryptServer && !encryptClient) {
+				encryptServer = true;
+				encryptClient = true;
+			}
+			if (encryptServer) {
+				this.encryptServerConnectionId = true;
+				if (connectionIdKeypair) {
+					this.connectionIdKeypair = connectionIdKeypair;
+				} else {
+					this.connectionIdKeypair = this.encryptionKeypair;
+				}
+			}
+			if (encryptClient) {
+				this.encryptClientConnectionId = true;
+			}
+			console.log(`Encrypt Connection ID Server ${encryptServer} Client ${encryptClient}`);
+		}
+	}
 }
 export async function server(...args) {
 	return construct(Server, args);

@@ -46,7 +46,8 @@ const uwApp = await app({
 	// default file extension default is .js but WWW default is www
 	defaultExtension: 'html',
 	// Domain certificate to be loaded used for connection encryption
-	certificatePath: path.join(currentPath(import.meta), '/certs/universal_web-Ephemeral/universal.web-Ephemeral.cert'),
+	certificatePath: path.join(currentPath(import.meta), '/certs/universalWeb.cert'),
+	publicCertificatePath: path.join(currentPath(import.meta), '/certs/universalWebPublic.cert'),
 	// Where to load app resources from
 	resourceDirectory: path.join(currentPath(import.meta), 'resources'),
 	rootDirectory: currentPath(import.meta),
