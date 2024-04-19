@@ -15,8 +15,8 @@ const UWCertificate = await domainCertificate({
 			8888,
 			// PRIORITY
 			0,
-			// GEOLOCATION FEATURE
-			'27.950575 -82.457176'
+			// GEOLOCATION FEATURE FOR GEO PRIORITIZATION
+			// '27.950575 -82.457176'
 		],
 		[
 			'a',
@@ -25,8 +25,8 @@ const UWCertificate = await domainCertificate({
 			8888,
 			// PRIORITY
 			0,
-			// GEOLOCATION FEATURE
-			'27.950575 -82.457176'
+			// GEOLOCATION FEATURE FOR GEO PRIORITIZATION
+			// '27.950575 -82.457176'
 		],
 	],
 });

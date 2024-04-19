@@ -66,19 +66,17 @@ export async function initialize(config) {
 	}
 	success(`key: ${toBase64(publicKey)}`);
 	const client = this;
-	let cipherSuiteId = header[3];
+	const cipherSuiteId = header[3];
 	const version = header[4];
 	const cipherSuites = header[5];
 	if (hasValue(cipherSuiteId)) {
 		client.cipherSuite = certificate.getCipherSuite(cipherSuiteId);
 	} else if (cipherSuites) {
-		const cipherSelection = intersection(cipherSuites, keys(serverCipherSuites));
-		if (cipherSelection.length) {
-			cipherSuiteId = cipherSelection[0];
-		}
-	} else {
-		console.log(`No cipher suite found going to default ${cipherSuiteId}`);
-		client.cipherSuite = certificate.getCipherSuite(serverCipherSuite);
+		// Add support for multiple cipher suites array permit server to prioritize cipher suites.
+		client.cipherSuite = certificate.selectCipherSuite(cipherSuites[0]);
+	}
+	if (!client.cipherSuite) {
+		this.close();
 	}
 	client.publicKeySize = publicKeySize;
 	// When changing to a new key you must first create new keys from scratch to replace these.

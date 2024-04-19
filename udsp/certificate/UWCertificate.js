@@ -1,4 +1,11 @@
-import { get, hasDot, isBuffer } from '@universalweb/acid';
+import {
+	get,
+	hasDot,
+	hasValue,
+	isArray,
+	isBuffer,
+	untilTrueArray
+} from '@universalweb/acid';
 import {
 	getCipherSuite,
 	getCipherSuites,
@@ -6,6 +13,7 @@ import {
 	getSignatureAlgorithm
 } from '../cryptoMiddleware/index.js';
 import { encode } from '#utilities/serialize';
+import { findRecord } from '../dis/index.js';
 import { resolve } from 'path';
 import { signDetached } from '#crypto';
 import { write } from '#utilities/file';
@@ -18,8 +26,9 @@ export class UWCertificate {
 		this.update();
 	}
 	get(key) {
+		console.log();
 		if (key) {
-			return get(this.object, key);
+			return get(key, this.object);
 		}
 		return this.object;
 	}
@@ -44,10 +53,19 @@ export class UWCertificate {
 	getCipherSuiteMethods() {
 		this.cipherSuiteMethods = this.getCipherSuites();
 	}
-	selectCipherSuite() {
+	selectCipherSuite(indexes) {
 		const cipherSuiteMethods = this.cipherSuiteMethods;
-		const selected = cipherSuiteMethods[0];
-		return selected;
+		const thisCert = this;
+		if (isArray(indexes)) {
+			let selected;
+			untilTrueArray(indexes, (index) => {
+				selected = this.getCipherSuite(index);
+				return hasValue(selected);
+			});
+			return selected;
+		} else {
+			return cipherSuiteMethods[indexes];
+		}
 	}
 	getHash() {
 		if (this?.object?.signature) {
@@ -106,5 +124,8 @@ export class UWCertificate {
 		const fileName = hasDot(savePathRoot) ? savePathRoot : `${savePathRoot}.cert`;
 		const result = await write(fileName, isBuffer(certificate) ? certificate : encode(certificate), 'binary', true);
 		return result;
+	}
+	async findRecord(recordType, hostname) {
+		return findRecord(this, recordType, hostname);
 	}
 }

@@ -187,11 +187,12 @@ export function rawToObjectDomainCertificate(rawObject, signature) {
 		contact,
 	] = rawObject;
 	const certificate = {
-		type,
+		type: certificateType,
 		version,
 		start,
 		end,
-		backupHash
+		backupHash,
+		entity,
 	};
 	if (isArray(signatureKeypair)) {
 		certificate.signatureKeypair = {

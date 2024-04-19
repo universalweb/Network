@@ -15,6 +15,11 @@ import {
 } from '@universalweb/acid';
 import { publicDomainCertificate } from '#udsp/certificate/domain.js';
 import { uwrl } from '#udsp/UWRL/index';
+function setRecordInfo(destination, record) {
+	destination.ip = record[2];
+	destination.port = record[3];
+	destination.record = record;
+}
 export async function setDestination() {
 	const {
 		destination,
@@ -36,42 +41,54 @@ export async function setDestination() {
 			this.destination.port = urlObject.port;
 		}
 	}
-	console.log('Loading Destination Certificate', destinationCertificate);
-	const certificate = await publicDomainCertificate(destinationCertificate);
-	this.certificate = certificate;
-	assign(destination, certificate.get());
-	if (destination.publicKey) {
-		await this.discovered();
+	if (destinationCertificate) {
+		console.log('Loading Destination Certificate', destinationCertificate);
+		const certificate = await publicDomainCertificate(destinationCertificate);
+		this.certificate = certificate;
+		const {
+			encryptionKeypair,
+			signatureKeypair,
+			version: certificateVersion,
+		} = certificate.get();
+		const version = certificate.getProtocolVersion();
+		assign(destination, {
+			encryptionKeypair,
+			signatureKeypair,
+			version: certificateVersion,
+		});
 	}
-	if (!destination.publicKey) {
+	if (destination.encryptionKeypair) {
+		await this.discovered();
+	} else {
 		console.log('No destination certificate provided.');
 	}
-	if (ip) {
-		destination.ip = ip;
-	}
-	if (isArray(destination.ip)) {
+	if (this.certificate) {
+		if (this.destination.clientConnectionIdSize) {
+			this.connectionIdSize = this.destination.clientConnectionIdSize;
+		}
+		if (!this.destination.connectionIdSize) {
+			this.destination.connectionIdSize = 8;
+		}
 		if (ipVersion === 'udp6') {
-			destination.ip = destination.ip.find((item) => {
-				return item.includes(':') ? item : false;
-			});
+			const record = this.certificate.findRecord('aaaa', 'universalweb.io');
+			if (record) {
+				setRecordInfo(destination, record);
+			}
 		}
 		if (!destination.ip) {
-			destination.ip = destination.ip.find((item) => {
-				return item.includes('.') ? item : false;
-			});
+			const record = this.certificate.findRecord('a', 'universalweb.io');
+			if (record) {
+				setRecordInfo(destination, record);
+				this.ipVersion = 'udp4';
+			}
 		}
-	}
-	if (destination.ip.includes(':')) {
-		this.ipVersion = 'udp6';
-	}
-	if (port) {
-		destination.port = port;
-	}
-	if (this.destination.clientConnectionIdSize) {
-		this.connectionIdSize = this.destination.clientConnectionIdSize;
-	}
-	if (!this.destination.connectionIdSize) {
-		this.destination.connectionIdSize = 8;
+		if (!destination.ip) {
+			console.log('No IP address found for destination was found');
+			this.close();
+		}
+		if (!destination.port) {
+			destination.port = 53;
+		}
 	}
 	// console.log('Destination', destination.cryptography);
 }
