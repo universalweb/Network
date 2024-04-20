@@ -208,21 +208,18 @@ export class Server extends UDSP {
 		return client;
 	}
 	async client(config, id, idString, connection) {
-		if (id.length === this.connectionIdSize) {
-			const existingClient = this.clients.get(idString);
-			if (existingClient) {
-				config.destination = existingClient;
-				if (existingClient.state === 1) {
-					await existingClient.attachNewClientKeys();
-				}
-				return existingClient;
-			}
-			if (config.packetDecoded.headerRPC === 0) {
-				return this.createClient(config, idString, connection);
-			}
-			return false;
+		if (config.packetDecoded.headerRPC === 0) {
+			return this.createClient(config, idString, connection);
 		}
-		return this.createClient(config, idString, connection);
+		const existingClient = this.clients.get(idString);
+		if (existingClient) {
+			config.destination = existingClient;
+			if (existingClient.state === 1) {
+				await existingClient.attachNewClientKeys();
+			}
+			return existingClient;
+		}
+		return false;
 	}
 	async removeClient(client) {
 		const { connectionIdString } = client;

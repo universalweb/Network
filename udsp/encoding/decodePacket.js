@@ -80,19 +80,7 @@ export async function decodePacketHeaders(config) {
 	if (isUndefined(headerDecoded)) {
 		return console.trace(`No header from decode -> Invalid Packet`);
 	}
-	let id = isShortHeaderMode ? headerDecoded : headerDecoded[0];
-	if (connectionIdKeypair) {
-		success('Connection ID Decrypted');
-		const shouldDecryptConnectionId = isServerEnd ? destination.encryptServerConnectionId : destination.encryptClientConnectionId;
-		// console.log(destination);
-		if (shouldDecryptConnectionId) {
-			id = boxCryptography.boxUnseal(id, destination.connectionIdKeypair);
-			if (!id) {
-				console.trace(`Packet ID Decrypt Failed`);
-				return;
-			}
-		}
-	}
+	const id = isShortHeaderMode ? headerDecoded : headerDecoded[0];
 	if (isClient) {
 		console.log(`Decode destination ID: ${destination.id.toString('hex')}`);
 		console.log(`Decode source ID: ${source?.id?.toString('hex')}`);

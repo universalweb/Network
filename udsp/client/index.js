@@ -34,7 +34,6 @@ import {
 	randomConnectionId,
 	toBase64,
 } from '#crypto';
-import { getAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
 import { Ask } from '../request/ask.js';
 import { UDSP } from '#udsp/base';
 import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
@@ -459,7 +458,8 @@ export class Client extends UDSP {
 		this.awaitHandshake = null;
 		this.destination = {
 			connectionIdSize: defaultServerConnectionIdSize,
-			overhead: {}
+			overhead: {},
+			id: Buffer.alloc(0),
 		};
 		this.autoConnect = false;
 		this.certificateChunks = [];
