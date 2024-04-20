@@ -35,7 +35,7 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 		isServerClient,
 		cipherSuite
 	} = source;
-	const id = destination.id || source.id;
+	const id = destination.id;
 	if (!id) {
 		console.trace(`ID is missing`);
 		return;

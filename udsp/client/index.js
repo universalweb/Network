@@ -228,9 +228,10 @@ export class Client extends UDSP {
 		const {
 			cipherSuiteName,
 			cipherSuite,
-			version
+			version,
+			id
 		} = this;
-		header.push(cipherSuite.id, version);
+		header.push(id, cipherSuite.id, version);
 		return header;
 	}
 	/*
@@ -271,9 +272,10 @@ export class Client extends UDSP {
 		const {
 			cipherSuiteName,
 			cipherSuite,
-			version
+			version,
+			id
 		} = this;
-		header.push(cipherSuite.id, version);
+		header.push(id, cipherSuite.id, version);
 		return header;
 	}
 	connect() {

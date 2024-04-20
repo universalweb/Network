@@ -52,12 +52,6 @@ export async function initialize(config) {
 		},
 	} = config;
 	const header = packet.header;
-	const clientId = packet.id;
-	if (!clientId) {
-		console.trace('Client ID is missing');
-		return;
-	}
-	success(`Client Connection ID: ${clientId.toString('hex')}`);
 	const publicKey = header[2];
 	console.log('Client initialize Packet Header', packet.header);
 	if (!publicKey) {
@@ -66,9 +60,11 @@ export async function initialize(config) {
 	}
 	success(`key: ${toBase64(publicKey)}`);
 	const client = this;
-	const cipherSuiteId = header[3];
-	const version = header[4];
-	const cipherSuites = header[5];
+	const clientId = header[3];
+	success(`Client Connection ID: ${clientId.toString('hex')}`);
+	const cipherSuiteId = header[4];
+	const version = header[5];
+	const cipherSuites = header[6];
 	if (hasValue(cipherSuiteId)) {
 		client.cipherSuite = certificate.getCipherSuite(cipherSuiteId);
 	} else if (cipherSuites) {
