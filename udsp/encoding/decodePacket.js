@@ -34,7 +34,6 @@ export async function decodePacketHeaders(config) {
 	} = config;
 	const {
 		encryptionKeypair,
-		publicKeyCryptography,
 		cipherSuite,
 		state,
 		isClient,

@@ -10,7 +10,7 @@ export async function configCryptography() {
 	const certificate = this.certificate;
 	const { cipherSuites }	= certificate;
 	// console.log(this.cryptography);
-	this.publicKeyCryptography = certificate.getSignatureAlgorithm();
+	this.signatureAlgorithm = certificate.getSignatureAlgorithm();
 	this.cipherSuite = certificate.selectCipherSuite(cipherSuites);
 	this.encryptionKeypair = this.cipherSuite.keypair();
 	await this.setSessionKeys();

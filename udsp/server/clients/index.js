@@ -27,6 +27,7 @@ import {
 import { Reply } from '#udsp/request/reply';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
 import cluster from 'node:cluster';
+import { defaultClientConnectionIdSize } from '../../defaults.js';
 import { destroy } from './destroy.js';
 import { encodePacket } from '#udsp/encoding/encodePacket';
 import { initialize } from './initialize.js';
@@ -45,10 +46,8 @@ export class Client {
 		const client = this;
 		const {
 			cipherSuites,
-			publicKeyCryptography,
-			encryptClientConnectionId,
-			encryptServerConnectionId,
-			connectionIdSize,
+			signatureAlgorithm,
+			certificate,
 		} = server;
 		this.server = function() {
 			return server;
@@ -58,17 +57,11 @@ export class Client {
 		};
 		this.socket = server.socket;
 		this.cipherSuites = cipherSuites;
-		this.publicKeyCryptography = publicKeyCryptography;
-		this.connectionIdSize = connectionIdSize;
-		if (hasValue(encryptClientConnectionId)) {
-			this.encryptClientConnectionId = encryptClientConnectionId;
-		}
-		if (hasValue(encryptServerConnectionId)) {
-			this.encryptServerConnectionId = encryptServerConnectionId;
-		}
+		this.signatureAlgorithm = signatureAlgorithm;
 		return this.initialize(config);
 	}
 	description = `Server's client`;
+	connectionIdSize = defaultClientConnectionIdSize;
 	type = 'serverClient';
 	isServerClient = true;
 	isServerEnd = true;
@@ -94,7 +87,7 @@ export class Client {
 	}
 	async setSessionKeys() {
 		console.log('Set session keys');
-		const sessionKeys = this.publicKeyCryptography.serverSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair, this.sessionKeys);
+		const sessionKeys = this.cipherSuite.serverSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair, this.sessionKeys);
 		if (isUndefined(this.sessionKeys)) {
 			this.sessionKeys = sessionKeys;
 		}

@@ -29,6 +29,7 @@ import { randomBuffer, toBase64 } from '#crypto';
 import { UDSP } from '#udsp/base';
 import { createClient } from './clients/index.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
+import { defaultServerConnectionIdSize } from '../defaults.js';
 import { listen } from './listen.js';
 import { onError } from './onError.js';
 import { onListen } from './onListen.js';
@@ -147,13 +148,11 @@ export class Server extends UDSP {
 	}
 	configCryptography() {
 		if (this.certificate) {
-			this.keypair = {
-				...this.certificate.get('encryptionKeypair')
-			};
+			this.encryptionKeypair = this.certificate.get('encryptionKeypair');
 			this.version = this.certificate.get('version');
-			this.publicKeyCryptography = this.certificate.getSignatureAlgorithm();
+			this.signatureAlgorithm = this.certificate.getSignatureAlgorithm();
+			console.log('signatureAlgorithm', this.signatureAlgorithm);
 		}
-		console.log('publicKeyCryptography', this.publicKeyCryptography);
 	}
 	async send(packet, destination) {
 		return sendPacket(packet, this, this.socket, destination);
@@ -239,7 +238,7 @@ export class Server extends UDSP {
 	clientCount = 0;
 	port = 80;
 	ip = '::1';
-	connectionIdSize = 8;
+	connectionIdSize = defaultServerConnectionIdSize;
 	events = new Map();
 	/*
 		* All created clients (clients) represent a client to server bi-directional connection until it is closed by either party.

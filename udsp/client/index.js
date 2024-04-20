@@ -28,6 +28,7 @@ import {
 	decode,
 	encode
 } from '#utilities/serialize';
+import { defaultClientConnectionIdSize, defaultServerConnectionIdSize } from '../defaults.js';
 import {
 	emptyNonce,
 	randomConnectionId,
@@ -135,9 +136,7 @@ export class Client extends UDSP {
 	socketOnError = socketOnError;
 	assignId() {
 		const connectionIdString = generateConnectionId(this.connectionIdSize);
-		this.connectionIdSize = this.destination.clientConnectionIdSize || 4;
 		this.id = connectionIdToBuffer(connectionIdString);
-		this.connectionIdString = connectionIdString;
 		success(`Assigned ClientId ${connectionIdString}`);
 		Client.connections.set(connectionIdString, this);
 	}
@@ -197,11 +196,8 @@ export class Client extends UDSP {
 	async processProtocolOptions() {
 		const protocolOptions = this.certificate.get('protocolOptions');
 		if (protocolOptions) {
-			if (protocolOptions.clientConnectionIdSize) {
-				this.connectionIdSize = protocolOptions.clientConnectionIdSize;
-			}
-			if (protocolOptions.serverConnectionIdSize) {
-				this.destination.connectionIdSize = protocolOptions.serverConnectionIdSize;
+			if (protocolOptions.connectionIdSize) {
+				this.destination.connectionIdSize = protocolOptions.connectionIdSize;
 			}
 		}
 	}
@@ -265,15 +261,9 @@ export class Client extends UDSP {
 		this.discovered();
 	}
 	setPublicKeyHeader(header = []) {
-		const key = this.encryptionKeypair.publicKey;
-		console.log('Setting Public Key in UDSP Header', toBase64(key));
-		const { encryptServerConnectionId } = this;
-		if (encryptServerConnectionId) {
-			console.log('Encrypting Public Key in UDSP Header');
-			header.push(this.boxCryptography.boxSeal(header.key, this.destination.connectionIdKeypair));
-		} else {
-			header.push(key);
-		}
+		const publicKey = this.encryptionKeypair.publicKey;
+		console.log('Setting Public Key in UDSP Header', toBase64(publicKey));
+		header.push(publicKey);
 		return header;
 	}
 	setCryptographyHeaders(header = []) {
@@ -468,14 +458,14 @@ export class Client extends UDSP {
 		this.handshakeCompleted = null;
 		this.awaitHandshake = null;
 		this.destination = {
-			connectionIdSize: 8,
+			connectionIdSize: defaultServerConnectionIdSize,
 			overhead: {}
 		};
 		this.autoConnect = false;
 		this.certificateChunks = [];
 		this.requestQueue = construct(Map);
 		this.data = construct(Map);
-		this.connectionIdSize = 4;
+		this.connectionIdSize = defaultClientConnectionIdSize;
 		this.ipVersion = 'udp4';
 	}
 }

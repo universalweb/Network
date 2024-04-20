@@ -140,16 +140,11 @@ export function objectToRawDomainCertificate(certificateObject) {
 		certificate[7] = records;
 	}
 	if (protocolOptions) {
-		const {
-			serverConnectionIdSize,
-			clientConnectionIdSize,
-		} = protocolOptions;
+		const { connectionIdSize, } = protocolOptions;
 		certificate[8] = [protocolOptions?.version || currentProtocolVersion];
-		if (hasValue(serverConnectionIdSize)) {
-			certificate[8][1] = serverConnectionIdSize;
-		}
-		if (hasValue(clientConnectionIdSize)) {
-			certificate[8][2] = clientConnectionIdSize;
+		// Connection ID size Sent to server
+		if (hasValue(connectionIdSize)) {
+			certificate[8][1] = connectionIdSize;
 		}
 	}
 	if (options) {
@@ -225,18 +220,14 @@ export function rawToObjectDomainCertificate(rawObject, signature) {
 	if (protocolOptions) {
 		const [
 			protocolVersion,
-			serverConnectionIdSize,
-			clientConnectionIdSize,
+			connectionIdSize,
 		] = protocolOptions;
 		certificate.protocolOptions = {};
 		if (protocolVersion) {
 			certificate.protocolOptions.protocolVersion = protocolVersion;
 		}
-		if (serverConnectionIdSize) {
-			certificate.protocolOptions.serverConnectionIdSize = serverConnectionIdSize;
-		}
-		if (clientConnectionIdSize) {
-			certificate.protocolOptions.clientConnectionIdSize = clientConnectionIdSize;
+		if (connectionIdSize) {
+			certificate.protocolOptions.connectionIdSize = connectionIdSize;
 		}
 	}
 	if (records) {
