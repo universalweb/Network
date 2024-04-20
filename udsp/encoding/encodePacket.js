@@ -33,22 +33,12 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 		isServer,
 		isServerEnd,
 		isServerClient,
-		publicKeyCryptography,
-		cipherSuite,
-		boxCryptography
+		cipherSuite
 	} = source;
-	let id = destination.id || source.id;
+	const id = destination.id || source.id;
 	if (!id) {
 		console.trace(`ID is missing`);
 		return;
-	}
-	const shouldEncryptConnectionId = isServerEnd ? source.encryptClientConnectionId : source.encryptServerConnectionId;
-	if (shouldEncryptConnectionId) {
-		id = boxCryptography.boxSeal(id, destination.connectionIdKeypair);
-		if (!id) {
-			console.trace(`Connection failed to encrypt`);
-			return;
-		}
 	}
 	let header = id;
 	let shortHeaderMode = true;

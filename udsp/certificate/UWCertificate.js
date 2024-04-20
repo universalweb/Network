@@ -4,6 +4,7 @@ import {
 	hasValue,
 	isArray,
 	isBuffer,
+	isNumber,
 	untilTrueArray
 } from '@universalweb/acid';
 import {
@@ -63,9 +64,8 @@ export class UWCertificate {
 				return hasValue(selected);
 			});
 			return selected;
-		} else {
-			return cipherSuiteMethods[indexes];
 		}
+		return this.getCipherSuites(indexes);
 	}
 	getHash() {
 		if (this?.object?.signature) {

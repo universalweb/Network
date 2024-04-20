@@ -100,14 +100,6 @@ export class Server extends UDSP {
 			console.log(this.certificate);
 			this.certificatePublic = await new PublicDomainCertificate(publicCertificatePath);
 		}
-		if (this.certificate) {
-			this.keypair = {
-				...this.certificate.get('encryptionKeypair')
-			};
-			this.version = this.certificate.get('version');
-			this.publicKeyCryptography = this.certificate.getSignatureAlgorithm();
-		}
-		console.log('publicKeyCryptography', this.publicKeyCryptography);
 	}
 	async configureNetwork() {
 		const { options } = this;
@@ -146,11 +138,22 @@ export class Server extends UDSP {
 		console.log('OPTIONS', this.options);
 		this.configConnectionId();
 		await this.setCertificate();
+		await this.configCryptography();
 		await this.configureNetwork();
 		await this.setupSocket();
 		await this.attachEvents();
 		console.log('-------SERVER INITIALIZED-------');
 		return this;
+	}
+	configCryptography() {
+		if (this.certificate) {
+			this.keypair = {
+				...this.certificate.get('encryptionKeypair')
+			};
+			this.version = this.certificate.get('version');
+			this.publicKeyCryptography = this.certificate.getSignatureAlgorithm();
+		}
+		console.log('publicKeyCryptography', this.publicKeyCryptography);
 	}
 	async send(packet, destination) {
 		return sendPacket(packet, this, this.socket, destination);

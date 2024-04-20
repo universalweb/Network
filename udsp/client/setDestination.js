@@ -41,54 +41,25 @@ export async function setDestination() {
 			this.destination.port = urlObject.port;
 		}
 	}
-	if (destinationCertificate) {
-		console.log('Loading Destination Certificate', destinationCertificate);
-		const certificate = await publicDomainCertificate(destinationCertificate);
-		this.certificate = certificate;
-		const {
-			encryptionKeypair,
-			signatureKeypair,
-			version: certificateVersion,
-		} = certificate.get();
-		const version = certificate.getProtocolVersion();
-		assign(destination, {
-			encryptionKeypair,
-			signatureKeypair,
-			version: certificateVersion,
-		});
+	if (ipVersion === 'udp6') {
+		const record = this.certificate.findRecord('aaaa', 'universalweb.io');
+		if (record) {
+			setRecordInfo(destination, record);
+		}
 	}
-	if (destination.encryptionKeypair) {
-		await this.discovered();
-	} else {
-		console.log('No destination certificate provided.');
+	if (!destination.ip) {
+		const record = this.certificate.findRecord('a', 'universalweb.io');
+		if (record) {
+			setRecordInfo(destination, record);
+			this.ipVersion = 'udp4';
+		}
 	}
-	if (this.certificate) {
-		if (this.destination.clientConnectionIdSize) {
-			this.connectionIdSize = this.destination.clientConnectionIdSize;
-		}
-		if (!this.destination.connectionIdSize) {
-			this.destination.connectionIdSize = 8;
-		}
-		if (ipVersion === 'udp6') {
-			const record = this.certificate.findRecord('aaaa', 'universalweb.io');
-			if (record) {
-				setRecordInfo(destination, record);
-			}
-		}
-		if (!destination.ip) {
-			const record = this.certificate.findRecord('a', 'universalweb.io');
-			if (record) {
-				setRecordInfo(destination, record);
-				this.ipVersion = 'udp4';
-			}
-		}
-		if (!destination.ip) {
-			console.log('No IP address found for destination was found');
-			this.close();
-		}
-		if (!destination.port) {
-			destination.port = 53;
-		}
+	if (!destination.ip) {
+		console.log('No IP address found for destination was found');
+		this.close();
+	}
+	if (!destination.port) {
+		destination.port = 53;
 	}
 	// console.log('Destination', destination.cryptography);
 }

@@ -85,6 +85,9 @@ export class Client extends UDSP {
 		if (options) {
 			this.options = options;
 		}
+		if (this.destinationCertificate) {
+			await this.loadCertificate(this.destinationCertificate);
+		}
 		await this.setDestination();
 		await this.getIPDetails();
 		await this.setProfile();
@@ -166,7 +169,41 @@ export class Client extends UDSP {
 	}
 	async loadCertificate(certificate) {
 		this.destination.certificate = await publicDomainCertificate(certificate);
-		this.configCryptography();
+		await this.discovered();
+		await this.processCertificate();
+		await this.configCryptography();
+	}
+	async processCertificate(message) {
+		const { destination, } = this;
+		const { certificate } = destination;
+		const {
+			encryptionKeypair,
+			signatureKeypair,
+			version: certificateVersion,
+			encryptConnectionId,
+			protocolOptions,
+			cipherSuites
+		} = certificate.get();
+		const version = certificate.getProtocolVersion();
+		assign(destination, {
+			encryptionKeypair,
+			signatureKeypair,
+			version: certificateVersion,
+		});
+		this.destination.encryptionKeypair = this.destination.encryptionKeypair;
+		this.destination.signatureKeypair = this.destination.signatureKeypair;
+		await this.processProtocolOptions(message);
+	}
+	async processProtocolOptions() {
+		const protocolOptions = this.certificate.get('protocolOptions');
+		if (protocolOptions) {
+			if (protocolOptions.clientConnectionIdSize) {
+				this.connectionIdSize = protocolOptions.clientConnectionIdSize;
+			}
+			if (protocolOptions.serverConnectionIdSize) {
+				this.destination.connectionIdSize = protocolOptions.serverConnectionIdSize;
+			}
+		}
 	}
 	async proccessCertificateChunk(message) {
 		const {
@@ -326,7 +363,7 @@ export class Client extends UDSP {
 	async setSessionKeys(generatedKeys) {
 		// console.log(this.destination.encryptionKeypair);
 		if (this.destination.encryptionKeypair || generatedKeys) {
-			this.sessionKeys = generatedKeys || this.publicKeyCryptography.clientSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair);
+			this.sessionKeys = generatedKeys || this.cipherSuite.clientSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair);
 			if (this.sessionKeys) {
 				success(`Created Shared Keys`);
 				success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);
