@@ -15,8 +15,6 @@ import {
 	certificateTypes,
 	currentCertificateVersion,
 	currentProtocolVersion,
-	defaultClientConnectionIdSize,
-	defaultServerConnectionIdSize
 } from '../defaults.js';
 import { decode, encode } from '#utilities/serialize';
 import { getCipherSuite, getSignatureAlgorithm } from '../cryptoMiddleware/index.js';
@@ -117,16 +115,7 @@ export function objectToRawDomainCertificate(certificateObject) {
 	certificate[2] = start;
 	certificate[3] = end;
 	certificate[4] = backupHash;
-	certificate[5] = [
-		[
-			signatureKeypair.publicKey,
-			signatureKeypair.privateKey
-		],
-		[
-			encryptionKeypair.publicKey,
-			encryptionKeypair.privateKey
-		],
-	];
+	certificate[5] = [[signatureKeypair.publicKey, signatureKeypair.privateKey], [encryptionKeypair.publicKey, encryptionKeypair.privateKey],];
 	if (hasValue(cipherSuites)) {
 		certificate[5][2] = cipherSuites;
 	}
@@ -140,12 +129,8 @@ export function objectToRawDomainCertificate(certificateObject) {
 		certificate[7] = records;
 	}
 	if (protocolOptions) {
-		const { connectionIdSize, } = protocolOptions;
 		certificate[8] = [protocolOptions?.version || currentProtocolVersion];
 		// Connection ID size Sent to server
-		if (hasValue(connectionIdSize)) {
-			certificate[8][1] = connectionIdSize;
-		}
 	}
 	if (options) {
 		certificate[9] = options;
@@ -218,16 +203,10 @@ export function rawToObjectDomainCertificate(rawObject, signature) {
 		certificate.signature = signature;
 	}
 	if (protocolOptions) {
-		const [
-			protocolVersion,
-			connectionIdSize,
-		] = protocolOptions;
+		const [protocolVersion] = protocolOptions;
 		certificate.protocolOptions = {};
 		if (protocolVersion) {
 			certificate.protocolOptions.protocolVersion = protocolVersion;
-		}
-		if (connectionIdSize) {
-			certificate.protocolOptions.connectionIdSize = connectionIdSize;
 		}
 	}
 	if (records) {

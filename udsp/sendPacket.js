@@ -51,10 +51,10 @@ export async function sendPacket(message, source, socket, destination = source.d
 	const packetEncoded = await encodePacket(message, source, destination, headers, footer);
 	console.log(`Packet Encoded Size ${packetEncoded.length} Worker ${source.workerId || 'Master'} sending to ip: ${ip} Port: ${port}`);
 	if (repeat) {
-		return Promise.all([
-			sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed),
-			sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed)
-		]);
+		const firstSent = sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed);
+		const secondSent = sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed);
+		const sentPromises = [firstSent, secondSent];
+		return Promise.all(sentPromises);
 	}
 	return sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed);
 }

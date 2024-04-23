@@ -10,7 +10,7 @@ const uwClient = await client({
 	// Load Profile Certificate from Keychain
 	keychain: 'Universal Web Profile',
 	// Load Profile Certificate from file
-	profile: `${currentPath(import.meta)}/../../profiles/default.cert`
+	profile: `${currentPath(import.meta)}/../../profiles/default/profile.cert`
 });
 const connection = await uwClient.connect();
 console.log(uwClient);

@@ -27,7 +27,6 @@ export class UWCertificate {
 		this.update();
 	}
 	get(key) {
-		console.log();
 		if (key) {
 			return get(key, this.object);
 		}
@@ -65,7 +64,7 @@ export class UWCertificate {
 			});
 			return selected;
 		}
-		return this.getCipherSuites(indexes);
+		return this.getCipherSuite(indexes);
 	}
 	getHash() {
 		if (this?.object?.signature) {
@@ -73,10 +72,7 @@ export class UWCertificate {
 		}
 	}
 	encodeArray() {
-		return [
-			this.array,
-			this.getSignature()
-		];
+		return [this.array, this.getSignature()];
 	}
 	encodePublic() {
 		return encode(this.getPublic());
@@ -109,10 +105,7 @@ export class UWCertificate {
 	getPublic() {
 		this.generatePublic();
 		const signature = this.getSignature();
-		return [
-			this.publicCertificate,
-			signature
-		];
+		return [this.publicCertificate, signature];
 	}
 	async saveToFile(config) {
 		const {

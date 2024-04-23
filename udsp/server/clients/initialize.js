@@ -30,19 +30,13 @@ export async function initialize(config) {
 		server,
 		server: {
 			encryptionKeypair,
-			clients,
 			id: serverId,
 			realtime,
 			gracePeriod,
+			heartbeat,
 			cipherSuites: serverCipherSuites,
 			cipherSuite: serverCipherSuite,
-			keypair: serverKeypair,
 			encryptionKeypair: serverEncryptionKeypair,
-			connectionIdKeypair: serverConnectionIdKeypair,
-			encryptClientConnectionId,
-			encryptServerConnectionId,
-			publicKeySize,
-			heartbeat,
 			connectionIdSize,
 			certificate
 		},
@@ -74,19 +68,9 @@ export async function initialize(config) {
 	if (!client.cipherSuite) {
 		this.close();
 	}
-	client.publicKeySize = publicKeySize;
+	client.connectionIdSize = connectionIdSize;
 	// When changing to a new key you must first create new keys from scratch to replace these.
-	client.keypair = serverKeypair;
 	client.encryptionKeypair = serverEncryptionKeypair;
-	if (serverConnectionIdKeypair) {
-		client.connectionIdKeypair = serverConnectionIdKeypair;
-		if (isBoolean(encryptClientConnectionId)) {
-			client.encryptClientConnectionId = encryptClientConnectionId;
-		}
-		if (isBoolean(encryptServerConnectionId)) {
-			client.encryptServerConnectionId = encryptServerConnectionId;
-		}
-	}
 	const serverConnectionIdString = generateConnectionId(connectionIdSize, serverId);
 	const serverClientId = connectionIdToBuffer(serverConnectionIdString);
 	console.log(`Server Connection ID: ${serverClientId} SIZE: ${connectionIdSize} CLIENT: ${clientId.toString('hex')}`);

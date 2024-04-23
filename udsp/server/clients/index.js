@@ -12,6 +12,7 @@ import {
 	promise
 } from '@universalweb/acid';
 import { createEvent, removeEvent, triggerEvent } from '../../events.js';
+import { defaultClientConnectionIdSize, defaultServerConnectionIdSize } from '../../defaults.js';
 import {
 	failed,
 	imported,
@@ -27,7 +28,6 @@ import {
 import { Reply } from '#udsp/request/reply';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
 import cluster from 'node:cluster';
-import { defaultClientConnectionIdSize } from '../../defaults.js';
 import { destroy } from './destroy.js';
 import { encodePacket } from '#udsp/encoding/encodePacket';
 import { initialize } from './initialize.js';
@@ -124,10 +124,7 @@ export class Client {
 		}
 		console.log('Sending CLIENT END');
 		this.updateState(0);
-		return this.send([
-			false,
-			1
-		], false, null, true);
+		return this.send([false, 1], false, null, true);
 	}
 	async end(frame, header) {
 		console.log(`Destroying client ${this.connectionIdString}`, frame, header);
@@ -204,11 +201,11 @@ export class Client {
 	requestQueue = construct(Map);
 	destination = {
 		overhead: {},
+		connectionIdSize: defaultClientConnectionIdSize
 	};
 }
 export async function createClient(config) {
 	info('Creating Client');
-	console.log(config.packet?.id?.toString('base64'));
 	const client = await construct(Client, [config]);
 	success(`Client has been created with sever connection id ${toBase64(client.id)}`);
 	return client;

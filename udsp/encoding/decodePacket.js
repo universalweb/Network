@@ -41,7 +41,6 @@ export async function decodePacketHeaders(config) {
 		isServerEnd,
 		isServerClient,
 		boxCryptography,
-		connectionIdKeypair,
 		connectionIdSize
 	} = destination;
 	const packetSize = packetEncoded.length;
@@ -82,7 +81,7 @@ export async function decodePacketHeaders(config) {
 	}
 	const id = isShortHeaderMode ? headerDecoded : headerDecoded[0];
 	if (isClient) {
-		console.log(`Decode destination ID: ${destination.id.toString('hex')}`);
+		console.log(`Decode destination ID: ${destination?.id?.toString('hex')}`);
 		console.log(`Decode source ID: ${source?.id?.toString('hex')}`);
 	} else {
 		console.log(`Decode Server side packet with id: ${id.toString('hex')}`);
@@ -93,7 +92,7 @@ export async function decodePacketHeaders(config) {
 	};
 	if (!isShortHeaderMode) {
 		const headerRPC = headerDecoded[1];
-		if (headerRPC) {
+		if (hasValue(headerRPC)) {
 			config.packetDecoded.headerRPC = headerRPC;
 		}
 		if (headerRPC === 0) {
@@ -103,20 +102,6 @@ export async function decodePacketHeaders(config) {
 				return console.trace('No Client Key provided', headerDecoded);
 			}
 			config.packetDecoded.key = key;
-			// Add check for length of key before processing further and just kill the connection
-			if (encryptionKeypair) {
-				if (connectionIdKeypair) {
-					console.log('Decrypting Public Key in UDSP Header');
-					const decryptedKey = boxCryptography.boxUnseal(key, encryptionKeypair);
-					if (decryptedKey) {
-						headerDecoded[2] = decryptedKey;
-						config.packetDecoded.key = decryptedKey;
-						console.log('DESTINATION DECRYPT PUBLIC KEY', toBase64(key));
-					} else {
-						return console.trace('Client Key Decode Failed', toBase64(key));
-					}
-				}
-			}
 		}
 	}
 	return config;
@@ -152,11 +137,11 @@ export async function decodePacket(config) {
 		console.log(packet, packetDecoded);
 		if (sessionKeys) {
 			info(`encrypted Message size ${messageEncoded.length}bytes`);
-			console.log('cipherSuite', cipherSuite);
 			const ad = isShortHeaderMode ? headerEncoded : encode(headerEncoded);
+			console.log('cipherSuite', cipherSuite);
 			const decryptedMessage = cipherSuite.decrypt(messageEncoded, sessionKeys, ad);
 			if (isUndefined(decryptedMessage)) {
-				console.trace('Encryption failed');
+				console.trace('Decryption failed');
 				return;
 			}
 			info(`decrypted Message size ${decryptedMessage.length} BYTES`);

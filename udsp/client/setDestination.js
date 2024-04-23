@@ -42,20 +42,20 @@ export async function setDestination() {
 		}
 	}
 	if (ipVersion === 'udp6') {
-		const record = this.certificate.findRecord('aaaa', 'universalweb.io');
+		const record = await destination.certificate.findRecord('aaaa', 'universalweb.io');
 		if (record) {
 			setRecordInfo(destination, record);
 		}
 	}
 	if (!destination.ip) {
-		const record = this.certificate.findRecord('a', 'universalweb.io');
+		const record = await destination.certificate.findRecord('a', 'universalweb.io');
 		if (record) {
 			setRecordInfo(destination, record);
 			this.ipVersion = 'udp4';
 		}
 	}
 	if (!destination.ip) {
-		console.log('No IP address found for destination was found');
+		console.log('No IP address found for destination');
 		this.close();
 	}
 	if (!destination.port) {

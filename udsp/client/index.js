@@ -85,9 +85,10 @@ export class Client extends UDSP {
 		if (options) {
 			this.options = options;
 		}
-		if (this.destinationCertificate) {
-			await this.loadCertificate(this.destinationCertificate);
+		if (options.destinationCertificate) {
+			await this.loadCertificate();
 		}
+		console.log(this);
 		await this.setDestination();
 		await this.getIPDetails();
 		await this.setProfile();
@@ -165,13 +166,16 @@ export class Client extends UDSP {
 		]);
 		return ask;
 	}
-	async loadCertificate(certificate) {
-		this.destination.certificate = await publicDomainCertificate(certificate);
+	async loadCertificate() {
+		console.log(this);
+		const { options: { destinationCertificate } } = this;
+		this.destination.certificate = await publicDomainCertificate(destinationCertificate);
+		console.log(this.destination.certificate);
 		await this.discovered();
 		await this.processCertificate();
 		await this.configCryptography();
 	}
-	async processCertificate(message) {
+	async processCertificate() {
 		const { destination, } = this;
 		const { certificate } = destination;
 		const {
@@ -183,22 +187,9 @@ export class Client extends UDSP {
 			cipherSuites
 		} = certificate.get();
 		const version = certificate.getProtocolVersion();
-		assign(destination, {
-			encryptionKeypair,
-			signatureKeypair,
-			version: certificateVersion,
-		});
-		this.destination.encryptionKeypair = this.destination.encryptionKeypair;
-		this.destination.signatureKeypair = this.destination.signatureKeypair;
-		await this.processProtocolOptions(message);
-	}
-	async processProtocolOptions() {
-		const protocolOptions = this.certificate.get('protocolOptions');
-		if (protocolOptions) {
-			if (protocolOptions.connectionIdSize) {
-				this.destination.connectionIdSize = protocolOptions.connectionIdSize;
-			}
-		}
+		destination.encryptionKeypair = encryptionKeypair;
+		destination.signatureKeypair = signatureKeypair;
+		destination.protocolOptions = protocolOptions;
 	}
 	async proccessCertificateChunk(message) {
 		const {
@@ -475,3 +466,4 @@ export async function client(options) {
 }
 // Add the request export here for simple auto connect and then just grab contents to return called UDSP
 // client is for a longer stateful connection request to a remote server
+console.log(encode(Buffer.alloc(0)).length, encode(false).length);

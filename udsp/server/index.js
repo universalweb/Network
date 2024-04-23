@@ -207,8 +207,10 @@ export class Server extends UDSP {
 		return client;
 	}
 	async client(config, id, idString, connection) {
-		if (config.packetDecoded.headerRPC === 0) {
-			return this.createClient(config, idString, connection);
+		if (!id || id.length === 0) {
+			if (config.packetDecoded.headerRPC === 0) {
+				return this.createClient(config, idString, connection);
+			}
 		}
 		const existingClient = this.clients.get(idString);
 		if (existingClient) {

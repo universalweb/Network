@@ -100,7 +100,7 @@ export function objectToRawUWProfile(certificateObject) {
 		[
 			encryptionKeypair.publicKey,
 			encryptionKeypair.privateKey
-		],
+		]
 	];
 	if (contact) {
 		certificate[5] = contact;

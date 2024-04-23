@@ -1,11 +1,11 @@
 import { PassThrough } from 'stream';
+import { currentPath } from '@universalweb/acid';
 import { protocol } from 'electron';
 import { read } from '#utilities/file';
-import { currentPath } from '@universalweb/acid';
-export * from './local/index.js';
 import uws from '#udsp/client/index';
+export * from './local/index.js';
 const service = await uws.getCertificate(`${currentPath(import.meta)}/../../services/universal.web.cert`);
-const profile = await uws.getCertificate(`${currentPath(import.meta)}/../../profiles/default.cert`);
+const profile = await uws.getCertificate(`${currentPath(import.meta)}/../../profiles/default/profile.cert`);
 const indexFile = await read(`${currentPath(import.meta)}/../resources/html/blank.html`);
 function createStream(text) {
 	const stream = new PassThrough();
