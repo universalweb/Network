@@ -68,17 +68,14 @@
 
 <hr />
 
-<h2>REQUIREMENTS</h2>
+<h2>DEV REQUIREMENTS</h2>
 
 <p>
-    <i>Development is done on <b>Mac</b> & <b>Linux</b>.</i>
+    <i>Development is primarily done on <b>Mac</b> & <b>Linux (ARCH)</b>.</i>
 </p>
 
 <ul>
     <li><a href="https://nodejs.org/en/">NODEJS</a></li>
-    <li><a href="https://npmjs.com">NPM</a></li>
-    <li><a href="https://npmjs.com/package/nodemon">NODEMON</a></li>
-    <li><a href="https://npmjs.com/package/eslint">ESLINT</a></li>
     <li><a href="https://code.visualstudio.com/">VSCODE</a></li>
 </ul>
 
@@ -90,7 +87,7 @@
     <li>Unique UW UI</li>
     <li>UW Server</li>
     <li>UW Client</li>
-    <li>UW DNS (DIS)</li>
+    <li>UW DIS (Alternative to DNS)</li>
     <li>Multi-OS Support</li>
     <li>Multi-Device Support</li>
 </ul>
@@ -101,6 +98,6 @@
 <p>The WWW has the Domain Name System, Web3 has Decentralized DNS, & the UW has a similar component called the DIS(Domain Information System). Where DNS * Decentralized DNS takes a hostname and spits out an IP the DIS returns a cryptographic certificate related to the hostname. It plays a similar role but has greater functionality, works differently, has similar syntax, contains important connection information, distributes only cryptographic certificates, is designed with all other components in mind (something we believe is vital), and most notably is merely a single component in a much larger system (The Universal Web). When browsing the UW all domain lookups would go to the DIS. The DIS doesn't share any domains or rules with the Web's Domain system.</p>
 
 <h4>It's crazy to rebuild the Web why not improve it?</h4>
-<p>By that standard we wouldn't have many of the nice things we have today like the Web itself. Why is a question with a never ending answer. The only viable answer to "why" is the only thing that can end a never ending paradox consisting of "but why" and that's also a never ending paradox, "Why not?". The Web was only meant to go so far instead of trying to push the same tech by adding technology we should focus on replacing technology.</p>
+<p>The idea of rebuilding the World Wide Web from scratch may seem radical at first, but when we acknowledge the state of the Web and its challenges, it becomes clear that incremental improvements will not be enough to address fundamental issues.</p>
 
 <small>COPYRIGHT © 2024 <a href="https://universalweb.io">UNIVERSAL WEB</a></small>
