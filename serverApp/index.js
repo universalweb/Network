@@ -30,7 +30,7 @@ const uwApp = await app({
 	// will listen on ipv4 and ipv6 default is '::1'
 	ip: '::',
 	// default port or the loadbalancer port
-	port: 443,
+	port: 8888,
 	// realtime mode - permits establishing a bidirectional real-time connection to clients
 	// Must be requested so that it can be denied if the client doesn't meet the requirements
 	// realtime: true,
@@ -41,15 +41,15 @@ const uwApp = await app({
 	maxPacketRetries: 5,
 	// max file size in bytes
 	maxFileSize: 9000,
-	// Max size of a Response
+	// Max size of a Response in bytes
 	maxResponseSize: 10000,
 	// default file extension default is .js but WWW default is www
 	defaultExtension: 'html',
 	// Domain certificate to be loaded used for connection encryption
-	certificatePath: path.join(currentPath(import.meta), '/certs/universalWeb.cert'),
-	publicCertificatePath: path.join(currentPath(import.meta), '/certs/universalWebPublic.cert'),
+	certificatePath: currentPath(import.meta, '/certs/universalWeb.cert'),
+	publicCertificatePath: currentPath(import.meta, '/certs/universalWebPublic.cert'),
 	// Where to load app resources from
-	resourceDirectory: path.join(currentPath(import.meta), 'resources'),
+	resourceDirectory: currentPath(import.meta, 'resources'),
 	rootDirectory: currentPath(import.meta),
 	clientConnectionIdSize: 4,
 });

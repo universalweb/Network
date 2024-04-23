@@ -387,10 +387,7 @@ export class Client extends UDSP {
 	async sendEnd() {
 		if (this.state === connectingState || this.state === connectedState || this.state === closingState) {
 			console.log('Sending CLIENT END');
-			return this.send([
-				false,
-				1
-			], false, null, true);
+			return this.send([false, 1], false, null, true);
 		}
 	}
 	end(frame, header) {

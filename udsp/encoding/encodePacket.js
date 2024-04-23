@@ -49,10 +49,7 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 			headers.unshift(id);
 			header = headers;
 		} else {
-			header = [
-				id,
-				headers
-			];
+			header = [id, headers];
 		}
 		console.log('HEADERS GIVEN', isHeadersAnArray, headers);
 	}
@@ -71,10 +68,7 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 		if (!encryptedMessage) {
 			return console.trace('Encryption failed');
 		}
-		let packetStructure = [
-			header,
-			encryptedMessage
-		];
+		let packetStructure = [header, encryptedMessage];
 		if (shortHeaderMode) {
 			packetStructure = Buffer.concat(packetStructure);
 		}

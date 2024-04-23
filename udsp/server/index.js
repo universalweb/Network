@@ -24,7 +24,6 @@ import {
 	msgSent,
 	success
 } from '#logs';
-import { getAlgorithm, getSignatureAlgorithm, processPublicKey } from '../cryptoMiddleware/index.js';
 import { randomBuffer, toBase64 } from '#crypto';
 import { UDSP } from '#udsp/base';
 import { createClient } from './clients/index.js';

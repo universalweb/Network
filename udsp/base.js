@@ -35,9 +35,6 @@ export class UDSP {
 		this.heapSize = 0;
 		this.randomId = randomBuffer(8);
 		this.version = currentVersion;
-		this.cipherSuiteName = cipherSuites.version[this.version][0].name;
-		this.cipherSuiteId = cipherSuites.version[this.version][0].id;
-		this.cipherSuites = cipherSuites.available[this.version];
 	}
 	generateConnectionID(size) {
 		const target = randomConnectionId(size || this.connectionIdSize || 8);

@@ -54,7 +54,7 @@ export default [
 				'error',
 				{
 					multiline: true,
-					minItems: 2
+					minItems: 3
 				}
 			],
 			'@stylistic/array-bracket-spacing': [
@@ -65,7 +65,7 @@ export default [
 				'error',
 				{
 					multiline: true,
-					minItems: 2
+					minItems: 3
 				}
 			],
 			'@stylistic/arrow-parens': [
@@ -469,7 +469,7 @@ export default [
 			'no-alert': 'error',
 			'no-array-constructor': 'error',
 			'no-await-in-loop': 'off',
-			'no-bitwise': 'error',
+			'no-bitwise': 'off',
 			'no-caller': 'error',
 			'no-case-declarations': 'error',
 			'no-catch-shadow': 'error',
