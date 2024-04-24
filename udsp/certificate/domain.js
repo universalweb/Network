@@ -275,7 +275,7 @@ export async function publicDomainCertificate(...args) {
 	return new PublicDomainCertificate(...args);
 }
 // const thisPath = currentPath(import.meta);
-// const profileCert = await uwProfile(`${thisPath}/certificates/profilePublicCert.cert`);
+// const profileCert = await uwProfile(`${thisPath}/cache/profilePublicCert.cert`);
 // const exampleCert = await new DomainCertificate({
 // 	backupHash: profileCert.get('signature'),
 // 	entity: 'universalweb.io',
@@ -296,8 +296,8 @@ export async function publicDomainCertificate(...args) {
 // });
 // const pubCert = exampleCert.getPublic();
 // console.log(profileCert, profileCert.get('signature').length);
-// await exampleCert.savePublic('domainPublicCert', `${thisPath}/certificates/`);
-// await exampleCert.save('domain', `${thisPath}/certificates/`);
+// await exampleCert.savePublic('domainPublicCert', `${thisPath}/cache/`);
+// await exampleCert.save('domain', `${thisPath}/cache/`);
 // console.log(exampleCert);
-// console.log(await new PublicDomainCertificate(`${thisPath}/certificates/domainPublicCert.cert`));
-// console.log(await new DomainCertificate(`${thisPath}/certificates/domain.cert`));
+// console.log(await new PublicDomainCertificate(`${thisPath}/cache/domainPublicCert.cert`));
+// console.log(await new DomainCertificate(`${thisPath}/cache/domain.cert`));

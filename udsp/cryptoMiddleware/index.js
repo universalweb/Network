@@ -1,5 +1,6 @@
 /* TODO: Add Mobile/Embedded Preferred option & algorithms. */
 import * as defaultCrypto from '#crypto';
+import { Kyber1024, Kyber512, Kyber768 } from 'crystals-kyber-js';
 import {
 	RistrettoPoint,
 	ed25519,
@@ -66,8 +67,8 @@ const {
 	boxUnseal, boxSeal, randomConnectionId, hashMin: defaultHashMin, hash: defaultHash,
 	signVerifyDetached, signDetached
 } = defaultCrypto;
-const x25519_xchacha20_poly1305 = {
-	name: 'x25519_xchacha20_poly1305',
+const x25519_xchacha20 = {
+	name: 'x25519_xchacha20',
 	short: 'x25519',
 	alias: 'default',
 	id: 0,
@@ -80,6 +81,16 @@ const x25519_xchacha20_poly1305 = {
 	safeMath: RistrettoPoint,
 	clientSessionKeys,
 	serverSessionKeys,
+	preferred: true,
+	hash: blake3,
+};
+const x25519_kyber768_xchacha20 = {
+	name: 'x25519_kyber768_xchacha20',
+	short: 'x25519Kyber768',
+	// Post Quantum Key Exchange
+	alias: 'pqt',
+	id: 1,
+	Kyber768,
 	preferred: true,
 	hash: blake3,
 };
@@ -125,17 +136,17 @@ publicKeyCertificateAlgorithmsVersion1.set(ed25519Algo.alias, ed25519Algo);
 export const cipherSuites = new Map();
 const cipherSuitesVersion1 = new Map();
 cipherSuites.set(1, cipherSuitesVersion1);
-cipherSuitesVersion1.set('all', [x25519_xchacha20_poly1305]);
-cipherSuitesVersion1.set(x25519_xchacha20_poly1305.name, x25519_xchacha20_poly1305);
-cipherSuitesVersion1.set(x25519_xchacha20_poly1305.id, x25519_xchacha20_poly1305);
-cipherSuitesVersion1.set(x25519_xchacha20_poly1305.alias, x25519_xchacha20_poly1305);
+cipherSuitesVersion1.set('all', [x25519_xchacha20]);
+cipherSuitesVersion1.set(x25519_xchacha20.name, x25519_xchacha20);
+cipherSuitesVersion1.set(x25519_xchacha20.id, x25519_xchacha20);
+cipherSuitesVersion1.set(x25519_xchacha20.alias, x25519_xchacha20);
 export const cipherSuitesCertificates = new Map();
 const cipherSuitesCertificatesVersion1 = new Map();
 cipherSuitesCertificates.set(1, cipherSuitesCertificatesVersion1);
-cipherSuitesCertificatesVersion1.set('all', [x25519_xchacha20_poly1305]);
-cipherSuitesCertificatesVersion1.set(x25519_xchacha20_poly1305.short, x25519_xchacha20_poly1305);
-cipherSuitesCertificatesVersion1.set(x25519_xchacha20_poly1305.id, x25519_xchacha20_poly1305);
-cipherSuitesCertificatesVersion1.set(x25519_xchacha20_poly1305.alias, x25519_xchacha20_poly1305);
+cipherSuitesCertificatesVersion1.set('all', [x25519_xchacha20]);
+cipherSuitesCertificatesVersion1.set(x25519_xchacha20.short, x25519_xchacha20);
+cipherSuitesCertificatesVersion1.set(x25519_xchacha20.id, x25519_xchacha20);
+cipherSuitesCertificatesVersion1.set(x25519_xchacha20.alias, x25519_xchacha20);
 export const boxAlgorithms = new Map();
 const boxAlgorithmsVersion1 = new Map();
 boxAlgorithms.set(1, boxAlgorithmsVersion1);

@@ -20,15 +20,17 @@ async function doKyber() {
 		skR
 	] = await recipient.generateKeyPair();
 	const sender = new Kyber768();
-	console.log(sender);
 	const [
 		ct,
 		ssS
 	] = await sender.encap(pkR);
-	const encoded = encode([ct]);
 	const ssR = await recipient.decap(ct, skR);
-	const encrypted = encrypt(Buffer.from('0812784807chnefjhkljwehgflkfuefhksdjdfglj'), ssS);
-	console.log(encrypted.length + encoded.length + encrypted.length, ct.length, createSessionKey().length, ssS);
+	const encrypted = encrypt(encode([
+		[
+			Buffer.alloc(0), 0, 0, 0
+		]
+	]), ssS);
+	console.log('ESTIMATED PACKET HELLO', 90 + ct.length, 'KYBER-OVERHEAD', ct.length);
 	return;
 }
 try {

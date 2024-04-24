@@ -245,7 +245,7 @@ export class Client extends UDSP {
 		}
 	}
 	async discovered() {
-		console.log('Discovery Completed - certificate loaded');
+		console.log('DISCOVERY COMPLETED -> CERTIFICATE LOADED');
 		await this.updateState(discoveredState);
 	}
 	discovery(frame, header) {

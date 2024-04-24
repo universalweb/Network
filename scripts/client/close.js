@@ -6,7 +6,7 @@ import { currentPath } from '@universalweb/acid';
 console.time('Benchmark');
 // Universal Web Client Socket
 const uwClient = await client({
-	destinationCertificate: `${currentPath(import.meta)}/../../serverApp/certs/universalWebPublic.cert`,
+	destinationCertificate: `${currentPath(import.meta)}/../../udsp/dis/cache/universalWebPublic.cert`,
 	// Load Profile Certificate from Keychain
 	keychain: 'Universal Web Profile',
 	// Load Profile Certificate from file

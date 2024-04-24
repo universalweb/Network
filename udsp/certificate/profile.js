@@ -244,7 +244,7 @@ export async function uwPublicProfile(...args) {
 // const pubCert = example.getPublic();
 // const thisPath = currentPath(import.meta);
 // console.log(example);
-// await example.savePublic('profilePublicCert', `${thisPath}/certificates/`);
-// await example.save('profile', `${thisPath}/certificates/`);
-// console.log(await new UWPublicProfile(`${thisPath}/certificates/profilePublicCert.cert`));
-// console.log(await new UWProfile(`${thisPath}/certificates/profile.cert`));
+// await example.savePublic('profilePublicCert', `${thisPath}/cache/`);
+// await example.save('profile', `${thisPath}/cache/`);
+// console.log(await new UWPublicProfile(`${thisPath}/cache/profilePublicCert.cert`));
+// console.log(await new UWProfile(`${thisPath}/cache/profile.cert`));

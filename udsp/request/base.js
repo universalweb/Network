@@ -437,7 +437,6 @@ export class Base {
 		if (isAsk) {
 			console.log('CHECKING CONNECTION');
 			const connect = await this.source().connect();
-			console.log('CONNECTED');
 			if (this.sent) {
 				return this.accept;
 			}

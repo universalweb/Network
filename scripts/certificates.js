@@ -31,4 +31,4 @@ const UWCertificate = await domainCertificate({
 	],
 });
 await UWCertificate.save('universalWeb.cert', `${dirname}/../serverApp/certs`);
-await UWCertificate.savePublic('universalWebPublic.cert', `${dirname}/../serverApp/certs`);
+await UWCertificate.savePublic('universalWebPublic.cert', `${dirname}/../udsp/dis/cache`);

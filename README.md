@@ -82,14 +82,14 @@
 <h5>BROAD CODE OBJECTIVES</h5>
 <ul>
     <li>UW UDP Based Protocol</li>
-    <li>UW Browser (Electron)</li>
-    <li>New UW Language(s)</li>
-    <li>Unique UW UI</li>
     <li>UW Server</li>
     <li>UW Client</li>
     <li>UW DIS (Alternative to DNS)</li>
+    <li>UW Web Apps</li>
     <li>Multi-OS Support</li>
     <li>Multi-Device Support</li>
+    <li>UW Browser/Wallet</li>
+    <li>Viat</li>
 </ul>
 
 <h2>Questions</h2>
