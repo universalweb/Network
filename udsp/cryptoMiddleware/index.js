@@ -67,6 +67,11 @@ const {
 	boxUnseal, boxSeal, randomConnectionId, hashMin: defaultHashMin, hash: defaultHash,
 	signVerifyDetached, signDetached
 } = defaultCrypto;
+function setOption(source, option) {
+	source.set(option.name, option);
+	source.set(option.id, option);
+	source.set(option.alias, option);
+}
 const x25519_xchacha20 = {
 	name: 'x25519_xchacha20',
 	short: 'x25519',
@@ -87,85 +92,24 @@ const x25519_xchacha20 = {
 const x25519_kyber768_xchacha20 = {
 	name: 'x25519_kyber768_xchacha20',
 	short: 'x25519Kyber768',
-	// Post Quantum Key Exchange
+	// Hybrid Post Quantum Key Exchange
 	alias: 'pqt',
 	id: 1,
 	Kyber768,
 	preferred: true,
 	hash: blake3,
 };
-const ed25519Algo = {
-	name: 'ed25519',
-	alias: 'default',
-	id: 0,
-	signKeypair,
-	sign,
-	signVerify,
-	signDetached,
-	signPrivateKeyToEncryptPrivateKey,
-	signPublicKeyToEncryptPublicKey,
-	signKeypairToEncryptionKeypair,
-	getSignPublicKeyFromPrivateKey,
-	safeMath: RistrettoPoint,
-	clientSessionKeys,
-	serverSessionKeys,
-	signVerifyDetached,
-	hash: blake3,
-	preferred: true
-};
-const xsalsa20Algo = {
-	name: 'xsalsa20Algo',
-	alias: 'default',
-	id: 0,
-	boxSeal,
-	boxUnseal,
-	preferred: true
-};
-export const publicKeyAlgorithms = new Map();
-const publicKeyAlgorithmVersion1 = new Map();
-publicKeyAlgorithms.set(1, publicKeyAlgorithmVersion1);
-publicKeyAlgorithmVersion1.set(ed25519Algo.name, ed25519Algo);
-publicKeyAlgorithmVersion1.set(ed25519Algo.id, ed25519Algo);
-publicKeyAlgorithmVersion1.set(ed25519Algo.alias, ed25519Algo);
-export const publicKeyCertificateAlgorithms = new Map();
-const publicKeyCertificateAlgorithmsVersion1 = new Map();
-publicKeyCertificateAlgorithms.set(1, publicKeyCertificateAlgorithmsVersion1);
-publicKeyCertificateAlgorithmsVersion1.set(ed25519Algo.name, ed25519Algo);
-publicKeyCertificateAlgorithmsVersion1.set(ed25519Algo.id, ed25519Algo);
-publicKeyCertificateAlgorithmsVersion1.set(ed25519Algo.alias, ed25519Algo);
 export const cipherSuites = new Map();
 const cipherSuitesVersion1 = new Map();
 cipherSuites.set(1, cipherSuitesVersion1);
 cipherSuitesVersion1.set('all', [x25519_xchacha20]);
-cipherSuitesVersion1.set(x25519_xchacha20.name, x25519_xchacha20);
-cipherSuitesVersion1.set(x25519_xchacha20.id, x25519_xchacha20);
-cipherSuitesVersion1.set(x25519_xchacha20.alias, x25519_xchacha20);
+setOption(cipherSuitesVersion1, x25519_xchacha20);
 export const cipherSuitesCertificates = new Map();
 const cipherSuitesCertificatesVersion1 = new Map();
 cipherSuitesCertificates.set(1, cipherSuitesCertificatesVersion1);
-cipherSuitesCertificatesVersion1.set('all', [x25519_xchacha20]);
-cipherSuitesCertificatesVersion1.set(x25519_xchacha20.short, x25519_xchacha20);
-cipherSuitesCertificatesVersion1.set(x25519_xchacha20.id, x25519_xchacha20);
-cipherSuitesCertificatesVersion1.set(x25519_xchacha20.alias, x25519_xchacha20);
-export const boxAlgorithms = new Map();
-const boxAlgorithmsVersion1 = new Map();
-boxAlgorithms.set(1, boxAlgorithmsVersion1);
-boxAlgorithmsVersion1.set(xsalsa20Algo.name, xsalsa20Algo);
-boxAlgorithmsVersion1.set(xsalsa20Algo.id, xsalsa20Algo);
-boxAlgorithmsVersion1.set(xsalsa20Algo.alias, xsalsa20Algo);
-const blake3Hash = {
-	name: 'blake3',
-	alias: 'default',
-	id: 0,
-	hash: blake3,
-	preferred: true
-};
-export const hashAlgorithms = new Map();
-const hashAlgorithmsVersion1 = new Map();
-boxAlgorithms.set(1, hashAlgorithmsVersion1);
-hashAlgorithmsVersion1.set(blake3Hash.name, blake3Hash);
-hashAlgorithmsVersion1.set(blake3Hash.id, blake3Hash);
-hashAlgorithmsVersion1.set(blake3Hash.alias, blake3Hash);
+cipherSuitesCertificatesVersion1.set('all', [x25519_xchacha20, x25519_kyber768_xchacha20]);
+setOption(cipherSuitesCertificatesVersion1, x25519_xchacha20);
+setOption(cipherSuitesCertificatesVersion1, x25519_kyber768_xchacha20);
 export function getEncryptionKeypairAlgorithm(algo = 0, version = currentCertificateVersion) {
 	if (!hasValue(algo)) {
 		return false;
@@ -200,6 +144,56 @@ export function getCipherSuites(indexes, version = currentVersion) {
 	}
 	return getCipherSuite('all', version);
 }
+const ed25519Algo = {
+	name: 'ed25519',
+	alias: 'default',
+	id: 0,
+	signKeypair,
+	sign,
+	signVerify,
+	signDetached,
+	signPrivateKeyToEncryptPrivateKey,
+	signPublicKeyToEncryptPublicKey,
+	signKeypairToEncryptionKeypair,
+	getSignPublicKeyFromPrivateKey,
+	safeMath: RistrettoPoint,
+	clientSessionKeys,
+	serverSessionKeys,
+	signVerifyDetached,
+	hash: blake3,
+	preferred: true
+};
+const xsalsa20Algo = {
+	name: 'xsalsa20Algo',
+	alias: 'default',
+	id: 0,
+	boxSeal,
+	boxUnseal,
+	preferred: true
+};
+export const publicKeyAlgorithms = new Map();
+const publicKeyAlgorithmVersion1 = new Map();
+publicKeyAlgorithms.set(1, publicKeyAlgorithmVersion1);
+setOption(publicKeyAlgorithmVersion1, ed25519Algo);
+export const publicKeyCertificateAlgorithms = new Map();
+const publicKeyCertificateAlgorithmsVersion1 = new Map();
+publicKeyCertificateAlgorithms.set(1, publicKeyCertificateAlgorithmsVersion1);
+setOption(publicKeyCertificateAlgorithmsVersion1, ed25519Algo);
+export const boxAlgorithms = new Map();
+const boxAlgorithmsVersion1 = new Map();
+boxAlgorithms.set(1, boxAlgorithmsVersion1);
+setOption(boxAlgorithmsVersion1, xsalsa20Algo);
+const blake3Hash = {
+	name: 'blake3',
+	alias: 'default',
+	id: 0,
+	hash: blake3,
+	preferred: true
+};
+export const hashAlgorithms = new Map();
+const hashAlgorithmsVersion1 = new Map();
+boxAlgorithms.set(1, hashAlgorithmsVersion1);
+setOption(hashAlgorithmsVersion1, blake3Hash);
 export function getSignatureAlgorithm(publicKeyAlgorithmName = 0, version = currentVersion) {
 	if (!hasValue(publicKeyAlgorithmName)) {
 		return false;
