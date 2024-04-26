@@ -9,12 +9,7 @@ import {
 	x25519
 } from '@noble/curves/ed25519';
 import {
-	assign,
-	compactMapArray,
-	eachArray,
-	hasValue,
-	isArray,
-	isNumber
+	assign, compactMapArray, eachArray, hasValue, isArray, isNumber, isUndefined
 } from '@universalweb/acid';
 import {
 	cshake128,
@@ -58,6 +53,8 @@ import { p256 } from '@noble/curves/p256';
 import { p384 } from '@noble/curves/p384';
 import { p521 } from '@noble/curves/p521';
 import { ripemd160 } from '@noble/hashes/ripemd160';
+import { success } from '#logs';
+import { toBase64 } from '#crypto';
 const { seal } = Object;
 const {
 	encrypt, decrypt, nonceBox, sign, signVerify, createSecretKey,
@@ -65,8 +62,11 @@ const {
 	serverSessionKeys, signPrivateKeyToEncryptPrivateKey, signPublicKeyToEncryptPublicKey,
 	signKeypairToEncryptionKeypair, getSignPublicKeyFromPrivateKey, keypair,
 	boxUnseal, boxSeal, randomConnectionId, hashMin: defaultHashMin, hash: defaultHash,
-	signVerifyDetached, signDetached
+	signVerifyDetached, signDetached, crypto_aead_xchacha20poly1305_ietf_KEYBYTES
 } = defaultCrypto;
+function blake3CombineKeys(key1, key2) {
+	return blake3(Buffer.concat([key1, key2]));
+}
 function setOption(source, option) {
 	source.set(option.name, option);
 	source.set(option.id, option);
@@ -89,6 +89,15 @@ const x25519_xchacha20 = {
 	preferred: true,
 	hash: blake3,
 };
+async function preparePublicKey(source, publicKey) {
+	const [
+		cipherText,
+		kyberSharedSecret
+	] = await source.kyberKeypair.encap(publicKey);
+	source.kyberSharedSecret = kyberSharedSecret;
+	source.cipherText = cipherText;
+	return Buffer.concat([source.x25519Keypair, cipherText]);
+}
 const x25519_kyber768_xchacha20 = {
 	name: 'x25519_kyber768_xchacha20',
 	short: 'x25519Kyber768',
@@ -98,6 +107,40 @@ const x25519_kyber768_xchacha20 = {
 	Kyber768,
 	preferred: true,
 	hash: blake3,
+	preparePublicKey,
+	async keypair() {
+		const x25519Keypair = x25519_xchacha20.keypair();
+		const kyberKeypair = new Kyber768();
+		const [
+			kyberPublicKey,
+			kyberPrivateKey
+		] = await kyberKeypair.generateKeyPair();
+		const target = {
+			x25519Keypair,
+			kyberKeypair,
+			publicKey: Buffer.concat([x25519Keypair.kyberPublicKey, kyberPublicKey])
+		};
+		return target;
+	},
+	// async serverSessionKeys(server, clientPublicKey, sessionKeys) {
+	// 	const x25519sessionKeys = serverSessionKeys(x25519Keypair, clientPublicKey, sessionKeys);
+	// 	const kyberPrivateKey = await recipient.decap(ct, skR);
+	// 	x25519sessionKeys.transmitKet = blake3CombineKeys();
+	// 	return sessionKeys;
+	// },
+	combineKeys: blake3CombineKeys
+};
+console.log(await x25519_kyber768_xchacha20.keypair());
+const x25519_kyber512_xchacha20 = {
+	name: 'x25519_kyber512_xchacha20',
+	short: 'x25519Kyber512',
+	// Hybrid Post Quantum Key Exchange
+	alias: 'pqt',
+	id: 2,
+	Kyber768,
+	preferred: true,
+	hash: blake3,
+	combineKeys: blake3CombineKeys
 };
 export const cipherSuites = new Map();
 const cipherSuitesVersion1 = new Map();

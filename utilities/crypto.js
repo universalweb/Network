@@ -38,6 +38,7 @@ const {
 	crypto_box_PUBLICKEYBYTES,
 	crypto_box_SECRETKEYBYTES,
 	crypto_aead_xchacha20poly1305_ietf_keygen,
+	// 32 bytes
 	crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
 	crypto_secretbox_easy,
 	crypto_secretbox_MACBYTES,
