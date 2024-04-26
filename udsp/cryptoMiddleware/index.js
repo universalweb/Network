@@ -89,15 +89,6 @@ const x25519_xchacha20 = {
 	preferred: true,
 	hash: blake3,
 };
-async function preparePublicKey(source, publicKey) {
-	const [
-		cipherText,
-		kyberSharedSecret
-	] = await source.kyberKeypair.encap(publicKey);
-	source.kyberSharedSecret = kyberSharedSecret;
-	source.cipherText = cipherText;
-	return Buffer.concat([source.x25519Keypair, cipherText]);
-}
 const x25519_kyber768_xchacha20 = {
 	name: 'x25519_kyber768_xchacha20',
 	short: 'x25519Kyber768',
@@ -107,8 +98,39 @@ const x25519_kyber768_xchacha20 = {
 	Kyber768,
 	preferred: true,
 	hash: blake3,
-	preparePublicKey,
-	async keypair() {
+	async serverSessionKeys(source, destinationPublicKey, sessionKeysOriginal) {
+		const x25519sessionKeys = serverSessionKeys(source, destinationPublicKey.slice(0, 32), sessionKeysOriginal);
+		const destinationKyberPublicKey = destinationPublicKey.slice(32);
+		const [
+			cipherText,
+			kyberSharedSecret
+		] = await source.kyberKeypair.encap(destinationKyberPublicKey);
+		source.kyberSharedSecret = kyberSharedSecret;
+		source.x25519sessionKeys = x25519sessionKeys;
+		source.cipherText = cipherText;
+		const sessionKeys = {
+			transmitKey: blake3CombineKeys(x25519sessionKeys.transmit, kyberSharedSecret),
+			receiveKey: blake3CombineKeys(x25519sessionKeys.receive, kyberSharedSecret)
+		};
+		return sessionKeys;
+	},
+	async clientSessionKeys(source, destinationPublicKey, sessionKeysOriginal) {
+		const x25519sessionKeys = clientSessionKeys(source, destinationPublicKey.slice(0, 32), sessionKeysOriginal);
+		const destinationKyberPublicKey = destinationPublicKey.slice(32);
+		const [
+			cipherText,
+			kyberSharedSecret
+		] = await source.kyberKeypair.encap(destinationKyberPublicKey);
+		source.kyberSharedSecret = kyberSharedSecret;
+		source.x25519sessionKeys = x25519sessionKeys;
+		source.cipherText = cipherText;
+		const sessionKeys = {
+			transmitKey: blake3CombineKeys(x25519sessionKeys.transmit, kyberSharedSecret),
+			receiveKey: blake3CombineKeys(x25519sessionKeys.receive, kyberSharedSecret)
+		};
+		return sessionKeys;
+	},
+	async keypair(destination) {
 		const x25519Keypair = x25519_xchacha20.keypair();
 		const kyberKeypair = new Kyber768();
 		const [
@@ -118,7 +140,8 @@ const x25519_kyber768_xchacha20 = {
 		const target = {
 			x25519Keypair,
 			kyberKeypair,
-			publicKey: Buffer.concat([x25519Keypair.kyberPublicKey, kyberPublicKey])
+			publicKey: Buffer.concat([x25519Keypair.privateKey, kyberPublicKey]),
+			privateKey: Buffer.concat([x25519Keypair.publicKey, kyberPrivateKey])
 		};
 		return target;
 	},
