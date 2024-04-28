@@ -41,7 +41,7 @@ export function createDomainCertificateObject(config = {}, options = {}) {
 		version = currentCertificateVersion,
 		signatureAlgorithm,
 		signatureKeypair,
-		encryptionKeypairAlgorithm,
+		cipherSuite,
 		contact,
 		cipherSuites,
 		encryptionKeypair,
@@ -78,8 +78,8 @@ export function createDomainCertificateObject(config = {}, options = {}) {
 	if (hasValue(signatureAlgorithm) && signatureAlgorithm !== 0) {
 		certificate.signatureAlgorithm = signatureAlgorithm;
 	}
-	if (hasValue(encryptionKeypairAlgorithm) && encryptionKeypairAlgorithm !== 0) {
-		certificate.encryptionKeypairAlgorithm = encryptionKeypairAlgorithm;
+	if (hasValue(cipherSuite) && cipherSuite !== 0) {
+		certificate.cipherSuite = cipherSuite;
 	}
 	if (hasValue(cipherSuites) && cipherSuites !== 0) {
 		certificate.cipherSuites = cipherSuites;
@@ -88,9 +88,9 @@ export function createDomainCertificateObject(config = {}, options = {}) {
 	if (!signatureKeypair) {
 		certificate.signatureKeypair = signatureMethod.signKeypair();
 	}
-	const keyExchangeMethod = getCipherSuite(certificate.encryptionKeypairAlgorithm, protocolVersion);
+	const keyExchangeMethod = getCipherSuite(certificate.cipherSuite, protocolVersion);
 	if (!encryptionKeypair) {
-		certificate.encryptionKeypair = keyExchangeMethod.keypair();
+		certificate.encryptionKeypair = keyExchangeMethod.certificateEncryptionKeypair();
 	}
 	return certificate;
 }

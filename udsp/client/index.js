@@ -252,13 +252,14 @@ export class Client extends UDSP {
 		this.discovered();
 	}
 	setPublicKeyHeader(header = []) {
-		const publicKey = this.encryptionKeypair.publicKey;
-		console.log('Setting Public Key in UDSP Header', toBase64(publicKey));
-		if (this.cipherSuite.preparePublicKey) {
-			const cipherText = this.cipherSuite.preparePublicKey(this.encryptionKeypair, this.destination.publicKey);
-			header.push(cipherText);
+		const preparedPublicKey = this.cipherSuite.preparedPublicKey;
+		if (this.cipherSuite.preparedPublicKey) {
+			header.push(preparedPublicKey);
+			console.log('Setting Prepared Public Key in UDSP Header', toBase64(preparedPublicKey));
 		} else {
+			const publicKey = this.encryptionKeypair.publicKey;
 			header.push(publicKey);
+			console.log('Setting Public Key in UDSP Header', toBase64(publicKey));
 		}
 		return header;
 	}

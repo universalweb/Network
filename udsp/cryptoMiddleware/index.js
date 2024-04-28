@@ -54,7 +54,6 @@ import { p384 } from '@noble/curves/p384';
 import { p521 } from '@noble/curves/p521';
 import { ripemd160 } from '@noble/hashes/ripemd160';
 import { success } from '#logs';
-import { toBase64 } from '#crypto';
 const { seal } = Object;
 const {
 	encrypt, decrypt, nonceBox, sign, signVerify, createSecretKey,
@@ -62,7 +61,7 @@ const {
 	serverSessionKeys, signPrivateKeyToEncryptPrivateKey, signPublicKeyToEncryptPublicKey,
 	signKeypairToEncryptionKeypair, getSignPublicKeyFromPrivateKey, keypair,
 	boxUnseal, boxSeal, randomConnectionId, hashMin: defaultHashMin, hash: defaultHash,
-	signVerifyDetached, signDetached, crypto_aead_xchacha20poly1305_ietf_KEYBYTES
+	signVerifyDetached, signDetached, crypto_aead_xchacha20poly1305_ietf_KEYBYTES, randomBuffer, toBase64
 } = defaultCrypto;
 function blake3CombineKeys(key1, key2) {
 	return blake3(Buffer.concat([key1, key2]));
@@ -81,6 +80,7 @@ const x25519_xchacha20 = {
 	encryptKeypair,
 	createSessionKey,
 	keypair,
+	certificateEncryptionKeypair: keypair,
 	decrypt,
 	encrypt,
 	safeMath: RistrettoPoint,
@@ -107,6 +107,7 @@ const x25519_kyber768_xchacha20 = {
 		] = await source.kyberKeypair.encap(destinationKyberPublicKey);
 		source.kyberSharedSecret = kyberSharedSecret;
 		source.x25519sessionKeys = x25519sessionKeys;
+		source.preparedPublicKey = Buffer.concat([source.x25519Keypair.publicKey, cipherText]);
 		source.cipherText = cipherText;
 		const sessionKeys = {
 			transmitKey: blake3CombineKeys(x25519sessionKeys.transmit, kyberSharedSecret),
@@ -123,6 +124,7 @@ const x25519_kyber768_xchacha20 = {
 		] = await source.kyberKeypair.encap(destinationKyberPublicKey);
 		source.kyberSharedSecret = kyberSharedSecret;
 		source.x25519sessionKeys = x25519sessionKeys;
+		source.preparedPublicKey = Buffer.concat([source.x25519Keypair.publicKey, cipherText]);
 		source.cipherText = cipherText;
 		const sessionKeys = {
 			transmitKey: blake3CombineKeys(x25519sessionKeys.transmit, kyberSharedSecret),
@@ -130,27 +132,60 @@ const x25519_kyber768_xchacha20 = {
 		};
 		return sessionKeys;
 	},
-	async keypair(destination) {
-		const x25519Keypair = x25519_xchacha20.keypair();
+	async loadKeypair(source) {
+		const { privateKey } = source;
 		const kyberKeypair = new Kyber768();
+		const seed = privateKey.slice(32);
 		const [
 			kyberPublicKey,
 			kyberPrivateKey
-		] = await kyberKeypair.generateKeyPair();
+		] = await kyberKeypair.deriveKeyPair(seed);
+		source.kyberInstance = kyberKeypair;
+		source.kyberKeypair = {
+			privateKey: kyberPrivateKey,
+			publicKey: kyberPublicKey
+		};
+		source.x25519Keypair = {
+			privateKey: privateKey.slice(0, 32),
+			publicKey: source.publicKey.slice(0, 32)
+		};
+	},
+	generateKeySeed() {
+		return randomBuffer(64);
+	},
+	async keypair() {
+		const x25519Keypair = x25519_xchacha20.keypair();
+		const kyberInstance = new Kyber768();
+		const seed = x25519_kyber768_xchacha20.generateKeySeed();
+		const [
+			kyberPublicKey,
+			kyberPrivateKey
+		] = await kyberInstance.deriveKeyPair(seed);
 		const target = {
 			x25519Keypair,
-			kyberKeypair,
+			kyberInstance,
+			kyberKeypair: {
+				kyberPublicKey,
+				kyberPrivateKey,
+				seed
+			},
 			publicKey: Buffer.concat([x25519Keypair.privateKey, kyberPublicKey]),
-			privateKey: Buffer.concat([x25519Keypair.publicKey, kyberPrivateKey])
+			privateKey: Buffer.concat([x25519Keypair.privateKey, kyberPrivateKey])
 		};
 		return target;
 	},
-	// async serverSessionKeys(server, clientPublicKey, sessionKeys) {
-	// 	const x25519sessionKeys = serverSessionKeys(x25519Keypair, clientPublicKey, sessionKeys);
-	// 	const kyberPrivateKey = await recipient.decap(ct, skR);
-	// 	x25519sessionKeys.transmitKet = blake3CombineKeys();
-	// 	return sessionKeys;
-	// },
+	async certificateEncryptionKeypair() {
+		const {
+			x25519Keypair,
+			kyberKeypair,
+			publicKey
+		} = x25519_kyber768_xchacha20.keypair();
+		const target = {
+			publicKey,
+			privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.seed])
+		};
+		return target;
+	},
 	combineKeys: blake3CombineKeys
 };
 console.log(await x25519_kyber768_xchacha20.keypair());

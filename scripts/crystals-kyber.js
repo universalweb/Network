@@ -9,9 +9,11 @@ import {
 	signKeypair
 } from '#utilities/crypto';
 import { decode, encode } from 'msgpackr';
+import { randomBuffer } from '#crypto';
 import { x25519 } from '@noble/curves/ed25519';
 import zlib from 'node:zlib';
 // TODO: Implement Kyber1024, Kyber512, Kyber768 into one option for encryption
+const seed = randomBuffer(64);
 async function doKyber() {
 	// A recipient generates a key pair.
 	const recipient = new Kyber1024();
@@ -19,8 +21,12 @@ async function doKyber() {
 	const [
 		pkR,
 		skR
-	] = await recipient.generateKeyPair();
-	console.log(recipient);
+	] = await recipient.deriveKeyPair(seed);
+	console.log(
+		pkR,
+		skR
+	);
+	console.log(await recipient.deriveKeyPair(seed));
 	const sender = new Kyber1024();
 	const [
 		ct,
@@ -34,13 +40,10 @@ async function doKyber() {
 		]
 	]), ssS);
 	console.log('ESTIMATED PACKET HELLO', 90 + ct.length, 'KYBER-OVERHEAD', ct.length);
+	console.log(recipient, sender);
 	return;
 }
-try {
-	doKyber();
-} catch (err) {
-	console.log('failed: ', err.message);
-}
+doKyber();
 // Hybrid Post Quantum Key Exchange ckx25519
 // C-K KeyExchange 0-RTT Initial (data encrypted with shared post quantum key)
 // x25519 Forward Secrecy Response Re-Key Event

@@ -40,7 +40,7 @@ export function createUWProfileObject(config = {}, options = {}) {
 		version = currentCertificateVersion,
 		signatureAlgorithm,
 		signatureKeypair,
-		encryptionKeypairAlgorithm,
+		cipherSuite,
 		contact,
 		cipherSuites,
 		encryptionKeypair,
@@ -60,16 +60,16 @@ export function createUWProfileObject(config = {}, options = {}) {
 	if (hasValue(signatureAlgorithm) && signatureAlgorithm !== 0) {
 		certificate.signatureAlgorithm = signatureAlgorithm;
 	}
-	if (hasValue(encryptionKeypairAlgorithm) && encryptionKeypairAlgorithm !== 0) {
-		certificate.encryptionKeypairAlgorithm = encryptionKeypairAlgorithm;
+	if (hasValue(cipherSuite) && cipherSuite !== 0) {
+		certificate.cipherSuite = cipherSuite;
 	}
 	const signatureMethod = getSignatureAlgorithm(certificate.signatureAlgorithm, protocolVersion);
 	if (!signatureKeypair) {
 		certificate.signatureKeypair = signatureMethod.signKeypair();
 	}
-	const keyExchangeMethod = getCipherSuite(certificate.encryptionKeypairAlgorithm, protocolVersion);
+	const keyExchangeMethod = getCipherSuite(certificate.cipherSuite, protocolVersion);
 	if (!encryptionKeypair) {
-		certificate.encryptionKeypair = keyExchangeMethod.keypair();
+		certificate.encryptionKeypair = keyExchangeMethod.certificateEncryptionKeypair();
 	}
 	return certificate;
 }
@@ -102,6 +102,12 @@ export function objectToRawUWProfile(certificateObject) {
 			encryptionKeypair.privateKey
 		]
 	];
+	if (cipherSuite) {
+		certificate[4][2] = cipherSuite;
+	}
+	if (signatureAlgorithm) {
+		certificate[4][3] = signatureAlgorithm;
+	}
 	if (contact) {
 		certificate[5] = contact;
 	}
@@ -204,7 +210,7 @@ export class UWProfile extends UWCertificate {
 		this.array = objectToRawUWProfile(this.object);
 	}
 	getSignatureAlgorithm() {
-		return getSignatureAlgorithmByCertificate(this.object.encryptionKeypairAlgorithm, this.getCertificateVersion());
+		return getSignatureAlgorithmByCertificate(this.object.cipherSuite, this.getCertificateVersion());
 	}
 	generatePublic() {
 		this.publicCertificate = getPublicProfileCertificate(this.array);
