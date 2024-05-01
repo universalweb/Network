@@ -9,15 +9,29 @@ import {
 	signKeypair
 } from '#utilities/crypto';
 import { decode, encode } from 'msgpackr';
+import { ml_kem1024, ml_kem512, ml_kem768 } from '@noble/post-quantum/ml-kem';
 import { randomBuffer } from '#crypto';
+import { slh_dsa_sha2_128f as sph } from '@noble/post-quantum/slh-dsa';
 import { x25519 } from '@noble/curves/ed25519';
 import zlib from 'node:zlib';
 // TODO: Implement Kyber1024, Kyber512, Kyber768 into one option for encryption
 const seed = randomBuffer(64);
 async function doKyber() {
+	const aliceSigKeys = sph.keygen();
+	const msg = new Uint8Array(1);
+	const sig = sph.sign(aliceSigKeys.secretKey, msg);
+	const isValid = sph.verify(aliceSigKeys.publicKey, msg, sig);
+	console.log('SLH-DSA', isValid);
+	const aliceKeys = ml_kem768.keygen();
+	const alicePub = aliceKeys.publicKey;
+	const {
+		cipherText, sharedSecret: bobShared
+	} = ml_kem768.encapsulate(alicePub);
+	const aliceShared = ml_kem768.decapsulate(cipherText, aliceKeys.secretKey);
+	console.log('ALICE', aliceShared, 'BOB', bobShared);
 	// A recipient generates a key pair.
-	const recipient = new Kyber1024();
-	console.log(recipient);
+	const recipient = new Kyber768();
+	// console.log(recipient);
 	const [
 		pkR,
 		skR
@@ -26,13 +40,13 @@ async function doKyber() {
 		pkR,
 		skR
 	);
-	console.log(await recipient.deriveKeyPair(seed));
-	const sender = new Kyber1024();
+	// console.log(await recipient.deriveKeyPair(seed));
+	const sender = new Kyber768();
 	const [
 		ct,
 		ssS
 	] = await sender.encap(pkR);
-	console.log('KYBER KEY SIZE:', pkR.length);
+	console.log('KYBER KEY SIZE:', pkR.length, skR.length);
 	const ssR = await recipient.decap(ct, skR);
 	const encrypted = encrypt(encode([
 		[
@@ -40,7 +54,7 @@ async function doKyber() {
 		]
 	]), ssS);
 	console.log('ESTIMATED PACKET HELLO', 90 + ct.length, 'KYBER-OVERHEAD', ct.length);
-	console.log(recipient, sender);
+	// console.log(recipient, sender);
 	return;
 }
 doKyber();
