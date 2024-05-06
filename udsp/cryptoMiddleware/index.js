@@ -1,205 +1,30 @@
 /* TODO: Add Mobile/Embedded Preferred option & algorithms. */
 import * as defaultCrypto from '#crypto';
-import { Kyber1024, Kyber512, Kyber768 } from 'crystals-kyber-js';
 import {
-	RistrettoPoint,
-	ed25519,
-	ed25519ctx,
-	ed25519ph,
-	x25519
-} from '@noble/curves/ed25519';
-import {
-	assign, compactMapArray, eachArray, hasValue, isArray, isNumber, isUndefined
+	assign,
+	compactMapArray,
+	eachArray,
+	hasValue,
+	isArray,
+	isNumber,
+	isUndefined
 } from '@universalweb/acid';
-import {
-	cshake128,
-	cshake256,
-	k12,
-	keccakprg,
-	kmac128,
-	kmac256,
-	m14,
-	parallelhash256,
-	tuplehash256
-} from '@noble/hashes/sha3-addons';
 import { currentCertificateVersion, currentVersion } from '../defaults.js';
-import { ed448, ed448ph, x448 } from '@noble/curves/ed448';
-import {
-	keccak_224,
-	keccak_256,
-	keccak_384,
-	keccak_512,
-	sha3_224,
-	sha3_256,
-	sha3_384,
-	sha3_512,
-	shake128,
-	shake256
-} from '@noble/hashes/sha3';
+import { ed25519Algo, x25519_xchacha20 } from './25519.js';
 import { pallas, vesta } from '@noble/curves/pasta';
 import { pbkdf2, pbkdf2Async } from '@noble/hashes/pbkdf2';
 import { schnorr, secp256k1 } from '@noble/curves/secp256k1';
 import { scrypt, scryptAsync } from '@noble/hashes/scrypt';
 import { sha384, sha512, sha512_256 } from '@noble/hashes/sha512';
-import { blake2b } from '@noble/hashes/blake2b';
-import { blake2s } from '@noble/hashes/blake2s';
 import { blake3 } from '@noble/hashes/blake3';
-import { bls12_381 } from '@noble/curves/bls12-381';
-import { bn254 } from '@noble/curves/bn254';
-import { hkdf } from '@noble/hashes/hkdf';
-import { hmac } from '@noble/hashes/hmac';
-import { jubjub } from '@noble/curves/jubjub';
-import { p256 } from '@noble/curves/p256';
-import { p384 } from '@noble/curves/p384';
-import { p521 } from '@noble/curves/p521';
-import { ripemd160 } from '@noble/hashes/ripemd160';
-import { success } from '#logs';
-const { seal } = Object;
-const {
-	encrypt, decrypt, nonceBox, sign, signVerify, createSecretKey,
-	signKeypair, encryptKeypair, createSessionKey, clientSessionKeys,
-	serverSessionKeys, signPrivateKeyToEncryptPrivateKey, signPublicKeyToEncryptPublicKey,
-	signKeypairToEncryptionKeypair, getSignPublicKeyFromPrivateKey, keypair,
-	boxUnseal, boxSeal, randomConnectionId, hashMin: defaultHashMin, hash: defaultHash,
-	signVerifyDetached, signDetached, crypto_aead_xchacha20poly1305_ietf_KEYBYTES, randomBuffer, toBase64
-} = defaultCrypto;
-function blake3CombineKeys(key1, key2) {
-	return blake3(Buffer.concat([key1, key2]));
-}
+import { blake3Hash } from './blake3.js';
+import { x25519_kyber768_xchacha20 } from './kyber.js';
+import { xsalsa20Algo } from './xsalsa20.js';
 function setOption(source, option) {
 	source.set(option.name, option);
 	source.set(option.id, option);
 	source.set(option.alias, option);
 }
-const x25519_xchacha20 = {
-	name: 'x25519_xchacha20',
-	short: 'x25519',
-	alias: 'default',
-	id: 0,
-	nonceBox,
-	encryptKeypair,
-	createSessionKey,
-	keypair,
-	certificateEncryptionKeypair: keypair,
-	decrypt,
-	encrypt,
-	safeMath: RistrettoPoint,
-	clientSessionKeys,
-	serverSessionKeys,
-	preferred: true,
-	hash: blake3,
-};
-const x25519_kyber768_xchacha20 = {
-	name: 'x25519_kyber768_xchacha20',
-	short: 'x25519Kyber768',
-	// Hybrid Post Quantum Key Exchange
-	alias: 'pqt',
-	id: 1,
-	Kyber768,
-	preferred: true,
-	hash: blake3,
-	async serverSessionKeys(source, destinationPublicKey, sessionKeysOriginal) {
-		const x25519sessionKeys = serverSessionKeys(source, destinationPublicKey.slice(0, 32), sessionKeysOriginal);
-		const destinationKyberPublicKey = destinationPublicKey.slice(32);
-		const [
-			cipherText,
-			kyberSharedSecret
-		] = await source.kyberKeypair.encap(destinationKyberPublicKey);
-		source.kyberSharedSecret = kyberSharedSecret;
-		source.x25519sessionKeys = x25519sessionKeys;
-		source.preparedPublicKey = Buffer.concat([source.x25519Keypair.publicKey, cipherText]);
-		source.cipherText = cipherText;
-		const sessionKeys = {
-			transmitKey: blake3CombineKeys(x25519sessionKeys.transmit, kyberSharedSecret),
-			receiveKey: blake3CombineKeys(x25519sessionKeys.receive, kyberSharedSecret)
-		};
-		return sessionKeys;
-	},
-	async clientSessionKeys(source, destinationPublicKey, sessionKeysOriginal) {
-		const x25519sessionKeys = clientSessionKeys(source, destinationPublicKey.slice(0, 32), sessionKeysOriginal);
-		const destinationKyberPublicKey = destinationPublicKey.slice(32);
-		const [
-			cipherText,
-			kyberSharedSecret
-		] = await source.kyberKeypair.encap(destinationKyberPublicKey);
-		source.kyberSharedSecret = kyberSharedSecret;
-		source.x25519sessionKeys = x25519sessionKeys;
-		source.preparedPublicKey = Buffer.concat([source.x25519Keypair.publicKey, cipherText]);
-		source.cipherText = cipherText;
-		const sessionKeys = {
-			transmitKey: blake3CombineKeys(x25519sessionKeys.transmit, kyberSharedSecret),
-			receiveKey: blake3CombineKeys(x25519sessionKeys.receive, kyberSharedSecret)
-		};
-		return sessionKeys;
-	},
-	async loadKeypair(source) {
-		const { privateKey } = source;
-		const kyberKeypair = new Kyber768();
-		const seed = privateKey.slice(32);
-		const [
-			kyberPublicKey,
-			kyberPrivateKey
-		] = await kyberKeypair.deriveKeyPair(seed);
-		source.kyberInstance = kyberKeypair;
-		source.kyberKeypair = {
-			privateKey: kyberPrivateKey,
-			publicKey: kyberPublicKey
-		};
-		source.x25519Keypair = {
-			privateKey: privateKey.slice(0, 32),
-			publicKey: source.publicKey.slice(0, 32)
-		};
-	},
-	generateKeySeed() {
-		return randomBuffer(64);
-	},
-	async keypair() {
-		const x25519Keypair = x25519_xchacha20.keypair();
-		const kyberInstance = new Kyber768();
-		const seed = x25519_kyber768_xchacha20.generateKeySeed();
-		const [
-			kyberPublicKey,
-			kyberPrivateKey
-		] = await kyberInstance.deriveKeyPair(seed);
-		const target = {
-			x25519Keypair,
-			kyberInstance,
-			kyberKeypair: {
-				kyberPublicKey,
-				kyberPrivateKey,
-				seed
-			},
-			publicKey: Buffer.concat([x25519Keypair.privateKey, kyberPublicKey]),
-			privateKey: Buffer.concat([x25519Keypair.privateKey, kyberPrivateKey])
-		};
-		return target;
-	},
-	async certificateEncryptionKeypair() {
-		const {
-			x25519Keypair,
-			kyberKeypair,
-			publicKey
-		} = x25519_kyber768_xchacha20.keypair();
-		const target = {
-			publicKey,
-			privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.seed])
-		};
-		return target;
-	},
-	combineKeys: blake3CombineKeys
-};
-console.log(await x25519_kyber768_xchacha20.keypair());
-const x25519_kyber512_xchacha20 = {
-	name: 'x25519_kyber512_xchacha20',
-	short: 'x25519Kyber512',
-	// Hybrid Post Quantum Key Exchange
-	alias: 'pqt',
-	id: 2,
-	Kyber768,
-	preferred: true,
-	hash: blake3,
-	combineKeys: blake3CombineKeys
-};
 export const cipherSuites = new Map();
 const cipherSuitesVersion1 = new Map();
 cipherSuites.set(1, cipherSuitesVersion1);
@@ -245,33 +70,6 @@ export function getCipherSuites(indexes, version = currentVersion) {
 	}
 	return getCipherSuite('all', version);
 }
-const ed25519Algo = {
-	name: 'ed25519',
-	alias: 'default',
-	id: 0,
-	signKeypair,
-	sign,
-	signVerify,
-	signDetached,
-	signPrivateKeyToEncryptPrivateKey,
-	signPublicKeyToEncryptPublicKey,
-	signKeypairToEncryptionKeypair,
-	getSignPublicKeyFromPrivateKey,
-	safeMath: RistrettoPoint,
-	clientSessionKeys,
-	serverSessionKeys,
-	signVerifyDetached,
-	hash: blake3,
-	preferred: true
-};
-const xsalsa20Algo = {
-	name: 'xsalsa20Algo',
-	alias: 'default',
-	id: 0,
-	boxSeal,
-	boxUnseal,
-	preferred: true
-};
 export const publicKeyAlgorithms = new Map();
 const publicKeyAlgorithmVersion1 = new Map();
 publicKeyAlgorithms.set(1, publicKeyAlgorithmVersion1);
@@ -284,13 +82,6 @@ export const boxAlgorithms = new Map();
 const boxAlgorithmsVersion1 = new Map();
 boxAlgorithms.set(1, boxAlgorithmsVersion1);
 setOption(boxAlgorithmsVersion1, xsalsa20Algo);
-const blake3Hash = {
-	name: 'blake3',
-	alias: 'default',
-	id: 0,
-	hash: blake3,
-	preferred: true
-};
 export const hashAlgorithms = new Map();
 const hashAlgorithmsVersion1 = new Map();
 boxAlgorithms.set(1, hashAlgorithmsVersion1);
