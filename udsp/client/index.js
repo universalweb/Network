@@ -348,10 +348,10 @@ export class Client extends UDSP {
 		}
 		this.handshaked();
 	}
-	async setSessionKeys(generatedKeys) {
+	async setSessionKeys() {
 		// console.log(this.destination.encryptionKeypair);
-		if (this.destination.encryptionKeypair || generatedKeys) {
-			this.sessionKeys = generatedKeys || this.cipherSuite.clientSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair);
+		if (this.destination.encryptionKeypair) {
+			this.sessionKeys = this.cipherSuite.clientSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair);
 			if (this.sessionKeys) {
 				success(`Created Shared Keys`);
 				success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);

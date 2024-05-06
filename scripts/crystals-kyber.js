@@ -30,7 +30,7 @@ async function doKyber() {
 	} = ml_kem768.encapsulate(alicePub);
 	const aliceShared = ml_kem768.decapsulate(cipherText, aliceKeys.secretKey);
 	console.log('ALICE', aliceShared, 'BOB', bobShared);
-	console.log('ESTIMATED PACKET HELLO', 90 + cipherText.length, 'KYBER-OVERHEAD', cipherText.length);
+	console.log('ESTIMATED PACKET HELLO', 104 + cipherText.length, 'KYBER-OVERHEAD', cipherText.length);
 	return;
 }
 doKyber();
