@@ -46,8 +46,6 @@ export async function destroy(client, reason) {
 	client.port = null;
 	client.id = null;
 	client.nonce = null;
-	client.sessionKeys = null;
-	client.encryptionKeypair = null;
 	client.lastAct = null;
 	client.server = null;
 	client.source = null;

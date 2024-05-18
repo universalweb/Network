@@ -57,7 +57,6 @@ export class Client {
 		};
 		this.socket = server.socket;
 		this.cipherSuites = cipherSuites;
-		this.signatureAlgorithm = signatureAlgorithm;
 		return this.initialize(config);
 	}
 	description = `Server's client`;
@@ -81,18 +80,15 @@ export class Client {
 	}
 	onConnected = onConnected;
 	async generateSessionKeypair() {
-		const newKeypair = this.cipherSuite.keypair();
+		const newKeypair = this.cipherSuite.ephemeralKeypair(this.destination);
 		this.newKeypair = newKeypair;
 		info(`CLIENT EVENT -> reKey - ID:${this.connectionIdString}`);
 	}
-	async setSessionKeys() {
+	async setSession() {
 		console.log('Set session keys');
-		const sessionKeys = this.cipherSuite.serverSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair, this.sessionKeys);
-		if (isUndefined(this.sessionKeys)) {
-			this.sessionKeys = sessionKeys;
-		}
-		success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);
-		success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
+		this.cipherSuite.serverSessionKeys(this, this.destination);
+		success(`receiveKey: ${toBase64(this.receiveKey)}`);
+		success(`transmitKey: ${toBase64(this.transmitKey)}`);
 	}
 	updateState(state) {
 		if (this.destroyed) {
@@ -141,11 +137,12 @@ export class Client {
 		if (!this.newKeypair) {
 			this.generateSessionKeypair();
 		}
+		const cryptographicData = this.newKeypair?.preparedPublicKey || this.newKeypair?.publicKey;
 		const frame = [
 			false,
 			0,
 			this.id,
-			this.newKeypair.publicKey,
+			cryptographicData,
 			this.randomId
 		];
 		if (cluster.worker) {
@@ -177,8 +174,8 @@ export class Client {
 	// PFS
 	async attachNewClientKeys() {
 		this.updateState(2);
-		this.encryptionKeypair = this.newKeypair;
-		await this.setSessionKeys();
+		assign(this, this.newKeypair);
+		await this.setSession();
 		this.newSessionKeysAssigned = true;
 	}
 	async reply(frame, header, rinfo) {

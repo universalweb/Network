@@ -33,7 +33,6 @@ export async function decodePacketHeaders(config) {
 		packet: packetEncoded
 	} = config;
 	const {
-		encryptionKeypair,
 		cipherSuite,
 		state,
 		isClient,
@@ -119,7 +118,6 @@ export async function decodePacket(config) {
 	const {
 		cipherSuite,
 		connectionIdSize,
-		sessionKeys
 	} = destination;
 	let messageEncoded;
 	if (isShortHeaderMode) {
@@ -131,15 +129,16 @@ export async function decodePacket(config) {
 		console.log('No message encoded');
 		return true;
 	}
+	const receiveKey = destination?.receiveKey;
 	// console.log(destination);
-	info(`Receive Key ${toBase64(sessionKeys.receiveKey)}`);
+	info(`Receive Key ${toBase64(receiveKey)}`);
 	if (messageEncoded && isBuffer(messageEncoded) && hasLength(messageEncoded)) {
 		console.log(packet, packetDecoded);
-		if (sessionKeys) {
+		if (receiveKey) {
 			info(`encrypted Message size ${messageEncoded.length}bytes`);
 			const ad = isShortHeaderMode ? headerEncoded : encode(headerEncoded);
 			console.log('cipherSuite', cipherSuite);
-			const decryptedMessage = cipherSuite.decrypt(messageEncoded, sessionKeys, ad);
+			const decryptedMessage = cipherSuite.decrypt(messageEncoded, receiveKey, ad);
 			if (isUndefined(decryptedMessage)) {
 				console.trace('Decryption failed');
 				return;

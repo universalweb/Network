@@ -27,7 +27,7 @@ async function doKyber() {
 	console.log(aliceKeys);
 	const {
 		cipherText, sharedSecret: bobShared
-	} = ml_kem768.encapsulate(alicePub);
+	} = ml_kem768.encapsulate(aliceKeys.publicKey);
 	const aliceShared = ml_kem768.decapsulate(cipherText, aliceKeys.secretKey);
 	console.log('ALICE', aliceShared, 'BOB', bobShared);
 	console.log('ESTIMATED PACKET HELLO', 104 + cipherText.length, 'KYBER-OVERHEAD', cipherText.length);

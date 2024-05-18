@@ -193,28 +193,41 @@ export function createSessionKey() {
 	const sessionKey = bufferAlloc(crypto_kx_SESSIONKEYBYTES);
 	return sessionKey;
 }
-export function clientSessionKeys(client, serverPublicKey, sessionKeys) {
-	const receiveKey = sessionKeys?.receiveKey || createSessionKey();
-	const transmitKey = sessionKeys?.transmitKey || createSessionKey();
+export function clientSessionKeys(client, serverPublicKey, target) {
+	const receiveKey = client?.receiveKey || createSessionKey();
+	const transmitKey = client?.transmitKey || createSessionKey();
 	crypto_kx_client_session_keys(receiveKey, transmitKey, client.publicKey, client.privateKey, serverPublicKey?.publicKey || serverPublicKey);
-	return {
-		transmitKey,
-		receiveKey
-	};
+	if (target) {
+		target.receiveKey = receiveKey;
+		target.transmitKey = transmitKey;
+		return target;
+	}
+	client.receiveKey = receiveKey;
+	client.transmitKey = transmitKey;
+	return client;
 }
-export function serverSessionKeys(server, clientPublicKey, sessionKeys) {
-	const receiveKey = sessionKeys?.receiveKey || createSessionKey();
-	const transmitKey = sessionKeys?.transmitKey || createSessionKey();
-	crypto_kx_server_session_keys(receiveKey, transmitKey, server.publicKey, server.privateKey, clientPublicKey?.publicKey || clientPublicKey);
-	return {
-		transmitKey,
-		receiveKey
-	};
+export function serverSessionKeys(server, client, target) {
+	const receiveKey = server?.receiveKey || createSessionKey();
+	const transmitKey = server?.transmitKey || createSessionKey();
+	crypto_kx_server_session_keys(receiveKey, transmitKey, server.publicKey, server.privateKey, client?.publicKey || client);
+	if (target) {
+		target.receiveKey = receiveKey;
+		target.transmitKey = transmitKey;
+		return target;
+	}
+	server.receiveKey = receiveKey;
+	server.transmitKey = transmitKey;
+	return server;
 }
 export function signKeypair(config) {
 	const publicKey = config?.publicKey || bufferAlloc(crypto_sign_PUBLICKEYBYTES);
 	const privateKey = config?.privateKey || bufferAlloc(crypto_sign_SECRETKEYBYTES);
 	crypto_sign_keypair(publicKey, privateKey);
+	if (config) {
+		config.publicKey = publicKey;
+		config.privateKey = privateKey;
+		return config;
+	}
 	return {
 		publicKey,
 		privateKey
@@ -224,6 +237,11 @@ export function encryptKeypair(config) {
 	const publicKey = config?.publicKey || bufferAlloc(crypto_box_PUBLICKEYBYTES);
 	const privateKey = config?.privateKey || bufferAlloc(crypto_box_SECRETKEYBYTES);
 	crypto_box_keypair(publicKey, privateKey);
+	if (config) {
+		config.publicKey = publicKey;
+		config.privateKey = privateKey;
+		return config;
+	}
 	return {
 		publicKey,
 		privateKey

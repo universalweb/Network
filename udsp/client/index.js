@@ -187,8 +187,8 @@ export class Client extends UDSP {
 			cipherSuites
 		} = certificate.get();
 		const version = certificate.getProtocolVersion();
-		destination.encryptionKeypair = encryptionKeypair;
-		destination.signatureKeypair = signatureKeypair;
+		destination.publicKey = encryptionKeypair.publicKey;
+		destination.signatureKeypair = signatureKeypair.publicKey;
 		destination.protocolOptions = protocolOptions;
 	}
 	async proccessCertificateChunk(message) {
@@ -214,7 +214,7 @@ export class Client extends UDSP {
 		await this.fire(this.events, 'readyState', this);
 	}
 	setDiscoveryHeaders(header = []) {
-		const key = this.encryptionKeypair.publicKey;
+		const key = this.publicKey;
 		console.log('Setting Cryptography in UDSP Header', toBase64(key));
 		const {
 			cipherSuiteName,
@@ -252,19 +252,20 @@ export class Client extends UDSP {
 		this.discovered();
 	}
 	setPublicKeyHeader(header = []) {
-		const preparedPublicKey = this.cipherSuite.preparedPublicKey;
-		if (this.cipherSuite.preparedPublicKey) {
+		const preparedPublicKey = this.preparedPublicKey;
+		console.log(this.publicKey);
+		if (this.preparedPublicKey) {
 			header.push(preparedPublicKey);
 			console.log('Setting Prepared Public Key in UDSP Header', toBase64(preparedPublicKey));
 		} else {
-			const publicKey = this.encryptionKeypair.publicKey;
+			const publicKey = this.publicKey;
 			header.push(publicKey);
 			console.log('Setting Public Key in UDSP Header', toBase64(publicKey));
 		}
 		return header;
 	}
 	setCryptographyHeaders(header = []) {
-		const key = this.encryptionKeypair.publicKey;
+		const key = this.publicKey;
 		console.log('Setting Cryptography in UDSP Header', toBase64(key));
 		const {
 			cipherSuiteName,
@@ -349,21 +350,19 @@ export class Client extends UDSP {
 		this.handshaked();
 	}
 	async setSessionKeys() {
-		// console.log(this.destination.encryptionKeypair);
-		if (this.destination.encryptionKeypair) {
-			this.sessionKeys = this.cipherSuite.clientSessionKeys(this.encryptionKeypair, this.destination.encryptionKeypair);
-			if (this.sessionKeys) {
+		// console.log(this.destination.publicKey);
+		if (this.destination.publicKey) {
+			this.cipherSuite.clientSessionKeys(this, this.destination);
+			if (this.receiveKey) {
 				success(`Created Shared Keys`);
-				success(`receiveKey: ${toBase64(this.sessionKeys.receiveKey)}`);
-				success(`transmitKey: ${toBase64(this.sessionKeys.transmitKey)}`);
+				success(`receiveKey: ${toBase64(this.receiveKey)}`);
+				success(`transmitKey: ${toBase64(this.transmitKey)}`);
 			}
 		}
 	}
 	async setNewDestinationKeys() {
 		if (this.newKeypair) {
-			this.destination.encryptionKeypair = {
-				publicKey: this.newKeypair
-			};
+			assign(this.destination, this.newKeypair);
 			await this.setSessionKeys();
 		}
 	}

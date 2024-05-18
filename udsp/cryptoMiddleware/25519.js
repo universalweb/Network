@@ -9,21 +9,34 @@ const {
 	boxUnseal, boxSeal, randomConnectionId, hashMin: defaultHashMin, hash: defaultHash,
 	signVerifyDetached, signDetached, crypto_aead_xchacha20poly1305_ietf_KEYBYTES, randomBuffer, toBase64
 } = defaultCrypto;
+async function serverSessionKeysAttach(source, destination) {
+	return serverSessionKeys(source, destination);
+}
+async function clientSessionKeysAttach(source, destination) {
+	return clientSessionKeys(source, destination);
+}
 export const x25519_xchacha20 = {
 	name: 'x25519_xchacha20',
 	short: 'x25519',
 	alias: 'default',
 	id: 0,
 	nonceBox,
-	encryptKeypair,
+	async encryptKeypair(source) {
+		return encryptKeypair(source);
+	},
 	createSessionKey,
-	keypair,
+	async keypair(source) {
+		return keypair(source);
+	},
+	async ephemeralKeypair(destination) {
+		return keypair();
+	},
 	certificateEncryptionKeypair: keypair,
 	decrypt,
 	encrypt,
 	safeMath: RistrettoPoint,
-	clientSessionKeys,
-	serverSessionKeys,
+	clientSessionKeys: serverSessionKeysAttach,
+	serverSessionKeys: clientSessionKeysAttach,
 	preferred: true,
 	hash: blake3,
 };

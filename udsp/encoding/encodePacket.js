@@ -60,11 +60,12 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 	}
 	const headerEncoded = shortHeaderMode ? header : encode(header);
 	let packetEncoded;
-	if (message && source.sessionKeys && source.sessionKeys?.transmitKey) {
-		info(`Transmit Key ${toBase64(source.sessionKeys.transmitKey)}`);
+	const transmitKey = source?.transmitKey;
+	if (message && transmitKey) {
+		info(`Transmit Key ${toBase64(transmitKey)}`);
 		const messageEncoded = encode(message);
 		const ad = headerEncoded;
-		const encryptedMessage = cipherSuite.encrypt(messageEncoded, source.sessionKeys, ad);
+		const encryptedMessage = cipherSuite.encrypt(messageEncoded, transmitKey, ad);
 		if (!encryptedMessage) {
 			return console.trace('Encryption failed');
 		}

@@ -20,19 +20,11 @@ import {
 } from '../defaults.js';
 import { decode, encode } from '#utilities/serialize';
 import { getCipherSuite, getSignatureAlgorithm, getSignatureAlgorithmByCertificate } from '../cryptoMiddleware/index.js';
-import {
-	hash,
-	keypair,
-	signDetached,
-	signKeypair,
-	signVerifyDetached,
-	toBase64
-} from '#crypto';
-import { imported, logCert } from '#logs';
 import { read, readStructure, write } from '#file';
 import { UWCertificate } from './UWCertificate.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { keychainSave } from '#udsp/certificate/keychain';
+import { toBase64 } from '#crypto';
 const type = certificateTypes.get('profile');
 export function createUWProfileObject(config = {}, options = {}) {
 	const currentDate = new Date();

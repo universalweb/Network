@@ -12,6 +12,6 @@ export async function configCryptography() {
 	this.signatureAlgorithm = await certificate.getSignatureAlgorithm();
 	this.cipherSuite = await certificate.selectCipherSuite(cipherSuites);
 	console.log(this.cipherSuite);
-	this.encryptionKeypair = await this.cipherSuite.keypair(this.destination);
+	assign(this, await this.cipherSuite.keypair(this.destination));
 	await this.setSessionKeys();
 }

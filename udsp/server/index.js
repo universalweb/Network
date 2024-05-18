@@ -147,10 +147,10 @@ export class Server extends UDSP {
 	}
 	configCryptography() {
 		if (this.certificate) {
-			this.encryptionKeypair = this.certificate.get('encryptionKeypair');
+			const encryptionKeypair = this.certificate.get('encryptionKeypair');
+			this.publicKey = encryptionKeypair.publicKey;
+			this.privateKey = encryptionKeypair.privateKey;
 			this.version = this.certificate.get('version');
-			this.signatureAlgorithm = this.certificate.getSignatureAlgorithm();
-			console.log('signatureAlgorithm', this.signatureAlgorithm);
 		}
 	}
 	async send(packet, destination) {
@@ -238,6 +238,7 @@ export class Server extends UDSP {
 	ip = '::1';
 	connectionIdSize = defaultServerConnectionIdSize;
 	events = new Map();
+	encryption = {};
 	/*
 		* All created clients (clients) represent a client to server bi-directional connection until it is closed by either party.
 	*/

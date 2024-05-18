@@ -20,7 +20,10 @@ function workerReady(worker) {
 }
 function workerOnMessage(workers, worker, msg) {
 	const decodedMessage = decode(msg);
-	const [eventName, data] = decodedMessage;
+	const [
+		eventName,
+		data
+	] = decodedMessage;
 	console.log('Worker Message Received', eventName, data);
 	switch (eventName) {
 		case 'state': {

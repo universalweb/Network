@@ -18,19 +18,11 @@ import {
 } from '../defaults.js';
 import { decode, encode } from '#utilities/serialize';
 import { getCipherSuite, getSignatureAlgorithm } from '../cryptoMiddleware/index.js';
-import {
-	hash,
-	keypair,
-	signDetached,
-	signKeypair,
-	signVerifyDetached,
-	toBase64
-} from '#crypto';
-import { imported, logCert } from '#logs';
 import { read, readStructure, write } from '#file';
 import { UWCertificate } from './UWCertificate.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { keychainSave } from '#udsp/certificate/keychain';
+import { toBase64 } from '#crypto';
 import { uwProfile } from './profile.js';
 const type = certificateTypes.get('domain');
 export function createDomainCertificateObject(config = {}, options = {}) {

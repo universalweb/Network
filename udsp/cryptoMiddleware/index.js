@@ -11,12 +11,6 @@ import {
 } from '@universalweb/acid';
 import { currentCertificateVersion, currentVersion } from '../defaults.js';
 import { ed25519Algo, x25519_xchacha20 } from './25519.js';
-import { pallas, vesta } from '@noble/curves/pasta';
-import { pbkdf2, pbkdf2Async } from '@noble/hashes/pbkdf2';
-import { schnorr, secp256k1 } from '@noble/curves/secp256k1';
-import { scrypt, scryptAsync } from '@noble/hashes/scrypt';
-import { sha384, sha512, sha512_256 } from '@noble/hashes/sha512';
-import { blake3 } from '@noble/hashes/blake3';
 import { blake3Hash } from './blake3.js';
 import { x25519_kyber768_xchacha20 } from './kyber.js';
 import { xsalsa20Algo } from './xsalsa20.js';

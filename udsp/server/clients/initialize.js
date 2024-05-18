@@ -77,10 +77,7 @@ export async function initialize(config) {
 	client.id = serverClientId;
 	client.connectionIdString = serverConnectionIdString;
 	assign(client.destination, {
-		encryptionKeypair: {
-			publicKey
-		},
-		connectionIdKeypair: {
+		encryption: {
 			publicKey
 		},
 		ip,
