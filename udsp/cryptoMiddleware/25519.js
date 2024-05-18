@@ -35,8 +35,8 @@ export const x25519_xchacha20 = {
 	decrypt,
 	encrypt,
 	safeMath: RistrettoPoint,
-	clientSessionKeys: serverSessionKeysAttach,
-	serverSessionKeys: clientSessionKeysAttach,
+	clientSessionKeys: clientSessionKeysAttach,
+	serverSessionKeys: serverSessionKeysAttach,
 	preferred: true,
 	hash: blake3,
 };

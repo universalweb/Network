@@ -130,7 +130,6 @@ export async function decodePacket(config) {
 		return true;
 	}
 	const receiveKey = destination?.receiveKey;
-	// console.log(destination);
 	info(`Receive Key ${toBase64(receiveKey)}`);
 	if (messageEncoded && isBuffer(messageEncoded) && hasLength(messageEncoded)) {
 		console.log(packet, packetDecoded);

@@ -53,9 +53,8 @@ export async function onPacket(packet, connection) {
 		message
 	} = config.packetDecoded;
 	if (!hasValue(message)) {
-		return console.log('Error no message found in packet');
+		console.log('No message found in packet');
 	}
-	console.log(config);
 	if (isFalse(config.isShortHeaderMode)) {
 		await proccessProtocolPacketHeader(client, message, header);
 	}

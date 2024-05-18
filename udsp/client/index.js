@@ -187,8 +187,9 @@ export class Client extends UDSP {
 			cipherSuites
 		} = certificate.get();
 		const version = certificate.getProtocolVersion();
-		destination.publicKey = encryptionKeypair.publicKey;
-		destination.signatureKeypair = signatureKeypair.publicKey;
+		destination.publicKey = encryptionKeypair?.publicKey || encryptionKeypair;
+		// console.log(destination);
+		destination.signatureKeypair = signatureKeypair?.publicKey || signatureKeypair;
 		destination.protocolOptions = protocolOptions;
 	}
 	async proccessCertificateChunk(message) {
@@ -349,7 +350,7 @@ export class Client extends UDSP {
 		}
 		this.handshaked();
 	}
-	async setSessionKeys() {
+	async setSession() {
 		// console.log(this.destination.publicKey);
 		if (this.destination.publicKey) {
 			this.cipherSuite.clientSessionKeys(this, this.destination);

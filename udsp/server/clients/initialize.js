@@ -29,14 +29,14 @@ export async function initialize(config) {
 		packet,
 		server,
 		server: {
-			encryptionKeypair,
 			id: serverId,
 			realtime,
 			gracePeriod,
 			heartbeat,
 			cipherSuites: serverCipherSuites,
 			cipherSuite: serverCipherSuite,
-			encryptionKeypair: serverEncryptionKeypair,
+			publicKey: serverPublicKey,
+			privateKey: serverPrivateKey,
 			connectionIdSize,
 			certificate
 		},
@@ -70,23 +70,22 @@ export async function initialize(config) {
 	}
 	client.connectionIdSize = connectionIdSize;
 	// When changing to a new key you must first create new keys from scratch to replace these.
-	client.encryptionKeypair = serverEncryptionKeypair;
+	client.publicKey = serverPublicKey;
+	client.privateKey = serverPrivateKey;
 	const serverConnectionIdString = generateConnectionId(connectionIdSize, serverId);
 	const serverClientId = connectionIdToBuffer(serverConnectionIdString);
 	console.log(`Server Connection ID: ${serverClientId} SIZE: ${connectionIdSize} CLIENT: ${clientId.toString('hex')}`);
 	client.id = serverClientId;
 	client.connectionIdString = serverConnectionIdString;
 	assign(client.destination, {
-		encryption: {
-			publicKey
-		},
+		publicKey,
 		ip,
 		port,
 		id: clientId,
 		connectionIdSize: clientId.length,
 	});
 	client.calculatePacketOverhead();
-	await client.setSessionKeys();
+	await client.setSession();
 	if (!realtime && gracePeriod) {
 		client.gracePeriodTimeout = setTimeout(() => {
 			const lastActive = Date.now() - client.lastActive;
