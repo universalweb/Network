@@ -10,10 +10,10 @@ const {
 	signVerifyDetached, signDetached, crypto_aead_xchacha20poly1305_ietf_KEYBYTES, randomBuffer, toBase64
 } = defaultCrypto;
 async function serverSessionKeysAttach(source, destination) {
-	return serverSessionKeys(source, destination);
+	return serverSessionKeys(source, destination, source);
 }
 async function clientSessionKeysAttach(source, destination) {
-	return clientSessionKeys(source, destination);
+	return clientSessionKeys(source, destination, source);
 }
 export const x25519_xchacha20 = {
 	name: 'x25519_xchacha20',
@@ -27,6 +27,9 @@ export const x25519_xchacha20 = {
 	createSessionKey,
 	async keypair(source) {
 		return keypair(source);
+	},
+	async ephemeralServerKeypair(destination) {
+		return keypair();
 	},
 	async ephemeralKeypair(destination) {
 		return keypair();

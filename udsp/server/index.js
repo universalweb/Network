@@ -215,9 +215,6 @@ export class Server extends UDSP {
 		const existingClient = this.clients.get(idString);
 		if (existingClient) {
 			config.destination = existingClient;
-			if (existingClient.state === 1) {
-				await existingClient.attachNewClientKeys();
-			}
 			return existingClient;
 		}
 		return false;

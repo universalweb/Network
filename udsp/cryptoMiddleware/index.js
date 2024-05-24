@@ -1,13 +1,7 @@
 /* TODO: Add Mobile/Embedded Preferred option & algorithms. */
 import * as defaultCrypto from '#crypto';
 import {
-	assign,
-	compactMapArray,
-	eachArray,
-	hasValue,
-	isArray,
-	isNumber,
-	isUndefined
+	assign, clearBuffer, compactMapArray, eachArray, hasValue, isArray, isNumber, isUndefined
 } from '@universalweb/acid';
 import { currentCertificateVersion, currentVersion } from '../defaults.js';
 import { ed25519Algo, x25519_xchacha20 } from './25519.js';

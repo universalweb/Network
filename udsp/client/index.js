@@ -15,6 +15,7 @@ import {
 	hasValue,
 	intersection,
 	isArray,
+	isEmpty,
 	isString,
 	isTrue,
 	isUndefined,
@@ -253,16 +254,10 @@ export class Client extends UDSP {
 		this.discovered();
 	}
 	setPublicKeyHeader(header = []) {
-		const preparedPublicKey = this.preparedPublicKey;
-		console.log(this.publicKey);
-		if (this.preparedPublicKey) {
-			header.push(preparedPublicKey);
-			console.log('Setting Prepared Public Key in UDSP Header', toBase64(preparedPublicKey));
-		} else {
-			const publicKey = this.publicKey;
-			header.push(publicKey);
-			console.log('Setting Public Key in UDSP Header', toBase64(publicKey));
-		}
+		const preparedPublicKey = this.preparedPublicKey || this.publicKey;
+		console.log(preparedPublicKey);
+		header.push(preparedPublicKey);
+		console.log('Setting Public Key in UDSP Header', toBase64(preparedPublicKey));
 		return header;
 	}
 	setCryptographyHeaders(header = []) {
@@ -298,33 +293,38 @@ export class Client extends UDSP {
 		const header = [0];
 		this.setPublicKeyHeader(header);
 		this.setCryptographyHeaders(header);
-		const message = [];
-		await this.send(message, header);
+		await this.send(null, header);
+	}
+	async introHeader(header, rinfo) {
+		console.log('Client Intro Header', header);
+		if (!header || !isArray(header) || isEmpty(header.length)) {
+			this.close();
+			return;
+		}
+		const rpc = header[1];
+		const cryptographicData = header[2];
+		this.destination.publicKey = cryptographicData;
+		await this.setSession();
 	}
 	async intro(frame, header, rinfo) {
+		console.log('Got server Intro', frame);
 		if (!frame || !isArray(frame)) {
 			this.close(frame);
 			return;
 		}
-		if (this.newKeypair) {
-			return;
-		}
 		const { destination } = this;
-		console.log('Got server Intro', frame);
 		const [
 			streamid_undefined,
 			rpc,
 			serverConnectionId,
-			newKeypair,
 			serverRandomToken,
 			changeDestinationAddress
 		] = frame;
 		this.destination.id = serverConnectionId;
 		this.destination.connectionIdSize = serverConnectionId.length;
-		this.newKeypair = newKeypair;
-		await this.setNewDestinationKeys();
 		console.log('New Server Connection ID', toBase64(serverConnectionId));
 		if (changeDestinationAddress) {
+			console.log('Change Server Address', changeDestinationAddress);
 			if (changeDestinationAddress === true) {
 				this.destination.ip = rinfo.address;
 				this.destination.port = rinfo.port;
@@ -359,12 +359,6 @@ export class Client extends UDSP {
 				success(`receiveKey: ${toBase64(this.receiveKey)}`);
 				success(`transmitKey: ${toBase64(this.transmitKey)}`);
 			}
-		}
-	}
-	async setNewDestinationKeys() {
-		if (this.newKeypair) {
-			assign(this.destination, this.newKeypair);
-			await this.setSessionKeys();
 		}
 	}
 	async handshaked(message) {

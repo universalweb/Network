@@ -79,14 +79,14 @@ export class Client {
 		return triggerEvent(this.events, eventName, this, ...args);
 	}
 	onConnected = onConnected;
-	async generateSessionKeypair() {
-		const newKeypair = this.cipherSuite.ephemeralKeypair(this.destination);
-		this.newKeypair = newKeypair;
+	async generateSession() {
+		assign(this, await this.cipherSuite.ephemeralKeypair());
+		this.setSessionKeys();
 		info(`CLIENT EVENT -> reKey - ID:${this.connectionIdString}`);
 	}
-	async setSession() {
+	async setSessionKeys() {
 		console.log('Set session keys');
-		this.cipherSuite.serverSessionKeys(this, this.destination);
+		await this.cipherSuite.serverSessionKeys(this, this.destination);
 		success(`receiveKey: ${toBase64(this.receiveKey)}`);
 		success(`transmitKey: ${toBase64(this.transmitKey)}`);
 	}
@@ -128,28 +128,27 @@ export class Client {
 		await this.destroy(0);
 	}
 	// CLIENT HELLO
-	async intro(frame, header) {
+	async introHeader(frame, header) {
 		info(`Client Intro -> - ID:${this.connectionIdString}`, frame, header);
 		this.sendIntro(frame, header);
 	}
 	// SERVER HELLO
+	// Change this to be header with no message permit message to be empty
 	async sendIntro() {
-		if (!this.newKeypair) {
-			this.generateSessionKeypair();
-		}
-		const cryptographicData = this.newKeypair?.preparedPublicKey || this.newKeypair?.publicKey;
+		const cryptographicData = this?.preparedPublicKey || this?.publicKey;
 		const frame = [
 			false,
 			0,
 			this.id,
-			cryptographicData,
 			this.randomId
 		];
+		const headers = [0, cryptographicData];
+		// Change connection IP:Port to be the workers IP:Port
 		if (cluster.worker) {
 			frame.push(true);
 		}
 		this.updateState(1);
-		this.send(frame);
+		this.send(frame, headers);
 	}
 	// CLIENT DISCOVERY
 	async discovery(frame, header) {
@@ -158,9 +157,6 @@ export class Client {
 	}
 	// SERVER DISCOVERY
 	async sendDiscovery() {
-		if (!this.newKeypair) {
-			this.generateSessionKeypair();
-		}
 		const frame = [
 			false,
 			2,
@@ -172,13 +168,10 @@ export class Client {
 		await this.send(frame);
 	}
 	// PFS
-	async attachNewClientKeys() {
-		this.updateState(2);
-		assign(this, this.newKeypair);
-		await this.setSession();
-		this.newSessionKeysAssigned = true;
-	}
 	async reply(frame, header, rinfo) {
+		if (this.state === 1) {
+			this.updateState(2);
+		}
 		const processingFrame = await processFrame(frame, header, this, this.requestQueue);
 		if (processingFrame === false) {
 			const replyObject = new Reply(frame, header, this);

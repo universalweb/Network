@@ -203,8 +203,10 @@ export function clientSessionKeys(client, serverPublicKey, target) {
 		return target;
 	}
 	client.receiveKey = receiveKey;
-	client.transmitKey = transmitKey;
-	return client;
+	return {
+		receiveKey,
+		transmitKey
+	};
 }
 export function serverSessionKeys(server, client, target) {
 	const receiveKey = server?.receiveKey || createSessionKey();
@@ -215,9 +217,10 @@ export function serverSessionKeys(server, client, target) {
 		target.transmitKey = transmitKey;
 		return target;
 	}
-	server.receiveKey = receiveKey;
-	server.transmitKey = transmitKey;
-	return server;
+	return {
+		receiveKey,
+		transmitKey
+	};
 }
 export function signKeypair(config) {
 	const publicKey = config?.publicKey || bufferAlloc(crypto_sign_PUBLICKEYBYTES);

@@ -13,5 +13,5 @@ export async function configCryptography() {
 	this.cipherSuite = await certificate.selectCipherSuite(cipherSuites);
 	console.log(this.cipherSuite);
 	assign(this, await this.cipherSuite.ephemeralKeypair(this.destination));
-	await this.setSession();
+	// await this.setSession();
 }

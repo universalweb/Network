@@ -84,8 +84,6 @@ export async function initialize(config) {
 		id: clientId,
 		connectionIdSize: clientId.length,
 	});
-	client.calculatePacketOverhead();
-	await client.setSession();
 	if (!realtime && gracePeriod) {
 		client.gracePeriodTimeout = setTimeout(() => {
 			const lastActive = Date.now() - client.lastActive;
@@ -95,6 +93,8 @@ export async function initialize(config) {
 			}
 		}, gracePeriod);
 	}
+	client.calculatePacketOverhead();
+	await client.generateSession();
 	success(`client Created: ID:${serverConnectionIdString} - Client CID${client.clientIdString} => ${ip}:${port}`);
 	return client;
 }

@@ -29,28 +29,27 @@ export async function onPacket(packet, rinfo) {
 		console.log(config.packet);
 		return console.trace('Error failed to decode packet headers');
 	}
+	const { header, } = config.packetDecoded;
+	if (isFalse(config.isShortHeaderMode)) {
+		await proccessProtocolPacketHeader(this, header, rinfo);
+	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {
 		return console.trace('Error when decoding the packet but header was decoded');
 	}
 	const {
-		header,
 		message,
 		footer,
 	} = config.packetDecoded;
 	// console.log(config);
-	if (!hasValue(message)) {
-		return console.trace('Error no message found in packet');
+	if (message) {
+		await processFrame(message, header, this, this.requestQueue, rinfo);
+		this.fire(this.events, 'socket.onPacket', this, [
+			message,
+			header,
+			rinfo
+		]);
 	}
-	if (isFalse(config.isShortHeaderMode)) {
-		await proccessProtocolPacketHeader(this, message, header, rinfo);
-	}
-	await processFrame(message, header, this, this.requestQueue, rinfo);
-	this.fire(this.events, 'socket.onPacket', this, [
-		message,
-		header,
-		rinfo
-	]);
 	return;
 }
 

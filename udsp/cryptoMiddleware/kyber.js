@@ -11,8 +11,14 @@ const {
 	boxUnseal, boxSeal, randomConnectionId, hashMin: defaultHashMin, hash: defaultHash,
 	signVerifyDetached, signDetached, crypto_aead_xchacha20poly1305_ietf_KEYBYTES, randomBuffer, toBase64
 } = defaultCrypto;
+function get25519Key(source) {
+	return source.slice(0, 32);
+}
+function getKyberKey(source) {
+	return source.slice(32);
+}
 export function blake3CombineKeys(key1, key2) {
-	// console.log(key1, key2);
+	// console.log('Combine', key1, key2);
 	return blake3(Buffer.concat([key1, key2]));
 }
 export async function createKyberKeypair(seed) {
@@ -28,10 +34,14 @@ function clearSessionKeys(source) {
 	source.transmitKey = null;
 	source.receiveKey = null;
 }
-async function kyberDecapsulate(source, destinationKeypair, x25519SessionKeys) {
-	const cipherText = destinationKeypair.publicKey.slice(32);
-	console.log(cipherText, source.kyberKeypair.privateKey);
-	const kyberSharedSecret = ml_kem768.decapsulate(cipherText, source.kyberKeypair.privateKey);
+async function kyberDecapsulate(source, destination, x25519SessionKeys) {
+	const sourceKeypairKyber = {
+		privateKey: getKyberKey(source.privateKey),
+		publicKey: getKyberKey(source.publicKey)
+	};
+	const cipherText = destination.preparedPublicKey.slice(32);
+	console.log(cipherText, sourceKeypairKyber.privateKey);
+	const kyberSharedSecret = ml_kem768.decapsulate(cipherText, sourceKeypairKyber.privateKey);
 	console.log('server cipherText', cipherText, cipherText.length);
 	source.transmitKey = blake3CombineKeys(x25519SessionKeys.transmitKey, kyberSharedSecret);
 	source.receiveKey = blake3CombineKeys(x25519SessionKeys.receiveKey, kyberSharedSecret);
@@ -49,61 +59,63 @@ export const x25519_kyber768_xchacha20 = {
 	x25519ServerSessionKeys: serverSessionKeys,
 	x25519ClientSessionKeys: clientSessionKeys,
 	kyberDecapsulate,
+	async clientSessionKeys(source, destination) {
+		const destinationPublicKey = destination.preparedPublicKey;
+		const sourceKeypair25519 = {
+			privateKey: get25519Key(source.privateKey),
+			publicKey: get25519Key(source.publicKey)
+		};
+		const x25519SessionKeys = clientSessionKeys(sourceKeypair25519, get25519Key(destinationPublicKey));
+		console.log('PublicKey from Server', destinationPublicKey);
+		await kyberDecapsulate(source, destination, x25519SessionKeys);
+		console.log('Decapsulate kyberSharedSecret', source);
+	},
 	async serverSessionKeys(source, destination) {
 		const destinationPublicKey = destination.publicKey;
-		const x25519SessionKeys = serverSessionKeys(source.x25519Keypair, destinationPublicKey.slice(0, 32));
-		// console.log(x25519SessionKeys);
-		const kyberRelated = destination.publicKey.slice(32);
-		await kyberDecapsulate(source, destination, x25519SessionKeys);
-		console.log('Decapsulate kyberSharedSecret', source.transmitKey);
-	},
-	async clientIntro(source, destination) {
-		const destinationPublicKey = destination.publicKey;
-		const x25519SessionKeys = serverSessionKeys(source.x25519Keypair, destinationPublicKey.slice(0, 32));
-		await kyberDecapsulate(source, destination);
-	},
-	async clientSessionKeys(source, destination) {
-		const destinationPublicKey = destination.publicKey;
-		const x25519SessionKeys = clientSessionKeys(source.x25519Keypair, destinationPublicKey.slice(0, 32));
+		const sourceKeypair25519 = {
+			privateKey: get25519Key(source.privateKey),
+			publicKey: get25519Key(source.publicKey)
+		};
+		const x25519SessionKeys = serverSessionKeys(sourceKeypair25519, get25519Key(destinationPublicKey));
+		const kyberPublicKeypair = getKyberKey(destinationPublicKey);
 		const {
-			cipherText: cipherTextUnit8,
+			cipherText,
 			sharedSecret: kyberSharedSecretUnit8
-		} = await ml_kem768.encapsulate(destinationPublicKey.slice(32));
-		const cipherText = cipherTextUnit8;
+		} = await ml_kem768.encapsulate(kyberPublicKeypair);
 		const kyberSharedSecret = kyberSharedSecretUnit8;
 		console.log('client kyberSharedSecret', kyberSharedSecret);
 		console.log('client cipherText', cipherText, cipherText.length);
+		source.preparedPublicKey = Buffer.concat([sourceKeypair25519.publicKey, cipherText]);
 		source.transmitKey = blake3CombineKeys(x25519SessionKeys.transmitKey, kyberSharedSecret);
 		source.receiveKey = blake3CombineKeys(x25519SessionKeys.receiveKey, kyberSharedSecret);
 	},
 	async loadKeypair(source) {
-		const { privateKey } = source;
-		const seed = privateKey.slice(32);
-		const kyberKeypair = createKyberKeypair(seed);
 		const {
-			publicKey: kyberPublicKey,
-			privateKey: kyberPrivateKey
-		} = kyberKeypair;
+			privateKey,
+			publicKey
+		} = source;
+		const kyberPublicKey = getKyberKey(publicKey);
+		const kyberPrivateKey = getKyberKey(privateKey);
 		source.kyberKeypair = {
 			privateKey: kyberPrivateKey,
 			publicKey: kyberPublicKey
 		};
 		source.x25519Keypair = {
-			privateKey: privateKey.slice(0, 32),
-			publicKey: source.publicKey.slice(0, 32)
+			privateKey: get25519Key(privateKey),
+			publicKey: get25519Key(publicKey)
 		};
 	},
 	generateKeySeed() {
 		return randomBuffer(64);
 	},
 	createKyberKeypair,
-	async ephemeralKeypair(destination) {
-		const target = keypair();
-		await x25519_kyber768_xchacha20.clientSessionKeys(target, destination);
-		return target;
+	async ephemeralServerKeypair(destination) {
+		const source = await keypair();
+		await x25519_kyber768_xchacha20.serverSessionKeys(source, destination);
+		return source;
 	},
 	async keypair(seedArg) {
-		const x25519Keypair = x25519_xchacha20.keypair();
+		const x25519Keypair = await x25519_xchacha20.keypair();
 		const seed = seedArg || x25519_kyber768_xchacha20.generateKeySeed();
 		const kyberKeypair = await createKyberKeypair(seed);
 		const target = {
@@ -127,9 +139,9 @@ export const x25519_kyber768_xchacha20 = {
 	combineKeys: blake3CombineKeys
 };
 // const client = await x25519_kyber768_xchacha20.keypair();
-// const server = await x25519_kyber768_xchacha20.keypair();
+// const server = await x25519_kyber768_xchacha20.ephemeralServerKeypair(client);
 // await x25519_kyber768_xchacha20.clientSessionKeys(client, server);
-// await x25519_kyber768_xchacha20.serverSessionKeys(server, client);
+// console.log(client, server);
 // console.log(client.publicKey.length);
 // console.log(server.transmitKey);
 // console.log(encrypt(boxSeal(randomBuffer(1120), keypair()), server.transmitKey).length);

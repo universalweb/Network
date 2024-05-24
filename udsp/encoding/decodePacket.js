@@ -130,27 +130,29 @@ export async function decodePacket(config) {
 		return true;
 	}
 	const receiveKey = destination?.receiveKey;
-	info(`Receive Key ${toBase64(receiveKey)}`);
-	if (messageEncoded && isBuffer(messageEncoded) && hasLength(messageEncoded)) {
-		console.log(packet, packetDecoded);
-		if (receiveKey) {
-			info(`encrypted Message size ${messageEncoded.length}bytes`);
-			const ad = isShortHeaderMode ? headerEncoded : encode(headerEncoded);
-			console.log('cipherSuite', cipherSuite);
-			const decryptedMessage = cipherSuite.decrypt(messageEncoded, receiveKey, ad);
-			if (isUndefined(decryptedMessage)) {
-				console.trace('Decryption failed');
-				return;
+	if (receiveKey) {
+		info(`Receive Key ${toBase64(receiveKey)}`);
+		if (messageEncoded && isBuffer(messageEncoded) && hasLength(messageEncoded)) {
+			console.log(packet, packetDecoded);
+			if (receiveKey) {
+				info(`encrypted Message size ${messageEncoded.length}bytes`);
+				const ad = isShortHeaderMode ? headerEncoded : encode(headerEncoded);
+				console.log('cipherSuite', cipherSuite);
+				const decryptedMessage = cipherSuite.decrypt(messageEncoded, receiveKey, ad);
+				if (isUndefined(decryptedMessage)) {
+					console.trace('Decryption failed');
+					return;
+				}
+				info(`decrypted Message size ${decryptedMessage.length} BYTES`);
+				const message = decode(decryptedMessage);
+				if (isUndefined(message)) {
+					console.trace('Message Decrypt failed');
+				}
+				packetDecoded.message = message;
 			}
-			info(`decrypted Message size ${decryptedMessage.length} BYTES`);
-			const message = decode(decryptedMessage);
-			if (isUndefined(message)) {
-				console.trace('No Message in Packet');
-			}
-			packetDecoded.message = message;
 		}
 	} else {
-		console.trace(`No Message in Packet`);
+		console.log(`No Message in Packet`);
 	}
 	return true;
 }

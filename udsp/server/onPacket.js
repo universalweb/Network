@@ -19,7 +19,6 @@ import {
 } from '#logs';
 import { createClient } from './clients/index.js';
 import { proccessProtocolPacketHeader } from '#udsp/proccessProtocolPacket';
-import { processFrame } from '../processFrame.js';
 import { reply } from '#udsp/request/reply';
 import { toBase64 } from '#crypto';
 export async function onPacket(packet, connection) {
@@ -44,19 +43,18 @@ export async function onPacket(packet, connection) {
 		// Send error message back to origin or not
 		return console.log('No matching Client id given', idString);
 	}
+	const { header, } = config.packetDecoded;
+	if (isFalse(config.isShortHeaderMode)) {
+		await proccessProtocolPacketHeader(client, header);
+	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {
-		return console.log('When decoding the packet but header passed');
+		return console.log('Header failed to decode');
 	}
-	const {
-		header,
-		message
-	} = config.packetDecoded;
+	const { message } = config.packetDecoded;
 	if (!hasValue(message)) {
 		console.log('No message found in packet');
-	}
-	if (isFalse(config.isShortHeaderMode)) {
-		await proccessProtocolPacketHeader(client, message, header);
+		return;
 	}
 	return client.reply(message, header);
 }
