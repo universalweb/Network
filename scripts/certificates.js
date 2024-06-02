@@ -7,6 +7,7 @@ await profile.save('profile', `${dirname}/../profiles/default`);
 const UWCertificate = await domainCertificate({
 	entity: 'universalweb.io',
 	backupHash: profile.getSignature(),
+	signatureAlgorithm: 0,
 	records: [
 		[
 			'aaaa',

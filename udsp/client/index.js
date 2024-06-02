@@ -22,7 +22,6 @@ import {
 	omit,
 	promise
 } from '@universalweb/acid';
-import { configure, info, success } from '#logs';
 import { connectionIdToBuffer, generateConnectionId } from '#udsp/connectionId';
 import { createEvent, removeEvent, triggerEvent } from '#udsp/events';
 import {
@@ -95,7 +94,6 @@ export class Client extends UDSP {
 		await this.setProfile();
 		console.log('ipVersion', this.ipVersion);
 		console.log('destination', this.destination);
-		await this.configCryptography();
 		this.assignId();
 		await this.calculatePacketOverhead();
 		await this.setupSocket();
@@ -138,7 +136,7 @@ export class Client extends UDSP {
 	assignId() {
 		const connectionIdString = generateConnectionId(this.connectionIdSize);
 		this.id = connectionIdToBuffer(connectionIdString);
-		success(`Assigned ClientId ${connectionIdString}`);
+		console.log(`Assigned ClientId ${connectionIdString}`);
 		Client.connections.set(connectionIdString, this);
 	}
 	async calculatePacketOverhead() {
@@ -146,7 +144,7 @@ export class Client extends UDSP {
 	}
 	reKey() {
 		const thisClient = this;
-		success(`client reKeyed -> ID: ${thisClient.connectionIdString}`);
+		console.log(`client reKeyed -> ID: ${thisClient.connectionIdString}`);
 	}
 	async send(message, headers, footer, repeat) {
 		console.log(`client.send to Server`, this.destination.ip, this.destination.port);
@@ -355,9 +353,9 @@ export class Client extends UDSP {
 		if (this.destination.publicKey) {
 			this.cipherSuite.clientSessionKeys(this, this.destination);
 			if (this.receiveKey) {
-				success(`Created Shared Keys`);
-				success(`receiveKey: ${toBase64(this.receiveKey)}`);
-				success(`transmitKey: ${toBase64(this.transmitKey)}`);
+				console.log(`Created Shared Keys`);
+				console.log(`receiveKey: ${toBase64(this.receiveKey)}`);
+				console.log(`transmitKey: ${toBase64(this.transmitKey)}`);
 			}
 		}
 	}

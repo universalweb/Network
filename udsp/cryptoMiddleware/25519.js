@@ -1,6 +1,7 @@
 import * as defaultCrypto from '#crypto';
 import { RistrettoPoint } from '@noble/curves/ed25519';
 import { blake3 } from '@noble/hashes/blake3';
+import { cli } from 'textlint';
 const {
 	encrypt, decrypt, nonceBox, sign, signVerify, createSecretKey,
 	signKeypair, encryptKeypair, createSessionKey, clientSessionKeys,
@@ -39,6 +40,9 @@ export const x25519_xchacha20 = {
 	encrypt,
 	safeMath: RistrettoPoint,
 	clientSessionKeys: clientSessionKeysAttach,
+	async clientInitialSession(...args) {
+		return clientSessionKeysAttach(...args);
+	},
 	serverSessionKeys: serverSessionKeysAttach,
 	preferred: true,
 	hash: blake3,

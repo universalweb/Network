@@ -1,11 +1,3 @@
-import {
-	failed,
-	imported,
-	info,
-	msgReceived,
-	msgSent,
-	success
-} from '#logs';
 export async function destroy(client, reason) {
 	if (client.destroyed) {
 		return;
@@ -16,7 +8,7 @@ export async function destroy(client, reason) {
 	console.log(`client destroyed: ${client.connectionIdString}`);
 	switch (reason) {
 		case 0: {
-			info(`client ended due to natural causes.
+			console.log(`client ended due to natural causes.
 			ID: ${client.connectionIdString}
 			Address: ${client.destination.ip}
 			Port: ${client.destination.port}
@@ -24,14 +16,14 @@ export async function destroy(client, reason) {
 			break;
 		}
 		case 1: {
-			info(`client ended from inactivity. Grace period ended.
+			console.log(`client ended from inactivity. Grace period ended.
 			ID: ${client.connectionIdString}
 			Address: ${client.destination.ip}
 			Port: ${client.destination.port}`);
 			break;
 		}
 		case 2: {
-			info(`client ended from invalid RPC given.
+			console.log(`client ended from invalid RPC given.
 			ID: ${client.connectionIdString}
 			Address: ${client.destination.ip}
 			Port: ${client.destination.port}`);

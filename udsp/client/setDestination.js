@@ -41,17 +41,19 @@ export async function setDestination() {
 			this.destination.port = urlObject.port;
 		}
 	}
-	if (ipVersion === 'udp6') {
-		const record = await destination.certificate.findRecord('aaaa', 'universalweb.io');
-		if (record) {
-			setRecordInfo(destination, record);
+	if (destination.certificate) {
+		if (ipVersion === 'udp6') {
+			const record = await destination.certificate.findRecord('aaaa', 'universalweb.io');
+			if (record) {
+				setRecordInfo(destination, record);
+			}
 		}
-	}
-	if (!destination.ip) {
-		const record = await destination.certificate.findRecord('a', 'universalweb.io');
-		if (record) {
-			setRecordInfo(destination, record);
-			this.ipVersion = 'udp4';
+		if (!destination.ip) {
+			const record = await destination.certificate.findRecord('a', 'universalweb.io');
+			if (record) {
+				setRecordInfo(destination, record);
+				this.ipVersion = 'udp4';
+			}
 		}
 	}
 	if (!destination.ip) {

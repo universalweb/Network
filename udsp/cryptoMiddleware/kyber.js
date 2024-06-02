@@ -59,7 +59,7 @@ export const x25519_kyber768_xchacha20 = {
 	x25519ServerSessionKeys: serverSessionKeys,
 	x25519ClientSessionKeys: clientSessionKeys,
 	kyberDecapsulate,
-	async clientSessionKeys(source, destination) {
+	async serverInitialSession(source, destination) {
 		const destinationPublicKey = destination.preparedPublicKey;
 		const sourceKeypair25519 = {
 			privateKey: get25519Key(source.privateKey),
@@ -67,16 +67,16 @@ export const x25519_kyber768_xchacha20 = {
 		};
 		const x25519SessionKeys = clientSessionKeys(sourceKeypair25519, get25519Key(destinationPublicKey));
 		console.log('PublicKey from Server', destinationPublicKey);
-		await kyberDecapsulate(source, destination, x25519SessionKeys);
-		console.log('Decapsulate kyberSharedSecret', source);
+		// await kyberDecapsulate(source, destination, x25519SessionKeys);
+		// console.log('Decapsulate kyberSharedSecret', source);
 	},
-	async serverSessionKeys(source, destination) {
+	async clientInitialSession(source, destination) {
 		const destinationPublicKey = destination.publicKey;
 		const sourceKeypair25519 = {
 			privateKey: get25519Key(source.privateKey),
 			publicKey: get25519Key(source.publicKey)
 		};
-		const x25519SessionKeys = serverSessionKeys(sourceKeypair25519, get25519Key(destinationPublicKey));
+		const x25519SessionKeys = clientSessionKeys(sourceKeypair25519, get25519Key(destinationPublicKey));
 		const kyberPublicKeypair = getKyberKey(destinationPublicKey);
 		const {
 			cipherText,
@@ -109,9 +109,8 @@ export const x25519_kyber768_xchacha20 = {
 		return randomBuffer(64);
 	},
 	createKyberKeypair,
-	async ephemeralServerKeypair(destination) {
+	async clientEphemeralKeypair() {
 		const source = await keypair();
-		await x25519_kyber768_xchacha20.serverSessionKeys(source, destination);
 		return source;
 	},
 	async keypair(seedArg) {
@@ -138,12 +137,12 @@ export const x25519_kyber768_xchacha20 = {
 	},
 	combineKeys: blake3CombineKeys
 };
-// const client = await x25519_kyber768_xchacha20.keypair();
-// const server = await x25519_kyber768_xchacha20.ephemeralServerKeypair(client);
-// await x25519_kyber768_xchacha20.clientSessionKeys(client, server);
-// console.log(client, server);
-// console.log(client.publicKey.length);
-// console.log(server.transmitKey);
+const client = await x25519_kyber768_xchacha20.keypair();
+const server = await x25519_kyber768_xchacha20.ephemeralKeypair();
+await x25519_kyber768_xchacha20.clientSessionKeys(client, server);
+console.log(client, server);
+console.log(client.publicKey.length);
+console.log(server.transmitKey);
 // console.log(encrypt(boxSeal(randomBuffer(1120), keypair()), server.transmitKey).length);
 // console.log('Client', clientSession.transmitKey);
 // console.log('Server', serverSession.receiveKey);
