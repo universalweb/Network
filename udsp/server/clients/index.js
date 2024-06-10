@@ -8,11 +8,12 @@ import {
 	isFalse,
 	isFalsy,
 	isPromise,
+	isTrue,
 	isUndefined,
 	promise
 } from '@universalweb/acid';
 import { createEvent, removeEvent, triggerEvent } from '../../events.js';
-import { defaultClientConnectionIdSize, defaultServerConnectionIdSize } from '../../defaults.js';
+import { defaultClientConnectionIdSize, defaultServerConnectionIdSize } from '../../../defaults.js';
 import {
 	failed,
 	imported,
@@ -23,7 +24,7 @@ import {
 } from '#logs';
 import {
 	randomBuffer,
-	toBase64
+	toHex,
 } from '#crypto';
 import { Reply } from '#udsp/request/reply';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
@@ -81,14 +82,14 @@ export class Client {
 	onConnected = onConnected;
 	async generateSession() {
 		assign(this, await this.cipherSuite.ephemeralKeypair());
-		this.setSessionKeys();
+		await this.setSessionKeys();
 		info(`CLIENT EVENT -> reKey - ID:${this.connectionIdString}`);
 	}
 	async setSessionKeys() {
 		console.log('Set session keys');
 		await this.cipherSuite.serverSessionKeys(this, this.destination);
-		success(`receiveKey: ${toBase64(this.receiveKey)}`);
-		success(`transmitKey: ${toBase64(this.transmitKey)}`);
+		success(`receiveKey: ${toHex(this.receiveKey)}`);
+		success(`transmitKey: ${toHex(this.transmitKey)}`);
 	}
 	updateState(state) {
 		if (this.destroyed) {
@@ -128,32 +129,86 @@ export class Client {
 		await this.destroy(0);
 	}
 	// CLIENT HELLO
-	async introHeader(frame, header) {
+	// Change from initialization to this for session stuff keep separate
+	async introHeader(header) {
+		info(`Client Intro -> - ID:${this.connectionIdString}`, header);
+		const [
+			connectionId,
+			rpc,
+			publicKey,
+			clientId,
+			cipherSuiteId,
+			version,
+			cipherSuites
+		] = header;
+		console.log('Client initialize Packet Header', header);
+		if (publicKey) {
+			success(`key: ${toHex(publicKey)}`);
+			this.destination.publicKey = publicKey;
+		} else {
+			console.trace('Client Public Key is missing');
+		}
+		const { certificate } = this.server();
+		if (hasValue(cipherSuiteId)) {
+			this.cipherSuite = certificate.getCipherSuite(cipherSuiteId);
+		}
+		if (!this.cipherSuite) {
+			this.close();
+			return false;
+		}
+		assign(this.destination, {
+			id: clientId,
+			connectionIdSize: clientId.length,
+		});
+		await this.setSessionKeys();
+		console.log(`CLIENT: ${toHex(clientId)}`);
+		await this.calculatePacketOverhead();
+		this.newKeypair = await this.cipherSuite.ephemeralServerKeypair();
+		return this.sendIntro();
+	}
+	async intro(frame, header) {
 		info(`Client Intro -> - ID:${this.connectionIdString}`, frame, header);
-		this.sendIntro(frame, header);
+		return this.sendIntro();
 	}
 	// SERVER HELLO
 	// Change this to be header with no message permit message to be empty
 	async sendIntro() {
-		const cryptographicData = this?.preparedPublicKey || this?.publicKey;
+		const header = [];
+		const framePublicKey = this?.newKeypair.framePublicKey;
+		const headerPublicKey = this?.newKeypair.headerPublicKey;
 		const frame = [
 			false,
 			0,
 			this.id,
-			this.randomId
 		];
-		const headers = [0, cryptographicData];
-		// Change connection IP:Port to be the workers IP:Port
-		if (cluster.worker) {
-			frame.push(true);
+		if (framePublicKey) {
+			frame[3] = framePublicKey;
+		} else if (headerPublicKey) {
+			header[0] = 0;
+			header[1] = headerPublicKey;
+		} else {
+			frame[3] = this.publicKey;
 		}
+		// Change connection IP:Port to be the workers IP:Port
+		const scale = this.scale;
+		if (scale) {
+			const changeAddress = scale.changeAddress;
+			if (isTrue(changeAddress)) {
+				frame[4] = true;
+			}
+		}
+		// this.randomId
 		this.updateState(1);
-		this.send(frame, headers);
+		if (header.length === 0) {
+			return this.send(frame);
+		} else {
+			return this.send(frame, header);
+		}
 	}
 	// CLIENT DISCOVERY
 	async discovery(frame, header) {
 		info(`Client Discovery -> - ID:${this.connectionIdString}`, frame, header);
-		this.sendDiscovery(frame, header);
+		return this.sendDiscovery(frame, header);
 	}
 	// SERVER DISCOVERY
 	async sendDiscovery() {
@@ -197,6 +252,6 @@ export class Client {
 export async function createClient(config) {
 	info('Creating Client');
 	const client = await construct(Client, [config]);
-	success(`Client has been created with sever connection id ${toBase64(client.id)}`);
+	success(`Client has been created with sever connection id ${toHex(client.id)}`);
 	return client;
 }

@@ -71,7 +71,8 @@ export const x25519_kyber768_xchacha20 = {
 		// console.log('Decapsulate kyberSharedSecret', source);
 	},
 	async clientInitialSession(source, destination) {
-		const destinationPublicKey = destination.publicKey;
+		const destinationPublicKey = source.publicKey;
+		const sourcePublicKey = source.publicKey;
 		const sourceKeypair25519 = {
 			privateKey: get25519Key(source.privateKey),
 			publicKey: get25519Key(source.publicKey)
@@ -137,12 +138,12 @@ export const x25519_kyber768_xchacha20 = {
 	},
 	combineKeys: blake3CombineKeys
 };
-const client = await x25519_kyber768_xchacha20.keypair();
-const server = await x25519_kyber768_xchacha20.ephemeralKeypair();
-await x25519_kyber768_xchacha20.clientSessionKeys(client, server);
-console.log(client, server);
-console.log(client.publicKey.length);
-console.log(server.transmitKey);
+// const client = await x25519_kyber768_xchacha20.keypair();
+// const server = await x25519_kyber768_xchacha20.ephemeralKeypair();
+// await x25519_kyber768_xchacha20.clientSessionKeys(client, server);
+// console.log(client, server);
+// console.log(client.publicKey.length);
+// console.log(server.transmitKey);
 // console.log(encrypt(boxSeal(randomBuffer(1120), keypair()), server.transmitKey).length);
 // console.log('Client', clientSession.transmitKey);
 // console.log('Server', serverSession.receiveKey);

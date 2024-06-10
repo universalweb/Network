@@ -23,7 +23,6 @@ import {
 	msgSent,
 	success
 } from '#logs';
-import { getCipherSuite } from '../../cryptoMiddleware/index.js';
 export async function initialize(config) {
 	const {
 		packet,
@@ -38,51 +37,28 @@ export async function initialize(config) {
 			publicKey: serverPublicKey,
 			privateKey: serverPrivateKey,
 			connectionIdSize,
-			certificate
+			certificate,
+			scale
 		},
 		connection: {
 			address: ip,
 			port
 		},
 	} = config;
-	const header = packet.header;
-	const publicKey = header[2];
-	console.log('Client initialize Packet Header', packet.header);
-	if (!publicKey) {
-		console.trace('Client Public Key is missing');
-		return;
-	}
-	success(`key: ${toBase64(publicKey)}`);
+	this.scale = server?.scale;
 	const client = this;
-	const clientId = header[3];
-	success(`Client Connection ID: ${clientId.toString('hex')}`);
-	const cipherSuiteId = header[4];
-	const version = header[5];
-	const cipherSuites = header[6];
-	if (hasValue(cipherSuiteId)) {
-		client.cipherSuite = certificate.getCipherSuite(cipherSuiteId);
-	} else if (cipherSuites) {
-		// Add support for multiple cipher suites array permit server to prioritize cipher suites.
-		client.cipherSuite = certificate.selectCipherSuite(cipherSuites[0]);
-	}
-	if (!client.cipherSuite) {
-		this.close();
-	}
 	client.connectionIdSize = connectionIdSize;
 	// When changing to a new key you must first create new keys from scratch to replace these.
 	client.publicKey = serverPublicKey;
 	client.privateKey = serverPrivateKey;
 	const serverConnectionIdString = generateConnectionId(connectionIdSize, serverId);
 	const serverClientId = connectionIdToBuffer(serverConnectionIdString);
-	console.log(`Server Connection ID: ${serverClientId} SIZE: ${connectionIdSize} CLIENT: ${clientId.toString('hex')}`);
+	console.log(`Server Connection ID: ${serverClientId} SIZE: ${connectionIdSize}`);
 	client.id = serverClientId;
 	client.connectionIdString = serverConnectionIdString;
 	assign(client.destination, {
-		publicKey,
 		ip,
-		port,
-		id: clientId,
-		connectionIdSize: clientId.length,
+		port
 	});
 	if (!realtime && gracePeriod) {
 		client.gracePeriodTimeout = setTimeout(() => {
@@ -93,8 +69,6 @@ export async function initialize(config) {
 			}
 		}, gracePeriod);
 	}
-	client.calculatePacketOverhead();
-	await client.generateSession();
 	success(`client Created: ID:${serverConnectionIdString} - Client CID${client.clientIdString} => ${ip}:${port}`);
 	return client;
 }

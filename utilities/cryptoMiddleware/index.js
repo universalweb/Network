@@ -3,7 +3,7 @@ import * as defaultCrypto from '#crypto';
 import {
 	assign, clearBuffer, compactMapArray, eachArray, hasValue, isArray, isNumber, isUndefined
 } from '@universalweb/acid';
-import { currentCertificateVersion, currentVersion } from '../defaults.js';
+import { currentCertificateVersion, currentVersion } from '../../defaults.js';
 import { ed25519Algo, x25519_xchacha20 } from './25519.js';
 import { blake3Hash } from './blake3.js';
 import { x25519_kyber768_xchacha20 } from './kyber.js';

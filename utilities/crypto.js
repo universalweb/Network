@@ -56,17 +56,17 @@ const {
 	crypto_box_MACBYTES
 } = sodiumLib;
 import { assign, isBuffer } from '@universalweb/acid';
-export function toBuffer(value) {
-	return Buffer.from(value);
+export function toBuffer(source) {
+	return Buffer.from(source);
 }
-export function toBase64(value) {
-	return value.toString('base64');
+export function toBase64(source) {
+	return source.toString('base64');
 }
-export function toHex(value) {
-	return value.toString('hex');
+export function toHex(source) {
+	return source.toString('hex');
 }
-export function buff(value) {
-	return Buffer.from(value);
+export function buff(source) {
+	return Buffer.from(source);
 }
 export function bufferAlloc(size) {
 	return Buffer.alloc(size);

@@ -1,4 +1,4 @@
-import { domainCertificate, uwProfile } from '#udsp/certificate/index';
+import { domainCertificate, uwProfile } from '#utilities/certificate/index';
 import { currentPath } from '@universalweb/acid';
 import { decode } from '#utilities/serialize';
 const dirname = currentPath(import.meta);

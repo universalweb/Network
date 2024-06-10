@@ -26,6 +26,7 @@ const uwApp = await app({
 		// exclusive roundrobin loadbalancer
 		// ipc or proxy
 		// mode: 'proxy',
+		changeAddress: true,
 	},
 	// will listen on ipv4 and ipv6 default is '::1'
 	ip: '::',

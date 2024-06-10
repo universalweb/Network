@@ -1,7 +1,6 @@
 import * as defaultCrypto from '#crypto';
 import { RistrettoPoint } from '@noble/curves/ed25519';
 import { blake3 } from '@noble/hashes/blake3';
-import { cli } from 'textlint';
 const {
 	encrypt, decrypt, nonceBox, sign, signVerify, createSecretKey,
 	signKeypair, encryptKeypair, createSessionKey, clientSessionKeys,
@@ -30,10 +29,14 @@ export const x25519_xchacha20 = {
 		return keypair(source);
 	},
 	async ephemeralServerKeypair(destination) {
-		return keypair();
+		const source = keypair();
+		source.framePublicKey = source.publicKey;
+		return source;
 	},
 	async ephemeralKeypair(destination) {
-		return keypair();
+		const generatedKeypair = keypair();
+		generatedKeypair.headerPublicKey = generatedKeypair.publicKey;
+		return generatedKeypair;
 	},
 	certificateEncryptionKeypair: keypair,
 	decrypt,

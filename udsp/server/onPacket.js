@@ -1,5 +1,5 @@
-import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import {
+	assign,
 	eachArray,
 	eachAsyncArray,
 	hasValue,
@@ -9,6 +9,7 @@ import {
 	isNumber,
 	isUndefined
 } from '@universalweb/acid';
+import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import {
 	failed,
 	imported,
@@ -46,6 +47,12 @@ export async function onPacket(packet, connection) {
 	const { header, } = config.packetDecoded;
 	if (isFalse(config.isShortHeaderMode)) {
 		await proccessProtocolPacketHeader(client, header);
+	}
+	if (client.newKeypair) {
+		console.log('Client has New Keypair assigned');
+		assign(client, client.newKeypair);
+		client.newKeypair = null;
+		await client.setSessionKeys();
 	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {

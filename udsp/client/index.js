@@ -28,11 +28,12 @@ import {
 	decode,
 	encode
 } from '#utilities/serialize';
-import { defaultClientConnectionIdSize, defaultServerConnectionIdSize } from '../defaults.js';
+import { defaultClientConnectionIdSize, defaultServerConnectionIdSize } from '../../defaults.js';
 import {
 	emptyNonce,
 	randomConnectionId,
 	toBase64,
+	toHex,
 } from '#crypto';
 import { Ask } from '../request/ask.js';
 import { UDSP } from '#udsp/base';
@@ -47,15 +48,15 @@ import { get } from '../requestMethods/get.js';
 import { getIPDetails } from './getIPDetails.js';
 import { getLocalIpVersion } from '../../utilities/network/getLocalIP.js';
 import { getWANIPAddress } from '../../utilities/network/getWANIPAddress.js';
-import { keychainGet } from '#udsp/certificate/keychain';
+import { keychainGet } from '../../utilities/certificate/keychain.js';
 import { onListening } from './listening.js';
 import { onPacket } from './onPacket.js';
 import { post } from '../requestMethods/post.js';
-import { publicDomainCertificate } from '../certificate/domain.js';
+import { publicDomainCertificate } from '../../utilities/certificate/domain.js';
 import { sendPacket } from '../sendPacket.js';
 import { setDestination } from './setDestination.js';
 import { socketOnError } from './socketOnError.js';
-import { uwProfile } from '../certificate/profile.js';
+import { uwProfile } from '../../utilities/certificate/profile.js';
 import { uwRequest } from '#udsp/requestMethods/request';
 import { watch } from '#watch';
 const {
@@ -251,18 +252,38 @@ export class Client extends UDSP {
 	discovery(frame, header) {
 		this.discovered();
 	}
+	changeAddress(changeDestinationAddress, rinfo) {
+		console.log('Change Server Address', changeDestinationAddress);
+		if (changeDestinationAddress === true) {
+			this.destination.ip = rinfo.address;
+			this.destination.port = rinfo.port;
+		} else if (isArray(changeDestinationAddress)) {
+			if (changeDestinationAddress[1]) {
+				this.destination.ip = changeDestinationAddress[1];
+			}
+			if (changeDestinationAddress[0]) {
+				this.destination.port = changeDestinationAddress[0];
+			}
+		} else if (isString(changeDestinationAddress)) {
+			if (changeDestinationAddress.has(/:|\./)) {
+				this.destination.ip = changeDestinationAddress;
+			} else {
+				this.destination.port = changeDestinationAddress;
+			}
+		}
+		console.log('Destination changed in INTRO', this.destination.ip, this.destination.port);
+	}
 	setPublicKeyHeader(header = []) {
-		const preparedPublicKey = this.preparedPublicKey || this.publicKey;
-		console.log(preparedPublicKey);
+		const preparedPublicKey = this.headerPublicKey || this.publicKey;
+		console.log('Prepared Public Key', toHex(preparedPublicKey));
 		header.push(preparedPublicKey);
-		console.log('Setting Public Key in UDSP Header', toBase64(preparedPublicKey));
+		console.log('Setting Public Key in UDSP Header', toHex(preparedPublicKey));
 		return header;
 	}
 	setCryptographyHeaders(header = []) {
 		const key = this.publicKey;
-		console.log('Setting Cryptography in UDSP Header', toBase64(key));
+		console.log('Setting Cryptography in UDSP Header', toHex(key));
 		const {
-			cipherSuiteName,
 			cipherSuite,
 			version,
 			id
@@ -315,36 +336,27 @@ export class Client extends UDSP {
 			streamid_undefined,
 			rpc,
 			serverConnectionId,
+			framePublicKey,
+			changeDestinationAddress,
 			serverRandomToken,
-			changeDestinationAddress
 		] = frame;
 		this.destination.id = serverConnectionId;
 		this.destination.connectionIdSize = serverConnectionId.length;
-		console.log('New Server Connection ID', toBase64(serverConnectionId));
-		if (changeDestinationAddress) {
-			console.log('Change Server Address', changeDestinationAddress);
-			if (changeDestinationAddress === true) {
-				this.destination.ip = rinfo.address;
-				this.destination.port = rinfo.port;
-			} else if (isArray(changeDestinationAddress)) {
-				if (changeDestinationAddress[1]) {
-					this.destination.ip = changeDestinationAddress[1];
-				}
-				if (changeDestinationAddress[0]) {
-					this.destination.port = changeDestinationAddress[0];
-				}
-			} else if (isString(changeDestinationAddress)) {
-				if (changeDestinationAddress.has(/:|\./)) {
-					this.destination.ip = changeDestinationAddress;
-				} else {
-					this.destination.port = changeDestinationAddress;
-				}
+		if (framePublicKey) {
+			this.destination.publicKey = framePublicKey;
+			console.log('Server Public Key', toHex(framePublicKey));
+			if (Buffer.compare(this.destination.publicKey, framePublicKey) === 0) {
+				console.log('New Public Key Provided Initiate New Session');
+				await this.setSession();
 			}
-			console.log('Destination changed in INTRO', this.destination.ip, destination.port);
+		}
+		console.log('New Server Connection ID', toHex(serverConnectionId));
+		if (changeDestinationAddress) {
+			this.changeAddress(changeDestinationAddress, rinfo);
 		}
 		if (serverRandomToken) {
 			this.serverRandomToken = serverRandomToken;
-			console.log('Server Random Token', toBase64(serverRandomToken));
+			console.log('Server Random Token', toHex(serverRandomToken));
 		}
 		this.handshaked();
 	}
@@ -354,8 +366,8 @@ export class Client extends UDSP {
 			this.cipherSuite.clientSessionKeys(this, this.destination);
 			if (this.receiveKey) {
 				console.log(`Created Shared Keys`);
-				console.log(`receiveKey: ${toBase64(this.receiveKey)}`);
-				console.log(`transmitKey: ${toBase64(this.transmitKey)}`);
+				console.log(`receiveKey: ${toHex(this.receiveKey)}`);
+				console.log(`transmitKey: ${toHex(this.transmitKey)}`);
 			}
 		}
 	}

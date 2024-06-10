@@ -15,13 +15,13 @@ import {
 	certificateTypes,
 	currentCertificateVersion,
 	currentProtocolVersion,
-} from '../defaults.js';
+} from '../../defaults.js';
 import { decode, encode } from '#utilities/serialize';
 import { getCipherSuite, getSignatureAlgorithm } from '../cryptoMiddleware/index.js';
 import { read, readStructure, write } from '#file';
 import { UWCertificate } from './UWCertificate.js';
 import { blake3 } from '@noble/hashes/blake3';
-import { keychainSave } from '#udsp/certificate/keychain';
+import { keychainSave } from './keychain.js';
 import { toBase64 } from '#crypto';
 import { uwProfile } from './profile.js';
 const type = certificateTypes.get('domain');

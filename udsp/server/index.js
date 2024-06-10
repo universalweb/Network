@@ -1,7 +1,7 @@
 import {
 	DomainCertificate,
 	PublicDomainCertificate
-} from '../certificate/domain.js';
+} from '../../utilities/certificate/domain.js';
 // The Universal Web's UDSP server module
 import {
 	UniqID,
@@ -28,7 +28,7 @@ import { randomBuffer, toBase64 } from '#crypto';
 import { UDSP } from '#udsp/base';
 import { createClient } from './clients/index.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
-import { defaultServerConnectionIdSize } from '../defaults.js';
+import { defaultServerConnectionIdSize } from '../../defaults.js';
 import { listen } from './listen.js';
 import { onError } from './onError.js';
 import { onListen } from './onListen.js';
@@ -63,29 +63,6 @@ export class Server extends UDSP {
 		this.socket.on('message', (packet, rinfo) => {
 			return thisServer.onPacket(packet, rinfo);
 		});
-	}
-	chunkCertificate() {
-		const certificate = this.publicCertificate;
-		let currentBytePosition = 0;
-		let index = 0;
-		const size = this.publicCertificateSize;
-		const chunks = [];
-		const maxSize = 1000;
-		while (currentBytePosition < size) {
-			const message = {};
-			const endIndex = currentBytePosition + maxSize;
-			const safeEndIndex = endIndex > size ? size : endIndex;
-			message.head = certificate.subarray(currentBytePosition, safeEndIndex);
-			message.headSize = message.head.length;
-			chunks[index] = message;
-			if (safeEndIndex === size) {
-				message.last = true;
-				break;
-			}
-			index++;
-			currentBytePosition += maxSize;
-		}
-		this.certificateChunks = chunks;
 	}
 	async setCertificate() {
 		const {

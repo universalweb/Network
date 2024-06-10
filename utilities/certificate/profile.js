@@ -17,13 +17,13 @@ import {
 	currentProtocolVersion,
 	defaultClientConnectionIdSize,
 	defaultServerConnectionIdSize
-} from '../defaults.js';
+} from '../../defaults.js';
 import { decode, encode } from '#utilities/serialize';
 import { getCipherSuite, getSignatureAlgorithm, getSignatureAlgorithmByCertificate } from '../cryptoMiddleware/index.js';
 import { read, readStructure, write } from '#file';
 import { UWCertificate } from './UWCertificate.js';
 import { blake3 } from '@noble/hashes/blake3';
-import { keychainSave } from '#udsp/certificate/keychain';
+import { keychainSave } from './keychain.js';
 import { toBase64 } from '#crypto';
 const type = certificateTypes.get('profile');
 export function createUWProfileObject(config = {}, options = {}) {

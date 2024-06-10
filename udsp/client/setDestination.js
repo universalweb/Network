@@ -13,7 +13,6 @@ import {
 	omit,
 	promise
 } from '@universalweb/acid';
-import { publicDomainCertificate } from '#udsp/certificate/domain';
 import { uwrl } from '#udsp/UWRL/index';
 function setRecordInfo(destination, record) {
 	destination.ip = record[2];

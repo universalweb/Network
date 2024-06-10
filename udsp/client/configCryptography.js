@@ -5,7 +5,6 @@ import {
 	intersection
 } from '@universalweb/acid';
 import { success } from '#logs';
-import { x25519_kyber768_xchacha20 } from '../cryptoMiddleware/kyber';
 export async function configCryptography() {
 	const certificate = this.destination.certificate;
 	const { cipherSuites }	= certificate;

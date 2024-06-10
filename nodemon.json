@@ -1,7 +1,12 @@
 {
-    "ignore": ["node_modules/", "./apps/client/**/filesystem/**", "./system/compile/**", "**.json", "**.css", "**.html"],
-    "delay": 2500,
-    "execMap": {
-        "js": "node"
-    }
+	"ignore": [
+		"node_modules/",
+		"**.json",
+		"**.css",
+		"**.html"
+	],
+	"delay": 2500,
+	"execMap": {
+		"js": "node"
+	}
 }

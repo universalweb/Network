@@ -43,13 +43,17 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 	let header = id;
 	let shortHeaderMode = true;
 	if (headers) {
-		const isHeadersAnArray = isArray(headers) && (headers.length > 0);
-		shortHeaderMode = false;
+		const isHeadersAnArray = isArray(headers);
 		if (isHeadersAnArray) {
-			headers.unshift(id);
-			header = headers;
+			if (headers.length > 0) {
+				headers.unshift(id);
+				header = headers;
+			}
 		} else {
 			header = [id, headers];
+		}
+		if (isArray(header)) {
+			shortHeaderMode = false;
 		}
 		console.log('HEADERS GIVEN', isHeadersAnArray, headers);
 	}

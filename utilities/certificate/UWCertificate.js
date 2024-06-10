@@ -14,7 +14,7 @@ import {
 	getSignatureAlgorithm
 } from '../cryptoMiddleware/index.js';
 import { encode } from '#utilities/serialize';
-import { findRecord } from '../dis/index.js';
+import { findRecord } from '../../udsp/dis/index.js';
 import { resolve } from 'path';
 import { signDetached } from '#crypto';
 import { write } from '#utilities/file';

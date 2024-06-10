@@ -66,13 +66,13 @@
 				"./utilities/pluckBuffer.js"
 			],
 			"#certificate": [
-				"udsp/certificate/index.js"
+				"utilities/certificate/index.js"
 			],
 			"#udsp": [
 				"./udsp/index.js"
 			],
 			"#keychain": [
-				"udsp/certificate/keychain.js"
+				"utilities/certificate/keychain.js"
 			]
 		},
 		"module": "NodeNext",
