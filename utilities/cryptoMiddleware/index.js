@@ -1,13 +1,20 @@
 /* TODO: Add Mobile/Embedded Preferred option & algorithms. */
 import * as defaultCrypto from '#crypto';
 import {
-	assign, clearBuffer, compactMapArray, eachArray, hasValue, isArray, isNumber, isUndefined
+	assign,
+	clearBuffer,
+	compactMapArray,
+	eachArray,
+	hasValue,
+	isArray,
+	isNumber,
+	isUndefined
 } from '@universalweb/acid';
 import { currentCertificateVersion, currentVersion } from '../../defaults.js';
-import { ed25519Algo, x25519_xchacha20 } from './25519.js';
 import { blake3Hash } from './blake3.js';
+import { ed25519Algo } from './ed25519.js';
 import { x25519_kyber768_xchacha20 } from './kyber.js';
-import { xsalsa20Algo } from './xsalsa20.js';
+import { x25519_xchacha20 } from './x25519XChaCha.js';
 function setOption(source, option) {
 	source.set(option.name, option);
 	source.set(option.id, option);
@@ -66,13 +73,13 @@ export const publicKeyCertificateAlgorithms = new Map();
 const publicKeyCertificateAlgorithmsVersion1 = new Map();
 publicKeyCertificateAlgorithms.set(1, publicKeyCertificateAlgorithmsVersion1);
 setOption(publicKeyCertificateAlgorithmsVersion1, ed25519Algo);
-export const boxAlgorithms = new Map();
-const boxAlgorithmsVersion1 = new Map();
-boxAlgorithms.set(1, boxAlgorithmsVersion1);
-setOption(boxAlgorithmsVersion1, xsalsa20Algo);
+// export const boxAlgorithms = new Map();
+// const boxAlgorithmsVersion1 = new Map();
+// boxAlgorithms.set(1, boxAlgorithmsVersion1);
+// setOption(boxAlgorithmsVersion1, xsalsa20Algo);
 export const hashAlgorithms = new Map();
 const hashAlgorithmsVersion1 = new Map();
-boxAlgorithms.set(1, hashAlgorithmsVersion1);
+hashAlgorithms.set(1, hashAlgorithmsVersion1);
 setOption(hashAlgorithmsVersion1, blake3Hash);
 export function getSignatureAlgorithm(publicKeyAlgorithmName = 0, version = currentVersion) {
 	if (!hasValue(publicKeyAlgorithmName)) {

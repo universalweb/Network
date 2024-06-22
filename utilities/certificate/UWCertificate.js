@@ -16,7 +16,6 @@ import {
 import { encode } from '#utilities/serialize';
 import { findRecord } from '../../udsp/dis/index.js';
 import { resolve } from 'path';
-import { signDetached } from '#crypto';
 import { write } from '#utilities/file';
 export class UWCertificate {
 	constructor(config) {

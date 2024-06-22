@@ -2,7 +2,7 @@ import * as defaultCrypto from '#crypto';
 import { clearBuffer, isBuffer } from '@universalweb/acid';
 import { blake3 } from '@noble/hashes/blake3';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
-import { x25519_xchacha20 } from './25519.js';
+import { x25519_xchacha20 } from './x25519XChaCha.js';
 const {
 	encrypt, decrypt, nonceBox, sign, signVerify, createSecretKey,
 	signKeypair, encryptKeypair, createSessionKey, clientSessionKeys,

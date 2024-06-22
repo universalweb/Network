@@ -30,8 +30,6 @@ import {
 } from '#utilities/serialize';
 import { defaultClientConnectionIdSize, defaultServerConnectionIdSize } from '../../defaults.js';
 import {
-	emptyNonce,
-	randomConnectionId,
 	toBase64,
 	toHex,
 } from '#crypto';

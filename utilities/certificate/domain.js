@@ -78,7 +78,7 @@ export function createDomainCertificateObject(config = {}, options = {}) {
 	}
 	const signatureMethod = getSignatureAlgorithm(certificate.signatureAlgorithm, protocolVersion);
 	if (!signatureKeypair) {
-		certificate.signatureKeypair = signatureMethod.signKeypair();
+		certificate.signatureKeypair = signatureMethod.signatureKeypair();
 	}
 	const keyExchangeMethod = getCipherSuite(certificate.cipherSuite, protocolVersion);
 	if (!encryptionKeypair) {
