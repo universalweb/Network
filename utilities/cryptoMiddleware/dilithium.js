@@ -14,18 +14,18 @@ export function createSeed(size = 32) {
 	const seed = bufferAlloc(size);
 	return seed;
 }
-export function signatureKeypair(seed = createSeed()) {
+export async function signatureKeypair(seed = createSeed()) {
 	const keypair = ml_dsa87.keygen(seed);
 	return {
 		publicKey: keypair.publicKey,
 		privateKey: keypair.secretKey
 	};
 }
-export function sign(message, privateKey) {
+export async function sign(message, privateKey) {
 	const signedMessage = ml_dsa87.sign(privateKey?.privateKey || privateKey, msg);
 	return signedMessage;
 }
-export function verifySignature(message, signedMessage, publicKey) {
+export async function verifySignature(message, signedMessage, publicKey) {
 	const isValid = ml_dsa87.verify(publicKey?.publicKey || publicKey, message, signedMessage);
 	return isValid;
 }
