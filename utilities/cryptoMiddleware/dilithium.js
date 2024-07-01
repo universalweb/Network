@@ -9,7 +9,6 @@ import { ml_dsa44, ml_dsa65, ml_dsa87 } from '@noble/post-quantum/ml-dsa';
 	strength of ML-DSA-44 is reduced from category 2 to category 1.)
 */
 import { bufferAlloc } from '../crypto.js';
-const msg = new Uint8Array(1);
 export function createSeed(size = 32) {
 	const seed = bufferAlloc(size);
 	return seed;
@@ -22,10 +21,10 @@ export async function signatureKeypair(seed = createSeed()) {
 	};
 }
 export async function sign(message, privateKey) {
-	const signedMessage = ml_dsa87.sign(privateKey?.privateKey || privateKey, msg);
+	const signedMessage = ml_dsa87.sign(privateKey?.privateKey || privateKey, message);
 	return signedMessage;
 }
-export async function verifySignature(message, signedMessage, publicKey) {
+export async function verifySignature(signedMessage, publicKey, message) {
 	const isValid = ml_dsa87.verify(publicKey?.publicKey || publicKey, message, signedMessage);
 	return isValid;
 }

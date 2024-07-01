@@ -53,7 +53,7 @@ export function verifySignature(signedMessage, publicKey) {
 	const verify = crypto_sign_open(message, signedMessage, publicKey?.publicKey || publicKey);
 	return verify && message;
 }
-export function verifySignatureDetached(signedMessage, message, publicKey) {
+export function verifySignatureDetached(signedMessage, publicKey, message) {
 	return crypto_sign_verify_detached(signedMessage, message, publicKey?.publicKey || publicKey);
 }
 export function signatureKeypair(config) {
