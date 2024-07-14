@@ -1,5 +1,10 @@
 import * as defaultCrypto from '#crypto';
-import { createSessionKey, nonceBox } from './XChaCha.js';
+import {
+	createSessionKey,
+	decrypt,
+	encrypt,
+	nonceBox
+} from './XChaCha.js';
 import {
 	getSignaturePublicKeyFromPrivateKey,
 	sign,
@@ -13,6 +18,7 @@ import {
 } from './ed25519.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { encryptionKeypair, } from './x25519.js';
+import { hash } from './blake3.js';
 const sodium = await import('sodium-native');
 const sodiumLib = sodium?.default || sodium;
 const {
@@ -20,7 +26,7 @@ const {
 	crypto_kx_server_session_keys,
 } = sodiumLib;
 const {
-	encrypt, decrypt, randomConnectionId, hashMin: defaultHashMin, hash: defaultHash, randomBuffer, toBase64
+	randomConnectionId, randomBuffer, toBase64
 } = defaultCrypto;
 export function clientSessionKeys(client, serverPublicKey, target) {
 	const receiveKey = client?.receiveKey || createSessionKey();
