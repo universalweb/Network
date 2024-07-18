@@ -108,3 +108,14 @@ export async function uwProfile(config) {
 	const source = new UWProfile(config);
 	return source;
 }
+const exampleProfileExample = await uwProfile();
+console.log(await exampleProfileExample);
+console.log(`Version: ${exampleProfileExample.version}`);
+console.log(`Public Key Size: ${exampleProfileExample.publicKey.length}`);
+console.log(`Private Key Size: ${exampleProfileExample.privateKey.length}`);
+console.log(exampleProfileExample.ed25519PublicKey);
+console.log(exampleProfileExample.ed25519PrivateKey);
+const messageExample = Buffer.from('Hello, World!');
+const sig = await exampleProfileExample.sign(messageExample);
+console.log(sig);
+console.log(await exampleProfileExample.verifySignature(sig, messageExample));
