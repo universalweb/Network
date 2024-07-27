@@ -27,6 +27,11 @@ export async function proccessProtocolHeader(source, header, rinfo) {
 			source.discoveryHeader(header, rinfo);
 			break;
 		}
+		// Second round Trip
+		case 3: {
+			source.expandedKeyExchange(header, rinfo);
+			break;
+		}
 		default: {
 			console.trace('Unknown Protocol Packet', header, rinfo);
 			break;

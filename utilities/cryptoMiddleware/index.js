@@ -13,7 +13,7 @@ import {
 import { currentCertificateVersion, currentVersion } from '../../defaults.js';
 import { blake3Hash } from './blake3.js';
 import { ed25519Algo } from './ed25519.js';
-import { x25519_kyber768_xchacha20 } from './kyber.js';
+import { x25519_kyber768_xchacha20 } from './kyber768.js';
 import { x25519_xchacha20 } from './x25519XChaCha.js';
 function setOption(source, option) {
 	source.set(option.name, option);

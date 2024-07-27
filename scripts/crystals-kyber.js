@@ -1,5 +1,6 @@
 import { decode, encode } from 'msgpackr';
 import { ml_kem1024, ml_kem512, ml_kem768 } from '@noble/post-quantum/ml-kem';
+import { encrypt } from '#utilities/cryptoMiddleware/XChaCha';
 import { randomBuffer } from '#crypto';
 import { slh_dsa_sha2_128f as sph } from '@noble/post-quantum/slh-dsa';
 import { x25519 } from '@noble/curves/ed25519';
@@ -20,8 +21,11 @@ async function doKyber() {
 		cipherText, sharedSecret: bobShared
 	} = ml_kem768.encapsulate(aliceKeys.publicKey);
 	const aliceShared = ml_kem768.decapsulate(cipherText, aliceKeys.secretKey);
+	const emptyBuffer = Buffer.alloc(0);
+	const encrypted = await encrypt(emptyBuffer, aliceShared, emptyBuffer);
+	console.log('ENCRYPTED', encrypted.length);
 	console.log('ALICE', aliceShared, 'BOB', bobShared);
-	console.log('ESTIMATED PACKET HELLO', 104 + cipherText.length, 'KYBER-OVERHEAD', cipherText.length);
+	console.log('ESTIMATED PACKET HELLO', 104 + cipherText.length, 'KYBER-OVERHEAD', cipherText.length, 'PublicKey', aliceKeys.publicKey.length);
 	return;
 }
 doKyber();
