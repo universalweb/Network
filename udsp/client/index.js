@@ -310,7 +310,7 @@ export class Client extends UDSP {
 		const header = [0];
 		this.setPublicKeyHeader(header);
 		this.setCryptographyHeaders(header);
-		await this.send(null, header);
+		await this.send([false, 0], header);
 	}
 	async introHeader(header, rinfo) {
 		console.log('Client Intro Header', header);
@@ -341,12 +341,11 @@ export class Client extends UDSP {
 		this.destination.id = serverConnectionId;
 		this.destination.connectionIdSize = serverConnectionId.length;
 		if (framePublicKey) {
+			console.log(this.destination.publicKey, framePublicKey);
 			this.destination.publicKey = framePublicKey;
 			console.log('Server Public Key', toHex(framePublicKey));
-			if (Buffer.compare(this.destination.publicKey, framePublicKey) === 0) {
-				console.log('New Public Key Provided Initiate New Session');
-				await this.setSession();
-			}
+			console.log('New Public Key Provided Initiate New Session');
+			await this.setSession();
 		}
 		console.log('New Server Connection ID', toHex(serverConnectionId));
 		if (changeDestinationAddress) {

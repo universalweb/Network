@@ -48,12 +48,10 @@ export const x25519_xchacha20 = {
 	},
 	async ephemeralServerKeypair(destination) {
 		const source = encryptionKeypair();
-		source.framePublicKey = source.publicKey;
 		return source;
 	},
 	async ephemeralKeypair(destination) {
 		const generatedKeypair = encryptionKeypair();
-		generatedKeypair.headerPublicKey = generatedKeypair.publicKey;
 		return generatedKeypair;
 	},
 	certificateEncryptionKeypair: encryptionKeypair,

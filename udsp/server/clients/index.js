@@ -80,13 +80,12 @@ export class Client {
 		return triggerEvent(this.events, eventName, this, ...args);
 	}
 	onConnected = onConnected;
-	async generateSession() {
-		assign(this, await this.cipherSuite.ephemeralKeypair());
-		await this.setSessionKeys();
-		info(`CLIENT EVENT -> reKey - ID:${this.connectionIdString}`);
-	}
 	async setSessionKeys() {
 		console.log('Set session keys');
+		if (this.receiveKey) {
+			success(`OLD receiveKey: ${toHex(this.receiveKey)}`);
+			success(`OLD transmitKey: ${toHex(this.transmitKey)}`);
+		}
 		await this.cipherSuite.serverSessionKeys(this, this.destination);
 		success(`receiveKey: ${toHex(this.receiveKey)}`);
 		success(`transmitKey: ${toHex(this.transmitKey)}`);
@@ -163,32 +162,23 @@ export class Client {
 		await this.setSessionKeys();
 		console.log(`CLIENT: ${toHex(clientId)}`);
 		await this.calculatePacketOverhead();
-		this.newKeypair = await this.cipherSuite.ephemeralServerKeypair(this);
-		return this.sendIntro();
+		// return this.sendIntro();
 	}
 	async intro(frame, header) {
 		info(`Client Intro -> - ID:${this.connectionIdString}`, frame, header);
+		this.newKeypair = await this.cipherSuite.ephemeralServerKeypair(this);
 		return this.sendIntro();
 	}
 	// SERVER HELLO
 	// Change this to be header with no message permit message to be empty
 	async sendIntro() {
 		const header = [];
-		const framePublicKey = this?.newKeypair.framePublicKey;
-		const headerPublicKey = this?.newKeypair.headerPublicKey;
 		const frame = [
 			false,
 			0,
 			this.id,
+			this.newKeypair.publicKey
 		];
-		if (framePublicKey) {
-			frame[3] = framePublicKey;
-		} else if (headerPublicKey) {
-			header[0] = 0;
-			header[1] = headerPublicKey;
-		} else {
-			frame[3] = this.publicKey;
-		}
 		// Change connection IP:Port to be the workers IP:Port
 		const scale = this.scale;
 		if (scale) {

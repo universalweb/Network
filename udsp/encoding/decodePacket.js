@@ -19,8 +19,8 @@ import {
 	msgSent,
 	success
 } from '#logs';
+import { toBase64, toHex } from '#crypto';
 import { createClient } from '../server/clients/index.js';
-import { toBase64 } from '#crypto';
 /**
 	* @TODO
 	* Add support to block connection Ids that are too large
@@ -131,7 +131,7 @@ export async function decodePacket(config) {
 	}
 	const receiveKey = destination?.receiveKey;
 	if (receiveKey) {
-		info(`Receive Key ${toBase64(receiveKey)}`);
+		info(`Receive Key ${toHex(receiveKey)}`);
 		if (messageEncoded && isBuffer(messageEncoded) && hasLength(messageEncoded)) {
 			console.log(packet, packetDecoded);
 			if (receiveKey) {

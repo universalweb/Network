@@ -49,14 +49,16 @@ export async function onPacket(packet, connection) {
 		await proccessProtocolPacketHeader(client, header);
 	}
 	if (client.newKeypair) {
-		console.log('Client has New Keypair assigned');
+		console.log('Client has New Keypair assigned', client.newKeypair, header, config);
+		// new Error();
+		// return;
 		assign(client, client.newKeypair);
 		client.newKeypair = null;
 		await client.setSessionKeys();
 	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {
-		return console.log('Header failed to decode');
+		return console.log('Message failed to decode');
 	}
 	const { message } = config.packetDecoded;
 	if (!hasValue(message)) {
