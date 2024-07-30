@@ -13,7 +13,7 @@ export function generateConnectionId(size = eight, prepend) {
 	}
 	if (hasValue(prepend)) {
 		result = `${prepend}${result.substring(prepend.length)}`;
-		console.log('ConnectionID created', result);
+		// console.log('ConnectionID created', result);
 	}
 	return result;
 }

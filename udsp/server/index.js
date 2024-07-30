@@ -183,10 +183,10 @@ export class Server extends UDSP {
 		console.log('Client Created', this.clientCount);
 		return client;
 	}
-	async client(config, id, idString, connection) {
+	async client(config, id, idString, rinfo) {
 		if (!id || id.length === 0) {
 			if (config.packetDecoded.headerRPC === 0) {
-				return this.createClient(config, idString, connection);
+				return this.createClient(config, idString, rinfo);
 			}
 		}
 		const existingClient = this.clients.get(idString);

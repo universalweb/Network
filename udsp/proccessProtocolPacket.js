@@ -3,7 +3,7 @@ import {
 	isNotNumber
 } from '@universalweb/acid';
 import { destroy } from './request/destory.js';
-export async function proccessProtocolHeader(source, header, rinfo) {
+export async function proccessProtocolHeader(source, header, packetDecoded, rinfo) {
 	const rpc = header[1];
 	console.log(`Processing Protocol Packet RPC ${rpc}`);
 	if (isNotNumber(rpc)) {
@@ -13,35 +13,35 @@ export async function proccessProtocolHeader(source, header, rinfo) {
 	switch (rpc) {
 		// Hello Packet
 		case 0: {
-			source.introHeader(header, rinfo);
+			source.introHeader(header, packetDecoded, rinfo);
 			break;
 		}
 		// End Connection Packet
 		case 1: {
 			console.log('END RECEIVED');
-			source.endHeader(header, rinfo);
+			source.endHeader(header, packetDecoded, rinfo);
 			break;
 		}
 		// Discovery Packet to get the server's certificate
 		case 2: {
-			source.discoveryHeader(header, rinfo);
+			source.discoveryHeader(header, packetDecoded, rinfo);
 			break;
 		}
 		// Second round Trip
 		case 3: {
-			source.expandedKeyExchange(header, rinfo);
+			source.expandedKeyExchange(header, packetDecoded, rinfo);
 			break;
 		}
 		default: {
-			console.trace('Unknown Protocol Packet', header, rinfo);
+			console.trace('Unknown Protocol Packet', header, packetDecoded, rinfo);
 			break;
 		}
 	}
 }
-export async function proccessProtocolPacketHeader(source, header, rinfo) {
+export async function proccessProtocolPacketHeader(source, header, packetDecoded, rinfo) {
 	console.log('Processing Protocol Packet Header', header);
 	if (header && isArray(header)) {
-		proccessProtocolHeader(source, header, rinfo);
+		proccessProtocolHeader(source, header, packetDecoded, rinfo);
 	}
 }
 export async function proccessProtocolFrame(source, frame, header, rinfo) {

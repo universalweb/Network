@@ -310,7 +310,7 @@ export class Client extends UDSP {
 		const header = [0];
 		this.setPublicKeyHeader(header);
 		this.setCryptographyHeaders(header);
-		await this.send([false, 0], header);
+		await this.send(null, header);
 	}
 	async introHeader(header, rinfo) {
 		console.log('Client Intro Header', header);

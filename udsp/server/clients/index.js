@@ -129,7 +129,7 @@ export class Client {
 	}
 	// CLIENT HELLO
 	// Change from initialization to this for session stuff keep separate
-	async introHeader(header) {
+	async introHeader(header, packetDecoded) {
 		info(`Client Intro -> - ID:${this.connectionIdString}`, header);
 		const [
 			connectionId,
@@ -162,11 +162,14 @@ export class Client {
 		await this.setSessionKeys();
 		console.log(`CLIENT: ${toHex(clientId)}`);
 		await this.calculatePacketOverhead();
-		// return this.sendIntro();
+		success(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port}`);
+		this.newKeypair = await this.cipherSuite.ephemeralServerKeypair(this);
+		if (packetDecoded.noMessage) {
+			return this.sendIntro();
+		}
 	}
 	async intro(frame, header) {
 		info(`Client Intro -> - ID:${this.connectionIdString}`, frame, header);
-		this.newKeypair = await this.cipherSuite.ephemeralServerKeypair(this);
 		return this.sendIntro();
 	}
 	// SERVER HELLO

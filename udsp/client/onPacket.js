@@ -30,7 +30,7 @@ export async function onPacket(packet, rinfo) {
 	}
 	const { header, } = config.packetDecoded;
 	if (isFalse(config.isShortHeaderMode)) {
-		await proccessProtocolPacketHeader(this, header, rinfo);
+		await proccessProtocolPacketHeader(this, header, config.packetDecoded, rinfo);
 	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {

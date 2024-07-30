@@ -59,6 +59,7 @@ export async function decodePacketHeaders(config) {
 	console.log(packet);
 	const isShortHeaderMode = isBuffer(packet);
 	config.isShortHeaderMode = isShortHeaderMode;
+	config.packetDecoded = {};
 	if (isShortHeaderMode) {
 		info(`ShortHeaderMode Size ${packet.length}`);
 	}
@@ -67,6 +68,9 @@ export async function decodePacketHeaders(config) {
 		headerEncoded = packet.subarray(0, connectionIdSize);
 	} else {
 		headerEncoded = packet[0];
+		if (!packet[1]) {
+			config.packetDecoded.noMessage = true;
+		}
 	}
 	info(`headerEncoded Size ${headerEncoded.length}`);
 	if (!headerEncoded) {
@@ -85,10 +89,8 @@ export async function decodePacketHeaders(config) {
 	} else {
 		console.log(`Decode Server side packet with id: ${id.toString('hex')}`);
 	}
-	config.packetDecoded = {
-		header: headerDecoded,
-		id
-	};
+	config.packetDecoded.header = headerEncoded;
+	config.packetDecoded.id = id;
 	if (!isShortHeaderMode) {
 		const headerRPC = headerDecoded[1];
 		if (hasValue(headerRPC)) {

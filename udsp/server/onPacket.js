@@ -22,12 +22,12 @@ import { createClient } from './clients/index.js';
 import { proccessProtocolPacketHeader } from '#udsp/proccessProtocolPacket';
 import { reply } from '#udsp/request/reply';
 import { toBase64 } from '#crypto';
-export async function onPacket(packet, connection) {
+export async function onPacket(packet, rinfo) {
 	const thisServer = this;
 	msgReceived('Message Received');
 	const config = {
 		packet,
-		connection,
+		connection: rinfo,
 		destination: thisServer,
 	};
 	const wasHeadersDecoded = await decodePacketHeaders(config);
@@ -39,16 +39,15 @@ export async function onPacket(packet, connection) {
 		return console.log('Invalid Client id given', id);
 	}
 	const idString = id.toString('hex');
-	const client = await this.client(config, id, idString, connection);
+	const client = await this.client(config, id, idString, rinfo);
 	if (!client) {
 		// Send error message back to origin or not
 		return console.log('No matching Client id given', idString);
 	}
 	const { header, } = config.packetDecoded;
 	if (isFalse(config.isShortHeaderMode)) {
-		await proccessProtocolPacketHeader(client, header);
-	}
-	if (client.newKeypair) {
+		await proccessProtocolPacketHeader(client, header, config.packetDecoded, rinfo);
+	} else if (client.newKeypair) {
 		console.log('Client has New Keypair assigned', client.newKeypair, header, config);
 		// new Error();
 		// return;
