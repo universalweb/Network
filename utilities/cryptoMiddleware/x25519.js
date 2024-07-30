@@ -129,9 +129,9 @@ export function serverSessionKeys(server, client, target) {
 		transmitKey
 	};
 }
-async function serverSessionKeysAttach(source, destination) {
+export async function serverSessionKeysAttach(source, destination) {
 	return serverSessionKeys(source, destination, source);
 }
-async function clientSessionKeysAttach(source, destination) {
+export async function clientSessionKeysAttach(source, destination) {
 	return clientSessionKeys(source, destination, source);
 }

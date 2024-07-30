@@ -1,6 +1,12 @@
 import * as defaultCrypto from '#crypto';
 import { clearBuffer, isBuffer } from '@universalweb/acid';
-import { clientSessionKeys, serverSessionKeys, x25519_xchacha20 } from './x25519XChaCha.js';
+import {
+	clientSessionKeys,
+	clientSessionKeysAttach,
+	encryptionKeypair,
+	serverSessionKeys,
+	serverSessionKeysAttach
+} from './x25519.js';
 import { decapsulate, encapsulate, signatureKeypair } from './kyber768.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
@@ -45,10 +51,10 @@ export const x25519_kyber768Half_xchacha20 = {
 	preferred: true,
 	hash: blake3,
 	x25519ServerSessionKeys: serverSessionKeys,
-	x25519ClientSessionKeys: clientSessionKeys,
+	x25519ClientSessionKeys: clientSessionKeysAttach,
 	kyberDecapsulate,
 	async clientInitialSession(source, destination) {
-		const x25519SessionKeys = clientSessionKeys(source, destination);
+		const x25519SessionKeys = clientSessionKeysAttach(source, destination);
 		console.log('PublicKey from Server', destination.publicKey);
 		// await kyberDecapsulate(source, destination, x25519SessionKeys);
 		// console.log('Decapsulate kyberSharedSecret', source);
@@ -98,11 +104,11 @@ export const x25519_kyber768Half_xchacha20 = {
 		return source;
 	},
 	async serverEphemeralKeypair(client) {
-		const source = await x25519_xchacha20.keypair();
+		const source = await encryptionKeypair();
 		return source;
 	},
 	async keypair(seedArg) {
-		const x25519Keypair = await x25519_xchacha20.keypair();
+		const x25519Keypair = await encryptionKeypair();
 		const seed = seedArg || x25519_kyber768Half_xchacha20.generateKeySeed();
 		const kyberKeypair = await signatureKeypair(seed);
 		const target = {

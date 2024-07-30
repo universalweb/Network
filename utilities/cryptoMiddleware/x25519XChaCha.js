@@ -1,5 +1,6 @@
 import * as defaultCrypto from '#crypto';
 import {
+	clientSessionKeys,
 	clientSessionKeysAttach,
 	encryptionKeypair,
 	serverSessionKeys,
@@ -58,10 +59,8 @@ export const x25519_xchacha20 = {
 	certificateEncryptionKeypair: encryptionKeypair,
 	decrypt,
 	encrypt,
-	clientSessionKeys: clientSessionKeysAttach,
-	async clientInitialSession(...args) {
-		return clientSessionKeysAttach(...args);
-	},
+	clientSessionKeys,
+	clientInitialSession: clientSessionKeysAttach,
 	serverSessionKeys: serverSessionKeysAttach,
 	preferred: true,
 	hash: blake3,

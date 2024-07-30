@@ -13,7 +13,7 @@ import {
 import { currentCertificateVersion, currentVersion } from '../../defaults.js';
 import { blake3Hash } from './blake3.js';
 import { ed25519Algo } from './ed25519.js';
-import { x25519_kyber768_xchacha20 } from './kyber768.js';
+import { x25519_kyber768Half_xchacha20 } from './x25519_Kyber768Half_xChaCha.js';
 import { x25519_xchacha20 } from './x25519XChaCha.js';
 function setOption(source, option) {
 	source.set(option.name, option);
@@ -28,9 +28,9 @@ setOption(cipherSuitesVersion1, x25519_xchacha20);
 export const cipherSuitesCertificates = new Map();
 const cipherSuitesCertificatesVersion1 = new Map();
 cipherSuitesCertificates.set(1, cipherSuitesCertificatesVersion1);
-cipherSuitesCertificatesVersion1.set('all', [x25519_xchacha20, x25519_kyber768_xchacha20]);
+cipherSuitesCertificatesVersion1.set('all', [x25519_xchacha20, x25519_kyber768Half_xchacha20]);
 setOption(cipherSuitesCertificatesVersion1, x25519_xchacha20);
-setOption(cipherSuitesCertificatesVersion1, x25519_kyber768_xchacha20);
+setOption(cipherSuitesCertificatesVersion1, x25519_kyber768Half_xchacha20);
 export function getEncryptionKeypairAlgorithm(algo = 0, version = currentCertificateVersion) {
 	if (!hasValue(algo)) {
 		return false;
