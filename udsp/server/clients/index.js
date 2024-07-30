@@ -163,7 +163,7 @@ export class Client {
 		await this.setSessionKeys();
 		console.log(`CLIENT: ${toHex(clientId)}`);
 		await this.calculatePacketOverhead();
-		this.newKeypair = await this.cipherSuite.ephemeralServerKeypair();
+		this.newKeypair = await this.cipherSuite.ephemeralServerKeypair(this);
 		return this.sendIntro();
 	}
 	async intro(frame, header) {

@@ -9,8 +9,13 @@ export async function signatureKeypair(seed) {
 		privateKey: kyberKeypair.secretKey
 	};
 }
-async function decapsulate(cipherText, sourceKeypairKyber, x25519SessionKeys) {
+export async function decapsulate(cipherText, sourceKeypairKyber, x25519SessionKeys) {
 	ml_kem768.decapsulate(cipherText, sourceKeypairKyber.privateKey);
+}
+export async function encapsulate(sourceKeypair) {
+	// { cipherText, sharedSecret }
+	const encapsulated = ml_kem768.encapsulate(sourceKeypair?.publicKey || sourceKeypair);
+	return encapsulated;
 }
 export const kyber768 = {
 	name: 'kyber768',
@@ -21,6 +26,7 @@ export const kyber768 = {
 	ml_kem768,
 	preferred: true,
 	decapsulate,
+	encapsulate,
 	generateKeySeed() {
 		return randomBuffer(64);
 	},

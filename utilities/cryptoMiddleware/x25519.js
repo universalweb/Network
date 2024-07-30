@@ -1,5 +1,6 @@
 import { bufferAlloc, randomBuffer } from '../crypto.js';
 import { RistrettoPoint } from '@noble/curves/ed25519';
+import { createSessionKey } from './XChaCha.js';
 const sodium = await import('sodium-native');
 const sodiumLib = sodium?.default || sodium;
 const {
@@ -22,7 +23,8 @@ const {
 	crypto_box_easy,
 	crypto_box_open_easy,
 	crypto_box_NONCEBYTES,
-	crypto_box_MACBYTES
+	crypto_box_MACBYTES,
+	crypto_kx_client_session_keys
 } = sodiumLib;
 export function encryptionKeypair(config) {
 	const publicKey = config?.publicKey || bufferAlloc(crypto_kx_PUBLICKEYBYTES);
@@ -97,4 +99,39 @@ export function authenticatedBox(message, receiverKeypair, senderKeypair) {
 		nonce,
 		encrypted
 	]);
+}
+export function clientSessionKeys(client, serverPublicKey, target) {
+	const receiveKey = client?.receiveKey || createSessionKey();
+	const transmitKey = client?.transmitKey || createSessionKey();
+	crypto_kx_client_session_keys(receiveKey, transmitKey, client.publicKey, client.privateKey, serverPublicKey?.publicKey || serverPublicKey);
+	if (target) {
+		target.receiveKey = receiveKey;
+		target.transmitKey = transmitKey;
+		return target;
+	}
+	client.receiveKey = receiveKey;
+	return {
+		receiveKey,
+		transmitKey
+	};
+}
+export function serverSessionKeys(server, client, target) {
+	const receiveKey = server?.receiveKey || createSessionKey();
+	const transmitKey = server?.transmitKey || createSessionKey();
+	crypto_kx_server_session_keys(receiveKey, transmitKey, server.publicKey, server.privateKey, client?.publicKey || client);
+	if (target) {
+		target.receiveKey = receiveKey;
+		target.transmitKey = transmitKey;
+		return target;
+	}
+	return {
+		receiveKey,
+		transmitKey
+	};
+}
+async function serverSessionKeysAttach(source, destination) {
+	return serverSessionKeys(source, destination, source);
+}
+async function clientSessionKeysAttach(source, destination) {
+	return clientSessionKeys(source, destination, source);
 }
