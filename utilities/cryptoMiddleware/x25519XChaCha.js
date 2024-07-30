@@ -35,7 +35,6 @@ const {
 } = defaultCrypto;
 export const x25519_xchacha20 = {
 	name: 'x25519_xchacha20',
-	short: 'x25519',
 	alias: 'default',
 	id: 0,
 	nonceBox,

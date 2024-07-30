@@ -19,8 +19,6 @@ export async function encapsulate(sourceKeypair) {
 }
 export const kyber768 = {
 	name: 'kyber768',
-	short: 'kyber768',
-	// Hybrid Post Quantum Key Exchange
 	alias: 'kyber768',
 	id: 2,
 	ml_kem768,

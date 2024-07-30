@@ -36,9 +36,8 @@ async function kyberDecapsulate(source, destination, x25519SessionKeys) {
 	source.receiveKey = blake3CombineKeys(x25519SessionKeys.receiveKey, kyberSharedSecret);
 	clearSessionKeys(x25519SessionKeys);
 }
-export const x25519_kyber768_xchacha20 = {
-	name: 'x25519_kyber768_xchacha20',
-	short: 'x25519Kyber768',
+export const x25519_kyber768Half_xchacha20 = {
+	name: 'x25519_kyber768Half_xchacha20',
 	// Hybrid Post Quantum Key Exchange
 	alias: 'hpqt',
 	id: 1,
@@ -95,7 +94,7 @@ export const x25519_kyber768_xchacha20 = {
 	},
 	signatureKeypair,
 	async clientEphemeralKeypair() {
-		const source = await x25519_kyber768_xchacha20.keypair();
+		const source = await x25519_kyber768Half_xchacha20.keypair();
 		return source;
 	},
 	async serverEphemeralKeypair(client) {
@@ -104,7 +103,7 @@ export const x25519_kyber768_xchacha20 = {
 	},
 	async keypair(seedArg) {
 		const x25519Keypair = await x25519_xchacha20.keypair();
-		const seed = seedArg || x25519_kyber768_xchacha20.generateKeySeed();
+		const seed = seedArg || x25519_kyber768Half_xchacha20.generateKeySeed();
 		const kyberKeypair = await signatureKeypair(seed);
 		const target = {
 			publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
@@ -117,18 +116,18 @@ export const x25519_kyber768_xchacha20 = {
 			x25519Keypair,
 			kyberKeypair,
 			publicKey
-		} = x25519_kyber768_xchacha20.keypair();
+		} = x25519_kyber768Half_xchacha20.keypair();
 		const target = {
 			publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
 			privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey])
 		};
-		return x25519_kyber768_xchacha20.keypair();
+		return x25519_kyber768Half_xchacha20.keypair();
 	},
 	combineKeys: blake3CombineKeys
 };
-// const client = await x25519_kyber768_xchacha20.keypair();
-// const server = await x25519_kyber768_xchacha20.ephemeralKeypair();
-// await x25519_kyber768_xchacha20.clientSessionKeys(client, server);
+// const client = await x25519_kyber768Half_xchacha20.keypair();
+// const server = await x25519_kyber768Half_xchacha20.ephemeralKeypair();
+// await x25519_kyber768Half_xchacha20.clientSessionKeys(client, server);
 // console.log(client, server);
 // console.log(client.publicKey.length);
 // console.log(server.transmitKey);
