@@ -449,7 +449,7 @@ export class Client extends UDSP {
 	getIPDetails = getIPDetails;
 	static connections = new Map();
 	async setDefaults() {
-		this.newKeypair = null;
+		this.nextSession = null;
 		this.serverRandomToken = null;
 		this.handshakeCompleted = null;
 		this.awaitHandshake = null;

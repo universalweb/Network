@@ -10,3 +10,7 @@ Get Kyber Keypair encapsulate the public key 1088
 
 Client (Updates using new shared kyber key)
 Plus hashes with new kyber key exchange
+
+## Memory improvements
+
+Clear one time keypairs for connections leaving only the session keys

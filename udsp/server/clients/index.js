@@ -163,7 +163,7 @@ export class Client {
 		console.log(`CLIENT: ${toHex(clientId)}`);
 		await this.calculatePacketOverhead();
 		success(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port}`);
-		this.newKeypair = await this.cipherSuite.ephemeralServerKeypair(this);
+		this.nextSession = await this.cipherSuite.ephemeralServerKeypair(this, this.destination);
 		if (packetDecoded.noMessage) {
 			return this.sendIntro();
 		}
@@ -180,7 +180,7 @@ export class Client {
 			false,
 			0,
 			this.id,
-			this.newKeypair.publicKey
+			this.nextSession.publicKey
 		];
 		// Change connection IP:Port to be the workers IP:Port
 		const scale = this.scale;
@@ -209,7 +209,7 @@ export class Client {
 			false,
 			2,
 			this.id,
-			this.newKeypair.publicKey,
+			this.nextSession.publicKey,
 			this.randomId
 		];
 		this.updateState(1);

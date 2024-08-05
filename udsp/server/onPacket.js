@@ -47,12 +47,12 @@ export async function onPacket(packet, rinfo) {
 	const { header, } = config.packetDecoded;
 	if (isFalse(config.isShortHeaderMode)) {
 		await proccessProtocolPacketHeader(client, header, config.packetDecoded, rinfo);
-	} else if (client.newKeypair) {
-		console.log('Client has New Keypair assigned', client.newKeypair, header, config);
+	} else if (client.nextSession) {
+		console.log('Client has New Keypair assigned', client.nextSession, header, config);
 		// new Error();
 		// return;
-		assign(client, client.newKeypair);
-		client.newKeypair = null;
+		assign(client, client.nextSession);
+		client.nextSession = null;
 		await client.setSessionKeys();
 	}
 	const wasDecoded = await decodePacket(config);

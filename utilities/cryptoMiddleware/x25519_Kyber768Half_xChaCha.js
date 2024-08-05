@@ -3,11 +3,11 @@ import { clearBuffer, isBuffer } from '@universalweb/acid';
 import {
 	clientSessionKeys,
 	clientSessionKeysAttach,
-	encryptionKeypair,
+	encryptionKeypair as encryptionKeypair25519,
 	serverSessionKeys,
 	serverSessionKeysAttach
 } from './x25519.js';
-import { decapsulate, encapsulate, signatureKeypair } from './kyber768.js';
+import { decapsulate, encapsulate, encryptionKeypair } from './kyber768.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
 const {
@@ -56,17 +56,32 @@ export const x25519_kyber768Half_xchacha20 = {
 	async clientInitialSession(source, destination) {
 		const x25519SessionKeys = clientSessionKeysAttach(source, destination);
 		console.log('PublicKey from Server', destination.publicKey);
-		// await kyberDecapsulate(source, destination, x25519SessionKeys);
-		// console.log('Decapsulate kyberSharedSecret', source);
+		return x25519SessionKeys;
 	},
 	async serverInitialSession(source, destination) {
-		const destinationPublicKey = source.publicKey;
-		const sourcePublicKey = source.publicKey;
-		const sourceKeypair25519 = {
-			privateKey: get25519Key(source.privateKey),
-			publicKey: get25519Key(source.publicKey)
+	},
+	generateSeed() {
+		return randomBuffer(64);
+	},
+	async keypair(seedArg) {
+		const x25519Keypair = await encryptionKeypair25519();
+		const seed = seedArg || x25519_kyber768Half_xchacha20.generateSeed();
+		const kyberKeypair = await encryptionKeypair(seed);
+		const target = {
+			publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
+			privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey])
 		};
-		const x25519SessionKeys = clientSessionKeys(sourceKeypair25519, get25519Key(destinationPublicKey));
+		return target;
+	},
+	async clientEphemeralKeypair() {
+		const source = await x25519_kyber768Half_xchacha20.keypair();
+		return source;
+	},
+	async serverEphemeralKeypair(source, destination) {
+		const destinationPublicKey = destination.publicKey;
+		const x25519Keypair = await encryptionKeypair25519();
+		const sourceKeypair25519 = x25519Keypair.publicKey;
+		const x25519SessionKeys = serverSessionKeys(sourceKeypair25519, get25519Key(destinationPublicKey));
 		const kyberPublicKeypair = getKyberKey(destinationPublicKey);
 		const {
 			cipherText,
@@ -75,47 +90,9 @@ export const x25519_kyber768Half_xchacha20 = {
 		const kyberSharedSecret = kyberSharedSecretUnit8;
 		console.log('client kyberSharedSecret', kyberSharedSecret);
 		console.log('client cipherText', cipherText, cipherText.length);
-		source.preparedPublicKey = Buffer.concat([sourceKeypair25519.publicKey, cipherText]);
-		source.transmitKey = blake3CombineKeys(x25519SessionKeys.transmitKey, kyberSharedSecret);
-		source.receiveKey = blake3CombineKeys(x25519SessionKeys.receiveKey, kyberSharedSecret);
-	},
-	async loadKeypair(source) {
-		const {
-			privateKey,
-			publicKey
-		} = source;
-		const kyberPublicKey = getKyberKey(publicKey);
-		const kyberPrivateKey = getKyberKey(privateKey);
-		source.kyberKeypair = {
-			privateKey: kyberPrivateKey,
-			publicKey: kyberPublicKey
-		};
-		source.x25519Keypair = {
-			privateKey: get25519Key(privateKey),
-			publicKey: get25519Key(publicKey)
-		};
-	},
-	generateKeySeed() {
-		return randomBuffer(64);
-	},
-	signatureKeypair,
-	async clientEphemeralKeypair() {
-		const source = await x25519_kyber768Half_xchacha20.keypair();
-		return source;
-	},
-	async serverEphemeralKeypair(client) {
-		const source = await encryptionKeypair();
-		return source;
-	},
-	async keypair(seedArg) {
-		const x25519Keypair = await encryptionKeypair();
-		const seed = seedArg || x25519_kyber768Half_xchacha20.generateKeySeed();
-		const kyberKeypair = await signatureKeypair(seed);
-		const target = {
-			publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
-			privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey])
-		};
-		return target;
+		source.nextSession.publicKey = Buffer.concat([sourceKeypair25519.publicKey, cipherText]);
+		source.nextSession.transmitKey = blake3CombineKeys(x25519SessionKeys.transmitKey, kyberSharedSecret);
+		source.nextSession.receiveKey = blake3CombineKeys(x25519SessionKeys.receiveKey, kyberSharedSecret);
 	},
 	async certificateEncryptionKeypair() {
 		const {
