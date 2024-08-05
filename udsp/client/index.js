@@ -286,6 +286,7 @@ export class Client extends UDSP {
 			version,
 			id
 		} = this;
+		console.log('Client ID', id);
 		header.push(id, cipherSuite.id, version);
 		return header;
 	}
@@ -360,7 +361,7 @@ export class Client extends UDSP {
 	async setSession() {
 		// console.log(this.destination.publicKey);
 		if (this.destination.publicKey) {
-			this.cipherSuite.clientSessionKeys(this, this.destination);
+			this.cipherSuite.setClientSession(this, this.destination);
 			if (this.receiveKey) {
 				console.log(`Created Shared Keys`);
 				console.log(`receiveKey: ${toHex(this.receiveKey)}`);
@@ -456,7 +457,8 @@ export class Client extends UDSP {
 		this.destination = {
 			connectionIdSize: defaultServerConnectionIdSize,
 			overhead: {},
-			id: Buffer.alloc(0),
+			// False is smaller than an empty buffer by a singular byte
+			id: false,
 		};
 		this.autoConnect = false;
 		this.certificateChunks = [];
@@ -473,4 +475,3 @@ export async function client(options) {
 }
 // Add the request export here for simple auto connect and then just grab contents to return called UDSP
 // client is for a longer stateful connection request to a remote server
-console.log(encode(Buffer.alloc(0)).length, encode(false).length);

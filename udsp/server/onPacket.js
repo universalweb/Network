@@ -4,6 +4,7 @@ import {
 	eachAsyncArray,
 	hasValue,
 	isArray,
+	isBuffer,
 	isEmpty,
 	isFalse,
 	isNumber,
@@ -35,8 +36,8 @@ export async function onPacket(packet, rinfo) {
 		return console.trace('Invalid Packet Headers');
 	}
 	const id = config.packetDecoded.id;
-	if (!id) {
-		return console.log('Invalid Client id given', id);
+	if (id !== false && !isBuffer(id)) {
+		return console.log('Invalid Client id given', id === false);
 	}
 	const idString = id.toString('hex');
 	const client = await this.client(config, id, idString, rinfo);
@@ -53,7 +54,7 @@ export async function onPacket(packet, rinfo) {
 		// return;
 		assign(client, client.nextSession);
 		client.nextSession = null;
-		await client.setSessionKeys();
+		await client.setSession();
 	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {

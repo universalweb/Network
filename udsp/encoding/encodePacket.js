@@ -1,6 +1,7 @@
 import {
 	assign,
 	chunk,
+	hasValue,
 	isArray,
 	isPlainObject,
 	objectSize,
@@ -36,7 +37,7 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 		cipherSuite
 	} = source;
 	const id = destination.id;
-	if (!id) {
+	if (!hasValue(id)) {
 		console.trace(`ID is missing`);
 		return;
 	}

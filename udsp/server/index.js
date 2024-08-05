@@ -184,7 +184,7 @@ export class Server extends UDSP {
 		return client;
 	}
 	async client(config, id, idString, rinfo) {
-		if (!id || id.length === 0) {
+		if (id === false || id.length === 0) {
 			if (config.packetDecoded.headerRPC === 0) {
 				return this.createClient(config, idString, rinfo);
 			}

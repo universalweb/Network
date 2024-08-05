@@ -60,72 +60,17 @@ export class Client {
 		this.cipherSuites = cipherSuites;
 		return this.initialize(config);
 	}
-	description = `Server's client`;
-	connectionIdSize = defaultClientConnectionIdSize;
-	type = 'serverClient';
-	isServerClient = true;
-	isServerEnd = true;
-	initialize = initialize;
-	async calculatePacketOverhead() {
-		return calculatePacketOverhead(this.cipherSuite, this.destination.connectionIdSize, this.destination);
-	}
-	on(eventName, eventMethod) {
-		return createEvent(this.events, eventName, eventMethod);
-	}
-	off(eventName, eventMethod) {
-		return removeEvent(this.events, eventName, eventMethod);
-	}
-	fire(eventName, ...args) {
-		success(`CLIENT EVENT -> ${eventName} - ID:${this.connectionIdString}`);
-		return triggerEvent(this.events, eventName, this, ...args);
-	}
-	onConnected = onConnected;
-	async setSessionKeys() {
-		console.log('Set session keys');
-		if (this.receiveKey) {
-			success(`OLD receiveKey: ${toHex(this.receiveKey)}`);
-			success(`OLD transmitKey: ${toHex(this.transmitKey)}`);
-		}
-		await this.cipherSuite.serverSessionKeys(this, this.destination);
+	async initializeSession() {
+		console.log('Client Initialize session');
+		await this.cipherSuite.serverInitializeSession(this, this.destination);
 		success(`receiveKey: ${toHex(this.receiveKey)}`);
 		success(`transmitKey: ${toHex(this.transmitKey)}`);
 	}
-	updateState(state) {
-		if (this.destroyed) {
-			return;
-		}
-		console.log(`CLIENT State Updated -> ${this.state}`);
-		this.state = state;
-	}
-	async send(frame, headers, footer) {
-		msgSent(`socket Sent -> ID: ${this.connectionIdString}`);
-		if (this.destroyed) {
-			return;
-		}
-		return sendPacket(frame, this, this.socket, this.destination, headers, footer);
-	}
-	async authenticate(frame, frameHeaders) {
-	}
-	close(destroyCode) {
-		this.sendEnd();
-		this.destroy(destroyCode);
-	}
-	async destroy(destroyCode) {
-		info(`socket EVENT -> destroy - ID:${this.connectionIdString}`);
-		return destroy(this, destroyCode);
-	}
-	sendEnd() {
-		if (this.state === 0) {
-			return;
-		}
-		console.log('Sending CLIENT END');
-		this.updateState(0);
-		return this.send([false, 1], false, null, true);
-	}
-	async end(frame, header) {
-		console.log(`Destroying client ${this.connectionIdString}`, frame, header);
-		await this.sendEnd();
-		await this.destroy(0);
+	async setSession() {
+		console.log('Client Set Session');
+		await this.cipherSuite.serverSetSession(this, this.destination);
+		success(`receiveKey: ${toHex(this.receiveKey)}`);
+		success(`transmitKey: ${toHex(this.transmitKey)}`);
 	}
 	// CLIENT HELLO
 	// Change from initialization to this for session stuff keep separate
@@ -159,11 +104,11 @@ export class Client {
 			id: clientId,
 			connectionIdSize: clientId.length,
 		});
-		await this.setSessionKeys();
+		await this.initializeSession();
 		console.log(`CLIENT: ${toHex(clientId)}`);
 		await this.calculatePacketOverhead();
 		success(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port}`);
-		this.nextSession = await this.cipherSuite.ephemeralServerKeypair(this, this.destination);
+		this.nextSession = await this.cipherSuite.serverEphemeralKeypair(this, this.destination);
 		if (packetDecoded.noMessage) {
 			return this.sendIntro();
 		}
@@ -215,6 +160,30 @@ export class Client {
 		this.updateState(1);
 		await this.send(frame);
 	}
+	updateState(state) {
+		if (this.destroyed) {
+			return;
+		}
+		console.log(`CLIENT State Updated -> ${this.state}`);
+		this.state = state;
+	}
+	async send(frame, headers, footer) {
+		msgSent(`socket Sent -> ID: ${this.connectionIdString}`);
+		if (this.destroyed) {
+			return;
+		}
+		return sendPacket(frame, this, this.socket, this.destination, headers, footer);
+	}
+	async authenticate(frame, frameHeaders) {
+	}
+	close(destroyCode) {
+		this.sendEnd();
+		this.destroy(destroyCode);
+	}
+	async destroy(destroyCode) {
+		info(`socket EVENT -> destroy - ID:${this.connectionIdString}`);
+		return destroy(this, destroyCode);
+	}
 	// PFS
 	async reply(frame, header, rinfo) {
 		if (this.state === 1) {
@@ -232,15 +201,47 @@ export class Client {
 			replyObject.onFrame(frame, header, rinfo);
 		}
 	}
+	sendEnd() {
+		if (this.state === 0) {
+			return;
+		}
+		console.log('Sending CLIENT END');
+		this.updateState(0);
+		return this.send([false, 1], false, null, true);
+	}
+	async end(frame, header) {
+		console.log(`Destroying client ${this.connectionIdString}`, frame, header);
+		await this.sendEnd();
+		await this.destroy(0);
+	}
+	async calculatePacketOverhead() {
+		return calculatePacketOverhead(this.cipherSuite, this.destination.connectionIdSize, this.destination);
+	}
+	on(eventName, eventMethod) {
+		return createEvent(this.events, eventName, eventMethod);
+	}
+	off(eventName, eventMethod) {
+		return removeEvent(this.events, eventName, eventMethod);
+	}
+	fire(eventName, ...args) {
+		success(`CLIENT EVENT -> ${eventName} - ID:${this.connectionIdString}`);
+		return triggerEvent(this.events, eventName, this, ...args);
+	}
+	destination = {
+		overhead: {},
+		connectionIdSize: defaultClientConnectionIdSize
+	};
 	pending = false;
 	state = 0;
 	randomId = randomBuffer(8);
 	data = construct(Map);
 	requestQueue = construct(Map);
-	destination = {
-		overhead: {},
-		connectionIdSize: defaultClientConnectionIdSize
-	};
+	connectionIdSize = defaultClientConnectionIdSize;
+	type = 'serverClient';
+	isServerClient = true;
+	isServerEnd = true;
+	initialize = initialize;
+	onConnected = onConnected;
 }
 export async function createClient(config) {
 	info('Creating Client');

@@ -1,7 +1,7 @@
 import * as defaultCrypto from '#crypto';
 import { clearBuffer, isBuffer } from '@universalweb/acid';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
-import { encryptionKeypair as x25519Keypair } from './x25519';
+import { encryptionKeypair as x25519Keypair } from './x25519.js';
 const { randomBuffer } = defaultCrypto;
 export async function encryptionKeypair(seed) {
 	const kyberKeypair = ml_kem768.keygen(seed);
