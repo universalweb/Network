@@ -49,11 +49,7 @@ export async function onPacket(packet, rinfo) {
 	if (isFalse(config.isShortHeaderMode)) {
 		await proccessProtocolPacketHeader(client, header, config.packetDecoded, rinfo);
 	} else if (client.nextSession) {
-		console.log('Client has New Keypair assigned', client.nextSession, header, config);
-		// new Error();
-		// return;
-		assign(client, client.nextSession);
-		client.nextSession = null;
+		console.log('Client assigned Next Session', client.nextSession, header, config);
 		await client.setSession();
 	}
 	const wasDecoded = await decodePacket(config);

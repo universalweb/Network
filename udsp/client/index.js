@@ -361,7 +361,7 @@ export class Client extends UDSP {
 	async setSession() {
 		// console.log(this.destination.publicKey);
 		if (this.destination.publicKey) {
-			this.cipherSuite.setClientSession(this, this.destination);
+			this.cipherSuite.clientSetSession(this, this.destination);
 			if (this.receiveKey) {
 				console.log(`Created Shared Keys`);
 				console.log(`receiveKey: ${toHex(this.receiveKey)}`);

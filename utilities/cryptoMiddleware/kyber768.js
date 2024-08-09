@@ -10,8 +10,9 @@ export async function encryptionKeypair(seed) {
 		privateKey: kyberKeypair.secretKey
 	};
 }
-export async function decapsulate(cipherText, sourceKeypairKyber, x25519SessionKeys) {
-	ml_kem768.decapsulate(cipherText, sourceKeypairKyber.privateKey);
+export async function decapsulate(cipherText, sourceKeypairKyber) {
+	const decapsulated = ml_kem768.decapsulate(cipherText, sourceKeypairKyber?.privateKey || sourceKeypairKyber);
+	return decapsulated;
 }
 export async function encapsulate(sourceKeypair) {
 	// { cipherText, sharedSecret }

@@ -30,7 +30,6 @@ import { Reply } from '#udsp/request/reply';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
 import cluster from 'node:cluster';
 import { destroy } from './destroy.js';
-import { encodePacket } from '#udsp/encoding/encodePacket';
 import { initialize } from './initialize.js';
 import { onConnected } from './onConnected.js';
 import { processFrame } from '#udsp/processFrame';
@@ -66,8 +65,13 @@ export class Client {
 		success(`receiveKey: ${toHex(this.receiveKey)}`);
 		success(`transmitKey: ${toHex(this.transmitKey)}`);
 	}
-	async setSession() {
+	async setSession(targetSession) {
 		console.log('Client Set Session');
+		if (targetSession) {
+			this.nextSession = targetSession;
+		}
+		assign(this, this.nextSession);
+		this.nextSession = null;
 		await this.cipherSuite.serverSetSession(this, this.destination);
 		success(`receiveKey: ${toHex(this.receiveKey)}`);
 		success(`transmitKey: ${toHex(this.transmitKey)}`);
@@ -105,11 +109,11 @@ export class Client {
 			connectionIdSize: clientId.length,
 		});
 		await this.initializeSession();
-		console.log(`CLIENT: ${toHex(clientId)}`);
-		await this.calculatePacketOverhead();
+		this.nextSession = await this.cipherSuite.serverEphemeralKeypair({}, this.destination);
 		success(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port}`);
-		this.nextSession = await this.cipherSuite.serverEphemeralKeypair(this, this.destination);
+		await this.calculatePacketOverhead();
 		if (packetDecoded.noMessage) {
+			console.log('Packet has No message body');
 			return this.sendIntro();
 		}
 	}

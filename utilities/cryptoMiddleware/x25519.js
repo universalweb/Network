@@ -100,7 +100,7 @@ export function authenticatedBox(message, receiverKeypair, senderKeypair) {
 		encrypted
 	]);
 }
-export function setClientSession(client, serverPublicKey, target) {
+export function clientSetSession(client, serverPublicKey, target) {
 	const receiveKey = client?.receiveKey || createSessionKey();
 	const transmitKey = client?.transmitKey || createSessionKey();
 	crypto_kx_client_session_keys(receiveKey, transmitKey, client.publicKey, client.privateKey, serverPublicKey?.publicKey || serverPublicKey);
@@ -132,6 +132,6 @@ export function serverSetSession(server, client, target) {
 export async function serverSetSessionAttach(source, destination) {
 	return serverSetSession(source, destination, source);
 }
-export async function clientSessionKeysAttach(source, destination) {
-	return setClientSession(source, destination, source);
+export async function clientSetSessionAttach(source, destination) {
+	return clientSetSession(source, destination, source);
 }

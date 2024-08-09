@@ -1,9 +1,9 @@
 import * as defaultCrypto from '#crypto';
 import {
-	clientSessionKeysAttach,
+	clientSetSession,
+	clientSetSessionAttach,
 	encryptionKeypair,
-	serverSetSessionAttach,
-	setClientSession
+	serverSetSessionAttach
 } from './x25519.js';
 import {
 	createSessionKey,
@@ -53,11 +53,15 @@ export const x25519_xchacha20 = {
 		const generatedKeypair = encryptionKeypair();
 		return generatedKeypair;
 	},
+	async clientEphemeralKeypair(destination) {
+		const generatedKeypair = encryptionKeypair();
+		return generatedKeypair;
+	},
 	certificateEncryptionKeypair: encryptionKeypair,
 	decrypt,
 	encrypt,
-	setClientSession,
-	clientInitializeSession: clientSessionKeysAttach,
+	clientSetSession,
+	clientInitializeSession: clientSetSessionAttach,
 	serverInitializeSession: serverSetSessionAttach,
 	serverSetSession: serverSetSessionAttach,
 	preferred: true,
