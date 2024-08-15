@@ -1,13 +1,15 @@
-import { domainCertificate, uwProfile } from '#utilities/certificate/index';
 import { currentPath } from '@universalweb/acid';
 import { decode } from '#utilities/serialize';
+import { domainCertificate } from '#utilities/certificate/index';
 const dirname = currentPath(import.meta);
-const profile = await uwProfile();
-await profile.save('profile', `${dirname}/../profiles/default`);
+// Consider not having UWProfile Certificate in favor of UWProfile/Viat version folder
+// const profile = await uwProfile();
+// await profile.save('profile', `${dirname}/../profiles/default`);
 const UWCertificate = await domainCertificate({
 	entity: 'universalweb.io',
-	backupHash: profile.getSignature(),
+	// ownerHash: profile.getSignature(),
 	signatureAlgorithm: 0,
+	cipherSuites: [0, 1],
 	records: [
 		[
 			'aaaa',

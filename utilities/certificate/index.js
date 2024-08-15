@@ -5,4 +5,3 @@ import { assign } from '@universalweb/acid';
 // Add certificate verification via DIS
 export * from './domain.js';
 export * from './domain.js';
-export * from './profile.js';

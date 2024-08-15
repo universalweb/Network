@@ -16,18 +16,28 @@ import { ed25519Algo } from './ed25519.js';
 import { x25519_kyber768Half_xchacha20 } from './x25519_Kyber768Half_xChaCha.js';
 import { x25519_xchacha20 } from './x25519XChaCha.js';
 function setOption(source, option) {
-	source.set(option.name, option);
-	source.set(option.id, option);
-	source.set(option.alias, option);
+	const {
+		id, name: cipherName, alias
+	} = option;
+	if (hasValue(cipherName)) {
+		source.set(cipherName, option);
+	}
+	if (hasValue(id)) {
+		source.set(id, option);
+	}
+	if (hasValue(alias)) {
+		source.set(alias, option);
+	}
 }
 export const cipherSuites = new Map();
 const cipherSuitesVersion1 = new Map();
-cipherSuites.set(1, cipherSuitesVersion1);
-cipherSuitesVersion1.set('all', [x25519_xchacha20]);
+cipherSuites.set(currentVersion, cipherSuitesVersion1);
+cipherSuitesVersion1.set('all', [x25519_xchacha20, x25519_kyber768Half_xchacha20]);
 setOption(cipherSuitesVersion1, x25519_xchacha20);
+setOption(cipherSuitesVersion1, x25519_kyber768Half_xchacha20);
 export const cipherSuitesCertificates = new Map();
 const cipherSuitesCertificatesVersion1 = new Map();
-cipherSuitesCertificates.set(1, cipherSuitesCertificatesVersion1);
+cipherSuitesCertificates.set(currentVersion, cipherSuitesCertificatesVersion1);
 cipherSuitesCertificatesVersion1.set('all', [x25519_xchacha20, x25519_kyber768Half_xchacha20]);
 setOption(cipherSuitesCertificatesVersion1, x25519_xchacha20);
 setOption(cipherSuitesCertificatesVersion1, x25519_kyber768Half_xchacha20);
@@ -71,7 +81,7 @@ publicKeyAlgorithms.set(1, publicKeyAlgorithmVersion1);
 setOption(publicKeyAlgorithmVersion1, ed25519Algo);
 export const publicKeyCertificateAlgorithms = new Map();
 const publicKeyCertificateAlgorithmsVersion1 = new Map();
-publicKeyCertificateAlgorithms.set(1, publicKeyCertificateAlgorithmsVersion1);
+publicKeyCertificateAlgorithms.set(currentVersion, publicKeyCertificateAlgorithmsVersion1);
 setOption(publicKeyCertificateAlgorithmsVersion1, ed25519Algo);
 // export const boxAlgorithms = new Map();
 // const boxAlgorithmsVersion1 = new Map();

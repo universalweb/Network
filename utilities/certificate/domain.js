@@ -23,7 +23,6 @@ import { UWCertificate } from './UWCertificate.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { keychainSave } from './keychain.js';
 import { toBase64 } from '#crypto';
-import { uwProfile } from './profile.js';
 const type = certificateTypes.get('domain');
 export function createDomainCertificateObject(config = {}, options = {}) {
 	const currentDate = new Date();
@@ -33,11 +32,10 @@ export function createDomainCertificateObject(config = {}, options = {}) {
 		version = currentCertificateVersion,
 		signatureAlgorithm,
 		signatureKeypair,
-		cipherSuite,
 		contact,
 		cipherSuites,
 		encryptionKeypair,
-		backupHash,
+		ownerHash,
 		protocolOptions,
 		start = currentDate.getTime(),
 		end = currentDate.setUTCMonth(currentDate.getUTCMonth() + 3)
@@ -49,7 +47,7 @@ export function createDomainCertificateObject(config = {}, options = {}) {
 		start,
 		end,
 		type,
-		backupHash
+		ownerHash
 	};
 	if (hasValue(protocolOptions)) {
 		certificate.protocolOptions = protocolOptions;
@@ -70,9 +68,6 @@ export function createDomainCertificateObject(config = {}, options = {}) {
 	if (hasValue(signatureAlgorithm) && signatureAlgorithm !== 0) {
 		certificate.signatureAlgorithm = signatureAlgorithm;
 	}
-	if (hasValue(cipherSuite) && cipherSuite !== 0) {
-		certificate.cipherSuite = cipherSuite;
-	}
 	if (hasValue(cipherSuites) && cipherSuites !== 0) {
 		certificate.cipherSuites = cipherSuites;
 	}
@@ -80,7 +75,8 @@ export function createDomainCertificateObject(config = {}, options = {}) {
 	if (!signatureKeypair) {
 		certificate.signatureKeypair = signatureMethod.signatureKeypair();
 	}
-	const keyExchangeMethod = getCipherSuite(certificate.cipherSuite, protocolVersion);
+	const encryptionKeypairAlgorithm = isArray(cipherSuites) ? cipherSuites[0] : cipherSuites;
+	const keyExchangeMethod = getCipherSuite(encryptionKeypairAlgorithm, protocolVersion);
 	if (!encryptionKeypair) {
 		certificate.encryptionKeypair = keyExchangeMethod.certificateEncryptionKeypair();
 	}
@@ -99,14 +95,14 @@ export function objectToRawDomainCertificate(certificateObject) {
 		options,
 		encryptionKeypair,
 		contact,
-		backupHash
+		ownerHash
 	} = certificateObject;
 	const certificate = [];
 	certificate[0] = 0;
 	certificate[1] = currentCertificateVersion;
 	certificate[2] = start;
 	certificate[3] = end;
-	certificate[4] = backupHash;
+	certificate[4] = ownerHash;
 	certificate[5] = [[signatureKeypair.publicKey, signatureKeypair.privateKey], [encryptionKeypair.publicKey, encryptionKeypair.privateKey],];
 	if (hasValue(cipherSuites)) {
 		certificate[5][2] = cipherSuites;
@@ -145,12 +141,12 @@ export function rawToObjectDomainCertificate(rawObject, signature) {
 		version,
 		start,
 		end,
-		backupHash,
+		ownerHash,
 		[
 			signatureKeypair,
 			encryptionKeypair,
-			signatureAlgorithm,
 			cipherSuites,
+			signatureAlgorithm,
 		],
 		entity,
 		records,
@@ -163,7 +159,7 @@ export function rawToObjectDomainCertificate(rawObject, signature) {
 		version,
 		start,
 		end,
-		backupHash,
+		ownerHash,
 		entity,
 	};
 	if (isArray(signatureKeypair)) {
@@ -267,9 +263,7 @@ export async function publicDomainCertificate(...args) {
 	return new PublicDomainCertificate(...args);
 }
 // const thisPath = currentPath(import.meta);
-// const profileCert = await uwProfile(`${thisPath}/cache/profilePublicCert.cert`);
 // const exampleCert = await new DomainCertificate({
-// 	backupHash: profileCert.get('signature'),
 // 	entity: 'universalweb.io',
 // 	records: [
 // 		[
