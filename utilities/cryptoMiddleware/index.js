@@ -67,7 +67,7 @@ export function getCipherSuites(indexes, version = currentVersion) {
 			const cipherSuitesArray = compactMapArray(indexes, (value) => {
 				const cipherSuite = getCipherSuite(value, version);
 				if (cipherSuite) {
-					cipherSuitesArray.push(cipherSuite);
+					return cipherSuite;
 				}
 			});
 			return cipherSuitesArray;

@@ -6,6 +6,7 @@ export async function onHeadReady(id, rpc, packetId, data, frame, source, rinfo)
 	source.sendHead();
 }
 export async function onHead(id, rpc, packetId, data, frame, source, rinfo) {
+	console.log('On Head Function', id, rpc, packetId, data, frame, source, rinfo);
 	if (!source.receivedSetupPacket || source.incomingHeadPackets[packetId]) {
 		return;
 	}

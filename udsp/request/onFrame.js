@@ -56,7 +56,7 @@ export async function onFrame(frame, header, rinfo) {
 		packetId,
 		data
 	] = frame;
-	console.log(`onPacket Stream Id ${id}`);
+	console.log(`onPacket Stream Id ${id}`, this);
 	if (isMethodCodeValid(rpc) === false) {
 		source.destroy('Invalid RPC');
 		return;

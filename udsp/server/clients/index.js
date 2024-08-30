@@ -241,7 +241,7 @@ export class Client {
 	data = construct(Map);
 	requestQueue = construct(Map);
 	connectionIdSize = defaultClientConnectionIdSize;
-	type = 'serverClient';
+	static type = 'serverClient';
 	isServerClient = true;
 	isServerEnd = true;
 	initialize = initialize;

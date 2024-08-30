@@ -3,7 +3,7 @@ import { isBuffer, promise } from '@universalweb/acid';
 import keychain from 'keychain';
 import { toBase64 } from '#crypto';
 export function keychainGetPromise(account, accept, reject) {
-	console.log(account);
+	console.log('Keychain Account', account);
 	keychain.getPassword({
 		account,
 		service: 'Universal Web'

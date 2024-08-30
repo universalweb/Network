@@ -1,3 +1,4 @@
+// Closed source not for private and or corporate use.
 import * as defaultCrypto from '#crypto';
 import { assign, clearBuffer, isBuffer } from '@universalweb/acid';
 import {
@@ -8,6 +9,7 @@ import {
 	serverSetSessionAttach,
 } from './x25519.js';
 import { decapsulate, encapsulate, encryptionKeypair } from './kyber768.js';
+import { decrypt, encrypt } from './XChaCha.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
 const {
@@ -120,6 +122,8 @@ export const x25519_kyber768Half_xchacha20 = {
 		const x25519Keypair = await encryptionKeypair25519();
 		return x25519Keypair;
 	},
+	decrypt,
+	encrypt,
 };
 // EXAMPLE
 // const ogServer = await encryptionKeypair25519();

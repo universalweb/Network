@@ -3,7 +3,7 @@ export async function onDataReady(id, rpc, packetId, data, frame, source, rinfo)
 		source.totalReceivedUniquePackets++;
 		source.receivedDataReadyPacket = true;
 	}
-	console.log('Data Ready Packet Received', source.type);
+	console.log('Data Ready Packet Received', id, rpc, packetId, data, frame, source, rinfo);
 	source.sendData();
 }
 export async function onData(id, rpc, packetId, data, frame, source, rinfo) {

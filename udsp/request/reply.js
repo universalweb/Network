@@ -59,6 +59,7 @@ export class Reply extends Base {
 		this.state = 1;
 		await processEvent(this.request, this.response, this.source().server());
 	}
+	static type = 'reply';
 }
 export function reply(...args) {
 	// console.log(client);

@@ -54,7 +54,7 @@ import { publicDomainCertificate } from '../../utilities/certificate/domain.js';
 import { sendPacket } from '../sendPacket.js';
 import { setDestination } from './setDestination.js';
 import { socketOnError } from './socketOnError.js';
-import { uwProfile } from '../../utilities/certificate/profile.js';
+import { uwProfile } from '../../UWProfile/index.js';
 import { uwRequest } from '#udsp/requestMethods/request';
 import { watch } from '#watch';
 const {

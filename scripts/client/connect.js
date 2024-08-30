@@ -17,14 +17,4 @@ const uwClient = await client({
 const connection = await uwClient.connect();
 console.timeEnd('Connected');
 console.log('INTRO =>', uwClient);
-// GET Request
-const fileRequest = await uwClient.request('get', 'index.html');
-// console.log(fileRequest);
-console.time('FileRequest');
-// Send Request
-const response = await fileRequest.send();
-// Close Connection
-console.timeEnd('FileRequest');
 console.timeEnd('Full');
-console.log('headers', response.headers);
-console.log('data', response.text());
