@@ -18,7 +18,7 @@ import {
 } from '../../defaults.js';
 import { decode, encode } from '#utilities/serialize';
 import { getCipherSuite, getSignatureAlgorithm } from '../cryptoMiddleware/index.js';
-import { read, readStructure, write } from '#file';
+import { read, readStructured, write } from '#file';
 import { UWCertificate } from './UWCertificate.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { keychainSave } from './keychain.js';
@@ -211,7 +211,7 @@ export class DomainCertificate extends UWCertificate {
 			this.object = createDomainCertificateObject(config);
 			this.update();
 		} else if (isString(config)) {
-			const source = await readStructure(config);
+			const source = await readStructured(config);
 			this.processAsObject(source);
 		} else if (isArray(config)) {
 			this.array = config;
@@ -252,7 +252,7 @@ export async function domainCertificate(...args) {
 }
 export class PublicDomainCertificate extends UWCertificate {
 	async initialize(config) {
-		const source = isString(config) ? await readStructure(config) : config;
+		const source = isString(config) ? await readStructured(config) : config;
 		this.array = source[0];
 		this.object = rawToObjectDomainCertificate(source[0], source[1]);
 		this.getCipherSuiteMethods();

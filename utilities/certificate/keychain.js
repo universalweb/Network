@@ -2,11 +2,12 @@ import { decode, encode } from '#utilities/serialize';
 import { isBuffer, promise } from '@universalweb/acid';
 import keychain from 'keychain';
 import { toBase64 } from '#crypto';
+export const keychainService = 'UniversalWeb';
 export function keychainGetPromise(account, accept, reject) {
 	console.log('Keychain Account', account);
 	keychain.getPassword({
 		account,
-		service: 'Universal Web'
+		service: keychainService
 	}, (err, data) => {
 		if (err) {
 			return console.log(`Keychain couldn't locate record`, err);
@@ -23,13 +24,13 @@ export function keychainGet(account) {
 	});
 }
 export function keychainPromise(config, accept, reject) {
-	if (!isBuffer(config.profile)) {
-		config.profile = encode(config.profile);
+	if (!isBuffer(config.password)) {
+		config.password = encode(config.password);
 	}
-	const password = toBase64(config.profile);
+	const password = toBase64(config.password);
 	keychain.setPassword({
 		account: config.account,
-		service: 'Universal Web',
+		service: keychainService,
 		type: 'generic',
 		password
 	}, (err) => {

@@ -166,18 +166,7 @@ export default [
 				}
 			],
 			'@stylistic/no-confusing-arrow': 'error',
-			'@stylistic/no-extra-parens': [
-				'error',
-				'all',
-				{
-					conditionalAssign: false,
-					enforceForSequenceExpressions: false,
-					nestedBinaryExpressions: false,
-					returnAssign: false,
-					ternaryOperandBinaryExpressions: false,
-					enforceForFunctionPrototypeMethods: false,
-				}
-			],
+			'@stylistic/no-extra-parens': 'off',
 			'@stylistic/no-extra-semi': 'error',
 			'@stylistic/no-floating-decimal': 'error',
 			'@stylistic/no-mixed-operators': 'error',

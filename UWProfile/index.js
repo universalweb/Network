@@ -1,23 +1,37 @@
 import * as dilithium from '../utilities/cryptoMiddleware/dilithium.js';
 import * as ed25519 from '../utilities/cryptoMiddleware/ed25519.js';
+import {
+	currentPath,
+	hasDot,
+	isBuffer,
+	isString
+} from '@universalweb/acid';
 import { decode, encode } from '#utilities/serialize';
-import { blake3Hash } from '../utilities/cryptoMiddleware/blake3.js';
+import { keychainGet, keychainSave } from '../utilities/certificate/keychain.js';
+import { read, readStructured, write } from '../utilities/file.js';
+import { blake3 } from '@noble/hashes/blake3';
 import { currentCertificateVersion } from '../defaults.js';
-import { isBuffer } from '@universalweb/acid';
-import { write } from '../utilities/file.js';
+import { x25519_kyber768Half_xchacha20 } from '../utilities/cryptoMiddleware/x25519_Kyber768Half_xChaCha.js';
 const defaultEncryptionAlgorithm = 1;
 const defaultSignatureAlgorithm = 1;
+const dirname = currentPath(import.meta);
 export class UWProfile {
-	constructor(config = {}) {
+	constructor(config = {}, optionalArg) {
 		if (config === false) {
 			return this;
 		}
-		return this.initialize(config);
+		return this.initialize(config, optionalArg);
 	}
-	async initialize(config) {
-		if (isBuffer(config)) {
-			this.importFromBinary(config);
-		} else if (config.publicKey || config.privateKey) {
+	async initialize(config, optionalArg) {
+		if (isString(config)) {
+			if (config.includes('/') || config.includes('\\') || hasDot(config)) {
+				await this.importFile(config, optionalArg);
+			} else {
+				await this.importFromKeychain(config, optionalArg);
+			}
+		} else if (isBuffer(config)) {
+			await this.importFromBinary(config, optionalArg);
+		} else if (config?.publicKey || config?.privateKey) {
 			const {
 				version,
 				publicKey,
@@ -37,18 +51,21 @@ export class UWProfile {
 		}
 		return this;
 	}
-	async generate(config) {
-		const {
-			signatureAlgorithm = defaultSignatureAlgorithm,
-			encryptionAlgorithm = defaultEncryptionAlgorithm,
-			version,
-		} = config;
-		this.version = version || currentCertificateVersion;
+	async generateSignatureKeypair() {
+		this.version = currentCertificateVersion;
 		const ed25519NewKeypair = await ed25519.signatureKeypair();
 		const dilithiumNewKeypair =	await dilithium.signatureKeypair();
 		console.log(ed25519NewKeypair.publicKey, ed25519NewKeypair.privateKey);
 		this.publicKey = Buffer.concat([ed25519NewKeypair.publicKey, dilithiumNewKeypair.publicKey]);
 		this.privateKey = Buffer.concat([ed25519NewKeypair.privateKey, dilithiumNewKeypair.privateKey]);
+	}
+	async generateEncryptionKeypair() {
+		const encryptionkeypair = await x25519_kyber768Half_xchacha20.keypair();
+		this.encryptionkeypair = encryptionkeypair;
+	}
+	async generate(config) {
+		await this.generateSignatureKeypair();
+		await this.generateEncryptionKeypair();
 	}
 	get ed25519PublicKey() {
 		return this.publicKey.slice(0, 32);
@@ -79,43 +96,91 @@ export class UWProfile {
 		return (ed25519Verify === dilithiumVerify) ? ed25519Verify : false;
 	}
 	async hash(message) {
-		const hashedMessage = blake3Hash.hash(message);
+		const hashedMessage = blake3(message);
 		return hashedMessage;
 	}
-	async importFromBinary(data) {
-		const decodedData = decode(data);
-		this.version = decodedData.version;
-		this.publicKey = decodedData.publicKey;
-		this.privateKey = decodedData.privateKey;
+	async importFromBinary(data, encryptionKey) {
+		const password = (isString(encryptionKey)) ? await this.hash(Buffer.from(encryptionKey)) : encryptionKey;
+		const decodedData = (password) ? await this.decryptBinary(data, password) : decode(data);
+		await this.importFromObject(decodedData);
 		return this;
 	}
-	async exportAsBinary() {
+	async importFromObject(decodedData, encryptionKey) {
+		const password = (isString(encryptionKey)) ? await this.hash(Buffer.from(encryptionKey)) : encryptionKey;
+		const data = (password) ?	await this.decryptBinary(decodedData.encrypted, password) : decodedData;
+		this.version = data.version;
+		this.publicKey = data.publicKey;
+		this.privateKey = data.privateKey;
+		this.encryptionKeypair = data.encryptionKeypair;
+		return this;
+	}
+	async decryptBinary(encryptedObject, encryptionPassword) {
+		const decrypted = await x25519_kyber768Half_xchacha20.decrypt(encryptedObject, encryptionPassword);
+		return decode(decrypted);
+	}
+	async exportBinary(encryptionKey) {
 		const data = {
 			version: this.version,
 			publicKey: this.publicKey,
 			privateKey: this.privateKey,
+			encryptionKeypair: this.encryptionkeypair
 		};
 		const dataEncoded = encode(data);
+		if (encryptionKey) {
+			const password = (isString(encryptionKey)) ? await this.hash(Buffer.from(encryptionKey)) : encryptionKey;
+			console.log(password);
+			const encryptedData = await x25519_kyber768Half_xchacha20.encrypt(dataEncoded, password);
+			const encryptedObject = {
+				encrypted: encryptedData,
+			};
+			return encode(encryptedObject);
+		}
 		return dataEncoded;
 	}
-	async saveToFile(fileLocation, fileName) {
-		const dataEncoded = await this.exportAsBinary();
+	async saveToFile(fileName, fileLocation, encryptionPassword) {
+		const binaryData = await this.exportBinary(encryptionPassword);
 		const fullPath = `${fileLocation}/${fileName}`;
-		write(fullPath, dataEncoded, 'binary', true);
+		return write(fullPath, binaryData, 'binary', true);
+	}
+	async importFile(filePath, encryptionPassword) {
+		const data = await readStructured(filePath);
+		if (data) {
+			return this.importFromObject(data, encryptionPassword);
+		}
+		console.log('Error Importing Profile', filePath);
+		return false;
+	}
+	async saveToKeychain(accountName = 'UWProfile', encryptionPassword) {
+		const binaryData = await this.exportBinary(encryptionPassword);
+		const config = {
+			account: this.accountName || accountName,
+			password: binaryData,
+		};
+		console.log('Profile Size', binaryData.length);
+		return keychainSave(config);
+	}
+	async importFromKeychain(accountName = 'UWProfile', encryptionPassword) {
+		const keychainObject = await keychainGet(this.accountName || accountName);
+		await this.importFromObject(keychainObject, encryptionPassword);
 	}
 }
-export async function uwProfile(config) {
-	const source = new UWProfile(config);
+export async function uwProfile(config, optionalArg) {
+	const source = new UWProfile(config, optionalArg);
 	return source;
 }
-const exampleProfileExample = await uwProfile();
-console.log(await exampleProfileExample);
-console.log(`Version: ${exampleProfileExample.version}`);
-console.log(`Public Key Size: ${exampleProfileExample.publicKey.length}`);
-console.log(`Private Key Size: ${exampleProfileExample.privateKey.length}`);
-console.log(exampleProfileExample.ed25519PublicKey);
-console.log(exampleProfileExample.ed25519PrivateKey);
-const messageExample = Buffer.from('Hello, World!');
-const sig = await exampleProfileExample.sign(messageExample);
-console.log(sig);
-console.log(await exampleProfileExample.verifySignature(sig, messageExample));
+// const exampleProfileExample = await uwProfile();
+// const encryptionPasswordExample = 'password';
+// console.log(await exampleProfileExample);
+// console.log(`Version: ${exampleProfileExample.version}`);
+// console.log(`Public Key Size: ${exampleProfileExample.publicKey.length}`);
+// console.log(`Private Key Size: ${exampleProfileExample.privateKey.length}`);
+// console.log(exampleProfileExample.ed25519PublicKey);
+// console.log(exampleProfileExample.ed25519PrivateKey);
+// const messageExample = Buffer.from('Hello, World!');
+// const sig = await exampleProfileExample.sign(messageExample);
+// console.log(sig);
+// console.log(await exampleProfileExample.verifySignature(sig, messageExample));
+// await exampleProfileExample.saveToKeychain('exampleUWProfile', encryptionPasswordExample);
+// await exampleProfileExample.saveToFile('profile.cert', `${dirname}/../profiles`, encryptionPasswordExample);
+// console.log(await uwProfile('exampleUWProfile', encryptionPasswordExample));
+// console.log(await uwProfile(`${dirname}/../profiles/profile.cert`, encryptionPasswordExample));

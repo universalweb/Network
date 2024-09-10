@@ -102,20 +102,13 @@ export class Client extends UDSP {
 		}
 		return this;
 	}
-	async getKeychainSave(keychain) {
-		return keychainGet(keychain);
-	}
 	async setProfile() {
 		const {
-			keychain,
-			profile
+			profile,
+			profilePassword
 		} = this.options;
-		if (isString(profile)) {
-			this.profile = await uwProfile(profile);
-		}
-		if (keychain) {
-			console.log('Loading Keychain', keychain);
-			this.profile = await this.getKeychainSave(keychain);
+		if (profile) {
+			this.profile = await uwProfile(profile, profilePassword);
 		}
 	}
 	async attachEvents() {

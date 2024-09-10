@@ -7,10 +7,9 @@ console.time('Connected');
 // Universal Web Client Socket
 const uwClient = await client({
 	destinationCertificate: `${currentPath(import.meta)}/../../udsp/dis/cache/universalWebPublic.cert`,
-	// Load Profile Certificate from Keychain
-	keychain: 'Universal Web Profile',
-	// Load Profile Certificate from file
-	profile: `${currentPath(import.meta)}/../../profiles/default/profile.cert`,
+	// Load Profile from file
+	profile: `${currentPath(import.meta)}/../../profiles/profile.cert`,
+	profilePassword: 'password',
 	// Force overide cipherSuite
 	cipherSuite: 1,
 });

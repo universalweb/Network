@@ -27,16 +27,16 @@ async function createFoldersIfNotExist(folderPath) {
 		}
 	}
 }
-export async function write(filePath, contents, encode, createPathFlag) {
+export async function write(filePath, contents, encoding, createPathFlag) {
 	const pathNormalized = normalize(filePath);
-	console.log('FILE WRITE', pathNormalized, contents.length, encode);
+	console.log('FILE WRITE', pathNormalized, contents.length, encoding);
 	if (createPathFlag) {
 		await createFoldersIfNotExist(path.dirname(pathNormalized));
 	}
-	return writeFile(pathNormalized, contents, encode);
+	return writeFile(pathNormalized, contents, encoding);
 }
-export async function read(filePath, encode) {
-	return readFile(normalize(filePath), encode);
+export async function read(filePath, encoding) {
+	return readFile(normalize(filePath), encoding);
 }
 export async function copy(source, destination, config) {
 	let file = await read(source);
@@ -49,17 +49,17 @@ export async function copy(source, destination, config) {
 }
 export async function readJson(filePath) {
 	try {
-		return jsonParse(await readFile(filePath));
+		return jsonParse(await read(filePath));
 	} catch (err) {
 		console.log('Read JSON Error', err);
 		return;
 	}
 }
-export async function readStructure(filePath) {
+export async function readStructured(filePath) {
 	try {
-		return decode(await readFile(filePath));
+		return decode(await read(filePath));
 	} catch (err) {
-		console.log('Read JSON Error', err);
+		console.log('Read Decode Error', err);
 		return;
 	}
 }

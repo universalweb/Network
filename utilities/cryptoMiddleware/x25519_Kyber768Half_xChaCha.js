@@ -89,9 +89,9 @@ export const x25519_kyber768Half_xchacha20 = {
 	generateSeed() {
 		return randomBuffer(64);
 	},
-	async keypair(seedArg) {
+	async keypair(kyberSeed) {
 		const x25519Keypair = await encryptionKeypair25519();
-		const seed = seedArg || x25519_kyber768Half_xchacha20.generateSeed();
+		const seed = kyberSeed || x25519_kyber768Half_xchacha20.generateSeed();
 		const kyberKeypair = await encryptionKeypair(seed);
 		const target = {
 			publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
