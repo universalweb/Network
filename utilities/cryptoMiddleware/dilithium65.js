@@ -1,4 +1,4 @@
-import { ml_dsa44, ml_dsa65, ml_dsa87 } from '@noble/post-quantum/ml-dsa';
+import { ml_dsa65, ml_dsa87 } from '@noble/post-quantum/ml-dsa';
 /*
 	Algorithm 1, implementing key generation for ML-DSA, uses an RBG to generate the 256-bit random
 	value ξ . The seed ξ shall be freshly generated using an approved RBG, as prescribed in NIST SP 800-90A,
@@ -14,20 +14,29 @@ export function createSeed(size = 32) {
 	return seed;
 }
 export async function signatureKeypair(seed = createSeed()) {
-	const keypair = ml_dsa87.keygen(seed);
+	const keypair = ml_dsa65.keygen(seed);
 	return {
 		publicKey: keypair.publicKey,
 		privateKey: keypair.secretKey
 	};
 }
 export async function sign(message, privateKey) {
-	const signedMessage = ml_dsa87.sign(privateKey?.privateKey || privateKey, message);
+	const signedMessage = ml_dsa65.sign(privateKey?.privateKey || privateKey, message);
 	return signedMessage;
 }
 export async function verifySignature(signedMessage, publicKey, message) {
-	const isValid = ml_dsa87.verify(publicKey?.publicKey || publicKey, message, signedMessage);
+	const isValid = ml_dsa65.verify(publicKey?.publicKey || publicKey, message, signedMessage);
 	return isValid;
 }
+export const dilithium65 = {
+	name: 'dilithium65',
+	alias: 'dilithium65',
+	id: 1,
+	createSeed,
+	signatureKeypair,
+	sign,
+	verifySignature
+};
 // const rseed = createSeed();
 // const kp = signatureKeypair(rseed);
 // console.log(sign(msg, kp).length);

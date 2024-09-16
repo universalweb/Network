@@ -98,7 +98,7 @@ export function getSignaturePublicKeyFromPrivateKey(privateKey) {
 	crypto_sign_ed25519_sk_to_pk(publicKey, privateKey);
 	return publicKey;
 }
-export const ed25519Algo = {
+export const ed25519 = {
 	name: 'ed25519',
 	alias: 'default',
 	id: 0,

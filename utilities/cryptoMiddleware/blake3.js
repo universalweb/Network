@@ -1,6 +1,5 @@
-import { blake3 } from '@noble/hashes/blake3';
-export const hash = blake3;
-export const blake3Hash = {
+import { blake3 as hash } from '@noble/hashes/blake3';
+export const blake3 = {
 	name: 'blake3',
 	alias: 'default',
 	id: 0,

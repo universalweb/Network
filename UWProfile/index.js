@@ -1,5 +1,3 @@
-import * as dilithium from '../utilities/cryptoMiddleware/dilithium.js';
-import * as ed25519 from '../utilities/cryptoMiddleware/ed25519.js';
 import {
 	currentPath,
 	hasDot,
@@ -11,6 +9,8 @@ import { keychainGet, keychainSave } from '../utilities/certificate/keychain.js'
 import { read, readStructured, write } from '../utilities/file.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { currentCertificateVersion } from '../defaults.js';
+import { dilithium44 } from '../utilities/cryptoMiddleware/dilithium44.js';
+import { ed25519 } from '../utilities/cryptoMiddleware/ed25519.js';
 import { x25519_kyber768Half_xchacha20 } from '../utilities/cryptoMiddleware/x25519_Kyber768Half_xChaCha.js';
 const defaultEncryptionAlgorithm = 1;
 const defaultSignatureAlgorithm = 1;
@@ -54,7 +54,7 @@ export class UWProfile {
 	async generateSignatureKeypair() {
 		this.version = currentCertificateVersion;
 		const ed25519NewKeypair = await ed25519.signatureKeypair();
-		const dilithiumNewKeypair =	await dilithium.signatureKeypair();
+		const dilithiumNewKeypair =	await dilithium44.signatureKeypair();
 		console.log(ed25519NewKeypair.publicKey, ed25519NewKeypair.privateKey);
 		this.publicKey = Buffer.concat([ed25519NewKeypair.publicKey, dilithiumNewKeypair.publicKey]);
 		this.privateKey = Buffer.concat([ed25519NewKeypair.privateKey, dilithiumNewKeypair.privateKey]);
@@ -82,7 +82,7 @@ export class UWProfile {
 	async sign(message) {
 		const ed25519Signature = await ed25519.signDetached(message, this.ed25519PrivateKey);
 		console.log(ed25519Signature.length);
-		const dilithiumSignature = await dilithium.sign(message, this.dilithiumPrivateKey);
+		const dilithiumSignature = await dilithium44.sign(message, this.dilithiumPrivateKey);
 		console.log(dilithiumSignature.length);
 		const signature = Buffer.concat([ed25519Signature, dilithiumSignature]);
 		return signature;
@@ -91,7 +91,7 @@ export class UWProfile {
 		const ed25519Signature = signature.slice(0, 64);
 		const dilithiumSignature = signature.slice(64);
 		const ed25519Verify = ed25519.verifySignatureDetached(ed25519Signature, this.ed25519PublicKey, message);
-		const dilithiumVerify = await dilithium.verifySignature(dilithiumSignature, this.dilithiumPublicKey, message);
+		const dilithiumVerify = await dilithium44.verifySignature(dilithiumSignature, this.dilithiumPublicKey, message);
 		console.log(ed25519Verify, dilithiumVerify);
 		return (ed25519Verify === dilithiumVerify) ? ed25519Verify : false;
 	}

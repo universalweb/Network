@@ -1,9 +1,8 @@
-import * as dilithium from '../utilities/cryptoMiddleware/dilithium.js';
 import * as ed25519 from '../utilities/cryptoMiddleware/ed25519.js';
 import { decode, encode } from '#utilities/serialize';
 import { UWProfile } from '../UWProfile/index.js';
-import { blake3Hash } from '../utilities/cryptoMiddleware/blake3.js';
 import { currentCertificateVersion } from '../defaults.js';
+import { dilithium44 } from '../utilities/cryptoMiddleware/dilithium44.js';
 import { isBuffer } from '@universalweb/acid';
 import { write } from '../utilities/file.js';
 export class ViatWallet extends UWProfile {
