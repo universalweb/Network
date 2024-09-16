@@ -3,6 +3,7 @@ Acks
 beuracratic
 brotli
 cshake
+dilithium
 ICANN
 jubjub
 keccak
