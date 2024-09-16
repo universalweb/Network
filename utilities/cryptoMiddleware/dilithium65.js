@@ -8,9 +8,9 @@ import { ml_dsa65, ml_dsa87 } from '@noble/post-quantum/ml-dsa';
 	RBG with at least 128 bits of security but less than 192 bits of security is used, then the claimed security
 	strength of ML-DSA-44 is reduced from category 2 to category 1.)
 */
-import { bufferAlloc } from '../crypto.js';
+import { randomBuffer } from '../crypto.js';
 export function createSeed(size = 32) {
-	const seed = bufferAlloc(size);
+	const seed = randomBuffer(size);
 	return seed;
 }
 export async function signatureKeypair(seed = createSeed()) {
@@ -31,7 +31,7 @@ export async function verifySignature(signedMessage, publicKey, message) {
 export const dilithium65 = {
 	name: 'dilithium65',
 	alias: 'dilithium65',
-	id: 1,
+	id: 2,
 	createSeed,
 	signatureKeypair,
 	sign,

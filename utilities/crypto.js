@@ -39,6 +39,18 @@ export function randomBuffer(size = 8) {
 	randomize(target);
 	return target;
 }
+const int32 = 32;
+export function random32ByteBuffer() {
+	const target = bufferAlloc(int32);
+	randomize(target);
+	return target;
+}
+const int64 = 64;
+export function random64ByteBuffer() {
+	const target = bufferAlloc(int64);
+	randomize(target);
+	return target;
+}
 export function randomConnectionId(size = 8) {
 	return randomBuffer(size);
 }

@@ -22,8 +22,7 @@ import {
 	verifySignature,
 	verifySignatureDetached,
 } from './ed25519.js';
-import { blake3 } from '@noble/hashes/blake3';
-import { hash } from './blake3.js';
+import { blake3 } from './blake3.js';
 const sodium = await import('sodium-native');
 const sodiumLib = sodium?.default || sodium;
 const {
@@ -33,6 +32,7 @@ const {
 const {
 	randomConnectionId, randomBuffer, toBase64
 } = defaultCrypto;
+const hash = blake3.hash;
 export const x25519_xchacha20 = {
 	name: 'x25519_xchacha20',
 	alias: 'default',
@@ -65,5 +65,5 @@ export const x25519_xchacha20 = {
 	serverInitializeSession: serverSetSessionAttach,
 	serverSetSession: serverSetSessionAttach,
 	preferred: true,
-	hash: blake3,
+	hash,
 };
