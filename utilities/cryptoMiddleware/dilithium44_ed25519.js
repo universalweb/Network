@@ -1,15 +1,15 @@
 import { dilithium44 } from './dilithium44.js';
 import { ed25519 } from './ed25519.js';
-export async function getEd25519PublicKey(publicKey) {
+export function getEd25519PublicKey(publicKey) {
 	return publicKey.slice(0, 32);
 }
-export async function getEd25519PrivateKey(privateKey) {
+export function getEd25519PrivateKey(privateKey) {
 	return privateKey.slice(0, 64);
 }
-export async function getDilithiumPublicKey(publicKey) {
+export function getDilithiumPublicKey(publicKey) {
 	return publicKey.slice(32);
 }
-export async function getDilithiumPrivateKey(privateKey) {
+export function getDilithiumPrivateKey(privateKey) {
 	return privateKey.slice(64);
 }
 export async function sign(message, privateKey) {
@@ -50,6 +50,8 @@ export async function signatureKeypair(target) {
 export const dilithium44_ed25519 = {
 	name: 'dilithium44_ed25519',
 	alias: 'dilithium44_ed25519',
+	ed25519,
+	dilithium44,
 	id: 4,
 	verifySignature,
 	signatureKeypair,
@@ -59,3 +61,4 @@ export const dilithium44_ed25519 = {
 	getEd25519PrivateKey,
 	getEd25519PublicKey
 };
+

@@ -5,12 +5,19 @@ import {
 	isString
 } from '@universalweb/acid';
 import { decode, encode } from '#utilities/serialize';
+import {
+	getDilithiumPrivateKey,
+	getDilithiumPublicKey,
+	getEd25519PrivateKey,
+	getEd25519PublicKey,
+	sign,
+	signatureKeypair,
+	verifySignature
+} from '../utilities/cryptoMiddleware/dilithium44_ed25519.js';
 import { keychainGet, keychainSave } from '../utilities/certificate/keychain.js';
 import { read, readStructured, write } from '../utilities/file.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { currentCertificateVersion } from '../defaults.js';
-import { dilithium44 } from '../utilities/cryptoMiddleware/dilithium44.js';
-import { ed25519 } from '../utilities/cryptoMiddleware/ed25519.js';
 import { x25519_kyber768Half_xchacha20 } from '../utilities/cryptoMiddleware/x25519_Kyber768Half_xChaCha.js';
 const defaultEncryptionAlgorithm = 1;
 const defaultSignatureAlgorithm = 1;
@@ -53,11 +60,9 @@ export class UWProfile {
 	}
 	async generateSignatureKeypair() {
 		this.version = currentCertificateVersion;
-		const ed25519NewKeypair = await ed25519.signatureKeypair();
-		const dilithiumNewKeypair =	await dilithium44.signatureKeypair();
-		console.log(ed25519NewKeypair.publicKey, ed25519NewKeypair.privateKey);
-		this.publicKey = Buffer.concat([ed25519NewKeypair.publicKey, dilithiumNewKeypair.publicKey]);
-		this.privateKey = Buffer.concat([ed25519NewKeypair.privateKey, dilithiumNewKeypair.privateKey]);
+		await signatureKeypair(this);
+		console.log(this.publicKey, this.privateKey);
+		return this;
 	}
 	async generateEncryptionKeypair() {
 		const encryptionkeypair = await x25519_kyber768Half_xchacha20.keypair();
@@ -68,32 +73,23 @@ export class UWProfile {
 		await this.generateEncryptionKeypair();
 	}
 	get ed25519PublicKey() {
-		return this.publicKey.slice(0, 32);
+		return getEd25519PublicKey(this.publicKey);
 	}
 	get ed25519PrivateKey() {
-		return this.privateKey.slice(0, 64);
+		return getEd25519PrivateKey(this.privateKey);
 	}
 	get dilithiumPublicKey() {
-		return this.publicKey.slice(32);
+		return getDilithiumPublicKey(this.publicKey);
 	}
 	get dilithiumPrivateKey() {
-		return this.privateKey.slice(64);
+		return getDilithiumPrivateKey(this.privateKey);
 	}
 	async sign(message) {
-		const ed25519Signature = await ed25519.signDetached(message, this.ed25519PrivateKey);
-		console.log(ed25519Signature.length);
-		const dilithiumSignature = await dilithium44.sign(message, this.dilithiumPrivateKey);
-		console.log(dilithiumSignature.length);
-		const signature = Buffer.concat([ed25519Signature, dilithiumSignature]);
+		const signature = await sign(message, this.privateKey);
 		return signature;
 	}
 	async verifySignature(signature, message) {
-		const ed25519Signature = signature.slice(0, 64);
-		const dilithiumSignature = signature.slice(64);
-		const ed25519Verify = ed25519.verifySignatureDetached(ed25519Signature, this.ed25519PublicKey, message);
-		const dilithiumVerify = await dilithium44.verifySignature(dilithiumSignature, this.dilithiumPublicKey, message);
-		console.log(ed25519Verify, dilithiumVerify);
-		return (ed25519Verify === dilithiumVerify) ? ed25519Verify : false;
+		return verifySignature(signature, message, this.publicKey);
 	}
 	async hash(message) {
 		const hashedMessage = blake3(message);
