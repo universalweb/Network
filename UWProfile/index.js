@@ -19,8 +19,6 @@ import { read, readStructured, write } from '../utilities/file.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { currentCertificateVersion } from '../defaults.js';
 import { x25519_kyber768Half_xchacha20 } from '../utilities/cryptoMiddleware/x25519_Kyber768Half_xChaCha.js';
-const defaultEncryptionAlgorithm = 1;
-const defaultSignatureAlgorithm = 1;
 const dirname = currentPath(import.meta);
 export class UWProfile {
 	constructor(config = {}, optionalArg) {
@@ -39,24 +37,27 @@ export class UWProfile {
 		} else if (isBuffer(config)) {
 			await this.importFromBinary(config, optionalArg);
 		} else if (config?.publicKey || config?.privateKey) {
-			const {
-				version,
-				publicKey,
-				privateKey
-			} = config;
-			if (publicKey) {
-				this.publicKey = publicKey;
-			}
-			if (privateKey) {
-				this.privateKey = privateKey;
-			}
-			if (version) {
-				this.version = version;
-			}
+			this.importKeys(config);
 		} else {
 			await this.generate(config);
 		}
 		return this;
+	}
+	importKeys(config) {
+		const {
+			version,
+			publicKey,
+			privateKey
+		} = config;
+		if (publicKey) {
+			this.publicKey = publicKey;
+		}
+		if (privateKey) {
+			this.privateKey = privateKey;
+		}
+		if (version) {
+			this.version = version;
+		}
 	}
 	async generateSignatureKeypair() {
 		this.version = currentCertificateVersion;

@@ -19,6 +19,7 @@ import {
 	promise,
 	stringify
 } from '@universalweb/acid';
+import { askRPC, replyRPC } from './rpc/rpcCodes.js';
 import { decode, encode } from '#utilities/serialize';
 import {
 	failed,
@@ -67,9 +68,9 @@ export class Ask extends Base {
 	}
 	completeReceived() {
 		console.log('Ask complete', this);
-		if (this.state === 3) {
-			this.state = 4;
-		}
+		this.setState(askRPC.received);
+		this.sendEnd();
+		this.end();
 		this.readyState = 4;
 		this.flush();
 		this.accept(this.response);

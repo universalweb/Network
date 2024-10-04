@@ -1,7 +1,14 @@
+import { askRPC, replyRPC } from './rpcCodes.js';
 export async function onDataReady(id, rpc, packetId, data, frame, source, rinfo) {
 	if (!source.receivedDataReadyPacket) {
 		source.totalReceivedUniquePackets++;
 		source.receivedDataReadyPacket = true;
+		const { isAsk } = source;
+		if (isAsk) {
+			source.setState(askRPC.dataReady);
+		} else {
+			source.setState(replyRPC.dataReady);
+		}
 	}
 	console.log('Data Ready Packet Received', id, rpc, packetId, data, frame, source, rinfo);
 	source.sendData();
@@ -11,11 +18,11 @@ export async function onData(id, rpc, packetId, data, frame, source, rinfo) {
 		return;
 	}
 	console.log('data frame', data);
+	const dataLength = data.length;
 	source.totalReceivedUniquePackets++;
 	source.incomingDataPackets[packetId] = frame;
 	source.incomingData[packetId] = data;
 	source.totalReceivedUniqueDataPackets++;
-	const dataLength = data.length;
 	source.currentIncomingDataSize += dataLength;
 	if (source.readyState === 2) {
 		source.readyState = 3;

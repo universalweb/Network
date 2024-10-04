@@ -1,3 +1,4 @@
+import { askRPC, replyRPC } from './rpc/rpcCodes.js';
 /*
 	* Server side client request
 	* Server receives a request from a client & creates a request and response object to pass along to the endpoint
@@ -56,7 +57,7 @@ export class Reply extends Base {
 	}
 	isReply = true;
 	async completeReceived() {
-		this.state = 1;
+		this.setState(replyRPC.received);
 		await processEvent(this.request, this.response, this.source().server());
 	}
 	static type = 'reply';

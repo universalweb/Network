@@ -1,8 +1,9 @@
+import { askRPC, replyRPC } from './rpcCodes.js';
 import { hasValue, isNotNumber, isNumber } from '@universalweb/acid';
 import { isMethodCodeValid } from '../../isMethodCodeValid.js';
 export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 	if (source.receivedSetupPacket) {
-		console.log('Received Setup Packet Already');
+		console.log('Received Setup Packet Already RESEND ANSWER');
 		return;
 	}
 	const { isAsk } = source;
@@ -15,12 +16,16 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 	let totalIncomingParametersSize;
 	if (isAsk) {
 		[
-			, , totalIncomingHeadSize,
+			,
+			,
+			totalIncomingHeadSize,
 			totalIncomingDataSize
 		] = frame;
 	} else {
 		[
-			, , rpcMethod,
+			,
+			,
+			rpcMethod,
 			totalIncomingPathSize,
 			totalIncomingParametersSize,
 			totalIncomingHeadSize,
@@ -32,7 +37,7 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 		}
 		source.method = rpcMethod;
 	}
-	console.log(`Setup Packet Received HEADER:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
+	console.log(`Setup Packet Received HEADER SIZE:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
 	if (hasValue(totalIncomingPathSize) && isNumber(totalIncomingPathSize)) {
 		source.totalIncomingPathSize = totalIncomingPathSize;
 	}
@@ -46,8 +51,10 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 		source.totalIncomingDataSize = totalIncomingDataSize;
 	}
 	if (isAsk) {
+		source.setState(askRPC.onSetup);
 		source.sendHeadReady();
 	} else {
+		source.setState(replyRPC.onSetup);
 		source.sendPathReady();
 	}
 }

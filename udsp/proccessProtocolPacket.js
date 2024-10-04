@@ -27,11 +27,6 @@ export async function proccessProtocolHeader(source, header, packetDecoded, rinf
 			source.discoveryHeader(header, packetDecoded, rinfo);
 			break;
 		}
-		// Second round Trip
-		case 3: {
-			source.expandedKeyExchange(header, packetDecoded, rinfo);
-			break;
-		}
 		default: {
 			console.trace('Unknown Protocol Packet', header, packetDecoded, rinfo);
 			break;
@@ -52,12 +47,13 @@ export async function proccessProtocolFrame(source, frame, header, rinfo) {
 		return;
 	}
 	switch (rpc) {
-		// Hello Packet
+		// Hello/Intro
 		case 0: {
+			console.log('Hello/Intro RECEIVED');
 			source.intro(frame, header, rinfo);
 			break;
 		}
-		// End Connection Packet
+		// End Connection
 		case 1: {
 			console.log('END RECEIVED');
 			source.end(frame, header, rinfo);

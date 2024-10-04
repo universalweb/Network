@@ -54,9 +54,13 @@ export async function onFrame(frame, header, rinfo) {
 		id,
 		rpc,
 		packetId,
-		data
+		data,
+		lastPacket
 	] = frame;
 	console.log(`onPacket Stream Id ${id}`, this);
+	if (lastPacket) {
+		console.log('LAST PACKET RECEIVED', frame);
+	}
 	if (isMethodCodeValid(rpc) === false) {
 		source.destroy('Invalid RPC');
 		return;

@@ -1,7 +1,14 @@
+import { askRPC, replyRPC } from './rpcCodes.js';
 export async function onHeadReady(id, rpc, packetId, data, frame, source, rinfo) {
 	if (!source.receivedHeadReadyPacket) {
 		source.totalReceivedUniquePackets++;
 		source.receivedHeadReadyPacket = true;
+		const { isAsk } = source;
+		if (isAsk) {
+			source.setState(askRPC.headReady);
+		} else {
+			source.setState(replyRPC.headReady);
+		}
 	}
 	source.sendHead();
 }

@@ -138,9 +138,9 @@ export class Client extends UDSP {
 		const thisClient = this;
 		console.log(`client reKeyed -> ID: ${thisClient.connectionIdString}`);
 	}
-	async send(message, headers, footer, repeat) {
+	async send(frame, header, footer, repeat) {
 		console.log(`client.send to Server`, this.destination.ip, this.destination.port);
-		return sendPacket(message, this, this.socket, this.destination, headers, footer, repeat);
+		return sendPacket(frame, this, this.socket, this.destination, header, footer, repeat);
 	}
 	async ask(method, path, parameters, data, head, options) {
 		if (!this.connected) {
@@ -231,9 +231,9 @@ export class Client extends UDSP {
 			const header = [2];
 			this.setPublicKeyHeader(header);
 			this.setCryptographyOptionsHeaders(header);
-			const message = [];
+			const frame = [];
 			this.discoverySent = true;
-			return this.send(message, header);
+			return this.send(frame, header);
 		}
 	}
 	async discovered() {
@@ -304,6 +304,9 @@ export class Client extends UDSP {
 		const header = [0];
 		this.setPublicKeyHeader(header);
 		this.setCryptographyHeaders(header);
+		if (!this.introSent) {
+			this.introSent = Date.now();
+		}
 		await this.send(null, header);
 	}
 	async introHeader(header, rinfo) {
@@ -379,7 +382,8 @@ export class Client extends UDSP {
 	async sendEnd() {
 		if (this.state === connectingState || this.state === connectedState || this.state === closingState) {
 			console.log('Sending CLIENT END');
-			return this.send([false, 1], false, null, true);
+			const frame = [false, 1];
+			return this.send(frame, false, null, true);
 		}
 	}
 	end(frame, header) {

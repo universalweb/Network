@@ -1,0 +1,31 @@
+export const defaultStage = 0;
+export const askRPC = {
+	setup: 1,
+	pathReady: 2,
+	parametersReady: 3,
+	headReady: 4,
+	dataReady: 5,
+	onSetup: 6,
+	sendPathReady: 7,
+	sendParametersReady: 8,
+	sendHeadReady: 9,
+	sendDataReady: 10,
+	received: 11,
+	sendEnd: 12,
+	end: 13,
+};
+export const replyRPC = {
+	onSetup: 1,
+	sendPathReady: 2,
+	sendParametersReady: 3,
+	sendHeadReady: 4,
+	sendDataReady: 5,
+	received: 6,
+	setup: 7,
+	pathReady: 8,
+	parametersReady: 9,
+	headReady: 10,
+	dataReady: 11,
+	sendEnd: 12,
+	end: 13,
+};

@@ -1,7 +1,14 @@
+import { askRPC, replyRPC } from './rpcCodes.js';
 export async function onParametersReady(id, rpc, packetId, data, frame, source, rinfo) {
 	if (!source.receivedParametersReadyPacket) {
 		source.totalReceivedUniquePackets++;
 		source.receivedParametersReadyPacket = true;
+		const { isAsk } = source;
+		if (isAsk) {
+			source.setState(askRPC.parametersReady);
+		} else {
+			source.setState(replyRPC.parametersReady);
+		}
 	}
 	console.log('Parameters Ready Packet Received', source.type);
 	source.sendParameters();

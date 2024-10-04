@@ -1,3 +1,4 @@
+import { askRPC, defaultStage, replyRPC } from './rpc/rpcCodes.js';
 import {
 	assign,
 	calcProgress,
@@ -48,6 +49,10 @@ export class Base {
 			this.handshake = source.handshake;
 		}
 		this.noData = noPayloadMethods.test(this.method);
+	}
+	setState(value) {
+		this.state = value;
+		console.log(`State Set: ${value}`);
 	}
 	setHeaders(target) {
 		const source = this.isAsk ? this.request : this.response;
@@ -113,6 +118,7 @@ export class Base {
 		}
 		this.readyState = 2;
 		this.parametersAssembled = true;
+		this.sendHeadReady();
 	}
 	setPath() {
 		clear(this.incomingPathPackets);
@@ -191,7 +197,6 @@ export class Base {
 		console.log('incomingParametersPackets', this.incomingParametersPackets);
 		if (this.totalIncomingParametersSize === this.currentIncomingParametersSize) {
 			this.setParameters();
-			this.sendHeadReady();
 		} else {
 			eachArray(this.incomingParametersPackets, (item, index) => {
 				if (!item) {
@@ -229,32 +234,58 @@ export class Base {
 			console.log('Missing packets: ', missingDataPackets);
 		}
 	}
-	sendSetup() {
+	checkSetupStatus() {
 		const { isAsk } = this;
-		if (this.state === 0) {
-			this.state = 1;
+		if (isAsk) {
+			if (this.state === 1) {
+				console.log('STATE STILL 1 NEED TO RESEND SETUP');
+				this.sendSetup();
+			}
+		} else if (this.state === 5) {
+			console.log('STATE STILL 5 NEED TO RESEND SETUP');
+			this.sendSetup();
 		}
+	}
+	sendSetup() {
+		const source = this;
+		const { isAsk } = this;
+		console.log('sendSetup', this.state);
 		const message = this.getPacketTemplate(0);
 		if (isAsk) {
 			message.push(this.method, this.outgoingPathSize, this.outgoingParametersSize, this.outgoingHeadSize);
+			if (this.state === defaultStage) {
+				this.setState(askRPC.setup);
+			}
 		} else {
 			message.push(this.outgoingHeadSize);
+			if (this.state === replyRPC.sendDataReady) {
+				this.setState(replyRPC.setup);
+			}
 		}
 		if (hasValue(this.outgoingDataSize)) {
 			message.push(this.outgoingDataSize);
 		}
+		// this.checkSetupStatusTimeout = setTimeout(() => {
+		// 	source.checkSetupStatus();
+		// }, this.latencyTimeout);
 		return this.sendPacket(message);
 	}
 	async sendPathReady() {
-		if (this.state === 1) {
-			this.state = 2;
+		const { isAsk } = this;
+		if (isAsk) {
+			this.setState(askRPC.sendPathReady);
+		} else {
+			this.setState(replyRPC.sendPathReady);
 		}
 		const message = this.getPacketTemplate(1);
 		return this.sendPacket(message);
 	}
 	async sendParametersReady() {
-		if (this.state === 2) {
-			this.state = 3;
+		const { isAsk } = this;
+		if (isAsk) {
+			this.setState(askRPC.sendParametersReady);
+		} else {
+			this.setState(replyRPC.sendParametersReady);
 		}
 		if (this.totalIncomingParametersSize === 0) {
 			return this.sendHeadReady();
@@ -263,8 +294,11 @@ export class Base {
 		return this.sendPacket(message);
 	}
 	async sendHeadReady() {
-		if (this.state === 3) {
-			this.state = 4;
+		const { isAsk } = this;
+		if (isAsk) {
+			this.setState(askRPC.sendHeadReady);
+		} else {
+			this.setState(replyRPC.sendHeadReady);
 		}
 		if (this.totalIncomingHeadSize === 0) {
 			return this.sendDataReady();
@@ -273,8 +307,11 @@ export class Base {
 		return this.sendPacket(message);
 	}
 	sendDataReady() {
-		if (this.state === 4) {
-			this.state = 5;
+		const { isAsk } = this;
+		if (isAsk) {
+			this.setState(askRPC.sendDataReady);
+		} else {
+			this.setState(replyRPC.sendDataReady);
 		}
 		if (this.isReply && this.noData) {
 			return this.completeReceived();
@@ -286,6 +323,12 @@ export class Base {
 		return this.sendPacket(message);
 	}
 	async sendEnd() {
+		const { isAsk } = this;
+		if (isAsk) {
+			this.setState(askRPC.sendEnd);
+		} else {
+			this.setState(replyRPC.sendEnd);
+		}
 		const message = this.getPacketTemplate(9);
 		return this.sendPacket(message);
 	}
@@ -458,33 +501,38 @@ export class Base {
 	}
 	async end(statusCode) {
 		const {
-			isAsk, isReply
+			isAsk,
+			isReply
 		} = this;
-		if (isReply) {
+		if (isAsk) {
+			this.setState(askRPC.end);
+		} else {
+			this.setState(replyRPC.end);
 			if (statusCode) {
 				await this.sendEnd();
-				this.destroy();
 			}
 		}
+		this.destroy();
 	}
 	async sendHead() {
 		const thisReply = this;
-		console.log('outgoingHeadPackets', this.outgoingHeadPackets);
+		console.log('sendHead outgoingHeadPackets', this.outgoingHeadPackets);
 		this.sendPackets(this.outgoingHeadPackets);
 	}
+	// doesnt change state
 	async sendPath() {
 		const thisReply = this;
-		console.log('outgoingPathPackets', this.outgoingPathPackets);
+		console.log('sendPath outgoingPathPackets', this.outgoingPathPackets);
 		this.sendPackets(this.outgoingPathPackets);
 	}
 	async sendParameters() {
 		const thisReply = this;
-		console.log('outgoingParametersPackets', this.outgoingParametersPackets);
+		console.log('sendParameters outgoingParametersPackets', this.outgoingParametersPackets);
 		this.sendPackets(this.outgoingParametersPackets);
 	}
 	async sendData() {
 		const thisReply = this;
-		console.log('outgoingDataPackets', this.outgoingDataPackets);
+		console.log('sendData outgoingDataPackets', this.outgoingDataPackets);
 		this.sendPackets(this.outgoingDataPackets);
 	}
 	sendPackets(packetArray) {
@@ -637,7 +685,6 @@ export class Base {
 	totalReceivedUniqueParametersPackets = 0;
 	totalIncomingParametersSize = 0;
 	// Request Specific UDSP State
-	state = 0;
 	handshake = false;
 	inRequestQueue = false;
 	status = 0;
@@ -655,4 +702,5 @@ export class Base {
 	onParametersCurrentId = 0;
 	onHeadCurrentId = 0;
 	onDataCurrentId = 0;
+	latencyTimeout = 300;
 }

@@ -1,9 +1,16 @@
+import { askRPC, replyRPC } from './rpcCodes.js';
 export async function onPathReady(id, rpc, packetId, data, frame, source, rinfo) {
+	const { isAsk } = source;
 	if (!source.receivedPathReadyPacket) {
 		source.totalReceivedUniquePackets++;
 		source.receivedPathReadyPacket = true;
+		if (isAsk) {
+			source.setState(askRPC.pathReady);
+		} else {
+			source.setState(replyRPC.pathReady);
+		}
 	}
-	console.log('Path Ready Packet Received', source.type);
+	console.log('Path Ready Packet Received', source.constructor.name, source.state, '-');
 	source.sendPath();
 }
 export async function onPath(id, rpc, packetId, data, frame, source, rinfo) {
