@@ -38,6 +38,8 @@ export const x25519_kyber768Half_xchacha20 = {
 	id: 1,
 	ml_kem768,
 	preferred: true,
+	speed: 0,
+	security: 1,
 	hash: blake3,
 	async clientInitializeSession(source, destination) {
 		const sourceKeypair25519 = {
@@ -91,8 +93,7 @@ export const x25519_kyber768Half_xchacha20 = {
 	},
 	async keypair(kyberSeed) {
 		const x25519Keypair = await encryptionKeypair25519();
-		const seed = kyberSeed || x25519_kyber768Half_xchacha20.generateSeed();
-		const kyberKeypair = await encryptionKeypair(seed);
+		const kyberKeypair = await encryptionKeypair(kyberSeed);
 		const target = {
 			publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
 			privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey])
@@ -140,3 +141,4 @@ export const x25519_kyber768Half_xchacha20 = {
 // console.log('SERVER', server);
 // // TRY AND KEEP ESTIMATED MAX BELOW 1280 (1232)
 // console.log('ESTIMATED MAX PACKET SERVER/CLIENT INTRO', 104 + server.publicKey.length, 'KYBER-CIPHERTEXT-OVERHEAD', server.publicKey.length);
+// console.log(await x25519_kyber768Half_xchacha20.keypair(), await x25519_kyber768Half_xchacha20.keypair());

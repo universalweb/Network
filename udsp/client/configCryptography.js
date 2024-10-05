@@ -10,8 +10,12 @@ export async function configCryptography() {
 	const certificate = this.destination.certificate;
 	const { cipherSuites }	= certificate;
 	this.signatureAlgorithm = await certificate.getSignatureAlgorithm();
+	if (hasValue(this.options?.cipherSuite)) {
+		this.cipherSuite = await certificate.selectCipherSuite(this.options?.cipherSuite);
+	}
 	if (noValue(this.cipherSuite)) {
-		this.cipherSuite = await certificate.selectCipherSuite(this.options?.cipherSuite || cipherSuites);
+		console.log('CIPHER SUITES SUPPORTED', cipherSuites, certificate);
+		this.cipherSuite = certificate.cipherSuiteMethods[0];
 	}
 	// console.log(this.cipherSuite);
 	assign(this, await this.cipherSuite.clientEphemeralKeypair());

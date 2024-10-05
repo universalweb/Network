@@ -1,4 +1,5 @@
 import {
+	eachArray,
 	get,
 	hasDot,
 	hasValue,
@@ -52,18 +53,42 @@ export class UWCertificate {
 	getCipherSuiteMethods() {
 		this.cipherSuiteMethods = this.getCipherSuites();
 	}
-	selectCipherSuite(indexes) {
+	findCipherSuiteMethod(id) {
+		if (!this.cipherSuiteMethods) {
+			this.getCipherSuiteMethods();
+		}
+		return this.cipherSuiteMethods.find((cipherSuite) => {
+			return cipherSuite.id === id;
+		});
+	}
+	selectCipherSuite(id) {
+		if (!this.cipherSuiteMethods) {
+			this.getCipherSuiteMethods();
+		}
 		const cipherSuiteMethods = this.cipherSuiteMethods;
 		const thisCert = this;
-		if (isArray(indexes)) {
-			let selected;
-			untilTrueArray(indexes, (index) => {
-				selected = this.getCipherSuite(index);
-				return hasValue(selected);
-			});
-			return selected;
+		if (hasValue(id)) {
+			return this.findCipherSuiteMethod(id);
 		}
-		return this.getCipherSuite(indexes);
+		return this.cipherSuiteMethods[0];
+	}
+	getFastestCipherSuite() {
+		let fastest = this.cipherSuiteMethods[0];
+		eachArray(this.cipherSuiteMethods, (cipherSuite) => {
+			if (cipherSuite.speed > fastest.speed) {
+				fastest = cipherSuite;
+			}
+		});
+		return fastest;
+	}
+	getMostSecureCipherSuite() {
+		let mostSecure = this.cipherSuiteMethods[0];
+		eachArray(this.cipherSuiteMethods, (cipherSuite) => {
+			if (cipherSuite.security > mostSecure.security) {
+				mostSecure = cipherSuite;
+			}
+		});
+		return mostSecure;
 	}
 	getHash() {
 		if (this?.object?.signature) {
@@ -98,7 +123,7 @@ export class UWCertificate {
 	createSignature() {
 		const encodedCertificate = encode(this.array);
 		const signatureMethod = getSignatureAlgorithm(this.get('signatureAlgorithm'), this.get('version'));
-		const signature = signatureMethod.signDetached(encodedCertificate, this.get('signatureKeypair'));
+		const signature = signatureMethod.sign(encodedCertificate, this.get('signatureKeypair'));
 		return signature;
 	}
 	getPublic() {

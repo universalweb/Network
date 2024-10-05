@@ -14,24 +14,24 @@ export function createSeed(size = 32) {
 	return seed;
 }
 export async function signatureKeypair(seed = createSeed()) {
-	const keypair = ml_dsa87.keygen(seed);
+	const keypair = await ml_dsa87.keygen(seed);
 	return {
 		publicKey: keypair.publicKey,
 		privateKey: keypair.secretKey
 	};
 }
 export async function sign(message, privateKey) {
-	const signedMessage = ml_dsa87.sign(privateKey?.privateKey || privateKey, message);
+	const signedMessage = await ml_dsa87.sign(privateKey?.privateKey || privateKey, message);
 	return signedMessage;
 }
 export async function verifySignature(signedMessage, publicKey, message) {
-	const isValid = ml_dsa87.verify(publicKey?.publicKey || publicKey, message, signedMessage);
+	const isValid = await ml_dsa87.verify(publicKey?.publicKey || publicKey, message, signedMessage);
 	return isValid;
 }
 export const dilithium87 = {
 	name: 'dilithium87',
 	alias: 'dilithium87',
-	id: 3,
+	id: 4,
 	createSeed,
 	signatureKeypair,
 	sign,

@@ -14,7 +14,6 @@ import {
 import {
 	getSignaturePublicKeyFromPrivateKey,
 	sign,
-	signDetached,
 	signatureKeypair,
 	signatureKeypairToEncryptionKeypair,
 	signaturePrivateKeyToEncryptPrivateKey,
@@ -38,6 +37,8 @@ export const x25519_xchacha20 = {
 	alias: 'default',
 	id: 0,
 	nonceBox,
+	speed: 1,
+	security: 0,
 	async encryptKeypair(source) {
 		return encryptionKeypair(source);
 	},

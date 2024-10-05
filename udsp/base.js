@@ -12,7 +12,6 @@ import { currentVersion } from '../defaults.js';
 import dgram from 'dgram';
 export class UDSP {
 	initializeBase(options) {
-		this.connectionGracePeriod = 30000;
 		this.state = 0;
 		/*
       	* A puzzle used to challenge clients to ensure authenticity, connection liveliness, and congestion control.

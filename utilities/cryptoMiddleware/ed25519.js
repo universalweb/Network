@@ -38,12 +38,12 @@ const {
 	crypto_box_NONCEBYTES,
 	crypto_box_MACBYTES
 } = sodiumLib;
-export function sign(message, privateKey) {
+export function signCombined(message, privateKey) {
 	const signedMessage = bufferAlloc(crypto_sign_BYTES + message.length);
 	crypto_sign(signedMessage, message, privateKey?.privateKey || privateKey);
 	return signedMessage;
 }
-export function signDetached(message, privateKey) {
+export function sign(message, privateKey) {
 	const signature = bufferAlloc(crypto_sign_BYTES);
 	crypto_sign_detached(signature, message, privateKey?.privateKey || privateKey);
 	return signature;
@@ -56,7 +56,7 @@ export function verifySignature(signedMessage, publicKey) {
 export function verifySignatureDetached(signedMessage, publicKey, message) {
 	return crypto_sign_verify_detached(signedMessage, message, publicKey?.publicKey || publicKey);
 }
-export function signatureKeypair(config) {
+export async function signatureKeypair(config) {
 	const publicKey = config?.publicKey || bufferAlloc(crypto_sign_PUBLICKEYBYTES);
 	const privateKey = config?.privateKey || bufferAlloc(crypto_sign_SECRETKEYBYTES);
 	crypto_sign_keypair(publicKey, privateKey);
@@ -105,7 +105,7 @@ export const ed25519 = {
 	signatureKeypair,
 	sign,
 	verifySignature,
-	signDetached,
+	signCombined,
 	signaturePrivateKeyToEncryptPrivateKey,
 	signaturePublicKeyToEncryptPublicKey,
 	signatureKeypairToEncryptionKeypair,

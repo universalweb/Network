@@ -32,9 +32,10 @@ const uwApp = await app({
 	ip: '::',
 	// default port or the loadbalancer port
 	port: 8888,
-	// realtime mode - permits establishing a bidirectional real-time connection to clients
-	// Must be requested so that it can be denied if the client doesn't meet the requirements
-	// realtime: true,
+	// realtime mode - permits establishing a longer lived bidirectional real-time connection to clients
+	// Can be requested or auto set for the server
+	realtime: true,
+	// keepAlive: true,
 	gracePeriod: 30000,
 	// heartbeat is an interval check for when a client must send something to the server to remain connected
 	heartbeat: 5000,

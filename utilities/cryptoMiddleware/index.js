@@ -12,6 +12,7 @@ import {
 } from '@universalweb/acid';
 import { currentCertificateVersion, currentVersion } from '../../defaults.js';
 import { blake3 } from './blake3.js';
+import { dilithium44_ed25519 } from './dilithium44_ed25519.js';
 import { ed25519 } from './ed25519.js';
 import { x25519_kyber768Half_xchacha20 } from './x25519_Kyber768Half_xChaCha.js';
 import { x25519_xchacha20 } from './x25519XChaCha.js';
@@ -79,6 +80,7 @@ export const publicKeyAlgorithms = new Map();
 const publicKeyAlgorithmVersion1 = new Map();
 publicKeyAlgorithms.set(1, publicKeyAlgorithmVersion1);
 setOption(publicKeyAlgorithmVersion1, ed25519);
+setOption(publicKeyAlgorithmVersion1, dilithium44_ed25519);
 export const publicKeyCertificateAlgorithms = new Map();
 const publicKeyCertificateAlgorithmsVersion1 = new Map();
 publicKeyCertificateAlgorithms.set(currentVersion, publicKeyCertificateAlgorithmsVersion1);

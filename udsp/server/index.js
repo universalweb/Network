@@ -217,7 +217,7 @@ export class Server extends UDSP {
 		* All created clients (clients) represent a client to server bi-directional connection until it is closed by either party.
 	*/
 	clients = construct(Map);
-	// TBA
+	gracePeriod = 10000;
 	connectionIdEncryption() {
 		const encryptConnectionId = this.certificate.get('encryptConnectionId');
 		if (encryptConnectionId) {

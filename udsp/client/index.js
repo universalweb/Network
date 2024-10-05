@@ -207,7 +207,7 @@ export class Client extends UDSP {
 	}
 	setDiscoveryHeaders(header = []) {
 		const key = this.publicKey;
-		console.log('Setting Cryptography in UDSP Header', toBase64(key));
+		console.log('Setting DISCOVERY in UDSP Header', toBase64(key));
 		const {
 			cipherSuiteName,
 			cipherSuite,
@@ -266,19 +266,18 @@ export class Client extends UDSP {
 	}
 	setPublicKeyHeader(header = []) {
 		const preparedPublicKey = this.headerPublicKey || this.publicKey;
-		console.log('Prepared Public Key', toHex(preparedPublicKey));
+		console.log('setPublicKeyHeader', toHex(preparedPublicKey));
 		header.push(preparedPublicKey);
-		console.log('Setting Public Key in UDSP Header', toHex(preparedPublicKey));
 		return header;
 	}
 	setCryptographyHeaders(header = []) {
 		const key = this.publicKey;
-		console.log('Setting Cryptography in UDSP Header', toHex(key));
 		const {
 			cipherSuite,
 			version,
 			id
 		} = this;
+		console.log(`setCryptographyHeaders Cipher:${cipherSuite.id}@${version} with ID: ${id}`, `Public Key Size: {key.length}`);
 		console.log('Client ID', id);
 		header.push(id, cipherSuite.id, version);
 		return header;
@@ -456,7 +455,6 @@ export class Client extends UDSP {
 	fire(eventName, ...args) {
 		return triggerEvent(this.events, eventName, this, ...args);
 	}
-	connectionAttempts = 0;
 	request = uwRequest;
 	fetch = fetchRequest;
 	post = post;
@@ -485,8 +483,11 @@ export class Client extends UDSP {
 		this.data = construct(Map);
 		this.connectionIdSize = defaultClientConnectionIdSize;
 		this.ipVersion = 'udp4';
+		this.readyState = 0;
+		this.connectionAttempts = 0;
+		this.latency = 100;
+		this.gracePeriod = 10000;
 	}
-	latency = 100;
 }
 export async function client(options) {
 	console.log('Create Client');

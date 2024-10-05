@@ -165,9 +165,9 @@ export async function uwProfile(config, optionalArg) {
 	const source = new UWProfile(config, optionalArg);
 	return source;
 }
-// const exampleProfileExample = await uwProfile();
+const exampleProfileExample = await uwProfile();
 // const encryptionPasswordExample = 'password';
-// console.log(await exampleProfileExample);
+// console.log(exampleProfileExample);
 // console.log(`Version: ${exampleProfileExample.version}`);
 // console.log(`Public Key Size: ${exampleProfileExample.publicKey.length}`);
 // console.log(`Private Key Size: ${exampleProfileExample.privateKey.length}`);
@@ -180,4 +180,4 @@ export async function uwProfile(config, optionalArg) {
 // await exampleProfileExample.saveToKeychain('exampleUWProfile', encryptionPasswordExample);
 // await exampleProfileExample.saveToFile('profile.cert', `${dirname}/../profiles`, encryptionPasswordExample);
 // console.log(await uwProfile('exampleUWProfile', encryptionPasswordExample));
-// console.log(await uwProfile(`${dirname}/../profiles/profile.cert`, encryptionPasswordExample));
+// console.log(await uwProfile(`${dirname}/../profiles/profile.cert`, 'password'));
