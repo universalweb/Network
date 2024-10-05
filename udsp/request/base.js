@@ -44,6 +44,10 @@ export class Base {
 		this.source = function() {
 			return source;
 		};
+		if (hasValue(source.latency)) {
+			this.connectionLatency = source.latency;
+			this.latency = this.connectionLatency + 10;
+		}
 		source.lastActive = Date.now();
 		if (this.isAsk) {
 			this.handshake = source.handshake;
@@ -234,17 +238,22 @@ export class Base {
 			console.log('Missing packets: ', missingDataPackets);
 		}
 	}
-	checkSetupStatus() {
+	checkSetupSent() {
 		const { isAsk } = this;
+		console.log(`CHECK SETUP STATUS - STATE:${this.state}`);
 		if (isAsk) {
-			if (this.state === 1) {
+			if (this.state === askRPC.setup) {
 				console.log('STATE STILL 1 NEED TO RESEND SETUP');
 				this.sendSetup();
 			}
-		} else if (this.state === 5) {
+		} else if (this.state === askRPC.setup) {
 			console.log('STATE STILL 5 NEED TO RESEND SETUP');
 			this.sendSetup();
 		}
+	}
+	clearSetupTimeout() {
+		clearTimeout(this.setupTimeout);
+		this.setupTimeout = null;
 	}
 	sendSetup() {
 		const source = this;
@@ -265,15 +274,16 @@ export class Base {
 		if (hasValue(this.outgoingDataSize)) {
 			message.push(this.outgoingDataSize);
 		}
-		// this.checkSetupStatusTimeout = setTimeout(() => {
-		// 	source.checkSetupStatus();
-		// }, this.latencyTimeout);
+		this.setupTimeout = setTimeout(() => {
+			source.checkSetupSent();
+		}, this.latencyTimeout);
 		return this.sendPacket(message);
 	}
 	async sendPathReady() {
 		const { isAsk } = this;
 		if (isAsk) {
 			this.setState(askRPC.sendPathReady);
+			this.clearSetupTimeout();
 		} else {
 			this.setState(replyRPC.sendPathReady);
 		}
@@ -702,5 +712,6 @@ export class Base {
 	onParametersCurrentId = 0;
 	onHeadCurrentId = 0;
 	onDataCurrentId = 0;
-	latencyTimeout = 300;
+	latency = 100;
+	connectionLatency = 100;
 }

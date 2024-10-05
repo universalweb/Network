@@ -298,8 +298,21 @@ export class Client extends UDSP {
 		this.sendIntro();
 		return this.awaitHandshake;
 	}
+	checkIntroTimeout() {
+		console.log('checkIntroTimeout', this.connected, this.connectionAttempts);
+		if (this.connected === true) {
+			return;
+		} else if (this.connectionAttempts <= 3) {
+			clearTimeout(this.introTimeout);
+			this.sendIntro();
+		} else {
+			this.destory(`Failed to connect with ${this.connectionAttempts} attempts`);
+		}
+	}
 	async sendIntro() {
 		console.log('Sending Intro');
+		this.connectionAttempts++;
+		this.introTimestamp = Date.now();
 		await this.updateState(connectingState);
 		const header = [0];
 		this.setPublicKeyHeader(header);
@@ -307,6 +320,9 @@ export class Client extends UDSP {
 		if (!this.introSent) {
 			this.introSent = Date.now();
 		}
+		this.introTimeout = setTimeout(() => {
+			this.checkIntroTimeout();
+		}, this.latency);
 		await this.send(null, header);
 	}
 	async introHeader(header, rinfo) {
@@ -352,6 +368,7 @@ export class Client extends UDSP {
 			this.serverRandomToken = serverRandomToken;
 			console.log('Server Random Token', toHex(serverRandomToken));
 		}
+		clearTimeout(this.introTimeout);
 		this.handshaked();
 	}
 	async setSession() {
@@ -377,6 +394,8 @@ export class Client extends UDSP {
 		this.connected = true;
 		await this.updateState(connectedState);
 		await this.updateReadyState(1);
+		this.latency = Date.now() - this.introTimestamp;
+		console.log(`CLIENT CONNECTED. Latency: ${this.latency}ms`);
 		this.fire(this.events, 'connected', this);
 	}
 	async sendEnd() {
@@ -395,7 +414,9 @@ export class Client extends UDSP {
 			Client.connections.delete(this.connectionIdString);
 			await this.updateState(closingState);
 			await this.updateReadyState(2);
-			await this.sendEnd();
+			if (this.connected === true) {
+				await this.sendEnd();
+			}
 			await this.setDisconnected();
 			await this.socket.close();
 			await this.updateState(closedState);
@@ -416,9 +437,9 @@ export class Client extends UDSP {
 			await this.connect();
 		}
 	}
-	async destory() {
+	async destory(errorMessage = 'unknown') {
 		if (this.state !== destroyedState) {
-			console.log('Destory Client Object - buffer cleanup');
+			console.log(`Destory Client - reason ${errorMessage}`);
 			await this.close();
 			await this.updateState(destroyingState);
 			// FLUSH DATA TEARDOWN NEEDED
@@ -435,6 +456,7 @@ export class Client extends UDSP {
 	fire(eventName, ...args) {
 		return triggerEvent(this.events, eventName, this, ...args);
 	}
+	connectionAttempts = 0;
 	request = uwRequest;
 	fetch = fetchRequest;
 	post = post;
@@ -464,6 +486,7 @@ export class Client extends UDSP {
 		this.connectionIdSize = defaultClientConnectionIdSize;
 		this.ipVersion = 'udp4';
 	}
+	latency = 100;
 }
 export async function client(options) {
 	console.log('Create Client');

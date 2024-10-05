@@ -17,7 +17,7 @@ export async function sendEncodedPacket(socket, packetEncoded, port, ip, destroy
 				reject(error);
 				return console.trace(error);
 			}
-			success('Packet Sent Out', packetEncoded.length);
+			success(`Packet Sent Out BYTES:${packetEncoded.length}`);
 			accept();
 		});
 	});
