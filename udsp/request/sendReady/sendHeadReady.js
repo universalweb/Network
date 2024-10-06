@@ -1,7 +1,7 @@
 import { askRPC, replyRPC } from '../rpc/rpcCodes.js';
 export async function checkSendHeadReady() {
 	const { isAsk } = this;
-	console.log(`CHECK SETUP STATUS - STATE:${this.state}`);
+	console.log(`CHECK SETUP STATUS checkSendHeadReady - STATE:${this.state}`);
 	if (isAsk) {
 		if (this.state === askRPC.sendHeadReady) {
 			console.log('NEED TO RESEND sendHeadReady');

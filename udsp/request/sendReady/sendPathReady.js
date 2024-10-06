@@ -1,7 +1,7 @@
 import { askRPC, replyRPC } from '../rpc/rpcCodes.js';
 export async function checkSendPathReady() {
 	const { isAsk } = this;
-	console.log(`CHECK SETUP STATUS - STATE:${this.state}`);
+	console.log(`CHECK SETUP STATUS checkSendPathReady - STATE:${this.state}`);
 	if (isAsk) {
 		if (this.state === askRPC.sendPathReady) {
 			console.log('NEED TO RESEND sendPathReady');
@@ -14,8 +14,11 @@ export async function checkSendPathReady() {
 	this.clearSendPathReadyTimeout();
 }
 export function clearSendPathReadyTimeout() {
-	clearTimeout(this.sendPathReadyTimeout);
-	this.sendPathReadyTimeout = null;
+	if (this.sendPathReadyTimeout !== null) {
+		console.log('CLEAR sendPathReady TIMEOUT');
+		clearTimeout(this.sendPathReadyTimeout);
+		this.sendPathReadyTimeout = null;
+	}
 }
 export async function sendPathReady() {
 	const { isAsk } = this;

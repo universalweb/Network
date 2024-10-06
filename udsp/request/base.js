@@ -506,4 +506,5 @@ export class Base {
 	onDataCurrentId = 0;
 	latency = 100;
 	connectionLatency = 100;
+	latencyTimeout	= 100;
 }

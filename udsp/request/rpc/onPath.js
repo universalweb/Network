@@ -17,6 +17,7 @@ export async function onPath(id, rpc, packetId, data, frame, source, rinfo) {
 	if (!source.receivedSetupPacket || source.incomingPathPackets[packetId]) {
 		return;
 	}
+	source.clearSendPathReadyTimeout();
 	source.totalReceivedUniquePackets++;
 	source.incomingPathPackets[packetId] = frame;
 	source.incomingPath[packetId] = data;

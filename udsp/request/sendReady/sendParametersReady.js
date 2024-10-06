@@ -1,7 +1,7 @@
 import { askRPC, replyRPC } from '../rpc/rpcCodes.js';
 export async function checkSendParametersReady() {
 	const { isAsk } = this;
-	console.log(`CHECK SETUP STATUS - STATE:${this.state}`);
+	console.log(`CHECK SETUP STATUS checkSendParametersReady - STATE:${this.state}`);
 	if (isAsk) {
 		if (this.state === askRPC.sendParametersReady) {
 			console.log('NEED TO RESEND sendParametersReady');

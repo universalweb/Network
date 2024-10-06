@@ -2,7 +2,7 @@ import { askRPC, defaultStage, replyRPC } from '../rpc/rpcCodes.js';
 import { hasValue } from '@universalweb/acid';
 export async function checkSetupSent() {
 	const { isAsk } = this;
-	console.log(`CHECK SETUP STATUS - STATE:${this.state}`);
+	console.log(`CHECK SETUP STATUS checkSetupSent - STATE:${this.state}`);
 	if (isAsk) {
 		if (this.state === askRPC.setup) {
 			console.log('STATE STILL 1 NEED TO RESEND SETUP');
