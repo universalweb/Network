@@ -69,6 +69,7 @@ export class Ask extends Base {
 	completeReceived() {
 		console.log('Ask complete', this);
 		this.setState(askRPC.received);
+		this.clearSendDataReadyTimeout();
 		this.sendEnd();
 		this.end();
 		this.readyState = 4;

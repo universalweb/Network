@@ -17,6 +17,7 @@ export async function onData(id, rpc, packetId, data, frame, source, rinfo) {
 	if (!source.receivedSetupPacket || source.incomingDataPackets[packetId]) {
 		return;
 	}
+	source.clearSendDataReadyTimeout();
 	console.log('data frame', data);
 	const dataLength = data.length;
 	source.totalReceivedUniquePackets++;

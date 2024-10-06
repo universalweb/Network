@@ -19,16 +19,34 @@ import {
 	promise
 } from '@universalweb/acid';
 import { callOnDataSyncEvent, onDataSync } from './onDataSync.js';
+import { checkSendDataReady, clearSendDataReadyTimeout, sendDataReady } from './sendReady/sendDataReady.js';
+import { checkSendHeadReady, clearSendHeadReadyTimeout, sendHeadReady } from './sendReady/sendHeadReady.js';
+import { checkSendParametersReady, clearSendParametersReadyTimeout, sendParametersReady } from './sendReady/sendParametersReady.js';
+import { checkSendPathReady, clearSendPathReadyTimeout, sendPathReady } from './sendReady/sendPathReady.js';
+import { checkSetupSent, clearSetupTimeout, sendSetup } from './sendReady/sendSetup.js';
 import { createEvent, removeEvent, triggerEvent } from '../events.js';
 import { decode, encode } from '#utilities/serialize';
 import { flush, flushIncoming, flushOutgoing } from './flush.js';
 import { dataPacketization } from './dataPacketization.js';
 import { destroy } from './destory.js';
 import { onData } from './onData.js';
+import { onDataProgress } from './onProgress/onDateProgress.js';
 import { onFrame } from './onFrame.js';
 import { onHead } from './onHead.js';
+import { onHeadProgress } from './onProgress/onHeadProgress.js';
+import { onParamatersProgress } from './onProgress/onParamatersProgress.js';
 import { onParameters } from './onParameters.js';
 import { onPath } from './onPath.js';
+import { onPathProgress } from './onProgress/onPathProgress.js';
+import { processData } from './process/processData.js';
+import { processHead } from './process/processHead.js';
+import { processParameters } from './process/processParameters.js';
+import { processPath } from './process/processPath.js';
+import { sendData } from './send/sendData.js';
+import { sendEnd } from './send/sendEnd.js';
+import { sendHead } from './send/sendHead.js';
+import { sendParameters } from './send/sendParameters.js';
+import { sendPath } from './send/sendPath.js';
 import { success } from '#logs';
 import { toBase64 } from '#crypto';
 const noPayloadMethods = /0/;
@@ -47,6 +65,7 @@ export class Base {
 		if (hasValue(source.latency)) {
 			this.connectionLatency = source.latency;
 			this.latency = this.connectionLatency + 10;
+			this.latencyTimeout = this.connectionLatency;
 		}
 		source.lastActive = Date.now();
 		if (this.isAsk) {
@@ -144,204 +163,6 @@ export class Base {
 		this.pathAssembled = true;
 	}
 	processState = 0;
-	async processHead() {
-		if (this.headAssembled) {
-			return console.log('Head already processed');
-		}
-		const {
-			missingHeadPackets,
-			incomingHead
-		} = this;
-		console.log('incomingHeadPackets', this.incomingHeadPackets);
-		if (this.totalIncomingHeadSize === this.currentIncomingHeadSize) {
-			this.setHead();
-			this.sendDataReady();
-		} else {
-			eachArray(this.incomingHeadPackets, (item, index) => {
-				if (!item) {
-					if (!missingHeadPackets.has(index)) {
-						missingHeadPackets.set(index, true);
-					}
-				}
-			});
-		}
-		console.log('incomingHead', incomingHead);
-	}
-	async processPath() {
-		if (this.pathAssembled) {
-			return console.log('Path already processed');
-		}
-		const {
-			missingPathPackets,
-			incomingPath
-		} = this;
-		console.log('incomingPathPackets', this.incomingPathPackets);
-		console.log('incomingPath', incomingPath);
-		if (this.totalIncomingPathSize === this.currentIncomingPathSize) {
-			this.setPath();
-			this.sendParametersReady();
-		} else {
-			eachArray(this.incomingPathPackets, (item, index) => {
-				if (!item) {
-					if (!missingPathPackets.has(index)) {
-						missingPathPackets.set(index, true);
-					}
-				}
-			});
-		}
-	}
-	async processParameters() {
-		if (this.parametersAssembled) {
-			return console.log('Parameters already processed');
-		}
-		const {
-			missingParametersPackets,
-			incomingParameters
-		} = this;
-		console.log('incomingParametersPackets', this.incomingParametersPackets);
-		if (this.totalIncomingParametersSize === this.currentIncomingParametersSize) {
-			this.setParameters();
-		} else {
-			eachArray(this.incomingParametersPackets, (item, index) => {
-				if (!item) {
-					if (!missingParametersPackets.has(index)) {
-						missingParametersPackets.set(index, true);
-					}
-				}
-			});
-		}
-		console.log('incomingParameters', incomingParameters);
-	}
-	async processData() {
-		console.log('Checking Data');
-		const { missingDataPackets } = this;
-		if (this.compiledDataAlready) {
-			return true;
-		}
-		if (this.totalIncomingDataSize === this.currentIncomingDataSize) {
-			clear(this.incomingDataPackets);
-			if (this.isAsk) {
-				if (this.incomingData.length) {
-					this.response.dataBuffer = Buffer.concat(this.incomingData);
-				}
-			} else if (this.incomingData.length) {
-				this.request.dataBuffer = Buffer.concat(this.incomingData);
-			}
-			return this.completeReceived();
-		}
-		eachArray(this.incomingDataPackets, (item, index) => {
-			if (missingDataPackets.has(index)) {
-				missingDataPackets.set(index, true);
-			}
-		});
-		if (missingDataPackets.size !== 0) {
-			console.log('Missing packets: ', missingDataPackets);
-		}
-	}
-	checkSetupSent() {
-		const { isAsk } = this;
-		console.log(`CHECK SETUP STATUS - STATE:${this.state}`);
-		if (isAsk) {
-			if (this.state === askRPC.setup) {
-				console.log('STATE STILL 1 NEED TO RESEND SETUP');
-				this.sendSetup();
-			}
-		} else if (this.state === askRPC.setup) {
-			console.log('STATE STILL 5 NEED TO RESEND SETUP');
-			this.sendSetup();
-		}
-	}
-	clearSetupTimeout() {
-		clearTimeout(this.setupTimeout);
-		this.setupTimeout = null;
-	}
-	sendSetup() {
-		const source = this;
-		const { isAsk } = this;
-		console.log('sendSetup', this.state);
-		const message = this.getPacketTemplate(0);
-		if (isAsk) {
-			message.push(this.method, this.outgoingPathSize, this.outgoingParametersSize, this.outgoingHeadSize);
-			if (this.state === defaultStage) {
-				this.setState(askRPC.setup);
-			}
-		} else {
-			message.push(this.outgoingHeadSize);
-			if (this.state === replyRPC.sendDataReady) {
-				this.setState(replyRPC.setup);
-			}
-		}
-		if (hasValue(this.outgoingDataSize)) {
-			message.push(this.outgoingDataSize);
-		}
-		this.setupTimeout = setTimeout(() => {
-			source.checkSetupSent();
-		}, this.latencyTimeout);
-		return this.sendPacket(message);
-	}
-	async sendPathReady() {
-		const { isAsk } = this;
-		if (isAsk) {
-			this.setState(askRPC.sendPathReady);
-			this.clearSetupTimeout();
-		} else {
-			this.setState(replyRPC.sendPathReady);
-		}
-		const message = this.getPacketTemplate(1);
-		return this.sendPacket(message);
-	}
-	async sendParametersReady() {
-		const { isAsk } = this;
-		if (isAsk) {
-			this.setState(askRPC.sendParametersReady);
-		} else {
-			this.setState(replyRPC.sendParametersReady);
-		}
-		if (this.totalIncomingParametersSize === 0) {
-			return this.sendHeadReady();
-		}
-		const message = this.getPacketTemplate(3);
-		return this.sendPacket(message);
-	}
-	async sendHeadReady() {
-		const { isAsk } = this;
-		if (isAsk) {
-			this.setState(askRPC.sendHeadReady);
-		} else {
-			this.setState(replyRPC.sendHeadReady);
-		}
-		if (this.totalIncomingHeadSize === 0) {
-			return this.sendDataReady();
-		}
-		const message = this.getPacketTemplate(5);
-		return this.sendPacket(message);
-	}
-	sendDataReady() {
-		const { isAsk } = this;
-		if (isAsk) {
-			this.setState(askRPC.sendDataReady);
-		} else {
-			this.setState(replyRPC.sendDataReady);
-		}
-		if (this.isReply && this.noData) {
-			return this.completeReceived();
-		}
-		if (this.totalIncomingDataSize === 0) {
-			return this.completeReceived();
-		}
-		const message = this.getPacketTemplate(7);
-		return this.sendPacket(message);
-	}
-	async sendEnd() {
-		const { isAsk } = this;
-		if (isAsk) {
-			this.setState(askRPC.sendEnd);
-		} else {
-			this.setState(replyRPC.sendEnd);
-		}
-		const message = this.getPacketTemplate(9);
-		return this.sendPacket(message);
-	}
 	async pathPacketization() {
 		const {
 			maxFrameSize,
@@ -524,27 +345,6 @@ export class Base {
 		}
 		this.destroy();
 	}
-	async sendHead() {
-		const thisReply = this;
-		console.log('sendHead outgoingHeadPackets', this.outgoingHeadPackets);
-		this.sendPackets(this.outgoingHeadPackets);
-	}
-	// doesnt change state
-	async sendPath() {
-		const thisReply = this;
-		console.log('sendPath outgoingPathPackets', this.outgoingPathPackets);
-		this.sendPackets(this.outgoingPathPackets);
-	}
-	async sendParameters() {
-		const thisReply = this;
-		console.log('sendParameters outgoingParametersPackets', this.outgoingParametersPackets);
-		this.sendPackets(this.outgoingParametersPackets);
-	}
-	async sendData() {
-		const thisReply = this;
-		console.log('sendData outgoingDataPackets', this.outgoingDataPackets);
-		this.sendPackets(this.outgoingDataPackets);
-	}
 	sendPackets(packetArray) {
 		const thisReply = this;
 		eachArray(packetArray, (message) => {
@@ -606,45 +406,37 @@ export class Base {
 	onDataSync = onDataSync;
 	callOnDataSyncEvent = callOnDataSyncEvent;
 	onData = onData;
+	onDataProgress = onDataProgress;
+	processData = processData;
 	onPath = onPath;
+	onPathProgress = onPathProgress;
+	processPath = processPath;
 	onParameters = onParameters;
+	onParamatersProgress = onParamatersProgress;
+	processParameters = processParameters;
 	onHead = onHead;
-	onDataProgress() {
-		if (this.totalIncomingDataSize) {
-			if (this.currentIncomingDataSize > 0) {
-				this.incomingDataProgress = calcProgress(this.totalIncomingDataSize, this.currentIncomingDataSize);
-			}
-			console.log(`DATA PROGRESS current:${this.currentIncomingDataSize}`, this.totalIncomingDataSize);
-			console.log('Incoming Progress', this.incomingDataProgress);
-		}
-	}
-	onHeadProgress() {
-		if (this.totalIncomingHeadSize) {
-			if (this.currentIncomingHeadSize > 0) {
-				this.incomingHeadProgress = calcProgress(this.currentIncomingHeadSize, this.currentIncomingHeadSize);
-			}
-			console.log(`Head PROGRESS current:${this.currentIncomingHeadSize}`, this.currentIncomingHeadSize);
-			console.log('Incoming Progress', this.incomingHeadProgress);
-		}
-	}
-	onPathProgress() {
-		if (this.totalIncomingPathSize) {
-			if (this.currentIncomingPathSize > 0) {
-				this.incomingPathProgress = calcProgress(this.currentIncomingPathSize, this.currentIncomingPathSize);
-			}
-			console.log(`Path PROGRESS current:${this.currentIncomingPathSize}`, this.currentIncomingPathSize);
-			console.log('Incoming Progress', this.incomingPathProgress);
-		}
-	}
-	onParamatersProgress() {
-		if (this.totalIncomingParamatersSize) {
-			if (this.currentIncomingParamatersSize > 0) {
-				this.incomingParamatersProgress = calcProgress(this.currentIncomingParamatersSize, this.currentIncomingParamatersSize);
-			}
-			console.log(`Paramaters PROGRESS current:${this.currentIncomingParamatersSize}`, this.currentIncomingParamatersSize);
-			console.log('Incoming Progress', this.incomingParamatersProgress);
-		}
-	}
+	onHeadProgress = onHeadProgress;
+	processHead = processHead;
+	sendData = sendData;
+	sendHead = sendHead;
+	sendParameters = sendParameters;
+	sendPath = sendPath;
+	sendEnd = sendEnd;
+	sendDataReady = sendDataReady;
+	checkSendDataReady = checkSendDataReady;
+	clearSendDataReadyTimeout = clearSendDataReadyTimeout;
+	sendHeadReady = sendHeadReady;
+	checkSendHeadReady	= checkSendHeadReady;
+	clearSendHeadReadyTimeout = clearSendHeadReadyTimeout;
+	checkSendParametersReady = checkSendParametersReady;
+	clearSendParametersReadyTimeout = clearSendParametersReadyTimeout;
+	sendParametersReady = sendParametersReady;
+	checkSendPathReady = checkSendPathReady;
+	clearSendPathReadyTimeout = clearSendPathReadyTimeout;
+	sendPathReady = sendPathReady;
+	checkSetupSent = checkSetupSent;
+	clearSetupTimeout = clearSetupTimeout;
+	sendSetup = sendSetup;
 	outgoingHead;
 	outgoingData;
 	incomingHeadState = false;

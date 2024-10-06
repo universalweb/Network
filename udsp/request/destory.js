@@ -1,4 +1,9 @@
 export async function destroy(err) {
+	this.clearSetupTimeout();
+	this.clearSendPathReadyTimeout();
+	this.clearSendParametersReadyTimeout();
+	this.clearSendHeadReadyTimeout();
+	this.clearSendDataReadyTimeout();
 	if (this.source().requestQueue.get(this.id) === this) {
 		this.state = false;
 		console.log(`Destroying Request ID:${this.id} ->`, err || 'No reason given');

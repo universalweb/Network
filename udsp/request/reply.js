@@ -58,6 +58,7 @@ export class Reply extends Base {
 	isReply = true;
 	async completeReceived() {
 		this.setState(replyRPC.received);
+		this.clearSendDataReadyTimeout();
 		await processEvent(this.request, this.response, this.source().server());
 	}
 	static type = 'reply';

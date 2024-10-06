@@ -302,11 +302,14 @@ export class Client extends UDSP {
 		if (this.connected === true) {
 			return;
 		} else if (this.connectionAttempts <= 3) {
-			clearTimeout(this.introTimeout);
 			this.sendIntro();
 		} else {
 			this.destory(`Failed to connect with ${this.connectionAttempts} attempts`);
 		}
+	}
+	clearIntroTimeout() {
+		clearTimeout(this.introTimeout);
+		this.introTimeout = null;
 	}
 	async sendIntro() {
 		console.log('Sending Intro');
@@ -367,7 +370,7 @@ export class Client extends UDSP {
 			this.serverRandomToken = serverRandomToken;
 			console.log('Server Random Token', toHex(serverRandomToken));
 		}
-		clearTimeout(this.introTimeout);
+		this.clearIntroTimeout();
 		this.handshaked();
 	}
 	async setSession() {
@@ -410,6 +413,7 @@ export class Client extends UDSP {
 	async close(message) {
 		if (this.state === connectingState || this.state === connectedState) {
 			console.log(`Client CLOSING. ${this.connectionIdString}`);
+			this.clearIntroTimeout();
 			Client.connections.delete(this.connectionIdString);
 			await this.updateState(closingState);
 			await this.updateReadyState(2);
