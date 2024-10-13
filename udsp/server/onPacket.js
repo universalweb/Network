@@ -25,7 +25,7 @@ import { reply } from '#udsp/request/reply';
 import { toBase64 } from '#crypto';
 export async function onPacket(packet, rinfo) {
 	const thisServer = this;
-	msgReceived('Message Received');
+	msgReceived('Message Received WORKER ID:', this.workerId || 'No Worker ID');
 	const config = {
 		packet,
 		connection: rinfo,

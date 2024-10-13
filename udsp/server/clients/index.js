@@ -87,7 +87,7 @@ export class Client {
 			clientId,
 			cipherSuiteId,
 			version,
-			cipherSuites
+			timeSent
 		] = header;
 		console.log('Client initialize Packet Header', header);
 		if (publicKey) {
@@ -108,9 +108,10 @@ export class Client {
 			id: clientId,
 			connectionIdSize: clientId.length,
 		});
+		this.latency = Date.now() - timeSent;
 		await this.initializeSession();
 		this.nextSession = await this.cipherSuite.serverEphemeralKeypair({}, this.destination);
-		success(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port}`);
+		success(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port} LATENCY = ${this.latency}`);
 		await this.calculatePacketOverhead();
 		if (packetDecoded.noMessage) {
 			console.log('Packet has No message body');
@@ -188,11 +189,38 @@ export class Client {
 		info(`socket EVENT -> destroy - ID:${this.connectionIdString}`);
 		return destroy(this, destroyCode);
 	}
+	updateLastActive() {
+		this.lastActive = Date.now();
+	}
+	checkActivity() {
+		const lastActive = Date.now() - this.lastActive;
+		if (lastActive > this.heartbeat) {
+			this.close(1);
+		}
+	}
+	initialGracePeriodCheck() {
+		const source = this;
+		const {
+			initialGracePeriod,
+			heartbeat
+		} = source;
+		source.initialGracePeriodTimeout = setTimeout(() => {
+			const lastActive = Date.now() - source.lastActive;
+			console.log('Client Grace Period reached killing connection', lastActive > initialGracePeriod, source);
+			if (source.state <= 1 || lastActive > heartbeat) {
+				source.close(1);
+			}
+		}, initialGracePeriod);
+	}
+	clearInitialGracePeriodTimeout() {
+		clearTimeout(this.initialGracePeriodTimeout);
+	}
 	// PFS
 	async reply(frame, header, rinfo) {
 		if (this.state === 1) {
 			this.updateState(2);
 		}
+		this.updateLastActive();
 		const processingFrame = await processFrame(frame, header, this, this.requestQueue);
 		if (processingFrame === false) {
 			const replyObject = new Reply(frame, header, this);

@@ -277,7 +277,7 @@ export class Client extends UDSP {
 			version,
 			id
 		} = this;
-		console.log(`setCryptographyHeaders Cipher:${cipherSuite.id}@${version} with ID: ${id}`, `Public Key Size: {key.length}`);
+		console.log(`setCryptographyHeaders Cipher: ${cipherSuite.id} @ v${version} with ID: ${id}`, `Public Key Size: {key.length}`);
 		console.log('Client ID', id);
 		header.push(id, cipherSuite.id, version);
 		return header;
@@ -298,13 +298,13 @@ export class Client extends UDSP {
 		return this.awaitHandshake;
 	}
 	checkIntroTimeout() {
-		console.log('checkIntroTimeout', this.connected, this.connectionAttempts);
+		console.log('checkIntroTimeout', this.connected, this.introAttempts);
 		if (this.connected === true) {
 			return;
-		} else if (this.connectionAttempts <= 3) {
+		} else if (this.introAttempts <= 3) {
 			this.sendIntro();
 		} else {
-			this.destory(`Failed to connect with ${this.connectionAttempts} attempts`);
+			this.destory(`Failed to connect with ${this.introAttempts} attempts`);
 		}
 	}
 	clearIntroTimeout() {
@@ -313,15 +313,13 @@ export class Client extends UDSP {
 	}
 	async sendIntro() {
 		console.log('Sending Intro');
-		this.connectionAttempts++;
+		this.introAttempts++;
 		this.introTimestamp = Date.now();
 		await this.updateState(connectingState);
 		const header = [0];
 		this.setPublicKeyHeader(header);
 		this.setCryptographyHeaders(header);
-		if (!this.introSent) {
-			this.introSent = Date.now();
-		}
+		header.push(Date.now());
 		this.introTimeout = setTimeout(() => {
 			this.checkIntroTimeout();
 		}, this.latency);
@@ -488,7 +486,7 @@ export class Client extends UDSP {
 		this.connectionIdSize = defaultClientConnectionIdSize;
 		this.ipVersion = 'udp4';
 		this.readyState = 0;
-		this.connectionAttempts = 0;
+		this.introAttempts = 0;
 		this.latency = 100;
 		this.gracePeriod = 10000;
 	}

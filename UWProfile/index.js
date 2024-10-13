@@ -154,11 +154,21 @@ export class UWProfile {
 			password: binaryData,
 		};
 		console.log('Profile Size', binaryData.length);
-		return keychainSave(config);
+		try {
+			return keychainSave(config);
+		} catch (error) {
+			console.log('No Keychain Access');
+			return false;
+		}
 	}
 	async importFromKeychain(accountName = 'UWProfile', encryptionPassword) {
-		const keychainObject = await keychainGet(this.accountName || accountName);
-		await this.importFromObject(keychainObject, encryptionPassword);
+		try {
+			const keychainObject = await keychainGet(this.accountName || accountName);
+			await this.importFromObject(keychainObject, encryptionPassword);
+		} catch (error) {
+			console.log('No Keychain Access');
+			return false;
+		}
 	}
 }
 export async function uwProfile(config, optionalArg) {

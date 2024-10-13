@@ -11,7 +11,6 @@ import { getCoreCount } from '#utilities/hardware/cpu';
 import { initialize } from '#server/clients/initialize';
 import { msgReceived } from '#logs';
 import { onPacket } from '../server/onPacket.js';
-import { requestMethods } from './methods/index.js';
 const numCPUs = getCoreCount();
 function workerReady(worker) {
 	worker.ready = true;
@@ -51,6 +50,7 @@ export async function app(config, ...args) {
 		}
 		const coreCount = (size && size <= numCPUs) ? size : numCPUs;
 		config.coreCount = coreCount;
+		config.reservedConnectionIdSize = String(coreCount).length;
 		if (cluster.isPrimary) {
 			cluster.settings.serialization = 'advanced';
 			console.log(`Primary ${process.pid} is running spawning ${coreCount} instances.`);
@@ -58,6 +58,7 @@ export async function app(config, ...args) {
 			config.workerId = String(0);
 			const masterLoadBalancer = await new App(config, ...args);
 			masterLoadBalancer.server.onPacket = function(packet, connection) {
+				console.log('Loadbalancer Packet Received');
 				return masterLoadBalancer.onLoadbalancer(packet, connection);
 			};
 			const workers = [];

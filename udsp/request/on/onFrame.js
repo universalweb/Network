@@ -5,15 +5,15 @@ import {
 	isNumber,
 	isUndefined,
 } from '@universalweb/acid';
-import { onData, onDataReady } from './rpc/onData.js';
-import { onHead, onHeadReady } from './rpc/onHead.js';
-import { onParameters, onParametersReady } from './rpc/onParameters.js';
-import { onPath, onPathReady } from './rpc/onPath.js';
-import { destroy } from './destory.js';
-import { isMethodCodeValid } from '../isMethodCodeValid.js';
-import { onEnd } from './rpc/onEnd.js';
-import { onError } from './rpc/onError.js';
-import { onSetup } from './rpc/onSetup.js';
+import { onData, onDataReady } from '../rpc/onData.js';
+import { onHead, onHeadReady } from '../rpc/onHead.js';
+import { onParameters, onParametersReady } from '../rpc/onParameters.js';
+import { onPath, onPathReady } from '../rpc/onPath.js';
+import { destroy } from '../destory.js';
+import { isMethodCodeValid } from '../../isMethodCodeValid.js';
+import { onEnd } from '../rpc/onEnd.js';
+import { onError } from '../rpc/onError.js';
+import { onSetup } from '../rpc/onSetup.js';
 import { processEvent } from '#server/processEvent';
 /**
  * 0 Setup Packet.

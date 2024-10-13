@@ -2,6 +2,7 @@ import * as routers from '../router/index.js';
 import * as servers from '#server';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { encode } from '#utilities/serialize';
+import { getConnectionIdReservedSpaceString } from '../connectionId.js';
 import { initialize } from '#server/clients/initialize';
 import { isUndefined } from '@universalweb/acid';
 import { msgReceived } from '#logs';
@@ -42,7 +43,7 @@ export class App {
 		const config = {
 			packet,
 			connection,
-			destination: this,
+			destination: this.server,
 		};
 		const wasHeadersDecoded = await decodePacketHeaders(config);
 		if (isUndefined(wasHeadersDecoded)) {
@@ -50,13 +51,19 @@ export class App {
 		}
 		const id = config.packetDecoded.id;
 		const key = config.packetDecoded.key;
-		const idString = id.toString('hex');
-		const reservedSmartRoute = idString.substring(0, this.reservedConnectionIdSize);
-		console.log(`Loadbalancer got an id ${idString}`);
-		if (key) {
-			console.log(`Loadbalancer has a new client ${idString}`);
+		let workerId = 1;
+		const { reservedConnectionIdSize } = config.destination;
+		if (id !== false) {
+			const idString = id.toString('hex');
+			const reservedSmartRoute = getConnectionIdReservedSpaceString(id, reservedConnectionIdSize);
+			console.log(`Loadbalancer got an id ${idString}`);
+			if (key) {
+				console.log(`Loadbalancer has a new client ${idString}`);
+			}
+			console.log(`Reserved Smart Route ${reservedSmartRoute}`, id.length, idString, reservedConnectionIdSize);
+			workerId = reservedSmartRoute;
 		}
-		const worker = this.workers[1];
+		const worker = this.workers[workerId];
 		const passMessage = encode([
 			packet,
 			connection

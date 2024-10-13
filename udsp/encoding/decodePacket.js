@@ -88,6 +88,7 @@ export async function decodePacketHeaders(config) {
 		console.log(`Decode source ID: ${source?.id?.toString('hex')}`);
 	} else {
 		console.log(`Decode Server side packet with id: ${id?.toString('hex')}`);
+		// console.log(packet, connectionIdSize, destination.connectionIdSize);
 	}
 	config.packetDecoded.header = headerEncoded;
 	config.packetDecoded.id = id;

@@ -23,6 +23,11 @@ export async function sendSetup() {
 	const { isAsk } = this;
 	console.log('sendSetup', this.state);
 	const message = this.getPacketTemplate(0);
+	this.setupAttempts++;
+	if (this.setupAttempts > 3) {
+		console.log('Intro Attempts Exceeded');
+		return this.destroy();
+	}
 	if (isAsk) {
 		message.push(this.method, this.outgoingPathSize, this.outgoingParametersSize, this.outgoingHeadSize);
 		if (this.state === defaultStage) {

@@ -22,13 +22,14 @@ export async function initialize(config) {
 		server: {
 			id: serverId,
 			realtime,
-			gracePeriod,
+			initialGracePeriod,
 			heartbeat,
 			cipherSuites: serverCipherSuites,
 			cipherSuite: serverCipherSuite,
 			publicKey: serverPublicKey,
 			privateKey: serverPrivateKey,
 			connectionIdSize,
+			reservedConnectionIdSize,
 			certificate,
 			scale
 		},
@@ -40,26 +41,24 @@ export async function initialize(config) {
 	this.scale = server?.scale;
 	const client = this;
 	client.connectionIdSize = connectionIdSize;
+	client.reservedConnectionIdSize = reservedConnectionIdSize;
 	// When changing to a new key you must first create new keys from scratch to replace these.
 	client.publicKey = serverPublicKey;
 	client.privateKey = serverPrivateKey;
-	const serverConnectionIdString = generateConnectionId(connectionIdSize, serverId);
+	const serverConnectionIdString = generateConnectionId(connectionIdSize, serverId, reservedConnectionIdSize);
 	const serverClientId = connectionIdToBuffer(serverConnectionIdString);
-	console.log(`Server Connection ID: ${serverConnectionIdString} SIZE: ${connectionIdSize}`);
+	console.log(`Server Connection ID: ${serverConnectionIdString} SIZE: ${connectionIdSize} SERVER ID: ${serverId} RESERVED SIZE: ${reservedConnectionIdSize}`);
 	client.id = serverClientId;
 	client.connectionIdString = serverConnectionIdString;
 	assign(client.destination, {
 		ip,
 		port
 	});
-	if (!realtime && gracePeriod) {
-		client.gracePeriodTimeout = setTimeout(() => {
-			const lastActive = Date.now() - client.lastActive;
-			console.log('Client Grace Period reached killing connection', lastActive > gracePeriod, client);
-			if (client.state <= 1 || lastActive > heartbeat) {
-				client.close(1);
-			}
-		}, gracePeriod);
+	this.initialGracePeriod = initialGracePeriod;
+	this.heartbeat = heartbeat;
+	this.realtime = realtime;
+	if (!realtime && initialGracePeriod) {
+		this.initialGracePeriodCheck();
 	}
 	return client;
 }

@@ -3,7 +3,7 @@ export async function destroy(client, reason) {
 		return;
 	}
 	client.destroyed = true;
-	clearTimeout(client.gracePeriodTimeout);
+	client.clearInitialGracePeriodTimeout();
 	const server = client.server();
 	console.log(`client destroyed: ${client.connectionIdString}`);
 	switch (reason) {

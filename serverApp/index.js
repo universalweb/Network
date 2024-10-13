@@ -18,7 +18,7 @@ const uwApp = await app({
 		// Each server in the cluster will have a unique port that is incremented by 1 but starting at the clusterPort number connection IDs are modified to include the relevant cluster
 		port: 8000,
 		// The amount of servers to spawn in the cluster
-		size: 1,
+		// size: 2,
 		// Amount of connections per server
 		connections: 5000,
 		// use the default port for the cluster's main point of contact & as the loadbalancer/router
@@ -36,7 +36,7 @@ const uwApp = await app({
 	// Can be requested or auto set for the server
 	realtime: true,
 	// keepAlive: true,
-	gracePeriod: 30000,
+	initialGracePeriod: 5000,
 	// heartbeat is an interval check for when a client must send something to the server to remain connected
 	heartbeat: 5000,
 	// Max packet retries for a singular request before restarting the request

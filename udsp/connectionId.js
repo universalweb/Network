@@ -4,14 +4,25 @@ import { randomConnectionId } from '#utilities/crypto';
 const eight = 8;
 const characters = 'abcdef0123456789';
 const charactersLength = characters.length;
-export function generateConnectionId(size = eight, prepend) {
+function convertPrepend(prepend, minSize) {
+	if (!prepend) {
+		return '';
+	}
+	if (prepend.length < minSize) {
+		const target = '0'.repeat(minSize - 1);
+		return `${target}${prepend}`;
+	}
+	return prepend;
+}
+export function generateConnectionId(size = eight, prependArg, minSize = 1) {
 	let result = '';
 	const hexSize = size * 2;
 	for (let i = 0; i < hexSize; i++) {
 		const randomIndex = Math.floor(Math.random() * charactersLength);
 		result += characters.charAt(randomIndex);
 	}
-	if (hasValue(prepend)) {
+	if (hasValue(prependArg)) {
+		const prepend = convertPrepend(String(prependArg), minSize);
 		result = `${prepend}${result.substring(prepend.length)}`;
 		// console.log('ConnectionID created', result);
 	}
@@ -23,11 +34,9 @@ export function connectionIdToBuffer(source) {
 export function connectionIdToString(source) {
 	return source.toString('hex');
 }
-export function getConnectionIdReservedSpace(source, size) {
-	return source.subarray(0, size);
-}
 export function getConnectionIdReservedSpaceString(source, size) {
-	return source.subarray(0, size).toString('hex');
+	return Number(source.toString('hex').substring(0, size));
 }
-// const serverConnectionIdString = generateConnectionId(4, '01d');
-// console.log(connectionIdToBuffer(serverConnectionIdString).toString('hex'));
+// console.log(generateConnectionId(8, 1, 2));
+// const serverConnectionIdString = connectionIdToBuffer(generateConnectionId(8, 1, 2));
+// console.log(getConnectionIdReservedSpaceString(serverConnectionIdString, 2));

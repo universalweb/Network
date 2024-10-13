@@ -18,25 +18,25 @@ import {
 	objectSize,
 	promise
 } from '@universalweb/acid';
-import { callOnDataSyncEvent, onDataSync } from './onDataSync.js';
+import { callOnDataSyncEvent, onDataSync } from './on/onDataSync.js';
 import { checkSendDataReady, clearSendDataReadyTimeout, sendDataReady } from './sendReady/sendDataReady.js';
 import { checkSendHeadReady, clearSendHeadReadyTimeout, sendHeadReady } from './sendReady/sendHeadReady.js';
 import { checkSendParametersReady, clearSendParametersReadyTimeout, sendParametersReady } from './sendReady/sendParametersReady.js';
 import { checkSendPathReady, clearSendPathReadyTimeout, sendPathReady } from './sendReady/sendPathReady.js';
-import { checkSetupSent, clearSetupTimeout, sendSetup } from './sendReady/sendSetup.js';
+import { checkSetupSent, clearSetupTimeout, sendSetup } from './send/sendSetup.js';
 import { createEvent, removeEvent, triggerEvent } from '../events.js';
 import { decode, encode } from '#utilities/serialize';
 import { flush, flushIncoming, flushOutgoing } from './flush.js';
 import { dataPacketization } from './dataPacketization.js';
 import { destroy } from './destory.js';
-import { onData } from './onData.js';
+import { onData } from './on/onData.js';
 import { onDataProgress } from './onProgress/onDateProgress.js';
-import { onFrame } from './onFrame.js';
-import { onHead } from './onHead.js';
+import { onFrame } from './on/onFrame.js';
+import { onHead } from './on/onHead.js';
 import { onHeadProgress } from './onProgress/onHeadProgress.js';
 import { onParamatersProgress } from './onProgress/onParamatersProgress.js';
-import { onParameters } from './onParameters.js';
-import { onPath } from './onPath.js';
+import { onParameters } from './on/onParameters.js';
+import { onPath } from './on/onPath.js';
 import { onPathProgress } from './onProgress/onPathProgress.js';
 import { processData } from './process/processData.js';
 import { processHead } from './process/processHead.js';
@@ -491,6 +491,7 @@ export class Base {
 	inRequestQueue = false;
 	status = 0;
 	readyState = 0;
+	state = 0;
 	parametersSize = 0;
 	outgoingPathSize = 0;
 	outgoingParametersSize = 0;
@@ -507,4 +508,5 @@ export class Base {
 	latency = 100;
 	connectionLatency = 100;
 	latencyTimeout	= 100;
+	setupAttempts = 0;
 }
