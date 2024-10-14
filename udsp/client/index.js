@@ -350,6 +350,7 @@ export class Client extends UDSP {
 			framePublicKey,
 			changeDestinationAddress,
 			serverRandomToken,
+			upgradeToRealtime
 		] = frame;
 		this.destination.id = serverConnectionId;
 		this.destination.connectionIdSize = serverConnectionId.length;
@@ -367,6 +368,10 @@ export class Client extends UDSP {
 		if (serverRandomToken) {
 			this.serverRandomToken = serverRandomToken;
 			console.log('Server Random Token', toHex(serverRandomToken));
+		}
+		if (upgradeToRealtime) {
+			console.log('Upgrade to Realtime');
+			this.realtime = true;
 		}
 		this.clearIntroTimeout();
 		this.handshaked();

@@ -17,6 +17,7 @@ export async function onParameters(id, rpc, packetId, data, frame, source, rinfo
 	if (!source.receivedSetupPacket || source.incomingParametersPackets[packetId]) {
 		return;
 	}
+	source.clearSendParametersReadyTimeout();
 	source.totalReceivedUniquePackets++;
 	source.incomingParametersPackets[packetId] = frame;
 	source.incomingParameters[packetId] = data;

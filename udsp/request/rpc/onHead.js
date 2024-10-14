@@ -17,6 +17,7 @@ export async function onHead(id, rpc, packetId, data, frame, source, rinfo) {
 	if (!source.receivedSetupPacket || source.incomingHeadPackets[packetId]) {
 		return;
 	}
+	source.clearSendHeadReadyTimeout();
 	source.totalReceivedUniquePackets++;
 	source.incomingHeadPackets[packetId] = frame;
 	source.incomingHead[packetId] = data;

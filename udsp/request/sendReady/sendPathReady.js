@@ -1,4 +1,5 @@
 import { askRPC, replyRPC } from '../rpc/rpcCodes.js';
+import { hasValue } from '@universalweb/acid';
 export async function checkSendPathReady() {
 	const { isAsk } = this;
 	console.log(`CHECK SETUP STATUS checkSendPathReady - STATE:${this.state}`);
@@ -14,7 +15,7 @@ export async function checkSendPathReady() {
 	this.clearSendPathReadyTimeout();
 }
 export function clearSendPathReadyTimeout() {
-	if (this.sendPathReadyTimeout !== null) {
+	if (hasValue(this.sendPathReadyTimeout)) {
 		console.log('CLEAR sendPathReady TIMEOUT');
 		clearTimeout(this.sendPathReadyTimeout);
 		this.sendPathReadyTimeout = null;

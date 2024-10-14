@@ -1,4 +1,5 @@
 import { askRPC, replyRPC } from '../rpc/rpcCodes.js';
+import { hasValue } from '@universalweb/acid';
 export async function checkSendHeadReady() {
 	const { isAsk } = this;
 	console.log(`CHECK SETUP STATUS checkSendHeadReady - STATE:${this.state}`);
@@ -14,8 +15,10 @@ export async function checkSendHeadReady() {
 	this.clearSendHeadReadyTimeout();
 }
 export function clearSendHeadReadyTimeout() {
-	clearTimeout(this.sendHeadReadyTimeout);
-	this.sendHeadReadyTimeout = null;
+	if (hasValue(this.sendHeadReadyTimeout)) {
+		clearTimeout(this.sendHeadReadyTimeout);
+		this.sendHeadReadyTimeout = null;
+	}
 }
 export async function sendHeadReady() {
 	const { isAsk } = this;

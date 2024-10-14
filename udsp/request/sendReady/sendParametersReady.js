@@ -1,4 +1,5 @@
 import { askRPC, replyRPC } from '../rpc/rpcCodes.js';
+import { hasValue } from '@universalweb/acid';
 export async function checkSendParametersReady() {
 	const { isAsk } = this;
 	console.log(`CHECK SETUP STATUS checkSendParametersReady - STATE:${this.state}`);
@@ -14,8 +15,10 @@ export async function checkSendParametersReady() {
 	this.clearSendParametersReadyTimeout();
 }
 export function clearSendParametersReadyTimeout() {
-	clearTimeout(this.sendParametersReadyTimeout);
-	this.sendParametersReadyTimeout = null;
+	if (hasValue(this.sendParametersReadyTimeout)) {
+		clearTimeout(this.sendParametersReadyTimeout);
+		this.sendParametersReadyTimeout = null;
+	}
 }
 export async function sendParametersReady() {
 	const { isAsk } = this;

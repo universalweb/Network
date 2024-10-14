@@ -6,6 +6,7 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 		console.log('Received Setup Packet Already RESEND ANSWER');
 		return;
 	}
+	source.clearSetupTimeout();
 	const { isAsk } = source;
 	source.totalReceivedUniquePackets++;
 	source.receivedSetupPacket = true;

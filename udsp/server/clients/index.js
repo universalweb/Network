@@ -123,7 +123,6 @@ export class Client {
 		return this.sendIntro();
 	}
 	// SERVER HELLO
-	// Change this to be header with no message permit message to be empty
 	async sendIntro() {
 		const header = [];
 		const frame = [
