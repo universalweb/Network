@@ -53,9 +53,32 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 	}
 	if (isAsk) {
 		source.setState(askRPC.onSetup);
-		source.sendHeadReady();
+		if (source.totalIncomingHeadSize) {
+			source.sendHeadReady();
+		} else if (source.totalIncomingDataSize) {
+			console.log('SKIPPED HEAD READY');
+			source.sendDataReady();
+		} else {
+			console.log('SKIPPED DATA READY');
+			source.completeReceived();
+		}
 	} else {
 		source.setState(replyRPC.onSetup);
-		source.sendPathReady();
+		if (source.totalIncomingPathSize) {
+			// CHECK TO SEE IF GET REQUEST BUT NO PATH THEN SET '/' as the PATH
+			source.sendPathReady();
+		} else if (source.totalIncomingParametersSize) {
+			console.log('SKIPPED PATH READY');
+			source.sendParametersReady();
+		} else if (source.totalIncomingHeadSize) {
+			console.log('SKIPPED PARAMETERS READY');
+			source.sendHeadReady();
+		} else if (source.totalIncomingDataSize) {
+			console.log('SKIPPED HEAD READY');
+			source.sendDataReady();
+		} else {
+			console.log('SKIPPED DATA READY');
+			source.completeReceived();
+		}
 	}
 }

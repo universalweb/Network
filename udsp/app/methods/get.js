@@ -33,10 +33,11 @@ export async function get(req, resp, client) {
 		resp.send();
 		return true;
 	}
-	let cleanedPath = cleanPath(`${resourceDirectory}/${filePath}`);
-	if (!hasDot(cleanedPath)) {
-		cleanedPath = cleanedPath + defaultExtension;
+	let compiledPath = (filePath === '' || filePath === '/') ? 'index' : filePath;
+	if (!hasDot(compiledPath) && defaultExtension) {
+		compiledPath = `${compiledPath}.${defaultExtension}`;
 	}
+	const cleanedPath = cleanPath(`${resourceDirectory}/${compiledPath}`);
 	console.log(cleanedPath);
 	try {
 		const fileData = await read(cleanedPath);
