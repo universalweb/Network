@@ -58,6 +58,7 @@ export async function setDestination() {
 	if (!destination.ip) {
 		console.log('No IP address found for destination');
 		this.close();
+		return false;
 	}
 	if (!destination.port) {
 		destination.port = 53;

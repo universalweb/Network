@@ -15,6 +15,10 @@ import { getMethodId } from '../methods.js';
 // If path arg has params in it then paramArg becomes dataArg
 // params support both Complex Data Binary Supported Params and simple traditional URL percent encoded params
 export async function uwRequest(methodArg, pathArg, paramArg, dataArg, headersArg, optionsArg) {
+	if (!this.destination.ip) {
+		console.log(`Can't send request - No Destination IP`);
+		return this;
+	}
 	let method = getMethodId(methodArg);
 	let path = pathArg;
 	let params = paramArg;

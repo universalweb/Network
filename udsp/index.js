@@ -9,7 +9,10 @@ export async function request(method = 0, url, params, data) {
 		url: uwrlObject,
 		autoConnect: true
 	});
-	return uwClient.request(method, uwrlObject, params, data).send();
+	// console.log('uwClient', uwClient);
+	const uwRequest = await uwClient.request(method, uwrlObject, params, data);
+	// console.log('uwRequest', uwRequest);
+	return uwRequest.send();
 }
 export async function get(url, params) {
 	return request(0, url, params);

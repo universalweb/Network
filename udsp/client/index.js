@@ -88,7 +88,10 @@ export class Client extends UDSP {
 			await this.loadCertificate();
 		}
 		console.log(this);
-		await this.setDestination();
+		const destinationStatus = await this.setDestination();
+		if (destinationStatus === false) {
+			return this;
+		}
 		await this.getIPDetails();
 		await this.setProfile();
 		console.log('ipVersion', this.ipVersion);
@@ -139,6 +142,10 @@ export class Client extends UDSP {
 		console.log(`client reKeyed -> ID: ${thisClient.connectionIdString}`);
 	}
 	async send(frame, header, footer, repeat) {
+		if (!this.destination.ip) {
+			console.log(`Can't send - No Destination IP`);
+			return;
+		}
 		console.log(`client.send to Server`, this.destination.ip, this.destination.port);
 		return sendPacket(frame, this, this.socket, this.destination, header, footer, repeat);
 	}
@@ -283,6 +290,10 @@ export class Client extends UDSP {
 		return header;
 	}
 	connect() {
+		if (!this.destination.ip) {
+			console.log(`Can't connect - No Destination IP`);
+			return;
+		}
 		if (this.state === 4) {
 			console.log('ALREADY CONNECTED');
 			return this;
@@ -414,22 +425,20 @@ export class Client extends UDSP {
 		this.close('Server Ended Connection');
 	}
 	async close(message) {
-		if (this.state === connectingState || this.state === connectedState) {
-			console.log(`Client CLOSING. ${this.connectionIdString}`);
-			this.clearIntroTimeout();
-			Client.connections.delete(this.connectionIdString);
-			await this.updateState(closingState);
-			await this.updateReadyState(2);
-			if (this.connected === true) {
-				await this.sendEnd();
-			}
-			await this.setDisconnected();
-			await this.socket.close();
-			await this.updateState(closedState);
-			await this.updateReadyState(3);
-			this.fire(this.events, 'closed', this);
-			console.log(`Client CLOSED. ${this.connectionIdString}`);
+		console.log(`Client CLOSING. ${this.connectionIdString}`);
+		this.clearIntroTimeout();
+		Client.connections.delete(this.connectionIdString);
+		await this.updateState(closingState);
+		await this.updateReadyState(2);
+		if (this.state === connectedState) {
+			await this.sendEnd();
 		}
+		await this.setDisconnected();
+		await this.socket?.close();
+		await this.updateState(closedState);
+		await this.updateReadyState(3);
+		this.fire(this.events, 'closed', this);
+		console.log(`Client CLOSED. ${this.connectionIdString}`);
 	}
 	async setDisconnected() {
 		this.connected = null;
