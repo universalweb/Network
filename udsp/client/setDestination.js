@@ -54,6 +54,14 @@ export async function setDestination() {
 				this.ipVersion = 'udp4';
 			}
 		}
+		const realtime = destination.certificate.realtime;
+		if (hasValue(realtime)) {
+			if (isUndefined(this.realtime) || realtime === true) {
+				this.realtime = realtime;
+			} else if (this.realtime === true && realtime === false) {
+				this.realtime = false;
+			}
+		}
 	}
 	if (!destination.ip) {
 		console.log('No IP address found for destination');

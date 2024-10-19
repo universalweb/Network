@@ -331,6 +331,9 @@ export class Client extends UDSP {
 		this.setPublicKeyHeader(header);
 		this.setCryptographyHeaders(header);
 		header.push(Date.now());
+		if (this.realtime) {
+			header.push(true);
+		}
 		this.introTimeout = setTimeout(() => {
 			this.checkIntroTimeout();
 		}, this.latency);

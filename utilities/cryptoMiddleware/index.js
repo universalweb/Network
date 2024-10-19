@@ -15,7 +15,7 @@ import { blake3 } from './blake3.js';
 import { dilithium44_ed25519 } from './dilithium44_ed25519.js';
 import { ed25519 } from './ed25519.js';
 import { x25519_kyber768Half_xchacha20 } from './x25519_Kyber768Half_xChaCha.js';
-import { x25519_xchacha20 } from './x25519XChaCha.js';
+import { x25519_xchacha20 } from './x25519_xChaCha.js';
 function setOption(source, option) {
 	const {
 		id, name: cipherName, alias

@@ -77,6 +77,17 @@ export function hashShort(message) {
 	crypto_shorthash(hashed, message, bufferAlloc(crypto_shorthash_KEYBYTES));
 	return hashed;
 }
+export function clearBuffer(...args) {
+	for (const arg of args) {
+		if (Array.isArray(arg)) {
+			for (const item of arg) {
+				item.fill(0);
+			}
+		} else {
+			arg.fill(0);
+		}
+	}
+}
 export const hashBytes = crypto_generichash_BYTES;
 export {
 	crypto_generichash,

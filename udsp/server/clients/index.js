@@ -87,7 +87,8 @@ export class Client {
 			clientId,
 			cipherSuiteId,
 			version,
-			timeSent
+			timeSent,
+			realtimeFlag,
 		] = header;
 		console.log('Client initialize Packet Header', header);
 		if (publicKey) {
@@ -113,8 +114,11 @@ export class Client {
 		this.nextSession = await this.cipherSuite.serverEphemeralKeypair({}, this.destination);
 		success(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port} LATENCY = ${this.latency}`);
 		await this.calculatePacketOverhead();
+		if (realtimeFlag === false) {
+			this.realtime = false;
+		}
 		if (packetDecoded.noMessage) {
-			console.log('Packet has No message body');
+			console.log('Intro Packet has No message body');
 			return this.sendIntro();
 		}
 	}
@@ -138,6 +142,9 @@ export class Client {
 			if (isTrue(changeAddress)) {
 				frame[4] = true;
 			}
+		}
+		if (this.destination.introHeader) {
+			header.push(this.destination.introHeader);
 		}
 		// this.randomId
 		this.updateState(1);
@@ -273,6 +280,8 @@ export class Client {
 	isServerEnd = true;
 	initialize = initialize;
 	onConnected = onConnected;
+	initialGracePeriod = 1000;
+	initialRealtimeGracePeriod = 2000;
 }
 export async function createClient(config) {
 	info('Creating Client');

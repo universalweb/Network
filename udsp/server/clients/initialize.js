@@ -23,6 +23,7 @@ export async function initialize(config) {
 			id: serverId,
 			realtime,
 			initialGracePeriod,
+			initialRealtimeGracePeriod,
 			heartbeat,
 			cipherSuites: serverCipherSuites,
 			cipherSuite: serverCipherSuite,
@@ -31,7 +32,7 @@ export async function initialize(config) {
 			connectionIdSize,
 			reservedConnectionIdSize,
 			certificate,
-			scale
+			scale,
 		},
 		connection: {
 			address: ip,
@@ -57,7 +58,7 @@ export async function initialize(config) {
 	this.initialGracePeriod = initialGracePeriod;
 	this.heartbeat = heartbeat;
 	this.realtime = realtime;
-	if (!realtime && initialGracePeriod) {
+	if (initialGracePeriod) {
 		this.initialGracePeriodCheck();
 	}
 	return client;
