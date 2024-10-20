@@ -29,8 +29,8 @@ function clearSessionKeys(source) {
 // User then sets the session with the new secret keys
 export const kyber768_xchacha20 = {
 	name: 'kyber768_xchacha20',
-	alias: 'hpqt',
-	description: 'Hybrid Post Quantum Key Exchange using both Crystals-Kyber768 and X25519 with XChaCha20 and Blake3.',
+	alias: 'kyber768',
+	description: 'Crystals-Kyber768 with XChaCha20 and Blake3.',
 	id: 2,
 	ml_kem768,
 	preferred: true,
