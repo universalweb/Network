@@ -14,6 +14,7 @@ import { currentCertificateVersion, currentVersion } from '../../defaults.js';
 import { blake3 } from './blake3.js';
 import { dilithium44_ed25519 } from './dilithium44_ed25519.js';
 import { ed25519 } from './ed25519.js';
+import { kyber768_xchacha20 } from './Kyber768_xChaCha.js';
 import { x25519_kyber768Half_xchacha20 } from './x25519_Kyber768Half_xChaCha.js';
 import { x25519_xchacha20 } from './x25519_xChaCha.js';
 function setOption(source, option) {
@@ -33,9 +34,14 @@ function setOption(source, option) {
 export const cipherSuites = new Map();
 const cipherSuitesVersion1 = new Map();
 cipherSuites.set(currentVersion, cipherSuitesVersion1);
-cipherSuitesVersion1.set('all', [x25519_xchacha20, x25519_kyber768Half_xchacha20]);
+cipherSuitesVersion1.set('all', [
+	x25519_xchacha20,
+	x25519_kyber768Half_xchacha20,
+	kyber768_xchacha20
+]);
 setOption(cipherSuitesVersion1, x25519_xchacha20);
 setOption(cipherSuitesVersion1, x25519_kyber768Half_xchacha20);
+setOption(cipherSuitesVersion1, kyber768_xchacha20);
 export const cipherSuitesCertificates = new Map();
 const cipherSuitesCertificatesVersion1 = new Map();
 cipherSuitesCertificates.set(currentVersion, cipherSuitesCertificatesVersion1);

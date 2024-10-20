@@ -12,3 +12,5 @@ Make DIS check for certificate when sending or when created - means move part of
 Enforce Realtime options for server side
 Data Streams and breaking up downloads with write a stream
 initialRealtimeGracePeriod
+Add ability to either have multiple encryption keypairs or have x25519+Kyber be able to also do either or for a client so client can connect with only kyber, hybrid, or x25519
+Might need to add way for them to check which ciphers are compatible with its keys

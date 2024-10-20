@@ -93,7 +93,7 @@ export function signatureKeypairToEncryptionKeypair(originalKeypair) {
 	}
 	return result;
 }
-export function getSignaturePublicKeyFromPrivateKey(privateKey) {
+export function getPublicKeyFromPrivateKey(privateKey) {
 	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);
 	crypto_sign_ed25519_sk_to_pk(publicKey, privateKey);
 	return publicKey;
@@ -109,7 +109,7 @@ export const ed25519 = {
 	signaturePrivateKeyToEncryptPrivateKey,
 	signaturePublicKeyToEncryptPublicKey,
 	signatureKeypairToEncryptionKeypair,
-	getSignaturePublicKeyFromPrivateKey,
+	getPublicKeyFromPrivateKey,
 	verifySignatureDetached,
 	hash: blake3,
 	preferred: true

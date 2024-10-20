@@ -12,7 +12,7 @@ import {
 	nonceBox
 } from './XChaCha.js';
 import {
-	getSignaturePublicKeyFromPrivateKey,
+	getPublicKeyFromPrivateKey,
 	sign,
 	signatureKeypair,
 	signatureKeypairToEncryptionKeypair,

@@ -27,8 +27,8 @@ function clearSessionKeys(source) {
 // Server sets the session with the new secret keys
 // User first decapsulates ciphertext with user's private kyber key located in the header
 // User then sets the session with the new secret keys
-export const kyber768Half_xchacha20 = {
-	name: 'kyber768Half_xchacha20',
+export const kyber768_xchacha20 = {
+	name: 'kyber768_xchacha20',
 	alias: 'hpqt',
 	description: 'Hybrid Post Quantum Key Exchange using both Crystals-Kyber768 and X25519 with XChaCha20 and Blake3.',
 	id: 2,
@@ -37,13 +37,23 @@ export const kyber768Half_xchacha20 = {
 	speed: 0,
 	security: 1,
 	hash: blake3,
+	publicKeyInServerIntroHeader: true,
+	extendedHandshake: true,
 	async clientInitializeSession(source, destination) {
 		console.log('clientInitializeSession Destination', destination);
-		console.log('Public Key from destination', toHex(destination.publicKey));
+		console.log('Public Key from destination', destination.publicKey[0]);
 	},
 	async serverInitializeSession(source, destination) {
-		console.log('Session Keys are not set');
-		console.log('Public Key from destination', toHex(destination.publicKey));
+		console.log('serverInitializeSession');
+		const destinationPublicKey = destination.publicKey;
+		const {
+			cipherText,
+			sharedSecret
+		} = await encapsulate(destinationPublicKey);
+		source.publicKey = cipherText;
+		source.transmitKey = blake3(sharedSecret);
+		source.receiveKey = source.transmitKey;
+		console.log('Public Key from destination', destination.publicKey[0]);
 	},
 	async serverSetSession(source, destination) {
 		console.log('serverSetSession');
@@ -64,7 +74,7 @@ export const kyber768Half_xchacha20 = {
 		console.log('clientSetSession kyberSharedSecret', kyberSharedSecret[0], kyberSharedSecret.length);
 		source.transmitKey = blake3(kyberSharedSecret);
 		source.receiveKey = source.transmitKey;
-		console.log('Keys', source.transmitKey, source.receiveKey);
+		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
 	generateSeed() {
 		return randomBuffer(64);
@@ -74,41 +84,47 @@ export const kyber768Half_xchacha20 = {
 		return target;
 	},
 	async clientEphemeralKeypair() {
-		const source = await kyber768Half_xchacha20.keypair();
+		const source = await kyber768_xchacha20.keypair();
 		return source;
 	},
-	async serverEphemeralKeypair(source = {}, destination) {
-		const destinationPublicKey = destination.publicKey;
-		const {
-			cipherText,
-			sharedSecret
-		} = await encapsulate(destinationPublicKey);
-		source.publicKey = cipherText;
-		source.sharedSecret = sharedSecret;
-		console.log('client kyberSharedSecret', sharedSecret[0], sharedSecret.length);
-		console.log('client cipherText', cipherText[0], cipherText.length);
-		return source;
-	},
+	// async serverEphemeralKeypair(source = {}, destination) {
+	// 	const destinationPublicKey = destination.publicKey;
+	// 	const {
+	// 		cipherText,
+	// 		sharedSecret
+	// 	} = await encapsulate(destinationPublicKey);
+	// 	source.publicKey = cipherText;
+	// 	source.sharedSecret = sharedSecret;
+	// 	console.log('client kyberSharedSecret', sharedSecret[0], sharedSecret.length);
+	// 	console.log('client cipherText', cipherText[0], cipherText.length);
+	// 	return source;
+	// },
 	async certificateEncryptionKeypair() {
 		const target = await encryptionKeypair();
 		return target;
+	},
+	async serverExtendedHandshake(source, frame) {
+		console.log('serverExtendedHandshake');
+		source.transmitKey = blake3CombineKeys(source.transmitKey, frame.secretKey);
+		source.receiveKey = source.transmitKey;
+		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
 	decrypt,
 	encrypt,
 };
 // EXAMPLE
 // const ogServer = await encryptionKeypair25519();
-// const client = await kyber768Half_xchacha20.clientEphemeralKeypair();
-// await kyber768Half_xchacha20.clientInitializeSession(client, ogServer);
-// await kyber768Half_xchacha20.serverInitializeSession(ogServer, client);
+// const client = await kyber768_xchacha20.clientEphemeralKeypair();
+// await kyber768_xchacha20.clientInitializeSession(client, ogServer);
+// await kyber768_xchacha20.serverInitializeSession(ogServer, client);
 // console.log('CLIENT INITIALIZED', client);
 // console.log('OG SERVER', ogServer);
-// const server = await kyber768Half_xchacha20.serverEphemeralKeypair({}, client);
-// await kyber768Half_xchacha20.clientSetSession(client, server);
-// await kyber768Half_xchacha20.serverSetSession(server, client);
+// const server = await kyber768_xchacha20.serverEphemeralKeypair({}, client);
+// await kyber768_xchacha20.clientSetSession(client, server);
+// await kyber768_xchacha20.serverSetSession(server, client);
 // console.log(Buffer.compare(server.transmitKey, client.receiveKey) === 0);
 // console.log('CLIENT', client);
 // console.log('SERVER', server);
 // // TRY AND KEEP ESTIMATED MAX BELOW 1280 (1232)
 // console.log('ESTIMATED MAX PACKET SERVER/CLIENT INTRO', 104 + server.publicKey.length, 'KYBER-CIPHERTEXT-OVERHEAD', server.publicKey.length);
-// console.log(await kyber768Half_xchacha20.keypair(), await kyber768Half_xchacha20.keypair());
+// console.log(await kyber768_xchacha20.keypair(), await kyber768_xchacha20.keypair());

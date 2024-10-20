@@ -103,6 +103,7 @@
 		"connectRequestHybridKyber": "nodemon ./scripts/client/connectRequestHybridKyber.js --watch ./udsp/ --watch ./scripts/client/connectRequestHybridKyber.js --watch ./utilities/ --delay 3",
 		"connect": "nodemon ./scripts/client/connect.js --watch ./udsp/ --watch ./scripts/client/connect.js --watch ./utilities/ --delay 3",
 		"closeReconnect": "nodemon ./scripts/client/closeReconnect.js --watch ./udsp/ --watch ./scripts/client/closeReconnect.js --watch ./utilities/ --delay 3",
+		"connectRequestKyber": "nodemon ./scripts/client/connectRequestKyber.js --watch ./udsp/ --watch ./scripts/client/connectRequestKyber.js --watch ./utilities/ --delay 3",
 		"request": "nodemon ./scripts/client/request.js --watch ./udsp/ --watch ./scripts/client/request.js --watch ./utilities/ --delay 3",
 		"close": "nodemon ./scripts/client/close.js --watch ./udsp/ --watch ./scripts/client/close.js --watch ./utilities/ --delay 3",
 		"clientNoCert": "nodemon ./scripts/client/clientNoCert.js --watch ./udsp/ --watch ./scripts/client/clientNoCert.js --watch ./utilities/ --delay 3",

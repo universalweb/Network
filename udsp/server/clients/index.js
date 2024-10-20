@@ -61,7 +61,9 @@ export class Client {
 	}
 	async initializeSession() {
 		console.log('Client Initialize session');
-		await this.cipherSuite.serverInitializeSession(this, this.destination);
+		if (this.cipherSuite.serverInitializeSession) {
+			await this.cipherSuite.serverInitializeSession(this, this.destination);
+		}
 		success(`receiveKey: ${toHex(this.receiveKey)}`);
 		success(`transmitKey: ${toHex(this.transmitKey)}`);
 	}
@@ -79,7 +81,7 @@ export class Client {
 	// CLIENT HELLO
 	// Change from initialization to this for session stuff keep separate
 	async introHeader(header, packetDecoded) {
-		info(`Client Intro -> - ID:${this.connectionIdString}`, header);
+		info(`Client Intro -> - ID:${this.connectionIdString}`);
 		const [
 			connectionId,
 			rpc,
@@ -110,8 +112,10 @@ export class Client {
 			connectionIdSize: clientId.length,
 		});
 		this.latency = Date.now() - timeSent;
-		await this.initializeSession();
-		this.nextSession = await this.cipherSuite.serverEphemeralKeypair({}, this.destination);
+		await this.initializeSession(this, this.destination);
+		if (this.cipherSuite.serverEphemeralKeypair) {
+			this.nextSession = await this.cipherSuite.serverEphemeralKeypair({}, this.destination);
+		}
 		success(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port} LATENCY = ${this.latency}`);
 		await this.calculatePacketOverhead();
 		if (realtimeFlag === false) {
@@ -123,18 +127,25 @@ export class Client {
 		}
 	}
 	async intro(frame, header) {
-		info(`Client Intro -> - ID:${this.connectionIdString}`, frame, header);
+		info(`Client Intro -> - ID:${this.connectionIdString}`);
 		return this.sendIntro();
 	}
 	// SERVER HELLO
+	// Add option for kyber to put everything in header
 	async sendIntro() {
+		console.log('Sending Server Intro');
 		const header = [];
 		const frame = [
 			false,
 			0,
-			this.id,
-			this.nextSession.publicKey
+			this.id
 		];
+		if (this.cipherSuite.publicKeyInServerIntroHeader) {
+			header[0] = 0;
+			header[1] = this.publicKey;
+		} else if (this.nextSession) {
+			frame[3] = this.nextSession.publicKey;
+		}
 		// Change connection IP:Port to be the workers IP:Port
 		const scale = this.scale;
 		if (scale) {
@@ -143,13 +154,12 @@ export class Client {
 				frame[4] = true;
 			}
 		}
-		if (this.destination.introHeader) {
-			header.push(this.destination.introHeader);
-		}
 		// this.randomId
 		this.updateState(1);
 		if (header.length === 0) {
 			return this.send(frame);
+		} else if (frame.length === 0) {
+			return this.send(null, header);
 		} else {
 			return this.send(frame, header);
 		}

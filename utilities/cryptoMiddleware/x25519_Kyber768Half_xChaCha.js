@@ -40,6 +40,10 @@ export const x25519_kyber768Half_xchacha20 = {
 	preferred: true,
 	speed: 0,
 	security: 1,
+	// compatibility: {
+	// 	0: true,
+	// 	1: true
+	// },
 	hash: blake3,
 	async clientInitializeSession(source, destination) {
 		const sourceKeypair25519 = {
@@ -52,7 +56,7 @@ export const x25519_kyber768Half_xchacha20 = {
 		return x25519SessionKeys;
 	},
 	async serverInitializeSession(source, destination) {
-		console.log('Session Keys are not set');
+		console.log('serverInitializeSession');
 		const x25519SessionKeys = serverSetSessionAttach(source, get25519Key(destination?.publicKey || destination));
 		console.log('Public Key from destination', toHex(destination.publicKey));
 		return x25519SessionKeys;

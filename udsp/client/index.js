@@ -146,8 +146,14 @@ export class Client extends UDSP {
 			console.log(`Can't send - No Destination IP`);
 			return;
 		}
+		if (this.state >= closingState) {
+			console.log(`Can't send - Connection Closed`);
+			return false;
+		}
 		console.log(`client.send to Server`, this.destination.ip, this.destination.port);
-		return sendPacket(frame, this, this.socket, this.destination, header, footer, repeat);
+		if (this.socket) {
+			return sendPacket(frame, this, this.socket, this.destination, header, footer, repeat);
+		}
 	}
 	async ask(method, path, parameters, data, head, options) {
 		if (!this.connected) {
@@ -282,10 +288,11 @@ export class Client extends UDSP {
 		const {
 			cipherSuite,
 			version,
-			id
+			id,
+			connectionIdString
 		} = this;
-		console.log(`setCryptographyHeaders Cipher: ${cipherSuite.id} @ v${version} with ID: ${id}`, `Public Key Size: {key.length}`);
-		console.log('Client ID', id);
+		console.log(`setCryptographyHeaders Cipher: ${cipherSuite.id} @ v${version} with ID: ${connectionIdString}`, `Public Key Size: ${key.length}`);
+		console.log('Client ID', connectionIdString);
 		header.push(id, cipherSuite.id, version);
 		return header;
 	}
@@ -293,12 +300,10 @@ export class Client extends UDSP {
 		if (!this.destination.ip) {
 			console.log(`Can't connect - No Destination IP`);
 			return;
-		}
-		if (this.state === 4) {
+		} else if (this.state === connectedState) {
 			console.log('ALREADY CONNECTED');
 			return this;
-		}
-		if (this.handshakeCompleted) {
+		} else if (this.handshakeCompleted) {
 			return this.awaitHandshake;
 		}
 		this.awaitHandshake = promise((accept) => {
@@ -315,7 +320,7 @@ export class Client extends UDSP {
 		} else if (this.introAttempts <= 3) {
 			this.sendIntro();
 		} else {
-			this.destory(`Failed to connect with ${this.introAttempts} attempts`);
+			this.close(`Failed to connect with ${this.introAttempts} attempts`);
 		}
 	}
 	clearIntroTimeout() {
@@ -427,21 +432,26 @@ export class Client extends UDSP {
 	end(frame, header) {
 		this.close('Server Ended Connection');
 	}
+	removeClient() {
+		Client.connections.delete(this.connectionIdString);
+	}
 	async close(message) {
 		console.log(`Client CLOSING. ${this.connectionIdString}`);
 		this.clearIntroTimeout();
-		Client.connections.delete(this.connectionIdString);
-		await this.updateState(closingState);
-		await this.updateReadyState(2);
 		if (this.state === connectedState) {
 			await this.sendEnd();
 		}
+		this.removeClient();
+		await this.updateState(closingState);
+		await this.updateReadyState(2);
 		await this.setDisconnected();
 		await this.socket?.close();
-		await this.updateState(closedState);
 		await this.updateReadyState(3);
 		this.fire(this.events, 'closed', this);
 		console.log(`Client CLOSED. ${this.connectionIdString}`);
+		if (this.handshakeCompleted) {
+			this.handshakeCompleted(false);
+		}
 	}
 	async setDisconnected() {
 		this.connected = null;
@@ -449,9 +459,11 @@ export class Client extends UDSP {
 		await this.updateReadyState(3);
 		this.fire(this.events, 'disconnected', this);
 	}
-	async reconnect() {
+	async reconnect(options) {
 		if (this.state === closedState) {
-			await this.initialize();
+			if (options) {
+				await this.initialize(this.options);
+			}
 			await this.connect();
 		}
 	}

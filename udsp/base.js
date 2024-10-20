@@ -47,7 +47,7 @@ export class UDSP {
 		// Make sure there is as graceful as possible shutdown
 		process.on('beforeExit', (code) => {
 			console.log('Before Exit', code);
-			source.trigger(source.events, 'socket.error', this);
+			source.fire(source.events, 'socket.error', this);
 		});
 	}
 	addMethod(methods) {
