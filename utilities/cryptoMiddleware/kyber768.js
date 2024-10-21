@@ -22,7 +22,7 @@ export async function encapsulate(sourceKeypair) {
 export const kyber768 = {
 	name: 'kyber768',
 	alias: 'kyber768',
-	id: 2,
+	id: 1,
 	ml_kem768,
 	preferred: true,
 	decapsulate,
@@ -31,4 +31,5 @@ export const kyber768 = {
 		return randomBuffer(64);
 	},
 	encryptionKeypair,
+	certificateEncryptionKeypair: encryptionKeypair,
 };

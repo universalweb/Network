@@ -135,3 +135,15 @@ export async function serverSetSessionAttach(source, destination) {
 export async function clientSetSessionAttach(source, destination) {
 	return clientSetSession(source, destination, source);
 }
+export const x25519 = {
+	name: 'x25519',
+	alias: 'x25519',
+	id: 0,
+	serverSetSessionAttach,
+	clientSetSession,
+	serverSetSession,
+	preferred: true,
+	clientSetSessionAttach,
+	encryptionKeypair,
+	certificateEncryptionKeypair: encryptionKeypair,
+};

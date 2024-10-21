@@ -14,7 +14,9 @@ import { currentCertificateVersion, currentVersion } from '../../defaults.js';
 import { blake3 } from './blake3.js';
 import { dilithium44_ed25519 } from './dilithium44_ed25519.js';
 import { ed25519 } from './ed25519.js';
+import { kyber768 } from './kyber768.js';
 import { kyber768_xchacha20 } from './Kyber768_xChaCha.js';
+import { x25519 } from './x25519.js';
 import { x25519_kyber768Half_xchacha20 } from './x25519_Kyber768Half_xChaCha.js';
 import { x25519_xchacha20 } from './x25519_xChaCha.js';
 function setOption(source, option) {
@@ -42,28 +44,37 @@ cipherSuitesVersion1.set('all', [
 setOption(cipherSuitesVersion1, x25519_xchacha20);
 setOption(cipherSuitesVersion1, x25519_kyber768Half_xchacha20);
 setOption(cipherSuitesVersion1, kyber768_xchacha20);
+export const encryptionKeypairAlgorithm = new Map();
+const encryptionKeypairAlgorithmVersion1 = new Map();
+encryptionKeypairAlgorithm.set(currentVersion, encryptionKeypairAlgorithmVersion1);
+encryptionKeypairAlgorithm.set('all', [
+	kyber768,
+	x25519,
+]);
+setOption(encryptionKeypairAlgorithmVersion1, kyber768);
+setOption(encryptionKeypairAlgorithmVersion1, x25519);
+export function getEncryptionKeypairAlgorithm(algo = 0, version = currentCertificateVersion) {
+	if (!hasValue(algo)) {
+		return false;
+	}
+	const versionMap = encryptionKeypairAlgorithm.get(version);
+	if (versionMap) {
+		return versionMap.get(algo);
+	}
+}
 export const cipherSuitesCertificates = new Map();
 const cipherSuitesCertificatesVersion1 = new Map();
 cipherSuitesCertificates.set(currentVersion, cipherSuitesCertificatesVersion1);
 cipherSuitesCertificatesVersion1.set('all', [x25519_xchacha20, x25519_kyber768Half_xchacha20]);
 setOption(cipherSuitesCertificatesVersion1, x25519_xchacha20);
 setOption(cipherSuitesCertificatesVersion1, x25519_kyber768Half_xchacha20);
-export function getEncryptionKeypairAlgorithm(algo = 0, version = currentCertificateVersion) {
-	if (!hasValue(algo)) {
-		return false;
-	}
-	const cipherVersion = cipherSuitesCertificates.get(version);
-	if (cipherVersion) {
-		return cipherVersion.get(algo);
-	}
-}
 export function getCipherSuite(cipherSuiteName = 0, version = currentVersion) {
 	if (!hasValue(cipherSuiteName)) {
 		return false;
 	}
-	const cipherVersion = cipherSuites.get(version);
-	if (cipherVersion) {
-		return cipherVersion.get(cipherSuiteName);
+	const versionMap = cipherSuites.get(version);
+	if (versionMap) {
+		return versionMap.get(cipherSuiteName);
 	}
 }
 export function getCipherSuites(indexes, version = currentVersion) {
@@ -103,9 +114,9 @@ export function getSignatureAlgorithm(publicKeyAlgorithmName = 0, version = curr
 	if (!hasValue(publicKeyAlgorithmName)) {
 		return false;
 	}
-	const algoVersion = publicKeyAlgorithms.get(version);
-	if (algoVersion) {
-		return algoVersion.get(publicKeyAlgorithmName);
+	const versionMap = publicKeyAlgorithms.get(version);
+	if (versionMap) {
+		return versionMap.get(publicKeyAlgorithmName);
 	}
 }
 export function getSignatureAlgorithmByCertificate(publicKeyAlgorithmName = 0, version = currentCertificateVersion) {

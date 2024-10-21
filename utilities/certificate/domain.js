@@ -17,7 +17,7 @@ import {
 	currentProtocolVersion,
 } from '../../defaults.js';
 import { decode, encode } from '#utilities/serialize';
-import { getCipherSuite, getSignatureAlgorithm } from '../cryptoMiddleware/index.js';
+import { getCipherSuite, getEncryptionKeypairAlgorithm, getSignatureAlgorithm } from '../cryptoMiddleware/index.js';
 import { read, readStructured, write } from '#file';
 import { UWCertificate } from './UWCertificate.js';
 import { blake3 } from '@noble/hashes/blake3';
@@ -31,7 +31,7 @@ export async function createDomainCertificateObject(config = {}, options = {}) {
 		entity,
 		records,
 		version = currentCertificateVersion,
-		signatureAlgorithm,
+		signatureAlgorithm = 0,
 		signatureKeypair,
 		contact,
 		cipherSuites,
@@ -40,7 +40,7 @@ export async function createDomainCertificateObject(config = {}, options = {}) {
 		protocolOptions,
 		start = currentDate.getTime(),
 		end = currentDate.setUTCMonth(currentDate.getUTCMonth() + 3),
-		encryptionKeypairAlgorithm
+		encryptionKeypairAlgorithm = 0
 	} = config;
 	const certificate = {
 		version,
@@ -48,7 +48,8 @@ export async function createDomainCertificateObject(config = {}, options = {}) {
 		encryptionKeypair,
 		start,
 		end,
-		certificateType
+		certificateType,
+		encryptionKeypairAlgorithm
 	};
 	if (ownerHash) {
 		certificate.ownerHash = ownerHash;
@@ -79,8 +80,7 @@ export async function createDomainCertificateObject(config = {}, options = {}) {
 	if (!signatureKeypair) {
 		certificate.signatureKeypair = await signatureMethod.signatureKeypair();
 	}
-	const chosenEncryptionKeypairAlgorithm = encryptionKeypairAlgorithm || (isArray(cipherSuites) ? cipherSuites[0] : cipherSuites);
-	const keyExchangeMethod = getCipherSuite(encryptionKeypairAlgorithm, protocolVersion);
+	const keyExchangeMethod = getEncryptionKeypairAlgorithm(encryptionKeypairAlgorithm, protocolVersion);
 	// console.log('cipherSuites', cipherSuites, encryptionKeypairAlgorithm, keyExchangeMethod);
 	if (!encryptionKeypair) {
 		certificate.encryptionKeypair = await keyExchangeMethod.certificateEncryptionKeypair();
@@ -93,7 +93,7 @@ export function objectToRawDomainCertificate(certificateObject) {
 		entity,
 		cipherSuites,
 		signatureKeypair,
-		signatureAlgorithm,
+		signatureAlgorithm = 0,
 		records,
 		end,
 		start,
@@ -102,7 +102,8 @@ export function objectToRawDomainCertificate(certificateObject) {
 		encryptionKeypair,
 		contact,
 		ownerHash = false,
-		certificateType
+		certificateType,
+		encryptionKeypairAlgorithm = 0,
 	} = certificateObject;
 	const certificate = [];
 	certificate[0] = certificateType;
@@ -110,12 +111,16 @@ export function objectToRawDomainCertificate(certificateObject) {
 	certificate[2] = start;
 	certificate[3] = end;
 	certificate[4] = ownerHash;
-	certificate[5] = [[signatureKeypair.publicKey, signatureKeypair.privateKey], [encryptionKeypair.publicKey, encryptionKeypair.privateKey],];
+	certificate[5] = [
+		[
+			signatureAlgorithm, signatureKeypair.publicKey, signatureKeypair.privateKey
+		],
+		[
+			encryptionKeypairAlgorithm, encryptionKeypair.publicKey, encryptionKeypair.privateKey
+		],
+	];
 	if (hasValue(cipherSuites)) {
 		certificate[5][2] = cipherSuites;
-	}
-	if (hasValue(signatureAlgorithm)) {
-		certificate[5][3] = signatureAlgorithm;
 	}
 	if (entity) {
 		certificate[6] = entity;
@@ -136,8 +141,8 @@ export function objectToRawDomainCertificate(certificateObject) {
 }
 export function getPublicDomainCertificate(certificate) {
 	const publicCertificate = clone(certificate);
-	publicCertificate[5][0] = publicCertificate[5][0][0];
-	publicCertificate[5][1] = publicCertificate[5][1][0];
+	publicCertificate[5][0] = [publicCertificate[5][0][0], publicCertificate[5][0][1]];
+	publicCertificate[5][1] = [publicCertificate[5][1][0], publicCertificate[5][1][1]];
 	// console.log(publicCertificate);
 	return publicCertificate;
 }
@@ -153,7 +158,6 @@ export function rawToObjectDomainCertificate(rawObject, signature) {
 			signatureKeypair,
 			encryptionKeypair,
 			cipherSuites,
-			signatureAlgorithm,
 		],
 		entity,
 		records,
@@ -171,16 +175,18 @@ export function rawToObjectDomainCertificate(rawObject, signature) {
 	};
 	if (isArray(signatureKeypair)) {
 		certificate.signatureKeypair = {
-			publicKey: signatureKeypair[0],
-			privateKey: signatureKeypair[1],
+			algo: signatureKeypair[0],
+			publicKey: signatureKeypair[1],
+			privateKey: signatureKeypair[2],
 		};
 	} else {
 		certificate.signatureKeypair = signatureKeypair;
 	}
 	if (isArray(encryptionKeypair)) {
 		certificate.encryptionKeypair = {
-			publicKey: encryptionKeypair[0],
-			privateKey: encryptionKeypair[1],
+			algo: encryptionKeypair[0],
+			publicKey: encryptionKeypair[1],
+			privateKey: encryptionKeypair[2],
 		};
 	} else {
 		certificate.encryptionKeypair = encryptionKeypair;
@@ -188,14 +194,8 @@ export function rawToObjectDomainCertificate(rawObject, signature) {
 	if (signature) {
 		certificate.signature = signature;
 	}
-	if (signatureAlgorithm) {
-		certificate.signatureAlgorithm = signatureAlgorithm;
-	}
 	if (cipherSuites) {
 		certificate.cipherSuites = cipherSuites;
-	}
-	if (signature) {
-		certificate.signature = signature;
 	}
 	if (protocolOptions) {
 		const [

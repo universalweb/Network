@@ -10,7 +10,7 @@ const UWCertificate = await domainCertificate({
 	entity: 'universalweb.io',
 	// ownerHash: profile.getSignature(),
 	signatureAlgorithm: 0,
-	// cipherSuites: [1, 0],
+	cipherSuites: [0],
 	encryptionKeypairAlgorithm: 0,
 	protocolOptions: {
 		realtime: true,
@@ -42,3 +42,4 @@ console.log(UWCertificate);
 await UWCertificate.save('universalWeb.cert', `${dirname}/../serverApp/certs`);
 await UWCertificate.savePublic('universalWebPublic.cert', `${dirname}/../serverApp/certs`);
 await UWCertificate.savePublic('universalWebPublic.cert', `${dirname}/../udsp/dis/cache`);
+console.log(await domainCertificate(`${dirname}/../serverApp/certs/universalWebPublic.cert`));

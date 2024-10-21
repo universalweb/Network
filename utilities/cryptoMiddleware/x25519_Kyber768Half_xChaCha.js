@@ -40,10 +40,10 @@ export const x25519_kyber768Half_xchacha20 = {
 	preferred: true,
 	speed: 0,
 	security: 1,
-	// compatibility: {
-	// 	0: true,
-	// 	1: true
-	// },
+	compatibility: {
+		0: true,
+		1: true
+	},
 	hash: blake3,
 	async clientInitializeSession(source, destination) {
 		const sourceKeypair25519 = {
