@@ -1,34 +1,25 @@
 // Closed source not for private and or corporate use.
 import * as defaultCrypto from '#crypto';
 import { assign, clearBuffer, isBuffer } from '@universalweb/acid';
-import { decapsulate, encapsulate, encryptionKeypair } from './kyber768.js';
-import { decrypt, encrypt } from './XChaCha.js';
+import { decapsulate, encapsulate, encryptionKeypair } from '../keyExchange/kyber768.js';
+import { decrypt, encrypt } from '../encryption/XChaCha.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
 const {
-	randomConnectionId, randomBuffer, toBase64, toHex
+	randomConnectionId,
+	randomBuffer,
+	toBase64,
+	toHex,
+	blake3CombineKeys
 } = defaultCrypto;
-function getKyberKey(source) {
-	return source.slice(32);
-}
-export function blake3CombineKeys(key1, key2) {
-	// console.log('Combine', key1, key2);
-	return blake3(Buffer.concat([key1, key2]));
-}
-function clearSessionKeys(source) {
-	clearBuffer(source.transmitKey);
-	clearBuffer(source.receiveKey);
-	source.transmitKey = null;
-	source.receiveKey = null;
-}
 // Create User Kyber keypair send to server
 // Server creates Kyber shared Secret & encapsulates it via user's public kyber key
 // Server sends cipher text in the header & encrypted intro frame to the user
 // Server sets the session with the new secret keys
 // User first decapsulates ciphertext with user's private kyber key located in the header
 // User then sets the session with the new secret keys
-export const kyber768_xchacha20 = {
-	name: 'kyber768_xchacha20',
+export const kyber768_xChaCha = {
+	name: 'kyber768_xChaCha',
 	alias: 'kyber768',
 	description: 'Crystals-Kyber768 with XChaCha20 and Blake3.',
 	id: 2,
@@ -84,7 +75,7 @@ export const kyber768_xchacha20 = {
 		return target;
 	},
 	async clientEphemeralKeypair() {
-		const source = await kyber768_xchacha20.keypair();
+		const source = await kyber768_xChaCha.keypair();
 		return source;
 	},
 	// async serverEphemeralKeypair(source = {}, destination) {

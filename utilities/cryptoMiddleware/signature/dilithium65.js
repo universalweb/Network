@@ -1,4 +1,3 @@
-import { ml_dsa65, ml_dsa87 } from '@noble/post-quantum/ml-dsa';
 /*
 	Algorithm 1, implementing key generation for ML-DSA, uses an RBG to generate the 256-bit random
 	value ξ . The seed ξ shall be freshly generated using an approved RBG, as prescribed in NIST SP 800-90A,
@@ -8,7 +7,15 @@ import { ml_dsa65, ml_dsa87 } from '@noble/post-quantum/ml-dsa';
 	RBG with at least 128 bits of security but less than 192 bits of security is used, then the claimed security
 	strength of ML-DSA-44 is reduced from category 2 to category 1.)
 */
-import { randomBuffer } from '../crypto.js';
+import * as defaultCrypto from '#crypto';
+import { ml_dsa65, ml_dsa87 } from '@noble/post-quantum/ml-dsa';
+const {
+	randomConnectionId,
+	randomBuffer,
+	toBase64,
+	toHex,
+	blake3CombineKeys
+} = defaultCrypto;
 export function createSeed(size = 32) {
 	const seed = randomBuffer(size);
 	return seed;

@@ -1,6 +1,6 @@
-import { bufferAlloc, randomBuffer } from '../crypto.js';
+import { bufferAlloc, randomBuffer } from '../../crypto.js';
 import { RistrettoPoint } from '@noble/curves/ed25519';
-import { createSessionKey } from './XChaCha.js';
+import { createSessionKey } from '../encryption/XChaCha.js';
 const sodium = await import('sodium-native');
 const sodiumLib = sodium?.default || sodium;
 const {

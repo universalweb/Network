@@ -13,12 +13,12 @@ import {
 	sign,
 	signatureKeypair,
 	verifySignature
-} from '../utilities/cryptoMiddleware/dilithium44_ed25519.js';
+} from '../utilities/cryptoMiddleware/signature/dilithium44_ed25519.js';
 import { keychainGet, keychainSave } from '../utilities/certificate/keychain.js';
 import { read, readStructured, write } from '../utilities/file.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { currentCertificateVersion } from '../defaults.js';
-import { x25519_kyber768Half_xchacha20 } from '../utilities/cryptoMiddleware/x25519_Kyber768Half_xChaCha.js';
+import { kyber768_x25519 } from '../utilities/cryptoMiddleware/keyExchange/kyber768_x25519.js';
 const dirname = currentPath(import.meta);
 export class UWProfile {
 	constructor(config = {}, optionalArg) {
@@ -66,7 +66,7 @@ export class UWProfile {
 		return this;
 	}
 	async generateEncryptionKeypair() {
-		const encryptionkeypair = await x25519_kyber768Half_xchacha20.keypair();
+		const encryptionkeypair = await kyber768_x25519.keypair();
 		this.encryptionkeypair = encryptionkeypair;
 	}
 	async generate(config) {
@@ -112,7 +112,7 @@ export class UWProfile {
 		return this;
 	}
 	async decryptBinary(encryptedObject, encryptionPassword) {
-		const decrypted = await x25519_kyber768Half_xchacha20.decrypt(encryptedObject, encryptionPassword);
+		const decrypted = await kyber768_x25519.decrypt(encryptedObject, encryptionPassword);
 		return decode(decrypted);
 	}
 	async exportBinary(encryptionKey) {
@@ -126,7 +126,7 @@ export class UWProfile {
 		if (encryptionKey) {
 			const password = (isString(encryptionKey)) ? await this.hash(Buffer.from(encryptionKey)) : encryptionKey;
 			console.log(password);
-			const encryptedData = await x25519_kyber768Half_xchacha20.encrypt(dataEncoded, password);
+			const encryptedData = await kyber768_x25519.encrypt(dataEncoded, password);
 			const encryptedObject = {
 				encrypted: encryptedData,
 			};

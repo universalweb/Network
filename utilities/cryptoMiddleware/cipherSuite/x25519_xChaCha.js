@@ -4,13 +4,13 @@ import {
 	clientSetSessionAttach,
 	encryptionKeypair,
 	serverSetSessionAttach
-} from './x25519.js';
+} from '../keyExchange/x25519.js';
 import {
 	createSessionKey,
 	decrypt,
 	encrypt,
 	nonceBox
-} from './XChaCha.js';
+} from '../encryption/XChaCha.js';
 import {
 	getPublicKeyFromPrivateKey,
 	sign,
@@ -20,8 +20,8 @@ import {
 	signaturePublicKeyToEncryptPublicKey,
 	verifySignature,
 	verifySignatureDetached,
-} from './ed25519.js';
-import { blake3 } from './blake3.js';
+} from '../signature/ed25519.js';
+import { blake3 } from '../hash/blake3.js';
 const sodium = await import('sodium-native');
 const sodiumLib = sodium?.default || sodium;
 const {
@@ -32,8 +32,8 @@ const {
 	randomConnectionId, randomBuffer, toBase64
 } = defaultCrypto;
 const hash = blake3.hash;
-export const x25519_xchacha20 = {
-	name: 'x25519_xchacha20',
+export const x25519_xChaCha = {
+	name: 'x25519_xChaCha',
 	alias: 'default',
 	id: 0,
 	nonceBox,
