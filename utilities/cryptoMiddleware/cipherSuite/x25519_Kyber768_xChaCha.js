@@ -2,7 +2,7 @@
 import * as defaultCrypto from '#crypto';
 import { assign, clearBuffer, isBuffer } from '@universalweb/acid';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
-import { kyber768Half_x25519 } from '../keyExchange/kyber768Half_x25519.js';
+import { kyber768_x25519 } from '../keyExchange/kyber768_x25519.js';
 const {
 	randomConnectionId,
 	randomBuffer,
@@ -24,12 +24,12 @@ const {
 	certificateEncryptionKeypair,
 	ml_kem768,
 	hash
-} = kyber768Half_x25519;
-export const x25519_kyber768Half_xchacha20 = {
-	name: 'x25519_kyber768Half_xchacha20',
+} = kyber768_x25519;
+export const x25519_kyber768_xchacha20 = {
+	name: 'x25519_kyber768_xchacha20',
 	alias: 'hpqt',
 	description: 'Hybrid Post Quantum Key Exchange using both Crystals-Kyber768 and X25519 with XChaCha20 and Blake3.',
-	id: 1,
+	id: 3,
 	ml_kem768,
 	preferred: true,
 	speed: 0,

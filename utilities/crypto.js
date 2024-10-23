@@ -89,7 +89,7 @@ export function clearBuffer(...args) {
 		}
 	}
 }
-function clearSessionKeys(source) {
+export function clearSessionKeys(source) {
 	clearBuffer(source.transmitKey);
 	clearBuffer(source.receiveKey);
 	source.transmitKey = null;
@@ -99,10 +99,10 @@ export function blake3CombineKeys(key1, key2) {
 	// console.log('Combine', key1, key2);
 	return blake3(Buffer.concat([key1, key2]));
 }
-function get25519Key(source) {
+export function get25519Key(source) {
 	return source.slice(0, 32);
 }
-function getKyberKey(source) {
+export function getKyberKey(source) {
 	return source.slice(32);
 }
 export const hashBytes = crypto_generichash_BYTES;

@@ -56,7 +56,6 @@ import { setDestination } from './setDestination.js';
 import { socketOnError } from './socketOnError.js';
 import { uwProfile } from '../../UWProfile/index.js';
 import { uwRequest } from '#udsp/requestMethods/request';
-import { watch } from '#watch';
 const {
 	inactiveState,
 	discoveringState,
@@ -130,6 +129,7 @@ export class Client extends UDSP {
 	socketOnError = socketOnError;
 	assignId() {
 		const connectionIdString = generateConnectionId(this.connectionIdSize);
+		this.connectionIdString = connectionIdString;
 		this.id = connectionIdToBuffer(connectionIdString);
 		console.log(`Assigned ClientId ${connectionIdString}`);
 		Client.connections.set(connectionIdString, this);
@@ -418,7 +418,7 @@ export class Client extends UDSP {
 		this.connected = true;
 		await this.updateState(connectedState);
 		await this.updateReadyState(1);
-		this.latency = Date.now() - this.introTimestamp;
+		this.latency = (Date.now() - this.introTimestamp) + 100;
 		console.log(`CLIENT CONNECTED. Latency: ${this.latency}ms`);
 		this.fire(this.events, 'connected', this);
 	}
@@ -461,9 +461,7 @@ export class Client extends UDSP {
 	}
 	async reconnect(options) {
 		if (this.state === closedState) {
-			if (options) {
-				await this.initialize(this.options);
-			}
+			await this.initialize(options || this.options);
 			await this.connect();
 		}
 	}

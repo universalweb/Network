@@ -2,12 +2,11 @@ import * as defaultCrypto from '#crypto';
 import {
 	clientSetSession,
 	clientSetSessionAttach,
-	encryptionKeypair,
 	encryptionKeypair as encryptionKeypair25519,
 	serverSetSession,
 	serverSetSessionAttach
 } from './x25519.js';
-import { decapsulate, encapsulate } from './kyber768.js';
+import { decapsulate, encapsulate, encryptionKeypair } from './kyber768.js';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
 import { assign } from '@universalweb/acid';
 import { blake3 } from '@noble/hashes/blake3';
@@ -103,6 +102,7 @@ export const kyber768Half_x25519 = {
 		const destinationPublicKey = destination.publicKey;
 		const x25519Keypair = await encryptionKeypair25519(source);
 		const kyberPublicKeypair = getKyberKey(destinationPublicKey);
+		console.log('serverEphemeralKeypair', destination, kyberPublicKeypair.length, destination.publicKey.length);
 		const {
 			cipherText,
 			sharedSecret

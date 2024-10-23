@@ -2,12 +2,11 @@ import * as defaultCrypto from '#crypto';
 import {
 	clientSetSession,
 	clientSetSessionAttach,
-	encryptionKeypair,
 	encryptionKeypair as encryptionKeypair25519,
 	serverSetSession,
 	serverSetSessionAttach
 } from './x25519.js';
-import { decapsulate, encapsulate } from '../keyExchange/kyber768.js';
+import { decapsulate, encapsulate, encryptionKeypair } from '../keyExchange/kyber768.js';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
 import { assign } from '@universalweb/acid';
 import { blake3 } from '@noble/hashes/blake3';
@@ -37,14 +36,17 @@ export const kyber768_x25519 = {
 		}
 	},
 	hash: blake3,
+	// partial initial encryption on first packet
 	async clientInitializeSession(source, destination) {
 		const sourceKeypair25519 = {
 			publicKey: get25519Key(source.publicKey),
 			privateKey: get25519Key(source.privateKey)
 		};
-		console.log('clientInitializeSession Destination', destination);
-		const x25519SessionKeys = clientSetSession(sourceKeypair25519, destination, source);
-		console.log('Public Key from destination', toHex(destination.publicKey));
+		const destinationPublicKey = destination.publicKey;
+		const destinationX25519PublicKey = get25519Key(destinationPublicKey);
+		console.log('clientInitializeSession Destination', destinationX25519PublicKey.length);
+		const x25519SessionKeys = clientSetSession(sourceKeypair25519, destinationPublicKey, source);
+		console.log('Public Key from destination', toHex(destinationX25519PublicKey));
 		return x25519SessionKeys;
 	},
 	async serverInitializeSession(source, destination) {
@@ -116,7 +118,7 @@ export const kyber768_x25519 = {
 		return source;
 	},
 	async certificateEncryptionKeypair() {
-		const source = await kyber768_x25519.keypair();
-		return source;
+		const target = await kyber768_x25519.keypair();
+		return target;
 	},
 };
