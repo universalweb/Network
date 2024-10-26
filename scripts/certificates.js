@@ -1,6 +1,6 @@
 import { currentPath } from '@universalweb/acid';
 import { decode } from '#utilities/serialize';
-import { domainCertificate } from '#utilities/certificate/index';
+import { domainCertificate } from '#udsp/certificate/index';
 import { uwProfile } from '../UWProfile/index.js';
 const dirname = currentPath(import.meta);
 const profile = await uwProfile();

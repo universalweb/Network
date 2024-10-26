@@ -1,2 +1,4 @@
-export const introRPC = 0;
-export const endRPC = 1;
+export const introHeaderRPC = 0;
+export const extendedHandshakeHeaderRPC = 1;
+export const discoveryHeaderRPC = 2;
+export const endHeaderRPC = 3;

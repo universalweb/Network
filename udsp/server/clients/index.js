@@ -15,6 +15,18 @@ import {
 import { createEvent, removeEvent, triggerEvent } from '../../events.js';
 import { defaultClientConnectionIdSize, defaultServerConnectionIdSize } from '../../../defaults.js';
 import {
+	discoveryHeaderRPC,
+	endHeaderRPC,
+	extendedHandshakeHeaderRPC,
+	introHeaderRPC
+} from '../../protocolHeaderRPCs.js';
+import {
+	discoveryRPC,
+	endRPC,
+	extendedHandshakeRPC,
+	introRPC
+} from '../../protocolFrameRPCs.js';
+import {
 	failed,
 	imported,
 	info,
@@ -126,9 +138,18 @@ export class Client {
 			return this.sendIntro();
 		}
 	}
-	async intro(frame, header) {
+	async intro(frame, header, rinfo) {
 		info(`Client Intro -> - ID:${this.connectionIdString}`);
 		return this.sendIntro();
+	}
+	async sendExtendedHandshake(header, packetDecoded) {
+		const { destination } = this;
+		console.log('Sending Extended Handshake');
+		const extendedHandshakeFrame = await this.cipherSuite.sendServerExtendedHandshake(this, destination);
+		await this.send(extendedHandshakeFrame);
+	}
+	async extendedHandshake(frame, header, rinfo) {
+		this.handshaked();
 	}
 	// SERVER HELLO
 	// Add option for kyber to put everything in header
@@ -137,11 +158,11 @@ export class Client {
 		const header = [];
 		const frame = [
 			false,
-			0,
+			introRPC,
 			this.id
 		];
 		if (this.cipherSuite.publicKeyInServerIntroHeader) {
-			header[0] = 0;
+			header[0] = introHeaderRPC;
 			header[1] = this.publicKey;
 		} else if (this.nextSession) {
 			frame[3] = this.nextSession.publicKey;
@@ -171,15 +192,15 @@ export class Client {
 	}
 	// SERVER DISCOVERY
 	async sendDiscovery() {
-		const frame = [
+		const header = [
 			false,
-			2,
+			discoveryHeaderRPC,
 			this.id,
 			this.nextSession.publicKey,
 			this.randomId
 		];
 		this.updateState(1);
-		await this.send(frame);
+		await this.send(null, header);
 	}
 	updateState(state) {
 		if (this.destroyed) {
@@ -255,7 +276,11 @@ export class Client {
 		}
 		console.log('Sending CLIENT END');
 		this.updateState(0);
-		return this.send([false, 1], false, null, true);
+		const frame = [
+			false,
+			endRPC
+		];
+		return this.send(frame, undefined, undefined, true);
 	}
 	async end(frame, header) {
 		console.log(`Destroying client ${this.connectionIdString}`, frame, header);

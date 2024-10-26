@@ -9,7 +9,7 @@ const {
 	crypto_aead_xchacha20poly1305_ietf_keygen,
 	crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
 } = sodiumLib;
-import { bufferAlloc, randomize } from '../../crypto.js';
+import { bufferAlloc, randomize } from '#utilities/crypto';
 export function emptyNonce() {
 	return bufferAlloc(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
 }

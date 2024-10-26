@@ -1,4 +1,16 @@
 import {
+	discoveryHeaderRPC,
+	endHeaderRPC,
+	extendedHandshakeHeaderRPC,
+	introHeaderRPC
+} from './protocolHeaderRPCs.js';
+import {
+	discoveryRPC,
+	endRPC,
+	extendedHandshakeRPC,
+	introRPC
+} from './protocolFrameRPCs.js';
+import {
 	isArray,
 	isNotNumber
 } from '@universalweb/acid';
@@ -12,19 +24,23 @@ export async function proccessProtocolHeader(source, header, packetDecoded, rinf
 	}
 	switch (rpc) {
 		// Hello Packet
-		case 0: {
+		case introHeaderRPC: {
 			source.introHeader(header, packetDecoded, rinfo);
 			break;
 		}
-		// End Connection Packet
-		case 1: {
-			console.log('END RECEIVED');
-			source.endHeader(header, packetDecoded, rinfo);
+		case extendedHandshakeHeaderRPC: {
+			source.extendedHandshakeHeader(header, packetDecoded, rinfo);
 			break;
 		}
 		// Discovery Packet to get the server's certificate
-		case 2: {
+		case discoveryHeaderRPC: {
 			source.discoveryHeader(header, packetDecoded, rinfo);
+			break;
+		}
+		// End Connection Packet
+		case endHeaderRPC: {
+			console.log('END RECEIVED');
+			source.endHeader(header, packetDecoded, rinfo);
 			break;
 		}
 		default: {
@@ -48,13 +64,21 @@ export async function proccessProtocolFrame(source, frame, header, rinfo) {
 	}
 	switch (rpc) {
 		// Hello/Intro
-		case 0: {
+		case introRPC: {
 			console.log('Hello/Intro RECEIVED');
 			source.intro(frame, header, rinfo);
 			break;
 		}
+		case extendedHandshakeRPC: {
+			source.extendedHandshake(frame, header, rinfo);
+			break;
+		}
+		case discoveryRPC: {
+			source.discovery(frame, header, rinfo);
+			break;
+		}
 		// End Connection
-		case 1: {
+		case endRPC: {
 			console.log('END RECEIVED');
 			source.end(frame, header, rinfo);
 			break;

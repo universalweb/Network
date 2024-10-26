@@ -15,7 +15,7 @@ import {
 	getSignatureAlgorithm
 } from '../cryptoMiddleware/index.js';
 import { encode } from '#utilities/serialize';
-import { findRecord } from '../../udsp/dis/index.js';
+import { findRecord } from '../dis/index.js';
 import { resolve } from 'path';
 import { write } from '#utilities/file';
 export class UWCertificate {

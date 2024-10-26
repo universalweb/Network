@@ -1,10 +1,18 @@
+/*
+	* This is a quick and dirty implementation of a connectionId generator.
+	* Depending on your use case you may want to use a more secure method or scalable method.
+	* This is a simple implementation that is meant to be quick and easy to use for a majority of use cases.
+*/
+import { hasValue, isString } from '@universalweb/acid';
 import Benchmark from 'benchmark';
-import { hasValue } from '@universalweb/acid';
 import { randomConnectionId } from '#utilities/crypto';
 const eight = 8;
 const characters = 'abcdef0123456789';
 const charactersLength = characters.length;
-function convertPrepend(prepend, minSize) {
+export const stringToHex = (str) => {
+	return Buffer.from(str, 'utf8').toString('hex');
+};
+export function convertPrepend(prepend, minSize) {
 	if (!prepend) {
 		return '';
 	}
@@ -22,7 +30,9 @@ export function generateConnectionId(size = eight, prependArg, minSize = 1) {
 		result += characters.charAt(randomIndex);
 	}
 	if (hasValue(prependArg)) {
-		const prepend = convertPrepend(String(prependArg), minSize);
+		const prependHex = String(prependArg);
+		const prepend = convertPrepend(prependHex, minSize);
+		console.log(prepend);
 		result = `${prepend}${result.substring(prepend.length)}`;
 		// console.log('ConnectionID created', result);
 	}
@@ -37,6 +47,6 @@ export function connectionIdToString(source) {
 export function getConnectionIdReservedSpaceString(source, size) {
 	return Number(source.toString('hex').substring(0, size));
 }
-// console.log(generateConnectionId(8, 1, 2));
+// console.log(connectionIdToString(generateConnectionId(8, 'a2405', 5)), connectionIdToBuffer(generateConnectionId(8, 'a2405', 5)).length);
 // const serverConnectionIdString = connectionIdToBuffer(generateConnectionId(8, 1, 2));
 // console.log(getConnectionIdReservedSpaceString(serverConnectionIdString, 2));

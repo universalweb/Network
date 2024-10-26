@@ -30,6 +30,18 @@ import {
 } from '#utilities/serialize';
 import { defaultClientConnectionIdSize, defaultServerConnectionIdSize } from '../../defaults.js';
 import {
+	discoveryHeaderRPC,
+	endHeaderRPC,
+	extendedHandshakeHeaderRPC,
+	introHeaderRPC
+} from '../protocolHeaderRPCs.js';
+import {
+	discoveryRPC,
+	endRPC,
+	extendedHandshakeRPC,
+	introRPC
+} from '../protocolFrameRPCs.js';
+import {
 	toBase64,
 	toHex,
 } from '#crypto';
@@ -46,11 +58,11 @@ import { get } from '../requestMethods/get.js';
 import { getIPDetails } from './getIPDetails.js';
 import { getLocalIpVersion } from '../../utilities/network/getLocalIP.js';
 import { getWANIPAddress } from '../../utilities/network/getWANIPAddress.js';
-import { keychainGet } from '../../utilities/certificate/keychain.js';
+import { keychainGet } from '../certificate/keychain.js';
 import { onListening } from './listening.js';
 import { onPacket } from './onPacket.js';
 import { post } from '../requestMethods/post.js';
-import { publicDomainCertificate } from '../../utilities/certificate/domain.js';
+import { publicDomainCertificate } from '../certificate/domain.js';
 import { sendPacket } from '../sendPacket.js';
 import { setDestination } from './setDestination.js';
 import { socketOnError } from './socketOnError.js';
@@ -241,7 +253,7 @@ export class Client extends UDSP {
 		if (this.state === inactiveState) {
 			console.log('Sending Discovery');
 			await this.updateState(discoveringState);
-			const header = [2];
+			const header = [discoveryHeaderRPC];
 			this.setPublicKeyHeader(header);
 			this.setCryptographyOptionsHeaders(header);
 			const frame = [];
@@ -332,7 +344,7 @@ export class Client extends UDSP {
 		this.introAttempts++;
 		this.introTimestamp = Date.now();
 		await this.updateState(connectingState);
-		const header = [0];
+		const header = [introHeaderRPC];
 		this.setPublicKeyHeader(header);
 		this.setCryptographyHeaders(header);
 		header.push(Date.now());
@@ -354,6 +366,9 @@ export class Client extends UDSP {
 		const cryptographicData = header[2];
 		this.destination.publicKey = cryptographicData;
 		await this.setSession();
+		if (this.cipherSuite.serverExtendedHandshake) {
+			this.sendExtendedHandshake(null, header, rinfo);
+		}
 	}
 	async intro(frame, header, rinfo) {
 		console.log('Got server Intro', frame);
@@ -393,6 +408,20 @@ export class Client extends UDSP {
 			this.realtime = true;
 		}
 		this.clearIntroTimeout();
+		if (this.cipherSuite.sendClientExtendedHandshake) {
+			this.sendExtendedHandshake(frame, header, rinfo);
+			return;
+		}
+		this.handshaked();
+	}
+	async sendExtendedHandshake(frame, header, rinfo) {
+		const { destination } = this;
+		console.log('Sending Client Extended Handshake');
+		const extendedHandshakeFrame = await this.cipherSuite.sendClientExtendedHandshake(this, destination);
+		await this.send(extendedHandshakeFrame);
+	}
+	async extendedHandshake(frame, header, rinfo) {
+		console.log('Client Extended Handshake');
 		this.handshaked();
 	}
 	async setSession() {
@@ -425,7 +454,7 @@ export class Client extends UDSP {
 	async sendEnd() {
 		if (this.state === connectingState || this.state === connectedState || this.state === closingState) {
 			console.log('Sending CLIENT END');
-			const frame = [false, 1];
+			const frame = [false, endRPC];
 			return this.send(frame, false, null, true);
 		}
 	}

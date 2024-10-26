@@ -13,12 +13,12 @@ import {
 	sign,
 	signatureKeypair,
 	verifySignature
-} from '../utilities/cryptoMiddleware/signature/dilithium44_ed25519.js';
-import { keychainGet, keychainSave } from '../utilities/certificate/keychain.js';
+} from '../udsp/cryptoMiddleware/signature/dilithium44_ed25519.js';
+import { keychainGet, keychainSave } from '../udsp/certificate/keychain.js';
 import { read, readStructured, write } from '../utilities/file.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { currentCertificateVersion } from '../defaults.js';
-import { x25519_kyber768_xchacha20 } from '../utilities/cryptoMiddleware/cipherSuite/x25519_Kyber768_xChaCha.js';
+import { x25519_kyber768_xchacha20 } from '../udsp/cryptoMiddleware/cipherSuite/x25519_Kyber768_xChaCha.js';
 const dirname = currentPath(import.meta);
 export class UWProfile {
 	constructor(config = {}, optionalArg) {

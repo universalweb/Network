@@ -7,7 +7,7 @@ import {
 } from '@universalweb/acid';
 import { randomBuffer, randomConnectionId, toBase64 } from '#crypto';
 import { calculatePacketOverhead } from './calculatePacketOverhead.js';
-import { cipherSuites } from '../utilities/cryptoMiddleware/index.js';
+import { cipherSuites } from './cryptoMiddleware/index.js';
 import { currentVersion } from '../defaults.js';
 import dgram from 'dgram';
 export class UDSP {

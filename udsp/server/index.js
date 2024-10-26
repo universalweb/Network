@@ -1,7 +1,7 @@
 import {
 	DomainCertificate,
 	PublicDomainCertificate
-} from '../../utilities/certificate/domain.js';
+} from '../certificate/domain.js';
 // The Universal Web's UDSP server module
 import {
 	UniqID,
@@ -29,6 +29,7 @@ import { UDSP } from '#udsp/base';
 import { createClient } from './clients/index.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { defaultServerConnectionIdSize } from '../../defaults.js';
+import { introHeaderRPC } from '#udsp/protocolHeaderRPCs';
 import { listen } from './listen.js';
 import { onError } from './onError.js';
 import { onListen } from './onListen.js';
@@ -185,7 +186,7 @@ export class Server extends UDSP {
 	}
 	async client(config, id, idString, rinfo) {
 		if (id === false || id.length === 0) {
-			if (config.packetDecoded.headerRPC === 0) {
+			if (config.packetDecoded.headerRPC === introHeaderRPC) {
 				return this.createClient(config, idString, rinfo);
 			}
 		}

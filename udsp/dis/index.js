@@ -1,6 +1,6 @@
 import { currentPath } from '@universalweb/acid';
 import os from 'os';
-import { publicDomainCertificate } from '../../utilities/certificate/domain.js';
+import { publicDomainCertificate } from '../certificate/domain.js';
 const homeDirectory = os.homedir();
 // const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // console.log(timeZone);
