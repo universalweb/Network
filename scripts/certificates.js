@@ -9,9 +9,9 @@ await profile.saveToKeychain('profile.cert', `${dirname}/../profiles`, 'password
 const UWCertificate = await domainCertificate({
 	entity: 'universalweb.io',
 	// ownerHash: profile.getSignature(),
-	signatureAlgorithm: 0,
-	cipherSuites: [1],
-	encryptionKeypairAlgorithm: 2,
+	signatureAlgorithm: 1,
+	cipherSuites: [2],
+	encryptionKeypairAlgorithm: 1,
 	protocolOptions: {
 		realtime: true,
 	},
@@ -42,4 +42,6 @@ console.log(UWCertificate);
 await UWCertificate.save('universalWeb.cert', `${dirname}/../serverApp/certs`);
 await UWCertificate.savePublic('universalWebPublic.cert', `${dirname}/../serverApp/certs`);
 await UWCertificate.savePublic('universalWebPublic.cert', `${dirname}/../udsp/dis/cache`);
-console.log(await domainCertificate(`${dirname}/../serverApp/certs/universalWebPublic.cert`));
+const cert = await domainCertificate(`${dirname}/../serverApp/certs/universalWebPublic.cert`);
+console.log(cert);
+console.log(cert.object.encryptionKeypair.publicKey.length);

@@ -109,7 +109,6 @@ export function clientSetSession(client, serverPublicKey, target) {
 		target.transmitKey = transmitKey;
 		return target;
 	}
-	client.receiveKey = receiveKey;
 	return {
 		receiveKey,
 		transmitKey

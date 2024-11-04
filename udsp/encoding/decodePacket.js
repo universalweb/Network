@@ -21,6 +21,7 @@ import {
 } from '#logs';
 import { toBase64, toHex } from '#crypto';
 import { createClient } from '../server/clients/index.js';
+import { introHeaderRPC } from '#udsp/protocolHeaderRPCs';
 /**
 	* @TODO
 	* Add support to block connection Ids that are too large
@@ -96,14 +97,6 @@ export async function decodePacketHeaders(config) {
 		const headerRPC = headerDecoded[1];
 		if (hasValue(headerRPC)) {
 			config.packetDecoded.headerRPC = headerRPC;
-		}
-		if (headerRPC === 0) {
-			success(`Public Key is given -> Processing as create client`);
-			const key = headerDecoded[2];
-			if (!key) {
-				return console.trace('No Client Key provided', headerDecoded);
-			}
-			config.packetDecoded.key = key;
 		}
 	}
 	return config;

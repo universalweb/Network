@@ -24,13 +24,14 @@ import {
 	msgSent,
 	success
 } from '#logs';
+import { introHeaderRPC, isIntroHeader } from '../protocolHeaderRPCs.js';
 import { randomBuffer, toBase64 } from '#crypto';
 import { UDSP } from '#udsp/base';
 import { createClient } from './clients/index.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { defaultServerConnectionIdSize } from '../../defaults.js';
-import { introHeaderRPC } from '#udsp/protocolHeaderRPCs';
 import { listen } from './listen.js';
+import { noStreamID } from '../utilities/hasConnectionID.js';
 import { onError } from './onError.js';
 import { onListen } from './onListen.js';
 import { onPacket } from './onPacket.js';
@@ -185,8 +186,8 @@ export class Server extends UDSP {
 		return client;
 	}
 	async client(config, id, idString, rinfo) {
-		if (id === false || id.length === 0) {
-			if (config.packetDecoded.headerRPC === introHeaderRPC) {
+		if (noStreamID(id)) {
+			if (isIntroHeader(config.packetDecoded.headerRPC)) {
 				return this.createClient(config, idString, rinfo);
 			}
 		}
@@ -217,6 +218,7 @@ export class Server extends UDSP {
 	/*
 		* All created clients (clients) represent a client to server bi-directional connection until it is closed by either party.
 	*/
+	// SWITCH TO BINARY SEARCH FOR CLIENTS FOR FASTER LOOKUP
 	clients = construct(Map);
 	initialGracePeriod = 5000;
 	connectionIdEncryption() {

@@ -78,16 +78,8 @@ export function hashShort(message) {
 	crypto_shorthash(hashed, message, bufferAlloc(crypto_shorthash_KEYBYTES));
 	return hashed;
 }
-export function clearBuffer(...args) {
-	for (const arg of args) {
-		if (Array.isArray(arg)) {
-			for (const item of arg) {
-				item.fill(0);
-			}
-		} else {
-			arg.fill(0);
-		}
-	}
+export function clearBuffer(source) {
+	source.fill(0);
 }
 export function clearSessionKeys(source) {
 	clearBuffer(source.transmitKey);

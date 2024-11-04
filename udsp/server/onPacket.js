@@ -46,11 +46,13 @@ export async function onPacket(packet, rinfo) {
 		return console.log('No matching Client id given', idString);
 	}
 	const { header, } = config.packetDecoded;
-	if (isFalse(config.isShortHeaderMode)) {
-		await proccessProtocolPacketHeader(client, header, config.packetDecoded, rinfo);
-	} else if (client.nextSession) {
-		console.log('Client assigned Next Session', client.nextSession, header, config);
-		await client.setSession();
+	if (isFalse(client.sessionCompleted)) {
+		if (isFalse(config.isShortHeaderMode)) {
+			await proccessProtocolPacketHeader(client, header, config.packetDecoded, rinfo);
+		} else if (client.nextSession) {
+			console.log('Client assigned Next Session', client.nextSession, header, config);
+			await client.setSession();
+		}
 	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {

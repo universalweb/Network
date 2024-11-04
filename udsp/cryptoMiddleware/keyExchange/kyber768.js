@@ -33,3 +33,7 @@ export const kyber768 = {
 	encryptionKeypair,
 	certificateEncryptionKeypair: encryptionKeypair,
 };
+// const keypair = await encryptionKeypair();
+// console.log(keypair);
+// console.log(keypair.publicKey.length);
+// console.log(await encapsulate(keypair));

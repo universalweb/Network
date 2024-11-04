@@ -50,19 +50,17 @@ export class App {
 			return console.trace('Invalid Packet Headers');
 		}
 		const id = config.packetDecoded.id;
-		const key = config.packetDecoded.key;
+		// ADD ALGO TO CHOOSE ONLY VIABLE WORKERS
 		let workerId = 1;
 		const { reservedConnectionIdSize } = config.destination;
 		if (id !== false) {
 			const idString = id.toString('hex');
 			const reservedSmartRoute = getConnectionIdReservedSpaceString(id, reservedConnectionIdSize);
 			console.log(`Loadbalancer got an id ${idString}`);
-			if (key) {
-				console.log(`Loadbalancer has a new client ${idString}`);
-			}
 			console.log(`Reserved Smart Route ${reservedSmartRoute}`, id.length, idString, reservedConnectionIdSize);
 			workerId = reservedSmartRoute;
 		}
+		// ADD ALGO TO CHOOSE ONLY VIABLE WORKERS
 		const worker = this.workers[workerId];
 		const passMessage = encode([
 			packet,

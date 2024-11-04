@@ -22,6 +22,13 @@ import {
 	omit,
 	promise
 } from '@universalweb/acid';
+import {
+	checkIntroTimeout,
+	clearIntroTimeout,
+	intro,
+	introHeader,
+	sendIntro
+} from './protocolEvents/intro.js';
 import { connectionIdToBuffer, generateConnectionId } from '#udsp/connectionId';
 import { createEvent, removeEvent, triggerEvent } from '#udsp/events';
 import {
@@ -41,6 +48,7 @@ import {
 	extendedHandshakeRPC,
 	introRPC
 } from '../protocolFrameRPCs.js';
+import { extendedHandshake, sendExtendedHandshake } from './protocolEvents/extendedHandshake.js';
 import {
 	toBase64,
 	toHex,
@@ -191,6 +199,10 @@ export class Client extends UDSP {
 		await this.processCertificate();
 		await this.configCryptography();
 	}
+	async discovered() {
+		console.log('DISCOVERY COMPLETED -> CERTIFICATE LOADED');
+		await this.updateState(discoveredState);
+	}
 	async processCertificate() {
 		const { destination, } = this;
 		const { certificate } = destination;
@@ -230,44 +242,6 @@ export class Client extends UDSP {
 		console.log(`CLIENT READYState Updated -> ${this.readyState}`);
 		await this.fire(this.events, 'readyState', this);
 	}
-	setDiscoveryHeaders(header = []) {
-		const key = this.publicKey;
-		console.log('Setting DISCOVERY in UDSP Header', toBase64(key));
-		const {
-			cipherSuiteName,
-			cipherSuite,
-			version,
-			id
-		} = this;
-		header.push(id, cipherSuite.id, version);
-		return header;
-	}
-	/*
-		* Send Discovery
-		* Generate & sign a random nonce include it in the header then send it to the server
-		* Server verifies client most likely has the private key
-		* sends cert chunked with one time encryption using client public key
-		* Client saves cert and restarts the connection with the new data
-	*/
-	async sendDiscovery() {
-		if (this.state === inactiveState) {
-			console.log('Sending Discovery');
-			await this.updateState(discoveringState);
-			const header = [discoveryHeaderRPC];
-			this.setPublicKeyHeader(header);
-			this.setCryptographyOptionsHeaders(header);
-			const frame = [];
-			this.discoverySent = true;
-			return this.send(frame, header);
-		}
-	}
-	async discovered() {
-		console.log('DISCOVERY COMPLETED -> CERTIFICATE LOADED');
-		await this.updateState(discoveredState);
-	}
-	discovery(frame, header) {
-		this.discovered();
-	}
 	changeAddress(changeDestinationAddress, rinfo) {
 		console.log('Change Server Address', changeDestinationAddress);
 		if (changeDestinationAddress === true) {
@@ -290,7 +264,7 @@ export class Client extends UDSP {
 		console.log('Destination changed in INTRO', this.destination.ip, this.destination.port);
 	}
 	setPublicKeyHeader(header = []) {
-		const preparedPublicKey = this.headerPublicKey || this.publicKey;
+		const preparedPublicKey = this.publicKey;
 		console.log('setPublicKeyHeader', toHex(preparedPublicKey));
 		header.push(preparedPublicKey);
 		return header;
@@ -325,114 +299,19 @@ export class Client extends UDSP {
 		this.sendIntro();
 		return this.awaitHandshake;
 	}
-	checkIntroTimeout() {
-		console.log('checkIntroTimeout', this.connected, this.introAttempts);
-		if (this.connected === true) {
-			return;
-		} else if (this.introAttempts <= 3) {
-			this.sendIntro();
-		} else {
-			this.close(`Failed to connect with ${this.introAttempts} attempts`);
-		}
-	}
-	clearIntroTimeout() {
-		clearTimeout(this.introTimeout);
-		this.introTimeout = null;
-	}
-	async sendIntro() {
-		console.log('Sending Intro');
-		this.introAttempts++;
-		this.introTimestamp = Date.now();
-		await this.updateState(connectingState);
-		const header = [introHeaderRPC];
-		this.setPublicKeyHeader(header);
-		this.setCryptographyHeaders(header);
-		header.push(Date.now());
-		if (this.realtime) {
-			header.push(true);
-		}
-		this.introTimeout = setTimeout(() => {
-			this.checkIntroTimeout();
-		}, this.latency);
-		await this.send(null, header);
-	}
-	async introHeader(header, rinfo) {
-		console.log('Client Intro Header', header);
-		if (!header || !isArray(header) || isEmpty(header.length)) {
-			this.close();
-			return;
-		}
-		const rpc = header[1];
-		const cryptographicData = header[2];
-		this.destination.publicKey = cryptographicData;
-		await this.setSession();
-		if (this.cipherSuite.serverExtendedHandshake) {
-			this.sendExtendedHandshake(null, header, rinfo);
-		}
-	}
-	async intro(frame, header, rinfo) {
-		console.log('Got server Intro', frame);
-		if (!frame || !isArray(frame)) {
-			this.close(frame);
-			return;
-		}
-		const { destination } = this;
-		const [
-			streamid_undefined,
-			rpc,
-			serverConnectionId,
-			framePublicKey,
-			changeDestinationAddress,
-			serverRandomToken,
-			upgradeToRealtime
-		] = frame;
-		this.destination.id = serverConnectionId;
-		this.destination.connectionIdSize = serverConnectionId.length;
-		if (framePublicKey) {
-			console.log(this.destination.publicKey, framePublicKey);
-			this.destination.publicKey = framePublicKey;
-			console.log('Server Public Key', toHex(framePublicKey));
-			console.log('New Public Key Provided Initiate New Session');
-			await this.setSession();
-		}
-		console.log('New Server Connection ID', toHex(serverConnectionId));
-		if (changeDestinationAddress) {
-			this.changeAddress(changeDestinationAddress, rinfo);
-		}
-		if (serverRandomToken) {
-			this.serverRandomToken = serverRandomToken;
-			console.log('Server Random Token', toHex(serverRandomToken));
-		}
-		if (upgradeToRealtime) {
-			console.log('Upgrade to Realtime');
-			this.realtime = true;
-		}
-		this.clearIntroTimeout();
-		if (this.cipherSuite.sendClientExtendedHandshake) {
-			this.sendExtendedHandshake(frame, header, rinfo);
-			return;
-		}
-		this.handshaked();
-	}
-	async sendExtendedHandshake(frame, header, rinfo) {
-		const { destination } = this;
-		console.log('Sending Client Extended Handshake');
-		const extendedHandshakeFrame = await this.cipherSuite.sendClientExtendedHandshake(this, destination);
-		await this.send(extendedHandshakeFrame);
-	}
-	async extendedHandshake(frame, header, rinfo) {
-		console.log('Client Extended Handshake');
-		this.handshaked();
-	}
-	async setSession() {
-		// console.log(this.destination.publicKey);
-		if (this.destination.publicKey) {
-			this.cipherSuite.clientSetSession(this, this.destination);
-			if (this.receiveKey) {
-				console.log(`Created Shared Keys`);
-				console.log(`receiveKey: ${toHex(this.receiveKey)}`);
-				console.log(`transmitKey: ${toHex(this.transmitKey)}`);
-			}
+	checkIntroTimeout = checkIntroTimeout;
+	clearIntroTimeout = clearIntroTimeout;
+	sendIntro = sendIntro;
+	introHeader = introHeader;
+	intro = intro;
+	extendedHandshake = extendedHandshake;
+	sendExtendedHandshake = sendExtendedHandshake;
+	async setSession(cipherData) {
+		this.cipherSuite.clientSetSession(this, this.destination, cipherData);
+		if (this.receiveKey) {
+			console.log(`Created Shared Keys`);
+			console.log(`receiveKey: ${toHex(this.receiveKey)}`);
+			console.log(`transmitKey: ${toHex(this.transmitKey)}`);
 		}
 	}
 	async handshaked(message) {

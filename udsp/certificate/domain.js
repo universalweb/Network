@@ -77,10 +77,12 @@ export async function createDomainCertificateObject(config = {}, options = {}) {
 		certificate.cipherSuites = cipherSuites;
 	}
 	const signatureMethod = getSignatureAlgorithm(certificate.signatureAlgorithm, protocolVersion);
+	certificate.signatureAlgorithm = await signatureMethod.id;
 	if (!signatureKeypair) {
 		certificate.signatureKeypair = await signatureMethod.signatureKeypair();
 	}
 	const keyExchangeMethod = getEncryptionKeypairAlgorithm(encryptionKeypairAlgorithm, protocolVersion);
+	certificate.encryptionKeypairAlgorithm = await keyExchangeMethod.id;
 	// console.log('cipherSuites', cipherSuites, encryptionKeypairAlgorithm, keyExchangeMethod);
 	if (!encryptionKeypair) {
 		certificate.encryptionKeypair = await keyExchangeMethod.certificateEncryptionKeypair();

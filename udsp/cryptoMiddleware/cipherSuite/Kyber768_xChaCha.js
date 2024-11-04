@@ -1,18 +1,22 @@
 // Closed source not for private and or corporate use.
 import * as defaultCrypto from '#crypto';
-import { assign, clearBuffer, isBuffer } from '@universalweb/acid';
+import { assign, clear, isBuffer } from '@universalweb/acid';
 import { decapsulate, encapsulate, encryptionKeypair } from '../keyExchange/kyber768.js';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { extendedHandshakeRPC } from '../../../udsp/protocolFrameRPCs.js';
+import { introHeaderRPC } from '../../protocolHeaderRPCs.js';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
 const {
 	randomConnectionId,
 	randomBuffer,
 	toBase64,
 	toHex,
-	blake3CombineKeys
+	blake3CombineKeys,
+	clearBuffer
 } = defaultCrypto;
+const hash = blake3;
+const combineKeys = blake3CombineKeys;
 // Create User Kyber keypair send to server
 // Server creates Kyber shared Secret & encapsulates it via user's public kyber key
 // Server sends cipher text in the header & encrypted intro frame to the user
@@ -29,43 +33,107 @@ export const kyber768_xChaCha = {
 	preferred: true,
 	speed: 0,
 	security: 1,
-	hash: blake3,
-	publicKeyInServerIntroHeader: true,
+	hash,
 	extendedHandshake: true,
+	async clientEphemeralKeypair() {
+		const source = await kyber768_xChaCha.keypair();
+		return source;
+	},
 	async clientInitializeSession(source, destination) {
 		console.log('clientInitializeSession Destination', destination);
 		console.log('Public Key from destination', destination.publicKey[0]);
 	},
-	async serverInitializeSession(source, destination) {
-		console.log('serverInitializeSession');
+	async sendClientExtendedHandshake(source, destination) {
 		const destinationPublicKey = destination.publicKey;
+		console.log('TRIGGERED sendClientExtendedHandshake');
+		console.log(destinationPublicKey.length);
 		const {
 			cipherText,
 			sharedSecret
 		} = await encapsulate(destinationPublicKey);
-		source.publicKey = cipherText;
-		source.transmitKey = blake3(sharedSecret);
+		const frame = [
+			false,
+			extendedHandshakeRPC,
+			cipherText
+		];
+		source.cipherData = cipherText;
+		source.sharedSecret = sharedSecret;
+		console.log('sendClientExtendedHandshake kyberSharedSecret', sharedSecret[0], sharedSecret.length);
+		console.log('sendClientExtendedHandshake cipherText', cipherText[0], cipherText.length);
+		return frame;
+	},
+	async clientExtendedHandshake(source, destination) {
+		console.log('TRIGGERED client ExtendedHandshake', source.transmitKey, source.sharedSecret);
+		source.transmitKey = combineKeys(source.transmitKey, source.sharedSecret);
 		source.receiveKey = source.transmitKey;
-		console.log('Public Key from destination', destination.publicKey[0]);
+		clearBuffer(source.sharedSecret);
+		clearBuffer(source.cipherData);
+		source.sharedSecret = null;
+		source.cipherData = null;
+		console.log('TRIGGERED client ExtendedHandshake', source.transmitKey);
+	},
+	async clientSetSession(source, destination, cipherData) {
+		const kyberPrivateKey = source.privateKey;
+		const sharedSecret = await decapsulate(cipherData, kyberPrivateKey);
+		source.transmitKey = sharedSecret;
+		source.receiveKey = source.transmitKey;
+		console.log('clientSetSession kyberSharedSecret', sharedSecret[0], sharedSecret.length);
+		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
+	},
+	async serverInitializeSession(source, destination, destinationPublicKey) {
+		console.log('server InitializeSession');
+		console.log(destinationPublicKey);
+		const {
+			cipherText,
+			sharedSecret
+		} = await encapsulate(destinationPublicKey);
+		destination.publicKey = destinationPublicKey;
+		source.cipherData = cipherText;
+		source.transmitKey = sharedSecret;
+		source.receiveKey = sharedSecret;
+		console.log('server kyberSharedSecret', sharedSecret[0], sharedSecret.length);
+		console.log('destinationPublicKey', destinationPublicKey[0]);
+	},
+	async sendServerIntro(source, destination, frame, header) {
+		console.log('Send Server Intro', source.cipherData);
+		header[0] = introHeaderRPC;
+		header[1] = source.cipherData;
+	},
+	async serverExtendedHandshake(source, destination, frame, header) {
+		if (!source.sharedSecret) {
+			console.log('serverExtendedHandshake CIPHER CALLED', frame, header);
+			const [
+				streamid_undefined,
+				rpc,
+				cipherData
+			] = frame;
+			const privateKey = source.privateKey;
+			const sharedSecret = await decapsulate(cipherData, privateKey);
+			clearBuffer(source.cipherData);
+			source.cipherData = null;
+			source.sharedSecret = sharedSecret;
+			source.nextSession = true;
+			console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
+			console.log('sharedSecret', source.sharedSecret[0]);
+			console.log('server cipherText', cipherData[0], cipherData.length);
+		}
+	},
+	async sendServerExtendedHandshake(source, destination) {
+		const frame = [
+			false,
+			extendedHandshakeRPC,
+		];
+		return frame;
 	},
 	async serverSetSession(source, destination) {
 		console.log('serverSetSession');
-		const destinationPublicKey = destination.publicKey;
 		const sharedSecret = source.sharedSecret;
-		source.transmitKey = blake3(sharedSecret);
+		source.transmitKey = combineKeys(source.transmitKey, sharedSecret);
 		source.receiveKey = source.transmitKey;
-		console.log('kyberSharedSecret', sharedSecret[0]);
+		clearBuffer(source.sharedSecret);
 		source.sharedSecret = null;
-		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
-	},
-	async clientSetSession(source, destination) {
-		const destinationPublicKey = destination.publicKey;
-		const cipherText = destinationPublicKey;
-		const kyberPrivateKey = source.privateKey;
-		const kyberSharedSecret = await decapsulate(cipherText, kyberPrivateKey);
-		source.transmitKey = blake3(kyberSharedSecret);
-		source.receiveKey = source.transmitKey;
-		console.log('clientSetSession kyberSharedSecret', kyberSharedSecret[0], kyberSharedSecret.length);
+		source.nextSession = null;
+		console.log('kyberSharedSecret', sharedSecret[0]);
 		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
 	generateSeed() {
@@ -75,78 +143,9 @@ export const kyber768_xChaCha = {
 		const target = await encryptionKeypair(kyberSeed);
 		return target;
 	},
-	async clientEphemeralKeypair() {
-		const source = await kyber768_xChaCha.keypair();
-		return source;
-	},
-	// async serverEphemeralKeypair(source = {}, destination) {
-	// 	const destinationPublicKey = destination.publicKey;
-	// 	const {
-	// 		cipherText,
-	// 		sharedSecret
-	// 	} = await encapsulate(destinationPublicKey);
-	// 	source.publicKey = cipherText;
-	// 	source.sharedSecret = sharedSecret;
-	// 	console.log('client kyberSharedSecret', sharedSecret[0], sharedSecret.length);
-	// 	console.log('client cipherText', cipherText[0], cipherText.length);
-	// 	return source;
-	// },
 	async certificateEncryptionKeypair() {
 		const target = await encryptionKeypair();
 		return target;
-	},
-	async clientExtendedHandshake(source, destination) {
-		console.log('clientExtendedHandshake');
-		const destinationPublicKey = destination.publicKey;
-		const {
-			cipherText,
-			sharedSecret
-		} = await encapsulate(destinationPublicKey);
-		source.sharedSecret = sharedSecret;
-		console.log('client kyberSharedSecret', sharedSecret[0], sharedSecret.length);
-		console.log('client cipherText', cipherText[0], cipherText.length);
-		const frame = [
-			false, extendedHandshakeRPC, cipherText
-		];
-		return source;
-	},
-	async sendClientExtendedHandshake(source, destination) {
-		const destinationPublicKey = destination.publicKey;
-		const {
-			cipherText,
-			sharedSecret
-		} = await encapsulate(destinationPublicKey);
-		const frame = [
-			false,
-			extendedHandshakeRPC,
-			destinationPublicKey
-		];
-		destination.sharedSecret = sharedSecret;
-		return frame;
-	},
-	async serverExtendedHandshake(source, destination, frame, header) {
-		const [
-			streamid_undefined,
-			rpc,
-			cipherText
-		] = frame;
-		console.log('serverExtendedHandshake');
-		const kyberPrivateKey = source.privateKey;
-		const kyberSharedSecret = await decapsulate(cipherText, kyberPrivateKey);
-		source.transmitKey = blake3CombineKeys(source.transmitKey, kyberSharedSecret);
-		source.receiveKey = source.transmitKey;
-		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
-	},
-	async sendServerExtendedHandshake(source, destination) {
-		const frame = [
-			false,
-			extendedHandshakeRPC,
-		];
-	},
-	async clientExtendedHandshakeComplete(source, destination) {
-		source.transmitKey = blake3CombineKeys(source.transmitKey, source.sharedSecret);
-		source.receiveKey = source.transmitKey;
-		source.sharedSecret = null;
 	},
 	decrypt,
 	encrypt,

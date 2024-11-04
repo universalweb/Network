@@ -66,14 +66,13 @@ export const kyber768Half_x25519 = {
 		source.sharedSecret = null;
 		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
-	async clientSetSession(source, destination) {
-		const destinationPublicKey = destination.publicKey;
+	async clientSetSession(source, destination, cipherData) {
 		const sourceKeypair25519 = {
 			publicKey: get25519Key(source.publicKey),
 			privateKey: get25519Key(source.privateKey)
 		};
-		const x25519SessionKeys = clientSetSession(sourceKeypair25519, get25519Key(destinationPublicKey), source);
-		const cipherText = getKyberKey(destinationPublicKey);
+		const x25519SessionKeys = clientSetSession(sourceKeypair25519, get25519Key(cipherData), source);
+		const cipherText = getKyberKey(cipherData);
 		const kyberPrivateKey = getKyberKey(source.privateKey);
 		console.log(cipherText, kyberPrivateKey);
 		const kyberSharedSecret = await decapsulate(cipherText, kyberPrivateKey);

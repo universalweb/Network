@@ -19,3 +19,8 @@ Make sure that client cant choose incompatible cipher based on encryption keypai
 Modify certs so that encryption keypair algorithm is specified so that hybrid options can exist?
 this allows clients to auto choose the best ciphersuite according to the encryption algorithm used
 Make encryption keypair hybrid of both to support kyber half, x25519, kyber, or x25519kyber(strict)
+Auto/manual update client and or server's IP & Port
+timeout for extended header
+Set state when session is completed fully so that those steps cant be re-done
+Update all crypto middleware double check all files
+Change update states to use predefined variables instead of numbers

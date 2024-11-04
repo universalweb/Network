@@ -71,22 +71,18 @@ export class Client {
 		this.cipherSuites = cipherSuites;
 		return this.initialize(config);
 	}
-	async initializeSession() {
+	async initializeSession(cipherData) {
 		console.log('Client Initialize session');
 		if (this.cipherSuite.serverInitializeSession) {
-			await this.cipherSuite.serverInitializeSession(this, this.destination);
+			await this.cipherSuite.serverInitializeSession(this, this.destination, cipherData);
 		}
 		success(`receiveKey: ${toHex(this.receiveKey)}`);
 		success(`transmitKey: ${toHex(this.transmitKey)}`);
 	}
-	async setSession(targetSession) {
+	async setSession(cipherData) {
 		console.log('Client Set Session');
-		if (targetSession) {
-			this.nextSession = targetSession;
-		}
-		assign(this, this.nextSession);
-		this.nextSession = null;
-		await this.cipherSuite.serverSetSession(this, this.destination);
+		await this.cipherSuite.serverSetSession(this, this.destination, cipherData);
+		this.sessionCompleted = null;
 		success(`receiveKey: ${toHex(this.receiveKey)}`);
 		success(`transmitKey: ${toHex(this.transmitKey)}`);
 	}
@@ -97,7 +93,7 @@ export class Client {
 		const [
 			connectionId,
 			rpc,
-			publicKey,
+			cipherData,
 			clientId,
 			cipherSuiteId,
 			version,
@@ -105,11 +101,8 @@ export class Client {
 			realtimeFlag,
 		] = header;
 		console.log('Client initialize Packet Header', header);
-		if (publicKey) {
-			success(`key: ${toHex(publicKey)}`);
-			this.destination.publicKey = publicKey;
-		} else {
-			console.trace('Client Public Key is missing');
+		if (cipherData) {
+			success(`cipherData: ${toHex(cipherData)}`);
 		}
 		const { certificate } = this.server();
 		if (hasValue(cipherSuiteId)) {
@@ -124,11 +117,8 @@ export class Client {
 			connectionIdSize: clientId.length,
 		});
 		this.latency = Date.now() - timeSent;
-		await this.initializeSession(this, this.destination);
-		if (this.cipherSuite.serverEphemeralKeypair) {
-			this.nextSession = await this.cipherSuite.serverEphemeralKeypair({}, this.destination);
-		}
 		success(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port} LATENCY = ${this.latency}`);
+		await this.initializeSession(cipherData);
 		await this.calculatePacketOverhead();
 		if (realtimeFlag === false) {
 			this.realtime = false;
@@ -142,31 +132,15 @@ export class Client {
 		info(`Client Intro -> - ID:${this.connectionIdString}`);
 		return this.sendIntro();
 	}
-	async sendExtendedHandshake(header, packetDecoded) {
-		const { destination } = this;
-		console.log('Sending Extended Handshake');
-		const extendedHandshakeFrame = await this.cipherSuite.sendServerExtendedHandshake(this, destination);
-		await this.send(extendedHandshakeFrame);
-	}
-	async extendedHandshake(frame, header, rinfo) {
-		this.handshaked();
-	}
 	// SERVER HELLO
-	// Add option for kyber to put everything in header
 	async sendIntro() {
-		console.log('Sending Server Intro');
 		const header = [];
 		const frame = [
 			false,
 			introRPC,
 			this.id
 		];
-		if (this.cipherSuite.publicKeyInServerIntroHeader) {
-			header[0] = introHeaderRPC;
-			header[1] = this.publicKey;
-		} else if (this.nextSession) {
-			frame[3] = this.nextSession.publicKey;
-		}
+		await this.cipherSuite.sendServerIntro(this, this.destination, frame, header);
 		// Change connection IP:Port to be the workers IP:Port
 		const scale = this.scale;
 		if (scale) {
@@ -175,6 +149,7 @@ export class Client {
 				frame[4] = true;
 			}
 		}
+		console.log('Sending Server Intro', frame, header);
 		// this.randomId
 		this.updateState(1);
 		if (header.length === 0) {
@@ -184,6 +159,21 @@ export class Client {
 		} else {
 			return this.send(frame, header);
 		}
+	}
+	async sendExtendedHandshake(header, packetDecoded) {
+		const { destination } = this;
+		console.log('Sending Extended Handshake');
+		const extendedHandshakeFrame = await this.cipherSuite.sendServerExtendedHandshake(this, destination);
+		await this.send(extendedHandshakeFrame);
+	}
+	async extendedHandshakeHeader(header, packetDecoded) {
+		console.log('extendedHandshakeHeader CALLED');
+	}
+	async extendedHandshake(frame, header, rinfo) {
+		console.log('Server Extended Handshake');
+		const { destination } = this;
+		await this.cipherSuite.serverExtendedHandshake(this, destination, frame, header);
+		await this.sendExtendedHandshake(header, frame);
 	}
 	// CLIENT DISCOVERY
 	async discovery(frame, header) {
@@ -196,8 +186,6 @@ export class Client {
 			false,
 			discoveryHeaderRPC,
 			this.id,
-			this.nextSession.publicKey,
-			this.randomId
 		];
 		this.updateState(1);
 		await this.send(null, header);
@@ -313,6 +301,7 @@ export class Client {
 	static type = 'serverClient';
 	isServerClient = true;
 	isServerEnd = true;
+	sessionCompleted = false;
 	initialize = initialize;
 	onConnected = onConnected;
 	initialGracePeriod = 1000;

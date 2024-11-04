@@ -39,8 +39,11 @@ export async function initialize(config) {
 			port
 		},
 	} = config;
-	this.scale = server?.scale;
 	const client = this;
+	client.scale = scale;
+	client.initialGracePeriod = initialGracePeriod;
+	client.heartbeat = heartbeat;
+	client.realtime = realtime;
 	client.connectionIdSize = connectionIdSize;
 	client.reservedConnectionIdSize = reservedConnectionIdSize;
 	// When changing to a new key you must first create new keys from scratch to replace these.
@@ -55,9 +58,6 @@ export async function initialize(config) {
 		ip,
 		port
 	});
-	this.initialGracePeriod = initialGracePeriod;
-	this.heartbeat = heartbeat;
-	this.realtime = realtime;
 	if (initialGracePeriod) {
 		this.initialGracePeriodCheck();
 	}
