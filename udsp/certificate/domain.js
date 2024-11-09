@@ -73,9 +73,6 @@ export async function createDomainCertificateObject(config = {}, options = {}) {
 	if (hasValue(signatureAlgorithm) && signatureAlgorithm !== 0) {
 		certificate.signatureAlgorithm = signatureAlgorithm;
 	}
-	if (hasValue(cipherSuites) && cipherSuites !== 0) {
-		certificate.cipherSuites = cipherSuites;
-	}
 	const signatureMethod = getSignatureAlgorithm(certificate.signatureAlgorithm, protocolVersion);
 	certificate.signatureAlgorithm = await signatureMethod.id;
 	if (!signatureKeypair) {
@@ -86,6 +83,11 @@ export async function createDomainCertificateObject(config = {}, options = {}) {
 	// console.log('cipherSuites', cipherSuites, encryptionKeypairAlgorithm, keyExchangeMethod);
 	if (!encryptionKeypair) {
 		certificate.encryptionKeypair = await keyExchangeMethod.certificateEncryptionKeypair();
+	}
+	if (hasValue(cipherSuites) && cipherSuites !== 0) {
+		certificate.cipherSuites = cipherSuites;
+	} else {
+		certificate.cipherSuites = keyExchangeMethod.cipherSuites;
 	}
 	// console.log('certificate', certificate);
 	return certificate;
@@ -177,21 +179,21 @@ export function rawToObjectDomainCertificate(rawObject, signature) {
 	};
 	if (isArray(signatureKeypair)) {
 		certificate.signatureKeypair = {
-			algo: signatureKeypair[0],
-			publicKey: signatureKeypair[1],
-			privateKey: signatureKeypair[2],
+			publicKey: signatureKeypair[1]
 		};
-	} else {
-		certificate.signatureKeypair = signatureKeypair;
+		certificate.signatureAlgorithm = signatureKeypair[0];
+		if (signatureKeypair[2]) {
+			certificate.signatureKeypair.privateKey = signatureKeypair[2];
+		}
 	}
 	if (isArray(encryptionKeypair)) {
 		certificate.encryptionKeypair = {
-			algo: encryptionKeypair[0],
 			publicKey: encryptionKeypair[1],
-			privateKey: encryptionKeypair[2],
 		};
-	} else {
-		certificate.encryptionKeypair = encryptionKeypair;
+		certificate.encryptionKeypairAlgorithm = encryptionKeypair[0];
+		if (encryptionKeypair[2]) {
+			certificate.encryptionKeypair.privateKey = encryptionKeypair[2];
+		}
 	}
 	if (signature) {
 		certificate.signature = signature;
@@ -274,8 +276,11 @@ export class PublicDomainCertificate extends UWCertificate {
 		const source = isString(config) ? await readStructured(config) : config;
 		this.array = source[0];
 		this.object = rawToObjectDomainCertificate(source[0], source[1]);
-		this.getCipherSuiteMethods();
+		this.setCipherSuiteMethods();
 		return this;
+	}
+	hasCipherSuite() {
+		return this.certificate.signatureKeypair.cip;
 	}
 }
 export async function publicDomainCertificate(...args) {

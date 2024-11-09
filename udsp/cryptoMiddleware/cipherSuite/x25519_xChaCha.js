@@ -49,7 +49,7 @@ export const x25519_xChaCha = {
 	async clientInitializeSession(source, destination) {
 		console.log('clientInitializeSession Destination', destination);
 		console.log('Public Key from destination', destination.publicKey[0]);
-		clientSetSessionAttach(source, destination);
+		await clientSetSessionAttach(source, destination);
 	},
 	async clientSetSession(source, destination, cipherData) {
 		destination.publicKey = cipherData;
@@ -75,7 +75,7 @@ export const x25519_xChaCha = {
 			assign(source, source.nextSession);
 			source.nextSession = null;
 		}
-		serverSetSessionAttach(source, destination);
+		await serverSetSessionAttach(source, destination);
 	},
 	async ephemeralKeypair(destination) {
 		const generatedKeypair = encryptionKeypair();

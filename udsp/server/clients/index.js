@@ -14,6 +14,7 @@ import {
 } from '@universalweb/acid';
 import { createEvent, removeEvent, triggerEvent } from '../../events.js';
 import { defaultClientConnectionIdSize, defaultServerConnectionIdSize } from '../../../defaults.js';
+import { discovery, sendDiscovery } from './protocolEvents/discovery.js';
 import {
 	discoveryHeaderRPC,
 	endHeaderRPC,
@@ -27,6 +28,11 @@ import {
 	introRPC
 } from '../../protocolFrameRPCs.js';
 import {
+	extendedHandshake,
+	extendedHandshakeHeader,
+	sendExtendedHandshake
+} from './protocolEvents/extendedHandshake.js';
+import {
 	failed,
 	imported,
 	info,
@@ -34,6 +40,7 @@ import {
 	msgSent,
 	success
 } from '#logs';
+import { intro, introHeader, sendIntro } from './protocolEvents/intro.js';
 import {
 	randomBuffer,
 	toHex,
@@ -69,6 +76,7 @@ export class Client {
 		};
 		this.socket = server.socket;
 		this.cipherSuites = cipherSuites;
+		this.certificate = certificate;
 		return this.initialize(config);
 	}
 	async initializeSession(cipherData) {
@@ -85,110 +93,6 @@ export class Client {
 		this.sessionCompleted = null;
 		success(`receiveKey: ${toHex(this.receiveKey)}`);
 		success(`transmitKey: ${toHex(this.transmitKey)}`);
-	}
-	// CLIENT HELLO
-	// Change from initialization to this for session stuff keep separate
-	async introHeader(header, packetDecoded) {
-		info(`Client Intro -> - ID:${this.connectionIdString}`);
-		const [
-			connectionId,
-			rpc,
-			cipherData,
-			clientId,
-			cipherSuiteId,
-			version,
-			timeSent,
-			realtimeFlag,
-		] = header;
-		console.log('Client initialize Packet Header', header);
-		if (cipherData) {
-			success(`cipherData: ${toHex(cipherData)}`);
-		}
-		const { certificate } = this.server();
-		if (hasValue(cipherSuiteId)) {
-			this.cipherSuite = certificate.getCipherSuite(cipherSuiteId);
-		}
-		if (!this.cipherSuite) {
-			this.close();
-			return false;
-		}
-		assign(this.destination, {
-			id: clientId,
-			connectionIdSize: clientId.length,
-		});
-		this.latency = Date.now() - timeSent;
-		success(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port} LATENCY = ${this.latency}`);
-		await this.initializeSession(cipherData);
-		await this.calculatePacketOverhead();
-		if (realtimeFlag === false) {
-			this.realtime = false;
-		}
-		if (packetDecoded.noMessage) {
-			console.log('Intro Packet has No message body');
-			return this.sendIntro();
-		}
-	}
-	async intro(frame, header, rinfo) {
-		info(`Client Intro -> - ID:${this.connectionIdString}`);
-		return this.sendIntro();
-	}
-	// SERVER HELLO
-	async sendIntro() {
-		const header = [];
-		const frame = [
-			false,
-			introRPC,
-			this.id
-		];
-		await this.cipherSuite.sendServerIntro(this, this.destination, frame, header);
-		// Change connection IP:Port to be the workers IP:Port
-		const scale = this.scale;
-		if (scale) {
-			const changeAddress = scale.changeAddress;
-			if (isTrue(changeAddress)) {
-				frame[4] = true;
-			}
-		}
-		console.log('Sending Server Intro', frame, header);
-		// this.randomId
-		this.updateState(1);
-		if (header.length === 0) {
-			return this.send(frame);
-		} else if (frame.length === 0) {
-			return this.send(null, header);
-		} else {
-			return this.send(frame, header);
-		}
-	}
-	async sendExtendedHandshake(header, packetDecoded) {
-		const { destination } = this;
-		console.log('Sending Extended Handshake');
-		const extendedHandshakeFrame = await this.cipherSuite.sendServerExtendedHandshake(this, destination);
-		await this.send(extendedHandshakeFrame);
-	}
-	async extendedHandshakeHeader(header, packetDecoded) {
-		console.log('extendedHandshakeHeader CALLED');
-	}
-	async extendedHandshake(frame, header, rinfo) {
-		console.log('Server Extended Handshake');
-		const { destination } = this;
-		await this.cipherSuite.serverExtendedHandshake(this, destination, frame, header);
-		await this.sendExtendedHandshake(header, frame);
-	}
-	// CLIENT DISCOVERY
-	async discovery(frame, header) {
-		info(`Client Discovery -> - ID:${this.connectionIdString}`, frame, header);
-		return this.sendDiscovery(frame, header);
-	}
-	// SERVER DISCOVERY
-	async sendDiscovery() {
-		const header = [
-			false,
-			discoveryHeaderRPC,
-			this.id,
-		];
-		this.updateState(1);
-		await this.send(null, header);
 	}
 	updateState(state) {
 		if (this.destroyed) {
@@ -271,7 +175,7 @@ export class Client {
 		return this.send(frame, undefined, undefined, true);
 	}
 	async end(frame, header) {
-		console.log(`Destroying client ${this.connectionIdString}`, frame, header);
+		console.log(`END RPC Destroying client ${this.connectionIdString}`, frame, header);
 		await this.sendEnd();
 		await this.destroy(0);
 	}
@@ -292,6 +196,12 @@ export class Client {
 		overhead: {},
 		connectionIdSize: defaultClientConnectionIdSize
 	};
+	introHeader = introHeader;
+	intro = intro;
+	sendIntro = sendIntro;
+	extendedHandshake = extendedHandshake;
+	extendedHandshakeHeader = extendedHandshakeHeader;
+	sendExtendedHandshake = sendExtendedHandshake;
 	pending = false;
 	state = 0;
 	randomId = randomBuffer(8);

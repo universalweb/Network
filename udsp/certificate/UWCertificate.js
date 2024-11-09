@@ -44,14 +44,30 @@ export class UWCertificate {
 	getEncryptionKeypairAlgorithm() {
 		return getEncryptionKeypairAlgorithm(this.object.encryptionKeypairAlgorithm, this.getCertificateVersion());
 	}
-	getCipherSuite(suiteName) {
-		return getCipherSuite(suiteName, this.getProtocolVersion());
+	getCipherSuite(suiteID) {
+		if (!this.cipherSuiteMethods) {
+			this.setCipherSuiteMethods();
+		}
+		if (hasValue(suiteID)) {
+			const target = this.cipherSuiteMethods.find((item) => {
+				return item.id === suiteID;
+			});
+			return target;
+		}
+		return this.cipherSuiteMethods[0];
 	}
 	getCipherSuites() {
-		return getCipherSuites(this.object.cipherSuites, this.getProtocolVersion());
+		return getCipherSuites(this.object.cipherSuites || this.getEncryptionKeypairAlgorithm().supported, this.getProtocolVersion());
 	}
-	getCipherSuiteMethods() {
+	setCipherSuiteMethods() {
+		const source = this;
 		this.cipherSuiteMethods = this.getCipherSuites();
+		this.cipherSuiteMethods.forEach((item) => {
+			source[`hashCipherSuite${item.id}`] = true;
+		});
+	}
+	getSupportedCipherSuites() {
+		return this.getEncryptionKeypairAlgorithm().supported;
 	}
 	findCipherSuiteMethod(id) {
 		if (!this.cipherSuiteMethods) {

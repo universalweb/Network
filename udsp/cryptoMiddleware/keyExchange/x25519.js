@@ -138,6 +138,10 @@ export const x25519 = {
 	name: 'x25519',
 	alias: 'x25519',
 	id: 0,
+	cipherSuites: [
+		0,
+		1
+	],
 	serverSetSessionAttach,
 	clientSetSession,
 	serverSetSession,

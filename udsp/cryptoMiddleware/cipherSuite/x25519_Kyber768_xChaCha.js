@@ -51,19 +51,4 @@ export const x25519_kyber768_xchacha20 = {
 	serverEphemeralKeypair,
 	certificateEncryptionKeypair,
 };
-// EXAMPLE
-// const ogServer = await encryptionKeypair25519();
-// const client = await x25519_kyber768Half_xchacha20.clientEphemeralKeypair();
-// await x25519_kyber768Half_xchacha20.clientInitializeSession(client, ogServer);
-// await x25519_kyber768Half_xchacha20.serverInitializeSession(ogServer, client);
-// console.log('CLIENT INITIALIZED', client);
-// console.log('OG SERVER', ogServer);
-// const server = await x25519_kyber768Half_xchacha20.serverEphemeralKeypair({}, client);
-// await x25519_kyber768Half_xchacha20.clientSetSession(client, server);
-// await x25519_kyber768Half_xchacha20.serverSetSession(server, client);
-// console.log(Buffer.compare(server.transmitKey, client.receiveKey) === 0);
-// console.log('CLIENT', client);
-// console.log('SERVER', server);
-// // TRY AND KEEP ESTIMATED MAX BELOW 1280 (1232)
-// console.log('ESTIMATED MAX PACKET SERVER/CLIENT INTRO', 104 + server.publicKey.length, 'KYBER-CIPHERTEXT-OVERHEAD', server.publicKey.length);
-// console.log(await x25519_kyber768Half_xchacha20.keypair(), await x25519_kyber768Half_xchacha20.keypair());
+

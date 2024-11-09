@@ -130,6 +130,7 @@ export class Server extends UDSP {
 			this.publicKey = encryptionKeypair.publicKey;
 			this.privateKey = encryptionKeypair.privateKey;
 			this.version = this.certificate.get('version');
+			this.certificate.setCipherSuiteMethods();
 		}
 	}
 	async send(packet, destination) {
@@ -221,34 +222,6 @@ export class Server extends UDSP {
 	// SWITCH TO BINARY SEARCH FOR CLIENTS FOR FASTER LOOKUP
 	clients = construct(Map);
 	initialGracePeriod = 5000;
-	connectionIdEncryption() {
-		const encryptConnectionId = this.certificate.get('encryptConnectionId');
-		if (encryptConnectionId) {
-			const {
-				server: encryptServerCid,
-				client: encryptClientCid,
-				keypair: connectionIdKeypair
-			} = encryptConnectionId;
-			let encryptServer = hasValue(encryptServerCid);
-			let encryptClient = hasValue(encryptClientCid);
-			if (!encryptServer && !encryptClient) {
-				encryptServer = true;
-				encryptClient = true;
-			}
-			if (encryptServer) {
-				this.encryptServerConnectionId = true;
-				if (connectionIdKeypair) {
-					this.connectionIdKeypair = connectionIdKeypair;
-				} else {
-					this.connectionIdKeypair = this.encryptionKeypair;
-				}
-			}
-			if (encryptClient) {
-				this.encryptClientConnectionId = true;
-			}
-			console.log(`Encrypt Connection ID Server ${encryptServer} Client ${encryptClient}`);
-		}
-	}
 }
 export async function server(...args) {
 	return construct(Server, args);
