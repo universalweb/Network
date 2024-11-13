@@ -31,6 +31,8 @@ export function addChild(target, source) {
 				source
 			];
 		}
+	} else if (isArray(target[1])) {
+		target[1].push(source);
 	} else {
 		target[2] = source;
 	}

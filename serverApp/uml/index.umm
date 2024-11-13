@@ -9,6 +9,15 @@ export const doctype = 'html';
 export const lang = 'en';
 // export const title = 'UML Module';
 // export const meta = [];
+// export const doc = {
+// 	type: 'html',
+// 	lang: 'en',
+// 	title: 'UML Module',
+// 	meta: [],
+//  style: [],
+//  script: [],
+// 	head: []
+// };
 export const head = {
 	title: 'UML Module',
 	meta: [
