@@ -10,8 +10,8 @@ export const lang = 'en';
 // export const title = 'UML Module';
 // export const meta = [];
 // export const doc = {
-// 	type: 'html',
-// 	lang: 'en',
+// 	DEFAULT type: 'html',
+// 	DEFAULT lang: 'en',
 // 	title: 'UML Module',
 // 	meta: [],
 //  style: [],
@@ -57,6 +57,7 @@ export const footer = {
 	script: ['script.js']
 };
 /*
+	TEXT BASED UML SHORTHAND
 	FORMAT EXAMPLE
 	['div.className',
 		['div.className2',
@@ -66,6 +67,41 @@ export const footer = {
 			]
 		]
 	];
+	EXPERIMENTAL ALT SYNTAX  -> INVALID JS/JSON OBJECT SYNTAX
+	[div.className,
+		[div.className2,
+			[div#idName, {
+					attribute: 'value'
+				}
+			]
+		]
+	];
+	EXPERIMENTAL ALT SYNTAX  -> INVALID JS/JSON OBJECT SYNTAX
+	[div.className,
+		[div.className2,
+			[div#idName, attribute='value' ATTR2='value', 'TEXT']
+		]
+	];
+	EXPERIMENTAL ALT SYNTAX  -> INVALID JS/JSON OBJECT SYNTAX
+	div.className[
+		div.className2[
+			div#idName attribute='value' ATTR2='value' ['TEXT']
+		]
+	];
+	EXPERIMENTAL LISP LIKE ALTERNATIVE SYNTAX (MORE PRONE TO SYNTAX ISSUES)
+	div.className( div.className2( div#idName[attribute='value'] ))
+	div.className(
+		div.className2(
+			div#idName[attribute='value' data-example='example']('TEXT')
+		)
+	)
+	EXPERIMENTAL LISP LIKE ALTERNATIVE SHORT SYNTAX (MORE PRONE TO SYNTAX ISSUES)
+	div.className( div.className2( div#idName attribute='value' data-example='example'('TEXT') ))
+	div.className(
+		div.className2(
+			div#idName attribute='value' data-example='example' ('TEXT')
+		)
+	)
 */
 // UML EXAMPLE ['div.className',['div.className2',['div#idName',{attribute: 'value'}]]]
 // HTML EXAMPLE <div class="className"><div class="className2"><div id="idName" attribute="value"></div></div></div>
