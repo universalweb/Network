@@ -1,0 +1,64 @@
+import { UML } from '../../UML/index.js';
+import { encode } from '#utilities/serialize';
+// EXPERIMENTAL MARKUP NONE FUNCTIONAL
+// UMLS Universal Markup Language Script (Generate Markup CLient Side) SCRIPT & MARKUP
+// UMM Universal Markup Language Module (Generate Markup Module) MODULE & MARKUP
+// UMLSS Universal Markup Language Server Script (Generate Markup Server Side) SERVER SIDE SCRIPT & MARKUP
+// UML Universal Markup Language Served As a Binary
+export const doctype = 'html';
+export const lang = 'en';
+// export const title = 'UML Module';
+// export const meta = [];
+export const head = {
+	title: 'UML Module',
+	meta: [
+		{
+			charset: 'UTF-8'
+		},
+		{
+			name: 'viewport',
+			content: 'width=device-width, initial-scale=1.0'
+		},
+		{
+			description: 'UMM Universal Markup Module'
+		}
+	],
+	style: [
+		// SHORT HAND 'style.css',
+		{
+		// DEFAULT type: 'text/css',
+		// DEFAULT rel: 'stylesheet',
+			href: 'style.css'
+		}
+	],
+};
+export const body = [
+	'div.className',
+	[
+		'div.className2',
+		[
+			'div#idName', {
+				attribute: 'value'
+			}
+		]
+	]
+];
+// LOAD AFTER BODY TAG
+export const footer = {
+	script: ['script.js']
+};
+/*
+	FORMAT EXAMPLE
+	['div.className',
+		['div.className2',
+			['div#idName', {
+					attribute: 'value'
+				}
+			]
+		]
+	];
+*/
+// UML EXAMPLE ['div.className',['div.className2',['div#idName',{attribute: 'value'}]]]
+// HTML EXAMPLE <div class="className"><div class="className2"><div id="idName" attribute="value"></div></div></div>
+// export const data = await UML(doctype, lang, head, body});
+// await data.save(`${import.meta.url}../resources/index.uml`);

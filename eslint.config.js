@@ -35,7 +35,11 @@ export default [
 			'.eslintignore',
 			'**/*.mjs'
 		],
-		files: ['**/*.js'],
+		files: [
+			'**/*.js',
+			'**/*.umm',
+			'**/*.uml'
+		],
 		languageOptions: {
 			parser: babelParser,
 			parserOptions: {

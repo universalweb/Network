@@ -1,11 +1,47 @@
 import { decode, encode } from '#utilities/serialize';
-import { isBuffer } from '@universalweb/acid';
+import { isArray, isBuffer, isPlainObject } from '@universalweb/acid';
+export function div(attrs, contents) {
+	return [
+		'div', attrs, contents
+	];
+}
+export function head(attrs, contents) {
+	return [
+		'head', attrs, contents
+	];
+}
+export function body(attrs, contents) {
+	return [
+		'body', attrs, contents
+	];
+}
+export function html(attrs, contents) {
+	return [
+		'html', attrs, contents
+	];
+}
+export function addChild(target, source) {
+	const contents = target[2];
+	if (contents) {
+		if (isArray(contents)) {
+			contents.push(source);
+		} else {
+			target[2] = [
+				contents,
+				source
+			];
+		}
+	} else {
+		target[2] = source;
+	}
+}
 export class UML {
 	constructor(source) {
-		this.data = {
-			nodes: [],
-			edges: []
-		};
+		if (isPlainObject(source)) {
+			this.data = source;
+		}
+	}
+	async processDocument(source) {
 	}
 	async addNode(node) {
 		this.data.nodes.push(node);
