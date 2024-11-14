@@ -11,7 +11,7 @@ const UWCertificate = await domainCertificate({
 	// ownerHash: profile.getSignature(),
 	signatureAlgorithm: 1,
 	cipherSuites: [0, 1],
-	encryptionKeypairAlgorithm: 2,
+	encryptionKeypairAlgorithm: 0,
 	protocolOptions: {
 		realtime: true,
 	},

@@ -76,3 +76,6 @@ export const kyber768Half_x25519 = {
 		return x25519Keypair;
 	},
 };
+const keys = await kyber768Half_x25519.keypair();
+const c = Buffer.copyBytesFrom(keys.publicKey, 0, 32);
+console.log(c.length);

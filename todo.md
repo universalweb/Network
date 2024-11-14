@@ -24,6 +24,14 @@ timeout for extended header
 Set state when session is completed fully so that those steps cant be re-done
 Update all crypto middleware double check all files
 Change update states to use predefined variables instead of numbers
+
+Add security checks for crypto middleware and try/catch to deny and or gracefully close
+Remove unused Keypairs & CipherText/CipherData
+Consider pre-compiling keys if it saves space removing older or unused data
+
+COMPACT MODE (CONDENSE REQUESTS/RESPONCE MAXIMIZE MTU SIZE BY INCLUDING MULTIPLE FRAMES IN A SINGULAR PACKET)
 Multi FRAME REQUEST Packet condense requests to singular packet instead of sizes array of the frame used (SPEED UP REQUESTS) AUTO CALC sizes
 Multi FRAME RESPONSE Packet condense response to singular packet instead of sizes response AUTO CALC sizes
-Universal Markup Language CLASS & Examples
+
+JUMBO MODE
+A future feature which can take advantage of JUMBO Frames for intranet situations.

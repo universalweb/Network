@@ -54,7 +54,7 @@ export async function introHeader(header, packetDecoded, rinfo) {
 	const cipherData = header[2];
 	// Change to own function call to handle introHeader cipherData
 	if (cipherData) {
-		await this.setSession(cipherData);
+		await this.setSession(cipherData, null, header);
 	}
 	if (packetDecoded.noMessage) {
 		// Add Function that then receives the server extendedHandshakeHeader

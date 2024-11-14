@@ -43,7 +43,7 @@ export const x25519_xChaCha = {
 	speed: 1,
 	security: 0,
 	async clientEphemeralKeypair(destination) {
-		const generatedKeypair = encryptionKeypair();
+		const generatedKeypair = await encryptionKeypair();
 		return generatedKeypair;
 	},
 	async clientInitializeSession(source, destination) {
@@ -70,8 +70,6 @@ export const x25519_xChaCha = {
 	},
 	async serverSetSession(source, destination) {
 		if (source.nextSession) {
-			clearBuffer(source.publicKey);
-			clearBuffer(source.privateKey);
 			assign(source, source.nextSession);
 			source.nextSession = null;
 		}

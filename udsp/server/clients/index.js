@@ -88,7 +88,7 @@ export class Client {
 		success(`transmitKey: ${toHex(this.transmitKey)}`);
 	}
 	async setSession(cipherData) {
-		console.log('Client Set Session');
+		console.log('Server client Set Session');
 		await this.cipherSuite.serverSetSession(this, this.destination, cipherData);
 		this.sessionCompleted = null;
 		success(`receiveKey: ${toHex(this.receiveKey)}`);

@@ -94,6 +94,9 @@ export function blake3CombineKeys(key1, key2) {
 export function get25519Key(source) {
 	return source.slice(0, 32);
 }
+export function get2519KeyCopy(source) {
+	return Buffer.copyBytesFrom(source, 0, 32);
+}
 export function getKyberKey(source) {
 	return source.slice(32);
 }
