@@ -1,9 +1,11 @@
+/** @format */
 import * as defaultCrypto from '#crypto';
 import {
 	clientSetSession,
 	clientSetSessionAttach,
 	encryptionKeypair,
-	serverSetSessionAttach
+	serverSetSessionAttach,
+	x25519
 } from '../keyExchange/x25519.js';
 import {
 	createSessionKey,
@@ -11,30 +13,20 @@ import {
 	encrypt,
 	nonceBox
 } from '../encryption/XChaCha.js';
-import {
-	getPublicKeyFromPrivateKey,
-	sign,
-	signatureKeypair,
-	signatureKeypairToEncryptionKeypair,
-	signaturePrivateKeyToEncryptPrivateKey,
-	signaturePublicKeyToEncryptPublicKey,
-	verifySignature,
-	verifySignatureDetached,
-} from '../signature/ed25519.js';
 import { assign } from '@universalweb/acid';
 import { blake3 } from '../hash/blake3.js';
+import { kyber768_x25519 } from '../keyExchange/kyber768_x25519.js';
 const sodium = await import('sodium-native');
 const sodiumLib = sodium?.default || sodium;
 const {
-	crypto_kx_client_session_keys,
-	crypto_kx_server_session_keys,
-} = sodiumLib;
+	crypto_kx_client_session_keys, crypto_kx_server_session_keys
+} =
+	sodiumLib;
 const {
-	randomConnectionId,
-	randomBuffer,
-	toHex,
-	clearBuffer
-} = defaultCrypto;
+	randomConnectionId, randomBuffer, toHex, clearBuffer, get25519Key
+} =
+	defaultCrypto;
+const { id: encryptionKeypairID } = x25519;
 const hash = blake3.hash;
 export const x25519_xChaCha = {
 	name: 'x25519_xChaCha',
@@ -42,13 +34,19 @@ export const x25519_xChaCha = {
 	id: 0,
 	speed: 1,
 	security: 0,
+	encryptionKeypairID,
+	matchingKeyExchangeID: 0,
 	async clientEphemeralKeypair(destination) {
 		const generatedKeypair = await encryptionKeypair();
 		return generatedKeypair;
 	},
 	async clientInitializeSession(source, destination) {
 		console.log('clientInitializeSession Destination', destination);
-		console.log('Public Key from destination', destination.publicKey[0]);
+		console.log(
+			'Public Key from destination',
+			destination.publicKey[0],
+			destination.publicKey.length
+		);
 		await clientSetSessionAttach(source, destination);
 	},
 	async clientSetSession(source, destination, cipherData) {
@@ -61,7 +59,10 @@ export const x25519_xChaCha = {
 	},
 	async serverInitializeSession(source, destination, cipherData) {
 		destination.publicKey = cipherData;
-		source.nextSession = await x25519_xChaCha.serverEphemeralKeypair(source, destination);
+		source.nextSession = await x25519_xChaCha.serverEphemeralKeypair(
+			source,
+			destination
+		);
 		await serverSetSessionAttach(source, destination);
 	},
 	async sendServerIntro(source, destination, frame, header) {
@@ -85,10 +86,47 @@ export const x25519_xChaCha = {
 	async keypair(source) {
 		return encryptionKeypair(source);
 	},
+	hybridToX25519(target) {
+		console.log('Attaching Compatible Key SLICE to X25519');
+		const {
+			certificate: {
+				publicKeyX25519,
+				privateKeyX25519
+			}
+		} = target;
+		if (publicKeyX25519) {
+			target.publicKey = publicKeyX25519;
+		}
+		if (privateKeyX25519) {
+			target.privateKey = privateKeyX25519;
+		}
+	},
+	certificateKeypairCompatability(source, cipherSuiteId) {
+		const encryptionKeypairAlgorithmId =
+			source.certificate.encryptionKeypairAlgorithm.id;
+		if (encryptionKeypairAlgorithmId === cipherSuiteId) {
+			return;
+		}
+		if (encryptionKeypairAlgorithmId === kyber768_x25519.id) {
+			x25519_xChaCha.hybridToX25519(source);
+		}
+	},
+	certificateKeypairCompatabilityClient(source, destination) {
+		return x25519_xChaCha.certificateKeypairCompatability(
+			destination,
+			source.cipherSuite.id
+		);
+	},
+	certificateKeypairCompatabilityServer(source, destination) {
+		return x25519_xChaCha.certificateKeypairCompatability(
+			source,
+			source.cipherSuite.id
+		);
+	},
 	createSessionKey,
 	certificateEncryptionKeypair: encryptionKeypair,
 	decrypt,
 	encrypt,
 	preferred: true,
-	hash,
+	hash
 };

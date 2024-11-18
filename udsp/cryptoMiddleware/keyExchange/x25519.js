@@ -1,6 +1,7 @@
 import { bufferAlloc, randomBuffer } from '#utilities/crypto';
 import { RistrettoPoint } from '@noble/curves/ed25519';
 import { createSessionKey } from '../encryption/XChaCha.js';
+import { domainCertificate } from '#udsp/certificate/domain';
 const sodium = await import('sodium-native');
 const sodiumLib = sodium?.default || sodium;
 const {
@@ -134,14 +135,18 @@ export async function serverSetSessionAttach(source, destination) {
 export async function clientSetSessionAttach(source, destination) {
 	return clientSetSession(source, destination, source);
 }
+const publicKeySize = 32;
+const privateKeySize = 32;
 export const x25519 = {
 	name: 'x25519',
 	alias: 'x25519',
 	id: 0,
-	cipherSuites: [
-		0,
-		1
-	],
+	publicKeySize,
+	privateKeySize,
+	clientPublicKeySize: publicKeySize,
+	clientPrivateKeySize: privateKeySize,
+	serverPublicKeySize: publicKeySize,
+	serverPrivateKeySize: privateKeySize,
 	serverSetSessionAttach,
 	clientSetSession,
 	serverSetSession,
@@ -150,3 +155,6 @@ export const x25519 = {
 	encryptionKeypair,
 	certificateEncryptionKeypair: encryptionKeypair,
 };
+// const keypair = await encryptionKeypair();
+// console.log(keypair);
+// console.log(keypair.publicKey.length);

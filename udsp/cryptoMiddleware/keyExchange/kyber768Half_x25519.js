@@ -4,9 +4,12 @@ import {
 	clientSetSessionAttach,
 	encryptionKeypair as encryptionKeypair25519,
 	serverSetSession,
-	serverSetSessionAttach
+	serverSetSessionAttach,
+	x25519
 } from './x25519.js';
-import { decapsulate, encapsulate, encryptionKeypair } from './kyber768.js';
+import {
+	decapsulate, encapsulate, encryptionKeypair, kyber768
+} from './kyber768.js';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
 import { assign } from '@universalweb/acid';
 import { blake3 } from '@noble/hashes/blake3';
@@ -21,25 +24,28 @@ const {
 	getKyberKey,
 	clearBuffer
 } = defaultCrypto;
+const publicKeySize = x25519.publicKeySize + kyber768.publicKeySize;
+const privateKeySize = x25519.privateKeySize + kyber768.privateKeySize;
 export const kyber768Half_x25519 = {
 	name: 'kyber768Half_x25519',
 	alias: 'kyber768Half_x25519',
 	description: 'Crystals-Kyber768 Client only with X25519 and Blake3.',
 	id: 2,
-	ml_kem768,
 	preferred: true,
-	cipherSuites: [
-		0,
-		1
-	],
 	speed: 0,
 	security: 1,
-	compatibility: {
-		keyexchange: {
-			0: true,
-		}
+	cipherSuiteCompatibility: {
+		0: true,
+		1: true,
+		2: true,
+		3: true
 	},
-	hash: blake3,
+	publicKeySize,
+	privateKeySize,
+	clientPublicKeySize: publicKeySize,
+	clientPrivateKeySize: privateKeySize,
+	serverPublicKeySize: x25519.publicKeySize,
+	serverPrivateKeySize: x25519.privateKeySize,
 	generateSeed() {
 		return randomBuffer(64);
 	},
@@ -75,4 +81,6 @@ export const kyber768Half_x25519 = {
 		const x25519Keypair = await encryptionKeypair25519();
 		return x25519Keypair;
 	},
+	ml_kem768,
+	hash: blake3,
 };

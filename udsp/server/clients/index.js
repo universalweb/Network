@@ -84,6 +84,7 @@ export class Client {
 		if (this.cipherSuite.serverInitializeSession) {
 			await this.cipherSuite.serverInitializeSession(this, this.destination, cipherData);
 		}
+		this.sessionInitialized = true;
 		success(`receiveKey: ${toHex(this.receiveKey)}`);
 		success(`transmitKey: ${toHex(this.transmitKey)}`);
 	}

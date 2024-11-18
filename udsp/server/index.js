@@ -124,13 +124,18 @@ export class Server extends UDSP {
 		console.log('-------SERVER INITIALIZED-------');
 		return this;
 	}
-	configCryptography() {
+	async configCryptography() {
 		if (this.certificate) {
+			console.log('CERTIFICATE CRYPTO CONFIG STARTING');
 			const encryptionKeypair = this.certificate.get('encryptionKeypair');
 			this.publicKey = encryptionKeypair.publicKey;
 			this.privateKey = encryptionKeypair.privateKey;
 			this.version = this.certificate.get('version');
-			this.certificate.setCipherSuiteMethods();
+			await this.certificate.setCipherSuiteMethods();
+			await this.certificate.setEncryptionKeypairAlgorithm();
+			console.log('CERTIFICATE CRYPTO CONFIG COMPLETE');
+		} else {
+			console.log('NO CERTIFICATE CRYPTO CONFIG');
 		}
 	}
 	async send(packet, destination) {

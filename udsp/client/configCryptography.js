@@ -17,6 +17,11 @@ export async function configCryptography() {
 		console.log('CIPHER SUITES SUPPORTED', cipherSuites, certificate);
 		this.cipherSuite = certificate.cipherSuiteMethods[0];
 	}
+	if (this.cipherSuite) {
+		if (this.cipherSuite?.certificateKeypairCompatabilityClient) {
+			await this.cipherSuite.certificateKeypairCompatabilityClient(this, this.destination);
+		}
+	}
 	// console.log(this.cipherSuite);
 	assign(this, await this.cipherSuite.clientEphemeralKeypair());
 	await this.cipherSuite.clientInitializeSession(this, this.destination);

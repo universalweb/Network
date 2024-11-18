@@ -19,12 +19,20 @@ export async function encapsulate(sourceKeypair) {
 	const encapsulated = ml_kem768.encapsulate(sourceKeypair?.publicKey || sourceKeypair);
 	return encapsulated;
 }
+const publicKeySize = 1184;
+const privateKeySize = 2400;
 export const kyber768 = {
 	name: 'kyber768',
 	alias: 'kyber768',
 	id: 1,
-	ml_kem768,
 	preferred: true,
+	publicKeySize,
+	privateKeySize,
+	clientPublicKeySize: publicKeySize,
+	clientPrivateKeySize: privateKeySize,
+	serverPublicKeySize: publicKeySize,
+	serverPrivateKeySize: privateKeySize,
+	ml_kem768,
 	decapsulate,
 	encapsulate,
 	generateSeed() {
@@ -35,5 +43,5 @@ export const kyber768 = {
 };
 // const keypair = await encryptionKeypair();
 // console.log(keypair);
-// console.log(keypair.publicKey.length);
+// console.log(keypair.privateKey.length);
 // console.log(await encapsulate(keypair));

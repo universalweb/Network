@@ -10,8 +10,13 @@ const UWCertificate = await domainCertificate({
 	entity: 'universalweb.io',
 	// ownerHash: profile.getSignature(),
 	signatureAlgorithm: 1,
-	cipherSuites: [0, 1],
-	encryptionKeypairAlgorithm: 0,
+	cipherSuites: [
+		0,
+		1,
+		2,
+		3
+	],
+	encryptionKeypairAlgorithm: 3,
 	protocolOptions: {
 		realtime: true,
 	},

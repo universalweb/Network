@@ -54,7 +54,7 @@ export async function setDestination() {
 				this.ipVersion = 'udp4';
 			}
 		}
-		const realtime = destination.certificate.realtime;
+		const realtime = destination.certificate.get('realtime');
 		if (hasValue(realtime)) {
 			if (isUndefined(this.realtime) || realtime === true) {
 				this.realtime = realtime;

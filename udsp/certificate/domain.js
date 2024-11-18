@@ -275,12 +275,10 @@ export class PublicDomainCertificate extends UWCertificate {
 	async initialize(config) {
 		const source = isString(config) ? await readStructured(config) : config;
 		this.array = source[0];
-		this.object = rawToObjectDomainCertificate(source[0], source[1]);
-		this.setCipherSuiteMethods();
+		this.object = await rawToObjectDomainCertificate(source[0], source[1]);
+		await this.setCipherSuiteMethods();
+		await this.setEncryptionKeypairAlgorithm();
 		return this;
-	}
-	hasCipherSuite() {
-		return this.certificate.signatureKeypair.cip;
 	}
 }
 export async function publicDomainCertificate(...args) {

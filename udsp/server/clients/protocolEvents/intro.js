@@ -5,6 +5,11 @@ import { info, success } from '#logs';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
 import { introRPC } from '../../../protocolFrameRPCs.js';
 import { toHex } from '#crypto';
+async function certificateKeypairCompatability(source, destination, header, frame) {
+	if (source.cipherSuite?.certificateKeypairCompatabilityServer) {
+		await source.cipherSuite?.certificateKeypairCompatabilityServer(source, source, destination, header, frame);
+	}
+}
 // CLIENT HELLO
 // Change from initialization to this for session stuff keep separate
 export async function introHeader(header, packetDecoded) {
@@ -20,10 +25,14 @@ export async function introHeader(header, packetDecoded) {
 		realtimeFlag,
 	] = header;
 	console.log('Client initialize Packet Header', header);
+	const { certificate } = this;
 	if (cipherData) {
 		success(`cipherData in INTRO HEADER: ${toHex(cipherData)}`);
+	} else {
+		console.log('No cipherData in INTRO HEADER');
+		this.destroy();
+		return false;
 	}
-	const { certificate } = this;
 	if (hasValue(cipherSuiteId)) {
 		if (isNotNumber(cipherSuiteId) || cipherSuiteId > 99 || cipherSuiteId < 0) {
 			this.destroy();
@@ -41,6 +50,7 @@ export async function introHeader(header, packetDecoded) {
 	});
 	this.latency = Date.now() - timeSent;
 	success(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port} LATENCY = ${this.latency}`);
+	await certificateKeypairCompatability(this, this.destination, header);
 	await this.initializeSession(cipherData);
 	await this.calculatePacketOverhead();
 	if (realtimeFlag === false) {

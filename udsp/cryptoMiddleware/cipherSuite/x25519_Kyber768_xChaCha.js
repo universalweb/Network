@@ -34,10 +34,6 @@ export const x25519_kyber768_xchacha20 = {
 	preferred: true,
 	speed: 0,
 	security: 1,
-	compatibility: {
-		0: true,
-		1: true
-	},
 	hash,
 	decrypt,
 	encrypt,

@@ -42,7 +42,13 @@ export class UWCertificate {
 		return getSignatureAlgorithm(this.object.signatureAlgorithm, this.getCertificateVersion());
 	}
 	getEncryptionKeypairAlgorithm() {
-		return getEncryptionKeypairAlgorithm(this.object.encryptionKeypairAlgorithm, this.getCertificateVersion());
+		return getEncryptionKeypairAlgorithm(this?.object?.encryptionKeypairAlgorithm, this.getCertificateVersion());
+	}
+	setEncryptionKeypairAlgorithm() {
+		this.encryptionKeypairAlgorithm = this.getEncryptionKeypairAlgorithm();
+		if (this.encryptionKeypairAlgorithm?.prepareKeypair) {
+			this.encryptionKeypairAlgorithm.prepareKeypair(this);
+		}
 	}
 	getCipherSuite(suiteID) {
 		if (!this.cipherSuiteMethods) {
@@ -57,7 +63,7 @@ export class UWCertificate {
 		return this.cipherSuiteMethods[0];
 	}
 	getCipherSuites() {
-		return getCipherSuites(this.object.cipherSuites || this.getEncryptionKeypairAlgorithm().supported, this.getProtocolVersion());
+		return getCipherSuites(this.object.cipherSuites, this.getProtocolVersion());
 	}
 	setCipherSuiteMethods() {
 		const source = this;
@@ -65,9 +71,6 @@ export class UWCertificate {
 		this.cipherSuiteMethods.forEach((item) => {
 			source[`hashCipherSuite${item.id}`] = true;
 		});
-	}
-	getSupportedCipherSuites() {
-		return this.getEncryptionKeypairAlgorithm().supported;
 	}
 	findCipherSuiteMethod(id) {
 		if (!this.cipherSuiteMethods) {

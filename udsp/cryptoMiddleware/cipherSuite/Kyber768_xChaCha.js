@@ -1,7 +1,9 @@
 // Closed source not for private and or corporate use.
 import * as defaultCrypto from '#crypto';
 import { assign, clear, isBuffer } from '@universalweb/acid';
-import { decapsulate, encapsulate, encryptionKeypair } from '../keyExchange/kyber768.js';
+import {
+	decapsulate, encapsulate, encryptionKeypair, kyber768
+} from '../keyExchange/kyber768.js';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { extendedHandshakeRPC } from '../../../udsp/protocolFrameRPCs.js';
@@ -15,6 +17,7 @@ const {
 	blake3CombineKeys,
 	clearBuffer
 } = defaultCrypto;
+const { id: encryptionKeypairID, } = kyber768;
 const hash = blake3;
 const combineKeys = blake3CombineKeys;
 // Create User Kyber keypair send to server
@@ -29,12 +32,9 @@ export const kyber768_xChaCha = {
 	alias: 'kyber768',
 	description: 'Crystals-Kyber768 with XChaCha20 and Blake3.',
 	id: 2,
-	ml_kem768,
 	preferred: true,
 	speed: 0,
 	security: 1,
-	hash,
-	extendedHandshake: true,
 	async clientEphemeralKeypair() {
 		const source = await kyber768_xChaCha.keypair();
 		return source;
@@ -149,4 +149,8 @@ export const kyber768_xChaCha = {
 	},
 	decrypt,
 	encrypt,
+	ml_kem768,
+	hash,
+	extendedHandshake: true,
+	encryptionKeypairID,
 };

@@ -4,9 +4,12 @@ import {
 	clientSetSessionAttach,
 	encryptionKeypair as encryptionKeypair25519,
 	serverSetSession,
-	serverSetSessionAttach
+	serverSetSessionAttach,
+	x25519
 } from './x25519.js';
-import { decapsulate, encapsulate, encryptionKeypair } from '../keyExchange/kyber768.js';
+import {
+	decapsulate, encapsulate, encryptionKeypair, kyber768
+} from '../keyExchange/kyber768.js';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
 import { assign } from '@universalweb/acid';
 import { blake3 } from '@noble/hashes/blake3';
@@ -20,6 +23,8 @@ const {
 	get25519Key,
 	getKyberKey
 } = defaultCrypto;
+const publicKeySize = x25519.publicKeySize + kyber768.publicKeySize;
+const privateKeySize = x25519.privateKeySize + kyber768.privateKeySize;
 export const kyber768_x25519 = {
 	name: 'kyber768_x25519',
 	alias: 'kyber768_x25519',
@@ -29,11 +34,17 @@ export const kyber768_x25519 = {
 	preferred: true,
 	speed: 0,
 	security: 1,
-	compatibility: {
-		keyexchange: {
-			0: true,
-			1: true
-		}
+	publicKeySize,
+	privateKeySize,
+	clientPublicKeySize: publicKeySize,
+	clientPrivateKeySize: privateKeySize,
+	serverPublicKeySize: publicKeySize,
+	serverPrivateKeySize: privateKeySize,
+	cipherSuiteCompatibility: {
+		0: true,
+		1: true,
+		2: true,
+		3: true
 	},
 	hash: blake3,
 	// partial initial encryption on first packet
@@ -121,4 +132,19 @@ export const kyber768_x25519 = {
 		const target = await kyber768_x25519.keypair();
 		return target;
 	},
+	prepareKeypair(cert) {
+		const sourceKeypair = cert.get('encryptionKeypair');
+		if (sourceKeypair) {
+			const {
+				publicKey,
+				privateKey
+			} = sourceKeypair;
+			if (publicKey) {
+				cert.publicKeyX25519 = get25519Key(publicKey);
+			}
+			if (privateKey) {
+				cert.privateKeyX25519 = get25519Key(privateKey);
+			}
+		}
+	}
 };
