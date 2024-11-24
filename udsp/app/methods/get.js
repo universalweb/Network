@@ -39,6 +39,8 @@ export async function get(req, resp, client) {
 	}
 	const cleanedPath = cleanPath(`${resourceDirectory}/${compiledPath}`);
 	console.log(cleanedPath);
+	// const fileCheck = checkFileExists(cleanedPath);
+	// Check best way to check for file or just read it with try catch
 	try {
 		const fileData = await read(cleanedPath);
 		const ext = path.extname(cleanedPath).replace('.', '');

@@ -30,23 +30,6 @@ export const kyber768_x25519 = {
 	alias: 'kyber768_x25519',
 	description: 'Crystals-Kyber768 with X25519 and Blake3.',
 	id: 3,
-	ml_kem768,
-	preferred: true,
-	speed: 0,
-	security: 1,
-	publicKeySize,
-	privateKeySize,
-	clientPublicKeySize: publicKeySize,
-	clientPrivateKeySize: privateKeySize,
-	serverPublicKeySize: publicKeySize,
-	serverPrivateKeySize: privateKeySize,
-	cipherSuiteCompatibility: {
-		0: true,
-		1: true,
-		2: true,
-		3: true
-	},
-	hash: blake3,
 	// partial initial encryption on first packet
 	async clientInitializeSession(source, destination) {
 		const sourceKeypair25519 = {
@@ -146,5 +129,31 @@ export const kyber768_x25519 = {
 				cert.privateKeyX25519 = get25519Key(privateKey);
 			}
 		}
-	}
+	},
+	hash: blake3,
+	ml_kem768,
+	noneQuatumPublicKeySize: x25519.publicKeySize,
+	noneQuatumPrivateKeySize: x25519.privateKeySize,
+	quantumPublicKeySize: kyber768.publicKeySize,
+	quantumPrivateKeySize: kyber768.privateKeySize,
+	publicKeySize,
+	privateKeySize,
+	clientPublicKeySize: publicKeySize,
+	clientPrivateKeySize: privateKeySize,
+	serverPublicKeySize: publicKeySize,
+	serverPrivateKeySize: privateKeySize,
+	cipherSuiteCompatibility: {
+		recommended: 3,
+		postQuantumRecommended: 3,
+		lowestSupported: 0,
+		maxSupported: 3,
+		0: true,
+		1: true,
+		2: true,
+		3: true
+	},
+	preferred: true,
+	preferredPostQuantum: true,
+	speed: 0,
+	security: 1,
 };

@@ -1,6 +1,6 @@
 import { askRPC, replyRPC } from './rpcCodes.js';
 import { hasValue, isNotNumber, isNumber } from '@universalweb/acid';
-import { isMethodCodeValid } from '../../isMethodCodeValid.js';
+import { isMethodCodeValid, isRequestMethodCodeValid } from '../../isMethodCodeValid.js';
 export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 	if (source.receivedSetupPacket) {
 		console.log('Received Setup Packet Already RESEND ANSWER');
@@ -10,7 +10,7 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 	const { isAsk } = source;
 	source.totalReceivedUniquePackets++;
 	source.receivedSetupPacket = true;
-	let rpcMethod;
+	let requestMethodRPC;
 	let totalIncomingHeadSize;
 	let totalIncomingDataSize;
 	let totalIncomingPathSize;
@@ -26,17 +26,17 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 		[
 			,
 			,
-			rpcMethod,
+			requestMethodRPC,
 			totalIncomingPathSize,
 			totalIncomingParametersSize,
 			totalIncomingHeadSize,
 			totalIncomingDataSize
 		] = frame;
-		if (isMethodCodeValid(rpcMethod) === false) {
-			source.close();
-			return;
-		}
-		source.method = rpcMethod;
+		// if (isRequestMethodCodeValid(requestMethodRPC) === false) {
+		// 	source.close();
+		// 	return;
+		// }
+		source.method = requestMethodRPC;
 	}
 	console.log(`Setup Packet Received HEADER SIZE:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
 	if (hasValue(totalIncomingPathSize) && isNumber(totalIncomingPathSize)) {

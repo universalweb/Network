@@ -6,8 +6,9 @@ import {
 	msgSent,
 	success
 } from '#logs';
+import getMethod from '../methods/get.js';
 export async function get(path, parameters, data, headers, options) {
 	info(`POST => ${path}`);
-	const request = await this.request(0, path, parameters, data, headers, options);
+	const request = await this.request(getMethod.id, path, parameters, data, headers, options);
 	return request.send();
 }

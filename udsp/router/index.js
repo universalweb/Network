@@ -1,4 +1,5 @@
 import { isFunction, isZero } from '@universalweb/acid';
+import getMethod from '../methods/get.js';
 export class Router {
 	// constructor(options) {
 	// }
@@ -73,7 +74,7 @@ export class Router {
 	}
 	get(route, method) {
 		if (method) {
-			this.routesMethods[0].push([
+			this.routesMethods[getMethod.id].push([
 				route,
 				method
 			]);

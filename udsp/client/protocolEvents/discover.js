@@ -1,3 +1,6 @@
+// ADD DISCOVERY AVAILABLE FOR DOMAIN CERTIFICATES
+// DISCOURAGE DISCOVERY FOR PUBLIC CERTIFICATES FROM SERVERS
+// ENCOURAGE DISCOVERY FOR PUBLIC CERTIFICATES FROM THE DOMAIN INFORMATION SYSTEM
 import { clientStates } from '../../states.js';
 import { discoveryHeaderRPC } from '../../protocolHeaderRPCs.js';
 import { toHex } from '#crypto';
@@ -45,4 +48,8 @@ export async function sendDiscovery() {
 }
 export async function discovery(frame, header) {
 	this.discovered();
+}
+export	async function discovered() {
+	console.log('DISCOVERY COMPLETED -> CERTIFICATE LOADED');
+	await this.updateState(discoveredState);
 }
