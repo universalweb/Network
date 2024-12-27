@@ -113,7 +113,7 @@
 		"publish": "npm update && npm run bumpVersion && npm run changelog",
 		"varmemtest": "nodemon -expose-gc --watch 'memoryTests.js' memoryTests.js"
 	},
-	"version": "3.0.5",
+	"version": "3.0.6",
 	"devDependencies": {
 		"@babel/core": "^7.23.7",
 		"@babel/eslint-parser": "^7.23.3",
