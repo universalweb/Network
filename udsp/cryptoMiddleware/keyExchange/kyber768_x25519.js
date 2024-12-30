@@ -19,8 +19,8 @@ const {
 	randomBuffer,
 	toBase64,
 	toHex,
-	blake3CombineKeys,
-	get25519Key,
+	combineKeys,
+	getX25519Key,
 	getKyberKey
 } = defaultCrypto;
 const publicKeySize = x25519.publicKeySize + kyber768.publicKeySize;
@@ -33,11 +33,11 @@ export const kyber768_x25519 = {
 	// partial initial encryption on first packet
 	async clientInitializeSession(source, destination) {
 		const sourceKeypair25519 = {
-			publicKey: get25519Key(source.publicKey),
-			privateKey: get25519Key(source.privateKey)
+			publicKey: getX25519Key(source.publicKey),
+			privateKey: getX25519Key(source.privateKey)
 		};
 		const destinationPublicKey = destination.publicKey;
-		const destinationX25519PublicKey = get25519Key(destinationPublicKey);
+		const destinationX25519PublicKey = getX25519Key(destinationPublicKey);
 		console.log('clientInitializeSession Destination', destinationX25519PublicKey.length);
 		const x25519SessionKeys = clientSetSession(sourceKeypair25519, destinationPublicKey, source);
 		console.log('Public Key from destination', toHex(destinationX25519PublicKey));
@@ -45,7 +45,7 @@ export const kyber768_x25519 = {
 	},
 	async serverInitializeSession(source, destination) {
 		console.log('serverInitializeSession');
-		const x25519SessionKeys = serverSetSessionAttach(source, get25519Key(destination?.publicKey || destination));
+		const x25519SessionKeys = serverSetSessionAttach(source, getX25519Key(destination?.publicKey || destination));
 		console.log('Public Key from destination', toHex(destination.publicKey));
 		return x25519SessionKeys;
 	},
@@ -53,13 +53,13 @@ export const kyber768_x25519 = {
 		console.log('serverSetSession');
 		const destinationPublicKey = destination.publicKey;
 		const sourceKeypair25519 = {
-			publicKey: get25519Key(source.publicKey),
-			privateKey: get25519Key(source.privateKey)
+			publicKey: getX25519Key(source.publicKey),
+			privateKey: getX25519Key(source.privateKey)
 		};
-		const x25519SessionKeys = serverSetSession(sourceKeypair25519, get25519Key(destinationPublicKey), source);
+		const x25519SessionKeys = serverSetSession(sourceKeypair25519, getX25519Key(destinationPublicKey), source);
 		const sharedSecret = source.sharedSecret;
-		source.transmitKey = blake3CombineKeys(source.transmitKey, sharedSecret);
-		source.receiveKey = blake3CombineKeys(source.receiveKey, sharedSecret);
+		source.transmitKey = combineKeys(source.transmitKey, sharedSecret);
+		source.receiveKey = combineKeys(source.receiveKey, sharedSecret);
 		console.log('kyberSharedSecret', sharedSecret[0]);
 		source.sharedSecret = null;
 		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
@@ -67,17 +67,17 @@ export const kyber768_x25519 = {
 	async clientSetSession(source, destination) {
 		const destinationPublicKey = destination.publicKey;
 		const sourceKeypair25519 = {
-			publicKey: get25519Key(source.publicKey),
-			privateKey: get25519Key(source.privateKey)
+			publicKey: getX25519Key(source.publicKey),
+			privateKey: getX25519Key(source.privateKey)
 		};
-		const x25519SessionKeys = clientSetSession(sourceKeypair25519, get25519Key(destinationPublicKey), source);
+		const x25519SessionKeys = clientSetSession(sourceKeypair25519, getX25519Key(destinationPublicKey), source);
 		const cipherText = getKyberKey(destinationPublicKey);
 		const kyberPrivateKey = getKyberKey(source.privateKey);
 		console.log(cipherText, kyberPrivateKey);
 		const kyberSharedSecret = await decapsulate(cipherText, kyberPrivateKey);
 		console.log('clientSetSession kyberSharedSecret', kyberSharedSecret[0], kyberSharedSecret.length);
-		source.transmitKey = blake3CombineKeys(x25519SessionKeys.transmitKey, kyberSharedSecret);
-		source.receiveKey = blake3CombineKeys(x25519SessionKeys.receiveKey, kyberSharedSecret);
+		source.transmitKey = combineKeys(x25519SessionKeys.transmitKey, kyberSharedSecret);
+		source.receiveKey = combineKeys(x25519SessionKeys.receiveKey, kyberSharedSecret);
 		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
 	generateSeed() {
@@ -123,10 +123,10 @@ export const kyber768_x25519 = {
 				privateKey
 			} = sourceKeypair;
 			if (publicKey) {
-				cert.publicKeyX25519 = get25519Key(publicKey);
+				cert.publicKeyX25519 = getX25519Key(publicKey);
 			}
 			if (privateKey) {
-				cert.privateKeyX25519 = get25519Key(privateKey);
+				cert.privateKeyX25519 = getX25519Key(privateKey);
 			}
 		}
 	},
@@ -157,3 +157,9 @@ export const kyber768_x25519 = {
 	speed: 0,
 	security: 1,
 };
+export function getX25519Keypair(source) {
+	return {
+		publicKey: getX25519Key(source.publicKey),
+		privateKey: getX25519Key(source.privateKey)
+	};
+}

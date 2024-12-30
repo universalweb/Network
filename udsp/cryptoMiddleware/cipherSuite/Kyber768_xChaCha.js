@@ -14,12 +14,11 @@ const {
 	randomBuffer,
 	toBase64,
 	toHex,
-	blake3CombineKeys,
+	combineKeys,
 	clearBuffer
 } = defaultCrypto;
 const { id: encryptionKeypairID, } = kyber768;
 const hash = blake3;
-const combineKeys = blake3CombineKeys;
 // Create User Kyber keypair send to server
 // Server creates Kyber shared Secret & encapsulates it via user's public kyber key
 // Server sends cipher text in the header & encrypted intro frame to the user

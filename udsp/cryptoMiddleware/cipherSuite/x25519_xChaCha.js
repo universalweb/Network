@@ -19,13 +19,19 @@ import { kyber768_x25519 } from '../keyExchange/kyber768_x25519.js';
 const sodium = await import('sodium-native');
 const sodiumLib = sodium?.default || sodium;
 const {
-	crypto_kx_client_session_keys, crypto_kx_server_session_keys
-} =
-	sodiumLib;
+	crypto_kx_client_session_keys,
+	crypto_kx_server_session_keys
+} = sodiumLib;
 const {
-	randomConnectionId, randomBuffer, toHex, clearBuffer, get25519Key
-} =
-	defaultCrypto;
+	randomConnectionId,
+	randomBuffer,
+	toHex,
+	clearBuffer,
+	clearBuffers,
+	getX25519Key,
+	combineKeys,
+	combineSessionKeys
+} = defaultCrypto;
 const { id: encryptionKeypairID } = x25519;
 const hash = blake3.hash;
 export const x25519_xChaCha = {
@@ -50,8 +56,19 @@ export const x25519_xChaCha = {
 		await clientSetSessionAttach(source, destination);
 	},
 	async clientSetSession(source, destination, cipherData) {
+		const {
+			transmitKey: oldTransmitKey,
+			receiveKey: oldReceiveKey
+		} = source;
+		source.transmitKey = null;
+		source.receiveKey = null;
 		destination.publicKey = cipherData;
-		return clientSetSession(source, destination);
+		await clientSetSessionAttach(source, destination);
+		const {
+			transmitKey,
+			receiveKey
+		} = source;
+		combineSessionKeys(source, oldTransmitKey, oldReceiveKey);
 	},
 	async serverEphemeralKeypair(destination) {
 		const source = encryptionKeypair();
@@ -70,11 +87,18 @@ export const x25519_xChaCha = {
 		frame[3] = source.nextSession.publicKey;
 	},
 	async serverSetSession(source, destination) {
+		const {
+			transmitKey: oldTransmitKey,
+			receiveKey: oldReceiveKey
+		} = source;
+		source.transmitKey = null;
+		source.receiveKey = null;
 		if (source.nextSession) {
 			assign(source, source.nextSession);
 			source.nextSession = null;
 		}
 		await serverSetSessionAttach(source, destination);
+		combineSessionKeys(source, oldTransmitKey, oldReceiveKey);
 	},
 	async ephemeralKeypair(destination) {
 		const generatedKeypair = encryptionKeypair();

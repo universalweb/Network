@@ -82,30 +82,31 @@ export class Router {
 			this.routesAll.push(route);
 		}
 	}
-	post(route, method) {
-		this.routesMethods[1].push([
-			route,
-			method
-		]);
-	}
-	delete(route, method) {
-		this.routesMethods[0].push([
-			route,
-			method
-		]);
-	}
-	api(route, method) {
-		this.routesMethods[0].push([
-			route,
-			method
-		]);
-	}
-	update(route, method) {
-		this.routesMethods[0].push([
-			route,
-			method
-		]);
-	}
+	// NOT IMPLIMENTED PASSED THIS POINT
+	// post(route, method) {
+	// 	this.routesMethods[1].push([
+	// 		route,
+	// 		method
+	// 	]);
+	// }
+	// delete(route, method) {
+	// 	this.routesMethods[0].push([
+	// 		route,
+	// 		method
+	// 	]);
+	// }
+	// api(route, method) {
+	// 	this.routesMethods[0].push([
+	// 		route,
+	// 		method
+	// 	]);
+	// }
+	// update(route, method) {
+	// 	this.routesMethods[0].push([
+	// 		route,
+	// 		method
+	// 	]);
+	// }
 }
 export function router(...args) {
 	return new Router(...args);

@@ -30,7 +30,7 @@ import {
 import { Base } from './base.js';
 import { clientRequestObject } from './objects/client/request.js';
 import { clientResponseObject } from './objects/client/response.js';
-import { getMethodId } from '../methods.js';
+import { getMethodId } from '../methods/index.js';
 import { objectGetSetMethods } from './objects/objectGetSetMethods.js';
 export class Ask extends Base {
 	constructor(method = 0, path, parameters, data, head, options = {}, source) {

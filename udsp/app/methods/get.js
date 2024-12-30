@@ -9,6 +9,8 @@ const dots = /\./g;
  * @todo
  */
 const cache = {};
+// Might just want to read file and catch error instead of access checking
+// Need cache mechanisms built in
 async function checkFileExists(filePath) {
 	try {
 		await fs.access(filePath, fs.constants.F_OK);
@@ -17,7 +19,7 @@ async function checkFileExists(filePath) {
 		console.error('File does not exist');
 	}
 }
-export async function get(req, resp, client) {
+export async function getMethod(req, resp, client) {
 	const {
 		resourceDirectory,
 		defaultExtension,

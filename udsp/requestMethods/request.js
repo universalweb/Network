@@ -11,7 +11,7 @@ import {
 	msgSent,
 	success
 } from '#logs';
-import { getMethodId } from '../methods.js';
+import { getMethodId } from '../methods/index.js';
 // If path arg has params in it then paramArg becomes dataArg
 // params support both Complex Data Binary Supported Params and simple traditional URL percent encoded params
 export async function uwRequest(methodArg, pathArg, paramArg, dataArg, headersArg, optionsArg) {

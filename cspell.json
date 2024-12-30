@@ -1,17 +1,29 @@
 {
-    "version": "0.2",
-    "ignorePaths": [],
-    "dictionaryDefinitions": [],
-    "dictionaries": [],
-    "words": [
-        "cbor",
-        "cldmv",
-        "daisyui",
-        "iife",
-        "sarif",
-        "simc",
-        "uwrl"
-    ],
-    "ignoreWords": [],
-    "import": []
+	"version": "0.2",
+	"language": "en-US",
+	"files": [
+		"**/*.{js,jsx,ts,tsx,md,yml}"
+	],
+	"ignorePaths": [
+		"node_modules/**",
+		"**/.git/**",
+		"**/.github/**",
+		"**/package-lock.json",
+		"!./*"
+	],
+	"languageId": "javascript,json,markdown,plaintext",
+	"useGitignore": true,
+	"dictionaryDefinitions": [],
+	"dictionaries": [],
+	"words": [
+		"cbor",
+		"cldmv",
+		"daisyui",
+		"iife",
+		"sarif",
+		"simc",
+		"uwrl"
+	],
+	"ignoreWords": [],
+	"import": []
 }

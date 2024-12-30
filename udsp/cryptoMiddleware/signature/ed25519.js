@@ -5,18 +5,13 @@ const {
 	randomBuffer,
 	toBase64,
 	toHex,
-	blake3CombineKeys
+	combineKeys
 } = defaultCrypto;
 import { RistrettoPoint } from '@noble/curves/ed25519';
 import { blake3 } from '@noble/hashes/blake3';
 const sodium = await import('sodium-native');
 const sodiumLib = sodium?.default || sodium;
 const {
-	crypto_kx_keypair,
-	crypto_kx_PUBLICKEYBYTES,
-	crypto_kx_SECRETKEYBYTES,
-	crypto_kx_server_session_keys,
-	crypto_kx_SESSIONKEYBYTES,
 	crypto_sign,
 	crypto_sign_BYTES,
 	crypto_sign_detached,
@@ -25,27 +20,16 @@ const {
 	crypto_sign_PUBLICKEYBYTES,
 	crypto_sign_SECRETKEYBYTES,
 	crypto_sign_verify_detached,
-	crypto_box_seal,
-	crypto_box_SEALBYTES,
-	crypto_box_seal_open,
-	crypto_box_keypair,
-	crypto_box_PUBLICKEYBYTES,
-	crypto_box_SECRETKEYBYTES,
-	crypto_secretbox_easy,
-	crypto_secretbox_MACBYTES,
-	crypto_secretbox_NONCEBYTES,
-	crypto_secretbox_KEYBYTES,
 	crypto_sign_ed25519_pk_to_curve25519,
 	crypto_sign_ed25519_sk_to_curve25519,
 	crypto_sign_ed25519_sk_to_pk,
 	crypto_sign_ed25519_sk_to_seed,
 	crypto_sign_SEEDBYTES,
-	crypto_kx_seed_keypair,
-	crypto_box_easy,
-	crypto_box_open_easy,
-	crypto_box_NONCEBYTES,
-	crypto_box_MACBYTES
+	crypto_kx_PUBLICKEYBYTES,
+	crypto_kx_SECRETKEYBYTES
 } = sodiumLib;
+const publicKeySize = crypto_sign_PUBLICKEYBYTES;
+const privateKeySize = crypto_sign_SECRETKEYBYTES;
 export function signCombined(message, privateKey) {
 	const signedMessage = bufferAlloc(crypto_sign_BYTES + message.length);
 	crypto_sign(signedMessage, message, privateKey?.privateKey || privateKey);
@@ -79,30 +63,27 @@ export async function signatureKeypair(config) {
 	};
 }
 export function signaturePublicKeyToEncryptPublicKey(originalPublicKey) {
-	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);
+	const publicKey = bufferAlloc(crypto_kx_PUBLICKEYBYTES);
 	crypto_sign_ed25519_pk_to_curve25519(publicKey, originalPublicKey);
 	return publicKey;
 }
 export function signaturePrivateKeyToEncryptPrivateKey(originalPrivateKey) {
-	const privateKey = bufferAlloc(crypto_box_SECRETKEYBYTES);
+	const privateKey = bufferAlloc(crypto_kx_SECRETKEYBYTES);
 	crypto_sign_ed25519_sk_to_curve25519(privateKey, originalPrivateKey);
 	return privateKey;
 }
 export function signatureKeypairToEncryptionKeypair(originalKeypair) {
-	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);
-	crypto_sign_ed25519_pk_to_curve25519(publicKey, originalKeypair.publicKey);
-	const result = {
-		publicKey
-	};
+	const result = {};
+	if (originalKeypair.publicKey) {
+		result.publicKey = signaturePublicKeyToEncryptPublicKey(originalKeypair.publicKey);
+	}
 	if (originalKeypair.privateKey) {
-		const privateKey = bufferAlloc(crypto_box_SECRETKEYBYTES);
-		crypto_sign_ed25519_sk_to_curve25519(privateKey, originalKeypair.privateKey);
-		result.privateKey = privateKey;
+		result.privateKey = signaturePrivateKeyToEncryptPrivateKey(originalKeypair.privateKey);
 	}
 	return result;
 }
 export function getPublicKeyFromPrivateKey(privateKey) {
-	const publicKey = bufferAlloc(crypto_box_PUBLICKEYBYTES);
+	const publicKey = bufferAlloc(crypto_sign_PUBLICKEYBYTES);
 	crypto_sign_ed25519_sk_to_pk(publicKey, privateKey);
 	return publicKey;
 }
@@ -110,6 +91,8 @@ export const ed25519 = {
 	name: 'ed25519',
 	alias: 'default',
 	id: 0,
+	publicKeySize,
+	privateKeySize,
 	signatureKeypair,
 	sign,
 	verifySignature,

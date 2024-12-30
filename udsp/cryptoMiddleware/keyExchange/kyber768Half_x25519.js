@@ -19,8 +19,8 @@ const {
 	randomBuffer,
 	toBase64,
 	toHex,
-	blake3CombineKeys,
-	get25519Key,
+	combineKeys,
+	getX25519Key,
 	getKyberKey,
 	clearBuffer
 } = defaultCrypto;

@@ -12,11 +12,11 @@ const UWCertificate = await domainCertificate({
 	signatureAlgorithm: 1,
 	cipherSuites: [
 		0,
-		1,
-		2,
-		3
+		// 1,
+		// 2,
+		// 3
 	],
-	encryptionKeypairAlgorithm: 3,
+	encryptionKeypairAlgorithm: 0,
 	protocolOptions: {
 		realtime: true,
 	},

@@ -105,6 +105,9 @@ export function clientSetSession(client, serverPublicKey, target) {
 	const receiveKey = client?.receiveKey || createSessionKey();
 	const transmitKey = client?.transmitKey || createSessionKey();
 	crypto_kx_client_session_keys(receiveKey, transmitKey, client.publicKey, client.privateKey, serverPublicKey?.publicKey || serverPublicKey);
+	if (client.receiveKey) {
+		return;
+	}
 	if (target) {
 		target.receiveKey = receiveKey;
 		target.transmitKey = transmitKey;
@@ -119,6 +122,9 @@ export function serverSetSession(server, client, target) {
 	const receiveKey = server?.receiveKey || createSessionKey();
 	const transmitKey = server?.transmitKey || createSessionKey();
 	crypto_kx_server_session_keys(receiveKey, transmitKey, server.publicKey, server.privateKey, client?.publicKey || client);
+	if (server.receiveKey) {
+		return;
+	}
 	if (target) {
 		target.receiveKey = receiveKey;
 		target.transmitKey = transmitKey;
@@ -135,8 +141,8 @@ export async function serverSetSessionAttach(source, destination) {
 export async function clientSetSessionAttach(source, destination) {
 	return clientSetSession(source, destination, source);
 }
-const publicKeySize = 32;
-const privateKeySize = 32;
+const publicKeySize = crypto_kx_PUBLICKEYBYTES;
+const privateKeySize = crypto_kx_SECRETKEYBYTES;
 export const x25519 = {
 	name: 'x25519',
 	alias: 'x25519',

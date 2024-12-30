@@ -35,7 +35,6 @@ import { noStreamID } from '../utilities/hasConnectionID.js';
 import { onError } from './onError.js';
 import { onListen } from './onListen.js';
 import { onPacket } from './onPacket.js';
-import { requestMethods } from '../app/methods/index.js';
 import { sendPacket } from '#udsp/sendPacket';
 const { seal } = Object;
 /*

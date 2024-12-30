@@ -14,7 +14,7 @@ const {
 	randomBuffer,
 	toBase64,
 	toHex,
-	blake3CombineKeys
+	combineKeys
 } = defaultCrypto;
 export function createSeed(size = 32) {
 	const seed = randomBuffer(size);

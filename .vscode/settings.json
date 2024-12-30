@@ -75,5 +75,6 @@
 	"docwriter.style": "JSDoc",
 	"diffEditor.codeLens": true,
 	"MutableAI.upsell": false,
-	"todo-tree.tree.scanMode": "workspace only"
+	"todo-tree.tree.scanMode": "workspace only",
+	"editor.fontSize": 15
 }

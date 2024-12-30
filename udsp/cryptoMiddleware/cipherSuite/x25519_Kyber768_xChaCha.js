@@ -2,14 +2,18 @@
 import * as defaultCrypto from '#crypto';
 import { assign, clearBuffer, isBuffer } from '@universalweb/acid';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
+import { blake3 } from '@noble/hashes/blake3';
+import { encapsulate } from '../keyExchange/kyber768.js';
+import { extendedHandshakeRPC } from '../../protocolFrameRPCs.js';
 import { kyber768_x25519 } from '../keyExchange/kyber768_x25519.js';
+const hash = blake3;
 const {
 	randomConnectionId,
 	randomBuffer,
 	toBase64,
 	toHex,
-	blake3CombineKeys,
-	get25519Key,
+	combineKeys,
+	getX25519Key,
 	getKyberKey
 } = defaultCrypto;
 const {
@@ -23,7 +27,17 @@ const {
 	serverEphemeralKeypair,
 	certificateEncryptionKeypair,
 	ml_kem768,
-	hash
+	noneQuatumPublicKeySize,
+	noneQuatumPrivateKeySize,
+	quantumPublicKeySize,
+	quantumPrivateKeySize,
+	publicKeySize,
+	privateKeySize,
+	clientPublicKeySize,
+	clientPrivateKeySize,
+	serverPublicKeySize,
+	serverPrivateKeySize,
+	getX25519Keypair
 } = kyber768_x25519;
 export const x25519_kyber768_xchacha20 = {
 	name: 'x25519_kyber768_xchacha20',
@@ -34,17 +48,53 @@ export const x25519_kyber768_xchacha20 = {
 	preferred: true,
 	speed: 0,
 	security: 1,
-	hash,
-	decrypt,
-	encrypt,
-	clientInitializeSession,
-	serverInitializeSession,
-	serverSetSession,
-	clientSetSession,
-	generateSeed,
+	async clientEphemeralKeypair() {
+		const source = await keypair();
+		return source;
+	},
+	async clientInitializeSession(source, destination) {
+		const sourceKeypair25519 = getX25519Keypair(source);
+		console.log('clientInitializeSession Destination', destination);
+		const x25519SessionKeys = clientSetSession(sourceKeypair25519, destination, source);
+		console.log('Public Key from destination', toHex(destination.publicKey));
+		return x25519SessionKeys;
+	},
+	async sendClientExtendedHandshake(source, destination) {
+		const destinationPublicKey = destination.publicKey;
+		console.log('TRIGGERED sendClientExtendedHandshake');
+		console.log(destinationPublicKey.length);
+		const {
+			cipherText,
+			sharedSecret
+		} = await encapsulate(destinationPublicKey);
+		const frame = [
+			false,
+			extendedHandshakeRPC,
+			cipherText
+		];
+		source.cipherData = cipherText;
+		source.sharedSecret = sharedSecret;
+		console.log('sendClientExtendedHandshake kyberSharedSecret', sharedSecret[0], sharedSecret.length);
+		console.log('sendClientExtendedHandshake cipherText', cipherText[0], cipherText.length);
+		return frame;
+	},
+	async certificateEncryptionKeypair() {
+		const target = await keypair();
+		return target;
+	},
 	keypair,
-	clientEphemeralKeypair,
-	serverEphemeralKeypair,
-	certificateEncryptionKeypair,
+	noneQuatumPublicKeySize,
+	noneQuatumPrivateKeySize,
+	quantumPublicKeySize,
+	quantumPrivateKeySize,
+	publicKeySize,
+	privateKeySize,
+	clientPublicKeySize,
+	clientPrivateKeySize,
+	serverPublicKeySize,
+	serverPrivateKeySize,
+	hash,
+	encrypt,
+	decrypt,
 };
 

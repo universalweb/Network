@@ -3,7 +3,7 @@
 */
 import { app } from '#udsp';
 import { currentPath } from '@universalweb/acid';
-import { get } from '../udsp/app/methods/get.js';
+import { getMethod } from '../udsp/app/methods/get.js';
 import { info } from '#logs';
 import { listen } from '../udsp/server/listen.js';
 import path from 'node:path';
@@ -58,7 +58,7 @@ const uwApp = await app({
 if (uwApp) {
 	uwApp.get((req, resp, client) => {
 		info('GET REQUEST APP LEVEL');
-		return get(req, resp, client);
+		return getMethod(req, resp, client);
 	});
 	uwApp.listen();
 }
