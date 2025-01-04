@@ -5,7 +5,6 @@ import { randomBuffer } from '#crypto';
 import { slh_dsa_sha2_128f as sph } from '@noble/post-quantum/slh-dsa';
 import { x25519 } from '@noble/curves/ed25519';
 import zlib from 'node:zlib';
-// TODO: Implement Kyber1024, Kyber512, Kyber768 into one option for encryption
 const seed = randomBuffer(64);
 async function doKyber() {
 	// const aliceSigKeys = sph.keygen();

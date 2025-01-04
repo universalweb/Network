@@ -1,6 +1,6 @@
 // Closed source not for private and or corporate use.
 import * as defaultCrypto from '#crypto';
-import { assign, clearBuffer, isBuffer } from '@universalweb/acid';
+import { assign, clear, isBuffer } from '@universalweb/acid';
 import {
 	clientSetSession,
 	encryptionKeypair as encryptionKeypair25519,
@@ -19,7 +19,9 @@ const {
 	combineKeys,
 	getX25519Key,
 	getKyberKey,
-	get2519KeyCopy
+	get25519KeyCopy,
+	clearBuffers,
+	clearBuffer
 } = defaultCrypto;
 const {
 	generateSeed,
@@ -59,20 +61,28 @@ export const x25519_kyber768Half_xchacha20 = {
 			publicKey: getX25519Key(source.publicKey),
 			privateKey: getX25519Key(source.privateKey)
 		};
-		destination.publicKey = get2519KeyCopy(cipherData);
-		const x25519SessionKeys = clientSetSession(sourceKeypair25519, destination, source);
+		const {
+			transmitKey: oldTransmitKey,
+			receiveKey: oldReceiveKey
+		} = source;
+		destination.publicKey = get25519KeyCopy(cipherData);
+		const x25519SessionKeys = clientSetSession(sourceKeypair25519, destination, sourceKeypair25519);
 		const cipherText = getKyberKey(cipherData);
 		const kyberPrivateKey = getKyberKey(source.privateKey);
 		console.log(cipherText, kyberPrivateKey);
-		const kyberSharedSecret = await decapsulate(cipherText, kyberPrivateKey);
-		console.log('clientSetSession kyberSharedSecret', kyberSharedSecret[0], kyberSharedSecret.length);
-		source.transmitKey = combineKeys(source.transmitKey, kyberSharedSecret);
-		source.receiveKey = combineKeys(source.receiveKey, kyberSharedSecret);
+		const sharedSecret = await decapsulate(cipherText, kyberPrivateKey);
+		console.log('clientSetSession sharedSecret', sharedSecret[0], sharedSecret.length);
+		const newTransmitKey = combineKeys(oldTransmitKey, sourceKeypair25519.transmitKey, sharedSecret);
+		const newReceiveKey = combineKeys(oldReceiveKey, sourceKeypair25519.receiveKey, sharedSecret);
+		clearBuffers(oldTransmitKey, x25519SessionKeys.transmitKey, sharedSecret);
+		clearBuffers(oldReceiveKey, x25519SessionKeys.receiveKey);
+		source.transmitKey = newTransmitKey;
+		source.receiveKey = newReceiveKey;
 		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
 	async serverInitializeSession(source, destination, cipherData) {
 		console.log('serverInitializeSession CIPHER', toHex(cipherData));
-		destination.publicKey = get2519KeyCopy(cipherData);
+		destination.publicKey = get25519KeyCopy(cipherData);
 		await serverSetSessionAttach(source, destination);
 		source.nextSession = await kyber768Half_x25519.serverEphemeralKeypair(source, destination, cipherData);
 		clearBuffer(cipherData);
@@ -83,24 +93,29 @@ export const x25519_kyber768Half_xchacha20 = {
 		frame[3] = source.nextSession.publicKey;
 	},
 	async serverSetSession(source, destination) {
-		console.log('serverSetSession');
-		if (source.nextSession) {
-			assign(source, source.nextSession);
-			source.nextSession = null;
-			const sourceKeypair25519 = {
-				publicKey: getX25519Key(source.publicKey),
-				privateKey: getX25519Key(source.privateKey)
-			};
-			console.log('serverSetSession nextSession', sourceKeypair25519, destination);
-			const x25519SessionKeys = serverSetSession(sourceKeypair25519, destination, source);
-			const sharedSecret = source.sharedSecret;
-			source.transmitKey = combineKeys(source.transmitKey, sharedSecret);
-			source.receiveKey = combineKeys(source.receiveKey, sharedSecret);
-			console.log('kyberSharedSecret', sharedSecret[0]);
-			clearBuffer(sharedSecret);
-			source.sharedSecret = null;
-			console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
-		}
+		console.log('server Setting Session');
+		const {
+			nextSession,
+			transmitKey: oldTransmitKey,
+			receiveKey: oldReceiveKey
+		} = source;
+		const nextSessionKeypair25519 = {
+			publicKey: getX25519Key(nextSession.publicKey),
+			privateKey: getX25519Key(nextSession.privateKey)
+		};
+		console.log('serverSetSession nextSession', nextSessionKeypair25519, destination);
+		const x25519SessionKeys = serverSetSession(nextSessionKeypair25519, destination, nextSessionKeypair25519);
+		const sharedSecret = nextSession.sharedSecret;
+		const newTransmitKey = combineKeys(oldTransmitKey, x25519SessionKeys.transmitKey, sharedSecret);
+		const newReceiveKey = combineKeys(oldReceiveKey, x25519SessionKeys.receiveKey, sharedSecret);
+		clearBuffers(oldTransmitKey, x25519SessionKeys.transmitKey, sharedSecret);
+		clearBuffers(oldReceiveKey, x25519SessionKeys.receiveKey);
+		source.transmitKey = newTransmitKey;
+		source.receiveKey = newReceiveKey;
+		console.log('sharedSecret', sharedSecret[0]);
+		source.sharedSecret = null;
+		source.nextSession = null;
+		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
 	generateSeed,
 	keypair,

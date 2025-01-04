@@ -93,7 +93,6 @@ export function clearSessionKeys(source) {
 export function combineKeys(...sources) {
 	// console.log('Combine', key1, key2);
 	const combinedKeys = blake3(Buffer.concat(sources));
-	clearBuffers(...sources);
 	return combinedKeys;
 }
 export function combineSessionKeys(source, oldTransmitKey, oldReceiveKey) {
@@ -105,10 +104,25 @@ export function combineSessionKeys(source, oldTransmitKey, oldReceiveKey) {
 		source.receiveKey = combineKeys(oldReceiveKey, source.receiveKey);
 	}
 }
+export function combineKeysFreeMemory(...sources) {
+	// console.log('Combine', key1, key2);
+	const combinedKeys = blake3(Buffer.concat(sources));
+	clearBuffers(...sources);
+	return combinedKeys;
+}
+export function combineSessionKeysFreeMemory(source, oldTransmitKey, oldReceiveKey) {
+	console.log('combineSessionKeys', source.transmitKey, oldTransmitKey, source.receiveKey, oldReceiveKey);
+	if (oldTransmitKey) {
+		source.transmitKey = combineKeysFreeMemory(oldTransmitKey, source.transmitKey);
+	}
+	if (oldReceiveKey) {
+		source.receiveKey = combineKeysFreeMemory(oldReceiveKey, source.receiveKey);
+	}
+}
 export function getX25519Key(source) {
 	return source.slice(0, 32);
 }
-export function get2519KeyCopy(source) {
+export function get25519KeyCopy(source) {
 	return Buffer.copyBytesFrom(source, 0, 32);
 }
 export function getKyberKey(source) {

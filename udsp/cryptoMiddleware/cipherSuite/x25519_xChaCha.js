@@ -69,6 +69,7 @@ export const x25519_xChaCha = {
 			receiveKey
 		} = source;
 		combineSessionKeys(source, oldTransmitKey, oldReceiveKey);
+		clearBuffers(oldTransmitKey, oldReceiveKey);
 	},
 	async serverEphemeralKeypair(destination) {
 		const source = encryptionKeypair();
@@ -99,6 +100,7 @@ export const x25519_xChaCha = {
 		}
 		await serverSetSessionAttach(source, destination);
 		combineSessionKeys(source, oldTransmitKey, oldReceiveKey);
+		clearBuffers(oldTransmitKey, oldReceiveKey);
 	},
 	async ephemeralKeypair(destination) {
 		const generatedKeypair = encryptionKeypair();

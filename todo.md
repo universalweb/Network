@@ -41,3 +41,5 @@ A future feature which can take advantage of JUMBO Frames for intranet situation
 Add universal request type that can handle all data sections params data could be no reason to have method types or are they usefull to help determine what basic server operations
 
 consider hashing all prior generated keys into new ones
+
+Avoid repeated Math limit packet math to cached only

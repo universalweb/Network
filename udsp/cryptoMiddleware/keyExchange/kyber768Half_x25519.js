@@ -75,6 +75,8 @@ export const kyber768Half_x25519 = {
 			sharedSecret
 		};
 		clearBuffer(ephemeralKeypair.publicKey);
+		ephemeralKeypair.privateKey = null;
+		ephemeralKeypair.publicKey = null;
 		return target;
 	},
 	async certificateEncryptionKeypair() {

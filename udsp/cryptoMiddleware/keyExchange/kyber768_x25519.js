@@ -21,7 +21,8 @@ const {
 	toHex,
 	combineKeys,
 	getX25519Key,
-	getKyberKey
+	getKyberKey,
+	clearBuffer
 } = defaultCrypto;
 const publicKeySize = x25519.publicKeySize + kyber768.publicKeySize;
 const privateKeySize = x25519.privateKeySize + kyber768.privateKeySize;
@@ -58,9 +59,16 @@ export const kyber768_x25519 = {
 		};
 		const x25519SessionKeys = serverSetSession(sourceKeypair25519, getX25519Key(destinationPublicKey), source);
 		const sharedSecret = source.sharedSecret;
-		source.transmitKey = combineKeys(source.transmitKey, sharedSecret);
-		source.receiveKey = combineKeys(source.receiveKey, sharedSecret);
+		const {
+			transmitKey: oldTransmitKey,
+			receiveKey: oldReceiveKey
+		} = source;
+		source.transmitKey = combineKeys(oldTransmitKey, sharedSecret);
+		source.receiveKey = combineKeys(oldReceiveKey, sharedSecret);
 		console.log('kyberSharedSecret', sharedSecret[0]);
+		clearBuffer(sharedSecret);
+		clearBuffer(oldTransmitKey);
+		clearBuffer(oldReceiveKey);
 		source.sharedSecret = null;
 		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
@@ -73,7 +81,7 @@ export const kyber768_x25519 = {
 		const x25519SessionKeys = clientSetSession(sourceKeypair25519, getX25519Key(destinationPublicKey), source);
 		const cipherText = getKyberKey(destinationPublicKey);
 		const kyberPrivateKey = getKyberKey(source.privateKey);
-		console.log(cipherText, kyberPrivateKey);
+		// console.log(cipherText, kyberPrivateKey);
 		const kyberSharedSecret = await decapsulate(cipherText, kyberPrivateKey);
 		console.log('clientSetSession kyberSharedSecret', kyberSharedSecret[0], kyberSharedSecret.length);
 		source.transmitKey = combineKeys(x25519SessionKeys.transmitKey, kyberSharedSecret);

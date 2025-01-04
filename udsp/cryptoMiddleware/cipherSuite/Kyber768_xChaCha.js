@@ -15,7 +15,8 @@ const {
 	toBase64,
 	toHex,
 	combineKeys,
-	clearBuffer
+	clearBuffer,
+	clearBuffers
 } = defaultCrypto;
 const { id: encryptionKeypairID, } = kyber768;
 const hash = blake3;
@@ -63,8 +64,10 @@ export const kyber768_xChaCha = {
 	},
 	async clientExtendedHandshake(source, destination) {
 		console.log('TRIGGERED client ExtendedHandshake', source.transmitKey, source.sharedSecret);
-		source.transmitKey = combineKeys(source.transmitKey, source.sharedSecret);
+		const oldTransmitKey = source.transmitKey;
+		source.transmitKey = combineKeys(oldTransmitKey, source.sharedSecret);
 		source.receiveKey = source.transmitKey;
+		clearBuffer(oldTransmitKey);
 		clearBuffer(source.sharedSecret);
 		clearBuffer(source.cipherData);
 		source.sharedSecret = null;
@@ -127,8 +130,12 @@ export const kyber768_xChaCha = {
 	async serverSetSession(source, destination) {
 		console.log('serverSetSession');
 		const sharedSecret = source.sharedSecret;
-		source.transmitKey = combineKeys(source.transmitKey, sharedSecret);
+		const oldTransmitKey = source.transmitKey;
+		source.transmitKey = combineKeys(oldTransmitKey, sharedSecret);
 		source.receiveKey = source.transmitKey;
+		clearBuffer(oldTransmitKey);
+		clearBuffer(source.sharedSecret);
+		clearBuffer(source.cipherData);
 		clearBuffer(source.sharedSecret);
 		source.sharedSecret = null;
 		source.nextSession = null;

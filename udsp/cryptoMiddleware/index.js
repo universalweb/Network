@@ -1,4 +1,3 @@
-/* TODO: Add Mobile/Embedded Preferred option & algorithms. */
 import * as defaultCrypto from '#crypto';
 import {
 	assign,

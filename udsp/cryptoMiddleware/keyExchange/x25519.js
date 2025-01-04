@@ -106,7 +106,7 @@ export function clientSetSession(client, serverPublicKey, target) {
 	const transmitKey = client?.transmitKey || createSessionKey();
 	crypto_kx_client_session_keys(receiveKey, transmitKey, client.publicKey, client.privateKey, serverPublicKey?.publicKey || serverPublicKey);
 	if (client.receiveKey) {
-		return;
+		return client;
 	}
 	if (target) {
 		target.receiveKey = receiveKey;
