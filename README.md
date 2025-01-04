@@ -14,7 +14,7 @@
 <hr />
 
 <h3 align="center">ATTENTION</h3>
-<h4 align="center">Are you a dev? Want to go against the grain? Don't like ICANN, IETF, TCP, HTTP, bureaucratic committees and or the WWW? Then join the imperium today!</h4>
+<h4 align="center">Are you a dev? Want to go against the grain? Don't like ICANN, IETF, TCP, HTTP, bureaucratic committees and or the WWW? Then join the Imperium today!</h4>
 
 <p align="center">
     <small>To help just submit code or star this repo! All are welcome to the New Web Order.</small>
