@@ -9,15 +9,14 @@ await profile.saveToKeychain('profile.cert', `${dirname}/../profiles`, 'password
 const UWCertificate = await domainCertificate({
 	entity: 'universalweb.io',
 	// ownerHash: profile.getSignature(),
-	signatureAlgorithm: 3,
+	signatureAlgorithm: 0,
 	cipherSuites: [
-		0,
-		1,
+		// 0,
 		// 1,
-		// 2,
+		2,
 		// 3
 	],
-	encryptionKeypairAlgorithm: 0,
+	encryptionKeypairAlgorithm: 1,
 	protocolOptions: {
 		realtime: true,
 	},

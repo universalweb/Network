@@ -43,3 +43,11 @@ Add universal request type that can handle all data sections params data could b
 consider hashing all prior generated keys into new ones
 
 Avoid repeated Math limit packet math to cached only
+
+Figure out and try and workout if you can avoid putting the protocol method id in the header when its not needed
+
+Advertise UW devices on a local network (Announcement UPnP)
+
+Disover Local Network UW devices
+
+Ping packet - encrypted using domain certificates handshake/key exchange public key (mimic ICMP) (net-ping raw-socket)

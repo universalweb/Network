@@ -1,4 +1,24 @@
 // Closed source not for private and or corporate use.
+/*
+	SUMMARY:
+	In the first initial packet x25519 encryption can already be used.
+	Both the server and client have a functioning x25519 key exchange with their first packets.
+	From there the key exchange process incorporates the kyber768 key exchange.
+	Session keys are created by hashing the combined keys of the prior session keys and the new ones.
+	Hashing ensures that keys remain the same size, ensure consistant performance, reduces memory, and authenticates the domain certificate/server in the process.
+	Hashing prior keys ensures a continuous historical session.
+	PROCESS:
+	The client sends a x25519 public key & a kyber public key.
+	After the first packet is sent from the server the client & the server will generate a kyber shared secret based on the clients public kyber key.
+	The server will encapsulate the shared secret with the client's public kyber key.
+	The server will then send the encapsulated shared secret & a new ephemeral 25519 public key to the client
+	The client then completes the new x25519 key exchange.
+	The client will then use the new x25519 shared keys & the kyber shared secret
+	The client will use the domain certificate's public kyber key to generate another shared secret.
+	The client sends the encapsulated shared secret created from the kyber public key in the domain certificate to the server.
+	The client and server then update their session keys with the new shared secrets.
+	The session keys are hashed based on the prior session keys used initially.
+ */
 import * as defaultCrypto from '#crypto';
 import { assign, clearBuffer, isBuffer } from '@universalweb/acid';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
@@ -59,7 +79,8 @@ export const x25519_kyber768_xchacha20 = {
 		console.log('Public Key from destination', toHex(destination.publicKey));
 		return x25519SessionKeys;
 	},
-	async sendClientExtendedHandshake(source, destination) {
+	// CHANGE TO NEW HEADER & FRAME ARGS
+	async sendClientExtendedHandshake(source, destination, frame, header) {
 		const destinationPublicKey = destination.publicKey;
 		console.log('TRIGGERED sendClientExtendedHandshake');
 		console.log(destinationPublicKey.length);
@@ -67,16 +88,11 @@ export const x25519_kyber768_xchacha20 = {
 			cipherText,
 			sharedSecret
 		} = await encapsulate(destinationPublicKey);
-		const frame = [
-			false,
-			extendedHandshakeRPC,
-			cipherText
-		];
+		frame.push(cipherText);
 		source.cipherData = cipherText;
 		source.sharedSecret = sharedSecret;
 		console.log('sendClientExtendedHandshake kyberSharedSecret', sharedSecret[0], sharedSecret.length);
 		console.log('sendClientExtendedHandshake cipherText', cipherText[0], cipherText.length);
-		return frame;
 	},
 	async certificateEncryptionKeypair() {
 		const target = await keypair();
@@ -97,4 +113,4 @@ export const x25519_kyber768_xchacha20 = {
 	encrypt,
 	decrypt,
 };
-
+// copyright © Thomas Marchi

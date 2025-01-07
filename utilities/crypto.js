@@ -95,7 +95,7 @@ export function combineKeys(...sources) {
 	const combinedKeys = blake3(Buffer.concat(sources));
 	return combinedKeys;
 }
-export function combineSessionKeys(source, oldTransmitKey, oldReceiveKey) {
+export function combineSessionKeys(oldTransmitKey, oldReceiveKey, source) {
 	console.log('combineSessionKeys', source.transmitKey, oldTransmitKey, source.receiveKey, oldReceiveKey);
 	if (oldTransmitKey) {
 		source.transmitKey = combineKeys(oldTransmitKey, source.transmitKey);

@@ -1,13 +1,26 @@
 // Closed source not for private and or corporate use.
+// KYBER KEY EXCHANGE WITH BUILT IN DOMAIN CERTIFICATE & SERVER AUTHENTICATION WITH Perfect Forward Secrecy
+/*
+	Create User Kyber keypair send to server
+	Server creates Kyber shared Secret & encapsulates it via user's public kyber key
+	Server sends cipher text in the header & encrypted intro frame to the user
+	Server sets the session with the new secret keys
+	User first decapsulates ciphertext with user's private kyber key located in the header
+	User then sets the session with the new secret keys
+	Make sure to create a transmit and receive keys so both are unique to add an extra layer of security
+*/
 import * as defaultCrypto from '#crypto';
 import { assign, clear, isBuffer } from '@universalweb/acid';
 import {
-	decapsulate, encapsulate, encryptionKeypair, kyber768
+	decapsulate,
+	encapsulate,
+	encryptionKeypair,
+	kyber768
 } from '../keyExchange/kyber768.js';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
+import { extendedHandshakeHeaderRPC, introHeaderRPC } from '../../protocolHeaderRPCs.js';
+import { extendedHandshakeRPC, introRPC } from '../../protocolFrameRPCs.js';
 import { blake3 } from '@noble/hashes/blake3';
-import { extendedHandshakeRPC } from '../../../udsp/protocolFrameRPCs.js';
-import { introHeaderRPC } from '../../protocolHeaderRPCs.js';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
 const {
 	randomConnectionId,
@@ -20,13 +33,6 @@ const {
 } = defaultCrypto;
 const { id: encryptionKeypairID, } = kyber768;
 const hash = blake3;
-// Create User Kyber keypair send to server
-// Server creates Kyber shared Secret & encapsulates it via user's public kyber key
-// Server sends cipher text in the header & encrypted intro frame to the user
-// Server sets the session with the new secret keys
-// User first decapsulates ciphertext with user's private kyber key located in the header
-// User then sets the session with the new secret keys
-// PRIORITY: Make sure to swap Transmit and Receive keys so both are unique to add an extra layer of security
 export const kyber768_xChaCha = {
 	name: 'kyber768_xChaCha',
 	alias: 'kyber768',
@@ -43,7 +49,15 @@ export const kyber768_xChaCha = {
 		console.log('clientInitializeSession Destination', destination);
 		console.log('Public Key from destination', destination.publicKey[0]);
 	},
-	async sendClientExtendedHandshake(source, destination) {
+	async clientSetSession(source, destination, cipherData) {
+		const kyberPrivateKey = source.privateKey;
+		const sharedSecret = await decapsulate(cipherData, kyberPrivateKey);
+		console.log('clientSetSession kyberSharedSecret', sharedSecret[0], sharedSecret.length);
+		source.transmitKey = sharedSecret;
+		source.receiveKey = hash(sharedSecret);
+		console.log('New Session Keys', source.transmitKey[0], source.receiveKey[0]);
+	},
+	async sendClientExtendedHandshake(source, destination, frame, header) {
 		const destinationPublicKey = destination.publicKey;
 		console.log('TRIGGERED sendClientExtendedHandshake');
 		console.log(destinationPublicKey.length);
@@ -51,37 +65,40 @@ export const kyber768_xChaCha = {
 			cipherText,
 			sharedSecret
 		} = await encapsulate(destinationPublicKey);
-		const frame = [
-			false,
-			extendedHandshakeRPC,
-			cipherText
-		];
+		frame.push(cipherText);
 		source.cipherData = cipherText;
 		source.sharedSecret = sharedSecret;
 		console.log('sendClientExtendedHandshake kyberSharedSecret', sharedSecret[0], sharedSecret.length);
 		console.log('sendClientExtendedHandshake cipherText', cipherText[0], cipherText.length);
-		return frame;
 	},
 	async clientExtendedHandshake(source, destination) {
 		console.log('TRIGGERED client ExtendedHandshake', source.transmitKey, source.sharedSecret);
+		const sharedSecret = source.sharedSecret;
 		const oldTransmitKey = source.transmitKey;
+		const oldReceiveKey = source.receiveKey;
 		source.transmitKey = combineKeys(oldTransmitKey, source.sharedSecret);
-		source.receiveKey = source.transmitKey;
+		source.receiveKey = combineKeys(oldReceiveKey, source.sharedSecret);
 		clearBuffer(oldTransmitKey);
+		clearBuffer(oldReceiveKey);
 		clearBuffer(source.sharedSecret);
 		clearBuffer(source.cipherData);
 		source.sharedSecret = null;
 		source.cipherData = null;
 		console.log('TRIGGERED client ExtendedHandshake', source.transmitKey);
 	},
-	async clientSetSession(source, destination, cipherData) {
-		const kyberPrivateKey = source.privateKey;
-		const sharedSecret = await decapsulate(cipherData, kyberPrivateKey);
-		source.transmitKey = sharedSecret;
-		source.receiveKey = source.transmitKey;
-		console.log('clientSetSession kyberSharedSecret', sharedSecret[0], sharedSecret.length);
-		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
-	},
+	// 	async clientSetSession(source, destination, cipherData) {
+	// 	const kyberPrivateKey = source.privateKey;
+	// 	const sharedSecret = await decapsulate(cipherData, kyberPrivateKey);
+	// 	console.log('clientSetSession kyberSharedSecret', sharedSecret[0], sharedSecret.length);
+	// 	const oldTransmitKey = source.transmitKey;
+	// 	const oldReceiveKey = source.receiveKey;
+	// 	console.log('Old Session Keys', source.transmitKey[0], source.receiveKey[0]);
+	// 	source.transmitKey = combineKeys(oldTransmitKey, source.sharedSecret);
+	// 	source.receiveKey = combineKeys(oldReceiveKey, source.sharedSecret);
+	// 	clearBuffer(oldTransmitKey);
+	// 	clearBuffer(oldReceiveKey);
+	// 	console.log('New Session Keys', source.transmitKey[0], source.receiveKey[0]);
+	// },
 	async serverInitializeSession(source, destination, destinationPublicKey) {
 		console.log('server InitializeSession');
 		console.log(destinationPublicKey);
@@ -91,7 +108,7 @@ export const kyber768_xChaCha = {
 		} = await encapsulate(destinationPublicKey);
 		destination.publicKey = destinationPublicKey;
 		source.cipherData = cipherText;
-		source.transmitKey = sharedSecret;
+		source.transmitKey = hash(sharedSecret);
 		source.receiveKey = sharedSecret;
 		console.log('server kyberSharedSecret', sharedSecret[0], sharedSecret.length);
 		console.log('destinationPublicKey', destinationPublicKey[0]);
@@ -102,44 +119,43 @@ export const kyber768_xChaCha = {
 		header[1] = source.cipherData;
 	},
 	async serverExtendedHandshake(source, destination, frame, header) {
-		if (!source.sharedSecret) {
-			console.log('serverExtendedHandshake CIPHER CALLED', frame, header);
-			const [
-				streamid_undefined,
-				rpc,
-				cipherData
-			] = frame;
-			const privateKey = source.privateKey;
-			const sharedSecret = await decapsulate(cipherData, privateKey);
-			clearBuffer(source.cipherData);
-			source.cipherData = null;
-			source.sharedSecret = sharedSecret;
-			source.nextSession = true;
-			console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
-			console.log('sharedSecret', source.sharedSecret[0]);
-			console.log('server cipherText', cipherData[0], cipherData.length);
-		}
+		console.log('serverExtendedHandshake CIPHER CALLED', frame, header);
+		const [
+			streamid_undefined,
+			rpc,
+			cipherData
+		] = frame;
+		const privateKey = source.privateKey;
+		const sharedSecret = await decapsulate(cipherData, privateKey);
+		clearBuffer(cipherData);
+		source.cipherData = null;
+		source.sharedSecret = sharedSecret;
+		source.nextSession = true;
+		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
+		console.log('sharedSecret', source.sharedSecret[0]);
+		console.log('server cipherText', cipherData[0], cipherData.length);
 	},
 	async sendServerExtendedHandshake(source, destination) {
-		const frame = [
-			false,
-			extendedHandshakeRPC,
-		];
-		return frame;
+		console.log('Server Extended Handshake ack');
+		// Should be able to remove this
+		// const frame = [
+		// 	false,
+		// 	extendedHandshakeRPC,
+		// ];
+		// return frame;
 	},
 	async serverSetSession(source, destination) {
 		console.log('serverSetSession');
 		const sharedSecret = source.sharedSecret;
 		const oldTransmitKey = source.transmitKey;
-		source.transmitKey = combineKeys(oldTransmitKey, sharedSecret);
-		source.receiveKey = source.transmitKey;
+		const oldReceiveKey = source.receiveKey;
+		source.transmitKey = combineKeys(oldTransmitKey, source.sharedSecret);
+		source.receiveKey = combineKeys(oldReceiveKey, source.sharedSecret);
 		clearBuffer(oldTransmitKey);
-		clearBuffer(source.sharedSecret);
-		clearBuffer(source.cipherData);
+		clearBuffer(oldReceiveKey);
 		clearBuffer(source.sharedSecret);
 		source.sharedSecret = null;
 		source.nextSession = null;
-		console.log('kyberSharedSecret', sharedSecret[0]);
 		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
 	generateSeed() {
@@ -160,3 +176,4 @@ export const kyber768_xChaCha = {
 	extendedHandshake: true,
 	encryptionKeypairID,
 };
+// copyright © Thomas Marchi

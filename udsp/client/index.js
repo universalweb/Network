@@ -48,7 +48,7 @@ import {
 	extendedHandshakeRPC,
 	introRPC
 } from '../protocolFrameRPCs.js';
-import { extendedHandshake, sendExtendedHandshake } from './protocolEvents/extendedHandshake.js';
+import { extendedHandshake, sendExtendedHandshake, sendExtendedHandshakeHeader } from './protocolEvents/extendedHandshake.js';
 import {
 	toBase64,
 	toHex,
@@ -306,6 +306,7 @@ export class Client extends UDSP {
 	intro = intro;
 	extendedHandshake = extendedHandshake;
 	sendExtendedHandshake = sendExtendedHandshake;
+	sendExtendedHandshakeHeader = sendExtendedHandshakeHeader;
 	async setSession(cipherData) {
 		this.cipherSuite.clientSetSession(this, this.destination, cipherData);
 		if (this.receiveKey) {

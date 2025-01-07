@@ -46,6 +46,7 @@ export async function onPacket(packet, rinfo) {
 		return console.log('No matching Client id given', idString);
 	}
 	const { header, } = config.packetDecoded;
+	// Replace with state ID instead of sessionCompleted boolean
 	if (isFalse(client.sessionCompleted)) {
 		if (isFalse(config.isShortHeaderMode)) {
 			await proccessProtocolPacketHeader(client, header, config.packetDecoded, rinfo);

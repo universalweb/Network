@@ -125,3 +125,4 @@ export const x25519_kyber768Half_xchacha20 = {
 	decrypt,
 	encrypt,
 };
+// copyright © Thomas Marchi

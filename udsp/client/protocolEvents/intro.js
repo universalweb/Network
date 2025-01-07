@@ -59,7 +59,7 @@ export async function introHeader(header, packetDecoded, rinfo) {
 	if (packetDecoded.noMessage) {
 		// Add Function that then receives the server extendedHandshakeHeader
 		if (this.cipherSuite.sendClientExtendedHandshakeHeader) {
-			this.cipherSuite.sendClientExtendedHandshakeHeader(this, this.destination, header, packetDecoded, rinfo);
+			this.sendExtendedHandshakeHeader(this, this.destination, header, packetDecoded, rinfo);
 		} else {
 			this.handshaked();
 		}

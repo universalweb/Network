@@ -69,6 +69,7 @@ export async function proccessProtocolFrame(source, frame, header, rinfo) {
 			source.intro(frame, header, rinfo);
 			break;
 		}
+		// Extended Handshake
 		case extendedHandshakeRPC: {
 			source.extendedHandshake(frame, header, rinfo);
 			break;
