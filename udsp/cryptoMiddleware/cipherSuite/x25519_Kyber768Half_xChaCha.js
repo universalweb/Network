@@ -2,24 +2,23 @@
 import * as defaultCrypto from '#crypto';
 import { assign, clear, isBuffer } from '@universalweb/acid';
 import {
+	clearSession,
 	clientSetSession,
 	encryptionKeypair as encryptionKeypair25519,
+	get25519KeyCopy,
+	getX25519Key,
 	serverSetSession,
-	serverSetSessionAttach
+	serverSetSessionAttach,
 } from '../keyExchange/x25519.js';
 import { decapsulate, encapsulate } from '../keyExchange/kyber768.js';
-import { decrypt, encrypt } from '../encryption/XChaCha.js';
+import { decrypt, encrypt, encryptionOverhead } from '../encryption/XChaCha.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { kyber768Half_x25519 } from '../keyExchange/kyber768Half_x25519.js';
 const {
-	randomConnectionId,
 	randomBuffer,
 	toBase64,
 	toHex,
 	combineKeys,
-	getX25519Key,
-	getKyberKey,
-	get25519KeyCopy,
 	clearBuffers,
 	clearBuffer
 } = defaultCrypto;
@@ -30,7 +29,8 @@ const {
 	serverEphemeralKeypair,
 	certificateEncryptionKeypair,
 	ml_kem768,
-	hash
+	hash,
+	getKyberKey
 } = kyber768Half_x25519;
 export const x25519_kyber768Half_xchacha20 = {
 	name: 'x25519_kyber768Half_xchacha20',
@@ -62,10 +62,11 @@ export const x25519_kyber768Half_xchacha20 = {
 			privateKey: getX25519Key(source.privateKey)
 		};
 		const {
+			sharedSecret: oldSharedSecret,
 			transmitKey: oldTransmitKey,
 			receiveKey: oldReceiveKey
 		} = source;
-		destination.publicKey = get25519KeyCopy(cipherData);
+		destination.publicKey = getX25519Key(cipherData);
 		const x25519SessionKeys = clientSetSession(sourceKeypair25519, destination, sourceKeypair25519);
 		const cipherText = getKyberKey(cipherData);
 		const kyberPrivateKey = getKyberKey(source.privateKey);
@@ -74,8 +75,9 @@ export const x25519_kyber768Half_xchacha20 = {
 		console.log('clientSetSession sharedSecret', sharedSecret[0], sharedSecret.length);
 		const newTransmitKey = combineKeys(oldTransmitKey, sourceKeypair25519.transmitKey, sharedSecret);
 		const newReceiveKey = combineKeys(oldReceiveKey, sourceKeypair25519.receiveKey, sharedSecret);
-		clearBuffers(oldTransmitKey, x25519SessionKeys.transmitKey, sharedSecret);
-		clearBuffers(oldReceiveKey, x25519SessionKeys.receiveKey);
+		clearBuffer(cipherData);
+		await clearSession(sourceKeypair25519);
+		clearBuffers(oldSharedSecret, sharedSecret);
 		source.transmitKey = newTransmitKey;
 		source.receiveKey = newReceiveKey;
 		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
@@ -96,6 +98,7 @@ export const x25519_kyber768Half_xchacha20 = {
 		console.log('server Setting Session');
 		const {
 			nextSession,
+			sharedSecret: oldSharedSecret,
 			transmitKey: oldTransmitKey,
 			receiveKey: oldReceiveKey
 		} = source;
@@ -108,8 +111,8 @@ export const x25519_kyber768Half_xchacha20 = {
 		const sharedSecret = nextSession.sharedSecret;
 		const newTransmitKey = combineKeys(oldTransmitKey, x25519SessionKeys.transmitKey, sharedSecret);
 		const newReceiveKey = combineKeys(oldReceiveKey, x25519SessionKeys.receiveKey, sharedSecret);
-		clearBuffers(oldTransmitKey, x25519SessionKeys.transmitKey, sharedSecret);
-		clearBuffers(oldReceiveKey, x25519SessionKeys.receiveKey);
+		await clearSession(nextSessionKeypair25519);
+		clearBuffers(oldSharedSecret, sharedSecret, destination.publicKey);
 		source.transmitKey = newTransmitKey;
 		source.receiveKey = newReceiveKey;
 		console.log('sharedSecret', sharedSecret[0]);
@@ -124,5 +127,6 @@ export const x25519_kyber768Half_xchacha20 = {
 	hash,
 	decrypt,
 	encrypt,
+	encryptionOverhead
 };
 // copyright © Thomas Marchi

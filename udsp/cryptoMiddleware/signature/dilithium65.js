@@ -8,42 +8,37 @@
 	strength of ML-DSA-44 is reduced from category 2 to category 1.)
 */
 import * as defaultCrypto from '#crypto';
-import { ml_dsa65, ml_dsa87 } from '@noble/post-quantum/ml-dsa';
+import { ml_dsa65 } from '@noble/post-quantum/ml-dsa';
+const generateKeypair = ml_dsa65;
 const {
-	randomConnectionId,
 	randomBuffer,
 	toBase64,
 	toHex,
 	combineKeys
 } = defaultCrypto;
-export function createSeed(size = 32) {
-	const seed = randomBuffer(size);
-	return seed;
-}
-export async function signatureKeypair(seed = createSeed()) {
-	const keypair = await ml_dsa65.keygen(seed);
+export async function signatureKeypair(seed) {
+	const keypair = await generateKeypair.keygen(seed);
 	return {
 		publicKey: keypair.publicKey,
 		privateKey: keypair.secretKey
 	};
 }
 export async function sign(message, privateKey) {
-	const signedMessage = await ml_dsa65.sign(privateKey?.privateKey || privateKey, message);
+	const signedMessage = await generateKeypair.sign(privateKey?.privateKey || privateKey, message);
 	return signedMessage;
 }
 export async function verifySignature(signedMessage, publicKey, message) {
-	const isValid = await ml_dsa65.verify(publicKey?.publicKey || publicKey, message, signedMessage);
+	const isValid = await generateKeypair.verify(publicKey?.publicKey || publicKey, message, signedMessage);
 	return isValid;
 }
 export const dilithium65 = {
 	name: 'dilithium65',
 	alias: 'dilithium65',
 	id: 3,
-	createSeed,
 	signatureKeypair,
 	sign,
 	verifySignature
 };
-// const rseed = createSeed();
-// const kp = signatureKeypair(rseed);
+export default dilithium65;
+// const kp = signatureKeypair();
 // console.log(sign(msg, kp).length);

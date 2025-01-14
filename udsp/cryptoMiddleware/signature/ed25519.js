@@ -1,7 +1,6 @@
 import * as defaultCrypto from '#crypto';
 const {
 	bufferAlloc,
-	randomConnectionId,
 	randomBuffer,
 	toBase64,
 	toHex,
@@ -28,8 +27,11 @@ const {
 	crypto_kx_PUBLICKEYBYTES,
 	crypto_kx_SECRETKEYBYTES
 } = sodiumLib;
+const generateKeypair = crypto_sign_keypair;
 const publicKeySize = crypto_sign_PUBLICKEYBYTES;
 const privateKeySize = crypto_sign_SECRETKEYBYTES;
+const signatureSize = crypto_sign_BYTES;
+const seedSize = crypto_sign_SEEDBYTES;
 export function signCombined(message, privateKey) {
 	const signedMessage = bufferAlloc(crypto_sign_BYTES + message.length);
 	crypto_sign(signedMessage, message, privateKey?.privateKey || privateKey);
@@ -51,7 +53,7 @@ export function verifySignatureDetached(signedMessage, publicKey, message) {
 export async function signatureKeypair(config) {
 	const publicKey = config?.publicKey || bufferAlloc(crypto_sign_PUBLICKEYBYTES);
 	const privateKey = config?.privateKey || bufferAlloc(crypto_sign_SECRETKEYBYTES);
-	crypto_sign_keypair(publicKey, privateKey);
+	generateKeypair(publicKey, privateKey);
 	if (config) {
 		config.publicKey = publicKey;
 		config.privateKey = privateKey;
@@ -93,6 +95,8 @@ export const ed25519 = {
 	id: 0,
 	publicKeySize,
 	privateKeySize,
+	signatureSize,
+	seedSize,
 	signatureKeypair,
 	sign,
 	verifySignature,
@@ -105,3 +109,5 @@ export const ed25519 = {
 	hash: blake3,
 	preferred: true
 };
+// const key = await signatureKeypair();
+// console.log(sign(Buffer.from('hello world'), key));

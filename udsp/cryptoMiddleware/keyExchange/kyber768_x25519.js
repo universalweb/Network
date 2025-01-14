@@ -15,7 +15,6 @@ import { assign } from '@universalweb/acid';
 import { blake3 } from '@noble/hashes/blake3';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
 const {
-	randomConnectionId,
 	randomBuffer,
 	toBase64,
 	toHex,
@@ -165,9 +164,4 @@ export const kyber768_x25519 = {
 	speed: 0,
 	security: 1,
 };
-export function getX25519Keypair(source) {
-	return {
-		publicKey: getX25519Key(source.publicKey),
-		privateKey: getX25519Key(source.privateKey)
-	};
-}
+export default kyber768_x25519;

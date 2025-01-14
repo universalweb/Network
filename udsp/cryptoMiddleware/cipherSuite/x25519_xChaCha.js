@@ -11,7 +11,7 @@ import {
 	createSessionKey,
 	decrypt,
 	encrypt,
-	nonceBox
+	encryptionOverhead
 } from '../encryption/XChaCha.js';
 import { assign } from '@universalweb/acid';
 import { blake3 } from '../hash/blake3.js';
@@ -23,7 +23,6 @@ const {
 	crypto_kx_server_session_keys
 } = sodiumLib;
 const {
-	randomConnectionId,
 	randomBuffer,
 	toHex,
 	clearBuffer,
@@ -153,6 +152,7 @@ export const x25519_xChaCha = {
 	certificateEncryptionKeypair: encryptionKeypair,
 	decrypt,
 	encrypt,
+	encryptionOverhead,
 	preferred: true,
 	hash
 };

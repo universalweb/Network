@@ -91,6 +91,7 @@ export async function decodePacketHeaders(config) {
 		console.log(`Decode Server side packet with id: ${id?.toString('hex')}`);
 		// console.log(packet, connectionIdSize, destination.connectionIdSize);
 	}
+	console.log(`ShortHeaderMode ${isShortHeaderMode}`);
 	config.packetDecoded.header = headerEncoded;
 	config.packetDecoded.id = id;
 	if (!isShortHeaderMode) {

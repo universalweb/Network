@@ -29,7 +29,7 @@ import {
 	introHeader,
 	sendIntro
 } from './protocolEvents/intro.js';
-import { connectionIdToBuffer, generateConnectionId } from '#udsp/connectionId';
+import { connectionIdToBuffer, generateConnectionIdString } from '#udsp/connectionId';
 import { createEvent, removeEvent, triggerEvent } from '#udsp/events';
 import {
 	decode,
@@ -148,7 +148,7 @@ export class Client extends UDSP {
 	}
 	socketOnError = socketOnError;
 	assignId() {
-		const connectionIdString = generateConnectionId(this.connectionIdSize);
+		const connectionIdString = generateConnectionIdString(this.connectionIdSize);
 		this.connectionIdString = connectionIdString;
 		this.id = connectionIdToBuffer(connectionIdString);
 		console.log(`Assigned ClientId ${connectionIdString}`);
@@ -307,8 +307,8 @@ export class Client extends UDSP {
 	extendedHandshake = extendedHandshake;
 	sendExtendedHandshake = sendExtendedHandshake;
 	sendExtendedHandshakeHeader = sendExtendedHandshakeHeader;
-	async setSession(cipherData) {
-		this.cipherSuite.clientSetSession(this, this.destination, cipherData);
+	async setSession(cipherData, frame, header, packetDecoded) {
+		this.cipherSuite.clientSetSession(this, this.destination, cipherData, frame, header, packetDecoded);
 		if (this.receiveKey) {
 			console.log(`Created Shared Keys`);
 			console.log(`receiveKey: ${toHex(this.receiveKey)}`);

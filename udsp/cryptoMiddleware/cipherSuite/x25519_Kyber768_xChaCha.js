@@ -21,26 +21,30 @@
  */
 import * as defaultCrypto from '#crypto';
 import { assign, clearBuffer, isBuffer } from '@universalweb/acid';
-import { decrypt, encrypt } from '../encryption/XChaCha.js';
+import { decrypt, encrypt, encryptionOverhead } from '../encryption/XChaCha.js';
+import { get25519KeyCopy, x25519 } from '../keyExchange/x25519.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { encapsulate } from '../keyExchange/kyber768.js';
 import { extendedHandshakeRPC } from '../../protocolFrameRPCs.js';
+import { kyber768Half_x25519 } from '../keyExchange/kyber768Half_x25519.js';
 import { kyber768_x25519 } from '../keyExchange/kyber768_x25519.js';
+import { x25519_kyber768Half_xchacha20 } from './x25519_Kyber768Half_xChaCha.js';
 const hash = blake3;
+const { clientSetSession } = x25519_kyber768Half_xchacha20;
 const {
-	randomConnectionId,
+	serverSetSessionAttach,
+	clientSetSession: clientSetSessionX25519,
+} = x25519;
+const {
 	randomBuffer,
 	toBase64,
 	toHex,
 	combineKeys,
-	getX25519Key,
-	getKyberKey
 } = defaultCrypto;
 const {
 	clientInitializeSession,
 	serverInitializeSession,
 	serverSetSession,
-	clientSetSession,
 	generateSeed,
 	keypair,
 	clientEphemeralKeypair,
@@ -72,13 +76,8 @@ export const x25519_kyber768_xchacha20 = {
 		const source = await keypair();
 		return source;
 	},
-	async clientInitializeSession(source, destination) {
-		const sourceKeypair25519 = getX25519Keypair(source);
-		console.log('clientInitializeSession Destination', destination);
-		const x25519SessionKeys = clientSetSession(sourceKeypair25519, destination, source);
-		console.log('Public Key from destination', toHex(destination.publicKey));
-		return x25519SessionKeys;
-	},
+	clientInitializeSession,
+	clientSetSession,
 	// CHANGE TO NEW HEADER & FRAME ARGS
 	async sendClientExtendedHandshake(source, destination, frame, header) {
 		const destinationPublicKey = destination.publicKey;
@@ -93,6 +92,18 @@ export const x25519_kyber768_xchacha20 = {
 		source.sharedSecret = sharedSecret;
 		console.log('sendClientExtendedHandshake kyberSharedSecret', sharedSecret[0], sharedSecret.length);
 		console.log('sendClientExtendedHandshake cipherText', cipherText[0], cipherText.length);
+	},
+	async serverInitializeSession(source, destination, cipherData) {
+		console.log('serverInitializeSession CIPHER', toHex(cipherData));
+		destination.publicKey = get25519KeyCopy(cipherData);
+		await serverSetSessionAttach(source, destination);
+		source.nextSession = await kyber768Half_x25519.serverEphemeralKeypair(source, destination, cipherData);
+		clearBuffer(cipherData);
+		console.log('nextSession', source.nextSession);
+	},
+	async sendServerIntro(source, destination, frame, header) {
+		console.log('Send Server Intro', source.nextSession.publicKey);
+		frame[3] = source.nextSession.publicKey;
 	},
 	async certificateEncryptionKeypair() {
 		const target = await keypair();
@@ -112,5 +123,6 @@ export const x25519_kyber768_xchacha20 = {
 	hash,
 	encrypt,
 	decrypt,
+	encryptionOverhead
 };
 // copyright © Thomas Marchi

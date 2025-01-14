@@ -15,17 +15,18 @@ import { assign } from '@universalweb/acid';
 import { blake3 } from '@noble/hashes/blake3';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
 const {
-	randomConnectionId,
 	randomBuffer,
 	toBase64,
 	toHex,
 	combineKeys,
 	getX25519Key,
-	getKyberKey,
 	clearBuffer
 } = defaultCrypto;
 const publicKeySize = x25519.publicKeySize + kyber768.publicKeySize;
 const privateKeySize = x25519.privateKeySize + kyber768.privateKeySize;
+export function getKyberKey(source) {
+	return source.subarray(32);
+}
 export const kyber768Half_x25519 = {
 	name: 'kyber768Half_x25519',
 	alias: 'kyber768Half_x25519',
@@ -75,6 +76,7 @@ export const kyber768Half_x25519 = {
 			sharedSecret
 		};
 		clearBuffer(ephemeralKeypair.publicKey);
+		clearBuffer(cipherText);
 		ephemeralKeypair.privateKey = null;
 		ephemeralKeypair.publicKey = null;
 		return target;
@@ -85,4 +87,6 @@ export const kyber768Half_x25519 = {
 	},
 	ml_kem768,
 	hash: blake3,
+	getKyberKey
 };
+export default kyber768Half_x25519;

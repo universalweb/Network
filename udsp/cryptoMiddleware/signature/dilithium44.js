@@ -9,41 +9,36 @@
 */
 import * as defaultCrypto from '#crypto';
 import { ml_dsa44 } from '@noble/post-quantum/ml-dsa';
+const generateKeypair = ml_dsa44;
 const {
-	randomConnectionId,
 	randomBuffer,
 	toBase64,
 	toHex,
 	combineKeys
 } = defaultCrypto;
-export function createSeed(size = 32) {
-	const seed = randomBuffer(size);
-	return seed;
-}
-export async function signatureKeypair(seed = createSeed()) {
-	const keypair = await ml_dsa44.keygen(seed);
+export async function signatureKeypair(seed) {
+	const keypair = await generateKeypair.keygen(seed);
 	return {
 		publicKey: keypair.publicKey,
 		privateKey: keypair.secretKey
 	};
 }
 export async function sign(message, privateKey) {
-	const signedMessage = await ml_dsa44.sign(privateKey?.privateKey || privateKey, message);
+	const signedMessage = await generateKeypair.sign(privateKey?.privateKey || privateKey, message);
 	return signedMessage;
 }
 export async function verifySignature(signedMessage, publicKey, message) {
-	const isValid = await ml_dsa44.verify(publicKey?.publicKey || publicKey, message, signedMessage);
+	const isValid = await generateKeypair.verify(publicKey?.publicKey || publicKey, message, signedMessage);
 	return isValid;
 }
 export const dilithium44 = {
 	name: 'dilithium44',
 	alias: 'dilithium44',
 	id: 2,
-	createSeed,
 	signatureKeypair,
 	sign,
 	verifySignature
 };
-// const rseed = createSeed();
-// const kp = signatureKeypair(rseed);
-// console.log(sign(msg, kp).length);
+export default dilithium44;
+// const kp = await signatureKeypair();
+// console.log(kp.publicKey, kp.publicKey.length);

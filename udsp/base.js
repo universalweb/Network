@@ -5,11 +5,12 @@ import {
 	each,
 	hasValue
 } from '@universalweb/acid';
-import { randomBuffer, randomConnectionId, toBase64 } from '#crypto';
+import { randomBuffer, toBase64 } from '#crypto';
 import { calculatePacketOverhead } from './calculatePacketOverhead.js';
 import { cipherSuites } from './cryptoMiddleware/index.js';
 import { currentVersion } from '../defaults.js';
 import dgram from 'dgram';
+import { randomConnectionId } from './connectionId.js';
 export class UDSP {
 	initializeBase(options) {
 		this.state = 0;

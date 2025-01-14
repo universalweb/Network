@@ -7,27 +7,33 @@
 <hr />
 <h1 align="center">UW://</h1>
 <p align="center">
-    REIMAGINE|REMAKE|REBUILD --> THE WEB
+    META-LAYER SOLUTION
+</p>
+<p align="center">
+    LAYER SUBZERO | LAYER -1 | SUB-LAYER 0
+</p>
+<p align="center">
+    <b>UW/VIAT is a Meta-Layer Solution designed as a Sub-Layer 0 network. It serves as the foundation for both a next-generation Web and a natively supported cryptocurrency. Unlike traditional Layer 0 solutions, which focus solely on blockchain interoperability and scalability, UW/VIAT is a hybrid system that embraces both centralized and decentralized approaches. The Universal Web is centrally structured to ensure efficiency, security, and seamless integration, while the cryptocurrency (VIAT) is decentralized, enabling trustless transactions and complete transparency. This unified framework enables the development of hybrid applications, where centralized Web services and decentralized cryptocurrency natively work together, creating a seamless infrastructure for secure communications, digital ownership, transactions, and beyond.</b>
 </p>
 
-<h5 align="center">| <a href="https://twitter.com/tommarchi">LEAD DEV TWITTER</a> |</h5>
+<h5 align="center">| <a href="https://x.com/tommarchi">LEAD DEV X(Twitter)</a> |</h5>
 <hr />
 
 <h3 align="center">ATTENTION</h3>
-<h4 align="center">Are you a dev? Want to go against the grain? Don't like ICANN, IETF, TCP, HTTP, bureaucratic committees and or the WWW? Then join the Imperium today!</h4>
+<h4 align="center">Want to contribute? Don't like ICANN, IETF, TCP, HTTP, bureaucratic committees and or the WWW? Then join the Imperium today!</h4>
 
 <p align="center">
     <small>To help just submit code or star this repo! All are welcome to the New Web Order.</small>
 </p>
 
 <h3>Perspective</h3>
-<p>The World Wide Web has evolved for decades but its general design, limitations, & components have largely remained. Our needs & desires have rapidly outgrown the initial design & purpose of the Web. What if the Web was reimagined today?</p>
+<p>The World Wide Web has evolved for decades but its general design, limitations, & components have largely remained the same. Our needs & desires have rapidly outgrown the initial design & purpose of the Web. What if the Web was built today with modern tech and a modern view?</p>
 
 <h4>Goals</h4>
 <p>The objective of the Universal Web is to create a viable modern replacement for the Web today.</p>
 
 <h4>Is it Web3?</h4>
-<p>Depends on your definition. If the definition of Web3 is a fully decentralized Web then The Universal Web is not Web3. If Web3 is the World Wide Web plus some decentralized apps then the UW is not Web3. If Web3 is just the general idea of mixing something like the Web with optional and or native integration of decentralized parts then it’s much closer to what the UW is.</p>
+<p>Depends on your definition. If the definition of Web3 is a fully decentralized Web then The Universal Web is not Web3 it's far more robust. If Web3 is the World Wide Web plus some decentralized apps then the UW is not Web3. If we had to use WEB3 then our definition of Web3 is a hybrid Web built from scratch with its own form of DNS & its own data transport protocol paired with a natively intigrated decentralized focused cryptocurrency.</p>
 
 <h4>Where's the name from?</h4>
 <p>The Universal Web's name was chosen because of its natural evolution of the name The World Wide Web.</p>

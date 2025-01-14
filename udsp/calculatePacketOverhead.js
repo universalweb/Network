@@ -12,7 +12,7 @@ export async function calculatePacketOverhead(cipherSuite, connectionIdSize, ass
 		return assign(assignTo || {}, cached);
 	}
 	const target = {};
-	const encryptOverhead = cipherSuite?.encrypt?.overhead || zero;
+	const encryptOverhead = cipherSuite?.encryptionOverhead || zero;
 	if (hasValue(encryptOverhead)) {
 		target.encryptOverhead = encryptOverhead;
 	}

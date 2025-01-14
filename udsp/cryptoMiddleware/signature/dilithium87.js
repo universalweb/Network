@@ -9,41 +9,36 @@
 */
 import * as defaultCrypto from '#crypto';
 import { ml_dsa87 } from '@noble/post-quantum/ml-dsa';
+const generateKeypair = ml_dsa87;
 const {
-	randomConnectionId,
 	randomBuffer,
 	toBase64,
 	toHex,
 	combineKeys
 } = defaultCrypto;
-export function createSeed(size = 32) {
-	const seed = randomBuffer(size);
-	return seed;
-}
-export async function signatureKeypair(seed = createSeed()) {
-	const keypair = await ml_dsa87.keygen(seed);
+export async function signatureKeypair(seed) {
+	const keypair = await generateKeypair.keygen(seed);
 	return {
 		publicKey: keypair.publicKey,
 		privateKey: keypair.secretKey
 	};
 }
 export async function sign(message, privateKey) {
-	const signedMessage = await ml_dsa87.sign(privateKey?.privateKey || privateKey, message);
+	const signedMessage = await generateKeypair.sign(privateKey?.privateKey || privateKey, message);
 	return signedMessage;
 }
 export async function verifySignature(signedMessage, publicKey, message) {
-	const isValid = await ml_dsa87.verify(publicKey?.publicKey || publicKey, message, signedMessage);
+	const isValid = await generateKeypair.verify(publicKey?.publicKey || publicKey, message, signedMessage);
 	return isValid;
 }
 export const dilithium87 = {
 	name: 'dilithium87',
 	alias: 'dilithium87',
 	id: 4,
-	createSeed,
 	signatureKeypair,
 	sign,
 	verifySignature
 };
-// const rseed = createSeed();
+export default dilithium87;
 // const kp = signatureKeypair(rseed);
 // console.log(sign(msg, kp).length);

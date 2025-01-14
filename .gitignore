@@ -49,3 +49,7 @@ tempCodeRunnerFile.js
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# CERTS #
+######################
+*.rootcert

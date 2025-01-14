@@ -17,13 +17,12 @@ import {
 	encryptionKeypair,
 	kyber768
 } from '../keyExchange/kyber768.js';
-import { decrypt, encrypt } from '../encryption/XChaCha.js';
+import { decrypt, encrypt, encryptionOverhead } from '../encryption/XChaCha.js';
 import { extendedHandshakeHeaderRPC, introHeaderRPC } from '../../protocolHeaderRPCs.js';
 import { extendedHandshakeRPC, introRPC } from '../../protocolFrameRPCs.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
 const {
-	randomConnectionId,
 	randomBuffer,
 	toBase64,
 	toHex,
@@ -175,5 +174,6 @@ export const kyber768_xChaCha = {
 	hash,
 	extendedHandshake: true,
 	encryptionKeypairID,
+	encryptionOverhead
 };
 // copyright © Thomas Marchi

@@ -13,14 +13,6 @@ Enforce Realtime options for server side
 Data Streams and breaking up downloads with write a stream
 initialRealtimeGracePeriod
 
-Add ability to either have multiple encryption keypairs or have x25519+Kyber be able to also do either or for a client so client can connect with only kyber, hybrid, or x25519
-Might need to add way for them to check which ciphers are compatible with its keys
-Means you need to create a hybrid full ciphersuite for that to happen then it can support both
-Make sure that client cant choose incompatible cipher based on encryption keypair?
-Modify certs so that encryption keypair algorithm is specified so that hybrid options can exist?
-this allows clients to auto choose the best ciphersuite according to the encryption algorithm used
-Make encryption keypair hybrid of both to support kyber half, x25519, kyber, or x25519kyber(strict)
-
 Auto/manual update client and or server's IP & Port
 timeout for extended header
 Set state when session is completed fully so that those steps cant be re-done
@@ -28,7 +20,6 @@ Update all crypto middleware double check all files
 Change update states to use predefined variables instead of numbers
 
 Add security checks for crypto middleware and try/catch to deny and or gracefully close
-Remove unused Keypairs & CipherText/CipherData
 Consider pre-compiling keys if it saves space removing older or unused data
 
 COMPACT MODE (CONDENSE REQUESTS/RESPONCE MAXIMIZE MTU SIZE BY INCLUDING MULTIPLE FRAMES IN A SINGULAR PACKET)
@@ -40,14 +31,28 @@ A future feature which can take advantage of JUMBO Frames for intranet situation
 
 Add universal request type that can handle all data sections params data could be no reason to have method types or are they usefull to help determine what basic server operations
 
-consider hashing all prior generated keys into new ones
-
-Avoid repeated Math limit packet math to cached only
-
-Figure out and try and workout if you can avoid putting the protocol method id in the header when its not needed
-
 Advertise UW devices on a local network (Announcement UPnP)
 
 Disover Local Network UW devices
 
 Ping packet - encrypted using domain certificates handshake/key exchange public key (mimic ICMP) (net-ping raw-socket)
+
+Wallet Address Changes alias
+
+Domain Certificate Apps stored inside the domain certificate static assets would still need to be stored on server and has a dependency tree which could be pre-loaded Cache JS and CSS common libraries so that it could be easily and quickly utilized create a package.json section inside a domain certificate to create offline sort of apps. Consider and install script inside it to install app locally then be able to use it as if it were a snap app ete but has security to limit low level access as usual
+
+Streamline var names to generic ones for crypto middleware
+
+Expand Kyber shared secret into 512bit 64byte hash then split this hash as the session keys. MANDATORY
+
+Make crypto operations async
+
+scoring number system for security hash plus key exchange + aead + sig IMPORTANT WRITE FUNCTION TO AUTO GRADE CIPHER SUITES
+
+Add viat address checksum error reporting to avoid bad or incorrect addresses
+
+re-add encryption overhead
+
+change generateConnectionId to hex binary mode (auto generate as buffer then use random bytes or counter)
+
+Remove unused Keypairs & CipherText/CipherData zero out old data then see if can use existing buffers IMPORTANT

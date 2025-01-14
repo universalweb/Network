@@ -6,7 +6,7 @@ import {
 	isBoolean,
 	keys
 } from '@universalweb/acid';
-import { connectionIdToBuffer, generateConnectionId } from '#udsp/connectionId';
+import { connectionIdToBuffer, generateConnectionIdString } from '#udsp/connectionId';
 import {
 	failed,
 	imported,
@@ -49,7 +49,7 @@ export async function initialize(config) {
 	// When changing to a new key you must first create new keys from scratch to replace these.
 	client.publicKey = serverPublicKey;
 	client.privateKey = serverPrivateKey;
-	const serverConnectionIdString = generateConnectionId(connectionIdSize, serverId, reservedConnectionIdSize);
+	const serverConnectionIdString = generateConnectionIdString(connectionIdSize, serverId, reservedConnectionIdSize);
 	const serverClientId = connectionIdToBuffer(serverConnectionIdString);
 	console.log(`Server Connection ID: ${serverConnectionIdString} SIZE: ${connectionIdSize} SERVER ID: ${serverId} RESERVED SIZE: ${reservedConnectionIdSize}`);
 	client.id = serverClientId;

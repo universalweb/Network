@@ -1,136 +1,111 @@
-import { bufferAlloc, randomBuffer } from '#utilities/crypto';
-import { RistrettoPoint } from '@noble/curves/ed25519';
-import { createSessionKey } from '../encryption/XChaCha.js';
-import { domainCertificate } from '#udsp/certificate/domain';
-const sodium = await import('sodium-native');
-const sodiumLib = sodium?.default || sodium;
-const {
-	crypto_kx_keypair,
-	crypto_kx_PUBLICKEYBYTES,
-	crypto_kx_SECRETKEYBYTES,
-	crypto_kx_server_session_keys,
-	crypto_kx_SESSIONKEYBYTES,
-	crypto_box_seal,
-	crypto_box_SEALBYTES,
-	crypto_box_seal_open,
-	crypto_box_keypair,
-	crypto_box_PUBLICKEYBYTES,
-	crypto_box_SECRETKEYBYTES,
-	crypto_secretbox_easy,
-	crypto_secretbox_MACBYTES,
-	crypto_secretbox_NONCEBYTES,
-	crypto_secretbox_KEYBYTES,
-	crypto_kx_seed_keypair,
-	crypto_box_easy,
-	crypto_box_open_easy,
-	crypto_box_NONCEBYTES,
-	crypto_box_MACBYTES,
-	crypto_kx_client_session_keys
-} = sodiumLib;
-export function encryptionKeypair(config) {
-	const publicKey = config?.publicKey || bufferAlloc(crypto_kx_PUBLICKEYBYTES);
-	const privateKey = config?.privateKey || bufferAlloc(crypto_kx_SECRETKEYBYTES);
-	crypto_kx_keypair(publicKey, privateKey);
-	if (config) {
-		config.publicKey = publicKey;
-		config.privateKey = privateKey;
-		return config;
+/**
+ * @NAME x25519_blake3
+ * @DESCRIPTION Cryptography middleware for X25519 with BLAKE3.
+ * The shared secret is hashed with BLAKE3 to a 512bit (64 byte) output & then is split into two 32 byte session keys.
+ */
+import * as curve25519 from '@noble/curves/ed25519';
+import {
+	bufferAlloc,
+	clearBuffer,
+	int32,
+	randomBuffer,
+	randomize
+} from '#utilities/crypto';
+import { blake3 } from '@noble/hashes/blake3';
+const hashFunction = blake3;
+const keyAlgorithm = curve25519.x25519;
+const generatePrivateKey = keyAlgorithm.utils.randomPrivateKey;
+const generatePublicKey = keyAlgorithm.getPublicKey;
+const publicKeySize = int32;
+const privateKeySize = int32;
+const keySize = int32;
+const hashSettings = {
+	dkLen: 64
+};
+export function encryptionKeypair(source, cleanFlag) {
+	const privateKey = (source?.privateKey) ? randomize(source.privateKey) : generatePrivateKey();
+	const publicKey = generatePublicKey(privateKey);
+	if (source) {
+		if (source.publicKey) {
+			clearBuffer(source.publicKey);
+			source.publicKey = null;
+		}
+		source.publicKey = publicKey;
+		source.privateKey = privateKey;
+		return source;
 	}
 	return {
 		publicKey,
 		privateKey
 	};
 }
-export function keypairSeed(config) {
-	const publicKey = config?.publicKey || bufferAlloc(crypto_kx_PUBLICKEYBYTES);
-	const privateKey = config?.privateKey || bufferAlloc(crypto_kx_SECRETKEYBYTES);
-	crypto_kx_seed_keypair(publicKey, privateKey, config.seed);
-	return {
-		publicKey,
-		privateKey
-	};
-}
-export function cryptoBoxKeypair(config) {
-	const publicKey = config?.publicKey || bufferAlloc(crypto_box_PUBLICKEYBYTES);
-	const privateKey = config?.privateKey || bufferAlloc(crypto_box_SECRETKEYBYTES);
-	crypto_box_keypair(publicKey, privateKey);
-	if (config) {
-		config.publicKey = publicKey;
-		config.privateKey = privateKey;
-		return config;
+export function clearSession(source) {
+	if (source.sharedSecret) {
+		clearBuffer(source.sharedSecret);
+		source.receiveKey = null;
 	}
-	return {
-		publicKey,
-		privateKey
-	};
-}
-export function boxSeal(message, destinationKeypair) {
-	const encrypted = bufferAlloc(message.length + crypto_box_SEALBYTES);
-	crypto_box_seal(encrypted, message, destinationKeypair?.publicKey || destinationKeypair);
-	return encrypted;
-}
-export function boxUnseal(encrypted, destinationKeypair) {
-	const message = bufferAlloc(encrypted.length - crypto_box_SEALBYTES);
-	const isValid = crypto_box_seal_open(message, encrypted, destinationKeypair.publicKey, destinationKeypair.privateKey);
-	return isValid && message;
-}
-export function secretBoxNonce() {
-	return randomBuffer(crypto_secretbox_NONCEBYTES);
-}
-export function authBoxNonce() {
-	return randomBuffer(crypto_box_NONCEBYTES);
-}
-export function authenticatedBoxOpen(encrypted, receiverKeypair, senderKeypair) {
-	const encryptedPayloadLength = encrypted.length;
-	const nonce = encrypted.subarray(0, crypto_box_NONCEBYTES);
-	const encryptedMessage = encrypted.subarray(crypto_box_NONCEBYTES, encryptedPayloadLength);
-	const message = bufferAlloc(encryptedMessage.length - crypto_box_MACBYTES);
-	const sender = senderKeypair?.publicKey || senderKeypair;
-	const receiver = receiverKeypair?.privateKey || receiverKeypair;
-	crypto_box_open_easy(message, encryptedMessage, nonce, receiver, sender);
-	return message;
-}
-export function authenticatedBox(message, receiverKeypair, senderKeypair) {
-	const nonce = authBoxNonce();
-	const encrypted = bufferAlloc(message.length + crypto_box_MACBYTES);
-	const sender = senderKeypair?.publicKey || senderKeypair;
-	const receiver = receiverKeypair?.privateKey || receiverKeypair;
-	crypto_box_easy(encrypted, message, nonce, receiver, sender);
-	return Buffer.concat([
-		nonce,
-		encrypted
-	]);
-}
-export function clientSetSession(client, serverPublicKey, target) {
-	const receiveKey = client?.receiveKey || createSessionKey();
-	const transmitKey = client?.transmitKey || createSessionKey();
-	crypto_kx_client_session_keys(receiveKey, transmitKey, client.publicKey, client.privateKey, serverPublicKey?.publicKey || serverPublicKey);
-	if (client.receiveKey) {
-		return client;
+	if (source.receiveKey) {
+		clearBuffer(source.receiveKey);
+		source.receiveKey = null;
 	}
+	if (source.transmitKey) {
+		clearBuffer(source.transmitKey);
+		source.transmitKey = null;
+	}
+	return source;
+}
+export function cleanKeypair(source) {
+	if (source.publicKey) {
+		clearBuffer(source.publicKey);
+		source.publicKey = null;
+	}
+	if (source.privateKey) {
+		clearBuffer(source.privateKey);
+		source.privateKey = null;
+	}
+	return source;
+}
+export function clientSetSession(client, server, target) {
+	const sharedsecret = curve25519.x25519.getSharedSecret(client?.privateKey || client, server?.publicKey || server);
+	const sharedSecret = hashFunction(Buffer.concat([
+		sharedsecret,
+		client.publicKey,
+		server?.publicKey || server
+	]), hashSettings);
+	const transmitKey = sharedSecret.subarray(keySize);
+	const receiveKey = sharedSecret.subarray(0, keySize);
 	if (target) {
+		target.sharedSecret = sharedSecret;
 		target.receiveKey = receiveKey;
 		target.transmitKey = transmitKey;
 		return target;
 	}
 	return {
+		sharedSecret,
 		receiveKey,
 		transmitKey
 	};
 }
+export async function clientSetSessionAttach(source, destination) {
+	return clientSetSession(source, destination, source);
+}
 export function serverSetSession(server, client, target) {
-	const receiveKey = server?.receiveKey || createSessionKey();
-	const transmitKey = server?.transmitKey || createSessionKey();
-	crypto_kx_server_session_keys(receiveKey, transmitKey, server.publicKey, server.privateKey, client?.publicKey || client);
-	if (server.receiveKey) {
-		return;
-	}
+	const sharedsecret = curve25519.x25519.getSharedSecret(server?.privateKey || server, client?.publicKey || client);
+	const sharedSecret = hashFunction(Buffer.concat([
+		sharedsecret,
+		client?.publicKey || client,
+		server.publicKey
+	]), hashSettings);
+	const transmitKey = sharedSecret.subarray(0, keySize);
+	const receiveKey = sharedSecret.subarray(keySize);
 	if (target) {
+		target.sharedSecret = sharedSecret;
 		target.receiveKey = receiveKey;
 		target.transmitKey = transmitKey;
 		return target;
 	}
 	return {
+		sharedSecret,
 		receiveKey,
 		transmitKey
 	};
@@ -138,14 +113,21 @@ export function serverSetSession(server, client, target) {
 export async function serverSetSessionAttach(source, destination) {
 	return serverSetSession(source, destination, source);
 }
-export async function clientSetSessionAttach(source, destination) {
-	return clientSetSession(source, destination, source);
+export function getX25519Key(source) {
+	return source.subarray(0, int32);
 }
-const publicKeySize = crypto_kx_PUBLICKEYBYTES;
-const privateKeySize = crypto_kx_SECRETKEYBYTES;
+export function get25519KeyCopy(source) {
+	return Buffer.copyBytesFrom(source, 0, int32);
+}
+export function getX25519Keypair(source) {
+	return {
+		publicKey: getX25519Key(source.publicKey),
+		privateKey: getX25519Key(source.privateKey)
+	};
+}
 export const x25519 = {
 	name: 'x25519',
-	alias: 'x25519',
+	alias: 'x25519_blake3',
 	id: 0,
 	publicKeySize,
 	privateKeySize,
@@ -161,6 +143,7 @@ export const x25519 = {
 	encryptionKeypair,
 	certificateEncryptionKeypair: encryptionKeypair,
 };
+export default x25519;
 // const keypair = await encryptionKeypair();
 // console.log(keypair);
 // console.log(keypair.publicKey.length);

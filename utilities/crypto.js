@@ -1,21 +1,14 @@
+// Cryptography utilities
+// @module utilities/crypto
+// default hash Blake3
 const sodium = await import('sodium-native');
 const sodiumLib = sodium?.default || sodium;
-const {
-	crypto_generichash,
-	crypto_generichash_BYTES,
-	crypto_generichash_BYTES_MIN,
-	crypto_pwhash_MEMLIMIT_MIN,
-	crypto_pwhash_OPSLIMIT_MIN,
-	crypto_pwhash_str,
-	crypto_pwhash_str_verify,
-	crypto_pwhash_STRBYTES,
-	crypto_shorthash,
-	crypto_shorthash_BYTES,
-	crypto_shorthash_KEYBYTES,
-	randombytes_buf
-} = sodiumLib;
+const { randombytes_buf } = sodiumLib;
 import { clear, isBuffer } from '@universalweb/acid';
 import { blake3 } from '@noble/hashes/blake3';
+export const defaultHashFunction = blake3;
+export const int32 = 32;
+export const int64 = 64;
 export function toBuffer(source) {
 	return Buffer.from(source);
 }
@@ -40,43 +33,19 @@ export function randomBuffer(size = 8) {
 	randomize(target);
 	return target;
 }
-const int32 = 32;
+export function createSeed(size = 32) {
+	const seed = randomBuffer(size);
+	return seed;
+}
 export function random32ByteBuffer() {
 	const target = bufferAlloc(int32);
 	randomize(target);
 	return target;
 }
-const int64 = 64;
 export function random64ByteBuffer() {
 	const target = bufferAlloc(int64);
 	randomize(target);
 	return target;
-}
-export function randomConnectionId(size = 8) {
-	return randomBuffer(size);
-}
-export function passwordHash(password) {
-	const out = bufferAlloc(crypto_pwhash_STRBYTES);
-	crypto_pwhash_str(out, isBuffer(password) ? password : Buffer.from(password), crypto_pwhash_OPSLIMIT_MIN, crypto_pwhash_MEMLIMIT_MIN);
-	return out;
-}
-export function passwordHashVerify(source, password) {
-	return crypto_pwhash_str_verify(source, isBuffer(password) ? password : Buffer.from(password));
-}
-export function hash(message, amount) {
-	const hashed = bufferAlloc(amount || crypto_generichash_BYTES);
-	crypto_generichash(hashed, message);
-	return hashed;
-}
-export function hashMin(message) {
-	const hashed = bufferAlloc(crypto_generichash_BYTES_MIN);
-	crypto_generichash(hashed, message);
-	return hashed;
-}
-export function hashShort(message) {
-	const hashed = bufferAlloc(crypto_shorthash_BYTES);
-	crypto_shorthash(hashed, message, bufferAlloc(crypto_shorthash_KEYBYTES));
-	return hashed;
 }
 export function clearBuffer(source) {
 	source.fill(0);
@@ -92,7 +61,7 @@ export function clearSessionKeys(source) {
 }
 export function combineKeys(...sources) {
 	// console.log('Combine', key1, key2);
-	const combinedKeys = blake3(Buffer.concat(sources));
+	const combinedKeys = defaultHashFunction(Buffer.concat(sources));
 	return combinedKeys;
 }
 export function combineSessionKeys(oldTransmitKey, oldReceiveKey, source) {
@@ -106,7 +75,7 @@ export function combineSessionKeys(oldTransmitKey, oldReceiveKey, source) {
 }
 export function combineKeysFreeMemory(...sources) {
 	// console.log('Combine', key1, key2);
-	const combinedKeys = blake3(Buffer.concat(sources));
+	const combinedKeys = defaultHashFunction(Buffer.concat(sources));
 	clearBuffers(...sources);
 	return combinedKeys;
 }
@@ -119,27 +88,4 @@ export function combineSessionKeysFreeMemory(source, oldTransmitKey, oldReceiveK
 		source.receiveKey = combineKeysFreeMemory(oldReceiveKey, source.receiveKey);
 	}
 }
-export function getX25519Key(source) {
-	return source.slice(0, 32);
-}
-export function get25519KeyCopy(source) {
-	return Buffer.copyBytesFrom(source, 0, 32);
-}
-export function getKyberKey(source) {
-	return source.slice(32);
-}
-export const hashBytes = crypto_generichash_BYTES;
-export {
-	crypto_generichash,
-	crypto_generichash_BYTES,
-	crypto_generichash_BYTES_MIN,
-	crypto_pwhash_MEMLIMIT_MIN,
-	crypto_pwhash_OPSLIMIT_MIN,
-	crypto_pwhash_str,
-	crypto_pwhash_str_verify,
-	crypto_pwhash_STRBYTES,
-	crypto_shorthash,
-	crypto_shorthash_BYTES,
-	crypto_shorthash_KEYBYTES,
-	randombytes_buf,
-};
+export { randombytes_buf };

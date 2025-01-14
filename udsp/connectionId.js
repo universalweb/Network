@@ -5,13 +5,22 @@
 */
 import { hasValue, isString } from '@universalweb/acid';
 import Benchmark from 'benchmark';
-import { randomConnectionId } from '#utilities/crypto';
+import { randomBuffer } from '../utilities/crypto.js';
 const eight = 8;
 const characters = 'abcdef0123456789';
 const charactersLength = characters.length;
-export const stringToHex = (str) => {
+export function randomConnectionId(size = 8) {
+	return randomBuffer(size);
+}
+export function randomServerConnectionId(size = 8) {
+	return randomBuffer(size);
+}
+export function randomClientConnectionId(size = 4) {
+	return randomBuffer(size);
+}
+export function stringToHex(str) {
 	return Buffer.from(str, 'utf8').toString('hex');
-};
+}
 export function convertPrepend(prepend, minSize) {
 	if (!prepend) {
 		return '';
@@ -22,7 +31,8 @@ export function convertPrepend(prepend, minSize) {
 	}
 	return prepend;
 }
-export function generateConnectionId(size = eight, prependArg, minSize = 1) {
+// TODO change generateConnectionId to hex binary mode (auto generate as buffer then use random bytes or counter) make name into string version
+export function generateConnectionIdString(size = eight, prependArg, minSize = 1) {
 	let result = '';
 	const hexSize = size * 2;
 	for (let i = 0; i < hexSize; i++) {

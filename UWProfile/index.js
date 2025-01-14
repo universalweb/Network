@@ -8,14 +8,18 @@ import { decode, encode } from '#utilities/serialize';
 import {
 	getDilithiumPrivateKey,
 	getDilithiumPublicKey,
+	getDilithiumSignature,
 	getEd25519PrivateKey,
 	getEd25519PublicKey,
+	getEd5519Signature
+} from '../udsp/cryptoMiddleware/signature/dilithium_ed25519.js';
+import { keychainGet, keychainSave } from '../udsp/certificate/keychain.js';
+import { read, readStructured, write } from '../utilities/file.js';
+import {
 	sign,
 	signatureKeypair,
 	verifySignature
 } from '../udsp/cryptoMiddleware/signature/dilithium44_ed25519.js';
-import { keychainGet, keychainSave } from '../udsp/certificate/keychain.js';
-import { read, readStructured, write } from '../utilities/file.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { currentCertificateVersion } from '../defaults.js';
 import { x25519_kyber768_xchacha20 } from '../udsp/cryptoMiddleware/cipherSuite/x25519_Kyber768_xChaCha.js';

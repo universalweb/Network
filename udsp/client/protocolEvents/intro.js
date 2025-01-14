@@ -54,10 +54,10 @@ export async function introHeader(header, packetDecoded, rinfo) {
 	const cipherData = header[2];
 	// Change to own function call to handle introHeader cipherData
 	if (cipherData) {
-		await this.setSession(cipherData, null, header);
+		await this.setSession(cipherData, null, header, packetDecoded);
 	}
+	// Consider change for how handshake is triggered maybe let cipher suite decide
 	if (packetDecoded.noMessage) {
-		// Add Function that then receives the server extendedHandshakeHeader
 		if (this.cipherSuite.sendClientExtendedHandshakeHeader) {
 			this.sendExtendedHandshakeHeader(this, this.destination, header, packetDecoded, rinfo);
 		} else {

@@ -1,10 +1,13 @@
-import * as ed25519 from '../udsp/cryptoMiddleware/ed25519.js';
 import { decode, encode } from '#utilities/serialize';
 import { UWProfile } from '../UWProfile/index.js';
-import { currentCertificateVersion } from '../defaults.js';
-import { dilithium44 } from '../udsp/cryptoMiddleware/dilithium44.js';
 import { isBuffer } from '@universalweb/acid';
+import { shake256 } from '@noble/hashes/sha3';
 import { write } from '../utilities/file.js';
+const hashFunction = shake256;
+// 512bit address output
+const hashSettings = {
+	dkLen: 64
+};
 export class ViatWallet extends UWProfile {
 	constructor(config = {}) {
 		const sourceInstance = super(config);
@@ -14,6 +17,14 @@ export class ViatWallet extends UWProfile {
 	}
 	async walletInitialize(config) {
 		return this;
+	}
+	generateAddress() {
+		const address = shake256(this.publicKey, hashSettings);
+		this.address = address;
+		return address;
+	}
+	setAlias(value) {
+		this.alias = value;
 	}
 }
 export function viatWallet(config) {

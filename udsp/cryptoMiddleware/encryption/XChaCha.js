@@ -10,10 +10,15 @@ const {
 	crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
 } = sodiumLib;
 import { bufferAlloc, randomize } from '#utilities/crypto';
+export const sessionKeySize = crypto_kx_SESSIONKEYBYTES;
+export const secretKeySize = crypto_aead_xchacha20poly1305_ietf_KEYBYTES;
+export const nonceSize = crypto_aead_xchacha20poly1305_ietf_NPUBBYTES;
+export const additionalBytesSize = crypto_aead_xchacha20poly1305_ietf_ABYTES;
+export const encryptionOverhead = additionalBytesSize + nonceSize;
 export function emptyNonce() {
-	return bufferAlloc(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
+	return bufferAlloc(nonceSize);
 }
-export function nonceBox(nonceBuffer) {
+export function createNonce(nonceBuffer) {
 	if (nonceBuffer) {
 		return randomize(nonceBuffer);
 	}
@@ -21,30 +26,29 @@ export function nonceBox(nonceBuffer) {
 	return nonce;
 }
 export function createSecretKey() {
-	const secretKey = bufferAlloc(crypto_aead_xchacha20poly1305_ietf_KEYBYTES);
+	const secretKey = bufferAlloc(secretKeySize);
 	crypto_aead_xchacha20poly1305_ietf_keygen(secretKey);
 	return secretKey;
 }
 export function createSessionKey() {
-	const sessionKey = bufferAlloc(crypto_kx_SESSIONKEYBYTES);
+	const sessionKey = bufferAlloc(sessionKeySize);
 	return sessionKey;
 }
 export function encrypt(message, sessionkeys, ad, nonceArg) {
-	const encrypted = bufferAlloc(message.length + crypto_aead_xchacha20poly1305_ietf_ABYTES);
-	const nonce = nonceBox(nonceArg);
+	const encrypted = bufferAlloc(message.length + additionalBytesSize);
+	const nonce = createNonce(nonceArg);
 	crypto_aead_xchacha20poly1305_ietf_encrypt(encrypted, message, ad, null, nonce, sessionkeys?.transmitKey || sessionkeys);
 	return Buffer.concat([
 		nonce,
 		encrypted
 	]);
 }
-encrypt.overhead = crypto_aead_xchacha20poly1305_ietf_ABYTES + crypto_aead_xchacha20poly1305_ietf_NPUBBYTES;
 export function decrypt(encrypted, sessionkeys, ad, nonceArg) {
 	try {
 		const encryptedPayloadLength = encrypted.length;
-		const nonce = nonceArg || encrypted.subarray(0, crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
-		const encryptedMessage = (nonceArg && encrypted) || encrypted.subarray(crypto_aead_xchacha20poly1305_ietf_NPUBBYTES, encryptedPayloadLength);
-		const message = (nonceArg && encrypted) || bufferAlloc(encryptedMessage.length - crypto_aead_xchacha20poly1305_ietf_ABYTES);
+		const nonce = nonceArg || encrypted.subarray(0, nonceSize);
+		const encryptedMessage = (nonceArg && encrypted) || encrypted.subarray(nonceSize, encryptedPayloadLength);
+		const message = bufferAlloc(encryptedMessage.length - additionalBytesSize);
 		const verify = crypto_aead_xchacha20poly1305_ietf_decrypt(message, null, encryptedMessage, ad, nonce, sessionkeys?.receiveKey || sessionkeys);
 		if (verify) {
 			return message;
@@ -55,3 +59,19 @@ export function decrypt(encrypted, sessionkeys, ad, nonceArg) {
 		return;
 	}
 }
+export const xchacha = {
+	id: 0,
+	name: 'xchacha',
+	alias: 'default',
+	sessionKeySize,
+	secretKeySize,
+	nonceSize,
+	encryptionOverhead,
+	additionalBytesSize,
+	emptyNonce,
+	createNonce,
+	createSecretKey,
+	createSessionKey,
+	encrypt,
+	decrypt
+};
