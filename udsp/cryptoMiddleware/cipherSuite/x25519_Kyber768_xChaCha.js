@@ -29,6 +29,7 @@ import { kyber768_x25519 } from '../keyExchange/kyber768_x25519.js';
 import { shake256 } from '@noble/hashes/sha3';
 import { x25519_kyber768Half_xchacha20 } from './x25519_Kyber768Half_xChaCha.js';
 const hashFunction = shake256;
+// CHANGE THIS TO BE SAFE TO ITS OWN AT kyber768_x25519
 const { clientSetSession } = x25519_kyber768Half_xchacha20;
 const {
 	serverSetSessionAttach,
@@ -38,7 +39,6 @@ const {
 	randomBuffer,
 	toBase64,
 	toHex,
-	combineKeys,
 } = defaultCrypto;
 const {
 	clientInitializeSession,

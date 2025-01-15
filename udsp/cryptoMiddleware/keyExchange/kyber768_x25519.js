@@ -1,3 +1,5 @@
+// CONVERT THIS TO SHAKE256 AFTER x25519_blake3 is done
+// Consider SHAKE256 as the hash function for x25519_shake256 variant
 import * as defaultCrypto from '#crypto';
 import {
 	clientSetSession,

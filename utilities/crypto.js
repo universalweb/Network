@@ -6,7 +6,9 @@ const sodiumLib = sodium?.default || sodium;
 const { randombytes_buf } = sodiumLib;
 import { clear, isBuffer } from '@universalweb/acid';
 import { blake3 } from '@noble/hashes/blake3';
-export const defaultHashFunction = blake3;
+import { shake256 } from '@noble/hashes/sha3';
+export const basicHashFunction = blake3;
+export const defaultHashFunction = shake256;
 export const int32 = 32;
 export const int64 = 64;
 export function toBuffer(source) {
@@ -87,6 +89,11 @@ export function cleanKeypair(source) {
 }
 export function combineKeys(...sources) {
 	// console.log('Combine', key1, key2);
+	const combinedKeys = basicHashFunction(Buffer.concat(sources));
+	return combinedKeys;
+}
+export function combineKeysSHAKE256(...sources) {
+	// console.log('Combine', key1, key2);
 	const combinedKeys = defaultHashFunction(Buffer.concat(sources));
 	return combinedKeys;
 }
@@ -101,7 +108,7 @@ export function combineSessionKeys(oldTransmitKey, oldReceiveKey, source) {
 }
 export function combineKeysFreeMemory(...sources) {
 	// console.log('Combine', key1, key2);
-	const combinedKeys = defaultHashFunction(Buffer.concat(sources));
+	const combinedKeys = basicHashFunction(Buffer.concat(sources));
 	clearBuffers(...sources);
 	return combinedKeys;
 }

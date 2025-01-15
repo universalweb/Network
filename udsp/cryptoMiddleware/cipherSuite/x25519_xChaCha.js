@@ -28,7 +28,6 @@ const {
 	clearBuffer,
 	clearBuffers,
 	getX25519Key,
-	combineKeys,
 	combineSessionKeys
 } = defaultCrypto;
 const { id: encryptionKeypairID } = x25519;

@@ -26,7 +26,7 @@ const {
 	randomBuffer,
 	toBase64,
 	toHex,
-	combineKeys,
+	combineKeysSHAKE256,
 	clearBuffer,
 	clearBuffers
 } = defaultCrypto;
@@ -75,8 +75,8 @@ export const kyber768_xChaCha = {
 		const sharedSecret = source.sharedSecret;
 		const oldTransmitKey = source.transmitKey;
 		const oldReceiveKey = source.receiveKey;
-		source.transmitKey = combineKeys(oldTransmitKey, source.sharedSecret);
-		source.receiveKey = combineKeys(oldReceiveKey, source.sharedSecret);
+		source.transmitKey = combineKeysSHAKE256(oldTransmitKey, source.sharedSecret);
+		source.receiveKey = combineKeysSHAKE256(oldReceiveKey, source.sharedSecret);
 		clearBuffer(oldTransmitKey);
 		clearBuffer(oldReceiveKey);
 		clearBuffer(source.sharedSecret);
@@ -148,8 +148,8 @@ export const kyber768_xChaCha = {
 		const sharedSecret = source.sharedSecret;
 		const oldTransmitKey = source.transmitKey;
 		const oldReceiveKey = source.receiveKey;
-		source.transmitKey = combineKeys(oldTransmitKey, source.sharedSecret);
-		source.receiveKey = combineKeys(oldReceiveKey, source.sharedSecret);
+		source.transmitKey = combineKeysSHAKE256(oldTransmitKey, source.sharedSecret);
+		source.receiveKey = combineKeysSHAKE256(oldReceiveKey, source.sharedSecret);
 		clearBuffer(oldTransmitKey);
 		clearBuffer(oldReceiveKey);
 		clearBuffer(source.sharedSecret);
