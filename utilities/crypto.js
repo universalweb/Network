@@ -59,6 +59,32 @@ export function clearSessionKeys(source) {
 	source.transmitKey = null;
 	source.receiveKey = null;
 }
+export function clearSessionWithSharedSecret(source) {
+	if (source.sharedSecret) {
+		clearBuffer(source.sharedSecret);
+		source.receiveKey = null;
+	}
+	if (source.receiveKey) {
+		clearBuffer(source.receiveKey);
+		source.receiveKey = null;
+	}
+	if (source.transmitKey) {
+		clearBuffer(source.transmitKey);
+		source.transmitKey = null;
+	}
+	return source;
+}
+export function cleanKeypair(source) {
+	if (source.publicKey) {
+		clearBuffer(source.publicKey);
+		source.publicKey = null;
+	}
+	if (source.privateKey) {
+		clearBuffer(source.privateKey);
+		source.privateKey = null;
+	}
+	return source;
+}
 export function combineKeys(...sources) {
 	// console.log('Combine', key1, key2);
 	const combinedKeys = defaultHashFunction(Buffer.concat(sources));

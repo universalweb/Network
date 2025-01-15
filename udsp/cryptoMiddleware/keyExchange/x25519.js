@@ -18,7 +18,7 @@ const generatePrivateKey = keyAlgorithm.utils.randomPrivateKey;
 const generatePublicKey = keyAlgorithm.getPublicKey;
 const publicKeySize = int32;
 const privateKeySize = int32;
-const keySize = int32;
+const sessionKeySize = int32;
 const hashSettings = {
 	dkLen: 64
 };
@@ -39,49 +39,23 @@ export function encryptionKeypair(source, cleanFlag) {
 		privateKey
 	};
 }
-export function clearSession(source) {
-	if (source.sharedSecret) {
-		clearBuffer(source.sharedSecret);
-		source.receiveKey = null;
-	}
-	if (source.receiveKey) {
-		clearBuffer(source.receiveKey);
-		source.receiveKey = null;
-	}
-	if (source.transmitKey) {
-		clearBuffer(source.transmitKey);
-		source.transmitKey = null;
-	}
-	return source;
-}
-export function cleanKeypair(source) {
-	if (source.publicKey) {
-		clearBuffer(source.publicKey);
-		source.publicKey = null;
-	}
-	if (source.privateKey) {
-		clearBuffer(source.privateKey);
-		source.privateKey = null;
-	}
-	return source;
-}
 export function clientSetSession(client, server, target) {
-	const sharedsecret = curve25519.x25519.getSharedSecret(client?.privateKey || client, server?.publicKey || server);
-	const sharedSecret = hashFunction(Buffer.concat([
-		sharedsecret,
+	const sharedSecret = curve25519.x25519.getSharedSecret(client?.privateKey || client, server?.publicKey || server);
+	const hashSharedSecret = hashFunction(Buffer.concat([
+		sharedSecret,
 		client.publicKey,
 		server?.publicKey || server
 	]), hashSettings);
-	const transmitKey = sharedSecret.subarray(keySize);
-	const receiveKey = sharedSecret.subarray(0, keySize);
+	const transmitKey = hashSharedSecret.subarray(sessionKeySize);
+	const receiveKey = hashSharedSecret.subarray(0, sessionKeySize);
 	if (target) {
-		target.sharedSecret = sharedSecret;
+		target.sharedSecret = hashSharedSecret;
 		target.receiveKey = receiveKey;
 		target.transmitKey = transmitKey;
 		return target;
 	}
 	return {
-		sharedSecret,
+		sharedSecret: hashSharedSecret,
 		receiveKey,
 		transmitKey
 	};
@@ -90,22 +64,22 @@ export async function clientSetSessionAttach(source, destination) {
 	return clientSetSession(source, destination, source);
 }
 export function serverSetSession(server, client, target) {
-	const sharedsecret = curve25519.x25519.getSharedSecret(server?.privateKey || server, client?.publicKey || client);
-	const sharedSecret = hashFunction(Buffer.concat([
-		sharedsecret,
+	const sharedSecret = curve25519.x25519.getSharedSecret(server?.privateKey || server, client?.publicKey || client);
+	const hashSharedSecret = hashFunction(Buffer.concat([
+		sharedSecret,
 		client?.publicKey || client,
 		server.publicKey
 	]), hashSettings);
-	const transmitKey = sharedSecret.subarray(0, keySize);
-	const receiveKey = sharedSecret.subarray(keySize);
+	const transmitKey = hashSharedSecret.subarray(0, sessionKeySize);
+	const receiveKey = hashSharedSecret.subarray(sessionKeySize);
 	if (target) {
-		target.sharedSecret = sharedSecret;
+		target.sharedSecret = hashSharedSecret;
 		target.receiveKey = receiveKey;
 		target.transmitKey = transmitKey;
 		return target;
 	}
 	return {
-		sharedSecret,
+		sharedSecret: hashSharedSecret,
 		receiveKey,
 		transmitKey
 	};
@@ -135,6 +109,7 @@ export const x25519 = {
 	clientPrivateKeySize: privateKeySize,
 	serverPublicKeySize: publicKeySize,
 	serverPrivateKeySize: privateKeySize,
+	sessionKeySize,
 	serverSetSessionAttach,
 	clientSetSession,
 	serverSetSession,

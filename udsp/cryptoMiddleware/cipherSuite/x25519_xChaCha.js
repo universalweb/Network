@@ -32,7 +32,7 @@ const {
 	combineSessionKeys
 } = defaultCrypto;
 const { id: encryptionKeypairID } = x25519;
-const hash = blake3.hash;
+const hashFunction = blake3.hash;
 export const x25519_xChaCha = {
 	name: 'x25519_xChaCha',
 	alias: 'default',
@@ -154,5 +154,5 @@ export const x25519_xChaCha = {
 	encrypt,
 	encryptionOverhead,
 	preferred: true,
-	hash
+	hash: hashFunction
 };

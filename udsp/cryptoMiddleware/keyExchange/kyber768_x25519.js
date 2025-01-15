@@ -12,8 +12,8 @@ import {
 } from '../keyExchange/kyber768.js';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
 import { assign } from '@universalweb/acid';
-import { blake3 } from '@noble/hashes/blake3';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
+import { shake256 } from '@noble/hashes/sha3';
 const {
 	randomBuffer,
 	toBase64,
@@ -25,10 +25,11 @@ const {
 } = defaultCrypto;
 const publicKeySize = x25519.publicKeySize + kyber768.publicKeySize;
 const privateKeySize = x25519.privateKeySize + kyber768.privateKeySize;
+const hashFunction = shake256;
 export const kyber768_x25519 = {
 	name: 'kyber768_x25519',
 	alias: 'kyber768_x25519',
-	description: 'Crystals-Kyber768 with X25519 and Blake3.',
+	description: 'Crystals-Kyber768 with X25519 and SHAKE256.',
 	id: 3,
 	// partial initial encryption on first packet
 	async clientInitializeSession(source, destination) {
@@ -137,7 +138,7 @@ export const kyber768_x25519 = {
 			}
 		}
 	},
-	hash: blake3,
+	hash: hashFunction,
 	ml_kem768,
 	noneQuatumPublicKeySize: x25519.publicKeySize,
 	noneQuatumPrivateKeySize: x25519.privateKeySize,

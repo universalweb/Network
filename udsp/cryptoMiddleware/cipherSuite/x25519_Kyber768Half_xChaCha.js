@@ -2,7 +2,6 @@
 import * as defaultCrypto from '#crypto';
 import { assign, clear, isBuffer } from '@universalweb/acid';
 import {
-	clearSession,
 	clientSetSession,
 	encryptionKeypair as encryptionKeypair25519,
 	get25519KeyCopy,
@@ -12,7 +11,6 @@ import {
 } from '../keyExchange/x25519.js';
 import { decapsulate, encapsulate } from '../keyExchange/kyber768.js';
 import { decrypt, encrypt, encryptionOverhead } from '../encryption/XChaCha.js';
-import { blake3 } from '@noble/hashes/blake3';
 import { kyber768Half_x25519 } from '../keyExchange/kyber768Half_x25519.js';
 const {
 	randomBuffer,
@@ -20,7 +18,9 @@ const {
 	toHex,
 	combineKeys,
 	clearBuffers,
-	clearBuffer
+	clearBuffer,
+	clearSessionKeys,
+	clearSessionWithSharedSecret,
 } = defaultCrypto;
 const {
 	generateSeed,
@@ -35,7 +35,7 @@ const {
 export const x25519_kyber768Half_xchacha20 = {
 	name: 'x25519_kyber768Half_xchacha20',
 	alias: 'hpqthalf',
-	description: 'Hybrid Post Quantum Key Exchange using both Crystals-Kyber768 and X25519 with XChaCha20 and Blake3 but certification verification only occurs with x25519.',
+	description: 'Hybrid Post Quantum Key Exchange using both Crystals-Kyber768 and X25519 with XChaCha20 and SHAKE256 but certification verification only occurs with x25519.',
 	id: 1,
 	ml_kem768,
 	preferred: true,
@@ -76,7 +76,7 @@ export const x25519_kyber768Half_xchacha20 = {
 		const newTransmitKey = combineKeys(oldTransmitKey, sourceKeypair25519.transmitKey, sharedSecret);
 		const newReceiveKey = combineKeys(oldReceiveKey, sourceKeypair25519.receiveKey, sharedSecret);
 		clearBuffer(cipherData);
-		await clearSession(sourceKeypair25519);
+		await clearSessionWithSharedSecret(sourceKeypair25519);
 		clearBuffers(oldSharedSecret, sharedSecret);
 		source.transmitKey = newTransmitKey;
 		source.receiveKey = newReceiveKey;
@@ -111,7 +111,7 @@ export const x25519_kyber768Half_xchacha20 = {
 		const sharedSecret = nextSession.sharedSecret;
 		const newTransmitKey = combineKeys(oldTransmitKey, x25519SessionKeys.transmitKey, sharedSecret);
 		const newReceiveKey = combineKeys(oldReceiveKey, x25519SessionKeys.receiveKey, sharedSecret);
-		await clearSession(nextSessionKeypair25519);
+		await clearSessionWithSharedSecret(nextSessionKeypair25519);
 		clearBuffers(oldSharedSecret, sharedSecret, destination.publicKey);
 		source.transmitKey = newTransmitKey;
 		source.receiveKey = newReceiveKey;

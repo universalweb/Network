@@ -23,13 +23,12 @@ import * as defaultCrypto from '#crypto';
 import { assign, clearBuffer, isBuffer } from '@universalweb/acid';
 import { decrypt, encrypt, encryptionOverhead } from '../encryption/XChaCha.js';
 import { get25519KeyCopy, x25519 } from '../keyExchange/x25519.js';
-import { blake3 } from '@noble/hashes/blake3';
 import { encapsulate } from '../keyExchange/kyber768.js';
 import { extendedHandshakeRPC } from '../../protocolFrameRPCs.js';
-import { kyber768Half_x25519 } from '../keyExchange/kyber768Half_x25519.js';
 import { kyber768_x25519 } from '../keyExchange/kyber768_x25519.js';
+import { shake256 } from '@noble/hashes/sha3';
 import { x25519_kyber768Half_xchacha20 } from './x25519_Kyber768Half_xChaCha.js';
-const hash = blake3;
+const hashFunction = shake256;
 const { clientSetSession } = x25519_kyber768Half_xchacha20;
 const {
 	serverSetSessionAttach,
@@ -66,7 +65,7 @@ const {
 export const x25519_kyber768_xchacha20 = {
 	name: 'x25519_kyber768_xchacha20',
 	alias: 'hpqt',
-	description: 'Hybrid Post Quantum Key Exchange using both Crystals-Kyber768 and X25519 with XChaCha20 and Blake3.',
+	description: 'Hybrid Post Quantum Key Exchange using both Crystals-Kyber768 + X25519 with XChaCha20 and SHAKE256.',
 	id: 3,
 	ml_kem768,
 	preferred: true,
@@ -97,7 +96,7 @@ export const x25519_kyber768_xchacha20 = {
 		console.log('serverInitializeSession CIPHER', toHex(cipherData));
 		destination.publicKey = get25519KeyCopy(cipherData);
 		await serverSetSessionAttach(source, destination);
-		source.nextSession = await kyber768Half_x25519.serverEphemeralKeypair(source, destination, cipherData);
+		source.nextSession = await kyber768_x25519.serverEphemeralKeypair(source, destination, cipherData);
 		clearBuffer(cipherData);
 		console.log('nextSession', source.nextSession);
 	},
@@ -120,7 +119,7 @@ export const x25519_kyber768_xchacha20 = {
 	clientPrivateKeySize,
 	serverPublicKeySize,
 	serverPrivateKeySize,
-	hash,
+	hash: hashFunction,
 	encrypt,
 	decrypt,
 	encryptionOverhead

@@ -12,8 +12,9 @@ import {
 } from './kyber768.js';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
 import { assign } from '@universalweb/acid';
-import { blake3 } from '@noble/hashes/blake3';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
+import { shake256 } from '@noble/hashes/sha3';
+const hashFunction = shake256;
 const {
 	randomBuffer,
 	toBase64,
@@ -86,7 +87,7 @@ export const kyber768Half_x25519 = {
 		return x25519Keypair;
 	},
 	ml_kem768,
-	hash: blake3,
+	hash: hashFunction,
 	getKyberKey
 };
 export default kyber768Half_x25519;

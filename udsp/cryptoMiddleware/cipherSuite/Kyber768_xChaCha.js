@@ -20,8 +20,8 @@ import {
 import { decrypt, encrypt, encryptionOverhead } from '../encryption/XChaCha.js';
 import { extendedHandshakeHeaderRPC, introHeaderRPC } from '../../protocolHeaderRPCs.js';
 import { extendedHandshakeRPC, introRPC } from '../../protocolFrameRPCs.js';
-import { blake3 } from '@noble/hashes/blake3';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
+import { shake256 } from '@noble/hashes/sha3';
 const {
 	randomBuffer,
 	toBase64,
@@ -31,11 +31,11 @@ const {
 	clearBuffers
 } = defaultCrypto;
 const { id: encryptionKeypairID, } = kyber768;
-const hash = blake3;
+const hashFunction = shake256;
 export const kyber768_xChaCha = {
 	name: 'kyber768_xChaCha',
 	alias: 'kyber768',
-	description: 'Crystals-Kyber768 with XChaCha20 and Blake3.',
+	description: 'Crystals-Kyber768 with XChaCha20 and SHAKE256.',
 	id: 2,
 	preferred: true,
 	speed: 0,
@@ -53,7 +53,7 @@ export const kyber768_xChaCha = {
 		const sharedSecret = await decapsulate(cipherData, kyberPrivateKey);
 		console.log('clientSetSession kyberSharedSecret', sharedSecret[0], sharedSecret.length);
 		source.transmitKey = sharedSecret;
-		source.receiveKey = hash(sharedSecret);
+		source.receiveKey = hashFunction(sharedSecret);
 		console.log('New Session Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
 	async sendClientExtendedHandshake(source, destination, frame, header) {
@@ -107,7 +107,7 @@ export const kyber768_xChaCha = {
 		} = await encapsulate(destinationPublicKey);
 		destination.publicKey = destinationPublicKey;
 		source.cipherData = cipherText;
-		source.transmitKey = hash(sharedSecret);
+		source.transmitKey = hashFunction(sharedSecret);
 		source.receiveKey = sharedSecret;
 		console.log('server kyberSharedSecret', sharedSecret[0], sharedSecret.length);
 		console.log('destinationPublicKey', destinationPublicKey[0]);
@@ -171,7 +171,7 @@ export const kyber768_xChaCha = {
 	decrypt,
 	encrypt,
 	ml_kem768,
-	hash,
+	hash: hashFunction,
 	extendedHandshake: true,
 	encryptionKeypairID,
 	encryptionOverhead
