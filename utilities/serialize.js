@@ -12,7 +12,7 @@ export function decode(data) {
 		return decodeRaw(data);
 	} catch (error) {
 		// console.error(error);
-		return false;
+		return;
 	}
 }
 export function encode(data) {
@@ -23,6 +23,6 @@ export function encode(data) {
 		return encodeRaw(data);
 	} catch (error) {
 		// console.error(error);
-		return false;
+		return;
 	}
 }
