@@ -62,3 +62,7 @@ Quantum pre-image resistance: Grover’s algorithm reduces its effective securit
 Quantum collision resistance: If a quantum collision attack is discovered, it could further reduce security.
 
 Research & development is required to see SPHINCS+ & Dilithium's effects on GPU & ASIC acceleration
+
+### Key derivation
+
+SHAKE256 is recommended as an extendable-output function (XOF) for key derivation.

@@ -16,7 +16,7 @@ const {
 	randomBuffer,
 	toBase64,
 	toHex,
-	combineKeys,
+	combineKeysSHAKE256,
 	clearBuffers,
 	clearBuffer,
 	clearSessionKeys,
@@ -73,8 +73,8 @@ export const x25519_kyber768Half_xchacha20 = {
 		console.log(cipherText, kyberPrivateKey);
 		const sharedSecret = await decapsulate(cipherText, kyberPrivateKey);
 		console.log('clientSetSession sharedSecret', sharedSecret[0], sharedSecret.length);
-		const newTransmitKey = combineKeys(oldTransmitKey, sourceKeypair25519.transmitKey, sharedSecret);
-		const newReceiveKey = combineKeys(oldReceiveKey, sourceKeypair25519.receiveKey, sharedSecret);
+		const newTransmitKey = combineKeysSHAKE256(oldTransmitKey, sourceKeypair25519.transmitKey, sharedSecret);
+		const newReceiveKey = combineKeysSHAKE256(oldReceiveKey, sourceKeypair25519.receiveKey, sharedSecret);
 		clearBuffer(cipherData);
 		await clearSessionWithSharedSecret(sourceKeypair25519);
 		clearBuffers(oldSharedSecret, sharedSecret);
@@ -109,8 +109,8 @@ export const x25519_kyber768Half_xchacha20 = {
 		console.log('serverSetSession nextSession', nextSessionKeypair25519, destination);
 		const x25519SessionKeys = serverSetSession(nextSessionKeypair25519, destination, nextSessionKeypair25519);
 		const sharedSecret = nextSession.sharedSecret;
-		const newTransmitKey = combineKeys(oldTransmitKey, x25519SessionKeys.transmitKey, sharedSecret);
-		const newReceiveKey = combineKeys(oldReceiveKey, x25519SessionKeys.receiveKey, sharedSecret);
+		const newTransmitKey = combineKeysSHAKE256(oldTransmitKey, x25519SessionKeys.transmitKey, sharedSecret);
+		const newReceiveKey = combineKeysSHAKE256(oldReceiveKey, x25519SessionKeys.receiveKey, sharedSecret);
 		await clearSessionWithSharedSecret(nextSessionKeypair25519);
 		clearBuffers(oldSharedSecret, sharedSecret, destination.publicKey);
 		source.transmitKey = newTransmitKey;

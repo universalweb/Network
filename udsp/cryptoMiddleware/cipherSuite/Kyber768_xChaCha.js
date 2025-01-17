@@ -27,11 +27,13 @@ const {
 	toBase64,
 	toHex,
 	combineKeysSHAKE256,
+	shake254_512,
 	clearBuffer,
-	clearBuffers
+	clearBuffers,
+	expandIntoSessionKeys
 } = defaultCrypto;
 const { id: encryptionKeypairID, } = kyber768;
-const hashFunction = shake256;
+const hashFunction = shake254_512;
 export const kyber768_xChaCha = {
 	name: 'kyber768_xChaCha',
 	alias: 'kyber768',
@@ -52,8 +54,7 @@ export const kyber768_xChaCha = {
 		const kyberPrivateKey = source.privateKey;
 		const sharedSecret = await decapsulate(cipherData, kyberPrivateKey);
 		console.log('clientSetSession kyberSharedSecret', sharedSecret[0], sharedSecret.length);
-		source.transmitKey = sharedSecret;
-		source.receiveKey = hashFunction(sharedSecret);
+		expandIntoSessionKeys(sharedSecret, source);
 		console.log('New Session Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
 	async sendClientExtendedHandshake(source, destination, frame, header) {
@@ -85,19 +86,6 @@ export const kyber768_xChaCha = {
 		source.cipherData = null;
 		console.log('TRIGGERED client ExtendedHandshake', source.transmitKey);
 	},
-	// 	async clientSetSession(source, destination, cipherData) {
-	// 	const kyberPrivateKey = source.privateKey;
-	// 	const sharedSecret = await decapsulate(cipherData, kyberPrivateKey);
-	// 	console.log('clientSetSession kyberSharedSecret', sharedSecret[0], sharedSecret.length);
-	// 	const oldTransmitKey = source.transmitKey;
-	// 	const oldReceiveKey = source.receiveKey;
-	// 	console.log('Old Session Keys', source.transmitKey[0], source.receiveKey[0]);
-	// 	source.transmitKey = combineKeys(oldTransmitKey, source.sharedSecret);
-	// 	source.receiveKey = combineKeys(oldReceiveKey, source.sharedSecret);
-	// 	clearBuffer(oldTransmitKey);
-	// 	clearBuffer(oldReceiveKey);
-	// 	console.log('New Session Keys', source.transmitKey[0], source.receiveKey[0]);
-	// },
 	async serverInitializeSession(source, destination, destinationPublicKey) {
 		console.log('server InitializeSession');
 		console.log(destinationPublicKey);
@@ -107,8 +95,7 @@ export const kyber768_xChaCha = {
 		} = await encapsulate(destinationPublicKey);
 		destination.publicKey = destinationPublicKey;
 		source.cipherData = cipherText;
-		source.transmitKey = hashFunction(sharedSecret);
-		source.receiveKey = sharedSecret;
+		expandIntoSessionKeys(sharedSecret, source);
 		console.log('server kyberSharedSecret', sharedSecret[0], sharedSecret.length);
 		console.log('destinationPublicKey', destinationPublicKey[0]);
 	},
