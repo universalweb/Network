@@ -129,7 +129,7 @@
 		"axios": "^1.6.3",
 		"benchmark": "^2.1.4",
 		"daisyui": "^4.4.19",
-		"eslint": "^8.56.0",
+		"eslint": "^9.18.0",
 		"eslint-plugin-jsdoc": "^46.9.1",
 		"htmlhint": "^1.1.4",
 		"rollup": "^4.9.1",
