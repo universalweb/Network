@@ -1,7 +1,7 @@
-import { encapsulate, encryptionKeypair } from '../udsp/cryptoMiddleware/keyExchange/kyber768.js';
+import { encapsulate, encryptionKeypair } from '../cryptoMiddleware/keyExchange/kyber768.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { encode } from '#utilities/serialize';
-import { encrypt } from '../udsp/cryptoMiddleware/encryption/XChaCha.js';
+import { encrypt } from '../cryptoMiddleware/encryption/XChaCha.js';
 import { generateConnectionId } from '#udsp/connectionId';
 // estimate packet sizes
 export async function createServerIntroPacket() {

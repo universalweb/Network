@@ -22,9 +22,9 @@
 import * as defaultCrypto from '#crypto';
 import { assign, clearBuffer, isBuffer } from '@universalweb/acid';
 import { decrypt, encrypt, encryptionOverhead } from '../encryption/XChaCha.js';
-import { get25519KeyCopy, x25519 } from '../keyExchange/x25519.js';
+import { get25519KeyCopy, x25519 } from '../keyExchange/x25519_blake3.js';
 import { encapsulate } from '../keyExchange/kyber768.js';
-import { extendedHandshakeRPC } from '../../protocolFrameRPCs.js';
+import { extendedHandshakeRPC } from '../../udsp/protocolFrameRPCs.js';
 import { kyber768_x25519 } from '../keyExchange/kyber768_x25519.js';
 import { shake256 } from '@noble/hashes/sha3';
 import { x25519_kyber768Half_xchacha20 } from './x25519_Kyber768Half_xChaCha.js';

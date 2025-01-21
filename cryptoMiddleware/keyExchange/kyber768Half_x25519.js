@@ -1,51 +1,73 @@
-// Closed source not for private and or corporate use.
 import * as defaultCrypto from '#crypto';
-import { assign, clear, isBuffer } from '@universalweb/acid';
 import {
 	clientSetSession,
-	encryptionKeypair as encryptionKeypair25519,
+	clientSetSessionAttach,
+	encryptionKeypair as encryptionKeypairX25519,
 	get25519KeyCopy,
 	getX25519Key,
 	serverSetSession,
 	serverSetSessionAttach,
-} from '../keyExchange/x25519.js';
-import { decapsulate, encapsulate } from '../keyExchange/kyber768.js';
-import { decrypt, encrypt, encryptionOverhead } from '../encryption/XChaCha.js';
-import { kyber768Half_x25519 } from '../keyExchange/kyber768Half_x25519.js';
+	x25519
+} from './x25519_blake3.js';
+import {
+	decapsulate,
+	encapsulate,
+	encryptionKeypair,
+	getKyberKey,
+	kyber768
+} from './kyber768.js';
+import { decrypt, encrypt } from '../encryption/XChaCha.js';
+import { assign } from '@universalweb/acid';
+import { ml_kem768 } from '@noble/post-quantum/ml-kem';
+import { shake256 } from '@noble/hashes/sha3';
+const hashFunction = shake256;
 const {
 	randomBuffer,
 	toBase64,
 	toHex,
 	combineKeysSHAKE256,
-	clearBuffers,
-	clearBuffer,
-	clearSessionKeys,
 	clearSessionWithSharedSecret,
+	clearBuffers,
+	clearBuffer
 } = defaultCrypto;
-const {
-	generateSeed,
-	keypair,
-	clientEphemeralKeypair,
-	serverEphemeralKeypair,
-	certificateEncryptionKeypair,
-	ml_kem768,
-	hash,
-	getKyberKey
-} = kyber768Half_x25519;
-export const x25519_kyber768Half_xchacha20 = {
-	name: 'x25519_kyber768Half_xchacha20',
-	alias: 'hpqthalf',
-	description: 'Hybrid Post Quantum Key Exchange using both Crystals-Kyber768 and X25519 with XChaCha20 and SHAKE256 but certification verification only occurs with x25519.',
-	id: 1,
-	ml_kem768,
+const publicKeySize = x25519.publicKeySize + kyber768.publicKeySize;
+const privateKeySize = x25519.privateKeySize + kyber768.privateKeySize;
+export const kyber768Half_x25519 = {
+	name: 'kyber768Half_x25519',
+	alias: 'kyber768Half_x25519',
+	description: 'Crystals-Kyber768 Client only with X25519 and Blake3.',
+	id: 2,
 	preferred: true,
 	speed: 0,
 	security: 1,
-	compatibility: {
+	cipherSuiteCompatibility: {
 		0: true,
-		1: true
+		1: true,
+		2: true,
+		3: true
 	},
-	clientEphemeralKeypair,
+	publicKeySize,
+	privateKeySize,
+	clientPublicKeySize: publicKeySize,
+	clientPrivateKeySize: privateKeySize,
+	serverPublicKeySize: x25519.publicKeySize,
+	serverPrivateKeySize: x25519.privateKeySize,
+	generateSeed() {
+		return randomBuffer(64);
+	},
+	async keypair(kyberSeed) {
+		const x25519Keypair = await encryptionKeypairX25519();
+		const kyberKeypair = await encryptionKeypair(kyberSeed);
+		const target = {
+			publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
+			privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey])
+		};
+		return target;
+	},
+	async clientEphemeralKeypair() {
+		const source = await kyber768Half_x25519.keypair();
+		return source;
+	},
 	async clientInitializeSession(source, destination) {
 		const sourceKeypair25519 = {
 			publicKey: getX25519Key(source.publicKey),
@@ -81,6 +103,24 @@ export const x25519_kyber768Half_xchacha20 = {
 		source.transmitKey = newTransmitKey;
 		source.receiveKey = newReceiveKey;
 		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
+	},
+	async serverEphemeralKeypair(source = {}, destination, cipherData) {
+		const kyberDestinationPublicKey = getKyberKey(cipherData);
+		const {
+			cipherText,
+			sharedSecret
+		} = await encapsulate(kyberDestinationPublicKey);
+		const ephemeralKeypair = await encryptionKeypairX25519();
+		const target = {
+			publicKey: Buffer.concat([ephemeralKeypair.publicKey, cipherText]),
+			privateKey: ephemeralKeypair.privateKey,
+			sharedSecret
+		};
+		clearBuffer(ephemeralKeypair.publicKey);
+		clearBuffer(cipherText);
+		ephemeralKeypair.privateKey = null;
+		ephemeralKeypair.publicKey = null;
+		return target;
 	},
 	async serverInitializeSession(source, destination, cipherData) {
 		console.log('serverInitializeSession CIPHER', toHex(cipherData));
@@ -120,13 +160,12 @@ export const x25519_kyber768Half_xchacha20 = {
 		source.nextSession = null;
 		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
-	generateSeed,
-	keypair,
-	serverEphemeralKeypair,
-	certificateEncryptionKeypair,
-	hash,
-	decrypt,
-	encrypt,
-	encryptionOverhead
+	async certificateEncryptionKeypair() {
+		const x25519Keypair = await encryptionKeypairX25519();
+		return x25519Keypair;
+	},
+	ml_kem768,
+	hash: hashFunction,
+	getKyberKey
 };
-// copyright © Thomas Marchi
+export default kyber768Half_x25519;

@@ -71,7 +71,7 @@ export async function encodePacket(message = Buffer.from(0), source, destination
 		const messageEncoded = encode(message);
 		const ad = headerEncoded;
 		console.log(cipherSuite);
-		const encryptedMessage = cipherSuite.encrypt(messageEncoded, transmitKey, ad);
+		const encryptedMessage = await cipherSuite.encrypt(messageEncoded, transmitKey, ad);
 		if (!encryptedMessage) {
 			return console.trace('Encryption failed');
 		}

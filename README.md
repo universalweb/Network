@@ -2,7 +2,7 @@
     <a href="uw://universalweb.io">UNIVERSAL WEB</a>
 </h1>
 <p align="center">
-| <a href="https://github.com/universalweb/Whitepaper">WHITEPAPER (OUTDATED)</a> |
+| <a href="https://github.com/universalweb/Whitepaper">WHITEPAPER (OUTDATED - OLD DESIGN)</a> |
 </p>
 <hr />
 <h1 align="center">UW://</h1>
@@ -46,7 +46,7 @@
     <li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">UDSP MODULE (CONTAINS SERVER & CLIENT MODULE)</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">SERVER MODULE (CHECK THE UDSP FOLDER & IMPORTS FOR FULL CODE)</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/udsp/client">CLIENT MODULE (CHECK THE UDSP FOLDER & IMPORTS FOR FULL CODE)</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/browser">BROWSER (ourdated)</a></li>
+    <li><a href="https://github.com/universalweb/Network/tree/master/browser">BROWSER (outdated)</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/serverApp">EXAMPLE APP (npm run server)</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/scripts/certificates.js">BUILD DOMAIN & IDENTITY CERTIFICATES THAT ARE ALSO VIAT WALLETS (npm run certificates)</a></li>
     <li><a href="https://github.com/universalweb/Network/tree/master/scripts/simulateClient.js">SIMULATE CLIENT REQUEST (npm run simc) (ONLY RUN WHEN DEMO IN A STABLE COMMIT NOT LATEST UNLESS SPECIFIED)</a></li>

@@ -17,7 +17,7 @@ import {
 	currentProtocolVersion,
 } from '../../defaults.js';
 import { decode, encode } from '#utilities/serialize';
-import { getCipherSuite, getEncryptionKeypairAlgorithm, getSignatureAlgorithm } from '../cryptoMiddleware/index.js';
+import { getCipherSuite, getEncryptionKeypairAlgorithm, getSignatureAlgorithm } from '../../cryptoMiddleware/index.js';
 import { read, readStructured, write } from '#file';
 import { UWCertificate } from './UWCertificate.js';
 import { blake3 } from '@noble/hashes/blake3';

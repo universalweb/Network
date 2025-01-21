@@ -56,3 +56,9 @@ re-add encryption overhead
 change generateConnectionId to hex binary mode (auto generate as buffer then use random bytes or counter)
 
 Remove unused Keypairs & CipherText/CipherData zero out old data then see if can use existing buffers IMPORTANT
+
+Update UW Profile & VIAT Wallet to new CIPHER SUITE
+
+Address ShortHeader Mode and avoid redundant encoding of header and or mesage
+
+Make all crypto operations async by default to future proof

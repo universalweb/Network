@@ -12,17 +12,17 @@ import {
 	getEd25519PrivateKey,
 	getEd25519PublicKey,
 	getEd5519Signature
-} from '../udsp/cryptoMiddleware/signature/dilithium_ed25519.js';
+} from '../cryptoMiddleware/signature/dilithium_ed25519.js';
 import { keychainGet, keychainSave } from '../udsp/certificate/keychain.js';
 import { read, readStructured, write } from '../utilities/file.js';
 import {
 	sign,
 	signatureKeypair,
 	verifySignature
-} from '../udsp/cryptoMiddleware/signature/dilithium44_ed25519.js';
-import { blake3 } from '@noble/hashes/blake3';
+} from '../cryptoMiddleware/signature/dilithium44_ed25519.js';
 import { currentCertificateVersion } from '../defaults.js';
-import { x25519_kyber768_xchacha20 } from '../udsp/cryptoMiddleware/cipherSuite/x25519_Kyber768_xChaCha.js';
+import { shake256 } from '@noble/hashes/sha3';
+import { x25519_kyber768_xchacha20 } from '../cryptoMiddleware/cipherSuite/x25519_Kyber768_xChaCha.js';
 const dirname = currentPath(import.meta);
 export class UWProfile {
 	constructor(config = {}, optionalArg) {
@@ -97,7 +97,7 @@ export class UWProfile {
 		return verifySignature(signature, message, this.publicKey);
 	}
 	async hash(message) {
-		const hashedMessage = blake3(message);
+		const hashedMessage = shake256(message);
 		return hashedMessage;
 	}
 	async importFromBinary(data, encryptionKey) {

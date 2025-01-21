@@ -11,8 +11,8 @@ import {
 	randomBuffer,
 	randomize
 } from '#utilities/crypto';
-import { blake3 } from '@noble/hashes/blake3';
-const hashFunction = blake3;
+import { shake256 } from '@noble/hashes/sha3';
+const hashFunction = shake256;
 const keyAlgorithm = curve25519.x25519;
 const generatePrivateKey = keyAlgorithm.utils.randomPrivateKey;
 const generatePublicKey = keyAlgorithm.getPublicKey;
@@ -23,13 +23,9 @@ const hashSettings = {
 	dkLen: 64
 };
 export function encryptionKeypair(source, cleanFlag) {
-	const privateKey = (source?.privateKey) ? randomize(source.privateKey) : generatePrivateKey();
+	const privateKey = generatePrivateKey();
 	const publicKey = generatePublicKey(privateKey);
 	if (source) {
-		if (source.publicKey) {
-			clearBuffer(source.publicKey);
-			source.publicKey = null;
-		}
 		source.publicKey = publicKey;
 		source.privateKey = privateKey;
 		return source;
@@ -87,21 +83,9 @@ export function serverSetSession(server, client, target) {
 export async function serverSetSessionAttach(source, destination) {
 	return serverSetSession(source, destination, source);
 }
-export function getX25519Key(source) {
-	return source.subarray(0, int32);
-}
-export function get25519KeyCopy(source) {
-	return Buffer.copyBytesFrom(source, 0, int32);
-}
-export function getX25519Keypair(source) {
-	return {
-		publicKey: getX25519Key(source.publicKey),
-		privateKey: getX25519Key(source.privateKey)
-	};
-}
 export const x25519 = {
 	name: 'x25519',
-	alias: 'x25519_blake3',
+	alias: 'x25519',
 	id: 0,
 	publicKeySize,
 	privateKeySize,

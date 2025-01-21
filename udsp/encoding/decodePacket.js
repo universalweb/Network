@@ -135,7 +135,7 @@ export async function decodePacket(config) {
 				info(`encrypted Message size ${messageEncoded.length}bytes`);
 				const ad = isShortHeaderMode ? headerEncoded : encode(headerEncoded);
 				console.log('cipherSuite', cipherSuite);
-				const decryptedMessage = cipherSuite.decrypt(messageEncoded, receiveKey, ad);
+				const decryptedMessage = await cipherSuite.decrypt(messageEncoded, receiveKey, ad);
 				if (isUndefined(decryptedMessage)) {
 					console.trace('Decryption failed');
 					return;
@@ -143,7 +143,7 @@ export async function decodePacket(config) {
 				info(`decrypted Message size ${decryptedMessage.length} BYTES`);
 				const message = decode(decryptedMessage);
 				if (isUndefined(message)) {
-					console.trace('Message Decrypt failed');
+					console.trace('Message Decrypt or Decode failed');
 				}
 				packetDecoded.message = message;
 			}

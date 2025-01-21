@@ -6,7 +6,7 @@ import {
 	encryptionKeypair,
 	serverSetSessionAttach,
 	x25519
-} from '../keyExchange/x25519.js';
+} from '../keyExchange/x25519_blake3.js';
 import {
 	createSessionKey,
 	decrypt,

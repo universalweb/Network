@@ -1,6 +1,6 @@
 import { decode, encode } from 'msgpackr';
 import { ml_kem1024, ml_kem512, ml_kem768 } from '@noble/post-quantum/ml-kem';
-import { encrypt } from '../udsp/cryptoMiddleware/encryption/XChaCha.js';
+import { encrypt } from '../cryptoMiddleware/encryption/XChaCha.js';
 import { randomBuffer } from '#crypto';
 import { slh_dsa_sha2_128f as sph } from '@noble/post-quantum/slh-dsa';
 import { x25519 } from '@noble/curves/ed25519';

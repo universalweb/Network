@@ -4,14 +4,14 @@ import * as defaultCrypto from '#crypto';
 import {
 	clientSetSession,
 	clientSetSessionAttach,
-	encryptionKeypair as encryptionKeypair25519,
+	encryptionKeypair as encryptionKeypairX25519,
 	serverSetSession,
 	serverSetSessionAttach,
 	x25519
-} from './x25519.js';
+} from './x25519_blake3.js';
 import {
 	decapsulate, encapsulate, encryptionKeypair, kyber768
-} from '../keyExchange/kyber768.js';
+} from './kyber768.js';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
 import { assign } from '@universalweb/acid';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
@@ -20,14 +20,29 @@ const {
 	randomBuffer,
 	toBase64,
 	toHex,
-	combineKeys,
-	getX25519Key,
-	getKyberKey,
-	clearBuffer
+	clearBuffer,
+	clearBuffers,
+	combineKeysSHAKE256,
+	int32
 } = defaultCrypto;
 const publicKeySize = x25519.publicKeySize + kyber768.publicKeySize;
 const privateKeySize = x25519.privateKeySize + kyber768.privateKeySize;
 const hashFunction = shake256;
+export function getKyberKey(source) {
+	return source.subarray(32);
+}
+export function getX25519Key(source) {
+	return source.subarray(0, int32);
+}
+export function get25519KeyCopy(source) {
+	return Buffer.copyBytesFrom(source, 0, int32);
+}
+export function getX25519Keypair(source) {
+	return {
+		publicKey: getX25519Key(source.publicKey),
+		privateKey: getX25519Key(source.privateKey)
+	};
+}
 export const kyber768_x25519 = {
 	name: 'kyber768_x25519',
 	alias: 'kyber768_x25519',
@@ -45,6 +60,37 @@ export const kyber768_x25519 = {
 		const x25519SessionKeys = clientSetSession(sourceKeypair25519, destinationPublicKey, source);
 		console.log('Public Key from destination', toHex(destinationX25519PublicKey));
 		return x25519SessionKeys;
+	},
+	async clientSetSession(source, destination) {
+		const destinationPublicKey = destination.publicKey;
+		const sourceKeypair25519 = {
+			publicKey: getX25519Key(source.publicKey),
+			privateKey: getX25519Key(source.privateKey)
+		};
+		const x25519SessionKeys = clientSetSession(sourceKeypair25519, getX25519Key(destinationPublicKey), source);
+		const cipherText = getKyberKey(destinationPublicKey);
+		const kyberPrivateKey = getKyberKey(source.privateKey);
+		// console.log(cipherText, kyberPrivateKey);
+		const kyberSharedSecret = await decapsulate(cipherText, kyberPrivateKey);
+		console.log('clientSetSession kyberSharedSecret', kyberSharedSecret[0], kyberSharedSecret.length);
+		source.transmitKey = combineKeysSHAKE256(x25519SessionKeys.transmitKey, kyberSharedSecret);
+		source.receiveKey = combineKeysSHAKE256(x25519SessionKeys.receiveKey, kyberSharedSecret);
+		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
+	},
+	async serverEphemeralKeypair(source = {}, destination) {
+		const destinationPublicKey = destination.publicKey;
+		const x25519Keypair = await encryptionKeypairX25519(source);
+		const kyberPublicKeypair = getKyberKey(destinationPublicKey);
+		const {
+			cipherText,
+			sharedSecret
+		} = await encapsulate(kyberPublicKeypair);
+		assign(source, x25519Keypair);
+		source.publicKey = Buffer.concat([x25519Keypair.publicKey, cipherText]);
+		source.sharedSecret = sharedSecret;
+		console.log('client kyberSharedSecret', sharedSecret[0], sharedSecret.length);
+		console.log('client cipherText', cipherText[0], cipherText.length);
+		return source;
 	},
 	async serverInitializeSession(source, destination) {
 		console.log('serverInitializeSession');
@@ -65,8 +111,8 @@ export const kyber768_x25519 = {
 			transmitKey: oldTransmitKey,
 			receiveKey: oldReceiveKey
 		} = source;
-		source.transmitKey = combineKeys(oldTransmitKey, sharedSecret);
-		source.receiveKey = combineKeys(oldReceiveKey, sharedSecret);
+		source.transmitKey = combineKeysSHAKE256(oldTransmitKey, sharedSecret);
+		source.receiveKey = combineKeysSHAKE256(oldReceiveKey, sharedSecret);
 		console.log('kyberSharedSecret', sharedSecret[0]);
 		clearBuffer(sharedSecret);
 		clearBuffer(oldTransmitKey);
@@ -74,27 +120,11 @@ export const kyber768_x25519 = {
 		source.sharedSecret = null;
 		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
-	async clientSetSession(source, destination) {
-		const destinationPublicKey = destination.publicKey;
-		const sourceKeypair25519 = {
-			publicKey: getX25519Key(source.publicKey),
-			privateKey: getX25519Key(source.privateKey)
-		};
-		const x25519SessionKeys = clientSetSession(sourceKeypair25519, getX25519Key(destinationPublicKey), source);
-		const cipherText = getKyberKey(destinationPublicKey);
-		const kyberPrivateKey = getKyberKey(source.privateKey);
-		// console.log(cipherText, kyberPrivateKey);
-		const kyberSharedSecret = await decapsulate(cipherText, kyberPrivateKey);
-		console.log('clientSetSession kyberSharedSecret', kyberSharedSecret[0], kyberSharedSecret.length);
-		source.transmitKey = combineKeys(x25519SessionKeys.transmitKey, kyberSharedSecret);
-		source.receiveKey = combineKeys(x25519SessionKeys.receiveKey, kyberSharedSecret);
-		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
-	},
 	generateSeed() {
 		return randomBuffer(64);
 	},
 	async keypair(kyberSeed) {
-		const x25519Keypair = await encryptionKeypair25519();
+		const x25519Keypair = await encryptionKeypairX25519();
 		const kyberKeypair = await encryptionKeypair(kyberSeed);
 		const target = {
 			publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
@@ -104,21 +134,6 @@ export const kyber768_x25519 = {
 	},
 	async clientEphemeralKeypair() {
 		const source = await kyber768_x25519.keypair();
-		return source;
-	},
-	async serverEphemeralKeypair(source = {}, destination) {
-		const destinationPublicKey = destination.publicKey;
-		const x25519Keypair = await encryptionKeypair25519(source);
-		const kyberPublicKeypair = getKyberKey(destinationPublicKey);
-		const {
-			cipherText,
-			sharedSecret
-		} = await encapsulate(kyberPublicKeypair);
-		assign(source, x25519Keypair);
-		source.publicKey = Buffer.concat([x25519Keypair.publicKey, cipherText]);
-		source.sharedSecret = sharedSecret;
-		console.log('client kyberSharedSecret', sharedSecret[0], sharedSecret.length);
-		console.log('client cipherText', cipherText[0], cipherText.length);
 		return source;
 	},
 	async certificateEncryptionKeypair() {

@@ -13,7 +13,7 @@ import {
 	getCipherSuites,
 	getEncryptionKeypairAlgorithm,
 	getSignatureAlgorithm
-} from '../cryptoMiddleware/index.js';
+} from '../../cryptoMiddleware/index.js';
 import { encode } from '#utilities/serialize';
 import { findRecord } from '../dis/index.js';
 import { resolve } from 'path';

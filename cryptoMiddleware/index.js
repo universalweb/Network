@@ -9,7 +9,7 @@ import {
 	isNumber,
 	isUndefined
 } from '@universalweb/acid';
-import { currentCertificateVersion, currentVersion } from '../../defaults.js';
+import { currentCertificateVersion, currentVersion } from '../defaults.js';
 import { blake3 } from './hash/blake3.js';
 import { dilithium44 } from './signature/dilithium44.js';
 import { dilithium44_ed25519 } from './signature/dilithium44_ed25519.js';
@@ -20,7 +20,7 @@ import { kyber768 } from './keyExchange/kyber768.js';
 import { kyber768Half_x25519 } from './keyExchange/kyber768Half_x25519.js';
 import { kyber768_x25519 } from './keyExchange/kyber768_x25519.js';
 import { kyber768_xChaCha } from './cipherSuite/Kyber768_xChaCha.js';
-import { x25519 } from './keyExchange/x25519.js';
+import { x25519 } from './keyExchange/x25519_blake3.js';
 import { x25519_kyber768Half_xchacha20 } from './cipherSuite/x25519_Kyber768Half_xChaCha.js';
 import { x25519_xChaCha } from './cipherSuite/x25519_xChaCha.js';
 function setOption(source, option) {

@@ -18,8 +18,8 @@ import {
 	kyber768
 } from '../keyExchange/kyber768.js';
 import { decrypt, encrypt, encryptionOverhead } from '../encryption/XChaCha.js';
-import { extendedHandshakeHeaderRPC, introHeaderRPC } from '../../protocolHeaderRPCs.js';
-import { extendedHandshakeRPC, introRPC } from '../../protocolFrameRPCs.js';
+import { extendedHandshakeHeaderRPC, introHeaderRPC } from '../../udsp/protocolHeaderRPCs.js';
+import { extendedHandshakeRPC, introRPC } from '../../udsp/protocolFrameRPCs.js';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
 import { shake256 } from '@noble/hashes/sha3';
 const {

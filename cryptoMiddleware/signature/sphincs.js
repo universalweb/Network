@@ -9,49 +9,60 @@
 	* strength of ML-DSA-44 is reduced from category 2 to category 1.)
  */
 import * as defaultCrypto from '#crypto';
-import {
-	slh_dsa_shake_128f,
-	slh_dsa_shake_128s,
-	slh_dsa_shake_192f,
-	slh_dsa_shake_192s,
-	slh_dsa_shake_256f,
-	slh_dsa_shake_256s,
-} from '@noble/post-quantum/slh-dsa';
-import { blake3 } from '@noble/hashes/blake3';
+import { shake256 } from '@noble/hashes/sha3';
+import { slh_dsa_shake_192s } from '@noble/post-quantum/slh-dsa';
 const {
 	randomBuffer,
 	toBase64,
 	toHex,
 	combineKeys
 } = defaultCrypto;
-const generateKeypair = slh_dsa_shake_256s;
+const seedSize = 64;
+const publicKeySize = 48;
+const privateKeySize = 96;
+const signatureSize = 16224;
+const generateKeypair = slh_dsa_shake_192s.keygen;
+const verify = slh_dsa_shake_192s.verify;
+const signData = slh_dsa_shake_192s.sign;
+const hashFunction = shake256;
 export async function signatureKeypair() {
-	const keypair = await generateKeypair.keygen();
+	const keypair = await generateKeypair();
 	return {
 		publicKey: keypair.publicKey,
 		privateKey: keypair.secretKey
 	};
 }
 export async function sign(message, privateKey) {
-	const signedMessage = await generateKeypair.sign(privateKey?.privateKey || privateKey, message);
+	if (!message || !privateKey) {
+		return false;
+	}
+	const signedMessage = await signData(privateKey?.privateKey || privateKey, message);
 	return signedMessage;
 }
-export async function verifySignature(signedMessage, publicKey, message) {
-	const isValid = await generateKeypair.verify(publicKey?.publicKey || publicKey, message, signedMessage);
-	return isValid;
+export async function verifySignature(signature, publicKey, message) {
+	if (!signature || !publicKey || !message) {
+		return false;
+	}
+	if (signature.length !== signatureSize) {
+		return false;
+	}
+	const verification = await verify(publicKey?.publicKey || publicKey, message, signature);
+	return verification;
 }
 export const sphincsShake256 = {
 	name: 'slh_dsa_shake_256f',
 	alias: 'sphincsShake256',
 	id: 5,
+	publicKeySize,
+	privateKeySize,
+	signatureSize,
+	seedSize,
 	signatureKeypair,
 	sign,
 	verifySignature
 };
-console.log(blake3('abc', {
-	dkLen: 64
-}).length);
-// const key = await signatureKeypair();
-// const textExample = Buffer.from('test');
-// // console.log(key);
-// console.log((await sign(textExample, key)).length);
+const key = await signatureKeypair();
+console.log(key.publicKey.length);
+const textExample = Buffer.from('test');
+const sig = await sign(textExample, key);
+console.log(sig, (await verifySignature(sig, key, textExample)));

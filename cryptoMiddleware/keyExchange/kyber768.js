@@ -8,6 +8,9 @@ import { ml_kem768 } from '@noble/post-quantum/ml-kem';
 import { shake256 } from '@noble/hashes/sha3';
 const hashFunction = shake256;
 const sessionKeySize = int32;
+const publicKeySize = 1184;
+const privateKeySize = 2400;
+const seedSize = 64;
 const hashSettings = {
 	dkLen: 64
 };
@@ -69,8 +72,6 @@ export async function encapsulate(sourceKeypair) {
 	const encapsulated = ml_kem768.encapsulate(sourceKeypair?.publicKey || sourceKeypair);
 	return encapsulated;
 }
-const publicKeySize = 1184;
-const privateKeySize = 2400;
 export const kyber768 = {
 	name: 'kyber768',
 	alias: 'kyber768',
