@@ -6,12 +6,14 @@ import { kyber768_x25519 } from './kyber768_x25519.js';
 import { setOptions } from '../utils.js';
 import { x25519 } from './x25519.js';
 import { x25519_blake3 } from './x25519_blake3.js';
+import { x25519_sodium } from './x25519_sodium.js';
 const cipherList = [
 	kyber768Half_x25519,
 	kyber768_x25519,
 	kyber768,
 	x25519,
-	x25519_blake3
+	x25519_blake3,
+	x25519_sodium
 ];
 export const encryptionKeypairAlgorithm = new Map();
 const encryptionKeypairAlgorithmVersion1 = new Map();

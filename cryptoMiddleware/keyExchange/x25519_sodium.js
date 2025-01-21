@@ -80,10 +80,10 @@ export function getX25519Keypair(source) {
 		privateKey: getX25519Key(source.privateKey)
 	};
 }
-export const x25519_blake2b = {
-	name: 'x25519_blake2b',
-	alias: 'x25519_blake2b',
-	id: 0,
+export const x25519_sodium = {
+	name: 'x25519_sodium',
+	alias: 'x25519_sodium',
+	id: 5,
 	publicKeySize,
 	privateKeySize,
 	clientPublicKeySize: publicKeySize,
@@ -98,7 +98,7 @@ export const x25519_blake2b = {
 	encryptionKeypair,
 	certificateEncryptionKeypair: encryptionKeypair,
 };
-export default x25519_blake2b;
+export default x25519_sodium;
 // const keypair = await encryptionKeypair();
 // console.log(keypair);
 // console.log(keypair.publicKey.length);
