@@ -89,10 +89,10 @@ export function getPublicKeyFromPrivateKey(privateKey) {
 	crypto_sign_ed25519_sk_to_pk(publicKey, privateKey);
 	return publicKey;
 }
-export const ed25519 = {
-	name: 'ed25519',
-	alias: 'default',
-	id: 0,
+export const ed25519_sodium = {
+	name: 'ed25519_sodium',
+	alias: 'ed25519_sodium',
+	id: 6,
 	publicKeySize,
 	privateKeySize,
 	signatureSize,

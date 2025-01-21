@@ -8,7 +8,7 @@ export const viatCipherSuite = {
 	name: 'viatCipherSuite',
 	alias: 'x25519_kyber768_xchacha20_dilithium65_sphincs+',
 	description: 'Crystals-Kyber768 with XChaCha20 and SHAKE256.',
-	id: 2,
+	id: 4,
 	preferred: true,
 	speed: 0,
 	security: 1,

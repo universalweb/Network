@@ -49,9 +49,9 @@ export async function verifySignature(signature, publicKey, message) {
 	const verification = await verify(publicKey?.publicKey || publicKey, message, signature);
 	return verification;
 }
-export const sphincsShake256 = {
-	name: 'slh_dsa_shake_256f',
-	alias: 'sphincsShake256',
+export const sphincs192 = {
+	name: 'slh_dsa_shake_192s',
+	alias: 'sphincs192',
 	id: 5,
 	publicKeySize,
 	privateKeySize,
@@ -61,8 +61,8 @@ export const sphincsShake256 = {
 	sign,
 	verifySignature
 };
-const key = await signatureKeypair();
-console.log(key.publicKey.length);
-const textExample = Buffer.from('test');
-const sig = await sign(textExample, key);
-console.log(sig, (await verifySignature(sig, key, textExample)));
+// const key = await signatureKeypair();
+// console.log(key.publicKey.length);
+// const textExample = Buffer.from('test');
+// const sig = await sign(textExample, key);
+// console.log(sig, (await verifySignature(sig, key, textExample)));
