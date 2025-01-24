@@ -15,3 +15,5 @@ UDSP: Universal Data Stream Protocol primary network data transport protocol for
 UW://: The primary Universal Web Protocol that incorporates the DIS & UDSP into a singular protocol & is similar to the responsibilities of HTTPS.
 
 Hybrid Key Pair: A hybrid key pair is the combination of classical and post quantum asymmetric cryptography (AKA Public Key Cryptography) key pair combined into a singular key pair consisting of a public key and a private key. Used for key exchanges & signing data.
+
+Hyper Layer: The communications layer of The Nexus.

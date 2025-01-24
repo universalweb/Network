@@ -308,7 +308,7 @@ export class Client extends UDSP {
 	sendExtendedHandshake = sendExtendedHandshake;
 	sendExtendedHandshakeHeader = sendExtendedHandshakeHeader;
 	async setSession(cipherData, frame, header, packetDecoded) {
-		this.cipherSuite.clientSetSession(this, this.destination, cipherData, frame, header, packetDecoded);
+		await this.cipherSuite.keyExchange.clientSetSession(this, this.destination, cipherData, frame, header, packetDecoded);
 		if (this.receiveKey) {
 			console.log(`Created Shared Keys`);
 			console.log(`receiveKey: ${toHex(this.receiveKey)}`);

@@ -81,8 +81,8 @@ export class Client {
 	}
 	async initializeSession(cipherData) {
 		console.log('Client Initialize session');
-		if (this.cipherSuite.serverInitializeSession) {
-			await this.cipherSuite.serverInitializeSession(this, this.destination, cipherData);
+		if (this.cipherSuite.keyExchange.serverInitializeSession) {
+			await this.cipherSuite.keyExchange.serverInitializeSession(this, this.destination, cipherData);
 		}
 		this.sessionInitialized = true;
 		success(`receiveKey: ${toHex(this.receiveKey)}`);
@@ -90,7 +90,7 @@ export class Client {
 	}
 	async setSession(cipherData) {
 		console.log('Server client Set Session');
-		await this.cipherSuite.serverSetSession(this, this.destination, cipherData);
+		await this.cipherSuite.keyExchange.serverSetSession(this, this.destination, cipherData);
 		this.sessionCompleted = null;
 		success(`receiveKey: ${toHex(this.receiveKey)}`);
 		success(`transmitKey: ${toHex(this.transmitKey)}`);

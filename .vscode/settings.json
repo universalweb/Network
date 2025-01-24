@@ -1,4 +1,12 @@
 {
+	"editor.fontFamily": "JetBrainsMono Nerd Font",
+	"editor.fontLigatures": true,
+	"editor.cursorBlinking": "solid",
+	"editor.formatOnType": false,
+	"editor.autoClosingOvertype": "always",
+	"editor.hideCursorInOverviewRuler": true,
+	"editor.tabCompletion": "on",
+	"editor.cursorSmoothCaretAnimation": "on",
 	"cSpell.words": [
 		"ABYTES",
 		"cnsl",
@@ -12,57 +20,11 @@
 		"uw",
 		"xchacha"
 	],
-	"cSpell.enableFiletypes": [
-		"analytics",
-		"aspnetcorerazor",
-		"bat",
-		"clojure",
-		"code-runner-output",
-		"code-text-binary",
-		"coffeescript",
-		"csv",
-		"cuda-cpp",
-		"dart",
-		"desktop",
-		"diff",
-		"dockercompose",
-		"dockerfile",
-		"excel",
-		"fsharp",
-		"git-rebase",
-		"gitignore",
-		"groovy",
-		"hlsl",
-		"ignore",
-		"ini",
-		"jsx-tags",
-		"julia",
-		"juliamarkdown",
-		"kotlin",
-		"log",
-		"lua",
-		"makefile",
-		"markdown-math",
-		"mustache",
-		"properties",
-		"quokka-recent",
-		"quokka-timeline",
-		"razor",
-		"search-result",
-		"security",
-		"shaderlab",
-		"shellscript",
-		"sql",
-		"ssh_config",
-		"tsv",
-		"vb",
-		"xml",
-		"xsl"
+	"cSpell.enabledFiletypes": [
+		"md",
+		"json",
+		"js"
 	],
-	"workbench.colorCustomizations": {
-		"editor.lineHighlightBackground": "#1073cf2d",
-		"editor.lineHighlightBorder": "#9fced11f"
-	},
 	"sarif-viewer.connectToGithubCodeScanning": "off",
 	"cSpell.customDictionaries": {
 		"custom-dictionary-workspace": {
@@ -76,5 +38,166 @@
 	"diffEditor.codeLens": true,
 	"MutableAI.upsell": false,
 	"todo-tree.tree.scanMode": "workspace only",
-	"editor.fontSize": 15
+	"editor.tokenColorCustomizations": {
+		"textMateRules": [
+			{
+				"scope": "constant.language.boolean.true.js",
+				"settings": {
+					"foreground": "#10ff6c",
+					"fontStyle": "italic bold"
+				}
+			},
+			{
+				"scope": "variable.other.readwrite.alias.js",
+				"settings": {
+					"foreground": "#ffb1ea",
+					"fontStyle": "italic bold"
+				}
+			},
+			{
+				"scope": "constant.language.boolean.false.js",
+				"settings": {
+					"foreground": "#ff1f1f",
+					"fontStyle": "italic bold"
+				}
+			},
+			{
+				"scope": "storage.type.js",
+				"settings": {
+					"foreground": "#C5C5C5",
+					"fontStyle": "italic"
+				}
+			},{
+				"scope": "keyword.operator.assignment.js",
+				"settings": {
+					"foreground": "#b1b1b1",
+					"fontStyle": ""
+				}
+			},{
+				"scope": "keyword.operator.logical.js",
+				"settings": {
+					"foreground": "#b1b1b1",
+					"fontStyle": ""
+				}
+			},
+			{
+				"scope": "keyword.control.export.js",
+				"settings": {
+					"foreground": "#FF7F50",
+					"fontStyle": "italic bold"
+				}
+			},
+			{
+				"scope": "keyword.control.import.js",
+				"settings": {
+					"foreground": "#ff5398",
+					"fontStyle": "italic bold"
+				}
+			},
+			{
+				"scope": "keyword.control.default.js",
+				"settings": {
+					"foreground": "#51e081",
+					"fontStyle": "bold italic"
+				}
+			},
+			{
+				"scope": "storage.modifier.async.js",
+				"settings": {
+					"foreground": "#f64747",
+					"fontStyle": "italic"
+				}
+			},
+			{
+				"scope": "keyword.control.flow.js",
+				"settings": {
+					"foreground": "#ff004c",
+					"fontStyle": "underline"
+				}
+			},
+			{
+				"scope": "constant.language.null.js",
+				"settings": {
+					"foreground": "#D8BFD8",
+					"fontStyle": ""
+				}
+			},
+			{
+				"scope": "string.quoted.single",
+				"settings": {
+					"foreground": "#fff",
+					"fontStyle": ""
+				}
+			},
+			{
+				"scope": "string.quoted.double",
+				"settings": {
+					"foreground": "#fff",
+					"fontStyle": ""
+				}
+			},
+			{
+				"scope": "punctuation.accessor.optional.js",
+				"settings": {
+					"foreground": "#c0c0c0",
+					"fontStyle": ""
+				}
+			},
+			{
+				"scope": "punctuation.separator",
+				"settings": {
+					"foreground": "#c0c0c0",
+					"fontStyle": ""
+				}
+			},
+			{
+				"scope": "punctuation.definition.string.begin.js",
+				"settings": {
+					"foreground": "#a4a4a4",
+					"fontStyle": ""
+				}
+			},
+			{
+				"scope": "punctuation.definition.string.end.js",
+				"settings": {
+					"foreground": "#a4a4a4",
+					"fontStyle": ""
+				}
+			},
+			{
+				"scope": "storage.type.function.js",
+				"settings": {
+					"foreground": "#acdfff",
+					"fontStyle": "italic"
+				}
+			}
+		],
+		"[*Light*]": {
+			"textMateRules": [
+				{
+					"scope": "ref.matchtext",
+					"settings": {
+						"foreground": "#000"
+					}
+				}
+			]
+		},
+		"[*Dark*]": {
+			"textMateRules": [
+				{
+					"scope": "ref.matchtext",
+					"settings": {
+						"foreground": "#fff"
+					}
+				}
+			]
+		}
+	},
+	"errorLens.enabledDiagnosticLevels": [
+		"error",
+		"warning",
+		"info",
+		"hint"
+	],
+	"explorer.copyRelativePathSeparator": "/",
 }

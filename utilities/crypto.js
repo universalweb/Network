@@ -11,46 +11,14 @@ export const basicHashFunction = blake3;
 export const defaultHashFunction = shake256;
 export const int32 = 32;
 export const int64 = 64;
-const hashSettings = {
-	dkLen: 64
+export const hash512Settings = {
+	dkLen: int64
 };
-export function shake254_512(source) {
-	return shake256(source, hashSettings);
+export function clearBuffer(source) {
+	source.fill(0);
 }
-export function expandIntoSessionKeys(sharedSecret, target) {
-	const expandedSecret = shake254_512(sharedSecret);
-	const transmitKey = expandedSecret.subarray(int32);
-	const receiveKey = expandedSecret.subarray(0, int32);
-	if (target) {
-		target.sharedSecret = expandedSecret;
-		target.transmitKey = transmitKey;
-		target.receiveKey = receiveKey;
-		return target;
-	}
-	return {
-		sharedSecret: expandedSecret,
-		transmitKey,
-		receiveKey
-	};
-}
-export function blake3_512(source) {
-	return blake3(source, hashSettings);
-}
-export function expandIntoSessionKeysBlake3(sharedSecret, target) {
-	const expandedSecret = blake3_512(sharedSecret);
-	const transmitKey = expandedSecret.subarray(int32);
-	const receiveKey = expandedSecret.subarray(0, int32);
-	if (target) {
-		target.sharedSecret = expandedSecret;
-		target.transmitKey = transmitKey;
-		target.receiveKey = receiveKey;
-		return target;
-	}
-	return {
-		sharedSecret: expandedSecret,
-		transmitKey,
-		receiveKey
-	};
+export function clearBuffers(...sources) {
+	sources.forEach((clearBuffer));
 }
 export function toBuffer(source) {
 	return Buffer.from(source);
@@ -90,12 +58,6 @@ export function random64ByteBuffer() {
 	randomize(target);
 	return target;
 }
-export function clearBuffer(source) {
-	source.fill(0);
-}
-export function clearBuffers(...sources) {
-	sources.forEach((clearBuffer));
-}
 export function clearSessionKeys(source) {
 	clearBuffer(source.transmitKey);
 	clearBuffer(source.receiveKey);
@@ -127,39 +89,5 @@ export function cleanKeypair(source) {
 		source.privateKey = null;
 	}
 	return source;
-}
-export function combineKeysBlake3(...sources) {
-	// console.log('Combine', key1, key2);
-	const combinedKeys = basicHashFunction(Buffer.concat(sources));
-	return combinedKeys;
-}
-export function combineKeysSHAKE256(...sources) {
-	// console.log('Combine', key1, key2);
-	const combinedKeys = defaultHashFunction(Buffer.concat(sources));
-	return combinedKeys;
-}
-export function combineSessionKeysBlake3(oldTransmitKey, oldReceiveKey, source) {
-	console.log('combineSessionKeys', source.transmitKey, oldTransmitKey, source.receiveKey, oldReceiveKey);
-	if (oldTransmitKey) {
-		source.transmitKey = combineKeysBlake3(oldTransmitKey, source.transmitKey);
-	}
-	if (oldReceiveKey) {
-		source.receiveKey = combineKeysBlake3(oldReceiveKey, source.receiveKey);
-	}
-}
-export function combineKeysFreeMemoryBlake3(...sources) {
-	// console.log('Combine', key1, key2);
-	const combinedKeys = basicHashFunction(Buffer.concat(sources));
-	clearBuffers(...sources);
-	return combinedKeys;
-}
-export function combineSessionKeysFreeMemory(source, oldTransmitKey, oldReceiveKey) {
-	console.log('combineSessionKeys', source.transmitKey, oldTransmitKey, source.receiveKey, oldReceiveKey);
-	if (oldTransmitKey) {
-		source.transmitKey = combineKeysFreeMemoryBlake3(oldTransmitKey, source.transmitKey);
-	}
-	if (oldReceiveKey) {
-		source.receiveKey = combineKeysFreeMemoryBlake3(oldReceiveKey, source.receiveKey);
-	}
 }
 export { randombytes_buf };

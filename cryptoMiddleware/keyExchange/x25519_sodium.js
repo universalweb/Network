@@ -68,18 +68,6 @@ export async function clientSetSessionAttach(source, destination) {
 }
 const publicKeySize = crypto_kx_PUBLICKEYBYTES;
 const privateKeySize = crypto_kx_SECRETKEYBYTES;
-export function getX25519Key(source) {
-	return source.subarray(0, crypto_kx_PUBLICKEYBYTES);
-}
-export function get25519KeyCopy(source) {
-	return Buffer.copyBytesFrom(source, 0, crypto_kx_PUBLICKEYBYTES);
-}
-export function getX25519Keypair(source) {
-	return {
-		publicKey: getX25519Key(source.publicKey),
-		privateKey: getX25519Key(source.privateKey)
-	};
-}
 export const x25519_sodium = {
 	name: 'x25519_sodium',
 	alias: 'x25519_sodium',

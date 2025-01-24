@@ -1,6 +1,6 @@
 import { currentCertificateVersion, currentVersion } from '../../defaults.js';
 import { dilithium44 } from './dilithium44.js';
-import { dilithium44_ed25519 } from './dilithium44_ed25519.js';
+import { dilithium44_ed25519 } from './dilithium65_ed25519.js';
 import { dilithium65 } from './dilithium65.js';
 import { dilithium87 } from './dilithium87.js';
 import { ed25519 } from './ed25519.js';

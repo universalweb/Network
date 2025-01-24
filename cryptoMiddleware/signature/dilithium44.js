@@ -7,15 +7,13 @@
 	RBG with at least 128 bits of security but less than 192 bits of security is used, then the claimed security
 	strength of ML-DSA-44 is reduced from category 2 to category 1.)
 */
-import * as defaultCrypto from '#crypto';
-import { ml_dsa44 } from '@noble/post-quantum/ml-dsa';
-const generateKeypair = ml_dsa44;
-const {
+import {
 	randomBuffer,
 	toBase64,
 	toHex,
-	combineKeys
-} = defaultCrypto;
+} from '#crypto';
+import { ml_dsa44 } from '@noble/post-quantum/ml-dsa';
+const generateKeypair = ml_dsa44;
 export async function signatureKeypair(seed) {
 	const keypair = await generateKeypair.keygen(seed);
 	return {

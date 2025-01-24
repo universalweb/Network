@@ -18,11 +18,11 @@ export async function configCryptography() {
 		this.cipherSuite = certificate.cipherSuiteMethods[0];
 	}
 	if (this.cipherSuite) {
-		if (this.cipherSuite?.certificateKeypairCompatabilityClient) {
-			await this.cipherSuite.certificateKeypairCompatabilityClient(this, this.destination);
+		if (this.cipherSuite?.keyExchange.certificateKeypairCompatabilityClient) {
+			await this.cipherSuite.keyExchange.certificateKeypairCompatabilityClient(this, this.destination);
 		}
 	}
 	// console.log(this.cipherSuite);
-	assign(this, await this.cipherSuite.clientEphemeralKeypair());
-	await this.cipherSuite.clientInitializeSession(this, this.destination);
+	assign(this, await this.cipherSuite.keyExchange.clientEphemeralKeypair());
+	await this.cipherSuite.keyExchange.clientInitializeSession(this, this.destination);
 }

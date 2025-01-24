@@ -62,3 +62,5 @@ Update UW Profile & VIAT Wallet to new CIPHER SUITE
 Address ShortHeader Mode and avoid redundant encoding of header and or mesage
 
 Make all crypto operations async by default to future proof
+
+Make sure a connection cant skip steps - handshake must be enforced

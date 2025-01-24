@@ -1,4 +1,11 @@
-import * as defaultCrypto from '#crypto';
+import {
+	clearBuffer,
+	clearBuffers,
+	clearSessionWithSharedSecret,
+	randomBuffer,
+	toBase64,
+	toHex
+} from '#crypto';
 import {
 	clientSetSession,
 	clientSetSessionAttach,
@@ -8,7 +15,8 @@ import {
 	serverSetSession,
 	serverSetSessionAttach,
 	x25519
-} from './x25519_blake3.js';
+} from './x25519.js';
+import { combineKeys, hash256 } from '../hash/shake256.js';
 import {
 	decapsulate,
 	encapsulate,
@@ -18,18 +26,6 @@ import {
 } from './kyber768.js';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
 import { assign } from '@universalweb/acid';
-import { ml_kem768 } from '@noble/post-quantum/ml-kem';
-import { shake256 } from '@noble/hashes/sha3';
-const hashFunction = shake256;
-const {
-	randomBuffer,
-	toBase64,
-	toHex,
-	combineKeysSHAKE256,
-	clearSessionWithSharedSecret,
-	clearBuffers,
-	clearBuffer
-} = defaultCrypto;
 const publicKeySize = x25519.publicKeySize + kyber768.publicKeySize;
 const privateKeySize = x25519.privateKeySize + kyber768.privateKeySize;
 export const kyber768Half_x25519 = {
@@ -95,8 +91,8 @@ export const kyber768Half_x25519 = {
 		console.log(cipherText, kyberPrivateKey);
 		const sharedSecret = await decapsulate(cipherText, kyberPrivateKey);
 		console.log('clientSetSession sharedSecret', sharedSecret[0], sharedSecret.length);
-		const newTransmitKey = combineKeysSHAKE256(oldTransmitKey, sourceKeypair25519.transmitKey, sharedSecret);
-		const newReceiveKey = combineKeysSHAKE256(oldReceiveKey, sourceKeypair25519.receiveKey, sharedSecret);
+		const newTransmitKey = await combineKeys(oldTransmitKey, sourceKeypair25519.transmitKey, sharedSecret);
+		const newReceiveKey = await combineKeys(oldReceiveKey, sourceKeypair25519.receiveKey, sharedSecret);
 		clearBuffer(cipherData);
 		await clearSessionWithSharedSecret(sourceKeypair25519);
 		clearBuffers(oldSharedSecret, sharedSecret);
@@ -149,8 +145,8 @@ export const kyber768Half_x25519 = {
 		console.log('serverSetSession nextSession', nextSessionKeypair25519, destination);
 		const x25519SessionKeys = serverSetSession(nextSessionKeypair25519, destination, nextSessionKeypair25519);
 		const sharedSecret = nextSession.sharedSecret;
-		const newTransmitKey = combineKeysSHAKE256(oldTransmitKey, x25519SessionKeys.transmitKey, sharedSecret);
-		const newReceiveKey = combineKeysSHAKE256(oldReceiveKey, x25519SessionKeys.receiveKey, sharedSecret);
+		const newTransmitKey = await combineKeys(oldTransmitKey, x25519SessionKeys.transmitKey, sharedSecret);
+		const newReceiveKey = await combineKeys(oldReceiveKey, x25519SessionKeys.receiveKey, sharedSecret);
 		await clearSessionWithSharedSecret(nextSessionKeypair25519);
 		clearBuffers(oldSharedSecret, sharedSecret, destination.publicKey);
 		source.transmitKey = newTransmitKey;
@@ -164,8 +160,7 @@ export const kyber768Half_x25519 = {
 		const x25519Keypair = await encryptionKeypairX25519();
 		return x25519Keypair;
 	},
-	ml_kem768,
-	hash: hashFunction,
+	hash: hash256,
 	getKyberKey
 };
 export default kyber768Half_x25519;

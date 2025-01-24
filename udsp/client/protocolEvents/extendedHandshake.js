@@ -5,7 +5,7 @@ export async function sendExtendedHandshake(frame, header, rinfo) {
 	const { destination } = this;
 	const targetHeader = [];
 	const targetFrame = [false, extendedHandshakeRPC];
-	await this.cipherSuite.sendClientExtendedHandshake(this, destination, targetFrame, targetHeader);
+	await this.cipherSuite.keyExchange.sendClientExtendedHandshake(this, destination, targetFrame, targetHeader);
 	await this.send(targetFrame, targetHeader);
 }
 export async function sendExtendedHandshakeHeader(frame, header, rinfo) {
@@ -13,14 +13,14 @@ export async function sendExtendedHandshakeHeader(frame, header, rinfo) {
 	const { destination } = this;
 	const targetHeader = [extendedHandshakeHeaderRPC];
 	const targetFrame = [];
-	await this.cipherSuite.sendClientExtendedHandshakeHeader(this, destination, targetFrame, targetHeader);
+	await this.cipherSuite.keyExchange.sendClientExtendedHandshakeHeader(this, destination, targetFrame, targetHeader);
 	await this.send(targetFrame, targetHeader);
 }
 export async function extendedHandshake(frame, header, rinfo) {
 	console.log('Client Extended Handshake');
 	const { destination } = this;
-	if (this.cipherSuite.clientExtendedHandshake) {
-		await this.cipherSuite.clientExtendedHandshake(this, destination);
+	if (this.cipherSuite.keyExchange.clientExtendedHandshake) {
+		await this.cipherSuite.keyExchange.clientExtendedHandshake(this, destination);
 	}
 	this.handshaked();
 }

@@ -27,5 +27,6 @@
 		"uwrl"
 	],
 	"ignoreWords": [],
-	"import": []
+	"import": [],
+	"enabled": true
 }

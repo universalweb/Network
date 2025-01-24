@@ -19,7 +19,7 @@ import {
 	sign,
 	signatureKeypair,
 	verifySignature
-} from '../cryptoMiddleware/signature/dilithium44_ed25519.js';
+} from '../cryptoMiddleware/signature/dilithium65_ed25519.js';
 import { currentCertificateVersion } from '../defaults.js';
 import { shake256 } from '@noble/hashes/sha3';
 import { x25519_kyber768_xchacha20 } from '../cryptoMiddleware/cipherSuite/x25519_Kyber768_xChaCha.js';

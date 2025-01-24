@@ -19,56 +19,22 @@
 	The client and server then update their session keys with the new shared secrets.
 	The session keys are hashed based on the prior session keys used initially.
  */
-import * as defaultCrypto from '#crypto';
-import { assign, clearBuffer, isBuffer } from '@universalweb/acid';
-import { decrypt, encrypt, encryptionOverhead } from '../encryption/XChaCha.js';
-import { get25519KeyCopy, x25519 } from '../keyExchange/x25519_blake3.js';
-import { encapsulate } from '../keyExchange/kyber768.js';
-import { extendedHandshakeRPC } from '../../udsp/protocolFrameRPCs.js';
-import { kyber768_x25519 } from '../keyExchange/kyber768_x25519.js';
-import { shake256 } from '@noble/hashes/sha3';
-import { x25519_kyber768Half_xchacha20 } from './x25519_Kyber768Half_xChaCha.js';
-// CHANGE THIS TO BE SAFE TO ITS OWN AT kyber768_x25519
-const { clientSetSession } = x25519_kyber768Half_xchacha20;
-const {
-	serverSetSessionAttach,
-	clientSetSession: clientSetSessionX25519,
-} = x25519;
-const {
+import { assign, isBuffer } from '@universalweb/acid';
+import {
+	clearBuffer,
+	clearBuffers,
 	randomBuffer,
 	toBase64,
-	toHex,
-	shake254_512
-} = defaultCrypto;
-const hashFunction = shake254_512;
-const {
-	clientInitializeSession,
-	serverInitializeSession,
-	serverSetSession,
-	generateSeed,
-	keypair,
-	clientEphemeralKeypair,
-	serverEphemeralKeypair,
-	certificateEncryptionKeypair,
-	ml_kem768,
-	noneQuatumPublicKeySize,
-	noneQuatumPrivateKeySize,
-	quantumPublicKeySize,
-	quantumPrivateKeySize,
-	publicKeySize,
-	privateKeySize,
-	clientPublicKeySize,
-	clientPrivateKeySize,
-	serverPublicKeySize,
-	serverPrivateKeySize,
-	getX25519Keypair
-} = kyber768_x25519;
+	toHex
+} from '#crypto';
+import kyber768_x25519 from '../keyExchange/kyber768_x25519.js';
+import shake256 from 'cryptoMiddleware/hash/shake256.js';
+import xChaCha from '../encryption/XChaCha.js';
 export const x25519_kyber768_xchacha20 = {
 	name: 'x25519_kyber768_xchacha20',
 	alias: 'hpqt',
 	description: 'Hybrid Post Quantum Key Exchange using both Crystals-Kyber768 + X25519 with XChaCha20 and SHAKE256.',
 	id: 3,
-	ml_kem768,
 	preferred: true,
 	speed: 0,
 	security: 1,
@@ -109,20 +75,8 @@ export const x25519_kyber768_xchacha20 = {
 		const target = await keypair();
 		return target;
 	},
-	keypair,
-	noneQuatumPublicKeySize,
-	noneQuatumPrivateKeySize,
-	quantumPublicKeySize,
-	quantumPrivateKeySize,
-	publicKeySize,
-	privateKeySize,
-	clientPublicKeySize,
-	clientPrivateKeySize,
-	serverPublicKeySize,
-	serverPrivateKeySize,
-	hash: hashFunction,
-	encrypt,
-	decrypt,
-	encryptionOverhead
+	encryption: xChaCha,
+	keyExchange: kyber768_x25519,
+	hash: shake256,
 };
 // copyright © Thomas Marchi

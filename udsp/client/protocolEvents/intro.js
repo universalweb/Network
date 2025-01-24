@@ -58,7 +58,7 @@ export async function introHeader(header, packetDecoded, rinfo) {
 	}
 	// Consider change for how handshake is triggered maybe let cipher suite decide
 	if (packetDecoded.noMessage) {
-		if (this.cipherSuite.sendClientExtendedHandshakeHeader) {
+		if (this.cipherSuite.keyExchange.sendClientExtendedHandshakeHeader) {
 			this.sendExtendedHandshakeHeader(this, this.destination, header, packetDecoded, rinfo);
 		} else {
 			this.handshaked();
@@ -102,7 +102,7 @@ export async function intro(frame, header, rinfo) {
 		this.realtime = true;
 	}
 	this.clearIntroTimeout();
-	if (this.cipherSuite.sendClientExtendedHandshake) {
+	if (this.cipherSuite.keyExchange.sendClientExtendedHandshake) {
 		this.sendExtendedHandshake(frame, header, rinfo);
 		return;
 	}

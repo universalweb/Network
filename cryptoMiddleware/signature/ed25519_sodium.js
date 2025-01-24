@@ -1,11 +1,9 @@
-import * as defaultCrypto from '#crypto';
-const {
+import {
 	bufferAlloc,
 	randomBuffer,
 	toBase64,
-	toHex,
-	combineKeys
-} = defaultCrypto;
+	toHex
+} from '#crypto';
 import { RistrettoPoint } from '@noble/curves/ed25519';
 import { blake3 } from '@noble/hashes/blake3';
 const sodium = await import('sodium-native');

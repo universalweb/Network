@@ -3,43 +3,25 @@
  * @DESCRIPTION Cryptography middleware for X25519 with BLAKE3.
  * The shared secret is hashed with BLAKE3 to a 512bit (64 byte) output & then is split into two 32 byte session keys.
  */
-import * as curve25519 from '@noble/curves/ed25519';
 import {
-	bufferAlloc,
-	clearBuffer,
-	int32,
-	randomBuffer,
-	randomize
-} from '#utilities/crypto';
-import { assign } from '@universalweb/acid';
-import { blake3 } from '@noble/hashes/blake3';
-import { x25519 } from './x25519.js';
-const hashFunction = blake3;
-const keyAlgorithm = curve25519.x25519;
-export function clientSetSession(client, server, target) {
-	return x25519.clientSetSession(client, server, target, hashFunction);
-}
-export async function clientSetSessionAttach(source, destination) {
-	return clientSetSession(source, destination, source);
-}
-export function serverSetSession(server, client, target) {
-	return x25519.serverSetSession(client, server, target, hashFunction);
-}
-export async function serverSetSessionAttach(source, destination) {
-	return serverSetSession(source, destination, source);
-}
-const x25519_blake3 = {};
-assign(x25519_blake3, x25519);
-assign(x25519_blake3, {
+	combineSessionKeys,
+	concatHash,
+	concatHash512,
+	hash256,
+	hash512
+} from '../hash/blake3.js';
+import { x25519KeyExchange } from './X25519KeyExchange.js';
+export const x25519_blake3 = x25519KeyExchange({
 	name: 'x25519_blake3',
 	alias: 'x25519_blake3',
-	id: 4,
-	clientSetSession,
-	clientSetSessionAttach,
-	serverSetSession,
-	serverSetSessionAttach
+	id: 0,
+	hash256,
+	hash512,
+	concatHash512,
+	concatHash,
+	combineSessionKeys
 });
 export default x25519_blake3;
-// const keypair = await encryptionKeypair();
-// console.log(keypair);
-// console.log(keypair.publicKey.length);
+const keypair = x25519_blake3.keypair();
+console.log(keypair);
+console.log(keypair.publicKey.length);

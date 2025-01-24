@@ -15,8 +15,11 @@
 <p align="center">
     <b>UW/VIAT is a Meta-Layer Solution designed as a Sub-Layer 0 network. It serves as the foundation for both a next-generation Web and a natively supported cryptocurrency. Unlike traditional Layer 0 solutions, which focus solely on blockchain interoperability and scalability, UW/VIAT is a hybrid system that embraces both centralized and decentralized approaches. The Universal Web is centrally structured to ensure efficiency, security, and seamless integration, while the cryptocurrency (VIAT) is decentralized, enabling trustless transactions and complete transparency. This unified framework enables the development of hybrid applications, where centralized Web services and decentralized cryptocurrency natively work together, creating a seamless infrastructure for secure communications, digital ownership, transactions, and beyond.</b>
 </p>
+<p align="center">
+The UW/VIAT is designed to be a multiplanetary "NEXUS" or more specifically a Crypto Nexus. The defintion we use for a NEXUS is: a unified system that fully integrates a Web & a decentralized cryptocurrency. The Universal Web is similar to the network design of the Web today being the centralized Server-Client model while VIAT is like a traditional decentralized cryptocurrency making it a hybrid network. The unified system can be referred to as the Universal Web (includes VIAT) or simply put The Nexus.
+</p>
 
-<h5 align="center">| <a href="https://x.com/tommarchi">LEAD DEV X(Twitter)</a> |</h5>
+<h5 align="center">| <a href="https://x.com/tommarchi">LEAD DEV</a> |</h5>
 <hr />
 
 <h3 align="center">ATTENTION</h3>
@@ -26,8 +29,17 @@
     <small>To help just submit code or star this repo! All are welcome to the New Web Order.</small>
 </p>
 
-<h3>Perspective</h3>
-<p>The World Wide Web has evolved for decades but its general design, limitations, & components have largely remained the same. Our needs & desires have rapidly outgrown the initial design & purpose of the Web. What if the Web was built today with modern tech and a modern view?</p>
+<h4>Perspective & Rational</h4>
+<p>Reimagining the Web from the ground up may seem like a radical proposition, but it is entirely logical, rational, within our ability, & necessary. At its core, the Web is a collection of software solutions. Therefore, creating a new Web doesn’t require reinventing the physical infrastructure; it simply demands innovative software designed to leverage current innovations while addressing the limitations of the old.</p>
+
+<p>If we critically evaluate the challenges facing the current Web from inefficiencies & vulnerabilities, to its inability to fully embrace emerging technologies it becomes selfevident that incremental updates isn't going to address fundimental design flaws. A foundational overhaul is not only viable but also more efficient and cost-effective. By building on 30 years of lessons, we can envision something that goes beyond what we call a Web something that integrates cutting-edge technologies and anticipates future advancements. This isn’t just an opportunity; it’s an imperative to build a sustainable, forward-thinking cryptographic ecosystem with cryptocurrency as a native component.</p>
+
+<p>It's something beyond a Web it's a Nexus.</p>
+
+<h3>NEXUS?</h3>
+<p>What do you call a system that seamlessly integrates a Web and a native cryptocurrency? We call it a Nexus: a unified ecosystem where both elements are deeply interconnected yet function independently, enhancing each other’s capabilities without compromise. Our version of the World Wide Web is the Universal Web (Multi-planetary) & our cryptocurrency is VIAT together they form what we call a/the Nexus.</p>
+
+<p>The Nexus has its own Domain System, Messaging System, Real-time events, design, data transport network protocol, language, browser, cryptocurrency, and many other unique components. It's a cohesive system rather than a bunch of independent technologies retrofitted to work with each other or layering one thing on-top of the next similar to the Web today or what most call "Web3".</p>
 
 <h4>Goals</h4>
 <p>The objective of the Universal Web is to create a viable modern replacement for the Web today.</p>
@@ -102,10 +114,5 @@
 
 <h4>Is the UW's DIS and the WWW's DNS the same?</h4>
 <p>The World Wide Web has the Domain Name System, Web3 has Decentralized DNS, & the Universal Web has a similar component called the DIS(Domain Information System). Here's the critical difference DNS takes a hostname and spits out a DNS record (has things like an IP address) the DIS returns a cryptographic signed certificate. The returned certificate can have records akin to DNS records in it but is part of a cryptographically protected and verifiable certificate. The DIS plays a similar role to DNS but the DIS has greater functionality, has similar syntax, distributes only cryptographic certificates, and was designed with all other components in mind. Because the DIS provides a certificate instead of just a basic DNS record it makes connection establishment faster and more secure, specifically speeding up the handshake process. When browsing the UW all domain lookups would go to the remote and or local DIS (cached). The entire DIS is a publicly verifiable blockchain but old certificates can be replaced which means Domain record changes are quick and easy with a 0TTL. The DIS doesn't share any domains or rules with the Web's Domain system meaning domain names don't carry over. The UW also permits emoji domains as well as single name domains. Reserved named domains are domains consisting of just a name to quickly access the site for example you just type "x" to go to "x.com".</p>
-
-<h4>It's crazy to rebuild the Web why not improve it?</h4>
-<p>The idea of rebuilding the Web from scratch may seem radical initially, but when we acknowledge the state of the Web and its challenges, it becomes clear that incremental improvements will not be enough to address fundamental issues. It would be cheaper and quicker to take what we have learned from the last 30 years and build a streamlined yet flexible replacement.</p>
-
-<p>The Web as we know it today has evolved organically over decades, resulting in a patchwork of technologies, standards, and protocols. This haphazard evolution has led to compatibility issues, security vulnerabilities, limitations, and performance bottlenecks. We can surpass what we have today but the only viable way to do that is by starting from a new foundation.</p>
 
 <small>COPYRIGHT © 2024 <a href="https://universalweb.io">UNIVERSAL WEB</a></small>

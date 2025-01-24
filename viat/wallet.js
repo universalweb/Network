@@ -1,13 +1,8 @@
 import { decode, encode } from '#utilities/serialize';
+import { hash256, hash512 } from '../cryptoMiddleware/hash/shake256.js';
 import { UWProfile } from '../UWProfile/index.js';
 import { isBuffer } from '@universalweb/acid';
-import { shake256 } from '@noble/hashes/sha3';
 import { write } from '../utilities/file.js';
-const hashFunction = shake256;
-// 512bit address output
-const hashSettings = {
-	dkLen: 64
-};
 export class ViatWallet extends UWProfile {
 	constructor(config = {}) {
 		const sourceInstance = super(config);
@@ -19,7 +14,7 @@ export class ViatWallet extends UWProfile {
 		return this;
 	}
 	generateAddress() {
-		const address = shake256(this.publicKey, hashSettings);
+		const address = hash512(this.publicKey);
 		this.address = address;
 		return address;
 	}

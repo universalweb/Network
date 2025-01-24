@@ -8,15 +8,13 @@
 	* RBG with at least 128 bits of security but less than 192 bits of security is used, then the claimed security
 	* strength of ML-DSA-44 is reduced from category 2 to category 1.)
  */
-import * as defaultCrypto from '#crypto';
-import { shake256 } from '@noble/hashes/sha3';
-import { slh_dsa_shake_192s } from '@noble/post-quantum/slh-dsa';
-const {
+import {
 	randomBuffer,
 	toBase64,
 	toHex,
-	combineKeys
-} = defaultCrypto;
+} from '#crypto';
+import { shake256 } from '@noble/hashes/sha3';
+import { slh_dsa_shake_192s } from '@noble/post-quantum/slh-dsa';
 const seedSize = 64;
 const publicKeySize = 48;
 const privateKeySize = 96;
@@ -24,7 +22,7 @@ const signatureSize = 16224;
 const generateKeypair = slh_dsa_shake_192s.keygen;
 const verify = slh_dsa_shake_192s.verify;
 const signData = slh_dsa_shake_192s.sign;
-const hashFunction = shake256;
+const hash256 = shake256;
 export async function signatureKeypair() {
 	const keypair = await generateKeypair();
 	return {

@@ -1,13 +1,12 @@
-import * as defaultCrypto from '#crypto';
 import * as ed25519Utils from '@noble/ed25519';
-import { RistrettoPoint } from '@noble/curves/ed25519';
-import { shake256 } from '@noble/hashes/sha3';
-const {
+import {
 	bufferAlloc,
 	randomBuffer,
 	toBase64,
 	toHex,
-} = defaultCrypto;
+} from '#crypto';
+import { RistrettoPoint } from '@noble/curves/ed25519';
+import { shake256 } from '@noble/hashes/sha3';
 const publicKeySize = 32;
 const privateKeySize = 32;
 const signatureSize = 64;
@@ -16,7 +15,7 @@ const randomPrivateKey = ed25519Utils.utils.randomPrivateKey;
 const getPublicKey = ed25519Utils.getPublicKeyAsync;
 const verify = ed25519Utils.verifyAsync;
 const signData = ed25519Utils.signAsync;
-const hashFunction = shake256;
+const hash256 = shake256;
 async function generateKeypair(source) {
 	const privateKey = await randomPrivateKey();
 	const publicKey = await getPublicKey(privateKey);
@@ -100,7 +99,7 @@ export const ed25519 = {
 	sign,
 	verifySignature,
 	signCombined,
-	hash: hashFunction,
+	hash: hash256,
 	preferred: true
 };
 // const key = await signatureKeypair();

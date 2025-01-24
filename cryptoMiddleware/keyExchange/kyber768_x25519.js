@@ -1,33 +1,32 @@
 // CONVERT THIS TO SHAKE256 AFTER x25519_blake3 is done
 // Consider SHAKE256 as the hash function for x25519_shake256 variant
-import * as defaultCrypto from '#crypto';
 import {
-	clientSetSession,
-	clientSetSessionAttach,
-	encryptionKeypair as encryptionKeypairX25519,
-	serverSetSession,
-	serverSetSessionAttach,
-	x25519
-} from './x25519_blake3.js';
-import {
-	decapsulate, encapsulate, encryptionKeypair, kyber768
-} from './kyber768.js';
-import { decrypt, encrypt } from '../encryption/XChaCha.js';
-import { assign } from '@universalweb/acid';
-import { ml_kem768 } from '@noble/post-quantum/ml-kem';
-import { shake256 } from '@noble/hashes/sha3';
-const {
-	randomBuffer,
-	toBase64,
-	toHex,
 	clearBuffer,
 	clearBuffers,
-	combineKeysSHAKE256,
-	int32
-} = defaultCrypto;
+	int32,
+	randomBuffer,
+	toBase64,
+	toHex
+} from '#crypto';
+import { combineKeys, hash256 } from '../hash/shake256.js';
+import {
+	decapsulate,
+	encapsulate,
+	encryptionKeypair,
+	kyber768
+} from './kyber768.js';
+import { assign } from '@universalweb/acid';
+import { ml_kem768 } from '@noble/post-quantum/ml-kem';
+import x25519 from './x25519.js';
+const {
+	clientSetSession,
+	clientSetSessionAttach,
+	encryptionKeypair: encryptionKeypairX25519,
+	serverSetSession,
+	serverSetSessionAttach,
+} = x25519;
 const publicKeySize = x25519.publicKeySize + kyber768.publicKeySize;
 const privateKeySize = x25519.privateKeySize + kyber768.privateKeySize;
-const hashFunction = shake256;
 export function getKyberKey(source) {
 	return source.subarray(32);
 }
@@ -73,8 +72,8 @@ export const kyber768_x25519 = {
 		// console.log(cipherText, kyberPrivateKey);
 		const kyberSharedSecret = await decapsulate(cipherText, kyberPrivateKey);
 		console.log('clientSetSession kyberSharedSecret', kyberSharedSecret[0], kyberSharedSecret.length);
-		source.transmitKey = combineKeysSHAKE256(x25519SessionKeys.transmitKey, kyberSharedSecret);
-		source.receiveKey = combineKeysSHAKE256(x25519SessionKeys.receiveKey, kyberSharedSecret);
+		source.transmitKey = await combineKeys(x25519SessionKeys.transmitKey, kyberSharedSecret);
+		source.receiveKey = await combineKeys(x25519SessionKeys.receiveKey, kyberSharedSecret);
 		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
 	async serverEphemeralKeypair(source = {}, destination) {
@@ -111,8 +110,8 @@ export const kyber768_x25519 = {
 			transmitKey: oldTransmitKey,
 			receiveKey: oldReceiveKey
 		} = source;
-		source.transmitKey = combineKeysSHAKE256(oldTransmitKey, sharedSecret);
-		source.receiveKey = combineKeysSHAKE256(oldReceiveKey, sharedSecret);
+		source.transmitKey = await combineKeys(oldTransmitKey, sharedSecret);
+		source.receiveKey = await combineKeys(oldReceiveKey, sharedSecret);
 		console.log('kyberSharedSecret', sharedSecret[0]);
 		clearBuffer(sharedSecret);
 		clearBuffer(oldTransmitKey);
@@ -155,7 +154,7 @@ export const kyber768_x25519 = {
 			}
 		}
 	},
-	hash: hashFunction,
+	hash: hash256,
 	ml_kem768,
 	noneQuatumPublicKeySize: x25519.publicKeySize,
 	noneQuatumPrivateKeySize: x25519.privateKeySize,

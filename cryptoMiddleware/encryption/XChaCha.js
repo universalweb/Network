@@ -10,11 +10,12 @@ const {
 	crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
 } = sodiumLib;
 import { bufferAlloc, randomize } from '#utilities/crypto';
-export const sessionKeySize = crypto_kx_SESSIONKEYBYTES;
+import { int32 } from '#crypto';
+export const sessionKeySize = int32;
 export const secretKeySize = crypto_aead_xchacha20poly1305_ietf_KEYBYTES;
 export const nonceSize = crypto_aead_xchacha20poly1305_ietf_NPUBBYTES;
 export const additionalBytesSize = crypto_aead_xchacha20poly1305_ietf_ABYTES;
-export const encryptionOverhead = additionalBytesSize + nonceSize;
+export const overhead = additionalBytesSize + nonceSize;
 export function emptyNonce() {
 	return bufferAlloc(nonceSize);
 }
@@ -59,14 +60,14 @@ export function decrypt(encrypted, sessionkeys, ad, nonceArg) {
 		return;
 	}
 }
-export const xchacha = {
+export const xChaCha = {
 	id: 0,
 	name: 'xchacha',
 	alias: 'default',
 	sessionKeySize,
 	secretKeySize,
 	nonceSize,
-	encryptionOverhead,
+	overhead,
 	additionalBytesSize,
 	emptyNonce,
 	createNonce,
@@ -75,3 +76,4 @@ export const xchacha = {
 	encrypt,
 	decrypt
 };
+export default xChaCha;

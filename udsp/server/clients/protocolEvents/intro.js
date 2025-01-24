@@ -73,7 +73,7 @@ export async function sendIntro() {
 		introRPC,
 		this.id
 	];
-	await this.cipherSuite.sendServerIntro(this, this.destination, frame, header);
+	await this.cipherSuite.keyExchange.sendServerIntro(this, this.destination, frame, header);
 	// Change connection IP:Port to be the workers IP:Port
 	const scale = this.scale;
 	if (scale) {

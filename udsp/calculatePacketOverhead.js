@@ -1,3 +1,4 @@
+// TODO: Cache Math Values Pre-Compute no need to do some of this per request
 import { assign, hasValue } from '@universalweb/acid';
 import { encode } from '#utilities/serialize';
 const cache = {};
@@ -12,7 +13,7 @@ export async function calculatePacketOverhead(cipherSuite, connectionIdSize, ass
 		return assign(assignTo || {}, cached);
 	}
 	const target = {};
-	const encryptOverhead = cipherSuite?.encryptionOverhead || zero;
+	const encryptOverhead = cipherSuite?.encryption.overhead || zero;
 	if (hasValue(encryptOverhead)) {
 		target.encryptOverhead = encryptOverhead;
 	}
