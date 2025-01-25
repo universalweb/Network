@@ -1,42 +1,53 @@
-/*
-	Algorithm 1, implementing key generation for ML-DSA, uses an RBG to generate the 256-bit random
-	value ξ . The seed ξ shall be freshly generated using an approved RBG, as prescribed in NIST SP 800-90A,
-	SP 800-90B, and SP 800-90C [19, 20, 21]. Moreover, the RBG used shall have a security strength of at
-	least 192 bits for ML-DSA-65 and 256 bits for ML-DSA-87. For ML-DSA-44, the RBG should have a
-	security strength of at least 192 bits and shall have a security strength of at least 128 bits. (If an approved
-	RBG with at least 128 bits of security but less than 192 bits of security is used, then the claimed security
-	strength of ML-DSA-44 is reduced from category 2 to category 1.)
-*/
+import { hash256, hash512, shake256 } from '../hash/shake256.js';
 import {
 	randomBuffer,
 	toBase64,
 	toHex,
 } from '#crypto';
 import { ml_dsa44 } from '@noble/post-quantum/ml-dsa';
-const generateKeypair = ml_dsa44;
-export async function signatureKeypair(seed) {
-	const keypair = await generateKeypair.keygen(seed);
+import { signatureScheme } from './signatureScheme.js';
+const seedSize = 64;
+const publicKeySize = 1312;
+const privateKeySize = 2560;
+const signatureSize = 2420;
+const generateKeypair = ml_dsa44.keygen;
+const verifyData = ml_dsa44.verify;
+const signData = ml_dsa44.sign;
+async function createKeypair(seed) {
+	const keypair = await generateKeypair();
 	return {
 		publicKey: keypair.publicKey,
 		privateKey: keypair.secretKey
 	};
 }
-export async function sign(message, privateKey) {
-	const signedMessage = await generateKeypair.sign(privateKey?.privateKey || privateKey, message);
-	return signedMessage;
+function signMethod(message, privateKey) {
+	return signData(privateKey?.privateKey || privateKey, message);
 }
-export async function verifySignature(signedMessage, publicKey, message) {
-	const isValid = await generateKeypair.verify(publicKey?.publicKey || publicKey, message, signedMessage);
-	return isValid;
+function verifyMethod(signature, message, publicKey) {
+	return verifyData(publicKey?.publicKey || publicKey, message, signature);
 }
-export const dilithium44 = {
+export const dilithium44 = signatureScheme({
 	name: 'dilithium44',
-	alias: 'dilithium44',
-	id: 2,
-	signatureKeypair,
-	sign,
-	verifySignature
-};
+	alias: 'ml_dsa44',
+	id: 1,
+	security: 1,
+	publicKeySize,
+	privateKeySize,
+	signatureSize,
+	seedSize,
+	createKeypair,
+	verifyMethod,
+	signMethod,
+	hash256,
+	hash512,
+	hash: shake256,
+	preferred: false
+});
 export default dilithium44;
-// const kp = await signatureKeypair();
-// console.log(kp.publicKey, kp.publicKey.length);
+// const key = await dilithium44.signatureKeypair();
+// const msg = Buffer.from('hello world');
+// console.log(key);
+// console.log(key.publicKey.length, key.privateKey.length);
+// const sig = await dilithium44.sign(msg, key);
+// console.log(sig.length);
+// console.log(await dilithium44.verify(sig, key, msg));

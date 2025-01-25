@@ -16,3 +16,4 @@ Ristretto
 schnorr
 scid
 secp
+SPHINCS

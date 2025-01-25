@@ -16,7 +16,7 @@
     <b>UW/VIAT is a Meta-Layer Solution designed as a Sub-Layer 0 network. It serves as the foundation for both a next-generation Web and a natively supported cryptocurrency. Unlike traditional Layer 0 solutions, which focus solely on blockchain interoperability and scalability, UW/VIAT is a hybrid system that embraces both centralized and decentralized approaches. The Universal Web is centrally structured to ensure efficiency, security, and seamless integration, while the cryptocurrency (VIAT) is decentralized, enabling trustless transactions and complete transparency. This unified framework enables the development of hybrid applications, where centralized Web services and decentralized cryptocurrency natively work together, creating a seamless infrastructure for secure communications, digital ownership, transactions, and beyond.</b>
 </p>
 <p align="center">
-The UW/VIAT is designed to be a multiplanetary "NEXUS" or more specifically a Crypto Nexus. The defintion we use for a NEXUS is: a unified system that fully integrates a Web & a decentralized cryptocurrency. The Universal Web is similar to the network design of the Web today being the centralized Server-Client model while VIAT is like a traditional decentralized cryptocurrency making it a hybrid network. The unified system can be referred to as the Universal Web (includes VIAT) or simply put The Nexus.
+The UW/VIAT is designed to be a multiplanetary "NEXUS" or more specifically a Crypto Nexus. The defintion we use for a NEXUS is: a unified system that fully integrates a Web & a decentralized cryptocurrency. The Universal Web is similar to the network design of the Web today being the centralized Server-Client model while VIAT is like a traditional decentralized cryptocurrency making it a hybrid network. The unified system can be referred to as the Universal Web (which includes VIAT) or simply put The Nexus.
 </p>
 
 <h5 align="center">| <a href="https://x.com/tommarchi">LEAD DEV</a> |</h5>
@@ -30,11 +30,11 @@ The UW/VIAT is designed to be a multiplanetary "NEXUS" or more specifically a Cr
 </p>
 
 <h4>Perspective & Rational</h4>
-<p>Reimagining the Web from the ground up may seem like a radical proposition, but it is entirely logical, rational, within our ability, & necessary. At its core, the Web is a collection of software solutions. Therefore, creating a new Web doesn’t require reinventing the physical infrastructure; it simply demands innovative software designed to leverage current innovations while addressing the limitations of the old.</p>
+<p>Re-imagining the Web from the ground up may seem like a radical proposition, but it is entirely logical, rational, within our ability, & necessary. At its core, the Web is a collection of software solutions. Therefore, creating a new Web doesn’t require reinventing the physical infrastructure; it simply demands innovative software designed to leverage current innovations while addressing the limitations of the old.</p>
 
 <p>If we critically evaluate the challenges facing the current Web from inefficiencies & vulnerabilities, to its inability to fully embrace emerging technologies it becomes selfevident that incremental updates isn't going to address fundimental design flaws. A foundational overhaul is not only viable but also more efficient and cost-effective. By building on 30 years of lessons, we can envision something that goes beyond what we call a Web something that integrates cutting-edge technologies and anticipates future advancements. This isn’t just an opportunity; it’s an imperative to build a sustainable, forward-thinking cryptographic ecosystem with cryptocurrency as a native component.</p>
 
-<p>It's something beyond a Web it's a Nexus.</p>
+<p>It's something beyond a Web & cryptocurrency it's a Nexus.</p>
 
 <h3>NEXUS?</h3>
 <p>What do you call a system that seamlessly integrates a Web and a native cryptocurrency? We call it a Nexus: a unified ecosystem where both elements are deeply interconnected yet function independently, enhancing each other’s capabilities without compromise. Our version of the World Wide Web is the Universal Web (Multi-planetary) & our cryptocurrency is VIAT together they form what we call a/the Nexus.</p>

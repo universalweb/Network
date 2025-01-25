@@ -1,7 +1,7 @@
 
 # Open link in Universal Web Browser (WIP)
 
-URLs for open link in the Universal Web browser can either begin with uw:// or universalweb:// including various capital or lowercase letter mixtures.
+UW Links can be done with uw:// or the longer backup variant is universalweb://
 
 ## Meta Tag Link
 
