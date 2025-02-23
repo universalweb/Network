@@ -15,26 +15,30 @@
 	"company": "Universal Web, Inc",
 	"dependencies": {
 		"@cldmv/sizeofvar": "^1.0.4",
-		"@electron/packager": "^18.3.2",
-		"@noble/ciphers": "^1.2.0",
-		"@noble/curves": "^1.1.0",
-		"@noble/ed25519": "^2.2.2",
-		"@noble/hashes": "^1.3.1",
-		"@noble/post-quantum": "^0.1.0",
-		"@universalweb/acid": "^3.0.63",
-		"cbor-x": "^1.5.6",
-		"electron": "^23.1.3",
-		"keychain": "^1.4.0",
-		"mongoose": "^7.0.1",
-		"msgpackr": "^1.8.5",
-		"node-seal": "^5.1.3",
-		"node-watch": "^0.7.3",
-		"nodemon": "^2.0.22",
+		"@electron/packager": "^18.3.6",
+		"@noble/ciphers": "^1.2.1",
+		"@noble/curves": "^1.8.1",
+		"@noble/ed25519": "^2.2.3",
+		"@noble/hashes": "^1.7.1",
+		"@noble/post-quantum": "^0.4.0",
+		"@universalweb/acid": "^3.0.74",
+		"cbor-x": "^1.6.0",
+		"electron": "^34.2.0",
+		"hash-wasm": "^4.12.0",
+		"keccak": "^3.0.4",
+		"keychain": "^1.5.0",
+		"libsodium-wrappers": "^0.7.15",
+		"mongoose": "^8.10.1",
+		"msgpackr": "^1.11.2",
+		"node-seal": "^5.1.4",
+		"node-watch": "^0.7.4",
+		"nodemon": "^3.1.9",
 		"os-utils": "^0.0.14",
 		"parse5": "^7.2.1",
 		"pqc-dilithium": "^0.2.0",
-		"qrcode": "^1.5.1",
-		"sodium-native": "^4.0.1"
+		"pqclean": "^0.7.0",
+		"qrcode": "^1.5.4",
+		"sodium-native": "^4.3.2"
 	},
 	"description": "UW:// modules for Client, Server, VIAT, DIS, Browser, Crypto, Modules, & certificates. This is the main repo for all Universal Web & VIAT related modules, scripts, and code.",
 	"esm": {
@@ -60,9 +64,7 @@
 		},
 		"ignore": [
 			"node_modules/",
-			"**.json",
-			"**.css",
-			"**.html"
+			"**.json"
 		]
 	},
 	"imports": {
@@ -84,7 +86,8 @@
 		"#pluckBuffer": "./utilities/pluckBuffer.js",
 		"#certificate": "./utilities/certificate/index.js",
 		"#udsp/*": "./udsp/*.js",
-		"#udsp": "./udsp/index.js"
+		"#udsp": "./udsp/index.js",
+		"#scripts/*": "./scripts/*.js"
 	},
 	"postinstall": "electron-builder install-app-deps",
 	"productName": "Universal Web Browser",
@@ -96,6 +99,7 @@
 		"access": "public"
 	},
 	"scripts": {
+		"preinstall": "npx only-allow pnpm",
 		"certificates": "nodemon ./scripts/certificates.js --watch ./scripts/certificates.js --watch ./certificates/ --watch ./utilities/",
 		"dist": "electron-builder",
 		"electron": "electron .",
@@ -108,34 +112,37 @@
 		"closeReconnect": "nodemon ./scripts/client/closeReconnect.js --watch ./udsp/ --watch ./scripts/client/closeReconnect.js --watch ./utilities/ --delay 3",
 		"connectRequestKyber": "nodemon ./scripts/client/connectRequestKyber.js --watch ./udsp/ --watch ./scripts/client/connectRequestKyber.js --watch ./utilities/ --delay 3",
 		"request": "nodemon ./scripts/client/request.js --watch ./udsp/ --watch ./scripts/client/request.js --watch ./utilities/ --delay 3",
+		"docs": "nodemon ./docs/generate.js --watch ./content.html",
 		"close": "nodemon ./scripts/client/close.js --watch ./udsp/ --watch ./scripts/client/close.js --watch ./utilities/ --delay 3",
 		"clientNoCert": "nodemon ./scripts/client/clientNoCert.js --watch ./udsp/ --watch ./scripts/client/clientNoCert.js --watch ./utilities/ --delay 3",
 		"start": "nodemon --watch ./index.html --watch ./client/ --watch ./browser/ --watch ./main.js --exec 'electron .'",
 		"changelog": "auto-changelog -p --sort-commits date-desc && git add CHANGELOG.md",
-		"bumpVersion": "npm version patch --force",
-		"publish": "npm update && npm run bumpVersion && npm run changelog",
-		"varmemtest": "nodemon -expose-gc --watch 'memoryTests.js' memoryTests.js"
+		"bumpVersion": "pnpm version patch --force",
+		"publish": "pnpm update && pnpm run bumpVersion && pnpm run changelog",
+		"varmemtest": "nodemon -expose-gc --watch 'memoryTests.js' memoryTests.js",
+		"upit": "pnpm update --latest"
 	},
-	"version": "3.0.6",
+	"version": "3.0.7",
 	"devDependencies": {
-		"@babel/core": "^7.23.7",
-		"@babel/eslint-parser": "^7.23.3",
-		"@babel/preset-env": "^7.23.8",
-		"@electron-forge/cli": "^6.0.5",
-		"@microsoft/eslint-formatter-sarif": "^3.0.0",
+		"@babel/core": "^7.26.9",
+		"@babel/eslint-parser": "^7.26.8",
+		"@babel/preset-env": "^7.26.9",
+		"@electron-forge/cli": "^7.7.0",
+		"@microsoft/eslint-formatter-sarif": "^3.1.0",
 		"@rollup/plugin-terser": "^0.4.4",
-		"@stylistic/eslint-plugin": "^1.5.4",
+		"@stylistic/eslint-plugin": "^4.0.1",
 		"@universalweb/docredux": "^3.2.7",
-		"auto-changelog": "^2.4.0",
-		"axios": "^1.6.3",
+		"auto-changelog": "^2.5.0",
+		"axios": "^1.7.9",
 		"benchmark": "^2.1.4",
-		"daisyui": "^4.4.19",
-		"eslint": "^8.56.0",
-		"eslint-plugin-jsdoc": "^46.9.1",
+		"daisyui": "^4.12.23",
+		"eslint": "^9.21.0",
+		"eslint-plugin-jsdoc": "^50.6.3",
 		"htmlhint": "^1.1.4",
-		"rollup": "^4.9.1",
-		"tailwindcss": "^3.3.6",
+		"rollup": "^4.34.8",
+		"tailwindcss": "^4.0.8",
 		"testatron": "^2.1.0",
-		"textlint": "^13.4.1"
-	}
+		"textlint": "^14.4.2"
+	},
+	"packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af"
 }
