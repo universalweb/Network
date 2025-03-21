@@ -40,7 +40,6 @@ export async function onPacket(packet, rinfo) {
 	}
 	const { header, } = config.packetDecoded;
 	// TODO: Replace sessionCompleted with state ID
-	//  TODO: Check if this can e re-written so that not relying on the header having a protocol RPC
 	if (isFalse(config.isShortHeaderMode)) {
 		await proccessProtocolPacketHeader(client, header, config.packetDecoded, rinfo);
 	}

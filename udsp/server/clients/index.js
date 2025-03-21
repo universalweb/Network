@@ -89,12 +89,6 @@ export class Client {
 		this.logInfo(`receiveKey: ${toHex(this.receiveKey)}`);
 		this.logInfo(`transmitKey: ${toHex(this.transmitKey)}`);
 	}
-	// TODO: CONSIDER TO REMOVE SETSESSION USE MORE SPECIFIC NAMES
-	async handshakeCompleted() {
-		this.logInfo('finalizeHandshake');
-		// await this.keyExchange.serverSetSession(this, this.destination, cipherData);
-		this.handshakeStatus = null;
-	}
 	updateState(state) {
 		if (this.destroyed || isNull(this.destroyed)) {
 			return;

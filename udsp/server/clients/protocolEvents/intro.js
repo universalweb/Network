@@ -27,12 +27,12 @@ export async function introHeader(header, packetDecoded) {
 		timeSent,
 		// version,
 	] = header;
-	this.logthis.logInfo('Client initialize Packet Header', header);
+	this.logInfo('Client initialize Packet Header', header);
 	const { certificate } = this;
 	if (cipherData) {
 		this.logSuccess(`cipherData in INTRO HEADER: ${toHex(cipherData)}`);
 	} else {
-		this.logthis.logInfo('No cipherData in INTRO HEADER');
+		this.logInfo('No cipherData in INTRO HEADER');
 		this.destroy();
 		return false;
 	}
@@ -60,7 +60,7 @@ export async function introHeader(header, packetDecoded) {
 	this.nonce = await this.cipher.createNonce();
 	this.logSuccess(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port} LATENCY = ${this.latency}`);
 	if (packetDecoded.noMessage) {
-		this.logthis.logInfo('Intro Packet has No message body');
+		this.logInfo('Intro Packet has No message body');
 		return this.sendIntro();
 	}
 }
@@ -105,6 +105,7 @@ export async function serverIntroFrame(frame) {
 	frame[1] = introRPC;
 	frame[2] = this.id;
 }
+// Add timeout to check if client is still connected
 export async function sendIntro() {
 	const header = [];
 	const frame = [];
@@ -113,8 +114,8 @@ export async function sendIntro() {
 	if (this.keyExchange.createServerIntro) {
 		await this.keyExchange.createServerIntro(this, this.destination, frame, header);
 	}
-	this.logthis.logInfo('Sending Server Intro', frame, header);
-	this.updateState(1);
+	this.logInfo('Sending Server Intro', frame, header);
+	await this.updateState(1);
 	return this.sendAny(frame, header);
 }
 
