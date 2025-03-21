@@ -1,7 +1,9 @@
 import { hasValue } from '@universalweb/acid';
 export function setOption(source, option) {
 	const {
-		id, name: cipherName, alias
+		id,
+		name: cipherName,
+		alias
 	} = option;
 	if (hasValue(cipherName)) {
 		source.set(cipherName, option);
@@ -13,7 +15,7 @@ export function setOption(source, option) {
 		source.set(alias, option);
 	}
 }
-export function setOptions(source, ...options) {
+export function setOptions(source, options) {
 	options.forEach((option) => {
 		setOption(source, option);
 	});

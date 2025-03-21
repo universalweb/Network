@@ -9,13 +9,13 @@ import {
 	untilTrueArray
 } from '@universalweb/acid';
 import {
-	getCipherSuite,
-	getCipherSuites,
-	getEncryptionKeypairAlgorithm,
+	getCipher,
+	getCiphers,
+	getKeyExchangeAlgorithm,
 	getSignatureAlgorithm
 } from '../../cryptoMiddleware/index.js';
+import dis from '../dis/index.js';
 import { encode } from '#utilities/serialize';
-import { findRecord } from '../dis/index.js';
 import { resolve } from 'path';
 import { write } from '#utilities/file';
 export class UWCertificate {
@@ -41,70 +41,70 @@ export class UWCertificate {
 	getSignatureAlgorithm() {
 		return getSignatureAlgorithm(this.object.signatureAlgorithm, this.getCertificateVersion());
 	}
-	getEncryptionKeypairAlgorithm() {
-		return getEncryptionKeypairAlgorithm(this?.object?.encryptionKeypairAlgorithm, this.getCertificateVersion());
+	getKeyExchangeAlgorithm() {
+		return getKeyExchangeAlgorithm(this?.object?.keyExchangeAlgorithm, this.getCertificateVersion());
 	}
-	setEncryptionKeypairAlgorithm() {
-		this.encryptionKeypairAlgorithm = this.getEncryptionKeypairAlgorithm();
-		if (this.encryptionKeypairAlgorithm?.prepareKeypair) {
-			this.encryptionKeypairAlgorithm.prepareKeypair(this);
-		}
+	setKeyExchangeAlgorithm() {
+		this.keyExchangeAlgorithm = this.getKeyExchangeAlgorithm();
 	}
-	getCipherSuite(suiteID) {
-		if (!this.cipherSuiteMethods) {
-			this.setCipherSuiteMethods();
+	setSignatureAlgorithm() {
+		this.signatureAlgorithm = this.getSignatureAlgorithm();
+	}
+	getCipher(cipherId) {
+		if (!this.cipherMethods) {
+			this.setCipherMethods();
 		}
-		if (hasValue(suiteID)) {
-			const target = this.cipherSuiteMethods.find((item) => {
-				return item.id === suiteID;
+		if (hasValue(cipherId)) {
+			const target = this.cipherMethods.find((item) => {
+				return item.id === cipherId;
 			});
 			return target;
 		}
-		return this.cipherSuiteMethods[0];
+		return this.cipherMethods[0];
 	}
-	getCipherSuites() {
-		return getCipherSuites(this.object.cipherSuites, this.getProtocolVersion());
+	getCiphers() {
+		return getCiphers(this.object.ciphers, this.getProtocolVersion());
 	}
-	setCipherSuiteMethods() {
+	setCipherMethods() {
 		const source = this;
-		this.cipherSuiteMethods = this.getCipherSuites();
-		this.cipherSuiteMethods.forEach((item) => {
-			source[`hashCipherSuite${item.id}`] = true;
+		this.cipherMethods = this.getCiphers();
+		this.cipherMethods.forEach((item) => {
+			source[item.id] = true;
 		});
 	}
 	findCipherSuiteMethod(id) {
-		if (!this.cipherSuiteMethods) {
-			this.getCipherSuiteMethods();
+		if (!this.cipherMethods) {
+			this.getcipherMethods();
 		}
-		return this.cipherSuiteMethods.find((cipherSuite) => {
-			return cipherSuite.id === id;
+		return this.cipherMethods.find((cipher) => {
+			return cipher.id === id;
 		});
 	}
 	selectCipherSuite(id) {
-		if (!this.cipherSuiteMethods) {
-			this.getCipherSuiteMethods();
+		if (!this.cipherMethods) {
+			this.getcipherMethods();
 		}
-		const cipherSuiteMethods = this.cipherSuiteMethods;
+		const cipherMethods = this.cipherMethods;
 		const thisCert = this;
 		if (hasValue(id)) {
 			return this.findCipherSuiteMethod(id);
 		}
-		return this.cipherSuiteMethods[0];
+		return this.cipherMethods[0];
 	}
 	getFastestCipherSuite() {
-		let fastest = this.cipherSuiteMethods[0];
-		eachArray(this.cipherSuiteMethods, (cipherSuite) => {
-			if (cipherSuite.speed > fastest.speed) {
-				fastest = cipherSuite;
+		let fastest = this.cipherMethods[0];
+		eachArray(this.cipherMethods, (cipher) => {
+			if (cipher.speed > fastest.speed) {
+				fastest = cipher;
 			}
 		});
 		return fastest;
 	}
 	getMostSecureCipherSuite() {
-		let mostSecure = this.cipherSuiteMethods[0];
-		eachArray(this.cipherSuiteMethods, (cipherSuite) => {
-			if (cipherSuite.security > mostSecure.security) {
-				mostSecure = cipherSuite;
+		let mostSecure = this.cipherMethods[0];
+		eachArray(this.cipherMethods, (cipher) => {
+			if (cipher.security > mostSecure.security) {
+				mostSecure = cipher;
 			}
 		});
 		return mostSecure;
@@ -114,11 +114,12 @@ export class UWCertificate {
 			return this.object.signature;
 		}
 	}
-	encodeArray() {
-		return [this.array, this.getSignature()];
+	async encodeArray() {
+		return [this.array, await this.getSignature()];
 	}
-	encodePublic() {
-		return encode(this.getPublic());
+	async encodePublic() {
+		const publicCertificate = await this.getPublic();
+		return encode(publicCertificate);
 	}
 	encode() {
 		return encode(this.object);
@@ -132,22 +133,25 @@ export class UWCertificate {
 		return saved;
 	}
 	async savePublic(certificateName, savePath) {
+		const certificate = await this.encodePublic();
 		const saved = await this.saveToFile({
-			certificate: this.encodePublic(),
+			certificate,
 			savePath,
 			certificateName
 		});
 		return saved;
 	}
-	createSignature() {
-		const encodedCertificate = encode(this.array);
-		const signatureMethod = getSignatureAlgorithm(this.get('signatureAlgorithm'), this.get('version'));
-		const signature = signatureMethod.sign(encodedCertificate, this.get('signatureKeypair'));
+	async selfSign() {
+		const encodedCertificate = await encode(this.publicCertificate);
+		console.log('selfSign encodedCertificate', encodedCertificate);
+		const signatureAlgorithm = getSignatureAlgorithm(this.get('signatureAlgorithm'), this.get('version'));
+		const signatureKeypair = this.signatureKeypairInstance || await signatureAlgorithm.initializeKeypair(this.get('signatureKeypair'));
+		const signature = await signatureAlgorithm.sign(encodedCertificate, signatureKeypair);
 		return signature;
 	}
-	getPublic() {
-		this.generatePublic();
-		const signature = this.getSignature();
+	async getPublic() {
+		await this.generatePublic();
+		const signature = await this.getSignature();
 		return [this.publicCertificate, signature];
 	}
 	async saveToFile(config) {
@@ -162,6 +166,20 @@ export class UWCertificate {
 		return result;
 	}
 	async findRecord(recordType, hostname) {
-		return findRecord(this, recordType, hostname);
+		return dis.findRecord(this, recordType, hostname);
+	}
+	signatureKeypair() {
+		const algo = this.getSignatureAlgorithm();
+		const keypair = this.get('signatureKeypair');
+		if (algo) {
+			return algo?.exportKeypair(keypair) || keypair;
+		}
+	}
+	keyExchangeKeypair() {
+		const algo = this.getKeyExchangeAlgorithm();
+		const keypair = this.get('keyExchangeAlgorithm');
+		if (algo) {
+			return algo?.exportKeypair(keypair) || keypair;
+		}
 	}
 }

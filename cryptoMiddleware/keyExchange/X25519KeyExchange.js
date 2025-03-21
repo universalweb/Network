@@ -1,29 +1,40 @@
 // CLASS To quickly create variations of x25519 key exchanges
-import * as curve25519 from '@noble/curves/ed25519';
+// TODO: Use clear buffer functions for combine keys
+// TODO: First Packet Encryption is required as an offering for any public key algorithm with small enough keys
 import {
 	bufferAlloc,
 	clearBuffer,
+	clearBuffers,
 	int32,
 	randomBuffer,
 	randomize
-} from '#utilities/crypto';
+} from '#crypto';
+import {
+	crypto_kx_keypair,
+	crypto_scalarmult
+} from '#utilities/sodium';
+import { KeyExchange } from './keyExchange.js';
 import { assign } from '@universalweb/acid';
-import { clearBuffers } from '#crypto';
+import { introHeaderRPC } from '../../udsp/protocolHeaderRPCs.js';
+import { introRPC } from '../../udsp/protocolFrameRPCs.js';
 const kyber768_x25519ID = 3;
-const keyAlgorithm = curve25519.x25519;
-const generatePrivateKey = keyAlgorithm.utils.randomPrivateKey;
-const generatePublicKey = keyAlgorithm.getPublicKey;
-const getSharedSecret = curve25519.x25519.getSharedSecret;
 const publicKeySize = int32;
 const privateKeySize = int32;
 const sessionKeySize = int32;
-export async function encryptionKeypair(source, cleanFlag) {
-	const privateKey = generatePrivateKey();
-	const publicKey = generatePublicKey(privateKey);
-	if (source) {
-		source.publicKey = publicKey;
-		source.privateKey = privateKey;
-		return source;
+export async function getSharedSecret(source, destination) {
+	const sharedSecret = bufferAlloc(sessionKeySize);
+	await crypto_scalarmult(sharedSecret, source?.privateKey || source, destination?.publicKey || destination);
+	console.log('Shared Secret', sharedSecret);
+	return sharedSecret;
+}
+export async function keyExchangeKeypair(config) {
+	const publicKey = config?.publicKey || bufferAlloc(publicKeySize);
+	const privateKey = config?.privateKey || bufferAlloc(privateKeySize);
+	await crypto_kx_keypair(publicKey, privateKey);
+	if (config) {
+		config.publicKey = publicKey;
+		config.privateKey = privateKey;
+		return config;
 	}
 	return {
 		publicKey,
@@ -45,116 +56,89 @@ function hybridToX25519(target) {
 		target.privateKey = privateKeyX25519;
 	}
 }
-function certificateKeypairCompatability(source, cipherSuiteId) {
-	const encryptionKeypairAlgorithmId =
-			source.certificate.encryptionKeypairAlgorithm.id;
-	if (encryptionKeypairAlgorithmId === cipherSuiteId) {
+function certificateKeypairCompatability(source, cipherId) {
+	const keyExchangeAlgorithmId =
+			source.certificate.keyExchangeAlgorithm.id;
+	if (keyExchangeAlgorithmId === cipherId) {
 		return;
 	}
-	if (encryptionKeypairAlgorithmId === kyber768_x25519ID) {
+	if (keyExchangeAlgorithmId === kyber768_x25519ID) {
 		hybridToX25519(source);
 	}
 }
-class X25519KeyExchange {
+class X25519KeyExchange extends KeyExchange {
 	constructor(config) {
+		super(config);
 		assign(this, config);
+		return this;
 	}
-	async clientEphemeralKeypair(destination) {
-		const generatedKeypair = await encryptionKeypair();
-		return generatedKeypair;
-	}
-	async createSession(source, destination, target) {
-		const sharedSecret = getSharedSecret(source?.privateKey || source, destination?.publicKey || destination);
-		const hashSharedSecret = await this.concatHash512(
-			sharedSecret,
-			source?.publicKey || source,
-			destination.publicKey
-		);
-		const transmitKey = hashSharedSecret.subarray(sessionKeySize);
-		const receiveKey = hashSharedSecret.subarray(0, sessionKeySize);
-		if (target) {
-			target.sharedSecret = hashSharedSecret;
-			target.receiveKey = receiveKey;
-			target.transmitKey = transmitKey;
-			return target;
-		}
-		return {
-			sharedSecret: hashSharedSecret,
-			receiveKey,
-			transmitKey
-		};
-	}
-	async clientSetSessionAttach(source, destination) {
-		return this.createSession(source, destination, source);
-	}
+	getSharedSecret = getSharedSecret;
+	keyExchangeKeypair = keyExchangeKeypair;
+	clientEphemeralKeypair = keyExchangeKeypair;
+	serverEphemeralKeypair = keyExchangeKeypair;
+	hybridToX25519 = hybridToX25519;
 	async clientInitializeSession(source, destination) {
-		console.log('clientInitializeSession Destination', destination);
-		console.log(
-			'Public Key from destination',
-			destination.publicKey[0],
-			destination.publicKey.length
-		);
-		await this.clientSetSessionAttach(source, destination);
+		source.sharedSecret = await getSharedSecret(source, destination);
+		await this.createClientSession(source, destination, source);
+	}
+	async createClientIntro(source, destination, frame, header) {
+		console.log('Send Client Intro', source.cipherData);
+		header[1] = source.nextSession.publicKey;
 	}
 	async clientSetSession(source, destination, cipherData) {
-		const {
-			transmitKey: oldTransmitKey,
-			receiveKey: oldReceiveKey
-		} = source;
-		source.transmitKey = null;
-		source.receiveKey = null;
-		destination.publicKey = cipherData;
-		await this.clientSetSessionAttach(source, destination);
-		const {
-			transmitKey,
-			receiveKey
-		} = source;
-		await this.combineSessionKeys(oldTransmitKey, oldReceiveKey, source);
-		clearBuffers(oldTransmitKey, oldReceiveKey);
+		console.log('clientSetSession');
+		source.sharedSecret = await getSharedSecret(source, cipherData);
+		console.log('sharedSecret', source.sharedSecret);
+		await this.finalizeSession(source, destination);
+		await this.clientCleanup(source);
+		source.nextSession = null;
 	}
-	serverEphemeralKeypair = encryptionKeypair;
-	async serverSetSessionAttach(source, destination) {
-		return this.createSession(source, destination, source);
+	async serverInitializeSessionMethod(source, destination, cipherData) {
+		source.sharedSecret = await getSharedSecret(source, destination);
+		source.nextSession = await keyExchangeKeypair();
 	}
-	async serverInitializeSession(source, destination, cipherData) {
-		destination.publicKey = cipherData;
-		source.nextSession = await encryptionKeypair();
-		await this.serverSetSessionAttach(source, destination);
-	}
-	async sendServerIntro(source, destination, frame, header) {
+	// The only thing which won't be public by default is the public key
+	async createServerIntro(source, destination, frame, header) {
 		console.log('Send Server Intro', source.cipherData);
-		frame[3] = source.nextSession.publicKey;
+		header[1] = source.nextSession.publicKey;
 	}
-	async serverSetSession(source, destination) {
-		const {
-			transmitKey: oldTransmitKey,
-			receiveKey: oldReceiveKey
-		} = source;
-		source.transmitKey = null;
-		source.receiveKey = null;
+	async serverSetSession(source, destination, cipherData) {
+		console.log('serverSetSession');
 		if (source.nextSession) {
-			assign(source, source.nextSession);
+			source.sharedSecret = await getSharedSecret(source.nextSession, destination);
 			source.nextSession = null;
 		}
-		await this.serverSetSessionAttach(source, destination);
-		await this.combineSessionKeys(oldTransmitKey, oldReceiveKey, source);
-		clearBuffers(oldTransmitKey, oldReceiveKey);
+		await this.finalizeSession(source, destination);
+		await this.serverCleanup(source);
+		source.nextSession = null;
 	}
-	ephemeralKeypair = encryptionKeypair;
-	encryptionKeypair = encryptionKeypair;
-	keypair = encryptionKeypair;
+	async finalizeSession(source, destination) {
+		console.log('finalizeSession', source.type);
+		await this.finalizeSessionKeys(source, destination);
+	}
 	certificateKeypairCompatability = certificateKeypairCompatability;
 	certificateKeypairCompatabilityClient(source, destination) {
 		return certificateKeypairCompatability(
 			destination,
-			source.cipherSuite.id
+			source.cipher.id
 		);
 	}
 	certificateKeypairCompatabilityServer(source, destination) {
 		return certificateKeypairCompatability(
 			source,
-			source.cipherSuite.id
+			source.cipher.id
 		);
+	}
+	async initializeKeypair(source, target) {
+		if (target) {
+			target.publicKey = source.publicKey;
+			target.privateKey = source.privateKey;
+			return target;
+		}
+		return assign({}, source);
+	}
+	async initializeCertificateKeypair(keypair, target) {
+		return this.initializeKeypair(target, keypair);
 	}
 	publicKeySize = publicKeySize;
 	privateKeySize = privateKeySize;
@@ -164,7 +148,7 @@ class X25519KeyExchange {
 	serverPrivateKeySize = privateKeySize;
 	sessionKeySize = sessionKeySize;
 	preferred = false;
-	certificateEncryptionKeypair = encryptionKeypair;
+	certificateEncryptionKeypair = keyExchangeKeypair;
 }
 export function x25519KeyExchange(config) {
 	return new X25519KeyExchange(config);

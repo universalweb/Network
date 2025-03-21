@@ -20,7 +20,7 @@ import {
 	success
 } from '#logs';
 import { createClient } from './clients/index.js';
-import { proccessProtocolPacketHeader } from '#udsp/proccessProtocolPacket';
+import { proccessProtocolPacketHeader } from '#udsp/proccessProtocol';
 import { reply } from '#udsp/request/reply';
 import { toBase64 } from '#crypto';
 export async function onPacket(packet, rinfo) {
@@ -37,31 +37,30 @@ export async function onPacket(packet, rinfo) {
 	}
 	const id = config.packetDecoded.id;
 	if (id !== false && !isBuffer(id)) {
-		return console.log('Invalid Client id given', id === false);
+		return this.logInfo('Invalid Client id given', id === false);
 	}
+	// TODO: Optimize lookup of client
 	const idString = id.toString('hex');
 	const client = await this.client(config, id, idString, rinfo);
 	if (!client) {
 		// Send error message back to origin or not
-		return console.log('No matching Client id given', idString);
+		return this.logInfo('No matching Client id given', idString);
 	}
 	const { header, } = config.packetDecoded;
-	// Replace with state ID instead of sessionCompleted boolean
-	if (isFalse(client.sessionCompleted)) {
+	// TODO: Replace sessionCompleted with state ID
+	//  TODO: Check if this can e re-written so that not relying on the header having a protocol RPC
+	if (isFalse(client.handshakeStatus)) {
 		if (isFalse(config.isShortHeaderMode)) {
 			await proccessProtocolPacketHeader(client, header, config.packetDecoded, rinfo);
-		} else if (client.nextSession) {
-			console.log('Client assigned Next Session', client.nextSession, header, config);
-			await client.setSession();
 		}
 	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {
-		return console.log('Message failed to decode');
+		return this.logInfo('Message failed to decode');
 	}
 	const { message } = config.packetDecoded;
 	if (!hasValue(message)) {
-		console.log('No message found in packet');
+		this.logInfo('No message found in packet');
 		return;
 	}
 	return client.reply(message, header);

@@ -10,8 +10,8 @@ const uwClient = await client({
 	// Load Profile from keychain
 	profile: `${currentPath(import.meta)}/../../profiles/profile.cert`,
 	profilePassword: 'password',
-	// Force overide cipherSuite
-	cipherSuite: 1,
+	// Force overide cipher
+	cipher: 1,
 });
 const connection = await uwClient.connect();
 console.timeEnd('Connected');

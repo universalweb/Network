@@ -4,7 +4,7 @@ import {
 	randomBuffer,
 	toHex,
 } from '#crypto';
-import XChaCha from '../encryption/XChaCha.js';
+import XChaCha from '../cipher/xChaCha.js';
 import shake256 from '../hash/shake256.js';
 import x25519 from '../keyExchange/x25519.js';
 export const x25519_xChaCha = {

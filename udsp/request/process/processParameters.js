@@ -1,13 +1,13 @@
 import { eachArray } from '@universalweb/acid';
 export async function processParameters() {
 	if (this.parametersAssembled) {
-		return console.log('Parameters already processed');
+		return this.logInfo('Parameters already processed');
 	}
 	const {
 		missingParametersPackets,
 		incomingParameters
 	} = this;
-	console.log('incomingParametersPackets', this.incomingParametersPackets);
+	this.logInfo('incomingParametersPackets', this.incomingParametersPackets);
 	if (this.totalIncomingParametersSize === this.currentIncomingParametersSize) {
 		this.setParameters();
 	} else {
@@ -19,5 +19,5 @@ export async function processParameters() {
 			}
 		});
 	}
-	console.log('incomingParameters', incomingParameters);
+	this.logInfo('incomingParameters', incomingParameters);
 }

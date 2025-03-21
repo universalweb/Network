@@ -16,7 +16,7 @@ import { getMethodId } from '../methods/index.js';
 // params support both Complex Data Binary Supported Params and simple traditional URL percent encoded params
 export async function uwRequest(methodArg, pathArg, paramArg, dataArg, headersArg, optionsArg) {
 	if (!this.destination.ip) {
-		console.log(`Can't send request - No Destination IP`);
+		this.logInfo(`Can't send request - No Destination IP`);
 		return this;
 	}
 	let method = getMethodId(methodArg);
@@ -35,6 +35,6 @@ export async function uwRequest(methodArg, pathArg, paramArg, dataArg, headersAr
 	}
 	info(`Request Function: ${method} ${path}`);
 	const ask = await this.ask(method, path, params, data, head, options);
-	console.log(data, ask);
+	this.logInfo(data, ask);
 	return ask;
 }

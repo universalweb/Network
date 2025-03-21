@@ -36,7 +36,7 @@ import { serverResponseObject } from './objects/server/response.js';
 export class Reply extends Base {
 	constructor(frame, header, source) {
 		super(source);
-		console.log('Setting up new reply', frame);
+		this.logInfo('Setting up new reply', frame);
 		const id = frame[0];
 		if (!hasValue(id)) {
 			console.trace('Catastrophic error no stream id in frame');
@@ -64,6 +64,6 @@ export class Reply extends Base {
 	static type = 'reply';
 }
 export function reply(...args) {
-	// console.log(client);
+	// this.logInfo(client);
 	return construct(Reply, args);
 }

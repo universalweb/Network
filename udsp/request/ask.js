@@ -40,7 +40,7 @@ export class Ask extends Base {
 			streamIdGenerator,
 			destination
 		} = source;
-		console.log('Ask', path);
+		this.logInfo('Ask', path);
 		const id = streamIdGenerator.get();
 		this.id = id;
 		this.method = getMethodId(method);
@@ -67,7 +67,7 @@ export class Ask extends Base {
 		requestQueue.set(id, this);
 	}
 	completeReceived() {
-		console.log('Ask complete', this);
+		this.logInfo('Ask complete', this);
 		this.setState(askRPC.received);
 		this.clearSendDataReadyTimeout();
 		this.sendEnd();

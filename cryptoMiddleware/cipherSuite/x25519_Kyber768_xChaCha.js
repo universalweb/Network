@@ -28,8 +28,8 @@ import {
 	toHex
 } from '#crypto';
 import kyber768_x25519 from '../keyExchange/kyber768_x25519.js';
-import shake256 from 'cryptoMiddleware/hash/shake256.js';
-import xChaCha from '../encryption/XChaCha.js';
+import shake256 from '../hash/shake256.js';
+import xChaCha from '../cipher/xChaCha.js';
 export const x25519_kyber768_xchacha20 = {
 	name: 'x25519_kyber768_xchacha20',
 	alias: 'hpqt',
@@ -38,45 +38,8 @@ export const x25519_kyber768_xchacha20 = {
 	preferred: true,
 	speed: 0,
 	security: 1,
-	async clientEphemeralKeypair() {
-		const source = await keypair();
-		return source;
-	},
-	clientInitializeSession,
-	clientSetSession,
-	// CHANGE TO NEW HEADER & FRAME ARGS
-	async sendClientExtendedHandshake(source, destination, frame, header) {
-		const destinationPublicKey = destination.publicKey;
-		console.log('TRIGGERED sendClientExtendedHandshake');
-		console.log(destinationPublicKey.length);
-		const {
-			cipherText,
-			sharedSecret
-		} = await encapsulate(destinationPublicKey);
-		frame.push(cipherText);
-		source.cipherData = cipherText;
-		source.sharedSecret = sharedSecret;
-		console.log('sendClientExtendedHandshake kyberSharedSecret', sharedSecret[0], sharedSecret.length);
-		console.log('sendClientExtendedHandshake cipherText', cipherText[0], cipherText.length);
-	},
-	async serverInitializeSession(source, destination, cipherData) {
-		console.log('serverInitializeSession CIPHER', toHex(cipherData));
-		destination.publicKey = get25519KeyCopy(cipherData);
-		await serverSetSessionAttach(source, destination);
-		source.nextSession = await kyber768_x25519.serverEphemeralKeypair(source, destination, cipherData);
-		clearBuffer(cipherData);
-		console.log('nextSession', source.nextSession);
-	},
-	async sendServerIntro(source, destination, frame, header) {
-		console.log('Send Server Intro', source.nextSession.publicKey);
-		frame[3] = source.nextSession.publicKey;
-	},
-	async certificateEncryptionKeypair() {
-		const target = await keypair();
-		return target;
-	},
-	encryption: xChaCha,
 	keyExchange: kyber768_x25519,
+	encryption: xChaCha,
 	hash: shake256,
 };
 // copyright © Thomas Marchi

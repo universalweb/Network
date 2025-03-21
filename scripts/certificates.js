@@ -1,22 +1,20 @@
 import { currentPath } from '@universalweb/acid';
 import { decode } from '#utilities/serialize';
 import { domainCertificate } from '#udsp/certificate/index';
-import { uwProfile } from '../UWProfile/index.js';
+import profile from '../profile/index.js';
 const dirname = currentPath(import.meta);
-const profile = await uwProfile();
-await profile.saveToFile('profile.cert', `${dirname}/../profiles`, 'password');
-await profile.saveToKeychain('profile.cert', `${dirname}/../profiles`, 'password');
+const uwProfile = await profile();
+await uwProfile.saveToFile('profile.cert', `${dirname}/../profiles`, 'password');
+await uwProfile.saveToKeychain('profile.cert', `${dirname}/../profiles`, 'password');
 const UWCertificate = await domainCertificate({
 	entity: 'universalweb.io',
 	// ownerHash: profile.getSignature(),
 	signatureAlgorithm: 0,
-	cipherSuites: [
-		// 0,
-		1,
-		// 2,
-		// 3
+	ciphers: [
+		0,
+		// 1,
 	],
-	encryptionKeypairAlgorithm: 2,
+	keyExchangeAlgorithm: 0,
 	protocolOptions: {
 		realtime: true,
 	},
@@ -49,4 +47,4 @@ await UWCertificate.savePublic('universalWebPublic.cert', `${dirname}/../serverA
 await UWCertificate.savePublic('universalWebPublic.cert', `${dirname}/../udsp/dis/cache`);
 const cert = await domainCertificate(`${dirname}/../serverApp/certs/universalWebPublic.cert`);
 console.log(cert);
-console.log(cert.object.encryptionKeypair.publicKey.length);
+console.log(cert.object.keyExchangeKeypair.publicKey.length);

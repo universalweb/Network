@@ -41,7 +41,7 @@ export class Router {
 			}
 		}
 		if (!res.sent) {
-			console.log(res);
+			this.logInfo(res);
 			res.send();
 		}
 	}
@@ -51,7 +51,7 @@ export class Router {
 	}
 	async processByMethod(method, path, req, res, client) {
 		const methodsOnRoute = this.routesMethods[method];
-		console.log('processByMethod', methodsOnRoute, path, method);
+		this.logInfo('processByMethod', methodsOnRoute, path, method);
 		if (isZero(methodsOnRoute.length)) {
 			return;
 		}

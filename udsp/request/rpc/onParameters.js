@@ -10,7 +10,7 @@ export async function onParametersReady(id, rpc, packetId, data, frame, source, 
 			source.setState(replyRPC.parametersReady);
 		}
 	}
-	console.log('Parameters Ready Packet Received', source.type);
+	this.logInfo('Parameters Ready Packet Received', source.type);
 	source.sendParameters();
 }
 export async function onParameters(id, rpc, packetId, data, frame, source, rinfo) {

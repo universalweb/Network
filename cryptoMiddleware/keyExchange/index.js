@@ -6,25 +6,25 @@ import { kyber768_x25519 } from './kyber768_x25519.js';
 import { setOptions } from '../utils.js';
 import { x25519 } from './x25519.js';
 import { x25519_blake3 } from './x25519_blake3.js';
-import { x25519_sodium } from './x25519_sodium.js';
+// import { x25519_sodium } from './x25519_blake2b.js';
 const cipherList = [
 	kyber768Half_x25519,
 	kyber768_x25519,
 	kyber768,
 	x25519,
 	x25519_blake3,
-	x25519_sodium
+	// x25519_sodium
 ];
-export const encryptionKeypairAlgorithm = new Map();
-const encryptionKeypairAlgorithmVersion1 = new Map();
-encryptionKeypairAlgorithm.set(currentVersion, encryptionKeypairAlgorithmVersion1);
-encryptionKeypairAlgorithmVersion1.set('all', cipherList);
-setOptions(encryptionKeypairAlgorithmVersion1, cipherList);
-export function getEncryptionKeypairAlgorithm(algo = 0, version = currentCertificateVersion) {
+export const keyExchangeAlgorithm = new Map();
+const keyExchangeAlgorithmVersion1 = new Map();
+keyExchangeAlgorithm.set(currentVersion, keyExchangeAlgorithmVersion1);
+keyExchangeAlgorithmVersion1.set('all', cipherList);
+setOptions(keyExchangeAlgorithmVersion1, cipherList);
+export function getKeyExchangeAlgorithm(algo = 0, version = currentCertificateVersion) {
 	if (!hasValue(algo)) {
 		return false;
 	}
-	const versionMap = encryptionKeypairAlgorithm.get(version);
+	const versionMap = keyExchangeAlgorithm.get(version);
 	if (versionMap) {
 		return versionMap.get(algo);
 	}

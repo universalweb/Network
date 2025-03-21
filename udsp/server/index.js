@@ -11,6 +11,8 @@ import {
 	each,
 	hasValue,
 	isFunction,
+	isNumber,
+	isString,
 	isTrue,
 	isUndefined
 } from '@universalweb/acid';
@@ -75,8 +77,27 @@ export class Server extends UDSP {
 		} = this;
 		if (certificatePath) {
 			this.certificate = await new DomainCertificate(certificatePath);
-			console.log(this.certificate);
+			this.logInfo('Domain Certificate Loaded', this.certificate);
+		}
+		if (publicCertificatePath) {
 			this.certificatePublic = await new PublicDomainCertificate(publicCertificatePath);
+			this.logInfo('Public Domain Certificate Loaded', this.certificatePublic);
+		}
+	}
+	async configCryptography() {
+		if (this.certificate) {
+			this.logInfo('CERTIFICATE CRYPTO CONFIG STARTING');
+			const keyExchangeKeypair = this.certificate.get('keyExchangeKeypair');
+			this.version = this.certificate.get('version');
+			await this.certificate.setCipherMethods();
+			await this.certificate.setKeyExchangeAlgorithm();
+			await this.certificate.setSignatureAlgorithm();
+			if (this.certificate.keyExchangeAlgorithm.initializeCertificateKeypair) {
+				await this.certificate.keyExchangeAlgorithm.initializeCertificateKeypair(keyExchangeKeypair, this);
+			}
+			this.logInfo('CERTIFICATE CRYPTO CONFIG COMPLETE');
+		} else {
+			this.logInfo('NO CERTIFICATE CRYPTO CONFIG');
 		}
 	}
 	async configureNetwork() {
@@ -87,7 +108,16 @@ export class Server extends UDSP {
 			this.ip = ip;
 		}
 		this.port = port;
-		console.log('Config Network', this.ip, this.port);
+		this.logInfo('Config Network', this.ip, this.port);
+	}
+	async setPort() {
+		const { options } = this;
+		if (options.port) {
+			this.port = options.port;
+		}
+		if (isNaN(this.port)) {
+			this.port = 80;
+		}
 	}
 	configConnectionId() {
 		const {
@@ -106,36 +136,22 @@ export class Server extends UDSP {
 		} else if (!this.id) {
 			this.id = '0';
 		}
-		console.log('Config Server ID', this.id);
+		this.logInfo('Config Server ID', this.id);
 	}
 	async initialize(options) {
-		console.log('-------SERVER INITIALIZING-------');
+		this.logInfo('-------SERVER INITIALIZING-------');
 		this.initializeBase(options);
 		assign(this, options);
 		this.options = seal(assign({}, options));
-		console.log('OPTIONS', this.options);
+		this.logInfo('OPTIONS', this.options);
 		this.configConnectionId();
 		await this.setCertificate();
 		await this.configCryptography();
 		await this.configureNetwork();
 		await this.setupSocket();
 		await this.attachEvents();
-		console.log('-------SERVER INITIALIZED-------');
+		this.logInfo('-------SERVER INITIALIZED-------');
 		return this;
-	}
-	async configCryptography() {
-		if (this.certificate) {
-			console.log('CERTIFICATE CRYPTO CONFIG STARTING');
-			const encryptionKeypair = this.certificate.get('encryptionKeypair');
-			this.publicKey = encryptionKeypair.publicKey;
-			this.privateKey = encryptionKeypair.privateKey;
-			this.version = this.certificate.get('version');
-			await this.certificate.setCipherSuiteMethods();
-			await this.certificate.setEncryptionKeypairAlgorithm();
-			console.log('CERTIFICATE CRYPTO CONFIG COMPLETE');
-		} else {
-			console.log('NO CERTIFICATE CRYPTO CONFIG');
-		}
 	}
 	async send(packet, destination) {
 		return sendPacket(packet, this, this.socket, destination);
@@ -147,7 +163,7 @@ export class Server extends UDSP {
 	}
 	syncWorkerState() {
 		const { clientCount } = this;
-		console.log(`Client count ${clientCount}`);
+		this.logInfo(`Client count ${clientCount}`);
 		process.send(encode([
 			'state',
 			{
@@ -187,7 +203,7 @@ export class Server extends UDSP {
 		if (this.isWorker) {
 			this.addClientCount();
 		}
-		console.log('Client Created', this.clientCount);
+		this.logInfo('Client Created', this.clientCount);
 		return client;
 	}
 	async client(config, id, idString, rinfo) {

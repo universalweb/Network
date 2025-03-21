@@ -5,7 +5,6 @@ import {
 	isNumber
 } from '@universalweb/acid';
 import { currentCertificateVersion, currentVersion } from '../../defaults.js';
-import { encryptionKeypairAlgorithm } from '../index';
 import { kyber768_xChaCha } from '../cipherSuite/Kyber768_xChaCha.js';
 import { setOptions } from '../utils.js';
 import { viatCipherSuite } from './viat.js';
@@ -24,15 +23,6 @@ const cipherSuitesVersion1 = new Map();
 cipherSuites.set(currentVersion, cipherSuitesVersion1);
 cipherSuitesVersion1.set('all', cipherList);
 setOptions(cipherSuitesVersion1, cipherList);
-export function getEncryptionKeypairAlgorithm(algo = 0, version = currentCertificateVersion) {
-	if (!hasValue(algo)) {
-		return false;
-	}
-	const versionMap = encryptionKeypairAlgorithm.get(version);
-	if (versionMap) {
-		return versionMap.get(algo);
-	}
-}
 export const cipherSuitesCertificates = new Map();
 const cipherSuitesCertificatesVersion1 = new Map();
 cipherSuitesCertificates.set(currentVersion, cipherSuitesCertificatesVersion1);

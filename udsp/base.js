@@ -5,9 +5,11 @@ import {
 	each,
 	hasValue
 } from '@universalweb/acid';
+import {
+	logError, logInfo, logVerbose, logWarning
+} from './consoleLog.js';
 import { randomBuffer, toBase64 } from '#crypto';
 import { calculatePacketOverhead } from './calculatePacketOverhead.js';
-import { cipherSuites } from '../cryptoMiddleware/index.js';
 import { currentVersion } from '../defaults.js';
 import dgram from 'dgram';
 import { randomConnectionId } from './connectionId.js';
@@ -47,7 +49,7 @@ export class UDSP {
 		this.socket = socket;
 		// Make sure there is as graceful as possible shutdown
 		process.on('beforeExit', (code) => {
-			console.log('Before Exit', code);
+			source.logInfo('Before Exit', code);
 			source.fire(source.events, 'socket.error', this);
 		});
 	}
@@ -63,4 +65,8 @@ export class UDSP {
 		'initialized',
 		'failed to initialize'
 	];
+	logError = logError;
+	logWarning = logWarning;
+	logInfo = logInfo;
+	logVerbose = logVerbose;
 }

@@ -6,28 +6,56 @@ import {
 	toBase64,
 	toHex
 } from '#crypto';
-import {
-	clientSetSession,
-	clientSetSessionAttach,
-	encryptionKeypair as encryptionKeypairX25519,
-	get25519KeyCopy,
-	getX25519Key,
-	serverSetSession,
-	serverSetSessionAttach,
-	x25519
-} from './x25519.js';
-import { combineKeys, hash256 } from '../hash/shake256.js';
-import {
+import { get25519KeyCopy, getKyberKey, getX25519Key } from './kyber768_x25519.js';
+import { assign } from '@universalweb/acid';
+import hash from '../hash/shake256.js';
+import kyber768 from './kyber768.js';
+import x25519 from './x25519.js';
+const {
+	combineKeys,
+	hash256
+} = hash;
+const {
 	decapsulate,
 	encapsulate,
-	encryptionKeypair,
-	getKyberKey,
-	kyber768
-} from './kyber768.js';
-import { decrypt, encrypt } from '../encryption/XChaCha.js';
-import { assign } from '@universalweb/acid';
+	keyExchangeKeypair,
+} = kyber768;
+const {
+	clientSetSession,
+	clientSetSessionAttach,
+	keyExchangeKeypair: encryptionKeypairX25519,
+	serverSetSession,
+	serverSetSessionAttach,
+} = x25519;
 const publicKeySize = x25519.publicKeySize + kyber768.publicKeySize;
 const privateKeySize = x25519.privateKeySize + kyber768.privateKeySize;
+async function keypair(kyberSeed) {
+	const x25519Keypair = await encryptionKeypairX25519();
+	const kyberKeypair = await keyExchangeKeypair(kyberSeed);
+	const target = {
+		publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
+		privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey])
+	};
+	return target;
+}
+async function serverEphemeralKeypair(source = {}, destination, cipherData) {
+	const kyberDestinationPublicKey = getKyberKey(cipherData);
+	const {
+		cipherText,
+		sharedSecret
+	} = await encapsulate(kyberDestinationPublicKey);
+	const ephemeralKeypair = await encryptionKeypairX25519();
+	const target = {
+		publicKey: Buffer.concat([ephemeralKeypair.publicKey, cipherText]),
+		privateKey: ephemeralKeypair.privateKey,
+		sharedSecret
+	};
+	clearBuffer(ephemeralKeypair.publicKey);
+	clearBuffer(cipherText);
+	ephemeralKeypair.privateKey = null;
+	ephemeralKeypair.publicKey = null;
+	return target;
+}
 export const kyber768Half_x25519 = {
 	name: 'kyber768Half_x25519',
 	alias: 'kyber768Half_x25519',
@@ -51,17 +79,8 @@ export const kyber768Half_x25519 = {
 	generateSeed() {
 		return randomBuffer(64);
 	},
-	async keypair(kyberSeed) {
-		const x25519Keypair = await encryptionKeypairX25519();
-		const kyberKeypair = await encryptionKeypair(kyberSeed);
-		const target = {
-			publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
-			privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey])
-		};
-		return target;
-	},
 	async clientEphemeralKeypair() {
-		const source = await kyber768Half_x25519.keypair();
+		const source = await keypair();
 		return source;
 	},
 	async clientInitializeSession(source, destination) {
@@ -100,33 +119,15 @@ export const kyber768Half_x25519 = {
 		source.receiveKey = newReceiveKey;
 		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
 	},
-	async serverEphemeralKeypair(source = {}, destination, cipherData) {
-		const kyberDestinationPublicKey = getKyberKey(cipherData);
-		const {
-			cipherText,
-			sharedSecret
-		} = await encapsulate(kyberDestinationPublicKey);
-		const ephemeralKeypair = await encryptionKeypairX25519();
-		const target = {
-			publicKey: Buffer.concat([ephemeralKeypair.publicKey, cipherText]),
-			privateKey: ephemeralKeypair.privateKey,
-			sharedSecret
-		};
-		clearBuffer(ephemeralKeypair.publicKey);
-		clearBuffer(cipherText);
-		ephemeralKeypair.privateKey = null;
-		ephemeralKeypair.publicKey = null;
-		return target;
-	},
 	async serverInitializeSession(source, destination, cipherData) {
 		console.log('serverInitializeSession CIPHER', toHex(cipherData));
 		destination.publicKey = get25519KeyCopy(cipherData);
 		await serverSetSessionAttach(source, destination);
-		source.nextSession = await kyber768Half_x25519.serverEphemeralKeypair(source, destination, cipherData);
+		source.nextSession = await serverEphemeralKeypair(source, destination, cipherData);
 		clearBuffer(cipherData);
 		console.log('nextSession', source.nextSession);
 	},
-	async sendServerIntro(source, destination, frame, header) {
+	async serverIntro(source, destination, frame, header) {
 		console.log('Send Server Intro', source.nextSession.publicKey);
 		frame[3] = source.nextSession.publicKey;
 	},

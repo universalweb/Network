@@ -64,12 +64,12 @@ export async function setDestination() {
 		}
 	}
 	if (!destination.ip) {
-		console.log('No IP address found for destination');
+		this.logInfo('No IP address found for destination');
 		this.close();
 		return false;
 	}
 	if (!destination.port) {
 		destination.port = 53;
 	}
-	// console.log('Destination', destination.cryptography);
+	// this.logInfo('Destination', destination.cryptography);
 }

@@ -2,14 +2,14 @@ import { askRPC, replyRPC } from '../rpc/rpcCodes.js';
 import { hasValue } from '@universalweb/acid';
 export async function checkSendDataReady() {
 	const { isAsk } = this;
-	console.log(`CHECK SETUP STATUS checkSendDataReady - STATE:${this.state}`);
+	this.logInfo(`CHECK SETUP STATUS checkSendDataReady - STATE:${this.state}`);
 	if (isAsk) {
 		if (this.state === askRPC.sendDataReady) {
-			console.log('NEED TO RESEND sendDataReady', this.state);
+			this.logInfo('NEED TO RESEND sendDataReady', this.state);
 			return this.sendDataReady();
 		}
 	} else if (this.state === replyRPC.sendDataReady) {
-		console.log('NEED TO RESEND sendDataReady', this.state);
+		this.logInfo('NEED TO RESEND sendDataReady', this.state);
 		return this.sendDataReady();
 	}
 	this.clearSendDataReadyTimeout();

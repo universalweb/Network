@@ -9,8 +9,8 @@ import {
 } from '#crypto';
 import kyber768 from '../keyExchange/kyber768.js';
 import kyber768Half_x25519 from '../keyExchange/kyber768Half_x25519.js';
-import shake256 from 'cryptoMiddleware/hash/shake256.js';
-import xChaCha from '../encryption/XChaCha.js';
+import shake256 from '../hash/shake256.js';
+import xChaCha from '../cipher/xChaCha.js';
 export const x25519_kyber768Half_xchacha20 = {
 	name: 'x25519_kyber768Half_xchacha20',
 	alias: 'hpqthalf',

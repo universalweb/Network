@@ -1,12 +1,12 @@
 export async function destroy(err) {
-	this.clearSetupTimeout();
-	this.clearSendPathReadyTimeout();
-	this.clearSendParametersReadyTimeout();
-	this.clearSendHeadReadyTimeout();
-	this.clearSendDataReadyTimeout();
+	await this.clearSetupTimeout();
+	await this.clearSendPathReadyTimeout();
+	await this.clearSendParametersReadyTimeout();
+	await this.clearSendHeadReadyTimeout();
+	await this.clearSendDataReadyTimeout();
 	if (this.source().requestQueue.get(this.id) === this) {
 		this.state = false;
-		console.log(`Destroying Request ID:${this.id} ->`, err || 'No reason given');
+		this.logInfo(`Destroying Request ID:${this.id} ->`, err || 'No reason given');
 		this.source().requestQueue.delete(this.id);
 		this.flush();
 		if (this.compiledData) {

@@ -1,19 +1,27 @@
 # Custom Dictionary Words
 Acks
+arpa
 beuracratic
 brotli
+CCID
 cshake
 dilithium
+handshaked
 ICANN
 jubjub
 keccak
 keccakprg
 kmac
+kyber
 Nacks
 Packetization
 ripemd
 Ristretto
+scalarmult
 schnorr
 scid
 secp
 SPHINCS
+streamid
+udsp
+viat

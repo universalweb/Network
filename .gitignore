@@ -53,3 +53,7 @@ Thumbs.db
 # CERTS #
 ######################
 *.rootcert
+
+# PRIVATE #
+######################
+*.private

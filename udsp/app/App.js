@@ -1,11 +1,16 @@
 import * as routers from '../router/index.js';
 import * as servers from '#server';
+import {
+	logError,
+	logInfo,
+	logVerbose,
+	logWarning
+} from '../consoleLog.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { encode } from '#utilities/serialize';
 import { getConnectionIdReservedSpaceString } from '../connectionId.js';
 import { initialize } from '#server/clients/initialize';
 import { isUndefined } from '@universalweb/acid';
-import { msgReceived } from '#logs';
 import { onPacket } from '../server/onPacket.js';
 const {
 	router: createRouter,
@@ -39,7 +44,7 @@ export class App {
 		return this;
 	}
 	async onLoadbalancer(packet, connection) {
-		msgReceived('Message Received');
+		this.logInfo('Message Received onLoadbalancer');
 		const config = {
 			packet,
 			connection,
@@ -56,8 +61,8 @@ export class App {
 		if (id !== false) {
 			const idString = id.toString('hex');
 			const reservedSmartRoute = getConnectionIdReservedSpaceString(id, reservedConnectionIdSize);
-			console.log(`Loadbalancer got an id ${idString}`);
-			console.log(`Reserved Smart Route ${reservedSmartRoute}`, id.length, idString, reservedConnectionIdSize);
+			this.logInfo(`Loadbalancer got an id ${idString}`);
+			this.logInfo(`Reserved Smart Route ${reservedSmartRoute}`, id.length, idString, reservedConnectionIdSize);
 			workerId = reservedSmartRoute;
 		}
 		// ADD ALGO TO CHOOSE ONLY VIABLE WORKERS
@@ -70,6 +75,10 @@ export class App {
 			worker.process.send(passMessage);
 		}
 	}
+	logError = logError;
+	logWarning = logWarning;
+	logInfo = logInfo;
+	logVerbose = logVerbose;
 	async onPacket(packet, connection) {
 		return this.server.onPacket(packet, connection);
 	}
@@ -95,7 +104,7 @@ export class App {
 	async onRequest(request, response, client) {
 		const { router, } = this;
 		if (router) {
-			console.log('Root Router Running');
+			this.logInfo('Root Router Running');
 			await router.handle(request, response, client);
 		}
 	}

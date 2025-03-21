@@ -1,59 +1,30 @@
-import { hash512Settings, int32, int64 } from '#crypto';
-import { shake256 as hash } from '@noble/hashes/sha3';
-const concatBuffer = Buffer.concat;
+//
+import {
+	clearBuffer,
+	hash512SettingsCrypto,
+	int32,
+	int64
+} from '#crypto';
+import cryptolib from 'crypto';
+import { hashScheme } from './hashScheme.js';
+const createHash = cryptolib.createHash;
+const hashName = 'shake256';
 export async function hash256(source) {
-	return hash(source);
+	return createHash(hashName).update(source).digest();
 }
 export async function hash512(source) {
-	return hash(source, hash512Settings);
+	return createHash(hashName, hash512SettingsCrypto).update(source).digest();
 }
-export async function concatHash(...sources) {
-	return hash(concatBuffer(sources));
-}
-export async function concatHash512(...sources) {
-	return hash(concatBuffer(sources), hash512Settings);
-}
-export async function expandIntoSessionKeys(sharedSecret, target) {
-	const expandedSecret = await hash512(sharedSecret);
-	const transmitKey = expandedSecret.subarray(int32);
-	const receiveKey = expandedSecret.subarray(0, int32);
-	if (target) {
-		target.sharedSecret = expandedSecret;
-		target.transmitKey = transmitKey;
-		target.receiveKey = receiveKey;
-		return target;
-	}
-	return {
-		sharedSecret: expandedSecret,
-		transmitKey,
-		receiveKey
-	};
-}
-export async function combineKeys(...sources) {
-	// console.log('Combine', key1, key2);
-	const combinedKeys = await concatHash(...sources);
-	return combinedKeys;
-}
-export async function combineSessionKeys(oldTransmitKey, oldReceiveKey, source) {
-	console.log('combineSessionKeys', source.transmitKey, oldTransmitKey, source.receiveKey, oldReceiveKey);
-	if (oldTransmitKey) {
-		source.transmitKey = await combineKeys(oldTransmitKey, source.transmitKey);
-	}
-	if (oldReceiveKey) {
-		source.receiveKey = await combineKeys(oldReceiveKey, source.receiveKey);
-	}
-}
-export const shake256 = {
+export const shake256 = hashScheme({
 	name: 'shake256',
 	alias: 'default',
 	id: 0,
+	security: 1,
+	preferred: true,
+	primary: true,
+	hash256,
 	hash: hash256,
 	hash512,
-	concatHash512,
-	concatHash,
-	expandIntoSessionKeys,
-	combineKeys,
-	security: 1,
-	preferred: true
-};
+});
 export default shake256;
+// console.log('hash', (await hash512('hello world')));

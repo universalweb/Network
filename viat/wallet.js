@@ -1,20 +1,24 @@
 import { decode, encode } from '#utilities/serialize';
-import { hash256, hash512 } from '../cryptoMiddleware/hash/shake256.js';
-import { UWProfile } from '../UWProfile/index.js';
+import { Profile } from '../profile/index.js';
+import hash from '../cryptoMiddleware/hash/shake256.js';
 import { isBuffer } from '@universalweb/acid';
+import viat from '../cryptoMiddleware/signature/viat.js';
 import { write } from '../utilities/file.js';
-export class ViatWallet extends UWProfile {
+const {
+	hash256,
+	hash512
+} = hash;
+export class ViatWallet extends Profile {
 	constructor(config = {}) {
 		const sourceInstance = super(config);
-		return sourceInstance.then(async (source) => {
-			return source.walletInitialize(config);
-		});
+		return this.walletInitialize(config);
 	}
 	async walletInitialize(config) {
 		return this;
 	}
 	generateAddress() {
-		const address = hash512(this.publicKey);
+		const publicKeyCombined = Buffer.concat(this.signatureKeypair.publicKey);
+		const address = hash512(publicKeyCombined);
 		this.address = address;
 		return address;
 	}

@@ -2,13 +2,13 @@ import { eachArray } from '@universalweb/acid';
 import { sendDataReady } from '../sendReady/sendDataReady.js';
 export async function processHead() {
 	if (this.headAssembled) {
-		return console.log('Head already processed');
+		return this.logInfo('Head already processed');
 	}
 	const {
 		missingHeadPackets,
 		incomingHead
 	} = this;
-	console.log('incomingHeadPackets', this.incomingHeadPackets);
+	this.logInfo('incomingHeadPackets', this.incomingHeadPackets);
 	if (this.totalIncomingHeadSize === this.currentIncomingHeadSize) {
 		this.setHead();
 		this.sendDataReady();
@@ -21,5 +21,5 @@ export async function processHead() {
 			}
 		});
 	}
-	console.log('incomingHead', incomingHead);
+	this.logInfo('incomingHead', incomingHead);
 }

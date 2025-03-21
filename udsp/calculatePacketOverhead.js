@@ -6,14 +6,14 @@ export const maxDefaultPacketSize = 1280;
 export const packetInitialOverhead = 6;
 const zero = 0;
 const seven = 7;
-export async function calculatePacketOverhead(cipherSuite, connectionIdSize, assignTo) {
-	const cacheId = `${cipherSuite.id}-${connectionIdSize}`;
+export async function calculatePacketOverhead(cipher, connectionIdSize, assignTo) {
+	const cacheId = `${cipher.id}-${connectionIdSize}`;
 	const cached = cache[cacheId];
 	if (cached) {
 		return assign(assignTo || {}, cached);
 	}
 	const target = {};
-	const encryptOverhead = cipherSuite?.encryption.overhead || zero;
+	const encryptOverhead = cipher?.overhead || zero;
 	if (hasValue(encryptOverhead)) {
 		target.encryptOverhead = encryptOverhead;
 	}

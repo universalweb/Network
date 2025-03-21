@@ -2,14 +2,14 @@ import { askRPC, defaultStage, replyRPC } from '../rpc/rpcCodes.js';
 import { hasValue } from '@universalweb/acid';
 export async function checkSetupSent() {
 	const { isAsk } = this;
-	console.log(`CHECK SETUP STATUS checkSetupSent - STATE:${this.state}`);
+	this.logInfo(`CHECK SETUP STATUS checkSetupSent - STATE:${this.state}`);
 	if (isAsk) {
 		if (this.state === askRPC.setup) {
-			console.log('STATE STILL 1 NEED TO RESEND SETUP');
+			this.logInfo('STATE STILL 1 NEED TO RESEND SETUP');
 			return this.sendSetup();
 		}
 	} else if (this.state === replyRPC.setup) {
-		console.log('STATE STILL 5 NEED TO RESEND SETUP');
+		this.logInfo('STATE STILL 5 NEED TO RESEND SETUP');
 		return this.sendSetup();
 	}
 	this.clearSetupTimeout();
@@ -21,11 +21,11 @@ export function clearSetupTimeout() {
 export async function sendSetup() {
 	const source = this;
 	const { isAsk } = this;
-	console.log('sendSetup', this.state);
+	this.logInfo('sendSetup', this.state);
 	const message = this.getPacketTemplate(0);
 	this.setupAttempts++;
 	if (this.setupAttempts > 3) {
-		console.log('Intro Attempts Exceeded');
+		this.logInfo('Intro Attempts Exceeded');
 		return this.destroy();
 	}
 	if (isAsk) {

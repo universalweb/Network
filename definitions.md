@@ -4,7 +4,7 @@ UW: Universal Web
 
 VIAT: The native cryptocurrency of the Universal Web
 
-SBD: Structured Binary Data typically done with messagePack and or similar structure.
+SBD: Structured Binary Data typically done with messagePack and or similar structured binary format.
 
 UML: Universal Markup Language stored in a binary format such as messagePack and or similar structure. Can be partially represented in JSON with Binary Buffers.
 
@@ -16,4 +16,6 @@ UW://: The primary Universal Web Protocol that incorporates the DIS & UDSP into 
 
 Hybrid Key Pair: A hybrid key pair is the combination of classical and post quantum asymmetric cryptography (AKA Public Key Cryptography) key pair combined into a singular key pair consisting of a public key and a private key. Used for key exchanges & signing data.
 
-Hyper Layer: The communications layer of The Nexus.
+META LAYER: The layer in which the Nexus exists.
+
+NIN: (NEXUS IDENTIFICATION NUMBER) AKA NEXUS ID

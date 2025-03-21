@@ -2,14 +2,14 @@ import { askRPC, replyRPC } from '../rpc/rpcCodes.js';
 import { hasValue } from '@universalweb/acid';
 export async function checkSendParametersReady() {
 	const { isAsk } = this;
-	console.log(`CHECK SETUP STATUS checkSendParametersReady - STATE:${this.state}`);
+	this.logInfo(`CHECK SETUP STATUS checkSendParametersReady - STATE:${this.state}`);
 	if (isAsk) {
 		if (this.state === askRPC.sendParametersReady) {
-			console.log('NEED TO RESEND sendParametersReady');
+			this.logInfo('NEED TO RESEND sendParametersReady');
 			return this.sendParametersReady();
 		}
 	} else if (this.state === replyRPC.sendParametersReady) {
-		console.log('NEED TO RESEND sendParametersReady');
+		this.logInfo('NEED TO RESEND sendParametersReady');
 		return this.sendParametersReady();
 	}
 	this.clearSendParametersReadyTimeout();

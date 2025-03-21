@@ -28,6 +28,9 @@ const uwApp = await app({
 		// mode: 'proxy',
 		changeAddress: true,
 	},
+	// The used to return a new address for the client to connect to after initial handshake packets
+	// Make semi-automatic so no hardinfo is required
+	// proxyAddress: ip,
 	// will listen on ipv4 and ipv6 default is '::1'
 	ip: '::',
 	// default port or the loadbalancer port

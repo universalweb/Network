@@ -1,15 +1,23 @@
 import * as routers from '../router/index.js';
 import * as servers from '#server';
 import {
-	assign, currentPath, hasValue, isUndefined
+	assign,
+	currentPath,
+	hasValue,
+	isUndefined
 } from '@universalweb/acid';
 import { decode, encode } from '#utilities/serialize';
+import {
+	logError,
+	logInfo,
+	logVerbose,
+	logWarning
+} from '../consoleLog.js';
 import { App } from './App.js';
 import cluster from 'node:cluster';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { getCoreCount } from '#utilities/hardware/cpu';
 import { initialize } from '#server/clients/initialize';
-import { msgReceived } from '#logs';
 import { onPacket } from '../server/onPacket.js';
 const numCPUs = getCoreCount();
 function workerReady(worker) {

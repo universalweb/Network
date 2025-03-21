@@ -1,40 +1,59 @@
-import { encapsulate, encryptionKeypair } from '../cryptoMiddleware/keyExchange/kyber768.js';
-import { blake3 } from '@noble/hashes/blake3';
+// DEMO SCRIPT TO CALCULATE PACKET SIZES MUST BE BELOW MTU EX: IPv6 1280 bytes
 import { encode } from '#utilities/serialize';
-import { encrypt } from '../cryptoMiddleware/encryption/XChaCha.js';
-import { generateConnectionId } from '#udsp/connectionId';
+import { introHeaderRPC } from '../udsp/protocolHeaderRPCs.js';
+import kyber768 from '../cryptoMiddleware/keyExchange/kyber768.js';
+import { randomConnectionId } from '#udsp/connectionId';
+import xChaCha from '../cryptoMiddleware/cipher/xChaCha.js';
+const {
+	encrypt,
+	overhead
+} = xChaCha;
+//  Includes port
+const ipv6BytesChangeAddress = 18;
 // estimate packet sizes
 export async function createServerIntroPacket() {
-	const keypair = await encryptionKeypair();
-	const {
-		cipherText,
+	const keypair = await kyber768.keyExchangeKeypair();
+	const [
+		cipherData,
 		sharedSecret
-	} = await encapsulate(keypair.publicKey);
-	const packet = [
+	] = await kyber768.encapsulate(keypair.publicKey);
+	const newEccKey = randomConnectionId(32);
+	const newAddress = randomConnectionId(18);
+	const header = [
+		randomConnectionId(8),
+		introHeaderRPC,
+		Buffer.concat([cipherData, newEccKey])
+	];
+	const frameArray = [
 		undefined,
 		0,
-		generateConnectionId(8),
-		cipherText,
-		true,
-		'44488',
-		true
+		randomConnectionId(8),
+		undefined,
+		newAddress,
+		// Version
+		1
 	];
-	console.log(sharedSecret);
-	const header = [generateConnectionId(8), 0];
-	const encrypted = encrypt(encode(packet), blake3(sharedSecret), encode(header));
-	console.log(encode([header, encrypted]).length, keypair.publicKey.length);
+	const frame = encode(frameArray);
+	const encrypted = await encrypt(frame, newEccKey, frame);
+	// KEEP UNDER 1280
+	// Kyber CipherDATA (1088) is smaller than PublicKey (1184)
+	// 1197 bytes with encryption overhead
+	// 32 Is classical ECC Public Key
+	console.log(encode([header, encrypted]).length, cipherData.length);
 }
-createServerIntroPacket();
+await createServerIntroPacket();
 export async function createClientIntroPacket() {
-	const keypair = await encryptionKeypair();
+	const keypair = await kyber768.keyExchangeKeypair();
 	const header = [
 		undefined,
 		0,
-		generateConnectionId(4),
-		keypair.publicKey,
+		randomConnectionId(4),
+		await kyber768.getPublicKey(keypair),
 		1,
 		1,
 	];
-	console.log(encode([header]).length, keypair.publicKey.length);
+	// KEEP UNDER 1280
+	// MAX ESTIMATE 1241 bytes with encryption overhead (NOT ALL CLIENT INTRO IS ENCRYPTED)
+	console.log(encode([header]).length + overhead, kyber768.publicKeySize);
 }
-createClientIntroPacket();
+await createClientIntroPacket();

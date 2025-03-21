@@ -1,6 +1,4 @@
 {
-	"editor.fontFamily": "JetBrainsMono Nerd Font",
-	"editor.fontLigatures": true,
 	"editor.cursorBlinking": "solid",
 	"editor.formatOnType": false,
 	"editor.autoClosingOvertype": "always",
@@ -41,6 +39,20 @@
 	"editor.tokenColorCustomizations": {
 		"textMateRules": [
 			{
+				"scope": "keyword.control.trycatch.js",
+				"settings": {
+					"foreground": "#55ebff",
+					"fontStyle": "bold"
+				}
+			},
+			{
+				"scope": "keyword.operator.ternary.js",
+				"settings": {
+					"foreground": "#d587ff",
+					"fontStyle": "bold"
+				}
+			},
+			{
 				"scope": "constant.language.boolean.true.js",
 				"settings": {
 					"foreground": "#10ff6c",
@@ -64,8 +76,8 @@
 			{
 				"scope": "storage.type.js",
 				"settings": {
-					"foreground": "#C5C5C5",
-					"fontStyle": "italic"
+					"foreground": "#bcffff",
+					"fontStyle": "italic bold"
 				}
 			},{
 				"scope": "keyword.operator.assignment.js",
@@ -76,7 +88,7 @@
 			},{
 				"scope": "keyword.operator.logical.js",
 				"settings": {
-					"foreground": "#b1b1b1",
+					"foreground": "#baff90",
 					"fontStyle": ""
 				}
 			},
@@ -84,14 +96,21 @@
 				"scope": "keyword.control.export.js",
 				"settings": {
 					"foreground": "#FF7F50",
-					"fontStyle": "italic bold"
+					"fontStyle": "italic"
+				}
+			},
+			{
+				"scope": "keyword.control.from.js",
+				"settings": {
+					"foreground": "#ff5398",
+					"fontStyle": "italic"
 				}
 			},
 			{
 				"scope": "keyword.control.import.js",
 				"settings": {
 					"foreground": "#ff5398",
-					"fontStyle": "italic bold"
+					"fontStyle": "italic"
 				}
 			},
 			{
@@ -105,7 +124,7 @@
 				"scope": "storage.modifier.async.js",
 				"settings": {
 					"foreground": "#f64747",
-					"fontStyle": "italic"
+					"fontStyle": "bold underline"
 				}
 			},
 			{
@@ -139,7 +158,13 @@
 			{
 				"scope": "punctuation.accessor.optional.js",
 				"settings": {
-					"foreground": "#c0c0c0",
+					"foreground": "#d3b2ff",
+					"fontStyle": "bold"
+				}
+			},
+			{
+				"scope": "variable.parameter.js",
+				"settings": {
 					"fontStyle": ""
 				}
 			},
@@ -167,8 +192,22 @@
 			{
 				"scope": "storage.type.function.js",
 				"settings": {
-					"foreground": "#acdfff",
+					"foreground": "#43ffff",
 					"fontStyle": "italic"
+				}
+			},
+			{
+				"scope": "storage.type.class.js",
+				"settings": {
+					"foreground": "#ff88f5",
+					"fontStyle": "italic"
+				}
+			},
+			{
+				"scope": "variable.language.this",
+				"settings": {
+					"foreground": "#ffb459",
+					"fontStyle": ""
 				}
 			}
 		],
@@ -200,4 +239,5 @@
 		"hint"
 	],
 	"explorer.copyRelativePathSeparator": "/",
+	
 }

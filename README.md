@@ -1,118 +1,93 @@
-<h1 align="center">
-    <a href="uw://universalweb.io">UNIVERSAL WEB</a>
-</h1>
-<p align="center">
-| <a href="https://github.com/universalweb/Whitepaper">WHITEPAPER (OUTDATED - OLD DESIGN)</a> |
-</p>
+<h2 align="center"></h2>
+<h2 align="center">WELCOME TO THE NEXUS</h2>
+<p align="center">META-LAYER  SOLUTION</p>
+<h4 align="center"> MULTI-PLANETARY HYBRID POST QUANTUM CRYPTOGRAPHIC NEXUS </h4>
+<!-- <p align="center"> <a href="https://github.com/universalweb/Whitepaper">WHITEPAPER (OUTDATED - OLD DESIGN)</a> </p> -->
 <hr />
-<h1 align="center">UW://</h1>
-<p align="center">
-    META-LAYER SOLUTION
-</p>
-<p align="center">
-    LAYER SUBZERO | LAYER -1 | SUB-LAYER 0
-</p>
-<p align="center">
-    <b>UW/VIAT is a Meta-Layer Solution designed as a Sub-Layer 0 network. It serves as the foundation for both a next-generation Web and a natively supported cryptocurrency. Unlike traditional Layer 0 solutions, which focus solely on blockchain interoperability and scalability, UW/VIAT is a hybrid system that embraces both centralized and decentralized approaches. The Universal Web is centrally structured to ensure efficiency, security, and seamless integration, while the cryptocurrency (VIAT) is decentralized, enabling trustless transactions and complete transparency. This unified framework enables the development of hybrid applications, where centralized Web services and decentralized cryptocurrency natively work together, creating a seamless infrastructure for secure communications, digital ownership, transactions, and beyond.</b>
-</p>
-<p align="center">
-The UW/VIAT is designed to be a multiplanetary "NEXUS" or more specifically a Crypto Nexus. The defintion we use for a NEXUS is: a unified system that fully integrates a Web & a decentralized cryptocurrency. The Universal Web is similar to the network design of the Web today being the centralized Server-Client model while VIAT is like a traditional decentralized cryptocurrency making it a hybrid network. The unified system can be referred to as the Universal Web (which includes VIAT) or simply put The Nexus.
-</p>
-
-<h5 align="center">| <a href="https://x.com/tommarchi">LEAD DEV</a> |</h5>
+<h3 align="center" class="mono">UW://DOMAINS</h3>
+<p align="center"> LAYER SUBZERO | LAYER -1 | SUB-LAYER 0 </p>
+<!-- <img class="header" width="100%" src="https://raw.githubusercontent.com/universalweb/Network/refs/heads/master/docs/images/header.jpeg" alt="header"> -->
+<h6 align="center">UW/VIAT is a post quantum Meta-Layer solution that embraces a hybrid architecture. It serves as the foundation for a next-generation Web with a natively integrated cryptocurrency, and federated governance. Unlike traditional Layer 0 solutions, which focus solely on blockchain interoperability and scalability, UW/VIAT encompasses a wide array of capabilities and technologies with implications beyond the blockchain space. The UW/VIAT is a nexus of infrastructure for next-gen communications, applications, secure voting, digital ownership, transactions, DeFi, IoT, cryptocurrency, digital cryptographic governance, smart contracts, domain name systems, and beyond. The UW/VIAT contains centralized and decentralized components that are natively integrated into a united system yet can act with a degree of autonomy. The UW/VIAT features a transparent federated governance system, based on a robust republic model.</h6>
+<h6 align="center">The Nexus (UW/VIAT) is a post quantum multi-planetary hybrid network, (universal nexus), encompassing all the features and more that we expect from a "web", a cryptocurrency, domain system, and cryptographic governance. This unified system can be referred to as the Universal Web (which includes VIAT), UW/VIAT, or simply put a Nexus.</h6>
+<h5 align="center"> <a href="https://x.com/tommarchi">LEAD DEV</a> </h5>
 <hr />
-
-<h3 align="center">ATTENTION</h3>
-<h4 align="center">Want to contribute? Don't like ICANN, IETF, TCP, HTTP, bureaucratic committees and or the WWW? Then join the Imperium today!</h4>
-
-<p align="center">
-    <small>To help just submit code or star this repo! All are welcome to the New Web Order.</small>
-</p>
-
-<h4>Perspective & Rational</h4>
-<p>Re-imagining the Web from the ground up may seem like a radical proposition, but it is entirely logical, rational, within our ability, & necessary. At its core, the Web is a collection of software solutions. Therefore, creating a new Web doesn’t require reinventing the physical infrastructure; it simply demands innovative software designed to leverage current innovations while addressing the limitations of the old.</p>
-
-<p>If we critically evaluate the challenges facing the current Web from inefficiencies & vulnerabilities, to its inability to fully embrace emerging technologies it becomes selfevident that incremental updates isn't going to address fundimental design flaws. A foundational overhaul is not only viable but also more efficient and cost-effective. By building on 30 years of lessons, we can envision something that goes beyond what we call a Web something that integrates cutting-edge technologies and anticipates future advancements. This isn’t just an opportunity; it’s an imperative to build a sustainable, forward-thinking cryptographic ecosystem with cryptocurrency as a native component.</p>
-
-<p>It's something beyond a Web & cryptocurrency it's a Nexus.</p>
-
+<h3 align="center">VIAT CRYPTO TEXT SYMBOLS</h3>
+<p align="center">⩝ - ᐯ - ∨</p>
+<hr />
+<h4 align="center"> ALL CRYPTOGRAPHY USED </h4>
+<h4>HASH: SHAKE256 &amp; BLAKE3</h4>
+<h4>KEY EXCHANGE: Kyber &amp; x25519</h4>
+<h4>ENCRYPTION: AEGIS-256 &amp; xChaCha20-Poly1305</h4>
+<h4>SIGNATURE: SPHINCS+ &amp; Dilithium &amp; ed25519 &amp; FALCON</h4>
+<p>These are all the cryptographic algorithms supported or play a role in the UW/VIAT.</p>
+<hr />
+<h4 align="center"> VIAT CRYPTOGRAPHY </h4>
+<h4>HASH: SHAKE256</h4>
+<h4>KEY EXCHANGE: Kyber+x25519</h4>
+<h4>ENCRYPTION: AEGIS-256</h4>
+<h4>SIGNATURE: SPHINCS+Dilithium+ed25519</h4>
+<p>These are the cryptographic algorithms that UW/VIAT depends on. However, there are other cryptographic algorithms like BLAKE3, which are used for operations that are not security-critical.</p>
+<hr />
 <h3>NEXUS?</h3>
-<p>What do you call a system that seamlessly integrates a Web and a native cryptocurrency? We call it a Nexus: a unified ecosystem where both elements are deeply interconnected yet function independently, enhancing each other’s capabilities without compromise. Our version of the World Wide Web is the Universal Web (Multi-planetary) & our cryptocurrency is VIAT together they form what we call a/the Nexus.</p>
-
+<p>We call the UW/VIAT a Nexus: a unified ecosystem where both Web-like, cryptocurrency, and governing elements are deeply interconnected yet function independently, enhancing each other’s capabilities without compromise. Our version of the World Wide Web is the Universal Web (Multi-planetary) &amp; our cryptocurrency is VIAT together they form what we call a/the Nexus.</p>
 <p>The Nexus has its own Domain System, Messaging System, Real-time events, design, data transport network protocol, language, browser, cryptocurrency, and many other unique components. It's a cohesive system rather than a bunch of independent technologies retrofitted to work with each other or layering one thing on-top of the next similar to the Web today or what most call "Web3".</p>
-
 <h4>Goals</h4>
 <p>The objective of the Universal Web is to create a viable modern replacement for the Web today.</p>
-
 <h4>Is it Web3?</h4>
-<p>Depends on your definition. If the definition of Web3 is a fully decentralized Web then The Universal Web is not Web3 it's far more robust. If Web3 is the World Wide Web plus some decentralized apps then the UW is not Web3. If we had to use WEB3 then our definition of Web3 is a hybrid Web built from scratch with its own form of DNS & its own data transport protocol paired with a natively intigrated decentralized focused cryptocurrency.</p>
-
+<p>Depends on your definition. If the definition of Web3 is a fully decentralized Web then The Universal Web is not Web3 it's far more robust. If Web3 is the World Wide Web plus some decentralized apps then the UW is not Web3. If we had to use WEB3 then our definition of Web3 is a hybrid Web built from scratch with its own system of domain name resolution &amp; data transport protocol paired with a natively integrated decentralized focused cryptocurrency.</p>
 <h4>Where's the name from?</h4>
 <p>The Universal Web's name was chosen because of its natural evolution of the name The World Wide Web.</p>
-
 <h4>Internet vs Web</h4>
 <p>The Web is all the software bits that sits on-top of the Internet. The Universal Web at least for now is only concerned with software no special hardware is required. Users just need software to access the Universal Web and Servers just need software to setup a Universal Web server.</p>
-
+<h4>Is the UW's DIS and the WWW's DNS the same?</h4>
+<p>The World Wide Web has the Domain Name System, Web3 has Decentralized DNS, &amp; the Universal Web has a similar component called the DIS(Domain Information System). Here's the critical difference DNS takes a hostname and spits out a DNS record (has things like an IP address) the DIS returns a cryptographic signed certificate. The returned certificate can have records akin to DNS records in it but is part of a cryptographically protected and verifiable certificate. The DIS plays a similar role to DNS but the DIS has greater functionality, has similar syntax, distributes only cryptographic certificates, and was designed with all other components in mind. Because the DIS provides a certificate instead of just a basic DNS record it makes connection establishment faster and more secure, specifically speeding up the handshake process. When browsing the UW all domain lookups would go to the remote and or local DIS (cached). The entire DIS is a publicly verifiable blockchain but old certificates can be replaced which means Domain record changes are quick and easy with a 0TTL. The DIS doesn't share any domains or rules with the Web's Domain system meaning domain names don't carry over. The UW also permits emoji domains as well as single name domains. Reserved named domains are domains consisting of just a name to quickly access the site for example you just type "x" to go to "x.com".</p>
+<h4>Perspective &amp; Rational</h4>
+<p>Re-imagining the Web from the ground up may seem like a radical proposition, but it is entirely logical, rational, within our ability, &amp; necessary. At its core, the Web is a collection of software solutions. Therefore, creating a system that can replace yet go beyond the Web doesn’t require reinventing the physical infrastructure; it simply demands innovative software designed to leverage current innovations while addressing the limitations of the old.</p>
+<p>If we critically evaluate the challenges facing the current Web, from inefficiencies &amp; vulnerabilities to its inability to fully embrace emerging technologies, it becomes self-evident that incremental updates aren't going to address fundamental design flaws. A foundational overhaul is not only viable but also more efficient and cost-effective. By building on 30 years of lessons, we can envision something that goes beyond what we call a Web, which integrates cutting-edge technologies and anticipates future advancements. This isn’t just an opportunity; it’s an imperative to build the future.</p>
 <h4>SUMMARY</h4>
 <ul>
-    <li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">UDSP MODULE (CONTAINS SERVER & CLIENT MODULE)</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">SERVER MODULE (CHECK THE UDSP FOLDER & IMPORTS FOR FULL CODE)</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/udsp/client">CLIENT MODULE (CHECK THE UDSP FOLDER & IMPORTS FOR FULL CODE)</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/browser">BROWSER (outdated)</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/serverApp">EXAMPLE APP (npm run server)</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/scripts/certificates.js">BUILD DOMAIN & IDENTITY CERTIFICATES THAT ARE ALSO VIAT WALLETS (npm run certificates)</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/scripts/simulateClient.js">SIMULATE CLIENT REQUEST (npm run simc) (ONLY RUN WHEN DEMO IN A STABLE COMMIT NOT LATEST UNLESS SPECIFIED)</a></li>
-    <li><a href="https://github.com/universalweb/Network/tree/master/scripts">VARIOUS HELPER SCRIPTS</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">UDSP MODULE (CONTAINS SERVER &amp; CLIENT MODULE)</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">SERVER MODULE (CHECK THE UDSP FOLDER &amp; IMPORTS FOR FULL CODE)</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/udsp/client">CLIENT MODULE (CHECK THE UDSP FOLDER &amp; IMPORTS FOR FULL CODE)</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/browser">BROWSER (outdated)</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/serverApp">EXAMPLE APP (npm run server)</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/scripts/certificates.js">BUILD DOMAIN &amp; IDENTITY CERTIFICATES THAT ARE ALSO VIAT WALLETS (npm run certificates)</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/scripts/simulateClient.js">SIMULATE CLIENT REQUEST (npm run simc) (ONLY RUN WHEN DEMO IN A STABLE COMMIT NOT LATEST UNLESS SPECIFIED)</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/scripts">VARIOUS HELPER SCRIPTS</a></li>
 </ul>
 <b>ONLY RUN NPM COMMANDS WHEN COMMIT DESCRIPTION SAYS DEMO STABLE OR DEMO ENABLED</b>
 <br />
-
 <h4><a href="https://github.com/universalweb/Network/blob/master/package.json">NPM SCRIPTS</a></h4>
-
 <ul>
-    <li>NPM start script builds/starts the Universal Web Browser</li>
-    <li>Components must also be compiled for the front-end library</li>
-    <li>Root is used to generate root certificates only</li>
-    <li>Includes Identity Certificate generation examples</li>
-    <li>EXAMPLE APPS</li>
-    <li>UDSP</li>
-    <li>UW URI (HIGHER ABSTRACTION PROTOCOL OVER UDSP)</li>
-    <li>VARIOUS HELPER SCRIPTS</li>
+	<li>NPM start script builds/starts the Universal Web Browser</li>
+	<li>Components must also be compiled for the front-end library</li>
+	<li>Root is used to generate root certificates only</li>
+	<li>Includes Identity Certificate generation examples</li>
+	<li>EXAMPLE APPS</li>
+	<li>UDSP</li>
+	<li>UW URI (HIGHER ABSTRACTION PROTOCOL OVER UDSP)</li>
+	<li>VARIOUS HELPER SCRIPTS</li>
 </ul>
-
 <br />
-
 <h5>FULL LIST OF COMMANDS CAN BE FOUND IN THE project.json</h5>
-
 <hr />
-
-<h2>DEV REQUIREMENTS</h2>
-
-<p>
-    <i>Development is primarily done on <b>Mac</b> & <b>Linux (ARCH)</b>.</i>
-</p>
-
+<h4>BROAD CODE OBJECTIVES</h4>
 <ul>
-    <li><a href="https://nodejs.org/en/">NODEJS</a></li>
-    <li><a href="https://code.visualstudio.com/">VSCODE</a></li>
+	<li>UW UDP BASED NETWORK PROTOCOL</li>
+	<li>SERVER MODULE</li>
+	<li>CLIENT MODULE</li>
+	<li>DIS (DOMAIN SYSTEM - NOT DNS)</li>
+	<li>UW APPS</li>
+	<li>Multi-OS Support</li>
+	<li>Multi-Device Support</li>
+	<li>UW BROWSER</li>
+	<li>VIAT - NATIVE CRYPTOCURRENCY</li>
+	<li>DECENTRALIZED GOVERNANCE</li>
 </ul>
-
-<h5>BROAD CODE OBJECTIVES</h5>
-<ul>
-    <li>UW UDP Based Protocol</li>
-    <li>UW Server</li>
-    <li>UW Client</li>
-    <li>UW DIS (Alternative to DNS)</li>
-    <li>UW Web Apps</li>
-    <li>Multi-OS Support</li>
-    <li>Multi-Device Support</li>
-    <li>UW Browser/Wallet</li>
-    <li>Viat</li>
-</ul>
-
-<h2>Questions</h2>
-
-<h4>Is the UW's DIS and the WWW's DNS the same?</h4>
-<p>The World Wide Web has the Domain Name System, Web3 has Decentralized DNS, & the Universal Web has a similar component called the DIS(Domain Information System). Here's the critical difference DNS takes a hostname and spits out a DNS record (has things like an IP address) the DIS returns a cryptographic signed certificate. The returned certificate can have records akin to DNS records in it but is part of a cryptographically protected and verifiable certificate. The DIS plays a similar role to DNS but the DIS has greater functionality, has similar syntax, distributes only cryptographic certificates, and was designed with all other components in mind. Because the DIS provides a certificate instead of just a basic DNS record it makes connection establishment faster and more secure, specifically speeding up the handshake process. When browsing the UW all domain lookups would go to the remote and or local DIS (cached). The entire DIS is a publicly verifiable blockchain but old certificates can be replaced which means Domain record changes are quick and easy with a 0TTL. The DIS doesn't share any domains or rules with the Web's Domain system meaning domain names don't carry over. The UW also permits emoji domains as well as single name domains. Reserved named domains are domains consisting of just a name to quickly access the site for example you just type "x" to go to "x.com".</p>
-
-<small>COPYRIGHT © 2024 <a href="https://universalweb.io">UNIVERSAL WEB</a></small>
+<hr />
+<h4 align="center">Want to contribute? Then join the Imperium today!</h4>
+<p align="center"> To help submit, write content, make art, write code, and or star this repo! All are welcome to the Nexus.</p>
+<hr />
+<small>COPYRIGHT © 2025 <a href="https://universalweb.io">UNIVERSAL WEB</a></small>
+<small>THE UNITED SYSTEMS of NEXUS</small>
+<small>MADE IN AMERICA</small>

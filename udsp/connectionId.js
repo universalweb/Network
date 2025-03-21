@@ -42,7 +42,6 @@ export function generateConnectionIdString(size = eight, prependArg, minSize = 1
 	if (hasValue(prependArg)) {
 		const prependHex = String(prependArg);
 		const prepend = convertPrepend(prependHex, minSize);
-		console.log(prepend);
 		result = `${prepend}${result.substring(prepend.length)}`;
 		// console.log('ConnectionID created', result);
 	}

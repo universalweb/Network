@@ -2,7 +2,7 @@
 	"version": "0.2",
 	"language": "en-US",
 	"files": [
-		"**/*.{js,jsx,ts,tsx,md,yml}"
+		"**/*.{js,jsx,ts,tsx,md,yml,txt,private}"
 	],
 	"ignorePaths": [
 		"node_modules/**",
@@ -22,11 +22,21 @@
 		"decapsulated",
 		"decapsulates",
 		"iife",
+		"pqclean",
 		"sarif",
 		"simc",
-		"uwrl"
+		"uwrl",
+		"UW",
+		"VIAT"
 	],
 	"ignoreWords": [],
 	"import": [],
-	"enabled": true
+	"enabled": true,
+	"enabledFileTypes": {
+		"plaintext": true,
+		"javascript": true,
+		"html": true,
+		"css": true,
+		"markdown": true
+	}
 }

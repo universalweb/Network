@@ -14,7 +14,7 @@ import {
 	isFalse,
 	isNumber
 } from '@universalweb/acid';
-import { proccessProtocolPacketHeader } from '#udsp/proccessProtocolPacket';
+import { proccessProtocolPacketHeader } from '#udsp/proccessProtocol';
 import { processFrame } from '../processFrame.js';
 export async function onPacket(packet, rinfo) {
 	msgReceived('Packet Received');
@@ -25,7 +25,7 @@ export async function onPacket(packet, rinfo) {
 	};
 	const wasHeadersDecoded = await decodePacketHeaders(config);
 	if (!wasHeadersDecoded || !config.packetDecoded.header) {
-		console.log(config.packet);
+		this.logInfo(config.packet);
 		return console.trace('Error failed to decode packet headers');
 	}
 	const { header, } = config.packetDecoded;
@@ -40,7 +40,7 @@ export async function onPacket(packet, rinfo) {
 		message,
 		footer,
 	} = config.packetDecoded;
-	// console.log(config);
+	// this.logInfo(config);
 	if (message) {
 		await processFrame(message, header, this, this.requestQueue, rinfo);
 		this.fire(this.events, 'socket.onPacket', this, [

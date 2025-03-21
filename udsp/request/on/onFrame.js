@@ -9,7 +9,7 @@ import { onData, onDataReady } from '../rpc/onData.js';
 import { onHead, onHeadReady } from '../rpc/onHead.js';
 import { onParameters, onParametersReady } from '../rpc/onParameters.js';
 import { onPath, onPathReady } from '../rpc/onPath.js';
-import { destroy } from '../destory.js';
+import { destroy } from '../destroy.js';
 import { isMethodCodeValid } from '../../isMethodCodeValid.js';
 import { onEnd } from '../rpc/onEnd.js';
 import { onError } from '../rpc/onError.js';
@@ -46,10 +46,10 @@ export async function onFrame(frame, header, rinfo) {
 	const { isAsk } = source;
 	source.lastActive = Date.now();
 	if (!frame) {
-		console.log(frame);
+		this.logInfo(frame);
 		return source.destroy('No Frame in Frame -> Packet');
 	}
-	console.log('On Packet event frame:', frame);
+	this.logInfo('On Packet event frame:', frame);
 	const [
 		id,
 		rpc,
@@ -57,9 +57,9 @@ export async function onFrame(frame, header, rinfo) {
 		data,
 		lastPacket
 	] = frame;
-	console.log(`onPacket Stream Id ${id}`, this);
+	this.logInfo(`onPacket Stream Id ${id}`, this);
 	if (lastPacket) {
-		console.log('LAST PACKET RECEIVED', frame);
+		this.logInfo('LAST PACKET RECEIVED', frame);
 	}
 	if (isMethodCodeValid(rpc) === false) {
 		source.destroy('Invalid RPC');

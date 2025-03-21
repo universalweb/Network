@@ -17,14 +17,14 @@ const {
 } = clientStates;
 export async function setDiscoveryHeaders(header = []) {
 	const key = this.publicKey;
-	console.log('Setting DISCOVERY in UDSP Header', toHex(key));
+	this.logInfo('Setting DISCOVERY in UDSP Header', toHex(key));
 	const {
-		cipherSuiteName,
-		cipherSuite,
+		cipherName,
+		cipher,
 		version,
 		id
 	} = this;
-	header.push(id, cipherSuite.id, version);
+	header.push(id, cipher.id, version);
 	return header;
 }
 /*
@@ -36,7 +36,7 @@ export async function setDiscoveryHeaders(header = []) {
 	*/
 export async function sendDiscovery() {
 	if (this.state === inactiveState) {
-		console.log('Sending Discovery');
+		this.logInfo('Sending Discovery');
 		await this.updateState(discoveringState);
 		const header = [discoveryHeaderRPC];
 		this.setPublicKeyHeader(header);
@@ -50,6 +50,6 @@ export async function discovery(frame, header) {
 	this.discovered();
 }
 export	async function discovered() {
-	console.log('DISCOVERY COMPLETED -> CERTIFICATE LOADED');
+	this.logInfo('DISCOVERY COMPLETED -> CERTIFICATE LOADED');
 	await this.updateState(discoveredState);
 }

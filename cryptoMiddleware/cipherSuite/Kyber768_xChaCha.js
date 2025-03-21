@@ -18,7 +18,7 @@ import {
 	toHex
 } from '#crypto';
 import kyber768 from '../keyExchange/kyber768.js';
-import xChaCha from '../encryption/XChaCha.js';
+import xChaCha from '../cipher/xChaCha.js';
 const hash256 = kyber768.hash;
 export const kyber768_xChaCha = {
 	name: 'kyber768_xChaCha',

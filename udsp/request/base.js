@@ -27,8 +27,14 @@ import { checkSetupSent, clearSetupTimeout, sendSetup } from './send/sendSetup.j
 import { createEvent, removeEvent, triggerEvent } from '../events.js';
 import { decode, encode } from '#utilities/serialize';
 import { flush, flushIncoming, flushOutgoing } from './flush.js';
+import {
+	logError,
+	logInfo,
+	logVerbose,
+	logWarning
+} from '../consoleLog.js';
 import { dataPacketization } from './dataPacketization.js';
-import { destroy } from './destory.js';
+import { destroy } from './destroy.js';
 import { onData } from './on/onData.js';
 import { onDataProgress } from './onProgress/onDateProgress.js';
 import { onFrame } from './on/onFrame.js';
@@ -75,7 +81,7 @@ export class Base {
 	}
 	setState(value) {
 		this.state = value;
-		console.log(`State Set: ${value}`);
+		this.logInfo(`State Set: ${value}`);
 	}
 	setHeaders(target) {
 		const source = this.isAsk ? this.request : this.response;
@@ -112,7 +118,7 @@ export class Base {
 			if (isPlainObject(head)) {
 				this.setHeaderDetails(head);
 			}
-			console.log('HEAD SET', head);
+			this.logInfo('HEAD SET', head);
 		} else {
 			head = {};
 		}
@@ -135,7 +141,7 @@ export class Base {
 				console.trace('parameters decode failed');
 				return this.destroy('parameters decode failed');
 			}
-			console.log('Parameters SET', this.parameters);
+			this.logInfo('Parameters SET', this.parameters);
 		} else {
 			this.parameters = null;
 		}
@@ -146,7 +152,7 @@ export class Base {
 	setPath() {
 		clear(this.incomingPathPackets);
 		if (this.incomingPath?.length) {
-			console.log('Assemble Path', this.incomingPath);
+			this.logInfo('Assemble Path', this.incomingPath);
 			const pathCompiled = Buffer.concat(this.incomingPath);
 			clearBuffer(this.incomingPath);
 			this.path = decode(pathCompiled);
@@ -155,7 +161,7 @@ export class Base {
 				console.trace('path decode failed');
 				return this.destroy('path decode failed');
 			}
-			console.log('Path SET', this.path);
+			this.logInfo('Path SET', this.path);
 		} else {
 			this.path = '';
 		}
@@ -174,14 +180,14 @@ export class Base {
 			this.emptyPath = true;
 			return;
 		}
-		console.log('pathPacketization', source.path);
+		this.logInfo('pathPacketization', source.path);
 		this.outgoingPath = encode(source.path);
 		this.outgoingPathSize = this.outgoingPath.length;
-		console.log('outgoingPathSize', this.outgoingPathSize);
+		this.logInfo('outgoingPathSize', this.outgoingPathSize);
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const outgoingPathSize = this.outgoingPathSize;
-		console.log('maxFrameSize', maxFrameSize);
+		this.logInfo('maxFrameSize', maxFrameSize);
 		while (currentBytePosition < outgoingPathSize) {
 			const message = this.getPacketTemplate(2);
 			message.push(packetId);
@@ -197,7 +203,7 @@ export class Base {
 			packetId++;
 			currentBytePosition = safeEndIndex;
 		}
-		console.log('outgoingPathSize', this.outgoingPathSize);
+		this.logInfo('outgoingPathSize', this.outgoingPathSize);
 	}
 	async parametersPacketization() {
 		const {
@@ -210,14 +216,14 @@ export class Base {
 			this.emptyParameters = true;
 			return;
 		}
-		console.log('parametersPacketization', source.parameters);
+		this.logInfo('parametersPacketization', source.parameters);
 		this.outgoingParameters = encode(source.parameters);
 		this.outgoingParametersSize = this.outgoingParameters.length;
-		console.log('outgoingParameterSize', this.outgoingParametersSize);
+		this.logInfo('outgoingParameterSize', this.outgoingParametersSize);
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const outgoingParametersSize = this.outgoingParametersSize;
-		console.log('maxFrameSize', maxFrameSize);
+		this.logInfo('maxFrameSize', maxFrameSize);
 		while (currentBytePosition < outgoingParametersSize) {
 			const message = this.getPacketTemplate(4);
 			message.push(packetId);
@@ -232,7 +238,7 @@ export class Base {
 			packetId++;
 			currentBytePosition = safeEndIndex;
 		}
-		console.log('outgoingParameterSize', this.outgoingParameterSize);
+		this.logInfo('outgoingParameterSize', this.outgoingParameterSize);
 	}
 	async headPacketization() {
 		const {
@@ -243,17 +249,17 @@ export class Base {
 		const source = this.isAsk ? this.request : this.response;
 		if (!source.head || !objectSize(source.head)) {
 			this.emptyHead = true;
-			console.log('Empty Head');
+			this.logInfo('Empty Head');
 			return;
 		}
-		console.log('headPacketization', source.head);
+		this.logInfo('headPacketization', source.head);
 		this.outgoingHead = encode(source.head);
 		this.outgoingHeadSize = this.outgoingHead.length;
-		console.log('outgoingHeadSize', this.outgoingHeadSize);
+		this.logInfo('outgoingHeadSize', this.outgoingHeadSize);
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const headSize = this.outgoingHeadSize;
-		console.log('maxFrameSize', maxFrameSize);
+		this.logInfo('maxFrameSize', maxFrameSize);
 		while (currentBytePosition < headSize) {
 			const message = this.getPacketTemplate(6);
 			message.push(packetId);
@@ -268,7 +274,7 @@ export class Base {
 			packetId++;
 			currentBytePosition = safeEndIndex;
 		}
-		console.log('outgoingHeadSize', this.outgoingHeadSize);
+		this.logInfo('outgoingHeadSize', this.outgoingHeadSize);
 	}
 	async dataPacketization() {
 		const {
@@ -309,7 +315,7 @@ export class Base {
 			isReply,
 		} = this;
 		if (isAsk) {
-			console.log('CHECKING CONNECTION');
+			this.logInfo('CHECKING CONNECTION');
 			const connect = await this.source().connect();
 			if (this.sent) {
 				return this.accept;
@@ -321,12 +327,12 @@ export class Base {
 		if (data) {
 			message.data = data;
 		}
-		console.log(`${this.constructor.name}.send`, message);
+		this.logInfo(`${this.constructor.name}.send`, message);
 		const awaitingResult = promise((accept) => {
 			thisSource.accept = accept;
 		});
 		await this.packetization();
-		console.log(`SENDING FROM A ${this.constructor.name}`);
+		this.logInfo(`SENDING FROM A ${this.constructor.name}`);
 		this.sendSetup();
 		return awaitingResult;
 	}
@@ -397,7 +403,7 @@ export class Base {
 	destroy = destroy;
 	onFrame = onFrame;
 	async sendPacket(message, headers, footer) {
-		// console.log('sendPacket this.source()', this.source());
+		// this.logInfo('sendPacket this.source()', this.source());
 		this.source().send(message, headers, footer);
 	}
 	flushOutgoing = flushOutgoing;
@@ -437,6 +443,10 @@ export class Base {
 	checkSetupSent = checkSetupSent;
 	clearSetupTimeout = clearSetupTimeout;
 	sendSetup = sendSetup;
+	logError = logError;
+	logWarning = logWarning;
+	logInfo = logInfo;
+	logVerbose = logVerbose;
 	outgoingHead;
 	outgoingData;
 	incomingHeadState = false;

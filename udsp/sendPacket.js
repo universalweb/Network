@@ -5,7 +5,7 @@ import {
 	msgSent,
 	success
 } from '#logs';
-import { isFunction, promise } from '@universalweb/acid';
+import { isArray, isFunction, promise } from '@universalweb/acid';
 import { encodePacket } from '#udsp/encoding/encodePacket';
 export async function sendEncodedPacket(socket, packetEncoded, port, ip, destroyed) {
 	if (destroyed) {
@@ -22,11 +22,11 @@ export async function sendEncodedPacket(socket, packetEncoded, port, ip, destroy
 		});
 	});
 }
-export async function sendPacket(message, source, socket, destination = source.destination, headers, footer, repeat, rinfo) {
+export async function sendPacket(frame, source, socket, destination = source.destination, headers, footer, repeat, rinfo) {
 	if (source.destroyed) {
 		return;
 	}
-	// console.log(`sendPacket`, source);
+	// source.logInfo(`sendPacket`, source);
 	const {
 		server,
 		isClient,
@@ -38,18 +38,15 @@ export async function sendPacket(message, source, socket, destination = source.d
 	if (headers) {
 		info(`Sending Packet with header`);
 	}
-	if (message) {
+	if (frame) {
 		info(`Sending Packet with message`);
-		if (message.method) {
-			info(`Sending Packet with act ${message.method}`);
-		}
 	}
 	if (footer) {
 		info(`Sending Packet with footer`);
 	}
-	// console.log('sendPacket', message, headers);
-	const packetEncoded = await encodePacket(message, source, destination, headers, footer);
-	console.log(`Packet Encoded Size ${packetEncoded.length} Worker ${source.workerId || 'Master'} sending to ip: ${ip} Port: ${port}`);
+	// source.logInfo('sendPacket', message, headers);
+	const packetEncoded = await encodePacket(frame, source, destination, headers, footer);
+	source.logInfo(`Packet Encoded Size ${packetEncoded.length} Worker ${source.workerId || 'Master'} sending to ip: ${ip} Port: ${port}`);
 	if (repeat) {
 		const firstSent = sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed);
 		const secondSent = sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed);
@@ -57,4 +54,24 @@ export async function sendPacket(message, source, socket, destination = source.d
 		return Promise.all(sentPromises);
 	}
 	return sendEncodedPacket(socket, packetEncoded, port, ip, source.destroyed);
+}
+export async function sendPacketWithDelay(frame, source, socket, destination, headers, footer, repeat, rinfo, delay) {
+	if (source.destroyed) {
+		return;
+	}
+	await new Promise((accept) => {
+		setTimeout(() => {
+			accept();
+		}, delay);
+	});
+	return sendPacket(frame, source, socket, destination, headers, footer, repeat, rinfo);
+}
+export async function sendPacketIfAny(frame, source, socket, destination, headers, footer, repeat, rinfo) {
+	if (source.destroyed) {
+		return;
+	}
+	if (frame && isArray(frame) && frame.length === 0) {
+		return sendPacket(undefined, source, socket, destination, headers, footer, repeat, rinfo);
+	}
+	return sendPacket(frame, source, socket, destination, headers, footer, repeat, rinfo);
 }

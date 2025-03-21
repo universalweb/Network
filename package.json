@@ -23,12 +23,13 @@
 		"@noble/post-quantum": "^0.4.0",
 		"@universalweb/acid": "^3.0.74",
 		"cbor-x": "^1.6.0",
-		"electron": "^34.2.0",
+		"electron": "^35.0.2",
 		"hash-wasm": "^4.12.0",
+		"ip": "^2.0.1",
 		"keccak": "^3.0.4",
 		"keychain": "^1.5.0",
 		"libsodium-wrappers": "^0.7.15",
-		"mongoose": "^8.10.1",
+		"mongoose": "^8.12.1",
 		"msgpackr": "^1.11.2",
 		"node-seal": "^5.1.4",
 		"node-watch": "^0.7.4",
@@ -38,9 +39,9 @@
 		"pqc-dilithium": "^0.2.0",
 		"pqclean": "^0.7.0",
 		"qrcode": "^1.5.4",
-		"sodium-native": "^4.3.2"
+		"sodium-native": "^4.3.3"
 	},
-	"description": "UW:// modules for Client, Server, VIAT, DIS, Browser, Crypto, Modules, & certificates. This is the main repo for all Universal Web & VIAT related modules, scripts, and code.",
+	"description": "UW & VIAT modules: Client, Server, VIAT, DIS, Browser, Crypto, Wallets, Modules, & certificates.",
 	"esm": {
 		"cjs": true,
 		"mode": "auto",
@@ -124,25 +125,35 @@
 	},
 	"version": "3.0.7",
 	"devDependencies": {
-		"@babel/core": "^7.26.9",
-		"@babel/eslint-parser": "^7.26.8",
+		"@babel/core": "^7.26.10",
+		"@babel/eslint-parser": "^7.26.10",
 		"@babel/preset-env": "^7.26.9",
 		"@electron-forge/cli": "^7.7.0",
 		"@microsoft/eslint-formatter-sarif": "^3.1.0",
 		"@rollup/plugin-terser": "^0.4.4",
-		"@stylistic/eslint-plugin": "^4.0.1",
-		"@universalweb/docredux": "^3.2.7",
+		"@stylistic/eslint-plugin": "^4.2.0",
 		"auto-changelog": "^2.5.0",
-		"axios": "^1.7.9",
+		"axios": "^1.8.3",
 		"benchmark": "^2.1.4",
-		"daisyui": "^4.12.23",
-		"eslint": "^9.21.0",
-		"eslint-plugin-jsdoc": "^50.6.3",
+		"daisyui": "^5.0.6",
+		"eslint": "^9.22.0",
+		"eslint-plugin-jsdoc": "^50.6.8",
+		"globals": "^16.0.0",
 		"htmlhint": "^1.1.4",
-		"rollup": "^4.34.8",
-		"tailwindcss": "^4.0.8",
+		"rollup": "^4.36.0",
+		"tailwindcss": "^4.0.14",
 		"testatron": "^2.1.0",
-		"textlint": "^14.4.2"
+		"textlint": "^14.5.0"
 	},
-	"packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af"
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"cbor-extract",
+			"core-js",
+			"electron",
+			"keccak",
+			"msgpackr-extract",
+			"pqclean"
+		]
+	},
+	"packageManager": "pnpm@10.6.2"
 }
