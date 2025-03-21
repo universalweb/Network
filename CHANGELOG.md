@@ -4,7 +4,12 @@
 |                  [Universal Web](https://universalweb.io) - [Twitter](https://twitter.com/tommarchi)                   |
 ---
 
-## [v3.0.6](https://github.com/universalweb/Network/compare/v3.0.6...v3.0.6)
+## [v3.0.7](https://github.com/universalweb/Network/compare/v3.0.7...v3.0.7)
+
+---
+---
+
+## [v3.0.7](https://github.com/universalweb/Network/compare/v3.0.6...v3.0.7) - 2025-02-23
 
 ---
 ---
