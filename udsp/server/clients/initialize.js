@@ -7,14 +7,6 @@ import {
 	keys
 } from '@universalweb/acid';
 import { connectionIdToBuffer, generateConnectionIdString } from '#udsp/connectionId';
-import {
-	failed,
-	imported,
-	info,
-	msgReceived,
-	msgSent,
-	success
-} from '#logs';
 export async function initialize(config) {
 	const {
 		packet,

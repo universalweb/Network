@@ -1,10 +1,3 @@
-import {
-	failed,
-	imported,
-	info,
-	msgSent,
-	success
-} from '#logs';
 import { isArray, isFunction, promise } from '@universalweb/acid';
 import { encodePacket } from '#udsp/encoding/encodePacket';
 export async function sendEncodedPacket(socket, packetEncoded, port, ip, destroyed) {
@@ -17,7 +10,6 @@ export async function sendEncodedPacket(socket, packetEncoded, port, ip, destroy
 				reject(error);
 				return console.trace(error);
 			}
-			success(`Packet Sent Out BYTES:${packetEncoded.length}`);
 			accept();
 		});
 	});
@@ -35,15 +27,6 @@ export async function sendPacket(frame, source, socket, destination = source.des
 	} = source;
 	const ip = rinfo ? rinfo.address : destination.ip;
 	const port = rinfo ? rinfo.port : destination.port;
-	if (headers) {
-		info(`Sending Packet with header`);
-	}
-	if (frame) {
-		info(`Sending Packet with message`);
-	}
-	if (footer) {
-		info(`Sending Packet with footer`);
-	}
 	// source.logInfo('sendPacket', message, headers);
 	const packetEncoded = await encodePacket(frame, source, destination, headers, footer);
 	source.logInfo(`Packet Encoded Size ${packetEncoded.length} Worker ${source.workerId || 'Master'} sending to ip: ${ip} Port: ${port}`);

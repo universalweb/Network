@@ -1,12 +1,5 @@
 // Process Frame Packets
 import {
-	failed,
-	imported,
-	info,
-	msgSent,
-	success
-} from '#logs';
-import {
 	hasValue,
 	isArray,
 	isNumber,
@@ -19,7 +12,7 @@ export async function processFrame(frame, header, source, queue, rinfo) {
 	}
 	if (isArray(frame) && frame.length) {
 		const streamId = frame[0];
-		info(`Packet Received Stream ID: ${streamId}`);
+		source.logInfo(`Packet Received Stream ID: ${streamId}`);
 		// TODO: Consider streamID to be undefined and RPC location to be the same see if can make this cleaner
 		if (hasValue(streamId)) {
 			if (streamId === false) {

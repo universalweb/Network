@@ -16,12 +16,6 @@ import {
 	stringify
 } from '@universalweb/acid';
 import { decode, encode } from '#utilities/serialize';
-import {
-	failed,
-	info,
-	msgReceived,
-	msgSent
-} from '#logs';
 export class Base {
 	constructor(config) {
 		if (config) {

@@ -11,21 +11,13 @@ import {
 	isUndefined
 } from '@universalweb/acid';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
-import {
-	failed,
-	imported,
-	info,
-	msgReceived,
-	msgSent,
-	success
-} from '#logs';
 import { createClient } from './clients/index.js';
 import { proccessProtocolPacketHeader } from '#udsp/proccessProtocol';
 import { reply } from '#udsp/request/reply';
 import { toBase64 } from '#crypto';
 export async function onPacket(packet, rinfo) {
 	const thisServer = this;
-	msgReceived('Message Received WORKER ID:', this.workerId || 'No Worker ID');
+	this.logInfo('Message Received WORKER ID:', this.workerId || 'No Worker ID');
 	const config = {
 		packet,
 		connection: rinfo,
@@ -49,10 +41,8 @@ export async function onPacket(packet, rinfo) {
 	const { header, } = config.packetDecoded;
 	// TODO: Replace sessionCompleted with state ID
 	//  TODO: Check if this can e re-written so that not relying on the header having a protocol RPC
-	if (isFalse(client.handshakeStatus)) {
-		if (isFalse(config.isShortHeaderMode)) {
-			await proccessProtocolPacketHeader(client, header, config.packetDecoded, rinfo);
-		}
+	if (isFalse(config.isShortHeaderMode)) {
+		await proccessProtocolPacketHeader(client, header, config.packetDecoded, rinfo);
 	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {

@@ -1,4 +1,3 @@
-import { info } from '#logs';
 export async function attachDefaultHeaders(reply) {
 	const {
 		defaultHeaders: {

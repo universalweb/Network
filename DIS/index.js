@@ -1,5 +1,4 @@
 import { createServer } from '../udsp/server/index.js';
-import { info } from '#logs';
 const server = await createServer({
 	maxMTU: 1100,
 	max: 900,
@@ -12,4 +11,4 @@ const server = await createServer({
 	onConnectMessage: `Welcome to the Universal Web.`,
 	port: 8888
 });
-info('DIS Server', server);
+server.infoLog('DIS Server', server);

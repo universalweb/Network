@@ -1,4 +1,3 @@
-import { failed, info } from '#logs';
 import { get, hasValue, stringify } from '@universalweb/acid';
 export async function processEvent(request, response, source) {
 	const { onRequest } = source;

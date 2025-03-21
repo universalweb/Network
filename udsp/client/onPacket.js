@@ -1,14 +1,6 @@
 import { decode, encode } from '#utilities/serialize';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import {
-	failed,
-	imported,
-	info,
-	msgReceived,
-	msgSent,
-	success
-} from '#logs';
-import {
 	hasValue,
 	isArray,
 	isFalse,
@@ -17,7 +9,7 @@ import {
 import { proccessProtocolPacketHeader } from '#udsp/proccessProtocol';
 import { processFrame } from '../processFrame.js';
 export async function onPacket(packet, rinfo) {
-	msgReceived('Packet Received');
+	this.logInfo('Packet Received');
 	const config = {
 		destination: this,
 		source: this.destination,

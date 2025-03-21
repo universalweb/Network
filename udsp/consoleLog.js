@@ -1,48 +1,39 @@
 import {
-	failed,
-	imported,
-	info,
-	msgReceived,
-	msgSent,
-	success
+	completedLog,
+	errorLog,
+	fatalLog,
+	infoLog,
+	noteLog,
+	successLog,
+	verboseLog,
+	warningLog
 } from '#logs';
 import { isUndefined } from '@universalweb/acid';
-const logCodes = ['LOG'];
-const logLevels = [
-	'ERROR',
-	'WARNING',
-	'INFO',
-	'VERBOSE',
-];
-function getLogCode(code = 0) {
-	return logCodes[code];
-}
-export async function consoleLog(source, code, err, logFunction = console.log) {
+export async function consoleLog(source, loglevel, err, logFunction = console.log) {
 	// Remove for production
-	const logLevel = source.logLevel || 3;
-	if (isUndefined(source.logLevel)) {
+	if (source && isUndefined(source?.logLevel)) {
 		return;
 	}
-	if (source.logLevel <= logLevel) {
+	if (source.logLevel <= loglevel) {
 		if (source.connectionIdString) {
-			logFunction(`${getLogCode(code)}[${code}]: ${source.type} ${source.connectionIdString ? source.connectionIdString : ''}`);
+			await logFunction(`${source.type} ${source.connectionIdString ? source.connectionIdString : ''}`, ...err);
 		} else {
-			logFunction(`${getLogCode(code)}[${code}]: ${source.type}`);
-		}
-		if (err) {
-			logFunction(...err);
+			await logFunction(`${source.type}`, ...err);
 		}
 	}
 }
 export async function logError(...err) {
-	await consoleLog(this, 0, err);
+	await consoleLog(this, 0, err, errorLog);
 }
 export async function logWarning(...err) {
-	await consoleLog(this, 1, err);
+	await consoleLog(this, 1, err, warningLog);
 }
 export async function logInfo(...err) {
-	await consoleLog(this, 2, err);
+	await consoleLog(this, 2, err, infoLog);
 }
 export async function logVerbose(...err) {
-	await consoleLog(this, 3, err);
+	await consoleLog(this, 3, err, verboseLog);
+}
+export async function logSuccess(...err) {
+	await consoleLog(this, 3, err, successLog);
 }

@@ -5,7 +5,6 @@ import {
 	intersection,
 	noValue
 } from '@universalweb/acid';
-import { success } from '#logs';
 export async function configCryptography() {
 	const certificate = this.destination.certificate;
 	const { ciphers }	= certificate;

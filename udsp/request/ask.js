@@ -21,12 +21,6 @@ import {
 } from '@universalweb/acid';
 import { askRPC, replyRPC } from './rpc/rpcCodes.js';
 import { decode, encode } from '#utilities/serialize';
-import {
-	failed,
-	info,
-	msgReceived,
-	msgSent
-} from '#logs';
 import { Base } from './base.js';
 import { clientRequestObject } from './objects/client/request.js';
 import { clientResponseObject } from './objects/client/response.js';

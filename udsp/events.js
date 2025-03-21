@@ -6,7 +6,6 @@ import {
 	isArray,
 	isPlainObject
 } from '@universalweb/acid';
-import { imported } from '#logs';
 export async function triggerEvent(events, eventName, thisBind, ...args) {
 	const eventArray = events.get(eventName);
 	if (eventArray) {

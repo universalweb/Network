@@ -1,8 +1,7 @@
 import { discoveryHeaderRPC } from '../../../protocolHeaderRPCs.js';
-import { info } from '#logs';
 // CLIENT DISCOVERY
 export	async function discovery(frame, header) {
-	info(`Client Discovery -> - ID:${this.connectionIdString}`, frame, header);
+	this.logInfo(`Client Discovery -> - ID:${this.connectionIdString}`, frame, header);
 	return this.sendDiscovery(frame, header);
 }
 // SERVER DISCOVERY

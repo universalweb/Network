@@ -23,7 +23,7 @@
 		"@noble/post-quantum": "^0.4.0",
 		"@universalweb/acid": "^3.0.74",
 		"cbor-x": "^1.6.0",
-		"electron": "^35.0.2",
+		"electron": "^35.0.3",
 		"hash-wasm": "^4.12.0",
 		"ip": "^2.0.1",
 		"keccak": "^3.0.4",
@@ -39,6 +39,7 @@
 		"pqc-dilithium": "^0.2.0",
 		"pqclean": "^0.7.0",
 		"qrcode": "^1.5.4",
+		"signale": "^1.4.0",
 		"sodium-native": "^4.3.3"
 	},
 	"description": "UW & VIAT modules: Client, Server, VIAT, DIS, Browser, Crypto, Wallets, Modules, & certificates.",
@@ -133,15 +134,15 @@
 		"@rollup/plugin-terser": "^0.4.4",
 		"@stylistic/eslint-plugin": "^4.2.0",
 		"auto-changelog": "^2.5.0",
-		"axios": "^1.8.3",
+		"axios": "^1.8.4",
 		"benchmark": "^2.1.4",
-		"daisyui": "^5.0.6",
+		"daisyui": "^5.0.9",
 		"eslint": "^9.22.0",
 		"eslint-plugin-jsdoc": "^50.6.8",
 		"globals": "^16.0.0",
 		"htmlhint": "^1.1.4",
 		"rollup": "^4.36.0",
-		"tailwindcss": "^4.0.14",
+		"tailwindcss": "^4.0.15",
 		"testatron": "^2.1.0",
 		"textlint": "^14.5.0"
 	},
@@ -155,5 +156,5 @@
 			"pqclean"
 		]
 	},
-	"packageManager": "pnpm@10.6.2"
+	"packageManager": "pnpm@10.6.5"
 }

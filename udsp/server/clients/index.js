@@ -36,6 +36,7 @@ import {
 import {
 	logError,
 	logInfo,
+	logSuccess,
 	logVerbose,
 	logWarning
 } from '../../consoleLog.js';
@@ -89,7 +90,7 @@ export class Client {
 		this.logInfo(`transmitKey: ${toHex(this.transmitKey)}`);
 	}
 	// TODO: CONSIDER TO REMOVE SETSESSION USE MORE SPECIFIC NAMES
-	async handshakeCompleted(cipherData) {
+	async handshakeCompleted() {
 		this.logInfo('finalizeHandshake');
 		// await this.keyExchange.serverSetSession(this, this.destination, cipherData);
 		this.handshakeStatus = null;
@@ -150,16 +151,15 @@ export class Client {
 	}
 	async reply(frame, header, rinfo) {
 		if (this.state === 1) {
-			this.updateState(2);
+			await this.updateState(2);
 		}
-		this.updateLastActive();
+		await this.updateLastActive();
 		const processingFrame = await processFrame(frame, header, this, this.requestQueue);
 		if (processingFrame === false) {
 			const replyObject = new Reply(frame, header, this);
 			this.logInfo('New reply object created', replyObject);
 			if (isFalse(replyObject)) {
-				this.logInfo('Reply creation failed');
-				console.trace();
+				this.errorLog('Reply creation failed');
 				return;
 			}
 			replyObject.onFrame(frame, header, rinfo);
@@ -211,6 +211,7 @@ export class Client {
 	logWarning = logWarning;
 	logInfo = logInfo;
 	logVerbose = logVerbose;
+	logSuccess = logSuccess;
 	pending = false;
 	state = 0;
 	randomId = randomBuffer(8);
@@ -220,7 +221,6 @@ export class Client {
 	static type = 'serverClient';
 	isServerClient = true;
 	isServerEnd = true;
-	handshakeStatus = false;
 	initialize = initialize;
 	onConnected = onConnected;
 	initialGracePeriod = 1000;

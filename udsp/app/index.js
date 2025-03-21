@@ -7,12 +7,6 @@ import {
 	isUndefined
 } from '@universalweb/acid';
 import { decode, encode } from '#utilities/serialize';
-import {
-	logError,
-	logInfo,
-	logVerbose,
-	logWarning
-} from '../consoleLog.js';
 import { App } from './App.js';
 import cluster from 'node:cluster';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';

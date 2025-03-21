@@ -4,7 +4,6 @@ import {
 	isNotNumber,
 	isTrue
 } from '@universalweb/acid';
-import { info, success } from '#logs';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
 import { introHeaderRPC } from '../../../protocolHeaderRPCs.js';
 import { introRPC } from '../../../protocolFrameRPCs.js';
@@ -18,7 +17,7 @@ async function certificateKeypairCompatability(source, destination, header, fram
 // CLIENT HELLO
 // Change from initialization to this for session stuff keep separate
 export async function introHeader(header, packetDecoded) {
-	info(`Client Intro -> - ID:${this.connectionIdString}`);
+	this.logInfo(`Client Intro -> - ID:${this.connectionIdString}`);
 	const [
 		connectionId,
 		rpc,
@@ -28,12 +27,12 @@ export async function introHeader(header, packetDecoded) {
 		timeSent,
 		// version,
 	] = header;
-	this.logInfo('Client initialize Packet Header', header);
+	this.logthis.logInfo('Client initialize Packet Header', header);
 	const { certificate } = this;
 	if (cipherData) {
-		success(`cipherData in INTRO HEADER: ${toHex(cipherData)}`);
+		this.logSuccess(`cipherData in INTRO HEADER: ${toHex(cipherData)}`);
 	} else {
-		this.logInfo('No cipherData in INTRO HEADER');
+		this.logthis.logInfo('No cipherData in INTRO HEADER');
 		this.destroy();
 		return false;
 	}
@@ -59,15 +58,15 @@ export async function introHeader(header, packetDecoded) {
 	await this.initializeSession(cipherData);
 	await this.calculatePacketOverhead();
 	this.nonce = await this.cipher.createNonce();
-	success(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port} LATENCY = ${this.latency}`);
+	this.logSuccess(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port} LATENCY = ${this.latency}`);
 	if (packetDecoded.noMessage) {
-		this.logInfo('Intro Packet has No message body');
+		this.logthis.logInfo('Intro Packet has No message body');
 		return this.sendIntro();
 	}
 }
 // Intro is not triggered only header intro is
 export async function intro(frame, header, rinfo) {
-	info(`Client Intro -> - ID:${this.connectionIdString}`);
+	this.logInfo(`Client Intro -> - ID:${this.connectionIdString}`);
 	return this.sendIntro();
 }
 async function attachProxyAddress(source) {
@@ -114,7 +113,7 @@ export async function sendIntro() {
 	if (this.keyExchange.createServerIntro) {
 		await this.keyExchange.createServerIntro(this, this.destination, frame, header);
 	}
-	this.logInfo('Sending Server Intro', frame, header);
+	this.logthis.logInfo('Sending Server Intro', frame, header);
 	this.updateState(1);
 	return this.sendAny(frame, header);
 }

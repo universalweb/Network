@@ -11,14 +11,6 @@ import {
 	noValue
 } from '@universalweb/acid';
 import { decode, encode, } from '#utilities/serialize';
-import {
-	failed,
-	imported,
-	info,
-	msgReceived,
-	msgSent,
-	success
-} from '#logs';
 import { toBase64, toHex } from '#crypto';
 import { createClient } from '../server/clients/index.js';
 import { introHeaderRPC } from '#udsp/protocolHeaderRPCs';
@@ -50,20 +42,20 @@ export async function decodePacketHeaders(config) {
 		destination.logInfo(`WARNING: DECODE Packet size is larger than max allowed size ${maxDefaultPacketSize} -> ${packetSize} over by ${packetSize - maxDefaultPacketSize}`);
 	}
 	const client = config.client;
-	info(`Packet Encoded Size ${packetSize}`);
+	destination.logInfo(`Packet Encoded Size ${packetSize}`);
 	const packet = decode(packetEncoded);
 	if (isUndefined(packet)) {
 		console.trace('Packet decode failed');
 		return;
 	}
 	config.packet = packet;
-	info(`Packet Decoded Array Size ${packet.length}`);
+	destination.logInfo(`Packet Decoded Array Size ${packet.length}`);
 	destination.logInfo(packet);
 	const isShortHeaderMode = isBuffer(packet);
 	config.isShortHeaderMode = isShortHeaderMode;
 	config.packetDecoded = {};
 	if (isShortHeaderMode) {
-		info(`ShortHeaderMode Size ${packet.length}`);
+		destination.logInfo(`ShortHeaderMode Size ${packet.length}`);
 	}
 	let headerEncoded;
 	if (isShortHeaderMode) {
@@ -74,7 +66,7 @@ export async function decodePacketHeaders(config) {
 			config.packetDecoded.noMessage = true;
 		}
 	}
-	info(`headerEncoded Size ${headerEncoded.length}`);
+	destination.logInfo(`headerEncoded Size ${headerEncoded.length}`);
 	if (!headerEncoded) {
 		return console.trace(`No header encoded -> Invalid Packet`);
 	}
@@ -124,9 +116,9 @@ export async function decodePacket(config) {
 	const receiveKey = destination?.receiveKey;
 	const hasEncryptedPayload = receiveKey && messageEncoded && isBuffer(messageEncoded) && hasLength(messageEncoded);
 	if (hasEncryptedPayload) {
-		info(`Receive Key ${toHex(receiveKey)}`);
+		destination.logInfo(`Receive Key ${toHex(receiveKey)}`);
 		destination.logInfo(packet, packetDecoded);
-		info(`encrypted Message size ${messageEncoded.length}bytes`);
+		destination.logInfo(`encrypted Message size ${messageEncoded.length}bytes`);
 		const ad = isShortHeaderMode ? headerEncoded : encode(headerEncoded);
 		destination.logInfo('decrypt op', messageEncoded, receiveKey, ad);
 		const decryptedMessage = await cipher.decrypt(messageEncoded, receiveKey, ad);
@@ -134,7 +126,7 @@ export async function decodePacket(config) {
 			console.trace('Decryption failed');
 			return;
 		}
-		info(`decrypted Message size ${decryptedMessage.length} BYTES`);
+		destination.logInfo(`decrypted Message size ${decryptedMessage.length} BYTES`);
 		const message = decode(decryptedMessage);
 		if (isUndefined(message)) {
 			console.trace('Message Decrypt or Decode failed');

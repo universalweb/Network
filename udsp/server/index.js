@@ -18,14 +18,6 @@ import {
 } from '@universalweb/acid';
 import { createEvent, removeEvent, triggerEvent } from '../events.js';
 import { decode, encode } from '#utilities/serialize';
-import {
-	failed,
-	imported,
-	info,
-	msgReceived,
-	msgSent,
-	success
-} from '#logs';
 import { introHeaderRPC, isIntroHeader } from '../protocolHeaderRPCs.js';
 import { randomBuffer, toBase64 } from '#crypto';
 import { UDSP } from '#udsp/base';
@@ -178,7 +170,7 @@ export class Server extends UDSP {
 		return removeEvent(this.events, eventName, eventMethod);
 	}
 	fire(eventName, ...args) {
-		success(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
+		this.logInfo(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
 		return triggerEvent(this.events, eventName, this, ...args);
 	}
 	addClientCount() {

@@ -1,7 +1,6 @@
 import { hasDot, isEmpty, isString } from '@universalweb/acid';
 import cleanPath from '#cleanPath';
 import { promises as fs } from 'fs';
-import { info } from '#logs';
 import path from 'path';
 import { read } from '#utilities/file';
 const dots = /\./g;

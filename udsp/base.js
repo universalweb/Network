@@ -6,7 +6,11 @@ import {
 	hasValue
 } from '@universalweb/acid';
 import {
-	logError, logInfo, logVerbose, logWarning
+	logError,
+	logInfo,
+	logSuccess,
+	logVerbose,
+	logWarning
 } from './consoleLog.js';
 import { randomBuffer, toBase64 } from '#crypto';
 import { calculatePacketOverhead } from './calculatePacketOverhead.js';
@@ -69,4 +73,5 @@ export class UDSP {
 	logWarning = logWarning;
 	logInfo = logInfo;
 	logVerbose = logVerbose;
+	logSuccess = logSuccess;
 }

@@ -11,17 +11,10 @@ import {
 	decode,
 	encode
 } from '#utilities/serialize';
-import {
-	failed,
-	imported,
-	info,
-	msgSent,
-	success
-} from '#logs';
 import { maxDefaultPacketSize } from '../calculatePacketOverhead.js';
 import { toBase64 } from '#crypto';
 export async function createPacket(message, source, destination, headers, footer) {
-	success(`PROCESSING TO ENCODE PACKET`);
+	source.logSuccess(`PROCESSING TO ENCODE PACKET`);
 	const {
 		state,
 		isClient,
@@ -40,25 +33,25 @@ export async function createPacket(message, source, destination, headers, footer
 	if (headers) {
 		headers[0] = id;
 		shortHeaderMode = false;
-		this.logInfo('HEADERS GIVEN');
+		this.logsource.logInfo('HEADERS GIVEN');
 	}
 	const header = headers || id;
 	if (isClient) {
-		info(`Encode client Packet with cid: ${id.toString('hex')}`);
+		source.logInfo(`Encode client Packet with cid: ${id.toString('hex')}`);
 	} else {
-		info(`Decode Server Packet with cid: ${id.toString('hex')}`);
+		source.logInfo(`Decode Server Packet with cid: ${id.toString('hex')}`);
 	}
 	const headerEncoded = shortHeaderMode ? header : encode(header);
 	const transmitKey = source?.transmitKey;
 	let packetEncoded;
 	if (message && transmitKey) {
-		info(`Transmit Key ${toBase64(transmitKey)}`);
+		source.logInfo(`Transmit Key ${toBase64(transmitKey)}`);
 		const messageEncoded = encode(message);
 		const ad = headerEncoded;
 		const encryptedMessage = await cipher.encrypt(messageEncoded, transmitKey, ad, nonce);
-		this.logInfo('nonce used', nonce);
+		this.logsource.logInfo('nonce used', nonce);
 		if (!encryptedMessage) {
-			this.logInfo('Encryption failed');
+			this.logsource.logInfo('Encryption failed');
 			return;
 		}
 		const packetStructure = [header, encryptedMessage];
@@ -67,20 +60,20 @@ export async function createPacket(message, source, destination, headers, footer
 		}
 		return encode(packetStructure);
 	}
-	this.logInfo('No message given header only packet');
+	this.logsource.logInfo('No message given header only packet');
 	return encode([header]);
 }
 export async function encodePacket(message, source, destination, headers, footer) {
 	const encodedPacket = await createPacket(message, source, destination, headers, footer);
 	if (!encodedPacket) {
-		this.logInfo(`Failed to encode packet`);
+		this.logsource.logInfo(`Failed to encode packet`);
 		return;
 	}
 	const packetSize = encodedPacket.length;
-	info(`encoded Packet Size ${packetSize}`);
+	source.logInfo(`encoded Packet Size ${packetSize}`);
 	if (packetSize > maxDefaultPacketSize) {
 		console.trace(`WARNING: Encode Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - maxDefaultPacketSize}`);
 	}
-	success(`PROCESSED ENCODE PACKET`);
+	source.logSuccess(`PROCESSED ENCODE PACKET`);
 	return encodedPacket;
 }

@@ -30,6 +30,7 @@ import { flush, flushIncoming, flushOutgoing } from './flush.js';
 import {
 	logError,
 	logInfo,
+	logSuccess,
 	logVerbose,
 	logWarning
 } from '../consoleLog.js';
@@ -53,7 +54,6 @@ import { sendEnd } from './send/sendEnd.js';
 import { sendHead } from './send/sendHead.js';
 import { sendParameters } from './send/sendParameters.js';
 import { sendPath } from './send/sendPath.js';
-import { success } from '#logs';
 import { toBase64 } from '#crypto';
 const noPayloadMethods = /0/;
 /**
@@ -397,7 +397,7 @@ export class Base {
 		return removeEvent(this.events, eventName, eventMethod);
 	}
 	fire(eventName, ...args) {
-		success(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
+		this.logInfo(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
 		return triggerEvent(this.events, eventName, this, ...args);
 	}
 	destroy = destroy;
@@ -447,6 +447,7 @@ export class Base {
 	logWarning = logWarning;
 	logInfo = logInfo;
 	logVerbose = logVerbose;
+	logSuccess = logSuccess;
 	outgoingHead;
 	outgoingData;
 	incomingHeadState = false;

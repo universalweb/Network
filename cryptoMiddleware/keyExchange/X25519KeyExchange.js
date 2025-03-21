@@ -21,6 +21,7 @@ const kyber768_x25519ID = 3;
 const publicKeySize = int32;
 const privateKeySize = int32;
 const sessionKeySize = int32;
+// Send Intro encrypt with server key to  new client key
 export async function getSharedSecret(source, destination) {
 	const sharedSecret = bufferAlloc(sessionKeySize);
 	await crypto_scalarmult(sharedSecret, source?.privateKey || source, destination?.publicKey || destination);

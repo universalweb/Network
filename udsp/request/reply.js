@@ -17,13 +17,6 @@ import {
 	stringify
 } from '@universalweb/acid';
 import { decode, encode } from '#utilities/serialize';
-import {
-	failed,
-	info,
-	msgReceived,
-	msgSent,
-	success
-} from '#logs';
 import { Base } from './base.js';
 import { flushOutgoing } from './flush.js';
 import { numberEncodedSize } from './numberEncodedSize.js';

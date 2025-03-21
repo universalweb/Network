@@ -3,6 +3,7 @@ import * as servers from '#server';
 import {
 	logError,
 	logInfo,
+	logSuccess,
 	logVerbose,
 	logWarning
 } from '../consoleLog.js';
@@ -75,10 +76,6 @@ export class App {
 			worker.process.send(passMessage);
 		}
 	}
-	logError = logError;
-	logWarning = logWarning;
-	logInfo = logInfo;
-	logVerbose = logVerbose;
 	async onPacket(packet, connection) {
 		return this.server.onPacket(packet, connection);
 	}
@@ -146,4 +143,9 @@ export class App {
 	delete(key) {
 		return this.deleteItem(key);
 	}
+	logError = logError;
+	logWarning = logWarning;
+	logInfo = logInfo;
+	logVerbose = logVerbose;
+	logSuccess = logSuccess;
 }

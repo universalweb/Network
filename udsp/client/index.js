@@ -68,7 +68,6 @@ import { UDSP } from '#udsp/base';
 import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
 import { clientStates } from '../states.js';
 import { configCryptography } from './configCryptography.js';
-import { consoleLog } from '../consoleLog,js';
 import dgram from 'dgram';
 // Client specific imports to extend class
 import { emit } from '../requestMethods/emit.js';
@@ -79,7 +78,6 @@ import { getIPDetails } from './getIPDetails.js';
 import { getLocalIpVersion } from '../../utilities/network/getLocalIP.js';
 import { getWANIPAddress } from '../../utilities/network/getWANIPAddress.js';
 import { keychainGet } from '../certificate/keychain.js';
-import { msgSent } from '#logs';
 import { onListening } from './listening.js';
 import { onPacket } from './onPacket.js';
 import { post } from '../requestMethods/post.js';
@@ -118,7 +116,7 @@ export class Client extends UDSP {
 		if (options.destinationCertificate) {
 			await this.loadCertificate();
 		}
-		this.consoleLog(this);
+		this.logInfo(this);
 		const destinationStatus = await this.setDestination();
 		if (destinationStatus === false) {
 			return this;
@@ -186,7 +184,7 @@ export class Client extends UDSP {
 		}
 	}
 	async sendAny(frame, headers, footer, repeat) {
-		msgSent(`socket sendPacketIfAny -> ID: ${this.connectionIdString}`);
+		this.infoLog(`socket sendPacketIfAny -> ID: ${this.connectionIdString}`);
 		if (this.destroyed) {
 			return;
 		}
@@ -208,10 +206,10 @@ export class Client extends UDSP {
 		return ask;
 	}
 	async loadCertificate() {
-		this.consoleLog(this);
+		this.logInfo(this);
 		const { options: { destinationCertificate } } = this;
 		this.destination.certificate = await publicDomainCertificate(destinationCertificate);
-		this.consoleLog(this.destination.certificate);
+		this.logInfo(this.destination.certificate);
 		await this.discovered();
 		await this.processCertificate();
 		await this.configCryptography();
@@ -235,7 +233,7 @@ export class Client extends UDSP {
 		// Need function that can assign to source and decide publicKey or other properties
 		destination.publicKey = keyExchangeKeypair?.publicKey || keyExchangeKeypair;
 		this.keyExchange = certificate.keyExchangeAlgorithm;
-		// this.consoleLog(destination);
+		// this.logInfo(destination);
 		destination.signatureKeypair = signatureKeypair?.publicKey || signatureKeypair;
 		destination.protocolOptions = protocolOptions;
 	}
@@ -391,9 +389,6 @@ export class Client extends UDSP {
 			await this.updateState(destroyedState);
 			this.fire(this.events, 'destroyed', this);
 		}
-	}
-	async consoleLog(code, err) {
-		await consoleLog(this, code, err);
 	}
 	on(...args) {
 		return createEvent(this.events, ...args);
