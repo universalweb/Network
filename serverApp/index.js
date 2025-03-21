@@ -56,6 +56,7 @@ const uwApp = await app({
 	resourceDirectory: currentPath(import.meta, 'resources'),
 	rootDirectory: currentPath(import.meta),
 	clientConnectionIdSize: 4,
+	logLevel: 3,
 });
 if (uwApp) {
 	uwApp.get((req, resp, client) => {

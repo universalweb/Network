@@ -520,4 +520,5 @@ export class Base {
 	connectionLatency = 100;
 	latencyTimeout	= 100;
 	setupAttempts = 0;
+	logLevel = 3;
 }

@@ -19,6 +19,9 @@ import dgram from 'dgram';
 import { randomConnectionId } from './connectionId.js';
 export class UDSP {
 	initializeBase(options) {
+		if (options.logLevel) {
+			this.logLevel = options.logLevel;
+		}
 		this.state = 0;
 		/*
       	* A puzzle used to challenge clients to ensure authenticity, connection liveliness, and congestion control.
