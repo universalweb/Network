@@ -6,7 +6,6 @@ import {
 	toHex,
 } from '#crypto';
 import { hash256, hash512, shake256 } from '../hash/shake256.js';
-import { RistrettoPoint } from '@noble/curves/ed25519';
 import { signatureScheme } from './signatureScheme.js';
 const publicKeySize = 32;
 const privateKeySize = 32;
@@ -29,7 +28,6 @@ export const ed25519PureJS = signatureScheme({
 	alias: 'ed25519PureJS',
 	id: 6,
 	security: 0,
-	RistrettoPoint,
 	publicKeySize,
 	privateKeySize,
 	signatureSize,

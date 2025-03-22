@@ -1,4 +1,3 @@
-import * as curve25519 from '@noble/curves/ed25519';
 // (sodium-native) native bindings to libsodium
 // Avoid in favor of blake3 this is left for archival purposes
 import { bufferAlloc, int32, randomBuffer } from '#crypto';

@@ -1,5 +1,4 @@
 // Compare x25519 for compatability and correctness
-import * as curve25519 from '@noble/curves/ed25519';
 import { clientSetSession, keyExchangeKeypair, serverSetSession } from './x25519_blake2b.js';
 import { blake2b as b2 } from 'hash-wasm';
 import { blake2b } from '@noble/hashes/blake2b';
