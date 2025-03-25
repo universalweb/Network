@@ -1,9 +1,9 @@
 // DEMO SCRIPT TO CALCULATE PACKET SIZES MUST BE BELOW MTU EX: IPv6 1280 bytes
 import { encode } from '#utilities/serialize';
 import { introHeaderRPC } from '../udsp/protocolHeaderRPCs.js';
-import kyber768 from '../cryptoMiddleware/keyExchange/kyber768.js';
+import kyber768 from '#crypto/keyExchange/kyber768.js';
 import { randomConnectionId } from '#udsp/connectionId';
-import xChaCha from '../cryptoMiddleware/cipher/xChaCha.js';
+import xChaCha from '#crypto/cipher/xChaCha.js';
 const {
 	encrypt,
 	overhead

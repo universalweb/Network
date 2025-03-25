@@ -14,7 +14,7 @@ import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { createClient } from './clients/index.js';
 import { proccessProtocolPacketHeader } from '#udsp/proccessProtocol';
 import { reply } from '#udsp/request/reply';
-import { toBase64 } from '#crypto';
+import { toBase64 } from '#utilities/cryptography/utils';
 export async function onPacket(packet, rinfo) {
 	const thisServer = this;
 	this.logInfo('Message Received WORKER ID:', this.workerId || 'No Worker ID');
@@ -31,7 +31,7 @@ export async function onPacket(packet, rinfo) {
 	if (id !== false && !isBuffer(id)) {
 		return this.logInfo('Invalid Client id given', id === false);
 	}
-	// TODO: Optimize lookup of client
+	// TODO: Optimize lookup of client objects
 	const idString = id.toString('hex');
 	const client = await this.client(config, id, idString, rinfo);
 	if (!client) {
@@ -39,7 +39,6 @@ export async function onPacket(packet, rinfo) {
 		return this.logInfo('No matching Client id given', idString);
 	}
 	const { header, } = config.packetDecoded;
-	// TODO: Replace sessionCompleted with state ID
 	if (isFalse(config.isShortHeaderMode)) {
 		await proccessProtocolPacketHeader(client, header, config.packetDecoded, rinfo);
 	}

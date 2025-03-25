@@ -33,7 +33,7 @@ import {
 	logSuccess,
 	logVerbose,
 	logWarning
-} from '../consoleLog.js';
+} from '../../utilities/classLogMethods.js';
 import { dataPacketization } from './dataPacketization.js';
 import { destroy } from './destroy.js';
 import { onData } from './on/onData.js';
@@ -54,7 +54,7 @@ import { sendEnd } from './send/sendEnd.js';
 import { sendHead } from './send/sendHead.js';
 import { sendParameters } from './send/sendParameters.js';
 import { sendPath } from './send/sendPath.js';
-import { toBase64 } from '#crypto';
+import { toBase64 } from '#utilities/cryptography/utils';
 const noPayloadMethods = /0/;
 /**
  * @todo

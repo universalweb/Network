@@ -17,11 +17,11 @@ import {
 	currentProtocolVersion,
 } from '../../defaults.js';
 import { decode, encode } from '#utilities/serialize';
-import { getCipher, getKeyExchangeAlgorithm, getSignatureAlgorithm } from '../../cryptoMiddleware/index.js';
+import { getCipher, getKeyExchangeAlgorithm, getSignatureAlgorithm } from '#crypto/index.js';
 import { read, readStructured, write } from '#file';
 import { UWCertificate } from './UWCertificate.js';
 import { keychainSave } from './keychain.js';
-import { toBase64 } from '#crypto';
+import { toBase64 } from '#utilities/cryptography/utils';
 const domainCertificateType = certificateTypes.get('domain');
 // TODO: ADD IMPORT METHOD FOR KEYS TO LOAD AND SHOW CORRECTLY
 // TODO: ADD EXPORT METHOD FOR KEYS TO SAVE AND SHOW CORRECTLY

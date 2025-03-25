@@ -8,7 +8,7 @@ import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
 import { introHeaderRPC } from '../../../protocolHeaderRPCs.js';
 import { introRPC } from '../../../protocolFrameRPCs.js';
 import { sendPacketIfAny } from '#udsp/sendPacket';
-import { toHex } from '#crypto';
+import { toHex } from '#utilities/cryptography/utils';
 async function certificateKeypairCompatability(source, destination, header, frame) {
 	if (source.cipher?.certificateKeypairCompatabilityServer) {
 		await source.cipher?.certificateKeypairCompatabilityServer(source, source, destination, header, frame);

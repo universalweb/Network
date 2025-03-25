@@ -3,7 +3,7 @@ import { clientStates } from '../../states.js';
 import { introHeaderRPC } from '../../protocolHeaderRPCs.js';
 import { introRPC } from '../../protocolFrameRPCs.js';
 import { sendPacketIfAny } from '#udsp/sendPacket';
-import { toHex } from '#crypto';
+import { toHex } from '#utilities/cryptography/utils';
 const {
 	inactiveState,
 	discoveringState,

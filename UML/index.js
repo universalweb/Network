@@ -1,6 +1,6 @@
 import { decode, encode } from '#utilities/serialize';
 import { isArray, isBuffer, isPlainObject } from '@universalweb/acid';
-// UNIVERSAL MARKUP LANGUAGE
+// UNIVERSAL MARKUP LANGUAGE EXPERIMENTAL SYNTAX
 export function div(attrs, contents) {
 	return [
 		'div', attrs, contents

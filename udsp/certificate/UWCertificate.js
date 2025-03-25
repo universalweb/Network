@@ -13,7 +13,7 @@ import {
 	getCiphers,
 	getKeyExchangeAlgorithm,
 	getSignatureAlgorithm
-} from '../../cryptoMiddleware/index.js';
+} from '#crypto/index.js';
 import dis from '../dis/index.js';
 import { encode } from '#utilities/serialize';
 import { resolve } from 'path';

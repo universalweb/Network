@@ -3,7 +3,7 @@
 // ENCOURAGE DISCOVERY FOR PUBLIC CERTIFICATES FROM THE DOMAIN INFORMATION SYSTEM
 import { clientStates } from '../../states.js';
 import { discoveryHeaderRPC } from '../../protocolHeaderRPCs.js';
-import { toHex } from '#crypto';
+import { toHex } from '#utilities/cryptography/utils';
 const {
 	inactiveState,
 	discoveringState,

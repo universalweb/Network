@@ -18,13 +18,13 @@
 				"udsp/client/index.js"
 			],
 			"#profile/*": [
-				"./profile/*.js"
+				"cryptoID/*.js"
 			],
 			"#serverApp/*": [
 				"./serverApp/*.js"
 			],
 			"#schemes/*": [
-				"./schemes/*.js"
+				"browser/schemes/*.js"
 			],
 			"#resources/*": [
 				"./resources/*"
@@ -44,8 +44,8 @@
 			"#sodium": [
 				"./sodium.js"
 			],
-			"#crypto": [
-				"./utilities/crypto.js"
+			"#crypto/": [
+				"./utilities/cryptography/"
 			],
 			"#watch": [
 				"./utilities/watch.js"
@@ -85,7 +85,6 @@
 	"exclude": [
 		"**/build/*",
 		"**/docSource/*",
-		"**/docs/*",
 		"**/examples/*",
 		"**/node_modules/*",
 		"**/npm/*",

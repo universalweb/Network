@@ -12,7 +12,7 @@ import {
 	encode
 } from '#utilities/serialize';
 import { maxDefaultPacketSize } from '../calculatePacketOverhead.js';
-import { toBase64 } from '#crypto';
+import { toBase64 } from '#utilities/cryptography/utils';
 export async function createPacket(message, source, destination, headers, footer) {
 	source.logSuccess(`PROCESSING TO ENCODE PACKET`);
 	const {

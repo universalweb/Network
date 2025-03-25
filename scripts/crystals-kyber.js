@@ -1,7 +1,7 @@
 import { decode, encode } from 'msgpackr';
 import { ml_kem1024, ml_kem512, ml_kem768 } from '@noble/post-quantum/ml-kem';
-import { encrypt } from '../cryptoMiddleware/cipher/xChaCha.js';
-import { randomBuffer } from '#crypto';
+import { encrypt } from '#crypto/cipher/xChaCha.js';
+import { randomBuffer } from '#utilities/cryptography/utils';
 import { slh_dsa_sha2_128f as sph } from '@noble/post-quantum/slh-dsa';
 import zlib from 'node:zlib';
 const seed = randomBuffer(64);

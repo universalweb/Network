@@ -11,8 +11,8 @@ import {
 	logSuccess,
 	logVerbose,
 	logWarning
-} from './consoleLog.js';
-import { randomBuffer, toBase64 } from '#crypto';
+} from '#utilities/classLogMethods';
+import { randomBuffer, toBase64 } from '#utilities/cryptography/utils';
 import { calculatePacketOverhead } from './calculatePacketOverhead.js';
 import { currentVersion } from '../defaults.js';
 import dgram from 'dgram';

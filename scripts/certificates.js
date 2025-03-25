@@ -1,7 +1,7 @@
 import { currentPath } from '@universalweb/acid';
 import { decode } from '#utilities/serialize';
 import { domainCertificate } from '#udsp/certificate/index';
-import profile from '../profile/index.js';
+import profile from '../cryptoID/index.js';
 const dirname = currentPath(import.meta);
 const uwProfile = await profile();
 await uwProfile.saveToFile('profile.cert', `${dirname}/../profiles`, 'password');

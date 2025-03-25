@@ -1,7 +1,7 @@
 import { decode, encode } from '#utilities/serialize';
 import { isBuffer, promise } from '@universalweb/acid';
 import keychain from 'keychain';
-import { toBase64 } from '#crypto';
+import { toBase64 } from '#utilities/cryptography/utils';
 export const keychainService = 'UniversalWeb';
 export function keychainGetPromise(account, accept, reject) {
 	console.log('Keychain Account', account);

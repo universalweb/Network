@@ -62,7 +62,7 @@ import { sendPacket, sendPacketIfAny } from '../sendPacket.js';
 import {
 	toBase64,
 	toHex,
-} from '#crypto';
+} from '#utilities/cryptography/utils';
 import { Ask } from '../request/ask.js';
 import { UDSP } from '#udsp/base';
 import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
@@ -84,7 +84,7 @@ import { post } from '../requestMethods/post.js';
 import { publicDomainCertificate } from '../certificate/domain.js';
 import { setDestination } from './setDestination.js';
 import { socketOnError } from './socketOnError.js';
-import uwProfile from '../../profile/index.js';
+import uwProfile from '../../cryptoID/index.js';
 import { uwRequest } from '#udsp/requestMethods/request';
 const {
 	inactiveState,

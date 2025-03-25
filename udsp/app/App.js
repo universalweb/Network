@@ -1,4 +1,4 @@
-import * as routers from '../router/index.js';
+import * as routers from './router/index.js';
 import * as servers from '#server';
 import {
 	logError,
@@ -6,7 +6,7 @@ import {
 	logSuccess,
 	logVerbose,
 	logWarning
-} from '../consoleLog.js';
+} from '../../utilities/classLogMethods.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { encode } from '#utilities/serialize';
 import { getConnectionIdReservedSpaceString } from '../connectionId.js';

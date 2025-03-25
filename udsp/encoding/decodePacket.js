@@ -11,7 +11,7 @@ import {
 	noValue
 } from '@universalweb/acid';
 import { decode, encode, } from '#utilities/serialize';
-import { toBase64, toHex } from '#crypto';
+import { toBase64, toHex } from '#utilities/cryptography/utils';
 import { createClient } from '../server/clients/index.js';
 import { introHeaderRPC } from '#udsp/protocolHeaderRPCs';
 import { maxDefaultPacketSize } from '../calculatePacketOverhead.js';

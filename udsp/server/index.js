@@ -19,7 +19,7 @@ import {
 import { createEvent, removeEvent, triggerEvent } from '../events.js';
 import { decode, encode } from '#utilities/serialize';
 import { introHeaderRPC, isIntroHeader } from '../protocolHeaderRPCs.js';
-import { randomBuffer, toBase64 } from '#crypto';
+import { randomBuffer, toBase64 } from '#utilities/cryptography/utils';
 import { UDSP } from '#udsp/base';
 import { createClient } from './clients/index.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';

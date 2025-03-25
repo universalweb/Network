@@ -1,4 +1,4 @@
-import * as routers from '../router/index.js';
+import * as routers from './router/index.js';
 import * as servers from '#server';
 import {
 	assign,

@@ -39,11 +39,11 @@ import {
 	logSuccess,
 	logVerbose,
 	logWarning
-} from '../../consoleLog.js';
+} from '../../../utilities/classLogMethods.js';
 import {
 	randomBuffer,
 	toHex,
-} from '#crypto';
+} from '#utilities/cryptography/utils';
 import { sendPacket, sendPacketIfAny } from '#udsp/sendPacket';
 import { Reply } from '#udsp/request/reply';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
