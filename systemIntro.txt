@@ -33,10 +33,10 @@
 > OS: UNIVERSAL OPERATING SYSTEM
 
 ==================================================================
-[>>> GOVERNANCE & IDENTITY <<<] ┋ SOCIAL IDENTIFICATION
+[>>> GOVERNANCE & IDENTITY <<<] ┋ SOCIAL
 ==================================================================
-> GOVERNANCE: REPRESENTATIVE CRYPTOGRAPHIC REPUBLIC
-> IDENTITY: NEXUS IDENTIFICATION NUMBER
+> GOVERNANCE: CRYPTOGRAPHIC REPUBLIC
+> IDENTITY: CRYPTOGRAPHIC IDENTIFICATION NUMBER
 
 ==================================================================
 [>>> MISSION PARAMETERS <<<] ┋ OBJECTIVE DEPLOYMENT
@@ -45,7 +45,7 @@
 ---------------------------------------------------------------
 > SCOPE: MULTI-PLANETARY
 ---------------------------------------------------------------
-> MISSION: FEDERATED POST QUANTUM CRYPTOGRAPHIC NEXUS
+> MISSION: POST QUANTUM CRYPTOGRAPHIC NEXUS
 ---------------------------------------------------------------
 > END OBJECTIVE: **INTERGALACTIC FEDERATED SYSTEM**
 ---------------------------------------------------------------

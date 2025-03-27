@@ -59,7 +59,7 @@
 	"imports": {
 		"#server/*": "./udsp/server/*.js",
 		"#server": "./udsp/server/index.js",
-		"#serverApp/*": "./serverApp/*.js",
+		"#serverApp/*": "./examples/serverApp/*.js",
 		"#utilities/*": "./utilities/*.js",
 		"#state/*": "./state/*.js",
 		"#client": "./udsp/client/index.js",
@@ -92,7 +92,7 @@
 		"dist": "electron-builder",
 		"electron": "electron .",
 		"pack": "electron-builder --dir",
-		"server": "nodemon ./serverApp/index.js --watch ./udsp/ --watch ./serverApp/  --watch ./utilities/",
+		"server": "nodemon ./examples/serverApp/index.js --watch ./udsp/ --watch ./examples/serverApp/  --watch ./utilities/",
 		"simulate": "nodemon ./examples/simulate.js --watch ./client/ --watch ./server/ --watch ./examples/simulate.js --watch utilities/",
 		"connectRequest": "nodemon ./examples/client/connectRequest.js --watch ./udsp/ --watch ./examples/client/connectRequest.js --watch ./utilities/ --delay 3",
 		"connectRequestHybridKyber": "nodemon ./examples/client/connectRequestHybridKyber.js --watch ./udsp/ --watch ./examples/client/connectRequestHybridKyber.js --watch ./utilities/ --delay 3",

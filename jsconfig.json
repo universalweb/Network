@@ -21,7 +21,7 @@
 				"cryptoID/*.js"
 			],
 			"#serverApp/*": [
-				"./serverApp/*.js"
+				"examples/serverApp/*.js"
 			],
 			"#schemes/*": [
 				"browser/schemes/*.js"

@@ -3,8 +3,8 @@
 */
 import { app } from '#udsp';
 import { currentPath } from '@universalweb/acid';
-import { getMethod } from '../udsp/app/methods/get.js';
-import { listen } from '../udsp/server/listen.js';
+import { getMethod } from '../../udsp/app/methods/get.js';
+import { listen } from '../../udsp/server/listen.js';
 import path from 'node:path';
 const uwApp = await app({
 	// Cluster Mode
