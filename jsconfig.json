@@ -29,8 +29,8 @@
 			"#resources/*": [
 				"./resources/*"
 			],
-			"#scripts/*": [
-				"./scripts/*.js"
+			"#examples/*": [
+				"./examples/*.js"
 			],
 			"#state/*": [
 				"./state/*.js"

@@ -1,8 +1,9 @@
+// VIAT WALLET
 import { decode, encode } from '#utilities/serialize';
-import { Profile } from '../cryptoID/index.js';
+import { CryptoID } from '../cryptoID/index.js';
 import { isBuffer } from '@universalweb/acid';
 import viat from '#crypto/cipherSuite/viat.js';
-export class ViatWallet extends Profile {
+export class Wallet extends CryptoID {
 	constructor(config = {}) {
 		const sourceInstance = super(config);
 		return this.walletInitialize(config);
@@ -10,11 +11,8 @@ export class ViatWallet extends Profile {
 	async walletInitialize(config) {
 		return this;
 	}
-	setAlias(value) {
-		this.alias = value;
-	}
 }
-export function viatWallet(config) {
-	const source = new ViatWallet();
+export function wallet(config) {
+	const source = new Wallet(config);
 	return source;
 }

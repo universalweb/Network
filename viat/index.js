@@ -1,2 +1,2 @@
-import { viatWallet } from './wallet.js';
-export { viatWallet };
+import { Wallet, wallet } from './wallet.js';
+export { Wallet, wallet };

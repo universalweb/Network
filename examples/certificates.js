@@ -4,8 +4,8 @@ import { domainCertificate } from '#udsp/certificate/index';
 import profile from '../cryptoID/index.js';
 const dirname = currentPath(import.meta);
 const uwProfile = await profile();
-await uwProfile.saveToFile('profile.cert', `${dirname}/../profiles`, 'password');
-await uwProfile.saveToKeychain('profile.cert', `${dirname}/../profiles`, 'password');
+await uwProfile.saveToFile('profile.cert', `${dirname}/profiles`, 'password');
+await uwProfile.saveToKeychain('profile.cert', `${dirname}/profiles`, 'password');
 const UWCertificate = await domainCertificate({
 	entity: 'universalweb.io',
 	// ownerHash: profile.getSignature(),

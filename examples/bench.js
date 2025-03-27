@@ -11,7 +11,7 @@ const uwClient = await client({
 	// Load Profile Certificate from Keychain
 	// keychain: 'Universal Web Profile',
 	// Load Profile Certificate from file
-	profile: `${currentPath(import.meta)}/../profiles/default-Ephemeral.cert`
+	profile: `${currentPath(import.meta)}/profiles/default-Ephemeral.cert`
 });
 const timenow = Date.now();
 for (let i = 0; i < 5; i++) {

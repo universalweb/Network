@@ -10,7 +10,7 @@ const uwClient = await client({
 	// Load Profile from keychain
 	profile: 'exampleUWProfile',
 	profilePassword: 'password',
-	// Force overide cipher
+	// Force override cipher
 	cipher: 1,
 });
 const connection = await uwClient.connect();

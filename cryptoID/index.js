@@ -21,7 +21,7 @@ import {
 import { read, readStructured, write } from '../utilities/file.js';
 import { profileVersion } from '../defaults.js';
 import viat from '#crypto/cipherSuite/viat.js';
-export class Profile {
+export class CryptoID {
 	constructor(config, optionalArg) {
 		if (config === false) {
 			return this;
@@ -195,22 +195,25 @@ export class Profile {
 		this.address = address;
 		return address;
 	}
+	setAlias(value) {
+		this.alias = value;
+	}
 	logError = logError;
 	logWarning = logWarning;
 	logInfo = logInfo;
 	logVerbose = logVerbose;
 	logSuccess = logSuccess;
 }
-export async function profile(config, optionalArg) {
-	const source = new Profile(config, optionalArg);
+export async function cryptoID(config, optionalArg) {
+	const source = new CryptoID(config, optionalArg);
 	return source;
 }
-export default profile;
+export default cryptoID;
 // const dirname = currentPath(import.meta);
-const exampleProfileExample = await profile();
+const exampleCryptoIDExample = await cryptoID();
 // const encryptionPasswordExample = 'password';
-console.log(exampleProfileExample);
-// const exportedKeypairs = await exampleProfileExample.exportKeypairs();
+console.log(exampleCryptoIDExample);
+// const exportedKeypairs = await exampleCryptoIDExample.exportKeypairs();
 // console.log(exportedKeypairs);
 // console.log(`Version: ${exampleProfileExample.version}`);
 // const messageExample = Buffer.from('Hello, World!');
@@ -223,5 +226,5 @@ console.log(exampleProfileExample);
 // console.log(await exampleProfileExample.verifyPartialSignature(sigPartial, messageExample));
 // await exampleProfileExample.saveToKeychain('exampleprofile', encryptionPasswordExample);
 // await exampleProfileExample.saveToFile('profile.cert', `${dirname}/../profiles`, encryptionPasswordExample);
-// console.log(await profile('exampleprofile', encryptionPasswordExample));
-// console.log(await profile(`${dirname}/../profiles/profile.cert`, 'password'));
+// console.log(await cryptoID('exampleprofile', encryptionPasswordExample));
+// console.log(await cryptoID(`${dirname}/../profiles/profile.cert`, 'password'));

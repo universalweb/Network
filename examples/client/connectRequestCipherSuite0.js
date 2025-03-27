@@ -7,8 +7,8 @@ console.time('Connected');
 // Universal Web Client Socket
 const uwClient = await client({
 	destinationCertificate: `${currentPath(import.meta)}/../../udsp/dis/cache/universalWebPublic.cert`,
-	// Force overide cipher
-	cipher: 1,
+	// Force override cipher
+	cipher: 0,
 });
 const connection = await uwClient.connect();
 console.timeEnd('Connected');

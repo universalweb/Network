@@ -8,9 +8,9 @@ console.time('Connected');
 const uwClient = await client({
 	destinationCertificate: `${currentPath(import.meta)}/../../udsp/dis/cache/universalWebPublic.cert`,
 	// Load Profile from keychain
-	profile: `${currentPath(import.meta)}/../../profiles/profile.cert`,
+	profile: `${currentPath(import.meta)}/../profiles/profile.cert`,
 	profilePassword: 'password',
-	// Force overide cipher
+	// Force override cipher
 	cipher: 1,
 });
 const connection = await uwClient.connect();

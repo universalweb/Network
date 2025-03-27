@@ -21,7 +21,7 @@ export function getHashAlgorithm(hashAlgorithmName = 0, version = currentVersion
 		return algoVersion.get(hashAlgorithmName);
 	}
 }
-// import runBench from '#scripts/benchmark';
+// import runBench from '#examples/benchmark';
 // runBench(async () => {
 // 	return blake3('hello world');
 // }, async () => {
