@@ -6,23 +6,25 @@
 > BASE PROTOCOL: UDSP://
 
 ==================================================================
-[>>> SYSTEM ARCHITECTURE <<<] ┋ NEXUS CORE CONFIGURATION
+[>>> SYSTEM ARCHITECTURE <<<] ┋ CORE CONFIGURATION
 ==================================================================
 > NETWORK: HYBRID CENTRALIZED & DECENTRALIZED ARCHITECTURE
 > CRYPTOGRAPHY: HYBRID POST QUANTUM
+> SIGNATURE: DILITHIUM ◉ ED25519 ◉ SPHINCS+ ◉ FALCON
+> KEY EXCHANGE: KYBER ◉ x25519
 > CRYPTOCURRENCY: VIAT
 > SECURE HASH: SHAKE256
+> ENCRYPTION: Authenticated Encryption with Associated Data (AEAD)
+> HARDWARE ACCELERATED ENCRYPTION: AEGIS
+> SOFTWARE ENCRYPTION: xChaCha20poly1305
 > CHECKSUM: BLAKE3
-> ENCRYPTION: AEAD CONSTRUCT
 
 ==================================================================
 [>>> VIAT <<<] ┋ NATIVE CRYPTOCURRENCY
 ==================================================================
 > SIGNATURE: DILITHIUM ◉ ED25519 ◉ SPHINCS+
-> KEY EXCHANGE: KYBER ◉ x25519
 > HASH: SHAKE256
-> BLOCKCHAIN: POST QUANTUM DIRECTED ACYCLIC META GRAPH
-> INTIGRATION: SHAKE256
+> BLOCKCHAIN: DIRECTED ACYCLIC HYPER META GRAPH (DRAFT NAME)
 
 ==================================================================
 [>>> UNIVERSAL WEB <<<] ┋ WEB & OPERATING SYSTEM
