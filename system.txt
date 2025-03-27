@@ -1,12 +1,15 @@
 ==================================================================
-[ THE NEXUS - VERSION ${VERSION} ] ┋ CORE SYSTEM
+[ THE NEXUS § VERSION ⇒ ${VERSION} ] ┋ SYSTEM CORE ∞
 ==================================================================
-> LAYER: META ═ SUBZERO
+> LAYER: META ◊ SUB₀
 > PROTOCOL: UW:// (UDSP+DIS)
 > BASE PROTOCOL: UDSP://
+> WEB: UNIVERSAL WEB
+> CRYPTOCURRENCY: VIAT
+> CRYPTOGRAPHY: HYBRID POST QUANTUM
 
 ==================================================================
-[>>> SYSTEM ARCHITECTURE <<<] ┋ CORE CONFIGURATION
+[>>> SYSTEM ARCHITECTURE <<<] ┋ CONFIGURATION ⊙
 ==================================================================
 > NETWORK: HYBRID CENTRALIZED & DECENTRALIZED ARCHITECTURE
 > CRYPTOGRAPHY: HYBRID POST QUANTUM
@@ -20,14 +23,15 @@
 > CHECKSUM: BLAKE3
 
 ==================================================================
-[>>> VIAT <<<] ┋ NATIVE CRYPTOCURRENCY
+[>>> VIAT <<<] ┋ NATIVE CRYPTOCURRENCY ⩝
 ==================================================================
 > SIGNATURE: DILITHIUM ◉ ED25519 ◉ SPHINCS+
 > HASH: SHAKE256
 > BLOCKCHAIN: DIRECTED ACYCLIC HYPER META GRAPH (DRAFT NAME)
+> SYMBOL: ⩝
 
 ==================================================================
-[>>> UNIVERSAL WEB <<<] ┋ WEB & OPERATING SYSTEM
+[>>> UNIVERSAL WEB <<<] ┋ WEB & DOMAINS ⌘
 ==================================================================
 > WEB: UNIVERSAL WEB
 > DOMAINS: DOMAIN INFORMATION SYSTEM
@@ -35,13 +39,13 @@
 > OS: UNIVERSAL OPERATING SYSTEM
 
 ==================================================================
-[>>> GOVERNANCE & IDENTITY <<<] ┋ SOCIAL
+[>>> GOVERNANCE & IDENTITY <<<] ┋ SOCIAL ⚜
 ==================================================================
-> GOVERNANCE: CRYPTOGRAPHIC REPUBLIC
-> IDENTITY: CRYPTOGRAPHIC IDENTIFICATION NUMBER
+> GOVERNANCE: CRYPTOGRAPHIC FEDERATED REPUBLIC ≍
+> IDENTITY: CRYPTOGRAPHIC IDENTIFICATION @
 
 ==================================================================
-[>>> MISSION PARAMETERS <<<] ┋ OBJECTIVE DEPLOYMENT
+[>>> MISSION PARAMETERS <<<] ┋ OBJECTIVES & DEPLOYMENT ⊕
 ==================================================================
 > CODE NAME: ${cryptonym}
 ---------------------------------------------------------------
