@@ -11,17 +11,19 @@ import {
 	merge,
 	promise
 } from '@universalweb/acid';
-import {
-	certificateTypes,
-	currentCertificateVersion,
-	currentProtocolVersion,
-} from '../../defaults.js';
 import { decode, encode } from '#utilities/serialize';
 import { getCipher, getKeyExchangeAlgorithm, getSignatureAlgorithm } from '#crypto/index.js';
 import { read, readStructured, write } from '#file';
 import { UWCertificate } from './UWCertificate.js';
+import certificateDefaults from '../certificate/defaults.js';
 import { keychainSave } from './keychain.js';
+import protocolDefaults from '../udsp/defaults.js';
 import { toBase64 } from '#utilities/cryptography/utils';
+const { protocolVersion: currentProtocolVersion } = protocolDefaults;
+const {
+	certificateTypes,
+	certificateVersion: currentCertificateVersion,
+} = certificateDefaults;
 const domainCertificateType = certificateTypes.get('domain');
 // TODO: ADD IMPORT METHOD FOR KEYS TO LOAD AND SHOW CORRECTLY
 // TODO: ADD EXPORT METHOD FOR KEYS TO SAVE AND SHOW CORRECTLY

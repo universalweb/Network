@@ -74,9 +74,6 @@ export class Base {
 			this.latencyTimeout = this.connectionLatency;
 		}
 		source.lastActive = Date.now();
-		if (this.isAsk) {
-			this.handshake = source.handshake;
-		}
 		this.noData = noPayloadMethods.test(this.method);
 	}
 	setState(value) {
@@ -497,8 +494,6 @@ export class Base {
 	totalReceivedUniquePathPackets = 0;
 	totalReceivedUniqueParametersPackets = 0;
 	totalIncomingParametersSize = 0;
-	// Request Specific UDSP State
-	handshake = false;
 	inRequestQueue = false;
 	status = 0;
 	readyState = 0;

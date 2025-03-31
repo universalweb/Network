@@ -5,29 +5,34 @@ import {
 	isNumber,
 	stringify
 } from '@universalweb/acid';
-import { proccessProtocolFrame } from '#udsp/proccessProtocol';
+import { onProtocolFrame } from '#udsp/proccessProtocol';
 export async function processFrame(frame, header, source, queue, rinfo) {
-	if (!frame) {
-		return console.trace(`Invalid Frame Received`);
-	}
-	if (isArray(frame) && frame.length) {
-		const streamId = frame[0];
-		source.logInfo(`Packet Received Stream ID: ${streamId}`);
-		// TODO: Consider streamID to be undefined and RPC location to be the same see if can make this cleaner
-		if (hasValue(streamId)) {
-			if (streamId === false) {
-				proccessProtocolFrame(source, frame, header, rinfo);
-				return;
-			}
-			const requestObject = queue.get(streamId);
-			if (requestObject) {
-				requestObject.onFrame(frame, header, rinfo);
-				return;
-			} else {
-				source.logInfo('No Reply found returning false', frame);
-				return false;
-			}
+	const streamId = frame[0];
+	source.logInfo(`Packet Received Stream ID: ${streamId}`);
+	// TODO: Consider streamID to be undefined and RPC location to be the same see if can make this cleaner
+	if (hasValue(streamId)) {
+		if (streamId === false) {
+			onProtocolFrame(source, frame, header, rinfo);
+			return;
+		}
+		const requestObject = queue.get(streamId);
+		if (requestObject) {
+			requestObject.onFrame(frame, header, rinfo);
+			return;
+		} else {
+			// TODO: Consider a new request format to have a standard directive to create a new request
+			// Otherwise should include the new reply constructor
+			source.logInfo('No Reply found returning false', frame);
+			return false;
 		}
 	}
 }
-
+export async function onFrame(frame, header, source, queue, rinfo) {
+	if (!frame) {
+		source.logError(`Invalid Frame Received`);
+		return;
+	}
+	if (isArray(frame) && frame.length) {
+		return processFrame(frame, header, source, queue, rinfo);
+	}
+}

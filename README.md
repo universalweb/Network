@@ -40,7 +40,7 @@
 <h4>Internet vs Web</h4>
 <p>The Web is all the software bits that sits on-top of the Internet. The Universal Web at least for now is only concerned with software no special hardware is required. Users just need software to access the Universal Web and Servers just need software to setup a Universal Web server.</p>
 <h4>Is the UW's DIS and the WWW's DNS the same?</h4>
-<p>The World Wide Web has the Domain Name System, Web3 has Decentralized DNS, &amp; the Universal Web has a similar component called the DIS(Domain Information System). Here's the critical difference DNS takes a hostname and spits out a DNS record (has things like an IP address) the DIS returns a cryptographic signed certificate. The returned certificate can have records akin to DNS records in it but is part of a cryptographically protected and verifiable certificate. The DIS plays a similar role to DNS but the DIS has greater functionality, has similar syntax, distributes only cryptographic certificates, and was designed with all other components in mind. Because the DIS provides a certificate instead of just a basic DNS record it makes connection establishment faster and more secure, specifically speeding up the handshake process. When browsing the UW all domain lookups would go to the remote and or local DIS (cached). The entire DIS is a publicly verifiable blockchain but old certificates can be replaced which means Domain record changes are quick and easy with a 0TTL. The DIS doesn't share any domains or rules with the Web's Domain system meaning domain names don't carry over. The UW also permits emoji domains as well as single name domains. Reserved named domains are domains consisting of just a name to quickly access the site for example you just type "x" to go to "x.com".</p>
+<p>The World Wide Web has the Domain Name System, Web3 has Decentralized DNS, &amp; the Universal Web has a similar component called the DIS(Domain Information System). Here's the critical difference DNS takes a hostname and spits out a DNS record (has things like an IP address) the DIS returns a cryptographic signed certificate. The returned certificate can have records akin to DNS records in it but is part of a cryptographically protected and verifiable certificate. The DIS plays a similar role to DNS but the DIS has greater functionality, has similar syntax, distributes only cryptographic certificates, and was designed with all other components in mind. Because the DIS provides a certificate instead of just a basic DNS record it makes connection establishment faster and more secure, specifically speeding up the connection synchronization (Handshake/Connection Establishment) process. When browsing the UW all domain lookups would go to the remote and or local DIS (cached). The entire DIS is a publicly verifiable blockchain but old certificates can be replaced which means Domain record changes are quick and easy with a 0TTL. The DIS doesn't share any domains or rules with the Web's Domain system meaning domain names don't carry over. The UW also permits emoji domains as well as single name domains. Reserved named domains are domains consisting of just a name to quickly access the site for example you just type "x" to go to "x.com".</p>
 <h4>Perspective &amp; Rational</h4>
 <p>Re-imagining the Web from the ground up may seem like a radical proposition, but it is entirely logical, rational, within our ability, &amp; necessary. At its core, the Web is a collection of software solutions. Therefore, creating a system that can replace yet go beyond the Web doesn’t require reinventing the physical infrastructure; it simply demands innovative software designed to leverage current innovations while addressing the limitations of the old.</p>
 <p>If we critically evaluate the challenges facing the current Web, from inefficiencies &amp; vulnerabilities to its inability to fully embrace emerging technologies, it becomes self-evident that incremental updates aren't going to address fundamental design flaws. A foundational overhaul is not only viable but also more efficient and cost-effective. By building on 30 years of lessons, we can envision something that goes beyond what we call a Web, which integrates cutting-edge technologies and anticipates future advancements. This isn’t just an opportunity; it’s an imperative to build the future.</p>
@@ -50,16 +50,16 @@
 	<li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">SERVER MODULE (CHECK THE UDSP FOLDER &amp; IMPORTS FOR FULL CODE)</a></li>
 	<li><a href="https://github.com/universalweb/Network/tree/master/udsp/client">CLIENT MODULE (CHECK THE UDSP FOLDER &amp; IMPORTS FOR FULL CODE)</a></li>
 	<li><a href="https://github.com/universalweb/Network/tree/master/browser">BROWSER (outdated)</a></li>
-	<li><a href="https://github.com/universalweb/Network/tree/master/serverApp">EXAMPLE APP (npm run server)</a></li>
-	<li><a href="https://github.com/universalweb/Network/tree/master/scripts/certificates.js">BUILD DOMAIN &amp; IDENTITY CERTIFICATES THAT ARE ALSO VIAT WALLETS (npm run certificates)</a></li>
-	<li><a href="https://github.com/universalweb/Network/tree/master/scripts/simulateClient.js">SIMULATE CLIENT REQUEST (npm run simc) (ONLY RUN WHEN DEMO IN A STABLE COMMIT NOT LATEST UNLESS SPECIFIED)</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/serverApp">EXAMPLE APP (pnpm run server)</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/examples/certificates.js">BUILD DOMAIN &amp; IDENTITY CERTIFICATES THAT ARE ALSO VIAT WALLETS (pnpm run certificates)</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/examples/simulateClient.js">SIMULATE CLIENT REQUEST (pnpm run simc) (ONLY RUN WHEN DEMO IN A STABLE COMMIT NOT LATEST UNLESS SPECIFIED)</a></li>
 	<li><a href="https://github.com/universalweb/Network/tree/master/scripts">VARIOUS HELPER SCRIPTS</a></li>
 </ul>
-<b>ONLY RUN NPM COMMANDS WHEN COMMIT DESCRIPTION SAYS DEMO STABLE OR DEMO ENABLED</b>
+<b>ONLY RUN PNPM COMMANDS WHEN COMMIT DESCRIPTION SAYS DEMO STABLE OR DEMO ENABLED</b>
 <br />
-<h4><a href="https://github.com/universalweb/Network/blob/master/package.json">NPM SCRIPTS</a></h4>
+<h4><a href="https://github.com/universalweb/Network/blob/master/package.json">PACKAGE SCRIPTS</a></h4>
 <ul>
-	<li>NPM start script builds/starts the Universal Web Browser</li>
+	<li>PNPM start script builds/starts the Universal Web Browser</li>
 	<li>Components must also be compiled for the front-end library</li>
 	<li>Root is used to generate root certificates only</li>
 	<li>Includes Identity Certificate generation examples</li>
@@ -67,6 +67,7 @@
 	<li>UDSP</li>
 	<li>UW URI (HIGHER ABSTRACTION PROTOCOL OVER UDSP)</li>
 	<li>VARIOUS HELPER SCRIPTS</li>
+	<li>PNPM is preferred for package management</li>
 </ul>
 <br />
 <h5>FULL LIST OF COMMANDS CAN BE FOUND IN THE project.json</h5>

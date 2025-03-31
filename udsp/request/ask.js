@@ -73,6 +73,6 @@ export class Ask extends Base {
 	isAsk = true;
 	static type = 'ask';
 }
-export async function ask(source) {
-	return construct(Ask, source);
+export async function ask(...sources) {
+	return construct(Ask, ...sources);
 }

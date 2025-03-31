@@ -4,7 +4,7 @@ import {
 	int64,
 	randomBuffer
 } from '#utilities/cryptography/utils';
-import { extendedHandshakeHeaderRPC, introHeaderRPC } from '../../../udsp/protocolHeaderRPCs.js';
+import { extendedSynchronizationHeaderRPC, introHeaderRPC } from '../../../udsp/protocolHeaderRPCs.js';
 import { findItem, isBuffer } from '@universalweb/acid';
 import { encode } from '#utilities/serialize';
 import { keyExchange } from './keyExchange.js';
@@ -88,9 +88,9 @@ export const kyber768 = keyExchange({
 		console.log(source);
 		console.log('New Session Keys', source.transmitKey.length, source.receiveKey[0]);
 	},
-	// This sends a extended handshake frame
-	async sendClientExtendedHandshakeHeader(source, destination, frame, header) {
-		console.log('TRIGGERED sendClientExtendedHandshake');
+	// This sends a extended synchronization frame
+	async sendClientExtendedSynchronizationHeader(source, destination, frame, header) {
+		console.log('TRIGGERED sendClientExtendedSynchronization');
 		console.log(destination.publicKey);
 		const [
 			cipherData,
@@ -99,11 +99,11 @@ export const kyber768 = keyExchange({
 		frame.push(cipherData);
 		source.cipherData = cipherData;
 		source.sharedSecret = sharedSecret;
-		console.log('sendClientExtendedHandshake kyberSharedSecret', sharedSecret[0], sharedSecret.length);
-		console.log('sendClientExtendedHandshake cipherText', cipherData[0], cipherData.length);
+		console.log('sendClientExtendedSynchronization kyberSharedSecret', sharedSecret[0], sharedSecret.length);
+		console.log('sendClientExtendedSynchronization cipherText', cipherData[0], cipherData.length);
 	},
-	async serverExtendedHandshake(source, destination, frame, header) {
-		console.log('serverExtendedHandshake CIPHER CALLED', frame, header);
+	async serverExtendedSynchronization(source, destination, frame, header) {
+		console.log('serverExtendedSynchronization CIPHER CALLED', frame, header);
 		const [
 			streamid_undefined,
 			rpc,
@@ -117,19 +117,19 @@ export const kyber768 = keyExchange({
 		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
 		console.log('sharedSecret', source.sharedSecret[0]);
 		console.log('server cipherText', cipherData[0], cipherData.length);
-		await this.finalizeExtendedHandshake(source, destination);
+		await this.finalizeExtendedSynchronization(source, destination);
 	},
-	async finalizeExtendedHandshake(source, destination) {
-		console.log('finalize Extended Handshake');
+	async finalizeExtendedSynchronization(source, destination) {
+		console.log('finalize Extended Synchronization');
 		await this.finalizeSessionKeys(source, destination);
 		await this.serverCleanupKeyClass(source);
 	},
-	async sendServerExtendedHandshake(source, destination, frame, header) {
-		console.log('Server Extended Handshake ack');
-		header[0] = extendedHandshakeHeaderRPC;
+	async sendServerExtendedSynchronization(source, destination, frame, header) {
+		console.log('Server Extended Synchronization ack');
+		header[0] = extendedSynchronizationHeaderRPC;
 	},
-	async clientExtendedHandshake(source, destination, frame, header) {
-		console.log('clientExtendedHandshake frame');
+	async clientExtendedSynchronization(source, destination, frame, header) {
+		console.log('clientExtendedSynchronization frame');
 		await this.serverCleanupKeyServer(source);
 	},
 	async initializeKeypair(source, target = {}) {
@@ -176,16 +176,16 @@ export default kyber768;
 // await kyber768.clientSetSession(client, server, server.cipherData);
 // console.log(client);
 // const frme = [];
-// await kyber768.sendClientExtendedHandshakeHeader(client, server, frme);
+// await kyber768.sendClientExtendedSynchronizationHeader(client, server, frme);
 // console.log(frme);
 // console.log(server);
-// await kyber768.serverExtendedHandshake(server, client, [
+// await kyber768.serverExtendedSynchronization(server, client, [
 // 	undefined,
 // 	undefined,
 // 	frme[0]
 // ]);
-// await kyber768.sendServerExtendedHandshake(server, client);
+// await kyber768.sendServerExtendedSynchronization(server, client);
 // console.log('server', server);
-// await kyber768.clientExtendedHandshakeHeader(client, server);
+// await kyber768.clientExtendedSynchronizationHeader(client, server);
 // console.log('client', client);
 // console.log('server', server);

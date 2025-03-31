@@ -12,7 +12,7 @@ import {
 } from '@universalweb/acid';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { createClient } from './clients/index.js';
-import { proccessProtocolPacketHeader } from '#udsp/proccessProtocol';
+import { onProtocolHeader } from '#udsp/proccessProtocol';
 import { reply } from '#udsp/request/reply';
 import { toBase64 } from '#utilities/cryptography/utils';
 export async function onPacket(packet, rinfo) {
@@ -40,7 +40,7 @@ export async function onPacket(packet, rinfo) {
 	}
 	const { header, } = config.packetDecoded;
 	if (isFalse(config.isShortHeaderMode)) {
-		await proccessProtocolPacketHeader(client, header, config.packetDecoded, rinfo);
+		await onProtocolHeader(client, header, config.packetDecoded, rinfo);
 	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {

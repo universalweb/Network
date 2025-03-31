@@ -1,4 +1,5 @@
 // TODO: Cache Math Values Pre-Compute no need to do some of this per request
+// TODO: Set a standard minimum packet overhead
 import { assign, hasValue } from '@universalweb/acid';
 import { encode } from '#utilities/serialize';
 const cache = {};

@@ -19,7 +19,7 @@ import {
 	logWarning
 } from '#utilities/classLogMethods';
 import { read, readStructured, write } from '../utilities/file.js';
-import { profileVersion } from '../defaults.js';
+import { profileVersion } from '../profile/defaults.js';
 import viat from '#crypto/cipherSuite/viat.js';
 export class CryptoID {
 	constructor(config, optionalArg) {

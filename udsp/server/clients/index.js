@@ -26,13 +26,12 @@ import {
 	sendIntro
 } from './protocolEvents/intro.js';
 import { createEvent, removeEvent, triggerEvent } from '../../events.js';
-import { defaultClientConnectionIdSize, defaultServerConnectionIdSize } from '../../../defaults.js';
 import { discovery, sendDiscovery } from './protocolEvents/discovery.js';
 import {
-	extendedHandshake,
-	extendedHandshakeHeader,
-	sendExtendedHandshake
-} from './protocolEvents/extendedHandshake.js';
+	extendedSynchronization,
+	extendedSynchronizationHeader,
+	sendExtendedSynchronization
+} from './protocolEvents/extendedSynchronization.js';
 import {
 	logError,
 	logInfo,
@@ -48,12 +47,13 @@ import { sendPacket, sendPacketIfAny } from '#udsp/sendPacket';
 import { Reply } from '#udsp/request/reply';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
 import cluster from 'node:cluster';
+import { defaultClientConnectionIdSize } from '../../client/defaults.js';
 import { destroy } from './destroy.js';
 import { endHeaderRPC, } from '../../protocolHeaderRPCs.js';
 import { endRPC, } from '../../protocolFrameRPCs.js';
 import { initialize } from './initialize.js';
 import { onConnected } from './onConnected.js';
-import { processFrame } from '#udsp/processFrame';
+import { onFrame } from '#udsp/processFrame';
 /**
  * @TODO
  */
@@ -144,11 +144,13 @@ export class Client {
 		clearTimeout(this.initialGracePeriodTimeout);
 	}
 	async reply(frame, header, rinfo) {
+		// TODO: Consider removing this and having it processed once to avoid re-checks
+		// NOTE: It could be better to have a check for a closed state?
 		if (this.state === 1) {
 			await this.updateState(2);
 		}
 		await this.updateLastActive();
-		const processingFrame = await processFrame(frame, header, this, this.requestQueue);
+		const processingFrame = await onFrame(frame, header, this, this.requestQueue);
 		if (processingFrame === false) {
 			const replyObject = new Reply(frame, header, this);
 			this.logInfo('New reply object created', replyObject);
@@ -198,9 +200,9 @@ export class Client {
 	introHeader = introHeader;
 	intro = intro;
 	sendIntro = sendIntro;
-	extendedHandshake = extendedHandshake;
-	extendedHandshakeHeader = extendedHandshakeHeader;
-	sendExtendedHandshake = sendExtendedHandshake;
+	extendedSynchronization = extendedSynchronization;
+	extendedSynchronizationHeader = extendedSynchronizationHeader;
+	sendExtendedSynchronization = sendExtendedSynchronization;
 	logError = logError;
 	logWarning = logWarning;
 	logInfo = logInfo;

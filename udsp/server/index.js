@@ -23,7 +23,7 @@ import { randomBuffer, toBase64 } from '#utilities/cryptography/utils';
 import { UDSP } from '#udsp/base';
 import { createClient } from './clients/index.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
-import { defaultServerConnectionIdSize } from '../../defaults.js';
+import { defaultServerConnectionIdSize } from './defaults.js';
 import { listen } from './listen.js';
 import { noStreamID } from '../utilities/hasConnectionID.js';
 import { onError } from './onError.js';

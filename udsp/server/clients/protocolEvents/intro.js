@@ -86,7 +86,7 @@ async function attachProxyAddress(source) {
 	}
 }
 // SERVER INTRO
-// Intro in plain text is fine because data is just to establish a connection if contents are modified then an encrypted handshake will fail at one point or another
+// Intro in plain text is fine because data is just to establish a connection if contents are modified then an encrypted synchronization will fail at one point or another
 /* const [
 		streamid_undefined,
 		rpc,

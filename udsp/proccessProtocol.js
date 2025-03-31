@@ -2,35 +2,31 @@
 import {
 	discoveryHeaderRPC,
 	endHeaderRPC,
-	extendedHandshakeHeaderRPC,
+	extendedSynchronizationHeaderRPC,
 	introHeaderRPC
 } from './protocolHeaderRPCs.js';
 import {
 	discoveryRPC,
 	endRPC,
-	extendedHandshakeRPC,
+	extendedSynchronizationRPC,
 	introRPC
 } from './protocolFrameRPCs.js';
 import {
 	isArray,
-	isNotNumber
+	isNotNumber,
+	isUndefined,
+	noValue
 } from '@universalweb/acid';
 import { destroy } from './request/destroy.js';
-export async function proccessProtocolHeader(source, header, packetDecoded, rinfo) {
-	const rpc = header[1];
-	source.logInfo(`Processing Protocol Packet RPC ${rpc}`);
-	if (isNotNumber(rpc)) {
-		source.destroy(3);
-		return;
-	}
+export async function proccessProtocolHeader(rpc, source, header, packetDecoded, rinfo) {
 	switch (rpc) {
 		// Hello Packet
 		case introHeaderRPC: {
 			source.introHeader(header, packetDecoded, rinfo);
 			break;
 		}
-		case extendedHandshakeHeaderRPC: {
-			source.extendedHandshakeHeader(header, packetDecoded, rinfo);
+		case extendedSynchronizationHeaderRPC: {
+			source.extendedSynchronizationHeader(header, packetDecoded, rinfo);
 			break;
 		}
 		// Discovery Packet to get the server's certificate
@@ -46,23 +42,25 @@ export async function proccessProtocolHeader(source, header, packetDecoded, rinf
 		}
 		default: {
 			console.trace('Unknown Protocol Packet', header, packetDecoded, rinfo);
+			source.endHeader(header, packetDecoded, rinfo);
 			break;
 		}
 	}
 }
-export async function proccessProtocolPacketHeader(source, header, packetDecoded, rinfo) {
+export async function onProtocolHeader(source, header, packetDecoded, rinfo) {
 	source.logInfo('Processing Protocol Packet Header', header);
-	if (header && isArray(header)) {
-		proccessProtocolHeader(source, header, packetDecoded, rinfo);
-	}
-}
-export async function proccessProtocolFrame(source, frame, header, rinfo) {
-	const rpc = frame[1];
+	const rpc = header[1];
 	source.logInfo(`Processing Protocol Packet RPC ${rpc}`);
-	if (isNotNumber(rpc)) {
+	if (noValue(rpc) || isNotNumber(rpc)) {
 		source.destroy(3);
 		return;
 	}
+	if (header && isArray(header)) {
+		// TODO: CHECK TO SEE IF CAN REMOVE RETURN
+		return proccessProtocolHeader(rpc, source, header, packetDecoded, rinfo);
+	}
+}
+export async function proccessProtocolFrame(rpc, source, frame, header, rinfo) {
 	switch (rpc) {
 		// Hello/Intro
 		case introRPC: {
@@ -70,9 +68,9 @@ export async function proccessProtocolFrame(source, frame, header, rinfo) {
 			source.intro(frame, header, rinfo);
 			break;
 		}
-		// Extended Handshake
-		case extendedHandshakeRPC: {
-			source.extendedHandshake(frame, header, rinfo);
+		// Extended Synchronization
+		case extendedSynchronizationRPC: {
+			source.extendedSynchronization(frame, header, rinfo);
 			break;
 		}
 		case discoveryRPC: {
@@ -87,7 +85,19 @@ export async function proccessProtocolFrame(source, frame, header, rinfo) {
 		}
 		default: {
 			console.trace('Unknown Protocol Packet', frame, header, rinfo);
+			source.end(frame, header, rinfo);
 			break;
 		}
+	}
+}
+export async function onProtocolFrame(source, frame, header, rinfo) {
+	const rpc = header[1];
+	source.logInfo(`Processing Protocol Packet RPC ${rpc}`);
+	if (noValue(rpc) || isNotNumber(rpc)) {
+		source.destroy(3);
+		return;
+	}
+	if (rpc) {
+		proccessProtocolFrame(rpc, source, frame, header, rinfo);
 	}
 }

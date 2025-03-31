@@ -7,7 +7,7 @@ The CIN can be public and is effectively anonymous disclosing it doesn't leak pr
 A CIN number is 64 bytes and is in binary which has a significantly larger address space than the total possible SSN combinations.
 The security aspect is separate from the CIN and is the associated key pair specifically the private key.
 
-Nexus Identification Card (NIC): Cryptographic Identification Card
+Cryptographic Identification Card (CIC): Nexus Identification Card (NIC)
 
 It's an encrypted container which holds details related to a specific CIN such as a keypair and or profile data.
 A NIC includes a CIN similar to a driving license including an identification number.

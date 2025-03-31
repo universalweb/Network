@@ -7,96 +7,58 @@
 	* Establishes a UDP based bi-directional real-time connection between client and server.
 */
 import {
-	UniqID,
 	assign,
 	construct,
-	currentPath,
-	has,
-	hasValue,
-	intersection,
-	isArray,
 	isBuffer,
-	isEmpty,
-	isString,
-	isTrue,
-	isUndefined,
-	noValue,
-	omit,
-	promise
+	noValue
 } from '@universalweb/acid';
 import {
 	checkIntroTimeout,
 	clearIntroTimeout,
 	clientIntroFrame,
-	clientIntroHeader,
+	createClientIntro,
 	intro,
 	introHeader,
-	sendIntro
+	sendIntro,
+	setIntroHeaderDefaults
 } from './protocolEvents/intro.js';
+import {
+	connect,
+	reconnect,
+	setConnected,
+	setDisconnected
+} from './connect.js';
 import { connectionIdToBuffer, generateConnectionIdString } from '#udsp/connectionId';
-import { createEvent, removeEvent, triggerEvent } from '#udsp/events';
+import { end, sendEnd } from './protocolEvents/end.js';
 import {
-	decode,
-	encode
-} from '#utilities/serialize';
-import { defaultClientConnectionIdSize, defaultServerConnectionIdSize } from '../../defaults.js';
-import {
-	discoveryHeaderRPC,
-	endHeaderRPC,
-	extendedHandshakeHeaderRPC,
-	introHeaderRPC
-} from '../protocolHeaderRPCs.js';
-import {
-	discoveryRPC,
-	endRPC,
-	extendedHandshakeRPC,
-	introRPC
-} from '../protocolFrameRPCs.js';
-import {
-	extendedHandshake,
-	extendedHandshakeHeader,
-	sendExtendedHandshake,
-	sendExtendedHandshakeHeader
-} from './protocolEvents/extendedHandshake.js';
-import { sendPacket, sendPacketIfAny } from '../sendPacket.js';
-import {
-	toBase64,
-	toHex,
-} from '#utilities/cryptography/utils';
-import { Ask } from '../request/ask.js';
+	extendedSynchronization,
+	extendedSynchronizationHeader,
+	sendExtendedSynchronization,
+	sendExtendedSynchronizationHeader
+} from './protocolEvents/extendedSynchronization.js';
+import { fire, off, on } from './events.js';
+import { send, sendAny } from './send.js';
 import { UDSP } from '#udsp/base';
+import { ask } from '../request/ask.js';
 import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
-import { clientStates } from '../states.js';
+import { changeAddress } from './changeAddress.js';
+import { closeSocket } from './close.js';
 import { configCryptography } from './configCryptography.js';
-import dgram from 'dgram';
-// Client specific imports to extend class
+import { destroy } from './destroy.js';
 import { emit } from '../requestMethods/emit.js';
 import { fetchRequest } from '../requestMethods/fetch.js';
 import { get } from '../requestMethods/get.js';
-import { getAddressStringFromBuffer } from '#utilities/network/ip';
 import { getIPDetails } from './getIPDetails.js';
-import { getLocalIpVersion } from '../../utilities/network/getLocalIP.js';
-import { getWANIPAddress } from '../../utilities/network/getWANIPAddress.js';
 import { keychainGet } from '../certificate/keychain.js';
 import { onListening } from './listening.js';
 import { onPacket } from './onPacket.js';
+import { onSocketError } from './onSocketError.js';
 import { post } from '../requestMethods/post.js';
 import { publicDomainCertificate } from '../certificate/domain.js';
+import { setDefaults } from './setDefaults.js';
 import { setDestination } from './setDestination.js';
-import { socketOnError } from './socketOnError.js';
 import uwProfile from '../../cryptoID/index.js';
 import { uwRequest } from '#udsp/requestMethods/request';
-const {
-	inactiveState,
-	discoveringState,
-	discoveredState,
-	connectingState,
-	connectedState,
-	closingState,
-	closedState,
-	destroyingState,
-	destroyedState
-} = clientStates;
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
 	constructor(options) {
@@ -123,7 +85,7 @@ export class Client extends UDSP {
 		}
 		await this.getIPDetails();
 		await this.setProfile();
-		this.assignId();
+		await this.assignId();
 		await this.calculatePacketOverhead();
 		await this.setupSocket();
 		await this.attachEvents();
@@ -132,6 +94,14 @@ export class Client extends UDSP {
 		}
 		this.logInfo('Client initialized successfully.');
 		return this;
+	}
+	async synchronized(message) {
+		await this.calculatePacketOverhead();
+		await this.setConnected();
+		if (this.completeSynchronization) {
+			this.logInfo('Synchronization Completed with new keys');
+			this.completeSynchronization(this);
+		}
 	}
 	async setProfile() {
 		const {
@@ -145,7 +115,7 @@ export class Client extends UDSP {
 	async attachEvents() {
 		const source = this;
 		this.socket.on('error', (...args) => {
-			return source.socketOnError(...args);
+			return source.onSocketError(...args);
 		});
 		this.socket.on('listening', (...args) => {
 			return source.onListening(...args);
@@ -155,8 +125,7 @@ export class Client extends UDSP {
 			return source.onPacket(packet, rinfo);
 		});
 	}
-	socketOnError = socketOnError;
-	assignId() {
+	async assignId() {
 		const connectionIdString = generateConnectionIdString(this.connectionIdSize);
 		this.connectionIdString = connectionIdString;
 		this.id = connectionIdToBuffer(connectionIdString);
@@ -169,32 +138,13 @@ export class Client extends UDSP {
 	reKey() {
 		this.logInfo(`client reKeyed`);
 	}
-	async send(frame, header, footer, repeat) {
-		if (!this.destination.ip) {
-			this.logInfo(`Can't send - No Destination IP`);
-			return;
-		}
-		if (this.state >= closingState) {
-			this.logInfo(`Can't send - Connection Closed`);
-			return false;
-		}
-		this.logInfo(`client.send to Server`);
-		if (this.socket) {
-			return sendPacket(frame, this, this.socket, this.destination, header, footer, repeat);
-		}
-	}
-	async sendAny(frame, headers, footer, repeat) {
-		this.infoLog(`socket sendPacketIfAny -> ID: ${this.connectionIdString}`);
-		if (this.destroyed) {
-			return;
-		}
-		return sendPacketIfAny(frame, this, this.socket, this.destination, headers, footer, repeat);
-	}
+	send = send;
+	sendAny = sendAny;
 	async ask(method, path, parameters, data, head, options) {
 		if (!this.connected) {
 			await this.reconnect();
 		}
-		const ask = construct(Ask, [
+		const createdAsk = ask(
 			method,
 			path,
 			parameters,
@@ -202,8 +152,8 @@ export class Client extends UDSP {
 			head,
 			options,
 			this
-		]);
-		return ask;
+		);
+		return createdAsk;
 	}
 	async loadCertificate() {
 		this.logInfo(this);
@@ -213,10 +163,6 @@ export class Client extends UDSP {
 		await this.discovered();
 		await this.processCertificate();
 		await this.configCryptography();
-	}
-	async discovered() {
-		this.logInfo('DISCOVERY COMPLETED -> CERTIFICATE LOADED');
-		await this.updateState(discoveredState);
 	}
 	async processCertificate() {
 		const { destination, } = this;
@@ -259,148 +205,35 @@ export class Client extends UDSP {
 		this.logInfo(`CLIENT READYState Updated -> ${this.readyState}`);
 		await this.fire(this.events, 'readyState', this);
 	}
-	// TODO: NEEDS SECURITY CHECKS FOR CHANGING DESTINATION
-	changeAddress(addressBuffer, rinfo) {
-		this.logInfo(`Change Server Address ${addressBuffer}`);
-		if (noValue(addressBuffer)) {
-			this.logInfo(`No Address Buffer`);
-			return;
-		}
-		if (addressBuffer === true) {
-			this.destination.ip = rinfo.address;
-			this.destination.port = rinfo.port;
-		} else if (isBuffer(addressBuffer)) {
-			// ipv4BytesChangeAddress
-			const addressArray = getAddressStringFromBuffer(addressBuffer);
-			if (addressArray) {
-				const [
-					ipAddress,
-					portNumber
-				] = addressArray;
-				if (ipAddress) {
-					this.destination.ip = ipAddress;
-				}
-				if (portNumber) {
-					this.destination.port = portNumber;
-				}
-			}
-		}
-		this.logInfo('Destination changed in INTRO');
-	}
 	// TODO: NEED BETTER WAY TO HANDLE GENERIC INSTEAD OF PUBLICKEY BUFFER?
-	async setPublicKeyHeader(header = []) {
-		if (this.keyExchange.setClientPublicKeyHeader) {
-			return this.keyExchange.setClientPublicKeyHeader(this, header);
-		}
-		const preparedPublicKey = this.publicKeyBuffer || this.publicKey;
-		header[2] = preparedPublicKey;
-	}
-	connect() {
-		if (!this.destination.ip) {
-			this.logInfo(`Can't connect - No Destination IP`);
-			return;
-		} else if (this.state === connectedState) {
-			this.logInfo('ALREADY CONNECTED');
-			return this;
-		} else if (this.completeHandshake) {
-			return this.awaitHandshake;
-		}
-		this.awaitHandshake = promise((accept) => {
-			this.logInfo('HANDSHAKE AWAITING');
-			this.completeHandshake = accept;
-		});
-		this.sendIntro();
-		return this.awaitHandshake;
-	}
-	checkIntroTimeout = checkIntroTimeout;
-	clearIntroTimeout = clearIntroTimeout;
-	sendIntro = sendIntro;
-	introHeader = introHeader;
-	intro = intro;
-	extendedHandshake = extendedHandshake;
-	extendedHandshakeHeader = extendedHandshakeHeader;
-	sendExtendedHandshake = sendExtendedHandshake;
-	sendExtendedHandshakeHeader = sendExtendedHandshakeHeader;
-	async handshaked(message) {
-		await this.calculatePacketOverhead();
-		await this.setConnected();
-		if (this.completeHandshake) {
-			this.logInfo('Handshake Completed with new keys');
-			this.completeHandshake(this);
-		}
-	}
-	async setConnected() {
-		this.connected = true;
-		await this.updateState(connectedState);
-		await this.updateReadyState(1);
-		this.latency = (Date.now() - this.introTimestamp) + 100;
-		this.logInfo(`CLIENT CONNECTED. Latency: ${this.latency}ms`);
-		this.fire(this.events, 'connected', this);
-	}
-	async sendEnd() {
-		if (this.state === connectingState || this.state === connectedState || this.state === closingState) {
-			this.logInfo('Sending CLIENT END');
-			const frame = [false, endRPC];
-			return this.send(frame, false, null, true);
-		}
-	}
-	end(frame, header) {
-		this.close('Server Ended Connection');
-	}
 	removeClient() {
 		Client.connections.delete(this.connectionIdString);
 	}
-	async close(message) {
-		this.logInfo(`Client CLOSING. ${this.connectionIdString}`);
-		this.clearIntroTimeout();
-		if (this.state === connectedState) {
-			await this.sendEnd();
-		}
-		this.removeClient();
-		await this.updateState(closingState);
-		await this.updateReadyState(2);
-		await this.setDisconnected();
-		await this.socket?.close();
-		await this.updateReadyState(3);
-		this.fire(this.events, 'closed', this);
-		this.logInfo(`Client CLOSED. ${this.connectionIdString}`);
-		if (this.completeHandshake) {
-			this.completeHandshake(false);
-		}
-	}
-	async setDisconnected() {
-		this.connected = null;
-		await this.updateState(closedState);
-		await this.updateReadyState(3);
-		this.fire(this.events, 'disconnected', this);
-	}
-	async reconnect(options) {
-		if (this.state === closedState) {
-			await this.initialize(options || this.options);
-			await this.connect();
-		}
-	}
-	async destroy(errorCode = 0) {
-		if (this.state !== destroyedState) {
-			this.logInfo(`destroy Client - reason ${errorCode}`);
-			await this.close();
-			await this.updateState(destroyingState);
-			// FLUSH DATA TEARDOWN NEEDED
-			await this.updateState(destroyedState);
-			this.fire(this.events, 'destroyed', this);
-		}
-	}
-	on(...args) {
-		return createEvent(this.events, ...args);
-	}
-	off(...args) {
-		return removeEvent(this.events, ...args);
-	}
-	fire(eventName, ...args) {
-		return triggerEvent(this.events, eventName, this, ...args);
-	}
-	clientIntroHeader = clientIntroHeader;
+	changeAddress = changeAddress;
+	checkIntroTimeout = checkIntroTimeout;
+	clearIntroTimeout = clearIntroTimeout;
 	clientIntroFrame = clientIntroFrame;
+	createClientIntro = createClientIntro;
+	setIntroHeaderDefaults = setIntroHeaderDefaults;
+	sendIntro = sendIntro;
+	introHeader = introHeader;
+	intro = intro;
+	extendedSynchronization = extendedSynchronization;
+	extendedSynchronizationHeader = extendedSynchronizationHeader;
+	sendExtendedSynchronization = sendExtendedSynchronization;
+	sendExtendedSynchronizationHeader = sendExtendedSynchronizationHeader;
+	connect = connect;
+	setConnected = setConnected;
+	setDisconnected = setDisconnected;
+	reconnect = reconnect;
+	sendEnd = sendEnd;
+	end = end;
+	close = closeSocket;
+	destroy = destroy;
+	onSocketError = onSocketError;
+	on = on;
+	off = off;
+	fire = fire;
 	request = uwRequest;
 	fetch = fetchRequest;
 	post = post;
@@ -412,28 +245,7 @@ export class Client extends UDSP {
 	configCryptography = configCryptography;
 	getIPDetails = getIPDetails;
 	static connections = new Map();
-	async setDefaults() {
-		this.nextSession = null;
-		this.serverRandomToken = null;
-		this.completeHandshake = null;
-		this.awaitHandshake = null;
-		this.destination = {
-			connectionIdSize: defaultServerConnectionIdSize,
-			overhead: {},
-			// False is smaller than an empty buffer by a singular byte
-			id: false,
-		};
-		this.autoConnect = false;
-		this.certificateChunks = [];
-		this.requestQueue = construct(Map);
-		this.data = construct(Map);
-		this.connectionIdSize = defaultClientConnectionIdSize;
-		this.ipVersion = 'udp4';
-		this.readyState = 0;
-		this.introAttempts = 0;
-		this.latency = 100;
-		this.gracePeriod = 10000;
-	}
+	setDefaults = setDefaults;
 }
 export async function client(options) {
 	this.logInfo('Create Client');

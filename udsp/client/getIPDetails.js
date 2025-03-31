@@ -14,6 +14,7 @@ try {
 }
 console.log('IP Version', globalIpVersion);
 export { globalIpVersion };
+// Consider moving this to ip.js as a utility
 export async function getIPDetails() {
 	const destinationIp = this.destination.ip;
 	if (destinationIp) {

@@ -227,16 +227,16 @@ console.log('publicKeySize', publicKeySize);
 // await kyber768.clientSetSession(client, srvr, srvr.cipherData);
 // console.log(client);
 // const frme = [];
-// await kyber768.sendClientExtendedHandshakeHeader(client, srvr, frme);
+// await kyber768.sendClientExtendedSynchronizationHeader(client, srvr, frme);
 // console.log(frme);
 // console.log(srvr);
-// await kyber768.serverExtendedHandshake(srvr, client, [
+// await kyber768.serverExtendedSynchronization(srvr, client, [
 // 	undefined,
 // 	undefined,
 // 	frme[0]
 // ]);
-// await kyber768.sendServerExtendedHandshake(server, client);
+// await kyber768.sendServerExtendedSynchronization(server, client);
 // console.log('server', server);
-// await kyber768.clientExtendedHandshakeHeader(client, server);
+// await kyber768.clientExtendedSynchronizationHeader(client, server);
 // console.log('client', client);
 // console.log('server', server);

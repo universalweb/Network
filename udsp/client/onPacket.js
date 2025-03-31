@@ -6,8 +6,8 @@ import {
 	isFalse,
 	isNumber
 } from '@universalweb/acid';
-import { proccessProtocolPacketHeader } from '#udsp/proccessProtocol';
-import { processFrame } from '../processFrame.js';
+import { onFrame } from '../processFrame.js';
+import { onProtocolHeader } from '#udsp/proccessProtocol';
 export async function onPacket(packet, rinfo) {
 	this.logInfo('Packet Received');
 	const config = {
@@ -18,28 +18,24 @@ export async function onPacket(packet, rinfo) {
 	const wasHeadersDecoded = await decodePacketHeaders(config);
 	if (!wasHeadersDecoded || !config.packetDecoded.header) {
 		this.logInfo(config.packet);
-		return console.trace('Error failed to decode packet headers');
+		this.logError('Error failed to decode packet headers');
+		return;
 	}
 	const { header, } = config.packetDecoded;
 	if (isFalse(config.isShortHeaderMode)) {
-		await proccessProtocolPacketHeader(this, header, config.packetDecoded, rinfo);
+		await onProtocolHeader(this, header, config.packetDecoded, rinfo);
 	}
 	const wasDecoded = await decodePacket(config);
 	if (!wasDecoded) {
-		return console.trace('Error when decoding the packet but header was decoded');
+		this.logError('Error when decoding the frame but header was decoded');
+		return;
 	}
 	const {
 		message,
-		footer,
+		footer
 	} = config.packetDecoded;
-	// this.logInfo(config);
 	if (message) {
-		await processFrame(message, header, this, this.requestQueue, rinfo);
-		this.fire(this.events, 'socket.onPacket', this, [
-			message,
-			header,
-			rinfo
-		]);
+		onFrame(message, header, this, this.requestQueue, rinfo);
 	}
 	return;
 }

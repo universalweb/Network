@@ -18,4 +18,6 @@ Hybrid Key Pair: A hybrid key pair is the combination of classical and post quan
 
 META LAYER: The layer in which the Nexus exists.
 
-NIN: (NEXUS IDENTIFICATION NUMBER) AKA NEXUS ID
+Cryptographic Identification Number (CIN): NEXUS IDENTIFICATION NUMBER (NIN)
+
+Cryptographic Identification Card (CIC): Nexus Identification Card (NIC), Nexus ID Card (NIC), Nexus ID

@@ -31,6 +31,6 @@ export const kyber768_xChaCha = {
 	encryption: xChaCha,
 	keyExchange: kyber768,
 	hash: hash256,
-	extendedHandshake: true,
+	extendedSynchronization: true,
 };
 // copyright © Thomas Marchi
