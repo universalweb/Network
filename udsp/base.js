@@ -5,6 +5,7 @@ import {
 	each,
 	hasValue
 } from '@universalweb/acid';
+import { currentVersion, stateCodeDescriptions } from '../defaults.js';
 import {
 	logError,
 	logInfo,
@@ -14,7 +15,6 @@ import {
 } from '#utilities/classLogMethods';
 import { randomBuffer, toBase64 } from '#utilities/cryptography/utils';
 import { calculatePacketOverhead } from './calculatePacketOverhead.js';
-import { currentVersion } from '../defaults.js';
 import dgram from 'dgram';
 import { randomConnectionId } from './connectionId.js';
 export class UDSP {
@@ -24,22 +24,24 @@ export class UDSP {
 		}
 		this.state = 0;
 		/*
-      	* A puzzle used to challenge clients to ensure authenticity, connection liveliness, and congestion control.
-      	* Slow down account creation.
-      	* Generate viat or do some sort of computational work.
-    */
+			* A puzzle used to challenge clients to ensure authenticity, connection liveliness, and congestion control.
+			* Slow down account creation.
+			* Generate viat or do some sort of computational work.
+    	*/
 		this.puzzleFlag = false;
 		/*
-		* IPv6 enforced
-	*/
+			* IPv6 enforced
+		*/
 		this.ipVersion = 'udp6';
 		this.events = construct(Map);
+		// TODO: CHANGE TO A BINARY FORMAT UNIQUE ID GENERATOR FOR SMALLER PACKET SIZE
 		this.streamIdGenerator = construct(UniqID);
-		// Eventually make this like .js or something in-between of JS/HTML/CSS maybe single modular files or ones that are similar to JSX
+		// NOTE: Eventually change to UWScript of some kind
 		this.defaultExtension = 'html';
 		this.packetCount = 0;
 		this.dataPacketCount = 0;
 		this.headPacketCount = 0;
+		// TODO: IMPLEMENT A FLOOD MECHANISM
 		this.maxPacketFlood = 0;
 		this.heapSize = 0;
 		this.randomId = randomBuffer(8);
@@ -67,11 +69,7 @@ export class UDSP {
 		});
 		return this;
 	}
-	stateCodeDescriptions = [
-		'initializing',
-		'initialized',
-		'failed to initialize'
-	];
+	stateCodeDescriptions = stateCodeDescriptions;
 	logError = logError;
 	logWarning = logWarning;
 	logInfo = logInfo;

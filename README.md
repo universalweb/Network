@@ -1,44 +1,44 @@
-<h2 align="center"></h2>
+<h1 align="center"></h1>
 <h2 align="center">WELCOME TO THE NEXUS</h2>
 <p align="center">META-LAYER  SOLUTION</p>
-<h4 align="center"> MULTI-PLANETARY HYBRID POST QUANTUM CRYPTOGRAPHIC NEXUS </h4>
+<h4 align="center"> POST QUANTUM CRYPTOGRAPHIC NEXUS </h4>
 <!-- <p align="center"> <a href="https://github.com/universalweb/Whitepaper">WHITEPAPER (OUTDATED - OLD DESIGN)</a> </p> -->
 <hr />
 <h3 align="center" class="mono">UW://DOMAINS</h3>
 <p align="center"> LAYER SUBZERO | LAYER -1 | SUB-LAYER 0 </p>
 <!-- <img class="header" width="100%" src="https://raw.githubusercontent.com/universalweb/Network/refs/heads/master/docs/images/header.jpeg" alt="header"> -->
-<h6 align="center">UW/VIAT is a post quantum Meta-Layer solution that embraces a hybrid architecture. It serves as the foundation for a next-generation Web with a natively integrated cryptocurrency, and federated governance. Unlike traditional Layer 0 solutions, which focus solely on blockchain interoperability and scalability, UW/VIAT encompasses a wide array of capabilities and technologies with implications beyond the blockchain space. The UW/VIAT is a nexus of infrastructure for next-gen communications, applications, secure voting, digital ownership, transactions, DeFi, IoT, cryptocurrency, digital cryptographic governance, smart contracts, domain name systems, and beyond. The UW/VIAT contains centralized and decentralized components that are natively integrated into a united system yet can act with a degree of autonomy. The UW/VIAT features a transparent federated governance system, based on a robust republic model.</h6>
-<h6 align="center">The Nexus (UW/VIAT) is a post quantum multi-planetary hybrid network, (universal nexus), encompassing all the features and more that we expect from a "web", a cryptocurrency, domain system, and cryptographic governance. This unified system can be referred to as the Universal Web (which includes VIAT), UW/VIAT, or simply put a Nexus.</h6>
+<h6 align="center">UW/VIAT is a post quantum Meta-Layer solution that embraces a hybrid network architecture and post-quantum cryptography designed for our multi-planetary future. It serves as the foundation for a next-generation Web (UW), Domain System (DIS), a native cryptocurrency (VIAT), and governed by a federated republic. Unlike traditional Layer 0 solutions, which focus solely on blockchain interoperability and scalability, UW/VIAT encompasses a wide array of capabilities and technologies with implications beyond the blockchain space. UW/VIAT is a nexus of infrastructure for next-gen communications, applications, secure voting, digital ownership, real-time transactions, DeFi, IoT, cryptocurrency, governance, cryptographic identification, smart contracts, domain name/information system, domain certificates, modern UTF-8 URLs, and beyond. UW/VIAT strives for balance; it contains both centralized and decentralized components that are natively integrated into a united system yet each component can act with a degree of autonomy.</h6>
 <h5 align="center"> <a href="https://x.com/tommarchi">LEAD DEV</a> </h5>
 <hr />
-<h3 align="center">VIAT CRYPTO TEXT SYMBOLS</h3>
-<p align="center">⩝ - ᐯ - ∨</p>
+<h4 align="center"> VIAT CRYPTOGRAPHY  </h4>
+<p>VIAT uses hybrid post quantum cryptography which combines classical and post quantum cryptography into a singular algorithm. There are two hybrid post quantum algorithms one is for Signatures and the other is for Key Exchanges. All primary VIAT cryptography used is listed below more are available for the UW.</p>
+<hr style="margin-top:5px;width:70%" />
+<p>  <span style="margin-left:10px;">SIGNATURE: DILITHIUM ◉ ED25519 ◉ SPHINCS+</span> </p>
+<p>  <span style="margin-left:10px;">KEY EXCHANGE: KYBER ◉ x25519</span> </p>
+<p>  <span style="margin-left:10px;">HASH: SHAKE256 (32 &amp; 64 byte outputs)</span> </p>
+<p>  <span style="margin-left:10px;">WALLET ADDRESS: 64bytes  SHAKE256 512bit expanded output</span> </p>
+<p>  <span style="margin-left:10px;">ENCRYPTION (AEAD): AEGIS-256 - XChaCha20Poly1305-IETF</span> </p>
+<p>  <span style="margin-left:10px;">SYMBOL: ⩝ </span> </p>
 <hr />
-<h4 align="center"> ALL CRYPTOGRAPHY USED </h4>
+<h4 align="center"> ALL CRYPTOGRAPHY USED/SUPPORTED </h4>
 <h4>HASH: SHAKE256 &amp; BLAKE3</h4>
 <h4>KEY EXCHANGE: Kyber &amp; x25519</h4>
 <h4>ENCRYPTION: AEGIS-256 &amp; xChaCha20-Poly1305</h4>
 <h4>SIGNATURE: SPHINCS+ &amp; Dilithium &amp; ed25519 &amp; FALCON</h4>
 <p>These are all the cryptographic algorithms supported or play a role in the UW/VIAT.</p>
 <hr />
-<h4 align="center"> VIAT CRYPTOGRAPHY </h4>
-<h4>HASH: SHAKE256</h4>
-<h4>KEY EXCHANGE: Kyber+x25519</h4>
-<h4>ENCRYPTION: AEGIS-256</h4>
-<h4>SIGNATURE: SPHINCS+Dilithium+ed25519</h4>
-<p>These are the cryptographic algorithms that UW/VIAT depends on. However, there are other cryptographic algorithms like BLAKE3, which are used for operations that are not security-critical.</p>
-<hr />
 <h3>NEXUS?</h3>
-<p>We call the UW/VIAT a Nexus: a unified ecosystem where both Web-like, cryptocurrency, and governing elements are deeply interconnected yet function independently, enhancing each other’s capabilities without compromise. Our version of the World Wide Web is the Universal Web (Multi-planetary) &amp; our cryptocurrency is VIAT together they form what we call a/the Nexus.</p>
-<p>The Nexus has its own Domain System, Messaging System, Real-time events, design, data transport network protocol, language, browser, cryptocurrency, and many other unique components. It's a cohesive system rather than a bunch of independent technologies retrofitted to work with each other or layering one thing on-top of the next similar to the Web today or what most call "Web3".</p>
+<p>We call the UW/VIAT a nexus which is: a unified ecosystem where both Web-like, cryptocurrency, and governing elements are deeply interconnected yet functionally independent. Our version of the World Wide Web is the Universal Web and our cryptocurrency is VIAT; together they form what we call a nexus.</p>
+<p>The Nexus has its own Domain System, Messaging System, Real-time events, design, data transport network protocol, language, browser, cryptocurrency, and many other unique components. It's a cohesive system rather than a bunch of independent technologies retrofitted to work with each other or layering one thing on top of the next similar to the Web today or what most call "Web3".</p>
 <h4>Goals</h4>
 <p>The objective of the Universal Web is to create a viable modern replacement for the Web today.</p>
 <h4>Is it Web3?</h4>
-<p>Depends on your definition. If the definition of Web3 is a fully decentralized Web then The Universal Web is not Web3 it's far more robust. If Web3 is the World Wide Web plus some decentralized apps then the UW is not Web3. If we had to use WEB3 then our definition of Web3 is a hybrid Web built from scratch with its own system of domain name resolution &amp; data transport protocol paired with a natively integrated decentralized focused cryptocurrency.</p>
+<p>Depends on your definition.</p>
+<p>If Web3 means all websites are on a network like IPFS, users/services forced to use a smart contract to interact with sites, paying a TX fee to post a social media update, using decentralized DNS with limited abilities (ex: ETH domains), then we have a very different definition. That version of the Web is a downgrade that removes key beneficial aspects of the Web while also not addressing any of the real issues.</p>
 <h4>Where's the name from?</h4>
-<p>The Universal Web's name was chosen because of its natural evolution of the name The World Wide Web.</p>
+<p>The Universal Web's name was chosen because of its natural evolution of the name "The World Wide Web" and highlights the intent to build a Multi-planetary Web.</p>
 <h4>Internet vs Web</h4>
-<p>The Web is all the software bits that sits on-top of the Internet. The Universal Web at least for now is only concerned with software no special hardware is required. Users just need software to access the Universal Web and Servers just need software to setup a Universal Web server.</p>
+<p>The Web is all the software bits that sits on-top of the Internet. The Universal Web at least for now is only concerned with software; no special hardware is required. Users just need software to access the Universal Web and Servers just need software to setup a Universal Web server; the same goes for VIAT.</p>
 <h4>Is the UW's DIS and the WWW's DNS the same?</h4>
 <p>The World Wide Web has the Domain Name System, Web3 has Decentralized DNS, &amp; the Universal Web has a similar component called the DIS(Domain Information System). Here's the critical difference DNS takes a hostname and spits out a DNS record (has things like an IP address) the DIS returns a cryptographic signed certificate. The returned certificate can have records akin to DNS records in it but is part of a cryptographically protected and verifiable certificate. The DIS plays a similar role to DNS but the DIS has greater functionality, has similar syntax, distributes only cryptographic certificates, and was designed with all other components in mind. Because the DIS provides a certificate instead of just a basic DNS record it makes connection establishment faster and more secure, specifically speeding up the connection synchronization (Handshake/Connection Establishment) process. When browsing the UW all domain lookups would go to the remote and or local DIS (cached). The entire DIS is a publicly verifiable blockchain but old certificates can be replaced which means Domain record changes are quick and easy with a 0TTL. The DIS doesn't share any domains or rules with the Web's Domain system meaning domain names don't carry over. The UW also permits emoji domains as well as single name domains. Reserved named domains are domains consisting of just a name to quickly access the site for example you just type "x" to go to "x.com".</p>
 <h4>Perspective &amp; Rational</h4>
