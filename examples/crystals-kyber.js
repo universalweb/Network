@@ -1,4 +1,4 @@
-import { decode, encode } from 'msgpackr';
+import { decode, encode } from 'cbor-x';
 import { ml_kem1024, ml_kem512, ml_kem768 } from '@noble/post-quantum/ml-kem';
 import { encrypt } from '#crypto/cipher/xChaCha.js';
 import { randomBuffer } from '#utilities/cryptography/utils';

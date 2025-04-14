@@ -1,9 +1,8 @@
 # VIAT LIVING SUPER STRUCTURE
 
-Viat has a Neuromorphic self-organizing layered multidimensional super structure.
-Wallets are stored in a sort of branched tree via Hubs that contain specific wallets based on the wallet's address.
-Wallets have their own chains akin to DAGs that are specific to particular actions such as a transaction chain and receipt chain.
-The benefits of
+Viat has a Neuromorphic self-organizing layered multidimensional DAG-like super structure.
+Wallets are stored in a folder trie with folder names based on wallet addresses.
+Wallets have their own chains akin to DAGs and or linear chains that are specific to particular actions such as a transaction chain and receipt chain.
 
 Viat's state is stored in a physical file system consisting of both individual binary files and organized via folders.
 Viat's physical cryptographically linked file system is a DAG-like super structure with efficient separation of concerns.

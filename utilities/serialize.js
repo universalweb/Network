@@ -4,7 +4,7 @@ const {
 	encode: encodeRaw,
 	decode: decodeRaw
 } = msgPack;
-export function decode(data) {
+export async function decode(data) {
 	if (noValue(data)) {
 		return;
 	}
@@ -15,7 +15,7 @@ export function decode(data) {
 		return;
 	}
 }
-export function encode(data) {
+export async function encode(data) {
 	if (noValue(data)) {
 		return;
 	}
@@ -26,3 +26,8 @@ export function encode(data) {
 		return;
 	}
 }
+const serialization = {
+	encode,
+	decode,
+};
+export default serialization;

@@ -181,15 +181,16 @@ export class CryptoID {
 	async signPartial(message) {
 		return this.cipherSuite.signature.signPartial(message, this.signatureKeypair);
 	}
-	verifyPartialSignature(signature, message) {
+	async verifyPartialSignature(signature, message) {
 		return this.cipherSuite.signature.verifyPartial(signature, message, this.signatureKeypair);
 	}
-	signCertificate(certificate) {
+	async signCertificate(certificate) {
 		const [certificateData] = certificate;
-		const signature = this.sign(certificateData, this.signatureKeypair);
+		const signature = await this.sign(certificateData, this.signatureKeypair);
+		return signature;
 	}
 	profileVersion = profileVersion;
-	generateAddress() {
+	async generateAddress() {
 		const publicKeyCombined = Buffer.concat(this.signatureKeypair.publicKey);
 		const address = this.cipherSuite.hash.hash512(publicKeyCombined);
 		this.address = address;

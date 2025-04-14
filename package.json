@@ -17,24 +17,24 @@
 		"@cldmv/sizeofvar": "^1.0.4",
 		"@noble/ciphers": "^1.2.1",
 		"@noble/ed25519": "^2.2.3",
-		"@noble/hashes": "^1.7.1",
+		"@noble/hashes": "^1.7.2",
 		"@universalweb/acid": "^3.0.74",
 		"cbor-x": "^1.6.0",
-		"electron": "^35.0.3",
+		"electron": "^35.1.5",
 		"hash-wasm": "^4.12.0",
 		"ip": "^2.0.1",
 		"keychain": "^1.5.0",
 		"libsodium-wrappers": "^0.7.15",
-		"mongoose": "^8.13.0",
+		"mongoose": "^8.13.2",
 		"msgpackr": "^1.11.2",
-		"node-seal": "^5.1.4",
+		"node-seal": "^5.1.5",
 		"node-watch": "^0.7.4",
 		"nodemon": "^3.1.9",
 		"os-utils": "^0.0.14",
 		"pqclean": "^0.8.0",
 		"qrcode": "^1.5.4",
 		"signale": "^1.4.0",
-		"sodium-native": "^4.3.3"
+		"sodium-native": "^5.0.1"
 	},
 	"description": "UW & VIAT modules: Client, Server, VIAT, DIS, Browser, Crypto, Wallets, Modules, & certificates.",
 	"engines": {
@@ -120,12 +120,12 @@
 		"auto-changelog": "^2.5.0",
 		"axios": "^1.8.4",
 		"benchmark": "^2.1.4",
-		"daisyui": "^5.0.9",
-		"eslint": "^9.23.0",
+		"daisyui": "^5.0.19",
+		"eslint": "^9.24.0",
 		"eslint-plugin-jsdoc": "^50.6.9",
 		"globals": "^16.0.0",
-		"tailwindcss": "^4.0.15",
-		"textlint": "^14.5.0"
+		"tailwindcss": "^4.1.4",
+		"textlint": "^14.6.0"
 	},
 	"pnpm": {
 		"overrides": {
@@ -144,5 +144,5 @@
 			"sodium-native"
 		]
 	},
-	"packageManager": "pnpm@10.6.5"
+	"packageManager": "pnpm@10.8.1"
 }

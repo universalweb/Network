@@ -4,9 +4,9 @@ UW: Universal Web
 
 VIAT: The native cryptocurrency of the Universal Web
 
-SBD: Structured Binary Data typically done with messagePack and or similar structured binary format.
+SBD: Structured Binary Data typically done with cbor and or similar structured binary format.
 
-UML: Universal Markup Language stored in a binary format such as messagePack and or similar structure. Can be partially represented in JSON with Binary Buffers.
+UML: Universal Markup Language stored in a binary format such as cbor and or similar structure. Can be partially represented in JSON with Binary Buffers.
 
 DIS: Domain Information System which is similar to DNS and is responsible for hosting domain certificates, managing domain certificates, and responding to queries for domains but only returns a cryptographic certificate if a match is found.
 
