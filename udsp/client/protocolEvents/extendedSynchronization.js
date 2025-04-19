@@ -1,6 +1,6 @@
 import { extendedSynchronizationHeaderRPC } from '../../protocolHeaderRPCs.js';
 import { extendedSynchronizationRPC } from '../../protocolFrameRPCs.js';
-export async function createClientExtendedSynchronization(header, frame) {
+export async function createExtendedSynchronization(header, frame) {
 	this.logInfo('Creating Client Extended Synchronization');
 	await this.keyExchange.onCreateClientExtendedSynchronization(this, this.destination, header, frame);
 }
@@ -11,7 +11,7 @@ export async function sendExtendedSynchronization() {
 	const { destination } = this;
 	const header = [];
 	const frame = [];
-	await this.createClientExtendedSynchronization(header, frame);
+	await this.createExtendedSynchronization(header, frame);
 	await this.sendAny(frame, header);
 }
 export async function extendedSynchronizationHeader(header, packetDecoded) {
@@ -23,7 +23,7 @@ export async function extendedSynchronizationHeader(header, packetDecoded) {
 		}
 	}
 }
-export async function clientExtendedSynchronizationFrame(frame, header, rinfo) {
+export async function extendedSynchronizationFrame(frame, header, rinfo) {
 	this.logInfo('Client Extended Synchronization');
 	if (this.keyExchange.clientExtendedSynchronizationFrame) {
 		const status = await this.keyExchange.clientExtendedSynchronizationFrame(this, this.destination, frame, header);

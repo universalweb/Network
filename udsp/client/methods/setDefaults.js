@@ -1,6 +1,6 @@
 import { construct } from '@universalweb/acid';
-import { defaultClientConnectionIdSize } from './defaults.js';
-import { defaultServerConnectionIdSize } from '../server/defaults.js';
+import { defaultClientConnectionIdSize } from '../defaults.js';
+import { defaultServerConnectionIdSize } from '../../server/defaults.js';
 export async function setDefaults() {
 	this.nextSession = null;
 	this.serverRandomToken = null;

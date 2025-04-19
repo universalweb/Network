@@ -1,4 +1,4 @@
-import { clientStates } from '../states.js';
+import { clientStates } from '../defaults.js';
 import { promise } from '@universalweb/acid';
 import { sendIntro } from './protocolEvents/intro.js';
 const {

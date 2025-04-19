@@ -12,6 +12,8 @@ The Wallet's address is used to determine the file path for all chains connected
 The Wallet's are part of a cryptographically linked DAG.
 All wallets link back to a core root wallet block then the genesis block.
 
+Wallets are stored within a physical folder trie where each folder represents a wallet hub. A wallet hub folder can be a shard point to distribute the file system across a network. The first folder and subfolder is named after the first 6 bytes of the wallet address with 3 bytes used for each folders name. The final subfolder is named after the last 32 bytes of the wallet address. All wallet specific files are located within the wallet folder. This folder trie acts as both a physical and virtual file system for Viat. The physical file system makes it easy to manually navigate the wallet section of the Viat super structure. The physical file system ensures near constant time wallet lookups.
+
 # VIAT META STRUCTURE
 
 genesisBlock = Second layer of DAG Super Structure {

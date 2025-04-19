@@ -1,5 +1,5 @@
 import { isArray, isEmpty } from '@universalweb/acid';
-import { clientStates } from '../../states.js';
+import { clientStates } from '../defaults.js';
 import { introHeaderRPC } from '../../protocolHeaderRPCs.js';
 import { introRPC } from '../../protocolFrameRPCs.js';
 import { sendPacketIfAny } from '#udsp/sendPacket';
@@ -33,7 +33,7 @@ const [
 		version,
 	] = header;
 */
-export async function setIntroHeaderDefaults(header) {
+export async function setIntroHeader(header) {
 	header[1] = introHeaderRPC;
 	header[3] = this.id;
 	header[4] = this.cipher.id;
@@ -45,15 +45,15 @@ export async function setIntroHeaderDefaults(header) {
 	// If is provided Creates a compatability mode for older clients but can't be relied upon? Most viable if not used
 	header[6] = this.version;
 }
-export async function clientIntroFrame(frame) {
+export async function setIntroFrame(frame) {
 	frame[0] = false;
 	frame[1] = introRPC;
 	frame[2] = this.id;
 }
-export async function createClientIntro(header, frame) {
-	await this.setIntroHeaderDefaults(header);
-	if (this.keyExchange.onCreateClientIntro) {
-		await this.keyExchange.onCreateClientIntro(this, this.destination, frame, header);
+export async function createIntro(header, frame) {
+	await this.setIntroHeader(header);
+	if (this.keyExchange.createClientIntro) {
+		await this.keyExchange.createClientIntro(this, this.destination, frame, header);
 	} else {
 		header[1] = this.publicKeyBuffer || this.publicKey;
 	}
@@ -65,7 +65,7 @@ export async function sendIntro() {
 	this.introTimestamp = dateNow;
 	const header = [];
 	const frame = [];
-	await this.createClientIntro(header, frame);
+	await this.createIntro(header, frame);
 	this.introTimeout = setTimeout(() => {
 		this.checkIntroTimeout();
 	}, this.serverIntroTimeout);

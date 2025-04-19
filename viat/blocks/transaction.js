@@ -1,4 +1,5 @@
 // Include a Block Link ID - uses to quickly share a transaction and then can be efficiently found by other parties.
 // This is a unique ID that is generated for each transaction. It can be used to quickly find the transaction in the block chain.
 // Reference block, link block, Anchor block, receipt block -> Links to received viat from another wallets send block
-// TX Queue Block - This is a block that is used to queue transactions and alert validators of needed work. It can be used to quickly find none validated transactions in the block chain that isn't yet indexed.
+// TX Queue Block - This is a block that is used to queue transactions and alert validators of needed work. It can be used to quickly find none validated transactions in the block chain that aren't yet indexed.
+// Use nonces to prevent replay attacks and ensure if a transaction is identical resulting in the same hash the nonce would result in a different hash mitigating this outcome. It also allows a transaction to have the same contents but the nonce shows they are different transactions still. Then a cancel request can target what otherwise could have been nearly identical transactions resulting in one being canceled over the other. This way a user can target a specific transaction with absolute certainty

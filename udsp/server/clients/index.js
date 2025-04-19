@@ -19,19 +19,20 @@ import {
 	promise
 } from '@universalweb/acid';
 import {
-	clientIntroFrame,
-	clientIntroHeader,
+	createIntro,
 	intro,
 	introHeader,
-	sendIntro
+	sendIntro,
+	setIntroFrame,
+	setIntroHeader
 } from './protocolEvents/intro.js';
-import { createEvent, removeEvent, triggerEvent } from '../../events.js';
-import { discovery, sendDiscovery } from './protocolEvents/discovery.js';
+import { end, sendEnd } from './methods/end.js';
 import {
 	extendedSynchronization,
 	extendedSynchronizationHeader,
 	sendExtendedSynchronization
 } from './protocolEvents/extendedSynchronization.js';
+import { fire, off, on } from './methods/events.js';
 import {
 	logError,
 	logInfo,
@@ -43,17 +44,15 @@ import {
 	randomBuffer,
 	toHex,
 } from '#utilities/cryptography/utils';
-import { sendPacket, sendPacketIfAny } from '#udsp/sendPacket';
-import { Reply } from '#udsp/request/reply';
+import { send, sendAny } from './methods/send.js';
+import { attachProxyAddress } from './methods/attachProxyAddress.js';
 import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
-import cluster from 'node:cluster';
 import { defaultClientConnectionIdSize } from '../../client/defaults.js';
 import { destroy } from './destroy.js';
-import { endHeaderRPC, } from '../../protocolHeaderRPCs.js';
-import { endRPC, } from '../../protocolFrameRPCs.js';
 import { initialize } from './initialize.js';
-import { onConnected } from './onConnected.js';
+import { onConnected } from './methods/onConnected.js';
 import { onFrame } from '#udsp/processFrame';
+import { reply } from './methods/reply.js';
 /**
  * @TODO
  */
@@ -64,11 +63,7 @@ export class Client {
 			app
 		} = config;
 		const client = this;
-		const {
-			ciphers,
-			signatureAlgorithm,
-			certificate,
-		} = server;
+		const { certificate, } = server;
 		this.server = function() {
 			return server;
 		};
@@ -76,15 +71,19 @@ export class Client {
 			return app;
 		};
 		this.socket = server.socket;
-		this.ciphers = ciphers;
 		this.certificate = certificate;
 		return this.initialize(config);
 	}
+	destination = {
+		overhead: {},
+		connectionIdSize: defaultClientConnectionIdSize
+	};
 	async initializeSession(cipherData) {
 		this.logInfo('Client Initialize session');
 		if (this.keyExchange.serverInitializeSession) {
 			await this.keyExchange.serverInitializeSession(this, this.destination, cipherData);
 		}
+		// TODO: USE NUMBERED STATES INSTEAD OF sessionInitialized BOOLEAN
 		this.sessionInitialized = true;
 		this.logInfo(`receiveKey: ${toHex(this.receiveKey)}`);
 		this.logInfo(`transmitKey: ${toHex(this.transmitKey)}`);
@@ -96,22 +95,9 @@ export class Client {
 		this.logInfo(`CLIENT State Updated -> ${this.state}`);
 		this.state = state;
 	}
-	async send(frame, headers, footer) {
-		this.logInfo(`socket Sent -> ID: ${this.connectionIdString}`);
-		if (this.destroyed) {
-			return;
-		}
-		return sendPacket(frame, this, this.socket, this.destination, headers, footer);
-	}
-	async sendAny(frame, headers, footer) {
-		this.logInfo(`socket sendPacketIfAny -> ID: ${this.connectionIdString}`);
-		if (this.destroyed) {
-			return;
-		}
-		return sendPacketIfAny(frame, this, this.socket, this.destination, headers, footer);
-	}
-	async authenticate(frame, headers) {
-	}
+	attachProxyAddress = attachProxyAddress;
+	send = send;
+	sendAny = sendAny;
 	close(destroyCode) {
 		this.sendEnd();
 		this.destroy(destroyCode);
@@ -143,62 +129,20 @@ export class Client {
 	clearInitialGracePeriodTimeout() {
 		clearTimeout(this.initialGracePeriodTimeout);
 	}
-	async reply(frame, header, rinfo) {
-		// TODO: Consider removing this and having it processed once to avoid re-checks
-		// NOTE: It could be better to have a check for a closed state?
-		if (this.state === 1) {
-			await this.updateState(2);
-		}
-		await this.updateLastActive();
-		const processingFrame = await onFrame(frame, header, this, this.requestQueue);
-		if (processingFrame === false) {
-			const replyObject = new Reply(frame, header, this);
-			this.logInfo('New reply object created', replyObject);
-			if (isFalse(replyObject)) {
-				this.errorLog('Reply creation failed');
-				return;
-			}
-			replyObject.onFrame(frame, header, rinfo);
-		}
-	}
-	sendEnd() {
-		if (this.state === 0) {
-			return;
-		}
-		this.logInfo('Sending CLIENT END');
-		this.updateState(0);
-		const frame = [
-			false,
-			endRPC
-		];
-		return this.send(frame, undefined, undefined, true);
-	}
-	async end(frame, header) {
-		this.logInfo(`END RPC Destroying client ${this.connectionIdString}`, frame, header);
-		await this.sendEnd();
-		await this.destroy(0);
-	}
+	on = on;
+	off = off;
+	fire = fire;
+	reply = reply;
+	sendEnd = sendEnd;
+	end = end;
 	async calculatePacketOverhead() {
 		return calculatePacketOverhead(this.cipher, this.destination.connectionIdSize, this.destination);
 	}
-	on(eventName, eventMethod) {
-		return createEvent(this.events, eventName, eventMethod);
-	}
-	off(eventName, eventMethod) {
-		return removeEvent(this.events, eventName, eventMethod);
-	}
-	fire(eventName, ...args) {
-		this.logInfo(`CLIENT EVENT -> ${eventName} - ID:${this.connectionIdString}`);
-		return triggerEvent(this.events, eventName, this, ...args);
-	}
-	destination = {
-		overhead: {},
-		connectionIdSize: defaultClientConnectionIdSize
-	};
-	clientIntroHeader = clientIntroHeader;
-	clientIntroFrame = clientIntroFrame;
+	setIntroHeader = setIntroHeader;
+	setIntroFrame = setIntroFrame;
 	introHeader = introHeader;
 	intro = intro;
+	createIntro = createIntro;
 	sendIntro = sendIntro;
 	extendedSynchronization = extendedSynchronization;
 	extendedSynchronizationHeader = extendedSynchronizationHeader;

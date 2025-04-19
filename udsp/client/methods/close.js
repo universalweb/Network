@@ -1,5 +1,5 @@
-import { clientStates } from '../states.js';
-import { sendEnd } from './protocolEvents/end.js';
+import { clientStates } from '../defaults.js';
+import { sendEnd } from '../protocolEvents/end.js';
 const {
 	connectedState,
 	closingState,

@@ -69,22 +69,6 @@ export async function intro(frame, header, rinfo) {
 	this.logInfo(`Client Intro -> - ID:${this.connectionIdString}`);
 	return this.sendIntro();
 }
-async function attachProxyAddress(source) {
-	// Change connection IP:Port to be the workers IP:Port
-	const scale = this.scale;
-	if (scale) {
-		const {
-			ipBuffer,
-			portBuffer,
-			proxyAddress
-		} = this;
-		if (proxyAddress) {
-			source[4] = proxyAddress;
-		} else if (portBuffer) {
-			source[4] = portBuffer;
-		}
-	}
-}
 // SERVER INTRO
 // Intro in plain text is fine because data is just to establish a connection if contents are modified then an encrypted synchronization will fail at one point or another
 /* const [
@@ -96,25 +80,28 @@ async function attachProxyAddress(source) {
 		serverRandomToken
 	] = frame;
 */
-export async function serverIntroHeader(header) {
+export async function setIntroHeader(header) {
 	header[1] = introHeaderRPC;
 	header[2] = this.id;
 }
-export async function serverIntroFrame(frame) {
+export async function setIntroFrame(frame) {
 	frame[0] = false;
 	frame[1] = introRPC;
 	frame[2] = this.id;
+}
+export async function createIntro(header, frame) {
+	await this.setIntroHeader(header);
+	await this.attachProxyAddress(header);
+	if (this.keyExchange.createServerIntro) {
+		await this.keyExchange.createServerIntro(this, this.destination, frame, header);
+	}
 }
 // Add timeout to check if client is still connected
 export async function sendIntro() {
 	const header = [];
 	const frame = [];
-	await this.serverIntroHeader(header);
-	await this.attachProxyAddress(header);
-	if (this.keyExchange.createServerIntro) {
-		await this.keyExchange.createServerIntro(this, this.destination, frame, header);
-	}
 	this.logInfo('Sending Server Intro', frame, header);
+	await this.createIntro(header, frame);
 	await this.updateState(1);
 	return this.sendAny(frame, header);
 }

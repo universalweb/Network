@@ -1,0 +1,3 @@
+# VIAT NOTES
+
+Base64 URL-SAFE Encoding - QR CODE

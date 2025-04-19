@@ -15,12 +15,12 @@ import {
 import {
 	checkIntroTimeout,
 	clearIntroTimeout,
-	clientIntroFrame,
-	createClientIntro,
+	createIntro,
 	intro,
 	introHeader,
 	sendIntro,
-	setIntroHeaderDefaults
+	setIntroFrame,
+	setIntroHeader,
 } from './protocolEvents/intro.js';
 import {
 	connect,
@@ -36,27 +36,27 @@ import {
 	sendExtendedSynchronization,
 	sendExtendedSynchronizationHeader
 } from './protocolEvents/extendedSynchronization.js';
-import { fire, off, on } from './events.js';
+import { fire, off, on } from './methods/events.js';
 import { send, sendAny } from './send.js';
 import { UDSP } from '#udsp/base';
 import { ask } from '../request/ask.js';
 import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
-import { changeAddress } from './changeAddress.js';
-import { closeSocket } from './close.js';
-import { configCryptography } from './configCryptography.js';
+import { changeAddress } from './methods/changeAddress.js';
+import { closeSocket } from './methods/close.js';
+import { configCryptography } from './methods/configCryptography.js';
 import { destroy } from './destroy.js';
 import { emit } from '../requestMethods/emit.js';
 import { fetchRequest } from '../requestMethods/fetch.js';
 import { get } from '../requestMethods/get.js';
-import { getIPDetails } from './getIPDetails.js';
+import { getIPDetails } from './utilities/getIPDetails.js';
 import { keychainGet } from '../certificate/keychain.js';
-import { onListening } from './listening.js';
+import { onListening } from './methods/listening.js';
 import { onPacket } from './onPacket.js';
-import { onSocketError } from './onSocketError.js';
+import { onSocketError } from './methods/onSocketError.js';
 import { post } from '../requestMethods/post.js';
 import { publicDomainCertificate } from '../certificate/domain.js';
-import { setDefaults } from './setDefaults.js';
-import { setDestination } from './setDestination.js';
+import { setDefaults } from './methods/setDefaults.js';
+import { setDestination } from './methods/setDestination.js';
 import uwProfile from '../../cryptoID/index.js';
 import { uwRequest } from '#udsp/requestMethods/request';
 // UNIVERSAL WEB Client Class
@@ -212,9 +212,9 @@ export class Client extends UDSP {
 	changeAddress = changeAddress;
 	checkIntroTimeout = checkIntroTimeout;
 	clearIntroTimeout = clearIntroTimeout;
-	clientIntroFrame = clientIntroFrame;
-	createClientIntro = createClientIntro;
-	setIntroHeaderDefaults = setIntroHeaderDefaults;
+	setIntroFrame = setIntroFrame;
+	createIntro = createIntro;
+	setIntroHeader = setIntroHeader;
 	sendIntro = sendIntro;
 	introHeader = introHeader;
 	intro = intro;

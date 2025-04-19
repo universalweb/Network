@@ -1,4 +1,4 @@
-import { clientStates } from '#udsp/states';
+import { clientStates } from '../defaults.js';
 import { endRPC } from '#udsp/protocolFrameRPCs';
 const {
 	inactiveState,

@@ -1,7 +1,7 @@
 // ADD DISCOVERY AVAILABLE FOR DOMAIN CERTIFICATES
 // DISCOURAGE DISCOVERY FOR PUBLIC CERTIFICATES FROM SERVERS
 // ENCOURAGE DISCOVERY FOR PUBLIC CERTIFICATES FROM THE DOMAIN INFORMATION SYSTEM
-import { clientStates } from '../../states.js';
+import { clientStates } from '../defaults.js';
 import { discoveryHeaderRPC } from '../../protocolHeaderRPCs.js';
 import { toHex } from '#utilities/cryptography/utils';
 const {

@@ -1,5 +1,5 @@
 import { sendPacket, sendPacketIfAny } from '../sendPacket.js';
-import { clientStates } from '../states.js';
+import { clientStates } from '../defaults.js';
 const { closingState, } = clientStates;
 export async function send(frame, header, footer, repeat) {
 	if (!this.destination.ip) {

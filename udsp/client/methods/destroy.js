@@ -1,4 +1,4 @@
-import { clientStates } from '../states.js';
+import { clientStates } from '../defaults.js';
 const {
 	destroyedState,
 	destroyingState
