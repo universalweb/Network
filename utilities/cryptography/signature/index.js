@@ -1,4 +1,5 @@
-import { currentCertificateVersion, currentVersion } from '../../../defaults.js';
+import { certificateVersion } from '../../../certificate/defaults.js';
+import { currentVersion } from '../../../defaults.js';
 import dilithium44 from './dilithium44.js';
 import dilithium65 from './dilithium65.js';
 import dilithium65_ed25519 from './dilithium65_ed25519.js';
@@ -40,7 +41,7 @@ const publicKeyCertificateAlgorithmsVersion1 = new Map();
 publicKeyCertificateAlgorithms.set(currentVersion, publicKeyCertificateAlgorithmsVersion1);
 publicKeyCertificateAlgorithmsVersion1.set('all', cipherList);
 setOptions(publicKeyCertificateAlgorithmsVersion1, cipherList);
-export function getSignatureAlgorithmByCertificate(publicKeyAlgorithmName = 0, version = currentCertificateVersion) {
+export function getSignatureAlgorithmByCertificate(publicKeyAlgorithmName = 0, version = certificateVersion) {
 	if (!hasValue(publicKeyAlgorithmName)) {
 		return false;
 	}

@@ -8,6 +8,7 @@ import {
 	isNumber,
 	untilTrueArray
 } from '@universalweb/acid';
+import { encode, encodeStrict } from '#utilities/serialize';
 import {
 	getCipher,
 	getCiphers,
@@ -15,7 +16,6 @@ import {
 	getSignatureAlgorithm
 } from '#crypto/index.js';
 import dis from '../dis/index.js';
-import { encode } from '#utilities/serialize';
 import { resolve } from 'path';
 import { write } from '#utilities/file';
 export class UWCertificate {
@@ -119,10 +119,10 @@ export class UWCertificate {
 	}
 	async encodePublic() {
 		const publicCertificate = await this.getPublic();
-		return encode(publicCertificate);
+		return encodeStrict(publicCertificate);
 	}
 	encode() {
-		return encode(this.object);
+		return encodeStrict(this.object);
 	}
 	async save(certificateName, savePath) {
 		const saved = await this.saveToFile({
@@ -142,7 +142,7 @@ export class UWCertificate {
 		return saved;
 	}
 	async selfSign() {
-		const encodedCertificate = await encode(this.publicCertificate);
+		const encodedCertificate = await encodeStrict(this.publicCertificate);
 		console.log('selfSign encodedCertificate', encodedCertificate);
 		const signatureAlgorithm = getSignatureAlgorithm(this.get('signatureAlgorithm'), this.get('version'));
 		const signatureKeypair = this.signatureKeypairInstance || await signatureAlgorithm.initializeKeypair(this.get('signatureKeypair'));
@@ -162,7 +162,7 @@ export class UWCertificate {
 		} = config;
 		const savePathRoot = `${resolve(`${savePath}`)}/${certificateName}`;
 		const fileName = hasDot(savePathRoot) ? savePathRoot : `${savePathRoot}.cert`;
-		const result = await write(fileName, isBuffer(certificate) ? certificate : encode(certificate), 'binary', true);
+		const result = await write(fileName, isBuffer(certificate) ? certificate : encodeStrict(certificate), 'binary', true);
 		return result;
 	}
 	async findRecord(recordType, hostname) {

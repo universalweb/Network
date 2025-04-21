@@ -14,7 +14,6 @@ import { isMethodCodeValid } from '../../isMethodCodeValid.js';
 import { onEnd } from '../rpc/onEnd.js';
 import { onError } from '../rpc/onError.js';
 import { onSetup } from '../rpc/onSetup.js';
-import { processEvent } from '#server/processEvent';
 /**
  * 0 Setup Packet.
  * 1 Path Ready Packet.

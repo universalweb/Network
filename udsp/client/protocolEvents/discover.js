@@ -37,7 +37,7 @@ export async function setDiscoveryHeaders(header = []) {
 export async function sendDiscovery() {
 	if (this.state === inactiveState) {
 		this.logInfo('Sending Discovery');
-		await this.updateState(discoveringState);
+		await this.setState(discoveringState);
 		const header = [discoveryHeaderRPC];
 		this.setPublicKeyHeader(header);
 		this.setCryptographyOptionsHeaders(header);
@@ -51,5 +51,5 @@ export async function discovery(frame, header) {
 }
 export	async function discovered() {
 	this.logInfo('DISCOVERY COMPLETED -> CERTIFICATE LOADED');
-	await this.updateState(discoveredState);
+	await this.setState(discoveredState);
 }

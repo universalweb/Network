@@ -69,7 +69,7 @@ export async function sendIntro() {
 	this.introTimeout = setTimeout(() => {
 		this.checkIntroTimeout();
 	}, this.serverIntroTimeout);
-	await this.updateState(connectingState);
+	await this.setState(connectingState);
 	await this.sendAny(frame, header);
 }
 export async function introHeader(header, packetDecoded, rinfo) {

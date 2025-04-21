@@ -26,7 +26,6 @@
 		"keychain": "^1.5.0",
 		"libsodium-wrappers": "^0.7.15",
 		"mongoose": "^8.13.2",
-		"msgpackr": "^1.11.2",
 		"node-seal": "^5.1.5",
 		"node-watch": "^0.7.4",
 		"nodemon": "^3.1.9",

@@ -27,8 +27,8 @@ export async function connect() {
 }
 export async function setDisconnected() {
 	this.connected = null;
-	await this.updateState(closedState);
-	await this.updateReadyState(3);
+	await this.setState(closedState);
+	await this.setReadyState(3);
 	this.fire(this.events, 'disconnected', this);
 }
 export async function reconnect(options) {
@@ -39,8 +39,8 @@ export async function reconnect(options) {
 }
 export async function setConnected() {
 	this.connected = true;
-	await this.updateState(connectedState);
-	await this.updateReadyState(1);
+	await this.setState(connectedState);
+	await this.setReadyState(1);
 	this.latency = (Date.now() - this.introTimestamp) + 100;
 	this.logInfo(`CLIENT CONNECTED. Latency: ${this.latency}ms`);
 	this.fire(this.events, 'connected', this);

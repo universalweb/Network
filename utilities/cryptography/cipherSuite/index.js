@@ -4,7 +4,7 @@ import {
 	isArray,
 	isNumber
 } from '@universalweb/acid';
-import { currentCertificateVersion, currentVersion } from '../../../defaults.js';
+import { currentVersion } from '../../../defaults.js';
 import { kyber768_xChaCha } from './Kyber768_xChaCha.js';
 import { setOptions } from '../setOption.js';
 import { viatCipherSuite } from './viat.js';

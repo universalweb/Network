@@ -212,13 +212,13 @@ export const kyber768_x25519 = keyExchange({
 	security: 1,
 });
 export default kyber768_x25519;
-const clint = await kyber768_x25519.clientEphemeralKeypair();
-const cert = await kyber768_x25519.certificateKeyExchangeKeypair();
-console.log('cert', cert);
-const srvr = {};
-await kyber768_x25519.initializeCertificateKeypair(cert, srvr);
-console.log('server', srvr);
-console.log('publicKeySize', publicKeySize);
+// const clint = await kyber768_x25519.clientEphemeralKeypair();
+// const cert = await kyber768_x25519.certificateKeyExchangeKeypair();
+// console.log('cert', cert);
+// const srvr = {};
+// await kyber768_x25519.initializeCertificateKeypair(cert, srvr);
+// console.log('server', srvr);
+// console.log('publicKeySize', publicKeySize);
 // await kyber768_x25519.clientInitializeSession(clint, srvr);
 // console.log('clientInitializeSession', clint);
 // console.log('server', srvr);

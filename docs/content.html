@@ -53,12 +53,12 @@
 	<li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">SERVER MODULE (CHECK THE UDSP FOLDER &amp; IMPORTS FOR FULL CODE)</a></li>
 	<li><a href="https://github.com/universalweb/Network/tree/master/udsp/client">CLIENT MODULE (CHECK THE UDSP FOLDER &amp; IMPORTS FOR FULL CODE)</a></li>
 	<li><a href="https://github.com/universalweb/Network/tree/master/browser">BROWSER (outdated)</a></li>
-	<li><a href="https://github.com/universalweb/Network/tree/master/serverApp">EXAMPLE APP (pnpm run server)</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/examples/serverApp">EXAMPLE APP (pnpm run server)</a></li>
 	<li><a href="https://github.com/universalweb/Network/tree/master/examples/certificates.js">BUILD DOMAIN &amp; IDENTITY CERTIFICATES THAT ARE ALSO VIAT WALLETS (pnpm run certificates)</a></li>
-	<li><a href="https://github.com/universalweb/Network/tree/master/examples/simulateClient.js">SIMULATE CLIENT REQUEST (pnpm run simc) (ONLY RUN WHEN DEMO IN A STABLE COMMIT NOT LATEST UNLESS SPECIFIED)</a></li>
-	<li><a href="https://github.com/universalweb/Network/tree/master/scripts">VARIOUS HELPER SCRIPTS</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/examples/client/simulateClient.js">SIMULATE CLIENT REQUEST (pnpm run simc) (ONLY RUN WHEN DEMO IN A STABLE COMMIT NOT LATEST UNLESS SPECIFIED)</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/examples">VARIOUS HELPER SCRIPTS</a></li>
 </ul>
-<b>ONLY RUN PNPM COMMANDS WHEN COMMIT DESCRIPTION SAYS DEMO STABLE OR DEMO ENABLED</b>
+<b>ONLY RUN PNPM (INSTALL PNPM AND NODEJS) COMMANDS WHEN COMMIT DESCRIPTION SAYS DEMO STABLE OR DEMO ENABLED</b>
 <br />
 <h4><a href="https://github.com/universalweb/Network/blob/master/package.json">PACKAGE SCRIPTS</a></h4>
 <ul>
@@ -74,6 +74,7 @@
 </ul>
 <br />
 <h5>FULL LIST OF COMMANDS CAN BE FOUND IN THE project.json</h5>
+<p>Install NodeJS and PNPM</p>
 <hr />
 <h4>BROAD CODE OBJECTIVES</h4>
 <ul>

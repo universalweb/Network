@@ -1,9 +1,13 @@
-import * as msgPack from 'msgpackr';
+import * as binaryFormat from 'cbor-x';
 import { noValue } from '@universalweb/acid';
 const {
 	encode: encodeRaw,
 	decode: decodeRaw
-} = msgPack;
+} = binaryFormat;
+const canonicalSerializationOptions = {
+	// Enforce canonical encoding for signing/verification
+	canonical: true
+};
 export async function decode(data) {
 	if (noValue(data)) {
 		return;
@@ -26,8 +30,20 @@ export async function encode(data) {
 		return;
 	}
 }
+export async function encodeStrict(data) {
+	if (noValue(data)) {
+		return;
+	}
+	try {
+		return encodeRaw(data, canonicalSerializationOptions);
+	} catch (error) {
+		// console.error(error);
+		return;
+	}
+}
 const serialization = {
 	encode,
+	encodeStrict,
 	decode,
 };
 export default serialization;

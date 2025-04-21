@@ -11,7 +11,7 @@ import {
 	merge,
 	promise
 } from '@universalweb/acid';
-import { decode, encode } from '#utilities/serialize';
+import { decode, encodeStrict } from '#utilities/serialize';
 import { getCipher, getKeyExchangeAlgorithm, getSignatureAlgorithm } from '#crypto/index.js';
 import { read, readStructured, write } from '#file';
 import { UWCertificate } from './UWCertificate.js';
@@ -305,7 +305,7 @@ export class PublicDomainCertificate extends UWCertificate {
 		const signatureKeypair = this.signatureKeypairInstance || await this.signatureAlgorithm.initializeKeypair(signatureKeypairObject);
 		// console.log('signatureKeypair', signatureKeypair);
 		const selfSignature = this.object.selfSignature;
-		const encodedCertificate = encode(this.array);
+		const encodedCertificate = encodeStrict(this.array);
 		// console.log('encodedCertificate', encodedCertificate);
 		const signatureMethod = await this.signatureAlgorithm;
 		const verifyStatus = await signatureMethod.verifySignature(selfSignature, encodedCertificate, signatureKeypair);

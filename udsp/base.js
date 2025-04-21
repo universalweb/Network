@@ -5,7 +5,6 @@ import {
 	each,
 	hasValue
 } from '@universalweb/acid';
-import { currentVersion, stateCodeDescriptions } from '../defaults.js';
 import {
 	logError,
 	logInfo,
@@ -15,8 +14,10 @@ import {
 } from '#utilities/classLogMethods';
 import { randomBuffer, toBase64 } from '#utilities/cryptography/utils';
 import { calculatePacketOverhead } from './calculatePacketOverhead.js';
+import { currentVersion } from '../defaults.js';
 import dgram from 'dgram';
 import { randomConnectionId } from './connectionId.js';
+import { stateCodeDescriptions } from './defaults.js';
 export class UDSP {
 	initializeBase(options) {
 		if (options.logLevel) {

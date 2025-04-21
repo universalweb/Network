@@ -60,14 +60,14 @@ export class Ask extends Base {
 		});
 		requestQueue.set(id, this);
 	}
-	completeReceived() {
+	async completeReceived() {
 		this.logInfo('Ask complete', this);
-		this.setState(askRPC.received);
-		this.clearSendDataReadyTimeout();
-		this.sendEnd();
-		this.end();
+		await this.setState(askRPC.received);
+		await this.clearSendDataReadyTimeout();
+		await this.sendEnd();
+		await this.end();
 		this.readyState = 4;
-		this.flush();
+		await this.flush();
 		this.accept(this.response);
 	}
 	isAsk = true;

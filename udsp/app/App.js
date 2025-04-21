@@ -12,7 +12,7 @@ import { encode } from '#utilities/serialize';
 import { getConnectionIdReservedSpaceString } from '../connectionId.js';
 import { initialize } from '#server/clients/initialize';
 import { isUndefined } from '@universalweb/acid';
-import { onPacket } from '../server/onPacket.js';
+import { onPacket } from '../server/methods/onPacket.js';
 const {
 	router: createRouter,
 	Router
@@ -28,10 +28,10 @@ export class App {
 	async initialize(options) {
 		const { router: routerOptions } = options;
 		if (options) {
-			if (options.constructor === Server) {
-				this.use(options);
+			if (options.server?.constructor === Server) {
+				this.useServer(options);
 			} else {
-				this.server = await createServer(options);
+				this.server = await createServer(options.server);
 				this.useServer(this.server);
 			}
 		}
@@ -80,29 +80,47 @@ export class App {
 		return this.server.onPacket(packet, connection);
 	}
 	use(primaryArg, ...args) {
-		if (primaryArg.constructor === Router) {
-			this.router = primaryArg;
-		} else if (primaryArg.constructor === Server) {
-			this.useServer(primaryArg);
-		} else {
-			this.router.all(primaryArg, ...args);
+		if (!primaryArg) {
+			return this;
+		}
+		switch (primaryArg.constructor) {
+			case Router: {
+				this.useRouter(primaryArg);
+				break;
+			} case Server: {
+				this.useServer(primaryArg);
+				break;
+			} default: {
+				this.router.all(primaryArg, ...args);
+			}
 		}
 		return this;
 	}
+	useRouter(router) {
+		if (!router) {
+			return this;
+		}
+		if (router.constructor === Router) {
+			this.router = router;
+		} else {
+			this.router = createRouter(router);
+		}
+		return this;
+	}
+	// TODO: ADD MIDDLEWARE SUPPORT
 	addMiddleware() {
 	}
+	// TODO: ADD MULTIPLE SERVER SUPPORT
 	useServer(createdServer) {
 		this.server = createdServer;
-		const thisApp = this;
-		createdServer.onRequest = function(request, response, client) {
-			return thisApp.onRequest(request, response, client);
-		};
 	}
-	async onRequest(request, response, client) {
+	async onRequest(request, response) {
 		const { router, } = this;
 		if (router) {
 			this.logInfo('Root Router Running');
-			await router.handle(request, response, client);
+			router.handle(request, response, this);
+		} else {
+			response.sendNotFound();
 		}
 	}
 	data = new Map();

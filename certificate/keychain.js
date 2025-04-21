@@ -1,4 +1,4 @@
-import { decode, encode } from '#utilities/serialize';
+import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { isBuffer, promise } from '@universalweb/acid';
 import keychain from 'keychain';
 import { toBase64 } from '#utilities/cryptography/utils';
@@ -25,7 +25,7 @@ export function keychainGet(account) {
 }
 export function keychainPromise(config, accept, reject) {
 	if (!isBuffer(config.password)) {
-		config.password = encode(config.password);
+		config.password = encodeStrict(config.password);
 	}
 	const password = toBase64(config.password);
 	keychain.setPassword({

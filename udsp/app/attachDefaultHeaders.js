@@ -1,3 +1,4 @@
+// TODO: CONSIDER REMOVAL
 export async function attachDefaultHeaders(reply) {
 	const {
 		defaultHeaders: {

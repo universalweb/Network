@@ -37,7 +37,9 @@ import {
 	sendExtendedSynchronizationHeader
 } from './protocolEvents/extendedSynchronization.js';
 import { fire, off, on } from './methods/events.js';
+import { loadCertificate, onCertificateChunk, processCertificate } from './methods/certificate.js';
 import { send, sendAny } from './send.js';
+import { setReadyState, setState } from './methods/state.js';
 import { UDSP } from '#udsp/base';
 import { ask } from '../request/ask.js';
 import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
@@ -88,7 +90,7 @@ export class Client extends UDSP {
 		await this.assignId();
 		await this.calculatePacketOverhead();
 		await this.setupSocket();
-		await this.attachEvents();
+		await this.attachSocketEvents();
 		if (this.options.autoConnect) {
 			await this.connect();
 		}
@@ -112,7 +114,7 @@ export class Client extends UDSP {
 			this.profile = await uwProfile(profile, profilePassword);
 		}
 	}
-	async attachEvents() {
+	async attachSocketEvents() {
 		const source = this;
 		this.socket.on('error', (...args) => {
 			return source.onSocketError(...args);
@@ -135,9 +137,6 @@ export class Client extends UDSP {
 	async calculatePacketOverhead() {
 		return calculatePacketOverhead(this.cipher, this.destination.connectionIdSize, this.destination);
 	}
-	reKey() {
-		this.logInfo(`client reKeyed`);
-	}
 	send = send;
 	sendAny = sendAny;
 	async ask(method, path, parameters, data, head, options) {
@@ -155,56 +154,11 @@ export class Client extends UDSP {
 		);
 		return createdAsk;
 	}
-	async loadCertificate() {
-		this.logInfo(this);
-		const { options: { destinationCertificate } } = this;
-		this.destination.certificate = await publicDomainCertificate(destinationCertificate);
-		this.logInfo(this.destination.certificate);
-		await this.discovered();
-		await this.processCertificate();
-		await this.configCryptography();
-	}
-	async processCertificate() {
-		const { destination, } = this;
-		const { certificate } = destination;
-		const {
-			keyExchangeKeypair,
-			signatureKeypair,
-			version: certificateVersion,
-			encryptConnectionId,
-			protocolOptions,
-			ciphers,
-		} = certificate.get();
-		const version = certificate.getProtocolVersion();
-		// Need function that can assign to source and decide publicKey or other properties
-		destination.publicKey = keyExchangeKeypair?.publicKey || keyExchangeKeypair;
-		this.keyExchange = certificate.keyExchangeAlgorithm;
-		// this.logInfo(destination);
-		destination.signatureKeypair = signatureKeypair?.publicKey || signatureKeypair;
-		destination.protocolOptions = protocolOptions;
-	}
-	async proccessCertificateChunk(message) {
-		const {
-			pid,
-			cert,
-			last
-		} = message;
-		this.certificateChunks[pid] = cert;
-		if (last) {
-			await this.loadCertificate(Buffer.concat(this.certificateChunks));
-			this.connect(message);
-		}
-	}
-	async updateState(state) {
-		this.state = state;
-		this.logInfo(`CLIENT State Updated -> ${this.state}`);
-		await this.fire(this.events, 'state', this);
-	}
-	async updateReadyState(state) {
-		this.readyState = state;
-		this.logInfo(`CLIENT READYState Updated -> ${this.readyState}`);
-		await this.fire(this.events, 'readyState', this);
-	}
+	loadCertificate = loadCertificate;
+	onCertificateChunk = onCertificateChunk;
+	processCertificate = processCertificate;
+	setState = setState;
+	setReadyState = setReadyState;
 	// TODO: NEED BETTER WAY TO HANDLE GENERIC INSTEAD OF PUBLICKEY BUFFER?
 	removeClient() {
 		Client.connections.delete(this.connectionIdString);

@@ -107,15 +107,15 @@ export function getAddressStringFromBuffer(source) {
 		return [ipv6FromBuffer(source), portFromIPv6Buffer(source)];
 	}
 }
-console.log(ipStringToBuffer('::1').length);
-console.log(ipStringToBuffer('157.60.0.1').length);
-console.log(portNumberToBuffer(80).length);
-const example2 = '2001:0db8:85a3:0000:0000:8a2e:0370:7334';
-const example = '::1';
-const example1 = '157.60.0.1';
-const portNumber = 65535;
-const exampleBuffer = Buffer.concat([ipStringToBuffer(example1), portNumberToBuffer(portNumber)]);
-console.log(getAddressStringFromBuffer(exampleBuffer));
+// console.log(ipStringToBuffer('::1').length);
+// console.log(ipStringToBuffer('157.60.0.1').length);
+// console.log(portNumberToBuffer(80).length);
+// const example2 = '2001:0db8:85a3:0000:0000:8a2e:0370:7334';
+// const example = '::1';
+// const example1 = '157.60.0.1';
+// const portNumber = 65535;
+// const exampleBuffer = Buffer.concat([ipStringToBuffer(example1), portNumberToBuffer(portNumber)]);
+// console.log(getAddressStringFromBuffer(exampleBuffer));
 // const binaryEncoded = encode(example);
 // console.log(binaryEncoded.length);
 // console.log(Buffer.from(example).length);

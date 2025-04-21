@@ -102,7 +102,7 @@ export async function sendIntro() {
 	const frame = [];
 	this.logInfo('Sending Server Intro', frame, header);
 	await this.createIntro(header, frame);
-	await this.updateState(1);
+	await this.setState(1);
 	return this.sendAny(frame, header);
 }
 

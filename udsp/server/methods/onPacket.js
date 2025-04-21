@@ -11,7 +11,7 @@ import {
 	isUndefined
 } from '@universalweb/acid';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
-import { createClient } from './clients/index.js';
+import { createClient } from '../clients/index.js';
 import { onProtocolHeader } from '#udsp/proccessProtocol';
 import { reply } from '#udsp/request/reply';
 import { toBase64 } from '#utilities/cryptography/utils';
@@ -33,7 +33,7 @@ export async function onPacket(packet, rinfo) {
 	}
 	// TODO: Optimize lookup of client objects
 	const idString = id.toString('hex');
-	const client = await this.client(config, id, idString, rinfo);
+	const client = await this.clientCheck(config, id, idString, rinfo);
 	if (!client) {
 		// Send error message back to origin or not
 		return this.logInfo('No matching Client id given', idString);

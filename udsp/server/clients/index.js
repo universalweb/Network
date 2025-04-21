@@ -67,9 +67,11 @@ export class Client {
 		this.server = function() {
 			return server;
 		};
-		this.app = function() {
-			return app;
-		};
+		if (app) {
+			this.app = function() {
+				return app;
+			};
+		}
 		this.socket = server.socket;
 		this.certificate = certificate;
 		return this.initialize(config);
@@ -88,16 +90,25 @@ export class Client {
 		this.logInfo(`receiveKey: ${toHex(this.receiveKey)}`);
 		this.logInfo(`transmitKey: ${toHex(this.transmitKey)}`);
 	}
-	updateState(state) {
+	setState(state) {
 		if (this.destroyed || isNull(this.destroyed)) {
 			return;
 		}
 		this.logInfo(`CLIENT State Updated -> ${this.state}`);
 		this.state = state;
 	}
-	attachProxyAddress = attachProxyAddress;
-	send = send;
-	sendAny = sendAny;
+	// NOTE: onRequest acts akin to a bubble and will bubble up to the app or server
+	onRequest(req, resp) {
+		const {
+			app,
+			server
+		} = this;
+		if (app) {
+			return app().onRequest(req, resp);
+		} else {
+			return server().onRequest(req, resp);
+		}
+	}
 	close(destroyCode) {
 		this.sendEnd();
 		this.destroy(destroyCode);
@@ -129,6 +140,9 @@ export class Client {
 	clearInitialGracePeriodTimeout() {
 		clearTimeout(this.initialGracePeriodTimeout);
 	}
+	attachProxyAddress = attachProxyAddress;
+	send = send;
+	sendAny = sendAny;
 	on = on;
 	off = off;
 	fire = fire;
@@ -168,7 +182,7 @@ export class Client {
 }
 export async function createClient(config) {
 	this.logInfo('Creating Client');
-	const client = await construct(Client, [config]);
+	const client = new Client(config);
 	this.logInfo(`Client has been created with sever connection id ${toHex(client.id)}`);
 	return client;
 }

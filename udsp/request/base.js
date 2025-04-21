@@ -80,14 +80,14 @@ export class Base {
 		this.state = value;
 		this.logInfo(`State Set: ${value}`);
 	}
-	setHeaders(target) {
+	async setHeaders(target) {
 		const source = this.isAsk ? this.request : this.response;
 		if (!source.head) {
 			source.head = {};
 		}
 		assign(source.head, target);
 	}
-	setHeader(headerName, headerValue) {
+	async setHeader(headerName, headerValue) {
 		const source = this.isAsk ? this.request : this.response;
 		if (!source.head) {
 			source.head = {};

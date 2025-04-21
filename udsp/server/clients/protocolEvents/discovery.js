@@ -11,6 +11,6 @@ export	async function sendDiscovery() {
 		discoveryHeaderRPC,
 		this.id,
 	];
-	this.updateState(1);
+	this.setState(1);
 	await this.send(null, header);
 }

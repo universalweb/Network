@@ -1,5 +1,5 @@
 import { currentPath, isArray, isString } from '@universalweb/acid';
-import { decode, encode } from '#utilities/serialize';
+import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { parse, parseFragment } from 'parse5';
 import { read } from '#utilities/file';
 import zlib from 'zlib';
@@ -94,7 +94,7 @@ const packedDataStructure = await convertHtmlToMsgPack(htmlContent);
 // 	depth: null,
 // 	colors: true
 // });
-const packedData = encode(packedDataStructure);
+const packedData = encodeStrict(packedDataStructure);
 console.log('UML uncompressed size:', packedData.length);
 console.log('RAW HTML SIZE', htmlFile.length);
 const compressedString = zlib.brotliCompressSync(htmlFile);

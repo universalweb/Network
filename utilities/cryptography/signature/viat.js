@@ -7,7 +7,7 @@ import {
 	returnValue,
 	untilFalseArray
 } from '@universalweb/acid';
-import { decode, encode } from '#utilities/serialize';
+import { decode, encode, encodeStrict } from '#utilities/serialize';
 // VIAT HYBRID SIGNATURE SCHEME
 // Permit partial signature possibility
 import { hash256, hash512 } from '../hash/shake256.js';
@@ -126,7 +126,7 @@ export async function signMethod(message, source) {
 		// console.log('sphincsSig', sphincsSig.length);
 		signatureArray[2] = sphincsSig;
 	}
-	return encode(signatureArray);
+	return encodeStrict(signatureArray);
 }
 export async function signPartial(message, source) {
 	const signatureArray = [];
@@ -145,7 +145,7 @@ export async function signPartial(message, source) {
 		// console.log('dilithiumSig', dilithiumSig.length);
 		signatureArray[1] = dilithiumSig;
 	}
-	return encode(signatureArray);
+	return encodeStrict(signatureArray);
 }
 export async function verifyEach(signatureArg, message, source) {
 	const signature = (isBuffer(signatureArg)) ? decode(signatureArg) : signatureArg;

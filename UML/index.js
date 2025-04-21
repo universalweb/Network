@@ -1,4 +1,4 @@
-import { decode, encode } from '#utilities/serialize';
+import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { isArray, isBuffer, isPlainObject } from '@universalweb/acid';
 // UNIVERSAL MARKUP LANGUAGE EXPERIMENTAL SYNTAX
 export function div(attrs, contents) {
@@ -53,7 +53,7 @@ export class UML {
 		this.data.edges.push(edge);
 	}
 	async encode() {
-		return encode(this.data);
+		return encodeStrict(this.data);
 	}
 	async decode(data) {
 		this.data = await decode(data);

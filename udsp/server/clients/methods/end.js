@@ -4,7 +4,7 @@ export async function sendEnd() {
 		return;
 	}
 	this.logInfo('Sending CLIENT END');
-	this.updateState(0);
+	this.setState(0);
 	const frame = [
 		false,
 		endRPC

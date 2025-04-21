@@ -27,16 +27,16 @@ export class Router {
 		}
 		return routes;
 	}
-	async executeRoutes(routes, req, res, client) {
+	async executeRoutes(routes, req, res, appServer) {
 		const routesLength = routes.length;
 		for (let i = 0; i < routesLength; i++) {
 			if (!res.sent) {
 				const route = routes[i];
 				if (route.handle) {
-					await route.handle(req, res, client);
+					await route.handle(req, res, appServer);
 					continue;
 				}
-				await route(req, res, client);
+				await route(req, res, appServer);
 				continue;
 			}
 		}
@@ -45,29 +45,29 @@ export class Router {
 			res.send();
 		}
 	}
-	async processRouteArray(routeArray, fullPath, req, res, client) {
+	async processRouteArray(routeArray, fullPath, req, res, appServer) {
 		const routes = this.matchRoute(routeArray, fullPath);
-		return this.executeRoutes(routes, req, res, client);
+		return this.executeRoutes(routes, req, res, appServer);
 	}
-	async processByMethod(method, path, req, res, client) {
+	async processByMethod(method, path, req, res, appServer) {
 		const methodsOnRoute = this.routesMethods[method];
 		this.logInfo('processByMethod', methodsOnRoute, path, method);
 		if (isZero(methodsOnRoute.length)) {
 			return;
 		}
 		const routes = this.matchRoute(methodsOnRoute, path);
-		return this.executeRoutes(routes, req, res, client);
+		return this.executeRoutes(routes, req, res, appServer);
 	}
-	async handle(req, res, client) {
+	async handle(req, res, appServer) {
 		const {
 			path,
 			method
 		} = req;
 		const { routesAll } = this;
 		if (routesAll.length) {
-			await this.executeRoutes(routesAll, req, res, client);
+			await this.executeRoutes(routesAll, req, res, appServer);
 		}
-		return this.processByMethod(method, path, req, res, client);
+		return this.processByMethod(method, path, req, res, appServer);
 	}
 	all(method) {
 		this.routesAll.push(method);

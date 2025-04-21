@@ -12,7 +12,7 @@ import cluster from 'node:cluster';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { getCoreCount } from '#utilities/hardware/cpu';
 import { initialize } from '#server/clients/initialize';
-import { onPacket } from '../server/onPacket.js';
+import { onPacket } from '../server/methods/onPacket.js';
 const numCPUs = getCoreCount();
 function workerReady(worker) {
 	worker.ready = true;
@@ -38,6 +38,7 @@ function workerOnMessage(workers, worker, msg) {
 		}
 	}
 }
+// TODO: Break up function try to put most as part of the class not the function
 export async function app(config, ...args) {
 	if (config.scale) {
 		const {
@@ -45,10 +46,10 @@ export async function app(config, ...args) {
 			scale: { size, }
 		} = config;
 		if (!scale.ip) {
-			scale.ip = config.ip || '::1';
+			scale.ip = config.server.ip || '::1';
 		}
 		if (!scale.port) {
-			scale.port = config.port + 1;
+			scale.port = config.server.port + 1;
 		}
 		const coreCount = (size && size <= numCPUs) ? size : numCPUs;
 		config.coreCount = coreCount;
@@ -90,7 +91,7 @@ export async function app(config, ...args) {
 		} else {
 			console.log(`Worker ${cluster.worker.id} started`);
 			config.isPrimary = false;
-			config.port = (scale.port || config.port) + cluster.worker.id;
+			config.port = (scale.port || config.server.port) + cluster.worker.id;
 			config.workerId = String(cluster.worker.id);
 			config.isWorker = true;
 			const serverWorker = await new App(config, ...args);

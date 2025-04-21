@@ -11,11 +11,11 @@ export async function closeSocket(message) {
 		await this.sendEnd();
 	}
 	this.removeClient();
-	await this.updateState(closingState);
-	await this.updateReadyState(2);
+	await this.setState(closingState);
+	await this.setReadyState(2);
 	await this.setDisconnected();
 	await this.socket?.close();
-	await this.updateReadyState(3);
+	await this.setReadyState(3);
 	this.fire(this.events, 'closed', this);
 	this.logInfo(`Client CLOSED. ${this.connectionIdString}`);
 	if (this.completeSynchronization) {

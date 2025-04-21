@@ -9,7 +9,7 @@ import {
 	isPlainObject,
 	isString
 } from '@universalweb/acid';
-import { decode, encode } from '#utilities/serialize';
+import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { keychainGet, keychainSave } from '../udsp/certificate/keychain.js';
 import {
 	logError,
@@ -125,14 +125,14 @@ export class CryptoID {
 			cipherSuiteId
 		};
 		assign(data, await this.exportKeypairs());
-		const dataEncoded = encode(data);
+		const dataEncoded = encodeStrict(data);
 		if (encryptionKey) {
 			const password = (isString(encryptionKey)) ? await this.cipherSuite.hash.hash256(Buffer.from(encryptionKey)) : encryptionKey;
 			const encryptedData = await this.cipherSuite.encryption.encrypt(dataEncoded, password);
 			const encryptedObject = {
 				encrypted: encryptedData,
 			};
-			return encode(encryptedObject);
+			return encodeStrict(encryptedObject);
 		}
 		return dataEncoded;
 	}

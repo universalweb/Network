@@ -18,12 +18,12 @@ async function checkFileExists(filePath) {
 		console.error('File does not exist');
 	}
 }
-export async function getMethod(req, resp, client) {
+//  TODO: CONSIDER NOT USING APP ARG INSTEAD VIA OBJECTS WITH .app()
+export async function getMethod(req, resp, appServer) {
 	const {
 		resourceDirectory,
-		defaultExtension,
-		cryptography
-	} = client;
+		defaultExtension
+	} = appServer;
 	const {
 		data,
 		path: filePath

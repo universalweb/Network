@@ -29,5 +29,5 @@ export class ServerRequest extends Base {
 objectGetSetMethods.attachMethods(ServerRequest);
 objectDataMethods.attachMethods(ServerRequest);
 export function serverRequestObject(source) {
-	return construct(ServerRequest, [source]);
+	return new ServerRequest(source);
 }

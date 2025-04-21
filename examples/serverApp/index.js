@@ -27,35 +27,38 @@ const uwApp = await app({
 		// mode: 'proxy',
 		changeAddress: true,
 	},
-	// The used to return a new address for the client to connect to after initial synchronization packets
-	// Make semi-automatic so no hardinfo is required
-	// proxyAddress: ip,
-	// will listen on ipv4 and ipv6 default is '::1'
-	ip: '::',
-	// default port or the loadbalancer port
-	port: 8888,
-	// realtime mode - permits establishing a longer lived bidirectional real-time connection to clients
-	// Can be requested or auto set for the server
-	realtime: true,
-	// keepAlive: true,
-	initialGracePeriod: 5000,
-	// heartbeat is an interval check for when a client must send something to the server to remain connected
-	heartbeat: 5000,
-	// Max packet retries for a singular request before restarting the request
-	maxPacketRetries: 5,
-	// max file size in bytes
-	maxFileSize: 9000,
-	// Max size of a Response in bytes
-	maxResponseSize: 10000,
+	// SERVER SPECIFIC CONFIG
+	server: {
+		// The used to return a new address for the client to connect to after initial synchronization packets
+		// Make semi-automatic so no hardinfo is required
+		// proxyAddress: ip,
+		// will listen on ipv4 and ipv6 default is '::1'
+		ip: '::',
+		// default port or the loadbalancer port
+		port: 8888,
+		// realtime mode - permits establishing a longer lived bidirectional real-time connection to clients
+		// Can be requested or auto set for the server
+		realtime: true,
+		// keepAlive: true,
+		initialGracePeriod: 5000,
+		// heartbeat is an interval check for when a client must send something to the server to remain connected
+		heartbeat: 5000,
+		// Max packet retries for a singular request before restarting the request
+		maxPacketRetries: 5,
+		// max file size in bytes
+		maxFileSize: 9000,
+		// Max size of a Response in bytes
+		maxResponseSize: 10000,
+		clientConnectionIdSize: 4,
+		// Domain certificate to be loaded used for connection encryption
+		certificatePath: currentPath(import.meta, '/certs/universalWeb.cert'),
+		publicCertificatePath: currentPath(import.meta, '/certs/universalWebPublic.cert'),
+	},
 	// default file extension default is .js but WWW default is www
 	defaultExtension: 'html',
-	// Domain certificate to be loaded used for connection encryption
-	certificatePath: currentPath(import.meta, '/certs/universalWeb.cert'),
-	publicCertificatePath: currentPath(import.meta, '/certs/universalWebPublic.cert'),
 	// Where to load app resources from
 	resourceDirectory: currentPath(import.meta, 'resources'),
 	rootDirectory: currentPath(import.meta),
-	clientConnectionIdSize: 4,
 	logLevel: 3,
 });
 if (uwApp) {
