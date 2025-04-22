@@ -15,7 +15,7 @@ import {
 	getKeyExchangeAlgorithm,
 	getSignatureAlgorithm
 } from '#crypto/index.js';
-import dis from '../dis/index.js';
+import dis from '#components/dis/index';
 import { resolve } from 'path';
 import { write } from '#utilities/file';
 export class UWCertificate {

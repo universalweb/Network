@@ -4,7 +4,7 @@ import {
 	int64,
 	randomBuffer
 } from '#utilities/cryptography/utils';
-import { extendedSynchronizationHeaderRPC, introHeaderRPC } from '../../../udsp/protocolHeaderRPCs.js';
+import { extendedSynchronizationHeaderRPC, introHeaderRPC } from '../../../udsp/rpc/headerRPC.js';
 import { findItem, isBuffer } from '@universalweb/acid';
 import { encode } from '#utilities/serialize';
 import { keyExchange } from './keyExchange.js';

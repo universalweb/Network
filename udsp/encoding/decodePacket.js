@@ -13,8 +13,8 @@ import {
 import { decode, encode, } from '#utilities/serialize';
 import { toBase64, toHex } from '#utilities/cryptography/utils';
 import { createClient } from '../server/clients/index.js';
-import { introHeaderRPC } from '#udsp/protocolHeaderRPCs';
-import { maxDefaultPacketSize } from '../calculatePacketOverhead.js';
+import { introHeaderRPC } from '#udsp/rpc/headerRPC';
+import { maxDefaultPacketSize } from '../utilities/calculatePacketOverhead.js';
 /**
 	* @TODO
 	* Add support to block connection Ids that are too large

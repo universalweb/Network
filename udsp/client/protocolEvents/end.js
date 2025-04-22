@@ -1,5 +1,5 @@
 import { clientStates } from '../defaults.js';
-import { endRPC } from '#udsp/protocolFrameRPCs';
+import { endRPC } from '#udsp/rpc/frameRPC';
 const {
 	inactiveState,
 	connectingState,

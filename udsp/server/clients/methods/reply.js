@@ -1,6 +1,6 @@
 import { Reply } from '#udsp/request/reply';
 import { isFalse } from '@universalweb/acid';
-import { onFrame } from '#udsp/processFrame';
+import { onFrame } from '#udsp/onPacket/onFrame';
 export async function reply(frame, header, rinfo) {
 	// TODO: Consider removing this and having it processed once to avoid re-checks
 	// NOTE: It could be better to have a check for a closed state?

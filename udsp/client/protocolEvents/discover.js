@@ -2,7 +2,7 @@
 // DISCOURAGE DISCOVERY FOR PUBLIC CERTIFICATES FROM SERVERS
 // ENCOURAGE DISCOVERY FOR PUBLIC CERTIFICATES FROM THE DOMAIN INFORMATION SYSTEM
 import { clientStates } from '../defaults.js';
-import { discoveryHeaderRPC } from '../../protocolHeaderRPCs.js';
+import { discoveryHeaderRPC } from '../../rpc/headerRPC.js';
 import { toHex } from '#utilities/cryptography/utils';
 const {
 	inactiveState,

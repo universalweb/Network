@@ -27,39 +27,38 @@ import {
 	reconnect,
 	setConnected,
 	setDisconnected
-} from './connect.js';
-import { connectionIdToBuffer, generateConnectionIdString } from '#udsp/connectionId';
+} from './methods/connect.js';
+import { connectionIdToBuffer, generateConnectionIdString } from '#udsp/utilities/connectionId';
 import { end, sendEnd } from './protocolEvents/end.js';
 import {
-	extendedSynchronization,
+	extendedSynchronizationFrame,
 	extendedSynchronizationHeader,
 	sendExtendedSynchronization,
-	sendExtendedSynchronizationHeader
 } from './protocolEvents/extendedSynchronization.js';
 import { fire, off, on } from './methods/events.js';
 import { loadCertificate, onCertificateChunk, processCertificate } from './methods/certificate.js';
-import { send, sendAny } from './send.js';
+import { send, sendAny } from './methods/send.js';
 import { setReadyState, setState } from './methods/state.js';
 import { UDSP } from '#udsp/base';
 import { ask } from '../request/ask.js';
-import { calculatePacketOverhead } from '../calculatePacketOverhead.js';
+import { calculatePacketOverhead } from '../utilities/calculatePacketOverhead.js';
 import { changeAddress } from './methods/changeAddress.js';
 import { closeSocket } from './methods/close.js';
 import { configCryptography } from './methods/configCryptography.js';
-import { destroy } from './destroy.js';
+import cryptoID from '#components/cryptoID/index';
+import { destroy } from './methods/destroy.js';
 import { emit } from '../requestMethods/emit.js';
 import { fetchRequest } from '../requestMethods/fetch.js';
 import { get } from '../requestMethods/get.js';
 import { getIPDetails } from './utilities/getIPDetails.js';
-import { keychainGet } from '../certificate/keychain.js';
+import { keychainGet } from '#components/certificate/keychain';
 import { onListening } from './methods/listening.js';
-import { onPacket } from './onPacket.js';
+import { onPacket } from './methods/onPacket.js';
 import { onSocketError } from './methods/onSocketError.js';
 import { post } from '../requestMethods/post.js';
-import { publicDomainCertificate } from '../certificate/domain.js';
+import { publicDomainCertificate } from '../../components/certificate/domain.js';
 import { setDefaults } from './methods/setDefaults.js';
 import { setDestination } from './methods/setDestination.js';
-import uwProfile from '../../cryptoID/index.js';
 import { uwRequest } from '#udsp/requestMethods/request';
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
@@ -111,7 +110,7 @@ export class Client extends UDSP {
 			profilePassword
 		} = this.options;
 		if (profile) {
-			this.profile = await uwProfile(profile, profilePassword);
+			this.profile = await cryptoID(profile, profilePassword);
 		}
 	}
 	async attachSocketEvents() {
@@ -172,10 +171,9 @@ export class Client extends UDSP {
 	sendIntro = sendIntro;
 	introHeader = introHeader;
 	intro = intro;
-	extendedSynchronization = extendedSynchronization;
+	extendedSynchronizationFrame = extendedSynchronizationFrame;
 	extendedSynchronizationHeader = extendedSynchronizationHeader;
 	sendExtendedSynchronization = sendExtendedSynchronization;
-	sendExtendedSynchronizationHeader = sendExtendedSynchronizationHeader;
 	connect = connect;
 	setConnected = setConnected;
 	setDisconnected = setDisconnected;

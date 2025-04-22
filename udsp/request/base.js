@@ -24,7 +24,7 @@ import { checkSendHeadReady, clearSendHeadReadyTimeout, sendHeadReady } from './
 import { checkSendParametersReady, clearSendParametersReadyTimeout, sendParametersReady } from './sendReady/sendParametersReady.js';
 import { checkSendPathReady, clearSendPathReadyTimeout, sendPathReady } from './sendReady/sendPathReady.js';
 import { checkSetupSent, clearSetupTimeout, sendSetup } from './send/sendSetup.js';
-import { createEvent, removeEvent, triggerEvent } from '../events.js';
+import { createEvent, removeEvent, triggerEvent } from '../utilities/events.js';
 import { decode, encode } from '#utilities/serialize';
 import { flush, flushIncoming, flushOutgoing } from './flush.js';
 import {

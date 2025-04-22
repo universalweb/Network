@@ -13,10 +13,10 @@ import {
 	logWarning
 } from '#utilities/classLogMethods';
 import { randomBuffer, toBase64 } from '#utilities/cryptography/utils';
-import { calculatePacketOverhead } from './calculatePacketOverhead.js';
+import { calculatePacketOverhead } from './utilities/calculatePacketOverhead.js';
 import { currentVersion } from '../defaults.js';
 import dgram from 'dgram';
-import { randomConnectionId } from './connectionId.js';
+import { randomConnectionId } from './utilities/connectionId.js';
 import { stateCodeDescriptions } from './defaults.js';
 export class UDSP {
 	initializeBase(options) {

@@ -9,7 +9,7 @@ import {
 } from '../../utilities/classLogMethods.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { encode } from '#utilities/serialize';
-import { getConnectionIdReservedSpaceString } from '../connectionId.js';
+import { getConnectionIdReservedSpaceString } from '../utilities/connectionId.js';
 import { initialize } from '#server/clients/initialize';
 import { isUndefined } from '@universalweb/acid';
 import { onPacket } from '../server/methods/onPacket.js';

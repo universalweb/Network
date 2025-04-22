@@ -12,7 +12,7 @@ import {
 } from '@universalweb/acid';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { createClient } from '../clients/index.js';
-import { onProtocolHeader } from '#udsp/proccessProtocol';
+import { onProtocolHeader } from '#udsp/onPacket/onProtocol';
 import { reply } from '#udsp/request/reply';
 import { toBase64 } from '#utilities/cryptography/utils';
 export async function onPacket(packet, rinfo) {

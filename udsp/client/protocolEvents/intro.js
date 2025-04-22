@@ -1,8 +1,8 @@
 import { isArray, isEmpty } from '@universalweb/acid';
 import { clientStates } from '../defaults.js';
-import { introHeaderRPC } from '../../protocolHeaderRPCs.js';
-import { introRPC } from '../../protocolFrameRPCs.js';
-import { sendPacketIfAny } from '#udsp/sendPacket';
+import { introHeaderRPC } from '../../rpc/headerRPC.js';
+import { introRPC } from '../../rpc/frameRPC.js';
+import { sendPacketIfAny } from '#udsp/utilities/sendPacket';
 import { toHex } from '#utilities/cryptography/utils';
 const { connectingState, } = clientStates;
 export function checkIntroTimeout() {

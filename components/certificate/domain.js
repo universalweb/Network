@@ -15,9 +15,9 @@ import { decode, encodeStrict } from '#utilities/serialize';
 import { getCipher, getKeyExchangeAlgorithm, getSignatureAlgorithm } from '#crypto/index.js';
 import { read, readStructured, write } from '#file';
 import { UWCertificate } from './UWCertificate.js';
-import certificateDefaults from '../certificate/defaults.js';
-import { keychainSave } from './keychain.js';
-import protocolDefaults from '../udsp/defaults.js';
+import certificateDefaults from './defaults.js';
+import { keychainSave } from '#components/certificate/keychain';
+import protocolDefaults from '../../udsp/defaults.js';
 import { toBase64 } from '#utilities/cryptography/utils';
 const { protocolVersion: currentProtocolVersion } = protocolDefaults;
 const {

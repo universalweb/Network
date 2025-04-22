@@ -5,6 +5,9 @@
 			"#utilities/*": [
 				"./utilities/*.js"
 			],
+			"#components/*": [
+				"./components/*.js"
+			],
 			"#server/*": [
 				"udsp/server/*.js"
 			],

@@ -5,7 +5,7 @@
 */
 import { hasValue, isString } from '@universalweb/acid';
 import Benchmark from 'benchmark';
-import { randomBuffer } from '../utilities/cryptography/utils.js';
+import { randomBuffer } from '../../utilities/cryptography/utils.js';
 const eight = 8;
 const characters = 'abcdef0123456789';
 const charactersLength = characters.length;

@@ -10,7 +10,7 @@ import { onHead, onHeadReady } from '../rpc/onHead.js';
 import { onParameters, onParametersReady } from '../rpc/onParameters.js';
 import { onPath, onPathReady } from '../rpc/onPath.js';
 import { destroy } from '../destroy.js';
-import { isMethodCodeValid } from '../../isMethodCodeValid.js';
+import { isRequestRPCValid } from '../../rpc/isRequestRPCValid.js';
 import { onEnd } from '../rpc/onEnd.js';
 import { onError } from '../rpc/onError.js';
 import { onSetup } from '../rpc/onSetup.js';
@@ -60,7 +60,7 @@ export async function onFrame(frame, header, rinfo) {
 	if (lastPacket) {
 		this.logInfo('LAST PACKET RECEIVED', frame);
 	}
-	if (isMethodCodeValid(rpc) === false) {
+	if (isRequestRPCValid(rpc) === false) {
 		source.destroy('Invalid RPC');
 		return;
 	}

@@ -1,4 +1,4 @@
-import { certificateVersion } from '../../../certificate/defaults.js';
+import { certificateVersion } from '../../../components/certificate/defaults.js';
 import { currentVersion } from '../../../defaults.js';
 import { hasValue } from '@universalweb/acid';
 import { kyber768 } from './kyber768.js';

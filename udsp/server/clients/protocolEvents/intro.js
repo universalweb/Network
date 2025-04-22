@@ -4,10 +4,10 @@ import {
 	isNotNumber,
 	isTrue
 } from '@universalweb/acid';
-import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
-import { introHeaderRPC } from '../../../protocolHeaderRPCs.js';
-import { introRPC } from '../../../protocolFrameRPCs.js';
-import { sendPacketIfAny } from '#udsp/sendPacket';
+import { calculatePacketOverhead } from '#udsp/utilities/calculatePacketOverhead';
+import { introHeaderRPC } from '../../../rpc/headerRPC.js';
+import { introRPC } from '../../../rpc/frameRPC.js';
+import { sendPacketIfAny } from '#udsp/utilities/sendPacket';
 import { toHex } from '#utilities/cryptography/utils';
 async function certificateKeypairCompatability(source, destination, header, frame) {
 	if (source.cipher?.certificateKeypairCompatabilityServer) {
@@ -56,6 +56,7 @@ export async function introHeader(header, packetDecoded) {
 	}
 	await certificateKeypairCompatability(this, this.destination, header);
 	await this.initializeSession(cipherData);
+	// TODO: CHECK CACHE OF VALUE
 	await this.calculatePacketOverhead();
 	this.nonce = await this.cipher.createNonce();
 	this.logSuccess(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port} LATENCY = ${this.latency}`);
@@ -71,6 +72,7 @@ export async function intro(frame, header, rinfo) {
 }
 // SERVER INTRO
 // Intro in plain text is fine because data is just to establish a connection if contents are modified then an encrypted synchronization will fail at one point or another
+// SOME DATA MUST STILL BE ENCRYPTED AS PART OF THE FRAME CIPHER DATA MOVE TO HEADER
 /* const [
 		streamid_undefined,
 		rpc,

@@ -1,9 +1,9 @@
+import { cryptoID } from '#components/cryptoID/index';
 import { currentPath } from '@universalweb/acid';
 import { decode } from '#utilities/serialize';
 import { domainCertificate } from '#udsp/certificate/index';
-import profile from '../cryptoID/index.js';
 const dirname = currentPath(import.meta);
-const uwProfile = await profile();
+const uwProfile = await cryptoID();
 await uwProfile.saveToFile('profile.cert', `${dirname}/profiles`, 'password');
 await uwProfile.saveToKeychain('profile.cert', `${dirname}/profiles`, 'password');
 const UWCertificate = await domainCertificate({
@@ -44,6 +44,7 @@ const UWCertificate = await domainCertificate({
 console.log(UWCertificate);
 await UWCertificate.save('universalWeb.cert', `${dirname}/../serverApp/certs`);
 await UWCertificate.savePublic('universalWebPublic.cert', `${dirname}/../serverApp/certs`);
+// TODO: DECIDE DEFAULT FOLDER
 await UWCertificate.savePublic('universalWebPublic.cert', `${dirname}/../udsp/dis/cache`);
 const cert = await domainCertificate(`${dirname}/../serverApp/certs/universalWebPublic.cert`);
 console.log(cert);

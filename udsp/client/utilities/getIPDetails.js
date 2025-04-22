@@ -12,7 +12,7 @@ try {
 } catch (error) {
 	console.log('NO GLOBAL IP');
 }
-console.log('IP Version', globalIpVersion);
+// console.log('IP Version', globalIpVersion);
 export { globalIpVersion };
 // Consider moving this to ip.js as a utility
 export async function getIPDetails() {

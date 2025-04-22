@@ -1,6 +1,6 @@
 import { askRPC, replyRPC } from './rpcCodes.js';
 import { hasValue, isNotNumber, isNumber } from '@universalweb/acid';
-import { isMethodCodeValid, isRequestMethodCodeValid } from '../../isMethodCodeValid.js';
+import { isRequestRPCValid, isRequestTypeValid } from '../../rpc/isRequestRPCValid.js';
 export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 	if (source.receivedSetupPacket) {
 		this.logInfo('Received Setup Packet Already RESEND ANSWER');
@@ -32,7 +32,7 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 			totalIncomingHeadSize,
 			totalIncomingDataSize
 		] = frame;
-		// if (isRequestMethodCodeValid(requestMethodRPC) === false) {
+		// if (isRequestTypeValid(requestMethodRPC) === false) {
 		// 	source.close();
 		// 	return;
 		// }

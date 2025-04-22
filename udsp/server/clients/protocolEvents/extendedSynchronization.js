@@ -1,6 +1,6 @@
-import { extendedSynchronizationHeaderRPC } from '../../../protocolHeaderRPCs.js';
-import { extendedSynchronizationRPC } from '../../../protocolFrameRPCs.js';
-import { sendPacketIfAny } from '#udsp/sendPacket';
+import { extendedSynchronizationHeaderRPC } from '../../../rpc/headerRPC.js';
+import { extendedSynchronizationRPC } from '../../../rpc/frameRPC.js';
+import { sendPacketIfAny } from '#udsp/utilities/sendPacket';
 // TODO: ADD CHECKS TO BLOCK ATTEMPTS TO SEND EXTENDED Synchronization IF NOT SUPPORTED ON KEY EXCHANGE ALGO
 export async function extendedSynchronizationHeader(header, packetDecoded) {
 	this.logInfo('extendedSynchronizationHeader CALLED');

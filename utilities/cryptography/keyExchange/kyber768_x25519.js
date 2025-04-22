@@ -10,7 +10,7 @@ import {
 } from '#utilities/cryptography/utils';
 import { assign } from '@universalweb/acid';
 import hash from '../hash/shake256.js';
-import { introHeaderRPC } from '../../../udsp/protocolHeaderRPCs.js';
+import { introHeaderRPC } from '../../../udsp/rpc/headerRPC.js';
 import keyExchange from './keyExchange.js';
 import kyber768 from './kyber768.js';
 import pqclean from 'pqclean';

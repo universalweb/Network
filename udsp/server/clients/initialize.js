@@ -6,7 +6,7 @@ import {
 	isBoolean,
 	keys
 } from '@universalweb/acid';
-import { connectionIdToBuffer, generateConnectionIdString } from '#udsp/connectionId';
+import { connectionIdToBuffer, generateConnectionIdString } from '#udsp/utilities/connectionId';
 export async function initialize(config) {
 	const {
 		packet,

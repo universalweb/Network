@@ -1,4 +1,4 @@
-import { sendPacket, sendPacketIfAny } from '#udsp/sendPacket';
+import { sendPacket, sendPacketIfAny } from '#udsp/utilities/sendPacket';
 export async function send(frame, headers, footer) {
 	this.logInfo(`socket Sent -> ID: ${this.connectionIdString}`);
 	if (this.destroyed) {

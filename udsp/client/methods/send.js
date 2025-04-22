@@ -1,4 +1,4 @@
-import { sendPacket, sendPacketIfAny } from '../sendPacket.js';
+import { sendPacket, sendPacketIfAny } from '../../utilities/sendPacket.js';
 import { clientStates } from '../defaults.js';
 const { closingState, } = clientStates;
 export async function send(frame, header, footer, repeat) {

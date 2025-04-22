@@ -1,4 +1,4 @@
-import { discoveryHeaderRPC } from '../../../protocolHeaderRPCs.js';
+import { discoveryHeaderRPC } from '../../../rpc/headerRPC.js';
 // CLIENT DISCOVERY
 export	async function discovery(frame, header) {
 	this.logInfo(`Client Discovery -> - ID:${this.connectionIdString}`, frame, header);

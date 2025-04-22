@@ -1,5 +1,5 @@
 import { createClient } from '../clients/index.js';
-import { isIntroHeader } from '../../protocolHeaderRPCs.js';
+import { isIntroHeader } from '../../rpc/headerRPC.js';
 import { noStreamID } from '../../utilities/hasConnectionID.js';
 export async function addClientCount() {
 	this.clientCount++;

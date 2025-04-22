@@ -15,8 +15,8 @@ import {
 } from '#utilities/cryptography/sodium';
 import { KeyExchange } from './keyExchange.js';
 import { assign } from '@universalweb/acid';
-import { introHeaderRPC } from '../../../udsp/protocolHeaderRPCs.js';
-import { introRPC } from '../../../udsp/protocolFrameRPCs.js';
+import { introHeaderRPC } from '../../../udsp/rpc/headerRPC.js';
+import { introRPC } from '../../../udsp/rpc/frameRPC.js';
 const kyber768_x25519ID = 3;
 const publicKeySize = int32;
 const privateKeySize = int32;

@@ -1,4 +1,4 @@
-import { endRPC } from '../../../protocolFrameRPCs.js';
+import { endRPC } from '../../../rpc/frameRPC.js';
 export async function sendEnd() {
 	if (this.state === 0) {
 		return;

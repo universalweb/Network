@@ -1,4 +1,4 @@
-import { DomainCertificate, PublicDomainCertificate } from '../../../certificate/domain.js';
+import { DomainCertificate, PublicDomainCertificate } from '../../../components/certificate/domain.js';
 export async function setCertificate() {
 	const {
 		options,

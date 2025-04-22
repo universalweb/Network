@@ -1,4 +1,4 @@
-import { publicDomainCertificate } from '../../certificate/domain.js';
+import { publicDomainCertificate } from '../../../components/certificate/domain.js';
 export async function loadCertificate() {
 	this.logInfo(this);
 	const { options: { destinationCertificate } } = this;

@@ -6,8 +6,8 @@ import {
 	isFalse,
 	isNumber
 } from '@universalweb/acid';
-import { onFrame } from '../processFrame.js';
-import { onProtocolHeader } from '#udsp/proccessProtocol';
+import { onFrame } from '#udsp/onPacket/onFrame';
+import { onProtocolHeader } from '#udsp/onPacket/onProtocol';
 export async function onPacket(packet, rinfo) {
 	this.logInfo('Packet Received');
 	const config = {

@@ -5,7 +5,7 @@ import {
 	isNumber,
 	stringify
 } from '@universalweb/acid';
-import { onProtocolFrame } from '#udsp/proccessProtocol';
+import { onProtocolFrame } from '#udsp/onPacket/onProtocol';
 export async function processFrame(frame, header, source, queue, rinfo) {
 	const streamId = frame[0];
 	source.logInfo(`Packet Received Stream ID: ${streamId}`);

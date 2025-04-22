@@ -21,10 +21,10 @@ import {
 } from './methods/clients.js';
 import { attachSocketEvents, configureNetwork, setPort } from './methods/network.js';
 import { configureCertificateCryptography, setCertificate } from './methods/certificate.js';
-import { createEvent, removeEvent, triggerEvent } from '../events.js';
+import { createEvent, removeEvent, triggerEvent } from '../utilities/events.js';
 import { decode, encode } from '#utilities/serialize';
 import { fire, off, on } from './methods/events.js';
-import { introHeaderRPC, isIntroHeader } from '../protocolHeaderRPCs.js';
+import { introHeaderRPC, isIntroHeader } from '../rpc/headerRPC.js';
 import { randomBuffer, toBase64 } from '#utilities/cryptography/utils';
 import { UDSP } from '#udsp/base';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
@@ -34,7 +34,7 @@ import { noStreamID } from '../utilities/hasConnectionID.js';
 import { onError } from './methods/onError.js';
 import { onListen } from './methods/onListen.js';
 import { onPacket } from './methods/onPacket.js';
-import { sendPacket } from '#udsp/sendPacket';
+import { sendPacket } from '#udsp/utilities/sendPacket';
 const { seal } = Object;
 /*
 	* TODO:

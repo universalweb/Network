@@ -1,6 +1,6 @@
 // VIAT WALLET
 import { decode, encode } from '#utilities/serialize';
-import { CryptoID } from '../cryptoID/index.js';
+import { CryptoID } from '#components/cryptoID/index';
 import { isBuffer } from '@universalweb/acid';
 import viat from '#crypto/cipherSuite/viat.js';
 export class Wallet extends CryptoID {

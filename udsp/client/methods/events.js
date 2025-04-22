@@ -1,4 +1,4 @@
-import { createEvent, removeEvent, triggerEvent } from '#udsp/events';
+import { createEvent, removeEvent, triggerEvent } from '#udsp/utilities/events';
 export async function on(...args) {
 	return createEvent(this.events, ...args);
 }

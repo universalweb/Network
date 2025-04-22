@@ -46,12 +46,12 @@ import {
 } from '#utilities/cryptography/utils';
 import { send, sendAny } from './methods/send.js';
 import { attachProxyAddress } from './methods/attachProxyAddress.js';
-import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
+import { calculatePacketOverhead } from '#udsp/utilities/calculatePacketOverhead';
 import { defaultClientConnectionIdSize } from '../../client/defaults.js';
 import { destroy } from './destroy.js';
 import { initialize } from './initialize.js';
 import { onConnected } from './methods/onConnected.js';
-import { onFrame } from '#udsp/processFrame';
+import { onFrame } from '#udsp/onPacket/onFrame';
 import { reply } from './methods/reply.js';
 /**
  * @TODO

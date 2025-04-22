@@ -1,5 +1,5 @@
 import { isNotNumber, isNumber, isUndefined } from '@universalweb/acid';
-export function isMethodCodeValid(rpc) {
+export function isRequestRPCValid(rpc) {
 	if (isUndefined(rpc)) {
 		console.log('RPC is undefined');
 		return false;
@@ -16,9 +16,9 @@ export function isMethodCodeValid(rpc) {
 }
 /**
  * Add checks to ensure setup is called first and others.
- * Make sure to make sure the RPC is a valid request method. GET POST PUT DELETE DOWNLOAD UPLOAD.
+ * Make sure the RPC is a valid request method. GET POST PUT DELETE DOWNLOAD UPLOAD.
  */
-export function isRequestMethodCodeValid(rpc) {
+export function isRequestTypeValid(rpc) {
 	if (isUndefined(rpc)) {
 		console.log('RPC is undefined');
 		return false;

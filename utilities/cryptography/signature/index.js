@@ -1,4 +1,4 @@
-import { certificateVersion } from '../../../certificate/defaults.js';
+import { certificateVersion } from '../../../components/certificate/defaults.js';
 import { currentVersion } from '../../../defaults.js';
 import dilithium44 from './dilithium44.js';
 import dilithium65 from './dilithium65.js';

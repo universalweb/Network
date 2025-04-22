@@ -1,4 +1,4 @@
-import { createEvent, removeEvent, triggerEvent } from '../../../events.js';
+import { createEvent, removeEvent, triggerEvent } from '../../../utilities/events.js';
 export async function on(eventName, eventMethod) {
 	return createEvent(this.events, eventName, eventMethod);
 }

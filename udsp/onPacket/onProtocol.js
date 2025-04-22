@@ -4,20 +4,19 @@ import {
 	endHeaderRPC,
 	extendedSynchronizationHeaderRPC,
 	introHeaderRPC
-} from './protocolHeaderRPCs.js';
+} from '#udsp/rpc/headerRPC';
 import {
 	discoveryRPC,
 	endRPC,
 	extendedSynchronizationRPC,
 	introRPC
-} from './protocolFrameRPCs.js';
+} from '#udsp/rpc/frameRPC';
 import {
 	isArray,
 	isNotNumber,
 	isUndefined,
 	noValue
 } from '@universalweb/acid';
-import { destroy } from './request/destroy.js';
 export async function proccessProtocolHeader(rpc, source, header, packetDecoded, rinfo) {
 	switch (rpc) {
 		// Hello Packet
@@ -84,7 +83,7 @@ export async function proccessProtocolFrame(rpc, source, frame, header, rinfo) {
 			break;
 		}
 		default: {
-			console.trace('Unknown Protocol Packet', frame, header, rinfo);
+			source.logInfo('Unknown Protocol RPC', frame, header, rinfo);
 			source.end(frame, header, rinfo);
 			break;
 		}

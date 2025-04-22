@@ -10,7 +10,7 @@ import {
 	isString
 } from '@universalweb/acid';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
-import { keychainGet, keychainSave } from '../udsp/certificate/keychain.js';
+import { keychainGet, keychainSave } from '#components/certificate/keychain';
 import {
 	logError,
 	logInfo,
@@ -18,8 +18,8 @@ import {
 	logVerbose,
 	logWarning
 } from '#utilities/classLogMethods';
-import { read, readStructured, write } from '../utilities/file.js';
-import { profileVersion } from '../profile/defaults.js';
+import { read, readStructured, write } from '#utilities/file';
+import { cryptoIDVersion } from '#components/cryptoID/defaults';
 import viat from '#crypto/cipherSuite/viat.js';
 export class CryptoID {
 	constructor(config, optionalArg) {
@@ -29,7 +29,7 @@ export class CryptoID {
 		return this.initialize(config, optionalArg);
 	}
 	cipherSuite = viat;
-	version = profileVersion;
+	version = cryptoIDVersion;
 	cipherSuiteId = this.cipherSuite.id;
 	async initialize(config, optionalArg) {
 		if (isString(config)) {
@@ -189,7 +189,7 @@ export class CryptoID {
 		const signature = await this.sign(certificateData, this.signatureKeypair);
 		return signature;
 	}
-	profileVersion = profileVersion;
+	cryptoIDVersion = cryptoIDVersion;
 	async generateAddress() {
 		const publicKeyCombined = Buffer.concat(this.signatureKeypair.publicKey);
 		const address = this.cipherSuite.hash.hash512(publicKeyCombined);
