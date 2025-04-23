@@ -17,7 +17,7 @@ import {
 	logSuccess,
 	logVerbose,
 	logWarning
-} from '#utilities/classLogMethods';
+} from '#utilities/logs/classLogMethods';
 import { read, readStructured, write } from '#utilities/file';
 import { cryptoIDVersion } from '#components/cryptoID/defaults';
 import viat from '#crypto/cipherSuite/viat.js';

@@ -1,5 +1,5 @@
 // GATHER SYSTEM INFORMATION
-import { infoLog, verboseLog } from './logs.js';
+import { infoLog, verboseLog } from './logs/logs.js';
 import os from 'os';
 import osUtils from 'os-utils';
 import { promise } from '@universalweb/acid';

@@ -6,7 +6,7 @@ import {
 	logSuccess,
 	logVerbose,
 	logWarning
-} from '../../utilities/classLogMethods.js';
+} from '../../utilities/logs/classLogMethods.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { encode } from '#utilities/serialize';
 import { getConnectionIdReservedSpaceString } from '../utilities/connectionId.js';

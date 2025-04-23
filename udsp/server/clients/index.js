@@ -39,7 +39,7 @@ import {
 	logSuccess,
 	logVerbose,
 	logWarning
-} from '../../../utilities/classLogMethods.js';
+} from '../../../utilities/logs/classLogMethods.js';
 import {
 	randomBuffer,
 	toHex,

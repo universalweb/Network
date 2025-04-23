@@ -54,7 +54,7 @@
 				"./utilities/watch.js"
 			],
 			"#logs": [
-				"./utilities/logs.js"
+				"utilities/logs/logs.js"
 			],
 			"#cleanPath": [
 				"./utilities/cleanPath.js"

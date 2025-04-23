@@ -33,7 +33,7 @@ import {
 	logSuccess,
 	logVerbose,
 	logWarning
-} from '../../utilities/classLogMethods.js';
+} from '../../utilities/logs/classLogMethods.js';
 import { dataPacketization } from './dataPacketization.js';
 import { destroy } from './destroy.js';
 import { onData } from './on/onData.js';

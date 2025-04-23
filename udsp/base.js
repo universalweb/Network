@@ -11,7 +11,7 @@ import {
 	logSuccess,
 	logVerbose,
 	logWarning
-} from '#utilities/classLogMethods';
+} from '#utilities/logs/classLogMethods';
 import { randomBuffer, toBase64 } from '#utilities/cryptography/utils';
 import { calculatePacketOverhead } from './utilities/calculatePacketOverhead.js';
 import { currentVersion } from '../defaults.js';

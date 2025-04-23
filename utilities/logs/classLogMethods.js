@@ -7,7 +7,7 @@ import {
 	successLog,
 	verboseLog,
 	warningLog
-} from '#logs';
+} from '#utilities/logs/logs';
 import { isUndefined } from '@universalweb/acid';
 export function consoleLog(source, loglevel, err, logFunction = console.log) {
 	// Remove for production
