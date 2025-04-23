@@ -100,20 +100,21 @@ export class Base {
 			this.totalIncomingDataSize = dataSize;
 		}
 	}
-	setHead() {
+	// TODO: ADD EVENT FOR WHEN HEADERS ARE COMPLETED TO RUN LOGIC BEFORE DATA ARRIVES
+	async setHead() {
 		clear(this.incomingHeadPackets);
 		let head;
 		if (this.incomingHead?.length) {
 			const headCompiled = Buffer.concat(this.incomingHead);
 			clearBuffer(this.incomingHead);
-			head = decode(headCompiled);
+			head = await decode(headCompiled);
 			headCompiled.fill(0);
 			if (isUndefined(head)) {
 				console.trace('Header decode failed');
 				return this.destroy('Header decode failed');
 			}
 			if (isPlainObject(head)) {
-				this.setHeaderDetails(head);
+				await this.setHeaderDetails(head);
 			}
 			this.logInfo('HEAD SET', head);
 		} else {
@@ -127,12 +128,13 @@ export class Base {
 		this.readyState = 2;
 		this.headAssembled = true;
 	}
-	setParameters() {
+	// TODO: ADD EVENT FOR WHEN Parameters ARE COMPLETED TO RUN LOGIC BEFORE DATA ARRIVES
+	async setParameters() {
 		clear(this.incomingParametersPackets);
 		if (this.incomingParameters?.length) {
 			const parametersCompiled = Buffer.concat(this.incomingParameters);
 			clearBuffer(this.incomingParameters);
-			this.parameters = decode(parametersCompiled);
+			this.parameters = await decode(parametersCompiled);
 			parametersCompiled.fill(0);
 			if (isUndefined(this.parameters)) {
 				console.trace('parameters decode failed');
@@ -146,13 +148,14 @@ export class Base {
 		this.parametersAssembled = true;
 		this.sendHeadReady();
 	}
-	setPath() {
+	// TODO: ADD EVENT FOR WHEN PATH IS COMPLETED TO RUN LOGIC BEFORE DATA ARRIVES
+	async setPath() {
 		clear(this.incomingPathPackets);
 		if (this.incomingPath?.length) {
 			this.logInfo('Assemble Path', this.incomingPath);
 			const pathCompiled = Buffer.concat(this.incomingPath);
 			clearBuffer(this.incomingPath);
-			this.path = decode(pathCompiled);
+			this.path = await decode(pathCompiled);
 			pathCompiled.fill(0);
 			if (isUndefined(this.path)) {
 				console.trace('path decode failed');
@@ -178,7 +181,7 @@ export class Base {
 			return;
 		}
 		this.logInfo('pathPacketization', source.path);
-		this.outgoingPath = encode(source.path);
+		this.outgoingPath = await encode(source.path);
 		this.outgoingPathSize = this.outgoingPath.length;
 		this.logInfo('outgoingPathSize', this.outgoingPathSize);
 		let currentBytePosition = 0;
@@ -214,7 +217,7 @@ export class Base {
 			return;
 		}
 		this.logInfo('parametersPacketization', source.parameters);
-		this.outgoingParameters = encode(source.parameters);
+		this.outgoingParameters = await encode(source.parameters);
 		this.outgoingParametersSize = this.outgoingParameters.length;
 		this.logInfo('outgoingParameterSize', this.outgoingParametersSize);
 		let currentBytePosition = 0;
@@ -250,7 +253,7 @@ export class Base {
 			return;
 		}
 		this.logInfo('headPacketization', source.head);
-		this.outgoingHead = encode(source.head);
+		this.outgoingHead = await encode(source.head);
 		this.outgoingHeadSize = this.outgoingHead.length;
 		this.logInfo('outgoingHeadSize', this.outgoingHeadSize);
 		let currentBytePosition = 0;
@@ -282,11 +285,11 @@ export class Base {
 		if (source.data) {
 			this.outgoingData = source.data;
 			if (!isBuffer(source.data)) {
-				this.setHeader('serialize');
-				this.outgoingData = encode(source.data);
+				await this.setHeader('serialize');
+				this.outgoingData = await encode(source.data);
 			}
 			this.outgoingDataSize = this.outgoingData.length;
-			this.setHeader('dataSize', this.outgoingData.length);
+			await this.setHeader('dataSize', this.outgoingData.length);
 			await dataPacketization(this);
 		}
 	}

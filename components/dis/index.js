@@ -2,7 +2,7 @@
 // This module provides functions to manage and retrieve information about domain certificates.
 import { currentPath } from '@universalweb/acid';
 import os from 'os';
-import { publicDomainCertificate } from '../certificate/domain.js';
+import { publicDomainCertificate } from '#components/certificate/domain';
 const homeDirectory = os.homedir();
 // const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // console.log(timeZone);

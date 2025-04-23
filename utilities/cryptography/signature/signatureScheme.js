@@ -172,7 +172,7 @@ export class SignatureScheme {
 		return encodeStrict(targetArray);
 	}
 	async initializeBinary(source) {
-		const targetArray = decode(source);
+		const targetArray = await decode(source);
 		const target = {
 			publicKey: targetArray[0],
 			privateKey: targetArray[1]

@@ -31,11 +31,8 @@ export class Cipher {
 	}
 	async encrypt(message, sessionKey, ad, nonce) {
 		try {
-			const encrypted = this.encryptMethod(message, ad, nonce, sessionKey?.transmitKey || sessionKey);
-			return Buffer.concat([
-				nonce,
-				encrypted
-			]);
+			const encrypted = await this.encryptMethod(message, sessionKey?.transmitKey || sessionKey, ad, nonce);
+			return encrypted;
 		} catch (e) {
 			return;
 		}
@@ -45,7 +42,7 @@ export class Cipher {
 			const encryptedPayloadLength = encrypted.length;
 			const nonce = nonceArg || encrypted.subarray(0, this.nonceSize);
 			const encryptedMessage = (nonceArg && encrypted) || encrypted.subarray(this.nonceSize, encryptedPayloadLength);
-			const message = this.decryptMethod(encryptedMessage, ad, nonce, sessionkey?.receiveKey || sessionkey);
+			const message = await this.decryptMethod(encryptedMessage, sessionkey?.receiveKey || sessionkey, ad, nonce);
 			return message;
 		} catch (e) {
 			return;

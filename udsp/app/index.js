@@ -19,8 +19,8 @@ function workerReady(worker) {
 	worker.process.send('registered');
 	console.log('worker is READY:', worker.id);
 }
-function workerOnMessage(workers, worker, msg) {
-	const decodedMessage = decode(msg);
+async function workerOnMessage(workers, worker, msg) {
+	const decodedMessage = await decode(msg);
 	const [
 		eventName,
 		data

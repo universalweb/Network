@@ -9,7 +9,7 @@ export async function processParameters() {
 	} = this;
 	this.logInfo('incomingParametersPackets', this.incomingParametersPackets);
 	if (this.totalIncomingParametersSize === this.currentIncomingParametersSize) {
-		this.setParameters();
+		await this.setParameters();
 	} else {
 		eachArray(this.incomingParametersPackets, (item, index) => {
 			if (!item) {

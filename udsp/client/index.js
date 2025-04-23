@@ -56,7 +56,7 @@ import { onListening } from './methods/listening.js';
 import { onPacket } from './methods/onPacket.js';
 import { onSocketError } from './methods/onSocketError.js';
 import { post } from '../requestMethods/post.js';
-import { publicDomainCertificate } from '../../components/certificate/domain.js';
+import { publicDomainCertificate } from '#components/certificate/domain';
 import { setDefaults } from './methods/setDefaults.js';
 import { setDestination } from './methods/setDestination.js';
 import { uwRequest } from '#udsp/requestMethods/request';

@@ -11,21 +11,21 @@ export async function attachDefaultHeaders(reply) {
 		},
 	} = this;
 	if (cacheMaxAge) {
-		reply.setHeader('cacheMaxAge', cacheMaxAge);
+		await reply.setHeader('cacheMaxAge', cacheMaxAge);
 	}
 	if (allowOrigin) {
-		reply.setHeader('allowOrigin', allowOrigin);
+		await reply.setHeader('allowOrigin', allowOrigin);
 	}
 	if (contentSecurityPolicy) {
-		reply.setHeader('contentSecurityPolicy', contentSecurityPolicy);
+		await reply.setHeader('contentSecurityPolicy', contentSecurityPolicy);
 	}
 	if (serverName) {
-		reply.setHeader('serverName', serverName);
+		await reply.setHeader('serverName', serverName);
 	}
 	if (domain) {
-		reply.setHeader('domain', domain);
+		await reply.setHeader('domain', domain);
 	}
 	if (crossOriginPolicy) {
-		reply.setHeader('crossOriginPolicy', crossOriginPolicy);
+		await reply.setHeader('crossOriginPolicy', crossOriginPolicy);
 	}
 }

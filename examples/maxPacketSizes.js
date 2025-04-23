@@ -33,13 +33,13 @@ export async function createServerIntroPacket() {
 		// Version
 		1
 	];
-	const frame = encode(frameArray);
+	const frame = await encode(frameArray);
 	const encrypted = await encrypt(frame, newEccKey, frame);
 	// KEEP UNDER 1280
 	// Kyber CipherDATA (1088) is smaller than PublicKey (1184)
 	// 1197 bytes with encryption overhead
 	// 32 Is classical ECC Public Key
-	console.log(encode([header, encrypted]).length, cipherData.length);
+	console.log(await encode([header, encrypted]).length, cipherData.length);
 }
 await createServerIntroPacket();
 export async function createClientIntroPacket() {
@@ -54,6 +54,7 @@ export async function createClientIntroPacket() {
 	];
 	// KEEP UNDER 1280
 	// MAX ESTIMATE 1241 bytes with encryption overhead (NOT ALL CLIENT INTRO IS ENCRYPTED)
-	console.log(encode([header]).length + overhead, kyber768.publicKeySize);
+	const frame = await encode([header]);
+	console.log(frame.length + overhead, kyber768.publicKeySize);
 }
 await createClientIntroPacket();

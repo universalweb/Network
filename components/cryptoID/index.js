@@ -83,7 +83,7 @@ export class CryptoID {
 	}
 	async importFromBinary(data, encryptionKey) {
 		const password = (isString(encryptionKey)) ? await this.cipherSuite.hash.hash256(Buffer.from(encryptionKey)) : encryptionKey;
-		const decodedData = (password) ? await this.decryptBinary(data, password) : decode(data);
+		const decodedData = (password) ? await this.decryptBinary(data, password) : await decode(data);
 		await this.importFromObject(decodedData, password);
 		return this;
 	}
@@ -125,14 +125,17 @@ export class CryptoID {
 			cipherSuiteId
 		};
 		assign(data, await this.exportKeypairs());
-		const dataEncoded = encodeStrict(data);
+		const dataEncoded = await encodeStrict(data);
 		if (encryptionKey) {
 			const password = (isString(encryptionKey)) ? await this.cipherSuite.hash.hash256(Buffer.from(encryptionKey)) : encryptionKey;
 			const encryptedData = await this.cipherSuite.encryption.encrypt(dataEncoded, password);
+			// TODO: CHANGE FORMAT VERSION IS FOUND TWICE? Add timestamp and additional metadata?
 			const encryptedObject = {
+				version,
 				encrypted: encryptedData,
 			};
-			return encodeStrict(encryptedObject);
+			return console.log(encryptedObject);
+			// return encodeStrict(encryptedObject);
 		}
 		return dataEncoded;
 	}
@@ -213,7 +216,7 @@ export default cryptoID;
 // const dirname = currentPath(import.meta);
 const exampleCryptoIDExample = await cryptoID();
 // const encryptionPasswordExample = 'password';
-console.log(exampleCryptoIDExample);
+console.log(await exampleCryptoIDExample.exportBinary('password'));
 // const exportedKeypairs = await exampleCryptoIDExample.exportKeypairs();
 // console.log(exportedKeypairs);
 // console.log(`Version: ${exampleProfileExample.version}`);

@@ -23,7 +23,7 @@ async function keygen() {
 }
 async function encryptMethod(message, sessionkeys, ad, nonceArg) {
 	const encrypted = bufferAlloc(message.length + additionalBytesSize);
-	const nonce = (nonceArg) ? randomize(nonceArg) : this.createNonce();
+	const nonce = (nonceArg) ? randomize(nonceArg) : await this.createNonce();
 	crypto_aead_xchacha20poly1305_ietf_encrypt(encrypted, message, ad, null, nonce, sessionkeys?.transmitKey || sessionkeys);
 	return Buffer.concat([
 		nonce,

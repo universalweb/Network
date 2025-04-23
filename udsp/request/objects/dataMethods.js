@@ -64,7 +64,7 @@ export const objectDataMethods = {
 			}
 			return target;
 		},
-		serialize(cache) {
+		async serialize(cache) {
 			if (noValue(this.dataBuffer)) {
 				return;
 			}
@@ -73,13 +73,13 @@ export const objectDataMethods = {
 					return this.serializeCached;
 				}
 			}
-			const target = decode(this.data);
+			const target = await decode(this.data);
 			if (cache) {
 				this.serializeCached = target;
 			}
 			return target;
 		},
-		decode(cache) {
+		async decode(cache) {
 			if (noValue(this.dataBuffer)) {
 				return;
 			}
@@ -100,7 +100,7 @@ export const objectDataMethods = {
 					return this.toJSON(cache);
 				}
 			}
-			let target = decode(this.data);
+			let target = await decode(this.data);
 			if (isUndefined(target)) {
 				target = this.data;
 			}

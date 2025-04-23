@@ -30,7 +30,7 @@ export async function getMethod(req, resp, appServer) {
 	} = req;
 	if (!isString(filePath) || isEmpty(filePath)) {
 		console.log('No fileName - Returning empty data');
-		resp.setHeader('status', 404);
+		await resp.setHeader('status', 404);
 		resp.send();
 		return true;
 	}
@@ -46,10 +46,10 @@ export async function getMethod(req, resp, appServer) {
 		const fileData = await read(cleanedPath);
 		const ext = path.extname(cleanedPath).replace('.', '');
 		console.log(`EXT => ${ext}`);
-		resp.setHeader('contentType', ext);
+		await resp.setHeader('contentType', ext);
 		resp.data = fileData;
 	} catch (err) {
-		resp.setHeader('status', 404);
+		await resp.setHeader('status', 404);
 	} finally {
 		resp.send();
 	}

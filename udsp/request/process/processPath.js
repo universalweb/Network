@@ -11,7 +11,7 @@ export async function processPath() {
 	this.logInfo('incomingPathPackets', this.incomingPathPackets);
 	this.logInfo('incomingPath', incomingPath);
 	if (this.totalIncomingPathSize === this.currentIncomingPathSize) {
-		this.setPath();
+		await this.setPath();
 		this.sendParametersReady();
 	} else {
 		eachArray(this.incomingPathPackets, (item, index) => {

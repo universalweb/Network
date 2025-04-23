@@ -41,12 +41,12 @@ export async function createPacket(message, source, destination, headers, footer
 	} else {
 		source.logInfo(`Decode Server Packet with cid: ${id.toString('hex')}`);
 	}
-	const headerEncoded = shortHeaderMode ? header : encode(header);
+	const headerEncoded = shortHeaderMode ? header : await encode(header);
 	const transmitKey = source?.transmitKey;
 	let packetEncoded;
 	if (message && transmitKey) {
 		source.logInfo(`Transmit Key ${toBase64(transmitKey)}`);
-		const messageEncoded = encode(message);
+		const messageEncoded = await encode(message);
 		const ad = headerEncoded;
 		const encryptedMessage = await cipher.encrypt(messageEncoded, transmitKey, ad, nonce);
 		this.logsource.logInfo('nonce used', nonce);

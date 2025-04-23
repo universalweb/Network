@@ -18,7 +18,7 @@ import {
 import dis from '#components/dis/index';
 import { resolve } from 'path';
 import { write } from '#utilities/file';
-export class UWCertificate {
+export class Certificate {
 	constructor(config) {
 		return this.initialize(config);
 	}
@@ -121,12 +121,12 @@ export class UWCertificate {
 		const publicCertificate = await this.getPublic();
 		return encodeStrict(publicCertificate);
 	}
-	encode() {
+	async encode() {
 		return encodeStrict(this.object);
 	}
 	async save(certificateName, savePath) {
 		const saved = await this.saveToFile({
-			certificate: this.encode(),
+			certificate: await this.encode(),
 			savePath,
 			certificateName
 		});
@@ -162,7 +162,8 @@ export class UWCertificate {
 		} = config;
 		const savePathRoot = `${resolve(`${savePath}`)}/${certificateName}`;
 		const fileName = hasDot(savePathRoot) ? savePathRoot : `${savePathRoot}.cert`;
-		const result = await write(fileName, isBuffer(certificate) ? certificate : encodeStrict(certificate), 'binary', true);
+		const contents = isBuffer(certificate) ? certificate : await encodeStrict(certificate);
+		const result = await write(fileName, contents, 'binary', true);
 		return result;
 	}
 	async findRecord(recordType, hostname) {

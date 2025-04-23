@@ -97,17 +97,19 @@ export class Server extends UDSP {
 	createClient = createServerClient;
 	removeClient = removeClient;
 	// CHANGE FUNCTION TO RESPOND TO REQUESTS
-	// TODO: ADD DEFAULT METHODS TO THIS FOR BUILT IN SUPPORT
+	// TODO: CONSIDER DEFAULT METHODS TO THIS FOR BUILT IN SUPPORT FOR BASE SERVER OBJECT NOT JUST APP
 	async onRequest(request, response, client) {
-		this.logInfo('onRequest', request, response, client);
+		this.logInfo('onRequest', request, response);
 	}
-	updateWorkerState() {
+	// TODO: Make this throttled - state doesn't have to be exact just near accurate for loadbalancing
+	async updateWorkerState() {
 		this.syncWorkerState();
 	}
-	syncWorkerState() {
+	// TODO: Make this throttled - state doesn't have to be exact just near accurate for loadbalancing
+	async syncWorkerState() {
 		const { clientCount } = this;
 		this.logInfo(`Client count ${clientCount}`);
-		process.send(encode([
+		process.send(await encode([
 			'state',
 			{
 				clientCount

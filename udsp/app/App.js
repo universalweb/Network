@@ -68,7 +68,7 @@ export class App {
 		}
 		// ADD ALGO TO CHOOSE ONLY VIABLE WORKERS
 		const worker = this.workers[workerId];
-		const passMessage = encode([
+		const passMessage = await encode([
 			packet,
 			connection
 		]);

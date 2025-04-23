@@ -116,7 +116,7 @@ export function getAddressStringFromBuffer(source) {
 // const portNumber = 65535;
 // const exampleBuffer = Buffer.concat([ipStringToBuffer(example1), portNumberToBuffer(portNumber)]);
 // console.log(getAddressStringFromBuffer(exampleBuffer));
-// const binaryEncoded = encode(example);
+// const binaryEncoded = await encode(example);
 // console.log(binaryEncoded.length);
 // console.log(Buffer.from(example).length);
 // console.log(ipBuffer(example).length);

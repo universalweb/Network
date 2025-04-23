@@ -43,9 +43,10 @@ export async function decodePacketHeaders(config) {
 	}
 	const client = config.client;
 	destination.logInfo(`Packet Encoded Size ${packetSize}`);
-	const packet = decode(packetEncoded);
+	const packet = await decode(packetEncoded);
 	if (isUndefined(packet)) {
-		console.trace('Packet decode failed');
+		destination.logError('Packet decode failed', packet);
+		// TODO: Add support to block connection Ids and or IPs
 		return;
 	}
 	config.packet = packet;
@@ -54,11 +55,9 @@ export async function decodePacketHeaders(config) {
 	const isShortHeaderMode = isBuffer(packet);
 	config.isShortHeaderMode = isShortHeaderMode;
 	config.packetDecoded = {};
-	if (isShortHeaderMode) {
-		destination.logInfo(`ShortHeaderMode Size ${packet.length}`);
-	}
 	let headerEncoded;
 	if (isShortHeaderMode) {
+		destination.logInfo(`ShortHeaderMode Size ${packet.length}`);
 		headerEncoded = packet.subarray(0, connectionIdSize);
 	} else {
 		headerEncoded = packet[0];
@@ -119,7 +118,7 @@ export async function decodePacket(config) {
 		destination.logInfo(`Receive Key ${toHex(receiveKey)}`);
 		destination.logInfo(packet, packetDecoded);
 		destination.logInfo(`encrypted Message size ${messageEncoded.length}bytes`);
-		const ad = isShortHeaderMode ? headerEncoded : encode(headerEncoded);
+		const ad = isShortHeaderMode ? headerEncoded : await encode(headerEncoded);
 		destination.logInfo('decrypt op', messageEncoded, receiveKey, ad);
 		const decryptedMessage = await cipher.decrypt(messageEncoded, receiveKey, ad);
 		if (isUndefined(decryptedMessage)) {
@@ -127,7 +126,7 @@ export async function decodePacket(config) {
 			return;
 		}
 		destination.logInfo(`decrypted Message size ${decryptedMessage.length} BYTES`);
-		const message = decode(decryptedMessage);
+		const message = await decode(decryptedMessage);
 		if (isUndefined(message)) {
 			console.trace('Message Decrypt or Decode failed');
 		}

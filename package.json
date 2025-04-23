@@ -135,6 +135,7 @@
 		},
 		"onlyBuiltDependencies": [
 			"cbor-extract",
+			"cbor-x",
 			"core-js",
 			"electron",
 			"msgpackr-extract",

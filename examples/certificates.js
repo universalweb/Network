@@ -1,12 +1,12 @@
 import { cryptoID } from '#components/cryptoID/index';
 import { currentPath } from '@universalweb/acid';
 import { decode } from '#utilities/serialize';
-import { domainCertificate } from '#udsp/certificate/index';
+import { domainCertificate } from '#components/certificate/index';
 const dirname = currentPath(import.meta);
 const uwProfile = await cryptoID();
 await uwProfile.saveToFile('profile.cert', `${dirname}/profiles`, 'password');
 await uwProfile.saveToKeychain('profile.cert', `${dirname}/profiles`, 'password');
-const UWCertificate = await domainCertificate({
+const domainCert = await domainCertificate({
 	entity: 'universalweb.io',
 	// ownerHash: profile.getSignature(),
 	signatureAlgorithm: 0,
@@ -41,11 +41,11 @@ const UWCertificate = await domainCertificate({
 		],
 	],
 });
-console.log(UWCertificate);
-await UWCertificate.save('universalWeb.cert', `${dirname}/../serverApp/certs`);
-await UWCertificate.savePublic('universalWebPublic.cert', `${dirname}/../serverApp/certs`);
-// TODO: DECIDE DEFAULT FOLDER
-await UWCertificate.savePublic('universalWebPublic.cert', `${dirname}/../udsp/dis/cache`);
-const cert = await domainCertificate(`${dirname}/../serverApp/certs/universalWebPublic.cert`);
-console.log(cert);
-console.log(cert.object.keyExchangeKeypair.publicKey.length);
+console.log(domainCert);
+// await domainCert.save('universalWeb.cert', `${dirname}/../serverApp/certs`);
+// await domainCert.savePublic('universalWebPublic.cert', `${dirname}/../serverApp/certs`);
+// // TODO: DECIDE DEFAULT FOLDER
+// await domainCert.savePublic('universalWebPublic.cert', `${dirname}/../udsp/dis/cache`);
+// const cert = await domainCertificate(`${dirname}/../serverApp/certs/universalWebPublic.cert`);
+// console.log(cert);
+// console.log(cert.object.keyExchangeKeypair.publicKey.length);

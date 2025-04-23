@@ -93,7 +93,7 @@ export async function createKeypair() {
 	};
 }
 export async function initializeKeypair(sourceArg) {
-	const source = (isBuffer(sourceArg)) ? decode(sourceArg) : sourceArg;
+	const source = (isBuffer(sourceArg)) ? await decode(sourceArg) : sourceArg;
 	const target = assign({}, source);
 	const ed25519 = await getEd25519Keypair(target);
 	const dilithium = await getDilithiumKeypair(target);
@@ -148,7 +148,7 @@ export async function signPartial(message, source) {
 	return encodeStrict(signatureArray);
 }
 export async function verifyEach(signatureArg, message, source) {
-	const signature = (isBuffer(signatureArg)) ? decode(signatureArg) : signatureArg;
+	const signature = (isBuffer(signatureArg)) ? await decode(signatureArg) : signatureArg;
 	if (!isArray(signature)) {
 		return false;
 	}
@@ -245,11 +245,11 @@ export default viat;
 // const msg = Buffer.from('hello world');
 // console.log(exported.publicKey.length, exported.privateKey.length);
 // const sig = await viat.sign(msg, key);
-// console.log('signature', sig.length, decode(sig));
+// console.log('signature', sig.length, await decode(sig));
 // console.log(await viat.verify(sig, msg, key));
 // const imported = await viat.initializeKeypair(exported);
 // console.log('imported', imported);
 // console.log(await viat.verify(sig, msg, imported));
 // const sig2 = await viat.sign(msg, imported);
-// console.log('sig2', sig2.length, decode(sig2));
+// console.log('sig2', sig2.length, await decode(sig2));
 // console.log(await viat.verifyPartial(sig, msg, imported));

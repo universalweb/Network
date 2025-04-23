@@ -14,7 +14,7 @@ import {
 import { decode, encodeStrict } from '#utilities/serialize';
 import { getCipher, getKeyExchangeAlgorithm, getSignatureAlgorithm } from '#crypto/index.js';
 import { read, readStructured, write } from '#file';
-import { UWCertificate } from './UWCertificate.js';
+import { Certificate } from './certificate.js';
 import certificateDefaults from './defaults.js';
 import { keychainSave } from '#components/certificate/keychain';
 import protocolDefaults from '../../udsp/defaults.js';
@@ -232,7 +232,7 @@ export async function rawToObjectDomainCertificate(rawObject, selfSignature, sig
 	// console.log(certificate);
 	return certificate;
 }
-export class DomainCertificate extends UWCertificate {
+export class DomainCertificate extends Certificate {
 	async initialize(config) {
 		if (isPlainObject(config)) {
 			this.object = await createDomainCertificateObject(config);
@@ -244,7 +244,7 @@ export class DomainCertificate extends UWCertificate {
 			this.array = config;
 			this.object = await rawToObjectDomainCertificate(config);
 		} else if (isBuffer(config)) {
-			const source = decode(config);
+			const source = await decode(config);
 			await this.processAsObject(source);
 		}
 		return this;
@@ -281,7 +281,7 @@ export class DomainCertificate extends UWCertificate {
 export async function domainCertificate(...args) {
 	return new DomainCertificate(...args);
 }
-export class PublicDomainCertificate extends UWCertificate {
+export class PublicDomainCertificate extends Certificate {
 	async initialize(config) {
 		const source = isString(config) ? await readStructured(config) : config;
 		const sourceDecoded = isBuffer(source) ? await decode(source) : source;
@@ -305,7 +305,7 @@ export class PublicDomainCertificate extends UWCertificate {
 		const signatureKeypair = this.signatureKeypairInstance || await this.signatureAlgorithm.initializeKeypair(signatureKeypairObject);
 		// console.log('signatureKeypair', signatureKeypair);
 		const selfSignature = this.object.selfSignature;
-		const encodedCertificate = encodeStrict(this.array);
+		const encodedCertificate = await encodeStrict(this.array);
 		// console.log('encodedCertificate', encodedCertificate);
 		const signatureMethod = await this.signatureAlgorithm;
 		const verifyStatus = await signatureMethod.verifySignature(selfSignature, encodedCertificate, signatureKeypair);

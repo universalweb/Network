@@ -18,6 +18,7 @@ const {
 	crypto_aead_aegis256_NSECBYTES,
 } = _sodium;
 import cipher from './cipher.js';
+import { isU8 } from '@universalweb/acid';
 export const sessionKeySize = crypto_aead_aegis256_KEYBYTES;
 export const secretKeySize = crypto_aead_aegis256_KEYBYTES;
 export const nonceSize = crypto_aead_aegis256_NPUBBYTES;
@@ -27,18 +28,20 @@ export async function keygen() {
 	const secretKey = await crypto_aead_aegis256_keygen();
 	return secretKey;
 }
-export async function encryptMethod(message, sessionkeys, ad, nonceArg) {
-	const nonce = (nonceArg) ? randomize(nonceArg) : this.createNonce();
-	const encrypted = crypto_aead_aegis256_encrypt(message, ad, null, nonce, sessionkeys?.transmitKey || sessionkeys, null);
+export async function encryptMethod(message, sessionKey, ad, nonceArg) {
+	const nonce = (nonceArg) ? randomize(nonceArg) : await this.createNonce();
+	const encrypted = crypto_aead_aegis256_encrypt(message, ad, null, Uint8Array.from(nonce), sessionKey, null);
 	return Buffer.concat([
 		nonce,
 		encrypted
 	]);
 }
-export async function decryptMethod(encryptedData, sessionKey, ad, nonceArg) {
+export async function decryptMethod(encryptedData, sessionKey, adArg, nonceArg) {
 	const encrypted = (nonceArg) ? encryptedData : encryptedData.subarray(nonceSize);
 	const nonce = (nonceArg) ? nonceArg : encryptedData.subarray(0, nonceSize);
-	const message = crypto_aead_aegis256_decrypt(null, encrypted, ad, nonce, sessionKey?.receiveKey || sessionKey);
+	const ad = (isU8(adArg)) ? adArg : Uint8Array.from(adArg);
+	// TODO: CLEAN THIS UP to take out from unless needed
+	const message = crypto_aead_aegis256_decrypt(null, Uint8Array.from(encrypted), ad, Uint8Array.from(nonce), sessionKey);
 	if (message) {
 		return message;
 	} else {

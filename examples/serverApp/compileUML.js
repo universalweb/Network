@@ -94,7 +94,7 @@ const packedDataStructure = await convertHtmlToMsgPack(htmlContent);
 // 	depth: null,
 // 	colors: true
 // });
-const packedData = encodeStrict(packedDataStructure);
+const packedData = await encodeStrict(packedDataStructure);
 console.log('UML uncompressed size:', packedData.length);
 console.log('RAW HTML SIZE', htmlFile.length);
 const compressedString = zlib.brotliCompressSync(htmlFile);
@@ -109,7 +109,7 @@ const compressOptions = {
 };
 const compressedUML = zlib.brotliCompressSync(packedData);
 const decompress = zlib.brotliDecompressSync(compressedUML);
-const decoded = decode(decompress);
+const decoded = await decode(decompress);
 console.log('compressedUML', compressedUML.length, decompress.length);
 // console.log(zlib.gzipSync(packedData, compressOptions).length);
 // console.log(decoded[1]);

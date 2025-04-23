@@ -10,7 +10,7 @@ export async function processHead() {
 	} = this;
 	this.logInfo('incomingHeadPackets', this.incomingHeadPackets);
 	if (this.totalIncomingHeadSize === this.currentIncomingHeadSize) {
-		this.setHead();
+		await this.setHead();
 		this.sendDataReady();
 	} else {
 		eachArray(this.incomingHeadPackets, (item, index) => {
