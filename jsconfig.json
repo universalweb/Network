@@ -2,6 +2,9 @@
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {
+			"#viat/*": [
+				"./viat/*.js"
+			],
 			"#utilities/*": [
 				"./utilities/*.js"
 			],

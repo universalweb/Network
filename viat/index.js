@@ -1,2 +1,2 @@
-import { Wallet, wallet } from './wallet.js';
+import { Wallet, wallet } from './wallet/wallet.js';
 export { Wallet, wallet };

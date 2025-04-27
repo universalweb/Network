@@ -2,13 +2,13 @@
 import { decode, encode } from '#utilities/serialize';
 import { CryptoID } from '#components/cryptoID/index';
 import { isBuffer } from '@universalweb/acid';
-import viat from '#crypto/cipherSuite/viat.js';
 export class Wallet extends CryptoID {
-	constructor(config = {}) {
-		const sourceInstance = super(config);
-		return this.walletInitialize(config);
+	constructor(config = {}, optionalArg) {
+		super(false);
+		return this.walletInitialize(config, optionalArg);
 	}
-	async walletInitialize(config) {
+	async walletInitialize(config, optionalArg) {
+		await this.initialize(config, optionalArg);
 		return this;
 	}
 }

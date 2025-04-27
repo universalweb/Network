@@ -17,8 +17,8 @@ import { introHeaderRPC } from '#udsp/rpc/headerRPC';
 import { maxDefaultPacketSize } from '../utilities/calculatePacketOverhead.js';
 /**
 	* @TODO
-	* Add support to block connection Ids that are too large
-	* Add support to block connection Ids that are too small
+	* - Support other typed arrays not just buffers
+	* - Add support to block connection Ids invalid format
  */
 export async function decodePacketHeaders(config) {
 	const {
@@ -113,6 +113,7 @@ export async function decodePacket(config) {
 		return true;
 	}
 	const receiveKey = destination?.receiveKey;
+	// TODO: Add support for a shared generic like a TypedArray?
 	const hasEncryptedPayload = receiveKey && messageEncoded && isBuffer(messageEncoded) && hasLength(messageEncoded);
 	if (hasEncryptedPayload) {
 		destination.logInfo(`Receive Key ${toHex(receiveKey)}`);

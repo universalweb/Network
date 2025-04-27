@@ -30,7 +30,6 @@ export class CryptoID {
 	}
 	cipherSuite = viat;
 	version = cryptoIDVersion;
-	cipherSuiteId = this.cipherSuite.id;
 	async initialize(config, optionalArg) {
 		if (isString(config)) {
 			if (config.includes('/') || config.includes('\\') || hasDot(config)) {
@@ -60,7 +59,7 @@ export class CryptoID {
 			version,
 			signatureKeypair,
 			keyExchangeKeypair,
-			cipherSuiteId
+			cipherSuite
 		} = config;
 		if (signatureKeypair) {
 			this.signatureKeypair = signatureKeypair;
@@ -71,8 +70,8 @@ export class CryptoID {
 		if (version) {
 			this.version = version;
 		}
-		if (cipherSuiteId) {
-			this.cipherSuiteId = cipherSuiteId;
+		if (cipherSuite?.id) {
+			this.cipherSuiteId = cipherSuite.id;
 		}
 		await this.initializeKeypairs();
 	}
@@ -122,20 +121,15 @@ export class CryptoID {
 		} = this;
 		const data = {
 			version,
-			cipherSuiteId
+			cipherSuiteId,
+			date: Date.now(),
 		};
 		assign(data, await this.exportKeypairs());
 		const dataEncoded = await encodeStrict(data);
 		if (encryptionKey) {
 			const password = (isString(encryptionKey)) ? await this.cipherSuite.hash.hash256(Buffer.from(encryptionKey)) : encryptionKey;
 			const encryptedData = await this.cipherSuite.encryption.encrypt(dataEncoded, password);
-			// TODO: CHANGE FORMAT VERSION IS FOUND TWICE? Add timestamp and additional metadata?
-			const encryptedObject = {
-				version,
-				encrypted: encryptedData,
-			};
-			return console.log(encryptedObject);
-			// return encodeStrict(encryptedObject);
+			return encryptedData;
 		}
 		return dataEncoded;
 	}

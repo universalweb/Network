@@ -1,30 +1,88 @@
-import { construct, get } from '@universalweb/acid';
+import {
+	assign, construct, get, isPlainObject, isString
+} from '@universalweb/acid';
 import blockDefaults from './defaults.js';
+import { encodeStrict } from '#utilities/serialize';
+import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 const {
 	version,
-	type
+	blockTypes
 } = blockDefaults;
 export class Block {
-	constructor(ver) {
-		if (ver) {
-			this.object.ver = ver;
+	constructor(config) {
+		this.setDefaults();
+		if (config?.block.data?.meta) {
+			assign(this.block.data.meta, config.block.data.meta);
+		}
+		if (config?.block.data?.core) {
+			assign(this.block.data.core, config.block.data.core);
 		}
 	}
-	object = {
-		version,
-		type,
+	version = version;
+	blockType = blockTypes.abstractBlockType;
+	block = {
+		data: {
+			meta: {},
+			core: {}
+		}
 	};
+	setDefaults() {
+		this.setMeta('timestamp', Date.now());
+		this.setMeta('version', this.version);
+		this.setMeta('blockType', this.blockType);
+		this.setMeta('nonce', viatCipherSuite.createBlockNonce());
+	}
 	getVersion() {
-		return this.object.version;
+		return this.data.version;
 	}
 	getType() {
-		return this.object.type;
+		return this.data.type;
 	}
-	get(propertyName) {
-		return get(propertyName, this.object);
+	getCore(propertyName) {
+		if (propertyName) {
+			return get(propertyName, this.block.data.core);
+		}
+		return this.block.data.core;
 	}
-	set(propertyName, value) {
-		this.object[propertyName] = value;
+	setCore(propertyName, value) {
+		if (isString(propertyName)) {
+			this.block.data.core[propertyName] = value;
+		} else if (isPlainObject(propertyName)) {
+			assign(this.block.data.core, propertyName);
+		}
+		return this;
+	}
+	getMeta(propertyName) {
+		if (propertyName) {
+			return get(propertyName, this.block.data.meta);
+		}
+		return this.block.data.meta;
+	}
+	setMeta(propertyName, value) {
+		if (isString(propertyName)) {
+			this.block.data.meta[propertyName] = value;
+		} else if (isPlainObject(propertyName)) {
+			assign(this.block.data.meta, propertyName);
+		}
+		return this;
+	}
+	async exportDataBinary() {
+		return encodeStrict(this.block.data);
+	}
+	getHash() {
+		return this.hash;
+	}
+	getParentHash() {
+		return this.parentHash;
+	}
+	async getDataHash() {
+		const binary = await this.exportDataBinary();
+		return viatCipherSuite.hash.hash256(binary);
+	}
+	async setDataHash() {
+		const blockHash = await this.getDataHash();
+		this.block.hash = blockHash;
+		return this;
 	}
 }
 export function block(...args) {

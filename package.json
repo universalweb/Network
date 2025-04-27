@@ -58,6 +58,7 @@
 	"imports": {
 		"#server/*": "./udsp/server/*.js",
 		"#components/*": "./components/*.js",
+		"#viat/*": "./viat/*.js",
 		"#server": "./udsp/server/index.js",
 		"#serverApp/*": "./examples/serverApp/*.js",
 		"#utilities/*": "./utilities/*.js",

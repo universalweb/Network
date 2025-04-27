@@ -1,4 +1,4 @@
-import { DomainCertificate, PublicDomainCertificate } from '../../../components/certificate/domain.js';
+import { DomainCertificate, PublicDomainCertificate } from '#components/certificate/domain';
 export async function setCertificate() {
 	const {
 		options,
@@ -20,12 +20,12 @@ export async function setCertificate() {
 export async function configureCertificateCryptography() {
 	if (this.certificate) {
 		this.logInfo('CERTIFICATE CRYPTO CONFIG STARTING');
-		const keyExchangeKeypair = this.certificate.get('keyExchangeKeypair');
-		this.version = this.certificate.get('version');
+		this.version = await this.certificate.get('version');
 		await this.certificate.setCipherMethods();
 		await this.certificate.setKeyExchangeAlgorithm();
 		await this.certificate.setSignatureAlgorithm();
 		if (this.certificate.keyExchangeAlgorithm.initializeCertificateKeypair) {
+			const keyExchangeKeypair = await this.certificate.get('keyExchangeKeypair');
 			await this.certificate.keyExchangeAlgorithm.initializeCertificateKeypair(keyExchangeKeypair, this);
 		}
 		this.logInfo('CERTIFICATE CRYPTO CONFIG COMPLETE');

@@ -15,7 +15,7 @@ A NIC includes a CIN similar to a driving license including an identification nu
 EXAMPLE
 
 +------------------------------------------+
-|       Nexus Identification Card          |
+|    Cryptographic Identification Card     |
 +------------------------------------------+
 | CIN: X7K9-P2M4-Q8R1-5T3V...              |
 | Issued: 03-20-2025			           |
