@@ -6,8 +6,8 @@ const coinSmallestUnitName = 'units';
 const coinLargestUnitName = 'VIAT';
 const coinTicker = 'VIAT';
 const coinUnitName = 'VIAT';
-// whole:8  decimal:56 total:64
-// ultra-fine granularity for micropayments - 64-digit Ints
+// whole:8  decimal:56|69 total:64|77
+// Used for -> for micro payments, nano transactions, quantum payments (ultra-fine granularity transactions), High-Frequency Trading Fees, Low-Value Use Cases, Layer-2 or Batching, Counterparty Compatibility, atomic swaps, Viat Federal Reserve Deflationary Mechanism
 const coinDecimalPlaces = 69;
 const coinMaxSupplyDisplay = '52,000,000.0';
 const coinMaxWholeSupplyDisplay = '52000000';

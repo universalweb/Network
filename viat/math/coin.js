@@ -150,7 +150,7 @@ const mathUtils = {
 	subtract,
 	add
 };
-// TODO: SIMD/Bit ops instead
+// TODO: Consider SIMD/Bit ops instead
 function bigIntToBuffer(bigInt) {
 	if (isBigInt(bigInt)) {
 		return Buffer.from(bigInt.toString(16), 'hex');
