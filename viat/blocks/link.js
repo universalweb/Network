@@ -14,8 +14,7 @@ class LinkBlock extends Block {
 		super(config);
 		return this;
 	}
-	// Create Hash Link Block than can
-	//  link distant blocks together with a deterministic hash acting as a shared link
+	// Create Hash Link Block then can link distant blocks together with a deterministic hash acting as a shared link
 	async createHashLink(...blocks) {
 		const blockHashes = await mapAsyncArray(blocks, async (item) => {
 			return item.getHash();
