@@ -42,3 +42,4 @@ const viatDefaults = {
 };
 export default viatDefaults;
 // console.log(coinDigitCount);
+// MADE IN AMERICA
