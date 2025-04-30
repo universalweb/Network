@@ -6,7 +6,9 @@ There are two types of Viat miners - Auditors (validate) and Arbiters (verify). 
 
 2) The second type is an Auditor which verifies large sections of the Viat super structure. Auditors are similar to a traditional miner and pull Viat into circulation which they are rewarded with.
 
-This design is reflective of the individual specific blocks for specific actions to strive for as high as possible linear TPS and extreme scalability built into the file system itself. Keep in mind one block equals one transaction. I’m still considering allowing multiple transactions in one block but would be send transactions from the same wallet.
+This design is reflective of the individual specific blocks for specific actions to strive for as high as possible linear TPS and extreme scalability.
 
 
-# MINING VIAT ElEMENT (Vitanium VI or Vytanium VY)
+# MINING VITANIUM [VI]
+
+Vitanium is the element which is mined and processed resulting in the final material VIAT.

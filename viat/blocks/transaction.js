@@ -5,10 +5,21 @@
 // Use nonces to prevent replay attacks and ensure if a transaction is identical resulting in the same hash the nonce would result in a different hash mitigating this outcome. It also allows a transaction to have the same contents but the nonce shows they are different transactions still. Then a cancel request can target what otherwise could have been nearly identical transactions resulting in one being canceled over the other. This way a user can target a specific transaction with absolute certainty
 import { Block } from './block.js';
 import { blockDefaults } from './defaults.js';
+import { encodeStrict } from '#utilities/serialize';
+import { mapAsyncArray } from '@universalweb/acid';
 class TransactionBlock extends Block {
 	constructor(config = {}) {
 		super(config);
 		this.data.meta.blockType = blockDefaults.blockTypes.transactionBlockType;
+		return this;
+	}
+	// Receipt Hash Link
+	async createHashLink(...blocks) {
+		const blockHashes = await mapAsyncArray(blocks, async (item) => {
+			return item.getHash();
+		});
+		const blockHashLink = this.cipherSuite.hash.hash256(encodeStrict(blockHashes));
+		this.set('hashLink', blockHashLink);
 		return this;
 	}
 }

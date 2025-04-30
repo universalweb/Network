@@ -4,6 +4,7 @@ export const blockTypes = {
 	receiptBlockType: 1,
 	abstractBlockType: 2,
 	profileBlockType: 3,
+	linkBlockType: 4,
 };
 export const blockDefaults = {
 	version,

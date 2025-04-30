@@ -6,6 +6,7 @@ const coinSmallestUnitName = 'units';
 const coinLargestUnitName = 'VIAT';
 const coinTicker = 'VIAT';
 const coinUnitName = 'VIAT';
+const coinElementName = 'Vitanium';
 // whole:8  decimal:56|69 total:64|77
 // Used for -> for micro payments, nano transactions, quantum payments (ultra-fine granularity transactions), High-Frequency Trading Fees, Low-Value Use Cases, Layer-2 or Batching, Counterparty Compatibility, atomic swaps, Viat Federal Reserve Deflationary Mechanism
 const coinDecimalPlaces = 69;

@@ -1,5 +1,6 @@
 import {
-	assign, construct, get, isPlainObject, isString
+	assign, construct, get, isPlainObject, isString,
+	mapAsyncArray, sortNumberAscending
 } from '@universalweb/acid';
 import blockDefaults from './defaults.js';
 import { encodeStrict } from '#utilities/serialize';
@@ -20,6 +21,7 @@ export class Block {
 	}
 	version = version;
 	blockType = blockTypes.abstractBlockType;
+	cipherSuite = viatCipherSuite;
 	block = {
 		data: {
 			meta: {},
@@ -30,13 +32,16 @@ export class Block {
 		this.setMeta('timestamp', Date.now());
 		this.setMeta('version', this.version);
 		this.setMeta('blockType', this.blockType);
-		this.setMeta('nonce', viatCipherSuite.createBlockNonce());
+		this.setMeta('nonce', this.cipherSuite.createBlockNonce());
 	}
-	getVersion() {
-		return this.data.version;
+	async getHash() {
+		const binary = await this.exportDataBinary();
+		return this.cipherSuite.hash.hash256(binary);
 	}
-	getType() {
-		return this.data.type;
+	async setHash() {
+		const blockHash = await this.getHash();
+		this.set('hash', blockHash);
+		return this;
 	}
 	getCore(propertyName) {
 		if (propertyName) {
@@ -66,23 +71,45 @@ export class Block {
 		}
 		return this;
 	}
+	getData() {
+		return this.block.data;
+	}
+	setData(propertyName, value) {
+		if (isString(propertyName)) {
+			this.block.data[propertyName] = value;
+		} else if (isPlainObject(propertyName)) {
+			assign(this.block.data, propertyName);
+		}
+		return this;
+	}
+	get() {
+		return this.block;
+	}
+	set(propertyName, value) {
+		if (isString(propertyName)) {
+			this.block[propertyName] = value;
+		} else if (isPlainObject(propertyName)) {
+			assign(this.block, propertyName);
+		}
+		return this;
+	}
 	async exportDataBinary() {
 		return encodeStrict(this.block.data);
 	}
-	getHash() {
-		return this.hash;
+	async exportMetaBinary() {
+		return encodeStrict(this.block.data.meta);
+	}
+	async exportCoreBinary() {
+		return encodeStrict(this.block.data.core);
 	}
 	getParentHash() {
 		return this.parentHash;
 	}
-	async getDataHash() {
-		const binary = await this.exportDataBinary();
-		return viatCipherSuite.hash.hash256(binary);
+	getVersion() {
+		return this.getMeta('version');
 	}
-	async setDataHash() {
-		const blockHash = await this.getDataHash();
-		this.block.hash = blockHash;
-		return this;
+	getType() {
+		return this.getMeta('type');
 	}
 }
 export function block(...args) {

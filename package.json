@@ -20,17 +20,17 @@
 		"@noble/hashes": "^1.8.0",
 		"@universalweb/acid": "^3.0.74",
 		"cbor-x": "^1.6.0",
-		"electron": "^35.2.1",
+		"electron": "latest",
 		"hash-wasm": "^4.12.0",
 		"ip": "^2.0.1",
 		"keychain": "^1.5.0",
 		"libsodium-wrappers": "^0.7.15",
-		"mongoose": "^8.14.0",
+		"mongoose": "^8.14.1",
 		"node-seal": "^5.1.5",
 		"node-watch": "^0.7.4",
 		"nodemon": "^3.1.10",
 		"os-utils": "^0.0.14",
-		"pqclean": "^0.8.1",
+		"pqclean": "latest",
 		"qrcode": "^1.5.4",
 		"signale": "^1.4.0",
 		"sodium-native": "^5.0.1"
@@ -121,7 +121,7 @@
 		"auto-changelog": "^2.5.0",
 		"axios": "^1.9.0",
 		"benchmark": "^2.1.4",
-		"daisyui": "^5.0.28",
+		"daisyui": "^5.0.30",
 		"eslint": "^9.25.1",
 		"eslint-plugin-jsdoc": "^50.6.11",
 		"globals": "^16.0.0",
@@ -146,5 +146,5 @@
 			"sodium-native"
 		]
 	},
-	"packageManager": "pnpm@10.8.1"
+	"packageManager": "pnpm@10.10.0"
 }
