@@ -20,6 +20,7 @@ import {
 } from '#utilities/logs/classLogMethods';
 import { read, readStructured, write } from '#utilities/file';
 import { cryptoIDVersion } from '#components/cryptoID/defaults';
+import path from 'node:path';
 import viat from '#crypto/cipherSuite/viat.js';
 export class CryptoID {
 	constructor(config, optionalArg) {
@@ -107,6 +108,7 @@ export class CryptoID {
 		return decode(decrypted);
 	}
 	async exportKeypairs() {
+		console.log('keyExchangeKeypair', this.keyExchangeKeypair);
 		const keyExchangeKeypair = await this.cipherSuite.keyExchange.exportKeypair(this.keyExchangeKeypair);
 		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
 		return {
@@ -135,7 +137,8 @@ export class CryptoID {
 	}
 	async saveToFile(fileName, fileLocation, encryptionPassword) {
 		const binaryData = await this.exportBinary(encryptionPassword);
-		const fullPath = `${fileLocation}/${fileName}`;
+		const fullPath = path.join(fileLocation, fileName);
+		// console.log('FILE WRITE', fullPath, binaryData, encryptionPassword);
 		return write(fullPath, binaryData, 'binary', true);
 	}
 	async importFile(filePath, encryptionPassword) {
@@ -208,9 +211,9 @@ export async function cryptoID(config, optionalArg) {
 }
 export default cryptoID;
 // const dirname = currentPath(import.meta);
-const exampleCryptoIDExample = await cryptoID();
+// const exampleCryptoIDExample = await cryptoID();
 // const encryptionPasswordExample = 'password';
-console.log(await exampleCryptoIDExample.exportBinary('password'));
+// console.log(await exampleCryptoIDExample.exportBinary());
 // const exportedKeypairs = await exampleCryptoIDExample.exportKeypairs();
 // console.log(exportedKeypairs);
 // console.log(`Version: ${exampleProfileExample.version}`);

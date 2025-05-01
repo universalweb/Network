@@ -20,6 +20,7 @@
 		"@noble/hashes": "^1.8.0",
 		"@universalweb/acid": "^3.0.74",
 		"cbor-x": "^1.6.0",
+		"commander": "^13.1.0",
 		"electron": "latest",
 		"hash-wasm": "^4.12.0",
 		"ip": "^2.0.1",

@@ -3,7 +3,7 @@ import { decode, encode } from '#utilities/serialize';
 import { CryptoID } from '#components/cryptoID/index';
 import { isBuffer } from '@universalweb/acid';
 export class Wallet extends CryptoID {
-	constructor(config = {}, optionalArg) {
+	constructor(config, optionalArg) {
 		super(false);
 		return this.walletInitialize(config, optionalArg);
 	}
@@ -16,3 +16,4 @@ export function wallet(config) {
 	const source = new Wallet(config);
 	return source;
 }
+// console.log('Wallet:', (await wallet()));

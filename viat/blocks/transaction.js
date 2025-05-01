@@ -14,6 +14,7 @@ class TransactionBlock extends Block {
 		return this;
 	}
 	// Receipt Hash Link
+	// Block Hash (TX DATA || Receipt NONCE || Receipt Meta?)
 	async createHashLink(...blocks) {
 		const blockHashes = await mapAsyncArray(blocks, async (item) => {
 			return item.getHash();
