@@ -16,4 +16,5 @@ export function wallet(config) {
 	const source = new Wallet(config);
 	return source;
 }
-// console.log('Wallet:', (await wallet()));
+// (await wallet('/Users/thomasmarchi/MEGA/Github/Network/viat/wallet.bin'));
+// console.log('Wallet:', (await wallet('/Users/thomasmarchi/MEGA/Github/Network/viat/wallet.bin')));

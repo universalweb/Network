@@ -103,6 +103,12 @@ export async function initializeKeypair(sourceArg) {
 	target.sphincs = sphincs;
 	return target;
 }
+async function isKeypairInitialized(source) {
+	if (source.ed25519 && source.dilithium && source.sphincs) {
+		return true;
+	}
+	return false;
+}
 export async function signMethod(message, source) {
 	const signatureArray = [];
 	const {
@@ -219,6 +225,7 @@ export const viat = signatureScheme({
 	privateKeySize,
 	signatureSize,
 	seedSize,
+	isKeypairInitialized,
 	createKeypair,
 	verifyMethod,
 	signMethod,

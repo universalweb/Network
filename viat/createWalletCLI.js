@@ -18,7 +18,11 @@ program
 		const result = await createWallet(filename, filepath, key);
 		// console.log(await decode(await result.exportBinary()));
 	});
+program.addHelpText('after', `
+Example Commands:
+  ./createWalletCLI.js walletFileName.bin /FILE/PATH/TO/SAVE/TO
+`);
 program.option('-v, --verbose', 'Enable verbose output');
 // Parse command-line arguments
 program.parse(process.argv);
-// ./createWalletCLI.js walletFileName.bin /FILE/PATH/TO/SAVE/TO
+// CLI COMMAND ./createWalletCLI.js walletFileName.bin /FILE/PATH/TO/SAVE/TO

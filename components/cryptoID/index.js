@@ -48,43 +48,38 @@ export class CryptoID {
 		return this;
 	}
 	async initializeKeypairs() {
-		if (isBuffer(this.signatureKeypair)) {
+		if (await this.cipherSuite.signature.isKeypairInitialized(this.signatureKeypair) === false) {
 			this.signatureKeypair = await this.cipherSuite.signature.initializeKeypair(this.signatureKeypair);
 		}
-		if (isBuffer(this.keyExchangeKeypair)) {
+		if (await this.cipherSuite.keyExchange.isKeypairInitialized(this.keyExchangeKeypair) === false) {
 			this.keyExchangeKeypair = await this.cipherSuite.keyExchange.initializeKeypair(this.keyExchangeKeypair);
 		}
 	}
-	async importKeypairs(config) {
+	async importKeypairs(core) {
 		const {
-			version,
 			signatureKeypair,
 			keyExchangeKeypair,
-			cipherSuite
-		} = config;
+		} = core;
 		if (signatureKeypair) {
 			this.signatureKeypair = signatureKeypair;
 		}
 		if (keyExchangeKeypair) {
 			this.keyExchangeKeypair = keyExchangeKeypair;
 		}
-		if (version) {
-			this.version = version;
-		}
-		if (cipherSuite?.id) {
-			this.cipherSuiteId = cipherSuite.id;
-		}
 		await this.initializeKeypairs();
+		return this;
 	}
 	async generate(options) {
 		this.signatureKeypair = await this.cipherSuite.signature.signatureKeypair();
 		this.keyExchangeKeypair = await this.cipherSuite.keyExchange.keyExchangeKeypair();
-		console.log('KEY EXCHANGE', this.keyExchangeKeypair);
+		// console.log('KEY EXCHANGE', this.keyExchangeKeypair);
 	}
 	async importFromBinary(data, encryptionKey) {
 		const password = (isString(encryptionKey)) ? await this.cipherSuite.hash.hash256(Buffer.from(encryptionKey)) : encryptionKey;
-		const decodedData = (password) ? await this.decryptBinary(data, password) : await decode(data);
-		await this.importFromObject(decodedData, password);
+		const encodedData = decode(data);
+		const decodedCore = (password) ? await this.decryptBinary(encodedData.core, password) : encodedData.core;
+		encodedData.core = decodedCore;
+		await this.importFromObject(encodedData, password);
 		return this;
 	}
 	async importFromObject(decodedData, encryptionKey) {
@@ -92,14 +87,16 @@ export class CryptoID {
 		const data = (password) ? await this.decryptBinary(decodedData.encrypted, password) : decodedData;
 		const {
 			version,
-			keyExchangeKeypair,
-			signatureKeypair,
-			cipherSuiteId
+			cipherID,
+			core: {
+				keyExchangeKeypair,
+				signatureKeypair,
+			},
 		} = data;
 		this.version = version;
 		this.keyExchangeKeypair = keyExchangeKeypair;
 		this.signatureKeypair = signatureKeypair;
-		this.cipherSuiteId = cipherSuiteId;
+		this.cipherID = cipherID;
 		await this.initializeKeypairs();
 		return this;
 	}
@@ -108,7 +105,7 @@ export class CryptoID {
 		return decode(decrypted);
 	}
 	async exportKeypairs() {
-		console.log('keyExchangeKeypair', this.keyExchangeKeypair);
+		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
 		const keyExchangeKeypair = await this.cipherSuite.keyExchange.exportKeypair(this.keyExchangeKeypair);
 		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
 		return {
@@ -117,16 +114,14 @@ export class CryptoID {
 		};
 	}
 	async exportBinary(encryptionKey) {
-		const {
-			version,
-			cipherSuiteId
-		} = this;
+		const { version, } = this;
 		const data = {
 			version,
-			cipherSuiteId,
 			date: Date.now(),
+			cipherID: this.cipherSuite.id,
+			core: {}
 		};
-		assign(data, await this.exportKeypairs());
+		assign(data.core, await this.exportKeypairs());
 		const dataEncoded = await encodeStrict(data);
 		if (encryptionKey) {
 			const password = (isString(encryptionKey)) ? await this.cipherSuite.hash.hash256(Buffer.from(encryptionKey)) : encryptionKey;
@@ -144,9 +139,8 @@ export class CryptoID {
 	async importFile(filePath, encryptionPassword) {
 		const data = await readStructured(filePath);
 		if (data) {
-			return this.importFromObject(data, encryptionPassword);
+			const loadedFile = await this.importFromObject(data, encryptionPassword);
 		}
-		console.log('Error Importing Profile', filePath);
 		return false;
 	}
 	async saveToKeychain(accountName = 'profile', encryptionPassword) {

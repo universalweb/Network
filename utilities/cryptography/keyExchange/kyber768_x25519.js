@@ -110,6 +110,12 @@ async function initializeKeypair(keypair, target) {
 		kyberKeypair
 	};
 }
+async function isKeypairInitialized(source) {
+	if (source.x25519Keypair && source.kyberKeypair) {
+		return true;
+	}
+	return false;
+}
 async function initializeCertificateKeypair(keypair, target) {
 	const result = await initializeKeypair(keypair, target);
 	return result;
@@ -134,6 +140,7 @@ export const kyber768_x25519 = keyExchange({
 	initializeCertificateKeypair,
 	exportKeypair,
 	initializeKeypair,
+	isKeypairInitialized,
 	// partial initial encryption on first packet
 	async clientInitializeSession(source, destination) {
 		source.x25519Keypair.sharedSecret = await x25519.getSharedSecret(source.x25519Keypair, destination.x25519Keypair);
