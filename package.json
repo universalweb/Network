@@ -129,7 +129,7 @@
 		"auto-changelog": "^2.4.0",
 		"axios": "^1.6.3",
 		"benchmark": "^2.1.4",
-		"daisyui": "^4.4.19",
+		"daisyui": "^5.0.35",
 		"eslint": "^8.56.0",
 		"eslint-plugin-jsdoc": "^46.9.1",
 		"htmlhint": "^1.1.4",
