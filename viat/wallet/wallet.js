@@ -11,6 +11,8 @@ export class Wallet extends CryptoID {
 		await this.initialize(config, optionalArg);
 		return this;
 	}
+	createFolder(initialPath) {
+	}
 }
 export function wallet(config) {
 	const source = new Wallet(config);

@@ -15,6 +15,11 @@ export async function hash256(source) {
 export async function hash512(source) {
 	return createHash(hashName, hash512SettingsCrypto).update(source).digest();
 }
+export async function hashXOF(source, outputLength) {
+	return createHash(hashName, {
+		outputLength
+	}).update(source).digest();
+}
 export const shake256 = hashScheme({
 	name: 'shake256',
 	alias: 'default',
@@ -25,6 +30,7 @@ export const shake256 = hashScheme({
 	hash256,
 	hash: hash256,
 	hash512,
+	hashXOF
 });
 export default shake256;
 // console.log('hash', (await hash512('hello world')));

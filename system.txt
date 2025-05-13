@@ -27,7 +27,8 @@
 ==================================================================
 > SIGNATURE: DILITHIUM ◉ ED25519 ◉ SPHINCS+
 > HASH: SHAKE256
-> BLOCKCHAIN: DIRECTED ACYCLIC HYPER META GRAPH (DRAFT NAME)
+> BLOCKCHAIN: Hierarchical Block-Trie SUPERSTRUCTURE (DRAFT)
+> BLOCKCHAIN TYPES: DAG ◉ Linear Blockchain
 > SYMBOL: ⩝
 
 ==================================================================

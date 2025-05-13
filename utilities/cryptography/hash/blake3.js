@@ -15,6 +15,9 @@ export async function hash256(source) {
 export async function hash512(source) {
 	return bufferFrom(await hash(source, int512), hexString);
 }
+export async function hashXOF(source, outputLength) {
+	return bufferFrom(await hash(source, outputLength), hexString);
+}
 export const blake3 = hashScheme({
 	name: 'blake3',
 	alias: 'blake3',
@@ -24,6 +27,7 @@ export const blake3 = hashScheme({
 	hash256,
 	hash: hash256,
 	hash512,
+	hashXOF
 });
 export default blake3;
 // console.log((await hash512('hello world')));

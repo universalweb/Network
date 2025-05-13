@@ -172,6 +172,13 @@ function bufferToBigInt(source) {
 	}
 	return;
 }
+function bufferToBigInt2(buf) {
+	let result = 0n;
+	for (const byte of buf) {
+		result = (result << 8n) + BigInt(byte);
+	}
+	return result;
+}
 function getBigIntByteSize(bigint) {
 	let bits = 0n;
 	let n = bigint;

@@ -1,9 +1,19 @@
 import {
-	assign, construct, get, isPlainObject, isString,
-	mapAsyncArray, sortNumberAscending
+	assign,
+	construct,
+	everyArray,
+	get,
+	hasValue,
+	isArray,
+	isPlainObject,
+	isString,
+	mapAsyncArray,
+	sortNumberAscending,
+	toPath
 } from '@universalweb/acid';
 import blockDefaults from './defaults.js';
 import { encodeStrict } from '#utilities/serialize';
+import { toBase64Url } from '#crypto/utils.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 const {
 	version,
@@ -12,86 +22,112 @@ const {
 export class Block {
 	constructor(config) {
 		this.setDefaults();
-		if (config?.block.data?.meta) {
+		if (config?.block?.data?.meta) {
 			assign(this.block.data.meta, config.block.data.meta);
 		}
-		if (config?.block.data?.core) {
+		if (config?.block?.data?.core) {
 			assign(this.block.data.core, config.block.data.core);
 		}
+		return this;
 	}
-	version = version;
-	blockType = blockTypes.abstractBlockType;
-	cipherSuite = viatCipherSuite;
+	async init() {
+		this.setDefaults();
+		return this;
+	}
 	block = {
 		data: {
 			meta: {},
-			core: {}
-		}
+			core: {},
+			//  receiptLink HASH of Contents
+		},
+		// directLink (Dynamically generated) /w/3bytes/3bytes/last32/t/transactionID(32)
+		// id HASH
 	};
 	setDefaults() {
 		this.setMeta('timestamp', Date.now());
 		this.setMeta('version', this.version);
 		this.setMeta('blockType', this.blockType);
-		this.setMeta('nonce', this.cipherSuite.createBlockNonce());
+		this.setMeta('nonce', this.cipherSuite.createBlockNonce(this.nonceSize));
 	}
-	async getHash() {
+	async hashData() {
 		const binary = await this.exportDataBinary();
-		return this.cipherSuite.hash.hash256(binary);
+		return this.hash256(binary);
 	}
-	async setHash() {
-		const blockHash = await this.getHash();
-		this.set('hash', blockHash);
-		return this;
+	async hashMeta() {
+		const binary = await this.exportMetaBinary();
+		return this.hash256(binary);
+	}
+	async hashCore() {
+		const binary = await this.exportCoreBinary();
+		return this.hash256(binary);
+	}
+	async blockHash() {
+		const binary = await this.exportBinary();
+		return this.hash256(binary);
+	}
+	async id(value) {
+		if (value) {
+			await this.set('id', value);
+		}
+		const id = await this.get('id');
+		if (id) {
+			return id;
+		}
+		await this.set('id', await this.hashData());
+		return this.get('id');
 	}
 	getCore(propertyName) {
-		if (propertyName) {
-			return get(propertyName, this.block.data.core);
-		}
-		return this.block.data.core;
+		return (propertyName) ? get(propertyName, this.block.data.core) : this.block.data.core;
 	}
 	setCore(propertyName, value) {
-		if (isString(propertyName)) {
-			this.block.data.core[propertyName] = value;
-		} else if (isPlainObject(propertyName)) {
-			assign(this.block.data.core, propertyName);
-		}
-		return this;
+		return this.set(propertyName, value, this.block.data.core);
 	}
 	getMeta(propertyName) {
-		if (propertyName) {
-			return get(propertyName, this.block.data.meta);
-		}
-		return this.block.data.meta;
+		return (propertyName) ? get(propertyName, this.block.data.meta) : this.block.data.meta;
 	}
 	setMeta(propertyName, value) {
-		if (isString(propertyName)) {
-			this.block.data.meta[propertyName] = value;
-		} else if (isPlainObject(propertyName)) {
-			assign(this.block.data.meta, propertyName);
-		}
-		return this;
+		return this.set(propertyName, value, this.block.data.meta);
 	}
-	getData() {
-		return this.block.data;
+	getData(propertyName) {
+		return (propertyName) ? get(propertyName, this.block.data) : this.block.data;
 	}
 	setData(propertyName, value) {
-		if (isString(propertyName)) {
-			this.block.data[propertyName] = value;
-		} else if (isPlainObject(propertyName)) {
-			assign(this.block.data, propertyName);
-		}
-		return this;
+		return this.setProperty(propertyName, value, this.block.data);
 	}
-	get() {
-		return this.block;
+	get(propertyName) {
+		return (propertyName) ? get(propertyName, this.block) : this.block;
 	}
-	set(propertyName, value) {
-		if (isString(propertyName)) {
-			this.block[propertyName] = value;
-		} else if (isPlainObject(propertyName)) {
-			assign(this.block, propertyName);
+	getSender() {
+		return this.getCore('sender');
+	}
+	getSenderString() {
+		return toBase64Url(this.getCore('sender'));
+	}
+	getSenderPath() {
+		return toBase64Url(this.getCore('sender'));
+	}
+	getReceiver() {
+		return this.getCore('receiver');
+	}
+	getReceiverString() {
+		return toBase64Url(this.getReceiver());
+	}
+	set(propertyName, value, sourceObject) {
+		let link = sourceObject || this.block;
+		const pathArray = isArray(propertyName) ? propertyName : toPath(propertyName);
+		const lastPathItem = pathArray.pop();
+		const pathArrayLength = pathArray.length;
+		everyArray(pathArray, (item) => {
+			link = link[item];
+			return hasValue(link);
+		});
+		if (link) {
+			link[lastPathItem] = value;
 		}
-		return this;
+		return link;
+	}
+	async exportBinary() {
+		return encodeStrict(this.block);
 	}
 	async exportDataBinary() {
 		return encodeStrict(this.block.data);
@@ -102,8 +138,26 @@ export class Block {
 	async exportCoreBinary() {
 		return encodeStrict(this.block.data.core);
 	}
-	getParentHash() {
-		return this.parentHash;
+	async hash256(binary) {
+		if (binary) {
+			return this.cipherSuite.hash.hash256(binary);
+		}
+	}
+	async hash512(binary) {
+		if (binary) {
+			return this.cipherSuite.hash.hash512(binary);
+		}
+	}
+	async hashXOF(binary, options) {
+		if (binary) {
+			return this.cipherSuite.hash.hashXOF(binary, options);
+		}
+	}
+	getParent() {
+		return this.parent;
+	}
+	getChildren() {
+		return this.children;
 	}
 	getVersion() {
 		return this.getMeta('version');
@@ -111,10 +165,17 @@ export class Block {
 	getType() {
 		return this.getMeta('type');
 	}
+	version = version;
+	blockType = blockTypes.abstractBlockType;
+	cipherSuite = viatCipherSuite;
+	nonceSize = 8;
 }
-export function block(...args) {
-	const source = construct(Block, args);
+export async function block(...args) {
+	const source = await construct(Block, args);
 	return source;
 }
-// console.log(block().object, block(2).object, block().object);
 export default block;
+const exmple = await block();
+console.log(exmple);
+console.log(exmple.get());
+// U3VjaCB2aXNpb24gb2Ygd2hhdCBjb3VsZCBiZSBidXQgb25lIEkgbWF5IG5ldmVyIHNlZS4gVGhlIGN1cnNlIG9mIGRyZWFtcy4=

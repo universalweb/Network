@@ -22,8 +22,8 @@ export const viatCipherSuite = {
 	keyExchange: kyber768_x25519,
 	signature: viat,
 	// REPLAY PROTECTION AND USED TO MAKE TWO BLOCKS WITH IDENTICAL DATA UNIQUE
-	createBlockNonce() {
-		return randomize(bufferAlloc(32));
+	createBlockNonce(size = 8) {
+		return randomize(bufferAlloc(size));
 	}
 };
 export default viatCipherSuite;

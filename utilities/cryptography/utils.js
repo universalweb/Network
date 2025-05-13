@@ -37,6 +37,9 @@ export function toBuffer(source) {
 export function toBase64(source) {
 	return source.toString('base64');
 }
+export function toBase64Url(source) {
+	return source.toString('base64url');
+}
 export function toHex(source) {
 	return source.toString('hex');
 }

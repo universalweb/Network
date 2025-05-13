@@ -1,5 +1,15 @@
 {
-	"cryptonym": "QUANTUM SOLSTICE",
+	"cryptonym": "SEREPH FALL",
 	"type": "source code",
-	"subject": "Nexus source code"
+	"subject": "Universal Web & VIAT source code",
+	"networkType": "nexus",
+	"protocol": "uw",
+	"cryptocurrency": "VIAT",
+	"web": "Universal Web",
+	"homepage": "uw://home.uw",
+	"repository": "uw://source.uw",
+	"domains": "uw://domains.uw",
+	"www": "https://universalweb.io",
+	"version": "1.0.0",
+	"architectureVersion": "4.5.0"
 }

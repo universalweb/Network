@@ -21,12 +21,14 @@
 		"@universalweb/acid": "^3.0.74",
 		"cbor-x": "^1.6.0",
 		"commander": "^13.1.0",
+		"directory-tree": "^3.5.2",
 		"electron": "latest",
+		"fs-extra": "^11.3.0",
 		"hash-wasm": "^4.12.0",
 		"ip": "^2.0.1",
 		"keychain": "^1.5.0",
 		"libsodium-wrappers": "^0.7.15",
-		"mongoose": "^8.14.1",
+		"mongoose": "^8.14.2",
 		"node-seal": "^5.1.5",
 		"node-watch": "^0.7.4",
 		"nodemon": "^3.1.10",
@@ -34,7 +36,7 @@
 		"pqclean": "latest",
 		"qrcode": "^1.5.4",
 		"signale": "^1.4.0",
-		"sodium-native": "^5.0.1"
+		"sodium-native": "^5.0.2"
 	},
 	"description": "UW & VIAT modules: Client, Server, VIAT, DIS, Browser, Crypto, Wallets, Modules, & certificates.",
 	"engines": {
@@ -115,19 +117,19 @@
 	},
 	"version": "3.0.7",
 	"devDependencies": {
-		"@babel/core": "^7.26.10",
-		"@babel/eslint-parser": "^7.27.0",
-		"@babel/preset-env": "^7.26.9",
+		"@babel/core": "^7.27.1",
+		"@babel/eslint-parser": "^7.27.1",
+		"@babel/preset-env": "^7.27.2",
 		"@stylistic/eslint-plugin": "^4.2.0",
 		"auto-changelog": "^2.5.0",
 		"axios": "^1.9.0",
 		"benchmark": "^2.1.4",
-		"daisyui": "^5.0.30",
-		"eslint": "^9.25.1",
-		"eslint-plugin-jsdoc": "^50.6.11",
-		"globals": "^16.0.0",
-		"tailwindcss": "^4.1.4",
-		"textlint": "^14.6.0"
+		"daisyui": "^5.0.35",
+		"eslint": "^9.26.0",
+		"eslint-plugin-jsdoc": "^50.6.14",
+		"globals": "^16.1.0",
+		"tailwindcss": "^4.1.6",
+		"textlint": "^14.7.1"
 	},
 	"pnpm": {
 		"overrides": {
@@ -144,7 +146,8 @@
 			"pqclean",
 			"os-utils",
 			"os",
-			"sodium-native"
+			"sodium-native",
+			"node-seal"
 		]
 	},
 	"packageManager": "pnpm@10.10.0"
