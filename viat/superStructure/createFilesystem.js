@@ -9,11 +9,21 @@ import {
 import { getViatDirectory } from '#utilities/directory';
 import path from 'node:path';
 const viatFilesystemObject = {
-	genesis: {},
-	pending: {},
-	wallets: {},
-	audit: {},
-	domains: {}
+	genesis: {
+		url: 'g'
+	},
+	pending: {
+		url: 'p'
+	},
+	wallets: {
+		url: 'w',
+	},
+	audit: {
+		url: 'a',
+	},
+	domains: {
+		url: 'd',
+	}
 };
 export async function createViatFilesystem(basePath, filesystemObject = viatFilesystemObject) {
 	return objectToFilesystem(basePath || getViatDirectory(), filesystemObject);

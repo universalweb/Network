@@ -7,4 +7,4 @@ Scalability potential stems from the modularity of the Viat super structure. The
 
 ## RISC LIKE THINKING
 
-Viat favors small consistent predictable contained operations over larger dynamic stacked operations. Instead of multiple transactions/operations forced into blocks  Viat is in direct position of that perspective opting to instead keep it one transaction per-block. Simple concise consistent instructions are faster, easier, more efficient and more optimizable than something that is less predictable and has to be broken down first to be processed.
+Viat favors small consistent predictable contained operations over larger dynamic stacked operations. Instead of multiple transactions/operations forced into blocks Viat is in direct position of that perspective opting to instead keep it one transaction per-block. Simple concise consistent instructions are faster, easier, more efficient and more optimizable than something that is less predictable and has to be broken down first to be processed.

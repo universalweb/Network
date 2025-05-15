@@ -4,6 +4,8 @@ export const dilithium65 = generateScheme('ml-dsa-65', {
 	alias: 'ml_dsa65',
 	id: 2,
 	security: 2,
+	seedSize: 96,
+	minimumSeedSize: 32,
 	preferred: false
 });
 export default dilithium65;
@@ -15,4 +17,4 @@ export default dilithium65;
 // console.log(exported.publicKey.length, exported.privateKey.length);
 // const sig = await dilithium65.sign(msg, key);
 // console.log(sig.length, dilithium65.signatureSize);
-// console.log(await dilithium65.verify(sig, key, msg));
+// console.log(await dilithium65.verify(sig, msg, key));

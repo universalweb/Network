@@ -15,4 +15,4 @@ export default dilithium87;
 // console.log(exported.publicKey.length, exported.privateKey.length);
 // const sig = await dilithium87.sign(msg, key);
 // console.log(sig);
-// console.log(await dilithium87.verify(sig, key, msg));
+// console.log(await dilithium87.verify(sig, msg, key));

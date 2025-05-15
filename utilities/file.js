@@ -7,6 +7,7 @@ import {
 } from 'node:fs/promises';
 import { decode } from '#utilities/serialize';
 import fs from 'node:fs';
+import fsExtra from 'fs-extra';
 import path from 'path';
 const { normalize } = path;
 async function createFoldersIfNotExist(folderPath) {
@@ -31,7 +32,7 @@ export async function write(filePath, contents, encoding, createPathFlag) {
 	const pathNormalized = normalize(filePath);
 	console.log('FILE WRITE', pathNormalized, contents.length, encoding);
 	if (createPathFlag) {
-		await createFoldersIfNotExist(path.dirname(pathNormalized));
+		await fsExtra.ensureDir(path.dirname(pathNormalized));
 	}
 	return writeFile(pathNormalized, contents, encoding);
 }

@@ -23,6 +23,7 @@ export async function hashXOF(source, outputLength) {
 export const shake256 = hashScheme({
 	name: 'shake256',
 	alias: 'default',
+	description: 'SHAKE256 XOF',
 	id: 0,
 	security: 1,
 	preferred: true,

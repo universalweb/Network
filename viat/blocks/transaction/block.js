@@ -8,19 +8,24 @@
 // The last for confirmed transactions that have been fully audited and verified
 // Use Merkle Trees with bloom filters - use merkle tree to confirm bloom filter then
 import { toBase64Url, toHex } from '#crypto/utils.js';
-import { Block } from './block.js';
-import { blockDefaults } from './defaults.js';
+import Block from '../block.js';
+import { blockDefaults } from '../defaults.js';
 import { encodeStrict } from '#utilities/serialize';
+import { getTransactionURL } from './uri.js';
 import { mapAsyncArray } from '@universalweb/acid';
-import receiptBlock from './receipt.js';
+import receiptBlock from '../receipt.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 class TransactionBlock extends Block {
 	constructor(config = {}) {
 		super(config);
-		this.amount = config.amount;
-		this.receiver = config.receiver;
-		this.sender = config.sender;
+		this.setCore('amount', config.amount);
+		this.setCore('receiver', config.receiver);
+		this.setCore('sender', config.sender);
 		return this;
+	}
+	async getLink() {
+		const blockLink = await getTransactionURL(this.get('hash'), this.getCore('sender'));
+		return blockLink;
 	}
 	// Receipt Hash Link
 	// Block Hash (TX DATA || Receipt Meta?)
@@ -32,6 +37,7 @@ class TransactionBlock extends Block {
 		return `w/t/${this.block.data.core.sender}/${this.block.data.meta.nonce}/${this.block.data.meta.nonce}/t/${this.block.data.meta.nonce}`;
 	}
 	blockType = blockDefaults.blockTypes.transactionBlockType;
+	fileType = blockDefaults.fileExtensions.transaction;
 }
 export async function transactionBlock(config) {
 	const block = new TransactionBlock(config);

@@ -1,37 +1,36 @@
 import {
 	assign,
 	construct,
+	currentPath,
 	everyArray,
 	get,
 	hasValue,
 	isArray,
 	isPlainObject,
 	isString,
+	isZero,
 	mapAsyncArray,
 	sortNumberAscending,
 	toPath
 } from '@universalweb/acid';
 import blockDefaults from './defaults.js';
 import { encodeStrict } from '#utilities/serialize';
+import path from 'path';
 import { toBase64Url } from '#crypto/utils.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
+import { write } from '#utilities/file';
 const {
 	version,
 	blockTypes
 } = blockDefaults;
 export class Block {
 	constructor(config) {
-		this.setDefaults();
-		if (config?.block?.data?.meta) {
-			assign(this.block.data.meta, config.block.data.meta);
-		}
-		if (config?.block?.data?.core) {
-			assign(this.block.data.core, config.block.data.core);
+		if (config?.block) {
+			assign(this.block, config.block);
 		}
 		return this;
 	}
 	async init() {
-		this.setDefaults();
 		return this;
 	}
 	block = {
@@ -43,6 +42,28 @@ export class Block {
 		// directLink (Dynamically generated) /w/3bytes/3bytes/last32/t/transactionID(32)
 		// id HASH
 	};
+	async save() {
+		await this.finalize();
+		const blockBinary = await this.exportBinary();
+		const filename = await this.filename();
+		return write(filename, blockBinary, 'binary', true);
+	}
+	async filename() {
+		const blockName = await this.get('hash');
+		return `${blockName}.bin`;
+	}
+	async finalize() {
+		await this.setDefaults();
+		await this.setHash();
+	}
+	async validate() {
+		const manualHash = await this.hashData();
+		const hash = await this.get('hash');
+		if (isZero(manualHash.compare(hash))) {
+			return true;
+		}
+		return false;
+	}
 	setDefaults() {
 		this.setMeta('timestamp', Date.now());
 		this.setMeta('version', this.version);
@@ -64,6 +85,9 @@ export class Block {
 	async blockHash() {
 		const binary = await this.exportBinary();
 		return this.hash256(binary);
+	}
+	async setHash() {
+		await this.set('hash', await this.blockHash());
 	}
 	async id(value) {
 		if (value) {
@@ -166,16 +190,19 @@ export class Block {
 		return this.getMeta('type');
 	}
 	version = version;
-	blockType = blockTypes.abstractBlockType;
+	blockType = blockTypes.genericBlockType;
 	cipherSuite = viatCipherSuite;
-	nonceSize = 8;
+	nonceSize = 16;
+	fileType = blockDefaults.fileExtensions.block;
 }
 export async function block(...args) {
 	const source = await construct(Block, args);
 	return source;
 }
 export default block;
-const exmple = await block();
-console.log(exmple);
-console.log(exmple.get());
+// const exmple = await block();
+// console.log(exmple);
+// console.log(exmple.get());
+console.log(path.resolve(currentPath(import.meta)));
+console.log(path.dirname(path.normalize('./')));
 // U3VjaCB2aXNpb24gb2Ygd2hhdCBjb3VsZCBiZSBidXQgb25lIEkgbWF5IG5ldmVyIHNlZS4gVGhlIGN1cnNlIG9mIGRyZWFtcy4=

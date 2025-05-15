@@ -8,13 +8,17 @@ import viat from '../signature/viat.js';
 import xChaCha from '../cipher/xChaCha.js';
 export const viatCipherSuite = {
 	name: 'viatCipherSuite',
-	alias: 'x25519_kyber768_xchacha20_dilithium65_sphincs192',
-	description: 'Crystals-Kyber768 with XChaCha20 and SHAKE256.',
-	id: 4,
+	alias: 'dilithium65_sphincs192',
+	description: 'Dilithium65, SPHINCS+192s, ed25519, Kyber, x25519, SHAKE256.',
+	id: 0,
+	viatCipherID: 0,
 	preferred: true,
 	speed: 0,
 	security: 1,
 	hash: shake256,
+	walletSize: 64,
+	keyExchangeSeedSize: kyber768_x25519.seedSize,
+	seedSize: viat.seedSize,
 	// Consider default encryption algo
 	encryption: aegis256,
 	softwareEncryption: xChaCha,
@@ -22,7 +26,7 @@ export const viatCipherSuite = {
 	keyExchange: kyber768_x25519,
 	signature: viat,
 	// REPLAY PROTECTION AND USED TO MAKE TWO BLOCKS WITH IDENTICAL DATA UNIQUE
-	createBlockNonce(size = 8) {
+	createBlockNonce(size = 16) {
 		return randomize(bufferAlloc(size));
 	}
 };

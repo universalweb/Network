@@ -11,7 +11,7 @@ import {
 } from '#utilities/cryptography/utils';
 import pqclean from 'pqclean';
 import { signatureScheme } from './signatureScheme.js';
-const seedSize = 64;
+const seedSize = 32;
 const algoList = pqclean.sign.supportedAlgorithms;
 const generateKeyPair = pqclean.sign.generateKeyPair;
 /* const supportedAlgorithms = [
@@ -76,6 +76,7 @@ function generateScheme(schemeName, options = {}) {
 		hash: shake256
 	};
 	assign(schemeObject, options);
+	schemeObject.description ??= description;
 	const sigScheme = signatureScheme(schemeObject);
 	return sigScheme;
 }

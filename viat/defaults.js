@@ -6,7 +6,7 @@ const coinSmallestUnitName = 'units';
 const coinLargestUnitName = 'VIAT';
 const coinTicker = 'VIAT';
 const coinUnitName = 'VIAT';
-const coinElementName = 'Vitanium';
+const coinElementName = 'Vitainium';
 const coinElementSymbol = 'Vi';
 const vFED = 'Viat Federal Reserve';
 // whole:8  decimal:56|69 total:64|77

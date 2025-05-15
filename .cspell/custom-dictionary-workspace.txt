@@ -21,6 +21,7 @@ scalarmult
 schnorr
 scid
 secp
+sphincs
 SPHINCS
 streamid
 udsp

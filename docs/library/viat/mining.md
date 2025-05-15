@@ -9,6 +9,6 @@ There are two types of Viat miners - Auditors (validate) and Arbiters (verify). 
 This design is reflective of the individual specific blocks for specific actions to strive for as high as possible linear TPS and extreme scalability.
 
 
-# MINING VITANIUM [VI]
+# MINING VITAINIUM [VI]
 
-Vitanium is the element which is mined and processed resulting in the final material VIAT.
+Vitainium is the element which is mined and processed resulting in the final material VIAT.

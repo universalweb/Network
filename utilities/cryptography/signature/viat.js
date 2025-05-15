@@ -1,4 +1,5 @@
-// dilithium65+ed25519Utils+SPHINCS+shake256
+// dilithium65+ed25519+SPHINCS192s+shake256
+// VIAT HYBRID SIGNATURE SCHEME
 import {
 	assign,
 	everyArray,
@@ -8,8 +9,6 @@ import {
 	untilFalseArray
 } from '@universalweb/acid';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
-// VIAT HYBRID SIGNATURE SCHEME
-// Permit partial signature possibility
 import { hash256, hash512 } from '../hash/shake256.js';
 import {
 	randomBuffer,
@@ -20,8 +19,10 @@ import dilithium65 from './dilithium65.js';
 import ed25519Utils from './ed25519.js';
 import signatureScheme from './signatureScheme.js';
 import sphincs192 from './sphincs192.js';
+// SEED SIZE COMBINED
+const seedSize = ed25519Utils.seedSize + dilithium65.seedSize + sphincs192.seedSize;
+console.log(seedSize);
 // KEY SIZES
-const seedSize = 64;
 const publicKeySize = dilithium65.publicKeySize + ed25519Utils.publicKeySize + sphincs192.publicKeySize;
 const privateKeySize = dilithium65.privateKeySize + ed25519Utils.privateKeySize + sphincs192.privateKeySize;
 const signatureSize = dilithium65.signatureSize + ed25519Utils.signatureSize + sphincs192.signatureSize;
@@ -36,21 +37,6 @@ const sphincsPrivateKeyEndIndex = dilithiumPrivateKeyEndIndex + sphincs192.priva
 const ed25519SignatureEndIndex = ed25519Utils.signatureSize;
 const dilithiumSignatureEndIndex = ed25519Utils.signatureSize + dilithium65.signatureSize;
 const sphincsSignatureEndIndex = dilithiumSignatureEndIndex + sphincs192.signatureSize;
-function getEd25519Key(publicKey) {
-	return publicKey.subarray(0, ed25519PublicKeyEndIndex);
-}
-function getDilithiumPublicKey(publicKey) {
-	return publicKey.subarray(ed25519Utils.publicKeySize, dilithiumPublicKeyEndIndex);
-}
-function getDilithiumPrivateKey(publicKey) {
-	return publicKey.subarray(ed25519Utils.privateKeySize, dilithiumPrivateKeyEndIndex);
-}
-function getSphincsPublicKey(publicKey) {
-	return publicKey.subarray(dilithiumPublicKeyEndIndex, sphincsPublicKeyEndIndex);
-}
-function getSphincsPrivateKey(publicKey) {
-	return publicKey.subarray(dilithiumPrivateKeyEndIndex, sphincsPrivateKeyEndIndex);
-}
 function assembleKeypairObject(source, index) {
 	const target = {};
 	if (source.publicKey) {
@@ -219,7 +205,7 @@ async function exportKeypair(source) {
 export const viat = signatureScheme({
 	name: 'viat',
 	alias: 'viat',
-	description: 'VIAT Hybrid Signature Scheme - ed25519Utils+dilithium65+slh_dsa_shake_192s+SHAKE256.',
+	description: 'ed25519 dilithium65 SPHINCS192s SHAKE256',
 	id: 6,
 	publicKeySize,
 	privateKeySize,
@@ -230,11 +216,6 @@ export const viat = signatureScheme({
 	verifyMethod,
 	signMethod,
 	signPartial,
-	getEd25519Key,
-	getDilithiumPublicKey,
-	getDilithiumPrivateKey,
-	getSphincsPublicKey,
-	getSphincsPrivateKey,
 	initializeKeypair,
 	verifyEach,
 	verifyPartial,
