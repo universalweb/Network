@@ -1,25 +1,25 @@
-import { transactionFilePathToURL, transactionURLToFilePath } from '#viat/blocks/transaction/uri';
-import { walletFilePathToURL, walletURLToFilePath } from '#viat/blocks/wallet/uri';
+import { transactionPathToURL, transactionURLToPath } from '#viat/blocks/transaction/uri';
+import { walletPathToURL, walletURLToPath } from '#viat/blocks/wallet/uri';
 import { has } from '@universalweb/acid';
 import txAPI from '../blocks/transaction/defaults.js';
 import walletAPI from '../blocks/wallet/defaults.js';
-export function urlToFilePath(url) {
+export function urlToPath(url) {
 	let target = url;
 	if (txAPI.urlPathnameRegex.test(url)) {
-		target = transactionURLToFilePath(url);
+		target = transactionURLToPath(url);
 	}
 	if (walletAPI.urlPathnameRegex.test(target)) {
-		target = walletURLToFilePath(target);
+		target = walletURLToPath(target);
 	}
 	return target;
 }
-export function filePathToURL(url) {
+export function pathToURL(url) {
 	let target = url;
 	if (txAPI.pathnameRegex.test(url)) {
-		target = transactionFilePathToURL(url);
+		target = transactionPathToURL(url);
 	}
 	if (walletAPI.pathnameRegex.test(target)) {
-		target = walletFilePathToURL(target);
+		target = walletPathToURL(target);
 	}
 	return target;
 }

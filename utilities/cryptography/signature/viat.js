@@ -21,7 +21,7 @@ import signatureScheme from './signatureScheme.js';
 import sphincs192 from './sphincs192.js';
 // SEED SIZE COMBINED
 const seedSize = ed25519Utils.seedSize + dilithium65.seedSize + sphincs192.seedSize;
-console.log(seedSize);
+// console.log(seedSize);
 // KEY SIZES
 const publicKeySize = dilithium65.publicKeySize + ed25519Utils.publicKeySize + sphincs192.publicKeySize;
 const privateKeySize = dilithium65.privateKeySize + ed25519Utils.privateKeySize + sphincs192.privateKeySize;

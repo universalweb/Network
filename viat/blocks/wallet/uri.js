@@ -1,33 +1,61 @@
-import api from './defaults.js';
-import { getFolderPath } from '../../files/getAddressDirectoryPath.js';
+import blockDefaults from '../defaults.js';
+import { getPrefixPath } from '../../files/getPrefixPath.js';
 import path from 'path';
 import { toBase64Url } from '#crypto/utils.js';
+import transactionDefaults from './defaults.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
-export function getWalletFolderPath(walletAddressBuffer) {
-	return getFolderPath(walletAddressBuffer, 3, 6);
+export const walletBlockFilename = blockDefaults.genericFilenames.wallet;
+export function getWalletPrefixPath(walletAddressBuffer) {
+	return getPrefixPath(walletAddressBuffer, 3, 6);
 }
-export function getLastWalletPath(walletAddressBuffer) {
-	const address = toBase64Url(walletAddressBuffer.slice(32));
+export function getWalletDirectory(walletAddressBuffer) {
+	const address = toBase64Url(walletAddressBuffer.slice(40));
 	return address;
 }
-export function getWalletPath(walletAddressBuffer) {
-	return path.join(getWalletFolderPath(walletAddressBuffer), getLastWalletPath(walletAddressBuffer));
+export function getWalletFilename(walletAddressBuffer) {
+	const address = (walletAddressBuffer) ? toBase64Url(walletAddressBuffer) : walletBlockFilename;
+	return address;
 }
-export function getWalletFilePath(walletAddressBuffer) {
-	return path.join(api.pathname, getWalletPath(walletAddressBuffer));
+export function getWalletPathway(walletAddressBuffer) {
+	return path.join(getWalletPrefixPath(walletAddressBuffer), getWalletDirectory(walletAddressBuffer));
+}
+export function getWalletPath(walletAddressBuffer) {
+	return path.join(transactionDefaults.pathname, getWalletPathway(walletAddressBuffer));
+}
+export function getWallet(walletAddressBuffer) {
+	return path.join(getWalletPath(walletAddressBuffer), walletBlockFilename);
+}
+export function walletPathToURL(url) {
+	return url.replace(transactionDefaults.pathnameRegex, transactionDefaults.directoryURLPathname);
 }
 export function getWalletURL(walletAddressBuffer) {
-	return path.join(api.urlPathname, getWalletPath(walletAddressBuffer));
+	return path.join(transactionDefaults.urlPathname, getWalletPathway(walletAddressBuffer));
 }
-export function walletURLToFilePath(url) {
-	return url.replace(api.urlPathnameRegex, api.directoryPathname);
+export function getWalletBlockURL(walletAddressBuffer) {
+	return path.join(getWalletURL(walletAddressBuffer), walletBlockFilename);
 }
-export function walletFilePathToURL(url) {
-	return url.replace(api.pathnameRegex, api.directoryURLPathname);
+export function walletURLToPath(url) {
+	return url.replace(transactionDefaults.urlPathnameRegex, transactionDefaults.directoryPathname);
 }
-// const walletAddressBufferex = viatCipherSuite.createBlockNonce(64);
-// const example = getWalletFilePath(walletAddressBufferex);
-// console.log(example, walletFilePathToURL(example));
-// console.log(example);
-// console.log(getWalletURL(walletAddressBufferex));
-// console.log('getPathFromAddress', example, example.length);
+export const api = {
+	walletBlockFilename,
+	getWalletPrefixPath,
+	getWalletDirectory,
+	getWalletFilename,
+	getWalletPathway,
+	getWallet,
+	walletPathToURL,
+	getWalletURL,
+	getWalletBlockURL,
+	walletURLToPath,
+	getPrefixPath,
+};
+export default api;
+const walletAddressBufferex = viatCipherSuite.createBlockNonce(64);
+// console.log('getWalletURL', getWalletURL(walletAddressBufferex));
+// console.log('getWallet', getWallet(walletAddressBufferex), getWallet(walletAddressBufferex).length);
+// console.log('getWalletBlock', getWalletBlock(walletAddressBufferex), getWalletBlock(walletAddressBufferex).length);
+// console.log('getWalletPathway', getWalletPathway(walletAddressBufferex), getWalletPathway(walletAddressBufferex).length);
+// console.log('getWalletDirectory', getWalletDirectory(walletAddressBufferex), getWalletDirectory(walletAddressBufferex).length);
+// console.log('getWalletBlockURL', getWalletBlockURL(walletAddressBufferex), getWalletBlockURL(walletAddressBufferex).length);
+// console.log(walletAddressBufferex.slice(40).length);

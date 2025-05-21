@@ -5,5 +5,6 @@ const api = {
 	pathnameRegex: new RegExp('^/wallets/|^wallets/'),
 	directoryPathname: '/wallets/',
 	directoryURLPathname: '/w/',
+	hashSize: 64,
 };
 export default api;

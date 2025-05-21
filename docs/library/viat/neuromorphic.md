@@ -31,5 +31,5 @@ For example this memory map (URI) is a folder path that leads first to a specifi
 
 The URI act as a pathway or memory index to a specific memory. As you travel down the pathway associated information can be accessed until the final location.
 
-wallets(Sensory cortices)/Cq2v/uH3f/(walletFolder last 32 bytes of 64)/transactions/HA/hQ/(transactionFolder last 30 bytes of 32)
+wallets(Sensory cortices)/Cq2v/uH3f/(walletFolder last 24 bytes of 64)/transactions/HA/hQ/(transactionFolder last 24 bytes of 64 byte hash)
 

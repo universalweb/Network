@@ -5,5 +5,6 @@ const api = {
 	pathnameRegex: new RegExp('/transactions/'),
 	directoryPathname: '/transactions/',
 	directoryURLPathname: '/t/',
+	hashSize: 64,
 };
 export default api;

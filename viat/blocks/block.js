@@ -15,6 +15,7 @@ import {
 } from '@universalweb/acid';
 import blockDefaults from './defaults.js';
 import { encodeStrict } from '#utilities/serialize';
+import { getWallet } from './wallet/uri.js';
 import path from 'path';
 import { toBase64Url } from '#crypto/utils.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
@@ -30,7 +31,10 @@ export class Block {
 		}
 		return this;
 	}
-	async init() {
+	initialize() {
+		this.blockType = blockDefaults.blockTypes[this.typeName];
+		this.fileType = blockDefaults.fileExtensions[this.typeName];
+		this.filename = blockDefaults.genericFilenames[this.typeName];
 		return this;
 	}
 	block = {
@@ -42,23 +46,30 @@ export class Block {
 		// directLink (Dynamically generated) /w/3bytes/3bytes/last32/t/transactionID(32)
 		// id HASH
 	};
-	async save() {
-		await this.finalize();
+	// TODO: Add network folder to it for saving
+	async save(directoryPath) {
 		const blockBinary = await this.exportBinary();
-		const filename = await this.filename();
-		return write(filename, blockBinary, 'binary', true);
+		const fullSavePath = path.join(directoryPath, await this.getPath());
+		return write(fullSavePath, blockBinary, 'binary', true);
 	}
-	async filename() {
-		const blockName = await this.get('hash');
-		return `${blockName}.bin`;
+	//  TODO:CONVERT BUFFER TO BASE64URL
+	async getFilename() {
+		return this.filename;
 	}
 	async finalize() {
 		await this.setDefaults();
 		await this.setHash();
 	}
 	async validate() {
+		const hashCheck = await this.validateHash();
+		if (!hashCheck) {
+			return false;
+		}
+		return true;
+	}
+	async validateHash() {
 		const manualHash = await this.hashData();
-		const hash = await this.get('hash');
+		const hash = await this.getHash();
 		if (isZero(manualHash.compare(hash))) {
 			return true;
 		}
@@ -72,22 +83,28 @@ export class Block {
 	}
 	async hashData() {
 		const binary = await this.exportDataBinary();
-		return this.hash256(binary);
+		return this.hash512(binary);
 	}
 	async hashMeta() {
 		const binary = await this.exportMetaBinary();
-		return this.hash256(binary);
+		return this.hash512(binary);
 	}
 	async hashCore() {
 		const binary = await this.exportCoreBinary();
-		return this.hash256(binary);
+		return this.hash512(binary);
 	}
-	async blockHash() {
+	async hashBlock() {
 		const binary = await this.exportBinary();
-		return this.hash256(binary);
+		return this.hash512(binary);
 	}
 	async setHash() {
-		await this.set('hash', await this.blockHash());
+		await this.set('hash', await this.hashData());
+	}
+	async getHash() {
+		if (!this.get('hash')) {
+			await this.setHash();
+		}
+		return this.get('hash');
 	}
 	async id(value) {
 		if (value) {
@@ -128,13 +145,16 @@ export class Block {
 		return toBase64Url(this.getCore('sender'));
 	}
 	getSenderPath() {
-		return toBase64Url(this.getCore('sender'));
+		return getWallet(this.getCore('sender'));
 	}
 	getReceiver() {
 		return this.getCore('receiver');
 	}
 	getReceiverString() {
 		return toBase64Url(this.getReceiver());
+	}
+	getReceiverPath() {
+		return getWallet(this.getCore('receiver'));
 	}
 	set(propertyName, value, sourceObject) {
 		let link = sourceObject || this.block;
@@ -190,19 +210,19 @@ export class Block {
 		return this.getMeta('type');
 	}
 	version = version;
-	blockType = blockTypes.genericBlockType;
+	typeName = 'generic';
+	blockType = blockDefaults.blockTypes.generic;
+	fileType = blockDefaults.fileExtensions.generic;
+	filename = blockDefaults.genericFilenames.generic;
 	cipherSuite = viatCipherSuite;
 	nonceSize = 16;
-	fileType = blockDefaults.fileExtensions.block;
+	hashSize = 64;
 }
-export async function block(...args) {
-	const source = await construct(Block, args);
+export function block(...args) {
+	const source = construct(Block, args);
 	return source;
 }
 export default block;
-// const exmple = await block();
+// const exmple = block();
 // console.log(exmple);
-// console.log(exmple.get());
-console.log(path.resolve(currentPath(import.meta)));
-console.log(path.dirname(path.normalize('./')));
 // U3VjaCB2aXNpb24gb2Ygd2hhdCBjb3VsZCBiZSBidXQgb25lIEkgbWF5IG5ldmVyIHNlZS4gVGhlIGN1cnNlIG9mIGRyZWFtcy4=
