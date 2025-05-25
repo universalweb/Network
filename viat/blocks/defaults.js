@@ -40,6 +40,17 @@ const genericFilenames = {
 	verification: 'vvr.block',
 	generic: 'vg.block',
 };
+export function createBlockDefaultsObject(blockName, blockNamePlural, letter) {
+	const target = {
+		urlPathname: letter,
+		pathname: blockNamePlural,
+		urlPathnameRegex: new RegExp(`/${letter}/`),
+		pathnameRegex: new RegExp(`/${blockNamePlural}/`),
+		directoryPathname: `/${blockNamePlural}/`,
+		directoryURLPathname: `/${letter}/`
+	};
+	return target;
+}
 export const blockDefaults = {
 	version,
 	blockTypes,

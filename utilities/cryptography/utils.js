@@ -12,12 +12,16 @@ export const defaultHashFunction = 'shake256';
 export const int32 = 32;
 export const int64 = 64;
 export const int512 = 512;
+export const int128 = 128;
 export const hexString = 'hex';
 export const hash512SettingsNoble = {
 	dkLen: int64
 };
 export const hash512SettingsCrypto = {
 	outputLength: int64
+};
+export const hash1024SettingsCrypto = {
+	outputLength: int128
 };
 export function clearBuffer(source) {
 	if (source) {

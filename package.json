@@ -29,14 +29,14 @@
 		"keychain": "^1.5.0",
 		"libsodium-wrappers": "^0.7.15",
 		"mongoose": "^8.15.0",
-		"node-seal": "^5.1.5",
+		"node-seal": "^5.1.6",
 		"node-watch": "^0.7.4",
 		"nodemon": "^3.1.10",
 		"os-utils": "^0.0.14",
 		"pqclean": "latest",
 		"qrcode": "^1.5.4",
 		"signale": "^1.4.0",
-		"sodium-native": "^5.0.3"
+		"sodium-native": "^5.0.4"
 	},
 	"description": "UW & VIAT modules: Client, Server, VIAT, DIS, Browser, Crypto, Wallets, Modules, & certificates.",
 	"engines": {
@@ -124,12 +124,12 @@
 		"auto-changelog": "^2.5.0",
 		"axios": "^1.9.0",
 		"benchmark": "^2.1.4",
-		"daisyui": "^5.0.35",
+		"daisyui": "^5.0.37",
 		"eslint": "^9.27.0",
 		"eslint-plugin-jsdoc": "^50.6.17",
 		"globals": "^16.1.0",
 		"tailwindcss": "^4.1.7",
-		"textlint": "^14.7.1"
+		"textlint": "^14.7.2"
 	},
 	"pnpm": {
 		"overrides": {

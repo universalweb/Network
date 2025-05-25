@@ -5,57 +5,57 @@ import { toBase64Url } from '#crypto/utils.js';
 import transactionDefaults from './defaults.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 export const walletBlockFilename = blockDefaults.genericFilenames.wallet;
-export function getWalletPrefixPath(walletAddressBuffer) {
-	return getPrefixPath(walletAddressBuffer, 3, 6);
+export function getWalletPrefixPath(walletAddress) {
+	return getPrefixPath(walletAddress, 3, 6);
 }
-export function getWalletDirectory(walletAddressBuffer) {
-	const address = toBase64Url(walletAddressBuffer.slice(40));
+export function getWalletDirectory(walletAddress) {
+	const address = toBase64Url(walletAddress.slice(40));
 	return address;
 }
-export function getWalletFilename(walletAddressBuffer) {
-	const address = (walletAddressBuffer) ? toBase64Url(walletAddressBuffer) : walletBlockFilename;
+export function getWalletFilename(walletAddress) {
+	const address = (walletAddress) ? toBase64Url(walletAddress) : walletBlockFilename;
 	return address;
 }
-export function getWalletPathway(walletAddressBuffer) {
-	return path.join(getWalletPrefixPath(walletAddressBuffer), getWalletDirectory(walletAddressBuffer));
+export function getWalletPathway(walletAddress) {
+	return path.join(getWalletPrefixPath(walletAddress), getWalletDirectory(walletAddress));
 }
-export function getWalletPath(walletAddressBuffer) {
-	return path.join(transactionDefaults.pathname, getWalletPathway(walletAddressBuffer));
+export function getWalletPath(walletAddress) {
+	return path.join(transactionDefaults.pathname, getWalletPathway(walletAddress));
 }
-export function getWallet(walletAddressBuffer) {
-	return path.join(getWalletPath(walletAddressBuffer), walletBlockFilename);
+export function getWallet(walletAddress) {
+	return path.join(getWalletPath(walletAddress), walletBlockFilename);
 }
 export function walletPathToURL(url) {
 	return url.replace(transactionDefaults.pathnameRegex, transactionDefaults.directoryURLPathname);
 }
-export function getWalletURL(walletAddressBuffer) {
-	return path.join(transactionDefaults.urlPathname, getWalletPathway(walletAddressBuffer));
+export function getWalletPathURL(walletAddress) {
+	return path.join(transactionDefaults.urlPathname, getWalletPathway(walletAddress));
 }
-export function getWalletBlockURL(walletAddressBuffer) {
-	return path.join(getWalletURL(walletAddressBuffer), walletBlockFilename);
+export function getWalletURL(walletAddress) {
+	return path.join(getWalletPathURL(walletAddress), walletBlockFilename);
 }
 export function walletURLToPath(url) {
 	return url.replace(transactionDefaults.urlPathnameRegex, transactionDefaults.directoryPathname);
 }
 export const api = {
-	walletBlockFilename,
-	getWalletPrefixPath,
-	getWalletDirectory,
-	getWalletFilename,
-	getWalletPathway,
-	getWallet,
-	walletPathToURL,
-	getWalletURL,
-	getWalletBlockURL,
-	walletURLToPath,
-	getPrefixPath,
+	blockFilename: walletBlockFilename,
+	getPrefixPath: getWalletPrefixPath,
+	getDirectory: getWalletDirectory,
+	getFilename: getWalletFilename,
+	getPathway: getWalletPathway,
+	get: getWallet,
+	pathToURL: walletPathToURL,
+	getURL: getWalletURL,
+	getBlockURL: getWalletURL,
+	urlToPath: walletURLToPath,
+	prefixPath: getWalletPrefixPath,
 };
 export default api;
-const walletAddressBufferex = viatCipherSuite.createBlockNonce(64);
-// console.log('getWalletURL', getWalletURL(walletAddressBufferex));
-// console.log('getWallet', getWallet(walletAddressBufferex), getWallet(walletAddressBufferex).length);
-// console.log('getWalletBlock', getWalletBlock(walletAddressBufferex), getWalletBlock(walletAddressBufferex).length);
-// console.log('getWalletPathway', getWalletPathway(walletAddressBufferex), getWalletPathway(walletAddressBufferex).length);
-// console.log('getWalletDirectory', getWalletDirectory(walletAddressBufferex), getWalletDirectory(walletAddressBufferex).length);
-// console.log('getWalletBlockURL', getWalletBlockURL(walletAddressBufferex), getWalletBlockURL(walletAddressBufferex).length);
-// console.log(walletAddressBufferex.slice(40).length);
+// const walletAddressex = viatCipherSuite.createBlockNonce(64);
+// console.log('getWalletURL', getWalletURL(walletAddressex));
+// console.log('getWallet', getWallet(walletAddressex), getWallet(walletAddressex).length);
+// console.log('getWalletBlock', getWalletBlock(walletAddressex), getWalletBlock(walletAddressex).length);
+// console.log('getWalletPathway', getWalletPathway(walletAddressex), getWalletPathway(walletAddressex).length);
+// console.log('getWalletDirectory', getWalletDirectory(walletAddressex), getWalletDirectory(walletAddressex).length);
+// console.log('getWalletBlockURL', getWalletBlockURL(walletAddressex), getWalletBlockURL(walletAddressex).length);
+// console.log(walletAddressex.slice(40).length);

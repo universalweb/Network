@@ -1,6 +1,10 @@
-import { get, mapAsyncArray } from '@universalweb/acid';
+import { assignToClass, get, mapAsyncArray } from '@universalweb/acid';
 import {
-	getTransactionFromBlock, getTransactionPathFromBlock, getTransactionPathURLFromBlock, getTransactionURLFromBlock
+	blockMethods,
+	getTransactionFromBlock,
+	getTransactionPathFromBlock,
+	getTransactionPathURLFromBlock,
+	getTransactionURLFromBlock
 } from './uri.js';
 // Include a Block Link ID - uses to quickly share a transaction and then can be efficiently found by other parties.
 // This is a unique ID that is generated for each transaction. It can be used to quickly find the transaction in the block chain.
@@ -14,65 +18,59 @@ import { toBase64Url, toHex } from '#crypto/utils.js';
 import { Block } from '../block.js';
 import blockDefaults from '../defaults.js';
 import { encodeStrict } from '#utilities/serialize';
-// import receiptBlock from '../receipt.js';
+import { getBlockFromBlock } from '../utils.js';
+import { loadBlock } from '#viat/blocks/utils';
+import path from 'path';
+import receiptBlock from '../receipt/block.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 class TransactionBlock extends Block {
-	constructor(config) {
-		super(config);
-		if (config.amount) {
-			this.setCore('amount', config.amount);
-		}
-		if (config.receiver) {
-			this.setCore('receiver', config.receiver);
-		}
-		if (config.sender) {
-			this.setCore('sender', config.sender);
-		}
-		this.initialize();
+	constructor(data, config) {
+		super(data, config);
+		this.initialize(data, config);
 		return this;
 	}
 	// Receipt Hash Link
 	// Block Hash (TX DATA || Receipt Meta?)
-	async generateReceipt(block) {
-		// this.receipt = receiptBlock(this);
+	async createReceipt(block) {
+		this.receipt = await receiptBlock(this);
 		return this;
 	}
-	getPath() {
-		return getTransactionFromBlock(this);
+	getReceiptPath() {
+		const { source, } = this;
+		const filepath = getTransactionPathFromBlock(this);
+		const networkPath = (source) ? source().networkPath : undefined;
+		const fullFilepath = (networkPath) ? path.join(networkPath, filepath) : filepath;
+		return fullFilepath;
 	}
-	getURL() {
-		return getTransactionURLFromBlock(this);
-	}
-	getDirectory() {
-		return getTransactionPathFromBlock(this);
-	}
-	getDirectoryURL() {
-		return getTransactionPathURLFromBlock(this);
+	async getReceipt() {
+		const transactionPath = this.getReceiptPath();
+		return getBlockFromBlock(transactionPath, this);
 	}
 	typeName = 'transaction';
-	hashSize = 64;
 }
-export function transactionBlock(config) {
-	const block = new TransactionBlock(config);
+assignToClass(TransactionBlock, blockMethods);
+export async function transactionBlock(data, config) {
+	const block = new TransactionBlock(data, config);
 	return block;
 }
 export default transactionBlock;
-const exampleBlock = transactionBlock({
-	amount: 1000,
-	receiver: viatCipherSuite.createBlockNonce(64),
-	sender: viatCipherSuite.createBlockNonce(64),
-});
+// const exampleBlock = await transactionBlock({
+// 	amount: 1000,
+// 	receiver: viatCipherSuite.createBlockNonce(64),
+// 	sender: viatCipherSuite.createBlockNonce(64),
+// 	mana: 1000,
+// });
 // console.log('Block HASH/ID', await exampleBlock.id());
 // console.log('Transaction Block', exampleBlock);
 // exampleBlock.setDefaults();
 // await exampleBlock.setHash();
-// console.log('Block HASH/ID', exampleBlock.block);
+// console.log('Block Object', exampleBlock.block);
 // console.log(await exampleBlock.validateHash());
-// console.log(await exampleBlock.getHash(), exampleBlock.getSender());
+// console.log(await exampleBlock.getHash(), exampleBlock.getReceiver());
 // console.log('getURL', await exampleBlock.getURL());
 // console.log('getPath', await exampleBlock.getPath());
-// console.log('getPath', await exampleBlock.getSenderPath());
-// console.log('getPath', await exampleBlock.getReceiverPath());
+// console.log('getSenderPath', await exampleBlock.getSenderPath());
+// console.log('getReceiverPath', await exampleBlock.getReceiverPath());
 // console.log('getDirectory', await exampleBlock.getDirectory());
 // console.log('getDirectoryURL', await exampleBlock.getDirectoryURL());
 // console.log('Transaction Block ENTIRE BINARY', await exampleBlock.exportBinary());

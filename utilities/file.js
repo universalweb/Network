@@ -58,7 +58,10 @@ export async function readJson(filePath) {
 }
 export async function readStructured(filePath) {
 	try {
-		return decode(await read(filePath));
+		const file = await read(filePath);
+		if (file) {
+			return decode(file);
+		}
 	} catch (err) {
 		console.log('Read Decode Error', err);
 		return;

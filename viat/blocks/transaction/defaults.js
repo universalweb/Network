@@ -1,10 +1,3 @@
-const api = {
-	urlPathname: 't',
-	pathname: 'transactions',
-	urlPathnameRegex: new RegExp('/t/'),
-	pathnameRegex: new RegExp('/transactions/'),
-	directoryPathname: '/transactions/',
-	directoryURLPathname: '/t/',
-	hashSize: 64,
-};
+import { createBlockDefaultsObject } from '../defaults.js';
+const api = createBlockDefaultsObject('transaction', 'transactions', 't');
 export default api;

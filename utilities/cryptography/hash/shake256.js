@@ -1,6 +1,7 @@
 //
 import {
 	clearBuffer,
+	hash1024SettingsCrypto,
 	hash512SettingsCrypto,
 	int32,
 	int64
@@ -14,6 +15,9 @@ export async function hash256(source) {
 }
 export async function hash512(source) {
 	return createHash(hashName, hash512SettingsCrypto).update(source).digest();
+}
+export async function hash1024(source) {
+	return createHash(hashName, hash1024SettingsCrypto).update(source).digest();
 }
 export async function hashXOF(source, outputLength) {
 	return createHash(hashName, {
@@ -31,6 +35,7 @@ export const shake256 = hashScheme({
 	hash256,
 	hash: hash256,
 	hash512,
+	hash1024,
 	hashXOF
 });
 export default shake256;

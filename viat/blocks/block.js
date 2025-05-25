@@ -13,29 +13,55 @@ import {
 	sortNumberAscending,
 	toPath
 } from '@universalweb/acid';
+import { readStructured, write } from '#utilities/file';
 import blockDefaults from './defaults.js';
 import { encodeStrict } from '#utilities/serialize';
+import { getParentClassName } from '#utilities/class';
+import { getTransactionPath } from './transaction/uri.js';
 import { getWallet } from './wallet/uri.js';
 import path from 'path';
 import { toBase64Url } from '#crypto/utils.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
-import { write } from '#utilities/file';
 const {
 	version,
 	blockTypes
 } = blockDefaults;
 export class Block {
-	constructor(config) {
-		if (config?.block) {
-			assign(this.block, config.block);
+	constructor(data, config) {
+		if (data) {
+			assign(this.block, data);
+		}
+		if (config?.source) {
+			this.source = function() {
+				return config.source;
+			};
 		}
 		return this;
 	}
-	initialize() {
+	initialize(data, config) {
 		this.blockType = blockDefaults.blockTypes[this.typeName];
 		this.fileType = blockDefaults.fileExtensions[this.typeName];
 		this.filename = blockDefaults.genericFilenames[this.typeName];
+		if (getParentClassName(data) === 'Block') {
+			this.configByBlock(data, config);
+		}
 		return this;
+	}
+	configByBlock(blockObject, config) {
+		switch (blockObject.blockType) {
+			case blockTypes.transaction: {
+				return this.configByTransactionBlock(blockObject, config);
+			}
+			case blockTypes.receipt: {
+				return this.configByReceiptBlock(blockObject, config);
+			}
+			default: {
+				return this.configByGenericBlock(blockObject, config);
+			}
+		}
+	}
+	async configByBlockAsync(blockObject, config) {
+		return this.configByBlock(blockObject, config);
 	}
 	block = {
 		data: {
@@ -218,11 +244,11 @@ export class Block {
 	nonceSize = 16;
 	hashSize = 64;
 }
-export function block(...args) {
+export async function block(...args) {
 	const source = construct(Block, args);
 	return source;
 }
 export default block;
-// const exmple = block();
+// const exmple = await block();
 // console.log(exmple);
 // U3VjaCB2aXNpb24gb2Ygd2hhdCBjb3VsZCBiZSBidXQgb25lIEkgbWF5IG5ldmVyIHNlZS4gVGhlIGN1cnNlIG9mIGRyZWFtcy4=

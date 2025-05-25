@@ -1,3 +1,3 @@
 import { createBlockDefaultsObject } from '../defaults.js';
-const api = createBlockDefaultsObject('wallet', 'wallets', 'w');
+const api = createBlockDefaultsObject('receipt', 'receipts', 'r');
 export default api;

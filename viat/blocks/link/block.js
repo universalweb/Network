@@ -1,4 +1,4 @@
-import { Block } from './block.js';
+import { Block } from '../block.js';
 import { blockDefaults } from './defaults.js';
 import { encodeStrict } from '#utilities/serialize';
 import { mapAsyncArray } from '@universalweb/acid';

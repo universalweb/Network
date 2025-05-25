@@ -1,55 +1,54 @@
+import { getFinalDirectory, getPrefixPath, getShortPrefixPath } from '../../files/getPrefixPath.js';
 import {
-	getWallet,
+	getWalletPath,
 	getWalletURL,
 	walletPathToURL,
 	walletURLToPath
 } from '../wallet/uri.js';
-import api from './defaults.js';
 import blockDefaults from '../defaults.js';
-import { getPrefixPath } from '../../files/getPrefixPath.js';
+import defaults from './defaults.js';
 import { isNotString } from '@universalweb/acid';
 import path from 'path';
 import { toBase64Url } from '#crypto/utils.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 // Consider Short URL which uses a "proxy trie" (Shortcut symlink to actual) that uses the 64 byte hash like a wallet trie to map to a wallet folder then the transaction.
 export const transactionBlockFilename = blockDefaults.genericFilenames.transaction;
-export function getTransactionPrefixPath(walletAddressBuffer) {
-	return getPrefixPath(walletAddressBuffer, 1, 2);
+export function getTransactionPrefixPath(transactionHash) {
+	return getShortPrefixPath(transactionHash);
 }
-export function getTransactionDirectory(transactionIDBuffer) {
-	const address = toBase64Url(transactionIDBuffer.slice(40));
+export function getTransactionDirectory(transactionHash) {
+	return getFinalDirectory(transactionHash);
+}
+export function getTransactionFilename(transactionHash) {
+	const address = (transactionHash) ? toBase64Url(transactionHash) : transactionBlockFilename;
 	return address;
 }
-export function getTransactionFilename(transactionIDBuffer) {
-	const address = (transactionIDBuffer) ? toBase64Url(transactionIDBuffer) : transactionBlockFilename;
-	return address;
+export function getTransactionPath(transactionHash, walletAddress) {
+	if (walletAddress) {
+		return path.join(getWalletPath(walletAddress), defaults.pathname, getTransactionPath(transactionHash));
+	}
+	return path.join(getTransactionPrefixPath(transactionHash), getTransactionDirectory(transactionHash));
 }
-export function getTransactionPathway(transactionIDBuffer) {
-	return path.join(getTransactionPrefixPath(transactionIDBuffer), getTransactionDirectory(transactionIDBuffer));
+export function getTransaction(transactionHash, walletAddress) {
+	return path.join(getTransactionPath(transactionHash, walletAddress), transactionBlockFilename);
 }
-export function getTransactionPath(transactionIDBuffer, walletAddressBuffer) {
-	return path.join(getWallet(walletAddressBuffer), api.pathname, getTransactionPathway(transactionIDBuffer));
+export function getTransactionPathURL(transactionHash, walletAddress) {
+	return path.join(getWalletURL(walletAddress), defaults.urlPathname, getTransactionPath(transactionHash));
 }
-export function getTransaction(transactionIDBuffer, walletAddressBuffer) {
-	return path.join(getTransactionPath(transactionIDBuffer, walletAddressBuffer), transactionBlockFilename);
-}
-export function getTransactionPathURL(transactionIDBuffer, walletAddressBuffer) {
-	return path.join(getWalletURL(walletAddressBuffer), api.urlPathname, getTransactionPathway(transactionIDBuffer));
-}
-export function getTransactionURL(transactionIDBuffer, walletAddressBuffer) {
-	return path.join(getTransactionPathURL(transactionIDBuffer, walletAddressBuffer), transactionBlockFilename);
+export function getTransactionURL(transactionHash, walletAddress) {
+	return path.join(getTransactionPathURL(transactionHash, walletAddress), transactionBlockFilename);
 }
 export function transactionURLToPath(url) {
 	if (isNotString(url)) {
 		return;
 	}
-	return walletURLToPath(url).replace(api.urlPathnameRegex, api.directoryPathname);
+	return walletURLToPath(url).replace(defaults.urlPathnameRegex, defaults.directoryPathname);
 }
 export function transactionPathToURL(url) {
 	if (isNotString(url)) {
 		return;
 	}
-	return walletPathToURL(url).replace(api.pathnameRegex, api.directoryURLPathname);
+	return walletPathToURL(url).replace(defaults.pathnameRegex, defaults.directoryURLPathname);
 }
 export async function getTransactionPathFromBlock(block) {
 	return getTransactionPath(await block.getHash(), block.getSender());
@@ -63,12 +62,38 @@ export async function getTransactionURLFromBlock(block) {
 export async function getTransactionPathURLFromBlock(block) {
 	return getTransactionPathURL(await block.getHash(), block.getSender());
 }
+export const api = {
+	blockFilename: transactionBlockFilename,
+	getPrefixPath: getTransactionPrefixPath,
+	getDirectory: getTransactionDirectory,
+	getFilename: getTransactionFilename,
+	get: getTransaction,
+	pathToURL: transactionPathToURL,
+	getURL: getTransactionURL,
+	urlToPath: transactionURLToPath,
+	prefixPath: getTransactionPrefixPath,
+};
+export const blockMethods = {
+	getPath() {
+		return getTransactionFromBlock(this);
+	},
+	getDirectory() {
+		return getTransactionPathFromBlock(this);
+	},
+	getDirectoryURL() {
+		return getTransactionPathURLFromBlock(this);
+	},
+	getURL() {
+		return getTransactionURLFromBlock(this);
+	},
+};
+export default api;
 // const walletBufferex = await viatCipherSuite.createBlockNonce(64);
 // const txBufferex = await viatCipherSuite.createBlockNonce(64);
-// console.log(getTransactionPath(txBufferex, walletBufferex));
-// console.log(getTransaction(txBufferex, walletBufferex));
+// console.log('getTransactionPath', getTransactionPath(txBufferex, walletBufferex));
+// console.log('getTransaction', getTransaction(txBufferex, walletBufferex));
 // console.log('getTransactionURL', getTransactionURL(txBufferex, walletBufferex), getTransactionURL(txBufferex, walletBufferex).length);
-// console.log(transactionPathToURL(getTransactionPath(txBufferex, walletBufferex)));
+// console.log('transactionPathToURL', transactionPathToURL(getTransactionPath(txBufferex, walletBufferex)));
 // console.log('getTransactionFilename', getTransactionFilename(txBufferex).length);
 // console.log('getTransactionPathway', getTransactionPathway(txBufferex).length);
 // console.log(toBase64Url(txBufferex));

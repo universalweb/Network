@@ -8,6 +8,7 @@ export const falcon1024 = generateScheme('falcon-padded-1024', {
 	alias: 'falcon-1024',
 	id: 5,
 	security: 4,
+	sideSize: 128,
 	preferred: false
 });
 export default falcon1024;
