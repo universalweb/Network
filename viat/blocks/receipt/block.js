@@ -1,3 +1,4 @@
+//  BETA
 import {
 	blockMethods,
 	getReceiptFromBlock,
