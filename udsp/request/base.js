@@ -24,11 +24,18 @@ import { checkSendHeadReady, clearSendHeadReadyTimeout, sendHeadReady } from './
 import { checkSendParametersReady, clearSendParametersReadyTimeout, sendParametersReady } from './sendReady/sendParametersReady.js';
 import { checkSendPathReady, clearSendPathReadyTimeout, sendPathReady } from './sendReady/sendPathReady.js';
 import { checkSetupSent, clearSetupTimeout, sendSetup } from './send/sendSetup.js';
-import { createEvent, removeEvent, triggerEvent } from '../events.js';
+import { createEvent, removeEvent, triggerEvent } from '../utilities/events.js';
 import { decode, encode } from '#utilities/serialize';
 import { flush, flushIncoming, flushOutgoing } from './flush.js';
+import {
+	logError,
+	logInfo,
+	logSuccess,
+	logVerbose,
+	logWarning
+} from '../../utilities/logs/classLogMethods.js';
 import { dataPacketization } from './dataPacketization.js';
-import { destroy } from './destory.js';
+import { destroy } from './destroy.js';
 import { onData } from './on/onData.js';
 import { onDataProgress } from './onProgress/onDateProgress.js';
 import { onFrame } from './on/onFrame.js';
@@ -47,8 +54,7 @@ import { sendEnd } from './send/sendEnd.js';
 import { sendHead } from './send/sendHead.js';
 import { sendParameters } from './send/sendParameters.js';
 import { sendPath } from './send/sendPath.js';
-import { success } from '#logs';
-import { toBase64 } from '#crypto';
+import { toBase64 } from '#utilities/cryptography/utils';
 const noPayloadMethods = /0/;
 /**
  * @todo
@@ -68,23 +74,20 @@ export class Base {
 			this.latencyTimeout = this.connectionLatency;
 		}
 		source.lastActive = Date.now();
-		if (this.isAsk) {
-			this.handshake = source.handshake;
-		}
 		this.noData = noPayloadMethods.test(this.method);
 	}
 	setState(value) {
 		this.state = value;
-		console.log(`State Set: ${value}`);
+		this.logInfo(`State Set: ${value}`);
 	}
-	setHeaders(target) {
+	async setHeaders(target) {
 		const source = this.isAsk ? this.request : this.response;
 		if (!source.head) {
 			source.head = {};
 		}
 		assign(source.head, target);
 	}
-	setHeader(headerName, headerValue) {
+	async setHeader(headerName, headerValue) {
 		const source = this.isAsk ? this.request : this.response;
 		if (!source.head) {
 			source.head = {};
@@ -97,22 +100,23 @@ export class Base {
 			this.totalIncomingDataSize = dataSize;
 		}
 	}
-	setHead() {
+	// TODO: ADD EVENT FOR WHEN HEADERS ARE COMPLETED TO RUN LOGIC BEFORE DATA ARRIVES
+	async setHead() {
 		clear(this.incomingHeadPackets);
 		let head;
 		if (this.incomingHead?.length) {
 			const headCompiled = Buffer.concat(this.incomingHead);
 			clearBuffer(this.incomingHead);
-			head = decode(headCompiled);
+			head = await decode(headCompiled);
 			headCompiled.fill(0);
 			if (isUndefined(head)) {
 				console.trace('Header decode failed');
 				return this.destroy('Header decode failed');
 			}
 			if (isPlainObject(head)) {
-				this.setHeaderDetails(head);
+				await this.setHeaderDetails(head);
 			}
-			console.log('HEAD SET', head);
+			this.logInfo('HEAD SET', head);
 		} else {
 			head = {};
 		}
@@ -124,18 +128,19 @@ export class Base {
 		this.readyState = 2;
 		this.headAssembled = true;
 	}
-	setParameters() {
+	// TODO: ADD EVENT FOR WHEN Parameters ARE COMPLETED TO RUN LOGIC BEFORE DATA ARRIVES
+	async setParameters() {
 		clear(this.incomingParametersPackets);
 		if (this.incomingParameters?.length) {
 			const parametersCompiled = Buffer.concat(this.incomingParameters);
 			clearBuffer(this.incomingParameters);
-			this.parameters = decode(parametersCompiled);
+			this.parameters = await decode(parametersCompiled);
 			parametersCompiled.fill(0);
 			if (isUndefined(this.parameters)) {
 				console.trace('parameters decode failed');
 				return this.destroy('parameters decode failed');
 			}
-			console.log('Parameters SET', this.parameters);
+			this.logInfo('Parameters SET', this.parameters);
 		} else {
 			this.parameters = null;
 		}
@@ -143,19 +148,20 @@ export class Base {
 		this.parametersAssembled = true;
 		this.sendHeadReady();
 	}
-	setPath() {
+	// TODO: ADD EVENT FOR WHEN PATH IS COMPLETED TO RUN LOGIC BEFORE DATA ARRIVES
+	async setPath() {
 		clear(this.incomingPathPackets);
 		if (this.incomingPath?.length) {
-			console.log('Assemble Path', this.incomingPath);
+			this.logInfo('Assemble Path', this.incomingPath);
 			const pathCompiled = Buffer.concat(this.incomingPath);
 			clearBuffer(this.incomingPath);
-			this.path = decode(pathCompiled);
+			this.path = await decode(pathCompiled);
 			pathCompiled.fill(0);
 			if (isUndefined(this.path)) {
 				console.trace('path decode failed');
 				return this.destroy('path decode failed');
 			}
-			console.log('Path SET', this.path);
+			this.logInfo('Path SET', this.path);
 		} else {
 			this.path = '';
 		}
@@ -174,14 +180,14 @@ export class Base {
 			this.emptyPath = true;
 			return;
 		}
-		console.log('pathPacketization', source.path);
-		this.outgoingPath = encode(source.path);
+		this.logInfo('pathPacketization', source.path);
+		this.outgoingPath = await encode(source.path);
 		this.outgoingPathSize = this.outgoingPath.length;
-		console.log('outgoingPathSize', this.outgoingPathSize);
+		this.logInfo('outgoingPathSize', this.outgoingPathSize);
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const outgoingPathSize = this.outgoingPathSize;
-		console.log('maxFrameSize', maxFrameSize);
+		this.logInfo('maxFrameSize', maxFrameSize);
 		while (currentBytePosition < outgoingPathSize) {
 			const message = this.getPacketTemplate(2);
 			message.push(packetId);
@@ -197,7 +203,7 @@ export class Base {
 			packetId++;
 			currentBytePosition = safeEndIndex;
 		}
-		console.log('outgoingPathSize', this.outgoingPathSize);
+		this.logInfo('outgoingPathSize', this.outgoingPathSize);
 	}
 	async parametersPacketization() {
 		const {
@@ -210,14 +216,14 @@ export class Base {
 			this.emptyParameters = true;
 			return;
 		}
-		console.log('parametersPacketization', source.parameters);
-		this.outgoingParameters = encode(source.parameters);
+		this.logInfo('parametersPacketization', source.parameters);
+		this.outgoingParameters = await encode(source.parameters);
 		this.outgoingParametersSize = this.outgoingParameters.length;
-		console.log('outgoingParameterSize', this.outgoingParametersSize);
+		this.logInfo('outgoingParameterSize', this.outgoingParametersSize);
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const outgoingParametersSize = this.outgoingParametersSize;
-		console.log('maxFrameSize', maxFrameSize);
+		this.logInfo('maxFrameSize', maxFrameSize);
 		while (currentBytePosition < outgoingParametersSize) {
 			const message = this.getPacketTemplate(4);
 			message.push(packetId);
@@ -232,7 +238,7 @@ export class Base {
 			packetId++;
 			currentBytePosition = safeEndIndex;
 		}
-		console.log('outgoingParameterSize', this.outgoingParameterSize);
+		this.logInfo('outgoingParameterSize', this.outgoingParameterSize);
 	}
 	async headPacketization() {
 		const {
@@ -243,17 +249,17 @@ export class Base {
 		const source = this.isAsk ? this.request : this.response;
 		if (!source.head || !objectSize(source.head)) {
 			this.emptyHead = true;
-			console.log('Empty Head');
+			this.logInfo('Empty Head');
 			return;
 		}
-		console.log('headPacketization', source.head);
-		this.outgoingHead = encode(source.head);
+		this.logInfo('headPacketization', source.head);
+		this.outgoingHead = await encode(source.head);
 		this.outgoingHeadSize = this.outgoingHead.length;
-		console.log('outgoingHeadSize', this.outgoingHeadSize);
+		this.logInfo('outgoingHeadSize', this.outgoingHeadSize);
 		let currentBytePosition = 0;
 		let packetId = 0;
 		const headSize = this.outgoingHeadSize;
-		console.log('maxFrameSize', maxFrameSize);
+		this.logInfo('maxFrameSize', maxFrameSize);
 		while (currentBytePosition < headSize) {
 			const message = this.getPacketTemplate(6);
 			message.push(packetId);
@@ -268,7 +274,7 @@ export class Base {
 			packetId++;
 			currentBytePosition = safeEndIndex;
 		}
-		console.log('outgoingHeadSize', this.outgoingHeadSize);
+		this.logInfo('outgoingHeadSize', this.outgoingHeadSize);
 	}
 	async dataPacketization() {
 		const {
@@ -279,11 +285,11 @@ export class Base {
 		if (source.data) {
 			this.outgoingData = source.data;
 			if (!isBuffer(source.data)) {
-				this.setHeader('serialize');
-				this.outgoingData = encode(source.data);
+				await this.setHeader('serialize');
+				this.outgoingData = await encode(source.data);
 			}
 			this.outgoingDataSize = this.outgoingData.length;
-			this.setHeader('dataSize', this.outgoingData.length);
+			await this.setHeader('dataSize', this.outgoingData.length);
 			await dataPacketization(this);
 		}
 	}
@@ -309,7 +315,7 @@ export class Base {
 			isReply,
 		} = this;
 		if (isAsk) {
-			console.log('CHECKING CONNECTION');
+			this.logInfo('CHECKING CONNECTION');
 			const connect = await this.source().connect();
 			if (this.sent) {
 				return this.accept;
@@ -321,12 +327,12 @@ export class Base {
 		if (data) {
 			message.data = data;
 		}
-		console.log(`${this.constructor.name}.send`, message);
+		this.logInfo(`${this.constructor.name}.send`, message);
 		const awaitingResult = promise((accept) => {
 			thisSource.accept = accept;
 		});
 		await this.packetization();
-		console.log(`SENDING FROM A ${this.constructor.name}`);
+		this.logInfo(`SENDING FROM A ${this.constructor.name}`);
 		this.sendSetup();
 		return awaitingResult;
 	}
@@ -391,13 +397,13 @@ export class Base {
 		return removeEvent(this.events, eventName, eventMethod);
 	}
 	fire(eventName, ...args) {
-		success(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
+		this.logInfo(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
 		return triggerEvent(this.events, eventName, this, ...args);
 	}
 	destroy = destroy;
 	onFrame = onFrame;
 	async sendPacket(message, headers, footer) {
-		// console.log('sendPacket this.source()', this.source());
+		// this.logInfo('sendPacket this.source()', this.source());
 		this.source().send(message, headers, footer);
 	}
 	flushOutgoing = flushOutgoing;
@@ -437,6 +443,11 @@ export class Base {
 	checkSetupSent = checkSetupSent;
 	clearSetupTimeout = clearSetupTimeout;
 	sendSetup = sendSetup;
+	logError = logError;
+	logWarning = logWarning;
+	logInfo = logInfo;
+	logVerbose = logVerbose;
+	logSuccess = logSuccess;
 	outgoingHead;
 	outgoingData;
 	incomingHeadState = false;
@@ -486,8 +497,6 @@ export class Base {
 	totalReceivedUniquePathPackets = 0;
 	totalReceivedUniqueParametersPackets = 0;
 	totalIncomingParametersSize = 0;
-	// Request Specific UDSP State
-	handshake = false;
 	inRequestQueue = false;
 	status = 0;
 	readyState = 0;
@@ -509,4 +518,5 @@ export class Base {
 	connectionLatency = 100;
 	latencyTimeout	= 100;
 	setupAttempts = 0;
+	logLevel = 3;
 }

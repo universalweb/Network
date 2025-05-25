@@ -1,12 +1,18 @@
-import * as routers from '../router/index.js';
+import * as routers from './router/index.js';
 import * as servers from '#server';
+import {
+	logError,
+	logInfo,
+	logSuccess,
+	logVerbose,
+	logWarning
+} from '../../utilities/logs/classLogMethods.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { encode } from '#utilities/serialize';
-import { getConnectionIdReservedSpaceString } from '../connectionId.js';
+import { getConnectionIdReservedSpaceString } from '../utilities/connectionId.js';
 import { initialize } from '#server/clients/initialize';
 import { isUndefined } from '@universalweb/acid';
-import { msgReceived } from '#logs';
-import { onPacket } from '../server/onPacket.js';
+import { onPacket } from '../server/methods/onPacket.js';
 const {
 	router: createRouter,
 	Router
@@ -22,10 +28,10 @@ export class App {
 	async initialize(options) {
 		const { router: routerOptions } = options;
 		if (options) {
-			if (options.constructor === Server) {
-				this.use(options);
+			if (options.server?.constructor === Server) {
+				this.useServer(options);
 			} else {
-				this.server = await createServer(options);
+				this.server = await createServer(options.server);
 				this.useServer(this.server);
 			}
 		}
@@ -39,7 +45,7 @@ export class App {
 		return this;
 	}
 	async onLoadbalancer(packet, connection) {
-		msgReceived('Message Received');
+		this.logInfo('Message Received onLoadbalancer');
 		const config = {
 			packet,
 			connection,
@@ -56,13 +62,13 @@ export class App {
 		if (id !== false) {
 			const idString = id.toString('hex');
 			const reservedSmartRoute = getConnectionIdReservedSpaceString(id, reservedConnectionIdSize);
-			console.log(`Loadbalancer got an id ${idString}`);
-			console.log(`Reserved Smart Route ${reservedSmartRoute}`, id.length, idString, reservedConnectionIdSize);
+			this.logInfo(`Loadbalancer got an id ${idString}`);
+			this.logInfo(`Reserved Smart Route ${reservedSmartRoute}`, id.length, idString, reservedConnectionIdSize);
 			workerId = reservedSmartRoute;
 		}
 		// ADD ALGO TO CHOOSE ONLY VIABLE WORKERS
 		const worker = this.workers[workerId];
-		const passMessage = encode([
+		const passMessage = await encode([
 			packet,
 			connection
 		]);
@@ -74,29 +80,47 @@ export class App {
 		return this.server.onPacket(packet, connection);
 	}
 	use(primaryArg, ...args) {
-		if (primaryArg.constructor === Router) {
-			this.router = primaryArg;
-		} else if (primaryArg.constructor === Server) {
-			this.useServer(primaryArg);
-		} else {
-			this.router.all(primaryArg, ...args);
+		if (!primaryArg) {
+			return this;
+		}
+		switch (primaryArg.constructor) {
+			case Router: {
+				this.useRouter(primaryArg);
+				break;
+			} case Server: {
+				this.useServer(primaryArg);
+				break;
+			} default: {
+				this.router.all(primaryArg, ...args);
+			}
 		}
 		return this;
 	}
+	useRouter(router) {
+		if (!router) {
+			return this;
+		}
+		if (router.constructor === Router) {
+			this.router = router;
+		} else {
+			this.router = createRouter(router);
+		}
+		return this;
+	}
+	// TODO: ADD MIDDLEWARE SUPPORT
 	addMiddleware() {
 	}
+	// TODO: ADD MULTIPLE SERVER SUPPORT
 	useServer(createdServer) {
 		this.server = createdServer;
-		const thisApp = this;
-		createdServer.onRequest = function(request, response, client) {
-			return thisApp.onRequest(request, response, client);
-		};
 	}
-	async onRequest(request, response, client) {
+	async onRequest(request, response) {
 		const { router, } = this;
 		if (router) {
-			console.log('Root Router Running');
-			await router.handle(request, response, client);
+			this.logInfo('Root Router Running');
+			router.handle(request, response, this);
+		} else {
+			response.sendNotFound();
 		}
 	}
 	data = new Map();
@@ -137,4 +161,9 @@ export class App {
 	delete(key) {
 		return this.deleteItem(key);
 	}
+	logError = logError;
+	logWarning = logWarning;
+	logInfo = logInfo;
+	logVerbose = logVerbose;
+	logSuccess = logSuccess;
 }

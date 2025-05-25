@@ -1,5 +1,5 @@
 export async function callOnDataSyncEvent(message) {
-	console.log('callOnDataSyncEvent', message.packetId);
+	this.logInfo('callOnDataSyncEvent', message.packetId);
 	this.fire('dataSync', message.data, message.packetId);
 }
 export async function onDataSync(message) {

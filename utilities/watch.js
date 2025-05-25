@@ -5,10 +5,7 @@ export function watch(item, callback) {
 		recursive: true
 	}, (evt, filename) => {
 		if (evt === 'update' && filename && isString(filename)) {
-			if (!filename.includes('.')) {
-				return;
-			}
-			return callback(filename);
+			return callback(evt, filename);
 		}
 	});
 }

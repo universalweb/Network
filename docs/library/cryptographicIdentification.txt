@@ -1,0 +1,34 @@
+Cryptographic Identification Number (CIN): (NEXUS IDENTIFICATION NUMBER)
+
+A CIN is 64 byte unique address derived from a cryptographic process using a signature keypair.
+
+A CIN plays a similar role to a Social Security Number (SSN) and or a citizen identification number except itself is merely an identification number like a wallet address.
+The CIN can be public and is effectively anonymous disclosing it doesn't leak private information or allow identity theft like an SSN would. 
+A CIN number is 64 bytes and is in binary which has a significantly larger address space than the total possible SSN combinations.
+The security aspect is separate from the CIN and is the associated key pair specifically the private key.
+
+Cryptographic Identification Card (CIC): Nexus Identification Card (NIC)
+
+It's an encrypted container which holds details related to a specific CIN such as a keypair and or profile data.
+A NIC includes a CIN similar to a driving license including an identification number.
+
+EXAMPLE
+
++------------------------------------------+
+|    Cryptographic Identification Card     |
++------------------------------------------+
+| CIN: X7K9-P2M4-Q8R1-5T3V...              |
+| Issued: 03-20-2025			           |
+|                                          |
+| Expiration: 03-20-2035                   |
+| Hash: 9f86d081884c7d659                  |
+| SIGNATURE: 9f86d0818859                  |
+| Issuing Authority: UW                    |
+| Security Level: 256                      |
+| VERSION: 1                      		   |
++------------------------------------------+
+| Restrictions:                            |
+| Authorized: Dig. Sig., Enc. Comm.        |
++------------------------------------------+
+| 			ENCRYPTED PAYLOAD              |
++------------------------------------------+

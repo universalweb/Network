@@ -1,7 +1,10 @@
-import * as routers from '../router/index.js';
+import * as routers from './router/index.js';
 import * as servers from '#server';
 import {
-	assign, currentPath, hasValue, isUndefined
+	assign,
+	currentPath,
+	hasValue,
+	isUndefined
 } from '@universalweb/acid';
 import { decode, encode } from '#utilities/serialize';
 import { App } from './App.js';
@@ -9,16 +12,15 @@ import cluster from 'node:cluster';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { getCoreCount } from '#utilities/hardware/cpu';
 import { initialize } from '#server/clients/initialize';
-import { msgReceived } from '#logs';
-import { onPacket } from '../server/onPacket.js';
+import { onPacket } from '../server/methods/onPacket.js';
 const numCPUs = getCoreCount();
 function workerReady(worker) {
 	worker.ready = true;
 	worker.process.send('registered');
 	console.log('worker is READY:', worker.id);
 }
-function workerOnMessage(workers, worker, msg) {
-	const decodedMessage = decode(msg);
+async function workerOnMessage(workers, worker, msg) {
+	const decodedMessage = await decode(msg);
 	const [
 		eventName,
 		data
@@ -36,6 +38,7 @@ function workerOnMessage(workers, worker, msg) {
 		}
 	}
 }
+// TODO: Break up function try to put most as part of the class not the function
 export async function app(config, ...args) {
 	if (config.scale) {
 		const {
@@ -43,10 +46,10 @@ export async function app(config, ...args) {
 			scale: { size, }
 		} = config;
 		if (!scale.ip) {
-			scale.ip = config.ip || '::1';
+			scale.ip = config.server.ip || '::1';
 		}
 		if (!scale.port) {
-			scale.port = config.port + 1;
+			scale.port = config.server.port + 1;
 		}
 		const coreCount = (size && size <= numCPUs) ? size : numCPUs;
 		config.coreCount = coreCount;
@@ -88,7 +91,7 @@ export async function app(config, ...args) {
 		} else {
 			console.log(`Worker ${cluster.worker.id} started`);
 			config.isPrimary = false;
-			config.port = (scale.port || config.port) + cluster.worker.id;
+			config.port = (scale.port || config.server.port) + cluster.worker.id;
 			config.workerId = String(cluster.worker.id);
 			config.isWorker = true;
 			const serverWorker = await new App(config, ...args);

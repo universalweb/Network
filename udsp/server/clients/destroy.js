@@ -1,14 +1,17 @@
-export async function destroy(client, reason) {
+export async function destroy(client, destroyCode, errString) {
 	if (client.destroyed) {
 		return;
 	}
 	client.destroyed = true;
 	client.clearInitialGracePeriodTimeout();
 	const server = client.server();
-	console.log(`client destroyed: ${client.connectionIdString}`);
-	switch (reason) {
+	this.logInfo(`client destroyed: ${client.connectionIdString}`);
+	if (errString) {
+		this.logInfo(errString);
+	}
+	switch (destroyCode) {
 		case 0: {
-			console.log(`client ended due to natural causes.
+			this.logInfo(`client ended due to natural causes.
 			ID: ${client.connectionIdString}
 			Address: ${client.destination.ip}
 			Port: ${client.destination.port}
@@ -16,14 +19,21 @@ export async function destroy(client, reason) {
 			break;
 		}
 		case 1: {
-			console.log(`client ended from inactivity. Grace period ended.
+			this.logInfo(`client ended from inactivity. Grace period ended.
 			ID: ${client.connectionIdString}
 			Address: ${client.destination.ip}
 			Port: ${client.destination.port}`);
 			break;
 		}
 		case 2: {
-			console.log(`client ended from invalid RPC given.
+			this.logInfo(`client ended from invalid RPC given.
+			ID: ${client.connectionIdString}
+			Address: ${client.destination.ip}
+			Port: ${client.destination.port}`);
+			break;
+		}
+		case 3: {
+			this.logInfo(`client destroyed
 			ID: ${client.connectionIdString}
 			Address: ${client.destination.ip}
 			Port: ${client.destination.port}`);

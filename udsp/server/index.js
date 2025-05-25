@@ -1,7 +1,3 @@
-import {
-	DomainCertificate,
-	PublicDomainCertificate
-} from '../certificate/domain.js';
 // The Universal Web's UDSP server module
 import {
 	UniqID,
@@ -11,31 +7,34 @@ import {
 	each,
 	hasValue,
 	isFunction,
+	isNumber,
+	isString,
 	isTrue,
 	isUndefined
 } from '@universalweb/acid';
-import { createEvent, removeEvent, triggerEvent } from '../events.js';
-import { decode, encode } from '#utilities/serialize';
 import {
-	failed,
-	imported,
-	info,
-	msgReceived,
-	msgSent,
-	success
-} from '#logs';
-import { introHeaderRPC, isIntroHeader } from '../protocolHeaderRPCs.js';
-import { randomBuffer, toBase64 } from '#crypto';
+	addClientCount,
+	clientCheck,
+	createServerClient,
+	removeClient,
+	subtractClientCount
+} from './methods/clients.js';
+import { attachSocketEvents, configureNetwork, setPort } from './methods/network.js';
+import { configureCertificateCryptography, setCertificate } from './methods/certificate.js';
+import { createEvent, removeEvent, triggerEvent } from '../utilities/events.js';
+import { decode, encode } from '#utilities/serialize';
+import { fire, off, on } from './methods/events.js';
+import { introHeaderRPC, isIntroHeader } from '../rpc/headerRPC.js';
+import { randomBuffer, toBase64 } from '#utilities/cryptography/utils';
 import { UDSP } from '#udsp/base';
-import { createClient } from './clients/index.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
-import { defaultServerConnectionIdSize } from '../../defaults.js';
-import { listen } from './listen.js';
+import { defaultServerConnectionIdSize } from './defaults.js';
+import { listen } from './methods/listen.js';
 import { noStreamID } from '../utilities/hasConnectionID.js';
-import { onError } from './onError.js';
-import { onListen } from './onListen.js';
-import { onPacket } from './onPacket.js';
-import { sendPacket } from '#udsp/sendPacket';
+import { onError } from './methods/onError.js';
+import { onListen } from './methods/onListen.js';
+import { onPacket } from './methods/onPacket.js';
+import { sendPacket } from '#udsp/utilities/sendPacket';
 const { seal } = Object;
 /*
 	* TODO:
@@ -49,46 +48,27 @@ export class Server extends UDSP {
 		super(options);
 		return this.initialize(options);
 	}
+	async initialize(options) {
+		this.logInfo('-------SERVER INITIALIZING-------');
+		this.initializeBase(options);
+		assign(this, options);
+		this.options = seal(assign({}, options));
+		this.logInfo('OPTIONS', this.options);
+		this.configConnectionId();
+		await this.setCertificate();
+		await this.configureCertificateCryptography();
+		await this.configureNetwork();
+		await this.setupSocket();
+		await this.attachSocketEvents();
+		this.logInfo('-------SERVER INITIALIZED-------');
+		return this;
+	}
 	static description = 'UW Server Module';
 	static type = 'server';
 	isServer = true;
 	isServerEnd = true;
-	attachEvents() {
-		const thisServer = this;
-		this.socket.on('error', (err) => {
-			return thisServer.onError(err);
-		});
-		this.socket.on('listening', () => {
-			return thisServer.onListen();
-		});
-		this.socket.on('message', (packet, rinfo) => {
-			return thisServer.onPacket(packet, rinfo);
-		});
-	}
-	async setCertificate() {
-		const {
-			options,
-			options: {
-				certificatePath,
-				publicCertificatePath
-			}
-		} = this;
-		if (certificatePath) {
-			this.certificate = await new DomainCertificate(certificatePath);
-			console.log(this.certificate);
-			this.certificatePublic = await new PublicDomainCertificate(publicCertificatePath);
-		}
-	}
-	async configureNetwork() {
-		const { options } = this;
-		const port = options.port;
-		const ip = options.ip;
-		if (options.ip) {
-			this.ip = ip;
-		}
-		this.port = port;
-		console.log('Config Network', this.ip, this.port);
-	}
+	configureCertificateCryptography = configureCertificateCryptography;
+	setCertificate = setCertificate;
 	configConnectionId() {
 		const {
 			isWorker,
@@ -106,108 +86,42 @@ export class Server extends UDSP {
 		} else if (!this.id) {
 			this.id = '0';
 		}
-		console.log('Config Server ID', this.id);
-	}
-	async initialize(options) {
-		console.log('-------SERVER INITIALIZING-------');
-		this.initializeBase(options);
-		assign(this, options);
-		this.options = seal(assign({}, options));
-		console.log('OPTIONS', this.options);
-		this.configConnectionId();
-		await this.setCertificate();
-		await this.configCryptography();
-		await this.configureNetwork();
-		await this.setupSocket();
-		await this.attachEvents();
-		console.log('-------SERVER INITIALIZED-------');
-		return this;
-	}
-	async configCryptography() {
-		if (this.certificate) {
-			console.log('CERTIFICATE CRYPTO CONFIG STARTING');
-			const encryptionKeypair = this.certificate.get('encryptionKeypair');
-			this.publicKey = encryptionKeypair.publicKey;
-			this.privateKey = encryptionKeypair.privateKey;
-			this.version = this.certificate.get('version');
-			await this.certificate.setCipherSuiteMethods();
-			await this.certificate.setEncryptionKeypairAlgorithm();
-			console.log('CERTIFICATE CRYPTO CONFIG COMPLETE');
-		} else {
-			console.log('NO CERTIFICATE CRYPTO CONFIG');
-		}
+		this.logInfo('Config Server ID', this.id);
 	}
 	async send(packet, destination) {
 		return sendPacket(packet, this, this.socket, destination);
 	}
-	addRequestMethod(methods) {
+	addClientCount = addClientCount;
+	subtractClientCount = subtractClientCount;
+	clientCheck = clientCheck;
+	createClient = createServerClient;
+	removeClient = removeClient;
+	// CHANGE FUNCTION TO RESPOND TO REQUESTS
+	// TODO: CONSIDER DEFAULT METHODS TO THIS FOR BUILT IN SUPPORT FOR BASE SERVER OBJECT NOT JUST APP
+	async onRequest(request, response, client) {
+		this.logInfo('onRequest', request, response);
 	}
-	updateWorkerState() {
+	// TODO: Make this throttled - state doesn't have to be exact just near accurate for loadbalancing
+	async updateWorkerState() {
 		this.syncWorkerState();
 	}
-	syncWorkerState() {
+	// TODO: Make this throttled - state doesn't have to be exact just near accurate for loadbalancing
+	async syncWorkerState() {
 		const { clientCount } = this;
-		console.log(`Client count ${clientCount}`);
-		process.send(encode([
+		this.logInfo(`Client count ${clientCount}`);
+		process.send(await encode([
 			'state',
 			{
 				clientCount
 			}
 		]));
 	}
-	on(eventName, eventMethod) {
-		return createEvent(this.events, eventName, eventMethod);
-	}
-	off(eventName, eventMethod) {
-		return removeEvent(this.events, eventName, eventMethod);
-	}
-	fire(eventName, ...args) {
-		success(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
-		return triggerEvent(this.events, eventName, this, ...args);
-	}
-	addClientCount() {
-		this.clientCount++;
-		this.updateWorkerState();
-	}
-	subtractClientCount() {
-		this.clientCount--;
-		this.updateWorkerState();
-	}
-	async createClient(config, idString, connection) {
-		const client = await createClient({
-			server: this,
-			connection,
-			packet: config.packetDecoded
-		});
-		if (!client) {
-			return console.trace(`Failed to create client for client connection id with ${idString}`);
-		}
-		config.destination = client;
-		this.clients.set(client.connectionIdString, client);
-		if (this.isWorker) {
-			this.addClientCount();
-		}
-		console.log('Client Created', this.clientCount);
-		return client;
-	}
-	async client(config, id, idString, rinfo) {
-		if (noStreamID(id)) {
-			if (isIntroHeader(config.packetDecoded.headerRPC)) {
-				return this.createClient(config, idString, rinfo);
-			}
-		}
-		const existingClient = this.clients.get(idString);
-		if (existingClient) {
-			config.destination = existingClient;
-			return existingClient;
-		}
-		return false;
-	}
-	async removeClient(client) {
-		const { connectionIdString } = client;
-		this.clients.delete(connectionIdString);
-		this.subtractClientCount();
-	}
+	on = on;
+	off = off;
+	fire = fire;
+	attachSocketEvents = attachSocketEvents;
+	configureNetwork = configureNetwork;
+	setPort = setPort;
 	listen = listen;
 	onError = onError;
 	onListen = onListen;

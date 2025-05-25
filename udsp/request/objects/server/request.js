@@ -16,12 +16,6 @@ import {
 	stringify
 } from '@universalweb/acid';
 import { decode, encode } from '#utilities/serialize';
-import {
-	failed,
-	info,
-	msgReceived,
-	msgSent
-} from '#logs';
 import { Base } from '../base.js';
 import { objectDataMethods } from '../dataMethods.js';
 import { objectGetSetMethods } from '../objectGetSetMethods.js';
@@ -35,5 +29,5 @@ export class ServerRequest extends Base {
 objectGetSetMethods.attachMethods(ServerRequest);
 objectDataMethods.attachMethods(ServerRequest);
 export function serverRequestObject(source) {
-	return construct(ServerRequest, [source]);
+	return new ServerRequest(source);
 }

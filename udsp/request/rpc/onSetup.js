@@ -1,9 +1,9 @@
 import { askRPC, replyRPC } from './rpcCodes.js';
 import { hasValue, isNotNumber, isNumber } from '@universalweb/acid';
-import { isMethodCodeValid, isRequestMethodCodeValid } from '../../isMethodCodeValid.js';
+import { isRequestRPCValid, isRequestTypeValid } from '../../rpc/isRequestRPCValid.js';
 export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 	if (source.receivedSetupPacket) {
-		console.log('Received Setup Packet Already RESEND ANSWER');
+		this.logInfo('Received Setup Packet Already RESEND ANSWER');
 		return;
 	}
 	source.clearSetupTimeout();
@@ -32,13 +32,13 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 			totalIncomingHeadSize,
 			totalIncomingDataSize
 		] = frame;
-		// if (isRequestMethodCodeValid(requestMethodRPC) === false) {
+		// if (isRequestTypeValid(requestMethodRPC) === false) {
 		// 	source.close();
 		// 	return;
 		// }
 		source.method = requestMethodRPC;
 	}
-	console.log(`Setup Packet Received HEADER SIZE:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
+	this.logInfo(`Setup Packet Received HEADER SIZE:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
 	if (hasValue(totalIncomingPathSize) && isNumber(totalIncomingPathSize)) {
 		source.totalIncomingPathSize = totalIncomingPathSize;
 	}
@@ -56,10 +56,10 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 		if (source.totalIncomingHeadSize) {
 			source.sendHeadReady();
 		} else if (source.totalIncomingDataSize) {
-			console.log('SKIPPED HEAD READY');
+			this.logInfo('SKIPPED HEAD READY');
 			source.sendDataReady();
 		} else {
-			console.log('SKIPPED DATA READY');
+			this.logInfo('SKIPPED DATA READY');
 			source.completeReceived();
 		}
 	} else {
@@ -68,16 +68,16 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 			// CHECK TO SEE IF GET REQUEST BUT NO PATH THEN SET '/' as the PATH
 			source.sendPathReady();
 		} else if (source.totalIncomingParametersSize) {
-			console.log('SKIPPED PATH READY');
+			this.logInfo('SKIPPED PATH READY');
 			source.sendParametersReady();
 		} else if (source.totalIncomingHeadSize) {
-			console.log('SKIPPED PARAMETERS READY');
+			this.logInfo('SKIPPED PARAMETERS READY');
 			source.sendHeadReady();
 		} else if (source.totalIncomingDataSize) {
-			console.log('SKIPPED HEAD READY');
+			this.logInfo('SKIPPED HEAD READY');
 			source.sendDataReady();
 		} else {
-			console.log('SKIPPED DATA READY');
+			this.logInfo('SKIPPED DATA READY');
 			source.completeReceived();
 		}
 	}

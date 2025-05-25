@@ -2,16 +2,16 @@ import { eachArray } from '@universalweb/acid';
 import { sendParametersReady } from '../sendReady/sendParametersReady.js';
 export async function processPath() {
 	if (this.pathAssembled) {
-		return console.log('Path already processed');
+		return this.logInfo('Path already processed');
 	}
 	const {
 		missingPathPackets,
 		incomingPath
 	} = this;
-	console.log('incomingPathPackets', this.incomingPathPackets);
-	console.log('incomingPath', incomingPath);
+	this.logInfo('incomingPathPackets', this.incomingPathPackets);
+	this.logInfo('incomingPath', incomingPath);
 	if (this.totalIncomingPathSize === this.currentIncomingPathSize) {
-		this.setPath();
+		await this.setPath();
 		this.sendParametersReady();
 	} else {
 		eachArray(this.incomingPathPackets, (item, index) => {

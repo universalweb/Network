@@ -1,11 +1,7 @@
 export const currentVersion = 1;
-export const walletVersion = 1;
-export const currentProtocolVersion = 1;
 export const exactVersion = '1.0.0';
-export const currentCertificateVersion = 1;
-export const defaultServerConnectionIdSize = 8;
-export const defaultClientConnectionIdSize = 4;
-export const certificateTypes = new Map();
-certificateTypes.set('domain', 0);
-certificateTypes.set('profile', 1);
-certificateTypes.set('dis', 2);
+const networkDefaults = {
+	currentVersion,
+	exactVersion,
+};
+export default networkDefaults;

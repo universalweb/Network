@@ -21,12 +21,6 @@ import {
 } from '@universalweb/acid';
 import { askRPC, replyRPC } from './rpc/rpcCodes.js';
 import { decode, encode } from '#utilities/serialize';
-import {
-	failed,
-	info,
-	msgReceived,
-	msgSent
-} from '#logs';
 import { Base } from './base.js';
 import { clientRequestObject } from './objects/client/request.js';
 import { clientResponseObject } from './objects/client/response.js';
@@ -40,7 +34,7 @@ export class Ask extends Base {
 			streamIdGenerator,
 			destination
 		} = source;
-		console.log('Ask', path);
+		this.logInfo('Ask', path);
 		const id = streamIdGenerator.get();
 		this.id = id;
 		this.method = getMethodId(method);
@@ -66,19 +60,19 @@ export class Ask extends Base {
 		});
 		requestQueue.set(id, this);
 	}
-	completeReceived() {
-		console.log('Ask complete', this);
-		this.setState(askRPC.received);
-		this.clearSendDataReadyTimeout();
-		this.sendEnd();
-		this.end();
+	async completeReceived() {
+		this.logInfo('Ask complete', this);
+		await this.setState(askRPC.received);
+		await this.clearSendDataReadyTimeout();
+		await this.sendEnd();
+		await this.end();
 		this.readyState = 4;
-		this.flush();
+		await this.flush();
 		this.accept(this.response);
 	}
 	isAsk = true;
 	static type = 'ask';
 }
-export async function ask(source) {
-	return construct(Ask, source);
+export async function ask(...sources) {
+	return construct(Ask, ...sources);
 }

@@ -4,7 +4,7 @@ export async function onParamatersProgress() {
 		if (this.currentIncomingParamatersSize > 0) {
 			this.incomingParamatersProgress = calcProgress(this.currentIncomingParamatersSize, this.currentIncomingParamatersSize);
 		}
-		console.log(`Paramaters PROGRESS current:${this.currentIncomingParamatersSize}`, this.currentIncomingParamatersSize);
-		console.log('Incoming Progress', this.incomingParamatersProgress);
+		this.logInfo(`Paramaters PROGRESS current:${this.currentIncomingParamatersSize}`, this.currentIncomingParamatersSize);
+		this.logInfo('Incoming Progress', this.incomingParamatersProgress);
 	}
 }

@@ -10,7 +10,7 @@ export async function onPathReady(id, rpc, packetId, data, frame, source, rinfo)
 			source.setState(replyRPC.pathReady);
 		}
 	}
-	console.log(`Path Ready Packet Received TYPE:${source.constructor.name} STATE: ${source.state}`);
+	this.logInfo(`Path Ready Packet Received TYPE:${source.constructor.name} STATE: ${source.state}`);
 	source.sendPath();
 }
 export async function onPath(id, rpc, packetId, data, frame, source, rinfo) {
@@ -30,7 +30,7 @@ export async function onPath(id, rpc, packetId, data, frame, source, rinfo) {
 	if (source.onPath) {
 		await source.onPath(frame);
 	}
-	console.log(source, source.currentIncomingPathSize);
+	this.logInfo(source, source.currentIncomingPathSize);
 	if (source.totalIncomingPathSize === source.currentIncomingPathSize) {
 		source.processPath();
 	}

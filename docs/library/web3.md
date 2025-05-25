@@ -1,0 +1,3 @@
+If Web3 is the Web today but all websites are on a network like IPFS, users/services forced to use a smart contract to interact with sites, paying a TX fee to post a social media update, uses decentralized DNS with limited abilities (ex: ETH domains), then we have a very different definition. That version of the Web is a downgrade that removes key beneficial aspects of the Web while also not addressing any of the real issues.
+
+Such a Web would effectively halt the entire digital economy, interfere with priority life-saving services, introduce wildly unnecessary costs for basic functionality, create new attack vectors, introduce an innovation bottleneck, hand over control of the entire Web to a singular entity, and effectively stifle global progress.

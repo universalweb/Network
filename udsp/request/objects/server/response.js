@@ -18,14 +18,32 @@ export class ServerResponse extends Base {
 		this.sent = true;
 		return this.source().send(data);
 	}
-	setHeader(headerName, headerValue) {
-		return this.source().setHeader(headerName, headerValue);
+	async setHeader(headerName, headerValue) {
+		await this.source().setHeader(headerName, headerValue);
+		return this;
 	}
-	setHeaders(target) {
-		return this.source().setHeaders(target);
+	async setHeaders(target) {
+		await this.source().setHeaders(target);
+		return this;
+	}
+	async sendStatus(statusCode, data) {
+		await this.setHeader('status', statusCode);
+		return this.send();
+	}
+	async sendNotFound() {
+		return this.sendStatus(404);
+	}
+	async sendError() {
+		return this.sendStatus(500);
+	}
+	async sendSuccess(data) {
+		return this.sendStatus(200, data);
+	}
+	async sendEmpty() {
+		return this.sendStatus(204);
 	}
 }
 objectGetSetMethods.attachMethods(ServerResponse);
 export function serverResponseObject(source) {
-	return construct(ServerResponse, [source]);
+	return new ServerResponse(source);
 }

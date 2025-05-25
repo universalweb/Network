@@ -1,0 +1,38 @@
+--flag-switches-begin 
+
+--enable-experimental-web-platform-features
+--enable-experimental-webassembly-features
+--enable-gpu-rasterization
+--javascript-harmony
+--enable-quic
+--enable-unsafe-webgpu
+--enable-webgpu-developer-features
+--enable-zero-copy
+--ignore-gpu-blocklist
+--use-angle=metal
+--enable-features=CanvasOopRasterization,DrawImmediatelyWhenInteractive,EnableTLS13EarlyData,ExperimentalWebMachineLearningNeuralNetwork,FontationsFontBackend,IsolatedWebAppAutomaticUpdates,IsolatedWebApps,ParallelDownloading,PostQuantumKyber,Prerender2WarmUpCompositor,RenderPassDrawnRect,SRIMessageSignatureEnforcement,SkiaGraphite,SkiaGraphitePrecompilation,UseMLKEM,UseSCContentSharingPicker,V8VmFuture,WarmUpCompositor,WebAssemblyBaseline,WebAssemblyExperimentalJSPI,WebAssemblyMemory64,WebAssemblyTiering,WebMachineLearningNeuralNetwork,WebShare,ZeroCopyTabCapture 
+
+--flag-switches-end
+
+
+LINUX/WINDOWS //--enable-features=Vulkan
+MacOS // --use-angle=metal
+
+IDEAL READOUT
+Graphics Feature Status
+=======================
+*   Canvas: Hardware accelerated
+*   Canvas out-of-process rasterization: Enabled
+*   Direct Rendering Display Compositor: Disabled
+*   Compositing: Hardware accelerated
+*   Multiple Raster Threads: Enabled
+*   OpenGL: Enabled
+*   Rasterization: Hardware accelerated on all pages
+*   Raw Draw: Disabled
+*   Skia Graphite: Enabled
+*   Video Decode: Hardware accelerated
+*   Video Encode: Hardware accelerated
+*   WebGL: Hardware accelerated
+*   WebGL2: Hardware accelerated
+*   WebGPU: Hardware accelerated
+*   WebNN: Enabled

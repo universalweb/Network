@@ -1,4 +1,5 @@
 import WebTorrent from 'webtorrent';
+// TODO: Turn this into a CLASS system
 const client = new WebTorrent();
 import { promise } from '@universalweb/acid';
 async function download(magnetURI, options = {}) {

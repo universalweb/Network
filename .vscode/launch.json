@@ -4,14 +4,20 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        {
-            "type": "pwa-node",
-            "request": "launch",
-            "name": "Launch Program",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}/main.js"
-        }
-    ]
+		{
+			"type": "pwa-node",
+			"request": "launch",
+			"name": "Launch Program",
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"program": "${workspaceFolder}/main.js"
+		},
+		{
+			"type": "chrome",
+			"name": "http://127.0.0.1:3000/docs/index.html",
+			"request": "launch",
+			"url": "http://127.0.0.1:3000/docs/index.html"
+		}
+	]
 }

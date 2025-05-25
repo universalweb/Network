@@ -6,15 +6,7 @@ import {
 	isBoolean,
 	keys
 } from '@universalweb/acid';
-import { connectionIdToBuffer, generateConnectionIdString } from '#udsp/connectionId';
-import {
-	failed,
-	imported,
-	info,
-	msgReceived,
-	msgSent,
-	success
-} from '#logs';
+import { connectionIdToBuffer, generateConnectionIdString } from '#udsp/utilities/connectionId';
 export async function initialize(config) {
 	const {
 		packet,
@@ -25,8 +17,6 @@ export async function initialize(config) {
 			initialGracePeriod,
 			initialRealtimeGracePeriod,
 			heartbeat,
-			cipherSuites: serverCipherSuites,
-			cipherSuite: serverCipherSuite,
 			publicKey: serverPublicKey,
 			privateKey: serverPrivateKey,
 			connectionIdSize,
@@ -46,18 +36,29 @@ export async function initialize(config) {
 	client.realtime = realtime;
 	client.connectionIdSize = connectionIdSize;
 	client.reservedConnectionIdSize = reservedConnectionIdSize;
-	// When changing to a new key you must first create new keys from scratch to replace these.
-	client.publicKey = serverPublicKey;
-	client.privateKey = serverPrivateKey;
+	if (certificate) {
+		this.logInfo('Certificate Crypto Algos attached');
+		client.keyExchangeAlgorithm = certificate.keyExchangeAlgorithm;
+		client.signatureAlgorithm = certificate.signatureAlgorithm;
+	}
+	if (serverPublicKey) {
+		client.publicKey = serverPublicKey;
+	}
+	if (serverPrivateKey) {
+		client.privateKey = serverPrivateKey;
+	}
 	const serverConnectionIdString = generateConnectionIdString(connectionIdSize, serverId, reservedConnectionIdSize);
 	const serverClientId = connectionIdToBuffer(serverConnectionIdString);
-	console.log(`Server Connection ID: ${serverConnectionIdString} SIZE: ${connectionIdSize} SERVER ID: ${serverId} RESERVED SIZE: ${reservedConnectionIdSize}`);
+	this.logInfo(`Server Connection ID: ${serverConnectionIdString} SIZE: ${connectionIdSize} SERVER ID: ${serverId} RESERVED SIZE: ${reservedConnectionIdSize}`);
 	client.id = serverClientId;
 	client.connectionIdString = serverConnectionIdString;
 	assign(client.destination, {
 		ip,
 		port
 	});
+	if (client.keyExchangeAlgorithm.serverClientCreation) {
+		await client.keyExchangeAlgorithm.serverClientCreation(client, server);
+	}
 	if (initialGracePeriod) {
 		this.initialGracePeriodCheck();
 	}

@@ -1,6 +1,6 @@
 import { clear, eachArray } from '@universalweb/acid';
 export async function processData() {
-	console.log('Checking Data');
+	this.logInfo('Checking Data');
 	const { missingDataPackets } = this;
 	if (this.compiledDataAlready) {
 		return true;
@@ -22,6 +22,6 @@ export async function processData() {
 		}
 	});
 	if (missingDataPackets.size !== 0) {
-		console.log('Missing packets: ', missingDataPackets);
+		this.logInfo('Missing packets: ', missingDataPackets);
 	}
 }

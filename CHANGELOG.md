@@ -1,13 +1,179 @@
-|                                         UNIVERSAL WEB Network - CHANGELOG                                          |
+|                                         UNIVERSAL WEB - CHANGELOG                                          |
 | :----------------------------------------------------------------------------------------------------------------: |
 | ![Universal Web Logo](https://raw.githubusercontent.com/sentivate/SentivateAlphaNetwork/master/resources/logo.png) |
-|                [Universal Web](https://universalweb.io) - [Twitter](https://twitter.com/tommarchi)                 |
+|                  [Universal Web](https://universalweb.io) - [Twitter](https://twitter.com/tommarchi)                   |
 ---
 
-## [v3.0.3](https://github.com/universalweb/Network/compare/v3.0.3...v3.0.3)
+## [v3.0.7](https://github.com/universalweb/Network/compare/v3.0.7...v3.0.7)
 
 ---
 ---
+
+## [v3.0.7](https://github.com/universalweb/Network/compare/v3.0.6...v3.0.7) - 2025-02-23
+
+---
+---
+
+### Commits
+
+- New Signature Class conversion in progress [`b6537d5`](https://github.com/universalweb/Network/commit/b6537d5adffddd8bf156f15d875ff1b7b4108e8d)
+- DO NOT RUN [`ff4ddc9`](https://github.com/universalweb/Network/commit/ff4ddc969f97b20b9d1f9bb073da998010fbd20f)
+- Crypto upgrade [`e972ff2`](https://github.com/universalweb/Network/commit/e972ff2d22da84bda3025000bd8c399a7559ff71)
+- CRYPTO Middleware Upgrade [`96570e0`](https://github.com/universalweb/Network/commit/96570e01c4958febadf1f2597270dd3205926c0a)
+- CRYPTO UPGRADE IN PROGRESS [`5f3e6b2`](https://github.com/universalweb/Network/commit/5f3e6b258b984ffbbe01d32ac32172cb8a73c02d)
+- Random ASCII Art Test [`e534db9`](https://github.com/universalweb/Network/commit/e534db9827fb72c910316760e204930eb15ca36e)
+- shake256 changes [`330a413`](https://github.com/universalweb/Network/commit/330a41369fe45bc7a7ca0c65a83b6101d39445f2)
+- Update dependabot.yml [`3503896`](https://github.com/universalweb/Network/commit/350389669bbf7f913874732f99a4a816d6f03e9d)
+- Moving to SHAKE256 [`3d56ba1`](https://github.com/universalweb/Network/commit/3d56ba15885027a2649da8e9c6cbc25c60345a59)
+- Moving to SHAKE256 in progress [`577560f`](https://github.com/universalweb/Network/commit/577560fa3b837e8a0f44d5c09e509dd902c333d9)
+- Blake2b replaced with Blake3 for generic hashing [`f76c9ee`](https://github.com/universalweb/Network/commit/f76c9eeb9a9ff2ee85cf3359641b41f174241fc7)
+- Strict Kyber KeyEchange with transmit and recieve keys [`59b8fe1`](https://github.com/universalweb/Network/commit/59b8fe14ce96aee0650736a1a26529c29cdf2321)
+- Crypto Middleware updates [`2aa5a52`](https://github.com/universalweb/Network/commit/2aa5a52436a3f9852733fbedc59c10d3927da3f0)
+- Update README.md [`307c8eb`](https://github.com/universalweb/Network/commit/307c8eba1e32470c5eff0b3976de926bed087a5e)
+- crypto cleanup [`9ba2e22`](https://github.com/universalweb/Network/commit/9ba2e22c5d6e69fce0dda71a1c46b4986b89c84e)
+
+## [v3.0.6](https://github.com/universalweb/Network/compare/v3.0.5...v3.0.6) - 2024-12-27
+
+---
+---
+
+## [v3.0.5](https://github.com/universalweb/Network/compare/v3.0.4...v3.0.5) - 2024-12-27
+
+---
+---
+
+## [v3.0.4](https://github.com/universalweb/Network/compare/v3.0.3...v3.0.4) - 2024-12-27
+
+---
+### Merged
+
+- Latest [`#28`](https://github.com/universalweb/Network/pull/28)
+- Organize Code [`#27`](https://github.com/universalweb/Network/pull/27)
+- Nightly [`#26`](https://github.com/universalweb/Network/pull/26)
+---
+
+### Commits
+
+- Cleanup for methods [`13841b8`](https://github.com/universalweb/Network/commit/13841b8fbbb1f3ed0667668afb37d7a56d6a846a)
+- Dependency Updates [`7ac5699`](https://github.com/universalweb/Network/commit/7ac56995d43efb68986d903a9b9c6042521df63d)
+- Opportunistic Encryption support for hybrid keypairs [`f000c42`](https://github.com/universalweb/Network/commit/f000c42ed7cd95ee3ee3370653637270c552d7e9)
+- remove test code [`3f699ee`](https://github.com/universalweb/Network/commit/3f699ee7428100a6d337a649bef5796fac25b96a)
+- kyber768Half_x25519 re-enabled [`5553faf`](https://github.com/universalweb/Network/commit/5553fafd5875ca8502cd1171dde791adc4dbc59d)
+- More Experminetal UML Syntax shorthand [`0865880`](https://github.com/universalweb/Network/commit/0865880ebb66ce755388dba486a713cf2c93016d)
+- UML Experimentation [`1482b1a`](https://github.com/universalweb/Network/commit/1482b1ac2cb5296dffb027c84df64ac8f0dddb0d)
+- Universal Markup Language Prototype syntax [`c8ad9bf`](https://github.com/universalweb/Network/commit/c8ad9bf5a0d7e23788660239a753094bf6493327)
+- Certificate Class new methods [`678ae72`](https://github.com/universalweb/Network/commit/678ae7264ddcd64c653f0fa43f14fe5cd067e59e)
+- Crypto Middleware refactored [`ab381c6`](https://github.com/universalweb/Network/commit/ab381c65771a8e6277be126d555b7b643f8b030a)
+- various crypto middleware changes [`98b7345`](https://github.com/universalweb/Network/commit/98b7345a5466f97f657cc2962392004cae3c4ce2)
+- crypto middleware patches re-enable some demos [`df62959`](https://github.com/universalweb/Network/commit/df629598d24c1efaad99ea9a0ff02017720b412b)
+- Crypto updates & organization [`cef3311`](https://github.com/universalweb/Network/commit/cef3311bc7c8ea9993ef5592a1d7136d1e992f4e)
+- Crypto middleware update [`33b4ae8`](https://github.com/universalweb/Network/commit/33b4ae8801d7ed30fd5469eac3ff03ebb5f8afae)
+- description changed [`20f41e6`](https://github.com/universalweb/Network/commit/20f41e60f7711eaf5960308749e5603395624422)
+- Hybrid Encryption expanded compatability [`bd9835e`](https://github.com/universalweb/Network/commit/bd9835e56c6b13ec334852e53844457f885b195d)
+- Crypto middleware changes [`1858d18`](https://github.com/universalweb/Network/commit/1858d1829a18f521deacaeb0c87ff114c2e398b7)
+- graceful error handling for failed requests [`eb57fb8`](https://github.com/universalweb/Network/commit/eb57fb899739c905f7b7ce5bda692125e36267b4)
+- Get method updated [`0f9da22`](https://github.com/universalweb/Network/commit/0f9da22a1abbd28cb60b6d5c53fc2d22019d921a)
+- Reliability Patches [`3297186`](https://github.com/universalweb/Network/commit/32971860ed127eb5defc7a3a9c074a568f5de943)
+- Latency patches [`9767de8`](https://github.com/universalweb/Network/commit/9767de8e8392ab9f59149f334e076b460fd65cfb)
+- Reliability timeout clear [`477417c`](https://github.com/universalweb/Network/commit/477417c03baa6093ed658121f1d339c03e549adb)
+- Reliability mechanisms [`e9ae6e3`](https://github.com/universalweb/Network/commit/e9ae6e3ef5d70c69126b7a230d015441da80d213)
+- Certificate method Patches [`5cf46da`](https://github.com/universalweb/Network/commit/5cf46dacc3fb65c3b0c092651fbf4b00ab5d5902)
+- reliability layer moving in [`67da831`](https://github.com/universalweb/Network/commit/67da8313057a0b303325452064dcfeee5a0f5cac)
+- protocolFrameRPCs [`35f1443`](https://github.com/universalweb/Network/commit/35f14438c9e2e839cce9cc84a62ec7585f9343a3)
+- UW Profile/VIAt Wallet Updates dedicated encryption middleware [`7ccc2ad`](https://github.com/universalweb/Network/commit/7ccc2ad87c085d6c8bfcaf43d0180dfb0ae68f1b)
+- Viat Wallet Crypto Middleware dilithium44_ed25519 [`a5dcf56`](https://github.com/universalweb/Network/commit/a5dcf562bffd96f9ef373437917c7fb58dab3448)
+- randomBuffer enabled instead of empty buffer for testing [`a3500eb`](https://github.com/universalweb/Network/commit/a3500ebe2f3c124e6382f6c1d422f80bdc91b56d)
+- added dilithium versions [`92dfbb9`](https://github.com/universalweb/Network/commit/92dfbb979fdcae28438f78ea83a5e1c86a415b1b)
+- demo updates [`37465d6`](https://github.com/universalweb/Network/commit/37465d6b1738b2d5078dae52b9d996eaab7485e0)
+- Viat Wallet new methods [`c997705`](https://github.com/universalweb/Network/commit/c99770586ce3b9d9e54ec06b1bbe43ee0f3d5043)
+- Working 2 packet x25519_kyber768Half_xchacha20 encryption scheme [`453b262`](https://github.com/universalweb/Network/commit/453b262eccecc4eb858a44da0a9f7a8bb2b68069)
+- Cert changes [`ee76c99`](https://github.com/universalweb/Network/commit/ee76c99f07d43d5777e5b946a5302904a2bf3924)
+- Kyber768-25519-xchacha final [`fcc2c35`](https://github.com/universalweb/Network/commit/fcc2c352a3e26c998d97e6e8b9faf677ffbcac09)
+- Server/Client Standardize API [`705ca44`](https://github.com/universalweb/Network/commit/705ca44a9fc3ecabcde9c41784c2d162eb768b12)
+- Post QT Crypto changes in progress [`ef9bb43`](https://github.com/universalweb/Network/commit/ef9bb43e1e2c96eeebe485a59b1834dbc6f3d1e6)
+- General Cleanup [`5946084`](https://github.com/universalweb/Network/commit/5946084b384cc65542a6617ea932708cfb385b99)
+- Quick patch for key exchange [`69360f3`](https://github.com/universalweb/Network/commit/69360f3fde366b2ce7bfc56293327f7cb489d33c)
+- Cleanup enable demo [`f55f82e`](https://github.com/universalweb/Network/commit/f55f82e2bf2de161b869b131f9e23ed9000656cd)
+- minor patches cleanup [`3529983`](https://github.com/universalweb/Network/commit/352998323040c9ea6943ebbd966b4b240dedee9e)
+- Organizing & preparing for Post QT Hyrbid algo switch [`f753b6c`](https://github.com/universalweb/Network/commit/f753b6ce3e3007592fc7568cf1dfe79087a4d384)
+- crypto middleware change in progress [`726295a`](https://github.com/universalweb/Network/commit/726295af5bdbb89fcae9422f4d991ea799f98fc8)
+- Async Class constructor [`50cad8d`](https://github.com/universalweb/Network/commit/50cad8d1dcb06bf7b5db75ac7b5a82660afadc9d)
+- UWProfile & ViatWallet Merge [`c54c3c2`](https://github.com/universalweb/Network/commit/c54c3c2d2b1beb410c79d7fba6eec7b615e3ac1c)
+- QUICK PATCH Re-ENABLE DEMO for new crypto middleware [`1535e4f`](https://github.com/universalweb/Network/commit/1535e4fdbfb720e3fea9e742ad9d454a0d0a898d)
+- Viat Wallet Signature, Verify Methods Added [`66d5e4d`](https://github.com/universalweb/Network/commit/66d5e4df82f201d4fe70259c83f4463cc978e569)
+- VIAT Hybrid Post QT [`b8e50c6`](https://github.com/universalweb/Network/commit/b8e50c6b8740c06050245bd39a1941cc097f8f78)
+- ml-dsa dilithium added [`beae6d5`](https://github.com/universalweb/Network/commit/beae6d5ba2f04faab98fa4709a51d52106e17552)
+- Crypto Middleware changes [`72057ef`](https://github.com/universalweb/Network/commit/72057efb4fe30e24341745b4fdfe698b2f2c64d6)
+- Filesystem Organization [`5e055c1`](https://github.com/universalweb/Network/commit/5e055c143b62a9e925110c759923e9a21e21dfc4)
+- Do not run partial changes [`802f90c`](https://github.com/universalweb/Network/commit/802f90c905c9e955ce60c06c9036bf5c465865dc)
+- Modified Handshake for kyper (partial encryption of serverIntro) [`8056e3b`](https://github.com/universalweb/Network/commit/8056e3b9de32b5daf7a193965385ec79bb845b60)
+- use singular object instead of encryption property [`6a62813`](https://github.com/universalweb/Network/commit/6a62813a435d4af475e4d5d51a4b280b633a99fe)
+- Converting to new crypto system do not run [`9e3efff`](https://github.com/universalweb/Network/commit/9e3efffa828c9952eb779898988703b2027efe59)
+- Post Quantum Kyber Middleware updated (testing) [`c0af858`](https://github.com/universalweb/Network/commit/c0af858f38e145e3595470e28c77fda69cbaf3fc)
+- Update Post Quantum Handshake Hybrid algorithm [`9d31372`](https://github.com/universalweb/Network/commit/9d31372dea3ac2480a04792ff0974735445dfedc)
+- Refactor crystals-kyber/post quantum [`2bf0d7b`](https://github.com/universalweb/Network/commit/2bf0d7bb7b713346f4066e78f39c65a1074710a1)
+- Added post quantum new algos [`ce4be7e`](https://github.com/universalweb/Network/commit/ce4be7ef44c0de95e66d6bcb7124ba26fe645c20)
+- x25519_kyber_xchacha20 Updates [`c8ad61a`](https://github.com/universalweb/Network/commit/c8ad61ad3a2aacfe3e6fa2931accfc909af1d819)
+- Refactor kyber hybrid cryptography-related code [`ee2a319`](https://github.com/universalweb/Network/commit/ee2a319172728e6cb8eae755b6bebff44fee9462)
+- Update Kyber encryption algorithm to Kyber1024 in crystals-kyber.js [`bfa9e20`](https://github.com/universalweb/Network/commit/bfa9e20837bbd47b7c2b37207eb16fa259db2c31)
+- Refactor cryptography-related code and update dependencies [`507c4cb`](https://github.com/universalweb/Network/commit/507c4cb62fd0aebae8d0963907d5fe098ffd0fbc)
+- Moving in Post Quantum Hybrid Encryption x25519 & Kyber768 option (will become new default) [`32d47e3`](https://github.com/universalweb/Network/commit/32d47e31bb99a47b9230b4a639895dc384efdc5f)
+- Update DIS description in README.md [`68aae64`](https://github.com/universalweb/Network/commit/68aae64d60db331a9ed8a403327eb79f9296d92c)
+- Readme update [`b6b6be1`](https://github.com/universalweb/Network/commit/b6b6be111629777407b3dd8df6ca4f647e655344)
+- Main Demo connectRequest Re-enabled [`b2bc38b`](https://github.com/universalweb/Network/commit/b2bc38b573866e53f70fad75cd84f53a89bb525c)
+- Remove depricated crypto code [`e714f7d`](https://github.com/universalweb/Network/commit/e714f7d118d860e4891d864d3cdcafd8f51b19db)
+- Client Creation reduction [`5561c9c`](https://github.com/universalweb/Network/commit/5561c9cb74bfbb28162fd2fb6a9a03062252fa7c)
+- 0 Size initial CID [`ff0496d`](https://github.com/universalweb/Network/commit/ff0496d82efb15f1ed6a2ed3cd74e88254d3dfe8)
+- ConnectionID Cert changes [`5021abb`](https://github.com/universalweb/Network/commit/5021abb572948446867bd599de1ea719a30de90f)
+- Client moving to new DomainCerts [`1075589`](https://github.com/universalweb/Network/commit/1075589ede9c9f7187e429e1a3664b3febf7c5ca)
+- DIS Record Support [`91ae333`](https://github.com/universalweb/Network/commit/91ae333c16aa58abb5e9bfcc7f060bda4a65ec0f)
+- Refactor in progress new uwProfiles and DomainCertificate classes [`ff7bb75`](https://github.com/universalweb/Network/commit/ff7bb75347a41cf09d13c4debfb3b06167e3d433)
+- Refactor certificate files and update dependencies [`16f7f22`](https://github.com/universalweb/Network/commit/16f7f226529cc3cde0131951fc38ac64638140b4)
+- Update certificates.js and index.js files [`48b2a19`](https://github.com/universalweb/Network/commit/48b2a197f12c16cc009e83a1f9adb70f20fb37c3)
+- Add dependencies and update main.js and certificate files [`4bd0b0e`](https://github.com/universalweb/Network/commit/4bd0b0e09472f80815902f8233198577b73b7c32)
+- Certificate Standard v1 [`58acf14`](https://github.com/universalweb/Network/commit/58acf145ab36d92fd63e1d26615083ba3567bf57)
+- Cert Changes [`12dd435`](https://github.com/universalweb/Network/commit/12dd435607b4366cdd0e72fef9767764427e22fc)
+- Cert changes moving in [`ed39f52`](https://github.com/universalweb/Network/commit/ed39f52fc0ebb2b6bf8bab6846f13bf4e4834c9e)
+- Main generate certificate by type [`2d01731`](https://github.com/universalweb/Network/commit/2d01731b71bb3322d5c5f7ef517d24871b9ba37b)
+- Domain Cert Changes [`edaafc1`](https://github.com/universalweb/Network/commit/edaafc17b300a43173720e7f70aca87fa2765e7e)
+- Cert changes [`b6801e5`](https://github.com/universalweb/Network/commit/b6801e53b4e16e7194c7a064c5dcc19d57d11e8d)
+- certificate standard for blockchain based certificate chain with dual signing [`34a87a8`](https://github.com/universalweb/Network/commit/34a87a82ab85c2c3eabb543b9de7bef32bf99481)
+- Commit catchup merges in progress do not run [`482df26`](https://github.com/universalweb/Network/commit/482df2667b9268553914e01feadf8c1ea65bee06)
+- Cyrstals-kyber prototyping [`a164502`](https://github.com/universalweb/Network/commit/a164502713b20d2a814c776c24811428ee6c4894)
+- further cert organization [`39e292c`](https://github.com/universalweb/Network/commit/39e292ce113733b134edfb22807e0b87812f2595)
+- raw cert organization [`0a458b8`](https://github.com/universalweb/Network/commit/0a458b8c6bfced6aec7a19cbe22374f52f31c534)
+- converting to new certificate format [`c504a22`](https://github.com/universalweb/Network/commit/c504a22a4f0ec9b0ae9641d1f314db0c43a5e24a)
+- Major changes taking place do not run or build [`431c9e6`](https://github.com/universalweb/Network/commit/431c9e67e418f54c66ce733a7a709b6aa32fab24)
+- Major changes [`6881e8d`](https://github.com/universalweb/Network/commit/6881e8dfaa0d79059ee478407f2af086485332ac)
+- Doc cert change [`2625fc6`](https://github.com/universalweb/Network/commit/2625fc67b331c3682729da9f359ff806dc6ea4e8)
+- cert doc changes (being stadardized) [`1cc950f`](https://github.com/universalweb/Network/commit/1cc950fd7b846ee764332af46f6972e0471279fc)
+- Kyber testing [`fc0c340`](https://github.com/universalweb/Network/commit/fc0c3405e32f4f0bca05864c8323d207f39a10e1)
+- CERTIFICATE CHANGE IN PROGRESS DO NOT RUN [`856ede0`](https://github.com/universalweb/Network/commit/856ede05b24af5bff21e5b2346d6352e1b8186c3)
+- Deps updated [`d18801f`](https://github.com/universalweb/Network/commit/d18801fb3d676ee1011ccc9f014579c5829b5126)
+- Eslint config migrated [`8219920`](https://github.com/universalweb/Network/commit/82199209fd729e4a45292da1736c59e7ac43b649)
+- Updated events API [`f8632ef`](https://github.com/universalweb/Network/commit/f8632ef4224c722d58287dcf7f06f4fdb02c1aa8)
+- Patched small state log bug (minor commit) [`f19f179`](https://github.com/universalweb/Network/commit/f19f1794dd3154cb26ef97af8b01c0aeb0eec0f2)
+- New States [`d371877`](https://github.com/universalweb/Network/commit/d371877472c31fed6e11b582f539d333b0d1d082)
+- System Info Logs [`c10418a`](https://github.com/universalweb/Network/commit/c10418a7781c078af1595a88fd23ae79d1b3d63d)
+- Change IP/Port from string input in intro [`4bc92af`](https://github.com/universalweb/Network/commit/4bc92af20f5d4a361ea4f3dc0b1794cdaf6fb442)
+- Include remote info [`eda8c36`](https://github.com/universalweb/Network/commit/eda8c36a6b65349b8447e45269f5a2b6d349541f)
+- ext patch [`f3ac473`](https://github.com/universalweb/Network/commit/f3ac4734167b2778913055f54e42739c3e00c0a2)
+- on off events client [`d2be291`](https://github.com/universalweb/Network/commit/d2be29103e3c7326782f33eafe9cd4e5fcced841)
+- close, destroy, connected, disconnected, and socket events [`e5bde12`](https://github.com/universalweb/Network/commit/e5bde12270c616f83c7d4b032cacfeb75b928766)
+- reconnect [`441a0cf`](https://github.com/universalweb/Network/commit/441a0cfa35a5b2fd7d7876446456c116957b8fcb)
+- Gracefull Destroy Client [`04b08d0`](https://github.com/universalweb/Network/commit/04b08d0c0021f8b5da60cf67614779eef4dc35dc)
+- Include return in packet sending [`3ca1bd1`](https://github.com/universalweb/Network/commit/3ca1bd1d8b8ddc851df7eb11bed9a46756a8d5d6)
+- End patch include frame [`e685136`](https://github.com/universalweb/Network/commit/e68513622fd476c4453fb21a8ca121b91de5b2db)
+- Removed redundent decode/encoding [`d1d2ca6`](https://github.com/universalweb/Network/commit/d1d2ca6c93cfebe698e23e1c8386f3d96a5f446e)
+- Readme update [`dc0ad79`](https://github.com/universalweb/Network/commit/dc0ad799909c553f8501eb072bfd2e30cc926d33)
+- Text based cleanup [`baf1118`](https://github.com/universalweb/Network/commit/baf1118b3103987ccd6f64b7bd0050234a1f46e7)
+- Dependency Cleanup [`8642cb4`](https://github.com/universalweb/Network/commit/8642cb4e0e31252c474e3cc998852ded4be2feb9)
+- Client Close/End/Destroy [`e5e92c6`](https://github.com/universalweb/Network/commit/e5e92c65452c6383518946636afc78e329e1acda)
+- This patched [`2eedf9b`](https://github.com/universalweb/Network/commit/2eedf9b8257145dbf8d7366b8fd5fa9f51611d3c)
+- Cleanup [`21b2a98`](https://github.com/universalweb/Network/commit/21b2a98a18d2bdcceb9d524f7eb604a89ac8ebc7)
+- Demo Working [`87a4e83`](https://github.com/universalweb/Network/commit/87a4e83983e9217f38807ea1492638a4d123fb8b)
+- routes merge 2# [`90f4168`](https://github.com/universalweb/Network/commit/90f416808850c2493fcdc6b0acb3373140fb1c7b)
+- transition to new classes merge 1# [`4edc833`](https://github.com/universalweb/Network/commit/4edc83381d23b8483d15f1e0dc6b02baab16489b)
 
 ## [v3.0.3](https://github.com/universalweb/Network/compare/v3.0.2...v3.0.3) - 2023-12-17
 

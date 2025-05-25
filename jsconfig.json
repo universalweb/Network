@@ -2,8 +2,14 @@
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {
+			"#viat/*": [
+				"./viat/*.js"
+			],
 			"#utilities/*": [
 				"./utilities/*.js"
+			],
+			"#components/*": [
+				"./components/*.js"
 			],
 			"#server/*": [
 				"udsp/server/*.js"
@@ -18,19 +24,19 @@
 				"udsp/client/index.js"
 			],
 			"#profile/*": [
-				"./profile/*.js"
+				"cryptoID/*.js"
 			],
 			"#serverApp/*": [
-				"./serverApp/*.js"
+				"examples/serverApp/*.js"
 			],
 			"#schemes/*": [
-				"./schemes/*.js"
+				"browser/schemes/*.js"
 			],
 			"#resources/*": [
 				"./resources/*"
 			],
-			"#scripts/*": [
-				"./scripts/*.js"
+			"#examples/*": [
+				"./examples/*.js"
 			],
 			"#state/*": [
 				"./state/*.js"
@@ -44,14 +50,14 @@
 			"#sodium": [
 				"./sodium.js"
 			],
-			"#crypto": [
-				"./utilities/crypto.js"
+			"#crypto/": [
+				"./utilities/cryptography/"
 			],
 			"#watch": [
 				"./utilities/watch.js"
 			],
 			"#logs": [
-				"./utilities/logs.js"
+				"utilities/logs/logs.js"
 			],
 			"#cleanPath": [
 				"./utilities/cleanPath.js"
@@ -85,7 +91,6 @@
 	"exclude": [
 		"**/build/*",
 		"**/docSource/*",
-		"**/docs/*",
 		"**/examples/*",
 		"**/node_modules/*",
 		"**/npm/*",

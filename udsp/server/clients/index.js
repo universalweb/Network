@@ -1,3 +1,8 @@
+// GENERAL RULES
+// DEFER COMPUTE TASKS
+// DEFER MEMORY TASKS
+// CLEAR MEMORY AS SOON AS POSSIBLE
+// PRE COMPUTE WHAT YOU CAN
 import {
 	UniqID,
 	assign,
@@ -7,52 +12,47 @@ import {
 	isArray,
 	isFalse,
 	isFalsy,
+	isNull,
 	isPromise,
 	isTrue,
 	isUndefined,
 	promise
 } from '@universalweb/acid';
-import { createEvent, removeEvent, triggerEvent } from '../../events.js';
-import { defaultClientConnectionIdSize, defaultServerConnectionIdSize } from '../../../defaults.js';
-import { discovery, sendDiscovery } from './protocolEvents/discovery.js';
 import {
-	discoveryHeaderRPC,
-	endHeaderRPC,
-	extendedHandshakeHeaderRPC,
-	introHeaderRPC
-} from '../../protocolHeaderRPCs.js';
+	createIntro,
+	intro,
+	introHeader,
+	sendIntro,
+	setIntroFrame,
+	setIntroHeader
+} from './protocolEvents/intro.js';
+import { end, sendEnd } from './methods/end.js';
 import {
-	discoveryRPC,
-	endRPC,
-	extendedHandshakeRPC,
-	introRPC
-} from '../../protocolFrameRPCs.js';
+	extendedSynchronization,
+	extendedSynchronizationHeader,
+	sendExtendedSynchronization
+} from './protocolEvents/extendedSynchronization.js';
+import { fire, off, on } from './methods/events.js';
 import {
-	extendedHandshake,
-	extendedHandshakeHeader,
-	sendExtendedHandshake
-} from './protocolEvents/extendedHandshake.js';
-import {
-	failed,
-	imported,
-	info,
-	msgReceived,
-	msgSent,
-	success
-} from '#logs';
-import { intro, introHeader, sendIntro } from './protocolEvents/intro.js';
+	logError,
+	logInfo,
+	logSuccess,
+	logVerbose,
+	logWarning
+} from '../../../utilities/logs/classLogMethods.js';
 import {
 	randomBuffer,
 	toHex,
-} from '#crypto';
-import { Reply } from '#udsp/request/reply';
-import { calculatePacketOverhead } from '#udsp/calculatePacketOverhead';
-import cluster from 'node:cluster';
+} from '#utilities/cryptography/utils';
+import { send, sendAny } from './methods/send.js';
+import { attachProxyAddress } from './methods/attachProxyAddress.js';
+import { calculatePacketOverhead } from '#udsp/utilities/calculatePacketOverhead';
+import { defaultClientConnectionIdSize } from '../../client/defaults.js';
 import { destroy } from './destroy.js';
 import { initialize } from './initialize.js';
-import { onConnected } from './onConnected.js';
-import { processFrame } from '#udsp/processFrame';
-import { sendPacket } from '#udsp/sendPacket';
+import { onConnected } from './methods/onConnected.js';
+import { onFrame } from '#udsp/onPacket/onFrame';
+import { reply } from './methods/reply.js';
 /**
  * @TODO
  */
@@ -63,66 +63,64 @@ export class Client {
 			app
 		} = config;
 		const client = this;
-		const {
-			cipherSuites,
-			signatureAlgorithm,
-			certificate,
-		} = server;
+		const { certificate, } = server;
 		this.server = function() {
 			return server;
 		};
-		this.app = function() {
-			return app;
-		};
+		if (app) {
+			this.app = function() {
+				return app;
+			};
+		}
 		this.socket = server.socket;
-		this.cipherSuites = cipherSuites;
 		this.certificate = certificate;
 		return this.initialize(config);
 	}
+	destination = {
+		overhead: {},
+		connectionIdSize: defaultClientConnectionIdSize
+	};
 	async initializeSession(cipherData) {
-		console.log('Client Initialize session');
-		if (this.cipherSuite.keyExchange.serverInitializeSession) {
-			await this.cipherSuite.keyExchange.serverInitializeSession(this, this.destination, cipherData);
+		this.logInfo('Client Initialize session');
+		if (this.keyExchange.serverInitializeSession) {
+			await this.keyExchange.serverInitializeSession(this, this.destination, cipherData);
 		}
+		// TODO: USE NUMBERED STATES INSTEAD OF sessionInitialized BOOLEAN
 		this.sessionInitialized = true;
-		success(`receiveKey: ${toHex(this.receiveKey)}`);
-		success(`transmitKey: ${toHex(this.transmitKey)}`);
+		this.logInfo(`receiveKey: ${toHex(this.receiveKey)}`);
+		this.logInfo(`transmitKey: ${toHex(this.transmitKey)}`);
 	}
-	async setSession(cipherData) {
-		console.log('Server client Set Session');
-		await this.cipherSuite.keyExchange.serverSetSession(this, this.destination, cipherData);
-		this.sessionCompleted = null;
-		success(`receiveKey: ${toHex(this.receiveKey)}`);
-		success(`transmitKey: ${toHex(this.transmitKey)}`);
-	}
-	updateState(state) {
-		if (this.destroyed) {
+	setState(state) {
+		if (this.destroyed || isNull(this.destroyed)) {
 			return;
 		}
-		console.log(`CLIENT State Updated -> ${this.state}`);
+		this.logInfo(`CLIENT State Updated -> ${this.state}`);
 		this.state = state;
 	}
-	async send(frame, headers, footer) {
-		msgSent(`socket Sent -> ID: ${this.connectionIdString}`);
-		if (this.destroyed) {
-			return;
+	// NOTE: onRequest acts akin to a bubble and will bubble up to the app or server
+	onRequest(req, resp) {
+		const {
+			app,
+			server
+		} = this;
+		if (app) {
+			return app().onRequest(req, resp);
+		} else {
+			return server().onRequest(req, resp);
 		}
-		return sendPacket(frame, this, this.socket, this.destination, headers, footer);
-	}
-	async authenticate(frame, frameHeaders) {
 	}
 	close(destroyCode) {
 		this.sendEnd();
 		this.destroy(destroyCode);
 	}
 	async destroy(destroyCode) {
-		info(`socket EVENT -> destroy - ID:${this.connectionIdString}`);
+		this.logInfo(`socket EVENT -> destroy - ID:${this.connectionIdString}`);
 		return destroy(this, destroyCode);
 	}
 	updateLastActive() {
 		this.lastActive = Date.now();
 	}
-	checkActivity() {
+	checkHeartbeat() {
 		const lastActive = Date.now() - this.lastActive;
 		if (lastActive > this.heartbeat) {
 			this.close(1);
@@ -130,14 +128,11 @@ export class Client {
 	}
 	initialGracePeriodCheck() {
 		const source = this;
-		const {
-			initialGracePeriod,
-			heartbeat
-		} = source;
+		const { initialGracePeriod } = source;
 		source.initialGracePeriodTimeout = setTimeout(() => {
 			const lastActive = Date.now() - source.lastActive;
-			console.log('Client Grace Period reached killing connection', lastActive > initialGracePeriod, source);
-			if (source.state <= 1 || lastActive > heartbeat) {
+			this.logInfo('Client Grace Period reached killing connection', lastActive > initialGracePeriod, source);
+			if (source.state <= 1) {
 				source.close(1);
 			}
 		}, initialGracePeriod);
@@ -145,64 +140,32 @@ export class Client {
 	clearInitialGracePeriodTimeout() {
 		clearTimeout(this.initialGracePeriodTimeout);
 	}
-	// PFS
-	async reply(frame, header, rinfo) {
-		if (this.state === 1) {
-			this.updateState(2);
-		}
-		this.updateLastActive();
-		const processingFrame = await processFrame(frame, header, this, this.requestQueue);
-		if (processingFrame === false) {
-			const replyObject = new Reply(frame, header, this);
-			console.log('New reply object created', replyObject);
-			if (isFalse(replyObject)) {
-				failed('Reply creation failed');
-				console.trace();
-				return;
-			}
-			replyObject.onFrame(frame, header, rinfo);
-		}
-	}
-	sendEnd() {
-		if (this.state === 0) {
-			return;
-		}
-		console.log('Sending CLIENT END');
-		this.updateState(0);
-		const frame = [
-			false,
-			endRPC
-		];
-		return this.send(frame, undefined, undefined, true);
-	}
-	async end(frame, header) {
-		console.log(`END RPC Destroying client ${this.connectionIdString}`, frame, header);
-		await this.sendEnd();
-		await this.destroy(0);
-	}
+	attachProxyAddress = attachProxyAddress;
+	send = send;
+	sendAny = sendAny;
+	on = on;
+	off = off;
+	fire = fire;
+	reply = reply;
+	sendEnd = sendEnd;
+	end = end;
 	async calculatePacketOverhead() {
-		return calculatePacketOverhead(this.cipherSuite, this.destination.connectionIdSize, this.destination);
+		return calculatePacketOverhead(this.cipher, this.destination.connectionIdSize, this.destination);
 	}
-	on(eventName, eventMethod) {
-		return createEvent(this.events, eventName, eventMethod);
-	}
-	off(eventName, eventMethod) {
-		return removeEvent(this.events, eventName, eventMethod);
-	}
-	fire(eventName, ...args) {
-		success(`CLIENT EVENT -> ${eventName} - ID:${this.connectionIdString}`);
-		return triggerEvent(this.events, eventName, this, ...args);
-	}
-	destination = {
-		overhead: {},
-		connectionIdSize: defaultClientConnectionIdSize
-	};
+	setIntroHeader = setIntroHeader;
+	setIntroFrame = setIntroFrame;
 	introHeader = introHeader;
 	intro = intro;
+	createIntro = createIntro;
 	sendIntro = sendIntro;
-	extendedHandshake = extendedHandshake;
-	extendedHandshakeHeader = extendedHandshakeHeader;
-	sendExtendedHandshake = sendExtendedHandshake;
+	extendedSynchronization = extendedSynchronization;
+	extendedSynchronizationHeader = extendedSynchronizationHeader;
+	sendExtendedSynchronization = sendExtendedSynchronization;
+	logError = logError;
+	logWarning = logWarning;
+	logInfo = logInfo;
+	logVerbose = logVerbose;
+	logSuccess = logSuccess;
 	pending = false;
 	state = 0;
 	randomId = randomBuffer(8);
@@ -212,15 +175,14 @@ export class Client {
 	static type = 'serverClient';
 	isServerClient = true;
 	isServerEnd = true;
-	sessionCompleted = false;
 	initialize = initialize;
 	onConnected = onConnected;
 	initialGracePeriod = 1000;
 	initialRealtimeGracePeriod = 2000;
 }
 export async function createClient(config) {
-	info('Creating Client');
-	const client = await construct(Client, [config]);
-	success(`Client has been created with sever connection id ${toHex(client.id)}`);
+	this.logInfo('Creating Client');
+	const client = new Client(config);
+	this.logInfo(`Client has been created with sever connection id ${toHex(client.id)}`);
 	return client;
 }

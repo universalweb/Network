@@ -4,7 +4,7 @@ export async function onHeadProgress() {
 		if (this.currentIncomingHeadSize > 0) {
 			this.incomingHeadProgress = calcProgress(this.currentIncomingHeadSize, this.currentIncomingHeadSize);
 		}
-		console.log(`Head PROGRESS current:${this.currentIncomingHeadSize}`, this.currentIncomingHeadSize);
-		console.log('Incoming Progress', this.incomingHeadProgress);
+		this.logInfo(`Head PROGRESS current:${this.currentIncomingHeadSize}`, this.currentIncomingHeadSize);
+		this.logInfo('Incoming Progress', this.incomingHeadProgress);
 	}
 }

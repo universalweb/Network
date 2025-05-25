@@ -11,85 +11,69 @@ import {
 	decode,
 	encode
 } from '#utilities/serialize';
-import {
-	failed,
-	imported,
-	info,
-	msgSent,
-	success
-} from '#logs';
-import { maxDefaultPacketSize } from '../calculatePacketOverhead.js';
-import { toBase64 } from '#crypto';
-/**
- * @todo
- * - Set Smart Id Routing up.
- * - If the packet is a request, then it should be sent to the server.
- */
-// [id, RPC, ...Args]
-export async function encodePacket(message = Buffer.from(0), source, destination, headers, footer) {
-	success(`PROCESSING TO ENCODE PACKET`);
+import { maxDefaultPacketSize } from '../utilities/calculatePacketOverhead.js';
+import { toBase64 } from '#utilities/cryptography/utils';
+export async function createPacket(message, source, destination, headers, footer) {
+	source.logSuccess(`PROCESSING TO ENCODE PACKET`);
 	const {
 		state,
 		isClient,
 		isServer,
 		isServerEnd,
 		isServerClient,
-		cipherSuite
+		cipher,
+		nonce
 	} = source;
 	const id = destination.id;
 	if (!hasValue(id)) {
 		console.trace(`ID is missing`);
 		return;
 	}
-	let header = id;
 	let shortHeaderMode = true;
 	if (headers) {
-		const isHeadersAnArray = isArray(headers);
-		if (isHeadersAnArray) {
-			if (headers.length > 0) {
-				headers.unshift(id);
-				header = headers;
-			}
-		} else {
-			header = [id, headers];
-		}
-		if (isArray(header)) {
-			shortHeaderMode = false;
-		}
-		console.log('HEADERS GIVEN', isHeadersAnArray, headers);
+		headers[0] = id;
+		shortHeaderMode = false;
+		this.logsource.logInfo('HEADERS GIVEN');
 	}
+	const header = headers || id;
 	if (isClient) {
-		info(`Encode client side with id: ${id.toString('hex')}`);
+		source.logInfo(`Encode client Packet with cid: ${id.toString('hex')}`);
 	} else {
-		info(`Decode Server side with Server-Client-id: ${id.toString('hex')}`);
+		source.logInfo(`Decode Server Packet with cid: ${id.toString('hex')}`);
 	}
-	const headerEncoded = shortHeaderMode ? header : encode(header);
-	let packetEncoded;
+	const headerEncoded = shortHeaderMode ? header : await encode(header);
 	const transmitKey = source?.transmitKey;
+	let packetEncoded;
 	if (message && transmitKey) {
-		info(`Transmit Key ${toBase64(transmitKey)}`);
-		const messageEncoded = encode(message);
+		source.logInfo(`Transmit Key ${toBase64(transmitKey)}`);
+		const messageEncoded = await encode(message);
 		const ad = headerEncoded;
-		console.log(cipherSuite);
-		const encryptedMessage = await cipherSuite.encryption.encrypt(messageEncoded, transmitKey, ad);
+		const encryptedMessage = await cipher.encrypt(messageEncoded, transmitKey, ad, nonce);
+		this.logsource.logInfo('nonce used', nonce);
 		if (!encryptedMessage) {
-			return console.trace('Encryption failed');
+			this.logsource.logInfo('Encryption failed');
+			return;
 		}
-		let packetStructure = [header, encryptedMessage];
+		const packetStructure = [header, encryptedMessage];
 		if (shortHeaderMode) {
-			packetStructure = Buffer.concat(packetStructure);
+			return encode(Buffer.concat(packetStructure));
 		}
-		packetEncoded = encode(packetStructure);
-	} else {
-		packetEncoded = encode([header]);
-		console.log('No message given sending as header only');
+		return encode(packetStructure);
 	}
-	const packetSize = packetEncoded.length;
-	info(`encoded Packet Size ${packetSize}`);
-	if (packetSize > 1280) {
-		console.log(packetEncoded);
+	this.logsource.logInfo('No message given header only packet');
+	return encode([header]);
+}
+export async function encodePacket(message, source, destination, headers, footer) {
+	const encodedPacket = await createPacket(message, source, destination, headers, footer);
+	if (!encodedPacket) {
+		this.logsource.logInfo(`Failed to encode packet`);
+		return;
+	}
+	const packetSize = encodedPacket.length;
+	source.logInfo(`encoded Packet Size ${packetSize}`);
+	if (packetSize > maxDefaultPacketSize) {
 		console.trace(`WARNING: Encode Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - maxDefaultPacketSize}`);
 	}
-	success(`PROCESSED ENCODE PACKET`);
-	return packetEncoded;
+	source.logSuccess(`PROCESSED ENCODE PACKET`);
+	return encodedPacket;
 }

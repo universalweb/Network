@@ -1,9 +1,9 @@
 // ADD DISCOVERY AVAILABLE FOR DOMAIN CERTIFICATES
 // DISCOURAGE DISCOVERY FOR PUBLIC CERTIFICATES FROM SERVERS
 // ENCOURAGE DISCOVERY FOR PUBLIC CERTIFICATES FROM THE DOMAIN INFORMATION SYSTEM
-import { clientStates } from '../../states.js';
-import { discoveryHeaderRPC } from '../../protocolHeaderRPCs.js';
-import { toHex } from '#crypto';
+import { clientStates } from '../defaults.js';
+import { discoveryHeaderRPC } from '../../rpc/headerRPC.js';
+import { toHex } from '#utilities/cryptography/utils';
 const {
 	inactiveState,
 	discoveringState,
@@ -17,14 +17,14 @@ const {
 } = clientStates;
 export async function setDiscoveryHeaders(header = []) {
 	const key = this.publicKey;
-	console.log('Setting DISCOVERY in UDSP Header', toHex(key));
+	this.logInfo('Setting DISCOVERY in UDSP Header', toHex(key));
 	const {
-		cipherSuiteName,
-		cipherSuite,
+		cipherName,
+		cipher,
 		version,
 		id
 	} = this;
-	header.push(id, cipherSuite.id, version);
+	header.push(id, cipher.id, version);
 	return header;
 }
 /*
@@ -36,8 +36,8 @@ export async function setDiscoveryHeaders(header = []) {
 	*/
 export async function sendDiscovery() {
 	if (this.state === inactiveState) {
-		console.log('Sending Discovery');
-		await this.updateState(discoveringState);
+		this.logInfo('Sending Discovery');
+		await this.setState(discoveringState);
 		const header = [discoveryHeaderRPC];
 		this.setPublicKeyHeader(header);
 		this.setCryptographyOptionsHeaders(header);
@@ -50,6 +50,6 @@ export async function discovery(frame, header) {
 	this.discovered();
 }
 export	async function discovered() {
-	console.log('DISCOVERY COMPLETED -> CERTIFICATE LOADED');
-	await this.updateState(discoveredState);
+	this.logInfo('DISCOVERY COMPLETED -> CERTIFICATE LOADED');
+	await this.setState(discoveredState);
 }

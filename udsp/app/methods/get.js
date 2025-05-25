@@ -1,7 +1,6 @@
 import { hasDot, isEmpty, isString } from '@universalweb/acid';
 import cleanPath from '#cleanPath';
 import { promises as fs } from 'fs';
-import { info } from '#logs';
 import path from 'path';
 import { read } from '#utilities/file';
 const dots = /\./g;
@@ -19,19 +18,19 @@ async function checkFileExists(filePath) {
 		console.error('File does not exist');
 	}
 }
-export async function getMethod(req, resp, client) {
+//  TODO: CONSIDER NOT USING APP ARG INSTEAD VIA OBJECTS WITH .app()
+export async function getMethod(req, resp, appServer) {
 	const {
 		resourceDirectory,
-		defaultExtension,
-		cryptography
-	} = client;
+		defaultExtension
+	} = appServer;
 	const {
 		data,
 		path: filePath
 	} = req;
 	if (!isString(filePath) || isEmpty(filePath)) {
 		console.log('No fileName - Returning empty data');
-		resp.setHeader('status', 404);
+		await resp.setHeader('status', 404);
 		resp.send();
 		return true;
 	}
@@ -47,10 +46,10 @@ export async function getMethod(req, resp, client) {
 		const fileData = await read(cleanedPath);
 		const ext = path.extname(cleanedPath).replace('.', '');
 		console.log(`EXT => ${ext}`);
-		resp.setHeader('contentType', ext);
+		await resp.setHeader('contentType', ext);
 		resp.data = fileData;
 	} catch (err) {
-		resp.setHeader('status', 404);
+		await resp.setHeader('status', 404);
 	} finally {
 		resp.send();
 	}

@@ -10,7 +10,7 @@ export function numberEncodedSize(source) {
 	} else if (sourceLength > 11 && sourceLength <= 16) {
 		return 9;
 	} else {
-		console.log('Larger than max safe integer in javascript detected.');
+		// console.trace('Larger than max safe integer in javascript detected.');
 		return false;
 	}
 }

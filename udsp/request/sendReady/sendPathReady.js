@@ -2,21 +2,21 @@ import { askRPC, replyRPC } from '../rpc/rpcCodes.js';
 import { hasValue } from '@universalweb/acid';
 export async function checkSendPathReady() {
 	const { isAsk } = this;
-	console.log(`CHECK SETUP STATUS checkSendPathReady - STATE:${this.state}`);
+	this.logInfo(`CHECK SETUP STATUS checkSendPathReady - STATE:${this.state}`);
 	if (isAsk) {
 		if (this.state === askRPC.sendPathReady) {
-			console.log('NEED TO RESEND sendPathReady');
+			this.logInfo('NEED TO RESEND sendPathReady');
 			return this.sendPathReady();
 		}
 	} else if (this.state === replyRPC.sendPathReady) {
-		console.log('NEED TO RESEND sendPathReady');
+		this.logInfo('NEED TO RESEND sendPathReady');
 		return this.sendPathReady();
 	}
 	this.clearSendPathReadyTimeout();
 }
 export function clearSendPathReadyTimeout() {
 	if (hasValue(this.sendPathReadyTimeout)) {
-		console.log('CLEAR sendPathReady TIMEOUT');
+		this.logInfo('CLEAR sendPathReady TIMEOUT');
 		clearTimeout(this.sendPathReadyTimeout);
 		this.sendPathReadyTimeout = null;
 	}

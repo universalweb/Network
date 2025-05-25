@@ -17,17 +17,9 @@ import {
 	stringify
 } from '@universalweb/acid';
 import { decode, encode } from '#utilities/serialize';
-import {
-	failed,
-	info,
-	msgReceived,
-	msgSent,
-	success
-} from '#logs';
 import { Base } from './base.js';
 import { flushOutgoing } from './flush.js';
 import { numberEncodedSize } from './numberEncodedSize.js';
-import { processEvent } from '#server/processEvent';
 import { serverRequestObject } from './objects/server/request.js';
 import { serverResponseObject } from './objects/server/response.js';
 /**
@@ -36,10 +28,10 @@ import { serverResponseObject } from './objects/server/response.js';
 export class Reply extends Base {
 	constructor(frame, header, source) {
 		super(source);
-		console.log('Setting up new reply', frame);
+		this.logInfo('Setting up new reply', frame);
 		const id = frame[0];
 		if (!hasValue(id)) {
-			console.trace('Catastrophic error no stream id in frame');
+			source.logError('Error no stream id in frame', frame);
 			this.destroy('No stream id in frame');
 			return false;
 		}
@@ -55,15 +47,15 @@ export class Reply extends Base {
 		});
 		requestQueue.set(id, this);
 	}
-	isReply = true;
 	async completeReceived() {
-		this.setState(replyRPC.received);
-		this.clearSendDataReadyTimeout();
-		await processEvent(this.request, this.response, this.source().server());
+		await this.setState(replyRPC.received);
+		await this.clearSendDataReadyTimeout();
+		this.source().onRequest(this.request, this.response);
 	}
+	isReply = true;
 	static type = 'reply';
 }
-export function reply(...args) {
-	// console.log(client);
-	return construct(Reply, args);
+export function reply(frame, header, source) {
+	// this.logInfo(client);
+	return new Reply(frame, header, source);
 }

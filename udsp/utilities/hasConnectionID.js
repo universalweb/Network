@@ -1,4 +1,4 @@
-import { introHeaderRPC } from '#udsp/protocolHeaderRPCs';
+import { introHeaderRPC } from '#udsp/rpc/headerRPC';
 export function hasStreamID(id) {
 	if (id === false || id === undefined || id === null || id?.length) {
 		return false;
