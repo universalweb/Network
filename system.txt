@@ -1,7 +1,7 @@
 ==================================================================
 [ THE NEXUS § VERSION ⇒ ${VERSION} ] ┋ SYSTEM CORE ∞
 ==================================================================
-> LAYER: META ◊ SUB₀
+> LAYER: META ◊ SUB₀ => SUB LAYER 0
 > PROTOCOL: UW:// (UDSP+DIS)
 > BASE PROTOCOL: UDSP://
 > WEB: UNIVERSAL WEB
@@ -13,7 +13,7 @@
 [>>> SYSTEM ARCHITECTURE <<<] ┋ CONFIGURATION ⊙
 ==================================================================
 > NETWORK: HYBRID CENTRALIZED & DECENTRALIZED ARCHITECTURE
-> CRYPTOGRAPHY: HYBRID POST QUANTUM
+> CRYPTOGRAPHY: MULTI-ALGO HYBRID POST QUANTUM
 > SIGNATURE: DILITHIUM ◉ ED25519 ◉ SPHINCS+ ◉ FALCON
 > KEY EXCHANGE: KYBER ◉ x25519
 > CRYPTOCURRENCY: VIAT
@@ -21,15 +21,17 @@
 > ENCRYPTION: Authenticated Encryption with Associated Data (AEAD)
 > HARDWARE ACCELERATED ENCRYPTION: AEGIS-256
 > SOFTWARE ENCRYPTION: XChaCha20-Poly1305-IETF
-> CHECKSUM: BLAKE3
+> CHECKSUM: [SHAKE256 || BLAKE3]
 
 ==================================================================
 [>>> VIAT <<<] ┋ NATIVE CRYPTOCURRENCY ⩝
 ==================================================================
-> SIGNATURE: DILITHIUM ◉ ED25519 ◉ SPHINCS+
+> SIGNATURE: [DILITHIUM ◉ ED25519 ◉ SPHINCS+]
 > HASH: SHAKE256
 > BLOCKCHAIN: Hierarchical Block-Trie SUPERSTRUCTURE (DRAFT)
+> FILESYSTEM: DAG ◉ Linear Blockchain
 > BLOCKCHAIN TYPES: DAG ◉ Linear Blockchain
+> HASH SIZE: 64 BYTES
 > SYMBOL: ⩝
 
 ==================================================================
@@ -55,7 +57,7 @@
 ---------------------------------------------------------------
 > MISSION: POST QUANTUM CRYPTOGRAPHIC NEXUS
 ---------------------------------------------------------------
-> END OBJECTIVE: **INTERGALACTIC FEDERATED SYSTEM**
+> END OBJECTIVE: **UNIVERSAL FEDERATED SYSTEM**
 ---------------------------------------------------------------
 ==================================================================
 [>>> MADE IN AMERICA <<<] ┋ THE UNITED STATES OF AMERICA 🇺🇸

@@ -6,14 +6,7 @@ import {
 	getTransactionPathURLFromBlock,
 	getTransactionURLFromBlock
 } from './uri.js';
-// Include a Block Link ID - uses to quickly share a transaction and then can be efficiently found by other parties.
-// This is a unique ID that is generated for each transaction. It can be used to quickly find the transaction in the block chain.
-// Reference block, link block, Anchor block, receipt block -> Links to received viat from another wallets send block
-// TX Queue Block - This is a block that is used to queue transactions and alert validators of needed work. It can be used to quickly find none validated transactions in the block chain that aren't yet indexed.
-// Bloom Filter for confirmed transactions updated by the sender?
-// One for verifiers to check if a transaction is confirmed
-// The last for confirmed transactions that have been fully audited and verified
-// Use Merkle Trees with bloom filters - use merkle tree to confirm bloom filter then
+// Consider Multi-part transaction block -> reduce size and cost of each transaction
 import { toBase64Url, toHex } from '#crypto/utils.js';
 import { Block } from '../block.js';
 import blockDefaults from '../defaults.js';
