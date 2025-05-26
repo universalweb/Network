@@ -9,7 +9,7 @@ Just like the brain, Viat supports massively parallel verification and processin
 Nodes (verifiers/validators) act like neurons firing and validating inputs in parallel — no global synchronization is required, reflecting asynchronous neural signaling.
 
 Spatially Addressable Memory (On-Disk Trie Folders)
-The physical file system structure mirrors spatial locality in the brain, where data is organized and located efficiently.
+The physical filesystem structure mirrors spatial locality in the brain, where data is organized and located efficiently.
 The use of constant-time lookups via physical paths is like neural signals traveling along optimized, reinforced synaptic paths.
 
 Viat's block centric design with specialized structures allows VIAT to benefit and more easily integrate a native neural network and or model that can be used to carry out complex queries with great efficiency.
@@ -25,7 +25,7 @@ Motor Neurons
 Interneurons (Projection/Relay) & local
 
 Viat filesystem
-These types of URLs server as a memory map linking to a specific memory location which stores the block which is the memory of an event. That memory then branches out to related memories.
+These types of URLs serve as a memory map linking to a specific memory location which stores the block(memory). That memory then branches out to related memories.
 
 For example this memory map (URI) is a folder path that leads first to a specific part of the brain that is the Viat Superstructure. In this case the specific part deals with wallets.
 
