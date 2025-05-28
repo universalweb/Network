@@ -50,13 +50,22 @@ export class Block {
 	configByBlock(blockObject, config) {
 		switch (blockObject.blockType) {
 			case blockTypes.transaction: {
-				return this.configByTransactionBlock(blockObject, config);
+				if (this.configByTransactionBlock) {
+					return this.configByTransactionBlock(blockObject, config);
+				}
+				break;
 			}
 			case blockTypes.receipt: {
-				return this.configByReceiptBlock(blockObject, config);
+				if (this.configByReceiptBlock) {
+					return this.configByReceiptBlock(blockObject, config);
+				}
+				break;
 			}
 			default: {
-				return this.configByGenericBlock(blockObject, config);
+				if (this.configByGenericBlock) {
+					return this.configByGenericBlock(blockObject, config);
+				}
+				break;
 			}
 		}
 	}
@@ -106,6 +115,16 @@ export class Block {
 		this.setMeta('version', this.version);
 		this.setMeta('blockType', this.blockType);
 		this.setMeta('nonce', this.cipherSuite.createBlockNonce(this.nonceSize));
+	}
+	async createSignature(wallet) {
+		const binary = await this.exportDataBinary();
+		const signature = await wallet.sign(binary);
+		return signature;
+	}
+	async signBlock(wallet) {
+		const signature = await this.createSignature(wallet);
+		await this.set('signature', signature);
+		return this;
 	}
 	async hashData() {
 		const binary = await this.exportDataBinary();
@@ -223,10 +242,10 @@ export class Block {
 			return this.cipherSuite.hash.hashXOF(binary, options);
 		}
 	}
-	getParent() {
+	async getParent() {
 		return this.parent;
 	}
-	getChildren() {
+	async getChildren() {
 		return this.children;
 	}
 	getVersion() {
@@ -234,6 +253,20 @@ export class Block {
 	}
 	getType() {
 		return this.getMeta('type');
+	}
+	getSequence() {
+		return this.getCore('sequence');
+	}
+	async getParentSequence() {
+		const parentNode = await this.getParent();
+		if (parentNode) {
+			return BigInt(parentNode.getSequence());
+		}
+		return null;
+	}
+	async setSequence() {
+		const parentId = await this.getParentSequence();
+		return parentId + 1n;
 	}
 	version = version;
 	typeName = 'generic';

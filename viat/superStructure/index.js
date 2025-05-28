@@ -1,5 +1,7 @@
-class SuperStructure {
+export class Superstructure {
 	constructor() {
+		// Initialize any necessary properties
+		console.log('Superstructure initializing');
 	}
 	async createGenesisBlock() {
 	}
@@ -8,3 +10,8 @@ class SuperStructure {
 	async createGenesisVerificationBlock() {
 	}
 }
+export async function superstructure() {
+	const source = new Superstructure();
+	return source;
+}
+export default superstructure;

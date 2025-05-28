@@ -28,11 +28,15 @@ async function createFoldersIfNotExist(folderPath) {
 		}
 	}
 }
+export async function ensureDirectoryPath(filePath) {
+	const pathNormalized = normalize(filePath);
+	return fsExtra.ensureDir(path.dirname(pathNormalized));
+}
 export async function write(filePath, contents, encoding, createPathFlag) {
 	const pathNormalized = normalize(filePath);
 	console.log('FILE WRITE', pathNormalized, contents.length, encoding);
 	if (createPathFlag) {
-		await fsExtra.ensureDir(path.dirname(pathNormalized));
+		await ensureDirectoryPath(pathNormalized);
 	}
 	return writeFile(pathNormalized, contents, encoding);
 }

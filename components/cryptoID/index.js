@@ -172,6 +172,9 @@ export class CryptoID {
 	async sign(message) {
 		return this.cipherSuite.signature.sign(message, this.signatureKeypair);
 	}
+	async signBlock(block) {
+		await block.sign(this);
+	}
 	async signPartial(message) {
 		return this.cipherSuite.signature.signPartial(message, this.signatureKeypair);
 	}

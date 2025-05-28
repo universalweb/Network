@@ -15,20 +15,12 @@ export async function createBlockFromObject(blockObject, config) {
 		}
 	}
 }
-export async function loadBlock(filepath, pathPrefix) {
-	const { source } = this;
-	const fullFilepath = (pathPrefix) ? path.join(pathPrefix, filepath) : filepath;
-	const blockObject = await readStructured(fullFilepath);
-	const config = {
-		source
-	};
-	if (source) {
-		return createBlockFromObject(blockObject, config);
-	}
-}
-export async function getBlockFromBlock(filepath, sourceBlock) {
-	const { source } = sourceBlock;
+export async function getFullPathFromBlock(filepath, source) {
 	const networkPath = (source) ? source().networkPath : undefined;
 	const fullFilepath = (networkPath) ? path.join(networkPath, filepath) : filepath;
 	return fullFilepath;
+}
+export async function loadBlock(filepath, config) {
+	const blockObject = await readStructured(filepath);
+	return createBlockFromObject(blockObject, config);
 }

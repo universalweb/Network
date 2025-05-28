@@ -47,8 +47,9 @@ export default receiptBlock;
 // 	receiver: viatCipherSuite.createBlockNonce(64),
 // 	mana: 1000,
 // 	amount: 1000,
-// 	//  Reference a prior confirmed receipt from the receiver's address.
-// 	priorReceipt: viatCipherSuite.createBlockNonce(64)
+//  Reference a prior confirmed receipt's TX hash from the receiver's address. Use path to lookup both receipts and domains.
+// Only valid if hash is from a receipt within the same wallet and links to a validated transaction.
+// 	priorReceiptTXHash: viatCipherSuite.createBlockNonce(64)
 // });
 // console.log('Transaction Block', exampleBlock);
 // exampleBlock.setDefaults();
