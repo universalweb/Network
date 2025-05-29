@@ -15,6 +15,7 @@ import { getFullPathFromBlock } from '../utils.js';
 import { loadBlock } from '#viat/blocks/utils';
 import path from 'path';
 import receiptBlock from '../receipt/block.js';
+import { transactionBlockSchema } from './schema.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 class TransactionBlock extends Block {
 	constructor(data, config) {
@@ -32,6 +33,7 @@ class TransactionBlock extends Block {
 		const filepath = getTransactionPathFromBlock(this);
 		return filepath;
 	}
+	blockSchema = transactionBlockSchema;
 	typeName = 'transaction';
 }
 assignToClass(TransactionBlock, blockMethods);
@@ -40,13 +42,13 @@ export async function transactionBlock(data, config) {
 	return block;
 }
 export default transactionBlock;
-const exampleBlock = await transactionBlock({
-	amount: 1000n,
-	receiver: viatCipherSuite.createBlockNonce(64),
-	sender: viatCipherSuite.createBlockNonce(64),
-	mana: 1000n,
-	sequence: 0n
-});
+// const exampleBlock = await transactionBlock({
+// 	amount: 1000n,
+// 	receiver: viatCipherSuite.createBlockNonce(64),
+// 	sender: viatCipherSuite.createBlockNonce(64),
+// 	mana: 1000n,
+// 	sequence: 0n
+// });
 // console.log('Block HASH/ID', await exampleBlock.id());
 // console.log('Transaction Block', exampleBlock);
 // exampleBlock.setDefaults();

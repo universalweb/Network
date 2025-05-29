@@ -5,6 +5,7 @@ import {
 	assign,
 	currentPath,
 	hasDot,
+	isArray,
 	isBuffer,
 	isPlainObject,
 	isString
@@ -113,12 +114,37 @@ export class CryptoID {
 			signatureKeypair
 		};
 	}
+	async exportSignatureKeypair() {
+		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
+		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
+		return signatureKeypair;
+	}
+	async exportExchangeKeypair() {
+		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
+		const keyExchangeKeypair = await this.cipherSuite.keyExchange.exportKeypair(this.keyExchangeKeypair);
+		return keyExchangeKeypair;
+	}
+	async exportPublicKey() {
+		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
+		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
+		return signatureKeypair.publicKey;
+	}
+	async exportPrivateKey() {
+		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
+		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
+		return signatureKeypair.privateKey;
+	}
 	async exportBinary(encryptionKey) {
-		const { version, } = this;
+		this.generateAddress();
+		const {
+			version,
+			address
+		} = this;
 		const data = {
 			version,
 			date: Date.now(),
 			cipherID: this.cipherSuite.id,
+			address,
 			core: {}
 		};
 		assign(data.core, await this.exportKeypairs());
@@ -188,8 +214,9 @@ export class CryptoID {
 	}
 	cryptoIDVersion = cryptoIDVersion;
 	async generateAddress() {
-		const publicKeyCombined = Buffer.concat(this.signatureKeypair.publicKey);
-		const address = this.cipherSuite.hash.hash512(publicKeyCombined);
+		const publicKey = await this.exportPublicKey();
+		const publicKeyCombined = (isArray(publicKey)) ? Buffer.concat(publicKey) : publicKey;
+		const address = await this.cipherSuite.hash.hash512(publicKeyCombined);
 		this.address = address;
 		return address;
 	}

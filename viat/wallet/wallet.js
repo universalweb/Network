@@ -1,4 +1,3 @@
-import { createFoldersIfNotExist, write } from '#utilities/file';
 // VIAT WALLET
 import { decode, encode } from '#utilities/serialize';
 import { CryptoID } from '#components/cryptoID/index';

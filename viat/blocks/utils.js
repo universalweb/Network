@@ -24,3 +24,15 @@ export async function loadBlock(filepath, config) {
 	const blockObject = await readStructured(filepath);
 	return createBlockFromObject(blockObject, config);
 }
+// SET Start time of nextwork creation invalidate anything before
+// Auto remove any number with more or less integers that possible
+export async function validateTimestamp(sourceBlock) {
+	const timestamp = sourceBlock?.data?.meta?.timestamp;
+	if (!timestamp) {
+		return false;
+	}
+	if (sourceBlock.timestamp && sourceBlock.timestamp > Date.now()) {
+		return false;
+	}
+	return true;
+}

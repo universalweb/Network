@@ -6,6 +6,8 @@ import {
 	get,
 	hasValue,
 	isArray,
+	isBigInt,
+	isNumber,
 	isPlainObject,
 	isString,
 	isZero,
@@ -14,7 +16,9 @@ import {
 	toPath
 } from '@universalweb/acid';
 import { readStructured, write } from '#utilities/file';
+import { validateSchema, validateSchemaVerbose } from '#utilities/schema/index';
 import blockDefaults from './defaults.js';
+import { blockSchema } from './schema.js';
 import { encodeStrict } from '#utilities/serialize';
 import { getParentClassName } from '#utilities/class';
 import { getTransactionPath } from './transaction/uri.js';
@@ -42,8 +46,10 @@ export class Block {
 		this.blockType = blockDefaults.blockTypes[this.typeName];
 		this.fileType = blockDefaults.fileExtensions[this.typeName];
 		this.filename = blockDefaults.genericFilenames[this.typeName];
-		if (getParentClassName(data) === 'Block') {
-			this.configByBlock(data, config);
+		if (data) {
+			if (getParentClassName(data) === 'Block') {
+				this.configByBlock(data, config);
+			}
 		}
 		return this;
 	}
@@ -95,13 +101,6 @@ export class Block {
 		await this.setDefaults();
 		await this.setHash();
 	}
-	async validate() {
-		const hashCheck = await this.validateHash();
-		if (!hashCheck) {
-			return false;
-		}
-		return true;
-	}
 	async validateHash() {
 		const manualHash = await this.hashData();
 		const hash = await this.getHash();
@@ -118,13 +117,36 @@ export class Block {
 	}
 	async createSignature(wallet) {
 		const binary = await this.exportDataBinary();
-		const signature = await wallet.sign(binary);
+		const signature = await wallet.signPartial(binary);
 		return signature;
 	}
-	async signBlock(wallet) {
+	async sign(wallet) {
 		const signature = await this.createSignature(wallet);
 		await this.set('signature', signature);
 		return this;
+	}
+	async createFullSignature(wallet) {
+		const binary = await this.exportDataBinary();
+		const signature = await wallet.sign(binary);
+		return signature;
+	}
+	async signFull(wallet) {
+		const binary = await this.exportDataBinary();
+		const signature = await this.createFullSignature(wallet, binary);
+		await this.set('signature', signature);
+		return this;
+	}
+	async verifySignature(wallet) {
+		const signature = await this.get('signature');
+		const binary = await this.exportDataBinary();
+		const isValid = await wallet.verifyPartialSignature(signature, binary);
+		return isValid;
+	}
+	async verifyFullSignature(wallet) {
+		const signature = await this.get('signature');
+		const binary = await this.exportDataBinary();
+		const isValid = await wallet.verifySignature(signature, binary);
+		return isValid;
 	}
 	async hashData() {
 		const binary = await this.exportDataBinary();
@@ -151,16 +173,15 @@ export class Block {
 		}
 		return this.get('hash');
 	}
-	async id(value) {
+	async storageID(value) {
 		if (value) {
-			await this.set('id', value);
+			await this.set('storageID', value);
 		}
-		const id = await this.get('id');
-		if (id) {
-			return id;
+		const storageID = await this.get('storageID');
+		if (storageID) {
+			return storageID;
 		}
-		await this.set('id', await this.hashData());
-		return this.get('id');
+		return this.hashData();
 	}
 	getCore(propertyName) {
 		return (propertyName) ? get(propertyName, this.block.data.core) : this.block.data.core;
@@ -255,18 +276,47 @@ export class Block {
 		return this.getMeta('type');
 	}
 	getSequence() {
-		return this.getCore('sequence');
+		const sequence = this.getCore('sequence');
+		if (isBigInt(sequence)) {
+			return sequence;
+		}
+		return;
 	}
 	async getParentSequence() {
 		const parentNode = await this.getParent();
 		if (parentNode) {
-			return BigInt(parentNode.getSequence());
+			return parentNode.getSequence();
 		}
-		return null;
+		return;
 	}
 	async setSequence() {
-		const parentId = await this.getParentSequence();
-		return parentId + 1n;
+		const parentSequence = await this.getParentSequence();
+		if (isBigInt(parentSequence)) {
+			return parentSequence + 1n;
+		} else {
+			return 0n;
+		}
+	}
+	async validate() {
+		const validateGeneric = await validateSchema(blockSchema, this.block);
+		if (!validateGeneric) {
+			return false;
+		}
+		if (this.blockSchema) {
+			const result = await validateSchema(this.blockSchema, this.block);
+			return result;
+		}
+		return true;
+	}
+	async validateVerbose() {
+		const validateGeneric = await validateSchemaVerbose(blockSchema, this.block);
+		if (!validateGeneric) {
+			return false;
+		}
+		if (this.blockSchema) {
+			const result = await validateSchemaVerbose(this.blockSchema, this.block);
+			return result;
+		}
 	}
 	version = version;
 	typeName = 'generic';
@@ -282,6 +332,9 @@ export async function block(...args) {
 	return source;
 }
 export default block;
-// const exmple = await block();
-// console.log(exmple);
+// const example = await block();
+// example.initialize();
+// example.setDefaults();
+// await example.setHash();
+// console.log(example.block, await example.validate());
 // U3VjaCB2aXNpb24gb2Ygd2hhdCBjb3VsZCBiZSBidXQgb25lIEkgbWF5IG5ldmVyIHNlZS4gVGhlIGN1cnNlIG9mIGRyZWFtcy4=

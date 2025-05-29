@@ -18,7 +18,7 @@ const viatFilesystemObject = {
 	wallets: {
 		url: 'w',
 	},
-	audit: {
+	audits: {
 		url: 'a',
 	},
 	domains: {
