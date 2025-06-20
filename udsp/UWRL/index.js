@@ -1,3 +1,4 @@
+//  EURL: Enhanced Universal Resource Locator
 import {
 	initialString,
 	isPlainObject,
@@ -6,10 +7,20 @@ import {
 	restString,
 	stringify
 } from '@universalweb/acid';
+import { getSchemeName } from './getScheme.js';
 const ipRegex = /^\b(?:\d{1,3}\.){3}\d{1,3}\b$/;
 class UWRL {
 	constructor(urlOriginal, paramaters) {
-		let url = urlOriginal.includes('uw://') ? urlOriginal : `uw://${urlOriginal}`;
+		const urlScheme = getSchemeName(urlOriginal);
+		let url = urlOriginal;
+		if (!urlScheme) {
+			if (urlOriginal.includes('://')) {
+				url = `uw${url}`;
+			} else {
+				url = `uw://${url}`;
+			}
+		}
+		console.log(url);
 		if (paramaters) {
 			if (isPlainObject(paramaters)) {
 				this.paramaters = paramaters;
@@ -19,11 +30,12 @@ class UWRL {
 				this.paramaters = jsonParse(this.params);
 			}
 		} else {
+			// TODO: EXTRACT USING NEW FUNCTION REMOVE THIS
 			const jsonStringStartIndex = url.indexOf('{');
 			if (jsonStringStartIndex !== -1) {
-				url = urlOriginal.substring(0, jsonStringStartIndex);
+				url = url.substring(0, jsonStringStartIndex);
 				if (jsonStringStartIndex) {
-					this.params = urlOriginal.substring(jsonStringStartIndex, urlOriginal.length);
+					this.params = url.substring(jsonStringStartIndex, url.length);
 					try {
 						this.paramaters = jsonParse(this.params);
 					} catch {
@@ -32,6 +44,7 @@ class UWRL {
 				}
 			}
 		}
+		console.log('url', url);
 		const urlObject = new URL(url);
 		if (this.paramaters) {
 			if (this.paramaters['#']) {
@@ -70,8 +83,9 @@ class UWRL {
 export function uwrl(...args) {
 	return new UWRL(...args);
 }
+export default uwrl;
 // Supports Username Password and URL Fragments
 // Server can opt in to get the URL fragments
 // fragments are turned into client side state tracking
-// const uwri = new UWRL('uw://localhost:8080/path/to/resource{"query":"value", "#": "fragment", ":": ["username", "password"]}');
+// const uwri = uwrl('://localhost:8080/path/to/resource{"query":"value", "#": "fragment", ":": ["username", "password"]}');
 // console.log(uwri);

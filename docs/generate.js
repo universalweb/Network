@@ -23,7 +23,6 @@ function createIndexPage(content) {
 			<link rel="stylesheet" href="https://mshaugh.github.io/nerdfont-webfonts/build/proggyclean.css" />
 			<link rel="stylesheet" href="index.css" />
 		</head>
-
 		<body>
 			<div class="content">
 				${content}
@@ -37,7 +36,7 @@ async function generateIndexPage() {
 	await write(`${filePath}/index.html`, createIndexPage(contents));
 	let cleanedContent = removeHighCharCodes(contents.toString(), 50000);
 	cleanedContent = cleanedContent.replaceAll('./', githubURL);
-	await write(`${filePath}/../README.md`, cleanedContent);
+	await write(`${filePath}/README.md`, cleanedContent);
 }
 await generateIndexPage();
 watch(`${filePath}/`, async (eventType, pathName) => {

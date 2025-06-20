@@ -1,0 +1,27 @@
+{
+	"default": true,
+	"MD003": {
+		"style": "atx"
+	},
+	"MD004": {
+		"style": "consistent"
+	},
+	"MD007": {
+		"indent": 1
+	},
+	"MD010": false,
+	"MD024": {
+		"siblings_only": true
+	},
+	"MD033": false,
+	"MD041": true,
+	"MD046": {
+		"style": "fenced"
+	},
+	"MD013": {
+		"line_length": 700,
+		"code_blocks": false,
+		"tables": false,
+		"headings": false
+	}
+}

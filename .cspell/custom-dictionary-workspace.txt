@@ -6,6 +6,7 @@ brotli
 CCID
 cshake
 dilithium
+EURL
 handshaked
 ICANN
 jubjub

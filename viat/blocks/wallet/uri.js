@@ -37,6 +37,12 @@ export function getWalletURL(walletAddress) {
 export function walletURLToPath(url) {
 	return url.replace(transactionDefaults.urlPathnameRegex, transactionDefaults.directoryPathname);
 }
+export const directoryTemplate = {
+	transactions: {},
+	receipts: {},
+	state: {},
+	data: {},
+};
 export const api = {
 	blockFilename: walletBlockFilename,
 	getPrefixPath: getWalletPrefixPath,
@@ -49,6 +55,7 @@ export const api = {
 	getBlockURL: getWalletURL,
 	urlToPath: walletURLToPath,
 	prefixPath: getWalletPrefixPath,
+	directoryTemplate,
 };
 export default api;
 // const walletAddressex = viatCipherSuite.createBlockNonce(64);
