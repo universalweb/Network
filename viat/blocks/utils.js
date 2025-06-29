@@ -15,20 +15,24 @@ export async function createBlockFromObject(blockObject, config) {
 		}
 	}
 }
-export async function loadBlock(filepath, pathPrefix) {
-	const { source } = this;
-	const fullFilepath = (pathPrefix) ? path.join(pathPrefix, filepath) : filepath;
-	const blockObject = await readStructured(fullFilepath);
-	const config = {
-		source
-	};
-	if (source) {
-		return createBlockFromObject(blockObject, config);
-	}
-}
-export async function getBlockFromBlock(filepath, sourceBlock) {
-	const { source } = sourceBlock;
+export async function getFullPathFromBlock(filepath, source) {
 	const networkPath = (source) ? source().networkPath : undefined;
 	const fullFilepath = (networkPath) ? path.join(networkPath, filepath) : filepath;
 	return fullFilepath;
+}
+export async function loadBlock(filepath, config) {
+	const blockObject = await readStructured(filepath);
+	return createBlockFromObject(blockObject, config);
+}
+// SET Start time of nextwork creation invalidate anything before
+// Auto remove any number with more or less integers that possible
+export async function validateTimestamp(sourceBlock) {
+	const timestamp = sourceBlock?.data?.meta?.timestamp;
+	if (!timestamp) {
+		return false;
+	}
+	if (sourceBlock.timestamp && sourceBlock.timestamp > Date.now()) {
+		return false;
+	}
+	return true;
 }

@@ -11,34 +11,29 @@ import { toBase64Url, toHex } from '#crypto/utils.js';
 import { Block } from '../block.js';
 import blockDefaults from '../defaults.js';
 import { encodeStrict } from '#utilities/serialize';
-import { getBlockFromBlock } from '../utils.js';
+import { getFullPathFromBlock } from '../utils.js';
 import { loadBlock } from '#viat/blocks/utils';
 import path from 'path';
 import receiptBlock from '../receipt/block.js';
+import { transactionBlockSchema } from './schema.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 class TransactionBlock extends Block {
 	constructor(data, config) {
-		super(data, config);
+		super(config);
 		this.initialize(data, config);
 		return this;
 	}
 	// Receipt Hash Link
 	// Block Hash (TX DATA || Receipt Meta?)
-	async createReceipt(block) {
-		this.receipt = await receiptBlock(this);
+	async createReceipt(wallet) {
+		this.receipt = await receiptBlock(this, wallet);
 		return this;
 	}
 	getReceiptPath() {
-		const { source, } = this;
 		const filepath = getTransactionPathFromBlock(this);
-		const networkPath = (source) ? source().networkPath : undefined;
-		const fullFilepath = (networkPath) ? path.join(networkPath, filepath) : filepath;
-		return fullFilepath;
+		return filepath;
 	}
-	async getReceipt() {
-		const transactionPath = this.getReceiptPath();
-		return getBlockFromBlock(transactionPath, this);
-	}
+	blockSchema = transactionBlockSchema;
 	typeName = 'transaction';
 }
 assignToClass(TransactionBlock, blockMethods);
@@ -48,10 +43,11 @@ export async function transactionBlock(data, config) {
 }
 export default transactionBlock;
 // const exampleBlock = await transactionBlock({
-// 	amount: 1000,
+// 	amount: 1000n,
 // 	receiver: viatCipherSuite.createBlockNonce(64),
 // 	sender: viatCipherSuite.createBlockNonce(64),
-// 	mana: 1000,
+// 	mana: 1000n,
+// 	sequence: 0n
 // });
 // console.log('Block HASH/ID', await exampleBlock.id());
 // console.log('Transaction Block', exampleBlock);

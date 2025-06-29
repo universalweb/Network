@@ -18,7 +18,7 @@ const viatFilesystemObject = {
 	wallets: {
 		url: 'w',
 	},
-	audit: {
+	audits: {
 		url: 'a',
 	},
 	domains: {
@@ -31,11 +31,10 @@ export async function createViatFilesystem(basePath, filesystemObject = viatFile
 export async function viatConfigToFilesystem(config = {}) {
 	config.source ??= viatFilesystemObject;
 	config.folderPath ??= getViatDirectory();
-	console.log(config);
-	// await configToFilesystem(config);
+	await configToFilesystem(config);
 	return true;
 }
-console.log(await viatConfigToFilesystem());
+// console.log(await viatConfigToFilesystem());
 // const filesystemFolder = path.normalize(`${currentPath(import.meta)}/../filesystem/testnet/`);
 // await createFolderStructure({
 // 	folderPath: filesystemFolder,

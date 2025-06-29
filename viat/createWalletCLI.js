@@ -1,10 +1,20 @@
 #!/usr/bin/env node
 import { Command, program } from 'commander';
+import {
+	completedLog,
+	errorLog,
+	fatalLog,
+	infoLog,
+	noteLog,
+	successLog,
+	verboseLog,
+	warningLog
+} from '#utilities/logs/logs';
 import { decode } from '#utilities/serialize';
 import { wallet } from './wallet/wallet.js';
 async function createWallet(filename, filepath, key) {
 	const walletInstance = await wallet();
-	// console.log(filename, filepath);
+	infoLog(`Creating wallet with filename: ${filename}, filepath: ${filepath}`);
 	await walletInstance.saveToFile(filename, filepath, key);
 	return walletInstance;
 }
@@ -16,7 +26,9 @@ program
 	.action(async (filename, filepath, key) => {
 		// Execute the function
 		const result = await createWallet(filename, filepath, key);
-		// console.log(await decode(await result.exportBinary()));
+		if (result) {
+			completedLog(`Created wallet with filename: ${filename}, filepath: ${filepath}`);
+		}
 	});
 program.addHelpText('after', `
 Example Commands:

@@ -1,6 +1,6 @@
 # How are URL parameters handled compared to HTTP? EXPERIMENTAL NOT FINAL
 
-Instead of URL paramaters being part of the Request-line they are turned into an structured object with binary support.
+Instead of URL parameters being part of the Request-line they are turned into an structured object with binary support.
 This enables: the ability for complex URL parameter requests, request are safer, no need to sanative, doesn't require URL encoding went sent, doesn't require URL decoding, less client side code, less server side code, less code complexity, easier to type, can support binary parameters, and are easier to understand.
 
 The Universal Web has a unique URL & URL parameter structure for the UW which enables more complex written URLs using a sort of JSON or structured object syntax which if done through a script could include binary data as well.

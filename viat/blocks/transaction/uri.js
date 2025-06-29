@@ -62,6 +62,10 @@ export async function getTransactionURLFromBlock(block) {
 export async function getTransactionPathURLFromBlock(block) {
 	return getTransactionPathURL(await block.getHash(), block.getSender());
 }
+export const directoryTemplate = {
+	// confirmations: {},
+	verifications: {},
+};
 export const api = {
 	blockFilename: transactionBlockFilename,
 	getPrefixPath: getTransactionPrefixPath,
@@ -72,6 +76,7 @@ export const api = {
 	getURL: getTransactionURL,
 	urlToPath: transactionURLToPath,
 	prefixPath: getTransactionPrefixPath,
+	directoryTemplate,
 };
 export const blockMethods = {
 	getPath() {

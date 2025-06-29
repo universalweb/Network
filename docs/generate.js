@@ -12,32 +12,17 @@ function removeHighCharCodes(str, maxCharCode) {
 	}
 	return result;
 }
-function createIndexPage(content) {
-	const htmlDOC = `<!doctype html>
-	<html>
-		<head>
-			<meta charset="UTF-8">
-			<meta name="viewport" content="width=device-width, initial-scale=1.0">
-			<title>Index Page</title>
-			<link rel="stylesheet" href="https://mshaugh.github.io/nerdfont-webfonts/build/0xproto.css" />
-			<link rel="stylesheet" href="https://mshaugh.github.io/nerdfont-webfonts/build/proggyclean.css" />
-			<link rel="stylesheet" href="index.css" />
-		</head>
-
-		<body>
-			<div class="content">
-				${content}
-			</div>
-		</body>
-	</html>`;
-	return htmlDOC;
+async function createIndexPage(content) {
+	const htmlDOC = await read(`${filePath}/docTemplate.html`);
+	console.log(htmlDOC);
+	return htmlDOC.toString().replace('${content}', content);
 }
 async function generateIndexPage() {
 	const contents = await read(`${filePath}/content.html`);
-	await write(`${filePath}/index.html`, createIndexPage(contents));
+	await write(`${filePath}/index.html`, await createIndexPage(contents));
 	let cleanedContent = removeHighCharCodes(contents.toString(), 50000);
 	cleanedContent = cleanedContent.replaceAll('./', githubURL);
-	await write(`${filePath}/../README.md`, cleanedContent);
+	await write(`${filePath}/README.md`, cleanedContent);
 }
 await generateIndexPage();
 watch(`${filePath}/`, async (eventType, pathName) => {

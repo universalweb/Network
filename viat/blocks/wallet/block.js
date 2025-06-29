@@ -9,3 +9,4 @@
 // Backup Address
 // Proxy Address
 // Identity?
+// role: auditor, validator, user, admin

@@ -23,7 +23,7 @@ import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 // Both together create a physical link between the two blocks
 export class ReceiptBlock extends Block {
 	constructor(data, config) {
-		super(data, config);
+		super(config);
 		this.initialize(data, config);
 		return this;
 	}
@@ -32,6 +32,28 @@ export class ReceiptBlock extends Block {
 	}
 	async getTransactionPath() {
 		return getTransaction(this.getCore('transaction'), this.getReceiver());
+	}
+	async configByTransactionBlock(blockObject, config) {
+		const txBlockData = blockObject.getData();
+		const txHash = blockObject.getHash();
+		this.appendToCore(txBlockData.core, txHash);
+	}
+	appendToCore(coreData, txHash) {
+		const {
+			receiver,
+			sender,
+			mana,
+			amount,
+		} = coreData;
+		this.setCore({
+			transaction: txHash,
+			receiver,
+			sender,
+			mana,
+			amount
+		});
+	}
+	async config(data, config) {
 	}
 	typeName = 'receipt';
 }
@@ -47,8 +69,9 @@ export default receiptBlock;
 // 	receiver: viatCipherSuite.createBlockNonce(64),
 // 	mana: 1000,
 // 	amount: 1000,
-// 	//  Reference a prior confirmed receipt from the receiver's address.
-// 	priorReceipt: viatCipherSuite.createBlockNonce(64)
+//  Reference a prior confirmed receipt's TX hash from the receiver's address. Use path to lookup both receipts and domains.
+// Only valid if hash is from a receipt within the same wallet and links to a validated transaction.
+// 	priorReceiptTXHash: viatCipherSuite.createBlockNonce(64)
 // });
 // console.log('Transaction Block', exampleBlock);
 // exampleBlock.setDefaults();
