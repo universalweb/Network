@@ -12,15 +12,27 @@ export class Wallet extends CryptoID {
 		await this.initialize(config, optionalArg);
 		return this;
 	}
-	async send(amount, receiver, mana = 1n) {
+	async createTransaction(amount, receiver, mana = 1n) {
 		const sender = await this.getAddress();
 		const txBlock = await transactionBlock({
-			amount,
-			receiver,
-			sender,
-			mana
+			core: {
+				amount,
+				receiver,
+				sender,
+				mana
+			}
 		});
+		await txBlock.finalize();
+		await txBlock.createReceipt();
+		await txBlock.receipt.finalize();
 		console.log('Transaction Block:', txBlock.block);
+		return txBlock;
+	}
+	async send(amount, receiver, mana = 1n) {
+		const txBlock = await this.createTransaction(amount, receiver, mana);
+		// Here you would typically send the transaction to the network
+		// This is a placeholder for the actual sending logic
+		console.log(`Sending transaction of ${amount} to ${receiver} with mana ${mana}`);
 	}
 }
 export function wallet(config) {

@@ -35,7 +35,7 @@ export class ReceiptBlock extends Block {
 	}
 	async configByTransactionBlock(blockObject, config) {
 		const txBlockData = blockObject.getData();
-		const txHash = blockObject.getHash();
+		const txHash = blockObject.block.hash;
 		this.appendToCore(txBlockData.core, txHash);
 	}
 	appendToCore(coreData, txHash) {
