@@ -121,7 +121,7 @@ export class Block {
 		this.setMeta('nonce', this.cipherSuite.createBlockNonce(this.nonceSize));
 	}
 	async createSignature(wallet) {
-		const binary = await this.exportDataBinary();
+		const binary = this.block.hash;
 		const signature = await wallet.signPartial(binary);
 		return signature;
 	}

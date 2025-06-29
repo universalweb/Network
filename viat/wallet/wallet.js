@@ -23,8 +23,10 @@ export class Wallet extends CryptoID {
 			}
 		});
 		await txBlock.finalize();
+		await txBlock.sign(this);
 		await txBlock.createReceipt();
 		await txBlock.receipt.finalize();
+		await txBlock.receipt.sign(this);
 		console.log('Transaction Block:', txBlock.block);
 		return txBlock;
 	}
