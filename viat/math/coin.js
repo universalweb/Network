@@ -117,9 +117,7 @@ export function toSmallestUnit(value) {
 		return parseStringUnits(value);
 	} else if (isBigInt(value)) {
 		const strValue = value.toString();
-		if (isBigIntBelowMaxSupply(value) && strValue.length <= coinMaxSupplyLength) {
-			return value;
-		}
+		return parseStringUnits(strValue);
 	}
 	return;
 }

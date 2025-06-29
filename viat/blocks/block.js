@@ -193,9 +193,6 @@ export class Block {
 	}
 	setCore(primaryArg, value) {
 		if (isPlainObject(primaryArg)) {
-			if (primaryArg.amount) {
-				primaryArg.amount = toSmallestUnit(primaryArg.amount, 'mana');
-			}
 			assign(this.block.data.core, primaryArg);
 			return this;
 		}
