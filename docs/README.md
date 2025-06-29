@@ -88,7 +88,7 @@
 </ul>
 <hr />
 <h4 align="center">Want to contribute? Then join the Imperium today!</h4>
-<p align="center"> To help write content, make art, write code, share it, and or star this repo! All are welcome to the Nexus.</p>
+<p align="center">To help write content, make art, write code, share it, and or star this repo! All are welcome to the Nexus.</p>
 <hr />
 <small>COPYRIGHT © 2025 VIAT, <a href="https://universalweb.io">UNIVERSAL WEB</a>, THE NEXUS</small>
 <br />
