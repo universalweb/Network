@@ -77,11 +77,33 @@ export function getSchemeNameAndDelimiter(urlString, defaultScheme = 'uw') {
 	}
 	return `${defaultScheme}://`;
 }
+export function hasSchemeDelimiter(urlString) {
+	if (isNotString(urlString)) {
+		return false;
+	}
+	if (urlString.includes('://')) {
+		return true;
+	}
+	return false;
+}
 export function hasValidScheme(urlString) {
 	if (urlString && getSchemeName(urlString)) {
 		return true;
 	}
 	return false;
+}
+export function appendScheme(urlString, defaultScheme = 'uw') {
+	if (!isString(urlString)) {
+		return;
+	}
+	const schemeName = hasValidScheme(urlString);
+	if (schemeName) {
+		return urlString;
+	}
+	if (hasSchemeDelimiter(urlString)) {
+		return `${defaultScheme}${urlString}`;
+	}
+	return `${defaultScheme}://${urlString}`;
 }
 export function hasEmptyOrValidScheme(urlString) {
 	return hasEmptyScheme(urlString) || hasValidScheme(urlString);
@@ -118,4 +140,4 @@ export function getSchemeDescription(url, defaultScheme) {
 // console.log('hasEmptyOrValidScheme', hasEmptyOrValidScheme('http://example.com'));
 // console.log('hasEmptyOrValidScheme', hasEmptyOrValidScheme('uw://example.com'));
 // console.log('hasEmptyOrValidScheme', hasEmptyOrValidScheme('://example.com'));
-console.log('getSchemeNameAndDelimiter', getSchemeNameAndDelimiter('://example.com'));
+// console.log('getSchemeNameAndDelimiter', getSchemeNameAndDelimiter('://example.com'));

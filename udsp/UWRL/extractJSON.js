@@ -1,12 +1,12 @@
 // Import the necessary utilities from @universalweb/acid
 // Assuming acid also provides isString and isEmpty for robust checks.
 import { isArray, isEmpty, isString } from '@universalweb/acid';
+const jsonRegex = /\{[^]*\}|\[[^]*\]/;
 /**
  * Extracts a valid JSON object or array from a given string.
  * It searches for the first occurrence of a JSON-like structure ({...} or [...])
  * and then attempts to parse it.
  *
- * This version uses utility functions from @universalweb/acid where applicable.
  * Returns the parsed JSON object/array if found and valid, otherwise `undefined`.
  *
  * @param {string} text - The string to search within.
@@ -16,7 +16,6 @@ export function extractAndValidateJson(text) {
 	if (!isString(text) || text.length < 2) {
 		return undefined;
 	}
-	const jsonRegex = /\{[^]*\}|\[[^]*\]/;
 	let match = text.match(jsonRegex);
 	while (match) {
 		const potentialJsonString = match[0];
@@ -35,6 +34,12 @@ export function extractAndValidateJson(text) {
 		match = remainingText.match(jsonRegex);
 	}
 	return;
+}
+export function removeJSON(target) {
+	if (!isString(target)) {
+		return;
+	}
+	return target.replace(jsonRegex, '');
 }
 export default extractAndValidateJson;
 // console.log('--- Valid JSON examples ---');

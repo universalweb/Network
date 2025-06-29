@@ -25,16 +25,14 @@ import { getTransactionPath } from './transaction/uri.js';
 import { getWallet } from './wallet/uri.js';
 import path from 'path';
 import { toBase64Url } from '#crypto/utils.js';
+import { toSmallestUnit } from '../math/coin.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 const {
 	version,
 	blockTypes
 } = blockDefaults;
 export class Block {
-	constructor(data, config) {
-		if (data) {
-			assign(this.block, data);
-		}
+	constructor(config) {
 		if (config?.source) {
 			this.source = function() {
 				return config.source;
@@ -49,6 +47,8 @@ export class Block {
 		if (data) {
 			if (getParentClassName(data) === 'Block') {
 				this.configByBlock(data, config);
+			} else {
+				this.config(data, config);
 			}
 		}
 		return this;
@@ -73,6 +73,11 @@ export class Block {
 				}
 				break;
 			}
+		}
+	}
+	config(data, config) {
+		if (isPlainObject(data)) {
+			this.setData(data);
 		}
 	}
 	async configByBlockAsync(blockObject, config) {
@@ -186,8 +191,15 @@ export class Block {
 	getCore(propertyName) {
 		return (propertyName) ? get(propertyName, this.block.data.core) : this.block.data.core;
 	}
-	setCore(propertyName, value) {
-		return this.set(propertyName, value, this.block.data.core);
+	setCore(primaryArg, value) {
+		if (isPlainObject(primaryArg)) {
+			if (primaryArg.amount) {
+				primaryArg.amount = toSmallestUnit(primaryArg.amount, 'mana');
+			}
+			assign(this.block.data.core, primaryArg);
+			return this;
+		}
+		return this.set(primaryArg, value, this.block.data.core);
 	}
 	getMeta(propertyName) {
 		return (propertyName) ? get(propertyName, this.block.data.meta) : this.block.data.meta;
@@ -199,6 +211,10 @@ export class Block {
 		return (propertyName) ? get(propertyName, this.block.data) : this.block.data;
 	}
 	setData(propertyName, value) {
+		if (isPlainObject(propertyName)) {
+			assign(this.block.data, propertyName);
+			return this;
+		}
 		return this.setProperty(propertyName, value, this.block.data);
 	}
 	get(propertyName) {

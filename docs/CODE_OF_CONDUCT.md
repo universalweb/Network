@@ -1,7 +1,7 @@
 <h1>Code of Conduct for the Imperium of Contributors (40K Edition)</h1>
 
 <h2>Our Oath</h2>
-<p>In the spirit of the Imperium at its most resolute, we, the contributors and overseers of this project, swear to uphold a community where <em>Freedom of Will</em> and <em>Honor of Duty</em> prevail. Guided by the principles of unfettered speech, reasoned debate, and sacred duty that defined the Imperium’s noblest campaigns, we pledge to foster an environment where ideas are forged in the crucible of discourse, and every citizen of our project is judged by the merit of their contributions. Our <em>Imperium of Code</em> thrives on truth, discipline, and the pursuit of the collective good.</p>
+<p>In the spirit of the Imperium at its most resolute, we, the contributors and overseers of this project, swear to uphold a community where <em>Freedom of Will</em> and <em>Honor of Duty</em> prevail. Guided by the principles of unfettered speech, reasoned debate, and sacred duty that defined the Imperium’s noblest campaigns, we pledge to foster an environment where ideas are forged in the crucible of discourse, and every citizen of our project is judged by the merit of their contributions. Our <em>Imperium of Code</em> thrives on truth, discipline, and the pursuit of efficacy.</p>
 
 <h2>Our Principles</h2>
 <p>The strength of our <em>Imperium of Code</em> lies in the unyielding exchange of ideas and the disciplined adherence to standards that elevate our collective endeavor. Honorable conduct, worthy of an Imperial citizen, includes:</p>
@@ -9,7 +9,7 @@
     <li>Speaking with <em>Resolve</em> and clarity, wielding words as weapons of truth.</li>
     <li>Engaging opposing viewpoints with reason and <em>Noble Bearing</em>, not personal vendettas.</li>
     <li>Offering criticism that refines ideas and strengthens the <em>Imperium of Code</em>.</li>
-    <li>Placing the project’s welfare above individual ambition, as a true servant of the collective will.</li>
+    <li>Placing the project’s welfare above individual ambition, as a true servant of the imperium.</li>
     <li>Embracing a diversity of thought, for through the clash of ideas, like warriors in battle, truth triumphs.</li>
 </ul>
 <p>Conduct that undermines our <em>Imperium of Code</em>, like the heresies of the unfaithful, includes:</p>

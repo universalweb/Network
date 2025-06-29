@@ -1,6 +1,14 @@
 // UW Domain Record APPS
+// Applications that can be in full or in part inside of a singular Domain Certificate.
 import { decode, encodeStrict } from '#utilities/serialize';
-const domainRecordScheme = {
+// Certificate Embedded App
+// Certificate-Bound App
+// Domain Certificate Binary
+// Domain Certificate App
+// Certificate Based Binary
+// Certificate Based App
+// CBOR-X-encoded binary within a domain certificate
+const dcaSchema = {
 	dependencies: {
 		scripts: [],
 		styles: [],

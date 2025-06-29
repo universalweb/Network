@@ -4,6 +4,7 @@ import {
 	isNotNumber,
 	isNotString,
 	isNumber,
+	isString,
 	noValue
 } from '@universalweb/acid';
 import { encode } from '#utilities/serialize';
@@ -11,7 +12,10 @@ import viatDefaults from '#viat/defaults';
 const {
 	coinDecimalPlaces, coinMaxSupply, coinMaxSupplyLength, coinMaxWholeSupplyLength, coinMaxSupplyDisplay, coinMaxSupplyInt
 } = viatDefaults;
-function displayAmount(bigInt) {
+// TODO: Change API so that using strings is obvious or numbers or bigInt or unify them
+// Already have smallest unit convert for math by removing period combine both sides then add the additional zeroes for full size
+// or maybe do bitMath to merge into a singular number
+export function displayAmount(bigInt) {
 	if (!isBigInt(bigInt)) {
 		return;
 	}
@@ -20,7 +24,7 @@ function displayAmount(bigInt) {
 	const fracPart = str.slice(-coinDecimalPlaces).replace(/0+$/, '') || '0';
 	return `${intPart}.${fracPart}`;
 }
-function displayAmountWithCommas(bigInt) {
+export function displayAmountWithCommas(bigInt) {
 	if (!isBigInt(bigInt)) {
 		return;
 	}
@@ -29,7 +33,7 @@ function displayAmountWithCommas(bigInt) {
 	const fracPart = str.slice(-coinDecimalPlaces).replace(/0+$/, '') || '0';
 	return `${intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${fracPart}`;
 }
-function formatUnitsWithCommas(value) {
+export function formatUnitsWithCommas(value) {
 	if (isNotString(value)) {
 		return;
 	}
@@ -40,31 +44,33 @@ function formatUnitsWithCommas(value) {
 	const intPart = intPartRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 	return `${intPart}.${fracPart}`;
 }
-function isValidFormattedNumber(str) {
+export function isValidFormattedNumber(str) {
 	// Must only contain digits, commas, or at most one dot
 	return (/^[\d,]*\.?\d*$/).test(str);
 }
-function normalizeFormattedNumber(str) {
+export function normalizeFormattedNumber(str) {
 	const cleaned = str.replace(/,/g, '').trim();
 	if (!(/^\d*\.?\d*$/).test(cleaned)) {
 		return;
 	}
 	return cleaned;
 }
-function isBigIntAboveMaxSupply(value) {
+export function isBigIntAboveMaxSupply(value) {
 	if (hasValue(value)) {
 		return value.toString().length >= coinMaxSupplyLength;
 	}
 	return false;
 }
-function isBigIntBelowMaxSupply(value) {
+export function isBigIntBelowMaxSupply(value) {
 	return value.toString().length <= coinMaxSupplyLength;
 }
-function convertToBigIntSafely(value) {
-	if (isNotString(value) && isNotNumber(value)) {
-		return;
-	}
-	if (isValidFormattedNumber(value)) {
+export function convertToBigIntSafely(value) {
+	if (isNumber(value)) {
+		const converted = BigInt(value);
+		if (isBigIntBelowMaxSupply(converted)) {
+			return converted;
+		}
+	} else if (isString(value) && isValidFormattedNumber(value)) {
 		const converted = BigInt(value);
 		if (isBigIntBelowMaxSupply(converted)) {
 			return converted;
@@ -72,13 +78,13 @@ function convertToBigIntSafely(value) {
 	}
 	return;
 }
-function isValidAmount(source) {
+export function isValidAmount(source) {
 	if (hasValue(source) && isBigInt(source) && isBigIntBelowMaxSupply(source)) {
-		return true;
+		return source >= 0n;
 	}
 	return false;
 }
-function parseUnits(displayStr) {
+export function parseStringUnits(displayStr) {
 	if (isNotString(displayStr) || !isValidFormattedNumber(displayStr)) {
 		return;
 	}
@@ -95,63 +101,87 @@ function parseUnits(displayStr) {
 		return converted;
 	}
 }
-function normalizeConvertToBigInt(value) {
-	return parseUnits(normalizeFormattedNumber(value));
+export function normalizeConvertToBigInt(value) {
+	return parseStringUnits(normalizeFormattedNumber(value));
 }
-function ensureZeroBigInt(source) {
+export function ensureZeroBigInt(source) {
 	if (noValue(source)) {
 		return 0n;
 	}
 	return source;
 }
-function toSmallestUnit(value) {
-	if (isNotNumber(value) || !isFinite(value)) {
-		return;
+export function toSmallestUnit(value) {
+	if (isNumber(value)) {
+		return parseStringUnits(value.toString());
+	} else if (isString(value)) {
+		return parseStringUnits(value);
+	} else if (isBigInt(value)) {
+		const strValue = value.toString();
+		if (isBigIntBelowMaxSupply(value) && strValue.length <= coinMaxSupplyLength) {
+			return value;
+		}
 	}
-	return parseUnits(value.toString());
+	return;
 }
-function fromSmallestUnit(value) {
+export function ensureSmallestUnit(value) {
+	if (isNumber(value) && isFinite(value)) {
+		const converted = convertToBigIntSafely(value);
+		if (isBigInt(converted)) {
+			return toSmallestUnit(converted);
+		}
+		return 0n;
+	}
+	if (isBigInt(value)) {
+		return toSmallestUnit(value);
+	}
+	return 0n;
+}
+export function fromSmallestUnit(value) {
 	const str = value.toString().padStart(coinDecimalPlaces + 1, '0');
 	const intPart = str.slice(0, -coinDecimalPlaces);
 	const fracPart = str.slice(-coinDecimalPlaces).replace(/0+$/, '');
 	return fracPart ? `${intPart}.${fracPart}` : intPart;
 }
-function applyPercent(amount, percent) {
-	return (amount * BigInt(percent)) / BigInt(10 ** coinDecimalPlaces);
+function getBigIntPercentage(value, percentage) {
+	return (value * percentage) / 100n;
 }
-function mod(a, b) {
+function getBigIntPercentageOf(part, whole) {
+	const bigPart = part;
+	const bigWhole = whole;
+	if (bigWhole === 0n) {
+		return;
+	}
+	return (bigPart * 100n) / bigWhole;
+}
+export function mod(a, b) {
 	return a % b;
 }
-function divide(a, b) {
-	if (b === 0n) {
-		return;
+export function divide(a, b) {
+	if (b === 0n || a === 0n) {
+		return 0n;
 	}
 	return a / b;
 }
-function multiply(a, b) {
+export function multiply(a, b) {
+	if (b === 0n || a === 0n) {
+		return 0n;
+	}
 	return a * b;
 }
-function subtract(a, b) {
+export function exponent(a, b) {
+	return a ** b;
+}
+export function subtract(a, b) {
 	if (b > a) {
 		return;
 	}
 	return a - b;
 }
-function add(a, b) {
+export function add(a, b) {
 	return a + b;
 }
-const mathUtils = {
-	displayAmount,
-	parseUnits,
-	applyPercent,
-	mod,
-	divide,
-	multiply,
-	subtract,
-	add
-};
 // TODO: Consider SIMD/Bit ops instead
-function bigIntToBuffer(bigInt) {
+export function bigIntToBuffer(bigInt) {
 	if (isBigInt(bigInt)) {
 		return Buffer.from(bigInt.toString(16), 'hex');
 	}
@@ -166,20 +196,20 @@ function bigIntToBuffer(bigInt) {
 //   }
 //   return buffer;
 // }
-function bufferToBigInt(source) {
+export function bufferToBigInt(source) {
 	if (Buffer.isBuffer(source)) {
 		return BigInt(`0x${source.toString('hex')}`);
 	}
 	return;
 }
-function bufferToBigInt2(buf) {
+export function bufferToBigIntBit(buf) {
 	let result = 0n;
 	for (const byte of buf) {
 		result = (result << 8n) + BigInt(byte);
 	}
 	return result;
 }
-function getBigIntByteSize(bigint) {
+export function getBigIntByteSize(bigint) {
 	let bits = 0n;
 	let n = bigint;
 	while (n !== 0n) {
@@ -188,13 +218,26 @@ function getBigIntByteSize(bigint) {
 	}
 	return Number((bits + 7n) / 8n);
 }
+const mathUtils = {
+	displayAmount,
+	parseStringUnits,
+	getBigIntPercentage,
+	mod,
+	divide,
+	multiply,
+	subtract,
+	add,
+	getBigIntByteSize,
+	bufferToBigInt,
+	bufferToBigIntBit
+};
 export default mathUtils;
 // console.log(getBigIntByteSize(coinMaxSupplyInt));
 // console.log(bufferToBigInt(bigIntToBuffer(coinMaxSupplyInt)));
 // console.log((await encode(coinMaxSupplyInt)).length);
 // console.log((await encode(bigIntToBuffer(coinMaxSupplyInt))).length);
 // console.log(isValidAmount(100000000000000000000000000000000000000000000000000000000000n), '100000000000000000000000000000000000000000000000000000000000'.length);
-// console.log(toSmallestUnit(1), fromSmallestUnit(toSmallestUnit(1)));
+// console.log(getBigIntPercentageOf(20n, 200n), BigInt(10n ** 69n), toSmallestUnit(5.5), isValidAmount(0n), fromSmallestUnit(toSmallestUnit(999999)));
 // const amountA = 10000000000000000000000000000000000000000000000000000n;
 // const amountB = 10000000000000000000000000000000000000000000000000000n;
 // const total = add(amountA, amountB);

@@ -19,14 +19,14 @@ import { transactionBlockSchema } from './schema.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 class TransactionBlock extends Block {
 	constructor(data, config) {
-		super(data, config);
+		super(config);
 		this.initialize(data, config);
 		return this;
 	}
 	// Receipt Hash Link
 	// Block Hash (TX DATA || Receipt Meta?)
-	async createReceipt(block) {
-		this.receipt = await receiptBlock(this);
+	async createReceipt(wallet) {
+		this.receipt = await receiptBlock(this, wallet);
 		return this;
 	}
 	getReceiptPath() {

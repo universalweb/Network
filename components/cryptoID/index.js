@@ -55,6 +55,7 @@ export class CryptoID {
 		if (await this.cipherSuite.keyExchange.isKeypairInitialized(this.keyExchangeKeypair) === false) {
 			this.keyExchangeKeypair = await this.cipherSuite.keyExchange.initializeKeypair(this.keyExchangeKeypair);
 		}
+		this.generateAddress();
 	}
 	async importKeypairs(core) {
 		const {
@@ -73,6 +74,7 @@ export class CryptoID {
 	async generate(options) {
 		this.signatureKeypair = await this.cipherSuite.signature.signatureKeypair();
 		this.keyExchangeKeypair = await this.cipherSuite.keyExchange.keyExchangeKeypair();
+		this.generateAddress();
 		// console.log('KEY EXCHANGE', this.keyExchangeKeypair);
 	}
 	async importFromBinary(data, encryptionKey) {
@@ -135,7 +137,6 @@ export class CryptoID {
 		return signatureKeypair.privateKey;
 	}
 	async exportBinary(encryptionKey) {
-		this.generateAddress();
 		const {
 			version,
 			address
@@ -218,6 +219,10 @@ export class CryptoID {
 		const publicKeyCombined = (isArray(publicKey)) ? Buffer.concat(publicKey) : publicKey;
 		const address = await this.cipherSuite.hash.hash512(publicKeyCombined);
 		this.address = address;
+		return address;
+	}
+	async getAddress() {
+		const address = this.address || await this.generateAddress();
 		return address;
 	}
 	setAlias(value) {

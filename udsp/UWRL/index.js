@@ -1,5 +1,6 @@
 //  EURL: Enhanced Universal Resource Locator
 import {
+	assign,
 	initialString,
 	isPlainObject,
 	isString,
@@ -7,85 +8,110 @@ import {
 	restString,
 	stringify
 } from '@universalweb/acid';
-import { getSchemeName } from './getScheme.js';
-const ipRegex = /^\b(?:\d{1,3}\.){3}\d{1,3}\b$/;
+import {
+	convertClassicalParams,
+	getFullURL,
+	hasPercentEncoding,
+	ipRegex
+} from './utils.js';
+import { getSchemeName, getSchemeNameAndDelimiter } from './getScheme.js';
+import { extractAndValidateJson } from './extractJSON.js';
 class UWRL {
-	constructor(urlOriginal, paramaters) {
-		const urlScheme = getSchemeName(urlOriginal);
-		let url = urlOriginal;
-		if (!urlScheme) {
-			if (urlOriginal.includes('://')) {
-				url = `uw${url}`;
-			} else {
-				url = `uw://${url}`;
-			}
+	constructor(urlOriginal, parameters, baseURL) {
+		this.originalURL = urlOriginal;
+		this.baseURL = baseURL;
+		this.setURLObject();
+		const urlObject = this.urlObject;
+		if (parameters) {
+			this.setParameters(parameters);
 		}
-		console.log(url);
-		if (paramaters) {
-			if (isPlainObject(paramaters)) {
-				this.paramaters = paramaters;
-				this.params = stringify(paramaters);
-			} else if (isString(paramaters)) {
-				this.params = paramaters;
-				this.paramaters = jsonParse(this.params);
-			}
-		} else {
-			// TODO: EXTRACT USING NEW FUNCTION REMOVE THIS
-			const jsonStringStartIndex = url.indexOf('{');
-			if (jsonStringStartIndex !== -1) {
-				url = url.substring(0, jsonStringStartIndex);
-				if (jsonStringStartIndex) {
-					this.params = url.substring(jsonStringStartIndex, url.length);
-					try {
-						this.paramaters = jsonParse(this.params);
-					} catch {
-						this.paramaters = {};
-					}
-				}
-			}
-		}
-		console.log('url', url);
-		const urlObject = new URL(url);
-		if (this.paramaters) {
-			if (this.paramaters['#']) {
-				this.hash = this.paramaters['#'];
-			}
-			if (this.paramaters[':']) {
-				this.account = this.paramaters[':'][0];
-				this.password = this.paramaters[':'][1];
-			}
-		} else {
-			this.params = urlObject.search;
-			this.parameters = urlObject.searchParams;
-		}
-		this.url = url;
-		this.origin = `${urlObject.protocol}//${urlObject.host}`;
-		this.port = urlObject.port;
-		this.host = urlObject.host;
-		this.hostname = urlObject.hostname;
 		if (ipRegex.test(this.hostname)) {
 			this.ip = this.hostname;
 		}
-		this.protocol = urlObject.protocol;
 	}
-	get search() {
-		return this.paramaterString;
+	setURLObject() {
+		const urlObject = getFullURL(this.originalURL, this.baseURL);
+		this.urlObject = urlObject;
+		this.url = urlObject.href;
+		if (urlObject.origin !== 'null') {
+			this.origin = urlObject.origin;
+		}
+		if (urlObject.port?.length) {
+			this.port = urlObject.port;
+		}
+		if (urlObject.hostname?.length) {
+			this.hostname = urlObject.hostname;
+		}
+		if (urlObject.protocol?.length) {
+			this.protocol = urlObject.protocol;
+		}
+		if (urlObject.pathname?.length) {
+			this.pathname = urlObject.pathname;
+		}
+		this.host = urlObject.host;
+		this.setPercentEncodedParameters();
+	}
+	setParameters(parameters) {
+		if (parameters) {
+			if (isPlainObject(parameters)) {
+				assign(this.parameters, parameters);
+			} else if (isString(parameters)) {
+				const extractJSON = extractAndValidateJson(parameters);
+				if (extractJSON) {
+					assign(this.parameters, extractJSON);
+				}
+			}
+		}
+	}
+	setPercentEncodedParameters() {
+		if (this?.urlObject?.searchParams) {
+			const classicalParams = convertClassicalParams(this.urlObject.searchParams);
+			if (classicalParams) {
+				assign(this.parameters, classicalParams);
+			}
+		}
+	}
+	extractJSONParameters() {
+		const jsonObject = extractAndValidateJson(this.originalURL);
+		if (jsonObject) {
+			this.parameters = jsonObject;
+		}
+	}
+	processParameters(parameters) {
+		this.setHash();
+		this.setAccount();
+	}
+	setHash() {
+		if (this.parameters['#']) {
+			this.hash = this.parameters['#'];
+		}
+	}
+	setAccount() {
+		if (this.parameters[':']) {
+			this.account = this.parameters[':'][0];
+			this.password = this.parameters[':'][1];
+		}
 	}
 	get searchParams() {
 		return this.parameters;
+	}
+	get search() {
+		return this.search;
 	}
 	get href() {
 		return this.url;
 	}
 	hash = '';
 	isUWRL = true;
+	parameters = {};
 }
 export function uwrl(...args) {
 	return new UWRL(...args);
 }
 export default uwrl;
-// Supports Username Password and URL Fragments
-// Server can opt in to get the URL fragments
-// fragments are turned into client side state tracking
 // const uwri = uwrl('://localhost:8080/path/to/resource{"query":"value", "#": "fragment", ":": ["username", "password"]}');
 // console.log(uwri);
+// console.log(uwrl('://localhost:8080/path/to/resource["username", "password"]'));
+// console.log(uwrl('example.com/path/to/resource?query=hello%20world&limit=10&sort=asc', {
+// 	example: 'value'
+// }));

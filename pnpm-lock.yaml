@@ -25,9 +25,9 @@ importers:
       '@noble/hashes':
         specifier: ^1.8.0
         version: 1.8.0
-      '@universalweb/acid':
-        specifier: ^3.0.74
-        version: 3.0.74
+      '@universalweb/Acid':
+        specifier: ^3.0.77
+        version: '@universalweb/acid@3.0.77'
       cbor-x:
         specifier: ^1.6.0
         version: 1.6.0
@@ -114,8 +114,8 @@ importers:
         specifier: ^9.29.0
         version: 9.29.0
       eslint-plugin-jsdoc:
-        specifier: ^51.0.3
-        version: 51.0.3(eslint@9.29.0)
+        specifier: ^51.1.2
+        version: 51.1.2(eslint@9.29.0)
       globals:
         specifier: ^16.2.0
         version: 16.2.0
@@ -663,9 +663,9 @@ packages:
     resolution: {integrity: sha512-fTMFb/ZiK6xQace5YZlhT+vNR08ogat9SqpvwpaC9vD6hgx7ouz9cdcrSrFuNji4823Jmmy90/CDhJq0I4vRFA==}
     engines: {node: '>=22.12.0'}
 
-  '@es-joy/jsdoccomment@0.50.2':
-    resolution: {integrity: sha512-YAdE/IJSpwbOTiaURNCKECdAwqrJuFiZhylmesBcIRawtYKnBR2wxPhoIewMg+Yu+QuYvHfJNReWpoxGBKOChA==}
-    engines: {node: '>=18'}
+  '@es-joy/jsdoccomment@0.52.0':
+    resolution: {integrity: sha512-BXuN7BII+8AyNtn57euU2Yxo9yA/KUDNzrpXyi3pfqKmBhhysR6ZWOebFh3vyPoqA3/j1SOvGgucElMGwlXing==}
+    engines: {node: '>=20.11.0'}
 
   '@eslint-community/eslint-utils@4.7.0':
     resolution: {integrity: sha512-dyybb3AcajC7uha6CvhdVRJqaKyn7w2YKqKyAN37NKYgZT36w+iRb0Dymmc5qEJ549c/S31cMMSFd75bteCpCw==}
@@ -938,8 +938,8 @@ packages:
     resolution: {integrity: sha512-xoh5rJ+tgsRKoXnkBPFRLZ7rjKM0AfVbC68UZ/ECXoDbfggb9RbEySN359acY1vS3qZ0jVTVWzbtfapwm5ztxw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@universalweb/acid@3.0.74':
-    resolution: {integrity: sha512-XC4S5UFaji4PRlUJSB5BzSXokqAAFoqojRuBjraICFpEfOMevRguIqWCwUsGuvCcTbbBDrFgWny7ogm4PxS8vg==}
+  '@universalweb/acid@3.0.77':
+    resolution: {integrity: sha512-krXfYv2U6GYD+QUN9GUDiQjUjkWfEY2dDshwkbvtm7qKLlN7VfHmiZVW7YYjaHtPRJ2IqiXTLUTEVVC2rgavyA==, tarball: https://npm.pkg.github.com/download/@universalweb/acid/3.0.77/08ed90a0acd09ae60b3b58ba354f32ea5bd6e74b}
     hasBin: true
 
   accepts@2.0.0:
@@ -1149,8 +1149,8 @@ packages:
     resolution: {integrity: sha512-L28STB170nwWS63UjtlEOE3dldQApaJXZkOI1uMFfzf3rRuPegHaHesyee+YxQ+W6SvRDQV6UrdOdRiR153wJg==}
     engines: {node: '>=6'}
 
-  caniuse-lite@1.0.30001723:
-    resolution: {integrity: sha512-1R/elMjtehrFejxwmexeXAtae5UO9iSyFn6G/I806CYC/BLyyBk1EPhrKBkWhy6wM6Xnm47dSJQec+tLJ39WHw==}
+  caniuse-lite@1.0.30001724:
+    resolution: {integrity: sha512-WqJo7p0TbHDOythNTqYujmaJTvtYRZrjpP8TCvH6Vb9CYJerJNKamKzIWOM4BkQatWj9H2lYulpdAQNBe7QhNA==}
 
   cbor-extract@2.2.0:
     resolution: {integrity: sha512-Ig1zM66BjLfTXpNgKpvBePq271BPOvu8MR0Jl080yG7Jsl+wAZunfrwiwA+9ruzm/WEdIV5QF/bjDZTqyAIVHA==}
@@ -1400,8 +1400,8 @@ packages:
     resolution: {integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==}
     engines: {node: '>=10'}
 
-  eslint-plugin-jsdoc@51.0.3:
-    resolution: {integrity: sha512-9BRR+b5nKwp6LGTffnrxKxduhzO/DzyBmRNqyt1wIlBFP+q9mq+sq1hIQCVetZAn1PaOl0Evo4PUOlT+xbtctQ==}
+  eslint-plugin-jsdoc@51.1.2:
+    resolution: {integrity: sha512-xLg40KhRnlaOX6W+YLofVavGTajOUn6VCSoVC5eWKbsaMMM/aznFAqVXysuk76wSQZJMiBOfC4V6beseIk6eOg==}
     engines: {node: '>=20.11.0'}
     peerDependencies:
       eslint: ^7.0.0 || ^8.0.0 || ^9.0.0
@@ -1477,11 +1477,11 @@ packages:
     resolution: {integrity: sha512-CRT1WTyuQoD771GW56XEZFQ/ZoSfWid1alKGDYMmkt2yl8UXrVR4pspqWNEcqKvVIzg6PAltWjxcSSPrboA4iA==}
     engines: {node: '>=18.0.0'}
 
-  express-rate-limit@7.5.0:
-    resolution: {integrity: sha512-eB5zbQh5h+VenMPM3fh+nw1YExi5nMr6HUCR62ELSP11huvxm/Uir1H1QEyTkk5QX6A58pX6NmaTMceKZ0Eodg==}
+  express-rate-limit@7.5.1:
+    resolution: {integrity: sha512-7iN8iPMDzOMHPUYllBEsQdWVB6fPDMPqwjBaFrgr4Jgr/+okjvzAy+UHlYYL/Vs0OsOrMkwS6PJDkFlJwoxUnw==}
     engines: {node: '>= 16'}
     peerDependencies:
-      express: ^4.11 || 5 || ^5.0.0-beta.1
+      express: '>= 4.11'
 
   express@5.1.0:
     resolution: {integrity: sha512-DT9ck5YIRU+8GYzzU5kT3eHGA5iL+1Zd0EutOmTE9Dtk+Tvuzd23VBU+ec7HPNSTxXYO55gPV/hq4pSBJDjFpA==}
@@ -3626,7 +3626,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@es-joy/jsdoccomment@0.50.2':
+  '@es-joy/jsdoccomment@0.52.0':
     dependencies:
       '@types/estree': 1.0.8
       '@typescript-eslint/types': 8.34.1
@@ -3739,7 +3739,7 @@ snapshots:
       cross-spawn: 7.0.6
       eventsource: 3.0.7
       express: 5.1.0
-      express-rate-limit: 7.5.0(express@5.1.0)
+      express-rate-limit: 7.5.1(express@5.1.0)
       pkce-challenge: 5.0.0
       raw-body: 3.0.0
       zod: 3.25.67
@@ -4006,7 +4006,7 @@ snapshots:
       '@typescript-eslint/types': 8.34.1
       eslint-visitor-keys: 4.2.1
 
-  '@universalweb/acid@3.0.74': {}
+  '@universalweb/acid@3.0.77': {}
 
   accepts@2.0.0:
     dependencies:
@@ -4187,7 +4187,7 @@ snapshots:
 
   browserslist@4.25.0:
     dependencies:
-      caniuse-lite: 1.0.30001723
+      caniuse-lite: 1.0.30001724
       electron-to-chromium: 1.5.171
       node-releases: 2.0.19
       update-browserslist-db: 1.1.3(browserslist@4.25.0)
@@ -4234,7 +4234,7 @@ snapshots:
 
   camelcase@5.3.1: {}
 
-  caniuse-lite@1.0.30001723: {}
+  caniuse-lite@1.0.30001724: {}
 
   cbor-extract@2.2.0:
     dependencies:
@@ -4473,9 +4473,9 @@ snapshots:
 
   escape-string-regexp@4.0.0: {}
 
-  eslint-plugin-jsdoc@51.0.3(eslint@9.29.0):
+  eslint-plugin-jsdoc@51.1.2(eslint@9.29.0):
     dependencies:
-      '@es-joy/jsdoccomment': 0.50.2
+      '@es-joy/jsdoccomment': 0.52.0
       are-docs-informative: 0.0.2
       comment-parser: 1.4.1
       debug: 4.4.1(supports-color@5.5.0)
@@ -4575,7 +4575,7 @@ snapshots:
     dependencies:
       eventsource-parser: 3.0.2
 
-  express-rate-limit@7.5.0(express@5.1.0):
+  express-rate-limit@7.5.1(express@5.1.0):
     dependencies:
       express: 5.1.0
 

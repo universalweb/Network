@@ -18,7 +18,7 @@
 		"@noble/ciphers": "^1.3.0",
 		"@noble/ed25519": "^2.3.0",
 		"@noble/hashes": "^1.8.0",
-		"@universalweb/acid": "^3.0.74",
+		"@universalweb/Acid": "^3.0.77",
 		"cbor-x": "^1.6.0",
 		"commander": "^14.0.0",
 		"directory-tree": "^3.5.2",
@@ -127,7 +127,7 @@
 		"benchmark": "^2.1.4",
 		"daisyui": "^5.0.43",
 		"eslint": "^9.29.0",
-		"eslint-plugin-jsdoc": "^51.0.3",
+		"eslint-plugin-jsdoc": "^51.1.2",
 		"globals": "^16.2.0",
 		"tailwindcss": "^4.1.10",
 		"textlint": "^14.8.4"

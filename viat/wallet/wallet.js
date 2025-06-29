@@ -2,6 +2,7 @@
 import { decode, encode } from '#utilities/serialize';
 import { CryptoID } from '#components/cryptoID/index';
 import { isBuffer } from '@universalweb/acid';
+import { transactionBlock } from '#viat/blocks/transaction/block';
 export class Wallet extends CryptoID {
 	constructor(config, optionalArg) {
 		super(false);
@@ -10,6 +11,16 @@ export class Wallet extends CryptoID {
 	async walletInitialize(config, optionalArg) {
 		await this.initialize(config, optionalArg);
 		return this;
+	}
+	async send(amount, receiver, mana = 1n) {
+		const sender = await this.getAddress();
+		const txBlock = await transactionBlock({
+			amount,
+			receiver,
+			sender,
+			mana
+		});
+		console.log('Transaction Block:', txBlock.block);
 	}
 }
 export function wallet(config) {
