@@ -1,6 +1,7 @@
 <h1 align="center"></h1>
 <h3 align="center" class="mono">$VIAT (NATIVE CRYPTO)</h3>
-<h4 align="center" class="mono">TOKENS: $bVIAT (BNB) | $mVIAT (SOL MEME) | $SNTVT (ETH)</h4>
+<h4 align="center" class="mono">TOKENS: $bVIAT (BNB) | $SNTVT (ETH)</h4>
+<!-- | $mVIAT (SOL MEME) -->
 <h2 align="center">WELCOME TO THE NEXUS</h2>
 <p align="center">META-LAYER  SOLUTION</p>
 <h4 align="center"> POST QUANTUM CRYPTOGRAPHIC NEXUS </h4>
@@ -54,39 +55,30 @@
 <p>If we critically evaluate the challenges facing the current Web, from inefficiencies &amp; vulnerabilities to its inability to fully embrace emerging technologies, it becomes self-evident that incremental updates aren't going to address fundamental design flaws. A foundational overhaul is not only viable but also more efficient and cost-effective. By building on 30 years of lessons, we can envision something that goes beyond what we call a Web, which integrates cutting-edge technologies and anticipates future advancements. This isn’t just an opportunity; it’s an imperative to build the future.</p>
 <h4>SUMMARY</h4>
 <ul>
-	<li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">UDSP MODULE (CONTAINS SERVER &amp; CLIENT MODULE)</a></li>
-	<li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">SERVER MODULE (CHECK THE UDSP FOLDER &amp; IMPORTS FOR FULL CODE)</a></li>
-	<li><a href="https://github.com/universalweb/Network/tree/master/udsp/client">CLIENT MODULE (CHECK THE UDSP FOLDER &amp; IMPORTS FOR FULL CODE)</a></li>
-	<li><a href="https://github.com/universalweb/Network/tree/master/browser">BROWSER (outdated)</a></li>
-	<li><a href="https://github.com/universalweb/Network/tree/master/examples/serverApp">EXAMPLE APP (pnpm run server)</a></li>
-	<li><a href="https://github.com/universalweb/Network/tree/master/examples/certificates.js">BUILD DOMAIN &amp; IDENTITY CERTIFICATES THAT ARE ALSO VIAT WALLETS (pnpm run certificates)</a></li>
-	<li><a href="https://github.com/universalweb/Network/tree/master/examples/client/simulateClient.js">SIMULATE CLIENT REQUEST (pnpm run simc) (ONLY RUN WHEN DEMO IN A STABLE COMMIT NOT LATEST UNLESS SPECIFIED)</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">NETWORK PROTOCOL UDSP MODULE</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/udsp/server">SERVER MODULE</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/udsp/client">CLIENT MODULE</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/examples/viat.js">VIAT WALLETS</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/viat">VIAT CODE FOLDER</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/examples/serverApp">EXAMPLE APP</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/examples/certificates.js">DEMO CERTS</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/examples/client/simulateClient.js">SIMULATE CLIENT REQUEST</a></li>
 	<li><a href="https://github.com/universalweb/Network/tree/master/examples">VARIOUS HELPER SCRIPTS</a></li>
+	<li><a href="https://github.com/universalweb/Network/tree/master/browser">BROWSER (outdated)</a></li>
 </ul>
-<b>ONLY RUN PNPM (INSTALL PNPM AND NODEJS) COMMANDS WHEN COMMIT DESCRIPTION SAYS DEMO STABLE OR DEMO ENABLED</b>
 <br />
 <h4><a href="https://github.com/universalweb/Network/blob/master/package.json">PACKAGE SCRIPTS</a></h4>
 <ul>
-	<li>PNPM start script builds/starts the Universal Web Browser</li>
-	<li>Components must also be compiled for the front-end library</li>
-	<li>Root is used to generate root certificates only</li>
-	<li>Includes Identity Certificate generation examples</li>
-	<li>EXAMPLE APPS</li>
-	<li>UDSP</li>
-	<li>UW URI (HIGHER ABSTRACTION PROTOCOL OVER UDSP)</li>
-	<li>VARIOUS HELPER SCRIPTS</li>
+	<li>VARIOUS HELPER SCRIPTS INCLUDED</li>
 	<li>PNPM is preferred for package management</li>
 </ul>
-<br />
-<h5>FULL LIST OF COMMANDS CAN BE FOUND IN THE project.json</h5>
-<p>Install NodeJS and PNPM</p>
 <hr />
 <h4>BROAD CODE OBJECTIVES</h4>
 <ul>
-	<li>UW UDP BASED NETWORK PROTOCOL</li>
+	<li>CUSTOM UDP BASED NETWORK PROTOCOL</li>
 	<li>SERVER MODULE</li>
 	<li>CLIENT MODULE</li>
-	<li>DIS (DOMAIN SYSTEM - NOT DNS)</li>
+	<li>DIS (DOMAIN SYSTEM)</li>
 	<li>UW APPS</li>
 	<li>Multi-OS Support</li>
 	<li>Multi-Device Support</li>
@@ -96,8 +88,10 @@
 </ul>
 <hr />
 <h4 align="center">Want to contribute? Then join the Imperium today!</h4>
-<p align="center"> To help submit, write content, make art, write code, and or star this repo! All are welcome to the Nexus.</p>
+<p align="center"> To help write content, make art, write code, share it, and or star this repo! All are welcome to the Nexus.</p>
 <hr />
 <small>COPYRIGHT © 2025 VIAT, <a href="https://universalweb.io">UNIVERSAL WEB</a>, THE NEXUS</small>
+<br />
 <small>THE UNITED SYSTEMS of NEXUS</small>
+<br />
 <small>MADE IN AMERICA </small>
