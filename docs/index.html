@@ -1,17 +1,20 @@
 <!doctype html>
-	<html>
-		<head>
-			<meta charset="UTF-8">
-			<meta name="viewport" content="width=device-width, initial-scale=1.0">
-			<title>Index Page</title>
-			<link rel="stylesheet" href="https://mshaugh.github.io/nerdfont-webfonts/build/0xproto.css" />
-			<link rel="stylesheet" href="https://mshaugh.github.io/nerdfont-webfonts/build/proggyclean.css" />
-			<link rel="stylesheet" href="index.css" />
-		</head>
+<html>
 
-		<body>
-			<div class="content">
-				<h1 align="center"></h1>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Index Page</title>
+		<link rel="stylesheet" href="https://mshaugh.github.io/nerdfont-webfonts/build/0xproto.css" />
+		<link rel="stylesheet" href="https://mshaugh.github.io/nerdfont-webfonts/build/proggyclean.css" />
+		<link rel="stylesheet" href="index.css" />
+	</head>
+
+	<body>
+		<canvas id="particle-canvas"></canvas>
+		<div class="content"> <h1 align="center"></h1>
+<h3 align="center" class="mono">$VIAT (NATIVE CRYPTO)</h3>
+<h4 align="center" class="mono">TOKENS: $bVIAT (BNB) | $mVIAT (SOL MEME) | $SNTVT (ETH)</h4>
 <h2 align="center">WELCOME TO THE NEXUS</h2>
 <p align="center">META-LAYER 󰽙 SOLUTION</p>
 <h4 align="center"> POST QUANTUM CRYPTOGRAPHIC NEXUS </h4>
@@ -32,7 +35,7 @@
 <p>  <span style="margin-left:10px;">HASH: SHAKE256 (32 &amp; 64 byte outputs)</span> </p>
 <p> 󰀋 <span style="margin-left:10px;">WALLET ADDRESS: 64bytes  SHAKE256 512bit expanded output</span> </p>
 <p> 󱌒 <span style="margin-left:10px;">ENCRYPTION (AEAD): AEGIS-256 - XChaCha20Poly1305-IETF</span> </p>
-<p>  <span style="margin-left:10px;">SYMBOL: ⩝ </span> </p>
+<p>  <span style="margin-left:10px;">SYMBOL: <a href="https://www.compart.com/en/unicode/U+2A5D">⩝</a></span> </p>
 <hr />
 <h4 align="center"> UW CRYPTOGRAPHY </h4>
 <p>These are all the cryptographic algorithms supported or play a role in the UW/VIAT. Hybrid post quantum algorithms are available for Key Exchanges and Signatures.</p>
@@ -42,11 +45,14 @@
 <p> 󱕴 <span style="margin-left:10px;">SIGNATURE: [DILITHIUM, ED25519, SPHINCS+, FALCON]</span> </p>
 <p> 󱕴 <span style="margin-left:10px;">HASH: [SHAKE256, BLAKE3]</span></p>
 <hr />
-<h3>NEXUS?</h3>
+<h1 align="center">F.A.Q</h1>
+<h3>WHAT IS A NEXUS?</h3>
 <p>We call the UW/VIAT a nexus which is: a unified ecosystem where both Web-like, cryptocurrency, and governing elements are deeply interconnected yet functionally independent. Our version of the World Wide Web is the Universal Web and our cryptocurrency is VIAT; together they form what we call a nexus.</p>
 <p>The Nexus has its own Domain System, Messaging System, Real-time events, design, data transport network protocol, language, browser, cryptocurrency, and many other unique components. It's a cohesive system rather than a bunch of independent technologies retrofitted to work with each other or layering one thing on top of the next similar to the Web today or what most call "Web3".</p>
-<h4>Goals</h4>
-<p>The objective of the Universal Web is to create a viable modern replacement for the Web today.</p>
+<h4>OBJECTIVES</h4>
+<p>The primary directive of the Universal Web is to create a viable post quantum replacement for the Web today. The primary objective for VIAT is to create the best post quantum cryptocurrency with the highest TPS possible. Both are viable objectives achieved with software no hardware needed.</p>
+<h4>Post Quantum World</h4>
+<p>The Universal Web and VIAT are designed to be resilient against the potential threats posed by quantum computing. This means implementing cryptographic algorithms that are secure against quantum attacks, ensuring the integrity and confidentiality of user data and transactions. VIAT & the UW could be used as a tool to help protect other none quantum cryptocurrencies and or provide users the ability to later prove they were the original owner of a legacy wallet, contract, NFT, and or other digital assets. This means that BTC holders could use VIAT to protect their BTC wallets and in the event the BTC team needs a viable fast off ramp to either transition BTC/ETH to their own hybrid post quantum fork or to transition to run on VIAT. VIAT has a tri-algo key pair with 1 classical key pair and two post quantum key pairs that rely on different primitives. This triplet hybrid algorithm provides robust assurances in different scenarios where one or two algorithms fail.</p>
 <h4>Is it Web3?</h4>
 <p>Depends on your definition.</p>
 <p>If Web3 means ALL websites/apps are on a network like IPFS, users/services must use a smart contract to interact with sites, paying a TX fee just to post a social media update, using decentralized DNS with limited abilities (ex: ETH domains), then we have a very different definition. That version of the Web would be a major downgrade that removes key beneficial aspects of the Web while also not addressing any of the real issues. Any Web replacement must not introduce delays for any actions when a client is interacting with a server. If a user must use a smart contract to post on a site or make profile edits it adds significant delays and costs to otherwise trivial actions. If an action must first go through mining, verification, and propagation it's inherently slower than a modern cost free client-server API request. Regardless of optimization generally the typical client-server API request will require less time, data, and processing. Thinking about this logically we know the shortest distance is between two points therefore adding more points will always be slower. What this means is that we need to improve and include the World Wide Web's client-server model in the solution not disregard it.</p>
@@ -106,10 +112,122 @@
 <h4 align="center">Want to contribute? Then join the Imperium today!</h4>
 <p align="center"> To help submit, write content, make art, write code, and or star this repo! All are welcome to the Nexus.</p>
 <hr />
-<small>COPYRIGHT © 2025 <a href="https://universalweb.io">UNIVERSAL WEB</a></small>
+<small>COPYRIGHT © 2025 VIAT, <a href="https://universalweb.io">UNIVERSAL WEB</a>, THE NEXUS</small>
 <small>THE UNITED SYSTEMS of NEXUS</small>
-<small>MADE IN AMERICA</small>
+<small>MADE IN AMERICA 🇺🇸</small>
+ </div>
+	</body>
+	<script>
+		// --- Canvas and Particle Animation Logic --
+		const canvas=document.getElementById('particle-canvas');
+		const ctx=canvas.getContext('2d');
 
-			</div>
-		</body>
-	</html>
+		// --- Configuration ---
+		const PARTICLE_COUNT=150; // Increased particle count for a denser network
+		const MAX_LINK_DISTANCE=100;
+		const PARTICLE_SPEED=0.7; // Slightly faster for more energy
+		const PARTICLE_COLOR='rgba(255, 0, 255, 0.9)'; // Bright Magenta
+		const LINE_COLOR_BASE='rgba(0, 255, 255, 0.5)'; // Bright Cyan
+
+		let particles=[];
+
+		// --- Utility Functions ---
+		function setCanvasSize() {
+			canvas.width=window.innerWidth;
+			canvas.height=window.innerHeight;
+		}
+
+		// --- Particle Class ---
+		class Particle {
+			constructor() {
+				this.x=Math.random()*canvas.width;
+				this.y=Math.random()*canvas.height;
+				this.vx=(Math.random()-0.5)*PARTICLE_SPEED;
+				this.vy=(Math.random()-0.5)*PARTICLE_SPEED;
+				this.size=Math.random()*2+1; // Size for the square particles
+			}
+
+			// Update particle position and handle wall collisions
+			update() {
+				this.x+=this.vx;
+				this.y+=this.vy;
+
+				// Bounce off edges
+				if(this.x<0||this.x>canvas.width) this.vx*=-1;
+				if(this.y<0||this.y>canvas.height) this.vy*=-1;
+			}
+
+			// Draw the particle on the canvas as a square
+			draw() {
+				ctx.fillStyle=PARTICLE_COLOR;
+				// Use fillRect to draw squares instead of circles (arc)
+				ctx.fillRect(this.x-this.size/2,this.y-this.size/2,this.size,this.size);
+			}
+		}
+
+		// --- Core Animation Logic ---
+
+		// Initialize particles
+		function init() {
+			setCanvasSize();
+			particles=[];
+			for(let i=0;i<PARTICLE_COUNT;i++) {
+				particles.push(new Particle());
+			}
+		}
+
+		// Connect particles with lines if they are close enough
+		function connectParticles() {
+			for(let i=0;i<particles.length;i++) {
+				for(let j=i+1;j<particles.length;j++) {
+					const dx=particles[i].x-particles[j].x;
+					const dy=particles[i].y-particles[j].y;
+					const distance=Math.sqrt(dx*dx+dy*dy);
+
+					if(distance<MAX_LINK_DISTANCE) {
+						// Calculate opacity based on distance
+						const opacity=1-(distance/MAX_LINK_DISTANCE);
+						ctx.beginPath();
+						ctx.moveTo(particles[i].x,particles[i].y);
+						ctx.lineTo(particles[j].x,particles[j].y);
+						// Add a 'glitchy' flicker effect to the lines
+						ctx.strokeStyle=`${LINE_COLOR_BASE}${opacity*Math.random()+0.1})`;
+						ctx.lineWidth=1;
+						ctx.stroke();
+					}
+				}
+			}
+		}
+
+		// The main animation loop
+		function animate() {
+			// Clear the canvas for the next frame
+			ctx.clearRect(0,0,canvas.width,canvas.height);
+
+			// Update and draw each particle
+			particles.forEach(p => {
+				p.update();
+				p.draw();
+			});
+
+			// Draw the connecting lines
+			connectParticles();
+
+			// Request the next frame
+			requestAnimationFrame(animate);
+		}
+
+		// --- Event Listeners ---
+
+		// Handle window resizing
+		window.addEventListener('resize',() => {
+			// Re-initialize on resize to adjust particle positions
+			init();
+		});
+
+		// --- Start the animation ---
+		init();
+		animate();
+	</script>
+
+</html>
