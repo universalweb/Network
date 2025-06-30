@@ -4,6 +4,7 @@
 // Generate two wallets in the Viat network.
 // Two wallets interact and send each other some amount of VIAT.
 import { Wallet, wallet } from '#viat/index';
+import { encode } from '#utilities/serialize';
 import { toSmallestUnit } from '#viat/math/coin';
 const amy = await wallet();
 const mitzi = await wallet();
@@ -16,3 +17,6 @@ const manaAmount = 10000n;
 const txBlock = await amy.createTransaction(sendAmount, mitziAddress, manaAmount);
 console.log('TX BLOCK', txBlock.block);
 console.log('RECEIPT BLOCK', txBlock.receipt.block);
+const txBlockSize = (await encode(txBlock.block)).length;
+const receiptBlockSize = (await encode(txBlock.receipt.block)).length;
+console.log(txBlockSize + receiptBlockSize, 'bytes');
