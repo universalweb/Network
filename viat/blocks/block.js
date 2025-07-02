@@ -31,6 +31,8 @@ const {
 	version,
 	blockTypes
 } = blockDefaults;
+// TODO: CHECK IF HASH CAN BE GENERATED INSTEAD OF SAVED TO DISK SINCE SIG COVERS IT - means can be dynamically generated
+// Consider only receipt block has signature. Means can cut total size of both blocks by maybe 2kb
 export class Block {
 	constructor(config) {
 		if (config?.source) {
@@ -115,10 +117,43 @@ export class Block {
 		return false;
 	}
 	setDefaults() {
-		this.setMeta('timestamp', Date.now());
-		this.setMeta('version', this.version);
-		this.setMeta('blockType', this.blockType);
-		this.setMeta('nonce', this.cipherSuite.createBlockNonce(this.nonceSize));
+		this.setTimestamp();
+		this.setVersion();
+		this.setBlockType();
+		this.setNonce();
+		return this;
+	}
+	setVersion(value) {
+		if (value) {
+			this.setMeta('version', value);
+		} else {
+			this.setMeta('version', this.version);
+		}
+		return this;
+	}
+	setTimestamp(timestamp) {
+		if (timestamp) {
+			this.setMeta('timestamp', timestamp);
+		} else {
+			this.setMeta('timestamp', Date.now());
+		}
+		return this;
+	}
+	setBlockType(blockType) {
+		if (blockType) {
+			this.setMeta('blockType', blockType);
+		} else {
+			this.setMeta('blockType', this.blockType);
+		}
+		return this;
+	}
+	setNonce(nonce) {
+		if (nonce) {
+			this.setMeta('nonce', nonce);
+		} else {
+			this.setMeta('nonce', this.cipherSuite.createBlockNonce(this.nonceSize));
+		}
+		return this;
 	}
 	async createSignature(wallet) {
 		const binary = this.block.hash;
