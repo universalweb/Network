@@ -5,8 +5,8 @@ const ctx = canvas.getContext('2d');
 const PARTICLE_COUNT = 150;
 const MAX_LINK_DISTANCE = 100;
 const PARTICLE_SPEED = 0.7;
-const PARTICLE_COLOR = 'rgba(255, 0, 255, 0.9)';
-const LINE_COLOR_BASE = 'rgba(0, 255, 255, 0.5)';
+const PARTICLE_COLOR = 'rgba(255, 255, 255, 0.9)';
+const LINE_COLOR_BASE = 'rgba(255, 255, 255, 0.5)';
 let particles = [];
 // --- Utility Functions ---
 function setCanvasSize() {

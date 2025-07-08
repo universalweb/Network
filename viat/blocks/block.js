@@ -24,6 +24,7 @@ import { getParentClassName } from '#utilities/class';
 import { getTransactionPath } from './transaction/uri.js';
 import { getWallet } from './wallet/uri.js';
 import path from 'path';
+import { promisify } from 'util';
 import { toBase64Url } from '#crypto/utils.js';
 import { toSmallestUnit } from '../math/coin.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
@@ -85,15 +86,6 @@ export class Block {
 	async configByBlockAsync(blockObject, config) {
 		return this.configByBlock(blockObject, config);
 	}
-	block = {
-		data: {
-			meta: {},
-			core: {},
-			//  receiptLink HASH of Contents
-		},
-		// directLink (Dynamically generated) /w/3bytes/3bytes/last32/t/transactionID(32)
-		// id HASH
-	};
 	// TODO: Add network folder to it for saving
 	async save(directoryPath) {
 		const blockBinary = await this.exportBinary();
@@ -187,6 +179,18 @@ export class Block {
 		const binary = await this.exportDataBinary();
 		const isValid = await wallet.verifySignature(signature, binary);
 		return isValid;
+	}
+	async getSenderPathHash() {
+		const hash = await this.getHash();
+		const sender = this.getSender();
+		const hashed = await this.hash256(Buffer.concat([hash, sender]));
+		return hashed;
+	}
+	async getReceiverPathHash() {
+		const hash = await this.getHash();
+		const receiver = this.getReceiver();
+		const hashed = await this.hash256(Buffer.concat([hash, receiver]));
+		return hashed;
 	}
 	async hashData() {
 		const binary = await this.exportDataBinary();
@@ -374,6 +378,15 @@ export class Block {
 	cipherSuite = viatCipherSuite;
 	nonceSize = 16;
 	hashSize = 64;
+	block = {
+		data: {
+			meta: {},
+			core: {},
+			//  receiptLink HASH of Contents
+		},
+		// directLink (Dynamically generated) /w/3bytes/3bytes/last32/t/transactionID(32)
+		// id HASH
+	};
 }
 export async function block(...args) {
 	const source = construct(Block, args);

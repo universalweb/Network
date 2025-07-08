@@ -37,6 +37,9 @@ export class ReceiptBlock extends Block {
 		const txBlockData = blockObject.getData();
 		const txHash = blockObject.block.hash;
 		this.appendToCore(txBlockData.core, txHash);
+		// Append Meta Data from prior transaction block - makes it easier to manage state but isn't required to store can generate on the fly still
+		// Use New Meta Data if requires confirmation or interaction of receiver
+		// Don't count until verified and can append data to block for state management
 	}
 	appendToCore(coreData, txHash) {
 		const {
