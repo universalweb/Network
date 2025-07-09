@@ -1,5 +1,5 @@
-// CONVERT THIS TO SHAKE256 AFTER x25519_blake3 is done
-// Consider SHAKE256 as the hash function for x25519_shake256 variant
+import { assign, isNotArray } from '@universalweb/acid';
+// TODO: Consider Array instead of concat
 import {
 	clearBuffer,
 	clearBuffers,
@@ -8,7 +8,6 @@ import {
 	toBase64,
 	toHex
 } from '#utilities/cryptography/utils';
-import { assign } from '@universalweb/acid';
 import hash from '../hash/shake256.js';
 import { introHeaderRPC } from '../../../udsp/rpc/headerRPC.js';
 import keyExchange from './keyExchange.js';
@@ -65,6 +64,34 @@ async function keyExchangeKeypair() {
 		// privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey]),
 		x25519Keypair,
 		kyberKeypair: kyberKeypairInstance
+	};
+	return target;
+}
+async function arrayKeyExchangeKeypair() {
+	const x25519Keypair = await x25519.clientEphemeralKeypair();
+	const kyberKeypair = await kyber768.keyExchangeKeypair();
+	return [
+		[x25519Keypair.publicKey, kyberKeypair.publicKey],
+		[x25519Keypair.privateKey,	kyberKeypair.privateKey]
+	];
+}
+async function arrayToObjectKeyExchangeKeypair(source) {
+	if (!source || isNotArray(source) || source.length !== 2) {
+		return;
+	}
+	const [
+		publicKey,
+		privateKey
+	] = source;
+	const target = {
+		x25519Keypair: {
+			publicKey: publicKey[0],
+			privateKey: privateKey[0]
+		},
+		kyberKeypair: {
+			publicKey: publicKey[1],
+			privateKey: privateKey[1]
+		}
 	};
 	return target;
 }
@@ -141,6 +168,8 @@ export const kyber768_x25519 = keyExchange({
 	exportKeypair,
 	initializeKeypair,
 	isKeypairInitialized,
+	arrayKeyExchangeKeypair,
+	arrayToObjectKeyExchangeKeypair,
 	// partial initial encryption on first packet
 	async clientInitializeSession(source, destination) {
 		source.x25519Keypair.sharedSecret = await x25519.getSharedSecret(source.x25519Keypair, destination.x25519Keypair);

@@ -25,7 +25,12 @@ class TransactionBlock extends Block {
 	// Receipt Hash Link
 	// Block Hash (TX DATA || Receipt Meta?)
 	async createReceipt() {
-		this.receipt = await receiptBlock(this);
+		const receipt = await receiptBlock(this);
+		await receipt.setHash();
+		return receipt;
+	}
+	async setReceipt() {
+		this.receipt = await this.createReceipt();
 		return this;
 	}
 	async getReceiptPath() {

@@ -1,37 +1,18 @@
-import {
-	assign,
-	construct,
-	currentPath,
-	everyArray,
-	get,
-	getConstructorName,
-	hasValue,
-	isArray,
-	isBigInt,
-	isNumber,
-	isPlainObject,
-	isString,
-	isZero,
-	mapAsyncArray,
-	sortNumberAscending,
-	toPath
-} from '@universalweb/acid';
-import { readStructured, write } from '#utilities/file';
-import { validateSchema, validateSchemaVerbose } from '#utilities/schema/index';
+import { construct, extendClass, getConstructorName } from '@universalweb/acid';
+import accessorMethods from './methods/accessors.js';
 import blockDefaults from './defaults.js';
-import { blockSchema } from './schema.js';
-import { encodeStrict } from '#utilities/serialize';
+import configMethods from './methods/config.js';
+import defaultsMethods from './methods/defaults.js';
+import exportMethods from './methods/export.js';
+import filesystemMethods from './methods/filesystem.js';
 import { getParentClassName } from '#utilities/class';
-import { getTransactionPath } from './transaction/uri.js';
-import { getWallet } from './wallet/uri.js';
-import path from 'path';
-import { promisify } from 'util';
-import { toBase64Url } from '#crypto/utils.js';
-import { toSmallestUnit } from '../math/coin.js';
+import hashingMethods from './methods/hashing.js';
+import signatureMethods from './methods/signature.js';
+import validateMethods from './methods/validate.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 const {
 	version,
-	blockTypes
+	blockTypes,
 } = blockDefaults;
 // TODO: CHECK IF HASH CAN BE GENERATED INSTEAD OF SAVED TO DISK SINCE SIG COVERS IT - means can be dynamically generated
 // Consider only receipt block has signature. Means can cut total size of both blocks by maybe 2kb
@@ -54,319 +35,9 @@ export class Block {
 		}
 		return this;
 	}
-	configByBlock(blockObject, config) {
-		switch (blockObject.blockType) {
-			case blockTypes.transaction: {
-				if (this.configByTransactionBlock) {
-					return this.configByTransactionBlock(blockObject, config);
-				}
-				break;
-			}
-			case blockTypes.receipt: {
-				if (this.configByReceiptBlock) {
-					return this.configByReceiptBlock(blockObject, config);
-				}
-				break;
-			}
-			default: {
-				if (this.configByGenericBlock) {
-					return this.configByGenericBlock(blockObject, config);
-				}
-				break;
-			}
-		}
-	}
-	config(data, config) {
-		if (isPlainObject(data)) {
-			this.setData(data);
-		}
-	}
-	async configByBlockAsync(blockObject, config) {
-		return this.configByBlock(blockObject, config);
-	}
-	// TODO: Add network folder to it for saving
-	async save(directoryPath) {
-		const blockBinary = await this.exportBinary();
-		const fullSavePath = path.join(directoryPath, await this.getPath());
-		return write(fullSavePath, blockBinary, 'binary', true);
-	}
-	//  TODO:CONVERT BUFFER TO BASE64URL
-	async getFilename() {
-		return this.filename;
-	}
 	async finalize() {
 		await this.setDefaults();
 		await this.setHash();
-	}
-	async validateHash() {
-		const manualHash = await this.hashData();
-		const hash = await this.getHash();
-		if (isZero(manualHash.compare(hash))) {
-			return true;
-		}
-		return false;
-	}
-	setDefaults() {
-		this.setTimestamp();
-		this.setVersion();
-		this.setBlockType();
-		this.setNonce();
-		return this;
-	}
-	setVersion(value) {
-		if (value) {
-			this.setMeta('version', value);
-		} else {
-			this.setMeta('version', this.version);
-		}
-		return this;
-	}
-	setTimestamp(timestamp) {
-		if (timestamp) {
-			this.setMeta('timestamp', timestamp);
-		} else {
-			this.setMeta('timestamp', Date.now());
-		}
-		return this;
-	}
-	setBlockType(blockType) {
-		if (blockType) {
-			this.setMeta('blockType', blockType);
-		} else {
-			this.setMeta('blockType', this.blockType);
-		}
-		return this;
-	}
-	setNonce(nonce) {
-		if (nonce) {
-			this.setMeta('nonce', nonce);
-		} else {
-			this.setMeta('nonce', this.cipherSuite.createBlockNonce(this.nonceSize));
-		}
-		return this;
-	}
-	async createSignature(wallet) {
-		const binary = this.block.hash;
-		const signature = await wallet.signPartial(binary);
-		return signature;
-	}
-	async sign(wallet) {
-		const signature = await this.createSignature(wallet);
-		await this.set('signature', signature);
-		return this;
-	}
-	async createFullSignature(wallet) {
-		const binary = await this.exportDataBinary();
-		const signature = await wallet.sign(binary);
-		return signature;
-	}
-	async signFull(wallet) {
-		const binary = await this.exportDataBinary();
-		const signature = await this.createFullSignature(wallet, binary);
-		await this.set('signature', signature);
-		return this;
-	}
-	async verifySignature(wallet) {
-		const signature = await this.get('signature');
-		const binary = await this.exportDataBinary();
-		const isValid = await wallet.verifyPartialSignature(signature, binary);
-		return isValid;
-	}
-	async verifyFullSignature(wallet) {
-		const signature = await this.get('signature');
-		const binary = await this.exportDataBinary();
-		const isValid = await wallet.verifySignature(signature, binary);
-		return isValid;
-	}
-	async getSenderPathHash() {
-		const hash = await this.getHash();
-		const sender = this.getSender();
-		const hashed = await this.hash256(Buffer.concat([hash, sender]));
-		return hashed;
-	}
-	async getReceiverPathHash() {
-		const hash = await this.getHash();
-		const receiver = this.getReceiver();
-		const hashed = await this.hash256(Buffer.concat([hash, receiver]));
-		return hashed;
-	}
-	async hashData() {
-		const binary = await this.exportDataBinary();
-		return this.hash512(binary);
-	}
-	async hashMeta() {
-		const binary = await this.exportMetaBinary();
-		return this.hash512(binary);
-	}
-	async hashCore() {
-		const binary = await this.exportCoreBinary();
-		return this.hash512(binary);
-	}
-	async hashBlock() {
-		const binary = await this.exportBinary();
-		return this.hash512(binary);
-	}
-	async setHash() {
-		await this.set('hash', await this.hashData());
-	}
-	async getHash() {
-		if (!this.get('hash')) {
-			await this.setHash();
-		}
-		return this.get('hash');
-	}
-	async storageID(value) {
-		if (value) {
-			await this.set('storageID', value);
-		}
-		const storageID = await this.get('storageID');
-		if (storageID) {
-			return storageID;
-		}
-		return this.hashData();
-	}
-	getCore(propertyName) {
-		return (propertyName) ? get(propertyName, this.block.data.core) : this.block.data.core;
-	}
-	setCore(primaryArg, value) {
-		if (isPlainObject(primaryArg)) {
-			assign(this.block.data.core, primaryArg);
-			return this;
-		}
-		return this.set(primaryArg, value, this.block.data.core);
-	}
-	getMeta(propertyName) {
-		return (propertyName) ? get(propertyName, this.block.data.meta) : this.block.data.meta;
-	}
-	setMeta(propertyName, value) {
-		return this.set(propertyName, value, this.block.data.meta);
-	}
-	getData(propertyName) {
-		return (propertyName) ? get(propertyName, this.block.data) : this.block.data;
-	}
-	setData(propertyName, value) {
-		if (isPlainObject(propertyName)) {
-			assign(this.block.data, propertyName);
-			return this;
-		}
-		return this.setProperty(propertyName, value, this.block.data);
-	}
-	get(propertyName) {
-		return (propertyName) ? get(propertyName, this.block) : this.block;
-	}
-	getSender() {
-		return this.getCore('sender');
-	}
-	getSenderString() {
-		return toBase64Url(this.getCore('sender'));
-	}
-	getSenderPath() {
-		return getWallet(this.getCore('sender'));
-	}
-	getReceiver() {
-		return this.getCore('receiver');
-	}
-	getReceiverString() {
-		return toBase64Url(this.getReceiver());
-	}
-	getReceiverPath() {
-		return getWallet(this.getCore('receiver'));
-	}
-	set(propertyName, value, sourceObject) {
-		let link = sourceObject || this.block;
-		const pathArray = isArray(propertyName) ? propertyName : toPath(propertyName);
-		const lastPathItem = pathArray.pop();
-		const pathArrayLength = pathArray.length;
-		everyArray(pathArray, (item) => {
-			link = link[item];
-			return hasValue(link);
-		});
-		if (link) {
-			link[lastPathItem] = value;
-		}
-		return link;
-	}
-	async exportBinary() {
-		return encodeStrict(this.block);
-	}
-	async exportDataBinary() {
-		return encodeStrict(this.block.data);
-	}
-	async exportMetaBinary() {
-		return encodeStrict(this.block.data.meta);
-	}
-	async exportCoreBinary() {
-		return encodeStrict(this.block.data.core);
-	}
-	async hash256(binary) {
-		if (binary) {
-			return this.cipherSuite.hash.hash256(binary);
-		}
-	}
-	async hash512(binary) {
-		if (binary) {
-			return this.cipherSuite.hash.hash512(binary);
-		}
-	}
-	async hashXOF(binary, options) {
-		if (binary) {
-			return this.cipherSuite.hash.hashXOF(binary, options);
-		}
-	}
-	async getParent() {
-		return this.parent;
-	}
-	async getChildren() {
-		return this.children;
-	}
-	getVersion() {
-		return this.getMeta('version');
-	}
-	getType() {
-		return this.getMeta('type');
-	}
-	getSequence() {
-		const sequence = this.getCore('sequence');
-		if (isBigInt(sequence)) {
-			return sequence;
-		}
-		return;
-	}
-	async getParentSequence() {
-		const parentNode = await this.getParent();
-		if (parentNode) {
-			return parentNode.getSequence();
-		}
-		return;
-	}
-	async setSequence() {
-		const parentSequence = await this.getParentSequence();
-		if (isBigInt(parentSequence)) {
-			return parentSequence + 1n;
-		} else {
-			return 0n;
-		}
-	}
-	async validate() {
-		const validateGeneric = await validateSchema(blockSchema, this.block);
-		if (!validateGeneric) {
-			return false;
-		}
-		if (this.blockSchema) {
-			const result = await validateSchema(this.blockSchema, this.block);
-			return result;
-		}
-		return true;
-	}
-	async validateVerbose() {
-		const validateGeneric = await validateSchemaVerbose(blockSchema, this.block);
-		if (!validateGeneric) {
-			return false;
-		}
-		if (this.blockSchema) {
-			const result = await validateSchemaVerbose(this.blockSchema, this.block);
-			return result;
-		}
 	}
 	version = version;
 	typeName = 'generic';
@@ -380,12 +51,17 @@ export class Block {
 		data: {
 			meta: {},
 			core: {},
-			//  receiptLink HASH of Contents
 		},
-		// directLink (Dynamically generated) /w/3bytes/3bytes/last32/t/transactionID(32)
-		// id HASH
 	};
 }
+extendClass(Block, accessorMethods);
+extendClass(Block, configMethods);
+extendClass(Block, defaultsMethods);
+extendClass(Block, exportMethods);
+extendClass(Block, filesystemMethods);
+extendClass(Block, hashingMethods);
+extendClass(Block, signatureMethods);
+extendClass(Block, validateMethods);
 export async function block(...args) {
 	const source = construct(Block, args);
 	return source;

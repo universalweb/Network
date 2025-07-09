@@ -35,33 +35,49 @@ export class ReceiptBlock extends Block {
 	async configByTransactionBlock(blockObject, config) {
 		const txBlockData = await blockObject.getData();
 		const txHash = blockObject.block.hash;
-		this.appendToCore(txBlockData.core, txHash);
+		this.appendToCore(txBlockData.core, txHash, txBlockData.meta);
 		// Append Meta Data from prior transaction block - makes it easier to manage state but isn't required to store can generate on the fly still
 		// Use New Meta Data if requires confirmation or interaction of receiver
 		// Don't count until verified and can append data to block for state management
 	}
-	async appendToCore(coreData, txHash) {
+	async appendToCore(coreData, transaction, metaData) {
+		const {
+			receiver,
+			sender,
+			amount,
+		} = coreData;
+		const { timestamp, } = metaData;
+		await this.config({
+			transaction,
+			receiver,
+			sender,
+			amount,
+			timestamp
+		});
+	}
+	async config(data, config) {
 		const {
 			receiver,
 			sender,
 			mana,
 			amount,
-		} = coreData;
+			timestamp,
+			transaction
+		} = data;
 		await this.setCore({
-			transaction: txHash,
+			transaction,
 			receiver,
 			sender,
 			mana,
-			amount
+			amount,
+			timestamp
 		});
-	}
-	async config(data, config) {
 	}
 	typeName = 'receipt';
 }
 assignToClass(ReceiptBlock, blockMethods);
 export async function receiptBlock(data, config) {
-	const block = new ReceiptBlock(data, config);
+	const block = await (new ReceiptBlock(data, config));
 	return block;
 }
 export default receiptBlock;

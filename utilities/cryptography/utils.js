@@ -15,13 +15,13 @@ export const int512 = 512;
 export const int128 = 128;
 export const hexString = 'hex';
 export const hash512SettingsNoble = {
-	dkLen: int64
+	dkLen: int64,
 };
 export const hash512SettingsCrypto = {
-	outputLength: int64
+	outputLength: int64,
 };
 export const hash1024SettingsCrypto = {
-	outputLength: int128
+	outputLength: int128,
 };
 export function clearBuffer(source) {
 	if (source) {

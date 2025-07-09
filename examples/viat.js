@@ -9,13 +9,18 @@ import { currentPath } from '@universalweb/Acid';
 import { encode } from '#utilities/serialize';
 import { superstructure } from '#viat/superstructure/index';
 import { toSmallestUnit } from '#viat/math/coin';
+import { walletBlock } from '#viat/blocks/wallet/block';
 const viatNetwork = await superstructure({
-	name: 'mainnet',
+	networkName: 'mainnet',
 });
 console.log('VIAT NETWORK', viatNetwork);
 console.log('VIAT NETWORK', await viatNetwork.getFullPath());
 const amy = await wallet();
 const mitzi = await wallet();
+const amyBlock = await walletBlock(amy);
+await amyBlock.finalize();
+await amyBlock.sign(amy);
+console.log('Wallet Block', amyBlock.block);
 // console.log('WALLET', amy, mitzi);
 const mitziAddress = await mitzi.getAddress();
 const amyAddress = await amy.getAddress();

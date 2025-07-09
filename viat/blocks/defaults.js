@@ -14,7 +14,7 @@ const fileTypes = {
 	'w.block': 'Viat Wallet Block',
 	'au.block': 'Viat Audit Block',
 	'vvr.block': 'Viat Verification Block',
-	'vg.block': 'Viat General Block'
+	'vg.block': 'Viat General Block',
 };
 const fileExtensions = {
 	transaction: '.vtx.block',
@@ -45,7 +45,7 @@ export function createBlockDefaultsObject(blockName, blockNamePlural, letter) {
 		urlPathnameRegex: new RegExp(`/${letter}/`),
 		pathnameRegex: new RegExp(`/${blockNamePlural}/`),
 		directoryPathname: `/${blockNamePlural}/`,
-		directoryURLPathname: `/${letter}/`
+		directoryURLPathname: `/${letter}/`,
 	};
 	return target;
 }

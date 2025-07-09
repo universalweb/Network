@@ -87,16 +87,16 @@ export class Superstructure {
 		// Logic to remove a block from the superstructure
 		console.log('Removing block:', source);
 	}
-	name = 'networkName';
+	networkName = 'mainnet';
 }
 export async function superstructure(...args) {
 	const source = new Superstructure(...args);
 	return source;
 }
 export default superstructure;
-const viatNetwork = await superstructure({
-	networkName: 'mainnet',
-});
-console.log('VIAT NETWORK', viatNetwork);
-console.log('VIAT NETWORK', await viatNetwork.getFullPath());
-console.log('VIAT SAVE', await viatNetwork.createFilesystem());
+// const viatNetwork = await superstructure({
+// 	networkName: 'mainnet',
+// });
+// console.log('VIAT NETWORK', viatNetwork);
+// console.log('VIAT NETWORK', await viatNetwork.getFullPath());
+// console.log('VIAT SAVE', await viatNetwork.createFilesystem());
