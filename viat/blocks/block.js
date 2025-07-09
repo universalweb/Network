@@ -4,6 +4,7 @@ import {
 	currentPath,
 	everyArray,
 	get,
+	getConstructorName,
 	hasValue,
 	isArray,
 	isBigInt,
@@ -36,22 +37,19 @@ const {
 // Consider only receipt block has signature. Means can cut total size of both blocks by maybe 2kb
 export class Block {
 	constructor(config) {
-		if (config?.source) {
-			this.source = function() {
-				return config.source;
-			};
-		}
 		return this;
 	}
-	initialize(data, config) {
+	async initialize(data, config, ...args) {
 		this.blockType = blockDefaults.blockTypes[this.typeName];
 		this.fileType = blockDefaults.fileExtensions[this.typeName];
 		this.filename = blockDefaults.genericFilenames[this.typeName];
 		if (data) {
 			if (getParentClassName(data) === 'Block') {
-				this.configByBlock(data, config);
+				await this.configByBlock(data, config, ...args);
+			} else if (getConstructorName(data) === 'Wallet') {
+				await this.configByWallet(data, config, ...args);
 			} else {
-				this.config(data, config);
+				await this.config(data, config, ...args);
 			}
 		}
 		return this;

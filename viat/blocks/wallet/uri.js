@@ -43,6 +43,32 @@ export const directoryTemplate = {
 	state: {},
 	data: {},
 };
+export async function getWalletPathFromBlock(block) {
+	return getWalletPath(await block.getAddress());
+}
+export async function getWalletFromBlock(block) {
+	return getWallet(await block.getAddress());
+}
+export async function getWalletURLFromBlock(block) {
+	return getWalletURL(await block.getAddress());
+}
+export async function getWalletPathURLFromBlock(block) {
+	return getWalletPathURL(await block.getAddress());
+}
+export const blockMethods = {
+	getPath() {
+		return getWalletFromBlock(this);
+	},
+	getDirectory() {
+		return getWalletPathFromBlock(this);
+	},
+	getDirectoryURL() {
+		return getWalletPathURLFromBlock(this);
+	},
+	getURL() {
+		return getWalletURLFromBlock(this);
+	},
+};
 export const api = {
 	blockFilename: walletBlockFilename,
 	getPrefixPath: getWalletPrefixPath,

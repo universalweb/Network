@@ -24,8 +24,7 @@ import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 export class ReceiptBlock extends Block {
 	constructor(data, config) {
 		super(config);
-		this.initialize(data, config);
-		return this;
+		return this.initialize(data, config);
 	}
 	async getTransactionDirectory() {
 		return getTransactionPath(this.getCore('transaction'), this.getReceiver());
@@ -34,21 +33,21 @@ export class ReceiptBlock extends Block {
 		return getTransaction(this.getCore('transaction'), this.getReceiver());
 	}
 	async configByTransactionBlock(blockObject, config) {
-		const txBlockData = blockObject.getData();
+		const txBlockData = await blockObject.getData();
 		const txHash = blockObject.block.hash;
 		this.appendToCore(txBlockData.core, txHash);
 		// Append Meta Data from prior transaction block - makes it easier to manage state but isn't required to store can generate on the fly still
 		// Use New Meta Data if requires confirmation or interaction of receiver
 		// Don't count until verified and can append data to block for state management
 	}
-	appendToCore(coreData, txHash) {
+	async appendToCore(coreData, txHash) {
 		const {
 			receiver,
 			sender,
 			mana,
 			amount,
 		} = coreData;
-		this.setCore({
+		await this.setCore({
 			transaction: txHash,
 			receiver,
 			sender,

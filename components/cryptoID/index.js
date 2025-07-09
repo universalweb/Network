@@ -107,15 +107,6 @@ export class CryptoID {
 		const decrypted = await this.cipherSuite.encryption.decrypt(encryptedObject, encryptionPassword);
 		return decode(decrypted);
 	}
-	async exportKeypairs() {
-		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
-		const keyExchangeKeypair = await this.cipherSuite.keyExchange.exportKeypair(this.keyExchangeKeypair);
-		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
-		return {
-			keyExchangeKeypair,
-			signatureKeypair
-		};
-	}
 	async exportSignatureKeypair() {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
 		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
@@ -126,17 +117,35 @@ export class CryptoID {
 		const keyExchangeKeypair = await this.cipherSuite.keyExchange.exportKeypair(this.keyExchangeKeypair);
 		return keyExchangeKeypair;
 	}
+	async exportKeypairs() {
+		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
+		const keyExchangeKeypair = await this.exportExchangeKeypair();
+		const signatureKeypair = await this.exportSignatureKeypair();
+		return {
+			keyExchangeKeypair,
+			signatureKeypair
+		};
+	}
+	async exportPublicKeys() {
+		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
+		const { publicKey: signaturePublicKey } = await this.exportSignatureKeypair();
+		const { publicKey: keyExchangePublicKey } = await this.exportExchangeKeypair();
+		return {
+			signaturePublicKey,
+			keyExchangePublicKey
+		};
+	}
 	async exportPublicKey() {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
-		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
+		const signatureKeypair = await this.exportSignatureKeypair();
 		return signatureKeypair.publicKey;
 	}
 	async exportPrivateKey() {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
-		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
+		const signatureKeypair = await this.exportSignatureKeypair();
 		return signatureKeypair.privateKey;
 	}
-	async exportBinary(encryptionKey) {
+	async exportObject() {
 		const {
 			version,
 			address
@@ -149,6 +158,25 @@ export class CryptoID {
 			core: {}
 		};
 		assign(data.core, await this.exportKeypairs());
+		return data;
+	}
+	async exportPublicObject() {
+		const {
+			version,
+			address
+		} = this;
+		const data = {
+			version,
+			date: Date.now(),
+			cipherID: this.cipherSuite.id,
+			address,
+			core: {}
+		};
+		assign(data.core, await this.exportPublicKey());
+		return data;
+	}
+	async exportBinary(encryptionKey) {
+		const data = await this.exportObject();
 		const dataEncoded = await encodeStrict(data);
 		if (encryptionKey) {
 			const password = (isString(encryptionKey)) ? await this.cipherSuite.hash.hash256(Buffer.from(encryptionKey)) : encryptionKey;

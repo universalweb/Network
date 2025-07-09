@@ -1,4 +1,5 @@
 import { assign, currentPath } from '@universalweb/acid';
+import { createViatFilesystem } from './createFilesystem.js';
 import fs from 'fs-extra';
 import { getHomeDirectory } from '#utilities/directory';
 import path from 'path';
@@ -33,15 +34,22 @@ export class Superstructure {
 		}
 	}
 	async save() {
-		await this.saveDirectory();
+		await this.ensureDirectory();
 		const fullPath = await this.getFullPath();
 		console.log('Saving superstructure to:', fullPath);
 		return this;
 	}
-	async saveDirectory() {
+	async ensureDirectory() {
 		const fullPath = await this.getFullPath();
 		await fs.ensureDir(fullPath);
-		console.log('Saving superstructure directory to:', fullPath);
+		console.log('Ensuring superstructure directory exists at:', fullPath);
+		return this;
+	}
+	async createFilesystem() {
+		const fullPath = await this.getFullPath();
+		await this.ensureDirectory();
+		console.log('Creating VIAT filesystem at:', fullPath);
+		await createViatFilesystem(fullPath);
 		return this;
 	}
 	async setFullPath(fullPath) {
@@ -91,4 +99,4 @@ const viatNetwork = await superstructure({
 });
 console.log('VIAT NETWORK', viatNetwork);
 console.log('VIAT NETWORK', await viatNetwork.getFullPath());
-console.log('VIAT SAVE', await viatNetwork.saveDirectory());
+console.log('VIAT SAVE', await viatNetwork.createFilesystem());

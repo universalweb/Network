@@ -20,8 +20,7 @@ import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 class TransactionBlock extends Block {
 	constructor(data, config) {
 		super(config);
-		this.initialize(data, config);
-		return this;
+		return this.initialize(data, config);
 	}
 	// Receipt Hash Link
 	// Block Hash (TX DATA || Receipt Meta?)
@@ -38,7 +37,7 @@ class TransactionBlock extends Block {
 }
 assignToClass(TransactionBlock, blockMethods);
 export async function transactionBlock(data, config) {
-	const block = new TransactionBlock(data, config);
+	const block = await (new TransactionBlock(data, config));
 	return block;
 }
 export default transactionBlock;

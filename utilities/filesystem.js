@@ -1,7 +1,10 @@
-import { eachAsyncObject, hasDot, isPlainObject } from '@universalweb/acid';
+import {
+	eachAsyncObject, hasDot, hasValue, isPlainObject
+} from '@universalweb/acid';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
+import { write } from './file.js';
 export async function objectToFilesystem(basePath, filesystemObject) {
 	if (!filesystemObject) {
 		return;
@@ -14,15 +17,21 @@ export async function objectToFilesystem(basePath, filesystemObject) {
 			await objectToFilesystem(folderPath, value);
 		} else if (hasDot(key)) {
 			console.log('FILE', folderPath);
+			if (hasValue(value)) {
+				await write(folderPath, value);
+			}
+		} else if (value === true) {
+			console.log('FOLDER', folderPath);
+			await fs.ensureDir(folderPath);
 		}
 	});
 }
 export async function configToFilesystem(config) {
 	const {
-		folderPath,
+		directory,
 		source,
 	} = config;
-	await objectToFilesystem(folderPath, source);
+	await objectToFilesystem(directory, source);
 	return true;
 }
 const exportAPI = {
