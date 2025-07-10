@@ -4,7 +4,7 @@ import {
 	getReceiptFromBlock,
 	getReceiptPathFromBlock,
 	getReceiptPathURLFromBlock,
-	getReceiptURLFromBlock
+	getReceiptURLFromBlock,
 } from './uri.js';
 import {
 	getTransaction,
@@ -12,15 +12,14 @@ import {
 	getTransactionPath,
 	getTransactionPathFromBlock,
 	getTransactionPathURLFromBlock,
-	getTransactionURLFromBlock
+	getTransactionURLFromBlock,
 } from '../transaction/uri.js';
 import { Block } from '../block.js';
 import { assignToClass } from '@universalweb/acid';
 import blockDefaults from '../defaults.js';
 import { readStructured } from '#utilities/file';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
-// Block Hash (TX DATA || Receipt NONCE || Receipt Meta?) Creates cryptographic link to the original transaction block
-// Both together create a physical link between the two blocks
+// Only signed by receiver to either confirm or reject a hashlock conditional transaction.
 export class ReceiptBlock extends Block {
 	constructor(data, config) {
 		super(config);
@@ -36,9 +35,6 @@ export class ReceiptBlock extends Block {
 		const txBlockData = await blockObject.getData();
 		const txHash = blockObject.block.hash;
 		this.appendToCore(txBlockData.core, txHash, txBlockData.meta);
-		// Append Meta Data from prior transaction block - makes it easier to manage state but isn't required to store can generate on the fly still
-		// Use New Meta Data if requires confirmation or interaction of receiver
-		// Don't count until verified and can append data to block for state management
 	}
 	async appendToCore(coreData, transaction, metaData) {
 		const {
@@ -46,31 +42,29 @@ export class ReceiptBlock extends Block {
 			sender,
 			amount,
 		} = coreData;
-		const { timestamp, } = metaData;
+		const { timestamp } = metaData;
 		await this.config({
 			transaction,
 			receiver,
 			sender,
 			amount,
-			timestamp
+			timestamp,
 		});
 	}
 	async config(data, config) {
 		const {
 			receiver,
 			sender,
-			mana,
 			amount,
 			timestamp,
-			transaction
+			transaction,
 		} = data;
 		await this.setCore({
 			transaction,
 			receiver,
 			sender,
-			mana,
 			amount,
-			timestamp
+			timestamp,
 		});
 	}
 	typeName = 'receipt';
@@ -85,7 +79,6 @@ export default receiptBlock;
 // 	sender: viatCipherSuite.createBlockNonce(64),
 // 	transaction: viatCipherSuite.createBlockNonce(64),
 // 	receiver: viatCipherSuite.createBlockNonce(64),
-// 	mana: 1000,
 // 	amount: 1000,
 //  Reference a prior confirmed receipt's TX hash from the receiver's address. Use path to lookup both receipts and domains.
 // Only valid if hash is from a receipt within the same wallet and links to a validated transaction.

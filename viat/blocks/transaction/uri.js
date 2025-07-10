@@ -3,7 +3,7 @@ import {
 	getWalletPath,
 	getWalletURL,
 	walletPathToURL,
-	walletURLToPath
+	walletURLToPath,
 } from '../wallet/uri.js';
 import blockDefaults from '../defaults.js';
 import defaults from './defaults.js';

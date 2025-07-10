@@ -37,3 +37,4 @@ console.log('RECEIPT BLOCK', txBlock.receipt.block);
 const txBlockSize = (await encode(txBlock.block)).length;
 const receiptBlockSize = (await encode(txBlock.receipt.block)).length;
 console.log(txBlockSize + receiptBlockSize, 'bytes');
+await viatNetwork.saveBlock(txBlock);

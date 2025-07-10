@@ -39,6 +39,11 @@ export class Superstructure {
 		console.log('Saving superstructure to:', fullPath);
 		return this;
 	}
+	async saveBlock(targetBlock) {
+		const fullPath = await this.getFullPath();
+		await targetBlock.save(fullPath);
+		return this;
+	}
 	async ensureDirectory() {
 		const fullPath = await this.getFullPath();
 		await fs.ensureDir(fullPath);
