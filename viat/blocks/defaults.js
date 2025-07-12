@@ -2,10 +2,8 @@ export const version = 1;
 export const blockTypes = {
 	transaction: 0,
 	receipt: 1,
-	generic: 2,
-	profile: 3,
-	link: 4,
-	abstract: 5,
+	wallet: 2,
+	generic: 3,
 };
 const fileTypes = {
 	'vtx.block': 'Viat Transaction Block',
@@ -16,7 +14,7 @@ const fileTypes = {
 	'w.block': 'Viat Wallet Block',
 	'au.block': 'Viat Audit Block',
 	'vvr.block': 'Viat Verification Block',
-	'vg.block': 'Viat General Block'
+	'vg.block': 'Viat General Block',
 };
 const fileExtensions = {
 	transaction: '.vtx.block',
@@ -47,7 +45,7 @@ export function createBlockDefaultsObject(blockName, blockNamePlural, letter) {
 		urlPathnameRegex: new RegExp(`/${letter}/`),
 		pathnameRegex: new RegExp(`/${blockNamePlural}/`),
 		directoryPathname: `/${blockNamePlural}/`,
-		directoryURLPathname: `/${letter}/`
+		directoryURLPathname: `/${letter}/`,
 	};
 	return target;
 }

@@ -13,6 +13,6 @@ export const blockSchema = schemaValidator.object({
 		core: schemaValidator.object({}).required(),
 	}).required(),
 	hash: schemaValidator.binary().required(),
-	signature: schemaValidator.binary().required(),
+	signature: schemaValidator.binary(),
 }).required();
 export default blockSchema;

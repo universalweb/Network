@@ -1,6 +1,6 @@
 /**
 	* @NAME falcon-padded-1024
-	* @DESCRIPTION Falcon-1024 padded has a fixed length signature of 1280 bytes.
+	* @DESCRIPTION Falcon-1024 padded has a fixed length signature of 1280 bytes. Avoid using this until further notice.
  */
 import generateScheme from './pqClean.js';
 export const falcon1024 = generateScheme('falcon-padded-1024', {

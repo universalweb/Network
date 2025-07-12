@@ -4,33 +4,25 @@ import {
 	eachAsyncObject,
 	eachObject,
 	hasDot,
-	isPlainObject
+	isPlainObject,
 } from '@universalweb/acid';
 import { getViatDirectory } from '#utilities/directory';
 import path from 'node:path';
 const viatFilesystemObject = {
-	genesis: {
-		url: 'g'
-	},
-	pending: {
-		url: 'p'
-	},
-	wallets: {
-		url: 'w',
-	},
-	audits: {
-		url: 'a',
-	},
-	domains: {
-		url: 'd',
-	}
+	cache: true,
+	pending: true,
+	wallets: true,
+	audits: true,
+	domains: true,
 };
 export async function createViatFilesystem(basePath, filesystemObject = viatFilesystemObject) {
-	return objectToFilesystem(basePath || getViatDirectory(), filesystemObject);
+	if (basePath) {
+		return objectToFilesystem(basePath, filesystemObject);
+	}
 }
 export async function viatConfigToFilesystem(config = {}) {
 	config.source ??= viatFilesystemObject;
-	config.folderPath ??= getViatDirectory();
+	config.directory ??= getViatDirectory();
 	await configToFilesystem(config);
 	return true;
 }

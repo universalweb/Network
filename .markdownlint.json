@@ -19,7 +19,7 @@
 		"style": "fenced"
 	},
 	"MD013": {
-		"line_length": 700,
+		"line_length": 1000,
 		"code_blocks": false,
 		"tables": false,
 		"headings": false

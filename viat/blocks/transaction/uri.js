@@ -3,7 +3,7 @@ import {
 	getWalletPath,
 	getWalletURL,
 	walletPathToURL,
-	walletURLToPath
+	walletURLToPath,
 } from '../wallet/uri.js';
 import blockDefaults from '../defaults.js';
 import defaults from './defaults.js';
@@ -23,17 +23,23 @@ export function getTransactionFilename(transactionHash) {
 	const address = (transactionHash) ? toBase64Url(transactionHash) : transactionBlockFilename;
 	return address;
 }
+export function getTransactionsPath(walletAddress) {
+	return path.join(getWalletPath(walletAddress), defaults.pathname);
+}
 export function getTransactionPath(transactionHash, walletAddress) {
 	if (walletAddress) {
-		return path.join(getWalletPath(walletAddress), defaults.pathname, getTransactionPath(transactionHash));
+		return path.join(getTransactionsPath(walletAddress), getTransactionPath(transactionHash));
 	}
 	return path.join(getTransactionPrefixPath(transactionHash), getTransactionDirectory(transactionHash));
 }
 export function getTransaction(transactionHash, walletAddress) {
 	return path.join(getTransactionPath(transactionHash, walletAddress), transactionBlockFilename);
 }
+export function getTransactionsURL(walletAddress) {
+	return path.join(getWalletURL(walletAddress), defaults.urlPathname);
+}
 export function getTransactionPathURL(transactionHash, walletAddress) {
-	return path.join(getWalletURL(walletAddress), defaults.urlPathname, getTransactionPath(transactionHash));
+	return path.join(getTransactionsURL(walletAddress), getTransactionPath(transactionHash));
 }
 export function getTransactionURL(transactionHash, walletAddress) {
 	return path.join(getTransactionPathURL(transactionHash, walletAddress), transactionBlockFilename);
@@ -93,8 +99,9 @@ export const blockMethods = {
 	},
 };
 export default api;
-// const walletBufferex = await viatCipherSuite.createBlockNonce(64);
-// const txBufferex = await viatCipherSuite.createBlockNonce(64);
+const walletBufferex = await viatCipherSuite.createBlockNonce(64);
+const txBufferex = await viatCipherSuite.createBlockNonce(64);
+console.log('getTransactionsPath', getTransactionsPath(walletBufferex));
 // console.log('getTransactionPath', getTransactionPath(txBufferex, walletBufferex));
 // console.log('getTransaction', getTransaction(txBufferex, walletBufferex));
 // console.log('getTransactionURL', getTransactionURL(txBufferex, walletBufferex), getTransactionURL(txBufferex, walletBufferex).length);

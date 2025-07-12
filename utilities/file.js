@@ -3,7 +3,7 @@ import {
 	mkdir,
 	readFile,
 	stat,
-	writeFile
+	writeFile,
 } from 'node:fs/promises';
 import { decode } from '#utilities/serialize';
 import fs from 'node:fs';

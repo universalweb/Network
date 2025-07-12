@@ -1,6 +1,6 @@
 :root {
-	--font-sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-	--font-mono: "Courier New", monospace;
+	--font-sans: "0xProto Nerd Font";
+		--font-mono: "ProggyClean CE Nerd Font";
 	--bg-color: #121212;
 	--text-color: #e0e0e0;
 	--accent-color: #00bcd4;
@@ -31,8 +31,8 @@ body {
 }
 
 #particle-canvas {
-	z-index: 0;
 	position: fixed;
+	z-index: 0;
 	top: 0;
 	left: 0;
 	width: 100%;

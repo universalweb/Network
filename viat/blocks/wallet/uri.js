@@ -2,8 +2,8 @@ import blockDefaults from '../defaults.js';
 import { getPrefixPath } from '../../files/getPrefixPath.js';
 import path from 'path';
 import { toBase64Url } from '#crypto/utils.js';
-import transactionDefaults from './defaults.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
+import walletDefaults from './defaults.js';
 export const walletBlockFilename = blockDefaults.genericFilenames.wallet;
 export function getWalletPrefixPath(walletAddress) {
 	return getPrefixPath(walletAddress, 3, 6);
@@ -20,28 +20,54 @@ export function getWalletPathway(walletAddress) {
 	return path.join(getWalletPrefixPath(walletAddress), getWalletDirectory(walletAddress));
 }
 export function getWalletPath(walletAddress) {
-	return path.join(transactionDefaults.pathname, getWalletPathway(walletAddress));
+	return path.join(walletDefaults.pathname, getWalletPathway(walletAddress));
 }
 export function getWallet(walletAddress) {
 	return path.join(getWalletPath(walletAddress), walletBlockFilename);
 }
 export function walletPathToURL(url) {
-	return url.replace(transactionDefaults.pathnameRegex, transactionDefaults.directoryURLPathname);
+	return url.replace(walletDefaults.pathnameRegex, walletDefaults.directoryURLPathname);
 }
 export function getWalletPathURL(walletAddress) {
-	return path.join(transactionDefaults.urlPathname, getWalletPathway(walletAddress));
+	return path.join(walletDefaults.urlPathname, getWalletPathway(walletAddress));
 }
 export function getWalletURL(walletAddress) {
 	return path.join(getWalletPathURL(walletAddress), walletBlockFilename);
 }
 export function walletURLToPath(url) {
-	return url.replace(transactionDefaults.urlPathnameRegex, transactionDefaults.directoryPathname);
+	return url.replace(walletDefaults.urlPathnameRegex, walletDefaults.directoryPathname);
 }
 export const directoryTemplate = {
-	transactions: {},
+	wallets: {},
 	receipts: {},
 	state: {},
 	data: {},
+};
+export async function getWalletPathFromBlock(block) {
+	return getWalletPath(await block.getAddress());
+}
+export async function getWalletFromBlock(block) {
+	return getWallet(await block.getAddress());
+}
+export async function getWalletURLFromBlock(block) {
+	return getWalletURL(await block.getAddress());
+}
+export async function getWalletPathURLFromBlock(block) {
+	return getWalletPathURL(await block.getAddress());
+}
+export const blockMethods = {
+	getPath() {
+		return getWalletFromBlock(this);
+	},
+	getDirectory() {
+		return getWalletPathFromBlock(this);
+	},
+	getDirectoryURL() {
+		return getWalletPathURLFromBlock(this);
+	},
+	getURL() {
+		return getWalletURLFromBlock(this);
+	},
 };
 export const api = {
 	blockFilename: walletBlockFilename,

@@ -5,10 +5,11 @@ import {
 	assign,
 	currentPath,
 	hasDot,
+	hasValue,
 	isArray,
 	isBuffer,
 	isPlainObject,
-	isString
+	isString,
 } from '@universalweb/acid';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { keychainGet, keychainSave } from '#components/certificate/keychain';
@@ -17,7 +18,7 @@ import {
 	logInfo,
 	logSuccess,
 	logVerbose,
-	logWarning
+	logWarning,
 } from '#utilities/logs/classLogMethods';
 import { read, readStructured, write } from '#utilities/file';
 import { cryptoIDVersion } from '#components/cryptoID/defaults';
@@ -95,26 +96,25 @@ export class CryptoID {
 				keyExchangeKeypair,
 				signatureKeypair,
 			},
+			networkName,
 		} = data;
-		this.version = version;
+		if (version) {
+			this.version = version;
+		}
 		this.keyExchangeKeypair = keyExchangeKeypair;
 		this.signatureKeypair = signatureKeypair;
-		this.cipherID = cipherID;
+		if (hasValue(cipherID)) {
+			this.cipherID = cipherID;
+		}
+		if (hasValue(networkName)) {
+			this.networkName = networkName;
+		}
 		await this.initializeKeypairs();
 		return this;
 	}
 	async decryptBinary(encryptedObject, encryptionPassword) {
 		const decrypted = await this.cipherSuite.encryption.decrypt(encryptedObject, encryptionPassword);
 		return decode(decrypted);
-	}
-	async exportKeypairs() {
-		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
-		const keyExchangeKeypair = await this.cipherSuite.keyExchange.exportKeypair(this.keyExchangeKeypair);
-		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
-		return {
-			keyExchangeKeypair,
-			signatureKeypair
-		};
 	}
 	async exportSignatureKeypair() {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
@@ -126,29 +126,66 @@ export class CryptoID {
 		const keyExchangeKeypair = await this.cipherSuite.keyExchange.exportKeypair(this.keyExchangeKeypair);
 		return keyExchangeKeypair;
 	}
+	async exportKeypairs() {
+		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
+		const keyExchangeKeypair = await this.exportExchangeKeypair();
+		const signatureKeypair = await this.exportSignatureKeypair();
+		return {
+			keyExchangeKeypair,
+			signatureKeypair,
+		};
+	}
+	async exportPublicKeys() {
+		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
+		const { publicKey: signaturePublicKey } = await this.exportSignatureKeypair();
+		const { publicKey: keyExchangePublicKey } = await this.exportExchangeKeypair();
+		return {
+			signaturePublicKey,
+			keyExchangePublicKey,
+		};
+	}
 	async exportPublicKey() {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
-		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
+		const signatureKeypair = await this.exportSignatureKeypair();
 		return signatureKeypair.publicKey;
 	}
 	async exportPrivateKey() {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
-		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
+		const signatureKeypair = await this.exportSignatureKeypair();
 		return signatureKeypair.privateKey;
 	}
-	async exportBinary(encryptionKey) {
+	async exportObject() {
 		const {
 			version,
-			address
+			address,
 		} = this;
 		const data = {
 			version,
 			date: Date.now(),
 			cipherID: this.cipherSuite.id,
 			address,
-			core: {}
+			core: {},
 		};
 		assign(data.core, await this.exportKeypairs());
+		return data;
+	}
+	async exportPublicObject() {
+		const {
+			version,
+			address,
+		} = this;
+		const data = {
+			version,
+			date: Date.now(),
+			cipherID: this.cipherSuite.id,
+			address,
+			core: {},
+		};
+		assign(data.core, await this.exportPublicKey());
+		return data;
+	}
+	async exportBinary(encryptionKey) {
+		const data = await this.exportObject();
 		const dataEncoded = await encodeStrict(data);
 		if (encryptionKey) {
 			const password = (isString(encryptionKey)) ? await this.cipherSuite.hash.hash256(Buffer.from(encryptionKey)) : encryptionKey;

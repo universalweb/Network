@@ -3,11 +3,11 @@ import { noValue } from '@universalweb/acid';
 const {
 	encode: encodeRaw,
 	decode: decodeRaw,
-	Decoder: DecoderRaw
+	Decoder: DecoderRaw,
 } = binaryFormat;
 // Enforce canonical encoding for signing/verification & crupto operations
 const canonicalSerializationOptions = {
-	canonical: true
+	canonical: true,
 };
 export async function decode(data) {
 	if (noValue(data)) {
@@ -81,6 +81,6 @@ const serialization = {
 	encodeStrict,
 	decode,
 	encodeStrictSync,
-	encodeSync
+	encodeSync,
 };
 export default serialization;
