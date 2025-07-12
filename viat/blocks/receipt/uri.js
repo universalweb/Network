@@ -3,7 +3,7 @@ import {
 	getWalletPath,
 	getWalletURL,
 	walletPathToURL,
-	walletURLToPath
+	walletURLToPath,
 } from '../wallet/uri.js';
 import blockDefaults from '../defaults.js';
 import defaults from './defaults.js';
@@ -23,17 +23,23 @@ export function getReceiptFilename(receiptHash) {
 	const address = (receiptHash) ? toBase64Url(receiptHash) : receiptBlockFilename;
 	return address;
 }
+export function getReceiptsPath(walletAddress) {
+	return path.join(getWalletPath(walletAddress), defaults.pathname);
+}
 export function getReceiptPath(receiptHash, walletAddress) {
 	if (walletAddress) {
-		return path.join(getWalletPath(walletAddress), defaults.pathname, getReceiptPath(receiptHash));
+		return path.join(getReceiptsPath(walletAddress), getReceiptPath(receiptHash));
 	}
 	return path.join(getReceiptPrefixPath(receiptHash), getReceiptDirectory(receiptHash));
 }
 export function getReceipt(receiptHash, walletAddress) {
 	return path.join(getReceiptPath(receiptHash, walletAddress), receiptBlockFilename);
 }
+export function getReceiptsPathURL(walletAddress) {
+	return path.join(getWalletURL(walletAddress), defaults.urlPathname);
+}
 export function getReceiptPathURL(receiptHash, walletAddress) {
-	return path.join(getWalletURL(walletAddress), defaults.urlPathname, getReceiptPath(receiptHash));
+	return path.join(getReceiptsPathURL(walletAddress), getReceiptPath(receiptHash));
 }
 export function getReceiptURL(receiptHash, walletAddress) {
 	return path.join(getReceiptPathURL(receiptHash, walletAddress), receiptBlockFilename);
@@ -89,10 +95,10 @@ export const blockMethods = {
 	},
 };
 export default api;
-// const walletBufferex = await viatCipherSuite.createBlockNonce(64);
-// const txBufferex = await viatCipherSuite.createBlockNonce(64);
-// console.log('getReceiptPath', getReceiptPath(txBufferex, walletBufferex));
-// console.log('getReceipt', getReceipt(txBufferex, walletBufferex));
+const walletBufferex = await viatCipherSuite.createBlockNonce(64);
+const txBufferex = await viatCipherSuite.createBlockNonce(64);
+console.log('getReceiptPath', getReceiptPath(txBufferex, walletBufferex));
+console.log('getReceipt', getReceipt(txBufferex, walletBufferex));
 // console.log('getReceiptURL', getReceiptURL(txBufferex, walletBufferex), getReceiptURL(txBufferex, walletBufferex).length);
 // console.log(receiptPathToURL(getReceiptPath(txBufferex, walletBufferex)));
 // console.log('getReceiptFilename', getReceiptFilename(txBufferex).length);

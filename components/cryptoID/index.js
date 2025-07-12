@@ -5,10 +5,11 @@ import {
 	assign,
 	currentPath,
 	hasDot,
+	hasValue,
 	isArray,
 	isBuffer,
 	isPlainObject,
-	isString
+	isString,
 } from '@universalweb/acid';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { keychainGet, keychainSave } from '#components/certificate/keychain';
@@ -17,7 +18,7 @@ import {
 	logInfo,
 	logSuccess,
 	logVerbose,
-	logWarning
+	logWarning,
 } from '#utilities/logs/classLogMethods';
 import { read, readStructured, write } from '#utilities/file';
 import { cryptoIDVersion } from '#components/cryptoID/defaults';
@@ -95,11 +96,19 @@ export class CryptoID {
 				keyExchangeKeypair,
 				signatureKeypair,
 			},
+			networkName,
 		} = data;
-		this.version = version;
+		if (version) {
+			this.version = version;
+		}
 		this.keyExchangeKeypair = keyExchangeKeypair;
 		this.signatureKeypair = signatureKeypair;
-		this.cipherID = cipherID;
+		if (hasValue(cipherID)) {
+			this.cipherID = cipherID;
+		}
+		if (hasValue(networkName)) {
+			this.networkName = networkName;
+		}
 		await this.initializeKeypairs();
 		return this;
 	}
@@ -123,7 +132,7 @@ export class CryptoID {
 		const signatureKeypair = await this.exportSignatureKeypair();
 		return {
 			keyExchangeKeypair,
-			signatureKeypair
+			signatureKeypair,
 		};
 	}
 	async exportPublicKeys() {
@@ -132,7 +141,7 @@ export class CryptoID {
 		const { publicKey: keyExchangePublicKey } = await this.exportExchangeKeypair();
 		return {
 			signaturePublicKey,
-			keyExchangePublicKey
+			keyExchangePublicKey,
 		};
 	}
 	async exportPublicKey() {
@@ -148,14 +157,14 @@ export class CryptoID {
 	async exportObject() {
 		const {
 			version,
-			address
+			address,
 		} = this;
 		const data = {
 			version,
 			date: Date.now(),
 			cipherID: this.cipherSuite.id,
 			address,
-			core: {}
+			core: {},
 		};
 		assign(data.core, await this.exportKeypairs());
 		return data;
@@ -163,14 +172,14 @@ export class CryptoID {
 	async exportPublicObject() {
 		const {
 			version,
-			address
+			address,
 		} = this;
 		const data = {
 			version,
 			date: Date.now(),
 			cipherID: this.cipherSuite.id,
 			address,
-			core: {}
+			core: {},
 		};
 		assign(data.core, await this.exportPublicKey());
 		return data;

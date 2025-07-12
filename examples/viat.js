@@ -3,16 +3,19 @@
 // Give amount to main wallet
 // Generate two wallets in the Viat network.
 // Two wallets interact and send each other some amount of VIAT.
-// A woman named Amy sends a transaction to her cat named Mitzi to buy treats
+// A woman named Amy sends a transaction to her cat named Mitzi to buy treats.
+// Amy embodied the best of humanity, and this demo script is dedicated to her memory 1993-2025.
 import { Wallet, wallet } from '#viat/index';
 import { currentPath } from '@universalweb/Acid';
 import { encode } from '#utilities/serialize';
+import { remove } from 'fs-extra';
 import { superstructure } from '#viat/superstructure/index';
 import { toSmallestUnit } from '#viat/math/coin';
 import { walletBlock } from '#viat/blocks/wallet/block';
 const viatNetwork = await superstructure({
 	networkName: 'mainnet',
 });
+await viatNetwork.remove();
 console.log('VIAT NETWORK', viatNetwork);
 console.log('VIAT NETWORK', await viatNetwork.getFullPath());
 const amy = await wallet();
@@ -38,3 +41,4 @@ const txBlockSize = (await encode(txBlock.block)).length;
 const receiptBlockSize = (await encode(txBlock.receipt.block)).length;
 console.log(txBlockSize + receiptBlockSize, 'bytes');
 await viatNetwork.saveBlock(txBlock);
+console.log(await viatNetwork.getTransactions(amyAddress));

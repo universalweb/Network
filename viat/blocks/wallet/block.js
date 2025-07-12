@@ -16,7 +16,7 @@ import {
 	getWalletFromBlock,
 	getWalletPathFromBlock,
 	getWalletPathURLFromBlock,
-	getWalletURLFromBlock
+	getWalletURLFromBlock,
 } from './uri.js';
 import { Block } from '../block.js';
 import { assignToClass } from '@universalweb/acid';

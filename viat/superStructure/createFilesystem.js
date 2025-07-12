@@ -4,7 +4,7 @@ import {
 	eachAsyncObject,
 	eachObject,
 	hasDot,
-	isPlainObject
+	isPlainObject,
 } from '@universalweb/acid';
 import { getViatDirectory } from '#utilities/directory';
 import path from 'node:path';
@@ -13,7 +13,7 @@ const viatFilesystemObject = {
 	pending: true,
 	wallets: true,
 	audits: true,
-	domains: true
+	domains: true,
 };
 export async function createViatFilesystem(basePath, filesystemObject = viatFilesystemObject) {
 	if (basePath) {

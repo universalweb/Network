@@ -1,6 +1,8 @@
 // VIAT WALLET
 import { decode, encode } from '#utilities/serialize';
+import { getTransactionPath, getTransactionsPath } from '../blocks/transaction/uri.js';
 import { CryptoID } from '#components/cryptoID/index';
+import { getWalletPath } from '../blocks/wallet/uri.js';
 import { isBuffer } from '@universalweb/acid';
 import { transactionBlock } from '#viat/blocks/transaction/block';
 export class Wallet extends CryptoID {
@@ -12,6 +14,10 @@ export class Wallet extends CryptoID {
 		await this.initialize(config, optionalArg);
 		return this;
 	}
+	async getPath() {
+		const address = await this.getAddress();
+		return getWalletPath(address);
+	}
 	async createTransaction(amount, receiver, mana = 1n) {
 		const sender = await this.getAddress();
 		const txBlock = await transactionBlock({
@@ -19,8 +25,8 @@ export class Wallet extends CryptoID {
 				amount,
 				receiver,
 				sender,
-				mana
-			}
+				mana,
+			},
 		});
 		await txBlock.finalize();
 		await txBlock.sign(this);
@@ -30,18 +36,12 @@ export class Wallet extends CryptoID {
 		console.log('Transaction Block:', txBlock.block);
 		return txBlock;
 	}
-	async send(amount, receiver, mana = 1n) {
-		const txBlock = await this.createTransaction(amount, receiver, mana);
-		// Here you would typically send the transaction to the network
-		// This is a placeholder for the actual sending logic
-		console.log(`Sending transaction of ${amount} to ${receiver} with mana ${mana}`);
-	}
 }
 export function wallet(config) {
 	const source = new Wallet(config);
 	return source;
 }
-// const example = await wallet();
+const example = await wallet();
 // console.log('Wallet Example:', await example.exportKeypairs());
 // (await wallet('/Users/thomasmarchi/MEGA/Github/Network/viat/wallet.bin'));
 // console.log('Wallet:', (await wallet('/Users/thomasmarchi/MEGA/Github/Network/viat/wallet.bin')));

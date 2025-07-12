@@ -2,6 +2,7 @@ import { assign, currentPath } from '@universalweb/acid';
 import { createViatFilesystem } from './createFilesystem.js';
 import fs from 'fs-extra';
 import { getHomeDirectory } from '#utilities/directory';
+import { getTransactionsPath } from '../blocks/transaction/uri.js';
 import path from 'path';
 import { watch } from '#utilities/watch';
 export class Superstructure {
@@ -12,6 +13,11 @@ export class Superstructure {
 		this.networkName = config.networkName || this.networkName;
 		this.setFullPath();
 		return this;
+	}
+	async getTransactions(address) {
+		const fullPath = await this.getFullPath();
+		const transactionsPath = path.join(fullPath, getTransactionsPath(address));
+		return transactionsPath;
 	}
 	async watchFolder() {
 		const fullPath = await this.getFullPath();
@@ -91,6 +97,15 @@ export class Superstructure {
 	async removeBlock(source) {
 		// Logic to remove a block from the superstructure
 		console.log('Removing block:', source);
+		return fs.remove(await source.getPath());
+	}
+	async removeBlockDirectory(source) {
+		// Logic to remove a block from the superstructure
+		console.log('Removing block directory:', source);
+		return fs.remove(await source.getDirectory());
+	}
+	async remove() {
+		return fs.remove(await this.getFullPath());
 	}
 	networkName = 'mainnet';
 }

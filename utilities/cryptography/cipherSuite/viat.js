@@ -28,6 +28,6 @@ export const viatCipherSuite = {
 	// REPLAY PROTECTION AND USED TO MAKE TWO BLOCKS WITH IDENTICAL DATA UNIQUE
 	createBlockNonce(size = 16) {
 		return randomize(bufferAlloc(size));
-	}
+	},
 };
 export default viatCipherSuite;
