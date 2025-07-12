@@ -10,7 +10,9 @@
 // Proxy Address
 // Identity?
 // role: auditor, validator, user, admin
-//  BETA
+//  Wallet Blocks are only kept if the first transaction is made. Without it there is no point to keeping the wallet block and will be discarded this counters abuse.
+//  Any attempts to spam the network with random wallets will be discarded.
+// A wallet block is only needed when the wallet has created a block. It's not required when sent VIAT.
 import {
 	blockMethods,
 	getWalletFromBlock,
@@ -25,8 +27,6 @@ import { readStructured } from '#utilities/file';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 import { wallet } from '#viat/index';
 import { walletBlockSchema } from './schema.js';
-// Block Hash (TX DATA || Wallet NONCE || Wallet Meta?) Creates cryptographic link to the original transaction block
-// Both together create a physical link between the two blocks
 export class WalletBlock extends Block {
 	constructor(data, config) {
 		super(config);

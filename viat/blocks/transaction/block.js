@@ -4,7 +4,7 @@ import {
 	getTransactionFromBlock,
 	getTransactionPathFromBlock,
 	getTransactionPathURLFromBlock,
-	getTransactionURLFromBlock
+	getTransactionURLFromBlock,
 } from './uri.js';
 // Consider Multi-part transaction block -> reduce size and cost of each transaction
 import { toBase64Url, toHex } from '#crypto/utils.js';

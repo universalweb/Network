@@ -18,24 +18,6 @@ export class Wallet extends CryptoID {
 		const address = await this.getAddress();
 		return getWalletPath(address);
 	}
-	async createTransaction(amount, receiver, mana = 1n) {
-		const sender = await this.getAddress();
-		const txBlock = await transactionBlock({
-			core: {
-				amount,
-				receiver,
-				sender,
-				mana,
-			},
-		});
-		await txBlock.finalize();
-		await txBlock.sign(this);
-		await txBlock.setReceipt();
-		// await txBlock.receipt.finalize();
-		// await txBlock.receipt.sign(this);
-		console.log('Transaction Block:', txBlock.block);
-		return txBlock;
-	}
 }
 export function wallet(config) {
 	const source = new Wallet(config);
