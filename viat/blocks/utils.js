@@ -4,12 +4,15 @@ import path from 'path';
 import { readStructured } from '#utilities/file';
 import { receiptBlock } from './receipt/block.js';
 import { transactionBlock } from './transaction/block.js';
+import { walletBlock } from './wallet/block.js';
 export async function createBlockFromObject(blockObject, config) {
 	switch (blockObject.type) {
 		case blockTypes.transaction: {
 			return transactionBlock(blockObject, config);
 		} case blockTypes.receipt: {
 			return receiptBlock(blockObject, config);
+		} case blockTypes.wallet: {
+			return walletBlock(blockObject, config);
 		} default: {
 			return block(blockObject, config);
 		}

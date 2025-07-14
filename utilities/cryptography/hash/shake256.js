@@ -4,7 +4,7 @@ import {
 	hash1024SettingsCrypto,
 	hash512SettingsCrypto,
 	int32,
-	int64
+	int64,
 } from '#utilities/cryptography/utils';
 import cryptolib from 'crypto';
 import { hashScheme } from './hashScheme.js';
@@ -21,7 +21,7 @@ export async function hash1024(source) {
 }
 export async function hashXOF(source, outputLength) {
 	return createHash(hashName, {
-		outputLength
+		outputLength,
 	}).update(source).digest();
 }
 export const shake256 = hashScheme({
@@ -36,7 +36,7 @@ export const shake256 = hashScheme({
 	hash: hash256,
 	hash512,
 	hash1024,
-	hashXOF
+	hashXOF,
 });
 export default shake256;
 // console.log('hash', (await hash512('hello world')));

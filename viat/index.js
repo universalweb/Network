@@ -1,19 +1,30 @@
 import { Superstructure, superstructure } from './superstructure/index.js';
 import { Wallet, wallet } from './wallet/wallet.js';
 import { transactionBlock } from './blocks/transaction/block.js';
-// const sender = await wallet();
-// const receiver = await wallet();
-// await sender.generateAddress();
-// const exampleBlock = await transactionBlock({
-// 	amount: 1000n,
-// 	receiver: receiver.address,
-// 	sender: sender.address,
-// 	mana: 1000n,
-// 	sequence: 0n
-// });
-// await exampleBlock.signFull(sender);
-// console.log('Wallet Example:', exampleBlock.block);
-// console.log(await exampleBlock.verifyFullSignature(sender));
+export class VIAT {
+	constructor(config) {
+		const {
+			wallet: thisWallet,
+			superstructure: thisSuperstructure,
+		} = config;
+		if (thisWallet) {
+			this.wallet = thisWallet;
+		}
+		if (thisSuperstructure) {
+			this.superstructure = function() {
+				return thisSuperstructure;
+			};
+		}
+	}
+}
+export async function viat(config) {
+	const source = await (new VIAT(config));
+	return source;
+}
 export {
-	Wallet, wallet, Superstructure, superstructure
+	Wallet,
+	wallet,
+	Superstructure,
+	superstructure,
 };
+export default viat;

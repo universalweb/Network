@@ -4,6 +4,8 @@ export const blockTypes = {
 	receipt: 1,
 	wallet: 2,
 	generic: 3,
+	genesis: 4,
+	genesisWallet: 5,
 };
 const fileTypes = {
 	'vtx.block': 'Viat Transaction Block',
@@ -37,6 +39,7 @@ const genericFilenames = {
 	audit: 'vau.block',
 	verification: 'vvr.block',
 	generic: 'vg.block',
+	genesis: 'genesis.block',
 };
 export function createBlockDefaultsObject(blockName, blockNamePlural, letter) {
 	const target = {

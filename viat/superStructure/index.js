@@ -1,8 +1,15 @@
-import { assign, currentPath, extendClass } from '@universalweb/acid';
+import {
+	assign,
+	currentPath,
+	eachAsyncArray,
+	extendClass,
+} from '@universalweb/acid';
+import { getFiles, readStructured } from '#utilities/file';
 import { createViatFilesystem } from './createFilesystem.js';
+import { decode } from '#utilities/serialize';
 import filesystemMethods from './methods/filesystem.js';
 import fs from 'fs-extra';
-import { getFiles } from '#utilities/file';
+import { genesisBlock } from '../blocks/genesis/block.js';
 import { getHomeDirectory } from '#utilities/directory';
 import { getTransactionsPath } from '../blocks/transaction/uri.js';
 import path from 'path';
@@ -36,6 +43,10 @@ export class Superstructure {
 		return txBlock;
 	}
 	async getAddressTransactions(address) {
+		const transactionPaths = await this.getAddressTransactionPaths(address);
+		return this.pathsToBlocks(transactionPaths);
+	}
+	async getAddressTransactionPaths(address) {
 		const transactionsPath = await this.getFullPath(getTransactionsPath(address));
 		const blocks = await getFiles(transactionsPath, {
 			nameFilter: /vtx\.block$/,
@@ -44,7 +55,29 @@ export class Superstructure {
 		});
 		return blocks;
 	}
+	async pathsToBlocks(transactionPaths) {
+		const blocks = [];
+		await eachAsyncArray(transactionPaths, async (filepath) => {
+			const data = await readStructured(filepath);
+			blocks.push(data);
+		});
+		return blocks;
+	}
+	async getAddressAmountTotal(address, blocks) {
+		const transactions = blocks || await this.getAddressTransactions(address);
+		let total = 0n;
+		await eachAsyncArray(transactions, (source) => {
+			const amount = source?.data?.core?.amount;
+			if (amount) {
+				total += amount;
+			}
+		});
+		return total;
+	}
 	async createGenesisBlock() {
+		const genesis = await genesisBlock();
+		await genesis.finalize();
+		return genesis;
 	}
 	async createGenesisWalletBlock() {
 	}

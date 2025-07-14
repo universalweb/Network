@@ -42,4 +42,4 @@ const txBlockSize = (await encode(txBlock.block)).length;
 const receiptBlockSize = (await encode(txBlock.receipt.block)).length;
 console.log(txBlockSize + receiptBlockSize, 'bytes');
 await viatNetwork.saveBlock(txBlock);
-console.log(await viatNetwork.getAddressTransactions(amyAddress));
+console.log(await viatNetwork.getAddressAmountTotal(amyAddress));

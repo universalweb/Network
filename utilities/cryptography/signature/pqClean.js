@@ -44,7 +44,7 @@ function generateScheme(schemeName, options = {}) {
 		publicKeySize,
 		privateKeySize,
 		signatureSize,
-		description
+		description,
 	} = scheme;
 	// console.log(scheme);
 	async function createKeypair() {
@@ -73,7 +73,7 @@ function generateScheme(schemeName, options = {}) {
 		initializeKeypair,
 		hash256,
 		hash512,
-		hash: shake256
+		hash: shake256,
 	};
 	assign(schemeObject, options);
 	schemeObject.description ??= description;
@@ -81,6 +81,7 @@ function generateScheme(schemeName, options = {}) {
 	return sigScheme;
 }
 export default generateScheme;
+// console.log(algoList);
 // const key = await sphincs192.signatureKeypair();
 // const msg = Buffer.from('hello world');
 // console.log(key);

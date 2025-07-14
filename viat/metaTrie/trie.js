@@ -1,6 +1,6 @@
 import {
 	eachArray, forOf, hasDot, hasValue,
-	isMap
+	isMap,
 } from '@universalweb/acid';
 class FileSystemTrie {
 	constructor() {

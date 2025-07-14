@@ -6,7 +6,7 @@ export const dilithium65 = generateScheme('ml-dsa-65', {
 	security: 2,
 	seedSize: 96,
 	minimumSeedSize: 32,
-	preferred: false
+	preferred: false,
 });
 export default dilithium65;
 // const key = await dilithium65.signatureKeypair();

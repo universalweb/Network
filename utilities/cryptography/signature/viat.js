@@ -6,14 +6,14 @@ import {
 	isArray,
 	isBuffer,
 	returnValue,
-	untilFalseArray
+	untilFalseArray,
 } from '@universalweb/acid';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { hash256, hash512 } from '../hash/shake256.js';
 import {
 	randomBuffer,
 	toBase64,
-	toHex
+	toHex,
 } from '#utilities/cryptography/utils';
 import dilithium65 from './dilithium65.js';
 import ed25519Utils from './ed25519.js';
@@ -65,17 +65,17 @@ export async function createKeypair() {
 	const sphincsKeypair = await sphincs192.exportKeypair(sphincs);
 	// console.log('createKeypair', ed25519Keypair, dilithiumKeypair, sphincsKeypair);
 	const publicKey = [
-		ed25519Keypair.publicKey, dilithiumKeypair.publicKey, sphincsKeypair.publicKey
+		ed25519Keypair.publicKey, dilithiumKeypair.publicKey, sphincsKeypair.publicKey,
 	];
 	const privateKey = [
-		ed25519Keypair.privateKey, dilithiumKeypair.privateKey, sphincsKeypair.privateKey
+		ed25519Keypair.privateKey, dilithiumKeypair.privateKey, sphincsKeypair.privateKey,
 	];
 	return {
 		publicKey,
 		privateKey,
 		ed25519,
 		dilithium,
-		sphincs
+		sphincs,
 	};
 }
 export async function initializeKeypair(sourceArg) {
@@ -100,7 +100,7 @@ export async function signMethod(message, source) {
 	const {
 		ed25519,
 		dilithium,
-		sphincs
+		sphincs,
 	} = source;
 	// console.log('signMethod', source);
 	if (ed25519) {
@@ -124,7 +124,7 @@ export async function signPartial(message, source) {
 	const signatureArray = [];
 	const {
 		ed25519,
-		dilithium
+		dilithium,
 	} = source;
 	// console.log('signMethod', source);
 	if (ed25519) {
@@ -148,7 +148,7 @@ export async function verifyEach(signatureArg, message, source) {
 	const {
 		ed25519,
 		dilithium,
-		sphincs
+		sphincs,
 	} = source;
 	// console.log('verifyEach', source);
 	const ed25519Sig = signature[0];
@@ -198,7 +198,7 @@ async function verifyPartial(signature, message, source) {
 async function exportKeypair(source) {
 	const target = {
 		publicKey: source.publicKey,
-		privateKey: source.privateKey
+		privateKey: source.privateKey,
 	};
 	return target;
 }
@@ -219,7 +219,7 @@ export const viat = signatureScheme({
 	initializeKeypair,
 	verifyEach,
 	verifyPartial,
-	exportKeypair
+	exportKeypair,
 });
 export default viat;
 // const key = await viat.signatureKeypair();
