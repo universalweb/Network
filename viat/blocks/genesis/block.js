@@ -24,7 +24,11 @@ export class GenesisBlock extends Block {
 		});
 	}
 	nonceSize = 32;
-	hashSize = 128;
+	hashSize = 1024;
+	hashXOFConfig = {
+		outputEncoding: 'binary',
+		outputLength: 1024,
+	};
 	typeName = 'genesis';
 }
 assignToClass(GenesisBlock, blockMethods);
@@ -35,9 +39,10 @@ export async function genesisBlock(data, config) {
 export default genesisBlock;
 const exampleBlock = await genesisBlock({});
 await exampleBlock.finalize();
-await exampleBlock.setHash();
-console.log('Genesis Block', exampleBlock.block);
-console.log('Genesis Block HASH SIZE', exampleBlock.block.hash.length);
+await exampleBlock.setHashXOF();
+console.log('Genesis Block', exampleBlock.block.hash.length);
+// console.log('Genesis Block HASH SIZE', exampleBlock.block.hash.length);
+// console.log('Genesis Block', (await exampleBlock.exportBinary()).length);
 // exampleBlock.setDefaults();
 // await exampleBlock.setHash();
 // console.log('Block HASH/ID', exampleBlock.block);

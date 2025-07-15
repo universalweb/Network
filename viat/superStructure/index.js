@@ -39,7 +39,7 @@ export class Superstructure {
 		await txBlock.setReceipt();
 		// await txBlock.receipt.finalize();
 		// await txBlock.receipt.sign(this);
-		console.log('Transaction Block:', txBlock.block);
+		// console.log('Transaction Block:', txBlock.block);
 		return txBlock;
 	}
 	async getAddressTransactions(address) {

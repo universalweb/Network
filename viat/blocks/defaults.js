@@ -6,40 +6,51 @@ export const blockTypes = {
 	generic: 3,
 	genesis: 4,
 	genesisWallet: 5,
+	genesisAudit: 6,
 };
-const fileTypes = {
-	'vtx.block': 'Viat Transaction Block',
-	'vr.block': 'Viat Receipt Block',
+export const filePaths = {
+	transaction: '/transactions/',
+	receipt: '/receipts/',
+	wallet: '/wallets/',
+	genesis: '/',
+	genesisWallet: '/wallets/',
+	genesisAudit: '/audits/',
+};
+export const fileTypes = {
+	't.block': 'Viat Transaction Block',
+	'r.block': 'Viat Receipt Block',
 	'ab.block': 'Viat Abstract Block',
-	'pf.block': 'Viat Profile Block',
-	'lk.block': 'Viat Link Block',
+	'p.block': 'Viat Profile Block',
+	'l.block': 'Viat Link Block',
 	'w.block': 'Viat Wallet Block',
-	'au.block': 'Viat Audit Block',
-	'vvr.block': 'Viat Verification Block',
-	'vg.block': 'Viat General Block',
+	'a.block': 'Viat Audit Block',
+	'v.block': 'Viat Verification Block',
+	'g.block': 'Viat General Block',
 };
-const fileExtensions = {
-	transaction: '.vtx.block',
-	receipt: '.vr.block',
-	abstract: '.vab.block',
-	profile: '.vpf.block',
-	link: '.vlk.block',
-	wallet: '.vwl.block',
-	audit: '.vau.block',
-	verification: '.vvr.block',
-	generic: '.vg.block',
+export const fileExtensions = {
+	transaction: '.t.block',
+	receipt: '.r.block',
+	abstract: '.ab.block',
+	profile: '.p.block',
+	link: '.l.block',
+	wallet: '.w.block',
+	audit: '.a.block',
+	verification: '.v.block',
+	generic: '.g.block',
 };
-const genericFilenames = {
-	transaction: 'vtx.block',
-	receipt: 'vr.block',
-	abstract: 'vab.block',
-	profile: 'vpf.block',
-	link: 'vlk.block',
-	wallet: 'vwl.block',
-	audit: 'vau.block',
-	verification: 'vvr.block',
-	generic: 'vg.block',
+export const genericFilenames = {
+	transaction: 't.block',
+	receipt: 'r.block',
+	abstract: 'ab.block',
+	profile: 'p.block',
+	link: 'l.block',
+	wallet: 'w.block',
+	audit: 'a.block',
+	verification: 'v.block',
+	generic: 'g.block',
 	genesis: 'genesis.block',
+	walletGenesis: 'walletGenesis.block',
+	auditGenesis: 'auditGenesis.block',
 };
 export function createBlockDefaultsObject(blockName, blockNamePlural, letter) {
 	const target = {
@@ -58,5 +69,6 @@ export const blockDefaults = {
 	fileTypes,
 	fileExtensions,
 	genericFilenames,
+	filePaths,
 };
 export default blockDefaults;

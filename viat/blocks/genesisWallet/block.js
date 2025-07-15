@@ -6,7 +6,7 @@ import blockDefaults from '../defaults.js';
 import { blockMethods } from './uri.js';
 import { readStructured } from '#utilities/file';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
-export class GenesisBlock extends Block {
+export class WalletGenesisBlock extends Block {
 	constructor(data, config) {
 		super(config);
 		return this.initialize(data, config);
@@ -17,9 +17,9 @@ export class GenesisBlock extends Block {
 			description: 'WALLET-GENESIS-BLOCK',
 			motto: 'FORTUNE FAVORS THE BRAVE',
 			data: [
-				'A SPARROW IN THE HAND IS BETTER THAN A PIGEON ON THE ROOF',
 				'NO PRICE IS TOO HIGH TO PAY FOR THE PRIVILEGE OF OWNING YOURSELF',
 				'THE WORLD RUNS ON INDIVIDUALS PURSUING THEIR SEPARATE INTERESTS',
+				'A SPARROW IN THE HAND IS BETTER THAN A PIGEON ON THE ROOF',
 			],
 		});
 	}
@@ -27,17 +27,17 @@ export class GenesisBlock extends Block {
 	hashSize = 128;
 	typeName = 'genesis';
 }
-assignToClass(GenesisBlock, blockMethods);
-export async function genesisBlock(data, config) {
-	const block = await (new GenesisBlock(data, config));
+assignToClass(WalletGenesisBlock, blockMethods);
+export async function walletGenesisBlock(data, config) {
+	const block = await (new WalletGenesisBlock(data, config));
 	return block;
 }
-export default genesisBlock;
-const exampleBlock = await genesisBlock({});
-await exampleBlock.finalize();
-await exampleBlock.setHash();
-console.log('Genesis Block', exampleBlock.block);
-console.log('Genesis Block HASH SIZE', exampleBlock.block.hash.length);
+export default walletGenesisBlock;
+// const exampleBlock = await walletGenesisBlock({});
+// await exampleBlock.finalize();
+// await exampleBlock.setHash();
+// console.log('Genesis Block', exampleBlock.block);
+// console.log('Genesis Block HASH SIZE', exampleBlock.block.hash.length);
 // exampleBlock.setDefaults();
 // await exampleBlock.setHash();
 // console.log('Block HASH/ID', exampleBlock.block);

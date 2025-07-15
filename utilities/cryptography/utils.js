@@ -17,11 +17,17 @@ export const hexString = 'hex';
 export const hash512SettingsNoble = {
 	dkLen: int64,
 };
+export const defaultHashSettings = {
+	outputLength: int32,
+	outputEncoding: 'buffer',
+};
 export const hash512SettingsCrypto = {
 	outputLength: int64,
+	outputEncoding: 'buffer',
 };
 export const hash1024SettingsCrypto = {
 	outputLength: int128,
+	outputEncoding: 'buffer',
 };
 export function clearBuffer(source) {
 	if (source) {

@@ -1,28 +1,35 @@
 //
 import {
 	clearBuffer,
+	defaultHashSettings,
 	hash1024SettingsCrypto,
 	hash512SettingsCrypto,
 	int32,
 	int64,
 } from '#utilities/cryptography/utils';
-import cryptolib from 'crypto';
+import cryptolib from 'node:crypto';
 import { hashScheme } from './hashScheme.js';
-const createHash = cryptolib.createHash;
+import { runBench } from '../../../examples/benchmark.js';
+const createHash = cryptolib.hash;
 const hashName = 'shake256';
+const outputEncoding = 'buffer';
 export async function hash256(source) {
-	return createHash(hashName).update(source).digest();
+	return createHash(hashName, source, defaultHashSettings);
 }
 export async function hash512(source) {
-	return createHash(hashName, hash512SettingsCrypto).update(source).digest();
+	return createHash(hashName, source, hash512SettingsCrypto);
 }
 export async function hash1024(source) {
-	return createHash(hashName, hash1024SettingsCrypto).update(source).digest();
+	return createHash(hashName, source, hash1024SettingsCrypto);
 }
-export async function hashXOF(source, outputLength) {
-	return createHash(hashName, {
+export async function hashXOF(source, outputLength = int32) {
+	return createHash(hashName, source, {
 		outputLength,
-	}).update(source).digest();
+		outputEncoding,
+	});
+}
+export async function hashXOFObject(source, config) {
+	return createHash(hashName, source, config);
 }
 export const shake256 = hashScheme({
 	name: 'shake256',
@@ -37,6 +44,8 @@ export const shake256 = hashScheme({
 	hash512,
 	hash1024,
 	hashXOF,
+	hashXOFObject,
 });
 export default shake256;
-// console.log('hash', (await hash512('hello world')));
+// console.log('hash', (await hash256('hello world')));
+
