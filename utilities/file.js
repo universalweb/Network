@@ -151,7 +151,7 @@ export async function ensureDirectoryPath(filePath) {
 }
 export async function write(filePath, contents, encoding, createPathFlag) {
 	const pathNormalized = normalize(filePath);
-	console.log('FILE WRITE', pathNormalized, contents.length, encoding);
+	// console.log('FILE WRITE', pathNormalized, contents.length, encoding);
 	if (createPathFlag) {
 		await ensureDirectoryPath(pathNormalized);
 	}

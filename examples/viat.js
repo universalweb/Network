@@ -10,6 +10,7 @@ import { runBench, runSingleBench } from './benchmark.js';
 import { currentPath } from '@universalweb/Acid';
 import { encode } from '#utilities/serialize';
 import { getFiles } from '#utilities/file';
+import { loop } from './viatBench.js';
 import { remove } from 'fs-extra';
 import { superstructure } from '#viat/superstructure/index';
 import { toSmallestUnit } from '#viat/math/coin';
@@ -43,23 +44,4 @@ const txBlockSize = (await encode(txBlock.block)).length;
 const receiptBlockSize = (await encode(txBlock.receipt.block)).length;
 console.log(txBlockSize + receiptBlockSize, 'bytes');
 // await viatNetwork.saveBlock(txBlock);
-// console.log(await viatNetwork.getAddressAmountTotal(amyAddress));
-let count = 0;
-const tim = Date.now();
-for (let i = 0; i < 100000; i++) {
-	await viatNetwork.createTransaction(amy, sendAmount, mitziAddress, manaAmount);
-	// console.clear();
-	count++;
-	if (Date.now() - tim >= 1000) {
-		console.log(count, Date.now() - tim);
-		break;
-	}
-}
-// runSingleBench(async () => {
-// 	await viatNetwork.createTransaction(amy, sendAmount, mitziAddress, manaAmount);
-// 	// console.clear();
-// 	// count++;
-// 	// console.log(count, Date.now() - tim);
-// });
-// 421,842 42.175
-// 1,468,011 127.965
+// await loop(viatNetwork, amy, sendAmount, mitziAddress, manaAmount);

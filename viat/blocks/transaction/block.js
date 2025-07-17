@@ -17,6 +17,7 @@ import path from 'path';
 import receiptBlock from '../receipt/block.js';
 import { transactionBlockSchema } from './schema.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
+//  TODO: Add method to re-use an existing TX Block Class specifically Buffers
 class TransactionBlock extends Block {
 	constructor(data, config) {
 		super(config);

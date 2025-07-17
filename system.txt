@@ -28,8 +28,8 @@
 ==================================================================
 > SIGNATURE: [DILITHIUM ◉ ED25519 ◉ SPHINCS+]
 > HASH: SHAKE256
-> BLOCKCHAIN: Hierarchical Block-Trie SUPERSTRUCTURE (DRAFT)
-> FILESYSTEM: DAG ◉ Linear Blockchain
+> BLOCKCHAIN: Hierarchical Block-Trie SUPERSTRUCTURE
+> FILESYSTEM: Physical Hierarchical Self-organizing Filesystem
 > BLOCKCHAIN TYPES: DAG ◉ Linear Blockchain
 > HASH SIZE: 64 BYTES
 > SYMBOL: ⩝

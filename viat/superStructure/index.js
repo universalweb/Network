@@ -19,7 +19,7 @@ export class Superstructure {
 	constructor(config = {}) {
 		// Initialize any necessary properties
 		console.log('Superstructure initializing');
-		this.location = config.location || getHomeDirectory();
+		this.directoryPath = config.directoryPath || getHomeDirectory();
 		this.networkName = config.networkName || this.networkName;
 		this.setFullPath();
 		return this;

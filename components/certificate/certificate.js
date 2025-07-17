@@ -6,14 +6,14 @@ import {
 	isArray,
 	isBuffer,
 	isNumber,
-	untilTrueArray
+	untilTrueArray,
 } from '@universalweb/acid';
 import { encode, encodeStrict } from '#utilities/serialize';
 import {
 	getCipher,
 	getCiphers,
 	getKeyExchangeAlgorithm,
-	getSignatureAlgorithm
+	getSignatureAlgorithm,
 } from '#crypto/index.js';
 import dis from '#components/dis/index';
 import { resolve } from 'path';
@@ -128,7 +128,7 @@ export class Certificate {
 		const saved = await this.saveToFile({
 			certificate: await this.encode(),
 			savePath,
-			certificateName
+			certificateName,
 		});
 		return saved;
 	}
@@ -137,7 +137,7 @@ export class Certificate {
 		const saved = await this.saveToFile({
 			certificate,
 			savePath,
-			certificateName
+			certificateName,
 		});
 		return saved;
 	}

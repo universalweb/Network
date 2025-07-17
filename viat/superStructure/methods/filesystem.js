@@ -26,7 +26,7 @@ const methods = {
 	async save() {
 		await this.ensureDirectory();
 		const fullPath = await this.getFullPath();
-		console.log('Saving superstructure to:', fullPath);
+		// console.log('Saving superstructure to:', fullPath);
 		return this;
 	},
 	async saveBlock(targetBlock) {
@@ -53,7 +53,7 @@ const methods = {
 	},
 	async getFullPath(joinPath) {
 		// Logic to get the full path of the superstructure
-		return path.join(this.location, '/viat/network/', this.networkName, joinPath || '');
+		return path.join(this.directoryPath, '/viat/network/', this.networkName, joinPath || '');
 	},
 	async getBlockPath(source) {
 		// Logic to get the path of a block in the superstructure

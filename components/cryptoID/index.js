@@ -22,7 +22,9 @@ import {
 } from '#utilities/logs/classLogMethods';
 import { read, readStructured, write } from '#utilities/file';
 import { cryptoIDVersion } from '#components/cryptoID/defaults';
+import { getHomeDirectory } from '#utilities/directory';
 import path from 'node:path';
+import { toBase64Url } from '#crypto/utils.js';
 import viat from '#crypto/cipherSuite/viat.js';
 export class CryptoID {
 	constructor(config, optionalArg) {
@@ -200,6 +202,11 @@ export class CryptoID {
 		// console.log('FILE WRITE', fullPath, binaryData, encryptionPassword);
 		return write(fullPath, binaryData, 'binary', true);
 	}
+	async save(fileLocationArg, fileNameArg, encryptionPassword, encoding) {
+		const fileLocation = (fileLocationArg) ? fileLocationArg : await getHomeDirectory();
+		const fileName = (fileNameArg) ? fileNameArg : await this.getAddressString(encoding);
+		return this.saveToFile(fileName, fileLocation, encryptionPassword);
+	}
 	async importFile(filePath, encryptionPassword) {
 		const data = await readStructured(filePath);
 		if (data) {
@@ -261,6 +268,10 @@ export class CryptoID {
 	async getAddress() {
 		const address = this.address || await this.generateAddress();
 		return address;
+	}
+	async getAddressString(encoding) {
+		const address = await this.getAddress();
+		return (encoding) ? address.toString(encoding) : toBase64Url(address);
 	}
 	setAlias(value) {
 		this.alias = value;
