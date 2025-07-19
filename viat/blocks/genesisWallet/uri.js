@@ -5,27 +5,27 @@ import { toBase64Url } from '#crypto/utils.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 export const blockFilename = blockDefaults.genericFilenames.walletGenesis;
 export function getWalletGenesisPath(walletAddress) {
-	return '/wallets/';
+	return '/genesisWallet.block';
 }
 export function getWalletGenesisURL(walletAddress) {
-	return '/wallets/';
+	return '/genesisWallet.block';
 }
 export const directoryTemplate = {
 	wallets: {},
 	audits: {},
 };
 export const blockMethods = {
-	getPath(prepend = '', append = '') {
-		return path.join(prepend, '/wallets/', append);
+	getPath() {
+		return '/genesisWallet.block';
 	},
-	getDirectory(prepend = '', append = '') {
-		return path.join(prepend, '/wallets/', append);
+	getDirectory() {
+		return '/';
 	},
-	getDirectoryURL(prepend = '', append = '') {
-		return path.join(prepend, '/wallets/', append);
+	getDirectoryURL() {
+		return '/';
 	},
-	getURL(prepend = '', append = '') {
-		return path.join(prepend, '/wallets/', append);
+	getURL() {
+		return '/genesisWallet.block';
 	},
 };
 export const api = {

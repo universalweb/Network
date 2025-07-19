@@ -6,12 +6,13 @@ import blockDefaults from '../defaults.js';
 import { blockMethods } from './uri.js';
 import { readStructured } from '#utilities/file';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
-export class WalletGenesisBlock extends Block {
+export class GenesisWalletBlock extends Block {
 	constructor(data, config) {
 		super(config);
 		return this.initialize(data, config);
 	}
-	async config(data, config) {
+	async setDefaults(data, config) {
+		await super.setDefaults();
 		await this.setCore({
 			name: 'genesisWallet',
 			description: 'WALLET-GENESIS-BLOCK',
@@ -24,18 +25,22 @@ export class WalletGenesisBlock extends Block {
 		});
 	}
 	nonceSize = 32;
-	hashSize = 128;
-	typeName = 'genesis';
+	hashSize = 1024;
+	hashXOFConfig = {
+		outputEncoding: 'buffer',
+		outputLength: 1024,
+	};
+	typeName = 'genesisWallet';
 }
-assignToClass(WalletGenesisBlock, blockMethods);
-export async function walletGenesisBlock(data, config) {
-	const block = await (new WalletGenesisBlock(data, config));
+assignToClass(GenesisWalletBlock, blockMethods);
+export async function genesisWalletBlock(data, config) {
+	const block = await (new GenesisWalletBlock(data, config));
 	return block;
 }
-export default walletGenesisBlock;
+export default genesisWalletBlock;
 // const exampleBlock = await walletGenesisBlock({});
 // await exampleBlock.finalize();
-// await exampleBlock.setHash();
+// await exampleBlock.setHashXOF();
 // console.log('Genesis Block', exampleBlock.block);
 // console.log('Genesis Block HASH SIZE', exampleBlock.block.hash.length);
 // exampleBlock.setDefaults();

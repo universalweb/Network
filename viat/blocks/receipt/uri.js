@@ -95,10 +95,10 @@ export const blockMethods = {
 	},
 };
 export default api;
-const walletBufferex = await viatCipherSuite.createBlockNonce(64);
-const txBufferex = await viatCipherSuite.createBlockNonce(64);
-console.log('getReceiptPath', getReceiptPath(txBufferex, walletBufferex));
-console.log('getReceipt', getReceipt(txBufferex, walletBufferex));
+// const walletBufferex = await viatCipherSuite.createBlockNonce(64);
+// const txBufferex = await viatCipherSuite.createBlockNonce(64);
+// console.log('getReceiptPath', getReceiptPath(txBufferex, walletBufferex));
+// console.log('getReceipt', getReceipt(txBufferex, walletBufferex));
 // console.log('getReceiptURL', getReceiptURL(txBufferex, walletBufferex), getReceiptURL(txBufferex, walletBufferex).length);
 // console.log(receiptPathToURL(getReceiptPath(txBufferex, walletBufferex)));
 // console.log('getReceiptFilename', getReceiptFilename(txBufferex).length);

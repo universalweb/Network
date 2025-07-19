@@ -9,6 +9,7 @@ import {
 	toPath,
 } from '@universalweb/acid';
 import { getWallet } from '../wallet/uri.js';
+import { readStructured } from '#utilities/file';
 import { toBase64Url } from '#crypto/utils.js';
 const methods = {
 	getCore(propertyName) {
@@ -72,8 +73,16 @@ const methods = {
 		}
 		return link;
 	},
-	async getParent() {
-		return this.parent;
+	setBlock(value) {
+		if (isPlainObject(value)) {
+			assign(this.block, value);
+		}
+		return this;
+	},
+	async getParentHash() {
+		// Get sequence if first reference wallet block
+		const parentHash = await this.getCore('parent');
+		return parentHash;
 	},
 	async getChildren() {
 		return this.children;
@@ -84,15 +93,17 @@ const methods = {
 	getType() {
 		return this.getMeta('type');
 	},
-	getSequence() {
-		const sequence = this.getCore('sequence');
+	async getSequence() {
+		const sequence = await this.getCore('sequence');
 		if (isBigInt(sequence)) {
 			return sequence;
 		}
 		return;
 	},
-	async getParentSequence() {
-		const parentNode = await this.getParent();
+	async setParent(parentHash) {
+		this.setCore('parent', parentHash);
+	},
+	async setParentSequence(parentNode) {
 		if (parentNode) {
 			return parentNode.getSequence();
 		}
@@ -106,7 +117,6 @@ const methods = {
 			return 0n;
 		}
 	},
-	//  TODO:CONVERT BUFFER TO BASE64URL
 	async getFilename() {
 		return this.filename;
 	},

@@ -26,11 +26,12 @@ const methods = {
 	async save() {
 		await this.ensureDirectory();
 		const fullPath = await this.getFullPath();
-		// console.log('Saving superstructure to:', fullPath);
+		console.log('Saving superstructure to:', fullPath);
 		return this;
 	},
 	async saveBlock(targetBlock) {
 		const fullPath = await this.getFullPath();
+		// console.log('targetBlock', fullPath);
 		await targetBlock.save(fullPath);
 		return this;
 	},
@@ -85,7 +86,9 @@ const methods = {
 		return fs.remove(await source.getDirectory());
 	},
 	async remove() {
-		return fs.remove(await this.getFullPath());
+		const fullpath = await this.getFullPath();
+		console.log('Remove superstructure at:', fullpath);
+		return fs.remove(fullpath);
 	},
 };
 export default methods;

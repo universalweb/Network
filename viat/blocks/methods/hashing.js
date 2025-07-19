@@ -50,6 +50,10 @@ const methods = {
 		const binary = await this.exportBinary();
 		return this.hash512(binary);
 	},
+	async hashBlockShort() {
+		const binary = await this.exportBinary();
+		return this.hash256(binary);
+	},
 	async hashXOFBlock(config) {
 		const binary = await this.exportBinary();
 		return this.hashXOF(binary, config);

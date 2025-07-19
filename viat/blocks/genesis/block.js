@@ -11,10 +11,11 @@ export class GenesisBlock extends Block {
 		super(config);
 		return this.initialize(data, config);
 	}
-	async config(data, config) {
+	async setDefaults() {
+		await super.setDefaults();
 		await this.setCore({
 			name: 'genesis',
-			description: 'ROOT-GENESIS-BLOCK',
+			description: 'GENESIS-BLOCK',
 			motto: 'LET THERE BE LIGHT',
 			data: [
 				`IF YOU DON'T BELIEVE ME OR DON'T GET IT, I DON'T HAVE TIME TO TRY TO CONVINCE YOU`,
@@ -26,7 +27,7 @@ export class GenesisBlock extends Block {
 	nonceSize = 32;
 	hashSize = 1024;
 	hashXOFConfig = {
-		outputEncoding: 'binary',
+		outputEncoding: 'buffer',
 		outputLength: 1024,
 	};
 	typeName = 'genesis';
@@ -37,10 +38,10 @@ export async function genesisBlock(data, config) {
 	return block;
 }
 export default genesisBlock;
-const exampleBlock = await genesisBlock({});
-await exampleBlock.finalize();
-await exampleBlock.setHashXOF();
-console.log('Genesis Block', exampleBlock.block.hash.length);
+// const exampleBlock = await genesisBlock({});
+// await exampleBlock.finalize();
+// await exampleBlock.setHashXOF();
+// console.log('Genesis Block', exampleBlock);
 // console.log('Genesis Block HASH SIZE', exampleBlock.block.hash.length);
 // console.log('Genesis Block', (await exampleBlock.exportBinary()).length);
 // exampleBlock.setDefaults();

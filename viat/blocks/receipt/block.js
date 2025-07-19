@@ -51,22 +51,6 @@ export class ReceiptBlock extends Block {
 			timestamp,
 		});
 	}
-	async config(data, config) {
-		const {
-			receiver,
-			sender,
-			amount,
-			timestamp,
-			transaction,
-		} = data;
-		await this.setCore({
-			transaction,
-			receiver,
-			sender,
-			amount,
-			timestamp,
-		});
-	}
 	typeName = 'receipt';
 }
 assignToClass(ReceiptBlock, blockMethods);

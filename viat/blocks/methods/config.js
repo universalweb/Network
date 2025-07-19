@@ -5,7 +5,7 @@ const {
 	blockTypes,
 } = blockDefaults;
 const methods = {
-	configByBlock(blockObject, config) {
+	async configByBlock(blockObject, config) {
 		switch (blockObject.blockType) {
 			case blockTypes.transaction: {
 				if (this.configByTransactionBlock) {
@@ -29,12 +29,9 @@ const methods = {
 	},
 	async config(data, config) {
 		if (isPlainObject(data)) {
-			await this.setData(data);
+			await this.setBlock(data);
 		}
 		return this;
-	},
-	async configByBlockAsync(blockObject, config) {
-		return this.configByBlock(blockObject, config);
 	},
 };
 export default methods;

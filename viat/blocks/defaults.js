@@ -26,6 +26,7 @@ export const fileTypes = {
 	'a.block': 'Viat Audit Block',
 	'v.block': 'Viat Verification Block',
 	'g.block': 'Viat General Block',
+	block: 'Viat Block',
 };
 export const fileExtensions = {
 	transaction: '.t.block',
@@ -37,6 +38,8 @@ export const fileExtensions = {
 	audit: '.a.block',
 	verification: '.v.block',
 	generic: '.g.block',
+	genesis: '.block',
+	genesisWallet: '.block',
 };
 export const genericFilenames = {
 	transaction: 't.block',
@@ -49,8 +52,8 @@ export const genericFilenames = {
 	verification: 'v.block',
 	generic: 'g.block',
 	genesis: 'genesis.block',
-	walletGenesis: 'walletGenesis.block',
-	auditGenesis: 'auditGenesis.block',
+	genesisWallet: 'genesisWallet.block',
+	genesisAudit: 'genesisAudit.block',
 };
 export function createBlockDefaultsObject(blockName, blockNamePlural, letter) {
 	const target = {

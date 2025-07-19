@@ -1,9 +1,9 @@
 const methods = {
-	setDefaults() {
-		this.setTimestamp();
-		this.setVersion();
-		this.setBlockType();
-		this.setNonce();
+	async setDefaults() {
+		await this.setTimestamp();
+		await this.setVersion();
+		await this.setBlockType();
+		await this.setNonce();
 		return this;
 	},
 	setVersion(value) {
@@ -30,11 +30,11 @@ const methods = {
 		}
 		return this;
 	},
-	setNonce(nonce) {
+	async setNonce(nonce) {
 		if (nonce) {
-			this.setMeta('nonce', nonce);
+			await this.setMeta('nonce', nonce);
 		} else {
-			this.setMeta('nonce', this.cipherSuite.createBlockNonce(this.nonceSize));
+			await this.setMeta('nonce', await this.cipherSuite.createBlockNonce(this.nonceSize));
 		}
 		return this;
 	},

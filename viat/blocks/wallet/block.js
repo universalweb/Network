@@ -40,6 +40,9 @@ export class WalletBlock extends Block {
 		await this.setCore('created', walletObject.date);
 		await this.setCore('address', await data.getAddress());
 	}
+	async getAddress() {
+		return this.getCore('address');
+	}
 	blockSchema = walletBlockSchema;
 	typeName = 'wallet';
 }
@@ -53,6 +56,7 @@ export default walletBlock;
 // const amyBlock = await walletBlock(amy);
 // await amyBlock.finalize();
 // await amyBlock.sign(amy);
+// console.log(await amyBlock.getAddress());
 // console.log('Wallet Block', amyBlock.block);
 // const exampleBlock = await walletBlock({
 // 	sender: viatCipherSuite.createBlockNonce(64),
