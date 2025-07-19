@@ -5,9 +5,9 @@ import { toBase64 } from '#utilities/cryptography/utils';
 export const keychainService = 'UniversalWeb';
 export async function keychainGetPromise(account, accept, reject) {
 	console.log('Keychain Account', account);
-	keychain.getPassword({
+	await keychain.getPassword({
 		account,
-		service: keychainService
+		service: keychainService,
 	}, async (err, data) => {
 		if (err) {
 			return console.log(`Keychain couldn't locate record`, err);
@@ -28,11 +28,11 @@ export async function keychainCallback(config, accept, reject) {
 		config.password = await encodeStrict(config.password);
 	}
 	const password = toBase64(config.password);
-	keychain.setPassword({
+	await keychain.setPassword({
 		account: config.account,
 		service: keychainService,
 		type: 'generic',
-		password
+		password,
 	}, (err) => {
 		if (err) {
 			return console.log('Keychain Access Save Failed', err);

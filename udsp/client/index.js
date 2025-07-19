@@ -10,7 +10,7 @@ import {
 	assign,
 	construct,
 	isBuffer,
-	noValue
+	noValue,
 } from '@universalweb/acid';
 import {
 	checkIntroTimeout,
@@ -26,7 +26,7 @@ import {
 	connect,
 	reconnect,
 	setConnected,
-	setDisconnected
+	setDisconnected,
 } from './methods/connect.js';
 import { connectionIdToBuffer, generateConnectionIdString } from '#udsp/utilities/connectionId';
 import { end, sendEnd } from './protocolEvents/end.js';
@@ -107,7 +107,7 @@ export class Client extends UDSP {
 	async setProfile() {
 		const {
 			profile,
-			profilePassword
+			profilePassword,
 		} = this.options;
 		if (profile) {
 			this.profile = await cryptoID(profile, profilePassword);

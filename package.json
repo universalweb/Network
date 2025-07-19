@@ -148,7 +148,8 @@
 			"os-utils",
 			"os",
 			"sodium-native",
-			"node-seal"
+			"node-seal",
+			"@noble"
 		]
 	},
 	"packageManager": "pnpm@10.11.0"

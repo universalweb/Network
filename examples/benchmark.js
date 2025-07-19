@@ -11,7 +11,22 @@ export async function runBench(test1, test2) {
 			console.log(`Fastest is ${this.filter('fastest').map('name')}`);
 		})
 		.run({
-			async: true
+			async: true,
+		});
+	return suite;
+}
+export async function runSingleBench(test1) {
+	const suite = new Benchmark.Suite();
+	suite
+		.add('test1', test1)
+		.on('cycle', (evnt) => {
+			console.log(String(evnt.target));
+		})
+		.on('complete', function() {
+			console.log(`Fastest is ${this.filter('fastest').map('name')}`);
+		})
+		.run({
+			async: true,
 		});
 	return suite;
 }

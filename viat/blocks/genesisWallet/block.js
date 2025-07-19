@@ -6,21 +6,21 @@ import blockDefaults from '../defaults.js';
 import { blockMethods } from './uri.js';
 import { readStructured } from '#utilities/file';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
-export class GenesisBlock extends Block {
+export class GenesisWalletBlock extends Block {
 	constructor(data, config) {
 		super(config);
 		return this.initialize(data, config);
 	}
-	async setDefaults() {
+	async setDefaults(data, config) {
 		await super.setDefaults();
 		await this.setCore({
-			name: 'genesis',
-			description: 'GENESIS-BLOCK',
-			motto: 'LET THERE BE LIGHT',
+			name: 'genesisWallet',
+			description: 'WALLET-GENESIS-BLOCK',
+			motto: 'FORTUNE FAVORS THE BRAVE',
 			data: [
-				`IF YOU DON'T BELIEVE ME OR DON'T GET IT, I DON'T HAVE TIME TO TRY TO CONVINCE YOU`,
-				'CIVILIZATION IS THE PROGRESS TOWARD A SOCIETY OF PRIVACY',
-				'LIBERTY MAY BE ENDANGERED BY THE ABUSES OF LIBERTY AS WELL AS BY THE ABUSES OF POWER',
+				'NO PRICE IS TOO HIGH TO PAY FOR THE PRIVILEGE OF OWNING YOURSELF',
+				'THE WORLD RUNS ON INDIVIDUALS PURSUING THEIR SEPARATE INTERESTS',
+				'A SPARROW IN THE HAND IS BETTER THAN A PIGEON ON THE ROOF',
 			],
 		});
 	}
@@ -30,20 +30,19 @@ export class GenesisBlock extends Block {
 		outputEncoding: 'buffer',
 		outputLength: 1024,
 	};
-	typeName = 'genesis';
+	typeName = 'genesisWallet';
 }
-assignToClass(GenesisBlock, blockMethods);
-export async function genesisBlock(data, config) {
-	const block = await (new GenesisBlock(data, config));
+assignToClass(GenesisWalletBlock, blockMethods);
+export async function genesisWalletBlock(data, config) {
+	const block = await (new GenesisWalletBlock(data, config));
 	return block;
 }
-export default genesisBlock;
-// const exampleBlock = await genesisBlock({});
+export default genesisWalletBlock;
+// const exampleBlock = await walletGenesisBlock({});
 // await exampleBlock.finalize();
 // await exampleBlock.setHashXOF();
-// console.log('Genesis Block', exampleBlock);
+// console.log('Genesis Block', exampleBlock.block);
 // console.log('Genesis Block HASH SIZE', exampleBlock.block.hash.length);
-// console.log('Genesis Block', (await exampleBlock.exportBinary()).length);
 // exampleBlock.setDefaults();
 // await exampleBlock.setHash();
 // console.log('Block HASH/ID', exampleBlock.block);

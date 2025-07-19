@@ -16,3 +16,5 @@ export function getFinalDirectory(sourceBuffer) {
 	const address = toBase64Url(sourceBuffer.slice(40));
 	return address;
 }
+// const txBufferex = await viatCipherSuite.createBlockNonce(64);
+// console.log(txBufferex.slice(40).length, Buffer.from(getFinalDirectory(txBufferex), 'base64url'));

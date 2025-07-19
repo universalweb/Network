@@ -99,9 +99,9 @@ export const blockMethods = {
 	},
 };
 export default api;
-const walletBufferex = await viatCipherSuite.createBlockNonce(64);
-const txBufferex = await viatCipherSuite.createBlockNonce(64);
-console.log('getTransactionsPath', getTransactionsPath(walletBufferex));
+// const walletBufferex = await viatCipherSuite.createBlockNonce(64);
+// const txBufferex = await viatCipherSuite.createBlockNonce(64);
+// console.log('getTransactionsPath', getTransactionsPath(walletBufferex));
 // console.log('getTransactionPath', getTransactionPath(txBufferex, walletBufferex));
 // console.log('getTransaction', getTransaction(txBufferex, walletBufferex));
 // console.log('getTransactionURL', getTransactionURL(txBufferex, walletBufferex), getTransactionURL(txBufferex, walletBufferex).length);

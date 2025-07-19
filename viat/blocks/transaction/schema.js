@@ -8,7 +8,7 @@ export const transactionBlockSchema = schemaValidator.object({
 			receiver: schemaValidator.binary().required(),
 			sender: schemaValidator.binary().required(),
 			mana: schemaValidator.bigint().required(),
-			sequence: schemaValidator.bigint().required()
+			sequence: schemaValidator.bigint().required(),
 		}).required(),
 	}).required(),
 }).required();

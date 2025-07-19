@@ -38,10 +38,9 @@ export function walletURLToPath(url) {
 	return url.replace(walletDefaults.urlPathnameRegex, walletDefaults.directoryPathname);
 }
 export const directoryTemplate = {
-	wallets: {},
+	transactions: {},
 	receipts: {},
 	state: {},
-	data: {},
 };
 export async function getWalletPathFromBlock(block) {
 	return getWalletPath(await block.getAddress());

@@ -9,7 +9,7 @@ import {
 	isPlainObject,
 	isString,
 	merge,
-	promise
+	promise,
 } from '@universalweb/acid';
 import { decode, encodeStrict } from '#utilities/serialize';
 import { getCipher, getKeyExchangeAlgorithm, getSignatureAlgorithm } from '#crypto/index.js';
@@ -44,7 +44,7 @@ export async function createDomainCertificateObject(config = {}, options = {}) {
 		protocolOptions,
 		start = currentDate.getTime(),
 		end = currentDate.setUTCMonth(currentDate.getUTCMonth() + 3),
-		keyExchangeAlgorithm = 0
+		keyExchangeAlgorithm = 0,
 	} = config;
 	const certificate = {
 		version,
@@ -53,7 +53,7 @@ export async function createDomainCertificateObject(config = {}, options = {}) {
 		start,
 		end,
 		certificateType,
-		keyExchangeAlgorithm
+		keyExchangeAlgorithm,
 	};
 	if (ownerHash) {
 		certificate.ownerHash = ownerHash;
@@ -121,10 +121,10 @@ export function objectToRawDomainCertificate(certificateObject) {
 	certificate[4] = ownerHash;
 	certificate[5] = [
 		[
-			signatureAlgorithm, signatureKeypair.publicKey, signatureKeypair.privateKey
+			signatureAlgorithm, signatureKeypair.publicKey, signatureKeypair.privateKey,
 		],
 		[
-			keyExchangeAlgorithm, keyExchangeKeypair.publicKey, keyExchangeKeypair.privateKey
+			keyExchangeAlgorithm, keyExchangeKeypair.publicKey, keyExchangeKeypair.privateKey,
 		],
 	];
 	if (hasValue(ciphers)) {
@@ -183,7 +183,7 @@ export async function rawToObjectDomainCertificate(rawObject, selfSignature, sig
 	};
 	if (isArray(signatureKeypair)) {
 		certificate.signatureKeypair = {
-			publicKey: signatureKeypair[1]
+			publicKey: signatureKeypair[1],
 		};
 		certificate.signatureAlgorithm = signatureKeypair[0];
 		if (signatureKeypair[2]) {
@@ -211,7 +211,7 @@ export async function rawToObjectDomainCertificate(rawObject, selfSignature, sig
 	if (protocolOptions) {
 		const [
 			protocolVersion,
-			realtime
+			realtime,
 		] = protocolOptions;
 		certificate.protocolOptions = {};
 		if (hasValue(protocolVersion)) {

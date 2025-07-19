@@ -6,6 +6,7 @@ import defaultsMethods from './methods/defaults.js';
 import exportMethods from './methods/export.js';
 import filesystemMethods from './methods/filesystem.js';
 import { getParentClassName } from '#utilities/class';
+import { hash512SettingsCrypto } from '#utilities/cryptography/utils';
 import hashingMethods from './methods/hashing.js';
 import signatureMethods from './methods/signature.js';
 import validateMethods from './methods/validate.js';
@@ -47,6 +48,7 @@ export class Block {
 	cipherSuite = viatCipherSuite;
 	nonceSize = 16;
 	hashSize = 64;
+	hashXOFConfig = hash512SettingsCrypto;
 	block = {
 		data: {
 			meta: {},

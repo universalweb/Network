@@ -5,7 +5,7 @@ import {
 	hexString,
 	int32,
 	int512,
-	int64
+	int64,
 } from '#utilities/cryptography/utils';
 import { createBLAKE3, blake3 as hash } from 'hash-wasm';
 import { hashScheme } from './hashScheme.js';
@@ -27,7 +27,7 @@ export const blake3 = hashScheme({
 	hash256,
 	hash: hash256,
 	hash512,
-	hashXOF
+	hashXOF,
 });
 export default blake3;
 // console.log((await hash512('hello world')));
