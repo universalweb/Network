@@ -10,10 +10,11 @@ import {
 	isBuffer,
 	isPlainObject,
 	isString,
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { keychainGet, keychainSave } from '#components/certificate/keychain';
 import {
+	logBanner,
 	logError,
 	logInfo,
 	logSuccess,
@@ -260,7 +261,7 @@ export class CryptoID {
 	cryptoIDVersion = cryptoIDVersion;
 	async generateAddress() {
 		const publicKey = await this.exportPublicKey();
-		const publicKeyCombined = (isArray(publicKey)) ? Buffer.concat(publicKey) : publicKey;
+		const publicKeyCombined = (isBuffer(publicKey)) ? publicKey : await encodeStrict(publicKey);
 		const address = await this.cipherSuite.hash.hash512(publicKeyCombined);
 		this.address = address;
 		return address;
@@ -279,6 +280,7 @@ export class CryptoID {
 	logError = logError;
 	logWarning = logWarning;
 	logInfo = logInfo;
+	logBanner = logBanner;
 	logVerbose = logVerbose;
 	logSuccess = logSuccess;
 }
@@ -291,6 +293,7 @@ export default cryptoID;
 // const exampleCryptoIDExample = await cryptoID();
 // const encryptionPasswordExample = 'password';
 // console.log(await exampleCryptoIDExample.exportBinary());
+// console.log((await exampleCryptoIDExample.getAddress()).length);
 // const exportedKeypairs = await exampleCryptoIDExample.exportKeypairs();
 // console.log(exportedKeypairs);
 // console.log(`Version: ${exampleProfileExample.version}`);

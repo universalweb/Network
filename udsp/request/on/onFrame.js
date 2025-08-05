@@ -4,7 +4,7 @@ import {
 	isFalse,
 	isNumber,
 	isUndefined,
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { onData, onDataReady } from '../rpc/onData.js';
 import { onHead, onHeadReady } from '../rpc/onHead.js';
 import { onParameters, onParametersReady } from '../rpc/onParameters.js';
@@ -38,7 +38,7 @@ const rpcFunctions = [
 	onDataReady,
 	onData,
 	onEnd,
-	onError
+	onError,
 ];
 export async function onFrame(frame, header, rinfo) {
 	const source = this;
@@ -54,7 +54,7 @@ export async function onFrame(frame, header, rinfo) {
 		rpc,
 		packetId,
 		data,
-		lastPacket
+		lastPacket,
 	] = frame;
 	this.logInfo(`onPacket Stream Id ${id}`, this);
 	if (lastPacket) {

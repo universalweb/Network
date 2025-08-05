@@ -8,7 +8,7 @@ import {
 	noteLog,
 	successLog,
 	verboseLog,
-	warningLog
+	warningLog,
 } from '#utilities/logs/logs';
 import { decode } from '#utilities/serialize';
 import { wallet } from './wallet/wallet.js';

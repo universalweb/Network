@@ -15,7 +15,7 @@ import {
 	getTransactionURLFromBlock,
 } from '../transaction/uri.js';
 import { Block } from '../block.js';
-import { assignToClass } from '@universalweb/acid';
+import { assignToClass } from '@universalweb/utilitylib';
 import blockDefaults from '../defaults.js';
 import { readStructured } from '#utilities/file';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
@@ -31,7 +31,7 @@ export class ReceiptBlock extends Block {
 	async getTransactionPath() {
 		return getTransaction(this.getCore('transaction'), this.getReceiver());
 	}
-	async configByTransactionBlock(blockObject, config) {
+	async configByProofBlock(blockObject, config) {
 		const txBlockData = await blockObject.getData();
 		const txHash = blockObject.block.hash;
 		this.appendToCore(txBlockData.core, txHash, txBlockData.meta);

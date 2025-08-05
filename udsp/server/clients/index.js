@@ -3,120 +3,86 @@
 // DEFER MEMORY TASKS
 // CLEAR MEMORY AS SOON AS POSSIBLE
 // PRE COMPUTE WHAT YOU CAN
-import {
-	UniqID,
-	assign,
-	construct,
-	eachArray,
-	hasValue,
-	isArray,
-	isFalse,
-	isFalsy,
-	isNull,
-	isPromise,
-	isTrue,
-	isUndefined,
-	promise
-} from '@universalweb/acid';
+import { construct, extendClass, isNull } from '@universalweb/utilitylib';
 import {
 	createIntro,
 	intro,
 	introHeader,
 	sendIntro,
 	setIntroFrame,
-	setIntroHeader
+	setIntroHeader,
 } from './protocolEvents/intro.js';
 import { end, sendEnd } from './methods/end.js';
 import {
 	extendedSynchronization,
 	extendedSynchronizationHeader,
-	sendExtendedSynchronization
+	sendExtendedSynchronization,
 } from './protocolEvents/extendedSynchronization.js';
-import { fire, off, on } from './methods/events.js';
 import {
+	logBanner,
 	logError,
 	logInfo,
 	logSuccess,
 	logVerbose,
-	logWarning
+	logWarning,
 } from '../../../utilities/logs/classLogMethods.js';
-import {
-	randomBuffer,
-	toHex,
-} from '#utilities/cryptography/utils';
 import { send, sendAny } from './methods/send.js';
 import { attachProxyAddress } from './methods/attachProxyAddress.js';
 import { calculatePacketOverhead } from '#udsp/utilities/calculatePacketOverhead';
 import { defaultClientConnectionIdSize } from '../../client/defaults.js';
-import { destroy } from './destroy.js';
-import { initialize } from './initialize.js';
+import { destroy } from './methods/destroy.js';
+import eventMethods from '#udsp/events';
+import { initialize } from './methods/initialize.js';
 import { onConnected } from './methods/onConnected.js';
-import { onFrame } from '#udsp/onPacket/onFrame';
+import { randomBuffer } from '#utilities/cryptography/utils';
 import { reply } from './methods/reply.js';
 /**
  * @TODO
  */
 export class Client {
 	constructor(config) {
-		const {
-			server,
-			app
-		} = config;
+		const { server } = config;
 		const client = this;
-		const { certificate, } = server;
-		this.server = function() {
-			return server;
-		};
-		if (app) {
-			this.app = function() {
-				return app;
-			};
-		}
+		const { certificate } = server;
+		this.server = server;
 		this.socket = server.socket;
 		this.certificate = certificate;
+		this.setupEventEmitter();
 		return this.initialize(config);
 	}
 	destination = {
 		overhead: {},
-		connectionIdSize: defaultClientConnectionIdSize
+		connectionIdSize: defaultClientConnectionIdSize,
 	};
-	async initializeSession(cipherData) {
-		this.logInfo('Client Initialize session');
-		if (this.keyExchange.serverInitializeSession) {
-			await this.keyExchange.serverInitializeSession(this, this.destination, cipherData);
-		}
-		// TODO: USE NUMBERED STATES INSTEAD OF sessionInitialized BOOLEAN
-		this.sessionInitialized = true;
-		this.logInfo(`receiveKey: ${toHex(this.receiveKey)}`);
-		this.logInfo(`transmitKey: ${toHex(this.transmitKey)}`);
-	}
+	// TODO: ADD STATE CHECKING INSTEAD OF GRACE OR HEARTBEAT
 	setState(state) {
 		if (this.destroyed || isNull(this.destroyed)) {
 			return;
 		}
-		this.logInfo(`CLIENT State Updated -> ${this.state}`);
 		this.state = state;
+		this.logInfo(`CLIENT State Updated -> ${this.state}`);
 	}
-	// NOTE: onRequest acts akin to a bubble and will bubble up to the app or server
-	onRequest(req, resp) {
-		const {
-			app,
-			server
-		} = this;
-		if (app) {
-			return app().onRequest(req, resp);
-		} else {
-			return server().onRequest(req, resp);
+	// NOTE: Server (receives raw packet)
+	//    └─► parses + authenticates + identifies Client
+	//          └─► Client.handlePacket(packet)
+	//                └─► Client.server.handleRequest(packet)
+	//                      └─► App.handleRequest(packet, client)
+	//                            └─► Router.route(packet, client)
+	async onRequest(request, response) {
+		const { server } = this;
+		this.logVerbose('onRequest EVENT', request);
+		if (this.onClientRequest) {
+			await this.onClientRequest(request, response);
+		}
+		if (server) {
+			return server.onRequest(request, response);
 		}
 	}
-	close(destroyCode) {
-		this.sendEnd();
+	async close(destroyCode) {
+		await this.sendEnd();
 		this.destroy(destroyCode);
 	}
-	async destroy(destroyCode) {
-		this.logInfo(`socket EVENT -> destroy - ID:${this.connectionIdString}`);
-		return destroy(this, destroyCode);
-	}
+	destroy = destroy;
 	updateLastActive() {
 		this.lastActive = Date.now();
 	}
@@ -140,18 +106,15 @@ export class Client {
 	clearInitialGracePeriodTimeout() {
 		clearTimeout(this.initialGracePeriodTimeout);
 	}
+	async calculatePacketOverhead() {
+		return calculatePacketOverhead(this.cipher, this.destination.connectionIdSize, this.destination, this);
+	}
 	attachProxyAddress = attachProxyAddress;
 	send = send;
 	sendAny = sendAny;
-	on = on;
-	off = off;
-	fire = fire;
 	reply = reply;
 	sendEnd = sendEnd;
 	end = end;
-	async calculatePacketOverhead() {
-		return calculatePacketOverhead(this.cipher, this.destination.connectionIdSize, this.destination);
-	}
 	setIntroHeader = setIntroHeader;
 	setIntroFrame = setIntroFrame;
 	introHeader = introHeader;
@@ -164,10 +127,10 @@ export class Client {
 	logError = logError;
 	logWarning = logWarning;
 	logInfo = logInfo;
+	logBanner = logBanner;
 	logVerbose = logVerbose;
 	logSuccess = logSuccess;
-	pending = false;
-	state = 0;
+	state = null;
 	randomId = randomBuffer(8);
 	data = construct(Map);
 	requestQueue = construct(Map);
@@ -180,9 +143,9 @@ export class Client {
 	initialGracePeriod = 1000;
 	initialRealtimeGracePeriod = 2000;
 }
+extendClass(Client, eventMethods);
 export async function createClient(config) {
-	this.logInfo('Creating Client');
-	const client = new Client(config);
-	this.logInfo(`Client has been created with sever connection id ${toHex(client.id)}`);
+	const client = await (new Client(config));
+	client.logInfo(`Client has been created with sever connection id ${client.id}`);
 	return client;
 }

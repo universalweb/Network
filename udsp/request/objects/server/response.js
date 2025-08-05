@@ -3,8 +3,8 @@ import {
 	hasValue,
 	isTrue,
 	jsonParse,
-	noValue
-} from '@universalweb/acid';
+	noValue,
+} from '@universalweb/utilitylib';
 import { Base } from '../base.js';
 import { decode } from '#utilities/serialize';
 import { objectGetSetMethods } from '../objectGetSetMethods.js';
@@ -16,14 +16,14 @@ export class ServerResponse extends Base {
 	isClientResponse = true;
 	send(data) {
 		this.sent = true;
-		return this.source().send(data);
+		return this.source.send(data);
 	}
 	async setHeader(headerName, headerValue) {
-		await this.source().setHeader(headerName, headerValue);
+		await this.source.setHeader(headerName, headerValue);
 		return this;
 	}
 	async setHeaders(target) {
-		await this.source().setHeaders(target);
+		await this.source.setHeaders(target);
 		return this;
 	}
 	async sendStatus(statusCode, data) {

@@ -1,4 +1,4 @@
-import { hasDot, isEmpty, isString } from '@universalweb/acid';
+import { hasDot, isEmpty, isString } from '@universalweb/utilitylib';
 import cleanPath from '#cleanPath';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -18,15 +18,14 @@ async function checkFileExists(filePath) {
 		console.error('File does not exist');
 	}
 }
-//  TODO: CONSIDER NOT USING APP ARG INSTEAD VIA OBJECTS WITH .app()
 export async function getMethod(req, resp, appServer) {
 	const {
 		resourceDirectory,
-		defaultExtension
+		defaultExtension,
 	} = appServer;
 	const {
 		data,
-		path: filePath
+		path: filePath,
 	} = req;
 	if (!isString(filePath) || isEmpty(filePath)) {
 		console.log('No fileName - Returning empty data');

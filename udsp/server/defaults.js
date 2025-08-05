@@ -1,5 +1,5 @@
 export const defaultServerConnectionIdSize = 8;
 const serverDefaults = {
-	defaultServerConnectionIdSize
+	defaultServerConnectionIdSize,
 };
 export default serverDefaults;

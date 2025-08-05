@@ -13,7 +13,7 @@ export async function createServerClient(config, idString, connection) {
 	const clientSource = await createClient({
 		server: this,
 		connection,
-		packet: config.packetDecoded
+		packet: config.packetDecoded,
 	});
 	if (!clientSource) {
 		return console.trace(`Failed to create client for client connection id with ${idString}`);
@@ -41,6 +41,8 @@ export async function clientCheck(config, id, idString, rinfo) {
 }
 export async function removeClient(clientSource) {
 	const { connectionIdString } = clientSource;
-	await this.clients.delete(connectionIdString);
-	await this.subtractClientCount();
+	if (this.clients.has(connectionIdString)) {
+		await this.clients.delete(connectionIdString);
+		await this.subtractClientCount();
+	}
 }

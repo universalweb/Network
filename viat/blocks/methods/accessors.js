@@ -1,13 +1,6 @@
 import {
-	assign,
-	everyArray,
-	get,
-	hasValue,
-	isArray,
-	isBigInt,
-	isPlainObject,
-	toPath,
-} from '@universalweb/acid';
+	assign, everyArray, get, hasValue, isArray, isBigInt, isPlainObject, merge, toPath,
+} from '@universalweb/utilitylib';
 import { getWallet } from '../wallet/uri.js';
 import { readStructured } from '#utilities/file';
 import { toBase64Url } from '#crypto/utils.js';
@@ -17,7 +10,7 @@ const methods = {
 	},
 	setCore(primaryArg, value) {
 		if (isPlainObject(primaryArg)) {
-			assign(this.block.data.core, primaryArg);
+			merge(this.block.data.core, primaryArg);
 			return this;
 		}
 		return this.set(primaryArg, value, this.block.data.core);
@@ -33,7 +26,7 @@ const methods = {
 	},
 	setData(propertyName, value) {
 		if (isPlainObject(propertyName)) {
-			assign(this.block.data, propertyName);
+			merge(this.block.data, propertyName);
 			return this;
 		}
 		return this.setProperty(propertyName, value, this.block.data);
@@ -73,9 +66,21 @@ const methods = {
 		}
 		return link;
 	},
-	setBlock(value) {
+	assignToBlock(value) {
 		if (isPlainObject(value)) {
 			assign(this.block, value);
+		}
+		return this;
+	},
+	mergeToBlock(value) {
+		if (isPlainObject(value)) {
+			merge(this.block, value);
+		}
+		return this;
+	},
+	setBlock(value) {
+		if (isPlainObject(value)) {
+			merge(this.block, value);
 		}
 		return this;
 	},

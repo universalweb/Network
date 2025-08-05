@@ -1,5 +1,5 @@
 import { client } from './client/index.js';
-import { isString } from '@universalweb/acid';
+import { isString } from '@universalweb/utilitylib';
 import { logSystemInfo } from '../utilities/systemInfo.js';
 import { uwrl } from './UWRL/index.js';
 await logSystemInfo();
@@ -7,7 +7,7 @@ export async function request(method = 0, url, params, data) {
 	const uwrlObject = isString(url) ? uwrl(url) : url;
 	const uwClient = await client({
 		url: uwrlObject,
-		autoConnect: true
+		autoConnect: true,
 	});
 	// console.log('uwClient', uwClient);
 	const uwRequest = await uwClient.request(method, uwrlObject, params, data);
@@ -21,7 +21,7 @@ export async function uwfetch(url, config) {
 	const uwrlObject = isString(url) ? uwrl(url) : url;
 	const uwClient = await client({
 		url: uwrlObject,
-		autoConnect: true
+		autoConnect: true,
 	});
 	return uwClient.fetch(uwrlObject, config).send();
 }

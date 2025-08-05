@@ -4,7 +4,7 @@ export const dilithium87 = generateScheme('ml-dsa-87', {
 	alias: 'ml_dsa87',
 	id: 3,
 	security: 3,
-	preferred: false
+	preferred: false,
 });
 export default dilithium87;
 // const key = await dilithium87.signatureKeypair();

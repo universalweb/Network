@@ -1,4 +1,4 @@
-import { isNumber } from '@universalweb/acid';
+import { isNumber } from '@universalweb/utilitylib';
 export async function attachSocketEvents() {
 	const thisServer = this;
 	this.socket.on('error', (err) => {

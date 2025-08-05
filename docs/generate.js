@@ -1,4 +1,4 @@
-import { currentPath, replaceList } from '@universalweb/acid';
+import { currentPath, replaceList } from '@universalweb/utilitylib';
 import { read, write } from '#utilities/file';
 import { watch } from '#utilities/watch';
 const filePath = currentPath(import.meta);

@@ -1,22 +1,12 @@
 # Universal Web Socket: PACKET DESIGN
 
-[
-  // HEAD
-  {
-    connectionID
-  },
-  // BODY
-  {
-    method
-    data
-  },
-  // FOOTER
-  {
+(CBOR Object)
+`[
+  [HEAD]
+  [BODY]
+]`
 
-  }
-]
-
-#### UDSP HEADERS (MSGPack Object)(OPTIONAL ENCRYPTION)
+## UDSP HEADERS
 
 - Nonce
 - Socket ID (CLIENT/SERVER)
@@ -26,7 +16,7 @@
 
 ---
 
-#### PROPERTY NAMES & MEANINGS
+## PROPERTY NAMES & MEANINGS
 
 - id: Connection ID
 - ccid: Client Connection ID
@@ -49,17 +39,17 @@
 
 ---
 
-#### UDSP LAYERS
+## UDSP LAYERS
 
 |  IPv6 HEADERS  |
 | :------------: |
 |      UDP       |
 |  UDSP HEADERS  |
-|  UDSP MESSAGE  |
-|  UDSP FOOTER   |
+|  UDSP FRAME    |
 
-The UDSP Header, Body, & Footer are all part of one array structure encoded with msgpack.
-##### IPv6 HEADERS
+The UDSP Header, Body are all part of one array structure encoded with CBOR.
+
+## IPv6 HEADERS
 
 - Version
 - Traffic Class
@@ -70,7 +60,7 @@ The UDSP Header, Body, & Footer are all part of one array structure encoded with
 - Source Address
 - Destination Address
 
-##### UDP HEADERS
+## UDP HEADERS
 
 These are the standard UDP headers sent over:
 

@@ -1,15 +1,25 @@
-import { assign, isNotArray } from '@universalweb/acid';
+// KYBER & x25519 KEY EXCHANGE WITH BUILT IN DOMAIN CERTIFICATE & SERVER AUTHENTICATION WITH Perfect Forward Secrecy
+/*
+	Create User Kyber keypair send to server
+	Server creates Kyber shared Secret & encapsulates it via user's public kyber key
+	Server sends cipher text in the header & encrypted intro frame to the user
+	Server sets the session with the new secret keys
+	User first decapsulates ciphertext with user's private kyber key located in the header
+	User then sets the session with the new secret keys
+	Make sure to create a transmit and receive keys so both are unique to add an extra layer of security
+*/
 // TODO: Consider Array instead of concat
+import { assign, isNotArray } from '@universalweb/utilitylib';
 import {
 	clearBuffer,
 	clearBuffers,
 	int32,
 	randomBuffer,
 	toBase64,
-	toHex
+	toHex,
 } from '#utilities/cryptography/utils';
 import hash from '../hash/shake256.js';
-import { introHeaderRPC } from '../../../udsp/rpc/headerRPC.js';
+import { introHeaderRPC } from '#udsp/rpc/headerRPC';
 import keyExchange from './keyExchange.js';
 import kyber768 from './kyber768.js';
 import pqclean from 'pqclean';
@@ -19,7 +29,7 @@ const privateKeySize = x25519.privateKeySize + kyber768.privateKeySize;
 const {
 	schemeName,
 	PrivateKey,
-	PublicKey
+	PublicKey,
 } = kyber768;
 export function getKyberKey(source) {
 	return source.subarray(int32);
@@ -33,7 +43,7 @@ export function get25519KeyCopy(source) {
 export function getX25519Keypair(source) {
 	return {
 		publicKey: getX25519Key(source.publicKey),
-		privateKey: getX25519Key(source.privateKey)
+		privateKey: getX25519Key(source.privateKey),
 	};
 }
 export function getKyberKeypair(source) {
@@ -63,7 +73,7 @@ async function keyExchangeKeypair() {
 		// publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
 		// privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey]),
 		x25519Keypair,
-		kyberKeypair: kyberKeypairInstance
+		kyberKeypair: kyberKeypairInstance,
 	};
 	return target;
 }
@@ -72,7 +82,7 @@ async function arrayKeyExchangeKeypair() {
 	const kyberKeypair = await kyber768.keyExchangeKeypair();
 	return [
 		[x25519Keypair.publicKey, kyberKeypair.publicKey],
-		[x25519Keypair.privateKey,	kyberKeypair.privateKey]
+		[x25519Keypair.privateKey,	kyberKeypair.privateKey],
 	];
 }
 async function arrayToObjectKeyExchangeKeypair(source) {
@@ -81,17 +91,17 @@ async function arrayToObjectKeyExchangeKeypair(source) {
 	}
 	const [
 		publicKey,
-		privateKey
+		privateKey,
 	] = source;
 	const target = {
 		x25519Keypair: {
 			publicKey: publicKey[0],
-			privateKey: privateKey[0]
+			privateKey: privateKey[0],
 		},
 		kyberKeypair: {
 			publicKey: publicKey[1],
-			privateKey: privateKey[1]
-		}
+			privateKey: privateKey[1],
+		},
 	};
 	return target;
 }
@@ -103,7 +113,7 @@ async function clientEphemeralKeypair() {
 	const target = {
 		x25519Keypair,
 		kyberKeypair,
-		publicKeyBuffer
+		publicKeyBuffer,
 	};
 	return target;
 }
@@ -134,7 +144,7 @@ async function initializeKeypair(keypair, target) {
 	}
 	return {
 		x25519Keypair,
-		kyberKeypair
+		kyberKeypair,
 	};
 }
 async function isKeypairInitialized(source) {
@@ -152,7 +162,7 @@ async function exportKeypair(source) {
 	const kyberKeypair = await kyber768.exportKeypair(source.kyberKeypair);
 	const target = {
 		publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
-		privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey])
+		privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey]),
 	};
 	return target;
 }
@@ -183,7 +193,7 @@ export const kyber768_x25519 = keyExchange({
 			x25519KeypairSharedSecret,
 			kyberKeypairSharedSecret,
 			destination.x25519Keypair.publicKey,
-			source.x25519Keypair.publicKey,
+			source.x25519Keypair.publicKey
 		);
 		clearBuffer(x25519KeypairSharedSecret);
 		clearBuffer(kyberKeypairSharedSecret);
@@ -198,7 +208,7 @@ export const kyber768_x25519 = keyExchange({
 		return {
 			sessionKeyHash,
 			receiveKey,
-			transmitKey
+			transmitKey,
 		};
 	},
 	// do first shared secret then generate next and create new session keys already?
@@ -210,7 +220,7 @@ export const kyber768_x25519 = keyExchange({
 		const kyberClientPublicKey = await kyber768.initializePublicKey(getKyberKey(clientCipherData));
 		const {
 			cipherData,
-			sharedSecret
+			sharedSecret,
 		} = await kyber768.encapsulate(kyberClientPublicKey);
 		source.cipherData = Buffer.concat([source.x25519Keypair.nextSession.publicKey, cipherData]);
 		clearBuffer(cipherData);
@@ -240,7 +250,7 @@ export const kyber768_x25519 = keyExchange({
 		0: true,
 		1: true,
 		2: true,
-		3: true
+		3: true,
 	},
 	preferred: true,
 	preferredPostQuantum: true,

@@ -1,4 +1,4 @@
-import { isBuffer, isString } from '@universalweb/acid';
+import { isBuffer, isString } from '@universalweb/utilitylib';
 import { toBase64Url } from '#crypto/utils.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 export function getUTF8Size(source) {

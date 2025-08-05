@@ -1,8 +1,8 @@
 // GATHER SYSTEM INFORMATION
-import { infoLog, verboseLog } from './logs/logs.js';
+import { bannerLog, infoLog, verboseLog } from './logs/logs.js';
 import os from 'os';
 import osUtils from 'os-utils';
-import { promise } from '@universalweb/acid';
+import { promise } from '@universalweb/utilitylib';
 // Function to convert bytes to human-readable format
 function formatBytes(bytes, decimals = 2) {
 	if (bytes === 0) {
@@ -11,7 +11,7 @@ function formatBytes(bytes, decimals = 2) {
 	const k = 1024;
 	const dm = decimals < 0 ? 0 : decimals;
 	const sizes = [
-		'Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'
+		'Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB',
 	];
 	const i = Math.floor(Math.log(bytes) / Math.log(k));
 	return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
@@ -42,19 +42,20 @@ async function memInfo() {
 	});
 }
 export function logSystemInfo() {
-	infoLog(`-------SYSTEM INFORMATION START-------`);
+	bannerLog(`SYSTEM REPORT`, 'SYSTEM INFORMATION');
+	// Log CPU information
+	infoLog(`Model: ${os.cpus()[0].model}`);
+	infoLog(`Cores: ${os.cpus().length}`);
+	infoLog(`Speed: ${os.cpus()[0].speed} MHz`);
+	infoLog(`Total Memory: ${formatBytes(os.totalmem())}`);
+	infoLog(`Free Memory: ${formatBytes(os.freemem())}`);
+	// SOFTWARE information
 	infoLog(`Platform: ${os.platform()}`);
 	infoLog(`Type: ${os.type()}`);
 	infoLog(`Release: ${os.release()}`);
 	infoLog(`Architecture: ${os.arch()}`);
-	// Log CPU information
-	infoLog(`\nCPU Information:`);
-	infoLog(`Model: ${os.cpus()[0].model}`);
-	infoLog(`Speed: ${os.cpus()[0].speed} MHz`);
-	infoLog(`Cores: ${os.cpus().length}`);
+	// NETWORK information
 	infoLog(`Hostname: ${os.hostname()}`);
-	infoLog(`Total Memory: ${formatBytes(os.totalmem())}`);
-	infoLog(`Free Memory: ${formatBytes(os.freemem())}`);
 	// Log network interfaces
 	// infoLog(`\nNetwork Interfaces:`);
 	// const networkInterfaces = os.networkInterfaces();
@@ -68,6 +69,6 @@ export function logSystemInfo() {
 	// 	await cpuUsageInfo();
 	// 	await cpuFreeInfo();
 	// 	await memInfo();
-	verboseLog(`-------SYSTEM INFORMATION END-------`);
+	bannerLog(`SYSTEM INFORMATION END`);
 }
 // logSystemInfo();

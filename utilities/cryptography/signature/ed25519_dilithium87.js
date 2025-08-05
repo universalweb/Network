@@ -5,14 +5,14 @@ import {
 	isArray,
 	isBuffer,
 	returnValue,
-	untilFalseArray
-} from '@universalweb/acid';
+	untilFalseArray,
+} from '@universalweb/utilitylib';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { hash256, hash512 } from '../hash/shake256.js';
 import {
 	randomBuffer,
 	toBase64,
-	toHex
+	toHex,
 } from '#utilities/cryptography/utils';
 import dilithiumAPI from './dilithium87.js';
 import ed25519Utils from './ed25519.js';
@@ -60,7 +60,7 @@ export async function createKeypair() {
 		publicKey,
 		privateKey,
 		ed25519,
-		dilithium
+		dilithium,
 	};
 }
 export async function initializeKeypair(sourceArg) {
@@ -82,7 +82,7 @@ export async function signMethod(message, source) {
 	const signatureArray = [];
 	const {
 		ed25519,
-		dilithium
+		dilithium,
 	} = source;
 	// console.log('signMethod', source);
 	if (ed25519) {
@@ -101,7 +101,7 @@ export async function signPartial(message, source) {
 	const signatureArray = [];
 	const {
 		ed25519,
-		dilithium
+		dilithium,
 	} = source;
 	// console.log('signMethod', source);
 	if (ed25519) {
@@ -125,7 +125,7 @@ export async function verifyEach(signatureArg, message, source) {
 	const {
 		ed25519,
 		dilithium,
-		sphincs
+		sphincs,
 	} = source;
 	// console.log('verifyEach', source);
 	const ed25519Sig = signature[0];
@@ -168,7 +168,7 @@ async function verifyPartial(signature, message, source) {
 async function exportKeypair(source) {
 	const target = {
 		publicKey: source.publicKey,
-		privateKey: source.privateKey
+		privateKey: source.privateKey,
 	};
 	return target;
 }
@@ -189,7 +189,7 @@ export const ed25519Dilithium87 = signatureScheme({
 	initializeKeypair,
 	verifyEach,
 	verifyPartial,
-	exportKeypair
+	exportKeypair,
 });
 export default ed25519Dilithium87;
 // const key = await ed25519Dilithium87.signatureKeypair();

@@ -7,7 +7,7 @@ import {
 	jsonParse,
 	restString,
 	stringify
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import {
 	convertClassicalParams,
 	getFullURL,

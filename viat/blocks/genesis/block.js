@@ -1,5 +1,5 @@
 import { Block } from '../block.js';
-import { assignToClass } from '@universalweb/acid';
+import { assignToClass } from '@universalweb/utilitylib';
 import blockDefaults from '../defaults.js';
 // Root Genesis Block
 //  BETA
@@ -25,10 +25,10 @@ export class GenesisBlock extends Block {
 		});
 	}
 	nonceSize = 32;
-	hashSize = 1024;
+	hashSize = 64;
 	hashXOFConfig = {
 		outputEncoding: 'buffer',
-		outputLength: 1024,
+		outputLength: 64,
 	};
 	typeName = 'genesis';
 }
@@ -38,12 +38,12 @@ export async function genesisBlock(data, config) {
 	return block;
 }
 export default genesisBlock;
-// const exampleBlock = await genesisBlock({});
-// await exampleBlock.finalize();
-// await exampleBlock.setHashXOF();
+const exampleBlock = await genesisBlock({});
+await exampleBlock.finalize();
+await exampleBlock.setHashXOF();
 // console.log('Genesis Block', exampleBlock);
-// console.log('Genesis Block HASH SIZE', exampleBlock.block.hash.length);
-// console.log('Genesis Block', (await exampleBlock.exportBinary()).length);
+console.log('Genesis Block HASH SIZE', exampleBlock.block);
+console.log('Genesis Block', (await exampleBlock.exportBinary()).length);
 // exampleBlock.setDefaults();
 // await exampleBlock.setHash();
 // console.log('Block HASH/ID', exampleBlock.block);

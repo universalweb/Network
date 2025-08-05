@@ -5,16 +5,16 @@ import {
 	isArray,
 	isPlainObject,
 	objectSize,
-	omit
-} from '@universalweb/acid';
+	omit,
+} from '@universalweb/utilitylib';
 import {
 	decode,
-	encode
+	encode,
 } from '#utilities/serialize';
 import { maxDefaultPacketSize } from '../utilities/calculatePacketOverhead.js';
 import { toBase64 } from '#utilities/cryptography/utils';
 export async function createPacket(message, source, destination, headers, footer) {
-	source.logSuccess(`PROCESSING TO ENCODE PACKET`);
+	source.logInfo(`PROCESSING TO ENCODE PACKET`);
 	const {
 		state,
 		isClient,
@@ -22,7 +22,7 @@ export async function createPacket(message, source, destination, headers, footer
 		isServerEnd,
 		isServerClient,
 		cipher,
-		nonce
+		nonce,
 	} = source;
 	const id = destination.id;
 	if (!hasValue(id)) {
@@ -33,7 +33,7 @@ export async function createPacket(message, source, destination, headers, footer
 	if (headers) {
 		headers[0] = id;
 		shortHeaderMode = false;
-		this.logsource.logInfo('HEADERS GIVEN');
+		source.logInfo('HEADERS GIVEN');
 	}
 	const header = headers || id;
 	if (isClient) {
@@ -41,17 +41,17 @@ export async function createPacket(message, source, destination, headers, footer
 	} else {
 		source.logInfo(`Decode Server Packet with cid: ${id.toString('hex')}`);
 	}
-	const headerEncoded = shortHeaderMode ? header : await encode(header);
 	const transmitKey = source?.transmitKey;
 	let packetEncoded;
 	if (message && transmitKey) {
 		source.logInfo(`Transmit Key ${toBase64(transmitKey)}`);
 		const messageEncoded = await encode(message);
+		const headerEncoded = shortHeaderMode ? header : await encode(header);
 		const ad = headerEncoded;
 		const encryptedMessage = await cipher.encrypt(messageEncoded, transmitKey, ad, nonce);
-		this.logsource.logInfo('nonce used', nonce);
+		source.logInfo('nonce used', nonce);
 		if (!encryptedMessage) {
-			this.logsource.logInfo('Encryption failed');
+			source.logInfo('Encryption failed');
 			return;
 		}
 		const packetStructure = [header, encryptedMessage];
@@ -60,13 +60,13 @@ export async function createPacket(message, source, destination, headers, footer
 		}
 		return encode(packetStructure);
 	}
-	this.logsource.logInfo('No message given header only packet');
+	source.logInfo('No message given header only packet');
 	return encode([header]);
 }
 export async function encodePacket(message, source, destination, headers, footer) {
 	const encodedPacket = await createPacket(message, source, destination, headers, footer);
 	if (!encodedPacket) {
-		this.logsource.logInfo(`Failed to encode packet`);
+		source.logInfo(`Failed to encode packet`);
 		return;
 	}
 	const packetSize = encodedPacket.length;
@@ -74,6 +74,6 @@ export async function encodePacket(message, source, destination, headers, footer
 	if (packetSize > maxDefaultPacketSize) {
 		console.trace(`WARNING: Encode Packet size is larger than max allowed size 1280 -> ${packetSize} over by ${packetSize - maxDefaultPacketSize}`);
 	}
-	source.logSuccess(`PROCESSED ENCODE PACKET`);
+	source.logInfo(`PROCESSED ENCODE PACKET`);
 	return encodedPacket;
 }

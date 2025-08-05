@@ -1,17 +1,18 @@
+import { assignToClass, merge } from '@universalweb/utilitylib';
 import { Block } from '../block.js';
-import { assignToClass } from '@universalweb/acid';
 import blockDefaults from '../defaults.js';
 // Root Genesis Block
 //  BETA
 import { blockMethods } from './uri.js';
 import { readStructured } from '#utilities/file';
+import receiptBlock from '../receipt/block.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 export class GenesisWalletBlock extends Block {
 	constructor(data, config) {
 		super(config);
 		return this.initialize(data, config);
 	}
-	async setDefaults(data, config) {
+	async setDefaults() {
 		await super.setDefaults();
 		await this.setCore({
 			name: 'genesisWallet',
@@ -22,13 +23,21 @@ export class GenesisWalletBlock extends Block {
 				'THE WORLD RUNS ON INDIVIDUALS PURSUING THEIR SEPARATE INTERESTS',
 				'A SPARROW IN THE HAND IS BETTER THAN A PIGEON ON THE ROOF',
 			],
+			allocation: {
+				receiver: 0,
+				amount: 5000000,
+			},
 		});
 	}
+	async config(data) {
+		await super.config(data);
+		await this.setCore(data.data.core);
+	}
 	nonceSize = 32;
-	hashSize = 1024;
+	hashSize = 64;
 	hashXOFConfig = {
 		outputEncoding: 'buffer',
-		outputLength: 1024,
+		outputLength: 64,
 	};
 	typeName = 'genesisWallet';
 }
@@ -38,10 +47,19 @@ export async function genesisWalletBlock(data, config) {
 	return block;
 }
 export default genesisWalletBlock;
-// const exampleBlock = await walletGenesisBlock({});
+// const exampleBlock = await genesisWalletBlock({
+// 	data: {
+// 		core: {
+// 			allocation: {
+// 				receiver: Buffer.from('0000000000000000000000000000000000000000000000000000000000000000'),
+// 				amount: 5000000,
+// 				sender: 1,
+// 			},
+// 		},
+// 	},
+// });
 // await exampleBlock.finalize();
 // await exampleBlock.setHashXOF();
-// console.log('Genesis Block', exampleBlock.block);
 // console.log('Genesis Block HASH SIZE', exampleBlock.block.hash.length);
 // exampleBlock.setDefaults();
 // await exampleBlock.setHash();

@@ -1,4 +1,4 @@
-import { currentPath, isArray, isString } from '@universalweb/acid';
+import { currentPath, isArray, isString } from '@universalweb/utilitylib';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { parse, parseFragment } from 'parse5';
 import { read } from '#utilities/file';

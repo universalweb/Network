@@ -1,4 +1,4 @@
-import { clear, clearBuffer } from '@universalweb/acid';
+import { clear, clearBuffer } from '@universalweb/utilitylib';
 export function flushOutgoing() {
 	clear(this.outgoingAck);
 	clear(this.outgoingNacks);

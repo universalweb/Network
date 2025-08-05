@@ -3,39 +3,43 @@ import {
 	assign,
 	construct,
 	each,
-	hasValue
-} from '@universalweb/acid';
+	extendClass,
+	hasValue,
+} from '@universalweb/utilitylib';
 import {
+	logBanner,
 	logError,
 	logInfo,
 	logSuccess,
 	logVerbose,
-	logWarning
+	logWarning,
 } from '#utilities/logs/classLogMethods';
 import { randomBuffer, toBase64 } from '#utilities/cryptography/utils';
 import { calculatePacketOverhead } from './utilities/calculatePacketOverhead.js';
 import { currentVersion } from '../defaults.js';
 import dgram from 'dgram';
+import eventMethods from '#udsp/events';
 import { randomConnectionId } from './utilities/connectionId.js';
 import { stateCodeDescriptions } from './defaults.js';
 export class UDSP {
-	initializeBase(options) {
+	initialize(options) {
+	}
+	setDefaults(options) {
 		if (options.logLevel) {
 			this.logLevel = options.logLevel;
 		}
+		this.setupEventEmitter();
 		this.state = 0;
 		/*
 			* A puzzle used to challenge clients to ensure authenticity, connection liveliness, and congestion control.
-			* Slow down account creation.
-			* Generate viat or do some sort of computational work.
+			* VIAT POW
     	*/
 		this.puzzleFlag = false;
 		/*
 			* IPv6 enforced
 		*/
 		this.ipVersion = 'udp6';
-		this.events = construct(Map);
-		// TODO: CHANGE TO A BINARY FORMAT UNIQUE ID GENERATOR FOR SMALLER PACKET SIZE
+		// NOTE: CONSIDER ALTERNATIVE ID GENERATION METHODS
 		this.streamIdGenerator = construct(UniqID);
 		// NOTE: Eventually change to UWScript of some kind
 		this.defaultExtension = 'html';
@@ -59,21 +63,16 @@ export class UDSP {
 		this.socket = socket;
 		// Make sure there is as graceful as possible shutdown
 		process.on('beforeExit', (code) => {
-			source.logInfo('Before Exit', code);
-			source.fire(source.events, 'socket.error', this);
+			source.logVerbose('Before Exit', code);
+			source.emitEvent('socket.error', code);
 		});
-	}
-	addMethod(methods) {
-		const thisContext = this;
-		each(methods, (method, methodName) => {
-			thisContext[methodName] = method.bind(thisContext);
-		});
-		return this;
 	}
 	stateCodeDescriptions = stateCodeDescriptions;
 	logError = logError;
 	logWarning = logWarning;
 	logInfo = logInfo;
+	logBanner = logBanner;
 	logVerbose = logVerbose;
 	logSuccess = logSuccess;
 }
+extendClass(UDSP, eventMethods);

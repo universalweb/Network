@@ -1,4 +1,4 @@
-import { assign } from '@universalweb/acid';
+import { assign } from '@universalweb/utilitylib';
 import { encode } from '#utilities/serialize';
 import { numberEncodedSize } from './numberEncodedSize.js';
 export async function dataPacketization(source) {

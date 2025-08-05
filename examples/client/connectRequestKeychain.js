@@ -2,7 +2,7 @@ console.clear();
 console.log('STARTING CLIENT');
 console.time('Full');
 import { client } from '#udsp';
-import { currentPath } from '@universalweb/acid';
+import { currentPath } from '@universalweb/utilitylib';
 console.time('Connected');
 // Universal Web Client Socket
 const uwClient = await client({

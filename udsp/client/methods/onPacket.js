@@ -4,8 +4,8 @@ import {
 	hasValue,
 	isArray,
 	isFalse,
-	isNumber
-} from '@universalweb/acid';
+	isNumber,
+} from '@universalweb/utilitylib';
 import { onFrame } from '#udsp/onPacket/onFrame';
 import { onProtocolHeader } from '#udsp/onPacket/onProtocol';
 export async function onPacket(packet, rinfo) {
@@ -21,7 +21,7 @@ export async function onPacket(packet, rinfo) {
 		this.logError('Error failed to decode packet headers');
 		return;
 	}
-	const { header, } = config.packetDecoded;
+	const { header } = config.packetDecoded;
 	if (isFalse(config.isShortHeaderMode)) {
 		await onProtocolHeader(this, header, config.packetDecoded, rinfo);
 	}
@@ -32,7 +32,7 @@ export async function onPacket(packet, rinfo) {
 	}
 	const {
 		message,
-		footer
+		footer,
 	} = config.packetDecoded;
 	if (message) {
 		onFrame(message, header, this, this.requestQueue, rinfo);

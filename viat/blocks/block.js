@@ -1,4 +1,4 @@
-import { construct, extendClass, getConstructorName } from '@universalweb/acid';
+import { construct, extendClass, getConstructorName } from '@universalweb/utilitylib';
 import accessorMethods from './methods/accessors.js';
 import blockDefaults from './defaults.js';
 import configMethods from './methods/config.js';

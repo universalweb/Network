@@ -1,6 +1,6 @@
 import { sendPacket, sendPacketIfAny } from '../../utilities/sendPacket.js';
 import { clientStates } from '../defaults.js';
-const { closingState, } = clientStates;
+const { closingState } = clientStates;
 export async function send(frame, header, footer, repeat) {
 	if (!this.destination.ip) {
 		this.logInfo(`Can't send - No Destination IP`);
@@ -16,7 +16,7 @@ export async function send(frame, header, footer, repeat) {
 	}
 }
 export async function sendAny(frame, headers, footer, repeat) {
-	this.infoLog(`socket sendPacketIfAny -> ID: ${this.connectionIdString}`);
+	this.logInfo(`socket sendPacketIfAny -> ID: ${this.connectionIdString}`);
 	if (this.destroyed) {
 		return;
 	}

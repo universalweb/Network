@@ -1,4 +1,4 @@
-import { isNotNumber, isNumber, isUndefined } from '@universalweb/acid';
+import { isNotNumber, isNumber, isUndefined } from '@universalweb/utilitylib';
 export function isRequestRPCValid(rpc) {
 	if (isUndefined(rpc)) {
 		console.log('RPC is undefined');

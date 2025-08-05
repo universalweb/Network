@@ -4,7 +4,7 @@
 const sodium = await import('sodium-native');
 const libsodium = sodium?.default || sodium;
 const { randombytes_buf } = libsodium;
-import { clear, isBuffer } from '@universalweb/acid';
+import { clear, isBuffer } from '@universalweb/utilitylib';
 export const concatBuffer = Buffer.concat;
 export const bufferFrom = Buffer.from;
 export const basicChecksumHashFunction = 'blake3';
@@ -18,6 +18,9 @@ export const hash512SettingsNoble = {
 	dkLen: int64,
 };
 export const defaultHashSettings = {
+	outputEncoding: 'buffer',
+};
+export const defaultHash256Settings = {
 	outputLength: int32,
 	outputEncoding: 'buffer',
 };

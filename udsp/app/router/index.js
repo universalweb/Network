@@ -1,8 +1,11 @@
-import { isFunction, isZero } from '@universalweb/acid';
+import { extendClass, isFunction, isZero } from '@universalweb/utilitylib';
+import eventMethods from '#udsp/events';
 import getMethod from '../../methods/get.js';
 export class Router {
-	// constructor(options) {
-	// }
+	constructor(options) {
+		this.setupEventEmitter();
+		return this;
+	}
 	routesAll = [];
 	routesMethods = [
 		[],
@@ -10,7 +13,7 @@ export class Router {
 		[],
 		[],
 		[],
-		[]
+		[],
 	];
 	matchRoute(routeArray, fullPath) {
 		const routeArrayLength = routeArray.length;
@@ -61,7 +64,7 @@ export class Router {
 	async handle(req, res, appServer) {
 		const {
 			path,
-			method
+			method,
 		} = req;
 		const { routesAll } = this;
 		if (routesAll.length) {
@@ -76,7 +79,7 @@ export class Router {
 		if (method) {
 			this.routesMethods[getMethod.id].push([
 				route,
-				method
+				method,
 			]);
 		} else {
 			this.routesAll.push(route);
@@ -111,3 +114,4 @@ export class Router {
 export function router(...args) {
 	return new Router(...args);
 }
+extendClass(Router, eventMethods);

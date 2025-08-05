@@ -5,12 +5,12 @@ import {
 	isNotString,
 	isNumber,
 	isString,
-	noValue
-} from '@universalweb/acid';
+	noValue,
+} from '@universalweb/utilitylib';
 import { encode } from '#utilities/serialize';
 import viatDefaults from '#viat/defaults';
 const {
-	coinDecimalPlaces, coinMaxSupply, coinMaxSupplyLength, coinMaxWholeSupplyLength, coinMaxSupplyDisplay, coinMaxSupplyInt
+	coinDecimalPlaces, coinMaxSupply, coinDigitCount, coinWholeDigitCount,
 } = viatDefaults;
 // TODO: Change API so that using strings is obvious or numbers or bigInt or unify them
 // Already have smallest unit convert for math by removing period combine both sides then add the additional zeroes for full size
@@ -57,12 +57,12 @@ export function normalizeFormattedNumber(str) {
 }
 export function isBigIntAboveMaxSupply(value) {
 	if (hasValue(value)) {
-		return value.toString().length >= coinMaxSupplyLength;
+		return value.toString().length >= coinDigitCount;
 	}
 	return false;
 }
 export function isBigIntBelowMaxSupply(value) {
-	return value.toString().length <= coinMaxSupplyLength;
+	return value.toString().length <= coinDigitCount;
 }
 export function convertToBigIntSafely(value) {
 	if (isNumber(value)) {
@@ -90,9 +90,9 @@ export function parseStringUnits(displayStr) {
 	}
 	const [
 		intPart,
-		fracPart = ''
+		fracPart = '',
 	] = displayStr.replace(/,/g, '').trim().split('.');
-	if (intPart.length > coinMaxWholeSupplyLength) {
+	if (intPart.length > coinWholeDigitCount) {
 		return;
 	}
 	const fullStr = intPart + fracPart.padEnd(coinDecimalPlaces, '0');
@@ -227,7 +227,7 @@ const mathUtils = {
 	add,
 	getBigIntByteSize,
 	bufferToBigInt,
-	bufferToBigIntBit
+	bufferToBigIntBit,
 };
 export default mathUtils;
 // console.log(getBigIntByteSize(coinMaxSupplyInt));
@@ -243,4 +243,4 @@ export default mathUtils;
 // console.log('0000000000000000000000000000000000000000000000000000'.length);
 // console.log(parseUnits('1,000.0'), parseUnits('1000000000000000.0'));
 // console.log(coinMaxSupplyInt, coinMaxSupply.length, displayAmountWithCommas(parseUnits(coinMaxSupplyDisplay)));
-// console.log(coinMaxSupplyInt, coinMaxSupply.length, displayAmountWithCommas(normalizeConvertToBigInt('52,000,000.0002000000001')), parseUnits('52,000,000.0002000'));
+// console.log(coinMaxSupplyInt, coinMaxSupply.length, displayAmountWithCommas(normalizeConvertToBigInt('42,000,000.0002000000001')), parseUnits('42,000,000.0002000'));

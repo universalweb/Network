@@ -1,4 +1,4 @@
-import { isBuffer, noValue } from '@universalweb/acid';
+import { isBuffer, noValue } from '@universalweb/utilitylib';
 import { getAddressStringFromBuffer } from '#utilities/network/ip';
 // TODO: NEEDS SECURITY CHECKS FOR CHANGING DESTINATION
 export async function changeAddress(addressBuffer, rinfo) {

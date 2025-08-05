@@ -16,7 +16,7 @@ import {
 	isNotNumber,
 	isUndefined,
 	noValue
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 export async function proccessProtocolHeader(rpc, source, header, packetDecoded, rinfo) {
 	switch (rpc) {
 		// Hello Packet

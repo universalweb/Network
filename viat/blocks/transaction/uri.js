@@ -7,7 +7,7 @@ import {
 } from '../wallet/uri.js';
 import blockDefaults from '../defaults.js';
 import defaults from './defaults.js';
-import { isNotString } from '@universalweb/acid';
+import { isNotString } from '@universalweb/utilitylib';
 import path from 'path';
 import { toBase64Url } from '#crypto/utils.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';

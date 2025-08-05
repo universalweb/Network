@@ -4,8 +4,8 @@ import {
 	hasValue,
 	intersection,
 	isBoolean,
-	keys
-} from '@universalweb/acid';
+	keys,
+} from '@universalweb/utilitylib';
 import { connectionIdToBuffer, generateConnectionIdString } from '#udsp/utilities/connectionId';
 export async function initialize(config) {
 	const {
@@ -26,10 +26,11 @@ export async function initialize(config) {
 		},
 		connection: {
 			address: ip,
-			port
+			port,
 		},
 	} = config;
 	const client = this;
+	//  NOTE: Consider accessing these vars via .app or .server instead of copying
 	client.scale = scale;
 	client.initialGracePeriod = initialGracePeriod;
 	client.heartbeat = heartbeat;
@@ -38,7 +39,7 @@ export async function initialize(config) {
 	client.reservedConnectionIdSize = reservedConnectionIdSize;
 	if (certificate) {
 		this.logInfo('Certificate Crypto Algos attached');
-		client.keyExchangeAlgorithm = certificate.keyExchangeAlgorithm;
+		client.keyExchange = certificate.keyExchangeAlgorithm;
 		client.signatureAlgorithm = certificate.signatureAlgorithm;
 	}
 	if (serverPublicKey) {
@@ -54,13 +55,13 @@ export async function initialize(config) {
 	client.connectionIdString = serverConnectionIdString;
 	assign(client.destination, {
 		ip,
-		port
+		port,
 	});
-	if (client.keyExchangeAlgorithm.serverClientCreation) {
-		await client.keyExchangeAlgorithm.serverClientCreation(client, server);
+	if (client.keyExchange.onServerClientInitialization) {
+		await client.keyExchange.onServerClientInitialization(client, server);
 	}
 	if (initialGracePeriod) {
-		this.initialGracePeriodCheck();
+		await this.initialGracePeriodCheck();
 	}
 	return client;
 }

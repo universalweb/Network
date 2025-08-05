@@ -1,4 +1,5 @@
 import {
+	bannerLog,
 	completedLog,
 	errorLog,
 	fatalLog,
@@ -6,34 +7,49 @@ import {
 	noteLog,
 	successLog,
 	verboseLog,
-	warningLog
+	warningLog,
 } from '#utilities/logs/logs';
-import { isUndefined } from '@universalweb/acid';
-export function consoleLog(source, loglevel, err, logFunction = console.log) {
-	// Remove for production
+import {
+	blue, bold, green, red, underline, yellow,
+} from 'colorette';
+import { isUndefined, upperCase } from '@universalweb/utilitylib';
+import boxen from 'boxen';
+function typeStyle(source, typeColor = blue) {
+	return bold(underline(typeColor(upperCase(source))));
+}
+const arrow = yellow('=>');
+export function consoleLog(source, loglevel, data, logFunction = console.log, typeColor = typeStyle) {
+	// console.log(source.constructor.name, source?.logLevel);
 	if (source && isUndefined(source?.logLevel)) {
 		return;
 	}
-	if (source.logLevel <= loglevel) {
+	if (loglevel <= source.logLevel) {
+		const type = source?.type || source?.constructor?.name || '';
 		if (source.connectionIdString) {
-			return logFunction(`${source.type} ${source.connectionIdString ? source.connectionIdString : ''}`, ...err);
+			const connectionIdString = source.connectionIdString ? `ID:${source.connectionIdString}` : '';
+			return logFunction(`${typeStyle(type, typeColor)} ${arrow} ${connectionIdString}`, ...data);
+		} else if (loglevel === 4) {
+			return logFunction(...data);
 		} else {
-			return logFunction(`${source.type}`, ...err);
+			return logFunction(`${typeStyle(type, typeColor)} ${arrow}`, ...data);
 		}
 	}
 }
 export function logError(...err) {
-	return consoleLog(this, 0, err, errorLog);
+	return consoleLog(this, 0, err, errorLog, red);
 }
 export function logWarning(...err) {
-	return consoleLog(this, 1, err, warningLog);
+	return consoleLog(this, 1, err, warningLog, yellow);
 }
-export function logInfo(...err) {
-	return consoleLog(this, 2, err, infoLog);
+export function logInfo(...source) {
+	return consoleLog(this, 2, source, infoLog);
 }
-export function logVerbose(...err) {
-	return consoleLog(this, 3, err, verboseLog);
+export function logVerbose(...data) {
+	return consoleLog(this, 3, data, verboseLog);
 }
-export function logSuccess(...err) {
-	return consoleLog(this, 3, err, successLog);
+export function logSuccess(...data) {
+	return consoleLog(this, 3, data, successLog, green);
+}
+export function logBanner(...source) {
+	return consoleLog(this, 4, source, bannerLog);
 }

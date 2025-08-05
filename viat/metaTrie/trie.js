@@ -1,7 +1,7 @@
 import {
 	eachArray, forOf, hasDot, hasValue,
 	isMap,
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 class FileSystemTrie {
 	constructor() {
 		this.root = new Map();

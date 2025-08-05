@@ -1,5 +1,5 @@
 import { decode, encode, encodeStrict } from '#utilities/serialize';
-import { isArray, isBuffer, isPlainObject } from '@universalweb/acid';
+import { isArray, isBuffer, isPlainObject } from '@universalweb/utilitylib';
 // UNIVERSAL MARKUP LANGUAGE EXPERIMENTAL SYNTAX
 export function div(attrs, contents) {
 	return [

@@ -1,5 +1,5 @@
 import { askRPC, defaultStage, replyRPC } from '../rpc/rpcCodes.js';
-import { hasValue } from '@universalweb/acid';
+import { hasValue } from '@universalweb/utilitylib';
 export async function checkSetupSent() {
 	const { isAsk } = this;
 	this.logInfo(`CHECK SETUP STATUS checkSetupSent - STATE:${this.state}`);
@@ -18,6 +18,10 @@ export function clearSetupTimeout() {
 	clearTimeout(this.setupTimeout);
 	this.setupTimeout = null;
 }
+// TODO: CREATE A COMPACT SETUP PACKET SO THAT ALL DETAILS COULD BE IN ONE PACKET
+// NOTE: Either raise number id type for stages to have a new setup type or just add a flag to show the mode for the setup type
+// NOTE: Speed improvements are required to ensure there is no trade off from fast connection establishment and then lost in data transfer steps
+// NOTE: Could use multiple Frame approach instead of setup mode might offer perks to not handle second setup frame before the first is verified
 export async function sendSetup() {
 	const source = this;
 	const { isAsk } = this;

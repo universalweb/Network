@@ -1,10 +1,10 @@
-import { isArray, isEmpty } from '@universalweb/acid';
+import { isArray, isEmpty } from '@universalweb/utilitylib';
 import { clientStates } from '../defaults.js';
 import { introHeaderRPC } from '../../rpc/headerRPC.js';
 import { introRPC } from '../../rpc/frameRPC.js';
 import { sendPacketIfAny } from '#udsp/utilities/sendPacket';
 import { toHex } from '#utilities/cryptography/utils';
-const { connectingState, } = clientStates;
+const { connectingState } = clientStates;
 export function checkIntroTimeout() {
 	this.logInfo('checkIntroTimeout', this.connected, this.introAttempts);
 	if (this.connected === true) {
@@ -19,31 +19,34 @@ export function clearIntroTimeout() {
 	clearTimeout(this.introTimeout);
 	this.introTimeout = null;
 }
-// CONSIDER OPTIMIZATION TO CREATE CLIENT ID FROM CLIENT PUBLICKEY FREES UP A FEW BYTES FOR LARGE POST QUANTUM PUBLICKEYS
-// COULD BE COMBINED WITH CLIENT PORT NUMBER TO INCREASE LIKELIHOOD OF A UNIQUE ID
-// PROS CONS OF GENERATING ID VS USING DEFINED AND SENT ONE
+// TODO: CONSIDER OPTIMIZATION TO CREATE CLIENT ID FROM CLIENT PUBLICKEY FREES UP A FEW BYTES FOR LARGE POST QUANTUM PUBLICKEYS
+// TODO: PROS CONS OF GENERATING ID VS USING DEFINED AND SENT ONE
 /*
 const [
 		connectionId,
 		rpc,
 		cipherData,
 		clientId,
-		cipherId,
 		timeSent,
-		version,
+		cipherId,
+		// version,
 	] = header;
 */
 export async function setIntroHeader(header) {
+	header[0] = undefined;
 	header[1] = introHeaderRPC;
-	header[3] = this.id;
-	header[4] = this.cipher.id;
-	header[5] = Date.now();
-	// ENSURE PROTOCOL VERSION IS SET & Being used here FOR NOW
-	// Try to see if can avoid using version in intro
-	// Enforce using specific protocol Versions?
-	// If present only then consider using downgraded protocol version?
-	// If is provided Creates a compatability mode for older clients but can't be relied upon? Most viable if not used
-	header[6] = this.version;
+	header[3] = Date.now();
+	// TODO: NOT REQUIRED COULD BE LEFT OUT AUTO DEFAULT TO SERVER PREFERRED
+	if (this.cipher.id) {
+		header[4] = this.cipher.id;
+	}
+	// SAVES BYTES TO USE SLICE OF PUBLIC KEY AS CLIENT ID
+	if (!this.publicKey) {
+		header[5] = this.id;
+	}
+	// PROTOCOL VERSION DEFAULTS TO LATEST
+	// If is provided Creates a compatability mode for older clients
+	// header[6] = this.version;
 }
 export async function setIntroFrame(frame) {
 	frame[0] = false;
@@ -78,13 +81,32 @@ export async function introHeader(header, packetDecoded, rinfo) {
 		this.close();
 		return;
 	}
-	const rpc = header[1];
-	const cipherData = header[2];
+	const [
+		streamid_undefined,
+		rpc,
+		cipherData,
+		serverConnectionId,
+		changeDestinationAddress,
+	] = header;
+	await this.clearIntroTimeout();
+	this.destination.id = serverConnectionId;
+	this.destination.connectionIdSize = serverConnectionId.length;
+	this.logInfo('New Server Connection ID', toHex(serverConnectionId));
+	// TODO: REMOVE CHANGEADD AFTER NEW NETWORK STRATEGY FOR LOADBALANCING USE CONDITIONAL
+	if (changeDestinationAddress) {
+		await this.changeAddress(changeDestinationAddress, rinfo);
+	}
 	if (cipherData) {
-		await this.keyExchange.onServerIntroHeader(this, this.destination, header, packetDecoded);
+		this.logInfo('Server introHeader', toHex(cipherData));
+	}
+	if (this.keyExchange.onServerIntroHeader) {
+		await this.keyExchange.onServerIntroHeader(this, this.destination, cipherData, header);
 	}
 	// Consider change for how synchronization is triggered maybe let cipher suite decide
-	if (packetDecoded.noMessage) {
+	if (packetDecoded.noFrame) {
+		if (this.keyExchange.onServerIntroHeader) {
+			await this.keyExchange.onServerIntroHeaderNoFrame(this, this.destination, cipherData, header);
+		}
 		if (this.keyExchange.extendedSynchronization) {
 			this.sendExtendedSynchronization(this, this.destination, header, packetDecoded, rinfo);
 		} else {
@@ -99,7 +121,7 @@ export async function introHeader(header, packetDecoded, rinfo) {
 // Get ipv4 example working first with port change
 // First packet would need to be sent via the originally sent IP & Port
 // Dynamic Endpoint scaling with new IP and Port must be the default only proxy initial synchronization packets at most see if room to change that.
-// calculate new sizes new ipv6 is 16 bytes then another 2 for ports doesn't matter to encrypt it because its public anyway
+// calculate new sizes new ipv6 is 16 bytes then another 2 for ports doesn't matter to encrypt it because it'll be public anyway after next packet
 // This gives us UDP hole punching for better scaling
 // SWAP THIS TO JUST BE HEADERS ONLY IN PLAIN TEXT NO REASON FOR IT TO BE ENCRYPTED WILL FAIL TO CONNECT ANYWAY
 export async function intro(frame, header, rinfo) {
@@ -112,34 +134,18 @@ export async function intro(frame, header, rinfo) {
 	const [
 		streamid_undefined,
 		rpc,
-		serverConnectionId,
-		cipherData,
-		changeDestinationAddress,
-		serverRandomToken
+		timesent,
+		serverRandomToken,
 	] = frame;
-	this.destination.id = serverConnectionId;
-	this.destination.connectionIdSize = serverConnectionId.length;
-	// Change this so that there is a specific Function for the frame cipherData in the KeyExchange Object
-	if (cipherData) {
-		this.logInfo(this.destination.publicKey, cipherData);
-		this.logInfo('Server cipherData', toHex(cipherData));
-		this.logInfo('cipherData Provided Initiate New Session');
-		await this.introCipherData(cipherData);
+	if (this.keyExchange.onServerIntro) {
+		await this.keyExchange.onServerIntro(this, this.destination, frame, header);
 	}
-	this.logInfo('New Server Connection ID', toHex(serverConnectionId));
-	// TODO: REMOVE CHANGEADD AFTER NEW NETWORK STRATEGY FOR LOADBALANCING USE CONDITIONAL
-	await this.changeAddress(changeDestinationAddress, rinfo);
-	// if (changeDestinationAddress) {
-	// 	this.changeAddress(changeDestinationAddress, rinfo);
-	// }
 	if (serverRandomToken) {
-		this.serverRandomToken = serverRandomToken;
 		this.logInfo('Server Random Token', toHex(serverRandomToken));
+		this.serverRandomToken = serverRandomToken;
 	}
-	await this.clearIntroTimeout();
 	if (this.keyExchange.extendedSynchronization) {
-		this.sendExtendedSynchronization(frame, header, rinfo);
-		return;
+		return this.sendExtendedSynchronization(frame, header, rinfo);
 	}
 	this.synchronized();
 }

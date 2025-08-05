@@ -10,14 +10,14 @@ import {
 	isString,
 	merge,
 	promise,
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { decode, encodeStrict } from '#utilities/serialize';
 import { getCipher, getKeyExchangeAlgorithm, getSignatureAlgorithm } from '#crypto/index.js';
 import { read, readStructured, write } from '#file';
-import { Certificate } from './certificate.js';
-import certificateDefaults from './defaults.js';
+import { Certificate } from '../certificate.js';
+import certificateDefaults from '../defaults.js';
 import { keychainSave } from '#components/certificate/keychain';
-import protocolDefaults from '../../udsp/defaults.js';
+import protocolDefaults from '../../../udsp/defaults.js';
 import { toBase64 } from '#utilities/cryptography/utils';
 const { protocolVersion: currentProtocolVersion } = protocolDefaults;
 const {
@@ -250,6 +250,7 @@ export class DomainCertificate extends Certificate {
 		return this;
 	}
 	async processAsObject(source) {
+		console.log(source);
 		if (isPlainObject(source)) {
 			this.object = source;
 		} else if (isArray(source[0])) {
@@ -300,7 +301,7 @@ export class PublicDomainCertificate extends Certificate {
 		return this;
 	}
 	async verifySelfSignature() {
-		const signatureKeypairObject = this.get('signatureKeypair');
+		const signatureKeypairObject = await this.get('signatureKeypair');
 		// console.log('signatureKeypairObject', signatureKeypairObject);
 		const signatureKeypair = this.signatureKeypairInstance || await this.signatureAlgorithm.initializeKeypair(signatureKeypairObject);
 		// console.log('signatureKeypair', signatureKeypair);

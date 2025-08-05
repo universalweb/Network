@@ -2,22 +2,12 @@ import {
 	compactMapArray,
 	hasValue,
 	isArray,
-	isNumber
-} from '@universalweb/acid';
+	isNumber,
+} from '@universalweb/utilitylib';
 import { currentVersion } from '../../../defaults.js';
-import { kyber768_xChaCha } from './Kyber768_xChaCha.js';
 import { setOptions } from '../setOption.js';
 import { viatCipherSuite } from './viat.js';
-import { x25519_kyber768Half_xchacha20 } from './x25519_Kyber768Half_xChaCha.js';
-import { x25519_kyber768_xchacha20 } from './x25519_Kyber768_xChaCha.js';
-import { x25519_xChaCha } from './x25519_xChaCha.js';
-const cipherList = [
-	x25519_xChaCha,
-	x25519_kyber768Half_xchacha20,
-	kyber768_xChaCha,
-	x25519_kyber768_xchacha20,
-	viatCipherSuite
-];
+const cipherList = [viatCipherSuite];
 export const cipherSuites = new Map();
 const cipherSuitesVersion1 = new Map();
 cipherSuites.set(currentVersion, cipherSuitesVersion1);

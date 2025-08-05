@@ -1,4 +1,4 @@
-import { assignToClass, get, mapAsyncArray } from '@universalweb/acid';
+import { assignToClass, get, mapAsyncArray } from '@universalweb/utilitylib';
 import {
 	blockMethods,
 	getTransactionFromBlock,
@@ -17,6 +17,7 @@ import path from 'path';
 import receiptBlock from '../receipt/block.js';
 import { transactionBlockSchema } from './schema.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
+// GET PRIOR TRANSACTION ID MAX & PRIOR HASH - include prior hash as parent then increment ID
 class TransactionBlock extends Block {
 	constructor(data, config) {
 		super(config);

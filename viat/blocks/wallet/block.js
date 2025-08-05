@@ -21,11 +21,10 @@ import {
 	getWalletURLFromBlock,
 } from './uri.js';
 import { Block } from '../block.js';
-import { assignToClass } from '@universalweb/acid';
+import { assignToClass } from '@universalweb/utilitylib';
 import blockDefaults from '../defaults.js';
 import { readStructured } from '#utilities/file';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
-import { wallet } from '#viat/index';
 import { walletBlockSchema } from './schema.js';
 export class WalletBlock extends Block {
 	constructor(data, config) {

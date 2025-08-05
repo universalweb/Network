@@ -1,7 +1,7 @@
 // IP address utilities
 import { encode } from '#utilities/serialize';
 import ip from 'ip';
-import { isNotNumber } from '@universalweb/acid';
+import { isNotNumber } from '@universalweb/utilitylib';
 const ipv6Size = 16;
 const ipv4Size = 4;
 const ipv6HeaderSize = 40;

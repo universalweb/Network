@@ -7,7 +7,7 @@ import {
 	isBuffer,
 	returnValue,
 	untilFalseArray,
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { hash256, hash512 } from '../hash/shake256.js';
 import {
@@ -206,7 +206,8 @@ export const viat = signatureScheme({
 	name: 'viat',
 	alias: 'viat',
 	description: 'ed25519 dilithium65 SPHINCS192s SHAKE256',
-	id: 6,
+	id: 7,
+	addressSize: 64,
 	publicKeySize,
 	privateKeySize,
 	signatureSize,

@@ -1,7 +1,7 @@
 import { Block } from '../block.js';
 import { blockDefaults } from './defaults.js';
 import { encodeStrict } from '#utilities/serialize';
-import { mapAsyncArray } from '@universalweb/acid';
+import { mapAsyncArray } from '@universalweb/utilitylib';
 const { linkBlockType } = blockDefaults.blockTypes;
 // LinkBlock: Are abstract and arbitrary hash-based block links used to navigate to otherwise unrelated blocks
 // Merkle Patricia Trie of linked blocks

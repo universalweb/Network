@@ -1,9 +1,9 @@
 import { askRPC, replyRPC } from './rpcCodes.js';
-import { hasValue, isNotNumber, isNumber } from '@universalweb/acid';
+import { hasValue, isNotNumber, isNumber } from '@universalweb/utilitylib';
 import { isRequestRPCValid, isRequestTypeValid } from '../../rpc/isRequestRPCValid.js';
 export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 	if (source.receivedSetupPacket) {
-		this.logInfo('Received Setup Packet Already RESEND ANSWER');
+		source.logInfo('Received Setup Packet Already RESEND ANSWER');
 		return;
 	}
 	source.clearSetupTimeout();
@@ -20,7 +20,7 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 			,
 			,
 			totalIncomingHeadSize,
-			totalIncomingDataSize
+			totalIncomingDataSize,
 		] = frame;
 	} else {
 		[
@@ -30,7 +30,7 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 			totalIncomingPathSize,
 			totalIncomingParametersSize,
 			totalIncomingHeadSize,
-			totalIncomingDataSize
+			totalIncomingDataSize,
 		] = frame;
 		// if (isRequestTypeValid(requestMethodRPC) === false) {
 		// 	source.close();
@@ -38,7 +38,7 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 		// }
 		source.method = requestMethodRPC;
 	}
-	this.logInfo(`Setup Packet Received HEADER SIZE:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
+	source.logInfo(`Setup Packet Received HEADER SIZE:${totalIncomingHeadSize} DATA:${totalIncomingDataSize}`);
 	if (hasValue(totalIncomingPathSize) && isNumber(totalIncomingPathSize)) {
 		source.totalIncomingPathSize = totalIncomingPathSize;
 	}
@@ -56,10 +56,10 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 		if (source.totalIncomingHeadSize) {
 			source.sendHeadReady();
 		} else if (source.totalIncomingDataSize) {
-			this.logInfo('SKIPPED HEAD READY');
+			source.logInfo('SKIPPED HEAD READY');
 			source.sendDataReady();
 		} else {
-			this.logInfo('SKIPPED DATA READY');
+			source.logInfo('SKIPPED DATA READY');
 			source.completeReceived();
 		}
 	} else {
@@ -68,16 +68,16 @@ export async function onSetup(id, rpc, packetId, data, frame, source, rinfo) {
 			// CHECK TO SEE IF GET REQUEST BUT NO PATH THEN SET '/' as the PATH
 			source.sendPathReady();
 		} else if (source.totalIncomingParametersSize) {
-			this.logInfo('SKIPPED PATH READY');
+			source.logInfo('SKIPPED PATH READY');
 			source.sendParametersReady();
 		} else if (source.totalIncomingHeadSize) {
-			this.logInfo('SKIPPED PARAMETERS READY');
+			source.logInfo('SKIPPED PARAMETERS READY');
 			source.sendHeadReady();
 		} else if (source.totalIncomingDataSize) {
-			this.logInfo('SKIPPED HEAD READY');
+			source.logInfo('SKIPPED HEAD READY');
 			source.sendDataReady();
 		} else {
-			this.logInfo('SKIPPED DATA READY');
+			source.logInfo('SKIPPED DATA READY');
 			source.completeReceived();
 		}
 	}

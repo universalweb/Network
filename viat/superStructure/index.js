@@ -1,9 +1,10 @@
+import { Wallet, wallet } from '#viat/wallet/wallet';
 import {
 	assign,
 	currentPath,
 	eachAsyncArray,
 	extendClass,
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { getFiles, readStructured } from '#utilities/file';
 import { createViatFilesystem } from './createFilesystem.js';
 import { decode } from '#utilities/serialize';
@@ -17,6 +18,7 @@ import { getTransactionsPath } from '../blocks/transaction/uri.js';
 import { loadBlock } from '#viat/blocks/utils';
 import path from 'path';
 import { transactionBlock } from '#viat/blocks/transaction/block';
+import viatDefaults from '#viat/defaults';
 import walletBlock from '#viat/blocks/wallet/block';
 export class Superstructure {
 	constructor(config = {}) {
@@ -30,20 +32,46 @@ export class Superstructure {
 		await this.setFullPath();
 		return this;
 	}
-	async createTransaction(wallet, amount, receiver, mana = 1n) {
-		const sender = await wallet.getAddress();
+	async createNetwork() {
+		await this.createCoreNetworkWallets();
+		await this.createFilesystem();
+		await this.createGenesisBlock();
+		await this.createGenesisWalletBlock({
+			data: {
+				core: {
+					reserve: await this.reserveWallet.getAddress(),
+					team: await this.teamWallet.getAddress(),
+					genesisWallet: await this.genesisWallet.getAddress(),
+				},
+			},
+		});
+	}
+	viatDefaults = viatDefaults;
+	async createCoreNetworkWallets() {
+		this.teamWallet = await wallet();
+		this.reserveWallet = await wallet();
+		this.genesisWallet = await wallet();
+	}
+	async createTransaction(walletArg, amount, receiver, mana = 1n) {
+		const sender = (walletArg.getAddress) ? await walletArg.getAddress() : walletArg;
 		const txBlock = await transactionBlock({
 			data: {
 				core: {
-					amount,
-					receiver,
-					sender,
-					mana,
+					output: [
+						{
+							amount,
+							receiver,
+							sender,
+							mana,
+						},
+					],
 				},
 			},
 		});
 		await txBlock.finalize();
-		await txBlock.sign(wallet);
+		if (walletArg.getAddress) {
+			await txBlock.sign(walletArg);
+		}
 		await txBlock.setReceipt();
 		// await txBlock.receipt.finalize();
 		// await txBlock.receipt.sign(this);
@@ -87,11 +115,11 @@ export class Superstructure {
 		await this.setGenesisWalletBlock();
 		return this;
 	}
-	async createWalletBlock(wallet) {
-		const source = await walletBlock(wallet);
+	async createWalletBlock(walletArg) {
+		const source = await walletBlock(walletArg);
 		await source.setParent(await this.genesisWalletBlock.hashBlock());
 		await source.finalize();
-		await source.sign(wallet);
+		await source.sign(walletArg);
 		await this.saveBlock(source);
 		return source;
 	}

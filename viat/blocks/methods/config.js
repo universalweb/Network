@@ -1,5 +1,5 @@
+import { isPlainObject, merge } from '@universalweb/utilitylib';
 import blockDefaults from '../defaults.js';
-import { isPlainObject } from '@universalweb/acid';
 const {
 	version,
 	blockTypes,

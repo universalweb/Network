@@ -1,4 +1,3 @@
-//
 import {
 	clearBuffer,
 	defaultHashSettings,
@@ -6,18 +5,24 @@ import {
 	hash512SettingsCrypto,
 	int32,
 	int64,
+	toHex,
 } from '#utilities/cryptography/utils';
 import cryptolib from 'node:crypto';
 import { hashScheme } from './hashScheme.js';
 import { runBench } from '../../../examples/benchmark.js';
 const createHash = cryptolib.hash;
 const hashName = 'shake256';
+const hash512StrictName = 'sha3-512';
 const outputEncoding = 'buffer';
 export async function hash256(source) {
 	return createHash(hashName, source, defaultHashSettings);
 }
 export async function hash512(source) {
 	return createHash(hashName, source, hash512SettingsCrypto);
+}
+// STRICT SECURITY MARGIN FOR 64 BYTE OUTPUT
+export async function hash512Strict(source) {
+	return createHash(hash512StrictName, source, defaultHashSettings);
 }
 export async function hash1024(source) {
 	return createHash(hashName, source, hash1024SettingsCrypto);
@@ -47,5 +52,6 @@ export const shake256 = hashScheme({
 	hashXOFObject,
 });
 export default shake256;
-// console.log('hash', (await hash256('hello world')));
+// console.log('hash', toHex((await hash256('hello world'))));
+// console.log('hash', (await hash512('hello world')));
 

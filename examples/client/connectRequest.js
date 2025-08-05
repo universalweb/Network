@@ -2,16 +2,15 @@ console.clear();
 console.log('STARTING CLIENT');
 console.time('Full');
 import { client } from '#udsp';
-import { currentPath } from '@universalweb/acid';
+import { currentPath } from '@universalweb/utilitylib';
 console.time('Connected');
 // Universal Web Client Socket
 const uwClient = await client({
-	destinationCertificate: `${currentPath(import.meta)}/../../udsp/dis/cache/universalWebPublic.cert`,
-	cipher: 0,
-	logLevel: 3,
+	destinationCertificate: `${currentPath(import.meta)}/../serverApp/certs/universalWebPublic.cert`,
+	logLevel: 4,
 });
 const connection = await uwClient.connect();
-console.log(connection);
+console.log(connection && true);
 // process.exit();
 if (connection) {
 	console.timeEnd('Connected');

@@ -18,7 +18,7 @@ const {
 	crypto_aead_aegis256_NSECBYTES,
 } = _sodium;
 import cipher from './cipher.js';
-import { isU8 } from '@universalweb/acid';
+import { isU8 } from '@universalweb/utilitylib';
 export const sessionKeySize = crypto_aead_aegis256_KEYBYTES;
 export const secretKeySize = crypto_aead_aegis256_KEYBYTES;
 export const nonceSize = crypto_aead_aegis256_NPUBBYTES;
@@ -33,7 +33,7 @@ export async function encryptMethod(message, sessionKey, ad, nonceArg) {
 	const encrypted = crypto_aead_aegis256_encrypt(message, ad, null, Uint8Array.from(nonce), sessionKey, null);
 	return Buffer.concat([
 		nonce,
-		encrypted
+		encrypted,
 	]);
 }
 export async function decryptMethod(encryptedData, sessionKey, adArg, nonceArg) {

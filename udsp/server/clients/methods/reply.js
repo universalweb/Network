@@ -1,5 +1,5 @@
 import { Reply } from '#udsp/request/reply';
-import { isFalse } from '@universalweb/acid';
+import { isFalse } from '@universalweb/utilitylib';
 import { onFrame } from '#udsp/onPacket/onFrame';
 export async function reply(frame, header, rinfo) {
 	// TODO: Consider removing this and having it processed once to avoid re-checks

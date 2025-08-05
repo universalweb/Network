@@ -7,7 +7,7 @@
 // bsuw:// - BSON - Binary JSON Universal Web Resource Locator using JSON string data
 import {
 	get, isNotString, isString, noValue
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 const schemes = {
 	uw: {
 		description: 'Binary Universal Web Resource Locator'

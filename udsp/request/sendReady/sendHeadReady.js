@@ -1,5 +1,5 @@
 import { askRPC, replyRPC } from '../rpc/rpcCodes.js';
-import { hasValue } from '@universalweb/acid';
+import { hasValue } from '@universalweb/utilitylib';
 export async function checkSendHeadReady() {
 	const { isAsk } = this;
 	this.logInfo(`CHECK SETUP STATUS checkSendHeadReady - STATE:${this.state}`);

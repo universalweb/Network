@@ -1,6 +1,6 @@
-// Import the necessary utilities from @universalweb/acid
+// Import the necessary utilities from @universalweb/utilitylib
 // Assuming acid also provides isString and isEmpty for robust checks.
-import { isArray, isEmpty, isString } from '@universalweb/acid';
+import { isArray, isEmpty, isString } from '@universalweb/utilitylib';
 const jsonRegex = /\{[^]*\}|\[[^]*\]/;
 /**
  * Extracts a valid JSON object or array from a given string.

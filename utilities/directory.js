@@ -1,4 +1,4 @@
-import { eachAsyncObject, hasDot, isPlainObject } from '@universalweb/acid';
+import { eachAsyncObject, hasDot, isPlainObject } from '@universalweb/utilitylib';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';

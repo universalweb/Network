@@ -1,2 +1,4 @@
 VIAT
 UDSP
+inlining
+de-optimizations

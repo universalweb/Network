@@ -13,8 +13,8 @@ import {
 	isPlainObject,
 	omit,
 	promise,
-	stringify
-} from '@universalweb/acid';
+	stringify,
+} from '@universalweb/utilitylib';
 import { decode, encode } from '#utilities/serialize';
 import { Base } from '../base.js';
 import { objectDataMethods } from '../dataMethods.js';

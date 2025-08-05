@@ -8,10 +8,10 @@ export const clientStates = {
 	closingState: 5,
 	closedState: 6,
 	destroyingState: 7,
-	destroyedState: 8
+	destroyedState: 8,
 };
 const clientDefaults = {
 	defaultClientConnectionIdSize,
-	clientStates
+	clientStates,
 };
 export default clientDefaults;

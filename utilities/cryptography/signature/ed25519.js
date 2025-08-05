@@ -3,12 +3,12 @@ import {
 	clearBuffer,
 	randomBuffer,
 	toBase64,
-	toHex
+	toHex,
 } from '#utilities/cryptography/utils';
 import hash from '../hash/shake256.js';
 const {
 	hash256,
-	hash512
+	hash512,
 } = hash;
 import { signatureScheme } from './signatureScheme.js';
 const sodium = await import('sodium-native');
@@ -25,7 +25,7 @@ const {
 	crypto_sign_ed25519_sk_to_pk,
 	crypto_sign_ed25519_sk_to_seed,
 	crypto_sign_PUBLICKEYBYTES,
-	crypto_sign_SECRETKEYBYTES
+	crypto_sign_SECRETKEYBYTES,
 } = libsodium;
 const generateKeypair = crypto_sign_keypair;
 const publicKeySize = 32;
@@ -44,13 +44,13 @@ export async function createKeypair(config) {
 	}
 	return {
 		publicKey,
-		privateKey
+		privateKey,
 	};
 }
 export async function exportKeypair(source) {
 	return {
 		publicKey: source.publicKey,
-		privateKey: source.privateKey.slice(0, privateKeySize)
+		privateKey: source.privateKey.slice(0, privateKeySize),
 	};
 }
 export function signCombinedMethod(message, privateKey) {
@@ -149,7 +149,7 @@ export const ed25519 = signatureScheme({
 	signaturePrivateKeyToEncryptPrivateKey,
 	exportKeypair,
 	initializeKeypair,
-	preferred: false
+	preferred: false,
 });
 export default ed25519;
 // const key = await ed25519.signatureKeypair();

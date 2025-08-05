@@ -1,6 +1,6 @@
 import { transactionPathToURL, transactionURLToPath } from '#viat/blocks/transaction/uri';
 import { walletPathToURL, walletURLToPath } from '#viat/blocks/wallet/uri';
-import { has } from '@universalweb/acid';
+import { has } from '@universalweb/utilitylib';
 import txAPI from '../blocks/transaction/defaults.js';
 import walletAPI from '../blocks/wallet/defaults.js';
 export function urlToPath(url) {

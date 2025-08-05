@@ -2,11 +2,11 @@
 	* App server example
 */
 import { app } from '#udsp';
-import { currentPath } from '@universalweb/acid';
+import { currentPath } from '@universalweb/utilitylib';
 import { getMethod } from '../../udsp/app/methods/get.js';
-import { listen } from '../../udsp/server/listen.js';
 import path from 'node:path';
 const uwApp = await app({
+	logLevel: 4,
 	// Cluster Mode
 	// The main server will be the only server that will be able to accept new connections and will forward them to the relevant server in the cluster acting in part as a load balancer
 	// However, the load balancer mode can be turned off and only the clusters will be setup
@@ -29,6 +29,7 @@ const uwApp = await app({
 	},
 	// SERVER SPECIFIC CONFIG
 	server: {
+		logLevel: 4,
 		// The used to return a new address for the client to connect to after initial synchronization packets
 		// Make semi-automatic so no hardinfo is required
 		// proxyAddress: ip,
@@ -59,13 +60,12 @@ const uwApp = await app({
 	// Where to load app resources from
 	resourceDirectory: currentPath(import.meta, 'resources'),
 	rootDirectory: currentPath(import.meta),
-	logLevel: 3,
 });
 if (uwApp) {
 	uwApp.get((req, resp, client) => {
-		uwApp.logIngo('GET REQUEST APP LEVEL');
+		uwApp.logInfo('GET REQUEST APP LEVEL');
 		return getMethod(req, resp, client);
 	});
-	uwApp.listen();
+	await uwApp.listen();
 }
 // info('App Server Status', appServer);

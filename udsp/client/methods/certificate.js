@@ -1,15 +1,15 @@
-import { publicDomainCertificate } from '#components/certificate/domain';
+import { publicDomainCertificate } from '#components/certificate/domain/domain';
 export async function loadCertificate() {
-	this.logInfo(this);
+	// this.logInfo(this);
 	const { options: { destinationCertificate } } = this;
 	this.destination.certificate = await publicDomainCertificate(destinationCertificate);
 	this.logInfo(this.destination.certificate);
-	await this.discovered();
 	await this.processCertificate();
 	await this.configCryptography();
+	await this.discovered();
 }
 export async function processCertificate() {
-	const { destination, } = this;
+	const { destination } = this;
 	const { certificate } = destination;
 	const {
 		keyExchangeKeypair,
@@ -28,14 +28,4 @@ export async function processCertificate() {
 	destination.protocolOptions = protocolOptions;
 }
 export async function onCertificateChunk(message) {
-	const {
-		pid,
-		cert,
-		last
-	} = message;
-	this.certificateChunks[pid] = cert;
-	if (last) {
-		await this.loadCertificate(Buffer.concat(this.certificateChunks));
-		this.connect(message);
-	}
 }

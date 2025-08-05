@@ -2,9 +2,9 @@ import {
 	compactMapArray,
 	hasValue,
 	isArray,
-	isNumber
-} from '@universalweb/acid';
-import aegis256 from './AEGIS-256.js';
+	isNumber,
+} from '@universalweb/utilitylib';
+import aegis256 from './AEGIS256.js';
 import { currentVersion } from '../../../defaults.js';
 import { setOptions } from '../setOption.js';
 import xChaCha from './xChaCha.js';

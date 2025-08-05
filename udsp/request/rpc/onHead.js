@@ -13,7 +13,7 @@ export async function onHeadReady(id, rpc, packetId, data, frame, source, rinfo)
 	source.sendHead();
 }
 export async function onHead(id, rpc, packetId, data, frame, source, rinfo) {
-	this.logInfo('On Head Function', id, rpc, packetId, data, frame, source, rinfo);
+	source.logInfo('On Head Function', id, rpc, packetId, data, frame, source, rinfo);
 	if (!source.receivedSetupPacket || source.incomingHeadPackets[packetId]) {
 		return;
 	}
@@ -30,7 +30,7 @@ export async function onHead(id, rpc, packetId, data, frame, source, rinfo) {
 	if (source.onHead) {
 		await source.onHead(frame);
 	}
-	this.logInfo(source, source.currentIncomingHeadSize);
+	source.logInfo(source, source.currentIncomingHeadSize);
 	if (source.totalIncomingHeadSize === source.currentIncomingHeadSize) {
 		source.processHead();
 	}
