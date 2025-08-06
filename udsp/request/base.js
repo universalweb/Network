@@ -21,17 +21,10 @@ import { checkSendPathReady, clearSendPathReadyTimeout, sendPathReady } from './
 import { checkSetupSent, clearSetupTimeout, sendSetup } from './send/sendSetup.js';
 import { decode, encode } from '#utilities/serialize';
 import { flush, flushIncoming, flushOutgoing } from './flush.js';
-import {
-	logBanner,
-	logError,
-	logInfo,
-	logSuccess,
-	logVerbose,
-	logWarning,
-} from '../../utilities/logs/classLogMethods.js';
 import { dataPacketization } from './dataPacketization.js';
 import { destroy } from './destroy.js';
 import eventMethods from '#udsp/events';
+import logMethods from '#utilities/logs/classLogMethods';
 import { onData } from './on/onData.js';
 import { onDataProgress } from './onProgress/onDateProgress.js';
 import { onFrame } from './on/onFrame.js';
@@ -428,12 +421,6 @@ export class Base {
 	checkSetupSent = checkSetupSent;
 	clearSetupTimeout = clearSetupTimeout;
 	sendSetup = sendSetup;
-	logError = logError;
-	logWarning = logWarning;
-	logInfo = logInfo;
-	logBanner = logBanner;
-	logVerbose = logVerbose;
-	logSuccess = logSuccess;
 	outgoingHead;
 	outgoingData;
 	incomingHeadState = false;
@@ -446,6 +433,7 @@ export class Base {
 	calcProgress = 0;
 	progressHead = 0;
 	progressData = 0;
+	sentHeadCount = 0;
 	dataOrdered = [];
 	stream = [];
 	missingPathPackets = construct(Map);
@@ -505,4 +493,5 @@ export class Base {
 	setupAttempts = 0;
 	logLevel = 3;
 }
+extendClass(Base, logMethods);
 extendClass(Base, eventMethods);

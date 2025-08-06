@@ -62,9 +62,9 @@ const uwApp = await app({
 	rootDirectory: currentPath(import.meta),
 });
 if (uwApp) {
-	uwApp.get((req, resp, client) => {
+	uwApp.get((req, resp, source) => {
 		uwApp.logInfo('GET REQUEST APP LEVEL');
-		return getMethod(req, resp, client);
+		return getMethod(req, resp, source);
 	});
 	await uwApp.listen();
 }

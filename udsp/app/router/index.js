@@ -1,6 +1,7 @@
 import { extendClass, isFunction, isZero } from '@universalweb/utilitylib';
 import eventMethods from '#udsp/events';
 import getMethod from '../../methods/get.js';
+import logMethods from '#utilities/logs/classLogMethods';
 export class Router {
 	constructor(options) {
 		this.setupEventEmitter();
@@ -44,7 +45,7 @@ export class Router {
 			}
 		}
 		if (!res.sent) {
-			this.logInfo(res);
+			this.logInfo('executeRoutes', res);
 			res.send();
 		}
 	}
@@ -111,6 +112,7 @@ export class Router {
 	// 	]);
 	// }
 }
+extendClass(Router, logMethods);
 export function router(...args) {
 	return new Router(...args);
 }

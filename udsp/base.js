@@ -6,19 +6,12 @@ import {
 	extendClass,
 	hasValue,
 } from '@universalweb/utilitylib';
-import {
-	logBanner,
-	logError,
-	logInfo,
-	logSuccess,
-	logVerbose,
-	logWarning,
-} from '#utilities/logs/classLogMethods';
 import { randomBuffer, toBase64 } from '#utilities/cryptography/utils';
 import { calculatePacketOverhead } from './utilities/calculatePacketOverhead.js';
 import { currentVersion } from '../defaults.js';
 import dgram from 'dgram';
 import eventMethods from '#udsp/events';
+import logMethods from '#utilities/logs/classLogMethods';
 import { randomConnectionId } from './utilities/connectionId.js';
 import { stateCodeDescriptions } from './defaults.js';
 export class UDSP {
@@ -68,11 +61,6 @@ export class UDSP {
 		});
 	}
 	stateCodeDescriptions = stateCodeDescriptions;
-	logError = logError;
-	logWarning = logWarning;
-	logInfo = logInfo;
-	logBanner = logBanner;
-	logVerbose = logVerbose;
-	logSuccess = logSuccess;
 }
+extendClass(UDSP, logMethods);
 extendClass(UDSP, eventMethods);

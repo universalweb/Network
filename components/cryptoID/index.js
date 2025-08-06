@@ -4,6 +4,7 @@
 import {
 	assign,
 	currentPath,
+	extendClass,
 	hasDot,
 	hasValue,
 	isArray,
@@ -13,17 +14,10 @@ import {
 } from '@universalweb/utilitylib';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { keychainGet, keychainSave } from '#components/certificate/keychain';
-import {
-	logBanner,
-	logError,
-	logInfo,
-	logSuccess,
-	logVerbose,
-	logWarning,
-} from '#utilities/logs/classLogMethods';
 import { read, readStructured, write } from '#utilities/file';
 import { cryptoIDVersion } from '#components/cryptoID/defaults';
 import { getHomeDirectory } from '#utilities/directory';
+import logMethods from '#utilities/logs/classLogMethods';
 import path from 'node:path';
 import { toBase64Url } from '#crypto/utils.js';
 import viat from '#crypto/cipherSuite/viat.js';
@@ -277,13 +271,8 @@ export class CryptoID {
 	setAlias(value) {
 		this.alias = value;
 	}
-	logError = logError;
-	logWarning = logWarning;
-	logInfo = logInfo;
-	logBanner = logBanner;
-	logVerbose = logVerbose;
-	logSuccess = logSuccess;
 }
+extendClass(CryptoID, logMethods);
 export async function cryptoID(config, optionalArg) {
 	const source = new CryptoID(config, optionalArg);
 	return source;

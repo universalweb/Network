@@ -51,7 +51,7 @@ export class Server extends UDSP {
 		await super.initialize(options);
 		await super.setDefaults(options);
 		await assign(this, options);
-		this.options = assign({}, options);
+		this.options = options;
 		await this.logInfo('OPTIONS', this.options);
 		await this.configConnectionId();
 		await this.setCertificate();
@@ -105,7 +105,7 @@ export class Server extends UDSP {
 		const { app } = this;
 		this.logVerbose('onRequest EVENT', request);
 		if (this.onServerRequest) {
-			await this.onServerRequest(request, response);
+			await this.onServerRequest(request, response, this);
 		}
 		if (app) {
 			return app.onRequest(request, response, this);

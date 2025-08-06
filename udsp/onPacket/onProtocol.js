@@ -3,19 +3,19 @@ import {
 	discoveryHeaderRPC,
 	endHeaderRPC,
 	extendedSynchronizationHeaderRPC,
-	introHeaderRPC
+	introHeaderRPC,
 } from '#udsp/rpc/headerRPC';
 import {
 	discoveryRPC,
 	endRPC,
 	extendedSynchronizationRPC,
-	introRPC
+	introRPC,
 } from '#udsp/rpc/frameRPC';
 import {
 	isArray,
 	isNotNumber,
 	isUndefined,
-	noValue
+	noValue,
 } from '@universalweb/utilitylib';
 export async function proccessProtocolHeader(rpc, source, header, packetDecoded, rinfo) {
 	switch (rpc) {
@@ -47,9 +47,8 @@ export async function proccessProtocolHeader(rpc, source, header, packetDecoded,
 	}
 }
 export async function onProtocolHeader(source, header, packetDecoded, rinfo) {
-	source.logInfo('Processing Protocol Packet Header', header);
+	source.logVerbose('Processing Protocol Header', header);
 	const rpc = header[1];
-	source.logInfo(`Processing Protocol Packet RPC ${rpc}`);
 	if (noValue(rpc) || isNotNumber(rpc)) {
 		source.destroy(3);
 		return;
@@ -83,15 +82,15 @@ export async function proccessProtocolFrame(rpc, source, frame, header, rinfo) {
 			break;
 		}
 		default: {
-			source.logInfo('Unknown Protocol RPC', frame, header, rinfo);
+			source.logError('Unknown Protocol RPC', rpc, frame, header, rinfo);
 			source.end(frame, header, rinfo);
 			break;
 		}
 	}
 }
 export async function onProtocolFrame(source, frame, header, rinfo) {
-	const rpc = header[1];
-	source.logInfo(`Processing Protocol Packet RPC ${rpc}`);
+	const rpc = frame[1];
+	source.logVerbose(`Processing Protocol FRAME RPC ${rpc}`);
 	if (noValue(rpc) || isNotNumber(rpc)) {
 		source.destroy(3);
 		return;

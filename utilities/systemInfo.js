@@ -44,18 +44,18 @@ async function memInfo() {
 export function logSystemInfo() {
 	bannerLog(`SYSTEM REPORT`, 'SYSTEM INFORMATION');
 	// Log CPU information
-	infoLog(`Model: ${os.cpus()[0].model}`);
-	infoLog(`Cores: ${os.cpus().length}`);
-	infoLog(`Speed: ${os.cpus()[0].speed} MHz`);
-	infoLog(`Total Memory: ${formatBytes(os.totalmem())}`);
-	infoLog(`Free Memory: ${formatBytes(os.freemem())}`);
+	infoLog('Model', `${os.cpus()[0].model}`);
+	infoLog('Cores', `${os.cpus().length}`);
+	infoLog('Speed', `${os.cpus()[0].speed} MHz`);
+	infoLog('Total Memory', `${formatBytes(os.totalmem())}`);
+	infoLog('Free Memory', `${formatBytes(os.freemem())}`);
 	// SOFTWARE information
-	infoLog(`Platform: ${os.platform()}`);
-	infoLog(`Type: ${os.type()}`);
-	infoLog(`Release: ${os.release()}`);
-	infoLog(`Architecture: ${os.arch()}`);
+	infoLog('Platform', `${os.platform()}`);
+	infoLog('Type', `${os.type()}`);
+	infoLog('Release', `${os.release()}`);
+	infoLog('Architecture', `${os.arch()}`);
 	// NETWORK information
-	infoLog(`Hostname: ${os.hostname()}`);
+	infoLog('Hostname', `${os.hostname()}`);
 	// Log network interfaces
 	// infoLog(`\nNetwork Interfaces:`);
 	// const networkInterfaces = os.networkInterfaces();

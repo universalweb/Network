@@ -1,6 +1,6 @@
 import * as routers from './router/index.js';
 import * as servers from '#server';
-import { extendClass, isUndefined } from '@universalweb/utilitylib';
+import { assign, extendClass, isUndefined } from '@universalweb/utilitylib';
 import {
 	logBanner,
 	logError,
@@ -14,6 +14,7 @@ import { encode } from '#utilities/serialize';
 import eventMethods from '#udsp/events';
 import { getConnectionIdReservedSpaceString } from '../utilities/connectionId.js';
 import { initialize } from '#server/clients/methods/initialize';
+import logMethods from '#utilities/logs/classLogMethods';
 import { onPacket } from '../server/methods/onPacket.js';
 const {
 	router: createRouter,
@@ -32,11 +33,9 @@ export class App {
 		const { router: routerOptions } = options;
 		this.setupEventEmitter();
 		if (options) {
-			if (options.logLevel) {
-				this.logLevel = options.logLevel;
-			}
+			assign(this, options);
 			if (options.server?.constructor === Server) {
-				this.useServer(options);
+				this.useServer(options.server);
 			} else {
 				this.server = await createServer(options.server);
 				this.useServer(this.server);
@@ -129,11 +128,12 @@ export class App {
 		const { router } = this;
 		this.logInfo('onRequest', request);
 		if (this.onAppRequest) {
-			await this.onAppRequest(request, response);
+			await this.onAppRequest(request, response, this);
 		}
 		if (router) {
-			return router.handle(request, response);
+			return router.handle(request, response, this);
 		} else {
+			this.logError('No Router Found - Returning 404');
 			return response.sendNotFound();
 		}
 	}
@@ -175,11 +175,6 @@ export class App {
 	delete(key) {
 		return this.deleteItem(key);
 	}
-	logError = logError;
-	logWarning = logWarning;
-	logInfo = logInfo;
-	logBanner = logBanner;
-	logVerbose = logVerbose;
-	logSuccess = logSuccess;
 }
+extendClass(App, logMethods);
 extendClass(App, eventMethods);

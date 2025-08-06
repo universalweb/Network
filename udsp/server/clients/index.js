@@ -18,14 +18,6 @@ import {
 	extendedSynchronizationHeader,
 	sendExtendedSynchronization,
 } from './protocolEvents/extendedSynchronization.js';
-import {
-	logBanner,
-	logError,
-	logInfo,
-	logSuccess,
-	logVerbose,
-	logWarning,
-} from '../../../utilities/logs/classLogMethods.js';
 import { send, sendAny } from './methods/send.js';
 import { attachProxyAddress } from './methods/attachProxyAddress.js';
 import { calculatePacketOverhead } from '#udsp/utilities/calculatePacketOverhead';
@@ -33,6 +25,7 @@ import { defaultClientConnectionIdSize } from '../../client/defaults.js';
 import { destroy } from './methods/destroy.js';
 import eventMethods from '#udsp/events';
 import { initialize } from './methods/initialize.js';
+import logMethods from '#utilities/logs/classLogMethods';
 import { onConnected } from './methods/onConnected.js';
 import { randomBuffer } from '#utilities/cryptography/utils';
 import { reply } from './methods/reply.js';
@@ -72,10 +65,10 @@ export class Client {
 		const { server } = this;
 		this.logVerbose('onRequest EVENT', request);
 		if (this.onClientRequest) {
-			await this.onClientRequest(request, response);
+			await this.onClientRequest(request, response, this);
 		}
 		if (server) {
-			return server.onRequest(request, response);
+			return server.onRequest(request, response, this);
 		}
 	}
 	async close(destroyCode) {
@@ -124,12 +117,6 @@ export class Client {
 	extendedSynchronization = extendedSynchronization;
 	extendedSynchronizationHeader = extendedSynchronizationHeader;
 	sendExtendedSynchronization = sendExtendedSynchronization;
-	logError = logError;
-	logWarning = logWarning;
-	logInfo = logInfo;
-	logBanner = logBanner;
-	logVerbose = logVerbose;
-	logSuccess = logSuccess;
 	state = null;
 	randomId = randomBuffer(8);
 	data = construct(Map);
@@ -143,6 +130,7 @@ export class Client {
 	initialGracePeriod = 1000;
 	initialRealtimeGracePeriod = 2000;
 }
+extendClass(Client, logMethods);
 extendClass(Client, eventMethods);
 export async function createClient(config) {
 	const client = await (new Client(config));
