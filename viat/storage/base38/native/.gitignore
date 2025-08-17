@@ -1,0 +1,25 @@
+# Rust build artifacts
+/target/
+**/*.rlib
+**/*.rmeta
+**/*.d
+/.cargo/
+
+# macOS and editors
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# N-API build outputs (binary is platform-specific; usually don't commit)
+*.node
+*.dylib
+*.so
+*.dll
+*.pdb
+*.dSYM/
+
+# If you DO want to commit the built addon, un-ignore just this file:
+#!index.node

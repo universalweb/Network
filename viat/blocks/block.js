@@ -8,15 +8,15 @@ import filesystemMethods from './methods/filesystem.js';
 import { getParentClassName } from '#utilities/class';
 import { hash512SettingsCrypto } from '#utilities/cryptography/utils';
 import hashingMethods from './methods/hashing.js';
+import logMethods from '#utilities/logs/classLogMethods';
 import signatureMethods from './methods/signature.js';
 import validateMethods from './methods/validate.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
+// import wallet from '#viat/wallet/wallet';
 const {
 	version,
 	blockTypes,
 } = blockDefaults;
-// TODO: CHECK IF HASH CAN BE GENERATED INSTEAD OF SAVED TO DISK SINCE SIG COVERS IT - means can be dynamically generated
-// Consider only receipt block has signature. Means can cut total size of both blocks by maybe 2kb
 export class Block {
 	constructor(config) {
 		return this;
@@ -39,6 +39,7 @@ export class Block {
 	async finalize() {
 		await this.setDefaults();
 		await this.setHash();
+		return this;
 	}
 	version = version;
 	typeName = 'generic';
@@ -56,6 +57,7 @@ export class Block {
 		},
 	};
 }
+extendClass(Block, logMethods);
 extendClass(Block, accessorMethods);
 extendClass(Block, configMethods);
 extendClass(Block, defaultsMethods);
@@ -70,8 +72,10 @@ export async function block(...args) {
 }
 export default block;
 // const example = await block();
-// example.initialize();
-// example.setDefaults();
+// const exampleWallet = await wallet();
+// await example.initialize();
+// await example.setDefaults();
 // await example.setHash();
+// console.log(example.block, (await example.exportBinary()).length);
 // console.log(example.block, await example.validate());
 // U3VjaCB2aXNpb24gb2Ygd2hhdCBjb3VsZCBiZSBidXQgb25lIEkgbWF5IG5ldmVyIHNlZS4gVGhlIGN1cnNlIG9mIGRyZWFtcy4=

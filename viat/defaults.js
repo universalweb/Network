@@ -30,13 +30,17 @@ const coinWholeDigitCount = coinMaxWholeSupplyString.length;
 const initialPreAllocation = 5200000;
 // console.log(coinMaxWholeSupplyString.length);
 const reservedAddresses = {
-	// INITIAL ALLOCATION AMOUNT
-	genesisWallet: 0,
-	mint: 1,
-	reserve: 2,
-	team: 3,
-	// TOKEN/NFT ONLY
-	burn: 4,
+	//  STATIC INT WALLET - MINT VIAT
+	coinFoundry: 0,
+	// STATIC INT WALLET - TOKEN/NFT ONLY
+	nullVault: 1,
+	// GENERATED WALLET - FEDERAL VIAT RESERVE FUND/VAULT
+	// The Phoenix Treasury - The Viat Reclamation Fund
+	reserveVault: 2,
+	// GENERATED WALLET - TEAM ALLOCATION WALLET
+	teamVault: 3,
+	//  GENERATED WALLET - INITIAL ALLOCATION WALLET
+	originVault: 4,
 };
 const reserveTxPercentage = 0.01;
 const reserveTxMin = 1n;

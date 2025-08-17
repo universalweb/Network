@@ -1,0 +1,14 @@
+{
+	"name": "@viat/base38-native",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"exports": "./index.js",
+	"scripts": {
+		"build": "RUSTFLAGS='-C target-cpu=native' napi build --release",
+		"build:debug": "RUSTFLAGS='-C target-cpu=native' napi build"
+	},
+	"devDependencies": {
+		"@napi-rs/cli": "^3.1.3"
+	}
+}

@@ -9,7 +9,7 @@ import {
 } from '#utilities/cryptography/utils';
 import cryptolib from 'node:crypto';
 import { hashScheme } from './hashScheme.js';
-import { runBench } from '../../../examples/benchmark.js';
+import { runBench } from '../../benchmark.js';
 const createHash = cryptolib.hash;
 const hashName = 'shake256';
 const hash512StrictName = 'sha3-512';

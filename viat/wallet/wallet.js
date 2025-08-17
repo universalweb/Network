@@ -1,10 +1,10 @@
 // VIAT WALLET
 import { decode, encode } from '#utilities/serialize';
-import { getTransactionPath, getTransactionsPath } from '../blocks/transaction/uri.js';
+import { getTransactionPath, getTransactionsPath } from '#viat/blocks/types/transactions/transaction/uri';
 import { CryptoID } from '#components/cryptoID/index';
-import { getWalletPath } from '../blocks/wallet/uri.js';
+import { getWalletPath } from '#viat/blocks/types/transactions/wallet/uri';
 import { isBuffer } from '@universalweb/utilitylib';
-import { transactionBlock } from '#viat/blocks/transaction/block';
+import { transactionBlock } from '#viat/blocks/types/transactions/transaction/block';
 export class Wallet extends CryptoID {
 	constructor(config, optionalArg) {
 		super(false);

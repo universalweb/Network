@@ -50,7 +50,7 @@ export async function createKeypair(config) {
 export async function exportKeypair(source) {
 	return {
 		publicKey: source.publicKey,
-		privateKey: source.privateKey.slice(0, privateKeySize),
+		privateKey: source.privateKey.subarray(0, privateKeySize),
 	};
 }
 export function signCombinedMethod(message, privateKey) {
@@ -93,7 +93,7 @@ export function signatureKeypairToEncryptionKeypair(originalKeypair) {
 }
 export function generatePublicKey(privateKey) {
 	if (privateKey.length === combinedKeySize) {
-		return privateKey.slice(privateKeySize);
+		return privateKey.subarray(privateKeySize);
 	}
 	const publicKey = bufferAlloc(publicKeySize);
 	crypto_sign_ed25519_sk_to_pk(publicKey, privateKey);
@@ -109,7 +109,7 @@ export async function initializeKeypair(source) {
 	}
 	if (!source.publicKey && source.privateKey) {
 		if (source.privateKey.length === this.combinedKeySize) {
-			target.publicKey = source.privateKey.slice(privateKeySize);
+			target.publicKey = source.privateKey.subarray(privateKeySize);
 		} else {
 			const publicKey = bufferAlloc(publicKeySize);
 			await generatePublicKey(publicKey, source.privateKey);

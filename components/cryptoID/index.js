@@ -13,10 +13,10 @@ import {
 	isString,
 } from '@universalweb/utilitylib';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
+import { getHomeDirectory, getWalletsDirectory } from '#utilities/directory';
 import { keychainGet, keychainSave } from '#components/certificate/keychain';
 import { read, readStructured, write } from '#utilities/file';
 import { cryptoIDVersion } from '#components/cryptoID/defaults';
-import { getHomeDirectory } from '#utilities/directory';
 import logMethods from '#utilities/logs/classLogMethods';
 import path from 'node:path';
 import { toBase64Url } from '#crypto/utils.js';
@@ -198,7 +198,7 @@ export class CryptoID {
 		return write(fullPath, binaryData, 'binary', true);
 	}
 	async save(fileLocationArg, fileNameArg, encryptionPassword, encoding) {
-		const fileLocation = (fileLocationArg) ? fileLocationArg : await getHomeDirectory();
+		const fileLocation = (fileLocationArg) ? fileLocationArg : await getWalletsDirectory();
 		const fileName = (fileNameArg) ? fileNameArg : await this.getAddressString(encoding);
 		return this.saveToFile(fileName, fileLocation, encryptionPassword);
 	}

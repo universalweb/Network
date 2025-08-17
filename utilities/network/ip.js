@@ -58,28 +58,28 @@ export function ipv4FromBuffer(buffer) {
 	if (!buffer || buffer.length < 6) {
 		return;
 	}
-	const address = buffer.slice(0, 4);
+	const address = buffer.subarray(0, 4);
 	return ipBufferToString(address);
 }
 export function ipv6FromBuffer(buffer) {
 	if (!buffer || buffer.length < 18) {
 		return;
 	}
-	const address = buffer.slice(0, 16);
+	const address = buffer.subarray(0, 16);
 	return ipBufferToString(address);
 }
 export function portFromIPv4Buffer(buffer) {
 	if (!buffer || buffer.length !== 6) {
 		return;
 	}
-	const port = buffer.slice(4, 6);
+	const port = buffer.subarray(4, 6);
 	return bufferToPortNumber(port);
 }
 export function portFromIPv6Buffer(buffer) {
 	if (!buffer || buffer.length !== 18) {
 		return;
 	}
-	const port = buffer.slice(16, 18);
+	const port = buffer.subarray(16, 18);
 	return bufferToPortNumber(port);
 }
 export function isValidPort(port) {

@@ -12,26 +12,26 @@ export const bigIntType = (joi) => {
 			if (typeof value === 'string' && (/^-?\d+n?$/).test(value)) {
 				try {
 					return {
-						value: BigInt(value.endsWith('n') ? value.slice(0, -1) : value)
+						value: BigInt(value.endsWith('n') ? value.slice(0, -1) : value),
 					};
 				} catch (e) {
 					return {
-						errors: helpers.error('bigint.base')
+						errors: helpers.error('bigint.base'),
 					};
 				}
 			}
 			return {
-				value
+				value,
 			};
 		},
 		validate(value, helpers) {
 			if (typeof value !== 'bigint') {
 				return {
-					errors: helpers.error('bigint.base')
+					errors: helpers.error('bigint.base'),
 				};
 			}
 			return {
-				value
+				value,
 			};
 		},
 		rules: {
@@ -40,8 +40,8 @@ export const bigIntType = (joi) => {
 					return this.$_addRule({
 						name: 'min',
 						args: {
-							limit: BigInt(limit)
-						}
+							limit: BigInt(limit),
+						},
 					});
 				},
 				args: [
@@ -57,7 +57,7 @@ export const bigIntType = (joi) => {
 				validate(value, helpers, args, options) {
 					if (value < args.limit) {
 						return helpers.error('bigint.min', {
-							limit: args.limit
+							limit: args.limit,
 						});
 					}
 					return value;
@@ -68,8 +68,8 @@ export const bigIntType = (joi) => {
 					return this.$_addRule({
 						name: 'max',
 						args: {
-							limit: BigInt(limit)
-						}
+							limit: BigInt(limit),
+						},
 					});
 				},
 				args: [
@@ -85,7 +85,7 @@ export const bigIntType = (joi) => {
 				validate(value, helpers, args, options) {
 					if (value > args.limit) {
 						return helpers.error('bigint.max', {
-							limit: args.limit
+							limit: args.limit,
 						});
 					}
 					return value;
@@ -94,13 +94,13 @@ export const bigIntType = (joi) => {
 			positive: {
 				method() {
 					return this.$_addRule({
-						name: 'positive'
+						name: 'positive',
 					});
 				},
 				validate(value, helpers) {
 					if (value <= 0n) {
 						return helpers.error('bigint.min', {
-							limit: 1n
+							limit: 1n,
 						});
 					}
 					return value;
@@ -109,13 +109,13 @@ export const bigIntType = (joi) => {
 			negative: {
 				method() {
 					return this.$_addRule({
-						name: 'negative'
+						name: 'negative',
 					});
 				},
 				validate(value, helpers) {
 					if (value >= 0n) {
 						return helpers.error('bigint.max', {
-							limit: -1n
+							limit: -1n,
 						});
 					}
 					return value;

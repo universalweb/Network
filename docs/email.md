@@ -1,0 +1,3 @@
+# Universal Web Email
+
+PERKS: First sender must request the receiver's certificate from the email server. If denied then the sender can't send the email. User specific email certs permits conditions which if followed can prevent an email server or admin from being able to read individual users email. Cuts down on mass marketing email spam by forcing the sender to request additional specific details from each receiver. Further ensures that the origin/sender can be easily authenticated as well as the receiver. Ensures that the senders email server can't read an individual users outgoing emails as well.

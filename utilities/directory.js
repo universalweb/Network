@@ -2,29 +2,24 @@ import { eachAsyncObject, hasDot, isPlainObject } from '@universalweb/utilitylib
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-export function getHomeDirectory() {
+export function getHomeDirectory(appendPath = '') {
 	const homeDirectory = os.homedir();
-	return homeDirectory;
+	return path.join(homeDirectory, appendPath);
 }
-export function getDesktopDirectory() {
-	const homeDirectory = getHomeDirectory();
-	const desktopDirectory = path.join(homeDirectory, 'Desktop');
-	return desktopDirectory;
+export function getViatDirectory(appendPath = '') {
+	return getHomeDirectory('viat', appendPath);
 }
-export function getDocumentsDirectory() {
-	const homeDirectory = getHomeDirectory();
-	const documentsDirectory = path.join(homeDirectory, 'Documents');
-	return documentsDirectory;
+export function getDesktopDirectory(appendPath = '') {
+	return getHomeDirectory('Desktop', appendPath);
 }
-export function getDownloadsDirectory() {
-	const homeDirectory = getHomeDirectory();
-	const downloadsDirectory = path.join(homeDirectory, 'Downloads');
-	return downloadsDirectory;
+export function getDocumentsDirectory(appendPath = '') {
+	return getHomeDirectory('Documents', appendPath);
 }
-export function getViatDirectory() {
-	const homeDirectory = getHomeDirectory();
-	const downloadsDirectory = path.join(homeDirectory, 'VIAT');
-	return downloadsDirectory;
+export function getDownloadsDirectory(appendPath = '') {
+	return getHomeDirectory('Downloads', appendPath);
+}
+export function getWalletsDirectory(appendPath = '') {
+	return getViatDirectory('wallets', appendPath);
 }
 const exportAPI = {
 	getHomeDirectory,
@@ -32,6 +27,7 @@ const exportAPI = {
 	getDocumentsDirectory,
 	getDownloadsDirectory,
 	getViatDirectory,
+	getWalletsDirectory,
 };
 export default exportAPI;
 // console.log('homeDirectory', getHomeDirectory());

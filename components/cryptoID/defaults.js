@@ -1,5 +1,5 @@
 export const cryptoIDVersion = 1;
 const cryptoIDDefaults = {
-	cryptoIDVersion
+	cryptoIDVersion,
 };
 export default cryptoIDDefaults;

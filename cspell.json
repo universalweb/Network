@@ -1,42 +1,43 @@
 {
-	"version": "0.2",
-	"language": "en-US",
-	"files": [
-		"**/*.{js,jsx,ts,tsx,md,yml,txt,private}"
-	],
-	"ignorePaths": [
-		"node_modules/**",
-		"**/.git/**",
-		"**/.github/**",
-		"**/package-lock.json",
-		"!./*"
-	],
-	"languageId": "javascript,json,markdown,plaintext",
-	"useGitignore": true,
-	"dictionaryDefinitions": [],
-	"dictionaries": [],
-	"words": [
-		"cbor",
-		"cldmv",
-		"daisyui",
-		"decapsulated",
-		"decapsulates",
-		"iife",
-		"pqclean",
-		"sarif",
-		"simc",
-		"uwrl",
-		"UW",
-		"VIAT"
-	],
-	"ignoreWords": [],
-	"import": [],
-	"enabled": true,
-	"enabledFileTypes": {
-		"plaintext": true,
-		"javascript": true,
-		"html": true,
-		"css": true,
-		"markdown": true
-	}
+"version": "0.2",
+"language": "en-US",
+"files": [
+	"**/*.{js,jsx,ts,tsx,md,yml,txt,private}"
+],
+"ignorePaths": [
+	"node_modules/**",
+	"**/.git/**",
+	"**/.github/**",
+	"**/package-lock.json",
+	"!./*"
+],
+"languageId": "javascript,json,markdown,plaintext",
+"useGitignore": true,
+"dictionaryDefinitions": [],
+"dictionaries": [],
+"words": [
+	"cbor",
+	"cldmv",
+	"daisyui",
+	"decapsulated",
+	"decapsulates",
+	"iife",
+	"journaling",
+	"pqclean",
+	"sarif",
+	"simc",
+	"UW",
+	"uwrl",
+	"VIAT"
+],
+"ignoreWords": [],
+"import": [],
+"enabled": true,
+"enabledFileTypes": {
+	"plaintext": true,
+	"javascript": true,
+	"html": true,
+	"css": true,
+	"markdown": true
+}
 }

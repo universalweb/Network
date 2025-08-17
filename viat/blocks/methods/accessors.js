@@ -1,7 +1,7 @@
 import {
 	assign, everyArray, get, hasValue, isArray, isBigInt, isPlainObject, merge, toPath,
 } from '@universalweb/utilitylib';
-import { getWallet } from '../wallet/uri.js';
+import { getWallet } from '#viat/blocks/types/transactions/wallet/uri';
 import { readStructured } from '#utilities/file';
 import { toBase64Url } from '#crypto/utils.js';
 const methods = {
@@ -64,7 +64,7 @@ const methods = {
 		if (link) {
 			link[lastPathItem] = value;
 		}
-		return link;
+		return this;
 	},
 	assignToBlock(value) {
 		if (isPlainObject(value)) {
