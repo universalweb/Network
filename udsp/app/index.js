@@ -5,8 +5,9 @@ import {
 	currentPath,
 	hasValue,
 	isUndefined,
+	omit,
 } from '@universalweb/utilitylib';
-import { bannerLog, infoLog } from '#utilities/logs/logs';
+import { bannerLog, infoLog, successLog } from '#utilities/logs/logs';
 import { decode, encode } from '#utilities/serialize';
 import { App } from './App.js';
 import cluster from 'node:cluster';
@@ -18,7 +19,7 @@ const numCPUs = await getCoreCount();
 function workerReady(worker) {
 	worker.ready = true;
 	worker.process.send('registered');
-	infoLog('worker is READY:', worker.id);
+	successLog('worker', `READY:${worker.id}`);
 }
 async function workerOnMessage(workers, worker, msg) {
 	const decodedMessage = await decode(msg);
@@ -39,9 +40,35 @@ async function workerOnMessage(workers, worker, msg) {
 	}
 }
 // TODO: Break up function try to put most as part of the class not the function
+async function workerInstance(config, ...args) {
+	const { scale } = config;
+	infoLog('WORKER', `${cluster.worker.id} started`);
+	infoLog('WORKER', 'CONFIG', false, config);
+	config.isPrimary = false;
+	config.port = (scale.port || config.server.port) + cluster.worker.id;
+	config.workerId = String(cluster.worker.id);
+	config.isWorker = true;
+	// const freshConfig = omit(config, ['scale']);
+	// assign(freshConfig, config.scale);
+	const serverWorker = await new App(config, ...args);
+	process.on('message', (message) => {
+		if (message === 'registered') {
+			return successLog('Worker', `REGISTERED ${config.workerId}`);
+		}
+		const messageDecoded = decode(message);
+		infoLog('MESSAGE FROM LOAD BALANCER');
+		if (hasValue(message)) {
+			return serverWorker.onPacket(messageDecoded[0], messageDecoded[1]);
+		} else {
+			infoLog('Invalid Message decode failed from load balancer');
+		}
+	});
+	process.send('ready');
+	return serverWorker;
+}
 export async function app(config, ...args) {
 	// if (config.scale && false) {
-	if (config.scale === false) {
+	if (config.scale) {
 		const {
 			scale,
 			scale: { size },
@@ -67,6 +94,13 @@ export async function app(config, ...args) {
 			};
 			const workers = [];
 			masterLoadBalancer.workers = workers;
+			cluster.on('online', (worker) => {
+				infoLog('worker is online:', worker.id);
+			});
+			cluster.on('exit', (worker, code, signal) => {
+				infoLog('worker is dead:', worker.isDead(), code);
+				workers[worker.id] = null;
+			});
 			for (let index = 0; index < coreCount; index++) {
 				const worker = cluster.fork();
 				worker.state = {};
@@ -79,37 +113,12 @@ export async function app(config, ...args) {
 					}
 					workerOnMessage(workers, worker, msg);
 				});
+				break;
 			}
-			cluster.on('online', (worker) => {
-				infoLog('worker is online:', worker.id);
-			});
-			cluster.on('exit', (worker, code, signal) => {
-				infoLog('worker is dead:', worker.isDead(), code);
-				workers[worker.id] = null;
-			});
 			// infoLog(cluster.settings);
 			return masterLoadBalancer;
 		} else {
-			infoLog(`Worker ${cluster.worker.id} started`);
-			config.isPrimary = false;
-			config.port = (scale.port || config.server.port) + cluster.worker.id;
-			config.workerId = String(cluster.worker.id);
-			config.isWorker = true;
-			const serverWorker = await new App(config, ...args);
-			process.on('message', (message) => {
-				if (message === 'registered') {
-					return infoLog('Worker ACK REG', config.workerId);
-				}
-				const messageDecoded = decode(message);
-				infoLog('MESSAGE FROM LOAD BALANCER');
-				if (hasValue(message)) {
-					return serverWorker.onPacket(messageDecoded[0], messageDecoded[1]);
-				} else {
-					infoLog('Invalid Message decode failed from load balancer');
-				}
-			});
-			process.send('ready');
-			return serverWorker;
+			return workerInstance(config, ...args);
 		}
 	} else {
 		bannerLog('SINGLE APP INSTANCE LAUNCHING');

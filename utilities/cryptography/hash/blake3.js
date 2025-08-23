@@ -3,6 +3,8 @@ import {
 	clearBuffer,
 	clearBuffers,
 	hexString,
+	hexToBuffer,
+	int256,
 	int32,
 	int512,
 	int64,
@@ -10,13 +12,13 @@ import {
 import { createBLAKE3, blake3 as hash } from 'hash-wasm';
 import { hashScheme } from './hashScheme.js';
 export async function hash256(source) {
-	return bufferFrom(await hash(source), hexString);
+	return hexToBuffer(await hash(source, int256));
 }
 export async function hash512(source) {
-	return bufferFrom(await hash(source, int512), hexString);
+	return hexToBuffer(await hash(source, int512));
 }
 export async function hashXOF(source, outputLength) {
-	return bufferFrom(await hash(source, outputLength), hexString);
+	return hexToBuffer(await hash(source, outputLength));
 }
 export const blake3 = hashScheme({
 	name: 'blake3',
@@ -30,4 +32,4 @@ export const blake3 = hashScheme({
 	hashXOF,
 });
 export default blake3;
-// console.log((await hash512('hello world')));
+// console.log((await hash(Buffer.from('hello world'), int256)));

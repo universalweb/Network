@@ -11,8 +11,9 @@ export const basicChecksumHashFunction = 'blake3';
 export const defaultHashFunction = 'shake256';
 export const int32 = 32;
 export const int64 = 64;
-export const int512 = 512;
 export const int128 = 128;
+export const int256 = 256;
+export const int512 = 512;
 export const hash512SettingsNoble = {
 	dkLen: int64,
 };
@@ -44,15 +45,15 @@ export function clearBuffers(...sources) {
 export function toBuffer(source) {
 	return Buffer.from(source);
 }
-const base64String = 'base64';
+export const base64String = 'base64';
 export function toBase64(source) {
 	return source.toString(base64String);
 }
-const base64URLString = 'base64url';
+export const base64URLString = 'base64url';
 export function toBase64Url(source) {
 	return source.toString(base64URLString);
 }
-const hexString = 'hex';
+export const hexString = 'hex';
 export function toHex(source) {
 	return source.toString(hexString);
 }

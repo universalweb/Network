@@ -52,7 +52,7 @@ export class Server extends UDSP {
 		await super.setDefaults(options);
 		await assign(this, options);
 		this.options = options;
-		await this.logInfo('OPTIONS', this.options);
+		await this.logInfo('UDSP', this.options);
 		await this.configConnectionId();
 		await this.setCertificate();
 		await this.configureCertificateCryptography();

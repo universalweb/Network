@@ -1,9 +1,10 @@
+// Bloom Filter experiments
 import { decode, encodeStrict } from '#utilities/serialize';
 import { hash256, hash512 } from '#crypto/hash/shake256.js';
-import { isBuffer, isPlainObject } from '@universalweb/utilitylib';
+import { isBuffer, isPlainObject, merge } from '@universalweb/utilitylib';
 import { random64ByteBuffer } from '#utilities/crypto';
 import runBench from '#utilities/benchmark';
-// Cached module-level constants (camelCase)
+// Cached module-level constants (camelCase)rr
 const wordBits = 64n;
 const wordMask = 63n;
 // Big-endian bytes -> BigInt
@@ -56,19 +57,19 @@ function inputToBuffer(input) {
 }
 // Sparse BigInt bitset: Map<wordIndex(BigInt), wordBits(BigInt)>
 class BigIntBitset {
-	constructor() {
+	constructor(source) {
 		// key: wordIndex(BigInt), value: 64-bit word BigInt
-		this.words = new Map();
+		this.sourceMap = source || new Map();
 	}
 	set(bitIndex) {
 		const wordIdx = bitIndex >> 6n;
 		const bit = 1n << (bitIndex & wordMask);
-		const cur = this.words.get(wordIdx) ?? 0n;
-		this.words.set(wordIdx, cur | bit);
+		const cur = this.sourceMap.get(wordIdx) ?? 0n;
+		this.sourceMap.set(wordIdx, cur | bit);
 	}
 	has(bitIndex) {
 		const wordIdx = bitIndex >> 6n;
-		const word = this.words.get(wordIdx);
+		const word = this.sourceMap.get(wordIdx);
 		if (word === undefined) {
 			return false;
 		}
@@ -76,19 +77,14 @@ class BigIntBitset {
 		return (word & bit) !== 0n;
 	}
 	clear() {
-		this.words.clear();
+		this.sourceMap.clear();
 	}
 	toEntries() {
-		return this.words;
+		return this.sourceMap;
 	}
 	fromEntries(entries) {
-		this.words.clear();
-		for (const [
-			k,
-			v,
-		] of entries) {
-			this.words.set(BigInt(k), BigInt(v));
-		}
+		this.sourceMap.clear();
+		this.sourceMap = entries;
 	}
 }
 /**
@@ -101,14 +97,24 @@ class BigIntBitset {
  *       h2 = last 32 bytes of the provided SHAKE256-512 output, forced odd.
  */
 export class BloomFilter {
-	constructor(config = {}) {
-		const {
-			mBits,
-			kHashes,
-		} = config;
-		this.mBits = BigInt(mBits);
-		this.k = BigInt(kHashes);
-		this.bits = new BigIntBitset();
+	constructor(config) {
+		if (isBuffer(config)) {
+			return this.fromBuffer(config);
+		} else if (isPlainObject(config)) {
+			return this.configure(config);
+		}
+	}
+	configure(config) {
+		if (isPlainObject(config)) {
+			const {
+				mBits,
+				kHashes,
+				sourceMap,
+			} = config;
+			this.mBits = BigInt(mBits);
+			this.k = BigInt(kHashes);
+			this.bits = new BigIntBitset(sourceMap);
+		}
 	}
 	// Add an element using a precomputed 64-byte SHAKE256 output (Buffer or { hash: Buffer }).
 	async add(input) {
@@ -177,22 +183,19 @@ export class BloomFilter {
 		this.bits.clear();
 	}
 	// CBOR snapshot that preserves BigInt and binary data
-	toCBOR() {
-		// words: Array<[BigInt, BigInt]>
+	exportBuffer() {
+		// sourceMap: Array<[BigInt, BigInt]>
 		return encodeStrict({
 			mBits: this.mBits,
 			kHashes: this.k,
-			words: this.bits.toEntries(),
+			sourceMap: this.bits.sourceMap,
 		});
 	}
-	static fromCBOR(cborBuffer) {
-		const snapshot = decode(cborBuffer);
-		const bf = new BloomFilter({
-			mBits: BigInt(snapshot.mBits),
-			kHashes: BigInt(snapshot.kHashes),
-		});
-		bf.bits.fromEntries(snapshot.words);
-		return bf;
+	async fromBuffer(cborBuffer) {
+		const config = await decode(cborBuffer);
+		console.log(config);
+		this.configure(config);
+		return this;
 	}
 }
 // Assume h64a and h64b are Buffers of length 64 produced elsewhere via SHAKE256-512.
@@ -215,8 +218,4 @@ await bloom.add(h64c);
 console.log(await bloom.has(h64a));
 console.log(await bloom.has(h64b));
 console.log(await bloom.has(h64c));
-const map = new Map();
-map.set(h64a, true);
-map.set(h64b, true);
-map.set(h64c, true);
-console.log(await decode(await encodeStrict(map)));
+console.log(await new BloomFilter(await bloom.exportBuffer()), (await bloom.exportBuffer()).length);
