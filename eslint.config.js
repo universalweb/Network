@@ -398,7 +398,7 @@ export default [
 			'no-duplicate-case': 'error',
 			'no-duplicate-imports': 'error',
 			'no-else-return': 'off',
-			'no-empty': 'error',
+			'no-empty': 'off',
 			'no-empty-character-class': 'error',
 			'no-empty-function': 'off',
 			'no-empty-pattern': 'error',

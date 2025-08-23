@@ -1,4 +1,4 @@
-import { assign, hasValue } from '@universalweb/acid';
+import { assign, hasValue } from '@universalweb/utilitylib';
 import { encode } from '#utilities/serialize';
 const cache = {};
 export const maxDefaultPacketSize = 1280;

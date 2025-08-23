@@ -1,14 +1,14 @@
 import { encapsulate, encryptionKeypair } from '../udsp/cryptoMiddleware/keyExchange/kyber768.js';
-import { blake3 } from '@noble/hashes/blake3';
 import { encode } from '#utilities/serialize';
 import { encrypt } from '../udsp/cryptoMiddleware/encryption/XChaCha.js';
 import { generateConnectionId } from '#udsp/connectionId';
+import { hash256 } from '#utilities/cryptography/hash/shake256';
 // estimate packet sizes
 export async function createServerIntroPacket() {
 	const keypair = await encryptionKeypair();
 	const {
 		cipherText,
-		sharedSecret
+		sharedSecret,
 	} = await encapsulate(keypair.publicKey);
 	const packet = [
 		undefined,
@@ -17,11 +17,11 @@ export async function createServerIntroPacket() {
 		cipherText,
 		true,
 		'44488',
-		true
+		true,
 	];
 	console.log(sharedSecret);
 	const header = [generateConnectionId(8), 0];
-	const encrypted = encrypt(encode(packet), blake3(sharedSecret), encode(header));
+	const encrypted = encrypt(encode(packet), hash256(sharedSecret), encode(header));
 	console.log(encode([header, encrypted]).length, keypair.publicKey.length);
 }
 createServerIntroPacket();

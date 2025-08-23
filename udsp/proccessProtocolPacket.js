@@ -13,7 +13,7 @@ import {
 import {
 	isArray,
 	isNotNumber
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { destroy } from './request/destory.js';
 export async function proccessProtocolHeader(source, header, packetDecoded, rinfo) {
 	const rpc = header[1];

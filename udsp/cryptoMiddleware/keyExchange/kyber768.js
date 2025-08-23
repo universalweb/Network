@@ -1,5 +1,5 @@
 import * as defaultCrypto from '#crypto';
-import { clearBuffer, isBuffer } from '@universalweb/acid';
+import { clearBuffer, isBuffer } from '@universalweb/utilitylib';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
 import { encryptionKeypair as x25519Keypair } from './x25519.js';
 const { randomBuffer } = defaultCrypto;

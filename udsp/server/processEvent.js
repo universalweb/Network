@@ -1,5 +1,5 @@
 import { failed, info } from '#logs';
-import { get, hasValue, stringify } from '@universalweb/acid';
+import { get, hasValue, stringify } from '@universalweb/utilitylib';
 export async function processEvent(request, response, source) {
 	const { onRequest } = source;
 	console.log('processEvent method', request.method);

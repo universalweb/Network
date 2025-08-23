@@ -4,8 +4,8 @@ import {
 	hasValue,
 	intersection,
 	isBoolean,
-	keys
-} from '@universalweb/acid';
+	keys,
+} from '@universalweb/utilitylib';
 import { connectionIdToBuffer, generateConnectionId } from '#udsp/connectionId';
 import {
 	failed,
@@ -13,7 +13,7 @@ import {
 	info,
 	msgReceived,
 	msgSent,
-	success
+	success,
 } from '#logs';
 export async function initialize(config) {
 	const {
@@ -36,7 +36,7 @@ export async function initialize(config) {
 		},
 		connection: {
 			address: ip,
-			port
+			port,
 		},
 	} = config;
 	const client = this;
@@ -56,7 +56,7 @@ export async function initialize(config) {
 	client.connectionIdString = serverConnectionIdString;
 	assign(client.destination, {
 		ip,
-		port
+		port,
 	});
 	if (initialGracePeriod) {
 		this.initialGracePeriodCheck();

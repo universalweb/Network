@@ -5,7 +5,7 @@ import {
 	isBuffer,
 	isPrimitive,
 	stringify
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import chalk from 'chalk';
 const arrayNumberRegex = /\[([\d\s,]*?)\]/gm;
 function truncateArray(match) {

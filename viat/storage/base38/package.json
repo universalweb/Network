@@ -1,0 +1,23 @@
+{
+	"name": "base38",
+	"version": "1.0.0",
+	"main": "index.js",
+	"type": "module",
+	"napi": {
+		"name": "base38-native",
+		"triples": {
+			"defaults": true,
+			"additional": [
+				"aarch64-apple-darwin"
+			]
+		}
+	},
+	"scripts": {
+		"build": "napi build --release --platform --cargo-cwd ./native",
+		"build:debug": "napi build --cargo-cwd ./native",
+		"prepublishOnly": "npm run build"
+	},
+	"devDependencies": {
+		"@napi-rs/cli": "^2.16.0"
+	}
+}

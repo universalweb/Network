@@ -12,7 +12,7 @@ import {
 	isUndefined,
 	omit,
 	promise
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { uwrl } from '#udsp/UWRL/index';
 function setRecordInfo(destination, record) {
 	destination.ip = record[2];

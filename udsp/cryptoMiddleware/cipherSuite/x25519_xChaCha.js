@@ -13,7 +13,7 @@ import {
 	encrypt,
 	nonceBox
 } from '../encryption/XChaCha.js';
-import { assign } from '@universalweb/acid';
+import { assign } from '@universalweb/utilitylib';
 import { blake3 } from '../hash/blake3.js';
 import { kyber768_x25519 } from '../keyExchange/kyber768_x25519.js';
 const sodium = await import('sodium-native');

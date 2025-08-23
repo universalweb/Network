@@ -12,18 +12,11 @@ const {
 	crypto_shorthash,
 	crypto_shorthash_BYTES,
 	crypto_shorthash_KEYBYTES,
-	randombytes_buf
+	randombytes_buf,
 } = sodiumLib;
-import { clear, isBuffer } from '@universalweb/acid';
-import { blake3 } from '@noble/hashes/blake3';
+import { clear, isBuffer } from '@universalweb/utilitylib';
 export function toBuffer(source) {
 	return Buffer.from(source);
-}
-export function toBase64(source) {
-	return source.toString('base64');
-}
-export function toHex(source) {
-	return source.toString('hex');
 }
 export function buff(source) {
 	return Buffer.from(source);
@@ -89,21 +82,6 @@ export function clearSessionKeys(source) {
 	clearBuffer(source.receiveKey);
 	source.transmitKey = null;
 	source.receiveKey = null;
-}
-export function combineKeys(...sources) {
-	// console.log('Combine', key1, key2);
-	const combinedKeys = blake3(Buffer.concat(sources));
-	clearBuffers(...sources);
-	return combinedKeys;
-}
-export function combineSessionKeys(source, oldTransmitKey, oldReceiveKey) {
-	console.log('combineSessionKeys', source.transmitKey, oldTransmitKey, source.receiveKey, oldReceiveKey);
-	if (oldTransmitKey) {
-		source.transmitKey = combineKeys(oldTransmitKey, source.transmitKey);
-	}
-	if (oldReceiveKey) {
-		source.receiveKey = combineKeys(oldReceiveKey, source.receiveKey);
-	}
 }
 export function getX25519Key(source) {
 	return source.slice(0, 32);

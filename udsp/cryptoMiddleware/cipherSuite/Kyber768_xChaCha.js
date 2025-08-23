@@ -1,8 +1,8 @@
 // Closed source not for private and or corporate use.
 import * as defaultCrypto from '#crypto';
-import { assign, clear, isBuffer } from '@universalweb/acid';
+import { assign, clear, isBuffer } from '@universalweb/utilitylib';
 import {
-	decapsulate, encapsulate, encryptionKeypair, kyber768
+	decapsulate, encapsulate, encryptionKeypair, kyber768,
 } from '../keyExchange/kyber768.js';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
 import { blake3 } from '@noble/hashes/blake3';
@@ -15,9 +15,9 @@ const {
 	toBase64,
 	toHex,
 	combineKeys,
-	clearBuffer
+	clearBuffer,
 } = defaultCrypto;
-const { id: encryptionKeypairID, } = kyber768;
+const { id: encryptionKeypairID } = kyber768;
 const hash = blake3;
 // Create User Kyber keypair send to server
 // Server creates Kyber shared Secret & encapsulates it via user's public kyber key
@@ -48,12 +48,12 @@ export const kyber768_xChaCha = {
 		console.log(destinationPublicKey.length);
 		const {
 			cipherText,
-			sharedSecret
+			sharedSecret,
 		} = await encapsulate(destinationPublicKey);
 		const frame = [
 			false,
 			extendedHandshakeRPC,
-			cipherText
+			cipherText,
 		];
 		source.cipherData = cipherText;
 		source.sharedSecret = sharedSecret;
@@ -84,7 +84,7 @@ export const kyber768_xChaCha = {
 		console.log(destinationPublicKey);
 		const {
 			cipherText,
-			sharedSecret
+			sharedSecret,
 		} = await encapsulate(destinationPublicKey);
 		destination.publicKey = destinationPublicKey;
 		source.cipherData = cipherText;
@@ -104,7 +104,7 @@ export const kyber768_xChaCha = {
 			const [
 				streamid_undefined,
 				rpc,
-				cipherData
+				cipherData,
 			] = frame;
 			const privateKey = source.privateKey;
 			const sharedSecret = await decapsulate(cipherData, privateKey);

@@ -1,4 +1,4 @@
-import { currentPath } from '@universalweb/acid';
+import { currentPath } from '@universalweb/utilitylib';
 import os from 'os';
 import { publicDomainCertificate } from '../certificate/domain.js';
 const homeDirectory = os.homedir();

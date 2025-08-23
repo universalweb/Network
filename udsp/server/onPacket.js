@@ -9,7 +9,7 @@ import {
 	isFalse,
 	isNumber,
 	isUndefined
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import {
 	failed,

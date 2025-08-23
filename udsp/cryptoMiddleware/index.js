@@ -8,7 +8,7 @@ import {
 	isArray,
 	isNumber,
 	isUndefined
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { currentCertificateVersion, currentVersion } from '../../defaults.js';
 import { blake3 } from './hash/blake3.js';
 import { dilithium44 } from './signature/dilithium44.js';

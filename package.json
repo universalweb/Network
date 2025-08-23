@@ -25,13 +25,15 @@
 		"commander": "^14.0.0",
 		"directory-tree": "^3.5.2",
 		"electron": "latest",
-		"fs-extra": "^11.3.0",
+		"fs-extra": "^11.3.1",
 		"hash-wasm": "^4.12.0",
 		"ip": "^2.0.1",
 		"joi": "^18.0.0",
 		"keychain": "^1.5.0",
 		"libsodium-wrappers": "^0.7.15",
-		"mongoose": "^8.17.0",
+		"lmdb": "^3.4.2",
+		"lru-cache": "^11.1.0",
+		"mongoose": "^8.17.2",
 		"node-seal": "^5.1.6",
 		"node-watch": "^0.7.4",
 		"nodemon": "^3.1.10",
@@ -119,18 +121,18 @@
 	},
 	"version": "3.0.7",
 	"devDependencies": {
-		"@babel/core": "^7.28.0",
+		"@babel/core": "^7.28.3",
 		"@babel/eslint-parser": "^7.28.0",
-		"@babel/preset-env": "^7.28.0",
-		"@stylistic/eslint-plugin": "^5.2.2",
+		"@babel/preset-env": "^7.28.3",
+		"@stylistic/eslint-plugin": "^5.2.3",
 		"auto-changelog": "^2.5.0",
 		"axios": "^1.11.0",
 		"benchmark": "^2.1.4",
 		"daisyui": "^5.0.50",
-		"eslint": "^9.32.0",
-		"eslint-plugin-jsdoc": "^52.0.2",
+		"eslint": "^9.33.0",
+		"eslint-plugin-jsdoc": "^54.1.0",
 		"globals": "^16.3.0",
-		"tailwindcss": "^4.1.11",
+		"tailwindcss": "^4.1.12",
 		"textlint": "^15.2.1"
 	},
 	"pnpm": {
@@ -140,6 +142,7 @@
 			"electron": "latest"
 		},
 		"onlyBuiltDependencies": [
+			"lmdb",
 			"cbor-extract",
 			"cbor-x",
 			"core-js",
@@ -150,7 +153,8 @@
 			"os",
 			"sodium-native",
 			"node-seal",
-			"@noble"
+			"@noble",
+			"lru-cache"
 		]
 	},
 	"packageManager": "pnpm@10.14.0"

@@ -13,7 +13,7 @@ import {
 	isArray,
 	isFalse,
 	isNumber
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { proccessProtocolPacketHeader } from '#udsp/proccessProtocolPacket';
 import { processFrame } from '../processFrame.js';
 export async function onPacket(packet, rinfo) {

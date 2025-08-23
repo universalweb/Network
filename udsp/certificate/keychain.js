@@ -1,5 +1,5 @@
 import { decode, encode } from '#utilities/serialize';
-import { isBuffer, promise } from '@universalweb/acid';
+import { isBuffer, promise } from '@universalweb/utilitylib';
 import keychain from 'keychain';
 import { toBase64 } from '#crypto';
 export const keychainService = 'UniversalWeb';

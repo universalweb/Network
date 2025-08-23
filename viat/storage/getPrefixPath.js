@@ -6,7 +6,7 @@ import {
 	toBase64Url,
 	toHex,
 } from '#crypto/utils.js';
-import { filesystemTypes } from './fileStorage.js';
+import { filesystemTypes } from './filesystem.js';
 import path from 'path';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 export function getPrefixPath(hash, config) {

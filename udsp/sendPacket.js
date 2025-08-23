@@ -5,7 +5,7 @@ import {
 	msgSent,
 	success
 } from '#logs';
-import { isFunction, promise } from '@universalweb/acid';
+import { isFunction, promise } from '@universalweb/utilitylib';
 import { encodePacket } from '#udsp/encoding/encodePacket';
 export async function sendEncodedPacket(socket, packetEncoded, port, ip, destroyed) {
 	if (destroyed) {

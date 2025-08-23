@@ -2,7 +2,7 @@
 	* App server example
 */
 import { app } from '#udsp';
-import { currentPath } from '@universalweb/acid';
+import { currentPath } from '@universalweb/utilitylib';
 import { getMethod } from '../udsp/app/methods/get.js';
 import { info } from '#logs';
 import { listen } from '../udsp/server/listen.js';

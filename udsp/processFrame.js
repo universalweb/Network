@@ -10,7 +10,7 @@ import {
 	isArray,
 	isNumber,
 	stringify
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { proccessProtocolPacketFrame } from '#udsp/proccessProtocolPacket';
 export async function processFrame(frame, header, source, queue, rinfo) {
 	if (!frame) {

@@ -2,8 +2,8 @@ import {
 	currentPath,
 	hasDot,
 	isBuffer,
-	isString
-} from '@universalweb/acid';
+	isString,
+} from '@universalweb/utilitylib';
 import { decode, encode } from '#utilities/serialize';
 import {
 	getDilithiumPrivateKey,
@@ -12,14 +12,14 @@ import {
 	getEd25519PublicKey,
 	sign,
 	signatureKeypair,
-	verifySignature
+	verifySignature,
 } from '../udsp/cryptoMiddleware/signature/dilithium44_ed25519.js';
 import { keychainGet, keychainSave } from '../udsp/certificate/keychain.js';
 import { read, readStructured, write } from '../utilities/file.js';
-import { blake3 } from '@noble/hashes/blake3';
 import { currentCertificateVersion } from '../defaults.js';
-import { x25519_kyber768_xchacha20 } from '../udsp/cryptoMiddleware/cipherSuite/x25519_Kyber768_xChaCha.js';
 const dirname = currentPath(import.meta);
+// TODO: CHANGE THIS TO USE CRYPTOID CLASS
+// TODO: MOVE UNIQUE FUNCTIONS TO CRYPTOID CLASS
 export class UWProfile {
 	constructor(config = {}, optionalArg) {
 		if (config === false) {
@@ -42,59 +42,6 @@ export class UWProfile {
 			await this.generate(config);
 		}
 		return this;
-	}
-	importKeys(config) {
-		const {
-			version,
-			publicKey,
-			privateKey
-		} = config;
-		if (publicKey) {
-			this.publicKey = publicKey;
-		}
-		if (privateKey) {
-			this.privateKey = privateKey;
-		}
-		if (version) {
-			this.version = version;
-		}
-	}
-	async generateSignatureKeypair() {
-		this.version = currentCertificateVersion;
-		await signatureKeypair(this);
-		console.log(this.publicKey, this.privateKey);
-		return this;
-	}
-	async generateEncryptionKeypair() {
-		const encryptionkeypair = await x25519_kyber768_xchacha20.keypair();
-		this.encryptionkeypair = encryptionkeypair;
-	}
-	async generate(config) {
-		await this.generateSignatureKeypair();
-		await this.generateEncryptionKeypair();
-	}
-	get ed25519PublicKey() {
-		return getEd25519PublicKey(this.publicKey);
-	}
-	get ed25519PrivateKey() {
-		return getEd25519PrivateKey(this.privateKey);
-	}
-	get dilithiumPublicKey() {
-		return getDilithiumPublicKey(this.publicKey);
-	}
-	get dilithiumPrivateKey() {
-		return getDilithiumPrivateKey(this.privateKey);
-	}
-	async sign(message) {
-		const signature = await sign(message, this.privateKey);
-		return signature;
-	}
-	async verifySignature(signature, message) {
-		return verifySignature(signature, message, this.publicKey);
-	}
-	async hash(message) {
-		const hashedMessage = blake3(message);
-		return hashedMessage;
 	}
 	async importFromBinary(data, encryptionKey) {
 		const password = (isString(encryptionKey)) ? await this.hash(Buffer.from(encryptionKey)) : encryptionKey;
@@ -120,7 +67,7 @@ export class UWProfile {
 			version: this.version,
 			publicKey: this.publicKey,
 			privateKey: this.privateKey,
-			encryptionKeypair: this.encryptionkeypair
+			encryptionKeypair: this.encryptionkeypair,
 		};
 		const dataEncoded = encode(data);
 		if (encryptionKey) {

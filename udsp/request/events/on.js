@@ -1,4 +1,4 @@
-import { each, isString } from '@universalweb/acid';
+import { each, isString } from '@universalweb/utilitylib';
 function addEvent(eventName, callback) {
 	if (!this.events[name]) {
 		this.events[name] = [];

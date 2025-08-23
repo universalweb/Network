@@ -1,6 +1,6 @@
 import { decode, encode } from '#utilities/serialize';
 import { imported, logCert } from '#logs';
 import { read, write } from '#file';
-import { assign } from '@universalweb/acid';
+import { assign } from '@universalweb/utilitylib';
 // Add certificate verification via DIS
 export * from './domain.js';

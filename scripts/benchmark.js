@@ -1,5 +1,5 @@
 import Benchmark from 'benchmark';
-import { noop } from '@universalweb/acid';
+import { noop } from '@universalweb/utilitylib';
 const array = new Array(100);
 const routesLength = array.length;
 function test1() {

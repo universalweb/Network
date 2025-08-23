@@ -11,7 +11,7 @@ import {
 	decapsulate, encapsulate, encryptionKeypair, kyber768
 } from '../keyExchange/kyber768.js';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
-import { assign } from '@universalweb/acid';
+import { assign } from '@universalweb/utilitylib';
 import { blake3 } from '@noble/hashes/blake3';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem';
 const {

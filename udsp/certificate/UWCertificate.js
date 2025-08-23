@@ -7,7 +7,7 @@ import {
 	isBuffer,
 	isNumber,
 	untilTrueArray
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import {
 	getCipherSuite,
 	getCipherSuites,

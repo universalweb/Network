@@ -1,5 +1,5 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
-import { currentPath } from '@universalweb/acid';
+import { currentPath } from '@universalweb/utilitylib';
 import fetchIt from 'node-fetch';
 import fs from 'fs';
 import https from 'https';

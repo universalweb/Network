@@ -1,3 +1,4 @@
+// SHAKE256 Paired with strict size outputs of SHA3-256 & SHA3-512
 import {
 	clearBuffer,
 	defaultHashSettings,
@@ -13,14 +14,19 @@ import { runBench } from '../../benchmark.js';
 const createHash = cryptolib.hash;
 const hashName = 'shake256';
 const hash512StrictName = 'sha3-512';
+const hash256StrictName = 'sha3-256';
 const outputEncoding = 'buffer';
 export async function hash256(source) {
 	return createHash(hashName, source, defaultHashSettings);
 }
+// STRICT SECURITY MARGIN FOR 64 BYTE OUTPUT USES SHA3-256 INSTEAD
+export async function hash256Strict(source) {
+	return createHash(hash256StrictName, source, defaultHashSettings);
+}
 export async function hash512(source) {
 	return createHash(hashName, source, hash512SettingsCrypto);
 }
-// STRICT SECURITY MARGIN FOR 64 BYTE OUTPUT
+// STRICT SECURITY MARGIN FOR 64 BYTE OUTPUT USES SHA3-512 INSTEAD
 export async function hash512Strict(source) {
 	return createHash(hash512StrictName, source, defaultHashSettings);
 }
@@ -33,6 +39,11 @@ export async function hashXOF(source, outputLength = int32) {
 		outputEncoding,
 	});
 }
+// console.log('hash256', await hash256(Buffer.from('hello world')));
+// console.log('hash256Strict', await hash256Strict(Buffer.from('hello world')));
+// console.log('hash512', await hash512(Buffer.from('hello world')));
+// console.log('hash512Strict', await hash512Strict(Buffer.from('hello world')));
+// console.log('hash1024', await hash1024(Buffer.from('hello world')));
 export async function hashXOFObject(source, config) {
 	return createHash(hashName, source, config);
 }

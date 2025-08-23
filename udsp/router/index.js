@@ -1,4 +1,4 @@
-import { isFunction, isZero } from '@universalweb/acid';
+import { isFunction, isZero } from '@universalweb/utilitylib';
 import getMethod from '../methods/get.js';
 export class Router {
 	// constructor(options) {

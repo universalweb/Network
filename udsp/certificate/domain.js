@@ -9,8 +9,8 @@ import {
 	isPlainObject,
 	isString,
 	merge,
-	promise
-} from '@universalweb/acid';
+	promise,
+} from '@universalweb/utilitylib';
 import {
 	certificateTypes,
 	currentCertificateVersion,
@@ -20,7 +20,6 @@ import { decode, encode } from '#utilities/serialize';
 import { getCipherSuite, getEncryptionKeypairAlgorithm, getSignatureAlgorithm } from '../cryptoMiddleware/index.js';
 import { read, readStructured, write } from '#file';
 import { UWCertificate } from './UWCertificate.js';
-import { blake3 } from '@noble/hashes/blake3';
 import { keychainSave } from './keychain.js';
 import { toBase64 } from '#crypto';
 const domainCertificateType = certificateTypes.get('domain');
@@ -40,7 +39,7 @@ export async function createDomainCertificateObject(config = {}, options = {}) {
 		protocolOptions,
 		start = currentDate.getTime(),
 		end = currentDate.setUTCMonth(currentDate.getUTCMonth() + 3),
-		encryptionKeypairAlgorithm = 0
+		encryptionKeypairAlgorithm = 0,
 	} = config;
 	const certificate = {
 		version,
@@ -49,7 +48,7 @@ export async function createDomainCertificateObject(config = {}, options = {}) {
 		start,
 		end,
 		certificateType,
-		encryptionKeypairAlgorithm
+		encryptionKeypairAlgorithm,
 	};
 	if (ownerHash) {
 		certificate.ownerHash = ownerHash;
@@ -117,10 +116,10 @@ export function objectToRawDomainCertificate(certificateObject) {
 	certificate[4] = ownerHash;
 	certificate[5] = [
 		[
-			signatureAlgorithm, signatureKeypair.publicKey, signatureKeypair.privateKey
+			signatureAlgorithm, signatureKeypair.publicKey, signatureKeypair.privateKey,
 		],
 		[
-			encryptionKeypairAlgorithm, encryptionKeypair.publicKey, encryptionKeypair.privateKey
+			encryptionKeypairAlgorithm, encryptionKeypair.publicKey, encryptionKeypair.privateKey,
 		],
 	];
 	if (hasValue(cipherSuites)) {
@@ -179,7 +178,7 @@ export function rawToObjectDomainCertificate(rawObject, signature) {
 	};
 	if (isArray(signatureKeypair)) {
 		certificate.signatureKeypair = {
-			publicKey: signatureKeypair[1]
+			publicKey: signatureKeypair[1],
 		};
 		certificate.signatureAlgorithm = signatureKeypair[0];
 		if (signatureKeypair[2]) {
@@ -204,7 +203,7 @@ export function rawToObjectDomainCertificate(rawObject, signature) {
 	if (protocolOptions) {
 		const [
 			protocolVersion,
-			realtime
+			realtime,
 		] = protocolOptions;
 		certificate.protocolOptions = {};
 		if (hasValue(protocolVersion)) {

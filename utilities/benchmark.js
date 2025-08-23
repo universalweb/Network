@@ -1,7 +1,10 @@
 import Benchmark from 'benchmark';
 export async function runBench(test1, test2, test3) {
 	const suite = new Benchmark.Suite();
-	suite.add('test1', test1).add('test2', test2);
+	suite.add('test1', test1);
+	if (test2) {
+		suite.add('test2', test2);
+	}
 	if (test3) {
 		suite.add('test3', test3);
 	}

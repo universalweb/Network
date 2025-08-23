@@ -3,7 +3,7 @@
 	* Depending on your use case you may want to use a more secure method or scalable method.
 	* This is a simple implementation that is meant to be quick and easy to use for a majority of use cases.
 */
-import { hasValue, isString } from '@universalweb/acid';
+import { hasValue, isString } from '@universalweb/utilitylib';
 import Benchmark from 'benchmark';
 import { randomConnectionId } from '#utilities/crypto';
 const eight = 8;

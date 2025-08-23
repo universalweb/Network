@@ -1,6 +1,6 @@
 // Closed source not for private and or corporate use.
 import * as defaultCrypto from '#crypto';
-import { assign, clearBuffer, isBuffer } from '@universalweb/acid';
+import { assign, clearBuffer, isBuffer } from '@universalweb/utilitylib';
 import { decrypt, encrypt } from '../encryption/XChaCha.js';
 import { blake3 } from '@noble/hashes/blake3';
 import { encapsulate } from '../keyExchange/kyber768.js';
