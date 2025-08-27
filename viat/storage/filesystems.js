@@ -7,11 +7,10 @@ import {
 	toHex,
 } from '#crypto/utils.js';
 import base38 from './base38.js';
-import { createFilesystemConfig } from './createFilesystemConfig.js';
-import { extendClass } from '@universalweb/utilitylib';
+import { filesystemPathHandler } from './filesystemPathHandler.js';
 import logMethods from '#utilities/logs/classLogMethods';
 import path from 'path';
-const defaultFilesystemConfig = createFilesystemConfig();
+const defaultFilesystemConfig = await filesystemPathHandler('generic', {});
 // TODO: Add more to support filesystems
 export const filesystemTypes = {
 	generic: defaultFilesystemConfig,

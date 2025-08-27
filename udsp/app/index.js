@@ -5,6 +5,7 @@ import {
 	currentPath,
 	hasValue,
 	isUndefined,
+	merge,
 	omit,
 } from '@universalweb/utilitylib';
 import { bannerLog, infoLog, successLog } from '#utilities/logs/logs';
@@ -41,16 +42,18 @@ async function workerOnMessage(workers, worker, msg) {
 }
 // TODO: Break up function try to put most as part of the class not the function
 async function workerInstance(config, ...args) {
-	const { scale } = config;
 	infoLog('WORKER', `${cluster.worker.id} started`);
 	infoLog('WORKER', 'CONFIG', false, config);
-	config.isPrimary = false;
-	config.port = (scale.port || config.server.port) + cluster.worker.id;
-	config.workerId = String(cluster.worker.id);
-	config.isWorker = true;
+	const freshConfig = omit(config, ['scale']);
+	freshConfig.server = {};
+	merge(freshConfig.server, config.server);
+	freshConfig.isPrimary = false;
+	freshConfig.port = (config?.scale.port || config?.server.port) + cluster.worker.id;
+	freshConfig.workerId = String(cluster.worker.id);
+	freshConfig.isWorker = true;
 	// const freshConfig = omit(config, ['scale']);
 	// assign(freshConfig, config.scale);
-	const serverWorker = await new App(config, ...args);
+	const serverWorker = await new App(freshConfig, ...args);
 	process.on('message', (message) => {
 		if (message === 'registered') {
 			return successLog('Worker', `REGISTERED ${config.workerId}`);

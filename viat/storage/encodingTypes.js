@@ -1,6 +1,6 @@
 import {
 	base64ToBuffer, base64UrlToBuffer, hexToBuffer, toBase64, toBase64Url, toHex,
-} from '#crypto/utils';
+} from '#crypto/utils.js';
 import base38 from './base38.js';
 export const encodingTypes = {
 	hex: {

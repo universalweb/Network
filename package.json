@@ -15,9 +15,11 @@
 	"company": "Universal Web, Inc",
 	"dependencies": {
 		"@cldmv/sizeofvar": "^1.0.4",
-		"@noble/ciphers": "^1.3.0",
-		"@noble/ed25519": "^2.3.0",
-		"@noble/hashes": "^1.8.0",
+		"@tensorflow/tfjs": "^4.22.0",
+		"@tensorflow/tfjs-converter": "^4.22.0",
+		"@tensorflow/tfjs-core": "^4.22.0",
+		"@tensorflow/tfjs-layers": "^4.22.0",
+		"@tensorflow/tfjs-node": "^4.22.0",
 		"@universalweb/utilitylib": "github:universalweb/utilitylib",
 		"boxen": "^8.0.1",
 		"cbor-x": "^1.6.0",
@@ -27,20 +29,21 @@
 		"electron": "latest",
 		"fs-extra": "^11.3.1",
 		"hash-wasm": "^4.12.0",
+		"install": "^0.13.0",
 		"ip": "^2.0.1",
-		"joi": "^18.0.0",
+		"joi": "^18.0.1",
 		"keychain": "^1.5.0",
 		"libsodium-wrappers": "^0.7.15",
 		"lmdb": "^3.4.2",
 		"lru-cache": "^11.1.0",
-		"mongoose": "^8.17.2",
-		"node-seal": "^5.1.6",
+		"mongoose": "^8.18.0",
+		"node-seal": "^5.1.7",
 		"node-watch": "^0.7.4",
 		"nodemon": "^3.1.10",
 		"os-utils": "^0.0.14",
 		"pqclean": "latest",
 		"qrcode": "^1.5.4",
-		"sodium-native": "^5.0.6"
+		"sodium-native": "^5.0.7"
 	},
 	"description": "UW & VIAT modules: Client, Server, VIAT, DIS, Browser, Crypto, Wallets, Modules, & certificates.",
 	"engines": {
@@ -129,11 +132,11 @@
 		"axios": "^1.11.0",
 		"benchmark": "^2.1.4",
 		"daisyui": "^5.0.50",
-		"eslint": "^9.33.0",
-		"eslint-plugin-jsdoc": "^54.1.0",
+		"eslint": "^9.34.0",
+		"eslint-plugin-jsdoc": "^54.1.1",
 		"globals": "^16.3.0",
 		"tailwindcss": "^4.1.12",
-		"textlint": "^15.2.1"
+		"textlint": "^15.2.2"
 	},
 	"pnpm": {
 		"overrides": {
@@ -154,7 +157,15 @@
 			"sodium-native",
 			"node-seal",
 			"@noble",
-			"lru-cache"
+			"lru-cache",
+			"@tensorflow",
+			"@tensorflow/tfjs-node",
+			"@tensorflow/tfjs-node-metal",
+			"@tensorflow/tfjs",
+			"@tensorflow/tfjs-converter",
+			"@tensorflow/tfjs-core",
+			"@tensorflow/tfjs-layers",
+			"gl"
 		]
 	},
 	"packageManager": "pnpm@10.14.0"

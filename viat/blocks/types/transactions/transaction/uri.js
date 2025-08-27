@@ -13,12 +13,6 @@ import { toBase64Url } from '#crypto/utils.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 // Consider Short URL which uses a "proxy trie" (Shortcut symlink to actual) that uses the 64 byte hash like a wallet trie to map to a wallet folder then the transaction.
 export const transactionBlockFilename = blockDefaults.genericFilenames.transaction;
-export function getTransactionPrefixPath(transactionHash) {
-	return getShortPrefixPath(transactionHash);
-}
-export function getTransactionDirectory(transactionHash) {
-	return getFinalDirectory(transactionHash);
-}
 export function getTransactionFilename(transactionHash) {
 	const address = (transactionHash) ? getTransactionDirectory(transactionHash) : transactionBlockFilename;
 	return address;

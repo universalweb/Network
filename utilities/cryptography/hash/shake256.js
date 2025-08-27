@@ -19,7 +19,7 @@ const outputEncoding = 'buffer';
 export async function hash256(source) {
 	return createHash(hashName, source, defaultHashSettings);
 }
-// STRICT SECURITY MARGIN FOR 64 BYTE OUTPUT USES SHA3-256 INSTEAD
+// STRICT SECURITY MARGIN FOR 32 BYTE OUTPUT USES SHA3-256 INSTEAD
 export async function hash256Strict(source) {
 	return createHash(hash256StrictName, source, defaultHashSettings);
 }
@@ -57,7 +57,9 @@ export const shake256 = hashScheme({
 	primary: true,
 	hash256,
 	hash: hash256,
+	hash256Strict,
 	hash512,
+	hash512Strict,
 	hash1024,
 	hashXOF,
 	hashXOFObject,

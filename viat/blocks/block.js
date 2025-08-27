@@ -5,6 +5,7 @@ import configMethods from './methods/config.js';
 import defaultsMethods from './methods/defaults.js';
 import exportMethods from './methods/export.js';
 import filesystemMethods from './methods/filesystem.js';
+import { filesystemTypes } from '../storage/filesystems.js';
 import { getParentClassName } from '#utilities/class';
 import { hash512SettingsCrypto } from '#utilities/cryptography/utils';
 import hashingMethods from './methods/hashing.js';
@@ -12,7 +13,7 @@ import logMethods from '#utilities/logs/classLogMethods';
 import signatureMethods from './methods/signature.js';
 import validateMethods from './methods/validate.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
-// import wallet from '#viat/wallet/wallet';
+import wallet from '#viat/wallet/wallet';
 const {
 	version,
 	blockTypes,
@@ -25,6 +26,7 @@ export class Block {
 		this.blockType = blockDefaults.blockTypes[this.typeName];
 		this.fileType = blockDefaults.fileExtensions[this.typeName];
 		this.filename = blockDefaults.genericFilenames[this.typeName];
+		this.filesystemPath = this.filesystemType[this.typeName];
 		if (data) {
 			if (getParentClassName(data) === 'Block') {
 				await this.configByBlock(data, config, ...args);
@@ -56,6 +58,16 @@ export class Block {
 			core: {},
 		},
 	};
+	getType() {
+		return this.getMeta('type') || this.blockType;
+	}
+	getFilePathPrefix(hash) {
+		return this.filesystemPath.pathPrefix.encode(hash || this.block.hash);
+	}
+	getFinalDirectory(hash) {
+		return this.filesystemPath.uniquePath.encode(hash || this.block.hash);
+	}
+	filesystemType = filesystemTypes.generic;
 }
 extendClass(Block, logMethods);
 extendClass(Block, accessorMethods);

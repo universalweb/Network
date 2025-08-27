@@ -2,16 +2,17 @@
 import { decode, encodeStrict } from '#utilities/serialize';
 import { hash256, hash512 } from '#crypto/hash/shake256.js';
 import { isBuffer, isPlainObject, merge } from '@universalweb/utilitylib';
-import { random64ByteBuffer } from '#utilities/crypto';
+import { random64ByteBuffer } from '#crypto/utils.js';
 import runBench from '#utilities/benchmark';
 // Cached module-level constants (camelCase)rr
 const wordBits = 64n;
 const wordMask = 63n;
+const int32 = 32;
 // Big-endian bytes -> BigInt
 function bytesToBigInt(buf) {
 	let x = 0n;
 	// Number (small)
-	const len = buf.length;
+	const len = int32;
 	// largest multiple of 8
 	const full = len & ~7;
 	for (let i = 0; i < full; i += 8) {
@@ -33,15 +34,6 @@ function readRemainingBytes(buf, start) {
 	let x = 0n;
 	for (let i = start; i < buf.length; i++) {
 		x = (x << 8n) | BigInt(buf[i]);
-	}
-	return x;
-}
-function bytesToBigIntFast(buf) {
-	let x = 0n;
-	for (let i = 0; i < buf.length; i += 8) {
-		// Process 8 bytes at a time using readBigUInt64BE
-		const chunk = i + 8 <= buf.length ? buf.readBigUInt64BE(i) : readRemainingBytes(buf, i);
-		x = (x << BigInt((Math.min(8, buf.length - i)) * 8)) | chunk;
 	}
 	return x;
 }
@@ -201,21 +193,21 @@ export class BloomFilter {
 // Assume h64a and h64b are Buffers of length 64 produced elsewhere via SHAKE256-512.
 console.clear();
 const h64a = await hash512(random64ByteBuffer());
-const h64b = await hash512(random64ByteBuffer());
-const h64c = await hash512(random64ByteBuffer());
-const h64d = await hash512(random64ByteBuffer());
-const bloom = new BloomFilter({
-	mBits: 1024n,
-	kHashes: 7n,
-});
-await bloom.add(h64a);
-await bloom.add(h64b);
-await bloom.add(h64c);
-// await runBench(async () => {
-// 	await bloom.add(h64b);
+// const h64b = await hash512(random64ByteBuffer());
+// const h64c = await hash512(random64ByteBuffer());
+// const h64d = await hash512(random64ByteBuffer());
+// const bloom = new BloomFilter({
+// 	mBits: 1024n,
+// 	kHashes: 7n,
+// });
+// await bloom.add(h64a);
+// await bloom.add(h64b);
+// await bloom.add(h64c);
+// await runBench(() => {
+// 	bytesToBigInt(h64a);
 // });
 // console.log(bloom.bits);
-console.log(await bloom.has(h64a));
-console.log(await bloom.has(h64b));
-console.log(await bloom.has(h64c));
-console.log(await new BloomFilter(await bloom.exportBuffer()), (await bloom.exportBuffer()).length);
+// console.log(await bloom.has(h64a));
+// console.log(await bloom.has(h64b));
+// console.log(await bloom.has(h64c));
+// console.log(await new BloomFilter(await bloom.exportBuffer()), (await bloom.exportBuffer()).length);

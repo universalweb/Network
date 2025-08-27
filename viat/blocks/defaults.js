@@ -18,6 +18,24 @@ export const filePaths = {
 	genesisWallet: '/wallets/',
 	genesisAudit: '/audits/',
 };
+export const urlPaths = {
+	transaction: '/t/',
+	proof: '/p/',
+	receipt: '/r/',
+	wallet: '/w/',
+	genesis: '/',
+	genesisWallet: '/gw/',
+	genesisAudit: '/ga/',
+};
+export const letters = {
+	transaction: 't',
+	proof: 'p',
+	receipt: 'r',
+	wallet: 'w',
+	genesis: 'g',
+	genesisWallet: 'gw',
+	genesisAudit: 'ga',
+};
 export const fileTypes = {
 	't.block': 'Viat Transaction Block',
 	'p.block': 'Viat Proof Block',
@@ -59,10 +77,8 @@ export const genericFilenames = {
 	genesisWallet: 'genesisWallet.block',
 	genesisAudit: 'genesisAudit.block',
 };
-export function createBlockDefaultsObject(blockName, blockNamePlural, letter) {
+export function createBlockDefaultsObject(source, blockName, blockNamePlural, letter) {
 	const target = {
-		urlPathname: letter,
-		pathname: blockNamePlural,
 		urlPathnameRegex: new RegExp(`/${letter}/`),
 		pathnameRegex: new RegExp(`/${blockNamePlural}/`),
 		directoryPathname: `/${blockNamePlural}/`,
