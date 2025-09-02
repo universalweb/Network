@@ -4,9 +4,10 @@ export const dilithium44 = generateScheme('ml-dsa-44', {
 	alias: 'ml_dsa44',
 	id: 1,
 	security: 1,
-	preferred: false
+	preferred: false,
 });
 export default dilithium44;
+// console.log(dilithium44);
 // const key = await dilithium44.signatureKeypair();
 // console.log(key);
 // const exported = await dilithium44.exportKeypair(key);

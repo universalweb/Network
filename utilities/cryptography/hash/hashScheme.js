@@ -1,7 +1,7 @@
 import {
-	clearBuffer, clearBuffers, concatBuffer, int32
+	clearBuffer, clearBuffers, concatBuffer, int32,
 } from '#utilities/cryptography/utils';
-import { assign } from '@universalweb/acid';
+import { assign } from '@universalweb/utilitylib';
 export class HashScheme {
 	constructor(config) {
 		assign(this, config);
@@ -11,7 +11,7 @@ export class HashScheme {
 		return this.hash256(concatBuffer(sources));
 	}
 	async concatHash512(...sources) {
-		console.log('ConcatHash512', sources);
+		// console.log('ConcatHash512', sources);
 		return this.hash512(concatBuffer(sources));
 	}
 	async combineKeys(...sources) {

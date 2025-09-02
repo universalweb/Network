@@ -2,28 +2,28 @@ import {
 	eachObject,
 	isTrue,
 	jsonParse,
-	noValue
-} from '@universalweb/acid';
+	noValue,
+} from '@universalweb/utilitylib';
 import { decode } from '#utilities/serialize';
 const requestMethods = {
 	getters: {
 		response() {
 			if (this.source) {
-				return this.source().response;
+				return this.source.response;
 			}
-		}
+		},
 	},
-	setters: {}
+	setters: {},
 };
 const responseMethods = {
 	getters: {
 		request() {
 			if (this.source) {
-				return this.source().request;
+				return this.source.request;
 			}
-		}
+		},
 	},
-	setters: {}
+	setters: {},
 };
 export const objectGetSetMethods = {
 	getters: {
@@ -40,17 +40,17 @@ export const objectGetSetMethods = {
 			return this.parameters;
 		},
 		id() {
-			return this.source().id;
+			return this.source.id;
 		},
 		method() {
-			return this.source().method;
+			return this.source.method;
 		},
 		parameters() {
-			return this.source().parameters;
+			return this.source.parameters;
 		},
 		path() {
-			return this.source().path;
-		}
+			return this.source.path;
+		},
 	},
 	setters: {
 		headers(value) {
@@ -76,14 +76,14 @@ export const objectGetSetMethods = {
 		},
 		path() {
 			return;
-		}
+		},
 	},
 	attachMethods(target) {
 		eachObject(objectGetSetMethods.getters, (get, key) => {
 			const set = objectGetSetMethods.setters[key];
 			Object.defineProperty(target.prototype, key, {
 				get,
-				set
+				set,
 			});
 		});
 		if (target.isRequest) {
@@ -91,7 +91,7 @@ export const objectGetSetMethods = {
 				const set = requestMethods.setters[key];
 				Object.defineProperty(target.prototype, key, {
 					get,
-					set
+					set,
 				});
 			});
 		} else {
@@ -99,10 +99,10 @@ export const objectGetSetMethods = {
 				const set = responseMethods.setters[key];
 				Object.defineProperty(target.prototype, key, {
 					get,
-					set
+					set,
 				});
 			});
 		}
-	}
+	},
 };
 

@@ -3,20 +3,20 @@ import {
 	has,
 	hasValue,
 	intersection,
-	noValue
-} from '@universalweb/acid';
+	noValue,
+} from '@universalweb/utilitylib';
 export async function configCryptography() {
 	const certificate = this.destination.certificate;
-	const { ciphers }	= certificate;
+	const ciphers = await certificate.getCiphers();
 	this.signatureAlgorithm = await certificate.getSignatureAlgorithm();
 	if (hasValue(this.options?.cipher)) {
-		this.cipher = await certificate.selectCipherSuite(this.options?.cipher);
+		this.cipher = await certificate.selectCipher(this.options?.cipher);
 	}
 	if (noValue(this.cipher)) {
-		this.logInfo('CIPHER SUITES SUPPORTED', ciphers, certificate);
+		this.logInfo('SUPPORTED CIPHER SUITES', ciphers, certificate.object);
 		this.cipher = certificate.cipherMethods[0];
 	}
-	if (this.keyExchangeAlgorithm) {
+	if (this.keyExchange) {
 		if (this.keyExchange.certificateKeypairCompatabilityClient) {
 			await this.keyExchange.certificateKeypairCompatabilityClient(this, this.destination);
 		}
@@ -25,8 +25,9 @@ export async function configCryptography() {
 		}
 	}
 	// this.logInfo(this.cipher);
-	const sessionObject = await this.keyExchange.clientEphemeralKeypair();
-	assign(this, sessionObject);
-	await this.keyExchange.clientInitializeSession(this, this.destination);
+	const clientEphemeralKeypair = await this.keyExchange.clientEphemeralKeypair();
+	assign(this, clientEphemeralKeypair);
 	this.nonce = await this.cipher.createNonce();
+	await this.keyExchange.onClientInitialization(this, this.destination);
+	this.logInfo('CRYPTOGRAPHY CONFIGURED', certificate.object);
 }

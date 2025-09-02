@@ -1,5 +1,5 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
-import { currentPath } from '@universalweb/acid';
+import { currentPath } from '@universalweb/utilitylib';
 import fetchIt from 'node-fetch';
 import fs from 'fs';
 import https from 'https';
@@ -9,11 +9,11 @@ const port = 8888;
 const dirname = currentPath(import.meta);
 const options = {
 	key: fs.readFileSync(`${currentPath(import.meta)}/key.pem`),
-	cert: fs.readFileSync(`${currentPath(import.meta)}/cert.pem`)
+	cert: fs.readFileSync(`${currentPath(import.meta)}/cert.pem`),
 };
 const server = https.createServer(options, (req, res) => {
 	res.writeHead(200, {
-		contentType: 'html'
+		contentType: 'html',
 	});
 	const indexFile = fs.readFileSync(`${currentPath(import.meta)}/../../serverApp/resources/index.html`);
 	res.end(indexFile);

@@ -1,4 +1,4 @@
-+import electron from 'electron';
+import electron from 'electron';
 import path from 'path';
 // if (require.main !== module) {
 // 	import('update-electron-app')({
@@ -9,15 +9,15 @@ import schemes from './browser/schemes/index.js';
 import stateFactory from './state/index.js';
 import universalWebSocket from './browser/protocol/';
 const state = stateFactory('browser', {
-	electron
+	electron,
 });
-const { file: { readJson, } } = state;
+const { file: { readJson } } = state;
 const config = await readJson('./config/index.json');
 const {
 	app,
 	BrowserWindow,
 	dialog,
-	protocol
+	protocol,
 } = electron;
 protocol.registerSchemesAsPrivileged(schemes);
 dialog.showErrorBox = function(title, content) {
@@ -56,7 +56,7 @@ function initialize() {
 			title: app.name,
 			webPreferences: {
 				webviewTag: true,
-				nodeIntegration: true
+				nodeIntegration: true,
 			},
 		};
 		mainWindow = new BrowserWindow(windowOptions);

@@ -1,4 +1,4 @@
-import { assign, isBuffer } from '@universalweb/acid';
+import { assign, isBuffer } from '@universalweb/utilitylib';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { concatBuffer } from '#utilities/cryptography/utils';
 export class SignatureScheme {
@@ -175,7 +175,7 @@ export class SignatureScheme {
 		const targetArray = await decode(source);
 		const target = {
 			publicKey: targetArray[0],
-			privateKey: targetArray[1]
+			privateKey: targetArray[1],
 		};
 		// console.log('initializeBinary', target);
 		return this.initializeKeypair(target);

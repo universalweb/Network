@@ -1,4 +1,4 @@
-import { hasValue, } from '@universalweb/acid';
+import { hasValue } from '@universalweb/utilitylib';
 export class Base {
 	constructor(config) {
 		if (config) {
@@ -24,7 +24,7 @@ export class Base {
 			domainCertificate,
 			profileCertificate,
 			source,
-			method
+			method,
 		} = config;
 		if (hasValue(data)) {
 			this.data = data;
@@ -36,10 +36,9 @@ export class Base {
 		} else if (hasValue(headers)) {
 			this.head = headers;
 		}
+		// TODO: CONSIDER NOT HAVING TO USE SOURCE AS PROPERTY?
 		if (source) {
-			this.source = function() {
-				return source;
-			};
+			this.source = source;
 		}
 	}
 }

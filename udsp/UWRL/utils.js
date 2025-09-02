@@ -7,7 +7,7 @@ import {
 	jsonParse,
 	restString,
 	stringify
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { base } from 'daisyui/imports.js';
 export const ipRegex = /^\b(?:\d{1,3}\.){3}\d{1,3}\b$/;
 export function getFullURL(urlString, baseURL, defaultScheme = 'uw') {

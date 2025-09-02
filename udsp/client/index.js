@@ -11,7 +11,7 @@ import {
 	construct,
 	isBuffer,
 	noValue,
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import {
 	checkIntroTimeout,
 	clearIntroTimeout,
@@ -35,7 +35,6 @@ import {
 	extendedSynchronizationHeader,
 	sendExtendedSynchronization,
 } from './protocolEvents/extendedSynchronization.js';
-import { fire, off, on } from './methods/events.js';
 import { loadCertificate, onCertificateChunk, processCertificate } from './methods/certificate.js';
 import { send, sendAny } from './methods/send.js';
 import { setReadyState, setState } from './methods/state.js';
@@ -43,10 +42,12 @@ import { UDSP } from '#udsp/base';
 import { ask } from '../request/ask.js';
 import { calculatePacketOverhead } from '../utilities/calculatePacketOverhead.js';
 import { changeAddress } from './methods/changeAddress.js';
+import { clientStates } from './defaults.js';
 import { closeSocket } from './methods/close.js';
 import { configCryptography } from './methods/configCryptography.js';
 import cryptoID from '#components/cryptoID/index';
 import { destroy } from './methods/destroy.js';
+import { discovered } from './protocolEvents/discover.js';
 import { emit } from '../requestMethods/emit.js';
 import { fetchRequest } from '../requestMethods/fetch.js';
 import { get } from '../requestMethods/get.js';
@@ -56,22 +57,25 @@ import { onListening } from './methods/listening.js';
 import { onPacket } from './methods/onPacket.js';
 import { onSocketError } from './methods/onSocketError.js';
 import { post } from '../requestMethods/post.js';
-import { publicDomainCertificate } from '#components/certificate/domain';
+import { publicDomainCertificate } from '#components/certificate/domain/domain';
 import { setDefaults } from './methods/setDefaults.js';
 import { setDestination } from './methods/setDestination.js';
+import { toHex } from '#utilities/cryptography/utils';
 import { uwRequest } from '#udsp/requestMethods/request';
+const { discoveredState } = clientStates;
 // UNIVERSAL WEB Client Class
 export class Client extends UDSP {
 	constructor(options) {
 		super(options);
-		this.logInfo('-------CLIENT INITIALIZING-------\n');
+		this.logBanner('CLIENT INITIALIZING', 'UDSP');
 		return this.initialize(options);
 	}
 	static description = `The Universal Web's UDSP client module to initiate connections to a UDSP Server.`;
 	static type = 'client';
 	isClient = true;
 	async initialize(options) {
-		this.initializeBase(options);
+		await super.initialize(options);
+		await super.setDefaults(options);
 		await this.setDefaults();
 		if (options) {
 			this.options = options;
@@ -79,14 +83,13 @@ export class Client extends UDSP {
 		if (options.destinationCertificate) {
 			await this.loadCertificate();
 		}
-		this.logInfo(this);
 		const destinationStatus = await this.setDestination();
 		if (destinationStatus === false) {
 			return this;
 		}
 		await this.getIPDetails();
 		await this.setProfile();
-		await this.assignId();
+		await this.generateID();
 		await this.calculatePacketOverhead();
 		await this.setupSocket();
 		await this.attachSocketEvents();
@@ -126,15 +129,24 @@ export class Client extends UDSP {
 			return source.onPacket(packet, rinfo);
 		});
 	}
-	async assignId() {
-		const connectionIdString = generateConnectionIdString(this.connectionIdSize);
-		this.connectionIdString = connectionIdString;
-		this.id = connectionIdToBuffer(connectionIdString);
-		this.logInfo(`Assigned ClientId ${connectionIdString}`);
-		Client.connections.set(connectionIdString, this);
+	async generateID() {
+		const { keyExchange } = this;
+		if (this.publicKey) {
+			const publicKey = await keyExchange.getPublicKey(this);
+			await this.assignID(publicKey);
+		} else {
+			const randomConnectionIdString = generateConnectionIdString(this.connectionIdSize);
+			await this.assignID(connectionIdToBuffer(randomConnectionIdString));
+		}
+	}
+	async assignID(data) {
+		this.id = data.byteLength > 4 ? Buffer.from(data.subarray(0, this.connectionIdSize)) : data;
+		this.connectionIdString = toHex(this.id);
+		this.logInfo(`Assigned ClientId ${this.connectionIdString}`);
+		Client.connections.set(this.connectionIdString, this);
 	}
 	async calculatePacketOverhead() {
-		return calculatePacketOverhead(this.cipher, this.destination.connectionIdSize, this.destination);
+		return calculatePacketOverhead(this.cipher, this.destination.connectionIdSize, this.destination, this);
 	}
 	send = send;
 	sendAny = sendAny;
@@ -160,7 +172,9 @@ export class Client extends UDSP {
 	setReadyState = setReadyState;
 	// TODO: NEED BETTER WAY TO HANDLE GENERIC INSTEAD OF PUBLICKEY BUFFER?
 	removeClient() {
-		Client.connections.delete(this.connectionIdString);
+		if (Client.connections.has(this.connectionIdString)) {
+			Client.connections.delete(this.connectionIdString);
+		}
 	}
 	changeAddress = changeAddress;
 	checkIntroTimeout = checkIntroTimeout;
@@ -183,9 +197,6 @@ export class Client extends UDSP {
 	close = closeSocket;
 	destroy = destroy;
 	onSocketError = onSocketError;
-	on = on;
-	off = off;
-	fire = fire;
 	request = uwRequest;
 	fetch = fetchRequest;
 	post = post;
@@ -198,10 +209,10 @@ export class Client extends UDSP {
 	getIPDetails = getIPDetails;
 	static connections = new Map();
 	setDefaults = setDefaults;
+	discovered = discovered;
 }
-export async function client(options) {
-	this.logInfo('Create Client');
-	const uwClient = await construct(Client, [options]);
+export async function client(...options) {
+	const uwClient = await construct(Client, options);
 	return uwClient;
 }
 // Add the request export here for simple auto connect and then just grab contents to return called UDSP

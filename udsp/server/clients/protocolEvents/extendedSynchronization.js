@@ -10,7 +10,7 @@ export async function extendedSynchronizationHeader(header, packetDecoded) {
 		return;
 	}
 	await this.keyExchange.serverExtendedSynchronizationHeader(this, this.destination, header);
-	if (packetDecoded.noMessage) {
+	if (packetDecoded.noFrame) {
 		await this.sendExtendedSynchronization(null, header, packetDecoded);
 	}
 }

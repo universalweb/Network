@@ -1,4 +1,4 @@
-import { calcProgress } from '@universalweb/acid';
+import { calcProgress } from '@universalweb/utilitylib';
 export async function onHeadProgress() {
 	if (this.totalIncomingHeadSize) {
 		if (this.currentIncomingHeadSize > 0) {

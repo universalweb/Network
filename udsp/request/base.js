@@ -1,41 +1,32 @@
-import { askRPC, defaultStage, replyRPC } from './rpc/rpcCodes.js';
+import { askRPC, replyRPC } from './rpc/rpcCodes.js';
 import {
 	assign,
-	calcProgress,
 	clear,
 	clearBuffer,
 	construct,
 	eachArray,
+	extendClass,
 	hasValue,
-	isArray,
 	isBuffer,
-	isFalse,
 	isPlainObject,
 	isString,
-	isTrue,
 	isUndefined,
-	jsonParse,
 	objectSize,
-	promise
-} from '@universalweb/acid';
+	promise,
+} from '@universalweb/utilitylib';
 import { callOnDataSyncEvent, onDataSync } from './on/onDataSync.js';
 import { checkSendDataReady, clearSendDataReadyTimeout, sendDataReady } from './sendReady/sendDataReady.js';
 import { checkSendHeadReady, clearSendHeadReadyTimeout, sendHeadReady } from './sendReady/sendHeadReady.js';
 import { checkSendParametersReady, clearSendParametersReadyTimeout, sendParametersReady } from './sendReady/sendParametersReady.js';
 import { checkSendPathReady, clearSendPathReadyTimeout, sendPathReady } from './sendReady/sendPathReady.js';
 import { checkSetupSent, clearSetupTimeout, sendSetup } from './send/sendSetup.js';
-import { createEvent, removeEvent, triggerEvent } from '../utilities/events.js';
 import { decode, encode } from '#utilities/serialize';
 import { flush, flushIncoming, flushOutgoing } from './flush.js';
-import {
-	logError,
-	logInfo,
-	logSuccess,
-	logVerbose,
-	logWarning
-} from '../../utilities/logs/classLogMethods.js';
+import { UDSP_HEADERS } from '#udsp/headerCodes';
 import { dataPacketization } from './dataPacketization.js';
 import { destroy } from './destroy.js';
+import eventMethods from '#udsp/events';
+import logMethods from '#utilities/logs/classLogMethods';
 import { onData } from './on/onData.js';
 import { onDataProgress } from './onProgress/onDateProgress.js';
 import { onFrame } from './on/onFrame.js';
@@ -54,7 +45,6 @@ import { sendEnd } from './send/sendEnd.js';
 import { sendHead } from './send/sendHead.js';
 import { sendParameters } from './send/sendParameters.js';
 import { sendPath } from './send/sendPath.js';
-import { toBase64 } from '#utilities/cryptography/utils';
 const noPayloadMethods = /0/;
 /**
  * @todo
@@ -65,9 +55,7 @@ export class Base {
 	constructor(source) {
 		const timeStamp = Date.now();
 		this.created = timeStamp;
-		this.source = function() {
-			return source;
-		};
+		this.source = source;
 		if (hasValue(source.latency)) {
 			this.connectionLatency = source.latency;
 			this.latency = this.connectionLatency + 10;
@@ -75,11 +63,13 @@ export class Base {
 		}
 		source.lastActive = Date.now();
 		this.noData = noPayloadMethods.test(this.method);
+		this.setupEventEmitter();
 	}
 	setState(value) {
 		this.state = value;
 		this.logInfo(`State Set: ${value}`);
 	}
+	// TODO: Headers need to be an array key and value pairs which enables header keys to be any type of data consider maybe a Map or Set or WeakMap
 	async setHeaders(target) {
 		const source = this.isAsk ? this.request : this.response;
 		if (!source.head) {
@@ -94,13 +84,19 @@ export class Base {
 		}
 		source.head[headerName] = hasValue(headerValue) ? headerValue : 0;
 	}
+	getHeader(headerName, head) {
+		const headObject = head || this.head;
+		const source = this.isAsk ? this.request : this.response;
+		return headObject[headerName] || headObject[UDSP_HEADERS[headerName]];
+	}
 	setHeaderDetails(head) {
-		const { dataSize } = head;
+		const headObject = head || this.head;
+		const dataSize = headObject[UDSP_HEADERS.CONTENT_LENGTH];
 		if (dataSize) {
 			this.totalIncomingDataSize = dataSize;
 		}
 	}
-	// TODO: ADD EVENT FOR WHEN HEADERS ARE COMPLETED TO RUN LOGIC BEFORE DATA ARRIVES
+	// TODO: Consider headers to be multiple data types pain object, array, string, buffer?
 	async setHead() {
 		clear(this.incomingHeadPackets);
 		let head;
@@ -173,7 +169,7 @@ export class Base {
 		const {
 			maxFrameSize,
 			isAsk,
-			outgoingPathPackets
+			outgoingPathPackets,
 		} = this;
 		const source = this.isAsk ? this.request : this.response;
 		if (!source.path || !objectSize(source.path)) {
@@ -209,7 +205,7 @@ export class Base {
 		const {
 			maxFrameSize,
 			isAsk,
-			outgoingParametersPackets
+			outgoingParametersPackets,
 		} = this;
 		const source = this.isAsk ? this.request : this.response;
 		if (!source.parameters || !objectSize(source.parameters)) {
@@ -244,7 +240,7 @@ export class Base {
 		const {
 			maxFrameSize,
 			isAsk,
-			outgoingHeadPackets
+			outgoingHeadPackets,
 		} = this;
 		const source = this.isAsk ? this.request : this.response;
 		if (!source.head || !objectSize(source.head)) {
@@ -279,17 +275,17 @@ export class Base {
 	async dataPacketization() {
 		const {
 			isAsk,
-			isReply
+			isReply,
 		} = this;
 		const source = isAsk ? this.request : this.response;
 		if (source.data) {
 			this.outgoingData = source.data;
 			if (!isBuffer(source.data)) {
-				await this.setHeader('serialize');
+				await this.setHeader(UDSP_HEADERS.SERIALIZE);
 				this.outgoingData = await encode(source.data);
 			}
 			this.outgoingDataSize = this.outgoingData.length;
-			await this.setHeader('dataSize', this.outgoingData.length);
+			await this.setHeader(UDSP_HEADERS.CONTENT_LENGTH, this.outgoingData.length);
 			await dataPacketization(this);
 		}
 	}
@@ -316,7 +312,7 @@ export class Base {
 		} = this;
 		if (isAsk) {
 			this.logInfo('CHECKING CONNECTION');
-			const connect = await this.source().connect();
+			const connect = await this.source.connect();
 			if (this.sent) {
 				return this.accept;
 			}
@@ -339,7 +335,7 @@ export class Base {
 	async end(statusCode) {
 		const {
 			isAsk,
-			isReply
+			isReply,
 		} = this;
 		if (isAsk) {
 			this.setState(askRPC.end);
@@ -380,31 +376,21 @@ export class Base {
 		return this.sendPacket(message);
 	}
 	getPacketTemplate(rpc, ...items) {
-		const { id, } = this;
+		const { id } = this;
 		const message = [
 			id,
-			rpc
+			rpc,
 		];
 		if (items) {
 			message.push(...items);
 		}
 		return message;
 	}
-	on(eventName, eventMethod) {
-		return createEvent(this.events, eventName, eventMethod);
-	}
-	off(eventName, eventMethod) {
-		return removeEvent(this.events, eventName, eventMethod);
-	}
-	fire(eventName, ...args) {
-		this.logInfo(`SERVER EVENT -> ${eventName} - ID:${this.connectionIdString}`);
-		return triggerEvent(this.events, eventName, this, ...args);
-	}
 	destroy = destroy;
 	onFrame = onFrame;
 	async sendPacket(message, headers, footer) {
-		// this.logInfo('sendPacket this.source()', this.source());
-		this.source().send(message, headers, footer);
+		// this.logInfo('sendPacket this.source', this.source));
+		this.source.send(message, headers, footer);
 	}
 	flushOutgoing = flushOutgoing;
 	flushIncoming = flushIncoming;
@@ -443,11 +429,6 @@ export class Base {
 	checkSetupSent = checkSetupSent;
 	clearSetupTimeout = clearSetupTimeout;
 	sendSetup = sendSetup;
-	logError = logError;
-	logWarning = logWarning;
-	logInfo = logInfo;
-	logVerbose = logVerbose;
-	logSuccess = logSuccess;
 	outgoingHead;
 	outgoingData;
 	incomingHeadState = false;
@@ -460,13 +441,13 @@ export class Base {
 	calcProgress = 0;
 	progressHead = 0;
 	progressData = 0;
+	sentHeadCount = 0;
 	dataOrdered = [];
 	stream = [];
 	missingPathPackets = construct(Map);
 	missingParametersPackets = construct(Map);
 	missingHeadPackets = construct(Map);
 	missingDataPackets = construct(Map);
-	events = new Map();
 	header = {};
 	options = {};
 	head = {};
@@ -520,3 +501,5 @@ export class Base {
 	setupAttempts = 0;
 	logLevel = 3;
 }
+extendClass(Base, logMethods);
+extendClass(Base, eventMethods);

@@ -1,4 +1,4 @@
-import { calcProgress } from '@universalweb/acid';
+import { calcProgress } from '@universalweb/utilitylib';
 export async function onPathProgress() {
 	if (this.totalIncomingPathSize) {
 		if (this.currentIncomingPathSize > 0) {

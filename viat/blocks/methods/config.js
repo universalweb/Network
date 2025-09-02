@@ -1,5 +1,5 @@
-import blockDefaults from '../defaults.js';
-import { isPlainObject } from '@universalweb/acid';
+import { isPlainObject, merge } from '@universalweb/utilitylib';
+import blockDefaults from '#viat/blocks/defaults';
 const {
 	version,
 	blockTypes,

@@ -1,4 +1,4 @@
-import { eachArray } from '@universalweb/acid';
+import { eachArray } from '@universalweb/utilitylib';
 import { sendParametersReady } from '../sendReady/sendParametersReady.js';
 export async function processPath() {
 	if (this.pathAssembled) {
@@ -6,7 +6,7 @@ export async function processPath() {
 	}
 	const {
 		missingPathPackets,
-		incomingPath
+		incomingPath,
 	} = this;
 	this.logInfo('incomingPathPackets', this.incomingPathPackets);
 	this.logInfo('incomingPath', incomingPath);

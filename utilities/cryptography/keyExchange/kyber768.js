@@ -2,10 +2,10 @@ import {
 	clearBuffer,
 	int32,
 	int64,
-	randomBuffer
+	randomBuffer,
 } from '#utilities/cryptography/utils';
 import { extendedSynchronizationHeaderRPC, introHeaderRPC } from '#udsp/rpc/headerRPC';
-import { findItem, isBuffer } from '@universalweb/acid';
+import { findItem, isBuffer } from '@universalweb/utilitylib';
 import { encode } from '#utilities/serialize';
 import { keyExchange } from './keyExchange.js';
 import pqclean from 'pqclean';
@@ -46,7 +46,7 @@ export async function encapsulate(publicKey) {
 	const target = await publicKey.generateKey();
 	return [
 		Buffer.from(target.encryptedKey),
-		Buffer.from(target.key)
+		Buffer.from(target.key),
 	];
 }
 export const kyber768 = keyExchange({
@@ -56,20 +56,38 @@ export const kyber768 = keyExchange({
 	preferred: true,
 	postQuantum: true,
 	hash: shake256,
-	keyExchangeKeypair,
-	clientEphemeralKeypair,
+	async initializeKeypair(source, target = {}) {
+		if (source.publicKey) {
+			target.publicKey = new PublicKey(schemeName, source.publicKey);
+			target.publicKeyHash = await hash256(source.publicKey);
+		}
+		if (source.privateKey) {
+			target.privateKey = new PrivateKey(schemeName, source.privateKey);
+		}
+		return target;
+	},
+	async initializeCertificateKeypair(...args) {
+		return this.initializeKeypair(...args);
+	},
 	// 	serverPrivateKeySize: privateKeySize,
-	async clientInitializeSession(source, destination) {
-		console.log('clientInitializeSession Destination', destination);
+	async onClientInitialization(source, destination) {
+		console.log('clientInitializeSession', destination);
+	},
+	async createClientIntro(source, destination, frame, header) {
+		source.logInfo('Send Client Intro', source.cipherData);
+		header[2] = source.publicKey;
+	},
+	async onServerClientInitialization(source, destination) {
+		source.logInfo('onServerClientInitialization');
 	},
 	async serverInitializeSessionMethod(source, destination, destinationPublicKey) {
-		const publicKeyHashed = await hash256(destinationPublicKey);
-		destination.publicKeyHash = publicKeyHashed;
+		const publicKeyHash = await hash256(destinationPublicKey);
+		destination.publicKeyHash = publicKeyHash;
 		destination.publicKey = new PublicKey(schemeName, destinationPublicKey);
 		// console.log(destination.publicKey.generateKey);
 		const [
 			cipherData,
-			sharedSecret
+			sharedSecret,
 		] = await encapsulate(destination.publicKey);
 		console.log('serverInitializeSessionMethod', cipherData, sharedSecret);
 		source.sharedSecret = sharedSecret;
@@ -94,7 +112,7 @@ export const kyber768 = keyExchange({
 		console.log(destination.publicKey);
 		const [
 			cipherData,
-			sharedSecret
+			sharedSecret,
 		] = await encapsulate(destination.publicKey);
 		frame.push(cipherData);
 		source.cipherData = cipherData;
@@ -107,7 +125,7 @@ export const kyber768 = keyExchange({
 		const [
 			streamid_undefined,
 			rpc,
-			cipherData
+			cipherData,
 		] = frame;
 		const privateKey = source.privateKey;
 		const sharedSecret = await decapsulate(cipherData, source.privateKey);
@@ -121,7 +139,7 @@ export const kyber768 = keyExchange({
 	},
 	async finalizeExtendedSynchronization(source, destination) {
 		console.log('finalize Extended Synchronization');
-		await this.finalizeSessionKeys(source, destination);
+		await this.upgradeSessionKeys(source, destination);
 		await this.serverCleanupKeyClass(source);
 	},
 	async sendServerExtendedSynchronization(source, destination, frame, header) {
@@ -132,25 +150,14 @@ export const kyber768 = keyExchange({
 		console.log('clientExtendedSynchronization frame');
 		await this.serverCleanupKeyServer(source);
 	},
-	async initializeKeypair(source, target = {}) {
-		if (source.publicKey) {
-			target.publicKey = new PublicKey(schemeName, source.publicKey);
-			target.publicKeyHash = await hash256(source.publicKey);
-		}
-		if (source.privateKey) {
-			target.privateKey = new PrivateKey(schemeName, source.privateKey);
-		}
-		return target;
-	},
-	async initializeCertificateKeypair(...args) {
-		return this.initializeKeypair(...args);
-	},
 	async initializePublicKey(source) {
 		return new PublicKey(schemeName, source?.publicKey || source);
 	},
 	async initializePrivateKey(source) {
 		return new PrivateKey(schemeName, source?.privateKey || source);
 	},
+	keyExchangeKeypair,
+	clientEphemeralKeypair,
 	schemeName,
 	PrivateKey,
 	PublicKey,

@@ -1,21 +1,24 @@
 import * as routers from './router/index.js';
 import * as servers from '#server';
+import { assign, extendClass, isUndefined } from '@universalweb/utilitylib';
 import {
+	logBanner,
 	logError,
 	logInfo,
 	logSuccess,
 	logVerbose,
-	logWarning
+	logWarning,
 } from '../../utilities/logs/classLogMethods.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { encode } from '#utilities/serialize';
+import eventMethods from '#udsp/events';
 import { getConnectionIdReservedSpaceString } from '../utilities/connectionId.js';
-import { initialize } from '#server/clients/initialize';
-import { isUndefined } from '@universalweb/acid';
+import { initialize } from '#server/clients/methods/initialize';
+import logMethods from '#utilities/logs/classLogMethods';
 import { onPacket } from '../server/methods/onPacket.js';
 const {
 	router: createRouter,
-	Router
+	Router,
 } = routers;
 const {
 	Server,
@@ -23,13 +26,16 @@ const {
 } = servers;
 export class App {
 	constructor(options) {
+		this.logBanner('APP INITIALIZING');
 		return this.initialize(options);
 	}
 	async initialize(options) {
 		const { router: routerOptions } = options;
+		this.setupEventEmitter();
 		if (options) {
+			assign(this, options);
 			if (options.server?.constructor === Server) {
-				this.useServer(options);
+				this.useServer(options.server);
 			} else {
 				this.server = await createServer(options.server);
 				this.useServer(this.server);
@@ -70,15 +76,16 @@ export class App {
 		const worker = this.workers[workerId];
 		const passMessage = await encode([
 			packet,
-			connection
+			connection,
 		]);
 		if (worker && passMessage) {
 			worker.process.send(passMessage);
 		}
 	}
-	async onPacket(packet, connection) {
-		return this.server.onPacket(packet, connection);
-	}
+	// async onPacket(packet, connection) {
+	// 	throw new Error('onPacket sent to server?');
+	// 	// return this.server.onPacket(packet, connection);
+	// }
 	use(primaryArg, ...args) {
 		if (!primaryArg) {
 			return this;
@@ -112,15 +119,22 @@ export class App {
 	}
 	// TODO: ADD MULTIPLE SERVER SUPPORT
 	useServer(createdServer) {
+		const app = this;
 		this.server = createdServer;
+		createdServer.app = app;
+		return this;
 	}
-	async onRequest(request, response) {
-		const { router, } = this;
+	async onRequest(request, response, server) {
+		const { router } = this;
+		this.logInfo('onRequest', request);
+		if (this.onAppRequest) {
+			await this.onAppRequest(request, response, this);
+		}
 		if (router) {
-			this.logInfo('Root Router Running');
-			router.handle(request, response, this);
+			return router.handle(request, response, this);
 		} else {
-			response.sendNotFound();
+			this.logError('No Router Found - Returning 404');
+			return response.sendNotFound();
 		}
 	}
 	data = new Map();
@@ -161,9 +175,6 @@ export class App {
 	delete(key) {
 		return this.deleteItem(key);
 	}
-	logError = logError;
-	logWarning = logWarning;
-	logInfo = logInfo;
-	logVerbose = logVerbose;
-	logSuccess = logSuccess;
 }
+extendClass(App, logMethods);
+extendClass(App, eventMethods);

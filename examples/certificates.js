@@ -1,12 +1,13 @@
+import { PublicDomainCertificate, domainCertificate, publicDomainCertificate } from '#components/certificate/index';
 import { cryptoID } from '#components/cryptoID/index';
-import { currentPath } from '@universalweb/acid';
+import { currentPath } from '@universalweb/utilitylib';
 import { decode } from '#utilities/serialize';
-import { domainCertificate } from '#components/certificate/index';
 const dirname = currentPath(import.meta);
 const uwProfile = await cryptoID();
-await uwProfile.saveToFile('profile.cert', `${dirname}/profiles`, 'password');
-await uwProfile.saveToKeychain('profile.cert', `${dirname}/profiles`, 'password');
-const domainCert = await domainCertificate({
+// await uwProfile.saveToFile('profile.cert', `${dirname}/profiles`, 'password');
+// await uwProfile.saveToKeychain('profile.cert', `${dirname}/profiles`, 'password');
+const domainCert = await domainCertificate();
+await domainCert.generate({
 	entity: 'universalweb.io',
 	// ownerHash: profile.getSignature(),
 	signatureAlgorithm: 0,
@@ -42,10 +43,10 @@ const domainCert = await domainCertificate({
 	],
 });
 console.log(domainCert);
-// await domainCert.save('universalWeb.cert', `${dirname}/../serverApp/certs`);
-// await domainCert.savePublic('universalWebPublic.cert', `${dirname}/../serverApp/certs`);
-// // TODO: DECIDE DEFAULT FOLDER
-// await domainCert.savePublic('universalWebPublic.cert', `${dirname}/../udsp/dis/cache`);
-// const cert = await domainCertificate(`${dirname}/../serverApp/certs/universalWebPublic.cert`);
-// console.log(cert);
+await domainCert.save(`${dirname}/../examples/serverApp/certs`, 'universalWeb.cert');
+await domainCert.savePublic(`${dirname}/../examples/serverApp/certs`, 'universalWebPublic.cert');
+await domainCert.savePublic('universalWebPublic.cert', `${dirname}/../components/dis/cache`);
+const cert = await publicDomainCertificate(`${dirname}/../examples/serverApp/certs/universalWebPublic.cert`);
+// await cert.loadCryptography();
+// console.log(await cert.getCiphers(), cert.getCipher(0));
 // console.log(cert.object.keyExchangeKeypair.publicKey.length);

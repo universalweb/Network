@@ -10,20 +10,18 @@ import {
 	isNumber,
 	isString,
 	isTrue,
-	isUndefined
-} from '@universalweb/acid';
+	isUndefined,
+} from '@universalweb/utilitylib';
 import {
 	addClientCount,
 	clientCheck,
 	createServerClient,
 	removeClient,
-	subtractClientCount
+	subtractClientCount,
 } from './methods/clients.js';
 import { attachSocketEvents, configureNetwork, setPort } from './methods/network.js';
 import { configureCertificateCryptography, setCertificate } from './methods/certificate.js';
-import { createEvent, removeEvent, triggerEvent } from '../utilities/events.js';
 import { decode, encode } from '#utilities/serialize';
-import { fire, off, on } from './methods/events.js';
 import { introHeaderRPC, isIntroHeader } from '../rpc/headerRPC.js';
 import { randomBuffer, toBase64 } from '#utilities/cryptography/utils';
 import { UDSP } from '#udsp/base';
@@ -35,6 +33,7 @@ import { onError } from './methods/onError.js';
 import { onListen } from './methods/onListen.js';
 import { onPacket } from './methods/onPacket.js';
 import { sendPacket } from '#udsp/utilities/sendPacket';
+import { setDefaults } from '../client/methods/setDefaults.js';
 const { seal } = Object;
 /*
 	* TODO:
@@ -44,23 +43,23 @@ const { seal } = Object;
  */
 export class Server extends UDSP {
 	constructor(options) {
-		// console.log = () => {};
 		super(options);
 		return this.initialize(options);
 	}
 	async initialize(options) {
-		this.logInfo('-------SERVER INITIALIZING-------');
-		this.initializeBase(options);
-		assign(this, options);
-		this.options = seal(assign({}, options));
-		this.logInfo('OPTIONS', this.options);
-		this.configConnectionId();
+		await this.logBanner('SERVER INITIALIZING');
+		await super.initialize(options);
+		await super.setDefaults(options);
+		await assign(this, options);
+		this.options = options;
+		await this.logInfo('UDSP', this.options);
+		await this.configConnectionId();
 		await this.setCertificate();
 		await this.configureCertificateCryptography();
 		await this.configureNetwork();
 		await this.setupSocket();
 		await this.attachSocketEvents();
-		this.logInfo('-------SERVER INITIALIZED-------');
+		await this.logBanner('SERVER INITIALIZED');
 		return this;
 	}
 	static description = 'UW Server Module';
@@ -72,7 +71,7 @@ export class Server extends UDSP {
 	configConnectionId() {
 		const {
 			isWorker,
-			coreCount
+			coreCount,
 		} = this;
 		if (isFunction(this.id)) {
 			this.id = this.id(this);
@@ -96,10 +95,21 @@ export class Server extends UDSP {
 	clientCheck = clientCheck;
 	createClient = createServerClient;
 	removeClient = removeClient;
-	// CHANGE FUNCTION TO RESPOND TO REQUESTS
-	// TODO: CONSIDER DEFAULT METHODS TO THIS FOR BUILT IN SUPPORT FOR BASE SERVER OBJECT NOT JUST APP
-	async onRequest(request, response, client) {
-		this.logInfo('onRequest', request, response);
+	// NOTE: Server (receives raw packet)
+	//    └─► parses + authenticates + identifies Client
+	//          └─► Client.handlePacket(packet)
+	//                └─► Client.server.handleRequest(packet)
+	//                      └─► App.handleRequest(packet, client)
+	//                            └─► Router.route(packet, client)
+	async onRequest(request, response) {
+		const { app } = this;
+		this.logVerbose('onRequest EVENT', request);
+		if (this.onServerRequest) {
+			await this.onServerRequest(request, response, this);
+		}
+		if (app) {
+			return app.onRequest(request, response, this);
+		}
 	}
 	// TODO: Make this throttled - state doesn't have to be exact just near accurate for loadbalancing
 	async updateWorkerState() {
@@ -112,13 +122,10 @@ export class Server extends UDSP {
 		process.send(await encode([
 			'state',
 			{
-				clientCount
-			}
+				clientCount,
+			},
 		]));
 	}
-	on = on;
-	off = off;
-	fire = fire;
 	attachSocketEvents = attachSocketEvents;
 	configureNetwork = configureNetwork;
 	setPort = setPort;
@@ -129,11 +136,9 @@ export class Server extends UDSP {
 	data = new Map();
 	realTime = true;
 	clientCount = 0;
-	port = 80;
+	port = 8080;
 	ip = '::1';
 	connectionIdSize = defaultServerConnectionIdSize;
-	events = new Map();
-	encryption = {};
 	/*
 		* All created clients (clients) represent a client to server bi-directional connection until it is closed by either party.
 	*/

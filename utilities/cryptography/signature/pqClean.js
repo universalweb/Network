@@ -1,4 +1,4 @@
-import { assign, findItem } from '@universalweb/acid';
+import { assign, findItem } from '@universalweb/utilitylib';
 // Auto Generate SignatureSchemes for Post Quantum Cryptography
 /**
 	* @NAME SPHINCS+ with SHAKE256 - slh_dsa_shake_192s sphincs-shake-192s-simple

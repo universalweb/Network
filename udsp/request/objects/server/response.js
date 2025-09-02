@@ -3,11 +3,13 @@ import {
 	hasValue,
 	isTrue,
 	jsonParse,
-	noValue
-} from '@universalweb/acid';
+	noValue,
+} from '@universalweb/utilitylib';
 import { Base } from '../base.js';
+import { UDSP_HEADERS } from '#udsp/headerCodes';
 import { decode } from '#utilities/serialize';
 import { objectGetSetMethods } from '../objectGetSetMethods.js';
+import { statusCodes } from '#udsp/statusCodes';
 export class ServerResponse extends Base {
 	// constructor(config) {
 	// 	super(config);
@@ -16,31 +18,35 @@ export class ServerResponse extends Base {
 	isClientResponse = true;
 	send(data) {
 		this.sent = true;
-		return this.source().send(data);
+		return this.source.send(data);
 	}
 	async setHeader(headerName, headerValue) {
-		await this.source().setHeader(headerName, headerValue);
+		await this.source.setHeader(headerName, headerValue);
 		return this;
 	}
 	async setHeaders(target) {
-		await this.source().setHeaders(target);
+		await this.source.setHeaders(target);
 		return this;
 	}
 	async sendStatus(statusCode, data) {
-		await this.setHeader('status', statusCode);
+		await this.setHeader(UDSP_HEADERS.STATUS, statusCode);
 		return this.send();
 	}
 	async sendNotFound() {
-		return this.sendStatus(404);
+		// Application (3), Semantic (3), Specific (2) → Resource not found
+		return this.sendStatus(statusCodes.APPLICATION_NOT_FOUND);
 	}
 	async sendError() {
-		return this.sendStatus(500);
+		// System (5), Semantic (2), Specific (0) → Internal error
+		return this.sendStatus(statusCodes.SYSTEM_INTERNAL_ERROR);
 	}
 	async sendSuccess(data) {
-		return this.sendStatus(200, data);
+		// 0 = OK / Success
+		return this.sendStatus(statusCodes.OK, data);
 	}
 	async sendEmpty() {
-		return this.sendStatus(204);
+		// 04 = No Content (success with no payload)
+		return this.sendStatus(statusCodes.NO_CONTENT);
 	}
 }
 objectGetSetMethods.attachMethods(ServerResponse);

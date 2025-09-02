@@ -9,7 +9,7 @@ export const x25519 = x25519KeyExchange({
 	name: 'x25519',
 	alias: 'x25519_SHAKE256',
 	id: 0,
-	hash
+	hash,
 });
 export default x25519;
 // const client = await x25519.keyExchangeKeypair();

@@ -1,8 +1,8 @@
 // DOMAIN INFORMATION SYSTEM
 // This module provides functions to manage and retrieve information about domain certificates.
-import { currentPath } from '@universalweb/acid';
+import { currentPath } from '@universalweb/utilitylib';
 import os from 'os';
-import { publicDomainCertificate } from '#components/certificate/domain';
+import { publicDomainCertificate } from '#components/certificate/domain/domain';
 const homeDirectory = os.homedir();
 // const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // console.log(timeZone);

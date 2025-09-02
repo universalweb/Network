@@ -9,6 +9,6 @@ const server = await createServer({
 	// DIS Server ID used for load balancing and attaching to the end of connection IDs
 	id: '0',
 	onConnectMessage: `Welcome to the Universal Web.`,
-	port: 8888
+	port: 8888,
 });
 server.infoLog('DIS Server', server);

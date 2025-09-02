@@ -1,5 +1,5 @@
 import * as binaryFormat from 'cbor-x';
-import { noValue } from '@universalweb/acid';
+import { noValue } from '@universalweb/utilitylib';
 const {
 	encode: encodeRaw,
 	decode: decodeRaw,

@@ -1,26 +1,46 @@
 export const version = 1;
 export const blockTypes = {
-	transaction: 0,
-	receipt: 1,
-	wallet: 2,
-	generic: 3,
-	genesis: 4,
-	genesisWallet: 5,
-	genesisAudit: 6,
+	proof: 0,
+	transaction: 1,
+	receipt: 2,
+	wallet: 3,
+	generic: 4,
+	genesis: 5,
+	genesisWallet: 6,
+	genesisAudit: 7,
 };
 export const filePaths = {
 	transaction: '/transactions/',
+	proof: '/proofs/',
 	receipt: '/receipts/',
 	wallet: '/wallets/',
 	genesis: '/',
 	genesisWallet: '/wallets/',
 	genesisAudit: '/audits/',
 };
+export const urlPaths = {
+	transaction: '/t/',
+	proof: '/p/',
+	receipt: '/r/',
+	wallet: '/w/',
+	genesis: '/',
+	genesisWallet: '/gw/',
+	genesisAudit: '/ga/',
+};
+export const letters = {
+	transaction: 't',
+	proof: 'p',
+	receipt: 'r',
+	wallet: 'w',
+	genesis: 'g',
+	genesisWallet: 'gw',
+	genesisAudit: 'ga',
+};
 export const fileTypes = {
 	't.block': 'Viat Transaction Block',
+	'p.block': 'Viat Proof Block',
 	'r.block': 'Viat Receipt Block',
 	'ab.block': 'Viat Abstract Block',
-	'p.block': 'Viat Profile Block',
 	'l.block': 'Viat Link Block',
 	'w.block': 'Viat Wallet Block',
 	'a.block': 'Viat Audit Block',
@@ -30,6 +50,7 @@ export const fileTypes = {
 };
 export const fileExtensions = {
 	transaction: '.t.block',
+	proof: '.p.block',
 	receipt: '.r.block',
 	abstract: '.ab.block',
 	profile: '.p.block',
@@ -43,6 +64,7 @@ export const fileExtensions = {
 };
 export const genericFilenames = {
 	transaction: 't.block',
+	proof: 'p.block',
 	receipt: 'r.block',
 	abstract: 'ab.block',
 	profile: 'p.block',
@@ -55,10 +77,8 @@ export const genericFilenames = {
 	genesisWallet: 'genesisWallet.block',
 	genesisAudit: 'genesisAudit.block',
 };
-export function createBlockDefaultsObject(blockName, blockNamePlural, letter) {
+export function createBlockDefaultsObject(source, blockName, blockNamePlural, letter) {
 	const target = {
-		urlPathname: letter,
-		pathname: blockNamePlural,
 		urlPathnameRegex: new RegExp(`/${letter}/`),
 		pathnameRegex: new RegExp(`/${blockNamePlural}/`),
 		directoryPathname: `/${blockNamePlural}/`,

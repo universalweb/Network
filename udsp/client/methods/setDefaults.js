@@ -1,4 +1,4 @@
-import { construct } from '@universalweb/acid';
+import { construct } from '@universalweb/utilitylib';
 import { defaultClientConnectionIdSize } from '../defaults.js';
 import { defaultServerConnectionIdSize } from '../../server/defaults.js';
 export async function setDefaults() {

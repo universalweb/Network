@@ -1,5 +1,5 @@
 import getObject from './get.js';
-import { isString } from '@universalweb/acid';
+import { isString } from '@universalweb/utilitylib';
 import postObject from './post.js';
 export const methods = {};
 export const methodNamesArray = [];

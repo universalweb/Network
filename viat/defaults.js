@@ -1,3 +1,4 @@
+import { encode } from '#utilities/serialize';
 const version = 1;
 const coinName = 'VIAT';
 const coinNamePlural = 'VIAT';
@@ -9,23 +10,41 @@ const coinUnitName = 'VIAT';
 const coinElementName = 'Vitainium';
 const coinElementSymbol = 'Vi';
 const vFED = 'Viat Federal Reserve';
-// whole:8  decimal:56|69 total:64|77
+const defaultHashSize = 64;
+const legacyHashSize = 32;
 // Used for -> for micro payments, nano transactions, quantum payments (ultra-fine granularity transactions), High-Frequency Trading Fees, Low-Value Use Cases, Layer-2 or Batching, Counterparty Compatibility, atomic swaps, Viat Federal Reserve Deflationary Mechanism
+//  DECIMAL DRAFT AMOUNT
+// WHOLE NUM digit count is 8
+// ALT DECIMAL amount 40
+// ALT2 Decimal amount 50
 const coinDecimalPlaces = 69;
-const coinMaxSupplyDisplay = '52,000,000';
-const coinMaxWholeSupplyDisplay = '52000000';
-const digitTotal = coinDecimalPlaces + coinMaxWholeSupplyDisplay.length;
-const coinMaxWholeSupplyNumber = 52000000;
-const coinMaxWholeSupplyBigInt = 52000000n;
-const coinMaxSupply = `${coinMaxWholeSupplyDisplay}${'0'.padEnd(coinDecimalPlaces, '0')}`;
-const coinDigitCount = coinMaxSupply.length;
-const coinMaxSupplyLength = coinMaxSupply.length;
-const coinMaxWholeSupplyLength = coinMaxWholeSupplyDisplay.length;
-const coinMaxSupplyInt = BigInt(coinMaxSupply);
-const coinMaxSupplyParsed = '52,000,000.0'.padEnd(coinDecimalPlaces, '0');
-// Add Max Supply in smallest units
-// Check sizes
-// Add smallest unit math for bigint
+const coinMaxSupplyDisplay = '42,000,000';
+const coinMaxWholeSupplyString = '42000000';
+const coinMaxWholeSupplyNumber = 42000000;
+const coinZeros = ''.padEnd(coinDecimalPlaces, '0');
+const coinMaxSupplyString = `${coinMaxWholeSupplyString}${coinZeros}`;
+const coinMaxSupplyAllString = `${coinMaxSupplyDisplay}.${coinZeros}`;
+const coinMaxSupply = BigInt(coinMaxSupplyString);
+const coinDigitCount = coinMaxSupplyString.length;
+const coinWholeDigitCount = coinMaxWholeSupplyString.length;
+const initialPreAllocation = 5200000;
+// console.log(coinMaxWholeSupplyString.length);
+const reservedAddresses = {
+	//  STATIC INT WALLET - MINT VIAT
+	coinFoundry: 0,
+	// STATIC INT WALLET - TOKEN/NFT ONLY
+	nullVault: 1,
+	// GENERATED WALLET - FEDERAL VIAT RESERVE FUND/VAULT
+	// The Phoenix Treasury - The Viat Reclamation Fund
+	reserveVault: 2,
+	// GENERATED WALLET - TEAM ALLOCATION WALLET
+	teamVault: 3,
+	//  GENERATED WALLET - INITIAL ALLOCATION WALLET
+	originVault: 4,
+};
+const reserveTxPercentage = 0.01;
+const reserveTxMin = 1n;
+const reserveTxMax = 10n;
 const viatDefaults = {
 	coinElementName,
 	coinElementSymbol,
@@ -35,9 +54,7 @@ const viatDefaults = {
 	coinDigitCount,
 	coinMaxSupply,
 	coinMaxSupplyDisplay,
-	coinMaxSupplyInt,
-	coinMaxSupplyLength,
-	coinMaxSupplyParsed,
+	coinWholeDigitCount,
 	coinName,
 	coinUnitName,
 	coinSymbol,
@@ -45,6 +62,7 @@ const viatDefaults = {
 	coinSmallestUnitName,
 	coinLargestUnitName,
 	version,
+	reservedAddresses,
 };
 export default viatDefaults;
 // console.log(coinDigitCount);

@@ -1,18 +1,18 @@
 import { clientStates } from '../defaults.js';
-import { promise } from '@universalweb/acid';
+import { promise } from '@universalweb/utilitylib';
 const {
 	connectedState,
 	closingState,
 	closedState,
 	destroyingState,
-	destroyedState
+	destroyedState,
 } = clientStates;
 export async function connect() {
 	if (!this.destination.ip) {
-		this.logInfo(`Can't connect - No Destination IP`);
-		return;
+		this.logError(`Can't connect - No Destination IP`, this.destination);
+		return false;
 	} else if (this.state === connectedState) {
-		this.logInfo('ALREADY CONNECTED');
+		this.logVerbose('ALREADY CONNECTED');
 		return this;
 	} else if (this.completeSynchronization) {
 		return this.awaitSynchronization;
@@ -28,7 +28,7 @@ export async function setDisconnected() {
 	this.connected = null;
 	await this.setState(closedState);
 	await this.setReadyState(3);
-	this.fire(this.events, 'disconnected', this);
+	this.emitEvent('disconnected');
 }
 export async function reconnect(options) {
 	if (this.state === closedState) {
@@ -37,10 +37,11 @@ export async function reconnect(options) {
 	}
 }
 export async function setConnected() {
+	// TODO: REMOVE CONNECTED PROPERTY NO NEED USE STATE
 	this.connected = true;
 	await this.setState(connectedState);
 	await this.setReadyState(1);
 	this.latency = (Date.now() - this.introTimestamp) + 100;
-	this.logInfo(`CLIENT CONNECTED. Latency: ${this.latency}ms`);
-	this.fire(this.events, 'connected', this);
+	this.logSuccess(`CLIENT CONNECTED. Latency: ${this.latency}ms`);
+	this.emitEvent('connected');
 }

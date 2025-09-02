@@ -1,13 +1,13 @@
-import { jsonParse, promise } from '@universalweb/acid';
+import { jsonParse, promise } from '@universalweb/utilitylib';
 import {
 	mkdir,
+	opendir,
 	readFile,
 	stat,
 	writeFile,
 } from 'node:fs/promises';
 import { decode } from '#utilities/serialize';
 import dirTree from 'directory-tree';
-import fs from 'node:fs';
 import fsExtra from 'fs-extra';
 import path from 'path';
 const { normalize } = path;
@@ -186,5 +186,37 @@ export async function readStructured(filePath) {
 	} catch (err) {
 		console.log('Read Decode Error', err);
 		return;
+	}
+}
+/**
+ * Stream and traverse a directory with depth and pattern matching.
+ *
+ * @param {string} dirPath - The root directory to start reading from.
+ * @param {object} options - Options to control behavior.
+ * @param {number} [options.maxDepth=Infinity] - Max recursion depth.
+ * @param {RegExp} [options.match] - Optional RegExp to match filenames.
+ * @param {(filePath: string) => void | Promise<void>} [options.onMatch] - Callback if match is found.
+ * @param {number} [depth=0] - Current depth (internal use).
+ */
+async function streamDirectory(dirPath, config = {}, depth = 0) {
+	const {
+		maxDepth = 10,
+		match,
+		onMatch,
+	} = config;
+	const dir = await opendir(dirPath);
+	for await (const dirent of dir) {
+		const fullPath = path.join(dirPath, dirent.name);
+		if (dirent.isDirectory()) {
+			if (depth < maxDepth) {
+				await streamDirectory(fullPath, {
+					maxDepth,
+					match,
+					onMatch,
+				}, depth + 1);
+			}
+		} else if (onMatch && match?.test(dirent.name)) {
+			await onMatch(fullPath);
+		}
 	}
 }

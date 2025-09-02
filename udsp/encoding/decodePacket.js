@@ -8,9 +8,9 @@ import {
 	isString,
 	isTrue,
 	isUndefined,
-	noValue
-} from '@universalweb/acid';
-import { decode, encode, } from '#utilities/serialize';
+	noValue,
+} from '@universalweb/utilitylib';
+import { decode, encode } from '#utilities/serialize';
 import { toBase64, toHex } from '#utilities/cryptography/utils';
 import { createClient } from '../server/clients/index.js';
 import { introHeaderRPC } from '#udsp/rpc/headerRPC';
@@ -24,7 +24,7 @@ export async function decodePacketHeaders(config) {
 	const {
 		source,
 		destination,
-		packet: packetEncoded
+		packet: packetEncoded,
 	} = config;
 	const {
 		cipher,
@@ -34,7 +34,7 @@ export async function decodePacketHeaders(config) {
 		isServerEnd,
 		isServerClient,
 		boxCryptography,
-		connectionIdSize
+		connectionIdSize,
 	} = destination;
 	const packetSize = packetEncoded.length;
 	if (packetSize > maxDefaultPacketSize) {
@@ -51,7 +51,7 @@ export async function decodePacketHeaders(config) {
 	}
 	config.packet = packet;
 	destination.logInfo(`Packet Decoded Array Size ${packet.length}`);
-	destination.logInfo(packet);
+	destination.logVerbose(packet);
 	const isShortHeaderMode = isBuffer(packet);
 	config.isShortHeaderMode = isShortHeaderMode;
 	config.packetDecoded = {};
@@ -62,18 +62,18 @@ export async function decodePacketHeaders(config) {
 	} else {
 		headerEncoded = packet[0];
 		if (!packet[1]) {
-			config.packetDecoded.noMessage = true;
+			config.packetDecoded.noFrame = true;
 		}
 	}
 	destination.logInfo(`headerEncoded Size ${headerEncoded.length}`);
 	if (!headerEncoded) {
-		return console.trace(`No header encoded -> Invalid Packet`);
+		return this.logError(`No header encoded -> Invalid Packet`);
 	}
 	config.headerEncoded = headerEncoded;
 	// Add single header support which holds only the binary data of the packet.id
 	const headerDecoded = headerEncoded;
 	if (isUndefined(headerDecoded)) {
-		return console.trace(`No header from decode -> Invalid Packet`);
+		return this.logError(`No header from decode -> Invalid Packet`);
 	}
 	const id = isShortHeaderMode ? headerDecoded : headerDecoded[0];
 	config.packetDecoded.header = headerEncoded;
@@ -94,7 +94,7 @@ export async function decodePacket(config) {
 		destination,
 		packet,
 		packetDecoded,
-		packetDecoded: { header, },
+		packetDecoded: { header },
 		headerEncoded,
 		isShortHeaderMode,
 	} = config;
@@ -109,31 +109,29 @@ export async function decodePacket(config) {
 		messageEncoded = packet[1];
 	}
 	if (noValue(messageEncoded)) {
-		destination.logInfo('No message encoded');
+		destination.logInfo('NO MESSAGE ENCODED');
 		return true;
 	}
 	const receiveKey = destination?.receiveKey;
 	// TODO: Add support for a shared generic like a TypedArray?
 	const hasEncryptedPayload = receiveKey && messageEncoded && isBuffer(messageEncoded) && hasLength(messageEncoded);
 	if (hasEncryptedPayload) {
-		destination.logInfo(`Receive Key ${toHex(receiveKey)}`);
 		destination.logInfo(packet, packetDecoded);
-		destination.logInfo(`encrypted Message size ${messageEncoded.length}bytes`);
 		const ad = isShortHeaderMode ? headerEncoded : await encode(headerEncoded);
-		destination.logInfo('decrypt op', messageEncoded, receiveKey, ad);
+		destination.logInfo(`DECRYPT FRAME ${messageEncoded.length}bytes`, messageEncoded.length, `Receive Key ${receiveKey[0]}`, ad[0]);
 		const decryptedMessage = await cipher.decrypt(messageEncoded, receiveKey, ad);
 		if (isUndefined(decryptedMessage)) {
-			console.trace('Decryption failed');
+			this.logError('DECRYPTION FAILED');
 			return;
 		}
-		destination.logInfo(`decrypted Message size ${decryptedMessage.length} BYTES`);
+		destination.logInfo(`DECRYPTED MESSAGE SIZE ${decryptedMessage.length} BYTES`);
 		const message = await decode(decryptedMessage);
 		if (isUndefined(message)) {
-			console.trace('Message Decrypt or Decode failed');
+			this.logError('Message Decrypt or Decode failed');
 		}
 		packetDecoded.message = message;
 	} else {
-		destination.logInfo(`No Message in Packet`);
+		destination.logInfo(`NO MESSAGE IN PACKET`);
 	}
 	return true;
 }

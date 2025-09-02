@@ -1,4 +1,4 @@
-import { isString } from '@universalweb/acid';
+import { isString } from '@universalweb/utilitylib';
 import nodeWatch from 'node-watch';
 export function watch(item, callback) {
 	return nodeWatch(item, {

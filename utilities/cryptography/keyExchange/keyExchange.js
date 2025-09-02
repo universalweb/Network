@@ -1,4 +1,4 @@
-import { assign, isBuffer } from '@universalweb/acid';
+import { assign, isBuffer } from '@universalweb/utilitylib';
 import { clearBuffer, clearBuffers } from '#utilities/cryptography/utils';
 import { sodium_memzero } from '#utilities/cryptography/sodium';
 export class KeyExchange {
@@ -13,9 +13,9 @@ export class KeyExchange {
 		const sharedSecret = source.sharedSecret;
 		const clientPublicKey = source?.publicKeyHash || source?.publicKey;
 		const serverPublicKey = destination?.publicKeyHash || destination?.publicKey;
-		console.log('sharedSecret', sharedSecret);
-		console.log('clientPublicKey', clientPublicKey);
-		console.log('serverPublicKey', serverPublicKey);
+		source.logInfo('sharedSecret', sharedSecret);
+		source.logInfo('clientPublicKey', clientPublicKey);
+		source.logInfo('serverPublicKey', serverPublicKey);
 		const sessionKeyHash = await this.hash.concatHash512(
 			sharedSecret,
 			clientPublicKey,
@@ -23,7 +23,7 @@ export class KeyExchange {
 		);
 		clearBuffer(sharedSecret);
 		source.sharedSecret = null;
-		console.log('Session Key Hash', sessionKeyHash);
+		source.logInfo('Session Key Hash', sessionKeyHash);
 		const transmitKey = sessionKeyHash.subarray(this.sessionKeySize);
 		const receiveKey = sessionKeyHash.subarray(0, this.sessionKeySize);
 		if (target) {
@@ -35,13 +35,14 @@ export class KeyExchange {
 		return {
 			sessionKeyHash,
 			receiveKey,
-			transmitKey
+			transmitKey,
 		};
 	}
 	async serverEphemeralKeypair(destination) {
 		const generatedKeypair = await this.keyExchangeKeypair();
 		return generatedKeypair;
 	}
+	//  TODO: SET IF FOR COMBINE PRIOR TX AND RX KEYS
 	async createServerSession(source, destination, target) {
 		const sharedSecret = source.sharedSecret;
 		const clientPublicKey = destination?.publicKeyHash || destination?.publicKey;
@@ -64,14 +65,8 @@ export class KeyExchange {
 		return {
 			sessionKeyHash,
 			receiveKey,
-			transmitKey
+			transmitKey,
 		};
-	}
-	async serverInitializeSession(source, destination, cipherData) {
-		console.log('server Initialize Session', cipherData);
-		destination.publicKey = cipherData;
-		await this.serverInitializeSessionMethod(source, destination, cipherData);
-		await this.createServerSession(source, destination, source);
 	}
 	async exportKeypair(source) {
 		const target = {};
@@ -96,33 +91,36 @@ export class KeyExchange {
 		return target;
 	}
 	async getPublicKey(source) {
-		if (!source.publicKey) {
-			return;
+		if (isBuffer(source)) {
+			return source;
 		}
-		if (source.publicKey.export) {
+		if (source.export) {
+			return Buffer.from(source.export());
+		}
+		if (source?.publicKey?.export) {
 			return Buffer.from(source.publicKey.export());
 		}
 		return source.publicKey;
 	}
-	async finalizeSessionKeys(source, destination) {
-		console.log('finalizeSessionKeys', source.sharedSecret);
+	// COMBINE SESSION KEYS
+	async upgradeSessionKeys(source, destination) {
+		source.logInfo('upgradeSessionKeys', source.sharedSecret);
 		const sharedSecret = source.sharedSecret;
 		const {
 			sessionKeyHash: oldSessionKeyHash,
 			transmitKey: oldTransmitKey,
-			receiveKey: oldReceiveKey
+			receiveKey: oldReceiveKey,
 		} = source;
-		console.log(oldReceiveKey, oldTransmitKey);
-		console.log(sharedSecret);
-		source.transmitKey = await this.hash.concatHash(oldTransmitKey, sharedSecret);
-		source.receiveKey = await this.hash.concatHash(oldReceiveKey, sharedSecret);
+		source.logInfo(oldReceiveKey, oldTransmitKey);
+		source.logInfo(sharedSecret);
+		source.transmitKey = await this.hash.concatHash(sharedSecret, oldTransmitKey);
+		source.receiveKey = await this.hash.concatHash(sharedSecret, oldReceiveKey);
 		clearBuffer(oldSessionKeyHash);
-		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
-		await this.cleanup(source);
+		source.logInfo('Keys', source.transmitKey[0], source.receiveKey[0]);
 	}
 	// Clear sensitive data as soon as possible for security & memory
 	async cleanup(source) {
-		console.log('cleanup');
+		source.logInfo('old buffer key cleanup');
 		if (source.cipherData) {
 			clearBuffer(source.cipherData);
 			source.cipherData = null;

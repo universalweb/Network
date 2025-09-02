@@ -1,4 +1,4 @@
-import { eachArray } from '@universalweb/acid';
+import { eachArray } from '@universalweb/utilitylib';
 import { sendDataReady } from '../sendReady/sendDataReady.js';
 export async function processHead() {
 	if (this.headAssembled) {
@@ -6,7 +6,7 @@ export async function processHead() {
 	}
 	const {
 		missingHeadPackets,
-		incomingHead
+		incomingHead,
 	} = this;
 	this.logInfo('incomingHeadPackets', this.incomingHeadPackets);
 	if (this.totalIncomingHeadSize === this.currentIncomingHeadSize) {

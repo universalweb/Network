@@ -14,7 +14,7 @@ import {
 	omit,
 	promise,
 	stringify
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { decode, encode } from '#utilities/serialize';
 import { Base } from '../base.js';
 import { objectGetSetMethods } from '../objectGetSetMethods.js';

@@ -1,4 +1,4 @@
-import { calcProgress } from '@universalweb/acid';
+import { calcProgress } from '@universalweb/utilitylib';
 export async function onDataProgress() {
 	if (this.totalIncomingDataSize) {
 		if (this.currentIncomingDataSize > 0) {

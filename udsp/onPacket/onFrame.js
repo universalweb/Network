@@ -3,8 +3,8 @@ import {
 	hasValue,
 	isArray,
 	isNumber,
-	stringify
-} from '@universalweb/acid';
+	stringify,
+} from '@universalweb/utilitylib';
 import { onProtocolFrame } from '#udsp/onPacket/onProtocol';
 export async function processFrame(frame, header, source, queue, rinfo) {
 	const streamId = frame[0];

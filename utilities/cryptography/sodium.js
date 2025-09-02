@@ -9,7 +9,8 @@ const {
 	crypto_kx_server_session_keys,
 	crypto_scalarmult,
 	crypto_aead_xchacha20poly1305_ietf_ABYTES,
-	sodium_memzero
+	sodium_memzero,
+	crypto_scalarmult_BYTES,
 } = libsodium;
 export {
 	crypto_aead_xchacha20poly1305_ietf_decrypt,
@@ -20,6 +21,7 @@ export {
 	crypto_kx_server_session_keys,
 	crypto_scalarmult,
 	crypto_aead_xchacha20poly1305_ietf_ABYTES,
-	sodium_memzero
+	sodium_memzero,
+	crypto_scalarmult_BYTES,
 };
 export default libsodium;

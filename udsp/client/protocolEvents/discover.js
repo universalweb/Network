@@ -3,6 +3,7 @@
 // ENCOURAGE DISCOVERY FOR PUBLIC CERTIFICATES FROM THE DOMAIN INFORMATION SYSTEM
 import { clientStates } from '../defaults.js';
 import { discoveryHeaderRPC } from '../../rpc/headerRPC.js';
+import { setState } from '../methods/state.js';
 import { toHex } from '#utilities/cryptography/utils';
 const {
 	inactiveState,
@@ -13,7 +14,7 @@ const {
 	closingState,
 	closedState,
 	destroyingState,
-	destroyedState
+	destroyedState,
 } = clientStates;
 export async function setDiscoveryHeaders(header = []) {
 	const key = this.publicKey;
@@ -22,7 +23,7 @@ export async function setDiscoveryHeaders(header = []) {
 		cipherName,
 		cipher,
 		version,
-		id
+		id,
 	} = this;
 	header.push(id, cipher.id, version);
 	return header;
@@ -47,9 +48,9 @@ export async function sendDiscovery() {
 	}
 }
 export async function discovery(frame, header) {
-	this.discovered();
+	await this.discovered();
 }
-export	async function discovered() {
-	this.logInfo('DISCOVERY COMPLETED -> CERTIFICATE LOADED');
+export async function discovered() {
+	this.logSuccess('DISCOVERY COMPLETED -> CERTIFICATE LOADED');
 	await this.setState(discoveredState);
 }

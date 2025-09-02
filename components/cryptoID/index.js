@@ -4,25 +4,20 @@
 import {
 	assign,
 	currentPath,
+	extendClass,
 	hasDot,
 	hasValue,
 	isArray,
 	isBuffer,
 	isPlainObject,
 	isString,
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
+import { getHomeDirectory, getWalletsDirectory } from '#utilities/directory';
 import { keychainGet, keychainSave } from '#components/certificate/keychain';
-import {
-	logError,
-	logInfo,
-	logSuccess,
-	logVerbose,
-	logWarning,
-} from '#utilities/logs/classLogMethods';
 import { read, readStructured, write } from '#utilities/file';
 import { cryptoIDVersion } from '#components/cryptoID/defaults';
-import { getHomeDirectory } from '#utilities/directory';
+import logMethods from '#utilities/logs/classLogMethods';
 import path from 'node:path';
 import { toBase64Url } from '#crypto/utils.js';
 import viat from '#crypto/cipherSuite/viat.js';
@@ -203,7 +198,7 @@ export class CryptoID {
 		return write(fullPath, binaryData, 'binary', true);
 	}
 	async save(fileLocationArg, fileNameArg, encryptionPassword, encoding) {
-		const fileLocation = (fileLocationArg) ? fileLocationArg : await getHomeDirectory();
+		const fileLocation = (fileLocationArg) ? fileLocationArg : await getWalletsDirectory();
 		const fileName = (fileNameArg) ? fileNameArg : await this.getAddressString(encoding);
 		return this.saveToFile(fileName, fileLocation, encryptionPassword);
 	}
@@ -260,7 +255,7 @@ export class CryptoID {
 	cryptoIDVersion = cryptoIDVersion;
 	async generateAddress() {
 		const publicKey = await this.exportPublicKey();
-		const publicKeyCombined = (isArray(publicKey)) ? Buffer.concat(publicKey) : publicKey;
+		const publicKeyCombined = (isBuffer(publicKey)) ? publicKey : await encodeStrict(publicKey);
 		const address = await this.cipherSuite.hash.hash512(publicKeyCombined);
 		this.address = address;
 		return address;
@@ -276,12 +271,8 @@ export class CryptoID {
 	setAlias(value) {
 		this.alias = value;
 	}
-	logError = logError;
-	logWarning = logWarning;
-	logInfo = logInfo;
-	logVerbose = logVerbose;
-	logSuccess = logSuccess;
 }
+extendClass(CryptoID, logMethods);
 export async function cryptoID(config, optionalArg) {
 	const source = new CryptoID(config, optionalArg);
 	return source;
@@ -291,6 +282,7 @@ export default cryptoID;
 // const exampleCryptoIDExample = await cryptoID();
 // const encryptionPasswordExample = 'password';
 // console.log(await exampleCryptoIDExample.exportBinary());
+// console.log((await exampleCryptoIDExample.getAddress()).length);
 // const exportedKeypairs = await exampleCryptoIDExample.exportKeypairs();
 // console.log(exportedKeypairs);
 // console.log(`Version: ${exampleProfileExample.version}`);

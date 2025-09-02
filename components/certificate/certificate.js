@@ -1,4 +1,6 @@
 import {
+	assign,
+	clone,
 	eachArray,
 	get,
 	hasDot,
@@ -6,43 +8,72 @@ import {
 	isArray,
 	isBuffer,
 	isNumber,
+	isPlainObject,
+	isString,
+	last,
+	merge,
 	untilTrueArray,
-} from '@universalweb/acid';
-import { encode, encodeStrict } from '#utilities/serialize';
+} from '@universalweb/utilitylib';
+import { decode, encodeStrict } from '#utilities/serialize';
 import {
 	getCipher,
 	getCiphers,
 	getKeyExchangeAlgorithm,
 	getSignatureAlgorithm,
 } from '#crypto/index.js';
+import { hash256, hash512 } from '#utilities/cryptography/hash/shake256';
 import dis from '#components/dis/index';
+import { readStructured } from '#file';
 import { resolve } from 'path';
 import { write } from '#utilities/file';
 export class Certificate {
 	constructor(config) {
 		return this.initialize(config);
 	}
+	async initialize(source) {
+		if (isPlainObject(source)) {
+			await this.merge(source);
+		} else if (isString(source)) {
+			const sourceDecoded = await readStructured(source);
+			await this.merge(sourceDecoded);
+		} else if (isBuffer(source)) {
+			const sourceDecoded = await decode(source);
+			await this.merge(sourceDecoded);
+		}
+		return this;
+	}
+	async loadCryptography() {
+		await this.setCipherMethods();
+		await this.setKeyExchangeAlgorithm();
+		await this.setSignatureAlgorithm();
+		return this;
+	}
+	merge(source) {
+		if (source) {
+			merge(this.object, source);
+		}
+		return this;
+	}
 	set(key, value) {
-		this.object[key] = value;
-		this.update();
+		this.object.data[key] = value;
 	}
 	get(key) {
 		if (key) {
-			return get(key, this.object);
+			return get(key, this.object.data);
 		}
-		return this.object;
+		return this.object.data;
 	}
 	getProtocolVersion() {
-		return this.object?.protocolOptions?.version;
+		return this.object?.data.protocolOptions?.version;
 	}
 	getCertificateVersion() {
-		return this.object?.version;
+		return this.object?.data.version;
 	}
 	getSignatureAlgorithm() {
-		return getSignatureAlgorithm(this.object.signatureAlgorithm, this.getCertificateVersion());
+		return getSignatureAlgorithm(this.object.data.signatureAlgorithm, this.getCertificateVersion());
 	}
 	getKeyExchangeAlgorithm() {
-		return getKeyExchangeAlgorithm(this?.object?.keyExchangeAlgorithm, this.getCertificateVersion());
+		return getKeyExchangeAlgorithm(this?.object?.data.keyExchangeAlgorithm, this.getCertificateVersion());
 	}
 	setKeyExchangeAlgorithm() {
 		this.keyExchangeAlgorithm = this.getKeyExchangeAlgorithm();
@@ -50,48 +81,30 @@ export class Certificate {
 	setSignatureAlgorithm() {
 		this.signatureAlgorithm = this.getSignatureAlgorithm();
 	}
-	getCipher(cipherId) {
-		if (!this.cipherMethods) {
-			this.setCipherMethods();
-		}
-		if (hasValue(cipherId)) {
-			const target = this.cipherMethods.find((item) => {
-				return item.id === cipherId;
-			});
-			return target;
-		}
-		return this.cipherMethods[0];
+	async getCiphers() {
+		return getCiphers(this.object.data.ciphers, this.getProtocolVersion());
 	}
-	getCiphers() {
-		return getCiphers(this.object.ciphers, this.getProtocolVersion());
-	}
-	setCipherMethods() {
+	async setCipherMethods() {
 		const source = this;
-		this.cipherMethods = this.getCiphers();
+		this.cipherMethods = await this.getCiphers();
 		this.cipherMethods.forEach((item) => {
-			source[item.id] = true;
+			source.availableCiphers[item.id] = item;
 		});
+		this.maxCipherId = last(this.cipherMethods)?.id;
 	}
-	findCipherSuiteMethod(id) {
-		if (!this.cipherMethods) {
-			this.getcipherMethods();
+	getCipher(id = 0) {
+		if (isNumber(id) && id >= 0 && id <= this.maxCipherId) {
+			return this.availableCiphers[id];
 		}
-		return this.cipherMethods.find((cipher) => {
-			return cipher.id === id;
-		});
 	}
-	selectCipherSuite(id) {
-		if (!this.cipherMethods) {
-			this.getcipherMethods();
-		}
-		const cipherMethods = this.cipherMethods;
-		const thisCert = this;
+	selectCipher(id) {
 		if (hasValue(id)) {
-			return this.findCipherSuiteMethod(id);
+			return this.getCipher(id);
 		}
 		return this.cipherMethods[0];
 	}
-	getFastestCipherSuite() {
+	// TODO: ADD FOR MOBILE/EMBED CIPHER CHOICE AS FUNCTION INSTEAD OF FIND
+	getFastestCipher() {
 		let fastest = this.cipherMethods[0];
 		eachArray(this.cipherMethods, (cipher) => {
 			if (cipher.speed > fastest.speed) {
@@ -100,7 +113,7 @@ export class Certificate {
 		});
 		return fastest;
 	}
-	getMostSecureCipherSuite() {
+	getMostSecureCipher() {
 		let mostSecure = this.cipherMethods[0];
 		eachArray(this.cipherMethods, (cipher) => {
 			if (cipher.security > mostSecure.security) {
@@ -109,61 +122,73 @@ export class Certificate {
 		});
 		return mostSecure;
 	}
-	getHash() {
-		if (this?.object?.signature) {
-			return this.object.signature;
-		}
-	}
-	async encodeArray() {
-		return [this.array, await this.getSignature()];
+	async getHash() {
+		return hash512(await this.encodePublic());
 	}
 	async encodePublic() {
-		const publicCertificate = await this.getPublic();
-		return encodeStrict(publicCertificate);
+		await this.getPublic();
+		return encodeStrict(this.publicCertificate);
 	}
 	async encode() {
 		return encodeStrict(this.object);
 	}
-	async save(certificateName, savePath) {
-		const saved = await this.saveToFile({
-			certificate: await this.encode(),
-			savePath,
-			certificateName,
-		});
+	async save(savePath, certificateName = 'private') {
+		const saved = await this.saveToFile(savePath, certificateName);
 		return saved;
 	}
-	async savePublic(certificateName, savePath) {
-		const certificate = await this.encodePublic();
-		const saved = await this.saveToFile({
-			certificate,
-			savePath,
-			certificateName,
-		});
+	async savePublic(savePath, certificateName = 'public') {
+		const saved = await this.saveToFile(savePath, certificateName, await this.encodePublic());
 		return saved;
 	}
-	async selfSign() {
+	async getSignature() {
+		if (!this.publicCertificate) {
+			await this.generatePublic();
+		}
 		const encodedCertificate = await encodeStrict(this.publicCertificate);
 		console.log('selfSign encodedCertificate', encodedCertificate);
-		const signatureAlgorithm = getSignatureAlgorithm(this.get('signatureAlgorithm'), this.get('version'));
-		const signatureKeypair = this.signatureKeypairInstance || await signatureAlgorithm.initializeKeypair(this.get('signatureKeypair'));
+		const signatureAlgorithm = await getSignatureAlgorithm(await this.get('signatureAlgorithm'), await this.get('version'));
+		const signatureKeypair = this.signatureKeypairInstance || await signatureAlgorithm.initializeKeypair(await this.get('signatureKeypair'));
 		const signature = await signatureAlgorithm.sign(encodedCertificate, signatureKeypair);
 		return signature;
 	}
-	async getPublic() {
-		await this.generatePublic();
+	async selfSign() {
 		const signature = await this.getSignature();
-		return [this.publicCertificate, signature];
+		this.object.selfSignature = signature;
+		return signature;
 	}
-	async saveToFile(config) {
-		const {
-			certificate,
-			savePath,
-			certificateName,
-		} = config;
+	async verifyOwnerSignature() {
+		const signatureKeypairObject = await this.get('signatureKeypair');
+		// console.log('signatureKeypairObject', signatureKeypairObject);
+		const signatureKeypair = this.signatureKeypairInstance || await this.signatureAlgorithm.initializeKeypair(signatureKeypairObject);
+		// console.log('signatureKeypair', signatureKeypair);
+		const selfSignature = this.object.selfSignature;
+		const encodedCertificate = await encodeStrict(this.object);
+		// console.log('encodedCertificate', encodedCertificate);
+		const signatureMethod = await this.signatureAlgorithm;
+		const verifyStatus = await signatureMethod.verifySignature(selfSignature, encodedCertificate, signatureKeypair);
+		// console.log('verifyStatus', verifyStatus);
+		return verifyStatus;
+	}
+	async getPublicDomainCertificate() {
+		const publicCertificate = clone(this.object);
+		publicCertificate.data.signatureKeypair = publicCertificate.data.signatureKeypair.publicKey;
+		publicCertificate.data.keyExchangeKeypair = publicCertificate.data.keyExchangeKeypair.publicKey;
+		// console.log(publicCertificate);
+		return publicCertificate;
+	}
+	async generatePublic() {
+		this.publicCertificate = await this.getPublicDomainCertificate();
+		return this.publicCertificate;
+	}
+	async getPublic() {
+		await this.selfSign();
+		await this.generatePublic();
+		return this.publicCertificate;
+	}
+	async saveToFile(savePath, certificateName, contents) {
 		const savePathRoot = `${resolve(`${savePath}`)}/${certificateName}`;
 		const fileName = hasDot(savePathRoot) ? savePathRoot : `${savePathRoot}.cert`;
-		const contents = isBuffer(certificate) ? certificate : await encodeStrict(certificate);
-		const result = await write(fileName, contents, 'binary', true);
+		const result = await write(fileName, contents || await this.encode(), 'binary', true);
 		return result;
 	}
 	async findRecord(recordType, hostname) {
@@ -183,4 +208,9 @@ export class Certificate {
 			return algo?.exportKeypair(keypair) || keypair;
 		}
 	}
+	availableCiphers = {};
+	object = {
+		data: {},
+	};
 }
+export default Certificate;

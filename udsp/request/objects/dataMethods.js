@@ -7,7 +7,7 @@ import {
 	isUndefined,
 	jsonParse,
 	noValue
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { decode, encode } from '#utilities/serialize';
 export const objectDataMethods = {
 	getters: {

@@ -3,8 +3,8 @@ import {
 	hasValue,
 	isTrue,
 	jsonParse,
-	noValue
-} from '@universalweb/acid';
+	noValue,
+} from '@universalweb/utilitylib';
 import { Base } from '../base.js';
 import { decode } from '#utilities/serialize';
 import { objectDataMethods } from '../dataMethods.js';

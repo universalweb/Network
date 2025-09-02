@@ -7,7 +7,7 @@ import {
 	crypto_aead_xchacha20poly1305_ietf_ABYTES,
 	crypto_aead_xchacha20poly1305_ietf_decrypt,
 	crypto_aead_xchacha20poly1305_ietf_encrypt,
-	crypto_aead_xchacha20poly1305_ietf_keygen
+	crypto_aead_xchacha20poly1305_ietf_keygen,
 } from '#utilities/cryptography/sodium';
 import cipher from './cipher.js';
 // import Benchmark from 'benchmark';
@@ -27,7 +27,7 @@ async function encryptMethod(message, sessionkeys, ad, nonceArg) {
 	crypto_aead_xchacha20poly1305_ietf_encrypt(encrypted, message, ad, null, nonce, sessionkeys?.transmitKey || sessionkeys);
 	return Buffer.concat([
 		nonce,
-		encrypted
+		encrypted,
 	]);
 }
 async function decryptMethod(encryptedData, sessionKey, ad, nonceArg) {

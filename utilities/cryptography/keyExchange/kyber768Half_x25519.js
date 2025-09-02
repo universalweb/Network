@@ -7,7 +7,7 @@ import {
 	toHex
 } from '#utilities/cryptography/utils';
 import { get25519KeyCopy, getKyberKey, getX25519Key } from './kyber768_x25519.js';
-import { assign } from '@universalweb/acid';
+import { assign } from '@universalweb/utilitylib';
 import hash from '../hash/shake256.js';
 import kyber768 from './kyber768.js';
 import x25519 from './x25519.js';

@@ -2,12 +2,12 @@ import {
 	bufferAlloc,
 	concatBuffer,
 	int32,
-	randomize
+	randomize,
 } from '#crypto/utils.js';
-import { assign } from '@universalweb/acid';
+import { assign } from '@universalweb/utilitylib';
 // DEFAULT SIZES
 export const sessionKeySize = int32;
-export const secretKeySize = sessionKeySize;
+export const secretKeySize = int32;
 export class Cipher {
 	constructor(options) {
 		assign(this, options);
@@ -50,6 +50,7 @@ export class Cipher {
 	}
 	sessionKeySize = sessionKeySize;
 	secretKeySize = secretKeySize;
+	keySize = secretKeySize;
 }
 export function cipher(options) {
 	return new Cipher(options);

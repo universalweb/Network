@@ -2,8 +2,8 @@ import { genesisBlock } from '../../blocks/genesis/block.js';
 import { genesisWalletBlock } from '#viat/blocks/genesisWallet/block';
 import { loadBlock } from '#viat/blocks/utils';
 const methods = {
-	async createGenesisBlock() {
-		const source = await genesisBlock();
+	async createGenesisBlock(data) {
+		const source = await genesisBlock(data);
 		await source.finalize();
 		await source.setHashXOF();
 		await this.saveBlock(source);
@@ -35,8 +35,8 @@ const methods = {
 		this.genesisWalletBlock = source;
 		return source;
 	},
-	async createGenesisWalletBlock() {
-		const source = await genesisWalletBlock();
+	async createGenesisWalletBlock(data) {
+		const source = await genesisWalletBlock(data);
 		const genesis = await this.getGenesisBlock();
 		await source.setParent(await genesis.hashBlock());
 		await source.finalize();

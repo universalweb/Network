@@ -10,7 +10,7 @@ export async function onDataReady(id, rpc, packetId, data, frame, source, rinfo)
 			source.setState(replyRPC.dataReady);
 		}
 	}
-	this.logInfo('Data Ready Packet Received', id, rpc, packetId, data, frame, source, rinfo);
+	source.logInfo('Data Ready Packet Received', id, rpc, packetId, data, frame, source, rinfo);
 	source.sendData();
 }
 export async function onData(id, rpc, packetId, data, frame, source, rinfo) {
@@ -18,7 +18,7 @@ export async function onData(id, rpc, packetId, data, frame, source, rinfo) {
 		return;
 	}
 	source.clearSendDataReadyTimeout();
-	this.logInfo('data frame', data);
+	source.logInfo('data frame', data);
 	const dataLength = data.length;
 	source.totalReceivedUniquePackets++;
 	source.incomingDataPackets[packetId] = frame;
@@ -32,13 +32,13 @@ export async function onData(id, rpc, packetId, data, frame, source, rinfo) {
 		source.missingDataPackets.delete(packetId);
 	}
 	if (source.currentIncomingDataSize === source.totalIncomingDataSize) {
-		this.logInfo('Last packet received', source.currentIncomingDataSize, source.totalIncomingDataSize);
+		source.logInfo('Last packet received', source.currentIncomingDataSize, source.totalIncomingDataSize);
 		frame.last = true;
 	}
-	source.onDataProgress();
-	source.onData(frame);
-	source.onDataSync(frame);
+	await source.onDataProgress();
+	await source.onData(frame);
+	await source.onDataSync(frame);
 	if (frame.last) {
-		source.processData();
+		return source.processData();
 	}
 }

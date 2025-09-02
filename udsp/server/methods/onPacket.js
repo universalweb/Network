@@ -8,8 +8,8 @@ import {
 	isEmpty,
 	isFalse,
 	isNumber,
-	isUndefined
-} from '@universalweb/acid';
+	isUndefined,
+} from '@universalweb/utilitylib';
 import { decodePacket, decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { createClient } from '../clients/index.js';
 import { onProtocolHeader } from '#udsp/onPacket/onProtocol';
@@ -38,7 +38,7 @@ export async function onPacket(packet, rinfo) {
 		// Send error message back to origin or not
 		return this.logInfo('No matching Client id given', idString);
 	}
-	const { header, } = config.packetDecoded;
+	const { header } = config.packetDecoded;
 	if (isFalse(config.isShortHeaderMode)) {
 		await onProtocolHeader(client, header, config.packetDecoded, rinfo);
 	}

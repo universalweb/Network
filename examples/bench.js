@@ -3,7 +3,7 @@ const logFunction = console.log;
 console.log = () => {};
 console.log('STARTING CLIENT');
 import { client } from '#udsp';
-import { currentPath } from '@universalweb/acid';
+import { currentPath } from '@universalweb/utilitylib';
 import { decode } from '#utilities/serialize';
 // Universal Web Socket
 const uwClient = await client({

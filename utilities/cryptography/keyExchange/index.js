@@ -1,6 +1,6 @@
 import { certificateVersion } from '../../../components/certificate/defaults.js';
 import { currentVersion } from '../../../defaults.js';
-import { hasValue } from '@universalweb/acid';
+import { hasValue } from '@universalweb/utilitylib';
 import { kyber768 } from './kyber768.js';
 import { kyber768Half_x25519 } from './kyber768Half_x25519.js';
 import { kyber768_x25519 } from './kyber768_x25519.js';

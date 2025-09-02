@@ -1,4 +1,4 @@
-import { calcProgress } from '@universalweb/acid';
+import { calcProgress } from '@universalweb/utilitylib';
 export async function onParamatersProgress() {
 	if (this.totalIncomingParamatersSize) {
 		if (this.currentIncomingParamatersSize > 0) {

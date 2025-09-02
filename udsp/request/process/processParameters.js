@@ -1,4 +1,4 @@
-import { eachArray } from '@universalweb/acid';
+import { eachArray } from '@universalweb/utilitylib';
 export async function processParameters() {
 	if (this.parametersAssembled) {
 		return this.logInfo('Parameters already processed');

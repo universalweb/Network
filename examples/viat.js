@@ -7,7 +7,7 @@
 // Amy embodied the best of humanity, and this demo script is dedicated to her memory 1993-2025.
 import { Wallet, wallet } from '#viat/index';
 import { runBench, runSingleBench } from './benchmark.js';
-import { currentPath } from '@universalweb/Acid';
+import { currentPath } from '@universalweb/utilitylib';
 import { encode } from '#utilities/serialize';
 import { getFiles } from '#utilities/file';
 import { loop } from './viatBench.js';

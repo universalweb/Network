@@ -17,8 +17,8 @@ import {
 	isPlainObject,
 	omit,
 	promise,
-	stringify
-} from '@universalweb/acid';
+	stringify,
+} from '@universalweb/utilitylib';
 import { askRPC, replyRPC } from './rpc/rpcCodes.js';
 import { decode, encode } from '#utilities/serialize';
 import { Base } from './base.js';
@@ -32,7 +32,7 @@ export class Ask extends Base {
 		const {
 			requestQueue,
 			streamIdGenerator,
-			destination
+			destination,
 		} = source;
 		this.logInfo('Ask', path);
 		const id = streamIdGenerator.get();
@@ -46,7 +46,7 @@ export class Ask extends Base {
 		}
 		this.maxFrameSize = destination.maxFrameSize;
 		const requestObject = {
-			source: this
+			source: this,
 		};
 		if (data) {
 			requestObject.data = data;
@@ -55,13 +55,14 @@ export class Ask extends Base {
 			requestObject.head = head;
 		}
 		this.request = clientRequestObject(requestObject);
+		// TODO: CONSIDER NOT USING SOURCE?
 		this.response = clientResponseObject({
 			source: this,
 		});
 		requestQueue.set(id, this);
 	}
 	async completeReceived() {
-		this.logInfo('Ask complete', this);
+		this.logInfo('Ask complete', this.id);
 		await this.setState(askRPC.received);
 		await this.clearSendDataReadyTimeout();
 		await this.sendEnd();
@@ -74,5 +75,6 @@ export class Ask extends Base {
 	static type = 'ask';
 }
 export async function ask(...sources) {
-	return construct(Ask, ...sources);
+	// console.log('Ask', sources);
+	return new Ask(...sources);
 }

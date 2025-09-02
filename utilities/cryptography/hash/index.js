@@ -4,7 +4,7 @@
 */
 import blake3 from './blake3.js';
 import { currentVersion } from '../../../defaults.js';
-import { hasValue } from '@universalweb/acid';
+import { hasValue } from '@universalweb/utilitylib';
 import { setOptions } from '../setOption.js';
 import shake256 from './shake256.js';
 const cipherList = [blake3, shake256];

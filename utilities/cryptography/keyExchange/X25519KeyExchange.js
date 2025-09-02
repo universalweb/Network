@@ -7,14 +7,15 @@ import {
 	clearBuffers,
 	int32,
 	randomBuffer,
-	randomize
+	randomize,
 } from '#utilities/cryptography/utils';
 import {
 	crypto_kx_keypair,
-	crypto_scalarmult
+	crypto_scalarmult,
+	crypto_scalarmult_BYTES,
 } from '#utilities/cryptography/sodium';
 import { KeyExchange } from './keyExchange.js';
-import { assign } from '@universalweb/acid';
+import { assign } from '@universalweb/utilitylib';
 import { introHeaderRPC } from '../../../udsp/rpc/headerRPC.js';
 import { introRPC } from '../../../udsp/rpc/frameRPC.js';
 const kyber768_x25519ID = 3;
@@ -25,7 +26,7 @@ const sessionKeySize = int32;
 export async function getSharedSecret(source, destination) {
 	const sharedSecret = bufferAlloc(sessionKeySize);
 	await crypto_scalarmult(sharedSecret, source?.privateKey || source, destination?.publicKey || destination);
-	console.log('Shared Secret', sharedSecret);
+	source.logInfo('Shared Secret', sharedSecret);
 	return sharedSecret;
 }
 export async function keyExchangeKeypair(config) {
@@ -39,16 +40,16 @@ export async function keyExchangeKeypair(config) {
 	}
 	return {
 		publicKey,
-		privateKey
+		privateKey,
 	};
 }
 function hybridToX25519(target) {
-	console.log('Attaching Compatible Key SLICE to X25519');
+	console.log('Attaching Compatible Key SLICE to only X25519 portion');
 	const {
 		certificate: {
 			publicKeyX25519,
-			privateKeyX25519
-		}
+			privateKeyX25519,
+		},
 	} = target;
 	if (publicKeyX25519) {
 		target.publicKey = publicKeyX25519;
@@ -73,50 +74,66 @@ class X25519KeyExchange extends KeyExchange {
 		assign(this, config);
 		return this;
 	}
-	getSharedSecret = getSharedSecret;
-	keyExchangeKeypair = keyExchangeKeypair;
-	clientEphemeralKeypair = keyExchangeKeypair;
-	serverEphemeralKeypair = keyExchangeKeypair;
-	hybridToX25519 = hybridToX25519;
-	async clientInitializeSession(source, destination) {
+	// onClientInitialization
+	async onClientInitialization(source, destination) {
 		source.sharedSecret = await getSharedSecret(source, destination);
 		await this.createClientSession(source, destination, source);
 	}
 	async createClientIntro(source, destination, frame, header) {
-		console.log('Send Client Intro', source.cipherData);
-		header[1] = source.nextSession.publicKey;
+		source.logInfo('Send Client Intro', source.cipherData);
+		header[2] = source.publicKey;
 	}
-	async clientSetSession(source, destination, cipherData) {
-		console.log('clientSetSession');
+	async onServerClientInitialization(source, destination) {
+		source.logInfo('onServerClientInitialization');
+	}
+	// GENERATE SERVER EPHEMERAL KEY PAIR
+	// THEN UPGRADE KEYS HERE AFTER BODY IS PROCESSED
+	async onClientIntroHeader(source, destination, cipherData, header) {
+		destination.publicKey = cipherData;
+		// console.log(destination, source.privateKey);
+		// throw new Error('onClientIntroHeader');
 		source.sharedSecret = await getSharedSecret(source, cipherData);
-		console.log('sharedSecret', source.sharedSecret);
-		await this.finalizeSession(source, destination);
-		await this.clientCleanup(source);
-		source.nextSession = null;
+		await this.createServerSession(source, destination, source);
 	}
-	async serverInitializeSessionMethod(source, destination, cipherData) {
+	// AFTER CLIENT INTRO HEADER FINISH PFS KEY UPGRADE
+	// TODO: CREATE METHOD TO SKIP THIS IF JUST NEED INTRO AGAIN or Don't see response?
+	async onClientIntroHeaderNoFrame(source, destination, cipherData, header) {
+		const nextSession = await keyExchangeKeypair();
+		assign(source, nextSession);
 		source.sharedSecret = await getSharedSecret(source, destination);
-		source.nextSession = await keyExchangeKeypair();
+		await this.upgradeSessionKeys(source, destination);
+		await this.cleanup(source);
 	}
-	// The only thing which won't be public by default is the public key
+	async onClientIntro(source, destination, frame, header) {
+		const cipherData = header[2];
+		return this.onClientIntroHeaderNoFrame(source, destination, cipherData, frame);
+	}
 	async createServerIntro(source, destination, frame, header) {
-		console.log('Send Server Intro', source.cipherData);
-		header[1] = source.nextSession.publicKey;
+		source.logInfo('Send Server Intro', source.cipherData);
+		header[2] = source.publicKey;
 	}
-	async serverSetSession(source, destination, cipherData) {
-		console.log('serverSetSession');
-		if (source.nextSession) {
-			source.sharedSecret = await getSharedSecret(source.nextSession, destination);
-			source.nextSession = null;
+	// onServerIntroHeader & on
+	async onServerIntroHeader(source, destination, cipherData, header) {
+		source.logInfo('onServerIntroHeader');
+		if (cipherData) {
+			source.sharedSecret = await getSharedSecret(source, cipherData);
+			await this.upgradeSessionKeys(source, destination);
+			source.logInfo('sharedSecret', source.sharedSecret);
+			await this.clientCleanup(source);
 		}
-		await this.finalizeSession(source, destination);
-		await this.serverCleanup(source);
-		source.nextSession = null;
 	}
-	async finalizeSession(source, destination) {
-		console.log('finalizeSession', source.type);
-		await this.finalizeSessionKeys(source, destination);
+	async onServerIntroHeaderNoFrame(source, destination, cipherData, header) {
+		source.logInfo('onServerIntroHeaderNoFrame');
 	}
+	async onServerIntro(source, destination, cipherData, frame, header) {
+		source.logInfo('onServerIntro');
+	}
+	async serverCleanup(source, destination) {
+		source.logInfo('serverCleanup', source.type);
+		await super.serverCleanup(source);
+		await super.cleanup();
+	}
+	// CLIENT CLEANUP
 	certificateKeypairCompatability = certificateKeypairCompatability;
 	certificateKeypairCompatabilityClient(source, destination) {
 		return certificateKeypairCompatability(
@@ -141,6 +158,11 @@ class X25519KeyExchange extends KeyExchange {
 	async initializeCertificateKeypair(keypair, target) {
 		return this.initializeKeypair(target, keypair);
 	}
+	getSharedSecret = getSharedSecret;
+	keyExchangeKeypair = keyExchangeKeypair;
+	clientEphemeralKeypair = keyExchangeKeypair;
+	serverEphemeralKeypair = keyExchangeKeypair;
+	hybridToX25519 = hybridToX25519;
 	publicKeySize = publicKeySize;
 	privateKeySize = privateKeySize;
 	clientPublicKeySize = publicKeySize;

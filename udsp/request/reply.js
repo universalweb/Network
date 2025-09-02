@@ -14,8 +14,8 @@ import {
 	isEmpty,
 	objectSize,
 	promise,
-	stringify
-} from '@universalweb/acid';
+	stringify,
+} from '@universalweb/utilitylib';
 import { decode, encode } from '#utilities/serialize';
 import { Base } from './base.js';
 import { flushOutgoing } from './flush.js';
@@ -36,7 +36,7 @@ export class Reply extends Base {
 			return false;
 		}
 		this.id = id;
-		const { requestQueue, } = source;
+		const { requestQueue } = source;
 		this.streamIdSize = numberEncodedSize(id);
 		this.maxFrameSize = source.destination.maxFrameSize;
 		this.request = serverRequestObject({
@@ -50,7 +50,7 @@ export class Reply extends Base {
 	async completeReceived() {
 		await this.setState(replyRPC.received);
 		await this.clearSendDataReadyTimeout();
-		this.source().onRequest(this.request, this.response);
+		this.source.onRequest(this.request, this.response);
 	}
 	isReply = true;
 	static type = 'reply';

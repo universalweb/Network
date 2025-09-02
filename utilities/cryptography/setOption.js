@@ -1,4 +1,4 @@
-import { hasValue } from '@universalweb/acid';
+import { hasValue } from '@universalweb/utilitylib';
 export function setOption(source, option) {
 	const {
 		id,

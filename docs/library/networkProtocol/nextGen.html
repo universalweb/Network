@@ -1,0 +1,173 @@
+<h1>Next Gen Connection Establishment</h1>
+<h4>An Evolution of DNS & Handshake Protocol</h4>
+<p>Modern Domains, Domain Name System, Domain Certificates, and UDP based Network Protocol enables next gen connection establishment. Domain ertificates are structured in CBOR and include a long-term key exchange key pair and a long-term signature key pair. Domain certs are mandatory self-signed to ensure the contents remain secure from the point of creation. In addition to the self-sign a centralized or decentralized CA is enforced to ensure a verifiable chain of trust. Domain certs can pre-include the unique 64 byte hash of a parent CA certificate that will be used to verify the chain of trust which ensures that the parent CA is a trusted parent. Domain certs act as a single unified authentication source ensuring the highest level of trust not offered by the WWW. Domain certs include DNS related records offering the highest level of trust for DNS related requests while remaining more efficient. Once you have a domain certificate you have immediate access to all possible publicly acceptable DNS records for a particular domain. Private Domain Certificates are still possible but are not recommended for typical domains which is more for enterprise and government usage for the highest level of security and privacy for publicly accessible servers.</p>
+<h2>Comparison Table</h2>
+<table border="1" cellpadding="8" cellspacing="0">
+	<thead>
+		<tr>
+			<th>Feature</th>
+			<th>Universal Web Protocol</th>
+			<th>TLS 1.3</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Handshake Structure</td>
+			<td>Client ephemeral + server long-term key, then adds server ephemeral</td>
+			<td>Client ephemeral + server ephemeral</td>
+		</tr>
+		<tr>
+			<td>Authentication Source</td>
+			<td>Domain Certificate with key exchange + signature key</td>
+			<td>X.509 certificate with signature key</td>
+		</tr>
+		<tr>
+			<td>Key Agreement</td>
+			<td>X25519 + long-term KEX key, then ephemeral ratchet</td>
+			<td>Ephemeral key exchange (e.g., X25519)</td>
+		</tr>
+		<tr>
+			<td>Forward Secrecy (PFS)</td>
+			<td>Yes (ephemeral ratcheting)</td>
+			<td>Yes</td>
+		</tr>
+		<tr>
+			<td>Initial Client Message Encryption</td>
+			<td>Possible using server's long-term key + client ephemeral</td>
+			<td>Not supported (ClientHello is plaintext)</td>
+		</tr>
+		<tr>
+			<td>Server Authentication</td>
+			<td>Verified via long-term KEX key</td>
+			<td>Verified via certificate signature</td>
+		</tr>
+		<tr>
+			<td>Client Authentication</td>
+			<td>Optional via client key</td>
+			<td>Optional via certificate or PSK</td>
+		</tr>
+		<tr>
+			<td>Certificate Trust Model</td>
+			<td>Self-sign + CA or decentralized trust</td>
+			<td>CA-signed X.509 certificates</td>
+		</tr>
+		<tr>
+			<td>Post-Quantum Support</td>
+			<td>Yes (hybrid: X25519 + Kyber, etc.)</td>
+			<td>Experimental hybrid only</td>
+		</tr>
+		<tr>
+			<td>Key Derivation</td>
+			<td>Two 64-byte hashes → combine → TX/RX keys</td>
+			<td>HKDF from shared secret</td>
+		</tr>
+		<tr>
+			<td>Domain Integration</td>
+			<td>Integrated with DIS (Domain Information System)</td>
+			<td>Indirect via SNI and CA validation</td>
+		</tr>
+		<tr>
+			<td>Replay Protection</td>
+			<td>Yes, via ratcheting and ephemeral keys</td>
+			<td>Yes, via nonces and tickets</td>
+		</tr>
+		<tr>
+			<td>Performance</td>
+			<td>Slight overhead from multi-key usage</td>
+			<td>Highly optimized and fast</td>
+		</tr>
+		<tr>
+			<td>Extensibility</td>
+			<td>Designed for modularity, UTF-8, and new cryptography</td>
+			<td>Constrained by legacy X.509 / ASN.1</td>
+		</tr>
+	</tbody>
+</table>
+<h2>Threat Model Comparison Table</h2>
+<table border="1" cellpadding="8" cellspacing="0">
+	<thead>
+		<tr>
+			<th>Threat Model / Feature</th>
+			<th>Universal Web Protocol</th>
+			<th>TLS 1.3</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>MITM Resistance</td>
+			<td>Strong (KEX key authenticated -> Auth via Encryption) + Certificate contents via self-signed signature</td>
+			<td>Strong (SIG key authenticated)</td>
+		</tr>
+		<tr>
+			<td>Forward Secrecy</td>
+			<td>Strong (ephemeral ratcheting)</td>
+			<td>Strong</td>
+		</tr>
+		<tr>
+			<td>PQ-Resistance</td>
+			<td>Yes (native hybrid)</td>
+			<td>Experimental</td>
+		</tr>
+		<tr>
+			<td>Cert Forgery Resilience</td>
+			<td>High (self-sign + CA)</td>
+			<td>Medium (CA only)</td>
+		</tr>
+		<tr>
+			<td>Initial Message Secrecy</td>
+			<td>Possible via KEX key</td>
+			<td>Not available</td>
+		</tr>
+	</tbody>
+</table>
+<h2>Key Advantages of the UW Protocol</h2>
+<table border="1" cellpadding="8" cellspacing="0">
+	<thead>
+		<tr>
+			<th>Advantage</th>
+			<th>Description</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Integrated Domain Identity</td>
+			<td>Combines domain ownership and authentication via cryptographically signed Domain Certificates.</td>
+		</tr>
+		<tr>
+			<td>Encrypted First Packet</td>
+			<td>Allows encryption of the initial client handshake using the server’s long-term key, providing confidentiality from the start.</td>
+		</tr>
+		<tr>
+			<td>Post-Quantum Ready</td>
+			<td>Supports hybrid cryptography (e.g. X25519 + Kyber, Ed25519 + Dilithium) for quantum-resistant communication.</td>
+		</tr>
+		<tr>
+			<td>Perfect Forward Secrecy (PFS)</td>
+			<td>Uses ephemeral keys with ratcheting to ensure that even if long-term keys are compromised, past sessions remain secure.</td>
+		</tr>
+		<tr>
+			<td>Deterministic Trust</td>
+			<td>Verifies servers using self-signed + CA-signed certificates without requiring runtime trust negotiation.</td>
+		</tr>
+		<tr>
+			<td>Compact & Fast</td>
+			<td>Lightweight protocol optimized for low-latency and parallel processing across connections.</td>
+		</tr>
+		<tr>
+			<td>Offline Verification</td>
+			<td>Clients can verify domain identities and public keys without real-time DNS resolution.</td>
+		</tr>
+		<tr>
+			<td>Modular Certificate Design</td>
+			<td>Certificates support structured metadata, including domain records, public keys, expiration, and capabilities.</td>
+		</tr>
+		<tr>
+			<td>UTF-8 Native Support</td>
+			<td>Full international domain name support without reliance on punycode.</td>
+		</tr>
+		<tr>
+			<td>Resistance to Replay & MITM</td>
+			<td>All handshake messages are tied to key material and domain certs, preventing impersonation or packet injection.</td>
+		</tr>
+	</tbody>
+</table>

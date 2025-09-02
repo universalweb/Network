@@ -6,10 +6,10 @@ import generateScheme from './pqClean.js';
 export const falcon1024 = generateScheme('falcon-padded-1024', {
 	name: 'falcon1024',
 	alias: 'falcon-1024',
-	id: 5,
+	id: 8,
 	security: 4,
 	sideSize: 128,
-	preferred: false
+	preferred: false,
 });
 export default falcon1024;
 // const key = await falcon1024.signatureKeypair();

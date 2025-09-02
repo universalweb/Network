@@ -2,11 +2,11 @@ import {
 	assign,
 	hasValue,
 	isNotNumber,
-	isTrue
-} from '@universalweb/acid';
+	isTrue,
+} from '@universalweb/utilitylib';
 import { calculatePacketOverhead } from '#udsp/utilities/calculatePacketOverhead';
-import { introHeaderRPC } from '../../../rpc/headerRPC.js';
-import { introRPC } from '../../../rpc/frameRPC.js';
+import { introHeaderRPC } from '#udsp/rpc/headerRPC';
+import { introRPC } from '#udsp/rpc/frameRPC';
 import { sendPacketIfAny } from '#udsp/utilities/sendPacket';
 import { toHex } from '#utilities/cryptography/utils';
 async function certificateKeypairCompatability(source, destination, header, frame) {
@@ -19,30 +19,35 @@ async function certificateKeypairCompatability(source, destination, header, fram
 export async function introHeader(header, packetDecoded) {
 	this.logInfo(`Client Intro -> - ID:${this.connectionIdString}`);
 	const [
-		connectionId,
+		connectionIdUndefined,
 		rpc,
 		cipherData,
-		clientId,
-		cipherId,
 		timeSent,
-		// version,
+		// OPTIONAL DEFAULTS TO 0 or SERVEr PREFERRED
+		cipherId,
+		// OPTIONAL DEFAULTS TO CIPHERDATA SUBARRAY
+		clientIdManual,
+		// OPTIONAL DEFAULTS TO SERVERS
+		version,
 	] = header;
+	const clientId = clientIdManual || Buffer.from(cipherData.subarray(0, 4));
 	this.logInfo('Client initialize Packet Header', header);
 	const { certificate } = this;
 	if (cipherData) {
-		this.logSuccess(`cipherData in INTRO HEADER: ${toHex(cipherData)}`);
+		this.logInfo(`cipherData in INTRO HEADER: ${toHex(cipherData)}`);
 	} else {
 		this.logInfo('No cipherData in INTRO HEADER');
 		this.destroy();
 		return false;
 	}
 	if (hasValue(cipherId)) {
+		// TODO: CHANGE 3 TO MAX ID VALUE SAVED TO DEFAULTS FILE OR AUTO GENERATED ID
 		if (isNotNumber(cipherId) || cipherId > 3 || cipherId < 0) {
 			this.destroy();
 			return false;
 		}
 	}
-	this.cipher = certificate.getCipherSuite(cipherId);
+	this.cipher = certificate.getCipher(cipherId);
 	if (!this.cipher) {
 		await this.destroy();
 		return false;
@@ -55,41 +60,42 @@ export async function introHeader(header, packetDecoded) {
 		this.latency = Date.now() - timeSent;
 	}
 	await certificateKeypairCompatability(this, this.destination, header);
-	await this.initializeSession(cipherData);
+	if (this.keyExchange.onClientIntroHeader) {
+		await this.keyExchange.onClientIntroHeader(this, this.destination, cipherData, header);
+	}
 	// TODO: CHECK CACHE OF VALUE
 	await this.calculatePacketOverhead();
 	this.nonce = await this.cipher.createNonce();
-	this.logSuccess(`SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | ADDR = ${this.destination.ip}:${this.destination.port} LATENCY = ${this.latency}`);
-	if (packetDecoded.noMessage) {
-		this.logInfo('Intro Packet has No message body');
+	this.logSuccess(`
+		SCID = ${this.connectionIdString} | CCID = ${toHex(clientId)} | 
+		ADDR = ${this.destination.ip}:${this.destination.port} 
+		LATENCY = ${this.latency}`);
+	if (packetDecoded.noFrame) {
+		this.logInfo('Intro Packet has No Frame');
+		if (this.keyExchange.onClientIntroHeaderNoFrame) {
+			await this.keyExchange.onClientIntroHeaderNoFrame(this, this.destination, cipherData, header);
+		}
 		return this.sendIntro();
 	}
 }
 // Intro is not triggered only header intro is
 export async function intro(frame, header, rinfo) {
 	this.logInfo(`Client Intro -> - ID:${this.connectionIdString}`);
+	if (this.keyExchange.onClientIntro) {
+		await this.keyExchange.onClientIntro(this, this.destination, frame, header);
+	}
 	return this.sendIntro();
 }
 // SERVER INTRO
-// Intro in plain text is fine because data is just to establish a connection if contents are modified then an encrypted synchronization will fail at one point or another
-// SOME DATA MUST STILL BE ENCRYPTED AS PART OF THE FRAME CIPHER DATA MOVE TO HEADER
-/* const [
-		streamid_undefined,
-		rpc,
-		serverConnectionId,
-		cipherData,
-		changeDestinationAddress,
-		serverRandomToken
-	] = frame;
-*/
 export async function setIntroHeader(header) {
+	header[0] = undefined;
 	header[1] = introHeaderRPC;
-	header[2] = this.id;
+	header[3] = this.id;
+	header[4] = Date.now();
 }
 export async function setIntroFrame(frame) {
 	frame[0] = false;
 	frame[1] = introRPC;
-	frame[2] = this.id;
 }
 export async function createIntro(header, frame) {
 	await this.setIntroHeader(header);

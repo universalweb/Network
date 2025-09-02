@@ -1,5 +1,5 @@
-import { promise, stringify } from '@universalweb/acid';
+import { promise, stringify } from '@universalweb/utilitylib';
 export function onSocketError() {
 	this.logError('CLIENT SOCKET SERVER ERROR');
-	this.fire(this.events, 'socket.error', this);
+	this.emitEvent('socket.error');
 }

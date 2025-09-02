@@ -18,10 +18,13 @@ export async function extendedSynchronizationHeader(header, packetDecoded) {
 	this.logInfo('Client Extended Synchronization HEADER');
 	if (this.keyExchange.clientExtendedSynchronizationHeader) {
 		const status = await this.keyExchange.clientExtendedSynchronizationHeader(this, this.destination, header, packetDecoded);
-		if (packetDecoded.noMessage && status !== false) {
+		if (packetDecoded.noFrame && status !== false) {
 			this.synchronized();
 		}
 	}
+}
+export async function extendedSynchronizationNoFrame(frame, header, rinfo) {
+	this.logInfo('extendedSynchronizationNoFrame');
 }
 export async function extendedSynchronizationFrame(frame, header, rinfo) {
 	this.logInfo('Client Extended Synchronization');

@@ -5,7 +5,7 @@ import {
 	eachObject,
 	hasDot,
 	isPlainObject,
-} from '@universalweb/acid';
+} from '@universalweb/utilitylib';
 import { getViatDirectory } from '#utilities/directory';
 import path from 'node:path';
 const viatFilesystemObject = {

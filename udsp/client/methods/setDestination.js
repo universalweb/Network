@@ -11,8 +11,8 @@ import {
 	isTrue,
 	isUndefined,
 	omit,
-	promise
-} from '@universalweb/acid';
+	promise,
+} from '@universalweb/utilitylib';
 import { uwrl } from '#udsp/UWRL/index';
 function setRecordInfo(destination, record) {
 	destination.ip = record[2];
@@ -26,9 +26,9 @@ export async function setDestination() {
 			url,
 			ip,
 			port,
-			destinationCertificate
+			destinationCertificate,
 		},
-		ipVersion
+		ipVersion,
 	} = this;
 	if (url) {
 		const urlObject = uwrl(url);
@@ -71,5 +71,4 @@ export async function setDestination() {
 	if (!destination.port) {
 		destination.port = 53;
 	}
-	// this.logInfo('Destination', destination.cryptography);
 }
