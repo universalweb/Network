@@ -1,5 +1,3 @@
-/* eslint-disable @stylistic/no-mixed-operators */
-/* eslint-disable no-shadow */
 // Import async serialization helpers (CBOR)
 import { decode, encodeStrict } from '#utilities/serialize';
 // Utility helpers

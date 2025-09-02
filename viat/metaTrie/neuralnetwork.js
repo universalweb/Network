@@ -1,5 +1,3 @@
-/* eslint-disable @stylistic/no-mixed-operators */
-/* eslint-disable no-shadow */
 // Experiments in neural networks and bloom filters
 // Import async serialization helpers (CBOR)
 import { decode, encodeStrict } from '#utilities/serialize';

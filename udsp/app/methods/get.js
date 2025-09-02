@@ -1,8 +1,10 @@
 import { hasDot, isEmpty, isString } from '@universalweb/utilitylib';
+import { UDSP_HEADERS } from '#udsp/headerCodes';
 import cleanPath from '#cleanPath';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { read } from '#utilities/file';
+import { statusCodes } from '#udsp/statusCodes';
 const dots = /\./g;
 /**
  * @todo
@@ -29,7 +31,7 @@ export async function getMethod(req, resp, appServer) {
 	} = req;
 	if (!isString(filePath) || isEmpty(filePath)) {
 		console.log('No fileName - Returning empty data');
-		await resp.setHeader('status', 404);
+		await resp.setHeader(UDSP_HEADERS.STATUS, statusCodes.NOT_FOUND);
 		resp.send();
 		return true;
 	}
@@ -45,10 +47,10 @@ export async function getMethod(req, resp, appServer) {
 		const fileData = await read(cleanedPath);
 		const ext = path.extname(cleanedPath).replace('.', '');
 		console.log(`EXT => ${ext}`);
-		await resp.setHeader('contentType', ext);
+		await resp.setHeader(UDSP_HEADERS.CONTENT_TYPE, ext);
 		resp.data = fileData;
 	} catch (err) {
-		await resp.setHeader('status', 404);
+		await resp.setHeader(UDSP_HEADERS.STATUS, statusCodes.NOT_FOUND);
 	} finally {
 		resp.send();
 	}

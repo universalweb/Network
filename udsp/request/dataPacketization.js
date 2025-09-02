@@ -7,7 +7,7 @@ export async function dataPacketization(source) {
 		isAsk,
 		outgoingDataPackets,
 		outgoingData,
-		streamIdSize
+		streamIdSize,
 	} = source;
 	const dataSize = outgoingData?.length;
 	const numberEncodedSizeMax = numberEncodedSize(dataSize);

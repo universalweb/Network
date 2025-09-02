@@ -9,6 +9,7 @@ import {
 	hasValue,
 	isBuffer,
 	isPlainObject,
+	isString,
 	isUndefined,
 	objectSize,
 	promise,
@@ -21,6 +22,7 @@ import { checkSendPathReady, clearSendPathReadyTimeout, sendPathReady } from './
 import { checkSetupSent, clearSetupTimeout, sendSetup } from './send/sendSetup.js';
 import { decode, encode } from '#utilities/serialize';
 import { flush, flushIncoming, flushOutgoing } from './flush.js';
+import { UDSP_HEADERS } from '#udsp/headerCodes';
 import { dataPacketization } from './dataPacketization.js';
 import { destroy } from './destroy.js';
 import eventMethods from '#udsp/events';
@@ -82,8 +84,14 @@ export class Base {
 		}
 		source.head[headerName] = hasValue(headerValue) ? headerValue : 0;
 	}
+	getHeader(headerName, head) {
+		const headObject = head || this.head;
+		const source = this.isAsk ? this.request : this.response;
+		return headObject[headerName] || headObject[UDSP_HEADERS[headerName]];
+	}
 	setHeaderDetails(head) {
-		const { dataSize } = head;
+		const headObject = head || this.head;
+		const dataSize = headObject[UDSP_HEADERS.CONTENT_LENGTH];
 		if (dataSize) {
 			this.totalIncomingDataSize = dataSize;
 		}
@@ -273,11 +281,11 @@ export class Base {
 		if (source.data) {
 			this.outgoingData = source.data;
 			if (!isBuffer(source.data)) {
-				await this.setHeader('serialize');
+				await this.setHeader(UDSP_HEADERS.SERIALIZE);
 				this.outgoingData = await encode(source.data);
 			}
 			this.outgoingDataSize = this.outgoingData.length;
-			await this.setHeader('dataSize', this.outgoingData.length);
+			await this.setHeader(UDSP_HEADERS.CONTENT_LENGTH, this.outgoingData.length);
 			await dataPacketization(this);
 		}
 	}

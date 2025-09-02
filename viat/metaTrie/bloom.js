@@ -191,8 +191,8 @@ export class BloomFilter {
 	}
 }
 // Assume h64a and h64b are Buffers of length 64 produced elsewhere via SHAKE256-512.
-console.clear();
-const h64a = await hash512(random64ByteBuffer());
+// console.clear();
+// const h64a = await hash512(random64ByteBuffer());
 // const h64b = await hash512(random64ByteBuffer());
 // const h64c = await hash512(random64ByteBuffer());
 // const h64d = await hash512(random64ByteBuffer());

@@ -1,5 +1,5 @@
 <h1 align="center">⩝</h1>
-<h3 align="center" class="mono">  <a href="https://github.com/universalweb/Network/tree/master/docs/library/viat">VIAT DOCS</a> | <a href="https://github.com/universalweb/Network/">CODE REPO (GITHUB)</a> | <a href="https://x.com/tommarchi/">DEV</a> | <a href="https://github.com/universalweb/Network/tree/master/docs/library">DOCS</a>  </h3>
+<h3 align="center" class="mono">  <a href="https://github.com/universalweb/Network/tree/master/docs/library/viat">VIAT DOCS</a> | <a href="https://github.com/universalweb/Network/">CODE REPO</a> | <a href="https://x.com/tommarchi/">DEV</a> | <a href="https://github.com/universalweb/Network/tree/master/docs/library">DOCS</a>  </h3>
 <hr />
 <h2 align="center">WELCOME TO THE NEXUS</h2>
 <p align="center">META-LAYER  SOLUTIONS</p>
@@ -9,28 +9,10 @@
 <h3 align="center" class="mono">UW://README</h3>
 <p align="center" class="mono"> LAYER SUBZERO | LAYER -1 | SUB-LAYER 0 </p>
 <!-- <img class="header" width="100%" src="https://raw.githubusercontent.com/universalweb/Network/refs/heads/master/docs/images/header.jpeg" alt="header"> -->
-<h6>UW/VIAT is a post quantum Meta-Layer solution that embraces a hybrid network architecture with post-quantum cryptography and designed for a multi-planetary future. It serves as the foundation for a next-generation Web (UW), Domain System (DIS), native cryptocurrency (VIAT), and UDP based Network Data Transport Protocol (UW://).</h6>
+<p>UW/VIAT is a post quantum Meta-Layer solution that embraces a hybrid network architecture with post-quantum cryptography and designed for a multi-planetary future. It serves as the foundation for a next-generation Web (UW), Domain System (DIS), native cryptocurrency (VIAT), and UDP based Network Data Transport Protocol (UW://).</p>
 <p>Unlike traditional Layer "0" solutions, which focus solely on blockchain interoperability and scalability, UW/VIAT encompasses a wide array of capabilities and technologies with implications beyond the blockchain space. UW/VIAT is a nexus of infrastructure for next-gen communications, applications, secure voting, digital ownership, real-time transactions, DeFi, IoT, cryptocurrency, governance, cryptographic identification, universal login, government intranets, smart contracts, domain name/information system, domain certificates, modern UTF-8 URLs, and beyond. UW/VIAT strives for balance; it contains both centralized and decentralized components that are natively integrated into a united system.</p>
 <hr />
-<h4 align="center"> VIAT (⩝) </h4>
-<!-- <h5 align="center" class="mono"> SWAP TOKENS: <a href="https://binplorer.com/address/0x78d25a64b084db308d805a41b98c810a4f2c7f4a">$bVIAT (BNB)</a> | $SNTVT (ETH) </h5> -->
-<h5 align="center" class="mono">  <a href="https://github.com/universalweb/Network/tree/master/docs/library/viat">DOCUMENTATION</a>  </h5>
-<h6>Viat /ˈviː.æt/ is a future-proof, high-throughput, hybrid-<a href="https://www.nist.gov/news-events/news/2024/08/nist-releases-first-3-finalized-post-quantum-encryption-standards" target="_blank">post-quantum</a> cryptocurrency designed for massive scalability, high TPS, and efficient (no-wasted-work) PoW mining. VIAT features a self-organizing, hierarchical superstructure implemented as a physical filesystem that seamlessly integrates both linear and DAG-based blockchains. This design enables deterministic structure, asynchronous operations, distributed fragmentation, efficient indexing, constant-time lookups, and high-throughput parallel processing. </h6>
-<p>VIAT uses a hybrid post-quantum signature scheme that balances speed, security, and long-term survivability. Each transaction is signed using both Ed25519—an efficient, widely adopted classical signature algorithm—and <a href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.204.pdf" target="_blank">Dilithium</a>, a NIST-selected post-quantum lattice-based scheme. This dual-signature approach ensures compatibility with existing systems while providing strong resistance to future quantum threats. As an added layer of resilience, <a href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.205.pdf" target="_blank">SPHINCS+</a>, a conservative, stateless hash-based signature, is included as a non-default fallback (primarily used by auditors) to safeguard against the failure or deprecation of either primary scheme. This layered cryptographic design offers robust protection and future-proof assurance, especially suited for risk-averse users and institutions. </p>
-<hr style="margin: 25px auto; width: 75%" />
-<p>  <span style="margin-left: 10px"> SYMBOL: <a href="https://www.compart.com/en/unicode/U+2A5D">⩝</a></span>
-</p>
-<p>  <span style="margin-left: 10px">SIGNATURE: [DILITHIUM ◉ ED25519 ◉ SPHINCS+]</span>
-</p>
-<p>  <span style="margin-left: 10px">KEY EXCHANGE: [KYBER ◉ x25519]</span></p>
-<p>  <span style="margin-left: 10px">HASH: SHAKE256  [64B 512bits, 32B 256bits]</span></p>
-<p>  <span style="margin-left: 10px">WALLET ADDRESS: 64bytes  SHAKE256-512bit output</span></p>
-<p>  <span style="margin-left: 10px">ENCRYPTION (AEAD): AEGIS-256 - XChaCha20Poly1305-IETF</span></p>
-<p>  <span style="margin-left: 10px">PROOF: Hybrid Proof of Work (PoW || HPoW)</span></p>
-<p>  <span style="margin-left: 10px">BLOCKCHAIN: HIERARCHICAL BLOCK-TRIE SUPERSTRUCTURE</span></p>
-<p>  <span style="margin-left: 10px">FILESYSTEM: PHYSICAL HIERARCHICAL SELF-ORGANIZING FILESYSTEM</span></p>
-<p>  <span style="margin-left: 10px">BLOCKCHAIN TYPES: [DAG ◉ LINEAR BLOCKCHAIN]</span></p>
-<p>  <span style="margin-left: 10px">ENCODING: CBOR-X  BINARY DATA SERIALIZATION FORMAT</span></p>
+${viat}
 <hr />
 <h4 align="center" style="margin-top: 20px"> UNIVERSAL WEB </h4>
 <p>These are all the cryptographic algorithms supported or play a role in the UW/VIAT. Hybrid post quantum algorithms are available for Key Exchanges and Signatures.</p>

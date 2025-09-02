@@ -9,11 +9,11 @@ const port = 8888;
 const dirname = currentPath(import.meta);
 const options = {
 	key: fs.readFileSync(`${currentPath(import.meta)}/key.pem`),
-	cert: fs.readFileSync(`${currentPath(import.meta)}/cert.pem`)
+	cert: fs.readFileSync(`${currentPath(import.meta)}/cert.pem`),
 };
 const server = https.createServer(options, (req, res) => {
 	res.writeHead(200, {
-		contentType: 'html'
+		contentType: 'html',
 	});
 	const indexFile = fs.readFileSync(`${currentPath(import.meta)}/../../serverApp/resources/index.html`);
 	res.end(indexFile);
