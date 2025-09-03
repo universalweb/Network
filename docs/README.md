@@ -1,5 +1,5 @@
 <h1 align="center">⩝</h1>
-<h3 align="center" class="mono">  <a href="https://github.com/universalweb/Network/tree/master/docs/library/viat">VIAT DOCS</a> | <a href="https://github.com/universalweb/Network/">CODE REPO</a> | <a href="https://x.com/tommarchi/">DEV</a> | <a href="https://github.com/universalweb/Network/tree/master/docs/library">DOCS</a>  </h3>
+<h3 align="center" class="mono">  <a href="https://viat.network">VIAT</a> | <a href="https://github.com/universalweb/Network/">GITHUB</a> | <a href="https://x.com/tommarchi/">DEV</a>  </h3>
 <hr />
 <h2 align="center">WELCOME TO THE NEXUS</h2>
 <p align="center">META-LAYER  SOLUTIONS</p>

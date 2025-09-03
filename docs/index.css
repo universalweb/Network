@@ -28,32 +28,12 @@ body {
   margin: 0;
   padding: 0;
   background:
-    radial-gradient(1200px 700px at 50% -20%, rgba(0, 212, 255, 0.06), transparent 60%),
-    radial-gradient(900px 600px at -20% 120%, rgba(0, 163, 204, 0.05), transparent 60%),
-    /* grid */
     linear-gradient(transparent 97%, rgba(255,255,255,0.06) 98%) 0 0/100% 32px,
     linear-gradient(90deg, transparent 97%, rgba(255,255,255,0.06) 98%) 0 0/32px 100%,
-    /* scanlines */
-    repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0 2px, transparent 2px 4px),
-    /* vignette */
-    radial-gradient(1200px 900px at 50% 120%, rgba(0,0,0,0.7), transparent 70%),
     var(--bg-color);
   color: var(--text-color);
   font-family: var(--font-sans);
   line-height: 1.62;
-}
-
-@keyframes gridGlitch {
-  0%, 100% { transform: translate(0, 0); opacity: 1; }
-  10% { transform: translate(1px, 0); opacity: 0.9; }
-  20% { transform: translate(-1px, 1px); opacity: 1; }
-  30% { transform: translate(0, -1px); opacity: 0.95; }
-  40% { transform: translate(2px, 0); opacity: 1; }
-  50% { transform: translate(-2px, -1px); opacity: 0.9; }
-  60% { transform: translate(1px, 1px); opacity: 1; }
-  70% { transform: translate(-1px, 0); opacity: 0.95; }
-  80% { transform: translate(0, 2px); opacity: 1; }
-  90% { transform: translate(1px, -1px); opacity: 0.9; }
 }
 
 /* Main content card: flat panel with crisp border */
