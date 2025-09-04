@@ -2,83 +2,95 @@
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {
-			"#viat/*": [
-				"./viat/*.js"
-			],
-			"#utilities/*": [
-				"./utilities/*.js"
-			],
-			"#components/*": [
-				"./components/*.js"
-			],
-			"#server/*": [
-				"udsp/server/*.js"
-			],
-			"#client/*": [
-				"udsp/client/*.js"
-			],
-			"#server*": [
-				"udsp/server/index.js"
-			],
-			"#client*": [
-				"udsp/client/index.js"
-			],
-			"#profile/*": [
-				"cryptoID/*.js"
-			],
-			"#serverApp/*": [
-				"examples/serverApp/*.js"
-			],
-			"#schemes/*": [
-				"browser/schemes/*.js"
-			],
-			"#resources/*": [
-				"./resources/*"
-			],
-			"#examples/*": [
-				"./examples/*.js"
-			],
-			"#state/*": [
-				"./state/*.js"
-			],
-			"#config/*": [
-				"./config/*.js"
-			],
-			"#udsp/*": [
-				"./udsp/*.js"
-			],
-			"#sodium": [
-				"./sodium.js"
-			],
-			"#crypto/": [
-				"./utilities/cryptography/"
-			],
-			"#watch": [
-				"./utilities/watch.js"
-			],
-			"#logs": [
-				"utilities/logs/logs.js"
+			"#certificate": [
+				"udsp/certificate/index.js"
 			],
 			"#cleanPath": [
 				"./utilities/cleanPath.js"
 			],
+			"#client*": [
+				"udsp/client/index.js"
+			],
+			"#client/*": [
+				"udsp/client/*.js"
+			],
+			"#components/*": [
+				"./components/*.js"
+			],
+			"#config/*": [
+				"./config/*.js"
+			],
+			"#crypto/": [
+				"./utilities/cryptography/"
+			],
+			"#hash/": [
+				"./utilities/cryptography/hash/*.js"
+			],
+			"#cipher/": [
+				"./utilities/cryptography/cipher/*.js"
+			],
+			"#keyExchange/": [
+				"./utilities/cryptography/keyExchange/*.js"
+			],
+			"#signature/": [
+				"./utilities/cryptography/signature/*.js"
+			],
+			"#examples/*": [
+				"./examples/*.js"
+			],
 			"#file": [
 				"./utilities/file.js"
 			],
-			"#propertyAccess": [
-				"./utilities/propertyAccess.js"
+			"#keychain": [
+				"udsp/certificate/keychain.js"
+			],
+			"#logs": [
+				"utilities/logs/logs.js"
 			],
 			"#pluckBuffer": [
 				"./utilities/pluckBuffer.js"
 			],
-			"#certificate": [
-				"udsp/certificate/index.js"
+			"#profile/*": [
+				"cryptoID/*.js"
+			],
+			"#propertyAccess": [
+				"./utilities/propertyAccess.js"
+			],
+			"#resources/*": [
+				"./resources/*"
+			],
+			"#schemes/*": [
+				"browser/schemes/*.js"
+			],
+			"#server*": [
+				"udsp/server/index.js"
+			],
+			"#server/*": [
+				"udsp/server/*.js"
+			],
+			"#serverApp/*": [
+				"examples/serverApp/*.js"
+			],
+			"#sodium": [
+				"./sodium.js"
+			],
+			"#state/*": [
+				"./state/*.js"
 			],
 			"#udsp": [
 				"./udsp/index.js"
 			],
-			"#keychain": [
-				"udsp/certificate/keychain.js"
+			"#udsp/*": [
+				"./udsp/*.js"
+			],
+			"#utilities/*": [
+				"./utilities/*.js"
+			],
+			"#viat/*": [
+				"./viat/*.js"
+			],
+			"#watch": [
+				"./utilities/watch.js"
 			]
 		},
 		"module": "NodeNext",

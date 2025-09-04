@@ -4,8 +4,14 @@
 	"subject": "Universal Web & VIAT source code",
 	"networkType": "nexus",
 	"protocol": "uw",
-	"cryptocurrency": "VIAT",
-	"web": "Universal Web",
+	"cryptocurrency": {
+		"name": "VIAT",
+		"www": "https://viat.network"
+	},
+	"web": {
+		"name": "Universal Web",
+		"www": "https://universalweb.io"
+	},
 	"homepage": "uw://home.uw",
 	"repository": "uw://source.uw",
 	"domains": "uw://domains.uw",

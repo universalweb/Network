@@ -70,8 +70,9 @@ async function workerInstance(config, ...args) {
 	return serverWorker;
 }
 export async function app(config, ...args) {
-	// if (config.scale && false) {
-	if (config.scale) {
+	// TODO: Implement new multi-threading model
+	if (config.scale === 'DISABLED') {
+	// if (config.scale) {
 		const {
 			scale,
 			scale: { size },

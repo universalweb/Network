@@ -21,7 +21,7 @@
 > ENCRYPTION: Authenticated Encryption with Associated Data (AEAD)
 > HARDWARE ACCELERATED ENCRYPTION: AEGIS-256
 > SOFTWARE ENCRYPTION: XChaCha20-Poly1305-IETF
-> CHECKSUM: [SHAKE256 || BLAKE3]
+> CHECKSUM: [SHAKE256 || SHA3-256 || sha3-512]
 
 ==================================================================
 [>>> VIAT <<<] ┋ NATIVE CRYPTOCURRENCY ⩝

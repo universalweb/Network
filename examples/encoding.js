@@ -1,13 +1,13 @@
 import * as cbor from 'cbor-x';
 import * as msgPack from 'msgpackr';
-import { runBench } from './benchmark.js';
+import { runBench } from '#utilities/benchmark';
 const example = {
 	foo: 'bar',
 	bar: {
 		baz: 'qux',
 	},
 	qux: [
-		1, 2, 3
+		1, 2, 3,
 	],
 	quux: {
 		corge: 'grault',
@@ -29,7 +29,7 @@ const example = {
 	},
 	bin: Buffer.from('hello world'),
 	timestamp: new Date(),
-	timenow: Date.now()
+	timenow: Date.now(),
 };
 const cborEncode = await cbor.encode(example);
 const msgPackEncode = await msgPack.encode(example);

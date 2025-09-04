@@ -45,21 +45,10 @@ WALLET HAS ed25519-Dilithium-SPHINCS+
 
 ### Hashes
 
-SHAKE256
-github.com/BLAKE3-team/BLAKE3
-
-BLAKE3 is not as viable as SHAKE256 for quantum-resistance as BLAKE3 has a security limit.
-SHAKE256 offers better resistance capabilities for long-term security.
-Use SHAKE256 (Extensible Output Function) instead of SHA3-256 (Fixed length)
-Post-Quantum Cryptography algos utilize SHAKE256.
-Increasing the output size of SHAKE256 enhances its security level, whereas BLAKE3's security level remains unchanged internally.
-By increasing the output size for SHAKE256, you directly increase both the classical and quantum security levels.
-
 Quantum computers can attack cryptographic hash functions using Grover’s algorithm, which provides a quadratic speedup over classical brute-force attacks.
 
-BLAKE3 is a 256-bit hash function based on BLAKE2 and the Merkle tree structure.
-Quantum pre-image resistance: Grover’s algorithm reduces its effective security from 256 bits → 128 bits.
-Quantum collision resistance: If a quantum collision attack is discovered, it could further reduce security.
+SHAKE256
+github.com/BLAKE3-team/BLAKE3
 
 ### Key derivation
 
