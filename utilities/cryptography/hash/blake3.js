@@ -1,3 +1,4 @@
+// RESTRICTED USAGE - READ BLAKE3 INTERNALS FIRST
 import {
 	bufferFrom,
 	clearBuffer,
