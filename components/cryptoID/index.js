@@ -21,6 +21,11 @@ import logMethods from '#utilities/logs/classLogMethods';
 import path from 'node:path';
 import { toBase64Url } from '#crypto/utils.js';
 import viat from '#crypto/cipherSuite/viat.js';
+const securityTypes = {
+	hybrid: viat,
+	quantum: 'quantum',
+	legacy: 'legacy',
+};
 export class CryptoID {
 	constructor(config, optionalArg) {
 		if (config === false) {
@@ -72,6 +77,7 @@ export class CryptoID {
 	async generate(options) {
 		this.signatureKeypair = await this.cipherSuite.signature.signatureKeypair();
 		this.keyExchangeKeypair = await this.cipherSuite.keyExchange.keyExchangeKeypair();
+		options?.type && (this.type = options.type);
 		this.generateAddress();
 		// console.log('KEY EXCHANGE', this.keyExchangeKeypair);
 	}
