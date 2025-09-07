@@ -1,12 +1,12 @@
 import { Block, block } from './block.js';
 import { blockTypes } from '#viat/blocks/defaults';
 import { genesisBlock } from '#viat/blocks/types/genesis/block';
-import { genesisWalletBlock } from '#viat/blocks/types/genesisWallet/block';
+import { genesisWalletBlock } from '#blocksgenesis/genesisWallet/block';
 import path from 'path';
 import { readStructured } from '#utilities/file';
 import { receiptBlock } from '#viat/blocks/types/transactions/receipt/block';
 import { transactionBlock } from '#viat/blocks/types/transactions/transaction/block';
-import { walletBlock } from '#viat/blocks/types/transactions/wallet/block';
+import { walletBlock } from '#blockswallet/block';
 export async function createBlockFromObject(blockObject, config) {
 	switch (blockObject.data.meta.blockType) {
 		case blockTypes.transaction: {

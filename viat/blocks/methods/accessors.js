@@ -1,7 +1,7 @@
 import {
 	assign, everyArray, get, hasValue, isArray, isBigInt, isPlainObject, merge, toPath,
 } from '@universalweb/utilitylib';
-import { getWallet } from '#viat/blocks/types/transactions/wallet/uri';
+import { getWallet } from '#blockswallet/uri';
 import { readStructured } from '#utilities/file';
 import { toBase64Url } from '#crypto/utils.js';
 const methods = {

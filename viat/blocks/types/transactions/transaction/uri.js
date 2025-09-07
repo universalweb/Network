@@ -4,7 +4,7 @@ import {
 	getWalletURL,
 	walletPathToURL,
 	walletURLToPath,
-} from '../wallet/uri.js';
+} from '../../wallet/uri.js';
 import blockDefaults from '#viat/blocks/defaults';
 import defaults from './defaults.js';
 import { isNotString } from '@universalweb/utilitylib';
