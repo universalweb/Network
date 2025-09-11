@@ -10,7 +10,8 @@ import {
 import { encode } from '#utilities/serialize';
 import viatDefaults from '#viat/defaults';
 const {
-	coinDecimalPlaces, coinMaxSupply, coinDigitCount, coinWholeDigitCount,
+	coinDecimalPlaces, coinMaxSupply,
+	coinDigitCount, coinWholeDigitCount,
 } = viatDefaults;
 // TODO: Change API so that using strings is obvious or numbers or bigInt or unify them
 // Already have smallest unit convert for math by removing period combine both sides then add the additional zeroes for full size
@@ -140,10 +141,10 @@ export function fromSmallestUnit(value) {
 	const fracPart = str.slice(-coinDecimalPlaces).replace(/0+$/, '');
 	return fracPart ? `${intPart}.${fracPart}` : intPart;
 }
-function getBigIntPercentage(value, percentage) {
+export function getBigIntPercentage(value, percentage) {
 	return (value * percentage) / 100n;
 }
-function getBigIntPercentageOf(part, whole) {
+export function getBigIntPercentageOf(part, whole) {
 	const bigPart = part;
 	const bigWhole = whole;
 	if (bigWhole === 0n) {
