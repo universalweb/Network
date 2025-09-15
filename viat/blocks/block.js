@@ -82,6 +82,23 @@ export class Block {
 	async getFileURL() {
 		return this.filesystem.getFileURL(await this.getHash());
 	}
+	async estimateBlockSize() {
+		const binary = await this.exportBinary();
+		const data = await this.exportObject();
+		const size = binary.length;
+		let compactSize = size;
+		console.log('Expanded Size:', size);
+		if (data.hash) {
+			compactSize -= data.hash.length;
+			console.log('Compact Without hash Size:', compactSize);
+		}
+		if (data.signature) {
+			compactSize -= data.signature.length;
+			console.log('Compact Without signature Size:', compactSize);
+		}
+		console.log('Compact Size:', compactSize);
+		return size;
+	}
 	filesystemConfig = filesystemTypes.generic;
 }
 extendClass(Block, logMethods);

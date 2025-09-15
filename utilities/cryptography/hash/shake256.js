@@ -6,6 +6,7 @@ import {
 	hash512SettingsCrypto,
 	int32,
 	int64,
+	legacyAddressHashSettings,
 	toHex,
 } from '#utilities/cryptography/utils';
 import cryptolib from 'node:crypto';
@@ -32,6 +33,9 @@ export async function hash512Strict(source) {
 }
 export async function hash1024(source) {
 	return createHash(hashName, source, hash1024SettingsCrypto);
+}
+export async function hashLegacyAddress(source) {
+	return createHash(hashName, source, legacyAddressHashSettings);
 }
 export async function hashXOF(source, outputLength = int32) {
 	return createHash(hashName, source, {
@@ -60,6 +64,7 @@ export const shake256 = hashScheme({
 	hash256Strict,
 	hash512,
 	hash512Strict,
+	hashLegacyAddress,
 	hash1024,
 	hashXOF,
 	hashXOFObject,

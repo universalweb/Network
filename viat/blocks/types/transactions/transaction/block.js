@@ -42,27 +42,27 @@ export async function transactionBlock(data, config) {
 	return block;
 }
 export default transactionBlock;
-const exampleBlock = await transactionBlock({
-	data: {
-		core: {
-			sender: viatCipherSuite.createBlockNonce(20),
-			receiver: viatCipherSuite.createBlockNonce(20),
-			amount: 1000n,
-			mana: 10n,
-			parent: viatCipherSuite.createBlockNonce(64),
-		},
-	},
-});
-console.log('Block', exampleBlock);
-await exampleBlock.setDefaults();
-await exampleBlock.setHash();
-console.log('Block', exampleBlock.block);
-console.log('Block HASH SIZE', exampleBlock.block.hash.length);
-console.log('getReceiptDirectory', await exampleBlock.getReceiptDirectory());
-console.log('getReceiptPath', await exampleBlock.getReceiptPath());
-console.log('getDirectory', await exampleBlock.getDirectory());
-console.log('getFile', await exampleBlock.getFile());
-console.log('getFileURL', await exampleBlock.getFileURL());
-await exampleBlock.setReceipt();
-console.log('receipt', exampleBlock.receipt.block);
-console.log('getSenderPath', await exampleBlock.getReceiverPath());
+// const exampleBlock = await transactionBlock({
+// 	data: {
+// 		core: {
+// 			sender: viatCipherSuite.createBlockNonce(20),
+// 			receiver: viatCipherSuite.createBlockNonce(20),
+// 			amount: 1000n,
+// 			mana: 10n,
+// 			parent: viatCipherSuite.createBlockNonce(64),
+// 		},
+// 	},
+// });
+// console.log('Block', exampleBlock);
+// await exampleBlock.setDefaults();
+// await exampleBlock.setHash();
+// console.log('Block', exampleBlock.block);
+// console.log('Block HASH SIZE', exampleBlock.block.hash.length);
+// console.log('getReceiptDirectory', await exampleBlock.getReceiptDirectory());
+// console.log('getReceiptPath', await exampleBlock.getReceiptPath());
+// console.log('getDirectory', await exampleBlock.getDirectory());
+// console.log('getFile', await exampleBlock.getFile());
+// console.log('getFileURL', await exampleBlock.getFileURL());
+// await exampleBlock.setReceipt();
+// console.log('receipt', exampleBlock.receipt.block);
+// console.log('getSenderPath', await exampleBlock.getReceiverPath());

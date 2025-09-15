@@ -34,11 +34,12 @@ export class WalletBlock extends Block {
 	}
 	async configByWallet(data, config) {
 		const walletObject = await data.exportObject();
-		await this.setCore('exchangePublicKey', walletObject.core.keyExchangeKeypair.publicKey);
+		console.log('wallet object', walletObject);
 		await this.setCore('publicKey', walletObject.core.signatureKeypair.publicKey);
-		await this.setCore('version', walletObject.version);
-		await this.setCore('created', walletObject.date);
-		await this.setCore('address', await data.getAddress());
+		await this.setCore('walletVersion', walletObject.version);
+		await this.setCore('walletTimestamp', walletObject.date);
+		await this.setCore('cipherSuiteID', walletObject.cipherSuiteID);
+		await this.setCore('address', await walletObject.address);
 	}
 	async getAddress() {
 		return this.getCore('address');
@@ -52,10 +53,13 @@ export async function walletBlock(...args) {
 }
 export default walletBlock;
 const amy = await wallet();
-console.log(await amy.exportObject());
-// const amyBlock = await walletBlock(amy);
-// await amyBlock.finalize();
-// await amyBlock.sign(amy);
+// console.log(await amy.exportObject());
+const amyBlock = await walletBlock(amy);
+await amyBlock.finalize();
+await amyBlock.sign(amy);
+console.log(amyBlock.block);
+console.log('block size', (await amyBlock.exportBinary()).length);
+// await amyBlock.estimateBlockSize();
 // console.log(await amyBlock.getAddress());
 // console.log('Wallet Block', amyBlock.block);
 // const exampleBlock = await walletBlock({

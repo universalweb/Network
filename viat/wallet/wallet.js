@@ -21,14 +21,16 @@ export class Wallet extends CryptoID {
 		return this;
 	}
 	filesystem = filesystemTypes.generic;
+	excludeKeyExchange = true;
 }
-export function wallet(config) {
-	const source = new Wallet(config);
+export function wallet(...args) {
+	const source = new Wallet(...args);
 	return source;
 }
 export default wallet;
 // console.log('Default Filesystem Config:', filesystemTypes.generic);
 // const example = await wallet();
+// console.log(await example.exportObject());
 // console.log('Wallet Example:', await example.exportKeypairs());
 // (await wallet('/Users/thomasmarchi/MEGA/Github/Network/viat/wallet.bin'));
 // console.log('Wallet:', (await wallet('/Users/thomasmarchi/MEGA/Github/Network/viat/wallet.bin')));

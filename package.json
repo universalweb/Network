@@ -61,7 +61,7 @@
 		]
 	},
 	"imports": {
-		"#blocks*": "./viat/blocks/types/*.js",
+		"#blocks/*": "./viat/blocks/types/*.js",
 		"#certificate": "./utilities/certificate/index.js",
 		"#cipher/*": "./utilities/cryptography/cipher/*.js",
 		"#cleanPath": "./utilities/cleanPath.js",

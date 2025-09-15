@@ -120,11 +120,12 @@ const methods = {
 	async setParent(parentHash) {
 		this.setCore('parent', parentHash);
 	},
-	async setParentSequence(parentNode) {
+	async getParentSequence(parentNode) {
 		if (parentNode) {
-			return parentNode.getSequence();
+			const parentSequence = await parentNode.getSequence();
+			return parentSequence;
 		}
-		return;
+		return 0n;
 	},
 	async setSequence() {
 		const parentSequence = await this.getParentSequence();
