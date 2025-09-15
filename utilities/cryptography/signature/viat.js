@@ -221,6 +221,10 @@ export const viat = signatureScheme({
 	verifyEach,
 	verifyPartial,
 	exportKeypair,
+	dilithium: dilithium65,
+	ed25519: ed25519Utils,
+	sphincs: sphincs192,
+	preferred: true,
 });
 export default viat;
 // const key = await viat.signatureKeypair();

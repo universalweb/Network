@@ -171,6 +171,8 @@ export const kyber768_x25519 = keyExchange({
 	alias: 'kyber768_x25519',
 	description: 'Crystals-Kyber768 with X25519 and SHAKE256.',
 	id: 3,
+	x25519,
+	kyber768,
 	keyExchangeKeypair,
 	clientEphemeralKeypair,
 	serverEphemeralKeypair,

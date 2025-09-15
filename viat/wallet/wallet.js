@@ -2,7 +2,7 @@
 import { decode, encode } from '#utilities/serialize';
 import { getTransactionPath, getTransactionsPath } from '#viat/blocks/types/transactions/transaction/uri';
 import { CryptoID } from '#components/cryptoID/index';
-import { getWalletPath } from '#viat/blocks/types/transactions/wallet/uri';
+import { getWalletPath } from '#blockswallet/uri';
 import { isBuffer } from '@universalweb/utilitylib';
 import { transactionBlock } from '#viat/blocks/types/transactions/transaction/block';
 export class Wallet extends CryptoID {
