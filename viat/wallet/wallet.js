@@ -1,10 +1,8 @@
 // VIAT WALLET
 import { decode, encode } from '#utilities/serialize';
-import { getTransactionPath, getTransactionsPath } from '#viat/blocks/types/transactions/transaction/uri';
 import { CryptoID } from '#components/cryptoID/index';
-import { getWalletPath } from '#blockswallet/uri';
+import filesystemTypes from '../storage/filesystems.js';
 import { isBuffer } from '@universalweb/utilitylib';
-import { transactionBlock } from '#viat/blocks/types/transactions/transaction/block';
 export class Wallet extends CryptoID {
 	constructor(config, optionalArg) {
 		super(false);
@@ -16,14 +14,20 @@ export class Wallet extends CryptoID {
 	}
 	async getPath() {
 		const address = await this.getAddress();
-		return getWalletPath(address);
+		// return getWalletPath(address);
 	}
+	setFilesystem(filesystem) {
+		this.filesystem = filesystem;
+		return this;
+	}
+	filesystem = filesystemTypes.generic;
 }
 export function wallet(config) {
 	const source = new Wallet(config);
 	return source;
 }
 export default wallet;
+// console.log('Default Filesystem Config:', filesystemTypes.generic);
 // const example = await wallet();
 // console.log('Wallet Example:', await example.exportKeypairs());
 // (await wallet('/Users/thomasmarchi/MEGA/Github/Network/viat/wallet.bin'));

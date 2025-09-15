@@ -1,11 +1,11 @@
-import { assignToClass, merge } from '@universalweb/utilitylib';
-import { Block } from '#viat/blocks/block';
-import blockDefaults from '#viat/blocks/defaults';
 // Root Genesis Block
-//  BETA
-import { blockMethods } from './uri.js';
+import {
+	filePaths, genericFilenames, hashSizes, nonceSizes, typeNames,
+} from '#viat/blocks/defaults';
+import { Block } from '#viat/blocks/block';
+import { assignToClass } from '@universalweb/utilitylib';
+import path from 'path';
 import { readStructured } from '#utilities/file';
-import receiptBlock from '#viat/blocks/types/transactions/receipt/block';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 export class GenesisWalletBlock extends Block {
 	constructor(data, config) {
@@ -29,39 +29,25 @@ export class GenesisWalletBlock extends Block {
 			},
 		});
 	}
-	async config(data) {
-		await super.config(data);
-		await this.setCore(data.data.core);
-	}
-	nonceSize = 32;
-	hashSize = 64;
+	nonceSize = nonceSizes.genesis;
+	hashSize = hashSizes.genesis;
 	hashXOFConfig = {
 		outputEncoding: 'buffer',
-		outputLength: 64,
+		outputLength: hashSizes.genesis,
 	};
-	typeName = 'genesisWallet';
+	typeName = typeNames.genesisWallet;
 }
-assignToClass(GenesisWalletBlock, blockMethods);
 export async function genesisWalletBlock(data, config) {
 	const block = await (new GenesisWalletBlock(data, config));
 	return block;
 }
 export default genesisWalletBlock;
-// const exampleBlock = await genesisWalletBlock({
-// 	data: {
-// 		core: {
-// 			allocation: {
-// 				receiver: Buffer.from('0000000000000000000000000000000000000000000000000000000000000000'),
-// 				amount: 5000000,
-// 				sender: 1,
-// 			},
-// 		},
-// 	},
-// });
+// const exampleBlock = await genesisWalletBlock({});
 // await exampleBlock.finalize();
 // await exampleBlock.setHashXOF();
-// console.log('Genesis Block HASH SIZE', exampleBlock.block.hash.length);
-// exampleBlock.setDefaults();
-// await exampleBlock.setHash();
-// console.log('Block HASH/ID', exampleBlock.block);
-// console.log(await exampleBlock.validateHash());
+// console.log('Genesis Block', exampleBlock.block);
+// console.log('Genesis Block Hash', exampleBlock.block.hash.length);
+// console.log('Genesis Block Binary Export', (await exampleBlock.exportBinary()).length);
+// console.log(exampleBlock.getPath());
+// console.log(exampleBlock.getDirectory());
+// console.log('Block Type', exampleBlock.blockType);

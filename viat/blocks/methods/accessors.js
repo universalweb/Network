@@ -1,9 +1,17 @@
 import {
-	assign, everyArray, get, hasValue, isArray, isBigInt, isPlainObject, merge, toPath,
+	assign,
+	everyArray,
+	get,
+	hasValue,
+	isArray,
+	isBigInt,
+	isPlainObject,
+	merge,
+	toPath,
 } from '@universalweb/utilitylib';
-import { getWallet } from '#blockswallet/uri';
+import base38 from '#viat/storage/base38';
+import { base64URLString } from '#crypto/utils.js';
 import { readStructured } from '#utilities/file';
-import { toBase64Url } from '#crypto/utils.js';
 const methods = {
 	getCore(propertyName) {
 		return (propertyName) ? get(propertyName, this.block.data.core) : this.block.data.core;
@@ -18,8 +26,12 @@ const methods = {
 	getMeta(propertyName) {
 		return (propertyName) ? get(propertyName, this.block.data.meta) : this.block.data.meta;
 	},
-	setMeta(propertyName, value) {
-		return this.set(propertyName, value, this.block.data.meta);
+	setMeta(primaryArg, value) {
+		if (isPlainObject(primaryArg)) {
+			merge(this.block.data.meta, primaryArg);
+			return this;
+		}
+		return this.set(primaryArg, value, this.block.data.meta);
 	},
 	getData(propertyName) {
 		return (propertyName) ? get(propertyName, this.block.data) : this.block.data;
@@ -38,19 +50,19 @@ const methods = {
 		return this.getCore('sender');
 	},
 	getSenderString() {
-		return toBase64Url(this.getCore('sender'));
+		return base64URLString(this.getCore('sender'));
 	},
 	getSenderPath() {
-		return getWallet(this.getCore('sender'));
+		return this.filesystemConfig.getWallet(this.getCore('sender'));
 	},
 	getReceiver() {
 		return this.getCore('receiver');
 	},
 	getReceiverString() {
-		return toBase64Url(this.getReceiver());
+		return base64URLString(this.getReceiver());
 	},
 	getReceiverPath() {
-		return getWallet(this.getCore('receiver'));
+		return this.filesystemConfig.getWallet(this.getCore('receiver'));
 	},
 	set(propertyName, value, sourceObject) {
 		let link = sourceObject || this.block;

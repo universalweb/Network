@@ -9,15 +9,15 @@ import { getFiles, readStructured } from '#utilities/file';
 import { createViatFilesystem } from './createFilesystem.js';
 import { decode } from '#utilities/serialize';
 import filesystemMethods from './methods/filesystem.js';
+import { filesystemTypes } from '../storage/filesystems.js';
 import fs from 'fs-extra';
-import { genesisBlock } from '../blocks/genesis/block.js';
+import { genesisBlock } from '#blocks/genesis/root/block';
 import genesisMethods from './methods/genesis.js';
-import { genesisWalletBlock } from '#viat/blocks/genesisWallet/block';
+import { genesisWalletBlock } from '#blocks/genesis/genesisWallet/block';
 import { getHomeDirectory } from '#utilities/directory';
-import { getTransactionsPath } from '../blocks/transaction/uri.js';
 import { loadBlock } from '#viat/blocks/utils';
 import path from 'path';
-import { transactionBlock } from '#viat/blocks/transaction/block';
+import { transactionBlock } from '#blocks/transactions/transaction/block';
 import viatDefaults from '#viat/defaults';
 import walletBlock from '#viat/blocks/wallet/block';
 export class Superstructure {
@@ -26,6 +26,9 @@ export class Superstructure {
 		console.log('Superstructure initializing');
 		this.directoryPath = config.directoryPath || getHomeDirectory();
 		this.networkName = config.networkName || this.networkName;
+		if (config.filesystem) {
+			this.filesystem = config.filesystem;
+		}
 		return this.initialize();
 	}
 	async initialize() {
@@ -83,11 +86,11 @@ export class Superstructure {
 		return this.filesToBlockObjects(transactionPaths);
 	}
 	async getAddressTransactionPaths(address) {
-		const transactionsPath = await this.getFullPath(getTransactionsPath(address));
+		const transactionsPath = await this.getFullPath(this.filesystem.getTransactionDirectory(address));
 		const blocks = await getFiles(transactionsPath, {
 			nameFilter: /vtx\.block$/,
 			ignoreHidden: true,
-			excludeFolderNames: ['verifications'],
+			// excludeFolderNames: ['verifications'],
 		});
 		return blocks;
 	}
@@ -127,6 +130,7 @@ export class Superstructure {
 		const data = await loadBlock(filePath);
 		return data;
 	}
+	filesystem = filesystemTypes.generic;
 	networkName = 'mainnet';
 }
 extendClass(Superstructure, filesystemMethods);
@@ -136,9 +140,9 @@ export async function superstructure(...args) {
 	return source;
 }
 export default superstructure;
-// const viatNetwork = await superstructure({
-// 	networkName: 'mainnet',
-// });
+const viatNetwork = await superstructure({
+	networkName: 'mainnet',
+});
 // console.log('VIAT NETWORK', viatNetwork);
 // console.log('VIAT NETWORK', await viatNetwork.getFullPath());
 // console.log('VIAT SAVE', await viatNetwork.createFilesystem());

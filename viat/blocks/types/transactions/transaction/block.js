@@ -1,20 +1,16 @@
-import { assignToClass, get, mapAsyncArray } from '@universalweb/utilitylib';
+//  BETA
 import {
-	blockMethods,
-	getTransactionFromBlock,
-	getTransactionPathFromBlock,
-	getTransactionPathURLFromBlock,
-	getTransactionURLFromBlock,
-} from './uri.js';
-import { getFullPathFromBlock, loadBlock } from '#viat/blocks/utils';
-// Consider Multi-part transaction block -> reduce size and cost of each transaction
-import { toBase64Url, toHex } from '#crypto/utils.js';
+	filePaths,
+	genericFilenames,
+	hashSizes,
+	nonceSizes,
+	typeNames,
+} from '#viat/blocks/defaults';
 import { Block } from '#viat/blocks/block';
-import blockDefaults from '#viat/blocks/defaults';
-import { encodeStrict } from '#utilities/serialize';
+import { assignToClass } from '@universalweb/utilitylib';
 import path from 'path';
-import receiptBlock from '#viat/blocks/types/transactions/receipt/block';
-import { transactionBlockSchema } from './schema.js';
+import { readStructured } from '#utilities/file';
+import { receiptBlock } from '#blocks/transactions/receipt/block';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 // GET PRIOR TRANSACTION ID MAX & PRIOR HASH - include prior hash as parent then increment ID
 class TransactionBlock extends Block {
@@ -22,8 +18,6 @@ class TransactionBlock extends Block {
 		super(config);
 		return this.initialize(data, config);
 	}
-	// Receipt Hash Link
-	// Block Hash (TX DATA || Receipt Meta?)
 	async createReceipt() {
 		const receipt = await receiptBlock(this);
 		await receipt.setHash();
@@ -33,37 +27,42 @@ class TransactionBlock extends Block {
 		this.receipt = await this.createReceipt();
 		return this;
 	}
-	async getReceiptPath() {
-		const filepath = await getTransactionPathFromBlock(this);
-		return filepath;
+	async getReceiptDirectory() {
+		const txPath = this.filesystemConfig.getReceiptDirectory(await this.getHash(), await this.getCore('receiver'));
+		return txPath;
 	}
-	blockSchema = transactionBlockSchema;
-	typeName = 'transaction';
+	async getReceiptPath() {
+		const txPath = this.filesystemConfig.getReceiptBlock(await this.getHash(), await this.getCore('receiver'));
+		return txPath;
+	}
+	typeName = typeNames.transaction;
 }
-assignToClass(TransactionBlock, blockMethods);
 export async function transactionBlock(data, config) {
 	const block = await (new TransactionBlock(data, config));
 	return block;
 }
 export default transactionBlock;
-// const exampleBlock = await transactionBlock({
-// 	amount: 1000n,
-// 	receiver: viatCipherSuite.createBlockNonce(64),
-// 	sender: viatCipherSuite.createBlockNonce(64),
-// 	mana: 1000n,
-// 	sequence: 0n
-// });
-// console.log('Block HASH/ID', await exampleBlock.id());
-// console.log('Transaction Block', exampleBlock);
-// exampleBlock.setDefaults();
-// await exampleBlock.setHash();
-// console.log('Block Object', exampleBlock.block);
-// console.log(await exampleBlock.validateHash());
-// console.log(await exampleBlock.getHash(), exampleBlock.getReceiver());
-// console.log('getURL', await exampleBlock.getURL());
-// console.log('getPath', await exampleBlock.getPath());
-// console.log('getSenderPath', await exampleBlock.getSenderPath());
-// console.log('getReceiverPath', await exampleBlock.getReceiverPath());
-// console.log('getDirectory', await exampleBlock.getDirectory());
-// console.log('getDirectoryURL', await exampleBlock.getDirectoryURL());
-// console.log('Transaction Block ENTIRE BINARY', await exampleBlock.exportBinary());
+const exampleBlock = await transactionBlock({
+	data: {
+		core: {
+			sender: viatCipherSuite.createBlockNonce(20),
+			receiver: viatCipherSuite.createBlockNonce(20),
+			amount: 1000n,
+			mana: 10n,
+			parent: viatCipherSuite.createBlockNonce(64),
+		},
+	},
+});
+console.log('Block', exampleBlock);
+await exampleBlock.setDefaults();
+await exampleBlock.setHash();
+console.log('Block', exampleBlock.block);
+console.log('Block HASH SIZE', exampleBlock.block.hash.length);
+console.log('getReceiptDirectory', await exampleBlock.getReceiptDirectory());
+console.log('getReceiptPath', await exampleBlock.getReceiptPath());
+console.log('getDirectory', await exampleBlock.getDirectory());
+console.log('getFile', await exampleBlock.getFile());
+console.log('getFileURL', await exampleBlock.getFileURL());
+await exampleBlock.setReceipt();
+console.log('receipt', exampleBlock.receipt.block);
+console.log('getSenderPath', await exampleBlock.getReceiverPath());

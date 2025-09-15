@@ -33,11 +33,18 @@ const methods = {
 	},
 	async hashData() {
 		const binary = await this.exportDataBinary();
+		if (this.hashSize === 64) {
+			return this.hash512(binary);
+		} else if (this.hashSize === 32) {
+			return this.hash256(binary);
+		} else if (this.hashSize > 64 && this.hashXOFConfig) {
+			return this.hashXOFData();
+		}
 		return this.hash512(binary);
 	},
 	async hashXOFData(config) {
 		const binary = await this.exportDataBinary();
-		return this.hashXOF(binary, config);
+		return this.hashXOF(binary, config || this.hashXOFConfig);
 	},
 	async hashMeta() {
 		const binary = await this.exportMetaBinary();

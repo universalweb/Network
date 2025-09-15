@@ -10,7 +10,7 @@ import base38 from './base38.js';
 import { filesystemPathHandler } from './filesystemPathHandler.js';
 import logMethods from '#utilities/logs/classLogMethods';
 import path from 'path';
-const defaultFilesystemConfig = await filesystemPathHandler('generic', {});
+export const defaultFilesystemConfig = await filesystemPathHandler('generic', {});
 // TODO: Add more to support filesystems
 export const filesystemTypes = {
 	generic: defaultFilesystemConfig,
@@ -19,3 +19,4 @@ export const filesystemTypes = {
 	apfs: defaultFilesystemConfig,
 };
 export default filesystemTypes;
+// console.log(defaultFilesystemConfig.wallet);

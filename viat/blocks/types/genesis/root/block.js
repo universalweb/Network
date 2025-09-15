@@ -1,11 +1,13 @@
+// Root Genesis Block
+import {
+	filePaths, genericFilenames, hashSizes, nonceSizes, typeNames,
+} from '#viat/blocks/defaults';
 import { Block } from '#viat/blocks/block';
 import { assignToClass } from '@universalweb/utilitylib';
-import blockDefaults from '#viat/blocks/defaults';
-// Root Genesis Block
-//  BETA
-import { blockMethods } from './uri.js';
+import path from 'path';
 import { readStructured } from '#utilities/file';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
+// import { blockMethods } from './uri.js';
 export class GenesisBlock extends Block {
 	constructor(data, config) {
 		super(config);
@@ -24,15 +26,26 @@ export class GenesisBlock extends Block {
 			],
 		});
 	}
-	nonceSize = 32;
-	hashSize = 64;
+	getPath() {
+		return path.join(filePaths.genesis, genericFilenames.genesis);
+	}
+	getDirectory() {
+		return filePaths.genesis;
+	}
+	getDirectoryURL() {
+		return filePaths.genesis;
+	}
+	getURL() {
+		return path.join(filePaths.genesis, genericFilenames.genesis);
+	}
+	nonceSize = nonceSizes.genesis;
+	hashSize = hashSizes.genesis;
 	hashXOFConfig = {
 		outputEncoding: 'buffer',
-		outputLength: 64,
+		outputLength: hashSizes.genesis,
 	};
-	typeName = 'genesis';
+	typeName = typeNames.genesis;
 }
-assignToClass(GenesisBlock, blockMethods);
 export async function genesisBlock(data, config) {
 	const block = await (new GenesisBlock(data, config));
 	return block;
@@ -41,9 +54,12 @@ export default genesisBlock;
 // const exampleBlock = await genesisBlock({});
 // await exampleBlock.finalize();
 // await exampleBlock.setHashXOF();
-// console.log('Genesis Block', exampleBlock);
-// console.log('Genesis Block HASH SIZE', exampleBlock.block);
-// console.log('Genesis Block', (await exampleBlock.exportBinary()).length);
+// console.log('Genesis Block Hash', exampleBlock.block.hash.length);
+// console.log('Genesis Block', exampleBlock.block);
+// console.log('Genesis Block Binary Export', (await exampleBlock.exportBinary()).length);
+// console.log(exampleBlock.getPath());
+// console.log(exampleBlock.getDirectory());
+// console.log('Block Type', exampleBlock.blockType);
 // exampleBlock.setDefaults();
 // await exampleBlock.setHash();
 // console.log('Block HASH/ID', exampleBlock.block);

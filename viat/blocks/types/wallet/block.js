@@ -14,18 +14,19 @@
 //  Any attempts to spam the network with random wallets will be discarded.
 // A wallet block is only needed when the wallet has created a block. It's not required when sent VIAT.
 import {
-	blockMethods,
-	getWalletFromBlock,
-	getWalletPathFromBlock,
-	getWalletPathURLFromBlock,
-	getWalletURLFromBlock,
-} from './uri.js';
+	filePaths,
+	genericFilenames,
+	hashSizes,
+	nonceSizes,
+	typeNames,
+} from '#viat/blocks/defaults';
 import { Block } from '#viat/blocks/block';
 import { assignToClass } from '@universalweb/utilitylib';
-import blockDefaults from '#viat/blocks/defaults';
+import path from 'path';
 import { readStructured } from '#utilities/file';
+import { receiptBlock } from '#blocks/transactions/receipt/block';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
-import { walletBlockSchema } from './schema.js';
+import wallet from '#viat/wallet/wallet';
 export class WalletBlock extends Block {
 	constructor(data, config) {
 		super(config);
@@ -42,16 +43,16 @@ export class WalletBlock extends Block {
 	async getAddress() {
 		return this.getCore('address');
 	}
-	blockSchema = walletBlockSchema;
-	typeName = 'wallet';
+	// blockSchema = walletBlockSchema;
+	typeName = typeNames.wallet;
 }
-assignToClass(WalletBlock, blockMethods);
 export async function walletBlock(...args) {
 	const block = await (new WalletBlock(...args));
 	return block;
 }
 export default walletBlock;
-// const amy = await wallet();
+const amy = await wallet();
+console.log(await amy.exportObject());
 // const amyBlock = await walletBlock(amy);
 // await amyBlock.finalize();
 // await amyBlock.sign(amy);
