@@ -16,14 +16,16 @@ import genesisMethods from './methods/genesis.js';
 import { genesisWalletBlock } from '#blocks/genesis/genesisWallet/block';
 import { getHomeDirectory } from '#utilities/directory';
 import { loadBlock } from '#viat/blocks/utils';
+import logMethods from '#utilities/logs/classLogMethods';
 import path from 'path';
 import { transactionBlock } from '#blocks/transactions/transaction/block';
 import viatDefaults from '#viat/defaults';
-import walletBlock from '#viat/blocks/wallet/block';
+import walletBlock from '#blocks/wallet/block';
 export class Superstructure {
+	logLevel = 4;
 	constructor(config = {}) {
 		// Initialize any necessary properties
-		console.log('Superstructure initializing');
+		this.logInfo('Superstructure initializing');
 		this.directoryPath = config.directoryPath || getHomeDirectory();
 		this.networkName = config.networkName || this.networkName;
 		if (config.filesystem) {
@@ -33,6 +35,7 @@ export class Superstructure {
 	}
 	async initialize() {
 		await this.setFullPath();
+		this.logInfo('Superstructure initialized');
 		return this;
 	}
 	async createNetwork() {
@@ -60,14 +63,10 @@ export class Superstructure {
 		const txBlock = await transactionBlock({
 			data: {
 				core: {
-					output: [
-						{
-							amount,
-							receiver,
-							sender,
-							mana,
-						},
-					],
+					amount,
+					receiver,
+					sender,
+					mana,
 				},
 			},
 		});
@@ -135,14 +134,17 @@ export class Superstructure {
 }
 extendClass(Superstructure, filesystemMethods);
 extendClass(Superstructure, genesisMethods);
+extendClass(Superstructure, logMethods);
 export async function superstructure(...args) {
 	const source = await (new Superstructure(...args));
 	return source;
 }
 export default superstructure;
-const viatNetwork = await superstructure({
-	networkName: 'mainnet',
-});
+// const viatNetwork = await superstructure({
+// 	networkName: 'mainnet',
+// });
 // console.log('VIAT NETWORK', viatNetwork);
+// await viatNetwork.createGenesisBlock();
+// await viatNetwork.createGenesisWalletBlock();
 // console.log('VIAT NETWORK', await viatNetwork.getFullPath());
 // console.log('VIAT SAVE', await viatNetwork.createFilesystem());

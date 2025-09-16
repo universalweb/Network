@@ -12,6 +12,8 @@ const viatFilesystemObject = {
 	cache: true,
 	pending: true,
 	wallets: true,
+	hybridWallets: true,
+	quantumWallets: true,
 	audits: true,
 	domains: true,
 };

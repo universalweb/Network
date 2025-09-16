@@ -73,7 +73,7 @@ export const filePaths = {
 	hybridWallet: '/hybridwallets/',
 	quantumWallet: '/quantumwallets/',
 	genesis: '/',
-	genesisWallet: '/wallets/',
+	genesisWallet: '/',
 	genesisAudit: '/audits/',
 };
 export const urlPaths = {

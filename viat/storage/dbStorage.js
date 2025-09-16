@@ -1,10 +1,15 @@
 import {
-	isBuffer, isPlainObject, isString, merge,
+	isBuffer,
+	isPlainObject,
+	isString,
+	merge,
 } from '@universalweb/utilitylib';
+import { randomBuffer, toBase64Url } from '#crypto/utils.js';
 import { LRUCache } from 'lru-cache';
+import { getViatDirectory } from '#utilities/directory';
 import lmdb from 'lmdb';
 import { readStructured } from '#utilities/file';
-import { toBase64Url } from '#crypto/utils.js';
+const defaultPath = await getViatDirectory();
 /**
  * Unified storage for Viat blocks (plain JS objects).
  * - Blocks are plain objects; the block.hash property is the canonical 64-byte Buffer.
@@ -12,7 +17,7 @@ import { toBase64Url } from '#crypto/utils.js';
  * - Cache key is base64url of those 32 bytes.
  */
 // TODO: CHECK BLOCK AGE - CHECK BLOCK'S AUDIT BLOCK REFERENCE -> DICTATE STRATEGY CACHE LMDB or FS
-export class UnifiedStorage {
+export class DBStorage {
 	/**
 	 * @param {object} options
 	 * @param {string} options.path - LMDB path (optional: instance can work cache-only).
@@ -21,89 +26,38 @@ export class UnifiedStorage {
 	 */
 	constructor(config = {}) {
 		merge(this, config);
+		return this.initialize();
+	}
+	async initialize() {
 		const {
-			dbPath: path,
-			maxCacheSize,
+			dbPath,
+			cacheConfig,
 			dbName,
 		} = this;
-		this.cache = new LRUCache({
-			max: maxCacheSize,
-		});
+		this.cache = await (new LRUCache(cacheConfig));
 		this.db = null;
-		if (path) {
+		if (dbPath) {
 			try {
-				this.db = lmdb.open({
-					path,
+				this.db = await lmdb.open({
+					path: dbPath,
 					name: dbName,
-					compression: true,
+					compression: false,
 				});
 			} catch (e) {
 				// fail gracefully -> operate as cache-only
 				this.db = null;
 			}
 		}
-	}
-	/**
-	 * Build dbKey (first 32 bytes Buffer) and cacheKey (base64url string) from a key Buffer.
-	 * Upstream is expected to ensure key is a valid 64-byte Buffer.
-	 * Returns { dbKey, cacheKey } or undefined on error.
-	 * @param {Buffer} key
-	 */
-	hashToKeys(key) {
-		const dbKey = key.slice(0, 32);
-		const cacheKey = toBase64Url(dbKey);
-		return {
-			dbKey,
-			cacheKey,
-		};
-	}
-	/**
-	 * Helper to resolve the key Buffer to use:
-	 * prefer explicitKey if provided, otherwise try block.hash.
-	 * Returns { keyBuffer, dbKey, cacheKey } or undefined.
-	 * @param {object|undefined} block
-	 * @param {Buffer|undefined} explicitKey
-	 */
-	resolveKeys(block) {
-		return {
-			cacheKey: this.getCacheKey(block),
-			dbKey: this.getDBKey(block),
-		};
+		return this;
 	}
 	getKeyFromHash(key) {
 		return key.subarray(0, 32);
 	}
 	getEncodedKey(key) {
-		if (isString(key) && key.length === 32) {
+		if (isString(key)) {
 			return key;
 		}
-		return toBase64Url(this.getKeyFromHash(key));
-	}
-	getDBKey(source) {
-		if (isPlainObject(source) && isBuffer(source.hash)) {
-			return this.getKeyFromHash(source.hash);
-		}
-		if (isBuffer(source)) {
-			return this.getKeyFromHash(source);
-		}
-		return;
-	}
-	getCacheKey(source) {
-		if (isString(source)) {
-			return source;
-		}
-		if (isPlainObject(source) && isBuffer(source.hash)) {
-			return this.getEncodedKey(source.hash);
-		}
-		if (isBuffer(source)) {
-			if (source.length === 64) {
-				return this.getEncodedKey(source);
-			} else if (source.length === 32) {
-				return toBase64Url(source);
-			}
-			return;
-		}
-		return;
+		return toBase64Url(key);
 	}
 	/**
 	 * Get a Viat block by 64-byte key Buffer (pass key as first arg).
@@ -112,17 +66,16 @@ export class UnifiedStorage {
 	 */
 	// TODO: GET BY BUFFER OR STRING
 	async get(source) {
-		const key = this.resolveKeys(source);
+		const key = this.getKeyFromHash(source);
+		console.log(key);
 		if (!key) {
 			return;
 		}
-		const {
-			dbKey,
-			cacheKey,
-		} = key;
+		const cacheKey = this.getEncodedKey(key);
 		// Try cache first
-		const cached = this.cache.get(cacheKey);
-		if (isPlainObject(cached)) {
+		const cached = await this.cache.get(cacheKey);
+		console.log('CACHED', cacheKey, cached);
+		if (cached) {
 			return cached;
 		}
 		// Try DB
@@ -130,11 +83,11 @@ export class UnifiedStorage {
 			return;
 		}
 		try {
-			const dbValue = await this.db.get(dbKey);
+			const dbValue = await this.db.get(key);
 			if (!isPlainObject(dbValue)) {
 				return;
 			}
-			this.cache.set(cacheKey, dbValue);
+			await this.cache.set(cacheKey, dbValue);
 			return dbValue;
 		} catch (e) {
 			return;
@@ -147,12 +100,11 @@ export class UnifiedStorage {
 	 * @param {object} block
 	 * @param {Buffer} [key]
 	 */
-	set(block, key) {
-		const resolvedKey = key || this.getCacheKey(block);
-		if (!resolvedKey) {
-			return;
-		}
-		this.cache.set(resolvedKey, block);
+	async set(key, value) {
+		const resolvedKey = this.getKeyFromHash(key);
+		const cacheKey = this.getEncodedKey(resolvedKey);
+		console.log('SET KEY', cacheKey, value);
+		console.log('SET RESULT', await this.cache.set(cacheKey, value));
 		return;
 	}
 	/**
@@ -162,21 +114,18 @@ export class UnifiedStorage {
 	 * @param {object} block
 	 * @param {Buffer} [key]
 	 */
-	async save(block, key) {
-		const resolved = key || this.resolveKeys(block, key);
-		if (!resolved) {
+	async save(key, block) {
+		const resolvedKey = this.getKeyFromHash(key);
+		if (!resolvedKey) {
 			return;
 		}
-		const {
-			dbKey,
-			cacheKey,
-		} = resolved;
 		if (!this.db) {
 			return;
 		}
+		const cacheKey = this.getEncodedKey(resolvedKey);
 		try {
-			await this.db.put(dbKey, block);
-			this.cache.set(cacheKey, block);
+			await this.db.put(resolvedKey, block);
+			await this.cache.set(cacheKey, block);
 		} catch (e) {
 			return;
 		}
@@ -193,17 +142,18 @@ export class UnifiedStorage {
 	 * @param {string|Buffer|object} identifier
 	 */
 	async delete(source) {
-		const key = this.resolveKeys(source);
+		const resolvedKey = this.getKeyFromHash(source);
+		const cacheKey = this.getEncodedKey(resolvedKey);
 		// Remove from cache
 		try {
-			await this.cache.delete(key.cacheKey);
+			await this.cache.delete(cacheKey);
 		} catch {}
 		// Remove from DB if available
 		if (!this.db) {
 			return;
 		}
 		try {
-			await this.db.remove(key.dbKey);
+			await this.db.remove(resolvedKey);
 		} catch {}
 		return;
 	}
@@ -220,6 +170,29 @@ export class UnifiedStorage {
 		}
 		await this.cache.clear();
 	}
-	maxCacheSize = 5000;
 	dbName = 'viat';
+	dbPath = defaultPath;
+	// TODO: Cache config for testing only change for production
+	cacheConfig = {
+		max: 10000,
+		ttl: 1000 * 60 * 60,
+		ttlResolution: 1000 * 60,
+		updateAgeOnGet: true,
+		updateAgeOnHas: true,
+		allowStale: true,
+	};
 }
+export async function dbStorage(...args) {
+	const source = await (new DBStorage(...args));
+	return source;
+}
+export default DBStorage;
+// const exampleStorage = await dbStorage();
+// console.log('UNIFIED STORAGE', exampleStorage.db);
+// const exampleKey = randomBuffer(64);
+// const exampleValue = 'example-VALUE111';
+// console.log(exampleKey.subarray(0, 32).length, exampleKey.length);
+// console.log(await exampleStorage.set(exampleKey, exampleValue));
+// console.log(await exampleStorage.cache.set(exampleKey, exampleValue));
+// console.log('manual get', await exampleStorage.cache.get(exampleKey));
+// console.log(await exampleStorage.get(exampleKey));

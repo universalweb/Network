@@ -46,6 +46,10 @@ export class Block {
 		await this.setHash();
 		return this;
 	}
+	setFilesystem(typeName) {
+		this.filesystem = this.filesystemConfig[typeName];
+		return this;
+	}
 	version = version;
 	typeName = 'generic';
 	blockType = blockTypes.generic;
@@ -73,6 +77,9 @@ export class Block {
 	async getDirectory() {
 		return this.filesystem.getFullPath(await this.getHash());
 	}
+	async getPath() {
+		return this.getFile();
+	}
 	async getFile() {
 		return this.filesystem.getFile(await this.getHash());
 	}
@@ -98,6 +105,9 @@ export class Block {
 		}
 		console.log('Compact Size:', compactSize);
 		return size;
+	}
+	async getAddressType() {
+		return this.cipherSuite.addressType;
 	}
 	filesystemConfig = filesystemTypes.generic;
 }

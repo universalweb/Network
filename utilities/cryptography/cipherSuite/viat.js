@@ -11,6 +11,7 @@ export const viatCipherSuite = {
 	name: 'viatCipherSuite',
 	alias: 'dilithium65_sphincs192',
 	description: 'Dilithium65, SPHINCS+192s, ed25519, Kyber, x25519, SHAKE256.',
+	addressType: 'hybrid',
 	id: 1,
 	viatCipherID: 1,
 	preferred: true,

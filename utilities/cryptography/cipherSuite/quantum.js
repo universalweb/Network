@@ -8,7 +8,8 @@ import xChaCha from '../cipher/xChaCha.js';
 export const quantumCipherSuite = {
 	name: 'quantumCipherSuite',
 	alias: 'dilithium65_sphincs192',
-	description: 'ed25519, x25519, SHAKE256',
+	description: 'dilithium, kyber, SHAKE256',
+	addressType: 'quantum',
 	id: 2,
 	viatCipherID: 2,
 	preferred: true,

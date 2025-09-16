@@ -9,6 +9,7 @@ export const legacyCipherSuite = {
 	name: 'legacyCipherSuite',
 	alias: 'dilithium65_sphincs192',
 	description: 'ed25519, x25519, SHAKE256',
+	addressType: 'legacy',
 	id: 0,
 	viatCipherID: 0,
 	preferred: true,

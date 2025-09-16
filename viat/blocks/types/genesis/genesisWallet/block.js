@@ -36,6 +36,21 @@ export class GenesisWalletBlock extends Block {
 		outputLength: hashSizes.genesis,
 	};
 	typeName = typeNames.genesisWallet;
+	async getDirectory() {
+		return '/';
+	}
+	async getPath() {
+		return `/${genericFilenames.genesisWallet}`;
+	}
+	async getFile() {
+		return `/${genericFilenames.genesisWallet}`;
+	}
+	async getURL() {
+		return '/';
+	}
+	async getFileURL() {
+		return `/${genericFilenames.genesisWallet}`;
+	}
 }
 export async function genesisWalletBlock(data, config) {
 	const block = await (new GenesisWalletBlock(data, config));
@@ -46,8 +61,9 @@ export default genesisWalletBlock;
 // await exampleBlock.finalize();
 // await exampleBlock.setHashXOF();
 // console.log('Genesis Block', exampleBlock.block);
+// console.log(exampleBlock.filesystem);
 // console.log('Genesis Block Hash', exampleBlock.block.hash.length);
 // console.log('Genesis Block Binary Export', (await exampleBlock.exportBinary()).length);
-// console.log(exampleBlock.getPath());
+// console.log(await exampleBlock.getPath());
 // console.log(exampleBlock.getDirectory());
 // console.log('Block Type', exampleBlock.blockType);
