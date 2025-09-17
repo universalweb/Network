@@ -12,10 +12,6 @@ export class Wallet extends CryptoID {
 		await this.initialize(config, optionalArg);
 		return this;
 	}
-	async getPath() {
-		const address = await this.getAddress();
-		// return getWalletPath(address);
-	}
 	setFilesystem(filesystem) {
 		this.filesystem = filesystem;
 		return this;

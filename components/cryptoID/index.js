@@ -111,6 +111,9 @@ export class CryptoID {
 		if (!this.excludeKeyExchange) {
 			this.keyExchangeKeypair = await this.cipherSuite.keyExchange.keyExchangeKeypair();
 		}
+		if (this.cipherSuite.backupSignature) {
+			this.backupSignature = await this.cipherSuite.backupSignature.signatureKeypair();
+		}
 		options?.type && (this.type = options.type);
 		if (options?.networkName) {
 			this.networkName = options.networkName;
@@ -135,6 +138,7 @@ export class CryptoID {
 			core: {
 				keyExchangeKeypair,
 				signatureKeypair,
+				backupSignature,
 			},
 			networkName,
 			cipherSuiteName,
@@ -144,6 +148,7 @@ export class CryptoID {
 		}
 		this.keyExchangeKeypair = keyExchangeKeypair;
 		this.signatureKeypair = signatureKeypair;
+		this.backupSignature = backupSignature;
 		if (hasValue(cipherSuiteID)) {
 			this.cipherSuiteID = cipherSuiteID;
 		}
@@ -162,6 +167,11 @@ export class CryptoID {
 		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
 		return signatureKeypair;
 	}
+	async exportBackupSignatureKeypair() {
+		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
+		const backupSignature = await this.cipherSuite.backupSignature.exportKeypair(this.backupSignature);
+		return backupSignature;
+	}
 	async exportExchangeKeypair() {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
 		if (this.keyExchangeKeypair) {
@@ -173,11 +183,15 @@ export class CryptoID {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
 		const keyExchangeKeypair = await this.exportExchangeKeypair();
 		const signatureKeypair = await this.exportSignatureKeypair();
+		const backupSignature = await this.exportBackupSignatureKeypair();
 		const target = {
 			signatureKeypair,
 		};
 		if (keyExchangeKeypair) {
 			target.keyExchangeKeypair = keyExchangeKeypair;
+		}
+		if (backupSignature) {
+			target.backupSignature = backupSignature;
 		}
 		return target;
 	}
@@ -185,11 +199,15 @@ export class CryptoID {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
 		const { publicKey: signaturePublicKey } = await this.exportSignatureKeypair();
 		const { publicKey: keyExchangePublicKey } = await this.exportExchangeKeypair();
+		const { publicKey: backupSignaturePublicKey } = await this.exportBackupSignatureKeypair();
 		const target = {
 			signaturePublicKey,
 		};
 		if (keyExchangePublicKey) {
 			target.keyExchangePublicKey = keyExchangePublicKey;
+		}
+		if (backupSignaturePublicKey) {
+			target.backupSignaturePublicKey = backupSignaturePublicKey;
 		}
 		return target;
 	}
@@ -202,6 +220,15 @@ export class CryptoID {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
 		const signatureKeypair = await this.exportSignatureKeypair();
 		return signatureKeypair.privateKey;
+	}
+	async exportBackupSignaturePublicKey() {
+		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
+		const backupSignature = await this.exportBackupSignatureKeypair();
+		return backupSignature.publicKey;
+	}
+	async expportBackupSignaturePrivateKey() {
+		const backupSignature = await this.exportBackupSignatureKeypair();
+		return backupSignature.privateKey;
 	}
 	async exportDefaultObject() {
 		const {
@@ -294,7 +321,7 @@ export class CryptoID {
 	}
 	async signPartial(message) {
 		if (!this.cipherSuite.signature.signPartial) {
-			return this.cipherSuite.signature.sign(message, this.signatureKeypair);
+			return this.sign(message);
 		}
 		return this.cipherSuite.signature.signPartial(message, this.signatureKeypair);
 	}
@@ -330,6 +357,10 @@ export class CryptoID {
 		const address = await this.getAddress();
 		return (encoding) ? address.toString(encoding) : toBase64Url(address);
 	}
+	async getBackupSignatureHash() {
+		const publicKey = await this.exportBackupSignaturePublicKey();
+		return this.cipherSuite.hash.hash256(publicKey);
+	}
 	setAlias(value) {
 		this.alias = value;
 	}
@@ -346,6 +377,7 @@ export default cryptoID;
 // });
 // console.log('exportSignatureKeypair', await exampleCryptoIDExample.exportSignatureKeypair());
 // console.log('exportObject', await exampleCryptoIDExample.exportObject());
+// console.log((await exampleCryptoIDExample.getBackupSignatureHash()).length);
 // const encryptionPasswordExample = 'password';
 // console.log(await exampleCryptoIDExample.exportBinary());
 // console.log((await exampleCryptoIDExample.getAddress()).length);

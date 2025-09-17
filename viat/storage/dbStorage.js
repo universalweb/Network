@@ -114,7 +114,7 @@ export class DBStorage {
 	 * @param {object} block
 	 * @param {Buffer} [key]
 	 */
-	async save(key, block) {
+	async save(key, source) {
 		const resolvedKey = this.getKeyFromHash(key);
 		if (!resolvedKey) {
 			return;
@@ -124,8 +124,8 @@ export class DBStorage {
 		}
 		const cacheKey = this.getEncodedKey(resolvedKey);
 		try {
-			await this.db.put(resolvedKey, block);
-			await this.cache.set(cacheKey, block);
+			await this.db.put(resolvedKey, source);
+			await this.cache.set(cacheKey, source);
 		} catch (e) {
 			return;
 		}

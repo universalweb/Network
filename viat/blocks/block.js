@@ -57,7 +57,7 @@ export class Block {
 	filename = genericFilenames.generic;
 	cipherSuite = viatCipherSuite;
 	nonceSize = nonceSizes.generic;
-	hashSize = hashSizes.generic;
+	hashSize = hashSizes.compact;
 	hashXOFConfig = hash512SettingsCrypto;
 	block = {
 		data: {
@@ -75,13 +75,13 @@ export class Block {
 		return this.filesystem.uniquePath.encode(hash || await this.getHash());
 	}
 	async getDirectory() {
-		return this.filesystem.getFullPath(await this.getHash());
+		return this.filesystemConfig.getBlockPath(this);
 	}
 	async getPath() {
 		return this.getFile();
 	}
 	async getFile() {
-		return this.filesystem.getFile(await this.getHash());
+		return this.filesystemConfig.getBlockFile(this);
 	}
 	async getURL() {
 		return this.filesystem.getURL(await this.getHash());
@@ -95,13 +95,13 @@ export class Block {
 		const size = binary.length;
 		let compactSize = size;
 		console.log('Expanded Size:', size);
-		if (data.hash) {
-			compactSize -= data.hash.length;
-			console.log('Compact Without hash Size:', compactSize);
-		}
 		if (data.signature) {
 			compactSize -= data.signature.length;
 			console.log('Compact Without signature Size:', compactSize);
+		}
+		if (data.hash) {
+			compactSize -= data.hash.length;
+			console.log('Compact Without hash Size:', compactSize);
 		}
 		console.log('Compact Size:', compactSize);
 		return size;

@@ -1,5 +1,6 @@
 import { genesisBlock } from '#blocks/genesis/root/block';
 import { genesisWalletBlock } from '#blocks/genesis/genesisWallet/block';
+import { hash256 } from '#crypto/hash/shake256.js';
 import { loadBlock } from '#viat/blocks/utils';
 const methods = {
 	async createGenesisBlock(data) {

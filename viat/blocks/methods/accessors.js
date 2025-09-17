@@ -49,6 +49,12 @@ const methods = {
 	getSender() {
 		return this.getCore('sender');
 	},
+	getTransaction() {
+		return this.getCore('transaction');
+	},
+	getAddress() {
+		return this.getCore('address');
+	},
 	getSenderString() {
 		return base64URLString(this.getCore('sender'));
 	},

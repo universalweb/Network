@@ -9,14 +9,18 @@ export const blockTypes = {
 	genesis: 6,
 	genesisWallet: 7,
 	genesisAudit: 8,
+	walletAnchor: 9,
+	receiptAnchor: 10,
 };
 export const hashSizes = {
+	compact: 32,
 	default: 64,
 	genesis: 256,
 	quantum: 64,
 };
 export const nonceSizes = {
 	default: 16,
+	mid: 24,
 	genesis: 64,
 	quantum: 32,
 };

@@ -1,6 +1,5 @@
 import { Superstructure, superstructure } from './superstructure/index.js';
 import { Wallet, wallet } from './wallet/wallet.js';
-import { transactionBlock } from './blocks/transaction/block.js';
 export class VIAT {
 	constructor(config) {
 		const {

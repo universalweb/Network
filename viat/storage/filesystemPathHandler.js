@@ -39,7 +39,7 @@ export function createSlaveBlockPathConfig(config) {
 			encoding: encodingTypes.hex,
 		},
 		uniquePath: {
-			startIndex: 64 - 12,
+			startIndex: 32 - 12,
 			encoding: encodingTypes.base38,
 		},
 	});
@@ -142,24 +142,19 @@ class FilesystemPathHandler {
 	async getBlockPath(source) {
 		switch (source.blockType) {
 			case blockTypes.transaction: {
-				this.getTransaction(await source.getHash(), await source.getSender());
-				break;
+				return this.getTransactionDirectory(await source.getHash(), await source.getSender());
 			}
 			case blockTypes.receipt: {
-				this.getReceipt(await source.getHash(), await source.getReceiver());
-				break;
+				return this.getReceiptDirectory(await source.getTransaction(), await source.getReceiver());
 			}
 			case blockTypes.wallet: {
-				this.getWallet(await source.getHash());
-				break;
+				return this.getWallet(await source.getAddress());
 			}
 			case blockTypes.hybridWallet: {
-				this.getWallet(await source.getHash());
-				break;
+				return this.getWallet(await source.getAddress());
 			}
 			case blockTypes.quantumWallet: {
-				this.getWallet(await source.getHash());
-				break;
+				return this.getWallet(await source.getAddress());
 			}
 			default: {
 				break;
@@ -167,7 +162,20 @@ class FilesystemPathHandler {
 		}
 	}
 	async getBlockFile(source) {
-		return this.getFile(await source.getType(), await source.getHash());
+		switch (source.blockType) {
+			case blockTypes.transaction:
+				return this.getTransactionBlock(await source.getHash(), await source.getSender());
+			case blockTypes.receipt:
+				return this.getReceiptBlock(await source.getTransaction(), await source.getReceiver());
+			case blockTypes.wallet:
+				return this.getWallet(await source.getAddress());
+			case blockTypes.quantumWallet:
+				return this.getWallet(await source.getAddress());
+			case blockTypes.hybridWallet:
+				return this.getWallet(await source.getAddress());
+			default:
+				break;
+		}
 	}
 	async getFile(blockType, hash) {
 		// TODO: USE INTS

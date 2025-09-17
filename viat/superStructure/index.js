@@ -4,8 +4,10 @@ import {
 	currentPath,
 	eachAsyncArray,
 	extendClass,
+	isBuffer,
 } from '@universalweb/utilitylib';
 import { getFiles, readStructured } from '#utilities/file';
+import { blockTypes } from '../blocks/defaults.js';
 import { createViatFilesystem } from './createFilesystem.js';
 import { decode } from '#utilities/serialize';
 import filesystemMethods from './methods/filesystem.js';
@@ -18,7 +20,9 @@ import { getHomeDirectory } from '#utilities/directory';
 import { loadBlock } from '#viat/blocks/utils';
 import logMethods from '#utilities/logs/classLogMethods';
 import path from 'path';
+import { toBase64 } from '#crypto/utils.js';
 import { transactionBlock } from '#blocks/transactions/transaction/block';
+import viat from '#viat/index';
 import viatDefaults from '#viat/defaults';
 import walletBlock from '#blocks/wallet/block';
 export class Superstructure {
@@ -55,19 +59,17 @@ export class Superstructure {
 	viatDefaults = viatDefaults;
 	async createCoreNetworkWallets() {
 		this.teamWallet = await wallet();
+		// this.reserveWallet = await wallet(null, {
+		// 	cipherSuiteName: 'hybrid',
+		// });
 		this.reserveWallet = await wallet();
 		this.genesisWallet = await wallet();
 	}
-	async createTransaction(walletArg, amount, receiver, mana = 1n) {
+	async createTransaction(core, walletArg) {
 		const sender = (walletArg.getAddress) ? await walletArg.getAddress() : walletArg;
 		const txBlock = await transactionBlock({
 			data: {
-				core: {
-					amount,
-					receiver,
-					sender,
-					mana,
-				},
+				core,
 			},
 		});
 		await txBlock.finalize();
@@ -75,10 +77,15 @@ export class Superstructure {
 			await txBlock.sign(walletArg);
 		}
 		await txBlock.setReceipt();
-		// await txBlock.receipt.finalize();
-		// await txBlock.receipt.sign(this);
-		// console.log('Transaction Block:', txBlock.block);
+		await txBlock.receipt.finalize();
 		return txBlock;
+	}
+	async submitTransaction(txBlock) {
+		const receipt = txBlock.receipt;
+		txBlock.receipt = null;
+		await this.setToAccount(txBlock);
+		await this.setToAccount(receipt);
+		return this;
 	}
 	async getAddressTransactions(address) {
 		const transactionPaths = await this.getAddressTransactionPaths(address);
@@ -129,6 +136,118 @@ export class Superstructure {
 		const data = await loadBlock(filePath);
 		return data;
 	}
+	mempool = {
+		cache: {
+			transactions: new Map(),
+			receipts: new Map(),
+			wallets: new Map(),
+			hybridWallets: new Map(),
+			quantumWallets: new Map(),
+		},
+		accounts: new Map(),
+	};
+	async getAccount(address) {
+		const keyString = (isBuffer(address)) ? toBase64(address) : address;
+		const account = this.mempool.accounts.get(keyString);
+		if (account) {
+			return account;
+		}
+		const accountObject = {
+			transactions: new Map(),
+			receipts: new Map(),
+		};
+		this.mempool.accounts.set(keyString, accountObject);
+		return accountObject;
+	}
+	async setToAccount(block) {
+		const { blockType } = block;
+		if (blockType === blockTypes.transaction) {
+			const account = await this.getAccount(block.getCore('sender'));
+			account.transactions.set(toBase64(await block.getHash()), block);
+		} else if (blockType === blockTypes.receipt) {
+			const account = await this.getAccount(block.getCore('receiver'));
+			account.receipts.set(toBase64(await block.getTransaction()), block);
+		} else if (blockType === blockTypes.wallet || blockType === blockTypes.hybridWallet || blockType === blockTypes.quantumWallet) {
+			const account = await this.getAccount(await block.getAddress());
+			account.wallet = block;
+		}
+	}
+	async sortIntoMempool(block) {
+		switch (block.blockType) {
+			case blockTypes.transaction: {
+				return this.setToAccount(block);
+			}
+			case blockTypes.receipt: {
+				return this.setToAccount(block);
+			}
+			case blockTypes.wallet: {
+				return this.setToAccount(block);
+			}
+			case blockTypes.hybridWallet: {
+				return this.setToAccount(block);
+			}
+			case blockTypes.quantumWallet: {
+				return this.setToAccount(block);
+			}
+			default: {
+				break;
+			}
+		}
+	}
+	async setMempool(key, block, target) {
+		const keyString = (isBuffer(key)) ? toBase64(key) : key;
+		await target.set(keyString, block);
+		return this;
+	}
+	async getMempool(key, target) {
+		const keyString = (isBuffer(key)) ? toBase64(key) : key;
+		return target.get(keyString);
+	}
+	async findInCache(key, blockType) {
+		const keyString = (isBuffer(key)) ? toBase64(key) : key;
+		switch (blockType) {
+			case blockTypes.transaction: {
+				return this.getMempool(keyString, this.mempool.cache.transactions);
+			}
+			case blockTypes.receipt: {
+				return this.getMempool(keyString, this.mempool.cache.receipts);
+			}
+			case blockTypes.wallet: {
+				return this.getMempool(keyString, this.mempool.cache.wallets);
+			}
+			case blockTypes.hybridWallet: {
+				return this.getMempool(keyString, this.mempool.cache.hybridWallets);
+			}
+			case blockTypes.quantumWallet: {
+				return this.getMempool(keyString, this.mempool.cache.quantumWallets);
+			}
+			default: {
+				break;
+			}
+		}
+	}
+	async saveToMempool(block) {
+		switch (block.blockType) {
+			case blockTypes.transaction: {
+				return this.setMempool(await block.getHash(), block, this.mempool.transactions);
+			}
+			case blockTypes.receipt: {
+				return this.setMempool(await block.getTransaction(), block, this.mempool.receipts);
+			}
+			case blockTypes.wallet: {
+				return this.setMempool(await block.getAddress(), block, this.mempool.wallets);
+			}
+			case blockTypes.hybridWallet: {
+				return this.setMempool(await block.getAddress(), block, this.mempool.hybridWallets);
+			}
+			case blockTypes.quantumWallet: {
+				return this.setMempool(await block.getAddress(), block, this.mempool.quantumWallets);
+			}
+			default: {
+				break;
+			}
+		}
+	}
 	filesystem = filesystemTypes.generic;
 	networkName = 'mainnet';
 }
@@ -144,7 +263,9 @@ export default superstructure;
 // 	networkName: 'mainnet',
 // });
 // console.log('VIAT NETWORK', viatNetwork);
-// await viatNetwork.createGenesisBlock();
-// await viatNetwork.createGenesisWalletBlock();
+// await viatNetwork.createNetwork();
+// console.log(viatNetwork.teamWallet);
+// console.log(viatNetwork.genesisWalletBlock.block);
+// console.log((await viatNetwork.genesisWalletBlock.exportBinary()).length);
 // console.log('VIAT NETWORK', await viatNetwork.getFullPath());
 // console.log('VIAT SAVE', await viatNetwork.createFilesystem());
