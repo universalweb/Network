@@ -38,13 +38,18 @@ const txCore = {
 };
 async function exampleTX() {
 	const txBlock = await viatNetwork.createTransaction(txCore, amy);
-	// await viatNetwork.saveBlock(txBlock);
+	await viatNetwork.saveBlock(txBlock);
+	// await viatNetwork.saveBlock(txBlock.receipt);
 	return txBlock;
 }
+// const exmplTX = await exampleTX();
+// console.log('txblock', exmplTX.block);
+// console.log('txblock', await exmplTX.getPath());
+// console.log('txblock', await exmplTX.receipt.getPath());
 // await exampleTX();
-await viatNetwork.submitTransaction(await exampleTX());
-console.log('mempool', viatNetwork.mempool);
-// await loop(exampleTX);
+// await viatNetwork.submitTransaction(await exampleTX());
+// console.log('mempool', viatNetwork.mempool);
+await loop(exampleTX);
 // const exmplTX = await exampleTX();
 // console.log('txblock', exmplTX.block);
 // console.log('txblock', await exmplTX.getPath());

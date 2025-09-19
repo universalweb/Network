@@ -1,10 +1,10 @@
 // Various optimization strategies could be used but for now will be kept this way to get a full feel of each event
-const sol = 'SOL';
+const txs = 'TXs & Receipts';
 const amount = 60000;
 const c = console.log;
-// console.log = () => {};
+console.log = () => {};
 function logit(times) {
-	c(sol, amount, Date.now() - times);
+	c(txs, amount, Date.now() - times);
 }
 export async function loop(func) {
 	// let count = 0;
@@ -18,3 +18,4 @@ export async function loop(func) {
 		}
 	}
 }
+// 10K - 50K Files/Folders

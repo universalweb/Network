@@ -29,6 +29,14 @@ node_modules
 ############
 tests/*
 
+# VIAT SITE #
+############
+viat/centralSite/*
+
+# DBs #
+############
+*.mdb
+
 # Testing #
 ############
 tempCodeRunnerFile.js

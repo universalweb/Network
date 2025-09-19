@@ -76,8 +76,8 @@ export class Superstructure {
 		if (walletArg.getAddress) {
 			await txBlock.sign(walletArg);
 		}
-		await txBlock.setReceipt();
-		await txBlock.receipt.finalize();
+		// await txBlock.setReceipt();
+		// await txBlock.receipt.finalize();
 		return txBlock;
 	}
 	async submitTransaction(txBlock) {
