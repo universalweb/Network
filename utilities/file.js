@@ -127,24 +127,6 @@ export function getDirectoryStructure(folderPath) {
 	});
 	return tree;
 }
-export async function ensureDirLegacy(folderPath) {
-	const directories = normalize(folderPath).split(path.sep);
-	let currentPath = `${path.sep}`;
-	for (const dir of directories) {
-		if (dir.length) {
-			currentPath = path.join(currentPath, dir);
-			try {
-				await stat(currentPath);
-			} catch {
-				try {
-					await mkdir(currentPath);
-				} catch {
-					console.log('Error creating folder', currentPath);
-				}
-			}
-		}
-	}
-}
 export async function ensureDirectoryPath(filePath) {
 	const pathNormalized = normalize(filePath);
 	return fsExtra.ensureDir(path.dirname(pathNormalized));
