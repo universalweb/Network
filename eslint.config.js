@@ -12,6 +12,7 @@ const customGlobals = {
 	client: 'off',
 	clients: 'off',
 	status: 'off',
+	VIAT: 'off',
 };
 function addGlobals(keysObject) {
 	const keys = Object.keys(keysObject);
@@ -490,12 +491,7 @@ export default [
 			'no-undef': 'error',
 			'no-undef-init': 'error',
 			'no-undefined': 'off',
-			'no-underscore-dangle': [
-				'error',
-				{
-					allow: ['__dirname', '__filename'],
-				},
-			],
+			'no-underscore-dangle': 'off',
 			'no-unexpected-multiline': 'error',
 			'no-unmodified-loop-condition': 'error',
 			'no-unneeded-ternary': 'error',

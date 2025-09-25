@@ -19,6 +19,7 @@ import { read, readStructured, write } from '#utilities/file';
 import { cryptoIDVersion } from '#components/cryptoID/defaults';
 import dilithium from '#crypto/signature/dilithium65.js';
 import ed25519 from '#crypto/signature/ed25519.js';
+import { generateAddress } from '#viat/wallet/generateAddress';
 import logMethods from '#utilities/logs/classLogMethods';
 import path from 'node:path';
 import { toBase64Url } from '#crypto/utils.js';
@@ -336,18 +337,7 @@ export class CryptoID {
 	async generateAddress() {
 		const publicKey = await this.exportPublicKey();
 		const publicKeyCombined = (isBuffer(publicKey)) ? publicKey : await encodeStrict(publicKey);
-		const domained = await encodeStrict({
-			cipherSuiteID: this.cipherSuiteID,
-			publicKey,
-		});
-		if (this.cipherSuite.walletSize === 20) {
-			this.address = await this.cipherSuite.hash.hashLegacyAddress(domained);
-		} else if (this.cipherSuite.walletSize === 32) {
-			this.address = await this.cipherSuite.hash.hash256(domained);
-		} else if (this.cipherSuite.walletSize === 64) {
-			this.address = await this.cipherSuite.hash.hash512(domained);
-		}
-		return this.address;
+		return generateAddress(publicKeyCombined, this.cipherSuite.id);
 	}
 	async getAddress() {
 		const address = this.address || await this.generateAddress();

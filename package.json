@@ -16,14 +16,23 @@
 	"dependencies": {
 		"@babel/eslint-parser": "^7.28.4",
 		"@cldmv/sizeofvar": "^1.0.4",
+		"@noble/curves": "^2.0.1",
+		"@noble/hashes": "^2.0.1",
+		"@rollup/plugin-replace": "^6.0.2",
+		"@rollup/plugin-terser": "^0.4.4",
+		"@rollup/rollup-darwin-arm64": "^4.52.2",
 		"@universalweb/utilitylib": "github:universalweb/utilitylib",
 		"boxen": "^8.0.1",
+		"buffer": "^6.0.3",
 		"cbor-x": "^1.6.0",
 		"colorette": "^2.0.20",
 		"commander": "^14.0.1",
+		"cors": "^2.8.5",
 		"directory-tree": "^3.5.2",
 		"du": "^1.0.0",
 		"electron": "latest",
+		"esbuild": "^0.25.10",
+		"express": "^5.1.0",
 		"fs-extra": "^11.3.2",
 		"get-folder-size": "^5.0.0",
 		"hash-wasm": "^4.12.0",
@@ -34,12 +43,14 @@
 		"libsodium-wrappers": "^0.7.15",
 		"lmdb": "^3.4.2",
 		"lru-cache": "^11.2.1",
+		"mongodb": "^6.20.0",
 		"node-seal": "^6.0.0",
 		"node-watch": "^0.7.4",
 		"nodemon": "^3.1.10",
 		"os-utils": "^0.0.14",
 		"pqclean": "latest",
 		"qrcode": "^1.5.4",
+		"rollup": "^4.52.2",
 		"sodium-native": "^5.0.8"
 	},
 	"description": "UW & VIAT modules: Client, Server, VIAT, DIS, Browser, Crypto, Wallets, Modules, & certificates.",
@@ -106,6 +117,8 @@
 		"electron": "electron .",
 		"pack": "electron-builder --dir",
 		"server": "nodemon ./examples/serverApp/index.js --watch ./udsp/ --watch ./examples/serverApp/  --watch ./utilities/",
+		"centralSite": "nodemon ./viat/centralSite/server/index.js --watch ./viat/centralSite/server/",
+		"build:client": "pnpm exec rollup -c",
 		"simulate": "nodemon ./examples/simulate.js --watch ./client/ --watch ./server/ --watch ./examples/simulate.js --watch utilities/",
 		"connectRequest": "nodemon ./examples/client/connectRequest.js --watch ./udsp/ --watch ./examples/client/connectRequest.js --watch ./utilities/ --delay 3",
 		"connectRequestHybridKyber": "nodemon ./examples/client/connectRequestHybridKyber.js --watch ./udsp/ --watch ./examples/client/connectRequestHybridKyber.js --watch ./utilities/ --delay 3",
@@ -131,6 +144,9 @@
 	"devDependencies": {
 		"@babel/core": "^7.28.4",
 		"@babel/preset-env": "^7.28.3",
+		"@rollup/plugin-commonjs": "^28.0.6",
+		"@rollup/plugin-inject": "*",
+		"@rollup/plugin-node-resolve": "^16.0.1",
 		"@stylistic/eslint-plugin": "^5.3.1",
 		"auto-changelog": "^2.5.0",
 		"axios": "^1.12.2",
@@ -160,8 +176,12 @@
 			"os",
 			"sodium-native",
 			"node-seal",
-			"lru-cache"
+			"lru-cache",
+			"rollup",
+			"@rollup",
+			"esbuild",
+			"@noble"
 		]
 	},
-	"packageManager": "pnpm@10.17.0"
+	"packageManager": "pnpm@10.17.1"
 }

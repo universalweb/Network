@@ -1,17 +1,33 @@
-import ed25519 from '#crypto/signature/ed25519.js';
+import { hash256, hash512, hashLegacyAddress } from '#crypto/hash/shake256.js';
+import { bufferAlloc } from '#crypto/utils.js';
 import { encodeStrict } from '#utilities/serialize';
-import { hashLegacyAddress } from '#crypto/hash/shake256';
-export async function generateAddress(publicKey, type, version = 0) {
+import viat from '#crypto/cipherSuite/viat.js';
+import viatLegacy from '#crypto/cipherSuite/legacy.js';
+import viatQuantum from '#crypto/cipherSuite/quantum.js';
+const walletCipherSuites = {
+	hybrid: viat,
+	quantum: viatQuantum,
+	legacy: viatLegacy,
+};
+export async function generateAddress(publicKey, type = 0, version = 0) {
 	const domained = await encodeStrict({
 		type,
 		version,
 		publicKey,
 	});
-	if (this.cipherSuite.walletSize === 20) {
-		return this.cipherSuite.hash.hashLegacyAddress(domained);
-	} else if (this.cipherSuite.walletSize === 32) {
-		return this.cipherSuite.hash.hash256(domained);
-	} else if (this.cipherSuite.walletSize === 64) {
-		return this.cipherSuite.hash.hash512(domained);
+	if (viatLegacy.id === type) {
+		return hashLegacyAddress(domained);
+	} else if (viat.id === type) {
+		return hash256(domained);
+	} else if (viatQuantum.id === type) {
+		return hash512(domained);
 	}
+}
+export async function generateLegacyAddress(publicKey, version = 0) {
+	const domained = await encodeStrict({
+		type: viatLegacy.id,
+		version,
+		publicKey,
+	});
+	return hashLegacyAddress(domained);
 }
