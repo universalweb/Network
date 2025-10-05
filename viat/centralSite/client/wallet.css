@@ -1,0 +1,330 @@
+/* VIAT Wallet Styles - Modular CSS Architecture */
+
+/* Import Foundation Styles */
+@import url('css/root.css');
+@import url('css/section-divider.css');
+
+/* Import Component Styles */
+@import url('css/layout.css');
+@import url('css/buttons.css');
+@import url('css/forms.css');
+@import url('css/stats.css');
+@import url('css/activity.css');
+@import url('css/identity-bar.css');
+@import url('css/overlays.css');
+@import url('css/welcome.css');
+@import url('css/notifications.css');
+
+/* Import System Styles */
+@import url('css/animations.css');
+@import url('css/utilities.css');
+@import url('css/responsive.css');
+
+/* Component Integration Styles */
+
+/* Account Stats Visibility */
+.account-stats {
+  margin-bottom: 20px;
+  opacity: 0;
+  transition: all 2s;
+}
+
+.account-stats.is-visible {
+  opacity: 1;
+}
+
+/* Enhanced Button Effects */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Enhanced Modern UI Elements */
+.panel {
+  position: relative;
+}
+
+/* Modern Card Hover Effects */
+.tx-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.tx-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px 3px 8px 8px;
+  transition: left 0.6s ease;
+}
+
+.tx-item:hover::before {
+  left: 100%;
+}
+
+/* Transaction Center */
+.transaction-center {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.transaction-center .description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.transaction-actions-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.transaction-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stat-item {
+  color: var(--accent-alt);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Private Key Section */
+.private-key-section {
+  margin: 14px 0 6px;
+}
+
+#showPrivBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+#showPrivBtn:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Custom Tooltips for Buttons */
+.btn[title] {
+  position: relative;
+  overflow: visible;
+}
+
+.btn[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel);
+  border: 1px solid var(--accent-alt);
+  color: var(--accent-alt);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 99999;
+  pointer-events: none;
+  box-shadow: 0 0 12px rgba(0, 233, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: tooltipFadeIn 0.3s ease-out;
+  opacity: 1;
+  display: block;
+}
+
+.btn[title]:hover::before {
+  content: '';
+  position: absolute;
+  top: calc(100% + 44px * -1);
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--accent-alt);
+  z-index: 99998;
+  pointer-events: none;
+  animation: tooltipFadeIn 0.3s ease-out;
+  opacity: 1;
+  display: block;
+}
+
+/* Transaction Details Page Styles */
+.transaction-details {
+  margin-bottom: 20px;
+}
+
+.transaction-overview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.transaction-hash {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--accent-warm);
+  word-break: break-all;
+}
+
+.transaction-hash .label {
+  color: var(--muted);
+  margin-right: 8px;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-confirmed {
+  background: rgba(0, 255, 0, 0.1);
+  color: #00ff00;
+  border: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+.status-pending {
+  background: rgba(255, 165, 0, 0.1);
+  color: #ffa500;
+  border: 1px solid rgba(255, 165, 0, 0.3);
+}
+
+.status-failed {
+  background: rgba(255, 0, 0, 0.1);
+  color: #ff0000;
+  border: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+.transaction-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.detail-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.detail-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.detail-content {
+  margin-bottom: 16px;
+}
+
+.detail-label {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  word-break: break-all;
+}
+
+.address-value {
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+}
+
+.address-value:hover {
+  color: var(--accent-warm);
+}
+
+.transaction-signature {
+  margin-top: 20px;
+}
+
+.signature-header h3 {
+  margin: 0 0 16px 0;
+  color: #fff;
+}
+
+.signature-display {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.signature-display textarea {
+  width: 100%;
+  min-height: 80px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.signature-actions {
+  margin-top: 12px;
+  text-align: right;
+}
+
+.transaction-header {
+  margin-bottom: 20px;
+}

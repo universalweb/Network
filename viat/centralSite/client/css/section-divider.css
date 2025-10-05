@@ -1,0 +1,22 @@
+/* Section Dividers */
+.section-divider {
+	margin: 16px 0;
+	border: none;
+	background: transparent;
+	border-right: 1px solid var(--border);
+	border-left: 1px solid var(--border);
+}
+
+.section-divider-top {
+	border-bottom: none;
+	border-top: 1px solid var(--border);
+	margin-bottom: 16px;
+	margin-top: 0;
+}
+
+.section-divider-bottom {
+	border-top: none;
+	border-bottom: 1px solid var(--border);
+	margin-top: 16px;
+	margin-bottom: 0;
+}

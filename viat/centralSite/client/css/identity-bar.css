@@ -1,0 +1,175 @@
+/* Identity Bar */
+.identity-bar.is-hidden {
+  display: none;
+}
+
+.identity-bar {
+  position: fixed;
+  left: 50%;
+  bottom: max(env(safe-area-inset-bottom, 0px), 18px);
+  transform: translate(-50%, 0);
+  width: min(960px, calc(100% - 32px));
+  padding: 0;
+  background: transparent;
+  border: none;
+  overflow: visible;
+  z-index: 60;
+}
+
+.identity-bar-content {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  overflow: visible;
+}
+
+.dock {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	justify-content: center;
+	padding: 16px 20px;
+	background: linear-gradient(180deg,rgba(255, 255, 255, 0.01) 0%, rgba(0, 0, 0, .1) 100%);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: var(--radius-lg);
+	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2), inset 0px 0px 5px 1px rgba(255, 255, 255, 0.05);
+	backdrop-filter: blur(3px);
+	-webkit-backdrop-filter: blur(3px);
+	width: fit-content;
+	overflow: visible;
+	position: relative;
+	min-height: 40px;
+}
+
+.identity-section {}
+
+.identity-section .address {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: clamp(14ch, 20vw, 24ch);
+  overflow: visible;
+  position: relative;
+}
+
+.identity-section .address .address-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identity-actions {
+}
+
+#showKeysBtn:not(:disabled) {
+	color: #fff;
+	border-color: var(--accent-red);
+  padding: 12px 5px;
+  border-radius: 100px;
+  
+}
+
+#showKeysBtn:not(:disabled):hover,
+#showKeysBtn:not(:disabled):focus-visible,
+#showKeysBtn:not(:disabled):active {
+  background: var(--accent-red);
+  color: var(--text-inverse);
+  border-color: var(--accent-red);
+  box-shadow: 0 0 0 2px rgba(255, 35, 72, 0.24);
+  outline-color: var(--accent-red);
+}
+
+.identity-actions .btn.is-hidden {
+  display: none;
+}
+
+.identity-actions .btn {
+  white-space: nowrap;
+}
+
+.identity-bar-enter {
+  animation: identityBarReveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.control-reveal {
+  animation: identityControlReveal 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Address Display */
+.address {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	background: rgba(0, 0, 0, 0.5);
+	border: 1px solid rgba(94, 129, 172, 0.3);
+	border-radius: 8px;
+	font-family: var(--mono);
+	font-size: 13px;
+	color: var(--text);
+	transition: all 0.3s ease;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.address:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.15);
+}
+
+.clickable-address {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: visible;
+}
+
+.clickable-address:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(79, 172, 254, 0.2);
+}
+
+/* Address Tooltip */
+.clickable-address[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: calc(100% + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel);
+  border: 1px solid var(--accent-alt);
+  color: var(--accent-alt);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 99999;
+  pointer-events: none;
+  box-shadow: 0 0 12px rgba(0, 233, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: tooltipFadeIn 0.3s ease-out;
+  opacity: 1;
+  display: block;
+}
+
+.clickable-address[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--accent-alt);
+  z-index: 99998;
+  pointer-events: none;
+  animation: tooltipFadeIn 0.3s ease-out;
+  opacity: 1;
+  display: block;
+}

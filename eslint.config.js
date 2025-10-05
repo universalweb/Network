@@ -224,7 +224,7 @@ export default [
 				'error',
 				'single',
 				{
-					allowTemplateLiterals: true,
+					allowTemplateLiterals: 'always',
 				},
 			],
 			'@stylistic/rest-spread-spacing': ['error', 'never'],

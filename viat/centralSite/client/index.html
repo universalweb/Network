@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>VIAT Wallet</title>
+		<link rel="stylesheet" href="https://mshaugh.github.io/nerdfont-webfonts/build/jetbrainsmono.css" />
+		<link rel="stylesheet" href="./wallet.css" />
+	</head>
+	<body>
+		<main class="app">
+			<header class="app-header">
+				<div class="brand">
+					<h1>VIAT Wallet</h1>
+					<p class="tag">MANAGE KEYS, CHECK BALANCE, SEND TRANSACTIONS, AND REVIEW ACTIVITY</p>
+				</div>
+				<div class="controls">
+					<button id="genKeys" class="btn outline" title="Generate New Keypair">󱕴</button>
+					<button id="setCustomKeyBtn" class="btn outline" title="Set Private Key"></button>
+				</div>
+			</header>
+
+			<section id="accountStats" class="panel account-stats" hidden>
+				<div class="stats-header">
+					<div class="outline-box">
+						<h2>󰄛 Account 󰠲</h2>
+					</div>
+					<button id="refreshStats" class="btn small" title="Refresh Account Statistics"></button>
+				</div>
+				<div class="address-display">
+					<span class="address-label">Address:</span>
+					<span id="statAddress" class="address-text">-</span>
+				</div>
+				<hr class="section-divider section-divider-top" />
+				<div class="stats-grid">
+					<div class="stat-item">
+						<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner">
+							<line x1="0" y1="0" x2="12" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+							<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+						</svg>
+						<span id="statBalance" class="stat-value">-</span>
+						<span class="stat-label">Balance</span>
+						<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner bottom right">
+							<line x1="0" y1="0" x2="24" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+							<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+						</svg>
+					</div>
+					<div class="stat-item">
+						<span id="statTotalIn" class="stat-value">-</span>
+						<span class="stat-label">Total Received</span>
+					</div>
+					<div class="stat-item">
+						<span id="statTotalOut" class="stat-value">-</span>
+						<span class="stat-label">Total Sent</span>
+					</div>
+					<div class="stat-item">
+						<span id="statTxCount" class="stat-value">-</span>
+						<span class="stat-label">Total Activity</span>
+					</div>
+				</div>
+				<hr class="section-divider section-divider-bottom" />
+			</section>
+
+			<section class="layout">
+				<section class="panel activity">
+					<div class="activity-header">
+						<div class="outline-box"><h2> Transactions </h2></div>
+						<button id="refreshTx" class="btn small" title="Refresh Transaction History"></button>
+					</div>
+					<div class="tx-controls">
+						<div class="tx-info">
+							<span id="txCount" class="tx-count">0 transactions displayed</span>
+						</div>
+					</div>
+					<ul id="txList" class="tx-list"></ul>
+					<div id="txEmpty" class="empty">NO TRANSACTIONS FOUND</div>
+					<div id="txLoadMoreContainer" class="load-more-container" hidden>
+						<button id="txLoadMore" class="btn small" title="Load Additional Transaction History">Load More Transactions</button>
+					</div>
+				</section>
+			</section>
+
+			<footer class="app-footer">
+				<small>MADE IN AMERICA 🇺🇸</small><br />
+				<small>COPYRIGHT © 2025 VIAT, UW, TMarchi</small><br/>
+				<small>In memory of Amy, the kindest of people</small><br/>
+				<small>...BUILT WITH VIAT CLIENT SDK (<code>viat-client.min.js</code>)</small>
+			</footer>
+		</main>
+
+		<div id="keysOverlay" class="overlay">
+			<div class="overlay-content">
+				<div class="overlay-header">
+					<h3>Wallet Keys</h3>
+					<button id="closeKeysOverlay" class="btn-close" aria-label="Close">×</button>
+				</div>
+				<div class="overlay-body">
+					<div class="info-banner">
+						<span class="info-icon">🔑</span>
+						<p>Your wallet keys. Public key is safe to share, private key must be kept secure.</p>
+					</div>
+					<div class="key-section">
+						<div class="key-header">
+							<h4>Public Key</h4>
+							<span class="key-badge safe">Safe to Share</span>
+						</div>
+						<div class="key-display">
+							<textarea id="pubDisplay" rows="3" readonly></textarea>
+							<div class="key-actions">
+								<button id="copyPubBtn" class="btn small primary">Copy Public Key</button>
+								<button id="downloadPubBtn" class="btn small outline">Download</button>
+							</div>
+						</div>
+					</div>
+					<div class="key-section">
+						<div class="key-header">
+							<h4>Private Key</h4>
+							<span class="key-badge danger">Keep Secret</span>
+						</div>
+						<div class="private-key-controls">
+							<button id="togglePrivateKeyBtn" class="btn small outline" aria-expanded="false">Show Private Key</button>
+							<div id="privateKeyWarning" class="warning-text">Private key is hidden for security</div>
+						</div>
+						<div id="privateKeyDisplay" class="key-display" hidden>
+							<div class="warning-banner">
+								<span class="warning-icon">⚠️</span>
+								<p>Anyone with access to this private key can control your wallet!</p>
+							</div>
+							<textarea id="privDisplay" rows="4" readonly></textarea>
+							<div class="key-actions">
+								<button id="copyPrivBtn" class="btn small primary">Copy Private Key</button>
+								<button id="downloadPrivBtn" class="btn small outline">Download</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				</div>
+			</div>
+
+			<div id="customKeyOverlay" class="overlay">
+				<div class="overlay-content">
+					<div class="overlay-header">
+						<h3>Set Private Key</h3>
+						<button id="closeCustomOverlay" class="btn-close" aria-label="Close">×</button>
+					</div>
+					<div class="overlay-body">
+						<div class="warning-banner">
+							<span class="warning-icon">⚠️</span>
+							<p>Enter your base64-encoded private key. This will generate the corresponding public key and address.</p>
+						</div>
+						<div class="key-input">
+							<label for="customPrivInput">Private Key (base64)</label>
+							<textarea id="customPrivInput" rows="4" placeholder="Enter your private key here..."></textarea>
+							<div class="key-actions">
+								<button id="setCustomPrivBtn" class="btn small primary">Set Private Key</button>
+								<button id="cancelCustomBtn" class="btn small ghost">Cancel</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div id="transactionOverlay" class="overlay">
+				<div class="overlay-content">
+					<div class="overlay-header">
+						<h3>Create Transaction</h3>
+						<button id="closeTransactionOverlay" class="btn-close" aria-label="Close">×</button>
+					</div>
+				<div class="overlay-body">
+					<div class="info-banner">
+						<span class="info-icon">💰</span>
+						<p>Create and sign a new transaction. Signature will be generated automatically when all fields are filled.</p>
+					</div>
+					<form class="transaction-form" onsubmit="return false;">
+						<div class="field">
+							<label for="txTo">To Address (base64)</label>
+							<input id="txTo" type="text" autocomplete="off" placeholder="Enter recipient address..." maxlength="28" />
+							<div id="txToError" class="field-error">Address must be exactly 28 characters</div>
+						</div>
+						<div class="field">
+							<label for="txAmount">Amount</label>
+							<input id="txAmount" type="number" value="1" min="0" step="any" autocomplete="off" placeholder="Enter amount..." />
+							<div id="txAmountError" class="field-error">Please enter a valid positive number</div>
+						</div>
+						<div class="field">
+							<label for="txSignature">Generated Signature</label>
+							<textarea id="txSignature" rows="3" readonly placeholder="Signature will appear here automatically..."></textarea>
+						</div>
+						<div class="transaction-actions">
+							<button id="sendTransactionBtn" type="button" class="btn primary" disabled>Send Transaction</button>
+							<button id="cancelTransactionBtn" type="button" class="btn ghost">Cancel</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<header id="identityBar" class="identity-bar is-hidden" data-visible="false">
+			<div class="identity-bar-content">
+				<div class="identity-section dock">
+					<button id="showKeysBtn" class="btn small outline is-hidden" title="Show Keys" disabled>󰡮</button>
+					<div id="from" class="address clickable-address" title="Click to copy address">
+						<span class="address-text">Address will appear here after generating keys...</span>
+					</div>
+				</div>
+				<div class="identity-actions dock">
+					<button id="mintFundsBtn" class="btn small outline mint-btn is-hidden" title="Mint Funds" disabled>󱢏</button>
+					<button id="createTransactionBtn" class="btn small outline" title="SEND TRANSACTION"></button>
+				</div>
+			</div>
+		</header>
+
+		<div id="notificationContainer" class="notification-container"></div>
+
+		<div id="welcomeOverlay" class="overlay welcome-overlay active">
+			<div class="welcome-content">
+				<h1 class="welcome-symbol">⩝</h1>
+				<h1>Welcome to VIAT</h1>
+				<h4>VIAT WALLET</h4>
+				<div class="welcome-buttons">
+					<button id="welcomeGenKeys" class="welcome-btn">
+						<span class="welcome-icon">󱕴</span>
+						<span class="welcome-text">Generate Keys</span>
+					</button>
+					<button id="welcomeSetCustom" class="welcome-btn">
+						<span class="welcome-icon"></span>
+						<span class="welcome-text">Set Private Key</span>
+					</button>
+				</div>
+				<p class="welcome-subtext">Get started by generating a new keypair or loading an existing one.</p>
+			</div>
+		</div>
+
+		<script src="./viat-client.min.js" defer></script>
+		<script type="module" src="./wallet.js"></script>
+	</body>
+</html>

@@ -1,0 +1,10 @@
+Default async functions use defer to async or run after function call
+
+function hello(string stringArg, struct objectArg) string {
+	const immutable string = 'string' + arg;
+	return '';
+}
+With return type set after return internally
+function hello(arg: string) {
+	return string hello(arg);
+} 

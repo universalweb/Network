@@ -31,7 +31,8 @@ tests/*
 
 # VIAT SITE #
 ############
-viat/centralSite/*
+viat/centralSite/server/*
+viat/centralSite/database/*
 
 # DBs #
 ############

@@ -1,0 +1,222 @@
+/* Account page specific styles (migrated from inline styles in account.html) */
+.account-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.account-address {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--accent-warm);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 16px;
+  border-radius: 8px;
+  margin: 16px 0;
+  word-break: break-all;
+}
+
+.account-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(clamp(200px, 25vw, 250px), 1fr)
+  );
+  gap: clamp(16px, 3vw, 24px);
+  margin-bottom: 32px;
+}
+
+.account-stat-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: clamp(20px, 4vw, 24px);
+  text-align: center;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.account-stat-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.account-stat-item .corner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  z-index: 2;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.account-stat-item .corner.bottom.right {
+  top: auto;
+  left: auto;
+  bottom: 0;
+  right: 0;
+  transform: rotate(180deg);
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.account-stat-item:hover .corner {
+  transform: scale(1.2);
+  stroke: #7be7fa;
+  opacity: 1;
+}
+
+.account-stat-item:hover .corner.bottom.right {
+  transform: rotate(180deg) scale(1.2);
+  stroke: #7be7fa;
+  opacity: 1;
+}
+
+.account-stat-label {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.account-stat-value {
+  font-size: clamp(20px, 4vw, 28px);
+  font-weight: 600;
+  color: #fff;
+}
+
+.transactions-section {
+  margin-top: 40px;
+}
+
+.transactions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.transactions-header h3 {
+  margin: 0;
+  color: #fff;
+}
+
+.tx-count {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.tx-list {
+  list-style: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tx-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+.tx-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.tx-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tx-direction {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.direction-in {
+  color: #69e2f9;
+}
+
+.direction-out {
+  color: #fcf350;
+}
+
+.tx-address {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.tx-date {
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.tx-amount {
+  font-weight: 600;
+  font-size: 16px;
+  text-align: right;
+}
+
+.amount-positive {
+  color: #69e2f9;
+}
+
+.amount-negative {
+  color: #fcf350;
+}
+
+.loading {
+  text-align: center;
+  color: var(--muted);
+  padding: 40px;
+}
+
+.error {
+  text-align: center;
+  color: #ff6b6b;
+  padding: 40px;
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 40px;
+  font-size: 16px;
+}
+
+/* Small load-more button container */
+.load-more-container {
+  margin-top: 12px;
+  text-align: center;
+}
+
+/* Lightweight button style used on account page */
+.btn.small {
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.btn.small.loading {
+  opacity: 0.8;
+}
