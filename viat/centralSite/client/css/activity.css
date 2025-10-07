@@ -1,17 +1,4 @@
 /* Activity & Transactions */
-.activity-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-}
-
-.activity-header h2 {
-  color: #fff;
-  margin: 0;
-  padding: 5px 10px;
-  background: rgba(11, 17, 229, 1);
-}
 
 .tx-controls {
   display: flex;

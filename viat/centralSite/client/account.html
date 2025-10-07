@@ -23,52 +23,54 @@
 				<span class="address-text"></span>
 			</div>
 			<section class="account-header">
-				<h2>Account Details</h2>
+				<div class="outline-box">
+					<h2>󰄛 Account 󰠲</h2>
+				</div>
 				<div id="accountAddress" class="account-address">Loading...</div>
 			</section>
 			<section id="accountStats" class="account-stats-grid" style="display: none;">
-				<div class="account-stat-item">
+				<div class="stat-item account-stat-item">
 					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner">
 						<line x1="0" y1="0" x2="12" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
 						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
 					</svg>
-					<div id="statBalance" class="account-stat-value">-</div>
+					<div id="statBalance" class="stat-value">-</div>
 					<div class="stat-label">Balance</div>
 					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner bottom right">
 						<line x1="0" y1="0" x2="24" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
 						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
 					</svg>
 				</div>
-				<div class="account-stat-item">
+				<div class="stat-item account-stat-item">
 					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner">
 						<line x1="0" y1="0" x2="12" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
 						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
 					</svg>
-					<div id="statTotalIn" class="account-stat-value">-</div>
+					<div id="statTotalIn" class="stat-value">-</div>
 					<div class="stat-label">Total Received</div>
 					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner bottom right">
 						<line x1="0" y1="0" x2="24" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
 						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
 					</svg>
 				</div>
-				<div class="account-stat-item">
+				<div class="stat-item account-stat-item">
 					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner">
 						<line x1="0" y1="0" x2="12" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
 						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
 					</svg>
-					<div id="statTotalOut" class="account-stat-value">-</div>
+					<div id="statTotalOut" class="stat-value">-</div>
 					<div class="stat-label">Total Sent</div>
 					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner bottom right">
 						<line x1="0" y1="0" x2="24" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
 						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
 					</svg>
 				</div>
-				<div class="account-stat-item">
+				<div class="stat-item account-stat-item">
 					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner">
 						<line x1="0" y1="0" x2="12" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
 						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
 					</svg>
-					<div id="statTxCount" class="account-stat-value">-</div>
+					<div id="statTxCount" class="stat-value">-</div>
 					<div class="stat-label">Transaction Count</div>
 					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner bottom right">
 						<line x1="0" y1="0" x2="24" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
@@ -78,7 +80,9 @@
 			</section>
 			<section class="transactions-section">
 				<div class="transactions-header">
-					<h3>Transaction History</h3>
+					<div class="outline-box">
+						<h2 class="blue"> Transactions </h2>
+					</div>
 					<div id="txCount" class="tx-count">Loading...</div>
 				</div>
 				<ul id="txList" class="tx-list"></ul>

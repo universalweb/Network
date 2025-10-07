@@ -65,13 +65,13 @@
 }
 
 .account-stat-item:hover .corner {
-  transform: scale(1.2);
+  transform: scale(2);
   stroke: #7be7fa;
   opacity: 1;
 }
 
 .account-stat-item:hover .corner.bottom.right {
-  transform: rotate(180deg) scale(1.2);
+  transform: rotate(180deg) scale(2);
   stroke: #7be7fa;
   opacity: 1;
 }
@@ -82,12 +82,6 @@
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}
-
-.account-stat-value {
-  font-size: clamp(20px, 4vw, 28px);
-  font-weight: 600;
-  color: #fff;
 }
 
 .transactions-section {

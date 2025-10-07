@@ -1,8 +1,25 @@
 /* Layout System */
+.title-container {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 14px;
+}
+
 .outline-box {
   border-radius: 5px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 5px;
+}
+.outline-box h2.blue {
+	background-color: rgb(14, 10, 203);
+	color: #fff;
+}
+.outline-box h2 {
+	margin: 0;
+	padding: 5px 10px;
+	background: var(--accent-warm);
+	color: #000;
 }
 
 .app {
@@ -60,18 +77,6 @@
   padding: clamp(16px, 3vw, 20px) clamp(20px, 4vw, 28px);
   overflow: visible;
 }
-
-.panel h2 {
-  margin: 0 0 14px;
-  font-size: clamp(1rem, 2.5vw, 1.5rem);
-  font-weight: 900;
-  letter-spacing: clamp(0.5px, 0.1vw, 1px);
-  color: var(--accent-alt);
-  text-transform: uppercase;
-  line-height: 1.2;
-  word-wrap: break-word;
-}
-
 /* Footer */
 .app-footer {
   text-align: center;

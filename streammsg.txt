@@ -13,12 +13,12 @@
  ██╗     ██╗██╗   ██╗███████╗
  ██║     ██║██║   ██║██╔════╝
  ██║     ██║██║   ██║█████╗
- ██║     ██║╚██╗ ██╔╝██╔══╝
+ ██║     ██║╚██╗ ██╔╝██╔══╝ 
  ███████╗██║ ╚████╔╝ ███████╗
  ╚══════╝╚═╝  ╚═══╝  ╚══════╝
 
 VISIT: wallet.viat.network:8080
-Be back tomorrow - SLEEP MODE
+STARTING SOON
 Account Info Page DONE
 Transaction Info Page DONE
 Block Explorer Links IN-PROGRESS

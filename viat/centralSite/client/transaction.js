@@ -66,9 +66,11 @@ function displayTransactionDetails(tx) {
 	}
 	if (elements.txFrom) {
 		elements.txFrom.textContent = tx.from;
+		elements.txFrom.href = `/account.html?address=${encodeURIComponent(tx.from)}`;
 	}
 	if (elements.txTo) {
 		elements.txTo.textContent = tx.to;
+		elements.txTo.href = `/account.html?address=${encodeURIComponent(tx.to)}`;
 	}
 	if (elements.txTimestamp) {
 		elements.txTimestamp.textContent = tx.timestamp;
@@ -85,23 +87,6 @@ function displayTransactionDetails(tx) {
 		elements.txStatus.textContent = tx.status.toUpperCase();
 		elements.txStatus.className = `status-badge status-${tx.status}`;
 	}
-}
-// Setup address copying functionality
-function setupAddressCopying() {
-	const addressElements = document.querySelectorAll('.address-value');
-	addressElements.forEach((element) => {
-		element.style.cursor = 'pointer';
-		element.title = 'Click to copy address';
-		element.addEventListener('click', async () => {
-			try {
-				await navigator.clipboard.writeText(element.textContent);
-				notifications.showNotification('Address copied to clipboard', 'success');
-			} catch (error) {
-				console.error('Failed to copy address:', error);
-				notifications.showNotification('Failed to copy address', 'error');
-			}
-		});
-	});
 }
 // Load transaction details from the API
 async function loadTransactionDetails(txId) {
@@ -153,8 +138,6 @@ function setupEventListeners() {
 			}
 		});
 	}
-	// Make addresses clickable for copying
-	setupAddressCopying();
 }
 // Initialize the transaction details page
 async function initTransactionPage() {

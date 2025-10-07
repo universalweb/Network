@@ -73,24 +73,34 @@ function renderTransaction(tx) {
 	if (tx.to === address) {
 		direction.textContent = '󰴮  RECEIVED';
 		direction.classList.add('direction-in');
-		addressInfo.textContent = `From: ${tx.from}`;
+		addressInfo.innerHTML = `From: <a href="/account.html?address=${encodeURIComponent(tx.from)}" class="address-link" target="_blank" title="View account">${tx.from}</a>`;
 		amount.textContent = `+${tx.amount}`;
 		amount.classList.add('amount-positive');
 	} else if (tx.from === address) {
 		direction.textContent = '  SENT';
 		direction.classList.add('direction-out');
-		addressInfo.textContent = `To: ${tx.to}`;
+		addressInfo.innerHTML = `To: <a href="/account.html?address=${encodeURIComponent(tx.to)}" class="address-link" target="_blank" title="View account">${tx.to}</a>`;
 		amount.textContent = `-${tx.amount}`;
 		amount.classList.add('amount-negative');
 	} else {
 		direction.textContent = '↔ TRANSFER';
-		addressInfo.textContent = `${tx.from} → ${tx.to}`;
+		addressInfo.innerHTML = `<a href="/account.html?address=${encodeURIComponent(tx.from)}" class="address-link" target="_blank" title="View account">${tx.from}</a> → <a href="/account.html?address=${encodeURIComponent(tx.to)}" class="address-link" target="_blank" title="View account">${tx.to}</a>`;
 		amount.textContent = tx.amount;
 	}
 	// Format timestamp to local time
 	if (tx.timestamp) {
 		const date = new Date(tx.timestamp);
-		dateInfo.textContent = date.toLocaleString();
+		const localTime = date.toLocaleString();
+		const utcTime = date.toLocaleString('en-US', {
+			timeZone: 'UTC',
+		});
+		// Get local timezone abbreviation
+		const localTimezone = Intl.DateTimeFormat('en-US', {
+			timeZoneName: 'short',
+		}).formatToParts(date).find((part) => {
+			return part.type === 'timeZoneName';
+		})?.value || 'Local';
+		dateInfo.textContent = `Local (${localTimezone}): ${localTime} - UTC: ${utcTime}`;
 	} else {
 		dateInfo.textContent = 'Unknown date';
 	}

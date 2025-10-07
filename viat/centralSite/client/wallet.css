@@ -291,6 +291,19 @@
   color: var(--accent-warm);
 }
 
+.address-link {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-primary);
+  text-decoration: none;
+  cursor: pointer;
+  word-break: break-all;
+}
+
+.address-link:hover {
+  color: var(--accent-warm);
+  text-decoration: underline;
+}
+
 .transaction-signature {
   margin-top: 20px;
 }
