@@ -115,7 +115,7 @@ export class CryptoID {
 		if (this.cipherSuite.backupSignature) {
 			this.backupSignature = await this.cipherSuite.backupSignature.signatureKeypair();
 		}
-		options?.type && (this.type = options.type);
+		options?.idType && (this.idType = options.idType);
 		if (options?.networkName) {
 			this.networkName = options.networkName;
 		}

@@ -1,3 +1,4 @@
+import viatDefaults from '#viat/defaults';
 export const version = 1;
 export const blockTypes = {
 	transaction: 0,
@@ -11,15 +12,16 @@ export const blockTypes = {
 	genesisAudit: 8,
 	walletAnchor: 9,
 	receiptAnchor: 10,
+	audit: 11,
 };
 export const hashSizes = {
-	compact: 32,
-	default: 64,
+	compact: viatDefaults.defaultHashSize,
+	default: viatDefaults.defaultQuantumHashSize,
 	genesis: 256,
 	quantum: 64,
 };
 export const nonceSizes = {
-	default: 16,
+	default: viatDefaults.defaultNonceSize,
 	mid: 24,
 	genesis: 64,
 	quantum: 32,
@@ -28,6 +30,7 @@ export const typeNames = {
 	transaction: 'transaction',
 	receipt: 'receipt',
 	wallet: 'wallet',
+	audit: 'audit',
 	hybridWallet: 'hybridWallet',
 	quantumWallet: 'quantumWallet',
 	genesis: 'genesis',
@@ -38,16 +41,17 @@ export const typeNamesPlural = {
 	transaction: 'transactions',
 	receipt: 'receipts',
 	wallet: 'wallets',
+	audit: 'audits',
 	hybridWallet: 'hybridWallets',
 	quantumWallet: 'quantumWallets',
-	genesis: '',
+	genesis: 'genesis',
 	genesisWallet: 'wallets',
 	genesisAudit: 'audits',
 };
 export const walletTypes = {
 	wallet: {
 		size: 20,
-		type: 'legacy',
+		walletType: 'legacy',
 		path: {
 			default: typeNames.wallet,
 			plural: typeNamesPlural.wallet,
@@ -55,7 +59,7 @@ export const walletTypes = {
 	},
 	hybridWallet: {
 		size: 32,
-		type: 'hybrid-quantum',
+		walletType: 'hybrid-quantum',
 		path: {
 			default: typeNames.hybridWallet,
 			plural: typeNamesPlural.hybridWallet,
@@ -63,7 +67,7 @@ export const walletTypes = {
 	},
 	quantumWallet: {
 		size: 64,
-		type: 'quantum',
+		walletType: 'quantum',
 		path: {
 			default: typeNames.quantumWallet,
 			plural: typeNamesPlural.quantumWallet,
@@ -74,6 +78,7 @@ export const filePaths = {
 	transaction: '/transactions/',
 	receipt: '/receipts/',
 	wallet: '/wallets/',
+	audit: '/audits/',
 	hybridWallet: '/hybridwallets/',
 	quantumWallet: '/quantumwallets/',
 	genesis: '/',
@@ -89,6 +94,7 @@ export const urlPaths = {
 	genesis: '/',
 	genesisWallet: '/gw/',
 	genesisAudit: '/ga/',
+	audit: '/a/',
 };
 export const letters = {
 	transaction: 't',
@@ -99,6 +105,7 @@ export const letters = {
 	genesis: 'g',
 	genesisWallet: 'gw',
 	genesisAudit: 'ga',
+	audit: 'a',
 };
 export const fileTypes = {
 	't.block': 'Viat Transaction Block',

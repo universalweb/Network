@@ -13,6 +13,8 @@ const customGlobals = {
 	clients: 'off',
 	status: 'off',
 	VIAT: 'off',
+	crypto: 'off',
+	Bun: 'off',
 };
 function addGlobals(keysObject) {
 	const keys = Object.keys(keysObject);
@@ -466,7 +468,11 @@ export default [
 			'no-restricted-globals': 'error',
 			'no-restricted-imports': 'off',
 			'no-restricted-modules': 'off',
-			'no-restricted-syntax': 'off',
+			'no-restricted-syntax': [
+				'error',
+				'VariableDeclarator[id.name="type"]',
+				'Property[key.name="type"]',
+			],
 			'no-return-assign': ['error', 'always'],
 			'no-return-await': 'error',
 			'no-script-url': 'error',

@@ -37,6 +37,8 @@ viat/centralSite/client_new/*
 viat/centralSite/server_new/*
 viat/centralSite/client_new/node_modules
 
+cache/
+.zig-cache/
 # DBs #
 ############
 *.mdb

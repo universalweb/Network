@@ -57,9 +57,6 @@ export class WalletBlock extends Block {
 	async getURL() {
 		return this.filesystem.getURL(await this.getAddress());
 	}
-	async getAddress() {
-		return this.getCore('address');
-	}
 	async getFileURL() {
 		return this.filesystem.getFileURL(await this.getAddress());
 	}

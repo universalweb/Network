@@ -1,0 +1,71 @@
+import {
+	filePaths,
+	genericFilenames,
+	hashSizes,
+	nonceSizes,
+	typeNames,
+} from '#viat/blocks/defaults';
+import { Block } from '#viat/blocks/block';
+import { assignToClass } from '@universalweb/utilitylib';
+import path from 'path';
+import { readStructured } from '#utilities/file';
+import { receiptBlock } from '#blocks/transactions/receipt/block';
+import viatCipherSuite from '#crypto/cipherSuite/viat.js';
+import wallet from '#viat/wallet/wallet';
+export class AuditBlock extends Block {
+	constructor(data, config) {
+		super(config);
+		return this.initialize(data, config);
+	}
+	async setDefaults() {
+		this.setCore({
+			state: {
+				prior: {},
+				future: {},
+			},
+			output: {},
+			legacyWallets: [],
+			hybridWallets: [],
+			quantumWallets: [],
+			transactions: [],
+			filters: {},
+			version: this.version,
+		});
+	}
+	async getFilePathPrefix() {
+		return this.filesystem.pathPrefix.encode(await this.getHash());
+	}
+	async getFinalDirectory() {
+		return this.filesystem.uniquePath.encode(await this.getHash());
+	}
+	async getDirectory() {
+		return this.filesystem.getFullPath(await this.getHash());
+	}
+	async getFile() {
+		return this.filesystem.getFile(await this.getHash());
+	}
+	async getURL() {
+		return this.filesystem.getURL(await this.getHash());
+	}
+	async getFileURL() {
+		return this.filesystem.getFileURL(await this.getHash());
+	}
+	// blockSchema = walletBlockSchema;
+	typeName = typeNames.audit;
+}
+export async function auditBlock(...args) {
+	const block = await (new AuditBlock(...args));
+	return block;
+}
+export default auditBlock;
+// const amy = await wallet();
+// console.log(await amy.exportObject());
+const exampleBlock = await auditBlock();
+await exampleBlock.finalize();
+// await exampleBlock.sign(amy);
+console.log(exampleBlock.block);
+// console.log(await exampleBlock.estimateBlockSize());
+// console.log('getDirectory', await exampleBlock.getDirectory());
+// console.log('getFile', await exampleBlock.getFile());
+// console.log('getFileURL', await exampleBlock.getFileURL());
+// console.log(exampleBlock.filesystem);

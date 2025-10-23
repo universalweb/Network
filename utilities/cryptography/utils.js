@@ -20,6 +20,7 @@ export const hash512SettingsNoble = {
 };
 export const defaultHashSettings = {
 	outputEncoding: 'buffer',
+	outputLength: int32,
 };
 export const legacyAddressHashSettings = {
 	outputLength: int20,

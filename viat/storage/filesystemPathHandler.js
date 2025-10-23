@@ -14,6 +14,7 @@ import { encodingTypes } from './encodingTypes.js';
 import { merge } from '@universalweb/utilitylib';
 import path from 'path';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
+import viatDefaults from '#viat/defaults';
 export function createBlockPathConfig(config) {
 	const templateConfig = {
 		typeName: 'generic',
@@ -24,7 +25,7 @@ export function createBlockPathConfig(config) {
 			encoding: encodingTypes.hex,
 		},
 		uniquePath: {
-			startIndex: 64 - 16,
+			startIndex: viatDefaults.defaultHashSize - 12,
 			encoding: encodingTypes.base38,
 		},
 	};
@@ -39,7 +40,7 @@ export function createSlaveBlockPathConfig(config) {
 			encoding: encodingTypes.hex,
 		},
 		uniquePath: {
-			startIndex: 32 - 12,
+			startIndex: viatDefaults.defaultHashSize - 12,
 			encoding: encodingTypes.base38,
 		},
 	});
@@ -54,6 +55,10 @@ const template = {
 			startIndex: walletTypes.wallet.size - 12,
 			encoding: encodingTypes.base38,
 		},
+	}),
+	audit: createBlockPathConfig({
+		typeName: typeNames.audit,
+		typeNamePlural: typeNamesPlural.audit,
 	}),
 	hybridWallet: createBlockPathConfig({
 		typeName: typeNames.hybridWallet,

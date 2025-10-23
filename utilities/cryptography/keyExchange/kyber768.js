@@ -9,7 +9,13 @@ import { findItem, isBuffer } from '@universalweb/utilitylib';
 import { encode } from '#utilities/serialize';
 import { keyExchange } from './keyExchange.js';
 import pqclean from 'pqclean';
+import runBench from '#utilities/benchmark';
 import shake256 from '../hash/shake256.js';
+import { webcrypto } from 'crypto';
+// Define the ML-KEM-768 algorithm
+const algorithm = 'ml-kem-768';
+// Generate a key pair (public and private keys)
+const { subtle } = webcrypto;
 const seedSize = int64;
 const sessionKeySize = int32;
 const generateKeyPair = pqclean.kem.generateKeyPair;
@@ -51,6 +57,7 @@ export async function encapsulate(publicKey) {
 }
 export const kyber768 = keyExchange({
 	name: 'kyber768',
+	algorithm,
 	alias: 'kyber768',
 	id: 1,
 	preferred: true,
@@ -196,3 +203,12 @@ export default kyber768;
 // await kyber768.clientExtendedSynchronizationHeader(client, server);
 // console.log('client', client);
 // console.log('server', server);
+// const alg = {
+// 	name: 'ML-KEM-768',
+// };
+// const methods = ['encapsulateKey', 'decapsulateKey'];
+// await runBench(async () => {
+// 	const keyPair = await subtle.generateKey(alg, true, methods);
+// 	return keyPair;
+// });
+// await runBench(keyExchangeKeypair);

@@ -1,6 +1,6 @@
 import { hash256, hash512, hashLegacyAddress } from '#crypto/hash/shake256.js';
 import { bufferAlloc } from '#crypto/utils.js';
-import { encodeStrict } from '#utilities/serialize';
+import { encode } from '#utilities/serialize';
 import { isBuffer } from '@universalweb/utilitylib';
 import viat from '#crypto/cipherSuite/viat.js';
 import viatLegacy from '#crypto/cipherSuite/legacy.js';
@@ -10,33 +10,39 @@ const walletCipherSuites = {
 	quantum: viatQuantum,
 	legacy: viatLegacy,
 };
-export async function generateAddress(publicKey, type = 0, version = 0, backupHash) {
-	const source = {
-		type,
+// Consider CBOR compatability
+export function generateAddressStruct(publicKey, cipher = '0', version = '0', kind = '0', ...args) {
+	const source = [
+		kind,
 		version,
+		cipher,
 		publicKey,
-	};
-	if (backupHash && isBuffer(backupHash)) {
-		source.backupHash = backupHash;
+	];
+	if (args.length) {
+		source.push(...args);
 	}
-	const domained = await encodeStrict(source);
-	if (viatLegacy.id === type) {
-		return hashLegacyAddress(domained);
-	} else if (viat.id === type) {
+	return source;
+}
+export function generateLegacyAddressStruct(publicKey, cipher = '0', version = '0', kind = '0', backupHash) {
+	const source = generateAddressStruct(publicKey, cipher, version, kind);
+	source.push(backupHash);
+	return source;
+}
+export async function generateLegacyAddress(publicKey, version = '0', kind = '0', backupHash) {
+	const source = generateLegacyAddressStruct(publicKey, '0', version, kind, backupHash);
+	const domained = await encode(source);
+	return hashLegacyAddress(domained);
+}
+export async function generateAddress(publicKey, cipher = 0, version, kind, backupHash) {
+	if (viatLegacy.id === cipher) {
+		return generateLegacyAddress(publicKey, version, kind, backupHash);
+	}
+	const source = generateAddressStruct(publicKey, cipher, version, kind, backupHash);
+	const domained = await encode(source);
+	if (viat.id === cipher) {
 		return hash256(domained);
-	} else if (viatQuantum.id === type) {
+	} else if (viatQuantum.id === cipher) {
 		return hash512(domained);
 	}
-}
-export async function generateLegacyAddress(publicKey, version = 0, backupHash) {
-	const source = {
-		type: viatLegacy.id,
-		version,
-		publicKey,
-	};
-	if (backupHash && isBuffer(backupHash)) {
-		source.backupHash = backupHash;
-	}
-	const domained = await encodeStrict(source);
-	return hashLegacyAddress(domained);
+	return generateLegacyAddress(publicKey, version, kind, backupHash);
 }

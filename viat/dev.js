@@ -1,7 +1,7 @@
 const ratioDefault = 3000;
 const currentDevPriceDefault = 0.00010216;
 const devSupply = 1_000_000_000;
-const vitaTotalSupply = 42000000;
+const vitaTotalSupply = 10_000_000_000;
 const devAddress = 'HDttRtkq8XJKAboqn1PCusyBTEEJpLwmVKQ128Txpump';
 function getRViatEstimates(ratio = ratioDefault, currentPrice = currentDevPriceDefault) {
 	const pricePerViat = ratio * currentPrice;

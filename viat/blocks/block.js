@@ -66,7 +66,7 @@ export class Block {
 		},
 	};
 	getType() {
-		return this.getMeta('type') || this.blockType;
+		return this.getMeta('blockType') || this.blockType;
 	}
 	async getFilePathPrefix(hash) {
 		return this.filesystem.pathPrefix.encode(hash || await this.getHash());
