@@ -1,0 +1,9 @@
+# Learn more: https://buf.build/docs/configuration/v2/buf-gen-yaml
+version: v2
+plugins:
+  # This will invoke protoc-gen-es and write output to src/gen
+  - local: ../../node_modules/.bin/protoc-gen-es
+    out: src/gen
+    opt:
+      # Add more plugin options here
+      - target=js

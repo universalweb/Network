@@ -11,7 +11,7 @@ import { randomBuffer } from '#crypto/utils.js';
 // TODO: BLOOM FILTER for quick search with false positives
 export class VIATHashTrie {
 	constructor(targetObject) {
-		this.trie = targetObject || {};
+		this.trie = targetObject || new Map();
 		return this;
 	}
 	async append(hash) {
@@ -39,11 +39,11 @@ export class VIATHashTrie {
 		let currentPath = this.trie;
 		for (let bytePosition = 0; bytePosition < hashLength; bytePosition++) {
 			const key = hash[bytePosition];
-			if (!currentPath[key]) {
+			if (!currentPath.has(key)) {
 				console.log(`Path not found for byte value ${key} at position ${bytePosition}`);
 				return false;
 			}
-			currentPath = currentPath[key];
+			currentPath = currentPath.get(key);
 		}
 		if (currentPath === true) {
 			console.log(`Path found for byte value ${hash[lastIndex]} at position ${lastIndex}`);

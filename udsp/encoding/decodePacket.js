@@ -46,7 +46,6 @@ export async function decodePacketHeaders(config) {
 	const packet = await decode(packetEncoded);
 	if (isUndefined(packet)) {
 		destination.logError('Packet decode failed', packet);
-		// TODO: Add support to block connection Ids and or IPs
 		return;
 	}
 	config.packet = packet;
