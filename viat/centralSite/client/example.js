@@ -77,9 +77,9 @@ async function example() {
 			throw new Error('signMessage/verifySignature failed');
 		}
 		// Test signTransaction / verifyTransactionSignature
-		// Create dummy 20-byte addresses
-		const fromAddr = Buffer.alloc(20, 1);
-		const toAddr = Buffer.alloc(20, 2);
+		// Create dummy 24-byte addresses
+		const fromAddr = Buffer.alloc(24, 1);
+		const toAddr = Buffer.alloc(24, 2);
 		const amount = 123n;
 		const sigTx = await viatClient.signTransaction(fromAddr, toAddr, amount, privateKey);
 		const ok2 = await viatClient.verifyTransactionSignature(sigTx, fromAddr, toAddr, amount, publicKey);

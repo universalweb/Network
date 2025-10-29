@@ -1,9 +1,9 @@
 import * as clientModule from './modules/client.js';
 import * as elementsModule from './modules/elements.js';
-import * as transactions from './modules/transactions.js';
-import * as stats from './modules/stats.js';
-import * as ui from './modules/ui.js';
 import * as state from './modules/state.js';
+import * as stats from './modules/stats.js';
+import * as transactions from './modules/transactions.js';
+import * as ui from './modules/ui.js';
 const elements = elementsModule.getElements();
 function getAddressFromURL() {
 	const urlParams = new URLSearchParams(window.location.search);
@@ -22,15 +22,15 @@ function setAddressInUI(address) {
 		const el = elements.from.querySelector('.address-text');
 		if (el) {
 			el.textContent = address || '';
-			if (!address) {
-				el.classList.add('placeholder');
-			} else {
+			if (address) {
 				el.classList.remove('placeholder');
+			} else {
+				el.classList.add('placeholder');
 			}
 		}
 	}
 	// Update UI toggles
-	ui.toggleAddressDependentUI(Boolean(address && address.length === 28));
+	ui.toggleAddressDependentUI(Boolean(address && address.length === 32));
 }
 function initClient() {
 	const client = clientModule.initClient();

@@ -134,8 +134,8 @@ export async function loadRecentTransactions(page = 1, options = {}) {
 		markEmpty('No address set. Generate keys to derive address.');
 		return;
 	}
-	if (address.length !== 28) {
-		markEmpty('Invalid address format. Address must be exactly 28 characters.');
+	if (address.length !== 32) {
+		markEmpty('Invalid address format. Address must be exactly 32 characters.');
 		return;
 	}
 	try {

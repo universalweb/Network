@@ -1,3 +1,5 @@
+// Prototype work for Protobuf packet structures -> CBOR Array shows little difference in size in some cases less
+// Question is speed but if protobuf in JS is done by JS could be slower than CBOR implementations in native module
 import { IntroHeaderSchema, PacketSchema, file_packet } from './src/gen/packet_pb.js';
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import { decode, encode, encodeStrict } from '#utilities/serialize';

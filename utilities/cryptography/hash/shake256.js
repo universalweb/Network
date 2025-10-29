@@ -7,7 +7,6 @@ import {
 	hash512SettingsCrypto,
 	int32,
 	int64,
-	legacyAddressHashSettings,
 	toHex,
 } from '#utilities/cryptography/utils';
 import cryptolib from 'node:crypto';
@@ -19,6 +18,8 @@ const hashName = 'shake256';
 const hash512StrictName = 'sha3-512';
 const hash256StrictName = 'sha3-256';
 const outputEncoding = 'buffer';
+import viatDefaults from '#viat/defaults';
+const legacyAddressHashSettings = viatDefaults.wallets.legacy.walletHashConfig;
 export async function hash256(source) {
 	if (globalThis?.Bun) {
 		const hasher = createHasher(hashName, defaultHashSettings);

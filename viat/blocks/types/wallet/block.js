@@ -11,6 +11,7 @@ import path from 'path';
 import { readStructured } from '#utilities/file';
 import { receiptBlock } from '#blocks/transactions/receipt/block';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
+import viatDefaults from '#viat/defaults';
 import wallet from '#viat/wallet/wallet';
 export class WalletBlock extends Block {
 	constructor(data, config) {
@@ -33,11 +34,11 @@ export class WalletBlock extends Block {
 		const address = this.getCore('address') || addressArg;
 		if (address) {
 			const walletLength = address.length;
-			if (walletLength === 20) {
+			if (walletLength === viatDefaults.wallets.legacy.walletSize) {
 				this.setFilesystem('wallet');
-			} else if (walletLength === 32) {
+			} else if (walletLength === viatDefaults.wallets.hybrid.walletSize) {
 				this.setFilesystem('hybridWallet');
-			} else if (walletLength === 64) {
+			} else if (walletLength === viatDefaults.wallets.quantum.walletSize) {
 				this.setFilesystem('quantumWallet');
 			}
 		}

@@ -37,10 +37,10 @@ export function validateAddress(value) {
 		};
 	}
 	const trimmed = value.trim();
-	if (trimmed.length !== 28) {
+	if (trimmed.length !== 32) {
 		return {
 			valid: false,
-			message: `Address must be exactly 28 characters (currently ${trimmed.length})`,
+			message: `Address must be exactly 32 characters (currently ${trimmed.length})`,
 		};
 	}
 	const base64Pattern = /^[A-Za-z0-9+/]*={0,2}$/;

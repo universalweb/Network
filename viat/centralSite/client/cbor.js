@@ -1,8 +1,8 @@
-import { decode, encode as encodeCBOR } from 'cbor2';
+import { decode, encode } from 'cbor2';
 const canonicalSerializationOptions = {
 	cde: true,
 };
 export function encodeSync(data) {
-	return encodeCBOR(data, canonicalSerializationOptions);
+	return encode(data, canonicalSerializationOptions);
 }
-export { decode };
+export { decode, encode };

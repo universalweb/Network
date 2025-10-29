@@ -2,7 +2,7 @@
 	"name": "viat",
 	"version": "0.1.0",
 	"description": "A small Zig project",
-	"zig_version": ">=0.10.0",
+	"zig_version": ">=0.16.0",
 	"authors": [
 		"Thomas Marchi <tom@viat.network>"
 	],

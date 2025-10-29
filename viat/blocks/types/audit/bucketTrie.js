@@ -16,7 +16,9 @@
 	To adjust collision rates you can reduce the total possible key combinations via bitwise operations on the byte values used as keys.
 	Hashing can be added at the beginning of the append process to ensure fixed length hashes are used, to increase entropy, and or induce historical complexity.
 */
-import { encode, encodeStrict } from '#utilities/serialize';
+import {
+	encode, encodeStrict, encodeStrictSync, encodeSync,
+} from '#utilities/serialize';
 import { getKeyString, insertSortedBuffer } from './utils.js';
 import { VIATHashTrie } from './hashTrie.js';
 import { assign } from '@universalweb/utilitylib';
@@ -26,20 +28,23 @@ import { randomBuffer } from '#crypto/utils.js';
 // Sort keys and arrays before hashing OR use CBOR encode Strict for deterministic encoding then hashing
 // Compare trie hashes for hash differences with different insertion order to confirm CBOR encoding is correct
 function consoleLog(...args) {
-	console.log(...args);
+	// console.log(...args);
 }
-// Control the shape of the trie by adjusting how many bits are used from each byte for the keys at each level
-// 255 >> 2 = 64 possible keys (6 bits) (63 + 1 for zero)
+//  TODO:Change array into MAP for hash lists will be consistent with rest of trie and faster abstract lookups
+// Control the shape of the trie by adjusting how many possible keys there are each level
 const encodingLevels = {
 	// Initial branch has 256 possible keys (8 bits)
 	0(value) {
+		// 256
 		return value;
 	},
 	1(value) {
+		// 4
 		return value >> 6;
 	},
 	2(value) {
-		return value >> 6;
+		// 2
+		return value >> 7;
 	},
 };
 /*
@@ -61,7 +66,7 @@ async function computeNodeHash(nodes) {
 		const key = nodeKeys[i];
 		if (nodes[key]) {
 			const nodeHash = await nodes[key].fullHash();
-			if (nodeHash) {
+			if (nodeHash?.count !== 0) {
 				insertSortedBuffer(hashes, nodeHash);
 			}
 		}
@@ -398,20 +403,20 @@ class ViatSyncTrie extends BucketTrie {
 }
 async function exampleTest() {
 	const trie = new ViatSyncTrie();
-	const hashExample = Buffer.from('TES');
-	const hash2Example = Buffer.from('TEG');
-	const hash3Example = Buffer.from('TEB');
-	const hash4Example = Buffer.from('AEB');
-	await trie.append(hashExample);
-	await trie.append(hash2Example);
-	await trie.append(hash3Example);
-	await trie.append(hash4Example);
-	await trie.remove(hash4Example);
-	await trie.append(hash4Example);
-	await trie.remove(hash4Example);
-	// for (let i = 0; i < 1000; i++) {
-	// 	await trie.append(await randomBuffer(32));
-	// }
+	// const hashExample = Buffer.from('TES');
+	// const hash2Example = Buffer.from('TEG');
+	// const hash3Example = Buffer.from('TEB');
+	// const hash4Example = Buffer.from('AEB');
+	// await trie.append(hashExample);
+	// await trie.append(hash2Example);
+	// await trie.append(hash3Example);
+	// await trie.append(hash4Example);
+	// await trie.remove(hash4Example);
+	// await trie.append(hash4Example);
+	// await trie.remove(hash4Example);
+	for (let i = 0; i < 10000; i++) {
+		await trie.append(await randomBuffer(32));
+	}
 	// consoleLog(findNextCollisionIndex([
 	// 	hashExample, hash2Example, hash3Example,
 	// ], 0, hashExample.length).prefix.toString());
@@ -431,8 +436,9 @@ async function exampleTest() {
 	console.dir(trie.trieMap, {
 		depth: 8,
 	});
-	console.log((await trie.getBucket(hashExample)).list);
-	console.log((await trie.hasHash(Buffer.from('TE'))));
+	// console.log((await trie.getBucket(hashExample)).list);
+	// console.log((await trie.hasHash(Buffer.from('TE'))));
+	// console.log(encodeStrictSync(trie.trieMap).length);
 	// console.log(trie.nodes);
 	// console.log(hashExample, hash2Example, hash3Example, hash4Example);
 	// console.log(hashExample[2]);

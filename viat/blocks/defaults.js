@@ -50,7 +50,7 @@ export const typeNamesPlural = {
 };
 export const walletTypes = {
 	wallet: {
-		size: 20,
+		size: viatDefaults.wallets.legacy.walletSize,
 		walletType: 'legacy',
 		path: {
 			default: typeNames.wallet,
@@ -58,7 +58,7 @@ export const walletTypes = {
 		},
 	},
 	hybridWallet: {
-		size: 32,
+		size: viatDefaults.wallets.hybrid.walletSize,
 		walletType: 'hybrid-quantum',
 		path: {
 			default: typeNames.hybridWallet,
@@ -66,7 +66,7 @@ export const walletTypes = {
 		},
 	},
 	quantumWallet: {
-		size: 64,
+		size: viatDefaults.wallets.quantum.walletSize,
 		walletType: 'quantum',
 		path: {
 			default: typeNames.quantumWallet,

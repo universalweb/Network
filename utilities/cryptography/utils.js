@@ -9,7 +9,7 @@ export const concatBuffer = Buffer.concat;
 export const bufferFrom = Buffer.from;
 export const basicChecksumHashFunction = 'blake3';
 export const defaultHashFunction = 'shake256';
-export const int20 = 20;
+export const int24 = 24;
 export const int32 = 32;
 export const int64 = 64;
 export const int128 = 128;
@@ -21,10 +21,6 @@ export const hash512SettingsNoble = {
 export const defaultHashSettings = {
 	outputEncoding: 'buffer',
 	outputLength: int32,
-};
-export const legacyAddressHashSettings = {
-	outputLength: int20,
-	outputEncoding: 'buffer',
 };
 export const defaultHash256Settings = {
 	outputLength: int32,

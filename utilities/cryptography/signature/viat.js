@@ -1,4 +1,4 @@
-// dilithium65+ed25519+SPHINCS192s+shake256
+// dilithiumAPI+ed25519+SPHINCS192s+shake256
 // VIAT HYBRID SIGNATURE SCHEME
 import {
 	assign,
@@ -15,27 +15,27 @@ import {
 	toBase64,
 	toHex,
 } from '#utilities/cryptography/utils';
-import dilithium65 from './dilithium65.js';
+import dilithiumAPI from './dilithium44.js';
 import ed25519Utils from './ed25519.js';
 import signatureScheme from './signatureScheme.js';
 import sphincs192 from './sphincs192.js';
 // SEED SIZE COMBINED
-const seedSize = ed25519Utils.seedSize + dilithium65.seedSize + sphincs192.seedSize;
+const seedSize = ed25519Utils.seedSize + dilithiumAPI.seedSize + sphincs192.seedSize;
 // console.log(seedSize);
 // KEY SIZES
-const publicKeySize = dilithium65.publicKeySize + ed25519Utils.publicKeySize + sphincs192.publicKeySize;
-const privateKeySize = dilithium65.privateKeySize + ed25519Utils.privateKeySize + sphincs192.privateKeySize;
-const signatureSize = dilithium65.signatureSize + ed25519Utils.signatureSize + sphincs192.signatureSize;
+const publicKeySize = dilithiumAPI.publicKeySize + ed25519Utils.publicKeySize + sphincs192.publicKeySize;
+const privateKeySize = dilithiumAPI.privateKeySize + ed25519Utils.privateKeySize + sphincs192.privateKeySize;
+const signatureSize = dilithiumAPI.signatureSize + ed25519Utils.signatureSize + sphincs192.signatureSize;
 // KEY END INDEXES
 const ed25519PublicKeyEndIndex = ed25519Utils.publicKeySize;
 const ed25519PrivateKeyEndIndex = ed25519Utils.privateKeySize;
-const dilithiumPublicKeyEndIndex = ed25519Utils.publicKeySize + dilithium65.publicKeySize;
-const dilithiumPrivateKeyEndIndex = ed25519Utils.privateKeySize + dilithium65.privateKeySize;
+const dilithiumPublicKeyEndIndex = ed25519Utils.publicKeySize + dilithiumAPI.publicKeySize;
+const dilithiumPrivateKeyEndIndex = ed25519Utils.privateKeySize + dilithiumAPI.privateKeySize;
 const sphincsPublicKeyEndIndex = dilithiumPublicKeyEndIndex + sphincs192.publicKeySize;
 const sphincsPrivateKeyEndIndex = dilithiumPrivateKeyEndIndex + sphincs192.privateKeySize;
 // SIGNATURE END INDEXES
 const ed25519SignatureEndIndex = ed25519Utils.signatureSize;
-const dilithiumSignatureEndIndex = ed25519Utils.signatureSize + dilithium65.signatureSize;
+const dilithiumSignatureEndIndex = ed25519Utils.signatureSize + dilithiumAPI.signatureSize;
 const sphincsSignatureEndIndex = dilithiumSignatureEndIndex + sphincs192.signatureSize;
 function assembleKeypairObject(source, index) {
 	const target = {};
@@ -51,17 +51,17 @@ function getEd25519Keypair(source) {
 	return ed25519Utils.initializeKeypair(assembleKeypairObject(source, 0));
 }
 function getDilithiumKeypair(source) {
-	return dilithium65.initializeKeypair(assembleKeypairObject(source, 1));
+	return dilithiumAPI.initializeKeypair(assembleKeypairObject(source, 1));
 }
 function getSphincsKeypair(source) {
 	return sphincs192.initializeKeypair(assembleKeypairObject(source, 2));
 }
 export async function createKeypair() {
-	const dilithium = await dilithium65.signatureKeypair();
+	const dilithium = await dilithiumAPI.signatureKeypair();
 	const sphincs = await sphincs192.signatureKeypair();
 	const ed25519 = await ed25519Utils.signatureKeypair();
 	const ed25519Keypair = await ed25519Utils.exportKeypair(ed25519);
-	const dilithiumKeypair = await dilithium65.exportKeypair(dilithium);
+	const dilithiumKeypair = await dilithiumAPI.exportKeypair(dilithium);
 	const sphincsKeypair = await sphincs192.exportKeypair(sphincs);
 	// console.log('createKeypair', ed25519Keypair, dilithiumKeypair, sphincsKeypair);
 	const publicKey = [
@@ -109,7 +109,7 @@ export async function signMethod(message, source) {
 		signatureArray[0] = ed25519Sig;
 	}
 	if (dilithium) {
-		const dilithiumSig = await dilithium65.sign(message, dilithium);
+		const dilithiumSig = await dilithiumAPI.sign(message, dilithium);
 		// console.log('dilithiumSig', dilithiumSig.length);
 		signatureArray[1] = dilithiumSig;
 	}
@@ -133,7 +133,7 @@ export async function signPartial(message, source) {
 		signatureArray[0] = ed25519Sig;
 	}
 	if (dilithium) {
-		const dilithiumSig = await dilithium65.sign(message, dilithium);
+		const dilithiumSig = await dilithiumAPI.sign(message, dilithium);
 		// console.log('dilithiumSig', dilithiumSig.length);
 		signatureArray[1] = dilithiumSig;
 	}
@@ -159,8 +159,8 @@ export async function verifyEach(signatureArg, message, source) {
 	}
 	const dilithiumSig = signature[1];
 	if (dilithium && dilithiumSig) {
-		// console.log('dilithiumSig', dilithiumSig?.length, dilithium65?.signatureSize);
-		const verified = await dilithium65.verifySignature(dilithiumSig, message, dilithium);
+		// console.log('dilithiumSig', dilithiumSig?.length, dilithiumAPI?.signatureSize);
+		const verified = await dilithiumAPI.verifySignature(dilithiumSig, message, dilithium);
 		verificationArray[1] = verified;
 	}
 	const sphincsSig = signature[2];
@@ -205,7 +205,7 @@ async function exportKeypair(source) {
 export const viat = signatureScheme({
 	name: 'viat',
 	alias: 'viat',
-	description: 'ed25519 dilithium65 SPHINCS192s SHAKE256',
+	description: 'ed25519 dilithiumAPI SPHINCS192s SHAKE256',
 	id: 7,
 	addressSize: 64,
 	publicKeySize,
@@ -221,7 +221,7 @@ export const viat = signatureScheme({
 	verifyEach,
 	verifyPartial,
 	exportKeypair,
-	dilithium: dilithium65,
+	dilithium: dilithiumAPI,
 	ed25519: ed25519Utils,
 	sphincs: sphincs192,
 	preferred: true,

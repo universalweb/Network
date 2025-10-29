@@ -74,7 +74,7 @@ export function updateAddressDisplay(address) {
 	if (elements.statAddress) {
 		elements.statAddress.textContent = address || '-';
 	}
-	const hasAddress = typeof address === 'string' && address.length === 28;
+	const hasAddress = typeof address === 'string' && address.length === 32;
 	toggleAddressDependentUI(hasAddress);
 	if (hasAddress && elements.welcomeOverlay) {
 		elements.welcomeOverlay.classList.remove('active');
@@ -89,7 +89,7 @@ export function getCurrentAddress() {
 }
 export function hasValidAddress() {
 	const address = getCurrentAddress();
-	return Boolean(address && address.length === 28);
+	return Boolean(address && address.length === 32);
 }
 export function showAccountStats() {
 	const accountStats = elements.accountStats;

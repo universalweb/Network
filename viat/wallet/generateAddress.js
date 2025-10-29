@@ -46,3 +46,10 @@ export async function generateAddress(publicKey, cipher = 0, version, kind, back
 	}
 	return generateLegacyAddress(publicKey, version, kind, backupHash);
 }
+export async function generateBackupHashStruct(backupPublicKey, cipher = '0', version = '0', kind = '0') {
+	const source = [
+		cipher,
+		backupPublicKey,
+	];
+	return source;
+}

@@ -1,3 +1,6 @@
+//  Treat Audit Blocks as record of actions summarized via HASHES ->
+// Store Blocks outside -> Store Account data outside Audit Blocks -> enforce computation of state changes
+// Keep design agnostic to allow natural evolution of strategies
 import {
 	filePaths,
 	genericFilenames,

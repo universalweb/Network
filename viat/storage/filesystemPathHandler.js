@@ -224,13 +224,13 @@ class FilesystemPathHandler {
 	async getWallet(walletAddress) {
 		const walletSize = walletAddress.length;
 		// console.log('Wallet Size:', walletSize);
-		if (walletSize === 20) {
-			// Handle 20-byte wallet addresses
+		if (walletSize === viatDefaults.wallets.legacy.walletSize) {
+			// Handle 24-byte wallet addresses
 			return this.wallet.getFullPath(walletAddress);
-		} else if (walletSize === 32) {
+		} else if (walletSize === viatDefaults.wallets.hybrid.walletSize) {
 			// Handle 32-byte wallet addresses
 			return this.hybridWallet.getFullPath(walletAddress);
-		} else if (walletSize === 64) {
+		} else if (walletSize === viatDefaults.wallets.quantum.walletSize) {
 			// Handle 64-byte wallet addresses
 			return this.quantumWallet.getFullPath(walletAddress);
 		} else {
