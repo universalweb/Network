@@ -122,7 +122,7 @@ const wallets = {
 		},
 		cipherSuite: 0,
 		signatureAlgo: 'ed25519',
-		backupHash: 'dilithium',
+		trapdoor: 'dilithium',
 	},
 	hybrid: {
 		walletSize: 32,
@@ -132,7 +132,7 @@ const wallets = {
 		},
 		cipherSuite: 1,
 		signatureAlgo: 'ed25519+dilithium',
-		backupHash: 'sphincs',
+		trapdoor: 'sphincs',
 	},
 	quantum: {
 		// ? [40, 48, 56, 64] < Beyond
@@ -144,7 +144,7 @@ const wallets = {
 		},
 		cipherSuite: 2,
 		signatureAlgo: 'dilithium',
-		backupHash: 'sphincs',
+		trapdoor: 'sphincs',
 	},
 };
 /*

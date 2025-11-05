@@ -4,7 +4,7 @@ import viatDefaults from '#viat/defaults';
 const hashConfig = {
 	dkLen: viatDefaults.wallets.legacy.walletSize,
 };
-export function generateAddress(publicKey, backupHash) {
+export function generateAddress(publicKey, trapdoor) {
 	const kind = 0;
 	const cipher = 0;
 	const version = 1;
@@ -14,8 +14,8 @@ export function generateAddress(publicKey, backupHash) {
 		cipher,
 		publicKey,
 	];
-	if (backupHash) {
-		source.push(backupHash);
+	if (trapdoor) {
+		source.push(trapdoor);
 	}
 	return shake256(encodeSync(source), hashConfig);
 }

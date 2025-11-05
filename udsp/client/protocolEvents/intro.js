@@ -29,18 +29,24 @@ const [
 		clientId,
 		timeSent,
 		cipherId,
+		If legacy include cert-mini-checksum if not consider compact hash summary or returned after first packet
 		// version,
 	] = header;
 */
+// TODO: Consider just byte reserved packing instead of CBOR from some of the structure.
 export async function setIntroHeader(header) {
+	// TODO: Consider being false or Buffer.alloc(0) to save a byte or use initial byte bits as flags
 	header[0] = undefined;
+	// TODO:Consider part of a reserved 1 byte space combined wih flag at the start of a packet
 	header[1] = introHeaderRPC;
 	header[3] = Date.now();
-	// TODO: NOT REQUIRED COULD BE LEFT OUT AUTO DEFAULT TO SERVER PREFERRED
+	// TODO: NOT REQUIRED COULD BE LEFT OUT AUTO DEFAULT TO SERVER PREFERRED in Domain Cert
 	if (this.cipher.id) {
 		header[4] = this.cipher.id;
 	}
 	// SAVES BYTES TO USE SLICE OF PUBLIC KEY AS CLIENT ID
+	// TODO: This is only set if no client ID is defined already but this should be combined into just header[0]
+	// NOTE: If pub key then place in header[0] then use flags to indicate no client ID
 	if (!this.publicKey) {
 		header[5] = this.id;
 	}

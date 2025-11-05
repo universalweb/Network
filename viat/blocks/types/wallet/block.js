@@ -20,7 +20,7 @@ export class WalletBlock extends Block {
 	}
 	async configByWallet(data, config) {
 		const walletObject = await data.exportObject();
-		const backupSignatureHash = await data.getBackupSignatureHash();
+		const trapdoorSignatureHash = await data.getTrapdoorSignatureHash();
 		console.log('wallet object', walletObject);
 		this.setWalletType(walletObject.address);
 		await this.setCore('publicKey', walletObject.core.signatureKeypair.publicKey);
@@ -28,7 +28,7 @@ export class WalletBlock extends Block {
 		await this.setCore('walletTimestamp', walletObject.date);
 		await this.setCore('cipherSuiteID', walletObject.cipherSuiteID);
 		await this.setCore('address', await walletObject.address);
-		await this.setCore('backupHash', backupSignatureHash);
+		await this.setCore('trapdoor', trapdoorSignatureHash);
 	}
 	setWalletType(addressArg) {
 		const address = this.getCore('address') || addressArg;

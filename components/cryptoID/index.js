@@ -112,8 +112,8 @@ export class CryptoID {
 		if (!this.excludeKeyExchange) {
 			this.keyExchangeKeypair = await this.cipherSuite.keyExchange.keyExchangeKeypair();
 		}
-		if (this.cipherSuite.backupSignature) {
-			this.backupSignature = await this.cipherSuite.backupSignature.signatureKeypair();
+		if (this.cipherSuite.trapdoorSignature) {
+			this.trapdoorSignature = await this.cipherSuite.trapdoorSignature.signatureKeypair();
 		}
 		options?.idType && (this.idType = options.idType);
 		if (options?.networkName) {
@@ -139,7 +139,7 @@ export class CryptoID {
 			core: {
 				keyExchangeKeypair,
 				signatureKeypair,
-				backupSignature,
+				trapdoorSignature,
 			},
 			networkName,
 			cipherSuiteName,
@@ -149,7 +149,7 @@ export class CryptoID {
 		}
 		this.keyExchangeKeypair = keyExchangeKeypair;
 		this.signatureKeypair = signatureKeypair;
-		this.backupSignature = backupSignature;
+		this.trapdoorSignature = trapdoorSignature;
 		if (hasValue(cipherSuiteID)) {
 			this.cipherSuiteID = cipherSuiteID;
 		}
@@ -168,10 +168,10 @@ export class CryptoID {
 		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
 		return signatureKeypair;
 	}
-	async exportBackupSignatureKeypair() {
+	async exporttrapdoorSignatureKeypair() {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
-		const backupSignature = await this.cipherSuite.backupSignature.exportKeypair(this.backupSignature);
-		return backupSignature;
+		const trapdoorSignature = await this.cipherSuite.trapdoorSignature.exportKeypair(this.trapdoorSignature);
+		return trapdoorSignature;
 	}
 	async exportExchangeKeypair() {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
@@ -184,15 +184,15 @@ export class CryptoID {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
 		const keyExchangeKeypair = await this.exportExchangeKeypair();
 		const signatureKeypair = await this.exportSignatureKeypair();
-		const backupSignature = await this.exportBackupSignatureKeypair();
+		const trapdoorSignature = await this.exporttrapdoorSignatureKeypair();
 		const target = {
 			signatureKeypair,
 		};
 		if (keyExchangeKeypair) {
 			target.keyExchangeKeypair = keyExchangeKeypair;
 		}
-		if (backupSignature) {
-			target.backupSignature = backupSignature;
+		if (trapdoorSignature) {
+			target.trapdoorSignature = trapdoorSignature;
 		}
 		return target;
 	}
@@ -200,15 +200,15 @@ export class CryptoID {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
 		const { publicKey: signaturePublicKey } = await this.exportSignatureKeypair();
 		const { publicKey: keyExchangePublicKey } = await this.exportExchangeKeypair();
-		const { publicKey: backupSignaturePublicKey } = await this.exportBackupSignatureKeypair();
+		const { publicKey: trapdoorSignaturePublicKey } = await this.exporttrapdoorSignatureKeypair();
 		const target = {
 			signaturePublicKey,
 		};
 		if (keyExchangePublicKey) {
 			target.keyExchangePublicKey = keyExchangePublicKey;
 		}
-		if (backupSignaturePublicKey) {
-			target.backupSignaturePublicKey = backupSignaturePublicKey;
+		if (trapdoorSignaturePublicKey) {
+			target.trapdoorSignaturePublicKey = trapdoorSignaturePublicKey;
 		}
 		return target;
 	}
@@ -222,14 +222,14 @@ export class CryptoID {
 		const signatureKeypair = await this.exportSignatureKeypair();
 		return signatureKeypair.privateKey;
 	}
-	async exportBackupSignaturePublicKey() {
+	async exporttrapdoorSignaturePublicKey() {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
-		const backupSignature = await this.exportBackupSignatureKeypair();
-		return backupSignature.publicKey;
+		const trapdoorSignature = await this.exporttrapdoorSignatureKeypair();
+		return trapdoorSignature.publicKey;
 	}
-	async expportBackupSignaturePrivateKey() {
-		const backupSignature = await this.exportBackupSignatureKeypair();
-		return backupSignature.privateKey;
+	async expporttrapdoorSignaturePrivateKey() {
+		const trapdoorSignature = await this.exporttrapdoorSignatureKeypair();
+		return trapdoorSignature.privateKey;
 	}
 	async exportDefaultObject() {
 		const {
@@ -347,8 +347,8 @@ export class CryptoID {
 		const address = await this.getAddress();
 		return (encoding) ? address.toString(encoding) : toBase64Url(address);
 	}
-	async getBackupSignatureHash() {
-		const publicKey = await this.exportBackupSignaturePublicKey();
+	async gettrapdoorSignatureHash() {
+		const publicKey = await this.exporttrapdoorSignaturePublicKey();
 		return this.cipherSuite.hash.hash256(publicKey);
 	}
 	setAlias(value) {
@@ -367,7 +367,7 @@ export default cryptoID;
 // });
 // console.log('exportSignatureKeypair', await exampleCryptoIDExample.exportSignatureKeypair());
 // console.log('exportObject', await exampleCryptoIDExample.exportObject());
-// console.log((await exampleCryptoIDExample.getBackupSignatureHash()).length);
+// console.log((await exampleCryptoIDExample.gettrapdoorSignatureHash()).length);
 // const encryptionPasswordExample = 'password';
 // console.log(await exampleCryptoIDExample.exportBinary());
 // console.log((await exampleCryptoIDExample.getAddress()).length);
