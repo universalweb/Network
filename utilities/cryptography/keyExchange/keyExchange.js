@@ -1,6 +1,5 @@
 import { assign, isBuffer } from '@universalweb/utilitylib';
-import { clearBuffer, clearBuffers } from '#utilities/cryptography/utils';
-import { sodium_memzero } from '#utilities/cryptography/sodium';
+import { clearBuffer } from '#utilities/cryptography/utils';
 export class KeyExchange {
 	constructor(config) {
 		assign(this, config);
@@ -9,6 +8,7 @@ export class KeyExchange {
 		const generatedKeypair = await this.keyExchangeKeypair();
 		return generatedKeypair;
 	}
+	// NOTE: Consider CBOR or Domain Separation for session key generation
 	async createClientSession(source, destination, target) {
 		const sharedSecret = source.sharedSecret;
 		const clientPublicKey = source?.publicKeyHash || source?.publicKey;
@@ -83,7 +83,7 @@ export class KeyExchange {
 			}
 		}
 		if (target.privateKey.length === this.combinedKeySize) {
-			const privateKey = target.privateKey.subarray(0, this.privateKeySize);
+			// const privateKey = target.privateKey.subarray(0, this.privateKeySize);
 			if (!target.publicKey) {
 				target.publicKey = target.publicKey.subarray(this.privateKeySize);
 			}
@@ -170,13 +170,51 @@ export class KeyExchange {
 	}
 	async certificateKeyExchangeKeypair() {
 		const keypair = await this.keyExchangeKeypair();
-		return this?.exportKeypair(keypair) || keypair;
+		if (this?.exportKeypair) {
+			return this?.exportKeypair(keypair);
+		}
+		return keypair;
 	}
 	async initializeKeypair(source) {
 		return assign({}, source);
 	}
 	async initializePublicKey(source) {
 		return source?.publicKey || source;
+	}
+	compareSessionkeys(client, server) {
+		if (!client.receiveKey || !client.transmitKey) {
+			return 'incomplete client keys';
+		}
+		if (!server.receiveKey || !server.transmitKey) {
+			return 'incomplete server keys';
+		}
+		if (client.receiveKey.length !== server.transmitKey.length) {
+			return 'mismatched key sizes';
+		}
+		if (client.transmitKey.length !== server.receiveKey.length) {
+			return 'mismatched key sizes';
+		}
+		const receiveKeyMatch = client.receiveKey.equals(server.transmitKey);
+		const transmitKeyMatch = client.transmitKey.equals(server.receiveKey);
+		if (receiveKeyMatch && transmitKeyMatch) {
+			return 'Keys Match';
+		}
+		if (receiveKeyMatch !== transmitKeyMatch) {
+			return 'only one key matches';
+		}
+		console.log('Session keys do not match:', {
+			receiveKeys: {
+				client: client.receiveKey,
+				server: server.transmitKey,
+				equal: receiveKeyMatch,
+			},
+			transmitKeys: {
+				client: client.transmitKey,
+				server: server.receiveKey,
+				equal: transmitKeyMatch,
+			},
+		});
+		return 'session keys do not match';
 	}
 }
 export function keyExchange(config) {

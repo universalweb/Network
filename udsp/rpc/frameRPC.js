@@ -14,3 +14,27 @@ export const endRPC = 3;
 export function isEnd(id) {
 	return id === endRPC;
 }
+export const finalizeExtendedSynchronizationRPC = 4;
+export function isFinalizeExtendedSynchronization(id) {
+	return id === finalizeExtendedSynchronizationRPC;
+}
+export function frameRPC(id, source = []) {
+	source[1] = id;
+	return source;
+}
+export function frameExtendedSynchronizationRPC(source = []) {
+	frameRPC(extendedSynchronizationRPC, source);
+	return source;
+}
+export function frameFinalizeExtendedSynchronizationRPC(source = []) {
+	frameRPC(finalizeExtendedSynchronizationRPC, source);
+	return source;
+}
+export function frameIntroRPC(source = []) {
+	frameRPC(introRPC, source);
+	return source;
+}
+export function frameEndRPC(source = []) {
+	frameRPC(endRPC, source);
+	return source;
+}

@@ -1,5 +1,4 @@
 import { assignToClass, isBuffer } from '@universalweb/utilitylib';
-//  BETA
 import {
 	filePaths,
 	genericFilenames,
@@ -13,7 +12,11 @@ import { readStructured } from '#utilities/file';
 import { receiptBlock } from '#blocks/transactions/receipt/block';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 import wallet from '#viat/wallet/wallet';
-// GET PRIOR TRANSACTION ID MAX & PRIOR HASH - include prior hash as parent then increment ID
+/*
+	TODO: GET PRIOR TRANSACTION ID MAX & PRIOR HASH - include prior hash as parent then increment ID
+	TODO: Add receipt hash to reference on receiver DAG which is then copied to the receipt block -> consider having in both for redundancy and for light clients
+	NOTE: TX HASH covers some redundancy in receipt block
+*/
 class TransactionBlock extends Block {
 	constructor(data, config) {
 		super(config);

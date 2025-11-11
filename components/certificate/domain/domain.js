@@ -1,24 +1,19 @@
-import {
-	assign,
-	clone,
-	cloneArray,
-	currentPath,
-	hasValue,
-	isArray,
-	isBuffer,
-	isPlainObject,
-	isString,
-	merge,
-	promise,
-} from '@universalweb/utilitylib';
-import { decode, encodeStrict } from '#utilities/serialize';
-import { getCipher, getKeyExchangeAlgorithm, getSignatureAlgorithm } from '#crypto/index.js';
-import { read, readStructured, write } from '#file';
+/*
+	NOTE: Consider splitting domain certs into two a sig cert and a domain cert that references the sig cert
+	Reason being is that domain certs may change more often than sig certs and this would allow for less data to be transferred
+	Post quantum sigs are also likely to be larger in size so separating them may be beneficial if algos are current NIST standard ones
+	Sig Cert aka Identify cert wouldn't change as often unless compromised
+	DomainCertificate would reference SigCert via hash and sig
+	Domain cert can now change more often and transfer less data
+	When connecting to server -> Server can respond with pub key short hash to indicate if user should fetch new domain cert
+	For domains that dont change often with one identity just one entire cert is best
+*/
+import { getKeyExchangeAlgorithm, getSignatureAlgorithm } from '#crypto/index.js';
 import { Certificate } from '../certificate.js';
 import certificateDefaults from '../defaults.js';
-import { keychainSave } from '#components/certificate/keychain';
+import { encodeStrict } from '#utilities/serialize';
+import { hasValue } from '@universalweb/utilitylib';
 import protocolDefaults from '../../../udsp/defaults.js';
-import { toBase64 } from '#utilities/cryptography/utils';
 const { protocolVersion: currentProtocolVersion } = protocolDefaults;
 const {
 	certificateTypes,

@@ -1,7 +1,5 @@
 import { hash256, hash512, hashLegacyAddress } from '#crypto/hash/shake256.js';
-import { bufferAlloc } from '#crypto/utils.js';
 import { encode } from '#utilities/serialize';
-import { isBuffer } from '@universalweb/utilitylib';
 import viat from '#crypto/cipherSuite/viat.js';
 import viatLegacy from '#crypto/cipherSuite/legacy.js';
 import viatQuantum from '#crypto/cipherSuite/quantum.js';
@@ -24,17 +22,17 @@ export function generateAddressStruct(publicKey, cipher = '0', version = '0', ki
 	}
 	return source;
 }
-export function generateLegacyAddressStruct(publicKey, cipher = '0', version = '0', kind = '0', trapdoor) {
+export function generateLegacyAddressStruct(publicKey, trapdoor, cipher = '0', version = '0', kind = '0') {
 	const source = generateAddressStruct(publicKey, cipher, version, kind);
 	source.push(trapdoor);
 	return source;
 }
-export async function generateLegacyAddress(publicKey, version = '0', kind = '0', trapdoor) {
+export async function generateLegacyAddress(publicKey, trapdoor, version = '0', kind = '0') {
 	const source = generateLegacyAddressStruct(publicKey, '0', version, kind, trapdoor);
 	const domained = await encode(source);
 	return hashLegacyAddress(domained);
 }
-export async function generateAddress(publicKey, cipher = 0, version, kind, trapdoor) {
+export async function generateAddress(publicKey, trapdoor, cipher = '0', version = '0', kind = '0') {
 	if (viatLegacy.id === cipher) {
 		return generateLegacyAddress(publicKey, version, kind, trapdoor);
 	}
@@ -46,11 +44,4 @@ export async function generateAddress(publicKey, cipher = 0, version, kind, trap
 		return hash512(domained);
 	}
 	return generateLegacyAddress(publicKey, version, kind, trapdoor);
-}
-export async function generateTrapdoorStruct(backupPublicKey, cipher = '0') {
-	const source = [
-		cipher,
-		backupPublicKey,
-	];
-	return source;
 }

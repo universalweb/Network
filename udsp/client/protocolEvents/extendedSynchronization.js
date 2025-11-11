@@ -1,8 +1,8 @@
 import { extendedSynchronizationHeaderRPC } from '../../rpc/headerRPC.js';
 import { extendedSynchronizationRPC } from '../../rpc/frameRPC.js';
-export async function createExtendedSynchronization(header, frame) {
+export async function createExtendedSynchronization(frame, header) {
 	this.logInfo('Creating Client Extended Synchronization');
-	await this.keyExchange.onCreateClientExtendedSynchronization(this, this.destination, header, frame);
+	await this.keyExchange.onCreateClientExtendedSynchronization(this, this.destination, frame, header);
 }
 // const targetHeader = [];
 // const targetFrame = [false, extendedSynchronizationRPC];
@@ -11,7 +11,7 @@ export async function sendExtendedSynchronization() {
 	const { destination } = this;
 	const header = [];
 	const frame = [];
-	await this.createExtendedSynchronization(header, frame);
+	await this.createExtendedSynchronization(frame, header);
 	await this.sendAny(frame, header);
 }
 export async function extendedSynchronizationHeader(header, packetDecoded) {

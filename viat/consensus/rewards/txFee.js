@@ -30,8 +30,8 @@ import { randomBuffer } from '#crypto/utils.js';
 	Any remaining amount that could not be distributed due to rounding errors is added to the recycle amount
 */
 console.clear();
-const amountMined = 2 ** 2;
-const amountThatQualify = 20;
+const amountMined = 2 ** 12;
+const amountThatQualify = 10;
 const amountNeededToBeQualified = 4;
 const stateExample = {
 	arbiters: {},
@@ -160,7 +160,7 @@ function computeAwards(transaction, decreaseFactor = undefined) {
 	}
 }
 each(stateExample.transactions, (transaction, key) => {
-	computeAwards(transaction, 1);
+	computeAwards(transaction, Math.E);
 });
 console.dir(stateExample, {
 	depth: 8,
