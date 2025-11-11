@@ -9,7 +9,7 @@ import falcon1024 from './falcon1024.js';
 // import { ed25519 } from './ed25519PureJS.js';
 import { hasValue } from '@universalweb/utilitylib';
 import { setOptions } from '../setOption.js';
-import sphincs192 from './sphincs192.js';
+import sphincs192 from './sphincs128.js';
 import viat from './viat.js';
 const cipherList = [
 	ed25519,

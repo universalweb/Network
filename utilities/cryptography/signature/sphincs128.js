@@ -3,7 +3,7 @@
 	* @DESCRIPTION sphincs-shake-192s-simple (s = SMALL/COMPACT)
  */
 import generateScheme from './pqClean.js';
-export const sphincs192 = generateScheme('sphincs-shake-192s-simple', {
+export const sphincs192 = generateScheme('sphincs-shake-128s-simple', {
 	name: 'sphincs192',
 	alias: 'slh_dsa_shake_192s',
 	id: 6,
