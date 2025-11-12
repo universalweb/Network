@@ -10,6 +10,9 @@ export class HashScheme {
 	async concatHash(...sources) {
 		return this.hash256(concatBuffer(sources));
 	}
+	async concatHashStrict(...sources) {
+		return this.hash256Strict(concatBuffer(sources));
+	}
 	async concatHash512(...sources) {
 		// console.log('ConcatHash512', sources);
 		return this.hash512(concatBuffer(sources));

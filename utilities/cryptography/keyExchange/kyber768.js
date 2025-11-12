@@ -1,4 +1,4 @@
-import KyberKeyExchange from './kyberKeyExchange.js';
+import KyberKeyExchange from './kyber.js';
 // Define the ML-KEM-768 algorithm
 const algorithm = 'ml-kem-768';
 // console.log('Supported Algorithms', algoList);
@@ -9,3 +9,4 @@ const kyber768 = new KyberKeyExchange({
 	id: 1,
 	preferred: true,
 });
+export default kyber768;

@@ -2,6 +2,7 @@ import {
 	clearBuffer,
 	int32,
 	int64,
+	random32ByteBuffer,
 } from '#utilities/cryptography/utils';
 import { extendedSynchronizationHeaderRPC, headerExtendedSynchronizationRPC, introHeaderRPC } from '#udsp/rpc/headerRPC';
 import { KeyExchange } from './keyExchange.js';
@@ -85,33 +86,33 @@ class KyberKeyExchange extends KeyExchange {
 	async onServerClientInitialization(source, destination) {
 		source.logInfo('onServerClientInitialization');
 	}
-	async onClientIntroHeader(source, destination, destinationPublicKey) {
+	async onClientIntroHeader(server, client, destinationPublicKey) {
 		const publicKeyHash = await hash256(destinationPublicKey);
-		destination.publicKeyHash = publicKeyHash;
-		destination.publicKey = new PublicKey(this.algorithm, destinationPublicKey);
+		client.publicKeyHash = publicKeyHash;
+		client.publicKey = new PublicKey(this.algorithm, destinationPublicKey);
 		// console.log(destination.publicKey.generateKey);
 		const [
 			cipherData,
 			sharedSecret,
-		] = await encapsulate(destination.publicKey);
-		source.sharedSecret = sharedSecret;
-		source.cipherData = cipherData;
-		source.logInfo('onClientIntroHeader', cipherData, sharedSecret);
-		await this.createServerSession(source, destination, source);
+		] = await encapsulate(client.publicKey);
+		server.sharedSecret = sharedSecret;
+		server.cipherData = cipherData;
+		server.logInfo('onClientIntroHeader', cipherData, sharedSecret);
+		await this.createServerSession(server, client, server);
 	}
 	async serverSendIntro(source, destination, frame, header) {
 		console.log('Send Server Intro', source.cipherData);
 		header[0] = introHeaderRPC;
 		header[1] = source.cipherData;
 	}
-	async onServerIntroHeader(source, destination, cipherData, header) {
-		source.logInfo('onServerIntroHeader');
+	async onServerIntroHeader(client, server, cipherData, header) {
+		client.logInfo('onServerIntroHeader');
 		if (cipherData) {
-			source.sharedSecret = await decapsulate(cipherData, source.privateKey);
-			source.logInfo('onServerIntroHeader kyberSharedSecret', source.sharedSecret);
-			await this.createClientSession(source, destination, source);
-			source.logInfo('sharedSecret', source.sharedSecret);
-			console.log('New Session Keys', source.transmitKey.length, source.receiveKey[0]);
+			client.sharedSecret = await decapsulate(cipherData, client.privateKey);
+			client.logInfo('onServerIntroHeader kyberSharedSecret', client.sharedSecret);
+			await this.createClientSession(client, server, client);
+			client.logInfo('sharedSecret', client.sharedSecret);
+			console.log('New Session Keys', client.transmitKey.length, client.receiveKey[0]);
 		}
 	}
 	async onServerIntroHeaderNoFrame(source, destination, cipherData, header) {
@@ -120,50 +121,47 @@ class KyberKeyExchange extends KeyExchange {
 	async onServerIntro(source, destination, cipherData, frame, header) {
 		source.logInfo('onServerIntro');
 	}
-	async onCreateClientExtendedSynchronization(source, destination, frame, header) {
+	async onCreateClientExtendedSynchronization(client, server, frame, header) {
 		console.log('TRIGGERED onCreateClientExtendedSynchronization');
-		console.log(destination.publicKey);
+		// console.log(destination.publicKey);
 		const [
 			cipherData,
 			sharedSecret,
-		] = await encapsulate(destination.publicKey);
+		] = await encapsulate(server.publicKey);
 		headerExtendedSynchronizationRPC(header);
 		header[2] = cipherData;
-		source.cipherData = cipherData;
-		source.sharedSecret = sharedSecret;
+		client.cipherData = cipherData;
+		client.sharedSecret = sharedSecret;
 		console.log('sendClientExtendedSynchronization kyberSharedSecret', sharedSecret[0], sharedSecret.length);
 		console.log('sendClientExtendedSynchronization cipherText', cipherData[0], cipherData.length);
 	}
-	async serverExtendedSynchronizationHeader(source, destination, frame, header) {
+	async serverExtendedSynchronizationHeader(server, client, frame, header) {
 		console.log('serverExtendedSynchronization CIPHER CALLED', frame, header);
-		const [
-			,,
-			cipherData,
-		] = header;
-		const privateKey = source.privateKey;
+		const cipherData = header[2];
+		const privateKey = server.privateKey;
 		const sharedSecret = await decapsulate(cipherData, privateKey);
-		clearBuffer(source.cipherData);
-		source.cipherData = null;
-		source.sharedSecret = sharedSecret;
-		console.log('Keys', source.transmitKey[0], source.receiveKey[0]);
-		console.log('sharedSecret', source.sharedSecret[0]);
-		console.log('server cipherText', cipherData[0], cipherData.length);
-		await this.finalizeExtendedSynchronization(source, destination);
+		clearBuffer(server.cipherData);
+		server.cipherData = null;
+		server.sharedSecret = sharedSecret;
+		console.log('serverExtendedSynchronization kyberSharedSecret', sharedSecret[0], sharedSecret.length);
+		// console.log('Keys', server.transmitKey[0], server.receiveKey[0]);
+		// console.log('sharedSecret', server.sharedSecret[0]);
+		// console.log('server cipherText', cipherData[0], cipherData.length);
+		await this.finalizeExtendedSynchronization(server, client);
 	}
-	async finalizeExtendedSynchronization(source, destination) {
+	async finalizeExtendedSynchronization(server, client) {
 		console.log('finalize Extended Synchronization');
-		await this.upgradeSessionKeys(source, destination);
-		await this.serverCleanupKeyClass(source);
+		await this.upgradeSessionKeys(server, client);
+		await this.serverCleanupKeyClass(server);
 	}
 	async sendServerExtendedSynchronization(source, destination, frame, header) {
 		console.log('Server Extended Synchronization ack');
 		header[1] = extendedSynchronizationHeaderRPC;
 	}
-	async clientExtendedSynchronization(source, destination, frame, header) {
+	async clientExtendedSynchronization(client, server, frame, header) {
 		console.log('clientExtendedSynchronization frame');
-		await this.upgradeSessionKeys(source, destination);
-		source.sharedSecret = null;
-		source.cipherData = null;
+		await this.upgradeSessionKeys(client, server);
+		client.cipherData = null;
 		// await this.serverCleanupKeyServer(source);
 	}
 	async initializePublicKey(source) {
@@ -201,17 +199,19 @@ async function example() {
 	const cert = await kyber768.exportKeypair(await kyber768.keyExchangeKeypair());
 	const server = await kyber768.initializeKeypair(cert);
 	server.logInfo = console.log;
+	// Server gets client intro
 	await kyber768.onClientIntroHeader(server, client, client.publicKeyBuffer);
+	// Client gets server intro
 	await kyber768.onServerIntroHeader(client, server, server.cipherData);
 	console.log('server', server);
-	console.log(kyber768.compareSessionkeys(client, server));
+	console.log(kyber768.compareSessionkeysThrow(client, server));
 	const serverExtendedHeader = [];
 	const serverExtendedFrame = [];
 	await kyber768.onCreateClientExtendedSynchronization(client, server, serverExtendedFrame, serverExtendedHeader);
-	console.log(serverExtendedHeader);
+	console.log('serverExtendedHeader', serverExtendedHeader);
 	await kyber768.serverExtendedSynchronizationHeader(server, client, serverExtendedFrame, serverExtendedHeader);
 	await kyber768.clientExtendedSynchronization(client, server);
-	console.log(kyber768.compareSessionkeys(client, server));
-	console.log('client', client);
+	// console.log('client', client);
+	console.log(kyber768.compareSessionkeysThrow(client, server));
 }
 // await example();

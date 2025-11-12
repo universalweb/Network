@@ -3,6 +3,9 @@
 	"appId": "universalWeb.browser",
 	"author": "Universal Web",
 	"type": "module",
+	"version": "5.0.0",
+	"designVersion": "5.0.0",
+	"state": "ALPHA",
 	"auto-changelog": {
 		"commitLimit": false,
 		"output": "CHANGELOG.md",
@@ -132,8 +135,6 @@
 		"updateAll": "pnpm update --latest",
 		"installMain": "pnpm install --no-optional"
 	},
-	"version": "5.0.0",
-	"designVersion": "5.0.0",
 	"devDependencies": {
 		"@babel/core": "^7.28.4",
 		"@babel/eslint-parser": "^7.28.4",

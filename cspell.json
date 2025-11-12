@@ -23,6 +23,7 @@
 	"decapsulates",
 	"iife",
 	"journaling",
+	"KMACXOF",
 	"pqclean",
 	"sarif",
 	"simc",

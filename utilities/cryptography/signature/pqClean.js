@@ -14,7 +14,7 @@ import { signatureScheme } from './signatureScheme.js';
 const seedSize = 32;
 const algoList = pqclean.sign.supportedAlgorithms;
 const generateKeyPair = pqclean.sign.generateKeyPair;
-console.log('PQClean Signature Schemes Available:', algoList);
+// console.log('PQClean Signature Schemes Available:', algoList);
 /* const supportedAlgorithms = [
 	'falcon-1024',
 	'falcon-512',

@@ -1,5 +1,5 @@
 // SHAKE256 Paired with strict size outputs of SHA3-256 & SHA3-512
-// Other SHAKE related algorithms can be included here
+// Other SHAKE related algorithms can be included here for key derivation functions and scalability cSHAKE256 or KMACXOF256 or ParallelHashXOF256
 import {
 	clearBuffer,
 	defaultHashSettings,
