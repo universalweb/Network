@@ -15,7 +15,7 @@ import {
 	toBase64,
 	toHex,
 } from '#utilities/cryptography/utils';
-import dilithiumAPI from './dilithium44.js';
+import dilithiumAPI from './dilithium65.js';
 import ed25519Utils from './ed25519.js';
 import signatureScheme from './signatureScheme.js';
 import sphincs192 from './sphincs128.js';

@@ -3,35 +3,21 @@ import { each, times } from '@universalweb/utilitylib';
 import { encodeSync } from '#utilities/serialize';
 import { randomBuffer } from '#crypto/utils.js';
 /*
-	Total amount awarded to arbiters take % of the total mined
-	Give out total based on the total number of arbiter blocks submitted to unique transactions
-	Distribute the total reward based on decreasing amounts from most verifications to least
-	___________
-	All auditors sign off on a block hash BFT agrees on a block hash
-	All auditors are forced to confirm work because if they sign off on a hash without knowing it then they risk their stake
-	This forces all auditors to be in sync with the network and confirm the work they are signing off on and not try and game the system
-	Auditors are then rewarded based on the hash order based on the total TX hash tries they have signed off on
-	__________
-	Awards are distributed in the next block based on the contents of the previous audit block submitted.
-	In the next block the awards are finalized by creating transactions from the system wallet which can be one TX block with many recipients.
-	___________
-	TX Fee must be more than minimum of Reserve + Recycle Fee + Minimum TX Fee set by network
-	__________
-	Take total amount of TX fee for Arbiters
-		An amount of the TX fee can be set aside for auditors as well which is added to the auditor reward split.
-	Take out Viat Reserve % or flat amount (1% or minimum fee amount)
-	Take out Viat Recycle % to be recycled back into network
-	GET arbiter block hashes closest to the TX hash that are more than TX hash in sorted order
-	IF Not enough Arbiter blocks enough to qualify the TX then TX is marked invalid
-	IF Current qualified arbiter list < Total qualified arbiters
-		PREPEND arbiter block hashes that take place before the TX hash in sorted order up to the qualified limit
-	Distribute the total reward based on decreasing amounts to each arbiter block hash in sorted order
-	__________
-	Any remaining amount that could not be distributed due to rounding errors is added to the recycle amount
+	SCRIPT FOR TX FEE SPLIT AMONG MINERS OF THE SAME TYPE
+	BLOCK REWARD
+		Arbiters
+		Auditors
+	TX FEE REWARD
+		Arbiters
+			TX FEE is split based on the hashes closest to the transaction hash
+				The algorithm goes until the TX Fee split is awarded until the remainder is too small
+				Once the remainder is too small to distribute further, it is recycled
+		Auditors
+			Should auditors get a cut of the TX Fee or is the block reward sufficient?
 */
 console.clear();
-const amountMined = 2 ** 12;
-const amountThatQualify = 10;
+const amountMined = 2 ** 5;
+const amountThatQualify = 100;
 const amountNeededToBeQualified = 4;
 const stateExample = {
 	arbiters: {},
@@ -160,7 +146,8 @@ function computeAwards(transaction, decreaseFactor = undefined) {
 	}
 }
 each(stateExample.transactions, (transaction, key) => {
-	computeAwards(transaction, Math.E);
+	// Math.PI, Math.E 1.62(Golden Ratio)
+	computeAwards(transaction, 1.62);
 });
 console.dir(stateExample, {
 	depth: 8,

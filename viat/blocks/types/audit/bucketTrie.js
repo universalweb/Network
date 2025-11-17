@@ -35,15 +35,42 @@ function consoleLog(...args) {
 const encodingLevels = {
 	// Initial branch has 256 possible keys (8 bits)
 	0(value) {
-		// 256
-		return value;
+		// 1 key
+		return 0;
 	},
 	1(value) {
-		// 4
-		return value >> 6;
+		if (value < 2) {
+			return value;
+		}
+		// 2 keys
+		return value >> 7;
 	},
 	2(value) {
-		// 2
+		// 4 keys
+		if (value < 4) {
+			return value;
+		}
+		return value >> 6;
+	},
+	3(value) {
+		// 64 keys
+		if (value < 64) {
+			return value;
+		}
+		return value >> 2;
+	},
+	4(value) {
+		// 2 keys
+		if (value < 2) {
+			return value;
+		}
+		return value >> 7;
+	},
+	5(value) {
+		// 2 keys
+		if (value < 2) {
+			return value;
+		}
 		return value >> 7;
 	},
 };
@@ -55,7 +82,7 @@ const encodingLevels = {
 	-->    ->
 	--> ->
 */
-async function computeNodeHash(nodes) {
+async function computeNodeHash(nodes, source) {
 	const hashes = [];
 	const nodeKeys = Object.keys(nodes);
 	const keysLength = nodeKeys.length;
@@ -66,22 +93,39 @@ async function computeNodeHash(nodes) {
 		const key = nodeKeys[i];
 		if (nodes[key]) {
 			const nodeHash = await nodes[key].fullHash();
-			if (nodeHash?.count !== 0) {
+			if (nodeHash && nodeHash?.count !== 0) {
 				insertSortedBuffer(hashes, nodeHash);
 			}
 		}
 	}
+	console.log('Keys length:', keysLength);
 	if (!hashes.length) {
 		return;
 	}
 	if (hashes.length === 1) {
+		// console.dir(trie.trieMap, {
+		// 	depth: 1,
+		// });
+		// throw (1);
+		if (source.root) {
+			source.root.hashingAvoided++;
+		} else {
+			source.hashingAvoided++;
+		}
 		return hashes[0];
 	}
+	if (source.root) {
+		source.root.hashingDone++;
+	} else {
+		source.hashingDone++;
+	}
 	const concatenatedHashes = await encode(hashes);
-	consoleLog('Computing node hash for hashes:', hashes, concatenatedHashes);
-	return hash256(concatenatedHashes);
+	consoleLog('HASHING DONE', hashes.length, source.key, source.bytePosition);
+	const hash = await hash256(concatenatedHashes);
+	source.trieMap.set('hash', hash);
+	return hash;
 }
-class BucketTrie {
+class Base {
 	constructor(...args) {
 		return this;
 	}
@@ -143,7 +187,7 @@ class BucketTrie {
 		const list = bucket.list;
 		const listLength = list.length;
 		for (let i = 0; i < listLength; i++) {
-			if (Buffer.compare(list[i], hash) === 0) {
+			if (list[i].equals(hash)) {
 				return true;
 			}
 		}
@@ -153,16 +197,21 @@ class BucketTrie {
 	nodes = {};
 	trieMap = new Map();
 	levelIndex = new Map();
-	depth = 3;
 	stale = true;
 	hash = undefined;
-	maxIndex = 2;
+	maxIndex = 5;
 	encodingLevels = encodingLevels;
 	count = 0;
 	hashes = new Map();
 	list = [];
+	branchCount = 0;
+	bucketCount = 0;
+	printStats() {
+		console.log(`Branch Count: ${this.branchCount}`);
+		console.log(`Bucket Count: ${this.bucketCount}`);
+	}
 }
-class Bucket extends BucketTrie {
+class Bucket extends Base {
 	constructor(...args) {
 		super(...args);
 		if (args.length) {
@@ -174,11 +223,16 @@ class Bucket extends BucketTrie {
 		this.key = key;
 		this.bytePosition = bytePosition;
 		this.parent = parentBranch;
+		this.root = parentBranch.root || parentBranch;
 		this.maxIndex = parentBranch.maxIndex;
 		this.toKey = this.encodingLevels[bytePosition];
 		const trieMap = new Map();
 		this.trieMap = trieMap;
 		trieMap.set('list', this.list);
+		this.parent.bucketCount++;
+		if (this.root) {
+			this.root.totalBucketCount++;
+		}
 		return this;
 	}
 	async append(hash) {
@@ -221,12 +275,14 @@ class Bucket extends BucketTrie {
 	// GET ALL CHILD HASHES
 	//  SORT OBJECT KEYS BEFORE HASHING
 	async fullHash() {
-		if (this.trieMap.get('hash') && !this.stale) {
+		if (this.hash && !this.stale) {
 			consoleLog('Returning cached hash');
-			return this.trieMap.get('hash');
+			return this.hash;
 		}
 		if (this.list.length === 1) {
-			this.trieMap.set('hash', this.list[0]);
+			this.hash = this.list[0];
+			this.root.hashingAvoided++;
+			this.stale = false;
 			return this.list[0];
 		} else if (this.list.length === 0) {
 			this.parent.trieMap.delete(this.key);
@@ -234,13 +290,14 @@ class Bucket extends BucketTrie {
 		}
 		// NOTE: Self sourted so encodeStrict is likely not needed
 		const concatenatedHashes = await encodeStrict(this.list);
-		this.trieMap.set('hash', await hash256(concatenatedHashes));
+		this.hash = await hash256(concatenatedHashes);
+		this.root.hashingDone++;
 		this.stale = false;
-		return this.trieMap.get('hash');
+		return this.hash;
 	}
 	isBucket = true;
 }
-class Branch extends BucketTrie {
+class Branch extends Base {
 	constructor(...args) {
 		super(...args);
 		if (args.length) {
@@ -253,24 +310,27 @@ class Branch extends BucketTrie {
 		this.bytePosition = bytePosition;
 		this.parent = parentSource;
 		this.maxIndex = parentSource.maxIndex;
-		const trieMap = new Map();
-		this.trieMap = trieMap;
+		this.trieMap = new Map();
 		this.root = parentSource.root || parentSource;
 		this.toKey = this.encodingLevels[bytePosition];
+		this.parent.branchCount++;
+		if (this.root) {
+			this.root.totalBranchCount++;
+		}
 		return this;
 	}
 	async append(hash) {
 		const bytePosition = this.bytePosition + 1;
 		const key = this.encodingLevels[bytePosition](hash[bytePosition]);
-		const ConstructorBranch = (bytePosition === this.maxIndex) ? Bucket : Branch;
 		if (!this.nodes[key]) {
 			consoleLog(`Creating new bucket for key ${key} index ${bytePosition} with hash ${hash.toString('base64')}`);
+			const ConstructorBranch = (bytePosition === this.maxIndex) ? Bucket : Branch;
 			this.nodes[key] = await (new ConstructorBranch(key, bytePosition, this));
 		}
 		if (!this.trieMap.has(key)) {
 			this.trieMap.set(key, this.nodes[key].trieMap);
 		}
-		const appendInfo = this.nodes[key].append(hash);
+		const appendInfo = await this.nodes[key].append(hash);
 		if (appendInfo) {
 			consoleLog(`Appending to existing bucket for key ${key} index ${bytePosition} with hash ${hash.toString('base64')}`);
 			this.stale = true;
@@ -297,27 +357,28 @@ class Branch extends BucketTrie {
 			};
 		}
 	}
-	setValue(hash, value) {
+	async setValue(hash, value) {
 		const bytePosition = this.bytePosition + 1;
 		const key = this.encodingLevels[bytePosition](hash[bytePosition]);
 		if (!this.nodes[key]) {
 			return;
 		}
-		this.nodes[key].setValue(hash, value);
+		await this.nodes[key].setValue(hash, value);
 	}
 	async fullHash() {
 		if (this.hash && !this.stale) {
 			consoleLog('Returning cached hash');
 			return this.hash;
 		}
-		this.hash = await computeNodeHash(this.nodes);
-		this.hash && this.trieMap.set('hash', this.hash);
+		const hash = await computeNodeHash(this.nodes, this);
+		this.hash = hash;
+		// this.trieMap.set('hash', this.hash);
 		this.stale = false;
-		return this.hash;
+		return hash;
 	}
 	isBranch = true;
 }
-class ViatSyncTrie extends BucketTrie {
+class ViatSyncTrie extends Base {
 	constructor(config) {
 		super();
 		this.hashTrie = new VIATHashTrie();
@@ -370,7 +431,10 @@ class ViatSyncTrie extends BucketTrie {
 			consoleLog('Returning cached hash');
 			return this.hash;
 		}
-		this.hash = await computeNodeHash(this.nodes);
+		this.hashingAvoided = 0;
+		this.hashingDone = 1;
+		const hash = await computeNodeHash(this.nodes, this);
+		this.hash = await hash256(hash);
 		this.trieMap.set('hash', this.hash);
 		this.stale = false;
 		return this.hash;
@@ -400,6 +464,17 @@ class ViatSyncTrie extends BucketTrie {
 	}
 	toKey = encodingLevels[0];
 	isRoot = true;
+	totalBranchCount = 0;
+	totalBucketCount = 0;
+	async printStats() {
+		console.log('TOTAL HASH', await this.fullHash());
+		console.log(`Total Hash Count: ${this.count}`);
+		console.log(`Total Branch Count: ${this.totalBranchCount}`);
+		console.log(`Total Bucket Count: ${this.totalBucketCount}`);
+		console.log(`Total hash work reduced to ${Math.floor((this.hashingDone / this.count) * 100)}%`);
+		console.log(`Total Hashing done ${this.hashingDone}`);
+		console.log(`Total Hashing avoided ${this.hashingAvoided}`);
+	}
 }
 async function exampleTest() {
 	const trie = new ViatSyncTrie();
@@ -414,8 +489,8 @@ async function exampleTest() {
 	// await trie.remove(hash4Example);
 	// await trie.append(hash4Example);
 	// await trie.remove(hash4Example);
-	for (let i = 0; i < 10000; i++) {
-		await trie.append(await randomBuffer(32));
+	for (let i = 0; i < 60_000; i++) {
+		await trie.append(await hash256(await randomBuffer(32)));
 	}
 	// consoleLog(findNextCollisionIndex([
 	// 	hashExample, hash2Example, hash3Example,
@@ -433,9 +508,13 @@ async function exampleTest() {
 	// const TEBranch = await trie.getBranch('T.E');
 	// consoleLog(TEBranch);
 	// consoleLog(TEBranch.getObject());
+	await trie.fullHash();
 	console.dir(trie.trieMap, {
-		depth: 8,
+		depth: 10,
 	});
+	await trie.printStats();
+	await trie.append(await hash256(await randomBuffer(32)));
+	await trie.printStats();
 	// console.log((await trie.getBucket(hashExample)).list);
 	// console.log((await trie.hasHash(Buffer.from('TE'))));
 	// console.log(encodeStrictSync(trie.trieMap).length);

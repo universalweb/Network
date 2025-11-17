@@ -4,7 +4,9 @@ import {
 	int64,
 	random32ByteBuffer,
 } from '#utilities/cryptography/utils';
-import { extendedSynchronizationHeaderRPC, headerExtendedSynchronizationRPC, introHeaderRPC } from '#udsp/rpc/headerRPC';
+import {
+	extendedAuthHeaderRPC, extendedSynchronizationHeaderRPC, headerExtendedSynchronizationRPC, introHeaderRPC,
+} from '#udsp/rpc/headerRPC';
 import { KeyExchange } from './keyExchange.js';
 import { findItem } from '@universalweb/utilitylib';
 import pqclean from 'pqclean';
@@ -25,6 +27,15 @@ export async function keyExchangeKeypair(seed) {
 	return kyberKeypair;
 }
 export async function clientEphemeralKeypair() {
+	const kyberKeypair = await this.generateKeyPair(this.algorithm);
+	const publicKeyBuffer = Buffer.from(await kyberKeypair.publicKey.export());
+	const publicKeyHash = await hash256(publicKeyBuffer);
+	// Hashed for faster session keys generation
+	kyberKeypair.publicKeyHash = publicKeyHash;
+	kyberKeypair.publicKeyBuffer = publicKeyBuffer;
+	return kyberKeypair;
+}
+export async function serverEphemeralKeypair() {
 	const kyberKeypair = await this.generateKeyPair(this.algorithm);
 	const publicKeyBuffer = Buffer.from(await kyberKeypair.publicKey.export());
 	const publicKeyHash = await hash256(publicKeyBuffer);
@@ -162,7 +173,18 @@ class KyberKeyExchange extends KeyExchange {
 		console.log('clientExtendedSynchronization frame');
 		await this.upgradeSessionKeys(client, server);
 		client.cipherData = null;
-		// await this.serverCleanupKeyServer(source);
+		// TODO: Run cleanup
+	}
+	async createServerEphemeralExtendedSyncAuth(server, client, frame, header) {
+		// SEND SERVER EPHEMERAL KEY
+		header[1] = extendedAuthHeaderRPC;
+		header[2] = server.publicKeyBuffer;
+	}
+	async onServerEphemeralExtendedSyncAuth(source, destination, frame, header) {
+		console.log('onServerEphemeralExtendedSyncAuth frame');
+	}
+	async clientAuth(client, server, frame, header) {
+		console.log('clientAuth frame');
 	}
 	async initializePublicKey(source) {
 		return new PublicKey(this.algorithm, source?.publicKey || source);
@@ -172,6 +194,7 @@ class KyberKeyExchange extends KeyExchange {
 	}
 	keyExchangeKeypair = keyExchangeKeypair;
 	clientEphemeralKeypair = clientEphemeralKeypair;
+	serverEphemeralKeypair = serverEphemeralKeypair;
 	PrivateKey = PrivateKey;
 	PublicKey = PublicKey;
 	encapsulate = encapsulate;

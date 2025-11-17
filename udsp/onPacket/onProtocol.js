@@ -68,7 +68,6 @@ export async function proccessProtocolFrame(rpc, source, frame, header, rinfo) {
 	switch (rpc) {
 		// Hello/Intro
 		case introRPC: {
-			source.logInfo('Hello/Intro RECEIVED');
 			source.intro(frame, header, rinfo);
 			break;
 		}

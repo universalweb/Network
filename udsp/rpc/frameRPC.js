@@ -38,3 +38,4 @@ export function frameEndRPC(source = []) {
 	frameRPC(endRPC, source);
 	return source;
 }
+export const extendedAuthRPC = 5;

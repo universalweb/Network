@@ -38,4 +38,5 @@ export function headerEndRPC(source = []) {
 	headerRPC(endHeaderRPC, source);
 	return source;
 }
+export const extendedAuthHeaderRPC = 5;
 export default headerRPC;
