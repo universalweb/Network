@@ -4,7 +4,7 @@ import { IntroHeaderSchema, PacketSchema, file_packet } from './src/gen/packet_p
 import { create, fromBinary, toBinary } from '@bufbuild/protobuf';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { gzip, zstdCompress } from 'node:zlib';
-import { hash256 } from '#crypto/hash/shake256.js';
+import { hash256 } from '#crypto/hash/shake.js';
 import { randomBuffer } from '#crypto/utils.js';
 function generateFlagsByte(shortHeaderMode, byte2, byte3, byte4, byte5, byte6, byte7, byte8) {
 	let byte = 0;

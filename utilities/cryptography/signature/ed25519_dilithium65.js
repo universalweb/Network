@@ -8,7 +8,7 @@ import {
 	untilFalseArray,
 } from '@universalweb/utilitylib';
 import { decode, encode, encodeStrict } from '#utilities/serialize';
-import { hash256, hash512 } from '../hash/shake256.js';
+import { hash256, hash512 } from '../hash/shake.js';
 import {
 	randomBuffer,
 	toBase64,

@@ -18,7 +18,7 @@ import {
 	toBase64,
 	toHex,
 } from '#utilities/cryptography/utils';
-import hash from '../hash/shake256.js';
+import hash from '../hash/shake.js';
 import { introHeaderRPC } from '#udsp/rpc/headerRPC';
 import keyExchange from './keyExchange.js';
 import kyber768 from './kyber768.js';

@@ -3,7 +3,7 @@ import { bufferAlloc, int32, randomize } from '#utilities/cryptography/utils';
 import aegis256 from '../cipher/AEGIS256.js';
 import dilithium from '#crypto/signature/dilithium44.js';
 import ed25519 from '../signature/ed25519.js';
-import shake256 from '../hash/shake256.js';
+import shake256 from '../hash/shake.js';
 import viatDefaults from '#viat/defaults';
 import x25519 from '../keyExchange/x25519.js';
 import xChaCha from '../cipher/xChaCha.js';

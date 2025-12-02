@@ -1,7 +1,7 @@
 import { Block, block } from './block.js';
 import { blockTypes } from '#viat/blocks/defaults';
-import { genesisBlock } from '#blocks/genesis/root/block';
-import { genesisWalletBlock } from '#blocks/genesis/genesisWallet/block';
+import { genesisBlock } from '#blocks/system/genesis/block';
+import { genesisWalletBlock } from '#blocks/system/wallet/block';
 import path from 'path';
 import { readStructured } from '#utilities/file';
 import { receiptBlock } from '#blocks/transactions/receipt/block';

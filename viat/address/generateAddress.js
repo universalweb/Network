@@ -1,4 +1,4 @@
-import { hash256, hash512, hashLegacyAddress } from '#crypto/hash/shake256.js';
+import { hash256, hash512, hashLegacyAddress } from '#crypto/hash/shake.js';
 import { encode } from '#utilities/serialize';
 import viat from '#crypto/cipherSuite/viat.js';
 import viatLegacy from '#crypto/cipherSuite/legacy.js';

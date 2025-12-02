@@ -44,6 +44,7 @@
 !   ╚═══╝  ╚═╝╚═╝  ╚═╝   ╚═╝       ╚═╝╚═╝  ╚═══╝╚═╝      ╚═════╝
 */
 const version = '0.0.1';
+const vanityVersion = '0.0.1';
 const coinName = 'VIAT';
 const coinNamePlural = 'VIAT';
 const coinSymbol = '⩝';
@@ -195,6 +196,7 @@ const viatDefaults = {
 	defaultNonceSize,
 	defaultQuantumHashSize,
 	wallets,
+	vanityVersion,
 };
 export default viatDefaults;
 // console.log(viatDefaults);

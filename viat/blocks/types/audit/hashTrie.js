@@ -1,7 +1,7 @@
 import { encode, encodeStrict } from '#utilities/serialize';
 import { gzip, zstdCompress } from 'node:zlib';
 import { insertSortedBuffer, toEncoding } from './utils.js';
-import { hash256 } from '#crypto/hash/shake256.js';
+import { hash256 } from '#crypto/hash/shake.js';
 import { promisify } from 'node:util';
 import { randomBuffer } from '#crypto/utils.js';
 // BASIC SNAPSHOT WITH NO FALSE POSITIVES DETERMINISTIC

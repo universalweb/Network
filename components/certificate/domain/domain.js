@@ -1,3 +1,7 @@
+import {
+	certificateTypes,
+	certificateVersion as currentCertificateVersion,
+} from '../defaults.js';
 /*
 	NOTE: Consider splitting domain certs into two a sig cert and a domain cert that references the sig cert
 	Reason being is that domain certs may change more often than sig certs and this would allow for less data to be transferred
@@ -10,23 +14,17 @@
 */
 import { getKeyExchangeAlgorithm, getSignatureAlgorithm } from '#crypto/index.js';
 import { Certificate } from '../certificate.js';
-import certificateDefaults from '../defaults.js';
 import { encodeStrict } from '#utilities/serialize';
 import { hasValue } from '@universalweb/utilitylib';
 import protocolDefaults from '../../../udsp/defaults.js';
 const { protocolVersion: currentProtocolVersion } = protocolDefaults;
-const {
-	certificateTypes,
-	certificateVersion: currentCertificateVersion,
-} = certificateDefaults;
-const domainCertificateType = certificateTypes.get('domain');
+const certificateType = certificateTypes.get('domain');
 // TODO: ADD IMPORT METHOD FOR KEYS TO LOAD AND SHOW CORRECTLY
 // TODO: ADD EXPORT METHOD FOR KEYS TO SAVE AND SHOW CORRECTLY
 // TODO: CONSIDER INT BASED RECORD TYPES INSTEAD OF STRINGS
 export async function createDomainCertificateObject(config = {}, options = {}) {
 	const currentDate = new Date();
 	const {
-		certificateType = domainCertificateType,
 		entity,
 		records,
 		version = currentCertificateVersion,

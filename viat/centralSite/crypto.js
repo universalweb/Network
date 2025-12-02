@@ -1,5 +1,5 @@
 import ed25519 from '#crypto/signature/ed25519.js';
-import { hash256 } from '#crypto/hash/shake256.js';
+import { hash256 } from '#crypto/hash/shake.js';
 async function verifySignature(signature, message, publicKey) {
 	return ed25519.verifySignature(signature, message, publicKey);
 }

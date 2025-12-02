@@ -16,7 +16,7 @@ import { randomBuffer } from '#crypto/utils.js';
 			Should auditors get a cut of the TX Fee or is the block reward sufficient?
 */
 console.clear();
-const amountMined = 2 ** 5;
+const amountMined = 2 ** 14;
 const amountThatQualify = 100;
 const amountNeededToBeQualified = 4;
 const stateExample = {
@@ -147,7 +147,7 @@ function computeAwards(transaction, decreaseFactor = undefined) {
 }
 each(stateExample.transactions, (transaction, key) => {
 	// Math.PI, Math.E 1.62(Golden Ratio)
-	computeAwards(transaction, 1.62);
+	computeAwards(transaction, 1.062);
 });
 console.dir(stateExample, {
 	depth: 8,

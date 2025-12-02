@@ -7,7 +7,7 @@ import { createRequire } from 'module';
 // Used to detect direct execution for the demo
 import { fileURLToPath } from 'url';
 // Import hash512 only for demo data generation; do not re-hash inputs inside Bloom
-import { hash512 } from '#utilities/cryptography/hash/shake256';
+import { hash512 } from '#crypto/hash/shake.js';
 import path from 'path';
 // Random 64-byte buffer generator for demo convenience
 import { random64ByteBuffer } from '#crypto/utils.js';

@@ -3,7 +3,7 @@
  * @alias x25519_SHAKE256
  * @DESCRIPTION Key exchange with x25519 & hashing is done with SHAKE256.
  */
-import hash from '../hash/shake256.js';
+import hash from '../hash/shake.js';
 import x25519KeyExchange from './X25519KeyExchange.js';
 export const x25519 = x25519KeyExchange({
 	name: 'x25519',

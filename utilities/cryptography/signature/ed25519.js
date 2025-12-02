@@ -5,7 +5,7 @@ import {
 	toBase64,
 	toHex,
 } from '#utilities/cryptography/utils';
-import hash from '../hash/shake256.js';
+import hash from '../hash/shake.js';
 const {
 	hash256,
 	hash512,

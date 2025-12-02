@@ -4,7 +4,7 @@
 import { bufferAlloc, int32, randomize } from '#utilities/cryptography/utils';
 import aegis256 from '../cipher/AEGIS256.js';
 import kyber768_x25519 from '../keyExchange/kyber768_x25519.js';
-import shake256 from '../hash/shake256.js';
+import shake256 from '../hash/shake.js';
 import viat from '../signature/viat.js';
 import xChaCha from '../cipher/xChaCha.js';
 export const viatCipherSuite = {

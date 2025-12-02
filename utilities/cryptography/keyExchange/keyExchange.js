@@ -3,8 +3,6 @@ import { clearBuffer } from '#utilities/cryptography/utils';
 /*
 	NOTE: Consider KMAC or cSHAKE for domain separation in session key generation instead of concact then SHA3-256
 */
-const txDomain = Buffer.from('TX');
-const rxDomain = Buffer.from('RX');
 export class KeyExchange {
 	constructor(config) {
 		assign(this, config);

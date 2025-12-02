@@ -11,7 +11,7 @@ import { KeyExchange } from './keyExchange.js';
 import { findItem } from '@universalweb/utilitylib';
 import pqclean from 'pqclean';
 // import runBench from '#utilities/benchmark';
-import shake256 from '../hash/shake256.js';
+import shake256 from '../hash/shake.js';
 // Define the ML-KEM-768 algorithm
 // Generate a key pair (public and private keys)
 const seedSize = int64;

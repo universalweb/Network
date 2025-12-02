@@ -17,12 +17,16 @@
 	Hashing can be added at the beginning of the append process to ensure fixed length hashes are used, to increase entropy, and or induce historical complexity.
 */
 import {
-	encode, encodeStrict, encodeStrictSync, encodeSync,
+	encode,
+	encodeStrict,
+	encodeStrictSync,
+	encodeSync,
 } from '#utilities/serialize';
 import { getKeyString, insertSortedBuffer } from './utils.js';
 import { VIATHashTrie } from './hashTrie.js';
 import { assign } from '@universalweb/utilitylib';
-import { hash256 } from '#crypto/hash/shake256.js';
+import { hash256 } from '#crypto/hash/shake.js';
+import { mem } from '#utilities/mem';
 import { randomBuffer } from '#crypto/utils.js';
 // ParallelHashXOF256
 // Sort keys and arrays before hashing OR use CBOR encode Strict for deterministic encoding then hashing
@@ -32,45 +36,22 @@ function consoleLog(...args) {
 }
 //  TODO:Change array into MAP for hash lists will be consistent with rest of trie and faster abstract lookups
 // Control the shape of the trie by adjusting how many possible keys there are each level
+// Tuned for around 180K Hashes good mem profile for Node
 const encodingLevels = {
-	// Initial branch has 256 possible keys (8 bits)
 	0(value) {
-		// 1 key
-		return 0;
+		// 2 key
+		return value >> 7;
 	},
 	1(value) {
-		if (value < 2) {
-			return value;
-		}
-		// 2 keys
-		return value >> 7;
-	},
-	2(value) {
-		// 4 keys
-		if (value < 4) {
-			return value;
-		}
 		return value >> 6;
 	},
-	3(value) {
-		// 64 keys
-		if (value < 64) {
-			return value;
-		}
+	2(value) {
 		return value >> 2;
 	},
-	4(value) {
-		// 2 keys
-		if (value < 2) {
-			return value;
-		}
-		return value >> 7;
+	3(value) {
+		return value >> 6;
 	},
-	5(value) {
-		// 2 keys
-		if (value < 2) {
-			return value;
-		}
+	4(value) {
 		return value >> 7;
 	},
 };
@@ -98,7 +79,7 @@ async function computeNodeHash(nodes, source) {
 			}
 		}
 	}
-	console.log('Keys length:', keysLength);
+	consoleLog('Keys length:', keysLength);
 	if (!hashes.length) {
 		return;
 	}
@@ -199,7 +180,7 @@ class Base {
 	levelIndex = new Map();
 	stale = true;
 	hash = undefined;
-	maxIndex = 5;
+	maxIndex = 4;
 	encodingLevels = encodingLevels;
 	count = 0;
 	hashes = new Map();
@@ -235,6 +216,7 @@ class Bucket extends Base {
 		}
 		return this;
 	}
+	// TODO: Create mini merkle trie for buckets see if viable
 	async append(hash) {
 		consoleLog('ViatSyncBucket', hash);
 		const hashKeyString = getKeyString(hash);
@@ -288,9 +270,8 @@ class Bucket extends Base {
 			this.parent.trieMap.delete(this.key);
 			return undefined;
 		}
-		// NOTE: Self sourted so encodeStrict is likely not needed
-		const concatenatedHashes = await encodeStrict(this.list);
-		this.hash = await hash256(concatenatedHashes);
+		const concatenatedHashes = this.list;
+		this.hash = await hash256(Buffer.concat(concatenatedHashes));
 		this.root.hashingDone++;
 		this.stale = false;
 		return this.hash;
@@ -471,12 +452,15 @@ class ViatSyncTrie extends Base {
 		console.log(`Total Hash Count: ${this.count}`);
 		console.log(`Total Branch Count: ${this.totalBranchCount}`);
 		console.log(`Total Bucket Count: ${this.totalBucketCount}`);
+		console.log(`Total Object Count: ${this.totalBucketCount + this.totalBranchCount}`);
 		console.log(`Total hash work reduced to ${Math.floor((this.hashingDone / this.count) * 100)}%`);
 		console.log(`Total Hashing done ${this.hashingDone}`);
 		console.log(`Total Hashing avoided ${this.hashingAvoided}`);
+		console.log(`Hashes split up to per Bucket: ${this.count / this.totalBucketCount}`);
 	}
 }
 async function exampleTest() {
+	mem('Initial memory usage');
 	const trie = new ViatSyncTrie();
 	// const hashExample = Buffer.from('TES');
 	// const hash2Example = Buffer.from('TEG');
@@ -489,9 +473,10 @@ async function exampleTest() {
 	// await trie.remove(hash4Example);
 	// await trie.append(hash4Example);
 	// await trie.remove(hash4Example);
-	for (let i = 0; i < 60_000; i++) {
+	for (let i = 0; i < 180_000; i++) {
 		await trie.append(await hash256(await randomBuffer(32)));
 	}
+	mem('After appends');
 	// consoleLog(findNextCollisionIndex([
 	// 	hashExample, hash2Example, hash3Example,
 	// ], 0, hashExample.length).prefix.toString());
@@ -509,12 +494,17 @@ async function exampleTest() {
 	// consoleLog(TEBranch);
 	// consoleLog(TEBranch.getObject());
 	await trie.fullHash();
-	console.dir(trie.trieMap, {
-		depth: 10,
-	});
+	mem('After fullHash');
+	// console.dir(trie.trieMap, {
+	// 	depth: 10,
+	// });
 	await trie.printStats();
 	await trie.append(await hash256(await randomBuffer(32)));
+	// await trie.append(await hash256(await randomBuffer(32)));
+	// await trie.append(await hash256(await randomBuffer(32)));
+	// await trie.append(await hash256(await randomBuffer(32)));
 	await trie.printStats();
+	mem('END');
 	// console.log((await trie.getBucket(hashExample)).list);
 	// console.log((await trie.hasHash(Buffer.from('TE'))));
 	// console.log(encodeStrictSync(trie.trieMap).length);

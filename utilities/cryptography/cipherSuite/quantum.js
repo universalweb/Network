@@ -3,7 +3,7 @@ import { bufferAlloc, int32, randomize } from '#utilities/cryptography/utils';
 import aegis256 from '../cipher/AEGIS256.js';
 import dilithium from '../signature/dilithium65.js';
 import kyber768 from '../keyExchange/kyber768.js';
-import shake256 from '../hash/shake256.js';
+import shake256 from '../hash/shake.js';
 import xChaCha from '../cipher/xChaCha.js';
 export const quantumCipherSuite = {
 	name: 'quantumCipherSuite',

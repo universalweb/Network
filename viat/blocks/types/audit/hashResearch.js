@@ -1,5 +1,5 @@
 import { encode, encodeStrict, encodeSync } from '#utilities/serialize';
-import { hash256 } from '#crypto/hash/shake256.js';
+import { hash256 } from '#crypto/hash/shake.js';
 import { randomBuffer } from '#crypto/utils.js';
 console.log(encodeSync(1200003).length);
 console.log(encodeSync('1.2.003').length);

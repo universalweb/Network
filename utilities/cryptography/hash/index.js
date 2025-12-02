@@ -2,7 +2,7 @@ import { hash256 as blake3 } from '#hash/blake3';
 import { currentVersion } from '../../../defaults.js';
 import { hasValue } from '@universalweb/utilitylib';
 import { setOptions } from '../setOption.js';
-import { hash256 as shake256 } from '#hash/shake256';
+import { hash256 as shake256 } from '#crypto/hash/shake.js';
 const cipherList = [blake3, shake256];
 export const hashAlgorithms = new Map();
 const hashAlgorithmsVersion1 = new Map();

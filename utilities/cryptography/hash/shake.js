@@ -11,6 +11,7 @@ import {
 } from '#utilities/cryptography/utils';
 import cryptolib from 'node:crypto';
 import { hashScheme } from './hashScheme.js';
+import { kmac256 } from './sha3/kmac.js';
 import { runBench } from '../../benchmark.js';
 const createHash = cryptolib.hash;
 const createHasher = cryptolib.createHash;

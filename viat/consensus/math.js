@@ -89,22 +89,23 @@ export function confidence(confirms, negatory) {
 export function isVotesPositive(confirms, negatory) {
 	return confirms > negatory;
 }
+function example() {
 // Set global defaults
-inspect.defaultOptions.depth = null;
-inspect.defaultOptions.colors = true;
-// Demo
-const confirmationVotes = 10;
-const negatoryVotes = 5;
-const totalArbiters = 7n;
-const f = faultyNodeTolerance(totalArbiters);
-console.log('Faulty nodes tolerance f:', f);
-console.log('Required majority (> n/2):', majority(totalArbiters));
-console.log('Supermajority (2f + 1):', superMajority(f));
-console.log('Supermajority from n:', superMajorityFromTotalNodes(totalArbiters));
-console.log('Two-thirds threshold ceil(2n/3):', twoThirdsThreshold(totalArbiters));
-console.log('Meets PBFT sizing (n ≥ 3f + 1):', isQuorumSatisfied(f, totalArbiters));
-console.log('Min n for f faults (3f + 1):', minNodesForFaults(f));
-console.log('Suspect/view-change threshold (f + 1):', suspectThreshold(f));
-console.log('Blocking threshold (f + 1):', blockingThreshold(f));
-console.log(`Confidence (${confirmationVotes} confirms, ${negatoryVotes} negatory):`, confidence(confirmationVotes, negatoryVotes));
-
+	inspect.defaultOptions.depth = null;
+	inspect.defaultOptions.colors = true;
+	// Demo
+	const confirmationVotes = 10;
+	const negatoryVotes = 5;
+	const totalArbiters = 7n;
+	const f = faultyNodeTolerance(totalArbiters);
+	console.log('Faulty nodes tolerance f:', f);
+	console.log('Required majority (> n/2):', majority(totalArbiters));
+	console.log('Supermajority (2f + 1):', superMajority(f));
+	console.log('Supermajority from n:', superMajorityFromTotalNodes(totalArbiters));
+	console.log('Two-thirds threshold ceil(2n/3):', twoThirdsThreshold(totalArbiters));
+	console.log('Meets PBFT sizing (n ≥ 3f + 1):', isQuorumSatisfied(f, totalArbiters));
+	console.log('Min n for f faults (3f + 1):', minNodesForFaults(f));
+	console.log('Suspect/view-change threshold (f + 1):', suspectThreshold(f));
+	console.log('Blocking threshold (f + 1):', blockingThreshold(f));
+	console.log(`Confidence (${confirmationVotes} confirms, ${negatoryVotes} negatory):`, confidence(confirmationVotes, negatoryVotes));
+}

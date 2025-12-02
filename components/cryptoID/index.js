@@ -19,7 +19,7 @@ import { read, readStructured, write } from '#utilities/file';
 import { cryptoIDVersion } from '#components/cryptoID/defaults';
 import dilithium from '#crypto/signature/dilithium65.js';
 import ed25519 from '#crypto/signature/ed25519.js';
-import { generateAddress } from '#viat/wallet/generateAddress';
+import { generateAddress } from '#viat/address/generateAddress';
 import logMethods from '#utilities/logs/classLogMethods';
 import path from 'node:path';
 import { toBase64Url } from '#crypto/utils.js';

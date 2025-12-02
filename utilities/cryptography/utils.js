@@ -8,7 +8,7 @@ import { clear, isBuffer } from '@universalweb/utilitylib';
 export const concatBuffer = Buffer.concat;
 export const bufferFrom = Buffer.from;
 export const basicChecksumHashFunction = 'blake3';
-export const defaultHashFunction = 'shake256';
+export const defaultHashFunction = 'shake';
 export const int24 = 24;
 export const int32 = 32;
 export const int64 = 64;
@@ -35,7 +35,7 @@ export const hash1024SettingsCrypto = {
 	outputEncoding: 'buffer',
 };
 export function clearBuffer(source) {
-	if (source) {
+	if (source?.fill) {
 		source.fill(0);
 	} else {
 		console.log('ERROR:No buffer to clear - confirm if issue');

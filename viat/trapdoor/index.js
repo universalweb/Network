@@ -1,5 +1,5 @@
 import { encode } from '#utilities/serialize';
-import { hash256 } from '#crypto/hash/shake256.js';
+import { hash256 } from '#crypto/hash/shake.js';
 /*
 	Version must match version in the original wallet
 	Kind must be 1 for trapdoors
