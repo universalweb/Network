@@ -97,3 +97,5 @@ ${viat}
 <small>MADE IN AMERICA </small>
 <br />
 <small>In memory of Amy (1993 – 2025), a truly kind person.</small>
+<br />
+<small><a href="https://viat.network">viat.network</a></small>
