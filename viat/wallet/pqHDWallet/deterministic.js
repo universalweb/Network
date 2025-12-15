@@ -32,8 +32,9 @@
 */
 import {
 	CONTEXT,
-	HASH_ALGORITHMS,
-	KEY_PURPOSES, NETWORKS,
+	DIRECTION,
+	HASH_ALGORITHMS, KEY_PURPOSES,
+	NETWORKS,
 	NETWORK_NAMES,
 	RELATIONSHIP,
 	SCHEME_TYPES,
@@ -103,8 +104,8 @@ class QHDWallet {
 	}
 	async generateSeedStruct(config, source = {}) {
 		source.context = CONTEXT.SEED;
-		source.kind = hasValue(config.kind) ? config.kind : source.kind || KEY_PURPOSES.SEED;
-		source.scheme = hasValue(config.scheme) ? config.scheme : source.scheme || SCHEME_TYPES.MASTER;
+		source.kind = hasValue(source.kind) ? source.kind : KEY_PURPOSES.SEED;
+		source.scheme = hasValue(source.scheme) ? source.scheme : SCHEME_TYPES.MASTER;
 		console.log('generateSeedStruct', source, config);
 		return source;
 	}
@@ -131,29 +132,41 @@ class QHDWallet {
 		An attacker would need to break each seed in the chain to reach the final seed
 	*/
 	// NOTE: Need to start with fresh encrypted seed
-	async generateSeedChain(endIndex, config) {
+	// INDEX IS EXCLUSIVE
+	async getChainSeed(endIndex, config) {
 		let lastSeed = this.info.masterSeed;
 		let lastKey;
 		let lastNonce;
 		const selfContext = this;
+		const keySource = {
+			id: 0,
+		};
+		const nonceSource = {
+			id: 0,
+		};
+		const source = {
+			id: 0,
+		};
 		await timesAsync(endIndex, async (id) => {
-			console.log(id);
-			const source = {
-				id,
-			};
+			console.log('Seed Chain Index', id);
+			source.id = id;
+			keySource.id = id;
+			nonceSource.id = id;
+			if (lastSeed) {
+				source.seed = lastSeed;
+			}
 			const encoded = await this.generateSeed(config, source);
-			lastKey = await this.generateChildKey({
-				scheme: source.scheme,
-				key: lastKey,
-				id,
-			});
-			this.describeObject(lastKey);
-			lastNonce = await this.generateChildNonce({
-				scheme: source.scheme,
-				nonce: lastNonce,
-				id,
-			});
-			this.describeObject(lastNonce);
+			this.describeObject(source);
+			if (lastKey) {
+				keySource.key = lastKey;
+			}
+			if (lastNonce) {
+				nonceSource.nonce = lastNonce;
+			}
+			lastKey = await this.generateChildKey(config, keySource);
+			this.describeObject(keySource);
+			lastNonce = await this.generateChildNonce(config, nonceSource);
+			this.describeObject(nonceSource);
 			lastSeed = await this.encrypt(encoded, lastKey, lastNonce);
 			console.log('encapsulated seed', id, lastSeed);
 		});
@@ -179,13 +192,14 @@ class QHDWallet {
 		hashAlgorithm: HASH_ALGORITHMS,
 	};
 	domainDefaults = {
-		version: this.version,
+		version: this.info.version,
 		kind: KEY_PURPOSES.SIGNING,
 		context: CONTEXT.SEED,
 		network: NETWORKS.MAINNET,
 		networkName: NETWORK_NAMES.VIAT,
 		relationship: RELATIONSHIP.CHILD,
 		id: 0,
+		direction: DIRECTION.HORIZONTAL,
 		scheme: SCHEME_TYPES.MASTER,
 		hashAlgorithm: HASH_ALGORITHMS.SHAKE256,
 	};
@@ -197,10 +211,10 @@ class QHDWallet {
 		eachObject(config, (value, key) => {
 			if (isString(value) && keyProperties[key]) {
 				source[key] = keyProperties[key][value];
+				// console.log(`Converting string to key property for ${key}: ${value}`, keyProperties[key][value], source);
 			} else if (hasValue(value)) {
 				source[key] = value;
-			} else if (noValue(source[key]) && this[key]) {
-			} else {
+			} else if (noValue(source[key]) && domainDefaults[key]) {
 				source[key] = domainDefaults[key];
 			}
 		});
@@ -209,13 +223,13 @@ class QHDWallet {
 	async generateKeyStruct(config = {}, source = {}) {
 		source.context = CONTEXT.SECRET_KEY;
 		source.kind = KEY_PURPOSES.SECRET_KEY;
-		source.key = this.masterKey;
+		source.key = this.info.masterKey;
 		return source;
 	}
 	async generateNonceStruct(config = {}, source = {}) {
 		source.context = CONTEXT.SECRET_NONCE;
 		source.kind = KEY_PURPOSES.NONCE;
-		source.nonce = this.masterNonce;
+		source.nonce = this.info.masterNonce;
 		return source;
 	}
 }
@@ -224,8 +238,9 @@ async function example() {
 	const qhdwallet = new QHDWallet({});
 	await qhdwallet.create();
 	await qhdwallet.logInfo();
-	console.log(await qhdwallet.getSeed({
+	console.log(await qhdwallet.getChainSeed(2, {
 		scheme: 'ML_DSA_65',
+		domain: 'example.com',
 	}));
 	// console.log(
 	// 	'LAST SEED',

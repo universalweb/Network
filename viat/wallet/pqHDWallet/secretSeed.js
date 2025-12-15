@@ -20,7 +20,7 @@ function generateSecretKeyBasic(size, hashSize) {
 	return hashXOF(randomBytes(size), hashSize || size);
 }
 // Function to generate a super high entropy throwaway seed
-export async function generateMaster(size, source = {}) {
+export async function generateEntropy(size, source = {}) {
 	const randomSeed = generateSecretKeyBasic(size || MASTER_SEED_ENTROPY_SIZES.default);
 	const kemA = ml_kem1024.keygen();
 	const kemB = ml_kem1024.keygen();
@@ -34,22 +34,22 @@ export async function generateMaster(size, source = {}) {
 	const domain = await encodeStrict(source);
 	return hashXOF(domain, size || MASTER_SEED_ENTROPY_SIZES.default);
 }
-export async function generateMasterKey(size, source = {}) {
+export async function generateMasterKeySeed(size, source = {}) {
 	if (!source.length) {
 		source.context = CONTEXT.SECRET_KEY;
 		source.kind = KEY_PURPOSES.SECRET_KEY;
 	}
-	return generateMaster(size, source);
+	return generateEntropy(size, source);
 }
-export async function generateMasterNonce(size, source = {}) {
+export async function generateMasterNonceSeed(size, source = {}) {
 	if (!source.length) {
 		source.context = CONTEXT.SECRET_NONCE;
 		source.kind = KEY_PURPOSES.NONCE;
 	}
-	return generateMaster(size, source);
+	return generateEntropy(size, source);
 }
 export default {
-	generateMaster,
-	generateMasterKey,
-	generateMasterNonce,
+	generateEntropy,
+	generateMasterKeySeed,
+	generateMasterNonceSeed,
 };

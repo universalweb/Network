@@ -1,5 +1,6 @@
+import { HASH_ALGORITHMS, trapdoorTypes } from '#viat/defaults';
+import { decodeSync, encode, encodeSync } from '#utilities/serialize';
 import { hash256, hash512, hashLegacyAddress } from '#crypto/hash/shake.js';
-import { encode } from '#utilities/serialize';
 import viat from '#crypto/cipherSuite/viat.js';
 import viatLegacy from '#crypto/cipherSuite/legacy.js';
 import viatQuantum from '#crypto/cipherSuite/quantum.js';
@@ -9,39 +10,58 @@ const walletCipherSuites = {
 	quantum: viatQuantum,
 	legacy: viatLegacy,
 };
-// Consider CBOR compatibility
-export function generateAddressStruct(publicKey, cipher = '0', version = '0', kind = '0', ...args) {
+export function createAddressStruct(publicKey, trapdoor, cipher, hash, version, kind) {
 	const source = [
 		kind,
 		version,
 		cipher,
+		hash,
 		publicKey,
+		trapdoor,
 	];
-	if (args.length) {
-		source.push(...args);
-	}
 	return source;
 }
-export function generateLegacyAddressStruct(publicKey, trapdoor, cipher = '0', version = '0', kind = '0') {
-	const source = generateAddressStruct(publicKey, cipher, version, kind);
-	source.push(trapdoor);
+export function createLegacyAddressStruct(publicKey, trapdoor) {
+	const source = [
+		publicKey,
+		trapdoor,
+	];
 	return source;
 }
-export async function generateLegacyAddress(publicKey, trapdoor, version = '0', kind = '0') {
-	const source = generateLegacyAddressStruct(publicKey, '0', version, kind, trapdoor);
+// NOTE: Legacy addresses have a strict format and the address size is restricted to this legacy format
+export async function createLegacyAddress(publicKey, trapdoor) {
+	const source = createLegacyAddressStruct(publicKey, trapdoor);
 	const domained = await encode(source);
 	return hashLegacyAddress(domained);
 }
-export async function generateAddress(publicKey, trapdoor, cipher = '0', version = '0', kind = '0') {
+export async function createAddress(publicKey, trapdoor, cipher = 0, version = 0, kind = 0) {
 	if (viatLegacy.id === cipher) {
-		return generateLegacyAddress(publicKey, version, kind, trapdoor);
+		return createLegacyAddress(publicKey, trapdoor);
 	}
-	const source = generateAddressStruct(publicKey, cipher, version, kind, trapdoor);
+	const source = createAddressStruct(publicKey, trapdoor, cipher, version, kind);
 	const domained = await encode(source);
 	if (viat.id === cipher) {
 		return hash256(domained);
 	} else if (viatQuantum.id === cipher) {
+		// TODO: Lower this to either (256 + X < 512) reserve larger hashes to modular format
+		// NOTE: After some time modular addresses will be preferred for quantum security & algo agility
 		return hash512(domained);
 	}
-	return generateLegacyAddress(publicKey, version, kind, trapdoor);
+	return;
 }
+// NOTE: Future modular address format
+export async function createModularAddress(publicKey, trapdoor, cipher, version = 0, kind = 0) {
+	const addressHash = await createAddress(publicKey, trapdoor, cipher, version, kind);
+	// NOTE: Small int values are only 1 byte in CBOR 0-23 so no wasted space
+	// NOTE: Could include trapdoor checksum or hash if a address was only receiving viat and want extra security
+	// NOTE: Kind could be used to indicate multisig or other future features
+	const target = await encode([
+		kind, version, cipher, addressHash,
+	]);
+	return target;
+}
+async function example() {
+	const ex = (await createModularAddress(Buffer.from('hello world'), null, 1, 0, 0));
+	console.log(decodeSync(ex), ex.length);
+}
+// example();

@@ -25,18 +25,9 @@ import { decodeSync, encodeStrict } from '#utilities/serialize';
 import { hash256, hashXOF } from '#crypto/hash/shake.js';
 import { randomBuffer } from '#crypto/utils.js';
 export async function exportObject() {
-	if (!this.masterSeed) {
-		await this.encryptMasterSeed();
-	}
-	return {
-		version: this.version,
-		masterSeed: this.masterSeed,
-		masterKey: this.masterKey,
-		masterNonce: this.masterNonce,
-		network: this.network,
-		networkName: this.networkName,
-		hashAlgorithm: this.hashAlgorithm,
-	};
+	const source = {};
+	assign(source, this.info);
+	return source;
 }
 export function encode(source) {
 	return encodeStrict(source);

@@ -36,10 +36,11 @@ export async function dencrypt(data, key, nonce, ad) {
 	return aegis256.decryptDetached(dataBuffer, normalizedKey, nonceNormalized, ad);
 }
 export async function createKey(source, size) {
-	console.log('createKey source', source);
+	console.log('createKey source object', source);
 	if (source.length === 32) {
 		return source;
 	}
+	this.describeObject(source);
 	return hashXOF((isPlainObject(source)) ? await encodeStrict(source) : source, size || 32);
 }
 export async function createNonce(source, size) {

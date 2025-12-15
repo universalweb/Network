@@ -15,17 +15,17 @@ import {
 async function logInfo() {
 	console.log('logInfo START');
 	console.log(await this.exportObject());
-	console.log(`masterNonce Size ${this.masterNonce.length}`);
-	console.log(`masterKey Size ${this.masterKey.length}`);
-	console.log(`masterSeed Encrypted Size ${this.masterSeed.length}`);
+	console.log(`masterNonce Size ${this.info.masterNonce.length}`);
+	console.log(`masterKey Size ${this.info.masterKey.length}`);
+	console.log(`masterSeed Encrypted Size ${this.info.masterSeed.length}`);
 	console.log('logInfo END');
 }
 // Generator function to create reverse lookup maps
 function createReverseLookup(obj) {
-	const result = {};
+	const result = new Map();
 	for (const key in obj) {
 		if (Object.hasOwn(obj, key)) {
-			result[obj[key]] = key;
+			result.set(obj[key], key);
 		}
 	}
 	return result;
@@ -53,13 +53,15 @@ function describeObject(source, logOutput = true) {
 	}
 	const described = {};
 	const thisContext = this;
+	console.log(source);
 	for (const [
 		key,
 		value,
 	] of Object.entries(source)) {
 		const lookup = propertyLookups[key];
 		if (lookup && hasValue(value)) {
-			described[key] = lookup[value] ?? `UNKNOWN(${value})`;
+			// console.log(lookup, value);
+			described[key] = lookup.get(value) ?? `UNKNOWN(${value})`;
 		} else if (isBuffer(value) || isU8(value)) {
 			described[key] = `<Buffer:${value.length} bytes>`;
 		} else if (isPlainObject(value)) {

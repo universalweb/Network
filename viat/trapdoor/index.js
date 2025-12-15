@@ -1,14 +1,14 @@
-import { encode } from '#utilities/serialize';
+import { HASH_ALGORITHMS, trapdoorTypes } from '#viat/defaults';
+import { encode, encodeStrictSync } from '#utilities/serialize';
+import { hasValue, isString } from '@universalweb/utilitylib';
 import { hash256 } from '#crypto/hash/shake.js';
 /*
 	Version must match version in the original wallet
-	Kind must be 1 for trapdoors
 	NOTE: Future trapdoors will have additional parameters in plain CBOR to support different trapdoor types but same trapdoor hash size
 	NOTE: To support many algos and be safe the modular trapdoor must have values in plain text to offset collision risks
 	NOTE for now v1 will be just the hash and the algo will be assumed dilithium with a set level of security
 */
-export async function generateTrapdoorStruct(publicKey, cipher = '0', version = '0') {
-	const kind = '1';
+export async function generateTrapdoorStruct(publicKey, kind, cipher, version, script) {
 	const source = [
 		kind,
 		version,
@@ -17,18 +17,19 @@ export async function generateTrapdoorStruct(publicKey, cipher = '0', version = 
 	];
 	return source;
 }
-async function trapdoor(publicKey, cipher = '0', version = '0') {
-	const struct = await generateTrapdoorStruct(publicKey, cipher, version);
-	const domained = await encode(struct);
-	const hashed = await hash256(domained);
+async function legacyTrapdoor(publicKey) {
+	const hashed = await hash256(publicKey);
 	return hashed;
 }
-async function modularTrapdoor(publicKey, cipher = '0', version = '0') {
-	const struct = await generateTrapdoorStruct(publicKey, cipher, version);
+// NOTE: Script isn't used yet but reserved for future use cases
+// NOTE: Modular trapdoors for future addresses
+async function trapdoor(publicKey, kindArg, cipher = 0, version = 0, script) {
+	const kind = isString(kindArg) ? (trapdoorTypes[kindArg] || 0) : trapdoorTypes.signature;
+	const struct = await generateTrapdoorStruct(publicKey, kind, cipher, version, script);
 	const domained = await encode(struct);
 	const hashed = await hash256(domained);
 	const finalize = await encode([
-		version, cipher, hashed,
+		kind, version, cipher, hashed,
 	]);
 	return finalize;
 }

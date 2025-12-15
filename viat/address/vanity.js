@@ -1,8 +1,6 @@
 import { decode, encodeStrict, encodeSync } from '#utilities/serialize';
 import { hasValue, isString, isTypedArray } from '@universalweb/utilitylib';
 import viatDefaults from '#viat/defaults';
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
 export const ADDRESS_TYPE = {
 	TEXT: 0,
 	EMOJI: 1,
@@ -36,7 +34,7 @@ export class VanityAddress {
 		date: Date.now(),
 		version: viatDefaults.vanityVersion,
 		kind: ADDRESS_TYPE.DEFAULT,
-		address: '',
+		address: null,
 		size: 0,
 		verified: false,
 	};

@@ -1,10 +1,14 @@
+// This is using JS libs for generation but the actual implementation will be in WASM/native for performance and security
+import { ed25519, x25519 } from '@noble/curves/ed25519.js';
 import { ml_dsa44, ml_dsa65, ml_dsa87 } from '@noble/post-quantum/ml-dsa.js';
 import { ml_kem1024, ml_kem512, ml_kem768 } from '@noble/post-quantum/ml-kem.js';
+// ONLY USE SHAKE VARIANTS
 import {
 	slh_dsa_shake_128s,
 	slh_dsa_shake_192s,
 	slh_dsa_shake_256s,
 } from '@noble/post-quantum/slh-dsa.js';
+import { HASH_ALGORITHMS } from '#viat/defaults';
 export const SCHEME_TYPES = {
 	MASTER: 0,
 	// Dilithium2 (Signature)
@@ -31,10 +35,14 @@ export const SCHEME_TYPES = {
 	NONCE: 11,
 	// SEED
 	SEED: 12,
+	// Edwards-curve Digital Signature Algorithm
+	ED25519: 13,
+	// Elliptic-curve Diffie–Hellman key exchange
+	X25519: 14,
 	// eXtended Merkle Signature Scheme
-	XMSS: 13,
+	XMSS: 15,
 	// Leighton-Micali Signatures
-	LMS: 14,
+	LMS: 16,
 };
 export const SCHEMES_BY_ID = {
 	[SCHEME_TYPES.ML_DSA_44]: ml_dsa44,
@@ -43,11 +51,10 @@ export const SCHEMES_BY_ID = {
 	[SCHEME_TYPES.ML_KEM_512]: ml_kem512,
 	[SCHEME_TYPES.ML_KEM_768]: ml_kem768,
 	[SCHEME_TYPES.ML_KEM_1024]: ml_kem1024,
-	[SCHEME_TYPES.SLH_DSA]: {
-		slh_dsa_shake_128s,
-		slh_dsa_shake_192s,
-		slh_dsa_shake_256s,
-	},
+	[SCHEME_TYPES.ED25519]: ed25519,
+	[SCHEME_TYPES.X25519]: x25519,
+	[SCHEME_TYPES.SLH_DSA_128S]: slh_dsa_shake_128s,
+	[SCHEME_TYPES.SLH_DSA_256S]: slh_dsa_shake_256s,
 };
 const MODES = {
 	DEFAULT: 0,
@@ -81,11 +88,11 @@ export const RELATIONSHIP = {
 	CHILD: 1,
 	SLAVE: 2,
 };
-export const HASH_ALGORITHMS = {
-	SHAKE256: 0,
-	SHA3_256: 1,
-	SHA3_512: 2,
+export const DIRECTION = {
+	HORIZONTAL: 0,
+	VERTICAL: 1,
 };
+export { HASH_ALGORITHMS };
 // Network identifiers
 export const NETWORKS = {
 	MAINNET: 0,
@@ -99,10 +106,11 @@ export const NETWORK_NAMES = {
 	UW: 1,
 	// Use on any network
 	GENERIC: 2,
-	BITCOIN: 3,
-	ETHEREUM: 4,
-	SOLANA: 5,
-	BNB: 6,
+	WWW: 3,
+	BITCOIN: 4,
+	ETHEREUM: 5,
+	SOLANA: 6,
+	BNB: 7,
 };
 export const SEED_SIZES = {
 	[SCHEME_TYPES.ML_KEM_512]: 64,

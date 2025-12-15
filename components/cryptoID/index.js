@@ -1,6 +1,7 @@
 // Cryptographic Identity
 // Used for creating a Nexus profile/ID
 // Used to generate a cryptographic identity number & cryptographic Identity Card
+// TODO: Add trapdoor support
 import {
 	assign,
 	currentPath,
@@ -16,10 +17,10 @@ import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { getHomeDirectory, getWalletsDirectory } from '#utilities/directory';
 import { keychainGet, keychainSave } from '#components/certificate/keychain';
 import { read, readStructured, write } from '#utilities/file';
+import { createAddress } from '#viat/address/generateAddress';
 import { cryptoIDVersion } from '#components/cryptoID/defaults';
 import dilithium from '#crypto/signature/dilithium65.js';
 import ed25519 from '#crypto/signature/ed25519.js';
-import { generateAddress } from '#viat/address/generateAddress';
 import logMethods from '#utilities/logs/classLogMethods';
 import path from 'node:path';
 import { toBase64Url } from '#crypto/utils.js';
@@ -337,7 +338,8 @@ export class CryptoID {
 	async generateAddress() {
 		const publicKey = await this.exportPublicKey();
 		const publicKeyCombined = (isBuffer(publicKey)) ? publicKey : await encodeStrict(publicKey);
-		return generateAddress(publicKeyCombined, this.cipherSuite.id);
+		// TODO: Add meta details for wallet support
+		return createAddress(publicKeyCombined, this.trapdoor, this.cipherSuite.id);
 	}
 	async getAddress() {
 		const address = this.address || await this.generateAddress();
