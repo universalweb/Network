@@ -1,14 +1,6 @@
 import * as routers from './router/index.js';
 import * as servers from '#server';
 import { assign, extendClass, isUndefined } from '@universalweb/utilitylib';
-import {
-	logBanner,
-	logError,
-	logInfo,
-	logSuccess,
-	logVerbose,
-	logWarning,
-} from '../../utilities/logs/classLogMethods.js';
 import { decodePacketHeaders } from '#udsp/encoding/decodePacket';
 import { encode } from '#utilities/serialize';
 import eventMethods from '#udsp/events';

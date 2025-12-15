@@ -292,6 +292,8 @@ const pure = {
 export const api = {
 	encodeBase38,
 	decodeBase38,
+	encode: encodeBase38,
+	decode: decodeBase38,
 	pure,
 	native: Boolean(native),
 };

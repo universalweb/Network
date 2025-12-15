@@ -1,48 +1,120 @@
+import viatDefaults from '#viat/defaults';
 export const version = 1;
 export const blockTypes = {
-	proof: 0,
-	transaction: 1,
-	receipt: 2,
-	wallet: 3,
-	generic: 4,
-	genesis: 5,
-	genesisWallet: 6,
-	genesisAudit: 7,
+	transaction: 0,
+	receipt: 1,
+	wallet: 2,
+	hybridWallet: 3,
+	quantumWallet: 4,
+	generic: 5,
+	genesis: 6,
+	genesisWallet: 7,
+	genesisAudit: 8,
+	walletAnchor: 9,
+	receiptAnchor: 10,
+	audit: 11,
+};
+export const hashSizes = {
+	compact: viatDefaults.defaultHashSize,
+	default: viatDefaults.defaultQuantumHashSize,
+	genesis: 256,
+	quantum: 64,
+};
+export const nonceSizes = {
+	default: viatDefaults.defaultNonceSize,
+	mid: 24,
+	genesis: 64,
+	quantum: 32,
+};
+export const typeNames = {
+	transaction: 'transaction',
+	receipt: 'receipt',
+	wallet: 'wallet',
+	audit: 'audit',
+	hybridWallet: 'hybridWallet',
+	quantumWallet: 'quantumWallet',
+	genesis: 'genesis',
+	genesisWallet: 'genesisWallet',
+	genesisAudit: 'genesisAudit',
+};
+export const typeNamesPlural = {
+	transaction: 'transactions',
+	receipt: 'receipts',
+	wallet: 'wallets',
+	audit: 'audits',
+	hybridWallet: 'hybridWallets',
+	quantumWallet: 'quantumWallets',
+	genesis: 'genesis',
+	genesisWallet: 'wallets',
+	genesisAudit: 'audits',
+};
+export const walletTypes = {
+	wallet: {
+		size: viatDefaults.wallets.legacy.walletSize,
+		walletType: 'legacy',
+		path: {
+			default: typeNames.wallet,
+			plural: typeNamesPlural.wallet,
+		},
+	},
+	hybridWallet: {
+		size: viatDefaults.wallets.hybrid.walletSize,
+		walletType: 'hybrid-quantum',
+		path: {
+			default: typeNames.hybridWallet,
+			plural: typeNamesPlural.hybridWallet,
+		},
+	},
+	quantumWallet: {
+		size: viatDefaults.wallets.quantum.walletSize,
+		walletType: 'quantum',
+		path: {
+			default: typeNames.quantumWallet,
+			plural: typeNamesPlural.quantumWallet,
+		},
+	},
 };
 export const filePaths = {
 	transaction: '/transactions/',
-	proof: '/proofs/',
 	receipt: '/receipts/',
 	wallet: '/wallets/',
+	audit: '/audits/',
+	hybridWallet: '/hybridwallets/',
+	quantumWallet: '/quantumwallets/',
 	genesis: '/',
-	genesisWallet: '/wallets/',
+	genesisWallet: '/',
 	genesisAudit: '/audits/',
 };
 export const urlPaths = {
 	transaction: '/t/',
-	proof: '/p/',
 	receipt: '/r/',
 	wallet: '/w/',
+	hybridWallet: '/hw/',
+	quantumWallet: '/qw/',
 	genesis: '/',
 	genesisWallet: '/gw/',
 	genesisAudit: '/ga/',
+	audit: '/a/',
 };
 export const letters = {
 	transaction: 't',
-	proof: 'p',
 	receipt: 'r',
 	wallet: 'w',
+	hybridWallet: 'hw',
+	quantumWallet: 'qw',
 	genesis: 'g',
 	genesisWallet: 'gw',
 	genesisAudit: 'ga',
+	audit: 'a',
 };
 export const fileTypes = {
 	't.block': 'Viat Transaction Block',
-	'p.block': 'Viat Proof Block',
 	'r.block': 'Viat Receipt Block',
 	'ab.block': 'Viat Abstract Block',
 	'l.block': 'Viat Link Block',
 	'w.block': 'Viat Wallet Block',
+	'hw.block': 'Viat Hybrid Wallet Block',
+	'qw.block': 'Viat Quantum Wallet Block',
 	'a.block': 'Viat Audit Block',
 	'v.block': 'Viat Verification Block',
 	'g.block': 'Viat General Block',
@@ -50,12 +122,13 @@ export const fileTypes = {
 };
 export const fileExtensions = {
 	transaction: '.t.block',
-	proof: '.p.block',
 	receipt: '.r.block',
 	abstract: '.ab.block',
 	profile: '.p.block',
 	link: '.l.block',
 	wallet: '.w.block',
+	hybridWallet: '.hw.block',
+	quantumWallet: '.qw.block',
 	audit: '.a.block',
 	verification: '.v.block',
 	generic: '.g.block',
@@ -64,12 +137,13 @@ export const fileExtensions = {
 };
 export const genericFilenames = {
 	transaction: 't.block',
-	proof: 'p.block',
 	receipt: 'r.block',
 	abstract: 'ab.block',
 	profile: 'p.block',
 	link: 'l.block',
 	wallet: 'w.block',
+	hybridWallet: 'hw.block',
+	quantumWallet: 'qw.block',
 	audit: 'a.block',
 	verification: 'v.block',
 	generic: 'g.block',

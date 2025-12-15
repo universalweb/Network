@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>VIAT Transaction Details</title>
+		<link rel="stylesheet" href="https://mshaugh.github.io/nerdfont-webfonts/build/jetbrainsmono.css" />
+		<link rel="stylesheet" href="./wallet.css" />
+	</head>
+
+	<body>
+		<main class="app">
+			<header class="app-header">
+				<div class="brand">
+					<h1>VIAT Transaction</h1>
+					<p class="tag">VIEW DETAILED TRANSACTION INFORMATION AND STATUS</p>
+				</div>
+				<div class="controls">
+					<button id="backToWallet" class="btn outline" title="Back to Wallet">←</button>
+					<button id="refreshTx" class="btn outline" title="Refresh Transaction"></button>
+				</div>
+			</header>
+			<div id="txLoading" class="loading" style="display: none;">Loading transaction...</div>
+			<section id="transactionDetails" class="panel transaction-details">
+				<div class="title-container">
+					<div class="outline-box">
+						<h2>Transaction </h2>
+					</div>
+				</div>
+				<div class="transaction-overview">
+					<div class="transaction-hash">
+						<span class="label">Transaction Hash:</span>
+						<span id="txHash" class="value">-</span>
+					</div>
+					<div class="transaction-status">
+						<span class="status-badge" id="txStatus">Loading...</span>
+					</div>
+				</div>
+				<hr class="section-divider section-divider-top" />
+				<div class="transaction-grid">
+					<div class="detail-item">
+						<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner">
+							<line x1="0" y1="0" x2="12" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+							<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+						</svg>
+						<div class="detail-content">
+							<div class="detail-label">Amount</div>
+							<div id="txAmount" class="detail-value">-</div>
+						</div>
+						<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner bottom right">
+							<line x1="0" y1="0" x2="24" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+							<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+						</svg>
+					</div>
+					<div class="detail-item">
+						<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner">
+							<line x1="0" y1="0" x2="12" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+							<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+						</svg>
+						<div class="detail-content">
+							<div class="detail-label">From Address</div>
+							<a id="txFrom" class="detail-value address-value" href="#" target="_blank">-</a>
+						</div>
+						<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner bottom right">
+							<line x1="0" y1="0" x2="24" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+							<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+						</svg>
+					</div>
+					<div class="detail-item">
+						<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner">
+							<line x1="0" y1="0" x2="12" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+							<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+						</svg>
+						<div class="detail-content">
+							<div class="detail-label">To Address</div>
+							<a id="txTo" class="detail-value address-value" href="#" target="_blank">-</a>
+						</div>
+						<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner bottom right">
+							<line x1="0" y1="0" x2="24" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+							<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+						</svg>
+					</div>
+					<div class="detail-item">
+						<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner">
+							<line x1="0" y1="0" x2="12" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+							<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+						</svg>
+						<div class="detail-content">
+							<div class="detail-label">Timestamp</div>
+							<div id="txTimestamp" class="detail-value">-</div>
+						</div>
+						<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner bottom right">
+							<line x1="0" y1="0" x2="24" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+							<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+						</svg>
+					</div>
+					<div class="detail-item">
+						<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner">
+							<line x1="0" y1="0" x2="12" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+							<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+						</svg>
+						<div class="detail-content">
+							<div class="detail-label">Fee</div>
+							<div id="txFee" class="detail-value">-</div>
+						</div>
+						<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner bottom right">
+							<line x1="0" y1="0" x2="24" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+							<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+						</svg>
+					</div>
+				</div>
+				<hr class="section-divider section-divider-middle" />
+				<div class="transaction-signature">
+					<div class="signature-header">
+						<h3>Transaction Signature</h3>
+					</div>
+					<div class="signature-display">
+						<textarea id="txSignature" rows="4" readonly placeholder="Loading signature..."></textarea>
+						<div class="signature-actions">
+							<button id="copySignatureBtn" class="btn small outline">Copy Signature</button>
+						</div>
+					</div>
+				</div>
+				<hr class="section-divider section-divider-bottom" />
+			</section>
+			<footer class="app-footer">
+				<small>MADE IN AMERICA 🇺🇸</small><br />
+				<small>COPYRIGHT © 2025 VIAT, UW, TMarchi</small><br />
+				<small>In memory of Amy, the kindest of people</small><br />
+				<small>...BUILT WITH VIAT CLIENT SDK (<code>viat-client.min.js</code>)</small>
+			</footer>
+		</main>
+		<div id="notificationContainer" class="notification-container"></div>
+		<script src="./viat-client.min.js" defer></script>
+		<script type="module" src="./transaction.js"></script>
+	</body>
+
+</html>

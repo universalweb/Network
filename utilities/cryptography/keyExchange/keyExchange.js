@@ -1,6 +1,8 @@
 import { assign, isBuffer } from '@universalweb/utilitylib';
-import { clearBuffer, clearBuffers } from '#utilities/cryptography/utils';
-import { sodium_memzero } from '#utilities/cryptography/sodium';
+import { clearBuffer } from '#utilities/cryptography/utils';
+/*
+	NOTE: Consider KMAC or cSHAKE for domain separation in session key generation instead of concact then SHA3-256
+*/
 export class KeyExchange {
 	constructor(config) {
 		assign(this, config);
@@ -9,23 +11,25 @@ export class KeyExchange {
 		const generatedKeypair = await this.keyExchangeKeypair();
 		return generatedKeypair;
 	}
-	async createClientSession(source, destination, target) {
-		const sharedSecret = source.sharedSecret;
-		const clientPublicKey = source?.publicKeyHash || source?.publicKey;
-		const serverPublicKey = destination?.publicKeyHash || destination?.publicKey;
-		source.logInfo('sharedSecret', sharedSecret);
-		source.logInfo('clientPublicKey', clientPublicKey);
-		source.logInfo('serverPublicKey', serverPublicKey);
+	// NOTE: Consider CBOR or Domain Separation for session key generation
+	async createClientSession(client, server, target) {
+		const sharedSecret = client.sharedSecret;
+		const clientPublicKey = client?.publicKeyHash || client?.publicKey;
+		const serverPublicKey = server?.publicKeyHash || server?.publicKey;
+		client.logInfo('sharedSecret', sharedSecret);
+		client.logInfo('clientPublicKey', clientPublicKey);
+		client.logInfo('serverPublicKey', serverPublicKey);
 		const sessionKeyHash = await this.hash.concatHash512(
 			sharedSecret,
 			clientPublicKey,
 			serverPublicKey
 		);
 		clearBuffer(sharedSecret);
-		source.sharedSecret = null;
-		source.logInfo('Session Key Hash', sessionKeyHash);
+		client.sharedSecret = null;
+		client.logInfo('Session Key Hash', sessionKeyHash);
 		const transmitKey = sessionKeyHash.subarray(this.sessionKeySize);
 		const receiveKey = sessionKeyHash.subarray(0, this.sessionKeySize);
+		console.log('createServerSession', sessionKeyHash.length, receiveKey, transmitKey);
 		if (target) {
 			target.sessionKeyHash = sessionKeyHash;
 			target.receiveKey = receiveKey;
@@ -43,19 +47,20 @@ export class KeyExchange {
 		return generatedKeypair;
 	}
 	//  TODO: SET IF FOR COMBINE PRIOR TX AND RX KEYS
-	async createServerSession(source, destination, target) {
-		const sharedSecret = source.sharedSecret;
-		const clientPublicKey = destination?.publicKeyHash || destination?.publicKey;
-		const serverPublicKey = source?.publicKeyHash || source?.publicKey;
+	async createServerSession(server, client, target) {
+		const sharedSecret = server.sharedSecret;
+		const clientPublicKey = client?.publicKeyHash || client?.publicKey;
+		const serverPublicKey = server?.publicKeyHash || server?.publicKey;
 		const sessionKeyHash = await this.hash.concatHash512(
 			sharedSecret,
 			clientPublicKey,
 			serverPublicKey
 		);
 		clearBuffer(sharedSecret);
-		source.sharedSecret = null;
+		server.sharedSecret = null;
 		const receiveKey = sessionKeyHash.subarray(this.sessionKeySize);
 		const transmitKey = sessionKeyHash.subarray(0, this.sessionKeySize);
+		console.log('createServerSession', sessionKeyHash.length, receiveKey, transmitKey);
 		if (target) {
 			target.sessionKeyHash = sessionKeyHash;
 			target.receiveKey = receiveKey;
@@ -83,7 +88,7 @@ export class KeyExchange {
 			}
 		}
 		if (target.privateKey.length === this.combinedKeySize) {
-			const privateKey = target.privateKey.subarray(0, this.privateKeySize);
+			// const privateKey = target.privateKey.subarray(0, this.privateKeySize);
 			if (!target.publicKey) {
 				target.publicKey = target.publicKey.subarray(this.privateKeySize);
 			}
@@ -104,19 +109,24 @@ export class KeyExchange {
 	}
 	// COMBINE SESSION KEYS
 	async upgradeSessionKeys(source, destination) {
-		source.logInfo('upgradeSessionKeys', source.sharedSecret);
+		source.logInfo('upgradeSessionKeys', source.sharedSecret[0]);
 		const sharedSecret = source.sharedSecret;
 		const {
 			sessionKeyHash: oldSessionKeyHash,
 			transmitKey: oldTransmitKey,
 			receiveKey: oldReceiveKey,
 		} = source;
-		source.logInfo(oldReceiveKey, oldTransmitKey);
-		source.logInfo(sharedSecret);
-		source.transmitKey = await this.hash.concatHash(sharedSecret, oldTransmitKey);
-		source.receiveKey = await this.hash.concatHash(sharedSecret, oldReceiveKey);
+		console.log('sharedSecret', sharedSecret[0], 'Old Keys', oldTransmitKey[0], oldReceiveKey[0]);
+		console.log('sharedSecret destination', 'Old Keys', destination.transmitKey[0], destination.receiveKey[0]);
+		source.transmitKey = await this.hash.concatHashStrict(sharedSecret, oldTransmitKey);
+		source.receiveKey = await this.hash.concatHashStrict(sharedSecret, oldReceiveKey);
+		console.log('sharedSecret', sharedSecret[0], 'Old Keys', source.transmitKey[0], source.receiveKey[0]);
+		// NOTE: CONFIRM WONT CAUSE ISSUES WITH OLDER CODEBASE
+		clearBuffer(sharedSecret);
+		source.sharedSecret = null;
 		clearBuffer(oldSessionKeyHash);
-		source.logInfo('Keys', source.transmitKey[0], source.receiveKey[0]);
+		source.sessionKeyHash = null;
+		console.log('New Keys', source.transmitKey[0], source.receiveKey[0]);
 	}
 	// Clear sensitive data as soon as possible for security & memory
 	async cleanup(source) {
@@ -170,13 +180,74 @@ export class KeyExchange {
 	}
 	async certificateKeyExchangeKeypair() {
 		const keypair = await this.keyExchangeKeypair();
-		return this?.exportKeypair(keypair) || keypair;
+		if (this?.exportKeypair) {
+			return this?.exportKeypair(keypair);
+		}
+		return keypair;
 	}
 	async initializeKeypair(source) {
 		return assign({}, source);
 	}
 	async initializePublicKey(source) {
 		return source?.publicKey || source;
+	}
+	compareSessionkeys(client, server) {
+		if (!client.receiveKey || !client.transmitKey) {
+			return false;
+		}
+		if (!server.receiveKey || !server.transmitKey) {
+			return false;
+		}
+		if (client.receiveKey.length !== server.transmitKey.length) {
+			return false;
+		}
+		if (client.transmitKey.length !== server.receiveKey.length) {
+			return false;
+		}
+		const receiveKeyMatch = client.receiveKey.equals(server.transmitKey);
+		const transmitKeyMatch = client.transmitKey.equals(server.receiveKey);
+		if (receiveKeyMatch && transmitKeyMatch) {
+			return true;
+		}
+		return false;
+	}
+	compareSessionkeysThrow(client, server) {
+		console.log('compareSessionkeysThrow START');
+		if (!client.receiveKey || !client.transmitKey) {
+			throw new Error('incomplete client keys');
+		}
+		if (!server.receiveKey || !server.transmitKey) {
+			throw new Error('incomplete server keys');
+		}
+		if (client.receiveKey.length !== server.transmitKey.length) {
+			throw new Error('mismatched key sizes');
+		}
+		if (client.transmitKey.length !== server.receiveKey.length) {
+			throw new Error('mismatched key sizes');
+		}
+		const receiveKeyMatch = client.receiveKey.equals(server.transmitKey);
+		const transmitKeyMatch = client.transmitKey.equals(server.receiveKey);
+		console.log('Session keys', {
+			clientSessionKeyHash: client.sessionKeyHash,
+			serverSessionKeyHash: server.sessionKeyHash,
+			receiveKeys: {
+				client: client.receiveKey,
+				server: server.receiveKey,
+				equal: receiveKeyMatch,
+			},
+			transmitKeys: {
+				client: client.transmitKey,
+				server: server.transmitKey,
+				equal: transmitKeyMatch,
+			},
+		});
+		if (receiveKeyMatch && transmitKeyMatch) {
+			return 'Keys Match';
+		}
+		if (receiveKeyMatch !== transmitKeyMatch) {
+			throw new Error('only one key matches');
+		}
+		throw new Error('session keys do not match');
 	}
 }
 export function keyExchange(config) {

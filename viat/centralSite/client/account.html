@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>VIAT Account</title>
+		<link rel="stylesheet" href="https://mshaugh.github.io/nerdfont-webfonts/build/jetbrainsmono.css" />
+		<link rel="stylesheet" href="./account.css" />
+		<link rel="stylesheet" href="./wallet.css" />
+	</head>
+
+	<body>
+		<main class="app">
+			<header class="app-header">
+				<div class="brand">
+					<h1>VIAT Account</h1>
+					<p class="tag">VIEW ACCOUNT BALANCE AND TRANSACTION HISTORY</p>
+				</div>
+			</header>
+			<!-- Hidden 'from' element so shared modules (ui, transactions) can read the current address -->
+			<div id="from" class="address clickable-address" style="display: none;">
+				<span class="address-text"></span>
+			</div>
+			<section class="account-header">
+				<div class="outline-box">
+					<h2>󰄛 Account 󰠲</h2>
+				</div>
+				<div id="accountAddress" class="account-address">Loading...</div>
+			</section>
+			<section id="accountStats" class="account-stats-grid" style="display: none;">
+				<div class="stat-item account-stat-item">
+					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner">
+						<line x1="0" y1="0" x2="12" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+					</svg>
+					<div id="statBalance" class="stat-value">-</div>
+					<div class="stat-label">Balance</div>
+					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner bottom right">
+						<line x1="0" y1="0" x2="24" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+					</svg>
+				</div>
+				<div class="stat-item account-stat-item">
+					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner">
+						<line x1="0" y1="0" x2="12" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+					</svg>
+					<div id="statTotalIn" class="stat-value">-</div>
+					<div class="stat-label">Total Received</div>
+					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner bottom right">
+						<line x1="0" y1="0" x2="24" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+					</svg>
+				</div>
+				<div class="stat-item account-stat-item">
+					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner">
+						<line x1="0" y1="0" x2="12" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+					</svg>
+					<div id="statTotalOut" class="stat-value">-</div>
+					<div class="stat-label">Total Sent</div>
+					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner bottom right">
+						<line x1="0" y1="0" x2="24" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+					</svg>
+				</div>
+				<div class="stat-item account-stat-item">
+					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner">
+						<line x1="0" y1="0" x2="12" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+					</svg>
+					<div id="statTxCount" class="stat-value">-</div>
+					<div class="stat-label">Transaction Count</div>
+					<svg width="12" height="12" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" class="corner bottom right">
+						<line x1="0" y1="0" x2="24" y2="0" stroke="#6BE6F9" stroke-width="2"></line>
+						<line x1="0" y1="0" x2="0" y2="48" stroke="#6BE6F9" stroke-width="2"></line>
+					</svg>
+				</div>
+			</section>
+			<section class="transactions-section">
+				<div class="transactions-header">
+					<div class="outline-box">
+						<h2 class="blue"> Transactions </h2>
+					</div>
+					<div id="txCount" class="tx-count">Loading...</div>
+				</div>
+				<ul id="txList" class="tx-list"></ul>
+				<div id="txEmpty" class="empty" style="display: none;">No transactions found for this account.</div>
+				<div id="txLoading" class="loading">Loading transactions...</div>
+				<div id="txLoadMoreContainer" class="load-more-container" style="display: none; margin-top: 12px; text-align: center;">
+					<button id="txLoadMore" class="btn small">Load More Transactions</button>
+				</div>
+			</section>
+			<footer class="app-footer">
+				<small>MADE IN AMERICA 🇺🇸</small><br />
+				<small>COPYRIGHT © 2025 VIAT, UW, TMarchi</small><br />
+				<small>In memory of Amy, the kindest of people</small><br />
+				<small>...BUILT WITH VIAT CLIENT SDK (<code>viat-client.min.js</code>)</small>
+			</footer>
+		</main>
+		<script src="./viat-client.min.js"></script>
+		<script type="module" src="./account.js"></script>
+	</body>
+
+</html>

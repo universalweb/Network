@@ -1,3 +1,7 @@
+/*
+	NOTE: "The use of ML-KEM-768 and ML-KEM-1024 are approved. However, for interoperability and maintainability reasons, ML-KEM-768 will not be approved beyond 2030."
+	NOTE: This may mean we will need to adopt cat 5 instead. It is a point of concern as to why.
+*/
 import generateScheme from './pqClean.js';
 export const dilithium65 = generateScheme('ml-dsa-65', {
 	name: 'dilithium65',

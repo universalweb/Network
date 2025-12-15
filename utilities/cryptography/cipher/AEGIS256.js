@@ -1,6 +1,7 @@
 /*
 	encrypt x 371,588 ops/sec ±0.34% (97 runs sampled)
 	decrypt x 581,631 ops/sec ±0.36% (98 runs sampled)
+	! AEGIS can also be used as a very fast MAC, by encrypting an empty message, and putting the actual message to be authenticated in the ad parameter, which can be up to 2^61 bytes long.
 */
 import { bufferAlloc, int32, randomize } from '#utilities/cryptography/utils';
 import Benchmark from 'benchmark';
@@ -36,6 +37,19 @@ export async function encryptMethod(message, sessionKey, ad, nonceArg) {
 		encrypted,
 	]);
 }
+export async function encryptDetached(message, sessionKey, nonce, ad) {
+	const encrypted = crypto_aead_aegis256_encrypt(message, ad, null, Uint8Array.from(nonce), sessionKey, null);
+	return encrypted;
+}
+export async function decryptDetached(encryptedData, sessionKey, nonce, ad) {
+	// TODO: CLEAN THIS UP to take out from unless needed
+	const message = crypto_aead_aegis256_decrypt(null, Uint8Array.from(encryptedData), ad, Uint8Array.from(nonce), sessionKey);
+	if (message) {
+		return message;
+	} else {
+		return;
+	}
+}
 export async function decryptMethod(encryptedData, sessionKey, adArg, nonceArg) {
 	const encrypted = (nonceArg) ? encryptedData : encryptedData.subarray(nonceSize);
 	const nonce = (nonceArg) ? nonceArg : encryptedData.subarray(0, nonceSize);
@@ -60,6 +74,8 @@ export const aegis256 = cipher({
 	additionalBytesSize,
 	encryptMethod,
 	decryptMethod,
+	encryptDetached,
+	decryptDetached,
 });
 export default aegis256;
 // const n = randomize(bufferAlloc(nonceSize));

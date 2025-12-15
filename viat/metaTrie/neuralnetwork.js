@@ -7,7 +7,7 @@ import { isBuffer, isPlainObject, merge } from '@universalweb/utilitylib';
 import { createRequire } from 'module';
 // Used to detect direct execution for the demo
 import { fileURLToPath } from 'url';
-import { hash512 } from '#crypto/hash/shake256.js';
+import { hash512 } from '#crypto/hash/shake.js';
 import path from 'path';
 // Random 64-byte buffer generator for demo convenience
 import { random64ByteBuffer } from '#crypto/utils.js';

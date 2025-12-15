@@ -29,6 +29,20 @@ node_modules
 ############
 tests/*
 
+# VIAT SITE #
+############
+viat/centralSite/server/*
+viat/centralSite/database/*
+viat/centralSite/client_new/*
+viat/centralSite/server_new/*
+viat/centralSite/client_new/node_modules
+
+cache/
+.zig-cache/
+# DBs #
+############
+*.mdb
+
 # Testing #
 ############
 tempCodeRunnerFile.js
@@ -58,8 +72,14 @@ Thumbs.db
 ######################
 *.private
 
+# tigerbeetle #
+######################
+tigerbeetle
+tigerbeetle.zip
+tigerbeetle/*
 
-
+# NX #
+######################
 .nx/cache
 .nx/workspace-data
 .cursor/rules/nx-rules.mdc

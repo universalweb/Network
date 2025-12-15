@@ -12,5 +12,8 @@ const methods = {
 	async exportCoreBinary() {
 		return encodeStrict(this.block.data.core);
 	},
+	async exportObject() {
+		return this.block;
+	},
 };
 export default methods;

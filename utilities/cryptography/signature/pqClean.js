@@ -3,7 +3,7 @@ import { assign, findItem } from '@universalweb/utilitylib';
 /**
 	* @NAME SPHINCS+ with SHAKE256 - slh_dsa_shake_192s sphincs-shake-192s-simple
  */
-import { hash256, hash512, shake256 } from '../hash/shake256.js';
+import { hash256, hash512, shake256 } from '../hash/shake.js';
 import {
 	randomBuffer,
 	toBase64,
@@ -14,6 +14,7 @@ import { signatureScheme } from './signatureScheme.js';
 const seedSize = 32;
 const algoList = pqclean.sign.supportedAlgorithms;
 const generateKeyPair = pqclean.sign.generateKeyPair;
+// console.log('PQClean Signature Schemes Available:', algoList);
 /* const supportedAlgorithms = [
 	'falcon-1024',
 	'falcon-512',

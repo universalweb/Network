@@ -8,8 +8,8 @@ export async function hash512(source) {
 	return hash(source, hash512Settings);
 }
 export const shake256PureJS = hashScheme({
-	name: 'shake256PureJS',
-	alias: 'shake256PureJS',
+	name: 'shakePureJS',
+	alias: 'shakePureJS',
 	id: 3,
 	security: 1,
 	preferred: false,

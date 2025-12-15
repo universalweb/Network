@@ -1,18 +1,17 @@
 {
 	"compilerOptions": {
-		"baseUrl": ".",
 		"paths": {
 			"#certificate": [
-				"udsp/certificate/index.js"
+				"./udsp/certificate/index.js"
 			],
 			"#cleanPath": [
 				"./utilities/cleanPath.js"
 			],
 			"#client*": [
-				"udsp/client/index.js"
+				"./udsp/client/index.js"
 			],
 			"#client/*": [
-				"udsp/client/*.js"
+				"./udsp/client/*.js"
 			],
 			"#components/*": [
 				"./components/*.js"
@@ -42,16 +41,16 @@
 				"./utilities/file.js"
 			],
 			"#keychain": [
-				"udsp/certificate/keychain.js"
+				"./udsp/certificate/keychain.js"
 			],
 			"#logs": [
-				"utilities/logs/logs.js"
+				"./utilities/logs/logs.js"
 			],
 			"#pluckBuffer": [
 				"./utilities/pluckBuffer.js"
 			],
 			"#profile/*": [
-				"cryptoID/*.js"
+				"./cryptoID/*.js"
 			],
 			"#propertyAccess": [
 				"./utilities/propertyAccess.js"
@@ -60,16 +59,16 @@
 				"./resources/*"
 			],
 			"#schemes/*": [
-				"browser/schemes/*.js"
+				"./browser/schemes/*.js"
 			],
 			"#server*": [
-				"udsp/server/index.js"
+				"./udsp/server/index.js"
 			],
 			"#server/*": [
-				"udsp/server/*.js"
+				"./udsp/server/*.js"
 			],
 			"#serverApp/*": [
-				"examples/serverApp/*.js"
+				"./examples/serverApp/*.js"
 			],
 			"#sodium": [
 				"./sodium.js"

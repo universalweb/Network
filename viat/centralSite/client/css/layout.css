@@ -1,0 +1,86 @@
+/* Layout System */
+.title-container {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 14px;
+}
+
+.outline-box {
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 5px;
+}
+.outline-box h2.blue {
+	background-color: rgb(14, 10, 203);
+	color: #fff;
+}
+.outline-box h2 {
+	margin: 0;
+	padding: 5px 10px;
+	background: var(--accent-warm);
+	color: #000;
+}
+
+.app {
+  max-width: 1160px;
+  margin: 30px auto 54px;
+  padding: 0 clamp(16px, 4vw, 26px) 160px;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 3vw, 28px);
+  overflow: visible;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel);
+  color: var(--text);
+  border-radius: var(--radius-lg);
+  padding: clamp(16px, 3vw, 20px) clamp(20px, 4vw, 28px);
+  border: 1px solid var(--border);
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 21px;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.brand .tag {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 3vw, 28px);
+  overflow: visible;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(16px, 3vw, 20px) clamp(20px, 4vw, 28px);
+  overflow: visible;
+}
+/* Footer */
+.app-footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 40px;
+}

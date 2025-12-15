@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+message Packet {
+	bytes flags = 1;
+	bytes headers = 2;
+	bytes payload = 3;
+}
+message PacketWithHeaders {
+	bytes headers = 1;
+	bytes payload = 2;
+}
+message PacketWithCID {
+	bytes connection_id = 1;
+	bytes payload = 2;
+}
+message IntroHeader {
+	// 1 byte -> 1 bit flags -> 8 Flags
+	bytes flags = 1;
+	bytes connection_id = 2;
+	bytes rpc = 3;
+	bytes time_sent = 4;
+	bytes cipher_id = 5;
+	bytes version = 6;
+}

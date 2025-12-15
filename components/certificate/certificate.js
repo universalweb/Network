@@ -21,7 +21,7 @@ import {
 	getKeyExchangeAlgorithm,
 	getSignatureAlgorithm,
 } from '#crypto/index.js';
-import { hash256, hash512 } from '#utilities/cryptography/hash/shake256';
+import { hash256, hash512 } from '#crypto/hash/shake.js';
 import dis from '#components/dis/index';
 import { readStructured } from '#file';
 import { resolve } from 'path';

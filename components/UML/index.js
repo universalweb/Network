@@ -3,22 +3,22 @@ import { isArray, isBuffer, isPlainObject } from '@universalweb/utilitylib';
 // UNIVERSAL MARKUP LANGUAGE EXPERIMENTAL SYNTAX
 export function div(attrs, contents) {
 	return [
-		'div', attrs, contents
+		'div', attrs, contents,
 	];
 }
 export function head(attrs, contents) {
 	return [
-		'head', attrs, contents
+		'head', attrs, contents,
 	];
 }
 export function body(attrs, contents) {
 	return [
-		'body', attrs, contents
+		'body', attrs, contents,
 	];
 }
 export function html(attrs, contents) {
 	return [
-		'html', attrs, contents
+		'html', attrs, contents,
 	];
 }
 export function addChild(target, source) {
@@ -29,7 +29,7 @@ export function addChild(target, source) {
 		} else {
 			target[2] = [
 				contents,
-				source
+				source,
 			];
 		}
 	} else if (isArray(target[1])) {
@@ -63,9 +63,9 @@ export class UML {
 			return node.id === id;
 		});
 	}
-	async searchByType(type) {
+	async searchBykind(kind) {
 		return this.data.nodes.filter((node) => {
-			return node.type === type;
+			return node.kind === kind;
 		});
 	}
 	async searchByClass(className) {

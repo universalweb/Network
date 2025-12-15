@@ -1,0 +1,239 @@
+/* Responsive Design */
+
+@media (max-width: 1080px) {
+  /* Layout is now single column by default */
+}
+
+@media (min-width: 561px) {
+  .identity-section {
+    padding: 16px 20px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 900px) {
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    padding: 8px 16px;
+  }
+  .stat-value {
+    font-size: 16px;
+  }
+  .app-header {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+  .identity-bar {
+    width: calc(100% - 32px);
+    bottom: 24px;
+  }
+  .identity-bar-content {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 18px;
+    justify-content: center;
+  }
+  .identity-section {
+    margin-right: 0;
+  }
+  .identity-actions {
+    justify-content: space-between;
+  }
+  .identity-actions .btn {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 780px) {
+  .quick-tx .field.narrow {
+    width: 120px;
+    flex: 0 0 120px;
+  }
+  .quick-tx .field.result {
+    width: 100%;
+  }
+  .quick-tx .qt-row.sig {
+    flex-direction: column;
+  }
+  .activity-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .notification-container {
+    top: 10px;
+    right: 10px;
+    max-width: calc(100vw - 20px);
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 8px 12px;
+  }
+  .identity-section {
+    padding: 14px 18px;
+    gap: 10px;
+    max-width: none;
+  }
+  .identity-section .address {
+    max-width: 16ch;
+  }
+  .identity-actions {
+    padding: 14px 18px;
+  }
+}
+
+@media (max-width: 560px) {
+  .btn-group {
+    flex-direction: column;
+  }
+  .quick-tx .field.narrow {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+  .quick-tx .field.stretch {
+    flex: 1 1 100%;
+  }
+  .identity-bar-content {
+    gap: 16px;
+  }
+  .transaction-actions-panel {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .transaction-stats {
+    justify-content: center;
+  }
+  .transaction-actions {
+    flex-direction: column;
+  }
+  .identity-section {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+  .identity-section .address {
+    max-width: 12ch;
+  }
+  .identity-actions {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+  .identity-bar #showKeysBtn:not(:disabled) {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    padding: 0;
+    border-radius: 50%;
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 6px 10px;
+  }
+  .stat-item {
+    padding: 8px 10px;
+  }
+  .stat-value {
+    font-size: 14px;
+  }
+  .stat-label {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+  .tx-item {
+    padding: 8px 10px;
+  }
+  .tx-direction {
+    font-size: 13px;
+  }
+  .tx-address {
+    font-size: 10px;
+    word-break: break-all;
+  }
+  .tx-amount {
+    font-size: 14px;
+  }
+  .notification {
+    min-width: auto;
+  }
+  .tx-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 480px) {
+  .app {
+    margin: 15px auto 30px;
+    padding: 0 12px 100px;
+  }
+  .identity-bar-content {
+    gap: 12px;
+  }
+  .identity-section {
+    padding: 12px 14px;
+    gap: 8px;
+  }
+  .identity-actions {
+    padding: 12px 14px;
+    gap: 8px;
+  }
+  .identity-section .address {
+    max-width: 10ch;
+  }
+  .identity-actions {
+    justify-content: center;
+    padding: 12px 16px;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 4px 8px;
+    border-left: 3px double var(--accent-warm);
+    border-right: 3px double var(--accent-warm);
+  }
+  .stat-item {
+    padding: 6px 8px;
+  }
+  .stat-value {
+    font-size: 12px;
+  }
+  .stat-label {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 320px) {
+  .identity-bar {
+    width: calc(100% - 16px);
+    min-width: auto;
+  }
+  .identity-bar-content {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .identity-section {
+    margin-right: 0;
+    margin-bottom: 0;
+    padding: 10px 12px;
+    gap: 6px;
+    min-width: 80px;
+  }
+  .identity-actions {
+    padding: 10px 12px;
+    gap: 6px;
+    min-width: 60px;
+  }
+  .identity-section .address {
+    max-width: 8ch;
+  }
+}

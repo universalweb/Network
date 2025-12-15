@@ -4,20 +4,21 @@
 import { bufferAlloc, int32, randomize } from '#utilities/cryptography/utils';
 import aegis256 from '../cipher/AEGIS256.js';
 import kyber768_x25519 from '../keyExchange/kyber768_x25519.js';
-import shake256 from '../hash/shake256.js';
+import shake256 from '../hash/shake.js';
 import viat from '../signature/viat.js';
 import xChaCha from '../cipher/xChaCha.js';
 export const viatCipherSuite = {
 	name: 'viatCipherSuite',
 	alias: 'dilithium65_sphincs192',
 	description: 'Dilithium65, SPHINCS+192s, ed25519, Kyber, x25519, SHAKE256.',
-	id: 0,
-	viatCipherID: 0,
+	addressType: 'hybrid',
+	id: 1,
+	viatCipherID: 1,
 	preferred: true,
 	speed: 0,
-	security: 1,
+	security: 2,
 	hash: shake256,
-	walletSize: 64,
+	walletSize: 32,
 	keyExchangeSeedSize: kyber768_x25519.seedSize,
 	seedSize: viat.seedSize,
 	// Consider default encryption algo

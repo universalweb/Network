@@ -12,6 +12,9 @@ const customGlobals = {
 	client: 'off',
 	clients: 'off',
 	status: 'off',
+	VIAT: 'off',
+	crypto: 'off',
+	Bun: 'off',
 };
 function addGlobals(keysObject) {
 	const keys = Object.keys(keysObject);
@@ -223,7 +226,7 @@ export default [
 				'error',
 				'single',
 				{
-					allowTemplateLiterals: true,
+					allowTemplateLiterals: 'always',
 				},
 			],
 			'@stylistic/rest-spread-spacing': ['error', 'never'],
@@ -465,7 +468,11 @@ export default [
 			'no-restricted-globals': 'error',
 			'no-restricted-imports': 'off',
 			'no-restricted-modules': 'off',
-			'no-restricted-syntax': 'off',
+			'no-restricted-syntax': [
+				'error',
+				'VariableDeclarator[id.name="type"]',
+				'Property[key.name="type"]',
+			],
 			'no-return-assign': ['error', 'always'],
 			'no-return-await': 'error',
 			'no-script-url': 'error',
@@ -490,12 +497,7 @@ export default [
 			'no-undef': 'error',
 			'no-undef-init': 'error',
 			'no-undefined': 'off',
-			'no-underscore-dangle': [
-				'error',
-				{
-					allow: ['__dirname', '__filename'],
-				},
-			],
+			'no-underscore-dangle': 'off',
 			'no-unexpected-multiline': 'error',
 			'no-unmodified-loop-condition': 'error',
 			'no-unneeded-ternary': 'error',

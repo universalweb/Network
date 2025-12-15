@@ -1,6 +1,6 @@
 // Bloom Filter experiments
 import { decode, encodeStrict } from '#utilities/serialize';
-import { hash256, hash512 } from '#crypto/hash/shake256.js';
+import { hash256, hash512 } from '#crypto/hash/shake.js';
 import { isBuffer, isPlainObject, merge } from '@universalweb/utilitylib';
 import { random64ByteBuffer } from '#crypto/utils.js';
 import runBench from '#utilities/benchmark';

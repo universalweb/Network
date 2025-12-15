@@ -1,6 +1,7 @@
 // Cryptographic Identity
 // Used for creating a Nexus profile/ID
 // Used to generate a cryptographic identity number & cryptographic Identity Card
+// TODO: Add trapdoor support
 import {
 	assign,
 	currentPath,
@@ -16,15 +17,20 @@ import { decode, encode, encodeStrict } from '#utilities/serialize';
 import { getHomeDirectory, getWalletsDirectory } from '#utilities/directory';
 import { keychainGet, keychainSave } from '#components/certificate/keychain';
 import { read, readStructured, write } from '#utilities/file';
+import { createAddress } from '#viat/address/generateAddress';
 import { cryptoIDVersion } from '#components/cryptoID/defaults';
+import dilithium from '#crypto/signature/dilithium65.js';
+import ed25519 from '#crypto/signature/ed25519.js';
 import logMethods from '#utilities/logs/classLogMethods';
 import path from 'node:path';
 import { toBase64Url } from '#crypto/utils.js';
 import viat from '#crypto/cipherSuite/viat.js';
-const securityTypes = {
+import viatLegacy from '#crypto/cipherSuite/legacy.js';
+import viatQuantum from '#crypto/cipherSuite/quantum.js';
+const walletCipherSuites = {
 	hybrid: viat,
-	quantum: 'quantum',
-	legacy: 'legacy',
+	quantum: viatQuantum,
+	legacy: viatLegacy,
 };
 export class CryptoID {
 	constructor(config, optionalArg) {
@@ -33,8 +39,9 @@ export class CryptoID {
 		}
 		return this.initialize(config, optionalArg);
 	}
-	cipherSuite = viat;
+	cipherSuite = viatLegacy;
 	version = cryptoIDVersion;
+	networkName = 'mainnet';
 	async initialize(config, optionalArg) {
 		if (isString(config)) {
 			if (config.includes('/') || config.includes('\\') || hasDot(config)) {
@@ -51,14 +58,40 @@ export class CryptoID {
 		}
 		return this;
 	}
+	setCipherSuite(cipherSuiteName = 'legacy') {
+		console.log('Setting cipher suite to:', cipherSuiteName);
+		if (isString(cipherSuiteName) && walletCipherSuites[cipherSuiteName]) {
+			this.cipherSuiteName = cipherSuiteName;
+			this.cipherSuite = walletCipherSuites[cipherSuiteName];
+		} else if (isPlainObject(cipherSuiteName)) {
+			this.cipherSuite = cipherSuiteName;
+		}
+		this.cipherSuiteID = this.cipherSuite.id;
+		// console.log('Current cipher suite:', this.cipherSuite);
+		return this;
+	}
+	setCipherSuiteByAddress(address) {
+		const addressSize = address.length;
+		if (addressSize === viat.walletSize) {
+			this.setCipherSuite('hybrid');
+		} else if (addressSize === viatQuantum.walletSize) {
+			this.setCipherSuite('quantum');
+		} else if (addressSize === viatLegacy.walletSize) {
+			this.setCipherSuite('legacy');
+		}
+	}
 	async initializeKeypairs() {
+		if (this.address) {
+			await this.setCipherSuiteByAddress(this.address);
+		}
 		if (await this.cipherSuite.signature.isKeypairInitialized(this.signatureKeypair) === false) {
 			this.signatureKeypair = await this.cipherSuite.signature.initializeKeypair(this.signatureKeypair);
 		}
-		if (await this.cipherSuite.keyExchange.isKeypairInitialized(this.keyExchangeKeypair) === false) {
+		if (this.keyExchangeKeypair && await this.cipherSuite.keyExchange.isKeypairInitialized(this.keyExchangeKeypair) === false) {
 			this.keyExchangeKeypair = await this.cipherSuite.keyExchange.initializeKeypair(this.keyExchangeKeypair);
 		}
-		this.generateAddress();
+		await this.generateAddress();
+		return this;
 	}
 	async importKeypairs(core) {
 		const {
@@ -75,10 +108,19 @@ export class CryptoID {
 		return this;
 	}
 	async generate(options) {
+		this.setCipherSuite(options?.cipherSuiteName);
 		this.signatureKeypair = await this.cipherSuite.signature.signatureKeypair();
-		this.keyExchangeKeypair = await this.cipherSuite.keyExchange.keyExchangeKeypair();
-		options?.type && (this.type = options.type);
-		this.generateAddress();
+		if (!this.excludeKeyExchange) {
+			this.keyExchangeKeypair = await this.cipherSuite.keyExchange.keyExchangeKeypair();
+		}
+		if (this.cipherSuite.trapdoorSignature) {
+			this.trapdoorSignature = await this.cipherSuite.trapdoorSignature.signatureKeypair();
+		}
+		options?.idType && (this.idType = options.idType);
+		if (options?.networkName) {
+			this.networkName = options.networkName;
+		}
+		await this.generateAddress();
 		// console.log('KEY EXCHANGE', this.keyExchangeKeypair);
 	}
 	async importFromBinary(data, encryptionKey) {
@@ -94,20 +136,23 @@ export class CryptoID {
 		const data = (password) ? await this.decryptBinary(decodedData.encrypted, password) : decodedData;
 		const {
 			version,
-			cipherID,
+			cipherSuiteID,
 			core: {
 				keyExchangeKeypair,
 				signatureKeypair,
+				trapdoorSignature,
 			},
 			networkName,
+			cipherSuiteName,
 		} = data;
 		if (version) {
 			this.version = version;
 		}
 		this.keyExchangeKeypair = keyExchangeKeypair;
 		this.signatureKeypair = signatureKeypair;
-		if (hasValue(cipherID)) {
-			this.cipherID = cipherID;
+		this.trapdoorSignature = trapdoorSignature;
+		if (hasValue(cipherSuiteID)) {
+			this.cipherSuiteID = cipherSuiteID;
 		}
 		if (hasValue(networkName)) {
 			this.networkName = networkName;
@@ -124,28 +169,49 @@ export class CryptoID {
 		const signatureKeypair = await this.cipherSuite.signature.exportKeypair(this.signatureKeypair);
 		return signatureKeypair;
 	}
+	async exporttrapdoorSignatureKeypair() {
+		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
+		const trapdoorSignature = await this.cipherSuite.trapdoorSignature.exportKeypair(this.trapdoorSignature);
+		return trapdoorSignature;
+	}
 	async exportExchangeKeypair() {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
-		const keyExchangeKeypair = await this.cipherSuite.keyExchange.exportKeypair(this.keyExchangeKeypair);
-		return keyExchangeKeypair;
+		if (this.keyExchangeKeypair) {
+			const keyExchangeKeypair = await this.cipherSuite.keyExchange.exportKeypair(this.keyExchangeKeypair);
+			return keyExchangeKeypair;
+		}
 	}
 	async exportKeypairs() {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
 		const keyExchangeKeypair = await this.exportExchangeKeypair();
 		const signatureKeypair = await this.exportSignatureKeypair();
-		return {
-			keyExchangeKeypair,
+		const trapdoorSignature = await this.exporttrapdoorSignatureKeypair();
+		const target = {
 			signatureKeypair,
 		};
+		if (keyExchangeKeypair) {
+			target.keyExchangeKeypair = keyExchangeKeypair;
+		}
+		if (trapdoorSignature) {
+			target.trapdoorSignature = trapdoorSignature;
+		}
+		return target;
 	}
 	async exportPublicKeys() {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
 		const { publicKey: signaturePublicKey } = await this.exportSignatureKeypair();
 		const { publicKey: keyExchangePublicKey } = await this.exportExchangeKeypair();
-		return {
+		const { publicKey: trapdoorSignaturePublicKey } = await this.exporttrapdoorSignatureKeypair();
+		const target = {
 			signaturePublicKey,
-			keyExchangePublicKey,
 		};
+		if (keyExchangePublicKey) {
+			target.keyExchangePublicKey = keyExchangePublicKey;
+		}
+		if (trapdoorSignaturePublicKey) {
+			target.trapdoorSignaturePublicKey = trapdoorSignaturePublicKey;
+		}
+		return target;
 	}
 	async exportPublicKey() {
 		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
@@ -157,35 +223,43 @@ export class CryptoID {
 		const signatureKeypair = await this.exportSignatureKeypair();
 		return signatureKeypair.privateKey;
 	}
-	async exportObject() {
+	async exporttrapdoorSignaturePublicKey() {
+		// console.log('keyExchangeKeypair', this.keyExchangeKeypair);
+		const trapdoorSignature = await this.exporttrapdoorSignatureKeypair();
+		return trapdoorSignature.publicKey;
+	}
+	async expporttrapdoorSignaturePrivateKey() {
+		const trapdoorSignature = await this.exporttrapdoorSignatureKeypair();
+		return trapdoorSignature.privateKey;
+	}
+	async exportDefaultObject() {
 		const {
 			version,
 			address,
+			cipherSuiteName,
+			networkName,
+			cipherSuiteID,
 		} = this;
 		const data = {
 			version,
 			date: Date.now(),
-			cipherID: this.cipherSuite.id,
+			cipherSuiteID,
 			address,
 			core: {},
+			cipherSuiteName,
+			networkName,
 		};
-		assign(data.core, await this.exportKeypairs());
 		return data;
 	}
+	async exportObject() {
+		const source = await this.exportDefaultObject();
+		assign(source.core, await this.exportKeypairs());
+		return source;
+	}
 	async exportPublicObject() {
-		const {
-			version,
-			address,
-		} = this;
-		const data = {
-			version,
-			date: Date.now(),
-			cipherID: this.cipherSuite.id,
-			address,
-			core: {},
-		};
-		assign(data.core, await this.exportPublicKey());
-		return data;
+		const source = await this.exportDefaultObject();
+		assign(source.core, await this.exportPublicKey());
+		return source;
 	}
 	async exportBinary(encryptionKey) {
 		const data = await this.exportObject();
@@ -248,6 +322,9 @@ export class CryptoID {
 		await block.sign(this);
 	}
 	async signPartial(message) {
+		if (!this.cipherSuite.signature.signPartial) {
+			return this.sign(message);
+		}
 		return this.cipherSuite.signature.signPartial(message, this.signatureKeypair);
 	}
 	async verifyPartialSignature(signature, message) {
@@ -258,13 +335,11 @@ export class CryptoID {
 		const signature = await this.sign(certificateData, this.signatureKeypair);
 		return signature;
 	}
-	cryptoIDVersion = cryptoIDVersion;
 	async generateAddress() {
 		const publicKey = await this.exportPublicKey();
 		const publicKeyCombined = (isBuffer(publicKey)) ? publicKey : await encodeStrict(publicKey);
-		const address = await this.cipherSuite.hash.hash512(publicKeyCombined);
-		this.address = address;
-		return address;
+		// TODO: Add meta details for wallet support
+		return createAddress(publicKeyCombined, this.trapdoor, this.cipherSuite.id);
 	}
 	async getAddress() {
 		const address = this.address || await this.generateAddress();
@@ -273,6 +348,10 @@ export class CryptoID {
 	async getAddressString(encoding) {
 		const address = await this.getAddress();
 		return (encoding) ? address.toString(encoding) : toBase64Url(address);
+	}
+	async gettrapdoorSignatureHash() {
+		const publicKey = await this.exporttrapdoorSignaturePublicKey();
+		return this.cipherSuite.hash.hash256(publicKey);
 	}
 	setAlias(value) {
 		this.alias = value;
@@ -285,7 +364,12 @@ export async function cryptoID(config, optionalArg) {
 }
 export default cryptoID;
 // const dirname = currentPath(import.meta);
-// const exampleCryptoIDExample = await cryptoID();
+// const exampleCryptoIDExample = await cryptoID(null, {
+// 	cipherSuiteName: 'legacy',
+// });
+// console.log('exportSignatureKeypair', await exampleCryptoIDExample.exportSignatureKeypair());
+// console.log('exportObject', await exampleCryptoIDExample.exportObject());
+// console.log((await exampleCryptoIDExample.gettrapdoorSignatureHash()).length);
 // const encryptionPasswordExample = 'password';
 // console.log(await exampleCryptoIDExample.exportBinary());
 // console.log((await exampleCryptoIDExample.getAddress()).length);

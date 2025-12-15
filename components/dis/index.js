@@ -2,7 +2,6 @@
 // This module provides functions to manage and retrieve information about domain certificates.
 import { currentPath } from '@universalweb/utilitylib';
 import os from 'os';
-import { publicDomainCertificate } from '#components/certificate/domain/domain';
 const homeDirectory = os.homedir();
 // const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // console.log(timeZone);
@@ -31,7 +30,7 @@ async function findRecord(certificate, recordType, hostname) {
 	return record;
 }
 const dis = {
-	findRecord
+	findRecord,
 };
 export default dis;
 // const thisPath = currentPath(import.meta);

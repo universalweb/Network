@@ -3,12 +3,14 @@ import {
 	discoveryHeaderRPC,
 	endHeaderRPC,
 	extendedSynchronizationHeaderRPC,
+	finalizeExtendedSynchronizationHeaderRPC,
 	introHeaderRPC,
 } from '#udsp/rpc/headerRPC';
 import {
 	discoveryRPC,
 	endRPC,
 	extendedSynchronizationRPC,
+	finalizeExtendedSynchronizationRPC,
 	introRPC,
 } from '#udsp/rpc/frameRPC';
 import {
@@ -25,6 +27,10 @@ export async function proccessProtocolHeader(rpc, source, header, packetDecoded,
 			break;
 		}
 		case extendedSynchronizationHeaderRPC: {
+			source.extendedSynchronizationHeader(header, packetDecoded, rinfo);
+			break;
+		}
+		case finalizeExtendedSynchronizationHeaderRPC: {
 			source.extendedSynchronizationHeader(header, packetDecoded, rinfo);
 			break;
 		}
@@ -62,17 +68,20 @@ export async function proccessProtocolFrame(rpc, source, frame, header, rinfo) {
 	switch (rpc) {
 		// Hello/Intro
 		case introRPC: {
-			source.logInfo('Hello/Intro RECEIVED');
 			source.intro(frame, header, rinfo);
 			break;
 		}
 		// Extended Synchronization
 		case extendedSynchronizationRPC: {
-			source.extendedSynchronization(frame, header, rinfo);
+			source.extendedSynchronizationFrame(frame, header, rinfo);
 			break;
 		}
 		case discoveryRPC: {
 			source.discovery(frame, header, rinfo);
+			break;
+		}
+		case finalizeExtendedSynchronizationRPC: {
+			source.finalizeExtendedSynchronization(frame, header, rinfo);
 			break;
 		}
 		// End Connection

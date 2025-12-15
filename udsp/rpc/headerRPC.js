@@ -14,3 +14,29 @@ export const endHeaderRPC = 3;
 export function isEndHeader(id) {
 	return id === endHeaderRPC;
 }
+export const finalizeExtendedSynchronizationHeaderRPC = 4;
+export function isFinalizeExtendedSynchronizationHeader(id) {
+	return id === finalizeExtendedSynchronizationHeaderRPC;
+}
+export function headerRPC(id, source = []) {
+	source[1] = id;
+	return source;
+}
+export function headerExtendedSynchronizationRPC(source = []) {
+	headerRPC(extendedSynchronizationHeaderRPC, source);
+	return source;
+}
+export function headerFinalizeExtendedSynchronizationRPC(source = []) {
+	headerRPC(finalizeExtendedSynchronizationHeaderRPC, source);
+	return source;
+}
+export function headerIntroRPC(source = []) {
+	headerRPC(introHeaderRPC, source);
+	return source;
+}
+export function headerEndRPC(source = []) {
+	headerRPC(endHeaderRPC, source);
+	return source;
+}
+export const extendedAuthHeaderRPC = 5;
+export default headerRPC;

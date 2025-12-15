@@ -1,15 +1,21 @@
 // Various optimization strategies could be used but for now will be kept this way to get a full feel of each event
-export async function loop(viatNetwork, amy, sendAmount, mitziAddress, manaAmount) {
-	let count = 0;
+const txs = 'TXs & Receipts';
+const amount = 60000;
+const c = console.log;
+console.log = () => {};
+function logit(times) {
+	c(txs, amount, Date.now() - times);
+}
+export async function loop(func) {
+	// let count = 0;
 	const tim = Date.now();
-	for (let i = 0; i < 5000; i++) {
-		const txBlock = await viatNetwork.createTransaction(amy, sendAmount, mitziAddress, manaAmount);
-		await viatNetwork.saveBlock(txBlock);
+	for (let i = 0; i < amount; i++) {
+		await func();
 		// console.clear();
-		count++;
-		if (Date.now() - tim >= 1000) {
-			console.log(count, Date.now() - tim);
+		if (i === amount - 1) {
+			logit(tim);
 			break;
 		}
 	}
 }
+// 10K - 50K Files/Folders

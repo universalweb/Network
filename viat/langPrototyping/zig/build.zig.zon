@@ -1,0 +1,15 @@
+.{
+    .name = .viat,
+    .version = "0.1.0",
+    .minimum_zig_version = "0.15.0",
+    .fingerprint = 0x3983f308524d058,
+    .dependencies = .{
+        .zbor = .{
+            .url = "https://github.com/r4gus/zbor/archive/refs/tags/0.20.1.tar.gz",
+            .hash = "zbor-0.20.0-kr-CoK1kAwDtdlkCAsc43I4FkS-G2GJ0buELN1gCVfLN",
+        },
+    },
+    .paths = .{
+        "src",
+    },
+}

@@ -31,7 +31,7 @@ const methods = {
 	},
 	async saveBlock(targetBlock) {
 		const fullPath = await this.getFullPath();
-		// console.log('targetBlock', fullPath);
+		console.log('targetBlock', fullPath);
 		await targetBlock.save(fullPath);
 		return this;
 	},

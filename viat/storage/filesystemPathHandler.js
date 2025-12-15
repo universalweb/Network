@@ -1,5 +1,12 @@
 import {
-	filePaths, genericFilenames, letters, urlPaths,
+	blockTypes,
+	filePaths,
+	genericFilenames,
+	letters,
+	typeNames,
+	typeNamesPlural,
+	urlPaths,
+	walletTypes,
 } from '../blocks/defaults.js';
 import { getFinalDirectoryGenerator, getPrefixPathGenerator } from './getPrefixPath.js';
 import base38 from './base38.js';
@@ -7,6 +14,7 @@ import { encodingTypes } from './encodingTypes.js';
 import { merge } from '@universalweb/utilitylib';
 import path from 'path';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
+import viatDefaults from '#viat/defaults';
 export function createBlockPathConfig(config) {
 	const templateConfig = {
 		typeName: 'generic',
@@ -17,11 +25,7 @@ export function createBlockPathConfig(config) {
 			encoding: encodingTypes.hex,
 		},
 		uniquePath: {
-			sizeOptions: [
-				12, 16, 18, 24, 26,
-			],
-			size: 16,
-			startIndex: 64 - 16,
+			startIndex: viatDefaults.defaultHashSize - 12,
 			encoding: encodingTypes.base38,
 		},
 	};
@@ -36,11 +40,7 @@ export function createSlaveBlockPathConfig(config) {
 			encoding: encodingTypes.hex,
 		},
 		uniquePath: {
-			sizeOptions: [
-				12, 16, 18, 24, 26,
-			],
-			size: 12,
-			startIndex: 64 - 12,
+			startIndex: viatDefaults.defaultHashSize - 12,
 			encoding: encodingTypes.base38,
 		},
 	});
@@ -49,20 +49,40 @@ export function createSlaveBlockPathConfig(config) {
 }
 const template = {
 	wallet: createBlockPathConfig({
-		typeName: 'wallet',
-		typeNamePlural: 'wallets',
+		typeName: typeNames.wallet,
+		typeNamePlural: typeNamesPlural.wallet,
+		uniquePath: {
+			startIndex: walletTypes.wallet.size - 12,
+			encoding: encodingTypes.base38,
+		},
+	}),
+	audit: createBlockPathConfig({
+		typeName: typeNames.audit,
+		typeNamePlural: typeNamesPlural.audit,
+	}),
+	hybridWallet: createBlockPathConfig({
+		typeName: typeNames.hybridWallet,
+		typeNamePlural: typeNamesPlural.hybridWallet,
+		uniquePath: {
+			startIndex: walletTypes.hybridWallet.size - 12,
+			encoding: encodingTypes.base38,
+		},
+	}),
+	quantumWallet: createBlockPathConfig({
+		typeName: typeNames.quantumWallet,
+		typeNamePlural: typeNamesPlural.quantumWallet,
+		uniquePath: {
+			startIndex: walletTypes.quantumWallet.size - 12,
+			encoding: encodingTypes.base38,
+		},
 	}),
 	transaction: createSlaveBlockPathConfig({
-		typeName: 'transaction',
-		typeNamePlural: 'transactions',
+		typeName: typeNames.transaction,
+		typeNamePlural: typeNamesPlural.transaction,
 	}),
 	receipt: createSlaveBlockPathConfig({
-		typeName: 'receipt',
-		typeNamePlural: 'receipts',
-	}),
-	proof: createSlaveBlockPathConfig({
-		typeName: 'proof',
-		typeNamePlural: 'proofs',
+		typeName: typeNames.receipt,
+		typeNamePlural: typeNamesPlural.receipt,
 	}),
 };
 class BlockPathHandler {
@@ -76,6 +96,7 @@ class BlockPathHandler {
 		this.filePath = filePaths[typeName];
 		this.letter = letters[typeName];
 		this.filename = genericFilenames[typeName];
+		this.typeID = blockTypes[typeName];
 		if (this.letter) {
 			this.urlPathnameRegex = new RegExp(`/${this.letter}/`);
 		}
@@ -103,6 +124,9 @@ class BlockPathHandler {
 	getURL(hash) {
 		return path.join(this.urlPath, this.getPathPrefix(hash), this.getUniquePath(hash));
 	}
+	getFileURL(hash) {
+		return path.join(this.getURL(hash), this.filename);
+	}
 	getFile(hash) {
 		return path.join(this.getFullPath(hash), this.filename);
 	}
@@ -115,21 +139,27 @@ class FilesystemPathHandler {
 		merge(target, config);
 		this.config = target;
 		this.wallet = new BlockPathHandler(this.config.wallet);
+		this.hybridWallet = new BlockPathHandler(this.config.hybridWallet);
+		this.quantumWallet = new BlockPathHandler(this.config.quantumWallet);
 		this.transaction = new BlockPathHandler(this.config.transaction);
+		this.receipt = new BlockPathHandler(this.config.receipt);
 	}
 	async getBlockPath(source) {
 		switch (source.blockType) {
-			case source.transaction: {
-				this.getTransaction(await source.getHash(), await source.getSender());
-				break;
+			case blockTypes.transaction: {
+				return this.getTransactionDirectory(await source.getHash(), await source.getSender());
 			}
-			case source.receipt: {
-				this.getReceipt(await source.getHash(), await source.getReceiver());
-				break;
+			case blockTypes.receipt: {
+				return this.getReceiptDirectory(await source.getTransaction(), await source.getReceiver());
 			}
-			case source.proof: {
-				this.getProof(await source.getHash(), await source.getSender());
-				break;
+			case blockTypes.wallet: {
+				return this.getWallet(await source.getAddress());
+			}
+			case blockTypes.hybridWallet: {
+				return this.getWallet(await source.getAddress());
+			}
+			case blockTypes.quantumWallet: {
+				return this.getWallet(await source.getAddress());
 			}
 			default: {
 				break;
@@ -137,40 +167,75 @@ class FilesystemPathHandler {
 		}
 	}
 	async getBlockFile(source) {
-		return this.getFile(source.getType(), await source.getHash());
-	}
-	async getFile(blockType, hash) {
-		switch (blockType) {
-			case 'transaction':
-				return this.transaction.getFile(hash);
-			case 'receipt':
-				return this.receipt.getFile(hash);
-			case 'proof':
-				return this.proof.getFile(hash);
+		switch (source.blockType) {
+			case blockTypes.transaction:
+				return this.getTransactionBlock(await source.getHash(), await source.getSender());
+			case blockTypes.receipt:
+				return this.getReceiptBlock(await source.getTransaction(), await source.getReceiver());
+			case blockTypes.wallet:
+				return this.getWallet(await source.getAddress());
+			case blockTypes.quantumWallet:
+				return this.getWallet(await source.getAddress());
+			case blockTypes.hybridWallet:
+				return this.getWallet(await source.getAddress());
 			default:
 				break;
 		}
 	}
-	async getTransaction(hash, walletAddress) {
+	async getFile(blockType, hash) {
+		// TODO: USE INTS
+		switch (blockType) {
+			case blockTypes.transaction:
+				return this.transaction.getFile(hash);
+			case blockTypes.receipt:
+				return this.receipt.getFile(hash);
+			case blockTypes.wallet:
+				return this.wallet.getFile(hash);
+			case blockTypes.quantumWallet:
+				return this.quantumWallet.getFile(hash);
+			case blockTypes.hybridWallet:
+				return this.hybridWallet.getFile(hash);
+			default:
+				break;
+		}
+	}
+	async getTransactionDirectory(hash, walletAddress) {
 		const transactionPath = await this.transaction.getFullPath(hash);
 		if (walletAddress) {
-			return path.join(await this.wallet.getFullPath(walletAddress), transactionPath);
+			return path.join(await this.getWallet(walletAddress), transactionPath);
 		}
 		return transactionPath;
 	}
-	async getReceipt(hash, walletAddress) {
+	async getTransactionBlock(hash, walletAddress) {
+		const transactionPath = await this.getTransactionDirectory(hash, walletAddress);
+		return path.join(transactionPath, this.transaction.filename);
+	}
+	async getReceiptDirectory(hash, receiverAddress) {
 		const receiptPath = await this.receipt.getFullPath(hash);
-		if (walletAddress) {
-			return path.join(await this.wallet.getFullPath(walletAddress), receiptPath);
+		if (receiverAddress) {
+			return path.join(await this.getWallet(receiverAddress), receiptPath);
 		}
 		return receiptPath;
 	}
-	async getProof(hash, walletAddress) {
-		const proofPath = await this.proof.getFullPath(hash);
-		if (walletAddress) {
-			return path.join(await this.wallet.getFullPath(walletAddress), proofPath);
+	async getReceiptBlock(hash, receiverAddress) {
+		const receiptPath = await this.getReceiptDirectory(hash, receiverAddress);
+		return path.join(receiptPath, this.receipt.filename);
+	}
+	async getWallet(walletAddress) {
+		const walletSize = walletAddress.length;
+		// console.log('Wallet Size:', walletSize);
+		if (walletSize === viatDefaults.wallets.legacy.walletSize) {
+			// Handle 24-byte wallet addresses
+			return this.wallet.getFullPath(walletAddress);
+		} else if (walletSize === viatDefaults.wallets.hybrid.walletSize) {
+			// Handle 32-byte wallet addresses
+			return this.hybridWallet.getFullPath(walletAddress);
+		} else if (walletSize === viatDefaults.wallets.quantum.walletSize) {
+			// Handle 64-byte wallet addresses
+			return this.quantumWallet.getFullPath(walletAddress);
+		} else {
+			return;
 		}
-		return proofPath;
 	}
 }
 export async function filesystemPathHandler(...args) {
@@ -178,7 +243,11 @@ export async function filesystemPathHandler(...args) {
 	return handler;
 }
 export default FilesystemPathHandler;
-const defaultFilesystemConfig = await filesystemPathHandler('generic', {});
-console.log(defaultFilesystemConfig);
-const txBufferex = await viatCipherSuite.createBlockNonce(64);
-console.log(await defaultFilesystemConfig.getTransaction(txBufferex));
+// const defaultFilesystemConfig = await filesystemPathHandler('generic', {});
+// console.log(defaultFilesystemConfig);
+// const example64 = await viatCipherSuite.createBlockNonce(64);
+// const example32 = await viatCipherSuite.createBlockNonce(32);
+// const example20 = await viatCipherSuite.createBlockNonce(20);
+// console.log(await defaultFilesystemConfig.getWallet(example64));
+// console.log(await defaultFilesystemConfig.getWallet(example32));
+// console.log(await defaultFilesystemConfig.getWallet(example20));

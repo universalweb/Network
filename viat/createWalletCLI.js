@@ -32,9 +32,9 @@ program
 	});
 program.addHelpText('after', `
 Example Commands:
-  ./createWalletCLI.js walletFilename.bin /FILE/PATH/TO/SAVE/TO
+  ./createWalletCLI.js walletFilename.wallet /FILE/PATH/TO/SAVE/TO
 `);
 program.option('-v, --verbose', 'Enable verbose output');
 // Parse command-line arguments
 program.parse(process.argv);
-// CLI COMMAND ./createWalletCLI.js walletFilename.bin /FILE/PATH/TO/SAVE/TO
+// CLI COMMAND ./createWalletCLI.js walletFilename.wallet /FILE/PATH/TO/SAVE/TO

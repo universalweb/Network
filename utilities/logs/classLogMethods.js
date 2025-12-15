@@ -29,12 +29,12 @@ export function consoleLog(source, loglevel, data, logFunction = console.log, ty
 		if (loglevel === 4) {
 			return logFunction(...data);
 		}
-		const type = source?.type || source?.constructor?.name || '';
+		const kind = source?.type || source?.constructor?.name || '';
 		if (source.connectionIdString || source.id) {
 			const idString = source.connectionIdString || source.id;
-			return logFunction(type, isString(idString) ? `ID:${idString} ${arrow}` : '', false, ...data);
+			return logFunction(kind, isString(idString) ? `ID:${idString} ${arrow}` : '', false, ...data);
 		}
-		return logFunction(type, '', true, ...data);
+		return logFunction(kind, '', true, ...data);
 	}
 }
 export function logError(...err) {

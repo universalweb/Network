@@ -59,8 +59,7 @@ function hybridToX25519(target) {
 	}
 }
 function certificateKeypairCompatability(source, cipherId) {
-	const keyExchangeAlgorithmId =
-			source.certificate.keyExchangeAlgorithm.id;
+	const keyExchangeAlgorithmId = source.certificate.keyExchangeAlgorithm.id;
 	if (keyExchangeAlgorithmId === cipherId) {
 		return;
 	}

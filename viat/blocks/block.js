@@ -1,6 +1,13 @@
+import {
+	blockTypes,
+	fileExtensions,
+	genericFilenames,
+	hashSizes,
+	nonceSizes,
+	version,
+} from './defaults.js';
 import { construct, extendClass, getConstructorName } from '@universalweb/utilitylib';
 import accessorMethods from './methods/accessors.js';
-import blockDefaults from './defaults.js';
 import configMethods from './methods/config.js';
 import defaultsMethods from './methods/defaults.js';
 import exportMethods from './methods/export.js';
@@ -14,19 +21,15 @@ import signatureMethods from './methods/signature.js';
 import validateMethods from './methods/validate.js';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 import wallet from '#viat/wallet/wallet';
-const {
-	version,
-	blockTypes,
-} = blockDefaults;
 export class Block {
 	constructor(config) {
 		return this;
 	}
 	async initialize(data, config, ...args) {
-		this.blockType = blockDefaults.blockTypes[this.typeName];
-		this.fileType = blockDefaults.fileExtensions[this.typeName];
-		this.filename = blockDefaults.genericFilenames[this.typeName];
-		this.filesystemPath = this.filesystemType[this.typeName];
+		this.blockType = blockTypes[this.typeName];
+		this.fileType = fileExtensions[this.typeName];
+		this.filename = genericFilenames[this.typeName];
+		this.filesystem = this.filesystemConfig[this.typeName];
 		if (data) {
 			if (getParentClassName(data) === 'Block') {
 				await this.configByBlock(data, config, ...args);
@@ -43,14 +46,18 @@ export class Block {
 		await this.setHash();
 		return this;
 	}
+	setFilesystem(typeName) {
+		this.filesystem = this.filesystemConfig[typeName];
+		return this;
+	}
 	version = version;
 	typeName = 'generic';
-	blockType = blockDefaults.blockTypes.generic;
-	fileType = blockDefaults.fileExtensions.generic;
-	filename = blockDefaults.genericFilenames.generic;
+	blockType = blockTypes.generic;
+	fileType = fileExtensions.generic;
+	filename = genericFilenames.generic;
 	cipherSuite = viatCipherSuite;
-	nonceSize = 16;
-	hashSize = 64;
+	nonceSize = nonceSizes.generic;
+	hashSize = hashSizes.compact;
 	hashXOFConfig = hash512SettingsCrypto;
 	block = {
 		data: {
@@ -59,15 +66,50 @@ export class Block {
 		},
 	};
 	getType() {
-		return this.getMeta('type') || this.blockType;
+		return this.getMeta('blockType') || this.blockType;
 	}
-	getFilePathPrefix(hash) {
-		return this.filesystemPath.pathPrefix.encode(hash || this.block.hash);
+	async getFilePathPrefix(hash) {
+		return this.filesystem.pathPrefix.encode(hash || await this.getHash());
 	}
-	getFinalDirectory(hash) {
-		return this.filesystemPath.uniquePath.encode(hash || this.block.hash);
+	async getFinalDirectory(hash) {
+		return this.filesystem.uniquePath.encode(hash || await this.getHash());
 	}
-	filesystemType = filesystemTypes.generic;
+	async getDirectory() {
+		return this.filesystemConfig.getBlockPath(this);
+	}
+	async getPath() {
+		return this.getFile();
+	}
+	async getFile() {
+		return this.filesystemConfig.getBlockFile(this);
+	}
+	async getURL() {
+		return this.filesystem.getURL(await this.getHash());
+	}
+	async getFileURL() {
+		return this.filesystem.getFileURL(await this.getHash());
+	}
+	async estimateBlockSize() {
+		const binary = await this.exportBinary();
+		const data = await this.exportObject();
+		const size = binary.length;
+		let compactSize = size;
+		console.log('Expanded Size:', size);
+		if (data.signature) {
+			compactSize -= data.signature.length;
+			console.log('Compact Without signature Size:', compactSize);
+		}
+		if (data.hash) {
+			compactSize -= data.hash.length;
+			console.log('Compact Without hash Size:', compactSize);
+		}
+		console.log('Compact Size:', compactSize);
+		return size;
+	}
+	async getAddressType() {
+		return this.cipherSuite.addressType;
+	}
+	filesystemConfig = filesystemTypes.generic;
 }
 extendClass(Block, logMethods);
 extendClass(Block, accessorMethods);

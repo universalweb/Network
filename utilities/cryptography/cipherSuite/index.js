@@ -5,9 +5,13 @@ import {
 	isNumber,
 } from '@universalweb/utilitylib';
 import { currentVersion } from '../../../defaults.js';
+import legacyCipherSuite from './legacy.js';
+import quantumCipherSuite from './quantum.js';
 import { setOptions } from '../setOption.js';
-import { viatCipherSuite } from './viat.js';
-const cipherList = [viatCipherSuite];
+import viatCipherSuite from './viat.js';
+const cipherList = [
+	viatCipherSuite, legacyCipherSuite, quantumCipherSuite,
+];
 export const cipherSuites = new Map();
 const cipherSuitesVersion1 = new Map();
 cipherSuites.set(currentVersion, cipherSuitesVersion1);
