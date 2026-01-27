@@ -4,7 +4,7 @@ import {
 	isArray,
 	isNumber,
 } from '@universalweb/utilitylib';
-import { currentVersion } from '../../../defaults.js';
+import { CURRENT_VERSION } from '#defaults';
 import legacyCipherSuite from './legacy.js';
 import quantumCipherSuite from './quantum.js';
 import { setOptions } from '../setOption.js';
@@ -14,15 +14,15 @@ const cipherList = [
 ];
 export const cipherSuites = new Map();
 const cipherSuitesVersion1 = new Map();
-cipherSuites.set(currentVersion, cipherSuitesVersion1);
+cipherSuites.set(CURRENT_VERSION, cipherSuitesVersion1);
 cipherSuitesVersion1.set('all', cipherList);
 setOptions(cipherSuitesVersion1, cipherList);
 export const cipherSuitesCertificates = new Map();
 const cipherSuitesCertificatesVersion1 = new Map();
-cipherSuitesCertificates.set(currentVersion, cipherSuitesCertificatesVersion1);
+cipherSuitesCertificates.set(CURRENT_VERSION, cipherSuitesCertificatesVersion1);
 cipherSuitesCertificatesVersion1.set('all', cipherList);
 setOptions(cipherSuitesCertificatesVersion1, cipherList);
-export function getCipherSuite(cipherSuiteName = 0, version = currentVersion) {
+export function getCipherSuite(cipherSuiteName = 0, version = CURRENT_VERSION) {
 	if (!hasValue(cipherSuiteName)) {
 		return false;
 	}
@@ -31,7 +31,7 @@ export function getCipherSuite(cipherSuiteName = 0, version = currentVersion) {
 		return versionMap.get(cipherSuiteName);
 	}
 }
-export function getCipherSuites(indexes, version = currentVersion) {
+export function getCipherSuites(indexes, version = CURRENT_VERSION) {
 	if (indexes) {
 		if (isNumber(indexes)) {
 			return getCipherSuite(indexes, version);

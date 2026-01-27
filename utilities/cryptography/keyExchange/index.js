@@ -1,5 +1,5 @@
+import { CURRENT_VERSION } from '#defaults';
 import { certificateVersion } from '../../../components/certificate/defaults.js';
-import { currentVersion } from '../../../defaults.js';
 import { hasValue } from '@universalweb/utilitylib';
 import { kyber768 } from './kyber768.js';
 import { kyber768Half_x25519 } from './kyber768Half_x25519.js';
@@ -18,7 +18,7 @@ const cipherList = [
 ];
 export const keyExchangeAlgorithm = new Map();
 const keyExchangeAlgorithmVersion1 = new Map();
-keyExchangeAlgorithm.set(currentVersion, keyExchangeAlgorithmVersion1);
+keyExchangeAlgorithm.set(CURRENT_VERSION, keyExchangeAlgorithmVersion1);
 keyExchangeAlgorithmVersion1.set('all', cipherList);
 setOptions(keyExchangeAlgorithmVersion1, cipherList);
 export function getKeyExchangeAlgorithm(algo = 0, version = certificateVersion) {

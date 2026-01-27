@@ -7,8 +7,8 @@ import {
 	hasValue,
 } from '@universalweb/utilitylib';
 import { randomBuffer, toBase64 } from '#utilities/cryptography/utils';
+import { CURRENT_VERSION } from '#defaults';
 import { calculatePacketOverhead } from './utilities/calculatePacketOverhead.js';
-import { currentVersion } from '../defaults.js';
 import dgram from 'dgram';
 import eventMethods from '#udsp/events';
 import logMethods from '#utilities/logs/classLogMethods';
@@ -43,7 +43,7 @@ export class UDSP {
 		this.maxPacketFlood = 0;
 		this.heapSize = 0;
 		this.randomId = randomBuffer(8);
-		this.version = currentVersion;
+		this.version = CURRENT_VERSION;
 	}
 	generateConnectionID(size) {
 		const target = randomConnectionId(size || this.connectionIdSize || 8);

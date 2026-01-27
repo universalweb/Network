@@ -1,6 +1,6 @@
 import { decode, encodeStrict, encodeSync } from '#utilities/serialize';
 import { hasValue, isString, isTypedArray } from '@universalweb/utilitylib';
-import viatDefaults from '#viat/defaults';
+import VIAT_DEFAULTS from '#viat/defaults';
 export function blockHashToHashStruct(block) {
 	const {
 		data,

@@ -1,7 +1,7 @@
 import { ed25519Dilithium65 } from './ed25519_dilithium65.js';
 import { ed25519Dilithium87 } from './ed25519_dilithium87.js';
 import { falcon1024 } from './falcon1024.js';
-import { sphincs192 } from './sphincs128.js';
+import { sphincs192 } from './sphincs192.js';
 import { viat } from './viat.js';
 const supportedAlgorithms = {
 	ed25519: 0,

@@ -1,8 +1,8 @@
-import { decode, encodeSync } from './cbor.js';
+import VIAT_DEFAULTS from '#viat/defaults';
+import { encodeSync } from './cbor.js';
 import { shake256 } from '@noble/hashes/sha3.js';
-import viatDefaults from '#viat/defaults';
 const hashConfig = {
-	dkLen: viatDefaults.wallets.legacy.walletSize,
+	dkLen: VIAT_DEFAULTS.WALLETS.LEGACY.WALLET_SIZE,
 };
 export function generateAddress(publicKey, trapdoor) {
 	const kind = 0;

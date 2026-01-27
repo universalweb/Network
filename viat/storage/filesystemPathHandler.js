@@ -9,12 +9,12 @@ import {
 	walletTypes,
 } from '../blocks/defaults.js';
 import { getFinalDirectoryGenerator, getPrefixPathGenerator } from './getPrefixPath.js';
+import VIAT_DEFAULTS from '#viat/defaults';
 import base38 from './base38.js';
 import { encodingTypes } from './encodingTypes.js';
 import { merge } from '@universalweb/utilitylib';
 import path from 'path';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
-import viatDefaults from '#viat/defaults';
 export function createBlockPathConfig(config) {
 	const templateConfig = {
 		typeName: 'generic',
@@ -25,7 +25,7 @@ export function createBlockPathConfig(config) {
 			encoding: encodingTypes.hex,
 		},
 		uniquePath: {
-			startIndex: viatDefaults.defaultHashSize - 12,
+			startIndex: VIAT_DEFAULTS.DEFAULT_HASH_SIZE - 12,
 			encoding: encodingTypes.base38,
 		},
 	};
@@ -40,7 +40,7 @@ export function createSlaveBlockPathConfig(config) {
 			encoding: encodingTypes.hex,
 		},
 		uniquePath: {
-			startIndex: viatDefaults.defaultHashSize - 12,
+			startIndex: VIAT_DEFAULTS.DEFAULT_HASH_SIZE - 12,
 			encoding: encodingTypes.base38,
 		},
 	});
@@ -224,13 +224,13 @@ class FilesystemPathHandler {
 	async getWallet(walletAddress) {
 		const walletSize = walletAddress.length;
 		// console.log('Wallet Size:', walletSize);
-		if (walletSize === viatDefaults.wallets.legacy.walletSize) {
+		if (walletSize === VIAT_DEFAULTS.wallets.legacy.walletSize) {
 			// Handle 24-byte wallet addresses
 			return this.wallet.getFullPath(walletAddress);
-		} else if (walletSize === viatDefaults.wallets.hybrid.walletSize) {
+		} else if (walletSize === VIAT_DEFAULTS.wallets.hybrid.walletSize) {
 			// Handle 32-byte wallet addresses
 			return this.hybridWallet.getFullPath(walletAddress);
-		} else if (walletSize === viatDefaults.wallets.quantum.walletSize) {
+		} else if (walletSize === VIAT_DEFAULTS.wallets.quantum.walletSize) {
 			// Handle 64-byte wallet addresses
 			return this.quantumWallet.getFullPath(walletAddress);
 		} else {

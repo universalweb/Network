@@ -35,4 +35,4 @@ async function example() {
 	console.log(paramDigest);
 	return paramDigest;
 }
-example();
+// example();

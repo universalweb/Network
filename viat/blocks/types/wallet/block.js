@@ -6,12 +6,12 @@ import {
 	typeNames,
 } from '#viat/blocks/defaults';
 import { Block } from '#viat/blocks/block';
+import VIAT_DEFAULTS from '#viat/defaults';
 import { assignToClass } from '@universalweb/utilitylib';
 import path from 'path';
 import { readStructured } from '#utilities/file';
 import { receiptBlock } from '#blocks/transactions/receipt/block';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
-import viatDefaults from '#viat/defaults';
 import wallet from '#viat/wallet/wallet';
 export class WalletBlock extends Block {
 	constructor(data, config) {
@@ -34,11 +34,11 @@ export class WalletBlock extends Block {
 		const address = this.getCore('address') || addressArg;
 		if (address) {
 			const walletLength = address.length;
-			if (walletLength === viatDefaults.wallets.legacy.walletSize) {
+			if (walletLength === VIAT_DEFAULTS.WALLETS.LEGACY.WALLET_SIZE) {
 				this.setFilesystem('wallet');
-			} else if (walletLength === viatDefaults.wallets.hybrid.walletSize) {
+			} else if (walletLength === VIAT_DEFAULTS.WALLETS.HYBRID.WALLET_SIZE) {
 				this.setFilesystem('hybridWallet');
-			} else if (walletLength === viatDefaults.wallets.quantum.walletSize) {
+			} else if (walletLength === VIAT_DEFAULTS.WALLETS.QUANTUM.WALLET_SIZE) {
 				this.setFilesystem('quantumWallet');
 			}
 		}

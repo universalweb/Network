@@ -4,8 +4,8 @@ import {
 	isArray,
 	isNumber,
 } from '@universalweb/utilitylib';
+import { CURRENT_VERSION } from '#defaults';
 import aegis256 from './AEGIS256.js';
-import { currentVersion } from '../../../defaults.js';
 import { setOptions } from '../setOption.js';
 import xChaCha from './xChaCha.js';
 const cipherList = [xChaCha, aegis256];
@@ -13,7 +13,7 @@ export const ciphers = new Map();
 const ciphersVersion1 = new Map();
 ciphers.set(1, ciphersVersion1);
 setOptions(ciphersVersion1, cipherList);
-export function getCipher(cipherId = 0, version = currentVersion) {
+export function getCipher(cipherId = 0, version = CURRENT_VERSION) {
 	if (!hasValue(cipherId)) {
 		return false;
 	}
@@ -22,7 +22,7 @@ export function getCipher(cipherId = 0, version = currentVersion) {
 		return algoVersion.get(cipherId);
 	}
 }
-export function getCiphers(indexes, version = currentVersion) {
+export function getCiphers(indexes, version = CURRENT_VERSION) {
 	if (indexes) {
 		if (isNumber(indexes)) {
 			return getCipher(indexes, version);

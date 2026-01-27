@@ -1,5 +1,5 @@
+import { CURRENT_VERSION } from '#defaults';
 import { certificateVersion } from '../../../components/certificate/defaults.js';
-import { currentVersion } from '../../../defaults.js';
 import dilithium44 from './dilithium44.js';
 import dilithium65 from './dilithium65.js';
 import dilithium65_ed25519 from './ed25519_dilithium65.js';
@@ -9,7 +9,7 @@ import falcon1024 from './falcon1024.js';
 // import { ed25519 } from './ed25519PureJS.js';
 import { hasValue } from '@universalweb/utilitylib';
 import { setOptions } from '../setOption.js';
-import sphincs192 from './sphincs128.js';
+import sphincs192 from './sphincs192.js';
 import viat from './viat.js';
 const cipherList = [
 	ed25519,
@@ -27,7 +27,7 @@ const publicKeyAlgorithmVersion1 = new Map();
 publicKeyAlgorithms.set(1, publicKeyAlgorithmVersion1);
 publicKeyAlgorithmVersion1.set('all', cipherList);
 setOptions(publicKeyAlgorithmVersion1, cipherList);
-export function getSignatureAlgorithm(publicKeyAlgorithmName = 0, version = currentVersion) {
+export function getSignatureAlgorithm(publicKeyAlgorithmName = 0, version = CURRENT_VERSION) {
 	if (!hasValue(publicKeyAlgorithmName)) {
 		return false;
 	}
@@ -38,7 +38,7 @@ export function getSignatureAlgorithm(publicKeyAlgorithmName = 0, version = curr
 }
 export const publicKeyCertificateAlgorithms = new Map();
 const publicKeyCertificateAlgorithmsVersion1 = new Map();
-publicKeyCertificateAlgorithms.set(currentVersion, publicKeyCertificateAlgorithmsVersion1);
+publicKeyCertificateAlgorithms.set(CURRENT_VERSION, publicKeyCertificateAlgorithmsVersion1);
 publicKeyCertificateAlgorithmsVersion1.set('all', cipherList);
 setOptions(publicKeyCertificateAlgorithmsVersion1, cipherList);
 export function getSignatureAlgorithmByCertificate(publicKeyAlgorithmName = 0, version = certificateVersion) {

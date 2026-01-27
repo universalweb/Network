@@ -1,29 +1,20 @@
-import { Wallet, wallet } from '#viat/wallet/wallet';
 import {
-	assign,
-	currentPath,
 	eachAsyncArray,
 	extendClass,
 	isBuffer,
 } from '@universalweb/utilitylib';
-import { getFiles, readStructured } from '#utilities/file';
+import VIAT_DEFAULTS from '#viat/defaults';
 import { blockTypes } from '../blocks/defaults.js';
-import { createViatFilesystem } from './createFilesystem.js';
-import { decode } from '#utilities/serialize';
 import filesystemMethods from './methods/filesystem.js';
 import { filesystemTypes } from '../storage/filesystems.js';
-import fs from 'fs-extra';
-import { genesisBlock } from '#blocks/system/genesis/block';
 import genesisMethods from './methods/genesis.js';
-import { genesisWalletBlock } from '#blocks/system/wallet/block';
+import { getFiles } from '#utilities/file';
 import { getHomeDirectory } from '#utilities/directory';
 import { loadBlock } from '#viat/blocks/utils';
 import logMethods from '#utilities/logs/classLogMethods';
-import path from 'path';
 import { toBase64 } from '#crypto/utils.js';
 import { transactionBlock } from '#blocks/transactions/transaction/block';
-import viat from '#viat/index';
-import viatDefaults from '#viat/defaults';
+import { wallet } from '#viat/wallet/wallet';
 import walletBlock from '#blocks/wallet/block';
 export class Superstructure {
 	logLevel = 4;
@@ -56,7 +47,7 @@ export class Superstructure {
 			},
 		});
 	}
-	viatDefaults = viatDefaults;
+	VIAT_DEFAULTS = VIAT_DEFAULTS;
 	async createCoreNetworkWallets() {
 		this.teamWallet = await wallet();
 		// this.reserveWallet = await wallet(null, {
