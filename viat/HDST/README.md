@@ -1,9 +1,25 @@
-# Post‑Quantum HD Key pair & Wallet Generation
+# Hierarchical Deterministic Seed Derivation Trie
+
+Post-Quantum Universal Identity System
+
+- Post-Quantum Ready
+- Supports Hierarchical Deterministic Key pairs
+- Supports Hierarchical Deterministic Wallets
+- Supports Hierarchical Deterministic Keys
+- 3 Sources of Entropy 256 Bytes each
+- 1 Master Seed
+- 1 Master Key
+- 1 Master Nonce
+- Supports Seed Isolation
+- Supports Seed Grouping
+- Support Seed Checkpoints
+- Supports Relational Proofs
+
 
 The foundation of Viat's Identity System
 
 ## Overview
-Viat uses seed-based hierarchical deterministic (HD) key generation with checkpoint compatibility. Checkpoints let users carry a scoped set of child keys while keeping the master seed offline. If a checkpoint seed is exposed, only its descendant keys are affected — the master seed and unrelated checkpoints remain secure.
+Viat uses seed-based hierarchical deterministic (HD) seed generation with checkpoint compatibility. Checkpoints let users carry a scoped set of child keys while keeping the master seed offline. If a checkpoint seed is exposed, only its descendant keys are affected — the master seed and unrelated checkpoints remain secure.
 
 HD keypairs are a core component of the VIAT identity system, which provides a universal identity layer for the broader VIAT network.
 
@@ -59,3 +75,15 @@ User generates deterministic key pair using meta details and their own master se
 - This document describes the HD keypair architecture and operational model. Implementation details (algorithms, serialization formats, and API usage) belong in the implementation reference and specification documents.
 
 
+Root = certificate authority / sovereign seed space
+Branch = delegated intermediate authority
+Leaf = service credential / account / concrete keypair
+
+branches can derive downward within their own subtree
+root is required to create peer/top-level branches
+optionally let some branches be marked as autonomous subtree masters for portable use
+
+DelegatedProfile (or AutonomousProfile)
+AnchoredProfile (or TetheredProfile)  - REQUIRES MASTER ENTROPY POOLS
+ServiceCredential or ProfileKey -> FINAL
+HardenedProfile (and HardenedCredential) -> FINAL WITH MASTER ENTROPY POOL REQUIRED

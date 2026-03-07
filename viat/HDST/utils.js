@@ -1,12 +1,12 @@
 import { isPlainObject, noValue } from '@universalweb/utilitylib';
 import { kmac256, kmac256xof } from '@noble/hashes/sha3-addons.js';
+import { shake256, shake256_64 } from '@noble/hashes/sha3.js';
 import { SEED_SIZES } from './defaults.js';
 import { encodeStrict } from '#utilities/serialize';
-import { shake256 } from '@noble/hashes/sha3.js';
 export function encode(source) {
 	return encodeStrict(source);
 }
-export function getKeyGenSeedSize(schemeID) {
+export function getSeedSize(schemeID) {
 	return SEED_SIZES[schemeID] || 64;
 }
 export async function kmac(key, message, dkLen = 32, personalization) {
@@ -25,6 +25,9 @@ export async function hash(message, dkLen = 32) {
 	return shake256(message, {
 		dkLen,
 	});
+}
+export async function hash64(message) {
+	return shake256_64(message);
 }
 export async function normalize(source, size = 256) {
 	return hash((isPlainObject(source)) ? await encode(source) : source, size);
@@ -51,6 +54,6 @@ export function validateObject(source, errors = []) {
 }
 export default {
 	encode,
-	getKeyGenSeedSize,
+	getSeedSize,
 	validateObject,
 };

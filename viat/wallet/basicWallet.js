@@ -1,4 +1,4 @@
-import { HDKeypair } from '#viat/HDKeypair/index';
+import { HDKeypair } from '#root/viat/HDST/index';
 import VIAT_DEFAULTS from '#viat/defaults';
 /*
 	Basic Viat Wallet for generic generation and usage. Built for Web Browser compatibility.

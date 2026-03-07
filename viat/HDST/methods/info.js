@@ -1,18 +1,23 @@
 import {
-	CONTEXT, HASH_ALGORITHMS,
-	KEY_PURPOSE, NETWORK_NAMES, NETWORK_TYPES,
+	CONTEXT, CRYPTOCURRENCY_NETWORK_TYPES,
+	HASH_ALGORITHMS, KEY_PURPOSE, NETWORK_NAMES,
 	RELATIONSHIP, SCHEME_TYPES,
 } from '../defaults.js';
 import {
 	hasValue, isBuffer, isPlainObject, isU8, noValue,
 } from '@universalweb/utilitylib';
 async function logInfo() {
-	console.log('logInfo START');
-	console.log(await this.exportObject());
-	console.log(`masterNonce Size ${this.STATE.masterNonce.length}`);
-	console.log(`masterKey Size ${this.STATE.masterKey.length}`);
-	console.log(`masterSeed Encrypted Size ${this.STATE.masterSeed.length}`);
-	console.log('logInfo END');
+	console.log('logInfo START __________________');
+	const exported = await this.exportObject();
+	exported.forEach((value, key) => {
+		if (isBuffer(value) || isU8(value)) {
+			console.log(`${key}: <Buffer:${value.length} bytes>`);
+		} else {
+			console.log(`${key}: ${value}`);
+		}
+	});
+	console.log('Binary export size', (await this.exportBinary()).length);
+	console.log('logInfo END __________________');
 }
 // Generator function to create reverse lookup maps
 function createReverseLookup(obj) {
@@ -31,8 +36,9 @@ const propertyLookups = {
 	key_purpose: createReverseLookup(KEY_PURPOSE),
 	relationship: createReverseLookup(RELATIONSHIP),
 	hash_algorithm: createReverseLookup(HASH_ALGORITHMS),
+	keyed_hash_algorithm: createReverseLookup(HASH_ALGORITHMS),
 	network: createReverseLookup(NETWORK_NAMES),
-	network_type: createReverseLookup(NETWORK_TYPES),
+	cryptocurrency_network_type: createReverseLookup(CRYPTOCURRENCY_NETWORK_TYPES),
 };
 /**
 	* Converts integer property values on a seed or key object to their text representation.
@@ -65,7 +71,8 @@ function describeObject(source, logOutput = true) {
 		}
 	}
 	if (logOutput) {
-		console.log('Object Description:');
+		console.log('OBJECT DESCRIBE START__________');
+		console.log('______ TYPE:', (source.key) ? 'KEY' : 'SEED', '', '---->');
 		for (const [
 			key,
 			value,
@@ -76,6 +83,8 @@ function describeObject(source, logOutput = true) {
 				console.log(`  ${key}: ${value}`);
 			}
 		}
+		console.log('------>');
+		console.log('OBJECT DESCRIBE END_______________');
 	}
 	return described;
 }
