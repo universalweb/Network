@@ -13,18 +13,15 @@
 import {
 	CRYPTOCURRENCY_NETWORK_TYPES,
 	HASH_ALGORITHMS,
-	KEY_PURPOSE,
 	NETWORK_NAMES,
+	PURPOSE,
 	RELATIONSHIP,
 	SCHEME_TYPES,
 } from './defaults.js';
 import {
-	assign,
-	clone,
-	eachObject,
-	extendClass,
-	hasValue,
-	isString,
+	assign, clone, each, eachArray, eachObject, extendClass,
+	hasValue, isArray, isPlainObject, isString,
+	isUndefined,
 } from '@universalweb/utilitylib';
 import { createKey, createNonce } from './key.js';
 import {
@@ -54,6 +51,8 @@ export class HDSeed {
 		version: 1,
 		hash_algorithm: HASH_ALGORITHMS.SHAKE_256,
 		keyed_hash_algorithm: HASH_ALGORITHMS.KMAC_256_XOF,
+		network_name: NETWORK_NAMES.VIAT,
+		wallet_beta: true,
 		master_seed: null,
 		master_key: null,
 		master_nonce: null,
@@ -72,19 +71,49 @@ export class HDSeed {
 		'mode',
 		'hash_algorithm',
 		'keyed_hash_algorithm',
-		'key_purpose',
+		'purpose',
 		'master_seed',
 		'master_key',
 		'master_nonce',
 	];
 	static KEY_PROPERTIES = {
-		kind: KEY_PURPOSE,
+		kind: PURPOSE,
 		network: NETWORK_NAMES,
 		cryptocurrency_network_type: CRYPTOCURRENCY_NETWORK_TYPES,
 		relationship: RELATIONSHIP,
 		scheme: SCHEME_TYPES,
 		hash_algorithm: HASH_ALGORITHMS,
 	};
+	getAll() {
+		const mapIter = this.STATE.entries();
+		const objectMap = {};
+		this.STATE.forEach((value, key) => {
+			objectMap[key] = value;
+		});
+		return objectMap;
+	}
+	get(key, target) {
+		if (isUndefined(key)) {
+			return this.getAll();
+		}
+		if (isString(key)) {
+			return this.STATE.get(key);
+		}
+		if (isArray(key)) {
+			const result = {};
+			eachArray(key, (value) => {
+				result[value] = this.STATE.get(value);
+			});
+			return result;
+		}
+		if (isPlainObject(key)) {
+			const result = target || key;
+			eachObject(key, (value, stateKey) => {
+				result[stateKey] = this.STATE.get(stateKey);
+			});
+			return result;
+		}
+	}
 	async create() {
 		await this.generateMasterKey();
 		await this.generateMasterNonce();
@@ -112,10 +141,10 @@ export class HDSeed {
 	async getNonce(source = {}) {
 		const pre_nonce = await this.getPreNonce(source);
 		const sourceStruct = await this.generateNonceStruct(assign({
-			pre_nonce: createNonce(pre_nonce),
+			pre_nonce,
 		}, source));
 		await this.describeObject(source);
-		return encode(sourceStruct);
+		return createNonce(sourceStruct);
 	}
 	async getPreSeed(source = {}) {
 		const sourceStruct = await this.generatePreSeedStruct(assign({}, source));
@@ -123,10 +152,18 @@ export class HDSeed {
 		await this.describeObject(source);
 		return preSeed;
 	}
-	async getSeed(source = {}, key, nonce) {
+	async getSeed(source = {}, keyArg, nonceArg) {
 		const preSeed = await this.getPreSeed(source);
 		const seedSize = getSeedSize(source.scheme);
+		const key = keyArg || await this.getKey(source);
+		const nonce = nonceArg || await this.getNonce(source);
 		const seed = await kmac(key, preSeed, seedSize, nonce);
+		return seed;
+	}
+	async getFinalSeed(source = {}) {
+		const key = await this.getKey(source);
+		const nonce = await this.getNonce(source);
+		const seed = await this.getSeed(source, key, nonce);
 		return seed;
 	}
 	async generateDomainFromConfig(source = {}) {
@@ -155,44 +192,6 @@ export class HDSeed {
 	}
 }
 extendClass(HDSeed, masterMethods, info, structMethods, stateMethods);
-async function example() {
-	const exampleRootSeed = await hash(Buffer.from('seed'), 256);
-	const exampleRootKey = await hash(Buffer.from('key'), 256);
-	const exampleRootNonce = await hash(Buffer.from('nonce'), 256);
-	const walletExample = new HDSeed({});
-	await walletExample.create();
-	const exported = await walletExample.exportObject();
-	console.log('EXPORTED WALLET', exported);
-	const walletExample2 = new HDSeed(exported);
-	console.log('master_seeds', walletExample.STATE.get('master_seed'), walletExample2.STATE.get('master_seed'));
-	console.log('Compare wallets are equal', Buffer.compare(Buffer.from(walletExample.STATE.get('master_seed')), Buffer.from(walletExample2.STATE.get('master_seed'))) === 0);
-	// await walletExample.logInfo();
-	const key = await walletExample.getKey({
-		scheme: SCHEME_TYPES.ML_DSA_65,
-		id: 'namespace',
-	});
-	// const checkpoint = await walletExample.getPreSeed({
-	// 	scheme: SCHEME_TYPES.ML_DSA_65,
-	// 	id: 0,
-	// }, key);
-	// console.log('CHECKPOINT SEED CHECKPOINT', checkpoint);
-	const seed = await walletExample.getSeed({
-		scheme: SCHEME_TYPES.ML_DSA_65,
-		id: 0,
-	}, key);
-	// console.log('SEED FINAL SIZE', seed);
-	// const seed = await walletExample.getSeed({
-	// 	scheme: SCHEME_TYPES.ML_DSA_65,
-	// 	id: 0,
-	// });
-	// console.log(
-	// 	'LAST SEED',
-	// 	await walletExample.generateSeedChain(5, {
-	// 		scheme: SCHEME_TYPES.ML_DSA_65,
-	// 	})
-	// );
-}
-await example();
 /*
 	! QUANTUM Hierarchal Deterministic Seed, Key, Keypair, & Wallet Generation
 	Master Seed -> V Pre-Seed 0 -> V Seed 1 -> Seed Final

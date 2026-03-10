@@ -1,5 +1,4 @@
 import * as ts_api_utils from 'ts-api-utils';
-import babelParser from '@babel/eslint-parser';
 import globals from 'globals';
 import jsdoc from 'eslint-plugin-jsdoc';
 import security from 'eslint-plugin-security';
@@ -48,7 +47,6 @@ export default [
 			'**/*.json',
 		],
 		languageOptions: {
-			parser: babelParser,
 			parserOptions: {
 				requireConfigFile: true,
 			},

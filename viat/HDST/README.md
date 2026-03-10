@@ -87,3 +87,14 @@ DelegatedProfile (or AutonomousProfile)
 AnchoredProfile (or TetheredProfile)  - REQUIRES MASTER ENTROPY POOLS
 ServiceCredential or ProfileKey -> FINAL
 HardenedProfile (and HardenedCredential) -> FINAL WITH MASTER ENTROPY POOL REQUIRED
+
+Intermediate deterministic commitments derived from different master entropy pool each bound to the same metadata domain then combined through KMAC into the final fixed-size seed.
+
+Each derived object shares a canonical base identity, then adds role-specific metadata and role-specific secret input so that all derivation transcripts remain related but non-equal.
+
+1 Shared/base derivation identity
+	- things like id, scheme, network, relationship, version, etc.
+2 Role-specific metadata
+	- fields unique to pre-seed vs pre-key vs pre-nonce
+3 Distinct entropy pools
+	- master_seed, master_key, master_nonce

@@ -27,10 +27,12 @@ class Branch {
 	async addBranch(branchName, config = {}) {
 		this[branchName] = new Branch(this.root);
 		const preSeed = await this.seedInstance.getPreSeed(config);
-		const keyPreSeed = await this.seedInstance.getKeyPreSeed(config);
+		const preKey = await this.seedInstance.getPreKey(config);
+		const preNonce = await this.seedInstance.getPreNonce(config);
 		await this[branchName].setSeed(assign(config, {
 			master_seed: preSeed,
-			master_key: keyPreSeed,
+			master_key: preKey,
+			master_nonce: preNonce,
 		}));
 		return this[branchName];
 	}

@@ -1,10 +1,18 @@
 import {
-	CONTEXT, CRYPTOCURRENCY_NETWORK_TYPES,
-	HASH_ALGORITHMS, KEY_PURPOSE, NETWORK_NAMES,
-	RELATIONSHIP, SCHEME_TYPES,
+	CONTEXT_INTENTION,
+	CRYPTOCURRENCY_NETWORK_TYPES,
+	HASH_ALGORITHMS,
+	NETWORK_NAMES,
+	PURPOSE,
+	RELATIONSHIP,
+	SCHEME_TYPES,
 } from '../defaults.js';
 import {
-	hasValue, isBuffer, isPlainObject, isU8, noValue,
+	hasValue,
+	isBuffer,
+	isPlainObject,
+	isU8,
+	noValue,
 } from '@universalweb/utilitylib';
 async function logInfo() {
 	console.log('logInfo START __________________');
@@ -32,8 +40,8 @@ function createReverseLookup(obj) {
 // Property to reverse lookup map mapping
 const propertyLookups = {
 	scheme: createReverseLookup(SCHEME_TYPES),
-	context: createReverseLookup(CONTEXT),
-	key_purpose: createReverseLookup(KEY_PURPOSE),
+	context_intention: createReverseLookup(CONTEXT_INTENTION),
+	purpose: createReverseLookup(PURPOSE),
 	relationship: createReverseLookup(RELATIONSHIP),
 	hash_algorithm: createReverseLookup(HASH_ALGORITHMS),
 	keyed_hash_algorithm: createReverseLookup(HASH_ALGORITHMS),

@@ -1,18 +1,33 @@
-# Purpose
-This agent is writing modern javascript syntax using the latest language features.
-This agent writes clean JS code.
-This agent is focused on NodeJS, Web Browser, & Bun env.
-This agent is aware of the latest post-quantum cryptography and SHA3 family of hashes.
+# Agent Identity
 
-# Coding Guidelines
-- Write clean code with descriptive variable names
-- Use the latest javascript syntax
-- Use import not require
-- For multi-line imports Make sure the import vars are about 8 per line instead of one after another
+- **Role:** Expert JS Developer (NodeJS, Browser, Bun).
+- **Specialty:** Modern, minimal, clean, performant JS; NIST post-quantum cryptography; SHA3 hashes.
+- **Core Loop:** After every task, consult this `AGENTS.md` file. Propose improvements to compact/refine instructions or append learned knowledge to `## NOTES`. Always confirm edits with the user.
 
-# Architectural Constraints
+## Coding Rules
 
+- **Syntax:** ES2022+ (`let`/`const`, optional chaining, nullish coalescing, `async`/`await`). Write clean, descriptive names.
+- **Imports:** Use `#` path aliases (via `jsconfig.json`/`package.json`) instead of complex `../`. Format multi-line destructuring compactly (up to 8 vars/line).
+- **Utilities:** Prefer `@universalweb/utilitylib` instead of writing custom inline implementations.
+- **Language:** JavaScript only. No other coding languages.
+- Edit files in place instead of making new ones
 
-# Prohibited Actions
-- Do not add new dependencies without justification
-- Do not refactor unrelated files
+## Project Structure
+
+- `AGENTS.md`: Source of truth for agent behavior and workflow.
+- `Configs`: (`package.json`, `jsconfig.json`, `eslint.config.js`) Workspace settings, module definitions, aliases.
+- `viat/`: Core Viat logic (consensus, blocks, data structures, mining, PQ crypto, wallet).
+- `udsp/`: Universal Data Stream Protocol (RPC, routing, packet structures, encoding, P2P).
+- `utilities/`: Core reusable implementations (logs, memory, crypto, fs). Check here before writing generic logic.
+
+## Constraints
+
+- 🚫 **NO** adding new dependencies without justification.
+- 🚫 **NO** refactoring unrelated files.
+- 🚫 **NO** removing files.
+
+### Code Map
+
+## NOTES
+
+Self-improving agent notes and discovered critical details append below in a list format:

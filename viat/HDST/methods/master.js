@@ -1,4 +1,4 @@
-import { KEY_PURPOSE } from '../defaults.js';
+import { PURPOSE } from '../defaults.js';
 import { generateEntropy } from '../entropy.js';
 import { isArray } from '@universalweb/utilitylib';
 export async function generateMasterNonce(size) {
