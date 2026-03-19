@@ -1,18 +1,14 @@
 import {
-	hasValue,
-	isBigInt,
-	isNotNumber,
-	isNotString,
-	isNumber,
-	isString,
-	noValue,
+	hasValue, isBigInt, isNotString,
+	isNumber, isString, noValue,
 } from '@universalweb/utilitylib';
-import { encode } from '#utilities/serialize';
-import viatDefaults from '#viat/defaults';
+import VIAT_DEFAULTS from '#viat/defaults';
 const {
-	coinDecimalPlaces, coinMaxSupply,
-	coinDigitCount, coinWholeDigitCount,
-} = viatDefaults;
+	COIN_DECIMAL_PLACES,
+	COIN_MAX_SUPPLY,
+	COIN_DIGIT_COUNT,
+	COIN_WHOLE_DIGIT_COUNT,
+} = VIAT_DEFAULTS;
 // TODO: Change API so that using strings is obvious or numbers or bigInt or unify them
 // Already have smallest unit convert for math by removing period combine both sides then add the additional zeroes for full size
 // or maybe do bitMath to merge into a singular number
@@ -20,27 +16,27 @@ export function displayAmount(bigInt) {
 	if (!isBigInt(bigInt)) {
 		return;
 	}
-	const str = bigInt.toString().padStart(coinDecimalPlaces + 1, '0');
-	const intPart = str.slice(0, -coinDecimalPlaces);
-	const fracPart = str.slice(-coinDecimalPlaces).replace(/0+$/, '') || '0';
+	const str = bigInt.toString().padStart(COIN_DECIMAL_PLACES + 1, '0');
+	const intPart = str.slice(0, -COIN_DECIMAL_PLACES);
+	const fracPart = str.slice(-COIN_DECIMAL_PLACES).replace(/0+$/, '') || '0';
 	return `${intPart}.${fracPart}`;
 }
 export function displayAmountWithCommas(bigInt) {
 	if (!isBigInt(bigInt)) {
 		return;
 	}
-	const str = bigInt.toString().padStart(coinDecimalPlaces + 1, '0');
-	const intPart = str.slice(0, -coinDecimalPlaces);
-	const fracPart = str.slice(-coinDecimalPlaces).replace(/0+$/, '') || '0';
+	const str = bigInt.toString().padStart(COIN_DECIMAL_PLACES + 1, '0');
+	const intPart = str.slice(0, -COIN_DECIMAL_PLACES);
+	const fracPart = str.slice(-COIN_DECIMAL_PLACES).replace(/0+$/, '') || '0';
 	return `${intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${fracPart}`;
 }
 export function formatUnitsWithCommas(value) {
 	if (isNotString(value)) {
 		return;
 	}
-	const str = value.toString().padStart(coinDecimalPlaces + 1, '0');
-	const intPartRaw = str.slice(0, -coinDecimalPlaces);
-	const fracPart = str.slice(-coinDecimalPlaces).replace(/0+$/, '') || '0';
+	const str = value.toString().padStart(COIN_DECIMAL_PLACES + 1, '0');
+	const intPartRaw = str.slice(0, -COIN_DECIMAL_PLACES);
+	const fracPart = str.slice(-COIN_DECIMAL_PLACES).replace(/0+$/, '') || '0';
 	// Add commas to integer part
 	const intPart = intPartRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 	return `${intPart}.${fracPart}`;
@@ -58,12 +54,12 @@ export function normalizeFormattedNumber(str) {
 }
 export function isBigIntAboveMaxSupply(value) {
 	if (hasValue(value)) {
-		return value.toString().length >= coinDigitCount;
+		return value.toString().length >= COIN_DIGIT_COUNT;
 	}
 	return false;
 }
 export function isBigIntBelowMaxSupply(value) {
-	return value.toString().length <= coinDigitCount;
+	return value.toString().length <= COIN_DIGIT_COUNT;
 }
 export function convertToBigIntSafely(value) {
 	if (isNumber(value)) {
@@ -93,10 +89,10 @@ export function parseStringUnits(displayStr) {
 		intPart,
 		fracPart = '',
 	] = displayStr.replace(/,/g, '').trim().split('.');
-	if (intPart.length > coinWholeDigitCount) {
+	if (intPart.length > COIN_WHOLE_DIGIT_COUNT) {
 		return;
 	}
-	const fullStr = intPart + fracPart.padEnd(coinDecimalPlaces, '0');
+	const fullStr = intPart + fracPart.padEnd(COIN_DECIMAL_PLACES, '0');
 	const converted = BigInt(fullStr);
 	if (isBigIntBelowMaxSupply(converted)) {
 		return converted;
@@ -136,9 +132,9 @@ export function ensureSmallestUnit(value) {
 	return 0n;
 }
 export function fromSmallestUnit(value) {
-	const str = value.toString().padStart(coinDecimalPlaces + 1, '0');
-	const intPart = str.slice(0, -coinDecimalPlaces);
-	const fracPart = str.slice(-coinDecimalPlaces).replace(/0+$/, '');
+	const str = value.toString().padStart(COIN_DECIMAL_PLACES + 1, '0');
+	const intPart = str.slice(0, -COIN_DECIMAL_PLACES);
+	const fracPart = str.slice(-COIN_DECIMAL_PLACES).replace(/0+$/, '');
 	return fracPart ? `${intPart}.${fracPart}` : intPart;
 }
 export function getBigIntPercentage(value, percentage) {

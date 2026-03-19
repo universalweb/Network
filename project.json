@@ -10,12 +10,12 @@
 	},
 	"web": {
 		"name": "Universal Web",
-		"www": "https://universalweb.io"
+		"www": "https://viat.network"
 	},
 	"homepage": "uw://home.uw",
 	"repository": "uw://source.uw",
 	"domains": "uw://domains.uw",
-	"www": "https://universalweb.io",
+	"www": "https://viat.network",
 	"version": "1.0.0",
 	"architectureVersion": "4.5.0"
 }

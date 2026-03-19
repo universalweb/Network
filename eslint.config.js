@@ -1,6 +1,8 @@
-import babelParser from '@babel/eslint-parser';
+import * as ts_api_utils from 'ts-api-utils';
 import globals from 'globals';
 import jsdoc from 'eslint-plugin-jsdoc';
+import security from 'eslint-plugin-security';
+import sonarjs from 'eslint-plugin-sonarjs';
 import stylisticJs from '@stylistic/eslint-plugin';
 const globalsObject = {};
 const customGlobals = {
@@ -42,9 +44,9 @@ export default [
 			'**/*.js',
 			'**/*.umm',
 			'**/*.uml',
+			'**/*.json',
 		],
 		languageOptions: {
-			parser: babelParser,
 			parserOptions: {
 				requireConfigFile: true,
 			},
@@ -55,8 +57,13 @@ export default [
 		plugins: {
 			jsdoc,
 			'@stylistic': stylisticJs,
+			sonarjs,
+			security,
+			ts_api_utils,
 		},
 		rules: {
+			'sonarjs/cognitive-complexity': 'warn',
+			'security/detect-object-injection': 'off',
 			'@stylistic/array-bracket-newline': [
 				'error',
 				{

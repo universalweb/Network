@@ -1,4 +1,4 @@
-import viatDefaults from '#viat/defaults';
+import VIAT_DEFAULTS from '#viat/defaults';
 export const version = 1;
 export const blockTypes = {
 	transaction: 0,
@@ -15,13 +15,13 @@ export const blockTypes = {
 	audit: 11,
 };
 export const hashSizes = {
-	compact: viatDefaults.defaultHashSize,
-	default: viatDefaults.defaultQuantumHashSize,
+	compact: VIAT_DEFAULTS.DEFAULT_HASH_SIZE,
+	default: VIAT_DEFAULTS.DEFAULT_QUANTUM_HASH_SIZE,
 	genesis: 256,
 	quantum: 64,
 };
 export const nonceSizes = {
-	default: viatDefaults.defaultNonceSize,
+	default: VIAT_DEFAULTS.DEFAULT_NONCE_SIZE,
 	mid: 24,
 	genesis: 64,
 	quantum: 32,
@@ -50,7 +50,7 @@ export const typeNamesPlural = {
 };
 export const walletTypes = {
 	wallet: {
-		size: viatDefaults.wallets.legacy.walletSize,
+		size: VIAT_DEFAULTS.WALLETS.LEGACY.WALLET_SIZE,
 		walletType: 'legacy',
 		path: {
 			default: typeNames.wallet,
@@ -58,7 +58,7 @@ export const walletTypes = {
 		},
 	},
 	hybridWallet: {
-		size: viatDefaults.wallets.hybrid.walletSize,
+		size: VIAT_DEFAULTS.WALLETS.HYBRID.WALLET_SIZE,
 		walletType: 'hybrid-quantum',
 		path: {
 			default: typeNames.hybridWallet,
@@ -66,7 +66,7 @@ export const walletTypes = {
 		},
 	},
 	quantumWallet: {
-		size: viatDefaults.wallets.quantum.walletSize,
+		size: VIAT_DEFAULTS.WALLETS.QUANTUM.WALLET_SIZE,
 		walletType: 'quantum',
 		path: {
 			default: typeNames.quantumWallet,

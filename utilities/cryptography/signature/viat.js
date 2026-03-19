@@ -18,7 +18,7 @@ import {
 import dilithiumAPI from './dilithium65.js';
 import ed25519Utils from './ed25519.js';
 import signatureScheme from './signatureScheme.js';
-import sphincs192 from './sphincs128.js';
+import sphincs192 from './sphincs192.js';
 // SEED SIZE COMBINED
 const seedSize = ed25519Utils.seedSize + dilithiumAPI.seedSize + sphincs192.seedSize;
 // console.log(seedSize);

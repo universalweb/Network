@@ -2,10 +2,8 @@
 import { decode, encodeSync } from './cbor.js';
 import { ed25519 } from '@noble/curves/ed25519.js';
 import { generateAddress } from './generateAddress.js';
+import { isString } from '@universalweb/utilitylib';
 import { shake256 } from '@noble/hashes/sha3.js';
-function isString(source) {
-	return source && typeof source === 'string';
-}
 function ensureBase64(source) {
 	if (source && isString(source)) {
 		return source;

@@ -1,7 +1,7 @@
-export const currentVersion = 1;
-export const exactVersion = '1.0.0';
+export const CURRENT_VERSION = 1;
+export const EXACT_VERSION = '1.0.0';
 const networkDefaults = {
-	currentVersion,
-	exactVersion,
+	CURRENT_VERSION,
+	EXACT_VERSION,
 };
 export default networkDefaults;

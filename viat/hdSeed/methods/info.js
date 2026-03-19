@@ -1,24 +1,31 @@
 import {
-	CONTEXT,
+	CONTEXT_INTENTION,
+	CRYPTOCURRENCY_NETWORK_TYPES,
 	HASH_ALGORITHMS,
-	KEY_PURPOSES,
-	MASTER_SEED_ENTROPY_SIZES,
-	NETWORKS,
 	NETWORK_NAMES,
+	PURPOSE,
 	RELATIONSHIP,
 	SCHEME_TYPES,
-	SEED_SIZES,
-} from '../defaults.js';
+} from '../defaults/index.js';
 import {
-	hasValue, isBuffer, isPlainObject, isU8,
+	hasValue,
+	isBuffer,
+	isPlainObject,
+	isU8,
+	noValue,
 } from '@universalweb/utilitylib';
 async function logInfo() {
-	console.log('logInfo START');
-	console.log(await this.exportObject());
-	console.log(`masterNonce Size ${this.info.masterNonce.length}`);
-	console.log(`masterKey Size ${this.info.masterKey.length}`);
-	console.log(`masterSeed Encrypted Size ${this.info.masterSeed.length}`);
-	console.log('logInfo END');
+	console.log('logInfo START __________________');
+	const exported = await this.exportObject();
+	exported.forEach((value, key) => {
+		if (isBuffer(value) || isU8(value)) {
+			console.log(`${key}: <Buffer:${value.length} bytes>`);
+		} else {
+			console.log(`${key}: ${value}`);
+		}
+	});
+	console.log('Binary export size', (await this.exportBinary()).length);
+	console.log('logInfo END __________________');
 }
 // Generator function to create reverse lookup maps
 function createReverseLookup(obj) {
@@ -33,19 +40,20 @@ function createReverseLookup(obj) {
 // Property to reverse lookup map mapping
 const propertyLookups = {
 	scheme: createReverseLookup(SCHEME_TYPES),
-	context: createReverseLookup(CONTEXT),
-	kind: createReverseLookup(KEY_PURPOSES),
+	context_intention: createReverseLookup(CONTEXT_INTENTION),
+	purpose: createReverseLookup(PURPOSE),
 	relationship: createReverseLookup(RELATIONSHIP),
-	hashAlgorithm: createReverseLookup(HASH_ALGORITHMS),
-	network: createReverseLookup(NETWORKS),
-	networkName: createReverseLookup(NETWORK_NAMES),
+	hash_algorithm: createReverseLookup(HASH_ALGORITHMS),
+	keyed_hash_algorithm: createReverseLookup(HASH_ALGORITHMS),
+	network: createReverseLookup(NETWORK_NAMES),
+	cryptocurrency_network_type: createReverseLookup(CRYPTOCURRENCY_NETWORK_TYPES),
 };
-	/**
-	 * Converts integer property values on a seed or key object to their text representation.
-	 * @param {Object} source - The plain object (seed or key) to describe.
-	 * @param {boolean} [logOutput=true] - Whether to log the output to console.
-	 * @returns {Object} An object with the same keys but with text values where applicable.
-	 */
+/**
+	* Converts integer property values on a seed or key object to their text representation.
+	* @param {Object} source - The plain object (seed or key) to describe.
+	* @param {boolean} [logOutput=true] - Whether to log the output to console.
+	* @returns {Object} An object with the same keys but with text values where applicable.
+ */
 function describeObject(source, logOutput = true) {
 	if (!isPlainObject(source)) {
 		console.error('describeObject requires a plain object');
@@ -53,7 +61,7 @@ function describeObject(source, logOutput = true) {
 	}
 	const described = {};
 	const thisContext = this;
-	console.log(source);
+	// console.log(source);
 	for (const [
 		key,
 		value,
@@ -71,7 +79,8 @@ function describeObject(source, logOutput = true) {
 		}
 	}
 	if (logOutput) {
-		console.log('Object Description:');
+		console.log('__________OBJECT STRUCT START__________');
+		console.log('==> TYPE:', (source.key) ? 'KEY' : 'SEED', '<==');
 		for (const [
 			key,
 			value,
@@ -82,6 +91,7 @@ function describeObject(source, logOutput = true) {
 				console.log(`  ${key}: ${value}`);
 			}
 		}
+		console.log('__________OBJECT STRUCT END__________');
 	}
 	return described;
 }
@@ -98,9 +108,20 @@ function getPropertyName(propertyName, value) {
 	}
 	return lookup[value] ?? null;
 }
+export async function validateSeedObject(source, errors = []) {
+	const requiredProperties = ['seed'];
+	requiredProperties.forEach((item) => {
+		if (noValue(source[item])) {
+			errors.push(`Missing required property: ${item}`);
+		}
+	});
+	await this.validateObject(source, errors);
+	return (errors.length && errors) || true;
+}
 export default {
 	logInfo,
 	describeObject,
 	getPropertyName,
 	propertyLookups,
+	validateSeedObject,
 };

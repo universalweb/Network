@@ -90,7 +90,7 @@ ${viat}
 <h4 align="center">Want to contribute? Then join the Imperium today!</h4>
 <p align="center"> To help write content, make art, write code, share it, and or star our repo! All are welcome to the Nexus. </p>
 <hr />
-<small>COPYRIGHT © 2025 VIAT, <a href="https://universalweb.io">UNIVERSAL WEB</a>, THE NEXUS</small>
+<small>COPYRIGHT © 2025 VIAT, <a href="https://viat.network">UNIVERSAL WEB</a>, THE NEXUS</small>
 <br />
 <small>THE UNITED SYSTEMS of NEXUS</small>
 <br />

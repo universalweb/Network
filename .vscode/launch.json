@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
 		{
-			"type": "pwa-node",
+			"type": "node",
 			"request": "launch",
 			"name": "Launch Program",
 			"skipFiles": [
@@ -18,6 +18,12 @@
 			"name": "http://127.0.0.1:3000/docs/index.html",
 			"request": "launch",
 			"url": "http://127.0.0.1:3000/docs/index.html"
+		},
+		{
+			"type": "chrome",
+			"name": "http://127.0.0.1:3000/viat/centralSite/client/demo.html",
+			"request": "launch",
+			"url": "http://127.0.0.1:3000/viat/centralSite/client/demo.html"
 		}
 	]
 }

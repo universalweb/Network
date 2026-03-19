@@ -9,9 +9,9 @@ import {
 	int64,
 	toHex,
 } from '#utilities/cryptography/utils';
+import VIAT_DEFAULTS from '#viat/defaults';
 import cryptolib from 'node:crypto';
 import { hashScheme } from './hashScheme.js';
-import { kmac256 } from './sha3/kmac.js';
 import { runBench } from '../../benchmark.js';
 const createHash = cryptolib.hash;
 const createHasher = cryptolib.createHash;
@@ -19,14 +19,29 @@ const hashName = 'shake256';
 const hash512StrictName = 'sha3-512';
 const hash256StrictName = 'sha3-256';
 const outputEncoding = 'buffer';
-import viatDefaults from '#viat/defaults';
-const legacyAddressHashSettings = viatDefaults.wallets.legacy.walletHashConfig;
+const legacyAddressHashSettings = VIAT_DEFAULTS.WALLETS.LEGACY.WALLET_HASH_CONFIG;
 export async function hash256(source) {
 	if (globalThis?.Bun) {
 		const hasher = createHasher(hashName, defaultHashSettings);
 		return hasher.update(source).digest();
 	}
 	return createHash(hashName, source, defaultHashSettings);
+}
+export async function hash256List(source, sourceTwo, sourceThree, sourceFour) {
+	const hasher = createHasher(hashName, defaultHashSettings);
+	if (source) {
+		hasher.update(source);
+	}
+	if (sourceTwo) {
+		hasher.update(sourceTwo);
+	}
+	if (sourceThree) {
+		hasher.update(sourceThree);
+	}
+	if (sourceFour) {
+		hasher.update(sourceFour);
+	}
+	return hasher.digest();
 }
 // STRICT SECURITY MARGIN FOR 32 BYTE OUTPUT USES SHA3-256 INSTEAD
 export async function hash256Strict(source) {
@@ -42,6 +57,22 @@ export async function hash512(source) {
 		return hasher.update(source).digest();
 	}
 	return createHash(hashName, source, hash512SettingsCrypto);
+}
+export async function hash512List(source, sourceTwo, sourceThree, sourceFour) {
+	const hasher = createHasher(hashName, hash512SettingsCrypto);
+	if (source) {
+		hasher.update(source);
+	}
+	if (sourceTwo) {
+		hasher.update(sourceTwo);
+	}
+	if (sourceThree) {
+		hasher.update(sourceThree);
+	}
+	if (sourceFour) {
+		hasher.update(sourceFour);
+	}
+	return hasher.digest();
 }
 // STRICT SECURITY MARGIN FOR 64 BYTE OUTPUT USES SHA3-512 INSTEAD
 export async function hash512Strict(source) {
@@ -100,8 +131,10 @@ export const shake256 = hashScheme({
 	primary: true,
 	hash256,
 	hash: hash256,
+	hash256List,
 	hash256Strict,
 	hash512,
+	hash512List,
 	hash512Strict,
 	hashLegacyAddress,
 	hash1024,
@@ -111,4 +144,7 @@ export const shake256 = hashScheme({
 export default shake256;
 // console.log('hash', toHex((await hash256('hello world'))));
 // console.log('hash', (await hash512('hello world')));
-
+// const hasher = createHasher(hashName, {
+// 	outputLength,
+// 	outputEncoding,
+// });

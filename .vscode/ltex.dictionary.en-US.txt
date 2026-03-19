@@ -14,3 +14,9 @@ SSTables
 SSTable
 logarithmically
 filesystem-specific
+Viat
+const
+javascript
+CBOR-native
+CBOR
+KMAC

@@ -1,6 +1,6 @@
 import { decode, encodeStrict, encodeSync } from '#utilities/serialize';
 import { hasValue, isString, isTypedArray } from '@universalweb/utilitylib';
-import viatDefaults from '#viat/defaults';
+import VIAT_DEFAULTS from '#viat/defaults';
 export const ADDRESS_TYPE = {
 	TEXT: 0,
 	EMOJI: 1,
@@ -29,10 +29,10 @@ function hasEmoji(str) {
 	return (/[\p{Emoji}\p{Emoji_Modifier}\p{Emoji_Component}]/u).test(str);
 }
 export class VanityAddress {
-	version = viatDefaults.vanityVersion;
+	version = VIAT_DEFAULTS.VANITY_VERSION;
 	addressObject = {
 		date: Date.now(),
-		version: viatDefaults.vanityVersion,
+		version: VIAT_DEFAULTS.VANITY_VERSION,
 		kind: ADDRESS_TYPE.DEFAULT,
 		address: null,
 		size: 0,

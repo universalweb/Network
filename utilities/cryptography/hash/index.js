@@ -1,5 +1,5 @@
+import { CURRENT_VERSION } from '#defaults';
 import { hash256 as blake3 } from '#hash/blake3';
-import { currentVersion } from '../../../defaults.js';
 import { hasValue } from '@universalweb/utilitylib';
 import { setOptions } from '../setOption.js';
 import { hash256 as shake256 } from '#crypto/hash/shake.js';
@@ -8,7 +8,7 @@ export const hashAlgorithms = new Map();
 const hashAlgorithmsVersion1 = new Map();
 hashAlgorithms.set(1, hashAlgorithmsVersion1);
 setOptions(hashAlgorithmsVersion1, cipherList);
-export function getHashAlgorithm(hashAlgorithmName = 0, version = currentVersion) {
+export function getHashAlgorithm(hashAlgorithmName = 0, version = CURRENT_VERSION) {
 	if (!hasValue(hashAlgorithmName)) {
 		return false;
 	}

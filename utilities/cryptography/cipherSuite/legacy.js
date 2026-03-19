@@ -1,10 +1,10 @@
 // x25519 ed25519 aegis-256/xchacha20-poly1305 shake256
 import { bufferAlloc, int32, randomize } from '#utilities/cryptography/utils';
+import VIAT_DEFAULTS from '#viat/defaults';
 import aegis256 from '../cipher/AEGIS256.js';
 import dilithium from '#crypto/signature/dilithium44.js';
 import ed25519 from '../signature/ed25519.js';
 import shake256 from '../hash/shake.js';
-import viatDefaults from '#viat/defaults';
 import x25519 from '../keyExchange/x25519.js';
 import xChaCha from '../cipher/xChaCha.js';
 export const legacyCipherSuite = {
@@ -18,7 +18,7 @@ export const legacyCipherSuite = {
 	speed: 2,
 	security: 0,
 	hash: shake256,
-	walletSize: viatDefaults.wallets.legacy.walletSize,
+	walletSize: VIAT_DEFAULTS.WALLETS.LEGACY.WALLET_SIZE,
 	keyExchangeSeedSize: x25519.seedSize,
 	seedSize: ed25519.seedSize,
 	encryption: aegis256,
