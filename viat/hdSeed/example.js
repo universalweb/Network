@@ -1,5 +1,5 @@
 import { HDSeed } from './index.js';
-import { SCHEME_TYPES } from './defaults.js';
+import { SCHEME_TYPES } from './defaults/index.js';
 import { hash } from './utils.js';
 async function manual(walletExample) {
 	const key = await walletExample.getKey({
@@ -29,8 +29,10 @@ async function example() {
 	const exported = await walletExample.exportObject();
 	console.log('EXPORTED WALLET', exported);
 	const walletExample2 = new HDSeed(exported);
-	console.log('master_seeds', walletExample.get('master_seed'), walletExample2.get('master_seed'));
-	console.log('Compare wallets are equal', Buffer.compare(Buffer.from(walletExample.get('master_seed')), Buffer.from(walletExample2.get('master_seed'))) === 0);
+	const seed1 = await walletExample.get('master_seed');
+	const seed2 = await walletExample2.get('master_seed');
+	console.log('master_seeds', seed1, seed2);
+	console.log('Compare wallets are equal', Buffer.compare(Buffer.from(seed1), Buffer.from(seed2)) === 0);
 	// await walletExample.logInfo();
 	// await manual(walletExample);
 	// TODO: Create master seed creation function with single config object

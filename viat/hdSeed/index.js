@@ -13,11 +13,13 @@
 import {
 	CRYPTOCURRENCY_NETWORK_TYPES,
 	HASH_ALGORITHMS,
+	MASTER_ENTROPY_POOL_SIZES,
 	NETWORK_NAMES,
+	OBJECT_TYPE,
 	PURPOSE,
 	RELATIONSHIP,
 	SCHEME_TYPES,
-} from './defaults.js';
+} from './defaults/index.js';
 import {
 	assign, clone, each, eachArray, eachObject, extendClass,
 	hasValue, isArray, isPlainObject, isString,
@@ -37,26 +39,38 @@ import stateMethods from './methods/state.js';
 import structMethods from './methods/structs.js';
 /*
 	NOTE: This is a Post-Quantum Hierarchical Deterministic Wallet & Keypair generator
-	TODO: Store only encrypted master seed, key, nonce in memory/disk when using prompt user to decrypt
-	NOTE: This is for Parent to Direct Child generation per-class instance.
-	NOTE: Branch/Root with direct leaves (Keys, Pre-Seeds, Seeds)
+	NOTE: This is for Parent to Direct Child generation per-class instance. Branch/Root with direct leaves
+	TODO: Add trapdoor deterministic generation support
 */
+export const STATE_DEFAULTS = {
+	version: 1,
+	hash_algorithm: HASH_ALGORITHMS.SHAKE_256,
+	keyed_hash_algorithm: HASH_ALGORITHMS.KMAC_256_XOF,
+	network_name: NETWORK_NAMES.VIAT,
+	wallet_beta: true,
+	master_seed: null,
+	master_key: null,
+	master_nonce: null,
+	encrypted: false,
+	seed_size: MASTER_ENTROPY_POOL_SIZES.DEFAULT,
+};
 export class HDSeed {
 	constructor(config) {
-		config && this.setState(config);
+		if (config) {
+			return this.initialize(config);
+		}
+		return this;
+	}
+	async initialize(config) {
+		const STATE = config?.STATE;
+		if (STATE) {
+			await this.set(STATE);
+		}
 		return this;
 	}
 	isHDSeed = true;
-	STATE = new Map(Object.entries({
-		version: 1,
-		hash_algorithm: HASH_ALGORITHMS.SHAKE_256,
-		keyed_hash_algorithm: HASH_ALGORITHMS.KMAC_256_XOF,
-		network_name: NETWORK_NAMES.VIAT,
-		wallet_beta: true,
-		master_seed: null,
-		master_key: null,
-		master_nonce: null,
-	}));
+	static STATE_DEFAULTS = STATE_DEFAULTS;
+	STATE = new Map(Object.entries(STATE_DEFAULTS));
 	static VALID_PROPERTY_NAMES = [
 		'version',
 		'kind',
@@ -84,7 +98,7 @@ export class HDSeed {
 		scheme: SCHEME_TYPES,
 		hash_algorithm: HASH_ALGORITHMS,
 	};
-	getAll() {
+	async getAll() {
 		const mapIter = this.STATE.entries();
 		const objectMap = {};
 		this.STATE.forEach((value, key) => {
@@ -92,27 +106,20 @@ export class HDSeed {
 		});
 		return objectMap;
 	}
-	get(key, target) {
-		if (isUndefined(key)) {
-			return this.getAll();
+	async zeroBuffers() {
+		const {
+			master_seed, master_key, master_nonce,
+		} = await this.getAll();
+		if (master_seed) {
+			master_seed.fill(0);
 		}
-		if (isString(key)) {
-			return this.STATE.get(key);
+		if (master_key) {
+			master_key.fill(0);
 		}
-		if (isArray(key)) {
-			const result = {};
-			eachArray(key, (value) => {
-				result[value] = this.STATE.get(value);
-			});
-			return result;
+		if (master_nonce) {
+			master_nonce.fill(0);
 		}
-		if (isPlainObject(key)) {
-			const result = target || key;
-			eachObject(key, (value, stateKey) => {
-				result[stateKey] = this.STATE.get(stateKey);
-			});
-			return result;
-		}
+		return this;
 	}
 	async create() {
 		await this.generateMasterKey();
@@ -130,7 +137,6 @@ export class HDSeed {
 		const sourceStruct = await this.generateKeyStruct(assign({
 			pre_key,
 		}, source));
-		await this.describeObject(source);
 		return createKey(sourceStruct);
 	}
 	async getPreNonce(source = {}) {
@@ -143,31 +149,45 @@ export class HDSeed {
 		const sourceStruct = await this.generateNonceStruct(assign({
 			pre_nonce,
 		}, source));
-		await this.describeObject(source);
 		return createNonce(sourceStruct);
 	}
 	async getPreSeed(source = {}) {
 		const sourceStruct = await this.generatePreSeedStruct(assign({}, source));
 		const preSeed = await normalize(sourceStruct, 256);
-		await this.describeObject(source);
 		return preSeed;
 	}
-	async getSeed(source = {}, keyArg, nonceArg) {
+	async getFinalSeed(source = {}, secretHash) {
 		const preSeed = await this.getPreSeed(source);
+		const finalSeedStruct = assign({
+			pre_seed: preSeed,
+		}, source);
+		if (secretHash) {
+			finalSeedStruct.secret_hash = secretHash;
+		}
+		const sourceStruct = await this.generateSeedStruct(finalSeedStruct);
+		const finalSeed = await normalize(sourceStruct, 256);
+		return finalSeed;
+	}
+	async getSeed(source = {}, keyArg, nonceArg, guardKey) {
 		const seedSize = getSeedSize(source.scheme);
-		const key = keyArg || await this.getKey(source);
-		const nonce = nonceArg || await this.getNonce(source);
-		const seed = await kmac(key, preSeed, seedSize, nonce);
+		const key = (!keyArg || isPlainObject(keyArg)) ? await this.getKey(keyArg || source) : keyArg;
+		const nonce = (!nonceArg || isPlainObject(nonceArg)) ? await this.getNonce(nonceArg || source) : nonceArg;
+		const finalSeed = await this.getFinalSeed(source, guardKey);
+		const seed = await kmac(key, finalSeed, seedSize, nonce);
 		return seed;
 	}
-	async getFinalSeed(source = {}) {
-		const key = await this.getKey(source);
-		const nonce = await this.getNonce(source);
-		const seed = await this.getSeed(source, key, nonce);
-		return seed;
+	async getTrapdoorSeed(source = {}, keyArg, nonceArg, guardKey) {
+		const seedSize = assign({
+			trapdoor: true,
+			alt_object_type: OBJECT_TYPE.TRAPDOOR,
+			alt_purpose: PURPOSE.TRAPDOOR,
+		}, source);
+		return this.getSeed(source, keyArg, nonceArg, guardKey);
+	}
+	async guardKey(source = {}) {
 	}
 	async generateDomainFromConfig(source = {}) {
-		const { KEY_PROPERTIES } = this.constructor;
+		const { KEY_PROPERTIES } = HDSeed;
 		eachObject(source, (value, key) => {
 			if (isString(value) && hasValue(KEY_PROPERTIES[key])) {
 				source[key] = KEY_PROPERTIES[key][value];
@@ -179,11 +199,10 @@ export class HDSeed {
 		return source;
 	}
 	async exportObject() {
-		const source = clone(this.STATE);
-		return source;
+		return this.getAll();
 	}
 	async importObject(source) {
-		this.setState(source);
+		await this.set(source);
 		return this;
 	}
 	async exportBinary() {
@@ -197,3 +216,9 @@ extendClass(HDSeed, masterMethods, info, structMethods, stateMethods);
 	Master Seed -> V Pre-Seed 0 -> V Seed 1 -> Seed Final
 					            -> H Pre-Seed 0 -> H Seed 1 -> Seed Final
 */
+export async function createHDSeed(config) {
+	const instance = new HDSeed(config);
+	return instance;
+}
+createHDSeed.classConstructor = HDSeed;
+export default createHDSeed;

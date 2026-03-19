@@ -1,7 +1,7 @@
 import {
 	OBJECT_TYPE,
 	PURPOSE,
-} from '../defaults.js';
+} from '../defaults/index.js';
 import { noValue } from '@universalweb/utilitylib';
 export async function setStructDefaults(source) {
 	const {
@@ -20,31 +20,34 @@ export async function setStructDefaults(source) {
 export async function generatePreSeedStruct(source = {}) {
 	await this.setStructDefaults(source);
 	source.object_type = OBJECT_TYPE.PRE_SEED;
-	source.seed = this.get('master_seed');
-	console.log('generatePreSeedStruct', source);
+	source.seed = await this.get('master_seed');
+	await this.describeObject(source);
 	return source;
 }
 export async function generateSeedStruct(source = {}) {
 	await this.setStructDefaults(source);
 	source.object_type = OBJECT_TYPE.SEED;
-	console.log('generateSeedStruct', source);
+	await this.describeObject(source);
 	return source;
 }
 export async function generatePreKeyStruct(source = {}) {
 	await this.setStructDefaults(source);
 	source.object_type = OBJECT_TYPE.PRE_KEY;
-	source.key = this.get('master_key');
+	source.key = await this.get('master_key');
+	await this.describeObject(source);
 	return source;
 }
 export async function generateKeyStruct(source = {}, pre_key) {
 	await this.setStructDefaults(source);
 	source.object_type = OBJECT_TYPE.KEY;
+	await this.describeObject(source);
 	return source;
 }
 export async function generatePreNonceStruct(source = {}) {
 	await this.setStructDefaults(source);
 	source.object_type = OBJECT_TYPE.PRE_NONCE;
-	source.nonce = this.get('master_nonce');
+	source.nonce = await this.get('master_nonce');
+	await this.describeObject(source);
 	return source;
 }
 export async function generateNonceStruct(source = {}, pre_nonce) {
@@ -53,6 +56,7 @@ export async function generateNonceStruct(source = {}, pre_nonce) {
 	if (pre_nonce) {
 		source.pre_nonce = pre_nonce;
 	}
+	await this.describeObject(source);
 	return source;
 }
 export default {

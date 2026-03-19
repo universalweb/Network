@@ -1,4 +1,4 @@
-import { HDSeedTrie } from './HDSeedTree.js';
+import { HDSeedTree } from './HDSeedTree.js';
 import { assign } from '@universalweb/utilitylib';
 export class UniversalProfile {
 	constructor(config = {}) {
@@ -10,10 +10,10 @@ export class UniversalProfile {
 	STATE = new Map(Object.entries({
 		version: 1,
 	}));
-	async createHDSeedTrie(config = {}) {
-		this.trie = new HDSeedTrie(config);
-		await this.trie.createRoot(config);
-		return this.trie;
+	async createHDSeedTree(config = {}) {
+		this.tree = new HDSeedTree(config);
+		await this.tree.createRoot(config);
+		return this.tree;
 	}
 }
 export default UniversalProfile;

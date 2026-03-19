@@ -1,7 +1,7 @@
 import { isPlainObject, noValue } from '@universalweb/utilitylib';
 import { kmac256, kmac256xof } from '@noble/hashes/sha3-addons.js';
 import { shake256, shake256_64 } from '@noble/hashes/sha3.js';
-import { SEED_SIZES } from './defaults.js';
+import { SEED_SIZES } from './defaults/index.js';
 import { encodeStrict } from '#utilities/serialize';
 export function encode(source) {
 	return encodeStrict(source);

@@ -1,20 +1,29 @@
-# Hierarchical Deterministic Seed Derivation Trie
+# Hierarchical Deterministic Universal Profiles
 
-Post-Quantum Universal Identity System
+Hierarchical Deterministic Seed Derivation
+Post-Quantum Hierarchical Deterministic Universal Identity System
 
 - Post-Quantum Ready
-- Supports Hierarchical Deterministic Key pairs
-- Supports Hierarchical Deterministic Wallets
-- Supports Hierarchical Deterministic Keys
-- 3 Sources of Entropy 256 Bytes each
-- 1 Master Seed
-- 1 Master Key
-- 1 Master Nonce
+- Supports Hierarchical Deterministic Key pairs, Wallets, Keys
+- Supports any Key Pair algorithm
+- Master Entropy Set Seed, Key, Nonce - Each 256 Bytes
+- Supports Compromised Master Set Protection
+	- Even if the master set is compromised attacker can't generate final seeds without a final secret
+		- Supports secret can be password based with argon2id (PBKD)
+		- Supports arbitrary size defined secret
+- Supports on Disk encryption
+	- Ensures Master Set protection while at rest
+	- Dynamic generation means keys don't need to persist on disk
 - Supports Seed Isolation
 - Supports Seed Grouping
 - Support Seed Checkpoints
 - Supports Relational Proofs
 
+Primitives used:
+
+- SHAKE256
+- KMAC256_XOF
+- Argon2id
 
 The foundation of Viat's Identity System
 
@@ -93,8 +102,48 @@ Intermediate deterministic commitments derived from different master entropy poo
 Each derived object shares a canonical base identity, then adds role-specific metadata and role-specific secret input so that all derivation transcripts remain related but non-equal.
 
 1 Shared/base derivation identity
-	- things like id, scheme, network, relationship, version, etc.
+	- things like ID, scheme, network, relationship, version, etc.
 2 Role-specific metadata
 	- fields unique to pre-seed vs pre-key vs pre-nonce
 3 Distinct entropy pools
 	- master_seed, master_key, master_nonce
+
+- deriving from reserved core identity fields
+- optionally including extension metadata
+- using strict CBOR
+- separating pre-seed / pre-key / pre-nonce by role
+- combining distinct entropy pools through KMAC
+- outputting one final fixed-size seed for the target scheme
+
+Core derivation fields are reserved, type-stable, and restricted to standardized values. Extension fields may be user- or service-defined and retain CBOR-native type flexibility, but they do not alter the semantic constraints of reserved fields.
+
+All derivation transcripts are encoded using strict CBOR so canonical core identities and extension metadata serialize deterministically.
+
+Derivation Process
+Each is used as a parameter for the final fixed size KMAC output used as the seed for generation.
+
+KEY
+MASTER -> PRE -> FIXED HASH FINAL KEY = KEY
+
+SEED
+MASTER -> PRE = MESSAGE
+
+NONCE
+MASTER -> PRE -> CBOR(META + PRE) = Customization String
+
+
+The trapdoor is also deterministic and can be auto matched to a specific wallet's meta struct details. This keeps both safe and on different branches.
+
+All seeds etc should be encrypted on disk. Optionally, Consider the use of argon2id to mix in user input to carry out full derivation. In the event a master set is compromised the derivation process can't be carried out fully without it serving as a final security layer. This can be done for the final key pair seeds if so desired. For browser based environments this could be vital in the event the seed or a private key could be compromised which means the actual seed and actual private key remain in an intermediate step. This ensures if it's read or compromised the secret keeps it safe until used this helps combat one-shot attack scripts that just pull the hard data and leave. In that event the pulled data is useless without the final secret hash.
+
+HD tree / branch derivation
+multiple entropy pools
+strict structured metadata
+KMAC-based derivation
+optional final password-derived guard on terminal seeds
+
+Argon2ID or User based output incorporated secret
+
+- Guard the operation output, not necessarily for every internal phase
+- Any output that can stand alone should have its own guard option
+	- Key or nonce used alone need to have this as an option

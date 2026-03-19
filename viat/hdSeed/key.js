@@ -1,4 +1,4 @@
-import { OBJECT_TYPE, SECRET_KEY_SIZES } from './defaults.js';
+import { OBJECT_TYPE, SECRET_KEY_SIZES } from './defaults/index.js';
 import { encode, normalize } from './utils.js';
 import { assign } from '@universalweb/utilitylib';
 /*

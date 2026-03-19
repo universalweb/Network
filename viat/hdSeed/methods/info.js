@@ -6,7 +6,7 @@ import {
 	PURPOSE,
 	RELATIONSHIP,
 	SCHEME_TYPES,
-} from '../defaults.js';
+} from '../defaults/index.js';
 import {
 	hasValue,
 	isBuffer,
@@ -79,8 +79,8 @@ function describeObject(source, logOutput = true) {
 		}
 	}
 	if (logOutput) {
-		console.log('OBJECT DESCRIBE START__________');
-		console.log('______ TYPE:', (source.key) ? 'KEY' : 'SEED', '', '---->');
+		console.log('__________OBJECT STRUCT START__________');
+		console.log('==> TYPE:', (source.key) ? 'KEY' : 'SEED', '<==');
 		for (const [
 			key,
 			value,
@@ -91,8 +91,7 @@ function describeObject(source, logOutput = true) {
 				console.log(`  ${key}: ${value}`);
 			}
 		}
-		console.log('------>');
-		console.log('OBJECT DESCRIBE END_______________');
+		console.log('__________OBJECT STRUCT END__________');
 	}
 	return described;
 }

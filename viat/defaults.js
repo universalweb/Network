@@ -11,7 +11,7 @@
     ? █████████████████████████████████████████
     ! VIAT is a post quantum cryptocurrency designed for indefinite scalability and security.
     ! VIAT utilizes a novel blockchain architecture and quantum-resistant cryptographic algorithms to ensure the integrity and longevity of the network.
-    ! WEBSITE: https://viat.network https://universalweb.io
+    ! WEBSITE: https://viat.network https://viat.network
     ^ HASH ALGORITHM: SHAKE256
     ^ SIGNATURE ALGORITHMS: ED25519, DILITHIUM, SPHINCS+
     * KEY EXCHANGE ALGORITHMS: X25519, Kyber

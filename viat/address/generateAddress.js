@@ -1,4 +1,4 @@
-import { HASH_ALGORITHMS, trapdoorTypes } from '#viat/defaults';
+import { HASH_ALGORITHMS, TRAPDOOR_TYPES } from '#viat/defaults';
 import { decodeSync, encode, encodeSync } from '#utilities/serialize';
 import { hash256, hash512, hashLegacyAddress } from '#crypto/hash/shake.js';
 import viat from '#crypto/cipherSuite/viat.js';

@@ -1,4 +1,4 @@
-import { HASH_ALGORITHMS, SCHEME_TYPES } from './defaults.js';
+import { HASH_ALGORITHMS, SCHEME_TYPES } from './defaults/index.js';
 import { HDSeed } from './index.js';
 import { assign } from '@universalweb/utilitylib';
 class Leaf {

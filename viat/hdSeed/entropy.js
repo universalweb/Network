@@ -6,7 +6,7 @@ import { isBuffer, isPlainObject, isU8 } from '@universalweb/utilitylib';
 	NOTE: Function to generate entropy with failsafe using Kyber KEM shared secrets and other entropy sources. In the future more entropy sources need to be added to ensure a high entropy pool.
 	© copyright Thomas Marchi 2025
 */
-import { MASTER_SEED_ENTROPY_SIZES } from './defaults.js';
+import { MASTER_SEED_ENTROPY_SIZES } from './defaults/index.js';
 import { encode } from './utils.js';
 import { keccakprg } from '@noble/hashes/sha3-addons.js';
 import { ml_kem1024 } from '@noble/post-quantum/ml-kem.js';
