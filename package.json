@@ -53,7 +53,8 @@
 		"pqclean": "^0.8.1",
 		"qrcode": "^1.5.4",
 		"rollup": "^4.59.0",
-		"sodium-native": "^5.1.0"
+		"sodium-native": "^5.1.0",
+		"xxhash-addon": "^2.1.0"
 	},
 	"description": "UW & VIAT modules: Client, Server, VIAT, DIS, Browser, Crypto, Wallets, Modules, & certificates.",
 	"engines": {
@@ -193,7 +194,8 @@
 			"pqclean",
 			"rollup",
 			"sodium-native",
-			"svelte"
+			"svelte",
+			"xxhash-addon"
 		]
 	},
 	"packageManager": "pnpm@10.28.2",

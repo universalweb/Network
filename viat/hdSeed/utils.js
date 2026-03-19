@@ -7,7 +7,7 @@ export function encode(source) {
 	return encodeStrict(source);
 }
 export function getSeedSize(schemeID) {
-	return SEED_SIZES[schemeID] || 64;
+	return SEED_SIZES[schemeID] || 32;
 }
 export async function kmac(key, message, dkLen = 32, personalization) {
 	return kmac256xof(key, message, {

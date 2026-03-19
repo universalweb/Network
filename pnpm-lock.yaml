@@ -122,6 +122,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      xxhash-addon:
+        specifier: ^2.1.0
+        version: 2.1.0
     devDependencies:
       '@cldmv/sizeofvar':
         specifier: ^1.0.4
@@ -2467,6 +2470,10 @@ packages:
     resolution: {integrity: sha512-s+w+rBWnpTMwSFbaE0UXsRlg7hU4FjekKU4eyAih5T8nJuNZT1nNsskXpxmeqSK9UzkBl6UgRlnKc8hz8IEqOw==}
     hasBin: true
 
+  node-gyp-build@4.8.4:
+    resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
+    hasBin: true
+
   node-seal@7.0.0:
     resolution: {integrity: sha512-R5q8PQ6z3Hyq7x1uunNf5yZtDuSlffYkWFA5uvzL2fYF/IHL7+KwCsRdLlG3inBU1dMUgakDWiuqf0csMvcang==}
 
@@ -3195,6 +3202,10 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+
+  xxhash-addon@2.1.0:
+    resolution: {integrity: sha512-y69Lhs6msXn4eLPZkDqSKff3OLHyOL7a5lhxbJ0NN4x6XYhVI+lKIXt7JxQqSHssEhUWLgAWIbUbT9X9KUTbcw==}
+    engines: {node: '>=8.6.0 <9.0.0 || >=10.0.0'}
 
   y18n@4.0.3:
     resolution: {integrity: sha512-JKhqTOwSrqNA1NY5lSztJ1GrBiUodLMmIZuLiDaMRJ+itFd+ABVE8XBjOvIWL+rSqNDC74LCSFmlb/U4UZ4hJQ==}
@@ -5438,6 +5449,8 @@ snapshots:
     dependencies:
       detect-libc: 2.1.2
 
+  node-gyp-build@4.8.4: {}
+
   node-seal@7.0.0: {}
 
   node-tfhe@1.5.4: {}
@@ -6248,6 +6261,10 @@ snapshots:
       strip-ansi: 7.2.0
 
   wrappy@1.0.2: {}
+
+  xxhash-addon@2.1.0:
+    dependencies:
+      node-gyp-build: 4.8.4
 
   y18n@4.0.3: {}
 

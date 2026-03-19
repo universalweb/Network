@@ -129,7 +129,7 @@ export class HDSeed {
 	}
 	async getPreKey(source = {}) {
 		const sourceStruct = await this.generatePreKeyStruct(assign({}, source));
-		const sourceStructure = hash(await encode(sourceStruct), 256);
+		const sourceStructure = hash(await encode(sourceStruct), this.get('seed_size'));
 		return sourceStructure;
 	}
 	async getKey(source = {}) {
@@ -141,7 +141,7 @@ export class HDSeed {
 	}
 	async getPreNonce(source = {}) {
 		const sourceStruct = await this.generatePreNonceStruct(assign({}, source));
-		const sourceStructure = hash(await encode(sourceStruct), 256);
+		const sourceStructure = hash(await encode(sourceStruct), this.get('seed_size'));
 		return sourceStructure;
 	}
 	async getNonce(source = {}) {
@@ -153,7 +153,7 @@ export class HDSeed {
 	}
 	async getPreSeed(source = {}) {
 		const sourceStruct = await this.generatePreSeedStruct(assign({}, source));
-		const preSeed = await normalize(sourceStruct, 256);
+		const preSeed = await normalize(sourceStruct, this.get('seed_size'));
 		return preSeed;
 	}
 	async getFinalSeed(source = {}, secretHash) {
@@ -165,7 +165,7 @@ export class HDSeed {
 			finalSeedStruct.secret_hash = secretHash;
 		}
 		const sourceStruct = await this.generateSeedStruct(finalSeedStruct);
-		const finalSeed = await normalize(sourceStruct, 256);
+		const finalSeed = await normalize(sourceStruct, this.get('seed_size'));
 		return finalSeed;
 	}
 	async getSeed(source = {}, keyArg, nonceArg, guardKey) {
@@ -173,7 +173,10 @@ export class HDSeed {
 		const key = (!keyArg || isPlainObject(keyArg)) ? await this.getKey(keyArg || source) : keyArg;
 		const nonce = (!nonceArg || isPlainObject(nonceArg)) ? await this.getNonce(nonceArg || source) : nonceArg;
 		const finalSeed = await this.getFinalSeed(source, guardKey);
-		const seed = await kmac(key, finalSeed, seedSize, nonce);
+		const customization = await encode(assign({
+			nonce,
+		}, source));
+		const seed = await kmac(key, finalSeed, seedSize, customization);
 		return seed;
 	}
 	async getTrapdoorSeed(source = {}, keyArg, nonceArg, guardKey) {
