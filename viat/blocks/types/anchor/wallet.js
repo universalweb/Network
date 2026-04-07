@@ -3,7 +3,11 @@ import { typeNames } from '#viat/blocks/defaults';
 export class AnchorBlock extends Block {
 	constructor(data, config) {
 		super(config);
-		return this.initialize(data, config);
+	}
+	static async create(data, config) {
+		const block = new AnchorBlock(data, config);
+		await block.initialize(data, config);
+		return block;
 	}
 	async config(address, config) {
 		await this.setCore('address', address);
@@ -12,7 +16,4 @@ export class AnchorBlock extends Block {
 	}
 	typeName = typeNames.walletAnchor;
 }
-export async function anchorBlock(...args) {
-	const block = await (new AnchorBlock(...args));
-	return block;
-}
+export default AnchorBlock;

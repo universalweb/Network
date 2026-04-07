@@ -1,4 +1,3 @@
-import { assignToClass, isBuffer } from '@universalweb/utilitylib';
 import {
 	filePaths,
 	genericFilenames,
@@ -7,9 +6,10 @@ import {
 	typeNames,
 } from '#viat/blocks/defaults';
 import { Block } from '#viat/blocks/block';
+import { ReceiptBlock } from '#blocks/transactions/receipt/block';
+import { isBuffer } from '@universalweb/utilitylib';
 import path from 'path';
 import { readStructured } from '#utilities/file';
-import { receiptBlock } from '#blocks/transactions/receipt/block';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 import wallet from '#viat/wallet/wallet';
 /*
@@ -17,13 +17,17 @@ import wallet from '#viat/wallet/wallet';
 	TODO: Add receipt hash to reference on receiver DAG which is then copied to the receipt block -> consider having in both for redundancy and for light clients
 	NOTE: TX HASH covers some redundancy in receipt block
 */
-class TransactionBlock extends Block {
+export class TransactionBlock extends Block {
 	constructor(data, config) {
 		super(config);
-		return this.initialize(data, config);
+	}
+	static async create(data, config) {
+		const block = new TransactionBlock(data, config);
+		await block.initialize(data, config);
+		return block;
 	}
 	async createReceipt() {
-		const receipt = await receiptBlock(this);
+		const receipt = await ReceiptBlock.create(this);
 		await receipt.setHash();
 		return receipt;
 	}
@@ -41,12 +45,8 @@ class TransactionBlock extends Block {
 	}
 	typeName = typeNames.transaction;
 }
-export async function transactionBlock(data, config) {
-	const block = await (new TransactionBlock(data, config));
-	return block;
-}
 export async function createTransactionBlock(core, senderWallet) {
-	const tx = await transactionBlock({
+	const tx = await TransactionBlock.create({
 		data: {
 			core,
 		},
@@ -62,7 +62,7 @@ export async function createTransactionBlock(core, senderWallet) {
 	}
 	return tx;
 }
-export default transactionBlock;
+export default TransactionBlock;
 const exampleBlock = await createTransactionBlock({
 	sender: viatCipherSuite.createBlockNonce(20),
 	receiver: viatCipherSuite.createBlockNonce(20),

@@ -1,12 +1,13 @@
-import axios from 'axios';
+// import axios from 'axios';
 import { forEachAsync } from '@universalweb/utilitylib';
 const ipv6Servers = ['https://api64.ipify.org?format=json'];
 const ipv4Servers = ['https://api.ipify.org?format=json'];
 async function fetchFromAPI(url) {
 	try {
-		const response = await axios.get(url);
-		if (response.data && response.data.ip) {
-			return response.data.ip;
+		const response = await fetch(url);
+		const data = await response.json();
+		if (data && data.ip) {
+			return data.ip;
 		} else {
 			// console.error('Failed to retrieve WAN IP address.');
 		}

@@ -1,0 +1,87 @@
+/* ── Shared panel styles ───────────────────────────── */
+.panel {
+	background: var(--bg-panel);
+	border: var(--border-light);
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	min-height: 0;
+	border-radius: 4px;
+}
+
+.nav-panel,
+.nav-menu-panel,
+.stats-panel,
+.wallet-params-panel,
+.output-feed {
+	scrollbar-width: thin;
+	scrollbar-color: var(--grey-mid) transparent;
+	overflow-y: auto;
+}
+
+.nav-panel::-webkit-scrollbar,
+.nav-menu-panel::-webkit-scrollbar,
+.stats-panel::-webkit-scrollbar,
+.wallet-params-panel::-webkit-scrollbar,
+.output-feed::-webkit-scrollbar {
+	width: 6px;
+}
+
+.nav-panel::-webkit-scrollbar-track,
+.nav-menu-panel::-webkit-scrollbar-track,
+.stats-panel::-webkit-scrollbar-track,
+.wallet-params-panel::-webkit-scrollbar-track,
+.output-feed::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.nav-panel::-webkit-scrollbar-thumb,
+.nav-menu-panel::-webkit-scrollbar-thumb,
+.stats-panel::-webkit-scrollbar-thumb,
+.wallet-params-panel::-webkit-scrollbar-thumb,
+.output-feed::-webkit-scrollbar-thumb {
+	background: var(--grey-mid);
+}
+
+.panel-header {
+	padding: 6px 14px 6px 10px;
+	border-bottom: var(--border-light);
+	border-left: 2px solid rgba(0, 240, 255, 0.45);
+	background: var(--bg-dark-mid);
+	font-family: var(--font-mono);
+	font-size: 0.5625rem;
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	color: rgba(200, 210, 230, 0.5);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-shrink: 0;
+	gap: 10px;
+}
+
+.panel-header .ph-id {
+	color: var(--cyan);
+	font-size: 0.5rem;
+	letter-spacing: 0.12em;
+	opacity: 0.8;
+	margin-right: 6px;
+}
+
+.panel-header .ph-cursor {
+	color: var(--cyan);
+	font-size: 0.6875rem;
+	opacity: 0.7;
+	animation: blink-indicator 1.1s steps(1) infinite;
+	margin-left: 4px;
+	line-height: 1;
+}
+
+.panel-header .ph-dot {
+	width: 5px;
+	height: 5px;
+	background: var(--teal);
+	border-radius: 50%;
+	box-shadow: 0 0 4px var(--teal);
+}

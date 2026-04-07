@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Chakra+Petch:wght@400;600;700&display=swap');
+
+/* ── Variables ─────────────────────────────────────── */
+:root {
+	--bg-body: #EEF0F4;
+	--bg-panel: #F8F9FB;
+	--bg-dark: #070C1E;
+	--bg-dark-mid: #0E1528;
+	--navy: #0A1128;
+	--navy-light: #1C2B54;
+	--teal: #006666;
+	--teal-dim: rgba(0, 102, 102, 0.12);
+	--cyan: #00F0FF;
+	--cyan-dim: rgba(0, 240, 255, 0.12);
+	--magenta: #FF0055;
+	--magenta-dim: rgba(255, 0, 85, 0.12);
+	--grey-solid: #9A9FA8;
+	--grey-mid: #3D4458;
+	--text-main: #070C1E;
+	--text-muted: #5A6480;
+	--text-light: #FFFFFF;
+	--text-offwhite: #CDD0D8;
+	--border-main: 1px solid var(--navy);
+	--border-light: 1px solid rgba(10, 17, 40, 0.18);
+	--border-dark: 1px solid rgba(255, 255, 255, 0.06);
+	--font-mono: 'Share Tech Mono', monospace;
+	--font-display: 'Chakra Petch', sans-serif;
+	--grid-pattern: repeating-linear-gradient(rgba(10, 17, 40, 0.05) 0px, rgba(10, 17, 40, 0.05) 1px,
+			transparent 1px, transparent 20px),
+		repeating-linear-gradient(90deg,
+			rgba(10, 17, 40, 0.05) 0px, rgba(10, 17, 40, 0.05) 1px,
+			transparent 1px, transparent 20px);
+	--grid-major: repeating-linear-gradient(rgba(10, 17, 40, 0.12) 0px, rgba(10, 17, 40, 0.12) 1px,
+			transparent 1px, transparent 100px),
+		repeating-linear-gradient(90deg,
+			rgba(10, 17, 40, 0.12) 0px, rgba(10, 17, 40, 0.12) 1px,
+			transparent 1px, transparent 100px);
+	--hatch: repeating-linear-gradient(45deg, transparent, transparent 2px,
+			rgba(10, 17, 40, 0.04) 2px, rgba(10, 17, 40, 0.04) 4px);
+}

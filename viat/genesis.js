@@ -1,9 +1,8 @@
 import fs from 'fs-extra';
-import genesisWalletBlock from '#viat/blocks/genesisWallet/block';
+import { GenesisWalletBlock } from '#blocks/system/wallet/block';
 import { getViatDirectory } from '#utilities/directory';
 import { superstructure } from '#viat/superstructure/index';
 import wallet from '#viat/wallet/wallet';
-import walletBlock from '#viat/blocks/wallet/block';
 await fs.remove(getViatDirectory());
 const viatNetwork = await superstructure({
 	networkName: 'mainnet',
@@ -26,7 +25,7 @@ async function createGenesisWallets(superstuct) {
 	const reserveVaultAddress = await reserveVaultBlock.getAddress();
 	const originVaultAddress = await originVaultBlock.getAddress();
 	// Create a genesis block and set each address as a separate property in its core
-	const genesisWallet = await genesisWalletBlock();
+	const genesisWallet = await GenesisWalletBlock.create();
 	await genesisWallet.setCore('teamVault', teamAddress);
 	await genesisWallet.setCore('reserveVault', reserveVaultAddress);
 	await genesisWallet.setCore('originVault', originVaultAddress);

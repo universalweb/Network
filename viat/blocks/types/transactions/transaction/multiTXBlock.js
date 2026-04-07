@@ -1,6 +1,6 @@
-import { transactionBlock } from './block';
+import { TransactionBlock } from './block';
 import viatCipherSuite from '#crypto/cipherSuite/viat';
-const exampleBlock = await transactionBlock({
+const exampleBlock = await TransactionBlock.create({
 	total: 1000n,
 	// transactions going out
 	output: [

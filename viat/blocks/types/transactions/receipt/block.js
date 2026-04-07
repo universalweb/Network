@@ -11,7 +11,11 @@ import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 export class ReceiptBlock extends Block {
 	constructor(data, config) {
 		super(config);
-		return this.initialize(data, config);
+	}
+	static async create(data, config) {
+		const block = new ReceiptBlock(data, config);
+		await block.initialize(data, config);
+		return block;
 	}
 	async getTransactionDirectory() {
 		const txPath = this.filesystemConfig.getTransactionDirectory(await this.getCore('transaction'), await this.getCore('sender'));
@@ -42,12 +46,8 @@ export class ReceiptBlock extends Block {
 	}
 	typeName = typeNames.receipt;
 }
-export async function receiptBlock(data, config) {
-	const block = await (new ReceiptBlock(data, config));
-	return block;
-}
-export default receiptBlock;
-// const exampleBlock = await receiptBlock({
+export default ReceiptBlock;
+// const exampleBlock = await ReceiptBlock.create({
 // 	data: {
 // 		core: {
 // 			sender: viatCipherSuite.createBlockNonce(20),

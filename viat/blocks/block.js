@@ -25,6 +25,11 @@ export class Block {
 	constructor(config) {
 		return this;
 	}
+	static async create(data, config) {
+		const block = new Block(data, config);
+		await block.initialize(data, config);
+		return block;
+	}
 	async initialize(data, config, ...args) {
 		this.blockType = blockTypes[this.typeName];
 		this.fileType = fileExtensions[this.typeName];
@@ -120,11 +125,7 @@ extendClass(Block, filesystemMethods);
 extendClass(Block, hashingMethods);
 extendClass(Block, signatureMethods);
 extendClass(Block, validateMethods);
-export async function block(...args) {
-	const source = construct(Block, args);
-	return source;
-}
-export default block;
+export default Block;
 // const example = await block();
 // const exampleWallet = await wallet();
 // await example.initialize();

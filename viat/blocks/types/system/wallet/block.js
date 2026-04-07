@@ -10,7 +10,11 @@ import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 export class GenesisWalletBlock extends Block {
 	constructor(data, config) {
 		super(config);
-		return this.initialize(data, config);
+	}
+	static async create(data, config) {
+		const block = new GenesisWalletBlock(data, config);
+		await block.initialize(data, config);
+		return block;
 	}
 	async setDefaults() {
 		await super.setDefaults();
@@ -52,12 +56,8 @@ export class GenesisWalletBlock extends Block {
 		return `/${genericFilenames.genesisWallet}`;
 	}
 }
-export async function genesisWalletBlock(data, config) {
-	const block = await (new GenesisWalletBlock(data, config));
-	return block;
-}
-export default genesisWalletBlock;
-// const exampleBlock = await genesisWalletBlock({});
+export default GenesisWalletBlock;
+// const exampleBlock = await GenesisWalletBlock.create({});
 // await exampleBlock.finalize();
 // await exampleBlock.setHashXOF();
 // console.log('Genesis Block', exampleBlock.block);

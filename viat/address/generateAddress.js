@@ -26,7 +26,7 @@ export function createLegacyAddressStruct(publicKey, trapdoor) {
 		publicKey,
 		trapdoor,
 	];
-	return source;
+	return Buffer.concat(source);
 }
 // NOTE: Legacy addresses have a strict format and the address size is restricted to this legacy format
 export async function createLegacyAddress(publicKey, trapdoor) {
@@ -55,6 +55,8 @@ export async function createModularAddress(publicKey, trapdoor, cipher, version 
 	// NOTE: Small int values are only 1 byte in CBOR 0-23 so no wasted space
 	// NOTE: Could include trapdoor checksum or hash if a address was only receiving viat and want extra security
 	// NOTE: Kind could be used to indicate multisig or other future features
+	// NOTE: Consider OBJECT based instead of array based for more flexible future proofing and readability but would require more complex encoding and more bytes used for small addresses
+	// NOTE: Compact array version can work keep other meta data inside of a wallet block and address is required vars
 	const target = await encode([
 		kind, version, cipher, addressHash,
 	]);

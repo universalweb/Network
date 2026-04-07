@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>VIAT :: WALLET</title>
+		<link rel="stylesheet" href="https://mshaugh.github.io/nerdfont-webfonts/build/jetbrainsmono.css">
+		<link rel="stylesheet" href="styles/index.css">
+	</head>
+
+	<body>
+		<!-- Viewport frame corners -->
+		<div class="vp-frame">
+			<div class="corner corner-tl"></div>
+			<div class="corner corner-tr"></div>
+			<div class="corner corner-bl"></div>
+			<div class="corner corner-br"></div>
+		</div>
+		<!-- ═══════════════ DASHBOARD ═══════════════ -->
+		<div class="dashboard">
+			<!-- ── TOP BAR ── -->
+			<header class="top-bar">
+				<div class="tb-logo">
+					<div class="tb-logo-mark"></div> VIAT <span class="tb-logo-sep">::</span>
+					<span class="tb-subtitle">WALLET INTERFACE</span>
+				</div>
+				<div class="tb-status">
+					<button class="tb-icon-btn" title="Profile">&#xf007;</button>
+					<button class="tb-icon-btn" title="Settings">&#xe615;</button>
+					<div class="tb-network-badge">MAINNET</div>
+				</div>
+			</header>
+			<!-- ── BODY ROW ── -->
+			<div class="body-row">
+				<!-- ── LEFT NAV COLUMN ── -->
+				<div class="nav-col">
+					<!-- Account Panel -->
+					<nav class="panel nav-panel">
+						<div class="panel-header">
+							<span><span class="ph-id">ACCOUNT</span> // OVERVIEW</span>
+							<div class="ph-dot"></div>
+						</div>
+						<div class="account-display">
+							<div class="account-top">
+								<div class="profile-meta">
+									<div class="profile-label">Profile</div>
+									<div class="profile-name">Thomas Marchi</div>
+									<div class="profile-status">Wallet Active</div>
+								</div>
+							</div>
+							<div class="account-grid">
+								<div class="account-field wide">
+									<div class="account-field-label">Wallet Address</div>
+									<div class="account-field-value">viat1qqtm4archi9x7v3f0pqnet5secure8c2n4z9kq1x8w</div>
+								</div>
+							</div>
+							<button class="account-action">[ Create WALLET ]</button>
+						</div>
+					</nav>
+					<!-- Navigator Panel -->
+					<nav class="panel nav-menu-panel">
+						<div class="panel-header">
+							<span><span class="ph-id">NAV</span> // MENU</span>
+							<div class="ph-dot"></div>
+						</div>
+						<!-- Account section -->
+						<div class="nav-section">
+							<div class="nav-section-label">ACCOUNT</div>
+							<div class="nav-item active">&#x25A0; Account</div>
+							<div class="nav-sub-item">Profile</div>
+							<div class="nav-sub-item">Export</div>
+							<div class="nav-sub-item">Settings</div>
+							<div class="nav-sub-item">Cryptography Info</div>
+							<div class="nav-sub-item">Cryptographic Identity</div>
+						</div>
+						<!-- Wallet section -->
+						<div class="nav-section">
+							<div class="nav-section-label">WALLET OPERATIONS</div>
+							<div class="nav-item">&#x25A0; Wallet</div>
+							<div class="nav-item">&#x25A0; Faucet</div>
+						</div>
+						<div class="nav-bottom">
+						</div>
+					</nav>
+				</div>
+				<!-- ── CENTER COLUMN ── -->
+				<div class="center-col">
+					<!-- Wallet Amount Panel -->
+					<section class="wallet-amount-panel">
+						<div class="wa-label">RESOURCE ALLOCATION</div>
+						<div class="wa-amount-main">142,894</div>
+						<div class="wa-amount-full">142,894.500000000 VIAT</div>
+						<div class="wa-viat-info">
+							<div class="wa-viat-symbol">V</div>
+							<span>VIAT &mdash; Post-Quantum Network Asset</span>
+						</div>
+					</section>
+					<!-- Transmit Funds Panel -->
+					<section class="transmit-panel panel">
+						<div class="panel-header">
+							<span><span class="ph-id">TX</span> // SEND VIAT</span>
+							<div class="ph-dot"></div>
+						</div>
+						<div class="transmit-body">
+							<!-- Amount -->
+							<div class="field">
+								<div class="field-head">
+									<div class="field-label">Amount</div>
+								</div>
+								<div class="field-with-addon">
+									<input type="text" placeholder="0.00000000">
+									<div class="field-addon">VIAT</div>
+								</div>
+							</div>
+							<!-- Gas -->
+							<div class="field">
+								<div class="field-head">
+									<div class="field-label">Gas</div>
+								</div>
+								<input type="text" value="0" readonly>
+							</div>
+							<!-- Address (full width) -->
+							<div class="field full-width">
+								<div class="field-label">Recipient Address</div>
+								<input type="text" placeholder="viat1...">
+							</div>
+							<!-- Transmit Button -->
+							<button class="btn-transmit"> [ INITIATE TRANSFER ] </button>
+						</div>
+					</section>
+					<!-- Address Logs Panel -->
+					<section class="output-panel">
+						<div class="panel-header">
+							<span><span class="ph-id">ACTIVITY</span> // LOG</span>
+							<div class="ph-dot" style="background:var(--cyan); box-shadow:0 0 4px var(--cyan);"></div>
+						</div>
+						<div class="output-tabs">
+							<div class="output-tab active">All</div>
+							<div class="output-tab">Inbound</div>
+							<div class="output-tab">Outbound</div>
+						</div>
+						<div class="output-feed">
+							<div class="log-entry">
+								<span class="log-ts">00:00:01</span>
+								<span class="log-tag log-tag-in">&#x2199;</span>
+								<span class="log-msg ok">viat1m8p4...2n7qsa :: +12.400000000 VIAT :: CONFIRMED :: 0x8f2a9c1b</span>
+							</div>
+							<div class="log-entry">
+								<span class="log-ts">00:00:02</span>
+								<span class="log-tag log-tag-out">&#x2197;</span>
+								<span class="log-msg">viat1qqtm...9kq1x8w :: -0.750000000 VIAT :: SENT TO viat1r9k2...v3mx0d</span>
+							</div>
+							<div class="log-entry">
+								<span class="log-ts">00:00:03</span>
+								<span class="log-tag log-tag-in">&#x2199;</span>
+								<span class="log-msg ok">viat1qqtm...9kq1x8w :: +1.000000000 VIAT :: RECEIVED FROM viat1m8p4...2n7qsa</span>
+							</div>
+							<div class="log-entry">
+								<span class="log-ts">00:00:04</span>
+								<span class="log-tag log-tag-out">&#x2197;</span>
+								<span class="log-msg">viat1qqtm...9kq1x8w :: -2.145000000 VIAT :: GAS 0.000000000 :: PENDING</span>
+							</div>
+							<div class="log-entry">
+								<span class="log-ts">00:00:05</span>
+								<span class="log-tag log-tag-in">&#x2199;</span>
+								<span class="log-msg ok">viat1qqtm...9kq1x8w :: +0.250000000 VIAT :: CONFIRMED :: 0x1a9e4f22</span>
+							</div>
+							<div class="log-entry">
+								<span class="log-ts">00:00:06</span>
+								<span class="log-tag log-tag-out">&#x2197;</span>
+								<span class="log-msg">viat1qqtm...9kq1x8w :: -18.000000000 VIAT :: SENT TO viat1e1d0...0a9k2m</span>
+							</div>
+							<div class="log-entry">
+								<span class="log-ts">00:00:07</span>
+								<span class="log-tag log-tag-out">&#x2197;</span>
+								<span class="log-msg warn">viat1qqtm...9kq1x8w :: -140.000000000 VIAT :: FLAGGED :: REVIEW REQUIRED</span>
+							</div>
+							<div class="log-entry">
+								<span class="log-ts">00:00:09</span>
+								<span class="log-tag log-tag-in">&#x2199;</span>
+								<span class="log-msg ok">viat1qqtm...9kq1x8w :: +4.000000000 VIAT :: CONFIRMED :: 0xbc1qx7tr</span>
+							</div>
+						</div>
+					</section>
+				</div>
+				<!-- ── RIGHT STATS COLUMN ── -->
+				<div class="stats-col">
+					<!-- Wallet Crypto Info Panel -->
+					<aside class="panel wallet-params-panel">
+						<div class="panel-header">
+							<span><span class="ph-id">WALLET</span> // PARAMETERS</span>
+							<div class="ph-dot"></div>
+						</div>
+						<div class="stat-block">
+							<div class="stat-row">
+								<span class="s-key">Scheme</span>
+								<span class="s-val">Kyber-1024</span>
+							</div>
+							<div class="stat-row">
+								<span class="s-key">Version</span>
+								<span class="s-val">v1.0.0</span>
+							</div>
+							<div class="stat-row">
+								<span class="s-key">Seed Count</span>
+								<span class="s-val">1</span>
+							</div>
+							<div class="stat-row">
+								<span class="s-key">HD Version</span>
+								<span class="s-val">v1</span>
+							</div>
+							<div class="stat-row">
+								<span class="s-key">Master Size</span>
+								<span class="s-val">1,024 B</span>
+							</div>
+							<div class="stat-row">
+								<span class="s-key">Trapdoor</span>
+								<span class="s-val pq" style="word-break:break-all; max-width:140px; text-align:right;">Z3VpZGFuY2U...</span>
+							</div>
+							<div class="stat-row">
+								<span class="s-key">Addr Size</span>
+								<span class="s-val">64 B</span>
+							</div>
+							<div class="stat-row">
+								<span class="s-key">Trap Size</span>
+								<span class="s-val">32 B</span>
+							</div>
+							<div class="stat-row">
+								<span class="s-key">Pub/Priv Key</span>
+								<span class="s-val">2.5/4.8 KB</span>
+							</div>
+							<div class="stat-row">
+								<span class="s-key">Seed Size</span>
+								<span class="s-val">32 B</span>
+							</div>
+						</div>
+					</aside>
+					<!-- Network/Node Stats Panel -->
+					<aside class="panel stats-panel">
+						<div class="panel-header">
+							<span><span class="ph-id">NET</span> // NODE STATUS</span>
+							<div class="ph-dot"></div>
+						</div>
+						<div class="stat-block">
+							<div class="stat-block-title">NETWORK DATA</div>
+							<div class="stat-row">
+								<span class="s-key">Peers</span>
+								<span class="s-val good">48 Active</span>
+							</div>
+							<div class="stat-row">
+								<span class="s-key">Network</span>
+								<span class="s-val">Viat Mainnet v1</span>
+							</div>
+							<div class="stat-row">
+								<span class="s-key">Latency</span>
+								<span class="s-val good">14 ms</span>
+							</div>
+							<div class="stat-latency-bar">
+								<div class="stat-latency-fill"></div>
+							</div>
+							<div class="stat-row">
+								<span class="s-key">Connection</span>
+								<span class="s-val pq">HTTP Hybrid Post-Quantum</span>
+							</div>
+						</div>
+						<div class="stat-block">
+							<div class="stat-block-title">CHAIN STATUS</div>
+							<div class="stat-row">
+								<span class="s-key">Block</span>
+								<span class="s-val">#4,291,842</span>
+							</div>
+							<div class="stat-row">
+								<span class="s-key">Status</span>
+								<span class="s-val good">In Sync</span>
+							</div>
+							<div class="stat-row">
+								<span class="s-key">Algorithm</span>
+								<span class="s-val pq">SHAKE-256 / CRYSTALS</span>
+							</div>
+						</div>
+					</aside>
+				</div>
+			</div>
+			<!-- ── BOTTOM FOOTER BAR ── -->
+			<footer class="bottom-bar">
+				<!-- Col 1 – App & Client Info -->
+				<div class="bb-col">
+					<h4>CLIENT MODULE</h4>
+					<ul class="bb-list">
+						<li><span>Version</span><span>v1.0.0</span></li>
+						<li><span>Client</span><span>VIAT Web</span></li>
+						<li><span>Key State</span><span>Secure</span></li>
+						<li><span>Encryption</span><span>PQ-Kyber1024</span></li>
+					</ul>
+				</div>
+				<!-- Col 2 – Viat Info -->
+				<div class="bb-col">
+					<h4>ASSET PROTOCOL</h4>
+					<ul class="bb-list">
+						<li><span>Symbol</span><span>VIAT</span></li>
+						<li><span>Decimals</span><span>9</span></li>
+						<li><span>Protocol</span><span>UDSP v1</span></li>
+						<li><span>Consensus</span><span>Proof-of-Work</span></li>
+					</ul>
+				</div>
+				<!-- Col 3 – Network / Node Info -->
+				<div class="bb-col">
+					<h4>NODE STATUS</h4>
+					<ul class="bb-list">
+						<li><span>Network</span><span>Mainnet</span></li>
+						<li><span>Node ID</span><span>NODE-TYO-09</span></li>
+						<li><span>Peers</span><span>48</span></li>
+						<li><span>Port</span><span>UDP/443</span></li>
+					</ul>
+				</div>
+				<!-- Col 4 – Domain URL Info -->
+				<div class="bb-col">
+					<h4>ACCESS POINT</h4>
+					<ul class="bb-list">
+						<li><span>Domain</span><span>wallet.viat.network</span></li>
+						<li><span>Protocol</span><span>HTTPS + UDSP</span></li>
+						<li><span>TLS</span><span>PQ-Hybrid v1</span></li>
+						<li><span>Origin</span><span>viat.network</span></li>
+					</ul>
+				</div>
+				<!-- Col 5 – Site Info -->
+				<div class="bb-col">
+					<h4>BUILD DATA</h4>
+					<ul class="bb-list">
+						<li><span>Build</span><span>2026.03.24</span></li>
+						<li><span>Environment</span><span>Production</span></li>
+						<li><span>CDN</span><span>None (P2P)</span></li>
+						<li><span>License</span><span>MIT</span></li>
+					</ul>
+				</div>
+			</footer>
+		</div>
+	</body>
+
+</html>

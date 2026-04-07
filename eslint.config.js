@@ -16,7 +16,7 @@ const customGlobals = {
 	status: 'off',
 	VIAT: 'off',
 	crypto: 'off',
-	Bun: 'off',
+	Bun: 'readonly',
 };
 function addGlobals(keysObject) {
 	const keys = Object.keys(keysObject);

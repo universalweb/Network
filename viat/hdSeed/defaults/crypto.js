@@ -61,15 +61,15 @@ export const TRAPDOOR_SCHEME_TYPES = {
  * material corresponding to specific cryptographic scheme derivations.
  */
 export const SEED_SIZES = {
-	[SCHEME_TYPES.ML_KEM_512]: 64,
-	[SCHEME_TYPES.ML_KEM_768]: 64,
-	[SCHEME_TYPES.ML_KEM_1024]: 64,
+	[SCHEME_TYPES.ML_KEM_512]: 32,
+	[SCHEME_TYPES.ML_KEM_768]: 32,
+	[SCHEME_TYPES.ML_KEM_1024]: 32,
 	[SCHEME_TYPES.ML_DSA_44]: 32,
 	[SCHEME_TYPES.ML_DSA_65]: 32,
 	[SCHEME_TYPES.ML_DSA_87]: 32,
-	[SCHEME_TYPES.SPHINCS_128S]: 48,
-	[SCHEME_TYPES.SPHINCS_256S]: 64,
-	[SCHEME_TYPES.SLH_DSA]: 48,
+	[SCHEME_TYPES.SPHINCS_128S]: 32,
+	[SCHEME_TYPES.SPHINCS_256S]: 32,
+	[SCHEME_TYPES.SLH_DSA]: 32,
 	[SCHEME_TYPES.SYMMETRIC_256]: 32,
 	[SCHEME_TYPES.SYMMETRIC_512]: 64,
 };
@@ -101,14 +101,6 @@ export const CONTEXT_INTENTION = {
 	FINAL_SEED: 3,
 	KEYPAIR: 4,
 	SECRET_KEY: 5,
-};
-/**
- * Specifies the derivation mode or behavior applied across the HD seed hierarchy.
- * E.g., CHAIN applies linked chaining logic to deterministic derivations.
- */
-export const MODES = {
-	DEFAULT: 0,
-	CHAIN: 1,
 };
 // Purpose codes for key usage
 /**
@@ -207,7 +199,6 @@ export default {
 	SEED_SIZES,
 	SCHEMES_BY_ID,
 	CONTEXT_INTENTION,
-	MODES,
 	PURPOSE,
 	HASH_ALGORITHMS,
 	KEYED_HASH_ALGORITHMS,

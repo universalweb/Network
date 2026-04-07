@@ -1,0 +1,46 @@
+/* ── Viewport corner brackets ──────────────────────── */
+.vp-frame {
+	position: fixed;
+	top: 16px;
+	left: 16px;
+	right: 16px;
+	bottom: 16px;
+	border: 1px solid rgba(10, 17, 40, 0.2);
+	pointer-events: none;
+	z-index: 100;
+}
+
+.corner {
+	position: absolute;
+	width: 14px;
+	height: 14px;
+	border: 2px solid var(--magenta);
+}
+
+.corner-tl {
+	top: -2px;
+	left: -2px;
+	border-right: none;
+	border-bottom: none;
+}
+
+.corner-tr {
+	top: -2px;
+	right: -2px;
+	border-left: none;
+	border-bottom: none;
+}
+
+.corner-bl {
+	bottom: -2px;
+	left: -2px;
+	border-right: none;
+	border-top: none;
+}
+
+.corner-br {
+	bottom: -2px;
+	right: -2px;
+	border-left: none;
+	border-top: none;
+}
