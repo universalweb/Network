@@ -33,7 +33,7 @@
 		"cors": "^2.8.6",
 		"directory-tree": "^3.6.0",
 		"du": "^1.0.0",
-		"electron": "^40.8.0",
+		"electron": "^40.8.5",
 		"esbuild": "^0.27.3",
 		"express": "^5.2.1",
 		"fs-extra": "^11.3.4",
