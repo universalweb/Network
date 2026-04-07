@@ -15,7 +15,6 @@ import { remove } from 'fs-extra';
 import { runBench } from '#utilities/benchmark';
 import { superstructure } from '#viat/superstructure/index';
 import { toSmallestUnit } from '#viat/math/coin';
-import { walletBlock } from '#blocks/wallet/block';
 const viatNetwork = await superstructure({
 	networkName: 'mainnet',
 });

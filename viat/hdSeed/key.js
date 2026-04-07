@@ -14,8 +14,14 @@ export async function createNonce(source, size = SECRET_KEY_SIZES.key_64_bytes) 
 	console.log('Nonce Created', result);
 	return result;
 }
+export async function createSalt(source, size = SECRET_KEY_SIZES.key_64_bytes) {
+	const result = await normalize(source, size);
+	console.log('Salt Created', result);
+	return result;
+}
 async function example() {
 	console.log(await (createKey({})));
 	console.log(await (createNonce({})));
+	console.log(await (createSalt({})));
 }
 // await example();

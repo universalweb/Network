@@ -13,9 +13,9 @@ import { getHomeDirectory } from '#utilities/directory';
 import { loadBlock } from '#viat/blocks/utils';
 import logMethods from '#utilities/logs/classLogMethods';
 import { toBase64 } from '#crypto/utils.js';
-import { transactionBlock } from '#blocks/transactions/transaction/block';
+import { TransactionBlock } from '#blocks/transactions/transaction/block';
 import { wallet } from '#viat/wallet/wallet';
-import walletBlock from '#blocks/wallet/block';
+import WalletBlock from '#blocks/wallet/block';
 export class Superstructure {
 	logLevel = 4;
 	constructor(config = {}) {
@@ -58,7 +58,7 @@ export class Superstructure {
 	}
 	async createTransaction(core, walletArg) {
 		const sender = (walletArg.getAddress) ? await walletArg.getAddress() : walletArg;
-		const txBlock = await transactionBlock({
+		const txBlock = await TransactionBlock.create({
 			data: {
 				core,
 			},
@@ -116,7 +116,7 @@ export class Superstructure {
 		return this;
 	}
 	async createWalletBlock(walletArg) {
-		const source = await walletBlock(walletArg);
+		const source = await WalletBlock.create(walletArg);
 		await source.setParent(await this.genesisWalletBlock.hashBlock());
 		await source.finalize();
 		await source.sign(walletArg);

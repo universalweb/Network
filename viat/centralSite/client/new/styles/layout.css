@@ -1,0 +1,74 @@
+/* ── Dashboard wrapper ─────────────────────────────── */
+.dashboard {
+	position: relative;
+	width: calc(200vw - 48px);
+	height: calc(100vh - 48px);
+	max-width: 1680px;
+	display: grid;
+	grid-template-rows: 56px 1fr auto;
+	grid-template-columns: 1fr;
+	gap: 8px;
+	padding: 8px;
+	background: transparent;
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
+	overflow: hidden;
+}
+
+.dashboard::before {
+	content: none;
+}
+
+.dashboard::after {
+	content: none;
+}
+
+/* ══════════════════════════════════════════════════════
+   BODY ROW  (Left Nav | Center Content | Right Stats)
+══════════════════════════════════════════════════════ */
+.body-row {
+	grid-row: 2;
+	grid-column: 1;
+	display: grid;
+	grid-template-columns: 240px 1fr 300px;
+	gap: 8px;
+	overflow: hidden;
+}
+
+.body-row > * {
+	min-width: 0;
+	min-height: 0;
+}
+
+/* ── Column wrappers ───────────────────────────────── */
+.nav-col,
+.stats-col {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	overflow: hidden;
+	min-height: 0;
+}
+
+.center-col {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	overflow-y: auto;
+	min-height: 0;
+	scrollbar-width: thin;
+	scrollbar-color: var(--grey-mid) transparent;
+}
+
+.center-col::-webkit-scrollbar {
+	width: 6px;
+}
+
+.center-col::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.center-col::-webkit-scrollbar-thumb {
+	background: var(--grey-mid);
+}

@@ -102,14 +102,6 @@ export const CONTEXT_INTENTION = {
 	KEYPAIR: 4,
 	SECRET_KEY: 5,
 };
-/**
- * Specifies the derivation mode or behavior applied across the HD seed hierarchy.
- * E.g., CHAIN applies linked chaining logic to deterministic derivations.
- */
-export const MODES = {
-	DEFAULT: 0,
-	CHAIN: 1,
-};
 // Purpose codes for key usage
 /**
  * Designates the functional purpose of a key/seed within the HDST paths,
@@ -207,7 +199,6 @@ export default {
 	SEED_SIZES,
 	SCHEMES_BY_ID,
 	CONTEXT_INTENTION,
-	MODES,
 	PURPOSE,
 	HASH_ALGORITHMS,
 	KEYED_HASH_ALGORITHMS,

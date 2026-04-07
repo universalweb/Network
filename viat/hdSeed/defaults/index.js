@@ -7,11 +7,18 @@
 import aiDefaults from './ai.js';
 import cryptoCurrencyDefaults from './cryptocurrency.js';
 import cryptoDefaults from './crypto.js';
+import { keys } from '@universalweb/utilitylib';
 import serviceDefaults from './service.js';
 const {
-	CONTEXT_INTENTION, MODES, PURPOSE, SCHEME_TYPES,
+	CONTEXT_INTENTION, PURPOSE, SCHEME_TYPES,
+	TRAPDOOR_SCHEME_TYPES, SEED_SIZES, SCHEMES_BY_ID, HASH_ALGORITHMS,
+	KEYED_HASH_ALGORITHMS, XOF_HASH_ALGORITHMS, USER_INPUT_HASH_ALGORITHMS,
+	MASTER_ENTROPY_POOL_SIZES,
 } = cryptoDefaults;
 const { CRYPTOCURRENCY_NETWORK_TYPES } = cryptoCurrencyDefaults;
+const {
+	NETWORK_NAMES, SERVICE_TYPES, SERVICE_NETWORK_TYPES, APP_PLATFORMS, APP_TYPES, OPERATING_SYSTEMS, MOBILE_BRANDS,
+} = serviceDefaults;
 /**
  * Represents the type of cryptographic object being generated or derived in the HDST
  * sequence, distinguishing between pre-states and final deterministic outputs.
@@ -124,7 +131,6 @@ export const DERIVATION_TYPES = {
 export const DEFAULT_KEY_STRUCTURE = {
 	scheme: SCHEME_TYPES.MASTER,
 	context_intention: CONTEXT_INTENTION.FINAL_SEED,
-	mode: MODES.DEFAULT,
 };
 /**
  * Defines a universal baseline object structure utilized as the generic
@@ -149,6 +155,50 @@ export const DEFAULT_CUSTOMIZATION_NONCE_STRUCTURE = {
 	profile: PROFILE_TYPES.PERSONAL,
 	purpose: PURPOSE.KEY,
 };
+// Generator function to create reverse lookup maps
+function createReverseLookup(obj) {
+	if (!obj) {
+		console.error('createReverseLookup requires an object');
+		throw new Error('Invalid object provided to createReverseLookup');
+	}
+	const result = new Map();
+	for (const key in obj) {
+		if (Object.hasOwn(obj, key)) {
+			result.set(obj[key], key);
+		}
+	}
+	return result;
+}
+export const PROPERTY_NAMES = {
+	context_intention: CONTEXT_INTENTION,
+	cryptocurrency_network_type: CRYPTOCURRENCY_NETWORK_TYPES,
+	hash_algorithm: HASH_ALGORITHMS,
+	horizontal_id: null,
+	id: null,
+	keyed_hash_algorithm: KEYED_HASH_ALGORITHMS,
+	object_type: OBJECT_TYPE,
+	master_key: null,
+	master_nonce: null,
+	master_salt: null,
+	master_seed: null,
+	network_name: NETWORK_NAMES,
+	profile_type: PROFILE_TYPES,
+	purpose: PURPOSE,
+	relationship: RELATIONSHIP,
+	scheme: SCHEME_TYPES,
+	seed_size: MASTER_ENTROPY_POOL_SIZES,
+	trapdoor_scheme: TRAPDOOR_SCHEME_TYPES,
+	version: null,
+	vertical_id: null,
+	xof_hash_algorithm: XOF_HASH_ALGORITHMS,
+	user_input_hash_algorithm: USER_INPUT_HASH_ALGORITHMS,
+};
+export const VALID_PROPERTY_NAMES = keys(PROPERTY_NAMES);
+export const PROPERTY_LOOKUP = {};
+VALID_PROPERTY_NAMES.forEach((propName) => {
+	PROPERTY_NAMES[propName] && (PROPERTY_LOOKUP[propName] = createReverseLookup(PROPERTY_NAMES[propName]));
+});
+console.log('PROPERTY_LOOKUP', PROPERTY_LOOKUP);
 const defaultOptions = {
 	DIRECTION,
 	RELATIONSHIP,
@@ -160,6 +210,7 @@ const defaultOptions = {
 	DEFAULT_KEY_STRUCTURE,
 	DEFAULT_SEED_STRUCTURE,
 	DEFAULT_CUSTOMIZATION_NONCE_STRUCTURE,
+	VALID_PROPERTY_NAMES,
 	...aiDefaults,
 	...cryptoDefaults,
 	...cryptoCurrencyDefaults,

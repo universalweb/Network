@@ -11,7 +11,11 @@ import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 export class GenesisBlock extends Block {
 	constructor(data, config) {
 		super(config);
-		return this.initialize(data, config);
+	}
+	static async create(data, config) {
+		const block = new GenesisBlock(data, config);
+		await block.initialize(data, config);
+		return block;
 	}
 	async setDefaults() {
 		await super.setDefaults();
@@ -46,12 +50,8 @@ export class GenesisBlock extends Block {
 	};
 	typeName = typeNames.genesis;
 }
-export async function genesisBlock(data, config) {
-	const block = await (new GenesisBlock(data, config));
-	return block;
-}
-export default genesisBlock;
-// const exampleBlock = await genesisBlock({});
+export default GenesisBlock;
+// const exampleBlock = await GenesisBlock.create({});
 // await exampleBlock.finalize();
 // await exampleBlock.setHashXOF();
 // console.log('Genesis Block Hash', exampleBlock.block.hash.length);

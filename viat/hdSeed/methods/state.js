@@ -3,6 +3,9 @@ import {
 	hasValue, isArray, isMap, isPlainObject, isString, isUndefined,
 } from '@universalweb/utilitylib';
 export async function getState(key) {
+	if (!key) {
+		return this.getAll();
+	}
 	if (isUndefined(key)) {
 		return this.getAll();
 	}
@@ -24,6 +27,10 @@ export async function getState(key) {
 	}
 }
 export async function setState(key, value) {
+	if (!key) {
+		console.warn('No key provided to setState');
+		return this;
+	}
 	if (value) {
 		this.STATE.set(key, value);
 		return this;
@@ -57,8 +64,42 @@ export async function pluck(key, target = {}) {
 	}
 	return target;
 }
+export async function getAll() {
+	const mapIter = this.STATE.entries();
+	const objectMap = {};
+	this.STATE.forEach((value, key) => {
+		objectMap[key] = value;
+	});
+	return objectMap;
+}
+export async function zeroBuffers() {
+	const {
+		master_seed, master_key, master_nonce,
+	} = await this.getAll();
+	if (master_seed) {
+		master_seed.fill(0);
+	}
+	if (master_key) {
+		master_key.fill(0);
+	}
+	if (master_nonce) {
+		master_nonce.fill(0);
+	}
+	return this;
+}
+export async function exportObject() {
+	return this.getAll();
+}
+export async function importObject(source) {
+	await this.set(source);
+	return this;
+}
 export default {
 	get: getState,
 	set: setState,
 	pluck,
+	getAll,
+	zeroBuffers,
+	exportObject,
+	importObject,
 };

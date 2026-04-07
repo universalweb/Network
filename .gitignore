@@ -86,3 +86,6 @@ tigerbeetle/*
 .github/instructions/nx.instructions.md
 
 prototype*.html
+
+/data/
+viat/neural/

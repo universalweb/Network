@@ -10,13 +10,16 @@ import VIAT_DEFAULTS from '#viat/defaults';
 import { assignToClass } from '@universalweb/utilitylib';
 import path from 'path';
 import { readStructured } from '#utilities/file';
-import { receiptBlock } from '#blocks/transactions/receipt/block';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 import wallet from '#viat/wallet/wallet';
 export class WalletBlock extends Block {
 	constructor(data, config) {
 		super(config);
-		return this.initialize(data, config);
+	}
+	static async create(data, config) {
+		const block = new WalletBlock(data, config);
+		await block.initialize(data, config);
+		return block;
 	}
 	async configByWallet(data, config) {
 		const walletObject = await data.exportObject();
@@ -64,14 +67,10 @@ export class WalletBlock extends Block {
 	// blockSchema = walletBlockSchema;
 	typeName = typeNames.wallet;
 }
-export async function walletBlock(...args) {
-	const block = await (new WalletBlock(...args));
-	return block;
-}
-export default walletBlock;
+export default WalletBlock;
 // const amy = await wallet();
 // console.log(await amy.exportObject());
-// const exampleBlock = await walletBlock(amy);
+// const exampleBlock = await WalletBlock.create(amy);
 // await exampleBlock.finalize();
 // await exampleBlock.sign(amy);
 // console.log(exampleBlock.block);

@@ -1,26 +1,26 @@
-import { Block, block } from './block.js';
+import { Block } from './block.js';
 import { blockTypes } from '#viat/blocks/defaults';
-import { genesisBlock } from '#blocks/system/genesis/block';
-import { genesisWalletBlock } from '#blocks/system/wallet/block';
+import { GenesisBlock } from '#blocks/system/genesis/block';
+import { GenesisWalletBlock } from '#blocks/system/wallet/block';
 import path from 'path';
 import { readStructured } from '#utilities/file';
-import { receiptBlock } from '#blocks/transactions/receipt/block';
-import { transactionBlock } from '#blocks/transactions/transaction/block';
-import { walletBlock } from '#blocks/wallet/block';
+import { ReceiptBlock } from '#blocks/transactions/receipt/block';
+import { TransactionBlock } from '#blocks/transactions/transaction/block';
+import { WalletBlock } from '#blocks/wallet/block';
 export async function createBlockFromObject(blockObject, config) {
 	switch (blockObject.data.meta.blockType) {
 		case blockTypes.transaction: {
-			return transactionBlock(blockObject, config);
+			return TransactionBlock.create(blockObject, config);
 		} case blockTypes.receipt: {
-			return receiptBlock(blockObject, config);
+			return ReceiptBlock.create(blockObject, config);
 		} case blockTypes.wallet: {
-			return walletBlock(blockObject, config);
+			return WalletBlock.create(blockObject, config);
 		} case blockTypes.genesis: {
-			return genesisBlock(blockObject, config);
+			return GenesisBlock.create(blockObject, config);
 		} case blockTypes.genesisWallet: {
-			return genesisWalletBlock(blockObject, config);
+			return GenesisWalletBlock.create(blockObject, config);
 		} default: {
-			return block(blockObject, config);
+			return Block.create(blockObject, config);
 		}
 	}
 }

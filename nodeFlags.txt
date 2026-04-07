@@ -1,1 +1,1 @@
---expose-gc
+node --expose-gc --experimental-permission --allow-fs-read=/app --allow-fs-write=/app/data --allow-net=127.0.0.1:3000 --allow-hrtime --allow-ffi --allow-env=NODE_ENV,PORT,NETWORK_ID,VERSION_ID,PURPOSE_ID,CUSTOMIZATION,APP_ID --allow-run=viat/signatureScheme/index.js,utilities/codeMap/index.js viat/signatureScheme/index.js

@@ -10,12 +10,21 @@ export async function setStructDefaults(source) {
 		version,
 		network_name,
 		wallet_beta,
+		wallet_site_beta,
 	} = await this.get();
 	source.hash_algorithm = hash_algorithm;
 	source.keyed_hash_algorithm = keyed_hash_algorithm;
 	source.version = version;
-	source.network_name = network_name;
-	source.wallet_beta = wallet_beta;
+	if (network_name) {
+		source.network_name = network_name;
+	}
+	if (wallet_beta) {
+		source.wallet_beta = wallet_beta;
+	}
+	if (wallet_site_beta) {
+		source.wallet_site_beta = wallet_site_beta;
+	}
+	// console.log(source, await this.get());
 }
 export async function generatePreSeedStruct(source = {}) {
 	await this.setStructDefaults(source);
@@ -59,6 +68,22 @@ export async function generateNonceStruct(source = {}, pre_nonce) {
 	await this.describeObject(source);
 	return source;
 }
+export async function generatePreSaltStruct(source = {}) {
+	await this.setStructDefaults(source);
+	source.object_type = OBJECT_TYPE.PRE_SALT;
+	source.salt = await this.get('master_salt');
+	await this.describeObject(source);
+	return source;
+}
+export async function generateSaltStruct(source = {}, pre_salt) {
+	await this.setStructDefaults(source);
+	source.object_type = OBJECT_TYPE.SALT;
+	if (pre_salt) {
+		source.pre_salt = pre_salt;
+	}
+	await this.describeObject(source);
+	return source;
+}
 export default {
 	generateSeedStruct,
 	setStructDefaults,
@@ -67,4 +92,6 @@ export default {
 	generatePreKeyStruct,
 	generateNonceStruct,
 	generatePreNonceStruct,
+	generatePreSaltStruct,
+	generateSaltStruct,
 };

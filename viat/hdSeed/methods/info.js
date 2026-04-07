@@ -3,6 +3,7 @@ import {
 	CRYPTOCURRENCY_NETWORK_TYPES,
 	HASH_ALGORITHMS,
 	NETWORK_NAMES,
+	PROPERTY_LOOKUP,
 	PURPOSE,
 	RELATIONSHIP,
 	SCHEME_TYPES,
@@ -27,27 +28,6 @@ async function logInfo() {
 	console.log('Binary export size', (await this.exportBinary()).length);
 	console.log('logInfo END __________________');
 }
-// Generator function to create reverse lookup maps
-function createReverseLookup(obj) {
-	const result = new Map();
-	for (const key in obj) {
-		if (Object.hasOwn(obj, key)) {
-			result.set(obj[key], key);
-		}
-	}
-	return result;
-}
-// Property to reverse lookup map mapping
-const propertyLookups = {
-	scheme: createReverseLookup(SCHEME_TYPES),
-	context_intention: createReverseLookup(CONTEXT_INTENTION),
-	purpose: createReverseLookup(PURPOSE),
-	relationship: createReverseLookup(RELATIONSHIP),
-	hash_algorithm: createReverseLookup(HASH_ALGORITHMS),
-	keyed_hash_algorithm: createReverseLookup(HASH_ALGORITHMS),
-	network: createReverseLookup(NETWORK_NAMES),
-	cryptocurrency_network_type: createReverseLookup(CRYPTOCURRENCY_NETWORK_TYPES),
-};
 /**
 	* Converts integer property values on a seed or key object to their text representation.
 	* @param {Object} source - The plain object (seed or key) to describe.
@@ -66,7 +46,7 @@ function describeObject(source, logOutput = true) {
 		key,
 		value,
 	] of Object.entries(source)) {
-		const lookup = propertyLookups[key];
+		const lookup = PROPERTY_LOOKUP[key];
 		if (lookup && hasValue(value)) {
 			// console.log(lookup, value);
 			described[key] = lookup.get(value) ?? `UNKNOWN(${value})`;
@@ -102,7 +82,7 @@ function describeObject(source, logOutput = true) {
  * @returns {string|null} The text representation or null if not found.
  */
 function getPropertyName(propertyName, value) {
-	const lookup = propertyLookups[propertyName];
+	const lookup = PROPERTY_LOOKUP[propertyName];
 	if (!lookup) {
 		return null;
 	}
@@ -122,6 +102,5 @@ export default {
 	logInfo,
 	describeObject,
 	getPropertyName,
-	propertyLookups,
 	validateSeedObject,
 };
