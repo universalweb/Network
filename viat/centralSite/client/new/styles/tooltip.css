@@ -1,0 +1,68 @@
+:host {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.tooltip-shell {
+  --tooltip-offset-x: 0px;
+  --tooltip-offset-y: 8px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  max-width: min(260px, calc(100vw - 24px));
+  padding: 7px 9px;
+  border: 1px solid var(--popup-border);
+  border-radius: var(--radius-lg);
+  background: var(--popup-bg);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--popup-shadow);
+  color: var(--popup-text);
+  font-size: 0.625rem;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0;
+  filter: blur(6px);
+  transform: translate3d(var(--tooltip-offset-x), var(--tooltip-offset-y), 0)
+    scale(0.94);
+  transform-origin: center;
+  transition: opacity 0.16s ease, filter 0.16s ease,
+    transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tooltip-shell.is-visible {
+  opacity: 1;
+  filter: blur(0);
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.tooltip-shell.is-sliding {
+  transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    top 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.16s ease,
+    filter 0.16s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tooltip-shell[data-placement='top'] {
+  --tooltip-offset-y: 8px;
+  transform-origin: bottom center;
+}
+
+.tooltip-shell[data-placement='bottom'] {
+  --tooltip-offset-y: -8px;
+  transform-origin: top center;
+}
+
+.tooltip-shell[data-placement='left'] {
+  --tooltip-offset-x: 8px;
+  --tooltip-offset-y: 0px;
+  transform-origin: center right;
+}
+
+.tooltip-shell[data-placement='right'] {
+  --tooltip-offset-x: -8px;
+  --tooltip-offset-y: 0px;
+  transform-origin: center left;
+}

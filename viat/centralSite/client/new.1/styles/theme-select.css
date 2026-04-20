@@ -1,0 +1,29 @@
+:host {
+  display: inline-block;
+}
+.ts-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--cyan-tint-faint);
+  border: 1px solid var(--cyan-glow-medium);
+  border-radius: var(--tb-badge-radius, 20px);
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.15em;
+  padding: 3px 10px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: border-color 0.2s, background 0.2s;
+  white-space: nowrap;
+}
+.ts-btn:hover {
+  background: var(--cyan-tint);
+  border-color: var(--cyan-glow-strong);
+}
+.ts-arrow {
+  opacity: 0.5;
+  font-size: 0.45rem;
+  line-height: 1;
+}

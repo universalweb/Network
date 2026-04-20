@@ -1,0 +1,46 @@
+/* ══════════════════════════════════════════════════════
+   BOTTOM STATUS STRIP
+══════════════════════════════════════════════════════ */
+.global-bottom-bar {
+  grid-row: 3;
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  background: var(--bg-dark);
+  border-top: 1px solid var(--dark-divider);
+  overflow: hidden;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.bb-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 12px;
+  height: 100%;
+  border-right: 1px solid var(--dark-divider-subtle);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.bb-key {
+  font-family: var(--font-display);
+  font-size: 0.4375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--dark-text-dim);
+}
+
+.bb-val {
+  font-family: var(--font-mono);
+  font-size: 0.4375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dark-text-medium);
+}
+
+.bb-val.good {
+  color: var(--color-success-text);
+}

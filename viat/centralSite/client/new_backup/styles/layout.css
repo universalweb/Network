@@ -1,0 +1,67 @@
+/* ── Dashboard wrapper ─────────────────────────────── */
+.dashboard {
+	position: relative;
+	min-width: 1360px;
+	width: min(calc(100vw - 48px), calc(100vh * 1.618));
+	height: calc(100vh - 48px);
+	display: grid;
+	grid-template-rows: 56px 1fr auto;
+	grid-template-columns: 1fr;
+	gap: 14px;
+	padding: 14px;
+	background: transparent;
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
+	overflow: hidden;
+}
+
+.dashboard::before {
+	content: none;
+}
+
+.dashboard::after {
+	content: none;
+}
+
+/* ══════════════════════════════════════════════════════
+   BODY ROW  (Left Nav | Center Content | Right Stats)
+══════════════════════════════════════════════════════ */
+.body-row {
+	grid-row: 2;
+	grid-column: 1;
+	display: grid;
+	grid-template-columns: 240px 1fr 300px;
+	gap: 14px;
+	overflow: hidden;
+}
+
+.body-row > * {
+	min-width: 0;
+	min-height: 0;
+}
+
+/* ── Column wrappers ───────────────────────────────── */
+.nav-col,
+.stats-col {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	min-height: 0;
+}
+
+.nav-col > *,
+.stats-col > * {
+	flex: 0 0 auto;
+	min-height: 0;
+}
+
+.center-col {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	overflow-y: auto;
+	min-height: 0;
+}

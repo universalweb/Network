@@ -1,0 +1,180 @@
+/* ══════════════════════════════════════════════════════
+   NAV RAIL
+══════════════════════════════════════════════════════ */
+.nav-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 6px 0;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.rail-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-icon);
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
+  appearance: none;
+}
+
+.rail-icon-btn:hover {
+  color: var(--text-main);
+  background: var(--surface-tint-soft);
+}
+
+.rail-icon-btn.active {
+  color: var(--teal);
+  background: none;
+  width: var(--rail-width, 52px);
+  border-radius: var(--radius) 0 0 var(--radius);
+  box-shadow: inset -2px 0 0 0 var(--teal);
+}
+
+.rail-icon-btn:focus-visible {
+  outline: 1px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════
+   NAV FLYOUT
+══════════════════════════════════════════════════════ */
+@keyframes flyout-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes flyout-out {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-10px) scale(0.97);
+  }
+}
+
+.nav-flyout {
+  position: absolute;
+  left: calc(var(--rail-width, 52px) + 6px);
+  top: 6px;
+  width: 220px;
+  background: var(--flyout-bg, var(--bg-dark-mid));
+  border: 1px solid var(--flyout-border, var(--dark-divider));
+  border-radius: var(--flyout-radius, 10px);
+  box-shadow: var(
+    --flyout-shadow,
+    0 8px 24px rgba(0, 0, 0, 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04)
+  );
+  z-index: 50;
+  transform-origin: left top;
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.nav-flyout.open {
+  opacity: 1;
+  pointer-events: all;
+  animation: flyout-in 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.nav-flyout.closing {
+  pointer-events: none;
+  animation: flyout-out 0.15s ease both;
+}
+
+/* ══════════════════════════════════════════════════════
+   ACCOUNT RAIL AVATAR
+══════════════════════════════════════════════════════ */
+.ac-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0 6px;
+  border-bottom: 1px solid var(--dark-divider);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.ac-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--surface-tint);
+  border: 1px solid var(--border-light-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.6875rem;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.ac-avatar:hover {
+  background: var(--surface-tint-soft);
+  border-color: var(--input-hover-border);
+}
+
+/* ══════════════════════════════════════════════════════
+   ACCOUNT FLYOUT CONTENT
+══════════════════════════════════════════════════════ */
+.account-display {
+  padding: 16px;
+  border-bottom: 1px solid var(--dark-divider);
+}
+
+.account-top {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.profile-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.profile-label {
+  font-size: 0.4375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--text-muted);
+}
+
+.profile-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-main);
+  letter-spacing: 0.04em;
+}

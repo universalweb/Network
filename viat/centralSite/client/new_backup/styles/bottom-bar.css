@@ -1,0 +1,61 @@
+/* ══════════════════════════════════════════════════════
+   BOTTOM FOOTER BAR  (from prototype1)
+══════════════════════════════════════════════════════ */
+.bottom-bar {
+	grid-row: 3;
+	grid-column: 1;
+	background: var(--bg-dark);
+	border-top: 2px solid var(--bg-dark-mid);
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	gap: 0;
+	padding: 0;
+	max-height: none;
+	overflow-y: visible;
+	border-radius: var(--radius);
+}
+
+.bb-col {
+	padding: 12px 16px;
+	border-right: 1px solid var(--dark-divider-subtle);
+}
+
+.bb-col:last-child {
+	border-right: none;
+}
+
+.bb-col h4 {
+	font-family: var(--font-display);
+	font-size: 0.5rem;
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	color: var(--dark-heading);
+	padding-bottom: 6px;
+	margin-bottom: 6px;
+	border-bottom: 1px solid var(--dark-divider-accent);
+}
+
+.bb-list {
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.bb-list li {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.5625rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--dark-text-dim);
+}
+
+.bb-list li span:last-child {
+	color: var(--dark-text-medium);
+	text-align: right;
+	max-width: 100px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

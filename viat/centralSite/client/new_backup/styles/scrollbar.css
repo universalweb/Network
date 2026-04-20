@@ -1,0 +1,58 @@
+/* ══════════════════════════════════════════════════════
+   CUSTOM SCROLLBAR
+══════════════════════════════════════════════════════ */
+
+/* ── Firefox / standards ────────────────────────────── */
+.panel,
+.panel *,
+.center-col,
+.nav-col,
+.stats-col {
+	scrollbar-width: thin;
+	scrollbar-color: var(--cyan-glow-faint) transparent;
+}
+
+/* ── Webkit (Chrome, Safari, Edge) ──────────────────── */
+.panel::-webkit-scrollbar,
+.panel *::-webkit-scrollbar,
+.center-col::-webkit-scrollbar,
+.nav-col::-webkit-scrollbar,
+.stats-col::-webkit-scrollbar {
+	width: 5px;
+	height: 5px;
+}
+
+.panel::-webkit-scrollbar-track,
+.panel *::-webkit-scrollbar-track,
+.center-col::-webkit-scrollbar-track,
+.nav-col::-webkit-scrollbar-track,
+.stats-col::-webkit-scrollbar-track {
+	background: transparent;
+	border-radius: 4px;
+}
+
+.panel::-webkit-scrollbar-thumb,
+.panel *::-webkit-scrollbar-thumb,
+.center-col::-webkit-scrollbar-thumb,
+.nav-col::-webkit-scrollbar-thumb,
+.stats-col::-webkit-scrollbar-thumb {
+	background: var(--cyan-glow-faint);
+	border-radius: 4px;
+	border: 1px solid transparent;
+}
+
+.panel::-webkit-scrollbar-thumb:hover,
+.panel *::-webkit-scrollbar-thumb:hover,
+.center-col::-webkit-scrollbar-thumb:hover,
+.nav-col::-webkit-scrollbar-thumb:hover,
+.stats-col::-webkit-scrollbar-thumb:hover {
+	background: var(--cyan-glow-soft);
+}
+
+.panel::-webkit-scrollbar-corner,
+.panel *::-webkit-scrollbar-corner,
+.center-col::-webkit-scrollbar-corner,
+.nav-col::-webkit-scrollbar-corner,
+.stats-col::-webkit-scrollbar-corner {
+	background: transparent;
+}

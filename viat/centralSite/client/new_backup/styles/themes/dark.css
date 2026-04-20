@@ -1,0 +1,217 @@
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Chakra+Petch:wght@400;600;700&display=swap');
+
+/* ── Dark Theme ───────────────────────────────────────
+   Retro sci-fi. Cyan accent. Angular.
+─────────────────────────────────────────────────────── */
+:root {
+	/* ── Base Palette ────────────────────────────────── */
+	--bg-body: #0C0C0E;
+	--bg-panel: #141416;
+	--bg-dark: #0A0A0C;
+	--bg-dark-mid: #111113;
+	--navy: #18181B;
+	--navy-light: #2A2A2E;
+	--teal: #00B3B3;
+	--teal-dim: rgba(0, 179, 179, 0.10);
+	--cyan: #00F0FF;
+	--cyan-dim: rgba(0, 240, 255, 0.10);
+	--magenta: #FF0055;
+	--magenta-dim: rgba(255, 0, 85, 0.10);
+	--grey-solid: #6B7280;
+	--grey-mid: #3A3A40;
+
+	/* ── Text ────────────────────────────────────────── */
+	--text-main: #E2E6EE;
+	--text-muted: #6B7894;
+	--text-light: #FFFFFF;
+	--text-offwhite: #9AA0AE;
+
+	/* ── Fonts ───────────────────────────────────────── */
+	--font-mono: 'Share Tech Mono', monospace;
+	--font-display: 'Chakra Petch', sans-serif;
+
+	/* ── Border Colors ───────────────────────────────── */
+	--border-light-color: rgba(255, 255, 255, 0.08);
+
+	/* ── Borders ─────────────────────────────────────── */
+	--border-main: 1px solid rgba(255, 255, 255, 0.12);
+	--border-light: 1px solid var(--border-light-color);
+	--border-dark: 1px solid var(--dark-divider-accent);
+
+	/* ── Frame ───────────────────────────────────────── */
+	--frame-border: rgba(255, 255, 255, 0.10);
+	--frame-corner: var(--magenta);
+
+	/* ── Surface Tints ──────────────────────────────── */
+	--surface-tint-heavy: rgba(255, 255, 255, 0.10);
+	--surface-tint: rgba(255, 255, 255, 0.06);
+	--surface-tint-soft: rgba(255, 255, 255, 0.04);
+	--surface-tint-faint: rgba(255, 255, 255, 0.025);
+	--surface-tint-ghost: rgba(255, 255, 255, 0.02);
+	--surface-tint-whisper: rgba(255, 255, 255, 0.015);
+	--watermark-text: rgba(255, 255, 255, 0.03);
+
+	/* ── Dark Surface Text ───────────────────────────── */
+	--dark-text: rgba(200, 210, 230, 0.5);
+	--dark-text-dim: rgba(200, 210, 230, 0.45);
+	--dark-text-medium: rgba(200, 210, 230, 0.7);
+	--dark-text-bright: rgba(200, 210, 230, 0.75);
+	--dark-heading: rgba(255, 255, 255, 0.35);
+	--dark-heading-sep: rgba(255, 255, 255, 0.2);
+	--dark-text-faint: rgba(255, 255, 255, 0.3);
+
+	/* ── Dark Surface Dividers ───────────────────────── */
+	--dark-divider: rgba(255, 255, 255, 0.07);
+	--dark-divider-subtle: rgba(255, 255, 255, 0.05);
+	--dark-divider-faint: rgba(255, 255, 255, 0.04);
+	--dark-divider-accent: rgba(255, 255, 255, 0.06);
+	--dark-highlight: rgba(255, 255, 255, 0.03);
+
+	/* ── Cyan Accent Scale ───────────────────────────── */
+	--cyan-glow-strong: rgba(0, 240, 255, 0.45);
+	--cyan-glow: rgba(0, 240, 255, 0.35);
+	--cyan-glow-medium: rgba(0, 240, 255, 0.3);
+	--cyan-glow-soft: rgba(0, 240, 255, 0.24);
+	--cyan-glow-faint: rgba(0, 240, 255, 0.15);
+	--cyan-tint: rgba(0, 240, 255, 0.06);
+	--cyan-tint-faint: rgba(0, 240, 255, 0.05);
+	--cyan-scanline: rgba(0, 240, 255, 0.015);
+	--cyan-timestamp: rgba(0, 240, 255, 0.5);
+
+	/* ── Teal Accent Scale ───────────────────────────── */
+	--teal-glow: rgba(0, 179, 179, 0.4);
+	--teal-glow-soft: rgba(0, 179, 179, 0.3);
+
+	/* ── Status Colors ───────────────────────────────── */
+	--color-success: #4affde;
+	--color-success-glow: rgba(74, 255, 224, 0.4);
+	--color-success-text: rgba(74, 255, 224, 0.8);
+	--color-danger: #ff5f5f;
+	--color-danger-glow: rgba(255, 95, 95, 0.4);
+	--color-warn-text: rgba(255, 0, 85, 0.9);
+
+	/* ── Patterns ────────────────────────────────────── */
+	--grid-pattern: repeating-linear-gradient(rgba(0, 240, 255, 0.025) 0px, rgba(0, 240, 255, 0.025) 1px,
+			transparent 1px, transparent 20px),
+		repeating-linear-gradient(90deg,
+			rgba(0, 240, 255, 0.025) 0px, rgba(0, 240, 255, 0.025) 1px,
+			transparent 1px, transparent 20px);
+	--grid-major: repeating-linear-gradient(rgba(0, 240, 255, 0.05) 0px, rgba(0, 240, 255, 0.05) 1px,
+			transparent 1px, transparent 100px),
+		repeating-linear-gradient(90deg,
+			rgba(0, 240, 255, 0.05) 0px, rgba(0, 240, 255, 0.05) 1px,
+			transparent 1px, transparent 100px);
+	--hatch: repeating-linear-gradient(45deg, transparent, transparent 2px,
+			rgba(0, 240, 255, 0.02) 2px, rgba(0, 240, 255, 0.02) 4px);
+
+	/* ═══════════════════════════════════════════════════
+	   COMPONENT THEME TOKENS
+	═══════════════════════════════════════════════════ */
+
+	/* ── Shape ───────────────────────────────────────── */
+	--radius: 4px;
+	--radius-lg: 6px;
+	--stat-bar-radius: 0px;
+	--indicator-radius: 50%;
+	--indicator-warn-radius: 0px;
+
+	/* ── Input ───────────────────────────────────────── */
+	--input-radius: 4px;
+	--input-accent-border: 1px solid var(--cyan-glow-faint);
+	--input-accent-shadow: inset 0 -1px 0 var(--cyan-glow-soft);
+	--field-border-style: solid;
+
+	/* ── Panel ───────────────────────────────────────── */
+	--panel-shadow:
+		0 1px 2px rgba(0, 0, 0, 0.3),
+		0 4px 8px rgba(0, 0, 0, 0.2),
+		inset 0 1px 0 rgba(255, 255, 255, 0.04);
+	--panel-hover-shadow:
+		0 2px 4px rgba(0, 0, 0, 0.35),
+		0 8px 16px rgba(0, 0, 0, 0.25),
+		0 0 12px var(--cyan-glow-faint),
+		inset 0 1px 0 rgba(255, 255, 255, 0.06),
+		inset 0 0 8px var(--cyan-tint);
+	--panel-hover-border: var(--cyan-glow-soft);
+	--panel-header-accent: var(--cyan-glow-strong);
+	--panel-header-bg: linear-gradient(
+		90deg,
+		rgba(0, 240, 255, 0.06) 0%,
+		rgba(0, 240, 255, 0.02) 40%,
+		transparent 100%
+	);
+	--panel-header-left-accent-width: 2px;
+	--panel-header-border-bottom: none;
+
+	/* ── Buttons ─────────────────────────────────────── */
+	--btn-bg: rgba(90, 145, 255, 0.14);
+	--btn-border: rgba(120, 180, 255, 0.28);
+	--btn-inset: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+	--btn-hover-bg: rgba(255, 74, 162, 0.22);
+	--btn-hover-border: rgba(255, 116, 186, 0.5);
+	--btn-hover-inset: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+	--btn-hover-glow: 0 0 0 1px rgba(255, 80, 170, 0.08);
+	--btn-hover-color: var(--text-light);
+	--focus-ring-color: rgba(110, 220, 255, 0.75);
+	--color-faucet: #43ff6a;
+
+	/* ── Inputs / Interactive ────────────────────────── */
+	--input-hover-border: rgba(110, 220, 255, 0.38);
+	--input-hover-glow: rgba(110, 220, 255, 0.12);
+	--input-copied-bg: rgba(110, 220, 255, 0.14);
+	--input-copied-border: rgba(110, 220, 255, 0.42);
+
+	/* ── Top Bar ─────────────────────────────────────── */
+	--topbar-bg: rgba(255, 255, 255, 0.05);
+	--topbar-border: rgba(255, 255, 255, 0.2);
+	--topbar-accent: var(--cyan);
+	--topbar-bottom-border: 1px solid var(--cyan-glow-faint);
+	--tb-badge-radius: 0px;
+	--logo-mark-pattern: repeating-linear-gradient(45deg,
+			var(--cyan), var(--cyan) 2px,
+			transparent 2px, transparent 5px);
+
+	/* ── Popups ──────────────────────────────────────── */
+	--popup-bg: rgba(14, 20, 31, 0.9);
+	--popup-bg-hover: rgba(20, 28, 43, 0.94);
+	--popup-border: rgba(110, 220, 255, 0.26);
+	--popup-border-hover: rgba(110, 220, 255, 0.42);
+	--popup-accent: var(--cyan-glow-strong);
+	--popup-shadow:
+		0 8px 22px rgba(0, 0, 0, 0.35),
+		0 0 0 1px rgba(110, 220, 255, 0.06),
+		inset 0 1px 0 rgba(255, 255, 255, 0.05);
+	--popup-text: var(--text-light);
+
+	/* ── Glow Scale ──────────────────────────────────── */
+	--ph-dot-shadow: 0 0 4px var(--teal);
+	--logo-mark-text-shadow: 0 0 10px var(--topbar-accent);
+	--subtitle-text-shadow: 0 0 6px var(--topbar-accent);
+	--indicator-on-shadow: 0 0 8px var(--topbar-accent);
+	--stat-good-text-shadow: 0 0 4px var(--teal-glow-soft);
+	--stat-bar-fill-shadow: 0 0 6px var(--teal);
+	--wa-underline-shadow: 0 0 8px var(--cyan);
+	--log-in-text-shadow: 0 0 5px var(--color-success-glow);
+	--log-out-text-shadow: 0 0 5px var(--color-danger-glow);
+}
+
+/* ── Dark: panel-header ──────────────────────────────
+   Cyan gradient sweep + underline accent.
+─────────────────────────────────────────────────────── */
+.panel-header {
+	position: relative;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(0, 240, 255, 0.12);
+}
+
+.panel-header::after {
+	content: '';
+	position: absolute;
+	inset: auto 0 0 0;
+	height: 1px;
+	background: linear-gradient(
+		90deg,
+		rgba(0, 240, 255, 0.5) 0%,
+		rgba(0, 179, 179, 0.2) 40%,
+		transparent 100%
+	);
+}

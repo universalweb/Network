@@ -70,7 +70,7 @@ export const statusCodes = {
 	// Feature not supported by application
 	APPLICATION_UNSUPPORTED_FEATURE: 333,
 	// Rate limit exceeded
-	APPLICATION_RATE_LIMITED: 334,
+	APPLICATION_RATE_LIMITED: 1000,
 	// Access forbidden
 	APPLICATION_FORBIDDEN: 335,
 	// Service unavailable

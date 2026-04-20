@@ -1,0 +1,19 @@
+@import './variables.css';
+@import './reset.css';
+@import './frame.css';
+@import './layout.css';
+@import './top-bar.css';
+@import './panel.css';
+@import './scrollbar.css';
+@import './nav.css';
+@import './wallet-amount.css';
+@import './transmit.css';
+@import './output.css';
+@import './stats.css';
+@import './bottom-bar.css';
+@import './utils.css';
+
+button,
+[role='button'] {
+	cursor: pointer;
+}

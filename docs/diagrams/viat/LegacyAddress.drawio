@@ -1,0 +1,77 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36">
+  <diagram name="Page-1" id="6rClt2_kw_-HUt3oJP6-">
+    <mxGraphModel dx="1550" dy="2035" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0" adaptiveColors="auto">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="-QF_BUaWhP8jx45awFET-1" parent="1" style="rhombus;whiteSpace=wrap;html=1;rounded=0;labelBackgroundColor=none;" value="Pr_KeyPair =&amp;nbsp;&lt;div&gt;Keygen&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;( PrS )&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="125" width="170" x="225" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="-QF_BUaWhP8jx45awFET-2" parent="1" style="rhombus;whiteSpace=wrap;html=1;rounded=0;labelBackgroundColor=none;" value="Tr_KeyPair&amp;nbsp;&amp;nbsp;=&amp;nbsp;&lt;div&gt;Keygen( TrS )&lt;/div&gt;" vertex="1">
+          <mxGeometry height="120" width="172.5" x="461.25" y="-10" as="geometry" />
+        </mxCell>
+        <mxCell id="-QF_BUaWhP8jx45awFET-49" edge="1" parent="1" source="-QF_BUaWhP8jx45awFET-1" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8;labelBackgroundColor=none;fontColor=default;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="-QF_BUaWhP8jx45awFET-74" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="310" y="175" as="sourcePoint" />
+            <mxPoint x="308" y="171.03999999999996" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-QF_BUaWhP8jx45awFET-60" edge="1" parent="1" source="-QF_BUaWhP8jx45awFET-2" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8;labelBackgroundColor=none;fontColor=default;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="-QF_BUaWhP8jx45awFET-70" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="550" y="175" as="sourcePoint" />
+            <mxPoint x="548.2905982905982" y="115.68376068376074" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-QF_BUaWhP8jx45awFET-58" edge="1" parent="1" source="-QF_BUaWhP8jx45awFET-57" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;fontSize=12;startSize=8;endSize=8;labelBackgroundColor=none;fontColor=default;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="616.6666666666665" y="141.66666666666652" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="TuVw1n1ImUCx_z-HZ48t-71" edge="1" parent="1" source="-QF_BUaWhP8jx45awFET-61" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontFamily=JetBrainsMono Nerd Font;fontSize=12;fontColor=default;autosize=1;" target="-QF_BUaWhP8jx45awFET-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-QF_BUaWhP8jx45awFET-61" parent="1" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;size=10;rounded=0;labelBackgroundColor=none;" value="TrS = TRAPDOOR SEED" vertex="1">
+          <mxGeometry height="40" width="180" x="457.5" y="-85" as="geometry" />
+        </mxCell>
+        <mxCell id="TuVw1n1ImUCx_z-HZ48t-72" edge="1" parent="1" source="-QF_BUaWhP8jx45awFET-63" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontFamily=JetBrainsMono Nerd Font;fontSize=12;fontColor=default;autosize=1;" target="-QF_BUaWhP8jx45awFET-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-QF_BUaWhP8jx45awFET-63" parent="1" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;size=10;rounded=0;labelBackgroundColor=none;" value="PrS = PRIMARY SEED" vertex="1">
+          <mxGeometry height="40" width="180" x="220" y="-85" as="geometry" />
+        </mxCell>
+        <mxCell id="-QF_BUaWhP8jx45awFET-73" edge="1" parent="1" source="-QF_BUaWhP8jx45awFET-70" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;fontSize=12;startSize=8;endSize=8;labelBackgroundColor=none;fontColor=default;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="-QF_BUaWhP8jx45awFET-74">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="410" y="191.78571428571422" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-QF_BUaWhP8jx45awFET-70" parent="1" style="shape=trapezoid;perimeter=trapezoidPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=0;labelBackgroundColor=none;" value="TrH = HASH( Tr_PubKey )" vertex="1">
+          <mxGeometry height="60" width="185" x="455" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="-QF_BUaWhP8jx45awFET-74" parent="1" style="shape=trapezoid;perimeter=trapezoidPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=0;labelBackgroundColor=none;" value="ADDRESS =&amp;nbsp;&lt;div&gt;HASH(Pr_PubKey | TrH)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="232.5" x="193.75" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="TuVw1n1ImUCx_z-HZ48t-79" edge="1" parent="1" source="TuVw1n1ImUCx_z-HZ48t-76" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=JetBrainsMono Nerd Font;fontSize=12;fontColor=default;autosize=1;" target="-QF_BUaWhP8jx45awFET-63" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TuVw1n1ImUCx_z-HZ48t-76" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;rounded=1;strokeColor=default;strokeWidth=1;align=center;verticalAlign=middle;spacing=4;arcSize=50;fontFamily=JetBrainsMono Nerd Font;fontSize=12;fontColor=default;autosize=1;fillColor=default;" value="HD-SEED" vertex="1">
+          <mxGeometry height="80" width="80" x="270" y="-200" as="geometry" />
+        </mxCell>
+        <mxCell id="TuVw1n1ImUCx_z-HZ48t-78" edge="1" parent="1" source="TuVw1n1ImUCx_z-HZ48t-77" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=JetBrainsMono Nerd Font;fontSize=12;fontColor=default;autosize=1;" target="-QF_BUaWhP8jx45awFET-61" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TuVw1n1ImUCx_z-HZ48t-77" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;rounded=1;strokeColor=default;strokeWidth=1;align=center;verticalAlign=middle;spacing=4;arcSize=50;fontFamily=JetBrainsMono Nerd Font;fontSize=12;fontColor=default;autosize=1;fillColor=default;" value="HD-SEED" vertex="1">
+          <mxGeometry height="80" width="80" x="507.5" y="-200" as="geometry" />
+        </mxCell>
+        <mxCell id="TuVw1n1ImUCx_z-HZ48t-82" edge="1" parent="1" source="TuVw1n1ImUCx_z-HZ48t-80" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontFamily=JetBrainsMono Nerd Font;fontSize=12;fontColor=default;autosize=1;" target="TuVw1n1ImUCx_z-HZ48t-76">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TuVw1n1ImUCx_z-HZ48t-83" edge="1" parent="1" source="TuVw1n1ImUCx_z-HZ48t-80" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontFamily=JetBrainsMono Nerd Font;fontSize=12;fontColor=default;autosize=1;" target="TuVw1n1ImUCx_z-HZ48t-77">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TuVw1n1ImUCx_z-HZ48t-80" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=default;strokeWidth=1;align=center;verticalAlign=middle;spacing=4;arcSize=50;fontFamily=JetBrainsMono Nerd Font;fontSize=12;fontColor=default;autosize=1;fillColor=default;" value="Hierarchical Deterministic Seed Tree" vertex="1">
+          <mxGeometry height="30" width="290" x="280" y="-270" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

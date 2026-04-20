@@ -96,6 +96,7 @@ export async function hashLegacyAddress(source) {
 	}
 	return createHash(hashName, source, legacyAddressHashSettings);
 }
+console.log(await hashLegacyAddress(Buffer.from('he')));
 export async function hashXOF(source, outputLength = int32) {
 	if (globalThis?.Bun) {
 		const hasher = createHasher(hashName, {
