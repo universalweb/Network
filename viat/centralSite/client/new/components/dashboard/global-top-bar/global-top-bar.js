@@ -1,29 +1,12 @@
-import '../theme-select.js';
-import {
-	hostSheet,
-	loadSheet,
-	resetSheet,
-	utilsSheet,
-} from '../componentLibrary/shared-styles.js';
-import { WebComponent } from '../componentLibrary/base.js';
-const topBarStyles = await loadSheet(new URL('../../styles/global-top-bar.css', import.meta.url));
-const host = hostSheet(`
-:host {
-	display: block;
-	height: 100%;
-	min-height: 40px;
-	width: 100%;
-	box-sizing: border-box;
-}
-`);
+import '../../theme-select/theme-select.js';
+import { WebComponent } from '../../base/base.js';
+const topBarStyles = await WebComponent.styleSheet('./global-top-bar.css', import.meta.url);
 export class GlobalTopBar extends WebComponent {
 	static get observedAttributes() {
 		return ['subtitle'];
 	}
 	constructor() {
-		super([
-			resetSheet, host, topBarStyles, utilsSheet,
-		], {
+		super([topBarStyles], {
 			tooltips: true,
 		});
 		this.state = {
@@ -56,10 +39,10 @@ export class GlobalTopBar extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		return this.html `
 			<header class="global-top-bar">
 				<div class="tb-logo">
-					<span class="tb-logo-mark">⩝</span> VIAT <span class="tb-logo-sep hidden">//</span>
+					<span class="tb-logo-mark">⩝</span> VIAT <span class="tb-logo-sep icon-font hidden">&#xe795</span>
 					<span class="tb-subtitle">${this.state.subtitle}</span>
 				</div>
 				<div class="tb-status">

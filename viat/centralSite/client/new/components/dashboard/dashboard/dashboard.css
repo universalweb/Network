@@ -1,3 +1,28 @@
+:host {
+	display: block;
+	position: relative;
+	width: 100%;
+	height: 100%;
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+	line-height: 1.5;
+	color: var(--text-main);
+	user-select: none;
+	-webkit-font-smoothing: antialiased;
+}
+
+::slotted([slot='global-top-bar']) {
+	display: block;
+	margin: 0;
+	width: 100%;
+}
+
+::slotted([slot='global-dock']) {
+	display: block;
+	flex: 0 0 auto;
+	width: 100%;
+}
+
 /* ── Dashboard wrapper ─────────────────────────────── */
 .dashboard {
 	position: relative;
@@ -5,7 +30,7 @@
 	width: 100vw;
 	height: 100vh;
 	display: grid;
-	grid-template-rows: 56px minmax(0, 1fr) 28px;
+	grid-template-rows: 0 minmax(0, 1fr) 0;
 	grid-template-columns: 1fr;
 	gap: 0;
 	padding: 0;
@@ -63,6 +88,14 @@
 	flex-direction: column;
 	overflow-y: auto;
 	min-height: 0;
+	padding-top: 90px;
+	padding-bottom: 64px;
+}
+
+dashboard-sidebar {
+	display: block;
+	padding-top: 90px;
+	padding-bottom: 64px;
 }
 
 .center-content {
@@ -89,5 +122,12 @@
 	flex-direction: column;
 	gap: 14px;
 	min-width: 0;
+}
+
+@media (max-width: 420px) {
+	.dashboard {
+		padding: 12px 10px 8px;
+		gap: 8px;
+	}
 }
 

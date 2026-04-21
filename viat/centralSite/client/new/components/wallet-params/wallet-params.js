@@ -1,17 +1,13 @@
-import {
-	hostSheet,
-	loadSheet,
-	panelSheet,
-	resetSheet,
-	scrollbarSheet,
-} from './componentLibrary/shared-styles.js';
-import { WebComponent } from './componentLibrary/base.js';
-const statsStyles = await loadSheet(new URL('../styles/stats.css', import.meta.url));
-const host = hostSheet(`:host { display: block; flex-shrink: 0; width: 100%; }`);
-export class WalletParams extends WebComponent {
+import { SidebarPanel } from '../sidebar-panel/sidebar-panel.js';
+import { WebComponent } from '../base/base.js';
+const styles = await WebComponent.styleSheet('./wallet-params.css', import.meta.url);
+const statsStyles = await WebComponent.styleSheet('../../styles/stats.css', import.meta.url);
+export class WalletParams extends SidebarPanel {
 	constructor() {
-		super([resetSheet, host, panelSheet, scrollbarSheet, statsStyles]);
-		this.state = { params: [] };
+		super([statsStyles, styles]);
+		this.state = {
+			params: [],
+		};
 	}
 	get params() {
 		return this.state.params;
@@ -20,19 +16,24 @@ export class WalletParams extends WebComponent {
 		this.state.params = Array.isArray(data) ? data : [];
 	}
 	render() {
-		this.html`
+		// eslint-disable-next-line no-unused-expressions
+		this.html `
 			<aside class="panel wallet-params-panel">
 				<div class="panel-header">
 					<span><span class="ph-id">WALLET</span> // PARAMETERS</span>
 					<div class="ph-dot"></div>
 				</div>
 				<div class="stat-block">
-					${() => this.state.params.map((p) => `
+					${() => {
+						return this.state.params.map((p) => {
+							return `
 						<div class="stat-row">
 							<span class="s-key">${p.key}</span>
 							<span class="s-val ${p.className ?? ''}">${p.value}</span>
 						</div>
-					`).join('')}
+					`;
+						}).join('');
+					}}
 				</div>
 			</aside>
 		`;

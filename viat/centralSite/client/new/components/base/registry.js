@@ -1,3 +1,4 @@
+import { isString } from '../utilities.js';
 const store = new Map();
 const toCamel = (s) => {
 	return s.replace(/-([a-z])/g, (_, c) => {
@@ -11,7 +12,7 @@ const toKebab = (s) => {
 };
 export const registry = new Proxy(store, {
 	get(target, prop) {
-		if (typeof prop !== 'string') {
+		if (!isString(prop)) {
 			return Reflect.get(target, prop);
 		}
 		return target.get(prop) ?? target.get(toKebab(prop));

@@ -1,33 +1,13 @@
-import './wallet-address.js';
-import {
-	hostSheet,
-	loadSheet,
-	panelSheet,
-	resetSheet,
-} from './componentLibrary/shared-styles.js';
-import { WebComponent } from './componentLibrary/base.js';
-const statsStyles = await loadSheet(new URL('../styles/stats.css', import.meta.url));
-const host = hostSheet(`
-:host {
-	display: flex;
-	flex-direction: column;
-	gap: 14px;
-	width: 100%;
-	flex-shrink: 0;
-}
-.addr-wrap { padding: 14px 16px 10px; }
-.copy-hint {
-	font-size: 0.4375rem;
-	text-transform: uppercase;
-	letter-spacing: 0.22em;
-	color: var(--text-muted);
-	margin-top: 8px;
-	text-align: center;
-}
-`);
-export class WalletPanel extends WebComponent {
+import '../wallet-address/wallet-address.js';
+import { SidebarPanel } from '../sidebar-panel/sidebar-panel.js';
+import { WebComponent } from '../base/base.js';
+const styles = await WebComponent.styleSheet('./wallet-panel.css', import.meta.url);
+const statsStyles = await WebComponent.styleSheet('../../styles/stats.css', import.meta.url);
+export class WalletPanel extends SidebarPanel {
 	constructor() {
-		super([resetSheet, host, panelSheet, statsStyles], { tooltips: true });
+		super([statsStyles, styles], {
+			tooltips: true,
+		});
 		this.state = {
 			activity: '0',
 			received: '0',
@@ -35,16 +15,32 @@ export class WalletPanel extends WebComponent {
 			walletAddress: '',
 		};
 	}
-	get walletAddress() { return this.state.walletAddress; }
-	set walletAddress(v) { this.state.walletAddress = v ?? ''; }
-	get received() { return this.state.received; }
-	set received(v) { this.state.received = v ?? '0'; }
-	get sent() { return this.state.sent; }
-	set sent(v) { this.state.sent = v ?? '0'; }
-	get activity() { return this.state.activity; }
-	set activity(v) { this.state.activity = v ?? '0'; }
+	get walletAddress() {
+		return this.state.walletAddress;
+	}
+	set walletAddress(v) {
+		this.state.walletAddress = v ?? '';
+	}
+	get received() {
+		return this.state.received;
+	}
+	set received(v) {
+		this.state.received = v ?? '0';
+	}
+	get sent() {
+		return this.state.sent;
+	}
+	set sent(v) {
+		this.state.sent = v ?? '0';
+	}
+	get activity() {
+		return this.state.activity;
+	}
+	set activity(v) {
+		this.state.activity = v ?? '0';
+	}
 	render() {
-		this.html`
+		return this.html `
 			<div class="panel">
 				<div class="panel-header">
 					<span><span class="ph-id">WALLET</span> // ADDRESS</span>
@@ -62,15 +58,15 @@ export class WalletPanel extends WebComponent {
 				</div>
 				<div class="stat-block">
 					<div class="stat-row">
-						<span class="s-key">Total Received</span>
+						<span class="s-key">TXs Received</span>
 						<span class="s-val good">${this.state.received}</span>
 					</div>
 					<div class="stat-row">
-						<span class="s-key">Total Sent</span>
+						<span class="s-key">TXs Sent</span>
 						<span class="s-val">${this.state.sent}</span>
 					</div>
 					<div class="stat-row">
-						<span class="s-key">Total Activity</span>
+						<span class="s-key">Total TXs</span>
 						<span class="s-val">${this.state.activity}</span>
 					</div>
 				</div>

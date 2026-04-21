@@ -1,0 +1,18 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  flex-shrink: 0;
+}
+.addr-wrap {
+  padding: 14px 16px 10px;
+}
+.copy-hint {
+  font-size: 0.4375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--text-muted);
+  margin-top: 8px;
+  text-align: center;
+}

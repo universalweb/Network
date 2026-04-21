@@ -1,4 +1,4 @@
-import './components/index.js';
+import '../components/index.js';
 import {
 	ACCOUNT_PANEL,
 	ACTIVITY_ENTRIES,
@@ -13,8 +13,8 @@ import {
 	WALLET_AMOUNT,
 	WALLET_PANEL,
 	WALLET_PARAMS,
-} from './components/appDefaults.js';
-import { WebComponent } from './components/componentLibrary/base.js';
+} from '../components/appDefaults.js';
+import { WebComponent } from '../components/base/base.js';
 const appHost = new CSSStyleSheet();
 appHost.replaceSync(`:host { display: block; width: 100vw; height: 100vh; overflow: hidden; }`);
 class AppView extends WebComponent {
@@ -30,7 +30,7 @@ class AppView extends WebComponent {
 		this.shadowRoot.appendChild(document.createElement('ui-notification'));
 	}
 	static async create() {
-		const app = new AppView();
+		const app = new this();
 		await WebComponent.preRender(app, document.body);
 		return app;
 	}
@@ -55,7 +55,6 @@ class AppView extends WebComponent {
 	get refs() {
 		return {
 			activityLog: this.getComponent('activity-log'),
-			accountPanel: this.getComponent('account-panel'),
 			globalBottomBar: this.getComponent('global-bottom-bar'),
 			globalDock: this.getComponent('global-dock'),
 			networkStats: this.getComponent('network-stats'),
@@ -82,36 +81,30 @@ class AppView extends WebComponent {
 		Object.assign(refs.walletAmount.state, WALLET_AMOUNT);
 		Object.assign(refs.transmitPanel.state, TRANSMIT);
 		refs.globalBottomBar.state.columns = BOTTOM_BAR_COLUMNS;
-		refs.activityLog.state.activeTab = 'All';
-		refs.activityLog.state.entries = this.store.activity.entries;
+		refs.activityLog.activeTab = 'All';
+		refs.activityLog.entries = this.store.activity.entries;
 		refs.activityLog.state.tabs = ACTIVITY_TABS;
-		Object.assign(refs.accountPanel.state, ACCOUNT_PANEL);
-		this.setWalletAddress('viat1newwalletaddressxxxxxxxxxxxxxxxxxxxx');
+		this.setWalletAddress('TESTADDRESS');
 		this.setProfileName('Elon Musk');
 		this.setViatAmount('250,000', '250,000.000000000');
 		this.setTimeout(() => {
 			this.addActivityEntry({
 				message: 'viat1demo...timeout :: +3.500000000 VIAT :: DEMO EVENT :: 0x1sec0001',
 			});
-		}, 1000);
-		window.walletApp = this;
+		}, 2000);
 	}
 	addActivityEntry(entry = {}) {
-		const next = {
+		this.getComponent('activity-log').addEntry({
 			direction: entry.direction ?? 'in',
 			message: entry.message ?? '',
 			status: entry.status ?? 'ok',
 			timestamp: entry.timestamp ?? new Date().toLocaleTimeString('en-GB', {
 				hour12: false,
 			}),
-		};
-		this.store.activity.entries = [next, ...this.store.activity.entries];
-		this.refs.activityLog.state.entries = this.store.activity.entries;
-		return next;
+		});
 	}
 	setProfileName(profileName) {
 		this.store.account.profileName = profileName;
-		this.refs.accountPanel.state.profileName = profileName;
 	}
 	setWalletAddress(walletAddress) {
 		this.store.account.walletAddress = walletAddress;
@@ -128,3 +121,4 @@ class AppView extends WebComponent {
 	}
 }
 customElements.define('app-view', AppView);
+export default AppView;

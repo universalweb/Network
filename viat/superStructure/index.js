@@ -3,7 +3,9 @@ import {
 	extendClass,
 	isBuffer,
 } from '@universalweb/utilitylib';
+import { TransactionBlock } from '#blocks/transactions/transaction/block';
 import VIAT_DEFAULTS from '#viat/defaults';
+import WalletBlock from '#blocks/wallet/block';
 import { blockTypes } from '../blocks/defaults.js';
 import filesystemMethods from './methods/filesystem.js';
 import { filesystemTypes } from '../storage/filesystems.js';
@@ -13,9 +15,7 @@ import { getHomeDirectory } from '#utilities/directory';
 import { loadBlock } from '#viat/blocks/utils';
 import logMethods from '#utilities/logs/classLogMethods';
 import { toBase64 } from '#crypto/utils.js';
-import { TransactionBlock } from '#blocks/transactions/transaction/block';
 import { wallet } from '#viat/wallet/wallet';
-import WalletBlock from '#blocks/wallet/block';
 export class Superstructure {
 	logLevel = 4;
 	constructor(config = {}) {

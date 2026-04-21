@@ -1,8 +1,7 @@
 import { THEMES, getTheme, setTheme } from './theme-manager.js';
-import { hostSheet, loadSheet, resetSheet } from './componentLibrary/shared-styles.js';
-import { WebComponent } from './componentLibrary/base.js';
-const btnStyles = await loadSheet(new URL('../styles/theme-select.css', import.meta.url));
-const dropStyles = await loadSheet(new URL('../styles/theme-drop.css', import.meta.url));
+import { WebComponent } from '../base/base.js';
+const btnStyles = await WebComponent.styleSheet('./theme-select.css', import.meta.url);
+const dropStyles = await WebComponent.styleSheet('./theme-drop.css', import.meta.url);
 let dropStylesInjected = false;
 function ensureDropStyles() {
 	if (dropStylesInjected) {
@@ -16,16 +15,22 @@ export class UIThemeSelect extends WebComponent {
 	dropdown = null;
 	closeTimer = null;
 	constructor() {
-		super([resetSheet, btnStyles]);
+		super([btnStyles]);
 		this.closeOutside = this.closeOutside.bind(this);
+		this.handleHostLeave = this.handleHostLeave.bind(this);
 		this.state = {
 			theme: getTheme(),
 		};
 		this.addEvent('toggle', 'click', this.handleToggle);
-		this.addEventListener('mouseleave', this.handleHostLeave.bind(this));
+	}
+	onConnect() {
+		this.addEventListener('mouseleave', this.handleHostLeave);
 	}
 	onDisconnect() {
-		this.closeDropdown();
+		this.removeEventListener('mouseleave', this.handleHostLeave);
+		if (this.open) {
+			this.closeDropdown();
+		}
 	}
 	cancelClose() {
 		this.clearTimeout(this.closeTimer);
@@ -40,10 +45,10 @@ export class UIThemeSelect extends WebComponent {
 		} else {
 			this.closeDropdown();
 		}
-		this.applyState();
+		this.refresh();
 	}
 	closeOutside(e) {
-		if (e.composedPath().includes(this)) {
+		if (e.composedPath().includes(this) || (this.dropdown && e.composedPath().includes(this.dropdown))) {
 			return;
 		}
 		this.closeDropdown();
@@ -51,7 +56,7 @@ export class UIThemeSelect extends WebComponent {
 	openDropdown() {
 		ensureDropStyles();
 		this.closeDropdown();
-		const { theme } = this.STATE;
+		const { theme } = this.state;
 		const div = document.createElement('div');
 		div.className = 'theme-drop';
 		for (const t of THEMES) {
@@ -110,7 +115,7 @@ export class UIThemeSelect extends WebComponent {
 		this.state.theme = id;
 	}
 	render() {
-		this.html `
+		return this.html `
 			<button class="ts-btn" data-onclick="toggle">
 				${() => {
 					const current = THEMES.find((t) => {

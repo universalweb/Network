@@ -1,5 +1,5 @@
 import {
-	isElement, isFunction, isPromiseLike, isString,
+	isElement, isError, isFunction, isPromiseLike, isString,
 } from '../utilities.js';
 export function addEvent(eventName, eventType, handlerFunction) {
 	if (!isString(eventName) || !eventName.trim()) {
@@ -13,6 +13,9 @@ export function addEvent(eventName, eventType, handlerFunction) {
 	}
 	const evtType = eventType.trim().toLowerCase();
 	const evtName = eventName.trim();
+	if (!this.eventHandlers) {
+		this.eventHandlers = new Map();
+	}
 	let handlers = this.eventHandlers.get(evtType);
 	if (!handlers) {
 		handlers = new Map();
@@ -31,6 +34,9 @@ export function setEventName(element, eventName, eventType) {
 	const evtName = this.normalizeEventName(eventName, evtType);
 	if (!evtName) {
 		return element;
+	}
+	if (!this.elementEventNames) {
+		this.elementEventNames = new WeakMap();
 	}
 	const map = this.elementEventNames.get(element) ?? new Map();
 	map.set(evtType, evtName);
@@ -62,6 +68,9 @@ export function getEventAttributeName(eventType) {
 	return `data-on${eventType}`;
 }
 export function connectDelegatedEvents() {
+	if (!this.eventHandlers) {
+		return;
+	}
 	const root = this.getComponentRoot();
 	if (this.eventRoot !== root) {
 		this.disconnectDelegatedEvents();
@@ -82,20 +91,28 @@ export function connectDelegatedEventType(eventType) {
 	if (this.eventRoot !== this.getComponentRoot()) {
 		this.connectDelegatedEvents();
 	}
+	if (!this.activeEventTypes) {
+		this.activeEventTypes = new Set();
+	}
 	if (this.activeEventTypes.has(evtType)) {
 		return;
 	}
-	this.eventRoot?.addEventListener(evtType, this.handleBubbledEvent);
+	this.eventRoot?.addEventListener(evtType, this);
 	this.activeEventTypes.add(evtType);
 }
 export function disconnectDelegatedEvents() {
-	for (const eventType of this.activeEventTypes) {
-		this.eventRoot?.removeEventListener(eventType, this.handleBubbledEvent);
+	if (this.activeEventTypes) {
+		for (const eventType of this.activeEventTypes) {
+			this.eventRoot?.removeEventListener(eventType, this);
+		}
+		this.activeEventTypes.clear();
 	}
-	this.activeEventTypes.clear();
 	this.eventRoot = null;
 }
 export function syncDelegatedEvents() {
+	if (!this.eventHandlers) {
+		return;
+	}
 	const root = this.getComponentRoot();
 	if (!root?.querySelectorAll) {
 		return;
@@ -112,7 +129,7 @@ export function getElementEventName(element, eventType) {
 	if (!evtType || !isElement(element)) {
 		return '';
 	}
-	const map = this.elementEventNames.get(element);
+	const map = this.elementEventNames?.get(element);
 	if (map?.has(evtType)) {
 		return map.get(evtType);
 	}
@@ -152,9 +169,12 @@ export function getMatchedEventTarget(domEvent) {
 		eventName: fallbackName,
 	} : null;
 }
+export function handleEvent(domEvent) {
+	this.handleBubbledEvent(domEvent);
+}
 export function handleDelegatedEventError(error, domEvent, element, eventName) {
 	queueMicrotask(() => {
-		throw Object.assign(error instanceof Error ? error : new Error(String(error)), {
+		throw Object.assign(isError(error) ? error : new Error(String(error)), {
 			element,
 			event: domEvent,
 			eventName,
@@ -162,6 +182,9 @@ export function handleDelegatedEventError(error, domEvent, element, eventName) {
 	});
 }
 export function handleBubbledEvent(domEvent) {
+	if (!this.eventHandlers) {
+		return;
+	}
 	const handlers = this.eventHandlers.get(this.normalizeEventType(domEvent.type));
 	if (!handlers?.size) {
 		return;

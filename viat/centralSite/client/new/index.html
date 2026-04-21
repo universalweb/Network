@@ -4,15 +4,22 @@
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>⩝ VIAT :: WALLET</title>
-		<link rel="stylesheet" href="https://mshaugh.github.io/nerdfont-webfonts/build/jetbrainsmono.css">
+		<!-- Preconnect for external resources -->
+		<link rel="preconnect" href="https://mshaugh.github.io" crossorigin="anonymous">
+		<!-- Preload critical CSS (e.g., base styles and theme) -->
+		<link rel="preload" href="styles/index.css" as="style">
+		<link rel="preload" href="styles/themes/midnight.css" as="style">
+		<!-- Preload critical JS (e.g., main entry point and any key modules) -->
+		<link rel="preload" async href="./index.js" as="script">
+		<!-- Add more if needed, e.g., <link rel="preload" href="path/to/component.js" as="script"> -->
+		<!-- Load stylesheets normally (after preload for priority) -->
+		<link rel="stylesheet" href="https://mshaugh.github.io/nerdfont-webfonts/build/jetbrainsmono.css" crossorigin="anonymous">
 		<link rel="stylesheet" href="styles/index.css">
 		<link rel="stylesheet" href="styles/themes/midnight.css">
-		<script type="module">
-			import './app.js';
-			const app=document.createElement('app-view');
-			await WebComponent.preRender(app,document.body);
-		</script>
-	</head>
-	<body>
-	</body>
+		<!-- Load scripts normally -->
+		<script type="module" src="./index.js"></script>
+		</head>
+		
+		<body>
+		</body>
 </html>

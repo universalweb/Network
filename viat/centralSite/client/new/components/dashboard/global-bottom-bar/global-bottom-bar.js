@@ -1,16 +1,8 @@
-import {
-	hostSheet,
-	loadSheet,
-	resetSheet,
-} from '../componentLibrary/shared-styles.js';
-import { WebComponent } from '../componentLibrary/base.js';
-const bottomBarStyles = await loadSheet(new URL('../../styles/global-bottom-bar.css', import.meta.url));
-const host = hostSheet(`:host { display: block; }`);
+import { WebComponent } from '../../base/base.js';
+const bottomBarStyles = await WebComponent.styleSheet('./global-bottom-bar.css', import.meta.url);
 export class GlobalBottomBar extends WebComponent {
 	constructor() {
-		super([
-			resetSheet, host, bottomBarStyles,
-		]);
+		super([bottomBarStyles]);
 		this.state = {
 			columns: [],
 		};

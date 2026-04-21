@@ -62,3 +62,10 @@
 	background: var(--teal);
 	box-shadow: var(--stat-bar-fill-shadow, 0 0 6px var(--teal));
 }
+
+@media (max-width: 420px) {
+	.stat-block {
+		padding-left: 12px;
+		padding-right: 12px;
+	}
+}

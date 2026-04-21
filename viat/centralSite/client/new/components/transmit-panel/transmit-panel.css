@@ -12,6 +12,15 @@
 	gap: 12px 20px;
 }
 
+@media (max-width: 420px) {
+	.transmit-body {
+		padding-left: 12px;
+		padding-right: 12px;
+		grid-template-columns: 1fr;
+		gap: 10px;
+	}
+}
+
 .field {
 	display: flex;
 	flex-direction: column;

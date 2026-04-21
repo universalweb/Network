@@ -25,7 +25,7 @@
 	/* ── Fonts ───────────────────────────────────────── */
 	--font-mono: 'Share Tech Mono', monospace;
 	--font-display: 'Chakra Petch', sans-serif;
-	--font-icon: 'JetBrainsMono NFP', 'Sora', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+	--font-icon: 'JetBrainsMonoNL NF', 'JetBrainsMono NFP', 'Sora', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
 
 	/* ── Border Colors ───────────────────────────────── */
 	--border-light-color: rgba(10, 17, 40, 0.18);

@@ -1,3 +1,8 @@
+:host {
+	display: block;
+	flex-shrink: 0;
+}
+
 /* ══════════════════════════════════════════════════════
    VERBOSE OUTPUT / ACTIVITY LOG PANEL
 ══════════════════════════════════════════════════════ */
@@ -79,48 +84,4 @@
 
 .output-feed::-webkit-scrollbar-thumb {
 	background: var(--grey-mid);
-}
-
-.log-entry {
-	display: grid;
-	grid-template-columns: 70px 60px 1fr;
-	gap: 10px;
-	font-size: 0.625rem;
-	padding-bottom: 5px;
-	border-bottom: 1px solid var(--dark-divider-faint);
-}
-
-.log-entry:last-child {
-	border-bottom: none;
-}
-
-.log-ts {
-	color: var(--cyan-timestamp);
-}
-
-.log-tag {
-	font-weight: 700;
-}
-
-.log-tag-in {
-	color: var(--color-success);
-	text-shadow: var(--log-in-text-shadow, 0 0 5px var(--color-success-glow));
-}
-
-.log-tag-out {
-	color: var(--color-danger);
-	text-shadow: var(--log-out-text-shadow, 0 0 5px var(--color-danger-glow));
-}
-
-.log-msg {
-	color: var(--dark-text-bright);
-	word-break: break-all;
-}
-
-.log-msg.ok {
-	color: var(--color-success-text);
-}
-
-.log-msg.warn {
-	color: var(--color-warn-text);
 }

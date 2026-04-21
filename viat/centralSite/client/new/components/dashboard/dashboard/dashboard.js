@@ -1,47 +1,12 @@
-import './dashboard-sidebar.js';
-import {
-	hostSheet, loadSheet, resetSheet, scrollbarSheet,
-} from '../componentLibrary/shared-styles.js';
-import { WebComponent } from '../componentLibrary/base.js';
-const layoutStyles = await loadSheet(new URL('../../styles/layout.css', import.meta.url));
-const host = hostSheet(`
-	:host {
-		display: block;
-		position: relative;
-		width: 100%;
-		height: 100%;
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
-		line-height: 1.5;
-		color: var(--text-main);
-		user-select: none;
-		-webkit-font-smoothing: antialiased;
-	}
-
-	::slotted([slot='global-top-bar']) {
-		display: block;
-		height: 40px;
-		margin: 8px 10px 0;
-		width: calc(100% - 20px);
-	}
-
-	::slotted([slot='global-dock']) {
-		display: block;
-		flex: 0 0 auto;
-		width: 100%;
-	}
-`);
+import '../dashboard-sidebar.js';
+import { WebComponent } from '../../base/base.js';
+const layoutStyles = await WebComponent.styleSheet('./dashboard.css', import.meta.url);
 export class AppDashboard extends WebComponent {
 	static get observedAttributes() {
 		return ['center-max-width'];
 	}
 	constructor() {
-		super([
-			resetSheet,
-			host,
-			scrollbarSheet,
-			layoutStyles,
-		]);
+		super([layoutStyles]);
 		this.shadowRoot.innerHTML = `
 			<div class="dashboard">
 				<slot name="global-top-bar"></slot>

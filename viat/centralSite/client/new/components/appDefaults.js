@@ -51,11 +51,6 @@ export const ACTIVITY_ENTRIES = [
 export const TOP_BAR = {
 	actions: [
 		{
-			icon: '&#xf007;',
-			id: 'profile',
-			title: 'Profile',
-		},
-		{
 			icon: '&#xe615;',
 			id: 'settings',
 			title: 'Settings',
@@ -213,24 +208,6 @@ export const BOTTOM_BAR_COLUMNS = [
 		value: 'MAINNET',
 	},
 	{
-		className: 'good',
-		label: 'Peers',
-		value: '48',
-	},
-	{
-		label: 'Block',
-		value: '#4,291,842',
-	},
-	{
-		className: 'good',
-		label: 'Status',
-		value: 'In Sync',
-	},
-	{
-		label: 'Latency',
-		value: '14ms',
-	},
-	{
 		label: 'Version',
 		value: 'v1.0.0',
 	},
@@ -242,9 +219,9 @@ export const ACCOUNT_PANEL = {
 	profileLabel: 'Profile',
 };
 export const WALLET_PANEL = {
-	activity: '21 Transactions',
-	received: '+17,894.500 VIAT',
-	sent: '-25.000 VIAT',
+	activity: '21',
+	received: '17,894',
+	sent: '25.000',
 };
 export const CENTER_BAR = {
 	actions: [
@@ -253,6 +230,11 @@ export const CENTER_BAR = {
 			icon: '&#xf188f;',
 			id: 'faucet',
 			title: 'Faucet',
+		},
+		{
+			icon: '&#xf1d8;',
+			id: 'send',
+			title: 'Send',
 		},
 	],
 };

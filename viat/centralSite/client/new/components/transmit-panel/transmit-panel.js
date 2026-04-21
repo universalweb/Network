@@ -1,15 +1,10 @@
-import {
-	hostSheet,
-	loadSheet,
-	panelSheet,
-	resetSheet,
-} from './componentLibrary/shared-styles.js';
-import { WebComponent } from './componentLibrary/base.js';
-const transmitStyles = await loadSheet(new URL('../styles/transmit.css', import.meta.url));
-const host = hostSheet(`:host { display: block; flex-shrink: 0; }`);
+import { WebComponent } from '../base/base.js';
+const transmitStyles = await WebComponent.styleSheet('./transmit-panel.css', import.meta.url);
 export class TransmitPanel extends WebComponent {
 	constructor() {
-		super([resetSheet, host, panelSheet, transmitStyles], { tooltips: true });
+		super([transmitStyles], {
+			tooltips: true,
+		});
 		this.state = {
 			amountLabel: '',
 			amountPlaceholder: '',
@@ -32,7 +27,7 @@ export class TransmitPanel extends WebComponent {
 		});
 	}
 	render() {
-		this.html`
+		this.html `
 			<section class="transmit-panel panel">
 				<div class="panel-header">
 					<span><span class="ph-id">TX</span> // SEND VIAT</span>

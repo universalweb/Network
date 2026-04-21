@@ -1,15 +1,5 @@
-import {
-	hostSheet,
-	loadSheet,
-	resetSheet,
-} from '../componentLibrary/shared-styles.js';
-import { WebComponent } from '../componentLibrary/base.js';
-const tooltipStyles = await loadSheet(new URL('../../styles/tooltip.css', import.meta.url));
-const host = hostSheet(`
-:host {
-	display: block;
-}
-`);
+import { WebComponent } from '../../base/base.js';
+const tooltipStyles = await WebComponent.styleSheet('./tooltip.css', import.meta.url);
 const EDGE_MARGIN = 12;
 const GAP = 10;
 const HIDE_DELAY = 180;
@@ -23,11 +13,7 @@ export class UITooltip extends WebComponent {
 	sequence = 0;
 	showFrame = 0;
 	constructor() {
-		super([
-			resetSheet,
-			host,
-			tooltipStyles,
-		]);
+		super([tooltipStyles]);
 		this.state = {
 			mounted: false,
 			placement: 'top',
@@ -97,7 +83,7 @@ export class UITooltip extends WebComponent {
 	track(mouseX, mouseY) {
 		this.mousePos[0] = mouseX;
 		this.mousePos[1] = mouseY;
-		if (!this.STATE?.mounted || !this.STATE?.visible) {
+		if (!this.state?.mounted || !this.state?.visible) {
 			return;
 		}
 		const shell = this.shell;
@@ -106,7 +92,7 @@ export class UITooltip extends WebComponent {
 		}
 		const {
 			x, y,
-		} = this.calcPosition(mouseX, mouseY, shell.getBoundingClientRect(), null, this.STATE.placement);
+		} = this.calcPosition(mouseX, mouseY, shell.getBoundingClientRect(), null, this.state.placement);
 		this.state.x = x;
 		this.state.y = y;
 	}
@@ -135,7 +121,7 @@ export class UITooltip extends WebComponent {
 			cancelAnimationFrame(this.showFrame);
 			this.showFrame = 0;
 		}
-		const sliding = this.STATE?.visible === true;
+		const sliding = this.state?.visible === true;
 		if (sliding) {
 			this.state.text = text;
 			this.state.sliding = true;
@@ -146,7 +132,7 @@ export class UITooltip extends WebComponent {
 			this.state.sliding = false;
 		}
 		this.showFrame = requestAnimationFrame(() => {
-			if (this.sequence !== token || !this.STATE?.mounted) {
+			if (this.sequence !== token || !this.state?.mounted) {
 				return;
 			}
 			const shell = this.shell;
@@ -190,7 +176,7 @@ export class UITooltip extends WebComponent {
 				}, SLIDE_DURATION);
 			} else {
 				requestAnimationFrame(() => {
-					if (this.sequence !== token || !this.STATE?.mounted) {
+					if (this.sequence !== token || !this.state?.mounted) {
 						return;
 					}
 					this.visible = true;
@@ -199,7 +185,7 @@ export class UITooltip extends WebComponent {
 		});
 	}
 	hide() {
-		if (!this.STATE?.mounted) {
+		if (!this.state?.mounted) {
 			return;
 		}
 		this.sequence += 1;
@@ -209,7 +195,7 @@ export class UITooltip extends WebComponent {
 		}
 		const token = this.sequence;
 		this.hideTimeoutId = this.setTimeout(() => {
-			if (this.sequence !== token || this.STATE?.visible) {
+			if (this.sequence !== token || this.state?.visible) {
 				return;
 			}
 			this.mounted = false;

@@ -1,8 +1,8 @@
 import { isSymbol } from '../utilities.js';
 export let currentTracking = null;
 export class Binding {
-	static isBinding(value) {
-		return value instanceof Binding;
+	static isBinding(source) {
+		return source instanceof Binding;
 	}
 	constructor(key, value) {
 		this.key = key;

@@ -1,20 +1,10 @@
-import {
-	hostSheet,
-	loadSheet,
-	panelSheet,
-	resetSheet,
-	scrollbarSheet,
-} from './componentLibrary/shared-styles.js';
-import { WebComponent } from './componentLibrary/base.js';
-import { each } from './componentLibrary/template.js';
-const outputStyles = await loadSheet(new URL('../styles/output.css', import.meta.url));
-const host = hostSheet(`:host { display: block; flex-shrink: 0; }`);
-const entryHost = hostSheet(`:host { display: contents; }`);
+import { WebComponent } from '../base/base.js';
+import { each } from '../base/template.js';
+const outputStyles = await WebComponent.styleSheet('./activity-log.css', import.meta.url);
+const entryStyles = await WebComponent.styleSheet('./activity-log-entry.css', import.meta.url);
 class ActivityLogEntry extends WebComponent {
 	constructor() {
-		super([
-			resetSheet, outputStyles, entryHost,
-		]);
+		super([entryStyles]);
 		this.state = {
 			direction: '',
 			message: '',
@@ -43,14 +33,21 @@ class ActivityLogEntry extends WebComponent {
 	}
 }
 customElements.define('activity-log-entry', ActivityLogEntry);
+function createEntry(entry) {
+	const el = new ActivityLogEntry();
+	el.state = entry;
+	return el;
+}
 export class ActivityLog extends WebComponent {
 	constructor() {
-		super([
-			resetSheet, host, panelSheet, scrollbarSheet, outputStyles,
-		]);
+		super([outputStyles]);
+		this.rawEntries = [];
+		this.entryList = each([], createEntry, (entry, i) => {
+			return entry.id ?? i;
+		});
 		this.state = {
 			activeTab: '',
-			entries: [],
+			isEmpty: true,
 			tabs: [],
 		};
 		this.addEvent('handleTabClick', 'click', this.handleTabClick);
@@ -60,32 +57,44 @@ export class ActivityLog extends WebComponent {
 	}
 	set activeTab(value) {
 		this.state.activeTab = value ?? '';
+		this.rebuildList();
 	}
 	get entries() {
-		return this.state.entries;
+		return this.rawEntries;
 	}
 	set entries(data) {
-		this.state.entries = Array.isArray(data) ? data : [];
+		this.rawEntries = Array.isArray(data) ? data : [];
+		this.rebuildList();
+	}
+	passesFilter(entry) {
+		const { activeTab } = this.state;
+		if (activeTab === 'Inbound') {
+			return entry.direction === 'in';
+		}
+		if (activeTab === 'Outbound') {
+			return entry.direction === 'out';
+		}
+		return true;
+	}
+	rebuildList() {
+		const filtered = this.rawEntries.filter((e) => {
+			return this.passesFilter(e);
+		});
+		this.entryList.splice(0, this.entryList.length, ...filtered);
+		this.state.isEmpty = filtered.length === 0;
+	}
+	addEntry(entry) {
+		this.rawEntries.unshift(entry);
+		if (this.passesFilter(entry)) {
+			this.entryList.unshift(entry);
+			this.state.isEmpty = false;
+		}
 	}
 	handleTabClick(e, tab) {
 		this.activeTab = tab.dataset.tab || tab.textContent.trim();
 		this.emit('tab-change', {
 			tab: this.activeTab,
 		});
-	}
-	getFilteredEntries() {
-		const { entries } = this.state;
-		if (this.activeTab === 'Inbound') {
-			return entries.filter((entry) => {
-				return entry.direction === 'in';
-			});
-		}
-		if (this.activeTab === 'Outbound') {
-			return entries.filter((entry) => {
-				return entry.direction === 'out';
-			});
-		}
-		return entries;
 	}
 	render() {
 		return this.html `
@@ -109,23 +118,19 @@ export class ActivityLog extends WebComponent {
 				</div>
 				<div class="output-feed">
 					${() => {
-						const filtered = this.getFilteredEntries();
-						if (!filtered.length) {
-							return `
-								<div class="log-entry">
-									<span class="log-ts">--:--:--</span>
-									<span class="log-tag">∅</span>
-									<span class="log-msg">No ${this.state.activeTab.toLowerCase()} transactions.</span>
-								</div>
-							`;
+						if (!this.state.isEmpty) {
+							return '';
 						}
-						return each(filtered, (entry) => {
-							const el = new ActivityLogEntry();
-							el.state = entry;
-							return el;
-						}, (entry, i) => {
-							return entry.id ?? i;
-						});
+						return `
+							<div class="log-entry">
+								<span class="log-ts">--:--:--</span>
+								<span class="log-tag">∅</span>
+								<span class="log-msg">No ${this.state.activeTab.toLowerCase()} transactions.</span>
+							</div>
+						`;
+					}}
+					${() => {
+						return this.entryList;
 					}}
 				</div>
 			</section>

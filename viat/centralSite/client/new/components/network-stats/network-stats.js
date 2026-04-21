@@ -1,22 +1,10 @@
-import {
-	hostSheet,
-	loadSheet,
-	panelSheet,
-	resetSheet,
-	scrollbarSheet,
-} from './componentLibrary/shared-styles.js';
-import { WebComponent } from './componentLibrary/base.js';
-const statsStyles = await loadSheet(new URL('../styles/stats.css', import.meta.url));
-const host = hostSheet(`
-:host {
-	display: block;
-	flex-shrink: 0;
-	width: 100%;
-}
-`);
-export class NetworkStats extends WebComponent {
+import { SidebarPanel } from '../sidebar-panel/sidebar-panel.js';
+import { WebComponent } from '../base/base.js';
+const styles = await WebComponent.styleSheet('./network-stats.css', import.meta.url);
+const statsStyles = await WebComponent.styleSheet('../../styles/stats.css', import.meta.url);
+export class NetworkStats extends SidebarPanel {
 	constructor() {
-		super([resetSheet, host, panelSheet, scrollbarSheet, statsStyles]);
+		super([statsStyles, styles]);
 		this.state = {
 			chainStatus: [],
 			networkData: [],
@@ -48,7 +36,7 @@ export class NetworkStats extends WebComponent {
 		}).join('');
 	}
 	render() {
-		this.html`
+		return this.html `
 			<aside class="panel stats-panel">
 				<div class="panel-header">
 					<span><span class="ph-id">NET</span> // NODE STATUS</span>
@@ -56,11 +44,15 @@ export class NetworkStats extends WebComponent {
 				</div>
 				<div class="stat-block">
 					<div class="stat-block-title">NETWORK DATA</div>
-					${() => this.renderRows(this.state.networkData)}
+					${() => {
+						return this.renderRows(this.state.networkData);
+					}}
 				</div>
 				<div class="stat-block">
 					<div class="stat-block-title">CHAIN STATUS</div>
-					${() => this.renderRows(this.state.chainStatus)}
+					${() => {
+						return this.renderRows(this.state.chainStatus);
+					}}
 				</div>
 			</aside>
 		`;

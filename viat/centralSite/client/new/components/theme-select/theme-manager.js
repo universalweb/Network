@@ -11,9 +11,13 @@ export const THEMES = [
 		id: 'noir',
 		label: 'Noir',
 	},
+	{
+		id: 'marathon',
+		label: 'Marathon',
+	},
 ];
 function themeLink() {
-	return document.querySelector('link[href*="themes/"]');
+	return document.querySelector('link[rel="stylesheet"][href*="themes/"]');
 }
 export function setTheme(id) {
 	if (!THEMES.find((t) => {
@@ -21,8 +25,8 @@ export function setTheme(id) {
 	})) {
 		return;
 	}
-	const link = themeLink();
-	if (link) {
+	const links = document.querySelectorAll('link[href*="themes/"]');
+	for (const link of links) {
 		link.href = link.href.replace(/[^/]+\.css(\?.*)?$/, `${id}.css`);
 	}
 	localStorage.setItem('theme.mode', id);

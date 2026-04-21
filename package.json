@@ -139,7 +139,6 @@
 		"changelog": "auto-changelog -p --sort-commits date-desc && git add CHANGELOG.md",
 		"bumpVersion": "pnpm version patch --force",
 		"publish": "pnpm update && pnpm run bumpVersion && pnpm run changelog",
-		"varmemtest": "nodemon -expose-gc --watch 'memoryTests.js' memoryTests.js",
 		"updateAll": "pnpm update --latest",
 		"installMain": "pnpm install --no-optional"
 	},

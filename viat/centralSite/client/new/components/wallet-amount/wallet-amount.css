@@ -1,3 +1,8 @@
+:host {
+  display: block;
+  flex-shrink: 0;
+}
+
 /* ══════════════════════════════════════════════════════
    WALLET HERO
 ══════════════════════════════════════════════════════ */
@@ -47,6 +52,12 @@
 	color: var(--text-main);
 	letter-spacing: -2px;
 	line-height: 1;
+}
+
+@media (max-width: 420px) {
+	.wa-amount-main {
+		font-size: 2.125rem;
+	}
 }
 
 .wa-coin-info {

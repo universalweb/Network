@@ -1,20 +1,12 @@
-import {
-	hostSheet,
-	loadSheet,
-	resetSheet,
-} from '../componentLibrary/shared-styles.js';
-import { WebComponent } from '../componentLibrary/base.js';
-const notificationStyles = await loadSheet(new URL('../../styles/notification.css', import.meta.url));
-const host = hostSheet(`:host { display: block; }`);
+import { WebComponent } from '../../base/base.js';
+const notificationStyles = await WebComponent.styleSheet('./notification.css', import.meta.url);
 const DEFAULT_TIMEOUT = 3200;
 const EXIT_DELAY = 260;
 export class UINotification extends WebComponent {
 	queue = [];
 	nextId = 0;
 	constructor() {
-		super([
-			resetSheet, host, notificationStyles,
-		]);
+		super([notificationStyles]);
 		this.addEvent('handleDismissNotification', 'click', this.handleDismissNotification);
 		this.addEvent('handleDismissNotificationKeydown', 'keydown', this.handleDismissNotificationKeydown);
 		this.addEvent('handleDismissNotificationClose', 'click', this.handleDismissNotificationClose);

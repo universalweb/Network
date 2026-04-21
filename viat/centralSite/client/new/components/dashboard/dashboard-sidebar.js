@@ -1,21 +1,5 @@
-import { hostSheet, resetSheet, scrollbarSheet } from '../componentLibrary/shared-styles.js';
-import { WebComponent } from '../componentLibrary/base.js';
-const host = hostSheet(`
-	:host {
-		display: flex;
-		flex-direction: column;
-		overflow-x: hidden;
-		overflow-y: auto;
-		transform: translateX(0);
-		transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s ease;
-		will-change: transform, opacity;
-	}
-	:host(.sidebar-closed) {
-		transform: translateX(100%);
-		opacity: 0;
-		pointer-events: none;
-	}
-`);
+import { WebComponent } from '../base/base.js';
+const styles = await WebComponent.styleSheet('./dashboard-sidebar.css', import.meta.url);
 const TOGGLE_ID = 'sidebar-toggle';
 const TOGGLE_ACTION = {
 	icon: '&#xebf4;',
@@ -24,17 +8,19 @@ const TOGGLE_ACTION = {
 };
 export class DashboardSidebar extends WebComponent {
 	constructor() {
-		super([
-			resetSheet, host, scrollbarSheet,
-		]);
+		super([styles]);
 		this.classList.add('sidebar-closed');
 		this.shadowRoot.innerHTML = `<slot></slot>`;
 	}
 	onConnect() {
 		[...this.querySelectorAll('slot')].forEach((s) => {
-			const handler = () => this.syncContent();
+			const handler = () => {
+				return this.syncContent();
+			};
 			s.addEventListener('slotchange', handler);
-			this.effectUnsubs.add(() => s.removeEventListener('slotchange', handler));
+			this.effectUnsubs.add(() => {
+				return s.removeEventListener('slotchange', handler);
+			});
 		});
 		const root = this.getRootNode();
 		const topbarHandler = (e) => {
@@ -43,8 +29,12 @@ export class DashboardSidebar extends WebComponent {
 			}
 		};
 		root.addEventListener('topbar-action', topbarHandler);
-		this.effectUnsubs.add(() => root.removeEventListener('topbar-action', topbarHandler));
-		this.setTimeout(() => this.syncContent(), 0);
+		this.effectUnsubs.add(() => {
+			return root.removeEventListener('topbar-action', topbarHandler);
+		});
+		this.setTimeout(() => {
+			return this.syncContent();
+		}, 0);
 	}
 	getTopBar() {
 		const slot = this.getRootNode().querySelector('slot[name="global-top-bar"]');
@@ -58,7 +48,7 @@ export class DashboardSidebar extends WebComponent {
 		if (!topBar) {
 			return;
 		}
-		const base = (topBar.STATE?.actions ?? []).filter((a) => {
+		const base = (topBar.STATE.actions ?? []).filter((a) => {
 			return a.id !== TOGGLE_ID;
 		});
 		topBar.state.actions = hasContent ? [...base, TOGGLE_ACTION] : base;

@@ -51,7 +51,7 @@
   --dark-text-medium: rgba(200, 208, 232, 0.70);
   --dark-text-bright: rgba(200, 208, 232, 0.84);
   --dark-heading: rgba(255, 255, 255, 0.38);
-  --dark-heading-sep: rgba(255, 255, 255, 0.14);
+  --dark-heading-sep: rgba(255, 255, 255, 0.8);
   --dark-text-faint: rgba(255, 255, 255, 0.26);
 
   /* ── Dark Surface Dividers ───────────────────────── */

@@ -1,17 +1,45 @@
 import * as eventMethods from './events.js';
 import * as globalMethods from './globalState.js';
+import * as sharedStyles from './shared-styles.js';
 import * as stateMethods from './state.js';
 import { allChildren, liveChildren, registerChild } from './children.js';
-import { isFunction, isShadowRoot } from '../utilities.js';
+import {
+	isFunction,
+	isPromiseLike,
+	isShadowRoot,
+	isString,
+} from '../utilities.js';
 import { register, registry, unregister } from './registry.js';
 import { attachTooltips } from '../global/tooltip-controller.js';
+import { loadSheet } from './css-loader.js';
 import { makeHtmlTag } from './template.js';
 import { makeRenderProxy } from './binding.js';
 export { liveChildren, registerChild } from './children.js';
 export { getGlobalState, setGlobalState, subscribeGlobal } from './globalState.js';
 export { registry } from './registry.js';
 export class WebComponent extends HTMLElement {
-	static WC = Symbol.for('wc.base');
+	constructor(sheets = [], opts = {}) {
+		super();
+		this.useTooltips = opts.tooltips === true;
+		this.attachShadow({
+			mode: 'open',
+		});
+		if (!this.constructor._compiledStyles) {
+			this.constructor._compiledStyles = [
+				...new Set([
+					sharedStyles.resetSheet,
+					sharedStyles.panelSheet,
+					sharedStyles.scrollbarSheet,
+					sharedStyles.utilsSheet,
+					...sheets,
+				]),
+			];
+		}
+		this.shadowRoot.adoptedStyleSheets = this.constructor._compiledStyles;
+		this.html = makeHtmlTag(this);
+		this.initState();
+		this.createRenderCompletePromise();
+	}
 	static attrBindings = {};
 	static get observedAttributes() {
 		return Object.keys(this.attrBindings ?? {});
@@ -23,7 +51,9 @@ export class WebComponent extends HTMLElement {
 		if (!WebComponent.isWebComponent(el)) {
 			return;
 		}
-		await el.renderComplete;
+		if (el.renderComplete) {
+			await el.renderComplete;
+		}
 		await Promise.all(allChildren(el).map(WebComponent.waitRenderTree));
 	}
 	static async preRender(element, mount, opts = {}) {
@@ -31,7 +61,7 @@ export class WebComponent extends HTMLElement {
 		const easing = opts.easing ?? 'cubic-bezier(0.4,0,0.2,1)';
 		element.style.cssText += ';opacity:0;pointer-events:none;will-change:opacity';
 		console.log(`[preRender] mounting ${element.localName} hidden`);
-		if (typeof mount === 'function') {
+		if (isFunction(mount)) {
 			mount(element);
 		} else {
 			mount.appendChild(element);
@@ -43,7 +73,7 @@ export class WebComponent extends HTMLElement {
 			});
 		});
 		console.log(`[preRender] all components ready — revealing ${element.localName} on GPU`);
-		await element.animate(
+		const animation = element.animate(
 			[
 				{
 					opacity: 0,
@@ -55,29 +85,57 @@ export class WebComponent extends HTMLElement {
 			{
 				duration,
 				easing,
-				fill: 'forwards',
 			}
-		).finished;
+		);
+		await animation.finished;
+		animation.commitStyles();
+		animation.cancel();
 		element.style.opacity = '';
 		element.style.pointerEvents = '';
 		element.style.willChange = '';
 		return element;
 	}
-	static isWebComponent(el) {
-		return el?.[WebComponent.WC] === true;
+	static isWebComponent(source) {
+		return source instanceof WebComponent;
+	}
+	static #sheetCache = new Map();
+	static styleSheet(source, metaUrl) {
+		const key = metaUrl ? new URL(source, metaUrl).toString() : source;
+		if (this.#sheetCache.has(key)) {
+			return this.#sheetCache.get(key);
+		}
+		if (metaUrl) {
+			const sheetPromise = loadSheet(key);
+			this.#sheetCache.set(key, sheetPromise);
+			return sheetPromise;
+		}
+		const sheet = new CSSStyleSheet();
+		sheet.replaceSync(source);
+		this.#sheetCache.set(key, sheet);
+		return sheet;
+	}
+	static async create(config = {}) {
+		const {
+			state, sheets = [], ...opts
+		} = config;
+		const instance = new this(sheets, opts);
+		if (state !== undefined) {
+			await instance.replaceState(await state);
+		}
+		return instance;
 	}
 	STATE = {};
 	stateProxy = null;
 	prevState = null;
-	stateWatchers = new Map();
+	stateWatchers = null;
 	globalUnsubs = new Set();
 	effectUnsubs = new Set();
 	templateBuilt = false;
 	renderTracking = false;
 	renderProxy = null;
-	eventHandlers = new Map();
-	elementEventNames = new WeakMap();
-	activeEventTypes = new Set();
+	eventHandlers = null;
+	elementEventNames = null;
+	activeEventTypes = null;
 	eventRoot = null;
 	renderResolver = null;
 	renderComplete = null;
@@ -89,39 +147,24 @@ export class WebComponent extends HTMLElement {
 		return this.stateProxy;
 	}
 	set state(value) {
-		this.setState(value);
+		this.replaceState(value);
 	}
 	unbindTooltips = null;
 	useTooltips = false;
 	renderSeq = 0;
 	unregisterFromParent = null;
 	timeouts = new Set();
-	constructor(sheets = [], opts = {}) {
-		super();
-		this[WebComponent.WC] = true;
-		this.handleBubbledEvent = this.handleBubbledEvent.bind(this);
-		this.useTooltips = opts.tooltips === true;
-		this.attachShadow({
-			mode: 'open',
-		});
-		if (sheets.length) {
-			this.shadowRoot.adoptedStyleSheets = sheets;
-		}
-		this.html = makeHtmlTag(this);
-		this.initState();
-		this.createRenderCompletePromise();
-	}
 	connectedCallback() {
 		register(this);
 		const root = this.getRootNode();
-		const parentHost = root instanceof ShadowRoot ? root.host : this.parentElement;
+		const parentHost = isShadowRoot(root) ? root.host : this.parentElement;
 		if (WebComponent.isWebComponent(parentHost)) {
 			this.unregisterFromParent = registerChild(parentHost, this);
 		}
 		this.connectDelegatedEvents();
 		this.onConnect();
 		if (Object.keys(this.STATE).length) {
-			this.applyState();
+			this.updateView();
 		} else {
 			this.refresh();
 		}
@@ -166,6 +209,9 @@ export class WebComponent extends HTMLElement {
 		this.intervals.clear();
 	}
 	attributeChangedCallback(attributeName, oldVal, newVal) {
+		if (oldVal === newVal) {
+			return;
+		}
 		const binding = this.constructor.attrBindings?.[attributeName];
 		if (binding) {
 			this.state[binding] = newVal;
@@ -178,10 +224,15 @@ export class WebComponent extends HTMLElement {
 	getComponents(tag) {
 		return liveChildren(this, tag.toLowerCase());
 	}
+	appendBatch(container, elements) {
+		const frag = document.createDocumentFragment();
+		frag.append(...elements);
+		container.append(frag);
+	}
 	addStyleSheet(sheet) {
 		const root = this.shadowRoot;
-		if (root && !root.adoptedStyleSheets.includes(sheet)) {
-			root.adoptedStyleSheets = [...root.adoptedStyleSheets, sheet];
+		if (root) {
+			root.adoptedStyleSheets = [...new Set([...root.adoptedStyleSheets, sheet])];
 		}
 	}
 	addInterval(fn, ms) {
@@ -196,8 +247,8 @@ export class WebComponent extends HTMLElement {
 	addEffect(keys, fn) {
 		const keyList = Array.isArray(keys) ? keys : [keys];
 		const unsubs = keyList.map((key) => {
-			return this.watchState(key, (newVal, oldVal, state) => {
-				return fn(state, newVal, oldVal);
+			return this.watchState(key, (newVal, oldVal) => {
+				return fn(this.state, newVal, oldVal);
 			});
 		});
 		const unsub = () => {
@@ -215,15 +266,23 @@ export class WebComponent extends HTMLElement {
 	onRenderError(error) {
 		console.error(`[${this.localName}] render error:`, error);
 	}
+	beforeRender() {}
 	render() {}
-	refresh() {
+	async refresh() {
 		this.templateBuilt = false;
 		this.createRenderCompletePromise();
 		this.renderTracking = true;
 		this.renderProxy = makeRenderProxy(this.STATE ?? {});
 		const seq = ++this.renderSeq;
 		try {
-			this.render();
+			const beforeResult = this.beforeRender();
+			if (isPromiseLike(beforeResult)) {
+				await beforeResult;
+			}
+			const result = this.render();
+			if (isPromiseLike(result)) {
+				await result;
+			}
 		} catch (error) {
 			this.onRenderError(error);
 		}
@@ -235,12 +294,16 @@ export class WebComponent extends HTMLElement {
 		this.syncDelegatedEvents();
 		this.renderResolver?.();
 		this.renderResolver = null;
-		console.log(`[rendered] ${this.localName}`);
+		console.log(`%c[view rendered] <${this.localName}>`, 'color:red');
 		this.onRender();
 		if (this.useTooltips) {
 			this.unbindTooltips?.();
 			this.unbindTooltips = null;
 			attachTooltips(this.getComponentRoot()).then((unbind) => {
+				if (!this.isConnected) {
+					unbind();
+					return;
+				}
 				this.unbindTooltips = unbind;
 			});
 		}
@@ -261,7 +324,7 @@ export class WebComponent extends HTMLElement {
 		return this.shadowRoot ?? this;
 	}
 	resolve(target) {
-		return typeof target === 'string' ? document.querySelector(target) : target;
+		return isString(target) ? document.querySelector(target) : target;
 	}
 	appendTo(target) {
 		return this.resolve(target)?.appendChild(this);

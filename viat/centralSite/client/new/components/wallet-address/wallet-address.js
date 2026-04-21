@@ -1,24 +1,16 @@
-import {
-	hostSheet,
-	loadSheet,
-	resetSheet,
-} from './componentLibrary/shared-styles.js';
-import { WebComponent } from './componentLibrary/base.js';
-const styles = await loadSheet(new URL('../styles/wallet-address.css', import.meta.url));
-const host = hostSheet(`:host { display: block; }`);
+import { WebComponent } from '../base/base.js';
+const styles = await WebComponent.styleSheet('./wallet-address.css', import.meta.url);
 export class WalletAddress extends WebComponent {
-	static get observedAttributes() {
-		return ['wallet-address'];
-	}
+	static attrBindings = {
+		'wallet-address': 'walletAddress',
+	};
 	constructor() {
-		super([
-			resetSheet, host, styles,
-		], {
+		super([styles], {
 			tooltips: true,
 		});
 		this.state = {
 			copied: false,
-			walletAddress: '',
+			walletAddress: this.getAttribute('wallet-address') ?? '',
 		};
 		this.addEvent('copy', 'click', this.handleCopy);
 		this.addEvent('copyKeydown', 'keydown', this.handleCopyKeydown);
@@ -28,14 +20,6 @@ export class WalletAddress extends WebComponent {
 	}
 	set walletAddress(value) {
 		this.state.walletAddress = value ?? '';
-	}
-	onConnect() {
-		this.state.walletAddress = this.getAttribute('wallet-address') ?? this.walletAddress;
-	}
-	onAttributeChange(attributeName, empty, newVal) {
-		if (attributeName === 'wallet-address') {
-			this.state.walletAddress = newVal ?? '';
-		}
 	}
 	async handleCopy() {
 		if (!this.state.walletAddress) {
