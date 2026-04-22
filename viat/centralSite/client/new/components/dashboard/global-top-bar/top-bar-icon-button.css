@@ -1,0 +1,22 @@
+button {
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--text-offwhite);
+  cursor: pointer;
+  display: flex;
+  font-family: var(--font-icon);
+  font-size: 1rem;
+  justify-content: center;
+  opacity: 0.75;
+  padding: 4px;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
+}
+button:hover {
+  color: var(--topbar-accent);
+  opacity: 1;
+}

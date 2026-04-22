@@ -1,88 +1,58 @@
 <h1 align="center">⩝</h1>
-<h3 align="center" class="mono">  <a href="https://viat.network">VIAT</a> | <a href="https://github.com/universalweb/Network/">GITHUB</a> | <a href="https://x.com/tommarchi/">DEV</a>  </h3>
+<h3 align="center" class="mono"> ▏<a href="https://viat.network">VIAT</a> ∣ <a href="https://github.com/universalweb/Network/">GITHUB</a> ∣ <a href="https://x.com/tommarchi/">DEV</a> ∣ <a href="https://github.com/universalweb/Network/blob/beta/VIAT.pdf">WHITEPAPER</a>▕</h3>
 <hr />
-<h2 align="center">WELCOME TO THE NEXUS</h2>
-<p align="center">META-LAYER  SOLUTIONS</p>
-<h4 align="center"> POST QUANTUM CRYPTOGRAPHIC NEXUS </h4>
-<!-- <p align="center"> <a href="https://github.com/universalweb/Whitepaper">WHITEPAPER (OUTDATED - OLD DESIGN)</a> </p> -->
-<hr />
-<h3 align="center" class="mono">UW://README</h3>
-<p align="center" class="mono"> LAYER SUBZERO | LAYER -1 | SUB-LAYER 0 </p>
-<!-- <img class="header" width="100%" src="https://raw.githubusercontent.com/universalweb/Network/refs/heads/master/docs/images/header.jpeg" alt="header"> -->
-<p>UW/VIAT is a post quantum Meta-Layer solution that embraces a hybrid network architecture with post-quantum cryptography and designed for a multi-planetary future. It serves as the foundation for a next-generation Web (UW), Domain System (DIS), native cryptocurrency (VIAT), and UDP based Network Data Transport Protocol (UW://).</p>
-<p>Unlike traditional Layer "0" solutions, which focus solely on blockchain interoperability and scalability, UW/VIAT encompasses a wide array of capabilities and technologies with implications beyond the blockchain space. UW/VIAT is a nexus of infrastructure for next-gen communications, applications, secure voting, digital ownership, real-time transactions, DeFi, IoT, cryptocurrency, governance, cryptographic identification, universal login, government intranets, smart contracts, domain name/information system, domain certificates, modern UTF-8 URLs, and beyond. UW/VIAT strives for balance; it contains both centralized and decentralized components that are natively integrated into a united system.</p>
-<hr />
-${viat}
-<hr />
-<h4 align="center" style="margin-top: 20px"> UNIVERSAL WEB </h4>
-<p>These are all the cryptographic algorithms supported or play a role in the UW/VIAT. Hybrid post quantum algorithms are available for Key Exchanges and Signatures.</p>
-<hr style="margin: 25px auto; width: 75%" />
-<p> <span style="margin-left: 10px">KEY EXCHANGE: [KYBER, x25519]</span></p>
-<p>  <span style="margin-left: 10px">ENCRYPTION (AEAD): [AEGIS-256, XChaCha20Poly1305-IETF]</span></p>
-<p>  <span style="margin-left: 10px">SIGNATURE: [DILITHIUM, ED25519, SPHINCS+, FALCON-1024]</span></p>
-<p> <span style="margin-left: 10px">HASH: [SHAKE256, BLAKE3]</span></p>
-<hr />
-<h1 align="center">F.A.Q</h1>
-<h4 class="mono">WHAT IS A NEXUS?</h4>
-<p>We call the UW/VIAT a nexus which is: a unified ecosystem where both Web-like, cryptocurrency, and governing elements are deeply interconnected yet functionally independent. Our version of the World Wide Web is the Universal Web and our cryptocurrency is VIAT; together they form what we call a nexus. </p>
-<p>The Nexus has its own Domain System, Messaging System, Real-time events, design, data transport network protocol, language, browser, cryptocurrency, and many other unique components. It's a cohesive system rather than a bunch of independent technologies retrofitted to work with each other or layering one thing on top of the next similar to the Web today or what most call "Web3". </p>
-<h4 class="mono">OBJECTIVES</h4>
-<p>The primary directive of the Universal Web is to create a viable post quantum replacement for the Web today. The primary objective for VIAT is to create the best post quantum cryptocurrency with the highest TPS possible. Both are viable objectives achieved with software no hardware needed. </p>
-<h4 class="mono">POST QUANTUM WORLD</h4>
-<p>The Universal Web and VIAT are designed to be resilient against the potential threats posed by quantum computing. This means implementing cryptographic algorithms that are secure against quantum attacks, ensuring the integrity and confidentiality of user data and transactions. VIAT & the UW could be used as a tool to help protect other none quantum cryptocurrencies and or provide users the ability to later prove they were the original owner of a legacy wallet, contract, NFT, and or other digital assets. This means that BTC holders could use VIAT to protect their BTC wallets and in the event the BTC team needs a viable fast off ramp to either transition BTC/ETH to their own hybrid post quantum fork or to transition to run on VIAT. VIAT has a tri-algo key pair with 1 classical key pair and two post quantum key pairs that rely on different primitives. This triplet hybrid algorithm provides robust assurances in different scenarios where one or two algorithms fail. </p>
-<h4 class="mono">IS IT WEB3?</h4>
-<p>Depends on your definition.</p>
-<p>If Web3 means ALL websites/apps are on a network like IPFS, users/services must use a smart contract to interact with sites, paying a TX fee just to post a social media update, using decentralized DNS with limited abilities (ex: ETH domains), then we have a very different definition. That version of the Web would be a major downgrade that removes key beneficial aspects of the Web while also not addressing any of the real issues. Any Web replacement must not introduce delays for any actions when a client is interacting with a server. If a user must use a smart contract to post on a site or make profile edits it adds significant delays and costs to otherwise trivial actions. If an action must first go through mining, verification, and propagation it's inherently slower than a modern cost free client-server API request. Regardless of optimization generally the typical client-server API request will require less time, data, and processing. Thinking about this logically we know the shortest distance is between two points therefore adding more points will always be slower. What this means is that we need to improve and include the World Wide Web's client-server model in the solution not disregard it. </p>
-<p>Our standard for what we consider Web3 includes 2 major networks that are natively integrated: the first is a Web and a cryptocurrency with a new UDP based network protocol (UW://), a new domain name system (DIS). The Web part must include: a new next gen encrypted by default UDP based network protocol (UW://), native UTF-8 URLs with native emoji support, a new cryptographic certificate focused Domain name system (DIS), new types of domains, feature packed Domain Certificates, hybrid post quantum cryptography, and a historical public ledger of domain certificates. Currently, no such project exists that meets that standard besides the UW and VIAT. </p>
-<h4 class="mono">WHERE'S THE UW NAME FROM?</h4>
-<p>The Universal Web's name was chosen because of its natural evolution of the name "The World Wide Web" and highlights the intent to build a Multi-planetary Web. </p>
-<h4 class="mono">INTERNET vs WEB</h4>
-<p>The Web is all the software bits that sits on-top of the Internet. The Universal Web at least for now is only concerned with software; no special hardware required. Users just need software to access the Universal Web and Servers just need software to setup a Universal Web server; the same goes for VIAT. </p>
-<h4 class="mono">Is the UW's DIS and the WWW's DNS the same?</h4>
-<p>The World Wide Web has the Domain Name System, Web3 has Decentralized DNS, &amp; the Universal Web has a similar component called the DIS(Domain Information System). Here's the critical difference DNS takes a hostname and spits out a DNS record (has things like an IP address) the DIS returns a cryptographic signed certificate. The returned certificate can have data akin to DNS records with similar syntax but are cryptographically protected. A CA can't modify or change the owner's contents of a domain cert, it can only add a section specific to the CA for client verification. The DIS plays a similar role to DNS but the DIS has greater functionality such as: all certificates include a signature by the owner in addition to a CA, and was designed for full integration with other components. Because the DIS provides a certificate instead of just a basic DNS record it makes connection establishment faster and more secure, specifically speeding up the connection synchronization (Handshake/Connection Establishment) process. DIS certs favor an authentication via encryption process so that certs are verified by taking part in the connection establishment process. When browsing the UW all domain lookups would go to the remote, website (if permitted by the server), and or local DIS (cached). The entire DIS is a publicly verifiable DAG & Linear blockchain but old certificates can be replaced which means Domain record changes are quick and easy with a 0TTL. The DIS doesn't share any domains with the World Wide Web's DNS meaning domain names don't carry over. The UW also permits emoji/UTF-8 domains as well as single name domains. Reserved named domains are domains consisting of just a name (without an extension) to quickly access the site for example you just type "x" to go to "x.com". Although Reserved named domains are supported they are limited in scope and options.</p>
-<h4 class="mono">PERSPECTIVE &amp; RATIONALE</h4>
-<p>Re-imagining the Web from the ground up may seem like a radical proposition, but it is entirely logical, rational, within our ability, &amp; necessary. At its core, the Web is a collection of software solutions. Therefore, creating a system that can replace yet go beyond the Web doesn’t require reinventing the physical infrastructure; it simply demands innovative software designed to leverage current innovations while addressing the limitations of the old. </p>
-<p>If we critically evaluate the challenges facing the current Web, from inefficiencies &amp; vulnerabilities to its inability to fully embrace emerging technologies, it becomes self-evident that incremental updates aren't going to address fundamental design flaws. A foundational overhaul is not only viable but also more efficient and cost-effective. By building on 30 years of lessons, we can envision something that goes beyond what we call a Web, which integrates cutting-edge technologies and anticipates future advancements. This isn’t just an opportunity; it’s an imperative to build the future. </p>
-<h4 class="mono">KNOWN POTENTIAL</h4>
-<p>VIAT and the Universal Web are the foundation for a multi-planetary, post-quantum, cryptographic nexus—what a real "everything app" would need to be. It could serve as a foundation for a future society. VIAT handles decentralized, high-throughput payments with hybrid quantum-resistant security, while the UW replaces the Web and beyond. Together, they unify payments, shopping, consensus, health, social, assets, identity, communication, government, digital infrastructure, and more into one seamless, scalable system—built for Earth, Mars, and beyond.</p>
+<h1 align="center">VIAT</h1>
+<p align="center">VIAT IS THE EMERGING STORE OF VALUE FOR THE POST-QUANTUM ERA</p>
+<p class="mono" align="center">No cryptographic algorithm is permanent. Legacy systems assumed stability. Post-quantum systems assume superiority. Both assumptions eventually expire.</p>
+<img class="header" style="display:block;margin:0 auto;" align="center" width="1000" src="https://raw.githubusercontent.com/universalweb/Network/refs/heads/master/docs/images/oct_coin.png" alt="header">
+<hr /> <div class="mainSection">
+	<h4 align="center"> VIAT (⩝) </h4>
+	<!-- <h5 align="center" class="mono"> SWAP TOKENS: <a href="https://binplorer.com/address/0x78d25a64b084db308d805a41b98c810a4f2c7f4a">$bVIAT (BNB)</a> | $SNTVT (ETH) </h5> -->
+	<p align="center">VIAT /ˈviː.æt/ is a proof-of-work post-quantum transitory cryptocurrency.</p>
+	<hr style="margin: 25px auto; width: 75%" />
+	<p>  <span style="margin-left: 10px">SYMBOL: <a href="https://www.compart.com/en/unicode/U+2A5D">⩝</a></span></p>
+	<p>  <span style="margin-left: 10px">SIGNATURE: [DILITHIUM ◉ ED25519 ◉ SPHINCS+]</span></p>
+	<p>  <span style="margin-left: 10px">WALLET ADDRESS: [24, 32+]BYTES (SHAKE256)</span></p>
+	<p>  <span style="margin-left: 10px">PROOF: Proof of Work + MULTI-PROOF</span></p>
+	<p>  <span style="margin-left: 10px">BLOCKCHAIN: Hybrid Block lattice</span></p>
+	<p>  <span style="margin-left: 10px">KEY EXCHANGE: [KYBER ◉ x25519]</span></p>
+	<p>  <span style="margin-left: 10px">HASH: SHAKE256 (XOF)</span></p>
+	<p>  <span style="margin-left: 10px">KEYED HASH: KMAC256 (XOF)</span></p>
+	<p>  <span style="margin-left: 10px">STRICT HASH: SHA3-256 ◉ SHA3-512</span></p>
+	<p>  <span style="margin-left: 10px">FILESYSTEM: SELF-ORGANIZING FILESYSTEM</span></p>
+	<p>  <span style="margin-left: 10px">BLOCKCHAIN TYPES: [DAG ◉ LINEAR BLOCKCHAIN]</span></p>
+	<p>  <span style="margin-left: 10px">ENCRYPTION (AEAD): AEGIS-256 - XChaCha20Poly1305-IETF</span></p>
+	<p>  <span style="margin-left: 10px">ENCODING: CBOR  BINARY DATA SERIALIZATION FORMAT</span></p>
+	<p>  <span style="margin-left: 10px">NETWORK PROTOCOL: UW://[UDSP + DIS] {UDP} - (TRANSPORT AGNOSTIC)</span></p>
+	<p>  <span style="margin-left: 10px">DOMAIN SYSTEM: Domain Information System [DIS]</span></p>
+	<p>  <span style="margin-left: 10px">QUANTUM: QUANTUM PROOF & QUANTUM READY</span></p>
+	<p>  <span style="margin-left: 10px">DESIGN VERSION: v5.0.0</span></p>
+	<hr style="margin: 25px auto; width: 75%" />
+</div>
+
 <hr />
 <h4 class="mono">BROAD CODE OBJECTIVES</h4>
 <ul>
 	<li>VIAT (NATIVE CRYPTOCURRENCY)</li>
 	<li>VIAT GUI WALLET</li>
 	<li>VIAT MINING GUI</li>
+	<li>VIAT COMMAND & CONTROL TERMINAL</li>
 	<li>DECENTRALIZED GOVERNANCE</li>
-	<li>SMART CONTRACTS</li>
-	<li>DECENTRALIZED EXCHANGE</li>
+	<li>SMART CONTRACTS & SPECS</li>
+	<li>SWAP & EXCHANGE</li>
 	<li>CUSTOM UDP BASED NETWORK PROTOCOL (UW://)</li>
-	<li>UW SERVER MODULE</li>
-	<li>UW CLIENT MODULE</li>
 	<li>DIS (DOMAIN INFORMATION SYSTEM)</li>
-	<li>UNIVERSAL WEB APPS</li>
-	<li>Multi-OS Support</li>
-	<li>Multi-Device Support</li>
-	<li>UW BROWSER</li>
+	<li>UNIVERSAL WEB</li>
+	<li>UW/VIAT WEB BROWSER</li>
 </ul>
 <hr />
 <h4 class="mono">CODE REPO SUMMARY</h4>
 <ul>
 	<li>
-		<a href="https://github.com/universalweb/Network/tree/master/examples/viat.js">VIAT</a>
+		<a href="https://github.com/universalweb/Network/tree/beta">BETA REPO</a>
 	</li>
 	<li>
-		<a href="https://github.com/universalweb/Network/tree/master/udsp/">NETWORK DATA TRANSPORT PROTOCOL (UDSP)</a>
-	</li>
-	<li>
-		<a href="https://github.com/universalweb/Network/tree/master/udsp/server">SERVER MODULE</a>
-	</li>
-	<li>
-		<a href="https://github.com/universalweb/Network/tree/master/udsp/client">CLIENT MODULE</a>
-	</li>
-	<li>
-		<a href="https://github.com/universalweb/Network/tree/master/examples/serverApp">EXAMPLE APP</a>
-	</li>
-	<li>
-		<a href="https://github.com/universalweb/Network/tree/master/examples/certificates.js">DEMO CERTS</a>
+		<a href="https://github.com/universalweb/Network/">MASTER REPO</a>
 	</li>
 </ul>
 <br />
@@ -90,10 +60,8 @@ ${viat}
 <h4 align="center">Want to contribute? Then join the Imperium today!</h4>
 <p align="center"> To help write content, make art, write code, share it, and or star our repo! All are welcome to the Nexus. </p>
 <hr />
-<small>COPYRIGHT © 2025 VIAT, <a href="https://viat.network">UNIVERSAL WEB</a>, THE NEXUS</small>
-<br />
-<small>THE UNITED SYSTEMS of NEXUS</small>
+<small>COPYRIGHT © 2025 VIAT, <a href="https://viat.network">VIAT.NETWORK</a></small>
 <br />
 <small>MADE IN AMERICA </small>
 <br />
-<small>In memory of Amy (1993 – 2025), a truly kind person.</small>
+<small>In memory of Amy (1993 – 2025)</small>

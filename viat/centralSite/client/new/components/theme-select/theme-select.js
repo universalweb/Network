@@ -1,0 +1,130 @@
+import { THEMES, getTheme, setTheme } from './theme-manager.js';
+import { WebComponent } from '../base/base.js';
+const btnStyles = await WebComponent.styleSheet('./theme-select.css', import.meta.url);
+const dropStyles = await WebComponent.styleSheet('./theme-drop.css', import.meta.url);
+let dropStylesInjected = false;
+function ensureDropStyles() {
+	if (dropStylesInjected) {
+		return;
+	}
+	dropStylesInjected = true;
+	document.adoptedStyleSheets = [...document.adoptedStyleSheets, dropStyles];
+}
+export class UIThemeSelect extends WebComponent {
+	open = false;
+	dropdown = null;
+	closeTimer = null;
+	constructor() {
+		super([btnStyles]);
+		this.closeOutside = this.closeOutside.bind(this);
+		this.handleHostLeave = this.handleHostLeave.bind(this);
+		this.state = {
+			theme: getTheme(),
+		};
+	}
+	onConnect() {
+		this.addEventListener('mouseleave', this.handleHostLeave);
+	}
+	onDisconnect() {
+		this.removeEventListener('mouseleave', this.handleHostLeave);
+		if (this.open) {
+			this.closeDropdown();
+		}
+	}
+	cancelClose() {
+		this.clearTimeout(this.closeTimer);
+	}
+	handleHostLeave() {
+		this.closeTimer = this.setTimeout(this.closeDropdown.bind(this), 120);
+	}
+	handleToggle() {
+		this.open = !this.open;
+		if (this.open) {
+			this.openDropdown();
+		} else {
+			this.closeDropdown();
+		}
+		this.refresh();
+	}
+	closeOutside(e) {
+		if (e.composedPath().includes(this) || (this.dropdown && e.composedPath().includes(this.dropdown))) {
+			return;
+		}
+		this.closeDropdown();
+	}
+	openDropdown() {
+		ensureDropStyles();
+		this.closeDropdown();
+		const { theme } = this.state;
+		const div = document.createElement('div');
+		div.className = 'theme-drop';
+		for (const t of THEMES) {
+			const btn = document.createElement('button');
+			btn.className = `theme-option${t.id === theme ? ' active' : ''}`;
+			btn.textContent = t.label;
+			btn.addEventListener('click', () => {
+				this.pickTheme(t.id);
+			});
+			div.append(btn);
+		}
+		div.addEventListener('mouseenter', this.cancelClose.bind(this));
+		div.addEventListener('mouseleave', this.closeDropdown.bind(this));
+		document.body.append(div);
+		this.dropdown = div;
+		requestAnimationFrame(() => {
+			if (!this.dropdown) {
+				return;
+			}
+			const btn = this.shadowRoot?.querySelector('.ts-btn');
+			if (!btn) {
+				return;
+			}
+			const rect = btn.getBoundingClientRect();
+			this.dropdown.style.top = `${rect.bottom + 6}px`;
+			this.dropdown.style.right = `${window.innerWidth - rect.right}px`;
+			this.dropdown.classList.add('open');
+		});
+		document.addEventListener('click', this.closeOutside, {
+			capture: true,
+		});
+	}
+	closeDropdown() {
+		this.clearTimeout(this.closeTimer);
+		if (!this.dropdown) {
+			return;
+		}
+		this.open = false;
+		const el = this.dropdown;
+		this.dropdown = null;
+		document.removeEventListener('click', this.closeOutside, {
+			capture: true,
+		});
+		el.classList.remove('open');
+		const remove = () => {
+			return el.isConnected && el.remove();
+		};
+		el.addEventListener('transitionend', remove, {
+			once: true,
+		});
+		this.setTimeout(remove, 300);
+	}
+	pickTheme(id) {
+		setTheme(id);
+		this.closeDropdown();
+		this.state.theme = id;
+	}
+	render() {
+		// eslint-disable-next-line no-unused-expressions
+		this.html `
+			<button class="ts-btn" @click=${this.handleToggle}>
+				${() => {
+					const current = THEMES.find((t) => {
+						return t.id === this.state.theme;
+					})?.label ?? this.state.theme;
+					return `${current}<span class="ts-arrow">${this.open ? '▲' : '▼'}</span>`;
+				}}
+			</button>
+		`;
+	}
+}
+customElements.define('ui-theme-select', UIThemeSelect);

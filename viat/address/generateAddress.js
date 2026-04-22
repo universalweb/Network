@@ -10,12 +10,11 @@ const walletCipherSuites = {
 	quantum: viatQuantum,
 	legacy: viatLegacy,
 };
-export function createAddressStruct(publicKey, trapdoor, cipher, hash, version, kind) {
+export function createAddressStruct(publicKey, trapdoor, cipher, version, kind) {
 	const source = [
 		kind,
 		version,
 		cipher,
-		hash,
 		publicKey,
 		trapdoor,
 	];
@@ -31,14 +30,14 @@ export function createLegacyAddressStruct(publicKey, trapdoor) {
 // NOTE: Legacy addresses have a strict format and the address size is restricted to this legacy format
 export async function createLegacyAddress(publicKey, trapdoor) {
 	const source = createLegacyAddressStruct(publicKey, trapdoor);
-	const domained = await encode(source);
-	return hashLegacyAddress(domained);
+	return hashLegacyAddress(source);
 }
 export async function createAddress(publicKey, trapdoor, cipher = 0, version = 0, kind = 0) {
 	if (viatLegacy.id === cipher) {
 		return createLegacyAddress(publicKey, trapdoor);
 	}
 	const source = createAddressStruct(publicKey, trapdoor, cipher, version, kind);
+	// NOTE: If using this option address used must also be a modular format
 	const domained = await encode(source);
 	if (viat.id === cipher) {
 		return hash256(domained);

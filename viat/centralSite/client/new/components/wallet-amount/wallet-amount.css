@@ -1,0 +1,80 @@
+:host {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   WALLET HERO
+══════════════════════════════════════════════════════ */
+.wallet-hero {
+	padding: 28px 32px 20px;
+	flex-shrink: 0;
+	border-radius: var(--radius);
+	background: var(--bg-panel);
+	border: var(--panel-border, var(--border-light));
+	box-shadow: var(--panel-shadow);
+	overflow: hidden;
+	position: relative;
+	transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.wallet-hero::before {
+	content: 'VIAT BALANCE';
+	position: absolute;
+	top: 10px;
+	right: 18px;
+	font-size: 2rem;
+	font-weight: 700;
+	letter-spacing: 2px;
+	color: var(--watermark-text);
+	pointer-events: none;
+	user-select: none;
+}
+
+.wallet-hero:hover {
+	border-color: var(--panel-hover-border);
+	box-shadow: var(--panel-hover-shadow);
+}
+
+.wa-label {
+	font-family: var(--font-display);
+	font-size: 0.4375rem;
+	text-transform: uppercase;
+	letter-spacing: 0.3em;
+	color: var(--text-muted);
+	margin-bottom: 10px;
+}
+
+.wa-amount-main {
+	font-size: 4.5rem;
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-main);
+	letter-spacing: -2px;
+	line-height: 1;
+}
+
+@media (max-width: 420px) {
+	.wa-amount-main {
+		font-size: 2.125rem;
+	}
+}
+
+.wa-coin-info {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 10px;
+}
+
+.wa-coin-symbol {
+	color: #fff;
+}
+
+.wa-amount-full {
+	font-size: 0.6875rem;
+	font-family: var(--font-mono);
+	color: var(--text-muted);
+	letter-spacing: 0.04em;
+}
+

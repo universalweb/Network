@@ -7,7 +7,7 @@ import shake256 from '../hash/shake.js';
 import xChaCha from '../cipher/xChaCha.js';
 export const quantumCipherSuite = {
 	name: 'quantumCipherSuite',
-	alias: 'dilithium65_sphincs192',
+	alias: 'dilithium65_kyber768',
 	description: 'dilithium, kyber, SHAKE256',
 	addressType: 'quantum',
 	id: 2,

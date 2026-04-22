@@ -1,0 +1,69 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  width: 100%;
+  position: relative;
+  overflow: visible;
+  background: var(--topbar-bg);
+  border-radius: var(--radius-lg, 10px);
+  border: 1px solid var(--dark-divider);
+  box-shadow: var(--panel-shadow),
+    inset 1px 0 0 rgba(255, 255, 255, 0.03);
+}
+
+/* ══════════════════════════════════════════════════════
+   NAV RAIL
+══════════════════════════════════════════════════════ */
+.nav-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 8px 0;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.rail-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s ease;
+  transform-origin: left center;
+  will-change: transform;
+  padding: 0;
+  appearance: none;
+}
+
+.rail-icon-btn:hover {
+  color: var(--text-main);
+  background: var(--surface-tint-heavy);
+  border-color: var(--dark-divider-accent);
+  box-shadow: 0 0 10px var(--cyan-glow-faint),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.rail-icon-btn.active {
+  color: var(--teal);
+  background: transparent;
+  width: var(--rail-width, 52px);
+  border-color: transparent;
+  border-right-color: transparent;
+  border-radius: 0;
+  box-shadow: inset -3px 0 0 0 var(--teal);
+}
+
+.rail-icon-btn:focus-visible {
+  outline: 1px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+

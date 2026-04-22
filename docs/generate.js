@@ -14,23 +14,23 @@ function removeHighCharCodes(str, maxCharCode) {
 	}
 	return result;
 }
-async function createIndexPage(content, viatContent) {
+async function createIndexPage(viatContent) {
 	const htmlDOC = await read(`${filePath}/docTemplate.html`);
 	console.log('INDEX PAGE GENERATED');
-	return htmlDOC.toString().replace('${content}', content).replace('${viat}', viatContent);
+	return htmlDOC.toString().replace('${viat}', viatContent.toString());
 }
 async function generateIndexPage() {
-	const contents = await read(`${filePath}/content.html`);
 	const viatContents = await read(`${filePath}/viat.html`);
-	await write(`${filePath}/index.html`, await createIndexPage(contents, viatContents));
-	let cleanedContent = removeHighCharCodes(contents.toString(), 50000);
+	const page = await createIndexPage(viatContents);
+	await write(`${filePath}/index.html`, page);
+	let cleanedContent = removeHighCharCodes(page, 50000);
 	cleanedContent = cleanedContent.replaceAll('./', githubURL);
 	await write(`${filePath}/README.md`, cleanedContent);
 }
 await generateIndexPage();
-const checkList = arrayToRegex(['README.md', 'index.html']);
+const checkList = arrayToRegex(['README.md']);
 const pathNameRegex = /\.md|\.html|\.css/;
-watch(`${filePath}/`, async (eventType, pathName) => {
+watch(`${filePath}/docTemplate.html`, async (eventType, pathName) => {
 	const regex = pathName.match(pathNameRegex);
 	if (regex && regex.length && !has(pathName, checkList)) {
 		if (eventType === 'change') {

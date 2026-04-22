@@ -18,29 +18,7 @@
  ╚══════╝╚═╝  ╚═══╝  ╚══════╝
 (,,◕　⋏　◕,,)
 
-VISIT: wallet.viat.network:8080
-
-          
- ██████╗ ██████╗ ███████╗███████╗███████╗███████╗    ██████╗ ██████╗ ██████╗ 
-██╔════╝██╔═══██╗██╔════╝██╔════╝██╔════╝██╔════╝    ██╔══██╗██╔══██╗██╔══██╗
-██║     ██║   ██║█████╗  █████╗  █████╗  █████╗      ██████╔╝██████╔╝██████╔╝
-██║     ██║   ██║██╔══╝  ██╔══╝  ██╔══╝  ██╔══╝      ██╔══██╗██╔══██╗██╔══██╗
-╚██████╗╚██████╔╝██║     ██║     ███████╗███████╗    ██████╔╝██║  ██║██████╔╝
- ╚═════╝ ╚═════╝ ╚═╝     ╚═╝     ╚══════╝╚══════╝    ╚═════╝ ╚═╝  ╚═╝╚═════╝ 
-                                                                             
-
-BE BACK ON SOON ->
-WORKING ON VIAT POST-QUANTUM HD KEY PAIR Generation                                                                   
-
-VIAT CODE WORK (DAILY)
-NEW VIAT BACKEND (IN-PROGRESS)
-
-NEW INVESTOR DECK (DONE)                                                                                                                      
-Account Info Page (DONE)
-Transaction Info Page (DONE)
-Block Explorer Links (DONE)
-
-
+VISIT: wallet.viat.network
 
 
 

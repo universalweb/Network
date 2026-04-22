@@ -118,8 +118,8 @@ const WALLETS = {
 		// 20 could still be considered for smaller simple use cases
 		WALLET_SIZE: 24,
 		WALLET_HASH_CONFIG: {
-			OUTPUT_LENGTH: 24,
-			OUTPUT_ENCODING: 'buffer',
+			outputLength: 24,
+			outputEncoding: 'buffer',
 		},
 		CIPHER_SUITE: 0,
 		SIGNATURE_ALGO: 'ed25519',
@@ -128,8 +128,8 @@ const WALLETS = {
 	HYBRID: {
 		WALLET_SIZE: 32,
 		WALLET_HASH_CONFIG: {
-			OUTPUT_LENGTH: 32,
-			OUTPUT_ENCODING: 'buffer',
+			outputLength: 32,
+			outputEncoding: 'buffer',
 		},
 		CIPHER_SUITE: 1,
 		SIGNATURE_ALGO: 'ed25519+dilithium',
@@ -140,8 +140,8 @@ const WALLETS = {
 		// It is likely that an address size less than 64 bytes is still viable for initial quantum needs
 		WALLET_SIZE: 64,
 		WALLET_HASH_CONFIG: {
-			OUTPUT_LENGTH: 64,
-			OUTPUT_ENCODING: 'buffer',
+			outputLength: 64,
+			outputEncoding: 'buffer',
 		},
 		CIPHER_SUITE: 2,
 		SIGNATURE_ALGO: 'dilithium',

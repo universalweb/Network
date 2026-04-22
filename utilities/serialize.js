@@ -1,7 +1,7 @@
 import * as binaryFormat from 'cbor-x';
-import { encode as encodeStrictRaw } from 'cbor2';
+import { encode as encodeStrictRaw, decode as jsDecodeRaw, rfc8949EncodeOptions } from 'cborg';
 import { noValue } from '@universalweb/utilitylib';
-// Can be optimized further by reusing encoder instances with pre-defined options & structures
+import runBench from './benchmark.js';
 // TODO: Require Stream support for large data sets
 const {
 	encode: encodeRaw,
@@ -9,20 +9,6 @@ const {
 	Decoder,
 	Encoder,
 } = binaryFormat;
-// Enforce canonical encoding for signing/verification & crypto operations for key value pairs
-const canonicalSerializationOptions = {
-	cde: true,
-};
-const keyMap = {};
-for (let i = 0; i < 256; i++) {
-	keyMap[i] = i;
-}
-export const compactByteMapEncoder = new Encoder({
-	keyMap,
-	// Likely won't work for cbor-x yet but left for future reference
-	canonical: true,
-	cde: true,
-});
 export async function decode(data) {
 	if (noValue(data)) {
 		return;
@@ -73,7 +59,7 @@ export async function encodeStrict(data) {
 		return;
 	}
 	try {
-		return encodeStrictRaw(data, canonicalSerializationOptions);
+		return encodeStrictRaw(data, rfc8949EncodeOptions);
 	} catch (error) {
 		// console.error(error);
 		return;
@@ -84,7 +70,7 @@ export function encodeStrictSync(data) {
 		return;
 	}
 	try {
-		return encodeStrictRaw(data, canonicalSerializationOptions);
+		return encodeStrictRaw(data, rfc8949EncodeOptions);
 	} catch (error) {
 		// console.error(error);
 		return;
@@ -134,11 +120,70 @@ export function objectToArrayRecursive(obj) {
 	}
 	return arr;
 }
+export async function jsDecode(data) {
+	if (noValue(data)) {
+		return;
+	}
+	try {
+		return jsDecodeRaw(data);
+	} catch (error) {
+		// console.error(error);
+		return;
+	}
+}
 const serialization = {
 	encode,
 	encodeStrict,
 	decode,
 	encodeStrictSync,
 	encodeSync,
+	jsDecode,
 };
+function benchmark() {
+	const data = {
+		name: 'Alice',
+		age: 30,
+		hobbies: [
+			'reading', 'hiking', 'coding',
+		],
+		address: {
+			street: '123 Main St',
+			city: 'Anytown',
+			country: 'USA',
+		},
+	};
+	const buf1 = encodeStrictRaw(data, rfc8949EncodeOptions);
+	const buf2 = encodeRaw(data);
+	console.log(buf1);
+	console.log(buf2);
+	console.log(Buffer.compare(buf1, buf2));
+	runBench(() => {
+		encodeRaw({
+			name: 'Alice',
+			age: 30,
+			hobbies: [
+				'reading', 'hiking', 'coding',
+			],
+			address: {
+				street: '123 Main St',
+				city: 'Anytown',
+				country: 'USA',
+			},
+		});
+	}, () => {
+		encodeStrict({
+			name: 'Alice',
+			age: 30,
+			hobbies: [
+				'reading', 'hiking', 'coding',
+			],
+			address: {
+				street: '123 Main St',
+				city: 'Anytown',
+				country: 'USA',
+			},
+		});
+	});
+}
+// benchmark();
 export default serialization;

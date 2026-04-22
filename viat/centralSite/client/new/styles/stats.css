@@ -4,9 +4,6 @@
 .stats-panel {
 	display: flex;
 	flex-direction: column;
-	overflow-y: auto;
-	min-height: 0;
-	max-height: none;
 }
 
 .stat-block {
@@ -43,7 +40,7 @@
 
 .stat-row .s-val.good {
 	color: var(--teal);
-	text-shadow: 0 0 4px rgba(0, 102, 102, 0.3);
+	text-shadow: var(--stat-good-text-shadow, 0 0 4px var(--teal-glow-soft));
 }
 
 .stat-row .s-val.pq {
@@ -53,8 +50,8 @@
 
 .stat-latency-bar {
 	height: 3px;
-	background: rgba(10, 17, 40, 0.1);
-	border-radius: 0;
+	background: var(--surface-tint);
+	border-radius: var(--stat-bar-radius);
 	margin-top: 4px;
 	overflow: hidden;
 }
@@ -63,5 +60,12 @@
 	height: 100%;
 	width: 18%;
 	background: var(--teal);
-	box-shadow: 0 0 6px var(--teal);
+	box-shadow: var(--stat-bar-fill-shadow, 0 0 6px var(--teal));
+}
+
+@media (max-width: 420px) {
+	.stat-block {
+		padding-left: 12px;
+		padding-right: 12px;
+	}
 }

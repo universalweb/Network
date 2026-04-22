@@ -1,0 +1,292 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Share+Tech+Mono&display=swap');
+
+/* ── Marathon Theme ───────────────────────────────────
+   Bungie Marathon. Hot magenta on electric cobalt.
+   Zero radius. Stencil geometry. Saturated blue dark.
+───────────────────────────────────────────────────── */
+:root {
+  /* ── Base Palette ────────────────────────────────── */
+  --bg-body: #06091A;
+  --bg-panel: #0A0D20;
+  --bg-dark: #040614;
+  --bg-dark-mid: #08091C;
+  --navy: #0E1228;
+  --navy-light: #161B38;
+  --teal: #FF1580;
+  --teal-dim: rgba(255, 21, 128, 0.10);
+  --cyan: #2B7FFF;
+  --cyan-dim: rgba(43, 127, 255, 0.10);
+  --magenta: #C84DFF;
+  --magenta-dim: rgba(200, 77, 255, 0.10);
+  --grey-solid: #3A4466;
+  --grey-mid: #161C36;
+
+  /* ── Text ────────────────────────────────────────── */
+  --text-main: #D8E4FF;
+  --text-muted: #445080;
+  --text-light: #EEF3FF;
+  --text-offwhite: #8898CC;
+
+  /* ── Fonts ───────────────────────────────────────── */
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-display: 'Barlow Condensed', sans-serif;
+
+  /* ── Border Colors ───────────────────────────────── */
+  --border-light-color: rgba(43, 127, 255, 0.12);
+
+  /* ── Borders ─────────────────────────────────────── */
+  --border-main: 1px solid rgba(43, 127, 255, 0.14);
+  --border-light: 1px solid var(--border-light-color);
+  --border-dark: 1px solid var(--dark-divider-accent);
+
+  /* ── Surface Tints (blue-tinted) ─────────────────── */
+  --surface-tint-heavy: rgba(43, 127, 255, 0.10);
+  --surface-tint: rgba(43, 127, 255, 0.055);
+  --surface-tint-soft: rgba(43, 127, 255, 0.034);
+  --surface-tint-faint: rgba(43, 127, 255, 0.020);
+  --surface-tint-ghost: rgba(43, 127, 255, 0.014);
+  --surface-tint-whisper: rgba(43, 127, 255, 0.009);
+  --watermark-text: rgba(255, 21, 128, 0.025);
+
+  /* ── Dark Surface Text ───────────────────────────── */
+  --dark-text: rgba(180, 200, 255, 0.52);
+  --dark-text-dim: rgba(180, 200, 255, 0.42);
+  --dark-text-medium: rgba(180, 200, 255, 0.70);
+  --dark-text-bright: rgba(180, 200, 255, 0.86);
+  --dark-heading: rgba(255, 255, 255, 0.38);
+  --dark-heading-sep: rgba(255, 255, 255, 0.14);
+  --dark-text-faint: rgba(255, 255, 255, 0.26);
+
+  /* ── Dark Surface Dividers ───────────────────────── */
+  --dark-divider: rgba(43, 127, 255, 0.075);
+  --dark-divider-subtle: rgba(43, 127, 255, 0.050);
+  --dark-divider-faint: rgba(43, 127, 255, 0.030);
+  --dark-divider-accent: rgba(43, 127, 255, 0.060);
+  --dark-highlight: rgba(43, 127, 255, 0.028);
+
+  /* ── Magenta Accent Scale ────────────────────────── */
+  --cyan-glow-strong: rgba(255, 21, 128, 0.55);
+  --cyan-glow: rgba(255, 21, 128, 0.42);
+  --cyan-glow-medium: rgba(255, 21, 128, 0.28);
+  --cyan-glow-soft: rgba(255, 21, 128, 0.20);
+  --cyan-glow-faint: rgba(255, 21, 128, 0.12);
+  --cyan-tint: rgba(255, 21, 128, 0.058);
+  --cyan-tint-faint: rgba(255, 21, 128, 0.034);
+  --cyan-scanline: rgba(255, 21, 128, 0.009);
+  --cyan-timestamp: rgba(255, 21, 128, 0.60);
+
+  /* ── Teal/Magenta Accent Scale ───────────────────── */
+  --teal-glow: rgba(255, 21, 128, 0.44);
+  --teal-glow-soft: rgba(255, 21, 128, 0.28);
+
+  /* ── Status Colors ───────────────────────────────── */
+  --color-success: #00E5A0;
+  --color-success-glow: rgba(0, 229, 160, 0.32);
+  --color-success-text: rgba(0, 229, 160, 0.90);
+  --color-danger: #FF3B5C;
+  --color-danger-glow: rgba(255, 59, 92, 0.32);
+  --color-warn-text: rgba(255, 180, 50, 0.92);
+
+  /* ═══════════════════════════════════════════════════
+     COMPONENT THEME TOKENS
+  ═══════════════════════════════════════════════════ */
+
+  /* ── Shape — zero radius, stencil-cut ───────────── */
+  --radius: 0px;
+  --radius-lg: 0px;
+  --stat-bar-radius: 0px;
+  --indicator-radius: 0px;
+  --indicator-warn-radius: 0px;
+
+  /* ── Input ───────────────────────────────────────── */
+  --input-radius: 0px;
+  --input-accent-border: 1px solid rgba(255, 21, 128, 0.22);
+  --input-accent-shadow: inset 0 -1px 0 rgba(255, 21, 128, 0.34);
+  --field-border-style: solid;
+
+  /* ── Panel ───────────────────────────────────────── */
+  --panel-shadow:
+    0 1px 2px rgba(0, 0, 20, 0.80),
+    0 4px 14px rgba(0, 0, 20, 0.60),
+    inset 0 1px 0 rgba(43, 127, 255, 0.06);
+  --panel-hover-shadow:
+    0 2px 6px rgba(0, 0, 20, 0.80),
+    0 10px 24px rgba(0, 0, 20, 0.65),
+    0 0 22px rgba(255, 21, 128, 0.10),
+    inset 0 1px 0 rgba(255, 21, 128, 0.08),
+    inset 0 0 14px rgba(255, 21, 128, 0.034);
+  --panel-hover-border: rgba(255, 21, 128, 0.60);
+  --panel-header-accent: rgba(255, 21, 128, 0.0);
+  --panel-header-bg: linear-gradient(180deg, rgba(255, 21, 128, 0.10) 0%, rgba(43, 127, 255, 0.04) 100%);
+  --panel-header-left-accent-width: 0px;
+  --panel-header-left-border: none;
+  --panel-header-border-bottom: none;
+  --panel-header-padding: 8px 14px 8px 14px;
+  --panel-header-font-size: 0.72rem;
+  --panel-header-letter-spacing: 0.28em;
+  --panel-header-color: rgba(255, 21, 128, 0.80);
+  --ph-id-font-size: 0.72rem;
+  --ph-id-letter-spacing: 0.28em;
+  --ph-id-opacity: 1;
+
+  /* ── Buttons ─────────────────────────────────────── */
+  --btn-bg: rgba(255, 21, 128, 0.08);
+  --btn-border: rgba(255, 21, 128, 0.26);
+  --btn-inset: inset 0 1px 0 rgba(255, 100, 180, 0.08);
+  --btn-hover-bg: var(--teal);
+  --btn-hover-border: var(--teal);
+  --btn-hover-inset: inset 0 1px 0 rgba(255, 150, 200, 0.16);
+  --btn-hover-glow: 0 0 18px rgba(255, 21, 128, 0.28);
+  --btn-hover-color: #06091A;
+  --focus-ring-color: rgba(255, 21, 128, 0.82);
+  --green-hover: #00E5A0;
+
+  /* ── Flyout ──────────────────────────────────────── */
+  --flyout-bg: rgba(6, 9, 26, 0.98);
+  --flyout-border: rgba(255, 21, 128, 0.22);
+  --flyout-radius: 0px;
+  --flyout-shadow:
+    0 16px 48px rgba(0, 0, 20, 0.85),
+    0 4px 12px rgba(0, 0, 20, 0.55),
+    0 0 0 1px rgba(255, 21, 128, 0.12),
+    inset 0 1px 0 rgba(43, 127, 255, 0.05);
+
+  /* ── Inputs / Interactive ────────────────────────── */
+  --input-hover-border: rgba(255, 21, 128, 0.50);
+  --input-hover-glow: rgba(255, 21, 128, 0.12);
+  --input-copied-bg: rgba(255, 21, 128, 0.10);
+  --input-copied-border: rgba(255, 21, 128, 0.48);
+
+  /* ── Top Bar ─────────────────────────────────────── */
+  --topbar-bg: rgba(43, 127, 255, 0.04);
+  --topbar-border: rgba(43, 127, 255, 0.18);
+  --topbar-accent: var(--teal);
+  --topbar-bottom-border: 1px solid rgba(255, 21, 128, 0.18);
+  --tb-badge-radius: 0px;
+  --logo-mark-pattern: repeating-linear-gradient(
+    90deg,
+    var(--teal), var(--teal) 2px,
+    transparent 2px, transparent 6px
+  );
+
+  /* ── Popups ──────────────────────────────────────── */
+  --popup-bg: rgba(6, 9, 26, 0.97);
+  --popup-bg-hover: rgba(9, 12, 32, 0.99);
+  --popup-border: rgba(255, 21, 128, 0.24);
+  --popup-border-hover: rgba(255, 21, 128, 0.48);
+  --popup-accent: var(--teal);
+  --popup-shadow:
+    0 8px 32px rgba(0, 0, 20, 0.68),
+    0 0 0 1px rgba(255, 21, 128, 0.09),
+    inset 0 1px 0 rgba(43, 127, 255, 0.05);
+  --popup-text: var(--text-main);
+
+  /* ── Glow Scale ──────────────────────────────────── */
+  --ph-dot-shadow: 0 0 6px var(--teal), 0 0 16px rgba(255, 21, 128, 0.65);
+  --logo-mark-text-shadow: 0 0 12px rgba(255, 21, 128, 0.90);
+  --subtitle-text-shadow: 0 0 6px rgba(255, 21, 128, 0.60);
+  --indicator-on-shadow: 0 0 8px var(--teal), 0 0 20px rgba(255, 21, 128, 0.55);
+  --stat-good-text-shadow: 0 0 5px var(--teal-glow-soft);
+  --stat-bar-fill-shadow: 0 0 7px var(--teal);
+  --wa-underline-shadow: 0 0 8px var(--teal);
+  --log-in-text-shadow: 0 0 5px var(--color-success-glow);
+  --log-out-text-shadow: 0 0 5px var(--color-danger-glow);
+}
+
+/* ── Marathon: panel-header ──────────────────────────── */
+.panel-header {
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: 700;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 21, 128, 0.10) 0%,
+    rgba(43, 127, 255, 0.04) 100%
+  ) !important;
+  border-left: none !important;
+  box-shadow: none;
+}
+
+.panel-header::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--teal) 0%,
+    rgba(43, 127, 255, 0.60) 60%,
+    transparent 100%
+  );
+  box-shadow: 0 0 10px rgba(255, 21, 128, 0.55);
+}
+
+.panel-header::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 1px;
+  background: rgba(43, 127, 255, 0.12);
+}
+
+/* ── Marathon: ph-dot — square beacon ───────────────── */
+.ph-dot {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 0;
+  background: var(--teal);
+  box-shadow: var(--ph-dot-shadow);
+}
+
+/* ── Marathon: buttons — invert to magenta on hover ─── */
+.panel button,
+.btn-transmit,
+.account-action,
+.tb-icon-btn {
+  border-radius: 0;
+  border-color: rgba(255, 21, 128, 0.20);
+  background: rgba(255, 21, 128, 0.06);
+  color: var(--text-main);
+  box-shadow: none;
+  transition: background 0.12s, border-color 0.12s, box-shadow 0.12s, color 0.12s;
+}
+
+.panel button:hover,
+.btn-transmit:hover,
+.account-action:hover,
+.tb-icon-btn:hover {
+  background: var(--teal);
+  border-color: var(--teal);
+  box-shadow: 0 0 18px rgba(255, 21, 128, 0.28);
+  color: #06091A;
+}
+
+/* ── Marathon: registration corner brackets ──────────── */
+.panel {
+  position: relative;
+}
+
+.panel::before,
+.panel::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  pointer-events: none;
+  opacity: 0.40;
+}
+
+.panel::before {
+  top: 0;
+  left: 0;
+  border-top: 1px solid var(--teal);
+  border-left: 1px solid var(--teal);
+}
+
+.panel::after {
+  bottom: 0;
+  right: 0;
+  border-bottom: 1px solid var(--teal);
+  border-right: 1px solid var(--teal);
+}

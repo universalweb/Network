@@ -11,22 +11,15 @@
 	^ <==================================================>
 */
 import {
-	CRYPTOCURRENCY_NETWORK_TYPES,
 	HASH_ALGORITHMS,
 	KEYED_HASH_ALGORITHMS,
 	MASTER_ENTROPY_POOL_SIZES,
 	NETWORK_NAMES,
 	OBJECT_TYPE,
 	PROPERTY_LOOKUP,
-	PURPOSE,
-	RELATIONSHIP,
-	SCHEME_TYPES,
-	VALID_PROPERTY_NAMES,
+	PURPOSE, VALID_PROPERTY_NAMES,
 } from './defaults/index.js';
-import {
-	assign, eachObject, extendClass,
-	hasValue, isPlainObject, isString,
-} from '@universalweb/utilitylib';
+import { assign, extendClass, isPlainObject } from '@universalweb/utilitylib';
 import { createKey, createNonce, createSalt } from './key.js';
 import {
 	encode,

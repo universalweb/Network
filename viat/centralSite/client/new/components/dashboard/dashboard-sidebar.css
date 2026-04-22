@@ -1,0 +1,14 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  transform: translateX(0);
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s ease;
+  will-change: transform, opacity;
+}
+:host(.sidebar-closed) {
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+}

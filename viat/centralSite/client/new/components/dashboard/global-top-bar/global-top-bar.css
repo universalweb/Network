@@ -1,0 +1,108 @@
+:host {
+  display: block;
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100%, 1260px);
+  max-width: calc(100% - 32px);
+  box-sizing: border-box;
+  z-index: 40;
+}
+
+/* ══════════════════════════════════════════════════════
+   TOP BAR
+══════════════════════════════════════════════════════ */
+.global-top-bar {
+  box-sizing: border-box;
+  background: var(--topbar-bg);
+  border: 1px solid var(--topbar-border, var(--dark-divider));
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 20px;
+  backdrop-filter: blur(6px);
+}
+
+.tb-logo {
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-light);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+}
+
+.tb-logo-mark {
+  display: inline-flex;
+  align-items: self-end;
+  justify-content: center;
+  width: 25px;
+  height: 32px;
+  font-family: var(--font-mono);
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--topbar-accent);
+  text-shadow: var(--logo-mark-text-shadow, none);
+  user-select: none;
+}
+
+.tb-logo-sep {
+  color: var(--dark-heading-sep);
+  font-weight: 300;
+}
+
+.tb-subtitle {
+  display: inline-block;
+  font-size: 0.6rem;
+  color: var(--topbar-accent);
+  letter-spacing: 0.24em;
+  text-shadow: var(--subtitle-text-shadow, none);
+  opacity: 0.8;
+}
+
+.tb-status {
+  display: flex;
+  gap: 16px;
+  flex-shrink: 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  color: var(--text-offwhite);
+  align-items: center;
+}
+
+.tb-icon-btn {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--text-offwhite);
+  font-family: var(--font-icon);
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: opacity 0.15s, color 0.15s;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  appearance: none;
+}
+
+.tb-icon-btn:hover {
+  opacity: 1;
+  color: var(--topbar-accent);
+}
+
+.tb-icon-btn:focus-visible {
+  outline: 1px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}

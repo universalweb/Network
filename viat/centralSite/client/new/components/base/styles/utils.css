@@ -1,0 +1,10 @@
+/* ── Shared hover utilities ────────────────────────── */
+.icon-font.green-hover:hover,
+.green-hover:hover {
+  color: var(--green-hover);
+}
+
+/* ── Shared icon utilities ────────────────────────── */
+.icon-font {
+  font-family: var(--font-icon);
+}
