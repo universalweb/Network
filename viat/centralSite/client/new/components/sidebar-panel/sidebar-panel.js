@@ -4,9 +4,8 @@ export class SidebarPanel extends WebComponent {
 	constructor(sheets = [], opts = {}) {
 		super([styles, ...sheets], opts);
 	}
-
 	renderPanelHeader(label = '', title = '') {
-		return this.html`
+		return this.html `
 			<div class="panel-header">
 				<span><span class="ph-id">${label}</span> // ${title}</span>
 				<div class="ph-dot"></div>

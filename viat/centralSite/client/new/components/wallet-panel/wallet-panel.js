@@ -40,7 +40,7 @@ export class WalletPanel extends SidebarPanel {
 		this.state.activity = v ?? '0';
 	}
 	render() {
-		return this.html `
+		this.html `
 			<div class="panel">
 				<div class="panel-header">
 					<span><span class="ph-id">WALLET</span> // ADDRESS</span>

@@ -12,8 +12,6 @@ export class WalletAddress extends WebComponent {
 			copied: false,
 			walletAddress: this.getAttribute('wallet-address') ?? '',
 		};
-		this.addEvent('copy', 'click', this.handleCopy);
-		this.addEvent('copyKeydown', 'keydown', this.handleCopyKeydown);
 	}
 	get walletAddress() {
 		return this.state.walletAddress;
@@ -59,8 +57,8 @@ export class WalletAddress extends WebComponent {
 			<div class="${() => {
 				return `wallet-address${this.state.copied ? ' copied' : ''}`;
 			}}"
-				data-onclick="copy"
-				data-onkeydown="copyKeydown"
+				@click=${this.handleCopy}
+				@keydown=${this.handleCopyKeydown}
 				data-tooltip="${() => {
 					return (this.state.copied ? 'Copied!' : 'Copy address');
 				}}"

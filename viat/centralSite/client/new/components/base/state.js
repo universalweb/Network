@@ -1,4 +1,9 @@
 import { isObject, isPromiseLike, isSymbol } from '../utilities.js';
+function queueAsyncError(error) {
+	queueMicrotask(() => {
+		throw error;
+	});
+}
 function deepEqual(a, b) {
 	if (a === b) {
 		return true;
@@ -31,6 +36,17 @@ function flushPending() {
 	}
 	return this.pendingFlush;
 }
+function pathsOverlap(currentPath, changedPath) {
+	return currentPath === changedPath || currentPath.startsWith(`${changedPath}.`) || changedPath.startsWith(`${currentPath}.`);
+}
+function getValueAtPath(source, path) {
+	if (!path) {
+		return source;
+	}
+	return path.split('.').reduce((value, key) => {
+		return value?.[key];
+	}, source);
+}
 function makeStateProxy(obj, component, path = '') {
 	return new Proxy(obj, {
 		get(target, key) {
@@ -61,9 +77,6 @@ function makeStateProxy(obj, component, path = '') {
 				detail,
 			};
 			component.dispatchEvent(new CustomEvent('state-change', init));
-			// For now disable granular events to avoid overhead, we can re-enable if needed
-			// component.dispatchEvent(new CustomEvent(`state:${fullPath}`, init));
-			console.log(`State changed: ${fullPath}`, value);
 			flushPending.call(component);
 			return true;
 		},
@@ -84,42 +97,38 @@ export function replaceState(state = {}) {
 	return this.updateView();
 }
 export function watchState(key, handler) {
-	if (!this.stateWatchers) {
-		this.stateWatchers = new Map();
+	const statePath = String(key ?? '');
+	let previousValue = getValueAtPath(this.STATE, statePath);
+	const component = this;
+	function handleStateChange(stateEvent) {
+		const changedPath = stateEvent.detail?.path;
+		if (!changedPath || !pathsOverlap(statePath, changedPath)) {
+			return;
+		}
+		const nextValue = getValueAtPath(component.STATE, statePath);
+		const result = handler(nextValue, previousValue, changedPath);
+		previousValue = nextValue;
+		if (isPromiseLike(result)) {
+			result.catch(queueAsyncError);
+		}
 	}
-	if (!this.stateWatchers.has(key)) {
-		this.stateWatchers.set(key, new Set());
-	}
-	this.stateWatchers.get(key).add(handler);
+	component.addEventListener('state-change', handleStateChange);
 	return () => {
-		this.stateWatchers?.get(key)?.delete(handler);
+		component.removeEventListener('state-change', handleStateChange);
 	};
 }
 export function onStateChange() {}
-export function updateView() {
-	const previousState = this.prevState;
-	this.prevState = {
-		...this.STATE,
-	};
-	const pendingWatchers = [];
-	if (previousState && this.stateWatchers?.size) {
-		for (const [
-			key,
-			handlers,
-		] of this.stateWatchers) {
-			if (previousState[key] !== this.STATE[key]) {
-				for (const handler of handlers) {
-					const result = handler(this.STATE[key], previousState[key]);
-					if (isPromiseLike(result)) {
-						pendingWatchers.push(result);
-					}
-				}
-			}
-		}
+export async function updateView() {
+	const pendingTasks = [];
+	const stateChangeResult = this.onStateChange();
+	if (isPromiseLike(stateChangeResult)) {
+		pendingTasks.push(stateChangeResult);
 	}
-	this.onStateChange();
 	if (this.isConnected && !this.templateBuilt) {
-		this.refresh();
+		pendingTasks.push(this.refresh());
 	}
-	return pendingWatchers.length ? Promise.all(pendingWatchers) : Promise.resolve();
+	if (!pendingTasks.length) {
+		return Promise.resolve();
+	}
+	await Promise.all(pendingTasks);
 }

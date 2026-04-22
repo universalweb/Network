@@ -1,12 +1,37 @@
+import { isPromiseLike } from '../utilities.js';
 const usePostTask = typeof scheduler !== 'undefined' && typeof scheduler.postTask === 'function';
 let batch = null;
-function flush() {
-	const b = batch;
+function queueAsyncError(error) {
+	queueMicrotask(() => {
+		throw error;
+	});
+}
+async function flush() {
+	const currentBatch = batch;
 	batch = null;
-	for (const fn of b.tasks) {
-		fn();
+	if (!currentBatch) {
+		return;
 	}
-	b.resolve();
+	const pendingTasks = [];
+	for (const fn of currentBatch.tasks) {
+		try {
+			const result = fn();
+			if (isPromiseLike(result)) {
+				pendingTasks.push(result);
+			}
+		} catch (error) {
+			queueAsyncError(error);
+		}
+	}
+	if (pendingTasks.length) {
+		const settledResults = await Promise.allSettled(pendingTasks);
+		for (const settledResult of settledResults) {
+			if (settledResult.status === 'rejected') {
+				queueAsyncError(settledResult.reason);
+			}
+		}
+	}
+	currentBatch.resolve();
 }
 export function schedule(fn) {
 	if (!batch) {
@@ -20,11 +45,15 @@ export function schedule(fn) {
 			resolve,
 		};
 		if (usePostTask) {
-			scheduler.postTask(flush, {
+			scheduler.postTask(() => {
+				return flush();
+			}, {
 				priority: 'user-visible',
 			});
 		} else {
-			requestAnimationFrame(flush);
+			requestAnimationFrame(() => {
+				return flush();
+			});
 		}
 	}
 	batch.tasks.add(fn);

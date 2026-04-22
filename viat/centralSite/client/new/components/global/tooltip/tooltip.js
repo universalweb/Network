@@ -203,7 +203,7 @@ export class UITooltip extends WebComponent {
 		}, HIDE_DELAY);
 	}
 	render() {
-		return this.html `
+		this.html `
 			<div class="${() => {
 				const {
 					visible, sliding,

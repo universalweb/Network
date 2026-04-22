@@ -1,6 +1,13 @@
 import '../../theme-select/theme-select.js';
+import './top-bar-icon-button.js';
 import { WebComponent } from '../../base/base.js';
+import { each } from '../../base/template.js';
 const topBarStyles = await WebComponent.styleSheet('./global-top-bar.css', import.meta.url);
+function createActionButton(action) {
+	const button = document.createElement('top-bar-icon-button');
+	button.state = action;
+	return button;
+}
 export class GlobalTopBar extends WebComponent {
 	static get observedAttributes() {
 		return ['subtitle'];
@@ -13,7 +20,6 @@ export class GlobalTopBar extends WebComponent {
 			actions: [],
 			subtitle: '',
 		};
-		this.addEvent('handleTopBarAction', 'click', this.handleClick);
 	}
 	get actions() {
 		return this.state.actions;
@@ -32,14 +38,26 @@ export class GlobalTopBar extends WebComponent {
 			this.state.subtitle = newVal ?? '';
 		}
 	}
-	handleClick(e, button) {
-		this.emit('topbar-action', {
-			id: button.dataset.id,
-			title: button.dataset.title,
+	buildActionItem(action, index) {
+		return {
+			actionId: action?.id,
+			className: action?.className ?? '',
+			icon: action?.icon ?? '',
+			key: action?.id ?? action?.title ?? index,
+			title: action?.title ?? '',
+		};
+	}
+	buildActionList() {
+		const actionItems = this.state.actions.map((action, index) => {
+			return this.buildActionItem(action, index);
+		});
+		return each(actionItems, createActionButton, (action, index) => {
+			return action.key ?? index;
 		});
 	}
 	render() {
-		return this.html `
+		// eslint-disable-next-line no-unused-expressions
+		this.html `
 			<header class="global-top-bar">
 				<div class="tb-logo">
 					<span class="tb-logo-mark">⩝</span> VIAT <span class="tb-logo-sep icon-font hidden">&#xe795</span>
@@ -48,16 +66,7 @@ export class GlobalTopBar extends WebComponent {
 				<div class="tb-status">
 					<ui-theme-select></ui-theme-select>
 					${() => {
-						return this.state.actions.map((action) => {
-							return `
-						<button class="tb-icon-btn icon-font${action.className ? ` ${action.className}` : ''}"
-							aria-label="${action.title}"
-							data-id="${action.id}"
-							data-title="${action.title}"
-							data-onclick="handleTopBarAction"
-							data-tooltip="${action.title}">${action.icon}</button>
-					`;
-						}).join('');
+						return this.buildActionList();
 					}}
 				</div>
 			</header>

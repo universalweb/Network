@@ -17,16 +17,9 @@ export class TransmitPanel extends WebComponent {
 			recipientValue: '',
 			tokenLabel: '',
 		};
-		this.addEvent('handleTransmit', 'click', this.handleTransmit);
-	}
-	handleTransmit() {
-		this.emit('transmit', {
-			amount: this.state.amountValue,
-			gas: this.state.gasValue,
-			recipient: this.state.recipientValue,
-		});
 	}
 	render() {
+		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<section class="transmit-panel panel">
 				<div class="panel-header">
@@ -59,7 +52,13 @@ export class TransmitPanel extends WebComponent {
 							value="${this.state.recipientValue}"
 							data-bind="recipientValue">
 					</div>
-					<button class="btn-transmit" data-onclick="handleTransmit" data-tooltip="Execute transfer">${this.state.buttonLabel}</button>
+						<button class="btn-transmit" @click=${this.createEmitHandler('transmit', () => {
+							return {
+								amount: this.state.amountValue,
+								gas: this.state.gasValue,
+								recipient: this.state.recipientValue,
+							};
+						})} data-tooltip="Execute transfer">${this.state.buttonLabel}</button>
 				</div>
 			</section>
 		`;

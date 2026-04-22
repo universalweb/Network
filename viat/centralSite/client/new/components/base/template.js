@@ -1,8 +1,43 @@
 /* eslint-disable no-restricted-syntax */
-import { Binding, makeTrackingProxy, track } from './binding.js';
-import { createElementFromHTML, isFunction, isString } from '../utilities.js';
+import {
+	Binding, makeGlobalTrackingProxy, makeTrackingProxy, track,
+} from './binding.js';
+import {
+	createElementFromHTML,
+	isElement,
+	isFunction,
+	isString,
+} from '../utilities.js';
 import { schedule } from './scheduler.js';
 const SPOT = 'data-expr';
+const TEMPLATE_CLEANUP = Symbol('templateCleanup');
+function cleanupTemplateNode(node) {
+	const cleanup = node?.[TEMPLATE_CLEANUP];
+	if (!isFunction(cleanup)) {
+		return;
+	}
+	node[TEMPLATE_CLEANUP] = null;
+	cleanup();
+}
+function cleanupTemplateTree(root) {
+	if (!root?.querySelectorAll) {
+		cleanupTemplateNode(root);
+		return;
+	}
+	cleanupTemplateNode(root);
+	for (const node of root.querySelectorAll('*')) {
+		cleanupTemplateNode(node);
+	}
+}
+function createRenderableElement(value) {
+	if (isString(value)) {
+		return createElementFromHTML(value);
+	}
+	if (isElement(value)) {
+		return value;
+	}
+	throw new TypeError('List render functions must return an Element or HTML string.');
+}
 export class LiveList {
 	items = [];
 	renderFn;
@@ -24,8 +59,7 @@ export class LiveList {
 		this.spot = spot;
 	}
 	createElement(item) {
-		const result = this.renderFn(item);
-		return isString(result) ? createElementFromHTML(result) : result;
+		return createRenderableElement(this.renderFn(item));
 	}
 	splice(start, deleteCount = 0, ...newItems) {
 		const currentLength = this.items.length;
@@ -36,7 +70,9 @@ export class LiveList {
 		if (this.spot) {
 			for (let deleteIndex = normalStart; deleteIndex < normalStart + deleteCount && deleteIndex < currentLength; deleteIndex++) {
 				const itemKey = this.keyFn(this.items[deleteIndex], deleteIndex);
-				this.spot.keyMap?.get(itemKey)?.remove();
+				const element = this.spot.keyMap?.get(itemKey);
+				cleanupTemplateNode(element);
+				element?.remove();
 				this.spot.keyMap?.delete(itemKey);
 				this.spot.prevItemMap?.delete(itemKey);
 			}
@@ -110,6 +146,7 @@ function patchList(spot, list) {
 		element,
 	] of oldMap) {
 		if (!newKeySet.has(key)) {
+			cleanupTemplateNode(element);
 			element.remove();
 			oldMap.delete(key);
 		}
@@ -124,8 +161,7 @@ function patchList(spot, list) {
 	} of keyedItems) {
 		let element = oldMap.get(key);
 		if (!element) {
-			const result = renderFn(item);
-			element = isString(result) ? createElementFromHTML(result) : result;
+			element = createRenderableElement(renderFn(item));
 			if (fragment) {
 				fragment.append(element);
 			}
@@ -133,7 +169,8 @@ function patchList(spot, list) {
 			if (element.state) {
 				Object.assign(element.state, item);
 			} else {
-				const replacementElement = createElementFromHTML(renderFn(item));
+				const replacementElement = createRenderableElement(renderFn(item));
+				cleanupTemplateNode(element);
 				element.replaceWith(replacementElement);
 				element = replacementElement;
 			}
@@ -158,15 +195,40 @@ function attrContext(templateString) {
 	const attrMatch = templateString.match(/([\w:-]+)=["']$/);
 	return attrMatch ? attrMatch[1] : null;
 }
+function eventContext(templateString) {
+	const eventMatch = templateString.match(/^(?<prefix>[\s\S]*?)@(?<eventName>[\w:-]+)=["']?$/);
+	if (!eventMatch?.groups?.eventName) {
+		return null;
+	}
+	return {
+		eventName: eventMatch.groups.eventName,
+		prefix: eventMatch.groups.prefix,
+	};
+}
+function eventMarkerAttribute(eventName) {
+	return `data-event-${String(eventName).toLowerCase().replace(/[^a-z0-9:-]/g, '-')}`;
+}
 function buildHTML(strings, exprs) {
 	let html = '';
 	const meta = [];
 	for (let stringIndex = 0; stringIndex < strings.length; stringIndex++) {
-		html += strings[stringIndex];
+		const currentString = strings[stringIndex];
+		const eventBinding = eventContext(currentString);
+		html += eventBinding?.prefix ?? currentString;
 		if (stringIndex >= exprs.length) {
 			continue;
 		}
 		const expr = exprs[stringIndex];
+		if (eventBinding) {
+			html += `${eventMarkerAttribute(eventBinding.eventName)}="expr${stringIndex}"`;
+			meta.push({
+				i: stringIndex,
+				type: 'event',
+				eventName: eventBinding.eventName,
+				expr,
+			});
+			continue;
+		}
 		const reactive = Binding.isBinding(expr) || isFunction(expr);
 		if (!reactive) {
 			html += expr ?? '';
@@ -195,33 +257,170 @@ function buildHTML(strings, exprs) {
 		meta,
 	};
 }
+function getValueAtPath(source, path) {
+	if (!path) {
+		return source;
+	}
+	return path.split('.').reduce((value, key) => {
+		return value?.[key];
+	}, source);
+}
+function setValueAtPath(source, path, value) {
+	const pathParts = path.split('.');
+	const finalKey = pathParts.pop();
+	let currentValue = source;
+	for (const pathPart of pathParts) {
+		if (!currentValue[pathPart] || typeof currentValue[pathPart] !== 'object') {
+			currentValue[pathPart] = {};
+		}
+		currentValue = currentValue[pathPart];
+	}
+	currentValue[finalKey] = value;
+}
+function clearSubscriptions(subscriptions = []) {
+	for (const unsubscribe of subscriptions) {
+		unsubscribe();
+	}
+	return [];
+}
+function getGlobalSource(component) {
+	if (component.getGlobalState) {
+		return component.getGlobalState();
+	}
+	return component.globalState;
+}
+function resolveBindingValue(component, bindingKey) {
+	if (bindingKey.startsWith('global.')) {
+		return getValueAtPath(getGlobalSource(component), bindingKey.slice(7));
+	}
+	return getValueAtPath(component.STATE, bindingKey);
+}
+function evaluateTrackedExpression(component, expr) {
+	const previousRenderTracking = component.renderTracking;
+	const previousRenderProxy = component.renderProxy;
+	const previousGlobalRenderProxy = component.globalRenderProxy;
+	component.renderTracking = true;
+	component.renderProxy = makeTrackingProxy(component.STATE, component);
+	component.globalRenderProxy = makeGlobalTrackingProxy(getGlobalSource(component), component);
+	try {
+		return track(() => {
+			return expr.call(component);
+		});
+	} finally {
+		component.renderTracking = previousRenderTracking;
+		component.renderProxy = previousRenderProxy;
+		component.globalRenderProxy = previousGlobalRenderProxy;
+	}
+}
+function subscribeStatePath(component, statePath, handler) {
+	if (!component.watchState) {
+		return () => {};
+	}
+	return component.watchState(statePath, (nextValue, empty, changedPath) => {
+		return handler(nextValue, changedPath);
+	});
+}
+function subscribeGlobalPath(component, statePath, handler) {
+	if (!component.watchGlobal) {
+		return () => {};
+	}
+	return component.watchGlobal(statePath, (nextValue, empty, changedPath) => {
+		return handler(nextValue, changedPath);
+	});
+}
+function syncSpotSubscriptions(spot, component, deps, handler) {
+	spot.unsubs = clearSubscriptions(spot.unsubs);
+	for (const dep of deps) {
+		if (dep.startsWith('global.')) {
+			spot.unsubs.push(subscribeGlobalPath(component, dep.slice(7), handler));
+		} else {
+			spot.unsubs.push(subscribeStatePath(component, dep, handler));
+		}
+	}
+}
 // Text spots use display:contents spans — transparent to layout but support
 // both textContent (plain strings) and innerHTML (HTML fragments from .map()).
 function patchSpot(spot, value) {
+	const patchToken = (spot.patchToken ?? 0) + 1;
+	spot.patchToken = patchToken;
 	if (LiveList.isLiveList(value)) {
 		patchList(spot, value);
 		return;
 	}
 	if (spot.keyMap) {
+		for (const element of spot.keyMap.values()) {
+			cleanupTemplateNode(element);
+		}
 		spot.keyMap = null;
 		spot.prevItemMap = null;
+	}
+	if (value instanceof Promise) {
+		value.then((v) => {
+			if (spot.patchToken !== patchToken) {
+				return;
+			}
+			return patchSpot(spot, v);
+		}).catch((error) => {
+			console.error('[template] async spot error:', error);
+		});
+		return;
 	}
 	if (spot.type === 'text') {
 		const str = String(value ?? '');
 		if (str.includes('<')) {
-			console.log(`%c[dom patch] innerHTML`, 'color:orange');
 			spot.el.innerHTML = str;
 		} else if (spot.el.textContent !== str) {
-			console.log(`%c[dom patch] textContent = ${str}`, 'color:orange');
 			spot.el.textContent = str;
 		}
 	} else {
 		const str = String(value ?? '');
 		if (spot.el.getAttribute(spot.attr) !== str) {
-			console.log(`%c[dom patch] ${spot.attr} = ${str}`, 'color:orange');
 			spot.el.setAttribute(spot.attr, str);
 		}
 	}
+}
+function initializeBindingSpot(spot, component) {
+	const bindingKey = spot.expr.key;
+	function updateBindingSpot() {
+		return schedule(() => {
+			return patchSpot(spot, resolveBindingValue(component, bindingKey));
+		});
+	}
+	spot.updateHandler = updateBindingSpot;
+	patchSpot(spot, resolveBindingValue(component, bindingKey));
+	syncSpotSubscriptions(spot, component, new Set([bindingKey]), updateBindingSpot);
+}
+function refreshComputedSpot(spot, component) {
+	const {
+		value,
+		deps,
+	} = evaluateTrackedExpression(component, spot.expr);
+	patchSpot(spot, value);
+	syncSpotSubscriptions(spot, component, deps, spot.updateHandler);
+}
+function initializeComputedSpot(spot, component) {
+	function updateComputedSpot() {
+		return schedule(() => {
+			return refreshComputedSpot(spot, component);
+		});
+	}
+	spot.updateHandler = updateComputedSpot;
+	refreshComputedSpot(spot, component);
+}
+function initializeEventSpot(spot, component) {
+	if (spot.expr === undefined || spot.expr === null || spot.expr === false) {
+		return;
+	}
+	if (!isFunction(spot.expr)) {
+		throw new TypeError(`Template event handler for @${spot.eventName} must be a function.`);
+	}
+	const listener = (domEvent) => {
+		return component.runEventHandler(spot.expr, domEvent, spot.el, spot.eventName);
+	};
+	spot.el.addEventListener(spot.eventName, listener);
+	spot.unsubs.push(() => {
+		spot.el.removeEventListener(spot.eventName, listener);
+	});
 }
 function resolveAndInit(fragment, meta, component, unsubs) {
 	const textSpots = {};
@@ -230,6 +429,26 @@ function resolveAndInit(fragment, meta, component, unsubs) {
 	}
 	for (const metaEntry of meta) {
 		let spot;
+		if (metaEntry.type === 'event') {
+			const markerAttribute = eventMarkerAttribute(metaEntry.eventName);
+			const spotElement = fragment.querySelector(`[${markerAttribute}="expr${metaEntry.i}"]`);
+			if (!spotElement) {
+				continue;
+			}
+			spotElement.removeAttribute(markerAttribute);
+			spot = {
+				type: 'event',
+				eventName: metaEntry.eventName,
+				el: spotElement,
+				expr: metaEntry.expr,
+				unsubs: [],
+			};
+			initializeEventSpot(spot, component);
+			unsubs.push(() => {
+				spot.unsubs = clearSubscriptions(spot.unsubs);
+			});
+			continue;
+		}
 		if (metaEntry.type === 'text') {
 			const spotElement = textSpots[metaEntry.i];
 			if (!spotElement) {
@@ -241,6 +460,7 @@ function resolveAndInit(fragment, meta, component, unsubs) {
 				type: 'text',
 				el: spotElement,
 				expr: metaEntry.expr,
+				unsubs: [],
 			};
 		} else {
 			const spotElement = fragment.querySelector(`[${metaEntry.attr}="expr${metaEntry.i}"]`);
@@ -252,38 +472,17 @@ function resolveAndInit(fragment, meta, component, unsubs) {
 				attr: metaEntry.attr,
 				el: spotElement,
 				expr: metaEntry.expr,
+				unsubs: [],
 			};
 		}
-		let value;
-		let deps;
 		if (Binding.isBinding(metaEntry.expr)) {
-			value = component.STATE?.[metaEntry.expr.key];
-			deps = new Set([metaEntry.expr.key]);
+			initializeBindingSpot(spot, component);
 		} else {
-			const previousRenderProxy = component.renderProxy;
-			component.renderProxy = makeTrackingProxy(component.STATE);
-			({
-				value, deps,
-			} = track(() => {
-				return metaEntry.expr.call(component);
-			}));
-			component.renderProxy = previousRenderProxy;
+			initializeComputedSpot(spot, component);
 		}
-		patchSpot(spot, value);
-		for (const stateKey of deps) {
-			const handler = (updatedValue) => {
-				if (Binding.isBinding(spot.expr)) {
-					return schedule(() => {
-						return patchSpot(spot, updatedValue);
-					});
-				}
-				const computedValue = spot.expr.call(component);
-				return schedule(() => {
-					return patchSpot(spot, computedValue);
-				});
-			};
-			unsubs.push(component.watchState(stateKey, handler));
-		}
+		unsubs.push(() => {
+			spot.unsubs = clearSubscriptions(spot.unsubs);
+		});
 	}
 	for (const boundElement of fragment.querySelectorAll('[data-bind]')) {
 		const stateKey = boundElement.dataset.bind;
@@ -293,35 +492,65 @@ function resolveAndInit(fragment, meta, component, unsubs) {
 		const isCheck = boundElement.type === 'checkbox' || boundElement.type === 'radio';
 		const eventType = boundElement.tagName === 'SELECT' || isCheck ? 'change' : 'input';
 		const handler = () => {
-			component.state[stateKey] = isCheck ? boundElement.checked : boundElement.value;
+			setValueAtPath(component.state, stateKey, isCheck ? boundElement.checked : boundElement.value);
 		};
 		boundElement.addEventListener(eventType, handler);
 		unsubs.push(() => {
 			return boundElement.removeEventListener(eventType, handler);
 		});
-		if (component.STATE?.[stateKey] !== undefined) {
+		const currentValue = getValueAtPath(component.STATE, stateKey);
+		if (currentValue !== undefined) {
 			if (isCheck) {
-				boundElement.checked = Boolean(component.STATE[stateKey]);
+				boundElement.checked = Boolean(currentValue);
 			} else {
-				boundElement.value = String(component.STATE[stateKey] ?? '');
+				boundElement.value = String(currentValue ?? '');
 			}
 		}
 	}
 }
+function buildTemplateContent(component, strings, exprs) {
+	const {
+		html: markup, meta,
+	} = buildHTML(strings, exprs);
+	const template = document.createElement('template');
+	template.innerHTML = markup;
+	const unsubs = [];
+	resolveAndInit(template.content, meta, component, unsubs);
+	return {
+		content: template.content,
+		unsubs,
+	};
+}
+function buildTemplateElement(component, strings, exprs) {
+	const {
+		content,
+		unsubs,
+	} = buildTemplateContent(component, strings, exprs);
+	if (content.children.length !== 1) {
+		clearSubscriptions(unsubs);
+		throw new TypeError('html.element requires exactly one root element.');
+	}
+	const element = content.firstElementChild;
+	element[TEMPLATE_CLEANUP] = () => {
+		clearSubscriptions(unsubs);
+	};
+	return element;
+}
 export function makeHtmlTag(component) {
 	let unsubs = [];
-	return function html(strings, ...exprs) {
+	function html(strings, ...exprs) {
 		for (const unsubscribe of unsubs) {
 			unsubscribe();
 		}
 		unsubs = [];
-		const {
-			html: markup, meta,
-		} = buildHTML(strings, exprs);
-		const template = document.createElement('template');
-		template.innerHTML = markup;
-		resolveAndInit(template.content, meta, component, unsubs);
-		(component.shadowRoot ?? component).replaceChildren(template.content);
+		cleanupTemplateTree(component.shadowRoot ?? component);
+		const builtTemplate = buildTemplateContent(component, strings, exprs);
+		unsubs = builtTemplate.unsubs;
+		(component.shadowRoot ?? component).replaceChildren(builtTemplate.content);
 		component.templateBuilt = true;
+	}
+	html.element = function element(strings, ...exprs) {
+		return buildTemplateElement(component, strings, exprs);
 	};
+	return html;
 }

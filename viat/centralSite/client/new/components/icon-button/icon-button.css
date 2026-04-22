@@ -1,0 +1,31 @@
+:host {
+  display: inline-flex;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+button {
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: none;
+  box-sizing: border-box;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  justify-content: center;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+button:focus-visible {
+  outline: 1px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+.icon-button-glyph {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  line-height: 1;
+  user-select: none;
+}

@@ -36,7 +36,7 @@ export class NetworkStats extends SidebarPanel {
 		}).join('');
 	}
 	render() {
-		return this.html `
+		this.html `
 			<aside class="panel stats-panel">
 				<div class="panel-header">
 					<span><span class="ph-id">NET</span> // NODE STATUS</span>

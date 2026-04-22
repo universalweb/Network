@@ -9,13 +9,20 @@ import {
 	isShadowRoot,
 	isString,
 } from '../utilities.js';
+import { makeGlobalRenderProxy, makeRenderProxy } from './binding.js';
 import { register, registry, unregister } from './registry.js';
 import { attachTooltips } from '../global/tooltip-controller.js';
 import { loadSheet } from './css-loader.js';
 import { makeHtmlTag } from './template.js';
-import { makeRenderProxy } from './binding.js';
 export { liveChildren, registerChild } from './children.js';
-export { getGlobalState, setGlobalState, subscribeGlobal } from './globalState.js';
+export {
+	getGlobal,
+	getGlobalState,
+	setGlobal,
+	setGlobalState,
+	subscribeGlobal,
+	watchGlobal,
+} from './globalState.js';
 export { registry } from './registry.js';
 export class WebComponent extends HTMLElement {
 	constructor(sheets = [], opts = {}) {
@@ -60,7 +67,6 @@ export class WebComponent extends HTMLElement {
 		const duration = opts.duration ?? 240;
 		const easing = opts.easing ?? 'cubic-bezier(0.4,0,0.2,1)';
 		element.style.cssText += ';opacity:0;pointer-events:none;will-change:opacity';
-		console.log(`[preRender] mounting ${element.localName} hidden`);
 		if (isFunction(mount)) {
 			mount(element);
 		} else {
@@ -72,7 +78,6 @@ export class WebComponent extends HTMLElement {
 				requestAnimationFrame(r);
 			});
 		});
-		console.log(`[preRender] all components ready — revealing ${element.localName} on GPU`);
 		const animation = element.animate(
 			[
 				{
@@ -101,17 +106,17 @@ export class WebComponent extends HTMLElement {
 	static #sheetCache = new Map();
 	static styleSheet(source, metaUrl) {
 		const key = metaUrl ? new URL(source, metaUrl).toString() : source;
-		if (this.#sheetCache.has(key)) {
-			return this.#sheetCache.get(key);
+		if (WebComponent.#sheetCache.has(key)) {
+			return WebComponent.#sheetCache.get(key);
 		}
 		if (metaUrl) {
 			const sheetPromise = loadSheet(key);
-			this.#sheetCache.set(key, sheetPromise);
+			WebComponent.#sheetCache.set(key, sheetPromise);
 			return sheetPromise;
 		}
 		const sheet = new CSSStyleSheet();
 		sheet.replaceSync(source);
-		this.#sheetCache.set(key, sheet);
+		WebComponent.#sheetCache.set(key, sheet);
 		return sheet;
 	}
 	static async create(config = {}) {
@@ -126,17 +131,13 @@ export class WebComponent extends HTMLElement {
 	}
 	STATE = {};
 	stateProxy = null;
-	prevState = null;
-	stateWatchers = null;
+	pendingFlush = null;
 	globalUnsubs = new Set();
 	effectUnsubs = new Set();
 	templateBuilt = false;
 	renderTracking = false;
 	renderProxy = null;
-	eventHandlers = null;
-	elementEventNames = null;
-	activeEventTypes = null;
-	eventRoot = null;
+	globalRenderProxy = null;
 	renderResolver = null;
 	renderComplete = null;
 	intervals = new Set();
@@ -149,31 +150,51 @@ export class WebComponent extends HTMLElement {
 	set state(value) {
 		this.replaceState(value);
 	}
+	get globalState() {
+		if (this.renderTracking) {
+			if (!this.globalRenderProxy) {
+				this.globalRenderProxy = makeGlobalRenderProxy(globalMethods.GLOBAL_STATE, this);
+			}
+			return this.globalRenderProxy;
+		}
+		return globalMethods.GLOBAL_STATE;
+	}
 	unbindTooltips = null;
 	useTooltips = false;
 	renderSeq = 0;
 	unregisterFromParent = null;
 	timeouts = new Set();
 	connectedCallback() {
+		this.handleConnectedCallback().catch((error) => {
+			this.onLifecycleError(error);
+		});
+	}
+	async handleConnectedCallback() {
 		register(this);
 		const root = this.getRootNode();
 		const parentHost = isShadowRoot(root) ? root.host : this.parentElement;
 		if (WebComponent.isWebComponent(parentHost)) {
 			this.unregisterFromParent = registerChild(parentHost, this);
 		}
-		this.connectDelegatedEvents();
-		this.onConnect();
+		const connectResult = this.onConnect();
+		if (isPromiseLike(connectResult)) {
+			await connectResult;
+		}
 		if (Object.keys(this.STATE).length) {
-			this.updateView();
+			await this.updateView();
 		} else {
-			this.refresh();
+			await this.refresh();
 		}
 	}
 	disconnectedCallback() {
+		this.handleDisconnectedCallback().catch((error) => {
+			this.onLifecycleError(error);
+		});
+	}
+	async handleDisconnectedCallback() {
 		unregister(this);
 		this.unregisterFromParent?.();
 		this.unregisterFromParent = null;
-		this.disconnectDelegatedEvents();
 		this.unbindTooltips?.();
 		this.unbindTooltips = null;
 		this.clearTimeouts();
@@ -186,7 +207,10 @@ export class WebComponent extends HTMLElement {
 			u();
 		});
 		this.globalUnsubs.clear();
-		this.onDisconnect();
+		const disconnectResult = this.onDisconnect();
+		if (isPromiseLike(disconnectResult)) {
+			await disconnectResult;
+		}
 	}
 	createRenderCompletePromise() {
 		if (this.renderResolver) {
@@ -209,6 +233,11 @@ export class WebComponent extends HTMLElement {
 		this.intervals.clear();
 	}
 	attributeChangedCallback(attributeName, oldVal, newVal) {
+		this.handleAttributeChangedCallback(attributeName, oldVal, newVal).catch((error) => {
+			this.onLifecycleError(error);
+		});
+	}
+	async handleAttributeChangedCallback(attributeName, oldVal, newVal) {
 		if (oldVal === newVal) {
 			return;
 		}
@@ -216,7 +245,10 @@ export class WebComponent extends HTMLElement {
 		if (binding) {
 			this.state[binding] = newVal;
 		}
-		this.onAttributeChange(attributeName, oldVal, newVal);
+		const attributeChangeResult = this.onAttributeChange(attributeName, oldVal, newVal);
+		if (isPromiseLike(attributeChangeResult)) {
+			await attributeChangeResult;
+		}
 	}
 	getComponent(tag) {
 		return liveChildren(this, tag.toLowerCase())[0] ?? null;
@@ -262,50 +294,66 @@ export class WebComponent extends HTMLElement {
 	onConnect() {}
 	onDisconnect() {}
 	onAttributeChange(attributeName, oldVal, newVal) {}
+	onLifecycleError(error) {
+		console.error(`[${this.localName}] lifecycle error:`, error);
+	}
 	onRender() {}
 	onRenderError(error) {
 		console.error(`[${this.localName}] render error:`, error);
 	}
 	beforeRender() {}
-	render() {}
+	async render() {}
 	async refresh() {
 		this.templateBuilt = false;
 		this.createRenderCompletePromise();
-		this.renderTracking = true;
-		this.renderProxy = makeRenderProxy(this.STATE ?? {});
 		const seq = ++this.renderSeq;
 		try {
 			const beforeResult = this.beforeRender();
 			if (isPromiseLike(beforeResult)) {
 				await beforeResult;
 			}
-			const result = this.render();
-			if (isPromiseLike(result)) {
-				await result;
+			if (seq !== this.renderSeq) {
+				return;
+			}
+			this.renderTracking = true;
+			this.renderProxy = makeRenderProxy(this.STATE ?? {}, this);
+			this.globalRenderProxy = makeGlobalRenderProxy(globalMethods.GLOBAL_STATE, this);
+			await this.render();
+			if (seq !== this.renderSeq) {
+				return;
 			}
 		} catch (error) {
 			this.onRenderError(error);
+		} finally {
+			if (seq === this.renderSeq) {
+				this.renderTracking = false;
+				this.renderProxy = null;
+				this.globalRenderProxy = null;
+			}
 		}
-		this.renderTracking = false;
-		this.renderProxy = null;
-		if (seq !== this.renderSeq) {
-			return;
-		}
-		this.syncDelegatedEvents();
-		this.renderResolver?.();
-		this.renderResolver = null;
-		console.log(`%c[view rendered] <${this.localName}>`, 'color:red');
-		this.onRender();
-		if (this.useTooltips) {
-			this.unbindTooltips?.();
-			this.unbindTooltips = null;
-			attachTooltips(this.getComponentRoot()).then((unbind) => {
-				if (!this.isConnected) {
-					unbind();
-					return;
+		if (seq === this.renderSeq) {
+			try {
+				this.templateBuilt = true;
+				const renderHookResult = this.onRender();
+				if (isPromiseLike(renderHookResult)) {
+					await renderHookResult;
 				}
-				this.unbindTooltips = unbind;
-			});
+				if (this.useTooltips) {
+					this.unbindTooltips?.();
+					this.unbindTooltips = null;
+					const unbind = await attachTooltips(this.getComponentRoot());
+					if (!this.isConnected) {
+						unbind();
+						return;
+					}
+					this.unbindTooltips = unbind;
+				}
+			} catch (error) {
+				this.onRenderError(error);
+			} finally {
+				this.renderResolver?.();
+				this.renderResolver = null;
+			}
 		}
 	}
 	setTimeout(fn, ms) {

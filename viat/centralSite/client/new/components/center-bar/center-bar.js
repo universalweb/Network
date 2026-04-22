@@ -1,5 +1,12 @@
+import './center-bar-icon-button.js';
 import { WebComponent } from '../base/base.js';
+import { each } from '../base/template.js';
 const styles = await WebComponent.styleSheet('./center-bar.css', import.meta.url);
+function createActionButton(action) {
+	const button = document.createElement('center-bar-icon-button');
+	button.state = action;
+	return button;
+}
 export class CenterBar extends WebComponent {
 	constructor() {
 		super([styles], {
@@ -8,7 +15,6 @@ export class CenterBar extends WebComponent {
 		this.state = {
 			actions: [],
 		};
-		this.addEvent('handleAction', 'click', this.handleClick);
 	}
 	get actions() {
 		return this.state.actions;
@@ -16,10 +22,21 @@ export class CenterBar extends WebComponent {
 	set actions(value) {
 		this.state.actions = Array.isArray(value) ? value : [];
 	}
-	handleClick(e, button) {
-		this.emit('center-bar-action', {
-			id: button.dataset.id,
-			title: button.dataset.title,
+	buildActionItem(action, index) {
+		return {
+			actionId: action?.id,
+			className: action?.className ?? '',
+			icon: action?.icon ?? '',
+			key: action?.id ?? action?.title ?? index,
+			title: action?.title ?? '',
+		};
+	}
+	buildActionList() {
+		const actionItems = this.state.actions.map((action, index) => {
+			return this.buildActionItem(action, index);
+		});
+		return each(actionItems, createActionButton, (action, index) => {
+			return action.key ?? index;
 		});
 	}
 	render() {
@@ -27,16 +44,7 @@ export class CenterBar extends WebComponent {
 		this.html `
 			<div class="center-bar">
 				${() => {
-					return this.state.actions.map((action) => {
-						return `
-					<button class="tb-icon-btn icon-font${action.className ? ` ${action.className}` : ''}"
-						aria-label="${action.title}"
-						data-id="${action.id}"
-						data-title="${action.title}"
-						data-onclick="handleAction"
-						data-tooltip="${action.title}">${action.icon}</button>
-				`;
-					}).join('');
+					return this.buildActionList();
 				}}
 			</div>
 		`;

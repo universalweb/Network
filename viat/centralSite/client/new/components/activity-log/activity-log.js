@@ -13,7 +13,8 @@ class ActivityLogEntry extends WebComponent {
 		};
 	}
 	render() {
-		return this.html `
+		// eslint-disable-next-line no-unused-expressions
+		this.html `
 			<div class="log-entry">
 				<span class="log-ts">${() => {
 					return this.state.timestamp;
@@ -41,32 +42,27 @@ function createEntry(entry) {
 export class ActivityLog extends WebComponent {
 	constructor() {
 		super([outputStyles]);
-		this.rawEntries = [];
-		this.entryList = each([], createEntry, (entry, i) => {
-			return entry.id ?? i;
-		});
+		this.entrySnapshotCache = new Map();
+		this.tabSnapshotCache = new Map();
 		this.state = {
 			activeTab: '',
-			isEmpty: true,
+			entries: [],
 			tabs: [],
 		};
-		this.addEvent('handleTabClick', 'click', this.handleTabClick);
 	}
 	get activeTab() {
 		return this.state.activeTab;
 	}
 	set activeTab(value) {
 		this.state.activeTab = value ?? '';
-		this.rebuildList();
 	}
 	get entries() {
-		return this.rawEntries;
+		return this.state.entries;
 	}
 	set entries(data) {
-		this.rawEntries = Array.isArray(data) ? data : [];
-		this.rebuildList();
+		this.state.entries = Array.isArray(data) ? data : [];
 	}
-	passesFilter(entry) {
+	entryMatchesActiveTab(entry) {
 		const { activeTab } = this.state;
 		if (activeTab === 'Inbound') {
 			return entry.direction === 'in';
@@ -76,28 +72,87 @@ export class ActivityLog extends WebComponent {
 		}
 		return true;
 	}
-	rebuildList() {
-		const filtered = this.rawEntries.filter((e) => {
-			return this.passesFilter(e);
+	get filteredEntries() {
+		return this.state.entries.filter((entry) => {
+			return this.entryMatchesActiveTab(entry);
 		});
-		this.entryList.splice(0, this.entryList.length, ...filtered);
-		this.state.isEmpty = filtered.length === 0;
+	}
+	createEntrySnapshot(entry, index) {
+		const entryKey = entry?.id ?? index;
+		const snapshot = {
+			direction: entry?.direction ?? '',
+			id: entryKey,
+			message: entry?.message ?? '',
+			status: entry?.status ?? '',
+			timestamp: entry?.timestamp ?? '',
+		};
+		if (!entry || typeof entry !== 'object') {
+			return snapshot;
+		}
+		const signature = `${snapshot.id}|${snapshot.direction}|${snapshot.message}|${snapshot.status}|${snapshot.timestamp}`;
+		const cachedEntry = this.entrySnapshotCache.get(entryKey);
+		if (cachedEntry?.signature === signature) {
+			return cachedEntry.snapshot;
+		}
+		this.entrySnapshotCache.set(entryKey, {
+			signature,
+			snapshot,
+		});
+		return snapshot;
+	}
+	buildEntryList() {
+		const entrySnapshots = this.filteredEntries.map((entry, index) => {
+			return this.createEntrySnapshot(entry, index);
+		});
+		return each(entrySnapshots, createEntry, (entry, index) => {
+			return entry.id ?? index;
+		});
+	}
+	createTabSnapshot(tab, index) {
+		const tabKey = tab ?? index;
+		const snapshot = {
+			active: tab === this.state.activeTab,
+			key: tabKey,
+			label: tab ?? '',
+		};
+		const signature = `${snapshot.key}|${snapshot.label}|${snapshot.active}`;
+		const cachedEntry = this.tabSnapshotCache.get(tabKey);
+		if (cachedEntry?.signature === signature) {
+			return cachedEntry.snapshot;
+		}
+		this.tabSnapshotCache.set(tabKey, {
+			signature,
+			snapshot,
+		});
+		return snapshot;
+	}
+	createTabElement(tab) {
+		const element = document.createElement('div');
+		element.className = `output-tab${tab.active ? ' active' : ''}`;
+		element.textContent = tab.label;
+		element.addEventListener('click', this.createEventHandler(this.handleTabClick, tab.label));
+		return element;
+	}
+	buildTabList() {
+		const tabSnapshots = this.state.tabs.map((tab, index) => {
+			return this.createTabSnapshot(tab, index);
+		});
+		return each(tabSnapshots, this.createTabElement.bind(this), (tab, index) => {
+			return tab.key ?? index;
+		});
 	}
 	addEntry(entry) {
-		this.rawEntries.unshift(entry);
-		if (this.passesFilter(entry)) {
-			this.entryList.unshift(entry);
-			this.state.isEmpty = false;
-		}
+		this.state.entries.unshift(entry ?? {});
 	}
-	handleTabClick(e, tab) {
-		this.activeTab = tab.dataset.tab || tab.textContent.trim();
+	handleTabClick(empty, emptyElement, tabLabel) {
+		this.activeTab = tabLabel ?? '';
 		this.emit('tab-change', {
 			tab: this.activeTab,
 		});
 	}
 	render() {
-		return this.html `
+		// eslint-disable-next-line no-unused-expressions
+		this.html `
 			<section class="output-panel">
 				<div class="panel-header">
 					<span><span class="ph-id">ACTIVITY</span> // LOG</span>
@@ -105,20 +160,12 @@ export class ActivityLog extends WebComponent {
 				</div>
 				<div class="output-tabs">
 					${() => {
-						const {
-							activeTab,
-							tabs,
-						} = this.state;
-						return tabs.map((tab) => {
-							return `
-						<div class="output-tab ${tab === activeTab ? 'active' : ''}" data-onclick="handleTabClick" data-tab="${tab}">${tab}</div>
-					`;
-						}).join('');
+						return this.buildTabList();
 					}}
 				</div>
 				<div class="output-feed">
 					${() => {
-						if (!this.state.isEmpty) {
+						if (this.filteredEntries.length > 0) {
 							return '';
 						}
 						return `
@@ -130,7 +177,7 @@ export class ActivityLog extends WebComponent {
 						`;
 					}}
 					${() => {
-						return this.entryList;
+						return this.buildEntryList();
 					}}
 				</div>
 			</section>

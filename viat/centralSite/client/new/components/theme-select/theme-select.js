@@ -21,7 +21,6 @@ export class UIThemeSelect extends WebComponent {
 		this.state = {
 			theme: getTheme(),
 		};
-		this.addEvent('toggle', 'click', this.handleToggle);
 	}
 	onConnect() {
 		this.addEventListener('mouseleave', this.handleHostLeave);
@@ -115,8 +114,9 @@ export class UIThemeSelect extends WebComponent {
 		this.state.theme = id;
 	}
 	render() {
-		return this.html `
-			<button class="ts-btn" data-onclick="toggle">
+		// eslint-disable-next-line no-unused-expressions
+		this.html `
+			<button class="ts-btn" @click=${this.handleToggle}>
 				${() => {
 					const current = THEMES.find((t) => {
 						return t.id === this.state.theme;

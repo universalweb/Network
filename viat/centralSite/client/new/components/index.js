@@ -1,5 +1,13 @@
 export {
-	WebComponent, registerChild, liveChildren, getGlobalState, setGlobalState, subscribeGlobal,
+	WebComponent,
+	registerChild,
+	liveChildren,
+	getGlobal,
+	getGlobalState,
+	setGlobal,
+	setGlobalState,
+	subscribeGlobal,
+	watchGlobal,
 } from './base/base.js';
 export { schedule } from './base/scheduler.js';
 export { UIThemeSelect } from './theme-select/theme-select.js';
