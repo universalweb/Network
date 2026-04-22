@@ -57,8 +57,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       electron:
-        specifier: ^41.2.1
-        version: 41.2.1
+        specifier: ^41.2.2
+        version: 41.2.2
       esbuild:
         specifier: ^0.28.0
         version: 0.28.0
@@ -997,8 +997,8 @@ packages:
       bare-url:
         optional: true
 
-  bare-os@3.8.7:
-    resolution: {integrity: sha512-G4Gr1UsGeEy2qtDTZwL7JFLo2wapUarz7iTMcYcMFdS89AIQuBoyjgXZz0Utv7uHs3xA9LckhVbeBi8lEQrC+w==}
+  bare-os@3.9.0:
+    resolution: {integrity: sha512-JTjuZyNIDpw+GytMO4a6TK1VXdVKKJr6DRxEHasyuYyShV2deuiHJK/ahGZlebc+SG0/wJCB9XK8gprBGDFi/Q==}
     engines: {bare: '>=1.14.0'}
 
   bare-path@3.0.0:
@@ -1301,8 +1301,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  electron@41.2.1:
-    resolution: {integrity: sha512-teeRThiYGTPKf/2yOW7zZA1bhb91KEQ4yLBPOg7GxpmnkLFLugKgQaAKOrCgdzwsXh/5mFIfmkm+4+wACJKwaA==}
+  electron@41.2.2:
+    resolution: {integrity: sha512-3rzz/hVIpF726W9g7nleQzyF2IOEZbzZnUTUYGhMaEfsoab8fDyOYAWbdBdo4+DczS1Ifz11rdYo8IAAGcRx/g==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -3251,12 +3251,12 @@ snapshots:
     optionalDependencies:
       bare-url: 2.3.1
 
-  bare-os@3.8.7:
+  bare-os@3.9.0:
     optional: true
 
   bare-path@3.0.0:
     dependencies:
-      bare-os: 3.8.7
+      bare-os: 3.9.0
     optional: true
 
   bare-semver@1.0.3: {}
@@ -3556,7 +3556,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  electron@41.2.1:
+  electron@41.2.2:
     dependencies:
       '@electron/get': 2.0.3
       '@types/node': 24.12.2
