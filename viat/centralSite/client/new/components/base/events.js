@@ -1,6 +1,6 @@
 import {
 	isError, isFunction, isPromiseLike, isString,
-} from '../utilities.js';
+} from './utilities.js';
 export function emit(eventName, detail) {
 	const init = {
 		bubbles: true,

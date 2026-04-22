@@ -6,8 +6,14 @@ export class AppDashboard extends WebComponent {
 		return ['center-max-width'];
 	}
 	constructor() {
-		super([layoutStyles]);
-		this.shadowRoot.innerHTML = `
+		super({
+			styles: [layoutStyles],
+		});
+		this.render();
+	}
+	render() {
+		// eslint-disable-next-line no-unused-expressions
+		this.html `
 			<div class="dashboard">
 				<slot name="global-top-bar"></slot>
 				<div class="body-row">
@@ -43,8 +49,8 @@ export class AppDashboard extends WebComponent {
 	onConnect() {
 		this.syncCenterWidth();
 	}
-	onAttributeChange(name) {
-		if (name === 'center-max-width') {
+	onAttributeChange(attributeName) {
+		if (attributeName === 'center-max-width') {
 			this.syncCenterWidth();
 		}
 	}

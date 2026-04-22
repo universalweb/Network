@@ -13,7 +13,9 @@ export class UITooltip extends WebComponent {
 	sequence = 0;
 	showFrame = 0;
 	constructor() {
-		super([tooltipStyles]);
+		super({
+			styles: [tooltipStyles],
+		});
 		this.state = {
 			mounted: false,
 			placement: 'top',
@@ -24,56 +26,24 @@ export class UITooltip extends WebComponent {
 			y: 0,
 		};
 	}
-	get mounted() {
-		return this.state.mounted;
-	}
-	set mounted(value) {
-		this.state.mounted = value === true;
-	}
-	get placement() {
-		return this.state.placement;
-	}
-	set placement(value) {
-		this.state.placement = value ?? 'top';
-	}
-	get text() {
-		return this.state.text;
-	}
-	set text(value) {
-		this.state.text = value ?? '';
-	}
-	get visible() {
-		return this.state.visible;
-	}
-	set visible(value) {
-		this.state.visible = value === true;
-	}
-	get x() {
-		return this.state.x;
-	}
-	set x(value) {
-		this.state.x = value ?? 0;
-	}
-	get y() {
-		return this.state.y;
-	}
-	set y(value) {
-		this.state.y = value ?? 0;
+	static async create() {
+		const instance = new this();
+		return instance;
 	}
 	get shell() {
 		return this.shadowRoot.querySelector('.tooltip-shell');
 	}
 	calcPosition(mouseX, mouseY, tooltipRect, targetRect, placement) {
-		let x = mouseX - tooltipRect.width / 2;
-		let y = mouseY - tooltipRect.height - GAP;
+		let x = mouseX - (tooltipRect.width / 2);
+		let y = (mouseY - tooltipRect.height - GAP);
 		if (placement === 'bottom') {
 			y = mouseY + GAP;
 		} else if (placement === 'left') {
 			x = mouseX - tooltipRect.width - GAP;
-			y = mouseY - tooltipRect.height / 2;
+			y = mouseY - (tooltipRect.height / 2);
 		} else if (placement === 'right') {
 			x = mouseX + GAP;
-			y = mouseY - tooltipRect.height / 2;
+			y = mouseY - (tooltipRect.height / 2);
 		}
 		return {
 			x: clamp(x, EDGE_MARGIN, window.innerWidth - tooltipRect.width - EDGE_MARGIN),
@@ -179,7 +149,7 @@ export class UITooltip extends WebComponent {
 					if (this.sequence !== token || !this.state?.mounted) {
 						return;
 					}
-					this.visible = true;
+					this.state.visible = true;
 				});
 			}
 		});
@@ -189,7 +159,7 @@ export class UITooltip extends WebComponent {
 			return;
 		}
 		this.sequence += 1;
-		this.visible = false;
+		this.state.visible = false;
 		if (this.hideTimeoutId) {
 			this.clearTimeout(this.hideTimeoutId);
 		}
@@ -198,11 +168,12 @@ export class UITooltip extends WebComponent {
 			if (this.sequence !== token || this.state?.visible) {
 				return;
 			}
-			this.mounted = false;
+			this.state.mounted = false;
 			this.hideTimeoutId = null;
 		}, HIDE_DELAY);
 	}
 	render() {
+		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<div class="${() => {
 				const {

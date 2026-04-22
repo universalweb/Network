@@ -2,7 +2,7 @@ import {
 	isFunction,
 	isObject,
 	isSymbol,
-} from '../utilities.js';
+} from './utilities.js';
 export let currentTracking = null;
 export class Binding {
 	static isBinding(source) {
@@ -52,17 +52,6 @@ function makeBindingFactory(setValue, prefix = '') {
 	const cache = new WeakMap();
 	function makeBindingValue(value, path = '') {
 		const binding = new Binding(makeDependencyKey(prefix, path), value);
-		if (!isObject(value)) {
-			return binding;
-		}
-		let pathCache = cache.get(value);
-		if (!pathCache) {
-			pathCache = new Map();
-			cache.set(value, pathCache);
-		}
-		if (pathCache.has(path)) {
-			return pathCache.get(path);
-		}
 		const proxy = new Proxy(binding, {
 			get(target, key) {
 				if (isSymbol(key) || key in target) {
@@ -86,6 +75,17 @@ function makeBindingFactory(setValue, prefix = '') {
 				return false;
 			},
 		});
+		if (!isObject(value)) {
+			return proxy;
+		}
+		let pathCache = cache.get(value);
+		if (!pathCache) {
+			pathCache = new Map();
+			cache.set(value, pathCache);
+		}
+		if (pathCache.has(path)) {
+			return pathCache.get(path);
+		}
 		pathCache.set(path, proxy);
 		return proxy;
 	}

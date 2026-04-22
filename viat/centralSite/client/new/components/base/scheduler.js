@@ -1,4 +1,4 @@
-import { isPromiseLike } from '../utilities.js';
+import { isPromiseLike } from './utilities.js';
 const usePostTask = typeof scheduler !== 'undefined' && typeof scheduler.postTask === 'function';
 let batch = null;
 function queueAsyncError(error) {

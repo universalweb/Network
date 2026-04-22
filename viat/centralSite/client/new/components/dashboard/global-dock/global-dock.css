@@ -23,47 +23,26 @@
   padding: 8px 0;
   gap: 4px;
   flex-shrink: 0;
+  position: relative;
 }
 
-.rail-icon-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
+.active-bar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 3px;
   height: 38px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  cursor: pointer;
-  border-radius: var(--radius);
-  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s ease;
-  transform-origin: left center;
-  will-change: transform;
-  padding: 0;
-  appearance: none;
+  background: var(--teal);
+  border-radius: 4px 0 0 4px;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+  will-change: transform, opacity;
+  box-shadow: -2px 0 8px var(--teal-glow-faint, rgba(0, 255, 255, 0.2));
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
 }
 
-.rail-icon-btn:hover {
-  color: var(--text-main);
-  background: var(--surface-tint-heavy);
-  border-color: var(--dark-divider-accent);
-  box-shadow: 0 0 10px var(--cyan-glow-faint),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-.rail-icon-btn.active {
-  color: var(--teal);
-  background: transparent;
-  width: var(--rail-width, 52px);
-  border-color: transparent;
-  border-right-color: transparent;
-  border-radius: 0;
-  box-shadow: inset -3px 0 0 0 var(--teal);
-}
-
-.rail-icon-btn:focus-visible {
-  outline: 1px solid var(--focus-ring-color);
-  outline-offset: 2px;
+.active-bar.is-visible {
+  opacity: 1;
 }
 

@@ -23,13 +23,12 @@ function prepareTooltipTarget(target) {
 }
 function bindTarget(target, tooltip, signal) {
 	prepareTooltipTarget(target);
-	const text = getTooltipText(target);
-	if (!text) {
+	if (!getTooltipText(target)) {
 		return;
 	}
 	target.addEventListener('mouseenter', (e) => {
 		tooltip.show({
-			text,
+			text: getTooltipText(target),
 			targetRect: target.getBoundingClientRect(),
 			mouseX: e.clientX,
 			mouseY: e.clientY,
@@ -49,7 +48,7 @@ function bindTarget(target, tooltip, signal) {
 	});
 	target.addEventListener('focus', () => {
 		tooltip.show({
-			text,
+			text: getTooltipText(target),
 			targetRect: target.getBoundingClientRect(),
 		});
 	}, {

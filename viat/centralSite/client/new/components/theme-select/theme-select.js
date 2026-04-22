@@ -15,7 +15,9 @@ export class UIThemeSelect extends WebComponent {
 	dropdown = null;
 	closeTimer = null;
 	constructor() {
-		super([btnStyles]);
+		super({
+			styles: [btnStyles],
+		});
 		this.closeOutside = this.closeOutside.bind(this);
 		this.handleHostLeave = this.handleHostLeave.bind(this);
 		this.state = {

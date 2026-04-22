@@ -4,16 +4,12 @@ const styles = await WebComponent.styleSheet('./wallet-params.css', import.meta.
 const statsStyles = await WebComponent.styleSheet('../../styles/stats.css', import.meta.url);
 export class WalletParams extends SidebarPanel {
 	constructor() {
-		super([statsStyles, styles]);
+		super({
+			styles: [statsStyles, styles],
+		});
 		this.state = {
 			params: [],
 		};
-	}
-	get params() {
-		return this.state.params;
-	}
-	set params(data) {
-		this.state.params = Array.isArray(data) ? data : [];
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions

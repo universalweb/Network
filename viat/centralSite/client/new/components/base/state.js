@@ -1,4 +1,4 @@
-import { isObject, isPromiseLike, isSymbol } from '../utilities.js';
+import { isObject, isPromiseLike, isSymbol } from './utilities.js';
 function queueAsyncError(error) {
 	queueMicrotask(() => {
 		throw error;
@@ -120,7 +120,7 @@ export function watchState(key, handler) {
 export function onStateChange() {}
 export async function updateView() {
 	const pendingTasks = [];
-	const stateChangeResult = this.onStateChange();
+	const stateChangeResult = await this.onStateChange();
 	if (isPromiseLike(stateChangeResult)) {
 		pendingTasks.push(stateChangeResult);
 	}

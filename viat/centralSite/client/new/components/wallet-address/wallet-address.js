@@ -1,30 +1,22 @@
 import { WebComponent } from '../base/base.js';
 const styles = await WebComponent.styleSheet('./wallet-address.css', import.meta.url);
 export class WalletAddress extends WebComponent {
-	static attrBindings = {
-		'wallet-address': 'walletAddress',
-	};
 	constructor() {
-		super([styles], {
+		super({
+			styles: [styles],
 			tooltips: true,
 		});
 		this.state = {
 			copied: false,
-			walletAddress: this.getAttribute('wallet-address') ?? '',
 		};
 	}
-	get walletAddress() {
-		return this.state.walletAddress;
-	}
-	set walletAddress(value) {
-		this.state.walletAddress = value ?? '';
-	}
 	async handleCopy() {
-		if (!this.state.walletAddress) {
+		const walletAddress = this.state.walletAddress;
+		if (!walletAddress) {
 			return;
 		}
 		try {
-			await navigator.clipboard.writeText(this.state.walletAddress);
+			await navigator.clipboard.writeText(walletAddress);
 			this.state.copied = true;
 			document.querySelector('app-view')?.getComponent('ui-notification')?.show({
 				itemType: 'success',
@@ -33,14 +25,14 @@ export class WalletAddress extends WebComponent {
 				title: 'Address Copied',
 			});
 			this.emit('copy', {
-				walletAddress: this.state.walletAddress,
+				walletAddress,
 			});
 			this.setTimeout(() => {
 				this.state.copied = false;
 			}, 1600);
 		} catch {
 			this.emit('copy-error', {
-				walletAddress: this.state.walletAddress,
+				walletAddress,
 			});
 		}
 	}
@@ -63,7 +55,7 @@ export class WalletAddress extends WebComponent {
 					return (this.state.copied ? 'Copied!' : 'Copy address');
 				}}"
 				role="button"
-				tabindex="0">${this.state.walletAddress}</div>
+				tabindex="0">${this.globalState.walletAddress}</div>
 		`;
 	}
 }

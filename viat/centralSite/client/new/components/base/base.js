@@ -5,12 +5,15 @@ import * as stateMethods from './state.js';
 import { allChildren, liveChildren, registerChild } from './children.js';
 import {
 	isFunction,
+	isObject,
 	isPromiseLike,
 	isShadowRoot,
 	isString,
-} from '../utilities.js';
+	noValue,
+} from './utilities.js';
 import { makeGlobalRenderProxy, makeRenderProxy } from './binding.js';
 import { register, registry, unregister } from './registry.js';
+import { Logger } from './logger.js';
 import { attachTooltips } from '../global/tooltip-controller.js';
 import { loadSheet } from './css-loader.js';
 import { makeHtmlTag } from './template.js';
@@ -24,10 +27,47 @@ export {
 	watchGlobal,
 } from './globalState.js';
 export { registry } from './registry.js';
+function isComponentConfig(config) {
+	return isObject(config) && !Array.isArray(config) && !isPromiseLike(config) && !isFunction(config.replaceSync);
+}
+function assertComponentConfig(config) {
+	if (isComponentConfig(config)) {
+		return;
+	}
+	throw new TypeError('WebComponent constructor expects a config object.');
+}
+function assertComponentStyle(style, index) {
+	if (style === undefined) {
+		throw new TypeError(`WebComponent styles[${index}] is undefined.`);
+	}
+	if (style === null) {
+		throw new TypeError(`WebComponent styles[${index}] is null.`);
+	}
+	if (!(style instanceof CSSStyleSheet)) {
+		throw new TypeError(`WebComponent styles[${index}] must be a CSSStyleSheet.`);
+	}
+}
+function assertComponentStyles(styles) {
+	if (styles === undefined) {
+		return;
+	}
+	if (!Array.isArray(styles)) {
+		throw new TypeError('WebComponent config.styles must be an array of CSSStyleSheet instances.');
+	}
+	styles.forEach((style, index) => {
+		assertComponentStyle(style, index);
+	});
+}
 export class WebComponent extends HTMLElement {
-	constructor(sheets = [], opts = {}) {
+	constructor(config = {}) {
 		super();
-		this.useTooltips = opts.tooltips === true;
+		this.constructor.assertConfig(config);
+		const {
+			styles = [],
+			tooltips = false,
+		} = config;
+		assertComponentStyles(styles);
+		this.useTooltips = tooltips === true;
 		this.attachShadow({
 			mode: 'open',
 		});
@@ -38,7 +78,7 @@ export class WebComponent extends HTMLElement {
 					sharedStyles.panelSheet,
 					sharedStyles.scrollbarSheet,
 					sharedStyles.utilsSheet,
-					...sheets,
+					...styles,
 				]),
 			];
 		}
@@ -46,6 +86,7 @@ export class WebComponent extends HTMLElement {
 		this.html = makeHtmlTag(this);
 		this.initState();
 		this.createRenderCompletePromise();
+		Logger.debug('WebComponent', `[${this.tagName}] Constructor`);
 	}
 	static attrBindings = {};
 	static get observedAttributes() {
@@ -69,7 +110,7 @@ export class WebComponent extends HTMLElement {
 		element.style.cssText += ';opacity:0;pointer-events:none;will-change:opacity';
 		if (isFunction(mount)) {
 			mount(element);
-		} else {
+		} else if (mount instanceof HTMLElement) {
 			mount.appendChild(element);
 		}
 		await WebComponent.waitRenderTree(element);
@@ -103,8 +144,16 @@ export class WebComponent extends HTMLElement {
 	static isWebComponent(source) {
 		return source instanceof WebComponent;
 	}
+	static assertConfig(config = {}) {
+		assertComponentConfig(config);
+	}
 	static #sheetCache = new Map();
 	static styleSheet(source, metaUrl) {
+		if (Array.isArray(source)) {
+			return Promise.all(source.map((s) => {
+				return this.styleSheet(s, metaUrl);
+			}));
+		}
 		const key = metaUrl ? new URL(source, metaUrl).toString() : source;
 		if (WebComponent.#sheetCache.has(key)) {
 			return WebComponent.#sheetCache.get(key);
@@ -120,13 +169,12 @@ export class WebComponent extends HTMLElement {
 		return sheet;
 	}
 	static async create(config = {}) {
-		const {
-			state, sheets = [], ...opts
-		} = config;
-		const instance = new this(sheets, opts);
-		if (state !== undefined) {
-			await instance.replaceState(await state);
+		this.assertConfig(config);
+		const instance = new this(config);
+		if (config.state !== undefined) {
+			await instance.replaceState(await config.state);
 		}
+		// await WebComponent.preRender(instance);
 		return instance;
 	}
 	STATE = {};
@@ -141,6 +189,7 @@ export class WebComponent extends HTMLElement {
 	renderResolver = null;
 	renderComplete = null;
 	intervals = new Set();
+	pendingRenderComplete = null;
 	get state() {
 		if (this.renderTracking) {
 			return this.renderProxy;
@@ -166,20 +215,19 @@ export class WebComponent extends HTMLElement {
 	timeouts = new Set();
 	connectedCallback() {
 		this.handleConnectedCallback().catch((error) => {
+			Logger.error('WebComponent', `[${this.tagName}] Connected error:`, error);
 			this.onLifecycleError(error);
 		});
 	}
 	async handleConnectedCallback() {
 		register(this);
+		Logger.debug('WebComponent', `[${this.tagName}] connectedCallback`);
 		const root = this.getRootNode();
 		const parentHost = isShadowRoot(root) ? root.host : this.parentElement;
 		if (WebComponent.isWebComponent(parentHost)) {
 			this.unregisterFromParent = registerChild(parentHost, this);
 		}
-		const connectResult = this.onConnect();
-		if (isPromiseLike(connectResult)) {
-			await connectResult;
-		}
+		const connectResult = await this.onConnect();
 		if (Object.keys(this.STATE).length) {
 			await this.updateView();
 		} else {
@@ -188,11 +236,13 @@ export class WebComponent extends HTMLElement {
 	}
 	disconnectedCallback() {
 		this.handleDisconnectedCallback().catch((error) => {
+			Logger.error('WebComponent', `[${this.tagName}] Disconnected error:`, error);
 			this.onLifecycleError(error);
 		});
 	}
 	async handleDisconnectedCallback() {
 		unregister(this);
+		Logger.debug('WebComponent', `[${this.tagName}] disconnectedCallback`);
 		this.unregisterFromParent?.();
 		this.unregisterFromParent = null;
 		this.unbindTooltips?.();
@@ -234,6 +284,7 @@ export class WebComponent extends HTMLElement {
 	}
 	attributeChangedCallback(attributeName, oldVal, newVal) {
 		this.handleAttributeChangedCallback(attributeName, oldVal, newVal).catch((error) => {
+			Logger.error('WebComponent', `[${this.tagName}] Attribute error:`, error);
 			this.onLifecycleError(error);
 		});
 	}
@@ -241,6 +292,7 @@ export class WebComponent extends HTMLElement {
 		if (oldVal === newVal) {
 			return;
 		}
+		Logger.debug('WebComponent', `[${this.tagName}] attributeChanged: ${attributeName} =`, newVal);
 		const binding = this.constructor.attrBindings?.[attributeName];
 		if (binding) {
 			this.state[binding] = newVal;
@@ -251,10 +303,10 @@ export class WebComponent extends HTMLElement {
 		}
 	}
 	getComponent(tag) {
-		return liveChildren(this, tag.toLowerCase())[0] ?? null;
+		return liveChildren(this, tag?.toLowerCase())[0] ?? null;
 	}
 	getComponents(tag) {
-		return liveChildren(this, tag.toLowerCase());
+		return liveChildren(this, tag?.toLowerCase());
 	}
 	appendBatch(container, elements) {
 		const frag = document.createDocumentFragment();
@@ -298,11 +350,50 @@ export class WebComponent extends HTMLElement {
 		console.error(`[${this.localName}] lifecycle error:`, error);
 	}
 	onRender() {}
+	onRenderComplete() {}
 	onRenderError(error) {
 		console.error(`[${this.localName}] render error:`, error);
 	}
 	beforeRender() {}
 	async render() {}
+	usesRenderCompleteLifecycle() {
+		return this.useTooltips || this.onRenderComplete !== WebComponent.prototype.onRenderComplete;
+	}
+	async waitForRenderedTree() {
+		await Promise.all(allChildren(this).map(WebComponent.waitRenderTree));
+		await new Promise((resolve) => {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(resolve);
+			});
+		});
+	}
+	async runRenderCompleteLifecycle() {
+		await this.waitForRenderedTree();
+		if (this.useTooltips) {
+			this.unbindTooltips?.();
+			this.unbindTooltips = null;
+			const unbind = await attachTooltips(this.getComponentRoot());
+			if (!this.isConnected) {
+				unbind();
+				return;
+			}
+			this.unbindTooltips = unbind;
+		}
+		if (this.onRenderComplete !== WebComponent.prototype.onRenderComplete) {
+			await this.onRenderComplete();
+		}
+	}
+	scheduleRenderComplete() {
+		if (!this.usesRenderCompleteLifecycle()) {
+			return Promise.resolve();
+		}
+		if (!this.pendingRenderComplete) {
+			this.pendingRenderComplete = this.runRenderCompleteLifecycle().finally(() => {
+				this.pendingRenderComplete = null;
+			});
+		}
+		return this.pendingRenderComplete;
+	}
 	async refresh() {
 		this.templateBuilt = false;
 		this.createRenderCompletePromise();
@@ -334,20 +425,8 @@ export class WebComponent extends HTMLElement {
 		if (seq === this.renderSeq) {
 			try {
 				this.templateBuilt = true;
-				const renderHookResult = this.onRender();
-				if (isPromiseLike(renderHookResult)) {
-					await renderHookResult;
-				}
-				if (this.useTooltips) {
-					this.unbindTooltips?.();
-					this.unbindTooltips = null;
-					const unbind = await attachTooltips(this.getComponentRoot());
-					if (!this.isConnected) {
-						unbind();
-						return;
-					}
-					this.unbindTooltips = unbind;
-				}
+				const renderHookResult = await this.onRender();
+				await this.scheduleRenderComplete();
 			} catch (error) {
 				this.onRenderError(error);
 			} finally {

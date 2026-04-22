@@ -2,7 +2,8 @@ import { WebComponent } from '../base/base.js';
 const transmitStyles = await WebComponent.styleSheet('./transmit-panel.css', import.meta.url);
 export class TransmitPanel extends WebComponent {
 	constructor() {
-		super([transmitStyles], {
+		super({
+			styles: [transmitStyles],
 			tooltips: true,
 		});
 		this.state = {

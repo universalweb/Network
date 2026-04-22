@@ -1,70 +1,49 @@
+import { noValue } from './utilities.js';
 const childrenMap = new WeakMap();
-const localFin = new FinalizationRegistry(({
-	set, ref, tag, host,
-}) => {
-	set.delete(ref);
-	const children = childrenMap.get(host);
-	if (children && !set.size) {
-		children.delete(tag);
-	}
-});
-export function registerChild(host, element) {
+function getHostChildren(host) {
 	let children = childrenMap.get(host);
 	if (!children) {
 		children = new Map();
 		childrenMap.set(host, children);
 	}
-	const tag = element.tagName.toLowerCase();
-	let set = children.get(tag);
-	if (!set) {
-		set = new Set();
-		children.set(tag, set);
+	return children;
+}
+function getTagChildren(host, tag) {
+	const children = getHostChildren(host);
+	let list = children.get(tag);
+	if (!list) {
+		list = [];
+		children.set(tag, list);
 	}
-	const ref = new WeakRef(element);
-	set.add(ref);
-	localFin.register(element, {
-		set,
-		ref,
-		tag,
-		host,
-	}, ref);
+	return list;
+}
+export function registerChild(host, element) {
+	const tag = element.tagName.toLowerCase();
+	const list = getTagChildren(host, tag);
+	if (!list.includes(element)) {
+		list.push(element);
+	}
 	return () => {
-		localFin.unregister(ref);
-		set.delete(ref);
-		if (!set.size) {
-			children.delete(tag);
+		const itemIndex = list.indexOf(element);
+		if (itemIndex !== -1) {
+			list.splice(itemIndex, 1);
 		}
 	};
 }
 export function allChildren(host) {
 	const children = childrenMap.get(host);
-	if (!children) return [];
+	if (!children) {
+		return [];
+	}
 	const out = [];
-	for (const set of children.values()) {
-		for (const ref of set) {
-			const el = ref.deref();
-			if (el) out.push(el);
-			else set.delete(ref);
-		}
+	for (const list of children.values()) {
+		out.push(...list);
 	}
 	return out;
 }
 export function liveChildren(host, tag) {
-	const set = childrenMap.get(host)?.get(tag);
-	if (!set) {
-		return [];
+	if (noValue(tag)) {
+		return getHostChildren(host);
 	}
-	const out = [];
-	for (const ref of set) {
-		const el = ref.deref();
-		if (el) {
-			out.push(el);
-		} else {
-			set.delete(ref);
-		}
-	}
-	if (!set.size) {
-		childrenMap.get(host)?.delete(tag);
-	}
-	return out;
+	return getTagChildren(host, tag);
 }

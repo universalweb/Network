@@ -1,22 +1,23 @@
 import { IconButtonBase } from '../../icon-button/icon-button.js';
 const styles = await IconButtonBase.styleSheet('./dock-icon-button.css', import.meta.url);
 export class DockIconButton extends IconButtonBase {
-	constructor() {
-		super([styles]);
-		this.state = {
-			active: false,
-			buttonClassName: 'rail-icon-btn icon-font',
-			icon: '',
-			label: '',
-			title: '',
-		};
+	constructor(config = {}) {
+		super({
+			styles: [styles],
+			state: {
+				onClick: 'nav-select',
+			},
+		});
+		if (config.state?.className) {
+			config.state.className.push(...this.state.className);
+		}
+		Object.assign(this.state, config.state || {});
+		this.state?.className.push('rail-icon-btn icon-font');
+		console.log('DockIconButton state:', this.state);
 	}
-	get activationEventName() {
-		return 'nav-select';
-	}
-	buildActivationDetail() {
+	onClickEventDetail() {
 		return {
-			label: (this.state.label ?? '').toLowerCase(),
+			label: this.state.label,
 		};
 	}
 }

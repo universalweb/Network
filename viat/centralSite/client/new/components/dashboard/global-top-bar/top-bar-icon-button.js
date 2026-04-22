@@ -1,22 +1,20 @@
 import { IconButtonBase } from '../../icon-button/icon-button.js';
 const styles = await IconButtonBase.styleSheet('./top-bar-icon-button.css', import.meta.url);
 export class TopBarIconButton extends IconButtonBase {
-	constructor() {
-		super([styles]);
-		this.state = {
-			actionId: '',
-			buttonClassName: 'tb-icon-btn icon-font',
-			className: '',
-			icon: '',
-			title: '',
-		};
+	constructor(config = {}) {
+		super({
+			styles: [styles],
+		});
+		if (config.state?.className) {
+			config.state.className.push(...this.state.className);
+		}
+		Object.assign(this.state, config.state || {});
+		this.state?.className.push('tb-icon-btn icon-font');
+		console.log('TopBarIconButton state:', this.state, config);
 	}
-	get activationEventName() {
-		return 'topbar-action';
-	}
-	buildActivationDetail() {
+	onClickEventDetail() {
 		return {
-			id: this.state.actionId,
+			id: this.state.actionId ?? this.state.id,
 			title: this.state.title,
 		};
 	}

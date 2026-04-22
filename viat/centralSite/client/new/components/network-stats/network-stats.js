@@ -4,23 +4,13 @@ const styles = await WebComponent.styleSheet('./network-stats.css', import.meta.
 const statsStyles = await WebComponent.styleSheet('../../styles/stats.css', import.meta.url);
 export class NetworkStats extends SidebarPanel {
 	constructor() {
-		super([statsStyles, styles]);
+		super({
+			styles: [statsStyles, styles],
+		});
 		this.state = {
 			chainStatus: [],
 			networkData: [],
 		};
-	}
-	get networkData() {
-		return this.state.networkData;
-	}
-	set networkData(data) {
-		this.state.networkData = Array.isArray(data) ? data : [];
-	}
-	get chainStatus() {
-		return this.state.chainStatus;
-	}
-	set chainStatus(data) {
-		this.state.chainStatus = Array.isArray(data) ? data : [];
 	}
 	renderRows(rows) {
 		return rows.map((r) => {
@@ -36,7 +26,7 @@ export class NetworkStats extends SidebarPanel {
 		}).join('');
 	}
 	render() {
-		this.html `
+		return this.html `
 			<aside class="panel stats-panel">
 				<div class="panel-header">
 					<span><span class="ph-id">NET</span> // NODE STATUS</span>

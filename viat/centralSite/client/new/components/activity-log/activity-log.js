@@ -1,12 +1,15 @@
 import { WebComponent } from '../base/base.js';
-import { each } from '../base/template.js';
+import { listBind } from '../base/template.js';
 const outputStyles = await WebComponent.styleSheet('./activity-log.css', import.meta.url);
 const entryStyles = await WebComponent.styleSheet('./activity-log-entry.css', import.meta.url);
 class ActivityLogEntry extends WebComponent {
 	constructor() {
-		super([entryStyles]);
+		super({
+			styles: [entryStyles],
+		});
 		this.state = {
 			direction: '',
+			id: '',
 			message: '',
 			status: '',
 			timestamp: '',
@@ -16,9 +19,7 @@ class ActivityLogEntry extends WebComponent {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<div class="log-entry">
-				<span class="log-ts">${() => {
-					return this.state.timestamp;
-				}}</span>
+				<span class="log-ts">${this.state.timestamp}</span>
 				<span class="${() => {
 					return `log-tag ${this.state.direction === 'in' ? 'log-tag-in' : 'log-tag-out'}`;
 				}}">${() => {
@@ -26,44 +27,69 @@ class ActivityLogEntry extends WebComponent {
 				}}</span>
 				<span class="${() => {
 					return `log-msg ${this.state.status ?? ''}`.trim();
-				}}">${() => {
-					return this.state.message;
-				}}</span>
+				}}">${this.state.message}</span>
 			</div>
 		`;
 	}
 }
 customElements.define('activity-log-entry', ActivityLogEntry);
-function createEntry(entry) {
-	const el = new ActivityLogEntry();
-	el.state = entry;
-	return el;
+class ActivityLogTab extends WebComponent {
+	constructor() {
+		super({
+			styles: [outputStyles],
+		});
+		this.state = {
+			active: false,
+			key: '',
+			label: '',
+		};
+	}
+	get activationEventName() {
+		return 'activity-log-tab-select';
+	}
+	buildActivationDetail() {
+		return {
+			label: this.state.label,
+		};
+	}
+	render() {
+		// eslint-disable-next-line no-unused-expressions
+		this.html `
+			<div class="${() => {
+				return `output-tab${this.state.active ? ' active' : ''}`;
+			}}" @click=${this.handleActivate}>${this.state.label}</div>
+		`;
+	}
 }
+customElements.define('activity-log-tab', ActivityLogTab);
 export class ActivityLog extends WebComponent {
 	constructor() {
-		super([outputStyles]);
-		this.entrySnapshotCache = new Map();
-		this.tabSnapshotCache = new Map();
+		super({
+			styles: [outputStyles],
+		});
 		this.state = {
 			activeTab: '',
 			entries: [],
 			tabs: [],
+			visibleEntries: [],
 		};
 	}
-	get activeTab() {
-		return this.state.activeTab;
-	}
-	set activeTab(value) {
-		this.state.activeTab = value ?? '';
-	}
-	get entries() {
-		return this.state.entries;
-	}
-	set entries(data) {
-		this.state.entries = Array.isArray(data) ? data : [];
+	onConnect() {
+		this.addEffect('entries', () => {
+			this.syncVisibleEntries();
+		});
+		this.addEffect('activeTab', () => {
+			this.syncTabs();
+			this.syncVisibleEntries();
+		});
+		this.addEffect('tabs', () => {
+			this.syncTabs();
+		});
+		this.syncTabs();
+		this.syncVisibleEntries();
 	}
 	entryMatchesActiveTab(entry) {
-		const { activeTab } = this.state;
+		const { activeTab } = this.STATE;
 		if (activeTab === 'Inbound') {
 			return entry.direction === 'in';
 		}
@@ -72,82 +98,51 @@ export class ActivityLog extends WebComponent {
 		}
 		return true;
 	}
-	get filteredEntries() {
-		return this.state.entries.filter((entry) => {
+	syncVisibleEntries() {
+		const activeTab = this.STATE.activeTab ?? '';
+		const visibleEntries = (this.STATE.entries ?? []).map((entry, index) => {
+			return {
+				...entry,
+				id: entry?.id ?? index,
+			};
+		}).filter((entry) => {
 			return this.entryMatchesActiveTab(entry);
 		});
+		this.state.visibleEntries = visibleEntries;
 	}
-	createEntrySnapshot(entry, index) {
-		const entryKey = entry?.id ?? index;
-		const snapshot = {
-			direction: entry?.direction ?? '',
-			id: entryKey,
-			message: entry?.message ?? '',
-			status: entry?.status ?? '',
-			timestamp: entry?.timestamp ?? '',
+	syncTabs() {
+		const activeTab = this.STATE.activeTab ?? '';
+		const tabs = (this.STATE.tabs ?? []).map((tab, index) => {
+			const label = typeof tab === 'string' ? tab : tab?.label ?? '';
+			return {
+				active: label === activeTab,
+				key: label || index,
+				label,
+			};
+		});
+		this.state.tabs = tabs;
+	}
+	createEntry(entry = {}) {
+		return {
+			direction: entry.direction ?? 'in',
+			message: entry.message ?? '',
+			status: entry.status ?? 'ok',
+			timestamp: entry.timestamp ?? new Date().toLocaleTimeString('en-GB', {
+				hour12: false,
+			}),
 		};
-		if (!entry || typeof entry !== 'object') {
-			return snapshot;
-		}
-		const signature = `${snapshot.id}|${snapshot.direction}|${snapshot.message}|${snapshot.status}|${snapshot.timestamp}`;
-		const cachedEntry = this.entrySnapshotCache.get(entryKey);
-		if (cachedEntry?.signature === signature) {
-			return cachedEntry.snapshot;
-		}
-		this.entrySnapshotCache.set(entryKey, {
-			signature,
-			snapshot,
-		});
-		return snapshot;
-	}
-	buildEntryList() {
-		const entrySnapshots = this.filteredEntries.map((entry, index) => {
-			return this.createEntrySnapshot(entry, index);
-		});
-		return each(entrySnapshots, createEntry, (entry, index) => {
-			return entry.id ?? index;
-		});
-	}
-	createTabSnapshot(tab, index) {
-		const tabKey = tab ?? index;
-		const snapshot = {
-			active: tab === this.state.activeTab,
-			key: tabKey,
-			label: tab ?? '',
-		};
-		const signature = `${snapshot.key}|${snapshot.label}|${snapshot.active}`;
-		const cachedEntry = this.tabSnapshotCache.get(tabKey);
-		if (cachedEntry?.signature === signature) {
-			return cachedEntry.snapshot;
-		}
-		this.tabSnapshotCache.set(tabKey, {
-			signature,
-			snapshot,
-		});
-		return snapshot;
-	}
-	createTabElement(tab) {
-		const element = document.createElement('div');
-		element.className = `output-tab${tab.active ? ' active' : ''}`;
-		element.textContent = tab.label;
-		element.addEventListener('click', this.createEventHandler(this.handleTabClick, tab.label));
-		return element;
-	}
-	buildTabList() {
-		const tabSnapshots = this.state.tabs.map((tab, index) => {
-			return this.createTabSnapshot(tab, index);
-		});
-		return each(tabSnapshots, this.createTabElement.bind(this), (tab, index) => {
-			return tab.key ?? index;
-		});
 	}
 	addEntry(entry) {
-		this.state.entries.unshift(entry ?? {});
+		this.state.entries.unshift(this.createEntry(entry));
 	}
-	handleTabClick(empty, emptyElement, tabLabel) {
-		this.activeTab = tabLabel ?? '';
+	handleTabClick(domEvent) {
+		const label = domEvent.detail?.label ?? '';
+		if (!label) {
+			return;
+		}
+		this.state.activeTab = label;
 		this.emit('tab-change', {
-			tab: this.activeTab,
+			tab: this.state.activeTab,
 		});
 	}
 	render() {
@@ -158,14 +153,12 @@ export class ActivityLog extends WebComponent {
 					<span><span class="ph-id">ACTIVITY</span> // LOG</span>
 					<div class="ph-dot"></div>
 				</div>
-				<div class="output-tabs">
-					${() => {
-						return this.buildTabList();
-					}}
+				<div class="output-tabs" @activity-log-tab-select=${this.handleTabClick}>
+					${listBind('tabs', ActivityLogTab)}
 				</div>
 				<div class="output-feed">
 					${() => {
-						if (this.filteredEntries.length > 0) {
+						if (this.state.visibleEntries.length > 0) {
 							return '';
 						}
 						return `
@@ -176,9 +169,9 @@ export class ActivityLog extends WebComponent {
 							</div>
 						`;
 					}}
-					${() => {
-						return this.buildEntryList();
-					}}
+					${listBind('visibleEntries', ActivityLogEntry, (entry) => {
+						return entry.id;
+					})}
 				</div>
 			</section>
 		`;

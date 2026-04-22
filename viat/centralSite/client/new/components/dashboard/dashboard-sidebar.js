@@ -1,60 +1,38 @@
 import { WebComponent } from '../base/base.js';
 const styles = await WebComponent.styleSheet('./dashboard-sidebar.css', import.meta.url);
-const TOGGLE_ID = 'sidebar-toggle';
-const TOGGLE_ACTION = {
-	icon: '&#xebf4;',
-	id: TOGGLE_ID,
-	title: 'sidebar',
-};
 export class DashboardSidebar extends WebComponent {
 	constructor() {
-		super([styles]);
+		super({
+			styles: [styles],
+		});
 		this.classList.add('sidebar-closed');
-		this.shadowRoot.innerHTML = `<slot></slot>`;
+		this.state = {
+			open: false,
+		};
 	}
 	onConnect() {
-		[...this.querySelectorAll('slot')].forEach((s) => {
-			const handler = () => {
-				return this.syncContent();
-			};
-			s.addEventListener('slotchange', handler);
-			this.effectUnsubs.add(() => {
-				return s.removeEventListener('slotchange', handler);
-			});
+		this.addEffect('open', (_component, isOpen) => {
+			this.classList.toggle('sidebar-closed', !isOpen);
 		});
 		const root = this.getRootNode();
-		const topbarHandler = (e) => {
-			if (e.detail?.id === TOGGLE_ID) {
-				this.toggle();
-			}
+		const sidebarHandler = () => {
+			this.toggle();
 		};
-		root.addEventListener('topbar-action', topbarHandler);
+		root.addEventListener('open-dashboard-sidebar', sidebarHandler);
 		this.effectUnsubs.add(() => {
-			return root.removeEventListener('topbar-action', topbarHandler);
+			return root.removeEventListener('open-dashboard-sidebar', sidebarHandler);
 		});
-		this.setTimeout(() => {
-			return this.syncContent();
-		}, 0);
-	}
-	getTopBar() {
-		const slot = this.getRootNode().querySelector('slot[name="global-top-bar"]');
-		return slot?.assignedElements()[0] ?? null;
-	}
-	syncContent() {
-		const hasContent = [...this.querySelectorAll('slot')].some((s) => {
-			return s.assignedElements().length > 0;
-		});
-		const topBar = this.getTopBar();
-		if (!topBar) {
-			return;
-		}
-		const base = (topBar.STATE.actions ?? []).filter((a) => {
-			return a.id !== TOGGLE_ID;
-		});
-		topBar.state.actions = hasContent ? [...base, TOGGLE_ACTION] : base;
 	}
 	toggle() {
-		this.classList.toggle('sidebar-closed');
+		this.state.open = !this.state.open;
+	}
+	render() {
+		// eslint-disable-next-line no-unused-expressions
+		this.html `
+			<div class="sidebar-shell">
+				<slot></slot>
+			</div>
+		`;
 	}
 }
 customElements.define('dashboard-sidebar', DashboardSidebar);

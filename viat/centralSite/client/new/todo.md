@@ -1,6 +1,6 @@
 
 - create router for page nav
-- Set custom attribute like data-id to save reference of a component by name in global app 
+- Add a custom attribute like @id to save reference of a component by name in global app similar to @click events except its for assigning an ID to the root appview component. 
 - Global State where stop assigning same variable to multiple objects just use global store
 - Make sure global state changes are reactive and can trigger a view update that is specific and only does the exact DOM operation to edit the DOM not replace the entire HTML
 - Add method to class to auto inject stylesheet
@@ -20,3 +20,11 @@ output-feed html tags and add the overflow-y class to them. There is CSS that is
 
 
 Merge variable change events with global change events but the global change events should fire with the event name beinging with the word global.then-variable-name like a property path
+
+Review other components make sure they are using the latest syntax as well then remove old code or an older style we no longer use
+
+For the theme change pre-load the CSS files needed before the swap
+
+Add a loading screen
+
+Add title change for appView or globalState most likely globalState in the event AppView is closed 

@@ -1,4 +1,4 @@
-import { isObject, isPromiseLike, isSymbol } from '../utilities.js';
+import { isObject, isPromiseLike, isSymbol } from './utilities.js';
 const STATE = {};
 const subs = new Map();
 const pending = new Set();

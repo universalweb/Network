@@ -2,7 +2,9 @@ import { IconButtonBase } from '../icon-button/icon-button.js';
 const styles = await IconButtonBase.styleSheet('./center-bar-icon-button.css', import.meta.url);
 export class CenterBarIconButton extends IconButtonBase {
 	constructor() {
-		super([styles]);
+		super({
+			styles: [styles],
+		});
 		this.state = {
 			actionId: '',
 			buttonClassName: 'tb-icon-btn icon-font',

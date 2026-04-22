@@ -18,7 +18,7 @@ export {
 	isObject,
 	isPromiseLike,
 	isString,
-} from './utilities.js';
+} from './base/utilities.js';
 export { GlobalTopBar } from './dashboard/global-top-bar/global-top-bar.js';
 export { GlobalDock } from './dashboard/global-dock/global-dock.js';
 export { WalletAmount } from './wallet-amount/wallet-amount.js';

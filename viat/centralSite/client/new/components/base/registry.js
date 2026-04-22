@@ -1,42 +1,36 @@
-import { isString } from '../utilities.js';
+import { isString } from './utilities.js';
 const store = new Map();
-const toCamel = (s) => {
-	return s.replace(/-([a-z])/g, (_, c) => {
-		return c.toUpperCase();
-	});
-};
-const toKebab = (s) => {
-	return s.replace(/[A-Z]/g, (c) => {
-		return `-${c.toLowerCase()}`;
-	});
-};
+function getRegistryKey(component) {
+	return component.getAttribute('name') || component.id || null;
+}
 export const registry = new Proxy(store, {
 	get(target, prop) {
 		if (!isString(prop)) {
 			return Reflect.get(target, prop);
 		}
-		return target.get(prop) ?? target.get(toKebab(prop));
+		return target.get(prop);
 	},
 	set(target, prop, value) {
 		target.set(prop, value);
 		return true;
 	},
 	has(target, prop) {
-		return target.has(prop) || target.has(toKebab(prop));
+		return target.has(prop);
 	},
 });
 export function register(component) {
-	const key = component.getAttribute('name') || component.id || component.localName;
+	const key = getRegistryKey(component);
+	if (!key) {
+		return;
+	}
 	store.set(key, component);
-	store.set(toCamel(key), component);
 }
 export function unregister(component) {
-	const key = component.getAttribute('name') || component.id || component.localName;
+	const key = getRegistryKey(component);
+	if (!key) {
+		return;
+	}
 	if (store.get(key) === component) {
 		store.delete(key);
-	}
-	const camel = toCamel(key);
-	if (store.get(camel) === component) {
-		store.delete(camel);
 	}
 }

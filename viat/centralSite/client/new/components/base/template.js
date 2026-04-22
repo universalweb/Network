@@ -7,7 +7,7 @@ import {
 	isElement,
 	isFunction,
 	isString,
-} from '../utilities.js';
+} from './utilities.js';
 import { schedule } from './scheduler.js';
 const SPOT = 'data-expr';
 const TEMPLATE_CLEANUP = Symbol('templateCleanup');
@@ -38,6 +38,37 @@ function createRenderableElement(value) {
 	}
 	throw new TypeError('List render functions must return an Element or HTML string.');
 }
+function isCustomElementConstructor(source) {
+	return isFunction(source) && source.prototype instanceof HTMLElement;
+}
+function createListElement(renderFn, item) {
+	if (isString(renderFn)) {
+		const el = document.createElement(renderFn);
+		el.state = item;
+		return el;
+	}
+	if (isCustomElementConstructor(renderFn)) {
+		const ElementType = renderFn;
+		const el = new ElementType();
+		if (el.STATE && typeof el.STATE === 'object' && typeof item === 'object' && item !== null) {
+			Object.assign(el.STATE, item);
+		} else {
+			el.state = item;
+		}
+		return el;
+	}
+	return createRenderableElement(renderFn(item));
+}
+export class ListBinding extends Binding {
+	static isListBinding(source) {
+		return source instanceof ListBinding;
+	}
+	constructor(key, renderFn, keyFn) {
+		super(key, null);
+		this.renderFn = renderFn;
+		this.keyFn = keyFn;
+	}
+}
 export class LiveList {
 	items = [];
 	renderFn;
@@ -59,7 +90,7 @@ export class LiveList {
 		this.spot = spot;
 	}
 	createElement(item) {
-		return createRenderableElement(this.renderFn(item));
+		return createListElement(this.renderFn, item);
 	}
 	splice(start, deleteCount = 0, ...newItems) {
 		const currentLength = this.items.length;
@@ -123,6 +154,16 @@ export function each(items, renderFn, keyFn = (item, index) => {
 	}
 	return list;
 }
+export function liveList(items, renderTarget, keyFn = (item, index) => {
+	return item?.key ?? item?.id ?? index;
+}) {
+	return each(items, renderTarget, keyFn);
+}
+export function listBind(key, renderFn, keyFn = (item, index) => {
+	return item?.key ?? item?.id ?? index;
+}) {
+	return new ListBinding(key, renderFn, keyFn);
+}
 function patchList(spot, list) {
 	if (list.connectSpot) {
 		list.connectSpot(spot);
@@ -161,7 +202,7 @@ function patchList(spot, list) {
 	} of keyedItems) {
 		let element = oldMap.get(key);
 		if (!element) {
-			element = createRenderableElement(renderFn(item));
+			element = list.createElement(item);
 			if (fragment) {
 				fragment.append(element);
 			}
@@ -169,7 +210,7 @@ function patchList(spot, list) {
 			if (element.state) {
 				Object.assign(element.state, item);
 			} else {
-				const replacementElement = createRenderableElement(renderFn(item));
+				const replacementElement = list.createElement(item);
 				cleanupTemplateNode(element);
 				element.replaceWith(replacementElement);
 				element = replacementElement;
@@ -208,6 +249,65 @@ function eventContext(templateString) {
 function eventMarkerAttribute(eventName) {
 	return `data-event-${String(eventName).toLowerCase().replace(/[^a-z0-9:-]/g, '-')}`;
 }
+function bareAttrMarkerAttribute(index) {
+	return `data-attr-expr-${index}`;
+}
+function bareAttrContext(currentString, nextString = '') {
+	const lastOpen = currentString.lastIndexOf('<');
+	const lastClose = currentString.lastIndexOf('>');
+	if (lastOpen <= lastClose) {
+		return false;
+	}
+	const trailingChar = currentString.at(-1);
+	if (![
+		' ',
+		'\t',
+		'\n',
+		'\r',
+	].includes(trailingChar)) {
+		return false;
+	}
+	const leadingChar = nextString[0];
+	if (leadingChar && ![
+		' ',
+		'\t',
+		'\n',
+		'\r',
+		'/',
+		'>',
+	].includes(leadingChar)) {
+		return false;
+	}
+	return true;
+}
+function inferBareAttrName(expr) {
+	if (!Binding.isBinding(expr)) {
+		return null;
+	}
+	const bindingKey = String(expr.key ?? '');
+	const attrName = bindingKey.split('.').pop()?.trim();
+	if (!attrName) {
+		return null;
+	}
+	const firstChar = attrName[0];
+	const firstCharCode = firstChar?.charCodeAt(0);
+	const startsWithLetter = (firstCharCode >= 65 && firstCharCode <= 90) || (firstCharCode >= 97 && firstCharCode <= 122);
+	if (!startsWithLetter && firstChar !== '_' && firstChar !== ':') {
+		return null;
+	}
+	for (const char of attrName.slice(1)) {
+		const charCode = char.charCodeAt(0);
+		const isLetter = (charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122);
+		const isNumber = charCode >= 48 && charCode <= 57;
+		if (!isLetter && !isNumber && char !== '_' && char !== ':' && char !== '.' && char !== '-') {
+			return null;
+		}
+	}
+	if (!attrName) {
+		return null;
+	}
+	return attrName;
+}
 function buildHTML(strings, exprs) {
 	let html = '';
 	const meta = [];
@@ -243,6 +343,18 @@ function buildHTML(strings, exprs) {
 				attr,
 				expr,
 			});
+		} else if (bareAttrContext(currentString, strings[stringIndex + 1] ?? '')) {
+			const inferredAttr = inferBareAttrName(expr);
+			if (inferredAttr) {
+				html += `${bareAttrMarkerAttribute(stringIndex)}=""`;
+				meta.push({
+					i: stringIndex,
+					type: 'bare-attr',
+					attr: inferredAttr,
+					expr,
+				});
+				continue;
+			}
 		} else {
 			html += `<span ${SPOT}="${stringIndex}"></span>`;
 			meta.push({
@@ -367,10 +479,25 @@ function patchSpot(spot, value) {
 	}
 	if (spot.type === 'text') {
 		const str = String(value ?? '');
-		if (str.includes('<')) {
+		if (str.includes('<') || str.includes('&')) {
 			spot.el.innerHTML = str;
 		} else if (spot.el.textContent !== str) {
 			spot.el.textContent = str;
+		}
+	} else if (spot.type === 'bare-attr') {
+		if (value === false || value === null || value === undefined || value === '') {
+			if (spot.el.hasAttribute(spot.attr)) {
+				spot.el.removeAttribute(spot.attr);
+			}
+		} else if (value === true) {
+			if (!spot.el.hasAttribute(spot.attr)) {
+				spot.el.setAttribute(spot.attr, '');
+			}
+		} else {
+			const str = String(value);
+			if (spot.el.getAttribute(spot.attr) !== str) {
+				spot.el.setAttribute(spot.attr, str);
+			}
 		}
 	} else {
 		const str = String(value ?? '');
@@ -381,9 +508,45 @@ function patchSpot(spot, value) {
 }
 function initializeBindingSpot(spot, component) {
 	const bindingKey = spot.expr.key;
+	if (ListBinding.isListBinding(spot.expr)) {
+		const {
+			renderFn, keyFn,
+		} = spot.expr;
+		function updateListSpot(nextValue, changedPath) {
+			return schedule(() => {
+				if (changedPath && changedPath !== bindingKey && changedPath.startsWith(`${bindingKey}.`) && spot.keyMap) {
+					const subPath = changedPath.slice(bindingKey.length + 1);
+					const index = Number(subPath.split('.')[0]);
+					if (!Number.isNaN(index)) {
+						const currentItems = resolveBindingValue(component, bindingKey);
+						const item = Array.isArray(currentItems) ? currentItems[index] : undefined;
+						if (item !== undefined) {
+							const itemKey = keyFn(item, index);
+							const element = spot.keyMap.get(itemKey);
+							if (element?.state) {
+								Object.assign(element.state, item);
+							}
+						}
+						return;
+					}
+				}
+				const allItems = resolveBindingValue(component, bindingKey);
+				const patchResult = patchSpot(spot, each(Array.isArray(allItems) ? allItems : [], renderFn, keyFn));
+				component.scheduleRenderComplete?.();
+				return patchResult;
+			});
+		}
+		spot.updateHandler = updateListSpot;
+		const initialItems = resolveBindingValue(component, bindingKey);
+		patchSpot(spot, each(Array.isArray(initialItems) ? initialItems : [], renderFn, keyFn));
+		syncSpotSubscriptions(spot, component, new Set([bindingKey]), updateListSpot);
+		return;
+	}
 	function updateBindingSpot() {
 		return schedule(() => {
-			return patchSpot(spot, resolveBindingValue(component, bindingKey));
+			const patchResult = patchSpot(spot, resolveBindingValue(component, bindingKey));
+			component.scheduleRenderComplete?.();
+			return patchResult;
 		});
 	}
 	spot.updateHandler = updateBindingSpot;
@@ -401,7 +564,9 @@ function refreshComputedSpot(spot, component) {
 function initializeComputedSpot(spot, component) {
 	function updateComputedSpot() {
 		return schedule(() => {
-			return refreshComputedSpot(spot, component);
+			const patchResult = refreshComputedSpot(spot, component);
+			component.scheduleRenderComplete?.();
+			return patchResult;
 		});
 	}
 	spot.updateHandler = updateComputedSpot;
@@ -458,6 +623,20 @@ function resolveAndInit(fragment, meta, component, unsubs) {
 			spotElement.style.display = 'contents';
 			spot = {
 				type: 'text',
+				el: spotElement,
+				expr: metaEntry.expr,
+				unsubs: [],
+			};
+		} else if (metaEntry.type === 'bare-attr') {
+			const markerAttribute = bareAttrMarkerAttribute(metaEntry.i);
+			const spotElement = fragment.querySelector(`[${markerAttribute}]`);
+			if (!spotElement) {
+				continue;
+			}
+			spotElement.removeAttribute(markerAttribute);
+			spot = {
+				type: 'bare-attr',
+				attr: metaEntry.attr,
 				el: spotElement,
 				expr: metaEntry.expr,
 				unsubs: [],
