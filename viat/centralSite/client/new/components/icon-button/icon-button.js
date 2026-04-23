@@ -20,12 +20,11 @@ export class IconButtonBase extends WebComponent {
 		}
 		Object.assign(this.state, config.state || {});
 	}
-	onClickEventDetail() {
-		return this;
-	}
 	handleActivate() {
 		if (this.state?.onClick) {
-			this.emit(this.state?.onClick, this.onClickEventDetail());
+			this.emit(this.state?.onClick, {
+				activated: true,
+			});
 		}
 	}
 	renderButtonClassName() {

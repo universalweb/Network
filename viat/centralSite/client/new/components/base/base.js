@@ -3,13 +3,12 @@ import * as globalMethods from './globalState.js';
 import * as sharedStyles from './shared-styles.js';
 import * as stateMethods from './state.js';
 import { allChildren, liveChildren, registerChild } from './children.js';
+import { assertComponentConfig, assertComponentStyles } from './assertions.js';
 import {
 	isFunction,
-	isObject,
 	isPromiseLike,
 	isShadowRoot,
 	isString,
-	noValue,
 } from './utilities.js';
 import { makeGlobalRenderProxy, makeRenderProxy } from './binding.js';
 import { register, registry, unregister } from './registry.js';
@@ -27,37 +26,6 @@ export {
 	watchGlobal,
 } from './globalState.js';
 export { registry } from './registry.js';
-function isComponentConfig(config) {
-	return isObject(config) && !Array.isArray(config) && !isPromiseLike(config) && !isFunction(config.replaceSync);
-}
-function assertComponentConfig(config) {
-	if (isComponentConfig(config)) {
-		return;
-	}
-	throw new TypeError('WebComponent constructor expects a config object.');
-}
-function assertComponentStyle(style, index) {
-	if (style === undefined) {
-		throw new TypeError(`WebComponent styles[${index}] is undefined.`);
-	}
-	if (style === null) {
-		throw new TypeError(`WebComponent styles[${index}] is null.`);
-	}
-	if (!(style instanceof CSSStyleSheet)) {
-		throw new TypeError(`WebComponent styles[${index}] must be a CSSStyleSheet.`);
-	}
-}
-function assertComponentStyles(styles) {
-	if (styles === undefined) {
-		return;
-	}
-	if (!Array.isArray(styles)) {
-		throw new TypeError('WebComponent config.styles must be an array of CSSStyleSheet instances.');
-	}
-	styles.forEach((style, index) => {
-		assertComponentStyle(style, index);
-	});
-}
 export class WebComponent extends HTMLElement {
 	constructor(config = {}) {
 		super();
@@ -71,8 +39,8 @@ export class WebComponent extends HTMLElement {
 		this.attachShadow({
 			mode: 'open',
 		});
-		if (!this.constructor._compiledStyles) {
-			this.constructor._compiledStyles = [
+		if (!this.constructor.compiledStyles) {
+			this.constructor.compiledStyles = [
 				...new Set([
 					sharedStyles.resetSheet,
 					sharedStyles.panelSheet,
@@ -82,7 +50,7 @@ export class WebComponent extends HTMLElement {
 				]),
 			];
 		}
-		this.shadowRoot.adoptedStyleSheets = this.constructor._compiledStyles;
+		this.shadowRoot.adoptedStyleSheets = this.constructor.compiledStyles;
 		this.html = makeHtmlTag(this);
 		this.initState();
 		this.createRenderCompletePromise();
@@ -114,10 +82,8 @@ export class WebComponent extends HTMLElement {
 			mount.appendChild(element);
 		}
 		await WebComponent.waitRenderTree(element);
-		await new Promise((r) => {
-			requestAnimationFrame(() => {
-				requestAnimationFrame(r);
-			});
+		await new Promise((resolve) => {
+			requestAnimationFrame(resolve);
 		});
 		const animation = element.animate(
 			[
@@ -147,7 +113,7 @@ export class WebComponent extends HTMLElement {
 	static assertConfig(config = {}) {
 		assertComponentConfig(config);
 	}
-	static #sheetCache = new Map();
+	static sheetCache = new Map();
 	static styleSheet(source, metaUrl) {
 		if (Array.isArray(source)) {
 			return Promise.all(source.map((s) => {
@@ -155,17 +121,17 @@ export class WebComponent extends HTMLElement {
 			}));
 		}
 		const key = metaUrl ? new URL(source, metaUrl).toString() : source;
-		if (WebComponent.#sheetCache.has(key)) {
-			return WebComponent.#sheetCache.get(key);
+		if (WebComponent.sheetCache.has(key)) {
+			return WebComponent.sheetCache.get(key);
 		}
 		if (metaUrl) {
 			const sheetPromise = loadSheet(key);
-			WebComponent.#sheetCache.set(key, sheetPromise);
+			WebComponent.sheetCache.set(key, sheetPromise);
 			return sheetPromise;
 		}
 		const sheet = new CSSStyleSheet();
 		sheet.replaceSync(source);
-		WebComponent.#sheetCache.set(key, sheet);
+		WebComponent.sheetCache.set(key, sheet);
 		return sheet;
 	}
 	static async create(config = {}) {
@@ -174,7 +140,6 @@ export class WebComponent extends HTMLElement {
 		if (config.state !== undefined) {
 			await instance.replaceState(await config.state);
 		}
-		// await WebComponent.preRender(instance);
 		return instance;
 	}
 	STATE = {};
@@ -185,7 +150,9 @@ export class WebComponent extends HTMLElement {
 	templateBuilt = false;
 	renderTracking = false;
 	renderProxy = null;
+	renderProxyState = null;
 	globalRenderProxy = null;
+	globalRenderProxyState = null;
 	renderResolver = null;
 	renderComplete = null;
 	intervals = new Set();
@@ -201,8 +168,9 @@ export class WebComponent extends HTMLElement {
 	}
 	get globalState() {
 		if (this.renderTracking) {
-			if (!this.globalRenderProxy) {
+			if (!this.globalRenderProxy || this.globalRenderProxyState !== globalMethods.GLOBAL_STATE) {
 				this.globalRenderProxy = makeGlobalRenderProxy(globalMethods.GLOBAL_STATE, this);
+				this.globalRenderProxyState = globalMethods.GLOBAL_STATE;
 			}
 			return this.globalRenderProxy;
 		}
@@ -227,7 +195,7 @@ export class WebComponent extends HTMLElement {
 		if (WebComponent.isWebComponent(parentHost)) {
 			this.unregisterFromParent = registerChild(parentHost, this);
 		}
-		const connectResult = await this.onConnect();
+		await this.onConnect();
 		if (Object.keys(this.STATE).length) {
 			await this.updateView();
 		} else {
@@ -315,9 +283,10 @@ export class WebComponent extends HTMLElement {
 	}
 	addStyleSheet(sheet) {
 		const root = this.shadowRoot;
-		if (root) {
-			root.adoptedStyleSheets = [...new Set([...root.adoptedStyleSheets, sheet])];
+		if (!root || root.adoptedStyleSheets.includes(sheet)) {
+			return;
 		}
+		root.adoptedStyleSheets = [...root.adoptedStyleSheets, sheet];
 	}
 	addInterval(fn, ms) {
 		const id = setInterval(fn, ms);
@@ -362,9 +331,7 @@ export class WebComponent extends HTMLElement {
 	async waitForRenderedTree() {
 		await Promise.all(allChildren(this).map(WebComponent.waitRenderTree));
 		await new Promise((resolve) => {
-			requestAnimationFrame(() => {
-				requestAnimationFrame(resolve);
-			});
+			requestAnimationFrame(resolve);
 		});
 	}
 	async runRenderCompleteLifecycle() {
@@ -407,8 +374,15 @@ export class WebComponent extends HTMLElement {
 				return;
 			}
 			this.renderTracking = true;
-			this.renderProxy = makeRenderProxy(this.STATE ?? {}, this);
-			this.globalRenderProxy = makeGlobalRenderProxy(globalMethods.GLOBAL_STATE, this);
+			const currentState = this.STATE ?? {};
+			if (!this.renderProxy || this.renderProxyState !== currentState) {
+				this.renderProxy = makeRenderProxy(currentState, this);
+				this.renderProxyState = currentState;
+			}
+			if (!this.globalRenderProxy || this.globalRenderProxyState !== globalMethods.GLOBAL_STATE) {
+				this.globalRenderProxy = makeGlobalRenderProxy(globalMethods.GLOBAL_STATE, this);
+				this.globalRenderProxyState = globalMethods.GLOBAL_STATE;
+			}
 			await this.render();
 			if (seq !== this.renderSeq) {
 				return;
@@ -418,14 +392,12 @@ export class WebComponent extends HTMLElement {
 		} finally {
 			if (seq === this.renderSeq) {
 				this.renderTracking = false;
-				this.renderProxy = null;
-				this.globalRenderProxy = null;
 			}
 		}
 		if (seq === this.renderSeq) {
 			try {
 				this.templateBuilt = true;
-				const renderHookResult = await this.onRender();
+				await this.onRender();
 				await this.scheduleRenderComplete();
 			} catch (error) {
 				this.onRenderError(error);
@@ -461,4 +433,3 @@ export class WebComponent extends HTMLElement {
 	}
 }
 Object.assign(WebComponent.prototype, stateMethods, eventMethods, globalMethods);
-window.WebComponent = WebComponent;

@@ -15,10 +15,5 @@ export class DockIconButton extends IconButtonBase {
 		this.state?.className.push('rail-icon-btn icon-font');
 		console.log('DockIconButton state:', this.state);
 	}
-	onClickEventDetail() {
-		return {
-			label: this.state.label,
-		};
-	}
 }
 customElements.define('dock-icon-button', DockIconButton);

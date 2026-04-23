@@ -9,49 +9,29 @@ export class GlobalDock extends WebComponent {
 			tooltips: true,
 		});
 		this.state = {
-			activeLabel: '',
 			items: [],
 		};
 	}
-	onConnect() {
-		this.addEffect('items', (state, items) => {
-			const active = (items ?? []).find((item) => {
-				return item.active;
-			});
-			const label = active?.label?.toLowerCase() ?? '';
-			if (this.STATE.activeLabel !== label) {
-				this.state.activeLabel = label;
-			}
-		});
-		this.addEffect('activeLabel', () => {
-			this.scheduleRenderComplete();
-		});
-	}
 	onRenderComplete() {
-		this.updateActiveBar();
+		const icons = Array.from(this.shadowRoot.querySelectorAll('dock-icon-button'));
+		const activeBtn = icons.find((btn) => {
+			return btn.state?.active === true;
+		});
+		this.updateActiveBar(activeBtn);
 	}
 	handleNavSelect(domEvent) {
-		const label = (domEvent.detail?.label ?? '').toLowerCase();
-		if (!label) {
-			return;
-		}
-		this.STATE.items.forEach((item, index) => {
-			const shouldBeActive = item.label.toLowerCase() === label;
-			if (item.active !== shouldBeActive) {
-				this.state.items[index] = {
-					...item,
-					active: shouldBeActive,
-				};
+		const { detail: { source } } = domEvent;
+		this.state.items.forEach((item, index) => {
+			if (item.label === source.state.label) {
+				this.state.items[index].active = true;
+			} else {
+				this.state.items[index].active = false;
 			}
 		});
+		this.updateActiveBar(source);
 	}
-	updateActiveBar() {
+	updateActiveBar(activeBtn) {
 		requestAnimationFrame(() => {
-			const activeLabel = (this.STATE.activeLabel ?? '').toLowerCase();
-			const icons = Array.from(this.shadowRoot.querySelectorAll('dock-icon-button'));
-			const activeBtn = icons.find((btn) => {
-				return (btn.state?.label ?? '').toLowerCase() === activeLabel;
-			});
 			const bar = this.shadowRoot.querySelector('.active-bar');
 			if (!bar) {
 				return;

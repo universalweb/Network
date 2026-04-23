@@ -2,7 +2,7 @@
 "version": "0.2",
 "language": "en-US",
 "files": [
-	"**/*.{js,jsx,ts,tsx,md,yml,txt,private,html,css}"
+	"**/*.{js,md,yml,txt,html,css}"
 ],
 "ignorePaths": [
 	"node_modules/**",

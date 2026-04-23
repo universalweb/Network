@@ -1,14 +1,16 @@
 import {
 	isError, isFunction, isPromiseLike, isString,
 } from './utilities.js';
-export function emit(eventName, detail) {
+export function emit(eventName, data = {}) {
 	const init = {
 		bubbles: true,
 		composed: true,
+		currentTarget: this,
+		detail: {
+			data,
+			source: this,
+		},
 	};
-	if (detail !== undefined) {
-		init.detail = detail;
-	}
 	return this.dispatchEvent(new CustomEvent(eventName, init));
 }
 export function handleEventError(error, domEvent, element, eventName) {
@@ -54,6 +56,7 @@ export function createEmitHandler(eventName, detailSource) {
 	const component = this;
 	return function emitHandler(domEvent, element) {
 		const detail = isFunction(detailSource) ? detailSource.call(component, domEvent, element) : detailSource;
+		detail.element = element;
 		return component.emit(trimmedEventName, detail);
 	};
 }

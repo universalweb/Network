@@ -31,6 +31,9 @@ export function isNull(value) {
 export function noValue(value) {
 	return Boolean(isUndefined(value) || isNull(value));
 }
+export function isArray(value) {
+	return Array.isArray(value);
+}
 export function isEmpty(value) {
 	if (isString(value)) {
 		return value.trim() === '';
