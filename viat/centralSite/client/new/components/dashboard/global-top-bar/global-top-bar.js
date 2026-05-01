@@ -1,18 +1,21 @@
 import '../../theme-select/theme-select.js';
 import { TopBarIconButton } from './top-bar-icon-button.js';
 import { WebComponent } from '../../base/base.js';
-import { listBind } from '../../base/template.js';
-const topBarStyles = await WebComponent.styleSheet('./global-top-bar.css', import.meta.url);
+import { list } from '../../base/template.js';
 export class GlobalTopBar extends WebComponent {
-	constructor() {
-		super({
-			styles: [topBarStyles],
-			tooltips: true,
+	static url = import.meta.url;
+	static styles = {
+		globalTopBar: './global-top-bar.css',
+	};
+	static state = {
+		items: [],
+		subtitle: '',
+	};
+	constructor(state = {}, config = {}) {
+		super(state, {
+			...config,
+			tooltips: config.tooltips ?? true,
 		});
-		this.state = {
-			items: [],
-			subtitle: '',
-		};
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
@@ -24,7 +27,7 @@ export class GlobalTopBar extends WebComponent {
 				</div>
 				<div class="tb-status">
 					<ui-theme-select></ui-theme-select>
-					${listBind('items', TopBarIconButton)}
+					${list('items', TopBarIconButton)}
 				</div>
 			</header>
 		`;

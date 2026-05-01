@@ -1,20 +1,17 @@
 import { WebComponent } from '../base/base.js';
-import { listBind } from '../base/template.js';
-const outputStyles = await WebComponent.styleSheet('./activity-log.css', import.meta.url);
-const entryStyles = await WebComponent.styleSheet('./activity-log-entry.css', import.meta.url);
+import { list } from '../base/template.js';
 class ActivityLogEntry extends WebComponent {
-	constructor() {
-		super({
-			styles: [entryStyles],
-		});
-		this.state = {
-			direction: '',
-			id: '',
-			message: '',
-			status: '',
-			timestamp: '',
-		};
-	}
+	static url = import.meta.url;
+	static styles = {
+		entry: './activity-log-entry.css',
+	};
+	static state = {
+		direction: '',
+		id: '',
+		message: '',
+		status: '',
+		timestamp: '',
+	};
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
@@ -34,55 +31,50 @@ class ActivityLogEntry extends WebComponent {
 }
 customElements.define('activity-log-entry', ActivityLogEntry);
 class ActivityLogTab extends WebComponent {
-	constructor() {
-		super({
-			styles: [outputStyles],
-		});
-		this.state = {
-			active: false,
-			key: '',
-			label: '',
-		};
-	}
-	get activationEventName() {
-		return 'activity-log-tab-select';
-	}
-	buildActivationDetail() {
-		return {
+	static url = import.meta.url;
+	static styles = {
+		log: './activity-log.css',
+	};
+	static state = {
+		active: false,
+		key: '',
+		label: '',
+	};
+	handleClick() {
+		this.emit('activity-log-tab-select', {
 			label: this.state.label,
-		};
+		});
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<div class="${() => {
 				return `output-tab${this.state.active ? ' active' : ''}`;
-			}}" @click=${this.handleActivate}>${this.state.label}</div>
+			}}" @click=${this.handleClick}>${this.state.label}</div>
 		`;
 	}
 }
 customElements.define('activity-log-tab', ActivityLogTab);
 export class ActivityLog extends WebComponent {
-	constructor() {
-		super({
-			styles: [outputStyles],
-		});
-		this.state = {
-			activeTab: '',
-			entries: [],
-			tabs: [],
-			visibleEntries: [],
-		};
-	}
+	static url = import.meta.url;
+	static styles = {
+		log: './activity-log.css',
+	};
+	static state = {
+		activeTab: '',
+		entries: [],
+		tabs: [],
+		visibleEntries: [],
+	};
 	onConnect() {
-		this.addEffect('entries', () => {
+		this.observe('entries', () => {
 			this.syncVisibleEntries();
 		});
-		this.addEffect('activeTab', () => {
+		this.observe('activeTab', () => {
 			this.syncTabs();
 			this.syncVisibleEntries();
 		});
-		this.addEffect('tabs', () => {
+		this.observe('tabs', () => {
 			this.syncTabs();
 		});
 		this.syncTabs();
@@ -136,7 +128,7 @@ export class ActivityLog extends WebComponent {
 		this.state.entries.unshift(this.createEntry(entry));
 	}
 	handleTabClick(domEvent) {
-		const label = domEvent.detail?.label ?? '';
+		const label = domEvent.detail?.data?.label ?? '';
 		if (!label) {
 			return;
 		}
@@ -154,7 +146,7 @@ export class ActivityLog extends WebComponent {
 					<div class="ph-dot"></div>
 				</div>
 				<div class="output-tabs" @activity-log-tab-select=${this.handleTabClick}>
-					${listBind('tabs', ActivityLogTab)}
+					${list('tabs', ActivityLogTab)}
 				</div>
 				<div class="output-feed">
 					${() => {
@@ -169,7 +161,7 @@ export class ActivityLog extends WebComponent {
 							</div>
 						`;
 					}}
-					${listBind('visibleEntries', ActivityLogEntry, (entry) => {
+					${list('visibleEntries', ActivityLogEntry, (entry) => {
 						return entry.id;
 					})}
 				</div>

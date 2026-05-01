@@ -89,3 +89,8 @@ prototype*.html
 
 /data/
 viat/neural/
+.github/agents/*
+.github/hooks/*
+.github/copilot-instructions.md
+.agents/*
+agent/types/*

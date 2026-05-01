@@ -1,36 +1,36 @@
 import { DockIconButton } from './dock-icon-button.js';
 import { WebComponent } from '../../base/base.js';
-import { listBind } from '../../base/template.js';
-const navStyles = await WebComponent.styleSheet('./global-dock.css', import.meta.url);
+import { list } from '../../base/template.js';
 export class GlobalDock extends WebComponent {
-	constructor() {
-		super({
-			styles: [navStyles],
-			tooltips: true,
+	static url = import.meta.url;
+	static styles = {
+		globalDock: './global-dock.css',
+	};
+	static state = {
+		items: [],
+	};
+	constructor(state = {}, config = {}) {
+		super(state, {
+			...config,
+			tooltips: config.tooltips ?? true,
 		});
-		this.state = {
-			items: [],
-		};
 	}
-	onRenderComplete() {
-		const icons = Array.from(this.shadowRoot.querySelectorAll('dock-icon-button'));
-		const activeBtn = icons.find((btn) => {
-			return btn.state?.active === true;
-		});
-		this.updateActiveBar(activeBtn);
-	}
-	handleNavSelect(domEvent) {
+	dockSelect(domEvent) {
 		const { detail: { source } } = domEvent;
-		this.state.items.forEach((item, index) => {
-			if (item.label === source.state.label) {
-				this.state.items[index].active = true;
-			} else {
-				this.state.items[index].active = false;
-			}
+		this.getComponents('dock-icon-button').forEach((btn) => {
+			btn.state.active = false;
 		});
+		source.state.active = true;
 		this.updateActiveBar(source);
 	}
-	updateActiveBar(activeBtn) {
+	async onMounted() {
+		this.state.items.forEach((item, index) => {
+			if (item.active) {
+				this.updateActiveBar(this.getComponents('dock-icon-button')[index]);
+			}
+		});
+	}
+	async updateActiveBar(activeBtn) {
 		requestAnimationFrame(() => {
 			const bar = this.shadowRoot.querySelector('.active-bar');
 			if (!bar) {
@@ -48,9 +48,9 @@ export class GlobalDock extends WebComponent {
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
-			<div class="nav-rail" @nav-select=${this.handleNavSelect}>
+			<div class="nav-rail" @dock-select=${this.dockSelect}>
 				<div class="active-bar"></div>
-				${listBind('items', DockIconButton)}
+				${list('items', DockIconButton)}
 			</div>
 		`;
 	}

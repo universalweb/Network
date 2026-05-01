@@ -1,5 +1,5 @@
 import {
-	isArray, isFunction, isObject, isPromiseLike,
+	isArray, isFunction, isObject, isPromiseLike, isString,
 } from './utilities.js';
 export function isComponentConfig(config) {
 	return isObject(config) && !isArray(config) && !isPromiseLike(config) && !isFunction(config.replaceSync);
@@ -10,25 +10,27 @@ export function assertComponentConfig(config) {
 	}
 	throw new TypeError('WebComponent constructor expects a config object.');
 }
-export function assertComponentStyle(style, index) {
-	if (style === undefined) {
-		throw new TypeError(`WebComponent styles[${index}] is undefined.`);
+export function assertStaticStyleEntry(name, value, className) {
+	if (value === undefined || value === null) {
+		return;
 	}
-	if (style === null) {
-		throw new TypeError(`WebComponent styles[${index}] is null.`);
+	if (value instanceof CSSStyleSheet) {
+		return;
 	}
-	if (!(style instanceof CSSStyleSheet)) {
-		throw new TypeError(`WebComponent styles[${index}] must be a CSSStyleSheet.`);
+	if (isString(value)) {
+		return;
 	}
+	throw new TypeError(`${className}.styles.${name} must be CSSStyleSheet | string | null | undefined.`);
 }
-export function assertComponentStyles(styles) {
+export function assertStaticStyles(styles, className) {
 	if (styles === undefined) {
 		return;
 	}
-	if (!isArray(styles)) {
-		throw new TypeError('WebComponent config.styles must be an array of CSSStyleSheet instances.');
+	if (!isObject(styles) || isArray(styles)) {
+		throw new TypeError(`${className}.styles must be an object map of { name: CSSStyleSheet | string | null }.`);
 	}
-	styles.forEach((style, index) => {
-		assertComponentStyle(style, index);
-	});
+	const keys = Object.keys(styles);
+	for (let i = 0; i < keys.length; i++) {
+		assertStaticStyleEntry(keys[i], styles[keys[i]], className);
+	}
 }

@@ -1,16 +1,10 @@
-import '../dashboard-sidebar.js';
+import '../sidebar/dashboard-sidebar.js';
 import { WebComponent } from '../../base/base.js';
-const layoutStyles = await WebComponent.styleSheet('./dashboard.css', import.meta.url);
 export class AppDashboard extends WebComponent {
-	static get observedAttributes() {
-		return ['center-max-width'];
-	}
-	constructor() {
-		super({
-			styles: [layoutStyles],
-		});
-		this.render();
-	}
+	static url = import.meta.url;
+	static styles = {
+		dashboard: './dashboard.css',
+	};
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
@@ -45,26 +39,6 @@ export class AppDashboard extends WebComponent {
 				<slot name="global-bottom-bar"></slot>
 			</div>
 		`;
-	}
-	onConnect() {
-		this.syncCenterWidth();
-	}
-	onAttributeChange(attributeName) {
-		if (attributeName === 'center-max-width') {
-			this.syncCenterWidth();
-		}
-	}
-	syncCenterWidth() {
-		const val = this.getAttribute('center-max-width');
-		const el = this.shadowRoot.querySelector('.center-content');
-		if (!el) {
-			return;
-		}
-		if (val) {
-			el.style.setProperty('--center-max-width', val);
-		} else {
-			el.style.removeProperty('--center-max-width');
-		}
 	}
 }
 customElements.define('app-dashboard', AppDashboard);

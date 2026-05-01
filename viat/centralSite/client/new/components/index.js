@@ -3,9 +3,7 @@ export {
 	registerChild,
 	liveChildren,
 	getGlobal,
-	getGlobalState,
 	setGlobal,
-	setGlobalState,
 	subscribeGlobal,
 	watchGlobal,
 } from './base/base.js';
@@ -28,10 +26,11 @@ export { ActivityLog } from './activity-log/activity-log.js';
 export { WalletParams } from './wallet-params/wallet-params.js';
 export { WalletPanel } from './wallet-panel/wallet-panel.js';
 export { NetworkStats } from './network-stats/network-stats.js';
-export { SidebarPanel } from './sidebar-panel/sidebar-panel.js';
+export { Panel } from './global/panel/panel.js';
 export { GlobalBottomBar } from './dashboard/global-bottom-bar/global-bottom-bar.js';
-export { DashboardSidebar } from './dashboard/dashboard-sidebar.js';
+export { DashboardSidebar } from './dashboard/sidebar/dashboard-sidebar.js';
 export { AppDashboard } from './dashboard/dashboard/dashboard.js';
 export { UINotification } from './global/notification/notification.js';
-export { UITooltip } from './global/tooltip/tooltip.js';
-import './center-bar/center-bar.js';
+export { UITooltip } from './base/tooltip.js';
+export { UIModal } from './global/modal/modal.js';
+import './dashboard/center-bar/center-bar.js';

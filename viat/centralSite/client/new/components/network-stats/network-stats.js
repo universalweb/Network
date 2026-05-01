@@ -1,17 +1,17 @@
-import { SidebarPanel } from '../sidebar-panel/sidebar-panel.js';
-import { WebComponent } from '../base/base.js';
-const styles = await WebComponent.styleSheet('./network-stats.css', import.meta.url);
-const statsStyles = await WebComponent.styleSheet('../../styles/stats.css', import.meta.url);
-export class NetworkStats extends SidebarPanel {
-	constructor() {
-		super({
-			styles: [statsStyles, styles],
-		});
-		this.state = {
-			chainStatus: [],
-			networkData: [],
-		};
-	}
+import { Panel } from '../global/panel/panel.js';
+export class NetworkStats extends Panel {
+	static url = import.meta.url;
+	static styles = {
+		stats: '../../styles/stats.css',
+		networkStats: './network-stats.css',
+	};
+	static state = {
+		chainStatus: [],
+		className: ['stats-panel'],
+		id: 'NET',
+		networkData: [],
+		title: 'NODE STATUS',
+	};
 	renderRows(rows) {
 		return rows.map((r) => {
 			if (r.rowType === 'latency-bar') {
@@ -25,26 +25,16 @@ export class NetworkStats extends SidebarPanel {
 			`;
 		}).join('');
 	}
-	render() {
-		return this.html `
-			<aside class="panel stats-panel">
-				<div class="panel-header">
-					<span><span class="ph-id">NET</span> // NODE STATUS</span>
-					<div class="ph-dot"></div>
-				</div>
-				<div class="stat-block">
-					<div class="stat-block-title">NETWORK DATA</div>
-					${() => {
-						return this.renderRows(this.state.networkData);
-					}}
-				</div>
-				<div class="stat-block">
-					<div class="stat-block-title">CHAIN STATUS</div>
-					${() => {
-						return this.renderRows(this.state.chainStatus);
-					}}
-				</div>
-			</aside>
+	renderBody() {
+		return `
+			<div class="stat-block">
+				<div class="stat-block-title">NETWORK DATA</div>
+				${this.renderRows(this.state.networkData)}
+			</div>
+			<div class="stat-block">
+				<div class="stat-block-title">CHAIN STATUS</div>
+				${this.renderRows(this.state.chainStatus)}
+			</div>
 		`;
 	}
 }

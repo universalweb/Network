@@ -1,23 +1,26 @@
 import { WebComponent } from '../base/base.js';
-const transmitStyles = await WebComponent.styleSheet('./transmit-panel.css', import.meta.url);
 export class TransmitPanel extends WebComponent {
-	constructor() {
-		super({
-			styles: [transmitStyles],
-			tooltips: true,
+	static url = import.meta.url;
+	static styles = {
+		transmitPanel: './transmit-panel.css',
+	};
+	static state = {
+		amountLabel: '',
+		amountPlaceholder: '',
+		amountValue: '',
+		buttonLabel: '',
+		gasLabel: '',
+		gasValue: '',
+		recipientLabel: '',
+		recipientPlaceholder: '',
+		recipientValue: '',
+		tokenLabel: '',
+	};
+	constructor(state = {}, config = {}) {
+		super(state, {
+			...config,
+			tooltips: config.tooltips ?? true,
 		});
-		this.state = {
-			amountLabel: '',
-			amountPlaceholder: '',
-			amountValue: '',
-			buttonLabel: '',
-			gasLabel: '',
-			gasValue: '',
-			recipientLabel: '',
-			recipientPlaceholder: '',
-			recipientValue: '',
-			tokenLabel: '',
-		};
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
@@ -35,8 +38,7 @@ export class TransmitPanel extends WebComponent {
 						<div class="field-with-addon">
 							<input id="amount" type="text"
 								placeholder="${this.state.amountPlaceholder}"
-								value="${this.state.amountValue}"
-								data-bind="amountValue">
+								value="${() => this.state.amountValue}">
 							<div class="field-addon">${this.state.tokenLabel}</div>
 						</div>
 					</div>
@@ -44,14 +46,13 @@ export class TransmitPanel extends WebComponent {
 						<div class="field-head">
 							<div class="field-label">${this.state.gasLabel}</div>
 						</div>
-						<input id="gas" type="text" value="${this.state.gasValue}" readonly>
+						<input id="gas" type="text" value="${() => this.state.gasValue}" readonly>
 					</div>
 					<div class="field full-width">
 						<div class="field-label">${this.state.recipientLabel}</div>
 						<input id="recipient" type="text"
 							placeholder="${this.state.recipientPlaceholder}"
-							value="${this.state.recipientValue}"
-							data-bind="recipientValue">
+							value="${() => this.state.recipientValue}">
 					</div>
 						<button class="btn-transmit" @click=${this.createEmitHandler('transmit', () => {
 							return {

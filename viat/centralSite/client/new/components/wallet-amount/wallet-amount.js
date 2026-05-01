@@ -1,12 +1,9 @@
 import { WebComponent } from '../base/base.js';
-const walletAmountStyles = await WebComponent.styleSheet('./wallet-amount.css', import.meta.url);
 export class WalletAmount extends WebComponent {
-	constructor() {
-		super({
-			styles: [walletAmountStyles],
-		});
-		this.state = {};
-	}
+	static url = import.meta.url;
+	static styles = {
+		walletAmount: './wallet-amount.css',
+	};
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `

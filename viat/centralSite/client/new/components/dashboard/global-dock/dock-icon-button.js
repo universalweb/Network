@@ -1,19 +1,11 @@
-import { IconButtonBase } from '../../icon-button/icon-button.js';
-const styles = await IconButtonBase.styleSheet('./dock-icon-button.css', import.meta.url);
+import { IconButtonBase } from '../../global/icon-button/icon-button.js';
 export class DockIconButton extends IconButtonBase {
-	constructor(config = {}) {
-		super({
-			styles: [styles],
-			state: {
-				onClick: 'nav-select',
-			},
-		});
-		if (config.state?.className) {
-			config.state.className.push(...this.state.className);
-		}
-		Object.assign(this.state, config.state || {});
-		this.state?.className.push('rail-icon-btn icon-font');
-		console.log('DockIconButton state:', this.state);
-	}
+	static url = import.meta.url;
+	static styles = {
+		dockIconButton: './dock-icon-button.css',
+	};
+	static state = {
+		className: ['rail-icon-btn icon-font'],
+	};
 }
 customElements.define('dock-icon-button', DockIconButton);

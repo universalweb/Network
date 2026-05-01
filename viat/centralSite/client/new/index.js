@@ -1,9 +1,8 @@
 import AppView from './modules/app.js';
-const getGlobal = (typeof globalThis === 'undefined') ? window : globalThis;
 async function initialize() {
 	console.log('APP LOADING');
 	const app = await AppView.create();
-	getGlobal.AppView = app;
+	globalThis.AppView = app;
 	return app;
 }
 async function onReady() {

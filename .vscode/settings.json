@@ -282,5 +282,9 @@
 		"string.h": "c",
 		"stdlib.h": "c"
 	},
+	"cSpell.caseSensitive": false,
+	"cSpell.autocorrect": true,
+	"cSpell.spellCheckOnlyWorkspaceFiles": true,
+	"cSpell.allowCompoundWords": true,
 	
 }

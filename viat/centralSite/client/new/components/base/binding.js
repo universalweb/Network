@@ -4,6 +4,9 @@ import {
 	isSymbol,
 } from './utilities.js';
 export let currentTracking = null;
+export function setCurrentTracking(value) {
+	currentTracking = value;
+}
 export class Binding {
 	static isBinding(source) {
 		return source instanceof Binding;
@@ -32,11 +35,12 @@ function setValueAtPath(source, path, value) {
 	const pathParts = path.split('.');
 	const finalKey = pathParts.pop();
 	let currentValue = source;
-	for (const pathPart of pathParts) {
-		if (!isObject(currentValue[pathPart])) {
-			currentValue[pathPart] = {};
+	for (let i = 0; i < pathParts.length; i++) {
+		const part = pathParts[i];
+		if (!isObject(currentValue[part])) {
+			currentValue[part] = {};
 		}
-		currentValue = currentValue[pathPart];
+		currentValue = currentValue[part];
 	}
 	currentValue[finalKey] = value;
 }
@@ -134,15 +138,18 @@ function makeTrackingFactory(setValue, prefix = '') {
 	}
 	return makeTrackingValue;
 }
-// Used during template expression evaluation — returns Binding objects so the
-// html tag can identify which state key each expression slot belongs to.
 export function makeRenderProxy(state, component) {
 	const setValue = makeSetter(component?.stateProxy ?? state);
-	return makeBindingFactory(setValue)(state ?? {}, '');
+	return makeTrackingFactory(setValue)(state ?? {}, '');
 }
 export function makeGlobalRenderProxy(globalState) {
 	const setValue = makeSetter(globalState);
-	return makeBindingFactory(setValue, 'global')(globalState ?? {}, '');
+	return makeTrackingFactory(setValue, 'global')(globalState ?? {}, '');
+}
+// Explicit Binding factory for two-way input bindings and other places that
+// need a reactive reference to a state key rather than its current value.
+export function bind(stateKey, currentValue) {
+	return new Binding(String(stateKey ?? ''), currentValue);
 }
 // Used when evaluating arrow-function expressions — returns actual values so
 // conditional logic works correctly, while recording accessed keys.
@@ -156,12 +163,13 @@ export function makeGlobalTrackingProxy(globalState) {
 }
 export function track(fn) {
 	const deps = new Set();
+	const previousTracking = currentTracking;
 	currentTracking = deps;
 	let value;
 	try {
 		value = fn();
 	} finally {
-		currentTracking = null;
+		currentTracking = previousTracking;
 	}
 	return {
 		value,

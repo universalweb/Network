@@ -1,4 +1,6 @@
-import { isObject, isPromiseLike, isSymbol } from './utilities.js';
+import {
+	eachObject, isObject, isPlainObject, isPromiseLike, isSymbol,
+} from './utilities.js';
 const STATE = {};
 const subs = new Map();
 const pending = new Set();
@@ -50,29 +52,14 @@ function setValueAtPath(source, path, value) {
 	const pathParts = path.split('.');
 	const finalKey = pathParts.pop();
 	let currentValue = source;
-	for (const pathPart of pathParts) {
-		if (!isObject(currentValue[pathPart]) && !Array.isArray(currentValue[pathPart])) {
-			currentValue[pathPart] = {};
+	for (let i = 0; i < pathParts.length; i++) {
+		const part = pathParts[i];
+		if (!isPlainObject(currentValue[part]) && !Array.isArray(currentValue[part])) {
+			currentValue[part] = {};
 		}
-		currentValue = currentValue[pathPart];
+		currentValue = currentValue[part];
 	}
 	currentValue[finalKey] = value;
-}
-function emitGlobalChange(path) {
-	if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') {
-		return;
-	}
-	const detail = {
-		path,
-		value: getValueAtPath(GLOBAL_STATE, path),
-	};
-	const init = {
-		bubbles: false,
-		cancelable: false,
-		composed: false,
-		detail,
-	};
-	window.dispatchEvent(new CustomEvent('global-state-change', init));
 }
 function notifySubscribers(path) {
 	pending.add(path);
@@ -85,38 +72,35 @@ function notifySubscribers(path) {
 		const changedPaths = Array.from(pending);
 		pending.clear();
 		const notificationMap = new Map();
-		for (const subscriptionKey of subs.keys()) {
-			for (const changedPath of changedPaths) {
-				if (!pathsOverlap(subscriptionKey, changedPath)) {
+		subs.forEach((subscribers, subscriptionKey) => {
+			if (!subscribers.size) {
+				return;
+			}
+			for (let i = 0; i < changedPaths.length; i++) {
+				if (!pathsOverlap(subscriptionKey, changedPaths[i])) {
 					continue;
 				}
-				notificationMap.set(subscriptionKey, changedPath);
+				notificationMap.set(subscriptionKey, changedPaths[i]);
 				break;
 			}
-		}
-		for (const [
-			subscriptionKey,
-			changedPath,
-		] of notificationMap) {
+		});
+		notificationMap.forEach((changedPath, subscriptionKey) => {
 			const callbacks = Array.from(subs.get(subscriptionKey) ?? []);
 			if (!callbacks.length) {
-				continue;
+				return;
 			}
 			const value = getValueAtPath(GLOBAL_STATE, subscriptionKey);
-			for (const callback of callbacks) {
-				const result = callback(value, GLOBAL_STATE, changedPath);
+			for (let i = 0; i < callbacks.length; i++) {
+				const result = callbacks[i](value, GLOBAL_STATE, changedPath);
 				if (isPromiseLike(result)) {
 					result.catch(queueAsyncError);
 				}
 			}
-		}
-		for (const changedPath of changedPaths) {
-			emitGlobalChange(changedPath);
-		}
+		});
 	});
 }
 function makeGlobalProxy(target, path = '') {
-	if (!isObject(target) && !Array.isArray(target)) {
+	if (!isPlainObject(target) && !Array.isArray(target)) {
 		return target;
 	}
 	let pathCache = proxyCache.get(target);
@@ -134,7 +118,7 @@ function makeGlobalProxy(target, path = '') {
 			}
 			const propertyValue = Reflect.get(obj, key);
 			const nestedPath = path ? `${path}.${String(key)}` : String(key);
-			if (isObject(propertyValue) || Array.isArray(propertyValue)) {
+			if (isPlainObject(propertyValue) || Array.isArray(propertyValue)) {
 				return makeGlobalProxy(propertyValue, nestedPath);
 			}
 			return propertyValue;
@@ -162,19 +146,16 @@ function makeGlobalProxy(target, path = '') {
 }
 GLOBAL_STATE = makeGlobalProxy(STATE);
 export { GLOBAL_STATE };
-export function getGlobalState(key) {
+export function getGlobal(key) {
 	return key === undefined ? GLOBAL_STATE : getValueAtPath(GLOBAL_STATE, key);
 }
-export function setGlobalState(updates) {
-	if (!isObject(updates)) {
+export function setGlobal(updates) {
+	if (!isPlainObject(updates)) {
 		return;
 	}
-	for (const [
-		key,
-		value,
-	] of Object.entries(updates)) {
+	eachObject(updates, (key, value) => {
 		setValueAtPath(GLOBAL_STATE, key, value);
-	}
+	});
 }
 export function subscribeGlobal(key, cb) {
 	if (!subs.has(key)) {
@@ -191,7 +172,7 @@ export function subscribeGlobal(key, cb) {
 }
 export function watchGlobal(key, cb) {
 	const unsubscribe = subscribeGlobal(key, cb ?? (() => {
-		return this.refresh();
+		return this.renderView();
 	}));
 	const stopWatching = () => {
 		unsubscribe();
@@ -199,10 +180,4 @@ export function watchGlobal(key, cb) {
 	};
 	this?.globalUnsubs?.add(stopWatching);
 	return stopWatching;
-}
-export function getGlobal(key) {
-	return getGlobalState(key);
-}
-export function setGlobal(updates) {
-	setGlobalState(updates);
 }

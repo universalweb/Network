@@ -2,63 +2,63 @@ import * as eventMethods from './events.js';
 import * as globalMethods from './globalState.js';
 import * as sharedStyles from './shared-styles.js';
 import * as stateMethods from './state.js';
-import { allChildren, liveChildren, registerChild } from './children.js';
-import { assertComponentConfig, assertComponentStyles } from './assertions.js';
 import {
+	Binding,
+	makeGlobalRenderProxy,
+	makeRenderProxy,
+	setCurrentTracking,
+} from './binding.js';
+import { allChildren, liveChildren, registerChild } from './children.js';
+import { assertComponentConfig, assertStaticStyles } from './assertions.js';
+import {
+	callFn,
+	eachArray,
+	eachObject,
+	hasValue,
 	isFunction,
 	isPromiseLike,
 	isShadowRoot,
 	isString,
 } from './utilities.js';
-import { makeGlobalRenderProxy, makeRenderProxy } from './binding.js';
 import { register, registry, unregister } from './registry.js';
 import { Logger } from './logger.js';
-import { attachTooltips } from '../global/tooltip-controller.js';
+import { attachTooltips } from './tooltip-controller.js';
+import { initState } from './state.js';
 import { loadSheet } from './css-loader.js';
 import { makeHtmlTag } from './template.js';
 export { liveChildren, registerChild } from './children.js';
 export {
 	getGlobal,
-	getGlobalState,
 	setGlobal,
-	setGlobalState,
 	subscribeGlobal,
 	watchGlobal,
 } from './globalState.js';
 export { registry } from './registry.js';
 export class WebComponent extends HTMLElement {
-	constructor(config = {}) {
+	static url = import.meta.url;
+	static styles = {
+		reset: sharedStyles.resetSheet,
+		panel: sharedStyles.panelSheet,
+		scrollbar: sharedStyles.scrollbarSheet,
+		utils: sharedStyles.utilsSheet,
+	};
+	static state = {};
+	constructor(state = {}, config = {}) {
 		super();
 		this.constructor.assertConfig(config);
-		const {
-			styles = [],
-			tooltips = false,
-		} = config;
-		assertComponentStyles(styles);
+		const { tooltips = false } = config;
 		this.useTooltips = tooltips === true;
 		this.attachShadow({
 			mode: 'open',
 		});
-		if (!this.constructor.compiledStyles) {
-			this.constructor.compiledStyles = [
-				...new Set([
-					sharedStyles.resetSheet,
-					sharedStyles.panelSheet,
-					sharedStyles.scrollbarSheet,
-					sharedStyles.utilsSheet,
-					...styles,
-				]),
-			];
-		}
-		this.shadowRoot.adoptedStyleSheets = this.constructor.compiledStyles;
+		this.constructor.ensureCompiledStyles();
 		this.html = makeHtmlTag(this);
+		Object.assign(this.STATE, structuredClone(this.constructor.ensureMergedState()));
+		Object.assign(this.STATE, state);
 		this.initState();
 		this.createRenderCompletePromise();
+		this.createMountedPromise();
 		Logger.debug('WebComponent', `[${this.tagName}] Constructor`);
-	}
-	static attrBindings = {};
-	static get observedAttributes() {
-		return Object.keys(this.attrBindings ?? {});
 	}
 	static findComponent(key) {
 		return registry[key] ?? null;
@@ -134,20 +134,135 @@ export class WebComponent extends HTMLElement {
 		WebComponent.sheetCache.set(key, sheet);
 		return sheet;
 	}
-	static async create(config = {}) {
-		this.assertConfig(config);
-		const instance = new this(config);
-		if (config.state !== undefined) {
-			await instance.replaceState(await config.state);
+	static collectStyleChain(C) {
+		const chain = [];
+		let cur = C;
+		while (cur && cur !== HTMLElement) {
+			chain.push(cur);
+			cur = Object.getPrototypeOf(cur);
 		}
-		return instance;
+		chain.reverse();
+		return chain;
+	}
+	static computeMergedState(C) {
+		const chain = WebComponent.collectStyleChain(C);
+		const merged = {};
+		for (let i = 0; i < chain.length; i++) {
+			const cls = chain[i];
+			if (Object.hasOwn(cls, 'state')) {
+				Object.assign(merged, cls.state);
+			}
+		}
+		return merged;
+	}
+	static ensureMergedState(C = this) {
+		if (Object.hasOwn(C, 'mergedState')) {
+			return C.mergedState;
+		}
+		const merged = WebComponent.computeMergedState(C);
+		Object.defineProperty(C, 'mergedState', {
+			value: merged,
+			configurable: true,
+			writable: true,
+		});
+		return merged;
+	}
+	static async compileStyles(C) {
+		const chain = WebComponent.collectStyleChain(C);
+		const merged = new Map();
+		eachArray(chain, (cls) => {
+			if (!Object.hasOwn(cls, 'styles')) {
+				return;
+			}
+			assertStaticStyles(cls.styles, cls.name);
+			eachObject(cls.styles, (key, value) => {
+				merged.set(key, {
+					owner: cls,
+					value,
+				});
+			});
+		});
+		const ordered = [];
+		const tasks = [];
+		merged.forEach((entry, key) => {
+			const {
+				owner,
+				value,
+			} = entry;
+			if (value === null || value === undefined) {
+				return;
+			}
+			if (value instanceof CSSStyleSheet) {
+				ordered.push({
+					key,
+					sheet: value,
+				});
+				return;
+			}
+			if (!Object.hasOwn(owner, 'url')) {
+				throw new TypeError(`${owner.name}.styles.${key}: relative path "${value}" requires \`static url = import.meta.url\` on ${owner.name}.`);
+			}
+			const slot = {
+				key,
+				sheet: null,
+			};
+			ordered.push(slot);
+			tasks.push(WebComponent.styleSheet(value, owner.url).then((sheet) => {
+				slot.sheet = sheet;
+			}));
+		});
+		await Promise.all(tasks);
+		const map = new Map();
+		eachArray(ordered, (slot) => {
+			map.set(slot.key, slot.sheet);
+		});
+		return {
+			map,
+			array: Object.freeze([...map.values()]),
+		};
+	}
+	static ensureCompiledStyles(C = this) {
+		if (Object.hasOwn(C, 'compiledStylesPromise')) {
+			return C.compiledStylesPromise;
+		}
+		const promise = WebComponent.compileStyles(C).then((result) => {
+			C.compiledStyles = result.map;
+			C.compiledStylesArray = result.array;
+			return result;
+		});
+		Object.defineProperty(C, 'compiledStylesPromise', {
+			value: promise,
+			configurable: true,
+			writable: true,
+		});
+		return promise;
+	}
+	static preload(C = this) {
+		return WebComponent.ensureCompiledStyles(C);
+	}
+	static async create(state, config = {}) {
+		this.assertConfig(config);
+		return new this(await state, config);
+	}
+	// Single-bag factory: `{ Source, state, config }` → instance.
+	// Exists so component creation can be passed as a first-class callback —
+	// e.g., `specs.map(WebComponent.createBound)` — without losing `this`
+	// binding and without wrapping every callsite in an arrow that just
+	// destructures and forwards. Useful when the component class is selected
+	// per-item from a config-driven list rather than known at the callsite.
+	static async createBound(spec = {}) {
+		const { Source } = spec;
+		return Source.create(spec.state, spec.config);
 	}
 	STATE = {};
 	stateProxy = null;
+	proxyCache = null;
 	pendingFlush = null;
 	globalUnsubs = new Set();
-	effectUnsubs = new Set();
+	customEventListeners = new Set();
+	observed = new Set();
 	templateBuilt = false;
+	firstRenderDone = false;
 	renderTracking = false;
 	renderProxy = null;
 	renderProxyState = null;
@@ -156,7 +271,11 @@ export class WebComponent extends HTMLElement {
 	renderResolver = null;
 	renderComplete = null;
 	intervals = new Set();
-	pendingRenderComplete = null;
+	pendingMount = null;
+	mounted = null;
+	mountedResolver = null;
+	visibleObserver = null;
+	visibleFired = false;
 	get state() {
 		if (this.renderTracking) {
 			return this.renderProxy;
@@ -177,12 +296,12 @@ export class WebComponent extends HTMLElement {
 		return globalMethods.GLOBAL_STATE;
 	}
 	unbindTooltips = null;
-	useTooltips = false;
 	renderSeq = 0;
 	unregisterFromParent = null;
 	timeouts = new Set();
+	connectPromise = null;
 	connectedCallback() {
-		this.handleConnectedCallback().catch((error) => {
+		this.connectPromise = this.handleConnectedCallback().catch((error) => {
 			Logger.error('WebComponent', `[${this.tagName}] Connected error:`, error);
 			this.onLifecycleError(error);
 		});
@@ -195,11 +314,12 @@ export class WebComponent extends HTMLElement {
 		if (WebComponent.isWebComponent(parentHost)) {
 			this.unregisterFromParent = registerChild(parentHost, this);
 		}
+		await this.applyStyles();
 		await this.onConnect();
 		if (Object.keys(this.STATE).length) {
 			await this.updateView();
 		} else {
-			await this.refresh();
+			await this.renderView();
 		}
 	}
 	disconnectedCallback() {
@@ -209,22 +329,32 @@ export class WebComponent extends HTMLElement {
 		});
 	}
 	async handleDisconnectedCallback() {
+		await this.connectPromise;
+		this.connectPromise = null;
 		unregister(this);
 		Logger.debug('WebComponent', `[${this.tagName}] disconnectedCallback`);
 		this.unregisterFromParent?.();
 		this.unregisterFromParent = null;
 		this.unbindTooltips?.();
 		this.unbindTooltips = null;
+		this.visibleObserver?.disconnect();
+		this.visibleObserver = null;
+		this.visibleFired = false;
 		this.clearTimeouts();
 		this.clearIntervals();
-		this.effectUnsubs.forEach((u) => {
-			u();
-		});
-		this.effectUnsubs.clear();
-		this.globalUnsubs.forEach((u) => {
-			u();
-		});
+		this.observed.forEach(callFn);
+		this.observed.clear();
+		this.globalUnsubs.forEach(callFn);
 		this.globalUnsubs.clear();
+		this.html?.cleanup?.();
+		this.templateBuilt = false;
+		this.firstRenderDone = false;
+		this.mounted = null;
+		this.mountedResolver = null;
+		this.createMountedPromise();
+		eachArray(this.renderDepUnsubs, callFn);
+		this.renderDepUnsubs = [];
+		this.clearEventListeners();
 		const disconnectResult = this.onDisconnect();
 		if (isPromiseLike(disconnectResult)) {
 			await disconnectResult;
@@ -238,37 +368,21 @@ export class WebComponent extends HTMLElement {
 			this.renderResolver = resolve;
 		});
 	}
-	clearTimeouts() {
-		for (const id of this.timeouts) {
-			clearTimeout(id);
+	createMountedPromise() {
+		if (this.mountedResolver || this.mounted) {
+			return;
 		}
+		this.mounted = new Promise((resolve) => {
+			this.mountedResolver = resolve;
+		});
+	}
+	clearTimeouts() {
+		this.timeouts.forEach(clearTimeout);
 		this.timeouts.clear();
 	}
 	clearIntervals() {
-		for (const id of this.intervals) {
-			clearInterval(id);
-		}
+		this.intervals.forEach(clearInterval);
 		this.intervals.clear();
-	}
-	attributeChangedCallback(attributeName, oldVal, newVal) {
-		this.handleAttributeChangedCallback(attributeName, oldVal, newVal).catch((error) => {
-			Logger.error('WebComponent', `[${this.tagName}] Attribute error:`, error);
-			this.onLifecycleError(error);
-		});
-	}
-	async handleAttributeChangedCallback(attributeName, oldVal, newVal) {
-		if (oldVal === newVal) {
-			return;
-		}
-		Logger.debug('WebComponent', `[${this.tagName}] attributeChanged: ${attributeName} =`, newVal);
-		const binding = this.constructor.attrBindings?.[attributeName];
-		if (binding) {
-			this.state[binding] = newVal;
-		}
-		const attributeChangeResult = this.onAttributeChange(attributeName, oldVal, newVal);
-		if (isPromiseLike(attributeChangeResult)) {
-			await attributeChangeResult;
-		}
 	}
 	getComponent(tag) {
 		return liveChildren(this, tag?.toLowerCase())[0] ?? null;
@@ -276,57 +390,195 @@ export class WebComponent extends HTMLElement {
 	getComponents(tag) {
 		return liveChildren(this, tag?.toLowerCase());
 	}
-	appendBatch(container, elements) {
-		const frag = document.createDocumentFragment();
-		frag.append(...elements);
-		container.append(frag);
+	getComponentsArray(tag) {
+		const components = this.getComponents(tag);
+		if (!components) {
+			return [];
+		}
+		return [...components];
 	}
-	addStyleSheet(sheet) {
-		const root = this.shadowRoot;
-		if (!root || root.adoptedStyleSheets.includes(sheet)) {
+	findComponent(selector, predicate) {
+		return this.getComponentsArray(selector).find(predicate) ?? null;
+	}
+	renderDepUnsubs = [];
+	subscribeRenderDeps(deps) {
+		eachArray(this.renderDepUnsubs, callFn);
+		this.renderDepUnsubs = [];
+		if (!deps || deps.size === 0) {
 			return;
 		}
-		root.adoptedStyleSheets = [...root.adoptedStyleSheets, sheet];
+		const invalidate = () => {
+			this.templateBuilt = false;
+		};
+		deps.forEach((dep) => {
+			if (dep.startsWith('global.')) {
+				if (this.watchGlobal) {
+					this.renderDepUnsubs.push(this.watchGlobal(dep.slice(7), invalidate));
+				}
+				return;
+			}
+			if (this.watchState) {
+				this.renderDepUnsubs.push(this.watchState(dep, invalidate));
+			}
+		});
+	}
+	bind(key, currentValue) {
+		return new Binding(String(key ?? ''), currentValue);
+	}
+	styleMap = null;
+	async applyStyles() {
+		const C = this.constructor;
+		if (this.styleMap) {
+			if (this.shadowRoot) {
+				this.shadowRoot.adoptedStyleSheets = [...this.styleMap.values()];
+			}
+			return;
+		}
+		const result = await C.ensureCompiledStyles();
+		if (!this.shadowRoot) {
+			return;
+		}
+		if (this.styleMap) {
+			this.shadowRoot.adoptedStyleSheets = [...this.styleMap.values()];
+			return;
+		}
+		this.shadowRoot.adoptedStyleSheets = result.array;
+	}
+	forkStyleMap() {
+		if (this.styleMap) {
+			return this.styleMap;
+		}
+		const compiled = this.constructor.compiledStyles;
+		this.styleMap = compiled ? new Map(compiled) : new Map();
+		return this.styleMap;
+	}
+	async resolveStyle(sheetOrPath, baseUrl) {
+		if (sheetOrPath instanceof CSSStyleSheet) {
+			return sheetOrPath;
+		}
+		if (!isString(sheetOrPath)) {
+			throw new TypeError('addStyle expects CSSStyleSheet or string path.');
+		}
+		const url = baseUrl ?? this.constructor.url ?? document.baseURI;
+		return WebComponent.styleSheet(sheetOrPath, url);
+	}
+	async addStyle(key, sheetOrPath, baseUrl) {
+		if (!isString(key)) {
+			throw new TypeError('addStyle: key must be a string.');
+		}
+		await this.constructor.ensureCompiledStyles();
+		const sheet = await this.resolveStyle(sheetOrPath, baseUrl);
+		this.forkStyleMap();
+		this.styleMap.set(key, sheet);
+		if (this.shadowRoot) {
+			this.shadowRoot.adoptedStyleSheets = [...this.styleMap.values()];
+		}
+		return sheet;
+	}
+	async removeStyle(key) {
+		if (!isString(key)) {
+			throw new TypeError('removeStyle: key must be a string.');
+		}
+		await this.constructor.ensureCompiledStyles();
+		this.forkStyleMap();
+		const had = this.styleMap.delete(key);
+		if (had && this.shadowRoot) {
+			this.shadowRoot.adoptedStyleSheets = [...this.styleMap.values()];
+		}
+		return had;
+	}
+	replaceStyle(key, sheetOrPath, baseUrl) {
+		return this.addStyle(key, sheetOrPath, baseUrl);
+	}
+	hasStyle(key) {
+		if (this.styleMap) {
+			return this.styleMap.has(key);
+		}
+		const compiled = this.constructor.compiledStyles;
+		if (compiled) {
+			return compiled.has(key);
+		}
+		return false;
 	}
 	addInterval(fn, ms) {
 		const id = setInterval(fn, ms);
 		this.intervals.add(id);
 		return id;
 	}
-	clearInterval(id) {
+	inertSequence = 0;
+	setInert(shouldBeInert) {
+		this.inertSequence += 1;
+		const token = this.inertSequence;
+		if (!shouldBeInert) {
+			this.toggleAttribute('inert', false);
+			return Promise.resolve();
+		}
+		const animations = this.getAnimations({
+			subtree: true,
+		});
+		if (!animations.length) {
+			this.toggleAttribute('inert', true);
+			return Promise.resolve();
+		}
+		return Promise.allSettled(animations.map((animation) => {
+			return animation.finished;
+		})).then(() => {
+			if (this.inertSequence === token && this.isConnected) {
+				this.toggleAttribute('inert', true);
+			}
+		});
+	}
+	stopInterval(id) {
 		clearInterval(id);
 		this.intervals.delete(id);
 	}
-	addEffect(keys, fn) {
+	observe(keys, fn) {
 		const keyList = Array.isArray(keys) ? keys : [keys];
 		const unsubs = keyList.map((key) => {
-			return this.watchState(key, (newVal, oldVal) => {
-				return fn(this.state, newVal, oldVal);
+			return this.watchState(key, fn);
+		});
+		const unsub = () => {
+			unsubs.forEach(callFn);
+			this.observed.delete(unsub);
+		};
+		this.observed.add(unsub);
+		return unsub;
+	}
+	observeGlobal(keys, fn) {
+		const keyList = Array.isArray(keys) ? keys : [keys];
+		const unsubs = keyList.map((key) => {
+			let previousValue = globalMethods.getGlobal(key);
+			return globalMethods.subscribeGlobal(key, (nextValue, globalState, changedPath) => {
+				const result = fn(nextValue, previousValue, changedPath);
+				previousValue = nextValue;
+				return result;
 			});
 		});
 		const unsub = () => {
-			unsubs.forEach((u) => {
-				u();
-			});
+			unsubs.forEach(callFn);
+			this.observed.delete(unsub);
 		};
-		this.effectUnsubs.add(unsub);
+		this.observed.add(unsub);
 		return unsub;
 	}
 	onConnect() {}
 	onDisconnect() {}
-	onAttributeChange(attributeName, oldVal, newVal) {}
 	onLifecycleError(error) {
 		console.error(`[${this.localName}] lifecycle error:`, error);
 	}
 	onRender() {}
-	onRenderComplete() {}
+	onMounted() {}
+	onRendered() {}
+	onVisible() {}
 	onRenderError(error) {
 		console.error(`[${this.localName}] render error:`, error);
 	}
 	beforeRender() {}
 	async render() {}
-	usesRenderCompleteLifecycle() {
-		return this.useTooltips || this.onRenderComplete !== WebComponent.prototype.onRenderComplete;
+	usesMountLifecycle() {
+		return this.useTooltips ||
+			this.onMounted !== WebComponent.prototype.onMounted ||
+			this.onVisible !== WebComponent.prototype.onVisible;
 	}
 	async waitForRenderedTree() {
 		await Promise.all(allChildren(this).map(WebComponent.waitRenderTree));
@@ -334,11 +586,38 @@ export class WebComponent extends HTMLElement {
 			requestAnimationFrame(resolve);
 		});
 	}
-	async runRenderCompleteLifecycle() {
+	observeVisibility() {
+		if (this.visibleObserver || this.visibleFired) {
+			return;
+		}
+		if (this.onVisible === WebComponent.prototype.onVisible) {
+			return;
+		}
+		if (typeof IntersectionObserver === 'undefined') {
+			return;
+		}
+		this.visibleObserver = new IntersectionObserver((entries) => {
+			for (let i = 0; i < entries.length; i++) {
+				if (!entries[i].isIntersecting) {
+					continue;
+				}
+				this.visibleFired = true;
+				this.visibleObserver?.disconnect();
+				this.visibleObserver = null;
+				Promise.resolve(this.onVisible()).catch((error) => {
+					this.onLifecycleError(error);
+				});
+				return;
+			}
+		});
+		this.visibleObserver.observe(this);
+	}
+	async runMountLifecycle() {
 		await this.waitForRenderedTree();
-		if (this.useTooltips) {
-			this.unbindTooltips?.();
-			this.unbindTooltips = null;
+		if (!this.isConnected) {
+			return;
+		}
+		if (this.useTooltips && !this.unbindTooltips) {
 			const unbind = await attachTooltips(this.getComponentRoot());
 			if (!this.isConnected) {
 				unbind();
@@ -346,25 +625,32 @@ export class WebComponent extends HTMLElement {
 			}
 			this.unbindTooltips = unbind;
 		}
-		if (this.onRenderComplete !== WebComponent.prototype.onRenderComplete) {
-			await this.onRenderComplete();
+		if (this.onMounted !== WebComponent.prototype.onMounted) {
+			await this.onMounted();
 		}
+		this.mountedResolver?.();
+		this.mountedResolver = null;
+		this.observeVisibility();
 	}
-	scheduleRenderComplete() {
-		if (!this.usesRenderCompleteLifecycle()) {
+	scheduleMount() {
+		if (!this.usesMountLifecycle()) {
+			this.mountedResolver?.();
+			this.mountedResolver = null;
 			return Promise.resolve();
 		}
-		if (!this.pendingRenderComplete) {
-			this.pendingRenderComplete = this.runRenderCompleteLifecycle().finally(() => {
-				this.pendingRenderComplete = null;
+		if (!this.pendingMount) {
+			this.pendingMount = this.runMountLifecycle().finally(() => {
+				this.pendingMount = null;
 			});
 		}
-		return this.pendingRenderComplete;
+		return this.pendingMount;
 	}
-	async refresh() {
+	async renderView() {
 		this.templateBuilt = false;
 		this.createRenderCompletePromise();
 		const seq = ++this.renderSeq;
+		const renderDeps = new Set();
+		const wasFirstRender = !this.firstRenderDone;
 		try {
 			const beforeResult = this.beforeRender();
 			if (isPromiseLike(beforeResult)) {
@@ -379,11 +665,12 @@ export class WebComponent extends HTMLElement {
 				this.renderProxy = makeRenderProxy(currentState, this);
 				this.renderProxyState = currentState;
 			}
-			if (!this.globalRenderProxy || this.globalRenderProxyState !== globalMethods.GLOBAL_STATE) {
-				this.globalRenderProxy = makeGlobalRenderProxy(globalMethods.GLOBAL_STATE, this);
-				this.globalRenderProxyState = globalMethods.GLOBAL_STATE;
+			setCurrentTracking(renderDeps);
+			try {
+				await this.render();
+			} finally {
+				setCurrentTracking(null);
 			}
-			await this.render();
 			if (seq !== this.renderSeq) {
 				return;
 			}
@@ -392,13 +679,25 @@ export class WebComponent extends HTMLElement {
 		} finally {
 			if (seq === this.renderSeq) {
 				this.renderTracking = false;
+				const boundKeys = this.html?.boundKeys?.();
+				if (boundKeys && boundKeys.size) {
+					boundKeys.forEach((boundKey) => {
+						renderDeps.delete(boundKey);
+					});
+				}
+				this.subscribeRenderDeps(renderDeps);
 			}
 		}
 		if (seq === this.renderSeq) {
 			try {
 				this.templateBuilt = true;
 				await this.onRender();
-				await this.scheduleRenderComplete();
+				if (wasFirstRender) {
+					this.firstRenderDone = true;
+					await this.scheduleMount();
+				} else if (this.onRendered !== WebComponent.prototype.onRendered) {
+					await this.onRendered();
+				}
 			} catch (error) {
 				this.onRenderError(error);
 			} finally {
@@ -415,21 +714,29 @@ export class WebComponent extends HTMLElement {
 		this.timeouts.add(id);
 		return id;
 	}
-	clearTimeout(id) {
+	removeTimeout(id) {
 		clearTimeout(id);
 		this.timeouts.delete(id);
 	}
 	getComponentRoot() {
-		return this.shadowRoot ?? this;
+		return this.shadowRoot;
 	}
-	resolve(target) {
+	findElement(target) {
 		return isString(target) ? document.querySelector(target) : target;
 	}
 	appendTo(target) {
-		return this.resolve(target)?.appendChild(this);
+		return this.findElement(target)?.appendChild(this);
 	}
 	prependTo(target) {
-		return this.resolve(target)?.prepend(this);
+		return this.findElement(target)?.prepend(this);
+	}
+	ifAssign(target) {
+		eachObject(target, (key, value) => {
+			if (hasValue(this.state[key])) {
+				this.state[key] = value;
+			}
+		});
+		return target;
 	}
 }
 Object.assign(WebComponent.prototype, stateMethods, eventMethods, globalMethods);

@@ -1,7 +1,8 @@
+import { Logger } from './logger.js';
 import { isString } from './utilities.js';
 const store = new Map();
 function getRegistryKey(component) {
-	return component.getAttribute('name') || component.id || null;
+	return component.id || null;
 }
 export const registry = new Proxy(store, {
 	get(target, prop) {
@@ -23,6 +24,7 @@ export function register(component) {
 	if (!key) {
 		return;
 	}
+	Logger.debug('registry', 'register', key);
 	store.set(key, component);
 }
 export function unregister(component) {

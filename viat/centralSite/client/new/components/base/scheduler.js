@@ -1,4 +1,4 @@
-import { isPromiseLike } from './utilities.js';
+import { eachArray, isPromiseLike } from './utilities.js';
 const usePostTask = typeof scheduler !== 'undefined' && typeof scheduler.postTask === 'function';
 let batch = null;
 function queueAsyncError(error) {
@@ -13,7 +13,7 @@ async function flush() {
 		return;
 	}
 	const pendingTasks = [];
-	for (const fn of currentBatch.tasks) {
+	currentBatch.tasks.forEach((fn) => {
 		try {
 			const result = fn();
 			if (isPromiseLike(result)) {
@@ -22,14 +22,14 @@ async function flush() {
 		} catch (error) {
 			queueAsyncError(error);
 		}
-	}
+	});
 	if (pendingTasks.length) {
 		const settledResults = await Promise.allSettled(pendingTasks);
-		for (const settledResult of settledResults) {
+		eachArray(settledResults, (settledResult) => {
 			if (settledResult.status === 'rejected') {
 				queueAsyncError(settledResult.reason);
 			}
-		}
+		});
 	}
 	currentBatch.resolve();
 }

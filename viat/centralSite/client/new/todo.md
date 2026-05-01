@@ -1,30 +1,20 @@
 
-- create router for page nav
+- create router for page nav listen via appview component
 - Add a custom attribute like @id to save reference of a component by name in global app similar to @click events except its for assigning an ID to the root appview component. 
-- Global State where stop assigning same variable to multiple objects just use global store
-- Make sure global state changes are reactive and can trigger a view update that is specific and only does the exact DOM operation to edit the DOM not replace the entire HTML
-- Add method to class to auto inject stylesheet
+- Agent to instruct how to build a WebComponent
+
+- For the theme change pre-load the CSS files needed before the swap so we don't get a flash
+
+Add title change for appView or globalState most likely globalState in the event AppView is closed can just be direct DOM change to title
+
+add static state property
+
+add state object to constructor
+
+Find a way to better deal with events like the dock buttons on clock maybe add onVisible method
 
 
-
-Separate class selectors from shared styles into the css files of their components. Instead change those classes to a general class name and apply that general class to the html element that needs that style or attribute.
-For example `.stats-panel,
-.wallet-params-panel,
-.output-feed {
-	overflow-y: auto;
-}` this should instead be `.overflow-y {
-	overflow-y: auto;
-}` Then find the stats-panel,
-wallet-params-panel,
-output-feed html tags and add the overflow-y class to them. There is CSS that is in the shared stylesheets that all need this applied to them. This ensures classes aren't spread out and avoids duplicate css attributes like overflow etc.
-
-
-Merge variable change events with global change events but the global change events should fire with the event name beinging with the word global.then-variable-name like a property path
-
+------------------------------------ROUTINE:
 Review other components make sure they are using the latest syntax as well then remove old code or an older style we no longer use
 
-For the theme change pre-load the CSS files needed before the swap
-
-Add a loading screen
-
-Add title change for appView or globalState most likely globalState in the event AppView is closed 
+Escape user content offer tools and methods for this.

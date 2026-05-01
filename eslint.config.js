@@ -1,12 +1,12 @@
 import * as ts_api_utils from 'ts-api-utils';
+import { LanguageVariant } from 'typescript';
 import globals from 'globals';
 import jsdoc from 'eslint-plugin-jsdoc';
 import json from '@eslint/json';
-import markdown from "@eslint/markdown";
+import markdown from '@eslint/markdown';
 import security from 'eslint-plugin-security';
 import sonarjs from 'eslint-plugin-sonarjs';
 import stylisticJs from '@stylistic/eslint-plugin';
-import {LanguageVariant} from 'typescript';
 const globalsObject = {};
 const customGlobals = {
 	globalThis: 'readonly',
@@ -55,19 +55,21 @@ export default [
 			'**/*.mjs',
 		],
 		languageOptions: {
-		  parser: '@typescript-eslint/parser',
-		  parserOptions: {
-			ecmaVersion: 'latest',
-			sourceType: 'module',
-		  },
+			parser: '@typescript-eslint/parser',
+			parserOptions: {
+				ecmaVersion: 'latest',
+				sourceType: 'module',
+			},
 		},
-		plugins: {'@typescript-eslint': ts_api_utils},
-	  },
+		plugins: {
+			'@typescript-eslint': ts_api_utils,
+		},
+	},
 	{
 		files: ['**/*.md'],
 		language: 'markdown/markdown',
 		plugins: {
-			markdown: markdown,
+			markdown,
 		},
 	},
 	{

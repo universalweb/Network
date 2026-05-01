@@ -1,21 +1,21 @@
 import '../wallet-address/wallet-address.js';
-import { SidebarPanel } from '../sidebar-panel/sidebar-panel.js';
 import { WebComponent } from '../base/base.js';
-const styles = await WebComponent.styleSheet([
-	'../../styles/stats.css',
-	'./wallet-panel.css',
-], import.meta.url);
-export class WalletPanel extends SidebarPanel {
-	constructor() {
-		super({
-			styles,
-			tooltips: true,
+export class WalletPanel extends WebComponent {
+	static url = import.meta.url;
+	static styles = {
+		stats: '../../styles/stats.css',
+		walletPanel: './wallet-panel.css',
+	};
+	static state = {
+		activity: '0',
+		received: '0',
+		sent: '0',
+	};
+	constructor(state = {}, config = {}) {
+		super(state, {
+			...config,
+			tooltips: config.tooltips ?? true,
 		});
-		this.state = {
-			activity: '0',
-			received: '0',
-			sent: '0',
-		};
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions

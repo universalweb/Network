@@ -1,15 +1,14 @@
 import { WebComponent } from '../../base/base.js';
-const bottomBarStyles = await WebComponent.styleSheet('./global-bottom-bar.css', import.meta.url);
 export class GlobalBottomBar extends WebComponent {
-	constructor() {
-		super({
-			styles: [bottomBarStyles],
-		});
-		this.state = {
-			columns: [],
-		};
-	}
+	static url = import.meta.url;
+	static styles = {
+		globalBottomBar: './global-bottom-bar.css',
+	};
+	static state = {
+		columns: [],
+	};
 	render() {
+		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<footer class="global-bottom-bar">
 				${() => {

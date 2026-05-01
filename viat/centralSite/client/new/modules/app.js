@@ -13,25 +13,31 @@ import {
 	WALLET_PANEL,
 	WALLET_PARAMS,
 } from './appDefaults.js';
-import { WebComponent, setGlobalState } from '../components/base/base.js';
+import { WebComponent, setGlobal } from '../components/base/base.js';
 const appHost = new CSSStyleSheet();
 appHost.replaceSync(`:host { display: block; width: 100vw; height: 100vh; overflow: hidden; }`);
 class AppView extends WebComponent {
-	constructor() {
-		super({
-			styles: [appHost],
-		});
+	constructor(state = {}, config = {}) {
+		super(state, config);
 	}
-	static async create() {
-		const app = new this();
+	static async create(state, config) {
+		const app = new this(await state, config);
 		await WebComponent.preRender(app, document.body);
 		return app;
+	}
+	handleNotify(domEvent) {
+		this.getComponent('ui-notification')?.show(domEvent.detail?.data ?? {});
+	}
+	handleSidebarToggle() {
+		this.refs.dashboard?.getComponent('dashboard-sidebar')?.toggle();
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<ui-notification></ui-notification>
-			<app-dashboard>
+			<app-dashboard
+				@notify=${this.handleNotify}
+				@open-dashboard-sidebar=${this.handleSidebarToggle}>
 				<center-bar slot="center-bar"></center-bar>
 				<global-top-bar slot="global-top-bar"></global-top-bar>
 				<global-dock slot="global-dock">
@@ -50,6 +56,7 @@ class AppView extends WebComponent {
 	get refs() {
 		return {
 			activityLog: this.getComponent('activity-log'),
+			dashboard: this.getComponent('app-dashboard'),
 			globalBottomBar: this.getComponent('global-bottom-bar'),
 			globalDock: this.getComponent('global-dock'),
 			networkStats: this.getComponent('network-stats'),
@@ -76,13 +83,13 @@ class AppView extends WebComponent {
 		refs.activityLog.state.activeTab = 'All';
 		refs.activityLog.state.entries = ACTIVITY_ENTRIES;
 		refs.activityLog.state.tabs = ACTIVITY_TABS;
-		setGlobalState({
+		setGlobal({
 			walletAddress: 'TESTADDRESS',
 		});
-		setGlobalState({
+		setGlobal({
 			profileName: 'Elon Musk',
 		});
-		setGlobalState({
+		setGlobal({
 			walletAmount: {
 				amount: '250,000',
 				amountFull: '250,000.000000000.000000000',

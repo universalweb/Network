@@ -36,9 +36,9 @@ export function allChildren(host) {
 		return [];
 	}
 	const out = [];
-	for (const list of children.values()) {
+	children.forEach((list) => {
 		out.push(...list);
-	}
+	});
 	return out;
 }
 export function liveChildren(host, tag) {

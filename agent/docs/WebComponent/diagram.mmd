@@ -1,0 +1,163 @@
+flowchart TB
+  classDef p0 fill:#132f4c,color:#fff,stroke:#6ab0ff,stroke-width:1px;
+  classDef p1 fill:#173d2d,color:#fff,stroke:#67d39a,stroke-width:1px;
+  classDef p2 fill:#4a2f13,color:#fff,stroke:#f3b46b,stroke-width:1px;
+
+  subgraph Core["P0 · Lifecycle + Render Core"]
+    cc["connectedCallback"]:::p0
+    hcc["handleConnectedCallback"]:::p0
+    rv["renderView"]:::p0
+    br["beforeRender"]:::p0
+    rn["render"]:::p0
+    orh["onRender"]:::p0
+    src["scheduleRenderComplete"]:::p0
+    rrc["runRenderCompleteLifecycle"]:::p0
+    wfr["waitForRenderedTree"]:::p1
+    orc["onRenderComplete"]:::p0
+    dc["disconnectedCallback"]:::p0
+    hdc["handleDisconnectedCallback"]:::p0
+  end
+
+  subgraph State["P0 · Local Reactive State"]
+    st["state (get/set)"]:::p0
+    is["initState"]:::p2
+    rs["replaceState"]:::p0
+    ws["watchState"]:::p1
+    uv["updateView"]:::p0
+    obs["observe"]:::p1
+    srd["subscribeRenderDeps"]:::p2
+    osg["onStateChange"]:::p2
+  end
+
+  subgraph Events["P1 · Events + Messaging"]
+    em["emit"]:::p1
+    onm["on"]:::p1
+    offm["off"]:::p1
+    oncem["once"]:::p1
+    ceh["createEventHandler"]:::p2
+    cem["createEmitHandler"]:::p2
+    rel["runEventHandler"]:::p2
+    cel["clearEventListeners"]:::p2
+  end
+
+  subgraph Global["P1 · Global Shared State"]
+    gsg["globalState (get)"]:::p1
+    gg["getGlobal"]:::p1
+    sg["setGlobal"]:::p1
+    subg["subscribeGlobal"]:::p2
+    wg["watchGlobal"]:::p1
+    og["observeGlobal"]:::p1
+  end
+
+  subgraph Style["P1 · Styles + Theming"]
+    aps["applyStyles"]:::p1
+    ads["addStyle"]:::p1
+    rms["removeStyle"]:::p1
+    rps["replaceStyle"]:::p1
+    hss["hasStyle"]:::p2
+    fsm["forkStyleMap"]:::p2
+    rsl["resolveStyle"]:::p2
+  end
+
+  subgraph Tree["P1 · Component Tree + DOM Ops"]
+    gc["getComponent"]:::p1
+    gcs["getComponents"]:::p1
+    gca["getComponentsArray"]:::p2
+    fdc["findComponent"]:::p1
+    gcr["getComponentRoot"]:::p2
+    fe["findElement"]:::p2
+    at["appendTo"]:::p2
+    pt["prependTo"]:::p2
+  end
+
+  subgraph Fx["P1 · Timing + Interaction Control"]
+    sto["setTimeout"]:::p1
+    rto["removeTimeout"]:::p2
+    aii["addInterval"]:::p1
+    sii["stopInterval"]:::p2
+    cin["clearTimeouts"]:::p2
+    cir["clearIntervals"]:::p2
+    inert["setInert"]:::p1
+    crp["createRenderCompletePromise"]:::p2
+  end
+
+  subgraph Static["P2 · Static Factory + Style Pipeline"]
+    fc["findComponent (static)"]:::p2
+    cst["create"]:::p1
+    prd["preRender"]:::p1
+    wrt["waitRenderTree"]:::p2
+    pld["preload"]:::p2
+    ecs["ensureCompiledStyles"]:::p2
+    cps["compileStyles"]:::p2
+    csc["collectStyleChain"]:::p2
+    sst["styleSheet"]:::p2
+    iwc["isWebComponent"]:::p2
+    acf["assertConfig"]:::p2
+  end
+
+  subgraph AI["P1 · Optional Agentic AI Mixin"]
+    air["aiRegister"]:::p1
+    aiu["aiUnregister"]:::p1
+    aid["aiId"]:::p2
+    aie["aiDescribe"]:::p1
+    ait["aiTools"]:::p1
+    aidt["aiDefineTool"]:::p1
+  end
+
+  cc --> hcc --> aps
+  hcc --> uv
+  uv --> rv
+  rv --> br --> rn --> orh --> src --> rrc --> orc
+  rrc --> wfr
+  dc --> hdc
+  hdc --> cin
+  hdc --> cir
+  hdc --> cel
+
+  st --> uv
+  rs --> uv
+  ws --> uv
+  obs --> ws
+  rv --> srd
+  uv --> osg
+
+  onm --> rel
+  oncem --> onm
+  offm --> cel
+  ceh --> onm
+  cem --> em
+
+  gsg --> wg
+  sg --> wg
+  og --> wg
+  wg --> uv
+  subg --> wg
+  gg --> gsg
+
+  aps --> ecs --> cps --> csc
+  ads --> rsl
+  rms --> fsm
+  rps --> ads
+  hss --> fsm
+
+  gcs --> gca --> fdc
+  fe --> at
+  fe --> pt
+  gc --> gcs
+
+  sto --> rto
+  aii --> sii
+  crp --> rv
+  inert --> orc
+
+  cst --> rs
+  pld --> ecs
+  prd --> wrt
+  iwc --> wrt
+  acf --> cst
+
+  air --> aid
+  air --> aie
+  air --> ait
+  aidt --> ait
+  aiu --> air

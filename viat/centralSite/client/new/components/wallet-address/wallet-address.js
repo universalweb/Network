@@ -1,14 +1,17 @@
 import { WebComponent } from '../base/base.js';
-const styles = await WebComponent.styleSheet('./wallet-address.css', import.meta.url);
 export class WalletAddress extends WebComponent {
-	constructor() {
-		super({
-			styles: [styles],
-			tooltips: true,
+	static url = import.meta.url;
+	static styles = {
+		walletAddress: './wallet-address.css',
+	};
+	static state = {
+		copied: false,
+	};
+	constructor(state = {}, config = {}) {
+		super(state, {
+			...config,
+			tooltips: config.tooltips ?? true,
 		});
-		this.state = {
-			copied: false,
-		};
 	}
 	async handleCopy() {
 		const walletAddress = this.state.walletAddress;
@@ -18,7 +21,7 @@ export class WalletAddress extends WebComponent {
 		try {
 			await navigator.clipboard.writeText(walletAddress);
 			this.state.copied = true;
-			document.querySelector('app-view')?.getComponent('ui-notification')?.show({
+			this.emit('notify', {
 				itemType: 'success',
 				message: 'Your wallet address has been copied to your clipboard.',
 				timeout: 3200,

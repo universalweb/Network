@@ -16,19 +16,15 @@ export const THEMES = [
 		label: 'Marathon',
 	},
 ];
-function themeLink() {
-	return document.querySelector('link[rel="stylesheet"][href*="themes/"]');
-}
 export function setTheme(id) {
 	if (!THEMES.find((t) => {
 		return t.id === id;
 	})) {
 		return;
 	}
-	const links = document.querySelectorAll('link[href*="themes/"]');
-	for (const link of links) {
+	document.querySelectorAll('link[href*="themes/"]').forEach((link) => {
 		link.href = link.href.replace(/[^/]+\.css(\?.*)?$/, `${id}.css`);
-	}
+	});
 	localStorage.setItem('theme.mode', id);
 }
 export function getTheme() {

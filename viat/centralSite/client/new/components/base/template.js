@@ -1,16 +1,30 @@
 /* eslint-disable no-restricted-syntax */
 import {
-	Binding, makeGlobalTrackingProxy, makeTrackingProxy, track,
+	Binding,
+	makeGlobalTrackingProxy,
+	makeTrackingProxy,
+	track,
 } from './binding.js';
 import {
+	callFn,
 	createElementFromHTML,
+	eachArray,
+	eachNodeList,
+	hasValue,
 	isElement,
 	isFunction,
 	isString,
 } from './utilities.js';
 import { schedule } from './scheduler.js';
+import { setGlobal } from './globalState.js';
 const SPOT = 'data-expr';
 const TEMPLATE_CLEANUP = Symbol('templateCleanup');
+const BIND_MARKER = 'data-bind-expr';
+const BINDABLE_TAGS = new Set([
+	'INPUT', 'SELECT', 'TEXTAREA',
+]);
+const BINDABLE_ATTRS = new Set(['value', 'checked']);
+const ATTR_NAME_RE = /^[a-zA-Z_:][a-zA-Z0-9_.:-]*$/;
 function cleanupTemplateNode(node) {
 	const cleanup = node?.[TEMPLATE_CLEANUP];
 	if (!isFunction(cleanup)) {
@@ -25,9 +39,7 @@ function cleanupTemplateTree(root) {
 		return;
 	}
 	cleanupTemplateNode(root);
-	for (const node of root.querySelectorAll('*')) {
-		cleanupTemplateNode(node);
-	}
+	eachNodeList(root.querySelectorAll('*'), cleanupTemplateNode);
 }
 function createRenderableElement(value) {
 	if (isString(value)) {
@@ -49,13 +61,7 @@ function createListElement(renderFn, item) {
 	}
 	if (isCustomElementConstructor(renderFn)) {
 		const ElementType = renderFn;
-		const el = new ElementType();
-		if (el.STATE && typeof el.STATE === 'object' && typeof item === 'object' && item !== null) {
-			Object.assign(el.STATE, item);
-		} else {
-			el.state = item;
-		}
-		return el;
+		return new ElementType(item);
 	}
 	return createRenderableElement(renderFn(item));
 }
@@ -111,16 +117,12 @@ export class LiveList {
 		this.items.splice(normalStart, deleteCount, ...newItems);
 		if (newItems.length && this.spot) {
 			const fragment = document.createDocumentFragment();
+			this.spot.keyMap ??= new Map();
+			this.spot.prevItemMap ??= new Map();
 			for (let insertIndex = 0; insertIndex < newItems.length; insertIndex++) {
 				const newItem = newItems[insertIndex];
 				const itemKey = this.keyFn(newItem, normalStart + insertIndex);
 				const element = this.createElement(newItem);
-				if (this.spot.keyMap === undefined || this.spot.keyMap === null) {
-					this.spot.keyMap = new Map();
-				}
-				if (this.spot.prevItemMap === undefined || this.spot.prevItemMap === null) {
-					this.spot.prevItemMap = new Map();
-				}
 				this.spot.keyMap.set(itemKey, element);
 				this.spot.prevItemMap.set(itemKey, newItem);
 				fragment.append(element);
@@ -148,61 +150,59 @@ export class LiveList {
 export function each(items, renderFn, keyFn = (item, index) => {
 	return index;
 }) {
-	const list = new LiveList(renderFn, keyFn);
+	const listItem = new LiveList(renderFn, keyFn);
 	if (Array.isArray(items) && items.length) {
-		list.push(...items);
+		listItem.push(...items);
 	}
-	return list;
+	return listItem;
 }
 export function liveList(items, renderTarget, keyFn = (item, index) => {
 	return item?.key ?? item?.id ?? index;
 }) {
 	return each(items, renderTarget, keyFn);
 }
-export function listBind(key, renderFn, keyFn = (item, index) => {
+export function list(key, renderFn, keyFn = (item, index) => {
 	return item?.key ?? item?.id ?? index;
 }) {
 	return new ListBinding(key, renderFn, keyFn);
 }
-function patchList(spot, list) {
-	if (list.connectSpot) {
-		list.connectSpot(spot);
+function patchList(spot, itemList) {
+	if (itemList.connectSpot) {
+		itemList.connectSpot(spot);
 	}
 	const {
 		items, renderFn, keyFn,
-	} = list;
+	} = itemList;
 	const anchor = spot.el;
 	const oldMap = spot.keyMap ?? new Map();
+	const newKeySet = new Set();
 	const keyedItems = items.map((item, index) => {
+		const key = keyFn(item, index);
+		newKeySet.add(key);
 		return {
-			key: keyFn(item, index),
+			key,
 			item,
 		};
 	});
-	const newKeySet = new Set(keyedItems.map((keyedItem) => {
-		return keyedItem.key;
-	}));
-	for (const [
-		key,
-		element,
-	] of oldMap) {
+	oldMap.forEach((element, key) => {
 		if (!newKeySet.has(key)) {
 			cleanupTemplateNode(element);
 			element.remove();
 			oldMap.delete(key);
 		}
-	}
+	});
 	const newMap = new Map();
 	const prevItemMap = spot.prevItemMap ?? new Map();
 	const isBatchInsert = oldMap.size === 0 && keyedItems.length > 1;
 	const fragment = isBatchInsert ? document.createDocumentFragment() : null;
 	let cursor = null;
-	for (const {
-		key, item,
-	} of keyedItems) {
+	for (let ki = 0; ki < keyedItems.length; ki++) {
+		const {
+			key, item,
+		} = keyedItems[ki];
 		let element = oldMap.get(key);
 		if (!element) {
-			element = list.createElement(item);
+			element = itemList.createElement(item);
 			if (fragment) {
 				fragment.append(element);
 			}
@@ -210,7 +210,7 @@ function patchList(spot, list) {
 			if (element.state) {
 				Object.assign(element.state, item);
 			} else {
-				const replacementElement = list.createElement(item);
+				const replacementElement = itemList.createElement(item);
 				cleanupTemplateNode(element);
 				element.replaceWith(replacementElement);
 				element = replacementElement;
@@ -249,8 +249,35 @@ function eventContext(templateString) {
 function eventMarkerAttribute(eventName) {
 	return `data-event-${String(eventName).toLowerCase().replace(/[^a-z0-9:-]/g, '-')}`;
 }
+function bindMarkerAttribute(index) {
+	return `${BIND_MARKER}-${index}`;
+}
+function bindContext(templateString) {
+	const m = (/^(?<prefix>[\s\S]*?)@bind=["']?$/).exec(templateString);
+	return m ? m.groups.prefix : null;
+}
 function bareAttrMarkerAttribute(index) {
 	return `data-attr-expr-${index}`;
+}
+function multiAttrMarkerAttribute(index) {
+	return `data-multi-attr-${index}`;
+}
+const ATTR_OPEN_RE = /([\w:-]+)=(["'])([^"']*)$/;
+function detectAttrOpen(currentString, nextString) {
+	const match = ATTR_OPEN_RE.exec(currentString);
+	if (!match) {
+		return null;
+	}
+	const [, name, quote, prefix] = match;
+	if (prefix.length === 0 && nextString.startsWith(quote)) {
+		return null;
+	}
+	return {
+		name,
+		quote,
+		prefix,
+		totalLength: name.length + 2 + prefix.length,
+	};
 }
 function bareAttrContext(currentString, nextString = '') {
 	const lastOpen = currentString.lastIndexOf('<');
@@ -284,41 +311,89 @@ function inferBareAttrName(expr) {
 	if (!Binding.isBinding(expr)) {
 		return null;
 	}
-	const bindingKey = String(expr.key ?? '');
-	const attrName = bindingKey.split('.').pop()?.trim();
-	if (!attrName) {
-		return null;
+	const attrName = String(expr.key ?? '')
+		.split('.')
+		.pop()
+		?.trim();
+	if (attrName && ATTR_NAME_RE.test(attrName)) {
+		return attrName;
 	}
-	const firstChar = attrName[0];
-	const firstCharCode = firstChar?.charCodeAt(0);
-	const startsWithLetter = (firstCharCode >= 65 && firstCharCode <= 90) || (firstCharCode >= 97 && firstCharCode <= 122);
-	if (!startsWithLetter && firstChar !== '_' && firstChar !== ':') {
-		return null;
-	}
-	for (const char of attrName.slice(1)) {
-		const charCode = char.charCodeAt(0);
-		const isLetter = (charCode >= 65 && charCode <= 90) || (charCode >= 97 && charCode <= 122);
-		const isNumber = charCode >= 48 && charCode <= 57;
-		if (!isLetter && !isNumber && char !== '_' && char !== ':' && char !== '.' && char !== '-') {
-			return null;
-		}
-	}
-	if (!attrName) {
-		return null;
-	}
-	return attrName;
+	return null;
 }
 function buildHTML(strings, exprs) {
 	let html = '';
 	const meta = [];
+	let attrAccum = null;
 	for (let stringIndex = 0; stringIndex < strings.length; stringIndex++) {
-		const currentString = strings[stringIndex];
-		const eventBinding = eventContext(currentString);
-		html += eventBinding?.prefix ?? currentString;
+		let effectiveString = strings[stringIndex];
+		const nextString = strings[stringIndex + 1] ?? '';
+		if (attrAccum) {
+			const closeIdx = effectiveString.indexOf(attrAccum.quote);
+			if (closeIdx === -1) {
+				if (effectiveString.length > 0) {
+					attrAccum.parts.push({
+						literal: effectiveString,
+					});
+				}
+				if (stringIndex < exprs.length) {
+					attrAccum.parts.push({
+						exprIndex: stringIndex,
+						expr: exprs[stringIndex],
+					});
+				}
+				continue;
+			}
+			if (closeIdx > 0) {
+				attrAccum.parts.push({
+					literal: effectiveString.slice(0, closeIdx),
+				});
+			}
+			meta.push({
+				i: attrAccum.markerIdx,
+				type: 'multi-attr',
+				attr: attrAccum.name,
+				parts: attrAccum.parts,
+			});
+			html += ` ${multiAttrMarkerAttribute(attrAccum.markerIdx)}=""`;
+			attrAccum = null;
+			effectiveString = effectiveString.slice(closeIdx + 1);
+		}
+		const open = detectAttrOpen(effectiveString, nextString);
+		if (open) {
+			const beforeOpener = effectiveString.slice(0, effectiveString.length - open.totalLength);
+			html += beforeOpener;
+			attrAccum = {
+				name: open.name,
+				quote: open.quote,
+				parts: open.prefix.length > 0 ? [{
+					literal: open.prefix,
+				}] : [],
+				markerIdx: stringIndex,
+			};
+			if (stringIndex < exprs.length) {
+				attrAccum.parts.push({
+					exprIndex: stringIndex,
+					expr: exprs[stringIndex],
+				});
+			}
+			continue;
+		}
+		const bindPrefix = bindContext(effectiveString);
+		const eventBinding = bindPrefix === null ? eventContext(effectiveString) : null;
+		html += (bindPrefix !== null) ? bindPrefix : (eventBinding?.prefix ?? effectiveString);
 		if (stringIndex >= exprs.length) {
 			continue;
 		}
 		const expr = exprs[stringIndex];
+		if (bindPrefix !== null) {
+			html += `${bindMarkerAttribute(stringIndex)}=""`;
+			meta.push({
+				i: stringIndex,
+				type: 'bind',
+				expr,
+			});
+			continue;
+		}
 		if (eventBinding) {
 			html += `${eventMarkerAttribute(eventBinding.eventName)}="expr${stringIndex}"`;
 			meta.push({
@@ -329,12 +404,7 @@ function buildHTML(strings, exprs) {
 			});
 			continue;
 		}
-		const reactive = Binding.isBinding(expr) || isFunction(expr);
-		if (!reactive) {
-			html += expr ?? '';
-			continue;
-		}
-		const attr = attrContext(strings[stringIndex]);
+		const attr = attrContext(effectiveString);
 		if (attr) {
 			html += `expr${stringIndex}`;
 			meta.push({
@@ -343,7 +413,7 @@ function buildHTML(strings, exprs) {
 				attr,
 				expr,
 			});
-		} else if (bareAttrContext(currentString, strings[stringIndex + 1] ?? '')) {
+		} else if (bareAttrContext(effectiveString, nextString)) {
 			const inferredAttr = inferBareAttrName(expr);
 			if (inferredAttr) {
 				html += `${bareAttrMarkerAttribute(stringIndex)}=""`;
@@ -381,23 +451,22 @@ function setValueAtPath(source, path, value) {
 	const pathParts = path.split('.');
 	const finalKey = pathParts.pop();
 	let currentValue = source;
-	for (const pathPart of pathParts) {
-		if (!currentValue[pathPart] || typeof currentValue[pathPart] !== 'object') {
-			currentValue[pathPart] = {};
+	for (let i = 0; i < pathParts.length; i++) {
+		const part = pathParts[i];
+		if (!currentValue[part] || typeof currentValue[part] !== 'object') {
+			currentValue[part] = {};
 		}
-		currentValue = currentValue[pathPart];
+		currentValue = currentValue[part];
 	}
 	currentValue[finalKey] = value;
 }
 function clearSubscriptions(subscriptions = []) {
-	for (const unsubscribe of subscriptions) {
-		unsubscribe();
-	}
+	eachArray(subscriptions, callFn);
 	return [];
 }
 function getGlobalSource(component) {
-	if (component.getGlobalState) {
-		return component.getGlobalState();
+	if (component.getGlobal) {
+		return component.getGlobal();
 	}
 	return component.globalState;
 }
@@ -442,13 +511,13 @@ function subscribeGlobalPath(component, statePath, handler) {
 }
 function syncSpotSubscriptions(spot, component, deps, handler) {
 	spot.unsubs = clearSubscriptions(spot.unsubs);
-	for (const dep of deps) {
+	deps.forEach((dep) => {
 		if (dep.startsWith('global.')) {
 			spot.unsubs.push(subscribeGlobalPath(component, dep.slice(7), handler));
 		} else {
 			spot.unsubs.push(subscribeStatePath(component, dep, handler));
 		}
-	}
+	});
 }
 // Text spots use display:contents spans — transparent to layout but support
 // both textContent (plain strings) and innerHTML (HTML fragments from .map()).
@@ -456,13 +525,14 @@ function patchSpot(spot, value) {
 	const patchToken = (spot.patchToken ?? 0) + 1;
 	spot.patchToken = patchToken;
 	if (LiveList.isLiveList(value)) {
+		if (!spot.keyMap && spot.el.firstChild) {
+			spot.el.textContent = '';
+		}
 		patchList(spot, value);
 		return;
 	}
 	if (spot.keyMap) {
-		for (const element of spot.keyMap.values()) {
-			cleanupTemplateNode(element);
-		}
+		spot.keyMap.forEach(cleanupTemplateNode);
 		spot.keyMap = null;
 		spot.prevItemMap = null;
 	}
@@ -523,17 +593,15 @@ function initializeBindingSpot(spot, component) {
 						if (item !== undefined) {
 							const itemKey = keyFn(item, index);
 							const element = spot.keyMap.get(itemKey);
-							if (element?.state) {
+							if (hasValue(element?.state)) {
 								Object.assign(element.state, item);
+								return;
 							}
 						}
-						return;
 					}
 				}
 				const allItems = resolveBindingValue(component, bindingKey);
-				const patchResult = patchSpot(spot, each(Array.isArray(allItems) ? allItems : [], renderFn, keyFn));
-				component.scheduleRenderComplete?.();
-				return patchResult;
+				return patchSpot(spot, each(Array.isArray(allItems) ? allItems : [], renderFn, keyFn));
 			});
 		}
 		spot.updateHandler = updateListSpot;
@@ -544,9 +612,7 @@ function initializeBindingSpot(spot, component) {
 	}
 	function updateBindingSpot() {
 		return schedule(() => {
-			const patchResult = patchSpot(spot, resolveBindingValue(component, bindingKey));
-			component.scheduleRenderComplete?.();
-			return patchResult;
+			return patchSpot(spot, resolveBindingValue(component, bindingKey));
 		});
 	}
 	spot.updateHandler = updateBindingSpot;
@@ -561,12 +627,61 @@ function refreshComputedSpot(spot, component) {
 	patchSpot(spot, value);
 	syncSpotSubscriptions(spot, component, deps, spot.updateHandler);
 }
+function evaluateMultiAttrParts(spot, component) {
+	let result = '';
+	const allDeps = new Set();
+	eachArray(spot.parts, (part) => {
+		if (part.literal !== undefined) {
+			result += part.literal;
+			return;
+		}
+		const { expr } = part;
+		if (Binding.isBinding(expr)) {
+			allDeps.add(expr.key);
+			result += resolveBindingValue(component, expr.key) ?? '';
+			return;
+		}
+		if (isFunction(expr)) {
+			const {
+				value,
+				deps,
+			} = evaluateTrackedExpression(component, expr);
+			deps.forEach((dep) => {
+				allDeps.add(dep);
+			});
+			result += value ?? '';
+			return;
+		}
+		result += expr ?? '';
+	});
+	return {
+		result,
+		deps: allDeps,
+	};
+}
+function refreshMultiAttrSpot(spot, component) {
+	const {
+		result,
+		deps,
+	} = evaluateMultiAttrParts(spot, component);
+	if (spot.el.getAttribute(spot.attr) !== result) {
+		spot.el.setAttribute(spot.attr, result);
+	}
+	syncSpotSubscriptions(spot, component, deps, spot.updateHandler);
+}
+function initializeMultiAttrSpot(spot, component) {
+	function updateMultiAttr() {
+		return schedule(() => {
+			return refreshMultiAttrSpot(spot, component);
+		});
+	}
+	spot.updateHandler = updateMultiAttr;
+	refreshMultiAttrSpot(spot, component);
+}
 function initializeComputedSpot(spot, component) {
 	function updateComputedSpot() {
 		return schedule(() => {
-			const patchResult = refreshComputedSpot(spot, component);
-			component.scheduleRenderComplete?.();
-			return patchResult;
+			return refreshComputedSpot(spot, component);
 		});
 	}
 	spot.updateHandler = updateComputedSpot;
@@ -587,149 +702,583 @@ function initializeEventSpot(spot, component) {
 		spot.el.removeEventListener(spot.eventName, listener);
 	});
 }
-function resolveAndInit(fragment, meta, component, unsubs) {
-	const textSpots = {};
-	for (const el of fragment.querySelectorAll(`[${SPOT}]`)) {
-		textSpots[el.getAttribute(SPOT)] = el;
+function domAttrForElement(el) {
+	if (el.type === 'checkbox' || el.type === 'radio') {
+		return 'checked';
 	}
-	for (const metaEntry of meta) {
-		let spot;
-		if (metaEntry.type === 'event') {
-			const markerAttribute = eventMarkerAttribute(metaEntry.eventName);
-			const spotElement = fragment.querySelector(`[${markerAttribute}="expr${metaEntry.i}"]`);
-			if (!spotElement) {
-				continue;
-			}
-			spotElement.removeAttribute(markerAttribute);
-			spot = {
-				type: 'event',
-				eventName: metaEntry.eventName,
-				el: spotElement,
-				expr: metaEntry.expr,
-				unsubs: [],
-			};
-			initializeEventSpot(spot, component);
-			unsubs.push(() => {
-				spot.unsubs = clearSubscriptions(spot.unsubs);
-			});
-			continue;
+	if (el.tagName === 'SELECT') {
+		return 'selectedIndex';
+	}
+	return 'value';
+}
+function readDomProp(el, attr) {
+	if (attr === 'checked') {
+		return el.checked;
+	}
+	if (attr === 'selectedIndex') {
+		return el.selectedIndex;
+	}
+	return el.value;
+}
+function setDomProp(el, attr, value) {
+	if (attr === 'checked') {
+		el.checked = Boolean(value);
+	} else if (attr === 'selectedIndex') {
+		el.selectedIndex = Number(value ?? -1);
+	} else {
+		el.value = String(value ?? '');
+	}
+}
+function domInputEvent(el) {
+	if (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'radio') {
+		return 'change';
+	}
+	return 'input';
+}
+function writeBoundValue(component, key, value) {
+	if (key.startsWith('global.')) {
+		setGlobal({
+			[key.slice(7)]: value,
+		});
+	} else {
+		setValueAtPath(component.stateProxy, key, value);
+	}
+}
+function initializeTwoWaySpot(spot, component, explicitKey) {
+	const key = explicitKey ?? spot.expr.key;
+	const el = spot.el;
+	const attr = spot.attr ?? domAttrForElement(el);
+	setDomProp(el, attr, resolveBindingValue(component, key));
+	if (el.hasAttribute('value')) {
+		el.removeAttribute('value');
+	}
+	if (el.hasAttribute('checked')) {
+		el.removeAttribute('checked');
+	}
+	const subscribeFn = key.startsWith('global.') ? (handler) => {
+		return subscribeGlobalPath(component, key.slice(7), handler);
+	} : (handler) => {
+		return subscribeStatePath(component, key, handler);
+	};
+	spot.unsubs.push(subscribeFn((nextValue) => {
+		return setDomProp(el, attr, nextValue);
+	}));
+	const eventType = domInputEvent(el);
+	const domHandler = () => {
+		writeBoundValue(component, key, readDomProp(el, attr));
+	};
+	el.addEventListener(eventType, domHandler);
+	spot.unsubs.push(() => {
+		return el.removeEventListener(eventType, domHandler);
+	});
+}
+const TEMPLATE_RECIPES = new WeakMap();
+function getNodePath(node, root) {
+	const path = [];
+	let current = node;
+	while (current !== root) {
+		const parent = current.parentNode;
+		if (!parent) {
+			return null;
 		}
-		if (metaEntry.type === 'text') {
-			const spotElement = textSpots[metaEntry.i];
-			if (!spotElement) {
-				continue;
+		let index = 0;
+		let sibling = parent.firstChild;
+		while (sibling && sibling !== current) {
+			sibling = sibling.nextSibling;
+			index += 1;
+		}
+		path.push(index);
+		current = parent;
+	}
+	path.reverse();
+	return path;
+}
+function walkPath(root, path) {
+	let node = root;
+	for (let i = 0; i < path.length; i++) {
+		node = node.childNodes[path[i]];
+	}
+	return node;
+}
+function buildSpotPlan(fragment, entry) {
+	if (entry.type === 'bind') {
+		const markerAttr = bindMarkerAttribute(entry.i);
+		const el = fragment.querySelector(`[${markerAttr}]`);
+		if (!el) {
+			return null;
+		}
+		el.removeAttribute(markerAttr);
+		return {
+			type: 'bind',
+			slotIndex: entry.i,
+			path: getNodePath(el, fragment),
+		};
+	}
+	if (entry.type === 'multi-attr') {
+		const markerAttr = multiAttrMarkerAttribute(entry.i);
+		const el = fragment.querySelector(`[${markerAttr}]`);
+		if (!el) {
+			return null;
+		}
+		el.removeAttribute(markerAttr);
+		const parts = entry.parts.map((part) => {
+			if (part.literal !== undefined) {
+				return {
+					literal: part.literal,
+				};
 			}
-			spotElement.removeAttribute(SPOT);
-			spotElement.style.display = 'contents';
-			spot = {
-				type: 'text',
-				el: spotElement,
-				expr: metaEntry.expr,
-				unsubs: [],
+			return {
+				exprIndex: part.exprIndex,
 			};
-		} else if (metaEntry.type === 'bare-attr') {
-			const markerAttribute = bareAttrMarkerAttribute(metaEntry.i);
-			const spotElement = fragment.querySelector(`[${markerAttribute}]`);
-			if (!spotElement) {
-				continue;
-			}
-			spotElement.removeAttribute(markerAttribute);
-			spot = {
-				type: 'bare-attr',
-				attr: metaEntry.attr,
-				el: spotElement,
-				expr: metaEntry.expr,
-				unsubs: [],
-			};
+		});
+		return {
+			type: 'multi-attr',
+			slotIndex: entry.i,
+			path: getNodePath(el, fragment),
+			attr: entry.attr,
+			parts,
+		};
+	}
+	if (entry.type === 'event') {
+		const markerAttr = eventMarkerAttribute(entry.eventName);
+		const el = fragment.querySelector(`[${markerAttr}="expr${entry.i}"]`);
+		if (!el) {
+			return null;
+		}
+		el.removeAttribute(markerAttr);
+		return {
+			type: 'event',
+			slotIndex: entry.i,
+			path: getNodePath(el, fragment),
+			eventName: entry.eventName,
+		};
+	}
+	if (entry.type === 'text') {
+		const el = fragment.querySelector(`[${SPOT}="${entry.i}"]`);
+		if (!el) {
+			return null;
+		}
+		el.removeAttribute(SPOT);
+		el.style.display = 'contents';
+		return {
+			type: 'text',
+			slotIndex: entry.i,
+			path: getNodePath(el, fragment),
+		};
+	}
+	if (entry.type === 'bare-attr') {
+		const markerAttr = bareAttrMarkerAttribute(entry.i);
+		const el = fragment.querySelector(`[${markerAttr}]`);
+		if (!el) {
+			return null;
+		}
+		el.removeAttribute(markerAttr);
+		return {
+			type: 'bare-attr',
+			slotIndex: entry.i,
+			path: getNodePath(el, fragment),
+		};
+	}
+	if (entry.type === 'attr') {
+		const el = fragment.querySelector(`[${entry.attr}="expr${entry.i}"]`);
+		if (!el) {
+			return null;
+		}
+		el.removeAttribute(entry.attr);
+		return {
+			type: 'attr',
+			slotIndex: entry.i,
+			path: getNodePath(el, fragment),
+			attr: entry.attr,
+		};
+	}
+	return null;
+}
+function extractDataBindPlans(fragment) {
+	const plans = [];
+	eachNodeList(fragment.querySelectorAll('[data-bind]'), (el) => {
+		const stateKey = el.dataset.bind;
+		if (!stateKey) {
+			return;
+		}
+		const path = getNodePath(el, fragment);
+		if (!path) {
+			return;
+		}
+		plans.push({
+			path,
+			key: stateKey,
+		});
+		el.removeAttribute('data-bind');
+	});
+	eachNodeList(fragment.querySelectorAll('*'), (el) => {
+		const stateKey = el.getAttribute('@bind');
+		if (!stateKey) {
+			return;
+		}
+		const path = getNodePath(el, fragment);
+		if (!path) {
+			return;
+		}
+		plans.push({
+			path,
+			key: stateKey,
+		});
+		el.removeAttribute('@bind');
+	});
+	return plans;
+}
+function prepareRecipe(strings) {
+	const placeholderExprs = new Array(Math.max(0, strings.length - 1));
+	const {
+		html: markup,
+		meta,
+	} = buildHTML(strings, placeholderExprs);
+	const template = document.createElement('template');
+	template.innerHTML = markup;
+	const fragment = template.content;
+	const spotPlans = [];
+	eachArray(meta, (entry) => {
+		const plan = buildSpotPlan(fragment, entry);
+		if (plan) {
+			spotPlans.push(plan);
+		}
+	});
+	const dataBindPlans = extractDataBindPlans(fragment);
+	return {
+		fragment,
+		spotPlans,
+		dataBindPlans,
+	};
+}
+function getRecipe(strings) {
+	let recipe = TEMPLATE_RECIPES.get(strings);
+	if (!recipe) {
+		recipe = prepareRecipe(strings);
+		TEMPLATE_RECIPES.set(strings, recipe);
+	}
+	return recipe;
+}
+function installDataBind(el, stateKey, component, unsubs) {
+	const isCheck = el.type === 'checkbox' || el.type === 'radio';
+	const eventType = domInputEvent(el);
+	const setProp = (v) => {
+		if (isCheck) {
+			el.checked = Boolean(v);
 		} else {
-			const spotElement = fragment.querySelector(`[${metaEntry.attr}="expr${metaEntry.i}"]`);
-			if (!spotElement) {
-				continue;
+			el.value = String(v ?? '');
+		}
+	};
+	const handler = () => {
+		setValueAtPath(component.stateProxy, stateKey, isCheck ? el.checked : el.value);
+	};
+	el.addEventListener(eventType, handler);
+	unsubs.push(() => {
+		el.removeEventListener(eventType, handler);
+	});
+	const currentValue = getValueAtPath(component.STATE, stateKey);
+	if (currentValue !== undefined) {
+		setProp(currentValue);
+	}
+	unsubs.push(subscribeStatePath(component, stateKey, setProp));
+}
+function installSpotFromPlan(plan, fragment, exprs, component, unsubs) {
+	const el = walkPath(fragment, plan.path);
+	if (!el) {
+		return null;
+	}
+	if (plan.type === 'multi-attr') {
+		const parts = plan.parts.map((part) => {
+			if (part.literal !== undefined) {
+				return {
+					literal: part.literal,
+				};
 			}
-			spot = {
-				type: 'attr',
-				attr: metaEntry.attr,
-				el: spotElement,
-				expr: metaEntry.expr,
-				unsubs: [],
+			return {
+				exprIndex: part.exprIndex,
+				expr: exprs[part.exprIndex],
 			};
-		}
-		if (Binding.isBinding(metaEntry.expr)) {
-			initializeBindingSpot(spot, component);
-		} else {
-			initializeComputedSpot(spot, component);
-		}
+		});
+		const spot = {
+			type: 'multi-attr',
+			slotIndex: plan.slotIndex,
+			attr: plan.attr,
+			parts,
+			el,
+			unsubs: [],
+		};
+		initializeMultiAttrSpot(spot, component);
 		unsubs.push(() => {
 			spot.unsubs = clearSubscriptions(spot.unsubs);
 		});
+		return spot;
 	}
-	for (const boundElement of fragment.querySelectorAll('[data-bind]')) {
-		const stateKey = boundElement.dataset.bind;
-		if (!stateKey) {
+	const expr = exprs[plan.slotIndex];
+	if (plan.type === 'bind') {
+		if (!Binding.isBinding(expr)) {
+			return null;
+		}
+		const spot = {
+			type: 'bind',
+			slotIndex: plan.slotIndex,
+			el,
+			expr,
+			unsubs: [],
+		};
+		initializeTwoWaySpot(spot, component);
+		unsubs.push(() => {
+			spot.unsubs = clearSubscriptions(spot.unsubs);
+		});
+		return spot;
+	}
+	if (plan.type === 'event') {
+		const spot = {
+			type: 'event',
+			slotIndex: plan.slotIndex,
+			eventName: plan.eventName,
+			el,
+			expr,
+			unsubs: [],
+		};
+		initializeEventSpot(spot, component);
+		unsubs.push(() => {
+			spot.unsubs = clearSubscriptions(spot.unsubs);
+		});
+		return spot;
+	}
+	let spot;
+	if (plan.type === 'text') {
+		spot = {
+			type: 'text',
+			slotIndex: plan.slotIndex,
+			el,
+			expr,
+			unsubs: [],
+		};
+	} else if (plan.type === 'bare-attr') {
+		const inferredAttr = inferBareAttrName(expr);
+		if (!inferredAttr) {
+			return null;
+		}
+		spot = {
+			type: 'bare-attr',
+			slotIndex: plan.slotIndex,
+			attr: inferredAttr,
+			el,
+			expr,
+			unsubs: [],
+		};
+	} else if (plan.type === 'attr') {
+		spot = {
+			type: 'attr',
+			slotIndex: plan.slotIndex,
+			attr: plan.attr,
+			el,
+			expr,
+			unsubs: [],
+		};
+	} else {
+		return null;
+	}
+	if (Binding.isBinding(expr)) {
+		const autoTwoWay = (spot.type === 'attr' || spot.type === 'bare-attr') &&
+			BINDABLE_TAGS.has(spot.el.tagName) &&
+			BINDABLE_ATTRS.has(spot.attr);
+		if (autoTwoWay) {
+			initializeTwoWaySpot(spot, component);
+		} else {
+			initializeBindingSpot(spot, component);
+		}
+	} else if (isFunction(expr)) {
+		const isBindableField = (spot.type === 'attr' || spot.type === 'bare-attr') &&
+			BINDABLE_TAGS.has(spot.el.tagName) &&
+			BINDABLE_ATTRS.has(spot.attr);
+		if (isBindableField) {
+			const evaluated = evaluateTrackedExpression(component, expr);
+			if (evaluated.deps.size === 1) {
+				const [inferredKey] = evaluated.deps;
+				const sourceValue = inferredKey.startsWith('global.')
+					? getValueAtPath(getGlobalSource(component), inferredKey.slice(7))
+					: getValueAtPath(component.STATE ?? {}, inferredKey);
+				if (sourceValue === evaluated.value) {
+					spot.bindingKey = inferredKey;
+					initializeTwoWaySpot(spot, component, inferredKey);
+					unsubs.push(() => {
+						spot.unsubs = clearSubscriptions(spot.unsubs);
+					});
+					return spot;
+				}
+			}
+		}
+		initializeComputedSpot(spot, component);
+	} else {
+		patchSpot(spot, expr);
+	}
+	unsubs.push(() => {
+		spot.unsubs = clearSubscriptions(spot.unsubs);
+	});
+	return spot;
+}
+function collectBoundKeys(spots, dataBindPlans) {
+	const keys = new Set();
+	for (let i = 0; i < spots.length; i++) {
+		const spot = spots[i];
+		if (spot.type === 'multi-attr') {
+			for (let j = 0; j < spot.parts.length; j++) {
+				const part = spot.parts[j];
+				if (part.expr && Binding.isBinding(part.expr)) {
+					keys.add(part.expr.key);
+				}
+			}
 			continue;
 		}
-		const isCheck = boundElement.type === 'checkbox' || boundElement.type === 'radio';
-		const eventType = boundElement.tagName === 'SELECT' || isCheck ? 'change' : 'input';
-		const handler = () => {
-			setValueAtPath(component.state, stateKey, isCheck ? boundElement.checked : boundElement.value);
-		};
-		boundElement.addEventListener(eventType, handler);
-		unsubs.push(() => {
-			return boundElement.removeEventListener(eventType, handler);
-		});
-		const currentValue = getValueAtPath(component.STATE, stateKey);
-		if (currentValue !== undefined) {
-			if (isCheck) {
-				boundElement.checked = Boolean(currentValue);
-			} else {
-				boundElement.value = String(currentValue ?? '');
+		if (spot.bindingKey) {
+			keys.add(spot.bindingKey);
+			continue;
+		}
+		if (spot.expr && Binding.isBinding(spot.expr)) {
+			keys.add(spot.expr.key);
+		}
+	}
+	if (dataBindPlans) {
+		for (let i = 0; i < dataBindPlans.length; i++) {
+			const plan = dataBindPlans[i];
+			if (plan.key) {
+				keys.add(plan.key);
 			}
 		}
 	}
+	return keys;
 }
-function buildTemplateContent(component, strings, exprs) {
-	const {
-		html: markup, meta,
-	} = buildHTML(strings, exprs);
-	const template = document.createElement('template');
-	template.innerHTML = markup;
+function instantiateRecipe(recipe, exprs, component) {
+	const fragment = recipe.fragment.cloneNode(true);
+	const spots = [];
 	const unsubs = [];
-	resolveAndInit(template.content, meta, component, unsubs);
+	eachArray(recipe.spotPlans, (plan) => {
+		const spot = installSpotFromPlan(plan, fragment, exprs, component, unsubs);
+		if (spot) {
+			spots.push(spot);
+		}
+	});
+	eachArray(recipe.dataBindPlans, (plan) => {
+		const el = walkPath(fragment, plan.path);
+		if (!el) {
+			return;
+		}
+		installDataBind(el, plan.key, component, unsubs);
+	});
 	return {
-		content: template.content,
+		fragment,
+		spots,
 		unsubs,
+		boundKeys: collectBoundKeys(spots, recipe.dataBindPlans),
 	};
 }
-function buildTemplateElement(component, strings, exprs) {
-	const {
-		content,
-		unsubs,
-	} = buildTemplateContent(component, strings, exprs);
-	if (content.children.length !== 1) {
-		clearSubscriptions(unsubs);
-		throw new TypeError('html.element requires exactly one root element.');
+function updateSpot(spot, newExpr, component) {
+	if (spot.type === 'event') {
+		spot.expr = newExpr;
+		return;
 	}
-	const element = content.firstElementChild;
-	element[TEMPLATE_CLEANUP] = () => {
-		clearSubscriptions(unsubs);
-	};
-	return element;
+	if (spot.type === 'bind') {
+		return;
+	}
+	if (Binding.isBinding(newExpr) || isFunction(newExpr)) {
+		spot.expr = newExpr;
+		return;
+	}
+	if (spot.type === 'attr') {
+		const str = String(newExpr ?? '');
+		if (spot.el.getAttribute(spot.attr) !== str) {
+			spot.el.setAttribute(spot.attr, str);
+		}
+		spot.expr = newExpr;
+		return;
+	}
+	if (spot.type === 'text' || spot.type === 'bare-attr') {
+		patchSpot(spot, newExpr);
+		spot.expr = newExpr;
+	}
+}
+function updateTemplateSpots(state, newExprs, component) {
+	const { spots, prevExprs } = state;
+	for (let i = 0; i < spots.length; i++) {
+		const spot = spots[i];
+		if (spot.type === 'multi-attr') {
+			let changed = false;
+			eachArray(spot.parts, (part) => {
+				if (part.exprIndex === undefined) {
+					return;
+				}
+				const newVal = newExprs[part.exprIndex];
+				if (part.expr !== newVal) {
+					part.expr = newVal;
+					changed = true;
+				}
+			});
+			if (changed) {
+				refreshMultiAttrSpot(spot, component);
+			}
+			continue;
+		}
+		const slotIndex = spot.slotIndex;
+		if (slotIndex === undefined) {
+			continue;
+		}
+		const newVal = newExprs[slotIndex];
+		const prevVal = prevExprs[slotIndex];
+		if (newVal === prevVal) {
+			continue;
+		}
+		updateSpot(spot, newVal, component);
+	}
+	state.prevExprs = newExprs.slice();
 }
 export function makeHtmlTag(component) {
 	let unsubs = [];
-	function html(strings, ...exprs) {
-		for (const unsubscribe of unsubs) {
-			unsubscribe();
-		}
+	let templateState = null;
+	let boundKeys = new Set();
+	const cleanup = () => {
+		eachArray(unsubs, callFn);
 		unsubs = [];
 		cleanupTemplateTree(component.shadowRoot ?? component);
-		const builtTemplate = buildTemplateContent(component, strings, exprs);
-		unsubs = builtTemplate.unsubs;
-		(component.shadowRoot ?? component).replaceChildren(builtTemplate.content);
+		templateState = null;
+		boundKeys = new Set();
+	};
+	function html(strings, ...exprs) {
+		if (templateState && templateState.strings === strings) {
+			updateTemplateSpots(templateState, exprs, component);
+			component.templateBuilt = true;
+			return;
+		}
+		cleanup();
+		const recipe = getRecipe(strings);
+		const instance = instantiateRecipe(recipe, exprs, component);
+		unsubs = instance.unsubs;
+		boundKeys = instance.boundKeys;
+		(component.shadowRoot ?? component).replaceChildren(instance.fragment);
 		component.templateBuilt = true;
+		templateState = {
+			strings,
+			spots: instance.spots,
+			prevExprs: exprs.slice(),
+		};
 	}
 	html.element = function element(strings, ...exprs) {
-		return buildTemplateElement(component, strings, exprs);
+		const recipe = getRecipe(strings);
+		const instance = instantiateRecipe(recipe, exprs, component);
+		if (instance.fragment.children.length !== 1) {
+			clearSubscriptions(instance.unsubs);
+			throw new TypeError('html.element requires exactly one root element.');
+		}
+		const element = instance.fragment.firstElementChild;
+		element[TEMPLATE_CLEANUP] = () => {
+			clearSubscriptions(instance.unsubs);
+		};
+		return element;
+	};
+	html.cleanup = cleanup;
+	html.boundKeys = () => {
+		return boundKeys;
 	};
 	return html;
 }
