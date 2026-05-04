@@ -1,4 +1,4 @@
-import { WebComponent } from '../../base/base.js';
+import { WebComponent } from '../../core/base.js';
 export class UIModal extends WebComponent {
 	static url = import.meta.url;
 	static styles = {

@@ -94,3 +94,8 @@ viat/neural/
 .github/copilot-instructions.md
 .agents/*
 agent/types/*
+.remember/*
+.claude/*
+.playwright/*
+.playwright-mcp/*
+agent/docs/classes/*

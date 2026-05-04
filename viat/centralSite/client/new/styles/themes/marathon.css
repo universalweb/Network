@@ -273,7 +273,6 @@
   position: absolute;
   width: 8px;
   height: 8px;
-  pointer-events: none;
   opacity: 0.40;
 }
 

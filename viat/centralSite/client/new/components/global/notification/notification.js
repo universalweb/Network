@@ -1,5 +1,5 @@
-import { WebComponent } from '../../base/base.js';
-import { list } from '../../base/template.js';
+import { WebComponent } from '../../core/base.js';
+import { list } from '../../core/template.js';
 const DEFAULT_TIMEOUT = 3200;
 const EXIT_DELAY = 260;
 class NotificationItem extends WebComponent {

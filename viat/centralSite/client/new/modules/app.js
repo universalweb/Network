@@ -13,13 +13,13 @@ import {
 	WALLET_PANEL,
 	WALLET_PARAMS,
 } from './appDefaults.js';
-import { WebComponent, setGlobal } from '../components/base/base.js';
+import { WebComponent, setGlobal } from '../components/core/base.js';
 const appHost = new CSSStyleSheet();
-appHost.replaceSync(`:host { display: block; width: 100vw; height: 100vh; overflow: hidden; }`);
+appHost.replaceSync(`:host { display: block; width: 100vw; height: 100vh; overflow: hidden;  }`);
 class AppView extends WebComponent {
-	constructor(state = {}, config = {}) {
-		super(state, config);
-	}
+	static styles = {
+		appHost,
+	};
 	static async create(state, config) {
 		const app = new this(await state, config);
 		await WebComponent.preRender(app, document.body);
@@ -37,38 +37,28 @@ class AppView extends WebComponent {
 			<ui-notification></ui-notification>
 			<app-dashboard
 				@notify=${this.handleNotify}
-				@open-dashboard-sidebar=${this.handleSidebarToggle}>
-				<center-bar slot="center-bar"></center-bar>
-				<global-top-bar slot="global-top-bar"></global-top-bar>
-				<global-dock slot="global-dock">
-					<account-panel slot="account"></account-panel>
-				</global-dock>
-				<wallet-panel slot="wallet-panel"></wallet-panel>
-				<wallet-amount slot="wallet-amount"></wallet-amount>
-				<transmit-panel slot="transmit-panel"></transmit-panel>
-				<activity-log slot="activity-log"></activity-log>
-				<wallet-params slot="wallet-params"></wallet-params>
-				<network-stats slot="network-stats"></network-stats>
-				<global-bottom-bar slot="global-bottom-bar"></global-bottom-bar>
-			</app-dashboard>
+				@open-dashboard-sidebar=${this.handleSidebarToggle}></app-dashboard>
 		`;
 	}
 	get refs() {
+		const dashboard = this.getComponent('app-dashboard');
 		return {
-			activityLog: this.getComponent('activity-log'),
-			dashboard: this.getComponent('app-dashboard'),
-			globalBottomBar: this.getComponent('global-bottom-bar'),
-			globalDock: this.getComponent('global-dock'),
-			networkStats: this.getComponent('network-stats'),
-			centerBar: this.getComponent('center-bar'),
-			globalTopBar: this.getComponent('global-top-bar'),
-			transmitPanel: this.getComponent('transmit-panel'),
-			walletAmount: this.getComponent('wallet-amount'),
-			walletPanel: this.getComponent('wallet-panel'),
-			walletParams: this.getComponent('wallet-params'),
+			dashboard,
+			activityLog: dashboard?.getComponent('activity-log'),
+			globalBottomBar: dashboard?.getComponent('global-bottom-bar'),
+			globalDock: dashboard?.getComponent('global-dock'),
+			networkStats: dashboard?.getComponent('dashboard-sidebar')?.getComponent('network-stats'),
+			centerBar: dashboard?.getComponent('center-bar'),
+			globalTopBar: dashboard?.getComponent('global-top-bar'),
+			transmitPanel: dashboard?.getComponent('transmit-panel'),
+			walletAmount: dashboard?.getComponent('wallet-amount'),
+			walletPanel: dashboard?.getComponent('wallet-panel'),
+			walletParams: dashboard?.getComponent('wallet-params'),
 		};
 	}
-	onRender() {
+	async onRender() {
+		const dashboard = this.getComponent('app-dashboard');
+		await WebComponent.waitRenderTree(dashboard);
 		const { refs } = this;
 		Object.assign(refs.centerBar.state, CENTER_BAR);
 		Object.assign(refs.globalTopBar.state, TOP_BAR);

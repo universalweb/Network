@@ -1,4 +1,4 @@
-import { WebComponent } from '../../base/base.js';
+import { WebComponent, classList } from '../../core/base.js';
 export class IconButtonBase extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -6,7 +6,7 @@ export class IconButtonBase extends WebComponent {
 	};
 	static state = {
 		active: false,
-		className: [],
+		classes: new Set(),
 		icon: '',
 		label: '',
 		title: '',
@@ -23,9 +23,13 @@ export class IconButtonBase extends WebComponent {
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
-			<button class="icon-button ${this.state?.className?.join?.(' ')} ${this.state?.active ? 'active' : ''}"
+			<button class="${classList('icon-button', this.state.classes, {
+				active: () => {
+					return this.state.active;
+				},
+			})}"
 				aria-label="${this.state.title}"
-				data-tooltip="${this.state.title}"
+				tooltip="${this.state.title}"
 				@click=${this.handleActivate}>
 					<span class="icon-button-glyph">${this.state.icon}</span>
 				</button>

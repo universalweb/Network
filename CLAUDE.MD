@@ -7,3 +7,4 @@
 - Var and Func names must be descriptive but short no half names 
 - function utilities in `utilities.js` or `@universalweb/utilitylib`
 - Don't use for of loops if you can use more performant options - inline for high performance or utility functions with first class functions
+- Do not use single character var or function names

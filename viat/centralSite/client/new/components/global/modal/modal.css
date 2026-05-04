@@ -26,7 +26,6 @@
 .modal:not([open]) {
   opacity: 0;
   transform: scale(0.96) translateY(8px);
-  pointer-events: none;
 }
 
 @starting-style {
