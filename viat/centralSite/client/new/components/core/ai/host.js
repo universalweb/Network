@@ -1,4 +1,4 @@
-import { Logger } from '../logger.js';
+import { Logger } from '../debug/logger.js';
 import { isFunction } from '../utilities.js';
 import { dispatch } from './protocol.js';
 import { subscribe as subscribeRegistry } from './registry.js';

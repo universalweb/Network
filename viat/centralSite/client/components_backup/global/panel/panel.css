@@ -1,3 +1,14 @@
+:host {
+  display: block;
+  width: 100%;
+  flex-shrink: 0;
+}
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 /* ── Shared panel styles ───────────────────────────── */
 .panel {
 	background: var(--bg-panel);

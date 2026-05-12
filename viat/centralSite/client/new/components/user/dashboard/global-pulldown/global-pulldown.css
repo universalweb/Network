@@ -1,0 +1,29 @@
+:host {
+	display: contents;
+}
+.gpd-content {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	padding: 32px;
+	color: var(--text-main, #fff);
+	font-family: var(--font-mono);
+	box-sizing: border-box;
+}
+.gpd-header {
+	margin-bottom: 16px;
+}
+.gpd-header h2 {
+	font-size: 1.25rem;
+	margin: 0 0 12px 0;
+	color: var(--teal, #5eead4);
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+.gpd-header p {
+	font-size: 0.875rem;
+	line-height: 1.6;
+	max-width: 520px;
+	margin: 0;
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+}

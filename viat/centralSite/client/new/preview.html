@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<script>
+			globalThis.CONFIG = {
+				production: false,
+			};
+		</script>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>⩝ VIAT :: COMPONENT PREVIEW</title>
+		<link rel="preload" href="styles/index.css" as="style" />
+		<link rel="preload" href="styles/themes/midnight.css" as="style" />
+		<link rel="preload" async href="./preview.js" as="script" />
+		<link rel="preload" href="components/global/icon/sprite.svg" as="image" type="image/svg+xml" />
+		<link rel="stylesheet" href="styles/index.css" />
+		<link rel="stylesheet" href="styles/themes/midnight.css" />
+		<style>
+			html, body {
+				height: auto;
+				min-height: 100vh;
+				overflow: auto;
+			}
+		</style>
+		<script type="module" src="./preview.js"></script>
+	</head>
+	<body></body>
+</html>

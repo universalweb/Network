@@ -1,0 +1,56 @@
+:host {
+	display: contents;
+}
+.pulldown-drawer {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 100vh;
+	overflow: hidden;
+	z-index: 90;
+	pointer-events: none;
+	display: none;
+	transform: translateY(-100%);
+	will-change: transform;
+}
+.pulldown-drawer.is-active,
+.pulldown-drawer.is-open {
+	display: block;
+	background: var(--bg-dark, #04060a);
+	border-bottom: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+.pulldown-drawer.is-fully-open {
+	pointer-events: auto;
+}
+.pulldown-content {
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	box-sizing: border-box;
+}
+.pulldown-drawer.is-fully-open .pulldown-content {
+	overflow: auto;
+	scrollbar-width: thin;
+	scrollbar-color: var(--cyan-glow-faint, rgba(0, 240, 255, 0.15)) transparent;
+}
+.pulldown-drawer.is-fully-open .pulldown-content::-webkit-scrollbar {
+	width: 5px;
+	height: 5px;
+}
+.pulldown-drawer.is-fully-open .pulldown-content::-webkit-scrollbar-track {
+	background: transparent;
+	border-radius: 4px;
+}
+.pulldown-drawer.is-fully-open .pulldown-content::-webkit-scrollbar-thumb {
+	background: var(--cyan-glow-faint, rgba(0, 240, 255, 0.15));
+	border-radius: 4px;
+	border: 1px solid transparent;
+}
+.pulldown-drawer.is-fully-open .pulldown-content::-webkit-scrollbar-thumb:hover {
+	background: var(--cyan-glow-soft, rgba(0, 240, 255, 0.24));
+}
+.pulldown-drawer.is-fully-open .pulldown-content::-webkit-scrollbar-corner {
+	background: transparent;
+}

@@ -51,20 +51,20 @@ export const ACTIVITY_ENTRIES = [
 export const TOP_BAR = {
 	items: [
 		{
-			icon: '&#xf007;',
+			icon: 'user',
 			id: 'profile',
-			title: 'Profile',
+			tooltip: 'Profile',
 		},
 		{
-			icon: '&#xe615;',
+			icon: 'settings',
 			id: 'settings',
-			title: 'Settings',
+			tooltip: 'Settings',
 		},
 		{
-			icon: '&#xebf4;',
+			icon: 'panel-left',
 			id: 'sidebar',
-			title: 'Sidebar',
-			onClick: 'open-dashboard-sidebar',
+			tooltip: 'Sidebar',
+			onClick: 'toggle-sidebar',
 		},
 	],
 	subtitle: 'TERMINAL',
@@ -73,33 +73,28 @@ export const DOCK = {
 	items: [
 		{
 			active: true,
-			icon: '&#xe25e;',
-			label: 'wallet',
-			title: 'Wallet',
+			icon: 'wallet',
+			tooltip: 'Wallet',
 		},
 		{
 			active: false,
-			icon: '&#xf14c;',
-			label: 'explorer',
-			title: 'Explorer',
+			icon: 'compass',
+			tooltip: 'Explorer',
 		},
 		{
 			active: false,
-			icon: '&#xf0ec;',
-			label: 'exchange',
-			title: 'Exchange (Coming Soon)',
+			icon: 'arrow-right-left',
+			tooltip: 'Exchange (Coming Soon)',
 		},
 		{
 			active: false,
-			icon: '&#xf074;',
-			label: 'swap',
-			title: 'Swap (Coming Soon)',
+			icon: 'repeat-2',
+			tooltip: 'Swap (Coming Soon)',
 		},
 		{
 			active: false,
-			icon: '&#xf07b0;',
-			label: 'analytics',
-			title: 'Analytics (Coming Soon)',
+			icon: 'chart-line',
+			tooltip: 'Analytics (Coming Soon)',
 		},
 	],
 };
@@ -230,14 +225,14 @@ export const CENTER_BAR = {
 	actions: [
 		{
 			className: 'green-hover',
-			icon: '&#xf188f;',
+			icon: 'droplets',
 			id: 'faucet',
-			title: 'Faucet',
+			tooltip: 'Faucet',
 		},
 		{
-			icon: '&#xf1d8;',
+			icon: 'send',
 			id: 'send',
-			title: 'Send',
+			tooltip: 'Send',
 		},
 	],
 };

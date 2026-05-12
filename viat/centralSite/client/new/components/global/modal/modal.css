@@ -16,22 +16,29 @@
   overflow: auto;
   opacity: 1;
   transform: scale(1) translateY(0);
+  transform-origin: center;
+  will-change: transform, opacity;
   transition:
-    opacity 0.2s ease,
-    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
-    overlay 0.2s ease allow-discrete,
-    display 0.2s ease allow-discrete;
+    opacity 0.22s ease,
+    transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1),
+    overlay 0.22s ease allow-discrete,
+    display 0.22s ease allow-discrete;
 }
 
 .modal:not([open]) {
   opacity: 0;
-  transform: scale(0.96) translateY(8px);
+  transform: scale(0.92) translateY(14px);
+  transition:
+    opacity 0.16s ease,
+    transform 0.18s cubic-bezier(0.55, 0, 0.85, 0.5),
+    overlay 0.18s ease allow-discrete,
+    display 0.18s ease allow-discrete;
 }
 
 @starting-style {
   .modal[open] {
     opacity: 0;
-    transform: scale(0.96) translateY(8px);
+    transform: scale(0.92) translateY(14px);
   }
 }
 
@@ -40,18 +47,21 @@
   backdrop-filter: blur(6px);
   opacity: 1;
   transition:
-    opacity 0.2s ease,
-    overlay 0.2s ease allow-discrete,
-    display 0.2s ease allow-discrete;
+    opacity 0.28s ease,
+    backdrop-filter 0.28s ease,
+    overlay 0.28s ease allow-discrete,
+    display 0.28s ease allow-discrete;
 }
 
 .modal:not([open])::backdrop {
   opacity: 0;
+  backdrop-filter: blur(0);
 }
 
 @starting-style {
   .modal[open]::backdrop {
     opacity: 0;
+    backdrop-filter: blur(0);
   }
 }
 

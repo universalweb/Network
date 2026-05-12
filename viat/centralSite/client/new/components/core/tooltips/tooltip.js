@@ -23,7 +23,7 @@ export class UITooltip extends WebComponent {
 	shellH = 0;
 	isOpen = false;
 	slideToken = 0;
-	onMounted() {
+	onMount() {
 		this.shell = this.shadowRoot.querySelector('.tooltip-shell');
 		if (!this.shell) {
 			return;
@@ -99,8 +99,12 @@ export class UITooltip extends WebComponent {
 		}
 		const wasOpen = this.isOpen;
 		const textChanged = wasOpen && this.state.text !== text;
-		this.state.sliding = textChanged;
-		this.state.text = text;
+		if (this.state.sliding !== textChanged) {
+			this.state.sliding = textChanged;
+		}
+		if (this.state.text !== text) {
+			this.state.text = text;
+		}
 		if (!wasOpen) {
 			this.shell.showPopover();
 		}
@@ -109,13 +113,19 @@ export class UITooltip extends WebComponent {
 		const {
 			x, y,
 		} = this.calcPosition(targetRect, placement);
-		this.state.placement = placement;
-		this.state.x = x;
-		this.state.y = y;
+		if (this.state.placement !== placement) {
+			this.state.placement = placement;
+		}
+		if (this.state.x !== x) {
+			this.state.x = x;
+		}
+		if (this.state.y !== y) {
+			this.state.y = y;
+		}
 		if (textChanged) {
 			const token = ++this.slideToken;
 			this.setTimeout(() => {
-				if (this.slideToken === token) {
+				if (this.slideToken === token && this.state.sliding !== false) {
 					this.state.sliding = false;
 				}
 			}, SLIDE_MS);
@@ -126,7 +136,9 @@ export class UITooltip extends WebComponent {
 			return;
 		}
 		this.slideToken++;
-		this.state.sliding = false;
+		if (this.state.sliding !== false) {
+			this.state.sliding = false;
+		}
 		this.shell.hidePopover();
 	}
 	render() {

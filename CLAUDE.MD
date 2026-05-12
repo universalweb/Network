@@ -8,3 +8,5 @@
 - function utilities in `utilities.js` or `@universalweb/utilitylib`
 - Don't use for of loops if you can use more performant options - inline for high performance or utility functions with first class functions
 - Do not use single character var or function names
+- Avoid try catch at all costs when in the browser or for easily avoidable concerns
+- Do not use event, name, and or type as argument names be descriptive

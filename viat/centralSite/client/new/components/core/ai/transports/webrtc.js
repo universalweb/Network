@@ -1,4 +1,4 @@
-import { Logger } from '../../logger.js';
+import { Logger } from '../../debug/logger.js';
 const DEFAULT_ICE = [{
 	urls: 'stun:stun.l.google.com:19302',
 }];

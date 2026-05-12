@@ -1,7 +1,5 @@
-import { WebComponent } from '../../core/base.js';
-import { list } from '../../core/template.js';
+import { WebComponent, list } from '../../core/index.js';
 const DEFAULT_TIMEOUT = 3200;
-const EXIT_DELAY = 260;
 class NotificationItem extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -12,31 +10,51 @@ class NotificationItem extends WebComponent {
 		id: null,
 		itemType: 'default',
 		message: '',
-		title: '',
+		timeout: 0,
+		title: 'Notification',
 	};
-	handleClick() {
+	onConnect() {
+		const { timeout } = this.STATE;
+		if (timeout > 0) {
+			this.setTimeout(() => {
+				// this.beginExit();
+			}, timeout);
+		}
+	}
+	beginExit() {
+		if (this.state.exiting) {
+			return;
+		}
+		this.state.exiting = true;
+	}
+	handleAnimationEnd(domEvent) {
+		if (domEvent.animationName !== 'notification-out') {
+			return;
+		}
 		this.emit('notification-dismiss', {
-			id: this.state.id,
+			id: this.STATE.id,
 		});
 	}
-	handleKeydown(domEvent) {
-		if (domEvent.key === 'Enter' || domEvent.key === ' ') {
-			domEvent.preventDefault();
-			this.handleClick();
+	handleKey(domEvent) {
+		if (domEvent.key !== 'Enter' && domEvent.key !== ' ') {
+			return;
 		}
+		domEvent.preventDefault();
+		this.beginExit();
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
-			<div class="notification notification-${this.state.itemType}${this.state.exiting ? ' is-exit' : ''}" role="button" tabindex="0" @click=${this.handleClick} @keydown=${this.handleKeydown}>
+			<div class="notification notification-${this.state.itemType}${this.state.exiting ? ' is-exit' : ''}"
+				role="button" tabindex="0" aria-label="Dismiss notification"
+				@click=${this.beginExit}
+				@keydown=${this.handleKey}
+				@animationend=${this.handleAnimationEnd}>
 				<div class="notification-body">
 					<div class="notification-title">${this.state.title}</div>
 					<div class="notification-message">${this.state.message}</div>
 				</div>
-				<button class="notification-close" aria-label="Dismiss notification" title="Dismiss notification" @click=${(e) => {
-					e.stopPropagation();
-					this.handleClick();
-				}}>&#xf05ad;</button>
+				<ui-icon class="notification-close" name="x" size="sm"></ui-icon>
 			</div>
 		`;
 	}
@@ -45,65 +63,33 @@ customElements.define('ui-notification-item', NotificationItem);
 export class UINotification extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
-		notification: './notification.css',
+		notificationStack: './notification-stack.css',
 	};
 	static state = {
 		items: [],
 	};
 	nextId = 0;
-	constructor(state = {}, config = {}) {
-		super(state, {
-			...config,
-			tooltips: config.tooltips ?? true,
-		});
-	}
-	show({
-		message, title = 'Notification', timeout = DEFAULT_TIMEOUT, itemType = 'default',
-	} = {}) {
+	show(spec = {}) {
+		const message = spec.message;
 		if (!message) {
 			return null;
 		}
 		const id = ++this.nextId;
-		const item = {
-			exiting: false,
+		this.state.items.unshift({
 			id,
-			itemType,
+			itemType: spec.itemType ?? 'default',
 			message,
-			title,
-			timer: null,
-		};
-		this.state.items.unshift(item);
-		if (timeout > 0) {
-			item.timer = this.setTimeout(() => {
-				this.dismiss(id);
-			}, timeout);
-		}
+			timeout: spec.timeout ?? DEFAULT_TIMEOUT,
+			title: spec.title ?? 'Notification',
+		});
 		return id;
 	}
 	dismiss(id) {
-		const item = this.state.items.find((e) => {
-			return e.id === id;
+		this.state.items = this.state.items.filter((item) => {
+			return item.id !== id;
 		});
-		if (!item || item.exiting) {
-			return;
-		}
-		item.exiting = true;
-		if (item.timer) {
-			this.removeTimeout(item.timer);
-			item.timer = null;
-		}
-		this.setTimeout(() => {
-			this.state.items = this.state.items.filter((entry) => {
-				return entry.id !== id;
-			});
-		}, EXIT_DELAY);
 	}
 	clear() {
-		this.state.items.forEach((item) => {
-			if (item.timer) {
-				this.removeTimeout(item.timer);
-			}
-		});
 		this.state.items = [];
 	}
 	handleDismiss(domEvent) {
@@ -115,7 +101,7 @@ export class UINotification extends WebComponent {
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
-			<div class="notification-stack" @notification-dismiss=${this.handleDismiss}>
+			<div class="notification-stack" @notification-dismiss="${this.handleDismiss}">
 				${list('items', NotificationItem, (item) => {
 					return item.id;
 				})}

@@ -5,7 +5,7 @@ export class TopBarIconButton extends IconButtonBase {
 		topBarIconButton: './top-bar-icon-button.css',
 	};
 	static state = {
-		classes: new Set(['tb-icon-btn', 'icon-font']),
+		className: ['tb-icon-btn'],
 	};
 }
 customElements.define('top-bar-icon-button', TopBarIconButton);

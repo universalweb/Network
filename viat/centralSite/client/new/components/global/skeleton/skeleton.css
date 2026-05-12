@@ -1,0 +1,31 @@
+:host {
+	display: block;
+	width: 100%;
+}
+.skeleton {
+	display: flex;
+	flex-direction: column;
+	gap: 0.45rem;
+	width: 100%;
+}
+.skeleton-line {
+	background: linear-gradient(
+		90deg,
+		var(--skeleton-base, rgba(255, 255, 255, 0.06)) 0%,
+		var(--skeleton-shine, rgba(255, 255, 255, 0.16)) 50%,
+		var(--skeleton-base, rgba(255, 255, 255, 0.06)) 100%
+	);
+	background-size: 200% 100%;
+	animation: skeleton-shine 1.4s linear infinite;
+	display: inline-block;
+}
+.variant-circle .skeleton-line {
+	border-radius: 50% !important;
+}
+.variant-rect .skeleton-line {
+	border-radius: var(--radius, 6px);
+}
+@keyframes skeleton-shine {
+	0% { background-position: 200% 0; }
+	100% { background-position: -200% 0; }
+}

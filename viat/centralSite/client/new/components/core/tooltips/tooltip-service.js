@@ -1,4 +1,4 @@
-import { delegate, getSubeventData } from '../delegate.js';
+import { delegate, getSubeventData } from '../dom/delegate.js';
 let tooltipReady = null;
 let activeTarget = null;
 function ensureTooltip() {
@@ -9,7 +9,7 @@ function ensureTooltip() {
 		await customElements.whenDefined('ui-tooltip');
 		const el = document.createElement('ui-tooltip');
 		document.body.append(el);
-		await el.mounted;
+		await el.whenMounted;
 		return el;
 	})();
 	return tooltipReady;

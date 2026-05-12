@@ -1,13 +1,13 @@
-import { Logger } from '../../logger.js';
-import { isFunction } from '../../utilities.js';
 import {
 	eachComponent,
 	getComponentId,
 	getTools,
 	subscribe,
 } from '../registry.js';
+import { isFunction, isTypeUndefined } from '../../utilities.js';
+import { Logger } from '../../debug/logger.js';
 function detectMcp() {
-	if (typeof navigator === 'undefined') {
+	if (isTypeUndefined(typeof navigator)) {
 		return null;
 	}
 	if (navigator.mcp) {
@@ -39,7 +39,9 @@ function buildToolDescriptor(componentId, name, def, executor) {
 	};
 }
 export class WebMCPTransport {
-	constructor({ siteName, autoPublish = true } = {}) {
+	constructor({
+		siteName, autoPublish = true,
+	} = {}) {
 		this.siteName = siteName ?? (typeof location !== 'undefined' ? location.hostname : 'site');
 		this.autoPublish = autoPublish;
 		this.registered = new Map();
@@ -99,7 +101,9 @@ export class WebMCPTransport {
 			if (isFunction(unregister)) {
 				this.registered.set(key, unregister);
 			} else if (unregister && isFunction(unregister.unregister)) {
-				this.registered.set(key, () => unregister.unregister());
+				this.registered.set(key, () => {
+					return unregister.unregister();
+				});
 			} else {
 				this.registered.set(key, () => {});
 			}

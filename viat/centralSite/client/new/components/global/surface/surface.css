@@ -1,0 +1,64 @@
+:host {
+	display: block;
+	box-sizing: border-box;
+}
+.surface {
+	box-sizing: border-box;
+	color: inherit;
+	transition:
+		background 0.2s ease,
+		border-color 0.2s ease,
+		box-shadow 0.28s ease,
+		transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Tones */
+.tone-transparent { background: transparent; }
+.tone-neutral     { background: var(--surface-neutral, rgba(255, 255, 255, 0.04)); }
+.tone-subtle      { background: var(--surface-subtle,  rgba(255, 255, 255, 0.025)); }
+.tone-panel       { background: var(--panel-bg,        rgba(12, 14, 22, 0.85)); }
+.tone-popup       { background: var(--popup-bg,        #07080c); }
+.tone-inverse     { background: var(--surface-inverse, #f5f6fa); color: #0b0d14; }
+.tone-success     { background: rgba(16, 185, 129, 0.08); }
+.tone-warning     { background: rgba(245, 158, 11, 0.08); }
+.tone-danger      { background: rgba(239, 68, 68, 0.08); }
+.tone-info        { background: rgba(59, 130, 246, 0.08); }
+.tone-accent      { background: rgba(99, 102, 241, 0.10); }
+/* Padding */
+.pad-none { padding: 0; }
+.pad-xs   { padding: 0.25rem; }
+.pad-sm   { padding: 0.5rem; }
+.pad-md   { padding: 0.875rem; }
+.pad-lg   { padding: 1.25rem; }
+.pad-xl   { padding: 1.75rem; }
+/* Radius */
+.radius-none { border-radius: 0; }
+.radius-sm   { border-radius: var(--radius-sm, 4px); }
+.radius-md   { border-radius: var(--radius-md, 8px); }
+.radius-lg   { border-radius: var(--radius-lg, 12px); }
+.radius-xl   { border-radius: var(--radius-xl, 18px); }
+.radius-full { border-radius: 999px; }
+/* Border */
+.has-border { border: 1px solid var(--surface-border, var(--dark-divider, rgba(255, 255, 255, 0.08))); }
+/* Elevation */
+.elev-0 { box-shadow: none; }
+.elev-1 { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18); }
+.elev-2 { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28); }
+.elev-3 { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.38); }
+/* Interactive */
+.is-interactive { cursor: pointer; }
+.is-interactive:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
+}
+.is-interactive:active {
+	transform: translateY(0);
+	transition-duration: 0.08s;
+}
+@media (prefers-reduced-motion: reduce) {
+	.surface,
+	.is-interactive:hover,
+	.is-interactive:active {
+		transform: none;
+		transition: none;
+	}
+}

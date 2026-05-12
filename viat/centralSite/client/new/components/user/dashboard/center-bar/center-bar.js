@@ -1,6 +1,5 @@
+import { WebComponent, list } from '../../../core/index.js';
 import { CenterBarIconButton } from './center-bar-icon-button.js';
-import { WebComponent } from '../../../core/base.js';
-import { list } from '../../../core/template.js';
 export class CenterBar extends WebComponent {
 	static url = import.meta.url;
 	static styles = {

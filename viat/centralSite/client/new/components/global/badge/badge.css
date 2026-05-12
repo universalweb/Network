@@ -1,0 +1,80 @@
+:host {
+	display: inline-flex;
+	flex: 0 0 auto;
+}
+.badge {
+	align-items: center;
+	border: 1px solid transparent;
+	border-radius: 999px;
+	display: inline-flex;
+	font-weight: 600;
+	gap: 0.35em;
+	letter-spacing: 0.04em;
+	line-height: 1;
+	padding: 0.25em 0.65em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	transform-origin: center;
+	animation: badge-in 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
+	will-change: transform, box-shadow;
+}
+.badge.is-pulsing {
+	animation: badge-pulse 0.46s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes badge-in {
+	0%   { opacity: 0; transform: scale(0.4); }
+	60%  { opacity: 1; transform: scale(1.08); }
+	100% { opacity: 1; transform: scale(1); }
+}
+@keyframes badge-pulse {
+	0%   { transform: scale(1); box-shadow: 0 0 0 0 currentColor; }
+	35%  { transform: scale(1.18); box-shadow: 0 0 0 6px transparent; }
+	100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.badge,
+	.badge.is-pulsing {
+		animation: none;
+	}
+}
+.size-sm { font-size: 0.65rem; padding: 0.18em 0.55em; }
+.size-md { font-size: 0.72rem; }
+.size-lg { font-size: 0.85rem; padding: 0.32em 0.85em; }
+.tone-neutral {
+	background: var(--badge-neutral-bg, rgba(255, 255, 255, 0.08));
+	border-color: var(--badge-neutral-border, rgba(255, 255, 255, 0.15));
+	color: var(--badge-neutral-text, currentColor);
+}
+.tone-success {
+	background: rgba(16, 185, 129, 0.18);
+	border-color: rgba(16, 185, 129, 0.4);
+	color: #34d399;
+}
+.tone-warning {
+	background: rgba(245, 158, 11, 0.18);
+	border-color: rgba(245, 158, 11, 0.4);
+	color: #fbbf24;
+}
+.tone-danger {
+	background: rgba(239, 68, 68, 0.18);
+	border-color: rgba(239, 68, 68, 0.4);
+	color: #f87171;
+}
+.tone-info {
+	background: rgba(59, 130, 246, 0.18);
+	border-color: rgba(59, 130, 246, 0.4);
+	color: #60a5fa;
+}
+.tone-accent {
+	background: rgba(99, 102, 241, 0.22);
+	border-color: rgba(99, 102, 241, 0.45);
+	color: #a5b4fc;
+}
+.badge-dot {
+	background: currentColor;
+	border-radius: 50%;
+	flex: 0 0 auto;
+	height: 0.5em;
+	width: 0.5em;
+}
+.badge-label { display: inline-block; }

@@ -1,0 +1,60 @@
+:host {
+	display: inline-flex;
+	flex: 0 0 auto;
+}
+.spinner {
+	align-items: center;
+	display: inline-flex;
+	gap: 0.5rem;
+	color: var(--accent, #6366f1);
+}
+.spinner-svg {
+	animation: spinner-rotate 1.1s linear infinite;
+	display: block;
+}
+.spinner-sm .spinner-svg { width: 14px; height: 14px; }
+.spinner-md .spinner-svg { width: 22px; height: 22px; }
+.spinner-lg .spinner-svg { width: 36px; height: 36px; }
+.spinner-xl .spinner-svg { width: 56px; height: 56px; }
+.spinner-track {
+	stroke: currentColor;
+	stroke-width: 4;
+	opacity: 0.18;
+}
+.spinner-arc {
+	stroke: currentColor;
+	stroke-width: 4;
+	stroke-linecap: round;
+	stroke-dasharray: 90 150;
+	stroke-dashoffset: 0;
+	animation: spinner-dash 1.4s ease-in-out infinite;
+}
+.spinner-bars .spinner-svg { display: none; }
+.spinner-bars::before {
+	content: '';
+	display: inline-block;
+	width: 1.4em;
+	height: 0.6em;
+	background:
+		linear-gradient(currentColor 0 0) 0 50%/0.25em 100% no-repeat,
+		linear-gradient(currentColor 0 0) 50% 50%/0.25em 100% no-repeat,
+		linear-gradient(currentColor 0 0) 100% 50%/0.25em 100% no-repeat;
+	animation: spinner-bars 0.9s linear infinite;
+}
+.spinner-label {
+	color: var(--text-muted, currentColor);
+	font-size: 0.85em;
+	letter-spacing: 0.04em;
+}
+@keyframes spinner-rotate {
+	100% { transform: rotate(360deg); }
+}
+@keyframes spinner-dash {
+	0% { stroke-dasharray: 1 150; stroke-dashoffset: 0; }
+	50% { stroke-dasharray: 90 150; stroke-dashoffset: -28; }
+	100% { stroke-dasharray: 90 150; stroke-dashoffset: -118; }
+}
+@keyframes spinner-bars {
+	0%, 100% { background-size: 0.25em 100%, 0.25em 60%, 0.25em 80%; }
+	50% { background-size: 0.25em 60%, 0.25em 100%, 0.25em 60%; }
+}

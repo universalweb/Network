@@ -1,4 +1,4 @@
-import { Logger } from '../../logger.js';
+import { Logger } from '../../debug/logger.js';
 const STATE_OPEN = 1;
 export class WebSocketTransport {
 	constructor({

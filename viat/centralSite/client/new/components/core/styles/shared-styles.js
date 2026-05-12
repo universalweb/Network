@@ -1,0 +1,10 @@
+import { loadSheet } from './css-loader.js';
+export { loadSheet };
+export const scrollbarSheet = await loadSheet(new URL('./scrollbar.css', import.meta.url));
+export const utilsSheet = await loadSheet(new URL('./utils.css', import.meta.url));
+export const resetSheet = await loadSheet(new URL('./reset.css', import.meta.url));
+export function hostSheet(css) {
+	const sheet = new CSSStyleSheet();
+	sheet.replaceSync(css);
+	return sheet;
+}

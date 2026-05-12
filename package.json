@@ -160,6 +160,7 @@
 		"eslint-plugin-security": "^4.0.0",
 		"eslint-plugin-sonarjs": "^4.0.3",
 		"globals": "^17.5.0",
+		"lucide-static": "^1.14.0",
 		"ts-api-utils": "^2.5.0"
 	},
 	"pnpm": {

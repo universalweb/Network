@@ -1,0 +1,55 @@
+:host {
+  display: block;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  z-index: 40;
+  box-sizing: border-box;
+}
+
+/* ══════════════════════════════════════════════════════
+   BOTTOM STATUS STRIP
+══════════════════════════════════════════════════════ */
+.global-bottom-bar {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  background: var(--bg-dark);
+  border-top: 1px solid var(--dark-divider);
+  overflow: hidden;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+
+.bb-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 12px;
+  height: 100%;
+  border-right: 1px solid var(--dark-divider-subtle);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.bb-key {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--dark-text-dim);
+}
+
+.bb-val {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dark-text-medium);
+}
+
+.bb-val.good {
+  color: var(--color-success-text);
+}

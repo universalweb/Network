@@ -125,6 +125,12 @@
 	--input-copied-bg: rgba(0, 102, 102, 0.1);
 	--input-copied-border: var(--teal);
 
+	/* ── Icons (state colors used by ui-icon consumers) ── */
+	--icon-color: var(--text-offwhite);
+	--icon-color-hover: var(--text-light);
+	--icon-color-active: var(--text-light);
+	--icon-color-disabled: var(--dark-text-faint);
+
 	/* ── Top Bar ─────────────────────────────────────── */
 	--topbar-bg: rgba(10, 17, 40, 0.05);
 	--topbar-border: rgba(10, 17, 40, 0.15);

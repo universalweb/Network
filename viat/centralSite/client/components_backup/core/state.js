@@ -28,17 +28,6 @@ function deepEqual(a, b) {
 	}
 	return false;
 }
-function flushPending() {
-	if (!this.pendingFlush) {
-		this.pendingFlush = new Promise((resolve) => {
-			queueMicrotask(() => {
-				this.pendingFlush = null;
-				resolve(this.updateView());
-			});
-		});
-	}
-	return this.pendingFlush;
-}
 function pathsOverlap(currentPath, changedPath) {
 	return currentPath === changedPath || currentPath.startsWith(`${changedPath}.`) || changedPath.startsWith(`${currentPath}.`);
 }
@@ -61,17 +50,15 @@ function ensureSignalRegistry(component) {
 		component.stateSignals = {
 			subs: new Map(),
 			pending: new Set(),
-			flushScheduled: false,
 		};
 	}
 	return component.stateSignals;
 }
 function flushStateSignals(component) {
 	const registry = component.stateSignals;
-	if (!registry) {
+	if (!registry || !registry.pending.size) {
 		return;
 	}
-	registry.flushScheduled = false;
 	const changedPaths = [...registry.pending];
 	registry.pending.clear();
 	const subs = registry.subs;
@@ -98,16 +85,27 @@ function flushStateSignals(component) {
 		}
 	});
 }
+function runStateFlush(component) {
+	component.pendingFlush = false;
+	flushStateSignals(component);
+	const result = component.updateView();
+	if (isPromiseLike(result)) {
+		result.catch(queueAsyncError);
+	}
+}
+function scheduleStateFlush(component) {
+	if (component.pendingFlush) {
+		return;
+	}
+	component.pendingFlush = true;
+	queueMicrotask(() => {
+		runStateFlush(component);
+	});
+}
 function notifyStateChange(component, changedPath) {
 	const registry = ensureSignalRegistry(component);
 	registry.pending.add(changedPath);
-	if (registry.flushScheduled) {
-		return;
-	}
-	registry.flushScheduled = true;
-	queueMicrotask(() => {
-		flushStateSignals(component);
-	});
+	scheduleStateFlush(component);
 }
 function cached(target, component, path, build) {
 	let pathCache = component.proxyCache.get(target);
@@ -123,106 +121,113 @@ function cached(target, component, path, build) {
 	pathCache.set(path, proxy);
 	return proxy;
 }
+function buildSetMethods(target, component, path) {
+	function setAdd(item) {
+		if (target.has(item)) {
+			return target;
+		}
+		target.add(item);
+		notifyStateChange(component, `${path}.${item}`);
+		return target;
+	}
+	function setDelete(item) {
+		if (!target.has(item)) {
+			return false;
+		}
+		target.delete(item);
+		notifyStateChange(component, `${path}.${item}`);
+		return true;
+	}
+	function setClear() {
+		if (!target.size) {
+			return;
+		}
+		const items = [...target];
+		target.clear();
+		for (let i = 0; i < items.length; i++) {
+			notifyStateChange(component, `${path}.${items[i]}`);
+		}
+	}
+	return {
+		add: setAdd,
+		delete: setDelete,
+		clear: setClear,
+		has: target.has.bind(target),
+		forEach: target.forEach.bind(target),
+		keys: target.keys.bind(target),
+		values: target.values.bind(target),
+		entries: target.entries.bind(target),
+		[Symbol.iterator]: target[Symbol.iterator].bind(target),
+	};
+}
+function buildMapMethods(target, component, path) {
+	function mapSet(mapKey, mapValue) {
+		if (target.has(mapKey) && target.get(mapKey) === mapValue) {
+			return target;
+		}
+		target.set(mapKey, mapValue);
+		notifyStateChange(component, `${path}.${mapKey}`);
+		return target;
+	}
+	function mapDelete(mapKey) {
+		if (!target.has(mapKey)) {
+			return false;
+		}
+		target.delete(mapKey);
+		notifyStateChange(component, `${path}.${mapKey}`);
+		return true;
+	}
+	function mapClear() {
+		if (!target.size) {
+			return;
+		}
+		const keys = [...target.keys()];
+		target.clear();
+		for (let i = 0; i < keys.length; i++) {
+			notifyStateChange(component, `${path}.${keys[i]}`);
+		}
+	}
+	return {
+		set: mapSet,
+		delete: mapDelete,
+		clear: mapClear,
+		get: target.get.bind(target),
+		has: target.has.bind(target),
+		forEach: target.forEach.bind(target),
+		keys: target.keys.bind(target),
+		values: target.values.bind(target),
+		entries: target.entries.bind(target),
+		[Symbol.iterator]: target[Symbol.iterator].bind(target),
+	};
+}
+function makeCollectionTrap(methods, path) {
+	return {
+		get(t, key) {
+			if (key === STATE_PATH) {
+				return path;
+			}
+			const method = methods[key];
+			if (method !== undefined) {
+				return method;
+			}
+			const value = Reflect.get(t, key);
+			if (typeof value !== 'function') {
+				return value;
+			}
+			return value.bind(t);
+		},
+	};
+}
 function makeSetProxy(target, component, path) {
 	return cached(target, component, path, () => {
-		return new Proxy(target, {
-			get(t, key) {
-				if (key === STATE_PATH) {
-					return path;
-				}
-				const value = Reflect.get(t, key);
-				if (typeof value !== 'function') {
-					return value;
-				}
-				if (key === 'add') {
-					return (item) => {
-						if (t.has(item)) {
-							return t;
-						}
-						t.add(item);
-						notifyStateChange(component, `${path}.${item}`);
-						flushPending.call(component);
-						return t;
-					};
-				}
-				if (key === 'delete') {
-					return (item) => {
-						if (!t.has(item)) {
-							return false;
-						}
-						t.delete(item);
-						notifyStateChange(component, `${path}.${item}`);
-						flushPending.call(component);
-						return true;
-					};
-				}
-				if (key === 'clear') {
-					return () => {
-						if (!t.size) {
-							return;
-						}
-						const items = [...t];
-						t.clear();
-						for (let i = 0; i < items.length; i++) {
-							notifyStateChange(component, `${path}.${items[i]}`);
-						}
-						flushPending.call(component);
-					};
-				}
-				return value.bind(t);
-			},
-		});
+		const methods = buildSetMethods(target, component, path);
+		return new Proxy(target, makeCollectionTrap(methods, path));
 	});
 }
 function makeMapProxy(target, component, path) {
 	return cached(target, component, path, () => {
-		return new Proxy(target, {
-			get(t, key) {
-				if (key === STATE_PATH) {
-					return path;
-				}
-				const value = Reflect.get(t, key);
-				if (typeof value !== 'function') {
-					return value;
-				}
-				if (key === 'set') {
-					return (mapKey, mapValue) => {
-						if (t.has(mapKey) && t.get(mapKey) === mapValue) {
-							return t;
-						}
-						t.set(mapKey, mapValue);
-						notifyStateChange(component, `${path}.${mapKey}`);
-						flushPending.call(component);
-						return t;
-					};
-				}
-				if (key === 'delete') {
-					return (mapKey) => {
-						if (!t.has(mapKey)) {
-							return false;
-						}
-						t.delete(mapKey);
-						notifyStateChange(component, `${path}.${mapKey}`);
-						flushPending.call(component);
-						return true;
-					};
-				}
-				if (key === 'clear') {
-					return () => {
-						if (!t.size) {
-							return;
-						}
-						const keys = [...t.keys()];
-						t.clear();
-						for (let i = 0; i < keys.length; i++) {
-							notifyStateChange(component, `${path}.${keys[i]}`);
-						}
-						flushPending.call(component);
-					};
-				}
-				return value.bind(t);
-			},
-		});
+		const methods = buildMapMethods(target, component, path);
+		return new Proxy(target, makeCollectionTrap(methods, path));
 	});
 }
 function makeStateProxy(obj, component, path = '') {
@@ -252,7 +257,6 @@ function makeStateProxy(obj, component, path = '') {
 				const fullPath = path ? `${path}.${String(key)}` : String(key);
 				Reflect.set(target, key, value);
 				notifyStateChange(component, fullPath);
-				flushPending.call(component);
 				return true;
 			},
 			deleteProperty(target, key) {
@@ -262,7 +266,6 @@ function makeStateProxy(obj, component, path = '') {
 				const fullPath = path ? `${path}.${String(key)}` : String(key);
 				Reflect.deleteProperty(target, key);
 				notifyStateChange(component, fullPath);
-				flushPending.call(component);
 				return true;
 			},
 		});

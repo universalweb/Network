@@ -1,0 +1,97 @@
+/*
+	Universal Web Components — public surface.
+	Re-exports the curated public API. Deep imports continue to work for advanced use.
+*/
+export {
+	ClassList,
+	WebComponent,
+	classList,
+	getGlobal,
+	liveChildren,
+	registerChild,
+	registry,
+	setGlobal,
+	subscribeGlobal,
+	watchGlobal,
+} from './base.js';
+export {
+	comp,
+	each,
+	liveList,
+	list,
+} from './template.js';
+export { bind } from './state/binding.js';
+export { getRef, makeRefsProxy, registerRef } from './dom/refs.js';
+export { allChildren } from './dom/children.js';
+export {
+	appendTo,
+	findComponent,
+	findElement,
+	getComponent,
+	getComponentRoot,
+	getComponents,
+	getComponentsArray,
+	ifAssign,
+	prependTo,
+} from './dom/dom.js';
+export { delegate, removeDelegate } from './dom/delegate.js';
+export {
+	registerBehavior,
+	getBehavior,
+	isBehaviorAttr,
+	behaviorAttrNames,
+} from './behaviors/index.js';
+export { setInert } from './dom/inert.js';
+export { nextFrame, schedule } from './lifecycle/scheduler.js';
+export { atPhase } from './lifecycle/phase.js';
+export {
+	addInterval,
+	clearIntervals,
+	clearTimeouts,
+	removeComponentTimeout,
+	setComponentTimeout,
+	stopInterval,
+} from './timers.js';
+export { Logger, IS_PRODUCTION, isDev } from './debug/logger.js';
+export {
+	assign,
+	assignPromisePair,
+	cachedProxy,
+	callFn,
+	clearUnsubs,
+	createElementFromHTML,
+	eachArray,
+	eachNodeList,
+	eachObject,
+	fireResolver,
+	getOrInit,
+	getProto,
+	getValueAtPath,
+	hasOwn,
+	hasValue,
+	isArray,
+	isElement,
+	isEmpty,
+	isError,
+	isFunction,
+	isNull,
+	isObject,
+	isPlainObject,
+	isPromiseLike,
+	isShadowRoot,
+	isString,
+	isSymbol,
+	isTypeUndefined,
+	isUndefined,
+	joinPath,
+	keysOf,
+	noValue,
+	parsePath,
+	pathsOverlap,
+	plainEqual,
+	queueAsyncError,
+	runHook,
+	setValueAtPath,
+	smartClone,
+	syncSubsByDiff,
+} from './utilities.js';

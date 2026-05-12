@@ -1,16 +1,5 @@
 :host {
-  position: fixed;
-  top: 18px;
-  right: 18px;
-  z-index: 9999;
-}
-
-.notification-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-  max-width: min(360px, calc(100vw - 36px));
+  display: block;
 }
 
 .notification {
@@ -32,15 +21,25 @@
   transform: translateX(0);
   opacity: 1;
   will-change: transform, opacity, filter;
-  animation: notification-in 0.42s cubic-bezier(0.16, 1, 0.3, 1);
-  transition: opacity 0.18s ease, transform 0.18s ease, border-color 0.18s ease,
-    background 0.18s ease;
+  animation: notification-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition:
+    opacity 0.22s ease,
+    transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 .notification:hover {
   background: var(--popup-bg-hover);
   border-color: var(--popup-border-hover);
-  transform: translateX(-2px);
+  transform: translateX(-3px) scale(1.01);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+.notification:active {
+  transform: translateX(-1px) scale(0.99);
+  transition-duration: 0.08s;
 }
 
 .notification.is-exit {
@@ -108,15 +107,16 @@
   0% {
     opacity: 0;
     filter: blur(8px);
-    transform: translate3d(42px, -14px, 0) scale(0.94);
+    transform: translate3d(56px, -18px, 0) scale(0.9);
   }
-
-  62% {
+  55% {
     opacity: 1;
     filter: blur(0);
-    transform: translate3d(-6px, 0, 0) scale(1.01);
+    transform: translate3d(-10px, 2px, 0) scale(1.025);
   }
-
+  78% {
+    transform: translate3d(3px, -1px, 0) scale(0.995);
+  }
   100% {
     opacity: 1;
     filter: blur(0);
@@ -130,10 +130,22 @@
     filter: blur(0);
     transform: translate3d(0, 0, 0) scale(1);
   }
-
   100% {
     opacity: 0;
     filter: blur(4px);
-    transform: translate3d(30px, -8px, 0) scale(0.96);
+    transform: translate3d(48px, -8px, 0) scale(0.92);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification {
+    animation: none;
+    transition-duration: 0.12s !important;
+  }
+  .notification:hover { transform: none; }
+  .notification.is-exit {
+    animation: none;
+    opacity: 0;
+    transform: none;
   }
 }

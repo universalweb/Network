@@ -1,5 +1,5 @@
-import { WebComponent } from '../../core/base.js';
-import { list } from '../../core/template.js';
+import { WebComponent, each } from '../../core/index.js';
+import { Panel } from '../../global/panel/panel.js';
 class ActivityLogEntry extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -55,33 +55,21 @@ class ActivityLogTab extends WebComponent {
 	}
 }
 customElements.define('activity-log-tab', ActivityLogTab);
-export class ActivityLog extends WebComponent {
+export class ActivityLog extends Panel {
 	static url = import.meta.url;
 	static styles = {
 		log: './activity-log.css',
 	};
 	static state = {
 		activeTab: '',
+		className: ['output-panel'],
 		entries: [],
+		id: 'ACTIVITY',
+		showDot: true,
 		tabs: [],
-		visibleEntries: [],
+		title: 'LOG',
 	};
-	onConnect() {
-		this.observe('entries', () => {
-			this.syncVisibleEntries();
-		});
-		this.observe('activeTab', () => {
-			this.syncTabs();
-			this.syncVisibleEntries();
-		});
-		this.observe('tabs', () => {
-			this.syncTabs();
-		});
-		this.syncTabs();
-		this.syncVisibleEntries();
-	}
-	entryMatchesActiveTab(entry) {
-		const { activeTab } = this.STATE;
+	entryMatchesActiveTab(entry, activeTab) {
 		if (activeTab === 'Inbound') {
 			return entry.direction === 'in';
 		}
@@ -90,29 +78,35 @@ export class ActivityLog extends WebComponent {
 		}
 		return true;
 	}
-	syncVisibleEntries() {
-		const activeTab = this.STATE.activeTab ?? '';
-		const visibleEntries = (this.STATE.entries ?? []).map((entry, index) => {
-			return {
-				...entry,
-				id: entry?.id ?? index,
-			};
-		}).filter((entry) => {
-			return this.entryMatchesActiveTab(entry);
-		});
-		this.state.visibleEntries = visibleEntries;
+	computeVisibleEntries() {
+		const activeTab = this.state.activeTab ?? '';
+		const entries = this.state.entries ?? [];
+		const out = [];
+		for (let i = 0; i < entries.length; i++) {
+			const entry = entries[i];
+			if (this.entryMatchesActiveTab(entry, activeTab)) {
+				out.push({
+					...entry,
+					id: entry?.id ?? i,
+				});
+			}
+		}
+		return out;
 	}
-	syncTabs() {
-		const activeTab = this.STATE.activeTab ?? '';
-		const tabs = (this.STATE.tabs ?? []).map((tab, index) => {
+	computeTabs() {
+		const activeTab = this.state.activeTab ?? '';
+		const tabs = this.state.tabs ?? [];
+		const out = [];
+		for (let i = 0; i < tabs.length; i++) {
+			const tab = tabs[i];
 			const label = typeof tab === 'string' ? tab : tab?.label ?? '';
-			return {
+			out.push({
 				active: label === activeTab,
-				key: label || index,
+				key: label || i,
 				label,
-			};
-		});
-		this.state.tabs = tabs;
+			});
+		}
+		return out;
 	}
 	createEntry(entry = {}) {
 		return {
@@ -137,20 +131,15 @@ export class ActivityLog extends WebComponent {
 			tab: this.state.activeTab,
 		});
 	}
-	render() {
-		// eslint-disable-next-line no-unused-expressions
-		this.html `
-			<section class="output-panel">
-				<div class="panel-header">
-					<span><span class="ph-id">ACTIVITY</span> // LOG</span>
-					<div class="ph-dot"></div>
-				</div>
+	renderBody() {
+		return this.htmlElement `
+			<div class="output-content">
 				<div class="output-tabs" @activity-log-tab-select=${this.handleTabClick}>
-					${list('tabs', ActivityLogTab)}
+					${() => each(this.computeTabs(), ActivityLogTab, (tab) => tab.key)}
 				</div>
 				<div class="output-feed">
 					${() => {
-						if (this.state.visibleEntries.length > 0) {
+						if (this.computeVisibleEntries().length > 0) {
 							return '';
 						}
 						return `
@@ -161,11 +150,9 @@ export class ActivityLog extends WebComponent {
 							</div>
 						`;
 					}}
-					${list('visibleEntries', ActivityLogEntry, (entry) => {
-						return entry.id;
-					})}
+					${() => each(this.computeVisibleEntries(), ActivityLogEntry, (entry) => entry.id)}
 				</div>
-			</section>
+			</div>
 		`;
 	}
 }

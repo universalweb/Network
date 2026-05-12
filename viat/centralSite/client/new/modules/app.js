@@ -13,31 +13,62 @@ import {
 	WALLET_PANEL,
 	WALLET_PARAMS,
 } from './appDefaults.js';
-import { WebComponent, setGlobal } from '../components/core/base.js';
-const appHost = new CSSStyleSheet();
-appHost.replaceSync(`:host { display: block; width: 100vw; height: 100vh; overflow: hidden;  }`);
+import { WebComponent, setGlobal } from '../components/core/index.js';
+import { UINotification } from '../components/global/notification/notification.js';
 class AppView extends WebComponent {
+	static id = 'app-view';
+	static url = import.meta.url;
 	static styles = {
-		appHost,
+		app: './app.css',
 	};
+	notificationPanel = null;
 	static async create(state, config) {
 		const app = new this(await state, config);
 		await WebComponent.preRender(app, document.body);
 		return app;
 	}
-	handleNotify(domEvent) {
-		this.getComponent('ui-notification')?.show(domEvent.detail?.data ?? {});
+	ensureNotificationPanel() {
+		if (this.notificationPanel?.isConnected) {
+			return this.notificationPanel;
+		}
+		this.notificationPanel = new UINotification();
+		document.body.appendChild(this.notificationPanel);
+		return this.notificationPanel;
 	}
-	handleSidebarToggle() {
-		this.refs.dashboard?.getComponent('dashboard-sidebar')?.toggle();
+	handleNotify(domEvent) {
+		this.ensureNotificationPanel().show(domEvent.detail?.data ?? {});
+	}
+	syncViewportClass() {
+		const w = this.globalState.environment?.viewport?.w ?? 'lg';
+		this.classList.value = `vw-${w}`;
+	}
+	handleViewportChange = () => {
+		this.syncViewportClass();
+	};
+	onMount() {
+		this.syncViewportClass();
+		this.delegate('viewport:change', this.handleViewportChange);
+	}
+	onDisconnect() {
+		this.notificationPanel?.remove();
+		this.notificationPanel = null;
 	}
 	render() {
+		// Shell owns persistent chrome; the page slot swaps via future router.
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
-			<ui-notification></ui-notification>
-			<app-dashboard
-				@notify=${this.handleNotify}
-				@open-dashboard-sidebar=${this.handleSidebarToggle}></app-dashboard>
+			<global-top-bar></global-top-bar>
+			<div class="shell-body">
+				<div class="shell-dock-rail">
+					<global-dock></global-dock>
+				</div>
+				<div class="shell-page">
+					<app-dashboard @notify=${this.handleNotify}></app-dashboard>
+				</div>
+				<global-sidebar></global-sidebar>
+			</div>
+			<global-bottom-bar></global-bottom-bar>
+			<global-pulldown></global-pulldown>
 		`;
 	}
 	get refs() {
@@ -45,31 +76,34 @@ class AppView extends WebComponent {
 		return {
 			dashboard,
 			activityLog: dashboard?.getComponent('activity-log'),
-			globalBottomBar: dashboard?.getComponent('global-bottom-bar'),
-			globalDock: dashboard?.getComponent('global-dock'),
-			networkStats: dashboard?.getComponent('dashboard-sidebar')?.getComponent('network-stats'),
+			globalBottomBar: this.getComponent('global-bottom-bar'),
+			globalDock: this.getComponent('global-dock'),
+			networkStats: this.getComponent('global-sidebar')?.getComponent('network-stats'),
 			centerBar: dashboard?.getComponent('center-bar'),
-			globalTopBar: dashboard?.getComponent('global-top-bar'),
+			globalTopBar: this.getComponent('global-top-bar'),
+			globalPulldown: this.getComponent('global-pulldown'),
 			transmitPanel: dashboard?.getComponent('transmit-panel'),
 			walletAmount: dashboard?.getComponent('wallet-amount'),
 			walletPanel: dashboard?.getComponent('wallet-panel'),
+			walletStatsPanel: dashboard?.getComponent('wallet-stats-panel'),
 			walletParams: dashboard?.getComponent('wallet-params'),
 		};
 	}
 	async onRender() {
+		// TODO: This is a bit of a hack to set the initial state of the dashboard components after they have been rendered. We should instead use the register component function that does this via the DOM but will need to make that a config for the component itself
 		const dashboard = this.getComponent('app-dashboard');
-		await WebComponent.waitRenderTree(dashboard);
+		await dashboard.whenRendered;
 		const { refs } = this;
 		Object.assign(refs.centerBar.state, CENTER_BAR);
 		Object.assign(refs.globalTopBar.state, TOP_BAR);
-		refs.globalDock.state.items = DOCK.items;
 		refs.networkStats.state.chainStatus = CHAIN_STATUS;
 		refs.networkStats.state.networkData = NETWORK_DATA;
-		Object.assign(refs.walletPanel.state, WALLET_PANEL);
+		Object.assign(refs.walletStatsPanel.state, WALLET_PANEL);
 		refs.walletParams.state.params = WALLET_PARAMS;
 		Object.assign(refs.walletAmount.state, WALLET_AMOUNT);
 		Object.assign(refs.transmitPanel.state, TRANSMIT);
 		refs.globalBottomBar.state.columns = BOTTOM_BAR_COLUMNS;
+		refs.globalDock.state.items = DOCK.items;
 		refs.activityLog.state.activeTab = 'All';
 		refs.activityLog.state.entries = ACTIVITY_ENTRIES;
 		refs.activityLog.state.tabs = ACTIVITY_TABS;

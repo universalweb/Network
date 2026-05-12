@@ -1,0 +1,58 @@
+/* ══════════════════════════════════════════════════════
+   CUSTOM SCROLLBAR
+══════════════════════════════════════════════════════ */
+
+/* ── Firefox / standards ────────────────────────────── */
+.panel,
+.panel *,
+.dashboard-center,
+.dashboard-dock,
+.dashboard-sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--cyan-glow-faint) transparent;
+}
+
+/* ── Webkit (Chrome, Safari, Edge) ──────────────────── */
+.panel::-webkit-scrollbar,
+.panel *::-webkit-scrollbar,
+.dashboard-center::-webkit-scrollbar,
+.dashboard-dock::-webkit-scrollbar,
+.dashboard-sidebar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.panel::-webkit-scrollbar-track,
+.panel *::-webkit-scrollbar-track,
+.dashboard-center::-webkit-scrollbar-track,
+.dashboard-dock::-webkit-scrollbar-track,
+.dashboard-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.panel::-webkit-scrollbar-thumb,
+.panel *::-webkit-scrollbar-thumb,
+.dashboard-center::-webkit-scrollbar-thumb,
+.dashboard-dock::-webkit-scrollbar-thumb,
+.dashboard-sidebar::-webkit-scrollbar-thumb {
+  background: var(--cyan-glow-faint);
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+.panel::-webkit-scrollbar-thumb:hover,
+.panel *::-webkit-scrollbar-thumb:hover,
+.dashboard-center::-webkit-scrollbar-thumb:hover,
+.dashboard-dock::-webkit-scrollbar-thumb:hover,
+.dashboard-sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--cyan-glow-soft);
+}
+
+.panel::-webkit-scrollbar-corner,
+.panel *::-webkit-scrollbar-corner,
+.dashboard-center::-webkit-scrollbar-corner,
+.dashboard-dock::-webkit-scrollbar-corner,
+.dashboard-sidebar::-webkit-scrollbar-corner {
+  background: transparent;
+}

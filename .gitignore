@@ -85,8 +85,6 @@ tigerbeetle/*
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-prototype*.html
-
 /data/
 viat/neural/
 .github/agents/*
@@ -99,3 +97,6 @@ agent/types/*
 .playwright/*
 .playwright-mcp/*
 agent/docs/classes/*
+*.png
+*.private.md
+.CLAUDE.MD.swp

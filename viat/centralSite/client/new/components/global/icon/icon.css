@@ -1,0 +1,56 @@
+:host {
+	display: inline-flex;
+	flex: 0 0 auto;
+	color: currentColor;
+	transition: color 0.15s ease;
+}
+:host(:hover) {
+	color: var(--icon-color-hover, currentColor);
+}
+:host([active]),
+:host(.active) {
+	color: var(--icon-color-active, currentColor);
+}
+:host([disabled]),
+:host(.disabled) {
+	color: var(--icon-color-disabled, currentColor);
+}
+.icon {
+	display: inline-block;
+	user-select: none;
+	flex: 0 0 auto;
+	overflow: visible;
+	color: currentColor;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+/* Sizes — width/height drive the box; SVG scales to fit. */
+.size-xs { width: 0.875rem; height: 0.875rem; }
+.size-sm { width: 1rem;     height: 1rem; }
+.size-md { width: 1.125rem; height: 1.125rem; }
+.size-lg { width: 1.5rem;   height: 1.5rem; }
+.size-xl { width: 2rem;     height: 2rem; }
+/* Tones */
+.tone-default { color: currentColor; }
+.tone-muted   { color: var(--text-muted, rgba(255, 255, 255, 0.55)); }
+.tone-subtle  { color: var(--text-subtle, rgba(255, 255, 255, 0.4)); }
+.tone-success { color: #34d399; }
+.tone-warning { color: #fbbf24; }
+.tone-danger  { color: #f87171; }
+.tone-info    { color: #60a5fa; }
+.tone-accent  { color: var(--teal, #5eead4); }
+/* Spin */
+.is-spinning {
+	animation: ui-icon-spin 1.05s linear infinite;
+	transform-origin: center;
+}
+@keyframes ui-icon-spin {
+	from { transform: rotate(0deg); }
+	to   { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+	.is-spinning { animation-duration: 2.5s; }
+}

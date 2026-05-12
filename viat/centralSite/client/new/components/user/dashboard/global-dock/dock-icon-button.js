@@ -5,7 +5,14 @@ export class DockIconButton extends IconButtonBase {
 		dockIconButton: './dock-icon-button.css',
 	};
 	static state = {
-		classes: new Set(['rail-icon-btn', 'icon-font']),
+		className: ['rail-icon-btn'],
+		onClick: 'dockSelect',
 	};
+	onMount() {
+		super.onMount();
+		if (this.state.active) {
+			this.emit(this.state.onClick, {});
+		}
+	}
 }
 customElements.define('dock-icon-button', DockIconButton);

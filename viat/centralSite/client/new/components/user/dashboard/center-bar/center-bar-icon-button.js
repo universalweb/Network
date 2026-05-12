@@ -6,7 +6,13 @@ export class CenterBarIconButton extends IconButtonBase {
 	};
 	static state = {
 		onClick: 'center-bar-action',
-		classes: new Set(['tb-icon-btn', 'icon-font']),
+		className: ['tb-icon-btn'],
 	};
+	iconState() {
+		return {
+			name: this.state.icon,
+			size: 'sm',
+		};
+	}
 }
 customElements.define('center-bar-icon-button', CenterBarIconButton);
