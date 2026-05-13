@@ -1,4 +1,5 @@
 import '../components/index.js';
+import './tools.js';
 import {
 	ACTIVITY_ENTRIES,
 	ACTIVITY_TABS,
@@ -16,11 +17,11 @@ import {
 import { WebComponent, setGlobal } from '../components/core/index.js';
 import { UINotification } from '../components/global/notification/notification.js';
 class AppView extends WebComponent {
-	static id = 'app-view';
 	static url = import.meta.url;
 	static styles = {
 		app: './app.css',
 	};
+	id = 'app';
 	notificationPanel = null;
 	static async create(state, config) {
 		const app = new this(await state, config);
@@ -48,10 +49,56 @@ class AppView extends WebComponent {
 	onMount() {
 		this.syncViewportClass();
 		this.delegate('viewport:change', this.handleViewportChange);
+		window.addEventListener('keydown', this.handleKeyShortcut);
+	}
+	onVisible() {
+		console.log('[AI MAP]\n%s', this.aiMap());
 	}
 	onDisconnect() {
+		window.removeEventListener('keydown', this.handleKeyShortcut);
 		this.notificationPanel?.remove();
 		this.notificationPanel = null;
+	}
+	handleKeyShortcut = (domEvent) => {
+		if (domEvent.key === 'Escape') {
+			if (this.pulldownIsOpen()) {
+				this.emit('pulldown:state', {
+					open: false,
+				});
+				domEvent.preventDefault();
+			}
+			return;
+		}
+		if (domEvent.key === '`' || domEvent.key === '~') {
+			if (this.isTypingFocus()) {
+				return;
+			}
+			this.emit('pulldown:state', {
+				open: !this.pulldownIsOpen(),
+			});
+			domEvent.preventDefault();
+		}
+	};
+	isTypingFocus() {
+		let node = document.activeElement;
+		while (node) {
+			const tag = node.tagName;
+			if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+				return true;
+			}
+			if (node.isContentEditable) {
+				return true;
+			}
+			const shadow = node.shadowRoot;
+			if (!shadow) {
+				return false;
+			}
+			node = shadow.activeElement;
+		}
+		return false;
+	}
+	pulldownIsOpen() {
+		return this.getComponent('global-pulldown')?.refs?.pulldown?.state?.open === true;
 	}
 	render() {
 		// Shell owns persistent chrome; the page slot swaps via future router.

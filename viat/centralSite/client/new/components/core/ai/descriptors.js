@@ -113,6 +113,7 @@ export function describeComponent(component, opts = {}) {
 	const includeState = opts.includeState !== false;
 	const includeText = opts.includeText !== false;
 	const includeTools = opts.includeTools !== false;
+	const includeRefs = opts.includeRefs !== false;
 	const id = getComponentId(component);
 	const path = getPathForComponent(component);
 	const ariaLabel = component.getAttribute('aria-label');
@@ -120,12 +121,25 @@ export function describeComponent(component, opts = {}) {
 		id,
 		path,
 		tag: component.tagName.toLowerCase(),
+		phase: component.phase ?? null,
 		role: component.constructor.aiRole ?? component.getAttribute('role') ?? null,
 		label: ariaLabel ?? component.constructor.aiLabel ?? null,
 		description: component.constructor.aiDescription ?? '',
 		attributes: collectAttributes(component),
 		bounds: describeBounds(component),
+		visibility: {
+			isConnected: component.isConnected,
+			isRendered: component.isRendered === true,
+			isMounted: component.isMounted === true,
+			isLive: component.isLive === true,
+			isVisible: component.isVisible === true,
+			isIntersecting: component.isIntersecting === true,
+			isIntersected: component.isIntersected === true,
+		},
 	};
+	if (includeRefs && component.refsMap) {
+		desc.refs = Object.keys(component.refsMap);
+	}
 	if (includeText) {
 		desc.text = collectTextSnippet(component);
 	}
@@ -145,6 +159,7 @@ export function describeComponent(component, opts = {}) {
 				path: getPathForComponent(child),
 				id: getComponentId(child),
 				tag: child.tagName.toLowerCase(),
+				phase: child.phase ?? null,
 			};
 		});
 	}

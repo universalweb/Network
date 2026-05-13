@@ -37,7 +37,7 @@ export class TransmitPanel extends Panel {
 					<div class="field-with-addon">
 						<input id="amount" type="text"
 							placeholder="${this.state.amountPlaceholder}"
-							value="${this.state.amountValue}">
+							$value="amountValue">
 						<div class="field-addon">${this.state.tokenLabel}</div>
 					</div>
 				</div>
@@ -45,13 +45,13 @@ export class TransmitPanel extends Panel {
 					<div class="field-head">
 						<div class="field-label">${this.state.gasLabel}</div>
 					</div>
-					<input id="gas" type="text" value="${this.state.gasValue}" readonly>
+					<input id="gas" type="text" $value="gasValue" readonly>
 				</div>
 				<div class="field full-width">
 					<div class="field-label">${this.state.recipientLabel}</div>
 					<input id="recipient" type="text"
 						placeholder="${this.state.recipientPlaceholder}"
-						value="${this.state.recipientValue}">
+						$value="recipientValue">
 				</div>
 				<button class="btn-transmit" @click=${this.handleTransmit} tooltip="Execute transfer">${this.state.buttonLabel}</button>
 			</div>

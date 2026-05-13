@@ -197,3 +197,24 @@ export function getStats() {
 		subscribers: subscribers.size,
 	};
 }
+export function listAllTools() {
+	const seen = new Set();
+	const out = [];
+	function push(name, def) {
+		if (seen.has(name)) {
+			return;
+		}
+		seen.add(name);
+		out.push({
+			name,
+			description: def.description ?? '',
+			inputSchema: def.inputSchema ?? { type: 'object' },
+			mutating: def.mutating === true,
+		});
+	}
+	globalTools.forEach((def, name) => push(name, def));
+	components.forEach((component) => {
+		getTools(component).forEach((def, name) => push(name, def));
+	});
+	return out;
+}

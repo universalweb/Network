@@ -1,5 +1,5 @@
 import { eachComponent } from './registry.js';
-import { getPathForComponent } from './paths.js';
+import { getPathForComponent, pageOverview } from './paths.js';
 function snapshot(component, id) {
 	if (!component.isConnected) {
 		return null;
@@ -90,4 +90,32 @@ export function clearHighlights() {
 	if (highlightLayer) {
 		highlightLayer.replaceChildren();
 	}
+}
+function renderTreeNode(name, node, prefix, isLast, isRoot, lines) {
+	const branch = isRoot ? '' : (isLast ? '└── ' : '├── ');
+	const tagPart = node.tag ? ` <${node.tag}>` : '';
+	const phasePart = node.phase ? ` :${node.phase}` : '';
+	const visPart = node.visible === true ? ' 👁' : '';
+	const rolePart = node.role ? ` [${node.role}]` : '';
+	const labelPart = node.label ? ` "${node.label}"` : '';
+	lines.push(`${prefix}${branch}${name}${tagPart}${phasePart}${visPart}${rolePart}${labelPart}`);
+	if (!node.children) {
+		return;
+	}
+	const childPrefix = isRoot ? prefix : prefix + (isLast ? '    ' : '│   ');
+	const childEntries = Object.entries(node.children);
+	for (let i = 0; i < childEntries.length; i++) {
+		const [childName, childNode] = childEntries[i];
+		renderTreeNode(childName, childNode, childPrefix, i === childEntries.length - 1, false, lines);
+	}
+}
+export function textPageMap(opts = {}) {
+	const overview = pageOverview(opts);
+	const lines = [];
+	const rootEntries = Object.entries(overview);
+	for (let i = 0; i < rootEntries.length; i++) {
+		const [rootName, rootNode] = rootEntries[i];
+		renderTreeNode(rootName, rootNode, '', i === rootEntries.length - 1, true, lines);
+	}
+	return lines.join('\n');
 }

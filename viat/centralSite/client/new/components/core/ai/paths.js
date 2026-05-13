@@ -106,7 +106,7 @@ export function getRootComponents() {
 export function listPaths() {
 	return Array.from(getIndex().componentByPath.keys());
 }
-function lightDescriptor(component) {
+function lightDescriptor(component, opts) {
 	const node = {
 		tag: component.tagName.toLowerCase(),
 	};
@@ -118,10 +118,17 @@ function lightDescriptor(component) {
 	if (label) {
 		node.label = label;
 	}
+	if (opts?.withPhase) {
+		node.phase = component.phase ?? null;
+	}
+	if (opts?.withVisibility) {
+		node.visible = component.isVisible === true;
+		node.intersecting = component.isIntersecting === true;
+	}
 	return node;
 }
-function buildOverviewNode(component, depth) {
-	const node = lightDescriptor(component);
+function buildOverviewNode(component, depth, opts) {
+	const node = lightDescriptor(component, opts);
 	if (depth <= 0) {
 		return node;
 	}
@@ -136,21 +143,27 @@ function buildOverviewNode(component, depth) {
 		if (!segment) {
 			return;
 		}
-		out[segment] = buildOverviewNode(child, depth - 1);
+		out[segment] = buildOverviewNode(child, depth - 1, opts);
 	});
 	node.children = out;
 	return node;
 }
 export function pageOverview(opts = {}) {
 	const depth = opts.depth ?? Infinity;
-	const out = {};
 	const nameByComponent = getIndex().nameByComponent;
+	if (opts.root) {
+		const rootSegment = nameByComponent.get(opts.root) ?? opts.root.tagName?.toLowerCase() ?? 'root';
+		return {
+			[rootSegment]: buildOverviewNode(opts.root, depth - 1, opts),
+		};
+	}
+	const out = {};
 	getRoots().forEach((root) => {
 		const segment = nameByComponent.get(root);
 		if (!segment) {
 			return;
 		}
-		out[segment] = buildOverviewNode(root, depth - 1);
+		out[segment] = buildOverviewNode(root, depth - 1, opts);
 	});
 	return out;
 }
@@ -160,7 +173,7 @@ export function peek(path, opts = {}) {
 	if (!component) {
 		return null;
 	}
-	const node = buildOverviewNode(component, depth);
+	const node = buildOverviewNode(component, depth, opts);
 	node.path = path;
 	return node;
 }

@@ -28,7 +28,19 @@ export class UIThemeSelect extends WebComponent {
 			return;
 		}
 		const rect = btn.getBoundingClientRect();
-		this.state.dropStyle = `top:${rect.bottom + 6}px;right:${window.innerWidth - rect.right}px`;
+		const viewportH = window.innerHeight;
+		const gap = 6;
+		const drop = this.shadowRoot.querySelector('.theme-drop');
+		const estimatedH = drop?.scrollHeight || ((THEMES.length * 32) + 4);
+		const spaceBelow = viewportH - rect.bottom - gap;
+		const spaceAbove = rect.top - gap;
+		const right = window.innerWidth - rect.right;
+		const flipUp = spaceBelow < estimatedH && spaceAbove > spaceBelow;
+		if (flipUp) {
+			this.state.dropStyle = `bottom:${(viewportH - rect.top) + gap}px;right:${right}px`;
+		} else {
+			this.state.dropStyle = `top:${rect.bottom + gap}px;right:${right}px`;
+		}
 	}
 	handlePopupClick(domEvent) {
 		const themeId = domEvent.target?.dataset?.themeId;

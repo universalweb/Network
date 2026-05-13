@@ -1417,6 +1417,16 @@ function buildSpotPlan(map, entry) {
 	}
 	return null;
 }
+const DOLLAR_BIND_ATTR_RE = /^\$(\w+)$/;
+function normalizeBindKey(rawKey) {
+	if (rawKey.startsWith('state.')) {
+		return rawKey.slice(6);
+	}
+	if (rawKey.startsWith('globalState.')) {
+		return `global.${rawKey.slice(12)}`;
+	}
+	return rawKey;
+}
 function extractDataBindPlans(fragment) {
 	const plans = [];
 	eachNodeList(fragment.querySelectorAll('[data-bind]'), (el) => {
@@ -1430,7 +1440,7 @@ function extractDataBindPlans(fragment) {
 		}
 		plans.push({
 			path,
-			key: stateKey,
+			key: normalizeBindKey(stateKey),
 		});
 		el.removeAttribute('data-bind');
 	});
@@ -1445,9 +1455,32 @@ function extractDataBindPlans(fragment) {
 		}
 		plans.push({
 			path,
-			key: stateKey,
+			key: normalizeBindKey(stateKey),
 		});
 		el.removeAttribute('@bind');
+	});
+	eachNodeList(fragment.querySelectorAll('*'), (el) => {
+		const attrs = el.attributes;
+		for (let i = attrs.length - 1; i >= 0; i--) {
+			const attrName = attrs[i].name;
+			const match = DOLLAR_BIND_ATTR_RE.exec(attrName);
+			if (!match) {
+				continue;
+			}
+			const rawKey = attrs[i].value;
+			if (!rawKey) {
+				el.removeAttribute(attrName);
+				continue;
+			}
+			const path = getNodePath(el, fragment);
+			if (path) {
+				plans.push({
+					path,
+					key: normalizeBindKey(rawKey),
+				});
+			}
+			el.removeAttribute(attrName);
+		}
 	});
 	return plans;
 }

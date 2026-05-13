@@ -34,21 +34,33 @@ export class UIInput extends WebComponent {
 		this.refs.input?.select();
 	}
 	handleInput(domEvent) {
-		this.emit('input', { value: domEvent.target.value, source: this });
+		this.emit('input', {
+			value: domEvent.target.value,
+			source: this,
+		});
 	}
 	handleChange(domEvent) {
-		this.emit('change', { value: domEvent.target.value, source: this });
+		this.emit('change', {
+			value: domEvent.target.value,
+			source: this,
+		});
 	}
 	handleFocus() {
-		this.emit('focus', { source: this });
+		this.emit('focus', {
+			source: this,
+		});
 	}
 	handleBlur() {
-		this.emit('blur', { source: this });
+		this.emit('blur', {
+			source: this,
+		});
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
-		this.html`
-			<div class="${() => this.hostClass}">
+		this.html `
+			<div class="${() => {
+				return this.hostClass;
+			}}">
 				<span class="field-leading"><slot name="leading"></slot></span>
 				<input #input
 					class="field-control"
@@ -58,11 +70,10 @@ export class UIInput extends WebComponent {
 					autocomplete="${this.state.autocomplete}"
 					inputmode="${this.state.inputmode}"
 					title="${this.state.title}"
-					.value=${this.state.value}
+					$value="value"
 					?disabled=${this.state.disabled}
 					?readonly=${this.state.readonly}
 					?spellcheck=${this.state.spellcheck}
-					@bind="value"
 					@${this.handleInput}
 					@change=${this.handleChange}
 					@focus=${this.handleFocus}

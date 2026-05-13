@@ -1,0 +1,36 @@
+:host {
+	display: block;
+}
+.sp-steps {
+	margin: 0;
+	padding: 16px 18px 16px 38px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	font-family: var(--font-mono);
+	font-size: 0.6875rem;
+	line-height: 1.5;
+	color: var(--text-muted, rgba(255, 255, 255, 0.6));
+}
+.sp-steps li::marker {
+	color: var(--teal, #5eead4);
+	font-weight: 600;
+}
+.sp-link {
+	color: var(--teal, #5eead4);
+	text-decoration: none;
+	border-bottom: 1px dotted var(--cyan-glow-faint, rgba(0, 240, 255, 0.35));
+}
+.sp-link:hover {
+	color: var(--cyan-glow, rgba(0, 240, 255, 0.9));
+}
+.sp-tag {
+	display: inline-block;
+	padding: 1px 5px;
+	background: var(--bg-dark, #04060a);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	border-radius: 3px;
+	color: var(--teal, #5eead4);
+	font-size: 0.625rem;
+	line-height: 1.2;
+}

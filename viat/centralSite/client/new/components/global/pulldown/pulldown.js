@@ -45,6 +45,13 @@ export class UIPullDown extends WebComponent {
 	handleState = (domEvent) => {
 		const isOpen = domEvent.detail.data.open;
 		const drawer = this.refs.drawer;
+		const wasHidden = !drawer.classList.contains('is-active') && !drawer.classList.contains('is-open');
+		if (isOpen && wasHidden) {
+			drawer.classList.add('is-active');
+			drawer.style.transition = 'none';
+			drawer.style.transform = 'translateY(-100%)';
+			drawer.getBoundingClientRect();
+		}
 		drawer.style.transition = `transform ${SNAP_MS}ms ${SNAP_CURVE}`;
 		drawer.style.transform = isOpen ? 'translateY(0)' : 'translateY(-100%)';
 		drawer.classList.toggle('is-open', isOpen);

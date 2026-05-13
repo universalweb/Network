@@ -47,4 +47,6 @@ export { UIBadge } from './global/badge/badge.js';
 export { UIEmptyState } from './global/empty-state/empty-state.js';
 export { UIPullDown } from './global/pulldown/pulldown.js';
 export { GlobalPulldown } from './user/dashboard/global-pulldown/global-pulldown.js';
+export { AIChat } from './user/dashboard/ai-chat/ai-chat.js';
+export { HelpPanel } from './user/dashboard/help-panel/help-panel.js';
 import './user/dashboard/center-bar/center-bar.js';

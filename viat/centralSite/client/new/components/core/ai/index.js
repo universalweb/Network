@@ -9,6 +9,7 @@ export {
 	getComponentId,
 	getStats,
 	getTools,
+	listAllTools,
 	listComponents,
 	registerComponent,
 	subscribe,
@@ -38,6 +39,7 @@ export {
 export {
 	clearHighlights,
 	highlight,
+	textPageMap,
 	visualPageMap,
 } from './visual.js';
 export {

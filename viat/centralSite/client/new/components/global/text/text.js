@@ -12,7 +12,9 @@ export class UIText extends WebComponent {
 		truncate: false,
 	};
 	get hostClass() {
-		const parts = ['text', `var-${this.state.variant}`, `tone-${this.state.tone}`, `align-${this.state.align}`];
+		const parts = [
+			'text', `var-${this.state.variant}`, `tone-${this.state.tone}`, `align-${this.state.align}`,
+		];
 		if (this.state.weight) {
 			parts.push(`weight-${this.state.weight}`);
 		}
@@ -23,8 +25,10 @@ export class UIText extends WebComponent {
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
-		this.html`
-			<span class="${() => this.hostClass}"><slot></slot></span>
+		this.html `
+			<span class="${() => {
+				return this.hostClass;
+			}}"><slot></slot></span>
 		`;
 	}
 }

@@ -1,5 +1,5 @@
 import { isFunction } from '../utilities.js';
-import { describeComponent } from './descriptors.js';
+import { describeComponent, sanitize } from './descriptors.js';
 import {
 	defineInstanceTool,
 	getComponentId,
@@ -7,7 +7,23 @@ import {
 	registerComponent,
 	unregisterComponent,
 } from './registry.js';
+import {
+	getDirectChildren,
+	getNameForComponent,
+	getPathForComponent,
+	pageOverview,
+} from './paths.js';
+import { textPageMap } from './visual.js';
 const APPLIED = Symbol('viat-ai-mixin-applied');
+const WHEN_BY_PHASE = {
+	connected: 'whenConnected',
+	rendered: 'whenRendered',
+	mounted: 'whenMounted',
+	live: 'whenLive',
+	visible: 'whenVisible',
+	disconnected: 'whenDisconnected',
+	destroyed: 'whenDestroyed',
+};
 function findAiAncestor(element) {
 	const root = element.getRootNode();
 	const parentHost = root instanceof ShadowRoot ? root.host : element.parentElement;
@@ -15,6 +31,73 @@ function findAiAncestor(element) {
 		return parentHost;
 	}
 	return null;
+}
+function collectAttrSnapshot(component) {
+	const out = {};
+	const list = component.attributes;
+	for (let i = 0; i < list.length; i++) {
+		out[list[i].name] = list[i].value;
+	}
+	return out;
+}
+function collectBounds(component) {
+	if (!component.isConnected) {
+		return null;
+	}
+	const rect = component.getBoundingClientRect();
+	const inViewport = rect.bottom > 0 && rect.right > 0 && rect.top < window.innerHeight && rect.left < window.innerWidth;
+	return {
+		x: Math.round(rect.x),
+		y: Math.round(rect.y),
+		w: Math.round(rect.width),
+		h: Math.round(rect.height),
+		visible: rect.width > 0 && rect.height > 0,
+		inViewport,
+	};
+}
+function walkSubtree(component, visitor) {
+	const kids = getDirectChildren(component);
+	for (let i = 0; i < kids.length; i++) {
+		visitor(kids[i]);
+		walkSubtree(kids[i], visitor);
+	}
+}
+function makeMatcher(filter) {
+	if (isFunction(filter)) {
+		return filter;
+	}
+	if (!filter || typeof filter !== 'object') {
+		return null;
+	}
+	const tagFilter = filter.tag ? String(filter.tag).toLowerCase() : null;
+	const roleFilter = filter.role ?? null;
+	const labelFilter = filter.label ? String(filter.label).toLowerCase() : null;
+	const pathPrefix = filter.pathStartsWith ? String(filter.pathStartsWith) : null;
+	return (candidate) => {
+		if (tagFilter && candidate.tagName.toLowerCase() !== tagFilter) {
+			return false;
+		}
+		if (roleFilter) {
+			const compRole = candidate.constructor.aiRole ?? candidate.getAttribute('role');
+			if (compRole !== roleFilter) {
+				return false;
+			}
+		}
+		if (labelFilter) {
+			const ariaLabel = (candidate.getAttribute('aria-label') ?? candidate.constructor.aiLabel ?? '').toLowerCase();
+			const desc = (candidate.constructor.aiDescription ?? '').toLowerCase();
+			if (!ariaLabel.includes(labelFilter) && !desc.includes(labelFilter)) {
+				return false;
+			}
+		}
+		if (pathPrefix) {
+			const path = getPathForComponent(candidate) ?? '';
+			if (!path.startsWith(pathPrefix)) {
+				return false;
+			}
+		}
+		return true;
+	};
 }
 export const aiMethods = {
 	aiRegister(parent) {
@@ -27,14 +110,119 @@ export const aiMethods = {
 	aiId() {
 		return getComponentId(this);
 	},
+	aiPath() {
+		return getPathForComponent(this);
+	},
+	aiSegment() {
+		return getNameForComponent(this);
+	},
+	aiChildren() {
+		return getDirectChildren(this);
+	},
+	aiOverview(opts) {
+		return pageOverview({ ...opts, root: this });
+	},
+	aiMap(opts) {
+		return textPageMap({ ...opts, root: this });
+	},
 	aiDescribe(opts) {
 		return describeComponent(this, opts);
 	},
 	aiTools() {
 		return getTools(this);
 	},
-	aiDefineTool(name, def) {
-		return defineInstanceTool(this, name, def);
+	aiDefineTool(toolLabel, def) {
+		return defineInstanceTool(this, toolLabel, def);
+	},
+	aiPhase() {
+		return this.phase ?? null;
+	},
+	aiState() {
+		const projector = isFunction(this.constructor.aiState) ? this.constructor.aiState : null;
+		const raw = projector ? projector(this) : this.STATE;
+		return sanitize(raw, 0);
+	},
+	aiAttrs() {
+		return collectAttrSnapshot(this);
+	},
+	aiBounds() {
+		return collectBounds(this);
+	},
+	aiVisibility() {
+		return {
+			phase: this.phase ?? null,
+			isConnected: this.isConnected,
+			isRendered: this.isRendered === true,
+			isMounted: this.isMounted === true,
+			isLive: this.isLive === true,
+			isVisible: this.isVisible === true,
+			isIntersecting: this.isIntersecting === true,
+			isIntersected: this.isIntersected === true,
+		};
+	},
+	aiRefs() {
+		if (!this.refsMap) {
+			return [];
+		}
+		return Object.keys(this.refsMap);
+	},
+	aiRef(refLabel) {
+		return isFunction(this.getRef) ? this.getRef(refLabel) : null;
+	},
+	aiText(maxLen = 240) {
+		const root = this.shadowRoot ?? this;
+		const text = root.textContent?.trim() ?? '';
+		if (!text) {
+			return '';
+		}
+		const condensed = text.replace(/\s+/g, ' ');
+		return condensed.length > maxLen ? `${condensed.slice(0, maxLen)}…` : condensed;
+	},
+	aiEmit(eventLabel, data) {
+		if (!isFunction(this.emit)) {
+			return null;
+		}
+		return this.emit(eventLabel, data);
+	},
+	aiGlobalState() {
+		return sanitize(this.globalState, 0);
+	},
+	aiWaitFor(phaseName) {
+		const promiseKey = WHEN_BY_PHASE[phaseName];
+		if (!promiseKey) {
+			return Promise.reject(new Error(`aiWaitFor: unknown phase "${phaseName}"`));
+		}
+		return this[promiseKey] ?? Promise.resolve();
+	},
+	aiQuery(filter) {
+		const out = [];
+		const match = makeMatcher(filter);
+		if (!match) {
+			walkSubtree(this, (candidate) => out.push(candidate));
+			return out;
+		}
+		walkSubtree(this, (candidate) => {
+			if (match(candidate)) {
+				out.push(candidate);
+			}
+		});
+		return out;
+	},
+	aiFind(filter) {
+		const match = makeMatcher(filter);
+		if (!match) {
+			return getDirectChildren(this)[0] ?? null;
+		}
+		let found = null;
+		walkSubtree(this, (candidate) => {
+			if (found) {
+				return;
+			}
+			if (match(candidate)) {
+				found = candidate;
+			}
+		});
+		return found;
 	},
 };
 function wrapAfter(target, hookName, after) {

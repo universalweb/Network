@@ -1,0 +1,13 @@
+:host {
+	display: block;
+}
+.hp-body {
+	display: flex;
+	flex-direction: column;
+	padding: 6px 0 2px 0;
+}
+.hp-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}

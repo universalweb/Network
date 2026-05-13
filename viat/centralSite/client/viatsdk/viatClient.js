@@ -16,7 +16,7 @@ import { webAPI } from './webAPI.js';
 /*
 	TODO: Change dilithium and ed25519 to native or wasm variants if present for better performance. Currently using pure JS implementations for compatibility and ease of use in the browser.
 */
-class ViatClient {
+class VIATClientSDK {
 	static WALLET_SAVE_KIND = 'wallet.viat';
 	static WALLET_SAVE_VERSION = 1;
 	static DEFAULT_WALLET_NAME = 'wallet';
@@ -42,7 +42,7 @@ class ViatClient {
 		this.setURL(config);
 	}
 	static async create(config = {}) {
-		const client = new ViatClient(config);
+		const client = new VIATClientSDK(config);
 		await client.initialize(config);
 		return client;
 	}
@@ -192,7 +192,8 @@ class ViatClient {
 		return Buffer.from(sig);
 	}
 }
-extendClass(ViatClient, webAPI);
-extendClass(ViatClient, walletPersistence);
-export default ViatClient;
-export { ViatClient };
+extendClass(VIATClientSDK, webAPI);
+extendClass(VIATClientSDK, walletPersistence);
+export default VIATClientSDK;
+export { VIATClientSDK };
+export { encode, decode } from './cbor.js';

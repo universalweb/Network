@@ -1,5 +1,33 @@
 import '../../../global/pulldown/pulldown.js';
+import '../ai-chat/ai-chat.js';
+import '../help-panel/help-panel.js';
+import '../info-panel/info-panel.js';
+import '../setup-panel/setup-panel.js';
 import { WebComponent } from '../../../core/index.js';
+const PULLDOWN_HOTKEYS = [
+	{
+		id: 'esc',
+		keys: ['Esc'],
+		desc: 'Close pulldown',
+	},
+	{
+		id: 'send',
+		keys: ['Enter'],
+		desc: 'Send message',
+	},
+	{
+		id: 'newline',
+		keys: ['Shift', 'Enter'],
+		joiner: '+',
+		desc: 'Newline in chat',
+	},
+	{
+		id: 'toggle',
+		keys: ['~', '`'],
+		joiner: '/',
+		desc: 'Toggle pulldown',
+	},
+];
 export class GlobalPulldown extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -29,6 +57,14 @@ export class GlobalPulldown extends WebComponent {
 	handleClose() {
 		this.emit('pulldown:close', {});
 	}
+	handleBackdropClick = (domEvent) => {
+		if (domEvent.target !== domEvent.currentTarget) {
+			return;
+		}
+		this.emit('pulldown:state', {
+			open: false,
+		});
+	};
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html`
@@ -36,12 +72,18 @@ export class GlobalPulldown extends WebComponent {
 				.state=${this.pulldownState}
 				@pulldown:open=${this.handleOpen}
 				@pulldown:close=${this.handleClose}>
-				<div class="gpd-content">
-					<header class="gpd-header">
-						<h2>Pull-Down Drawer</h2>
-						<p>Drag the top bar down to reveal this panel. Past the snap threshold it commits to full screen with the bar pinned at the bottom. Drag the bar back up to dismiss.</p>
-					</header>
-					<slot></slot>
+				<div class="gpd-content" @click=${this.handleBackdropClick}>
+					<div class="gpd-columns">
+						<aside class="gpd-col gpd-col-help">
+							<info-panel></info-panel>
+							<setup-panel></setup-panel>
+							<help-panel .shortcuts=${PULLDOWN_HOTKEYS}></help-panel>
+						</aside>
+						<section class="gpd-col gpd-col-chat">
+							<ai-chat></ai-chat>
+						</section>
+						<aside class="gpd-col gpd-col-spacer"></aside>
+					</div>
 				</div>
 			</ui-pulldown>
 		`;

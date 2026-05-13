@@ -23,6 +23,17 @@
 }
 .pulldown-drawer.is-fully-open {
 	pointer-events: auto;
+	background: color-mix(in srgb, var(--bg-dark, #04060a) 62%, transparent);
+	-webkit-backdrop-filter: blur(18px) saturate(140%);
+	backdrop-filter: blur(18px) saturate(140%);
+	animation: pulldown-blur-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes pulldown-blur-in {
+	from {
+		background: var(--bg-dark, #04060a);
+		-webkit-backdrop-filter: blur(0) saturate(100%);
+		backdrop-filter: blur(0) saturate(100%);
+	}
 }
 .pulldown-content {
 	height: 100%;

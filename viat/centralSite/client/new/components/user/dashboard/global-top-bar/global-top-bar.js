@@ -36,8 +36,19 @@ export class GlobalTopBar extends WebComponent {
 		this.style.cursor = 'grab';
 		this.addEventListener('pointerdown', this.handlePointerDown);
 		this.delegate('click', this.handleClickCapture);
+		this.delegate('pulldown:state', this.handlePulldownState);
 		window.addEventListener('resize', this.handleResize);
 	}
+	handlePulldownState = (domEvent) => {
+		if (domEvent.target === this) {
+			return;
+		}
+		const targetOpen = domEvent.detail?.data?.open === true;
+		if (targetOpen === this.open) {
+			return;
+		}
+		this.snapTo(targetOpen);
+	};
 	onUnmount() {
 		this.removeEventListener('pointerdown', this.handlePointerDown);
 		this.removeDragListeners();

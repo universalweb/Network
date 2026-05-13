@@ -2,6 +2,9 @@
 	Universal Web Components — public surface.
 	Re-exports the curated public API. Deep imports continue to work for advanced use.
 */
+import { WebComponent } from './base.js';
+import { applyAiMixin } from './ai/mixin.js';
+applyAiMixin(WebComponent);
 export {
 	ClassList,
 	WebComponent,

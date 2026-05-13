@@ -217,12 +217,66 @@ it the moment it's mounted.
 | `.prop=${expr}` | Property setter — assigns `el.prop`, not the attribute (`.value=${state.text}`)            |
 | `@event=${fn}`  | Event listener with explicit name (`@click=${this.onClick}`)                               |
 | `@${fn}`        | Event listener with name **deduced from `fn.name`** (`@${this.dockSelect}` → `dockSelect`) |
-| `@bind=${key}`  | Two-way state binding (input/select/textarea)                                              |
+| `@bind=${key}`  | Two-way state binding (input/select/textarea) — explicit form, state key can differ from attr name |
+| `$attr="key"`   | Two-way binding shorthand (static) — binds the `attr` DOM attribute to state path `key`. Key is bare (`"amountValue"` → `state.amountValue`), or namespaced (`"state.X"`, `"globalState.X"`). |
 | `#name`         | Per-component element ref — accessed as `this.refs.name`                                   |
 
 Authors must quote interpolated attribute values: `<input class="${cls}">`, not `<input class=${cls}>`.
 
 > **Reserved**: `data-uwc` is the framework's marker-discovery attribute. Don't use it on your own elements; it's stripped during recipe prep.
+
+### Reactive expressions: function vs. value
+
+Every interpolation is tracked, but the **granularity** depends on what you pass:
+
+- **Function** — the engine re-invokes it on dep change and patches just that spot. `this` is bound to the component automatically (no `.bind`, no closure needed).
+- **Bare value** — read happens during `render()`, registers as a whole-component dep, and forces a **full re-render** when it changes.
+
+So both update, but functions update surgically.
+
+```js
+// ✅ no-arg method — pass the reference directly, engine calls it with this = component, spot-level update
+<span>${this.buildKeysMarkup}</span>
+
+// ✅ getter / property / inline expression — wrap so the engine receives a function it can re-call
+<span class="${() => this.hostClass}">
+<span>${() => this.state.count + 1}</span>
+
+// ✅ method that needs args — arrow is the only way
+<button @click=${() => this.select(item.id)}>
+
+// ⚠️ works but pessimistic — bare reads register at render() scope; a write re-renders the whole template
+<span>${this.state.count}</span>
+```
+
+Rule of thumb: prefer the function form for any value derived from state. Bare method refs are already functions; getters, properties, and inline expressions need an arrow.
+
+### `$attr=` two-way shorthand
+
+`$attr="key"` declares two-way binding statically — no interpolation, no slot. The attribute name after `$` says **which DOM attribute** to bind (`value` or `checked`); the static value is **the state path** to bind to.
+
+```js
+// bare key → state path (most common)
+<input $value="amountValue">                    // ↔ state.amountValue
+<textarea $value="message">                     // ↔ state.message
+<input type="checkbox" $checked="isActive">     // ↔ state.isActive
+
+// explicit state. prefix — same as bare
+<input $value="state.amountValue">              // ↔ state.amountValue
+
+// globalState. prefix for global namespace
+<input $value="globalState.theme">              // ↔ globalState.theme
+```
+
+**Resolution rules:**
+- `"amountValue"` → `state.amountValue` (bare keys default to the local state namespace)
+- `"state.amountValue"` → `state.amountValue` (explicit, same as bare)
+- `"globalState.theme"` → `globalState.theme` (cross-component global state)
+
+**Constraints:**
+- Works on `<input>` / `<textarea>` / `<select>` for the `value` and `checked` attributes (same set as the rest of the two-way machinery).
+- Static only — the attribute value is the state path string, not an interpolation. For dynamic key resolution, use the function-form auto-bind (`value=${() => state[someName]}`) or explicit `@bind=${dynamicKey}`.
+- One `$attr=` per element (HTML attribute uniqueness).
 
 ### `@${fn}` shorthand caveats
 

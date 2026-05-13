@@ -1,4 +1,12 @@
 import { WebComponent } from '../../../core/index.js';
+const DASHBOARD_HOTKEYS = [
+	{
+		id: 'toggle',
+		keys: ['~', '`'],
+		joiner: '/',
+		desc: 'Toggle Local Agent',
+	},
+];
 export class AppDashboard extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -14,6 +22,7 @@ export class AppDashboard extends WebComponent {
 						<div class="center-stack">
 							<wallet-panel></wallet-panel>
 							<wallet-stats-panel></wallet-stats-panel>
+							<help-panel .shortcuts=${DASHBOARD_HOTKEYS}></help-panel>
 						</div>
 						<div class="center-stack">
 							<wallet-amount></wallet-amount>
