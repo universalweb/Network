@@ -18,7 +18,7 @@ export function handleObserverCallback(entry) {
 	this.isVisible = visibleNow;
 	if (visibleNow && !this.visibleFired) {
 		this.visibleFired = true;
-		fireResolver(this, 'whenVisible');
+		fireResolver(this.lifecycle, 'whenVisible');
 		this.onVisible?.();
 	}
 }

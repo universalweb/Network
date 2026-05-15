@@ -122,6 +122,18 @@
 	outline: none;
 	border-color: var(--teal, #5eead4);
 }
+.sm-readout {
+	padding: 10px 12px;
+	background: var(--bg-dark, #04060a);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-radius: 4px;
+	color: var(--text-main, #e8eaf2);
+	font-family: inherit;
+	font-size: 0.6875rem;
+	letter-spacing: 0.04em;
+	word-break: break-all;
+	min-height: 1em;
+}
 .sm-actions {
 	display: flex;
 	gap: 8px;

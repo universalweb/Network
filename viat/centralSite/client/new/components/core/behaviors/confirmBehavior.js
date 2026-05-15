@@ -52,7 +52,7 @@ async function ensureModal() {
 	acceptButton = modalElement.querySelector('.confirm-prompt-accept');
 	cancelButton = modalElement.querySelector('.confirm-prompt-cancel');
 	// Wait for first render so the internal <dialog> exists before open() runs.
-	await modalElement.whenRendered;
+	await modalElement.lifecycle.whenRendered;
 }
 async function showConfirmPrompt(message) {
 	await ensureModal();

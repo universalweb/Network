@@ -29,9 +29,11 @@ Produce a component that is:
    - `class X extends WebComponent`
    - `static url = import.meta.url`
    - `static styles = { name: './x.css' }`
-   - `static state = { ... }` for reactive defaults
-   - Optional `static attrs`, `static config`
-   - Constructor only when you need to extend config defaults — most components don't need one
+   - `static state = { ... }` for reactive defaults (chain-merged + smart-cloned per instance)
+   - Optional `static attrs`, `static config` (config = non-reactive ctor params)
+   - Optional framework flags: `static mergeState = false` (skip chain merge), `static mergeObjects = true` (deep-merge containers across chain + ctor-arg state), `static skipStaticState = true` (bypass static state pipeline)
+   - Constructor signature is `(state, config, flags)` — pass overrides per-instance when constructing manually
+   - **NEVER** declare `state = {…}` as a subclass class field — it shadows the prototype accessor and silently breaks reactivity. Always use `static state`.
 
 2. **Lifecycle placement**
    - `onConnect`: subscriptions (`this.delegate(...)`, `this.on(...)`), one-time prep
@@ -48,10 +50,13 @@ Produce a component that is:
    - **Never** query the DOM. For element handles, write `#name` in the template and read `this.refs.name`.
 
 4. **State discipline**
+   - Class-level defaults: `static state = { … }` (chain-merged, smart-cloned per instance)
+   - Per-instance overrides: `new MyComp({ key: value })` (ctor-arg state — plain `Object.assign`, caller-owned values)
    - Single-key change: `this.state.x = y`
    - Multi-key change: `this.assignState({ a, b, c })` (not `Object.assign(this.state, …)`)
    - Cross-component shared state: `this.globalState.theme` + `watchGlobal('theme', ...)`
    - Never write `this.STATE.x = y` from app code (bypasses tracking)
+   - **NEVER** use `state = {…}` class field on a subclass — silently breaks reactivity (shadows the accessor)
 
 5. **Events**
    - **Within a template**: `@click=${this.handleClick}` — bare method ref, engine calls with `this = component`
@@ -85,8 +90,10 @@ Produce a component that is:
 
 - extends `WebComponent`, defines `static url` + at least one `static styles` entry
 - handlers are method shorthand, not arrow class fields
+- **no `state = {…}` class field on subclasses** — defaults live in `static state`
 - no `querySelector` / `getElementById` — uses `#name` + `this.refs`
 - multi-key state writes use `assignState`
+- lifecycle awaits use `this.lifecycle.whenX` namespace (not top-level `this.whenX`)
 - cross-component listeners use `this.delegate(...)`, not `document.addEventListener`
 - `window` references rewritten to `globalThis`
 - no `delete` keyword anywhere

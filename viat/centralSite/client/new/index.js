@@ -18,7 +18,7 @@ async function initialize() {
 	await runPlugins();
 	const app = await AppView.create();
 	globalThis.AppView = app;
-	await app.whenLive;
+	await app.lifecycle.whenLive;
 	bootScreen.dismiss();
 	return app;
 }

@@ -111,12 +111,12 @@ The framework's lifecycle works through direct function calls and Promise resolv
 Three primitives cover every cross-component pattern:
 
 1. **Self's lifecycle hooks** (the spine) — your component reaches every phase under its own bottom-up wait chain
-2. **`whenX` Promises** — `await someComponent.whenMounted` synchronizes against any other component's lifecycle
+2. **`lifecycle.whenX` Promises** — `await someComponent.lifecycle.whenMounted` synchronizes against any other component's lifecycle
 3. **`parentComponent` accessor** — direct reference to nearest WebComponent ancestor; method calls and property reads work normally
 
 #### Why no `onParentMount` / `onParentLive`
 
-Both would be sugar over `await parentComponent.whenMounted` / `await parentComponent.whenLive`. Layout is document-wide: when YOUR rAF has fired (`onLive`), the browser has computed layout for everything, including ancestors. Reading `parentComponent.getBoundingClientRect()` in your own `onLive` returns correct values.
+Both would be sugar over `await parentComponent.lifecycle.whenMounted` / `await parentComponent.lifecycle.whenLive`. Layout is document-wide: when YOUR rAF has fired (`onLive`), the browser has computed layout for everything, including ancestors. Reading `parentComponent.getBoundingClientRect()` in your own `onLive` returns correct values.
 
 Parent instance methods are callable the moment parent is constructed; children don't need to wait for parent's `onMount` to read parent state or call parent methods.
 
@@ -163,7 +163,7 @@ class Dock extends WebComponent {
 ```js
 // Wait for all current children to be live before doing setup
 async onMount() {
-  await Promise.all(this.getComponentsArray('list-item').map(c => c.whenLive))
+  await Promise.all(this.getComponentsArray('list-item').map(c => c.lifecycle.whenLive))
   this.calibrateLayout()
 }
 
@@ -298,7 +298,7 @@ Rule: **structural Promises (`whenMounted`, `whenRendered`, `whenLive`) are alre
 **Pattern:** Promises wake you up; phase tells you what happened.
 
 ```js
-await comp.whenLive
+await comp.lifecycle.whenLive
 if (!comp.atPhase('live')) {
   // disconnected or errored before reaching live
   return
@@ -647,7 +647,7 @@ preRender starts:
     → IO callback fires → onIntersect(true)  ← fires while opacity:0
     → V2 visibility check fails (opacity is 0) → onVisible NOT called yet
 preRender continues:
-  await element.whenLive  // already done, resolves immediately
+  await element.lifecycle.whenLive  // already done, resolves immediately
   animate opacity 0 → 1
   await animation.finished
     → V2 next callback fires with isVisible=true → onVisible  ← fires when user can actually see it
@@ -762,7 +762,7 @@ static async preRender(element, mount, options = {}) {
   if (typeof mount === 'function') mount(element)
   else if (mount instanceof HTMLElement) mount.appendChild(element)
 
-  await element.whenLive   // entire subtree mounted + paint-aligned via bottom-up await chain
+  await element.lifecycle.whenLive   // entire subtree mounted + paint-aligned via bottom-up await chain
 
   const animation = element.animate(
     [{ opacity: 0 }, { opacity: 1 }],
@@ -1107,18 +1107,18 @@ These have different lifecycles. The rendered template (shadow) is populated dur
 
 ```js
 // 1. App-ready
-await app.whenMounted
+await app.lifecycle.whenMounted
 
 // 2. Parallel orchestration
-await Promise.all([sidebar.whenLive, content.whenLive, footer.whenLive])
+await Promise.all([sidebar.lifecycle.whenLive, content.lifecycle.whenLive, footer.lifecycle.whenLive])
 
 // 3. Race conditions
-const winner = await Promise.race([modal.whenVisible, modal.whenDisconnected])
+const winner = await Promise.race([modal.lifecycle.whenVisible, modal.lifecycle.whenDisconnected])
 
 // 4. Test instrumentation
 const comp = document.createElement('my-comp')
 document.body.appendChild(comp)
-await comp.whenLive
+await comp.lifecycle.whenLive
 expect(comp.shadowRoot.querySelector('.ready')).toBeTruthy()
 
 // 5. Parent coordinates child-dependent setup using its OWN hooks.
@@ -1140,13 +1140,13 @@ class Dock extends WebComponent {
 }
 
 // 6. Sequential boot
-await app.whenConnected
+await app.lifecycle.whenConnected
 await loadCriticalAssets()
-await app.whenLive
+await app.lifecycle.whenLive
 trackInitialView()
 
 // 7. Disconnect-aware wait
-await Promise.race([comp.whenVisible, comp.whenDisconnected])
+await Promise.race([comp.lifecycle.whenVisible, comp.lifecycle.whenDisconnected])
 if (comp.isVisible) startEntryAnimation()
 
 // 8. Wait for the entire subtree to be visible before measuring

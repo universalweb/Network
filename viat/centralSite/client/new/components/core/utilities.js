@@ -69,7 +69,7 @@ export function isEmpty(value) {
 	if (isString(value)) {
 		return value.trim() === '';
 	}
-	if (Array.isArray(value)) {
+	if (isArray(value)) {
 		return value.length === 0;
 	}
 	if (isObject(value)) {
@@ -113,7 +113,7 @@ export function plainEqual(a, b) {
 	if (a?.constructor !== b?.constructor) {
 		return false;
 	}
-	if (isPlainObject(a) || Array.isArray(a)) {
+	if (isPlainObject(a) || isArray(a)) {
 		const keys = Object.keys(a);
 		if (keys.length !== Object.keys(b).length) {
 			return false;
@@ -162,9 +162,9 @@ export function getValueAtPath(source, path) {
 			return undefined;
 		}
 		const key = parts[i];
-		if (value instanceof Set) {
+		if (isSet(value)) {
 			value = value.has(key);
-		} else if (value instanceof Map) {
+		} else if (isMap(value)) {
 			value = value.get(key);
 		} else {
 			value = value[key];
@@ -256,6 +256,38 @@ export function syncSubsByDiff(current, nextKeys, subscribe) {
 	});
 	return current;
 }
+// Deep-merge two values per container-aware rules. Used when `mergeObjects` is
+// on for static-state chain merging and for ctor-arg state when the same key
+// already has a populated container. Rules:
+//   - both plain objects → recurse; incoming keys win on conflicts
+//   - both arrays → concat (existing then incoming)
+//   - both Sets → union
+//   - both Maps → new Map; incoming wins on key conflict
+//   - any other shape pair → incoming wins (replace)
+// Always returns a fresh container at the top level so callers can own it.
+export function deepMerge(existing, incoming) {
+	if (isPlainObject(existing) && isPlainObject(incoming)) {
+		const out = {
+			...existing,
+		};
+		const keys = Object.keys(incoming);
+		for (let i = 0; i < keys.length; i++) {
+			const key = keys[i];
+			out[key] = deepMerge(existing[key], incoming[key]);
+		}
+		return out;
+	}
+	if (isArray(existing) && isArray(incoming)) {
+		return [...existing, ...incoming];
+	}
+	if (isSet(existing) && isSet(incoming)) {
+		return new Set([...existing, ...incoming]);
+	}
+	if (isMap(existing) && isMap(incoming)) {
+		return new Map([...existing, ...incoming]);
+	}
+	return incoming;
+}
 // Recursive *container* clone — gives each instance its own owned-shape graph
 // for state purposes.
 //   - Arrays + plain objects: recurse, each element/value is smartClone'd
@@ -279,10 +311,10 @@ export function smartClone(value) {
 		}
 		return out;
 	}
-	if (value instanceof Map) {
+	if (isMap(value)) {
 		return new Map(value);
 	}
-	if (value instanceof Set) {
+	if (isSet(value)) {
 		return new Set(value);
 	}
 	if (isPlainObject(value)) {
@@ -306,7 +338,7 @@ export function setValueAtPath(source, path, value) {
 	let cursor = source;
 	for (let i = 0; i < parts.length; i++) {
 		const part = parts[i];
-		if (!isPlainObject(cursor[part]) && !Array.isArray(cursor[part])) {
+		if (!isPlainObject(cursor[part]) && !isArray(cursor[part])) {
 			cursor[part] = {};
 		}
 		cursor = cursor[part];

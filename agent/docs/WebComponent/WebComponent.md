@@ -14,9 +14,13 @@ import { WebComponent } from 'webcomponent';
 class MyThing extends WebComponent {
   static url = import.meta.url;
   static styles = { mything: './mything.css' };
-  static state = { count: 0 };
-  static attrs = {};       // optional, typed attribute proxy
-  static config = {};      // optional, frozen ctor-time config
+  static state = { count: 0 };           // reactive class-level defaults
+  static attrs = {};                     // optional, typed attribute proxy
+  static config = {};                    // optional, non-reactive ctor params
+  // Optional framework flags (defaults shown):
+  // static mergeState = true;        // chain-merge static state through inheritance
+  // static mergeObjects = false;     // deep-merge containers when merging
+  // static skipStaticState = false;  // bypass static state pipeline entirely
 
   onConnect() {}           // setup before first render
   beforeRender() {}        // sync/async prep; can return false to skip render
@@ -35,6 +39,15 @@ class MyThing extends WebComponent {
 
 customElements.define('my-thing', MyThing);
 ```
+
+## Constructor signature
+```js
+new MyThing(state, config, flags)
+//        ↑ per-instance state (Object.assign, no smartClone)
+//               ↑ per-instance config override (plain assign)
+//                       ↑ per-instance flag override (e.g. { skipStaticState: true })
+```
+`static state` is the class-level template — chain-merged across inheritance, smart-cloned per instance. Constructor-arg `state` is the absolute final word (overrides static).
 
 ## Template sigils
 | Sigil | Use | Example |
@@ -66,10 +79,15 @@ customElements.define('my-thing', MyThing);
 - `this.refs` is a Proxy over `Map<refName, WeakRef<Element>>` with `FinalizationRegistry` cleanup.
 - For repeated hot reads, cache `const el = this.refs.foo` once in `onLive` and use the bare element.
 
-## Lifecycle promises
-`whenConnected`, `whenRendered`, `whenMounted`, `whenLive`, `whenVisible`, `whenDisconnected`, `whenDestroyed`. Also `this.atPhase('mounted')`.
+## Lifecycle promises (`this.lifecycle.*`)
+`this.lifecycle.whenConnected`, `whenRendered`, `whenMounted`, `whenLive`, `whenVisible`, `whenDisconnected`, `whenDestroyed`. Plus the top-level prototype getter `this.whenTreeVisible` and the phase helper `this.atPhase('mounted')`.
 
-Parent phases await children's same phase first (bottom-up). So `await this.whenMounted` is "self + all descendants mounted" already — no `whenTreeMounted` alias needed.
+Parent phases await children's same phase first (bottom-up). So `await this.lifecycle.whenMounted` is "self + all descendants mounted" already — no `whenTreeMounted` alias needed.
+
+```js
+await this.lifecycle.whenConnected;
+await child.lifecycle.whenRendered;
+```
 
 ## Refs are per-instance
 Each component has its own `refsMap` (lazy-init `Map`) and refs Proxy. Two `<my-thing>` instances don't share refs. `#btn` in component A and `#btn` in component B are isolated.
@@ -77,6 +95,7 @@ Each component has its own `refsMap` (lazy-init `Map`) and refs Proxy. Two `<my-
 ## Anti-patterns
 | Don't | Do |
 |---|---|
+| `class X extends WebComponent { state = {…}; }` (subclass class-field state) | `static state = {…}` — class field shadows the prototype accessor and silently breaks reactivity |
 | `handleX = () => {}` arrow class field | `handleX() {}` regular method |
 | `this.shadowRoot.querySelector('.foo')` | `<div #foo>` + `this.refs.foo` |
 | `Object.assign(this.state, partial)` | `this.assignState(partial)` |
@@ -85,6 +104,7 @@ Each component has its own `refsMap` (lazy-init `Map`) and refs Proxy. Two `<my-
 | `delete this.x` | `this.x = null` (or `.delete()` for Map/Set) |
 | `onUnmount` (does not exist) | `onDisconnect` |
 | `findComponent('sibling')?.method()` | emit event; sibling listens |
+| `await this.whenConnected` | `await this.lifecycle.whenConnected` |
 
 ## Reading further
 - **Full conceptual docs**: `/docs/library/WebComponent/README.md`

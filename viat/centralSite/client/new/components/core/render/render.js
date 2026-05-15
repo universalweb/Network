@@ -19,14 +19,14 @@ async function awaitChildren(component, fieldName) {
 	}
 	const childPromises = [];
 	for (let i = 0; i < children.length; i++) {
-		childPromises.push(children[i][fieldName]);
+		childPromises.push(children[i].lifecycle[fieldName]);
 	}
 	await Promise.all(childPromises);
 }
 export function finishRender(resolver) {
 	resolver();
-	if (this.whenRenderedResolver === resolver) {
-		this.whenRenderedResolver = null;
+	if (this.lifecycle.whenRenderedResolver === resolver) {
+		this.lifecycle.whenRenderedResolver = null;
 	}
 }
 export function invalidateRender() {
@@ -55,12 +55,12 @@ export function subscribeRenderDeps(deps) {
 export async function renderView() {
 	this.templateBuilt = false;
 	const sequence = ++this.renderSeq;
-	if (this.whenRenderedResolver === null) {
-		this.whenRendered = new Promise((resolve) => {
-			this.whenRenderedResolver = resolve;
+	if (!this.lifecycle.whenRenderedResolver) {
+		this.lifecycle.whenRendered = new Promise((resolve) => {
+			this.lifecycle.whenRenderedResolver = resolve;
 		});
 	}
-	const renderedResolver = this.whenRenderedResolver;
+	const renderedResolver = this.lifecycle.whenRenderedResolver;
 	const renderDeps = new Set();
 	const wasFirstRender = !this.firstRenderDone;
 	this.isRendering = true;
@@ -170,31 +170,31 @@ export async function handleRendered(sequence, wasFirstRender, renderedResolver)
 export async function handleMount() {
 	await awaitChildren(this, 'whenMounted');
 	if (!this.isConnected) {
-		fireResolver(this, 'whenMounted');
+		fireResolver(this.lifecycle, 'whenMounted');
 		return;
 	}
 	await this.onMount?.();
 	if (this.phase === 'rendered') {
 		this.phase = 'mounted';
 	}
-	fireResolver(this, 'whenMounted');
+	fireResolver(this.lifecycle, 'whenMounted');
 }
 export async function handleLive() {
 	await nextFrame();
 	if (!this.isConnected) {
-		fireResolver(this, 'whenLive');
+		fireResolver(this.lifecycle, 'whenLive');
 		return;
 	}
 	this.classList.remove('mounting');
 	await awaitChildren(this, 'whenLive');
 	if (!this.isConnected) {
-		fireResolver(this, 'whenLive');
+		fireResolver(this.lifecycle, 'whenLive');
 		return;
 	}
 	await this.onLive?.();
 	if (this.phase === 'mounted') {
 		this.phase = 'live';
 	}
-	fireResolver(this, 'whenLive');
+	fireResolver(this.lifecycle, 'whenLive');
 	this.installObserver();
 }

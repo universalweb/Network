@@ -11,6 +11,7 @@
 - Names must be descriptive but short — no half names, no single-character names
 - Don't shadow globals: never use `confirm`, `event`, `name`, `parent`, `type`, `alert`, `fetch`, etc. as bindings
 - Utilities live in `utilities.js` or `@universalweb/utilitylib`
+- no instanceof typeof when you can use util funcs
 
 ## Performance
 - Write compact, modern, memory-efficient code

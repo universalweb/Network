@@ -14,7 +14,7 @@ function ensureTooltip() {
 		await customElements.whenDefined('ui-tooltip');
 		const tooltipEl = document.createElement('ui-tooltip');
 		document.body.append(tooltipEl);
-		await tooltipEl.whenMounted;
+		await tooltipEl.lifecycle.whenMounted;
 		return tooltipEl;
 	})();
 	return tooltipReady;

@@ -14,7 +14,7 @@ export async function preRender(element, mount, options = {}) {
 		console.log('Pre-render Appended element to mount point', mount);
 	}
 	if (element.isWebComponent) {
-		await element.whenLive;
+		await element.lifecycle.whenLive;
 	}
 	const animation = element.animate(
 		[

@@ -74,7 +74,7 @@ export async function handleConnect() {
 	await this.applyStyles();
 	await this.onConnect?.();
 	this.phase = 'connected';
-	fireResolver(this, 'whenConnected');
+	fireResolver(this.lifecycle, 'whenConnected');
 	if (Object.keys(this.STATE).length) {
 		await this.updateView();
 	} else {
@@ -123,7 +123,7 @@ export async function handleDisconnect() {
 	this.resolveStrandedConnectCyclePromises();
 	await this.onDisconnect?.();
 	this.phase = 'disconnected';
-	fireResolver(this, 'whenDisconnected');
+	fireResolver(this.lifecycle, 'whenDisconnected');
 	this.createConnectCyclePromises();
 	if (this.pendingDestroy) {
 		await this.handleDestroy();
@@ -132,11 +132,11 @@ export async function handleDisconnect() {
 export async function handleDestroy() {
 	await this.onDestroy?.();
 	this.phase = 'destroyed';
-	fireResolver(this, 'whenDestroyed');
+	fireResolver(this.lifecycle, 'whenDestroyed');
 }
 export function destroy() {
 	if (this.phase === 'destroyed') {
-		return this.whenDestroyed;
+		return this.lifecycle.whenDestroyed;
 	}
 	this.pendingDestroy = true;
 	if (this.isConnected) {
@@ -146,20 +146,20 @@ export function destroy() {
 			this.onLifecycleError(error);
 		});
 	}
-	return this.whenDestroyed;
+	return this.lifecycle.whenDestroyed;
 }
 export function resolveStrandedConnectCyclePromises() {
 	for (let i = 0; i < STRANDED_CYCLE_KEYS.length; i++) {
-		fireResolver(this, STRANDED_CYCLE_KEYS[i]);
+		fireResolver(this.lifecycle, STRANDED_CYCLE_KEYS[i]);
 	}
-	this.treeVisiblePromise = null;
+	this.lifecycle.treeVisiblePromise = null;
 }
 export function createConnectCyclePromises() {
 	for (let i = 0; i < CONNECT_CYCLE_KEYS.length; i++) {
-		assignPromisePair(this, CONNECT_CYCLE_KEYS[i]);
+		assignPromisePair(this.lifecycle, CONNECT_CYCLE_KEYS[i]);
 	}
-	this.treeVisiblePromise = null;
+	this.lifecycle.treeVisiblePromise = null;
 }
 export function createWhenDestroyedPromise() {
-	assignPromisePair(this, 'whenDestroyed');
+	assignPromisePair(this.lifecycle, 'whenDestroyed');
 }

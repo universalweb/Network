@@ -81,7 +81,7 @@ A reactive base class that stays out of your way:
 | 🎨 Style chain        | Static `styles = {}` merged across the inheritance chain, compiled once and cached as `CSSStyleSheet`s on `adoptedStyleSheets`; `WebComponent.preload()` warms                                                  |
 | 🧩 Templating         | `this.html` tagged literal — spots, two-way `@bind`, `@event` / `@${fn}`, `?bool` / `.prop`, `#name` element refs, bare-attr inference, `each()` / `liveList()` keyed list diffing, `ClassList`, `comp()` slots |
 | 🪝 Lifecycle hooks    | `onInit` · `onConnect` · `beforeRender` · `onRender` · `onRendered` · `onMount` · `onLive` · `onVisible` · `onIntersect` · `onMove` · `onDisconnect` · `onDestroy`                                              |
-| ⏳ Lifecycle promises | `whenConnected` · `whenRendered` · `whenMounted` · `whenLive` · `whenVisible` · `whenDisconnected` · `whenDestroyed` — and `this.atPhase(name)`                                                                 |
+| ⏳ Lifecycle promises | `this.lifecycle.whenConnected` · `whenRendered` · `whenMounted` · `whenLive` · `whenVisible` · `whenDisconnected` · `whenDestroyed` — plus top-level `this.whenTreeVisible` getter and `this.atPhase(name)` helper                                                                 |
 | 📡 Events             | Auto-cleaned listeners, delegate channels, sub-event attrs (e.g. `tooltip`), global observers                                                                                                                   |
 | 🧹 Auto cleanup       | Template spots, timeouts, intervals, IntersectionObserver, state/global/delegate subscriptions, event listeners — all torn down on `disconnectedCallback`                                                       |
 | 📨 Children registry  | Per-host `liveChildren(this)` / `liveChildren(this, tag)`; auto-registered on connect, auto-removed on disconnect/move (held in a `WeakMap` keyed by host)                                                      |
@@ -92,7 +92,7 @@ A reactive base class that stays out of your way:
 ### Phases
 
 `created` → `connected` → `rendered` → `mounted` → `live` → `disconnected` → `destroyed`.
-Re-connecting resets through the cycle; `destroy()` is terminal and resolves `whenDestroyed`.
+Re-connecting resets through the cycle; `destroy()` is terminal and resolves `this.lifecycle.whenDestroyed`.
 
 ---
 
@@ -202,6 +202,91 @@ customElements.define('x-counter', Counter);
 
 No build. No bundler. No framework. Just a component, and an agent can drive
 it the moment it's mounted.
+
+---
+
+## 🧬 State model
+
+Three buckets, distinct in nature:
+
+| Where | Reactive | Scope | Use for |
+|---|---|---|---|
+| `state` | ✅ | per-instance | render-driving data (Proxy over `STATE`) |
+| `config` | ❌ | per-instance | construction params (apiEndpoint, etc.) — set once, no tracking |
+| `globalState` | ✅ | app-wide | cross-component shared values |
+
+**`static state` is the only mechanism for class-level defaults.** It is chain-merged through the inheritance line (subject to merge flags below), then *smart-cloned* per instance so every component owns its own outer containers.
+
+```js
+class WalletPanel extends WebComponent {
+  static state = {
+    className: ['wallet-panel'],   // each instance gets its own array
+    counters: { sends: 0, gets: 0 } // each instance gets its own object
+  };
+}
+```
+
+**Per-instance overrides come through the constructor**, not class-field state:
+
+```js
+new WalletPanel(
+  { className: ['wallet-panel', 'active'] },  // state override (plain Object.assign, no clone)
+  { apiEndpoint: '/wallet' },                  // config override
+  { skipStaticState: true }                    // flags override
+);
+```
+
+### ⚠️ Never declare `state = {…}` as a subclass class field
+
+JS class fields use `[[DefineOwnProperty]]`, which **bypasses the prototype `state` accessor**. The own property shadows reactivity entirely — mutations don't fire renders. Always use `static state` instead.
+
+```js
+// ❌ silently breaks reactivity
+class Bad extends WebComponent {
+  state = { count: 0 };
+}
+
+// ✅ correct
+class Good extends WebComponent {
+  static state = { count: 0 };
+}
+```
+
+### Framework flags
+
+Class-shape decisions that govern static-state merging. All inherit through the static prototype chain — a subclass declares the override.
+
+| Flag | Default | Effect |
+|---|---|---|
+| `static mergeState` | `true` | chain-merge `static state` through the class line; `false` → use only the current class's `static state`, ancestors ignored |
+| `static mergeObjects` | `false` | when merging, deep-merge containers (plain objects, arrays, Sets, Maps) instead of replacing |
+| `static skipStaticState` | `false` | bypass the static state pipeline entirely (instance built only from ctor-arg state) |
+
+Per-instance: only `skipStaticState` is overridable via the `flags` ctor arg. `mergeState` and `mergeObjects` are class-level (results cached on the class).
+
+### Merge matrix (when `mergeState: true`)
+
+| Static-state value type | `mergeObjects: false` | `mergeObjects: true` |
+|---|---|---|
+| Primitive | child wins | child wins |
+| Plain object | child wins (replace) | recursive merge (child keys win, parent fills) |
+| Array | child wins (replace) | concat (parent then child) |
+| Set | child wins (replace) | union |
+| Map | child wins (replace) | entries merged (child wins on key conflict) |
+| Class instance / Date / RegExp / fn | child wins | child wins |
+
+### Constructor pipeline (inside `WebComponent`)
+
+1. `flags` resolved: class statics → ctor-arg overrides
+2. `config` chain-merged from `static config`; ctor-arg config merged in via `Object.assign`
+3. Shadow attach, styles compile, template runtime, attrs proxy
+4. If `!flags.skipStaticState`: chain-merged static state smart-cloned into `STATE` (primitives direct-assign, containers `smartClone`)
+5. Ctor-arg state applied: `Object.assign(this.STATE, state)` — or `deepMerge` per key if `mergeObjects` is on
+6. `onInit(state, config, flags)` called — sees fully-built `STATE`
+7. `initState()` wires up the reactive proxy + subscriptions
+8. First render fires naturally on connect via the lifecycle
+
+All writes during construction go directly to `this.STATE` (raw) — no proxy traps, no `updateView`. The proxy is wired only once, at `initState`.
 
 ---
 

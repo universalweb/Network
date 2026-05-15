@@ -31,7 +31,11 @@ import {
 	styleSheet,
 } from './styles/styleApi.js';
 import {
-	assign, isPlainObject, keysOf, smartClone,
+	assign,
+	deepMerge,
+	isPlainObject,
+	keysOf,
+	smartClone,
 } from './utilities.js';
 import { atPhase, phaseGetters } from './lifecycle/phase.js';
 import {
@@ -72,6 +76,14 @@ export class WebComponent extends HTMLElement {
 	static state = {};
 	static attrs = {};
 	static config = {};
+	// Framework behavior knobs. Class-shape decisions, naturally inherited
+	// through the static prototype chain — a subclass declares the override.
+	// `mergeState` and `mergeObjects` govern how `ensureMergedState` folds
+	// the class chain; `skipStaticState` lets an instance opt out of the
+	// static state pipeline entirely.
+	static mergeState = true;
+	static mergeObjects = false;
+	static skipStaticState = false;
 	static isWebComponent(source) {
 		return source instanceof WebComponent;
 	}
@@ -112,8 +124,20 @@ export class WebComponent extends HTMLElement {
 		this.assertConfig(config);
 		return new this(await state, config);
 	}
-	constructor(state = {}, config) {
+	constructor(state = {}, config, flags) {
 		super();
+		// Framework flags resolved first — subsequent pipeline steps branch on
+		// `this.flags`. Class-level statics seed the defaults (with standard
+		// JS static inheritance), then ctor-arg `flags` override per-instance.
+		// Only `skipStaticState` is consulted from `this.flags` here; the
+		// merge-chain flags (`mergeState`/`mergeObjects`) read from the class
+		// because `ensureMergedState` caches its result on the class.
+		this.flags.skipStaticState = this.constructor.skipStaticState === true;
+		this.flags.mergeState = this.constructor.mergeState !== false;
+		this.flags.mergeObjects = this.constructor.mergeObjects === true;
+		if (flags) {
+			assign(this.flags, flags);
+		}
 		assign(this.config, this.constructor.ensureMergedConfig());
 		if (config) {
 			this.constructor.assertConfig(config);
@@ -125,31 +149,41 @@ export class WebComponent extends HTMLElement {
 		this.constructor.ensureCompiledStyles();
 		initTemplateRuntime(this);
 		this.attrs = makeAttrsProxy(this, this.constructor.ensureMergedAttrs());
-		// `static state` is a class-level template — merged across the
-		// inheritance chain, then smart-cloned per instance so each one gets
-		// its own outer containers. Putting `className: ['x']` or
-		// `params: []` in static state is safe; both instances do not share
-		// the array. Maps/Sets get a new container but their entries pass
-		// through by reference (see `smartClone` for the rule).
-		// Constructor-arg `state` overrides the merged static defaults and
-		// goes through the same clone path. A subclass `state = {…}` class
-		// field — which fires after `super()` returns — flows through
-		// `set state` and silent-merges during the `created` phase (no
-		// `updateView` triggered until the first connect).
-		const mergedState = this.constructor.ensureMergedState();
-		const mergedKeys = keysOf(mergedState);
-		for (let mergedIndex = 0; mergedIndex < mergedKeys.length; mergedIndex += 1) {
-			const mergedKey = mergedKeys[mergedIndex];
-			this.STATE[mergedKey] = smartClone(mergedState[mergedKey]);
-		}
-		if (isPlainObject(state)) {
-			const argStateKeys = keysOf(state);
-			for (let argIndex = 0; argIndex < argStateKeys.length; argIndex += 1) {
-				const argKey = argStateKeys[argIndex];
-				this.STATE[argKey] = smartClone(state[argKey]);
+		// `static state` is a class-level template — chain-merged across the
+		// inheritance line via flag-aware folding, cached on the class, then
+		// smart-cloned per instance so every component owns its own outer
+		// containers. Primitives pass through as direct assigns. Constructor-
+		// arg `state` is treated as caller-owned: no smartClone, no deep
+		// traversal (unless `mergeObjects` is on, in which case it deep-
+		// merges into the static-cloned containers via `deepMerge`).
+		// Subclass class-field `state = {…}` is NOT supported — the class
+		// field shadows the prototype accessor and silently breaks reactivity.
+		// Use `static state` for class-level defaults.
+		if (!this.flags.skipStaticState) {
+			const mergedState = this.constructor.ensureMergedState();
+			const mergedKeys = keysOf(mergedState);
+			for (let mergedIndex = 0; mergedIndex < mergedKeys.length; mergedIndex += 1) {
+				const mergedKey = mergedKeys[mergedIndex];
+				const mergedValue = mergedState[mergedKey];
+				if (mergedValue === null || typeof mergedValue !== 'object') {
+					this.STATE[mergedKey] = mergedValue;
+				} else {
+					this.STATE[mergedKey] = smartClone(mergedValue);
+				}
 			}
 		}
-		this.onInit?.(state, config);
+		if (isPlainObject(state)) {
+			if (this.flags.mergeObjects) {
+				const argStateKeys = keysOf(state);
+				for (let argIndex = 0; argIndex < argStateKeys.length; argIndex += 1) {
+					const argKey = argStateKeys[argIndex];
+					this.STATE[argKey] = deepMerge(this.STATE[argKey], state[argKey]);
+				}
+			} else {
+				assign(this.STATE, state);
+			}
+		}
+		this.onInit?.(state, config, flags);
 		this.initState();
 		this.createConnectCyclePromises();
 		this.createWhenDestroyedPromise();
@@ -158,6 +192,8 @@ export class WebComponent extends HTMLElement {
 		});
 	}
 	config = {};
+	flags = {};
+	lifecycle = {};
 	isWebComponent = true;
 	STATE = {};
 	stateProxy = null;
@@ -185,21 +221,6 @@ export class WebComponent extends HTMLElement {
 	pendingDestroy = false;
 	intersectObserved = false;
 	visibleFired = false;
-	whenRendered = null;
-	whenRenderedResolver = null;
-	whenConnected = null;
-	whenConnectedResolver = null;
-	whenMounted = null;
-	whenMountedResolver = null;
-	whenLive = null;
-	whenLiveResolver = null;
-	whenVisible = null;
-	whenVisibleResolver = null;
-	whenDisconnected = null;
-	whenDisconnectedResolver = null;
-	whenDestroyed = null;
-	whenDestroyedResolver = null;
-	treeVisiblePromise = null;
 	renderSeq = 0;
 	unregisterFromParent = null;
 	timeouts = new Set();
@@ -223,21 +244,6 @@ export class WebComponent extends HTMLElement {
 		return this.stateProxy;
 	}
 	set state(value) {
-		// During construction, an instance `state = {…}` class field (or an
-		// explicit `this.state = …` from `onInit`) fires the setter before
-		// the first render. Merging into raw STATE silently here avoids
-		// triggering `replaceState` → `notifyStateChange` → `updateView` per
-		// keystroke; the first render captures the merged state in one pass.
-		// After construction, replace semantics are preserved so list spots'
-		// `el.state = item` patching keeps working.
-		if (this.phase === 'created' && isPlainObject(value)) {
-			const keys = keysOf(value);
-			for (let i = 0; i < keys.length; i++) {
-				const key = keys[i];
-				this.STATE[key] = smartClone(value[key]);
-			}
-			return;
-		}
 		this.replaceState(value);
 	}
 	get globalState() {

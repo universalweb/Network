@@ -23,7 +23,39 @@ import {
 	WALLET_PARAMS,
 } from './appDefaults.js';
 import { WebComponent, setGlobal } from 'webcomponent';
+import VIATClientSDK from 'viat';
 import { UINotification } from '../components/global/notification/notification.js';
+function bytesToBase64(bytes) {
+	const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+	let binary = '';
+	for (let index = 0; index < view.length; index += 1) {
+		binary += String.fromCharCode(view[index]);
+	}
+	return globalThis.btoa(binary);
+}
+function base64ToBytes(text) {
+	const cleaned = (text || '').trim().replace(/\s+/g, '');
+	if (!cleaned) {
+		throw new Error('Provide a base64-encoded wallet string');
+	}
+	const binary = globalThis.atob(cleaned);
+	const view = new Uint8Array(binary.length);
+	for (let index = 0; index < binary.length; index += 1) {
+		view[index] = binary.charCodeAt(index);
+	}
+	return view;
+}
+function toPublicHex(source) {
+	if (!source) {
+		return '';
+	}
+	const view = source instanceof Uint8Array ? source : new Uint8Array(source);
+	let out = '';
+	for (let index = 0; index < view.length; index += 1) {
+		out += view[index].toString(16).padStart(2, '0');
+	}
+	return out;
+}
 class AppView extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -34,10 +66,124 @@ class AppView extends WebComponent {
 	};
 	id = 'app';
 	notificationPanel = null;
+	// SDK instance lives on the AppView only — it carries private keys,
+	// hdWalletInstance, and walletSeeds. Never set into globalState; only the
+	// public projection (address, public keys, trapdoor hash, label) lands in
+	// `globalState.wallet`. Profile metadata is mirrored to `globalState.profile`
+	// and rides with save/load via the SDK's `meta.extra` field.
+	sdk = null;
 	static async create(state, config) {
 		const app = new this(await state, config);
 		await WebComponent.preRender(app, document.body);
 		return app;
+	}
+	async ensureSDK() {
+		if (this.sdk) {
+			return this.sdk;
+		}
+		this.sdk = await VIATClientSDK.create();
+		return this.sdk;
+	}
+	getProfileMeta() {
+		return this.globalState.profile ?? {};
+	}
+	async syncWalletPublics() {
+		const sdk = this.sdk;
+		const primary = sdk?.STATE?.primaryKeypair;
+		const trapdoor = sdk?.STATE?.trapdoorKeypair;
+		const trapdoorHash = sdk?.STATE?.trapdoorHash;
+		const hasWallet = Boolean(sdk?.STATE?.walletSeeds?.seed);
+		// Prefer the persisted save meta (carries the extra/profile data through
+		// load); fall back to a fresh derivation when no save has occurred yet.
+		let meta = sdk?.STATE?.walletSaveMeta;
+		if (hasWallet && !meta?.address && sdk?.getWalletMeta) {
+			try {
+				meta = await sdk.getWalletMeta({
+					label: sdk.STATE?.walletSaveMeta?.label,
+					meta: this.getProfileMeta(),
+				});
+			} catch (error) {
+				this.onRenderError(error);
+			}
+		}
+		setGlobal({
+			wallet: {
+				hasWallet,
+				address: meta?.address ?? '',
+				publicKey: toPublicHex(primary?.publicKey),
+				trapdoorPublicKey: toPublicHex(trapdoor?.publicKey),
+				trapdoorHash: toPublicHex(trapdoorHash),
+				label: meta?.label ?? '',
+				walletSavedAt: meta?.createdAt ?? '',
+			},
+		});
+		if (meta?.address) {
+			setGlobal({
+				walletAddress: meta.address,
+			});
+		}
+		if (meta?.extra && typeof meta.extra === 'object') {
+			setGlobal({
+				profile: {
+					...this.getProfileMeta(),
+					...meta.extra,
+				},
+			});
+		}
+	}
+	async handleWalletCreate(domEvent) {
+		const data = domEvent.detail?.data ?? {};
+		const sdk = await this.ensureSDK();
+		await sdk.generateSiteWallet({
+			meta: data.profileMeta ?? this.getProfileMeta(),
+			label: data.label,
+		});
+		if (data.label) {
+			await sdk.set('walletSaveMeta', {
+				label: data.label,
+			});
+		}
+		await this.syncWalletPublics();
+		this.emit('wallet:state', {
+			phase: 'created',
+		});
+	}
+	async handleWalletSave(domEvent) {
+		const data = domEvent.detail?.data ?? {};
+		const sdk = await this.ensureSDK();
+		const pkg = await sdk.createWalletPackage(data.password, {
+			label: data.label,
+			meta: data.profileMeta ?? this.getProfileMeta(),
+		});
+		const bytes = await sdk.serializeWalletPackage(pkg, 'cbor');
+		const base64 = bytesToBase64(bytes);
+		await sdk.set('walletSaveMeta', pkg.meta);
+		await this.syncWalletPublics();
+		this.emit('wallet:saved', {
+			base64,
+			meta: pkg.meta,
+		});
+	}
+	async handleWalletLoad(domEvent) {
+		const data = domEvent.detail?.data ?? {};
+		const sdk = await this.ensureSDK();
+		const bytes = base64ToBytes(data.base64);
+		const pkg = await sdk.deserializeWalletPackage(bytes, 'cbor');
+		const imported = await sdk.importWalletPackage(pkg, data.password);
+		await this.syncWalletPublics();
+		this.emit('wallet:state', {
+			phase: 'loaded',
+			meta: imported.meta,
+		});
+	}
+	handleProfileUpdate(domEvent) {
+		const data = domEvent.detail?.data ?? {};
+		setGlobal({
+			profile: {
+				...this.getProfileMeta(),
+				...(data.meta ?? {}),
+			},
+		});
 	}
 	ensureNotificationPanel() {
 		if (this.notificationPanel?.isConnected) {
@@ -63,7 +209,11 @@ class AppView extends WebComponent {
 		this.delegate('open-settings', this.handleOpenSettings);
 		this.delegate('toggle-pulldown', this.handleTogglePulldown);
 		this.delegate('dockSelect', this.handleDockSelect);
-		window.addEventListener('keydown', this.handleKeyShortcut);
+		this.delegate('wallet:create', this.handleWalletCreate);
+		this.delegate('wallet:save', this.handleWalletSave);
+		this.delegate('wallet:load', this.handleWalletLoad);
+		this.delegate('profile:update', this.handleProfileUpdate);
+		globalThis.addEventListener('keydown', this.handleKeyShortcut);
 	}
 	handleOpenSettings = () => {
 		this.getComponent('settings-modal')?.open();
@@ -83,7 +233,7 @@ class AppView extends WebComponent {
 		console.log('[AI MAP]\n%s', this.aiMap());
 	}
 	onDisconnect() {
-		window.removeEventListener('keydown', this.handleKeyShortcut);
+		globalThis.removeEventListener('keydown', this.handleKeyShortcut);
 		this.notificationPanel?.remove();
 		this.notificationPanel = null;
 	}
@@ -171,7 +321,7 @@ class AppView extends WebComponent {
 	async onRender() {
 		// TODO: This is a bit of a hack to set the initial state of the dashboard components after they have been rendered. We should instead use the register component function that does this via the DOM but will need to make that a config for the component itself
 		const dashboard = this.getComponent('app-dashboard');
-		await dashboard.whenRendered;
+		await dashboard.lifecycle.whenRendered;
 		const { refs } = this;
 		Object.assign(refs.centerBar.state, CENTER_BAR);
 		Object.assign(refs.globalTopBar.state, TOP_BAR);

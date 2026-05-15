@@ -8,6 +8,10 @@ export class DockIconButton extends IconButtonBase {
 		className: ['rail-icon-btn'],
 		onClick: 'dockSelect',
 	};
+	constructor(state = {}, config = {}) {
+		super(state, config);
+		console.log('DockIconButton state', this.state);
+	}
 	onMount() {
 		super.onMount();
 		if (this.state.active) {

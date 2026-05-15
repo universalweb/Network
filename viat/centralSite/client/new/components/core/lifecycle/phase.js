@@ -48,15 +48,15 @@ export const phaseGetters = {
 	whenTreeVisible: {
 		configurable: true,
 		get() {
-			if (this.treeVisiblePromise) {
-				return this.treeVisiblePromise;
+			if (this.lifecycle.treeVisiblePromise) {
+				return this.lifecycle.treeVisiblePromise;
 			}
 			const children = allChildren(this);
 			const childPromises = children.map((child) => {
 				return child.whenTreeVisible;
 			});
-			this.treeVisiblePromise = Promise.all([this.whenVisible, ...childPromises]);
-			return this.treeVisiblePromise;
+			this.lifecycle.treeVisiblePromise = Promise.all([this.lifecycle.whenVisible, ...childPromises]);
+			return this.lifecycle.treeVisiblePromise;
 		},
 	},
 };
