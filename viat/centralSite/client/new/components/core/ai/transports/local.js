@@ -61,7 +61,7 @@ export class LocalTransport {
 	stop() {
 		this.subscribers.clear();
 		if (this.expose && globalThis[this.globalKey]?.sessionId === this.sessionId) {
-			delete globalThis[this.globalKey];
+			globalThis[this.globalKey] = undefined;
 		}
 		this.onRequest = null;
 		this.sessionId = null;

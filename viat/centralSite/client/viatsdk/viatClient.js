@@ -13,6 +13,7 @@ import { textToBuffer } from './utils.js';
 import { walletPersistence } from './walletPersistence.js';
 import { webAPI } from './webAPI.js';
 /** VIAT Cryptocurrency API Client. */
+// TODO: EXPOSE UTILS AND BUFFER CLASS FOR USERS OF THE SDK
 /*
 	TODO: Change dilithium and ed25519 to native or wasm variants if present for better performance. Currently using pure JS implementations for compatibility and ease of use in the browser.
 */

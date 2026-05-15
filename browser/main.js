@@ -7,7 +7,7 @@ import path from 'path';
 // }
 import schemes from './browser/schemes/index.js';
 import stateFactory from './state/index.js';
-import universalWebSocket from './browser/protocol/';
+import universalWebSocket from './browser/protocol';
 const state = stateFactory('browser', {
 	electron,
 });

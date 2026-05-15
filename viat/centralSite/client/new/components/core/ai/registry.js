@@ -27,13 +27,13 @@ function notify(event) {
 		}
 	});
 }
-function recordParent(component, parent) {
-	if (parent) {
-		parents.set(component, parent);
-		let kids = childrenSets.get(parent);
+function recordParent(component, parentComponent) {
+	if (parentComponent) {
+		parents.set(component, parentComponent);
+		let kids = childrenSets.get(parentComponent);
 		if (!kids) {
 			kids = new Set();
-			childrenSets.set(parent, kids);
+			childrenSets.set(parentComponent, kids);
 		}
 		kids.add(component);
 		roots.delete(component);
@@ -43,16 +43,16 @@ function recordParent(component, parent) {
 	}
 }
 function clearParent(component) {
-	const parent = parents.get(component);
-	if (parent) {
-		const kids = childrenSets.get(parent);
+	const parentComponent = parents.get(component);
+	if (parentComponent) {
+		const kids = childrenSets.get(parentComponent);
 		kids?.delete(component);
 	}
 	parents.delete(component);
 	roots.delete(component);
 	childrenSets.delete(component);
 }
-export function registerComponent(component, parent = null) {
+export function registerComponent(component, parentComponent = null) {
 	let id = componentIds.get(component);
 	if (!id) {
 		id = makeId(component);
@@ -63,7 +63,7 @@ export function registerComponent(component, parent = null) {
 		componentIds.set(component, id);
 	}
 	components.set(id, component);
-	recordParent(component, parent);
+	recordParent(component, parentComponent);
 	notify({
 		type: 'componentAdded',
 		id,

@@ -1,0 +1,199 @@
+:host {
+	display: contents;
+}
+.sm-shell {
+	position: relative;
+	display: grid;
+	grid-template-columns: 220px minmax(0, 1fr);
+	width: min(1120px, calc(100vw - 48px), calc((100vh - 64px) * 16 / 9));
+	aspect-ratio: 16 / 9;
+	font-family: var(--font-mono, 'JetBrains Mono', monospace);
+	color: var(--text-main, #e8eaf2);
+}
+.sm-nav {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 24px 12px;
+	background: var(--bg-dark, #04060a);
+	border-right: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	overflow-y: auto;
+}
+.sm-nav-item {
+	display: flex;
+	align-items: center;
+	padding: 9px 12px;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+	font-family: inherit;
+	font-size: 0.6875rem;
+	letter-spacing: 0.18em;
+	text-align: left;
+	cursor: pointer;
+	transition:
+		color 0.15s ease,
+		background 0.15s ease,
+		border-color 0.15s ease;
+}
+.sm-nav-item:hover {
+	color: var(--text-main, #e8eaf2);
+	background: rgba(255, 255, 255, 0.03);
+}
+.sm-nav-item.is-active {
+	color: var(--teal, #5eead4);
+	border-color: var(--cyan-glow-soft, rgba(109, 74, 255, 0.18));
+	background: var(--cyan-tint-faint, rgba(109, 74, 255, 0.05));
+}
+.sm-body {
+	min-width: 0;
+	min-height: 0;
+	max-height: 100%;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 40px 48px 56px 48px;
+	scrollbar-width: thin;
+	scrollbar-color: var(--cyan-glow-faint, rgba(0, 240, 255, 0.15)) transparent;
+}
+.sm-body::-webkit-scrollbar {
+	width: 5px;
+}
+.sm-body::-webkit-scrollbar-thumb {
+	background: var(--cyan-glow-faint, rgba(0, 240, 255, 0.15));
+	border-radius: 4px;
+}
+.sm-section {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	min-width: 0;
+}
+.sm-section-head {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	font-size: 0.75rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+.sm-section-id {
+	color: var(--cyan, #a78bfa);
+	opacity: 0.8;
+}
+.sm-section-title {
+	color: var(--text-main, #e8eaf2);
+}
+.sm-copy {
+	margin: 0;
+	font-size: 0.6875rem;
+	line-height: 1.5;
+	color: var(--text-muted, rgba(255, 255, 255, 0.6));
+}
+.sm-field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+.sm-label {
+	font-size: 0.5625rem;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--text-muted, rgba(255, 255, 255, 0.45));
+}
+.sm-textarea,
+.sm-input {
+	box-sizing: border-box;
+	width: 100%;
+	padding: 10px 12px;
+	background: var(--bg-dark, #04060a);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	border-radius: 4px;
+	color: var(--text-main, #e8eaf2);
+	font-family: inherit;
+	font-size: 0.6875rem;
+	letter-spacing: 0.04em;
+	resize: vertical;
+	transition: border-color 0.15s ease;
+}
+.sm-textarea:focus,
+.sm-input:focus {
+	outline: none;
+	border-color: var(--teal, #5eead4);
+}
+.sm-actions {
+	display: flex;
+	gap: 8px;
+}
+.sm-btn {
+	padding: 8px 18px;
+	background: transparent;
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	border-radius: 4px;
+	color: var(--text-muted, rgba(255, 255, 255, 0.7));
+	font-family: inherit;
+	font-size: 0.6875rem;
+	letter-spacing: 0.18em;
+	cursor: pointer;
+	transition:
+		border-color 0.15s ease,
+		color 0.15s ease,
+		background 0.15s ease;
+}
+.sm-btn:hover:not(:disabled) {
+	border-color: var(--teal, #5eead4);
+	color: var(--teal, #5eead4);
+}
+.sm-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+.sm-btn-primary {
+	border-color: var(--teal, #5eead4);
+	color: var(--teal, #5eead4);
+}
+.sm-btn-primary:hover:not(:disabled) {
+	background: var(--cyan-tint-faint, rgba(109, 74, 255, 0.06));
+}
+.sm-status {
+	margin-top: 4px;
+	font-size: 0.6875rem;
+	line-height: 1.4;
+	min-height: 1em;
+	opacity: 0;
+	transition: opacity 0.18s ease;
+}
+.sm-status.is-visible {
+	opacity: 1;
+}
+.sm-status.tone-info {
+	color: var(--text-muted, rgba(255, 255, 255, 0.6));
+}
+.sm-status.tone-success {
+	color: #34d399;
+}
+.sm-status.tone-error {
+	color: #f87171;
+}
+.sm-close {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	width: 28px;
+	height: 28px;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	color: var(--text-muted, rgba(255, 255, 255, 0.4));
+	font-size: 2rem;
+	line-height: 0;
+	cursor: pointer;
+	transition:
+		color 0.15s ease,
+		border-color 0.15s ease;
+}
+.sm-close:hover {
+	color: var(--text-main, #e8eaf2);
+	border-color: var(--dark-divider, rgba(255, 255, 255, 0.18));
+}

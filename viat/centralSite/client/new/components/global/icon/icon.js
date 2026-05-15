@@ -10,11 +10,17 @@ export class UIIcon extends WebComponent {
 		size: 'md',
 		tone: 'default',
 		spin: false,
+		animate: '',
 	};
 	get hostClass() {
-		const parts = ['icon', `size-${this.state.size}`, `tone-${this.state.tone}`];
+		const parts = [
+			'icon', `size-${this.state.size}`, `tone-${this.state.tone}`,
+		];
 		if (this.state.spin) {
 			parts.push('is-spinning');
+		}
+		if (this.state.animate) {
+			parts.push(`anim-${this.state.animate}`);
 		}
 		return parts.join(' ');
 	}
@@ -23,7 +29,7 @@ export class UIIcon extends WebComponent {
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
-		this.html`
+		this.html `
 			<svg class="${this.hostClass}" aria-hidden="true">
 				<use href=${this.iconHref}></use>
 			</svg>

@@ -11,7 +11,6 @@ import {
 	eachArray,
 	eachNodeList,
 	getValueAtPath,
-	hasValue,
 	isElement,
 	isFunction,
 	isString,
@@ -201,23 +200,16 @@ const BINDABLE_TAGS = new Set([
 const BINDABLE_ATTRS = new Set(['value', 'checked']);
 const ATTR_NAME_RE = /^[a-zA-Z_:][a-zA-Z0-9_.:-]*$/;
 function cleanupTemplateNode(node) {
-	if (node) {
-		unregisterAllSubevents(node);
+	if (!node) {
+		return;
 	}
-	const cleanup = node?.[TEMPLATE_CLEANUP];
+	unregisterAllSubevents(node);
+	const cleanup = node[TEMPLATE_CLEANUP];
 	if (!isFunction(cleanup)) {
 		return;
 	}
 	node[TEMPLATE_CLEANUP] = null;
 	cleanup.call(node);
-}
-function cleanupTemplateTree(root) {
-	if (!root?.querySelectorAll) {
-		cleanupTemplateNode(root);
-		return;
-	}
-	cleanupTemplateNode(root);
-	eachNodeList(root.querySelectorAll('*'), cleanupTemplateNode);
 }
 function createRenderableElement(value) {
 	if (isString(value)) {
@@ -403,8 +395,8 @@ function patchList(spot, itemList) {
 		if (element) {
 			oldMap.delete(key);
 			if (item !== prevItemMap.get(key)) {
-				if (element.state) {
-					Object.assign(element.state, item);
+				if (isFunction(element.assignState)) {
+					element.assignState(item);
 				} else {
 					const replacement = itemList.createElement(item);
 					cleanupTemplateNode(element);
@@ -937,8 +929,8 @@ function refreshListSpot(spot, changedPath) {
 				if (item !== undefined) {
 					const itemKey = keyFn(item, index);
 					const element = spot.keyMap.get(itemKey);
-					if (hasValue(element?.state)) {
-						Object.assign(element.state, item);
+					if (isFunction(element?.assignState)) {
+						element.assignState(item);
 						return;
 					}
 				}
@@ -1070,6 +1062,13 @@ function runSpotRefresh(spot) {
 	}
 	return undefined;
 }
+// Hot path: called once per state-change notification per spot. Both the
+// update handler and the refresh task are pre-bound at spot init (one alloc
+// per spot lifetime) so per-change dispatch costs nothing but a property set.
+function runSpotRefreshTask(spot) {
+	spot.pendingTask = null;
+	return runSpotRefresh(spot);
+}
 function dispatchSpotUpdate(spot, nextValue, prevOrGlobal, changedPath) {
 	if (spot.kind === 'list') {
 		if (!spot.pendingPaths) {
@@ -1080,23 +1079,18 @@ function dispatchSpotUpdate(spot, nextValue, prevOrGlobal, changedPath) {
 	if (spot.pendingTask) {
 		return spot.pendingTask;
 	}
-	const task = () => {
-		spot.pendingTask = null;
-		const result = runSpotRefresh(spot);
-		const component = spot.component;
-		if (component && isFunction(component.scheduleRenderComplete)) {
-			component.scheduleRenderComplete();
-		}
-		return result;
-	};
-	spot.pendingTask = schedule(task);
+	spot.pendingTask = schedule(spot.refreshTask);
 	return spot.pendingTask;
+}
+function attachSpotDispatch(spot) {
+	spot.updateHandler = dispatchSpotUpdate.bind(null, spot);
+	spot.refreshTask = runSpotRefreshTask.bind(null, spot);
 }
 function initializeBindingSpot(spot, component) {
 	const bindingKey = spot.expr.key;
 	spot.component = component;
 	spot.bindingKey = bindingKey;
-	spot.updateHandler = dispatchSpotUpdate.bind(null, spot);
+	attachSpotDispatch(spot);
 	if (ListBinding.isListBinding(spot.expr)) {
 		spot.kind = 'list';
 		spot.renderFn = spot.expr.renderFn;
@@ -1112,19 +1106,19 @@ function initializeBindingSpot(spot, component) {
 function initializeClassListSpot(spot, component) {
 	spot.kind = 'class';
 	spot.component = component;
-	spot.updateHandler = dispatchSpotUpdate.bind(null, spot);
+	attachSpotDispatch(spot);
 	refreshClassListSpot(spot);
 }
 function initializeMultiAttrSpot(spot, component) {
 	spot.kind = 'multi';
 	spot.component = component;
-	spot.updateHandler = dispatchSpotUpdate.bind(null, spot);
+	attachSpotDispatch(spot);
 	refreshMultiAttrSpot(spot);
 }
 function initializeComputedSpot(spot, component) {
 	spot.kind = 'computed';
 	spot.component = component;
-	spot.updateHandler = dispatchSpotUpdate.bind(null, spot);
+	attachSpotDispatch(spot);
 	refreshComputedSpot(spot);
 }
 const EVENT_SPOTS = new WeakMap();
@@ -1133,7 +1127,7 @@ function dispatchEventSpotListener(domEvent) {
 	if (!map) {
 		return undefined;
 	}
-	const spot = map[domEvent.type];
+	const spot = map.get(domEvent.type);
 	if (!spot) {
 		return undefined;
 	}
@@ -1142,7 +1136,7 @@ function dispatchEventSpotListener(domEvent) {
 function teardownEventSpot(spot) {
 	const map = EVENT_SPOTS.get(spot.el);
 	if (map) {
-		delete map[spot.eventName];
+		map.delete(spot.eventName);
 	}
 	spot.el.removeEventListener(spot.eventName, dispatchEventSpotListener);
 }
@@ -1156,10 +1150,10 @@ function initializeEventSpot(spot, component) {
 	spot.component = component;
 	let map = EVENT_SPOTS.get(spot.el);
 	if (!map) {
-		map = Object.create(null);
+		map = new Map();
 		EVENT_SPOTS.set(spot.el, map);
 	}
-	map[spot.eventName] = spot;
+	map.set(spot.eventName, spot);
 	spot.el.addEventListener(spot.eventName, dispatchEventSpotListener);
 }
 function domAttrForElement(el) {
@@ -1210,7 +1204,7 @@ function dispatchTwoWayInput() {
 	if (!map) {
 		return;
 	}
-	const spot = map[this.eventTypeKey ?? 'input'] ?? map.input ?? map.change;
+	const spot = map.get(this.eventTypeKey ?? 'input') ?? map.get('input') ?? map.get('change');
 	if (!spot) {
 		return;
 	}
@@ -1222,7 +1216,7 @@ function applyTwoWayState(spot, nextValue) {
 function teardownTwoWaySpot(spot) {
 	const map = TWO_WAY_SPOTS.get(spot.el);
 	if (map) {
-		delete map[spot.twoWayEvent];
+		map.delete(spot.twoWayEvent);
 	}
 	spot.el.removeEventListener(spot.twoWayEvent, dispatchTwoWayInput);
 }
@@ -1250,10 +1244,10 @@ function initializeTwoWaySpot(spot, component, explicitKey) {
 	}
 	let map = TWO_WAY_SPOTS.get(el);
 	if (!map) {
-		map = Object.create(null);
+		map = new Map();
 		TWO_WAY_SPOTS.set(el, map);
 	}
-	map[eventType] = spot;
+	map.set(eventType, spot);
 	el.addEventListener(eventType, dispatchTwoWayInput);
 }
 const TEMPLATE_RECIPES = new WeakMap();
@@ -1261,18 +1255,18 @@ function getNodePath(node, root) {
 	const path = [];
 	let current = node;
 	while (current !== root) {
-		const parent = current.parentNode;
-		if (!parent) {
+		const parentNode = current.parentNode;
+		if (!parentNode) {
 			return null;
 		}
 		let index = 0;
-		let sibling = parent.firstChild;
+		let sibling = parentNode.firstChild;
 		while (sibling && sibling !== current) {
 			sibling = sibling.nextSibling;
 			index += 1;
 		}
 		path.push(index);
-		current = parent;
+		current = parentNode;
 	}
 	path.reverse();
 	return path;
@@ -1284,6 +1278,37 @@ function walkPath(root, path) {
 	}
 	return node;
 }
+// Only the patterns below are lookup keys — anything else on a [data-uwc]
+// node is a static attribute that no spot will ever query, so storing it
+// just bloats the map. Filtering at index time saves the entries and the
+// per-entry composite-string allocation.
+//   data-*=""                — void markers (bind/multi/bare-attr/uwc-evfn)
+//   data-expr="<digits>"     — text-spot marker
+//   <any-name>="expr<digits>" — interpolated attr / bool-attr / prop / named event
+function isAllDigitsFrom(value, from) {
+	if (value.length === from) {
+		return false;
+	}
+	for (let i = from; i < value.length; i++) {
+		const code = value.charCodeAt(i);
+		if (code < 48 || code > 57) {
+			return false;
+		}
+	}
+	return true;
+}
+function isMarkerAttr(name, value) {
+	if (value === '') {
+		return name.startsWith('data-');
+	}
+	if (value.charCodeAt(0) === 101 && value.startsWith('expr')) {
+		return isAllDigitsFrom(value, 4);
+	}
+	if (name === 'data-expr') {
+		return isAllDigitsFrom(value, 0);
+	}
+	return false;
+}
 function buildMarkerMap(fragment) {
 	const map = new Map();
 	eachNodeList(fragment.querySelectorAll('[data-uwc]'), (node) => {
@@ -1294,7 +1319,12 @@ function buildMarkerMap(fragment) {
 		node.removeAttribute('data-uwc');
 		const attrs = node.attributes;
 		for (let i = 0; i < attrs.length; i++) {
-			map.set(`${attrs[i].name}|${attrs[i].value}`, {
+			const attrName = attrs[i].name;
+			const attrValue = attrs[i].value;
+			if (!isMarkerAttr(attrName, attrValue)) {
+				continue;
+			}
+			map.set(`${attrName}|${attrValue}`, {
 				el: node,
 				path,
 			});
@@ -1989,13 +2019,21 @@ function updateTemplateSpots(state, newExprs, component) {
 	}
 	state.prevExprs = newExprs.slice();
 }
-// Per-instance template runtime: 3 plain fields, no closures.
-// All template methods are first-class functions on WebComponent.prototype
-// so the JIT can monomorphize them across every component instance.
+// Per-instance template runtime: plain fields, no closures. All template
+// methods are first-class functions on WebComponent.prototype so the JIT can
+// monomorphize them across every component instance. `tplCleanupNodes` is the
+// only set of nodes we must visit on teardown — populated by templateHtmlElement
+// and by the dynamic subevent installer. Other DOM nodes' WeakMap entries
+// (subevents, SUBEVENT_LAST_VALUES, HTML_ELEMENT_INSTANCES) auto-clean on GC
+// once `replaceChildren` detaches them; we don't pay for a full subtree walk.
 export function initTemplateRuntime(component) {
 	component.tplUnsubs = [];
 	component.tplState = null;
 	component.tplBoundKeys = new Set();
+	component.tplCleanupNodes = new Set();
+}
+function runCleanupOnNode(node) {
+	cleanupTemplateNode(node);
 }
 export function templateCleanup() {
 	if (this.tplState) {
@@ -2003,7 +2041,10 @@ export function templateCleanup() {
 	}
 	eachArray(this.tplUnsubs, callFn);
 	this.tplUnsubs = [];
-	cleanupTemplateTree(this.shadowRoot ?? this);
+	if (this.tplCleanupNodes.size) {
+		this.tplCleanupNodes.forEach(runCleanupOnNode);
+		this.tplCleanupNodes.clear();
+	}
 	this.tplState = null;
 	this.tplBoundKeys = new Set();
 }
@@ -2048,5 +2089,6 @@ export function templateHtmlElement(strings, ...exprs) {
 	const element = instance.fragment.firstElementChild;
 	HTML_ELEMENT_INSTANCES.set(element, instance);
 	element[TEMPLATE_CLEANUP] = cleanupHtmlElementInstance;
+	this.tplCleanupNodes?.add(element);
 	return element;
 }

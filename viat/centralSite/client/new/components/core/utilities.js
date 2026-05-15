@@ -47,6 +47,12 @@ export function hasValue(value) {
 export function isArray(value) {
 	return Array.isArray(value);
 }
+export function isMap(value) {
+	return value instanceof Map;
+}
+export function isSet(value) {
+	return value instanceof Set;
+}
 export function assign(target, ...sources) {
 	return Object.assign(target, ...sources);
 }
@@ -188,8 +194,8 @@ export function cachedProxy(cache, target, path, build) {
 	pathMap.set(path, proxy);
 	return proxy;
 }
-export function joinPath(parent, key) {
-	return parent ? `${parent}.${String(key)}` : String(key);
+export function joinPath(parentPath, key) {
+	return parentPath ? `${parentPath}.${String(key)}` : String(key);
 }
 const CACHED_RESOLVED_PROMISE = Promise.resolve();
 export function assignPromisePair(target, name) {
@@ -250,6 +256,18 @@ export function syncSubsByDiff(current, nextKeys, subscribe) {
 	});
 	return current;
 }
+// Recursive *container* clone — gives each instance its own owned-shape graph
+// for state purposes.
+//   - Arrays + plain objects: recurse, each element/value is smartClone'd
+//   - Maps + Sets:            new container, entries copied by reference
+//                             (matches `new Map(orig)` / `new Set(orig)`; an
+//                             entry that's an object stays shared — JS would
+//                             mutate it by reference anyway, and deep-cloning
+//                             keyed-collection entries forks singletons)
+//   - Class instances, Date, RegExp, functions, primitives: pass through
+// Used by the framework to materialize instance state from instance-supplied
+// templates. `static state` is never run through this — it's a shared
+// class-level template by design (opt in via `static cloneStaticState = true`).
 export function smartClone(value) {
 	if (value === null || typeof value !== 'object') {
 		return value;
@@ -262,18 +280,10 @@ export function smartClone(value) {
 		return out;
 	}
 	if (value instanceof Map) {
-		const out = new Map();
-		value.forEach((entry, key) => {
-			out.set(key, smartClone(entry));
-		});
-		return out;
+		return new Map(value);
 	}
 	if (value instanceof Set) {
-		const out = new Set();
-		value.forEach((entry) => {
-			out.add(smartClone(entry));
-		});
-		return out;
+		return new Set(value);
 	}
 	if (isPlainObject(value)) {
 		const out = {};

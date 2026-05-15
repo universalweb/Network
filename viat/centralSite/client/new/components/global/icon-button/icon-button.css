@@ -3,6 +3,9 @@
 	flex: 0 0 auto;
 	box-sizing: border-box;
 }
+:host(:hover) {
+	--ui-icon-anim-state: ;
+}
 ui-icon {
 	pointer-events: none;
 }

@@ -9,13 +9,13 @@ export class UIPullDown extends WebComponent {
 	static state = {
 		open: false,
 	};
-	onMount() {
+	onConnect() {
 		this.delegate('pulldown:dragstart', this.handleDragStart);
 		this.delegate('pulldown:drag', this.handleDrag);
 		this.delegate('pulldown:state', this.handleState);
 		this.delegate('pulldown:dragend', this.handleDragEnd);
 	}
-	handleDragEnd = (domEvent) => {
+	handleDragEnd(domEvent) {
 		const data = domEvent.detail.data;
 		if (data.snapped) {
 			return;
@@ -30,19 +30,19 @@ export class UIPullDown extends WebComponent {
 		drawer.classList.remove('is-active', 'is-fully-open', 'is-open');
 		drawer.style.transform = '';
 		drawer.style.transition = '';
-	};
-	handleDragStart = () => {
+	}
+	handleDragStart() {
 		const drawer = this.refs.drawer;
 		drawer.style.transition = 'none';
 		drawer.classList.add('is-active');
 		drawer.classList.remove('is-fully-open');
-	};
-	handleDrag = (domEvent) => {
+	}
+	handleDrag(domEvent) {
 		const { barTop } = domEvent.detail.data;
 		const drawer = this.refs.drawer;
-		drawer.style.transform = `translateY(${barTop - window.innerHeight}px)`;
-	};
-	handleState = (domEvent) => {
+		drawer.style.transform = `translateY(${barTop - globalThis.innerHeight}px)`;
+	}
+	handleState(domEvent) {
 		const isOpen = domEvent.detail.data.open;
 		const drawer = this.refs.drawer;
 		const wasHidden = !drawer.classList.contains('is-active') && !drawer.classList.contains('is-open');
@@ -65,7 +65,7 @@ export class UIPullDown extends WebComponent {
 				drawer.style.transition = '';
 			}
 		}, SNAP_MS);
-	};
+	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `

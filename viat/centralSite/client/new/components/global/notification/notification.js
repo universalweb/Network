@@ -17,7 +17,7 @@ class NotificationItem extends WebComponent {
 		const { timeout } = this.STATE;
 		if (timeout > 0) {
 			this.setTimeout(() => {
-				// this.beginExit();
+				this.beginExit();
 			}, timeout);
 		}
 	}

@@ -1,16 +1,11 @@
-import { isTypeUndefined } from '../utilities.js';
-const target = isTypeUndefined(typeof globalThis) ? window : globalThis;
-const isProduction = target.CONFIG?.production === true;
-export const IS_PRODUCTION = isProduction;
-export function isDev() {
-	return !isProduction;
-}
+export const IS_PRODUCTION = globalThis.CONFIG?.production === true;
 const colorMap = {
 	info: 'color: #3b82f6; font-weight: bold;',
 	success: 'color: #10b981; font-weight: bold;',
 	warn: 'color: #f59e0b; font-weight: bold;',
 	error: 'color: #ef4444; font-weight: bold;',
 	debug: 'color: #8b5cf6; font-weight: bold;',
+	perf: 'background:#dc2626; color:#fff; padding:2px 8px; border-radius:3px; font-weight:800;',
 };
 const headerStyles = {
 	banner: 'font-size: 18px; font-weight: 800; padding: 6px 12px; border-radius: 6px; background: #111827; color: #f9fafb;',
@@ -21,17 +16,13 @@ const headerStyles = {
 const LEVEL_TO_METHOD = {
 	error: 'error',
 	warn: 'warn',
+	perf: 'warn',
 };
-function shouldSilence(level) {
-	return isProduction && level !== 'error';
-}
 function gated(level, fn) {
-	return (...args) => {
-		if (shouldSilence(level)) {
-			return undefined;
-		}
-		return fn(...args);
-	};
+	if (IS_PRODUCTION && level !== 'error') {
+		return () => undefined;
+	}
+	return fn;
 }
 function printLine(level, label, message, args) {
 	const method = LEVEL_TO_METHOD[level] ?? 'log';
@@ -43,9 +34,18 @@ function printLine(level, label, message, args) {
 		console[method](head, style, message);
 	}
 }
+// Lazy-message functions may return null/undefined to skip the log entirely.
+// When `msg` is a function, any extra args after it are forwarded — callsites
+// pass a hoisted (module-level) formatter + plain data instead of allocating
+// a fresh closure per call. In production the whole logger is replaced by a
+// noop so the formatter never runs and args never get gathered into an array.
 function makeLevelLogger(level) {
 	return gated(level, (label, msg, ...args) => {
-		printLine(level, label, typeof msg === 'function' ? msg() : msg, args);
+		const resolved = typeof msg === 'function' ? msg(...args) : msg;
+		if (resolved == null) {
+			return;
+		}
+		printLine(level, label, resolved, []);
 	});
 }
 function resolveHeaderStyle(style) {
@@ -80,6 +80,7 @@ export const Logger = {
 	warn: makeLevelLogger('warn'),
 	error: makeLevelLogger('error'),
 	debug: makeLevelLogger('debug'),
+	perf: makeLevelLogger('perf'),
 	header: gated('info', (text, style) => {
 		console.log(`%c${text}`, resolveHeaderStyle(style));
 	}),
@@ -115,7 +116,7 @@ export const Logger = {
 	profile: ifAvailable('profile', 'info'),
 	profileEnd: ifAvailable('profileEnd', 'info'),
 	break(condition) {
-		if (isProduction) {
+		if (IS_PRODUCTION) {
 			return;
 		}
 		if (condition === undefined || condition) {
@@ -124,7 +125,7 @@ export const Logger = {
 		}
 	},
 	breakOn(label, condition) {
-		if (isProduction || !condition) {
+		if (IS_PRODUCTION || !condition) {
 			return;
 		}
 		printLine('debug', label, 'breakpoint hit', []);
@@ -132,7 +133,7 @@ export const Logger = {
 		debugger;
 	},
 	inspect(label, value) {
-		if (shouldSilence('debug')) {
+		if (IS_PRODUCTION) {
 			return value;
 		}
 		console.log(`%c[${label}]`, colorMap.debug, value);

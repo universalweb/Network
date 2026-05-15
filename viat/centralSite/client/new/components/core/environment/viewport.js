@@ -1,8 +1,9 @@
 // Self-initializing viewport service. Single shared resize listener,
 // rAF-coalesced. Writes globalState.environment.viewport on every change.
-// Dispatches viewport:resize (every coalesced tick) and viewport:change
-// (only on bucket transitions) at document level — components subscribe
-// via this.delegate('viewport:resize'/'viewport:change', ...).
+// Dispatches viewport:resize (every coalesced tick that actually changed)
+// and viewport:change (only on bucket transitions) at document level —
+// components subscribe via this.delegate('viewport:resize'/'viewport:change', ...).
+import { plainEqual } from '../utilities.js';
 import { setGlobal } from '../state/globalState.js';
 import {
 	aspectBucket,
@@ -13,14 +14,14 @@ import {
 let scheduled = false;
 let lastSnapshot = null;
 function snapshot() {
-	const width = window.innerWidth;
-	const height = window.innerHeight;
+	const width = globalThis.innerWidth;
+	const height = globalThis.innerHeight;
 	const ratio = height ? width / height : 0;
 	return {
 		width,
 		height,
 		ratio,
-		pixelRatio: window.devicePixelRatio,
+		pixelRatio: globalThis.devicePixelRatio,
 		w: widthBucket(width),
 		h: heightBucket(height),
 		orientation: orientationOf(ratio),
@@ -49,6 +50,9 @@ function dispatchViewport(eventName, data) {
 function tick() {
 	scheduled = false;
 	const next = snapshot();
+	if (plainEqual(lastSnapshot, next)) {
+		return;
+	}
 	const bucketChanges = diffBuckets(lastSnapshot, next);
 	lastSnapshot = next;
 	setGlobal({ 'environment.viewport': next });
@@ -64,6 +68,6 @@ function schedule() {
 	scheduled = true;
 	requestAnimationFrame(tick);
 }
-window.addEventListener('resize', schedule);
-window.addEventListener('orientationchange', schedule);
+globalThis.addEventListener('resize', schedule);
+globalThis.addEventListener('orientationchange', schedule);
 tick();

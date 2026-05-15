@@ -74,7 +74,7 @@ export function observeGlobal(keys, callback) {
 	return trackUnsubs(this.globalUnsubs, unsubscribers);
 }
 export function delegate(channel, handler, options) {
-	return trackUnsub(this.delegateUnsubs, delegateChannel(channel, handler, options));
+	return trackUnsub(this.delegateUnsubs, delegateChannel(channel, handler, this, options));
 }
 export function removeDelegate(channel, handler) {
 	removeDelegateChannel(channel, handler);

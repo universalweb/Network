@@ -16,9 +16,10 @@ export class UILoadingScreen extends WebComponent {
 		return `loading-screen variant-${this.state.variant}${this.state.open ? ' is-open' : ''}${this.state.blocking ? ' is-blocking' : ''}`;
 	}
 	open(detail = {}) {
-		Object.assign(this.state, {
+		this.assignState({
+			...detail,
 			open: true,
-		}, detail);
+		});
 	}
 	close() {
 		this.state.open = false;

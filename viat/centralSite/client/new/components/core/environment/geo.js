@@ -13,15 +13,27 @@ function update(position) {
 		speed: position.coords.speed,
 		timestamp: position.timestamp,
 	};
-	setGlobal({ 'environment.geo': value });
+	setGlobal({
+		'environment.geo': value,
+	});
 	document.dispatchEvent(new CustomEvent('environment:change', {
 		bubbles: true,
 		composed: true,
-		detail: { data: { area: 'geo', value } },
+		detail: {
+			data: {
+				area: 'geo',
+				value,
+			},
+		},
 	}));
 }
 function fail(error) {
-	setGlobal({ 'environment.geo': { error: error.message, code: error.code } });
+	setGlobal({
+		'environment.geo': {
+			error: error.message,
+			code: error.code,
+		},
+	});
 }
 export function requestGeo(options = {}) {
 	if (!navigator.geolocation) {

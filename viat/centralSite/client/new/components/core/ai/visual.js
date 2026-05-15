@@ -5,7 +5,7 @@ function snapshot(component, id) {
 		return null;
 	}
 	const rect = component.getBoundingClientRect();
-	const inViewport = rect.bottom > 0 && rect.right > 0 && rect.top < window.innerHeight && rect.left < window.innerWidth;
+	const inViewport = rect.bottom > 0 && rect.right > 0 && rect.top < globalThis.innerHeight && rect.left < globalThis.innerWidth;
 	return {
 		id,
 		path: getPathForComponent(component),
@@ -39,11 +39,11 @@ export function visualPageMap(opts = {}) {
 	});
 	return {
 		viewport: {
-			w: window.innerWidth,
-			h: window.innerHeight,
-			scrollX: window.scrollX,
-			scrollY: window.scrollY,
-			devicePixelRatio: window.devicePixelRatio,
+			w: globalThis.innerWidth,
+			h: globalThis.innerHeight,
+			scrollX: globalThis.scrollX,
+			scrollY: globalThis.scrollY,
+			devicePixelRatio: globalThis.devicePixelRatio,
 		},
 		document: {
 			title: document.title,

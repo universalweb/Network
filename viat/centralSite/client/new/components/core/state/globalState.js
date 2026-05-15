@@ -1,4 +1,3 @@
-import { Logger, isDev } from '../debug/logger.js';
 import {
 	cachedProxy,
 	eachObject,
@@ -10,6 +9,7 @@ import {
 	plainEqual,
 	setValueAtPath,
 } from '../utilities.js';
+import { Logger } from '../debug/logger.js';
 import { makePathBus } from './pathBus.js';
 const STATE = {};
 const proxyCache = new WeakMap();
@@ -19,46 +19,57 @@ const bus = makePathBus({
 		return getValueAtPath(GLOBAL_STATE, path);
 	},
 });
-function makeGlobalProxy(target, path = '') {
-	if (!isPlainObject(target) && !isArray(target)) {
-		return target;
+function reportWastedGlobalSet(obj, key, value, fullPath) {
+	if (!plainEqual(obj[key], value)) {
+		return null;
 	}
-	return cachedProxy(proxyCache, target, path, () => {
-		return new Proxy(target, {
-			get(obj, key) {
-				if (isSymbol(key)) {
-					return Reflect.get(obj, key);
-				}
-				const propertyValue = Reflect.get(obj, key);
-				const nestedPath = joinPath(path, key);
-				if (isPlainObject(propertyValue) || isArray(propertyValue)) {
-					return makeGlobalProxy(propertyValue, nestedPath);
-				}
-				return propertyValue;
-			},
-			set(obj, key, value) {
-				const fullPath = joinPath(path, key);
-				if (isDev() && plainEqual(obj[key], value)) {
-					Logger.debug('globalState', () => {
-						return `wasted set on "${fullPath}" — value is structurally equal to current; consider guarding the assignment.`;
-					});
-				}
-				Reflect.set(obj, key, value);
-				bus.notify(fullPath);
-				return true;
-			},
-			deleteProperty(obj, key) {
-				const fullPath = joinPath(path, key);
-				const result = Reflect.deleteProperty(obj, key);
-				if (result) {
-					bus.notify(fullPath);
-				}
-				return result;
-			},
-		});
-	});
+	return `wasted set on "${fullPath}" — new value is structurally equal to current but a different reference; reuse the existing reference to avoid re-render.`;
 }
-GLOBAL_STATE = makeGlobalProxy(STATE);
+// Same monomorphization rationale as StateProxyHandler: prototype-shared traps,
+// one tiny handler instance per proxy, no per-instance closures.
+class GlobalProxyHandler {
+	constructor(path) {
+		this.path = path;
+	}
+	static create(target, path = '') {
+		if (!isPlainObject(target) && !isArray(target)) {
+			return target;
+		}
+		return cachedProxy(proxyCache, target, path, () => {
+			return new Proxy(target, new GlobalProxyHandler(path));
+		});
+	}
+	get(obj, key) {
+		if (isSymbol(key)) {
+			return Reflect.get(obj, key);
+		}
+		const propertyValue = Reflect.get(obj, key);
+		const nestedPath = joinPath(this.path, key);
+		if (isPlainObject(propertyValue) || isArray(propertyValue)) {
+			return GlobalProxyHandler.create(propertyValue, nestedPath);
+		}
+		return propertyValue;
+	}
+	set(obj, key, value) {
+		if (obj[key] === value) {
+			return true;
+		}
+		const fullPath = joinPath(this.path, key);
+		Logger.perf('globalState', reportWastedGlobalSet, obj, key, value, fullPath);
+		Reflect.set(obj, key, value);
+		bus.notify(fullPath);
+		return true;
+	}
+	deleteProperty(obj, key) {
+		const fullPath = joinPath(this.path, key);
+		const result = Reflect.deleteProperty(obj, key);
+		if (result) {
+			bus.notify(fullPath);
+		}
+		return result;
+	}
+}
+GLOBAL_STATE = GlobalProxyHandler.create(STATE);
 export { GLOBAL_STATE };
 export function getGlobal(key) {
 	return key === undefined ? GLOBAL_STATE : getValueAtPath(GLOBAL_STATE, key);

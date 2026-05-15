@@ -39,26 +39,6 @@ export function runEventHandler(handlerFunction, domEvent, element, eventName = 
 	}
 	return result;
 }
-export function createEventHandler(handlerFunction, ...args) {
-	if (!isFunction(handlerFunction)) {
-		throw new TypeError('handlerFunction must be a function');
-	}
-	const component = this;
-	return function eventHandler(domEvent, element) {
-		return handlerFunction.call(component, domEvent, element, ...args);
-	};
-}
-export function createEmitHandler(eventName, detailSource, options) {
-	if (!isString(eventName) || !eventName.trim()) {
-		throw new TypeError('eventName must be a non-empty string');
-	}
-	const trimmedEventName = eventName.trim();
-	const component = this;
-	return function emitHandler(domEvent, element) {
-		const data = isFunction(detailSource) ? detailSource.call(component, domEvent, element) : detailSource;
-		return component.emit(trimmedEventName, data, options);
-	};
-}
 function getCaptureFlag(options) {
 	if (options === true) {
 		return true;

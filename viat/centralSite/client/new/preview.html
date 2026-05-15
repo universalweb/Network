@@ -22,6 +22,16 @@
 				overflow: auto;
 			}
 		</style>
+		<!-- Import map must appear before any module that uses the mapped specifier -->
+		<script type="importmap">
+			{
+				"imports": {
+					"@universalweb/utilitylib": "./scripts/utilityLibrary/index.js",
+					"viat": "./scripts/viat-client-sdk-bundle.js",
+					"webcomponent": "./components/core/index.js"
+				}
+			}
+		</script>
 		<script type="module" src="./preview.js"></script>
 	</head>
 	<body></body>

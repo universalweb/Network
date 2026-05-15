@@ -1,6 +1,6 @@
 // On focus, select all text in the input/textarea.
-function handleFocus(event) {
-	const el = event.currentTarget;
+function handleFocus(focusEvent) {
+	const el = focusEvent.currentTarget;
 	if (typeof el.select === 'function') {
 		el.select();
 	}

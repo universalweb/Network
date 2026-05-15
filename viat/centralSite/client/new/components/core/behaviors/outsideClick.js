@@ -1,11 +1,11 @@
 // Emits a custom event (defaults to "outside-click") when a pointerdown
 // lands outside the element. Powers popovers, menus, dismissible drawers.
 const tracked = new Set();
-function handlePointerDown(event) {
+function handlePointerDown(pointerEvent) {
 	if (tracked.size === 0) {
 		return;
 	}
-	const path = event.composedPath();
+	const path = pointerEvent.composedPath();
 	tracked.forEach((entry) => {
 		if (!entry.element.isConnected) {
 			tracked.delete(entry);
@@ -18,7 +18,7 @@ function handlePointerDown(event) {
 			bubbles: true,
 			composed: true,
 			detail: {
-				originalEvent: event,
+				originalEvent: pointerEvent,
 			},
 		}));
 	});

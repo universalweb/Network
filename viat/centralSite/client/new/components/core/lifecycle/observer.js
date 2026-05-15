@@ -43,7 +43,7 @@ function ensureSharedObserver() {
 	return sharedObserver;
 }
 export function installObserver() {
-	if (this.intersectObserver) {
+	if (this.intersectObserved) {
 		return;
 	}
 	if (!this.onIntersect && !this.onVisible) {
@@ -54,14 +54,15 @@ export function installObserver() {
 		return;
 	}
 	componentRegistry.set(this, this);
-	this.intersectObserver = observer;
+	this.intersectObserved = true;
 	observer.observe(this);
 }
 export function uninstallObserver() {
-	if (!this.intersectObserver) {
+	if (!this.intersectObserved) {
 		return;
 	}
+	const observer = sharedObserver;
 	componentRegistry.delete(this);
-	this.intersectObserver.unobserve(this);
-	this.intersectObserver = null;
+	this.intersectObserved = false;
+	observer?.unobserve(this);
 }

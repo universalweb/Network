@@ -26,21 +26,21 @@ function normalize(spec) {
 	});
 	return `${modList.join('+')}|${key}`;
 }
-function handleKeydown(event) {
+function handleKeydown(keyEvent) {
 	const mods = [];
-	if (event.ctrlKey) {
+	if (keyEvent.ctrlKey) {
 		mods.push('ctrl');
 	}
-	if (event.altKey) {
+	if (keyEvent.altKey) {
 		mods.push('alt');
 	}
-	if (event.shiftKey) {
+	if (keyEvent.shiftKey) {
 		mods.push('shift');
 	}
-	if (event.metaKey) {
+	if (keyEvent.metaKey) {
 		mods.push('meta');
 	}
-	const key = event.key.toLowerCase();
+	const key = keyEvent.key.toLowerCase();
 	const signature = `${mods.join('+')}|${key}`;
 	const elements = elementsBySpec.get(signature);
 	if (!elements || elements.size === 0) {
@@ -51,7 +51,7 @@ function handleKeydown(event) {
 		elements.delete(target);
 		return;
 	}
-	event.preventDefault();
+	keyEvent.preventDefault();
 	target.click();
 }
 export const shortcut = {

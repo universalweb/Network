@@ -66,6 +66,6 @@ setGlobal({
 		engine: detectEngine(),
 		type: detectType(),
 		touch: navigator.maxTouchPoints > 0,
-		pixelRatio: window.devicePixelRatio,
+		pixelRatio: globalThis.devicePixelRatio,
 	},
 });

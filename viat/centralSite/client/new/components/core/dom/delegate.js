@@ -4,8 +4,11 @@ import {
 const subevents = new WeakMap();
 const channels = new Map();
 const rootListeners = new Map();
-function runHandler(handler, domEvent, target, data) {
-	const result = handler(domEvent, target, data);
+function runEntry(entry, domEvent, target, data) {
+	if (entry.fireOnce) {
+		removeEntry(entry.eventName, entry.subeventName, entry);
+	}
+	const result = entry.handler.call(entry.thisArg, domEvent, target, data);
 	if (isPromiseLike(result)) {
 		result.catch(queueAsyncError);
 	}
@@ -23,7 +26,7 @@ function dispatchChannel(domEvent) {
 		if (subeventName === null) {
 			const target = path[0];
 			handlers.forEach((entry) => {
-				runHandler(entry.wrapped, domEvent, target, undefined);
+				runEntry(entry, domEvent, target, undefined);
 			});
 			return;
 		}
@@ -37,7 +40,7 @@ function dispatchChannel(domEvent) {
 				continue;
 			}
 			handlers.forEach((entry) => {
-				runHandler(entry.wrapped, domEvent, path[i], data);
+				runEntry(entry, domEvent, path[i], data);
 			});
 			return;
 		}
@@ -101,7 +104,7 @@ function removeEntry(eventName, subeventName, entry) {
 		}
 	}
 }
-export function delegate(channel, handler, options) {
+export function delegate(channel, handler, thisArg, options) {
 	if (!isFunction(handler)) {
 		throw new TypeError('delegate: handler must be a function');
 	}
@@ -117,14 +120,13 @@ export function delegate(channel, handler, options) {
 	const subMap = getOrInit(channels, eventName, () => new Map());
 	const handlers = getOrInit(subMap, subeventName, () => new Set());
 	const entry = {
+		eventName,
+		subeventName,
 		handler,
-		wrapped: null,
+		thisArg: thisArg ?? null,
+		fireOnce,
 		signalCleanup: null,
 	};
-	entry.wrapped = fireOnce ? function onceHandler(domEvent, target, data) {
-		removeEntry(eventName, subeventName, entry);
-		return handler(domEvent, target, data);
-	} : handler;
 	handlers.add(entry);
 	ensureRootListener(eventName);
 	if (signal) {

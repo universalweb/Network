@@ -35,6 +35,7 @@ export class IconButtonBase extends WebComponent {
 		return {
 			name: this.state.icon,
 			size: 'md',
+			animate: this.state.animate || '',
 		};
 	}
 	handleActivate() {

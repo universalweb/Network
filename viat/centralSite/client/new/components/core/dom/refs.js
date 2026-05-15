@@ -1,8 +1,11 @@
 import { isString } from '../utilities.js';
 const REF_NAME_RE = /^[a-z_][a-z0-9_]*$/;
-const FINALIZER = new FinalizationRegistry(({ map, name }) => {
-	if (map[name]?.deref() === undefined) {
-		delete map[name];
+// refsMap is a Map<refName, WeakRef<Element>>. Map gives us a real `.delete()`
+// method (no `delete` keyword), stable iteration, and avoids the dictionary-
+// mode deopt that a churning plain object would hit.
+const FINALIZER = new FinalizationRegistry(({ map, name: refName }) => {
+	if (map.get(refName)?.deref() === undefined) {
+		map.delete(refName);
 	}
 });
 const REFS_HANDLER = {
@@ -10,22 +13,30 @@ const REFS_HANDLER = {
 		if (!isString(prop)) {
 			return undefined;
 		}
-		return map[prop]?.deref();
+		return map.get(prop)?.deref();
 	},
 	has(map, prop) {
 		if (!isString(prop)) {
 			return false;
 		}
-		return map[prop]?.deref() !== undefined;
+		return map.get(prop)?.deref() !== undefined;
 	},
 };
+function ensureRefsMap(component) {
+	let map = component.refsMap;
+	if (!map) {
+		map = new Map();
+		component.refsMap = map;
+	}
+	return map;
+}
 export function isValidRefName(name) {
 	return REF_NAME_RE.test(name);
 }
 export function registerRef(component, name, el) {
-	const map = (component.refsMap ??= Object.create(null));
+	const map = ensureRefsMap(component);
 	const ref = new WeakRef(el);
-	map[name] = ref;
+	map.set(name, ref);
 	const token = {};
 	FINALIZER.register(el, {
 		map,
@@ -33,14 +44,14 @@ export function registerRef(component, name, el) {
 	}, token);
 	return () => {
 		FINALIZER.unregister(token);
-		if (map[name] === ref) {
-			delete map[name];
+		if (map.get(name) === ref) {
+			map.delete(name);
 		}
 	};
 }
 export function getRef(component, name) {
-	return component.refsMap?.[name]?.deref();
+	return component.refsMap?.get(name)?.deref();
 }
 export function makeRefsProxy(component) {
-	return new Proxy((component.refsMap ??= Object.create(null)), REFS_HANDLER);
+	return new Proxy(ensureRefsMap(component), REFS_HANDLER);
 }

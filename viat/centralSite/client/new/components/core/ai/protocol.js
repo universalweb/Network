@@ -56,8 +56,11 @@ function findFromParams(params) {
 	}
 	return component;
 }
-const handlers = Object.create(null);
-handlers['ai.listComponents'] = () => {
+// Method registry as a Map so registerMethod's cleanup can use map.delete()
+// instead of the `delete` keyword (V8 deopt). Built-in handlers are inserted
+// up front; user-registered methods append.
+const handlers = new Map();
+handlers.set('ai.listComponents', () => {
 	return listComponents().map(({ id, component }) => {
 		return {
 			id,
@@ -67,11 +70,11 @@ handlers['ai.listComponents'] = () => {
 			label: component.getAttribute('aria-label') ?? component.constructor.aiLabel ?? null,
 		};
 	});
-};
-handlers['ai.pageOverview'] = (params) => {
+});
+handlers.set('ai.pageOverview', (params) => {
 	return pageOverview(params ?? {});
-};
-handlers['ai.peek'] = (params) => {
+});
+handlers.set('ai.peek', (params) => {
 	const path = params?.path;
 	if (!isString(path) || !path.length) {
 		throw invalidParams('path is required');
@@ -81,17 +84,17 @@ handlers['ai.peek'] = (params) => {
 		throw notFound(path);
 	}
 	return result;
-};
-handlers['ai.inspect'] = (params) => {
+});
+handlers.set('ai.inspect', (params) => {
 	return describeComponent(findFromParams(params), params);
-};
-handlers['ai.describeComponent'] = (params) => {
+});
+handlers.set('ai.describeComponent', (params) => {
 	return describeComponent(findFromParams(params), params);
-};
-handlers['ai.visualPageMap'] = (params) => {
+});
+handlers.set('ai.visualPageMap', (params) => {
 	return visualPageMap(params ?? {});
-};
-handlers['ai.resolvePath'] = (params) => {
+});
+handlers.set('ai.resolvePath', (params) => {
 	const component = resolvePath(params?.path);
 	if (!component) {
 		return null;
@@ -101,11 +104,11 @@ handlers['ai.resolvePath'] = (params) => {
 		path: params.path,
 		tag: component.tagName.toLowerCase(),
 	};
-};
-handlers['ai.listPaths'] = () => {
+});
+handlers.set('ai.listPaths', () => {
 	return listPaths();
-};
-handlers['ai.queryState'] = (params) => {
+});
+handlers.set('ai.queryState', (params) => {
 	const component = findFromParams(params);
 	const state = component.STATE ?? {};
 	const statePath = params?.statePath;
@@ -115,8 +118,8 @@ handlers['ai.queryState'] = (params) => {
 	return statePath.split('.').reduce((acc, key) => {
 		return acc?.[key];
 	}, state);
-};
-handlers['ai.listTools'] = (params) => {
+});
+handlers.set('ai.listTools', (params) => {
 	if (params?.id || params?.path) {
 		const component = findFromParams(params);
 		const list = [];
@@ -151,8 +154,8 @@ handlers['ai.listTools'] = (params) => {
 		});
 	});
 	return list;
-};
-handlers['ai.callTool'] = async (params, ctx) => {
+});
+handlers.set('ai.callTool', async (params, ctx) => {
 	const component = findFromParams(params);
 	const toolName = params?.tool;
 	if (!isString(toolName) || !toolName.length) {
@@ -179,8 +182,8 @@ handlers['ai.callTool'] = async (params, ctx) => {
 		ctx,
 	});
 	return result ?? null;
-};
-handlers['ai.queryByTag'] = (params) => {
+});
+handlers.set('ai.queryByTag', (params) => {
 	return queryByTag(params?.tag).map(({ id, component }) => {
 		return {
 			id,
@@ -188,8 +191,8 @@ handlers['ai.queryByTag'] = (params) => {
 			tag: component.tagName.toLowerCase(),
 		};
 	});
-};
-handlers['ai.queryByLabel'] = (params) => {
+});
+handlers.set('ai.queryByLabel', (params) => {
 	return queryByLabel(params?.query).map(({ id, component }) => {
 		return {
 			id,
@@ -197,32 +200,32 @@ handlers['ai.queryByLabel'] = (params) => {
 			tag: component.tagName.toLowerCase(),
 		};
 	});
-};
-handlers['ai.highlight'] = (params) => {
+});
+handlers.set('ai.highlight', (params) => {
 	const component = findFromParams(params);
 	highlight(component, params);
 	return {
 		ok: true,
 	};
-};
-handlers['ai.ping'] = () => {
+});
+handlers.set('ai.ping', () => {
 	return {
 		t: Date.now(),
 	};
-};
+});
 export function registerMethod(name, handler) {
 	if (!isString(name) || !isFunction(handler)) {
 		throw new TypeError('registerMethod requires (name, handler)');
 	}
-	handlers[name] = handler;
+	handlers.set(name, handler);
 	return () => {
-		if (handlers[name] === handler) {
-			delete handlers[name];
+		if (handlers.get(name) === handler) {
+			handlers.delete(name);
 		}
 	};
 }
 export function getMethod(name) {
-	return handlers[name] ?? null;
+	return handlers.get(name) ?? null;
 }
 export async function dispatch(message, ctx = {}) {
 	const id = message?.id ?? null;
@@ -233,7 +236,7 @@ export async function dispatch(message, ctx = {}) {
 			error: makeError(ERROR_CODES.invalidRequest, 'Invalid JSON-RPC request'),
 		};
 	}
-	const handler = handlers[message.method];
+	const handler = handlers.get(message.method);
 	if (!handler) {
 		return {
 			jsonrpc: '2.0',

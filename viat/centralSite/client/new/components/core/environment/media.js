@@ -1,6 +1,7 @@
 // matchMedia subscriptions for user-preference media queries. Self-init.
 // Writes globalState.environment.media and dispatches environment:change
 // when any preference flips.
+import { plainEqual } from '../utilities.js';
 import { setGlobal } from '../state/globalState.js';
 const queries = {
 	reducedMotion: '(prefers-reduced-motion: reduce)',
@@ -11,12 +12,13 @@ const queries = {
 	hover: '(hover: hover)',
 	pointerFine: '(pointer: fine)',
 };
+let lastSnapshot = null;
 function read() {
 	const out = {};
 	const keys = Object.keys(queries);
 	for (let i = 0; i < keys.length; i++) {
 		const key = keys[i];
-		const mql = window.matchMedia(queries[key]);
+		const mql = globalThis.matchMedia(queries[key]);
 		if (key === 'colorScheme') {
 			out[key] = mql.matches ? 'dark' : 'light';
 		} else {
@@ -27,6 +29,10 @@ function read() {
 }
 function update() {
 	const value = read();
+	if (plainEqual(lastSnapshot, value)) {
+		return;
+	}
+	lastSnapshot = value;
 	setGlobal({ 'environment.media': value });
 	document.dispatchEvent(new CustomEvent('environment:change', {
 		bubbles: true,
@@ -36,6 +42,6 @@ function update() {
 }
 const keys = Object.keys(queries);
 for (let i = 0; i < keys.length; i++) {
-	window.matchMedia(queries[keys[i]]).addEventListener('change', update);
+	globalThis.matchMedia(queries[keys[i]]).addEventListener('change', update);
 }
 update();

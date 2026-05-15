@@ -11,8 +11,8 @@
   color: var(--popup-text, #e8eaf2);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6),
     0 0 0 1px rgba(109, 74, 255, 0.08);
-  max-width: min(640px, calc(100vw - 32px));
-  max-height: calc(100vh - 32px);
+  max-width: var(--ui-modal-max-width, min(640px, calc(100vw - 32px)));
+  max-height: var(--ui-modal-max-height, calc(100vh - 32px));
   overflow: auto;
   opacity: 1;
   transform: scale(1) translateY(0);

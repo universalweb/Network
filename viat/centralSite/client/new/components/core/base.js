@@ -30,7 +30,9 @@ import {
 	resolveStyle,
 	styleSheet,
 } from './styles/styleApi.js';
-import { assign, keysOf, smartClone } from './utilities.js';
+import {
+	assign, isPlainObject, keysOf, smartClone,
+} from './utilities.js';
 import { atPhase, phaseGetters } from './lifecycle/phase.js';
 import {
 	collectClassChain,
@@ -65,10 +67,7 @@ export { registry } from './dom/registry.js';
 export class WebComponent extends HTMLElement {
 	static url = import.meta.url;
 	static styles = {
-		reset: sharedStyles.resetSheet,
-		panel: sharedStyles.panelSheet,
-		scrollbar: sharedStyles.scrollbarSheet,
-		utils: sharedStyles.utilsSheet,
+		base: sharedStyles.baseSheet,
 	};
 	static state = {};
 	static attrs = {};
@@ -126,9 +125,30 @@ export class WebComponent extends HTMLElement {
 		this.constructor.ensureCompiledStyles();
 		initTemplateRuntime(this);
 		this.attrs = makeAttrsProxy(this, this.constructor.ensureMergedAttrs());
+		// `static state` is a class-level template — merged across the
+		// inheritance chain, then smart-cloned per instance so each one gets
+		// its own outer containers. Putting `className: ['x']` or
+		// `params: []` in static state is safe; both instances do not share
+		// the array. Maps/Sets get a new container but their entries pass
+		// through by reference (see `smartClone` for the rule).
+		// Constructor-arg `state` overrides the merged static defaults and
+		// goes through the same clone path. A subclass `state = {…}` class
+		// field — which fires after `super()` returns — flows through
+		// `set state` and silent-merges during the `created` phase (no
+		// `updateView` triggered until the first connect).
 		const mergedState = this.constructor.ensureMergedState();
-		assign(this.STATE, this.constructor.noCloneStaticState ? mergedState : smartClone(mergedState));
-		assign(this.STATE, state);
+		const mergedKeys = keysOf(mergedState);
+		for (let mergedIndex = 0; mergedIndex < mergedKeys.length; mergedIndex += 1) {
+			const mergedKey = mergedKeys[mergedIndex];
+			this.STATE[mergedKey] = smartClone(mergedState[mergedKey]);
+		}
+		if (isPlainObject(state)) {
+			const argStateKeys = keysOf(state);
+			for (let argIndex = 0; argIndex < argStateKeys.length; argIndex += 1) {
+				const argKey = argStateKeys[argIndex];
+				this.STATE[argKey] = smartClone(state[argKey]);
+			}
+		}
 		this.onInit?.(state, config);
 		this.initState();
 		this.createConnectCyclePromises();
@@ -163,7 +183,7 @@ export class WebComponent extends HTMLElement {
 	isVisible = false;
 	parentComponent = null;
 	pendingDestroy = false;
-	intersectObserver = null;
+	intersectObserved = false;
 	visibleFired = false;
 	whenRendered = null;
 	whenRenderedResolver = null;
@@ -203,6 +223,21 @@ export class WebComponent extends HTMLElement {
 		return this.stateProxy;
 	}
 	set state(value) {
+		// During construction, an instance `state = {…}` class field (or an
+		// explicit `this.state = …` from `onInit`) fires the setter before
+		// the first render. Merging into raw STATE silently here avoids
+		// triggering `replaceState` → `notifyStateChange` → `updateView` per
+		// keystroke; the first render captures the merged state in one pass.
+		// After construction, replace semantics are preserved so list spots'
+		// `el.state = item` patching keeps working.
+		if (this.phase === 'created' && isPlainObject(value)) {
+			const keys = keysOf(value);
+			for (let i = 0; i < keys.length; i++) {
+				const key = keys[i];
+				this.STATE[key] = smartClone(value[key]);
+			}
+			return;
+		}
 		this.replaceState(value);
 	}
 	get globalState() {

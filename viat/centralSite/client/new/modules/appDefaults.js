@@ -51,20 +51,25 @@ export const ACTIVITY_ENTRIES = [
 export const TOP_BAR = {
 	items: [
 		{
-			icon: 'user',
-			id: 'profile',
-			tooltip: 'Profile',
+			icon: 'bot',
+			id: 'agent',
+			tooltip: 'Local Agent',
+			onClick: 'toggle-pulldown',
+			animate: 'rainbow',
 		},
 		{
 			icon: 'settings',
 			id: 'settings',
 			tooltip: 'Settings',
+			onClick: 'open-settings',
+			animate: 'settings',
 		},
 		{
 			icon: 'panel-left',
 			id: 'sidebar',
 			tooltip: 'Sidebar',
 			onClick: 'toggle-sidebar',
+			animate: 'sidebar',
 		},
 	],
 	subtitle: 'TERMINAL',
@@ -72,26 +77,33 @@ export const TOP_BAR = {
 export const DOCK = {
 	items: [
 		{
+			id: 'wallet',
 			active: true,
 			icon: 'wallet',
 			tooltip: 'Wallet',
+			animate: 'wallet',
 		},
 		{
+			id: 'explorer',
 			active: false,
 			icon: 'compass',
 			tooltip: 'Explorer',
 		},
 		{
+			id: 'exchange',
 			active: false,
 			icon: 'arrow-right-left',
 			tooltip: 'Exchange (Coming Soon)',
 		},
 		{
+			id: 'swap',
 			active: false,
 			icon: 'repeat-2',
-			tooltip: 'Swap (Coming Soon)',
+			tooltip: 'Swap',
+			animate: 'swap',
 		},
 		{
+			id: 'analytics',
 			active: false,
 			icon: 'chart-line',
 			tooltip: 'Analytics (Coming Soon)',

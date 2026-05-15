@@ -81,7 +81,7 @@ function describeBounds(component) {
 		return null;
 	}
 	const rect = component.getBoundingClientRect();
-	const inViewport = rect.bottom > 0 && rect.right > 0 && rect.top < window.innerHeight && rect.left < window.innerWidth;
+	const inViewport = rect.bottom > 0 && rect.right > 0 && rect.top < globalThis.innerHeight && rect.left < globalThis.innerWidth;
 	return {
 		x: Math.round(rect.x),
 		y: Math.round(rect.y),

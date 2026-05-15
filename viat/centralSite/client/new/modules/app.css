@@ -54,7 +54,13 @@
 	min-height: 0;
 	overflow: hidden;
 }
-.shell-page > app-dashboard {
+.shell-page > .shell-page-view {
 	flex: 1;
 	min-height: 0;
+}
+.shell-page.is-page-wallet > swap-page {
+	display: none;
+}
+.shell-page.is-page-swap > app-dashboard {
+	display: none;
 }

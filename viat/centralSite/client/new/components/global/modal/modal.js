@@ -7,12 +7,18 @@ export class UIModal extends WebComponent {
 	static state = {
 		modal: true,
 		open: false,
+		closeOnBackdrop: true,
 	};
-	get dialog() {
-		return this.shadowRoot.querySelector('dialog');
+	handleDialogClick(domEvent) {
+		if (!this.state.closeOnBackdrop) {
+			return;
+		}
+		if (domEvent.target === this.refs.dialog) {
+			this.close();
+		}
 	}
 	open() {
-		const dialog = this.dialog;
+		const dialog = this.refs.dialog;
 		if (!dialog || dialog.open) {
 			return;
 		}
@@ -25,7 +31,7 @@ export class UIModal extends WebComponent {
 		this.emit('modal-open');
 	}
 	close(returnValue) {
-		const dialog = this.dialog;
+		const dialog = this.refs.dialog;
 		if (!dialog?.open) {
 			return;
 		}
@@ -53,7 +59,7 @@ export class UIModal extends WebComponent {
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
-			<dialog class="modal" @cancel=${this.handleCancel} @close=${this.handleClose}>
+			<dialog #dialog class="modal" @click=${this.handleDialogClick} @cancel=${this.handleCancel} @close=${this.handleClose}>
 				<slot></slot>
 			</dialog>
 		`;

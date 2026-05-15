@@ -1,5 +1,13 @@
-import '../components/index.js';
+import '../components/user/dashboard/dashboard.js';
+import '../components/user/global-bottom-bar/global-bottom-bar.js';
+import '../components/user/global-dock/global-dock.js';
+import '../components/user/global-pulldown/global-pulldown.js';
+import '../components/user/global-sidebar/global-sidebar.js';
+import '../components/user/global-top-bar/global-top-bar.js';
+import '../components/user/settings-modal/settings-modal.js';
+import '../components/user/swap-page/swap-page.js';
 import './tools.js';
+import '../components/core/tooltips/tooltip.js';
 import {
 	ACTIVITY_ENTRIES,
 	ACTIVITY_TABS,
@@ -14,12 +22,15 @@ import {
 	WALLET_PANEL,
 	WALLET_PARAMS,
 } from './appDefaults.js';
-import { WebComponent, setGlobal } from '../components/core/index.js';
+import { WebComponent, setGlobal } from 'webcomponent';
 import { UINotification } from '../components/global/notification/notification.js';
 class AppView extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
 		app: './app.css',
+	};
+	static state = {
+		activePage: 'wallet',
 	};
 	id = 'app';
 	notificationPanel = null;
@@ -49,8 +60,25 @@ class AppView extends WebComponent {
 	onMount() {
 		this.syncViewportClass();
 		this.delegate('viewport:change', this.handleViewportChange);
+		this.delegate('open-settings', this.handleOpenSettings);
+		this.delegate('toggle-pulldown', this.handleTogglePulldown);
+		this.delegate('dockSelect', this.handleDockSelect);
 		window.addEventListener('keydown', this.handleKeyShortcut);
 	}
+	handleOpenSettings = () => {
+		this.getComponent('settings-modal')?.open();
+	};
+	handleTogglePulldown = () => {
+		this.emit('pulldown:state', {
+			open: !this.pulldownIsOpen(),
+		});
+	};
+	handleDockSelect = (domEvent) => {
+		const id = domEvent.detail?.source?.state?.id;
+		if (id === 'swap' || id === 'wallet') {
+			this.state.activePage = id;
+		}
+	};
 	onVisible() {
 		console.log('[AI MAP]\n%s', this.aiMap());
 	}
@@ -109,13 +137,17 @@ class AppView extends WebComponent {
 				<div class="shell-dock-rail">
 					<global-dock></global-dock>
 				</div>
-				<div class="shell-page">
-					<app-dashboard @notify=${this.handleNotify}></app-dashboard>
+				<div class="${() => {
+					return `shell-page is-page-${this.state.activePage}`;
+				}}">
+					<app-dashboard class="shell-page-view" @notify=${this.handleNotify}></app-dashboard>
+					<swap-page class="shell-page-view"></swap-page>
 				</div>
 				<global-sidebar></global-sidebar>
 			</div>
 			<global-bottom-bar></global-bottom-bar>
 			<global-pulldown></global-pulldown>
+			<settings-modal></settings-modal>
 		`;
 	}
 	get refs() {

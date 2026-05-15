@@ -10,8 +10,8 @@ export function collectClassChain(ComponentClass) {
 	return chain;
 }
 function computeMerged(ComponentClass, fieldName) {
-	const parent = getProto(ComponentClass);
-	if (parent !== null && getProto(parent) === HTMLElement) {
+	const parentClass = getProto(ComponentClass);
+	if (parentClass !== null && getProto(parentClass) === HTMLElement) {
 		return hasOwn(ComponentClass, fieldName) ? {
 			...ComponentClass[fieldName],
 		} : {};

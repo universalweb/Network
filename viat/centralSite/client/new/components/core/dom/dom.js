@@ -1,20 +1,57 @@
-import { eachObject, hasValue, isString } from '../utilities.js';
-import { liveChildren } from './children.js';
+import { eachObject, hasValue, isFunction, isString } from '../utilities.js';
+import { getHostChildren, liveChildren } from './children.js';
 export function getComponent(tag) {
 	return liveChildren(this, tag?.toLowerCase())[0] ?? null;
 }
 export function getComponents(tag) {
 	return liveChildren(this, tag?.toLowerCase());
 }
+// Tag-narrowed: copy the live array so callers can't mutate the registry.
+// No-tag: walk every bucket and copy components into a fresh array.
 export function getComponentsArray(tag) {
-	const components = this.getComponents(tag);
-	if (!components) {
-		return [];
+	if (tag) {
+		const list = liveChildren(this, tag.toLowerCase());
+		return list ? list.slice() : [];
 	}
-	return [...components];
+	const out = [];
+	getHostChildren(this).forEach((list) => {
+		for (let i = 0; i < list.length; i++) {
+			out.push(list[i]);
+		}
+	});
+	return out;
 }
-export function findComponent(selector, predicate) {
-	return this.getComponentsArray(selector).find(predicate) ?? null;
+// Tag-narrowed: linear scan of the matching bucket (small list).
+// No-tag: iterate every bucket without allocating a flat array; stop at first match.
+export function findComponent(tag, predicate) {
+	if (!isFunction(predicate)) {
+		return null;
+	}
+	if (tag) {
+		const list = liveChildren(this, tag.toLowerCase());
+		if (!list) {
+			return null;
+		}
+		for (let i = 0; i < list.length; i++) {
+			if (predicate(list[i])) {
+				return list[i];
+			}
+		}
+		return null;
+	}
+	let match = null;
+	getHostChildren(this).forEach((list) => {
+		if (match) {
+			return;
+		}
+		for (let i = 0; i < list.length; i++) {
+			if (predicate(list[i])) {
+				match = list[i];
+				return;
+			}
+		}
+	});
+	return match;
 }
 export function getComponentRoot() {
 	return this.shadowRoot;

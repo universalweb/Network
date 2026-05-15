@@ -1,12 +1,12 @@
 import './modules/environment.js';
 import './modules/plugins-bootstrap.js';
+import './modules/registerRoots.js';
 import AppView from './modules/app.js';
 import { BootScreen } from './components/global/boot-screen/boot-screen.js';
-import { isAgent } from '@universalweb/utilitylib';
 import VIATClientSDK from 'viat';
+import { isAgent } from '@universalweb/utilitylib';
 import { runPlugins } from './components/core/plugins/registry.js';
 console.log('VIAT Central Site - Client');
-console.log('UTILITYLIB VERSION', isAgent());
 async function mountBootScreen() {
 	const bootScreen = new BootScreen();
 	document.body.appendChild(bootScreen);

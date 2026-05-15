@@ -1,3 +1,15 @@
+// indexCodebase.js — parse JS class declarations and emit one JSON doc per class.
+//
+// Modes:
+//   node ./agent/indexCodebase.js                                 // all important classes (whole repo)
+//   node ./agent/indexCodebase.js --class WebComponent            // just one class by name
+//   node ./agent/indexCodebase.js --source viat/centralSite/...   // scope the scan to a folder
+//   node ./agent/indexCodebase.js --out agent/docs/classes        // override output folder
+//   node ./agent/indexCodebase.js --min-score 3                   // change importance threshold
+//
+// Flags compose: --source narrows the scan, --class filters the output, --out redirects, --min-score
+// gates the default "all classes" mode. With --class, the score gate is ignored so the named class
+// always appears even if its score is low.
 import fileSystem from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +27,7 @@ const ignoreFolderSet = new Set([
 	'.turbo',
 	'.github',
 	'.pnpm-store',
+	'components_backup',
 ]);
 const validExtensionSet = new Set(['.js']);
 const purposeOrder = [
@@ -35,6 +48,7 @@ function parseArgs(rawArgs) {
 		sourcePath: repoFolderPath,
 		outputPath: path.resolve(agentFolderPath, 'docs', 'classes'),
 		minimumScore: 3,
+		classNameFilter: null,
 	};
 	for (let argIndex = 0; argIndex < rawArgs.length; argIndex += 1) {
 		const argValue = rawArgs[argIndex];
@@ -53,6 +67,11 @@ function parseArgs(rawArgs) {
 			if (Number.isFinite(parsedValue) && parsedValue >= 0) {
 				settings.minimumScore = parsedValue;
 			}
+			argIndex += 1;
+			continue;
+		}
+		if (argValue === '--class' && rawArgs[argIndex + 1]) {
+			settings.classNameFilter = String(rawArgs[argIndex + 1]);
 			argIndex += 1;
 		}
 	}
@@ -429,6 +448,327 @@ function getExtendsName(extendsRaw) {
 	}
 	return tokenList[tokenList.length - 1];
 }
+function parseFileImports(sourceText) {
+	const importsByLocal = new Map();
+	const namespacePattern = /import\s+\*\s+as\s+([A-Za-z_$][\w$]*)\s+from\s+['"]([^'"]+)['"]/g;
+	let nsMatch = namespacePattern.exec(sourceText);
+	while (nsMatch) {
+		importsByLocal.set(nsMatch[1], {
+			kind: 'namespace',
+			source: nsMatch[2],
+		});
+		nsMatch = namespacePattern.exec(sourceText);
+	}
+	const namedPattern = /import\s+\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/g;
+	let namedMatch = namedPattern.exec(sourceText);
+	while (namedMatch) {
+		const itemList = namedMatch[1].split(',').map((rawItem) => {
+			return rawItem.trim();
+		}).filter(Boolean);
+		for (let itemIndex = 0; itemIndex < itemList.length; itemIndex += 1) {
+			const aliasParts = itemList[itemIndex].split(/\s+as\s+/).map((part) => {
+				return part.trim();
+			});
+			const originalName = aliasParts[0];
+			const localName = aliasParts[1] ?? originalName;
+			importsByLocal.set(localName, {
+				kind: 'named',
+				source: namedMatch[2],
+				importedName: originalName,
+			});
+		}
+		namedMatch = namedPattern.exec(sourceText);
+	}
+	return importsByLocal;
+}
+function parseFileExports(sourceText) {
+	const exportList = [];
+	const seenNames = new Set();
+	const addExport = (name, kind, isAsync, params) => {
+		if (!name || seenNames.has(name)) {
+			return;
+		}
+		seenNames.add(name);
+		exportList.push({
+			name,
+			kind,
+			isAsync: isAsync === true,
+			params: params ?? '',
+		});
+	};
+	const fnPattern = /export\s+(async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(([^)]*)\)/g;
+	let fnMatch = fnPattern.exec(sourceText);
+	while (fnMatch) {
+		addExport(fnMatch[2], 'function', Boolean(fnMatch[1]), fnMatch[3].trim());
+		fnMatch = fnPattern.exec(sourceText);
+	}
+	const constPattern = /export\s+(?:const|let|var)\s+([A-Za-z_$][\w$]*)/g;
+	let constMatch = constPattern.exec(sourceText);
+	while (constMatch) {
+		addExport(constMatch[1], 'binding', false);
+		constMatch = constPattern.exec(sourceText);
+	}
+	const classExportPattern = /export\s+(?:default\s+)?class\s+([A-Za-z_$][\w$]*)/g;
+	let classMatch = classExportPattern.exec(sourceText);
+	while (classMatch) {
+		addExport(classMatch[1], 'class', false);
+		classMatch = classExportPattern.exec(sourceText);
+	}
+	const reExportPattern = /export\s+\{([^}]+)\}/g;
+	let reMatch = reExportPattern.exec(sourceText);
+	while (reMatch) {
+		const itemList = reMatch[1].split(',').map((rawItem) => {
+			return rawItem.trim();
+		}).filter(Boolean);
+		for (let itemIndex = 0; itemIndex < itemList.length; itemIndex += 1) {
+			const aliasParts = itemList[itemIndex].split(/\s+as\s+/).map((part) => {
+				return part.trim();
+			});
+			const exportedName = aliasParts[1] ?? aliasParts[0];
+			addExport(exportedName, 'binding', false);
+		}
+		reMatch = reExportPattern.exec(sourceText);
+	}
+	return exportList;
+}
+function splitTopLevelArgs(argsText) {
+	const args = [];
+	let depth = 0;
+	let inSingle = false;
+	let inDouble = false;
+	let inTemplate = false;
+	let isEscaped = false;
+	let buffer = '';
+	for (let scanIndex = 0; scanIndex < argsText.length; scanIndex += 1) {
+		const currentChar = argsText[scanIndex];
+		if (isEscaped) {
+			buffer += currentChar;
+			isEscaped = false;
+			continue;
+		}
+		if (currentChar === '\\' && (inSingle || inDouble || inTemplate)) {
+			buffer += currentChar;
+			isEscaped = true;
+			continue;
+		}
+		if (inSingle) {
+			buffer += currentChar;
+			if (currentChar === '\'') {
+				inSingle = false;
+			}
+			continue;
+		}
+		if (inDouble) {
+			buffer += currentChar;
+			if (currentChar === '"') {
+				inDouble = false;
+			}
+			continue;
+		}
+		if (inTemplate) {
+			buffer += currentChar;
+			if (currentChar === '`') {
+				inTemplate = false;
+			}
+			continue;
+		}
+		if (currentChar === '\'') {
+			inSingle = true;
+			buffer += currentChar;
+			continue;
+		}
+		if (currentChar === '"') {
+			inDouble = true;
+			buffer += currentChar;
+			continue;
+		}
+		if (currentChar === '`') {
+			inTemplate = true;
+			buffer += currentChar;
+			continue;
+		}
+		if (currentChar === '(' || currentChar === '{' || currentChar === '[') {
+			depth += 1;
+			buffer += currentChar;
+			continue;
+		}
+		if (currentChar === ')' || currentChar === '}' || currentChar === ']') {
+			depth -= 1;
+			buffer += currentChar;
+			continue;
+		}
+		if (currentChar === ',' && depth === 0) {
+			const trimmedArg = buffer.trim();
+			if (trimmedArg) {
+				args.push(trimmedArg);
+			}
+			buffer = '';
+			continue;
+		}
+		buffer += currentChar;
+	}
+	const finalArg = buffer.trim();
+	if (finalArg) {
+		args.push(finalArg);
+	}
+	return args;
+}
+function parseObjectLiteralKeys(objectBodyText) {
+	const propertyList = splitTopLevelArgs(objectBodyText);
+	const keyList = [];
+	for (let itemIndex = 0; itemIndex < propertyList.length; itemIndex += 1) {
+		const trimmedProperty = propertyList[itemIndex];
+		if (!trimmedProperty || trimmedProperty.startsWith('...')) {
+			continue;
+		}
+		const keyMatch = trimmedProperty.match(/^(?:async\s+|get\s+|set\s+)?([A-Za-z_$][\w$]*)/);
+		if (keyMatch) {
+			keyList.push(keyMatch[1]);
+		}
+	}
+	return keyList;
+}
+function findLocalConstObjectBody(sourceText, constName) {
+	const escapedName = constName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const pattern = new RegExp(`(?:^|[\\s;])(?:const|let|var)\\s+${escapedName}\\s*=\\s*\\{`, 'm');
+	const headerMatch = pattern.exec(sourceText);
+	if (!headerMatch) {
+		return null;
+	}
+	const openIdx = headerMatch.index + headerMatch[0].length - 1;
+	const closeIdx = findMatchingBrace(sourceText, openIdx);
+	if (closeIdx < 0) {
+		return null;
+	}
+	return sourceText.slice(openIdx + 1, closeIdx);
+}
+function findPrototypeMixinCalls(sourceText, className) {
+	const callList = [];
+	const escapedName = className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const assignPattern = new RegExp(`(?:^|[\\s;=({,])(?:Object\\.)?assign\\s*\\(\\s*${escapedName}\\.prototype\\s*,`, 'g');
+	let assignMatch = assignPattern.exec(sourceText);
+	while (assignMatch) {
+		const commaIdx = assignMatch.index + assignMatch[0].length - 1;
+		const argsEnd = findMatchingParenForCall(sourceText, commaIdx);
+		if (argsEnd > commaIdx) {
+			const argsText = sourceText.slice(commaIdx + 1, argsEnd);
+			callList.push({
+				kind: 'assign',
+				args: splitTopLevelArgs(argsText),
+			});
+		}
+		assignPattern.lastIndex = commaIdx + 1;
+		assignMatch = assignPattern.exec(sourceText);
+	}
+	const definePattern = new RegExp(`(?:^|[\\s;=({,])Object\\.defineProperties\\s*\\(\\s*${escapedName}\\.prototype\\s*,`, 'g');
+	let defineMatch = definePattern.exec(sourceText);
+	while (defineMatch) {
+		const commaIdx = defineMatch.index + defineMatch[0].length - 1;
+		const argsEnd = findMatchingParenForCall(sourceText, commaIdx);
+		if (argsEnd > commaIdx) {
+			const argsText = sourceText.slice(commaIdx + 1, argsEnd);
+			callList.push({
+				kind: 'defineProperties',
+				args: splitTopLevelArgs(argsText),
+			});
+		}
+		definePattern.lastIndex = commaIdx + 1;
+		defineMatch = definePattern.exec(sourceText);
+	}
+	return callList;
+}
+function findMatchingParenForCall(sourceText, commaIdx) {
+	let depth = 1;
+	let inSingle = false;
+	let inDouble = false;
+	let inTemplate = false;
+	let inLineComment = false;
+	let inBlockComment = false;
+	let isEscaped = false;
+	for (let scanIndex = commaIdx + 1; scanIndex < sourceText.length; scanIndex += 1) {
+		const currentChar = sourceText[scanIndex];
+		const nextChar = sourceText[scanIndex + 1];
+		if (inLineComment) {
+			if (currentChar === '\n') {
+				inLineComment = false;
+			}
+			continue;
+		}
+		if (inBlockComment) {
+			if (currentChar === '*' && nextChar === '/') {
+				inBlockComment = false;
+				scanIndex += 1;
+			}
+			continue;
+		}
+		if (isEscaped) {
+			isEscaped = false;
+			continue;
+		}
+		if (currentChar === '\\' && (inSingle || inDouble || inTemplate)) {
+			isEscaped = true;
+			continue;
+		}
+		if (inSingle) {
+			if (currentChar === '\'') {
+				inSingle = false;
+			}
+			continue;
+		}
+		if (inDouble) {
+			if (currentChar === '"') {
+				inDouble = false;
+			}
+			continue;
+		}
+		if (inTemplate) {
+			if (currentChar === '`') {
+				inTemplate = false;
+			}
+			continue;
+		}
+		if (currentChar === '/' && nextChar === '/') {
+			inLineComment = true;
+			scanIndex += 1;
+			continue;
+		}
+		if (currentChar === '/' && nextChar === '*') {
+			inBlockComment = true;
+			scanIndex += 1;
+			continue;
+		}
+		if (currentChar === '\'') {
+			inSingle = true;
+			continue;
+		}
+		if (currentChar === '"') {
+			inDouble = true;
+			continue;
+		}
+		if (currentChar === '`') {
+			inTemplate = true;
+			continue;
+		}
+		if (currentChar === '(') {
+			depth += 1;
+			continue;
+		}
+		if (currentChar === ')') {
+			depth -= 1;
+			if (depth === 0) {
+				return scanIndex;
+			}
+		}
+	}
+	return -1;
+}
+function resolveRelativeImport(currentAbsoluteFilePath, importSource) {
+	if (!importSource || importSource[0] !== '.') {
+		return null;
+	}
+	const baseDir = path.dirname(currentAbsoluteFilePath);
+	return path.resolve(baseDir, importSource);
+}
 function parseClassesFromFile(sourceText, relativeFilePath) {
 	const classList = [];
 	const lineStarts = buildLineStarts(sourceText);
@@ -671,6 +1011,7 @@ async function collectJavaScriptFiles(sourcePath) {
 }
 async function readClassIndex(classFileList, sourcePath) {
 	const classList = [];
+	const fileDataByAbsolutePath = new Map();
 	for (let fileIndex = 0; fileIndex < classFileList.length; fileIndex += 1) {
 		const absoluteFilePath = classFileList[fileIndex];
 		let fileText = '';
@@ -680,14 +1021,176 @@ async function readClassIndex(classFileList, sourcePath) {
 			continue;
 		}
 		const relativeFilePath = path.relative(sourcePath, absoluteFilePath);
+		const importsByLocal = parseFileImports(fileText);
+		const exportList = parseFileExports(fileText);
+		fileDataByAbsolutePath.set(absoluteFilePath, {
+			absolutePath: absoluteFilePath,
+			source: fileText,
+			importsByLocal,
+			exportList,
+		});
 		const discoveredClasses = parseClassesFromFile(fileText, relativeFilePath);
 		for (let classIndex = 0; classIndex < discoveredClasses.length; classIndex += 1) {
-			classList.push(discoveredClasses[classIndex]);
+			const classMeta = discoveredClasses[classIndex];
+			classMeta.absoluteFilePath = absoluteFilePath;
+			classList.push(classMeta);
 		}
 	}
-	return classList;
+	return {
+		classList,
+		fileDataByAbsolutePath,
+	};
+}
+function collectPrototypeMixins(classMeta, fileDataByAbsolutePath) {
+	const fileData = fileDataByAbsolutePath.get(classMeta.absoluteFilePath);
+	if (!fileData) {
+		return [];
+	}
+	const mixinCallList = findPrototypeMixinCalls(fileData.source, classMeta.name);
+	if (!mixinCallList.length) {
+		return [];
+	}
+	const mixinMethodList = [];
+	const seenMethodNames = new Set();
+	const addMethod = (name, kind, isAsync, params, sourceLabel, viaLabel) => {
+		if (!name || seenMethodNames.has(name)) {
+			return;
+		}
+		seenMethodNames.add(name);
+		mixinMethodList.push({
+			name,
+			kind,
+			isAsync: isAsync === true,
+			params: params ?? '',
+			source: sourceLabel,
+			via: viaLabel,
+		});
+	};
+	for (let callIndex = 0; callIndex < mixinCallList.length; callIndex += 1) {
+		const call = mixinCallList[callIndex];
+		for (let argIndex = 0; argIndex < call.args.length; argIndex += 1) {
+			const argText = call.args[argIndex];
+			if (!argText) {
+				continue;
+			}
+			const methodKind = call.kind === 'defineProperties' ? 'get' : 'method';
+			if (argText[0] === '{') {
+				const keyList = parseObjectLiteralKeys(argText.slice(1, argText.length - 1));
+				for (let keyIndex = 0; keyIndex < keyList.length; keyIndex += 1) {
+					addMethod(keyList[keyIndex], methodKind, false, '', classMeta.relativeFilePath, '(inline)');
+				}
+				continue;
+			}
+			const importInfo = fileData.importsByLocal.get(argText);
+			if (importInfo && importInfo.source) {
+				const targetAbsolutePath = resolveImportTarget(classMeta.absoluteFilePath, importInfo.source, fileDataByAbsolutePath);
+				if (!targetAbsolutePath) {
+					continue;
+				}
+				const targetData = fileDataByAbsolutePath.get(targetAbsolutePath);
+				if (!targetData) {
+					continue;
+				}
+				if (importInfo.kind === 'namespace') {
+					for (let exportIndex = 0; exportIndex < targetData.exportList.length; exportIndex += 1) {
+						const exportEntry = targetData.exportList[exportIndex];
+						if (exportEntry.kind !== 'function' && exportEntry.kind !== 'binding') {
+							continue;
+						}
+						addMethod(exportEntry.name, methodKind, exportEntry.isAsync, exportEntry.params, importInfo.source, argText);
+					}
+					continue;
+				}
+				if (importInfo.kind === 'named') {
+					const sourceName = importInfo.importedName ?? argText;
+					const constBody = findLocalConstObjectBody(targetData.source, sourceName);
+					if (constBody !== null) {
+						const keyList = parseObjectLiteralKeys(constBody);
+						for (let keyIndex = 0; keyIndex < keyList.length; keyIndex += 1) {
+							addMethod(keyList[keyIndex], methodKind, false, '', importInfo.source, argText);
+						}
+					}
+					continue;
+				}
+			}
+			const localConstBody = findLocalConstObjectBody(fileData.source, argText);
+			if (localConstBody !== null) {
+				const keyList = parseObjectLiteralKeys(localConstBody);
+				for (let keyIndex = 0; keyIndex < keyList.length; keyIndex += 1) {
+					const keyName = keyList[keyIndex];
+					const fwdImport = fileData.importsByLocal.get(keyName);
+					let params = '';
+					let isAsync = false;
+					if (fwdImport && fwdImport.kind === 'named' && fwdImport.source) {
+						const fwdTargetPath = resolveImportTarget(classMeta.absoluteFilePath, fwdImport.source, fileDataByAbsolutePath);
+						const fwdTargetData = fwdTargetPath ? fileDataByAbsolutePath.get(fwdTargetPath) : null;
+						if (fwdTargetData) {
+							const fwdExport = fwdTargetData.exportList.find((entry) => {
+								return entry.name === (fwdImport.importedName ?? keyName);
+							});
+							if (fwdExport) {
+								params = fwdExport.params ?? '';
+								isAsync = fwdExport.isAsync === true;
+							}
+						}
+					}
+					addMethod(keyName, methodKind, isAsync, params, classMeta.relativeFilePath, argText);
+				}
+			}
+		}
+	}
+	return mixinMethodList;
+}
+function resolveImportTarget(currentAbsoluteFilePath, importSource, fileDataByAbsolutePath) {
+	const baseTarget = resolveRelativeImport(currentAbsoluteFilePath, importSource);
+	if (!baseTarget) {
+		return null;
+	}
+	const candidates = [
+		baseTarget,
+		`${baseTarget}.js`,
+		path.join(baseTarget, 'index.js'),
+	];
+	for (let candidateIndex = 0; candidateIndex < candidates.length; candidateIndex += 1) {
+		if (fileDataByAbsolutePath.has(candidates[candidateIndex])) {
+			return candidates[candidateIndex];
+		}
+	}
+	return null;
 }
 function buildClassDocument(classMeta, generatedAt) {
+	const unifiedMethods = [];
+	for (let methodIndex = 0; methodIndex < classMeta.methodList.length; methodIndex += 1) {
+		const declared = classMeta.methodList[methodIndex];
+		unifiedMethods.push({
+			name: declared.name,
+			kind: declared.kind,
+			params: declared.params ?? '',
+			isStatic: declared.isStatic === true,
+			isAsync: declared.isAsync === true,
+			origin: 'declared',
+			via: null,
+			source: null,
+		});
+	}
+	const mixinList = classMeta.prototypeMixins ?? [];
+	let mixinAsyncCount = 0;
+	for (let mixinIndex = 0; mixinIndex < mixinList.length; mixinIndex += 1) {
+		const mixin = mixinList[mixinIndex];
+		if (mixin.isAsync) {
+			mixinAsyncCount += 1;
+		}
+		unifiedMethods.push({
+			name: mixin.name,
+			kind: mixin.kind,
+			params: mixin.params ?? '',
+			isStatic: false,
+			isAsync: mixin.isAsync === true,
+			origin: 'prototype-mixin',
+			via: mixin.via,
+			source: mixin.source,
+		});
+	}
 	return {
 		className: classMeta.name,
 		purpose: classMeta.purpose,
@@ -701,16 +1204,18 @@ function buildClassDocument(classMeta, generatedAt) {
 		},
 		importanceScore: classMeta.importanceScore,
 		metrics: {
-			methodCount: classMeta.methodCount,
+			methodCount: unifiedMethods.length,
+			declaredMethodCount: classMeta.methodCount,
+			prototypeMixinMethodCount: mixinList.length,
 			staticMethodCount: classMeta.staticMethodCount,
-			asyncMethodCount: classMeta.asyncMethodCount,
+			asyncMethodCount: classMeta.asyncMethodCount + mixinAsyncCount,
 		},
 		complexity: {
 			isComplex: classMeta.isComplex,
 			reasons: classMeta.complexReasons,
 		},
 		similarNames: classMeta.similarNames,
-		methods: classMeta.methodList,
+		methods: unifiedMethods,
 		generatedAt,
 	};
 }
@@ -758,12 +1263,9 @@ async function writeClassDocs(classList, outputPath, sourcePath, scannedFileCoun
 		if (classMeta.isComplex) {
 			complexCount += 1;
 		}
-		const safePurpose = sanitizeName(classMeta.purpose);
 		const safeClassName = sanitizeName(classMeta.name);
 		const sameNameCount = lowerNameCount.get(classMeta.name.toLowerCase()) || 0;
-		const needsClassFolder = classMeta.isComplex || sameNameCount > 1;
-		const baseFolder = path.join(outputPath, safePurpose);
-		const targetFolder = needsClassFolder ? path.join(baseFolder, safeClassName) : baseFolder;
+		const targetFolder = path.join(outputPath, safeClassName);
 		await fileSystem.mkdir(targetFolder, {
 			recursive: true,
 		});
@@ -824,12 +1326,21 @@ async function writeClassDocs(classList, outputPath, sourcePath, scannedFileCoun
 async function run() {
 	const settings = parseArgs(process.argv.slice(2));
 	const classFileList = await collectJavaScriptFiles(settings.sourcePath);
-	const allClassList = await readClassIndex(classFileList, settings.sourcePath);
+	const { classList: allClassList, fileDataByAbsolutePath } = await readClassIndex(classFileList, settings.sourcePath);
+	for (let classIndex = 0; classIndex < allClassList.length; classIndex += 1) {
+		allClassList[classIndex].prototypeMixins = collectPrototypeMixins(allClassList[classIndex], fileDataByAbsolutePath);
+	}
 	markComplexity(allClassList);
 	for (let classIndex = 0; classIndex < allClassList.length; classIndex += 1) {
 		allClassList[classIndex].importanceScore = scoreClassImportance(allClassList[classIndex]);
 	}
 	const importantClassList = allClassList.filter((classMeta) => {
+		if (settings.classNameFilter && classMeta.name !== settings.classNameFilter) {
+			return false;
+		}
+		if (settings.classNameFilter) {
+			return true;
+		}
 		return classMeta.importanceScore >= settings.minimumScore;
 	});
 	sortClasses(importantClassList);

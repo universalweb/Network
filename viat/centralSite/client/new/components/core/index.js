@@ -24,6 +24,14 @@ export {
 	list,
 } from './template.js';
 export { bind } from './state/binding.js';
+export { assignState } from './state/state.js';
+export {
+	getRoots,
+	registerRoot,
+	resolveTag,
+	resolveTagUrl,
+	scanAndResolve,
+} from './resolver.js';
 export { getRef, makeRefsProxy, registerRef } from './dom/refs.js';
 export { allChildren } from './dom/children.js';
 export {
@@ -55,7 +63,7 @@ export {
 	setComponentTimeout,
 	stopInterval,
 } from './timers.js';
-export { Logger, IS_PRODUCTION, isDev } from './debug/logger.js';
+export { Logger, IS_PRODUCTION } from './debug/logger.js';
 export {
 	assign,
 	assignPromisePair,

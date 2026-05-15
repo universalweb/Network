@@ -1,6 +1,6 @@
 import { getOrInit, noValue } from '../utilities.js';
 const childrenMap = new WeakMap();
-function getHostChildren(host) {
+export function getHostChildren(host) {
 	return getOrInit(childrenMap, host, () => {
 		return new Map();
 	});
@@ -9,6 +9,11 @@ function getTagChildren(host, tag) {
 	return getOrInit(getHostChildren(host), tag, () => {
 		return [];
 	});
+}
+function pushAll(target, source) {
+	for (let i = 0; i < source.length; i++) {
+		target.push(source[i]);
+	}
 }
 export function registerChild(host, element) {
 	const tag = element.tagName.toLowerCase();
@@ -30,7 +35,7 @@ export function allChildren(host) {
 	}
 	const out = [];
 	children.forEach((list) => {
-		out.push(...list);
+		pushAll(out, list);
 	});
 	return out;
 }

@@ -23,18 +23,18 @@ export class UIThemeSelect extends WebComponent {
 		if (domEvent.newState !== 'open') {
 			return;
 		}
-		const btn = this.shadowRoot.querySelector('.ts-btn');
+		const btn = this.refs.btn;
 		if (!btn) {
 			return;
 		}
 		const rect = btn.getBoundingClientRect();
-		const viewportH = window.innerHeight;
+		const viewportH = globalThis.innerHeight;
 		const gap = 6;
-		const drop = this.shadowRoot.querySelector('.theme-drop');
+		const drop = this.refs.drop;
 		const estimatedH = drop?.scrollHeight || ((THEMES.length * 32) + 4);
 		const spaceBelow = viewportH - rect.bottom - gap;
 		const spaceAbove = rect.top - gap;
-		const right = window.innerWidth - rect.right;
+		const right = globalThis.innerWidth - rect.right;
 		const flipUp = spaceBelow < estimatedH && spaceAbove > spaceBelow;
 		if (flipUp) {
 			this.state.dropStyle = `bottom:${(viewportH - rect.top) + gap}px;right:${right}px`;
@@ -49,17 +49,17 @@ export class UIThemeSelect extends WebComponent {
 		}
 		setTheme(themeId);
 		this.state.theme = themeId;
-		this.shadowRoot.querySelector('.theme-drop')?.hidePopover();
+		this.refs.drop?.hidePopover();
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
-			<button class="ts-btn" popovertarget="theme-drop">
+			<button #btn class="ts-btn" popovertarget="theme-drop">
 				${() => {
 					return `${this.currentLabel}<span class="ts-arrow">▾</span>`;
 				}}
 			</button>
-			<div class="theme-drop" id="theme-drop" popover="auto"
+			<div #drop class="theme-drop" id="theme-drop" popover="auto"
 				style="${() => {
 					return this.state.dropStyle;
 				}}"

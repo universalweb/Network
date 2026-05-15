@@ -1,13 +1,14 @@
-import { Binding, makeProxy, setCurrentTracking } from '../state/binding.js';
 import {
 	clearUnsubs,
 	fireResolver,
 	isPromiseLike,
 	syncSubsByDiff,
 } from '../utilities.js';
+import { makeProxy, setCurrentTracking } from '../state/binding.js';
 import { allChildren } from '../dom/children.js';
 import { Logger } from '../debug/logger.js';
 import { nextFrame } from '../lifecycle/scheduler.js';
+import { scanAndResolve } from '../resolver.js';
 async function awaitChildren(component, fieldName) {
 	if (component.config?.fastLifecycle === true) {
 		return;
@@ -22,7 +23,6 @@ async function awaitChildren(component, fieldName) {
 	}
 	await Promise.all(childPromises);
 }
-export async function render() {}
 export function finishRender(resolver) {
 	resolver();
 	if (this.whenRenderedResolver === resolver) {
@@ -51,9 +51,6 @@ export function subscribeRenderDeps(deps) {
 		}
 		return component.watchState ? component.watchState(dep, invalidate) : (() => {});
 	});
-}
-export function bind(key, currentValue) {
-	return new Binding(String(key ?? ''), currentValue);
 }
 export async function renderView() {
 	this.templateBuilt = false;
@@ -96,18 +93,34 @@ export async function renderView() {
 			this.renderProxy = makeProxy(currentState, this);
 			this.renderProxyState = currentState;
 		}
+		// Dependency tracking spans only the synchronous body of render().
+		// currentTracking is module-global, so it is cleared before any await
+		// yields — otherwise an interleaving component's render absorbs, or is
+		// absorbed into, the wrong dep set. A synchronous throw from render()
+		// skips this line but is caught by the outer finally, which clears it
+		// too. If render() is async, reads after its first await are untracked
+		// by design; do async prep in beforeRender instead.
 		setCurrentTracking(renderDeps);
-		try {
-			await this.render();
-		} finally {
-			setCurrentTracking(null);
+		const renderResult = this.render?.();
+		setCurrentTracking(null);
+		if (isPromiseLike(renderResult)) {
+			Logger.debug(this.constructor.name, () => {
+				return `[${this.tagName}] async render(): reads after the first await are untracked — move async work to beforeRender`;
+			});
+			await renderResult;
 		}
 		if (sequence !== this.renderSeq) {
 			this.isRendering = false;
 			this.finishRender(renderedResolver);
 			return;
 		}
+		// Fire-and-forget: lazy-load any undefined custom elements this render
+		// produced. Non-blocking so the parent's whenRendered doesn't wait —
+		// lazy children upgrade on their own once their module lands.
+		scanAndResolve(this.shadowRoot);
 	} finally {
+		// Safety net: a synchronous throw from render() skips the inline clear.
+		setCurrentTracking(null);
 		if (sequence === this.renderSeq) {
 			this.renderTracking = false;
 			const boundKeys = this.tplBoundKeys;
