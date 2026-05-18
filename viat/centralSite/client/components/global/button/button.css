@@ -1,0 +1,251 @@
+:host {
+	display: inline-flex;
+	flex: 0 0 auto;
+	box-sizing: border-box;
+}
+:host([hidden]) {
+	display: none;
+}
+button {
+	align-items: center;
+	appearance: none;
+	background: transparent;
+	border: 1px solid transparent;
+	box-sizing: border-box;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	font: inherit;
+	gap: 0.5em;
+	justify-content: center;
+	margin: 0;
+	min-width: 0;
+	transform: scale(1);
+	transform-origin: center;
+	transition:
+		background 0.18s ease,
+		border-color 0.18s ease,
+		color 0.18s ease,
+		box-shadow 0.18s ease,
+		transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+	white-space: nowrap;
+	user-select: none;
+}
+button:focus-visible {
+	outline: 1px solid var(--focus-ring-color, var(--teal, #5eead4));
+	outline-offset: 2px;
+}
+button:active:not(:disabled) {
+	transform: scale(0.92);
+	transition-duration: 0.07s;
+	transition-timing-function: cubic-bezier(0.55, 0, 0.85, 0.5);
+}
+.btn-icon {
+	line-height: 1;
+	flex: 0 0 auto;
+	/* Icons inherit the button's current font-size so text and glyph stay
+	   proportional across button sizes. 0.8em keeps the glyph visually
+	   smaller than the label so the label leads. Icon-only buttons restore
+	   the absolute size class below. */
+	--icon-size: 0.8em;
+}
+button.is-icon-only .btn-icon {
+	--icon-size: initial;
+}
+.btn-label {
+	line-height: 1;
+}
+/* Sizes — font-size drives both text and icon (via --icon-size: 1.1em). */
+button.size-xs {
+	font-size: 0.75rem;
+	padding: 0.25rem 0.55rem;
+	border-radius: 6px;
+	min-height: 22px;
+}
+button.size-sm {
+	font-size: 0.875rem;
+	padding: 0.35rem 0.7rem;
+	border-radius: 7px;
+	min-height: 28px;
+}
+button.size-md {
+	font-size: 1rem;
+	padding: 0.5rem 0.95rem;
+	border-radius: 8px;
+	min-height: 34px;
+}
+button.size-lg {
+	font-size: 1.125rem;
+	padding: 0.65rem 1.15rem;
+	border-radius: 9px;
+	min-height: 40px;
+}
+/* SOLID */
+button.var-solid.tone-neutral {
+	background: var(--btn-neutral, rgba(255, 255, 255, 0.08));
+	border-color: var(--btn-neutral-border, rgba(255, 255, 255, 0.14));
+	color: var(--text-default, #e8eaf2);
+}
+button.var-solid.tone-neutral:hover:not(:disabled) {
+	background: rgba(255, 255, 255, 0.13);
+}
+button.var-solid.tone-primary {
+	background: var(--teal, #5eead4);
+	border-color: var(--teal, #5eead4);
+	color: #06151a;
+}
+button.var-solid.tone-primary:hover:not(:disabled) {
+	background: #7cf2dd;
+}
+button.var-solid.tone-success {
+	background: #10b981;
+	border-color: #10b981;
+	color: #04231a;
+}
+button.var-solid.tone-success:hover:not(:disabled) {
+	background: #34d399;
+}
+button.var-solid.tone-danger {
+	background: #ef4444;
+	border-color: #ef4444;
+	color: #fff;
+}
+button.var-solid.tone-danger:hover:not(:disabled) {
+	background: #f87171;
+}
+button.var-solid.tone-warning {
+	background: #f59e0b;
+	border-color: #f59e0b;
+	color: #261604;
+}
+button.var-solid.tone-warning:hover:not(:disabled) {
+	background: #fbbf24;
+}
+button.var-solid.tone-subtle {
+	background: rgba(255, 255, 255, 0.04);
+	border-color: rgba(255, 255, 255, 0.08);
+	color: var(--text-default, #e8eaf2);
+}
+button.var-solid.tone-subtle:hover:not(:disabled) {
+	background: rgba(255, 255, 255, 0.09);
+}
+/* OUTLINE */
+button.var-outline.tone-neutral {
+	border-color: rgba(255, 255, 255, 0.18);
+	color: var(--text-default, #e8eaf2);
+}
+button.var-outline.tone-primary {
+	border-color: var(--teal, #5eead4);
+	color: var(--teal, #5eead4);
+}
+button.var-outline.tone-success {
+	border-color: #34d399;
+	color: #34d399;
+}
+button.var-outline.tone-danger {
+	border-color: #f87171;
+	color: #f87171;
+}
+button.var-outline.tone-warning {
+	border-color: #fbbf24;
+	color: #fbbf24;
+}
+button.var-outline:hover:not(:disabled) {
+	background: rgba(255, 255, 255, 0.06);
+}
+/* GHOST */
+button.var-ghost.tone-neutral {
+	color: var(--text-default, #e8eaf2);
+}
+button.var-ghost.tone-primary {
+	color: var(--teal, #5eead4);
+}
+button.var-ghost.tone-success {
+	color: #34d399;
+}
+button.var-ghost.tone-danger {
+	color: #f87171;
+}
+button.var-ghost.tone-warning {
+	color: #fbbf24;
+}
+button.var-ghost:hover:not(:disabled) {
+	background: rgba(255, 255, 255, 0.08);
+}
+/* LINK */
+button.var-link {
+	padding-left: 0;
+	padding-right: 0;
+	min-height: auto;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+button.var-link.tone-primary {
+	color: var(--teal, #5eead4);
+}
+button.var-link.tone-neutral {
+	color: var(--text-default, #e8eaf2);
+}
+button.var-link:hover:not(:disabled) {
+	text-decoration-thickness: 2px;
+}
+/* ICON variant — square, label hidden, used by IconButton style */
+button.var-icon {
+	padding: 0.4rem;
+	min-height: auto;
+	border-radius: 8px;
+	color: inherit;
+}
+button.var-icon:hover:not(:disabled) {
+	background: rgba(255, 255, 255, 0.08);
+}
+/* Icon-only buttons — guarantee a square hit area regardless of glyph metrics */
+button.is-icon-only {
+	padding: 0.5rem;
+	min-width: 2rem;
+	min-height: 2rem;
+}
+button.is-icon-only.size-xs { padding: 0.3rem; min-width: 1.6rem; min-height: 1.6rem; }
+button.is-icon-only.size-sm { padding: 0.4rem; min-width: 1.8rem; min-height: 1.8rem; }
+button.is-icon-only.size-lg { padding: 0.6rem; min-width: 2.4rem; min-height: 2.4rem; }
+/* States */
+button.is-disabled,
+button:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+button.is-full {
+	width: 100%;
+}
+:host(.is-full) {
+	width: 100%;
+	display: flex;
+}
+/* Loading spinner */
+.btn-spinner {
+	width: 1em;
+	height: 1em;
+	border: 2px solid currentColor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	display: inline-block;
+	animation: ui-btn-spin 0.65s linear infinite;
+}
+button.is-loading {
+	cursor: progress;
+}
+@keyframes ui-btn-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	button,
+	button:active:not(:disabled) {
+		transform: none;
+		transition: none;
+	}
+	.btn-spinner {
+		animation-duration: 1.6s;
+	}
+}

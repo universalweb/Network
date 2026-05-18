@@ -1,0 +1,113 @@
+:host {
+	display: block;
+	flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   WALLET HERO
+══════════════════════════════════════════════════════ */
+.wallet-hero {
+	padding: 28px 32px 20px;
+	flex-shrink: 0;
+	border-radius: var(--radius);
+	background: var(--bg-panel);
+	border: var(--panel-border, var(--border-light));
+	box-shadow: var(--panel-shadow);
+	overflow: hidden;
+	position: relative;
+	transition:
+		border-color 0.25s,
+		box-shadow 0.25s;
+}
+
+.wallet-hero::before {
+	content: 'VIAT BALANCE';
+	position: absolute;
+	top: 10px;
+	right: 18px;
+	font-size: 2rem;
+	font-weight: 700;
+	letter-spacing: 2px;
+	color: var(--watermark-text);
+	user-select: none;
+}
+
+.wallet-hero:hover {
+	border-color: var(--panel-hover-border);
+	box-shadow: var(--panel-hover-shadow);
+}
+
+.wa-label {
+	font-family: var(--font-display);
+	font-size: 0.4375rem;
+	text-transform: uppercase;
+	letter-spacing: 0.3em;
+	color: var(--text-muted);
+	margin-bottom: 10px;
+}
+
+.wa-amount-main {
+	font-size: 4.5rem;
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-main);
+	letter-spacing: -2px;
+	line-height: 1;
+}
+
+/* `bare` mode — used by <mobile-dashboard> so the balance reads as part
+   of the page background instead of as a card. Strip the panel chrome
+   (background, border, shadow, padding) and let the typography do the
+   work. The bigger font + the watermark "VIAT BALANCE" still anchor it
+   as a hero region, just unbounded. */
+:host(.bare) .wallet-hero {
+	padding: 8px 6px 4px;
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	border-radius: 0;
+}
+:host(.bare) .wallet-hero:hover {
+	border-color: transparent;
+	box-shadow: none;
+}
+:host(.bare) .wallet-hero::before {
+	font-size: 1.5rem;
+	opacity: 0.5;
+	top: 0;
+	right: 0;
+}
+:host(.bare) .wa-amount-main {
+	font-size: 3.75rem;
+	letter-spacing: -2px;
+}
+:host(.bare) .wa-amount-full {
+	font-size: 0.8125rem;
+}
+
+@media (max-width: 420px) {
+	.wa-amount-main {
+		font-size: 2.125rem;
+	}
+	:host(.bare) .wa-amount-main {
+		font-size: 3rem;
+	}
+}
+
+.wa-coin-info {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 10px;
+}
+
+.wa-coin-symbol {
+	color: #fff;
+}
+
+.wa-amount-full {
+	font-size: 0.6875rem;
+	font-family: var(--font-mono);
+	color: var(--text-muted);
+	letter-spacing: 0.04em;
+}

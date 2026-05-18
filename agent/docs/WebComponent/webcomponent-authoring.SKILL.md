@@ -18,7 +18,7 @@ Use when creating or refactoring custom elements that must be reactive, cleanup-
 
 Produce a component that is:
 - standards-based (`customElements` + Shadow DOM, no compiler)
-- strongly reactive (`state` proxy + auto-tracked spots)
+- strongly reactive (`state` proxy + auto-tracked spots, `Set`/`Map` reactive too)
 - low-boilerplate and deterministic
 - per-component-isolated (no shared refs, no DOM queries)
 - agent-addressable for free (AXON / AI mixin when needed)
@@ -26,6 +26,7 @@ Produce a component that is:
 ## Required build pattern
 
 1. **Class scaffold**
+   - `import { WebComponent } from 'webcomponent'` — bare specifier per the importmap
    - `class X extends WebComponent`
    - `static url = import.meta.url`
    - `static styles = { name: './x.css' }`
@@ -34,6 +35,7 @@ Produce a component that is:
    - Optional framework flags: `static mergeState = false` (skip chain merge), `static mergeObjects = true` (deep-merge containers across chain + ctor-arg state), `static skipStaticState = true` (bypass static state pipeline)
    - Constructor signature is `(state, config, flags)` — pass overrides per-instance when constructing manually
    - **NEVER** declare `state = {…}` as a subclass class field — it shadows the prototype accessor and silently breaks reactivity. Always use `static state`.
+   - The framework's `upgradeShadowedProperties()` auto-runs in the base constructor — pre-upgrade prop assignments (`el.state = {...}` from a parent template before the element was upgraded) are rescued through the setter, no manual upgrade dance.
 
 2. **Lifecycle placement**
    - `onConnect`: subscriptions (`this.delegate(...)`, `this.on(...)`), one-time prep
@@ -46,14 +48,18 @@ Produce a component that is:
 3. **Render discipline**
    - Wrap function spots: `${() => this.state.count}` or bare method refs `${this.computeLabel}`
    - Bare reads inside template `${this.state.x}` work but force a whole-template re-render on change
-   - Quote attribute interpolations: `class="${cls}"`, not `class=${cls}`
+   - Quote string attribute interpolations: `class="${cls}"`, not `class=${cls}`
+   - Use the `classList()` helper for reactive class lists: `class=${classList('panel', () => this.state.open && 'is-open', this.state.classes)}` — strings, bool-returning fns, and reactive `Set` values all collapse into a deduped class string with per-token diffing
+   - For keyed lists of child components, use `list('stateKey', ChildClass)` or `each(items, ChildClass, keyFn)` from `'webcomponent'` — never imperatively re-render markup strings
    - **Never** query the DOM. For element handles, write `#name` in the template and read `this.refs.name`.
+   - **Ref names must match `/^[a-z_][a-z0-9_]*$/`** — all-lowercase, underscores allowed. `#camelCase` gets lowercased by the parser into `camelcase` and the matching `refs.camelCase` returns `undefined`. Use `#snake_case`.
 
 4. **State discipline**
    - Class-level defaults: `static state = { … }` (chain-merged, smart-cloned per instance)
    - Per-instance overrides: `new MyComp({ key: value })` (ctor-arg state — plain `Object.assign`, caller-owned values)
    - Single-key change: `this.state.x = y`
    - Multi-key change: `this.assignState({ a, b, c })` (not `Object.assign(this.state, …)`)
+   - **`Set` / `Map`** values inside state are reactive — call `state.classes.add('foo')` / `state.tags.delete('bar')` and the change notifies just like a prop write. Default to a `Set` for class-list state rather than an array.
    - Cross-component shared state: `this.globalState.theme` + `watchGlobal('theme', ...)`
    - Never write `this.STATE.x = y` from app code (bypasses tracking)
    - **NEVER** use `state = {…}` class field on a subclass — silently breaks reactivity (shadows the accessor)
@@ -72,31 +78,48 @@ Produce a component that is:
    - Per-component-instance scoped. Names need only be unique within a single component's template.
    - For hot loops, deref once: `const el = this.refs.foo; el.x = 1;`
 
-7. **Method form**
+7. **Component lookup (`getComponent` / `getComponents` / `findComponent`)**
+   - All three are **shadow-children-only — non-recursive**. Walk through each parent yourself to find nested instances.
+   - `getComponent('tag')` — first direct child with that tag, or `null`
+   - `getComponents('tag')` — live array of direct children with that tag (do not mutate)
+   - `findComponent('tag', predicate)` — first child where `predicate(component)` is truthy
+   - If two parent components both mount the same child tag (e.g. desktop and mobile dashboards both mount `<transmit-panel>`), iterate each parent's `getComponents('transmit-panel')` and fan the update out to every instance.
+
+8. **Method form**
    - Use shorthand class methods: `handleClick() { ... }`
    - Do **not** use arrow class fields (`handleClick = () => {}`). The framework's `delegate`, `on`, and template event spots all call handlers with `this` bound to the component. Arrow fields add a closure per instance and can't `super.method()`.
 
-8. **Styles**
+9. **Styles**
    - Static style chain first (`static styles = { ... }`) — compiled once per class, adopted via `adoptedStyleSheets`
+   - Every component gets `core/styles/base.css` via the shared sheet (reset, sitewide scrollbar skin driven by `--scrollbar-*` vars, tap-highlight reset)
+   - Theme overrides through CSS vars (`styles/variables.css` + theme files in `styles/themes/`) — set tokens, never hard-code colors
    - Runtime toggles via `addStyle`/`removeStyle`/`replaceStyle`
    - Subclass-only host states: target `:host(.active)` or `:host([active])`
+   - For two component classes sharing a single CSS file: scope `:host` rules so they don't leak (a fixed-position container rule will otherwise apply to every list item too)
 
-9. **Optional AI enablement**
-   - Apply AI mixin when the component must be agent-addressable
-   - Expose concise tools (`aiDefineTool`) with clear input schemas
-   - Default read-only; gate mutating tools by policy
+10. **Optional AI enablement**
+    - Apply AI mixin when the component must be agent-addressable
+    - Expose concise tools (`aiDefineTool`) with clear input schemas
+    - Default read-only; gate mutating tools by policy
 
 ## Output checklist
 
 - extends `WebComponent`, defines `static url` + at least one `static styles` entry
+- imports from the bare `'webcomponent'` specifier (not relative paths)
 - handlers are method shorthand, not arrow class fields
 - **no `state = {…}` class field on subclasses** — defaults live in `static state`
 - no `querySelector` / `getElementById` — uses `#name` + `this.refs`
+- all `#refs` are lowercase / underscore (matches `/^[a-z_][a-z0-9_]*$/`)
 - multi-key state writes use `assignState`
+- reactive class state uses `Set` + `classList()` template helper, not an array
+- keyed lists use `list()` / `each()`, not imperative string rendering
+- `getComponent` / `getComponents` callers handle nesting explicitly (it's not recursive)
 - lifecycle awaits use `this.lifecycle.whenX` namespace (not top-level `this.whenX`)
 - cross-component listeners use `this.delegate(...)`, not `document.addEventListener`
 - `window` references rewritten to `globalThis`
 - no `delete` keyword anywhere
+- no `for…of` in hot loops; use indexed `for`
+- no shadowing of globals (`name`, `event`, `confirm`, `type`, `alert`, `fetch`, `parent`)
 - emitted events use `feature:phase` or `kebab-case-action` naming
 - if AI-enabled: clear `aiLabel`, `aiRole`, minimal `aiDefineTool` set
 

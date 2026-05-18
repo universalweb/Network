@@ -1,0 +1,242 @@
+:host {
+  display: contents;
+}
+
+.modal {
+  box-sizing: border-box;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--popup-border, rgba(109, 74, 255, 0.22));
+  border-radius: var(--radius-lg, 12px);
+  background: var(--popup-bg, #07080c);
+  color: var(--popup-text, #e8eaf2);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(109, 74, 255, 0.08);
+  max-width: var(--ui-modal-max-width, min(640px, calc(100vw - 32px)));
+  /* `100dvh` accounts for mobile browser chrome (URL bar showing/hiding)
+     where `100vh` either reports the largest possible value and clips, or
+     locks to the initial value and leaves dead space. `100dvh` shrinks the
+     ceiling so the modal never extends past the visible viewport. */
+  max-height: var(--ui-modal-max-height, calc(100dvh - 32px));
+  overflow: hidden;
+  position: relative;
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  transform-origin: center;
+  will-change: transform, opacity;
+  transition:
+    opacity 0.22s ease,
+    transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-radius 0.2s ease,
+    overlay 0.22s ease allow-discrete,
+    display 0.22s ease allow-discrete;
+}
+/* Flex column ONLY when the dialog is actually open. Author rules win
+   specificity ties against the UA's `dialog:not([open]) { display: none }`,
+   so writing `display: flex` on `.modal` directly used to make EVERY
+   nested closed modal still render and silently pad its parent's layout
+   (a hidden thumbnail-lightbox dialog was inflating the wallet-onboarding
+   shell by ~430px). Scoping to `[open]` keeps the UA's display:none in
+   force for closed dialogs while still giving open ones a flex column. */
+.modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+.modal-body {
+  /* Two-part behavior:
+     1. When content fits inside the modal's `max-height`, the body is
+        sized to its content (no `flex-grow` → no stretching into empty
+        flex space). The dialog's `height: fit-content` (UA default) then
+        shrink-wraps around it, so the modal stays content-sized and the
+        backdrop reveals real space above/below — the modal looks
+        properly *centered* on tall viewports.
+     2. When content is taller than the modal's `max-height`, the body
+        shrinks (`flex-shrink: 1` + `min-height: 0` to override flex's
+        default `min-height: auto`) to fit inside the capped modal and
+        scrolls its overflow internally. */
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+/* Built-in control strip — only present in the DOM when at least one
+   showClose / showMaximize / showMinimize flag is set on the modal
+   state. The strip wrapper is created lazily by the render method, so
+   if no flags are set, this rule simply doesn't match anything. */
+.modal-controls {
+  position: absolute;
+  top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 2;
+}
+/* Anchor side. Default: right (Windows-style). */
+.modal.controls-right .modal-controls { right: 8px; left: auto; }
+/* macOS-style: anchored left, with the close button leftmost (close, min,
+   max) — achieved with CSS `order` rather than re-ordering the DOM so the
+   render method stays simple. */
+.modal.controls-left .modal-controls { left: 8px; right: auto; }
+.modal.controls-left .mc-close { order: 1; }
+.modal.controls-left .mc-min   { order: 2; }
+.modal.controls-left .mc-max   { order: 3; }
+.mc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-muted, rgba(255, 255, 255, 0.4));
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Author display: inline-flex above overrides the UA default of
+   display: none for [hidden] elements, so the framework's ?hidden binding
+   correctly toggles the attribute but the button still paints. Force it
+   back on every control flavor so showMinimize/showMaximize/showClose
+   all hide cleanly when their flag is anything other than literal true. */
+.mc-btn[hidden],
+.mc-close[hidden] {
+  display: none !important;
+}
+.mc-btn .mc-icon {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease, opacity 0.2s ease;
+}
+.mc-btn:hover {
+  color: var(--text-main, #e8eaf2);
+  border-color: var(--dark-divider, rgba(255, 255, 255, 0.18));
+  background: rgba(255, 255, 255, 0.04);
+}
+.mc-btn:active { transform: scale(0.92); }
+.mc-btn:focus-visible {
+  outline: none;
+  border-color: var(--cyan, #a78bfa);
+  box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.25);
+}
+/* Per-button hover micro-animations on the icon itself. */
+.mc-min:hover .mc-icon {
+  transform: translateY(2px) scaleX(1.1);
+  color: var(--teal, #5eead4);
+}
+.mc-max:hover .mc-icon-grow,
+.mc-max:hover .mc-icon-shrink {
+  color: var(--cyan, #a78bfa);
+}
+/* Expand/restore single toggle — both icons live in the same button slot
+   and crossfade with a rotate+scale morph so it reads as one icon
+   transforming rather than two icons swapping. The currently-visible one
+   matches the modal's actual size state (is-maximized class). */
+.mc-max {
+  position: relative;
+}
+.mc-max .mc-icon-grow,
+.mc-max .mc-icon-shrink {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    opacity 0.26s ease,
+    transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 0.2s ease;
+}
+.mc-max .mc-icon-grow {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+.mc-max .mc-icon-shrink {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.5);
+}
+.modal.is-maximized .mc-max .mc-icon-grow {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.5);
+}
+.modal.is-maximized .mc-max .mc-icon-shrink {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+/* Maximized — fill the viewport. `100dvh` for the same mobile-chrome
+   reason as the default `max-height` above. Body's `flex: 1 1 auto` +
+   `min-height: 0` from the base rule already handles internal scroll. */
+.modal.is-maximized {
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  border-radius: 0;
+  margin: 0;
+}
+/* Minimized — collapse the body so only the control strip remains. */
+.modal.is-minimized .modal-body { display: none; }
+.modal.is-minimized {
+  width: 240px;
+  height: 46px;
+  max-height: 46px;
+}
+.modal:not([open]) {
+  opacity: 0;
+  transform: scale(0.92) translateY(14px);
+  transition:
+    opacity 0.16s ease,
+    transform 0.18s cubic-bezier(0.55, 0, 0.85, 0.5),
+    overlay 0.18s ease allow-discrete,
+    display 0.18s ease allow-discrete;
+}
+
+@starting-style {
+  .modal[open] {
+    opacity: 0;
+    transform: scale(0.92) translateY(14px);
+  }
+}
+
+.modal::backdrop {
+  background: rgba(4, 6, 12, 0.55);
+  backdrop-filter: blur(6px);
+  opacity: 1;
+  transition:
+    opacity 0.28s ease,
+    backdrop-filter 0.28s ease,
+    overlay 0.28s ease allow-discrete,
+    display 0.28s ease allow-discrete;
+}
+
+.modal:not([open])::backdrop {
+  opacity: 0;
+  backdrop-filter: blur(0);
+}
+
+@starting-style {
+  .modal[open]::backdrop {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal {
+    transition: opacity 0.12s ease, overlay 0.12s ease allow-discrete, display 0.12s ease allow-discrete;
+    transform: none;
+  }
+  .modal:not([open]) { transform: none; }
+  @starting-style {
+    .modal[open] { transform: none; }
+  }
+  .mc-btn,
+  .mc-btn .mc-icon {
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+  .mc-btn:hover .mc-icon,
+  .mc-btn:active { transform: none; }
+  .mc-max .mc-icon-grow,
+  .mc-max .mc-icon-shrink {
+    transition: color 0.15s ease, opacity 0.15s ease;
+    transform: none;
+  }
+}

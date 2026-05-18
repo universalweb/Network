@@ -1,0 +1,26 @@
+:host {
+	display: flex;
+	justify-content: center;
+	width: 100%;
+	color: var(--icon-color);
+	transition: color 0.18s ease;
+}
+/* Horizontal dock: each button takes its natural width inside the row's
+   space-around distribution instead of stretching the full width (which
+   would put every button on top of every other one). */
+@media (max-width: 767px) {
+	:host {
+		width: auto;
+		flex: 0 0 auto;
+	}
+}
+:host(:hover) {
+	color: var(--icon-color-hover);
+}
+:host(.active),
+:host([active]) {
+	color: var(--icon-color-active);
+}
+ui-button {
+	color: inherit;
+}

@@ -1,0 +1,66 @@
+:host {
+	display: block;
+	flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   VERBOSE OUTPUT / ACTIVITY LOG PANEL
+══════════════════════════════════════════════════════ */
+.output-panel {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	background: var(--bg-dark);
+	min-height: 350px;
+	border-radius: var(--radius);
+	border: var(--panel-border, var(--border-light));
+	box-shadow: var(--panel-shadow);
+	transition:
+		border-color 0.25s,
+		box-shadow 0.25s;
+}
+
+.output-panel:hover {
+	border-color: var(--panel-hover-border);
+	box-shadow: var(--panel-hover-shadow);
+}
+
+.output-panel .panel-header {
+	background: var(--dark-highlight);
+	border-bottom: 1px solid var(--dark-divider);
+	color: var(--dark-heading);
+}
+
+/* Tab strip — uses the core <ui-tabs> component now; no bespoke styling
+   needed here. Just a thin separator so the strip reads as part of the
+   panel's header band. */
+.output-tabs-strip {
+	display: block;
+	flex-shrink: 0;
+	border-bottom: 1px solid var(--dark-divider);
+}
+
+.output-feed {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding: 12px 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	position: relative;
+}
+
+/* CRT scanline overlay */
+.output-feed::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: repeating-linear-gradient(
+		transparent,
+		transparent 3px,
+		var(--cyan-scanline) 3px,
+		var(--cyan-scanline) 4px
+	);
+}
+

@@ -1,0 +1,92 @@
+:host {
+	display: block;
+	min-height: 0;
+}
+.tabs {
+	display: grid;
+	min-height: 0;
+	height: 100%;
+}
+.tabs-horizontal {
+	grid-template-rows: auto minmax(0, 1fr);
+	grid-template-columns: 1fr;
+}
+.tabs-vertical {
+	grid-template-columns: var(--tab-strip-width, auto) minmax(0, 1fr);
+	grid-template-rows: minmax(0, 1fr);
+}
+.tab-strip {
+	position: relative;
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	font-family: var(--font-mono, monospace);
+}
+.tabs-horizontal .tab-strip {
+	flex-direction: row;
+	gap: 2px;
+	border-bottom: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	padding: 0 4px;
+}
+.tabs-vertical .tab-strip {
+	flex-direction: column;
+	gap: 4px;
+	padding: 18px 10px;
+	background: var(--bg-dark, #04060a);
+	border-right: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	overflow-y: auto;
+}
+.tab-indicator {
+	position: absolute;
+	background: var(--teal, #5eead4);
+	border-radius: 2px;
+	opacity: 0;
+	pointer-events: none;
+	box-shadow: 0 0 8px rgba(94, 234, 212, 0.45);
+}
+.tab-indicator.is-visible {
+	opacity: 1;
+}
+.tab-indicator.no-transition {
+	transition: none !important;
+}
+.tabs-horizontal .tab-indicator {
+	left: var(--ind-x, 0);
+	width: var(--ind-w, 0);
+	bottom: -1px;
+	height: 2px;
+	transition:
+		left 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		width 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		opacity 0.2s ease;
+}
+.tabs-vertical .tab-indicator {
+	top: var(--ind-y, 0);
+	height: var(--ind-h, 0);
+	left: -1px;
+	width: 2px;
+	transition:
+		top 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		height 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		opacity 0.2s ease;
+}
+.tab-content {
+	min-width: 0;
+	min-height: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+/* Mobile: vertical strip becomes a tight icon rail. Shrink padding so a
+   `--tab-strip-width: 56px` from the consumer leaves real estate for the
+   actual button. */
+@media (max-width: 767px) {
+	.tabs-vertical .tab-strip {
+		padding: 12px 4px;
+		gap: 6px;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.tab-indicator {
+		transition: opacity 0.2s ease;
+	}
+}

@@ -1,0 +1,60 @@
+/* ══════════════════════════════════════════════════════
+   BASELINE — reset + scrollbar + utils
+   Applied to every WebComponent's shadow root.
+══════════════════════════════════════════════════════ */
+
+/* ── Reset ──────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+/* ── Scrollbar — sitewide, var-driven ─────────────────
+   Single source of truth. Every scrollable element in any
+   shadow root inherits this skin without needing a class.
+   Themes re-skin globally by overriding the --scrollbar-*
+   tokens declared in `styles/variables.css`. Light-DOM
+   scrollers get the same treatment via `styles/index.css`.
+
+   Firefox uses `scrollbar-width` / `scrollbar-color` (only
+   honoured on elements that actually have a scroll axis).
+   WebKit / Blink use the `::-webkit-scrollbar-*` pseudo
+   tree. Both branches are below; together they cover every
+   evergreen browser.
+
+   Optional variants: extra knobs like `.scrollbar-horizontal`
+   can re-apply selected vars locally (e.g. flip the height
+   for a wide bar). They are name-only hooks — they should
+   not introduce their own color or radius rules.
+   ────────────────────────────────────────────────────── */
+* {
+	scrollbar-width: var(--scrollbar-firefox-width, thin);
+	scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+*::-webkit-scrollbar {
+	width: var(--scrollbar-size);
+	height: var(--scrollbar-size);
+}
+*::-webkit-scrollbar-track {
+	background: var(--scrollbar-track);
+	border-radius: var(--scrollbar-radius);
+}
+*::-webkit-scrollbar-thumb {
+	background: var(--scrollbar-thumb);
+	border-radius: var(--scrollbar-radius);
+	border: 1px solid transparent;
+}
+*::-webkit-scrollbar-thumb:hover {
+	background: var(--scrollbar-thumb-hover);
+}
+*::-webkit-scrollbar-corner {
+	background: var(--scrollbar-corner);
+}
+
+/* ── Hover utilities ────────────────────────────────── */
+.green-hover:hover {
+	color: var(--green-hover);
+}

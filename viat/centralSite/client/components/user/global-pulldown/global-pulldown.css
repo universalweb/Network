@@ -1,0 +1,41 @@
+:host {
+	display: contents;
+}
+.gpd-content {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	padding: 24px 14px 0 14px;
+	color: var(--text-main, #fff);
+	font-family: var(--font-mono);
+	box-sizing: border-box;
+	width: 100%;
+	cursor: pointer;
+}
+.gpd-columns {
+	display: grid;
+	grid-template-columns: 220px minmax(0, 1fr) 220px;
+	gap: 14px;
+	flex: 1;
+	min-height: 0;
+	align-items: start;
+	width: 100%;
+	max-width: var(--center-max-width, 1536px);
+	margin: 0 auto;
+	cursor: auto;
+}
+.gpd-col {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+.gpd-col-help {
+	gap: 14px;
+	overflow-y: auto;
+	padding-right: 4px;
+	padding-bottom: 220px;
+}
+.gpd-col-chat {
+	min-height: 0;
+	padding-bottom: 220px;
+}

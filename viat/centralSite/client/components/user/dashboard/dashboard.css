@@ -1,0 +1,40 @@
+:host {
+	display: block;
+	height: 100%;
+	min-height: 0;
+}
+.dashboard-center {
+	display: flex;
+	flex-direction: column;
+	overflow-y: auto;
+	min-height: 0;
+	height: 100%;
+	padding-top: 90px;
+	padding-bottom: 64px;
+}
+.center-content {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 14px;
+	width: 100%;
+	max-width: var(--center-max-width, 1536px);
+	margin: 0 auto;
+	box-sizing: border-box;
+}
+.center-columns {
+	display: grid;
+	grid-template-columns: 220px minmax(0, 1fr) 220px;
+	gap: 14px;
+	width: 100%;
+	align-items: start;
+}
+.center-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	min-width: 0;
+}
+/* Mobile is handled entirely by the separate <mobile-dashboard>
+   component (mounted as a sibling in the wallet page slot and toggled
+   via the app-view viewport class) — no media queries here. */

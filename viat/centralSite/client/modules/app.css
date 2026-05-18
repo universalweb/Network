@@ -1,0 +1,113 @@
+:host {
+	display: grid;
+	grid-template-rows: 0 minmax(0, 1fr) 0;
+	grid-template-columns: 1fr;
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+	line-height: 1.5;
+	color: var(--text-main);
+	user-select: none;
+	-webkit-font-smoothing: antialiased;
+	background: transparent;
+}
+.shell-body {
+	grid-row: 2;
+	grid-column: 1;
+	display: grid;
+	grid-template-columns: calc(var(--rail-width, 52px) + 16px) minmax(0, 1fr) 0;
+	gap: 0;
+	overflow: hidden;
+	position: relative;
+	min-height: 0;
+	transition: grid-template-columns 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+:host(.vw-lg) .shell-body,
+:host(.vw-xl) .shell-body,
+:host(.vw-xxl) .shell-body {
+	grid-template-columns: calc(var(--rail-width, 52px) + 16px) minmax(0, 1fr) 260px;
+}
+:host(.vw-lg) .shell-body:has(global-sidebar:not([open])),
+:host(.vw-xl) .shell-body:has(global-sidebar:not([open])),
+:host(.vw-xxl) .shell-body:has(global-sidebar:not([open])) {
+	grid-template-columns: calc(var(--rail-width, 52px) + 16px) minmax(0, 1fr) 0;
+}
+.shell-body > * {
+	min-width: 0;
+	min-height: 0;
+}
+.shell-dock-rail {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: stretch;
+	overflow: visible;
+	position: relative;
+	z-index: 20;
+	padding: 8px 6px;
+}
+.shell-page {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
+}
+.shell-page > .shell-page-view {
+	flex: 1;
+	min-height: 0;
+}
+.shell-page:not(.is-page-wallet) > app-dashboard,
+.shell-page:not(.is-page-wallet) > mobile-dashboard,
+.shell-page:not(.is-page-swap) > swap-page,
+.shell-page:not(.is-page-explorer) > explorer-page,
+.shell-page:not(.is-page-accounts) > accounts-list-page,
+.shell-page:not(.is-page-account) > account-detail-page,
+.shell-page:not(.is-page-transaction) > transaction-detail-page {
+	display: none;
+}
+/* Viewport-scoped dashboard swap. Both <app-dashboard> and
+   <mobile-dashboard> are mounted side-by-side in the wallet page slot;
+   each viewport bucket hides the wrong one so only the correct layout
+   is visible (and tabbable) at any time. */
+:host(.vw-md) mobile-dashboard,
+:host(.vw-lg) mobile-dashboard,
+:host(.vw-xl) mobile-dashboard,
+:host(.vw-xxl) mobile-dashboard {
+	display: none;
+}
+:host(.vw-xs) app-dashboard,
+:host(.vw-sm) app-dashboard {
+	display: none;
+}
+/* Mobile (xs/sm < 768px): stack page → dock at bottom, hide sidebar +
+   bottom-bar. The dock takes over the bottom-bar slot, so the bottom-bar
+   is suppressed entirely. Sidebar collapses (its desktop docked column was
+   already 0-width below vw-lg). */
+:host(.vw-xs) .shell-body,
+:host(.vw-sm) .shell-body {
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-rows: minmax(0, 1fr) auto;
+}
+:host(.vw-xs) .shell-page,
+:host(.vw-sm) .shell-page {
+	grid-row: 1;
+	grid-column: 1;
+}
+:host(.vw-xs) .shell-dock-rail,
+:host(.vw-sm) .shell-dock-rail {
+	grid-row: 2;
+	grid-column: 1;
+	padding: 6px 8px;
+	z-index: 40;
+}
+/* Bottom bar is permanently suppressed on mobile — the dock takes its
+   vertical slot. The sidebar is intentionally NOT hidden here: its own
+   mode-overlay CSS already keeps the shell translated off-screen until
+   the user opens it, and hiding it outright would prevent the swipe-open
+   gesture and the toggle button from doing anything. */
+:host(.vw-xs) global-bottom-bar,
+:host(.vw-sm) global-bottom-bar {
+	display: none;
+}

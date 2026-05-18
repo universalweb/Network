@@ -4,6 +4,7 @@ import {
 	isString,
 } from '@universalweb/utilitylib';
 import { HDSeed } from '#viat/hdSeed/index';
+import QRCode from 'qrcode';
 import { ed25519 } from '@noble/curves/ed25519.js';
 import { encode } from './cbor.js';
 import { generateLegacyAddress } from './generateAddress.js';
@@ -12,8 +13,14 @@ import { shake256 } from '@noble/hashes/sha3.js';
 import { textToBuffer } from './utils.js';
 import { walletPersistence } from './walletPersistence.js';
 import { webAPI } from './webAPI.js';
+// Expose the bundled Buffer polyfill globally so consumers of the SDK can use
+// it without re-importing the `buffer` package. Skip when a native Buffer is
+// already present (Node, Bun) so we don't shadow a faster implementation.
+if (!globalThis.Buffer) {
+	globalThis.Buffer = Buffer;
+}
 /** VIAT Cryptocurrency API Client. */
-// TODO: EXPOSE UTILS AND BUFFER CLASS FOR USERS OF THE SDK
+// TODO: EXPOSE UTILS CLASS FOR USERS OF THE SDK
 /*
 	TODO: Change dilithium and ed25519 to native or wasm variants if present for better performance. Currently using pure JS implementations for compatibility and ease of use in the browser.
 */
@@ -95,6 +102,17 @@ class VIATClientSDK {
 	async set(key, value) {
 		this.STATE = this.STATE || {};
 		this.STATE[key] = value;
+		// Avoid shadowing prototype methods (e.g. `trapdoorKeypair`,
+		// `primaryKeypair`) that share a name with a state key. Without this
+		// guard, a second call to `setKeypairs()` invokes an object as a
+		// function and throws.
+		let proto = Object.getPrototypeOf(this);
+		while (proto && proto !== Object.prototype) {
+			if (Object.prototype.hasOwnProperty.call(proto, key) && typeof proto[key] === 'function') {
+				return value;
+			}
+			proto = Object.getPrototypeOf(proto);
+		}
 		this[key] = value;
 		return value;
 	}
@@ -186,15 +204,62 @@ class VIATClientSDK {
 			amount: amountStr,
 		};
 		const encoded = await encode(transactionData);
-		console.log(transactionData, encoded.toBase64());
 		const msg = Buffer.from(encoded);
 		const priv = Buffer.from(privateKey);
 		const sig = await ed25519.sign(msg, priv);
 		return Buffer.from(sig);
 	}
+	// High-level helper: pull the active wallet's primary keypair, derive the
+	// from-address, sign over the canonical (from, to, amount) struct, and post
+	// to /api/transactions. Returns the server's transaction record.
+	async sendTransaction(toAddress, amount, options = {}) {
+		const primaryKeypair = await this.get('primaryKeypair');
+		if (!primaryKeypair?.privateKey || !primaryKeypair?.publicKey) {
+			throw new Error('No wallet loaded. Create or import a wallet before sending.');
+		}
+		const fromAddress = await this.generateLegacyAddress();
+		const fromBase64 = Buffer.from(fromAddress).toString('base64');
+		const toBase64 = isString(toAddress) ? toAddress : Buffer.from(toAddress).toString('base64');
+		const amountStr = (isBigInt(amount)) ? amount.toString() : String(amount);
+		const signature = await this.signTransaction(fromBase64, toBase64, amountStr, primaryKeypair.privateKey);
+		const payload = {
+			from: fromBase64,
+			to: toBase64,
+			amount: amountStr,
+			signature: Buffer.from(signature).toString('base64'),
+		};
+		// First send always carries the public key so the server can verify and,
+		// if needed, create the account record.
+		if (options.includePublicKey !== false) {
+			payload.publicKey = Buffer.from(primaryKeypair.publicKey).toString('base64');
+		}
+		return this.createTransaction(payload);
+	}
 }
 extendClass(VIATClientSDK, webAPI);
 extendClass(VIATClientSDK, walletPersistence);
+const QR_OUTPUT_KEY = 'type';
+const DEFAULT_QR_OPTIONS = {
+	margin: 1,
+	errorCorrectionLevel: 'M',
+};
+DEFAULT_QR_OPTIONS[QR_OUTPUT_KEY] = 'svg';
+export async function toQrSvg(text, options = {}) {
+	if (!text) {
+		return '';
+	}
+	const merged = {
+		...DEFAULT_QR_OPTIONS,
+		...options,
+	};
+	merged[QR_OUTPUT_KEY] = 'svg';
+	return QRCode.toString(String(text), merged);
+}
+VIATClientSDK.toQrSvg = toQrSvg;
+VIATClientSDK.prototype.toQrSvg = function instanceToQrSvg(text, options) {
+	return toQrSvg(text, options);
+};
 export default VIATClientSDK;
 export { VIATClientSDK };
 export { encode, decode } from './cbor.js';
+export { Buffer } from 'buffer';

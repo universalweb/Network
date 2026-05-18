@@ -18,6 +18,10 @@ import {
 import { HDSeed } from '#viat/hdSeed/index';
 import { argon2id } from 'hash-wasm';
 import { shake256 } from '@noble/hashes/sha3.js';
+import { xchacha20poly1305 } from '@noble/ciphers/chacha.js';
+const XCHACHA_KEY_SIZE = 32;
+const XCHACHA_NONCE_SIZE = 24;
+const WALLET_CIPHER_ALGORITHM = 'XChaCha20-Poly1305';
 const fallbackArgonConfig = {
 	parallelism: 1,
 	iterations: 256,
@@ -138,8 +142,8 @@ export function cleanupMeta(source = {}) {
 }
 export function getCrypto() {
 	const cryptoAPI = globalThis.crypto;
-	if (!cryptoAPI?.subtle) {
-		throw new Error('Web Crypto API is required to save or load wallet seed data in the browser.');
+	if (!cryptoAPI?.getRandomValues) {
+		throw new Error('A crypto.getRandomValues source is required to save or load wallet seed data.');
 	}
 	return cryptoAPI;
 }
@@ -182,22 +186,19 @@ export function getArgonConfig(options = {}, meta = undefined) {
 		saltLength: options?.passwordSaltLength || options?.saltLength || metaPassword.saltLength || defaults.saltLength,
 	};
 }
-export function getIvLength(options = {}, meta = undefined) {
-	return options?.ivLength || meta?.cipher?.ivLength || 12;
-}
-export function toAesKeyBytes(source) {
+export function toEncryptionKey(source) {
 	const bytes = toUint8Array(source);
-	if (bytes.byteLength === 16 || bytes.byteLength === 24 || bytes.byteLength === 32) {
+	if (bytes.byteLength === XCHACHA_KEY_SIZE) {
 		return bytes;
 	}
 	return new Uint8Array(shake256(bytes, {
-		dkLen: 32,
+		dkLen: XCHACHA_KEY_SIZE,
 	}));
 }
 export async function derivePasswordKey(userInput, salt, options = {}, meta = undefined) {
 	this.assertUserInput(userInput);
 	if (this.resolvePasswordHashBypass(options, meta)) {
-		return this.toAesKeyBytes(userInput);
+		return this.toEncryptionKey(userInput);
 	}
 	const argonConfig = this.getArgonConfig(options, meta);
 	const password = isString(userInput) ? userInput : toBase64(userInput);
@@ -210,7 +211,7 @@ export async function derivePasswordKey(userInput, salt, options = {}, meta = un
 		hashLength: argonConfig.hashLength,
 		outputType: 'binary',
 	});
-	return this.toAesKeyBytes(hash);
+	return this.toEncryptionKey(hash);
 }
 export async function encodeAuthenticatedMeta(meta) {
 	return toUint8Array(await encode(this.canonicalizeMeta(meta)));
@@ -301,7 +302,10 @@ export async function getWalletMeta(options = {}) {
 	const defaults = this.getWalletDefaults();
 	await this.ensureWalletKeys();
 	const primaryKeypair = await this.get('primaryKeypair');
-	const trapdoorKeypair = await this.get('trapdoorKeypair');
+	// `trapdoorKeypair.publicKey` (~1.3 KB) is regenerable from
+	// `walletSeeds.trapdoorSeed` via `ml_dsa44.keygen`, so we omit it from the
+	// saved meta. We still derive the trapdoor hash here because it's used for
+	// the wallet address.
 	const trapdoorHash = (await this.get('trapdoorHash')) || await this.getTrapdoorHash();
 	const argonConfig = this.getArgonConfig(options);
 	const hashMode = this.resolvePasswordHashBypass(options) ? 'provided' : 'argon2id';
@@ -321,7 +325,6 @@ export async function getWalletMeta(options = {}) {
 		label: this.getWalletLabel(options),
 		address: this.encodePlainValue(address),
 		publicKey: primaryKeypair?.publicKey ? toBase64(primaryKeypair.publicKey) : undefined,
-		trapdoorPublicKey: trapdoorKeypair?.publicKey ? toBase64(trapdoorKeypair.publicKey) : undefined,
 		trapdoorHash: trapdoorHash ? toBase64(trapdoorHash) : undefined,
 		password: {
 			hashMode,
@@ -332,8 +335,8 @@ export async function getWalletMeta(options = {}) {
 			saltLength: argonConfig.saltLength,
 		},
 		cipher: {
-			algorithm: 'AES-GCM',
-			ivLength: this.getIvLength(options),
+			algorithm: WALLET_CIPHER_ALGORITHM,
+			nonceLength: XCHACHA_NONCE_SIZE,
 			innerEncoding: 'cbor',
 		},
 		extra: extra && Object.keys(extra).length ? extra : undefined,
@@ -341,42 +344,29 @@ export async function getWalletMeta(options = {}) {
 }
 export async function encryptWalletSecret(secret, meta, userInput, options = {}) {
 	const salt = this.randomBytes(this.getArgonConfig(options, meta).saltLength);
-	const iv = this.randomBytes(this.getIvLength(options, meta));
+	const nonce = this.randomBytes(XCHACHA_NONCE_SIZE);
 	const keyBytes = await this.derivePasswordKey(userInput, salt, options, meta);
-	const cryptoAPI = this.getCrypto();
-	const cryptoKey = await cryptoAPI.subtle.importKey('raw', keyBytes, {
-		name: 'AES-GCM',
-	}, false, ['encrypt']);
-	const encrypted = await cryptoAPI.subtle.encrypt({
-		name: 'AES-GCM',
-		iv,
-		additionalData: await this.encodeAuthenticatedMeta(meta),
-		tagLength: 128,
-	}, cryptoKey, toUint8Array(await encode(secret)));
+	const aad = await this.encodeAuthenticatedMeta(meta);
+	const plaintext = toUint8Array(await encode(secret));
+	const cipher = xchacha20poly1305(toUint8Array(keyBytes), nonce, aad);
+	const data = cipher.encrypt(plaintext);
 	return {
 		salt,
-		iv,
-		data: new Uint8Array(encrypted),
+		nonce,
+		data,
 	};
 }
 export async function decryptWalletSecret(walletPackage, userInput, options = {}) {
-	const cryptoAPI = this.getCrypto();
 	const keyBytes = await this.derivePasswordKey(userInput, walletPackage.encrypted.salt, options, walletPackage.meta);
-	const cryptoKey = await cryptoAPI.subtle.importKey('raw', keyBytes, {
-		name: 'AES-GCM',
-	}, false, ['decrypt']);
+	const aad = await this.encodeAuthenticatedMeta(walletPackage.meta);
+	const cipher = xchacha20poly1305(toUint8Array(keyBytes), toUint8Array(walletPackage.encrypted.nonce), aad);
 	let decrypted;
 	try {
-		decrypted = await cryptoAPI.subtle.decrypt({
-			name: 'AES-GCM',
-			iv: walletPackage.encrypted.iv,
-			additionalData: await this.encodeAuthenticatedMeta(walletPackage.meta),
-			tagLength: 128,
-		}, cryptoKey, walletPackage.encrypted.data);
+		decrypted = cipher.decrypt(toUint8Array(walletPackage.encrypted.data));
 	} catch {
-		throw new Error('Unable to decrypt the saved wallet data. Check the user input or password bypass option.');
+		throw new Error('Unable to decrypt the saved wallet data. Wrong password or corrupted payload.');
 	}
-	return this.normalizeWalletSecret(await decode(toBuffer(new Uint8Array(decrypted))));
+	return this.normalizeWalletSecret(await decode(toBuffer(decrypted)));
 }
 export function createWalletPackageShape(walletPackage, format) {
 	const defaults = this.getWalletDefaults();
@@ -388,17 +378,18 @@ export function createWalletPackageShape(walletPackage, format) {
 		encrypted: {
 			innerEncoding: walletPackage.encrypted?.innerEncoding || 'cbor',
 			salt: format === 'json' ? toBase64(walletPackage.encrypted.salt) : toUint8Array(walletPackage.encrypted.salt),
-			iv: format === 'json' ? toBase64(walletPackage.encrypted.iv) : toUint8Array(walletPackage.encrypted.iv),
+			nonce: format === 'json' ? toBase64(walletPackage.encrypted.nonce) : toUint8Array(walletPackage.encrypted.nonce),
 			data: format === 'json' ? toBase64(walletPackage.encrypted.data) : toUint8Array(walletPackage.encrypted.data),
 		},
 	};
 }
 export function normalizeWalletPackage(source = {}) {
-	if (!source?.encrypted?.data || !source?.encrypted?.iv || !source?.encrypted?.salt) {
+	const encrypted = source?.encrypted;
+	const nonceField = encrypted?.nonce;
+	if (!encrypted?.data || !nonceField || !encrypted?.salt) {
 		throw new Error('Invalid wallet package: encrypted seed data is missing.');
 	}
 	const defaults = this.getWalletDefaults();
-	const encrypted = source.encrypted;
 	return {
 		kind: source.kind || defaults.WALLET_SAVE_KIND,
 		version: source.version || defaults.WALLET_SAVE_VERSION,
@@ -407,7 +398,7 @@ export function normalizeWalletPackage(source = {}) {
 		encrypted: {
 			innerEncoding: encrypted.innerEncoding || 'cbor',
 			salt: isString(encrypted.salt) ? fromBase64(encrypted.salt) : toUint8Array(encrypted.salt),
-			iv: isString(encrypted.iv) ? fromBase64(encrypted.iv) : toUint8Array(encrypted.iv),
+			nonce: isString(nonceField) ? fromBase64(nonceField) : toUint8Array(nonceField),
 			data: isString(encrypted.data) ? fromBase64(encrypted.data) : toUint8Array(encrypted.data),
 		},
 	};
@@ -424,7 +415,7 @@ export async function createWalletPackage(userInput, options = {}) {
 		encrypted: {
 			innerEncoding: 'cbor',
 			salt: encrypted.salt,
-			iv: encrypted.iv,
+			nonce: encrypted.nonce,
 			data: encrypted.data,
 		},
 	};
@@ -646,8 +637,7 @@ export const walletPersistence = {
 	assertUserInput,
 	resolvePasswordHashBypass,
 	getArgonConfig,
-	getIvLength,
-	toAesKeyBytes,
+	toEncryptionKey,
 	derivePasswordKey,
 	encodeAuthenticatedMeta,
 	getWalletLabel,

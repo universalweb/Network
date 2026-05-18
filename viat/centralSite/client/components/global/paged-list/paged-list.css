@@ -1,0 +1,98 @@
+:host {
+	display: block;
+	min-height: 0;
+}
+.pl-shell {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	min-height: 0;
+	font-family: var(--font-mono, monospace);
+	color: var(--dark-text-medium, #c8d0e0);
+}
+.pl-table {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	overflow-y: auto;
+	border: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.05));
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.01);
+}
+.pl-empty {
+	padding: 24px;
+	text-align: center;
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+	font-size: 0.8rem;
+}
+.pl-empty.pl-error {
+	color: #f87171;
+}
+.pl-pager {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 10px;
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.015);
+	align-self: stretch;
+}
+.pl-btn {
+	background: transparent;
+	color: var(--dark-text-medium, #c8d0e0);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.16));
+	padding: 5px 10px;
+	font-family: var(--font-mono, monospace);
+	font-size: 0.65rem;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	cursor: pointer;
+	text-decoration: none;
+	transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.pl-btn:hover:not(:disabled):not([aria-disabled='true']) {
+	border-color: var(--color-accent, #6d4aff);
+	color: var(--color-accent, #6d4aff);
+}
+.pl-btn:disabled,
+.pl-btn[aria-disabled='true'] {
+	opacity: 0.35;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+a.pl-btn {
+	display: inline-flex;
+	align-items: center;
+}
+.pl-refresh {
+	margin-left: auto;
+}
+.pl-status {
+	display: inline-flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	column-gap: 6px;
+	row-gap: 2px;
+	font-size: 0.7rem;
+	text-transform: uppercase;
+	letter-spacing: 0.14em;
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+}
+.pl-num {
+	color: var(--dark-text-medium, #c8d0e0);
+	font-variant-numeric: tabular-nums;
+}
+.pl-label {
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+}
+.pl-sep {
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.3));
+}
+.pl-status-text:empty {
+	display: none;
+}
+.pl-status-text {
+	margin-left: 6px;
+	color: var(--color-accent, #6d4aff);
+}

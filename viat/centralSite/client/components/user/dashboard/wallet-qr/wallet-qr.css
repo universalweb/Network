@@ -1,0 +1,117 @@
+:host {
+	display: block;
+	flex-shrink: 0;
+	width: 100%;
+}
+
+.wq-wrap {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 8px;
+	padding: 12px;
+	margin-top: 4px;
+	background: var(--surface-tint-faint, rgba(255, 255, 255, 0.022));
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-radius: 6px;
+}
+
+.wq-wrap.is-empty {
+	padding: 18px 12px;
+}
+
+.wq-canvas {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	border-radius: 4px;
+	padding: 4px;
+	transition: background 0.15s ease;
+}
+
+.wq-wrap.is-empty .wq-canvas {
+	cursor: default;
+}
+
+.wq-wrap.is-ready .wq-canvas:hover {
+	background: var(--cyan-glow-medium, rgba(109, 74, 255, 0.24));
+}
+
+.wq-canvas:focus-visible {
+	outline: 1px solid var(--focus-ring-color, rgba(109, 74, 255, 0.72));
+	outline-offset: 2px;
+}
+
+.wq-frame {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	border-radius: 8px;
+	pointer-events: none;
+}
+
+.wq-canvas svg {
+	width: 100%;
+	max-width: 200px;
+	height: auto;
+	display: block;
+	image-rendering: pixelated;
+	shape-rendering: crispEdges;
+	/* Lets pointermove/click target the .wq-canvas wrapper so the framework
+	   tooltip subevent and click handler fire regardless of which QR module
+	   the cursor is over. */
+	pointer-events: none;
+}
+
+.wq-empty-msg {
+	font-family: var(--font-mono);
+	font-size: 0.5625rem;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--text-muted, rgba(255, 255, 255, 0.45));
+}
+
+.wq-download {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 6px 12px;
+	background: transparent;
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	border-radius: 4px;
+	color: var(--text-muted, rgba(255, 255, 255, 0.65));
+	font-family: var(--font-mono);
+	font-size: 0.6875rem;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition:
+		border-color 0.15s ease,
+		color 0.15s ease,
+		background 0.15s ease;
+}
+.wq-download .wq-download-icon {
+	--icon-size: 0.8em;
+}
+
+.wq-download:hover:not(:disabled) {
+	border-color: var(--teal, #5eead4);
+	color: var(--teal, #5eead4);
+	background: rgba(109, 74, 255, 0.06);
+}
+
+.wq-download:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.wq-download ui-icon {
+	display: inline-flex;
+}
+
+.wq-download-label {
+	line-height: 1;
+}

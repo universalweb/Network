@@ -1,0 +1,109 @@
+:host {
+	display: contents;
+}
+/* Re-skin the inner <ui-modal> for media: white background, no padding,
+   tight border-radius. Variables aren't enough here (the dark popup-bg is
+   set inside the modal's shadow root), so we use ::part-style by class on
+   our host wrapper — anything inside `.whitebox-host` is in our light DOM
+   and reachable. */
+.wb-shell {
+	position: relative;
+	background: #ffffff;
+	color: #111;
+	border-radius: 10px;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-width: 220px;
+}
+.wb-stage {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	max-height: calc(96vh - 60px);
+	background: #ffffff;
+	padding: 18px;
+	box-sizing: border-box;
+}
+.wb-media {
+	display: block;
+	max-width: 100%;
+	max-height: calc(96vh - 96px);
+	width: auto;
+	height: auto;
+	object-fit: contain;
+	user-select: none;
+	border-radius: 4px;
+}
+.wb-caption {
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 0.75rem;
+	color: #333;
+	padding: 10px 18px 14px;
+	text-align: center;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+/* Oversized close button — easy to see against the bright background and
+   easy to hit on touch. Sits over the media with a soft drop-shadow so
+   it reads on both light and dark image content. */
+.wb-close {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	width: 52px;
+	height: 52px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.94);
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	color: #1a1a1a;
+	cursor: pointer;
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 2;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15);
+	transition:
+		background 0.18s ease,
+		border-color 0.18s ease,
+		transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+		box-shadow 0.18s ease;
+}
+.wb-close .wb-close-icon {
+	transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.18s ease;
+}
+.wb-close:hover {
+	background: #ffffff;
+	border-color: rgba(0, 0, 0, 0.2);
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32), 0 3px 6px rgba(0, 0, 0, 0.18);
+}
+.wb-close:hover .wb-close-icon {
+	color: #e11d48;
+	transform: rotate(90deg) scale(1.08);
+}
+.wb-close:active {
+	transform: scale(0.94);
+}
+.wb-close:active .wb-close-icon {
+	transform: rotate(180deg) scale(0.92);
+	transition-duration: 0.12s;
+}
+.wb-close:focus-visible {
+	outline: 2px solid #2563eb;
+	outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+	.wb-close,
+	.wb-close .wb-close-icon {
+		transition: background 0.12s, color 0.12s, border-color 0.12s;
+	}
+	.wb-close:hover,
+	.wb-close:hover .wb-close-icon,
+	.wb-close:active,
+	.wb-close:active .wb-close-icon {
+		transform: none;
+	}
+}

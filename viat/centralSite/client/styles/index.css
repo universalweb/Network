@@ -1,0 +1,93 @@
+@import './variables.css';
+/* ── Reset ─────────────────────────────────────────── */
+html {
+	font-size: clamp(14px, 1.3vw, 18px);
+}
+
+@media (min-width: 2560px) {
+	html {
+		font-size: clamp(14px, 1vw, 18px);
+	}
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+/* ── Body ──────────────────────────────────────────── */
+body {
+	background-color: var(--bg-body);
+	color: var(--text-main);
+	font-family: var(--font-mono);
+	font-size: .8rem;
+	line-height: 1.5;
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+	-webkit-font-smoothing: antialiased;
+	cursor: crosshair;
+	user-select: none;
+}
+
+/* ── Buttons ──────────────────────────────────────────── */
+button,
+[role='button'] {
+	cursor: pointer;
+}
+
+/* ── Mobile tap polish ───────────────────────────────────
+   Strip the grey/blue translucent rectangle WebKit/Chromium
+   paint on tap. Universal because shadow roots inherit the
+   property and the visual is wrong everywhere in this UI —
+   we use focus-visible rings for keyboard focus and never
+   want the OS tap flash on top of our own hover/active
+   states. `touch-action: manipulation` on interactive
+   elements also kills the 300ms double-tap-zoom delay so
+   taps feel native.
+   ────────────────────────────────────────────────────── */
+* {
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* ── Scrollbars (light DOM) ──────────────────────────────
+   Mirror of the rules in `components/core/styles/base.css`
+   so the same skin applies to scrollable elements that live
+   in the document tree (root, page-level, light-DOM children
+   of shadow components). Single source of truth lives in
+   --scrollbar-* tokens (styles/variables.css). */
+* {
+	scrollbar-width: var(--scrollbar-firefox-width, thin);
+	scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+*::-webkit-scrollbar {
+	width: var(--scrollbar-size);
+	height: var(--scrollbar-size);
+}
+*::-webkit-scrollbar-track {
+	background: var(--scrollbar-track);
+	border-radius: var(--scrollbar-radius);
+}
+*::-webkit-scrollbar-thumb {
+	background: var(--scrollbar-thumb);
+	border-radius: var(--scrollbar-radius);
+	border: 1px solid transparent;
+}
+*::-webkit-scrollbar-thumb:hover {
+	background: var(--scrollbar-thumb-hover);
+}
+*::-webkit-scrollbar-corner {
+	background: var(--scrollbar-corner);
+}
+button,
+a,
+[role='button'],
+input,
+textarea,
+select,
+summary {
+	touch-action: manipulation;
+}
