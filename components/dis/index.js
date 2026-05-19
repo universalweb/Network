@@ -36,5 +36,5 @@ export default dis;
 // const thisPath = currentPath(import.meta);
 // const certificateExample = await publicDomainCertificate(`${thisPath}/../../serverApp/certs/universalWebPublic.cert`);
 // console.log(certificateExample);
-// const recordFound = await findRecord(certificateExample, 'a', 'universalweb.io');
+// const recordFound = await findRecord(certificateExample, 'a', 'viat.network');
 // console.log('Record Found', recordFound);

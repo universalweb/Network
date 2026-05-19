@@ -42,13 +42,13 @@ export async function setDestination() {
 	}
 	if (destination.certificate) {
 		if (ipVersion === 'udp6') {
-			const record = await destination.certificate.findRecord('aaaa', 'universalweb.io');
+			const record = await destination.certificate.findRecord('aaaa', 'viat.network');
 			if (record) {
 				setRecordInfo(destination, record);
 			}
 		}
 		if (!destination.ip) {
-			const record = await destination.certificate.findRecord('a', 'universalweb.io');
+			const record = await destination.certificate.findRecord('a', 'viat.network');
 			if (record) {
 				setRecordInfo(destination, record);
 				this.ipVersion = 'udp4';
