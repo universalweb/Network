@@ -31,7 +31,11 @@ export class GlobalSidebar extends WebComponent {
 		if (v.w === 'xs' || v.w === 'sm' || v.h === 'short') {
 			return 'overlay';
 		}
-		if (v.w === 'md') {
+		// Only the widest desktop tiers (xl/xxl) can afford a permanent
+		// 260px column without crushing the dashboard. Below that — lg and
+		// md — the sidebar floats over the layout so the dashboard keeps
+		// its full width and the user opens the sidebar on demand.
+		if (v.w === 'md' || v.w === 'lg') {
 			return 'floating';
 		}
 		return 'docked';

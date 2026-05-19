@@ -35,21 +35,34 @@ export function invalidateRender() {
 		this.updateView();
 	}
 }
+function markRenderDirty() {
+	this.templateBuilt = false;
+}
 export function subscribeRenderDeps(deps) {
 	if (!deps || deps.size === 0) {
 		clearUnsubs(this.renderDepUnsubs);
 		return;
 	}
 	const component = this;
-	if (!this.boundInvalidateRender) {
-		this.boundInvalidateRender = this.invalidateRender.bind(this);
+	// Renderdep subscribers only need to flip the dirty flag — the path bus
+	// calls `onFlush → updateView` at the end of every flush, so the actual
+	// renderView is scheduled there exactly once per flush. If each
+	// subscriber called `updateView` itself (as `invalidateRender` does for
+	// external callers), N renderDeps firing in one flush would each kick
+	// off a sync `renderView` pass, with the `renderSeq` check finally
+	// bailing every pass except the last — wasted `render()` invocations
+	// and wasted spot-diff work that produced no DOM. The external
+	// `invalidateRender` keeps its full semantics for explicit force-render
+	// callers.
+	if (!this.boundMarkRenderDirty) {
+		this.boundMarkRenderDirty = markRenderDirty.bind(this);
 	}
-	const invalidate = this.boundInvalidateRender;
+	const markDirty = this.boundMarkRenderDirty;
 	syncSubsByDiff(this.renderDepUnsubs, deps, (dep) => {
 		if (dep.startsWith('global.')) {
-			return component.watchGlobal ? component.watchGlobal(dep.slice(7), invalidate) : (() => {});
+			return component.watchGlobal ? component.watchGlobal(dep.slice(7), markDirty) : (() => {});
 		}
-		return component.watchState ? component.watchState(dep, invalidate) : (() => {});
+		return component.watchState ? component.watchState(dep, markDirty) : (() => {});
 	});
 }
 export async function renderView() {

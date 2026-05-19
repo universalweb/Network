@@ -82,9 +82,22 @@
 }
 :host(.mode-floating) {
 	width: 0;
+	z-index: 50;
 }
 :host(.mode-floating) .sidebar-shell {
 	width: 280px;
+	box-shadow: -10px 0 28px rgba(0, 0, 0, 0.45);
+}
+/* When floating opens, the backdrop fades in so clicking off-shell
+   dismisses (same affordance as overlay mode). Without this, opening on
+   md/lg would leave the user with no obvious way back out except the
+   close button or the keyboard shortcut. */
+:host(.mode-floating[open]) .sidebar-backdrop {
+	opacity: 1;
+	pointer-events: auto;
+}
+:host(.mode-floating) .sidebar-close {
+	display: inline-flex;
 }
 :host(.mode-overlay) {
 	width: 0;

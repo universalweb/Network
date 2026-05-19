@@ -20,15 +20,15 @@ export class WalletAddress extends WebComponent {
 		return `wallet-address${this.state.copied ? ' copied' : ''}`;
 	}
 	copyText() {
-		const address = this.globalState.walletAddress ?? '';
-		return address ? `Wallet Address: ${address}` : '';
+		// Pure address — anything decorative (labels, prefixes) breaks
+		// paste-into-wallet flows. Keep this string clipboard-clean.
+		return this.globalState.walletAddress ?? '';
 	}
-	handleCopyDone(domEvent) {
+	handleCopyDone() {
 		this.state.copied = true;
-		const copied = domEvent?.detail?.value ?? this.copyText();
 		this.emit('notify', {
 			itemType: 'copy',
-			message: copied,
+			message: this.copyText() || 'Wallet address copied to clipboard.',
 			title: 'Address Copied',
 		});
 		this.setTimeout(() => {

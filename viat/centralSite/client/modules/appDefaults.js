@@ -88,18 +88,14 @@ export const DOCK = {
 			active: false,
 			icon: 'compass',
 			tooltip: 'Explorer',
+			animate: 'explorer',
 		},
 		{
 			id: 'accounts',
 			active: false,
 			icon: 'users',
 			tooltip: 'Accounts',
-		},
-		{
-			id: 'exchange',
-			active: false,
-			icon: 'arrow-right-left',
-			tooltip: 'Exchange (Coming Soon)',
+			animate: 'accounts',
 		},
 		{
 			id: 'swap',
@@ -107,6 +103,12 @@ export const DOCK = {
 			icon: 'repeat-2',
 			tooltip: 'Swap',
 			animate: 'swap',
+		},
+		{
+			id: 'exchange',
+			active: false,
+			icon: 'arrow-right-left',
+			tooltip: 'Exchange (Coming Soon)',
 		},
 		{
 			id: 'analytics',
@@ -247,6 +249,12 @@ export const CENTER_BAR = {
 			id: 'sign-data',
 			onClick: 'sign:open',
 			tooltip: 'Sign arbitrary data',
+		},
+		{
+			icon: 'refresh-cw',
+			id: 'refresh-account',
+			onClick: 'wallet:refresh',
+			tooltip: 'Refresh balance, totals, and activity log',
 		},
 		{
 			icon: 'info',

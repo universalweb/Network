@@ -1,4 +1,15 @@
 import { delegate, getSubeventData } from '../dom/delegate.js';
+// Tooltips are a hover affordance — they make no sense on touch-only
+// devices (phones, most tablets) where the user can't preview an
+// element without committing to a tap, and we don't want the tip
+// flashing during a scroll. `(hover: hover)` is the precise CSS media
+// query for "has a hover-capable pointer" — true on desktops (mouse,
+// trackpad), false on touch-only mobile. Surface / iPad with attached
+// keyboard report `hover: hover` and get tooltips back automatically.
+const hoverCapableMQ = typeof globalThis.matchMedia === 'function' ? globalThis.matchMedia('(hover: hover)') : null;
+function isHoverCapable() {
+	return hoverCapableMQ ? hoverCapableMQ.matches : true;
+}
 let tooltipReady = null;
 // WeakRef so an element removed from DOM mid-hover doesn't pin until the next
 // pointermove. The deref check below also catches the gc'd case.
@@ -43,6 +54,16 @@ function hide() {
 	}).catch(() => {});
 }
 document.addEventListener('pointermove', (pointerEvent) => {
+	// Touch / pen flick across an element still emits pointermove on
+	// some engines; bail out so we don't surface a hover tip on a tap.
+	// Re-check on every event because a docked laptop can change its
+	// capability profile at runtime.
+	if (!isHoverCapable()) {
+		if (currentActiveTarget()) {
+			hide();
+		}
+		return;
+	}
 	const target = pointerEvent.composedPath()[0];
 	const data = getSubeventData(target, 'tooltip');
 	if (data === undefined) {
@@ -65,4 +86,9 @@ globalThis.addEventListener('scroll', hide, {
 	capture: true,
 	passive: true,
 });
-ensureTooltip().catch(() => {});
+// Defer creating the tooltip element until we know we'll need it.
+// Hover-capable devices pre-warm so the first tip is instant; touch-only
+// devices never spin up the popover at all.
+if (isHoverCapable()) {
+	ensureTooltip().catch(() => {});
+}

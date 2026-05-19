@@ -1,10 +1,10 @@
 import '../../global/modal/modal.js';
-import { WebComponent } from '../../core/index.js';
+import { WebComponent, classList } from '../../core/index.js';
+// `<sign-data-modal>` — arbitrary-data signing dialog. Visuals all flow
+// from the shared `.dialog-*` primitives in `core/styles/base.css`; this
+// component carries zero bespoke CSS.
 export class SignDataModal extends WebComponent {
 	static url = import.meta.url;
-	static styles = {
-		signDataModal: './sign-data-modal.css',
-	};
 	static state = {
 		inputData: '',
 		signatureOutput: '',
@@ -98,35 +98,35 @@ export class SignDataModal extends WebComponent {
 				showClose: true,
 				showMaximize: true,
 			}} style="--ui-modal-max-width: min(640px, calc(100vw - 32px))">
-				<div class="sd-shell">
-					<header class="sd-head">
-						<span class="sd-id">SIGN</span>
-						<span class="sd-title">// ARBITRARY DATA</span>
+				<div class="dialog-shell">
+					<header class="dialog-head">
+						<span class="dialog-head-id">SIGN</span>
+						<span class="dialog-head-title">// ARBITRARY DATA</span>
 					</header>
-					<div class="sd-warning">
-						<div class="sd-warning-head">⚠ Security warning</div>
-						<p class="sd-warning-body">Signing arbitrary data with your primary ed25519 key proves you control this wallet. A malicious site can ask you to sign challenges that grant access to other systems or authorize off-chain actions. <strong>Only sign payloads you understand and trust.</strong></p>
+					<div class="dialog-warning">
+						<div class="dialog-warning-head">⚠ Security warning</div>
+						<p class="dialog-warning-body">Signing arbitrary data with your primary ed25519 key proves you control this wallet. A malicious site can ask you to sign challenges that grant access to other systems or authorize off-chain actions. <strong>Only sign payloads you understand and trust.</strong></p>
 					</div>
-					<label class="sd-field">
-						<span class="sd-label">DATA TO SIGN</span>
+					<label class="dialog-field">
+						<span class="dialog-label">DATA TO SIGN</span>
 						<textarea
-							class="sd-textarea"
+							class="dialog-textarea"
 							rows="6"
 							spellcheck="false"
 							autocomplete="off"
 							placeholder="enter the exact bytes/string you want to sign…"
 							$value="inputData"></textarea>
 					</label>
-					<div class="sd-actions">
-						<button class="sd-btn sd-btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleSign}>
+					<div class="dialog-actions">
+						<button class="dialog-btn dialog-btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleSign}>
 							${() => (this.state.busy ? 'SIGNING…' : 'SIGN WITH PRIMARY KEY')}
 						</button>
-						<button class="sd-btn" ?disabled=${() => this.state.busy} @click=${this.handleClear}>CLEAR</button>
+						<button class="dialog-btn" ?disabled=${() => this.state.busy} @click=${this.handleClear}>CLEAR</button>
 					</div>
-					<label class="sd-field">
-						<span class="sd-label">SIGNATURE (BASE64) — CLICK TO COPY</span>
+					<label class="dialog-field">
+						<span class="dialog-label">SIGNATURE (BASE64) — CLICK TO COPY</span>
 						<textarea
-							class="sd-textarea sd-output is-copyable"
+							class="dialog-textarea is-copyable"
 							rows="4"
 							spellcheck="false"
 							autocomplete="off"
@@ -135,9 +135,7 @@ export class SignDataModal extends WebComponent {
 							.value=${() => this.state.signatureOutput}
 							@click=${this.handleCopySignature}></textarea>
 					</label>
-					<div class="${() => {
-						return `sd-status tone-${this.state.statusTone || 'idle'}${this.state.statusMessage ? ' is-visible' : ''}`;
-					}}">${() => this.state.statusMessage}</div>
+					<div class=${classList('dialog-status', () => `tone-${this.state.statusTone || 'idle'}`, () => (this.state.statusMessage ? 'is-visible' : ''))}>${() => this.state.statusMessage}</div>
 				</div>
 			</ui-modal>
 		`;

@@ -8,6 +8,9 @@ import '../components/user/global-top-bar/global-top-bar.js';
 import '../components/user/settings-modal/settings-modal.js';
 import '../components/user/sign-data-modal/sign-data-modal.js';
 import '../components/user/wallet-info-modal/wallet-info-modal.js';
+import '../components/user/wallet-unlock-modal/wallet-unlock-modal.js';
+import '../components/user/welcome-back-modal/welcome-back-modal.js';
+import '../components/user/send-confirm-modal/send-confirm-modal.js';
 import '../components/user/swap-page/swap-page.js';
 import '../components/user/explorer-page/explorer-page.js';
 import '../components/user/accounts-list-page/accounts-list-page.js';
@@ -325,6 +328,47 @@ function bytesRowIfPresent(key, label, size, className) {
 	}
 	return bytesRow(key, label, size, className);
 }
+// Build the wallet-params rows from a deserialized package's meta only —
+// no SDK / no private key required. Used when we auto-load a locked
+// profile's metadata at boot, so the params panel still shows the wallet
+// label, address, public key and KDF settings before the user unlocks.
+// The byte-size rows (seed / priv key) deliberately stay out — those need
+// the decrypted secret to measure.
+function buildWalletParamsFromMeta(meta = {}, extras = {}) {
+	const password = meta.password ?? {};
+	const cipher = meta.cipher ?? {};
+	const rows = [
+		plainRow('Scheme', 'Signature Scheme', 'ed25519'),
+		plainRow('Version', 'Wallet Version', meta.version ? `v${meta.version}` : 'v1'),
+		plainRow('Kind', 'Wallet Kind', meta.walletType || meta.kind),
+		plainRow('Seed Count', 'Seed Count', '1'),
+		plainRow('HD Version', 'HD Wallet Version', 'v1'),
+		plainRow('Trapdoor', 'Trapdoor Scheme', 'ML-DSA-44', {
+			className: 'pq',
+		}),
+		plainRow('Addr Size', 'Address Size', '24B', {
+			copyValue: '24 Bytes',
+		}),
+		metaRow('Label', 'Wallet Label', meta.label, {
+			head: 10,
+			tail: 4,
+		}),
+		metaRow('Address', 'Wallet Address', meta.address),
+		metaRow('Pub Key', 'Primary Public Key', meta.publicKey),
+		metaRow('Trap Hash', 'Trapdoor Hash', meta.trapdoorHash, {
+			className: 'pq',
+		}),
+		timestampRow('Created', 'Created At', extras.createdAt || meta.createdAt),
+		timestampRow('Last Used', 'Last Used At', extras.lastUsedAt),
+		plainRow('KDF', 'Password Hash Mode', password.hashMode),
+		plainRow('KDF Iter', 'KDF Iterations', password.iterations),
+		plainRow('KDF Mem', 'KDF Memory (KiB)', password.memorySize),
+		plainRow('Cipher', 'Encryption Cipher', cipher.algorithm),
+	];
+	return rows.filter((row) => {
+		return row != null;
+	});
+}
 function buildWalletParams(sdk, extras = {}) {
 	if (!sdk?.STATE?.walletSeeds?.seed) {
 		return [];
@@ -456,6 +500,31 @@ function forgetProfileFromIndex(profileName) {
 		saveProfileIndex(indexData);
 	}
 }
+// Peek at a saved wallet payload's plaintext `meta.createdAt` without
+// decrypting. Used as the final ranking fallback when the profile index is
+// missing or corrupt — that way the most-recent boot scan still works even
+// after the index entry was wiped (e.g. clearStorage with a manual wallet
+// re-save).
+function readPackageCreatedAt(profileName) {
+	if (!profileName || !globalThis.localStorage) {
+		return '';
+	}
+	const raw = globalThis.localStorage.getItem(profileNameToKey(profileName));
+	if (!raw) {
+		return '';
+	}
+	if (isJsonString(raw)) {
+		try {
+			const parsed = JSON.parse(raw);
+			return parsed?.meta?.createdAt || '';
+		} catch {
+			return '';
+		}
+	}
+	// CBOR payloads need the SDK to decode — skip the heavy path here.
+	// The index entry will be written on first successful load anyway.
+	return '';
+}
 function mostRecentProfile() {
 	const profiles = listSavedProfiles();
 	if (!profiles.length) {
@@ -465,20 +534,54 @@ function mostRecentProfile() {
 	let bestName = profiles[0];
 	let bestTime = -1;
 	for (let index = 0; index < profiles.length; index += 1) {
-		const name = profiles[index];
-		const entry = indexData[name];
-		const ts = Date.parse(entry?.lastUsedAt ?? '');
+		const profileName = profiles[index];
+		const entry = indexData[profileName];
+		// Prefer lastUsedAt; fall back to createdAt so a profile that was
+		// saved before lastUsedAt existed still ranks by its only timestamp;
+		// final fallback peeks at the plaintext meta in the saved package
+		// itself so we can still rank when the index is missing entirely.
+		const stamp = entry?.lastUsedAt || entry?.createdAt || readPackageCreatedAt(profileName);
+		const ts = Date.parse(stamp);
 		const value = Number.isFinite(ts) ? ts : 0;
 		if (value > bestTime) {
 			bestTime = value;
-			bestName = name;
+			bestName = profileName;
 		}
 	}
 	return bestName;
 }
-function profileIsPasswordless(profileName) {
+// One-shot migration: for every saved profile in localStorage make sure
+// the index has both a createdAt and a lastUsedAt. Legacy profiles often
+// have only createdAt (or nothing at all if the index entry was lost);
+// without lastUsedAt the "most recent" scan can't compare them. Backfill
+// is conservative — never overwrites an existing lastUsedAt, only fills
+// the missing fields.
+function backfillProfileIndex() {
+	const profiles = listSavedProfiles();
+	if (!profiles.length) {
+		return;
+	}
 	const indexData = loadProfileIndex();
-	return indexData[profileName]?.passwordless === true;
+	const now = new Date().toISOString();
+	let mutated = false;
+	for (let index = 0; index < profiles.length; index += 1) {
+		const profileName = profiles[index];
+		const existing = indexData[profileName] ?? {};
+		const createdAt = existing.createdAt || now;
+		const lastUsedAt = existing.lastUsedAt || existing.createdAt || now;
+		if (existing.createdAt === createdAt && existing.lastUsedAt === lastUsedAt) {
+			continue;
+		}
+		indexData[profileName] = {
+			...existing,
+			createdAt,
+			lastUsedAt,
+		};
+		mutated = true;
+	}
+	if (mutated) {
+		saveProfileIndex(indexData);
+	}
 }
 class AppView extends WebComponent {
 	static url = import.meta.url;
@@ -497,6 +600,21 @@ class AppView extends WebComponent {
 	// and rides with save/load via the SDK's `meta.extra` field.
 	sdk = null;
 	router = new URLRouter(ROUTER_CONFIG);
+	// Set by `previewProfileMeta` when a password-protected profile is
+	// auto-loaded at boot: holds the un-decrypted package + its raw string
+	// so the eventual `wallet:unlock` round-trip can decrypt without a
+	// second localStorage read.
+	lockedProfileRaw = null;
+	lockedProfilePkg = null;
+	// Sensitive action (transmit/sign) that was deferred while we wait for
+	// the user to unlock the wallet via <wallet-unlock-modal>. Cleared when
+	// the action re-fires successfully OR when the user cancels.
+	pendingAction = null;
+	// Flips to true while a transmit triggered by the send-confirm modal is
+	// in flight, so `handleTransmitResult` knows to route the outcome back
+	// to the modal (close on success / show inline error on failure) instead
+	// of letting it pass through silently.
+	sendConfirmActive = false;
 	static async create(state, config) {
 		const app = new this(await state, config);
 		await WebComponent.preRender(app, document.body);
@@ -620,6 +738,21 @@ class AppView extends WebComponent {
 			},
 		});
 	}
+	// Touch the active profile's lastUsedAt every time the user takes a
+	// real action with it (transmit, sign, faucet, etc.). Cheap — one
+	// localStorage write — and keeps `mostRecentProfile()` ranking honest
+	// across sessions. No-op when the active wallet isn't a saved profile
+	// (freshly created and not yet stored).
+	bumpCurrentProfileUsed() {
+		const label = this.globalState.wallet?.label;
+		if (!label) {
+			return;
+		}
+		if (!listSavedProfiles().includes(label)) {
+			return;
+		}
+		markProfileUsed(label);
+	}
 	applyProfileTheme() {
 		// Theme rides in profile meta so it follows a wallet across browsers
 		// — when a saved wallet is loaded its extras populate globalState.profile,
@@ -721,45 +854,155 @@ class AppView extends WebComponent {
 		}
 	}
 	async tryAutoLoadRecentProfile() {
+		// Backfill once on boot so legacy profiles with only createdAt (or
+		// no index entry at all) participate in the "most recent" scan.
+		backfillProfileIndex();
 		const profileName = mostRecentProfile();
 		if (!profileName) {
 			return false;
 		}
+		// Pre-select the most-recent profile in shared state so the
+		// settings → LOAD form defaults to it even when we can't auto-load
+		// (e.g. it's password-protected). The user just enters the
+		// password rather than picking from the dropdown first.
+		setGlobal({
+			profile: {
+				...this.getProfileMeta(),
+				lastSelected: profileName,
+			},
+		});
 		const indexEntry = loadProfileIndex()[profileName];
-		if (!indexEntry?.passwordless || !indexEntry?.autoKey) {
-			// Either needs a real password or wasn't saved via the auto-key
-			// flow — let the user open the load modal explicitly.
-			return false;
-		}
-		try {
-			const storageKey = profileNameToKey(profileName);
-			const raw = globalThis.localStorage?.getItem(storageKey);
-			if (!raw) {
-				forgetProfileFromIndex(profileName);
+		if (indexEntry?.passwordless && indexEntry?.autoKey) {
+			try {
+				const storageKey = profileNameToKey(profileName);
+				const raw = globalThis.localStorage?.getItem(storageKey);
+				if (!raw) {
+					forgetProfileFromIndex(profileName);
+					return false;
+				}
+				const sdk = await this.freshSDK();
+				const pkg = isJsonString(raw) ? await sdk.deserializeWalletPackage(raw, 'json') : await sdk.deserializeWalletPackage(base64ToBytes(raw), 'cbor');
+				const autoKeyBytes = base64ToBytes(indexEntry.autoKey);
+				const imported = await sdk.importWalletPackage(pkg, autoKeyBytes, {
+					bypassPasswordHash: true,
+				});
+				markProfileUsed(profileName, {
+					passwordless: true,
+					autoKey: indexEntry.autoKey,
+				});
+				await this.syncWalletPublics();
+				this.emit('wallet:state', {
+					phase: 'loaded',
+					meta: imported.meta,
+					autoLoaded: true,
+				});
+				this.showWelcomeBack(profileName, false);
+				return true;
+			} catch (error) {
+				console.warn('[wallet:autoload]', error);
 				return false;
 			}
-			const sdk = await this.freshSDK();
-			const pkg = isJsonString(raw) ? await sdk.deserializeWalletPackage(raw, 'json') : await sdk.deserializeWalletPackage(base64ToBytes(raw), 'cbor');
-			const autoKeyBytes = base64ToBytes(indexEntry.autoKey);
-			const imported = await sdk.importWalletPackage(pkg, autoKeyBytes, {
-				bypassPasswordHash: true,
-			});
-			markProfileUsed(profileName, {
-				passwordless: true,
-				autoKey: indexEntry.autoKey,
-			});
-			await this.syncWalletPublics();
-			this.emit('wallet:state', {
-				phase: 'loaded',
-				meta: imported.meta,
-				autoLoaded: true,
-			});
-			return true;
-		} catch (error) {
-			console.warn('[wallet:autoload]', error);
+		}
+		// Password-protected: load the public metadata only so the dashboard
+		// renders with the wallet's address, public key, theme, etc. — and
+		// the live balance / transactions fetch kicks off immediately. The
+		// private keys stay encrypted until the user triggers a sensitive
+		// action and feeds their password through <wallet-unlock-modal>.
+		return this.previewProfileMeta(profileName);
+	}
+	async previewProfileMeta(profileName) {
+		if (!profileName || !globalThis.localStorage) {
 			return false;
 		}
+		const storageKey = profileNameToKey(profileName);
+		const raw = globalThis.localStorage.getItem(storageKey);
+		if (!raw) {
+			forgetProfileFromIndex(profileName);
+			return false;
+		}
+		// freshSDK is correct here even though we won't decrypt: any prior
+		// SDK instance might be carrying half-loaded state from a previous
+		// session, and we want the locked preview to start from a clean
+		// slate so a later unlock attempt has nothing to collide with.
+		const sdk = await this.freshSDK();
+		let pkg;
+		try {
+			pkg = isJsonString(raw) ? await sdk.deserializeWalletPackage(raw, 'json') : await sdk.deserializeWalletPackage(base64ToBytes(raw), 'cbor');
+		} catch (error) {
+			console.warn('[wallet:preview]', error);
+			return false;
+		}
+		const meta = pkg?.meta ?? {};
+		// Cache for handleWalletUnlock so the unlock round-trip doesn't have
+		// to re-read + re-parse the package the user is staring at.
+		this.lockedProfileRaw = raw;
+		this.lockedProfilePkg = pkg;
+		const stats = getProfileStats(profileName);
+		const publicKeyHex = meta.publicKey ? toPublicHex(base64ToBytes(meta.publicKey)) : '';
+		const trapdoorHashHex = meta.trapdoorHash ? toPublicHex(base64ToBytes(meta.trapdoorHash)) : '';
+		const createdAt = stats.createdAt || meta.createdAt || '';
+		const lastUsedAt = stats.lastUsedAt || createdAt;
+		setGlobal({
+			wallet: {
+				...(this.globalState.wallet ?? {}),
+				hasWallet: true,
+				locked: true,
+				lockedProfileName: profileName,
+				address: meta.address ?? '',
+				publicKey: publicKeyHex,
+				trapdoorPublicKey: '',
+				trapdoorHash: trapdoorHashHex,
+				label: meta.label ?? profileName,
+				walletSavedAt: createdAt,
+				createdAt,
+				lastUsedAt,
+			},
+			walletAddress: meta.address ?? '',
+			walletParams: buildWalletParamsFromMeta(meta, {
+				createdAt,
+				lastUsedAt,
+			}),
+		});
+		if (meta.extra && typeof meta.extra === 'object') {
+			setGlobal({
+				profile: {
+					...this.getProfileMeta(),
+					...meta.extra,
+				},
+			});
+		}
+		this.applyProfileAddressDefaults();
+		this.applyProfileTheme();
+		if (meta.address) {
+			this.fetchAccountForWallet();
+		}
+		this.emit('wallet:state', {
+			phase: 'preview',
+			meta,
+			locked: true,
+			profileName,
+		});
+		this.showWelcomeBack(profileName, true);
+		return true;
 	}
+	showWelcomeBack(profileName, locked) {
+		const wallet = this.globalState.wallet ?? {};
+		const modal = this.getComponent('welcome-back-modal');
+		modal?.openFor?.({
+			profileName,
+			address: wallet.address || '',
+			label: wallet.label || profileName,
+			locked,
+		});
+	}
+	handleRequestUnlock = (domEvent) => {
+		// Re-uses the standard sensitive-action gate so the unlock modal
+		// shows with the same reason styling the user has already seen.
+		// No pending action queued here — they explicitly asked to unlock
+		// without a downstream side-effect to re-fire.
+		const data = domEvent?.detail?.data ?? {};
+		this.ensureWalletUnlocked(data.reason || 'Unlock your wallet to enable signing and transactions.', null);
+	};
 	resetProfileToAddress() {
 		const address = this.globalState.wallet?.address;
 		if (!address) {
@@ -875,6 +1118,15 @@ class AppView extends WebComponent {
 			markProfileUsed(profileName, {
 				passwordless: password === '',
 			});
+			this.lockedProfileRaw = null;
+			this.lockedProfilePkg = null;
+			setGlobal({
+				wallet: {
+					...(this.globalState.wallet ?? {}),
+					locked: false,
+					lockedProfileName: '',
+				},
+			});
 			await this.syncWalletPublics();
 			this.emit('wallet:state', {
 				phase: 'loaded',
@@ -883,6 +1135,126 @@ class AppView extends WebComponent {
 		} catch (error) {
 			this.walletError('load-local', error);
 		}
+	}
+	// Triggered by <wallet-unlock-modal> when the user submits a password.
+	// Resolves the cached locked package (or re-reads localStorage as a
+	// fallback), decrypts it, swaps the SDK over to the unlocked instance,
+	// then re-fires whatever sensitive action the user originally clicked
+	// via `runPendingAction`. Failures bounce back into the modal so the
+	// user can retry without losing context.
+	async handleWalletUnlock(domEvent) {
+		const data = domEvent?.detail?.data ?? {};
+		const password = data.password ?? '';
+		const profileName = (data.profileName ?? this.globalState.wallet?.lockedProfileName ?? '').trim();
+		const unlockModal = this.getComponent('wallet-unlock-modal');
+		if (!profileName) {
+			unlockModal?.handleFailure?.('No locked profile to unlock.');
+			return;
+		}
+		try {
+			const storageKey = profileNameToKey(profileName);
+			const raw = this.lockedProfileRaw || globalThis.localStorage?.getItem(storageKey);
+			if (!raw) {
+				throw new Error('Saved wallet payload missing from localStorage.');
+			}
+			const sdk = await this.freshSDK();
+			const pkg = isJsonString(raw) ? await sdk.deserializeWalletPackage(raw, 'json') : await sdk.deserializeWalletPackage(base64ToBytes(raw), 'cbor');
+			const imported = await sdk.importWalletPackage(pkg, password);
+			markProfileUsed(profileName, {
+				passwordless: password === '',
+			});
+			this.lockedProfileRaw = null;
+			this.lockedProfilePkg = null;
+			setGlobal({
+				wallet: {
+					...(this.globalState.wallet ?? {}),
+					locked: false,
+					lockedProfileName: '',
+				},
+			});
+			await this.syncWalletPublics();
+			this.emit('wallet:state', {
+				phase: 'loaded',
+				meta: imported.meta,
+				unlocked: true,
+			});
+			unlockModal?.handleSuccess?.();
+			this.runPendingAction();
+		} catch (error) {
+			console.warn('[wallet:unlock]', error);
+			unlockModal?.handleFailure?.(error?.message);
+		}
+	}
+	handleWalletUnlockCancel = () => {
+		// Discard whatever sensitive action queued the unlock prompt — the
+		// user explicitly bailed and shouldn't have it fire later if they
+		// then unlock via the settings flow.
+		this.pendingAction = null;
+	};
+	// AI-initiated (or future programmatic) sends route through the
+	// send-confirm modal. On CONFIRM the modal emits `send-confirm:execute`;
+	// we forward to the existing `transmit` event so the normal sign /
+	// API / refresh pipeline runs, then route the `transmit:result` back
+	// into the modal so it can close on success or surface the error.
+	handleSendConfirmExecute = (domEvent) => {
+		const data = domEvent?.detail?.data ?? {};
+		this.sendConfirmActive = true;
+		this.emit('transmit', {
+			recipient: data.recipient,
+			recipientFormat: data.recipientFormat || 'base64',
+			amount: data.amount,
+		});
+	};
+	handleSendConfirmCancel = () => {
+		this.sendConfirmActive = false;
+	};
+	handleTransmitResult = (domEvent) => {
+		if (!this.sendConfirmActive) {
+			return;
+		}
+		this.sendConfirmActive = false;
+		const data = domEvent?.detail?.data ?? {};
+		const modal = this.getComponent('send-confirm-modal');
+		modal?.handleResult?.(data);
+	};
+	runPendingAction() {
+		const pending = this.pendingAction;
+		if (!pending) {
+			return;
+		}
+		this.pendingAction = null;
+		// Defer one tick so the unlock-modal close transition and reactive
+		// state writes settle before the original action re-runs (some
+		// downstream handlers read `globalState.wallet.locked` synchronously).
+		setTimeout(() => {
+			pending();
+		}, 0);
+	}
+	// Gate sensitive actions that need a private key. Returns true when the
+	// wallet is already unlocked and the action may proceed; returns false
+	// (and either opens onboarding or the unlock modal) when the caller
+	// should bail out. The `intent` callback is what we'll re-fire once the
+	// user successfully unlocks — store the original domEvent payload there
+	// so the action runs with the exact same data.
+	ensureWalletUnlocked(reason, intent) {
+		const wallet = this.globalState.wallet ?? {};
+		if (!wallet.hasWallet) {
+			this.emit('wallet:onboarding-required', {
+				reason,
+			});
+			return false;
+		}
+		if (!wallet.locked) {
+			return true;
+		}
+		this.pendingAction = typeof intent === 'function' ? intent : null;
+		const unlockModal = this.getComponent('wallet-unlock-modal');
+		unlockModal?.openFor?.({
+			profileName: wallet.lockedProfileName || wallet.label || '',
+			address: wallet.address || '',
+			reason,
+		});
+		return false;
 	}
 	handleWalletDeleteLocal(domEvent) {
 		const data = domEvent.detail?.data ?? {};
@@ -959,6 +1331,12 @@ class AppView extends WebComponent {
 		this.delegate('wallet:load', this.handleWalletLoad);
 		this.delegate('wallet:load-local', this.handleWalletLoadLocal);
 		this.delegate('wallet:delete-local', this.handleWalletDeleteLocal);
+		this.delegate('wallet:unlock', this.handleWalletUnlock);
+		this.delegate('wallet:unlock-cancel', this.handleWalletUnlockCancel);
+		this.delegate('wallet:request-unlock', this.handleRequestUnlock);
+		this.delegate('send-confirm:execute', this.handleSendConfirmExecute);
+		this.delegate('send-confirm:cancel', this.handleSendConfirmCancel);
+		this.delegate('transmit:result', this.handleTransmitResult);
 		this.delegate('wallet:onboarding-required', this.handleOnboardingRequired);
 		this.delegate('profile:update', this.handleProfileUpdate);
 		this.delegate('sign:open', this.handleSignOpen);
@@ -966,6 +1344,7 @@ class AppView extends WebComponent {
 		this.delegate('info:open', this.handleInfoOpen);
 		this.delegate('transmit', this.handleTransmit);
 		this.delegate('faucet:request', this.handleFaucetRequest);
+		this.delegate('wallet:refresh', this.handleWalletRefresh);
 		this.delegate('notify', this.handleNotify);
 		this.syncSavedProfiles();
 		this.checkAPIHealth();
@@ -1064,7 +1443,75 @@ class AppView extends WebComponent {
 			sent: formatBalanceShort(totalOut),
 			activity: formatBalanceShort(balance),
 		});
+		// Transactions for the activity log piggy-back on every account
+		// refresh — the same round-trip that fetched the balance also
+		// gives us the user's recent tx list. Fire-and-forget; the activity
+		// log shows "No transactions" while it waits.
+		this.fetchTransactionsForWallet();
 		return account;
+	}
+	async fetchTransactionsForWallet() {
+		const address = this.globalState.wallet?.address;
+		if (!address || this.globalState.api?.ok === false) {
+			return null;
+		}
+		const sdk = await this.ensureSDK();
+		// Server caps at 100 per page; 50 is plenty for the dashboard preview
+		// without thrashing on big histories.
+		const response = await sdk.getAccountTransactions(address, {
+			limit: 50,
+		});
+		const txs = response?.transactions ?? [];
+		const entries = [];
+		for (let i = 0; i < txs.length; i += 1) {
+			entries.push(this.txToActivityEntry(txs[i], address));
+		}
+		// Both desktop and mobile dashboards mount their own activity-log;
+		// seed every instance so the hidden one is ready when the viewport
+		// flips. Replace `entries` wholesale rather than diffing — the
+		// activity log treats it as a reactive array and re-renders.
+		this.applyToAll('activity-log', (log) => {
+			if (log?.state) {
+				log.state.entries = entries;
+			}
+		});
+		return txs;
+	}
+	txToActivityEntry(tx, walletAddress) {
+		const isInbound = tx.to === walletAddress;
+		const direction = isInbound ? 'in' : 'out';
+		const counterparty = isInbound ? tx.from : tx.to;
+		let counterpartyShort = '—';
+		if (counterparty) {
+			counterpartyShort = `${counterparty.slice(0, 8)}…${counterparty.slice(-4)}`;
+		}
+		return {
+			direction,
+			id: tx.id ?? '',
+			// Router intercepts in-app anchor clicks (interceptLinks: true) so
+			// these hrefs route via History API without page reload. Encode
+			// the address — base64 carries `/` and `+`.
+			txHref: tx.id ? `/tx/${encodeURIComponent(tx.id)}/` : '',
+			counterparty: counterparty ?? '',
+			counterpartyHref: counterparty ? `/account/${encodeURIComponent(counterparty)}/` : '',
+			counterpartyShort,
+			amount: formatBalanceShort(tx.amount),
+			verb: isInbound ? 'from' : 'to',
+			status: tx.status === 'completed' || tx.status === 'confirmed' ? 'ok' : (tx.status || 'pending'),
+			timestamp: this.formatTxTimestamp(tx.timestamp),
+		};
+	}
+	formatTxTimestamp(iso) {
+		if (!iso) {
+			return '--:--:--';
+		}
+		const date = new Date(iso);
+		if (Number.isNaN(date.getTime())) {
+			return '--:--:--';
+		}
+		return date.toLocaleTimeString('en-GB', {
+			hour12: false,
+		});
 	}
 	syncWalletStatsPanel(values) {
 		this.applyToAll('wallet-stats-panel', (panel) => {
@@ -1094,6 +1541,20 @@ class AppView extends WebComponent {
 			}
 		}
 	}
+	// Center-bar refresh button — pulls a fresh account snapshot (balance,
+	// totals, activity-log entries) for the active wallet. No-ops when no
+	// wallet is loaded so it's safe to leave the button enabled.
+	handleWalletRefresh = () => {
+		if (!this.globalState.wallet?.address) {
+			this.emit('notify', {
+				itemType: 'info',
+				title: 'Refresh skipped',
+				message: 'Load a wallet first — nothing to refresh yet.',
+			});
+			return;
+		}
+		this.fetchAccountForWallet();
+	};
 	async handleFaucetRequest() {
 		if (this.globalState.api?.ok === false) {
 			this.emit('notify', {
@@ -1124,6 +1585,7 @@ class AppView extends WebComponent {
 			message: `Minted ${amount}${tx?.id ? ` (tx ${tx.id.slice(0, 12)}…)` : ''}`,
 		});
 		this.fetchAccountForWallet();
+		this.bumpCurrentProfileUsed();
 		return tx;
 	}
 	async handleTransmit(domEvent) {
@@ -1160,6 +1622,16 @@ class AppView extends WebComponent {
 			});
 			return null;
 		}
+		// Need the primary keypair to sign — prompt for the password if the
+		// active wallet was preview-loaded (metadata only). After unlock the
+		// modal re-fires the original event so this handler runs again with
+		// the same data.
+		const unlocked = this.ensureWalletUnlocked('Sending a transaction needs your wallet password to sign.', () => {
+			this.handleTransmit(domEvent);
+		});
+		if (!unlocked) {
+			return null;
+		}
 		const sdk = await this.ensureSDK();
 		const tx = await sdk.sendTransaction(recipient, amount);
 		if (!tx) {
@@ -1180,6 +1652,7 @@ class AppView extends WebComponent {
 			transaction: tx?.transaction ?? null,
 		});
 		this.fetchAccountForWallet();
+		this.bumpCurrentProfileUsed();
 		return tx;
 	}
 	validateTransmit(recipient, amount) {
@@ -1212,12 +1685,16 @@ class AppView extends WebComponent {
 		settings.open();
 	};
 	handleSignOpen = () => {
-		if (!this.globalState.wallet?.hasWallet) {
+		const wallet = this.globalState.wallet ?? {};
+		if (!wallet.hasWallet) {
 			this.emit('wallet:onboarding-required', {
 				reason: 'Signing data requires a loaded wallet.',
 			});
 			return;
 		}
+		// Opening the sign modal is harmless while locked — we only need to
+		// gate the actual sign-execute step. Lets the user paste/type data
+		// while we wait for them to confirm signing.
 		const modal = this.getComponent('sign-data-modal');
 		if (!modal) {
 			return;
@@ -1233,6 +1710,12 @@ class AppView extends WebComponent {
 	};
 	handleSignExecute = async (domEvent) => {
 		const message = domEvent?.detail?.data?.data;
+		const unlocked = this.ensureWalletUnlocked('Signing data needs your wallet password to access the private key.', () => {
+			this.handleSignExecute(domEvent);
+		});
+		if (!unlocked) {
+			return;
+		}
 		try {
 			const sdk = this.sdk;
 			const privateKey = sdk?.STATE?.primaryKeypair?.privateKey;
@@ -1246,6 +1729,7 @@ class AppView extends WebComponent {
 			this.emit('sign:result', {
 				signature: bytesToBase64(signature),
 			});
+			this.bumpCurrentProfileUsed();
 		} catch (error) {
 			console.warn('[sign:error]', error);
 			this.emit('sign:error', {
@@ -1268,11 +1752,15 @@ class AppView extends WebComponent {
 		if (!DOCK_ROUTE_IDS.has(id) || !this.router.findById(id)) {
 			return;
 		}
-		// Skip when already in this section (dock-icon-button auto-emits on
-		// mount for the active button, which would otherwise clobber any
-		// `/page/N/` URL the user landed on). Also matches macOS-dock
-		// behaviour (clicking the active app is a no-op).
+		// Re-tapping the active dock entry doesn't navigate (matches the
+		// macOS dock; also avoids clobbering any /page/N/ deep-link the
+		// user landed on), but for the wallet section we DO want it to
+		// hard-refresh account state — balance, totals, tx feed — so the
+		// dashboard click acts like a "pull to refresh".
 		if (this.router.current?.section === id) {
+			if (id === 'wallet') {
+				this.fetchAccountForWallet();
+			}
 			return;
 		}
 		this.router.navigate(id);
@@ -1286,6 +1774,7 @@ class AppView extends WebComponent {
 		if (!view) {
 			return;
 		}
+		const previousView = this.state.activePage;
 		this.state.activePage = view;
 		const params = this.globalState?.routeParams ?? {};
 		const filter = this.globalState?.routeFilter ?? '';
@@ -1298,6 +1787,12 @@ class AppView extends WebComponent {
 			this.getComponent('explorer-page')?.setView?.(filter || 'all', page);
 		} else if (view === 'accounts') {
 			this.getComponent('accounts-list-page')?.setPage?.(page);
+		} else if (view === 'wallet' && previousView !== 'wallet') {
+			// Entering the dashboard from elsewhere — pull a fresh account
+			// snapshot so balance, totals and the activity feed reflect any
+			// state the user picked up while they were on the explorer /
+			// account-detail / transaction-detail pages.
+			this.fetchAccountForWallet();
 		}
 	};
 	onVisible() {
@@ -1384,6 +1879,9 @@ class AppView extends WebComponent {
 			<settings-modal></settings-modal>
 			<sign-data-modal></sign-data-modal>
 			<wallet-info-modal></wallet-info-modal>
+			<wallet-unlock-modal></wallet-unlock-modal>
+			<welcome-back-modal></welcome-back-modal>
+			<send-confirm-modal></send-confirm-modal>
 			<wallet-onboarding></wallet-onboarding>
 		`;
 	}

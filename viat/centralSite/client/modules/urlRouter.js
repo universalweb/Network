@@ -122,6 +122,12 @@ export class URLRouter {
 		if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) {
 			return;
 		}
+		// Explicit escape hatch — author wants a real navigation (full
+		// reload, leave the SPA, hard-clear state, etc.). Honoured before
+		// any route resolution so the browser does its default thing.
+		if (anchor.hasAttribute('data-route-passthrough')) {
+			return;
+		}
 		const url = new URL(href, globalThis.location.href);
 		if (url.origin !== globalThis.location.origin) {
 			return;

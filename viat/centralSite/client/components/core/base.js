@@ -161,10 +161,29 @@ export class WebComponent extends HTMLElement {
 		// Use `static state` for class-level defaults.
 		if (!this.flags.skipStaticState) {
 			const mergedState = this.constructor.ensureMergedState();
-			const mergedKeys = keysOf(mergedState);
+			const mergedDescriptors = Object.getOwnPropertyDescriptors(mergedState);
+			const mergedKeys = Object.getOwnPropertyNames(mergedDescriptors);
 			for (let mergedIndex = 0; mergedIndex < mergedKeys.length; mergedIndex += 1) {
 				const mergedKey = mergedKeys[mergedIndex];
-				const mergedValue = mergedState[mergedKey];
+				const descriptor = mergedDescriptors[mergedKey];
+				if (descriptor.get || descriptor.set) {
+					// Re-install accessor on the instance STATE with `this`
+					// rebound to the component. State setters/getters declared
+					// in `static state = { set foo(v) { ... } }` reasonably
+					// expect `this` to be the component so they can mutate
+					// other state keys, call instance methods, etc. — the
+					// class-literal `this` (the static state object) is
+					// useless for that. Per-instance rebind because each
+					// component owns its own STATE and proxy.
+					Object.defineProperty(this.STATE, mergedKey, {
+						configurable: true,
+						enumerable: descriptor.enumerable !== false,
+						get: descriptor.get ? descriptor.get.bind(this) : undefined,
+						set: descriptor.set ? descriptor.set.bind(this) : undefined,
+					});
+					continue;
+				}
+				const mergedValue = descriptor.value;
 				if (mergedValue === null || typeof mergedValue !== 'object') {
 					this.STATE[mergedKey] = mergedValue;
 				} else {

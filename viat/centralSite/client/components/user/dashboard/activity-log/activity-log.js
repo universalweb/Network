@@ -9,11 +9,20 @@ class ActivityLogEntry extends WebComponent {
 	static state = {
 		direction: '',
 		id: '',
-		message: '',
+		txHref: '',
+		counterparty: '',
+		counterpartyHref: '',
+		counterpartyShort: '',
+		amount: '',
+		verb: '',
 		status: '',
 		timestamp: '',
 	};
 	render() {
+		// Whole-row reactive read so an entry repaint also refreshes the
+		// embedded <a href> targets. Router intercepts anchor clicks across
+		// the shadow boundary via composedPath, so plain `<a>` is enough —
+		// no manual navigate() wiring.
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<div class="log-entry">
@@ -25,7 +34,11 @@ class ActivityLogEntry extends WebComponent {
 				}}</span>
 				<span class=${classList('log-msg', () => {
 					return this.state.status;
-				})}>${this.state.message}</span>
+				})}>
+					<a class="log-link log-amount" href="${this.state.txHref}" title="${this.state.id}">${this.state.amount} ⩝</a>
+					<span class="log-verb"> ${this.state.verb} </span>
+					<a class="log-link log-addr" href="${this.state.counterpartyHref}" title="${this.state.counterparty}">${this.state.counterpartyShort}</a>
+				</span>
 			</div>
 		`;
 	}
@@ -92,7 +105,13 @@ export class ActivityLog extends Panel {
 	createEntry(entry = {}) {
 		return {
 			direction: entry.direction ?? 'in',
-			message: entry.message ?? '',
+			id: entry.id ?? '',
+			txHref: entry.txHref ?? '',
+			counterparty: entry.counterparty ?? '',
+			counterpartyHref: entry.counterpartyHref ?? '',
+			counterpartyShort: entry.counterpartyShort ?? '—',
+			amount: entry.amount ?? '0',
+			verb: entry.verb ?? '',
 			status: entry.status ?? 'ok',
 			timestamp: entry.timestamp ?? new Date().toLocaleTimeString('en-GB', {
 				hour12: false,

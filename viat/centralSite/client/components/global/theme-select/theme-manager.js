@@ -1,3 +1,8 @@
+// Midnight is the canonical default. Other themes are opt-in via the
+// settings selector; an unknown / stale theme id in localStorage falls
+// back to midnight rather than silently sticking with the last valid
+// paint.
+export const DEFAULT_THEME = 'midnight';
 export const THEMES = [
 	{
 		id: 'midnight',
@@ -26,19 +31,27 @@ function findTheme(id) {
 	});
 }
 export function setTheme(id) {
-	const theme = findTheme(id);
+	const theme = findTheme(id) ?? findTheme(DEFAULT_THEME);
 	if (!theme) {
 		return;
 	}
 	document.querySelectorAll('link[href*="themes/"]').forEach((link) => {
-		link.href = link.href.replace(/[^/]+\.css(\?.*)?$/, `${id}.css`);
+		link.href = link.href.replace(/[^/]+\.css(\?.*)?$/, `${theme.id}.css`);
 	});
-	document.documentElement.dataset.theme = id;
+	document.documentElement.dataset.theme = theme.id;
 	document.documentElement.dataset.themeMode = theme.mode;
-	localStorage.setItem('theme.mode', id);
+	localStorage.setItem('theme.mode', theme.id);
 }
 export function getTheme() {
-	return localStorage.getItem('theme.mode') ?? 'midnight';
+	const stored = localStorage.getItem('theme.mode');
+	// Only honour stored value when it points at a known theme — guards
+	// against typos, leftover ids from removed themes, or any other
+	// garbage that would otherwise let `setTheme(<invalid>)` collapse
+	// silently and leave the DOM on whatever paint came before.
+	if (stored && findTheme(stored)) {
+		return stored;
+	}
+	return DEFAULT_THEME;
 }
 export function isDarkTheme(id = getTheme()) {
 	return findTheme(id)?.mode === 'dark';

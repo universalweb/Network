@@ -58,3 +58,374 @@
 .green-hover:hover {
 	color: var(--green-hover);
 }
+
+/* ══════════════════════════════════════════════════════
+   DIALOG CONTENT — generic primitives for modal bodies.
+   Every modal-using component reuses these instead of
+   defining its own per-component button + meta-row + field
+   stylesheet (wb-, wu-, sm-, sd- prefixes were redundant
+   skins of the exact same chrome). Truly unique content
+   stays per-component; everything else flows from these.
+   Drop `.dialog-shell` on the slotted root and compose
+   the rest as needed.
+══════════════════════════════════════════════════════ */
+.dialog-shell {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	/* Top padding clears the core modal's control strip (close / max /
+	   min buttons sit at top:8 with ~30px height) so the dialog header
+	   never crowds them. Sides + bottom are generous on purpose so dense
+	   content (meta rows, password fields) has breathing room. */
+	padding: 48px 28px 28px;
+	color: var(--popup-text);
+	font-family: var(--font-mono, ui-monospace, monospace);
+}
+.dialog-head {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+}
+.dialog-head-id {
+	font-weight: 700;
+	color: var(--cyan, var(--popup-text));
+	letter-spacing: 0.04em;
+}
+.dialog-head-title {
+	color: var(--text-muted, var(--popup-text));
+	font-size: 0.75rem;
+	letter-spacing: 0.06em;
+}
+.dialog-copy {
+	margin: 0;
+	font-size: 0.875rem;
+	line-height: 1.45;
+}
+.dialog-meta {
+	display: grid;
+	gap: 6px;
+	background: var(--popup-bg-alt, rgba(255, 255, 255, 0.03));
+	border: 1px solid var(--popup-border);
+	border-radius: var(--radius-md, 6px);
+	padding: 12px 14px;
+	font-size: 0.75rem;
+}
+.dialog-meta-row {
+	display: grid;
+	grid-template-columns: 86px 1fr;
+	gap: 12px;
+	align-items: baseline;
+}
+.dialog-meta-key {
+	color: var(--text-muted, var(--popup-text));
+	letter-spacing: 0.06em;
+}
+.dialog-meta-val {
+	color: var(--popup-text);
+	word-break: break-all;
+}
+.dialog-meta-val.is-locked {
+	color: var(--color-warn-text, #facc15);
+}
+.dialog-meta-val.is-unlocked {
+	color: var(--color-success-text, #4ade80);
+}
+.dialog-field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+.dialog-label {
+	font-size: 0.7rem;
+	color: var(--text-muted, var(--popup-text));
+	letter-spacing: 0.06em;
+}
+.dialog-input {
+	background: var(--popup-bg);
+	color: var(--popup-text);
+	border: 1px solid var(--popup-border);
+	border-radius: var(--radius-md, 6px);
+	padding: 10px 12px;
+	font-family: inherit;
+	font-size: 0.875rem;
+	outline: none;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.dialog-input:focus-visible {
+	border-color: var(--cyan, var(--popup-border));
+	box-shadow: 0 0 0 2px var(--cyan-glow, rgba(94, 234, 212, 0.25));
+}
+.dialog-error {
+	min-height: 18px;
+	font-size: 0.75rem;
+	color: var(--color-danger, #f87171);
+	opacity: 0;
+	transition: opacity 0.15s ease;
+}
+.dialog-error.is-visible {
+	opacity: 1;
+}
+.dialog-actions {
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+}
+.dialog-btn {
+	background: var(--popup-bg);
+	color: var(--popup-text);
+	border: 1px solid var(--popup-border);
+	border-radius: var(--radius-md, 6px);
+	padding: 8px 18px;
+	font-family: inherit;
+	font-size: 0.8125rem;
+	letter-spacing: 0.06em;
+	cursor: pointer;
+	transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.dialog-btn:hover {
+	border-color: var(--cyan, var(--popup-border));
+}
+.dialog-btn[disabled] {
+	cursor: progress;
+	opacity: 0.6;
+}
+.dialog-btn-primary {
+	background: var(--cyan, var(--popup-bg));
+	color: var(--popup-bg);
+	border-color: var(--cyan, var(--popup-border));
+}
+.dialog-btn-primary:hover {
+	background: var(--cyan-hover, var(--cyan, var(--popup-bg)));
+	color: var(--popup-bg);
+}
+/* Multi-line input. Same skin as .dialog-input plus resize handle and
+   the `.is-copyable` modifier (click-to-copy outputs). */
+.dialog-textarea {
+	background: var(--popup-bg);
+	color: var(--popup-text);
+	border: 1px solid var(--popup-border);
+	border-radius: var(--radius-md, 6px);
+	padding: 10px 12px;
+	font-family: inherit;
+	font-size: 0.8125rem;
+	line-height: 1.45;
+	resize: vertical;
+	outline: none;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+.dialog-textarea:focus-visible {
+	border-color: var(--cyan, var(--popup-border));
+	box-shadow: 0 0 0 2px var(--cyan-glow, rgba(94, 234, 212, 0.25));
+}
+.dialog-input.is-copyable,
+.dialog-textarea.is-copyable {
+	cursor: pointer;
+	word-break: break-all;
+}
+.dialog-input.is-copyable:hover,
+.dialog-textarea.is-copyable:hover {
+	border-color: var(--cyan, var(--popup-border));
+	color: var(--cyan, var(--popup-text));
+}
+/* Inline warning banner — accent-coloured border + tinted background.
+   Tone is controlled by `--dialog-warning-color` so a per-instance
+   override (or future `.tone-info` class) can re-skin without touching
+   the box. Default tone is danger because that's the most common use. */
+.dialog-warning {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 12px 14px;
+	border: 1px solid var(--dialog-warning-color, rgba(248, 113, 113, 0.35));
+	border-radius: var(--radius-md, 6px);
+	background: color-mix(in srgb, var(--dialog-warning-color, #f87171) 8%, transparent);
+	color: var(--popup-text);
+}
+.dialog-warning-head {
+	font-size: 0.6875rem;
+	letter-spacing: 0.12em;
+	color: var(--dialog-warning-color, #f87171);
+	font-weight: 600;
+}
+.dialog-warning-body {
+	margin: 0;
+	font-size: 0.75rem;
+	line-height: 1.5;
+	color: var(--text-muted, var(--popup-text));
+}
+.dialog-warning-body strong {
+	color: var(--popup-text);
+}
+/* Status line — invisible until a tone class lands. Multi-tone variant
+   of .dialog-error (which is danger-only). Used for transient "Signing…"
+   / "Signature ready." style messages under forms. */
+.dialog-status {
+	margin-top: 4px;
+	font-size: 0.75rem;
+	line-height: 1.4;
+	min-height: 1em;
+	opacity: 0;
+	transition: opacity 0.18s ease, color 0.18s ease;
+}
+.dialog-status.is-visible {
+	opacity: 1;
+}
+.dialog-status.tone-info {
+	color: var(--text-muted, var(--popup-text));
+}
+.dialog-status.tone-success {
+	color: var(--color-success-text, #34d399);
+}
+.dialog-status.tone-error {
+	color: var(--color-danger, #f87171);
+}
+.dialog-status.tone-warn {
+	color: var(--color-warn-text, #facc15);
+}
+/* Section heading inside .dialog-shell — small caps that match the
+   .dialog-head-title look. Use for grouping long-form copy (sign-data,
+   wallet-info). */
+.dialog-section {
+	margin: 10px 0 0;
+	font-size: 0.6875rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--cyan, var(--popup-text));
+	font-weight: 600;
+}
+/* Rich text inside .dialog-copy — pulled into the generic primitive so
+   every dialog renders <strong>/<em>/<code> consistently without each
+   modal redefining the look. */
+.dialog-copy strong {
+	color: var(--popup-text);
+}
+.dialog-copy em {
+	font-style: italic;
+	color: var(--popup-text);
+}
+.dialog-copy code {
+	padding: 1px 5px;
+	background: var(--bg-dark, rgba(0, 0, 0, 0.25));
+	border-radius: 3px;
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 0.875em;
+	color: var(--teal, var(--cyan, var(--popup-text)));
+}
+/* Hero strip — glyph chip on the left, headline + tagline on the right.
+   Shared by the intro modal and the welcome-back modal so both reads as
+   the same family. The glyph itself stays component-local (each modal
+   inlines its own SVG / icon). */
+.dialog-hero {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	align-items: center;
+	gap: 22px;
+	padding-bottom: 16px;
+	border-bottom: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.06));
+}
+.dialog-glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 88px;
+	height: 88px;
+	color: var(--cyan, var(--popup-text));
+	background: linear-gradient(135deg, rgba(167, 139, 250, 0.18), rgba(94, 234, 212, 0.06));
+	border: 1px solid rgba(167, 139, 250, 0.25);
+	border-radius: 12px;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 4px 24px rgba(109, 74, 255, 0.18);
+	flex: 0 0 auto;
+}
+.dialog-hero-text {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+.dialog-tagline {
+	margin: 0;
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: var(--teal, var(--cyan, var(--popup-text)));
+	letter-spacing: 0.01em;
+}
+/* Article-style card with a clickable thumbnail on the left and a short
+   pitch on the right — used by the welcome-back modal to point users at
+   the HD-seed diagram. Thumbnail click is wired by the consumer; this
+   stylesheet only ships the look. */
+.dialog-thumb-card {
+	display: grid;
+	grid-template-columns: 92px minmax(0, 1fr);
+	gap: 14px;
+	align-items: center;
+	padding: 12px 14px;
+	background: var(--popup-bg-alt, rgba(255, 255, 255, 0.03));
+	border: 1px solid var(--popup-border);
+	border-radius: var(--radius-md, 6px);
+}
+.dialog-thumb {
+	width: 92px;
+	height: 92px;
+	padding: 0;
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.08));
+	border-radius: 6px;
+	cursor: zoom-in;
+	overflow: hidden;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: border-color 0.18s ease, transform 0.2s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.18s ease;
+}
+.dialog-thumb img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	pointer-events: none;
+}
+.dialog-thumb:hover {
+	border-color: rgba(167, 139, 250, 0.45);
+	transform: translateY(-1px);
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(167, 139, 250, 0.15);
+}
+.dialog-thumb:focus-visible {
+	outline: 2px solid var(--cyan, var(--popup-text));
+	outline-offset: 2px;
+}
+.dialog-thumb-text {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+	font-size: 0.75rem;
+	line-height: 1.5;
+	color: var(--text-muted, var(--popup-text));
+}
+.dialog-thumb-text strong {
+	color: var(--popup-text);
+	letter-spacing: 0.06em;
+}
+.dialog-thumb-text a,
+.dialog-thumb-text button.dialog-link {
+	color: var(--cyan, var(--popup-text));
+	text-decoration: none;
+	border: 0;
+	background: none;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+	border-bottom: 1px dotted currentColor;
+	align-self: flex-start;
+}
+.dialog-thumb-text a:hover,
+.dialog-thumb-text button.dialog-link:hover {
+	color: var(--teal, var(--cyan, var(--popup-text)));
+}
+@media (prefers-reduced-motion: reduce) {
+	.dialog-thumb,
+	.dialog-thumb:hover {
+		transition: none;
+		transform: none;
+	}
+}

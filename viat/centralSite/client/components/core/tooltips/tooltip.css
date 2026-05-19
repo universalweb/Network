@@ -159,3 +159,15 @@
 		}
 	}
 }
+
+/* Belt-and-suspenders: even if the tooltip-service somehow asks the
+   popover to open on a touch-only device (e.g. someone bypasses the
+   hover-capable check), the CSS gate keeps it off-screen. `(hover:
+   none)` matches phones / most tablets — surfaces that cannot
+   express a hover affordance. Surface / iPad-with-keyboard report
+   `(hover: hover)` and keep tooltips. */
+@media (hover: none) {
+	.tooltip-shell {
+		display: none !important;
+	}
+}

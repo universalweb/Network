@@ -1961,6 +1961,16 @@ function updateSpot(spot, newExpr, component) {
 		spot.expr = newExpr;
 	}
 }
+function isStateProxyValue(value) {
+	// Both `StateProxyHandler` and `TrackingProxyHandler` answer the
+	// `STATE_PATH` symbol with a non-undefined dotted path. Plain objects
+	// return undefined because symbols can only be looked up by identity.
+	// We use this to distinguish "a value that may have mutated in place"
+	// (state proxy whose underlying object got patched) from a true static
+	// value, so `updateTemplateSpots` knows not to bail on the same-
+	// reference skip for the proxy case.
+	return value !== null && typeof value === 'object' && value[STATE_PATH] !== undefined;
+}
 function updateTemplateSpots(state, newExprs, component) {
 	const {
 		spots, prevExprs,
@@ -2007,7 +2017,17 @@ function updateTemplateSpots(state, newExprs, component) {
 		}
 		const newVal = newExprs[slotIndex];
 		const prevVal = prevExprs[slotIndex];
-		if (newVal === prevVal) {
+		// The reference-equality skip is correct for static values and
+		// function refs (computed spots own their own subscription path).
+		// It is INCORRECT for a live state proxy: the proxy reference is
+		// cached per underlying object, so `parent.state.foo` returns the
+		// same proxy across renders even when the underlying object's
+		// properties have mutated. Bailing here would freeze any child
+		// `.state=${this.state.foo}` binding on the first render's
+		// snapshot. Detect the proxy and let `updateSpot` patch through —
+		// the child's `replaceState` does its own plainEqual check, so
+		// genuinely unchanged proxies still cost only a deep compare.
+		if (newVal === prevVal && !isStateProxyValue(newVal)) {
 			continue;
 		}
 		updateSpot(spot, newVal, component);
@@ -2026,6 +2046,13 @@ export function initTemplateRuntime(component) {
 	component.tplState = null;
 	component.tplBoundKeys = new Set();
 	component.tplCleanupNodes = new Set();
+	// One entry per `this.htmlElement` call site. Keyed by the tagged-
+	// template strings array so re-entering the same call site returns the
+	// same root element with its spots patched in place. Without this,
+	// patterns like `${this.renderBody}` (computed spot → `htmlElement`)
+	// would mint a fresh subtree on every dep change, ripping focus out of
+	// any focused input every time the user typed.
+	component.htmlElementCache = new Map();
 }
 function runCleanupOnNode(node) {
 	cleanupTemplateNode(node);
@@ -2042,6 +2069,7 @@ export function templateCleanup() {
 	}
 	this.tplState = null;
 	this.tplBoundKeys = new Set();
+	this.htmlElementCache?.clear();
 }
 export function templateHtml(strings, ...exprs) {
 	const state = this.tplState;
@@ -2074,6 +2102,21 @@ function cleanupHtmlElementInstance() {
 	clearSubscriptions(instance.unsubs);
 }
 export function templateHtmlElement(strings, ...exprs) {
+	// Stable identity across calls from the same site: the tagged-template
+	// `strings` array is a per-call-site singleton, so we cache the root
+	// element + tplState there. Repeated calls (e.g. a `${this.renderBody}`
+	// computed spot refreshing on every typed character) patch the existing
+	// subtree's spots in place via `updateTemplateSpots` and return the
+	// same root, which lets `patchComponentKind`'s `firstChild === node`
+	// short-circuit fire and leaves focus, selection, and IME state alone.
+	const cache = this.htmlElementCache;
+	if (cache) {
+		const cached = cache.get(strings);
+		if (cached) {
+			updateTemplateSpots(cached.tplState, exprs, this);
+			return cached.element;
+		}
+	}
 	const recipe = getRecipe(strings);
 	const instance = instantiateRecipe(recipe, exprs, this);
 	if (instance.fragment.children.length !== 1) {
@@ -2085,5 +2128,15 @@ export function templateHtmlElement(strings, ...exprs) {
 	HTML_ELEMENT_INSTANCES.set(element, instance);
 	element[TEMPLATE_CLEANUP] = cleanupHtmlElementInstance;
 	this.tplCleanupNodes?.add(element);
+	if (cache) {
+		cache.set(strings, {
+			element,
+			tplState: {
+				strings,
+				spots: instance.spots,
+				prevExprs: exprs.slice(),
+			},
+		});
+	}
 	return element;
 }

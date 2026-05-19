@@ -51,11 +51,15 @@
 	position: relative;
 }
 
-/* CRT scanline overlay */
+/* CRT scanline overlay — purely cosmetic. `pointer-events: none` is
+   load-bearing: without it the pseudo-element sits over every log entry
+   and steals every click, leaving the tx-hash + counterparty links
+   inert and the panel's `cursor: crosshair` showing through. */
 .output-feed::after {
 	content: '';
 	position: absolute;
 	inset: 0;
+	pointer-events: none;
 	background: repeating-linear-gradient(
 		transparent,
 		transparent 3px,

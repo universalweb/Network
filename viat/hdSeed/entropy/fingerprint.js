@@ -5,6 +5,11 @@ import {
 // Surface that should NOT be enumerated on the browser's `navigator`:
 //  * Protected Audience API (`runAdAuction`, `joinAdInterestGroup`, etc.) —
 //    deprecated, accessing the function references logs warnings.
+//  * Legacy quota storage (`webkitPersistentStorage`, `webkitTemporaryStorage`) —
+//    reading either property triggers Chrome's
+//    "StorageType.persistent is deprecated" console warning even if we
+//    never invoke a method on the returned handle. The modern
+//    `navigator.storage` API replaces both.
 //  * Permission-gated APIs that yield nothing without a user grant
 //    (bluetooth/usb/serial/hid/geolocation/wakeLock/presentation/xr/clipboard).
 //  * Live device handles that aren't deterministic fingerprint material
@@ -29,6 +34,9 @@ const BROWSER_IGNORED = new Set([
 	'adAuctionComponents',
 	'deprecatedURNToURL',
 	'deprecatedReplaceInURN',
+	'webkitPersistentStorage',
+	'webkitTemporaryStorage',
+	'storage',
 	'bluetooth',
 	'usb',
 	'serial',

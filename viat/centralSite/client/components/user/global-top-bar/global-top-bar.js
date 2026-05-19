@@ -38,10 +38,36 @@ export class GlobalTopBar extends WebComponent {
 		this.on('pointerdown', this.handlePointerDown);
 		this.delegate('click', this.handleClickCapture);
 		this.delegate('pulldown:state', this.handlePulldownState);
+		// Mirror the viewport width bucket onto our own host so we can use
+		// plain `:host(.vw-xs)` selectors in the stylesheet — Safari < 16.4
+		// (and a handful of WebViews on older iPhones) doesn't honour
+		// `:host-context()`, which made the mobile-hide rule silently miss
+		// there. Self-subscribing keeps the rule portable.
+		this.syncViewportClass();
+		this.delegate('viewport:change', this.handleViewportChange);
 		globalThis.addEventListener('resize', () => this.handleResize(), {
 			signal: this.windowAbort.signal,
 		});
 	}
+	syncViewportClass() {
+		const w = this.globalState?.environment?.viewport?.w ?? 'lg';
+		// Wipe any prior vw-* class then set the current one. Using a
+		// space-delimited assignment keeps the class list authoritative
+		// (no leftover bucket classes if the user zooms past several).
+		const next = [];
+		const current = (this.classList.value || '').split(/\s+/);
+		for (let i = 0; i < current.length; i += 1) {
+			const token = current[i];
+			if (token && !token.startsWith('vw-')) {
+				next.push(token);
+			}
+		}
+		next.push(`vw-${w}`);
+		this.classList.value = next.join(' ');
+	}
+	handleViewportChange = () => {
+		this.syncViewportClass();
+	};
 	onDisconnect() {
 		this.windowAbort?.abort();
 		this.windowAbort = null;
@@ -227,8 +253,10 @@ export class GlobalTopBar extends WebComponent {
 		this.html `
 			<header class="global-top-bar">
 				<div class="tb-logo">
-					<span class="tb-logo-mark">⩝</span>
-					<span class="tb-logo-text">VIAT</span>
+					<a class="tb-logo-home" href="/" aria-label="Back to dashboard">
+						<span class="tb-logo-mark">⩝</span>
+						<span class="tb-logo-text">VIAT</span>
+					</a>
 					<ui-icon class="tb-logo-sep" .state=${this.sepIconState}></ui-icon>
 					<span class="tb-subtitle">${this.state.subtitle}</span>
 				</div>

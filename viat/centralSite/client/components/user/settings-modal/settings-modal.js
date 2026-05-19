@@ -74,6 +74,15 @@ export class SettingsModal extends WebComponent {
 		if (this.state.themeId !== nextTheme) {
 			this.state.themeId = nextTheme;
 		}
+		// Pre-select the most-recently-used profile in the LOAD form when
+		// the user hasn't already chosen something themselves. App.js
+		// publishes `profile.lastSelected` on boot (and after auto-load
+		// attempts) — without this, password-protected profiles forced the
+		// user to dig through the dropdown every visit.
+		const lastSelected = profile.lastSelected ?? '';
+		if (lastSelected && !this.state.selectedProfile) {
+			this.state.selectedProfile = lastSelected;
+		}
 	}
 	open() {
 		this.refs.modal?.open();

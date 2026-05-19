@@ -12,6 +12,35 @@
 	width: 100%;
 	cursor: pointer;
 }
+/* Desktop-only banner that explains why the AI chat column is missing on
+   narrow viewports. Hidden by default; surfaced via the mobile breakpoint
+   block below using `:host-context()` so it reaches up to the app-view's
+   viewport class across shadow roots. */
+.gpd-mobile-notice {
+	display: none;
+	max-width: var(--center-max-width, 1536px);
+	margin: 0 auto 14px auto;
+	padding: 12px 14px;
+	background: var(--popup-bg-alt, rgba(255, 255, 255, 0.04));
+	border: 1px solid var(--popup-border, rgba(255, 255, 255, 0.1));
+	border-left: 3px solid var(--cyan, #a78bfa);
+	border-radius: var(--radius-md, 6px);
+	cursor: auto;
+}
+.gpd-mobile-notice-id {
+	display: block;
+	font-size: 0.65rem;
+	letter-spacing: 0.18em;
+	color: var(--cyan, #a78bfa);
+	font-weight: 600;
+	margin-bottom: 4px;
+}
+.gpd-mobile-notice-body {
+	margin: 0;
+	font-size: 0.75rem;
+	line-height: 1.5;
+	color: var(--text-muted, rgba(255, 255, 255, 0.7));
+}
 .gpd-columns {
 	display: grid;
 	grid-template-columns: 220px minmax(0, 1fr) 220px;
@@ -38,4 +67,35 @@
 .gpd-col-chat {
 	min-height: 0;
 	padding-bottom: 220px;
+}
+/* Mobile + small-tablet (xs/sm/md): show the desktop-only notice, hide
+   the AI chat column entirely, and collapse the 3-col grid to a single
+   column so the help/info/setup panels get the full width. The spacer
+   column is also dropped — it was only there to balance the help column
+   visually against the chat. Plain `:host(.vw-*)` form (component
+   self-applies the viewport class via `syncViewportClass`) so we don't
+   rely on `:host-context()` — that selector is missing from Safari
+   <16.4 / older iPhone WebViews and would silently no-op there. */
+:host(.vw-xs) .gpd-mobile-notice,
+:host(.vw-sm) .gpd-mobile-notice,
+:host(.vw-md) .gpd-mobile-notice {
+	display: block;
+}
+:host(.vw-xs) .gpd-col-chat,
+:host(.vw-sm) .gpd-col-chat,
+:host(.vw-md) .gpd-col-chat,
+:host(.vw-xs) .gpd-col-spacer,
+:host(.vw-sm) .gpd-col-spacer,
+:host(.vw-md) .gpd-col-spacer {
+	display: none;
+}
+:host(.vw-xs) .gpd-columns,
+:host(.vw-sm) .gpd-columns,
+:host(.vw-md) .gpd-columns {
+	grid-template-columns: minmax(0, 1fr);
+}
+:host(.vw-xs) .gpd-col-help,
+:host(.vw-sm) .gpd-col-help,
+:host(.vw-md) .gpd-col-help {
+	padding-right: 0;
 }

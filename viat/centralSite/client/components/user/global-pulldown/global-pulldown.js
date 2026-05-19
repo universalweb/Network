@@ -34,17 +34,12 @@ export class GlobalPulldown extends WebComponent {
 		globalPulldown: './global-pulldown.css',
 	};
 	static state = {
-		trigger: 'main',
-		threshold: 0.3,
-		velocity: 0.5,
+		pulldown: {
+			trigger: 'main',
+			threshold: 0.3,
+			velocity: 0.5,
+		},
 	};
-	pulldownState() {
-		return {
-			trigger: this.state.trigger,
-			threshold: this.state.threshold,
-			velocity: this.state.velocity,
-		};
-	}
 	open() {
 		this.emit('pulldown:state', {
 			open: true,
@@ -61,6 +56,31 @@ export class GlobalPulldown extends WebComponent {
 	handleClose() {
 		this.emit('pulldown:close', {});
 	}
+	onConnect() {
+		// Mirror the viewport bucket onto our own host so CSS can use the
+		// portable `:host(.vw-xs)` form. `:host-context()` is unreliable on
+		// older mobile Safari (pre-16.4) which still ships on plenty of
+		// iPhones — using a self-applied class makes the mobile hide rules
+		// fire on every browser we support.
+		this.syncViewportClass();
+		this.delegate('viewport:change', this.handleViewportChange);
+	}
+	syncViewportClass() {
+		const w = this.globalState?.environment?.viewport?.w ?? 'lg';
+		const next = [];
+		const current = (this.classList.value || '').split(/\s+/);
+		for (let i = 0; i < current.length; i += 1) {
+			const token = current[i];
+			if (token && !token.startsWith('vw-')) {
+				next.push(token);
+			}
+		}
+		next.push(`vw-${w}`);
+		this.classList.value = next.join(' ');
+	}
+	handleViewportChange = () => {
+		this.syncViewportClass();
+	};
 	handleBackdropClick(domEvent) {
 		if (domEvent.target !== domEvent.currentTarget) {
 			return;
@@ -73,10 +93,14 @@ export class GlobalPulldown extends WebComponent {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<ui-pulldown #pulldown
-				.state=${this.pulldownState}
+				.state=${this.state.pulldown}
 				@pulldown:open=${this.handleOpen}
 				@pulldown:close=${this.handleClose}>
 				<div class="gpd-content" @click=${this.handleBackdropClick}>
+					<div class="gpd-mobile-notice" role="status">
+						<span class="gpd-mobile-notice-id">⩝ LOCAL AGENT</span>
+						<p class="gpd-mobile-notice-body">The Local AI chat is desktop-only for now — it streams from a local LLM endpoint that needs a keyboard-friendly workflow. The help and info panels below stay available on every screen size.</p>
+					</div>
 					<div class="gpd-columns">
 						<aside class="gpd-col gpd-col-help">
 							<info-panel></info-panel>

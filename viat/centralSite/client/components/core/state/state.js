@@ -207,10 +207,27 @@ export function replaceState(state = {}) {
 		...state,
 	} : {};
 	this.proxyCache = new WeakMap();
-	this.stateBus = null;
 	this.stateProxy = StateProxyHandler.create(this.STATE, this);
-	this.templateBuilt = false;
-	notifyStateChange(this, '');
+	// The bus is intentionally preserved across a state replacement. Its
+	// `getValue(path)` closure resolves against `component.STATE` by
+	// reference, so every existing subscription automatically reads the new
+	// STATE on the next flush — including the computed-spot subscriptions
+	// behind function-expression bindings (e.g. `.state=${this.indicatorState}`)
+	// and the renderDep watches behind raw `${this.state.foo}` reads.
+	// Tearing the bus down — or wiping `tplState` to force a full template
+	// rebuild — orphans every one of those subscriptions and silently
+	// recreates every child custom element on each parent update (badge
+	// constructors fire over and over) and yanks focus out of any focused
+	// input. Re-firing each currently-subscribed path is enough: the bus
+	// coalesces them into a single microtask flush and each spot patches
+	// its DOM in place against the fresh STATE. There is no native
+	// "notify-all" path (`pathsOverlap('', x)` matches only the literal
+	// empty string), hence the explicit walk over `subs`.
+	if (this.stateBus) {
+		this.stateBus.subs.forEach((_handlers, subscribedPath) => {
+			this.stateBus.notify(subscribedPath);
+		});
+	}
 	return this.updateView();
 }
 // Shallow-merge a partial patch into top-level state. Bypasses the per-key

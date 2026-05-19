@@ -67,7 +67,9 @@
 .anim-wallet,
 .anim-settings,
 .anim-sidebar,
-.anim-swap {
+.anim-swap,
+.anim-explorer,
+.anim-accounts {
 	transition:
 		transform 0.3s ease,
 		color 0.3s ease,
@@ -119,13 +121,57 @@
 	50%  { transform: rotateY(180deg); }
 	100% { transform: rotateY(360deg); }
 }
+/* Compass / Explorer — a needle hunt: sweep left/right with eased
+   reversal so it reads like a real compass settling on a bearing, plus a
+   subtle cyan glow pulse to sell the "scanning" vibe. */
+.anim-explorer {
+	transform-origin: center;
+	animation:
+		var(--ui-icon-anim-state) ui-icon-explorer-sweep 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite,
+		var(--ui-icon-anim-state) ui-icon-explorer-glow 2s ease-in-out infinite;
+}
+@keyframes ui-icon-explorer-sweep {
+	0%   { transform: rotate(0deg); }
+	20%  { transform: rotate(-32deg); }
+	35%  { transform: rotate(-18deg); }
+	55%  { transform: rotate(38deg); }
+	70%  { transform: rotate(24deg); }
+	85%  { transform: rotate(-6deg); }
+	100% { transform: rotate(0deg); }
+}
+@keyframes ui-icon-explorer-glow {
+	0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+	50%      { filter: drop-shadow(0 0 6px var(--cyan, #a78bfa)); }
+}
+/* Accounts / Users — a friendly "hello" bounce: scale + drop with a
+   gentle head-tilt and a teal glow pulse so the group of people feels
+   alive without descending into chaos. */
+.anim-accounts {
+	transform-origin: 50% 80%;
+	animation:
+		var(--ui-icon-anim-state) ui-icon-accounts-bounce 1.3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite,
+		var(--ui-icon-anim-state) ui-icon-accounts-glow 1.3s ease-in-out infinite;
+}
+@keyframes ui-icon-accounts-bounce {
+	0%   { transform: translateY(0) scale(1) rotate(0deg); }
+	25%  { transform: translateY(-2.5px) scale(1.08) rotate(-5deg); }
+	50%  { transform: translateY(0) scale(1) rotate(0deg); }
+	75%  { transform: translateY(-1.5px) scale(1.06) rotate(5deg); }
+	100% { transform: translateY(0) scale(1) rotate(0deg); }
+}
+@keyframes ui-icon-accounts-glow {
+	0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+	50%      { filter: drop-shadow(0 0 5px var(--teal, #5eead4)); }
+}
 @media (prefers-reduced-motion: reduce) {
 	.is-spinning { animation-duration: 2.5s; }
 	.anim-rainbow,
 	.anim-wallet,
 	.anim-settings,
 	.anim-sidebar,
-	.anim-swap {
+	.anim-swap,
+	.anim-explorer,
+	.anim-accounts {
 		animation: none;
 	}
 }

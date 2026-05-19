@@ -39,6 +39,32 @@
   gap: 10px;
 }
 
+/* Home link wrapping the ⩝ mark + VIAT wordmark. Anchor — so the router
+   intercepts clicks via composedPath and routes to / (wallet view)
+   without a full reload. Inherits color/font from .tb-logo. */
+.tb-logo-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+  border-radius: 6px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.tb-logo-home:hover {
+  color: var(--topbar-accent);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tb-logo-home:focus-visible {
+  outline: 1px solid var(--focus-ring-color, var(--topbar-accent));
+  outline-offset: 2px;
+}
+
 .tb-logo-mark {
   display: inline-flex;
   align-items: self-end;
@@ -105,17 +131,25 @@
   outline-offset: 2px;
 }
 
-/* On mobile, the theme dropdown is offered from inside the settings
-   modal instead — keeps the top bar uncluttered when horizontal real
-   estate is scarce. `:host-context()` reaches up through shadow roots
-   to match the app-view's viewport class. The chevron separator and
-   the COMMAND TERMINAL subtitle drop out too, but the VIAT wordmark
-   stays alongside the ⩝ glyph since there's room for both. */
-:host-context(.vw-xs) ui-theme-select,
-:host-context(.vw-sm) ui-theme-select,
-:host-context(.vw-xs) .tb-logo-sep,
-:host-context(.vw-sm) .tb-logo-sep,
-:host-context(.vw-xs) .tb-subtitle,
-:host-context(.vw-sm) .tb-subtitle {
+/* Mobile + small-tablet (xs/sm/md): the theme dropdown is offered from
+   inside the settings modal instead, keeping the top bar uncluttered
+   when horizontal real estate is scarce. The chevron separator and the
+   COMMAND TERMINAL subtitle drop out at the same breakpoints — the VIAT
+   wordmark stays alongside the ⩝ glyph since there's room for both.
+   Desktop (lg / xl / xxl) keeps the full theme dropdown + subtitle row.
+   The viewport class is mirrored onto our own host by `syncViewportClass`
+   in the JS — we use plain `:host(.vw-xs)` here instead of the older
+   `:host-context()` form because Safari < 16.4 (still common on iPhones
+   on iOS 16.3 and below, and various in-app browser WebViews) doesn't
+   honour `:host-context()`, which silently broke the mobile hide. */
+:host(.vw-xs) ui-theme-select,
+:host(.vw-sm) ui-theme-select,
+:host(.vw-md) ui-theme-select,
+:host(.vw-xs) .tb-logo-sep,
+:host(.vw-sm) .tb-logo-sep,
+:host(.vw-md) .tb-logo-sep,
+:host(.vw-xs) .tb-subtitle,
+:host(.vw-sm) .tb-subtitle,
+:host(.vw-md) .tb-subtitle {
   display: none;
 }

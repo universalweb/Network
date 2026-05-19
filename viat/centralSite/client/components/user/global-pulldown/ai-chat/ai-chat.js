@@ -6,8 +6,30 @@ const DEFAULT_MODEL = 'local-model';
 const SSE_DELIMITER = '\n\n';
 const SSE_DATA_PREFIX = 'data:';
 const SSE_DONE = '[DONE]';
-const PRIMING_USER_MESSAGE = 'Acknowledge that you have received the page map and the tool list above. Reply in ONE short sentence (under 20 words) inviting me to give a command. Do not enumerate the page or the tools.';
-const VIAT_CMD_REGEX = /\$VIAT\.CMD\[\s*([A-Za-z_][\w-]*)\s*,\s*([^\],]+?)\s*\]/g;
+const HEALTH_TIMEOUT_MS = 2500;
+const PRIMING_USER_MESSAGE = 'Reply in ONE short sentence (under 20 words) inviting me to give a command. If you need page context, call getPageMap. If you need a tool\'s input schema, call getToolSchema.';
+// LM Studio mirrors the OpenAI spec, so `GET /v1/models` is a cheap
+// liveness probe that returns the list of loaded models on a 200. The
+// chat-completions endpoint we use for actual messages lives at the same
+// base; deriving the probe URL from the chat URL keeps a single user-
+// configurable endpoint.
+function deriveHealthURL(chatEndpoint) {
+	const trimmed = String(chatEndpoint ?? '').trim();
+	if (!trimmed) {
+		return '';
+	}
+	const idx = trimmed.indexOf('/v1/');
+	if (idx < 0) {
+		return '';
+	}
+	return `${trimmed.slice(0, idx + 4)}models`;
+}
+// Two flavours:
+//   $VIAT.CMD[name, id]                      → call with empty args
+//   $VIAT.CMD[name, id, {"k":"v", …}]        → call with JSON args
+// The third group is greedy on `{…}` so a JSON object with commas inside
+// doesn't trip the outer split. Whitespace between groups is tolerated.
+const VIAT_CMD_REGEX = /\$VIAT\.CMD\[\s*([A-Za-z_][\w-]*)\s*,\s*([^,\]]+?)\s*(?:,\s*(\{[\s\S]*?\}))?\s*\]/g;
 const MAX_TOOL_ROUND_TRIPS = 5;
 function parseViatCommands(text) {
 	if (!text) {
@@ -20,12 +42,29 @@ function parseViatCommands(text) {
 	while (match !== null) {
 		const name = match[1];
 		const callId = match[2].trim();
+		const argsRaw = match[3];
+		// Parse defensively — a malformed args payload should not nuke the
+		// whole command stream. We surface the parse failure as the args
+		// payload `{ _parseError: '…' }` so the tool handler can decide
+		// whether to bail or proceed with defaults.
+		let args = {};
+		if (argsRaw) {
+			try {
+				args = JSON.parse(argsRaw);
+			} catch (parseError) {
+				args = {
+					_parseError: parseError?.message ?? 'invalid JSON args',
+					_raw: argsRaw,
+				};
+			}
+		}
 		const key = `${name}|${callId}`;
 		if (!seen.has(key)) {
 			seen.add(key);
 			out.push({
 				name,
 				callId,
+				args,
 			});
 		}
 		match = VIAT_CMD_REGEX.exec(text);
@@ -36,54 +75,55 @@ function formatAiResponse(name, callId, value) {
 	const payload = value === undefined ? 'null' : JSON.stringify(value);
 	return `$AI.CMD[${name}, ${callId}, ${payload}]`;
 }
-function formatToolList(tools) {
+// Short tool digest — name + description + mutating flag. NO inputSchema
+// here. Callers fetch the full schema on demand via the `getToolSchema`
+// tool so the system prompt stays tight and we don't bloat every chat
+// turn with unused JSON shapes.
+function formatToolDigest(tools) {
 	if (!tools.length) {
 		return '(no tools registered)';
 	}
 	const lines = [];
 	for (let i = 0; i < tools.length; i++) {
 		const tool = tools[i];
-		const mutTag = tool.mutating ? ' (mutating)' : '';
+		const mutTag = tool.mutating ? ' [MUT]' : '';
 		lines.push(`- ${tool.name}${mutTag}: ${tool.description || '(no description)'}`);
-		lines.push(`  input: ${JSON.stringify(tool.inputSchema)}`);
 	}
 	return lines.join('\n');
 }
-function buildSystemPrompt(pageMapText, toolsText) {
+// Minimal system prompt. Page map + per-tool input schemas are NO LONGER
+// embedded here — every byte that ships every turn is a tax on first-
+// response latency for local models. The AI fetches them on demand:
+//   - `getPageMap`      → returns the live component tree
+//   - `getToolSchema`   → returns one tool's full input schema by name
+// That cuts the system prompt from ~10KB to ~1.5KB on a typical session.
+function buildSystemPrompt(toolsDigest) {
 	return [
-		'You are the LOCAL AGENT for Viat — a post-quantum cryptocurrency on the Universal Web. You are embedded in the Viat Wallet client and run on the user\'s own machine. Be concise, direct, and helpful.',
+		'You are the LOCAL AGENT for Viat — a post-quantum cryptocurrency. You run inside the user\'s Viat Wallet client. Be concise and direct.',
 		'',
-		'COMMAND PROTOCOL',
-		'To activate a command or call a tool in the browser, emit a token of the form:',
-		'  $VIAT.CMD[<COMMAND_NAME>, <COMMAND_UNIQUE_ID>]',
+		'PROTOCOL',
+		'Call a tool by emitting EXACTLY one of these tokens on its own line:',
+		'  $VIAT.CMD[<NAME>, <CALL_ID>]',
+		'  $VIAT.CMD[<NAME>, <CALL_ID>, <ARGS_JSON>]',
+		'CALL_ID is a short unique id you mint (e.g. a1, a2). ARGS_JSON is a single-line JSON object — include it whenever the tool needs arguments (see getToolSchema). The browser replies on a later turn with:',
+		'  $AI.CMD[<NAME>, <CALL_ID>, <ANSWER>]',
+		'Wait for the matching reply before claiming the action succeeded. Plain prose around command tokens is fine.',
 		'',
-		'COMMAND_NAME is the action or tool to invoke (see the AVAILABLE TOOLS list below, or use page-aware verbs like highlight, focus, click, inspect, navigate).',
-		'COMMAND_UNIQUE_ID is a short, unique identifier you generate so you can match the response to your request.',
+		'WHAT YOU CAN DO',
+		'You have a digest of available tools below. To learn a tool\'s arguments call:',
+		'  $VIAT.CMD[getToolSchema, s1, {"name":"<toolName>"}]',
+		'To see the current page tree (every component is agent-addressable) call:',
+		'  $VIAT.CMD[getPageMap, p1]',
+		'Only fetch the map / schemas when you actually need them — they\'re large.',
 		'',
-		'The browser will execute the command and reply with a message in the form:',
-		'  $AI.CMD[<COMMAND_NAME>, <COMMAND_UNIQUE_ID>, <ANSWER>]',
+		'TOOLS',
+		toolsDigest,
 		'',
-		'<ANSWER> is the JSON-encoded result of the command (or {"error":"…"} on failure). Match the COMMAND_UNIQUE_ID exactly between request and response. You may have multiple in-flight commands; each is tracked by its ID. Emit one command per line. Plain prose around the command tokens is fine.',
-		'',
-		'PAGE OVERVIEW',
-		'The Viat Wallet client is composed of Universal Web Components. Every component is agent-addressable. The live tree below is your map of the page. Refer to components by their path (e.g. `view.dashboard.panel`).',
-		'',
-		pageMapText,
-		'',
-		'AVAILABLE TOOLS',
-		'These tools are registered in the page right now. Invoke any of them via $VIAT.CMD[<tool name>, <id>].',
-		'',
-		toolsText,
-		'',
-		'WORKED EXAMPLE — getting the wallet amount',
-		'User: "What is my wallet amount?"',
-		'You emit (exactly this token, on its own line):',
-		'  $VIAT.CMD[getWalletAmount, w1]',
-		'The browser will reply with:',
-		'  $AI.CMD[getWalletAmount, w1, {"amount":"250,000","amountFull":"250,000.000000000.000000000"}]',
-		'You then read the JSON ANSWER and reply to the user in plain language, e.g. "Your wallet holds 250,000 VIAT." Generate a fresh unique id (e.g. w1, w2, …) for every call so concurrent responses can be matched.',
-		'',
-		'When the user asks you to do something else, locate the target in the map above, pick the right tool or command, then emit the $VIAT.CMD[…] token. Wait for the matching $AI.CMD[…] reply before claiming the action succeeded.',
+		'EXAMPLE',
+		'User: "What\'s my balance?"',
+		'You emit: $VIAT.CMD[getWalletAmount, w1]',
+		'Browser replies: $AI.CMD[getWalletAmount, w1, {"amount":"250,000"}]',
+		'You then say: "Your wallet holds 250,000 VIAT."',
 	].join('\n');
 }
 class AIChatMessage extends WebComponent {
@@ -124,32 +164,80 @@ export class AIChat extends WebComponent {
 		streaming: false,
 		errorText: '',
 		systemPrompt: '',
-		connectionStatus: 'unknown',
+		connectionState: 'offline',
 	};
 	controller = null;
+	healthController = null;
 	messageSeq = 0;
 	onMount() {
 		this.delegate('pulldown:open', this.handlePulldownOpen);
 		this.refreshSystemPrompt();
+		// Probe up-front so the indicator badge is accurate before the
+		// user opens the pulldown. Cheap — single GET with a short
+		// timeout and the response is small (just a model list).
+		this.checkConnection();
 	}
 	onDisconnect() {
 		this.controller?.abort();
 		this.controller = null;
+		this.healthController?.abort();
+		this.healthController = null;
 		this.state.streaming = false;
 	}
 	handlePulldownOpen() {
 		this.refreshSystemPrompt();
-		this.maybePrime();
+		// Re-check on every open so the badge reflects the current state
+		// (the LM Studio server might have started/stopped while the
+		// pulldown was closed). The priming message only fires once the
+		// probe resolves online — keeps the user from staring at the
+		// "DISCONNECTED" badge while a doomed POST hangs.
+		this.checkConnection().then((isOnline) => {
+			if (isOnline) {
+				this.maybePrime();
+			}
+		});
+	}
+	async checkConnection() {
+		// Single in-flight probe — abort any prior one so a slow probe
+		// can't overwrite a fresher result.
+		this.healthController?.abort();
+		const controller = new AbortController();
+		this.healthController = controller;
+		const url = deriveHealthURL(this.state.endpoint);
+		if (!url) {
+			this.state.connectionState = 'offline';
+			return false;
+		}
+		this.state.connectionState = 'checking';
+		const timeoutId = this.setTimeout(() => {
+			controller.abort();
+		}, HEALTH_TIMEOUT_MS);
+		try {
+			const response = await fetch(url, {
+				method: 'GET',
+				signal: controller.signal,
+			});
+			clearTimeout(timeoutId);
+			if (this.healthController !== controller) {
+				return this.state.connectionState === 'online';
+			}
+			const ok = response.ok;
+			this.state.connectionState = ok ? 'online' : 'offline';
+			this.healthController = null;
+			return ok;
+		} catch (probeError) {
+			clearTimeout(timeoutId);
+			if (this.healthController !== controller) {
+				return this.state.connectionState === 'online';
+			}
+			this.state.connectionState = 'offline';
+			this.healthController = null;
+			return false;
+		}
 	}
 	refreshSystemPrompt() {
-		const map = this.findPageRoot().aiMap();
-		const tools = formatToolList(listAllTools());
-		this.state.systemPrompt = buildSystemPrompt(map, tools);
-	}
-	indicatorState() {
-		return {
-			status: this.state.connectionStatus,
-		};
+		const tools = formatToolDigest(listAllTools());
+		this.state.systemPrompt = buildSystemPrompt(tools);
 	}
 	hasAssistantReply() {
 		const list = this.state.messages;
@@ -187,7 +275,7 @@ export class AIChat extends WebComponent {
 		}
 		const invocation = Promise.resolve(def.handler({
 			component: root,
-			args: {},
+			args: cmd.args ?? {},
 			ctx: {
 				source: 'ai-chat',
 			},
@@ -346,7 +434,7 @@ export class AIChat extends WebComponent {
 		if (streamErr?.name === 'AbortError') {
 			return;
 		}
-		this.state.connectionStatus = 'offline';
+		this.state.connectionState = 'offline';
 		this.state.streaming = false;
 		this.controller = null;
 	}
@@ -363,7 +451,7 @@ export class AIChat extends WebComponent {
 	}
 	async streamReply(depth = 0) {
 		this.state.streaming = true;
-		this.state.connectionStatus = 'connecting';
+		this.state.connectionState = 'connecting';
 		const controller = new AbortController();
 		this.controller = controller;
 		const payload = this.buildPayload(null);
@@ -379,25 +467,25 @@ export class AIChat extends WebComponent {
 			});
 		} catch (fetchErr) {
 			if (fetchErr?.name !== 'AbortError') {
-				this.state.connectionStatus = 'offline';
+				this.state.connectionState = 'offline';
 			}
 			this.state.streaming = false;
 			this.controller = null;
 			return;
 		}
 		if (!response.ok) {
-			this.state.connectionStatus = 'offline';
+			this.state.connectionState = 'offline';
 			this.state.streaming = false;
 			this.controller = null;
 			return;
 		}
 		if (!response.body) {
-			this.state.connectionStatus = 'offline';
+			this.state.connectionState = 'offline';
 			this.state.streaming = false;
 			this.controller = null;
 			return;
 		}
-		this.state.connectionStatus = 'online';
+		this.state.connectionState = 'online';
 		const assistantId = this.pushMessage('assistant', '');
 		const reader = response.body.getReader();
 		const decoder = new TextDecoder('utf-8');
@@ -464,7 +552,7 @@ export class AIChat extends WebComponent {
 					<div class="aic-titlebar">
 						<div class="aic-title-group">
 							<span class="aic-title">LOCAL AI</span>
-							<ai-status-indicator .state=${this.indicatorState}></ai-status-indicator>
+							<ai-status-indicator .status=${this.state.connectionState}></ai-status-indicator>
 						</div>
 						<button class="aic-clear" @click=${this.handleClear} ?disabled=${this.state.messages.length === 0 && !this.state.streaming}>CLEAR</button>
 					</div>
@@ -486,7 +574,7 @@ export class AIChat extends WebComponent {
 						class="aic-input"
 						placeholder="Message local AI…"
 						rows="2"
-						$value=${this.state.inputValue}
+						$value="inputValue"
 						?disabled=${this.state.streaming}
 						@keydown=${this.handleKeyDown}></textarea>
 					<button class="${() => {

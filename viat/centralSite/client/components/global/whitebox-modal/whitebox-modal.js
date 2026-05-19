@@ -1,11 +1,12 @@
 import '../modal/modal.js';
-import '../icon/icon.js';
 import { WebComponent } from '../../core/index.js';
 // `<ui-whitebox-modal>` — bright-background modal sized around its media
 // payload. Drop in an image or video URL via state, call `.open()`, and the
 // modal centers the content on white with a large, obvious close icon at
 // the top-right so it's hard to miss. Uses the shared <ui-modal> internals
-// so it participates in modal stacking, focus management, and Esc routing.
+// so it participates in modal stacking, focus management, and Esc routing
+// — including the built-in close / maximize control strip (no bespoke
+// close button to duplicate).
 const VIDEO_EXTENSIONS = new Set(['mp4', 'webm', 'mov', 'm4v', 'ogv']);
 function isVideoSrc(src) {
 	const cleaned = String(src ?? '').split('?')[0].split('#')[0];
@@ -31,9 +32,6 @@ export class UIWhiteboxModal extends WebComponent {
 	close() {
 		this.refs.modal?.close();
 	}
-	handleClose = () => {
-		this.refs.modal?.close();
-	};
 	render() {
 		const src = this.state.src;
 		const video = isVideoSrc(src);
@@ -45,14 +43,8 @@ export class UIWhiteboxModal extends WebComponent {
 				open: false,
 				showClose: true,
 				showMaximize: true,
-			}} style="--ui-modal-max-width: min(96vw, 1280px); --ui-modal-max-height: 96dvh; --popup-bg: #ffffff; --popup-border: rgba(0, 0, 0, 0.08); --popup-text: #111">
+			}} style="--ui-modal-max-width: min(96vw, 1280px); --ui-modal-max-height: 96dvh">
 				<div class="wb-shell">
-					<button type="button" class="wb-close" aria-label="Close" @click=${this.handleClose}>
-						<ui-icon class="wb-close-icon" .state=${{
-							name: 'x',
-							size: 'lg',
-						}}></ui-icon>
-					</button>
 					<div class="wb-stage">
 						${video
 							? `<video class="wb-media" src="${src}" controls playsinline preload="metadata"></video>`
