@@ -96,7 +96,6 @@ agent/types/*
 .claude/*
 .playwright/*
 .playwright-mcp/*
-agent/docs/classes/*
 *.png
 *.private.md
 .CLAUDE.MD.swp

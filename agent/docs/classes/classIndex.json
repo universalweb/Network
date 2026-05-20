@@ -1,0 +1,28 @@
+{
+  "generatedAt": "2026-05-15T13:57:35.995Z",
+  "sourcePath": ".",
+  "outputPath": "agent/docs/classes",
+  "totals": {
+    "scannedFileCount": 559,
+    "discoveredClassCount": 201,
+    "importantClassCount": 1,
+    "complexClassCount": 0,
+    "groupCount": 1
+  },
+  "groups": [
+    {
+      "purpose": "core",
+      "count": 1,
+      "classes": [
+        {
+          "className": "WebComponent",
+          "purpose": "core",
+          "sourcePath": "viat/centralSite/client/new/components/core/base.js",
+          "docPath": "agent/docs/classes/WebComponent/WebComponent.json",
+          "isComplex": false,
+          "importanceScore": 10
+        }
+      ]
+    }
+  ]
+}
