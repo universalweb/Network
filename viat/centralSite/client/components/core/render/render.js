@@ -31,12 +31,19 @@ export function finishRender(resolver) {
 }
 export function invalidateRender() {
 	this.templateBuilt = false;
+	// Explicit force-render — clear the patch flag so the render runs the
+	// full structural lifecycle (onRender / onRendered / awaitChildren).
+	this.renderDepDirty = false;
 	if (this.isConnected) {
 		this.updateView();
 	}
 }
 function markRenderDirty() {
 	this.templateBuilt = false;
+	// A tracked renderDep changed — the next renderView is a PATCH PASS:
+	// render() re-runs and updateTemplateSpots patches the spots in place,
+	// but the structural lifecycle is skipped. See renderView's isPatchPass.
+	this.renderDepDirty = true;
 }
 export function subscribeRenderDeps(deps) {
 	if (!deps || deps.size === 0) {
@@ -76,6 +83,13 @@ export async function renderView() {
 	const renderedResolver = this.lifecycle.whenRenderedResolver;
 	const renderDeps = new Set();
 	const wasFirstRender = !this.firstRenderDone;
+	// A patch pass is a re-render triggered purely by a tracked renderDep
+	// (a bare `${this.state.x}` read). render() still re-runs so
+	// updateTemplateSpots can patch the changed spots in place — but the
+	// structural lifecycle (onRender, onRendered, awaitChildren) is skipped:
+	// those exist for first render and explicit invalidateRender only.
+	const isPatchPass = !wasFirstRender && this.renderDepDirty === true;
+	this.renderDepDirty = false;
 	this.isRendering = true;
 	let renderSkipped = false;
 	try {
@@ -150,6 +164,16 @@ export async function renderView() {
 		return;
 	}
 	this.templateBuilt = true;
+	if (isPatchPass) {
+		// Spots already patched in place by updateTemplateSpots; renderDeps
+		// re-subscribed in the finally above. No structural lifecycle.
+		this.isRendering = false;
+		this.finishRender(renderedResolver);
+		Logger.debug(this.constructor.name, () => {
+			return `[${this.tagName}] patch pass (no re-render)`;
+		});
+		return;
+	}
 	await this.onRender?.();
 	Logger.debug(this.constructor.name, () => {
 		return `[${this.tagName}] onRender called`;

@@ -50,12 +50,14 @@ export class ActivityLog extends Panel {
 		log: './activity-log.css',
 	};
 	static state = {
-		activeTab: '',
+		activeTab: 'All',
 		classes: new Set(['output-panel']),
 		entries: [],
 		id: 'ACTIVITY',
 		showDot: true,
-		tabs: [],
+		tabs: [
+			'All', 'Inbound', 'Outbound',
+		],
 		title: 'LOG',
 	};
 	entryMatchesActiveTab(entry, activeTab) {

@@ -1,0 +1,135 @@
+%% WebComponent — method map grouped by purpose, with the connect/render flow.
+%% Source: viat/centralSite/client/components/core/base.js
+flowchart TD
+
+    subgraph CONNECT[Connect cycle]
+        direction TB
+        cc[connectedCallback]
+        hc[handleConnect]
+        oc[onConnect hook]
+        cc --> hc --> oc
+    end
+
+    subgraph RENDER[Render]
+        direction TB
+        br[beforeRender hook]
+        rn[render hook]
+        rv[renderView]
+        fr[finishRender]
+        ir[invalidateRender]
+        srd[subscribeRenderDeps]
+        br --> rn --> rv
+        rv --> srd
+        rv --> fr
+        ir --> rv
+    end
+
+    subgraph STRUCT[Structural lifecycle - first render only]
+        direction TB
+        orn[onRender hook]
+        hrd[handleRendered]
+        ordn[onRendered hook]
+        hm[handleMount]
+        omn[onMount hook]
+        hl[handleLive]
+        oln[onLive hook]
+        orn --> hrd --> ordn --> hm --> omn --> hl --> oln
+    end
+
+    subgraph STATE[State]
+        direction TB
+        sset[state.x equals y]
+        as[assignState]
+        rs[replaceState]
+        ws[watchState]
+        is[initState]
+        usp[upgradeShadowedProperties]
+        uv[updateView]
+    end
+
+    subgraph PATCH[Patch pass - subsequent changes]
+        direction TB
+        pp[re-run render, diff spots, skip structural lifecycle]
+    end
+
+    subgraph EVENTS[Events]
+        direction TB
+        em[emit]
+        on[on]
+        once[once]
+        off[off]
+        dg[delegate]
+        rdg[removeDelegate]
+        reh[runEventHandler]
+    end
+
+    subgraph SUBS[Observers]
+        direction TB
+        obs[observe]
+        oba[observeAttr]
+        obg[observeGlobal]
+        gg[getGlobal]
+        sg[setGlobal]
+        wg[watchGlobal]
+    end
+
+    subgraph DOM[DOM and refs]
+        direction TB
+        refs[refs getter]
+        gref[getRef]
+        gc[getComponent]
+        gcs[getComponents]
+        fc[findComponent]
+        apt[appendTo]
+        prt[prependTo]
+    end
+
+    subgraph STYLE[Styles]
+        direction TB
+        ash[addStyle]
+        rsh[removeStyle]
+        hsh[hasStyle]
+        rst[resolveStyle]
+        aps[applyStyles]
+    end
+
+    subgraph TIME[Timers]
+        direction TB
+        sto[setTimeout]
+        rto[removeTimeout]
+        ain[addInterval]
+        sin[stopInterval]
+    end
+
+    subgraph TPL[Template]
+        direction TB
+        html[html tag]
+        htmlel[htmlElement tag]
+        bind[bind / bind.text / .html / .component / .list]
+        ct[cleanupTemplate]
+    end
+
+    subgraph DISCONNECT[Disconnect and destroy]
+        direction TB
+        dc[disconnectedCallback]
+        hd[handleDisconnect]
+        odn[onDisconnect hook]
+        dy[destroy]
+        hdy[handleDestroy]
+        ody[onDestroy hook]
+        dc --> hd --> odn
+        dy --> hdy --> ody
+    end
+
+    %% main flow
+    oc --> br
+    rn --> html
+    rv -->|first render| orn
+    rv -->|renderDep changed| pp
+    sset --> uv --> rv
+    as --> uv
+    oln -.installs.-> obsv[IntersectionObserver to onVisible]
+    hd -.auto-clean.-> EVENTS
+    hd -.auto-clean.-> SUBS
+    hd -.auto-clean.-> TIME
+    hd -.auto-clean.-> ct

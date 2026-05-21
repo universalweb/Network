@@ -1,4 +1,4 @@
-import { WebComponent } from '../../core/index.js';
+import { WebComponent, classList } from '../../core/index.js';
 export class UIBadge extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -10,9 +10,6 @@ export class UIBadge extends WebComponent {
 		size: 'md',
 		tone: 'neutral',
 	};
-	get hostClass() {
-		return `badge tone-${this.state.tone} size-${this.state.size}${this.state.dot ? ' has-dot' : ''}`;
-	}
 	onMount() {
 		this.observe('label', (newValue, oldValue) => {
 			if (oldValue !== undefined && oldValue !== '' && newValue !== oldValue) {
@@ -37,7 +34,13 @@ export class UIBadge extends WebComponent {
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
-			<span #badge class="${() => this.hostClass}" role="status" @animationend=${this.handleAnimationEnd}>
+			<span #badge class=${classList('badge', () => {
+				return `tone-${this.state.tone}`;
+			}, () => {
+				return `size-${this.state.size}`;
+			}, () => {
+				return this.state.dot && 'has-dot';
+			})} role="status" @animationend=${this.handleAnimationEnd}>
 				${this.state.dot ? '<span class="badge-dot" aria-hidden="true"></span>' : ''}
 				<span class="badge-label">${this.state.label}</span>
 			</span>

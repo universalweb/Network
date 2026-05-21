@@ -5,10 +5,42 @@ export class NetworkStats extends Panel {
 		networkStats: './network-stats.css',
 	};
 	static state = {
-		chainStatus: [],
+		chainStatus: [
+			{
+				key: 'Block',
+				value: '0',
+			},
+			{
+				className: 'good',
+				key: 'Status',
+				value: 'In Sync',
+			},
+		],
 		classes: new Set(['stats-panel']),
 		id: 'NET',
-		networkData: [],
+		networkData: [
+			{
+				className: 'good',
+				key: 'Peers',
+				value: '1 Active',
+			},
+			{
+				key: 'Network',
+				value: 'Viat Mainnet v1',
+			},
+			{
+				className: 'good',
+				key: 'Latency',
+				value: '—ms',
+			},
+			{
+				rowType: 'latency-bar',
+			},
+			{
+				key: 'Connection',
+				value: 'HTTPS',
+			},
+		],
 		title: 'NODE STATUS',
 	};
 	onConnect() {

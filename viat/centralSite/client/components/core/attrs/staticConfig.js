@@ -195,3 +195,49 @@ export function ensureMergedAttrs(ComponentClass) {
 export function ensureMergedConfig(ComponentClass) {
 	return ensureMerged(ComponentClass, 'config', 'mergedConfig');
 }
+// `static types` — the per-path state schema. Shallow chain-merge (it is a
+// flat, path-keyed object: `{ 'a.b.c': { kind, react } }`), exactly like
+// `static attrs`.
+export function ensureMergedTypes(ComponentClass) {
+	return ensureMerged(ComponentClass, 'types', 'mergedTypes');
+}
+// Derive the fast-lookup index from the merged `static types`, cached on the
+// class. `hasTypes` / `hasNonReactive` / `hasKinds` are coarse booleans so the
+// proxy hot paths short-circuit with a single check when a feature is unused.
+//   nonReactivePaths — paths declared `react: false` (skip notify + tracking)
+//   kinds            — path → CONTENT_KIND (skip content classification)
+export function ensureTypeIndex(ComponentClass) {
+	if (hasOwn(ComponentClass, 'mergedTypeIndex')) {
+		return ComponentClass.mergedTypeIndex;
+	}
+	const merged = ensureMergedTypes(ComponentClass);
+	const paths = Object.keys(merged);
+	const nonReactivePaths = new Set();
+	const kinds = new Map();
+	for (let index = 0; index < paths.length; index++) {
+		const path = paths[index];
+		const descriptor = merged[path];
+		if (!descriptor) {
+			continue;
+		}
+		if (descriptor.react === false) {
+			nonReactivePaths.add(path);
+		}
+		if (descriptor.kind) {
+			kinds.set(path, descriptor.kind);
+		}
+	}
+	const typeIndex = {
+		hasTypes: paths.length > 0,
+		hasNonReactive: nonReactivePaths.size > 0,
+		hasKinds: kinds.size > 0,
+		nonReactivePaths,
+		kinds,
+	};
+	Object.defineProperty(ComponentClass, 'mergedTypeIndex', {
+		value: typeIndex,
+		configurable: true,
+		writable: true,
+	});
+	return typeIndex;
+}

@@ -9,6 +9,7 @@ Use this with any class. Replace every `{{...}}` value before sending.
 - `{{targetDir}}`: output folder
 - `{{baselineTech}}`: baseline to compare against (example: native Web Components)
 - `{{skillFileName}}`: skill filename (example: `{{className}}-authoring.SKILL.md`)
+- `{{classMethods}}`: List of all class methods either directly on the class or assigned to the prototype
 
 ## Prompt to send an agent
 

@@ -43,6 +43,8 @@ import {
 	ensureMergedAttrs,
 	ensureMergedConfig,
 	ensureMergedState,
+	ensureMergedTypes,
+	ensureTypeIndex,
 } from './attrs/staticConfig.js';
 import { createBound, getById, preRender } from './render/factory.js';
 import { getRef, makeRefsProxy } from './dom/refs.js';
@@ -56,7 +58,7 @@ import {
 import { Logger } from './debug/logger.js';
 import { assertComponentConfig } from './debug/assertions.js';
 import { makeAttrsProxy } from './attrs/attrs.js';
-import { makeGlobalProxy } from './state/binding.js';
+import { bind, makeGlobalProxy } from './state/binding.js';
 import { nextFrame } from './lifecycle/scheduler.js';
 import { setInert } from './dom/inert.js';
 export { liveChildren, registerChild } from './dom/children.js';
@@ -76,6 +78,10 @@ export class WebComponent extends HTMLElement {
 	static state = {};
 	static attrs = {};
 	static config = {};
+	// `static types` — per-path state schema: `{ 'a.b': { kind, react } }`.
+	// `kind` declares the CONTENT_KIND (skips classification); `react: false`
+	// makes the path non-reactive (writes notify nothing). Chain-merged.
+	static types = {};
 	// Framework behavior knobs. Class-shape decisions, naturally inherited
 	// through the static prototype chain — a subclass declares the override.
 	// `mergeState` and `mergeObjects` govern how `ensureMergedState` folds
@@ -108,6 +114,12 @@ export class WebComponent extends HTMLElement {
 	static ensureMergedConfig(ComponentClass = this) {
 		return ensureMergedConfig(ComponentClass);
 	}
+	static ensureMergedTypes(ComponentClass = this) {
+		return ensureMergedTypes(ComponentClass);
+	}
+	static ensureTypeIndex(ComponentClass = this) {
+		return ensureTypeIndex(ComponentClass);
+	}
 	static get observedAttributes() {
 		return keysOf(ensureMergedAttrs(this));
 	}
@@ -138,6 +150,9 @@ export class WebComponent extends HTMLElement {
 		if (flags) {
 			assign(this.flags, flags);
 		}
+		// Resolve the `static types` schema index once (cached per class).
+		// The state proxies read it to honor `react: false` and declared kinds.
+		this.typeIndex = ensureTypeIndex(this.constructor);
 		assign(this.config, this.constructor.ensureMergedConfig());
 		if (config) {
 			this.constructor.assertConfig(config);
@@ -221,6 +236,7 @@ export class WebComponent extends HTMLElement {
 	flags = {};
 	lifecycle = {};
 	isWebComponent = true;
+	typeIndex = null;
 	STATE = {};
 	stateProxy = null;
 	stateBus = null;
@@ -230,6 +246,7 @@ export class WebComponent extends HTMLElement {
 	stateUnsubs = new Set();
 	delegateUnsubs = new Set();
 	templateBuilt = false;
+	renderDepDirty = false;
 	firstRenderDone = false;
 	renderTracking = false;
 	renderProxy = null;
@@ -297,6 +314,9 @@ const PROTO_METHODS = {
 	addInterval,
 	addStyle,
 	applyStyles,
+	// `this.bind` — the binding callable (bind / bind.text / .html /
+	// .component / .list). Shared, stateless, no import needed in templates.
+	bind,
 	clearIntervals,
 	clearTimeouts,
 	cleanupTemplate: templateCleanup,

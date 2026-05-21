@@ -8,7 +8,48 @@ export class GlobalDock extends WebComponent {
 		globalDock: './global-dock.css',
 	};
 	static state = {
-		items: [],
+		items: [
+			{
+				id: 'wallet',
+				active: false,
+				icon: 'wallet',
+				tooltip: 'Wallet',
+				animate: 'wallet',
+			},
+			{
+				id: 'explorer',
+				active: false,
+				icon: 'compass',
+				tooltip: 'Explorer',
+				animate: 'explorer',
+			},
+			{
+				id: 'accounts',
+				active: false,
+				icon: 'users',
+				tooltip: 'Accounts',
+				animate: 'accounts',
+			},
+			{
+				id: 'swap',
+				active: false,
+				icon: 'repeat-2',
+				tooltip: 'Swap',
+				animate: 'swap',
+			},
+			{
+				id: 'exchange',
+				active: false,
+				icon: 'arrow-right-left',
+				tooltip: 'Exchange (Coming Soon)',
+			},
+			{
+				id: 'analytics',
+				active: false,
+				icon: 'chart-line',
+				tooltip: 'Analytics (Coming Soon)',
+			},
+		],
 	};
 	barMoveToken = 0;
 	constructor(state = {}, config = {}) {
@@ -37,11 +78,10 @@ export class GlobalDock extends WebComponent {
 		this.observeGlobal('routeSection', (sectionId) => {
 			this.applyActiveSection(sectionId);
 		});
-		// `state.items` is supplied by the parent (app.js seeds from
-		// appDefaults.DOCK). We don't import that here — we just react when
-		// items first arrive and re-apply whatever section the router has
-		// already published. The rAF wait lets the list-rendered
-		// dock-icon-button children actually mount before we look for them.
+		// `state.items` is supplied by the parent. We just react when items
+		// first arrive and re-apply whatever section the router has already
+		// published. The rAF wait lets the list-rendered dock-icon-button
+		// children actually mount before we look for them.
 		this.observe('items', () => {
 			if (!this.state.items?.length) {
 				return;

@@ -1,6 +1,8 @@
 /* eslint-disable no-restricted-syntax */
 import {
 	Binding,
+	CONTENT_KIND,
+	bind,
 	makeGlobalProxy,
 	makeProxy,
 	track,
@@ -370,6 +372,9 @@ export function list(key, renderFn, keyFn = (item, index) => {
 }) {
 	return new ListBinding(key, renderFn, keyFn);
 }
+// `bind.list` — typed LIST variant of the bind family. Wired here, where the
+// list machinery lives, onto the shared `bind` callable (no import circular).
+bind.list = list;
 function patchList(spot, itemList) {
 	if (spot.liveList && spot.liveList !== itemList && spot.liveList.disconnectSpot) {
 		spot.liveList.disconnectSpot();
@@ -776,6 +781,18 @@ function patchComponentKind(spot, value) {
 function patchHtmlKind(spot, value) {
 	spot.el.innerHTML = String(value ?? '');
 }
+// Strict text patcher — straight textContent, no markup scan. Used when the
+// content kind is DECLARED (a typed bind or a `static types` entry): the dev
+// has promised plain text, so skip the per-patch `<` / `&` detection.
+function patchTextStrict(spot, value) {
+	const str = String(value ?? '');
+	if (spot.el.textContent !== str) {
+		spot.el.textContent = str;
+	}
+}
+// Auto text patcher — self-correcting. An auto-classified text spot may later
+// receive a value carrying markup; on the first such value it upgrades itself
+// to the HTML patcher and stays there.
 function patchTextKind(spot, value) {
 	const str = String(value ?? '');
 	if (str.includes('<')) {
@@ -793,25 +810,72 @@ function patchTextKind(spot, value) {
 		spot.el.textContent = str;
 	}
 }
-function bindSpotKind(spot, value) {
+// ── Content-kind classification ──────────────────────────────────────
+// classifyContentKind() is the SINGLE decision point that answers
+// "what kind of content is this ${…}?". Every text-position value
+// resolves to exactly one CONTENT_KIND (defined in binding.js);
+// CONTENT_PATCHERS maps each kind to its patch routine. To add a kind:
+// extend CONTENT_KIND, this function, and CONTENT_PATCHERS.
+//
+//   EMPTY      null | undefined | ''          → cleared via patchTextStrict
+//   LIST       a LiveList (each() / list())   → patchListKind     keyed diff
+//   COMPONENT  a comp() binding or a Node     → patchComponentKind  adopt node
+//   HTML       a string with markup (< or &) → patchHtmlKind     innerHTML
+//   TEXT       a plain string / number       → patchTextKind     textContent
+// ─────────────────────────────────────────────────────────────────────
+function classifyContentKind(value) {
+	if (value === null || value === undefined || value === '') {
+		return CONTENT_KIND.EMPTY;
+	}
 	if (LiveList.isLiveList(value)) {
-		spot.el.style.pointerEvents = '';
-		spot.patch = patchListKind;
-		return;
+		return CONTENT_KIND.LIST;
 	}
 	if (ComponentBinding.is(value) || value instanceof Node) {
-		spot.el.style.pointerEvents = '';
-		spot.patch = patchComponentKind;
-		return;
+		return CONTENT_KIND.COMPONENT;
 	}
-	const str = String(value ?? '');
-	if (str.includes('<')) {
-		spot.el.style.pointerEvents = '';
-		spot.patch = patchHtmlKind;
-		return;
+	const str = String(value);
+	if (str.includes('<') || str.includes('&')) {
+		return CONTENT_KIND.HTML;
 	}
-	spot.el.style.pointerEvents = 'none';
-	spot.patch = str.includes('&') ? patchHtmlKind : patchTextKind;
+	return CONTENT_KIND.TEXT;
+}
+// Kind → patcher for a DECLARED kind. EMPTY and declared TEXT both use the
+// strict patcher (the auto path below substitutes the self-correcting
+// patchTextKind for an UNdeclared text spot).
+const CONTENT_PATCHERS = {
+	[CONTENT_KIND.EMPTY]: patchTextStrict,
+	[CONTENT_KIND.TEXT]: patchTextStrict,
+	[CONTENT_KIND.HTML]: patchHtmlKind,
+	[CONTENT_KIND.COMPONENT]: patchComponentKind,
+	[CONTENT_KIND.LIST]: patchListKind,
+};
+// A spot's contents-wrapper stays hit-testable only when it holds real
+// elements (a list, a component, or markup with tags). Pure text and
+// entity-only HTML opt out so the wrapper never intercepts pointer events.
+function spotKeepsInteractive(kind, value) {
+	if (kind === CONTENT_KIND.LIST || kind === CONTENT_KIND.COMPONENT) {
+		return true;
+	}
+	if (kind === CONTENT_KIND.HTML) {
+		return String(value ?? '').includes('<');
+	}
+	return false;
+}
+// Resolve and cache the patcher for a text-position spot. `spot.declaredKind`
+// (set from a typed bind or `static types`) short-circuits classification.
+function bindSpotKind(spot, value) {
+	const declared = spot.declaredKind;
+	const kind = declared ?? classifyContentKind(value);
+	spot.contentKind = kind;
+	// Auto-classified text OR empty stays self-correcting: a spot that is
+	// empty (or plain text) now may later receive markup, and must be free to
+	// upgrade itself to the HTML patcher. Only a DECLARED kind trusts itself.
+	if ((kind === CONTENT_KIND.TEXT || kind === CONTENT_KIND.EMPTY) && !declared) {
+		spot.patch = patchTextKind;
+	} else {
+		spot.patch = CONTENT_PATCHERS[kind];
+	}
+	spot.el.style.pointerEvents = spotKeepsInteractive(kind, value) ? '' : 'none';
 }
 function patchSpot(spot, value) {
 	if (value instanceof Promise) {
@@ -1090,6 +1154,16 @@ function initializeBindingSpot(spot, component) {
 		syncSpotSubscriptions(spot, component, new Set([bindingKey]), spot.updateHandler);
 		return;
 	}
+	// Declared content kind: an explicit typed bind wins, else the component's
+	// `static types` schema, else null (auto-classified at patch time).
+	const typeIndex = component.typeIndex;
+	spot.declaredKind = spot.expr.kind ?? typeIndex?.kinds.get(bindingKey) ?? null;
+	// A path declared `react: false` in `static types` is a static one-shot —
+	// patch once now, never subscribe.
+	if (typeIndex?.hasNonReactive && typeIndex.nonReactivePaths.has(bindingKey)) {
+		refreshBindingSpot(spot);
+		return;
+	}
 	spot.kind = 'binding';
 	refreshBindingSpot(spot);
 	syncSpotSubscriptions(spot, component, new Set([bindingKey]), spot.updateHandler);
@@ -1109,6 +1183,10 @@ function initializeMultiAttrSpot(spot, component) {
 function initializeComputedSpot(spot, component) {
 	spot.kind = 'computed';
 	spot.component = component;
+	// A typed bind given a function (this.bind.text(() => …)) tags the
+	// function with its declared content kind; a plain ${() => …} leaves it
+	// undefined → auto-classified.
+	spot.declaredKind = spot.expr.contentKind ?? null;
 	attachSpotDispatch(spot);
 	refreshComputedSpot(spot);
 }

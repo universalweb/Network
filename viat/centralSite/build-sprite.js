@@ -1,10 +1,20 @@
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+// build-sprite.js — generate the SVG icon sprite for the centralSite client.
+//
+// Reads every Lucide SVG and bakes them into a single <symbol> sprite at
+//   client/components/global/icon/sprite.svg
+// which the <ui-icon> component consumes via <use href="sprite.svg#name">.
+//
+// This is a manual, dev-time build tool — NOT runtime or server code. Run it
+// after adding new icons or upgrading the `lucide-static` package:
+//   node viat/centralSite/build-sprite.js
+import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// This script lives at <repo>/viat/centralSite/ — two levels below the repo root.
 const here = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(here, '../../../../../../..');
+const repoRoot = resolve(here, '../..');
 const lucideIconsDir = join(repoRoot, 'node_modules/lucide-static/icons');
-const outputPath = join(here, 'sprite.svg');
+const outputPath = join(here, 'client/components/global/icon/sprite.svg');
 const innerRe = /<svg[^>]*>([\s\S]*?)<\/svg>/;
 function extractInner(svgText) {
 	const match = svgText.match(innerRe);

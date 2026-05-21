@@ -1,0 +1,31 @@
+:host {
+	display: flex;
+	height: 100%;
+	flex-shrink: 0;
+}
+.bb-item {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	padding: 0 12px;
+	height: 100%;
+	border-right: 1px solid var(--dark-divider);
+	white-space: nowrap;
+}
+.bb-key {
+	font-family: var(--font-display);
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: var(--dark-text-dim);
+}
+.bb-val {
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--dark-text-medium);
+}
+.bb-val.good {
+	color: var(--color-success-text);
+}

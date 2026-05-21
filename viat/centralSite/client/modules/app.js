@@ -19,16 +19,6 @@ import '../components/user/transaction-detail-page/transaction-detail-page.js';
 import '../components/user/wallet-onboarding/wallet-onboarding.js';
 import './tools.js';
 import '../components/core/tooltips/tooltip.js';
-import {
-	ACTIVITY_TABS,
-	BOTTOM_BAR_COLUMNS,
-	CENTER_BAR,
-	CHAIN_STATUS,
-	DOCK,
-	NETWORK_DATA,
-	TOP_BAR,
-	TRANSMIT,
-} from './appDefaults.js';
 import VIATClientSDK, * as viatSDK from 'viat';
 import { WebComponent, setGlobal } from 'webcomponent';
 import { getTheme, setTheme } from '../components/global/theme-select/theme-manager.js';
@@ -1904,45 +1894,17 @@ class AppView extends WebComponent {
 		};
 	}
 	async onRender() {
-		// Chrome-only bootstrap: top bar, dock, network stats, activity tabs.
-		// Wallet-shaped data (params, amount, address, stats, activity entries)
-		// is populated by `syncWalletPublics` after a wallet is created or
-		// loaded — components fall back to defaults when no wallet is present.
+		// Chrome-only bootstrap: wait for both dashboards to render, sync the
+		// network latency readout from the live API, then start the router.
 		// Both <app-dashboard> and <mobile-dashboard> mount in parallel; await
-		// each so their children exist before we seed per-instance state.
+		// each so their subtree exists before the router publishes the route.
 		const dashboard = this.getComponent('app-dashboard');
 		const mobileDashboard = this.getComponent('mobile-dashboard');
 		await dashboard.lifecycle.whenRendered;
 		if (mobileDashboard?.lifecycle?.whenRendered) {
 			await mobileDashboard.lifecycle.whenRendered;
 		}
-		const { refs } = this;
-		// Shared dashboard children — seed every instance so the hidden
-		// viewport's components are pre-configured if the user resizes.
-		this.applyToAll('center-bar', (cb) => {
-			Object.assign(cb.state, CENTER_BAR);
-		});
-		this.applyToAll('transmit-panel', (tp) => {
-			Object.assign(tp.state, TRANSMIT);
-		});
-		this.applyToAll('activity-log', (al) => {
-			al.state.activeTab = 'All';
-			al.state.tabs = ACTIVITY_TABS;
-		});
-		Object.assign(refs.globalTopBar.state, TOP_BAR);
-		refs.networkStats.state.chainStatus = CHAIN_STATUS;
-		refs.networkStats.state.networkData = NETWORK_DATA;
-		refs.networkStats.syncLatency?.(this.globalState.api);
-		refs.globalBottomBar.state.columns = BOTTOM_BAR_COLUMNS;
-		// AppView owns the dock's default config (modules don't import from
-		// appDefaults themselves). The dock auto-applies the published
-		// routeSection once items arrive.
-		refs.globalDock.state.items = DOCK.items.map((item) => {
-			return {
-				...item,
-				active: false,
-			};
-		});
+		this.refs.networkStats.syncLatency?.(this.globalState.api);
 		// Router writes to globalState; AppView's `onConnect` already
 		// subscribed to the keys it cares about. We just kick the router off
 		// — no callback wiring needed.

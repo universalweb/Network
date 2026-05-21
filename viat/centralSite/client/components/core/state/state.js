@@ -36,6 +36,16 @@ function ensureBus(component) {
 function notifyStateChange(component, changedPath) {
 	ensureBus(component).notify(changedPath);
 }
+// `static types` may declare a path `react: false` — a non-reactive path is
+// written straight through to STATE but fires no notification, so it never
+// schedules a render or a spot patch. Default (no entry) is reactive.
+function pathIsReactive(component, fullPath) {
+	const typeIndex = component.typeIndex;
+	if (!typeIndex || !typeIndex.hasNonReactive) {
+		return true;
+	}
+	return !typeIndex.nonReactivePaths.has(fullPath);
+}
 function buildCollectionMethods(target, component, path, asMap) {
 	function notify(key) {
 		notifyStateChange(component, joinPath(path, key));
@@ -182,7 +192,9 @@ class StateProxyHandler {
 		const fullPath = joinPath(this.path, key);
 		Logger.perf('state', reportWastedStateSet, target, key, value, fullPath, this.component);
 		Reflect.set(target, key, value);
-		notifyStateChange(this.component, fullPath);
+		if (pathIsReactive(this.component, fullPath)) {
+			notifyStateChange(this.component, fullPath);
+		}
 		return true;
 	}
 	deleteProperty(target, key) {
@@ -191,7 +203,9 @@ class StateProxyHandler {
 		}
 		const fullPath = joinPath(this.path, key);
 		Reflect.deleteProperty(target, key);
-		notifyStateChange(this.component, fullPath);
+		if (pathIsReactive(this.component, fullPath)) {
+			notifyStateChange(this.component, fullPath);
+		}
 		return true;
 	}
 }
@@ -253,7 +267,7 @@ export function assignState(partial, options) {
 		}
 		this.STATE[key] = next;
 		touched = true;
-		if (!silent) {
+		if (!silent && pathIsReactive(this, key)) {
 			notifyStateChange(this, key);
 		}
 	}

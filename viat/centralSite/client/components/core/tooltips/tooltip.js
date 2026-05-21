@@ -1,5 +1,6 @@
 import './tooltip-service.js';
 import { WebComponent } from '../base.js';
+import { classList } from '../template.js';
 const EDGE_MARGIN = 12;
 const GAP = 10;
 const SLIDE_MS = 240;
@@ -22,18 +23,12 @@ export class UITooltip extends WebComponent {
 	shellH = 0;
 	isOpen = false;
 	slideToken = 0;
-	onMount() {
-		const shell = this.refs.shell;
-		if (!shell) {
-			return;
-		}
-		shell.addEventListener('beforetoggle', (toggleEvent) => {
-			this.isOpen = toggleEvent.newState === 'open';
-		});
-		shell.addEventListener('toggle', (toggleEvent) => {
-			this.emit(toggleEvent.newState === 'open' ? 'tooltip:show' : 'tooltip:hide', {
-				text: this.state.text,
-			});
+	handleBeforeToggle(toggleEvent) {
+		this.isOpen = toggleEvent.newState === 'open';
+	}
+	handleToggle(toggleEvent) {
+		this.emit(toggleEvent.newState === 'open' ? 'tooltip:show' : 'tooltip:hide', {
+			text: this.state.text,
 		});
 	}
 	onDisconnect() {
@@ -144,16 +139,18 @@ export class UITooltip extends WebComponent {
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
-			<div #shell class="${() => {
-				return `tooltip-shell${this.state.sliding ? ' is-sliding' : ''}`;
-			}}" popover="manual" data-placement="${() => {
-				return this.state.placement;
-			}}" style="${() => {
-				return `left:${this.state.x}px;top:${this.state.y}px;`;
-			}}">
-				<span class="tooltip-text">${() => {
-					return this.state.text;
-				}}</span>
+			<div #shell
+				class=${classList('tooltip-shell', () => {
+					return this.state.sliding && 'is-sliding';
+				})}
+				popover="manual"
+				data-placement=${this.state.placement}
+				style=${() => {
+					return `left:${this.state.x}px;top:${this.state.y}px;`;
+				}}
+				@beforetoggle=${this.handleBeforeToggle}
+				@toggle=${this.handleToggle}>
+				<span class="tooltip-text">${this.state.text}</span>
 			</div>
 		`;
 	}

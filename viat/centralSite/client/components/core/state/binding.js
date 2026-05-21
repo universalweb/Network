@@ -9,14 +9,37 @@ import {
 	setValueAtPath,
 } from '../utilities.js';
 import { STATE_PATH } from './state.js';
+// ── Content kinds ────────────────────────────────────────────────────
+// Classification of any value that lands in a TEXT-position ${…} spot.
+// One value → exactly one kind. The template engine's classifyContentKind()
+// is the single decision point and CONTENT_PATCHERS maps each kind to its
+// patch routine. A typed bind (this.bind.text / .html / …) or a matching
+// `static types` entry DECLARES the kind up front, skipping classification.
+//
+//   TEXT       plain string / number          → textContent (fast path)
+//   HTML       string containing markup (< &) → innerHTML
+//   COMPONENT  a comp() binding or a DOM Node  → adopt the node
+//   LIST       a LiveList (each() / list())    → keyed element diff
+//   EMPTY      null | undefined | ''           → cleared
+// ─────────────────────────────────────────────────────────────────────
+export const CONTENT_KIND = {
+	TEXT: 'text',
+	HTML: 'html',
+	COMPONENT: 'component',
+	LIST: 'list',
+	EMPTY: 'empty',
+};
 export let currentTracking = null;
 export function setCurrentTracking(value) {
 	currentTracking = value;
 }
 export class Binding {
-	constructor(key, value) {
+	constructor(key, value, kind = null) {
 		this.key = key;
 		this.value = value;
+		// Declared CONTENT_KIND from a typed bind — null means auto-classify
+		// (or resolve from the component's `static types`).
+		this.kind = kind;
 	}
 	toString() {
 		return String(this.value ?? '');
@@ -43,10 +66,13 @@ function makeSetter(source) {
 // each TrackingProxyHandler is a thin per-proxy instance that points back at
 // the factory. Trap methods live on the prototype for JIT monomorphization.
 class TrackingFactory {
-	constructor(setValue, prefix) {
+	constructor(setValue, prefix, typeIndex) {
 		this.setValue = setValue;
 		this.prefix = prefix;
 		this.cache = new WeakMap();
+		// `static types` index — lets the render proxy skip dep-tracking for
+		// paths declared `react: false`. Null for the global proxy.
+		this.typeIndex = typeIndex ?? null;
 	}
 	create(value, path = '') {
 		if (!isObject(value)) {
@@ -78,7 +104,10 @@ class TrackingProxyHandler {
 		}
 		const nestedPath = joinPath(this.path, key);
 		if (!isFunction(propertyValue) && currentTracking) {
-			currentTracking.add(makeDependencyKey(factory.prefix, nestedPath));
+			const typeIndex = factory.typeIndex;
+			if (!typeIndex || !typeIndex.hasNonReactive || !typeIndex.nonReactivePaths.has(nestedPath)) {
+				currentTracking.add(makeDependencyKey(factory.prefix, nestedPath));
+			}
 		}
 		if (isObject(propertyValue) && !this.isCollection) {
 			return factory.create(propertyValue, nestedPath);
@@ -97,17 +126,44 @@ class TrackingProxyHandler {
 }
 export function makeProxy(state, component) {
 	const setValue = makeSetter(component?.stateProxy ?? state);
-	return new TrackingFactory(setValue, '').create(state ?? {}, '');
+	return new TrackingFactory(setValue, '', component?.typeIndex ?? null).create(state ?? {}, '');
 }
 export function makeGlobalProxy(globalState) {
 	const setValue = makeSetter(globalState);
-	return new TrackingFactory(setValue, 'global').create(globalState ?? {}, '');
+	return new TrackingFactory(setValue, 'global', null).create(globalState ?? {}, '');
 }
-// Explicit Binding factory for two-way input bindings and other places that
-// need a reactive reference to a state key rather than its current value.
+// One-way reactive reference to a state path — a surgical binding spot that
+// patches in place without re-running render(). `bind('a.b')` auto-classifies
+// its content kind (or reads it from the component's `static types`); the
+// typed variants DECLARE the kind so the engine skips classification:
+//   this.bind.text(key)       — declared TEXT  (strict textContent)
+//   this.bind.html(key)       — declared HTML  (innerHTML)
+//   this.bind.component(key)  — declared COMPONENT
+//   this.bind.list(key, Comp) — declared LIST  (wired in template.js)
+// Each variant also accepts a function → a computed spot carrying the kind.
+// Exposed on every component as `this.bind` — no import needed.
 export function bind(stateKey, currentValue) {
-	return new Binding(String(stateKey ?? ''), currentValue);
+	return new Binding(String(stateKey ?? ''), currentValue, null);
 }
+function makeTypedBinding(stateKeyOrFn, currentValue, kind) {
+	if (isFunction(stateKeyOrFn)) {
+		stateKeyOrFn.contentKind = kind;
+		return stateKeyOrFn;
+	}
+	return new Binding(String(stateKeyOrFn ?? ''), currentValue, kind);
+}
+function bindText(stateKeyOrFn, currentValue) {
+	return makeTypedBinding(stateKeyOrFn, currentValue, CONTENT_KIND.TEXT);
+}
+function bindHtml(stateKeyOrFn, currentValue) {
+	return makeTypedBinding(stateKeyOrFn, currentValue, CONTENT_KIND.HTML);
+}
+function bindComponent(stateKeyOrFn, currentValue) {
+	return makeTypedBinding(stateKeyOrFn, currentValue, CONTENT_KIND.COMPONENT);
+}
+bind.text = bindText;
+bind.html = bindHtml;
+bind.component = bindComponent;
 export function track(fn) {
 	const deps = new Set();
 	const previousTracking = currentTracking;

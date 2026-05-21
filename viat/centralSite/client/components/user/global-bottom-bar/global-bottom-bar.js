@@ -1,11 +1,25 @@
-import { WebComponent } from '../../core/index.js';
+import { BottomBarItem } from './bottom-bar-item/bottom-bar-item.js';
+import { WebComponent, each } from '../../core/index.js';
 export class GlobalBottomBar extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
 		globalBottomBar: './global-bottom-bar.css',
 	};
 	static state = {
-		columns: [],
+		columns: [
+			{
+				label: 'Client',
+				value: 'Web',
+			},
+			{
+				label: 'Network',
+				value: 'MAINNET',
+			},
+			{
+				label: 'Version',
+				value: 'v1.0.0',
+			},
+		],
 	};
 	apiStatus() {
 		const api = this.globalState.api ?? null;
@@ -46,14 +60,9 @@ export class GlobalBottomBar extends WebComponent {
 			<footer class="global-bottom-bar">
 				<div class="bb-columns">
 					${() => {
-						return this.state.columns.map((item) => {
-							return `
-								<div class="bb-item">
-									<span class="bb-key">${item.label}</span>
-									<span class="bb-val${item.className ? ` ${item.className}` : ''}">${item.value}</span>
-								</div>
-							`;
-						}).join('');
+						return each(this.state.columns, BottomBarItem, (item) => {
+							return item.label;
+						});
 					}}
 				</div>
 				<div class="bb-spacer"></div>

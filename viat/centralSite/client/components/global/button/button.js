@@ -80,7 +80,7 @@ export class UIButton extends WebComponent {
 			)}
 				?disabled="${this.state.disabled || this.state.loading}"
 				aria-label="${this.state.title || this.state.label}"
-				tooltip="${this.state.title}"
+				tooltip=${this.state.title}
 				@click=${this.handleClick}>
 				${this.renderLead}
 				<slot name="lead"></slot>

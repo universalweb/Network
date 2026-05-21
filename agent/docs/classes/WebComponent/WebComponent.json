@@ -1,8 +1,8 @@
 {
   "className": "WebComponent",
   "purpose": "core",
-  "sourcePath": "viat/centralSite/client/new/components/core/base.js",
-  "sourceLine": 71,
+  "sourcePath": "viat/centralSite/client/components/core/base.js",
+  "sourceLine": 73,
   "exported": true,
   "extends": {
     "raw": "HTMLElement",
@@ -11,9 +11,9 @@
   },
   "importanceScore": 10,
   "metrics": {
-    "methodCount": 89,
+    "methodCount": 92,
     "declaredMethodCount": 13,
-    "prototypeMixinMethodCount": 76,
+    "prototypeMixinMethodCount": 79,
     "staticMethodCount": 5,
     "asyncMethodCount": 13
   },
@@ -199,6 +199,16 @@
       "params": "",
       "isStatic": false,
       "isAsync": true,
+      "origin": "prototype-mixin",
+      "via": "stateMethods",
+      "source": "./state/state.js"
+    },
+    {
+      "name": "upgradeShadowedProperties",
+      "kind": "method",
+      "params": "",
+      "isStatic": false,
+      "isAsync": false,
       "origin": "prototype-mixin",
       "via": "stateMethods",
       "source": "./state/state.js"
@@ -671,7 +681,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "addStyle",
@@ -681,7 +691,7 @@
       "isAsync": true,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "applyStyles",
@@ -691,7 +701,27 @@
       "isAsync": true,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
+    },
+    {
+      "name": "stateless",
+      "kind": "method",
+      "params": "",
+      "isStatic": false,
+      "isAsync": false,
+      "origin": "prototype-mixin",
+      "via": "PROTO_METHODS",
+      "source": "viat/centralSite/client/components/core/base.js"
+    },
+    {
+      "name": "no",
+      "kind": "method",
+      "params": "",
+      "isStatic": false,
+      "isAsync": false,
+      "origin": "prototype-mixin",
+      "via": "PROTO_METHODS",
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "clearIntervals",
@@ -701,7 +731,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "clearTimeouts",
@@ -711,7 +741,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "cleanupTemplate",
@@ -721,7 +751,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "forkStyleMap",
@@ -731,7 +761,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "handleObserverCallback",
@@ -741,7 +771,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "hasStyle",
@@ -751,7 +781,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "html",
@@ -761,7 +791,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "htmlElement",
@@ -771,7 +801,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "installObserver",
@@ -781,7 +811,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "uninstallObserver",
@@ -791,7 +821,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "removeStyle",
@@ -801,7 +831,7 @@
       "isAsync": true,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "removeTimeout",
@@ -811,7 +841,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "resolveStyle",
@@ -821,7 +851,7 @@
       "isAsync": true,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "setTimeout",
@@ -831,7 +861,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "setInert",
@@ -841,7 +871,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "stopInterval",
@@ -851,7 +881,7 @@
       "isAsync": false,
       "origin": "prototype-mixin",
       "via": "PROTO_METHODS",
-      "source": "viat/centralSite/client/new/components/core/base.js"
+      "source": "viat/centralSite/client/components/core/base.js"
     },
     {
       "name": "isMounted",
@@ -914,5 +944,5 @@
       "source": "./lifecycle/phase.js"
     }
   ],
-  "generatedAt": "2026-05-15T13:57:35.995Z"
+  "generatedAt": "2026-05-21T11:54:22.054Z"
 }

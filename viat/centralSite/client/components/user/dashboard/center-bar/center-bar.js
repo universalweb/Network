@@ -6,7 +6,33 @@ export class CenterBar extends WebComponent {
 		centerBar: './center-bar.css',
 	};
 	static state = {
-		actions: [],
+		actions: [
+			{
+				className: 'green-hover',
+				icon: 'droplets',
+				id: 'faucet',
+				onClick: 'faucet:request',
+				tooltip: 'Faucet — mint test VIAT',
+			},
+			{
+				icon: 'file-signature',
+				id: 'sign-data',
+				onClick: 'sign:open',
+				tooltip: 'Sign arbitrary data',
+			},
+			{
+				icon: 'refresh-cw',
+				id: 'refresh-account',
+				onClick: 'wallet:refresh',
+				tooltip: 'Refresh balance, totals, and activity log',
+			},
+			{
+				icon: 'info',
+				id: 'wallet-info',
+				onClick: 'info:open',
+				tooltip: 'How wallets are built',
+			},
+		],
 	};
 	constructor(state = {}, config = {}) {
 		super(state, {

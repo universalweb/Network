@@ -46,8 +46,8 @@ export class WalletAddress extends WebComponent {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<div class=${this.hostClasses}
-				copy="${this.copyText}"
-				tooltip="${this.tooltipText}"
+				copy=${this.copyText}
+				tooltip=${this.tooltipText}
 				@copy:done=${this.handleCopyDone}
 				@copy:error=${this.handleCopyError}
 				role="button"

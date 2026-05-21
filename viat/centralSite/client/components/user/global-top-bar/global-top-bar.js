@@ -13,8 +13,30 @@ export class GlobalTopBar extends WebComponent {
 		globalTopBar: './global-top-bar.css',
 	};
 	static state = {
-		items: [],
-		subtitle: '',
+		items: [
+			{
+				icon: 'bot',
+				id: 'agent',
+				tooltip: 'Local Agent',
+				onClick: 'toggle-pulldown',
+				animate: 'rainbow',
+			},
+			{
+				icon: 'settings',
+				id: 'settings',
+				tooltip: 'Settings',
+				onClick: 'open-settings',
+				animate: 'settings',
+			},
+			{
+				icon: 'panel-left',
+				id: 'sidebar',
+				tooltip: 'Sidebar',
+				onClick: 'toggle-sidebar',
+				animate: 'sidebar',
+			},
+		],
+		subtitle: 'COMMAND TERMINAL',
 	};
 	open = false;
 	pointerId = null;

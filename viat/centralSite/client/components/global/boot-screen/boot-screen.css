@@ -29,6 +29,12 @@
 	min-width: 320px;
 	max-width: min(86vw, 440px);
 }
+/* The logo arrives as a caller-supplied HTML string in state; the framework
+   wraps that spot in a <span>. display:contents drops the wrapper box so the
+   injected <svg class="bs-mark"> is the real flex child of .bs-stage. */
+.bs-stage > span {
+	display: contents;
+}
 .bs-glow {
 	position: absolute;
 	top: -20%;

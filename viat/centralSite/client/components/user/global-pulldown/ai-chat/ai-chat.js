@@ -1,4 +1,4 @@
-import '../ai-status-indicator/ai-status-indicator.js';
+import '../../../global/status-indicator/status-indicator.js';
 import { WebComponent, each } from 'webcomponent';
 import { listAllTools } from '../../../core/ai/index.js';
 const DEFAULT_ENDPOINT = 'http://localhost:1234/v1/chat/completions';
@@ -172,10 +172,22 @@ export class AIChat extends WebComponent {
 	onMount() {
 		this.delegate('pulldown:open', this.handlePulldownOpen);
 		this.refreshSystemPrompt();
+		// Keep the log pinned to the newest message. This is an EFFECT, not a
+		// render trigger — the template now patches the message list spot
+		// surgically, so the component never re-renders on a new message or a
+		// streamed token. `observe` defers through the scheduler, so the scroll
+		// runs after the list/text spots have committed their DOM.
+		this.observe('messages', this.handleLogScroll);
 		// Probe up-front so the indicator badge is accurate before the
 		// user opens the pulldown. Cheap — single GET with a short
 		// timeout and the response is small (just a model list).
 		this.checkConnection();
+	}
+	handleLogScroll() {
+		const logEl = this.refs.log;
+		if (logEl) {
+			logEl.scrollTop = logEl.scrollHeight;
+		}
 	}
 	onDisconnect() {
 		this.controller?.abort();
@@ -334,12 +346,6 @@ export class AIChat extends WebComponent {
 				return cursor;
 			}
 			cursor = host;
-		}
-	}
-	onRendered() {
-		const logEl = this.refs.log;
-		if (logEl) {
-			logEl.scrollTop = logEl.scrollHeight;
 		}
 	}
 	nextId() {
@@ -552,9 +558,11 @@ export class AIChat extends WebComponent {
 					<div class="aic-titlebar">
 						<div class="aic-title-group">
 							<span class="aic-title">LOCAL AI</span>
-							<ai-status-indicator .status=${this.state.connectionState}></ai-status-indicator>
+							<ui-status-indicator .status=${this.state.connectionState}></ui-status-indicator>
 						</div>
-						<button class="aic-clear" @click=${this.handleClear} ?disabled=${this.state.messages.length === 0 && !this.state.streaming}>CLEAR</button>
+						<button class="aic-clear" @click=${this.handleClear} ?disabled=${() => {
+							return this.state.messages.length === 0 && !this.state.streaming;
+						}}>CLEAR</button>
 					</div>
 					<span class="aic-endpoint">${this.state.endpoint}</span>
 				</header>

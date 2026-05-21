@@ -48,21 +48,21 @@ export class TransmitPanel extends Panel {
 		transmitPanel: './transmit-panel.css',
 	};
 	static state = {
-		amountLabel: '',
-		amountPlaceholder: '',
+		amountLabel: 'Amount',
+		amountPlaceholder: '0.00000000',
 		amountValue: '',
-		buttonLabel: '',
+		buttonLabel: '[ EXECUTE TRANSFER ]',
 		classes: new Set(['transmit-panel']),
-		gasLabel: '',
-		gasValue: '',
+		gasLabel: 'Gas',
+		gasValue: '0',
 		id: 'TX',
-		recipientLabel: '',
-		recipientPlaceholder: '',
+		recipientLabel: 'Recipient Address',
+		recipientPlaceholder: 'viat1...',
 		recipientValue: '',
 		recipientFormat: 'base64url',
 		showDot: true,
 		title: 'SEND VIAT',
-		tokenLabel: '',
+		tokenLabel: 'VIAT',
 	};
 	handleRecipientInput = (domEvent) => {
 		const raw = String(domEvent.target.value ?? '');
