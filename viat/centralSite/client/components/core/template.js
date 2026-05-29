@@ -8,8 +8,8 @@ import {
 	track,
 } from './state/binding.js';
 import {
-	callFn,
 	createElementFromHTML,
+	disposeItem,
 	eachArray,
 	eachNodeList,
 	getValueAtPath,
@@ -19,18 +19,51 @@ import {
 	setValueAtPath,
 	syncSubsByDiff,
 } from './utilities.js';
-import {
-	registerSubevent,
-	unregisterAllSubevents,
-	unregisterSubevent,
-} from './dom/delegate.js';
 import { isValidRefName, registerRef } from './dom/refs.js';
-import { STATE_PATH } from './state/state.js';
+import { ensureStateBus, STATE_PATH } from './state/state.js';
 import { schedule } from './lifecycle/scheduler.js';
-import { setGlobal } from './state/globalState.js';
+import { globalState } from './state/globalState.js';
 import { behaviorAttrNames, getBehavior } from './behaviors/index.js';
+/**
+ * Spot type vocabulary. Single source of truth for every `spot.type` /
+ * `plan.type` / `entry.type` literal the template runtime reads or writes.
+ * Use `SPOT_TYPE.X` everywhere — never a bare string literal. The parser
+ * (extractor) emits these on entries, the planner copies them into plans,
+ * and the Spot subclasses store them for the patch dispatch in `patchSpot` /
+ * `updateSpot` / `updateTemplateSpots`.
+ */
+export const SPOT_TYPE = Object.freeze({
+	TEXT: 'text',
+	BARE_ATTR: 'bare-attr',
+	ATTR: 'attr',
+	BOOL_ATTR: 'bool-attr',
+	PROP: 'prop',
+	MULTI_ATTR: 'multi-attr',
+	CLASS_LIST: 'class-list',
+	EVENT: 'event',
+	BIND: 'bind',
+});
+/**
+ * Spot kind vocabulary. Identifies the Spot subclass family — set in each
+ * subclass constructor, read by `Spot.handle` to gate list-only bookkeeping
+ * (the only cross-class branch on kind today). Cleared to `null` by the
+ * non-reactive one-shot path in `installBindingSpot`.
+ */
+export const SPOT_KIND = Object.freeze({
+	BINDING: 'binding',
+	LIST: 'list',
+	COMPUTED: 'computed',
+	MULTI: 'multi',
+	CLASS: 'class',
+});
 const SUBEVENT_ATTRS = behaviorAttrNames();
-const SUBEVENT_LAST_VALUES = new WeakMap();
+// Behavior-attribute attribute application. The template extractor strips the
+// raw `tooltip="…"` / `hotkey="…"` etc. attributes; this function reflects the
+// (possibly dynamic) value into a sibling `data-<name>` attribute that the
+// behavior implementations read on demand. Pure write — install/uninstall of
+// the actual per-element listeners is owned by `behavior.install`, wired in
+// the fragment build path (further down). Subevent map / `registerSubevent`
+// machinery removed in Phase 8 — dataset is now the single store.
 function applySubeventAttr(el, attrName, value) {
 	if (!SUBEVENT_ATTRS.has(attrName)) {
 		return false;
@@ -38,30 +71,13 @@ function applySubeventAttr(el, attrName, value) {
 	if (el.hasAttribute(attrName)) {
 		el.removeAttribute(attrName);
 	}
-	let perElement = SUBEVENT_LAST_VALUES.get(el);
-	const previous = perElement?.get(attrName);
 	const isEmpty = value == null || value === false || value === '';
 	if (isEmpty) {
-		if (previous === undefined) {
-			return true;
-		}
-		unregisterSubevent(el, attrName);
-		perElement.delete(attrName);
-		if (!perElement.size) {
-			SUBEVENT_LAST_VALUES.delete(el);
-		}
+		el.removeAttribute(`data-${attrName}`);
 		return true;
 	}
 	const next = value === true ? '' : String(value);
-	if (previous === next) {
-		return true;
-	}
-	registerSubevent(el, attrName, next);
-	if (!perElement) {
-		perElement = new Map();
-		SUBEVENT_LAST_VALUES.set(el, perElement);
-	}
-	perElement.set(attrName, next);
+	el.setAttribute(`data-${attrName}`, next);
 	return true;
 }
 export class ClassList {
@@ -205,13 +221,12 @@ function cleanupTemplateNode(node) {
 	if (!node) {
 		return;
 	}
-	unregisterAllSubevents(node);
 	const cleanup = node[TEMPLATE_CLEANUP];
 	if (!isFunction(cleanup)) {
 		return;
 	}
 	node[TEMPLATE_CLEANUP] = null;
-	cleanup.call(node);
+	cleanup(node);
 }
 function createRenderableElement(value) {
 	if (isString(value)) {
@@ -578,7 +593,7 @@ function buildHTML(strings, exprs) {
 			}
 			meta.push({
 				i: attrAccum.markerIdx,
-				type: 'multi-attr',
+				type: SPOT_TYPE.MULTI_ATTR,
 				attr: attrAccum.name,
 				parts: attrAccum.parts,
 			});
@@ -619,7 +634,7 @@ function buildHTML(strings, exprs) {
 			html += `data-uwc ${bindMarkerAttribute(stringIndex)}=""`;
 			meta.push({
 				i: stringIndex,
-				type: 'bind',
+				type: SPOT_TYPE.BIND,
 				expr,
 			});
 			continue;
@@ -629,7 +644,7 @@ function buildHTML(strings, exprs) {
 				html += `data-uwc data-uwc-evfn-${stringIndex}=""`;
 				meta.push({
 					i: stringIndex,
-					type: 'event',
+					type: SPOT_TYPE.EVENT,
 					eventName: null,
 					deduceFromExpr: true,
 					expr,
@@ -638,7 +653,7 @@ function buildHTML(strings, exprs) {
 				html += `data-uwc ${eventMarkerAttribute(eventBinding.eventName)}="expr${stringIndex}"`;
 				meta.push({
 					i: stringIndex,
-					type: 'event',
+					type: SPOT_TYPE.EVENT,
 					eventName: eventBinding.eventName,
 					deduceFromExpr: false,
 					expr,
@@ -660,17 +675,17 @@ function buildHTML(strings, exprs) {
 			if (attr.sigil === '?') {
 				meta.push({
 					...baseMeta,
-					type: 'bool-attr',
+					type: SPOT_TYPE.BOOL_ATTR,
 				});
 			} else if (attr.sigil === '.') {
 				meta.push({
 					...baseMeta,
-					type: 'prop',
+					type: SPOT_TYPE.PROP,
 				});
 			} else {
 				meta.push({
 					...baseMeta,
-					type: 'attr',
+					type: SPOT_TYPE.ATTR,
 				});
 			}
 		} else if (bareAttrContext(effectiveString, nextString)) {
@@ -679,7 +694,7 @@ function buildHTML(strings, exprs) {
 				html += `data-uwc ${bareAttrMarkerAttribute(stringIndex)}=""`;
 				meta.push({
 					i: stringIndex,
-					type: 'bare-attr',
+					type: SPOT_TYPE.BARE_ATTR,
 					attr: inferredAttr,
 					expr,
 				});
@@ -689,7 +704,7 @@ function buildHTML(strings, exprs) {
 			html += `<span data-uwc ${SPOT}="${stringIndex}"></span>`;
 			meta.push({
 				i: stringIndex,
-				type: 'text',
+				type: SPOT_TYPE.TEXT,
 				expr,
 			});
 		}
@@ -700,18 +715,12 @@ function buildHTML(strings, exprs) {
 	};
 }
 function clearSubscriptions(subscriptions = []) {
-	eachArray(subscriptions, callFn);
+	eachArray(subscriptions, disposeItem);
 	return [];
-}
-function getGlobalSource(component) {
-	if (component.getGlobal) {
-		return component.getGlobal();
-	}
-	return component.globalState;
 }
 function resolveBindingValue(component, bindingKey) {
 	if (bindingKey.startsWith('global.')) {
-		return getValueAtPath(getGlobalSource(component), bindingKey.slice(7));
+		return getValueAtPath(globalState.proxy, bindingKey.slice(7));
 	}
 	return getValueAtPath(component.STATE, bindingKey);
 }
@@ -721,7 +730,7 @@ function ensureRenderProxies(component) {
 		component.renderProxy = makeProxy(currentState, component);
 		component.renderProxyState = currentState;
 	}
-	const currentGlobal = getGlobalSource(component);
+	const currentGlobal = globalState.proxy;
 	if (!component.globalRenderProxy || component.globalRenderProxyState !== currentGlobal) {
 		component.globalRenderProxy = makeGlobalProxy(currentGlobal, component);
 		component.globalRenderProxyState = currentGlobal;
@@ -737,28 +746,30 @@ function evaluateTrackedExpression(component, expr) {
 	component.renderTracking = previousRenderTracking;
 	return result;
 }
-function subscribeStatePath(component, statePath, handler) {
-	if (!component.watchState) {
-		return () => {};
-	}
-	return component.watchState(statePath, handler);
+function subscribeStatePath(component, statePath, handler, target) {
+	return ensureStateBus(component).subscribe(statePath, handler, target);
 }
-function subscribeGlobalPath(component, statePath, handler) {
-	if (!component.watchGlobal) {
-		return () => {};
-	}
-	return component.watchGlobal(statePath, handler);
+function subscribeGlobalPath(statePath, handler, target) {
+	return globalState.bus.subscribe(statePath, handler, target);
 }
-function syncSpotSubscriptions(spot, component, deps, handler) {
+// Module-scope subscribe callback for syncSubsByDiff — receives `(dep, spot)`
+// per the `subscribe(key, context)` contract. The handler is `spot.handle`,
+// which resolves to `Spot.prototype.handle` via the prototype chain (same
+// function value for every spot instance — no per-instance allocation). The
+// spot is passed as the bus `target`, so the bus dispatches
+// `handle.call(spot, …)` with zero per-spot closure (no `.bind`,
+// no per-subscription wrapper).
+function subscribeSpotDep(dep, spot) {
+	if (dep.startsWith('global.')) {
+		return subscribeGlobalPath(dep.slice(7), spot.handle, spot);
+	}
+	return subscribeStatePath(spot.component, dep, spot.handle, spot);
+}
+function syncSpotSubscriptions(spot, deps) {
 	if (!spot.depMap) {
 		spot.depMap = new Map();
 	}
-	syncSubsByDiff(spot.depMap, deps, (dep) => {
-		if (dep.startsWith('global.')) {
-			return subscribeGlobalPath(component, dep.slice(7), handler);
-		}
-		return subscribeStatePath(component, dep, handler);
-	});
+	syncSubsByDiff(spot.depMap, deps, subscribeSpotDep, spot);
 }
 // Text-position spots cache a specialized patcher in spot.patch so subsequent
 // patches skip kind detection. Hot path is one virtual call per patch.
@@ -891,7 +902,7 @@ function patchSpot(spot, value) {
 		});
 		return;
 	}
-	if (spot.type === 'text') {
+	if (spot.type === SPOT_TYPE.TEXT) {
 		if (spot.keyMap && !LiveList.isLiveList(value)) {
 			spot.keyMap.forEach(cleanupTemplateNode);
 			spot.keyMap = null;
@@ -904,7 +915,7 @@ function patchSpot(spot, value) {
 		spot.patch(spot, value);
 		return;
 	}
-	if (spot.type === 'bare-attr') {
+	if (spot.type === SPOT_TYPE.BARE_ATTR) {
 		if (applySubeventAttr(spot.el, spot.attr, value)) {
 			return;
 		}
@@ -926,7 +937,7 @@ function patchSpot(spot, value) {
 		}
 		return;
 	}
-	if (spot.type === 'bool-attr') {
+	if (spot.type === SPOT_TYPE.BOOL_ATTR) {
 		const has = spot.el.hasAttribute(spot.attr);
 		if (value && !has) {
 			spot.el.setAttribute(spot.attr, '');
@@ -935,7 +946,7 @@ function patchSpot(spot, value) {
 		}
 		return;
 	}
-	if (spot.type === 'prop') {
+	if (spot.type === SPOT_TYPE.PROP) {
 		if (spot.el[spot.attr] !== value) {
 			spot.el[spot.attr] = value;
 		}
@@ -962,234 +973,6 @@ function patchSpot(spot, value) {
 		spot.el.setAttribute(spot.attr, str);
 	}
 }
-function refreshBindingSpot(spot) {
-	patchSpot(spot, resolveBindingValue(spot.component, spot.bindingKey));
-}
-function refreshListSpot(spot, changedPath) {
-	const {
-		component, bindingKey, renderFn, keyFn,
-	} = spot;
-	const rawItems = resolveBindingValue(component, bindingKey);
-	const itemsArray = Array.isArray(rawItems) ? rawItems : [];
-	// Partial in-place update is only safe when the change is a *deep* path
-	// inside an existing item (`items.i.foo`), meaning the array shape is
-	// unchanged. Top-level changes (`items.i`) can be array-shape ops
-	// (unshift/push/splice/swap) that fire multiple sub-paths, but the
-	// subscription only sees the first one — taking the partial branch then
-	// would skip the rest of the changes.
-	if (
-		changedPath &&
-		changedPath !== bindingKey &&
-		changedPath.startsWith(`${bindingKey}.`) &&
-		spot.keyMap &&
-		itemsArray.length === spot.keyMap.size
-	) {
-		const subPath = changedPath.slice(bindingKey.length + 1);
-		const firstDot = subPath.indexOf('.');
-		if (firstDot !== -1) {
-			const index = Number(subPath.slice(0, firstDot));
-			if (!Number.isNaN(index)) {
-				const item = itemsArray[index];
-				if (item !== undefined) {
-					const itemKey = keyFn(item, index);
-					const element = spot.keyMap.get(itemKey);
-					if (isFunction(element?.assignState)) {
-						element.assignState(item);
-						return;
-					}
-				}
-			}
-		}
-	}
-	patchSpot(spot, each(itemsArray, renderFn, keyFn));
-}
-function refreshComputedSpot(spot) {
-	const {
-		value,
-		deps,
-	} = evaluateTrackedExpression(spot.component, spot.expr);
-	patchSpot(spot, value);
-	syncSpotSubscriptions(spot, spot.component, deps, spot.updateHandler);
-}
-function evaluateMultiAttrParts(spot, component) {
-	let result = '';
-	const allDeps = new Set();
-	eachArray(spot.parts, (part) => {
-		if (part.literal !== undefined) {
-			result += part.literal;
-			return;
-		}
-		const { expr } = part;
-		if (isBindingType(expr)) {
-			allDeps.add(expr.key);
-			result += resolveBindingValue(component, expr.key) ?? '';
-			return;
-		}
-		if (isFunction(expr)) {
-			const {
-				value,
-				deps,
-			} = evaluateTrackedExpression(component, expr);
-			deps.forEach((dep) => {
-				allDeps.add(dep);
-			});
-			result += value ?? '';
-			return;
-		}
-		result += expr ?? '';
-	});
-	return {
-		result,
-		deps: allDeps,
-	};
-}
-function evaluateClassListParts(spot, component) {
-	const desired = new Set();
-	const deps = new Set();
-	eachArray(spot.parts, (part) => {
-		if (part.literal !== undefined) {
-			addTokens(part.literal, desired);
-			return;
-		}
-		const { expr } = part;
-		if (ClassList.isClassList(expr)) {
-			applyClassListItems(expr.items, desired, deps, component);
-			return;
-		}
-		applyClassListItems([expr], desired, deps, component);
-	});
-	return {
-		desired,
-		deps,
-	};
-}
-function refreshClassListSpot(spot) {
-	const {
-		desired,
-		deps,
-	} = evaluateClassListParts(spot, spot.component);
-	const current = spot.classListCurrent ?? new Set();
-	diffClassList(spot.el, current, desired);
-	spot.classListCurrent = desired;
-	syncSpotSubscriptions(spot, spot.component, deps, spot.updateHandler);
-}
-function refreshMultiAttrSpot(spot) {
-	const {
-		result,
-		deps,
-	} = evaluateMultiAttrParts(spot, spot.component);
-	if (!applySubeventAttr(spot.el, spot.attr, result)) {
-		if (spot.el.getAttribute(spot.attr) !== result) {
-			spot.el.setAttribute(spot.attr, result);
-		}
-	}
-	syncSpotSubscriptions(spot, spot.component, deps, spot.updateHandler);
-}
-function runSpotRefresh(spot) {
-	const kind = spot.kind;
-	if (!kind) {
-		return undefined;
-	}
-	if (kind === 'list') {
-		const paths = spot.pendingPaths;
-		spot.pendingPaths = null;
-		if (paths && paths.length > 1) {
-			let lastResult;
-			for (let i = 0; i < paths.length; i++) {
-				lastResult = refreshListSpot(spot, paths[i]);
-			}
-			return lastResult;
-		}
-		return refreshListSpot(spot, paths ? paths[0] : null);
-	}
-	spot.pendingPaths = null;
-	if (kind === 'binding') {
-		return refreshBindingSpot(spot);
-	}
-	if (kind === 'computed') {
-		return refreshComputedSpot(spot);
-	}
-	if (kind === 'multi') {
-		return refreshMultiAttrSpot(spot);
-	}
-	if (kind === 'class') {
-		return refreshClassListSpot(spot);
-	}
-	return undefined;
-}
-// Hot path: called once per state-change notification per spot. Both the
-// update handler and the refresh task are pre-bound at spot init (one alloc
-// per spot lifetime) so per-change dispatch costs nothing but a property set.
-function runSpotRefreshTask(spot) {
-	spot.pendingTask = null;
-	return runSpotRefresh(spot);
-}
-function dispatchSpotUpdate(spot, nextValue, prevOrGlobal, changedPath) {
-	if (spot.kind === 'list') {
-		if (!spot.pendingPaths) {
-			spot.pendingPaths = [];
-		}
-		spot.pendingPaths.push(changedPath);
-	}
-	if (spot.pendingTask) {
-		return spot.pendingTask;
-	}
-	spot.pendingTask = schedule(spot.refreshTask);
-	return spot.pendingTask;
-}
-function attachSpotDispatch(spot) {
-	spot.updateHandler = dispatchSpotUpdate.bind(null, spot);
-	spot.refreshTask = runSpotRefreshTask.bind(null, spot);
-}
-function initializeBindingSpot(spot, component) {
-	const bindingKey = spot.expr.key;
-	spot.component = component;
-	spot.bindingKey = bindingKey;
-	attachSpotDispatch(spot);
-	if (ListBinding.isListBinding(spot.expr)) {
-		spot.kind = 'list';
-		spot.renderFn = spot.expr.renderFn;
-		spot.keyFn = spot.expr.keyFn;
-		refreshListSpot(spot, null);
-		syncSpotSubscriptions(spot, component, new Set([bindingKey]), spot.updateHandler);
-		return;
-	}
-	// Declared content kind: an explicit typed bind wins, else the component's
-	// `static types` schema, else null (auto-classified at patch time).
-	const typeIndex = component.typeIndex;
-	spot.declaredKind = spot.expr.kind ?? typeIndex?.kinds.get(bindingKey) ?? null;
-	// A path declared `react: false` in `static types` is a static one-shot —
-	// patch once now, never subscribe.
-	if (typeIndex?.hasNonReactive && typeIndex.nonReactivePaths.has(bindingKey)) {
-		refreshBindingSpot(spot);
-		return;
-	}
-	spot.kind = 'binding';
-	refreshBindingSpot(spot);
-	syncSpotSubscriptions(spot, component, new Set([bindingKey]), spot.updateHandler);
-}
-function initializeClassListSpot(spot, component) {
-	spot.kind = 'class';
-	spot.component = component;
-	attachSpotDispatch(spot);
-	refreshClassListSpot(spot);
-}
-function initializeMultiAttrSpot(spot, component) {
-	spot.kind = 'multi';
-	spot.component = component;
-	attachSpotDispatch(spot);
-	refreshMultiAttrSpot(spot);
-}
-function initializeComputedSpot(spot, component) {
-	spot.kind = 'computed';
-	spot.component = component;
-	// A typed bind given a function (this.bind.text(() => …)) tags the
-	// function with its declared content kind; a plain ${() => …} leaves it
-	// undefined → auto-classified.
-	spot.declaredKind = spot.expr.contentKind ?? null;
-	attachSpotDispatch(spot);
-	refreshComputedSpot(spot);
-}
 const EVENT_SPOTS = new WeakMap();
 function dispatchEventSpotListener(domEvent) {
 	const map = EVENT_SPOTS.get(this);
@@ -1202,28 +985,375 @@ function dispatchEventSpotListener(domEvent) {
 	}
 	return spot.component.runEventHandler(spot.expr, domEvent, this, domEvent.type);
 }
-function teardownEventSpot(spot) {
-	const map = EVENT_SPOTS.get(spot.el);
-	if (map) {
-		map.delete(spot.eventName);
+/**
+ * Abstract base for every template spot. Spots are the per-DOM-node patchers
+ * built from a recipe plan. The class hierarchy below replaces the old plain-
+ * object spot shapes — `this`-using prototype methods eliminate the per-spot
+ * `.bind(null, spot)` allocations that used to back `updateHandler` /
+ * `refreshTask`. Subscribed via the bus's `target` arg → bus dispatches
+ * `Spot.prototype.handle.call(spot, …)` with zero per-spot closure.
+ */
+class Spot {
+	constructor() {
+		this.unsubs = [];
+		this.depMap = null;
+		this.pendingTask = null;
+		this.pendingPaths = null;
 	}
-	spot.el.removeEventListener(spot.eventName, dispatchEventSpotListener);
+	/** Bus handler. List spots accumulate changed paths so a multi-path flush
+	 *  can decide between per-item assignState (partial) and full re-diff. */
+	handle(_nextValue, _prevOrGlobal, changedPath) {
+		if (this.kind === SPOT_KIND.LIST) {
+			if (!this.pendingPaths) {
+				this.pendingPaths = [];
+			}
+			this.pendingPaths.push(changedPath);
+		}
+		if (this.pendingTask) {
+			return this.pendingTask;
+		}
+		// Scheduler dedups by target identity (the spot). One prototype-method
+		// reference + per-spot target = zero `.bind` and no per-flush
+		// collisions across spots.
+		this.pendingTask = schedule(Spot.prototype.runTask, this);
+		return this.pendingTask;
+	}
+	runTask() {
+		this.pendingTask = null;
+		return this.refresh();
+	}
+	/** Virtual. Subclasses with reactive deps override. */
+	refresh() {
+		return undefined;
+	}
+	unsubscribe() {
+		if (this.depMap) {
+			this.depMap.forEach(disposeItem);
+			this.depMap.clear();
+			this.depMap = null;
+		}
+		if (this.unsubs && this.unsubs.length) {
+			this.unsubs = clearSubscriptions(this.unsubs);
+		}
+		this.pendingTask = null;
+		this.pendingPaths = null;
+	}
 }
-function initializeEventSpot(spot, component) {
-	if (spot.expr === undefined || spot.expr === null || spot.expr === false) {
-		return;
+/**
+ * One-way state-path watcher. `this.bind('foo')` / `${this.state.foo}` /
+ * any `${bindingExpr}` whose expr resolves to a single state path.
+ */
+class BindingSpot extends Spot {
+	constructor(el, slotIndex, type, attr, expr, component, bindingKey, declaredKind) {
+		super();
+		this.kind = SPOT_KIND.BINDING;
+		this.type = type;
+		this.attr = attr;
+		this.el = el;
+		this.slotIndex = slotIndex;
+		this.expr = expr;
+		this.component = component;
+		this.bindingKey = bindingKey;
+		this.declaredKind = declaredKind;
+		this.contentKind = null;
+		this.patch = null;
 	}
-	if (!isFunction(spot.expr)) {
-		throw new TypeError(`Template event handler for @${spot.eventName} must be a function.`);
+	refresh() {
+		patchSpot(this, resolveBindingValue(this.component, this.bindingKey));
 	}
-	spot.component = component;
-	let map = EVENT_SPOTS.get(spot.el);
+}
+/**
+ * Keyed list — `each(items, render, keyFn)` / `list(key, …)` /
+ * `liveList(…)`. Owns `keyMap` (key → element) and `liveList` handle.
+ */
+class ListSpot extends Spot {
+	constructor(el, slotIndex, type, expr, component, bindingKey, renderFn, keyFn) {
+		super();
+		this.kind = SPOT_KIND.LIST;
+		this.type = type;
+		this.el = el;
+		this.slotIndex = slotIndex;
+		this.expr = expr;
+		this.component = component;
+		this.bindingKey = bindingKey;
+		this.renderFn = renderFn;
+		this.keyFn = keyFn;
+		this.keyMap = null;
+		this.liveList = null;
+		this.prevItemMap = null;
+		this.patch = null;
+	}
+	/** Drains `pendingPaths` and replays the refresh once per accumulated path
+	 *  (since each path may take different branches between full re-diff and
+	 *  per-item assignState — see comment in refresh()). */
+	runTask() {
+		this.pendingTask = null;
+		const paths = this.pendingPaths;
+		this.pendingPaths = null;
+		if (paths && paths.length > 1) {
+			let lastResult;
+			for (let i = 0; i < paths.length; i++) {
+				lastResult = this.refresh(paths[i]);
+			}
+			return lastResult;
+		}
+		return this.refresh(paths ? paths[0] : null);
+	}
+	refresh(changedPath = null) {
+		const {
+			component, bindingKey, renderFn, keyFn,
+		} = this;
+		const rawItems = resolveBindingValue(component, bindingKey);
+		const itemsArray = Array.isArray(rawItems) ? rawItems : [];
+		// Partial in-place update is only safe when the change is a *deep*
+		// path inside an existing item (`items.i.foo`), meaning the array
+		// shape is unchanged. Top-level changes (`items.i`) can be array-
+		// shape ops (unshift/push/splice/swap) that fire multiple sub-paths,
+		// but the subscription only sees the first one — taking the partial
+		// branch then would skip the rest of the changes.
+		if (
+			changedPath &&
+			changedPath !== bindingKey &&
+			changedPath.startsWith(`${bindingKey}.`) &&
+			this.keyMap &&
+			itemsArray.length === this.keyMap.size
+		) {
+			const subPath = changedPath.slice(bindingKey.length + 1);
+			const firstDot = subPath.indexOf('.');
+			if (firstDot !== -1) {
+				const index = Number(subPath.slice(0, firstDot));
+				if (!Number.isNaN(index)) {
+					const itemAtIndex = itemsArray[index];
+					if (itemAtIndex !== undefined) {
+						const itemKey = keyFn(itemAtIndex, index);
+						const element = this.keyMap.get(itemKey);
+						if (isFunction(element?.assignState)) {
+							element.assignState(itemAtIndex);
+							return;
+						}
+					}
+				}
+			}
+		}
+		patchSpot(this, each(itemsArray, renderFn, keyFn));
+	}
+	unsubscribe() {
+		if (this.liveList && this.liveList.disconnectSpot) {
+			this.liveList.disconnectSpot();
+		}
+		this.liveList = null;
+		this.keyMap = null;
+		this.prevItemMap = null;
+		super.unsubscribe();
+	}
+}
+/**
+ * Function-valued expression with auto-tracked deps — `${() => …}` and
+ * `bind.text(() => …)`. Re-evaluates inside a tracking session every
+ * refresh so deps stay accurate.
+ */
+class ComputedSpot extends Spot {
+	constructor(el, slotIndex, type, attr, expr, component, declaredKind) {
+		super();
+		this.kind = SPOT_KIND.COMPUTED;
+		this.type = type;
+		this.attr = attr;
+		this.el = el;
+		this.slotIndex = slotIndex;
+		this.expr = expr;
+		this.component = component;
+		this.declaredKind = declaredKind;
+		this.contentKind = null;
+		this.patch = null;
+	}
+	refresh() {
+		const {
+			value,
+			deps,
+		} = evaluateTrackedExpression(this.component, this.expr);
+		patchSpot(this, value);
+		syncSpotSubscriptions(this, deps);
+	}
+}
+/** Multi-interpolation attribute: `<div data-x="a${b}c${d}e">`. */
+class MultiAttrSpot extends Spot {
+	constructor(el, slotIndex, attr, parts, component) {
+		super();
+		this.kind = SPOT_KIND.MULTI;
+		this.type = SPOT_TYPE.MULTI_ATTR;
+		this.attr = attr;
+		this.el = el;
+		this.slotIndex = slotIndex;
+		this.parts = parts;
+		this.component = component;
+	}
+	refresh() {
+		const component = this.component;
+		const parts = this.parts;
+		const allDeps = new Set();
+		let result = '';
+		for (let partIndex = 0; partIndex < parts.length; partIndex++) {
+			const part = parts[partIndex];
+			if (part.literal !== undefined) {
+				result += part.literal;
+				continue;
+			}
+			const expr = part.expr;
+			if (isBindingType(expr)) {
+				allDeps.add(expr.key);
+				result += resolveBindingValue(component, expr.key) ?? '';
+				continue;
+			}
+			if (isFunction(expr)) {
+				const evaluated = evaluateTrackedExpression(component, expr);
+				const evaluatedDeps = evaluated.deps;
+				const depArr = [...evaluatedDeps];
+				for (let depIndex = 0; depIndex < depArr.length; depIndex++) {
+					allDeps.add(depArr[depIndex]);
+				}
+				result += evaluated.value ?? '';
+				continue;
+			}
+			result += expr ?? '';
+		}
+		if (!applySubeventAttr(this.el, this.attr, result)) {
+			if (this.el.getAttribute(this.attr) !== result) {
+				this.el.setAttribute(this.attr, result);
+			}
+		}
+		syncSpotSubscriptions(this, allDeps);
+	}
+}
+/** `class=` binding — token-level diff via `applyClassListItems`. */
+class ClassListSpot extends Spot {
+	constructor(el, slotIndex, parts, component) {
+		super();
+		this.kind = SPOT_KIND.CLASS;
+		this.type = SPOT_TYPE.CLASS_LIST;
+		this.attr = 'class';
+		this.el = el;
+		this.slotIndex = slotIndex;
+		this.parts = parts;
+		this.component = component;
+		this.classListCurrent = null;
+	}
+	refresh() {
+		const component = this.component;
+		const parts = this.parts;
+		const desired = new Set();
+		const deps = new Set();
+		for (let partIndex = 0; partIndex < parts.length; partIndex++) {
+			const part = parts[partIndex];
+			if (part.literal !== undefined) {
+				addTokens(part.literal, desired);
+				continue;
+			}
+			const expr = part.expr;
+			if (ClassList.isClassList(expr)) {
+				applyClassListItems(expr.items, desired, deps, component);
+				continue;
+			}
+			applyClassListItems([expr], desired, deps, component);
+		}
+		const current = this.classListCurrent ?? new Set();
+		diffClassList(this.el, current, desired);
+		this.classListCurrent = desired;
+		syncSpotSubscriptions(this, deps);
+	}
+}
+/**
+ * DOM event handler spot (`@click=${fn}` / `@${namedFn}`). No bus
+ * subscription — the WeakMap-keyed listener pattern dispatches through
+ * `dispatchEventSpotListener` looking up the spot by element + event type.
+ */
+class EventSpot extends Spot {
+	constructor(el, slotIndex, eventName, expr, component) {
+		super();
+		this.type = SPOT_TYPE.EVENT;
+		this.el = el;
+		this.slotIndex = slotIndex;
+		this.eventName = eventName;
+		this.expr = expr;
+		this.component = component;
+	}
+	unsubscribe() {
+		const map = EVENT_SPOTS.get(this.el);
+		if (map) {
+			map.delete(this.eventName);
+		}
+		this.el.removeEventListener(this.eventName, dispatchEventSpotListener);
+		super.unsubscribe();
+	}
+}
+function installBindingSpot(plan, el, expr, component) {
+	const bindingKey = expr.key;
+	if (ListBinding.isListBinding(expr)) {
+		const listSpot = new ListSpot(el, plan.slotIndex, plan.type, expr, component, bindingKey, expr.renderFn, expr.keyFn);
+		listSpot.refresh(null);
+		syncSpotSubscriptions(listSpot, new Set([bindingKey]));
+		return listSpot;
+	}
+	const typeIndex = component.typeIndex;
+	const declaredKind = expr.kind ?? typeIndex?.kinds.get(bindingKey) ?? null;
+	const spot = new BindingSpot(el, plan.slotIndex, plan.type, plan.attr, expr, component, bindingKey, declaredKind);
+	// A path declared `react: false` in `static types` is a static one-shot —
+	// patch once now, never subscribe.
+	if (typeIndex?.hasNonReactive && typeIndex.nonReactivePaths.has(bindingKey)) {
+		spot.kind = null;
+		spot.refresh();
+		return spot;
+	}
+	spot.refresh();
+	syncSpotSubscriptions(spot, new Set([bindingKey]));
+	return spot;
+}
+function installComputedSpot(plan, el, expr, component) {
+	// A typed bind given a function (`this.bind.text(() => …)`) tags the
+	// function with its declared content kind; a plain `${() => …}` leaves it
+	// undefined → auto-classified at patch time.
+	const declaredKind = expr.contentKind ?? null;
+	const spot = new ComputedSpot(el, plan.slotIndex, plan.type, plan.attr, expr, component, declaredKind);
+	spot.refresh();
+	return spot;
+}
+function installClassListSpot(plan, el, parts, component) {
+	const spot = new ClassListSpot(el, plan.slotIndex, parts, component);
+	spot.refresh();
+	return spot;
+}
+function installMultiAttrSpot(plan, el, parts, component) {
+	const spot = new MultiAttrSpot(el, plan.slotIndex, plan.attr, parts, component);
+	spot.refresh();
+	return spot;
+}
+function installEventSpot(plan, el, eventName, expr, component) {
+	const spot = new EventSpot(el, plan.slotIndex, eventName, expr, component);
+	let map = EVENT_SPOTS.get(el);
 	if (!map) {
 		map = new Map();
-		EVENT_SPOTS.set(spot.el, map);
+		EVENT_SPOTS.set(el, map);
 	}
-	map.set(spot.eventName, spot);
-	spot.el.addEventListener(spot.eventName, dispatchEventSpotListener);
+	map.set(eventName, spot);
+	el.addEventListener(eventName, dispatchEventSpotListener);
+	return spot;
+}
+/**
+ * Inert spot — used for `text`/`bare-attr`/`attr`/`bool-attr`/`prop`
+ * positions whose expression is a literal value (no Binding, no function).
+ * Patched once on install and again from `updateTemplateSpots` on re-render
+ * if the expr changes; never subscribes to state. `unsubscribe()` inherits
+ * the base behavior (no-op for empty unsubs/depMap).
+ */
+class StaticSpot extends Spot {
+	constructor(el, slotIndex, type, attr, expr) {
+		super();
+		this.type = type;
+		this.attr = attr;
+		this.el = el;
+		this.slotIndex = slotIndex;
+		this.expr = expr;
+		this.patch = null;
+	}
 }
 function domAttrForElement(el) {
 	if (el.type === 'checkbox' || el.type === 'radio') {
@@ -1260,7 +1390,7 @@ function domInputEvent(el) {
 }
 function writeBoundValue(component, key, value) {
 	if (key.startsWith('global.')) {
-		setGlobal({
+		globalState.set({
 			[key.slice(7)]: value,
 		});
 	} else {
@@ -1279,25 +1409,42 @@ function dispatchTwoWayInput() {
 	}
 	writeBoundValue(spot.component, spot.bindingKey, readDomProp(this, spot.twoWayAttr));
 }
-function applyTwoWayState(spot, nextValue) {
-	setDomProp(spot.el, spot.twoWayAttr, nextValue);
-}
-function teardownTwoWaySpot(spot) {
-	const map = TWO_WAY_SPOTS.get(spot.el);
-	if (map) {
-		map.delete(spot.twoWayEvent);
+/**
+ * Two-way `<input>`/`<select>`/`<textarea>` binding. `handle(value)` is the
+ * bus callback — a direct DOM write, no scheduling (write is synchronous and
+ * idempotent). The DOM-side `input`/`change` listener stays as the module-
+ * scope `dispatchTwoWayInput` dispatched via the `TWO_WAY_SPOTS` WeakMap.
+ */
+class TwoWaySpot extends Spot {
+	constructor(el, slotIndex, type, attr, expr, component, bindingKey, twoWayAttr, twoWayEvent) {
+		super();
+		this.type = type;
+		this.attr = attr;
+		this.el = el;
+		this.slotIndex = slotIndex;
+		this.expr = expr;
+		this.component = component;
+		this.bindingKey = bindingKey;
+		this.twoWayAttr = twoWayAttr;
+		this.twoWayEvent = twoWayEvent;
 	}
-	spot.el.removeEventListener(spot.twoWayEvent, dispatchTwoWayInput);
+	handle(nextValue) {
+		setDomProp(this.el, this.twoWayAttr, nextValue);
+	}
+	unsubscribe() {
+		const map = TWO_WAY_SPOTS.get(this.el);
+		if (map) {
+			map.delete(this.twoWayEvent);
+		}
+		this.el.removeEventListener(this.twoWayEvent, dispatchTwoWayInput);
+		super.unsubscribe();
+	}
 }
-function initializeTwoWaySpot(spot, component, explicitKey) {
-	const key = explicitKey ?? spot.expr.key;
-	const el = spot.el;
-	const attr = spot.attr ?? domAttrForElement(el);
+function installTwoWaySpot(plan, el, expr, component, explicitKey) {
+	const key = explicitKey ?? expr.key;
+	const attr = plan.attr ?? domAttrForElement(el);
 	const eventType = domInputEvent(el);
-	spot.component = component;
-	spot.bindingKey = key;
-	spot.twoWayAttr = attr;
-	spot.twoWayEvent = eventType;
+	const spot = new TwoWaySpot(el, plan.slotIndex, plan.type, attr, expr, component, key, attr, eventType);
 	setDomProp(el, attr, resolveBindingValue(component, key));
 	if (el.hasAttribute('value')) {
 		el.removeAttribute('value');
@@ -1305,11 +1452,10 @@ function initializeTwoWaySpot(spot, component, explicitKey) {
 	if (el.hasAttribute('checked')) {
 		el.removeAttribute('checked');
 	}
-	const stateHandler = applyTwoWayState.bind(null, spot);
 	if (key.startsWith('global.')) {
-		spot.unsubs.push(subscribeGlobalPath(component, key.slice(7), stateHandler));
+		spot.unsubs.push(subscribeGlobalPath(key.slice(7), TwoWaySpot.prototype.handle, spot));
 	} else {
-		spot.unsubs.push(subscribeStatePath(component, key, stateHandler));
+		spot.unsubs.push(subscribeStatePath(component, key, TwoWaySpot.prototype.handle, spot));
 	}
 	let map = TWO_WAY_SPOTS.get(el);
 	if (!map) {
@@ -1318,6 +1464,7 @@ function initializeTwoWaySpot(spot, component, explicitKey) {
 	}
 	map.set(eventType, spot);
 	el.addEventListener(eventType, dispatchTwoWayInput);
+	return spot;
 }
 const TEMPLATE_RECIPES = new WeakMap();
 function getNodePath(node, root) {
@@ -1405,7 +1552,7 @@ function lookupMarker(map, attrName, attrValue) {
 	return map.get(`${attrName}|${attrValue}`);
 }
 function buildSpotPlan(map, entry) {
-	if (entry.type === 'bind') {
+	if (entry.type === SPOT_TYPE.BIND) {
 		const markerAttr = bindMarkerAttribute(entry.i);
 		const lookup = lookupMarker(map, markerAttr, '');
 		if (!lookup) {
@@ -1413,12 +1560,12 @@ function buildSpotPlan(map, entry) {
 		}
 		lookup.el.removeAttribute(markerAttr);
 		return {
-			type: 'bind',
+			type: SPOT_TYPE.BIND,
 			slotIndex: entry.i,
 			path: lookup.path,
 		};
 	}
-	if (entry.type === 'multi-attr') {
+	if (entry.type === SPOT_TYPE.MULTI_ATTR) {
 		const markerAttr = multiAttrMarkerAttribute(entry.i);
 		const lookup = lookupMarker(map, markerAttr, '');
 		if (!lookup) {
@@ -1436,14 +1583,14 @@ function buildSpotPlan(map, entry) {
 			};
 		});
 		return {
-			type: 'multi-attr',
+			type: SPOT_TYPE.MULTI_ATTR,
 			slotIndex: entry.i,
 			path: lookup.path,
 			attr: entry.attr,
 			parts,
 		};
 	}
-	if (entry.type === 'event') {
+	if (entry.type === SPOT_TYPE.EVENT) {
 		const isDeduce = entry.deduceFromExpr === true;
 		const markerAttr = isDeduce ? `data-uwc-evfn-${entry.i}` : eventMarkerAttribute(entry.eventName);
 		const markerValue = isDeduce ? '' : `expr${entry.i}`;
@@ -1453,14 +1600,14 @@ function buildSpotPlan(map, entry) {
 		}
 		lookup.el.removeAttribute(markerAttr);
 		return {
-			type: 'event',
+			type: SPOT_TYPE.EVENT,
 			slotIndex: entry.i,
 			path: lookup.path,
 			eventName: isDeduce ? null : entry.eventName,
 			deduceFromExpr: isDeduce,
 		};
 	}
-	if (entry.type === 'text') {
+	if (entry.type === SPOT_TYPE.TEXT) {
 		const lookup = lookupMarker(map, SPOT, String(entry.i));
 		if (!lookup) {
 			return null;
@@ -1468,12 +1615,12 @@ function buildSpotPlan(map, entry) {
 		lookup.el.removeAttribute(SPOT);
 		lookup.el.style.display = 'contents';
 		return {
-			type: 'text',
+			type: SPOT_TYPE.TEXT,
 			slotIndex: entry.i,
 			path: lookup.path,
 		};
 	}
-	if (entry.type === 'bare-attr') {
+	if (entry.type === SPOT_TYPE.BARE_ATTR) {
 		const markerAttr = bareAttrMarkerAttribute(entry.i);
 		const lookup = lookupMarker(map, markerAttr, '');
 		if (!lookup) {
@@ -1481,26 +1628,26 @@ function buildSpotPlan(map, entry) {
 		}
 		lookup.el.removeAttribute(markerAttr);
 		return {
-			type: 'bare-attr',
+			type: SPOT_TYPE.BARE_ATTR,
 			slotIndex: entry.i,
 			path: lookup.path,
 		};
 	}
-	if (entry.type === 'attr') {
+	if (entry.type === SPOT_TYPE.ATTR) {
 		const lookup = lookupMarker(map, entry.attr, `expr${entry.i}`);
 		if (!lookup) {
 			return null;
 		}
 		lookup.el.removeAttribute(entry.attr);
 		return {
-			type: 'attr',
+			type: SPOT_TYPE.ATTR,
 			slotIndex: entry.i,
 			path: lookup.path,
 			attr: entry.attr,
 		};
 	}
-	if (entry.type === 'bool-attr' || entry.type === 'prop') {
-		const sigilChar = entry.type === 'bool-attr' ? '?' : '.';
+	if (entry.type === SPOT_TYPE.BOOL_ATTR || entry.type === SPOT_TYPE.PROP) {
+		const sigilChar = entry.type === SPOT_TYPE.BOOL_ATTR ? '?' : '.';
 		const domAttr = sigilChar + entry.attr;
 		const lookup = lookupMarker(map, domAttr, `expr${entry.i}`);
 		if (!lookup) {
@@ -1674,258 +1821,204 @@ function dispatchDataBindInput() {
 	}
 	setValueAtPath(spot.component.stateProxy, spot.bindingKey, spot.isCheck ? this.checked : this.value);
 }
-function applyDataBindState(spot, nextValue) {
-	if (spot.isCheck) {
-		spot.el.checked = Boolean(nextValue);
-	} else {
-		spot.el.value = String(nextValue ?? '');
+/**
+ * `data-bind="key"` HTML-attribute two-way binding (cousin of TwoWaySpot —
+ * activated by markup, not by template interpolation). Lives outside the
+ * `tplState.spots` array; pushed directly into the template's `unsubs` array
+ * because it is its own Disposable. `handle(value)` writes the next value
+ * into the DOM property; `unsubscribe()` tears down both the bus
+ * subscription (already an `unsubs` entry) and the WeakMap / DOM listener.
+ */
+class DataBindSpot {
+	constructor(el, stateKey, component) {
+		this.el = el;
+		this.component = component;
+		this.bindingKey = stateKey;
+		this.eventType = domInputEvent(el);
+		this.isCheck = el.type === 'checkbox' || el.type === 'radio';
+		this.busSubscription = null;
 	}
-}
-function teardownDataBind(spot) {
-	DATA_BIND_SPOTS.delete(spot.el);
-	spot.el.removeEventListener(spot.eventType, dispatchDataBindInput);
+	handle(nextValue) {
+		if (this.isCheck) {
+			this.el.checked = Boolean(nextValue);
+		} else {
+			this.el.value = String(nextValue ?? '');
+		}
+	}
+	unsubscribe() {
+		DATA_BIND_SPOTS.delete(this.el);
+		this.el.removeEventListener(this.eventType, dispatchDataBindInput);
+		if (this.busSubscription) {
+			this.busSubscription.unsubscribe();
+			this.busSubscription = null;
+		}
+	}
 }
 function installDataBind(el, stateKey, component, unsubs) {
-	const spot = {
-		el,
-		component,
-		bindingKey: stateKey,
-		eventType: domInputEvent(el),
-		isCheck: el.type === 'checkbox' || el.type === 'radio',
-	};
+	const spot = new DataBindSpot(el, stateKey, component);
 	DATA_BIND_SPOTS.set(el, spot);
 	el.addEventListener(spot.eventType, dispatchDataBindInput);
-	unsubs.push(teardownDataBind.bind(null, spot));
-	unsubs.push(subscribeStatePath(component, stateKey, applyDataBindState.bind(null, spot)));
+	spot.busSubscription = subscribeStatePath(component, stateKey, DataBindSpot.prototype.handle, spot);
+	unsubs.push(spot);
 	const currentValue = getValueAtPath(component.STATE, stateKey);
 	if (currentValue !== undefined) {
-		applyDataBindState(spot, currentValue);
+		spot.handle(currentValue);
 	}
 }
-function installSpotFromPlan(plan, fragment, exprs, component, unsubs) {
+function buildMultiParts(planParts, exprs) {
+	const parts = new Array(planParts.length);
+	for (let i = 0; i < planParts.length; i++) {
+		const part = planParts[i];
+		if (part.literal === undefined) {
+			parts[i] = {
+				exprIndex: part.exprIndex,
+				expr: exprs[part.exprIndex],
+			};
+		} else {
+			parts[i] = {
+				literal: part.literal,
+			};
+		}
+	}
+	return parts;
+}
+function deduceEventName(plan, expr) {
+	if (!plan.deduceFromExpr) {
+		return plan.eventName;
+	}
+	if (!isFunction(expr)) {
+		throw new TypeError('Template event handler must be a function.');
+	}
+	const fnName = expr.name;
+	if (!fnName || fnName.startsWith('bound ')) {
+		throw new TypeError(`@\${fn} requires a named function reference; got "${fnName || 'anonymous'}". Pass a class method, named function, or class arrow field; not an anonymous arrow or .bind() result.`);
+	}
+	return fnName;
+}
+function resolveTwoWaySourceValue(component, inferredKey) {
+	if (inferredKey.startsWith('global.')) {
+		return getValueAtPath(globalState.proxy, inferredKey.slice(7));
+	}
+	return getValueAtPath(component.STATE ?? {}, inferredKey);
+}
+function inferTwoWayBindingKey(component, expr, type, el, attr) {
+	const isBindableField = (type === SPOT_TYPE.ATTR || type === SPOT_TYPE.BARE_ATTR) &&
+		BINDABLE_TAGS.has(el.tagName) &&
+		BINDABLE_ATTRS.has(attr);
+	if (!isBindableField) {
+		return null;
+	}
+	const evaluated = evaluateTrackedExpression(component, expr);
+	if (evaluated.deps.size !== 1) {
+		return null;
+	}
+	const [inferredKey] = evaluated.deps;
+	const sourceValue = resolveTwoWaySourceValue(component, inferredKey);
+	return sourceValue === evaluated.value ? inferredKey : null;
+}
+function installSpotFromPlan(plan, fragment, exprs, component) {
 	const el = walkPath(fragment, plan.path);
 	if (!el) {
 		return null;
 	}
-	if (plan.type === 'multi-attr') {
-		const parts = plan.parts.map((part) => {
-			if (part.literal !== undefined) {
-				return {
-					literal: part.literal,
-				};
-			}
-			return {
-				exprIndex: part.exprIndex,
-				expr: exprs[part.exprIndex],
-			};
-		});
+	if (plan.type === SPOT_TYPE.MULTI_ATTR) {
+		const parts = buildMultiParts(plan.parts, exprs);
 		// `class=` always uses the class-list spot so updates diff individual
 		// tokens (preserving any class added externally), and every input
 		// type — string, function, ClassList, Set, Array, Map, Binding — is
 		// handled by the same machinery in `applyClassListItems`.
 		if (plan.attr === 'class') {
-			const classSpot = {
-				type: 'class-list',
-				slotIndex: plan.slotIndex,
-				attr: 'class',
-				parts,
-				el,
-				unsubs: [],
-			};
-			initializeClassListSpot(classSpot, component);
-			return classSpot;
+			return installClassListSpot(plan, el, parts, component);
 		}
-		const multiSpot = {
-			type: 'multi-attr',
-			slotIndex: plan.slotIndex,
-			attr: plan.attr,
-			parts,
-			el,
-			unsubs: [],
-		};
-		initializeMultiAttrSpot(multiSpot, component);
-		return multiSpot;
+		return installMultiAttrSpot(plan, el, parts, component);
 	}
 	const expr = exprs[plan.slotIndex];
-	if (plan.type === 'bind') {
+	if (plan.type === SPOT_TYPE.BIND) {
 		if (!isBindingType(expr)) {
 			return null;
 		}
-		const bindSpot = {
-			type: 'bind',
-			slotIndex: plan.slotIndex,
-			el,
-			expr,
-			unsubs: [],
-		};
-		initializeTwoWaySpot(bindSpot, component);
-		return bindSpot;
+		return installTwoWaySpot(plan, el, expr, component);
 	}
-	if (plan.type === 'event') {
-		let eventName = plan.eventName;
-		if (plan.deduceFromExpr) {
-			if (expr === undefined || expr === null || expr === false) {
-				return null;
-			}
-			if (!isFunction(expr)) {
-				throw new TypeError('Template event handler must be a function.');
-			}
-			const fnName = expr.name;
-			if (!fnName || fnName.startsWith('bound ')) {
-				throw new TypeError(
-					`@\${fn} requires a named function reference; got "${fnName || 'anonymous'}". Pass a class method, named function, or class arrow field; not an anonymous arrow or .bind() result.`
-				);
-			}
-			eventName = fnName;
+	if (plan.type === SPOT_TYPE.EVENT) {
+		if (plan.deduceFromExpr && (expr === undefined || expr === null || expr === false)) {
+			return null;
 		}
-		const eventSpot = {
-			type: 'event',
-			slotIndex: plan.slotIndex,
-			eventName,
-			el,
-			expr,
-			unsubs: [],
-		};
-		initializeEventSpot(eventSpot, component);
-		return eventSpot;
+		const eventName = deduceEventName(plan, expr);
+		return installEventSpot(plan, el, eventName, expr, component);
 	}
-	let spot;
-	if (plan.type === 'text') {
-		spot = {
-			type: 'text',
-			slotIndex: plan.slotIndex,
-			el,
-			expr,
-			unsubs: [],
-		};
-		if (ListBinding.isListBinding(expr)) {
-			spot.patch = patchListKind;
-			spot.el.style.pointerEvents = '';
-		} else if (ComponentBinding.is(expr)) {
-			spot.patch = patchComponentKind;
-			spot.el.style.pointerEvents = '';
-		}
-	} else if (plan.type === 'bare-attr') {
+	const resolvedType = plan.type;
+	let resolvedAttr = plan.attr;
+	if (plan.type === SPOT_TYPE.TEXT) {
+		// `text`/`bare-attr` etc. flow through below — text starts with no attr.
+	} else if (plan.type === SPOT_TYPE.BARE_ATTR) {
 		const inferredAttr = inferBareAttrName(expr);
 		if (!inferredAttr) {
 			return null;
 		}
-		spot = {
-			type: 'bare-attr',
-			slotIndex: plan.slotIndex,
-			attr: inferredAttr,
-			el,
-			expr,
-			unsubs: [],
-		};
-	} else if (plan.type === 'attr') {
+		resolvedAttr = inferredAttr;
+	} else if (plan.type === SPOT_TYPE.ATTR) {
 		if (plan.attr === 'class') {
-			const classAttrSpot = {
-				type: 'class-list',
-				slotIndex: plan.slotIndex,
-				attr: 'class',
-				parts: [
-					{
-						exprIndex: plan.slotIndex,
-						expr,
-					},
-				],
-				el,
-				unsubs: [],
-			};
-			initializeClassListSpot(classAttrSpot, component);
-			return classAttrSpot;
+			const singletonParts = [
+				{
+					exprIndex: plan.slotIndex,
+					expr,
+				},
+			];
+			return installClassListSpot(plan, el, singletonParts, component);
 		}
-		spot = {
-			type: 'attr',
-			slotIndex: plan.slotIndex,
-			attr: plan.attr,
-			el,
-			expr,
-			unsubs: [],
-		};
-	} else if (plan.type === 'bool-attr' || plan.type === 'prop') {
-		spot = {
-			type: plan.type,
-			slotIndex: plan.slotIndex,
-			attr: plan.attr,
-			el,
-			expr,
-			unsubs: [],
-		};
+	} else if (plan.type === SPOT_TYPE.BOOL_ATTR || plan.type === SPOT_TYPE.PROP) {
+		// passthrough — resolvedType/attr already set
 	} else {
 		return null;
 	}
+	const resolvedPlan = resolvedAttr === plan.attr ? plan : {
+		...plan,
+		attr: resolvedAttr,
+	};
 	if (isBindingType(expr)) {
-		const autoTwoWay = (spot.type === 'attr' || spot.type === 'bare-attr') &&
-			BINDABLE_TAGS.has(spot.el.tagName) &&
-			BINDABLE_ATTRS.has(spot.attr);
+		const autoTwoWay = (resolvedType === SPOT_TYPE.ATTR || resolvedType === SPOT_TYPE.BARE_ATTR) &&
+			BINDABLE_TAGS.has(el.tagName) &&
+			BINDABLE_ATTRS.has(resolvedAttr);
 		if (autoTwoWay) {
-			initializeTwoWaySpot(spot, component);
-		} else {
-			initializeBindingSpot(spot, component);
+			return installTwoWaySpot(resolvedPlan, el, expr, component);
 		}
-	} else if (isFunction(expr)) {
-		const isBindableField = (spot.type === 'attr' || spot.type === 'bare-attr') &&
-			BINDABLE_TAGS.has(spot.el.tagName) &&
-			BINDABLE_ATTRS.has(spot.attr);
-		if (isBindableField) {
-			const evaluated = evaluateTrackedExpression(component, expr);
-			if (evaluated.deps.size === 1) {
-				const [inferredKey] = evaluated.deps;
-				const sourceValue = inferredKey.startsWith('global.') ? getValueAtPath(getGlobalSource(component), inferredKey.slice(7)) : getValueAtPath(component.STATE ?? {}, inferredKey);
-				if (sourceValue === evaluated.value) {
-					spot.bindingKey = inferredKey;
-					initializeTwoWaySpot(spot, component, inferredKey);
-					return spot;
-				}
-			}
-		}
-		initializeComputedSpot(spot, component);
-	} else {
-		patchSpot(spot, expr);
+		return installBindingSpot(resolvedPlan, el, expr, component);
 	}
-	return spot;
+	if (isFunction(expr)) {
+		const inferredKey = inferTwoWayBindingKey(component, expr, resolvedType, el, resolvedAttr);
+		if (inferredKey) {
+			return installTwoWaySpot(resolvedPlan, el, expr, component, inferredKey);
+		}
+		return installComputedSpot(resolvedPlan, el, expr, component);
+	}
+	// Static literal value — patch once now; updateTemplateSpots will repatch
+	// on re-render if the expr changes.
+	const staticSpot = new StaticSpot(el, plan.slotIndex, resolvedType, resolvedAttr, expr);
+	if (resolvedType === SPOT_TYPE.TEXT) {
+		if (ListBinding.isListBinding(expr)) {
+			staticSpot.patch = patchListKind;
+			el.style.pointerEvents = '';
+		} else if (ComponentBinding.is(expr)) {
+			staticSpot.patch = patchComponentKind;
+			el.style.pointerEvents = '';
+		}
+	}
+	patchSpot(staticSpot, expr);
+	return staticSpot;
 }
 function cleanupSpots(spots) {
 	if (!spots || !spots.length) {
 		return;
 	}
 	for (let i = 0; i < spots.length; i++) {
-		const spot = spots[i];
-		if (spot.type === 'event') {
-			teardownEventSpot(spot);
-			continue;
-		}
-		if (spot.type === 'bind' || (spot.bindingKey !== undefined && spot.twoWayEvent)) {
-			teardownTwoWaySpot(spot);
-		}
-		if (spot.liveList) {
-			if (spot.liveList.disconnectSpot) {
-				spot.liveList.disconnectSpot();
-			}
-			spot.liveList = null;
-		}
-		spot.keyMap = null;
-		spot.prevItemMap = null;
-		spot.pendingTask = null;
-		spot.pendingPaths = null;
-		spot.kind = null;
-		if (spot.depMap) {
-			spot.depMap.forEach(callFn);
-			spot.depMap.clear();
-			spot.depMap = null;
-		}
-		if (spot.unsubs && spot.unsubs.length) {
-			spot.unsubs = clearSubscriptions(spot.unsubs);
-		}
+		spots[i].unsubscribe();
 	}
 }
 function collectBoundKeys(spots, dataBindPlans) {
 	const keys = new Set();
 	for (let i = 0; i < spots.length; i++) {
 		const spot = spots[i];
-		if (spot.type === 'multi-attr' || spot.type === 'class-list') {
+		if (spot.type === SPOT_TYPE.MULTI_ATTR || spot.type === SPOT_TYPE.CLASS_LIST) {
 			for (let j = 0; j < spot.parts.length; j++) {
 				const part = spot.parts[j];
 				if (isBindingType(part.expr)) {
@@ -1968,7 +2061,7 @@ function instantiateRecipe(recipe, exprs, component) {
 	const spots = [];
 	const unsubs = [];
 	eachArray(recipe.spotPlans, (plan) => {
-		const spot = installSpotFromPlan(plan, fragment, exprs, component, unsubs);
+		const spot = installSpotFromPlan(plan, fragment, exprs, component);
 		if (spot) {
 			spots.push(spot);
 		}
@@ -1986,7 +2079,13 @@ function instantiateRecipe(recipe, exprs, component) {
 			if (!el) {
 				return;
 			}
-			registerSubevent(el, plan.attrName, plan.value);
+			// Reflect the static value into the data attribute so behaviors
+			// reading `el.dataset.<name>` see the initial value before any
+			// dynamic spot refresh fires. Dynamic updates flow through
+			// `applySubeventAttr` (further up).
+			if (plan.value != null && plan.value !== false && plan.value !== '') {
+				el.setAttribute(`data-${plan.attrName}`, plan.value === true ? '' : String(plan.value));
+			}
 			const behavior = getBehavior(plan.attrName);
 			if (behavior?.install) {
 				const cleanup = behavior.install(el, plan.value, component);
@@ -2013,18 +2112,18 @@ function instantiateRecipe(recipe, exprs, component) {
 	};
 }
 function updateSpot(spot, newExpr, component) {
-	if (spot.type === 'event') {
+	if (spot.type === SPOT_TYPE.EVENT) {
 		spot.expr = newExpr;
 		return;
 	}
-	if (spot.type === 'bind') {
+	if (spot.type === SPOT_TYPE.BIND) {
 		return;
 	}
 	if (isBindingType(newExpr) || isFunction(newExpr)) {
 		spot.expr = newExpr;
 		return;
 	}
-	if (spot.type === 'attr') {
+	if (spot.type === SPOT_TYPE.ATTR) {
 		const str = String(newExpr ?? '');
 		if (!applySubeventAttr(spot.el, spot.attr, str)) {
 			if (spot.el.getAttribute(spot.attr) !== str) {
@@ -2034,7 +2133,7 @@ function updateSpot(spot, newExpr, component) {
 		spot.expr = newExpr;
 		return;
 	}
-	if (spot.type === 'text' || spot.type === 'bare-attr' || spot.type === 'bool-attr' || spot.type === 'prop') {
+	if (spot.type === SPOT_TYPE.TEXT || spot.type === SPOT_TYPE.BARE_ATTR || spot.type === SPOT_TYPE.BOOL_ATTR || spot.type === SPOT_TYPE.PROP) {
 		patchSpot(spot, newExpr);
 		spot.expr = newExpr;
 	}
@@ -2055,7 +2154,7 @@ function updateTemplateSpots(state, newExprs, component) {
 	} = state;
 	for (let i = 0; i < spots.length; i++) {
 		const spot = spots[i];
-		if (spot.type === 'multi-attr') {
+		if (spot.type === SPOT_TYPE.MULTI_ATTR) {
 			let changed = false;
 			eachArray(spot.parts, (part) => {
 				if (part.exprIndex === undefined) {
@@ -2068,11 +2167,11 @@ function updateTemplateSpots(state, newExprs, component) {
 				}
 			});
 			if (changed) {
-				refreshMultiAttrSpot(spot);
+				spot.refresh();
 			}
 			continue;
 		}
-		if (spot.type === 'class-list') {
+		if (spot.type === SPOT_TYPE.CLASS_LIST) {
 			let changed = false;
 			eachArray(spot.parts, (part) => {
 				if (part.exprIndex === undefined) {
@@ -2085,7 +2184,7 @@ function updateTemplateSpots(state, newExprs, component) {
 				}
 			});
 			if (changed) {
-				refreshClassListSpot(spot);
+				spot.refresh();
 			}
 			continue;
 		}
@@ -2115,9 +2214,8 @@ function updateTemplateSpots(state, newExprs, component) {
 // Per-instance template runtime: plain fields, no closures. All template
 // methods are first-class functions on WebComponent.prototype so the JIT can
 // monomorphize them across every component instance. `tplCleanupNodes` is the
-// only set of nodes we must visit on teardown — populated by templateHtmlElement
-// and by the dynamic subevent installer. Other DOM nodes' WeakMap entries
-// (subevents, SUBEVENT_LAST_VALUES, HTML_ELEMENT_INSTANCES) auto-clean on GC
+// only set of nodes we must visit on teardown — populated by templateHtmlElement.
+// Other DOM nodes' WeakMap entries (HTML_ELEMENT_INSTANCES) auto-clean on GC
 // once `replaceChildren` detaches them; we don't pay for a full subtree walk.
 export function initTemplateRuntime(component) {
 	component.tplUnsubs = [];
@@ -2135,19 +2233,22 @@ export function initTemplateRuntime(component) {
 function runCleanupOnNode(node) {
 	cleanupTemplateNode(node);
 }
+function runTemplateCleanup(component) {
+	if (component.tplState) {
+		cleanupSpots(component.tplState.spots);
+	}
+	eachArray(component.tplUnsubs, disposeItem);
+	component.tplUnsubs = [];
+	if (component.tplCleanupNodes.size) {
+		component.tplCleanupNodes.forEach(runCleanupOnNode);
+		component.tplCleanupNodes.clear();
+	}
+	component.tplState = null;
+	component.tplBoundKeys = new Set();
+	component.htmlElementCache?.clear();
+}
 export function templateCleanup() {
-	if (this.tplState) {
-		cleanupSpots(this.tplState.spots);
-	}
-	eachArray(this.tplUnsubs, callFn);
-	this.tplUnsubs = [];
-	if (this.tplCleanupNodes.size) {
-		this.tplCleanupNodes.forEach(runCleanupOnNode);
-		this.tplCleanupNodes.clear();
-	}
-	this.tplState = null;
-	this.tplBoundKeys = new Set();
-	this.htmlElementCache?.clear();
+	runTemplateCleanup(this);
 }
 export function templateHtml(strings, ...exprs) {
 	const state = this.tplState;
@@ -2156,7 +2257,7 @@ export function templateHtml(strings, ...exprs) {
 		this.templateBuilt = true;
 		return;
 	}
-	templateCleanup.call(this);
+	runTemplateCleanup(this);
 	const recipe = getRecipe(strings);
 	const instance = instantiateRecipe(recipe, exprs, this);
 	this.tplUnsubs = instance.unsubs;
@@ -2170,12 +2271,12 @@ export function templateHtml(strings, ...exprs) {
 	};
 }
 const HTML_ELEMENT_INSTANCES = new WeakMap();
-function cleanupHtmlElementInstance() {
-	const instance = HTML_ELEMENT_INSTANCES.get(this);
+function cleanupHtmlElementInstance(node) {
+	const instance = HTML_ELEMENT_INSTANCES.get(node);
 	if (!instance) {
 		return;
 	}
-	HTML_ELEMENT_INSTANCES.delete(this);
+	HTML_ELEMENT_INSTANCES.delete(node);
 	cleanupSpots(instance.spots);
 	clearSubscriptions(instance.unsubs);
 }

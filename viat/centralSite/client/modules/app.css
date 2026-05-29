@@ -22,20 +22,10 @@
 	overflow: hidden;
 	position: relative;
 	min-height: 0;
-	transition: grid-template-columns 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 }
-/* Only xl/xxl actually dock the sidebar into a reserved 260px column.
-   At lg and below the sidebar's own `mode-floating` / `mode-overlay`
-   styling positions it over the dashboard so we don't reserve a column
-   here — see global-sidebar.js#mode. */
-:host(.vw-xl) .shell-body,
-:host(.vw-xxl) .shell-body {
-	grid-template-columns: calc(var(--rail-width, 52px) + 16px) minmax(0, 1fr) 260px;
-}
-:host(.vw-xl) .shell-body:has(global-sidebar:not([open])),
-:host(.vw-xxl) .shell-body:has(global-sidebar:not([open])) {
-	grid-template-columns: calc(var(--rail-width, 52px) + 16px) minmax(0, 1fr) 0;
-}
+/* The sidebar is a fixed-position flyout in every mode — it overlays the page
+   and never reserves a column or displaces dashboard content, so the third
+   track stays 0. See ui-sidebar#mode. */
 .shell-body > * {
 	min-width: 0;
 	min-height: 0;
@@ -83,10 +73,9 @@
 :host(.vw-sm) app-dashboard {
 	display: none;
 }
-/* Mobile (xs/sm < 768px): stack page → dock at bottom, hide sidebar +
-   bottom-bar. The dock takes over the bottom-bar slot, so the bottom-bar
-   is suppressed entirely. Sidebar collapses (its desktop docked column was
-   already 0-width below vw-lg). */
+/* Mobile (xs/sm < 768px): stack page → dock at bottom, suppress the
+   bottom-bar — the dock takes over its vertical slot. The sidebar is left
+   alone: it runs in `mode-coverup` here and floats as its own drawer. */
 :host(.vw-xs) .shell-body,
 :host(.vw-sm) .shell-body {
 	grid-template-columns: minmax(0, 1fr);
@@ -106,9 +95,8 @@
 }
 /* Bottom bar is permanently suppressed on mobile — the dock takes its
    vertical slot. The sidebar is intentionally NOT hidden here: its own
-   mode-overlay CSS already keeps the shell translated off-screen until
-   the user opens it, and hiding it outright would prevent the swipe-open
-   gesture and the toggle button from doing anything. */
+   mode-coverup CSS keeps the shell translated off-screen until the user
+   opens it, and hiding it outright would kill the swipe-open gesture. */
 :host(.vw-xs) global-bottom-bar,
 :host(.vw-sm) global-bottom-bar {
 	display: none;

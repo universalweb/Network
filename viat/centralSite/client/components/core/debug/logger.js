@@ -61,10 +61,7 @@ function passthrough(method) {
 }
 function ifAvailable(method, level = 'info') {
 	return gated(level, (...args) => {
-		const fn = console[method];
-		if (typeof fn === 'function') {
-			fn.apply(console, args);
-		}
+		console[method]?.(...args);
 	});
 }
 function ifPerf(method) {

@@ -5,8 +5,12 @@ import {
 	syncSubsByDiff,
 } from '../utilities.js';
 import { makeProxy, setCurrentTracking } from '../state/binding.js';
-import { allChildren } from '../dom/children.js';
+import { LIFECYCLE_PROMISE } from '../lifecycle/lifecycle.js';
 import { Logger } from '../debug/logger.js';
+import { PHASE } from '../lifecycle/phase.js';
+import { allChildren } from '../dom/children.js';
+import { ensureStateBus } from '../state/state.js';
+import { globalState } from '../state/globalState.js';
 import { nextFrame } from '../lifecycle/scheduler.js';
 import { scanAndResolve } from '../resolver.js';
 async function awaitChildren(component, fieldName) {
@@ -38,19 +42,33 @@ export function invalidateRender() {
 		this.updateView();
 	}
 }
-function markRenderDirty() {
+// Renderdep dirty-marker. Promoted from a module-scope function (which had to
+// be `.bind`-ed per component to capture `this`) to a `WebComponent.prototype`
+// method — the path bus now supports a `target` for `handler.call(target, …)`,
+// so a single shared prototype reference + per-subscription target replaces
+// the per-component bound closure. Zero `.bind`, zero per-component allocation.
+export function markRenderDirty() {
 	this.templateBuilt = false;
 	// A tracked renderDep changed — the next renderView is a PATCH PASS:
 	// render() re-runs and updateTemplateSpots patches the spots in place,
 	// but the structural lifecycle is skipped. See renderView's isPatchPass.
 	this.renderDepDirty = true;
 }
+// Module-scope, signature ordered as (key, context) so it slots directly into
+// syncSubsByDiff's `subscribe(key, context)` contract — the component is the
+// per-call context, passed as the 4th arg of syncSubsByDiff with zero wrapper
+// allocations.
+function subscribeRenderDep(dep, component) {
+	if (dep.startsWith('global.')) {
+		return globalState.bus.subscribe(dep.slice(7), component.markRenderDirty, component);
+	}
+	return ensureStateBus(component).subscribe(dep, component.markRenderDirty, component);
+}
 export function subscribeRenderDeps(deps) {
 	if (!deps || deps.size === 0) {
 		clearUnsubs(this.renderDepUnsubs);
 		return;
 	}
-	const component = this;
 	// Renderdep subscribers only need to flip the dirty flag — the path bus
 	// calls `onFlush → updateView` at the end of every flush, so the actual
 	// renderView is scheduled there exactly once per flush. If each
@@ -61,16 +79,7 @@ export function subscribeRenderDeps(deps) {
 	// and wasted spot-diff work that produced no DOM. The external
 	// `invalidateRender` keeps its full semantics for explicit force-render
 	// callers.
-	if (!this.boundMarkRenderDirty) {
-		this.boundMarkRenderDirty = markRenderDirty.bind(this);
-	}
-	const markDirty = this.boundMarkRenderDirty;
-	syncSubsByDiff(this.renderDepUnsubs, deps, (dep) => {
-		if (dep.startsWith('global.')) {
-			return component.watchGlobal ? component.watchGlobal(dep.slice(7), markDirty) : (() => {});
-		}
-		return component.watchState ? component.watchState(dep, markDirty) : (() => {});
-	});
+	syncSubsByDiff(this.renderDepUnsubs, deps, subscribeRenderDep, this);
 }
 export async function renderView() {
 	this.templateBuilt = false;
@@ -193,45 +202,45 @@ export async function renderView() {
 	await this.handleLive();
 }
 export async function handleRendered(sequence, wasFirstRender, renderedResolver) {
-	await awaitChildren(this, 'whenRendered');
+	await awaitChildren(this, LIFECYCLE_PROMISE.RENDERED);
 	if (sequence !== this.renderSeq) {
 		this.finishRender(renderedResolver);
 		return;
 	}
 	await this.onRendered?.();
-	if (wasFirstRender && this.phase === 'connected') {
-		this.phase = 'rendered';
+	if (wasFirstRender && this.phase === PHASE.CONNECTED) {
+		this.phase = PHASE.RENDERED;
 	}
 	this.finishRender(renderedResolver);
 }
 export async function handleMount() {
-	await awaitChildren(this, 'whenMounted');
+	await awaitChildren(this, LIFECYCLE_PROMISE.MOUNTED);
 	if (!this.isConnected) {
-		fireResolver(this.lifecycle, 'whenMounted');
+		fireResolver(this.lifecycle, LIFECYCLE_PROMISE.MOUNTED);
 		return;
 	}
 	await this.onMount?.();
-	if (this.phase === 'rendered') {
-		this.phase = 'mounted';
+	if (this.phase === PHASE.RENDERED) {
+		this.phase = PHASE.MOUNTED;
 	}
-	fireResolver(this.lifecycle, 'whenMounted');
+	fireResolver(this.lifecycle, LIFECYCLE_PROMISE.MOUNTED);
 }
 export async function handleLive() {
 	await nextFrame();
 	if (!this.isConnected) {
-		fireResolver(this.lifecycle, 'whenLive');
+		fireResolver(this.lifecycle, LIFECYCLE_PROMISE.LIVE);
 		return;
 	}
 	this.classList.remove('mounting');
-	await awaitChildren(this, 'whenLive');
+	await awaitChildren(this, LIFECYCLE_PROMISE.LIVE);
 	if (!this.isConnected) {
-		fireResolver(this.lifecycle, 'whenLive');
+		fireResolver(this.lifecycle, LIFECYCLE_PROMISE.LIVE);
 		return;
 	}
 	await this.onLive?.();
-	if (this.phase === 'mounted') {
-		this.phase = 'live';
+	if (this.phase === PHASE.MOUNTED) {
+		this.phase = PHASE.LIVE;
 	}
-	fireResolver(this.lifecycle, 'whenLive');
+	fireResolver(this.lifecycle, LIFECYCLE_PROMISE.LIVE);
 	this.installObserver();
 }

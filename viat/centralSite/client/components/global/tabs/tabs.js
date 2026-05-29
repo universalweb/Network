@@ -1,4 +1,4 @@
-import { WebComponent, classList, each } from '../../core/index.js';
+import { WebComponent, classList, each, movingIndicator } from '../../core/index.js';
 import { UITabButton } from './tab-button.js';
 // `<ui-tabs>` — reusable tab strip + slotted content area with built-in
 // switching animation (sliding indicator bar + cross-fade panel).
@@ -66,20 +66,27 @@ export class UITabs extends WebComponent {
 	}
 	switching = false;
 	stripObserver = null;
+	indicatorController = null;
 	onConnect() {
-		this.observe('active', (next, prev) => {
+		this.observeAsync('active', (next, prev) => {
 			if (prev !== next) {
 				this.syncIndicator();
 			}
 		});
-		this.observe('tabs', () => {
+		this.observeAsync('tabs', () => {
 			this.syncIndicator();
 		});
-		this.observe('orientation', () => {
+		this.observeAsync('orientation', () => {
 			this.syncIndicator(true);
 		});
 	}
 	onMount() {
+		// The indicator engine needs its element — present now, after the first
+		// render. Create it before seeding `active` below: that seed trips the
+		// `active` observer straight into `syncIndicator`.
+		this.indicatorController = movingIndicator(this.refs.indicator, {
+			prefix: 'ind',
+		});
 		// Seed `active` to the first tab when the parent doesn't pass one.
 		if (!this.state.active && this.state.tabs?.length) {
 			this.state.active = this.state.tabs[0].id;
@@ -101,6 +108,8 @@ export class UITabs extends WebComponent {
 	onDisconnect() {
 		this.stripObserver?.disconnect();
 		this.stripObserver = null;
+		this.indicatorController?.destroy();
+		this.indicatorController = null;
 	}
 	// Enrich every state.tabs item with the parent-owned `active` flag and
 	// `orientation`. Re-runs whenever any of those change — the list-binding's
@@ -128,36 +137,16 @@ export class UITabs extends WebComponent {
 		return item.id;
 	}
 	syncIndicator(skipTransition = false) {
-		const indicator = this.refs.indicator;
-		if (!indicator) {
+		const controller = this.indicatorController;
+		if (!controller) {
 			return;
 		}
+		// `moveTo` measures the button and writes both axes; the orientation
+		// CSS picks the pair it honours. A falsy active button hides it.
 		const activeBtn = this.findComponent('ui-tab-button', (btn) => {
 			return btn.state.active;
 		});
-		if (!activeBtn) {
-			indicator.classList.remove('is-visible');
-			return;
-		}
-		if (skipTransition) {
-			indicator.classList.add('no-transition');
-		}
-		const isVertical = this.state.orientation === 'vertical';
-		if (isVertical) {
-			indicator.style.setProperty('--ind-y', `${activeBtn.offsetTop}px`);
-			indicator.style.setProperty('--ind-h', `${activeBtn.offsetHeight}px`);
-		} else {
-			indicator.style.setProperty('--ind-x', `${activeBtn.offsetLeft}px`);
-			indicator.style.setProperty('--ind-w', `${activeBtn.offsetWidth}px`);
-		}
-		indicator.classList.add('is-visible');
-		if (skipTransition) {
-			// Force the position to apply, then re-enable transitions next frame.
-			indicator.getBoundingClientRect();
-			requestAnimationFrame(() => {
-				indicator.classList.remove('no-transition');
-			});
-		}
+		controller.moveTo(activeBtn, skipTransition);
 	}
 	async setActive(id) {
 		if (!id || id === this.state.active || this.switching) {
@@ -278,9 +267,7 @@ export class UITabs extends WebComponent {
 					@keydown=${this.handleKey}
 					#strip>
 					<div class="tab-indicator" #indicator></div>
-					${() => {
-						return each(this.itemsForList(), UITabButton, this.tabKey);
-					}}
+					${each(this.itemsForList(), UITabButton, this.tabKey)}
 				</div>
 				<div class="tab-content" #content>
 					<slot name=${this.activeSlotName}></slot>

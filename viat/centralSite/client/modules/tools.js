@@ -1,5 +1,5 @@
 import { defineGlobalTool } from '../components/core/ai/index.js';
-import { getGlobal } from '../components/core/index.js';
+import { globalState } from '../components/core/index.js';
 import { listAllTools } from '../components/core/ai/registry.js';
 // Page map + per-tool schemas are NOT shipped in every system prompt.
 // The AI fetches them on demand via these two tools — keeps the steady-
@@ -63,7 +63,7 @@ defineGlobalTool('getWalletAmount', {
 	},
 	mutating: false,
 	handler: () => {
-		return getGlobal()?.walletAmount ?? null;
+		return globalState.get()?.walletAmount ?? null;
 	},
 });
 // AI-facing send entrypoint. We INTENTIONALLY don't send straight from a

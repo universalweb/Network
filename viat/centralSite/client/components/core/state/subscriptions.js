@@ -1,81 +1,47 @@
-import { delegate as delegateChannel, removeDelegate as removeDelegateChannel } from '../dom/delegate.js';
-import { getGlobal, subscribeGlobal } from './globalState.js';
-import { getOrInit, isArray } from '../utilities.js';
+import { TrackedBundle } from './pathSubscriptions.js';
+import { globalState } from './globalState.js';
+import { isArray } from '../utilities.js';
 import { schedule } from '../lifecycle/scheduler.js';
 function toList(keys) {
 	return isArray(keys) ? keys : [keys];
 }
-function trackUnsubs(set, unsubscribers) {
-	for (let i = 0; i < unsubscribers.length; i++) {
-		set.add(unsubscribers[i]);
+function trackUnsubs(set, subscriptions) {
+	for (let i = 0; i < subscriptions.length; i += 1) {
+		set.add(subscriptions[i]);
 	}
-	return () => {
-		for (let i = 0; i < unsubscribers.length; i++) {
-			unsubscribers[i]();
-			set.delete(unsubscribers[i]);
-		}
-	};
+	return new TrackedBundle(set, subscriptions);
 }
-function trackUnsub(set, unsubscribe) {
-	set.add(unsubscribe);
-	return () => {
-		unsubscribe();
-		set.delete(unsubscribe);
-	};
-}
-export function observe(keys, callback) {
+export function observeAsync(keys, callback) {
 	const component = this;
 	// Defer through the render scheduler so the callback fires AFTER any
 	// list/spot patches in the same batch have updated the DOM.
+	// This can't be making random new functions need a better solution here
 	const deferred = function deferredObserver(nextValue, previousValue, changedPath) {
 		schedule(() => {
 			return callback.call(component, nextValue, previousValue, changedPath);
 		});
 	};
-	const unsubscribers = toList(keys).map((key) => {
-		return this.watchState(key, deferred);
+	const subscriptions = toList(keys).map((key) => {
+		return this.observe(key, deferred);
 	});
-	return trackUnsubs(this.stateUnsubs, unsubscribers);
-}
-export function observeAttr(keys, callback) {
-	const keyList = toList(keys);
-	if (!this.attrObservers) {
-		this.attrObservers = new Map();
-	}
-	const observerMap = this.attrObservers;
-	keyList.forEach((key) => {
-		getOrInit(observerMap, key, () => new Set()).add(callback);
-	});
-	return () => {
-		if (!this.attrObservers) {
-			return;
-		}
-		keyList.forEach((key) => {
-			const subscriberSet = this.attrObservers.get(key);
-			if (!subscriberSet) {
-				return;
-			}
-			subscriberSet.delete(callback);
-			if (subscriberSet.size === 0) {
-				this.attrObservers.delete(key);
-			}
-		});
-	};
+	return trackUnsubs(this.stateUnsubs, subscriptions);
 }
 export function observeGlobal(keys, callback) {
-	const unsubscribers = toList(keys).map((key) => {
-		let previousValue = getGlobal(key);
-		return subscribeGlobal(key, (nextValue, globalState, changedPath) => {
+	const subscriptions = toList(keys).map((key) => {
+		let previousValue = globalState.get(key);
+		return globalState.bus.subscribe(key, (nextValue, changedPath) => {
 			const result = callback(nextValue, previousValue, changedPath);
 			previousValue = nextValue;
 			return result;
 		});
 	});
-	return trackUnsubs(this.globalUnsubs, unsubscribers);
+	return trackUnsubs(this.globalUnsubs, subscriptions);
 }
-export function delegate(channel, handler, options) {
-	return trackUnsub(this.delegateUnsubs, delegateChannel(channel, handler, this, options));
-}
-export function removeDelegate(channel, handler) {
-	removeDelegateChannel(channel, handler);
+/**
+ * Tear down every globalState observer this component has on `key`. Same
+ * contract as `unobserve` but scoped to the `globalUnsubs` tracker. Other
+ * components observing the same key are untouched.
+ */
+export function unobserveGlobal(key) {
+	this.globalUnsubs.removeByKey(String(key ?? ''));
 }

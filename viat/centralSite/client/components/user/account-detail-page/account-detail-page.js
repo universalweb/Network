@@ -57,12 +57,12 @@ export class AccountDetailPage extends WebComponent {
 		totalCount: 0,
 		loading: false,
 		error: '',
+		titleIconState: {
+			name: 'user-round',
+			size: 'md',
+		},
 	};
 	loadedKey = '';
-	titleIconState = {
-		name: 'user-round',
-		size: 'md',
-	};
 	setAddress(address, page = 1) {
 		const nextAddress = address || '';
 		const nextPage = Number.isFinite(page) && page >= 1 ? page : 1;
@@ -200,7 +200,7 @@ export class AccountDetailPage extends WebComponent {
 			<div class="ad-shell">
 				<header class="ad-header">
 					<div class="ad-title-block">
-						<ui-icon class="ad-title-icon" .state=${this.titleIconState}></ui-icon>
+						<ui-icon class="ad-title-icon" .state=${this.state.titleIconState}></ui-icon>
 						<span class="ad-title">// ACCOUNT DETAIL</span>
 						<span class="ad-label-tag">${() => labelForAddress(this.state.address)}</span>
 					</div>

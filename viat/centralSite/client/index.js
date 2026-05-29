@@ -32,8 +32,9 @@ const VIAT_BOOT_LOGO = `
 `;
 async function mountBootScreen() {
 	const bootScreen = new BootScreen({
-		title: 'Welcome to Viat',
+		title: 'WELCOME TO VIAT',
 		subtitle: 'Command and Control Terminal',
+		extraSubtitle: 'LOCAL AI ENABLED',
 		logo: VIAT_BOOT_LOGO,
 		barState: {
 			indeterminate: true,

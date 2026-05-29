@@ -97,10 +97,10 @@ export class ExplorerPage extends WebComponent {
 		totalCount: 0,
 		loading: false,
 		error: '',
-	};
-	titleIconState = {
-		name: 'compass',
-		size: 'md',
+		titleIconState: {
+			name: 'compass',
+			size: 'md',
+		},
 	};
 	loadedKey = '';
 	onConnect() {
@@ -237,7 +237,7 @@ export class ExplorerPage extends WebComponent {
 			<div class="ex-shell">
 				<header class="ex-title-header">
 					<div class="ex-title-block">
-						<ui-icon class="ex-title-icon" .state=${this.titleIconState}></ui-icon>
+						<ui-icon class="ex-title-icon" .state=${this.state.titleIconState}></ui-icon>
 						<span class="ex-title">// EXPLORER · RECENT TRANSACTIONS</span>
 					</div>
 					<div class="ex-subtitle">

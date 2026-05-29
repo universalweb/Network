@@ -20,7 +20,7 @@ import '../components/user/wallet-onboarding/wallet-onboarding.js';
 import './tools.js';
 import '../components/core/tooltips/tooltip.js';
 import VIATClientSDK, * as viatSDK from 'viat';
-import { WebComponent, setGlobal } from 'webcomponent';
+import { WebComponent, globalState } from 'webcomponent';
 import { getTheme, setTheme } from '../components/global/theme-select/theme-manager.js';
 import { UINotification } from '../components/global/notification/notification.js';
 import { URLRouter } from './urlRouter.js';
@@ -629,7 +629,7 @@ class AppView extends WebComponent {
 	}
 	syncSavedProfiles() {
 		const profiles = listSavedProfiles();
-		setGlobal({
+		globalState.set({
 			wallet: {
 				...(this.globalState.wallet ?? {}),
 				savedProfiles: profiles,
@@ -665,7 +665,7 @@ class AppView extends WebComponent {
 		const lastUsedAt = stats.lastUsedAt || '';
 		const publicKeyHex = toPublicHex(primary?.publicKey);
 		const trapdoorHashHex = toPublicHex(trapdoorHash);
-		setGlobal({
+		globalState.set({
 			wallet: {
 				...(this.globalState.wallet ?? {}),
 				hasWallet,
@@ -688,12 +688,12 @@ class AppView extends WebComponent {
 			}),
 		});
 		if (meta?.address) {
-			setGlobal({
+			globalState.set({
 				walletAddress: meta.address,
 			});
 		}
 		if (meta?.extra && typeof meta.extra === 'object') {
-			setGlobal({
+			globalState.set({
 				profile: {
 					...this.getProfileMeta(),
 					...meta.extra,
@@ -720,7 +720,7 @@ class AppView extends WebComponent {
 		if (nextDisplay === profile.displayName && nextHandle === profile.handle) {
 			return;
 		}
-		setGlobal({
+		globalState.set({
 			profile: {
 				...profile,
 				displayName: nextDisplay,
@@ -855,7 +855,7 @@ class AppView extends WebComponent {
 		// settings → LOAD form defaults to it even when we can't auto-load
 		// (e.g. it's password-protected). The user just enters the
 		// password rather than picking from the dropdown first.
-		setGlobal({
+		globalState.set({
 			profile: {
 				...this.getProfileMeta(),
 				lastSelected: profileName,
@@ -932,7 +932,7 @@ class AppView extends WebComponent {
 		const trapdoorHashHex = meta.trapdoorHash ? toPublicHex(base64ToBytes(meta.trapdoorHash)) : '';
 		const createdAt = stats.createdAt || meta.createdAt || '';
 		const lastUsedAt = stats.lastUsedAt || createdAt;
-		setGlobal({
+		globalState.set({
 			wallet: {
 				...(this.globalState.wallet ?? {}),
 				hasWallet: true,
@@ -954,7 +954,7 @@ class AppView extends WebComponent {
 			}),
 		});
 		if (meta.extra && typeof meta.extra === 'object') {
-			setGlobal({
+			globalState.set({
 				profile: {
 					...this.getProfileMeta(),
 					...meta.extra,
@@ -999,7 +999,7 @@ class AppView extends WebComponent {
 			return;
 		}
 		const urlSafe = toUrlSafeBase64(address);
-		setGlobal({
+		globalState.set({
 			profile: {
 				...this.getProfileMeta(),
 				displayName: urlSafe,
@@ -1110,7 +1110,7 @@ class AppView extends WebComponent {
 			});
 			this.lockedProfileRaw = null;
 			this.lockedProfilePkg = null;
-			setGlobal({
+			globalState.set({
 				wallet: {
 					...(this.globalState.wallet ?? {}),
 					locked: false,
@@ -1155,7 +1155,7 @@ class AppView extends WebComponent {
 			});
 			this.lockedProfileRaw = null;
 			this.lockedProfilePkg = null;
-			setGlobal({
+			globalState.set({
 				wallet: {
 					...(this.globalState.wallet ?? {}),
 					locked: false,
@@ -1261,7 +1261,7 @@ class AppView extends WebComponent {
 	}
 	handleProfileUpdate(domEvent) {
 		const data = domEvent.detail?.data ?? {};
-		setGlobal({
+		globalState.set({
 			profile: {
 				...this.getProfileMeta(),
 				...(data.meta ?? {}),
@@ -1339,7 +1339,24 @@ class AppView extends WebComponent {
 		this.syncSavedProfiles();
 		this.checkAPIHealth();
 		this.tryAutoLoadRecentProfile();
-		globalThis.addEventListener('keydown', this.handleKeyShortcut);
+		// Keyboard shortcuts route through the hotkey registry — one master
+		// `keydown` listener lives in core/hotkeys, and lifecycle's
+		// sweepHotkeyEntries releases each entry on disconnect. No raw
+		// addEventListener / removeEventListener pair needed.
+		//
+		// `escape` carries `whileTyping: true` because the original closes the
+		// pulldown regardless of focus (a chat input inside the pulldown still
+		// needs to surrender to it). `preventDefault: false` keeps the key
+		// available for other consumers when the pulldown is already shut —
+		// the handler calls `preventDefault()` itself only when it acts.
+		this.hotKey('escape', this.handleEscapeHotkey, {
+			preventDefault: false,
+			whileTyping: true,
+		});
+		this.hotKey('`', this.handleTogglePulldownHotkey);
+		this.hotKey('~', this.handleTogglePulldownHotkey);
+		this.hotKey('\\', this.handleToggleSidebarHotkey);
+		this.hotKey('|', this.handleToggleSidebarHotkey);
 		globalThis.addEventListener('viat:api-error', this.handleApiError);
 	}
 	handleApiError = (event) => {
@@ -1367,7 +1384,7 @@ class AppView extends WebComponent {
 		const startedAt = Date.now();
 		const health = await sdk.health();
 		if (!health) {
-			setGlobal({
+			globalState.set({
 				api: {
 					ok: false,
 					status: 'unreachable',
@@ -1378,7 +1395,7 @@ class AppView extends WebComponent {
 			return null;
 		}
 		const latencyMs = Date.now() - startedAt;
-		setGlobal({
+		globalState.set({
 			api: {
 				ok: true,
 				status: health.status ?? 'unknown',
@@ -1409,7 +1426,7 @@ class AppView extends WebComponent {
 		const balance = account?.balance ?? '0';
 		const totalIn = account?.totalIn ?? '0';
 		const totalOut = account?.totalOut ?? '0';
-		setGlobal({
+		globalState.set({
 			account: {
 				...(account ?? {}),
 				fetchedAt: new Date().toISOString(),
@@ -1789,61 +1806,37 @@ class AppView extends WebComponent {
 		console.log('[AI MAP]\n%s', this.aiMap());
 	}
 	onDisconnect() {
-		globalThis.removeEventListener('keydown', this.handleKeyShortcut);
+		// Hotkey entries are released by lifecycle's sweepHotkeyEntries —
+		// nothing to do here for the keyboard.
 		this.notificationPanel?.remove();
 		this.notificationPanel = null;
 	}
-	handleKeyShortcut = (domEvent) => {
-		if (domEvent.key === 'Escape') {
-			if (this.pulldownIsOpen()) {
-				this.emit('pulldown:state', {
-					open: false,
-				});
-				domEvent.preventDefault();
-			}
+	// Hotkey handlers — prototype methods (not arrow fields). The hotkey
+	// dispatcher does `handler.call(component, keyEvent, combo)`, so `this` is
+	// supplied at call time and the registry's `WeakRef<component>` stays
+	// honest. A bound or arrow-field handler would re-pin the instance.
+	handleEscapeHotkey(keyEvent) {
+		if (!this.pulldownIsOpen()) {
 			return;
 		}
-		if (domEvent.key === '`' || domEvent.key === '~') {
-			if (this.isTypingFocus()) {
-				return;
-			}
-			this.emit('pulldown:state', {
-				open: !this.pulldownIsOpen(),
-			});
-			domEvent.preventDefault();
-			return;
-		}
-		if (domEvent.key === '\\' || domEvent.key === '|') {
-			if (this.isTypingFocus()) {
-				return;
-			}
-			this.emit('toggle-sidebar', {});
-			domEvent.preventDefault();
-		}
-	};
-	isTypingFocus() {
-		let node = document.activeElement;
-		while (node) {
-			const tag = node.tagName;
-			if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
-				return true;
-			}
-			if (node.isContentEditable) {
-				return true;
-			}
-			const shadow = node.shadowRoot;
-			if (!shadow) {
-				return false;
-			}
-			node = shadow.activeElement;
-		}
-		return false;
+		this.emit('pulldown:state', {
+			open: false,
+		});
+		keyEvent.preventDefault();
+	}
+	handleTogglePulldownHotkey() {
+		this.emit('pulldown:state', {
+			open: !this.pulldownIsOpen(),
+		});
+	}
+	handleToggleSidebarHotkey() {
+		this.emit('toggle-sidebar', {});
 	}
 	pulldownIsOpen() {
 		return this.getComponent('global-pulldown')?.refs?.pulldown?.state?.open === true;
 	}
 	render() {
-		// Shell owns persistent chrome; the page slot swaps via future router.
+		// Can't be css hide show for page components the router should be mounting and unmounting them based on the URL; they need to be fully removed from the DOM when not active so their lifecycle disconnects and they stop consuming resources. The router doesn't do this automatically since some pages (e.g. explorer) have nested sub-pages that share the same parent route, so we mount all page components here and let the router delegate which one is active via a wrapper class on the parent.
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<global-top-bar></global-top-bar>

@@ -1,0 +1,185 @@
+:host {
+	display: block;
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	pointer-events: none;
+	z-index: 30;
+	--shell-closed-x: 100%;
+}
+:host(.side-right) {
+	right: 0;
+}
+:host(.side-left) {
+	left: 0;
+	--shell-closed-x: -100%;
+}
+
+/* ── FLYOUT — xl / xxl ───────────────────────────────────────────────────
+   Large screens that fit the dashboard's full max width (1536px) with room
+   beside it: a BARE flyout — no shell background, no close button, no page
+   backdrop. The slotted panel carries its own solid surface. Slides in from
+   the edge; hidden by default, shown by default only on a very wide (xxl)
+   screen. */
+:host(.mode-flyout) {
+	width: 0;
+	/* Below the global top bar (z-index 40): the bare flyout spans the full
+	   viewport height, so a higher z-index would swallow the top bar's
+	   toggle button. The frosted top padding clears the bar visually. */
+	z-index: 30;
+}
+
+/* ── COVER-UP — xs / sm / md / lg ────────────────────────────────────────
+   Narrower screens, where the drawer would sit over dashboard content: a
+   frosted shell + full-page frosted backdrop, with a close button and
+   drag-to-close. */
+:host(.mode-coverup) {
+	width: 0;
+	z-index: 60;
+}
+
+/* Edge swipe sensor — a thin off-screen strip, live only while the drawer is
+   closed, so it can be dragged in with nothing else to grab. */
+.sidebar-edge {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	width: 18px;
+	pointer-events: none;
+	touch-action: none;
+	z-index: 1;
+}
+:host(.side-right) .sidebar-edge {
+	right: 0;
+}
+:host(.side-left) .sidebar-edge {
+	left: 0;
+}
+:host(:not([open])) .sidebar-edge {
+	pointer-events: auto;
+}
+
+/* Backdrop — cover-up only. Transparent + blur, never a dark scrim: the page
+   stays visible but pushed back behind frosted glass. */
+.sidebar-backdrop {
+	position: fixed;
+	inset: 0;
+	background: transparent;
+	backdrop-filter: blur(7px);
+	-webkit-backdrop-filter: blur(7px);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.28s ease;
+	z-index: -1;
+}
+:host(.mode-flyout) .sidebar-backdrop,
+:host(.no-backdrop) .sidebar-backdrop {
+	display: none;
+}
+:host(.mode-coverup[open]) .sidebar-backdrop {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* ── Shell — the panel container ───────────────────────────────────────── */
+.sidebar-shell {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	display: flex;
+	flex-direction: column;
+	overflow-x: hidden;
+	overflow-y: auto;
+	box-sizing: border-box;
+	pointer-events: auto;
+	padding-bottom: 64px;
+	will-change: transform;
+	transform: translateX(var(--shell-closed-x));
+	transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+:host(.side-right) .sidebar-shell {
+	right: 0;
+}
+:host(.side-left) .sidebar-shell {
+	left: 0;
+}
+/* While dragging, JS inlines `transition: none` so the shell tracks 1:1. */
+.sidebar-shell.is-dragging {
+	transition: none;
+}
+:host([open]) .sidebar-shell {
+	transform: translateX(0);
+}
+
+/* Bare flyout shell — no background, no border, no shadow: purely a
+   positioner. The slotted panel supplies its own solid surface. The extra
+   top padding lifts the panel clear of the floating global top bar. */
+:host(.mode-flyout) .sidebar-shell {
+	width: 300px;
+	background: transparent;
+	padding-top: 120px;
+}
+
+/* Cover-up shell — frosted glass: a near-transparent tint over a backdrop
+   blur, with an edge border + shadow. */
+:host(.mode-coverup) .sidebar-shell {
+	width: 100vw;
+	max-width: 420px;
+	touch-action: pan-y;
+	background: var(--sidebar-shell-bg, rgba(8, 10, 16, 0.55));
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	padding-top: 90px;
+}
+:host(.side-right.mode-coverup) .sidebar-shell {
+	border-left: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	box-shadow: -8px 0 24px rgba(0, 0, 0, 0.35);
+}
+:host(.side-left.mode-coverup) .sidebar-shell {
+	border-right: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	box-shadow: 8px 0 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Close button — cover-up only. The bare flyout is dismissed via the top
+   bar's toggle or a swipe; it carries no close affordance of its own. */
+.sidebar-close {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	width: 36px;
+	height: 36px;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	border-radius: 8px;
+	color: var(--text-muted, rgba(255, 255, 255, 0.6));
+	cursor: pointer;
+	padding: 0;
+	z-index: 2;
+	transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+:host(.side-left) .sidebar-close {
+	right: auto;
+	left: 12px;
+}
+:host(.mode-coverup) .sidebar-close {
+	display: inline-flex;
+}
+:host(.no-close) .sidebar-close {
+	display: none;
+}
+.sidebar-close:hover {
+	color: var(--text-main, #e8eaf2);
+	border-color: var(--dark-divider, rgba(255, 255, 255, 0.18));
+	background: rgba(255, 255, 255, 0.04);
+}
+.sidebar-close:active {
+	transform: scale(0.92);
+}
+.sidebar-close:focus-visible {
+	outline: none;
+	border-color: var(--cyan, #a78bfa);
+	box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.25);
+}

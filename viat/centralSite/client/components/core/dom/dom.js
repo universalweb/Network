@@ -1,5 +1,5 @@
 import {
-	eachObject, hasValue, isFunction, isString,
+	eachObject, hasValue, isFunction, resolveTarget,
 } from '../utilities.js';
 import { getHostChildren, liveChildren } from './children.js';
 export function getComponent(tag) {
@@ -58,14 +58,11 @@ export function findComponent(tag, predicate) {
 export function getComponentRoot() {
 	return this.shadowRoot;
 }
-export function findElement(target) {
-	return isString(target) ? document.querySelector(target) : target;
-}
 export function appendTo(target) {
-	return this.findElement(target)?.appendChild(this);
+	return resolveTarget(target)?.appendChild(this);
 }
 export function prependTo(target) {
-	return this.findElement(target)?.prepend(this);
+	return resolveTarget(target)?.prepend(this);
 }
 export function ifAssign(target) {
 	eachObject(target, (key, value) => {

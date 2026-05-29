@@ -1,6 +1,7 @@
 // Writes globalState.environment.locale and listens for languagechange.
+import { emitDelegate } from '../dom/delegate.js';
 import { plainEqual } from '../utilities.js';
-import { setGlobal } from '../state/globalState.js';
+import { globalState } from '../state/globalState.js';
 let lastSnapshot = null;
 function snapshot() {
 	return {
@@ -15,12 +16,8 @@ function update() {
 		return;
 	}
 	lastSnapshot = value;
-	setGlobal({ 'environment.locale': value });
-	document.dispatchEvent(new CustomEvent('environment:change', {
-		bubbles: true,
-		composed: true,
-		detail: { data: { area: 'locale', value } },
-	}));
+	globalState.set({ 'environment.locale': value });
+	emitDelegate('environment:change', { area: 'locale', value });
 }
 globalThis.addEventListener('languagechange', update);
 update();

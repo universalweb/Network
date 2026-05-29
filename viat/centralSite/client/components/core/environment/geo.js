@@ -1,7 +1,8 @@
 // Opt-in geolocation. Importing alone does NOT prompt the user. Call
 // requestGeo() to trigger the permission dialog. Once granted, position
 // is watched continuously and written to globalState.environment.geo.
-import { setGlobal } from '../state/globalState.js';
+import { emitDelegate } from '../dom/delegate.js';
+import { globalState } from '../state/globalState.js';
 let watchId = null;
 function update(position) {
 	const value = {
@@ -13,22 +14,13 @@ function update(position) {
 		speed: position.coords.speed,
 		timestamp: position.timestamp,
 	};
-	setGlobal({
+	globalState.set({
 		'environment.geo': value,
 	});
-	document.dispatchEvent(new CustomEvent('environment:change', {
-		bubbles: true,
-		composed: true,
-		detail: {
-			data: {
-				area: 'geo',
-				value,
-			},
-		},
-	}));
+	emitDelegate('environment:change', { area: 'geo', value });
 }
 function fail(error) {
-	setGlobal({
+	globalState.set({
 		'environment.geo': {
 			error: error.message,
 			code: error.code,

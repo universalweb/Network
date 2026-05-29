@@ -1,5 +1,3 @@
-import { isFunction } from '../utilities.js';
-import { describeComponent, sanitize } from './descriptors.js';
 import {
 	defineInstanceTool,
 	getComponentId,
@@ -7,22 +5,26 @@ import {
 	registerComponent,
 	unregisterComponent,
 } from './registry.js';
+import { describeComponent, sanitize } from './descriptors.js';
 import {
 	getDirectChildren,
 	getNameForComponent,
 	getPathForComponent,
 	pageOverview,
 } from './paths.js';
+import { LIFECYCLE_PROMISE } from '../lifecycle/lifecycle.js';
+import { PHASE } from '../lifecycle/phase.js';
+import { isFunction } from '../utilities.js';
 import { textPageMap } from './visual.js';
 const APPLIED = Symbol('viat-ai-mixin-applied');
 const WHEN_BY_PHASE = {
-	connected: 'whenConnected',
-	rendered: 'whenRendered',
-	mounted: 'whenMounted',
-	live: 'whenLive',
-	visible: 'whenVisible',
-	disconnected: 'whenDisconnected',
-	destroyed: 'whenDestroyed',
+	[PHASE.CONNECTED]: LIFECYCLE_PROMISE.CONNECTED,
+	[PHASE.RENDERED]: LIFECYCLE_PROMISE.RENDERED,
+	[PHASE.MOUNTED]: LIFECYCLE_PROMISE.MOUNTED,
+	[PHASE.LIVE]: LIFECYCLE_PROMISE.LIVE,
+	visible: LIFECYCLE_PROMISE.VISIBLE,
+	[PHASE.DISCONNECTED]: LIFECYCLE_PROMISE.DISCONNECTED,
+	[PHASE.DESTROYED]: LIFECYCLE_PROMISE.DESTROYED,
 };
 function findAiAncestor(element) {
 	const root = element.getRootNode();
@@ -120,10 +122,16 @@ export const aiMethods = {
 		return getDirectChildren(this);
 	},
 	aiOverview(opts) {
-		return pageOverview({ ...opts, root: this });
+		return pageOverview({
+			...opts,
+			root: this,
+		});
 	},
 	aiMap(opts) {
-		return textPageMap({ ...opts, root: this });
+		return textPageMap({
+			...opts,
+			root: this,
+		});
 	},
 	aiDescribe(opts) {
 		return describeComponent(this, opts);
@@ -198,7 +206,9 @@ export const aiMethods = {
 		const out = [];
 		const match = makeMatcher(filter);
 		if (!match) {
-			walkSubtree(this, (candidate) => out.push(candidate));
+			walkSubtree(this, (candidate) => {
+				return out.push(candidate);
+			});
 			return out;
 		}
 		walkSubtree(this, (candidate) => {
@@ -232,14 +242,14 @@ function wrapAfter(target, hookName, after) {
 		if (isFunction(original)) {
 			result = original.apply(this, args);
 		}
-		after.call(this);
+		after(this);
 		return result;
 	};
 }
 function wrapBefore(target, hookName, before) {
 	const original = target[hookName];
 	target[hookName] = function aiBeforeHook(...args) {
-		before.call(this);
+		before(this);
 		if (isFunction(original)) {
 			return original.apply(this, args);
 		}
@@ -253,11 +263,11 @@ export function applyAiMixin(WebComponent, opts = {}) {
 	const proto = WebComponent.prototype;
 	Object.assign(proto, aiMethods);
 	if (opts.autoRegister !== false) {
-		wrapAfter(proto, 'connectedCallback', function aiAfterConnect() {
-			this.aiRegister();
+		wrapAfter(proto, 'connectedCallback', function aiAfterConnect(component) {
+			component.aiRegister();
 		});
-		wrapBefore(proto, 'disconnectedCallback', function aiBeforeDisconnect() {
-			this.aiUnregister();
+		wrapBefore(proto, 'disconnectedCallback', function aiBeforeDisconnect(component) {
+			component.aiUnregister();
 		});
 	}
 	WebComponent[APPLIED] = true;

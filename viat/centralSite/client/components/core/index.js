@@ -10,15 +10,13 @@ applyAiMixin(WebComponent);
 globalThis.WebComponent ??= WebComponent;
 export {
 	ClassList,
+	Store,
 	WebComponent,
 	classList,
-	getGlobal,
+	globalState,
 	liveChildren,
 	registerChild,
 	registry,
-	setGlobal,
-	subscribeGlobal,
-	watchGlobal,
 } from './base.js';
 export {
 	comp,
@@ -40,7 +38,6 @@ export { allChildren } from './dom/children.js';
 export {
 	appendTo,
 	findComponent,
-	findElement,
 	getComponent,
 	getComponentRoot,
 	getComponents,
@@ -48,7 +45,10 @@ export {
 	ifAssign,
 	prependTo,
 } from './dom/dom.js';
-export { delegate, removeDelegate } from './dom/delegate.js';
+export { DelegateEntry, emitDelegate } from './dom/delegate.js';
+export { canonicalizeCombo, registerHotkey } from './hotkeys/hotkeys.js';
+export { createDragSnap, SNAP_MS, SNAP_CURVE } from './gestures/dragSnap.js';
+export { movingIndicator } from './indicator/movingIndicator.js';
 export {
 	registerBehavior,
 	getBehavior,
@@ -104,6 +104,7 @@ export {
 	pathsOverlap,
 	plainEqual,
 	queueAsyncError,
+	resolveTarget,
 	runHook,
 	setValueAtPath,
 	smartClone,

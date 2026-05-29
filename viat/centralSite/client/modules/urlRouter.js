@@ -16,7 +16,7 @@
 // `routeSection`, `routeFilter`, `routeParams`, `routeQuery`, `routePath`).
 // Downstream components observe whichever key they care about — neither the
 // app shell nor the dock needs to be wired up to a router callback.
-import { setGlobal } from 'webcomponent';
+import { globalState } from 'webcomponent';
 export const URL_ROUTER_CONFIG = {
 	root: '/',
 	interceptLinks: true,
@@ -347,7 +347,7 @@ export class URLRouter {
 		// `setGlobal` already short-circuits structurally-equal writes so
 		// repeated same-page navigations don't trigger downstream renders.
 		const route = this.current ?? {};
-		setGlobal({
+		globalState.set({
 			routeId: route.id ?? '',
 			routePath: this.currentPath(),
 			routeView: route.view ?? '',

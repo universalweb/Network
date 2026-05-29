@@ -30,10 +30,10 @@ export class TransactionDetailPage extends WebComponent {
 		transaction: null,
 		loading: false,
 		error: '',
-	};
-	titleIconState = {
-		name: 'receipt',
-		size: 'md',
+		titleIconState: {
+			name: 'receipt',
+			size: 'md',
+		},
 	};
 	previousId = '';
 	setTxId(id) {
@@ -134,7 +134,7 @@ export class TransactionDetailPage extends WebComponent {
 			<div class="td-shell">
 				<header class="td-header">
 					<div class="td-title-block">
-						<ui-icon class="td-title-icon" .state=${this.titleIconState}></ui-icon>
+						<ui-icon class="td-title-icon" .state=${this.state.titleIconState}></ui-icon>
 						<span class="td-title">// TRANSACTION DETAIL</span>
 					</div>
 					<button class="td-copy" @click=${this.handleCopyId} tooltip="Copy transaction ID">${() => this.state.txId || '—'}</button>

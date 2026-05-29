@@ -1,242 +1,84 @@
-import { WebComponent, list } from '../../core/index.js';
-import { DockIconButton } from './dock-icon-button.js';
-const SQUEEZE_MS = 140;
-const MOVE_MS = 440;
+import { WebComponent } from 'webcomponent';
+import '../../global/dock/dock.js';
+// `<global-dock>` — the Viat navigation rail. A thin composition over the
+// built-in `<ui-dock>`: it supplies the six section items and owns the router
+// coupling — the `dockSelect` event and `observeGlobal('routeSection')` both
+// drive `<ui-dock>`'s `activeId`. The built-in never reads the router.
 export class GlobalDock extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
 		globalDock: './global-dock.css',
 	};
 	static state = {
-		items: [
-			{
-				id: 'wallet',
-				active: false,
-				icon: 'wallet',
-				tooltip: 'Wallet',
-				animate: 'wallet',
-			},
-			{
-				id: 'explorer',
-				active: false,
-				icon: 'compass',
-				tooltip: 'Explorer',
-				animate: 'explorer',
-			},
-			{
-				id: 'accounts',
-				active: false,
-				icon: 'users',
-				tooltip: 'Accounts',
-				animate: 'accounts',
-			},
-			{
-				id: 'swap',
-				active: false,
-				icon: 'repeat-2',
-				tooltip: 'Swap',
-				animate: 'swap',
-			},
-			{
-				id: 'exchange',
-				active: false,
-				icon: 'arrow-right-left',
-				tooltip: 'Exchange (Coming Soon)',
-			},
-			{
-				id: 'analytics',
-				active: false,
-				icon: 'chart-line',
-				tooltip: 'Analytics (Coming Soon)',
-			},
-		],
+		dock: {
+			// A complete config — `global-dock` mutates `activeId`, which
+			// re-applies `.state=` on a patch pass; a re-applied `.state=`
+			// wholesale-replaces, so every key the built-in needs must be here.
+			activeId: '',
+			orientation: 'vertical',
+			showActiveBar: true,
+			items: [
+				{
+					id: 'wallet',
+					icon: 'wallet',
+					tooltip: 'Wallet',
+					animate: 'wallet',
+					onClick: 'dockSelect',
+				},
+				{
+					id: 'explorer',
+					icon: 'compass',
+					tooltip: 'Explorer',
+					animate: 'explorer',
+					onClick: 'dockSelect',
+				},
+				{
+					id: 'accounts',
+					icon: 'users',
+					tooltip: 'Accounts',
+					animate: 'accounts',
+					onClick: 'dockSelect',
+				},
+				{
+					id: 'swap',
+					icon: 'repeat-2',
+					tooltip: 'Swap',
+					animate: 'swap',
+					onClick: 'dockSelect',
+				},
+				{
+					id: 'exchange',
+					icon: 'arrow-right-left',
+					tooltip: 'Exchange (Coming Soon)',
+					onClick: 'dockSelect',
+				},
+				{
+					id: 'analytics',
+					icon: 'chart-line',
+					tooltip: 'Analytics (Coming Soon)',
+					onClick: 'dockSelect',
+				},
+			],
+		},
 	};
-	barMoveToken = 0;
-	constructor(state = {}, config = {}) {
-		super(state, {
-			...config,
-			tooltips: config.tooltips ?? true,
-		});
-	}
-	dockSelect(domEvent) {
-		const { detail: { source } } = domEvent;
-		const active = this.getComponents('dock-icon-button').find((btn) => {
-			return btn.state.active;
-		});
-		if (active && active !== source) {
-			active.state.active = false;
-		}
-		if (source) {
-			source.state.active = true;
-		}
-		this.updateActiveBar(source);
-	}
-	activeSection = '';
 	onConnect() {
-		// Single source of truth — the router publishes routeSection on every
-		// navigation; the dock owns its own lit/unlit logic by watching that.
+		// Router coupling lives here, never in the built-in. A click
+		// optimistically highlights; the router's routeSection then reconciles.
+		this.delegate('dockSelect', this.handleDockSelect);
 		this.observeGlobal('routeSection', (sectionId) => {
-			this.applyActiveSection(sectionId);
-		});
-		// `state.items` is supplied by the parent. We just react when items
-		// first arrive and re-apply whatever section the router has already
-		// published. The rAF wait lets the list-rendered dock-icon-button
-		// children actually mount before we look for them.
-		this.observe('items', () => {
-			if (!this.state.items?.length) {
-				return;
-			}
-			requestAnimationFrame(() => {
-				this.applyActiveSection(this.activeSection || this.globalState?.routeSection || '');
-			});
+			this.state.dock.activeId = sectionId || '';
 		});
 	}
-	onMount() {
-		// Pick up whatever the router has already published (e.g. on a
-		// deep-linked first paint where the router publishes before any of
-		// our dock-icon-buttons exist).
-		this.applyActiveSection(this.globalState?.routeSection ?? '');
-		// Re-snap the active bar when layout shifts. `viewport:resize` is
-		// rAF-coalesced so we just snap (no animation) and let the bar's CSS
-		// transition smooth-track the new offset. On a bucket width change
-		// (e.g. crossing the mobile breakpoint) we flip orientation so the
-		// bar doesn't try to interpolate between translateX/translateY.
-		this.delegate('viewport:resize', this.handleViewportResize);
-		this.delegate('viewport:change', this.handleViewportChange);
-	}
-	handleViewportResize = () => {
-		this.snapActiveBar();
-	};
-	handleViewportChange = (domEvent) => {
-		const changed = domEvent?.detail?.data?.changed;
-		if (!changed?.w) {
-			return;
+	handleDockSelect(domEvent) {
+		const source = domEvent.detail?.source;
+		const id = source?.state?.id;
+		if (id) {
+			this.state.dock.activeId = id;
 		}
-		this.flipActiveBar();
-	};
-	applyActiveSection(sectionId) {
-		const nextSection = sectionId ?? '';
-		this.activeSection = nextSection;
-		const buttons = this.getComponents('dock-icon-button');
-		if (!buttons?.length) {
-			// Buttons mount asynchronously after `state.items` is populated;
-			// once at least one is in place we'll be re-invoked via the next
-			// observeGlobal tick or syncFromActiveSection on items-change.
-			return;
-		}
-		let target = null;
-		for (let index = 0; index < buttons.length; index += 1) {
-			const btn = buttons[index];
-			const matches = Boolean(nextSection) && btn.state?.id === nextSection;
-			if (btn.state && btn.state.active !== matches) {
-				btn.state.active = matches;
-			}
-			if (matches) {
-				target = btn;
-			}
-		}
-		this.updateActiveBar(target);
-	}
-	syncActiveBar(activeBtn) {
-		if (this.state.items.length === 0) {
-			return;
-		}
-		const active = activeBtn || this.getComponents('dock-icon-button').find((btn) => {
-			return btn.state.active;
-		});
-		this.updateActiveBar(active);
-	}
-	writeBarMetrics(bar, activeBtn) {
-		// Both axes are written every time so the CSS can pick which one to
-		// use via media query (vertical bar uses --bar-y/--bar-h, horizontal
-		// uses --bar-x/--bar-w). Cheap to set; no layout cost beyond the
-		// offset reads we already do.
-		bar.style.setProperty('--bar-x', `${activeBtn.offsetLeft}px`);
-		bar.style.setProperty('--bar-y', `${activeBtn.offsetTop}px`);
-		bar.style.setProperty('--bar-w', `${activeBtn.offsetWidth}px`);
-		bar.style.setProperty('--bar-h', `${activeBtn.offsetHeight}px`);
-	}
-	snapActiveBar() {
-		const bar = this.refs.active_bar;
-		if (!bar?.classList.contains('is-visible')) {
-			return;
-		}
-		const active = this.getComponents('dock-icon-button').find((btn) => {
-			return btn.state.active;
-		});
-		if (!active) {
-			return;
-		}
-		this.writeBarMetrics(bar, active);
-	}
-	flipActiveBar() {
-		// Orientation just changed (vertical ↔ horizontal across the mobile
-		// breakpoint). Disable transitions for one frame so the bar snaps to
-		// the new axis without trying to interpolate between translateX and
-		// translateY (which the browser would otherwise drop into a hard
-		// jump anyway).
-		const bar = this.refs.active_bar;
-		if (!bar?.classList.contains('is-visible')) {
-			return;
-		}
-		const active = this.getComponents('dock-icon-button').find((btn) => {
-			return btn.state.active;
-		});
-		if (!active) {
-			return;
-		}
-		bar.classList.add('is-flipping');
-		this.writeBarMetrics(bar, active);
-		requestAnimationFrame(() => {
-			bar.classList.remove('is-flipping');
-		});
-	}
-	async updateActiveBar(activeBtn) {
-		const bar = this.refs.active_bar;
-		if (!bar) {
-			return;
-		}
-		if (!activeBtn) {
-			bar.classList.remove('is-visible');
-			return;
-		}
-		const wasVisible = bar.classList.contains('is-visible');
-		if (!wasVisible) {
-			this.writeBarMetrics(bar, activeBtn);
-			bar.style.setProperty('--bar-scale', '1');
-			bar.classList.add('is-visible');
-			return;
-		}
-		const token = ++this.barMoveToken;
-		bar.classList.add('is-squeezing');
-		bar.style.setProperty('--bar-scale', '0.25');
-		bar.style.setProperty('--bar-w', `${activeBtn.offsetWidth}px`);
-		bar.style.setProperty('--bar-h', `${activeBtn.offsetHeight}px`);
-		await new Promise((resolve) => {
-			this.setTimeout(resolve, SQUEEZE_MS);
-		});
-		if (token !== this.barMoveToken) {
-			return;
-		}
-		bar.classList.remove('is-squeezing');
-		bar.style.setProperty('--bar-x', `${activeBtn.offsetLeft}px`);
-		bar.style.setProperty('--bar-y', `${activeBtn.offsetTop}px`);
-		await new Promise((resolve) => {
-			this.setTimeout(resolve, MOVE_MS);
-		});
-		if (token !== this.barMoveToken) {
-			return;
-		}
-		bar.style.setProperty('--bar-scale', '1');
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
-		this.html `
-			<div class="nav-rail" @${this.dockSelect}>
-				<div class="active-bar" #active_bar></div>
-				${list('items', DockIconButton)}
-			</div>
-		`;
+		this.html `<ui-dock .state=${this.state.dock}></ui-dock>`;
 	}
 }
 customElements.define('global-dock', GlobalDock);

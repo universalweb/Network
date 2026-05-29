@@ -11,10 +11,12 @@ export class UICloseButton extends WebComponent {
 	};
 	static state = {
 		label: 'Close',
-	};
-	iconState = {
-		name: 'x',
-		size: 'sm',
+		// Child-state for the composed <ui-icon> — a reactive key on the one
+		// state tree, bound bare in render(); not a loose instance field.
+		iconState: {
+			name: 'x',
+			size: 'sm',
+		},
 	};
 	handleClick = (domEvent) => {
 		this.emit('close-click', {
@@ -26,7 +28,7 @@ export class UICloseButton extends WebComponent {
 		// eslint-disable-next-line no-unused-expressions
 		this.html`
 			<button class="cb" @click=${this.handleClick} aria-label=${() => this.state.label}>
-				<ui-icon class="cb-icon" .state=${this.iconState}></ui-icon>
+				<ui-icon class="cb-icon" .state=${this.state.iconState}></ui-icon>
 			</button>
 		`;
 	}

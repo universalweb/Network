@@ -3,8 +3,9 @@
 // Dispatches viewport:resize (every coalesced tick that actually changed)
 // and viewport:change (only on bucket transitions) at document level —
 // components subscribe via this.delegate('viewport:resize'/'viewport:change', ...).
+import { emitDelegate } from '../dom/delegate.js';
 import { plainEqual } from '../utilities.js';
-import { setGlobal } from '../state/globalState.js';
+import { globalState } from '../state/globalState.js';
 import {
 	aspectBucket,
 	heightBucket,
@@ -31,21 +32,19 @@ function snapshot() {
 }
 function diffBuckets(before, after) {
 	const changed = {};
-	const keys = ['w', 'h', 'orientation', 'aspect', 'touch'];
+	const keys = [
+		'w', 'h', 'orientation', 'aspect', 'touch',
+	];
 	for (let i = 0; i < keys.length; i++) {
 		const key = keys[i];
 		if (!before || before[key] !== after[key]) {
-			changed[key] = { from: before?.[key] ?? null, to: after[key] };
+			changed[key] = {
+				from: before?.[key] ?? null,
+				to: after[key],
+			};
 		}
 	}
 	return Object.keys(changed).length ? changed : null;
-}
-function dispatchViewport(eventName, data) {
-	document.dispatchEvent(new CustomEvent(eventName, {
-		bubbles: true,
-		composed: true,
-		detail: { data, source: null },
-	}));
 }
 function tick() {
 	scheduled = false;
@@ -55,10 +54,15 @@ function tick() {
 	}
 	const bucketChanges = diffBuckets(lastSnapshot, next);
 	lastSnapshot = next;
-	setGlobal({ 'environment.viewport': next });
-	dispatchViewport('viewport:resize', next);
+	globalState.set({
+		'environment.viewport': next,
+	});
+	emitDelegate('viewport:resize', next);
 	if (bucketChanges) {
-		dispatchViewport('viewport:change', { ...next, changed: bucketChanges });
+		emitDelegate('viewport:change', {
+			...next,
+			changed: bucketChanges,
+		});
 	}
 }
 function schedule() {

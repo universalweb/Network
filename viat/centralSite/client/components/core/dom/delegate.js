@@ -1,188 +1,369 @@
+// Delegate subsystem — the document/global half of the event surface.
+//
+// Public methods mixed onto `WebComponent.prototype` via base.js:
+//   this.delegate(name, handler, options?)              — Tier 2: document bus
+//   this.delegateTo(name, sel, handler, scope?, opts?)  — Tier 3: scoped delegation
+//   this.onEnv(name, handler, options?)                 — Tier 4: globalThis master
+//   this.clearDelegateListeners()                       — lifecycle sweep
+//
+// Public free function (services / non-component callers):
+//   emitDelegate(name, data)                            — publish onto the bus
+//
+// Architecture
+//
+// Tier 2 (`delegate`) is a pure pub/sub bus: one master listener at
+// `document` per event name, flat `Map<eventName, Set<DelegateEntry>>`.
+// No selector, no `composedPath` JS traversal, no subevent dot-notation.
+// `viewport:change`, `pulldown:state`, etc. are the canonical event names.
+//
+// Tier 3 (`delegateTo`) is scoped delegation: one master listener at the
+// caller-provided `scope` (default: the component itself) per event name,
+// `closest(selector)` on dispatch to find a matching descendant. Native
+// engine work, no JS DOM walk.
+//
+// Tier 4 (`onEnv`) attaches the master at `globalThis` per event name —
+// for browser-level events like `resize`, `online`, `visibilitychange`.
+// Single registration, multiple subscribers.
+//
+// Every subscription is a `DelegateEntry` (mirrors `EventEntry` shape):
+// `WeakRef` on owner, idempotent `unsubscribe`, auto-sweep on disconnect
+// via `component.delegateEntries`. Handlers run via `handler.call(owner, …)`
+// — no arrow fields, no `.bind`, no per-registration wrapper closure
+// beyond the entry itself.
 import {
-	getOrInit, isFunction, isObject, isPromiseLike, isString, queueAsyncError,
+	isError, isFunction, isObject, isPromiseLike, isString,
 } from '../utilities.js';
-const subevents = new WeakMap();
-const channels = new Map();
-const rootListeners = new Map();
-function runEntry(entry, domEvent, target, data) {
-	if (entry.fireOnce) {
-		removeEntry(entry.eventName, entry.subeventName, entry);
-	}
-	const result = entry.handler.call(entry.thisArg, domEvent, target, data);
-	if (isPromiseLike(result)) {
-		result.catch(queueAsyncError);
-	}
-}
-function dispatchChannel(domEvent) {
-	const subMap = channels.get(domEvent.type);
-	if (!subMap) {
+// — Bus registry (Tier 2) — one master at `document` per event name —
+const busRegistry = new Map();
+const busMasters = new Set();
+function dispatchBus(domEvent) {
+	const bucket = busRegistry.get(domEvent.type);
+	if (!bucket || bucket.size === 0) {
 		return;
 	}
-	const path = domEvent.composedPath();
-	subMap.forEach((handlers, subeventName) => {
-		if (!handlers.size) {
-			return;
-		}
-		if (subeventName === null) {
-			const target = path[0];
-			handlers.forEach((entry) => {
-				runEntry(entry, domEvent, target, undefined);
-			});
-			return;
-		}
-		for (let i = 0; i < path.length; i++) {
-			const tags = subevents.get(path[i]);
-			if (!tags) {
-				continue;
-			}
-			const data = tags.get(subeventName);
-			if (data === undefined) {
-				continue;
-			}
-			handlers.forEach((entry) => {
-				runEntry(entry, domEvent, path[i], data);
-			});
-			return;
-		}
-	});
+	const snapshot = Array.from(bucket);
+	for (let i = 0; i < snapshot.length; i++) {
+		snapshot[i].invoke(domEvent, null);
+	}
 }
-function ensureRootListener(eventName) {
-	if (rootListeners.has(eventName)) {
+function ensureBusMaster(eventName) {
+	if (busMasters.has(eventName)) {
 		return;
 	}
-	document.addEventListener(eventName, dispatchChannel, {
+	document.addEventListener(eventName, dispatchBus, {
 		capture: true,
 	});
-	rootListeners.set(eventName, document);
+	busMasters.add(eventName);
 }
-function detachRootListener(eventName) {
-	if (!rootListeners.has(eventName)) {
+function detachBusMaster(eventName) {
+	if (!busMasters.has(eventName)) {
 		return;
 	}
-	document.removeEventListener(eventName, dispatchChannel, {
+	document.removeEventListener(eventName, dispatchBus, {
 		capture: true,
 	});
-	rootListeners.delete(eventName);
+	busMasters.delete(eventName);
 }
-function parseChannel(channel) {
-	if (!isString(channel) || !channel.length) {
-		throw new TypeError('delegate: channel must be a non-empty string');
-	}
-	const dot = channel.indexOf('.');
-	if (dot === -1) {
-		return {
-			eventName: channel,
-			subeventName: null,
-		};
-	}
-	return {
-		eventName: channel.slice(0, dot),
-		subeventName: channel.slice(dot + 1),
-	};
-}
-function removeEntry(eventName, subeventName, entry) {
-	const subMap = channels.get(eventName);
-	if (!subMap) {
+// — Environment registry (Tier 4) — one master at `globalThis` per event name —
+const envRegistry = new Map();
+const envMasters = new Set();
+function dispatchEnv(domEvent) {
+	const bucket = envRegistry.get(domEvent.type);
+	if (!bucket || bucket.size === 0) {
 		return;
 	}
-	const handlers = subMap.get(subeventName);
-	if (!handlers) {
-		return;
-	}
-	if (!handlers.delete(entry)) {
-		return;
-	}
-	if (entry.signalCleanup) {
-		entry.signalCleanup();
-		entry.signalCleanup = null;
-	}
-	if (handlers.size === 0) {
-		subMap.delete(subeventName);
-		if (subMap.size === 0) {
-			channels.delete(eventName);
-			detachRootListener(eventName);
-		}
+	const snapshot = Array.from(bucket);
+	for (let i = 0; i < snapshot.length; i++) {
+		snapshot[i].invoke(domEvent, null);
 	}
 }
-export function delegate(channel, handler, thisArg, options) {
-	if (!isFunction(handler)) {
-		throw new TypeError('delegate: handler must be a function');
+function ensureEnvMaster(eventName) {
+	if (envMasters.has(eventName)) {
+		return;
 	}
-	const {
+	globalThis.addEventListener(eventName, dispatchEnv);
+	envMasters.add(eventName);
+}
+function detachEnvMaster(eventName) {
+	if (!envMasters.has(eventName)) {
+		return;
+	}
+	globalThis.removeEventListener(eventName, dispatchEnv);
+	envMasters.delete(eventName);
+}
+// — Scoped delegation (Tier 3) — one master per (scope, eventName) pair —
+//
+// Each scope element holds a `WeakMap<scope, Map<eventName, scopeRecord>>`.
+// The `scopeRecord` IS the EventListener — DOM spec: any object with a
+// `handleEvent` method qualifies. On dispatch, walk entries and resolve
+// each entry's selector via native `closest()` (no JS composedPath loop).
+const scopeMastersByScope = new WeakMap();
+function getOrCreateScopeRecord(scope, eventName) {
+	let perScope = scopeMastersByScope.get(scope);
+	if (!perScope) {
+		perScope = new Map();
+		scopeMastersByScope.set(scope, perScope);
+	}
+	const existing = perScope.get(eventName);
+	if (existing) {
+		return existing;
+	}
+	const record = {
 		eventName,
-		subeventName,
-	} = parseChannel(channel);
-	const fireOnce = isObject(options) && options.once === true;
-	const signal = isObject(options) ? options.signal : null;
-	if (signal?.aborted) {
-		return function unsubscribeNoop() {};
-	}
-	const subMap = getOrInit(channels, eventName, () => new Map());
-	const handlers = getOrInit(subMap, subeventName, () => new Set());
-	const entry = {
-		eventName,
-		subeventName,
-		handler,
-		thisArg: thisArg ?? null,
-		fireOnce,
-		signalCleanup: null,
+		scope,
+		entries: new Set(),
+		handleEvent(domEvent) {
+			if (!record.entries.size) {
+				return;
+			}
+			const snapshot = Array.from(record.entries);
+			for (let i = 0; i < snapshot.length; i++) {
+				const entry = snapshot[i];
+				const matchedTarget = domEvent.target.closest?.(entry.selector);
+				if (!matchedTarget) {
+					continue;
+				}
+				if (!scope.contains(matchedTarget)) {
+					continue;
+				}
+				entry.invoke(domEvent, matchedTarget);
+			}
+		},
 	};
-	handlers.add(entry);
-	ensureRootListener(eventName);
-	if (signal) {
-		const onAbort = () => {
-			removeEntry(eventName, subeventName, entry);
-		};
-		signal.addEventListener('abort', onAbort, {
-			once: true,
+	scope.addEventListener(eventName, record);
+	perScope.set(eventName, record);
+	return record;
+}
+function releaseScopeRecord(scope, eventName, entry) {
+	const perScope = scopeMastersByScope.get(scope);
+	if (!perScope) {
+		return;
+	}
+	const record = perScope.get(eventName);
+	if (!record) {
+		return;
+	}
+	record.entries.delete(entry);
+	if (record.entries.size !== 0) {
+		return;
+	}
+	scope.removeEventListener(eventName, record);
+	perScope.delete(eventName);
+	if (perScope.size === 0) {
+		scopeMastersByScope.delete(scope);
+	}
+}
+// — DelegateEntry class — mirrors `EventEntry` shape —
+function queueDelegateError(error, domEvent, owner, eventName) {
+	queueMicrotask(() => {
+		throw Object.assign(isError(error) ? error : new Error(String(error)), {
+			element: owner,
+			event: domEvent,
+			eventName,
 		});
-		entry.signalCleanup = () => {
-			signal.removeEventListener('abort', onAbort);
-		};
-	}
-	return function unsubscribe() {
-		removeEntry(eventName, subeventName, entry);
-	};
-}
-export function removeDelegate(channel, handler) {
-	const {
-		eventName,
-		subeventName,
-	} = parseChannel(channel);
-	const subMap = channels.get(eventName);
-	if (!subMap) {
-		return;
-	}
-	const handlers = subMap.get(subeventName);
-	if (!handlers) {
-		return;
-	}
-	const targets = [];
-	handlers.forEach((entry) => {
-		if (entry.handler === handler) {
-			targets.push(entry);
-		}
 	});
-	for (let i = 0; i < targets.length; i++) {
-		removeEntry(eventName, subeventName, targets[i]);
+}
+export class DelegateEntry {
+	ownerRef = null;
+	kind = '';
+	eventName = '';
+	selector = '';
+	scope = null;
+	handler = null;
+	fireOnce = false;
+	signal = null;
+	subscribed = false;
+	static create(owner, kind, eventName, handler, options) {
+		const entry = new DelegateEntry();
+		entry.ownerRef = new WeakRef(owner);
+		entry.kind = kind;
+		entry.eventName = eventName;
+		entry.handler = handler;
+		entry.fireOnce = isObject(options) && options.once === true;
+		entry.signal = isObject(options) ? (options.signal || null) : null;
+		return entry;
+	}
+	// Internal dispatch entry point — used by bus/env/scoped masters. Routes
+	// through `handler.call(owner, domEvent, matchTarget, eventName)` so the
+	// handler's `this` is the subscribing component without `.bind` or arrow.
+	invoke(domEvent, matchTarget) {
+		const owner = this.ownerRef.deref();
+		if (!owner) {
+			this.unsubscribe();
+			return;
+		}
+		if (this.fireOnce) {
+			this.unsubscribe();
+		}
+		if (!isFunction(this.handler)) {
+			return;
+		}
+		const result = this.handler.call(owner, domEvent, matchTarget || owner, this.eventName);
+		if (isPromiseLike(result)) {
+			result.catch((error) => {
+				queueDelegateError(error, domEvent, owner, this.eventName);
+			});
+		}
+	}
+	// Abort-signal listener path. The entry doubles as the abort listener
+	// (registered once on the signal), routed through `domEvent.type === 'abort'`.
+	handleEvent(domEvent) {
+		if (domEvent.type === 'abort') {
+			this.unsubscribe();
+		}
+	}
+	subscribe() {
+		if (this.subscribed) {
+			return this;
+		}
+		if (this.signal?.aborted) {
+			return this;
+		}
+		const owner = this.ownerRef.deref();
+		if (!owner) {
+			return this;
+		}
+		if (this.kind === 'bus') {
+			let bucket = busRegistry.get(this.eventName);
+			if (!bucket) {
+				bucket = new Set();
+				busRegistry.set(this.eventName, bucket);
+			}
+			bucket.add(this);
+			ensureBusMaster(this.eventName);
+		} else if (this.kind === 'env') {
+			let bucket = envRegistry.get(this.eventName);
+			if (!bucket) {
+				bucket = new Set();
+				envRegistry.set(this.eventName, bucket);
+			}
+			bucket.add(this);
+			ensureEnvMaster(this.eventName);
+		} else if (this.kind === 'scoped') {
+			const record = getOrCreateScopeRecord(this.scope, this.eventName);
+			record.entries.add(this);
+		}
+		owner.delegateEntries.add(this);
+		this.subscribed = true;
+		if (this.signal) {
+			this.signal.addEventListener('abort', this, {
+				once: true,
+			});
+		}
+		return this;
+	}
+	unsubscribe() {
+		if (!this.subscribed) {
+			this.detachSignal();
+			return this;
+		}
+		if (this.kind === 'bus') {
+			const bucket = busRegistry.get(this.eventName);
+			if (bucket) {
+				bucket.delete(this);
+				if (bucket.size === 0) {
+					busRegistry.delete(this.eventName);
+					detachBusMaster(this.eventName);
+				}
+			}
+		} else if (this.kind === 'env') {
+			const bucket = envRegistry.get(this.eventName);
+			if (bucket) {
+				bucket.delete(this);
+				if (bucket.size === 0) {
+					envRegistry.delete(this.eventName);
+					detachEnvMaster(this.eventName);
+				}
+			}
+		} else if (this.kind === 'scoped') {
+			releaseScopeRecord(this.scope, this.eventName, this);
+		}
+		const owner = this.ownerRef.deref();
+		if (owner) {
+			owner.delegateEntries.delete(this);
+		}
+		this.detachSignal();
+		this.subscribed = false;
+		this.scope = null;
+		return this;
+	}
+	detachSignal() {
+		if (!this.signal) {
+			return;
+		}
+		this.signal.removeEventListener('abort', this);
+		this.signal = null;
 	}
 }
-export function registerSubevent(element, subeventName, data) {
-	getOrInit(subevents, element, () => new Map()).set(subeventName, data);
+// — Public prototype methods —
+//
+// All three return a `DelegateEntry` so the caller can hold it and call
+// `entry.unsubscribe()`. Auto-tracked in `component.delegateEntries`;
+// disconnect sweep tears them all down.
+export function delegate(eventName, handler, options) {
+	if (!isString(eventName) || !eventName.trim()) {
+		throw new TypeError('eventName must be a non-empty string');
+	}
+	if (!isFunction(handler)) {
+		throw new TypeError('handler must be a function');
+	}
+	const entry = DelegateEntry.create(this, 'bus', eventName.trim(), handler, options);
+	entry.subscribe();
+	return entry;
 }
-export function unregisterSubevent(element, subeventName) {
-	const map = subevents.get(element);
-	if (!map) {
+export function onEnv(eventName, handler, options) {
+	if (!isString(eventName) || !eventName.trim()) {
+		throw new TypeError('eventName must be a non-empty string');
+	}
+	if (!isFunction(handler)) {
+		throw new TypeError('handler must be a function');
+	}
+	const entry = DelegateEntry.create(this, 'env', eventName.trim(), handler, options);
+	entry.subscribe();
+	return entry;
+}
+export function delegateTo(eventName, selector, handler, scope, options) {
+	if (!isString(eventName) || !eventName.trim()) {
+		throw new TypeError('eventName must be a non-empty string');
+	}
+	if (!isString(selector) || !selector.trim()) {
+		throw new TypeError('selector must be a non-empty string');
+	}
+	if (!isFunction(handler)) {
+		throw new TypeError('handler must be a function');
+	}
+	const owner = this;
+	const resolvedScope = scope || owner;
+	const entry = DelegateEntry.create(owner, 'scoped', eventName.trim(), handler, options);
+	entry.selector = selector.trim();
+	entry.scope = resolvedScope;
+	entry.subscribe();
+	return entry;
+}
+// — Lifecycle sweep — mixed onto the prototype, called by `lifecycle.js` —
+export function clearDelegateListeners() {
+	const entries = this.delegateEntries;
+	if (!entries?.size) {
 		return;
 	}
-	map.delete(subeventName);
-	if (map.size === 0) {
-		subevents.delete(element);
+	const snapshot = Array.from(entries);
+	for (let i = 0; i < snapshot.length; i++) {
+		snapshot[i].unsubscribe();
 	}
+	entries.clear();
 }
-export function unregisterAllSubevents(element) {
-	subevents.delete(element);
-}
-export function getSubeventData(element, subeventName) {
-	return subevents.get(element)?.get(subeventName);
+// — Free function: publish onto the document bus from a non-component caller.
+// Services (`viewport.js`, `connection.js`, etc.) call this instead of
+// hand-rolling `document.dispatchEvent(new CustomEvent(...))`. The detail
+// shape matches the conventional `{ data, source }` payload that bus
+// subscribers expect via `domEvent.detail`.
+export function emitDelegate(eventName, data) {
+	document.dispatchEvent(new CustomEvent(eventName, {
+		bubbles: true,
+		composed: true,
+		detail: {
+			data,
+			source: null,
+		},
+	}));
 }

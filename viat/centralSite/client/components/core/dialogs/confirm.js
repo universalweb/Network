@@ -1,10 +1,23 @@
-import { delegate } from '../dom/delegate.js';
+// `this.confirm(message): Promise<boolean>` — imperative confirmation prompt,
+// mixed onto WebComponent.prototype via base.js. Wraps a lazily-built
+// singleton `<ui-modal>` shared across the page. Returns true on accept,
+// false on cancel / backdrop close / Escape.
+//
+// Replaces the old declarative `confirm="…"` behavior and its synthetic
+// `target.click()` re-fire. Handlers now run directly:
+//
+//     async handleSave() {
+//         if (!await this.confirm('Delete this wallet?')) {
+//             return;
+//         }
+//         // …proceed…
+//     }
+//
+// One modal at a time — concurrent confirms are not supported (the second
+// would stomp the first's listener wiring). In practice a single global
+// confirmation dialog is the right shape; competing prompts indicate a UX
+// problem at the call sites, not at this module.
 import { resolveTag } from '../resolver.js';
-// Singleton prompt — lazily built on first use, reused thereafter. Buttons are
-// wired with explicit click handlers because <form method="dialog"> would need
-// the form and the host <dialog> in the same tree; here the dialog lives in
-// ui-modal's shadow root and the form would be slotted, so the form/dialog
-// auto-close contract doesn't connect across the shadow boundary.
 const PROMPT_CSS = `
 .confirm-prompt { display:flex; flex-direction:column; gap:1rem; padding:1.25rem 1.5rem; min-width:280px; max-width:480px; font:inherit; }
 .confirm-prompt-msg { margin:0; line-height:1.4; white-space:pre-wrap; }
@@ -51,10 +64,14 @@ async function ensureModal() {
 	messageNode = modalElement.querySelector('.confirm-prompt-msg');
 	acceptButton = modalElement.querySelector('.confirm-prompt-accept');
 	cancelButton = modalElement.querySelector('.confirm-prompt-cancel');
-	// Wait for first render so the internal <dialog> exists before open() runs.
+	// Wait for the modal's first render so the internal <dialog> exists
+	// before .open() runs.
 	await modalElement.lifecycle.whenRendered;
 }
-async function showConfirmPrompt(message) {
+// Public entry point. Module-internal name avoids shadowing the global
+// `confirm` binding (per CLAUDE.md) — it is exposed on the prototype as
+// `this.confirm(message)` via base.js's PROTO_METHODS map.
+export async function confirmPrompt(message) {
 	await ensureModal();
 	messageNode.textContent = String(message);
 	return new Promise((resolve) => {
@@ -85,26 +102,3 @@ async function showConfirmPrompt(message) {
 		modalElement.open();
 	});
 }
-async function handleConfirm(domEvent, target, message) {
-	if (!message) {
-		return;
-	}
-	if (target.dataset.confirmAccepted === '1') {
-		target.removeAttribute('data-confirm-accepted');
-		return;
-	}
-	domEvent.preventDefault();
-	domEvent.stopImmediatePropagation();
-	const accepted = await showConfirmPrompt(message);
-	if (!accepted) {
-		return;
-	}
-	target.dataset.confirmAccepted = '1';
-	target.click();
-}
-export const confirmBehavior = {
-	name: 'confirm',
-	init() {
-		delegate('click.confirm', handleConfirm);
-	},
-};

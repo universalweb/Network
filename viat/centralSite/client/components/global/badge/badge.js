@@ -11,7 +11,7 @@ export class UIBadge extends WebComponent {
 		tone: 'neutral',
 	};
 	onMount() {
-		this.observe('label', (newValue, oldValue) => {
+		this.observeAsync('label', (newValue, oldValue) => {
 			if (oldValue !== undefined && oldValue !== '' && newValue !== oldValue) {
 				this.pulse();
 			}

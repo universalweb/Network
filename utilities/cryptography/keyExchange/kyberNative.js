@@ -2,7 +2,6 @@ import {
 	clearBuffer,
 	int32,
 	int64,
-	random32ByteBuffer,
 } from '#utilities/cryptography/utils';
 import {
 	extendedAuthHeaderRPC,
@@ -14,17 +13,72 @@ import { KeyExchange } from './keyExchange.js';
 import crypto from 'node:crypto';
 import { findItem } from '@universalweb/utilitylib';
 import shake256 from '../hash/shake.js';
-const seedSize = int64;
 const sessionKeySize = int32;
 const algoList = [
 	{
 		name: 'ml-kem-768',
 		publicKeySize: 1184,
-		privateKeySize: 2400,
+		/*
+			Serializable private key is the 64-byte FIPS 203 keygen seed (d‖z). The expanded
+			2400-byte decapsulation key only ever lives inside the KeyObject — native crypto
+			never emits it, so the seed IS the portable private form.
+		*/
+		privateKeySize: int64,
+		expandedPrivateKeySize: 2400,
+		seedSize: int64,
+		// ML-KEM.KeyGen draws two independent 32-byte seeds; both are required to reproduce a key
+		seedSegments: [
+			{ name: 'd', size: int32, role: 'expansion' },
+			{ name: 'z', size: int32, role: 'implicitRejection' },
+		],
 	},
 ];
+const primaryAlgo = algoList[0];
+const seedSize = primaryAlgo.seedSize;
+const RAW_PUBLIC_KEY_SIZE = primaryAlgo.publicKeySize;
 const { hash256 } = shake256;
-const SPKI_PREFIX = Buffer.from('308204b2300b0609608648016503040402038204a100', 'hex');
+/**
+ * Native crypto rejects bare ML-KEM key/seed bytes — it only ingests DER. Peers send raw
+ * public keys and we serialize private keys as the raw d‖z seed, so both get re-wrapped with
+ * their scheme DER headers on the way back in. Derived once from a probe key so the OID and
+ * length bytes track exactly what OpenSSL emits, instead of rotting as hardcoded 768-only
+ * blobs the moment another variant joins algoList.
+ */
+function deriveDerPrefixes(algorithm, rawPublicKeySize, seedByteLength) {
+	const {
+		publicKey, privateKey,
+	} = crypto.generateKeyPairSync(algorithm);
+	const spki = publicKey.export({
+		format: 'der',
+		/* eslint-disable-next-line no-restricted-syntax */
+		type: 'spki',
+	});
+	const pkcs8 = privateKey.export({
+		format: 'der',
+		/* eslint-disable-next-line no-restricted-syntax */
+		type: 'pkcs8',
+	});
+	return {
+		spkiPrefix: Buffer.from(spki.subarray(0, spki.length - rawPublicKeySize)),
+		seedPkcs8Prefix: Buffer.from(pkcs8.subarray(0, pkcs8.length - seedByteLength)),
+	};
+}
+const {
+	spkiPrefix: SPKI_PREFIX,
+	seedPkcs8Prefix: PKCS8_SEED_PREFIX,
+} = deriveDerPrefixes(primaryAlgo.name, RAW_PUBLIC_KEY_SIZE, seedSize);
+function privateKeyFromSeed(seed) {
+	if (seed.length !== seedSize) {
+		throw new Error(`ml-kem seed must be ${seedSize} bytes (d‖z); received ${seed.length}`);
+	}
+	const der = Buffer.concat([PKCS8_SEED_PREFIX, seed]);
+	return crypto.createPrivateKey({
+		key: der,
+		format: 'der',
+		/* eslint-disable-next-line no-restricted-syntax */
+		type: 'pkcs8',
+	});
+}
 class PublicKey {
 	constructor(algorithm, data) {
 		this.algorithm = algorithm;
@@ -32,7 +86,7 @@ class PublicKey {
 			this.key = data;
 		} else {
 			const buf = Buffer.isBuffer(data) ? data : Buffer.from(data);
-			if (buf.length === 1184) {
+			if (buf.length === RAW_PUBLIC_KEY_SIZE) {
 				const der = Buffer.concat([SPKI_PREFIX, buf]);
 				this.key = crypto.createPublicKey({
 					key: der,
@@ -56,8 +110,10 @@ class PublicKey {
 			/* eslint-disable-next-line no-restricted-syntax */
 			type: 'spki',
 		});
-		// Return raw 1184 byte ArrayBuffer
-		return der.slice(22).buffer;
+		// Strip the SPKI header back to the raw key. Copy the exact window — .buffer alone
+		// returns the whole backing store and ignores byteOffset, leaking the prefix.
+		const raw = der.subarray(SPKI_PREFIX.length);
+		return raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength);
 	}
 	async generateKey() {
 		const {
@@ -76,8 +132,10 @@ class PrivateKey {
 			this.key = data;
 		} else {
 			const buf = Buffer.isBuffer(data) ? data : Buffer.from(data);
+			// A bare d‖z seed needs the PKCS8 header re-attached; a full DER passes straight through
+			const der = (buf.length === seedSize) ? Buffer.concat([PKCS8_SEED_PREFIX, buf]) : buf;
 			this.key = crypto.createPrivateKey({
-				key: buf,
+				key: der,
 				format: 'der',
 				/* eslint-disable-next-line no-restricted-syntax */
 				type: 'pkcs8',
@@ -85,17 +143,28 @@ class PrivateKey {
 		}
 	}
 	async export() {
-		return this.key.export({
+		const der = this.key.export({
 			format: 'der',
 			/* eslint-disable-next-line no-restricted-syntax */
 			type: 'pkcs8',
-		}).buffer;
+		});
+		// Native PKCS8 is seed-format — strip the ASN.1 header to the raw d‖z seed (the portable private)
+		const seed = der.subarray(der.length - seedSize);
+		return seed.buffer.slice(seed.byteOffset, seed.byteOffset + seed.byteLength);
 	}
 	async decryptKey(ciphertext) {
 		return crypto.decapsulate(this.key, ciphertext);
 	}
 }
-export async function generateKeyPair(algorithm = 'ml-kem-768') {
+export async function generateKeyPair(algorithm = primaryAlgo.name, seed) {
+	if (seed) {
+		const seedBuffer = Buffer.isBuffer(seed) ? seed : Buffer.from(seed);
+		const privateKeyObject = privateKeyFromSeed(seedBuffer);
+		return {
+			publicKey: new PublicKey(algorithm, crypto.createPublicKey(privateKeyObject)),
+			privateKey: new PrivateKey(algorithm, privateKeyObject),
+		};
+	}
 	const {
 		publicKey, privateKey,
 	} = crypto.generateKeyPairSync(algorithm);
@@ -105,8 +174,7 @@ export async function generateKeyPair(algorithm = 'ml-kem-768') {
 	};
 }
 export async function keyExchangeKeypair(seed) {
-	const kyberKeypair = await this.generateKeyPair(this.algorithm);
-	return kyberKeypair;
+	return this.generateKeyPair(this.algorithm, seed);
 }
 export async function clientEphemeralKeypair() {
 	const kyberKeypair = await this.generateKeyPair(this.algorithm);
@@ -140,8 +208,8 @@ class KyberNativeKeyExchange extends KeyExchange {
 		super(config);
 		// NOTE: Make sure correct key sizes are used avoid default values fail if not found
 		const scheme = findItem(algoList, config.algorithm, 'name') || {
-			publicKeySize: 1184,
-			privateKeySize: 2400,
+			publicKeySize: RAW_PUBLIC_KEY_SIZE,
+			privateKeySize: seedSize,
 		};
 		const {
 			publicKeySize, privateKeySize,

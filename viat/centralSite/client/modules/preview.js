@@ -91,8 +91,10 @@ class PreviewView extends WebComponent {
 			bootScreen.dismiss();
 		}, 2200);
 	}
-	doDestructiveAction() {
-		this.state.confirmResult = `confirmed at ${new Date().toLocaleTimeString()}`;
+	async doDestructiveAction() {
+		const accepted = await this.confirm('Delete this wallet? This action cannot be undone.');
+		const timestamp = new Date().toLocaleTimeString();
+		this.state.confirmResult = accepted ? `confirmed at ${timestamp}` : `cancelled at ${timestamp}`;
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
@@ -1126,8 +1128,8 @@ class PreviewView extends WebComponent {
 
 				<section class="preview-section">
 					<div class="preview-section-head">
-						<ui-text variant="overline" tone="accent">confirm behavior</ui-text>
-						<ui-text variant="caption" tone="muted">declarative confirm="message" attribute · ui-modal backed · returns promise</ui-text>
+						<ui-text variant="overline" tone="accent">this.confirm()</ui-text>
+						<ui-text variant="caption" tone="muted">imperative this.confirm(message) · ui-modal backed · returns Promise&lt;boolean&gt;</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -1141,7 +1143,7 @@ class PreviewView extends WebComponent {
 							wrap: true,
 							align: 'center',
 						}}>
-							<ui-button confirm="Delete this wallet? This action cannot be undone." .state=${{
+							<ui-button .state=${{
 								label: 'Delete wallet',
 								tone: 'danger',
 							}} @click=${this.doDestructiveAction}></ui-button>

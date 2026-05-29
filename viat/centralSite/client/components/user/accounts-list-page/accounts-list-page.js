@@ -58,10 +58,10 @@ export class AccountsListPage extends WebComponent {
 		totalCount: 0,
 		loading: false,
 		error: '',
-	};
-	titleIconState = {
-		name: 'users',
-		size: 'md',
+		titleIconState: {
+			name: 'users',
+			size: 'md',
+		},
 	};
 	loadedForPage = 0;
 	onConnect() {
@@ -174,7 +174,7 @@ export class AccountsListPage extends WebComponent {
 			<div class="al-shell">
 				<header class="al-title-header">
 					<div class="al-title-block">
-						<ui-icon class="al-title-icon" .state=${this.titleIconState}></ui-icon>
+						<ui-icon class="al-title-icon" .state=${this.state.titleIconState}></ui-icon>
 						<span class="al-title">// ACCOUNTS · RECENTLY UPDATED</span>
 					</div>
 					<div class="al-subtitle">

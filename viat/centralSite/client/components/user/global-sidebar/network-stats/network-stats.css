@@ -2,4 +2,8 @@
   display: block;
   flex-shrink: 0;
   width: 100%;
+  /* Solid panel surface. The sidebar's frosted shell is translucent, so the
+     panel must carry its own opaque background instead of letting the blur
+     show through `--panel-bg`'s default translucency. */
+  --panel-bg: rgb(12, 14, 22);
 }

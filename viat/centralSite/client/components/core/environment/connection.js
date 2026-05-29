@@ -1,7 +1,8 @@
 // navigator.connection (Network Information API). Self-init when imported.
 // Chromium-only at the moment; gracefully no-ops elsewhere.
+import { emitDelegate } from '../dom/delegate.js';
 import { plainEqual } from '../utilities.js';
-import { setGlobal } from '../state/globalState.js';
+import { globalState } from '../state/globalState.js';
 const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
 let lastSnapshot = null;
 function snapshot() {
@@ -21,12 +22,8 @@ function update() {
 		return;
 	}
 	lastSnapshot = value;
-	setGlobal({ 'environment.connection': value });
-	document.dispatchEvent(new CustomEvent('environment:change', {
-		bubbles: true,
-		composed: true,
-		detail: { data: { area: 'connection', value } },
-	}));
+	globalState.set({ 'environment.connection': value });
+	emitDelegate('environment:change', { area: 'connection', value });
 }
 if (conn) {
 	conn.addEventListener('change', update);

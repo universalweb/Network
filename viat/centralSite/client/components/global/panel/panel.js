@@ -14,16 +14,16 @@ export class UIPanel extends WebComponent {
 		id: '',
 		showDot: true,
 		title: '',
-	};
-	surfaceState() {
-		return {
+		// Child-state for the composed <ui-surface> — a reactive key on the
+		// one state tree, bound bare in render(); no method fabricates it.
+		surfaceState: {
 			tone: 'panel',
 			padding: 'none',
 			radius: 'md',
 			border: true,
 			elevation: '0',
-		};
-	}
+		},
+	};
 	renderBody() {
 		return '';
 	}
@@ -33,7 +33,7 @@ export class UIPanel extends WebComponent {
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
-			<ui-surface .state=${this.surfaceState}>
+			<ui-surface .state=${this.state.surfaceState}>
 				<aside class=${classList('panel', this.state.classes)}>
 					<div class="panel-header">
 						<span>

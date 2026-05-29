@@ -1,0 +1,41 @@
+:host {
+	display: block;
+}
+.bar {
+	display: flex;
+	box-sizing: border-box;
+	min-width: 0;
+	min-height: 0;
+	background: var(--bar-bg, transparent);
+	border: var(--bar-border, none);
+	padding: var(--bar-padding, 0);
+}
+/* No gap on `.bar` itself — gap lives inside each region, so an empty region
+   contributes neither space nor a stray gap between its neighbours. */
+.bar-horizontal {
+	flex-direction: row;
+	align-items: center;
+	height: var(--bar-height, auto);
+}
+.bar-vertical {
+	flex-direction: column;
+	align-items: center;
+	width: var(--bar-width, auto);
+	height: 100%;
+}
+.bar-region {
+	display: flex;
+	align-items: center;
+	align-self: stretch;
+	gap: var(--bar-gap, 8px);
+	min-width: 0;
+	min-height: 0;
+}
+.bar-vertical .bar-region {
+	flex-direction: column;
+}
+/* The centre region is the flexible spacer; start and end stay intrinsic. */
+.bar-center {
+	flex: 1 1 auto;
+	justify-content: center;
+}

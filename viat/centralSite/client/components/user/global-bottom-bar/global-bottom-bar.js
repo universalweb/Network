@@ -1,76 +1,80 @@
-import { BottomBarItem } from './bottom-bar-item/bottom-bar-item.js';
-import { WebComponent, each } from '../../core/index.js';
+import { WebComponent, classList } from 'webcomponent';
+import '../../global/status-bar/status-bar.js';
+// `<global-bottom-bar>` — the Viat status strip. A thin composition over the
+// built-in `<ui-status-bar>`: it supplies the three info cells through config
+// and slots its API-health badge into the bar's `end` region. The badge view
+// (tone / text / tooltip) is derived from `globalState.api` into reactive
+// state keys by `syncBadge` — no per-render method fabricates it.
 export class GlobalBottomBar extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
 		globalBottomBar: './global-bottom-bar.css',
 	};
 	static state = {
-		columns: [
-			{
-				label: 'Client',
-				value: 'Web',
-			},
-			{
-				label: 'Network',
-				value: 'MAINNET',
-			},
-			{
-				label: 'Version',
-				value: 'v1.0.0',
-			},
-		],
+		statusBar: {
+			cells: [
+				{
+					label: 'Client',
+					value: 'Web',
+				},
+				{
+					label: 'Network',
+					value: 'MAINNET',
+				},
+				{
+					label: 'Version',
+					value: 'v1.0.0',
+				},
+			],
+			dividers: true,
+		},
+		badgeTone: 'idle',
+		badgeText: 'API Connecting…',
+		badgeTooltip: 'Checking API health',
 	};
-	apiStatus() {
+	onConnect() {
+		this.syncBadge();
+		this.observeGlobal('api', () => {
+			this.syncBadge();
+		});
+	}
+	syncBadge() {
 		const api = this.globalState.api ?? null;
 		if (!api) {
-			return {
-				label: 'Connecting…',
-				tone: 'idle',
-				title: 'Checking API health',
-			};
+			this.assignState({
+				badgeTone: 'idle',
+				badgeText: 'API Connecting…',
+				badgeTooltip: 'Checking API health',
+			});
+			return;
 		}
 		if (api.ok) {
 			const latency = typeof api.latencyMs === 'number' ? ` ${api.latencyMs}ms` : '';
 			const version = api.version ? `v${api.version}` : 'online';
-			return {
-				label: `${version}${latency}`,
-				tone: api.status === 'warning' ? 'warn' : 'ok',
-				title: 'Web API Connected',
-			};
+			this.assignState({
+				badgeTone: api.status === 'warning' ? 'warn' : 'ok',
+				badgeText: `API ${version}${latency}`,
+				badgeTooltip: 'Web API Connected',
+			});
+			return;
 		}
-		return {
-			label: 'Offline',
-			tone: 'bad',
-			title: api.error || 'API unreachable',
-		};
-	}
-	badgeClass() {
-		return `bb-badge tone-${this.apiStatus().tone}`;
-	}
-	badgeTooltip() {
-		return this.apiStatus().title;
-	}
-	badgeText() {
-		return `API ${this.apiStatus().label}`;
+		this.assignState({
+			badgeTone: 'bad',
+			badgeText: 'API Offline',
+			badgeTooltip: api.error || 'API unreachable',
+		});
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
-		this.html `
-			<footer class="global-bottom-bar">
-				<div class="bb-columns">
-					${() => {
-						return each(this.state.columns, BottomBarItem, (item) => {
-							return item.label;
-						});
-					}}
-				</div>
-				<div class="bb-spacer"></div>
-				<div class=${this.badgeClass} tooltip=${this.badgeTooltip}>
+		this.html`
+			<ui-status-bar .state=${this.state.statusBar}>
+				<div slot="end" class=${classList('bb-badge', () => {
+					return `tone-${this.state.badgeTone}`;
+				})} tooltip=${this.state.badgeTooltip}>
 					<span class="bb-badge-dot"></span>
-					<span class="bb-badge-text">${this.badgeText}</span>
+					<span class="bb-badge-text">${this.state.badgeText}</span>
 				</div>
-			</footer>
+			</ui-status-bar>
 		`;
 	}
 }

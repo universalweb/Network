@@ -1,96 +1,62 @@
+/* The bottom strip itself is `<ui-status-bar>` (fixed, themed). This host only
+   carries the API-health badge that gets slotted into the bar's `end` region. */
 :host {
-  display: block;
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  z-index: 40;
-  box-sizing: border-box;
-}
-
-/* ══════════════════════════════════════════════════════
-   BOTTOM STATUS STRIP
-══════════════════════════════════════════════════════ */
-.global-bottom-bar {
-  display: flex;
-  align-items: center;
-  height: 40px;
-  background: var(--bg-dark);
-  border-top: 1px solid var(--dark-divider);
-  overflow: hidden;
-  padding: 0 16px;
-  flex-shrink: 0;
-  gap: 8px;
-}
-
-.bb-columns {
-  display: flex;
-  align-items: center;
-  height: 100%;
-}
-
-.bb-spacer {
-  flex: 1 1 auto;
+	display: contents;
 }
 
 .bb-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 16px;
-  align-self: stretch;
-  margin-right: -16px;
-  border-radius: 0;
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  border-width: 0;
-  border-left: 1px solid transparent;
-  border-style: solid;
-  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0 16px;
+	align-self: stretch;
+	margin-right: -16px;
+	font-family: var(--font-mono);
+	font-size: 0.6875rem;
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+	border-width: 0;
+	border-left: 1px solid transparent;
+	border-style: solid;
+	transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
 .bb-badge > * {
-  pointer-events: none;
+	pointer-events: none;
 }
 
 .bb-badge-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-  box-shadow: 0 0 6px currentColor;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: currentColor;
+	box-shadow: 0 0 6px currentColor;
 }
 
 .bb-badge.tone-ok {
-  color: var(--color-success, #34d399);
-  border-color: rgba(52, 211, 153, 0.32);
-  background: rgba(52, 211, 153, 0.06);
+	color: var(--color-success, #34d399);
+	border-color: rgba(52, 211, 153, 0.32);
+	background: rgba(52, 211, 153, 0.06);
 }
 
 .bb-badge.tone-warn {
-  color: #fbbf24;
-  border-color: rgba(251, 191, 36, 0.36);
-  background: rgba(251, 191, 36, 0.07);
+	color: #fbbf24;
+	border-color: rgba(251, 191, 36, 0.36);
+	background: rgba(251, 191, 36, 0.07);
 }
 
 .bb-badge.tone-bad {
-  color: var(--color-danger, #f87171);
-  border-color: rgba(248, 113, 113, 0.36);
-  background: rgba(248, 113, 113, 0.06);
+	color: var(--color-danger, #f87171);
+	border-color: rgba(248, 113, 113, 0.36);
+	background: rgba(248, 113, 113, 0.06);
 }
 
 .bb-badge.tone-idle {
-  color: var(--text-muted, rgba(255, 255, 255, 0.45));
-  border-color: var(--dark-divider, rgba(255, 255, 255, 0.12));
+	color: var(--text-muted, rgba(255, 255, 255, 0.45));
+	border-color: var(--dark-divider, rgba(255, 255, 255, 0.12));
 }
 
 .bb-badge.tone-idle .bb-badge-dot {
-  box-shadow: none;
-  opacity: 0.6;
+	box-shadow: none;
+	opacity: 0.6;
 }
-
-/* bb-item / bb-key / bb-val now live in bottom-bar-item.css — each status
-   cell is its own <bottom-bar-item> component, rendered via each(). */

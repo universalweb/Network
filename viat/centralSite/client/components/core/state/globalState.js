@@ -2,6 +2,7 @@ import {
 	cachedProxy,
 	eachObject,
 	getValueAtPath,
+	hasOwn,
 	isArray,
 	isPlainObject,
 	isSymbol,
@@ -10,34 +11,49 @@ import {
 	setValueAtPath,
 } from '../utilities.js';
 import { Logger } from '../debug/logger.js';
-import { makePathBus } from './pathBus.js';
-const STATE = {};
-const proxyCache = new WeakMap();
-let GLOBAL_STATE = null;
-const bus = makePathBus({
-	getValue: (path) => {
-		return getValueAtPath(GLOBAL_STATE, path);
-	},
-});
-function reportWastedGlobalSet(obj, key, value, fullPath) {
+import { PathSubscriptions } from './pathSubscriptions.js';
+/**
+ * Reactive bus for a `Store`. Mirrors `ComponentStateBus` in state.js: holds
+ * a back-reference to the store so `getValue(path)` resolves against the
+ * store's reactive proxy at flush time. `onFlush` is inherited as a no-op —
+ * a Store has no render pipeline of its own; downstream observers drive
+ * their own renders.
+ */
+class StoreBus extends PathSubscriptions {
+	constructor(store) {
+		super();
+		this.store = store;
+	}
+	getValue(path) {
+		return getValueAtPath(this.store.proxy, path);
+	}
+}
+function reportWastedStoreSet(obj, key, value, fullPath) {
 	if (!plainEqual(obj[key], value)) {
 		return null;
 	}
 	return `wasted set on "${fullPath}" — new value is structurally equal to current but a different reference; reuse the existing reference to avoid re-render.`;
 }
-// Same monomorphization rationale as StateProxyHandler: prototype-shared traps,
-// one tiny handler instance per proxy, no per-instance closures.
-class GlobalProxyHandler {
-	constructor(path) {
+/**
+ * Stateless trap container for a reactive `Store`. Each proxy holds a tiny
+ * handler instance carrying just `(store, path)` so the trap can resolve the
+ * bus and proxy cache via `this.store` without module-scope state — the
+ * legacy `let GLOBAL_STATE = null` reassignment is gone. Methods live on the
+ * prototype for JIT monomorphization across every nested-path proxy.
+ */
+class StoreProxyHandler {
+	constructor(store, path) {
+		this.store = store;
 		this.path = path;
 	}
-	static create(target, path = '') {
+	static create(store, target, path = '') {
 		if (!isPlainObject(target) && !isArray(target)) {
 			return target;
 		}
-		return cachedProxy(proxyCache, target, path, () => {
-			return new Proxy(target, new GlobalProxyHandler(path));
-		});
+		return cachedProxy(store.proxyCache, target, path, StoreProxyHandler, store);
+	}
+	static build(target, path, store) {
+		return new Proxy(target, new StoreProxyHandler(store, path));
 	}
 	get(obj, key) {
 		if (isSymbol(key)) {
@@ -46,7 +62,7 @@ class GlobalProxyHandler {
 		const propertyValue = Reflect.get(obj, key);
 		const nestedPath = joinPath(this.path, key);
 		if (isPlainObject(propertyValue) || isArray(propertyValue)) {
-			return GlobalProxyHandler.create(propertyValue, nestedPath);
+			return StoreProxyHandler.create(this.store, propertyValue, nestedPath);
 		}
 		return propertyValue;
 	}
@@ -55,57 +71,77 @@ class GlobalProxyHandler {
 			return true;
 		}
 		const fullPath = joinPath(this.path, key);
-		Logger.perf('globalState', reportWastedGlobalSet, obj, key, value, fullPath);
+		Logger.perf('globalState', reportWastedStoreSet, obj, key, value, fullPath);
 		Reflect.set(obj, key, value);
-		bus.notify(fullPath);
+		this.store.bus.notify(fullPath);
 		return true;
 	}
 	deleteProperty(obj, key) {
+		/**
+		 * `delete store.foo` is translated to null-assignment so the store's
+		 * hidden class stays stable — `delete` would trigger a V8 deopt.
+		 * Callers that need true "absent" semantics should model the field
+		 * with a Map or use a sentinel.
+		 */
+		if (!hasOwn(obj, key) || obj[key] === null) {
+			return true;
+		}
 		const fullPath = joinPath(this.path, key);
-		const result = Reflect.deleteProperty(obj, key);
-		if (result) {
-			bus.notify(fullPath);
-		}
-		return result;
+		obj[key] = null;
+		this.store.bus.notify(fullPath);
+		return true;
 	}
 }
-GLOBAL_STATE = GlobalProxyHandler.create(STATE);
-export { GLOBAL_STATE };
-export function getGlobal(key) {
-	return key === undefined ? GLOBAL_STATE : getValueAtPath(GLOBAL_STATE, key);
-}
-export function setGlobal(updates) {
-	if (!isPlainObject(updates)) {
-		return;
+/**
+ * Reactive key/value store. Owns its STATE container, a path-keyed bus, and
+ * a `proxy` that traps reads/writes so mutations notify subscribers. The
+ * shape mirrors what each WebComponent has internally (STATE + stateBus +
+ * stateProxy); this is just that machinery hoisted into a stand-alone class.
+ *
+ * `Store.create()` is the only constructor entry point — no `null`-then-
+ * reassigned bootstrap. Subscribe with `.observe(key, handler)`; the returned
+ * `Subscription` instance has an `.unsubscribe()` for explicit teardown.
+ * Component-side wrappers (`this.observeGlobal`) delegate here and add
+ * auto-cleanup tied to the component lifecycle.
+ */
+export class Store {
+	STATE = {};
+	proxyCache = new WeakMap();
+	proxy = null;
+	bus = null;
+	static create() {
+		const store = new Store();
+		store.bus = new StoreBus(store);
+		store.proxy = StoreProxyHandler.create(store, store.STATE);
+		return store;
 	}
-	eachObject(updates, (key, value) => {
-		const current = getValueAtPath(GLOBAL_STATE, key);
-		if (current === value) {
+	get(key) {
+		return key === undefined ? this.proxy : getValueAtPath(this.proxy, key);
+	}
+	set(updates) {
+		if (!isPlainObject(updates)) {
 			return;
 		}
-		// Drop structurally-equal writes here so we don't pay re-render cost on
-		// fresh-but-identical objects (the wasted-set perf warning's whole
-		// motivation). Direct proxy mutations still warn — callers who reach
-		// past `setGlobal` opt out of the guard.
-		if (plainEqual(current, value)) {
-			return;
-		}
-		setValueAtPath(GLOBAL_STATE, key, value);
-	});
+		const proxy = this.proxy;
+		eachObject(updates, (key, value) => {
+			const current = getValueAtPath(proxy, key);
+			if (current === value) {
+				return;
+			}
+			/**
+			 * Drop structurally-equal writes here so we don't pay re-render
+			 * cost on fresh-but-identical objects (the wasted-set perf
+			 * warning's whole motivation). Direct proxy mutations still warn
+			 * — callers who reach past `Store.set` opt out of the guard.
+			 */
+			if (plainEqual(current, value)) {
+				return;
+			}
+			setValueAtPath(proxy, key, value);
+		});
+	}
+	observe(key, handler) {
+		return this.bus.subscribe(key, handler);
+	}
 }
-export function subscribeGlobal(key, cb) {
-	return bus.subscribe(key, (value, changedPath) => {
-		return cb(value, GLOBAL_STATE, changedPath);
-	});
-}
-export function watchGlobal(key, cb) {
-	const unsubscribe = subscribeGlobal(key, cb ?? (() => {
-		return this.renderView();
-	}));
-	const stopWatching = () => {
-		unsubscribe();
-		this?.globalUnsubs?.delete(stopWatching);
-	};
-	this?.globalUnsubs?.add(stopWatching);
-	return stopWatching;
-}
+export const globalState = Store.create();

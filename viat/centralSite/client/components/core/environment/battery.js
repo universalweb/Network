@@ -1,7 +1,8 @@
 // Opt-in battery info. Call requestBattery() once to start tracking.
 // navigator.getBattery() is deprecated in some browsers — gracefully
 // no-ops if unavailable.
-import { setGlobal } from '../state/globalState.js';
+import { emitDelegate } from '../dom/delegate.js';
+import { globalState } from '../state/globalState.js';
 let manager = null;
 function snapshot() {
 	if (!manager) {
@@ -16,12 +17,8 @@ function snapshot() {
 }
 function update() {
 	const value = snapshot();
-	setGlobal({ 'environment.battery': value });
-	document.dispatchEvent(new CustomEvent('environment:change', {
-		bubbles: true,
-		composed: true,
-		detail: { data: { area: 'battery', value } },
-	}));
+	globalState.set({ 'environment.battery': value });
+	emitDelegate('environment:change', { area: 'battery', value });
 }
 export async function requestBattery() {
 	if (manager || typeof navigator.getBattery !== 'function') {

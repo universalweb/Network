@@ -65,18 +65,20 @@ export class UIModal extends WebComponent {
 		// modal reopened with a different intent doesn't accidentally
 		// re-invoke a stale handler.
 		afterAction: null,
-	};
-	maximizeIconState = {
-		name: 'maximize-2',
-		size: 'sm',
-	};
-	restoreIconState = {
-		name: 'minimize-2',
-		size: 'sm',
-	};
-	minimizeIconState = {
-		name: 'minus',
-		size: 'sm',
+		// Child-state for the composed window-control <ui-icon>s — reactive
+		// keys on the one state tree, bound bare in render(); not loose fields.
+		maximizeIconState: {
+			name: 'maximize-2',
+			size: 'sm',
+		},
+		restoreIconState: {
+			name: 'minimize-2',
+			size: 'sm',
+		},
+		minimizeIconState: {
+			name: 'minus',
+			size: 'sm',
+		},
 	};
 	handleDialogClick(domEvent) {
 		// Backdrop-close is part of the base modal contract — every modal
@@ -250,13 +252,13 @@ export class UIModal extends WebComponent {
 					<button type="button" class="mc-btn mc-min" aria-label="Minimize" ?hidden=${() => {
 						return this.state.showMinimize !== true;
 					}} @click=${this.handleToggleMinimize}>
-						<ui-icon class="mc-icon" .state=${this.minimizeIconState}></ui-icon>
+						<ui-icon class="mc-icon" .state=${this.state.minimizeIconState}></ui-icon>
 					</button>
 					<button type="button" class="mc-btn mc-max" aria-label="Toggle size" ?hidden=${() => {
 						return this.state.showMaximize !== true;
 					}} @click=${this.handleToggleMaximize}>
-						<ui-icon class="mc-icon mc-icon-grow" .state=${this.maximizeIconState}></ui-icon>
-						<ui-icon class="mc-icon mc-icon-shrink" .state=${this.restoreIconState}></ui-icon>
+						<ui-icon class="mc-icon mc-icon-grow" .state=${this.state.maximizeIconState}></ui-icon>
+						<ui-icon class="mc-icon mc-icon-shrink" .state=${this.state.restoreIconState}></ui-icon>
 					</button>
 					<ui-close-button class="mc-close" ?hidden=${() => {
 						return this.state.showClose !== true;

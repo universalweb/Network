@@ -6,21 +6,39 @@ import {
 } from '../utilities.js';
 import { register, unregister } from '../dom/registry.js';
 import { Logger } from '../debug/logger.js';
+import { PHASE } from './phase.js';
 import { registerChild } from '../dom/children.js';
+import { sweepHotkeyEntries } from '../hotkeys/hotkeys.js';
+/**
+ * Lifecycle-promise key vocabulary. The single source of truth for every
+ * `lifecycle.whenX` key passed as a string argument to fireResolver,
+ * assignPromisePair, or awaitChildren. Dot-notation accesses (`x.lifecycle.whenLive`)
+ * keep the idiomatic property form; renaming a key still requires touching
+ * those, but at least every dynamic-key call site reads from one place.
+ */
+export const LIFECYCLE_PROMISE = Object.freeze({
+	CONNECTED: 'whenConnected',
+	RENDERED: 'whenRendered',
+	MOUNTED: 'whenMounted',
+	LIVE: 'whenLive',
+	VISIBLE: 'whenVisible',
+	DISCONNECTED: 'whenDisconnected',
+	DESTROYED: 'whenDestroyed',
+});
 const CONNECT_CYCLE_KEYS = [
-	'whenConnected',
-	'whenRendered',
-	'whenMounted',
-	'whenLive',
-	'whenVisible',
-	'whenDisconnected',
+	LIFECYCLE_PROMISE.CONNECTED,
+	LIFECYCLE_PROMISE.RENDERED,
+	LIFECYCLE_PROMISE.MOUNTED,
+	LIFECYCLE_PROMISE.LIVE,
+	LIFECYCLE_PROMISE.VISIBLE,
+	LIFECYCLE_PROMISE.DISCONNECTED,
 ];
 const STRANDED_CYCLE_KEYS = [
-	'whenConnected',
-	'whenRendered',
-	'whenMounted',
-	'whenLive',
-	'whenVisible',
+	LIFECYCLE_PROMISE.CONNECTED,
+	LIFECYCLE_PROMISE.RENDERED,
+	LIFECYCLE_PROMISE.MOUNTED,
+	LIFECYCLE_PROMISE.LIVE,
+	LIFECYCLE_PROMISE.VISIBLE,
 ];
 function attachToParent(component, parentHost) {
 	if (parentHost && parentHost.isWebComponent) {
@@ -52,19 +70,6 @@ export function connectedMoveCallback() {
 export function disconnectedCallback() {
 	runLifecycleStep(this, 'handleDisconnect', 'Disconnected');
 }
-export function attributeChangedCallback(attrName, oldValue, newValue) {
-	if (oldValue === newValue) {
-		return;
-	}
-	const subscribers = this.attrObservers?.get(attrName);
-	if (!subscribers || subscribers.size === 0) {
-		return;
-	}
-	const value = this.attrs[attrName];
-	subscribers.forEach((subscriber) => {
-		subscriber(value);
-	});
-}
 export async function handleConnect() {
 	register(this);
 	Logger.debug('WebComponent', () => {
@@ -73,8 +78,8 @@ export async function handleConnect() {
 	attachToParent(this, resolveParentHost(this));
 	await this.applyStyles();
 	await this.onConnect?.();
-	this.phase = 'connected';
-	fireResolver(this.lifecycle, 'whenConnected');
+	this.phase = PHASE.CONNECTED;
+	fireResolver(this.lifecycle, LIFECYCLE_PROMISE.CONNECTED);
 	if (Object.keys(this.STATE).length) {
 		await this.updateView();
 	} else {
@@ -108,10 +113,11 @@ export async function handleDisconnect() {
 	this.isVisible = false;
 	this.clearTimeouts();
 	this.clearIntervals();
-	clearUnsubs(this.stateUnsubs);
-	clearUnsubs(this.globalUnsubs);
-	clearUnsubs(this.delegateUnsubs);
-	this.attrObservers = null;
+	this.stateUnsubs.clear();
+	this.globalUnsubs.clear();
+	this.clearDelegateListeners();
+	sweepHotkeyEntries(this.hotkeyEntries);
+	clearUnsubs(this.gestureUnsubs);
 	this.refsMap = null;
 	this.refsProxy = null;
 	this.cleanupTemplate();
@@ -122,8 +128,8 @@ export async function handleDisconnect() {
 	this.clearEventListeners();
 	this.resolveStrandedConnectCyclePromises();
 	await this.onDisconnect?.();
-	this.phase = 'disconnected';
-	fireResolver(this.lifecycle, 'whenDisconnected');
+	this.phase = PHASE.DISCONNECTED;
+	fireResolver(this.lifecycle, LIFECYCLE_PROMISE.DISCONNECTED);
 	this.createConnectCyclePromises();
 	if (this.pendingDestroy) {
 		await this.handleDestroy();
@@ -131,11 +137,11 @@ export async function handleDisconnect() {
 }
 export async function handleDestroy() {
 	await this.onDestroy?.();
-	this.phase = 'destroyed';
-	fireResolver(this.lifecycle, 'whenDestroyed');
+	this.phase = PHASE.DESTROYED;
+	fireResolver(this.lifecycle, LIFECYCLE_PROMISE.DESTROYED);
 }
 export function destroy() {
-	if (this.phase === 'destroyed') {
+	if (this.phase === PHASE.DESTROYED) {
 		return this.lifecycle.whenDestroyed;
 	}
 	this.pendingDestroy = true;
@@ -161,5 +167,5 @@ export function createConnectCyclePromises() {
 	this.lifecycle.treeVisiblePromise = null;
 }
 export function createWhenDestroyedPromise() {
-	assignPromisePair(this.lifecycle, 'whenDestroyed');
+	assignPromisePair(this.lifecycle, LIFECYCLE_PROMISE.DESTROYED);
 }

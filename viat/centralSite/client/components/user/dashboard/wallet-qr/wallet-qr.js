@@ -53,6 +53,12 @@ export class WalletQr extends WebComponent {
 		svg: '',
 		renderedAddress: '',
 		busy: false,
+		// Child-state for the composed download <ui-icon> — a reactive key,
+		// bound bare; no method fabricates it.
+		downloadIconState: {
+			name: 'download',
+			size: 'sm',
+		},
 	};
 	onConnect() {
 		this.observeGlobal('walletAddress', (nextAddress) => {
@@ -172,12 +178,6 @@ export class WalletQr extends WebComponent {
 			});
 		}
 	}
-	downloadIconState() {
-		return {
-			name: 'download',
-			size: 'sm',
-		};
-	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
@@ -195,7 +195,7 @@ export class WalletQr extends WebComponent {
 					type="button"
 					?disabled=${() => !this.state.renderedAddress}
 					@click=${this.handleDownload}>
-					<ui-icon class="wq-download-icon" .state=${this.downloadIconState}></ui-icon>
+					<ui-icon class="wq-download-icon" .state=${this.state.downloadIconState}></ui-icon>
 					<span class="wq-download-label">Download</span>
 				</button>
 			</div>

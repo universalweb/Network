@@ -1,0 +1,27 @@
+:host {
+	display: block;
+}
+.toolbar {
+	--bar-height: 40px;
+	--bar-padding: 0 16px;
+	--bar-gap: 4px;
+}
+.toolbar-actions {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+/* Toolbar-context colouring for the composed icon buttons. `color` is an
+   inherited property, so it crosses the shadow boundary down to each
+   `<ui-icon>`'s currentColor. */
+ui-icon-button {
+	color: var(--icon-color, var(--text-main));
+	transition: color 0.15s ease;
+}
+ui-icon-button:hover {
+	color: var(--icon-color-hover, var(--cyan));
+}
+ui-icon-button.active,
+ui-icon-button[active] {
+	color: var(--icon-color-active, var(--cyan));
+}

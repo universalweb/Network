@@ -49,6 +49,17 @@ export class SwapPage extends WebComponent {
 		ratePerBtc: DEFAULT_RATE_VIAT_PER_BTC,
 		status: '',
 		statusTone: '',
+		// Child-state for the composed <ui-icon>s — reactive keys, bound bare;
+		// no method or render-local fabricates them. `assetIconState` serves the
+		// icon-bearing asset (BTC); the glyph asset (VIAT) renders a span.
+		flipIconState: {
+			name: 'arrow-up-down',
+			size: 'md',
+		},
+		assetIconState: {
+			name: 'bitcoin',
+			size: 'md',
+		},
 	};
 	get fromAsset() {
 		return ASSETS[this.state.fromSymbol];
@@ -84,11 +95,7 @@ export class SwapPage extends WebComponent {
 		if (asset.glyph) {
 			return this.htmlElement`<span class="sp-glyph">${asset.glyph}</span>`;
 		}
-		const iconState = {
-			name: asset.icon,
-			size: 'md',
-		};
-		return this.htmlElement`<ui-icon class="sp-icon" .state=${iconState}></ui-icon>`;
+		return this.htmlElement`<ui-icon class="sp-icon" .state=${this.state.assetIconState}></ui-icon>`;
 	}
 	flipDirection() {
 		const next = this.state.fromSymbol === 'VIAT' ? 'BTC' : 'VIAT';
@@ -135,16 +142,10 @@ export class SwapPage extends WebComponent {
 			</section>
 		`;
 	}
-	flipIconState() {
-		return {
-			name: 'arrow-up-down',
-			size: 'md',
-		};
-	}
 	renderFlipButton() {
 		return this.htmlElement`
 			<button class="sp-flip" @click=${this.handleFlip} aria-label="Flip swap direction" tooltip="Flip direction">
-				<ui-icon class="sp-flip-icon" .state=${this.flipIconState}></ui-icon>
+				<ui-icon class="sp-flip-icon" .state=${this.state.flipIconState}></ui-icon>
 			</button>
 		`;
 	}

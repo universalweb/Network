@@ -1,4 +1,5 @@
 import { fireResolver, isTypeUndefined } from '../utilities.js';
+import { LIFECYCLE_PROMISE } from './lifecycle.js';
 const componentRegistry = new WeakMap();
 let sharedObserver = null;
 function checkManualVisibility(element) {
@@ -18,7 +19,7 @@ export function handleObserverCallback(entry) {
 	this.isVisible = visibleNow;
 	if (visibleNow && !this.visibleFired) {
 		this.visibleFired = true;
-		fireResolver(this.lifecycle, 'whenVisible');
+		fireResolver(this.lifecycle, LIFECYCLE_PROMISE.VISIBLE);
 		this.onVisible?.();
 	}
 }

@@ -1,6 +1,6 @@
 import '../loading-bar/loading-bar.js';
 import { WebComponent, classList } from '../../core/index.js';
-import { setGlobal } from '../../core/state/globalState.js';
+import { globalState } from '../../core/state/globalState.js';
 const FADE_MS = 420;
 // Minimum time the boot screen stays on screen so the V slide-in (≈1.1s)
 // has time to play out even when the app boots faster than that. Anything
@@ -14,6 +14,7 @@ export class BootScreen extends WebComponent {
 	static state = {
 		title: '',
 		subtitle: '',
+		extraSubtitle: '',
 		logo: '',
 		barState: {
 			indeterminate: true,
@@ -45,7 +46,7 @@ export class BootScreen extends WebComponent {
 				// Signal to gated UI (e.g. the wallet-onboarding modal) that
 				// it's safe to surface itself — anything that watches this
 				// flag stays quiet until the splash is fully torn down.
-				setGlobal({
+				globalState.set({
 					bootComplete: true,
 				});
 			}, FADE_MS);
@@ -65,7 +66,7 @@ export class BootScreen extends WebComponent {
 						<div class="bs-subtitle">${this.state.subtitle}</div>
 					</div>
 					<ui-loading-bar .state=${this.state.barState}></ui-loading-bar>
-					<div class="bs-subtitle">LOCAL AI ENABLED</div>
+					<div class="bs-subtitle">${this.state.extraSubtitle}</div>
 				</div>
 			</div>
 		`;

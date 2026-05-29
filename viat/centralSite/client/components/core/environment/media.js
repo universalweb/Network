@@ -1,8 +1,9 @@
 // matchMedia subscriptions for user-preference media queries. Self-init.
 // Writes globalState.environment.media and dispatches environment:change
 // when any preference flips.
+import { emitDelegate } from '../dom/delegate.js';
 import { plainEqual } from '../utilities.js';
-import { setGlobal } from '../state/globalState.js';
+import { globalState } from '../state/globalState.js';
 const queries = {
 	reducedMotion: '(prefers-reduced-motion: reduce)',
 	reducedTransparency: '(prefers-reduced-transparency: reduce)',
@@ -33,12 +34,8 @@ function update() {
 		return;
 	}
 	lastSnapshot = value;
-	setGlobal({ 'environment.media': value });
-	document.dispatchEvent(new CustomEvent('environment:change', {
-		bubbles: true,
-		composed: true,
-		detail: { data: { area: 'media', value } },
-	}));
+	globalState.set({ 'environment.media': value });
+	emitDelegate('environment:change', { area: 'media', value });
 }
 const keys = Object.keys(queries);
 for (let i = 0; i < keys.length; i++) {

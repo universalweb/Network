@@ -1,0 +1,156 @@
+:host {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	flex: 0 0 auto;
+	width: 100%;
+	position: relative;
+	overflow: visible;
+	background: var(--topbar-bg);
+	border-radius: var(--radius-lg, 10px);
+	border: 1px solid var(--dark-divider);
+	box-shadow:
+		var(--panel-shadow),
+		inset 1px 0 0 rgba(255, 255, 255, 0.03);
+	animation: dock-slide-in 2080ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes dock-slide-in {
+	from {
+		opacity: 0;
+		transform: translateX(-100px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	:host {
+		animation: none;
+	}
+}
+.dock {
+	--bar-padding: 0;
+	--bar-gap: 0;
+	width: 100%;
+}
+/* The rail — the active-bar's positioning context and the item flex line. */
+.dock-rail {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	padding: 8px 0;
+	gap: 4px;
+	flex-shrink: 0;
+	position: relative;
+}
+:host(.dock-horizontal) .dock-rail {
+	flex-direction: row;
+	justify-content: space-around;
+	padding: 4px 6px;
+}
+/* Dock-context sizing + colouring for the composed icon buttons. Scoped under
+   the host class so it outranks `<ui-icon-button>`'s own `:host` defaults.
+   `color` is inherited, so it crosses the shadow boundary to each `<ui-icon>`. */
+:host(.dock-vertical) ui-icon-button,
+:host(.dock-horizontal) ui-icon-button {
+	display: flex;
+	justify-content: center;
+	color: var(--icon-color, var(--text-main));
+	transition: color 0.18s ease;
+}
+:host(.dock-vertical) ui-icon-button {
+	width: 100%;
+}
+:host(.dock-horizontal) ui-icon-button {
+	width: auto;
+	flex: 0 0 auto;
+}
+:host(.dock-vertical) ui-icon-button:hover,
+:host(.dock-horizontal) ui-icon-button:hover {
+	color: var(--icon-color-hover, var(--cyan));
+}
+:host(.dock-vertical) ui-icon-button.active,
+:host(.dock-horizontal) ui-icon-button.active {
+	color: var(--icon-color-active, var(--cyan));
+}
+@media (max-width: 767px) {
+	:host(.dock-vertical) ui-icon-button {
+		width: auto;
+		flex: 0 0 auto;
+	}
+}
+/* The sliding active-bar. movingIndicator writes --bar-x/-y/-w/-h on both
+   axes; each orientation honours its own pair, exactly like the tab strip. */
+.active-bar {
+	position: absolute;
+	background: var(--teal);
+	transform-origin: center;
+	transition:
+		transform 0.44s cubic-bezier(0.34, 1.56, 0.64, 1),
+		width 0.2s ease,
+		height 0.2s ease,
+		opacity 0.25s ease;
+	will-change: transform, opacity;
+	opacity: 0;
+	z-index: 2;
+}
+.active-bar.is-visible {
+	opacity: 1;
+}
+.active-bar.no-transition {
+	transition: none;
+}
+/* Vertical rail: a 3px bar pinned to the left edge, sliding on Y. */
+:host(.dock-vertical) .active-bar {
+	top: 0;
+	left: 0;
+	width: 3px;
+	height: var(--bar-h, 38px);
+	border-radius: 4px 0 0 4px;
+	transform: translateY(var(--bar-y, 0));
+	box-shadow: -2px 0 8px var(--teal-glow-faint, rgba(0, 255, 255, 0.2));
+}
+/* Horizontal rail: a 3px underline pinned to the bottom edge, sliding on X. */
+:host(.dock-horizontal) .active-bar {
+	bottom: 0;
+	left: 0;
+	height: 3px;
+	width: var(--bar-w, 38px);
+	border-radius: 4px 4px 0 0;
+	transform: translateX(var(--bar-x, 0));
+	box-shadow: 0 -2px 8px var(--teal-glow-faint, rgba(0, 255, 255, 0.2));
+}
+/* Mobile: a vertical dock rotates to a horizontal bar. */
+@media (max-width: 767px) {
+	:host(.dock-vertical) {
+		flex-direction: row;
+		animation: dock-slide-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+	@keyframes dock-slide-up {
+		from {
+			opacity: 0;
+			transform: translateY(100%);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	:host(.dock-vertical) .dock-rail {
+		flex-direction: row;
+		justify-content: space-around;
+		padding: 4px 6px;
+	}
+	:host(.dock-vertical) .active-bar {
+		top: auto;
+		bottom: 0;
+		left: 0;
+		width: var(--bar-w, 38px);
+		height: 3px;
+		border-radius: 4px 4px 0 0;
+		transform: translateX(var(--bar-x, 0));
+		box-shadow: 0 -2px 8px var(--teal-glow-faint, rgba(0, 255, 255, 0.2));
+	}
+}

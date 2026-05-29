@@ -17,7 +17,24 @@ export class UITabButton extends WebComponent {
 		icon: '',
 		active: false,
 		orientation: 'horizontal',
+		// Derived child-state for the composed <ui-icon>; kept in step with
+		// `icon` by `syncIconState`. Bound bare — no method fabricates it.
+		iconState: {
+			name: '',
+			size: 'sm',
+		},
 	};
+	onConnect() {
+		this.syncIconState();
+		this.observe('icon', () => {
+			this.syncIconState();
+		});
+	}
+	syncIconState() {
+		// Mutate the field, not the bundle — the proxy's identity check makes a
+		// no-op set free, so a redundant sync never churns or warns.
+		this.state.iconState.name = this.state.icon;
+	}
 	handleClick = () => {
 		this.emit('tab-select', {
 			id: this.state.id,
@@ -25,12 +42,6 @@ export class UITabButton extends WebComponent {
 	};
 	focus() {
 		this.refs.button?.focus();
-	}
-	iconState() {
-		return {
-			name: this.state.icon,
-			size: 'sm',
-		};
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
@@ -59,7 +70,7 @@ export class UITabButton extends WebComponent {
 				title=${this.state.label}
 				@click=${this.handleClick}>
 				${() => {
-					return this.state.icon ? this.htmlElement `<ui-icon class="tab-btn-icon" .state=${this.iconState}></ui-icon>` : '';
+					return this.state.icon ? this.htmlElement `<ui-icon class="tab-btn-icon" .state=${this.state.iconState}></ui-icon>` : '';
 				}}
 				<span class="tab-btn-label">${this.state.label}</span>
 			</button>

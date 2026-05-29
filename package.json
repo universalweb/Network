@@ -1,5 +1,6 @@
 {
 	"name": "network",
+	"projectName": "network",
 	"appId": "universalWeb.browser",
 	"author": "Universal Web",
 	"type": "module",
@@ -186,7 +187,7 @@
 			"xxhash-addon"
 		]
 	},
-	"packageManager": "pnpm@10.33.0",
+	"packageManager": "pnpm@11.3.0",
 	"private": true,
 	"peerDependencies": {
 		"typescript": "^6.0.2"

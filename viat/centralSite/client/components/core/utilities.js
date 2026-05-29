@@ -82,6 +82,11 @@ export function createElementFromHTML(htmlString) {
 	template.innerHTML = htmlString.trim();
 	return template.content.firstElementChild;
 }
+// Resolve a target spec to an element: a selector string is queried against
+// the document; an element passes straight through.
+export function resolveTarget(target) {
+	return isString(target) ? document.querySelector(target) : target;
+}
 export const callFn = (fn) => {
 	fn();
 };
@@ -180,7 +185,16 @@ export function getOrInit(map, key, factory) {
 	}
 	return entry;
 }
-export function cachedProxy(cache, target, path, build) {
+/**
+ * Cache-or-build a path-keyed proxy. `builder` is any object exposing a
+ * `static build(target, path, extra1, extra2)` method — typically the
+ * ProxyHandler class itself. Passing a class reference (not a closure) means
+ * zero arrow allocations per call: `builder.build` is a property lookup on a
+ * singleton, not a fresh function. Fixed-arity extras cover every reactive
+ * proxy in the codebase (max two trailing args needed; pass `undefined` for
+ * sites that need fewer).
+ */
+export function cachedProxy(cache, target, path, builder, extra1, extra2) {
 	let pathMap = cache.get(target);
 	if (!pathMap) {
 		pathMap = new Map();
@@ -190,7 +204,7 @@ export function cachedProxy(cache, target, path, build) {
 	if (existing) {
 		return existing;
 	}
-	const proxy = build();
+	const proxy = builder.build(target, path, extra1, extra2);
 	pathMap.set(path, proxy);
 	return proxy;
 }
@@ -212,13 +226,12 @@ export function fireResolver(target, name) {
 	}
 }
 export function runHook(component, hookName, args, errorHandler = 'onLifecycleError') {
-	const hook = component[hookName];
-	if (!hook) {
+	if (!component[hookName]) {
 		return true;
 	}
 	let result;
 	try {
-		result = args ? hook.apply(component, args) : hook.call(component);
+		result = args ? component[hookName](...args) : component[hookName]();
 	} catch (error) {
 		component[errorHandler](error);
 		return false;
@@ -233,27 +246,51 @@ export function runHook(component, hookName, args, errorHandler = 'onLifecycleEr
 		return false;
 	});
 }
+/**
+ * Polymorphic disposer: invokes `.unsubscribe()` on a Subscription instance,
+ * or calls a plain function for legacy disposers (dragSnap's controller.destroy,
+ * the closure handles returned by watchGlobal's stopWatching pattern, etc.).
+ * Module-scope so `set.forEach(disposeItem)` reuses one function reference.
+ */
+export function disposeItem(item) {
+	if (item.unsubscribe) {
+		item.unsubscribe();
+		return;
+	}
+	item();
+}
 export function clearUnsubs(set) {
-	set.forEach(callFn);
+	set.forEach(disposeItem);
 	set.clear();
 }
-// Keep `current` (Map<key, unsub>) in sync with `nextKeys` (Set<key>) by:
-//   - calling the unsub for any key dropped
+// Keep `current` (Map<key, sub>) in sync with `nextKeys` (Set<key>) by:
+//   - disposing the subscription for any key dropped
 //   - subscribing only for keys newly added
-// Returns the same `current` map (now updated). Stable keys keep their unsub
-// reference so we don't churn subscribers when state shapes are unchanged.
-export function syncSubsByDiff(current, nextKeys, subscribe) {
-	current.forEach((unsub, key) => {
+// Returns the same `current` map (now updated). Stable keys keep their
+// subscription reference so we don't churn subscribers when state shapes
+// are unchanged.
+//
+// `subscribe` is invoked as `subscribe(key, context)` — the optional 4th
+// arg carries per-call data (component, spot, …) so callers can pass a
+// module-scope first-class fn instead of a wrapper closure that captures
+// the same data. Callbacks that don't need a context simply ignore the
+// second parameter.
+export function syncSubsByDiff(current, nextKeys, subscribe, context) {
+	const entries = [...current.entries()];
+	for (let i = 0; i < entries.length; i += 1) {
+		const key = entries[i][0];
 		if (!nextKeys.has(key)) {
-			unsub();
+			disposeItem(entries[i][1]);
 			current.delete(key);
 		}
-	});
-	nextKeys.forEach((key) => {
+	}
+	const nextArray = [...nextKeys];
+	for (let i = 0; i < nextArray.length; i += 1) {
+		const key = nextArray[i];
 		if (!current.has(key)) {
-			current.set(key, subscribe(key));
+			current.set(key, subscribe(key, context));
 		}
-	});
+	}
 	return current;
 }
 // Deep-merge two values per container-aware rules. Used when `mergeObjects` is

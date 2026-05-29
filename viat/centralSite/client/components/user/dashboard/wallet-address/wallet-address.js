@@ -19,16 +19,24 @@ export class WalletAddress extends WebComponent {
 	hostClasses() {
 		return `wallet-address${this.state.copied ? ' copied' : ''}`;
 	}
-	copyText() {
+	addressText() {
 		// Pure address — anything decorative (labels, prefixes) breaks
 		// paste-into-wallet flows. Keep this string clipboard-clean.
 		return this.globalState.walletAddress ?? '';
+	}
+	async handleCopy() {
+		const accepted = await this.copyText(this.addressText());
+		if (accepted) {
+			this.handleCopyDone();
+			return;
+		}
+		this.handleCopyError();
 	}
 	handleCopyDone() {
 		this.state.copied = true;
 		this.emit('notify', {
 			itemType: 'copy',
-			message: this.copyText() || 'Wallet address copied to clipboard.',
+			message: this.addressText() || 'Wallet address copied to clipboard.',
 			title: 'Address Copied',
 		});
 		this.setTimeout(() => {
@@ -46,10 +54,8 @@ export class WalletAddress extends WebComponent {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<div class=${this.hostClasses}
-				copy=${this.copyText}
 				tooltip=${this.tooltipText}
-				@copy:done=${this.handleCopyDone}
-				@copy:error=${this.handleCopyError}
+				@click=${this.handleCopy}
 				role="button"
 				tabindex="0">${() => this.globalState.walletAddress || 'no wallet'}</div>
 		`;

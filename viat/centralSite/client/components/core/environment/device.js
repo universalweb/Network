@@ -1,6 +1,6 @@
 // One-shot detection at module load. Writes globalState.environment.device.
 // No listeners — these don't change at runtime.
-import { setGlobal } from '../state/globalState.js';
+import { globalState } from '../state/globalState.js';
 const ua = navigator.userAgent || '';
 function detectOS() {
 	if (/iPhone|iPad|iPod/.test(ua)) {
@@ -59,7 +59,7 @@ function detectType() {
 	}
 	return 'desktop';
 }
-setGlobal({
+globalState.set({
 	'environment.device': {
 		os: detectOS(),
 		browser: detectBrowser(),

@@ -177,7 +177,7 @@ export class AIChat extends WebComponent {
 		// surgically, so the component never re-renders on a new message or a
 		// streamed token. `observe` defers through the scheduler, so the scroll
 		// runs after the list/text spots have committed their DOM.
-		this.observe('messages', this.handleLogScroll);
+		this.observeAsync('messages', this.handleLogScroll);
 		// Probe up-front so the indicator badge is accurate before the
 		// user opens the pulldown. Cheap — single GET with a short
 		// timeout and the response is small (just a model list).
@@ -567,11 +567,9 @@ export class AIChat extends WebComponent {
 					<span class="aic-endpoint">${this.state.endpoint}</span>
 				</header>
 				<div #log class="aic-log">
-					${() => {
-						return each(this.visibleMessages(), AIChatMessage, (msg) => {
-							return msg.id;
-						});
-					}}
+					${each(this.visibleMessages(), AIChatMessage, (msg) => {
+						return msg.id;
+					})}
 				</div>
 				<div class="${() => {
 					return `aic-error${this.state.errorText ? ' is-visible' : ''}`;

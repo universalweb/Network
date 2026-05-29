@@ -5,7 +5,8 @@
 */
 import * as dom from './dom/dom.js';
 import * as eventMethods from './events/events.js';
-import * as globalMethods from './state/globalState.js';
+import { ComponentSubscriptionTracker } from './state/pathSubscriptions.js';
+import { globalState } from './state/globalState.js';
 import * as lifecycle from './lifecycle/lifecycle.js';
 import * as renderMethods from './render/render.js';
 import * as sharedStyles from './styles/shared-styles.js';
@@ -37,7 +38,11 @@ import {
 	keysOf,
 	smartClone,
 } from './utilities.js';
-import { atPhase, phaseGetters } from './lifecycle/phase.js';
+import { PHASE, atPhase, phaseGetters } from './lifecycle/phase.js';
+import { bind, makeGlobalProxy } from './state/binding.js';
+import {
+	clearDelegateListeners, delegate, delegateTo, onEnv,
+} from './dom/delegate.js';
 import {
 	collectClassChain,
 	ensureMergedAttrs,
@@ -49,6 +54,7 @@ import {
 import { createBound, getById, preRender } from './render/factory.js';
 import { getRef, makeRefsProxy } from './dom/refs.js';
 import { handleObserverCallback, installObserver, uninstallObserver } from './lifecycle/observer.js';
+import { hotKey, hotKeyListeners } from './hotkeys/hotkeys.js';
 import {
 	initTemplateRuntime,
 	templateCleanup,
@@ -57,18 +63,15 @@ import {
 } from './template.js';
 import { Logger } from './debug/logger.js';
 import { assertComponentConfig } from './debug/assertions.js';
+import { confirmPrompt } from './dialogs/confirm.js';
+import { dragSnap } from './gestures/dragSnap.js';
 import { makeAttrsProxy } from './attrs/attrs.js';
-import { bind, makeGlobalProxy } from './state/binding.js';
 import { nextFrame } from './lifecycle/scheduler.js';
 import { setInert } from './dom/inert.js';
+import { writeTextToClipboard } from './clipboard.js';
 export { liveChildren, registerChild } from './dom/children.js';
 export { classList, ClassList } from './template.js';
-export {
-	getGlobal,
-	setGlobal,
-	subscribeGlobal,
-	watchGlobal,
-} from './state/globalState.js';
+export { Store, globalState } from './state/globalState.js';
 export { registry } from './dom/registry.js';
 export class WebComponent extends HTMLElement {
 	static url = import.meta.url;
@@ -241,10 +244,13 @@ export class WebComponent extends HTMLElement {
 	stateProxy = null;
 	stateBus = null;
 	proxyCache = null;
-	globalUnsubs = new Set();
-	customEventListeners = new Set();
-	stateUnsubs = new Set();
-	delegateUnsubs = new Set();
+	globalUnsubs = new ComponentSubscriptionTracker();
+	eventEntries = new Set();
+	stateUnsubs = new ComponentSubscriptionTracker();
+	delegateEntries = new Set();
+	hotkeyEntries = new Set();
+	gestureUnsubs = new Set();
+	listenerCache = null;
 	templateBuilt = false;
 	renderDepDirty = false;
 	firstRenderDone = false;
@@ -254,8 +260,7 @@ export class WebComponent extends HTMLElement {
 	globalRenderProxy = null;
 	globalRenderProxyState = null;
 	intervals = new Set();
-	attrObservers = null;
-	phase = 'created';
+	phase = PHASE.CREATED;
 	isRendering = false;
 	isIntersecting = false;
 	isIntersected = false;
@@ -291,13 +296,13 @@ export class WebComponent extends HTMLElement {
 	}
 	get globalState() {
 		if (this.renderTracking) {
-			if (!this.globalRenderProxy || this.globalRenderProxyState !== globalMethods.GLOBAL_STATE) {
-				this.globalRenderProxy = makeGlobalProxy(globalMethods.GLOBAL_STATE, this);
-				this.globalRenderProxyState = globalMethods.GLOBAL_STATE;
+			if (!this.globalRenderProxy || this.globalRenderProxyState !== globalState.proxy) {
+				this.globalRenderProxy = makeGlobalProxy(globalState.proxy, this);
+				this.globalRenderProxyState = globalState.proxy;
 			}
 			return this.globalRenderProxy;
 		}
-		return globalMethods.GLOBAL_STATE;
+		return globalState.proxy;
 	}
 	atPhase = atPhase;
 	onLifecycleError(error) {
@@ -320,13 +325,22 @@ const PROTO_METHODS = {
 	clearIntervals,
 	clearTimeouts,
 	cleanupTemplate: templateCleanup,
+	clearDelegateListeners,
+	confirm: confirmPrompt,
+	copyText: writeTextToClipboard,
+	delegate,
+	delegateTo,
+	dragSnap,
 	forkStyleMap,
 	handleObserverCallback,
 	hasStyle,
+	hotKey,
+	hotKeyListeners,
 	html: templateHtml,
 	htmlElement: templateHtmlElement,
 	installObserver,
 	uninstallObserver,
+	onEnv,
 	removeStyle,
 	removeTimeout: removeComponentTimeout,
 	resolveStyle,
@@ -338,7 +352,6 @@ assign(
 	WebComponent.prototype,
 	stateMethods,
 	eventMethods,
-	globalMethods,
 	lifecycle,
 	renderMethods,
 	subscriptions,

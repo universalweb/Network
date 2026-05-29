@@ -1,22 +1,24 @@
-import { isString } from '../utilities.js';
 import {
 	getChildren,
 	getParent,
 	getRoots,
 	subscribe,
 } from './registry.js';
+import { isString } from '../utilities.js';
 const SEPARATOR = '.';
 let indexCache = null;
-subscribe(() => {
+export function invalidatePathIndex() {
 	indexCache = null;
-});
+}
+subscribe(invalidatePathIndex);
+function dashToCamel(match, ch) {
+	return ch.toUpperCase();
+}
 function tagSlug(component) {
 	const tag = component.tagName.toLowerCase();
 	const dashIndex = tag.indexOf('-');
 	const base = dashIndex >= 0 ? tag.slice(dashIndex + 1) : tag;
-	return base.replace(/-([a-z0-9])/g, (match, ch) => {
-		return ch.toUpperCase();
-	});
+	return base.replace(/-([a-z0-9])/g, dashToCamel);
 }
 function nameSegment(component, takenNames) {
 	const explicit = component.constructor.aiName;
@@ -36,44 +38,50 @@ function nameSegment(component, takenNames) {
 	}
 	return candidate;
 }
-function buildIndex() {
-	const componentByPath = new Map();
-	const pathByComponent = new WeakMap();
-	const nameByComponent = new WeakMap();
-	function visit(component, parentPath, taken) {
+/**
+ * Walks the registry tree once and populates three correlated lookups in
+ * lockstep. Class form so `visit` is a prototype method shared across the
+ * recursion — zero per-call closure allocation, the three maps live on the
+ * instance, and the shape is monomorphic so the JIT can inline the dispatch.
+ */
+class PathIndexBuilder {
+	componentByPath = new Map();
+	pathByComponent = new WeakMap();
+	nameByComponent = new WeakMap();
+	static create() {
+		return new PathIndexBuilder();
+	}
+	visit(component, parentPath, taken) {
 		const segment = nameSegment(component, taken);
 		taken.add(segment);
-		nameByComponent.set(component, segment);
+		this.nameByComponent.set(component, segment);
 		const fullPath = parentPath ? `${parentPath}${SEPARATOR}${segment}` : segment;
-		componentByPath.set(fullPath, component);
-		pathByComponent.set(component, fullPath);
+		this.componentByPath.set(fullPath, component);
+		this.pathByComponent.set(component, fullPath);
 		const kids = getChildren(component);
-		if (kids?.size) {
-			const childTaken = new Set();
-			kids.forEach((child) => {
-				visit(child, fullPath, childTaken);
-			});
+		if (!kids?.size) {
+			return;
+		}
+		const childArray = [...kids];
+		const childTaken = new Set();
+		for (let i = 0; i < childArray.length; i += 1) {
+			this.visit(childArray[i], fullPath, childTaken);
 		}
 	}
-	const rootList = getRoots();
-	const rootTaken = new Set();
-	rootList.forEach((root) => {
-		visit(root, '', rootTaken);
-	});
-	return {
-		componentByPath,
-		pathByComponent,
-		nameByComponent,
-	};
+	build() {
+		const rootList = getRoots();
+		const rootTaken = new Set();
+		for (let i = 0; i < rootList.length; i += 1) {
+			this.visit(rootList[i], '', rootTaken);
+		}
+		return this;
+	}
 }
 function getIndex() {
 	if (!indexCache) {
-		indexCache = buildIndex();
+		indexCache = PathIndexBuilder.create().build();
 	}
 	return indexCache;
-}
-export function invalidatePathIndex() {
-	indexCache = null;
 }
 export function resolvePath(path) {
 	if (!isString(path) || !path.length) {

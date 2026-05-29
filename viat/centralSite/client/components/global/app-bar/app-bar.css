@@ -1,0 +1,40 @@
+:host {
+	display: block;
+	position: fixed;
+	top: 16px;
+	left: 16px;
+	right: 16px;
+	box-sizing: border-box;
+	z-index: 40;
+}
+.app-bar {
+	box-sizing: border-box;
+	background: var(--topbar-bg);
+	border: 1px solid var(--topbar-border, var(--dark-divider));
+	border-radius: 14px;
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+	min-height: 52px;
+	padding: 10px 20px;
+	backdrop-filter: blur(6px);
+}
+.app-bar-bar {
+	--bar-padding: 0;
+	--bar-gap: 16px;
+	width: 100%;
+}
+.app-bar-end {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}
+/* App-bar-context colouring for the composed action buttons. Scoped under
+   `.app-bar-end` so it outranks `<ui-icon-button>`'s own `:host` defaults. */
+.app-bar-end ui-icon-button {
+	color: var(--icon-color, var(--text-offwhite));
+	opacity: 0.75;
+	transition: color 0.15s ease, opacity 0.15s ease;
+}
+.app-bar-end ui-icon-button:hover {
+	color: var(--icon-color-hover, var(--topbar-accent));
+	opacity: 1;
+}

@@ -51,6 +51,14 @@ export class UIStatusIndicator extends WebComponent {
 	};
 	static state = {
 		status: 'offline',
+		// Derived badge view — a reactive key kept in step with `status` by
+		// `syncBadgeView`; bound bare in render(), no method fabricates it.
+		badgeView: {
+			dot: true,
+			size: 'sm',
+			label: 'DISCONNECTED',
+			tone: 'danger',
+		},
 	};
 	// The contract surface. A `.status=` template binding (or a plain
 	// `el.status =`) routes through reactive state. Lives on the prototype —
@@ -61,13 +69,25 @@ export class UIStatusIndicator extends WebComponent {
 	set status(value) {
 		this.state.status = this.constructor.STATUS_VIEW[value] ? value : 'offline';
 	}
-	// Derived badge state. Read only inside the `.state` computed spot below,
-	// so a `status` change refreshes that one spot and patches the badge —
-	// render() is never re-run, no whole-template view update.
-	badgeView() {
+	onConnect() {
+		this.syncBadgeView();
+		this.observe('status', () => {
+			this.syncBadgeView();
+		});
+	}
+	// Keep the badge view in step with `status`. Writes a reactive state key;
+	// render() binds it bare — no per-render method fabricates the child state.
+	syncBadgeView() {
+		// Skip when the derived view is unchanged — keeps a redundant sync free
+		// of "wasted set" churn; reassigning when it differs (or is missing)
+		// stays crash-safe even if a caller replaced `state` wholesale.
 		const table = this.constructor.STATUS_VIEW;
 		const view = table[this.state.status] || table.offline;
-		return {
+		const current = this.state.badgeView;
+		if (current && current.label === view.label && current.tone === view.tone) {
+			return;
+		}
+		this.state.badgeView = {
 			dot: true,
 			size: 'sm',
 			label: view.label,
@@ -76,7 +96,7 @@ export class UIStatusIndicator extends WebComponent {
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
-		this.html `<ui-badge .state=${this.badgeView}></ui-badge>`;
+		this.html`<ui-badge .state=${this.state.badgeView}></ui-badge>`;
 	}
 }
 customElements.define('ui-status-indicator', UIStatusIndicator);

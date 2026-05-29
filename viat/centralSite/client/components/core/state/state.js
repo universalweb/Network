@@ -1,4 +1,8 @@
 import {
+	PathSubscriptions,
+	TrackedBundle,
+} from './pathSubscriptions.js';
+import {
 	cachedProxy,
 	getValueAtPath,
 	hasOwn,
@@ -13,28 +17,44 @@ import {
 	queueAsyncError,
 } from '../utilities.js';
 import { Logger } from '../debug/logger.js';
-import { makePathBus } from './pathBus.js';
 export const STATE_PATH = Symbol('statePath');
-function ensureBus(component) {
-	if (component.stateBus) {
-		return component.stateBus;
+/**
+ * Concrete bus for a single component's reactive state. Owns a reference to
+ * the component so `getValue` and `onFlush` are prototype methods — zero
+ * per-component arrow allocations, monomorphic shape across every bus.
+ * The render pipeline integration lives on `onFlush`: each flush kicks the
+ * component's `updateView` and forwards any async rejection to the global
+ * error queue (matching the pre-refactor config-arrow behavior).
+ */
+// TODO: Consider manual class / prototype upgrading of existing objects to avoid creating new ones
+class ComponentStateBus extends PathSubscriptions {
+	constructor(component) {
+		super();
+		this.component = component;
 	}
-	const bus = makePathBus({
-		getValue: (path) => {
-			return getValueAtPath(component.STATE, path);
-		},
-		onFlush: () => {
-			const result = component.updateView();
-			if (isPromiseLike(result)) {
-				result.catch(queueAsyncError);
-			}
-		},
-	});
-	component.stateBus = bus;
-	return bus;
+	getValue(path) {
+		return getValueAtPath(this.component.STATE, path);
+	}
+	onFlush() {
+		const result = this.component.updateView();
+		if (isPromiseLike(result)) {
+			result.catch(queueAsyncError);
+		}
+	}
+}
+/**
+ * Lazy-init for a component's reactive bus. Single chokepoint so engine
+ * callers (render.js subscribeRenderDeps, template.js subscribeStatePath)
+ * don't each open-code the `??= new ComponentStateBus(...)` pattern.
+ */
+export function ensureStateBus(component) {
+	if (!component.stateBus) {
+		component.stateBus = new ComponentStateBus(component);
+	}
+	return component.stateBus;
 }
 function notifyStateChange(component, changedPath) {
-	ensureBus(component).notify(changedPath);
+	ensureStateBus(component).notify(changedPath);
 }
 // `static types` may declare a path `react: false` — a non-reactive path is
 // written straight through to STATE but fires no notification, so it never
@@ -46,102 +66,126 @@ function pathIsReactive(component, fullPath) {
 	}
 	return !typeIndex.nonReactivePaths.has(fullPath);
 }
-function buildCollectionMethods(target, component, path, asMap) {
-	function notify(key) {
-		notifyStateChange(component, joinPath(path, key));
-	}
-	function mutateAdd(item) {
-		if (target.has(item)) {
-			return target;
-		}
-		target.add(item);
-		notify(item);
-		return target;
-	}
-	function mutateSet(mapKey, mapValue) {
-		if (target.has(mapKey) && target.get(mapKey) === mapValue) {
-			return target;
-		}
-		target.set(mapKey, mapValue);
-		notify(mapKey);
-		return target;
-	}
-	function mutateDelete(key) {
-		if (!target.has(key)) {
-			return false;
-		}
-		target.delete(key);
-		notify(key);
-		return true;
-	}
-	function mutateClear() {
-		if (!target.size) {
-			return;
-		}
-		const keys = asMap ? [...target.keys()] : [...target];
-		target.clear();
-		for (let i = 0; i < keys.length; i++) {
-			notify(keys[i]);
-		}
-	}
-	const shared = {
-		delete: mutateDelete,
-		clear: mutateClear,
-		has: target.has.bind(target),
-		forEach: target.forEach.bind(target),
-		keys: target.keys.bind(target),
-		values: target.values.bind(target),
-		entries: target.entries.bind(target),
-		[Symbol.iterator]: target[Symbol.iterator].bind(target),
-	};
-	if (asMap) {
-		shared.set = mutateSet;
-		shared.get = target.get.bind(target);
-		return shared;
-	}
-	shared.add = mutateAdd;
-	return shared;
-}
 function throwCollectionMutate() {
 	throw new Error('Do not mutate Map/Set proxy properties directly. Use .set() or .add() instead.');
 }
 function throwCollectionDelete() {
 	throw new Error('Do not delete Map/Set proxy properties directly. Use .delete() instead.');
 }
-// Prototype-shared trap methods; per-proxy state is just (path, methods).
-// Mutating + bound passthrough methods are still built per-collection (their
-// closures over target/component/path are unavoidable), but the proxy traps
-// themselves are no longer fresh closures per Map/Set.
-class CollectionProxyHandler {
-	constructor(path, methods) {
+/**
+ * Reactive facade for a Set/Map stored under STATE. Every operation lives on
+ * the prototype — one function shape across every collection in the app,
+ * zero closures + zero `.bind` per instance. Per-instance cost is the four
+ * fields below. Mutating methods notify the component bus via the joined
+ * (path + key) path; pass-throughs forward to the underlying target.
+ *
+ * Why a facade behind a Proxy: keeping the Proxy lets us reject foreign
+ * `set` / `deleteProperty` and intercept the STATE_PATH symbol read; making
+ * the facade the proxy target (instead of the raw Set/Map) means the proxy's
+ * `get` dispatches via the facade's prototype chain. The handler overrides
+ * `getPrototypeOf` to return `Set.prototype` / `Map.prototype` so external
+ * `instanceof Set/Map` checks (e.g. Template.js list-rendering) still pass.
+ */
+class ReactiveCollection {
+	constructor(target, component, path, asMap) {
+		this.target = target;
+		this.component = component;
 		this.path = path;
-		this.methods = methods;
+		this.asMap = asMap;
 	}
+	notifyKey(key) {
+		notifyStateChange(this.component, joinPath(this.path, key));
+	}
+	add(item) {
+		if (this.target.has(item)) {
+			return this.target;
+		}
+		this.target.add(item);
+		this.notifyKey(item);
+		return this.target;
+	}
+	set(key, value) {
+		if (this.target.has(key) && this.target.get(key) === value) {
+			return this.target;
+		}
+		this.target.set(key, value);
+		this.notifyKey(key);
+		return this.target;
+	}
+	delete(key) {
+		if (!this.target.has(key)) {
+			return false;
+		}
+		this.target.delete(key);
+		this.notifyKey(key);
+		return true;
+	}
+	clear() {
+		if (!this.target.size) {
+			return;
+		}
+		const keys = this.asMap ? [...this.target.keys()] : [...this.target];
+		this.target.clear();
+		for (let i = 0; i < keys.length; i++) {
+			this.notifyKey(keys[i]);
+		}
+	}
+	has(key) {
+		return this.target.has(key);
+	}
+	get(key) {
+		return this.target.get(key);
+	}
+	forEach(cb) {
+		return this.target.forEach(cb);
+	}
+	keys() {
+		return this.target.keys();
+	}
+	values() {
+		return this.target.values();
+	}
+	entries() {
+		return this.target.entries();
+	}
+	get size() {
+		return this.target.size;
+	}
+	[Symbol.iterator]() {
+		return this.target[Symbol.iterator]();
+	}
+}
+/**
+ * Stateless proxy handler shared by every reactive collection — all four
+ * traps live on the prototype, no per-proxy state. `get` defers to the
+ * facade's prototype dispatch so methods invoked via the proxy receive the
+ * proxy as their receiver, which then forwards their `this.target` /
+ * `this.component` reads back through the same trap. `getPrototypeOf`
+ * reports Set/Map's prototype so `instanceof Set/Map` keeps working.
+ */
+class CollectionProxyHandler {
+	static instance = new CollectionProxyHandler();
 	static create(target, component, path, asMap) {
-		return cachedProxy(component.proxyCache, target, path, () => {
-			const methods = buildCollectionMethods(target, component, path, asMap);
-			return new Proxy(target, new CollectionProxyHandler(path, methods));
-		});
+		return cachedProxy(component.proxyCache, target, path, CollectionProxyHandler, component, asMap);
 	}
-	get(target, key) {
+	static build(target, path, component, asMap) {
+		const facade = new ReactiveCollection(target, component, path, asMap);
+		return new Proxy(facade, CollectionProxyHandler.instance);
+	}
+	get(facade, key, receiver) {
 		if (key === STATE_PATH) {
-			return this.path;
+			return facade.path;
 		}
-		const method = this.methods[key];
-		if (method !== undefined) {
-			return method;
-		}
-		const value = Reflect.get(target, key);
-		if (typeof value !== 'function' || key === 'constructor') {
-			return value;
-		}
-		return value.bind(target);
+		return Reflect.get(facade, key, receiver);
 	}
 	set() {
 		throwCollectionMutate();
 	}
 	deleteProperty() {
 		throwCollectionDelete();
+	}
+	getPrototypeOf(facade) {
+		return facade.asMap ? Map.prototype : Set.prototype;
 	}
 }
 function makeCollectionProxy(target, component, path, asMap) {
@@ -164,9 +208,10 @@ class StateProxyHandler {
 		this.path = path;
 	}
 	static create(obj, component, path = '') {
-		return cachedProxy(component.proxyCache, obj, path, () => {
-			return new Proxy(obj, new StateProxyHandler(component, path));
-		});
+		return cachedProxy(component.proxyCache, obj, path, StateProxyHandler, component);
+	}
+	static build(target, path, component) {
+		return new Proxy(target, new StateProxyHandler(component, path));
 	}
 	get(target, key) {
 		if (isSymbol(key)) {
@@ -198,11 +243,17 @@ class StateProxyHandler {
 		return true;
 	}
 	deleteProperty(target, key) {
-		if (!hasOwn(target, key)) {
+		/**
+		 * `delete state.foo` is translated to null-assignment to preserve the
+		 * STATE object's hidden class — using the `delete` keyword would force
+		 * V8 to abandon the hot shape. Callers that need true "absent"
+		 * semantics should model the field with a Map or use a sentinel.
+		 */
+		if (!hasOwn(target, key) || target[key] === null) {
 			return true;
 		}
 		const fullPath = joinPath(this.path, key);
-		Reflect.deleteProperty(target, key);
+		target[key] = null;
 		if (pathIsReactive(this.component, fullPath)) {
 			notifyStateChange(this.component, fullPath);
 		}
@@ -237,6 +288,7 @@ export function replaceState(state = {}) {
 	// its DOM in place against the fresh STATE. There is no native
 	// "notify-all" path (`pathsOverlap('', x)` matches only the literal
 	// empty string), hence the explicit walk over `subs`.
+	// TODO: Consider a diff check instead of blind notify-all, but that has to be balanced against the cost of the diff itself and the fact that many updates are full replacements where every path changes.
 	if (this.stateBus) {
 		this.stateBus.subs.forEach((_handlers, subscribedPath) => {
 			this.stateBus.notify(subscribedPath);
@@ -273,15 +325,68 @@ export function assignState(partial, options) {
 	}
 	return touched;
 }
-export function watchState(key, handler) {
+/**
+ * Subscribe one path to a handler that fires synchronously inside the state
+ * write-trap. Internal helper for `observe` — returns the bare `Subscription`
+ * instance so callers can wire it into their own tracker.
+ */
+function observeStateKey(component, key, handler) {
 	const statePath = String(key ?? '');
-	const bus = ensureBus(this);
-	let previousValue = getValueAtPath(this.STATE, statePath);
+	const bus = ensureStateBus(component);
+	let previousValue = getValueAtPath(component.STATE, statePath);
 	return bus.subscribe(statePath, (nextValue, changedPath) => {
-		const result = handler(nextValue, previousValue, changedPath);
+		const result = handler.call(component, nextValue, previousValue, changedPath);
 		previousValue = nextValue;
 		return result;
 	});
+}
+/**
+ * Subscribe to component-state changes. Three call shapes:
+ *
+ *   this.observe('user.name', cb)            // single key
+ *   this.observe(['a', 'b', 'c'], cb)        // array of keys, one cb
+ *   this.observe({ 'a': cb1, 'b': cb2 })     // object form, per-key cb
+ *
+ * Every resulting `Subscription` is registered in `this.stateUnsubs` so
+ * `this.unobserve(key)` can find and tear it down by path, and so the
+ * disconnect lifecycle cleans every dangling subscription automatically.
+ * Single-key form returns the `Subscription` directly; multi-key / object
+ * forms return a `TrackedBundle` whose `.unsubscribe()` clears the lot.
+ */
+export function observe(keys, handler) {
+	const stateUnsubs = this.stateUnsubs;
+	if (isPlainObject(keys) && handler === undefined) {
+		const objKeys = Object.keys(keys);
+		const subscriptions = [];
+		for (let i = 0; i < objKeys.length; i += 1) {
+			const key = objKeys[i];
+			const objectSub = observeStateKey(this, key, keys[key]);
+			stateUnsubs.add(objectSub);
+			subscriptions.push(objectSub);
+		}
+		return new TrackedBundle(stateUnsubs, subscriptions);
+	}
+	if (isArray(keys)) {
+		const subscriptions = [];
+		for (let i = 0; i < keys.length; i += 1) {
+			const arraySub = observeStateKey(this, keys[i], handler);
+			stateUnsubs.add(arraySub);
+			subscriptions.push(arraySub);
+		}
+		return new TrackedBundle(stateUnsubs, subscriptions);
+	}
+	const sub = observeStateKey(this, keys, handler);
+	stateUnsubs.add(sub);
+	return sub;
+}
+/**
+ * Tear down every observer this component has on `key`. Looks up the tracker
+ * by path in O(1) and unsubscribes each matching `Subscription` — callers
+ * don't need to retain the original handler reference. No-op if nothing on
+ * this component observes the given key.
+ */
+export function unobserve(key) {
+	this.stateUnsubs.removeByKey(String(key ?? ''));
 }
 export async function updateView() {
 	const pendingTasks = [];
@@ -301,37 +406,28 @@ export async function updateView() {
 // prop on a child element (e.g. `.state=${...}`, or any future `.foo=` whose
 // class declares `set foo(v)`) BEFORE that child's class has been imported
 // and customElements.define() upgrades the element, JavaScript silently
-// creates an own data property — there is no prototype accessor yet to
-// intercept the write. After upgrade, that data property permanently
-// shadows the prototype getter/setter pair: every read returns the pre-
-// upgrade literal, every write mutates that literal, and the reactive
-// proxy is bypassed forever. Symptom: `el.state.foo = bar` looks like it
-// works but nothing re-renders. Detect the situation once at construction
-// time and re-route each shadowed value through the proper channel. For
-// `state` specifically, merge into the already-populated STATE so static
-// defaults survive (matches the constructor-arg state semantics). For any
-// other accessor-backed prop, run plain assignment so the subclass setter
-// fires naturally.
-function hasPrototypeSetter(instance, key) {
+// creates an own data property
+function findPrototypeSetterDescriptor(instance, key) {
 	let proto = Object.getPrototypeOf(instance);
 	while (proto && proto !== HTMLElement.prototype) {
 		const descriptor = Object.getOwnPropertyDescriptor(proto, key);
 		if (descriptor) {
-			return Boolean(descriptor.set);
+			return descriptor.set ? descriptor : null;
 		}
 		proto = Object.getPrototypeOf(proto);
 	}
-	return false;
+	return null;
 }
 export function upgradeShadowedProperties() {
 	const ownKeys = Object.getOwnPropertyNames(this);
 	for (let i = 0; i < ownKeys.length; i += 1) {
 		const key = ownKeys[i];
-		if (!hasPrototypeSetter(this, key)) {
+		const descriptor = findPrototypeSetterDescriptor(this, key);
+		if (!descriptor) {
 			continue;
 		}
 		const shadowValue = this[key];
-		Reflect.deleteProperty(this, key);
+		Object.defineProperty(this, key, descriptor);
 		if (key === 'state' && isPlainObject(shadowValue)) {
 			this.assignState(shadowValue);
 			continue;
