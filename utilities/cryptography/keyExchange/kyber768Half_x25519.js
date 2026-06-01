@@ -4,7 +4,7 @@ import {
 	clearSessionWithSharedSecret,
 	randomBuffer,
 	toBase64,
-	toHex
+	toHex,
 } from '#utilities/cryptography/utils';
 import { get25519KeyCopy, getKyberKey, getX25519Key } from './kyber768_x25519.js';
 import { assign } from '@universalweb/utilitylib';
@@ -13,7 +13,7 @@ import kyber768 from './kyber768.js';
 import x25519 from './x25519.js';
 const {
 	combineKeys,
-	hash256
+	hash256,
 } = hash;
 const {
 	decapsulate,
@@ -34,7 +34,7 @@ async function keypair(kyberSeed) {
 	const kyberKeypair = await keyExchangeKeypair(kyberSeed);
 	const target = {
 		publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
-		privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey])
+		privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey]),
 	};
 	return target;
 }
@@ -42,13 +42,13 @@ async function serverEphemeralKeypair(source = {}, destination, cipherData) {
 	const kyberDestinationPublicKey = getKyberKey(cipherData);
 	const {
 		cipherText,
-		sharedSecret
+		sharedSecret,
 	} = await encapsulate(kyberDestinationPublicKey);
 	const ephemeralKeypair = await encryptionKeypairX25519();
 	const target = {
 		publicKey: Buffer.concat([ephemeralKeypair.publicKey, cipherText]),
 		privateKey: ephemeralKeypair.privateKey,
-		sharedSecret
+		sharedSecret,
 	};
 	clearBuffer(ephemeralKeypair.publicKey);
 	clearBuffer(cipherText);
@@ -68,7 +68,7 @@ export const kyber768Half_x25519 = {
 		0: true,
 		1: true,
 		2: true,
-		3: true
+		3: true,
 	},
 	publicKeySize,
 	privateKeySize,
@@ -86,7 +86,7 @@ export const kyber768Half_x25519 = {
 	async clientInitializeSession(source, destination) {
 		const sourceKeypair25519 = {
 			publicKey: getX25519Key(source.publicKey),
-			privateKey: getX25519Key(source.privateKey)
+			privateKey: getX25519Key(source.privateKey),
 		};
 		console.log('clientInitializeSession Destination', destination);
 		const x25519SessionKeys = clientSetSession(sourceKeypair25519, destination, source);
@@ -96,12 +96,12 @@ export const kyber768Half_x25519 = {
 	async clientSetSession(source, destination, cipherData) {
 		const sourceKeypair25519 = {
 			publicKey: getX25519Key(source.publicKey),
-			privateKey: getX25519Key(source.privateKey)
+			privateKey: getX25519Key(source.privateKey),
 		};
 		const {
 			sharedSecret: oldSharedSecret,
 			transmitKey: oldTransmitKey,
-			receiveKey: oldReceiveKey
+			receiveKey: oldReceiveKey,
 		} = source;
 		destination.publicKey = getX25519Key(cipherData);
 		const x25519SessionKeys = clientSetSession(sourceKeypair25519, destination, sourceKeypair25519);
@@ -137,11 +137,11 @@ export const kyber768Half_x25519 = {
 			nextSession,
 			sharedSecret: oldSharedSecret,
 			transmitKey: oldTransmitKey,
-			receiveKey: oldReceiveKey
+			receiveKey: oldReceiveKey,
 		} = source;
 		const nextSessionKeypair25519 = {
 			publicKey: getX25519Key(nextSession.publicKey),
-			privateKey: getX25519Key(nextSession.privateKey)
+			privateKey: getX25519Key(nextSession.privateKey),
 		};
 		console.log('serverSetSession nextSession', nextSessionKeypair25519, destination);
 		const x25519SessionKeys = serverSetSession(nextSessionKeypair25519, destination, nextSessionKeypair25519);
@@ -162,6 +162,6 @@ export const kyber768Half_x25519 = {
 		return x25519Keypair;
 	},
 	hash: hash256,
-	getKyberKey
+	getKyberKey,
 };
 export default kyber768Half_x25519;

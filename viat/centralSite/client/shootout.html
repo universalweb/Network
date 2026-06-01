@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<script>
+			globalThis.CONFIG = {
+				production: false,
+			};
+		</script>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>⩝ UWC :: SHOOTOUT</title>
+		<link rel="stylesheet" href="styles/index.css" />
+		<link rel="stylesheet" href="styles/themes/midnight.css" />
+		<style>
+			html, body {
+				height: auto;
+				min-height: 100vh;
+				overflow: auto;
+				margin: 0;
+				background: #0a0a0f;
+			}
+		</style>
+		<script type="importmap">
+			{
+				"imports": {
+					"@universalweb/utilitylib": "./scripts/utilityLibrary/index.js",
+					"viat": "./scripts/viat-client-sdk-bundle.js",
+					"webcomponent": "./components/core/index.js"
+				}
+			}
+		</script>
+		<script type="module" src="./shootout.js"></script>
+	</head>
+	<body>
+		<framework-shootout></framework-shootout>
+	</body>
+</html>

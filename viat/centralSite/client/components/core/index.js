@@ -21,6 +21,7 @@ export {
 export {
 	comp,
 	each,
+	html,
 	liveList,
 	list,
 } from './template.js';
@@ -34,6 +35,7 @@ export {
 	scanAndResolve,
 } from './resolver.js';
 export { getRef, makeRefsProxy, registerRef } from './dom/refs.js';
+export { setDocumentTitle, syncDocumentTitle } from './dom/documentTitle.js';
 export { allChildren } from './dom/children.js';
 export {
 	appendTo,

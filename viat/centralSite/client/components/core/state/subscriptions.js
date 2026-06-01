@@ -1,6 +1,7 @@
-import { TrackedBundle } from './pathSubscriptions.js';
+import { ComponentSubscriptionTracker, TrackedBundle } from './pathSubscriptions.js';
+import { getValueAtPath, isArray } from '../utilities.js';
+import { ensureStateBus } from './state.js';
 import { globalState } from './globalState.js';
-import { isArray } from '../utilities.js';
 import { schedule } from '../lifecycle/scheduler.js';
 function toList(keys) {
 	return isArray(keys) ? keys : [keys];
@@ -11,31 +12,80 @@ function trackUnsubs(set, subscriptions) {
 	}
 	return new TrackedBundle(set, subscriptions);
 }
+/**
+ * Deferred component-state observer. Bus fires stash the latest value +
+ * changedPath on the observer; the scheduler dedups by observer identity so
+ * a single coalesced `fire()` runs per scheduler flush regardless of how
+ * many bus flushes accumulated between scheduler ticks. `previousValue`
+ * advances only at fire time so the callback sees the first→last diff of
+ * a coalesced batch. The callback fires AFTER the render scheduler has
+ * already settled the DOM in this batch.
+ */
+class DeferredStateObserver {
+	constructor(component, callback, previousValue) {
+		this.component = component;
+		this.callback = callback;
+		this.previousValue = previousValue;
+		this.nextValue = previousValue;
+		this.changedPath = '';
+	}
+	handle(nextValue, changedPath) {
+		this.nextValue = nextValue;
+		this.changedPath = changedPath;
+		schedule(DeferredStateObserver.prototype.fire, this);
+	}
+	fire() {
+		const nextValue = this.nextValue;
+		const previousValue = this.previousValue;
+		const changedPath = this.changedPath;
+		this.previousValue = nextValue;
+		this.callback.call(this.component, nextValue, previousValue, changedPath);
+	}
+}
+function observeAsyncKey(component, key, callback) {
+	const statePath = String(key ?? '');
+	const bus = ensureStateBus(component);
+	const previousValue = getValueAtPath(component.STATE, statePath);
+	const observer = new DeferredStateObserver(component, callback, previousValue);
+	return bus.subscribe(statePath, DeferredStateObserver.prototype.handle, observer);
+}
 export function observeAsync(keys, callback) {
-	const component = this;
-	// Defer through the render scheduler so the callback fires AFTER any
-	// list/spot patches in the same batch have updated the DOM.
-	// This can't be making random new functions need a better solution here
-	const deferred = function deferredObserver(nextValue, previousValue, changedPath) {
-		schedule(() => {
-			return callback.call(component, nextValue, previousValue, changedPath);
-		});
-	};
-	const subscriptions = toList(keys).map((key) => {
-		return this.observe(key, deferred);
-	});
-	return trackUnsubs(this.stateUnsubs, subscriptions);
+	const keyList = toList(keys);
+	const subscriptions = new Array(keyList.length);
+	for (let i = 0; i < keyList.length; i++) {
+		subscriptions[i] = observeAsyncKey(this, keyList[i], callback);
+	}
+	return trackUnsubs(this.stateUnsubs ??= new ComponentSubscriptionTracker(), subscriptions);
+}
+/**
+ * Sync global-state observer. User callback fires WITHOUT a bound `this`
+ * (matches the original globalState observer contract — global observers are
+ * intentionally context-free; if you need component-this, use `observe` /
+ * `observeAsync` on a mirrored local state key).
+ */
+class GlobalObserver {
+	constructor(callback, previousValue) {
+		this.callback = callback;
+		this.previousValue = previousValue;
+	}
+	handle(nextValue, changedPath) {
+		const result = this.callback(nextValue, this.previousValue, changedPath);
+		this.previousValue = nextValue;
+		return result;
+	}
+}
+function observeGlobalKey(callback, key) {
+	const previousValue = globalState.get(key);
+	const observer = new GlobalObserver(callback, previousValue);
+	return globalState.bus.subscribe(key, GlobalObserver.prototype.handle, observer);
 }
 export function observeGlobal(keys, callback) {
-	const subscriptions = toList(keys).map((key) => {
-		let previousValue = globalState.get(key);
-		return globalState.bus.subscribe(key, (nextValue, changedPath) => {
-			const result = callback(nextValue, previousValue, changedPath);
-			previousValue = nextValue;
-			return result;
-		});
-	});
-	return trackUnsubs(this.globalUnsubs, subscriptions);
+	const keyList = toList(keys);
+	const subscriptions = new Array(keyList.length);
+	for (let i = 0; i < keyList.length; i++) {
+		subscriptions[i] = observeGlobalKey(callback, keyList[i]);
+	}
+	return trackUnsubs(this.globalUnsubs ??= new ComponentSubscriptionTracker(), subscriptions);
 }
 /**
  * Tear down every globalState observer this component has on `key`. Same
@@ -43,5 +93,5 @@ export function observeGlobal(keys, callback) {
  * components observing the same key are untouched.
  */
 export function unobserveGlobal(key) {
-	this.globalUnsubs.removeByKey(String(key ?? ''));
+	this.globalUnsubs?.removeByKey(String(key ?? ''));
 }

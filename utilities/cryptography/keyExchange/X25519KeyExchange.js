@@ -67,7 +67,7 @@ function certificateKeypairCompatability(source, cipherId) {
 		hybridToX25519(source);
 	}
 }
-class X25519KeyExchange extends KeyExchange {
+export class X25519KeyExchange extends KeyExchange {
 	constructor(config) {
 		super(config);
 		assign(this, config);

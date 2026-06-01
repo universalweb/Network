@@ -5,22 +5,22 @@
 const REGISTRY = new Map();
 const ATTR_NAMES = new Set();
 const installedInits = new WeakSet();
-export function registerBehavior(name, behavior) {
-	if (typeof name !== 'string' || !name) {
-		throw new TypeError('registerBehavior: name must be a non-empty string');
+export function registerBehavior(behaviorName, behavior) {
+	if (typeof behaviorName !== 'string' || !behaviorName) {
+		throw new TypeError('registerBehavior: behaviorName must be a non-empty string');
 	}
-	REGISTRY.set(name, behavior);
-	ATTR_NAMES.add(name);
+	REGISTRY.set(behaviorName, behavior);
+	ATTR_NAMES.add(behaviorName);
 	if (typeof behavior?.init === 'function' && !installedInits.has(behavior)) {
 		installedInits.add(behavior);
 		behavior.init();
 	}
 }
-export function getBehavior(name) {
-	return REGISTRY.get(name);
+export function getBehavior(behaviorName) {
+	return REGISTRY.get(behaviorName);
 }
-export function isBehaviorAttr(name) {
-	return ATTR_NAMES.has(name);
+export function isBehaviorAttr(behaviorName) {
+	return ATTR_NAMES.has(behaviorName);
 }
 export function behaviorAttrNames() {
 	return ATTR_NAMES;

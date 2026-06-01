@@ -72,7 +72,7 @@ The engine has two surgical update paths. There is **no whole-component re-rende
 - Cross-component shared state: `this.globalState.theme` + `watchGlobal('theme', …)` / `this.observeGlobal(...)`.
 - React to changes without rendering: `this.watchState(key, handler)` or `this.observe(keys, callback)`.
 - Never write `this.STATE.x` from app code (bypasses tracking).
-- Optional `static types = { 'a.b': { kind, react } }` — declare a `CONTENT_KIND` or mark a path `react: false`. Keys are exact dot-paths. Keep state reactive by default.
+- Optional `static properties = { 'a.b': { kind, react } }` — declare a `CONTENT_KIND` or mark a path `react: false`. Keys are exact dot-paths. Keep state reactive by default. Computed accessors stay in `static state = { get foo() {}, set foo(v) {} }` — the framework auto-dispatches them with `this === component`.
 
 ## 5. Events & global
 

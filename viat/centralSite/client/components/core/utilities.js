@@ -212,17 +212,17 @@ export function joinPath(parentPath, key) {
 	return parentPath ? `${parentPath}.${String(key)}` : String(key);
 }
 const CACHED_RESOLVED_PROMISE = Promise.resolve();
-export function assignPromisePair(target, name) {
-	target[name] = new Promise((resolve) => {
-		target[`${name}Resolver`] = resolve;
-	});
+export function assignPromisePair(target, pairName) {
+	const deferred = Promise.withResolvers();
+	target[pairName] = deferred.promise;
+	target[`${pairName}Resolver`] = deferred.resolve;
 }
-export function fireResolver(target, name) {
-	const resolverName = `${name}Resolver`;
+export function fireResolver(target, pairName) {
+	const resolverName = `${pairName}Resolver`;
 	if (target[resolverName]) {
 		target[resolverName]();
 		target[resolverName] = null;
-		target[name] = CACHED_RESOLVED_PROMISE;
+		target[pairName] = CACHED_RESOLVED_PROMISE;
 	}
 }
 export function runHook(component, hookName, args, errorHandler = 'onLifecycleError') {
@@ -260,6 +260,9 @@ export function disposeItem(item) {
 	item();
 }
 export function clearUnsubs(set) {
+	if (!set) {
+		return;
+	}
 	set.forEach(disposeItem);
 	set.clear();
 }
@@ -381,4 +384,45 @@ export function setValueAtPath(source, path, value) {
 		cursor = cursor[part];
 	}
 	cursor[finalKey] = value;
+}
+/**
+ * Buffer / TypedArray / DataView / ArrayBuffer → URL-safe base64 string
+ * (unpadded). Modern path is the native `Uint8Array.prototype.toBase64` (TC39,
+ * see MDN `Uint8Array/toBase64#alphabet`); falls back to the platform `Buffer`
+ * (global in the viat client) and finally a `btoa` encoder for older engines.
+ * Any binary view is normalized to its underlying bytes first, so a non-Uint8
+ * typed array / DataView encodes its real bytes rather than its element values.
+ */
+export function toBase64Url(source) {
+	let bytes;
+	if (source instanceof Uint8Array) {
+		bytes = source;
+	} else if (source instanceof ArrayBuffer) {
+		bytes = new Uint8Array(source);
+	} else {
+		bytes = new Uint8Array(source.buffer, source.byteOffset, source.byteLength);
+	}
+	if (bytes.toBase64) {
+		return bytes.toBase64({
+			alphabet: 'base64url',
+			omitPadding: true,
+		});
+	}
+	const platformBuffer = globalThis.Buffer;
+	if (platformBuffer) {
+		return platformBuffer.from(bytes).toString('base64url');
+	}
+	let binary = '';
+	const chunkSize = 0x8000;
+	for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+		binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+	}
+	const standardBase64 = btoa(binary);
+	return standardBase64
+		.split('+')
+		.join('-')
+		.split('/')
+		.join('_')
+		.split('=')
+		.join('');
 }

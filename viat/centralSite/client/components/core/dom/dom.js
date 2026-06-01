@@ -56,7 +56,8 @@ export function findComponent(tag, predicate) {
 	return match;
 }
 export function getComponentRoot() {
-	return this.shadowRoot;
+	// Light-DOM (no-shadow) components render into the host element itself.
+	return this.shadowRoot ?? this;
 }
 export function appendTo(target) {
 	return resolveTarget(target)?.appendChild(this);

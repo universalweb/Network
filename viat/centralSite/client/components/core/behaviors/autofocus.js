@@ -4,10 +4,9 @@ function focusElement(element) {
 		element.focus();
 		return;
 	}
-	if (element.shadowRoot) {
-		const focusable = element.shadowRoot.querySelector('input, textarea, select, button, [tabindex]');
-		focusable?.focus?.();
-	}
+	const root = element.shadowRoot ?? element;
+	const focusable = root.querySelector('input, textarea, select, button, [tabindex]');
+	focusable?.focus?.();
 }
 export const autofocus = {
 	name: 'autofocus',

@@ -34,6 +34,8 @@ import {
 	pathsOverlap,
 	queueAsyncError,
 } from '../utilities.js';
+import { Perf } from '../debug/perf.js';
+import { drainGlobalRenders, drainSpots } from '../lifecycle/scheduler.js';
 // Module-static master-flush state — every PathSubscriptions instance shares
 // one microtask hop. `masterFlush` is a first-class module-scope function
 // passed directly to `queueMicrotask`; no per-instance bind needed.
@@ -63,6 +65,13 @@ function masterFlush() {
 	for (let i = 0; i < instances.length; i++) {
 		instances[i].flush();
 	}
+	// Every bus has fired its subscribers (renderDep dirties + spot dirties) —
+	// drain the reactive template spots once, in this same microtask. Collapses
+	// the old second hop (per-spot postTask/RAF) into the bus flush.
+	drainSpots();
+	// Then kick the components whose GLOBAL renderDeps fired — the shared global
+	// bus has no per-component onFlush→updateView, so they enqueued instead.
+	drainGlobalRenders();
 }
 /**
  * Path-keyed Subscription tracker living on every component as
@@ -211,6 +220,7 @@ export class PathSubscriptions {
 		}
 	}
 	flush() {
+		const perfMark = Perf.mark('busFlush');
 		this.flushScheduled = false;
 		const changed = [...this.pending];
 		this.pending.clear();
@@ -245,5 +255,6 @@ export class PathSubscriptions {
 			}
 		}
 		this.onFlush();
+		Perf.measure('busFlush', perfMark);
 	}
 }

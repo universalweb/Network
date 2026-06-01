@@ -123,9 +123,9 @@ handlers.set('ai.listTools', (params) => {
 	if (params?.id || params?.path) {
 		const component = findFromParams(params);
 		const list = [];
-		getTools(component).forEach((def, name) => {
+		getTools(component).forEach((def, toolName) => {
 			list.push({
-				name,
+				name: toolName,
 				description: def.description ?? '',
 				inputSchema: def.inputSchema ?? {
 					type: 'object',
@@ -138,13 +138,13 @@ handlers.set('ai.listTools', (params) => {
 	const seen = new Set();
 	const list = [];
 	listComponents().forEach(({ component }) => {
-		getTools(component).forEach((def, name) => {
-			if (seen.has(name)) {
+		getTools(component).forEach((def, toolName) => {
+			if (seen.has(toolName)) {
 				return;
 			}
-			seen.add(name);
+			seen.add(toolName);
 			list.push({
-				name,
+				name: toolName,
 				description: def.description ?? '',
 				inputSchema: def.inputSchema ?? {
 					type: 'object',
@@ -213,19 +213,19 @@ handlers.set('ai.ping', () => {
 		t: Date.now(),
 	};
 });
-export function registerMethod(name, handler) {
-	if (!isString(name) || !isFunction(handler)) {
-		throw new TypeError('registerMethod requires (name, handler)');
+export function registerMethod(methodName, handler) {
+	if (!isString(methodName) || !isFunction(handler)) {
+		throw new TypeError('registerMethod requires (methodName, handler)');
 	}
-	handlers.set(name, handler);
+	handlers.set(methodName, handler);
 	return () => {
-		if (handlers.get(name) === handler) {
-			handlers.delete(name);
+		if (handlers.get(methodName) === handler) {
+			handlers.delete(methodName);
 		}
 	};
 }
-export function getMethod(name) {
-	return handlers.get(name) ?? null;
+export function getMethod(methodName) {
+	return handlers.get(methodName) ?? null;
 }
 export async function dispatch(message, ctx = {}) {
 	const id = message?.id ?? null;

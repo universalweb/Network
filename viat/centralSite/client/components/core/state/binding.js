@@ -14,7 +14,7 @@ import { STATE_PATH } from './state.js';
 // One value → exactly one kind. The template engine's classifyContentKind()
 // is the single decision point and CONTENT_PATCHERS maps each kind to its
 // patch routine. A typed bind (this.bind.text / .html / …) or a matching
-// `static types` entry DECLARES the kind up front, skipping classification.
+// `static properties` entry DECLARES the kind up front, skipping classification.
 //
 //   TEXT       plain string / number          → textContent (fast path)
 //   HTML       string containing markup (< &) → innerHTML
@@ -38,7 +38,7 @@ export class Binding {
 		this.key = key;
 		this.value = value;
 		// Declared CONTENT_KIND from a typed bind — null means auto-classify
-		// (or resolve from the component's `static types`).
+		// (or resolve from the component's `static properties`).
 		this.kind = kind;
 	}
 	toString() {
@@ -62,19 +62,27 @@ function makeDependencyKey(prefix, path) {
  * directly; the trap is responsible for the source-null fallback.
  */
 class TrackingFactory {
-	constructor(source, prefix, typeIndex) {
+	constructor(source, prefix, component) {
 		this.source = source ?? null;
 		this.prefix = prefix;
 		this.cache = new WeakMap();
-		// `static types` index — lets the render proxy skip dep-tracking for
-		// paths declared `react: false`. Null for the global proxy.
-		this.typeIndex = typeIndex ?? null;
+		// Component reference — null for the global proxy. Used by the
+		// tracking proxy to dispatch top-level accessor getters via
+		// `.call(component)` and to read the class's propertyIndex (which
+		// declares `react: false` paths, declared kinds, and accessor maps).
+		this.component = component ?? null;
+		this.propertyIndex = component?.propertyIndex ?? null;
 	}
 	setValue(path, value) {
 		setValueAtPath(this.source, path, value);
 	}
 	create(value, path = '') {
-		if (!isObject(value)) {
+		// Binary buffers (TypedArray / DataView / ArrayBuffer) are LEAF values —
+		// replaced wholesale, never element-mutated reactively — so pass them
+		// through raw instead of wrapping each in a tracking proxy. Wrapping
+		// breaks `ArrayBuffer.isView` downstream (e.g. template display →
+		// base64url) and serves no reactive purpose.
+		if (!isObject(value) || ArrayBuffer.isView(value) || value instanceof ArrayBuffer) {
 			return value;
 		}
 		return cachedProxy(this.cache, value, path, TrackingProxyHandler, this);
@@ -135,9 +143,9 @@ class TrackingCollection {
 	get size() {
 		if (currentTracking) {
 			const factory = this.factory;
-			const typeIndex = factory.typeIndex;
+			const propertyIndex = factory.propertyIndex;
 			const nestedPath = joinPath(this.path, 'size');
-			if (!typeIndex || !typeIndex.hasNonReactive || !typeIndex.nonReactivePaths.has(nestedPath)) {
+			if (!propertyIndex || !propertyIndex.hasNonReactive || !propertyIndex.nonReactivePaths.has(nestedPath)) {
 				currentTracking.add(makeDependencyKey(factory.prefix, nestedPath));
 			}
 		}
@@ -151,7 +159,7 @@ class TrackingCollection {
  * Stateless proxy handler for `TrackingCollection` facades — singleton, all
  * traps live on the prototype, no per-proxy state. `getPrototypeOf` reports
  * `Set.prototype` / `Map.prototype` so external `instanceof Set/Map` checks
- * (e.g. template.js list-rendering at line 116/136) keep passing through the
+ * (e.g. Template.js list-rendering at line 116/136) keep passing through the
  * tracking proxy.
  */
 class TrackingCollectionProxyHandler {
@@ -201,11 +209,23 @@ class TrackingProxyHandler {
 		if (isSymbol(key)) {
 			return Reflect.get(target, key);
 		}
+		const propertyIndex = factory.propertyIndex;
+		// Top-level accessor dispatch — declared via `get foo()` / `set foo()`
+		// in `static state`. Fires the getter with `this === component` so it
+		// can read sibling state (those reads route through this same proxy
+		// during render → naturally tracked) and call instance methods. The
+		// accessor's own path is registered as a dep so writes through the
+		// matching setter trigger the spot/renderDep re-fire.
+		if (this.path === '' && propertyIndex?.hasAccessors && propertyIndex.getters.has(key)) {
+			if (currentTracking) {
+				currentTracking.add(makeDependencyKey(factory.prefix, key));
+			}
+			return propertyIndex.getters.get(key).call(factory.component);
+		}
 		const propertyValue = Reflect.get(target, key);
 		const nestedPath = joinPath(this.path, key);
 		if (!isFunction(propertyValue) && currentTracking) {
-			const typeIndex = factory.typeIndex;
-			if (!typeIndex || !typeIndex.hasNonReactive || !typeIndex.nonReactivePaths.has(nestedPath)) {
+			if (!propertyIndex || !propertyIndex.hasNonReactive || !propertyIndex.nonReactivePaths.has(nestedPath)) {
 				currentTracking.add(makeDependencyKey(factory.prefix, nestedPath));
 			}
 		}
@@ -226,14 +246,14 @@ class TrackingProxyHandler {
 }
 export function makeProxy(state, component) {
 	const source = component?.stateProxy ?? state;
-	return new TrackingFactory(source, '', component?.typeIndex ?? null).create(state ?? {}, '');
+	return new TrackingFactory(source, '', component ?? null).create(state ?? {}, '');
 }
 export function makeGlobalProxy(globalState) {
 	return new TrackingFactory(globalState, 'global', null).create(globalState ?? {}, '');
 }
 // One-way reactive reference to a state path — a surgical binding spot that
 // patches in place without re-running render(). `bind('a.b')` auto-classifies
-// its content kind (or reads it from the component's `static types`); the
+// its content kind (or reads it from the component's `static properties`); the
 // typed variants DECLARE the kind so the engine skips classification:
 //   this.bind.text(key)       — declared TEXT  (strict textContent)
 //   this.bind.html(key)       — declared HTML  (innerHTML)
@@ -263,11 +283,17 @@ function bindComponent(stateKeyOrFn, currentValue) {
 bind.text = bindText;
 bind.html = bindHtml;
 bind.component = bindComponent;
-export function track(fn) {
+// Open a dep-tracking session around a single function call and return
+// `{ value, deps }`. `thisArg` is dispatched through `expr.call(thisArg)` —
+// a single monomorphic C-Bus call site replaces the per-eval wrapper arrow
+// the template runtime previously allocated for every computed spot refresh.
+// For callers that don't need a `this`, pass `undefined` (under strict mode
+// modules, `expr.call(undefined)` is equivalent to a bare call).
+export function track(expr, thisArg) {
 	const deps = new Set();
 	const previousTracking = currentTracking;
 	currentTracking = deps;
-	const value = fn();
+	const value = expr.call(thisArg);
 	currentTracking = previousTracking;
 	return {
 		value,

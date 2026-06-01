@@ -2,11 +2,13 @@ import { Panel } from '../../../global/panel/panel.js';
 // Address formats the recipient input accepts. The dropdown next to the
 // input lets the user override the auto-detection if our heuristic gets
 // it wrong (the SDK ultimately needs base64 — see app.js handleTransmit).
-const FORMATS = ['base64', 'base64url', 'hex'];
+const FORMATS = [
+	'base64', 'base64url', 'hex',
+];
 const PREFIX_MAP = {
-	'b64:':  'base64',
+	'b64:': 'base64',
 	'ub64:': 'base64url',
-	'hex:':  'hex',
+	'hex:': 'hex',
 };
 function stripPrefix(raw) {
 	const lower = raw.toLowerCase();
@@ -31,13 +33,13 @@ function detectFormat(value) {
 	if (!value) {
 		return null;
 	}
-	if (/[+/]/.test(value)) {
+	if ((/[+/]/).test(value)) {
 		return 'base64';
 	}
-	if (/[-_]/.test(value)) {
+	if ((/[-_]/).test(value)) {
 		return 'base64url';
 	}
-	if (/^[0-9a-fA-F]+$/.test(value) && (value.length === 48 || value.length === 64)) {
+	if ((/^[0-9a-fA-F]+$/).test(value) && (value.length === 48 || value.length === 64)) {
 		return 'hex';
 	}
 	return null;

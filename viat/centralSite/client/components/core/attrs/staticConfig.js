@@ -4,6 +4,7 @@ import {
 	getProto,
 	hasOwn,
 } from '../utilities.js';
+import { inferStateSchema } from './inferTypes.js';
 export function collectClassChain(ComponentClass) {
 	const chain = [];
 	let current = ComponentClass;
@@ -54,8 +55,9 @@ function ensureMerged(ComponentClass, fieldName, cacheName) {
 // Caches the result on the class under `mergedState`. Flags are read from the
 // class via static prototype inheritance, so subclass overrides are honored.
 // Accessor descriptors (`get foo()` / `set foo()`) survive the merge intact
-// — they're transferred via `Object.defineProperty` so the constructor can
-// re-install them on the instance STATE with `this` bound to the component.
+// — they're transferred via `Object.defineProperty` and later collected into
+// the class's propertyIndex (getters/setters Maps) so the state proxies
+// dispatch them via `.call(component)` rather than per-instance `.bind`.
 function copyDescriptor(target, key, descriptor) {
 	Object.defineProperty(target, key, descriptor);
 }
@@ -195,25 +197,55 @@ export function ensureMergedAttrs(ComponentClass) {
 export function ensureMergedConfig(ComponentClass) {
 	return ensureMerged(ComponentClass, 'config', 'mergedConfig');
 }
-// `static types` — the per-path state schema. Shallow chain-merge (it is a
-// flat, path-keyed object: `{ 'a.b.c': { kind, react } }`), exactly like
-// `static attrs`.
-export function ensureMergedTypes(ComponentClass) {
-	return ensureMerged(ComponentClass, 'types', 'mergedTypes');
+// `static properties` — the per-path state schema. Shallow chain-merge (it is
+// a flat, path-keyed object: `{ 'a.b.c': { kind, react } }`), exactly like
+// `static attrs`. Accessor descriptors (`get foo()` / `set foo()`) on `static
+// state` are separately collected into the same propertyIndex via the
+// mergedState walk in `ensurePropertyIndex`.
+export function ensureMergedProperties(ComponentClass) {
+	return ensureMerged(ComponentClass, 'properties', 'mergedProperties');
 }
-// Derive the fast-lookup index from the merged `static types`, cached on the
-// class. `hasTypes` / `hasNonReactive` / `hasKinds` are coarse booleans so the
-// proxy hot paths short-circuit with a single check when a feature is unused.
-//   nonReactivePaths — paths declared `react: false` (skip notify + tracking)
-//   kinds            — path → CONTENT_KIND (skip content classification)
-export function ensureTypeIndex(ComponentClass) {
-	if (hasOwn(ComponentClass, 'mergedTypeIndex')) {
-		return ComponentClass.mergedTypeIndex;
+function collectAccessors(mergedState, getters, setters) {
+	const descriptors = Object.getOwnPropertyDescriptors(mergedState);
+	const keys = Object.getOwnPropertyNames(descriptors);
+	for (let i = 0; i < keys.length; i++) {
+		const key = keys[i];
+		const descriptor = descriptors[key];
+		if (descriptor.get) {
+			getters.set(key, descriptor.get);
+		}
+		if (descriptor.set) {
+			setters.set(key, descriptor.set);
+		}
 	}
-	const merged = ensureMergedTypes(ComponentClass);
+}
+// Derive the fast-lookup index from compile-time inference over `static state`,
+// the merged `static properties`, and accessor descriptors on `static state` —
+// cached on the class. `hasProperties` / `hasNonReactive` / `hasKinds` /
+// `hasTypes` / `hasAccessors` are coarse booleans so the proxy + compiler hot
+// paths short-circuit with a single check when a feature is unused.
+//   types            — path → STATE_TYPE (inferred JS type; compiler/sigil oracle)
+//   nonReactivePaths — paths declared `react: false` (skip notify + tracking)
+//   kinds            — path → CONTENT_KIND (skip content classification); seeded
+//                      from inference for TEXT-safe primitives, then OVERRIDDEN
+//                      by any explicit `static properties` `kind`
+//   getters          — top-level key → getter fn (dispatched via .call(component))
+//   setters          — top-level key → setter fn (dispatched via .call(component, value))
+export function ensurePropertyIndex(ComponentClass) {
+	if (hasOwn(ComponentClass, 'mergedPropertyIndex')) {
+		return ComponentClass.mergedPropertyIndex;
+	}
+	const merged = ensureMergedProperties(ComponentClass);
+	const mergedState = ensureMergedState(ComponentClass);
+	// One walk over `static state` seeds the type oracle and the auto kinds.
+	// Explicit `static properties` `kind` declarations below override inference.
+	const inferred = inferStateSchema(mergedState);
+	const types = inferred.types;
+	const kinds = inferred.kinds;
 	const paths = Object.keys(merged);
 	const nonReactivePaths = new Set();
-	const kinds = new Map();
+	const getters = new Map();
+	const setters = new Map();
 	for (let index = 0; index < paths.length; index++) {
 		const path = paths[index];
 		const descriptor = merged[path];
@@ -227,17 +259,23 @@ export function ensureTypeIndex(ComponentClass) {
 			kinds.set(path, descriptor.kind);
 		}
 	}
-	const typeIndex = {
-		hasTypes: paths.length > 0,
+	collectAccessors(mergedState, getters, setters);
+	const propertyIndex = {
+		hasProperties: paths.length > 0,
 		hasNonReactive: nonReactivePaths.size > 0,
 		hasKinds: kinds.size > 0,
+		hasTypes: types.size > 0,
+		hasAccessors: getters.size > 0 || setters.size > 0,
 		nonReactivePaths,
 		kinds,
+		types,
+		getters,
+		setters,
 	};
-	Object.defineProperty(ComponentClass, 'mergedTypeIndex', {
-		value: typeIndex,
+	Object.defineProperty(ComponentClass, 'mergedPropertyIndex', {
+		value: propertyIndex,
 		configurable: true,
 		writable: true,
 	});
-	return typeIndex;
+	return propertyIndex;
 }

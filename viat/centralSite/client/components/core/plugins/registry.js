@@ -3,17 +3,17 @@
 // self-init via side-effect imports — they don't go through this.
 const plugins = new Map();
 const ran = new WeakSet();
-export function registerPlugin(name, plugin) {
-	if (typeof name !== 'string' || !name) {
-		throw new TypeError('registerPlugin: name must be a non-empty string');
+export function registerPlugin(pluginName, plugin) {
+	if (typeof pluginName !== 'string' || !pluginName) {
+		throw new TypeError('registerPlugin: pluginName must be a non-empty string');
 	}
 	if (!plugin || typeof plugin.init !== 'function') {
 		throw new TypeError('registerPlugin: plugin must have an init() function');
 	}
-	plugins.set(name, plugin);
+	plugins.set(pluginName, plugin);
 }
-export function getPlugin(name) {
-	return plugins.get(name) ?? null;
+export function getPlugin(pluginName) {
+	return plugins.get(pluginName) ?? null;
 }
 export function listPlugins() {
 	return [...plugins.keys()];

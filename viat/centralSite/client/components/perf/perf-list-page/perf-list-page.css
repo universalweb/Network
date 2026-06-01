@@ -1,0 +1,254 @@
+:host {
+	display: block;
+	background: #0a0a0f;
+	color: rgba(255, 255, 255, 0.9);
+	min-height: 100vh;
+	font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+	/* Single source of truth for the list table columns — inherited across the
+	   shadow boundary into every <perf-list-item> so the sticky header and the
+	   rows align as one table. */
+	--perf-row-cols: 64px minmax(140px, 280px) 110px 110px 90px 1fr;
+}
+.page {
+	max-width: 1100px;
+	margin: 0 auto;
+	padding: 32px 24px 64px;
+}
+.head h1 {
+	font-size: 18px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #fff;
+	margin: 0 0 6px;
+}
+.head .hint {
+	margin: 0 0 24px;
+	color: rgba(255, 255, 255, 0.5);
+	font-size: 12px;
+}
+.controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	padding: 12px;
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 6px;
+	margin-bottom: 16px;
+}
+.controls .count {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 11px;
+	color: rgba(255, 255, 255, 0.6);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+.controls input {
+	background: #1a1a24;
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	color: #fff;
+	padding: 4px 8px;
+	border-radius: 4px;
+	width: 80px;
+	font-family: 'JetBrains Mono', ui-monospace, monospace;
+	font-size: 12px;
+}
+.controls button {
+	background: #1a1a24;
+	border: 1px solid rgba(99, 102, 241, 0.3);
+	color: #c7d2fe;
+	padding: 6px 12px;
+	border-radius: 4px;
+	font-family: inherit;
+	font-size: 11px;
+	letter-spacing: 0.04em;
+	cursor: pointer;
+	transition: background 0.12s ease, border-color 0.12s ease;
+}
+.controls button:hover {
+	background: #21212d;
+	border-color: rgba(99, 102, 241, 0.6);
+}
+.controls button:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+.list-type-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	padding: 8px 12px;
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	border-radius: 6px;
+	margin-bottom: 12px;
+}
+.list-type-label {
+	color: rgba(255, 255, 255, 0.4);
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	margin-right: 6px;
+}
+.list-type {
+	background: #14141d;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	color: rgba(255, 255, 255, 0.65);
+	padding: 5px 10px;
+	border-radius: 4px;
+	font-family: 'JetBrains Mono', ui-monospace, monospace;
+	font-size: 11px;
+	cursor: pointer;
+	transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+.list-type:hover {
+	background: #1d1d28;
+	color: #fff;
+}
+.list-type.active {
+	background: rgba(99, 102, 241, 0.18);
+	border-color: rgba(99, 102, 241, 0.55);
+	color: #c7d2fe;
+}
+.list-type:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+.status {
+	display: flex;
+	gap: 8px;
+	font-size: 11px;
+	color: rgba(255, 255, 255, 0.55);
+	margin-bottom: 16px;
+	font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+.status .label {
+	color: rgba(255, 255, 255, 0.35);
+}
+.status .value {
+	color: #6ee7b7;
+}
+.report {
+	margin-bottom: 24px;
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 6px;
+	overflow: hidden;
+}
+.report table {
+	width: 100%;
+	border-collapse: collapse;
+	font-family: 'JetBrains Mono', ui-monospace, monospace;
+	font-size: 11px;
+}
+.report th {
+	text-align: left;
+	padding: 8px 12px;
+	background: rgba(255, 255, 255, 0.04);
+	color: rgba(255, 255, 255, 0.55);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	font-size: 10px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.report td {
+	padding: 6px 12px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+	color: rgba(255, 255, 255, 0.85);
+	font-variant-numeric: tabular-nums;
+}
+.report td.empty {
+	text-align: center;
+	color: rgba(255, 255, 255, 0.3);
+	padding: 24px;
+}
+.list {
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	border-radius: 6px;
+	max-height: 60vh;
+	overflow-y: auto;
+	margin-bottom: 8px;
+}
+/* Sticky table header that shares the rows' column track, so it stays pinned
+   while the rows scroll and column-aligns with every <perf-list-item>. */
+.list-header {
+	display: grid;
+	grid-template-columns: var(--perf-row-cols);
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	background: #14141d;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.list-header .h-cell {
+	padding: 7px 14px;
+	font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: rgba(255, 255, 255, 0.45);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.list-header .h-cell.num {
+	text-align: right;
+}
+.dashboard-wide {
+	display: block;
+	margin: 0 0 16px;
+}
+.hidden-list {
+	display: none;
+}
+.active-list {
+	display: block;
+}
+.depth-section {
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 6px;
+	padding: 12px;
+	margin-bottom: 16px;
+}
+.depth-section h2 {
+	margin: 0 0 6px;
+	font-size: 12px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.7);
+}
+.depth-section .hint {
+	margin: 0 0 12px;
+	color: rgba(255, 255, 255, 0.45);
+	font-size: 11px;
+}
+.depth-controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 12px;
+}
+.depth-controls label {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	font-size: 10px;
+	color: rgba(255, 255, 255, 0.55);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+.depth-tree {
+	background: rgba(0, 0, 0, 0.25);
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	border-radius: 4px;
+	padding: 8px 6px;
+	max-height: 40vh;
+	overflow-y: auto;
+}

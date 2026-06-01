@@ -30,27 +30,27 @@ function ensureRefsMap(component) {
 	}
 	return map;
 }
-export function isValidRefName(name) {
-	return REF_NAME_RE.test(name);
+export function isValidRefName(refName) {
+	return REF_NAME_RE.test(refName);
 }
-export function registerRef(component, name, el) {
+export function registerRef(component, refName, el) {
 	const map = ensureRefsMap(component);
 	const ref = new WeakRef(el);
-	map.set(name, ref);
+	map.set(refName, ref);
 	const token = {};
 	FINALIZER.register(el, {
 		map,
-		name,
+		name: refName,
 	}, token);
 	return () => {
 		FINALIZER.unregister(token);
-		if (map.get(name) === ref) {
-			map.delete(name);
+		if (map.get(refName) === ref) {
+			map.delete(refName);
 		}
 	};
 }
-export function getRef(component, name) {
-	return component.refsMap?.get(name)?.deref();
+export function getRef(component, refName) {
+	return component.refsMap?.get(refName)?.deref();
 }
 export function makeRefsProxy(component) {
 	return new Proxy(ensureRefsMap(component), REFS_HANDLER);

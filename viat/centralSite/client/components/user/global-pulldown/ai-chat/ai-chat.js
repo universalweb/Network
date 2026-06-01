@@ -178,10 +178,8 @@ export class AIChat extends WebComponent {
 		// streamed token. `observe` defers through the scheduler, so the scroll
 		// runs after the list/text spots have committed their DOM.
 		this.observeAsync('messages', this.handleLogScroll);
-		// Probe up-front so the indicator badge is accurate before the
-		// user opens the pulldown. Cheap — single GET with a short
-		// timeout and the response is small (just a model list).
-		this.checkConnection();
+		// No reason to run this at start leave it as is commented out
+		// this.checkConnection();
 	}
 	handleLogScroll() {
 		const logEl = this.refs.log;

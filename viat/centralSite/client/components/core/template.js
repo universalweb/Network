@@ -7,6 +7,8 @@ import {
 	makeProxy,
 	track,
 } from './state/binding.js';
+import { STATE_PATH, ensureStateBus } from './state/state.js';
+import { behaviorAttrNames, getBehavior } from './behaviors/index.js';
 import {
 	createElementFromHTML,
 	disposeItem,
@@ -18,12 +20,12 @@ import {
 	isString,
 	setValueAtPath,
 	syncSubsByDiff,
+	toBase64Url,
 } from './utilities.js';
 import { isValidRefName, registerRef } from './dom/refs.js';
-import { ensureStateBus, STATE_PATH } from './state/state.js';
-import { schedule } from './lifecycle/scheduler.js';
+import { Perf } from './debug/perf.js';
 import { globalState } from './state/globalState.js';
-import { behaviorAttrNames, getBehavior } from './behaviors/index.js';
+import { markSpotDirty } from './lifecycle/scheduler.js';
 /**
  * Spot type vocabulary. Single source of truth for every `spot.type` /
  * `plan.type` / `entry.type` literal the template runtime reads or writes.
@@ -59,17 +61,22 @@ export const SPOT_KIND = Object.freeze({
 const SUBEVENT_ATTRS = behaviorAttrNames();
 // Behavior-attribute attribute application. The template extractor strips the
 // raw `tooltip="…"` / `hotkey="…"` etc. attributes; this function reflects the
-// (possibly dynamic) value into a sibling `data-<name>` attribute that the
-// behavior implementations read on demand. Pure write — install/uninstall of
-// the actual per-element listeners is owned by `behavior.install`, wired in
-// the fragment build path (further down). Subevent map / `registerSubevent`
-// machinery removed in Phase 8 — dataset is now the single store.
+// (possibly dynamic) value to the behavior. If the behavior exposes an
+// `applyValue(el, value)` hook, it owns the update — typically by writing a
+// WeakMap registry instead of mutating the DOM (tooltip lives here). For
+// legacy behaviors with no hook the value is reflected into a sibling
+// `data-<name>` attribute that the behavior reads on demand.
 function applySubeventAttr(el, attrName, value) {
 	if (!SUBEVENT_ATTRS.has(attrName)) {
 		return false;
 	}
 	if (el.hasAttribute(attrName)) {
 		el.removeAttribute(attrName);
+	}
+	const behavior = getBehavior(attrName);
+	if (behavior && typeof behavior.applyValue === 'function') {
+		behavior.applyValue(el, value);
+		return true;
 	}
 	const isEmpty = value == null || value === false || value === '';
 	if (isEmpty) {
@@ -210,6 +217,13 @@ function diffClassList(el, current, desired) {
 	});
 }
 const SPOT = 'data-expr';
+// Comment-anchor markers for a PARTIAL text spot (static siblings present, so it
+// can't fold onto the parent). The HTML parser turns `<!--uwc:N-->` into a real
+// comment node that survives as a parse-stable position anchor (Lit's trick) —
+// no element, no layout/style, text stays selectable. Two comments bound the
+// spot's range so insert/clear is O(1): `<!--uwc:N-->`(start) `<!--uwc/N-->`(end).
+const ANCHOR_START_PREFIX = 'uwc:';
+const ANCHOR_END_PREFIX = 'uwc/';
 const TEMPLATE_CLEANUP = Symbol('templateCleanup');
 const BIND_MARKER = 'data-bind-expr';
 const BINDABLE_TAGS = new Set([
@@ -228,7 +242,25 @@ function cleanupTemplateNode(node) {
 	node[TEMPLATE_CLEANUP] = null;
 	cleanup(node);
 }
+// Remove every node strictly BETWEEN an anchored spot's two comment markers,
+// leaving the comments themselves in place. The anchored counterpart to a
+// wrapper's `el.textContent = ''` / `el.innerHTML =` wipe — it touches only the
+// spot's own range, never the static siblings that share the parent element.
+// `cleanupTemplateNode` runs per removed node (idempotent) so nested template
+// instances (list rows, html fragments) release their spots/subscriptions.
+function clearRange(startComment, endComment) {
+	let node = startComment.nextSibling;
+	while (node && node !== endComment) {
+		const next = node.nextSibling;
+		cleanupTemplateNode(node);
+		node.remove();
+		node = next;
+	}
+}
 function createRenderableElement(value) {
+	if (LightTemplate.is(value)) {
+		return instantiateLightRow(value);
+	}
 	if (isString(value)) {
 		return createElementFromHTML(value);
 	}
@@ -239,6 +271,86 @@ function createRenderableElement(value) {
 }
 function isCustomElementConstructor(source) {
 	return isFunction(source) && source.prototype instanceof HTMLElement;
+}
+// ── Lightweight list rows ───────────────────────────────────────────────────
+// A list row that does NOT pay for a custom element + shadow root + async
+// lifecycle. The standalone `html` tag returns a LightTemplate {strings,
+// values}; the list clones the SHARED recipe (parsed once via getRecipe, same
+// as a component) into plain DOM and RETAINS the spots, so updates are surgical
+// textContent/attr writes — no component, no subscription, no re-parse, no
+// rebuild. ~10× cheaper to create than a full component row. For data lists
+// that need no per-row encapsulation or state; rows needing those keep the
+// `class` component kind of each()/list().
+//
+// Constraints (thrown loud, never silent):
+//   • exactly one root element per row;
+//   • value-only expressions — compute inline (`${item.value * 2}`), never
+//     `${() => …}` or a binding (those need a component's reactive graph);
+//   • no `#ref`, `$two-way`, behaviors, or `@event` spots.
+// String values default to HTML (innerHTML) like everywhere in UWC — use the
+// `^text${str}` sigil for any untrusted string (XSS-safe textContent write).
+class LightTemplate {
+	constructor(strings, values) {
+		this.strings = strings;
+		this.values = values;
+	}
+	static is(source) {
+		return source instanceof LightTemplate;
+	}
+}
+export function html(strings, ...values) {
+	return new LightTemplate(strings, values);
+}
+// root element → { spots, prevExprs }. WeakMap so a removed row's retained
+// spots clear on GC with zero bookkeeping.
+const LIGHT_ROW_INSTANCES = new WeakMap();
+function assertLightTemplate(recipe, values) {
+	for (let valueIndex = 0; valueIndex < values.length; valueIndex++) {
+		const value = values[valueIndex];
+		if (isFunction(value) || isBindingType(value)) {
+			throw new TypeError('each() html row expressions must be plain values — compute inline (`${item.x * 2}`), not `${() => …}` or a binding.');
+		}
+	}
+	if ((recipe.refPlans && recipe.refPlans.length) || (recipe.dataBindPlans && recipe.dataBindPlans.length) || (recipe.subeventPlans && recipe.subeventPlans.length)) {
+		throw new TypeError('each() html row does not support #refs, two-way bindings, or behaviors — use the component (class) kind for those.');
+	}
+}
+function instantiateLightRow(lightTemplate) {
+	const recipe = getRecipe(lightTemplate.strings);
+	const values = lightTemplate.values;
+	assertLightTemplate(recipe, values);
+	const fragment = recipe.fragment.cloneNode(true);
+	const spotPlans = recipe.spotPlans;
+	const spots = [];
+	// Two-phase (see instantiateRecipe): resolve all nodes on the pristine clone
+	// before any anchored install shifts child indices, then install.
+	const spotResolved = new Array(spotPlans.length);
+	for (let spotIndex = 0; spotIndex < spotPlans.length; spotIndex++) {
+		spotResolved[spotIndex] = resolveSpotNode(spotPlans[spotIndex], fragment);
+	}
+	for (let spotIndex = 0; spotIndex < spotPlans.length; spotIndex++) {
+		const spot = installSpotFromPlan(spotPlans[spotIndex], spotResolved[spotIndex], values, null);
+		if (spot) {
+			spots.push(spot);
+		}
+	}
+	if (fragment.children.length !== 1) {
+		throw new TypeError('each() html row must have exactly one root element.');
+	}
+	const root = fragment.firstElementChild;
+	LIGHT_ROW_INSTANCES.set(root, {
+		spots,
+		prevExprs: values.slice(),
+	});
+	return root;
+}
+function patchLightRow(element, lightTemplate) {
+	const instance = LIGHT_ROW_INSTANCES.get(element);
+	if (!instance) {
+		return false;
+	}
+	updateTemplateSpots(instance, lightTemplate.values, null);
+	return true;
 }
 function resolveRenderKind(renderFn) {
 	if (isString(renderFn)) {
@@ -256,6 +368,9 @@ function createListElementByKind(kind, renderFn, item) {
 		return el;
 	}
 	if (kind === 'class') {
+		// `renderFn` is the caller-supplied list constructor (the `each()` render
+		// arg) — a dynamic class whose lowercase binding name we don't control.
+		// eslint-disable-next-line new-cap
 		return new renderFn(item);
 	}
 	return createRenderableElement(renderFn(item));
@@ -348,7 +463,9 @@ export class LiveList {
 				this.spot.prevItemMap.set(itemKey, newItem);
 				fragment.append(element);
 			}
-			this.spot.el.insertBefore(fragment, refElement ?? null);
+			const container = this.spot.anchored ? this.spot.startComment.parentNode : this.spot.el;
+			const tail = this.spot.anchored ? this.spot.endComment : null;
+			container.insertBefore(fragment, refElement ?? tail);
 		}
 		return this;
 	}
@@ -390,6 +507,45 @@ export function list(key, renderFn, keyFn = (item, index) => {
 // `bind.list` — typed LIST variant of the bind family. Wired here, where the
 // list machinery lives, onto the shared `bind` callable (no import circular).
 bind.list = list;
+// Longest increasing subsequence over `sources` (each entry is a reused
+// element's OLD dom-order index, or -1 for a freshly created element). Returns
+// the Set of array indices that form the LIS — those elements are already in
+// correct relative order and need NO dom move. O(n log n). This is the core
+// that turns a 2-item swap from O(n) insertBefore calls into O(1) moves.
+function lisIndexSet(sources) {
+	const sourceCount = sources.length;
+	const predecessor = new Array(sourceCount);
+	const tails = [];
+	for (let i = 0; i < sourceCount; i++) {
+		const value = sources[i];
+		if (value < 0) {
+			continue;
+		}
+		let low = 0;
+		let high = tails.length;
+		while (low < high) {
+			const mid = (low + high) >> 1;
+			if (sources[tails[mid]] < value) {
+				low = mid + 1;
+			} else {
+				high = mid;
+			}
+		}
+		predecessor[i] = low > 0 ? tails[low - 1] : -1;
+		if (low === tails.length) {
+			tails.push(i);
+		} else {
+			tails[low] = i;
+		}
+	}
+	const stable = new Set();
+	let walk = tails.length ? tails[tails.length - 1] : -1;
+	while (walk >= 0) {
+		stable.add(walk);
+		walk = predecessor[walk];
+	}
+	return stable;
+}
 function patchList(spot, itemList) {
 	if (spot.liveList && spot.liveList !== itemList && spot.liveList.disconnectSpot) {
 		spot.liveList.disconnectSpot();
@@ -401,21 +557,65 @@ function patchList(spot, itemList) {
 	const {
 		items, keyFn,
 	} = itemList;
-	const anchor = spot.el;
+	// Container + tail boundary. Tier-1 / wrapper: the element itself, append at
+	// its end (tail = null). Anchored partial: the parent shared with statics,
+	// inserting before the end comment so the list stays inside its range.
+	const anchor = spot.anchored ? spot.startComment.parentNode : spot.el;
+	const tail = spot.anchored ? spot.endComment : null;
 	const oldMap = spot.keyMap ?? new Map();
 	const prevItemMap = spot.prevItemMap ?? new Map();
 	const newMap = new Map();
-	const isBatchInsert = oldMap.size === 0 && items.length > 1;
-	const fragment = isBatchInsert ? document.createDocumentFragment() : null;
-	let cursor = null;
-	for (let i = 0; i < items.length; i++) {
+	const itemCount = items.length;
+	// Fast path — first mount (no existing keyed children): straight append, one
+	// fragment for the multi-item case.
+	if (oldMap.size === 0) {
+		const fragment = itemCount > 1 ? document.createDocumentFragment() : null;
+		for (let i = 0; i < itemCount; i++) {
+			const item = items[i];
+			const key = keyFn(item, i);
+			const element = itemList.createElement(item);
+			newMap.set(key, element);
+			prevItemMap.set(key, item);
+			if (fragment) {
+				fragment.append(element);
+			} else {
+				anchor.insertBefore(element, tail);
+			}
+		}
+		if (fragment) {
+			anchor.insertBefore(fragment, tail);
+		}
+		spot.keyMap = newMap;
+		spot.prevItemMap = prevItemMap;
+		return;
+	}
+	// Snapshot old dom order (Map insertion order == dom order) so each reused
+	// element carries its previous index for the LIS.
+	const oldKeys = [...oldMap.keys()];
+	const oldOrder = new Map();
+	for (let oldIndex = 0; oldIndex < oldKeys.length; oldIndex++) {
+		oldOrder.set(oldKeys[oldIndex], oldIndex);
+	}
+	// Phase 1 — resolve every new item to an element (reuse / update-in-place /
+	// create), recording each reused element's old index. `reordered` stays
+	// false for a pure in-order update or a tail trim, letting phase 2 bail.
+	const elements = new Array(itemCount);
+	const sources = new Array(itemCount);
+	let reordered = false;
+	let highestOldSeen = -1;
+	for (let i = 0; i < itemCount; i++) {
 		const item = items[i];
 		const key = keyFn(item, i);
 		let element = oldMap.get(key);
 		if (element) {
 			oldMap.delete(key);
 			if (item !== prevItemMap.get(key)) {
-				if (isFunction(element.assignState)) {
+				if (LIGHT_ROW_INSTANCES.has(element)) {
+					// Lightweight row: re-run the row fn (plain JS, recomputes
+					// inline expressions) and surgically re-patch the retained
+					// spots — no rebuild, no replace, no re-parse.
+					patchLightRow(element, itemList.renderFn(item));
+				} else if (isFunction(element.assignState)) {
 					element.assignState(item);
 				} else {
 					const replacement = itemList.createElement(item);
@@ -424,29 +624,48 @@ function patchList(spot, itemList) {
 					element = replacement;
 				}
 			}
+			const source = oldOrder.get(key);
+			sources[i] = source;
+			if (source < highestOldSeen) {
+				reordered = true;
+			} else {
+				highestOldSeen = source;
+			}
 		} else {
 			element = itemList.createElement(item);
-			if (fragment) {
-				fragment.append(element);
-			}
+			sources[i] = -1;
+			reordered = true;
 		}
-		if (!fragment) {
-			const referenceNode = cursor ? cursor.nextSibling : anchor.firstChild;
-			if (element !== referenceNode) {
-				anchor.insertBefore(element, referenceNode ?? null);
-			}
-			cursor = element;
-		}
+		elements[i] = element;
 		newMap.set(key, element);
 		prevItemMap.set(key, item);
 	}
-	oldMap.forEach((element, key) => {
-		cleanupTemplateNode(element);
-		element.remove();
-		prevItemMap.delete(key);
-	});
-	if (fragment) {
-		anchor.append(fragment);
+	// Remove the old elements that were not reused.
+	const staleEntries = [...oldMap.entries()];
+	for (let staleIndex = 0; staleIndex < staleEntries.length; staleIndex++) {
+		const staleElement = staleEntries[staleIndex][1];
+		cleanupTemplateNode(staleElement);
+		staleElement.remove();
+		prevItemMap.delete(staleEntries[staleIndex][0]);
+	}
+	// Phase 2 — minimal-move positioning, walking backwards so each element's
+	// final next-sibling is already placed. Elements inside the LIS of `sources`
+	// keep their slot; only reordered or new elements are inserted.
+	if (reordered) {
+		const stable = lisIndexSet(sources);
+		let nextSibling = tail;
+		for (let i = itemCount - 1; i >= 0; i--) {
+			const element = elements[i];
+			if (sources[i] === -1) {
+				// Freshly created and still detached — its `nextSibling` is null and
+				// can't signal "already placed", so always insert at the slot
+				// (covers append-at-end, where the target nextSibling is also null).
+				anchor.insertBefore(element, nextSibling);
+			} else if (!stable.has(i) && element.nextSibling !== nextSibling) {
+				anchor.insertBefore(element, nextSibling);
+			}
+			nextSibling = element;
+		}
 	}
 	spot.keyMap = newMap;
 	spot.prevItemMap = prevItemMap;
@@ -563,7 +782,106 @@ function inferBareAttrName(expr) {
 	}
 	return null;
 }
-function buildHTML(strings, exprs) {
+// Text-position content sigils. A caret token in the literal IMMEDIATELY before
+// a text `${…}` declares the spot's CONTENT_KIND at parse time, so the patcher
+// is chosen ahead of any value classification — and, unlike a typed
+// `bind.text`/`bind.html`, the sigil reaches BARE reads (`^text${this.state.x}`)
+// whose StaticSpot otherwise carries no declared kind and re-scans every patch.
+//   ^text${x}  → TEXT  strict textContent; no `<`/`&` scan; never auto-upgrades
+//                       to innerHTML (the auto path's silent XSS footgun)
+//   ^html${x}  → HTML  innerHTML; TRUSTED rich content — the dev owns XSS here,
+//                       exactly like `bind.html`
+// The `^` must follow a tag close, whitespace, or start-of-content so a stray
+// caret in real text (`a^b`) or an unquoted attr (`x=^text`) can't be misread.
+const TEXT_SIGIL_RE = /(?:^|[\s>])\^(text|html)$/;
+const TEXT_SIGIL_KINDS = {
+	text: CONTENT_KIND.TEXT,
+	html: CONTENT_KIND.HTML,
+};
+function detectTextSigil(currentString) {
+	const match = TEXT_SIGIL_RE.exec(currentString);
+	if (!match) {
+		return null;
+	}
+	return {
+		kind: TEXT_SIGIL_KINDS[match[1]],
+		// `^` + the keyword — the span of chars to strip from the emitted markup.
+		sigilLength: match[1].length + 1,
+	};
+}
+// Void elements take no children; raw-text / restricted-content elements don't
+// parse child markup the way a folded marker on the parent would need. A text
+// spot inside any of these keeps its wrapper.
+const VOID_ELEMENT_TAGS = new Set([
+	'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr',
+]);
+const RAW_TEXT_TAGS = new Set([
+	'script', 'style', 'textarea', 'title', 'select', 'option', 'optgroup',
+]);
+const TAG_NAME_TERMINATORS = new Set([
+	' ', '>', '/', '\t', '\n', '\r',
+]);
+// Lowercased tag name of the open tag whose `<` sits at `openIndex`, scanning up
+// to `limit`. Shared by the elide / anchor predicates to classify the parent.
+function openTagName(markup, openIndex, limit) {
+	let tagEnd = openIndex + 1;
+	while (tagEnd < limit && !TAG_NAME_TERMINATORS.has(markup[tagEnd])) {
+		tagEnd++;
+	}
+	return markup.slice(openIndex + 1, tagEnd).toLowerCase();
+}
+// True when a whole-content text spot can fold its marker onto the PARENT
+// element instead of emitting a wrapper <span> — i.e. the `${}` is the parent's
+// SOLE content (no static text, no sibling node). Requires, in order: the very
+// next literal is the parent's close tag (`nextString` starts `</`, which alone
+// rejects every trailing-text / sibling-element / sibling-comment / adjacent-
+// spot case), the parent's open tag just closed (`html` ends with a non-self-
+// closing `>`), and the last `<` in `html` opens a real, content-hostable
+// element (not a `</…>` close, not a `<!…` comment, not void / raw-text). When
+// all hold the spot OWNS the element outright → `spot.el = parent`, every
+// patcher works against the real element, and there is NO wrapper, NO
+// `display:contents`, NO `pointer-events:none` (so the text stays selectable).
+function canElideTextWrapper(markup, nextString) {
+	if (!nextString.startsWith('</')) {
+		return false;
+	}
+	const lastIndex = markup.length - 1;
+	if (markup[lastIndex] !== '>' || markup[lastIndex - 1] === '/') {
+		return false;
+	}
+	const openIndex = markup.lastIndexOf('<');
+	if (openIndex === -1) {
+		return false;
+	}
+	const afterOpen = markup[openIndex + 1];
+	if (afterOpen === '/' || afterOpen === '!') {
+		return false;
+	}
+	const tagName = openTagName(markup, openIndex, lastIndex);
+	return !VOID_ELEMENT_TAGS.has(tagName) && !RAW_TEXT_TAGS.has(tagName);
+}
+// A PARTIAL text spot (canElide already returned false) uses comment anchors
+// UNLESS it sits inside a raw-text element, where the parser would render the
+// comments as literal text instead of nodes — there it falls back to the wrapper
+// <span>. If the last `<` is a close tag (`</`) or another comment (`<!`) we're
+// in normal flow (raw-text elements can't contain child elements/comments), so
+// anchors are safe. Only a still-open raw-text tag blocks them.
+function canAnchorTextSpot(markup) {
+	const openIndex = markup.lastIndexOf('<');
+	if (openIndex === -1) {
+		// Root-level spot (no enclosing element). Keep the wrapper <span>: comments
+		// alone add ZERO element children, and `templateHtmlElement` /
+		// `instantiateLightRow` require exactly one root element. Root-level partial
+		// text is rare, so staying non-zero-span here costs nothing.
+		return false;
+	}
+	const afterOpen = markup[openIndex + 1];
+	if (afterOpen === '/' || afterOpen === '!') {
+		return true;
+	}
+	return !RAW_TEXT_TAGS.has(openTagName(markup, openIndex, markup.length));
+}
+export function buildHTML(strings, exprs) {
 	let html = '';
 	const meta = [];
 	let attrAccum = null;
@@ -601,16 +919,20 @@ function buildHTML(strings, exprs) {
 			attrAccum = null;
 			effectiveString = effectiveString.slice(closeIdx + 1);
 		}
-		const open = detectAttrOpen(effectiveString, nextString);
-		if (open) {
-			const beforeOpener = effectiveString.slice(0, effectiveString.length - open.totalLength);
+		const textSigil = detectTextSigil(effectiveString);
+		if (textSigil) {
+			effectiveString = effectiveString.slice(0, effectiveString.length - textSigil.sigilLength);
+		}
+		const attrOpen = detectAttrOpen(effectiveString, nextString);
+		if (attrOpen) {
+			const beforeOpener = effectiveString.slice(0, effectiveString.length - attrOpen.totalLength);
 			html += beforeOpener;
 			attrAccum = {
-				name: open.name,
-				quote: open.quote,
-				parts: open.prefix.length > 0 ? [
+				name: attrOpen.name,
+				quote: attrOpen.quote,
+				parts: attrOpen.prefix.length > 0 ? [
 					{
-						literal: open.prefix,
+						literal: attrOpen.prefix,
 					},
 				] : [],
 				markerIdx: stringIndex,
@@ -625,7 +947,7 @@ function buildHTML(strings, exprs) {
 		}
 		const bindPrefix = bindContext(effectiveString);
 		const eventBinding = bindPrefix === null ? eventContext(effectiveString) : null;
-		html += (bindPrefix !== null) ? bindPrefix : (eventBinding?.prefix ?? effectiveString);
+		html += bindPrefix === null ? (eventBinding?.prefix ?? effectiveString) : bindPrefix;
 		if (stringIndex >= exprs.length) {
 			continue;
 		}
@@ -663,9 +985,7 @@ function buildHTML(strings, exprs) {
 		}
 		const attr = attrContext(effectiveString);
 		if (attr) {
-			html += attr.quote === ''
-				? `expr${stringIndex} data-uwc`
-				: `expr${stringIndex}${attr.quote} data-uwc=${attr.quote}`;
+			html += attr.quote === '' ? `expr${stringIndex} data-uwc` : `expr${stringIndex}${attr.quote} data-uwc=${attr.quote}`;
 			const baseMeta = {
 				i: stringIndex,
 				attr: attr.name,
@@ -700,12 +1020,36 @@ function buildHTML(strings, exprs) {
 				});
 				continue;
 			}
+		} else if (canElideTextWrapper(html, nextString)) {
+			// Whole-content spot — fold the marker onto the parent's open tag (drop
+			// the trailing `>`, re-add it after the marker). `spot.el` becomes the
+			// parent element itself: no wrapper node, no display/pointer-events hack.
+			html = `${html.slice(0, html.length - 1)} data-uwc ${SPOT}="${stringIndex}">`;
+			meta.push({
+				i: stringIndex,
+				type: SPOT_TYPE.TEXT,
+				expr,
+				declaredKind: textSigil ? textSigil.kind : null,
+				elided: true,
+			});
+		} else if (canAnchorTextSpot(html)) {
+			// Partial spot — two comment anchors bound the dynamic range; static
+			// siblings on either side are untouched. No wrapper element.
+			html += `<!--${ANCHOR_START_PREFIX}${stringIndex}--><!--${ANCHOR_END_PREFIX}${stringIndex}-->`;
+			meta.push({
+				i: stringIndex,
+				type: SPOT_TYPE.TEXT,
+				expr,
+				declaredKind: textSigil ? textSigil.kind : null,
+				anchored: true,
+			});
 		} else {
 			html += `<span data-uwc ${SPOT}="${stringIndex}"></span>`;
 			meta.push({
 				i: stringIndex,
 				type: SPOT_TYPE.TEXT,
 				expr,
+				declaredKind: textSigil ? textSigil.kind : null,
 			});
 		}
 	}
@@ -740,9 +1084,7 @@ function evaluateTrackedExpression(component, expr) {
 	ensureRenderProxies(component);
 	const previousRenderTracking = component.renderTracking;
 	component.renderTracking = true;
-	const result = track(() => {
-		return expr.call(component);
-	});
+	const result = track(expr, component);
 	component.renderTracking = previousRenderTracking;
 	return result;
 }
@@ -792,31 +1134,52 @@ function patchComponentKind(spot, value) {
 function patchHtmlKind(spot, value) {
 	spot.el.innerHTML = String(value ?? '');
 }
-// Strict text patcher — straight textContent, no markup scan. Used when the
-// content kind is DECLARED (a typed bind or a `static types` entry): the dev
-// has promised plain text, so skip the per-patch `<` / `&` detection.
-function patchTextStrict(spot, value) {
-	const str = String(value ?? '');
-	if (spot.el.textContent !== str) {
-		spot.el.textContent = str;
+// JSON-for-display replacer: BigInt-safe (stringified — wallet amounts survive)
+// and circular-safe (`[Circular]`), so an object/array spot never throws. The
+// `seen` set lives at module scope (reset per `jsonDisplay` call) so the
+// replacer stays a first-class declaration with no per-call closure.
+let jsonDisplaySeen = null;
+function jsonDisplayReplacer(replacerKey, replacerValue) {
+	if (typeof replacerValue === 'bigint') {
+		return String(replacerValue);
 	}
+	if (replacerValue !== null && typeof replacerValue === 'object') {
+		if (jsonDisplaySeen.has(replacerValue)) {
+			return '[Circular]';
+		}
+		jsonDisplaySeen.add(replacerValue);
+	}
+	return replacerValue;
 }
-// Auto text patcher — self-correcting. An auto-classified text spot may later
-// receive a value carrying markup; on the first such value it upgrades itself
-// to the HTML patcher and stays there.
-function patchTextKind(spot, value) {
-	const str = String(value ?? '');
-	if (str.includes('<')) {
-		spot.el.style.pointerEvents = '';
-		spot.patch = patchHtmlKind;
-		patchHtmlKind(spot, str);
-		return;
+function jsonDisplay(value) {
+	jsonDisplaySeen = new WeakSet();
+	const result = JSON.stringify(value, jsonDisplayReplacer) ?? '';
+	jsonDisplaySeen = null;
+	return result;
+}
+// Render any non-HTML value as a plain display string for textContent:
+//   number / bigint / boolean / (string)  → String()
+//   TypedArray / DataView / ArrayBuffer    → base64url (display form)
+//   plain object / array                   → JSON (BigInt- & circular-safe)
+function valueToText(value) {
+	if (value === null || value === undefined) {
+		return '';
 	}
-	if (str.includes('&')) {
-		spot.patch = patchHtmlKind;
-		patchHtmlKind(spot, str);
-		return;
+	if (typeof value !== 'object') {
+		return String(value);
 	}
+	if (ArrayBuffer.isView(value) || value instanceof ArrayBuffer) {
+		return toBase64Url(value);
+	}
+	return jsonDisplay(value);
+}
+// The text patcher — straight textContent (via `valueToText`), no markup scan.
+// Used for the non-string auto default (numbers / bigints / buffers / objects)
+// AND for any spot DECLARED `text` (`^text` / `static properties` `kind:'text'`
+// / bind.text). No self-correcting upgrade — strings default to HTML and reach
+// innerHTML only via classification or an explicit `html` declaration.
+function patchTextStrict(spot, value) {
+	const str = valueToText(value);
 	if (spot.el.textContent !== str) {
 		spot.el.textContent = str;
 	}
@@ -831,8 +1194,8 @@ function patchTextKind(spot, value) {
 //   EMPTY      null | undefined | ''          → cleared via patchTextStrict
 //   LIST       a LiveList (each() / list())   → patchListKind     keyed diff
 //   COMPONENT  a comp() binding or a Node     → patchComponentKind  adopt node
-//   HTML       a string with markup (< or &) → patchHtmlKind     innerHTML
-//   TEXT       a plain string / number       → patchTextKind     textContent
+//   HTML       any string (the DEFAULT)      → patchHtmlKind     innerHTML
+//   TEXT       a number / non-string          → patchTextStrict   textContent
 // ─────────────────────────────────────────────────────────────────────
 function classifyContentKind(value) {
 	if (value === null || value === undefined || value === '') {
@@ -844,21 +1207,89 @@ function classifyContentKind(value) {
 	if (ComponentBinding.is(value) || value instanceof Node) {
 		return CONTENT_KIND.COMPONENT;
 	}
-	const str = String(value);
-	if (str.includes('<') || str.includes('&')) {
+	// Strings DEFAULT to innerHTML — markup / entities in string state must
+	// render as HTML (app content relies on it), and this skips the per-patch
+	// `<`/`&` scan entirely. Numbers / booleans stay textContent. Opt OUT of
+	// HTML per-spot with `^text` / `static properties` `kind:'text'` / bind.text.
+	if (typeof value === 'string') {
 		return CONTENT_KIND.HTML;
 	}
 	return CONTENT_KIND.TEXT;
 }
-// Kind → patcher for a DECLARED kind. EMPTY and declared TEXT both use the
-// strict patcher (the auto path below substitutes the self-correcting
-// patchTextKind for an UNdeclared text spot).
+// Kind → patcher. EMPTY and TEXT (numbers / bigints / non-strings) use the
+// strict textContent patcher; HTML (the string default + any declared `html`)
+// uses innerHTML. No auto / self-correcting path — `bindSpotKind` dispatches
+// straight through this table.
 const CONTENT_PATCHERS = {
 	[CONTENT_KIND.EMPTY]: patchTextStrict,
 	[CONTENT_KIND.TEXT]: patchTextStrict,
 	[CONTENT_KIND.HTML]: patchHtmlKind,
 	[CONTENT_KIND.COMPONENT]: patchComponentKind,
 	[CONTENT_KIND.LIST]: patchListKind,
+};
+// Anchored mirror of CONTENT_PATCHERS. Every routine operates on the comment-
+// bounded range (startComment … endComment) inside a parent shared with static
+// siblings — so it NEVER reads/writes the parent's whole textContent/innerHTML.
+// `spot.textNode` caches the single managed text node for the hot TEXT path.
+function patchTextAnchored(spot, value) {
+	const str = valueToText(value);
+	const textNode = spot.textNode;
+	// Fast path: our text node still solely occupies the range — mutate its data.
+	if (textNode !== null && textNode.parentNode !== null &&
+		textNode.previousSibling === spot.startComment && textNode.nextSibling === spot.endComment) {
+		if (textNode.data !== str) {
+			textNode.data = str;
+		}
+		return;
+	}
+	// Range held other content (or first patch) — clear it, drop in a fresh node.
+	clearRange(spot.startComment, spot.endComment);
+	const fresh = document.createTextNode(str);
+	spot.textNode = fresh;
+	spot.startComment.parentNode.insertBefore(fresh, spot.endComment);
+}
+function patchHtmlAnchored(spot, value) {
+	clearRange(spot.startComment, spot.endComment);
+	spot.textNode = null;
+	const str = String(value ?? '');
+	if (str === '') {
+		return;
+	}
+	// Parse via an INERT <template> — script-inert, matching the wrapper path's
+	// `el.innerHTML` semantics. NOT `Range.createContextualFragment`, which is an
+	// XSS sink that EXECUTES embedded <script>. Then splice the parsed nodes into
+	// the comment-bounded range. (Also drops the per-patch Range allocation.)
+	const parsed = document.createElement('template');
+	parsed.innerHTML = str;
+	spot.startComment.parentNode.insertBefore(parsed.content, spot.endComment);
+}
+function patchComponentAnchored(spot, value) {
+	const node = ComponentBinding.is(value) ? value.value : value;
+	if (spot.startComment.nextSibling === node &&
+		(node === null || node.nextSibling === spot.endComment)) {
+		return;
+	}
+	clearRange(spot.startComment, spot.endComment);
+	spot.textNode = null;
+	if (node) {
+		spot.startComment.parentNode.insertBefore(node, spot.endComment);
+	}
+}
+function patchListAnchored(spot, value) {
+	// If the range still holds leftover text/html from a prior kind, drop it
+	// before the keyed build (the wrapper path relied on `el.textContent=''`).
+	if (!spot.keyMap && spot.startComment.nextSibling !== spot.endComment) {
+		clearRange(spot.startComment, spot.endComment);
+	}
+	spot.textNode = null;
+	patchList(spot, value);
+}
+const CONTENT_PATCHERS_ANCHORED = {
+	[CONTENT_KIND.EMPTY]: patchTextAnchored,
+	[CONTENT_KIND.TEXT]: patchTextAnchored,
+	[CONTENT_KIND.HTML]: patchHtmlAnchored,
+	[CONTENT_KIND.COMPONENT]: patchComponentAnchored,
+	[CONTENT_KIND.LIST]: patchListAnchored,
 };
 // A spot's contents-wrapper stays hit-testable only when it holds real
 // elements (a list, a component, or markup with tags). Pure text and
@@ -873,22 +1304,30 @@ function spotKeepsInteractive(kind, value) {
 	return false;
 }
 // Resolve and cache the patcher for a text-position spot. `spot.declaredKind`
-// (set from a typed bind or `static types`) short-circuits classification.
+// (set from a typed bind or `static properties`) short-circuits classification.
 function bindSpotKind(spot, value) {
-	const declared = spot.declaredKind;
-	const kind = declared ?? classifyContentKind(value);
+	const kind = spot.declaredKind ?? classifyContentKind(value);
 	spot.contentKind = kind;
-	// Auto-classified text OR empty stays self-correcting: a spot that is
-	// empty (or plain text) now may later receive markup, and must be free to
-	// upgrade itself to the HTML patcher. Only a DECLARED kind trusts itself.
-	if ((kind === CONTENT_KIND.TEXT || kind === CONTENT_KIND.EMPTY) && !declared) {
-		spot.patch = patchTextKind;
-	} else {
-		spot.patch = CONTENT_PATCHERS[kind];
+	// No auto-detection: each kind maps straight to its patcher. A string is
+	// HTML (innerHTML), a number/bigint is TEXT (textContent), and `^text` /
+	// `static properties` `kind` override via `spot.declaredKind` above.
+	spot.patch = (spot.anchored ? CONTENT_PATCHERS_ANCHORED : CONTENT_PATCHERS)[kind];
+	if (!spot.elided && !spot.anchored) {
+		// Wrapper <span> only: a folded marker (elided) or a comment range
+		// (anchored) lives on/around a real element whose pointer behavior
+		// belongs to the app — never force it (keeps text selectable / copyable,
+		// fixes the unclickable `<button>${x}</button>`).
+		spot.el.style.pointerEvents = spotKeepsInteractive(kind, value) ? '' : 'none';
 	}
-	spot.el.style.pointerEvents = spotKeepsInteractive(kind, value) ? '' : 'none';
 }
-function patchSpot(spot, value) {
+// Module-scope error reporter — replaces the per-fire `.catch((error) => …)`
+// arrow. The `.then` callback still allocates a closure per fire (it MUST
+// capture `spot` + the per-fire `token` to reject stale resolutions, and
+// `.then` callbacks have no `this` binding). One closure saved out of two.
+function reportAsyncSpotError(error) {
+	console.error('[template] async spot error:', error);
+}
+function patchSpotBody(spot, value) {
 	if (value instanceof Promise) {
 		const token = (spot.patchToken ?? 0) + 1;
 		spot.patchToken = token;
@@ -897,9 +1336,7 @@ function patchSpot(spot, value) {
 				return;
 			}
 			patchSpot(spot, v);
-		}).catch((error) => {
-			console.error('[template] async spot error:', error);
-		});
+		}, reportAsyncSpotError);
 		return;
 	}
 	if (spot.type === SPOT_TYPE.TEXT) {
@@ -908,8 +1345,29 @@ function patchSpot(spot, value) {
 			spot.keyMap = null;
 			spot.prevItemMap = null;
 			spot.patch = null;
+			if (spot.anchored) {
+				// No follow-up parent-wipe to detach the old rows — clear the range.
+				clearRange(spot.startComment, spot.endComment);
+				spot.textNode = null;
+			}
 		}
 		if (!spot.patch) {
+			// Undeclared + still empty (null/undefined/''): clear, but DON'T lock
+			// a patcher yet — the kind (string→HTML vs number→text) isn't known
+			// until a real value arrives, so defer classification to the next
+			// patch. Without this a spot whose state inits to '' would lock to
+			// textContent and then render later HTML strings as inert text.
+			if (!spot.declaredKind && (value === null || value === undefined || value === '')) {
+				if (spot.anchored) {
+					if (spot.startComment.nextSibling !== spot.endComment) {
+						clearRange(spot.startComment, spot.endComment);
+					}
+					spot.textNode = null;
+				} else if (spot.el.textContent !== '') {
+					spot.el.textContent = '';
+				}
+				return;
+			}
 			bindSpotKind(spot, value);
 		}
 		spot.patch(spot, value);
@@ -973,6 +1431,12 @@ function patchSpot(spot, value) {
 		spot.el.setAttribute(spot.attr, str);
 	}
 }
+function patchSpot(spot, value) {
+	const perfMark = Perf.mark('patch');
+	const result = patchSpotBody(spot, value);
+	Perf.measure('patch', perfMark);
+	return result;
+}
 const EVENT_SPOTS = new WeakMap();
 function dispatchEventSpotListener(domEvent) {
 	const map = EVENT_SPOTS.get(this);
@@ -997,11 +1461,13 @@ class Spot {
 	constructor() {
 		this.unsubs = [];
 		this.depMap = null;
-		this.pendingTask = null;
 		this.pendingPaths = null;
 	}
-	/** Bus handler. List spots accumulate changed paths so a multi-path flush
-	 *  can decide between per-item assignState (partial) and full re-diff. */
+	/** Bus handler. Marks the spot dirty for the single per-microtask drain
+	 *  (drainSpots at the tail of masterFlush) — Set membership is the dedup, so
+	 *  N deps firing for one spot in a flush still drain it once. List spots
+	 *  accumulate changed paths so the drain can decide between per-item
+	 *  assignState (partial) and full re-diff. */
 	handle(_nextValue, _prevOrGlobal, changedPath) {
 		if (this.kind === SPOT_KIND.LIST) {
 			if (!this.pendingPaths) {
@@ -1009,17 +1475,11 @@ class Spot {
 			}
 			this.pendingPaths.push(changedPath);
 		}
-		if (this.pendingTask) {
-			return this.pendingTask;
-		}
-		// Scheduler dedups by target identity (the spot). One prototype-method
-		// reference + per-spot target = zero `.bind` and no per-flush
-		// collisions across spots.
-		this.pendingTask = schedule(Spot.prototype.runTask, this);
-		return this.pendingTask;
+		markSpotDirty(this);
 	}
-	runTask() {
-		this.pendingTask = null;
+	/** Drain hook — runs once per microtask in drainSpots. Default re-evaluates
+	 *  via refresh(); BindingSpot overrides to apply its captured value. */
+	drain() {
 		return this.refresh();
 	}
 	/** Virtual. Subclasses with reactive deps override. */
@@ -1035,7 +1495,6 @@ class Spot {
 		if (this.unsubs && this.unsubs.length) {
 			this.unsubs = clearSubscriptions(this.unsubs);
 		}
-		this.pendingTask = null;
 		this.pendingPaths = null;
 	}
 }
@@ -1057,6 +1516,26 @@ class BindingSpot extends Spot {
 		this.declaredKind = declaredKind;
 		this.contentKind = null;
 		this.patch = null;
+		this.pendingValue = undefined;
+		// true when the marker is folded onto a real parent element (no wrapper);
+		// `bindSpotKind` then leaves pointer-events/display untouched.
+		this.elided = false;
+		// anchored partial: comment-bounded range in a parent shared with statics.
+		this.anchored = false;
+		this.startComment = null;
+		this.endComment = null;
+		this.textNode = null;
+	}
+	/** A BindingSpot subscribes to EXACTLY `bindingKey`, so the value the bus
+	 *  hands us is provably identical to re-reading the path — capture it and
+	 *  skip the redundant getValueAtPath walk at drain time. Measured 1.28x
+	 *  faster than the re-read + task-dispatch path (see _batcherBench). */
+	handle(nextValue) {
+		this.pendingValue = nextValue;
+		markSpotDirty(this);
+	}
+	drain() {
+		patchSpot(this, this.pendingValue);
 	}
 	refresh() {
 		patchSpot(this, resolveBindingValue(this.component, this.bindingKey));
@@ -1082,12 +1561,16 @@ class ListSpot extends Spot {
 		this.liveList = null;
 		this.prevItemMap = null;
 		this.patch = null;
+		// anchored partial list: patchList targets (startComment.parentNode, endComment).
+		this.anchored = false;
+		this.startComment = null;
+		this.endComment = null;
+		this.textNode = null;
 	}
 	/** Drains `pendingPaths` and replays the refresh once per accumulated path
 	 *  (since each path may take different branches between full re-diff and
 	 *  per-item assignState — see comment in refresh()). */
-	runTask() {
-		this.pendingTask = null;
+	drain() {
 		const paths = this.pendingPaths;
 		this.pendingPaths = null;
 		if (paths && paths.length > 1) {
@@ -1165,6 +1648,11 @@ class ComputedSpot extends Spot {
 		this.declaredKind = declaredKind;
 		this.contentKind = null;
 		this.patch = null;
+		this.elided = false;
+		this.anchored = false;
+		this.startComment = null;
+		this.endComment = null;
+		this.textNode = null;
 	}
 	refresh() {
 		const {
@@ -1293,12 +1781,16 @@ function installBindingSpot(plan, el, expr, component) {
 		syncSpotSubscriptions(listSpot, new Set([bindingKey]));
 		return listSpot;
 	}
-	const typeIndex = component.typeIndex;
-	const declaredKind = expr.kind ?? typeIndex?.kinds.get(bindingKey) ?? null;
+	const propertyIndex = component.propertyIndex;
+	// Precedence: a `^text`/`^html` sigil on the spot (explicit at the call site)
+	// beats a typed bind's own kind, which beats the inferred `static properties`
+	// kind for the path.
+	const declaredKind = plan.declaredKind ?? expr.kind ?? propertyIndex?.kinds.get(bindingKey) ?? null;
 	const spot = new BindingSpot(el, plan.slotIndex, plan.type, plan.attr, expr, component, bindingKey, declaredKind);
-	// A path declared `react: false` in `static types` is a static one-shot —
+	spot.elided = plan.elided === true;
+	// A path declared `react: false` in `static properties` is a static one-shot —
 	// patch once now, never subscribe.
-	if (typeIndex?.hasNonReactive && typeIndex.nonReactivePaths.has(bindingKey)) {
+	if (propertyIndex?.hasNonReactive && propertyIndex.nonReactivePaths.has(bindingKey)) {
 		spot.kind = null;
 		spot.refresh();
 		return spot;
@@ -1308,11 +1800,12 @@ function installBindingSpot(plan, el, expr, component) {
 	return spot;
 }
 function installComputedSpot(plan, el, expr, component) {
-	// A typed bind given a function (`this.bind.text(() => …)`) tags the
-	// function with its declared content kind; a plain `${() => …}` leaves it
-	// undefined → auto-classified at patch time.
-	const declaredKind = expr.contentKind ?? null;
+	// A `^text`/`^html` sigil on the spot wins; else a typed bind given a
+	// function (`this.bind.text(() => …)`) tags it with a content kind; a plain
+	// `${() => …}` leaves it undefined → auto-classified at patch time.
+	const declaredKind = plan.declaredKind ?? expr.contentKind ?? null;
 	const spot = new ComputedSpot(el, plan.slotIndex, plan.type, plan.attr, expr, component, declaredKind);
+	spot.elided = plan.elided === true;
 	spot.refresh();
 	return spot;
 }
@@ -1345,14 +1838,23 @@ function installEventSpot(plan, el, eventName, expr, component) {
  * the base behavior (no-op for empty unsubs/depMap).
  */
 class StaticSpot extends Spot {
-	constructor(el, slotIndex, type, attr, expr) {
+	constructor(el, slotIndex, type, attr, expr, declaredKind) {
 		super();
 		this.type = type;
 		this.attr = attr;
 		this.el = el;
 		this.slotIndex = slotIndex;
 		this.expr = expr;
+		// Set only by a `^text`/`^html` sigil on a bare-read text spot — read by
+		// `bindSpotKind` to skip content classification. null = auto-classify.
+		this.declaredKind = declaredKind ?? null;
+		this.contentKind = null;
 		this.patch = null;
+		this.elided = false;
+		this.anchored = false;
+		this.startComment = null;
+		this.endComment = null;
+		this.textNode = null;
 	}
 }
 function domAttrForElement(el) {
@@ -1513,14 +2015,14 @@ function isAllDigitsFrom(value, from) {
 	}
 	return true;
 }
-function isMarkerAttr(name, value) {
+function isMarkerAttr(attrName, value) {
 	if (value === '') {
-		return name.startsWith('data-');
+		return attrName.startsWith('data-');
 	}
 	if (value.charCodeAt(0) === 101 && value.startsWith('expr')) {
 		return isAllDigitsFrom(value, 4);
 	}
-	if (name === 'data-expr') {
+	if (attrName === 'data-expr') {
 		return isAllDigitsFrom(value, 0);
 	}
 	return false;
@@ -1546,6 +2048,24 @@ function buildMarkerMap(fragment) {
 			});
 		}
 	});
+	// Second pass: anchored text-spot comment markers (`uwc:N` / `uwc/N`).
+	// querySelectorAll only sees elements, so comments need their own walk. Keyed
+	// by raw comment data (contains no `|`, so never collides with attr keys).
+	const commentWalker = document.createTreeWalker(fragment, NodeFilter.SHOW_COMMENT);
+	let commentNode = commentWalker.nextNode();
+	while (commentNode) {
+		const data = commentNode.data;
+		if ((data.startsWith(ANCHOR_START_PREFIX) || data.startsWith(ANCHOR_END_PREFIX)) && isAllDigitsFrom(data, ANCHOR_START_PREFIX.length)) {
+			const path = getNodePath(commentNode, fragment);
+			if (path) {
+				map.set(data, {
+					el: commentNode,
+					path,
+				});
+			}
+		}
+		commentNode = commentWalker.nextNode();
+	}
 	return map;
 }
 function lookupMarker(map, attrName, attrValue) {
@@ -1608,16 +2128,37 @@ function buildSpotPlan(map, entry) {
 		};
 	}
 	if (entry.type === SPOT_TYPE.TEXT) {
+		if (entry.anchored) {
+			const startLookup = map.get(`${ANCHOR_START_PREFIX}${entry.i}`);
+			const endLookup = map.get(`${ANCHOR_END_PREFIX}${entry.i}`);
+			if (!startLookup || !endLookup) {
+				return null;
+			}
+			return {
+				type: SPOT_TYPE.TEXT,
+				slotIndex: entry.i,
+				anchored: true,
+				startPath: startLookup.path,
+				endPath: endLookup.path,
+				declaredKind: entry.declaredKind ?? null,
+			};
+		}
 		const lookup = lookupMarker(map, SPOT, String(entry.i));
 		if (!lookup) {
 			return null;
 		}
 		lookup.el.removeAttribute(SPOT);
-		lookup.el.style.display = 'contents';
+		if (!entry.elided) {
+			// Wrapper <span> only — a folded marker sits on a real element that
+			// already lays itself out; `display:contents` would wrongly collapse it.
+			lookup.el.style.display = 'contents';
+		}
 		return {
 			type: SPOT_TYPE.TEXT,
 			slotIndex: entry.i,
 			path: lookup.path,
+			declaredKind: entry.declaredKind ?? null,
+			elided: entry.elided === true,
 		};
 	}
 	if (entry.type === SPOT_TYPE.BARE_ATTR) {
@@ -1638,7 +2179,17 @@ function buildSpotPlan(map, entry) {
 		if (!lookup) {
 			return null;
 		}
-		lookup.el.removeAttribute(entry.attr);
+		// Subevent attrs (tooltip, hotkey, …) must stay on the element so
+		// the later `extractSubeventPlans` pass can capture them and emit
+		// the install plan that runs the behavior's install hook. Removing
+		// here was the bug: `tooltip=${expr}` produced an ATTR spot but no
+		// subeventPlan, so the behavior never installed. extractSubeventPlans
+		// removes the attribute itself after recording the plan; for non-
+		// subevent attrs we still strip it here so the marker text never
+		// leaks into the rendered DOM.
+		if (!SUBEVENT_ATTRS.has(entry.attr)) {
+			lookup.el.removeAttribute(entry.attr);
+		}
 		return {
 			type: SPOT_TYPE.ATTR,
 			slotIndex: entry.i,
@@ -1648,7 +2199,13 @@ function buildSpotPlan(map, entry) {
 	}
 	if (entry.type === SPOT_TYPE.BOOL_ATTR || entry.type === SPOT_TYPE.PROP) {
 		const sigilChar = entry.type === SPOT_TYPE.BOOL_ATTR ? '?' : '.';
-		const domAttr = sigilChar + entry.attr;
+		// The HTML parser lowercases attribute names, so a camelCase binding
+		// (`.textContent`, `.importStyles`, `?ariaHidden`) lands in the DOM as a
+		// lowercase marker. Look up / remove by the lowercased name, but KEEP the
+		// original-case `entry.attr` in the plan — `el[attr]` must hit the real
+		// case-sensitive DOM/JS property. Without this, camelCase `.prop=` /
+		// `?attr=` bindings silently produced no spot.
+		const domAttr = `${sigilChar}${entry.attr}`.toLowerCase();
 		const lookup = lookupMarker(map, domAttr, `expr${entry.i}`);
 		if (!lookup) {
 			return null;
@@ -1730,21 +2287,33 @@ function extractDataBindPlans(fragment) {
 	});
 	return plans;
 }
+// A parser-emitted spot marker — `expr0`, `expr1`, … — encodes "this attr
+// is interpolated; the real value comes from an ATTR spot patch." Used to
+// distinguish static subevent values from placeholder markers in
+// extractSubeventPlans so the install path doesn't stomp the patch.
+const SPOT_MARKER_RE = /^expr\d+$/;
 function extractSubeventPlans(fragment) {
 	const plans = [];
 	SUBEVENT_ATTRS.forEach((attrName) => {
 		const elements = fragment.querySelectorAll(`[${attrName}]`);
 		eachNodeList(elements, (el) => {
-			const value = el.getAttribute(attrName);
+			const rawValue = el.getAttribute(attrName);
 			el.removeAttribute(attrName);
 			const path = getNodePath(el, fragment);
-			if (path) {
-				plans.push({
-					path,
-					attrName,
-					value,
-				});
+			if (!path) {
+				return;
 			}
+			// Interpolated subevent attr (`tooltip=${expr}`): the captured
+			// value is a marker like "expr3" — the corresponding ATTR spot
+			// will patch the real value into `data-<attrName>` at first
+			// render. Skip the install-time dataset write by passing
+			// undefined so the patch wins.
+			const isMarker = SPOT_MARKER_RE.test(rawValue);
+			plans.push({
+				path,
+				attrName,
+				value: isMarker ? undefined : rawValue,
+			});
 		});
 	});
 	return plans;
@@ -1761,9 +2330,7 @@ function extractRefPlans(fragment) {
 			const refName = attrName.slice(1);
 			el.removeAttribute(attrName);
 			if (!isValidRefName(refName)) {
-				throw new SyntaxError(
-					`Invalid #ref name "${refName}". Use lowercase letters, digits, and underscore only ("_" not "-" for word separators). Example: <input #email_field>.`
-				);
+				throw new SyntaxError(`Invalid #ref name "${refName}". Use lowercase letters, digits, and underscore only ("_" not "-" for word separators). Example: <input #email_field>.`);
 			}
 			const path = getNodePath(el, fragment);
 			if (path) {
@@ -1916,8 +2483,79 @@ function inferTwoWayBindingKey(component, expr, type, el, attr) {
 	const sourceValue = resolveTwoWaySourceValue(component, inferredKey);
 	return sourceValue === evaluated.value ? inferredKey : null;
 }
-function installSpotFromPlan(plan, fragment, exprs, component) {
-	const el = walkPath(fragment, plan.path);
+function markAnchored(spot, startComment, endComment) {
+	spot.anchored = true;
+	spot.startComment = startComment;
+	spot.endComment = endComment;
+	spot.textNode = null;
+}
+// Install path for a PARTIAL (anchored) text spot. Mirrors the text-position
+// branch of installSpotFromPlan (list-binding / binding / function / static) but
+// resolves the two comment markers and flags the spot anchored BEFORE its first
+// patch, so every refresh dispatches through CONTENT_PATCHERS_ANCHORED and never
+// touches the parent's whole content. Kept separate so the hot tier-1 / wrapper
+// install stays byte-identical.
+function installAnchoredTextSpot(plan, resolved, exprs, component) {
+	const startComment = resolved.startComment;
+	const endComment = resolved.endComment;
+	if (!startComment || !endComment) {
+		return null;
+	}
+	const parentEl = startComment.parentNode;
+	const expr = exprs[plan.slotIndex];
+	if (ListBinding.isListBinding(expr)) {
+		const listSpot = new ListSpot(parentEl, plan.slotIndex, SPOT_TYPE.TEXT, expr, component, expr.key, expr.renderFn, expr.keyFn);
+		markAnchored(listSpot, startComment, endComment);
+		listSpot.refresh(null);
+		syncSpotSubscriptions(listSpot, new Set([expr.key]));
+		return listSpot;
+	}
+	if (isBindingType(expr)) {
+		const bindingKey = expr.key;
+		const propertyIndex = component?.propertyIndex;
+		const declaredKind = plan.declaredKind ?? expr.kind ?? propertyIndex?.kinds.get(bindingKey) ?? null;
+		const spot = new BindingSpot(parentEl, plan.slotIndex, SPOT_TYPE.TEXT, undefined, expr, component, bindingKey, declaredKind);
+		markAnchored(spot, startComment, endComment);
+		if (propertyIndex?.hasNonReactive && propertyIndex.nonReactivePaths.has(bindingKey)) {
+			spot.kind = null;
+			spot.refresh();
+			return spot;
+		}
+		spot.refresh();
+		syncSpotSubscriptions(spot, new Set([bindingKey]));
+		return spot;
+	}
+	if (isFunction(expr)) {
+		const declaredKind = plan.declaredKind ?? expr.contentKind ?? null;
+		const spot = new ComputedSpot(parentEl, plan.slotIndex, SPOT_TYPE.TEXT, undefined, expr, component, declaredKind);
+		markAnchored(spot, startComment, endComment);
+		spot.refresh();
+		return spot;
+	}
+	const staticSpot = new StaticSpot(parentEl, plan.slotIndex, SPOT_TYPE.TEXT, undefined, expr, plan.declaredKind);
+	markAnchored(staticSpot, startComment, endComment);
+	patchSpot(staticSpot, expr);
+	return staticSpot;
+}
+// Resolve a plan's DOM node(s) on the (still-pristine) clone. Anchored plans
+// resolve BOTH comment markers; every other plan resolves its single element.
+// Callers MUST resolve every plan before installing any of them — an anchored
+// install inserts content between its comments, shifting later markers' child
+// indices, so paths are only valid before the first insertion.
+function resolveSpotNode(plan, fragment) {
+	if (plan.anchored) {
+		return {
+			startComment: walkPath(fragment, plan.startPath),
+			endComment: walkPath(fragment, plan.endPath),
+		};
+	}
+	return walkPath(fragment, plan.path);
+}
+function installSpotFromPlan(plan, resolved, exprs, component) {
+	if (plan.anchored) {
+		return installAnchoredTextSpot(plan, resolved, exprs, component);
+	}
+	const el = resolved;
 	if (!el) {
 		return null;
 	}
@@ -1993,14 +2631,19 @@ function installSpotFromPlan(plan, fragment, exprs, component) {
 	}
 	// Static literal value — patch once now; updateTemplateSpots will repatch
 	// on re-render if the expr changes.
-	const staticSpot = new StaticSpot(el, plan.slotIndex, resolvedType, resolvedAttr, expr);
+	const staticSpot = new StaticSpot(el, plan.slotIndex, resolvedType, resolvedAttr, expr, plan.declaredKind);
+	staticSpot.elided = plan.elided === true;
 	if (resolvedType === SPOT_TYPE.TEXT) {
 		if (ListBinding.isListBinding(expr)) {
 			staticSpot.patch = patchListKind;
-			el.style.pointerEvents = '';
+			if (!staticSpot.elided) {
+				el.style.pointerEvents = '';
+			}
 		} else if (ComponentBinding.is(expr)) {
 			staticSpot.patch = patchComponentKind;
-			el.style.pointerEvents = '';
+			if (!staticSpot.elided) {
+				el.style.pointerEvents = '';
+			}
 		}
 	}
 	patchSpot(staticSpot, expr);
@@ -2057,35 +2700,65 @@ function instantiateRecipe(recipe, exprs, component) {
 			boundKeys: EMPTY_KEYS,
 		};
 	}
+	const instantiateMark = Perf.mark('instantiate');
 	const fragment = recipe.fragment.cloneNode(true);
 	const spots = [];
 	const unsubs = [];
-	eachArray(recipe.spotPlans, (plan) => {
-		const spot = installSpotFromPlan(plan, fragment, exprs, component);
+	const spotPlans = recipe.spotPlans;
+	const dataBindPlans = recipe.dataBindPlans;
+	const subeventPlans = recipe.subeventPlans;
+	const refPlans = recipe.refPlans;
+	// PHASE 1 — resolve every plan's node(s) on the PRISTINE clone, before any
+	// install runs. An anchored spot install inserts content between its comment
+	// markers, shifting the child indices of every later marker; capturing all
+	// references up front keeps paths valid. Phase 2 only moves captured refs.
+	const spotInstallMark = Perf.mark('spotInstall');
+	const spotResolved = new Array(spotPlans.length);
+	for (let spotIndex = 0; spotIndex < spotPlans.length; spotIndex++) {
+		spotResolved[spotIndex] = resolveSpotNode(spotPlans[spotIndex], fragment);
+	}
+	const dataBindEls = new Array(dataBindPlans.length);
+	for (let bindIndex = 0; bindIndex < dataBindPlans.length; bindIndex++) {
+		dataBindEls[bindIndex] = walkPath(fragment, dataBindPlans[bindIndex].path);
+	}
+	const subeventEls = subeventPlans ? new Array(subeventPlans.length) : null;
+	if (subeventPlans) {
+		for (let subeventIndex = 0; subeventIndex < subeventPlans.length; subeventIndex++) {
+			subeventEls[subeventIndex] = walkPath(fragment, subeventPlans[subeventIndex].path);
+		}
+	}
+	const refEls = refPlans ? new Array(refPlans.length) : null;
+	if (refPlans) {
+		for (let refIndex = 0; refIndex < refPlans.length; refIndex++) {
+			refEls[refIndex] = walkPath(fragment, refPlans[refIndex].path);
+		}
+	}
+	// PHASE 2 — install. Anchored insertions are now safe (every node captured).
+	for (let spotIndex = 0; spotIndex < spotPlans.length; spotIndex++) {
+		const spot = installSpotFromPlan(spotPlans[spotIndex], spotResolved[spotIndex], exprs, component);
 		if (spot) {
 			spots.push(spot);
 		}
-	});
-	eachArray(recipe.dataBindPlans, (plan) => {
-		const el = walkPath(fragment, plan.path);
+	}
+	Perf.measure('spotInstall', spotInstallMark);
+	for (let bindIndex = 0; bindIndex < dataBindPlans.length; bindIndex++) {
+		const el = dataBindEls[bindIndex];
 		if (!el) {
-			return;
+			continue;
 		}
-		installDataBind(el, plan.key, component, unsubs);
-	});
-	if (recipe.subeventPlans) {
-		eachArray(recipe.subeventPlans, (plan) => {
-			const el = walkPath(fragment, plan.path);
+		installDataBind(el, dataBindPlans[bindIndex].key, component, unsubs);
+	}
+	if (subeventPlans) {
+		for (let subeventIndex = 0; subeventIndex < subeventPlans.length; subeventIndex++) {
+			const el = subeventEls[subeventIndex];
 			if (!el) {
-				return;
+				continue;
 			}
-			// Reflect the static value into the data attribute so behaviors
-			// reading `el.dataset.<name>` see the initial value before any
-			// dynamic spot refresh fires. Dynamic updates flow through
-			// `applySubeventAttr` (further up).
-			if (plan.value != null && plan.value !== false && plan.value !== '') {
-				el.setAttribute(`data-${plan.attrName}`, plan.value === true ? '' : String(plan.value));
-			}
+			// Behavior install owns the initial value end-to-end — passed as the
+			// `value` arg directly. The tooltip behavior stores `value` in a
+			// WeakMap; legacy behaviors only need it at install time. Dynamic
+			// updates flow through `applySubeventAttr` → `behavior.applyValue`.
+			const plan = subeventPlans[subeventIndex];
 			const behavior = getBehavior(plan.attrName);
 			if (behavior?.install) {
 				const cleanup = behavior.install(el, plan.value, component);
@@ -2093,23 +2766,25 @@ function instantiateRecipe(recipe, exprs, component) {
 					unsubs.push(cleanup);
 				}
 			}
-		});
+		}
 	}
-	if (recipe.refPlans) {
-		eachArray(recipe.refPlans, (plan) => {
-			const el = walkPath(fragment, plan.path);
+	if (refPlans) {
+		for (let refIndex = 0; refIndex < refPlans.length; refIndex++) {
+			const el = refEls[refIndex];
 			if (!el) {
-				return;
+				continue;
 			}
-			unsubs.push(registerRef(component, plan.name, el));
-		});
+			unsubs.push(registerRef(component, refPlans[refIndex].name, el));
+		}
 	}
-	return {
+	const instance = {
 		fragment,
 		spots,
 		unsubs,
 		boundKeys: collectBoundKeys(spots, recipe.dataBindPlans),
 	};
+	Perf.measure('instantiate', instantiateMark);
+	return instance;
 }
 function updateSpot(spot, newExpr, component) {
 	if (spot.type === SPOT_TYPE.EVENT) {
@@ -2148,6 +2823,27 @@ function isStateProxyValue(value) {
 	// reference skip for the proxy case.
 	return value !== null && typeof value === 'object' && value[STATE_PATH] !== undefined;
 }
+// Shared between MULTI_ATTR and CLASS_LIST spot re-render paths. Walks the
+// spot's `parts` array, updates any expression slots whose value changed
+// against the latest `newExprs`, and returns whether any slot changed. Pure
+// indexed for-loop, no per-call closure — was previously two near-identical
+// `eachArray(spot.parts, (part) => {…})` blocks allocating an arrow per
+// multi/class spot per re-render.
+function syncSpotParts(parts, newExprs) {
+	let changed = false;
+	for (let i = 0; i < parts.length; i++) {
+		const part = parts[i];
+		if (part.exprIndex === undefined) {
+			continue;
+		}
+		const partVal = newExprs[part.exprIndex];
+		if (part.expr !== partVal) {
+			part.expr = partVal;
+			changed = true;
+		}
+	}
+	return changed;
+}
 function updateTemplateSpots(state, newExprs, component) {
 	const {
 		spots, prevExprs,
@@ -2155,35 +2851,13 @@ function updateTemplateSpots(state, newExprs, component) {
 	for (let i = 0; i < spots.length; i++) {
 		const spot = spots[i];
 		if (spot.type === SPOT_TYPE.MULTI_ATTR) {
-			let changed = false;
-			eachArray(spot.parts, (part) => {
-				if (part.exprIndex === undefined) {
-					return;
-				}
-				const partVal = newExprs[part.exprIndex];
-				if (part.expr !== partVal) {
-					part.expr = partVal;
-					changed = true;
-				}
-			});
-			if (changed) {
+			if (syncSpotParts(spot.parts, newExprs)) {
 				spot.refresh();
 			}
 			continue;
 		}
 		if (spot.type === SPOT_TYPE.CLASS_LIST) {
-			let changed = false;
-			eachArray(spot.parts, (part) => {
-				if (part.exprIndex === undefined) {
-					return;
-				}
-				const partVal = newExprs[part.exprIndex];
-				if (part.expr !== partVal) {
-					part.expr = partVal;
-					changed = true;
-				}
-			});
-			if (changed) {
+			if (syncSpotParts(spot.parts, newExprs)) {
 				spot.refresh();
 			}
 			continue;

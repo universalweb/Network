@@ -1,6 +1,5 @@
 import {
 	cachedProxy,
-	eachObject,
 	getValueAtPath,
 	hasOwn,
 	isArray,
@@ -71,7 +70,9 @@ class StoreProxyHandler {
 			return true;
 		}
 		const fullPath = joinPath(this.path, key);
-		Logger.perf('globalState', reportWastedStoreSet, obj, key, value, fullPath);
+		if (Logger.perfOn) {
+			Logger.perf('globalState', reportWastedStoreSet, obj, key, value, fullPath);
+		}
 		Reflect.set(obj, key, value);
 		this.store.bus.notify(fullPath);
 		return true;
@@ -123,10 +124,13 @@ export class Store {
 			return;
 		}
 		const proxy = this.proxy;
-		eachObject(updates, (key, value) => {
+		const keys = Object.keys(updates);
+		for (let i = 0; i < keys.length; i++) {
+			const key = keys[i];
+			const value = updates[key];
 			const current = getValueAtPath(proxy, key);
 			if (current === value) {
-				return;
+				continue;
 			}
 			/**
 			 * Drop structurally-equal writes here so we don't pay re-render
@@ -135,10 +139,10 @@ export class Store {
 			 * — callers who reach past `Store.set` opt out of the guard.
 			 */
 			if (plainEqual(current, value)) {
-				return;
+				continue;
 			}
 			setValueAtPath(proxy, key, value);
-		});
+		}
 	}
 	observe(key, handler) {
 		return this.bus.subscribe(key, handler);

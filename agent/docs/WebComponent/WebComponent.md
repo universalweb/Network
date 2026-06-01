@@ -58,7 +58,7 @@ export class MyThing extends WebComponent {
   static state = { count: 0, label: '' };  // reactive class-level defaults
   static attrs = {};                       // optional — HTML attribute ↔ state mirror
   static config = {};                      // optional — non-reactive ctor params
-  static types = {};                       // optional — per-path state schema (see below)
+  static properties = {};                  // optional — per-path state schema (see below)
 
   onConnect() {}            // entered DOM — subscriptions, one-time prep
   beforeRender() {}         // sync/async prep; return false to skip this render
@@ -258,16 +258,28 @@ Icons are a global component, not a base-class feature, but every component uses
 - `this.watchState(key, handler)` — run a handler on change.
 - `this.observe(keys, callback)` — react to state changes (effect) without re-rendering.
 
-### `static types` — per-path schema (optional)
+### `static properties` — per-path schema (optional)
 
 ```js
-static types = {
+static properties = {
   label:        { kind: 'text' },     // declares CONTENT_KIND, skips runtime classification
   'meta.cache': { react: false },     // non-reactive — writes notify nothing
 };
 ```
 
-Keys are **dot-paths matching the state accessor path exactly**. `kind` ∈ `CONTENT_KIND` (`text | html | component | list | empty`). `react: false` makes a path non-reactive. Chain-merged like `state`. Keep state reactive by default — declare types only where you need the strict patcher or a non-reactive path.
+Keys are **dot-paths matching the state accessor path exactly**. `kind` ∈ `CONTENT_KIND` (`text | html | component | list | empty`). `react: false` makes a path non-reactive. Chain-merged like `state`. Keep state reactive by default — declare entries only where you need the strict patcher or a non-reactive path.
+
+### Computed accessors — write them in `static state`
+
+```js
+static state = {
+  amount: 0,
+  get total() { return this.state.amount * 1.07; },
+  set total(value) { this.state.amount = value / 1.07; },
+};
+```
+
+Top-level `get` / `set` accessors on `static state` dispatch with `this === component` so they can read sibling state through `this.state.x` and call instance methods. Reads through `this.state.total` fire the getter; writes through `this.state.total = …` fire the setter and notify subscribers of the `total` path. A getter-only declaration silently rejects writes. Nested objects in `static state` cannot carry accessors (use a top-level key).
 
 ## Events
 

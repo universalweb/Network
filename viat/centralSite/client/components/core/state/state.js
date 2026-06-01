@@ -1,4 +1,5 @@
 import {
+	ComponentSubscriptionTracker,
 	PathSubscriptions,
 	TrackedBundle,
 } from './pathSubscriptions.js';
@@ -17,6 +18,7 @@ import {
 	queueAsyncError,
 } from '../utilities.js';
 import { Logger } from '../debug/logger.js';
+import { Perf } from '../debug/perf.js';
 export const STATE_PATH = Symbol('statePath');
 /**
  * Concrete bus for a single component's reactive state. Owns a reference to
@@ -56,15 +58,15 @@ export function ensureStateBus(component) {
 function notifyStateChange(component, changedPath) {
 	ensureStateBus(component).notify(changedPath);
 }
-// `static types` may declare a path `react: false` — a non-reactive path is
-// written straight through to STATE but fires no notification, so it never
+// `static properties` may declare a path `react: false` — a non-reactive path
+// is written straight through to STATE but fires no notification, so it never
 // schedules a render or a spot patch. Default (no entry) is reactive.
 function pathIsReactive(component, fullPath) {
-	const typeIndex = component.typeIndex;
-	if (!typeIndex || !typeIndex.hasNonReactive) {
+	const propertyIndex = component.propertyIndex;
+	if (!propertyIndex || !propertyIndex.hasNonReactive) {
 		return true;
 	}
-	return !typeIndex.nonReactivePaths.has(fullPath);
+	return !propertyIndex.nonReactivePaths.has(fullPath);
 }
 function throwCollectionMutate() {
 	throw new Error('Do not mutate Map/Set proxy properties directly. Use .set() or .add() instead.');
@@ -217,6 +219,15 @@ class StateProxyHandler {
 		if (isSymbol(key)) {
 			return Reflect.get(target, key);
 		}
+		// Top-level accessor dispatch — declared via `get foo()` in `static
+		// state`. Fires with `this === component` so the getter can read
+		// sibling state through this.state.x and call instance methods.
+		if (this.path === '') {
+			const propertyIndex = this.component.propertyIndex;
+			if (propertyIndex?.hasAccessors && propertyIndex.getters.has(key)) {
+				return propertyIndex.getters.get(key).call(this.component);
+			}
+		}
 		const propertyValue = Reflect.get(target, key);
 		const nestedPath = joinPath(this.path, key);
 		if (isPlainObject(propertyValue) || isArray(propertyValue)) {
@@ -231,11 +242,36 @@ class StateProxyHandler {
 		return propertyValue;
 	}
 	set(target, key, value) {
+		// Top-level accessor dispatch — declared via `set foo(v)` in `static
+		// state`. Fires with `this === component`. Notify the path so spots /
+		// renderDeps subscribed to this key re-evaluate (the new getter value
+		// is read on next access). A getter-only declaration (no setter)
+		// silently rejects writes — matches Reflect.set on a getter-only
+		// accessor descriptor.
+		if (this.path === '') {
+			const propertyIndex = this.component.propertyIndex;
+			if (propertyIndex?.hasAccessors) {
+				const setter = propertyIndex.setters.get(key);
+				if (setter) {
+					setter.call(this.component, value);
+					const accessorPath = String(key);
+					if (pathIsReactive(this.component, accessorPath)) {
+						notifyStateChange(this.component, accessorPath);
+					}
+					return true;
+				}
+				if (propertyIndex.getters.has(key)) {
+					return true;
+				}
+			}
+		}
 		if (target[key] === value) {
 			return true;
 		}
 		const fullPath = joinPath(this.path, key);
-		Logger.perf('state', reportWastedStateSet, target, key, value, fullPath, this.component);
+		if (Logger.perfOn) {
+			Logger.perf('state', reportWastedStateSet, target, key, value, fullPath, this.component);
+		}
 		Reflect.set(target, key, value);
 		if (pathIsReactive(this.component, fullPath)) {
 			notifyStateChange(this.component, fullPath);
@@ -290,9 +326,11 @@ export function replaceState(state = {}) {
 	// empty string), hence the explicit walk over `subs`.
 	// TODO: Consider a diff check instead of blind notify-all, but that has to be balanced against the cost of the diff itself and the fact that many updates are full replacements where every path changes.
 	if (this.stateBus) {
-		this.stateBus.subs.forEach((_handlers, subscribedPath) => {
-			this.stateBus.notify(subscribedPath);
-		});
+		const stateBus = this.stateBus;
+		const paths = [...stateBus.subs.keys()];
+		for (let i = 0; i < paths.length; i++) {
+			stateBus.notify(paths[i]);
+		}
 	}
 	return this.updateView();
 }
@@ -326,6 +364,25 @@ export function assignState(partial, options) {
 	return touched;
 }
 /**
+ * Sync state-key observer. Wraps the user handler with previousValue tracking
+ * so the bus's 2-arg `(value, changedPath)` contract delivers the 3-arg
+ * `(nextValue, previousValue, changedPath)` shape callers expect. Subscribed
+ * via bus `target` — one shared prototype method serves every observer; no
+ * per-subscription closure, stable hidden class for JIT monomorphization.
+ */
+class StateKeyObserver {
+	constructor(component, handler, previousValue) {
+		this.component = component;
+		this.handler = handler;
+		this.previousValue = previousValue;
+	}
+	handle(nextValue, changedPath) {
+		const result = this.handler.call(this.component, nextValue, this.previousValue, changedPath);
+		this.previousValue = nextValue;
+		return result;
+	}
+}
+/**
  * Subscribe one path to a handler that fires synchronously inside the state
  * write-trap. Internal helper for `observe` — returns the bare `Subscription`
  * instance so callers can wire it into their own tracker.
@@ -333,12 +390,9 @@ export function assignState(partial, options) {
 function observeStateKey(component, key, handler) {
 	const statePath = String(key ?? '');
 	const bus = ensureStateBus(component);
-	let previousValue = getValueAtPath(component.STATE, statePath);
-	return bus.subscribe(statePath, (nextValue, changedPath) => {
-		const result = handler.call(component, nextValue, previousValue, changedPath);
-		previousValue = nextValue;
-		return result;
-	});
+	const previousValue = getValueAtPath(component.STATE, statePath);
+	const observer = new StateKeyObserver(component, handler, previousValue);
+	return bus.subscribe(statePath, StateKeyObserver.prototype.handle, observer);
 }
 /**
  * Subscribe to component-state changes. Three call shapes:
@@ -354,7 +408,7 @@ function observeStateKey(component, key, handler) {
  * forms return a `TrackedBundle` whose `.unsubscribe()` clears the lot.
  */
 export function observe(keys, handler) {
-	const stateUnsubs = this.stateUnsubs;
+	const stateUnsubs = this.stateUnsubs ??= new ComponentSubscriptionTracker();
 	if (isPlainObject(keys) && handler === undefined) {
 		const objKeys = Object.keys(keys);
 		const subscriptions = [];
@@ -386,21 +440,31 @@ export function observe(keys, handler) {
  * this component observes the given key.
  */
 export function unobserve(key) {
-	this.stateUnsubs.removeByKey(String(key ?? ''));
+	this.stateUnsubs?.removeByKey(String(key ?? ''));
 }
 export async function updateView() {
-	const pendingTasks = [];
-	const stateChangeResult = this.onStateChange?.();
-	if (isPromiseLike(stateChangeResult)) {
-		pendingTasks.push(stateChangeResult);
+	const perfMark = Perf.mark('updateView');
+	try {
+		// Start both side-effects synchronously (preserving call order), then await
+		// only what is actually pending. The first-render hot path is a single
+		// task (renderView, no onStateChange) — awaiting it directly skips the
+		// per-child `Promise.all([…])` array + wrapper microtask the batch form
+		// otherwise pays N times during a list create.
+		const stateChangeResult = this.onStateChange?.();
+		const stateChangePending = isPromiseLike(stateChangeResult) ? stateChangeResult : null;
+		const renderPending = (this.isConnected && !this.templateBuilt) ? this.renderView() : null;
+		if (stateChangePending && renderPending) {
+			await Promise.all([
+				stateChangePending, renderPending,
+			]);
+		} else if (renderPending) {
+			await renderPending;
+		} else if (stateChangePending) {
+			await stateChangePending;
+		}
+	} finally {
+		Perf.measure('updateView', perfMark);
 	}
-	if (this.isConnected && !this.templateBuilt) {
-		pendingTasks.push(this.renderView());
-	}
-	if (!pendingTasks.length) {
-		return Promise.resolve();
-	}
-	await Promise.all(pendingTasks);
 }
 // Custom Elements lazy-property rescue. When a parent template assigns a
 // prop on a child element (e.g. `.state=${...}`, or any future `.foo=` whose

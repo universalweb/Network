@@ -320,10 +320,10 @@ export function hotKey(combo, callback, options) {
 	if (!entry) {
 		return binding.unregister;
 	}
-	component.hotkeyEntries.add(entry);
+	(component.hotkeyEntries ??= new Set()).add(entry);
 	return function releaseHotkey() {
 		binding.unregister();
-		component.hotkeyEntries.delete(entry);
+		component.hotkeyEntries?.delete(entry);
 	};
 }
 // Live components also bound to `combo`, excluding `this` — lets a component

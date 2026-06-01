@@ -64,9 +64,9 @@ function sanitize(value, depth) {
 function describeTools(component) {
 	const tools = getTools(component);
 	const out = [];
-	tools.forEach((def, name) => {
+	tools.forEach((def, toolName) => {
 		out.push({
-			name,
+			name: toolName,
 			description: def.description ?? '',
 			inputSchema: def.inputSchema ?? {
 				type: 'object',

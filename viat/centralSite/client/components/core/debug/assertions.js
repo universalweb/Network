@@ -10,7 +10,7 @@ export function assertComponentConfig(config) {
 	}
 	throw new TypeError('WebComponent constructor expects a config object.');
 }
-export function assertStaticStyleEntry(name, value, className) {
+export function assertStaticStyleEntry(styleName, value, className) {
 	if (value === undefined || value === null) {
 		return;
 	}
@@ -20,7 +20,7 @@ export function assertStaticStyleEntry(name, value, className) {
 	if (isString(value)) {
 		return;
 	}
-	throw new TypeError(`${className}.styles.${name} must be CSSStyleSheet | string | null | undefined.`);
+	throw new TypeError(`${className}.styles.${styleName} must be CSSStyleSheet | string | null | undefined.`);
 }
 export function assertStaticStyles(styles, className) {
 	if (styles === undefined) {

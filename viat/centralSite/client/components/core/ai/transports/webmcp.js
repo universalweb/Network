@@ -13,25 +13,25 @@ function detectMcp() {
 	if (navigator.mcp) {
 		return navigator.mcp;
 	}
-	if (typeof window !== 'undefined' && window.mcp) {
-		return window.mcp;
+	if (globalThis.mcp) {
+		return globalThis.mcp;
 	}
 	return null;
 }
 function buildToolKey(componentId, toolName) {
 	return `${componentId}:${toolName}`;
 }
-function buildToolDescriptor(componentId, name, def, executor) {
+function buildToolDescriptor(componentId, toolName, def, executor) {
 	return {
-		name: buildToolKey(componentId, name),
-		title: def.title ?? name,
+		name: buildToolKey(componentId, toolName),
+		title: def.title ?? toolName,
 		description: def.description ?? '',
 		inputSchema: def.inputSchema ?? {
 			type: 'object',
 		},
 		annotations: {
 			componentId,
-			toolName: name,
+			toolName,
 			mutating: def.mutating === true,
 			...def.annotations,
 		},
@@ -89,13 +89,13 @@ export class WebMCPTransport {
 	}
 	publishComponent(id, component) {
 		const tools = getTools(component);
-		tools.forEach((def, name) => {
-			const key = buildToolKey(id, name);
+		tools.forEach((def, toolName) => {
+			const key = buildToolKey(id, toolName);
 			if (this.registered.has(key)) {
 				return;
 			}
-			const descriptor = buildToolDescriptor(id, name, def, async (args) => {
-				return this.invokeRemoteTool(id, name, args);
+			const descriptor = buildToolDescriptor(id, toolName, def, async (args) => {
+				return this.invokeRemoteTool(id, toolName, args);
 			});
 			const unregister = this.mcp.registerTool ? this.mcp.registerTool(descriptor) : this.mcp.tools?.register?.(descriptor);
 			if (isFunction(unregister)) {
@@ -123,14 +123,14 @@ export class WebMCPTransport {
 			this.registered.delete(key);
 		});
 	}
-	async invokeRemoteTool(id, name, args) {
+	async invokeRemoteTool(id, toolName, args) {
 		const reply = await this.onRequest({
 			jsonrpc: '2.0',
-			id: `mcp:${id}:${name}:${Date.now().toString(36)}`,
+			id: `mcp:${id}:${toolName}:${Date.now().toString(36)}`,
 			method: 'ai.callTool',
 			params: {
 				id,
-				tool: name,
+				tool: toolName,
 				args,
 			},
 		});
@@ -161,16 +161,16 @@ export function getMcpToolDescriptors() {
 	const out = [];
 	eachComponent((component, id) => {
 		const tools = getTools(component);
-		tools.forEach((def, name) => {
+		tools.forEach((def, toolName) => {
 			out.push({
-				name: buildToolKey(id, name),
+				name: buildToolKey(id, toolName),
 				description: def.description ?? '',
 				inputSchema: def.inputSchema ?? {
 					type: 'object',
 				},
 				annotations: {
 					componentId: id,
-					toolName: name,
+					toolName,
 					mutating: def.mutating === true,
 				},
 			});

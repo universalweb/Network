@@ -6,8 +6,16 @@
 //   this.onEnv(name, handler, options?)                 — Tier 4: globalThis master
 //   this.clearDelegateListeners()                       — lifecycle sweep
 //
-// Public free function (services / non-component callers):
+// Public free functions (services / non-component callers):
 //   emitDelegate(name, data)                            — publish onto the bus
+//   installScopedDelegate(name, sel, handler, scope?, opts?) — owner-less Tier 3
+//                                                         install for services like
+//                                                         tooltip-service that wire
+//                                                         delegated listeners at
+//                                                         module load (before any
+//                                                         component exists).
+//                                                         Mirrored as the static
+//                                                         `WebComponent.delegateTo`.
 //
 // Architecture
 //
@@ -116,14 +124,38 @@ function getOrCreateScopeRecord(scope, eventName) {
 			if (!record.entries.size) {
 				return;
 			}
+			// Shadow-DOM-aware dispatch.
+			//
+			// `domEvent.target` is RETARGETED to the closest non-shadow
+			// ancestor when the event leaves a shadow tree — for events that
+			// crossed shadow boundaries it points at the shadow host, not the
+			// deep element the user actually interacted with. Calling
+			// `.closest(selector)` on the host walks UP into light DOM, so
+			// matches inside the shadow tree are missed entirely.
+			//
+			// `composedPath()` gives the full bottom-up path INCLUDING shadow
+			// descendants. `path[0]` is the real deep target; `.closest()`
+			// from there finds matches anywhere along the path.
+			//
+			// `scope.contains(matchedTarget)` also doesn't cross shadow
+			// boundaries — a button inside a shadow tree fails `contains`
+			// against `document` even though the event reached document.
+			// Fall back to "does the composedPath traverse scope?" which is
+			// always true for events that actually fired through `scope`.
+			const path = domEvent.composedPath();
+			const deepTarget = path.length ? path[0] : domEvent.target;
+			if (!deepTarget || typeof deepTarget.closest !== 'function') {
+				return;
+			}
+			const inScope = path.indexOf(scope) !== -1;
 			const snapshot = Array.from(record.entries);
 			for (let i = 0; i < snapshot.length; i++) {
 				const entry = snapshot[i];
-				const matchedTarget = domEvent.target.closest?.(entry.selector);
+				const matchedTarget = deepTarget.closest(entry.selector);
 				if (!matchedTarget) {
 					continue;
 				}
-				if (!scope.contains(matchedTarget)) {
+				if (!inScope && !scope.contains(matchedTarget)) {
 					continue;
 				}
 				entry.invoke(domEvent, matchedTarget);
@@ -175,7 +207,11 @@ export class DelegateEntry {
 	subscribed = false;
 	static create(owner, kind, eventName, handler, options) {
 		const entry = new DelegateEntry();
-		entry.ownerRef = new WeakRef(owner);
+		// `owner === null` → owner-less anonymous registration (static delegate,
+		// services). Skips WeakRef, skips owner.delegateEntries tracking, never
+		// auto-unsubscribes on owner GC. Lifetime = page lifetime unless the
+		// caller explicitly calls `entry.unsubscribe()`.
+		entry.ownerRef = owner ? new WeakRef(owner) : null;
 		entry.kind = kind;
 		entry.eventName = eventName;
 		entry.handler = handler;
@@ -186,11 +222,16 @@ export class DelegateEntry {
 	// Internal dispatch entry point — used by bus/env/scoped masters. Routes
 	// through `handler.call(owner, domEvent, matchTarget, eventName)` so the
 	// handler's `this` is the subscribing component without `.bind` or arrow.
+	// Owner-less path uses `matchTarget` (Tier 3) or the eventName scope as
+	// `this` so handlers still get a sensible binding.
 	invoke(domEvent, matchTarget) {
-		const owner = this.ownerRef.deref();
-		if (!owner) {
-			this.unsubscribe();
-			return;
+		let owner = null;
+		if (this.ownerRef) {
+			owner = this.ownerRef.deref();
+			if (!owner) {
+				this.unsubscribe();
+				return;
+			}
 		}
 		if (this.fireOnce) {
 			this.unsubscribe();
@@ -198,7 +239,8 @@ export class DelegateEntry {
 		if (!isFunction(this.handler)) {
 			return;
 		}
-		const result = this.handler.call(owner, domEvent, matchTarget || owner, this.eventName);
+		const thisArg = owner || matchTarget || null;
+		const result = this.handler.call(thisArg, domEvent, matchTarget || owner, this.eventName);
 		if (isPromiseLike(result)) {
 			result.catch((error) => {
 				queueDelegateError(error, domEvent, owner, this.eventName);
@@ -219,9 +261,13 @@ export class DelegateEntry {
 		if (this.signal?.aborted) {
 			return this;
 		}
-		const owner = this.ownerRef.deref();
-		if (!owner) {
-			return this;
+		// Owner-less entries skip the deref guard — they have no owner to GC.
+		let owner = null;
+		if (this.ownerRef) {
+			owner = this.ownerRef.deref();
+			if (!owner) {
+				return this;
+			}
 		}
 		if (this.kind === 'bus') {
 			let bucket = busRegistry.get(this.eventName);
@@ -243,7 +289,9 @@ export class DelegateEntry {
 			const record = getOrCreateScopeRecord(this.scope, this.eventName);
 			record.entries.add(this);
 		}
-		owner.delegateEntries.add(this);
+		if (owner) {
+			(owner.delegateEntries ??= new Set()).add(this);
+		}
 		this.subscribed = true;
 		if (this.signal) {
 			this.signal.addEventListener('abort', this, {
@@ -278,9 +326,11 @@ export class DelegateEntry {
 		} else if (this.kind === 'scoped') {
 			releaseScopeRecord(this.scope, this.eventName, this);
 		}
-		const owner = this.ownerRef.deref();
-		if (owner) {
-			owner.delegateEntries.delete(this);
+		if (this.ownerRef) {
+			const owner = this.ownerRef.deref();
+			if (owner) {
+				owner.delegateEntries?.delete(this);
+			}
 		}
 		this.detachSignal();
 		this.subscribed = false;
@@ -322,7 +372,7 @@ export function onEnv(eventName, handler, options) {
 	entry.subscribe();
 	return entry;
 }
-export function delegateTo(eventName, selector, handler, scope, options) {
+function installScopedDelegateInternal(owner, eventName, selector, handler, scope, options) {
 	if (!isString(eventName) || !eventName.trim()) {
 		throw new TypeError('eventName must be a non-empty string');
 	}
@@ -332,13 +382,29 @@ export function delegateTo(eventName, selector, handler, scope, options) {
 	if (!isFunction(handler)) {
 		throw new TypeError('handler must be a function');
 	}
-	const owner = this;
+	// Owner-less calls (services, static `WebComponent.delegateTo`) MUST pass
+	// an explicit scope — there is no `this` to fall back to. Component-instance
+	// calls default scope to the component itself.
 	const resolvedScope = scope || owner;
+	if (!resolvedScope) {
+		throw new TypeError('scope must be provided when no owner is bound');
+	}
 	const entry = DelegateEntry.create(owner, 'scoped', eventName.trim(), handler, options);
 	entry.selector = selector.trim();
 	entry.scope = resolvedScope;
 	entry.subscribe();
 	return entry;
+}
+// Instance method — `this` = component owner; auto-tracks via delegateEntries.
+export function delegateTo(eventName, selector, handler, scope, options) {
+	return installScopedDelegateInternal(this, eventName, selector, handler, scope, options);
+}
+// Owner-less free export — for services / static methods that need scoped
+// delegation before any component exists, or for listeners that should live
+// for the page's lifetime. No auto-track, no GC sweep. Caller holds the
+// returned `DelegateEntry` if they want explicit teardown.
+export function installScopedDelegate(eventName, selector, handler, scope, options) {
+	return installScopedDelegateInternal(null, eventName, selector, handler, scope, options);
 }
 // — Lifecycle sweep — mixed onto the prototype, called by `lifecycle.js` —
 export function clearDelegateListeners() {

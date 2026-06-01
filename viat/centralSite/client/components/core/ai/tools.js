@@ -4,21 +4,21 @@ import {
 	defineTagTool,
 } from './registry.js';
 import { isFunction, isPlainObject, isString } from '../utilities.js';
-export function defineTool(scope, name, def) {
-	if (!isString(name) || !name.trim()) {
-		throw new TypeError('tool name must be a non-empty string');
+export function defineTool(scope, toolName, def) {
+	if (!isString(toolName) || !toolName.trim()) {
+		throw new TypeError('toolName must be a non-empty string');
 	}
 	if (!isPlainObject(def) || !isFunction(def.handler)) {
 		throw new TypeError('tool definition requires a handler function');
 	}
 	if (scope === 'global' || scope === undefined || scope === null) {
-		return defineGlobalTool(name, def);
+		return defineGlobalTool(toolName, def);
 	}
 	if (isString(scope) && scope.startsWith('tag:')) {
-		return defineTagTool(scope.slice(4), name, def);
+		return defineTagTool(scope.slice(4), toolName, def);
 	}
 	if (scope instanceof Element) {
-		return defineInstanceTool(scope, name, def);
+		return defineInstanceTool(scope, toolName, def);
 	}
 	throw new TypeError('scope must be "global", "tag:<tagname>", or a component instance');
 }

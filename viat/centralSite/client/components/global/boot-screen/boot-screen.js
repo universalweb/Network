@@ -24,7 +24,7 @@ export class BootScreen extends WebComponent {
 	};
 	// `logo` is a caller-supplied SVG markup string — declare it html-kind so
 	// the spot injects it as markup, not escaped text.
-	static types = {
+	static properties = {
 		logo: {
 			kind: 'html',
 		},

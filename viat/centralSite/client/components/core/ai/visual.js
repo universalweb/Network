@@ -91,14 +91,14 @@ export function clearHighlights() {
 		highlightLayer.replaceChildren();
 	}
 }
-function renderTreeNode(name, node, prefix, isLast, isRoot, lines) {
+function renderTreeNode(nodeName, node, prefix, isLast, isRoot, lines) {
 	const branch = isRoot ? '' : (isLast ? '└── ' : '├── ');
 	const tagPart = node.tag ? ` <${node.tag}>` : '';
 	const phasePart = node.phase ? ` :${node.phase}` : '';
 	const visPart = node.visible === true ? ' 👁' : '';
 	const rolePart = node.role ? ` [${node.role}]` : '';
 	const labelPart = node.label ? ` "${node.label}"` : '';
-	lines.push(`${prefix}${branch}${name}${tagPart}${phasePart}${visPart}${rolePart}${labelPart}`);
+	lines.push(`${prefix}${branch}${nodeName}${tagPart}${phasePart}${visPart}${rolePart}${labelPart}`);
 	if (!node.children) {
 		return;
 	}

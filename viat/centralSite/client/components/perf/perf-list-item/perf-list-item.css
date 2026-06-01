@@ -1,0 +1,46 @@
+:host {
+	display: block;
+	font-family: 'JetBrains Mono', ui-monospace, monospace;
+	font-size: 11px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+/**
+ * One row of the shared perf table. Columns come from the inherited
+ * `--perf-row-cols` custom property (declared on perf-list-page) so this row
+ * and the list header column-align as a single table across the shadow
+ * boundary — same treatment as <ui-stat-table>'s single-grid layout. The
+ * fallback keeps the row sane standalone (e.g. the shootout arena). Spacing is
+ * per-cell padding (not grid `gap`) so the header's cell padding lines up
+ * exactly; a short label no longer blows a 1fr column open into a huge gutter.
+ */
+.row {
+	display: grid;
+	grid-template-columns: var(--perf-row-cols, 64px minmax(140px, 280px) 110px 110px 90px 1fr);
+	align-items: center;
+}
+.row > span {
+	padding: 6px 14px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.id {
+	color: rgba(255, 255, 255, 0.4);
+}
+.label {
+	color: rgba(255, 255, 255, 0.9);
+}
+.value {
+	color: #6366f1;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+.doubled {
+	color: rgba(165, 180, 252, 0.75);
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+.parity {
+	color: rgba(255, 255, 255, 0.45);
+	text-align: right;
+}

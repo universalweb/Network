@@ -117,64 +117,64 @@ export function listComponents() {
 	});
 	return out;
 }
-export function defineGlobalTool(name, def) {
-	globalTools.set(name, def);
+export function defineGlobalTool(toolName, def) {
+	globalTools.set(toolName, def);
 	return () => {
-		if (globalTools.get(name) === def) {
-			globalTools.delete(name);
+		if (globalTools.get(toolName) === def) {
+			globalTools.delete(toolName);
 		}
 	};
 }
-export function defineTagTool(tag, name, def) {
+export function defineTagTool(tag, toolName, def) {
 	const key = String(tag).toLowerCase();
 	let map = tagTools.get(key);
 	if (!map) {
 		map = new Map();
 		tagTools.set(key, map);
 	}
-	map.set(name, def);
+	map.set(toolName, def);
 	return () => {
 		const current = tagTools.get(key);
-		if (current?.get(name) === def) {
-			current.delete(name);
+		if (current?.get(toolName) === def) {
+			current.delete(toolName);
 		}
 	};
 }
-export function defineInstanceTool(component, name, def) {
+export function defineInstanceTool(component, toolName, def) {
 	let map = instanceTools.get(component);
 	if (!map) {
 		map = new Map();
 		instanceTools.set(component, map);
 	}
-	map.set(name, def);
+	map.set(toolName, def);
 	return () => {
 		const current = instanceTools.get(component);
-		if (current?.get(name) === def) {
-			current.delete(name);
+		if (current?.get(toolName) === def) {
+			current.delete(toolName);
 		}
 	};
 }
 export function getTools(component) {
 	const merged = new Map();
-	globalTools.forEach((def, name) => {
-		merged.set(name, def);
+	globalTools.forEach((def, toolName) => {
+		merged.set(toolName, def);
 	});
 	const staticTools = component?.constructor?.aiTools;
 	if (isPlainObject(staticTools)) {
-		Object.keys(staticTools).forEach((name) => {
-			merged.set(name, staticTools[name]);
+		Object.keys(staticTools).forEach((toolName) => {
+			merged.set(toolName, staticTools[toolName]);
 		});
 	}
 	const tag = component?.tagName?.toLowerCase();
 	if (tag && tagTools.has(tag)) {
-		tagTools.get(tag).forEach((def, name) => {
-			merged.set(name, def);
+		tagTools.get(tag).forEach((def, toolName) => {
+			merged.set(toolName, def);
 		});
 	}
 	const localMap = instanceTools.get(component);
 	if (localMap) {
-		localMap.forEach((def, name) => {
-			merged.set(name, def);
+		localMap.forEach((def, toolName) => {
+			merged.set(toolName, def);
 		});
 	}
 	return merged;
@@ -200,21 +200,21 @@ export function getStats() {
 export function listAllTools() {
 	const seen = new Set();
 	const out = [];
-	function push(name, def) {
-		if (seen.has(name)) {
+	function push(toolName, def) {
+		if (seen.has(toolName)) {
 			return;
 		}
-		seen.add(name);
+		seen.add(toolName);
 		out.push({
-			name,
+			name: toolName,
 			description: def.description ?? '',
 			inputSchema: def.inputSchema ?? { type: 'object' },
 			mutating: def.mutating === true,
 		});
 	}
-	globalTools.forEach((def, name) => push(name, def));
+	globalTools.forEach((def, toolName) => push(toolName, def));
 	components.forEach((component) => {
-		getTools(component).forEach((def, name) => push(name, def));
+		getTools(component).forEach((def, toolName) => push(toolName, def));
 	});
 	return out;
 }

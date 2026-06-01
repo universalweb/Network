@@ -225,6 +225,6 @@ export function createDragSnap(startElement, options = {}) {
 */
 export function dragSnap(startElement, options) {
 	const controller = createDragSnap(startElement, options);
-	this.gestureUnsubs.add(controller.destroy);
+	(this.gestureUnsubs ??= new Set()).add(controller.destroy);
 	return controller;
 }

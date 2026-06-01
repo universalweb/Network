@@ -54,7 +54,7 @@ export class EventEntry {
 			// addEventListener). Clear our bookkeeping; the abort registration
 			// was `{ once: true }` so it self-detaches.
 			if (component) {
-				component.eventEntries.delete(this);
+				component.eventEntries?.delete(this);
 			}
 			this.subscribed = false;
 			this.signal = null;
@@ -97,7 +97,7 @@ export class EventEntry {
 			return this;
 		}
 		element.addEventListener(this.eventName, this, this.options || undefined);
-		component.eventEntries.add(this);
+		(component.eventEntries ??= new Set()).add(this);
 		this.subscribed = true;
 		if (this.signal) {
 			// Entry doubles as the abort listener — same object, same
@@ -121,7 +121,7 @@ export class EventEntry {
 			element.removeEventListener(this.eventName, this, this.options || undefined);
 		}
 		if (component) {
-			component.eventEntries.delete(this);
+			component.eventEntries?.delete(this);
 		}
 		this.detachSignal();
 		this.subscribed = false;
