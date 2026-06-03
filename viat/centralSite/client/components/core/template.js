@@ -1,5 +1,13 @@
 /* eslint-disable no-restricted-syntax */
 import {
+	ANCHOR_END_PREFIX,
+	ANCHOR_START_PREFIX,
+	BIND_MARKER,
+	SPOT,
+	SPOT_KIND,
+	SPOT_TYPE,
+} from './template/constants.js';
+import {
 	Binding,
 	CONTENT_KIND,
 	addDep,
@@ -32,38 +40,6 @@ import { Perf } from './debug/perf.js';
 import { IS_PRODUCTION, Logger } from './debug/logger.js';
 import { globalRealm, globalState } from './state/globalState.js';
 import { markSpotDirty } from './lifecycle/scheduler.js';
-/**
- * Spot type vocabulary. Single source of truth for every `spot.type` /
- * `plan.type` / `entry.type` literal the template runtime reads or writes.
- * Use `SPOT_TYPE.X` everywhere — never a bare string literal. The parser
- * (extractor) emits these on entries, the planner copies them into plans,
- * and the Spot subclasses store them for the patch dispatch in `patchSpot` /
- * `updateSpot` / `updateTemplateSpots`.
- */
-export const SPOT_TYPE = Object.freeze({
-	TEXT: 'text',
-	BARE_ATTR: 'bare-attr',
-	ATTR: 'attr',
-	BOOL_ATTR: 'bool-attr',
-	PROP: 'prop',
-	MULTI_ATTR: 'multi-attr',
-	CLASS_LIST: 'class-list',
-	EVENT: 'event',
-	BIND: 'bind',
-});
-/**
- * Spot kind vocabulary. Identifies the Spot subclass family — set in each
- * subclass constructor, read by `Spot.handle` to gate list-only bookkeeping
- * (the only cross-class branch on kind today). Cleared to `null` by the
- * non-reactive one-shot path in `installBindingSpot`.
- */
-export const SPOT_KIND = Object.freeze({
-	BINDING: 'binding',
-	LIST: 'list',
-	COMPUTED: 'computed',
-	MULTI: 'multi',
-	CLASS: 'class',
-});
 const SUBEVENT_ATTRS = behaviorAttrNames();
 /**
  * Behavior-attribute attribute application. The template extractor strips the
@@ -262,18 +238,7 @@ function diffClassList(el, current, desired) {
 		}
 	});
 }
-const SPOT = 'data-expr';
-/*
- * Comment-anchor markers for a PARTIAL text spot (static siblings present, so it
- * can't fold onto the parent). The HTML parser turns `<!--uwc:N-->` into a real
- * comment node that survives as a parse-stable position anchor (Lit's trick) —
- * no element, no layout/style, text stays selectable. Two comments bound the
- * spot's range so insert/clear is O(1): `<!--uwc:N-->`(start) `<!--uwc/N-->`(end).
- */
-const ANCHOR_START_PREFIX = 'uwc:';
-const ANCHOR_END_PREFIX = 'uwc/';
 const TEMPLATE_CLEANUP = Symbol('templateCleanup');
-const BIND_MARKER = 'data-bind-expr';
 const BINDABLE_TAGS = new Set([
 	'INPUT', 'SELECT', 'TEXTAREA',
 ]);
