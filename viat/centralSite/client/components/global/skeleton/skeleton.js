@@ -31,7 +31,7 @@ export class UISkeleton extends WebComponent {
 			<div class=${classList('skeleton', () => {
 				return `variant-${this.state.variant}`;
 			})} aria-busy="true" aria-live="polite">
-				${() => {
+				^html${() => {
 					return (this.isMulti ? this.renderLines() : `<span class="skeleton-line" style="${this.singleStyle}"></span>`);
 				}}
 			</div>

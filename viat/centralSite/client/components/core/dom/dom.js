@@ -8,8 +8,13 @@ export function getComponent(tag) {
 export function getComponents(tag) {
 	return liveChildren(this, tag?.toLowerCase());
 }
-// Tag-narrowed: copy the live array so callers can't mutate the registry.
-// No-tag: walk every bucket and copy components into a fresh array.
+/**
+ * Snapshot child components into a fresh array (callers can't mutate the live
+ * registry). Tag-narrowed: copies the matching bucket. No-tag: walks every
+ * bucket and copies all components.
+ * @param {string} [tag] - Optional element tag to narrow by.
+ * @returns {WebComponent[]} A fresh array of matching child components.
+ */
 export function getComponentsArray(tag) {
 	if (tag) {
 		const list = liveChildren(this, tag.toLowerCase());
@@ -23,8 +28,14 @@ export function getComponentsArray(tag) {
 	});
 	return out;
 }
-// Tag-narrowed: linear scan of the matching bucket (small list).
-// No-tag: iterate every bucket without allocating a flat array; stop at first match.
+/**
+ * Find the first child component matching `predicate`. Tag-narrowed: linear
+ * scan of the matching bucket. No-tag: iterates every bucket without
+ * allocating a flat array, stopping at the first match.
+ * @param {string} tag - Element tag to narrow by (falsy = search all).
+ * @param {(component: WebComponent) => boolean} predicate - Match test.
+ * @returns {WebComponent|null} The first match, or null.
+ */
 export function findComponent(tag, predicate) {
 	if (!isFunction(predicate)) {
 		return null;

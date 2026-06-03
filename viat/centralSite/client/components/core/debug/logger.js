@@ -1,7 +1,9 @@
 export const IS_PRODUCTION = globalThis.CONFIG?.production === true;
-// Numeric severity ranks. A line prints only when its rank ≤ the active
-// threshold. `debug` is the highest (noisiest) rank — the per-render lifecycle
-// traces (patch pass, onRender, disconnect) all sit here.
+/*
+ * Numeric severity ranks. A line prints only when its rank ≤ the active
+ * threshold. `debug` is the highest (noisiest) rank — the per-render lifecycle
+ * traces (patch pass, onRender, disconnect) all sit here.
+ */
 const LEVEL_RANK = Object.freeze({
 	silent: 0,
 	error: 1,
@@ -9,18 +11,22 @@ const LEVEL_RANK = Object.freeze({
 	success: 3,
 	info: 3,
 	debug: 4,
-	// `perf` is the NOISIEST rank on purpose: its diagnostics (wasted-set
-	// detection) run an O(n) `plainEqual` deep-compare per state write. Sitting
-	// above `debug` means even full `debug` verbosity won't pay that compare —
-	// only an explicit `setLevel('perf')` arms it for active perf hunting.
+	/*
+	 * `perf` is the NOISIEST rank on purpose: its diagnostics (wasted-set
+	 * detection) run an O(n) `plainEqual` deep-compare per state write. Sitting
+	 * above `debug` means even full `debug` verbosity won't pay that compare —
+	 * only an explicit `setLevel('perf')` arms it for active perf hunting.
+	 */
 	perf: 5,
 });
-// Production: errors only. Dev default: `info` — keeps boot banners, warnings
-// and one-shot info, but MUTES the per-render `debug` flood that otherwise
-// dumps thousands of styled console.log calls through a hot mount (measured at
-// ~2/3 of cold-create wall time — pure console I/O the production build never
-// pays). Opt back into the full trace with `globalThis.CONFIG.logLevel='debug'`
-// at boot, or `Logger.setLevel('debug')` at runtime.
+/*
+ * Production: errors only. Dev default: `info` — keeps boot banners, warnings
+ * and one-shot info, but MUTES the per-render `debug` flood that otherwise
+ * dumps thousands of styled console.log calls through a hot mount (measured at
+ * ~2/3 of cold-create wall time — pure console I/O the production build never
+ * pays). Opt back into the full trace with `globalThis.CONFIG.logLevel='debug'`
+ * at boot, or `Logger.setLevel('debug')` at runtime.
+ */
 const DEFAULT_LEVEL = IS_PRODUCTION ? 'error' : 'info';
 let activeRank = LEVEL_RANK[globalThis.CONFIG?.logLevel] ?? LEVEL_RANK[DEFAULT_LEVEL];
 const colorMap = {
@@ -46,14 +52,18 @@ function noop() {
 	return undefined;
 }
 function gated(level, fn) {
-	// Production: only `error` ever runs — captured once as a literal noop so the
-	// disabled paths cost nothing (no per-call branch, no closure allocation).
+	/**
+	 * Production: only `error` ever runs — captured once as a literal noop so the
+	 * disabled paths cost nothing (no per-call branch, no closure allocation).
+	 */
 	if (IS_PRODUCTION && level !== 'error') {
 		return noop;
 	}
-	// Dev: gate at CALL time against the runtime-adjustable rank so `setLevel`
-	// re-mutes/-unmutes live. The rank compare short-circuits BEFORE the wrapped
-	// formatter (and any lazy message closure it would invoke) runs.
+	/*
+	 * Dev: gate at CALL time against the runtime-adjustable rank so `setLevel`
+	 * re-mutes/-unmutes live. The rank compare short-circuits BEFORE the wrapped
+	 * formatter (and any lazy message closure it would invoke) runs.
+	 */
 	const rank = LEVEL_RANK[level];
 	return function gatedLog(...args) {
 		if (rank > activeRank) {
@@ -72,11 +82,13 @@ function printLine(level, label, message, args) {
 		console[method](head, style, message);
 	}
 }
-// Lazy-message functions may return null/undefined to skip the log entirely.
-// When `msg` is a function, any extra args after it are forwarded — callsites
-// pass a hoisted (module-level) formatter + plain data instead of allocating
-// a fresh closure per call. In production the whole logger is replaced by a
-// noop so the formatter never runs and args never get gathered into an array.
+/**
+ * Lazy-message functions may return null/undefined to skip the log entirely.
+ * When `msg` is a function, any extra args after it are forwarded — callsites
+ * pass a hoisted (module-level) formatter + plain data instead of allocating
+ * a fresh closure per call. In production the whole logger is replaced by a
+ * noop so the formatter never runs and args never get gathered into an array.
+ */
 function makeLevelLogger(level) {
 	return gated(level, (label, msg, ...args) => {
 		const resolved = typeof msg === 'function' ? msg(...args) : msg;
@@ -109,16 +121,20 @@ function ifPerf(method) {
 		}
 	};
 }
-// Cheap boolean gate for a hot callsite: true only in dev when `level` is at or
-// below the active rank. Reads only already-declared module state (no forward
-// refs) so it is safe to call from the Logger literal and from setLevel.
+/**
+ * Cheap boolean gate for a hot callsite: true only in dev when `level` is at or
+ * below the active rank. Reads only already-declared module state (no forward
+ * refs) so it is safe to call from the Logger literal and from setLevel.
+ */
 function computeFlag(level) {
 	return !IS_PRODUCTION && LEVEL_RANK[level] <= activeRank;
 }
 export const Logger = {
-	// Runtime verbosity control. `setLevel('debug')` restores the full per-render
-	// trace; `setLevel('warn')` or `'silent'` cuts noise further. No effect in
-	// production (gated paths are already hard noops). Returns the rank applied.
+	/**
+	 * Runtime verbosity control. `setLevel('debug')` restores the full per-render
+	 * trace; `setLevel('warn')` or `'silent'` cuts noise further. No effect in
+	 * production (gated paths are already hard noops). Returns the rank applied.
+	 */
 	setLevel(level) {
 		const rank = LEVEL_RANK[level];
 		if (rank !== undefined) {
@@ -131,12 +147,14 @@ export const Logger = {
 	getLevel() {
 		return activeRank;
 	},
-	// Cheap boolean gates for HOT callsites. Wrap a per-render / per-state-write
-	// log in `if (Logger.debugOn) { … }` so a disabled level skips the call
-	// ENTIRELY at the callsite — no message string built, no closure allocated,
-	// no args gathered. A property read + branch, nothing more. Recomputed by
-	// `setLevel`; false in production. `perfOn` guards the O(n) wasted-set
-	// deep-compare diagnostics.
+	/*
+	 * Cheap boolean gates for HOT callsites. Wrap a per-render / per-state-write
+	 * log in `if (Logger.debugOn) { … }` so a disabled level skips the call
+	 * ENTIRELY at the callsite — no message string built, no closure allocated,
+	 * no args gathered. A property read + branch, nothing more. Recomputed by
+	 * `setLevel`; false in production. `perfOn` guards the O(n) wasted-set
+	 * deep-compare diagnostics.
+	 */
 	debugOn: computeFlag('debug'),
 	perfOn: computeFlag('perf'),
 	info: makeLevelLogger('info'),

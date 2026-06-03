@@ -228,28 +228,32 @@ function memory() {
 	if (!perfMemory) {
 		return null;
 	}
-	// Rounded to whole MB intentionally — Chromium's `performance.memory`
-	// reports sub-MB fluctuations between polls even at idle, which would
-	// patch the JS-heap table every 2s and look like the framework is
-	// busy. Whole-MB resolution is plenty for spotting leaks (the only
-	// real use case here); detailed accounting belongs in DevTools.
+	/*
+	 * Rounded to whole MB intentionally — Chromium's `performance.memory`
+	 * reports sub-MB fluctuations between polls even at idle, which would
+	 * patch the JS-heap table every 2s and look like the framework is
+	 * busy. Whole-MB resolution is plenty for spotting leaks (the only
+	 * real use case here); detailed accounting belongs in DevTools.
+	 */
 	return {
 		usedHeapMb: Math.round(perfMemory.usedJSHeapSize / 1024 / 1024),
 		totalHeapMb: Math.round(perfMemory.totalJSHeapSize / 1024 / 1024),
 		heapLimitMb: Math.round(perfMemory.jsHeapSizeLimit / 1024 / 1024),
 	};
 }
-// ── Honest memory + timing benchmarking (dev only) ───────────────────
-// The negative-heap bug devs hit comes from sampling `usedJSHeapSize` across
-// allocating work while GC fires mid-measurement. The fix is discipline, not a
-// formula: force GC → read baseline → run → force GC → read after. Reported as
-// retained (afterSettled − baseline) AND peak (max during run − baseline),
-// never a raw uncorrected delta. `gcHonest:false` flags when GC couldn't be
-// forced (heap numbers are then sawtooth — timing stays valid regardless).
-//
-// Enable forced GC: Chrome → launch with `--js-flags="--expose-gc"` (and
-// `--enable-precise-memory-info` for MB-accurate heap); Node/Bun → `--expose-gc`
-// or Bun.gc. Without it, `Perf.bench` still returns honest TIMING.
+/**
+ * ── Honest memory + timing benchmarking (dev only) ───────────────────
+ * The negative-heap bug devs hit comes from sampling `usedJSHeapSize` across
+ * allocating work while GC fires mid-measurement. The fix is discipline, not a
+ * formula: force GC → read baseline → run → force GC → read after. Reported as
+ * retained (afterSettled − baseline) AND peak (max during run − baseline),
+ * never a raw uncorrected delta. `gcHonest:false` flags when GC couldn't be
+ * forced (heap numbers are then sawtooth — timing stays valid regardless).
+ *
+ * Enable forced GC: Chrome → launch with `--js-flags="--expose-gc"` (and
+ * `--enable-precise-memory-info` for MB-accurate heap); Node/Bun → `--expose-gc`
+ * or Bun.gc. Without it, `Perf.bench` still returns honest TIMING.
+ */
 function round1(value) {
 	return Number(value.toFixed(1));
 }
@@ -293,31 +297,37 @@ function singleRaf() {
 		requestAnimationFrame(resolve);
 	});
 }
-// `--enable-precise-memory-info` makes `usedJSHeapSize` byte-granular; without
-// it Chrome quantizes to coarse buckets. A non-zero sub-MB remainder is a
-// reliable signal the precise flag is active — which lets the no-forced-GC path
-// below trust a min-sampled floor instead of reporting nothing.
+/**
+ * `--enable-precise-memory-info` makes `usedJSHeapSize` byte-granular; without
+ * it Chrome quantizes to coarse buckets. A non-zero sub-MB remainder is a
+ * reliable signal the precise flag is active — which lets the no-forced-GC path
+ * below trust a min-sampled floor instead of reporting nothing.
+ */
 function preciseMemoryActive() {
 	const bytes = readHeapBytes();
 	return bytes > 0 && bytes % 1048576 !== 0;
 }
 const HEAP_FLOOR_FRAMES = 6;
-// Drain settle — the reactive update lands at the tail of masterFlush (one
-// microtask after a state write); a child-cascade (list assignState) costs one
-// more. Awaiting a few microtasks lets a benched `fn` include the full
-// write→drain→DOM cost in its timed region. Bump `microtasks` for deeper trees.
+/**
+ * Drain settle — the reactive update lands at the tail of masterFlush (one
+ * microtask after a state write); a child-cascade (list assignState) costs one
+ * more. Awaiting a few microtasks lets a benched `fn` include the full
+ * write→drain→DOM cost in its timed region. Bump `microtasks` for deeper trees.
+ */
 async function settle(microtasks = 3) {
 	const hops = typeof microtasks === 'number' ? microtasks : 3;
 	for (let hop = 0; hop < hops; hop++) {
 		await Promise.resolve();
 	}
 }
-// Return a steady-state heap floor in bytes. With forced GC available, that's
-// the canonical "collect → settle paint → collect → read". Without it (e.g.
-// Playwright swallows `--js-flags=--expose-gc`), approximate the post-GC floor
-// by sampling across several RAFs and taking the MINIMUM — any GC that fires in
-// the window pulls the floor down, so retained heap stays meaningful as long as
-// `--enable-precise-memory-info` makes the readings byte-granular.
+/**
+ * Return a steady-state heap floor in bytes. With forced GC available, that's
+ * the canonical "collect → settle paint → collect → read". Without it (e.g.
+ * Playwright swallows `--js-flags=--expose-gc`), approximate the post-GC floor
+ * by sampling across several RAFs and taking the MINIMUM — any GC that fires in
+ * the window pulls the floor down, so retained heap stays meaningful as long as
+ * `--enable-precise-memory-info` makes the readings byte-granular.
+ */
 async function settleHeap() {
 	if (forceGc()) {
 		await rafTwice();
@@ -364,9 +374,11 @@ async function bench(label, fn, options) {
 	const opts = options ?? {};
 	const warmupRuns = opts.warmup ?? 5;
 	const timedRuns = opts.iterations ?? 30;
-	// Optional per-iteration setup — run before each timed `fn` but EXCLUDED
-	// from the sample, so a destructive op (e.g. "create from empty") can
-	// re-establish its pre-state every run without polluting the timing.
+	/*
+	 * Optional per-iteration setup — run before each timed `fn` but EXCLUDED
+	 * from the sample, so a destructive op (e.g. "create from empty") can
+	 * re-establish its pre-state every run without polluting the timing.
+	 */
 	const setup = typeof opts.setup === 'function' ? opts.setup : null;
 	const gcHonest = forceGc();
 	for (let warm = 0; warm < warmupRuns; warm++) {
@@ -399,13 +411,15 @@ async function bench(label, fn, options) {
 		total += samples[index];
 	}
 	const meanMs = total / timedRuns;
-	// Heap-confidence tiers:
-	//   forced-gc      — gc() forced at both boundaries; retained is canonical.
-	//   precise-settle — no forced GC, but byte-granular memory + min-sampled
-	//                    floor (settleHeap) make retained meaningful; clamp tiny
-	//                    negatives (net-neutral op) to 0 so it never reads as the
-	//                    confusing negative artifact.
-	//   coarse         — MB-quantized + no GC: retained is noise → report null.
+	/*
+	 * Heap-confidence tiers:
+	 *   forced-gc      — gc() forced at both boundaries; retained is canonical.
+	 *   precise-settle — no forced GC, but byte-granular memory + min-sampled
+	 *                    floor (settleHeap) make retained meaningful; clamp tiny
+	 *                    negatives (net-neutral op) to 0 so it never reads as the
+	 *                    confusing negative artifact.
+	 *   coarse         — MB-quantized + no GC: retained is noise → report null.
+	 */
 	const heapMethod = heapConfidenceTier(gcHonest);
 	let heapRetainedKb;
 	if (heapMethod === 'coarse') {

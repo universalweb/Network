@@ -1,29 +1,31 @@
-// Per-component event subscription — the per-element half of the event
-// surface (the document bus and scoped delegation live in `delegate.js`,
-// keyboard in `hotkeys.js`, environment-master arrives with Phase 7). This
-// file owns three public methods plus an escape hatch:
-//
-//   this.on(name, h, options?)        — listen on the component itself
-//   this.once(name, h, options?)      — same, but auto-detach on first fire
-//   this.addEvent(name,h,el?,opts?)   — listen on ANY element (defaults to this)
-//   this.listener(handler)            — cached EventListener-object for raw
-//                                       addEventListener wiring when you do
-//                                       NOT want auto-tracking
-//
-// All four routes land in `component.eventEntries: Set<EventEntry>`. The
-// lifecycle disconnect sweep iterates the set, calling `entry.unsubscribe()`
-// on each. Every entry IS the EventListener (DOM spec — any object with a
-// `handleEvent` method qualifies), so the browser calls
-// `entry.handleEvent(domEvent)` directly with `this = entry`. The handler
-// itself runs via `handler.call(component, domEvent, element, name)` inside
-// `EventEntry.handleEvent` — proper `this`-binding with no arrow fields and
-// no `.bind`. `componentRef` and `elementRef` are WeakRefs so a held entry
-// never pins either; stale derefs short-circuit dispatch.
-//
-// `on()` is a thin wrapper over `addEvent(name, h, this, options)`. `off()`
-// matches name + handler + capture (and constrains the entry's element to
-// the component itself, so off() can never reach beyond the `on()` contract)
-// and routes through `entry.unsubscribe()`.
+/*
+ * Per-component event subscription — the per-element half of the event
+ * surface (the document bus and scoped delegation live in `delegate.js`,
+ * keyboard in `hotkeys.js`, environment-master arrives with Phase 7). This
+ * file owns three public methods plus an escape hatch:
+ *
+ *   this.on(name, h, options?)        — listen on the component itself
+ *   this.once(name, h, options?)      — same, but auto-detach on first fire
+ *   this.addEvent(name,h,el?,opts?)   — listen on ANY element (defaults to this)
+ *   this.listener(handler)            — cached EventListener-object for raw
+ *                                       addEventListener wiring when you do
+ *                                       NOT want auto-tracking
+ *
+ * All four routes land in `component.eventEntries: Set<EventEntry>`. The
+ * lifecycle disconnect sweep iterates the set, calling `entry.unsubscribe()`
+ * on each. Every entry IS the EventListener (DOM spec — any object with a
+ * `handleEvent` method qualifies), so the browser calls
+ * `entry.handleEvent(domEvent)` directly with `this = entry`. The handler
+ * itself runs via `handler.call(component, domEvent, element, name)` inside
+ * `EventEntry.handleEvent` — proper `this`-binding with no arrow fields and
+ * no `.bind`. `componentRef` and `elementRef` are WeakRefs so a held entry
+ * never pins either; stale derefs short-circuit dispatch.
+ *
+ * `on()` is a thin wrapper over `addEvent(name, h, this, options)`. `off()`
+ * matches name + handler + capture (and constrains the entry's element to
+ * the component itself, so off() can never reach beyond the `on()` contract)
+ * and routes through `entry.unsubscribe()`.
+ */
 import {
 	isError, isFunction, isObject, isPromiseLike, isString,
 } from '../utilities.js';
@@ -75,12 +77,16 @@ function getCaptureFlag(options) {
 	}
 	return false;
 }
-// Shared dispatcher for `this.listener(handler)` — the cached EventListener-
-// object. Same EventListener-object pattern as EventEntry: the wrapper IS the
-// listener (its `handleEvent` is this function), so the browser calls
-// `wrapper.handleEvent(domEvent)` with `this = wrapper`. Routes through the
-// component's own `runEventHandler` so async errors land in the standard
-// `handleEventError` path.
+/**
+ * Shared dispatcher for `this.listener(handler)` — the cached EventListener
+ * object. The wrapper IS the listener (its `handleEvent` is this function), so
+ * the browser calls `wrapper.handleEvent(domEvent)` with `this = wrapper`.
+ * Routes through the component's `runEventHandler` so async errors land in the
+ * standard `handleEventError` path.
+ * @this {{componentRef: WeakRef, handler: Function}}
+ * @param {Event} domEvent - The dispatched DOM event.
+ * @returns {*} The handler's result, or undefined when the component is gone.
+ */
 function dispatchCachedListener(domEvent) {
 	const wrapper = this;
 	const component = wrapper.componentRef.deref();
@@ -89,11 +95,17 @@ function dispatchCachedListener(domEvent) {
 	}
 	return component.runEventHandler(wrapper.handler, domEvent, domEvent.currentTarget, domEvent.type);
 }
-// `this.addEvent(eventName, handler, element?, options?)` — the unified
-// primitive. Element defaults to the component itself. Returns an `EventEntry`
-// with `.unsubscribe()`. The entry is auto-tracked in `component.eventEntries`
-// and swept on disconnect via `clearEventListeners`. Both positional and
-// object-form invocation are accepted.
+/**
+ * The unified event primitive. Element defaults to the component itself.
+ * Returns an `EventEntry` with `.unsubscribe()`, auto-tracked in
+ * `component.eventEntries` and swept on disconnect via `clearEventListeners`.
+ * Accepts positional or single-object-bag invocation.
+ * @param {string|object} eventName - Event name, or a `{ eventName, handler, element, options }` bag.
+ * @param {Function} [handler] - The event handler (positional form).
+ * @param {EventTarget} [element] - Target element (defaults to the component).
+ * @param {AddEventListenerOptions} [options] - Native listener options.
+ * @returns {EventEntry} The subscription entry.
+ */
 export function addEvent(eventName, handler, element, options) {
 	let resolvedEventName = eventName;
 	let resolvedHandler = handler;
@@ -118,11 +130,14 @@ export function addEvent(eventName, handler, element, options) {
 	entry.subscribe();
 	return entry;
 }
-// `this.listener(handler)` — escape hatch for raw `addEventListener` wiring on
-// an element you do not want auto-tracked. Returns a cached EventListener-
-// object (one per `(component, handler)` pair) that the browser invokes via
-// its `handleEvent`. WeakRef on component so a forgotten registration cannot
-// pin its component alive.
+/**
+ * Escape hatch for raw `addEventListener` wiring on an element you do NOT want
+ * auto-tracked. Returns a cached EventListener object (one per
+ * `(component, handler)` pair) the browser invokes via its `handleEvent`. A
+ * WeakRef on the component means a forgotten registration can't pin it alive.
+ * @param {Function} handlerFunction - The handler to wrap.
+ * @returns {{handleEvent: Function}} The cached EventListener object.
+ */
 export function listener(handlerFunction) {
 	if (!isFunction(handlerFunction)) {
 		throw new TypeError('handlerFunction must be a function');
@@ -142,15 +157,26 @@ export function listener(handlerFunction) {
 	this.listenerCache.set(handlerFunction, wrapper);
 	return wrapper;
 }
-// `this.on(name, handler, options?)` — thin wrapper over `addEvent` that
-// pins the element to the component itself. Returns the same `EventEntry`
-// shape addEvent returns, so callers can hold the entry and call
-// `entry.unsubscribe()`. Validation lives in `addEvent`.
+/**
+ * Thin wrapper over `addEvent` that pins the element to the component itself.
+ * Returns the same `EventEntry` addEvent returns, so callers can hold it and
+ * call `entry.unsubscribe()`. Validation lives in `addEvent`.
+ * @param {string} eventName - The event name.
+ * @param {Function} handlerFunction - The event handler.
+ * @param {AddEventListenerOptions} [options] - Native listener options.
+ * @returns {EventEntry} The subscription entry.
+ */
 export function on(eventName, handlerFunction, options) {
 	return this.addEvent(eventName, handlerFunction, this, options);
 }
-// `this.once(name, handler, options?)` — merge `once: true` into options
-// and route through `on()`. `EventEntry.handleEvent` honors `fireOnce`.
+/**
+ * Like `on`, but merges `once: true` into options so the listener fires a
+ * single time (`EventEntry.handleEvent` honors `fireOnce`).
+ * @param {string} eventName - The event name.
+ * @param {Function} handlerFunction - The event handler.
+ * @param {AddEventListenerOptions} [options] - Native listener options.
+ * @returns {EventEntry} The subscription entry.
+ */
 export function once(eventName, handlerFunction, options) {
 	const merged = isObject(options) ? {
 		...options,
@@ -160,11 +186,16 @@ export function once(eventName, handlerFunction, options) {
 	};
 	return this.on(eventName, handlerFunction, merged);
 }
-// `this.off(name, handler?, options?)` — criteria-match `eventEntries` and
-// unsubscribe each match. Constrained to entries whose element IS the
-// component, so `off()` cannot reach beyond the `on()` contract; entries
-// from `addEvent(..., someOtherElement)` are handled by holding the entry
-// reference and calling `entry.unsubscribe()` directly.
+/**
+ * Criteria-match `eventEntries` and unsubscribe each match. Constrained to
+ * entries whose element IS the component, so `off()` cannot reach beyond the
+ * `on()` contract — entries from `addEvent(..., someOtherElement)` are removed
+ * by holding the entry and calling `entry.unsubscribe()` directly.
+ * @param {string} eventName - The event name to match.
+ * @param {Function} [handlerFunction] - Narrow to this handler.
+ * @param {object} [options] - Narrow by capture flag.
+ * @returns {WebComponent} The component, for chaining.
+ */
 export function off(eventName, handlerFunction, options) {
 	if (!isString(eventName) || !eventName.trim()) {
 		throw new TypeError('eventName must be a non-empty string');
@@ -195,12 +226,14 @@ export function off(eventName, handlerFunction, options) {
 	}
 	return this;
 }
-// Lifecycle disconnect hook — walks the component's `eventEntries` and
-// unsubscribes each. Every entry is an `EventEntry` instance (Phase 2 unified
-// the shape), so `entry.unsubscribe()` covers detach + Set removal + abort-
-// listener cleanup in one call. Snapshot first because `unsubscribe()`
-// mutates `eventEntries` during the walk; `entries.clear()` at the end is
-// defensive — by then the Set is already empty.
+/**
+ * Lifecycle disconnect hook — walks the component's `eventEntries` and
+ * unsubscribes each. Every entry is an `EventEntry` instance (Phase 2 unified
+ * the shape), so `entry.unsubscribe()` covers detach + Set removal + abort-
+ * listener cleanup in one call. Snapshot first because `unsubscribe()`
+ * mutates `eventEntries` during the walk; `entries.clear()` at the end is
+ * defensive — by then the Set is already empty.
+ */
 export function clearEventListeners() {
 	const entries = this.eventEntries;
 	if (!entries?.size) {

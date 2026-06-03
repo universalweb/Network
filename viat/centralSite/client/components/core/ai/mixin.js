@@ -17,13 +17,18 @@ import { PHASE } from '../lifecycle/phase.js';
 import { isFunction } from '../utilities.js';
 import { textPageMap } from './visual.js';
 const APPLIED = Symbol('viat-ai-mixin-applied');
+/*
+ * Awaitable lifecycle phases for `aiWaitFor`. No `disconnected` entry —
+ * disconnect is not a promise (a recurring transition; observe it via the
+ * `onDisconnect` hook / `isDisconnected` / native `disconnectedCallback`).
+ * `destroyed` stays (it IS a one-shot promise via `destroy()`).
+ */
 const WHEN_BY_PHASE = {
 	[PHASE.CONNECTED]: LIFECYCLE_PROMISE.CONNECTED,
 	[PHASE.RENDERED]: LIFECYCLE_PROMISE.RENDERED,
 	[PHASE.MOUNTED]: LIFECYCLE_PROMISE.MOUNTED,
 	[PHASE.LIVE]: LIFECYCLE_PROMISE.LIVE,
 	visible: LIFECYCLE_PROMISE.VISIBLE,
-	[PHASE.DISCONNECTED]: LIFECYCLE_PROMISE.DISCONNECTED,
 	[PHASE.DESTROYED]: LIFECYCLE_PROMISE.DESTROYED,
 };
 function findAiAncestor(element) {

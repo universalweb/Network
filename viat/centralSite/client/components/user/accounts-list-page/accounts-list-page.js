@@ -205,7 +205,7 @@ export class AccountsListPage extends WebComponent {
 						<span class="al-cell al-totout">TOTAL OUT</span>
 						<span class="al-cell al-time">UPDATED</span>
 					</div>
-					${this.renderRows}
+					^html${this.renderRows}
 				</div>
 			</div>
 		`;

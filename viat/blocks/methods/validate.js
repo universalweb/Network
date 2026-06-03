@@ -2,12 +2,15 @@ import { validateSchema, validateSchemaVerbose } from '#utilities/schema/index';
 import { blockSchema } from '../schema.js';
 const methods = {
 	async validate() {
-		const validateGeneric = await validateSchema(blockSchema, this.block);
+		const validateGeneric = await validateSchema(blockSchema, this.get());
 		if (!validateGeneric) {
 			return false;
 		}
+		if (this.isSigned && (!this.get('signature') || !this.getMeta('timestamp') || !this.getMeta('nonce'))) {
+			return false;
+		}
 		if (this.blockSchema) {
-			const result = await validateSchema(this.blockSchema, this.block);
+			const result = await validateSchema(this.blockSchema, this.get());
 			return result;
 		}
 		return true;

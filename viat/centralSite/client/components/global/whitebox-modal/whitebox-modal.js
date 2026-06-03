@@ -46,11 +46,11 @@ export class UIWhiteboxModal extends WebComponent {
 			}} style="--ui-modal-max-width: min(96vw, 1280px); --ui-modal-max-height: 96dvh">
 				<div class="wb-shell">
 					<div class="wb-stage">
-						${video
+						^html${video
 							? `<video class="wb-media" src="${src}" controls playsinline preload="metadata"></video>`
 							: `<img class="wb-media" src="${src}" alt="${this.state.alt}" draggable="false">`}
 					</div>
-					${caption ? `<div class="wb-caption">${caption}</div>` : ''}
+					^html${caption ? `<div class="wb-caption">${caption}</div>` : ''}
 				</div>
 			</ui-modal>
 		`;

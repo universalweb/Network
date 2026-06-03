@@ -15,8 +15,10 @@
 	snap point afterwards — supplied through callbacks.
 */
 
-// Snap-animation timing. The engine never animates; it exports these so every
-// consumer animates the settle with one identical curve.
+/*
+ * Snap-animation timing. The engine never animates; it exports these so every
+ * consumer animates the settle with one identical curve.
+ */
 export const SNAP_MS = 320;
 export const SNAP_CURVE = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
 
@@ -25,8 +27,10 @@ const DRAG_THRESHOLD_PX = 6; // raw travel before a press becomes a drag
 const SNAP_RATIO = 0.3; // travel fraction (of the snap extent) that flips state
 const SNAP_VELOCITY = 0.5; // px/ms that flips state regardless of distance
 
-// `opensToward` → the sign of axis movement that opens the panel. A pulldown
-// opens downward (+y); a right-edge drawer opens leftward (-x).
+/*
+ * `opensToward` → the sign of axis movement that opens the panel. A pulldown
+ * opens downward (+y); a right-edge drawer opens leftward (-x).
+ */
 const OPEN_SIGN = {
 	down: 1,
 	right: 1,
@@ -94,9 +98,11 @@ export function createDragSnap(startElement, options = {}) {
 	let suppressClick = false;
 	let destroyed = false;
 
-	// Keep only the part of `raw` that points in `sign`'s direction; the
-	// opposite direction reads as zero. This is what locks an opening drag to
-	// opening movement and a closing drag to closing movement.
+	/**
+	 * Keep only the part of `raw` that points in `sign`'s direction; the
+	 * opposite direction reads as zero. This is what locks an opening drag to
+	 * opening movement and a closing drag to closing movement.
+	 */
 	function keepDirection(raw, sign) {
 		return sign * Math.max(0, sign * raw);
 	}
@@ -165,8 +171,10 @@ export function createDragSnap(startElement, options = {}) {
 		if (!dragMoved) {
 			return;
 		}
-		// A real drag occurred — the click the browser synthesizes next is a
-		// side effect of the press, not an intent. Swallow it.
+		/**
+		 * A real drag occurred — the click the browser synthesizes next is a
+		 * side effect of the press, not an intent. Swallow it.
+		 */
 		suppressClick = true;
 		const elapsed = Math.max(performance.now() - startTime, 1);
 		const distance = Math.abs(delta);
@@ -182,8 +190,10 @@ export function createDragSnap(startElement, options = {}) {
 		if (pointerId === null) {
 			return;
 		}
-		// Losing the window mid-drag counts as a release — settle on the
-		// distance travelled so far.
+		/*
+		 * Losing the window mid-drag counts as a release — settle on the
+		 * distance travelled so far.
+		 */
 		handlePointerEnd({
 			pointerId,
 		});

@@ -38,9 +38,13 @@ export async function preRender(element, mount, options = {}) {
 	element.style.willChange = '';
 	return element;
 }
-// Single-bag factory: `{ Source, state, config }` → instance.
-// Useful when the component class is selected per-item from a config-driven
-// list rather than known at the callsite.
+/**
+ * Single-bag factory: `{ Source, state, config }` → instance. Useful when the
+ * component class is selected per-item from a config-driven list rather than
+ * known at the call site.
+ * @param {{Source: typeof WebComponent, state?: object, config?: object}} [spec] - The component class plus its construction args.
+ * @returns {Promise<WebComponent>} The constructed instance.
+ */
 export async function createBound(spec = {}) {
 	const { Source } = spec;
 	return Source.create(spec.state, spec.config);

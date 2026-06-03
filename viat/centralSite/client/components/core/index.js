@@ -5,8 +5,10 @@
 import { WebComponent } from './base.js';
 import { applyAiMixin } from './ai/mixin.js';
 applyAiMixin(WebComponent);
-// Make WebComponent reachable without an import — `class X extends WebComponent`
-// works once the `webcomponent` package has been loaded anywhere in the app.
+/*
+ * Make WebComponent reachable without an import — `class X extends WebComponent`
+ * works once the `webcomponent` package has been loaded anywhere in the app.
+ */
 globalThis.WebComponent ??= WebComponent;
 export {
 	ClassList,
@@ -24,6 +26,7 @@ export {
 	html,
 	liveList,
 	list,
+	styles,
 } from './template.js';
 export { bind, CONTENT_KIND } from './state/binding.js';
 export { assignState } from './state/state.js';

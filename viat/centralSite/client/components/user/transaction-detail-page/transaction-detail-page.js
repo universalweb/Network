@@ -139,7 +139,7 @@ export class TransactionDetailPage extends WebComponent {
 					</div>
 					<button class="td-copy" @click=${this.handleCopyId} tooltip="Copy transaction ID">${() => this.state.txId || '—'}</button>
 				</header>
-				${this.renderBody}
+				^html${this.renderBody}
 			</div>
 		`;
 	}

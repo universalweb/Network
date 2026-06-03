@@ -35,9 +35,11 @@ export function resolveTagUrl(tag) {
 	const segments = tag.slice(dash + 1).split('_');
 	return `${base}/${segments.join('/')}/${segments[segments.length - 1]}.js`;
 }
-// Imports the module for one tag. Returns a Promise that settles when the tag
-// is defined, or null when there's nothing to do (already defined / unknown
-// root / known-failed). Concurrent and repeat calls share one in-flight task.
+/**
+ * Imports the module for one tag. Returns a Promise that settles when the tag
+ * is defined, or null when there's nothing to do (already defined / unknown
+ * root / known-failed). Concurrent and repeat calls share one in-flight task.
+ */
 export function resolveTag(tag) {
 	if (customElements.get(tag)) {
 		return null;
@@ -64,10 +66,12 @@ export function resolveTag(tag) {
 	inFlight.set(tag, task);
 	return task;
 }
-// Scans a rendered subtree for undefined custom elements and resolves each tag
-// once. Non-blocking by contract: it kicks off imports and returns the pending
-// tasks (or null) so the caller decides whether to await — the render path
-// does not, lazy children upgrade on their own.
+/**
+ * Scans a rendered subtree for undefined custom elements and resolves each tag
+ * once. Non-blocking by contract: it kicks off imports and returns the pending
+ * tasks (or null) so the caller decides whether to await — the render path
+ * does not, lazy children upgrade on their own.
+ */
 export function scanAndResolve(root) {
 	if (!root || !root.querySelectorAll) {
 		return null;

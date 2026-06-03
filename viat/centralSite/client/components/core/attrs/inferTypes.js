@@ -37,18 +37,22 @@ export const STATE_TYPE = Object.freeze({
 	NULL: 'null',
 });
 
-// Primitive types whose text-position stringification is markup-free, so a TEXT
-// spot bound to such a field can use the strict `textContent` patcher and skip
-// the per-patch `<` / `&` scan. Strings are EXCLUDED — they may legitimately
-// carry markup (→ HTML kind), which only the sigil parser / dev disambiguates.
+/*
+ * Primitive types whose text-position stringification is markup-free, so a TEXT
+ * spot bound to such a field can use the strict `textContent` patcher and skip
+ * the per-patch `<` / `&` scan. Strings are EXCLUDED — they may legitimately
+ * carry markup (→ HTML kind), which only the sigil parser / dev disambiguates.
+ */
 const TEXT_SAFE_TYPES = new Set([
 	STATE_TYPE.NUMBER,
 	STATE_TYPE.BOOLEAN,
 	STATE_TYPE.BIGINT,
 ]);
 
-// Recursion ceiling — guards pathological deep / cyclic static state. Real
-// component state nests a handful of levels at most.
+/*
+ * Recursion ceiling — guards pathological deep / cyclic static state. Real
+ * component state nests a handful of levels at most.
+ */
 const MAX_INFER_DEPTH = 8;
 
 function classifyValueType(value) {
@@ -68,16 +72,20 @@ function classifyValueType(value) {
 	if (valueType === 'object') {
 		return STATE_TYPE.OBJECT;
 	}
-	// `typeof` already yields the exact STATE_TYPE string for every primitive
-	// (string / number / boolean / bigint / symbol / function / undefined).
+	/*
+	 * `typeof` already yields the exact STATE_TYPE string for every primitive
+	 * (string / number / boolean / bigint / symbol / function / undefined).
+	 */
 	return valueType;
 }
 
-// Recurse ONLY into plain objects — their key shape is stable and safely
-// path-addressable. Arrays / Maps / Sets / Nodes / class instances record their
-// container type and stop; their element shape is runtime-variable and not
-// inferable at compile time. Accessor descriptors (`get foo()`) are skipped —
-// their return type is unknown until they run.
+/**
+ * Recurse ONLY into plain objects — their key shape is stable and safely
+ * path-addressable. Arrays / Maps / Sets / Nodes / class instances record their
+ * container type and stop; their element shape is runtime-variable and not
+ * inferable at compile time. Accessor descriptors (`get foo()`) are skipped —
+ * their return type is unknown until they run.
+ */
 function walkStateLevel(source, prefix, types, kinds, depth) {
 	const keys = Object.keys(source);
 	for (let keyIndex = 0; keyIndex < keys.length; keyIndex++) {

@@ -361,7 +361,7 @@ export class SettingsModal extends WebComponent {
 				</label>
 				<label class="sm-field">
 					<span class="sm-label">THEME</span>
-					<select class="sm-input" $value="themeId" @change=${this.handleThemeChange}>${themeOptions}</select>
+					<select class="sm-input" $value="themeId" @change=${this.handleThemeChange}>^html${themeOptions}</select>
 				</label>
 				<p class="sm-copy">Theme is applied immediately and saved with the profile — when a wallet is loaded the theme follows it.</p>
 				<div class="sm-actions">
@@ -394,7 +394,7 @@ export class SettingsModal extends WebComponent {
 					<span class="sm-section-title">// PROPERTIES (CLICK TO COPY)</span>
 				</header>
 				<p class="sm-copy">Public projection of the active wallet. Private keys and seeds stay in memory on the app instance and are never written to global state.</p>
-				<div class="sm-grid" @click=${this.handleCopy}>${rowItems}</div>
+				<div class="sm-grid" @click=${this.handleCopy}>^html${rowItems}</div>
 			</div>
 		`;
 	}
@@ -529,7 +529,7 @@ export class SettingsModal extends WebComponent {
 				<p class="sm-copy">Load a saved wallet from localStorage by profile name, or paste a wallet payload (JSON or base64 CBOR — format auto-detected).</p>
 				<label class="sm-field">
 					<span class="sm-label">SAVED PROFILES</span>
-					<select class="sm-input" $value="selectedProfile">${profileOptions}</select>
+					<select class="sm-input" $value="selectedProfile">^html${profileOptions}</select>
 				</label>
 				<label class="sm-field">
 					<span class="sm-label">PASSWORD</span>

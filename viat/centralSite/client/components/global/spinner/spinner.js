@@ -25,7 +25,7 @@ export class UISpinner extends WebComponent {
 					<circle class="spinner-track" cx="25" cy="25" r="20" fill="none"></circle>
 					<circle class="spinner-arc" cx="25" cy="25" r="20" fill="none"></circle>
 				</svg>
-				${this.state.label ? `<span class="spinner-label">${this.state.label}</span>` : ''}
+				^html${this.state.label ? `<span class="spinner-label">${this.state.label}</span>` : ''}
 			</div>
 		`;
 	}

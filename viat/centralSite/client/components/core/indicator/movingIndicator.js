@@ -65,8 +65,10 @@ export function movingIndicator(indicatorElement, options = {}) {
 			hide();
 			return;
 		}
-		// The suppress-transition class must be on *before* the props change so
-		// the position jump is instant; it comes off next frame.
+		/**
+		 * The suppress-transition class must be on *before* the props change so
+		 * the position jump is instant; it comes off next frame.
+		 */
 		if (snap) {
 			indicatorElement.classList.add(snapClass);
 		}

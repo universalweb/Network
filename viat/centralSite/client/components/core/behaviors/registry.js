@@ -1,7 +1,9 @@
-// Behavior registry — single source of truth for template-attached behaviors
-// (copy, confirm, tooltip, autofocus, reveal, etc.). The set is hot during
-// template parsing, so reads stay O(1). Builtins register at boot via their
-// own modules; consumers can append their own via `registerBehavior`.
+/*
+ * Behavior registry — single source of truth for template-attached behaviors
+ * (copy, confirm, tooltip, autofocus, reveal, etc.). The set is hot during
+ * template parsing, so reads stay O(1). Builtins register at boot via their
+ * own modules; consumers can append their own via `registerBehavior`.
+ */
 const REGISTRY = new Map();
 const ATTR_NAMES = new Set();
 const installedInits = new WeakSet();

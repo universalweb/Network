@@ -82,11 +82,11 @@ export class UIButton extends WebComponent {
 				aria-label="${this.state.title || this.state.label}"
 				tooltip=${this.state.title}
 				@click=${this.handleClick}>
-				${this.renderLead}
+				^html${this.renderLead}
 				<slot name="lead"></slot>
-				${this.renderLabel}
+				^html${this.renderLabel}
 				<slot></slot>
-				${this.renderTrail}
+				^html${this.renderTrail}
 				<slot name="trail"></slot>
 			</button>
 		`;

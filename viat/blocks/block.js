@@ -48,14 +48,22 @@ export class Block {
 	}
 	async finalize() {
 		await this.setDefaults();
-		await this.setHash();
+		if (this.isSigned) {
+			await this.setPreHash();
+		} else {
+			await this.setHash();
+		}
 		return this;
+	}
+	get isDeterministic() {
+		return !this.isSigned;
 	}
 	setFilesystem(typeName) {
 		this.filesystem = this.filesystemConfig[typeName];
 		return this;
 	}
 	version = version;
+	isSigned = false;
 	typeName = 'generic';
 	blockType = blockTypes.generic;
 	fileType = fileExtensions.generic;

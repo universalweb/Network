@@ -148,8 +148,8 @@ export class PagedList extends WebComponent {
 		this.html`
 			<div class="pl-shell">
 				<div class="pl-table">
-					${this.renderHead}
-					${this.renderBody}
+					^html${this.renderHead}
+					^html${this.renderBody}
 				</div>
 				<div class="pl-pager">
 					<a class="pl-btn"

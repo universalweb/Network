@@ -250,7 +250,7 @@ export class ExplorerPage extends WebComponent {
 					</div>
 				</header>
 				<div class="ex-controls-bar">
-					<div class="ex-filters">${this.renderFilters}</div>
+					<div class="ex-filters">^html${this.renderFilters}</div>
 					<div class="ex-controls">
 						<a class="ex-btn"
 							href=${this.prevHref}
@@ -272,7 +272,7 @@ export class ExplorerPage extends WebComponent {
 						<span class="ex-cell ex-status">STATUS</span>
 						<span class="ex-cell ex-time">TIMESTAMP</span>
 					</div>
-					${this.renderRows}
+					^html${this.renderRows}
 				</div>
 			</div>
 		`;

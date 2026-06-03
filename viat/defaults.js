@@ -90,6 +90,13 @@ const INITIAL_PRE_ALLOCATION = BigInt(`${INITIAL_PRE_ALLOCATION_NUMBER}${COIN_ZE
 const DEFAULT_HASH_SIZE = 32;
 const DEFAULT_NONCE_SIZE = 16;
 const DEFAULT_QUANTUM_HASH_SIZE = 64;
+/* Network identity — bound into every block's META for cross-network replay protection. */
+const NETWORK_IDS = {
+	mainnet: 0,
+	testnet: 1,
+	devnet: 2,
+};
+const NETWORK_ID = NETWORK_IDS.mainnet;
 /*
     ~ ██╗    ██╗ █████╗ ██╗     ██╗     ███████╗████████╗    ██╗███╗   ██╗███████╗ ██████╗
     ~ ██║    ██║██╔══██╗██║     ██║     ██╔════╝╚══██╔══╝    ██║████╗  ██║██╔════╝██╔═══██╗
@@ -171,6 +178,8 @@ export const HASH_ALGORITHMS = {
 const RESERVE_TX_PERCENTAGE = 0.01;
 const RESERVE_TX_MIN = 1n;
 const RESERVE_TX_MAX = 10n;
+/* Hybrid-UTXO sweep cap — a transaction consumes up to this many prior receipts as inputs (sweep-and-condense). */
+const MAX_TRANSACTION_INPUTS = 16;
 /*
 ^ ███████╗██╗  ██╗██████╗  ██████╗ ██████╗ ████████╗
 ^ ██╔════╝╚██╗██╔╝██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝
@@ -204,6 +213,9 @@ const VIAT_DEFAULTS = {
 	DEFAULT_HASH_SIZE,
 	DEFAULT_NONCE_SIZE,
 	DEFAULT_QUANTUM_HASH_SIZE,
+	NETWORK_ID,
+	NETWORK_IDS,
+	MAX_TRANSACTION_INPUTS,
 	WALLETS,
 	VANITY_VERSION,
 };

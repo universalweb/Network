@@ -1,13 +1,15 @@
-// Keyboard subsystem — one master keydown listener, one canonical-combo
-// normalizer, one registry. Two front-ends share it:
-//   • programmatic — `this.hotKey(combo, callback, options)` on any WebComponent
-//   • declarative  — the `hotkey="combo"` template behavior (behaviors/hotkey.js)
-//
-// A combo is a SET of keys held simultaneously — order-insensitive. The
-// canonical form lowercases, resolves aliases, sorts the tokens and joins with
-// '+', so `a+b` ≡ `b+a` and a registration always agrees with the combo rebuilt
-// from a live keydown. Importing this module is inert — listeners attach lazily
-// on the first `registerHotkey()` and detach when the registry empties.
+/*
+ * Keyboard subsystem — one master keydown listener, one canonical-combo
+ * normalizer, one registry. Two front-ends share it:
+ *   • programmatic — `this.hotKey(combo, callback, options)` on any WebComponent
+ *   • declarative  — the `hotkey="combo"` template behavior (behaviors/hotkey.js)
+ *
+ * A combo is a SET of keys held simultaneously — order-insensitive. The
+ * canonical form lowercases, resolves aliases, sorts the tokens and joins with
+ * '+', so `a+b` ≡ `b+a` and a registration always agrees with the combo rebuilt
+ * from a live keydown. Importing this module is inert — listeners attach lazily
+ * on the first `registerHotkey()` and detach when the registry empties.
+ */
 import { getOrInit, isPromiseLike, queueAsyncError } from '../utilities.js';
 const platform = typeof navigator !== 'undefined' ? (navigator.userAgentData?.platform || navigator.platform || '') : '';
 const isMac = (/mac|iphone|ipad|ipod/i).test(platform);
@@ -31,27 +33,35 @@ const KEY_ALIASES = {
 	spacebar: 'space',
 	up: 'arrowup',
 };
-// Modifiers that let a bare combo fire while a field is focused (input guard).
-// `shift` is excluded — `Shift`+key is ordinary typing, not a shortcut.
+/*
+ * Modifiers that let a bare combo fire while a field is focused (input guard).
+ * `shift` is excluded — `Shift`+key is ordinary typing, not a shortcut.
+ */
 const BYPASS_MODIFIERS = [
 	'alt', 'ctrl', 'meta',
 ];
-// `KeyboardEvent.key` values for the modifier keys themselves — never held;
-// their state is read from the event's modifier flags instead.
+/*
+ * `KeyboardEvent.key` values for the modifier keys themselves — never held;
+ * their state is read from the event's modifier flags instead.
+ */
 const MODIFIER_KEYS = new Set([
 	'Alt', 'AltGraph', 'Control', 'Meta', 'Shift',
 ]);
 const EMPTY_OPTIONS = {};
-// Returned when `combo` canonicalises to empty — a stable sentinel so the
-// caller still gets the standard `{ entry, unregister }` shape without a null
-// check at every site.
+/*
+ * Returned when `combo` canonicalises to empty — a stable sentinel so the
+ * caller still gets the standard `{ entry, unregister }` shape without a null
+ * check at every site.
+ */
 const EMPTY_REGISTRATION = {
 	entry: null,
 	unregister() {},
 };
-// Resolve a registration spec ('mod+k', 'b+a', 'Shift+Esc') to canonical form.
-// A shifted symbol is registered as its glyph (`~`, `|`) — never `shift+`<base>;
-// see `comboFromEvent` for why.
+/**
+ * Resolve a registration spec ('mod+k', 'b+a', 'Shift+Esc') to canonical form.
+ * A shifted symbol is registered as its glyph (`~`, `|`) — never `shift+`<base>;
+ * see `comboFromEvent` for why.
+ */
 export function canonicalizeCombo(spec) {
 	const tokens = String(spec).toLowerCase().split('+');
 	const parts = [];
@@ -74,9 +84,11 @@ export function canonicalizeCombo(spec) {
 	parts.sort();
 	return parts.join('+');
 }
-// Held-key tracking. Keyed by physical key id (`KeyboardEvent.code`) so keydown
-// and keyup stay symmetric even when a modifier is released mid-press and the
-// glyph changes (`~` down, `` ` `` up). The value is the glyph used in combos.
+/*
+ * Held-key tracking. Keyed by physical key id (`KeyboardEvent.code`) so keydown
+ * and keyup stay symmetric even when a modifier is released mid-press and the
+ * glyph changes (`~` down, `` ` `` up). The value is the glyph used in combos.
+ */
 const heldKeys = new Map();
 let masterAttached = false;
 function isModifierKey(rawKey) {
@@ -89,9 +101,11 @@ function normalizeEventKey(rawKey) {
 function physicalId(keyEvent, glyph) {
 	return keyEvent.code || glyph;
 }
-// `shift` carries information only for letters and named keys. For a shifted
-// symbol the glyph already encodes it (`~`, not `` ` ``), so adding `shift`
-// would double-count and never match a `~` registration.
+/**
+ * `shift` carries information only for letters and named keys. For a shifted
+ * symbol the glyph already encodes it (`~`, not `` ` ``), so adding `shift`
+ * would double-count and never match a `~` registration.
+ */
 function shiftIsMeaningful() {
 	let meaningful = false;
 	heldKeys.forEach((glyph) => {
@@ -169,9 +183,11 @@ function detachMasterListener() {
 	globalThis.removeEventListener('blur', clearHeld);
 	heldKeys.clear();
 }
-// Registry: canonicalCombo → Set<Entry>. Each Entry holds a WeakRef to its
-// target, so the registry never pins a component or element. The
-// FinalizationRegistry is the safety net for targets GC'd without cleanup.
+/*
+ * Registry: canonicalCombo → Set<Entry>. Each Entry holds a WeakRef to its
+ * target, so the registry never pins a component or element. The
+ * FinalizationRegistry is the safety net for targets GC'd without cleanup.
+ */
 const registry = new Map();
 const finalizationRegistry = new FinalizationRegistry(pruneEntry);
 function makeEntrySet() {
@@ -258,17 +274,21 @@ function dispatch(canonical, keyEvent) {
 		keyEvent.preventDefault();
 	}
 }
-// Release a single entry — detach from the GC net, prune from its bucket, and
-// cascade the empty-bucket → empty-registry → detach-master-listener chain.
-// The canonical teardown operation; manual unregister (from `registerHotkey`'s
-// returned closure) and the lifecycle sweep both route through it.
+/**
+ * Release a single entry — detach from the GC net, prune from its bucket, and
+ * cascade the empty-bucket → empty-registry → detach-master-listener chain.
+ * The canonical teardown operation; manual unregister (from `registerHotkey`'s
+ * returned closure) and the lifecycle sweep both route through it.
+ */
 export function releaseHotkeyEntry(entry) {
 	finalizationRegistry.unregister(entry);
 	pruneEntry(entry);
 }
-// Sweep a component's `hotkeyEntries` set on disconnect — releases each entry
-// then empties the set. Safe on an empty or undefined set (components that
-// never registered a hotkey still hit this path).
+/**
+ * Sweep a component's `hotkeyEntries` set on disconnect — releases each entry
+ * then empties the set. Safe on an empty or undefined set (components that
+ * never registered a hotkey still hit this path).
+ */
 export function sweepHotkeyEntries(entries) {
 	if (!entries || entries.size === 0) {
 		return;
@@ -276,16 +296,18 @@ export function sweepHotkeyEntries(entries) {
 	entries.forEach(releaseHotkeyEntry);
 	entries.clear();
 }
-// Low-level registration shared by both front-ends. `target` is a WebComponent
-// (programmatic) or an Element (template). `options`: { whileTyping, allowRepeat,
-// preventDefault }.
-//
-// Returns `{ entry, unregister }`. The `entry` IS the teardown handle — it is
-// its own key in every Set it lives in (the registry bucket and the
-// component's `hotkeyEntries`), so removal is always O(1) and never has to
-// search. Callers that only want manual release ignore `entry` and call
-// `unregister()`; framework-internal callers (`hotKey()` below) capture the
-// entry into the component's set so lifecycle sweep needs no closures.
+/**
+ * Low-level registration shared by both front-ends. `target` is a WebComponent
+ * (programmatic) or an Element (template). `options`: { whileTyping, allowRepeat,
+ * preventDefault }.
+ *
+ * Returns `{ entry, unregister }`. The `entry` IS the teardown handle — it is
+ * its own key in every Set it lives in (the registry bucket and the
+ * component's `hotkeyEntries`), so removal is always O(1) and never has to
+ * search. Callers that only want manual release ignore `entry` and call
+ * `unregister()`; framework-internal callers (`hotKey()` below) capture the
+ * entry into the component's set so lifecycle sweep needs no closures.
+ */
 export function registerHotkey(target, combo, handler, source, options) {
 	const canonical = canonicalizeCombo(combo);
 	if (!canonical) {
@@ -308,11 +330,13 @@ export function registerHotkey(target, combo, handler, source, options) {
 		},
 	};
 }
-// Programmatic front-end — mixed onto WebComponent.prototype by base.js, so
-// `this` is the component. The entry itself is tracked in `this.hotkeyEntries`
-// (no per-registration closure stored) and released by the lifecycle sweep on
-// disconnect. The returned releaser is for the rare manual-release case; if
-// the caller drops it, it is collected — only the entry stays live.
+/**
+ * Programmatic front-end — mixed onto WebComponent.prototype by base.js, so
+ * `this` is the component. The entry itself is tracked in `this.hotkeyEntries`
+ * (no per-registration closure stored) and released by the lifecycle sweep on
+ * disconnect. The returned releaser is for the rare manual-release case; if
+ * the caller drops it, it is collected — only the entry stays live.
+ */
 export function hotKey(combo, callback, options) {
 	const component = this;
 	const binding = registerHotkey(component, combo, callback, 'api', options);
@@ -326,8 +350,10 @@ export function hotKey(combo, callback, options) {
 		component.hotkeyEntries?.delete(entry);
 	};
 }
-// Live components also bound to `combo`, excluding `this` — lets a component
-// see its co-listeners (e.g. for a "show all shortcuts" overlay).
+/**
+ * Live components also bound to `combo`, excluding `this` — lets a component
+ * see its co-listeners (e.g. for a "show all shortcuts" overlay).
+ */
 export function hotKeyListeners(combo) {
 	const bucket = registry.get(canonicalizeCombo(combo));
 	const others = [];

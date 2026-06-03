@@ -149,3 +149,23 @@ export class Store {
 	}
 }
 export const globalState = Store.create();
+/*
+ * A reactive REALM is the object-reference replacement for the old `global.`
+ * string prefix: a self-contained {bus, read, write, global} that says WHICH
+ * reactive store a dependency belongs to. Routing, value resolution, and
+ * two-way writes go through the realm directly — no string parsing, and
+ * local / global / private channels never co-mingle. This is the shared
+ */
+// global realm singleton; per-component local realms live in state.js.
+export const globalRealm = {
+	bus: globalState.bus,
+	global: true,
+	read(path) {
+		return getValueAtPath(globalState.proxy, path);
+	},
+	write(path, value) {
+		globalState.set({
+			[path]: value,
+		});
+	},
+};

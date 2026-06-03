@@ -56,9 +56,11 @@ function findFromParams(params) {
 	}
 	return component;
 }
-// Method registry as a Map so registerMethod's cleanup can use map.delete()
-// instead of the `delete` keyword (V8 deopt). Built-in handlers are inserted
-// up front; user-registered methods append.
+/*
+ * Method registry as a Map so registerMethod's cleanup can use map.delete()
+ * instead of the `delete` keyword (V8 deopt). Built-in handlers are inserted
+ * up front; user-registered methods append.
+ */
 const handlers = new Map();
 handlers.set('ai.listComponents', () => {
 	return listComponents().map(({ id, component }) => {

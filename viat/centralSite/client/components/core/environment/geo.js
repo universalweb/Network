@@ -1,6 +1,8 @@
-// Opt-in geolocation. Importing alone does NOT prompt the user. Call
-// requestGeo() to trigger the permission dialog. Once granted, position
-// is watched continuously and written to globalState.environment.geo.
+/*
+ * Opt-in geolocation. Importing alone does NOT prompt the user. Call
+ * requestGeo() to trigger the permission dialog. Once granted, position
+ * is watched continuously and written to globalState.environment.geo.
+ */
 import { emitDelegate } from '../dom/delegate.js';
 import { globalState } from '../state/globalState.js';
 let watchId = null;

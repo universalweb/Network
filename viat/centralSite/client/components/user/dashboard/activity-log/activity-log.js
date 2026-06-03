@@ -149,7 +149,7 @@ export class ActivityLog extends Panel {
 					.active=${() => this.state.activeTab}
 					@tab-change=${this.handleTabChange}></ui-tabs>
 				<div class="output-feed">
-					${() => {
+					^html${() => {
 						if (this.computeVisibleEntries().length > 0) {
 							return '';
 						}

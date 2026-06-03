@@ -46,7 +46,7 @@ Produce a component that is:
 - `onMount()` / `onLive()` — first-render-done hooks (measurement, focus, animation); fire once.
 - `onVisible()` / `onIntersect()` — viewport-gated work.
 - `onDisconnect()` — only for what the framework cannot auto-clean (rare). **Never write `onUnmount` — it does not exist.**
-- Await lifecycle on the `this.lifecycle.whenX` namespace (`whenConnected`, `whenRendered`, `whenMounted`, `whenLive`, `whenDisconnected`, `whenDestroyed`) — not top-level `this.whenX`.
+- Await lifecycle on the `this.lifecycle.whenX` namespace (`whenConnected`, `whenRendered`, `whenMounted`, `whenLive`, `whenVisible`, `whenDestroyed`) — not top-level `this.whenX`. There is no `whenDisconnected` promise (disconnect is recurring, not one-shot) — observe disconnect via the `onDisconnect()` hook, `isDisconnected` / `phase === 'disconnected'`, or the native `disconnectedCallback`.
 
 ## 3. Render discipline — the patch-pass model
 

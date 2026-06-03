@@ -1,5 +1,6 @@
 import {
 	assignPromisePair,
+	clearRealmUnsubs,
 	clearUnsubs,
 	fireResolver,
 	isShadowRoot,
@@ -23,18 +24,22 @@ export const LIFECYCLE_PROMISE = Object.freeze({
 	MOUNTED: 'whenMounted',
 	LIVE: 'whenLive',
 	VISIBLE: 'whenVisible',
-	DISCONNECTED: 'whenDisconnected',
 	DESTROYED: 'whenDestroyed',
 });
+/*
+ * The forward connect-cycle promises: created on connect, re-armed after a
+ * disconnect (so a reconnect / DOM move gets fresh ones), and resolved as
+ * "stranded" if the element disconnects before the cycle completes (so awaiters
+ * of whenLive/etc. on an early-detached element never hang). One array drives
+ * both create + stranded-resolve since the sets are identical.
+ *
+ * Deliberately NO `whenDisconnected`: disconnect is a RECURRING transition, and a
+ * one-shot promise is the wrong primitive (it would have to be re-armed every
+ * cycle — which was a footgun). Nothing consumed it. Observe disconnect via the
+ * `onDisconnect` hook, `phase === 'disconnected'` / `isDisconnected`, or the
+ * native `disconnectedCallback`.
+ */
 const CONNECT_CYCLE_KEYS = [
-	LIFECYCLE_PROMISE.CONNECTED,
-	LIFECYCLE_PROMISE.RENDERED,
-	LIFECYCLE_PROMISE.MOUNTED,
-	LIFECYCLE_PROMISE.LIVE,
-	LIFECYCLE_PROMISE.VISIBLE,
-	LIFECYCLE_PROMISE.DISCONNECTED,
-];
-const STRANDED_CYCLE_KEYS = [
 	LIFECYCLE_PROMISE.CONNECTED,
 	LIFECYCLE_PROMISE.RENDERED,
 	LIFECYCLE_PROMISE.MOUNTED,
@@ -78,18 +83,22 @@ export async function handleConnect() {
 		Logger.debug('WebComponent', `[${this.tagName}] connectedCallback`);
 	}
 	attachToParent(this, resolveParentHost(this));
-	// `await this.applyStyles()` used to queue a microtask EVERY instance
-	// even when the styleMap was already populated (warm path, instances
-	// 2..N of the class — synchronous adoptedStyleSheets assign). For a
-	// 500-item list that was ~25ms of pure microtask overhead. Only await
-	// when applyStyles actually returns a promise.
+	/*
+	 * `await this.applyStyles()` used to queue a microtask EVERY instance
+	 * even when the styleMap was already populated (warm path, instances
+	 * 2..N of the class — synchronous adoptedStyleSheets assign). For a
+	 * 500-item list that was ~25ms of pure microtask overhead. Only await
+	 * when applyStyles actually returns a promise.
+	 */
 	const stylesResult = this.applyStyles();
 	if (stylesResult && typeof stylesResult.then === 'function') {
 		await stylesResult;
 	}
-	// Same pattern for `onConnect` — components without an `onConnect`
-	// hook used to pay one microtask for `await undefined`. Only await if
-	// the hook exists AND its return is a thenable.
+	/**
+	 * Same pattern for `onConnect` — components without an `onConnect`
+	 * hook used to pay one microtask for `await undefined`. Only await if
+	 * the hook exists AND its return is a thenable.
+	 */
 	if (this.onConnect) {
 		const connectResult = this.onConnect();
 		if (connectResult && typeof connectResult.then === 'function') {
@@ -137,18 +146,18 @@ export async function handleDisconnect() {
 	this.clearDelegateListeners();
 	sweepHotkeyEntries(this.hotkeyEntries);
 	clearUnsubs(this.gestureUnsubs);
+	this.clearInjectLinks();
 	this.refsMap = null;
 	this.refsProxy = null;
 	this.cleanupTemplate();
 	this.templateBuilt = false;
 	this.firstRenderDone = false;
 	this.isRendering = false;
-	clearUnsubs(this.renderDepUnsubs);
+	clearRealmUnsubs(this.renderDepUnsubs);
 	this.clearEventListeners();
 	this.resolveStrandedConnectCyclePromises();
 	await this.onDisconnect?.();
 	this.phase = PHASE.DISCONNECTED;
-	fireResolver(this.lifecycle, LIFECYCLE_PROMISE.DISCONNECTED);
 	this.createConnectCyclePromises();
 	if (this.pendingDestroy) {
 		await this.handleDestroy();
@@ -174,8 +183,8 @@ export function destroy() {
 	return this.lifecycle.whenDestroyed;
 }
 export function resolveStrandedConnectCyclePromises() {
-	for (let i = 0; i < STRANDED_CYCLE_KEYS.length; i++) {
-		fireResolver(this.lifecycle, STRANDED_CYCLE_KEYS[i]);
+	for (let i = 0; i < CONNECT_CYCLE_KEYS.length; i++) {
+		fireResolver(this.lifecycle, CONNECT_CYCLE_KEYS[i]);
 	}
 	this.lifecycle.treeVisiblePromise = null;
 }

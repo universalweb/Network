@@ -1,6 +1,7 @@
-import { eachArray, eachObject, hasOwn, isArray, isString } from '../utilities.js';
-import { assertStaticStyles } from '../debug/assertions.js';
-import { collectClassChain } from '../attrs/staticConfig.js';
+import { applyHeadStyles, mergeStyleEntries } from './headStyles.js';
+import {
+	eachArray, hasOwn, isArray, isString,
+} from '../utilities.js';
 import { loadSheet } from './css-loader.js';
 const sheetCache = new Map();
 export function styleSheet(source, metaUrl) {
@@ -24,20 +25,7 @@ export function styleSheet(source, metaUrl) {
 	return sheet;
 }
 export async function compileStyles(ComponentClass) {
-	const chain = collectClassChain(ComponentClass);
-	const merged = new Map();
-	eachArray(chain, (classRef) => {
-		if (!hasOwn(classRef, 'styles')) {
-			return;
-		}
-		assertStaticStyles(classRef.styles, classRef.name);
-		eachObject(classRef.styles, (key, value) => {
-			merged.set(key, {
-				owner: classRef,
-				value,
-			});
-		});
-	});
+	const merged = mergeStyleEntries(ComponentClass);
 	const ordered = [];
 	const tasks = [];
 	merged.forEach((entry, key) => {
@@ -93,24 +81,28 @@ export function ensureCompiledStyles(ComponentClass) {
 	});
 	return promise;
 }
-// ── Light-DOM (no-shadow) style scoping ──────────────────────────────
-// A no-shadow component has no shadowRoot to adopt sheets into, so its styles
-// would leak across the whole document. We scope them with `@scope (tag) { … }`
-// — the custom-element tag is unique per type, so one injection covers every
-// instance, and `@scope` confines rules to each host's own subtree (handling
-// nested same-tag instances natively). `:host` → `:scope`. Injection is
-// once-per-class + append-only (other instances may outlive any one; never
-// removed on unmount). Constraint: `<slot>`/`::slotted`/`:host-context` don't
-// exist in light DOM.
-// BROWSER FLOOR: `@scope` requires Chrome 118+ / Safari 17.4+ / Firefox 128+.
-// This is the project's binding floor — higher than the Promise.withResolvers
-// floor (FF 121) in lifecycle/scheduler.js. Only no-shadow components hit it;
-// shadow-DOM components (the default) have no `@scope` dependency.
+/*
+ * ── Light-DOM (no-shadow) style scoping ──────────────────────────────
+ * A no-shadow component has no shadowRoot to adopt sheets into, so its styles
+ * would leak across the whole document. We scope them with `@scope (tag) { … }`
+ * — the custom-element tag is unique per type, so one injection covers every
+ * instance, and `@scope` confines rules to each host's own subtree (handling
+ * nested same-tag instances natively). `:host` → `:scope`. Injection is
+ * once-per-class + append-only (other instances may outlive any one; never
+ * removed on unmount). Constraint: `<slot>`/`::slotted`/`:host-context` don't
+ * exist in light DOM.
+ * BROWSER FLOOR: `@scope` requires Chrome 118+ / Safari 17.4+ / Firefox 128+.
+ * This is the project's binding floor — higher than the Promise.withResolvers
+ * floor (FF 121) in lifecycle/scheduler.js. Only no-shadow components hit it;
+ * shadow-DOM components (the default) have no `@scope` dependency.
+ */
 const lightStyleClasses = new Set();
 function scopeHostSelectors(cssText) {
-	// `:host(.x)` → `:scope.x` (host matching .x); bare `:host` → `:scope`.
-	// The negative lookahead leaves `:host-context(` and `:host(` (handled above)
-	// untouched by the bare pass.
+	/*
+	 * `:host(.x)` → `:scope.x` (host matching .x); bare `:host` → `:scope`.
+	 * The negative lookahead leaves `:host-context(` and `:host(` (handled above)
+	 * untouched by the bare pass.
+	 */
 	return cssText
 		.replace(/:host\(([^)]*)\)/g, ':scope$1')
 		.replace(/:host(?![-\w(])/g, ':scope');
@@ -146,6 +138,17 @@ function injectLightStyles(ComponentClass, sheets, tagSelector) {
 }
 export async function applyStyles() {
 	const ComponentClass = this.constructor;
+	/*
+	 * Unscoped light DOM (useShadow=false + scopeStyles=false): emit normal
+	 * global CSS into <head> as deduped <link>/<style>. Branches BEFORE the
+	 * compile/fetch — path imports become <link> and the browser fetches them,
+	 * so this mode never inlines a sheet. addStyle/importStyles target shadow
+	 * children and don't apply here.
+	 */
+	if (!this.shadowRoot && ComponentClass.scopeStyles === false) {
+		applyHeadStyles(ComponentClass);
+		return;
+	}
 	if (this.styleMap) {
 		if (this.shadowRoot) {
 			this.shadowRoot.adoptedStyleSheets = [...this.styleMap.values()];
@@ -208,15 +211,17 @@ export async function removeStyle(key) {
 	}
 	return wasDeleted;
 }
-// Parent → child style injection. A parent does `<child .importStyles=${sheet}>`
-// (or `child.importStyles = sheet`) to push a stylesheet THROUGH the child's
-// shadow boundary — the sanctioned way to style a subcomponent's internals from
-// the outside. Accepts a CSSStyleSheet, a `./path.css` string, or an array of
-// either; each is adopted via `addStyle` (keyed, layered AFTER the child's own
-// styles so the parent's rules win). A setter, so it works declaratively in a
-// template and imperatively. Setting null/undefined clears the first imported
-// sheet. NOTE: targets a shadow child; a light-DOM child already inherits the
-// parent's global/`@scope` styles, so injection isn't needed there.
+/**
+ * Parent → child style injection. A parent does `<child .importStyles=${sheet}>`
+ * (or `child.importStyles = sheet`) to push a stylesheet THROUGH the child's
+ * shadow boundary — the sanctioned way to style a subcomponent's internals from
+ * the outside. Accepts a CSSStyleSheet, a `./path.css` string, or an array of
+ * either; each is adopted via `addStyle` (keyed, layered AFTER the child's own
+ * styles so the parent's rules win). A setter, so it works declaratively in a
+ * template and imperatively. Setting null/undefined clears the first imported
+ * sheet. NOTE: targets a shadow child; a light-DOM child already inherits the
+ * parent's global/`@scope` styles, so injection isn't needed there.
+ */
 export function importStyles(source) {
 	if (source === null || source === undefined) {
 		this.removeStyle('imported-0');

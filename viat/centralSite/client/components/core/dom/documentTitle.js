@@ -1,9 +1,11 @@
 import { globalState } from '../state/globalState.js';
-// Reactive `document.title`, driven by a reserved global-state key. The binding
-// is a MODULE-level observer on the shared global bus, so it outlives every
-// component (AppView included): once activated, setting the bound key updates
-// the page title whether AppView is mounted, closed, or never existed — the
-// "direct DOM change when AppView is closed" the title feature needs.
+/*
+ * Reactive `document.title`, driven by a reserved global-state key. The binding
+ * is a MODULE-level observer on the shared global bus, so it outlives every
+ * component (AppView included): once activated, setting the bound key updates
+ * the page title whether AppView is mounted, closed, or never existed — the
+ * "direct DOM change when AppView is closed" the title feature needs.
+ */
 let titleSubscription = null;
 let activeTitleKey = 'title';
 function applyDocumentTitle(value) {
@@ -11,8 +13,10 @@ function applyDocumentTitle(value) {
 		document.title = value;
 	}
 }
-// Module-scope bus handler — invoked with the new value on every change to the
-// bound key. First-class function, zero per-call closure.
+/**
+ * Module-scope bus handler — invoked with the new value on every change to the
+ * bound key. First-class function, zero per-call closure.
+ */
 function handleTitleChange(value) {
 	applyDocumentTitle(value);
 }
@@ -42,8 +46,10 @@ export function setDocumentTitle(value, key = activeTitleKey) {
 	}
 	globalState.proxy[key] = value;
 }
-// Auto-activate the default `title` key so `globalState.title = '…'` just works
-// out of the box. Guarded for non-DOM realms (SSR / workers).
+/**
+ * Auto-activate the default `title` key so `globalState.title = '…'` just works
+ * out of the box. Guarded for non-DOM realms (SSR / workers).
+ */
 if (typeof document !== 'undefined') {
 	syncDocumentTitle('title');
 }

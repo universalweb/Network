@@ -208,7 +208,7 @@ export class AccountDetailPage extends WebComponent {
 						<span class="ad-address-text">${this.addressDisplay}</span>
 					</button>
 				</header>
-				${this.renderStats}
+				^html${this.renderStats}
 				<div class="ad-section">
 					<div class="ad-section-head">
 						<span>Transactions</span>
@@ -231,7 +231,7 @@ export class AccountDetailPage extends WebComponent {
 							<span class="ad-cell ad-status">STATUS</span>
 							<span class="ad-cell ad-time">TIMESTAMP</span>
 						</div>
-						${this.renderTxList}
+						^html${this.renderTxList}
 					</div>
 				</div>
 			</div>

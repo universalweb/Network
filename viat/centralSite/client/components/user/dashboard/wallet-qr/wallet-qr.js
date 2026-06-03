@@ -188,7 +188,7 @@ export class WalletQr extends WebComponent {
 					tooltip="Click to copy image"
 					@click=${this.handleCopyImage}>
 					<div class="wq-frame">
-						${() => this.state.svg || '<div class="wq-empty-msg">no address</div>'}
+						^html${() => this.state.svg || '<div class="wq-empty-msg">no address</div>'}
 					</div>
 				</div>
 				<button class="wq-download"

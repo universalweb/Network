@@ -1,6 +1,8 @@
-// Default thresholds. Override by mutating these maps before importing
-// viewport.js, or by calling setBreakpoints() at any time (re-evaluates
-// the current state on next resize).
+/*
+ * Default thresholds. Override by mutating these maps before importing
+ * viewport.js, or by calling setBreakpoints() at any time (re-evaluates
+ * the current state on next resize).
+ */
 export const widthBreakpoints = {
 	xs: 480,
 	sm: 768,

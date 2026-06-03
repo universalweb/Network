@@ -1,6 +1,8 @@
-// Opt-in battery info. Call requestBattery() once to start tracking.
-// navigator.getBattery() is deprecated in some browsers — gracefully
-// no-ops if unavailable.
+/*
+ * Opt-in battery info. Call requestBattery() once to start tracking.
+ * navigator.getBattery() is deprecated in some browsers — gracefully
+ * no-ops if unavailable.
+ */
 import { emitDelegate } from '../dom/delegate.js';
 import { globalState } from '../state/globalState.js';
 let manager = null;

@@ -95,7 +95,7 @@ export class UiStatTable extends WebComponent {
 					<p class="hint">${this.state.hint}</p>
 				</header>
 				<div class="grid-table" style="grid-template-columns: ${template};">
-					${this.buildTableHtml()}
+					^html${this.buildTableHtml()}
 				</div>
 			</section>
 		`;

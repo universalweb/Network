@@ -1,6 +1,8 @@
-// User-facing plugin registry for app-level extension points (analytics,
-// telemetry, custom services). Framework subsystems (environment, etc.)
-// self-init via side-effect imports — they don't go through this.
+/*
+ * User-facing plugin registry for app-level extension points (analytics,
+ * telemetry, custom services). Framework subsystems (environment, etc.)
+ * self-init via side-effect imports — they don't go through this.
+ */
 const plugins = new Map();
 const ran = new WeakSet();
 export function registerPlugin(pluginName, plugin) {

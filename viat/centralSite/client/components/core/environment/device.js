@@ -1,5 +1,7 @@
-// One-shot detection at module load. Writes globalState.environment.device.
-// No listeners — these don't change at runtime.
+/*
+ * One-shot detection at module load. Writes globalState.environment.device.
+ * No listeners — these don't change at runtime.
+ */
 import { globalState } from '../state/globalState.js';
 const ua = navigator.userAgent || '';
 function detectOS() {

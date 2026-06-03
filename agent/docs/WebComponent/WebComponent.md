@@ -136,7 +136,7 @@ Hooks (define only what you need):
 
 ### Lifecycle promises — `this.lifecycle.*`
 
-`whenConnected`, `whenRendered`, `whenMounted`, `whenLive`, `whenVisible`, `whenDisconnected`, `whenDestroyed`. Plus prototype getter `this.whenTreeVisible` and phase helper `this.atPhase('mounted')`.
+`whenConnected`, `whenRendered`, `whenMounted`, `whenLive`, `whenVisible`, `whenDestroyed`. Plus prototype getter `this.whenTreeVisible` and phase helper `this.atPhase('mounted')`. There is **no** `whenDisconnected` promise — disconnect is a recurring transition, so observe it via the `onDisconnect()` hook, `isDisconnected` / `phase === 'disconnected'`, or the native `disconnectedCallback`.
 
 Parent phases await children's same phase first (bottom-up), so `await this.lifecycle.whenMounted` already means "self + all descendants mounted" — no `whenTreeMounted` alias needed.
 

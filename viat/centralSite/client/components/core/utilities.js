@@ -82,8 +82,10 @@ export function createElementFromHTML(htmlString) {
 	template.innerHTML = htmlString.trim();
 	return template.content.firstElementChild;
 }
-// Resolve a target spec to an element: a selector string is queried against
-// the document; an element passes straight through.
+/**
+ * Resolve a target spec to an element: a selector string is queried against
+ * the document; an element passes straight through.
+ */
 export function resolveTarget(target) {
 	return isString(target) ? document.querySelector(target) : target;
 }
@@ -266,18 +268,32 @@ export function clearUnsubs(set) {
 	set.forEach(disposeItem);
 	set.clear();
 }
-// Keep `current` (Map<key, sub>) in sync with `nextKeys` (Set<key>) by:
-//   - disposing the subscription for any key dropped
-//   - subscribing only for keys newly added
-// Returns the same `current` map (now updated). Stable keys keep their
-// subscription reference so we don't churn subscribers when state shapes
-// are unchanged.
-//
-// `subscribe` is invoked as `subscribe(key, context)` — the optional 4th
-// arg carries per-call data (component, spot, …) so callers can pass a
-// module-scope first-class fn instead of a wrapper closure that captures
-// the same data. Callbacks that don't need a context simply ignore the
-// second parameter.
+/**
+ * Tear down a 2-level realm unsub store (Map<realm, Map<path, unsub>>): dispose
+ * every per-realm submap, then drop the realms. `forEach(clearUnsubs)` passes
+ * each submap as clearUnsubs's first arg (extra forEach args ignored).
+ */
+export function clearRealmUnsubs(store) {
+	if (!store) {
+		return;
+	}
+	store.forEach(clearUnsubs);
+	store.clear();
+}
+/**
+ * Keep `current` (Map<key, sub>) in sync with `nextKeys` (Set<key>) by:
+ *   - disposing the subscription for any key dropped
+ *   - subscribing only for keys newly added
+ * Returns the same `current` map (now updated). Stable keys keep their
+ * subscription reference so we don't churn subscribers when state shapes
+ * are unchanged.
+ *
+ * `subscribe` is invoked as `subscribe(key, context)` — the optional 4th
+ * arg carries per-call data (component, spot, …) so callers can pass a
+ * module-scope first-class fn instead of a wrapper closure that captures
+ * the same data. Callbacks that don't need a context simply ignore the
+ * second parameter.
+ */
 export function syncSubsByDiff(current, nextKeys, subscribe, context) {
 	const entries = [...current.entries()];
 	for (let i = 0; i < entries.length; i += 1) {
@@ -296,15 +312,17 @@ export function syncSubsByDiff(current, nextKeys, subscribe, context) {
 	}
 	return current;
 }
-// Deep-merge two values per container-aware rules. Used when `mergeObjects` is
-// on for static-state chain merging and for ctor-arg state when the same key
-// already has a populated container. Rules:
-//   - both plain objects → recurse; incoming keys win on conflicts
-//   - both arrays → concat (existing then incoming)
-//   - both Sets → union
-//   - both Maps → new Map; incoming wins on key conflict
-//   - any other shape pair → incoming wins (replace)
-// Always returns a fresh container at the top level so callers can own it.
+/**
+ * Deep-merge two values per container-aware rules. Used when `mergeObjects` is
+ * on for static-state chain merging and for ctor-arg state when the same key
+ * already has a populated container. Rules:
+ *   - both plain objects → recurse; incoming keys win on conflicts
+ *   - both arrays → concat (existing then incoming)
+ *   - both Sets → union
+ *   - both Maps → new Map; incoming wins on key conflict
+ *   - any other shape pair → incoming wins (replace)
+ * Always returns a fresh container at the top level so callers can own it.
+ */
 export function deepMerge(existing, incoming) {
 	if (isPlainObject(existing) && isPlainObject(incoming)) {
 		const out = {
@@ -328,18 +346,20 @@ export function deepMerge(existing, incoming) {
 	}
 	return incoming;
 }
-// Recursive *container* clone — gives each instance its own owned-shape graph
-// for state purposes.
-//   - Arrays + plain objects: recurse, each element/value is smartClone'd
-//   - Maps + Sets:            new container, entries copied by reference
-//                             (matches `new Map(orig)` / `new Set(orig)`; an
-//                             entry that's an object stays shared — JS would
-//                             mutate it by reference anyway, and deep-cloning
-//                             keyed-collection entries forks singletons)
-//   - Class instances, Date, RegExp, functions, primitives: pass through
-// Used by the framework to materialize instance state from instance-supplied
-// templates. `static state` is never run through this — it's a shared
-// class-level template by design (opt in via `static cloneStaticState = true`).
+/**
+ * Recursive *container* clone — gives each instance its own owned-shape graph
+ * for state purposes.
+ *   - Arrays + plain objects: recurse, each element/value is smartClone'd
+ *   - Maps + Sets:            new container, entries copied by reference
+ *                             (matches `new Map(orig)` / `new Set(orig)`; an
+ *                             entry that's an object stays shared — JS would
+ *                             mutate it by reference anyway, and deep-cloning
+ *                             keyed-collection entries forks singletons)
+ *   - Class instances, Date, RegExp, functions, primitives: pass through
+ * Used by the framework to materialize instance state from instance-supplied
+ * templates. `static state` is never run through this — it's a shared
+ * class-level template by design (opt in via `static cloneStaticState = true`).
+ */
 export function smartClone(value) {
 	if (value === null || typeof value !== 'object') {
 		return value;

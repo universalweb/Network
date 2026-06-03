@@ -33,9 +33,9 @@ export class UIField extends WebComponent {
 					return this.state.required && 'is-required';
 				}
 			)}>
-				${this.state.label ? `<label class="field-label">${this.state.label}${this.state.required ? '<span class="field-required" aria-hidden="true"> *</span>' : ''}</label>` : ''}
+				^html${this.state.label ? `<label class="field-label">${this.state.label}${this.state.required ? '<span class="field-required" aria-hidden="true"> *</span>' : ''}</label>` : ''}
 				<div class="field-body"><slot></slot></div>
-				${() => {
+				^html${() => {
 					return (this.hintText ? `<div class="field-hint">${this.hintText}</div>` : '');
 				}}
 			</div>

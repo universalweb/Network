@@ -1,3 +1,5 @@
+import { AnchorBlock } from '#blocks/anchor/wallet';
+import { AuditBlock } from '#blocks/audit/index';
 import { Block } from './block.js';
 import { blockTypes } from '#viat/blocks/defaults';
 import { GenesisBlock } from '#blocks/system/genesis/block';
@@ -13,8 +15,16 @@ export async function createBlockFromObject(blockObject, config) {
 			return TransactionBlock.create(blockObject, config);
 		} case blockTypes.receipt: {
 			return ReceiptBlock.create(blockObject, config);
-		} case blockTypes.wallet: {
+		} case blockTypes.wallet:
+		case blockTypes.hybridWallet:
+		case blockTypes.quantumWallet: {
 			return WalletBlock.create(blockObject, config);
+		} case blockTypes.audit:
+		case blockTypes.genesisAudit: {
+			return AuditBlock.create(blockObject, config);
+		} case blockTypes.walletAnchor:
+		case blockTypes.receiptAnchor: {
+			return AnchorBlock.create(blockObject, config);
 		} case blockTypes.genesis: {
 			return GenesisBlock.create(blockObject, config);
 		} case blockTypes.genesisWallet: {

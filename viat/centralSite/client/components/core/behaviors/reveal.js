@@ -1,6 +1,8 @@
-// Adds `is-revealed` class the first time the element scrolls into view.
-// Use with CSS to animate (`opacity`, `transform`). Optional value is the
-// IntersectionObserver root margin (defaults to "0px 0px -10% 0px").
+/*
+ * Adds `is-revealed` class the first time the element scrolls into view.
+ * Use with CSS to animate (`opacity`, `transform`). Optional value is the
+ * IntersectionObserver root margin (defaults to "0px 0px -10% 0px").
+ */
 let observer = null;
 const elements = new WeakMap();
 function getObserver() {

@@ -16,6 +16,7 @@ import {
 	joinPath,
 	plainEqual,
 	queueAsyncError,
+	setValueAtPath,
 } from '../utilities.js';
 import { Logger } from '../debug/logger.js';
 import { Perf } from '../debug/perf.js';
@@ -48,6 +49,8 @@ class ComponentStateBus extends PathSubscriptions {
  * Lazy-init for a component's reactive bus. Single chokepoint so engine
  * callers (render.js subscribeRenderDeps, template.js subscribeStatePath)
  * don't each open-code the `??= new ComponentStateBus(...)` pattern.
+ * @param {WebComponent} component - The owning component.
+ * @returns {ComponentStateBus} The component's reactive state bus.
  */
 export function ensureStateBus(component) {
 	if (!component.stateBus) {
@@ -55,12 +58,44 @@ export function ensureStateBus(component) {
 	}
 	return component.stateBus;
 }
+/**
+ * A per-component LOCAL realm — the object-reference replacement for a bare
+ * (unprefixed) dependency string. Carries the component's bus (preserved across
+ * replaceState) and reads/writes against the LIVE STATE/stateProxy so it
+ * survives state replacement. `global:false` → renderDep subscription picks the
+ * plain markRenderDirty. Cached on the component so its identity is stable — it
+ * is the key for the tracking accumulator Map and for spot realm resolution.
+ */
+class LocalRealm {
+	constructor(component) {
+		this.component = component;
+		this.bus = ensureStateBus(component);
+		this.global = false;
+	}
+	read(path) {
+		return getValueAtPath(this.component.STATE, path);
+	}
+	write(path, value) {
+		setValueAtPath(this.component.stateProxy, path, value);
+	}
+}
+export function localRealm(component) {
+	if (!component.localRealmRef) {
+		component.localRealmRef = new LocalRealm(component);
+	}
+	return component.localRealmRef;
+}
 function notifyStateChange(component, changedPath) {
 	ensureStateBus(component).notify(changedPath);
 }
-// `static properties` may declare a path `react: false` — a non-reactive path
-// is written straight through to STATE but fires no notification, so it never
-// schedules a render or a spot patch. Default (no entry) is reactive.
+/**
+ * `static properties` may declare a path `react: false` — a non-reactive path
+ * is written straight through to STATE but fires no notification, so it never
+ * schedules a render or a spot patch. Default (no entry) is reactive.
+ * @param {WebComponent} component - The owning component.
+ * @param {string} fullPath - The dotted state path being written.
+ * @returns {boolean} True when a write to the path should notify subscribers.
+ */
 function pathIsReactive(component, fullPath) {
 	const propertyIndex = component.propertyIndex;
 	if (!propertyIndex || !propertyIndex.hasNonReactive) {
@@ -176,7 +211,10 @@ class CollectionProxyHandler {
 	}
 	get(facade, key, receiver) {
 		if (key === STATE_PATH) {
-			return facade.path;
+			return {
+				realm: localRealm(facade.component),
+				path: facade.path,
+			};
 		}
 		return Reflect.get(facade, key, receiver);
 	}
@@ -199,11 +237,13 @@ function reportWastedStateSet(target, key, value, fullPath, component) {
 	}
 	return `[${component.tagName}] wasted set on "${fullPath}" — new value is structurally equal to current but a different reference; reuse the existing reference to avoid re-render.`;
 }
-// Single trap shape shared by every state proxy. Methods live on the prototype
-// so JIT can monomorphize get/set/deleteProperty across all instances; each
-// proxy only pays for a 2-field handler instance, not 3 fresh closures.
-// Recursion goes through StateProxyHandler.create (a static factory) instead
-// of a free function so the class avoids forward references.
+/**
+ * Single trap shape shared by every state proxy. Methods live on the prototype
+ * so JIT can monomorphize get/set/deleteProperty across all instances; each
+ * proxy only pays for a 2-field handler instance, not 3 fresh closures.
+ * Recursion goes through StateProxyHandler.create (a static factory) instead
+ * of a free function so the class avoids forward references.
+ */
 class StateProxyHandler {
 	constructor(component, path) {
 		this.component = component;
@@ -219,9 +259,11 @@ class StateProxyHandler {
 		if (isSymbol(key)) {
 			return Reflect.get(target, key);
 		}
-		// Top-level accessor dispatch — declared via `get foo()` in `static
-		// state`. Fires with `this === component` so the getter can read
-		// sibling state through this.state.x and call instance methods.
+		/**
+		 * Top-level accessor dispatch — declared via `get foo()` in `static
+		 * state`. Fires with `this === component` so the getter can read
+		 * sibling state through this.state.x and call instance methods.
+		 */
 		if (this.path === '') {
 			const propertyIndex = this.component.propertyIndex;
 			if (propertyIndex?.hasAccessors && propertyIndex.getters.has(key)) {
@@ -242,12 +284,14 @@ class StateProxyHandler {
 		return propertyValue;
 	}
 	set(target, key, value) {
-		// Top-level accessor dispatch — declared via `set foo(v)` in `static
-		// state`. Fires with `this === component`. Notify the path so spots /
-		// renderDeps subscribed to this key re-evaluate (the new getter value
-		// is read on next access). A getter-only declaration (no setter)
-		// silently rejects writes — matches Reflect.set on a getter-only
-		// accessor descriptor.
+		/**
+		 * Top-level accessor dispatch — declared via `set foo(v)` in `static
+		 * state`. Fires with `this === component`. Notify the path so spots /
+		 * renderDeps subscribed to this key re-evaluate (the new getter value
+		 * is read on next access). A getter-only declaration (no setter)
+		 * silently rejects writes — matches Reflect.set on a getter-only
+		 * accessor descriptor.
+		 */
 		if (this.path === '') {
 			const propertyIndex = this.component.propertyIndex;
 			if (propertyIndex?.hasAccessors) {
@@ -309,22 +353,24 @@ export function replaceState(state = {}) {
 	} : {};
 	this.proxyCache = new WeakMap();
 	this.stateProxy = StateProxyHandler.create(this.STATE, this);
-	// The bus is intentionally preserved across a state replacement. Its
-	// `getValue(path)` closure resolves against `component.STATE` by
-	// reference, so every existing subscription automatically reads the new
-	// STATE on the next flush — including the computed-spot subscriptions
-	// behind function-expression bindings (e.g. `.state=${this.indicatorState}`)
-	// and the renderDep watches behind raw `${this.state.foo}` reads.
-	// Tearing the bus down — or wiping `tplState` to force a full template
-	// rebuild — orphans every one of those subscriptions and silently
-	// recreates every child custom element on each parent update (badge
-	// constructors fire over and over) and yanks focus out of any focused
-	// input. Re-firing each currently-subscribed path is enough: the bus
-	// coalesces them into a single microtask flush and each spot patches
-	// its DOM in place against the fresh STATE. There is no native
-	// "notify-all" path (`pathsOverlap('', x)` matches only the literal
-	// empty string), hence the explicit walk over `subs`.
-	// TODO: Consider a diff check instead of blind notify-all, but that has to be balanced against the cost of the diff itself and the fact that many updates are full replacements where every path changes.
+	/**
+	 * The bus is intentionally preserved across a state replacement. Its
+	 * `getValue(path)` closure resolves against `component.STATE` by
+	 * reference, so every existing subscription automatically reads the new
+	 * STATE on the next flush — including the computed-spot subscriptions
+	 * behind function-expression bindings (e.g. `.state=${this.indicatorState}`)
+	 * and the renderDep watches behind raw `${this.state.foo}` reads.
+	 * Tearing the bus down — or wiping `tplState` to force a full template
+	 * rebuild — orphans every one of those subscriptions and silently
+	 * recreates every child custom element on each parent update (badge
+	 * constructors fire over and over) and yanks focus out of any focused
+	 * input. Re-firing each currently-subscribed path is enough: the bus
+	 * coalesces them into a single microtask flush and each spot patches
+	 * its DOM in place against the fresh STATE. There is no native
+	 * "notify-all" path (`pathsOverlap('', x)` matches only the literal
+	 * empty string), hence the explicit walk over `subs`.
+	 * TODO: Consider a diff check instead of blind notify-all, but that has to be balanced against the cost of the diff itself and the fact that many updates are full replacements where every path changes.
+	 */
 	if (this.stateBus) {
 		const stateBus = this.stateBus;
 		const paths = [...stateBus.subs.keys()];
@@ -334,14 +380,16 @@ export function replaceState(state = {}) {
 	}
 	return this.updateView();
 }
-// Shallow-merge a partial patch into top-level state. Bypasses the per-key
-// proxy `set` trap so N writes cost N strict-equality compares instead of N
-// trap invocations. Notifies only the paths that actually changed; the path
-// bus coalesces the batch into a single flush + updateView. Nested writes
-// inside `partial.foo.bar` are NOT tracked — pass a top-level patch object.
-// Pass `{ silent: true }` to suppress notification entirely (hydration paths
-// where you intend to trigger render yourself).
-// Returns true if any key changed, false otherwise.
+/**
+ * Shallow-merge a partial patch into top-level state. Bypasses the per-key
+ * proxy `set` trap so N writes cost N strict-equality compares instead of N
+ * trap invocations. Notifies only the paths that actually changed; the path
+ * bus coalesces the batch into a single flush + updateView. Nested writes
+ * inside `partial.foo.bar` are NOT tracked — pass a top-level patch object.
+ * @param {object} partial - Top-level keys to merge into STATE.
+ * @param {object} [options] - `{ silent: true }` suppresses notification (hydration paths that trigger render themselves).
+ * @returns {boolean} True if any key changed, false otherwise.
+ */
 export function assignState(partial, options) {
 	if (!isPlainObject(partial)) {
 		return false;
@@ -386,6 +434,10 @@ class StateKeyObserver {
  * Subscribe one path to a handler that fires synchronously inside the state
  * write-trap. Internal helper for `observe` — returns the bare `Subscription`
  * instance so callers can wire it into their own tracker.
+ * @param {WebComponent} component - The owning component.
+ * @param {string} key - State path to observe.
+ * @param {Function} handler - Called as `(nextValue, previousValue, changedPath)`.
+ * @returns {Subscription} The bare subscription.
  */
 function observeStateKey(component, key, handler) {
 	const statePath = String(key ?? '');
@@ -395,17 +447,17 @@ function observeStateKey(component, key, handler) {
 	return bus.subscribe(statePath, StateKeyObserver.prototype.handle, observer);
 }
 /**
- * Subscribe to component-state changes. Three call shapes:
- *
- *   this.observe('user.name', cb)            // single key
- *   this.observe(['a', 'b', 'c'], cb)        // array of keys, one cb
- *   this.observe({ 'a': cb1, 'b': cb2 })     // object form, per-key cb
- *
- * Every resulting `Subscription` is registered in `this.stateUnsubs` so
- * `this.unobserve(key)` can find and tear it down by path, and so the
- * disconnect lifecycle cleans every dangling subscription automatically.
- * Single-key form returns the `Subscription` directly; multi-key / object
- * forms return a `TrackedBundle` whose `.unsubscribe()` clears the lot.
+ * Subscribe to component-state changes. Accepts a single key, an array of keys
+ * sharing one callback, or a `{ key: callback }` map. Every resulting
+ * `Subscription` registers in `this.stateUnsubs` so `unobserve(key)` can tear
+ * it down by path and the disconnect lifecycle cleans danglers automatically.
+ * @param {string|string[]|object} keys - A path, an array of paths, or a `{ path: cb }` map.
+ * @param {Function} [handler] - Callback for the single-key and array forms.
+ * @returns {Subscription|TrackedBundle} Single-key → a Subscription; array/object → a TrackedBundle.
+ * @example
+ * this.observe('user.name', cb);
+ * this.observe(['a', 'b', 'c'], cb);
+ * this.observe({ a: cb1, b: cb2 });
  */
 export function observe(keys, handler) {
 	const stateUnsubs = this.stateUnsubs ??= new ComponentSubscriptionTracker();
@@ -445,18 +497,18 @@ export function unobserve(key) {
 export async function updateView() {
 	const perfMark = Perf.mark('updateView');
 	try {
-		// Start both side-effects synchronously (preserving call order), then await
-		// only what is actually pending. The first-render hot path is a single
-		// task (renderView, no onStateChange) — awaiting it directly skips the
-		// per-child `Promise.all([…])` array + wrapper microtask the batch form
-		// otherwise pays N times during a list create.
+		/*
+		 * Start both side-effects synchronously (preserving call order), then await
+		 * only what is actually pending. The first-render hot path is a single
+		 * task (renderView, no onStateChange) — awaiting it directly skips the
+		 * per-child `Promise.all([…])` array + wrapper microtask the batch form
+		 * otherwise pays N times during a list create.
+		 */
 		const stateChangeResult = this.onStateChange?.();
 		const stateChangePending = isPromiseLike(stateChangeResult) ? stateChangeResult : null;
 		const renderPending = (this.isConnected && !this.templateBuilt) ? this.renderView() : null;
 		if (stateChangePending && renderPending) {
-			await Promise.all([
-				stateChangePending, renderPending,
-			]);
+			await Promise.all([stateChangePending, renderPending]);
 		} else if (renderPending) {
 			await renderPending;
 		} else if (stateChangePending) {
@@ -466,11 +518,17 @@ export async function updateView() {
 		Perf.measure('updateView', perfMark);
 	}
 }
-// Custom Elements lazy-property rescue. When a parent template assigns a
-// prop on a child element (e.g. `.state=${...}`, or any future `.foo=` whose
-// class declares `set foo(v)`) BEFORE that child's class has been imported
-// and customElements.define() upgrades the element, JavaScript silently
-// creates an own data property
+/**
+ * Custom Elements lazy-property rescue. When a parent template assigns a prop
+ * on a child element (`.state=${...}`, or any `.foo=` whose class declares
+ * `set foo(v)`) BEFORE that child's class is imported and upgraded, JS silently
+ * creates an own data property that shadows the prototype accessor. This walks
+ * the prototype chain to find that shadowed setter descriptor so the stashed
+ * value can be migrated back through the proper channel.
+ * @param {object} instance - The element instance to inspect.
+ * @param {string} key - The shadowed property name.
+ * @returns {PropertyDescriptor|null} The setter descriptor, or null if none found.
+ */
 function findPrototypeSetterDescriptor(instance, key) {
 	let proto = Object.getPrototypeOf(instance);
 	while (proto && proto !== HTMLElement.prototype) {

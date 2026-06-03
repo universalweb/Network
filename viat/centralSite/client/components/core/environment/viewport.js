@@ -1,8 +1,10 @@
-// Self-initializing viewport service. Single shared resize listener,
-// rAF-coalesced. Writes globalState.environment.viewport on every change.
-// Dispatches viewport:resize (every coalesced tick that actually changed)
-// and viewport:change (only on bucket transitions) at document level —
-// components subscribe via this.delegate('viewport:resize'/'viewport:change', ...).
+/*
+ * Self-initializing viewport service. Single shared resize listener,
+ * rAF-coalesced. Writes globalState.environment.viewport on every change.
+ * Dispatches viewport:resize (every coalesced tick that actually changed)
+ * and viewport:change (only on bucket transitions) at document level —
+ * components subscribe via this.delegate('viewport:resize'/'viewport:change', ...).
+ */
 import { emitDelegate } from '../dom/delegate.js';
 import { plainEqual } from '../utilities.js';
 import { globalState } from '../state/globalState.js';

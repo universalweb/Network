@@ -169,8 +169,8 @@ export class WalletOnboarding extends WebComponent {
 									<animateTransform attributeName="gradientTransform" type="rotate" from="0 32 32" to="360 32 32" dur="14s" repeatCount="indefinite"></animateTransform>
 								</linearGradient>
 							</defs>
-							<path class="wo-leg wo-leg-left" fill="url(#wo-grad)" d="M 11.54 15.23 L 16.46 12.77 L 32 43.85 L 32 56.14 Z"></path>
-							<path class="wo-leg wo-leg-right" fill="url(#wo-grad)" d="M 52.46 15.23 L 47.54 12.77 L 32 43.85 L 32 56.14 Z"></path>
+							<path class="wo-leg wo-leg-left" fill="url(#wo-grad)" d="M 11.54 15.23 L 16.46 12.77 L 32.8 43.85 L 32 56.14 Z"></path>
+							<path class="wo-leg wo-leg-right" fill="url(#wo-grad)" d="M 52.46 15.23 L 47.54 12.77 L 31.2 43.85 L 32 56.14 Z"></path>
 							<line class="wo-dash" stroke="url(#wo-grad)" x1="16" y1="32" x2="48" y2="32"></line>
 						</svg>
 					</span>

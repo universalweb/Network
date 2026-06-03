@@ -39,9 +39,9 @@ export class UIPanel extends WebComponent {
 						<span>
 							<span class="ph-id">${this.state.id}</span> // ${this.state.title}
 						</span>
-						${this.renderDot}
+						^html${this.renderDot}
 					</div>
-					<div class="panel-body">${this.renderBody}</div>
+					<div class="panel-body">^html${this.renderBody}</div>
 				</aside>
 			</ui-surface>
 		`;

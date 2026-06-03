@@ -60,7 +60,7 @@ export class BootScreen extends WebComponent {
 			})} role="status" aria-live="polite">
 				<div class="bs-stage">
 					<div class="bs-glow"></div>
-					${this.state.logo}
+					${this.bind('logo')}
 					<div class="bs-titles">
 						<div class="bs-title">${this.state.title}</div>
 						<div class="bs-subtitle">${this.state.subtitle}</div>

@@ -1,6 +1,8 @@
-// Single import point: pulls every builtin into the registry on first load,
-// then re-exports the public API for downstream code. Order is intentional —
-// we register fast/common behaviors first so any ordered iteration favors them.
+/*
+ * Single import point: pulls every builtin into the registry on first load,
+ * then re-exports the public API for downstream code. Order is intentional —
+ * we register fast/common behaviors first so any ordered iteration favors them.
+ */
 import { autoResize } from './autoResize.js';
 import { autofocus } from './autofocus.js';
 import { autoselect } from './autoselect.js';

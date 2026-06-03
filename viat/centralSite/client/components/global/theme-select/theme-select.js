@@ -55,7 +55,7 @@ export class UIThemeSelect extends WebComponent {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<button #btn class="ts-btn" popovertarget="theme-drop">
-				${() => {
+				^html${() => {
 					return `${this.currentLabel}<span class="ts-arrow">▾</span>`;
 				}}
 			</button>
@@ -65,7 +65,7 @@ export class UIThemeSelect extends WebComponent {
 				}}"
 				@beforetoggle=${this.handleBeforeToggle}
 				@click=${this.handlePopupClick}>
-				${() => {
+				^html${() => {
 					return THEMES.map((t) => {
 						const active = t.id === this.state.theme ? ' active' : '';
 						return `<button class="theme-option${active}" data-theme-id="${t.id}">${t.label}</button>`;

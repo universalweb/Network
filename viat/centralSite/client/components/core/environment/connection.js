@@ -1,5 +1,7 @@
-// navigator.connection (Network Information API). Self-init when imported.
-// Chromium-only at the moment; gracefully no-ops elsewhere.
+/*
+ * navigator.connection (Network Information API). Self-init when imported.
+ * Chromium-only at the moment; gracefully no-ops elsewhere.
+ */
 import { emitDelegate } from '../dom/delegate.js';
 import { plainEqual } from '../utilities.js';
 import { globalState } from '../state/globalState.js';

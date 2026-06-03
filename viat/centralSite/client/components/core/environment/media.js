@@ -1,6 +1,8 @@
-// matchMedia subscriptions for user-preference media queries. Self-init.
-// Writes globalState.environment.media and dispatches environment:change
-// when any preference flips.
+/*
+ * matchMedia subscriptions for user-preference media queries. Self-init.
+ * Writes globalState.environment.media and dispatches environment:change
+ * when any preference flips.
+ */
 import { emitDelegate } from '../dom/delegate.js';
 import { plainEqual } from '../utilities.js';
 import { globalState } from '../state/globalState.js';
