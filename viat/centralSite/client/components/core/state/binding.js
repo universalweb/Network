@@ -342,3 +342,27 @@ export function track(expr, thisArg) {
 		deps,
 	};
 }
+/*
+	`ListBinding` + `isBindingType` live here with `Binding` so the binding-type
+	vocabulary has one home that the template parser (extractor) and the runtime
+	core both import one-way — mirrors SPOT_TYPE → template/constants.js. Without
+	this, the parser's bare-attr inference (which must recognize a Binding value)
+	would force a circular template↔parser import.
+*/
+export class ListBinding extends Binding {
+	static isListBinding(source) {
+		return source instanceof ListBinding;
+	}
+	constructor(key, renderFn, keyFn) {
+		super(key, null);
+		this.renderFn = renderFn;
+		this.keyFn = keyFn;
+	}
+}
+export function isBindingType(x) {
+	if (!x) {
+		return false;
+	}
+	const c = x.constructor;
+	return c === Binding || c === ListBinding;
+}
