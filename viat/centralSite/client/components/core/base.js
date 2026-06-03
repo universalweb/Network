@@ -5,6 +5,7 @@
  * observer, styleApi, timers, factory, attrs, staticConfig) and are folded onto
  * the prototype by the `assign()` call at the bottom of this file.
  */
+import * as animationMethods from './dom/animation.js';
 import * as contextMethods from './state/context.js';
 import * as dom from './dom/dom.js';
 import * as eventMethods from './events/events.js';
@@ -624,6 +625,7 @@ assign(
 	stateMethods,
 	privateStateMethods,
 	contextMethods,
+	animationMethods,
 	eventMethods,
 	lifecycle,
 	renderMethods,

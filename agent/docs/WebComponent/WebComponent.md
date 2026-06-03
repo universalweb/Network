@@ -136,9 +136,15 @@ Hooks (define only what you need):
 
 ### Lifecycle promises — `this.lifecycle.*`
 
-`whenConnected`, `whenRendered`, `whenMounted`, `whenLive`, `whenVisible`, `whenDestroyed`. Plus prototype getter `this.whenTreeVisible` and phase helper `this.atPhase('mounted')`. There is **no** `whenDisconnected` promise — disconnect is a recurring transition, so observe it via the `onDisconnect()` hook, `isDisconnected` / `phase === 'disconnected'`, or the native `disconnectedCallback`.
+`whenConnected`, `whenRendered`, `whenMounted`, `whenLive`, `whenVisible`, `whenDestroyed`. Plus prototype getter `this.whenTreeVisible` and phase helper `this.atPhase('mounted')`.
+
+**Primitive rule — terminal vs recurring.** A *terminal* one-shot moment (`destroy()`) gets a **promise** (`whenDestroyed`, armed once, fired once). *Forward-readiness* milestones (`whenConnected`…`whenVisible`) are promises re-armed per connect cycle and stranded-resolved so they never hang. A *recurring backward transition* (disconnect) gets a **hook + phase**, never a promise — so there is deliberately **no `whenDisconnected`** (a one-shot promise can't model a recurring event without a footgun-y re-arm, and nothing consumed it). Observe disconnect via `onDisconnect()`, `isDisconnected` / `phase === 'disconnected'`, or the native `disconnectedCallback`. The disconnect↔connect asymmetry is correct by design — do not "restore `whenDisconnected` for symmetry."
+
+**`destroy()` and `whenDestroyed`.** `destroy()` is imperative **terminal** teardown — distinct from `remove()` (recoverable / reconnectable). It fires `onDestroy()`, sets `phase === 'destroyed'`, and resolves `whenDestroyed`. `whenDestroyed` resolves **only** through `destroy()`, never on a bare `remove()`/disconnect; it resolves with `undefined` and swaps to a shared resolved-promise singleton on fire (holding it never pins the component). Use `Promise.all(els.map(el => el.whenDestroyed))` to react after a batch is gone — but await **only** components you will deterministically `destroy()`, or the await stalls forever (and retains its continuation). This stall is a liveness property of awaiting any maybe-never event, identical for `onDestroy` — not a flaw of the promise.
 
 Parent phases await children's same phase first (bottom-up), so `await this.lifecycle.whenMounted` already means "self + all descendants mounted" — no `whenTreeMounted` alias needed.
+
+**Enter / leave animations.** Author-invoked prototype helpers — `await this.animateIn({ target?, className? })`, `await this.animateOut({ target?, className? })`, `await this.leave()`. They toggle a CSS class (default `is-entering` / `is-exiting`) on the target (default the host) and resolve when the animation/transition finishes via `Element.getAnimations()` — **hang-safe** (no animation → resolves immediately) for both `@keyframes` and `transition`s (finite only). `leave()` = `animateOut()` then `remove()`, the correct order for a visible exit (a detached node can't animate; `disconnectedCallback` fires post-removal). Zero cost unless called (never auto-invoked). Replaces the hand-rolled `exiting`-flag + `@animationend` + hardcoded-duration `setTimeout` idiom.
 
 ```js
 await this.lifecycle.whenConnected;
@@ -196,6 +202,7 @@ Do **not** wrap attribute interpolations in quotes — `class=${...}`, not `clas
 | `each(items, ChildClass, keyFn?)` | Same machinery on an arbitrary array reference — use inside a computed spot. |
 | `liveList(items, target, keyFn?)` | Imperative keyed-list render outside templates. |
 | `comp(value)` | Wraps a value as a component binding for advanced spots. |
+| `<portal to="body">…</portal>` | Teleport: renders content inline then atomically relocates it to a DOM target (default `document.body`) for modals/overlays. Reactivity, refs, `@click`, and child-component lifecycle survive the move (atomic `moveBefore`); shadow styles are carried (target wrapper re-adopts the component's sheets); torn down with its owner. `to` is **static**. `delegate`/`provide`/`inject` resolve by the target's physical ancestry. |
 | `bind` / `bind.text` / `.html` / `.component` / `.list` | Typed binding callables. Also available as `this.bind` on every instance — no import needed in templates. |
 
 Never imperatively build markup strings for collections — use `each` / `list`.

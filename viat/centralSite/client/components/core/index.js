@@ -24,7 +24,6 @@ export {
 	comp,
 	each,
 	html,
-	liveList,
 	list,
 	styles,
 } from './template.js';

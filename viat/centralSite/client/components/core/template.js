@@ -27,6 +27,7 @@ import {
 	toBase64Url,
 } from './utilities.js';
 import { isValidRefName, registerRef } from './dom/refs.js';
+import { projectPortals, removePortals } from './dom/portal.js';
 import { Perf } from './debug/perf.js';
 import { IS_PRODUCTION, Logger } from './debug/logger.js';
 import { globalRealm, globalState } from './state/globalState.js';
@@ -432,9 +433,6 @@ function createListElementByKind(kind, renderFn, item) {
 	}
 	return createRenderableElement(renderFn(item));
 }
-function createListElement(renderFn, item) {
-	return createListElementByKind(resolveRenderKind(renderFn), renderFn, item);
-}
 export class ListBinding extends Binding {
 	static isListBinding(source) {
 		return source instanceof ListBinding;
@@ -557,11 +555,6 @@ export function each(items, renderFn, keyFn = (item, index) => {
 		listItem.items = items.slice();
 	}
 	return listItem;
-}
-export function liveList(items, renderTarget, keyFn = (item, index) => {
-	return item?.key ?? item?.id ?? index;
-}) {
-	return each(items, renderTarget, keyFn);
 }
 export function list(key, renderFn, keyFn = (item, index) => {
 	return item?.key ?? item?.id ?? index;
@@ -2720,6 +2713,10 @@ function prepareRecipe(strings) {
 		dataBindPlans,
 		subeventPlans,
 		refPlans,
+		/* Detect a <portal> ONCE per template literal (recipe is cached), so the
+		 * per-render relocation pass is gated to templates that actually use it —
+		 * every portal-free component pays zero query cost on each build. */
+		hasPortal: Boolean(fragment.querySelector('portal')),
 		isStatic: !spotPlans.length && !dataBindPlans.length && !subeventPlans.length && !refPlans.length,
 	};
 }
@@ -3264,6 +3261,10 @@ function runCleanupOnNode(node) {
 	cleanupTemplateNode(node);
 }
 function runTemplateCleanup(component) {
+	/* Detach relocated <portal> wrappers first — fires on rebuild (before
+	 * re-projection) AND disconnect (cleanupTemplate), so a portal never outlives
+	 * its owner. A patch pass skips this path, leaving moved content to patch in place. */
+	removePortals(component);
 	if (component.tplState) {
 		cleanupSpots(component.tplState.spots);
 	}
@@ -3305,6 +3306,13 @@ export function templateHtml(strings, ...exprs) {
 	renderRoot.replaceChildren(instance.fragment);
 	if (renderRoot === this) {
 		projectLightChildren(this);
+	}
+	/* Relocate any <portal> markers AFTER mount — both shadow and light, since a
+	 * portal escapes the render root in either mode. Gated on the recipe flag so
+	 * portal-free templates skip the query; spots already point at the moved nodes,
+	 * so reactivity follows for free. */
+	if (recipe.hasPortal) {
+		projectPortals(this, renderRoot);
 	}
 	this.templateBuilt = true;
 	this.tplState = {

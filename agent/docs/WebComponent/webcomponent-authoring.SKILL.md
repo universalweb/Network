@@ -46,7 +46,21 @@ Produce a component that is:
 - `onMount()` / `onLive()` — first-render-done hooks (measurement, focus, animation); fire once.
 - `onVisible()` / `onIntersect()` — viewport-gated work.
 - `onDisconnect()` — only for what the framework cannot auto-clean (rare). **Never write `onUnmount` — it does not exist.**
-- Await lifecycle on the `this.lifecycle.whenX` namespace (`whenConnected`, `whenRendered`, `whenMounted`, `whenLive`, `whenVisible`, `whenDestroyed`) — not top-level `this.whenX`. There is no `whenDisconnected` promise (disconnect is recurring, not one-shot) — observe disconnect via the `onDisconnect()` hook, `isDisconnected` / `phase === 'disconnected'`, or the native `disconnectedCallback`.
+- Await lifecycle on the `this.lifecycle.whenX` namespace (`whenConnected`, `whenRendered`, `whenMounted`, `whenLive`, `whenVisible`, `whenDestroyed`) — not top-level `this.whenX`.
+- **Lifecycle-primitive rule — terminal vs recurring:**
+  - *Terminal, one-shot* (`destroy()`) → a **promise** (`whenDestroyed`). Armed once, fires once, never re-armed.
+  - *Forward-readiness within a cycle* (`whenConnected`…`whenVisible`) → promises, re-armed per connect cycle, stranded-resolved so they never hang.
+  - *Recurring backward transition* (disconnect) → **hook + phase**, never a promise. There is deliberately **no `whenDisconnected`** (a one-shot promise can't model a recurring event without a footgun-y re-arm; nothing consumed it). Observe disconnect via `onDisconnect()`, `isDisconnected` / `phase === 'disconnected'`, or the native `disconnectedCallback`. Do not "restore it for symmetry" — the asymmetry is correct.
+- `destroy()` = imperative **terminal** teardown (distinct from `remove()`, which is recoverable/reconnectable). It fires `onDestroy()`, sets `phase === 'destroyed'`, and resolves `whenDestroyed`. `whenDestroyed` resolves **only** via `destroy()`, never on a bare `remove()`/disconnect. `Promise.all(els.map(el => el.whenDestroyed))` is the clean batch-await ("react after all are gone") — but await **only** components you will deterministically `destroy()`, or the await stalls (and retains its continuation). The promise resolves with `undefined` and swaps to a shared singleton on fire, so holding it does not pin the component.
+
+## 2b. Enter / leave animations
+
+Author-invoked prototype helpers (zero cost unless called — the framework never auto-runs them):
+- `await this.animateIn({ target?, className? })` — add `className` (default `is-entering`) to `target` (default the **host**), await the CSS animation/transition, then strip the class.
+- `await this.animateOut({ target?, className? })` — add `className` (default `is-exiting`), await it, leave the class on (the element is leaving); the caller removes/dismisses next.
+- `await this.leave()` — `animateOut()` then `this.remove()`. The **correct order for a visible exit**: a detached node can't animate, and `disconnectedCallback`/`onDisconnect` fire *after* removal — never start an exit animation there. For terminal teardown, compose `await this.animateOut(); this.destroy()`.
+
+Settling uses `Element.getAnimations()` — **hang-safe** (no animation → resolves immediately, never waits forever) and covers both `@keyframes` and `transition`s (a reflow registers a just-triggered transition deterministically; exit animations must be **finite**). Prefer the host default or a static / `classList()`-bound class on the animated element — a raw `class="...${cond ? 'x' : ''}"` string spot rewrites the whole attribute and can drop an imperatively-added animation class. This replaces the hand-rolled `exiting`-flag + `@animationend` idiom (and any hardcoded fade-duration `setTimeout`).
 
 ## 3. Render discipline — the patch-pass model
 
@@ -59,6 +73,7 @@ The engine has two surgical update paths. There is **no whole-component re-rende
 - Events: `@click=${this.handleClick}` — bare method ref; engine calls with `this` = component.
 - Reactive class lists: `class=${classList('panel', () => { return this.state.open && 'is-open'; }, this.state.tags)}` — strings, token-returning fns, and reactive `Set` values collapse into a deduped class string with per-token diffing.
 - Keyed lists / child components: `each(items, ChildClass, keyFn)` or `list('stateKey', ChildClass)` from `'webcomponent'` — never imperative markup strings.
+- **Portal / Teleport**: wrap content in `<portal to="body">…</portal>` to relocate it to another DOM target (default `document.body`) — for modals/overlays that must escape `overflow`/stacking contexts. Content renders inline (spots/refs/`@click`/reactivity all work, and survive the move via an atomic `moveBefore`), then moves to the target; shadow-component styles are carried (the target wrapper re-adopts the component's sheets), and the subtree is torn down with its owner. `to` is a **static** attribute (no `${}`). Teleport semantics: `delegate`/`provide`/`inject` resolve by the target's physical ancestry, not the logical parent — pass data via props/bare reads. Keep a `<portal>` as a standalone element (same standalone rule as `<slot>`).
 - **Never query the DOM.** Write `#name` in the template, read `this.refs.name`. Ref names must match `/^[a-z_][a-z0-9_]*$/` — all lowercase, underscores allowed. `#camelCase` is lowercased by the parser and breaks; use `#snake_case`.
 - Arrow bodies must be block-bodied (`() => { return …; }`) per eslint.
 

@@ -162,11 +162,11 @@ export async function applyStyles() {
 		injectLightStyles(ComponentClass, result.array, this.localName);
 		return;
 	}
-	if (this.styleMap) {
-		this.shadowRoot.adoptedStyleSheets = [...this.styleMap.values()];
-		return;
-	}
-	this.shadowRoot.adoptedStyleSheets = result.array;
+	/*
+	 * addStyle/importStyles may have forked a styleMap during the await above; if
+	 * so it holds the live sheet set and supersedes the freshly compiled defaults.
+	 */
+	this.shadowRoot.adoptedStyleSheets = this.styleMap ? [...this.styleMap.values()] : result.array;
 }
 export function forkStyleMap() {
 	if (this.styleMap) {
