@@ -59,29 +59,6 @@ export function encodeSync(data) {
 		return;
 	}
 }
-// NOTE: USED FOR SIGNING AND VERIFICATION KEEPS DATA IN A STRICT ORDER
-export async function encodeStrict(data) {
-	if (noValue(data)) {
-		return;
-	}
-	try {
-		return encodeStrictRaw(data, rfc8949EncodeOptions);
-	} catch (error) {
-		// console.error(error);
-		return;
-	}
-}
-export function encodeStrictSync(data) {
-	if (noValue(data)) {
-		return;
-	}
-	try {
-		return encodeStrictRaw(data, rfc8949EncodeOptions);
-	} catch (error) {
-		// console.error(error);
-		return;
-	}
-}
 const BIGINT_UINT64_LIMIT = 18446744073709551616n;
 /*
 	Native big-endian minimal byte string for a non-negative bigint (no Buffer — browser-safe).
@@ -133,6 +110,29 @@ const strictEncodeOptions = Object.freeze({
 		bigint: strictBigintEncoder,
 	},
 });
+// NOTE: USED FOR SIGNING AND VERIFICATION KEEPS DATA IN A STRICT ORDER
+export async function encodeStrict(data) {
+	if (noValue(data)) {
+		return;
+	}
+	try {
+		return encodeStrictRaw(data, strictEncodeOptions);
+	} catch (error) {
+		// console.error(error);
+		return;
+	}
+}
+export function encodeStrictSync(data) {
+	if (noValue(data)) {
+		return;
+	}
+	try {
+		return encodeStrictRaw(data, strictEncodeOptions);
+	} catch (error) {
+		// console.error(error);
+		return;
+	}
+}
 export function objectToMapRecursive(obj) {
 	if (obj === null || typeof obj !== 'object') {
 		// Base case: primitives
@@ -191,8 +191,6 @@ export async function jsDecode(data) {
 const serialization = {
 	encode,
 	encodeStrict,
-	encodeStrictBig,
-	encodeStrictBigSync,
 	decode,
 	encodeStrictSync,
 	encodeSync,

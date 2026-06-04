@@ -60,6 +60,8 @@ export {
 	behaviorAttrNames,
 } from './behaviors/index.js';
 export { setInert } from './dom/inert.js';
+export { UniversalWebSocket } from './net/universalWebSocket.js';
+export { FRAME_TYPE } from './net/envelope.js';
 export { nextFrame, schedule } from './lifecycle/scheduler.js';
 export { atPhase } from './lifecycle/phase.js';
 export {

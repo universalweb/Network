@@ -2,7 +2,7 @@ import { AnchorBlock } from '#blocks/anchor/wallet';
 import { AuditBlock } from '#blocks/audit/index';
 import { Block } from '#viat/blocks/block';
 import { createBlockFromObject } from '#viat/blocks/utils';
-import { decode } from '#utilities/serialize';
+import { decode, encodeStrict } from '#utilities/serialize';
 import { TransactionBlock } from '#blocks/transactions/transaction/block';
 import viatCipherSuite from '#crypto/cipherSuite/viat.js';
 /*
@@ -105,7 +105,8 @@ line('10^58 block hashes (encode did not crash)', Boolean(bigBlock.get('hash')))
 const bigDecoded = await decode(await bigBlock.exportBinary());
 line('10^58 round-trips faithfully', bigDecoded.data.core.amount === bigAmount);
 line('decoded big amount is bigint', typeof bigDecoded.data.core.amount === 'bigint');
-line('small 1000n stays bigint (consistency)', bigDecoded.data.core.small === 1000n && typeof bigDecoded.data.core.small === 'bigint');
+line('small 1000n decodes as number (preferred serialization; accessor coerces)', bigDecoded.data.core.small === 1000 && typeof bigDecoded.data.core.small === 'number');
+line('number 1000 and bigint 1000n hash IDENTICALLY (consensus-robust)', bytesEqual(await encodeStrict({ value: 1000 }), await encodeStrict({ value: 1000n })));
 const bigReborn = await createBlockFromObject(bigDecoded);
 line('re-hash of decoded === original (cross-decode determinism)', bytesEqual(await bigReborn.hashData(), bigBlock.get('hash')));
 console.log('\n=== ANCHOR (deterministic from address) ===');

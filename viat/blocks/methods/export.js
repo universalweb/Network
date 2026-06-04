@@ -1,17 +1,17 @@
-import { encodeStrictBig } from '#utilities/serialize';
-/* Blocks use the bignum-safe canonical encoder — VIAT amounts (up to 10^58) exceed cborg's plain 2^64 int cap. */
+import { encodeStrict } from '#utilities/serialize';
+/* encodeStrict is the unified bignum-safe canonical encoder: amounts >= 2^64 (VIAT reaches 10^58) serialize as CBOR bignum tags, smaller values as preferred-serialization ints. */
 const methods = {
 	async exportBinary() {
-		return encodeStrictBig(this.get());
+		return encodeStrict(this.get());
 	},
 	async exportDataBinary() {
-		return encodeStrictBig(this.getData());
+		return encodeStrict(this.getData());
 	},
 	async exportMetaBinary() {
-		return encodeStrictBig(this.getMeta());
+		return encodeStrict(this.getMeta());
 	},
 	async exportCoreBinary() {
-		return encodeStrictBig(this.getCore());
+		return encodeStrict(this.getCore());
 	},
 	async exportObject() {
 		return this.get();
