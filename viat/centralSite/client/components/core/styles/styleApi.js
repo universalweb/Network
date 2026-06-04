@@ -2,6 +2,7 @@ import { applyHeadStyles, mergeStyleEntries } from './headStyles.js';
 import {
 	eachArray, hasOwn, isArray, isString,
 } from '../utilities.js';
+import { collectClassChain } from '../attrs/staticConfig.js';
 import { loadSheet } from './css-loader.js';
 const sheetCache = new Map();
 const COMPONENT_LAYER = 'uwc.components';
@@ -148,18 +149,33 @@ function buildScopedSheet(sheet, tagSelector) {
 	scoped.replaceSync(`@layer ${COMPONENT_LAYER} {\n@scope (${tagSelector}) {\n${scopeHostSelectors(cssText)}\n}\n}`);
 	return scoped;
 }
-function injectLightStyles(ComponentClass, sheets, tagSelector) {
+function injectLightStyles(ComponentClass, styleMap, tagSelector) {
 	if (lightStyleClasses.has(ComponentClass)) {
 		return;
 	}
 	lightStyleClasses.add(ComponentClass);
+	/*
+	 * Framework module sheets (owner === the WebComponent base) are GLOBAL — they
+	 * reach light DOM via styles/index.css @imports, so they must NOT be scoped to
+	 * this tag or re-layered (doing so would scope-trap the reset/utilities and
+	 * break their self-declared @layer bands). Only component-authored sheets (and
+	 * any runtime-injected keys absent from the static-style chain) get
+	 * @scope(tag) + @layer uwc.components. Mirrors the frameworkBase skip in
+	 * headStyles.applyHeadStyles.
+	 */
+	const frameworkBase = collectClassChain(ComponentClass)[0];
+	const entries = mergeStyleEntries(ComponentClass);
 	const scoped = [];
-	for (let sheetIndex = 0; sheetIndex < sheets.length; sheetIndex++) {
-		const built = buildScopedSheet(sheets[sheetIndex], tagSelector);
+	styleMap.forEach((sheet, key) => {
+		const entry = entries.get(key);
+		if (entry && entry.owner === frameworkBase) {
+			return;
+		}
+		const built = buildScopedSheet(sheet, tagSelector);
 		if (built) {
 			scoped.push(built);
 		}
-	}
+	});
 	if (scoped.length) {
 		document.adoptedStyleSheets = [...document.adoptedStyleSheets, ...scoped];
 	}
@@ -181,13 +197,13 @@ export async function applyStyles() {
 		if (this.shadowRoot) {
 			this.shadowRoot.adoptedStyleSheets = [...this.styleMap.values()];
 		} else {
-			injectLightStyles(ComponentClass, [...this.styleMap.values()], this.localName);
+			injectLightStyles(ComponentClass, this.styleMap, this.localName);
 		}
 		return;
 	}
 	const result = await ensureCompiledStyles(ComponentClass);
 	if (!this.shadowRoot) {
-		injectLightStyles(ComponentClass, result.array, this.localName);
+		injectLightStyles(ComponentClass, result.map, this.localName);
 		return;
 	}
 	/*
