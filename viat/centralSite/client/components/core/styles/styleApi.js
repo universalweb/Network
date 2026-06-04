@@ -4,6 +4,32 @@ import {
 } from '../utilities.js';
 import { loadSheet } from './css-loader.js';
 const sheetCache = new Map();
+const COMPONENT_LAYER = 'uwc.components';
+/**
+ * Wrap a component-authored sheet's cssText in @layer uwc.components so utility
+ * classes (uwc.util) win over it while it still beats base-element rules
+ * (uwc.base). Framework module sheets are NOT passed here — they self-declare
+ * their own @layer bands.
+ * @param {string} cssText - Raw component CSS.
+ * @returns {string} The layer-wrapped CSS.
+ */
+export function layerComponentSheet(cssText) {
+	return `@layer ${COMPONENT_LAYER} {\n${cssText}\n}`;
+}
+function sheetIsFrameworkOwned(owner) {
+	return owner === globalThis.WebComponent || (owner && owner.name === 'WebComponent');
+}
+function reLayer(sheet) {
+	if (!(sheet instanceof CSSStyleSheet)) { return sheet; }
+	const rules = sheet.cssRules;
+	let cssText = '';
+	for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
+		cssText += `${rules[ruleIndex].cssText}\n`;
+	}
+	const layered = new CSSStyleSheet();
+	layered.replaceSync(layerComponentSheet(cssText));
+	return layered;
+}
 export function styleSheet(source, metaUrl) {
 	if (isArray(source)) {
 		return Promise.all(source.map((sourceItem) => {
@@ -52,7 +78,7 @@ export async function compileStyles(ComponentClass) {
 		};
 		ordered.push(slot);
 		tasks.push(styleSheet(value, owner.url).then((sheet) => {
-			slot.sheet = sheet;
+			slot.sheet = sheetIsFrameworkOwned(owner) ? sheet : reLayer(sheet);
 		}));
 	});
 	await Promise.all(tasks);
@@ -117,7 +143,7 @@ function buildScopedSheet(sheet, tagSelector) {
 		cssText += `${rules[ruleIndex].cssText}\n`;
 	}
 	const scoped = new CSSStyleSheet();
-	scoped.replaceSync(`@scope (${tagSelector}) {\n${scopeHostSelectors(cssText)}\n}`);
+	scoped.replaceSync(`@layer ${COMPONENT_LAYER} {\n@scope (${tagSelector}) {\n${scopeHostSelectors(cssText)}\n}\n}`);
 	return scoped;
 }
 function injectLightStyles(ComponentClass, sheets, tagSelector) {

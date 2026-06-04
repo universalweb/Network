@@ -227,6 +227,14 @@ function render() {
     (await mod.uwcBase['uwc.reset']) instanceof CSSStyleSheet ? 'yes' : 'no', 'yes');
   cssTest.render();
 }
+// ── Task 16: component-sheet layering ──
+{
+  const api = await import('./components/core/styles/styleApi.js');
+  const wrapped = api.layerComponentSheet('.x { padding: 7px; }');
+  cssTest.record('layerComponentSheet wraps in @layer uwc.components',
+    /@layer\s+uwc\.components\s*\{/.test(wrapped) ? 'yes' : 'no', 'yes');
+  cssTest.render();
+}
 /* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
 render();
 globalThis.cssTestRender = render;
