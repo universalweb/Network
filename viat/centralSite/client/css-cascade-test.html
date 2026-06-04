@@ -152,6 +152,17 @@ function render() {
     inShadow([vars, sp], '<div class="gap-3" id="t" style="display:flex"><i></i><i></i></div>', '#t', 'columnGap'), '8px');
   cssTest.render();
 }
+// ── Task 9: util-layout.css ──
+{
+  const lay = await fetchSheet('./components/core/styles/modules/util-layout.css');
+  cssTest.record('.row is flex row',
+    cssTest.inShadow([lay], '<div class="row" id="t"></div>', '#t', 'flexDirection'), 'row');
+  cssTest.record('.stack is flex column',
+    cssTest.inShadow([lay], '<div class="stack" id="t"></div>', '#t', 'flexDirection'), 'column');
+  cssTest.record('.items-center aligns center',
+    cssTest.inShadow([lay], '<div class="row items-center" id="t"></div>', '#t', 'alignItems'), 'center');
+  cssTest.render();
+}
 /* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
 render();
 globalThis.cssTestRender = render;
