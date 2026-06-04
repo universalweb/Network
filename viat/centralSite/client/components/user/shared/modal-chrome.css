@@ -1,0 +1,96 @@
+/* Shared modal chrome — the slimmed, renamed successor to the genuinely shared
+ * rules of the retired legacy-dialog.css. Imported by the user modals via their
+ * `static styles` (owner = the modal class, so the framework re-layers this into
+ * uwc.components). Form-control rules are gone — base elements-forms.css covers
+ * input/textarea/button/code/label. Single-consumer chrome lives in each owning
+ * modal. NOT registered in the framework manifest: it loads only into modals
+ * that import it, instead of into every shadow root. */
+
+.modal-shell {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	/* Top padding clears the core modal's control strip (close / max / min). */
+	padding: 48px 28px 28px;
+	color: var(--popup-text);
+	font-family: var(--font-mono, ui-monospace, monospace);
+}
+.modal-head {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+}
+.modal-head-id {
+	font-weight: 700;
+	color: var(--cyan, var(--popup-text));
+	letter-spacing: 0.04em;
+}
+.modal-head-title {
+	color: var(--text-muted, var(--popup-text));
+	font-size: 0.75rem;
+	letter-spacing: 0.06em;
+}
+.modal-copy {
+	margin: 0;
+	font-size: 0.875rem;
+	line-height: 1.45;
+}
+.modal-copy strong { color: var(--popup-text); }
+.modal-copy em { font-style: italic; color: var(--popup-text); }
+.modal-meta {
+	display: grid;
+	gap: 6px;
+	background: var(--popup-bg-alt, rgba(255, 255, 255, 0.03));
+	border: 1px solid var(--popup-border);
+	border-radius: var(--radius-md, 6px);
+	padding: 12px 14px;
+	font-size: 0.75rem;
+}
+.modal-meta-row {
+	display: grid;
+	grid-template-columns: 86px 1fr;
+	gap: 12px;
+	align-items: baseline;
+}
+.modal-meta-key {
+	color: var(--text-muted, var(--popup-text));
+	letter-spacing: 0.06em;
+}
+.modal-meta-val {
+	color: var(--popup-text);
+	word-break: break-all;
+}
+.modal-meta-val.is-locked { color: var(--color-warn-text, #facc15); }
+.modal-meta-val.is-unlocked { color: var(--color-success-text, #4ade80); }
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+.field-label {
+	font-size: 0.7rem;
+	color: var(--text-muted, var(--popup-text));
+	letter-spacing: 0.06em;
+}
+.modal-error {
+	min-height: 18px;
+	font-size: 0.75rem;
+	color: var(--color-danger, #f87171);
+	opacity: 0;
+	transition: opacity 0.15s ease;
+}
+.modal-error.is-visible { opacity: 1; }
+.modal-actions {
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+}
+/* Click-to-copy modifier for base inputs/textareas (old .dialog-*.is-copyable). */
+input.is-copyable, textarea.is-copyable {
+	cursor: pointer;
+	word-break: break-all;
+}
+input.is-copyable:hover, textarea.is-copyable:hover {
+	border-color: var(--cyan, var(--popup-border));
+	color: var(--cyan, var(--popup-text));
+}
