@@ -138,6 +138,20 @@ function render() {
     inShadow([vars, legacy], '<div class="dialog-meta-row" id="t"><span></span><span></span></div>', '#t', 'display'), 'grid');
   cssTest.render();
 }
+// ── Task 8: util-spacing.css ──
+{
+  const vars = await fetchSheet('./styles/variables.css');
+  const sp   = await fetchSheet('./components/core/styles/modules/util-spacing.css');
+  const comp = sheetFrom('@layer uwc.components { .box { padding: 40px; } }');
+  const order = sheetFrom('@layer uwc.reset, uwc.base, uwc.components, uwc.util;');
+  cssTest.record('.p-5 = 16px',
+    inShadow([vars, sp], '<div class="p-5" id="t"></div>', '#t', 'paddingTop'), '16px');
+  cssTest.record('.p-0 utility beats layered component padding',
+    inShadow([order, vars, comp, sp], '<div class="box p-0" id="t"></div>', '#t', 'paddingTop'), '0px');
+  cssTest.record('.gap-3 = 8px on a flex row',
+    inShadow([vars, sp], '<div class="gap-3" id="t" style="display:flex"><i></i><i></i></div>', '#t', 'columnGap'), '8px');
+  cssTest.render();
+}
 /* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
 render();
 globalThis.cssTestRender = render;
