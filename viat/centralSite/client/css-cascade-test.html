@@ -235,6 +235,18 @@ function render() {
     /@layer\s+uwc\.components\s*\{/.test(wrapped) ? 'yes' : 'no', 'yes');
   cssTest.render();
 }
+// ── Task 19: end-to-end with the real manifest ──
+{
+  const mod = await import('./components/core/styles/manifest.js');
+  const sheets = await Promise.all(Object.values(mod.uwcBase));
+  const vars = await cssTest.fetchSheet('./styles/variables.css');
+  const comp = cssTest.sheetFrom('@layer uwc.components { button { padding: 50px; } }');
+  cssTest.record('e2e: .p-0 utility beats layered component button',
+    cssTest.inShadow([vars, ...sheets, comp], '<button class="p-0" id="t">x</button>', '#t', 'paddingTop'), '0px');
+  cssTest.record('e2e: bare button gets base padding under full manifest',
+    cssTest.inShadow([vars, ...sheets], '<button id="t">x</button>', '#t', 'paddingTop'), '8px');
+  cssTest.render();
+}
 /* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
 render();
 globalThis.cssTestRender = render;
