@@ -91,6 +91,18 @@ function render() {
     inShadow([vars, probe], '<div class="probe" id="t">x</div>', '#t', 'fontSize'), '11px');
   cssTest.render();
 }
+// ── Task 4: reset.css ──
+{
+  const reset = await fetchSheet('./components/core/styles/modules/reset.css');
+  const util  = sheetFrom('@layer uwc.util { .pz { padding: 0px; } }');
+  const comp  = sheetFrom('@layer uwc.components { .box { padding: 40px; } }');
+  // reset's @layer statement must order a later-adopted comp BELOW util:
+  cssTest.record('reset.css statement orders comp < util',
+    inShadow([reset, util, comp], '<div class="box pz" id="t"></div>', '#t', 'paddingTop'), '0px');
+  cssTest.record('reset applies border-box',
+    inShadow([reset], '<div id="t" style="width:100px;padding:10px;border:5px solid">x</div>', '#t', 'boxSizing'), 'border-box');
+  cssTest.render();
+}
 /* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
 render();
 globalThis.cssTestRender = render;
