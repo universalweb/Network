@@ -161,21 +161,26 @@ function injectLightStyles(ComponentClass, styleMap, tagSelector) {
 	 * break their self-declared @layer bands). Only component-authored sheets (and
 	 * any runtime-injected keys absent from the static-style chain) get
 	 * @scope(tag) + @layer uwc.components. Mirrors the frameworkBase skip in
-	 * headStyles.applyHeadStyles.
+	 * headStyles.applyHeadStyles — and its indexed-for over a materialized map:
+	 * runs once per class (the guard above), so the loop cost is moot and the
+	 * win is killing the per-entry anonymous callback. `for…of` is avoided in
+	 * core, so materialize-then-index is the eslint-clean, sibling-matching form.
 	 */
 	const frameworkBase = collectClassChain(ComponentClass)[0];
 	const entries = mergeStyleEntries(ComponentClass);
+	const pairs = [...styleMap];
 	const scoped = [];
-	styleMap.forEach((sheet, key) => {
+	for (let index = 0; index < pairs.length; index++) {
+		const key = pairs[index][0];
 		const entry = entries.get(key);
 		if (entry && entry.owner === frameworkBase) {
-			return;
+			continue;
 		}
-		const built = buildScopedSheet(sheet, tagSelector);
+		const built = buildScopedSheet(pairs[index][1], tagSelector);
 		if (built) {
 			scoped.push(built);
 		}
-	});
+	}
 	if (scoped.length) {
 		document.adoptedStyleSheets = [...document.adoptedStyleSheets, ...scoped];
 	}
