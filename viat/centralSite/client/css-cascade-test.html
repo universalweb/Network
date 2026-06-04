@@ -115,6 +115,19 @@ function render() {
     inShadow([vars, reset, forms, comp], '<button class="btn" id="t">x</button>', '#t', 'paddingTop'), '99px');
   cssTest.render();
 }
+// ── Task 6: elements-prose.css ──
+// reset.css is included because it zeroes bare-element margins (as in the app);
+// without it a bare <p> keeps its UA-default 16px margin. Tokens come from the
+// document-level adoption, so no vars sheet is needed here.
+{
+  const reset = await fetchSheet('./components/core/styles/modules/reset.css');
+  const prose = await fetchSheet('./components/core/styles/modules/elements-prose.css');
+  cssTest.record('p inside .prose gets margin (--space-4 = 12px)',
+    cssTest.inShadow([reset, prose], '<div class="prose"><p id="t">x</p></div>', '#t', 'marginBottom'), '12px');
+  cssTest.record('bare p OUTSIDE .prose is untouched (reset zeroes it, no prose leak)',
+    cssTest.inShadow([reset, prose], '<p id="t">x</p>', '#t', 'marginBottom'), '0px');
+  cssTest.render();
+}
 /* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
 render();
 globalThis.cssTestRender = render;
