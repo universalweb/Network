@@ -204,6 +204,18 @@ function render() {
     cssTest.inShadow([an], '<div class="anim-pulse" id="t">x</div>', '#t', 'animationIterationCount'), 'infinite');
   cssTest.render();
 }
+// ── Task 14: effects.css ──
+{
+  const vars = await fetchSheet('./styles/variables.css');
+  const fx   = await fetchSheet('./components/core/styles/modules/effects.css');
+  cssTest.record('.full-bleed is absolutely positioned',
+    cssTest.inShadow([vars, fx], '<div class="full-bleed" id="t">x</div>', '#t', 'position'), 'absolute');
+  cssTest.record('.hero-split is a 2-col grid',
+    (cssTest.inShadow([vars, fx], '<div class="hero hero-split" id="t"><a></a><b></b></div>', '#t', 'gridTemplateColumns').split(' ').length === 2) ? 'yes' : 'no', 'yes');
+  cssTest.record('.fx-glow has a box-shadow',
+    (cssTest.inShadow([vars, fx], '<div class="fx-glow" id="t">x</div>', '#t', 'boxShadow') !== 'none') ? 'yes' : 'no', 'yes');
+  cssTest.render();
+}
 /* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
 render();
 globalThis.cssTestRender = render;
