@@ -193,6 +193,17 @@ function render() {
     (parseFloat(cssTest.inShadow([vars, su], '<div class="border" id="t">x</div>', '#t', 'borderTopWidth')) > 0) ? 'yes' : 'no', 'yes');
   cssTest.render();
 }
+// ── Task 13: animations.css ──
+{
+  const an = await fetchSheet('./components/core/styles/modules/animations.css');
+  cssTest.record('.anim-spin uses uwc-spin keyframes',
+    cssTest.inShadow([an], '<div class="anim-spin" id="t">x</div>', '#t', 'animationName'), 'uwc-spin');
+  cssTest.record('.anim-fade-in-up uses uwc-fade-in-up',
+    cssTest.inShadow([an], '<div class="anim-fade-in-up" id="t">x</div>', '#t', 'animationName'), 'uwc-fade-in-up');
+  cssTest.record('.anim-pulse loops infinitely',
+    cssTest.inShadow([an], '<div class="anim-pulse" id="t">x</div>', '#t', 'animationIterationCount'), 'infinite');
+  cssTest.render();
+}
 /* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
 render();
 globalThis.cssTestRender = render;
