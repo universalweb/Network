@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>UWC CSS cascade tests</title>
+<style>body{font:13px ui-monospace,monospace;background:#0E1528;color:#cdd0d8;padding:20px}
+.pass{color:#4affde}.fail{color:#ff5f5f;font-weight:700}</style>
+</head>
+<body>
+<h1>UWC CSS cascade tests</h1>
+<pre id="out">running…</pre>
+<script type="module">
+const results = [];
+function record(name, actual, expected) {
+  const ok = String(actual) === String(expected);
+  results.push({ name, actual, expected, ok });
+}
+function sheetFrom(cssText) { const sheet = new CSSStyleSheet(); sheet.replaceSync(cssText); return sheet; }
+async function fetchSheet(path) { const text = await fetch(path).then((response) => { return response.text(); }); return sheetFrom(text); }
+function inShadow(sheets, markup, selector, prop) {
+  const host = document.createElement('div');
+  document.body.appendChild(host);
+  const root = host.attachShadow({ mode: 'open' });
+  root.adoptedStyleSheets = sheets;
+  root.innerHTML = markup;
+  const value = getComputedStyle(root.querySelector(selector))[prop];
+  host.remove();
+  return value;
+}
+function inLight(sheets, tag, markup, selector, prop) {
+  const previous = document.adoptedStyleSheets;
+  document.adoptedStyleSheets = sheets;
+  const wrapper = document.createElement(tag);
+  wrapper.innerHTML = markup;
+  document.body.appendChild(wrapper);
+  const value = getComputedStyle(wrapper.querySelector(selector))[prop];
+  wrapper.remove();
+  document.adoptedStyleSheets = previous;
+  return value;
+}
+// Exposed for later tasks to extend.
+globalThis.cssTest = { results, record, sheetFrom, fetchSheet, inShadow, inLight };
+
+// ── PROVEN SELF-TESTS (Task 1) ──────────────────────────────
+const order = sheetFrom('@layer uwc.reset, uwc.base, uwc.components, uwc.util;');
+const base  = sheetFrom('@layer uwc.base { .box { padding: 4px; } button { padding: 8px; } }');
+const comp  = sheetFrom('@layer uwc.components { .box { padding: 40px; } .btn { padding: 99px; } }');
+const util  = sheetFrom('@layer uwc.util { .pz { padding: 0px; } }');
+const unl   = sheetFrom('.box2 { padding: 40px; }');
+
+record('shadow util beats layered comp',
+  inShadow([order, base, util, comp], '<div class="box pz" id="t"></div>', '#t', 'paddingTop'), '0px');
+record('shadow unlayered comp beats util (must-layer proof)',
+  inShadow([order, util, unl], '<div class="box2 pz" id="t"></div>', '#t', 'paddingTop'), '40px');
+record('explicit statement: util wins even when comp adopted last',
+  inShadow([order, util, comp], '<div class="box pz" id="t"></div>', '#t', 'paddingTop'), '0px');
+record('without statement: last-adopted comp wins (statement mandatory)',
+  inShadow([util, comp], '<div class="box pz" id="t"></div>', '#t', 'paddingTop'), '40px');
+record('component class beats base-element',
+  inShadow([order, base, comp], '<button class="btn" id="t"></button>', '#t', 'paddingTop'), '99px');
+record('bare element gets base styling',
+  inShadow([order, base, comp], '<button id="t"></button>', '#t', 'paddingTop'), '8px');
+record('light-DOM parity: util beats layered comp',
+  inLight([order, base, util, comp], 'test-light', '<div class="box pz" id="t"></div>', '#t', 'paddingTop'), '0px');
+
+// @layer ⊃ @scope nesting (light-DOM component path)
+const scoped = sheetFrom('@layer uwc.components { @scope (test-scope) { p { padding: 40px; } :scope { padding: 33px; } } }');
+record('nested @layer⊃@scope: util beats scoped comp',
+  inLight([order, base, util, scoped], 'test-scope', '<p class="pz" id="t">x</p>', '#t', 'paddingTop'), '0px');
+record('nested @layer⊃@scope: scoped comp beats base p',
+  inLight([order, base, util, scoped], 'test-scope', '<p id="t">x</p>', '#t', 'paddingTop'), '40px');
+
+// Render
+function render() {
+  const lines = results.map((r) => { return `${r.ok ? '✅ PASS' : '❌ FAIL'}  ${r.name}  (got ${r.actual}, expected ${r.expected})`; });
+  const failed = results.filter((r) => { return !r.ok; }).length;
+  document.getElementById('out').innerHTML = `${failed === 0 ? '<span class="pass">ALL GREEN</span>' : `<span class="fail">${failed} FAILED</span>`}\n\n` + lines.map((line) => { return line.replace('✅', '<span class="pass">✅</span>').replace('❌', '<span class="fail">❌</span>'); }).join('\n');
+  globalThis.cssTestSummary = { total: results.length, failed };
+}
+/* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
+render();
+globalThis.cssTestRender = render;
+</script>
+</body>
+</html>
