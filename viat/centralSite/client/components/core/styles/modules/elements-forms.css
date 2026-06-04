@@ -1,0 +1,45 @@
+/* uwc.base — classless form-control + interactive defaults (UNIVERSAL).
+   Adopted into every root. Component class rules (uwc.components) always win. */
+@layer uwc.base {
+	input, textarea, select {
+		font-family: inherit;
+		font-size: var(--text-md);
+		color: var(--popup-text, var(--text-main));
+		background: var(--popup-bg, var(--bg-panel));
+		border: var(--border-width) solid var(--popup-border, var(--border-light-color));
+		border-radius: var(--radius-md);
+		padding: var(--space-3) var(--space-4);
+		outline: none;
+		transition: border-color var(--transition-base), box-shadow var(--transition-base);
+	}
+	textarea { line-height: var(--leading-normal); resize: vertical; }
+	input:focus-visible, textarea:focus-visible, select:focus-visible {
+		border-color: var(--cyan, var(--focus-ring-color));
+		box-shadow: 0 0 0 2px var(--cyan-glow, rgba(0, 240, 255, 0.25));
+	}
+	input::placeholder, textarea::placeholder { color: var(--text-muted); opacity: 0.7; }
+	input[disabled], textarea[disabled], select[disabled], button[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+	button {
+		font-family: inherit;
+		font-size: var(--text-base);
+		letter-spacing: 0.04em;
+		color: var(--popup-text, var(--text-main));
+		background: var(--btn-bg, transparent);
+		border: var(--border-width) solid var(--btn-border, var(--border-light-color));
+		border-radius: var(--radius-md);
+		padding: var(--space-3) var(--space-6);
+		cursor: pointer;
+		transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base);
+	}
+	button:hover { border-color: var(--btn-hover-border, var(--cyan)); }
+	button:focus-visible { outline: 2px solid var(--cyan, var(--focus-ring-color)); outline-offset: 2px; }
+
+	fieldset { border: var(--border-width) solid var(--popup-border, var(--border-light-color)); border-radius: var(--radius-md); padding: var(--space-5); }
+	legend { padding: 0 var(--space-3); font-size: var(--text-sm); color: var(--text-muted); }
+	label { font-size: var(--text-sm); color: var(--text-muted); letter-spacing: 0.04em; }
+	hr { border: 0; border-top: var(--border-width) solid var(--dark-divider, var(--border-light-color)); margin: var(--space-5) 0; }
+	code, kbd { font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.9em; }
+	code { padding: 1px var(--space-2); background: var(--bg-dark, rgba(0, 0, 0, 0.25)); border-radius: var(--radius-xs); color: var(--teal, var(--cyan, var(--popup-text))); }
+	kbd { padding: 1px var(--space-2); border: var(--border-width) solid var(--popup-border); border-radius: var(--radius-xs); }
+}

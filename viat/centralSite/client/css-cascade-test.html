@@ -103,6 +103,18 @@ function render() {
     inShadow([reset], '<div id="t" style="width:100px;padding:10px;border:5px solid">x</div>', '#t', 'boxSizing'), 'border-box');
   cssTest.render();
 }
+// ── Task 5: elements-forms.css ──
+{
+  const vars  = await fetchSheet('./styles/variables.css');
+  const reset = await fetchSheet('./components/core/styles/modules/reset.css');
+  const forms = await fetchSheet('./components/core/styles/modules/elements-forms.css');
+  const comp  = sheetFrom('@layer uwc.components { .btn { padding: 99px; } }');
+  cssTest.record('bare button gets base padding-top (--space-3 = 8px)',
+    inShadow([vars, reset, forms], '<button id="t">x</button>', '#t', 'paddingTop'), '8px');
+  cssTest.record('component .btn beats base button',
+    inShadow([vars, reset, forms, comp], '<button class="btn" id="t">x</button>', '#t', 'paddingTop'), '99px');
+  cssTest.render();
+}
 /* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
 render();
 globalThis.cssTestRender = render;
