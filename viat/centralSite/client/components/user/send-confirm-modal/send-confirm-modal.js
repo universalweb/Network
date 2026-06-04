@@ -8,8 +8,6 @@ import { WebComponent, classList } from '../../core/index.js';
 // so AppView's existing handler runs the full sign-and-send-and-refresh
 // pipeline — including the post-send `fetchAccountForWallet()` that
 // keeps balance / totals / activity-log in sync.
-// All chrome is inherited from the `.dialog-*` primitives in
-// `core/styles/base.css`; this component carries zero bespoke CSS.
 function shortAddress(address) {
 	const text = `${address ?? ''}`;
 	if (!text) {
@@ -22,6 +20,9 @@ function shortAddress(address) {
 }
 export class SendConfirmModal extends WebComponent {
 	static url = import.meta.url;
+	static styles = {
+		modalChrome: '../shared/modal-chrome.css',
+	};
 	static state = {
 		recipient: '',
 		recipientFormat: 'base64',
@@ -125,40 +126,38 @@ export class SendConfirmModal extends WebComponent {
 				showClose: true,
 				closeOnBackdrop: false,
 			}} style="--ui-modal-max-width: 520px">
-				<div class="dialog-shell">
-					<header class="dialog-head">
-						<span class="dialog-head-id">SEND</span>
-						<span class="dialog-head-title">// CONFIRM TRANSACTION</span>
+				<div class="modal-shell">
+					<header class="modal-head">
+						<span class="modal-head-id">SEND</span>
+						<span class="modal-head-title">// CONFIRM TRANSACTION</span>
 					</header>
-					<p class="dialog-copy">${() => {
+					<p class="modal-copy">${() => {
 						return this.state.reason || 'Review the recipient and amount, then confirm to sign and broadcast.';
 					}}</p>
-					<div class="dialog-meta">
-						<div class="dialog-meta-row">
-							<span class="dialog-meta-key">RECIPIENT</span>
-							<span class="dialog-meta-val" title="${() => this.state.recipient}">${() => shortAddress(this.state.recipient) || '—'}</span>
+					<div class="modal-meta">
+						<div class="modal-meta-row">
+							<span class="modal-meta-key">RECIPIENT</span>
+							<span class="modal-meta-val" title="${() => this.state.recipient}">${() => shortAddress(this.state.recipient) || '—'}</span>
 						</div>
-						<div class="dialog-meta-row">
-							<span class="dialog-meta-key">AMOUNT</span>
-							<span class="dialog-meta-val">${() => this.state.amount || '0'} ⩝</span>
+						<div class="modal-meta-row">
+							<span class="modal-meta-key">AMOUNT</span>
+							<span class="modal-meta-val">${() => this.state.amount || '0'} ⩝</span>
 						</div>
 					</div>
-					<label class="dialog-field">
-						<span class="dialog-label">RECIPIENT ADDRESS</span>
+					<label class="field">
+						<span class="field-label">RECIPIENT ADDRESS</span>
 						<input #recipient
 							type="text"
-							class="dialog-input"
 							spellcheck="false"
 							autocomplete="off"
 							placeholder="base64 wallet address"
 							$value="recipient"
 							@keydown=${this.handleKeyDown}>
 					</label>
-					<label class="dialog-field">
-						<span class="dialog-label">AMOUNT (VIAT)</span>
+					<label class="field">
+						<span class="field-label">AMOUNT (VIAT)</span>
 						<input #amount
 							type="text"
-							class="dialog-input"
 							spellcheck="false"
 							autocomplete="off"
 							inputmode="decimal"
@@ -166,10 +165,10 @@ export class SendConfirmModal extends WebComponent {
 							$value="amount"
 							@keydown=${this.handleKeyDown}>
 					</label>
-					<div class=${classList('dialog-error', () => (this.state.error ? 'is-visible' : ''))}>${() => this.state.error}</div>
-					<div class="dialog-actions">
-						<button #confirm type="button" class="dialog-btn dialog-btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleConfirm}>${() => (this.state.busy ? 'SENDING…' : 'CONFIRM & SEND')}</button>
-						<button type="button" class="dialog-btn" ?disabled=${() => this.state.busy} @click=${this.handleCancel}>CANCEL</button>
+					<div class=${classList('modal-error', () => (this.state.error ? 'is-visible' : ''))}>${() => this.state.error}</div>
+					<div class="modal-actions">
+						<button #confirm type="button" class="btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleConfirm}>${() => (this.state.busy ? 'SENDING…' : 'CONFIRM & SEND')}</button>
+						<button type="button" ?disabled=${() => this.state.busy} @click=${this.handleCancel}>CANCEL</button>
 					</div>
 				</div>
 			</ui-modal>
