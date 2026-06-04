@@ -216,6 +216,17 @@ function render() {
     (cssTest.inShadow([vars, fx], '<div class="fx-glow" id="t">x</div>', '#t', 'boxShadow') !== 'none') ? 'yes' : 'no', 'yes');
   cssTest.render();
 }
+// ── Task 15: manifest exposes keyed module sheets ──
+{
+  const mod = await import('./components/core/styles/manifest.js');
+  const keys = Object.keys(mod.uwcBase);
+  const expected = ['uwc.reset','uwc.elements','uwc.prose','uwc.legacy-dialog','uwc.util-spacing','uwc.util-layout','uwc.util-type','uwc.util-elevation','uwc.util-surface','uwc.animations','uwc.effects'];
+  cssTest.record('manifest exposes all 11 module keys',
+    expected.every((key) => { return keys.includes(key); }) ? 'yes' : 'no', 'yes');
+  cssTest.record('manifest values are CSSStyleSheet (awaited)',
+    (await mod.uwcBase['uwc.reset']) instanceof CSSStyleSheet ? 'yes' : 'no', 'yes');
+  cssTest.render();
+}
 /* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
 render();
 globalThis.cssTestRender = render;
