@@ -163,6 +163,16 @@ function render() {
     cssTest.inShadow([lay], '<div class="row items-center" id="t"></div>', '#t', 'alignItems'), 'center');
   cssTest.render();
 }
+// ── Task 10: util-type.css ──
+{
+  const vars = await fetchSheet('./styles/variables.css');
+  const ty   = await fetchSheet('./components/core/styles/modules/util-type.css');
+  cssTest.record('.text-xs = 11px',
+    cssTest.inShadow([vars, ty], '<div class="text-xs" id="t">x</div>', '#t', 'fontSize'), '11px');
+  cssTest.record('.font-bold = 700',
+    cssTest.inShadow([vars, ty], '<div class="font-bold" id="t">x</div>', '#t', 'fontWeight'), '700');
+  cssTest.render();
+}
 /* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
 render();
 globalThis.cssTestRender = render;
