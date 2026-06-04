@@ -1359,8 +1359,8 @@ class AppView extends WebComponent {
 		this.hotKey('|', this.handleToggleSidebarHotkey);
 		globalThis.addEventListener('viat:api-error', this.handleApiError);
 	}
-	handleApiError = (event) => {
-		const detail = event?.detail ?? {};
+	handleApiError = (evnt) => {
+		const detail = evnt?.detail ?? {};
 		if (detail.silent) {
 			return;
 		}
