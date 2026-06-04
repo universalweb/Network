@@ -128,6 +128,16 @@ function render() {
     cssTest.inShadow([reset, prose], '<p id="t">x</p>', '#t', 'marginBottom'), '0px');
   cssTest.render();
 }
+// ── Task 7: legacy-dialog.css (preserved verbatim) ──
+{
+  const vars   = await fetchSheet('./styles/variables.css');
+  const legacy = await fetchSheet('./components/core/styles/modules/legacy-dialog.css');
+  cssTest.record('.dialog-shell preserves 48px top padding',
+    inShadow([vars, legacy], '<div class="dialog-shell" id="t">x</div>', '#t', 'paddingTop'), '48px');
+  cssTest.record('.dialog-meta-row keeps 2-col grid',
+    inShadow([vars, legacy], '<div class="dialog-meta-row" id="t"><span></span><span></span></div>', '#t', 'display'), 'grid');
+  cssTest.render();
+}
 /* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
 render();
 globalThis.cssTestRender = render;
