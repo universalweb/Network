@@ -1,10 +1,14 @@
 import '../../global/modal/modal.js';
 import { WebComponent, classList } from '../../core/index.js';
-// `<sign-data-modal>` — arbitrary-data signing dialog. Visuals all flow
-// from the shared `.dialog-*` primitives in `core/styles/base.css`; this
-// component carries zero bespoke CSS.
+/* `<sign-data-modal>` — arbitrary-data signing dialog. Chrome comes from the
+   shared modal-chrome.css + base element styles; the warning banner and status
+   line are colocated in sign-data-modal.css. */
 export class SignDataModal extends WebComponent {
 	static url = import.meta.url;
+	static styles = {
+		modalChrome: '../shared/modal-chrome.css',
+		signData: './sign-data-modal.css',
+	};
 	static state = {
 		inputData: '',
 		signatureOutput: '',
@@ -98,35 +102,34 @@ export class SignDataModal extends WebComponent {
 				showClose: true,
 				showMaximize: true,
 			}} style="--ui-modal-max-width: min(640px, calc(100vw - 32px))">
-				<div class="dialog-shell">
-					<header class="dialog-head">
-						<span class="dialog-head-id">SIGN</span>
-						<span class="dialog-head-title">// ARBITRARY DATA</span>
+				<div class="modal-shell">
+					<header class="modal-head">
+						<span class="modal-head-id">SIGN</span>
+						<span class="modal-head-title">// ARBITRARY DATA</span>
 					</header>
-					<div class="dialog-warning">
-						<div class="dialog-warning-head">⚠ Security warning</div>
-						<p class="dialog-warning-body">Signing arbitrary data with your primary ed25519 key proves you control this wallet. A malicious site can ask you to sign challenges that grant access to other systems or authorize off-chain actions. <strong>Only sign payloads you understand and trust.</strong></p>
+					<div class="sign-warning">
+						<div class="sign-warning-head">⚠ Security warning</div>
+						<p class="sign-warning-body">Signing arbitrary data with your primary ed25519 key proves you control this wallet. A malicious site can ask you to sign challenges that grant access to other systems or authorize off-chain actions. <strong>Only sign payloads you understand and trust.</strong></p>
 					</div>
-					<label class="dialog-field">
-						<span class="dialog-label">DATA TO SIGN</span>
+					<label class="field">
+						<span class="field-label">DATA TO SIGN</span>
 						<textarea
-							class="dialog-textarea"
 							rows="6"
 							spellcheck="false"
 							autocomplete="off"
 							placeholder="enter the exact bytes/string you want to sign…"
 							$value="inputData"></textarea>
 					</label>
-					<div class="dialog-actions">
-						<button class="dialog-btn dialog-btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleSign}>
+					<div class="modal-actions">
+						<button class="btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleSign}>
 							${() => (this.state.busy ? 'SIGNING…' : 'SIGN WITH PRIMARY KEY')}
 						</button>
-						<button class="dialog-btn" ?disabled=${() => this.state.busy} @click=${this.handleClear}>CLEAR</button>
+						<button ?disabled=${() => this.state.busy} @click=${this.handleClear}>CLEAR</button>
 					</div>
-					<label class="dialog-field">
-						<span class="dialog-label">SIGNATURE (BASE64) — CLICK TO COPY</span>
+					<label class="field">
+						<span class="field-label">SIGNATURE (BASE64) — CLICK TO COPY</span>
 						<textarea
-							class="dialog-textarea is-copyable"
+							class="is-copyable"
 							rows="4"
 							spellcheck="false"
 							autocomplete="off"
@@ -135,7 +138,7 @@ export class SignDataModal extends WebComponent {
 							.value=${() => this.state.signatureOutput}
 							@click=${this.handleCopySignature}></textarea>
 					</label>
-					<div class=${classList('dialog-status', () => `tone-${this.state.statusTone || 'idle'}`, () => (this.state.statusMessage ? 'is-visible' : ''))}>${() => this.state.statusMessage}</div>
+					<div class=${classList('sign-status', () => `tone-${this.state.statusTone || 'idle'}`, () => (this.state.statusMessage ? 'is-visible' : ''))}>${() => this.state.statusMessage}</div>
 				</div>
 			</ui-modal>
 		`;
