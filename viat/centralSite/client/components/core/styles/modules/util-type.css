@@ -1,11 +1,92 @@
 /* uwc.util — typography utilities. */
 @layer uwc.util {
-	.text-2xs{font-size:var(--text-2xs)} .text-xs{font-size:var(--text-xs)} .text-sm{font-size:var(--text-sm)} .text-base{font-size:var(--text-base)} .text-md{font-size:var(--text-md)} .text-lg{font-size:var(--text-lg)} .text-xl{font-size:var(--text-xl)} .text-2xl{font-size:var(--text-2xl)} .text-3xl{font-size:var(--text-3xl)}
-	.font-normal{font-weight:var(--weight-normal)} .font-medium{font-weight:var(--weight-medium)} .font-semibold{font-weight:var(--weight-semibold)} .font-bold{font-weight:var(--weight-bold)}
-	.leading-tight{line-height:var(--leading-tight)} .leading-normal{line-height:var(--leading-normal)} .leading-loose{line-height:var(--leading-loose)}
-	.font-mono{font-family:var(--font-mono,ui-monospace,monospace)} .font-display{font-family:var(--font-display,sans-serif)}
-	.text-left{text-align:left} .text-center{text-align:center} .text-right{text-align:right}
-	.uppercase{text-transform:uppercase} .tracking-wide{letter-spacing:0.06em} .tracking-wider{letter-spacing:0.12em}
-	.muted{color:var(--text-muted)} .text-main{color:var(--text-main)}
-	.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .break-all{word-break:break-all} .nowrap-text{white-space:nowrap}
+	.text-2xs {
+		font-size: var(--text-2xs);
+	}
+	.text-xs {
+		font-size: var(--text-xs);
+	}
+	.text-sm {
+		font-size: var(--text-sm);
+	}
+	.text-base {
+		font-size: var(--text-base);
+	}
+	.text-md {
+		font-size: var(--text-md);
+	}
+	.text-lg {
+		font-size: var(--text-lg);
+	}
+	.text-xl {
+		font-size: var(--text-xl);
+	}
+	.text-2xl {
+		font-size: var(--text-2xl);
+	}
+	.text-3xl {
+		font-size: var(--text-3xl);
+	}
+	.font-normal {
+		font-weight: var(--weight-normal);
+	}
+	.font-medium {
+		font-weight: var(--weight-medium);
+	}
+	.font-semibold {
+		font-weight: var(--weight-semibold);
+	}
+	.font-bold {
+		font-weight: var(--weight-bold);
+	}
+	.leading-tight {
+		line-height: var(--leading-tight);
+	}
+	.leading-normal {
+		line-height: var(--leading-normal);
+	}
+	.leading-loose {
+		line-height: var(--leading-loose);
+	}
+	.font-mono {
+		font-family: var(--font-mono, ui-monospace, monospace);
+	}
+	.font-display {
+		font-family: var(--font-display, sans-serif);
+	}
+	.text-left {
+		text-align: left;
+	}
+	.text-center {
+		text-align: center;
+	}
+	.text-right {
+		text-align: right;
+	}
+	.uppercase {
+		text-transform: uppercase;
+	}
+	.tracking-wide {
+		letter-spacing: 0.06em;
+	}
+	.tracking-wider {
+		letter-spacing: 0.12em;
+	}
+	.muted {
+		color: var(--text-muted);
+	}
+	.text-main {
+		color: var(--text-main);
+	}
+	.truncate {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.break-all {
+		word-break: break-all;
+	}
+	.nowrap-text {
+		white-space: nowrap;
+	}
 }

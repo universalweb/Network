@@ -2,19 +2,77 @@
    Keeps existing components stable until the sweep; post-sweep this scope
    can be widened to universal in one edit. */
 @layer uwc.base {
-	.prose { color: var(--popup-text, var(--text-main)); font-size: var(--text-base); line-height: var(--leading-normal); }
-	.prose h1 { font-size: var(--text-3xl); font-weight: var(--weight-bold); margin: var(--space-7) 0 var(--space-4); letter-spacing: 0.01em; }
-	.prose h2 { font-size: var(--text-2xl); font-weight: var(--weight-bold); margin: var(--space-6) 0 var(--space-4); }
-	.prose h3 { font-size: var(--text-xl); font-weight: var(--weight-semibold); margin: var(--space-5) 0 var(--space-3); }
-	.prose h4 { font-size: var(--text-lg); font-weight: var(--weight-semibold); margin: var(--space-5) 0 var(--space-3); }
-	.prose h5, .prose h6 { font-size: var(--text-md); font-weight: var(--weight-semibold); margin: var(--space-4) 0 var(--space-2); }
-	.prose p { margin: 0 0 var(--space-4); }
-	.prose a { color: var(--cyan, var(--teal)); text-decoration: none; border-bottom: 1px dotted currentColor; }
-	.prose a:hover { color: var(--teal, var(--cyan)); }
-	.prose ul, .prose ol { margin: 0 0 var(--space-4) var(--space-6); }
-	.prose li { margin: var(--space-2) 0; }
-	.prose blockquote { margin: var(--space-4) 0; padding: var(--space-3) var(--space-5); border-left: var(--border-width-thick) solid var(--cyan, var(--teal)); color: var(--text-muted); }
-	.prose table { width: 100%; border-collapse: collapse; margin: var(--space-4) 0; font-size: var(--text-sm); }
-	.prose th, .prose td { padding: var(--space-3) var(--space-4); border-bottom: var(--border-width) solid var(--dark-divider, var(--border-light-color)); text-align: left; }
-	.prose th { color: var(--text-muted); font-weight: var(--weight-semibold); }
+	.prose {
+		color: var(--popup-text, var(--text-main));
+		font-size: var(--text-base);
+		line-height: var(--leading-normal);
+	}
+	.prose h1 {
+		font-size: var(--text-3xl);
+		font-weight: var(--weight-bold);
+		margin: var(--space-7) 0 var(--space-4);
+		letter-spacing: 0.01em;
+	}
+	.prose h2 {
+		font-size: var(--text-2xl);
+		font-weight: var(--weight-bold);
+		margin: var(--space-6) 0 var(--space-4);
+	}
+	.prose h3 {
+		font-size: var(--text-xl);
+		font-weight: var(--weight-semibold);
+		margin: var(--space-5) 0 var(--space-3);
+	}
+	.prose h4 {
+		font-size: var(--text-lg);
+		font-weight: var(--weight-semibold);
+		margin: var(--space-5) 0 var(--space-3);
+	}
+	.prose h5,
+	.prose h6 {
+		font-size: var(--text-md);
+		font-weight: var(--weight-semibold);
+		margin: var(--space-4) 0 var(--space-2);
+	}
+	.prose p {
+		margin: 0 0 var(--space-4);
+	}
+	.prose a {
+		color: var(--cyan, var(--teal));
+		text-decoration: none;
+		border-bottom: 1px dotted currentColor;
+	}
+	.prose a:hover {
+		color: var(--teal, var(--cyan));
+	}
+	.prose ul,
+	.prose ol {
+		margin: 0 0 var(--space-4) var(--space-6);
+	}
+	.prose li {
+		margin: var(--space-2) 0;
+	}
+	.prose blockquote {
+		margin: var(--space-4) 0;
+		padding: var(--space-3) var(--space-5);
+		border-left: var(--border-width-thick) solid var(--cyan, var(--teal));
+		color: var(--text-muted);
+	}
+	.prose table {
+		width: 100%;
+		border-collapse: collapse;
+		margin: var(--space-4) 0;
+		font-size: var(--text-sm);
+	}
+	.prose th,
+	.prose td {
+		padding: var(--space-3) var(--space-4);
+		border-bottom: var(--border-width) solid
+			var(--dark-divider, var(--border-light-color));
+		text-align: left;
+	}
+	.prose th {
+		color: var(--text-muted);
+		font-weight: var(--weight-semibold);
+	}
 }
