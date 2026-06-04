@@ -185,7 +185,32 @@ function injectLightStyles(ComponentClass, styleMap, tagSelector) {
 		document.adoptedStyleSheets = [...document.adoptedStyleSheets, ...scoped];
 	}
 }
-export async function applyStyles() {
+function adoptStyleSheets(component, ComponentClass, styleMap, array) {
+	if (component.shadowRoot) {
+		/*
+		 * addStyle/importStyles may have forked a styleMap (its live set supersedes
+		 * the compiled defaults); otherwise adopt the pre-frozen ordered array.
+		 */
+		component.shadowRoot.adoptedStyleSheets = component.styleMap ? [...component.styleMap.values()] : array;
+		return;
+	}
+	injectLightStyles(ComponentClass, styleMap, component.localName);
+}
+/* Cold path only: compile (async) then adopt — the sole promise applyStyles yields. */
+async function compileAndAdopt(component, ComponentClass) {
+	const result = await ensureCompiledStyles(ComponentClass);
+	adoptStyleSheets(component, ComponentClass, result.map, result.array);
+}
+/**
+ * Adopt a component's styles, synchronously on the warm path. A forked styleMap
+ * or the class's already-compiled styles are adopted in place, returning
+ * `undefined` so handleConnect skips the per-instance await and its microtask.
+ * Only the cold first-compile path returns a promise. An `async` declaration
+ * returned a resolved promise every instance, defeating that skip silently
+ * because an async function is always thenable.
+ * @returns {Promise<void>|undefined} A promise on cold compile, otherwise undefined.
+ */
+export function applyStyles() {
 	const ComponentClass = this.constructor;
 	/*
 	 * Unscoped light DOM (useShadow=false + scopeStyles=false): emit normal
@@ -196,26 +221,21 @@ export async function applyStyles() {
 	 */
 	if (!this.shadowRoot && ComponentClass.scopeStyles === false) {
 		applyHeadStyles(ComponentClass);
-		return;
+		return undefined;
 	}
 	if (this.styleMap) {
-		if (this.shadowRoot) {
-			this.shadowRoot.adoptedStyleSheets = [...this.styleMap.values()];
-		} else {
-			injectLightStyles(ComponentClass, this.styleMap, this.localName);
-		}
-		return;
-	}
-	const result = await ensureCompiledStyles(ComponentClass);
-	if (!this.shadowRoot) {
-		injectLightStyles(ComponentClass, result.map, this.localName);
-		return;
+		adoptStyleSheets(this, ComponentClass, this.styleMap, null);
+		return undefined;
 	}
 	/*
-	 * addStyle/importStyles may have forked a styleMap during the await above; if
-	 * so it holds the live sheet set and supersedes the freshly compiled defaults.
+	 * hasOwn, not a truthy read: static fields inherit, so a subclass must
+	 * compile its own styles, never silently adopt the parent's resolved set.
 	 */
-	this.shadowRoot.adoptedStyleSheets = this.styleMap ? [...this.styleMap.values()] : result.array;
+	if (hasOwn(ComponentClass, 'compiledStyles')) {
+		adoptStyleSheets(this, ComponentClass, ComponentClass.compiledStyles, ComponentClass.compiledStylesArray);
+		return undefined;
+	}
+	return compileAndAdopt(this, ComponentClass);
 }
 export function forkStyleMap() {
 	if (this.styleMap) {
