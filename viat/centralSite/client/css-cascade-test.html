@@ -75,6 +75,16 @@ function render() {
   document.getElementById('out').innerHTML = `${failed === 0 ? '<span class="pass">ALL GREEN</span>' : `<span class="fail">${failed} FAILED</span>`}\n\n` + lines.map((line) => { return line.replace('✅', '<span class="pass">✅</span>').replace('❌', '<span class="fail">❌</span>'); }).join('\n');
   globalThis.cssTestSummary = { total: results.length, failed };
 }
+// ── Task 3: token scales resolve ──
+{
+  const vars = await fetchSheet('./styles/variables.css');
+  const probe = sheetFrom('.probe { padding: var(--space-5); font-size: var(--text-xs); border-radius: var(--radius-md); }');
+  cssTest.record('--space-5 resolves to 16px',
+    inShadow([vars, probe], '<div class="probe" id="t"></div>', '#t', 'paddingTop'), '16px');
+  cssTest.record('--text-xs resolves to 11px (0.6875rem @16px root)',
+    inShadow([vars, probe], '<div class="probe" id="t">x</div>', '#t', 'fontSize'), '11px');
+  cssTest.render();
+}
 /* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
 render();
 globalThis.cssTestRender = render;
