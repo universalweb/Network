@@ -105,7 +105,7 @@ export { registry } from './dom/registry.js';
 export class WebComponent extends HTMLElement {
 	static url = import.meta.url;
 	static styles = {
-		base: sharedStyles.baseSheet,
+		...sharedStyles.uwcBase,
 	};
 	/**
 	 * Light-DOM style isolation knob, consulted only when `useShadow === false`.
