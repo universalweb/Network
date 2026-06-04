@@ -1,0 +1,13 @@
+/* uwc.util — surface, border, and tone utilities. */
+@layer uwc.util {
+	.surface { background: var(--bg-panel); border: var(--border-width) solid var(--border-light-color); border-radius: var(--radius-md); }
+	.panel { background: var(--bg-panel); border: var(--border-width) solid var(--border-light-color); border-radius: var(--radius-md); box-shadow: var(--shadow-2); }
+	.border { border: var(--border-width) solid var(--border-light-color); }
+	.border-top { border-top: var(--border-width) solid var(--border-light-color); }
+	.border-bottom { border-bottom: var(--border-width) solid var(--border-light-color); }
+	.divider { border: 0; border-top: var(--border-width) solid var(--dark-divider, var(--border-light-color)); }
+	.tone-success { color: var(--color-success-text); } .tone-danger { color: var(--color-danger); } .tone-warn { color: var(--color-warn-text); } .tone-info { color: var(--cyan); }
+	.bg-success { background: color-mix(in srgb, var(--color-success) 12%, transparent); } .bg-danger { background: color-mix(in srgb, var(--color-danger) 12%, transparent); }
+	/* migrated from base.css */
+	.green-hover:hover { color: var(--green-hover); }
+}

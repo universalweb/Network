@@ -183,6 +183,16 @@ function render() {
     (cssTest.inShadow([vars, el], '<div class="shadow-3" id="t">x</div>', '#t', 'boxShadow') !== 'none') ? 'yes' : 'no', 'yes');
   cssTest.render();
 }
+// ── Task 12: util-surface.css ──
+{
+  const vars = await fetchSheet('./styles/variables.css');
+  const su   = await fetchSheet('./components/core/styles/modules/util-surface.css');
+  cssTest.record('.surface has a border',
+    (cssTest.inShadow([vars, su], '<div class="surface" id="t">x</div>', '#t', 'borderTopWidth') !== '0px') ? 'yes' : 'no', 'yes');
+  cssTest.record('.border applies 1px',
+    cssTest.inShadow([vars, su], '<div class="border" id="t">x</div>', '#t', 'borderTopWidth'), '1px');
+  cssTest.render();
+}
 /* ⟨INSERT TASK TESTS ABOVE⟩ — every later task inserts its test block directly above this sentinel line, never below it */
 render();
 globalThis.cssTestRender = render;
