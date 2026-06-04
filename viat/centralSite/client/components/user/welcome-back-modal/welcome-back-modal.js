@@ -6,9 +6,6 @@ import { WebComponent, classList } from '../../core/index.js';
 // (animated VIAT triangle on a gradient chip, headline + tagline) so the
 // two boot paths read as the same family, then shows profile / address /
 // status, a tappable HD-seed thumbnail, and finally the action row.
-// All chrome flows from `.dialog-*` primitives in `core/styles/base.css`;
-// the only component-local CSS is the SVG triangle animation, shared
-// with the intro modal but not yet extracted into a sibling component.
 function shortAddress(address) {
 	const text = `${address ?? ''}`;
 	if (!text) {
@@ -22,6 +19,7 @@ function shortAddress(address) {
 export class WelcomeBackModal extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
+		modalChrome: '../shared/modal-chrome.css',
 		welcomeBack: './welcome-back-modal.css',
 	};
 	static state = {
@@ -72,9 +70,9 @@ export class WelcomeBackModal extends WebComponent {
 				open: false,
 				showClose: true,
 			}} style="--ui-modal-max-width: 620px">
-				<div class="dialog-shell">
-					<div class="dialog-hero">
-						<span class="dialog-glyph" aria-hidden="true">
+				<div class="modal-shell">
+					<div class="wb-hero">
+						<span class="wb-glyph" aria-hidden="true">
 							<svg class="wb-mark" viewBox="0 0 64 64" fill="none" stroke-width="5.5" stroke-linecap="square" stroke-linejoin="miter">
 								<defs>
 									<linearGradient id="wb-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="64" y2="64">
@@ -95,45 +93,45 @@ export class WelcomeBackModal extends WebComponent {
 								<line class="wb-dash" stroke="url(#wb-grad)" x1="16" y1="32" x2="48" y2="32"></line>
 							</svg>
 						</span>
-						<div class="dialog-hero-text">
-							<header class="dialog-head">
-								<span class="dialog-head-id">⩝VIAT</span>
-								<span class="dialog-head-title">// WELCOME BACK</span>
+						<div class="wb-hero-text">
+							<header class="modal-head">
+								<span class="modal-head-id">⩝VIAT</span>
+								<span class="modal-head-title">// WELCOME BACK</span>
 							</header>
-							<p class="dialog-tagline">${() => this.state.locked ? 'Your profile is loaded — unlock when you\'re ready.' : 'Your profile is loaded and unlocked.'}</p>
+							<p class="wb-tagline">${() => this.state.locked ? 'Your profile is loaded — unlock when you\'re ready.' : 'Your profile is loaded and unlocked.'}</p>
 						</div>
 					</div>
-					<p class="dialog-copy">${() => {
+					<p class="modal-copy">${() => {
 						return this.state.locked
 							? 'Public data (address, balance, transactions) is live. Private keys stay encrypted until you enter your password — needed only for signing or transmitting.'
 							: 'Sign and transmit are ready. Your private keys are decrypted for this session and never leave the browser.';
 					}}</p>
-					<div class="dialog-meta">
-						<div class="dialog-meta-row">
-							<span class="dialog-meta-key">PROFILE</span>
-							<span class="dialog-meta-val">${() => this.state.label || this.state.profileName || '—'}</span>
+					<div class="modal-meta">
+						<div class="modal-meta-row">
+							<span class="modal-meta-key">PROFILE</span>
+							<span class="modal-meta-val">${() => this.state.label || this.state.profileName || '—'}</span>
 						</div>
-						<div class="dialog-meta-row">
-							<span class="dialog-meta-key">ADDRESS</span>
-							<span class="dialog-meta-val" title="${() => this.state.address}">${() => shortAddress(this.state.address)}</span>
+						<div class="modal-meta-row">
+							<span class="modal-meta-key">ADDRESS</span>
+							<span class="modal-meta-val" title="${() => this.state.address}">${() => shortAddress(this.state.address)}</span>
 						</div>
-						<div class="dialog-meta-row">
-							<span class="dialog-meta-key">STATUS</span>
-							<span class=${classList('dialog-meta-val', () => this.state.locked ? 'is-locked' : 'is-unlocked')}>${() => this.state.locked ? '🔒 LOCKED — public data only' : '🔓 UNLOCKED — ready'}</span>
+						<div class="modal-meta-row">
+							<span class="modal-meta-key">STATUS</span>
+							<span class=${classList('modal-meta-val', () => this.state.locked ? 'is-locked' : 'is-unlocked')}>${() => this.state.locked ? '🔒 LOCKED — public data only' : '🔓 UNLOCKED — ready'}</span>
 						</div>
 					</div>
-					<div class="dialog-thumb-card">
-						<button type="button" class="dialog-thumb" @click=${this.handleThumbClick} aria-label="Open HD seed diagram">
+					<div class="wb-thumb-card">
+						<button type="button" class="wb-thumb" @click=${this.handleThumbClick} aria-label="Open HD seed diagram">
 							<img src="./HDSeed.png" alt="HD seed tree diagram" draggable="false">
 						</button>
-						<div class="dialog-thumb-text">
+						<div class="wb-thumb-text">
 							<strong>HOW WALLETS WORK</strong>
 							<span>Tap the diagram for a closer look at the four-pool master entropy + post-quantum trapdoor that backs every VIAT wallet.</span>
 						</div>
 					</div>
-					<div class="dialog-actions">
-						<button type="button" class="dialog-btn dialog-btn-primary" ?hidden=${() => !this.state.locked} @click=${this.handleUnlockNow}>UNLOCK NOW</button>
-						<button type="button" class="dialog-btn" @click=${this.handleContinue}>CONTINUE</button>
+					<div class="modal-actions">
+						<button type="button" class="btn-primary" ?hidden=${() => !this.state.locked} @click=${this.handleUnlockNow}>UNLOCK NOW</button>
+						<button type="button" @click=${this.handleContinue}>CONTINUE</button>
 					</div>
 					<ui-whitebox-modal #thumb_modal .state=${{
 						src: './HDSeed.png',
