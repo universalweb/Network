@@ -20,7 +20,9 @@ function sheetIsFrameworkOwned(owner) {
 	return owner === globalThis.WebComponent || (owner && owner.name === 'WebComponent');
 }
 function reLayer(sheet) {
-	if (!(sheet instanceof CSSStyleSheet)) { return sheet; }
+	if (!(sheet instanceof CSSStyleSheet)) {
+		return sheet;
+	}
 	const rules = sheet.cssRules;
 	let cssText = '';
 	for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
