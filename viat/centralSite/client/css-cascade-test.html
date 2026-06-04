@@ -9,6 +9,7 @@
 <pre id="out">running…</pre>
 <script type="module">
 const results = [];
+let tokenSheet = null;
 function record(name, actual, expected) {
   const ok = String(actual) === String(expected);
   results.push({ name, actual, expected, ok });
@@ -27,7 +28,7 @@ function inShadow(sheets, markup, selector, prop) {
 }
 function inLight(sheets, tag, markup, selector, prop) {
   const previous = document.adoptedStyleSheets;
-  document.adoptedStyleSheets = sheets;
+  document.adoptedStyleSheets = tokenSheet ? [tokenSheet, ...sheets] : sheets;
   const wrapper = document.createElement(tag);
   wrapper.innerHTML = markup;
   document.body.appendChild(wrapper);
@@ -37,7 +38,12 @@ function inLight(sheets, tag, markup, selector, prop) {
   return value;
 }
 // Exposed for later tasks to extend.
-globalThis.cssTest = { results, record, sheetFrom, fetchSheet, inShadow, inLight };
+globalThis.cssTest = { results, record, sheetFrom, fetchSheet, inShadow, inLight, render };
+
+// Design tokens use :root (matches <html> only) — adopt at DOCUMENT level so every
+// shadow-root probe inherits them, mirroring how the app loads variables.css.
+tokenSheet = await fetchSheet('./styles/variables.css');
+document.adoptedStyleSheets = [...document.adoptedStyleSheets, tokenSheet];
 
 // ── PROVEN SELF-TESTS (Task 1) ──────────────────────────────
 const order = sheetFrom('@layer uwc.reset, uwc.base, uwc.components, uwc.util;');
