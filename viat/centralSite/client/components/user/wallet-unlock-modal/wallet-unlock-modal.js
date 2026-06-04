@@ -7,8 +7,6 @@ import { WebComponent, classList } from '../../core/index.js';
 // `wallet:unlock` and AppView decrypts the package, swaps the SDK over, and
 // re-fires the pending action. AppView calls `handleSuccess()` /
 // `handleFailure(message)` back into us once that round-trip resolves.
-// Visuals are inherited from the shared `.dialog-*` primitives in
-// `core/styles/base.css` — this component carries zero bespoke CSS.
 function shortAddress(address) {
 	const text = `${address ?? ''}`;
 	if (!text) {
@@ -21,6 +19,9 @@ function shortAddress(address) {
 }
 export class WalletUnlockModal extends WebComponent {
 	static url = import.meta.url;
+	static styles = {
+		modalChrome: '../shared/modal-chrome.css',
+	};
 	static state = {
 		profileName: '',
 		address: '',
@@ -104,39 +105,38 @@ export class WalletUnlockModal extends WebComponent {
 				showClose: true,
 				closeOnBackdrop: false,
 			}} style="--ui-modal-max-width: 460px">
-				<div class="dialog-shell">
-					<header class="dialog-head">
-						<span class="dialog-head-id">⩝VIAT</span>
-						<span class="dialog-head-title">// UNLOCK WALLET</span>
+				<div class="modal-shell">
+					<header class="modal-head">
+						<span class="modal-head-id">⩝VIAT</span>
+						<span class="modal-head-title">// UNLOCK WALLET</span>
 					</header>
-					<p class="dialog-copy">${() => {
+					<p class="modal-copy">${() => {
 						return this.state.reason || 'This action requires your wallet password to decrypt the private keys.';
 					}}</p>
-					<div class="dialog-meta">
-						<div class="dialog-meta-row">
-							<span class="dialog-meta-key">PROFILE</span>
-							<span class="dialog-meta-val">${() => this.state.profileName || '—'}</span>
+					<div class="modal-meta">
+						<div class="modal-meta-row">
+							<span class="modal-meta-key">PROFILE</span>
+							<span class="modal-meta-val">${() => this.state.profileName || '—'}</span>
 						</div>
-						<div class="dialog-meta-row">
-							<span class="dialog-meta-key">ADDRESS</span>
-							<span class="dialog-meta-val" title="${() => this.state.address}">${() => shortAddress(this.state.address)}</span>
+						<div class="modal-meta-row">
+							<span class="modal-meta-key">ADDRESS</span>
+							<span class="modal-meta-val" title="${() => this.state.address}">${() => shortAddress(this.state.address)}</span>
 						</div>
 					</div>
-					<label class="dialog-field">
-						<span class="dialog-label">PASSWORD</span>
+					<label class="field">
+						<span class="field-label">PASSWORD</span>
 						<input #password
 							type="password"
-							class="dialog-input"
 							spellcheck="false"
 							autocomplete="current-password"
 							placeholder="wallet password"
 							$value="password"
 							@keydown=${this.handleKeyDown}>
 					</label>
-					<div class=${classList('dialog-error', () => (this.state.error ? 'is-visible' : ''))}>${() => this.state.error}</div>
-					<div class="dialog-actions">
-						<button type="button" class="dialog-btn dialog-btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleUnlock}>${() => (this.state.busy ? 'UNLOCKING…' : 'UNLOCK')}</button>
-						<button type="button" class="dialog-btn" @click=${this.handleCancel}>CANCEL</button>
+					<div class=${classList('modal-error', () => (this.state.error ? 'is-visible' : ''))}>${() => this.state.error}</div>
+					<div class="modal-actions">
+						<button type="button" class="btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleUnlock}>${() => (this.state.busy ? 'UNLOCKING…' : 'UNLOCK')}</button>
+						<button type="button" @click=${this.handleCancel}>CANCEL</button>
 					</div>
 				</div>
 			</ui-modal>
