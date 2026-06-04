@@ -3,7 +3,6 @@ const moduleFiles = {
 	'uwc.reset': 'reset.css',
 	'uwc.elements': 'elements-forms.css',
 	'uwc.prose': 'elements-prose.css',
-	'uwc.legacy-dialog': 'legacy-dialog.css',
 	'uwc.util-spacing': 'util-spacing.css',
 	'uwc.util-layout': 'util-layout.css',
 	'uwc.util-type': 'util-type.css',

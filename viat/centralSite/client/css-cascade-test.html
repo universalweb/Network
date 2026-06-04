@@ -128,14 +128,14 @@ function render() {
     cssTest.inShadow([reset, prose], '<p id="t">x</p>', '#t', 'marginBottom'), '0px');
   cssTest.render();
 }
-// ── Task 7: legacy-dialog.css (preserved verbatim) ──
+// ── Task 7: modal-chrome.css (the legacy-dialog successor) ──
 {
   const vars   = await fetchSheet('./styles/variables.css');
-  const legacy = await fetchSheet('./components/core/styles/modules/legacy-dialog.css');
-  cssTest.record('.dialog-shell preserves 48px top padding',
-    inShadow([vars, legacy], '<div class="dialog-shell" id="t">x</div>', '#t', 'paddingTop'), '48px');
-  cssTest.record('.dialog-meta-row keeps 2-col grid',
-    inShadow([vars, legacy], '<div class="dialog-meta-row" id="t"><span></span><span></span></div>', '#t', 'display'), 'grid');
+  const chrome = await fetchSheet('./components/user/shared/modal-chrome.css');
+  cssTest.record('.modal-shell preserves 48px top padding',
+    inShadow([vars, chrome], '<div class="modal-shell" id="t">x</div>', '#t', 'paddingTop'), '48px');
+  cssTest.record('.modal-meta-row keeps 2-col grid',
+    inShadow([vars, chrome], '<div class="modal-meta-row" id="t"><span></span><span></span></div>', '#t', 'display'), 'grid');
   cssTest.render();
 }
 // ── Task 8: util-spacing.css ──
@@ -220,8 +220,8 @@ function render() {
 {
   const mod = await import('./components/core/styles/manifest.js');
   const keys = Object.keys(mod.uwcBase);
-  const expected = ['uwc.reset','uwc.elements','uwc.prose','uwc.legacy-dialog','uwc.util-spacing','uwc.util-layout','uwc.util-type','uwc.util-elevation','uwc.util-surface','uwc.animations','uwc.effects'];
-  cssTest.record('manifest exposes all 11 module keys',
+  const expected = ['uwc.reset','uwc.elements','uwc.prose','uwc.util-spacing','uwc.util-layout','uwc.util-type','uwc.util-elevation','uwc.util-surface','uwc.animations','uwc.effects'];
+  cssTest.record('manifest exposes all 10 module keys',
     expected.every((key) => { return keys.includes(key); }) ? 'yes' : 'no', 'yes');
   cssTest.record('manifest values are CSSStyleSheet (awaited)',
     (await mod.uwcBase['uwc.reset']) instanceof CSSStyleSheet ? 'yes' : 'no', 'yes');

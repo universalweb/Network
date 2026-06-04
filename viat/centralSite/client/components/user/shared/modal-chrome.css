@@ -85,7 +85,7 @@
 	gap: 10px;
 	justify-content: flex-end;
 }
-/* Click-to-copy modifier for base inputs/textareas (old .dialog-*.is-copyable). */
+/* Click-to-copy modifier for base inputs/textareas. */
 input.is-copyable, textarea.is-copyable {
 	cursor: pointer;
 	word-break: break-all;
