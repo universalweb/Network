@@ -37,7 +37,7 @@
 	font-weight: var(--weight-normal);
 }
 /* Tones */
-.tone-default { color: var(--text-default, currentColor); }
+.tone-default { color: currentColor; }
 .tone-muted   { color: var(--text-muted,   rgba(255, 255, 255, 0.55)); }
 .tone-subtle  { color: var(--text-subtle,  rgba(255, 255, 255, 0.4)); }
 .tone-success { color: var(--color-success); }

@@ -30,7 +30,7 @@
 	border: var(--border-light, 1px solid rgba(255, 255, 255, 0.1));
 	border-radius: var(--radius, 8px);
 	box-shadow: var(--panel-shadow, 0 12px 36px rgba(0, 0, 0, 0.5));
-	color: var(--text, currentColor);
+	color: currentColor;
 	display: flex;
 	flex-direction: column;
 	gap: 0.9rem;

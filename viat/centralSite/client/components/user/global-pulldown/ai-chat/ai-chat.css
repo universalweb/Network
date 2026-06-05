@@ -130,12 +130,12 @@
 	transition: background 0.15s ease, color 0.15s ease;
 }
 .aic-btn:hover {
-	background: var(--teal-hover, #2dd4bf);
+	background: var(--teal);
 }
 .aic-btn.is-streaming {
 	background: var(--color-danger);
 	color: var(--text-light);
 }
 .aic-btn.is-streaming:hover {
-	background: var(--danger-hover, #dc2626);
+	background: var(--color-danger);
 }
