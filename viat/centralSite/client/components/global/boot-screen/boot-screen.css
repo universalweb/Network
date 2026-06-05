@@ -133,7 +133,7 @@
 	font-size: var(--text-xs);
 	letter-spacing: 0.32em;
 	text-transform: uppercase;
-	color: var(--text-subtle, rgba(255, 255, 255, 0.42));
+	color: var(--text-subtle);
 }
 .boot-screen ui-loading-bar {
 	position: relative;

@@ -52,6 +52,7 @@
 	--dark-heading: rgba(255, 255, 255, 0.35);
 	--dark-heading-sep: rgba(255, 255, 255, 0.2);
 	--dark-text-faint: rgba(255, 255, 255, 0.3);
+	--text-subtle: rgba(255, 255, 255, 0.4);
 
 	/* ── Dark Surface Dividers ───────────────────────── */
 	--dark-divider: rgba(255, 255, 255, 0.07);
@@ -74,6 +75,7 @@
 	/* ── Teal Accent Scale ───────────────────────────── */
 	--teal-glow: rgba(0, 102, 102, 0.4);
 	--teal-glow-soft: rgba(0, 102, 102, 0.3);
+	--teal-glow-faint: rgba(0, 255, 255, 0.2);
 
 	/* ── Scrollbar tokens ────────────────────────────────
 	   Single source of truth for every scrollbar in the app.

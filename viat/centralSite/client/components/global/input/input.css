@@ -76,7 +76,7 @@
 	width: 100%;
 }
 .field-control::placeholder {
-	color: var(--text-subtle, rgba(255, 255, 255, 0.4));
+	color: var(--text-subtle);
 }
 .field-control:disabled {
 	cursor: not-allowed;

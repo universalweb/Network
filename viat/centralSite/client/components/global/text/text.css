@@ -39,7 +39,7 @@
 /* Tones */
 .tone-default { color: currentColor; }
 .tone-muted   { color: var(--text-muted,   rgba(255, 255, 255, 0.55)); }
-.tone-subtle  { color: var(--text-subtle,  rgba(255, 255, 255, 0.4)); }
+.tone-subtle  { color: var(--text-subtle); }
 .tone-success { color: var(--color-success); }
 .tone-warning { color: var(--color-warning); }
 .tone-danger  { color: var(--color-danger); }

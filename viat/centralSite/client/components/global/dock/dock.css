@@ -110,7 +110,7 @@
 	height: var(--bar-h, 38px);
 	border-radius: var(--radius-sm) 0 0 var(--radius-sm);
 	transform: translateY(var(--bar-y, 0));
-	box-shadow: -2px 0 8px var(--teal-glow-faint, rgba(0, 255, 255, 0.2));
+	box-shadow: -2px 0 8px var(--teal-glow-faint);
 }
 /* Horizontal rail: a 3px underline pinned to the bottom edge, sliding on X. */
 :host(.dock-horizontal) .active-bar {
@@ -120,7 +120,7 @@
 	width: var(--bar-w, 38px);
 	border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 	transform: translateX(var(--bar-x, 0));
-	box-shadow: 0 -2px 8px var(--teal-glow-faint, rgba(0, 255, 255, 0.2));
+	box-shadow: 0 -2px 8px var(--teal-glow-faint);
 }
 /* Mobile: a vertical dock rotates to a horizontal bar. */
 @media (max-width: 47.9375em) {
@@ -151,6 +151,6 @@
 		height: 0.1875rem;
 		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 		transform: translateX(var(--bar-x, 0));
-		box-shadow: 0 -2px 8px var(--teal-glow-faint, rgba(0, 255, 255, 0.2));
+		box-shadow: 0 -2px 8px var(--teal-glow-faint);
 	}
 }
