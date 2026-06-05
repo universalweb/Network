@@ -22,7 +22,7 @@
 	align-items: center;
 	justify-content: center;
 	width: 100%;
-	max-height: calc(96vh - 60px);
+	max-height: calc(96svh - 60px);
 	background: var(--popup-bg);
 	padding: var(--space-5);
 	box-sizing: border-box;
@@ -30,7 +30,7 @@
 .wb-media {
 	display: block;
 	max-width: 100%;
-	max-height: calc(96vh - 96px);
+	max-height: calc(96svh - 96px);
 	width: auto;
 	height: auto;
 	object-fit: contain;

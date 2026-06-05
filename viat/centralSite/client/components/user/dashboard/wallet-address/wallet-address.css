@@ -9,7 +9,7 @@
 	font-size: clamp(0.625rem, 1vw, 0.8125rem);
 	font-family: var(--font-mono);
 	color: var(--text-muted);
-	padding: clamp(8px, 1.2vh, 14px) clamp(10px, 1.2vw, 16px);
+	padding: clamp(8px, 1.2svh, 14px) clamp(10px, 1.2vw, 16px);
 	border: 1px dashed var(--border-light-color);
 	background: var(--surface-tint-ghost);
 	border-radius: var(--radius-sm);

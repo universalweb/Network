@@ -12,7 +12,7 @@
 }
 .wi-img {
 	max-width: 100%;
-	max-height: calc(100vh - 320px);
+	max-height: calc(100svh - 320px);
 	height: auto;
 	border-radius: var(--radius-md);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
