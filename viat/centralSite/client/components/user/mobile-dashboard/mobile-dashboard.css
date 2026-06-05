@@ -14,7 +14,7 @@
 	   (52px bar + 16px float gap = ~78px clearance) — the extra ~50px
 	   gives the bare wallet hero negative space above it so the balance
 	   reads as the page's anchor instead of crowding the chrome. */
-	padding: 128px 12px 16px;
-	gap: 14px;
+	padding: 128px var(--space-4) var(--space-5);
+	gap: var(--space-4);
 	box-sizing: border-box;
 }

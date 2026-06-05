@@ -10,7 +10,7 @@
 	align-items: center;
 	height: 100%;
 	overflow-y: auto;
-	padding: 90px 14px 64px 14px;
+	padding: 90px var(--space-4) var(--space-12) var(--space-4);
 	font-family: var(--font-mono, 'JetBrains Mono', monospace);
 	color: var(--text-main, #e8eaf2);
 	box-sizing: border-box;
@@ -20,8 +20,8 @@
 	max-width: 460px;
 	display: flex;
 	flex-direction: column;
-	gap: 14px;
-	padding: 22px 22px 26px 22px;
+	gap: var(--space-4);
+	padding: var(--space-6) var(--space-6) var(--space-7) var(--space-6);
 	background: var(--bg-panel, rgba(7, 8, 12, 0.78));
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	border-radius: 14px;
@@ -35,8 +35,8 @@
 .sp-header {
 	display: flex;
 	align-items: baseline;
-	gap: 8px;
-	font-size: 0.75rem;
+	gap: var(--space-3);
+	font-size: var(--text-sm);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 }
@@ -50,8 +50,8 @@
 .sp-card {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
-	padding: 14px 16px;
+	gap: var(--space-3);
+	padding: var(--space-4) var(--space-5);
 	background: var(--bg-dark, #04060a);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.1));
 	border-radius: 10px;
@@ -60,7 +60,7 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	font-size: 0.5625rem;
+	font-size: var(--text-2xs);
 	letter-spacing: 0.2em;
 	text-transform: uppercase;
 	color: var(--text-muted, rgba(255, 255, 255, 0.45));
@@ -68,7 +68,7 @@
 .sp-card-row {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: var(--space-4);
 }
 .sp-amount {
 	flex: 1;
@@ -79,7 +79,7 @@
 	font-family: inherit;
 	font-size: 1.5rem;
 	letter-spacing: 0.02em;
-	padding: 4px 0;
+	padding: var(--space-2) 0;
 	outline: none;
 }
 .sp-amount:focus {
@@ -92,8 +92,8 @@
 .sp-asset {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	padding: 6px 12px;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-4);
 	background: var(--cyan-tint-faint, rgba(109, 74, 255, 0.05));
 	border: 1px solid var(--cyan-glow-soft, rgba(109, 74, 255, 0.18));
 	border-radius: 999px;
@@ -107,7 +107,7 @@
 	animation: sp-asset-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 .sp-glyph {
-	font-size: 1.05rem;
+	font-size: var(--text-lg);
 	line-height: 1;
 	color: var(--teal, #5eead4);
 }
@@ -120,7 +120,7 @@
 	to { opacity: 1; transform: scale(1) rotate(0); }
 }
 .sp-asset-symbol {
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	letter-spacing: 0.16em;
 	text-transform: uppercase;
 	color: var(--text-main, #e8eaf2);
@@ -152,8 +152,8 @@
 	color: var(--teal, #5eead4);
 }
 .sp-rate {
-	margin-top: 6px;
-	font-size: 0.625rem;
+	margin-top: var(--space-2);
+	font-size: var(--text-2xs);
 	letter-spacing: 0.16em;
 	color: var(--text-muted, rgba(255, 255, 255, 0.5));
 }
@@ -162,14 +162,14 @@
 	letter-spacing: 0.06em;
 }
 .sp-execute {
-	margin-top: 6px;
-	padding: 12px 16px;
+	margin-top: var(--space-2);
+	padding: var(--space-4) var(--space-5);
 	background: var(--cyan-tint-faint, rgba(109, 74, 255, 0.08));
 	border: 1px solid var(--teal, #5eead4);
-	border-radius: 8px;
+	border-radius: var(--radius-md);
 	color: var(--teal, #5eead4);
 	font-family: inherit;
-	font-size: 0.75rem;
+	font-size: var(--text-sm);
 	letter-spacing: 0.22em;
 	text-transform: uppercase;
 	cursor: pointer;
@@ -179,7 +179,7 @@
 	background: var(--cyan-tint, rgba(109, 74, 255, 0.14));
 }
 .sp-status {
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	line-height: 1.4;
 	min-height: 1em;
 	opacity: 0;

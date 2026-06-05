@@ -6,9 +6,9 @@
 .aim {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
-	padding: 10px 12px;
-	border-radius: 8px;
+	gap: var(--space-2);
+	padding: var(--space-3) var(--space-4);
+	border-radius: var(--radius-md);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.06));
 	background: var(--bg-panel, rgba(255, 255, 255, 0.025));
 	cursor: text;
@@ -21,7 +21,7 @@
 	background: var(--bg-panel, rgba(255, 255, 255, 0.03));
 }
 .aim-role {
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	letter-spacing: 0.16em;
 	text-transform: uppercase;
 	color: var(--text-muted, rgba(255, 255, 255, 0.45));
@@ -33,7 +33,7 @@
 	color: var(--teal, #5eead4);
 }
 .aim-content {
-	font-size: 0.9375rem;
+	font-size: var(--text-md);
 	line-height: 1.55;
 	color: var(--text-main, #fff);
 	white-space: pre-wrap;

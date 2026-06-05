@@ -1,29 +1,29 @@
 .sign-warning {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
-	padding: 12px 14px;
+	gap: var(--space-2);
+	padding: var(--space-4) var(--space-4);
 	border: 1px solid var(--dialog-warning-color, rgba(248, 113, 113, 0.35));
 	border-radius: var(--radius-md, 6px);
 	background: color-mix(in srgb, var(--dialog-warning-color, #f87171) 8%, transparent);
 	color: var(--popup-text);
 }
 .sign-warning-head {
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	letter-spacing: 0.12em;
 	color: var(--dialog-warning-color, #f87171);
-	font-weight: 600;
+	font-weight: var(--weight-semibold);
 }
 .sign-warning-body {
 	margin: 0;
-	font-size: 0.75rem;
+	font-size: var(--text-sm);
 	line-height: 1.5;
 	color: var(--text-muted, var(--popup-text));
 }
 .sign-warning-body strong { color: var(--popup-text); }
 .sign-status {
-	margin-top: 4px;
-	font-size: 0.75rem;
+	margin-top: var(--space-2);
+	font-size: var(--text-sm);
 	line-height: 1.4;
 	min-height: 1em;
 	opacity: 0;

@@ -5,9 +5,9 @@
 .log-entry {
   display: grid;
   grid-template-columns: 70px 60px 1fr;
-  gap: 10px;
-  font-size: 0.625rem;
-  padding-bottom: 5px;
+  gap: var(--space-3);
+  font-size: var(--text-2xs);
+  padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--dark-divider-faint);
 }
 
@@ -20,7 +20,7 @@
 }
 
 .log-tag {
-  font-weight: 700;
+  font-weight: var(--weight-bold);
 }
 
 .log-tag-in {
@@ -64,7 +64,7 @@
 }
 
 .log-amount {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 
 .log-verb {

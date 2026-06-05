@@ -67,8 +67,8 @@
 	display: grid;
 	grid-template-columns: auto minmax(0, 1fr);
 	align-items: center;
-	gap: 22px;
-	padding-bottom: 16px;
+	gap: var(--space-6);
+	padding-bottom: var(--space-5);
 	border-bottom: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.06));
 }
 .wb-glyph {
@@ -87,22 +87,22 @@
 .wb-hero-text {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
+	gap: var(--space-2);
 	min-width: 0;
 }
 .wb-tagline {
 	margin: 0;
-	font-size: 0.95rem;
-	font-weight: 600;
+	font-size: var(--text-lg);
+	font-weight: var(--weight-semibold);
 	color: var(--teal, var(--cyan, var(--popup-text)));
 	letter-spacing: 0.01em;
 }
 .wb-thumb-card {
 	display: grid;
 	grid-template-columns: 92px minmax(0, 1fr);
-	gap: 14px;
+	gap: var(--space-4);
 	align-items: center;
-	padding: 12px 14px;
+	padding: var(--space-4) var(--space-4);
 	background: var(--popup-bg-alt, rgba(255, 255, 255, 0.03));
 	border: 1px solid var(--popup-border);
 	border-radius: var(--radius-md, 6px);
@@ -113,7 +113,7 @@
 	padding: 0;
 	background: rgba(255, 255, 255, 0.03);
 	border: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.08));
-	border-radius: 6px;
+	border-radius: var(--radius-md);
 	cursor: zoom-in;
 	overflow: hidden;
 	display: inline-flex;
@@ -140,9 +140,9 @@
 .wb-thumb-text {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: var(--space-2);
 	min-width: 0;
-	font-size: 0.75rem;
+	font-size: var(--text-sm);
 	line-height: 1.5;
 	color: var(--text-muted, var(--popup-text));
 }

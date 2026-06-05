@@ -8,16 +8,16 @@
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
-	gap: 8px;
-	padding: 12px;
-	margin-top: 4px;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	margin-top: var(--space-2);
 	background: var(--surface-tint-faint, rgba(255, 255, 255, 0.022));
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
-	border-radius: 6px;
+	border-radius: var(--radius-md);
 }
 
 .wq-wrap.is-empty {
-	padding: 18px 12px;
+	padding: var(--space-5) var(--space-4);
 }
 
 .wq-canvas {
@@ -25,8 +25,8 @@
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
-	border-radius: 4px;
-	padding: 4px;
+	border-radius: var(--radius-sm);
+	padding: var(--space-2);
 	transition: background 0.15s ease;
 }
 
@@ -48,7 +48,7 @@
 	align-items: center;
 	justify-content: center;
 	overflow: hidden;
-	border-radius: 8px;
+	border-radius: var(--radius-md);
 	pointer-events: none;
 }
 
@@ -67,7 +67,7 @@
 
 .wq-empty-msg {
 	font-family: var(--font-mono);
-	font-size: 0.5625rem;
+	font-size: var(--text-2xs);
 	letter-spacing: 0.2em;
 	text-transform: uppercase;
 	color: var(--text-muted, rgba(255, 255, 255, 0.45));
@@ -77,14 +77,14 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	gap: 8px;
-	padding: 6px 12px;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-4);
 	background: transparent;
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	color: var(--text-muted, rgba(255, 255, 255, 0.65));
 	font-family: var(--font-mono);
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	letter-spacing: 0.2em;
 	text-transform: uppercase;
 	cursor: pointer;

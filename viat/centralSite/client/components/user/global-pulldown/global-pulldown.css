@@ -5,7 +5,7 @@
 	height: 100%;
 	display: flex;
 	flex-direction: column;
-	padding: 24px 14px 0 14px;
+	padding: var(--space-7) var(--space-4) 0 var(--space-4);
 	color: var(--text-main, #fff);
 	font-family: var(--font-mono);
 	box-sizing: border-box;
@@ -19,8 +19,8 @@
 .gpd-mobile-notice {
 	display: none;
 	max-width: var(--center-max-width, 1536px);
-	margin: 0 auto 14px auto;
-	padding: 12px 14px;
+	margin: 0 auto var(--space-4) auto;
+	padding: var(--space-4) var(--space-4);
 	background: var(--popup-bg-alt, rgba(255, 255, 255, 0.04));
 	border: 1px solid var(--popup-border, rgba(255, 255, 255, 0.1));
 	border-left: 3px solid var(--cyan, #a78bfa);
@@ -29,22 +29,22 @@
 }
 .gpd-mobile-notice-id {
 	display: block;
-	font-size: 0.65rem;
+	font-size: var(--text-2xs);
 	letter-spacing: 0.18em;
 	color: var(--cyan, #a78bfa);
-	font-weight: 600;
-	margin-bottom: 4px;
+	font-weight: var(--weight-semibold);
+	margin-bottom: var(--space-2);
 }
 .gpd-mobile-notice-body {
 	margin: 0;
-	font-size: 0.75rem;
+	font-size: var(--text-sm);
 	line-height: 1.5;
 	color: var(--text-muted, rgba(255, 255, 255, 0.7));
 }
 .gpd-columns {
 	display: grid;
 	grid-template-columns: 220px minmax(0, 1fr) 220px;
-	gap: 14px;
+	gap: var(--space-4);
 	flex: 1;
 	min-height: 0;
 	align-items: start;
@@ -59,9 +59,9 @@
 	min-height: 0;
 }
 .gpd-col-help {
-	gap: 14px;
+	gap: var(--space-4);
 	overflow-y: auto;
-	padding-right: 4px;
+	padding-right: var(--space-2);
 	padding-bottom: 220px;
 }
 .gpd-col-chat {

@@ -9,47 +9,47 @@
 .modal-shell {
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: var(--space-5);
 	/* Top padding clears the core modal's control strip (close / max / min). */
-	padding: 48px 28px 28px;
+	padding: var(--space-10) var(--space-7) var(--space-7);
 	color: var(--popup-text);
 	font-family: var(--font-mono, ui-monospace, monospace);
 }
 .modal-head {
 	display: flex;
 	align-items: baseline;
-	gap: 10px;
+	gap: var(--space-3);
 }
 .modal-head-id {
-	font-weight: 700;
+	font-weight: var(--weight-bold);
 	color: var(--cyan, var(--popup-text));
 	letter-spacing: 0.04em;
 }
 .modal-head-title {
 	color: var(--text-muted, var(--popup-text));
-	font-size: 0.75rem;
+	font-size: var(--text-sm);
 	letter-spacing: 0.06em;
 }
 .modal-copy {
 	margin: 0;
-	font-size: 0.875rem;
+	font-size: var(--text-md);
 	line-height: 1.45;
 }
 .modal-copy strong { color: var(--popup-text); }
 .modal-copy em { font-style: italic; color: var(--popup-text); }
 .modal-meta {
 	display: grid;
-	gap: 6px;
+	gap: var(--space-2);
 	background: var(--popup-bg-alt, rgba(255, 255, 255, 0.03));
 	border: 1px solid var(--popup-border);
 	border-radius: var(--radius-md, 6px);
-	padding: 12px 14px;
-	font-size: 0.75rem;
+	padding: var(--space-4) var(--space-4);
+	font-size: var(--text-sm);
 }
 .modal-meta-row {
 	display: grid;
 	grid-template-columns: 86px 1fr;
-	gap: 12px;
+	gap: var(--space-4);
 	align-items: baseline;
 }
 .modal-meta-key {
@@ -65,16 +65,16 @@
 .field {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
+	gap: var(--space-2);
 }
 .field-label {
-	font-size: 0.7rem;
+	font-size: var(--text-xs);
 	color: var(--text-muted, var(--popup-text));
 	letter-spacing: 0.06em;
 }
 .modal-error {
 	min-height: 18px;
-	font-size: 0.75rem;
+	font-size: var(--text-sm);
 	color: var(--color-danger, #f87171);
 	opacity: 0;
 	transition: opacity 0.15s ease;
@@ -82,7 +82,7 @@
 .modal-error.is-visible { opacity: 1; }
 .modal-actions {
 	display: flex;
-	gap: 10px;
+	gap: var(--space-3);
 	justify-content: flex-end;
 }
 /* Click-to-copy modifier for base inputs/textareas. */

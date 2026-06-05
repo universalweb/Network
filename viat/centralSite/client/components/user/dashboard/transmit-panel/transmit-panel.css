@@ -6,32 +6,32 @@
 }
 
 .transmit-body {
-	padding: 16px 24px;
+	padding: var(--space-5) var(--space-7);
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	gap: 12px 20px;
+	gap: var(--space-4) var(--space-6);
 }
 
 @media (max-width: 420px) {
 	.transmit-body {
-		padding-left: 12px;
-		padding-right: 12px;
+		padding-left: var(--space-4);
+		padding-right: var(--space-4);
 		grid-template-columns: 1fr;
-		gap: 10px;
+		gap: var(--space-3);
 	}
 }
 
 .field {
 	display: flex;
 	flex-direction: column;
-	gap: 5px;
+	gap: var(--space-2);
 }
 
 .field-head {
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-start;
-	gap: 2px;
+	gap: var(--space-1);
 }
 
 .field.full-width {
@@ -39,12 +39,12 @@
 }
 
 .field-label {
-	font-size: 0.625rem;
+	font-size: var(--text-2xs);
 	text-transform: uppercase;
 	letter-spacing: 0.18em;
 	color: var(--text-main);
 	opacity: 0.75;
-	font-weight: 600;
+	font-weight: var(--weight-semibold);
 }
 
 .field input {
@@ -55,9 +55,9 @@
 		--input-accent-shadow,
 		inset 0 -1px 0 var(--cyan-glow-soft)
 	);
-	padding: 8px 10px;
+	padding: var(--space-3) var(--space-3);
 	font-family: var(--font-mono);
-	font-size: 0.8125rem;
+	font-size: var(--text-base);
 	color: var(--text-main);
 	outline: none;
 	width: 100%;
@@ -95,7 +95,7 @@
 }
 
 .field-with-addon input {
-	padding-right: 58px;
+	padding-right: var(--space-11);
 }
 
 .field-addon {
@@ -109,7 +109,7 @@
 	border-bottom: none;
 	box-sizing: border-box;
 	color: var(--text-light);
-	font-size: 0.625rem;
+	font-size: var(--text-2xs);
 	font-family: var(--font-mono);
 	letter-spacing: 0.05em;
 	display: flex;
@@ -129,10 +129,10 @@
 	border-left: 1px solid var(--border-light-color);
 	outline: none;
 	min-width: 70px;
-	padding: 0 22px 0 12px;
+	padding: 0 var(--space-6) 0 var(--space-4);
 	cursor: pointer;
 	text-transform: uppercase;
-	font-weight: 600;
+	font-weight: var(--weight-semibold);
 	background-image:
 		linear-gradient(135deg, transparent 50%, currentColor 50%, currentColor 62%, transparent 62%),
 		linear-gradient(45deg, transparent 50%, currentColor 50%, currentColor 62%, transparent 62%);
@@ -159,15 +159,15 @@
 
 .btn-transmit {
 	grid-column: 1 / -1;
-	padding: 9px 12px;
+	padding: var(--space-3) var(--space-4);
 	background: var(--btn-bg);
 	color: var(--text-light);
 	border: 1px solid var(--btn-border);
 	box-shadow: var(--btn-inset);
 	backdrop-filter: blur(4px);
 	font-family: var(--font-display);
-	font-size: 0.625rem;
-	font-weight: 700;
+	font-size: var(--text-2xs);
+	font-weight: var(--weight-bold);
 	text-transform: uppercase;
 	letter-spacing: 0.16em;
 	cursor: pointer;

@@ -23,7 +23,7 @@
 	min-height: 0;
 	overflow-y: auto;
 	overscroll-behavior: contain;
-	padding: 32px 40px 48px 40px;
+	padding: var(--space-8) var(--space-9) var(--space-10) var(--space-9);
 }
 /* Mobile: take the full screen and shrink the vertical rail to an
    icon-only strip. The modal already supports `--ui-modal-max-*` =
@@ -45,20 +45,20 @@
 		--tab-strip-width: 56px;
 	}
 	.sm-body {
-		padding: 20px 16px 32px;
+		padding: var(--space-6) var(--space-5) var(--space-8);
 	}
 }
 .sm-section {
 	display: flex;
 	flex-direction: column;
-	gap: 14px;
+	gap: var(--space-4);
 	min-width: 0;
 }
 .sm-section-head {
 	display: flex;
 	align-items: baseline;
-	gap: 8px;
-	font-size: 0.75rem;
+	gap: var(--space-3);
+	font-size: var(--text-sm);
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 }
@@ -71,18 +71,18 @@
 }
 .sm-copy {
 	margin: 0;
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	line-height: 1.5;
 	color: var(--text-muted, rgba(255, 255, 255, 0.6));
 }
 .sm-field {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
+	gap: var(--space-2);
 	min-width: 0;
 }
 .sm-label {
-	font-size: 0.5625rem;
+	font-size: var(--text-2xs);
 	letter-spacing: 0.2em;
 	text-transform: uppercase;
 	color: var(--text-muted, rgba(255, 255, 255, 0.45));
@@ -91,13 +91,13 @@
 .sm-input {
 	box-sizing: border-box;
 	width: 100%;
-	padding: 10px 12px;
+	padding: var(--space-3) var(--space-4);
 	background: var(--bg-dark, #04060a);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	color: var(--text-main, #e8eaf2);
 	font-family: inherit;
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	letter-spacing: 0.04em;
 	resize: vertical;
 	transition: border-color 0.15s ease;
@@ -108,13 +108,13 @@
 	border-color: var(--teal, #5eead4);
 }
 .sm-readout {
-	padding: 10px 12px;
+	padding: var(--space-3) var(--space-4);
 	background: var(--bg-dark, #04060a);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	color: var(--text-main, #e8eaf2);
 	font-family: inherit;
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	letter-spacing: 0.04em;
 	word-break: break-all;
 	min-height: 1em;
@@ -135,34 +135,34 @@
 .sm-grid {
 	display: flex;
 	flex-direction: column;
-	gap: 14px;
+	gap: var(--space-4);
 }
 .sm-divider {
-	margin: 6px 0 4px;
-	font-size: 0.5625rem;
+	margin: var(--space-2) 0 var(--space-2);
+	font-size: var(--text-2xs);
 	letter-spacing: 0.2em;
 	text-transform: uppercase;
 	color: var(--text-muted, rgba(255, 255, 255, 0.4));
 }
 .sm-copy code {
-	padding: 1px 5px;
+	padding: 1px var(--space-2);
 	background: var(--bg-dark, #04060a);
-	border-radius: 3px;
+	border-radius: var(--radius-xs);
 	font-family: inherit;
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 }
 .sm-actions {
 	display: flex;
-	gap: 8px;
+	gap: var(--space-3);
 }
 .sm-btn {
-	padding: 8px 18px;
+	padding: var(--space-3) var(--space-5);
 	background: transparent;
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	color: var(--text-muted, rgba(255, 255, 255, 0.7));
 	font-family: inherit;
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	letter-spacing: 0.18em;
 	cursor: pointer;
 	transition:
@@ -198,37 +198,37 @@
 .sm-create-confirm {
 	display: flex;
 	flex-direction: column;
-	gap: 14px;
+	gap: var(--space-4);
 }
 .sm-warning {
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
-	padding: 14px 16px;
+	gap: var(--space-3);
+	padding: var(--space-4) var(--space-5);
 	border: 1px solid rgba(248, 113, 113, 0.35);
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	background: rgba(248, 113, 113, 0.06);
 }
 .sm-warning-head {
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: #f87171;
 }
 .sm-warning-body {
 	margin: 0;
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	line-height: 1.5;
 	color: var(--text-muted, rgba(255, 255, 255, 0.7));
 }
 .sm-warning-row {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
+	gap: var(--space-2);
 }
 .sm-status {
-	margin-top: 4px;
-	font-size: 0.6875rem;
+	margin-top: var(--space-2);
+	font-size: var(--text-xs);
 	line-height: 1.4;
 	min-height: 1em;
 	opacity: 0;

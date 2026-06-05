@@ -7,7 +7,7 @@
    WALLET HERO
 ══════════════════════════════════════════════════════ */
 .wallet-hero {
-	padding: 28px 32px 20px;
+	padding: var(--space-7) var(--space-8) var(--space-6);
 	flex-shrink: 0;
 	border-radius: var(--radius);
 	background: var(--bg-panel);
@@ -26,7 +26,7 @@
 	top: 10px;
 	right: 18px;
 	font-size: 2rem;
-	font-weight: 700;
+	font-weight: var(--weight-bold);
 	letter-spacing: 2px;
 	color: var(--watermark-text);
 	user-select: none;
@@ -43,7 +43,7 @@
 	text-transform: uppercase;
 	letter-spacing: 0.3em;
 	color: var(--text-muted);
-	margin-bottom: 10px;
+	margin-bottom: var(--space-3);
 }
 
 .wa-amount-main {
@@ -61,7 +61,7 @@
    work. The bigger font + the watermark "VIAT BALANCE" still anchor it
    as a hero region, just unbounded. */
 :host(.bare) .wallet-hero {
-	padding: 8px 6px 4px;
+	padding: var(--space-3) var(--space-2) var(--space-2);
 	background: transparent;
 	border: none;
 	box-shadow: none;
@@ -82,7 +82,7 @@
 	letter-spacing: -2px;
 }
 :host(.bare) .wa-amount-full {
-	font-size: 0.8125rem;
+	font-size: var(--text-base);
 }
 
 @media (max-width: 420px) {
@@ -97,8 +97,8 @@
 .wa-coin-info {
 	display: flex;
 	align-items: center;
-	gap: 6px;
-	margin-top: 10px;
+	gap: var(--space-2);
+	margin-top: var(--space-3);
 }
 
 .wa-coin-symbol {
@@ -106,7 +106,7 @@
 }
 
 .wa-amount-full {
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	font-family: var(--font-mono);
 	color: var(--text-muted);
 	letter-spacing: 0.04em;

@@ -4,20 +4,20 @@
 .ip-body {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
-	padding: 12px;
+	gap: var(--space-3);
+	padding: var(--space-4);
 }
 .ip-lede {
 	margin: 0;
 	font-family: var(--font-mono);
-	font-size: 0.75rem;
+	font-size: var(--text-sm);
 	line-height: 1.35;
 	color: var(--teal, #5eead4);
 }
 .ip-copy {
 	margin: 0;
 	font-family: var(--font-mono);
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	line-height: 1.45;
 	color: var(--text-muted, rgba(255, 255, 255, 0.6));
 }

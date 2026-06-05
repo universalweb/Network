@@ -15,15 +15,15 @@
 	max-width: 820px;
 	margin: 0 auto;
 	box-sizing: border-box;
-	gap: 12px;
+	gap: var(--space-4);
 	color: var(--text-main, #fff);
 	font-family: var(--font-mono);
 }
 .aic-header {
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
-	padding-bottom: 10px;
+	gap: var(--space-2);
+	padding-bottom: var(--space-3);
 	border-bottom: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 }
 .aic-titlebar {
@@ -32,7 +32,7 @@
 	align-items: center;
 }
 .aic-title {
-	font-size: 0.875rem;
+	font-size: var(--text-md);
 	letter-spacing: 0.18em;
 	color: var(--teal, #5eead4);
 	text-transform: uppercase;
@@ -40,23 +40,23 @@
 .aic-title-group {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: var(--space-4);
 }
 .aic-endpoint {
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	letter-spacing: 0.05em;
 	color: var(--text-muted, rgba(255, 255, 255, 0.45));
 	font-variant-numeric: tabular-nums;
 }
 .aic-clear {
 	font-family: var(--font-mono);
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	letter-spacing: 0.15em;
-	padding: 4px 10px;
+	padding: var(--space-2) var(--space-3);
 	color: var(--text-muted, rgba(255, 255, 255, 0.55));
 	background: transparent;
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	cursor: pointer;
 	transition: border-color 0.15s ease, color 0.15s ease;
 }
@@ -74,12 +74,12 @@
 	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
-	padding: 4px 4px 8px 4px;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-2) var(--space-3) var(--space-2);
 	cursor: text;
 }
 .aic-error {
-	font-size: 0.75rem;
+	font-size: var(--text-sm);
 	color: var(--danger, #f87171);
 	min-height: 1em;
 	opacity: 0;
@@ -90,19 +90,19 @@
 }
 .aic-input-row {
 	display: flex;
-	gap: 8px;
+	gap: var(--space-3);
 	align-items: stretch;
 }
 .aic-input {
 	flex: 1;
 	font-family: var(--font-mono);
-	font-size: 0.875rem;
+	font-size: var(--text-md);
 	line-height: 1.45;
 	color: var(--text-main, #fff);
 	background: var(--bg-panel, rgba(255, 255, 255, 0.04));
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
-	border-radius: 6px;
-	padding: 10px 12px;
+	border-radius: var(--radius-md);
+	padding: var(--space-3) var(--space-4);
 	resize: vertical;
 	min-height: 44px;
 	max-height: 200px;
@@ -118,14 +118,14 @@
 }
 .aic-btn {
 	font-family: var(--font-mono);
-	font-size: 0.8125rem;
+	font-size: var(--text-base);
 	letter-spacing: 0.12em;
-	padding: 0 22px;
+	padding: 0 var(--space-6);
 	min-width: 96px;
 	color: var(--bg-dark, #04060a);
 	background: var(--teal, #5eead4);
 	border: none;
-	border-radius: 6px;
+	border-radius: var(--radius-md);
 	cursor: pointer;
 	transition: background 0.15s ease, color 0.15s ease;
 }

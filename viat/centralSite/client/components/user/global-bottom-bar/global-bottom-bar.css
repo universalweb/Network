@@ -7,12 +7,12 @@
 .bb-badge {
 	display: inline-flex;
 	align-items: center;
-	gap: 8px;
-	padding: 0 16px;
+	gap: var(--space-3);
+	padding: 0 var(--space-5);
 	align-self: stretch;
 	margin-right: -16px;
 	font-family: var(--font-mono);
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	text-transform: uppercase;
 	letter-spacing: 0.16em;
 	border-width: 0;

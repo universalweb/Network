@@ -1,11 +1,11 @@
 .addr-wrap {
-	padding: 14px 16px 10px;
+	padding: var(--space-4) var(--space-5) var(--space-3);
 }
 .copy-hint {
 	font-size: 0.4375rem;
 	text-transform: uppercase;
 	letter-spacing: 0.22em;
 	color: var(--text-muted);
-	margin-top: 8px;
+	margin-top: var(--space-3);
 	text-align: center;
 }

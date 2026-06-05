@@ -12,7 +12,7 @@
 	padding: clamp(8px, 1.2vh, 14px) clamp(10px, 1.2vw, 16px);
 	border: 1px dashed var(--border-light-color);
 	background: var(--surface-tint-ghost);
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	word-break: break-all;
 	cursor: pointer;
 	line-height: 1.5;

@@ -6,15 +6,15 @@
 
 .tb-logo {
 	font-family: var(--font-display);
-	font-size: 0.875rem;
-	font-weight: 700;
+	font-size: var(--text-md);
+	font-weight: var(--weight-bold);
 	color: var(--text-light);
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	display: flex;
 	align-items: center;
 	min-width: 0;
-	gap: 10px;
+	gap: var(--space-3);
 }
 
 /* Home link wrapping the ⩝ mark + VIAT wordmark — an anchor, so the router
@@ -22,12 +22,12 @@
 .tb-logo-home {
 	display: inline-flex;
 	align-items: center;
-	gap: 10px;
+	gap: var(--space-3);
 	color: inherit;
 	font: inherit;
 	text-decoration: none;
-	border-radius: 6px;
-	padding: 2px 4px;
+	border-radius: var(--radius-md);
+	padding: var(--space-1) var(--space-2);
 	margin: -2px -4px;
 	transition: color 0.15s ease, background 0.15s ease;
 }
@@ -50,7 +50,7 @@
 	height: 32px;
 	font-family: var(--font-mono);
 	font-size: 40px;
-	font-weight: 400;
+	font-weight: var(--weight-normal);
 	line-height: 1;
 	color: var(--topbar-accent);
 	text-shadow: var(--logo-mark-text-shadow, none);
@@ -64,7 +64,7 @@
 
 .tb-subtitle {
 	display: inline-block;
-	font-size: 0.6rem;
+	font-size: var(--text-2xs);
 	color: var(--topbar-accent);
 	letter-spacing: 0.24em;
 	text-shadow: var(--subtitle-text-shadow, none);
