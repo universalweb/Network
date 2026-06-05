@@ -9,7 +9,7 @@
 .sm-modal {
 	--ui-modal-max-width: min(1120px, calc(100vw - 48px));
 	--ui-modal-max-height: calc(100dvh - 64px);
-	color: var(--text-main, #e8eaf2);
+	color: var(--text-main);
 	font-family: var(--font-mono, 'JetBrains Mono', monospace);
 }
 .sm-tabs {
@@ -63,11 +63,11 @@
 	text-transform: uppercase;
 }
 .sm-section-id {
-	color: var(--cyan, #a78bfa);
+	color: var(--cyan);
 	opacity: 0.8;
 }
 .sm-section-title {
-	color: var(--text-main, #e8eaf2);
+	color: var(--text-main);
 }
 .sm-copy {
 	margin: 0;
@@ -92,10 +92,10 @@
 	box-sizing: border-box;
 	width: 100%;
 	padding: var(--space-3) var(--space-4);
-	background: var(--bg-dark, #04060a);
+	background: var(--bg-dark);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
 	border-radius: var(--radius-sm);
-	color: var(--text-main, #e8eaf2);
+	color: var(--text-main);
 	font-family: inherit;
 	font-size: var(--text-xs);
 	letter-spacing: 0.04em;
@@ -105,14 +105,14 @@
 .sm-textarea:focus,
 .sm-input:focus {
 	outline: none;
-	border-color: var(--teal, #5eead4);
+	border-color: var(--teal);
 }
 .sm-readout {
 	padding: var(--space-3) var(--space-4);
-	background: var(--bg-dark, #04060a);
+	background: var(--bg-dark);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	border-radius: var(--radius-sm);
-	color: var(--text-main, #e8eaf2);
+	color: var(--text-main);
 	font-family: inherit;
 	font-size: var(--text-xs);
 	letter-spacing: 0.04em;
@@ -126,8 +126,8 @@
 	cursor: copy;
 }
 .sm-readout.is-copyable:hover {
-	border-color: var(--teal, #5eead4);
-	color: var(--teal, #5eead4);
+	border-color: var(--teal);
+	color: var(--teal);
 }
 .sm-textarea.is-copyable {
 	cursor: copy;
@@ -146,7 +146,7 @@
 }
 .sm-copy code {
 	padding: 1px var(--space-2);
-	background: var(--bg-dark, #04060a);
+	background: var(--bg-dark);
 	border-radius: var(--radius-xs);
 	font-family: inherit;
 	font-size: var(--text-xs);
@@ -171,16 +171,16 @@
 		background 0.15s ease;
 }
 .sm-btn:hover:not(:disabled) {
-	border-color: var(--teal, #5eead4);
-	color: var(--teal, #5eead4);
+	border-color: var(--teal);
+	color: var(--teal);
 }
 .sm-btn:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
 .sm-btn-primary {
-	border-color: var(--teal, #5eead4);
-	color: var(--teal, #5eead4);
+	border-color: var(--teal);
+	color: var(--teal);
 }
 .sm-btn-primary:hover:not(:disabled) {
 	background: var(--cyan-tint-faint, rgba(109, 74, 255, 0.06));

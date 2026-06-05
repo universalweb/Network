@@ -44,7 +44,7 @@
 .tone-warning { color: var(--color-warning); }
 .tone-danger  { color: var(--color-danger); }
 .tone-info    { color: var(--color-info); }
-.tone-accent  { color: var(--teal, #5eead4); }
+.tone-accent  { color: var(--teal); }
 .tone-inverse { color: #0b0d14; }
 /* Align */
 .align-start  { text-align: start; }

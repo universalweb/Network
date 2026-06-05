@@ -32,7 +32,7 @@ button {
 	user-select: none;
 }
 button:focus-visible {
-	outline: 1px solid var(--focus-ring-color, var(--teal, #5eead4));
+	outline: 1px solid var(--focus-ring-color, var(--teal));
 	outline-offset: 2px;
 }
 button:active:not(:disabled) {
@@ -90,8 +90,8 @@ button.var-solid.tone-neutral:hover:not(:disabled) {
 	background: rgba(255, 255, 255, 0.13);
 }
 button.var-solid.tone-primary {
-	background: var(--teal, #5eead4);
-	border-color: var(--teal, #5eead4);
+	background: var(--teal);
+	border-color: var(--teal);
 	color: #06151a;
 }
 button.var-solid.tone-primary:hover:not(:disabled) {
@@ -135,8 +135,8 @@ button.var-outline.tone-neutral {
 	color: var(--text-default, #e8eaf2);
 }
 button.var-outline.tone-primary {
-	border-color: var(--teal, #5eead4);
-	color: var(--teal, #5eead4);
+	border-color: var(--teal);
+	color: var(--teal);
 }
 button.var-outline.tone-success {
 	border-color: var(--color-success);
@@ -158,7 +158,7 @@ button.var-ghost.tone-neutral {
 	color: var(--text-default, #e8eaf2);
 }
 button.var-ghost.tone-primary {
-	color: var(--teal, #5eead4);
+	color: var(--teal);
 }
 button.var-ghost.tone-success {
 	color: var(--color-success);
@@ -181,7 +181,7 @@ button.var-link {
 	text-underline-offset: 3px;
 }
 button.var-link.tone-primary {
-	color: var(--teal, #5eead4);
+	color: var(--teal);
 }
 button.var-link.tone-neutral {
 	color: var(--text-default, #e8eaf2);

@@ -60,8 +60,8 @@
 	color: var(--popup-text);
 	word-break: break-all;
 }
-.modal-meta-val.is-locked { color: var(--color-warn-text, #facc15); }
-.modal-meta-val.is-unlocked { color: var(--color-success-text, #4ade80); }
+.modal-meta-val.is-locked { color: var(--color-warn-text); }
+.modal-meta-val.is-unlocked { color: var(--color-success-text); }
 .field {
 	display: flex;
 	flex-direction: column;
@@ -75,7 +75,7 @@
 .modal-error {
 	min-height: 18px;
 	font-size: var(--text-sm);
-	color: var(--color-danger, #f87171);
+	color: var(--color-danger);
 	opacity: 0;
 	transition: opacity 0.15s ease;
 }

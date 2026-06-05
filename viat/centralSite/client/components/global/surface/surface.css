@@ -16,7 +16,7 @@
 .tone-neutral     { background: var(--surface-neutral, rgba(255, 255, 255, 0.04)); }
 .tone-subtle      { background: var(--surface-subtle,  rgba(255, 255, 255, 0.025)); }
 .tone-panel       { background: var(--panel-bg,        rgba(12, 14, 22, 0.85)); }
-.tone-popup       { background: var(--popup-bg,        #07080c); }
+.tone-popup       { background: var(--popup-bg); }
 .tone-inverse     { background: var(--surface-inverse, #f5f6fa); color: #0b0d14; }
 .tone-success     { background: rgba(16, 185, 129, 0.08); }
 .tone-warning     { background: rgba(245, 158, 11, 0.08); }

@@ -11,7 +11,7 @@
 	padding: 140px var(--space-4) var(--space-12) var(--space-4);
 	gap: var(--space-5);
 	box-sizing: border-box;
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	font-family: var(--font-mono, monospace);
 }
 .td-shell > *,
@@ -49,7 +49,7 @@
 .td-copy {
 	background: transparent;
 	border: 1px dashed var(--dark-divider, rgba(255, 255, 255, 0.18));
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	font-family: var(--font-mono, monospace);
 	font-size: var(--text-sm);
 	padding: var(--space-2) var(--space-3);
@@ -95,7 +95,7 @@
 }
 .td-val {
 	font-size: var(--text-sm);
-	color: var(--dark-text-medium, #e2e8f0);
+	color: var(--dark-text-medium);
 	word-break: break-all;
 	font-variant-numeric: tabular-nums;
 }

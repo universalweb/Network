@@ -34,7 +34,7 @@
 }
 
 .bb-badge.tone-ok {
-	color: var(--color-success, #34d399);
+	color: var(--color-success);
 	border-color: rgba(52, 211, 153, 0.32);
 	background: rgba(52, 211, 153, 0.06);
 }
@@ -46,7 +46,7 @@
 }
 
 .bb-badge.tone-bad {
-	color: var(--color-danger, #f87171);
+	color: var(--color-danger);
 	border-color: rgba(248, 113, 113, 0.36);
 	background: rgba(248, 113, 113, 0.06);
 }

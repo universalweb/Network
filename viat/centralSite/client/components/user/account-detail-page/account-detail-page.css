@@ -11,7 +11,7 @@
 	padding: 140px var(--space-4) var(--space-12) var(--space-4);
 	gap: var(--space-5);
 	box-sizing: border-box;
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	font-family: var(--font-mono, monospace);
 }
 .ad-shell > *,
@@ -56,7 +56,7 @@
 .ad-address {
 	background: transparent;
 	border: 1px dashed var(--dark-divider, rgba(255, 255, 255, 0.18));
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	font-family: var(--font-mono, monospace);
 	padding: var(--space-2) var(--space-3);
 	text-align: left;
@@ -104,7 +104,7 @@
 }
 .ad-stat-val {
 	font-size: var(--text-lg);
-	color: var(--dark-text-medium, #e2e8f0);
+	color: var(--dark-text-medium);
 	font-variant-numeric: tabular-nums;
 }
 .ad-stat-val.ad-stat-good {
@@ -134,7 +134,7 @@
 .ad-btn {
 	background: transparent;
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.18));
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	padding: var(--space-2) var(--space-3);
 	font-family: var(--font-mono, monospace);
 	font-size: var(--text-2xs);
@@ -189,7 +189,7 @@ a.ad-btn {
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 	position: sticky;
 	inset-block-start: 0;
-	background: var(--bg-dark, #0a0a14);
+	background: var(--bg-dark);
 	z-index: 1;
 }
 .ad-cell {
@@ -200,7 +200,7 @@ a.ad-btn {
 .ad-id,
 .ad-addr {
 	text-decoration: none;
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	border-block-end: 1px dashed transparent;
 }
 a.ad-id:hover,

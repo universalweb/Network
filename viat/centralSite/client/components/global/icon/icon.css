@@ -44,7 +44,7 @@
 .tone-warning { color: var(--color-warning); }
 .tone-danger  { color: var(--color-danger); }
 .tone-info    { color: var(--color-info); }
-.tone-accent  { color: var(--teal, #5eead4); }
+.tone-accent  { color: var(--teal); }
 /* Spin */
 .is-spinning {
 	animation: ui-icon-spin 1.05s linear infinite;
@@ -141,7 +141,7 @@
 }
 @keyframes ui-icon-explorer-glow {
 	0%, 100% { filter: drop-shadow(0 0 0 transparent); }
-	50%      { filter: drop-shadow(0 0 6px var(--cyan, #a78bfa)); }
+	50%      { filter: drop-shadow(0 0 6px var(--cyan)); }
 }
 /* Accounts / Users — a friendly "hello" bounce: scale + drop with a
    gentle head-tilt and a teal glow pulse so the group of people feels
@@ -161,7 +161,7 @@
 }
 @keyframes ui-icon-accounts-glow {
 	0%, 100% { filter: drop-shadow(0 0 0 transparent); }
-	50%      { filter: drop-shadow(0 0 5px var(--teal, #5eead4)); }
+	50%      { filter: drop-shadow(0 0 5px var(--teal)); }
 }
 @media (prefers-reduced-motion: reduce) {
 	.is-spinning { animation-duration: 2.5s; }

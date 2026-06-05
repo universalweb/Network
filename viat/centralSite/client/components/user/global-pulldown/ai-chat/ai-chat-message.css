@@ -27,15 +27,15 @@
 	color: var(--text-muted, rgba(255, 255, 255, 0.45));
 }
 .aim-user .aim-role {
-	color: var(--cyan, #67e8f9);
+	color: var(--cyan);
 }
 .aim-assistant .aim-role {
-	color: var(--teal, #5eead4);
+	color: var(--teal);
 }
 .aim-content {
 	font-size: var(--text-md);
 	line-height: 1.55;
-	color: var(--text-main, #fff);
+	color: var(--text-main);
 	white-space: pre-wrap;
 	word-wrap: break-word;
 	cursor: text;

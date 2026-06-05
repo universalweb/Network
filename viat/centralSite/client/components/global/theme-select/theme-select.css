@@ -38,7 +38,7 @@
   border: 1px solid var(--popup-border, rgba(109, 74, 255, 0.22));
   border-radius: var(--radius, 10px);
   min-width: 120px;
-  background: var(--popup-bg, #07080c);
+  background: var(--popup-bg);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(109, 74, 255, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
   overflow: hidden;
@@ -77,7 +77,7 @@
   background: transparent;
   border: none;
   border-block-end: 1px solid var(--dark-divider-faint, rgba(255, 255, 255, 0.022));
-  color: var(--text-offwhite, #adb4cc);
+  color: var(--text-offwhite);
   font-family: inherit;
   font-size: var(--text-2xs);
   letter-spacing: 0.15em;
@@ -93,10 +93,10 @@
 }
 .theme-option:hover {
   background: var(--surface-tint, rgba(255, 255, 255, 0.05));
-  color: var(--text-main, #e8eaf2);
+  color: var(--text-main);
 }
 .theme-option.active {
-  color: var(--cyan, #a78bfa);
+  color: var(--cyan);
   background: var(--cyan-tint-faint, rgba(109, 74, 255, 0.034));
 }
 @media (prefers-reduced-motion: reduce) {

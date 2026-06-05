@@ -8,7 +8,7 @@
 	gap: var(--space-4);
 	min-height: 0;
 	font-family: var(--font-mono, monospace);
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 }
 .pl-table {
 	display: flex;
@@ -40,7 +40,7 @@
 }
 .pl-btn {
 	background: transparent;
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.16));
 	padding: var(--space-2) var(--space-3);
 	font-family: var(--font-mono, monospace);
@@ -80,7 +80,7 @@ a.pl-btn {
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 }
 .pl-num {
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	font-variant-numeric: tabular-nums;
 }
 .pl-label {

@@ -11,7 +11,7 @@
 	padding: 140px var(--space-4) var(--space-12) var(--space-4);
 	gap: var(--space-5);
 	box-sizing: border-box;
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	font-family: var(--font-mono, monospace);
 }
 .ex-shell > * {
@@ -49,7 +49,7 @@
 	font-size: var(--text-md);
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 }
 .ex-subtitle {
 	display: inline-flex;
@@ -75,7 +75,7 @@
 	border-radius: var(--radius-sm);
 }
 .ex-stat-num {
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	font-variant-numeric: tabular-nums;
 }
 .ex-stat-label {
@@ -126,7 +126,7 @@
 }
 .ex-btn {
 	background: transparent;
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.16));
 	padding: var(--space-2) var(--space-3);
 	font-family: var(--font-mono, monospace);
@@ -182,7 +182,7 @@ a.ex-btn {
 	border-block-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
 	position: sticky;
 	inset-block-start: 0;
-	background: var(--bg-dark, #0a0a14);
+	background: var(--bg-dark);
 	z-index: 1;
 }
 .ex-cell {
@@ -192,7 +192,7 @@ a.ex-btn {
 }
 .ex-id,
 .ex-addr {
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	text-decoration: none;
 	border-block-end: 1px dashed transparent;
 }

@@ -171,7 +171,7 @@
 	display: none;
 }
 .sidebar-close:hover {
-	color: var(--text-main, #e8eaf2);
+	color: var(--text-main);
 	border-color: var(--dark-divider, rgba(255, 255, 255, 0.18));
 	background: rgba(255, 255, 255, 0.04);
 }
@@ -180,6 +180,6 @@
 }
 .sidebar-close:focus-visible {
 	outline: none;
-	border-color: var(--cyan, #a78bfa);
+	border-color: var(--cyan);
 	box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.25);
 }

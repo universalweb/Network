@@ -32,13 +32,13 @@
 	flex-direction: column;
 	gap: var(--space-2);
 	padding: var(--space-5) var(--space-3);
-	background: var(--bg-dark, #04060a);
+	background: var(--bg-dark);
 	border-inline-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	overflow-y: auto;
 }
 .tab-indicator {
 	position: absolute;
-	background: var(--teal, #5eead4);
+	background: var(--teal);
 	border-radius: var(--radius-xs);
 	opacity: 0;
 	pointer-events: none;

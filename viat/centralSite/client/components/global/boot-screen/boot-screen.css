@@ -8,8 +8,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: var(--bg-dark, #04060a);
-	color: var(--text-main, #fff);
+	background: var(--bg-dark);
+	color: var(--text-main);
 	font-family: var(--font-mono);
 	opacity: 1;
 	transition: opacity 420ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -141,7 +141,7 @@
 	width: 100%;
 	max-width: 280px;
 	--bar-track: var(--cyan-glow-faint, rgba(109, 74, 255, 0.10));
-	--accent: var(--teal, #6d4aff);
+	--accent: var(--teal);
 	--accent-2: var(--cyan-glow-strong, rgba(109, 74, 255, 0.44));
 }
 @keyframes bs-glow-pulse {

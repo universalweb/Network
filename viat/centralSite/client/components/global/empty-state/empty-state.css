@@ -43,6 +43,6 @@
 }
 .empty-action:hover { filter: brightness(1.12); }
 .empty-action:focus-visible {
-	outline: 1px solid var(--focus-ring-color, #6366f1);
+	outline: 1px solid var(--focus-ring-color);
 	outline-offset: 2px;
 }

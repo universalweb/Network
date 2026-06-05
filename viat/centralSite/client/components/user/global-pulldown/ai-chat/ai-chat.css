@@ -16,7 +16,7 @@
 	margin: 0 auto;
 	box-sizing: border-box;
 	gap: var(--space-4);
-	color: var(--text-main, #fff);
+	color: var(--text-main);
 	font-family: var(--font-mono);
 }
 .aic-header {
@@ -34,7 +34,7 @@
 .aic-title {
 	font-size: var(--text-md);
 	letter-spacing: 0.18em;
-	color: var(--teal, #5eead4);
+	color: var(--teal);
 	text-transform: uppercase;
 }
 .aic-title-group {
@@ -61,8 +61,8 @@
 	transition: border-color 0.15s ease, color 0.15s ease;
 }
 .aic-clear:hover:not(:disabled) {
-	border-color: var(--teal, #5eead4);
-	color: var(--teal, #5eead4);
+	border-color: var(--teal);
+	color: var(--teal);
 }
 .aic-clear:disabled {
 	opacity: 0.4;
@@ -98,7 +98,7 @@
 	font-family: var(--font-mono);
 	font-size: var(--text-md);
 	line-height: 1.45;
-	color: var(--text-main, #fff);
+	color: var(--text-main);
 	background: var(--bg-panel, rgba(255, 255, 255, 0.04));
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	border-radius: var(--radius-md);
@@ -110,7 +110,7 @@
 	transition: border-color 0.15s ease;
 }
 .aic-input:focus {
-	border-color: var(--teal, #5eead4);
+	border-color: var(--teal);
 }
 .aic-input:disabled {
 	opacity: 0.6;
@@ -122,8 +122,8 @@
 	letter-spacing: 0.12em;
 	padding: 0 var(--space-6);
 	min-width: 96px;
-	color: var(--bg-dark, #04060a);
-	background: var(--teal, #5eead4);
+	color: var(--bg-dark);
+	background: var(--teal);
 	border: none;
 	border-radius: var(--radius-md);
 	cursor: pointer;

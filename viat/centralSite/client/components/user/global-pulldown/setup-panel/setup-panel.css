@@ -13,11 +13,11 @@
 	color: var(--text-muted, rgba(255, 255, 255, 0.6));
 }
 .sp-steps li::marker {
-	color: var(--teal, #5eead4);
+	color: var(--teal);
 	font-weight: var(--weight-semibold);
 }
 .sp-link {
-	color: var(--teal, #5eead4);
+	color: var(--teal);
 	text-decoration: none;
 	border-block-end: 1px dotted var(--cyan-glow-faint, rgba(0, 240, 255, 0.35));
 }
@@ -27,10 +27,10 @@
 .sp-tag {
 	display: inline-block;
 	padding: 1px var(--space-2);
-	background: var(--bg-dark, #04060a);
+	background: var(--bg-dark);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
 	border-radius: var(--radius-xs);
-	color: var(--teal, #5eead4);
+	color: var(--teal);
 	font-size: var(--text-2xs);
 	line-height: 1.2;
 }

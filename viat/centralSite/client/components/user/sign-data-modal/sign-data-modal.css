@@ -31,6 +31,6 @@
 }
 .sign-status.is-visible { opacity: 1; }
 .sign-status.tone-info { color: var(--text-muted, var(--popup-text)); }
-.sign-status.tone-success { color: var(--color-success-text, #34d399); }
-.sign-status.tone-error { color: var(--color-danger, #f87171); }
-.sign-status.tone-warn { color: var(--color-warn-text, #facc15); }
+.sign-status.tone-success { color: var(--color-success-text); }
+.sign-status.tone-error { color: var(--color-danger); }
+.sign-status.tone-warn { color: var(--color-warn-text); }

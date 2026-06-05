@@ -11,7 +11,7 @@
 	padding: 140px var(--space-4) var(--space-12) var(--space-4);
 	gap: var(--space-5);
 	box-sizing: border-box;
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	font-family: var(--font-mono, monospace);
 }
 .al-shell > * {
@@ -48,7 +48,7 @@
 	font-size: var(--text-md);
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 }
 .al-subtitle {
 	display: inline-flex;
@@ -74,7 +74,7 @@
 	border-radius: var(--radius-sm);
 }
 .al-stat-num {
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	font-variant-numeric: tabular-nums;
 }
 .al-stat-label {
@@ -97,7 +97,7 @@
 }
 .al-btn {
 	background: transparent;
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.16));
 	padding: var(--space-2) var(--space-3);
 	font-family: var(--font-mono, monospace);
@@ -149,7 +149,7 @@ a.al-btn {
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 	position: sticky;
 	inset-block-start: 0;
-	background: var(--bg-dark, #0a0a14);
+	background: var(--bg-dark);
 	z-index: 1;
 }
 .al-cell {
@@ -159,7 +159,7 @@ a.al-btn {
 }
 .al-addr {
 	text-decoration: none;
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	border-block-end: 1px dashed transparent;
 }
 a.al-addr:hover {
@@ -173,7 +173,7 @@ a.al-addr:hover {
 }
 .al-totin {
 	text-align: right;
-	color: var(--dark-text-medium, #c8d0e0);
+	color: var(--dark-text-medium);
 	font-variant-numeric: tabular-nums;
 }
 .al-totout {

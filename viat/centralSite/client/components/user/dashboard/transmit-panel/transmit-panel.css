@@ -152,7 +152,7 @@
 	outline-offset: -2px;
 }
 .field-addon-select option {
-	background: var(--popup-bg, #07080c);
+	background: var(--popup-bg);
 	color: var(--text-main);
 	text-transform: uppercase;
 }

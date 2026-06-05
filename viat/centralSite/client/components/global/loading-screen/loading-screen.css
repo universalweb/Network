@@ -26,7 +26,7 @@
 }
 .loading-card {
 	align-items: center;
-	background: var(--bg-panel, #111);
+	background: var(--bg-panel);
 	border: var(--border-light, 1px solid rgba(255, 255, 255, 0.1));
 	border-radius: var(--radius, 8px);
 	box-shadow: var(--panel-shadow, 0 12px 36px rgba(0, 0, 0, 0.5));

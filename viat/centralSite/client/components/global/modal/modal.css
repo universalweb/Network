@@ -8,8 +8,8 @@
   padding: 0;
   border: 1px solid var(--popup-border, rgba(109, 74, 255, 0.22));
   border-radius: var(--radius-lg, 12px);
-  background: var(--popup-bg, #07080c);
-  color: var(--popup-text, #e8eaf2);
+  background: var(--popup-bg);
+  color: var(--popup-text);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6),
     0 0 0 1px rgba(109, 74, 255, 0.08);
   max-width: var(--ui-modal-max-width, min(640px, calc(100vw - 32px)));
@@ -107,24 +107,24 @@
   transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease, opacity 0.2s ease;
 }
 .mc-btn:hover {
-  color: var(--text-main, #e8eaf2);
+  color: var(--text-main);
   border-color: var(--dark-divider, rgba(255, 255, 255, 0.18));
   background: rgba(255, 255, 255, 0.04);
 }
 .mc-btn:active { transform: scale(0.92); }
 .mc-btn:focus-visible {
   outline: none;
-  border-color: var(--cyan, #a78bfa);
+  border-color: var(--cyan);
   box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.25);
 }
 /* Per-button hover micro-animations on the icon itself. */
 .mc-min:hover .mc-icon {
   transform: translateY(2px) scaleX(1.1);
-  color: var(--teal, #5eead4);
+  color: var(--teal);
 }
 .mc-max:hover .mc-icon-grow,
 .mc-max:hover .mc-icon-shrink {
-  color: var(--cyan, #a78bfa);
+  color: var(--cyan);
 }
 /* Expand/restore single toggle — both icons live in the same button slot
    and crossfade with a rotate+scale morph so it reads as one icon

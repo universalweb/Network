@@ -7,7 +7,7 @@
 	gap: var(--space-5);
 	padding: var(--space-8) var(--space-9) var(--space-8) var(--space-9);
 	font-family: var(--font-mono, 'JetBrains Mono', monospace);
-	color: var(--text-main, #e8eaf2);
+	color: var(--text-main);
 }
 .wo-hero {
 	display: grid;
@@ -23,7 +23,7 @@
 	justify-content: center;
 	width: 88px;
 	height: 88px;
-	color: var(--cyan, #a78bfa);
+	color: var(--cyan);
 	background: linear-gradient(135deg, rgba(167, 139, 250, 0.18), rgba(94, 234, 212, 0.06));
 	border: 1px solid rgba(167, 139, 250, 0.25);
 	border-radius: 12px;
@@ -111,18 +111,18 @@
 	text-transform: uppercase;
 }
 .wo-id {
-	color: var(--cyan, #a78bfa);
+	color: var(--cyan);
 	opacity: 0.85;
 	font-weight: var(--weight-bold);
 }
 .wo-title {
-	color: var(--text-main, #e8eaf2);
+	color: var(--text-main);
 }
 .wo-tagline {
 	margin: 0;
 	font-size: var(--text-lg);
 	font-weight: var(--weight-semibold);
-	color: var(--teal, #5eead4);
+	color: var(--teal);
 	letter-spacing: 0.01em;
 }
 .wo-intro {
@@ -161,7 +161,7 @@
 	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(167, 139, 250, 0.15);
 }
 .wo-thumb:focus-visible {
-	outline: 2px solid var(--cyan, #a78bfa);
+	outline: 2px solid var(--cyan);
 	outline-offset: 2px;
 }
 @media (max-width: 32.5em) {
@@ -172,10 +172,10 @@
 	}
 }
 .wo-intro strong {
-	color: var(--text-main, #e8eaf2);
+	color: var(--text-main);
 }
 .wo-intro em {
-	color: var(--cyan, #a78bfa);
+	color: var(--cyan);
 	font-style: normal;
 }
 .wo-intro code {
@@ -184,7 +184,7 @@
 	background: rgba(255, 255, 255, 0.04);
 	padding: 1px var(--space-2);
 	border-radius: var(--radius-xs);
-	color: var(--teal, #5eead4);
+	color: var(--teal);
 }
 .wo-bullets {
 	display: flex;
@@ -212,7 +212,7 @@
 	font-size: var(--text-2xs);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--cyan, #a78bfa);
+	color: var(--cyan);
 	font-weight: var(--weight-bold);
 }
 .wo-status {
@@ -222,7 +222,7 @@
 	line-height: 1.55;
 	color: var(--text-muted, rgba(255, 255, 255, 0.55));
 	background: rgba(167, 139, 250, 0.04);
-	border-inline-start: 2px solid var(--cyan, #a78bfa);
+	border-inline-start: 2px solid var(--cyan);
 	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 .wo-actions {
@@ -249,17 +249,17 @@
 		transform 0.15s ease;
 }
 .wo-btn:hover {
-	color: var(--text-main, #e8eaf2);
+	color: var(--text-main);
 	border-color: rgba(255, 255, 255, 0.25);
 	transform: translateY(-1px);
 }
 .wo-btn-primary {
-	border-color: var(--teal, #5eead4);
-	color: var(--teal, #5eead4);
+	border-color: var(--teal);
+	color: var(--teal);
 }
 .wo-btn-primary:hover {
 	background: var(--cyan-tint-faint, rgba(109, 74, 255, 0.08));
-	border-color: var(--teal, #5eead4);
+	border-color: var(--teal);
 }
 .wo-readmore {
 	align-self: center;
@@ -267,14 +267,14 @@
 	font-size: var(--text-xs);
 	letter-spacing: 0.16em;
 	text-transform: uppercase;
-	color: var(--cyan, #a78bfa);
+	color: var(--cyan);
 	text-decoration: none;
 	border-block-end: 1px dashed transparent;
 	transition: color 0.15s ease, border-color 0.15s ease;
 }
 .wo-readmore:hover {
-	color: var(--teal, #5eead4);
-	border-block-end-color: var(--teal, #5eead4);
+	color: var(--teal);
+	border-block-end-color: var(--teal);
 }
 @media (prefers-reduced-motion: reduce) {
 	.wo-mark,

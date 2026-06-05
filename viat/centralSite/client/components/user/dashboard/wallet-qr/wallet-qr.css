@@ -98,8 +98,8 @@
 }
 
 .wq-download:hover:not(:disabled) {
-	border-color: var(--teal, #5eead4);
-	color: var(--teal, #5eead4);
+	border-color: var(--teal);
+	color: var(--teal);
 	background: rgba(109, 74, 255, 0.06);
 }
 

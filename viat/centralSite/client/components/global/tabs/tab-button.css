@@ -61,7 +61,7 @@
 	border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 .tab-btn:hover {
-	color: var(--text-main, #e8eaf2);
+	color: var(--text-main);
 	background: rgba(255, 255, 255, 0.03);
 	transform: translateY(-1px);
 }
@@ -69,7 +69,7 @@
 	transform: translateX(2px);
 }
 .tab-btn.is-active {
-	color: var(--teal, #5eead4);
+	color: var(--teal);
 	border-color: var(--cyan-glow-soft, rgba(109, 74, 255, 0.18));
 	background: var(--cyan-tint-faint, rgba(109, 74, 255, 0.06));
 	transform: none;

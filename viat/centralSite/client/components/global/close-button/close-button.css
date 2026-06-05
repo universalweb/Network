@@ -19,7 +19,7 @@
 	transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
 }
 .cb:hover {
-	color: var(--text-main, #e8eaf2);
+	color: var(--text-main);
 	border-color: var(--dark-divider, rgba(255, 255, 255, 0.18));
 	background: rgba(255, 255, 255, 0.04);
 }
@@ -36,7 +36,7 @@
 }
 .cb:focus-visible {
 	outline: none;
-	border-color: var(--cyan, #a78bfa);
+	border-color: var(--cyan);
 	box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.25);
 }
 @media (prefers-reduced-motion: reduce) {
