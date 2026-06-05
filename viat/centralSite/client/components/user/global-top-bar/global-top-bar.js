@@ -1,7 +1,8 @@
-import { WebComponent, SNAP_MS, SNAP_CURVE } from 'webcomponent';
 import '../../global/app-bar/app-bar.js';
 import '../../global/icon/icon.js';
 import '../../global/theme-select/theme-select.js';
+import { SNAP_CURVE, SNAP_MS, WebComponent } from 'webcomponent';
+import { clampOffset, offsetIsOpen } from './pulldownOffset.js';
 // `<global-top-bar>` — the Viat top bar. A thin composition over `<ui-app-bar>`:
 // it slots the brand block + theme select and supplies the three action items.
 // The drag-to-open-pulldown coupling lives *here*, not in the built-in — it
@@ -48,6 +49,7 @@ export class GlobalTopBar extends WebComponent {
 	open = false;
 	naturalTop = 0;
 	naturalBottom = 0;
+	dragStartOffset = 0;
 	onConnect() {
 		this.delegate('pulldown:state', this.handlePulldownState);
 		this.syncViewportClass();
@@ -70,7 +72,7 @@ export class GlobalTopBar extends WebComponent {
 			axis: 'y',
 			opensToward: 'down',
 			isOpen: () => {
-				return this.open;
+				return offsetIsOpen(this.currentRenderedOffset(), this.maxOffset());
 			},
 			extent: () => {
 				return this.maxOffset();
@@ -81,8 +83,8 @@ export class GlobalTopBar extends WebComponent {
 			onStart: () => {
 				this.handleDragStart();
 			},
-			onMove: (progress) => {
-				this.handleDragMove(progress);
+			onMove: (progress, delta) => {
+				this.handleDragMove(delta);
 			},
 			onSettle: (shouldOpen) => {
 				this.snapTo(shouldOpen);
@@ -127,6 +129,25 @@ export class GlobalTopBar extends WebComponent {
 	maxOffset() {
 		return Math.max(0, globalThis.innerHeight - this.naturalBottom - FLOAT_GAP_PX);
 	}
+	/**
+	 * The bar's LIVE rendered vertical offset (px), read from the computed
+	 * transform matrix so it reflects the real on-screen position mid-snap — not
+	 * the committed `open` boolean. The drag keys off this so a gesture that
+	 * begins while the 320ms snap is still animating tracks the bar from where it
+	 * actually is, instead of teleporting to the boolean's end.
+	 * @returns {number} The current translateY of the app bar in pixels.
+	 */
+	currentRenderedOffset() {
+		const appBar = this.refs.appbar;
+		if (!appBar) {
+			return 0;
+		}
+		const transform = getComputedStyle(appBar).transform;
+		if (!transform || transform === 'none') {
+			return 0;
+		}
+		return new DOMMatrixReadOnly(transform).m42;
+	}
 	measureNatural() {
 		const appBar = this.refs.appbar;
 		if (!appBar) {
@@ -162,28 +183,36 @@ export class GlobalTopBar extends WebComponent {
 		this.snapTo(targetOpen);
 	}
 	handleDragStart() {
+		// Capture where the bar actually is RIGHT NOW (mid-snap included), then
+		// pin the transform there before killing the transition — so grabbing an
+		// in-flight bar freezes it in place instead of snapping to its old
+		// target. The drag then tracks the pointer from this offset.
+		this.dragStartOffset = this.currentRenderedOffset();
 		this.measureNatural();
 		const appBar = this.refs.appbar;
 		appBar.style.transition = 'none';
+		appBar.style.transform = `translateY(${this.dragStartOffset}px)`;
 		appBar.style.cursor = 'grabbing';
 		appBar.style.zIndex = '100';
 		this.emit('pulldown:dragstart', {
 			open: this.open,
 		});
 	}
-	handleDragMove(progress) {
-		// `progress` is the engine's clamped 0..1 travel fraction. Opening
-		// slides the bar down from 0 to `max`; closing slides it back.
+	handleDragMove(delta) {
+		// Position from the captured start offset + the pointer's signed travel,
+		// clamped to the travel span — never from the `open` boolean. Reading the
+		// boolean here teleported the bar to the wrong end when state and render
+		// were out of phase (the "hit the bottom and jump back up" bug).
 		const appBar = this.refs.appbar;
 		const max = this.maxOffset();
-		const targetY = this.open ? max * (1 - progress) : max * progress;
+		const targetY = clampOffset(this.dragStartOffset, delta, max);
 		appBar.style.transform = `translateY(${targetY}px)`;
 		this.emit('pulldown:drag', {
 			progress: max ? targetY / max : 0,
 			barTop: this.naturalTop + targetY,
 		});
 	}
-	snapTo(open) {
+	snapTo(willOpen) {
 		const appBar = this.refs.appbar;
 		if (!appBar) {
 			return;
@@ -194,21 +223,21 @@ export class GlobalTopBar extends WebComponent {
 		// be stale (0), collapsing `maxOffset()` and stranding the bar.
 		this.measureNatural();
 		const max = this.maxOffset();
-		const targetY = open ? max : 0;
+		const targetY = willOpen ? max : 0;
 		appBar.style.transition = `transform ${SNAP_MS}ms ${SNAP_CURVE}`;
 		appBar.style.transform = `translateY(${targetY}px)`;
 		appBar.style.cursor = 'grab';
 		const wasOpen = this.open;
-		this.open = open;
-		appBar.style.zIndex = open ? '100' : '';
+		this.open = willOpen;
+		appBar.style.zIndex = willOpen ? '100' : '';
 		this.emit('pulldown:state', {
-			open,
+			open: willOpen,
 		});
 		this.emit('pulldown:dragend', {
-			open,
+			open: willOpen,
 			snapped: true,
 		});
-		if (!open) {
+		if (!willOpen) {
 			this.setTimeout(() => {
 				if (!this.open) {
 					appBar.style.transform = '';
@@ -217,13 +246,13 @@ export class GlobalTopBar extends WebComponent {
 				}
 			}, SNAP_MS);
 		}
-		if (open !== wasOpen) {
-			this.emit(open ? 'pulldown:open' : 'pulldown:close', {});
+		if (willOpen !== wasOpen) {
+			this.emit(willOpen ? 'pulldown:open' : 'pulldown:close', {});
 		}
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
-		this.html`
+		this.html `
 			<ui-app-bar #appbar .state=${this.state.appBar}>
 				<div slot="start" class="tb-logo">
 					<a class="tb-logo-home" href="/" aria-label="Back to dashboard">

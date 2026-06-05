@@ -9,6 +9,7 @@ export class UIPullDown extends WebComponent {
 	static state = {
 		open: false,
 	};
+	settleTimer = null;
 	onConnect() {
 		this.delegate('pulldown:dragstart', this.handleDragStart);
 		this.delegate('pulldown:drag', this.handleDrag);
@@ -56,8 +57,18 @@ export class UIPullDown extends WebComponent {
 		drawer.style.transform = isOpen ? 'translateY(0)' : 'translateY(-100%)';
 		drawer.classList.toggle('is-open', isOpen);
 		this.state.open = isOpen;
-		this.setTimeout(() => {
-			if (isOpen) {
+		// One settle timer at a time. A rapid open→close→open lands three
+		// transitions inside SNAP_MS; a stale close-settle firing on the drawer
+		// that has since reopened would strip `is-active`/transform off it,
+		// leaving the panel invisible while the open flag stays true. Supersede
+		// the prior timer, and resolve against the LIVE `this.state.open` at fire
+		// time — never the value captured when the timer was scheduled.
+		if (this.settleTimer) {
+			this.removeTimeout(this.settleTimer);
+		}
+		this.settleTimer = this.setTimeout(() => {
+			this.settleTimer = null;
+			if (this.state.open) {
 				drawer.classList.add('is-fully-open');
 			} else {
 				drawer.classList.remove('is-active', 'is-fully-open');
