@@ -1,5 +1,5 @@
-import { WebComponent, each } from 'webcomponent';
 import '../bar/bar.js';
+import { WebComponent, list } from 'webcomponent';
 import { IconButtonBase } from '../icon-button/icon-button.js';
 // `<ui-app-bar>` — the global top bar. Pure chrome: a fixed-top `<header>`
 // composing a `<ui-bar>` with `start` / `center` / `end` regions. The `end`
@@ -14,21 +14,6 @@ export class UIAppBar extends WebComponent {
 	static state = {
 		actions: [],
 	};
-	actionItems() {
-		// Genuine computation feeding each(): drop the hidden actions.
-		const actions = this.state.actions || [];
-		const out = [];
-		for (let index = 0; index < actions.length; index += 1) {
-			if (actions[index].hidden) {
-				continue;
-			}
-			out.push(actions[index]);
-		}
-		return out;
-	}
-	actionKey(item) {
-		return item.id;
-	}
 	syncViewportClass() {
 		// Mirror the viewport width bucket onto the host so `:host(.vw-xs)`
 		// rules work without `:host-context()` (unsupported on older Safari).
@@ -53,14 +38,14 @@ export class UIAppBar extends WebComponent {
 	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
-		this.html`
+		this.html `
 			<header class="app-bar">
 				<ui-bar class="app-bar-bar">
 					<slot slot="start" name="start"></slot>
 					<slot slot="center" name="center"></slot>
 					<div slot="end" class="app-bar-end">
 						<slot name="end"></slot>
-						${each(this.actionItems(), IconButtonBase, this.actionKey)}
+						${list('actions', IconButtonBase)}
 					</div>
 				</ui-bar>
 			</header>
