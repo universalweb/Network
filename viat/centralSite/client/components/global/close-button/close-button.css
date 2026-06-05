@@ -5,8 +5,8 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 30px;
-	height: 30px;
+	width: 1.875rem;
+	height: 1.875rem;
 	background: transparent;
 	border: 1px solid transparent;
 	border-radius: var(--radius-md);

@@ -46,8 +46,8 @@
 	display: inline-flex;
 	align-items: self-end;
 	justify-content: center;
-	width: 25px;
-	height: 32px;
+	width: 1.5625rem;
+	height: 2rem;
 	font-family: var(--font-mono);
 	font-size: 40px;
 	font-weight: var(--weight-normal);

@@ -26,8 +26,8 @@
 }
 
 .bb-badge-dot {
-	width: 8px;
-	height: 8px;
+	width: 0.5rem;
+	height: 0.5rem;
 	border-radius: 50%;
 	background: currentColor;
 	box-shadow: 0 0 6px currentColor;

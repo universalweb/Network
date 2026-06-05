@@ -60,25 +60,25 @@ button.size-xs {
 	font-size: var(--text-sm);
 	padding: 0.25rem 0.55rem;
 	border-radius: var(--radius-md);
-	min-height: 22px;
+	min-height: 1.375rem;
 }
 button.size-sm {
 	font-size: var(--text-md);
 	padding: 0.35rem 0.7rem;
 	border-radius: var(--radius-md);
-	min-height: 28px;
+	min-height: 1.75rem;
 }
 button.size-md {
 	font-size: var(--text-lg);
 	padding: 0.5rem 0.95rem;
 	border-radius: var(--radius-md);
-	min-height: 34px;
+	min-height: 2.125rem;
 }
 button.size-lg {
 	font-size: var(--text-xl);
 	padding: 0.65rem 1.15rem;
 	border-radius: 9px;
-	min-height: 40px;
+	min-height: 2.5rem;
 }
 /* SOLID */
 button.var-solid.tone-neutral {

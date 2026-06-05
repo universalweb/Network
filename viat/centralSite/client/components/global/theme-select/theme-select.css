@@ -37,7 +37,7 @@
   padding: 0;
   border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
   border-radius: var(--radius, 10px);
-  min-width: 120px;
+  min-width: 7.5rem;
   background: var(--popup-bg);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px color-mix(in oklab, var(--teal) 8%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);

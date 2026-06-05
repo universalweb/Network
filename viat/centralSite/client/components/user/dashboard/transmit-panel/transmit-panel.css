@@ -103,7 +103,7 @@
 	inset-inline-end: 0;
 	inset-block-start: 0;
 	inset-block-end: 0;
-	min-width: 52px;
+	min-width: 3.25rem;
 	background: var(--navy);
 	border-inline-start: 1px solid var(--border-light-color);
 	border-block-end: none;
@@ -128,7 +128,7 @@
 	border: none;
 	border-inline-start: 1px solid var(--border-light-color);
 	outline: none;
-	min-width: 70px;
+	min-width: 4.375rem;
 	padding: 0 var(--space-6) 0 var(--space-4);
 	cursor: pointer;
 	text-transform: uppercase;

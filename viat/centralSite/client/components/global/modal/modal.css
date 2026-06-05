@@ -84,8 +84,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 1.875rem;
+  height: 1.875rem;
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
@@ -175,9 +175,9 @@
 /* Minimized — collapse the body so only the control strip remains. */
 .modal.is-minimized .modal-body { display: none; }
 .modal.is-minimized {
-  width: 240px;
-  height: 46px;
-  max-height: 46px;
+  width: 15rem;
+  height: 2.875rem;
+  max-height: 2.875rem;
 }
 .modal:not([open]) {
   opacity: 0;

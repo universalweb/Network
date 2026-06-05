@@ -44,7 +44,7 @@
 	position: fixed;
 	inset-block-start: 0;
 	inset-block-end: 0;
-	width: 18px;
+	width: 1.125rem;
 	pointer-events: none;
 	touch-action: none;
 	z-index: 1;
@@ -115,7 +115,7 @@
    positioner. The slotted panel supplies its own solid surface. The extra
    top padding lifts the panel clear of the floating global top bar. */
 :host(.mode-flyout) .sidebar-shell {
-	width: 300px;
+	width: 18.75rem;
 	background: transparent;
 	padding-block-start: 120px;
 }
@@ -124,7 +124,7 @@
    blur, with an edge border + shadow. */
 :host(.mode-coverup) .sidebar-shell {
 	width: 100vw;
-	max-width: 420px;
+	max-width: 26.25rem;
 	touch-action: pan-y;
 	background: var(--sidebar-shell-bg, rgba(8, 10, 16, 0.55));
 	backdrop-filter: blur(16px);
@@ -146,8 +146,8 @@
 	position: absolute;
 	inset-block-start: 12px;
 	inset-inline-end: 12px;
-	width: 36px;
-	height: 36px;
+	width: 2.25rem;
+	height: 2.25rem;
 	display: none;
 	align-items: center;
 	justify-content: center;

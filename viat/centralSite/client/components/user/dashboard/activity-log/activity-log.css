@@ -11,7 +11,7 @@
 	flex-direction: column;
 	overflow: hidden;
 	background: var(--bg-dark);
-	min-height: 350px;
+	min-height: 21.875rem;
 	border-radius: var(--radius);
 	border: var(--panel-border, var(--border-light));
 	box-shadow: var(--panel-shadow);

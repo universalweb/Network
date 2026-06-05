@@ -12,10 +12,10 @@
 	animation: spinner-rotate 1.1s linear infinite;
 	display: block;
 }
-.spinner-sm .spinner-svg { width: 14px; height: 14px; }
-.spinner-md .spinner-svg { width: 22px; height: 22px; }
-.spinner-lg .spinner-svg { width: 36px; height: 36px; }
-.spinner-xl .spinner-svg { width: 56px; height: 56px; }
+.spinner-sm .spinner-svg { width: 0.875rem; height: 0.875rem; }
+.spinner-md .spinner-svg { width: 1.375rem; height: 1.375rem; }
+.spinner-lg .spinner-svg { width: 2.25rem; height: 2.25rem; }
+.spinner-xl .spinner-svg { width: 3.5rem; height: 3.5rem; }
 .spinner-track {
 	stroke: currentColor;
 	stroke-width: 4;

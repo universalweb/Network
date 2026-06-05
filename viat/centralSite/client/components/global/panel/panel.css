@@ -31,7 +31,7 @@
 .stats-panel,
 .wallet-params-panel {
 	flex: 0 0 auto;
-	min-height: 220px;
+	min-height: 13.75rem;
 }
 
 .panel-header {
@@ -61,8 +61,8 @@
 
 .panel-header .ph-dot {
 	display: var(--ph-dot-display, block);
-	width: 5px;
-	height: 5px;
+	width: 0.3125rem;
+	height: 0.3125rem;
 	background: var(--teal);
 	border-radius: var(--indicator-radius);
 	box-shadow: var(--ph-dot-shadow, 0 0 4px var(--teal));
@@ -121,7 +121,7 @@
 }
 
 .stat-latency-bar {
-	height: 3px;
+	height: 0.1875rem;
 	background: var(--surface-tint);
 	border-radius: var(--stat-bar-radius);
 	margin-block-start: var(--space-2);

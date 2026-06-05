@@ -21,8 +21,8 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 88px;
-	height: 88px;
+	width: 5.5rem;
+	height: 5.5rem;
 	color: var(--cyan);
 	background: linear-gradient(135deg, color-mix(in oklab, var(--cyan) 18%, transparent), rgba(94, 234, 212, 0.06));
 	border: 1px solid color-mix(in oklab, var(--cyan) 25%, transparent);
@@ -30,8 +30,8 @@
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 4px 24px color-mix(in oklab, var(--teal) 18%, transparent);
 }
 .wo-mark {
-	width: 56px;
-	height: 56px;
+	width: 3.5rem;
+	height: 3.5rem;
 	overflow: visible;
 	animation: wo-mark-pulse 4s ease-in-out infinite;
 }
@@ -135,8 +135,8 @@
 .wo-thumb {
 	float: right;
 	margin: var(--space-1) 0 var(--space-2) var(--space-4);
-	width: 140px;
-	height: 140px;
+	width: 8.75rem;
+	height: 8.75rem;
 	padding: 0;
 	background: rgba(255, 255, 255, 0.03);
 	border: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.08));
@@ -166,8 +166,8 @@
 }
 @media (max-width: 32.5em) {
 	.wo-thumb {
-		width: 100px;
-		height: 100px;
+		width: 6.25rem;
+		height: 6.25rem;
 		margin-inline-start: var(--space-3);
 	}
 }

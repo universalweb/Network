@@ -73,7 +73,7 @@
 	letter-spacing: 0.06em;
 }
 .modal-error {
-	min-height: 18px;
+	min-height: 1.125rem;
 	font-size: var(--text-sm);
 	color: var(--color-danger);
 	opacity: 0;

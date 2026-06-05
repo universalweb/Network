@@ -6,8 +6,8 @@
    the SVG-specific keyframes live here. Matches the intro modal's mark
    exactly so a returning user reads "same family, different message". */
 .wb-mark {
-	width: 56px;
-	height: 56px;
+	width: 3.5rem;
+	height: 3.5rem;
 	overflow: visible;
 	animation: wb-mark-pulse 4s ease-in-out infinite;
 }
@@ -75,8 +75,8 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 88px;
-	height: 88px;
+	width: 5.5rem;
+	height: 5.5rem;
 	color: var(--cyan, var(--popup-text));
 	background: linear-gradient(135deg, color-mix(in oklab, var(--cyan) 18%, transparent), rgba(94, 234, 212, 0.06));
 	border: 1px solid color-mix(in oklab, var(--cyan) 25%, transparent);
@@ -108,8 +108,8 @@
 	border-radius: var(--radius-md, 6px);
 }
 .wb-thumb {
-	width: 92px;
-	height: 92px;
+	width: 5.75rem;
+	height: 5.75rem;
 	padding: 0;
 	background: rgba(255, 255, 255, 0.03);
 	border: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.08));

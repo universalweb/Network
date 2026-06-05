@@ -17,7 +17,7 @@
 }
 .sp-frame {
 	width: 100%;
-	max-width: 460px;
+	max-width: 28.75rem;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-4);
@@ -131,8 +131,8 @@
 	margin: -4px 0;
 }
 .sp-flip {
-	width: 40px;
-	height: 40px;
+	width: 2.5rem;
+	height: 2.5rem;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
