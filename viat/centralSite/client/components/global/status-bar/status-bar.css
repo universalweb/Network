@@ -12,8 +12,8 @@
 }
 .status-bar {
 	--bar-height: var(--status-bar-height, 40px);
-	--bar-padding: 0 16px;
-	--bar-gap: 8px;
+	--bar-padding: 0 var(--space-5);
+	--bar-gap: var(--space-3);
 }
 .status-cells {
 	display: flex;

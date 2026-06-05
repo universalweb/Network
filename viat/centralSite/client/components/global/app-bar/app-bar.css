@@ -19,7 +19,7 @@
 }
 .app-bar-bar {
 	--bar-padding: 0;
-	--bar-gap: 16px;
+	--bar-gap: var(--space-5);
 	width: 100%;
 }
 .app-bar-end {

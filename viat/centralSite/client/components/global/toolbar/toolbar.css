@@ -3,8 +3,8 @@
 }
 .toolbar {
 	--bar-height: 40px;
-	--bar-padding: 0 16px;
-	--bar-gap: 4px;
+	--bar-padding: 0 var(--space-5);
+	--bar-gap: var(--space-2);
 }
 .toolbar-actions {
 	display: flex;
