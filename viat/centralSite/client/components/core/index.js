@@ -23,6 +23,7 @@ export {
 export {
 	comp,
 	each,
+	filter,
 	html,
 	list,
 	styles,

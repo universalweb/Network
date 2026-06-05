@@ -353,10 +353,11 @@ export class ListBinding extends Binding {
 	static isListBinding(source) {
 		return source instanceof ListBinding;
 	}
-	constructor(key, renderFn, keyFn) {
+	constructor(key, renderFn, keyFn, filterFn = null) {
 		super(key, null);
 		this.renderFn = renderFn;
 		this.keyFn = keyFn;
+		this.filterFn = filterFn;
 	}
 }
 export function isBindingType(x) {

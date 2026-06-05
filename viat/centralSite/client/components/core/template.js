@@ -16,6 +16,7 @@ import {
 	makeProxy,
 	track,
 } from './state/binding.js';
+import { resolveListFilter } from './state/listFilter.js';
 import { STATE_PATH, ensureStateBus, localRealm } from './state/state.js';
 import {
 	bareAttrMarkerAttribute,
@@ -515,6 +516,18 @@ export function list(key, renderFn, keyFn = (item, index) => {
 	return item?.key ?? item?.id ?? index;
 }) {
 	return new ListBinding(key, renderFn, keyFn);
+}
+/**
+ * `filter(stateKey, ChildClass, test, keyFn?)` — `list()` plus a predicate. Only
+ * the items `test` keeps are rendered; the filtered view is recomputed whenever
+ * the bound array changes. `test` is a keep-predicate `(item) => boolean` or a
+ * string flag name to hide on (`'hidden'`). Auto-keys by `key ?? id ?? index`,
+ * exactly like `list`; `list` itself stays filter-free and light.
+ */
+export function filter(key, renderFn, test, keyFn = (item, index) => {
+	return item?.key ?? item?.id ?? index;
+}) {
+	return new ListBinding(key, renderFn, keyFn, resolveListFilter(test));
 }
 /*
  * `bind.list` — typed LIST variant of the bind family. Wired here, where the
@@ -1412,7 +1425,7 @@ class BindingSpot extends Spot {
  * `liveList(…)`. Owns `keyMap` (key → element) and `liveList` handle.
  */
 class ListSpot extends Spot {
-	constructor(el, slotIndex, type, expr, component, bindingKey, renderFn, keyFn) {
+	constructor(el, slotIndex, type, expr, component, bindingKey, renderFn, keyFn, filterFn = null) {
 		super();
 		this.kind = SPOT_KIND.LIST;
 		this.type = type;
@@ -1423,6 +1436,7 @@ class ListSpot extends Spot {
 		this.bindingKey = bindingKey;
 		this.renderFn = renderFn;
 		this.keyFn = keyFn;
+		this.filterFn = filterFn;
 		this.keyMap = null;
 		this.liveList = null;
 		this.prevItemMap = null;
@@ -1450,7 +1464,7 @@ class ListSpot extends Spot {
 	}
 	refresh(changedPath = null) {
 		const {
-			component, bindingKey, renderFn, keyFn,
+			component, bindingKey, renderFn, keyFn, filterFn,
 		} = this;
 		const rawItems = resolveBindingValue(component, bindingKey);
 		const itemsArray = Array.isArray(rawItems) ? rawItems : [];
@@ -1460,9 +1474,13 @@ class ListSpot extends Spot {
 		 * shape is unchanged. Top-level changes (`items.i`) can be array-
 		 * shape ops (unshift/push/splice/swap) that fire multiple sub-paths,
 		 * but the subscription only sees the first one — taking the partial
-		 * branch then would skip the rest of the changes.
+		 * branch then would skip the rest of the changes. A filtered list is
+		 * excluded entirely: a deep change may flip a filtered flag (a
+		 * membership change), and the filtered view's indices no longer line
+		 * up with the source array's — so it always takes the full keyed diff.
 		 */
 		if (
+			!filterFn &&
 			changedPath &&
 			changedPath !== bindingKey &&
 			changedPath.startsWith(`${bindingKey}.`) &&
@@ -1486,7 +1504,8 @@ class ListSpot extends Spot {
 				}
 			}
 		}
-		patchSpot(this, each(itemsArray, renderFn, keyFn));
+		const viewItems = filterFn ? itemsArray.filter(filterFn) : itemsArray;
+		patchSpot(this, each(viewItems, renderFn, keyFn));
 	}
 	unsubscribe() {
 		if (this.liveList && this.liveList.disconnectSpot) {
@@ -1641,7 +1660,7 @@ class EventSpot extends Spot {
 function installBindingSpot(plan, el, expr, component) {
 	const bindingKey = expr.key;
 	if (ListBinding.isListBinding(expr)) {
-		const listSpot = new ListSpot(el, plan.slotIndex, plan.type, expr, component, bindingKey, expr.renderFn, expr.keyFn);
+		const listSpot = new ListSpot(el, plan.slotIndex, plan.type, expr, component, bindingKey, expr.renderFn, expr.keyFn, expr.filterFn);
 		listSpot.refresh(null);
 		syncSpotSubscriptions(listSpot, keyDepMap(bindingKey, component));
 		return listSpot;
@@ -2404,7 +2423,7 @@ function installAnchoredTextSpot(plan, resolved, exprs, component) {
 	const parentEl = startComment.parentNode;
 	const expr = exprs[plan.slotIndex];
 	if (ListBinding.isListBinding(expr)) {
-		const listSpot = new ListSpot(parentEl, plan.slotIndex, SPOT_TYPE.TEXT, expr, component, expr.key, expr.renderFn, expr.keyFn);
+		const listSpot = new ListSpot(parentEl, plan.slotIndex, SPOT_TYPE.TEXT, expr, component, expr.key, expr.renderFn, expr.keyFn, expr.filterFn);
 		markAnchored(listSpot, startComment, endComment);
 		listSpot.refresh(null);
 		syncSpotSubscriptions(listSpot, keyDepMap(expr.key, component));
