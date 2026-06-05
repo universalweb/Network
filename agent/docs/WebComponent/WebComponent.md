@@ -349,6 +349,7 @@ If two parents mount the same child tag, iterate each parent and fan the update 
 - `this.setInert(bool)` — toggle `inert` safely.
 - `this.nextFrame()` — `requestAnimationFrame` promise.
 - `this.installObserver()` / `this.uninstallObserver()` — IntersectionObserver control.
+- `this.reflectViewport()` — mirror the viewport width bucket onto the host as `data-vw` (matches `:host([data-vw="sm"])`), kept live via an auto-cleaned `viewport:change` subscription. Call once in `onConnect`; replaces hand-rolled `syncViewportClass`.
 - `this.atPhase(phase)` — phase-gated promise.
 - `this.destroy()` — permanent teardown.
 
