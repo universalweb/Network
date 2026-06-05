@@ -21,12 +21,12 @@
 	margin-inline-end: auto;
 }
 /* Title separated from controls so each gets its own breathing room.
-   Title + stats meta line up baseline-aligned in one bar; the pager /
-   refresh controls drop into their own bar below. */
+   Title + stats meta sit centered in one bar; the pager / refresh
+   controls drop into their own bar below. */
 .al-title-header {
 	display: flex;
 	flex-wrap: wrap;
-	align-items: baseline;
+	align-items: center;
 	justify-content: space-between;
 	column-gap: var(--space-5);
 	row-gap: var(--space-3);
