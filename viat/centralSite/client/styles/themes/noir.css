@@ -171,8 +171,7 @@
 
 /* ── Noir: buttons — soft border, inverts on hover ───── */
 .panel button,
-.btn-transmit,
-.account-action {
+.btn-transmit {
   border-radius: var(--radius);
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: transparent;
@@ -181,8 +180,7 @@
 }
 
 .panel button:hover,
-.btn-transmit:hover,
-.account-action:hover {
+.btn-transmit:hover {
   background: #ffffff;
   border-color: #ffffff;
   box-shadow: none;
