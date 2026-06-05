@@ -85,7 +85,7 @@
 	font-size: var(--text-base);
 }
 
-@media (max-width: 420px) {
+@media (max-width: 26.25em) {
 	.wa-amount-main {
 		font-size: 2.125rem;
 	}

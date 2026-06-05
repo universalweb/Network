@@ -164,7 +164,7 @@
 	outline: 2px solid var(--cyan, #a78bfa);
 	outline-offset: 2px;
 }
-@media (max-width: 520px) {
+@media (max-width: 32.5em) {
 	.wo-thumb {
 		width: 100px;
 		height: 100px;

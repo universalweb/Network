@@ -37,7 +37,7 @@
    accessibility-preserving `clip-path` rather than display:none so screen
    readers still announce the button's name. The button itself becomes a
    tight square so the rail can shrink to ~52px wide. */
-@media (max-width: 767px) {
+@media (max-width: 47.9375em) {
 	.tab-btn.has-icon {
 		justify-content: center;
 		gap: 0;

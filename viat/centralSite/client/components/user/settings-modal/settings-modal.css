@@ -28,7 +28,7 @@
 /* Mobile: take the full screen and shrink the vertical rail to an
    icon-only strip. The modal already supports `--ui-modal-max-*` =
    `100*` for a true edge-to-edge dialog, so we just override both. */
-@media (max-width: 767px) {
+@media (max-width: 47.9375em) {
 	.sm-modal {
 		--ui-modal-max-width: 100vw;
 		--ui-modal-max-height: 100dvh;

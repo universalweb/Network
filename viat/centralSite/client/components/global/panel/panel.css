@@ -135,7 +135,7 @@
 	box-shadow: var(--stat-bar-fill-shadow, 0 0 6px var(--teal));
 }
 
-@media (max-width: 420px) {
+@media (max-width: 26.25em) {
 	.stat-block {
 		padding-inline-start: var(--space-4);
 		padding-inline-end: var(--space-4);

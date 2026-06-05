@@ -75,7 +75,7 @@
 :host(.dock-horizontal) ui-icon-button.active {
 	color: var(--icon-color-active, var(--cyan));
 }
-@media (max-width: 767px) {
+@media (max-width: 47.9375em) {
 	:host(.dock-vertical) ui-icon-button {
 		width: auto;
 		flex: 0 0 auto;
@@ -123,7 +123,7 @@
 	box-shadow: 0 -2px 8px var(--teal-glow-faint, rgba(0, 255, 255, 0.2));
 }
 /* Mobile: a vertical dock rotates to a horizontal bar. */
-@media (max-width: 767px) {
+@media (max-width: 47.9375em) {
 	:host(.dock-vertical) {
 		flex-direction: row;
 		animation: dock-slide-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
