@@ -7,7 +7,7 @@
 	border: 1px solid transparent;
 	border-radius: 999px;
 	display: inline-flex;
-	font-weight: 600;
+	font-weight: var(--weight-semibold);
 	gap: 0.35em;
 	letter-spacing: 0.04em;
 	line-height: 1;
@@ -37,9 +37,9 @@
 		animation: none;
 	}
 }
-.size-sm { font-size: 0.65rem; padding: 0.18em 0.55em; }
-.size-md { font-size: 0.72rem; }
-.size-lg { font-size: 0.85rem; padding: 0.32em 0.85em; }
+.size-sm { font-size: var(--text-2xs); padding: 0.18em 0.55em; }
+.size-md { font-size: var(--text-sm); }
+.size-lg { font-size: var(--text-md); padding: 0.32em 0.85em; }
 .tone-neutral {
 	background: var(--badge-neutral-bg, rgba(255, 255, 255, 0.08));
 	border-color: var(--badge-neutral-border, rgba(255, 255, 255, 0.15));

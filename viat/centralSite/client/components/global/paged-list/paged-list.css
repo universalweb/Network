@@ -5,7 +5,7 @@
 .pl-shell {
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	gap: var(--space-4);
 	min-height: 0;
 	font-family: var(--font-mono, monospace);
 	color: var(--dark-text-medium, #c8d0e0);
@@ -16,14 +16,14 @@
 	min-height: 0;
 	overflow-y: auto;
 	border: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.05));
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	background: rgba(255, 255, 255, 0.01);
 }
 .pl-empty {
-	padding: 24px;
+	padding: var(--space-7);
 	text-align: center;
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
-	font-size: 0.8rem;
+	font-size: var(--text-base);
 }
 .pl-empty.pl-error {
 	color: #f87171;
@@ -31,10 +31,10 @@
 .pl-pager {
 	display: inline-flex;
 	align-items: center;
-	gap: 8px;
-	padding: 6px 10px;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-3);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	background: rgba(255, 255, 255, 0.015);
 	align-self: stretch;
 }
@@ -42,9 +42,9 @@
 	background: transparent;
 	color: var(--dark-text-medium, #c8d0e0);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.16));
-	padding: 5px 10px;
+	padding: var(--space-2) var(--space-3);
 	font-family: var(--font-mono, monospace);
-	font-size: 0.65rem;
+	font-size: var(--text-2xs);
 	letter-spacing: 0.16em;
 	text-transform: uppercase;
 	cursor: pointer;
@@ -72,9 +72,9 @@ a.pl-btn {
 	display: inline-flex;
 	align-items: baseline;
 	flex-wrap: wrap;
-	column-gap: 6px;
-	row-gap: 2px;
-	font-size: 0.7rem;
+	column-gap: var(--space-2);
+	row-gap: var(--space-1);
+	font-size: var(--text-xs);
 	text-transform: uppercase;
 	letter-spacing: 0.14em;
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
@@ -93,6 +93,6 @@ a.pl-btn {
 	display: none;
 }
 .pl-status-text {
-	margin-left: 6px;
+	margin-left: var(--space-2);
 	color: var(--color-accent, #6d4aff);
 }

@@ -9,7 +9,7 @@
 .toolbar-actions {
 	display: flex;
 	align-items: center;
-	gap: 4px;
+	gap: var(--space-2);
 }
 /* Toolbar-context colouring for the composed icon buttons. `color` is an
    inherited property, so it crosses the shadow boundary down to each

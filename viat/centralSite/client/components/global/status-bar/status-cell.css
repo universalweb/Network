@@ -6,8 +6,8 @@
 .cell {
 	display: flex;
 	align-items: center;
-	gap: 5px;
-	padding: 0 12px;
+	gap: var(--space-2);
+	padding: 0 var(--space-4);
 	height: 100%;
 	white-space: nowrap;
 }
@@ -16,14 +16,14 @@
 }
 .cell-key {
 	font-family: var(--font-display);
-	font-size: 0.75rem;
+	font-size: var(--text-sm);
 	text-transform: uppercase;
 	letter-spacing: 0.12em;
 	color: var(--dark-text-dim);
 }
 .cell-val {
 	font-family: var(--font-mono);
-	font-size: 0.75rem;
+	font-size: var(--text-sm);
 	text-transform: uppercase;
 	letter-spacing: 0.06em;
 	color: var(--dark-text-medium);

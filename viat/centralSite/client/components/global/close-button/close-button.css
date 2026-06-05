@@ -9,7 +9,7 @@
 	height: 30px;
 	background: transparent;
 	border: 1px solid transparent;
-	border-radius: 6px;
+	border-radius: var(--radius-md);
 	color: var(--text-muted, rgba(255, 255, 255, 0.4));
 	cursor: pointer;
 	padding: 0;

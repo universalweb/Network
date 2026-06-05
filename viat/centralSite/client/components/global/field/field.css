@@ -16,8 +16,8 @@
 .is-inline .field-body { flex: 1 1 auto; min-width: 0; }
 .field-label {
 	color: var(--text-light, rgba(255, 255, 255, 0.85));
-	font-size: 0.7rem;
-	font-weight: 600;
+	font-size: var(--text-xs);
+	font-weight: var(--weight-semibold);
 	letter-spacing: 0.08em;
 	line-height: 1.3;
 	text-transform: uppercase;
@@ -25,8 +25,8 @@
 .is-inline .field-label {
 	letter-spacing: 0.04em;
 	text-transform: none;
-	font-size: 0.78rem;
-	font-weight: 500;
+	font-size: var(--text-sm);
+	font-weight: var(--weight-medium);
 	white-space: nowrap;
 }
 .field-required {
@@ -36,12 +36,12 @@
 .field-body { display: block; min-width: 0; }
 .field-hint {
 	color: var(--text-muted, rgba(255, 255, 255, 0.55));
-	font-size: 0.7rem;
+	font-size: var(--text-xs);
 	line-height: 1.35;
 	min-height: 1em;
 }
 .has-error .field-hint { color: #f87171; }
 .has-error .field-label { color: #f87171; }
 /* Sizes (cascade through to nested control if it reads field size cues) */
-.size-sm .field-label { font-size: 0.65rem; }
-.size-lg .field-label { font-size: 0.78rem; }
+.size-sm .field-label { font-size: var(--text-2xs); }
+.size-lg .field-label { font-size: var(--text-sm); }

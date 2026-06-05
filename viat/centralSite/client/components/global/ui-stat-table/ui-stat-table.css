@@ -5,11 +5,11 @@
 .table-wrap {
 	background: rgba(255, 255, 255, 0.02);
 	border: 1px solid rgba(255, 255, 255, 0.08);
-	border-radius: 6px;
+	border-radius: var(--radius-md);
 	overflow: hidden;
 }
 .table-head {
-	padding: 10px 14px 6px;
+	padding: var(--space-3) var(--space-4) var(--space-2);
 	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 	background: rgba(255, 255, 255, 0.02);
 }
@@ -25,7 +25,7 @@
 	color: rgba(255, 255, 255, 0.85);
 }
 .table-head .hint {
-	margin: 2px 0 0;
+	margin: var(--space-1) 0 0;
 	font-size: 10px;
 	color: rgba(255, 255, 255, 0.4);
 	font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -35,7 +35,7 @@
 	font-size: 11px;
 }
 .cell {
-	padding: 6px 14px;
+	padding: var(--space-2) var(--space-4);
 	display: block;
 	color: rgba(255, 255, 255, 0.85);
 	font-variant-numeric: tabular-nums;
@@ -54,7 +54,7 @@
 	font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 .empty {
-	padding: 18px;
+	padding: var(--space-5);
 	text-align: center;
 	color: rgba(255, 255, 255, 0.35);
 	grid-column: 1 / -1;

@@ -24,14 +24,14 @@
 }
 .tabs-horizontal .tab-strip {
 	flex-direction: row;
-	gap: 2px;
+	gap: var(--space-1);
 	border-bottom: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
-	padding: 0 4px;
+	padding: 0 var(--space-2);
 }
 .tabs-vertical .tab-strip {
 	flex-direction: column;
-	gap: 4px;
-	padding: 18px 10px;
+	gap: var(--space-2);
+	padding: var(--space-5) var(--space-3);
 	background: var(--bg-dark, #04060a);
 	border-right: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	overflow-y: auto;
@@ -39,7 +39,7 @@
 .tab-indicator {
 	position: absolute;
 	background: var(--teal, #5eead4);
-	border-radius: 2px;
+	border-radius: var(--radius-xs);
 	opacity: 0;
 	pointer-events: none;
 	box-shadow: 0 0 8px rgba(94, 234, 212, 0.45);
@@ -81,8 +81,8 @@
    actual button. */
 @media (max-width: 767px) {
 	.tabs-vertical .tab-strip {
-		padding: 12px 4px;
-		gap: 6px;
+		padding: var(--space-4) var(--space-2);
+		gap: var(--space-2);
 	}
 }
 @media (prefers-reduced-motion: reduce) {

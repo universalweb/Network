@@ -14,7 +14,7 @@
 	border-radius: 14px;
 	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 	min-height: 52px;
-	padding: 10px 20px;
+	padding: var(--space-3) var(--space-6);
 	backdrop-filter: blur(6px);
 }
 .app-bar-bar {
@@ -25,7 +25,7 @@
 .app-bar-end {
 	display: flex;
 	align-items: center;
-	gap: 16px;
+	gap: var(--space-5);
 }
 /* App-bar-context colouring for the composed action buttons. Scoped under
    `.app-bar-end` so it outranks `<ui-icon-button>`'s own `:host` defaults. */

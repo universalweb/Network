@@ -8,14 +8,14 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: flex-start;
-	gap: 10px;
-	padding: 9px 14px;
+	gap: var(--space-3);
+	padding: var(--space-3) var(--space-4);
 	background: transparent;
 	border: 1px solid transparent;
-	border-radius: 4px;
+	border-radius: var(--radius-sm);
 	color: var(--text-muted, rgba(255, 255, 255, 0.55));
 	font-family: var(--font-mono, monospace);
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	cursor: pointer;
@@ -41,7 +41,7 @@
 	.tab-btn.has-icon {
 		justify-content: center;
 		gap: 0;
-		padding: 12px 0;
+		padding: var(--space-4) 0;
 		width: 100%;
 	}
 	.tab-btn.has-icon .tab-btn-label {
@@ -57,8 +57,8 @@
 	}
 }
 .tab-btn-horizontal {
-	padding: 10px 16px;
-	border-radius: 4px 4px 0 0;
+	padding: var(--space-3) var(--space-5);
+	border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 .tab-btn:hover {
 	color: var(--text-main, #e8eaf2);

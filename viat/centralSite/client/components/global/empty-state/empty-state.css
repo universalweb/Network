@@ -18,23 +18,23 @@
 }
 .empty-title {
 	color: var(--text, currentColor);
-	font-size: 0.95rem;
-	font-weight: 700;
+	font-size: var(--text-lg);
+	font-weight: var(--weight-bold);
 	letter-spacing: 0.04em;
 }
 .empty-hint {
 	color: var(--text-muted, currentColor);
-	font-size: 0.82rem;
+	font-size: var(--text-base);
 	max-width: 38ch;
 }
 .empty-action {
 	background: var(--accent, #6366f1);
 	border: none;
-	border-radius: 6px;
+	border-radius: var(--radius-md);
 	color: var(--accent-text, #fff);
 	cursor: pointer;
-	font-size: 0.78rem;
-	font-weight: 700;
+	font-size: var(--text-sm);
+	font-weight: var(--weight-bold);
 	letter-spacing: 0.06em;
 	margin-top: 0.4rem;
 	padding: 0.5rem 1rem;

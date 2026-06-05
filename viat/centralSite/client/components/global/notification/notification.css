@@ -6,10 +6,10 @@
   position: relative;
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 10px;
+  gap: var(--space-3);
   align-items: start;
   width: min(360px, calc(100vw - 36px));
-  padding: 12px 14px;
+  padding: var(--space-4) var(--space-4);
   border: 1px solid var(--popup-border);
   border-left: 2px solid var(--popup-accent);
   border-radius: var(--radius-lg);
@@ -60,21 +60,21 @@
 .notification-body {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-2);
   min-width: 0;
 }
 
 .notification-title {
   font-family: var(--font-display);
-  font-size: 0.625rem;
-  font-weight: 700;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text-light);
 }
 
 .notification-message {
-  font-size: 0.6875rem;
+  font-size: var(--text-xs);
   line-height: 1.4;
   color: var(--popup-text);
   word-break: break-word;
@@ -85,9 +85,9 @@
   border: 0;
   background: transparent;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: var(--text-md);
   line-height: 1;
-  padding: 2px;
+  padding: var(--space-1);
   cursor: pointer;
   transition: color 0.15s ease, transform 0.15s ease;
 }

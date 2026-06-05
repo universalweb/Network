@@ -28,9 +28,9 @@
 	box-shadow: 0 0 0 3px var(--focus-ring-glow, rgba(94, 234, 212, 0.18));
 }
 /* Sizes */
-.size-sm { font-size: 0.78rem;  min-height: 28px; padding: 0 0.55rem; }
-.size-md { font-size: 0.875rem; min-height: 34px; padding: 0 0.7rem; }
-.size-lg { font-size: 0.95rem;  min-height: 40px; padding: 0 0.9rem; }
+.size-sm { font-size: var(--text-sm);  min-height: 28px; padding: 0 0.55rem; }
+.size-md { font-size: var(--text-md); min-height: 34px; padding: 0 0.7rem; }
+.size-lg { font-size: var(--text-lg);  min-height: 40px; padding: 0 0.9rem; }
 /* Tones */
 .tone-error.field-shell {
 	border-color: #f87171;
