@@ -33,10 +33,10 @@
 .size-lg { font-size: var(--text-lg);  min-height: 40px; padding: 0 0.9rem; }
 /* Tones */
 .tone-error.field-shell {
-	border-color: #f87171;
+	border-color: var(--color-danger);
 }
 .tone-error.field-shell:focus-within {
-	border-color: #ef4444;
+	border-color: var(--color-danger);
 	box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22);
 }
 /* States */

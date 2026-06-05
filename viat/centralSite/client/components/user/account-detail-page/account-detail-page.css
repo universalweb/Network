@@ -108,7 +108,7 @@
 	font-variant-numeric: tabular-nums;
 }
 .ad-stat-val.ad-stat-good {
-	color: #34d399;
+	color: var(--color-success);
 }
 .ad-section {
 	display: flex;
@@ -214,20 +214,20 @@ a.ad-addr:hover {
 	font-weight: var(--weight-semibold);
 }
 .ad-dir.tone-in {
-	color: #34d399;
+	color: var(--color-success);
 }
 .ad-dir.tone-out {
-	color: #f59e0b;
+	color: var(--color-warning);
 }
 .ad-amount {
 	text-align: right;
 	font-variant-numeric: tabular-nums;
 }
 .ad-amount.tone-in {
-	color: #34d399;
+	color: var(--color-success);
 }
 .ad-amount.tone-out {
-	color: #f59e0b;
+	color: var(--color-warning);
 }
 .ad-status {
 	text-transform: uppercase;
@@ -244,5 +244,5 @@ a.ad-addr:hover {
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 }
 .ad-empty.ad-error {
-	color: #f87171;
+	color: var(--color-danger);
 }

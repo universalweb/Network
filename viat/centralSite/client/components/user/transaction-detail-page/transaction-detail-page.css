@@ -113,5 +113,5 @@ a.td-link:hover {
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 }
 .td-empty.td-error {
-	color: #f87171;
+	color: var(--color-danger);
 }

@@ -207,7 +207,7 @@ a.ex-addr:hover {
 }
 .ex-amount {
 	text-align: right;
-	color: #34d399;
+	color: var(--color-success);
 	font-variant-numeric: tabular-nums;
 }
 .ex-status {
@@ -226,10 +226,10 @@ a.ex-addr:hover {
 	border: 1px solid currentColor;
 }
 .ex-type.tone-mint {
-	color: #34d399;
+	color: var(--color-success);
 }
 .ex-type.tone-transfer {
-	color: #6d4aff;
+	color: var(--teal);
 }
 .ex-time {
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
@@ -242,5 +242,5 @@ a.ex-addr:hover {
 	font-size: var(--text-base);
 }
 .ex-empty.ex-error {
-	color: #f87171;
+	color: var(--color-danger);
 }

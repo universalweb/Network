@@ -30,7 +30,7 @@
 	white-space: nowrap;
 }
 .field-required {
-	color: #f87171;
+	color: var(--color-danger);
 	margin-inline-start: 0.15em;
 }
 .field-body { display: block; min-width: 0; }
@@ -40,8 +40,8 @@
 	line-height: 1.35;
 	min-height: 1em;
 }
-.has-error .field-hint { color: #f87171; }
-.has-error .field-label { color: #f87171; }
+.has-error .field-hint { color: var(--color-danger); }
+.has-error .field-label { color: var(--color-danger); }
 /* Sizes (cascade through to nested control if it reads field size cues) */
 .size-sm .field-label { font-size: var(--text-2xs); }
 .size-lg .field-label { font-size: var(--text-sm); }

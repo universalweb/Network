@@ -48,27 +48,27 @@
 .tone-success {
 	background: rgba(16, 185, 129, 0.18);
 	border-color: rgba(16, 185, 129, 0.4);
-	color: #34d399;
+	color: var(--color-success);
 }
 .tone-warning {
 	background: rgba(245, 158, 11, 0.18);
 	border-color: rgba(245, 158, 11, 0.4);
-	color: #fbbf24;
+	color: var(--color-warning);
 }
 .tone-danger {
 	background: rgba(239, 68, 68, 0.18);
 	border-color: rgba(239, 68, 68, 0.4);
-	color: #f87171;
+	color: var(--color-danger);
 }
 .tone-info {
 	background: rgba(59, 130, 246, 0.18);
 	border-color: rgba(59, 130, 246, 0.4);
-	color: #60a5fa;
+	color: var(--color-info);
 }
 .tone-accent {
 	background: rgba(99, 102, 241, 0.22);
 	border-color: rgba(99, 102, 241, 0.45);
-	color: #a5b4fc;
+	color: var(--color-info);
 }
 .badge-dot {
 	background: currentColor;

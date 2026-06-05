@@ -168,7 +168,7 @@ a.al-addr:hover {
 }
 .al-balance {
 	text-align: right;
-	color: #34d399;
+	color: var(--color-success);
 	font-variant-numeric: tabular-nums;
 }
 .al-totin {
@@ -178,7 +178,7 @@ a.al-addr:hover {
 }
 .al-totout {
 	text-align: right;
-	color: #f59e0b;
+	color: var(--color-warning);
 	font-variant-numeric: tabular-nums;
 }
 .al-time {
@@ -191,5 +191,5 @@ a.al-addr:hover {
 	font-size: var(--text-base);
 }
 .al-empty.al-error {
-	color: #f87171;
+	color: var(--color-danger);
 }

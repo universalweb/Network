@@ -40,10 +40,10 @@
 .tone-default { color: var(--text-default, currentColor); }
 .tone-muted   { color: var(--text-muted,   rgba(255, 255, 255, 0.55)); }
 .tone-subtle  { color: var(--text-subtle,  rgba(255, 255, 255, 0.4)); }
-.tone-success { color: #34d399; }
-.tone-warning { color: #fbbf24; }
-.tone-danger  { color: #f87171; }
-.tone-info    { color: #60a5fa; }
+.tone-success { color: var(--color-success); }
+.tone-warning { color: var(--color-warning); }
+.tone-danger  { color: var(--color-danger); }
+.tone-info    { color: var(--color-info); }
 .tone-accent  { color: var(--teal, #5eead4); }
 .tone-inverse { color: #0b0d14; }
 /* Align */

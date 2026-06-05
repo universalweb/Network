@@ -40,10 +40,10 @@
 .tone-default { color: currentColor; }
 .tone-muted   { color: var(--text-muted, rgba(255, 255, 255, 0.55)); }
 .tone-subtle  { color: var(--text-subtle, rgba(255, 255, 255, 0.4)); }
-.tone-success { color: #34d399; }
-.tone-warning { color: #fbbf24; }
-.tone-danger  { color: #f87171; }
-.tone-info    { color: #60a5fa; }
+.tone-success { color: var(--color-success); }
+.tone-warning { color: var(--color-warning); }
+.tone-danger  { color: var(--color-danger); }
+.tone-info    { color: var(--color-info); }
 .tone-accent  { color: var(--teal, #5eead4); }
 /* Spin */
 .is-spinning {
@@ -83,7 +83,7 @@
 	0%   { color: #ff5d8f; filter: hue-rotate(0deg) drop-shadow(0 0 4px currentColor); }
 	25%  { color: #ffd24a; filter: hue-rotate(90deg) drop-shadow(0 0 5px currentColor); }
 	50%  { color: #4ade80; filter: hue-rotate(180deg) drop-shadow(0 0 6px currentColor); }
-	75%  { color: #60a5fa; filter: hue-rotate(270deg) drop-shadow(0 0 5px currentColor); }
+	75%  { color: var(--color-info); filter: hue-rotate(270deg) drop-shadow(0 0 5px currentColor); }
 	100% { color: #ff5d8f; filter: hue-rotate(360deg) drop-shadow(0 0 4px currentColor); }
 }
 .anim-wallet {

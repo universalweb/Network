@@ -40,7 +40,7 @@
 }
 
 .bb-badge.tone-warn {
-	color: #fbbf24;
+	color: var(--color-warning);
 	border-color: rgba(251, 191, 36, 0.36);
 	background: rgba(251, 191, 36, 0.07);
 }

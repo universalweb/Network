@@ -188,5 +188,5 @@
 .sp-status.is-visible {
 	opacity: 1;
 }
-.sp-status.tone-success { color: #34d399; }
-.sp-status.tone-error { color: #f87171; }
+.sp-status.tone-success { color: var(--color-success); }
+.sp-status.tone-error { color: var(--color-danger); }

@@ -98,28 +98,28 @@ button.var-solid.tone-primary:hover:not(:disabled) {
 	background: #7cf2dd;
 }
 button.var-solid.tone-success {
-	background: #10b981;
-	border-color: #10b981;
+	background: var(--color-success);
+	border-color: var(--color-success);
 	color: #04231a;
 }
 button.var-solid.tone-success:hover:not(:disabled) {
-	background: #34d399;
+	background: var(--color-success);
 }
 button.var-solid.tone-danger {
-	background: #ef4444;
-	border-color: #ef4444;
-	color: #fff;
+	background: var(--color-danger);
+	border-color: var(--color-danger);
+	color: var(--text-light);
 }
 button.var-solid.tone-danger:hover:not(:disabled) {
-	background: #f87171;
+	background: var(--color-danger);
 }
 button.var-solid.tone-warning {
-	background: #f59e0b;
-	border-color: #f59e0b;
+	background: var(--color-warning);
+	border-color: var(--color-warning);
 	color: #261604;
 }
 button.var-solid.tone-warning:hover:not(:disabled) {
-	background: #fbbf24;
+	background: var(--color-warning);
 }
 button.var-solid.tone-subtle {
 	background: rgba(255, 255, 255, 0.04);
@@ -139,16 +139,16 @@ button.var-outline.tone-primary {
 	color: var(--teal, #5eead4);
 }
 button.var-outline.tone-success {
-	border-color: #34d399;
-	color: #34d399;
+	border-color: var(--color-success);
+	color: var(--color-success);
 }
 button.var-outline.tone-danger {
-	border-color: #f87171;
-	color: #f87171;
+	border-color: var(--color-danger);
+	color: var(--color-danger);
 }
 button.var-outline.tone-warning {
-	border-color: #fbbf24;
-	color: #fbbf24;
+	border-color: var(--color-warning);
+	color: var(--color-warning);
 }
 button.var-outline:hover:not(:disabled) {
 	background: rgba(255, 255, 255, 0.06);
@@ -161,13 +161,13 @@ button.var-ghost.tone-primary {
 	color: var(--teal, #5eead4);
 }
 button.var-ghost.tone-success {
-	color: #34d399;
+	color: var(--color-success);
 }
 button.var-ghost.tone-danger {
-	color: #f87171;
+	color: var(--color-danger);
 }
 button.var-ghost.tone-warning {
-	color: #fbbf24;
+	color: var(--color-warning);
 }
 button.var-ghost:hover:not(:disabled) {
 	background: rgba(255, 255, 255, 0.08);

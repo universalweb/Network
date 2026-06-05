@@ -82,6 +82,8 @@
   --color-success-text: #4caf7a;
   --color-danger: #e05555;
   --color-danger-glow: transparent;
+  --color-warning: #fbbf24;
+  --color-info: #60a5fa;
   --color-warn-text: #e05555;
 
   /* ── Shape (Tahoe-radius) ────────────────────────── */

@@ -102,7 +102,7 @@
 }
 
 .wa-coin-symbol {
-	color: #fff;
+	color: var(--text-light);
 }
 
 .wa-amount-full {

@@ -96,6 +96,8 @@
 	--color-success-text: rgba(74, 255, 224, 0.8);
 	--color-danger: #ff5f5f;
 	--color-danger-glow: rgba(255, 95, 95, 0.4);
+	--color-warning: #f59e0b;
+	--color-info: #3b82f6;
 	--color-warn-text: rgba(255, 0, 85, 0.9);
 
 	/* ═══════════════════════════════════════════════════

@@ -187,12 +187,12 @@
 }
 .sm-btn-danger {
 	border-color: rgba(248, 113, 113, 0.5);
-	color: #f87171;
+	color: var(--color-danger);
 }
 .sm-btn-danger:hover:not(:disabled) {
-	border-color: #f87171;
+	border-color: var(--color-danger);
 	background: rgba(248, 113, 113, 0.08);
-	color: #fca5a5;
+	color: var(--color-danger);
 }
 .sm-create-form,
 .sm-create-confirm {
@@ -213,7 +213,7 @@
 	font-size: var(--text-xs);
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: #f87171;
+	color: var(--color-danger);
 }
 .sm-warning-body {
 	margin: 0;
@@ -241,10 +241,10 @@
 	color: var(--text-muted, rgba(255, 255, 255, 0.6));
 }
 .sm-status.tone-success {
-	color: #34d399;
+	color: var(--color-success);
 }
 .sm-status.tone-error {
-	color: #f87171;
+	color: var(--color-danger);
 }
 .sm-close {
 	position: absolute;

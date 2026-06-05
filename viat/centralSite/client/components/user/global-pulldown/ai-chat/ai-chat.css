@@ -134,7 +134,7 @@
 }
 .aic-btn.is-streaming {
 	background: var(--danger, #ef4444);
-	color: #fff;
+	color: var(--text-light);
 }
 .aic-btn.is-streaming:hover {
 	background: var(--danger-hover, #dc2626);
