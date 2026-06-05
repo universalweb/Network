@@ -140,7 +140,7 @@ a.al-btn {
 	align-items: center;
 }
 .al-row:hover:not(.al-head) {
-	background: rgba(109, 74, 255, 0.06);
+	background: color-mix(in oklab, var(--teal) 6%, transparent);
 }
 .al-row.al-head {
 	font-size: var(--text-2xs);

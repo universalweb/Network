@@ -181,5 +181,5 @@
 .sidebar-close:focus-visible {
 	outline: none;
 	border-color: var(--cyan);
-	box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.25);
+	box-shadow: 0 0 0 2px color-mix(in oklab, var(--cyan) 25%, transparent);
 }

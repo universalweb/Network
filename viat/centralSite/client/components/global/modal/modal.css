@@ -6,12 +6,12 @@
   box-sizing: border-box;
   margin: auto;
   padding: 0;
-  border: 1px solid var(--popup-border, rgba(109, 74, 255, 0.22));
+  border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
   border-radius: var(--radius-lg, 12px);
   background: var(--popup-bg);
   color: var(--popup-text);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(109, 74, 255, 0.08);
+    0 0 0 1px color-mix(in oklab, var(--teal) 8%, transparent);
   max-width: var(--ui-modal-max-width, min(640px, calc(100vw - 32px)));
   /* `100dvh` accounts for mobile browser chrome (URL bar showing/hiding)
      where `100vh` either reports the largest possible value and clips, or
@@ -115,7 +115,7 @@
 .mc-btn:focus-visible {
   outline: none;
   border-color: var(--cyan);
-  box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.25);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--cyan) 25%, transparent);
 }
 /* Per-button hover micro-animations on the icon itself. */
 .mc-min:hover .mc-icon {

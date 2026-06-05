@@ -35,11 +35,11 @@
   margin: 0;
   inset: auto;
   padding: 0;
-  border: 1px solid var(--popup-border, rgba(109, 74, 255, 0.22));
+  border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
   border-radius: var(--radius, 10px);
   min-width: 120px;
   background: var(--popup-bg);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(109, 74, 255, 0.08),
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px color-mix(in oklab, var(--teal) 8%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
   overflow: hidden;
   display: flex;
@@ -97,7 +97,7 @@
 }
 .theme-option.active {
   color: var(--cyan);
-  background: var(--cyan-tint-faint, rgba(109, 74, 255, 0.034));
+  background: var(--cyan-tint-faint, color-mix(in oklab, var(--teal) 3.4%, transparent));
 }
 @media (prefers-reduced-motion: reduce) {
   .theme-drop {

@@ -117,7 +117,7 @@
 .ex-tab.is-active {
 	color: var(--teal);
 	border-color: var(--teal);
-	background: rgba(109, 74, 255, 0.08);
+	background: color-mix(in oklab, var(--teal) 8%, transparent);
 }
 .ex-controls {
 	display: inline-flex;
@@ -172,7 +172,7 @@ a.ex-btn {
 	transition: background 0.12s ease;
 }
 .ex-row:hover:not(.ex-head) {
-	background: rgba(109, 74, 255, 0.06);
+	background: color-mix(in oklab, var(--teal) 6%, transparent);
 }
 .ex-row.ex-head {
 	font-size: var(--text-2xs);

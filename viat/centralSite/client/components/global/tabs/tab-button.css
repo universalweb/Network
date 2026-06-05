@@ -70,13 +70,13 @@
 }
 .tab-btn.is-active {
 	color: var(--teal);
-	border-color: var(--cyan-glow-soft, rgba(109, 74, 255, 0.18));
-	background: var(--cyan-tint-faint, rgba(109, 74, 255, 0.06));
+	border-color: var(--cyan-glow-soft, color-mix(in oklab, var(--teal) 18%, transparent));
+	background: var(--cyan-tint-faint, color-mix(in oklab, var(--teal) 6%, transparent));
 	transform: none;
 }
 .tab-btn:focus-visible {
 	outline: none;
-	box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.35);
+	box-shadow: 0 0 0 2px color-mix(in oklab, var(--cyan) 35%, transparent);
 }
 @media (prefers-reduced-motion: reduce) {
 	.tab-btn {

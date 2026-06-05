@@ -27,7 +27,7 @@
 	max-height: none;
 }
 .wi-img:hover {
-	border-color: var(--input-hover-border, rgba(109, 74, 255, 0.44));
+	border-color: var(--input-hover-border, color-mix(in oklab, var(--teal) 44%, transparent));
 }
 .wi-caption {
 	font-size: var(--text-2xs);

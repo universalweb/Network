@@ -35,20 +35,20 @@
 
 .bb-badge.tone-ok {
 	color: var(--color-success);
-	border-color: rgba(52, 211, 153, 0.32);
-	background: rgba(52, 211, 153, 0.06);
+	border-color: color-mix(in oklab, var(--color-success) 32%, transparent);
+	background: color-mix(in oklab, var(--color-success) 6%, transparent);
 }
 
 .bb-badge.tone-warn {
 	color: var(--color-warning);
-	border-color: rgba(251, 191, 36, 0.36);
-	background: rgba(251, 191, 36, 0.07);
+	border-color: color-mix(in oklab, var(--color-warning) 36%, transparent);
+	background: color-mix(in oklab, var(--color-warning) 7%, transparent);
 }
 
 .bb-badge.tone-bad {
 	color: var(--color-danger);
-	border-color: rgba(248, 113, 113, 0.36);
-	background: rgba(248, 113, 113, 0.06);
+	border-color: color-mix(in oklab, var(--color-danger) 36%, transparent);
+	background: color-mix(in oklab, var(--color-danger) 6%, transparent);
 }
 
 .bb-badge.tone-idle {

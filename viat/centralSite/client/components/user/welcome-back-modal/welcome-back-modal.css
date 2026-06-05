@@ -15,13 +15,13 @@
 	0%, 100% {
 		filter:
 			drop-shadow(0 3px 4px rgba(0, 0, 0, 0.55))
-			drop-shadow(0 0 10px rgba(167, 139, 250, 0.55))
+			drop-shadow(0 0 10px color-mix(in oklab, var(--cyan) 55%, transparent))
 			drop-shadow(0 0 20px rgba(94, 234, 212, 0.2));
 	}
 	50% {
 		filter:
 			drop-shadow(0 3px 4px rgba(0, 0, 0, 0.55))
-			drop-shadow(0 0 16px rgba(167, 139, 250, 0.85))
+			drop-shadow(0 0 16px color-mix(in oklab, var(--cyan) 85%, transparent))
 			drop-shadow(0 0 30px rgba(94, 234, 212, 0.4));
 	}
 }
@@ -78,10 +78,10 @@
 	width: 88px;
 	height: 88px;
 	color: var(--cyan, var(--popup-text));
-	background: linear-gradient(135deg, rgba(167, 139, 250, 0.18), rgba(94, 234, 212, 0.06));
-	border: 1px solid rgba(167, 139, 250, 0.25);
+	background: linear-gradient(135deg, color-mix(in oklab, var(--cyan) 18%, transparent), rgba(94, 234, 212, 0.06));
+	border: 1px solid color-mix(in oklab, var(--cyan) 25%, transparent);
 	border-radius: 12px;
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 4px 24px rgba(109, 74, 255, 0.18);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 4px 24px color-mix(in oklab, var(--teal) 18%, transparent);
 	flex: 0 0 auto;
 }
 .wb-hero-text {
@@ -129,9 +129,9 @@
 	pointer-events: none;
 }
 .wb-thumb:hover {
-	border-color: rgba(167, 139, 250, 0.45);
+	border-color: color-mix(in oklab, var(--cyan) 45%, transparent);
 	transform: translateY(-1px);
-	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(167, 139, 250, 0.15);
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 0 1px color-mix(in oklab, var(--cyan) 15%, transparent);
 }
 .wb-thumb:focus-visible {
 	outline: 2px solid var(--cyan, var(--popup-text));

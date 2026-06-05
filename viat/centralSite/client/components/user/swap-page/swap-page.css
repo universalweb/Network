@@ -22,7 +22,7 @@
 	flex-direction: column;
 	gap: var(--space-4);
 	padding: var(--space-6) var(--space-6) var(--space-7) var(--space-6);
-	background: var(--bg-panel, rgba(7, 8, 12, 0.78));
+	background: var(--bg-panel, color-mix(in oklab, var(--bg-body) 78%, transparent));
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	border-radius: 14px;
 	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
@@ -94,8 +94,8 @@
 	align-items: center;
 	gap: var(--space-3);
 	padding: var(--space-2) var(--space-4);
-	background: var(--cyan-tint-faint, rgba(109, 74, 255, 0.05));
-	border: 1px solid var(--cyan-glow-soft, rgba(109, 74, 255, 0.18));
+	background: var(--cyan-tint-faint, color-mix(in oklab, var(--teal) 5%, transparent));
+	border: 1px solid var(--cyan-glow-soft, color-mix(in oklab, var(--teal) 18%, transparent));
 	border-radius: 999px;
 	flex-shrink: 0;
 }
@@ -137,7 +137,7 @@
 	align-items: center;
 	justify-content: center;
 	background: var(--bg-dark);
-	border: 1px solid var(--cyan-glow-soft, rgba(109, 74, 255, 0.22));
+	border: 1px solid var(--cyan-glow-soft, color-mix(in oklab, var(--teal) 22%, transparent));
 	border-radius: 50%;
 	color: var(--teal);
 	cursor: pointer;
@@ -145,7 +145,7 @@
 }
 .sp-flip:hover {
 	border-color: var(--teal);
-	background: var(--cyan-tint-faint, rgba(109, 74, 255, 0.06));
+	background: var(--cyan-tint-faint, color-mix(in oklab, var(--teal) 6%, transparent));
 	transform: rotate(180deg);
 }
 .sp-flip-icon {
@@ -164,7 +164,7 @@
 .sp-execute {
 	margin-block-start: var(--space-2);
 	padding: var(--space-4) var(--space-5);
-	background: var(--cyan-tint-faint, rgba(109, 74, 255, 0.08));
+	background: var(--cyan-tint-faint, color-mix(in oklab, var(--teal) 8%, transparent));
 	border: 1px solid var(--teal);
 	border-radius: var(--radius-md);
 	color: var(--teal);
@@ -176,7 +176,7 @@
 	transition: background 0.15s ease, color 0.15s ease;
 }
 .sp-execute:hover {
-	background: var(--cyan-tint, rgba(109, 74, 255, 0.14));
+	background: var(--cyan-tint, color-mix(in oklab, var(--teal) 14%, transparent));
 }
 .sp-status {
 	font-size: var(--text-xs);

@@ -42,7 +42,7 @@
 	width: 360px;
 	height: 360px;
 	transform: translateX(-50%);
-	background: radial-gradient(circle, var(--cyan-glow, rgba(109, 74, 255, 0.32)) 0%, transparent 64%);
+	background: radial-gradient(circle, var(--cyan-glow, color-mix(in oklab, var(--teal) 32%, transparent)) 0%, transparent 64%);
 	filter: blur(40px);
 	pointer-events: none;
 	z-index: 0;
@@ -64,7 +64,7 @@
 	   to the composited .bs-glow layer above; the mark now paints its halo once. */
 	filter:
 		drop-shadow(0 4px 6px rgba(0, 0, 0, 0.55))
-		drop-shadow(0 0 18px rgba(167, 139, 250, 0.62))
+		drop-shadow(0 0 18px color-mix(in oklab, var(--cyan) 62%, transparent))
 		drop-shadow(0 0 34px rgba(94, 234, 212, 0.32));
 }
 .bs-leg-left,
@@ -140,9 +140,9 @@
 	z-index: 1;
 	width: 100%;
 	max-width: 280px;
-	--bar-track: var(--cyan-glow-faint, rgba(109, 74, 255, 0.10));
+	--bar-track: var(--cyan-glow-faint, color-mix(in oklab, var(--teal) 10%, transparent));
 	--accent: var(--teal);
-	--accent-2: var(--cyan-glow-strong, rgba(109, 74, 255, 0.44));
+	--accent-2: var(--cyan-glow-strong, color-mix(in oklab, var(--teal) 44%, transparent));
 }
 @keyframes bs-glow-pulse {
 	0%, 100% {

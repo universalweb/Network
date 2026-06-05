@@ -35,11 +35,11 @@
 }
 
 .wq-wrap.is-ready .wq-canvas:hover {
-	background: var(--cyan-glow-medium, rgba(109, 74, 255, 0.24));
+	background: var(--cyan-glow-medium, color-mix(in oklab, var(--teal) 24%, transparent));
 }
 
 .wq-canvas:focus-visible {
-	outline: 1px solid var(--focus-ring-color, rgba(109, 74, 255, 0.72));
+	outline: 1px solid var(--focus-ring-color, color-mix(in oklab, var(--teal) 72%, transparent));
 	outline-offset: 2px;
 }
 
@@ -100,7 +100,7 @@
 .wq-download:hover:not(:disabled) {
 	border-color: var(--teal);
 	color: var(--teal);
-	background: rgba(109, 74, 255, 0.06);
+	background: color-mix(in oklab, var(--teal) 6%, transparent);
 }
 
 .wq-download:disabled {
