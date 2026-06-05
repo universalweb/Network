@@ -10,30 +10,64 @@
  * (a strict `<` never lets an equal distance displace the earlier entry).
  * Out-of-range inputs return null → value left raw.
  */
-
 /** Spacing scale — px reference values; array index === the --space-N suffix. */
-export const SPACE_STEPS = [0, 2, 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64];
-
+export const SPACE_STEPS = [
+	0, 2, 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64,
+];
 /** Structural radius steps only — the themeable lg/xl band is intentionally absent. */
 export const RADIUS_STEPS = [
-	{ token: '--radius-xs', px: 2 },
-	{ token: '--radius-sm', px: 4 },
-	{ token: '--radius-md', px: 6 },
+	{
+		token: '--radius-xs',
+		px: 2,
+	},
+	{
+		token: '--radius-sm',
+		px: 4,
+	},
+	{
+		token: '--radius-md',
+		px: 6,
+	},
 ];
-
 /** Type scale — rem values; component rem font-sizes match these directly. */
 export const TEXT_STEPS = [
-	{ token: '--text-2xs', rem: 0.625 },
-	{ token: '--text-xs', rem: 0.6875 },
-	{ token: '--text-sm', rem: 0.75 },
-	{ token: '--text-base', rem: 0.8125 },
-	{ token: '--text-md', rem: 0.875 },
-	{ token: '--text-lg', rem: 1 },
-	{ token: '--text-xl', rem: 1.125 },
-	{ token: '--text-2xl', rem: 1.375 },
-	{ token: '--text-3xl', rem: 1.75 },
+	{
+		token: '--text-2xs',
+		rem: 0.625,
+	},
+	{
+		token: '--text-xs',
+		rem: 0.6875,
+	},
+	{
+		token: '--text-sm',
+		rem: 0.75,
+	},
+	{
+		token: '--text-base',
+		rem: 0.8125,
+	},
+	{
+		token: '--text-md',
+		rem: 0.875,
+	},
+	{
+		token: '--text-lg',
+		rem: 1,
+	},
+	{
+		token: '--text-xl',
+		rem: 1.125,
+	},
+	{
+		token: '--text-2xl',
+		rem: 1.375,
+	},
+	{
+		token: '--text-3xl',
+		rem: 1.75,
+	},
 ];
-
 /** Discrete font-weight map — exact match only (weights don't snap). */
 export const WEIGHT_TOKENS = new Map([
 	[400, '--weight-normal'],
@@ -41,13 +75,11 @@ export const WEIGHT_TOKENS = new Map([
 	[600, '--weight-semibold'],
 	[700, '--weight-bold'],
 ]);
-
 const LENGTH_PATTERN = /^(-?\d*\.?\d+)(px|rem|em|%|vw|vh|svh|dvh|lvh|ch|fr|cqi|cqb)?$/;
-
 /**
  * Index of the nearest value in an ascending list; ties resolve DOWN.
  * @param {number} value
- * @param {number[]} steps ascending
+ * @param {number[]} steps - Ascending.
  * @returns {number}
  */
 export function nearestIndex(value, steps) {
@@ -62,11 +94,10 @@ export function nearestIndex(value, steps) {
 	}
 	return bestIndex;
 }
-
 /**
  * Token whose `key` value is nearest; ties resolve DOWN (earlier entry).
  * @param {number} value
- * @param {{token:string}[]} steps ascending by key
+ * @param {{token:string}[]} steps - Ascending by key.
  * @param {string} key
  * @returns {string}
  */
@@ -82,29 +113,25 @@ function nearestToken(value, steps, key) {
 	}
 	return bestToken;
 }
-
-/** px spacing → `--space-N`; leaves ≤1px hairlines, 0, negatives, and >64px outliers. */
+/** Px spacing → `--space-N`; leaves ≤1px hairlines, 0, negatives, and >64px outliers. */
 export function snapSpacing(px) {
 	if (px < 2 || px > 64) {
 		return null;
 	}
 	return `--space-${nearestIndex(px, SPACE_STEPS)}`;
 }
-
-/** px radius → structural token; leaves sharp 0/negatives and the themeable >8px band. */
+/** Px radius → structural token; leaves sharp 0/negatives and the themeable >8px band. */
 export function snapRadiusPx(px) {
 	if (px <= 0 || px > 8) {
 		return null;
 	}
 	return nearestToken(px, RADIUS_STEPS, 'px');
 }
-
 /* Beyond this rem distance from the nearest step, a font-size is intentionally
  * off-scale — a display heading above --text-3xl or a sub-scale micro-label below
  * --text-2xs — and is left raw rather than snapped (which would visibly resize it). */
 const FONT_SNAP_MAX_DISTANCE = 0.1;
-
-/** rem font-size → `--text-*`, or null when no step is within FONT_SNAP_MAX_DISTANCE. (px font-size is gated out by the caller — §2b.) */
+/** Rem font-size → `--text-*`, or null when no step is within FONT_SNAP_MAX_DISTANCE. (px font-size is gated out by the caller — §2b.) */
 export function snapFontRem(rem) {
 	let bestStep = TEXT_STEPS[0];
 	let bestDistance = Math.abs(rem - TEXT_STEPS[0].rem);
@@ -120,27 +147,25 @@ export function snapFontRem(rem) {
 	}
 	return bestStep.token;
 }
-
 /** Exact font-weight → token, or null. */
 export function snapWeight(weight) {
 	return WEIGHT_TOKENS.get(weight) ?? null;
 }
-
+/** Wrap a token name as `var(--token)`, or pass null/empty through unchanged. */
+function wrapToken(token) {
+	return token ? `var(${token})` : null;
+}
 /**
  * Snap one whitespace-delimited value piece for a bucket. Returns a `var(...)`
  * replacement string, or null to leave the original verbatim.
- * @param {string} piece e.g. '16px', '0.75rem', 'auto', '600'
+ * @param {string} piece - E.g. '16px', '0.75rem', 'auto', '600'.
  * @param {'spacing'|'radius'|'fontSize'|'weight'} bucket
  * @returns {string|null}
  */
 export function snapPiece(piece, bucket) {
 	if (bucket === 'weight') {
 		const weight = Number(piece);
-		if (!Number.isInteger(weight)) {
-			return null;
-		}
-		const weightToken = snapWeight(weight);
-		return weightToken ? `var(${weightToken})` : null;
+		return Number.isInteger(weight) ? wrapToken(snapWeight(weight)) : null;
 	}
 	const match = LENGTH_PATTERN.exec(piece);
 	if (!match) {
@@ -149,29 +174,16 @@ export function snapPiece(piece, bucket) {
 	const amount = Number(match[1]);
 	const unit = match[2];
 	if (bucket === 'spacing') {
-		if (unit !== 'px') {
-			return null;
-		}
-		const spaceToken = snapSpacing(amount);
-		return spaceToken ? `var(${spaceToken})` : null;
+		return unit === 'px' ? wrapToken(snapSpacing(amount)) : null;
 	}
 	if (bucket === 'radius') {
-		if (unit !== 'px') {
-			return null;
-		}
-		const radiusToken = snapRadiusPx(amount);
-		return radiusToken ? `var(${radiusToken})` : null;
+		return unit === 'px' ? wrapToken(snapRadiusPx(amount)) : null;
 	}
 	if (bucket === 'fontSize') {
-		if (unit !== 'rem') {
-			return null;
-		}
-		const textToken = snapFontRem(amount);
-		return textToken ? `var(${textToken})` : null;
+		return unit === 'rem' ? wrapToken(snapFontRem(amount)) : null;
 	}
 	return null;
 }
-
 /**
  * Snap every length piece in a declaration value. A value containing any function
  * — var(), calc(), clamp(), min/max() — is left entirely untouched.
@@ -181,7 +193,10 @@ export function snapPiece(piece, bucket) {
  */
 export function snapValue(value, bucket) {
 	if (value.includes('(')) {
-		return { value, changes: [] };
+		return {
+			value,
+			changes: [],
+		};
 	}
 	const pieces = value.split(/\s+/);
 	const changes = [];
@@ -189,29 +204,33 @@ export function snapValue(value, bucket) {
 		const piece = pieces[pieceIndex];
 		const replacement = snapPiece(piece, bucket);
 		if (replacement && replacement !== piece) {
-			changes.push({ from: piece, to: replacement });
+			changes.push({
+				from: piece,
+				to: replacement,
+			});
 			pieces[pieceIndex] = replacement;
 		}
 	}
-	return { value: pieces.join(' '), changes };
+	return {
+		value: pieces.join(' '),
+		changes,
+	};
 }
-
 const SPACING_PROPERTY = /^(padding|margin)(-(top|right|bottom|left|inline|block)(-(start|end))?)?$|^(row-gap|column-gap|gap)$/;
 const RADIUS_PROPERTY = /^border(-(top|bottom)-(left|right))?-radius$|^border-(start|end)-(start|end)-radius$/;
-
 /** Map a CSS property to its snap bucket, or null if out of scope. */
 export function bucketForProperty(property) {
-	const name = property.toLowerCase();
-	if (name === 'font-size') {
+	const propertyName = property.toLowerCase();
+	if (propertyName === 'font-size') {
 		return 'fontSize';
 	}
-	if (name === 'font-weight') {
+	if (propertyName === 'font-weight') {
 		return 'weight';
 	}
-	if (RADIUS_PROPERTY.test(name)) {
+	if (RADIUS_PROPERTY.test(propertyName)) {
 		return 'radius';
 	}
-	if (SPACING_PROPERTY.test(name)) {
+	if (SPACING_PROPERTY.test(propertyName)) {
 		return 'spacing';
 	}
 	return null;

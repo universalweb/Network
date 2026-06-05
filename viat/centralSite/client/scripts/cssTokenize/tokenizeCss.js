@@ -11,10 +11,9 @@
  *
  * --dry-run prints a per-file mapping report and writes nothing.
  */
-import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
-import { join, relative } from 'node:path';
 import { bucketForProperty, snapValue } from './snap.js';
-
+import { join, relative } from 'node:path';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 /*
  * Declaration-oriented (NOT line-oriented): matches every `prop: value;` anywhere
  * — handles multiple declarations per line and inline `selector { decl; }` rules.
@@ -23,7 +22,6 @@ import { bucketForProperty, snapValue } from './snap.js';
  * preludes (`@media (max-width: 600px) {` — no terminating `;`) never match.
  */
 const DECLARATION_PATTERN = /(?<![\w-])([a-zA-Z][\w-]*)\s*:\s*([^;{}]+?)\s*;/g;
-
 /**
  * Transform a whole text blob. Replaces only changed, in-scope declarations,
  * slicing untouched regions (selectors, braces, comments, color, functions)
@@ -49,15 +47,21 @@ export function transformText(text) {
 		}
 		for (let changeIndex = 0; changeIndex < snapped.changes.length; changeIndex++) {
 			const entry = snapped.changes[changeIndex];
-			changes.push({ property, from: entry.from, to: entry.to });
+			changes.push({
+				property,
+				from: entry.from,
+				to: entry.to,
+			});
 		}
-		result += text.slice(lastIndex, match.index) + `${property}: ${snapped.value};`;
+		result += `${text.slice(lastIndex, match.index)}${property}: ${snapped.value};`;
 		lastIndex = match.index + match[0].length;
 	}
 	result += text.slice(lastIndex);
-	return { text: result, changes };
+	return {
+		text: result,
+		changes,
+	};
 }
-
 /**
  * Transform a single line (thin wrapper over transformText for unit testing).
  * @param {string} line
@@ -65,13 +69,17 @@ export function transformText(text) {
  */
 export function transformLine(line) {
 	const result = transformText(line);
-	return { line: result.text, changes: result.changes };
+	return {
+		line: result.text,
+		changes: result.changes,
+	};
 }
-
 /** Recursively collect *.css paths under a directory. */
 export function collectCssFiles(directory) {
 	const found = [];
-	const entries = readdirSync(directory, { withFileTypes: true });
+	const entries = readdirSync(directory, {
+		withFileTypes: true,
+	});
 	for (let entryIndex = 0; entryIndex < entries.length; entryIndex++) {
 		const entry = entries[entryIndex];
 		const fullPath = join(directory, entry.name);
@@ -86,11 +94,10 @@ export function collectCssFiles(directory) {
 	}
 	return found;
 }
-
 function run() {
 	const args = process.argv.slice(2);
 	const dryRun = args.includes('--dry-run');
-	const targetDir = args.find(function notFlag(arg) {
+	const targetDir = args.find((arg) => {
 		return !arg.startsWith('--');
 	});
 	if (!targetDir) {
@@ -104,7 +111,9 @@ function run() {
 	for (let fileIndex = 0; fileIndex < files.length; fileIndex++) {
 		const filePath = files[fileIndex];
 		const original = readFileSync(filePath, 'utf8');
-		const { text, changes } = transformText(original);
+		const {
+			text, changes,
+		} = transformText(original);
 		if (changes.length === 0) {
 			continue;
 		}
@@ -121,7 +130,6 @@ function run() {
 	}
 	console.log(`\n${dryRun ? 'DRY-RUN ' : ''}${totalChanges} substitutions across ${changedFiles} files`);
 }
-
 if (import.meta.url === `file://${process.argv[1]}`) {
 	run();
 }
