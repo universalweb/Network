@@ -37,36 +37,41 @@ function applyThemeAttributes(theme) {
 	document.documentElement.dataset.theme = theme.id;
 	document.documentElement.dataset.themeMode = theme.mode;
 }
-/* Fetch + parse the target sheet WITHOUT applying it, so the later href swap is
- * a cache hit. Resolves on load or error (a missing theme file must not stall the
- * switch). The listener is the resolver itself — no wrapper closure. */
-function preloadStylesheet(href) {
+/* Swap one theme <link> without a flash. Insert the NEW sheet immediately after
+ * the old one and wait for it to LOAD — so its rules are live — BEFORE removing
+ * the old. The two sheets overlap for that interval and the new wins by cascade
+ * order, so the page never drops to the unstyled base for a frame (the white
+ * flash on a first, uncached switch — mutating one link's href instead removes
+ * the old rules before the new file has arrived). Resolves on load OR error so a
+ * missing theme file can't strand the page with the old sheet already gone. The
+ * new link inherits the old one's id so the next swap still finds it. */
+function swapStylesheet(oldLink, nextHref) {
 	return new Promise((resolve) => {
-		const probe = document.createElement('link');
-		probe.rel = 'preload';
-		probe.as = 'style';
-		probe.href = href;
-		probe.addEventListener('load', resolve, {
+		const nextLink = document.createElement('link');
+		nextLink.rel = 'stylesheet';
+		nextLink.href = nextHref;
+		function settle() {
+			if (oldLink.id) {
+				nextLink.id = oldLink.id;
+			}
+			oldLink.remove();
+			resolve();
+		}
+		nextLink.addEventListener('load', settle, {
 			once: true,
 		});
-		probe.addEventListener('error', resolve, {
+		nextLink.addEventListener('error', settle, {
 			once: true,
 		});
-		document.head.appendChild(probe);
+		oldLink.insertAdjacentElement('afterend', nextLink);
 	});
 }
-function commitThemeSwap(targets, theme) {
-	for (let index = 0; index < targets.length; index++) {
-		targets[index].link.href = targets[index].href;
-	}
-	applyThemeAttributes(theme);
-}
 /**
- * Switch the active theme seamlessly. The flash came from flipping
- * `data-theme`/`-mode` synchronously while the linked theme file loaded async —
- * a frame with the new mode but the old (or no) color vars. Fix: preload every
- * target sheet, then commit the `href` swaps and the `data-*` writes together in
- * a single `requestAnimationFrame` so the mode flag and its vars land in one paint.
+ * Switch the active theme without a flash. Each theme <link> is swapped via
+ * `swapStylesheet` — the new sheet loads while the old stays applied, then the
+ * old is removed — so the page never shows the unstyled base for a frame, even
+ * on a first (uncached) switch. The `data-theme`/`-mode` attributes flip once
+ * every new sheet is live, so the flag and its colour vars agree.
  * @param {string} id - The theme id to activate; an unknown id falls back to DEFAULT_THEME.
  */
 export function setTheme(id) {
@@ -75,7 +80,7 @@ export function setTheme(id) {
 		return;
 	}
 	localStorage.setItem('theme.mode', theme.id);
-	const links = [...document.querySelectorAll('link[href*="themes/"]')];
+	const links = [...document.querySelectorAll('link[rel="stylesheet"][href*="themes/"]')];
 	const targets = [];
 	for (let index = 0; index < links.length; index++) {
 		const link = links[index];
@@ -91,13 +96,11 @@ export function setTheme(id) {
 		applyThemeAttributes(theme);
 		return;
 	}
-	const preloads = targets.map((target) => {
-		return preloadStylesheet(target.href);
+	const swaps = targets.map((target) => {
+		return swapStylesheet(target.link, target.href);
 	});
-	Promise.all(preloads).then(() => {
-		requestAnimationFrame(() => {
-			commitThemeSwap(targets, theme);
-		});
+	Promise.all(swaps).then(() => {
+		applyThemeAttributes(theme);
 	});
 }
 export function getTheme() {
