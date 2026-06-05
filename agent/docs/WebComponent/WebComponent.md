@@ -199,6 +199,7 @@ Do **not** wrap attribute interpolations in quotes — `class=${...}`, not `clas
 |---|---|
 | `classList('base', () => cond && 'token', stateSet)` | Reactive class list. Strings, token-returning fns, `Set`/`Map`/array/`{token:cond}` all collapse into a deduped class string with per-token diffing. Pair with `class=${classList(...)}`. |
 | `list(stateKey, ChildClass, keyFn?)` | Keyed list bound to `this.state[stateKey]`. Mounts/destroys `ChildClass` instances per item. |
+| `filter(stateKey, ChildClass, test, keyFn?)` | `list` plus a keep-predicate. `test` is `(item) => boolean` (keep where true) or a string flag-name (`'hidden'` → keep unless `item.hidden`). Reactive on array changes AND deep flag toggles. `list` stays filter-free. |
 | `each(items, ChildClass, keyFn?)` | Same machinery on an arbitrary array reference — use inside a computed spot. |
 | `liveList(items, target, keyFn?)` | Imperative keyed-list render outside templates. |
 | `comp(value)` | Wraps a value as a component binding for advanced spots. |
