@@ -37,8 +37,8 @@
 }
 .bs-glow {
 	position: absolute;
-	top: -20%;
-	left: 50%;
+	inset-block-start: -20%;
+	inset-inline-start: 50%;
 	width: 360px;
 	height: 360px;
 	transform: translateX(-50%);

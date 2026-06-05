@@ -25,7 +25,7 @@
 .tabs-horizontal .tab-strip {
 	flex-direction: row;
 	gap: var(--space-1);
-	border-bottom: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-block-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	padding: 0 var(--space-2);
 }
 .tabs-vertical .tab-strip {
@@ -33,7 +33,7 @@
 	gap: var(--space-2);
 	padding: var(--space-5) var(--space-3);
 	background: var(--bg-dark, #04060a);
-	border-right: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-inline-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	overflow-y: auto;
 }
 .tab-indicator {
@@ -51,9 +51,9 @@
 	transition: none !important;
 }
 .tabs-horizontal .tab-indicator {
-	left: var(--ind-x, 0);
+	inset-inline-start: var(--ind-x, 0);
 	width: var(--ind-w, 0);
-	bottom: -1px;
+	inset-block-end: -1px;
 	height: 2px;
 	transition:
 		left 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -61,9 +61,9 @@
 		opacity 0.2s ease;
 }
 .tabs-vertical .tab-indicator {
-	top: var(--ind-y, 0);
+	inset-block-start: var(--ind-y, 0);
 	height: var(--ind-h, 0);
-	left: -1px;
+	inset-inline-start: -1px;
 	width: 2px;
 	transition:
 		top 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),

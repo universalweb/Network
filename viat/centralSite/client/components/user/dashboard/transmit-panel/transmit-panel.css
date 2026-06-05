@@ -14,8 +14,8 @@
 
 @media (max-width: 420px) {
 	.transmit-body {
-		padding-left: var(--space-4);
-		padding-right: var(--space-4);
+		padding-inline-start: var(--space-4);
+		padding-inline-end: var(--space-4);
 		grid-template-columns: 1fr;
 		gap: var(--space-3);
 	}
@@ -50,7 +50,7 @@
 .field input {
 	background: var(--surface-tint-faint);
 	border: var(--border-light);
-	border-bottom: var(--input-accent-border, 1px solid var(--cyan-glow-soft));
+	border-block-end: var(--input-accent-border, 1px solid var(--cyan-glow-soft));
 	box-shadow: var(
 		--input-accent-shadow,
 		inset 0 -1px 0 var(--cyan-glow-soft)
@@ -70,14 +70,14 @@
 
 .field input:hover {
 	border-color: var(--cyan-glow-faint);
-	border-bottom-color: var(--cyan-glow);
+	border-block-end-color: var(--cyan-glow);
 	background: var(--surface-tint-soft);
 	box-shadow: inset 0 -1px 0 var(--cyan-glow);
 }
 
 .field input:focus {
 	border-color: var(--topbar-accent);
-	border-bottom-color: var(--topbar-accent);
+	border-block-end-color: var(--topbar-accent);
 	box-shadow:
 		inset 0 -1px 0 var(--topbar-accent),
 		inset 0 0 0 1px var(--topbar-accent);
@@ -95,18 +95,18 @@
 }
 
 .field-with-addon input {
-	padding-right: var(--space-11);
+	padding-inline-end: var(--space-11);
 }
 
 .field-addon {
 	position: absolute;
-	right: 0;
-	top: 0;
-	bottom: 0;
+	inset-inline-end: 0;
+	inset-block-start: 0;
+	inset-block-end: 0;
 	min-width: 52px;
 	background: var(--navy);
-	border-left: 1px solid var(--border-light-color);
-	border-bottom: none;
+	border-inline-start: 1px solid var(--border-light-color);
+	border-block-end: none;
 	box-sizing: border-box;
 	color: var(--text-light);
 	font-size: var(--text-2xs);
@@ -120,13 +120,13 @@
    stripped (`appearance: none`) and a CSS chevron is painted into the
    background so it visually matches the static VIAT addon next door. */
 .recipient-with-addon input {
-	padding-right: 76px;
+	padding-inline-end: 76px;
 }
 .field-addon-select {
 	appearance: none;
 	-webkit-appearance: none;
 	border: none;
-	border-left: 1px solid var(--border-light-color);
+	border-inline-start: 1px solid var(--border-light-color);
 	outline: none;
 	min-width: 70px;
 	padding: 0 var(--space-6) 0 var(--space-4);

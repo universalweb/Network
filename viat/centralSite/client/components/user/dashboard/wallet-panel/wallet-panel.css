@@ -6,6 +6,6 @@
 	text-transform: uppercase;
 	letter-spacing: 0.22em;
 	color: var(--text-muted);
-	margin-top: var(--space-3);
+	margin-block-start: var(--space-3);
 	text-align: center;
 }

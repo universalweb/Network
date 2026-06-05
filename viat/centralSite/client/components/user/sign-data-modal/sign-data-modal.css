@@ -22,7 +22,7 @@
 }
 .sign-warning-body strong { color: var(--popup-text); }
 .sign-status {
-	margin-top: var(--space-2);
+	margin-block-start: var(--space-2);
 	font-size: var(--text-sm);
 	line-height: 1.4;
 	min-height: 1em;

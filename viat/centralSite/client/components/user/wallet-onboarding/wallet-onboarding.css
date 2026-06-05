@@ -14,8 +14,8 @@
 	grid-template-columns: auto minmax(0, 1fr);
 	align-items: center;
 	gap: var(--space-6);
-	padding-bottom: var(--space-5);
-	border-bottom: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.06));
+	padding-block-end: var(--space-5);
+	border-block-end: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.06));
 }
 .wo-glyph {
 	display: inline-flex;
@@ -168,7 +168,7 @@
 	.wo-thumb {
 		width: 100px;
 		height: 100px;
-		margin-left: var(--space-3);
+		margin-inline-start: var(--space-3);
 	}
 }
 .wo-intro strong {
@@ -222,13 +222,13 @@
 	line-height: 1.55;
 	color: var(--text-muted, rgba(255, 255, 255, 0.55));
 	background: rgba(167, 139, 250, 0.04);
-	border-left: 2px solid var(--cyan, #a78bfa);
+	border-inline-start: 2px solid var(--cyan, #a78bfa);
 	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 .wo-actions {
 	display: flex;
 	gap: var(--space-3);
-	margin-top: var(--space-2);
+	margin-block-start: var(--space-2);
 	flex-wrap: wrap;
 }
 .wo-btn {
@@ -263,18 +263,18 @@
 }
 .wo-readmore {
 	align-self: center;
-	margin-top: var(--space-1);
+	margin-block-start: var(--space-1);
 	font-size: var(--text-xs);
 	letter-spacing: 0.16em;
 	text-transform: uppercase;
 	color: var(--cyan, #a78bfa);
 	text-decoration: none;
-	border-bottom: 1px dashed transparent;
+	border-block-end: 1px dashed transparent;
 	transition: color 0.15s ease, border-color 0.15s ease;
 }
 .wo-readmore:hover {
 	color: var(--teal, #5eead4);
-	border-bottom-color: var(--teal, #5eead4);
+	border-block-end-color: var(--teal, #5eead4);
 }
 @media (prefers-reduced-motion: reduce) {
 	.wo-mark,

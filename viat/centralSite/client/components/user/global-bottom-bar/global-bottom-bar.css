@@ -10,13 +10,13 @@
 	gap: var(--space-3);
 	padding: 0 var(--space-5);
 	align-self: stretch;
-	margin-right: -16px;
+	margin-inline-end: -16px;
 	font-family: var(--font-mono);
 	font-size: var(--text-xs);
 	text-transform: uppercase;
 	letter-spacing: 0.16em;
 	border-width: 0;
-	border-left: 1px solid transparent;
+	border-inline-start: 1px solid transparent;
 	border-style: solid;
 	transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
 }

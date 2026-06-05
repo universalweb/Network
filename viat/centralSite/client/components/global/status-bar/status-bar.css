@@ -1,14 +1,14 @@
 :host {
 	display: block;
 	position: fixed;
-	left: 0;
-	right: 0;
-	bottom: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
+	inset-block-end: 0;
 	z-index: 40;
 	box-sizing: border-box;
 	overflow: hidden;
 	background: var(--status-bar-bg, var(--bg-dark));
-	border-top: 1px solid var(--status-bar-border, var(--dark-divider));
+	border-block-start: 1px solid var(--status-bar-border, var(--dark-divider));
 }
 .status-bar {
 	--bar-height: var(--status-bar-height, 40px);

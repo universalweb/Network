@@ -17,8 +17,8 @@
 .ex-shell > * {
 	width: 100%;
 	max-width: var(--center-max-width, 1280px);
-	margin-left: auto;
-	margin-right: auto;
+	margin-inline-start: auto;
+	margin-inline-end: auto;
 }
 /* Title and controls were jammed into one grid before — the title had
    to fight for space with the prev/next/refresh row. Split them into two
@@ -88,7 +88,7 @@
 	display: none;
 }
 .ex-stat-status {
-	margin-left: var(--space-2);
+	margin-inline-start: var(--space-2);
 	color: var(--color-accent, #6d4aff);
 }
 .ex-filters {
@@ -166,7 +166,7 @@ a.ex-btn {
 	grid-template-columns: 1.1fr 0.75fr 1.6fr 0.3fr 1.6fr 0.9fr 0.8fr 1.5fr;
 	gap: var(--space-3);
 	padding: var(--space-3) var(--space-3);
-	border-bottom: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.04));
+	border-block-end: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.04));
 	font-size: var(--text-sm);
 	align-items: center;
 	transition: background 0.12s ease;
@@ -179,9 +179,9 @@ a.ex-btn {
 	letter-spacing: 0.18em;
 	text-transform: uppercase;
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
-	border-bottom: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	border-block-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
 	position: sticky;
-	top: 0;
+	inset-block-start: 0;
 	background: var(--bg-dark, #0a0a14);
 	z-index: 1;
 }
@@ -194,12 +194,12 @@ a.ex-btn {
 .ex-addr {
 	color: var(--dark-text-medium, #c8d0e0);
 	text-decoration: none;
-	border-bottom: 1px dashed transparent;
+	border-block-end: 1px dashed transparent;
 }
 a.ex-id:hover,
 a.ex-addr:hover {
 	color: var(--color-accent, #6d4aff);
-	border-bottom-color: var(--color-accent, #6d4aff);
+	border-block-end-color: var(--color-accent, #6d4aff);
 }
 .ex-arrow {
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));

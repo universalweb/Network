@@ -27,7 +27,7 @@
 
 .output-panel .panel-header {
 	background: var(--dark-highlight);
-	border-bottom: 1px solid var(--dark-divider);
+	border-block-end: 1px solid var(--dark-divider);
 	color: var(--dark-heading);
 }
 
@@ -37,7 +37,7 @@
 .output-tabs-strip {
 	display: block;
 	flex-shrink: 0;
-	border-bottom: 1px solid var(--dark-divider);
+	border-block-end: 1px solid var(--dark-divider);
 }
 
 .output-feed {

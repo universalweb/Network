@@ -66,7 +66,7 @@ a.pl-btn {
 	align-items: center;
 }
 .pl-refresh {
-	margin-left: auto;
+	margin-inline-start: auto;
 }
 .pl-status {
 	display: inline-flex;
@@ -93,6 +93,6 @@ a.pl-btn {
 	display: none;
 }
 .pl-status-text {
-	margin-left: var(--space-2);
+	margin-inline-start: var(--space-2);
 	color: var(--color-accent, #6d4aff);
 }

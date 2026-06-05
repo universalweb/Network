@@ -46,5 +46,5 @@
 .loading-message {
 	color: var(--text-muted, currentColor);
 	font-size: var(--text-md);
-	margin-top: 0.2rem;
+	margin-block-start: 0.2rem;
 }

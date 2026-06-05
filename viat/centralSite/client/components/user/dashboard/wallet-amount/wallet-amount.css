@@ -23,8 +23,8 @@
 .wallet-hero::before {
 	content: 'VIAT BALANCE';
 	position: absolute;
-	top: 10px;
-	right: 18px;
+	inset-block-start: 10px;
+	inset-inline-end: 18px;
 	font-size: 2rem;
 	font-weight: var(--weight-bold);
 	letter-spacing: 2px;
@@ -43,7 +43,7 @@
 	text-transform: uppercase;
 	letter-spacing: 0.3em;
 	color: var(--text-muted);
-	margin-bottom: var(--space-3);
+	margin-block-end: var(--space-3);
 }
 
 .wa-amount-main {
@@ -74,8 +74,8 @@
 :host(.bare) .wallet-hero::before {
 	font-size: 1.5rem;
 	opacity: 0.5;
-	top: 0;
-	right: 0;
+	inset-block-start: 0;
+	inset-inline-end: 0;
 }
 :host(.bare) .wa-amount-main {
 	font-size: 3.75rem;
@@ -98,7 +98,7 @@
 	display: flex;
 	align-items: center;
 	gap: var(--space-2);
-	margin-top: var(--space-3);
+	margin-block-start: var(--space-3);
 }
 
 .wa-coin-symbol {

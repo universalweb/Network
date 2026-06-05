@@ -31,7 +31,7 @@
 }
 .field-required {
 	color: #f87171;
-	margin-left: 0.15em;
+	margin-inline-start: 0.15em;
 }
 .field-body { display: block; min-width: 0; }
 .field-hint {

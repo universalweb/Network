@@ -1,7 +1,7 @@
 :host {
   position: fixed;
-  top: 18px;
-  right: 18px;
+  inset-block-start: 18px;
+  inset-inline-end: 18px;
   z-index: 9999;
 }
 
@@ -10,8 +10,8 @@
    with no chrome and clicks pass through to siblings below. */
 :host([popover]) {
   inset: auto;
-  top: 18px;
-  right: 18px;
+  inset-block-start: 18px;
+  inset-inline-end: 18px;
   margin: 0;
   padding: 0;
   border: 0;

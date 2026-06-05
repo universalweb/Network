@@ -24,7 +24,7 @@
 	padding: var(--space-1) var(--space-2);
 	background: var(--bg-dark, #04060a);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
-	border-bottom-width: 2px;
+	border-block-end-width: 2px;
 	border-radius: var(--radius-sm);
 	color: var(--teal, #5eead4);
 	font-family: var(--font-mono);

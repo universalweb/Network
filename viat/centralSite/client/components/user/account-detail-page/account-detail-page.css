@@ -20,8 +20,8 @@
 .ad-shell .ad-empty {
 	width: 100%;
 	max-width: 820px;
-	margin-left: auto;
-	margin-right: auto;
+	margin-inline-start: auto;
+	margin-inline-end: auto;
 	box-sizing: border-box;
 }
 .ad-header {
@@ -175,7 +175,7 @@ a.ad-btn {
 	grid-template-columns: 1.1fr 0.5fr 1.7fr 1fr 0.8fr 1.5fr;
 	gap: var(--space-3);
 	padding: var(--space-3) var(--space-3);
-	border-bottom: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.04));
+	border-block-end: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.04));
 	font-size: var(--text-sm);
 	align-items: center;
 }
@@ -188,7 +188,7 @@ a.ad-btn {
 	text-transform: uppercase;
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 	position: sticky;
-	top: 0;
+	inset-block-start: 0;
 	background: var(--bg-dark, #0a0a14);
 	z-index: 1;
 }
@@ -201,12 +201,12 @@ a.ad-btn {
 .ad-addr {
 	text-decoration: none;
 	color: var(--dark-text-medium, #c8d0e0);
-	border-bottom: 1px dashed transparent;
+	border-block-end: 1px dashed transparent;
 }
 a.ad-id:hover,
 a.ad-addr:hover {
 	color: var(--color-accent, #6d4aff);
-	border-bottom-color: var(--color-accent, #6d4aff);
+	border-block-end-color: var(--color-accent, #6d4aff);
 }
 .ad-dir {
 	font-size: var(--text-2xs);

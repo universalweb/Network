@@ -9,8 +9,8 @@
 	overflow-y: auto;
 	min-height: 0;
 	height: 100%;
-	padding-top: 90px;
-	padding-bottom: var(--space-12);
+	padding-block-start: 90px;
+	padding-block-end: var(--space-12);
 }
 .center-content {
 	display: flex;

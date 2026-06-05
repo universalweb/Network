@@ -36,7 +36,7 @@
 	font-size: var(--text-sm);
 	font-weight: var(--weight-bold);
 	letter-spacing: 0.06em;
-	margin-top: 0.4rem;
+	margin-block-start: 0.4rem;
 	padding: 0.5rem 1rem;
 	text-transform: uppercase;
 	transition: filter 0.18s ease-out;

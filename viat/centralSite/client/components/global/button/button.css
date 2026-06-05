@@ -174,8 +174,8 @@ button.var-ghost:hover:not(:disabled) {
 }
 /* LINK */
 button.var-link {
-	padding-left: 0;
-	padding-right: 0;
+	padding-inline-start: 0;
+	padding-inline-end: 0;
 	min-height: auto;
 	text-decoration: underline;
 	text-underline-offset: 3px;
@@ -226,7 +226,7 @@ button.is-full {
 	width: 1em;
 	height: 1em;
 	border: 2px solid currentColor;
-	border-right-color: transparent;
+	border-inline-end-color: transparent;
 	border-radius: 50%;
 	display: inline-block;
 	animation: ui-btn-spin 0.65s linear infinite;

@@ -12,7 +12,7 @@
 	white-space: nowrap;
 }
 .cell-divider {
-	border-right: 1px solid var(--dark-divider);
+	border-inline-end: 1px solid var(--dark-divider);
 }
 .cell-key {
 	font-family: var(--font-display);

@@ -17,8 +17,8 @@
 .al-shell > * {
 	width: 100%;
 	max-width: var(--center-max-width, 1100px);
-	margin-left: auto;
-	margin-right: auto;
+	margin-inline-start: auto;
+	margin-inline-end: auto;
 }
 /* Title separated from controls so each gets its own breathing room.
    Title + stats meta line up baseline-aligned in one bar; the pager /
@@ -87,7 +87,7 @@
 	display: none;
 }
 .al-stat-status {
-	margin-left: var(--space-2);
+	margin-inline-start: var(--space-2);
 	color: var(--color-accent, #6d4aff);
 }
 .al-controls {
@@ -135,7 +135,7 @@ a.al-btn {
 	grid-template-columns: 1.7fr 1fr 1fr 1fr 1.5fr;
 	gap: var(--space-3);
 	padding: var(--space-3) var(--space-3);
-	border-bottom: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.04));
+	border-block-end: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.04));
 	font-size: var(--text-sm);
 	align-items: center;
 }
@@ -148,7 +148,7 @@ a.al-btn {
 	text-transform: uppercase;
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 	position: sticky;
-	top: 0;
+	inset-block-start: 0;
 	background: var(--bg-dark, #0a0a14);
 	z-index: 1;
 }
@@ -160,11 +160,11 @@ a.al-btn {
 .al-addr {
 	text-decoration: none;
 	color: var(--dark-text-medium, #c8d0e0);
-	border-bottom: 1px dashed transparent;
+	border-block-end: 1px dashed transparent;
 }
 a.al-addr:hover {
 	color: var(--color-accent, #6d4aff);
-	border-bottom-color: var(--color-accent, #6d4aff);
+	border-block-end-color: var(--color-accent, #6d4aff);
 }
 .al-balance {
 	text-align: right;

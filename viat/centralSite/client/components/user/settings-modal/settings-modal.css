@@ -227,7 +227,7 @@
 	gap: var(--space-2);
 }
 .sm-status {
-	margin-top: var(--space-2);
+	margin-block-start: var(--space-2);
 	font-size: var(--text-xs);
 	line-height: 1.4;
 	min-height: 1em;
@@ -248,6 +248,6 @@
 }
 .sm-close {
 	position: absolute;
-	top: 12px;
-	right: 12px;
+	inset-block-start: 12px;
+	inset-inline-end: 12px;
 }

@@ -65,18 +65,18 @@
    if no flags are set, this rule simply doesn't match anything. */
 .modal-controls {
   position: absolute;
-  top: 8px;
+  inset-block-start: 8px;
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
   z-index: 2;
 }
 /* Anchor side. Default: right (Windows-style). */
-.modal.controls-right .modal-controls { right: 8px; left: auto; }
+.modal.controls-right .modal-controls { inset-inline-end: 8px; inset-inline-start: auto; }
 /* macOS-style: anchored left, with the close button leftmost (close, min,
    max) — achieved with CSS `order` rather than re-ordering the DOM so the
    render method stays simple. */
-.modal.controls-left .modal-controls { left: 8px; right: auto; }
+.modal.controls-left .modal-controls { inset-inline-start: 8px; inset-inline-end: auto; }
 .modal.controls-left .mc-close { order: 1; }
 .modal.controls-left .mc-min   { order: 2; }
 .modal.controls-left .mc-max   { order: 3; }

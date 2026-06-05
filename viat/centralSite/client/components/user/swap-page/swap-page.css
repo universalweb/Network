@@ -152,7 +152,7 @@
 	color: var(--teal, #5eead4);
 }
 .sp-rate {
-	margin-top: var(--space-2);
+	margin-block-start: var(--space-2);
 	font-size: var(--text-2xs);
 	letter-spacing: 0.16em;
 	color: var(--text-muted, rgba(255, 255, 255, 0.5));
@@ -162,7 +162,7 @@
 	letter-spacing: 0.06em;
 }
 .sp-execute {
-	margin-top: var(--space-2);
+	margin-block-start: var(--space-2);
 	padding: var(--space-4) var(--space-5);
 	background: var(--cyan-tint-faint, rgba(109, 74, 255, 0.08));
 	border: 1px solid var(--teal, #5eead4);

@@ -19,7 +19,7 @@
 .sp-link {
 	color: var(--teal, #5eead4);
 	text-decoration: none;
-	border-bottom: 1px dotted var(--cyan-glow-faint, rgba(0, 240, 255, 0.35));
+	border-block-end: 1px dotted var(--cyan-glow-faint, rgba(0, 240, 255, 0.35));
 }
 .sp-link:hover {
 	color: var(--cyan-glow, rgba(0, 240, 255, 0.9));

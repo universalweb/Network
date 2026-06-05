@@ -104,8 +104,8 @@
 }
 /* Vertical rail: a 3px bar pinned to the left edge, sliding on Y. */
 :host(.dock-vertical) .active-bar {
-	top: 0;
-	left: 0;
+	inset-block-start: 0;
+	inset-inline-start: 0;
 	width: 3px;
 	height: var(--bar-h, 38px);
 	border-radius: var(--radius-sm) 0 0 var(--radius-sm);
@@ -114,8 +114,8 @@
 }
 /* Horizontal rail: a 3px underline pinned to the bottom edge, sliding on X. */
 :host(.dock-horizontal) .active-bar {
-	bottom: 0;
-	left: 0;
+	inset-block-end: 0;
+	inset-inline-start: 0;
 	height: 3px;
 	width: var(--bar-w, 38px);
 	border-radius: var(--radius-sm) var(--radius-sm) 0 0;
@@ -144,9 +144,9 @@
 		padding: var(--space-2) var(--space-2);
 	}
 	:host(.dock-vertical) .active-bar {
-		top: auto;
-		bottom: 0;
-		left: 0;
+		inset-block-start: auto;
+		inset-block-end: 0;
+		inset-inline-start: 0;
 		width: var(--bar-w, 38px);
 		height: 3px;
 		border-radius: var(--radius-sm) var(--radius-sm) 0 0;

@@ -11,7 +11,7 @@
   width: min(360px, calc(100vw - 36px));
   padding: var(--space-4) var(--space-4);
   border: 1px solid var(--popup-border);
-  border-left: 2px solid var(--popup-accent);
+  border-inline-start: 2px solid var(--popup-accent);
   border-radius: var(--radius-lg);
   background: var(--popup-bg);
   backdrop-filter: blur(10px);
@@ -50,11 +50,11 @@
 }
 
 .notification-copy {
-  border-left-color: var(--teal);
+  border-inline-start-color: var(--teal);
 }
 
 .notification-error {
-  border-left-color: var(--magenta);
+  border-inline-start-color: var(--magenta);
 }
 
 .notification-body {

@@ -1,17 +1,17 @@
 :host {
 	display: block;
 	position: fixed;
-	top: 0;
-	bottom: 0;
+	inset-block-start: 0;
+	inset-block-end: 0;
 	pointer-events: none;
 	z-index: 30;
 	--shell-closed-x: 100%;
 }
 :host(.side-right) {
-	right: 0;
+	inset-inline-end: 0;
 }
 :host(.side-left) {
-	left: 0;
+	inset-inline-start: 0;
 	--shell-closed-x: -100%;
 }
 
@@ -42,18 +42,18 @@
    closed, so it can be dragged in with nothing else to grab. */
 .sidebar-edge {
 	position: fixed;
-	top: 0;
-	bottom: 0;
+	inset-block-start: 0;
+	inset-block-end: 0;
 	width: 18px;
 	pointer-events: none;
 	touch-action: none;
 	z-index: 1;
 }
 :host(.side-right) .sidebar-edge {
-	right: 0;
+	inset-inline-end: 0;
 }
 :host(.side-left) .sidebar-edge {
-	left: 0;
+	inset-inline-start: 0;
 }
 :host(:not([open])) .sidebar-edge {
 	pointer-events: auto;
@@ -84,24 +84,24 @@
 /* ── Shell — the panel container ───────────────────────────────────────── */
 .sidebar-shell {
 	position: absolute;
-	top: 0;
-	bottom: 0;
+	inset-block-start: 0;
+	inset-block-end: 0;
 	display: flex;
 	flex-direction: column;
 	overflow-x: hidden;
 	overflow-y: auto;
 	box-sizing: border-box;
 	pointer-events: auto;
-	padding-bottom: var(--space-12);
+	padding-block-end: var(--space-12);
 	will-change: transform;
 	transform: translateX(var(--shell-closed-x));
 	transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 }
 :host(.side-right) .sidebar-shell {
-	right: 0;
+	inset-inline-end: 0;
 }
 :host(.side-left) .sidebar-shell {
-	left: 0;
+	inset-inline-start: 0;
 }
 /* While dragging, JS inlines `transition: none` so the shell tracks 1:1. */
 .sidebar-shell.is-dragging {
@@ -117,7 +117,7 @@
 :host(.mode-flyout) .sidebar-shell {
 	width: 300px;
 	background: transparent;
-	padding-top: 120px;
+	padding-block-start: 120px;
 }
 
 /* Cover-up shell — frosted glass: a near-transparent tint over a backdrop
@@ -129,14 +129,14 @@
 	background: var(--sidebar-shell-bg, rgba(8, 10, 16, 0.55));
 	backdrop-filter: blur(16px);
 	-webkit-backdrop-filter: blur(16px);
-	padding-top: 90px;
+	padding-block-start: 90px;
 }
 :host(.side-right.mode-coverup) .sidebar-shell {
-	border-left: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-inline-start: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	box-shadow: -8px 0 24px rgba(0, 0, 0, 0.35);
 }
 :host(.side-left.mode-coverup) .sidebar-shell {
-	border-right: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-inline-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	box-shadow: 8px 0 24px rgba(0, 0, 0, 0.35);
 }
 
@@ -144,8 +144,8 @@
    bar's toggle or a swipe; it carries no close affordance of its own. */
 .sidebar-close {
 	position: absolute;
-	top: 12px;
-	right: 12px;
+	inset-block-start: 12px;
+	inset-inline-end: 12px;
 	width: 36px;
 	height: 36px;
 	display: none;
@@ -161,8 +161,8 @@
 	transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 :host(.side-left) .sidebar-close {
-	right: auto;
-	left: 12px;
+	inset-inline-end: auto;
+	inset-inline-start: 12px;
 }
 :host(.mode-coverup) .sidebar-close {
 	display: inline-flex;

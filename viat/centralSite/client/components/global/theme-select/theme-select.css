@@ -76,7 +76,7 @@
 .theme-option {
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--dark-divider-faint, rgba(255, 255, 255, 0.022));
+  border-block-end: 1px solid var(--dark-divider-faint, rgba(255, 255, 255, 0.022));
   color: var(--text-offwhite, #adb4cc);
   font-family: inherit;
   font-size: var(--text-2xs);
@@ -89,7 +89,7 @@
   transition: background 0.15s, color 0.15s;
 }
 .theme-option:last-child {
-  border-bottom: none;
+  border-block-end: none;
 }
 .theme-option:hover {
   background: var(--surface-tint, rgba(255, 255, 255, 0.05));

@@ -23,7 +23,7 @@
 	padding: var(--space-4) var(--space-4);
 	background: var(--popup-bg-alt, rgba(255, 255, 255, 0.04));
 	border: 1px solid var(--popup-border, rgba(255, 255, 255, 0.1));
-	border-left: 3px solid var(--cyan, #a78bfa);
+	border-inline-start: 3px solid var(--cyan, #a78bfa);
 	border-radius: var(--radius-md, 6px);
 	cursor: auto;
 }
@@ -33,7 +33,7 @@
 	letter-spacing: 0.18em;
 	color: var(--cyan, #a78bfa);
 	font-weight: var(--weight-semibold);
-	margin-bottom: var(--space-2);
+	margin-block-end: var(--space-2);
 }
 .gpd-mobile-notice-body {
 	margin: 0;
@@ -61,12 +61,12 @@
 .gpd-col-help {
 	gap: var(--space-4);
 	overflow-y: auto;
-	padding-right: var(--space-2);
-	padding-bottom: 220px;
+	padding-inline-end: var(--space-2);
+	padding-block-end: 220px;
 }
 .gpd-col-chat {
 	min-height: 0;
-	padding-bottom: 220px;
+	padding-block-end: 220px;
 }
 /* Mobile + small-tablet (xs/sm/md): show the desktop-only notice, hide
    the AI chat column entirely, and collapse the 3-col grid to a single
@@ -97,5 +97,5 @@
 :host(.vw-xs) .gpd-col-help,
 :host(.vw-sm) .gpd-col-help,
 :host(.vw-md) .gpd-col-help {
-	padding-right: 0;
+	padding-inline-end: 0;
 }
