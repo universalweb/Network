@@ -39,10 +39,10 @@
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-3);
-	color: var(--color-accent, #6d4aff);
+	color: var(--teal);
 }
 .al-title-icon {
-	color: var(--color-accent, #6d4aff);
+	color: var(--teal);
 }
 .al-title {
 	font-size: var(--text-md);
@@ -88,7 +88,7 @@
 }
 .al-stat-status {
 	margin-inline-start: var(--space-2);
-	color: var(--color-accent, #6d4aff);
+	color: var(--teal);
 }
 .al-controls {
 	display: inline-flex;
@@ -108,8 +108,8 @@
 	transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 .al-btn:hover:not(:disabled):not([aria-disabled='true']) {
-	border-color: var(--color-accent, #6d4aff);
-	color: var(--color-accent, #6d4aff);
+	border-color: var(--teal);
+	color: var(--teal);
 }
 .al-btn:disabled,
 .al-btn[aria-disabled='true'] {
@@ -163,8 +163,8 @@ a.al-btn {
 	border-block-end: 1px dashed transparent;
 }
 a.al-addr:hover {
-	color: var(--color-accent, #6d4aff);
-	border-block-end-color: var(--color-accent, #6d4aff);
+	color: var(--teal);
+	border-block-end-color: var(--teal);
 }
 .al-balance {
 	text-align: right;

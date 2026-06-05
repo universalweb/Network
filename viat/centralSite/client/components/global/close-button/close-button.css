@@ -25,7 +25,7 @@
 }
 .cb:hover .cb-icon {
 	transform: rotate(90deg) scale(1.05);
-	color: var(--danger, #f87171);
+	color: var(--color-danger);
 }
 .cb:active {
 	transform: scale(0.92);

@@ -37,10 +37,10 @@
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-3);
-	color: var(--color-accent, #6d4aff);
+	color: var(--teal);
 }
 .ad-title-icon {
-	color: var(--color-accent, #6d4aff);
+	color: var(--teal);
 }
 .ad-label-tag {
 	font-size: var(--text-2xs);
@@ -65,8 +65,8 @@
 	width: 100%;
 }
 .ad-address:hover {
-	border-color: var(--color-accent, #6d4aff);
-	color: var(--color-accent, #6d4aff);
+	border-color: var(--teal);
+	color: var(--teal);
 }
 .ad-address > * {
 	pointer-events: none;
@@ -143,8 +143,8 @@
 	cursor: pointer;
 }
 .ad-btn:hover:not(:disabled) {
-	border-color: var(--color-accent, #6d4aff);
-	color: var(--color-accent, #6d4aff);
+	border-color: var(--teal);
+	color: var(--teal);
 }
 .ad-btn:disabled,
 .ad-btn[aria-disabled='true'] {
@@ -205,8 +205,8 @@ a.ad-btn {
 }
 a.ad-id:hover,
 a.ad-addr:hover {
-	color: var(--color-accent, #6d4aff);
-	border-block-end-color: var(--color-accent, #6d4aff);
+	color: var(--teal);
+	border-block-end-color: var(--teal);
 }
 .ad-dir {
 	font-size: var(--text-2xs);

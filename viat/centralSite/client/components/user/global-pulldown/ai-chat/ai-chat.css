@@ -80,7 +80,7 @@
 }
 .aic-error {
 	font-size: var(--text-sm);
-	color: var(--danger, #f87171);
+	color: var(--color-danger);
 	min-height: 1em;
 	opacity: 0;
 	transition: opacity 0.18s ease;
@@ -133,7 +133,7 @@
 	background: var(--teal-hover, #2dd4bf);
 }
 .aic-btn.is-streaming {
-	background: var(--danger, #ef4444);
+	background: var(--color-danger);
 	color: var(--text-light);
 }
 .aic-btn.is-streaming:hover {

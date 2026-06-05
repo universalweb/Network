@@ -36,10 +36,10 @@
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-3);
-	color: var(--color-accent, #6d4aff);
+	color: var(--teal);
 }
 .td-title-icon {
-	color: var(--color-accent, #6d4aff);
+	color: var(--teal);
 }
 .td-title {
 	font-size: var(--text-base);
@@ -59,8 +59,8 @@
 	word-break: break-all;
 }
 .td-copy:hover {
-	border-color: var(--color-accent, #6d4aff);
-	color: var(--color-accent, #6d4aff);
+	border-color: var(--teal);
+	color: var(--teal);
 }
 .td-copy > * {
 	pointer-events: none;
@@ -100,12 +100,12 @@
 	font-variant-numeric: tabular-nums;
 }
 a.td-link {
-	color: var(--color-accent, #6d4aff);
+	color: var(--teal);
 	text-decoration: none;
 	border-block-end: 1px dashed transparent;
 }
 a.td-link:hover {
-	border-block-end-color: var(--color-accent, #6d4aff);
+	border-block-end-color: var(--teal);
 }
 .td-empty {
 	padding: var(--space-7);

@@ -84,7 +84,7 @@ button.size-lg {
 button.var-solid.tone-neutral {
 	background: var(--btn-neutral, rgba(255, 255, 255, 0.08));
 	border-color: var(--btn-neutral-border, rgba(255, 255, 255, 0.14));
-	color: var(--text-default, #e8eaf2);
+	color: var(--text-main);
 }
 button.var-solid.tone-neutral:hover:not(:disabled) {
 	background: rgba(255, 255, 255, 0.13);
@@ -124,7 +124,7 @@ button.var-solid.tone-warning:hover:not(:disabled) {
 button.var-solid.tone-subtle {
 	background: rgba(255, 255, 255, 0.04);
 	border-color: rgba(255, 255, 255, 0.08);
-	color: var(--text-default, #e8eaf2);
+	color: var(--text-main);
 }
 button.var-solid.tone-subtle:hover:not(:disabled) {
 	background: rgba(255, 255, 255, 0.09);
@@ -132,7 +132,7 @@ button.var-solid.tone-subtle:hover:not(:disabled) {
 /* OUTLINE */
 button.var-outline.tone-neutral {
 	border-color: rgba(255, 255, 255, 0.18);
-	color: var(--text-default, #e8eaf2);
+	color: var(--text-main);
 }
 button.var-outline.tone-primary {
 	border-color: var(--teal);
@@ -155,7 +155,7 @@ button.var-outline:hover:not(:disabled) {
 }
 /* GHOST */
 button.var-ghost.tone-neutral {
-	color: var(--text-default, #e8eaf2);
+	color: var(--text-main);
 }
 button.var-ghost.tone-primary {
 	color: var(--teal);
@@ -184,7 +184,7 @@ button.var-link.tone-primary {
 	color: var(--teal);
 }
 button.var-link.tone-neutral {
-	color: var(--text-default, #e8eaf2);
+	color: var(--text-main);
 }
 button.var-link:hover:not(:disabled) {
 	text-decoration-thickness: 2px;

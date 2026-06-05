@@ -40,10 +40,10 @@
 	display: inline-flex;
 	align-items: center;
 	gap: var(--space-3);
-	color: var(--color-accent, #6d4aff);
+	color: var(--teal);
 }
 .ex-title-icon {
-	color: var(--color-accent, #6d4aff);
+	color: var(--teal);
 }
 .ex-title {
 	font-size: var(--text-md);
@@ -89,7 +89,7 @@
 }
 .ex-stat-status {
 	margin-inline-start: var(--space-2);
-	color: var(--color-accent, #6d4aff);
+	color: var(--teal);
 }
 .ex-filters {
 	display: inline-flex;
@@ -111,12 +111,12 @@
 	transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 .ex-tab:hover {
-	color: var(--color-accent, #6d4aff);
-	border-color: var(--color-accent, #6d4aff);
+	color: var(--teal);
+	border-color: var(--teal);
 }
 .ex-tab.is-active {
-	color: var(--color-accent, #6d4aff);
-	border-color: var(--color-accent, #6d4aff);
+	color: var(--teal);
+	border-color: var(--teal);
 	background: rgba(109, 74, 255, 0.08);
 }
 .ex-controls {
@@ -137,8 +137,8 @@
 	transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 .ex-btn:hover:not(:disabled) {
-	border-color: var(--color-accent, #6d4aff);
-	color: var(--color-accent, #6d4aff);
+	border-color: var(--teal);
+	color: var(--teal);
 }
 .ex-btn:disabled,
 .ex-btn[aria-disabled='true'] {
@@ -198,8 +198,8 @@ a.ex-btn {
 }
 a.ex-id:hover,
 a.ex-addr:hover {
-	color: var(--color-accent, #6d4aff);
-	border-block-end-color: var(--color-accent, #6d4aff);
+	color: var(--teal);
+	border-block-end-color: var(--teal);
 }
 .ex-arrow {
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));

@@ -52,8 +52,8 @@
 	transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 .pl-btn:hover:not(:disabled):not([aria-disabled='true']) {
-	border-color: var(--color-accent, #6d4aff);
-	color: var(--color-accent, #6d4aff);
+	border-color: var(--teal);
+	color: var(--teal);
 }
 .pl-btn:disabled,
 .pl-btn[aria-disabled='true'] {
@@ -94,5 +94,5 @@ a.pl-btn {
 }
 .pl-status-text {
 	margin-inline-start: var(--space-2);
-	color: var(--color-accent, #6d4aff);
+	color: var(--teal);
 }
