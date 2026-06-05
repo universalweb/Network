@@ -63,31 +63,31 @@
    <mobile-dashboard> are mounted side-by-side in the wallet page slot;
    each viewport bucket hides the wrong one so only the correct layout
    is visible (and tabbable) at any time. */
-:host(.vw-md) mobile-dashboard,
-:host(.vw-lg) mobile-dashboard,
-:host(.vw-xl) mobile-dashboard,
-:host(.vw-xxl) mobile-dashboard {
+:host([data-vw="md"]) mobile-dashboard,
+:host([data-vw="lg"]) mobile-dashboard,
+:host([data-vw="xl"]) mobile-dashboard,
+:host([data-vw="xxl"]) mobile-dashboard {
 	display: none;
 }
-:host(.vw-xs) app-dashboard,
-:host(.vw-sm) app-dashboard {
+:host([data-vw="xs"]) app-dashboard,
+:host([data-vw="sm"]) app-dashboard {
 	display: none;
 }
 /* Mobile (xs/sm < 768px): stack page → dock at bottom, suppress the
    bottom-bar — the dock takes over its vertical slot. The sidebar is left
    alone: it runs in `mode-coverup` here and floats as its own drawer. */
-:host(.vw-xs) .shell-body,
-:host(.vw-sm) .shell-body {
+:host([data-vw="xs"]) .shell-body,
+:host([data-vw="sm"]) .shell-body {
 	grid-template-columns: minmax(0, 1fr);
 	grid-template-rows: minmax(0, 1fr) auto;
 }
-:host(.vw-xs) .shell-page,
-:host(.vw-sm) .shell-page {
+:host([data-vw="xs"]) .shell-page,
+:host([data-vw="sm"]) .shell-page {
 	grid-row: 1;
 	grid-column: 1;
 }
-:host(.vw-xs) .shell-dock-rail,
-:host(.vw-sm) .shell-dock-rail {
+:host([data-vw="xs"]) .shell-dock-rail,
+:host([data-vw="sm"]) .shell-dock-rail {
 	grid-row: 2;
 	grid-column: 1;
 	padding: 6px 8px;
@@ -97,7 +97,7 @@
    vertical slot. The sidebar is intentionally NOT hidden here: its own
    mode-coverup CSS keeps the shell translated off-screen until the user
    opens it, and hiding it outright would kill the swipe-open gesture. */
-:host(.vw-xs) global-bottom-bar,
-:host(.vw-sm) global-bottom-bar {
+:host([data-vw="xs"]) global-bottom-bar,
+:host([data-vw="sm"]) global-bottom-bar {
 	display: none;
 }

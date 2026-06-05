@@ -36,6 +36,7 @@ import {
 	resolveStyle,
 	styleSheet,
 } from './styles/styleApi.js';
+import { applyViewportBucket, reflectViewport } from './environment/reflectViewport.js';
 import {
 	assign,
 	deepMerge,
@@ -585,6 +586,7 @@ const PROTO_METHODS = {
 	addInterval,
 	addStyle,
 	applyStyles,
+	applyViewportBucket,
 	/*
 	 * `this.bind` — the binding callable (bind / bind.text / .html /
 	 * .component / .list). Shared, stateless, no import needed in templates.
@@ -609,6 +611,7 @@ const PROTO_METHODS = {
 	installObserver,
 	uninstallObserver,
 	onEnv,
+	reflectViewport,
 	removeStyle,
 	removeTimeout: removeComponentTimeout,
 	resolveStyle,

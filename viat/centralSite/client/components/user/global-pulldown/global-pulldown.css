@@ -72,30 +72,30 @@
    the AI chat column entirely, and collapse the 3-col grid to a single
    column so the help/info/setup panels get the full width. The spacer
    column is also dropped — it was only there to balance the help column
-   visually against the chat. Plain `:host(.vw-*)` form (component
-   self-applies the viewport class via `syncViewportClass`) so we don't
+   visually against the chat. Plain `:host([data-vw="..."])` form
+   (component self-applies the bucket via `reflectViewport`) so we don't
    rely on `:host-context()` — that selector is missing from Safari
    <16.4 / older iPhone WebViews and would silently no-op there. */
-:host(.vw-xs) .gpd-mobile-notice,
-:host(.vw-sm) .gpd-mobile-notice,
-:host(.vw-md) .gpd-mobile-notice {
+:host([data-vw="xs"]) .gpd-mobile-notice,
+:host([data-vw="sm"]) .gpd-mobile-notice,
+:host([data-vw="md"]) .gpd-mobile-notice {
 	display: block;
 }
-:host(.vw-xs) .gpd-col-chat,
-:host(.vw-sm) .gpd-col-chat,
-:host(.vw-md) .gpd-col-chat,
-:host(.vw-xs) .gpd-col-spacer,
-:host(.vw-sm) .gpd-col-spacer,
-:host(.vw-md) .gpd-col-spacer {
+:host([data-vw="xs"]) .gpd-col-chat,
+:host([data-vw="sm"]) .gpd-col-chat,
+:host([data-vw="md"]) .gpd-col-chat,
+:host([data-vw="xs"]) .gpd-col-spacer,
+:host([data-vw="sm"]) .gpd-col-spacer,
+:host([data-vw="md"]) .gpd-col-spacer {
 	display: none;
 }
-:host(.vw-xs) .gpd-columns,
-:host(.vw-sm) .gpd-columns,
-:host(.vw-md) .gpd-columns {
+:host([data-vw="xs"]) .gpd-columns,
+:host([data-vw="sm"]) .gpd-columns,
+:host([data-vw="md"]) .gpd-columns {
 	grid-template-columns: minmax(0, 1fr);
 }
-:host(.vw-xs) .gpd-col-help,
-:host(.vw-sm) .gpd-col-help,
-:host(.vw-md) .gpd-col-help {
+:host([data-vw="xs"]) .gpd-col-help,
+:host([data-vw="sm"]) .gpd-col-help,
+:host([data-vw="md"]) .gpd-col-help {
 	padding-inline-end: 0;
 }

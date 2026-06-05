@@ -1292,14 +1292,8 @@ class AppView extends WebComponent {
 	handleNotify(domEvent) {
 		this.ensureNotificationPanel().show(domEvent.detail?.data ?? {});
 	}
-	syncViewportClass() {
-		const w = this.globalState.environment?.viewport?.w ?? 'lg';
-		this.classList.value = `vw-${w}`;
-	}
-	handleViewportChange = () => {
-		this.syncViewportClass();
-	};
 	onConnect() {
+		this.reflectViewport();
 		// AppView observes the router's published global keys and reacts;
 		// the router owns URL/history work entirely. See urlRouter.js → publishGlobal.
 		this.observeGlobal([
@@ -1309,8 +1303,6 @@ class AppView extends WebComponent {
 		});
 	}
 	onMount() {
-		this.syncViewportClass();
-		this.delegate('viewport:change', this.handleViewportChange);
 		this.delegate('open-settings', this.handleOpenSettings);
 		this.delegate('toggle-pulldown', this.handleTogglePulldown);
 		this.delegate('dockSelect', this.handleDockSelect);

@@ -52,8 +52,7 @@ export class GlobalTopBar extends WebComponent {
 	dragStartOffset = 0;
 	onConnect() {
 		this.delegate('pulldown:state', this.handlePulldownState);
-		this.syncViewportClass();
-		this.delegate('viewport:change', this.handleViewportChange);
+		this.reflectViewport();
 		this.windowAbort = new AbortController();
 		globalThis.addEventListener('resize', this.handleResize, {
 			signal: this.windowAbort.signal,
@@ -94,22 +93,6 @@ export class GlobalTopBar extends WebComponent {
 	onDisconnect() {
 		this.windowAbort?.abort();
 		this.windowAbort = null;
-	}
-	syncViewportClass() {
-		const bucket = this.globalState?.environment?.viewport?.w ?? 'lg';
-		const next = [];
-		const current = (this.classList.value || '').split(/\s+/);
-		for (let index = 0; index < current.length; index += 1) {
-			const token = current[index];
-			if (token && !token.startsWith('vw-')) {
-				next.push(token);
-			}
-		}
-		next.push(`vw-${bucket}`);
-		this.classList.value = next.join(' ');
-	}
-	handleViewportChange() {
-		this.syncViewportClass();
 	}
 	handleResize = () => {
 		if (this.naturalBottom === 0) {

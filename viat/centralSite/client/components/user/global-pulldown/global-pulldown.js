@@ -57,30 +57,9 @@ export class GlobalPulldown extends WebComponent {
 		this.emit('pulldown:close', {});
 	}
 	onConnect() {
-		// Mirror the viewport bucket onto our own host so CSS can use the
-		// portable `:host(.vw-xs)` form. `:host-context()` is unreliable on
-		// older mobile Safari (pre-16.4) which still ships on plenty of
-		// iPhones — using a self-applied class makes the mobile hide rules
-		// fire on every browser we support.
-		this.syncViewportClass();
-		this.delegate('viewport:change', this.handleViewportChange);
+		// `data-vw` drives the mobile column-hide rules — see reflectViewport.
+		this.reflectViewport();
 	}
-	syncViewportClass() {
-		const w = this.globalState?.environment?.viewport?.w ?? 'lg';
-		const next = [];
-		const current = (this.classList.value || '').split(/\s+/);
-		for (let i = 0; i < current.length; i += 1) {
-			const token = current[i];
-			if (token && !token.startsWith('vw-')) {
-				next.push(token);
-			}
-		}
-		next.push(`vw-${w}`);
-		this.classList.value = next.join(' ');
-	}
-	handleViewportChange = () => {
-		this.syncViewportClass();
-	};
 	handleBackdropClick(domEvent) {
 		if (domEvent.target !== domEvent.currentTarget) {
 			return;

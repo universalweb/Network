@@ -75,14 +75,14 @@
    modal, and the chevron separator + COMMAND TERMINAL subtitle drop out, to
    keep the bar uncluttered when horizontal room is scarce. The viewport class
    is mirrored onto this host by `syncViewportClass`. */
-:host(.vw-xs) ui-theme-select,
-:host(.vw-sm) ui-theme-select,
-:host(.vw-md) ui-theme-select,
-:host(.vw-xs) .tb-logo-sep,
-:host(.vw-sm) .tb-logo-sep,
-:host(.vw-md) .tb-logo-sep,
-:host(.vw-xs) .tb-subtitle,
-:host(.vw-sm) .tb-subtitle,
-:host(.vw-md) .tb-subtitle {
+:host([data-vw="xs"]) ui-theme-select,
+:host([data-vw="sm"]) ui-theme-select,
+:host([data-vw="md"]) ui-theme-select,
+:host([data-vw="xs"]) .tb-logo-sep,
+:host([data-vw="sm"]) .tb-logo-sep,
+:host([data-vw="md"]) .tb-logo-sep,
+:host([data-vw="xs"]) .tb-subtitle,
+:host([data-vw="sm"]) .tb-subtitle,
+:host([data-vw="md"]) .tb-subtitle {
 	display: none;
 }
