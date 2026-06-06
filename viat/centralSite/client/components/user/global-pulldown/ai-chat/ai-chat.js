@@ -218,7 +218,17 @@ export class AIChat extends WebComponent {
 			this.state.connectionState = 'offline';
 			return false;
 		}
-		this.state.connectionState = 'checking';
+		/*
+		 * Only surface the transient 'checking' label when there is no established
+		 * connection yet. Re-probing an already-online endpoint must NOT flap
+		 * CONNECTED -> CHECKING -> CONNECTED: with a real (slow) probe the async
+		 * scheduler flushes the intermediate, re-pulsing the badge on every
+		 * re-check even though the connection never changed. A genuine drop still
+		 * shows — the probe below resolves the state to 'offline'.
+		 */
+		if (this.state.connectionState !== 'online') {
+			this.state.connectionState = 'checking';
+		}
 		const timeoutId = this.setTimeout(() => {
 			controller.abort();
 		}, HEALTH_TIMEOUT_MS);
