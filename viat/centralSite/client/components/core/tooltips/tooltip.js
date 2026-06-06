@@ -102,6 +102,14 @@ export class UITooltip extends WebComponent {
 		if (!wasOpen) {
 			shell.showPopover();
 		}
+		/*
+		 * Write the text imperatively rather than relying on the `state.text`
+		 * spot, which paints on an async patch pass. `measure()` must read the
+		 * shell with the real text on the very FIRST show — otherwise it measures
+		 * an empty shell and mis-centres (the first-hover-off / second-hover-right
+		 * bug). `state.text` is still set above for change detection + the emit.
+		 */
+		this.refs.tip_text.textContent = text;
 		this.measure();
 		const placement = this.pickPlacement(targetRect);
 		const {
@@ -150,7 +158,7 @@ export class UITooltip extends WebComponent {
 				}}
 				@beforetoggle=${this.handleBeforeToggle}
 				@toggle=${this.handleToggle}>
-				<span class="tooltip-text">${this.state.text}</span>
+				<span class="tooltip-text" #tip_text></span>
 			</div>
 		`;
 	}
