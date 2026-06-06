@@ -2,7 +2,7 @@
 	display: block;
 }
 .toolbar {
-	--bar-height: 40px;
+	--bar-height: 2rem;
 	--bar-padding: 0 var(--space-5);
 	--bar-gap: var(--space-2);
 }
