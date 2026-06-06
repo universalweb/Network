@@ -29,14 +29,16 @@
 }
 :host([data-vw="xs"]),
 :host([data-vw="sm"]) {
-	inset-block: auto 0;
-	inset-inline: 0;
-	width: 100%;
+	inset-block: auto max(var(--space-3), env(safe-area-inset-bottom));
+	inset-inline-start: 50%;
+	transform: translateX(-50%);
+	inline-size: fit-content;
+	max-inline-size: calc(100% - var(--space-5) * 2);
 	flex-direction: row;
 	justify-content: center;
-	padding: var(--space-2) var(--space-3);
-	padding-block-end: max(var(--space-2), env(safe-area-inset-bottom));
+	padding: var(--space-2);
 	background: var(--dock-mobile-bg, color-mix(in oklab, var(--popup-bg, rgba(7, 8, 12, 0.95)) 68%, transparent));
 	backdrop-filter: blur(0.75rem) saturate(1.2);
-	border-block-start: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.06));
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.06));
+	border-radius: var(--radius-lg, 0.75rem);
 }
