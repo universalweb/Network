@@ -169,6 +169,7 @@ export class AIChat extends WebComponent {
 	controller = null;
 	healthController = null;
 	messageSeq = 0;
+	hasProbed = false;
 	onMount() {
 		this.delegate('pulldown:open', this.handlePulldownOpen);
 		this.refreshSystemPrompt();
@@ -219,14 +220,16 @@ export class AIChat extends WebComponent {
 			return false;
 		}
 		/*
-		 * Only surface the transient 'checking' label when there is no established
-		 * connection yet. Re-probing an already-online endpoint must NOT flap
-		 * CONNECTED -> CHECKING -> CONNECTED: with a real (slow) probe the async
-		 * scheduler flushes the intermediate, re-pulsing the badge on every
-		 * re-check even though the connection never changed. A genuine drop still
-		 * shows — the probe below resolves the state to 'offline'.
+		 * Surface the transient 'checking' only on the FIRST probe (no settled
+		 * result yet). Every pulldown open re-checks; with a real (slow) probe the
+		 * async scheduler flushes the intermediate, so re-confirming an unchanged
+		 * connection — online OR offline — would flap the badge label/tone and
+		 * re-pulse it on every open (CONNECTED→CHECKING→CONNECTED, or
+		 * DISCONNECTED→CHECKING→DISCONNECTED). Re-checks resolve silently to their
+		 * result below; only a genuine change moves the badge.
 		 */
-		if (this.state.connectionState !== 'online') {
+		if (!this.hasProbed) {
+			this.hasProbed = true;
 			this.state.connectionState = 'checking';
 		}
 		const timeoutId = this.setTimeout(() => {

@@ -77,4 +77,9 @@
 	height: 0.5em;
 	width: 0.5em;
 }
+/* The dot is a stable element (no per-render `^html` re-injection); show it only
+   when the badge opts in via `has-dot`, so a dot-less badge renders none. */
+.badge:not(.has-dot) .badge-dot {
+	display: none;
+}
 .badge-label { display: inline-block; }

@@ -41,7 +41,7 @@ export class UIBadge extends WebComponent {
 			}, () => {
 				return this.state.dot && 'has-dot';
 			})} role="status" @animationend=${this.handleAnimationEnd}>
-				^html${this.state.dot ? '<span class="badge-dot" aria-hidden="true"></span>' : ''}
+				<span class="badge-dot" aria-hidden="true"></span>
 				<span class="badge-label">${this.state.label}</span>
 			</span>
 		`;
