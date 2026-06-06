@@ -1,5 +1,5 @@
-import { WebComponent, each } from 'webcomponent';
 import '../bar/bar.js';
+import { WebComponent, filter } from 'webcomponent';
 import { IconButtonBase } from '../icon-button/icon-button.js';
 // `<ui-toolbar>` — an in-place action bar, dropped inside page content. Composes
 // `<ui-bar>` and renders its `actions` config as `<ui-icon-button>`s in the
@@ -13,27 +13,12 @@ export class UIToolbar extends WebComponent {
 	static state = {
 		actions: [],
 	};
-	actionItems() {
-		// Genuine computation feeding each(): drop the hidden actions.
-		const actions = this.state.actions || [];
-		const out = [];
-		for (let index = 0; index < actions.length; index += 1) {
-			if (actions[index].hidden) {
-				continue;
-			}
-			out.push(actions[index]);
-		}
-		return out;
-	}
-	actionKey(item) {
-		return item.id;
-	}
 	render() {
 		// eslint-disable-next-line no-unused-expressions
-		this.html`
+		this.html `
 			<ui-bar class="toolbar" role="toolbar">
 				<div slot="center" class="toolbar-actions">
-					${each(this.actionItems(), IconButtonBase, this.actionKey)}
+					${filter('actions', IconButtonBase, 'hidden')}
 				</div>
 				<slot></slot>
 			</ui-bar>

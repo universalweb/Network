@@ -1,5 +1,5 @@
 import '../../../global/status-indicator/status-indicator.js';
-import { WebComponent, each } from 'webcomponent';
+import { WebComponent, filter } from 'webcomponent';
 import { listAllTools } from '../../../core/ai/index.js';
 const DEFAULT_ENDPOINT = 'http://localhost:1234/v1/chat/completions';
 const DEFAULT_MODEL = 'local-model';
@@ -375,16 +375,6 @@ export class AIChat extends WebComponent {
 			}
 		}
 	}
-	visibleMessages() {
-		const list = this.state.messages;
-		const out = [];
-		for (let i = 0; i < list.length; i++) {
-			if (!list[i].hidden) {
-				out.push(list[i]);
-			}
-		}
-		return out;
-	}
 	buildPayload(excludeId) {
 		const list = this.state.messages;
 		const out = [];
@@ -565,9 +555,7 @@ export class AIChat extends WebComponent {
 					<span class="aic-endpoint">${this.state.endpoint}</span>
 				</header>
 				<div #log class="aic-log">
-					${each(this.visibleMessages(), AIChatMessage, (msg) => {
-						return msg.id;
-					})}
+					${filter('messages', AIChatMessage, 'hidden')}
 				</div>
 				<div class="${() => {
 					return `aic-error${this.state.errorText ? ' is-visible' : ''}`;
