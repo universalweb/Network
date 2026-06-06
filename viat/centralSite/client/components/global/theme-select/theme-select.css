@@ -36,7 +36,7 @@
   inset: auto;
   padding: 0;
   border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
-  border-radius: var(--radius, 10px);
+  border-radius: var(--menu-radius, var(--radius, 0.625rem));
   min-width: 7.5rem;
   background: var(--popup-bg);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px color-mix(in oklab, var(--teal) 8%, transparent),
@@ -77,6 +77,10 @@
   background: transparent;
   border: none;
   border-block-end: 1px solid var(--dark-divider-faint, rgba(255, 255, 255, 0.022));
+  /* The framework styles every <button> with --radius-md; in a stacked list
+     that rounds the hover/active fill on every row. Square the rows and round
+     only the two list ends below so the items read as one seamless menu. */
+  border-radius: 0;
   color: var(--text-offwhite);
   font-family: inherit;
   font-size: var(--text-2xs);
@@ -88,8 +92,14 @@
   width: 100%;
   transition: background 0.15s, color 0.15s;
 }
+.theme-option:first-child {
+  border-start-start-radius: var(--menu-radius, var(--radius, 0.625rem));
+  border-start-end-radius: var(--menu-radius, var(--radius, 0.625rem));
+}
 .theme-option:last-child {
   border-block-end: none;
+  border-end-start-radius: var(--menu-radius, var(--radius, 0.625rem));
+  border-end-end-radius: var(--menu-radius, var(--radius, 0.625rem));
 }
 .theme-option:hover {
   background: var(--surface-tint, rgba(255, 255, 255, 0.05));
