@@ -1,0 +1,19 @@
+/*
+ * Noir — panel RULE overrides, adopted into the panel shadow by theme. Tokens
+ * live in styles/themes/noir.css. Unlayered so it wins over base panel.css.
+ * Monochrome: soft border buttons that invert to white on hover.
+ */
+.panel button,
+.btn-transmit {
+	border-radius: var(--radius);
+	border: 1px solid rgba(255, 255, 255, 0.22);
+	background: transparent;
+	box-shadow: none;
+	transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.panel button:hover,
+.btn-transmit:hover {
+	background: #ffffff;
+	border-color: #ffffff;
+	box-shadow: none;
+}

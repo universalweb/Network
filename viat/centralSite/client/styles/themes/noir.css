@@ -169,33 +169,6 @@
   display: none;
 }
 
-/* ── Noir: buttons — soft border, inverts on hover ───── */
-.panel button,
-.btn-transmit {
-  border-radius: var(--radius);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: transparent;
-  box-shadow: none;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
-}
-
-.panel button:hover,
-.btn-transmit:hover {
-  background: #ffffff;
-  border-color: #ffffff;
-  box-shadow: none;
-}
-
-.tb-icon-btn {
-  border: none;
-  box-shadow: none;
-}
-
-.tb-icon-btn:hover {
-  background: transparent;
-  box-shadow: none;
-}
-
 /* ── Noir: indicator — no pulse animation ────────────── */
 .indicator.on {
   animation: none;

@@ -5,6 +5,15 @@ export class UIPanel extends WebComponent {
 	static styles = {
 		panelBase: './panel.css',
 	};
+	/*
+	 * Per-theme RULE overrides for panels live in `./themes/{id}.css` and are
+	 * adopted into the shadow root by theme (core/environment/themeStyles.js) —
+	 * the document-level theme sheet only carries tokens, which can't reach a
+	 * shadow root. Every Panel subclass inherits this layer via the chain walk.
+	 */
+	static themes = [
+		'midnight', 'dark', 'noir', 'marathon',
+	];
 	static state = {
 		// Reactive class set: subclasses seed it with their own identifier
 		// (e.g. `new Set(['help-panel'])`) and runtime code adds/removes
@@ -31,7 +40,6 @@ export class UIPanel extends WebComponent {
 		return this.state.showDot ? '<div class="ph-dot"></div>' : '';
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<ui-surface .state=${this.state.surfaceState}>
 				<aside class=${classList('panel', this.state.classes)}>

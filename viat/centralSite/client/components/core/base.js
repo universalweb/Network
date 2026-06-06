@@ -36,6 +36,7 @@ import {
 	resolveStyle,
 	styleSheet,
 } from './styles/styleApi.js';
+import { applyThemeStyles, handleThemeChange, syncThemeStyles } from './environment/themeStyles.js';
 import { applyViewportBucket, reflectViewport } from './environment/reflectViewport.js';
 import {
 	assign,
@@ -586,7 +587,10 @@ const PROTO_METHODS = {
 	addInterval,
 	addStyle,
 	applyStyles,
+	applyThemeStyles,
 	applyViewportBucket,
+	handleThemeChange,
+	syncThemeStyles,
 	/*
 	 * `this.bind` — the binding callable (bind / bind.text / .html /
 	 * .component / .list). Shared, stateless, no import needed in templates.

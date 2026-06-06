@@ -94,6 +94,16 @@ export async function handleConnect() {
 	if (stylesResult && typeof stylesResult.then === 'function') {
 		await stylesResult;
 	}
+	/*
+	 * Per-component theme sub-modules — adopt the active theme's rule sheet(s)
+	 * BEFORE first paint (no FOUC), then hot-swap on `theme:change`. Near-free
+	 * for a component with no `static themes` layer (cached empty layer list →
+	 * returns null, no await); only themed components pay the sheet-load await.
+	 */
+	const themeResult = this.applyThemeStyles();
+	if (themeResult && typeof themeResult.then === 'function') {
+		await themeResult;
+	}
 	/**
 	 * Same pattern for `onConnect` — components without an `onConnect`
 	 * hook used to pay one microtask for `await undefined`. Only await if

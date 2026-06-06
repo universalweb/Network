@@ -1,3 +1,4 @@
+import { emitDelegate } from '../../core/dom/delegate.js';
 // Midnight is the canonical default. Other themes are opt-in via the
 // settings selector; an unknown / stale theme id in localStorage falls
 // back to midnight rather than silently sticking with the last valid
@@ -36,6 +37,17 @@ function themeHrefFor(currentHref, themeId) {
 function applyThemeAttributes(theme) {
 	document.documentElement.dataset.theme = theme.id;
 	document.documentElement.dataset.themeMode = theme.mode;
+	/*
+	 * Announce so themed components hot-swap their per-component theme
+	 * sub-modules (core/environment/themeStyles.js). Fires AFTER the attribute
+	 * flip — and, on the swap path, after the global token sheets have loaded —
+	 * so a listener reading documentElement.dataset.theme sees the new id and the
+	 * tokens are already live when component rules swap.
+	 */
+	emitDelegate('theme:change', {
+		id: theme.id,
+		mode: theme.mode,
+	});
 }
 /* Swap one theme <link> without a flash. Insert the NEW sheet immediately after
  * the old one and wait for it to LOAD — so its rules are live — BEFORE removing
