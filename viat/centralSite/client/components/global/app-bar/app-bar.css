@@ -1,21 +1,54 @@
+/* The top bar is a fixed overlay. DEFAULT = flat: full-width, flush to the top
+   and side edges, square, with only a bottom hairline — a classic header. On
+   scroll the host gains `data-scrolled` (set by global-top-bar from the
+   `scroll-report` global flag) and DETACHES into a floating, rounded, shadowed
+   bar. The float is driven by `inset` / radius / shadow, never `transform`, so
+   it composes cleanly with the pulldown drag that owns this element's transform. */
 :host {
 	display: block;
 	position: fixed;
-	inset-block-start: 16px;
-	inset-inline-start: 16px;
-	inset-inline-end: 16px;
+	inset-block-start: 0;
+	inset-inline: 0;
 	box-sizing: border-box;
 	z-index: 40;
+	transition: inset 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .app-bar {
 	box-sizing: border-box;
+	/* Centre the composed bar within the min-height so the brand + actions sit
+	   on the vertical midline, not pinned to the top. */
+	display: flex;
+	align-items: center;
 	background: var(--topbar-bg);
-	border: 1px solid var(--topbar-border, var(--dark-divider));
-	border-radius: 14px;
-	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+	border: 1px solid transparent;
+	border-block-end-color: var(--topbar-border, var(--dark-divider));
+	border-radius: 0;
+	box-shadow: none;
 	min-height: 3.25rem;
-	padding: var(--space-3) var(--space-6);
-	backdrop-filter: blur(6px);
+	padding-block: var(--space-3);
+	padding-inline: var(--space-6);
+	backdrop-filter: blur(0.375rem);
+	transition:
+		border-radius 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+		border-color 0.28s ease,
+		box-shadow 0.28s ease;
+}
+:host([data-scrolled]) {
+	inset-block-start: 1rem;
+	inset-inline: 1rem;
+}
+:host([data-scrolled]) .app-bar {
+	border-color: var(--topbar-border, var(--dark-divider));
+	border-radius: 0.875rem;
+	box-shadow:
+		0 0.75rem 2.5rem rgba(0, 0, 0, 0.18),
+		inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+@media (prefers-reduced-motion: reduce) {
+	:host,
+	.app-bar {
+		transition: none;
+	}
 }
 .app-bar-bar {
 	--bar-padding: 0;

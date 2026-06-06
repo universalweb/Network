@@ -9,6 +9,7 @@ import { autoselect } from './autoselect.js';
 import { hotkey } from './hotkey.js';
 import { registerBehavior } from './registry.js';
 import { reveal } from './reveal.js';
+import { scrollReport } from './scrollReport.js';
 import { tooltip } from './tooltip.js';
 registerBehavior(tooltip.name, tooltip);
 registerBehavior(hotkey.name, hotkey);
@@ -16,6 +17,7 @@ registerBehavior(autofocus.name, autofocus);
 registerBehavior(autoselect.name, autoselect);
 registerBehavior(autoResize.name, autoResize);
 registerBehavior(reveal.name, reveal);
+registerBehavior(scrollReport.name, scrollReport);
 export {
 	registerBehavior,
 	getBehavior,

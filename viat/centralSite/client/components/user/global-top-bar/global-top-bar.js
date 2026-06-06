@@ -53,10 +53,27 @@ export class GlobalTopBar extends WebComponent {
 	onConnect() {
 		this.delegate('pulldown:state', this.handlePulldownState);
 		this.reflectViewport();
+		/*
+		 * Adaptive flat → float: the bar can't watch the page scroll itself
+		 * (scroll events are composed:false), so each page's scroller publishes
+		 * `environment.scrolled` via the `scroll-report` behavior and the bar
+		 * mirrors it onto the app-bar host. A route change lands a fresh page
+		 * (shown at its own scroll position) so reset to flat — the new page's
+		 * scroll-report re-reports if it is actually scrolled.
+		 */
+		this.observeGlobal('environment.scrolled', (scrolled) => {
+			this.applyScrolled(scrolled === true);
+		});
+		this.observeGlobal('routeView', () => {
+			this.applyScrolled(false);
+		});
 		this.windowAbort = new AbortController();
 		globalThis.addEventListener('resize', this.handleResize, {
 			signal: this.windowAbort.signal,
 		});
+	}
+	applyScrolled(scrolled) {
+		this.refs.appbar?.toggleAttribute('data-scrolled', scrolled);
 	}
 	onMount() {
 		const appBar = this.refs.appbar;
