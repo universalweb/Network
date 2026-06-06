@@ -30,17 +30,10 @@
 	min-width: 0;
 	min-height: 0;
 }
-.shell-dock-rail {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: stretch;
-	overflow: visible;
-	position: relative;
-	z-index: 20;
-	padding: 8px 6px;
-}
+/* Column 2 is the content track; column 1 is the empty gutter the fixed
+   `global-dock` overlay floats over (the dock no longer lives in the grid). */
 .shell-page {
+	grid-column: 2;
 	display: flex;
 	flex-direction: column;
 	min-height: 0;
@@ -73,25 +66,19 @@
 :host([data-vw="sm"]) app-dashboard {
 	display: none;
 }
-/* Mobile (xs/sm < 768px): stack page → dock at bottom, suppress the
-   bottom-bar — the dock takes over its vertical slot. The sidebar is left
-   alone: it runs in `mode-coverup` here and floats as its own drawer. */
+/* Mobile (xs/sm < 768px): the page fills the shell as a single cell; the dock
+   is a fixed bottom overlay (global-dock.css) floating above it, and the
+   bottom-bar is suppressed. The sidebar is left alone: it runs in
+   `mode-coverup` here and floats as its own drawer. */
 :host([data-vw="xs"]) .shell-body,
 :host([data-vw="sm"]) .shell-body {
 	grid-template-columns: minmax(0, 1fr);
-	grid-template-rows: minmax(0, 1fr) auto;
+	grid-template-rows: minmax(0, 1fr);
 }
 :host([data-vw="xs"]) .shell-page,
 :host([data-vw="sm"]) .shell-page {
 	grid-row: 1;
 	grid-column: 1;
-}
-:host([data-vw="xs"]) .shell-dock-rail,
-:host([data-vw="sm"]) .shell-dock-rail {
-	grid-row: 2;
-	grid-column: 1;
-	padding: 6px 8px;
-	z-index: 40;
 }
 /* Bottom bar is permanently suppressed on mobile — the dock takes its
    vertical slot. The sidebar is intentionally NOT hidden here: its own

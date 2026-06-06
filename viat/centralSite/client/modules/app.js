@@ -1833,9 +1833,6 @@ class AppView extends WebComponent {
 		this.html `
 			<global-top-bar></global-top-bar>
 			<div class="shell-body">
-				<div class="shell-dock-rail">
-					<global-dock></global-dock>
-				</div>
 				<div class="${() => {
 					return `shell-page is-page-${this.state.activePage}`;
 				}}">
@@ -1850,6 +1847,7 @@ class AppView extends WebComponent {
 				<global-sidebar></global-sidebar>
 			</div>
 			<global-bottom-bar></global-bottom-bar>
+			<global-dock></global-dock>
 			<global-pulldown></global-pulldown>
 			<settings-modal></settings-modal>
 			<sign-data-modal></sign-data-modal>

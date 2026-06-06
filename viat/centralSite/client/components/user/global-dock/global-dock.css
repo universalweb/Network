@@ -1,5 +1,42 @@
-/* The rail itself is `<ui-dock>` (themed, responsive, layout-participating).
-   This host is a passthrough — it contributes no box of its own. */
+/* `global-dock` is a top-level FIXED overlay — a global chrome layer like
+   `global-pulldown`, not a cell inside the shell grid. It no longer occupies an
+   opaque grid row that revealed the black app body behind it ("the black box");
+   it floats over the page so content flows full-height behind it.
+
+   Desktop: a vertical rail pinned to the inline-start edge, icons centred in the
+   viewport height — mirrors the old `.shell-dock-rail` column (rail-width + the
+   reserved gutter the shell still keeps as empty spacer).
+   Mobile (xs/sm, via the host's `data-vw`): a translucent glass bar across the
+   block-end edge, so the page is visible scrolling behind it. */
 :host {
-	display: contents;
+	position: fixed;
+	inset-block: 0;
+	inset-inline-start: 0;
+	width: calc(var(--rail-width, 3.25rem) + 1rem);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: stretch;
+	box-sizing: border-box;
+	padding: var(--space-2) var(--space-1);
+	z-index: var(--z-dock, 40);
+	pointer-events: none;
+}
+/* Only the rail itself is interactive; the tall empty span on desktop must let
+   clicks fall through to the fixed top bar it overlaps at the inline-start edge. */
+:host > * {
+	pointer-events: auto;
+}
+:host([data-vw="xs"]),
+:host([data-vw="sm"]) {
+	inset-block: auto 0;
+	inset-inline: 0;
+	width: 100%;
+	flex-direction: row;
+	justify-content: center;
+	padding: var(--space-2) var(--space-3);
+	padding-block-end: max(var(--space-2), env(safe-area-inset-bottom));
+	background: var(--dock-mobile-bg, color-mix(in oklab, var(--popup-bg, rgba(7, 8, 12, 0.95)) 68%, transparent));
+	backdrop-filter: blur(0.75rem) saturate(1.2);
+	border-block-start: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.06));
 }

@@ -10,11 +10,12 @@
 	height: 100%;
 	overflow-y: auto;
 	overscroll-behavior: contain;
-	/* Generous top breathing room beyond what the fixed top bar requires
-	   (52px bar + 16px float gap = ~78px clearance) — the extra ~50px
-	   gives the bare wallet hero negative space above it so the balance
-	   reads as the page's anchor instead of crowding the chrome. */
-	padding: 128px var(--space-4) var(--space-5);
+	/* Top: generous breathing room beyond the fixed top bar (52px bar + 16px
+	   float gap = ~78px) — the extra ~50px gives the wallet hero negative space
+	   so the balance anchors the page. Bottom: clears the fixed `global-dock`
+	   overlay so the last row scrolls above it, never behind it. */
+	padding-block: 128px calc(var(--dock-h, 3.25rem) + var(--space-4));
+	padding-inline: var(--space-4);
 	gap: var(--space-4);
 	box-sizing: border-box;
 }

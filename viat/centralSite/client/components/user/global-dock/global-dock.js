@@ -1,5 +1,5 @@
-import { WebComponent } from 'webcomponent';
 import '../../global/dock/dock.js';
+import { WebComponent } from 'webcomponent';
 // `<global-dock>` — the Viat navigation rail. A thin composition over the
 // built-in `<ui-dock>`: it supplies the six section items and owns the router
 // coupling — the `dockSelect` event and `observeGlobal('routeSection')` both
@@ -62,6 +62,9 @@ export class GlobalDock extends WebComponent {
 		},
 	};
 	onConnect() {
+		// `data-vw` on the host drives the desktop-rail ↔ mobile-bottom-bar
+		// placement switch in global-dock.css.
+		this.reflectViewport();
 		// Router coupling lives here, never in the built-in. A click
 		// optimistically highlights; the router's routeSection then reconciles.
 		this.delegate('dockSelect', this.handleDockSelect);
