@@ -8,7 +8,6 @@ import { clampOffset, offsetIsOpen } from './pulldownOffset.js';
 // The drag-to-open-pulldown coupling lives *here*, not in the built-in — it
 // attaches `this.dragSnap` to the composed `<ui-app-bar>` and emits the
 // `pulldown:*` protocol the pulldown component listens for.
-const FLOAT_GAP_PX = 16;
 export class GlobalTopBar extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -67,10 +66,15 @@ export class GlobalTopBar extends WebComponent {
 		this.observeGlobal('routeView', () => {
 			this.applyScrolled(false);
 		});
-		this.windowAbort = new AbortController();
-		globalThis.addEventListener('resize', this.handleResize, {
-			signal: this.windowAbort.signal,
-		});
+		/*
+		 * Re-float on viewport change. Subscribe to the canonical viewport
+		 * service (`viewport:resize`) rather than a raw `resize` listener: it
+		 * fires for BOTH window resize AND mobile `orientationchange`, is
+		 * rAF-coalesced (so `measureNatural` reads a settled layout, never the
+		 * mid-rotation box), and is auto-torn-down by the disconnect sweep — no
+		 * AbortController to manage.
+		 */
+		this.delegate('viewport:resize', this.handleResize);
 	}
 	applyScrolled(scrolled) {
 		this.refs.appbar?.toggleAttribute('data-scrolled', scrolled);
@@ -107,27 +111,34 @@ export class GlobalTopBar extends WebComponent {
 			},
 		});
 	}
-	onDisconnect() {
-		this.windowAbort?.abort();
-		this.windowAbort = null;
-	}
-	handleResize = () => {
+	handleResize() {
 		if (this.naturalBottom === 0) {
 			return;
 		}
 		this.measureNatural();
-		if (this.open) {
-			const appBar = this.refs.appbar;
-			appBar.style.transition = 'none';
-			appBar.style.transform = `translateY(${this.maxOffset()}px)`;
-			this.emit('pulldown:drag', {
-				progress: 1,
-				barTop: this.naturalTop + this.maxOffset(),
-			});
+		if (!this.open) {
+			return;
 		}
-	};
+		/*
+		 * Re-float the bar to the new bottom only. The drawer is the pulldown's
+		 * own concern: while open it rests at the settled `translateY(0)` (set by
+		 * the pulldown's `handleState`) and its `100svh` height auto-refits the new
+		 * viewport, so it needs NO repositioning here. The old code emitted
+		 * `pulldown:drag` — the TRANSIENT mid-drag geometry `translateY(barTop −
+		 * innerHeight)` — which yanked the drawer up by roughly the bar's own height
+		 * and never settled it, clipping the panel at the top with dead space at the
+		 * bottom after every resize / rotate.
+		 */
+		const appBar = this.refs.appbar;
+		appBar.style.transition = 'none';
+		appBar.style.transform = `translateY(${this.maxOffset()}px)`;
+	}
 	maxOffset() {
-		return Math.max(0, globalThis.innerHeight - this.naturalBottom - FLOAT_GAP_PX);
+		// The pulldown's full travel: drop the bar until its bottom edge is flush
+		// with the viewport bottom (bottom === innerHeight). No floating gap — when
+		// the pulldown is open the bar rests fully at the bottom, pinned beneath the
+		// drawer content.
+		return Math.max(0, globalThis.innerHeight - this.naturalBottom);
 	}
 	/**
 	 * The bar's LIVE rendered vertical offset (px), read from the computed
