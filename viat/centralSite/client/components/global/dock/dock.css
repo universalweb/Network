@@ -40,7 +40,9 @@
 	flex-direction: column;
 	align-items: center;
 	width: 100%;
-	padding: var(--space-3) 0;
+	/* Symmetric inline padding insets the icon column from the panel's rounded
+	   edges (the desktop rail). Mobile + horizontal rules below re-set this. */
+	padding: var(--space-3);
 	gap: var(--space-2);
 	flex-shrink: 0;
 	position: relative;

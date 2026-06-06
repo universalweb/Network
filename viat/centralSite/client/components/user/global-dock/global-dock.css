@@ -12,7 +12,7 @@
 	position: fixed;
 	inset-block: 0;
 	inset-inline-start: 0;
-	width: calc(var(--rail-width, 3.25rem) + 1rem);
+	inline-size: fit-content;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
