@@ -163,13 +163,3 @@
   --log-in-text-shadow: none;
   --log-out-text-shadow: none;
 }
-
-/* ── Noir: top bar line off ──────────────────────────── */
-.global-top-bar::after {
-  display: none;
-}
-
-/* ── Noir: indicator — no pulse animation ────────────── */
-.indicator.on {
-  animation: none;
-}
