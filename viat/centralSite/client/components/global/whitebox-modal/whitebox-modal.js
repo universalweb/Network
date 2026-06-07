@@ -29,22 +29,7 @@ export class UIWhiteboxModal extends WebComponent {
 		caption: '',
 	};
 	open() {
-		/*
-		 * Configure the inner <ui-modal> via its OWN assignState (a MERGE that
-		 * keeps its chain defaults) instead of a reactive `.state=` binding. A
-		 * `.state=${literal}` re-applies on any re-render (e.g. a parent feeding
-		 * this whitebox fresh src/caption) and routes through replaceState, which
-		 * wipes ui-modal's `classes: Set(['modal'])` → bare white native dialog +
-		 * a throw on close. modal:true / open:false are already ui-modal defaults.
-		 */
-		const modal = this.refs.modal;
-		if (modal) {
-			modal.assignState({
-				showClose: true,
-				showMaximize: true,
-			});
-			modal.open();
-		}
+		this.refs.modal?.open();
 	}
 	close() {
 		this.refs.modal?.close();
@@ -54,7 +39,12 @@ export class UIWhiteboxModal extends WebComponent {
 		const video = isVideoSrc(src);
 		const caption = this.state.caption;
 		this.html `
-			<ui-modal #modal class="whitebox-host" style="--ui-modal-max-width: min(96vw, 1280px); --ui-modal-max-height: 96dvh">
+			<ui-modal #modal class="whitebox-host" .state=${{
+				modal: true,
+				open: false,
+				showClose: true,
+				showMaximize: true,
+			}} style="--ui-modal-max-width: min(96vw, 1280px); --ui-modal-max-height: 96dvh">
 				<div class="wb-shell">
 					<div class="wb-stage">
 						^html${video ? `<video class="wb-media" src="${src}" controls playsinline preload="metadata"></video>` : `<img class="wb-media" src="${src}" alt="${this.state.alt}" draggable="false">`}
