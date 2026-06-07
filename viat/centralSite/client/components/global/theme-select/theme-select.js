@@ -1,3 +1,4 @@
+import '../icon/icon.js';
 import { THEMES, getTheme, setTheme } from './theme-manager.js';
 import { WebComponent } from '../../core/index.js';
 export class UIThemeSelect extends WebComponent {
@@ -7,6 +8,12 @@ export class UIThemeSelect extends WebComponent {
 	};
 	static state = {
 		dropStyle: '',
+		// Child-state for the composed dropdown chevron <ui-icon> — a reactive
+		// static-state key, bound bare (not a render-local literal).
+		arrowIconState: {
+			name: 'chevron-down',
+			size: 'xs',
+		},
 	};
 	constructor(state = {}, config = {}) {
 		super({
@@ -54,9 +61,10 @@ export class UIThemeSelect extends WebComponent {
 	render() {
 		this.html `
 			<button #btn class="ts-btn" popovertarget="theme-drop">
-				^html${() => {
-					return `${this.currentLabel}<span class="ts-arrow">▾</span>`;
-				}}
+				<span class="ts-label">${() => {
+					return this.currentLabel;
+				}}</span>
+				<ui-icon class="ts-arrow" .state=${this.state.arrowIconState}></ui-icon>
 			</button>
 			<div #drop class="theme-drop" id="theme-drop" popover="auto"
 				style="${this.state.dropStyle}"

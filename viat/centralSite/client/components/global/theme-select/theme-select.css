@@ -12,7 +12,7 @@
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   letter-spacing: 0.15em;
-  padding: var(--space-1) var(--space-3);
+  padding: var(--space-2) var(--space-4);
   cursor: pointer;
   text-transform: uppercase;
   transition: border-color 0.2s, background 0.2s;
@@ -23,9 +23,10 @@
   border-color: var(--cyan-glow-strong);
 }
 .ts-arrow {
-  opacity: 0.5;
-  font-size: var(--text-xs);
-  line-height: 1;
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--cyan);
+  opacity: 0.6;
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .ts-btn[aria-expanded='true'] .ts-arrow {
