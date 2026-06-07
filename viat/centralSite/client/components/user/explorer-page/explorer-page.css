@@ -27,7 +27,7 @@
 .ex-title-header {
 	display: flex;
 	flex-wrap: wrap;
-	align-items: baseline;
+	align-items: center;
 	justify-content: space-between;
 	column-gap: var(--space-5);
 	row-gap: var(--space-3);
