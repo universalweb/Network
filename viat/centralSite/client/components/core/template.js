@@ -1277,6 +1277,23 @@ function patchSpotBody(spot, value) {
 		return;
 	}
 	if (spot.type === SPOT_TYPE.PROP) {
+		/*
+		 * `.state=` on a child component MERGES through the child's own
+		 * `assignState` instead of REPLACING through its `set state` →
+		 * replaceState. Replace rebuilt the child's STATE from only the passed
+		 * keys, so any post-upgrade re-application of the binding (e.g. a modal
+		 * whose parent re-renders) silently wiped the child's own `static state`
+		 * chain defaults — e.g. ui-modal's `classes: Set(['modal'])` that styles
+		 * the dialog, leaving a bare white, top-anchored native <dialog> plus a
+		 * throw on close. Merge preserves those defaults and matches the keyed-
+		 * list path, which already feeds retained component rows via assignState.
+		 * `assignState` no-ops on a non-object value, so non-object `.state=` is
+		 * safe; every other property still assigns directly.
+		 */
+		if (spot.attr === 'state' && isFunction(spot.el.assignState)) {
+			spot.el.assignState(value);
+			return;
+		}
 		if (spot.el[spot.attr] !== value) {
 			spot.el[spot.attr] = value;
 		}
