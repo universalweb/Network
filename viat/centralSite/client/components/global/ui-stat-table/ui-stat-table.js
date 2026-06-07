@@ -23,12 +23,12 @@ function escapeHtml(value) {
  *       { key: 'connect', cells: ['connect', 500] },
  *       { key: 'render', cells: ['render', 320] },
  *     ],
- *   }}></ui-stat-table>
+ *   }}></ui-stat-table>.
  *
  * Rows accept three shapes:
  *   - Array of cells:           [cell0, cell1, …]
  *   - Object with .cells array: { key, cells: [cell0, …] }
- *   - Object keyed by column id: { key, [col.id]: cellValue, … }
+ *   - Object keyed by column id: { key, [col.id]: cellValue, … }.
  */
 export class UiStatTable extends WebComponent {
 	static url = import.meta.url;
@@ -87,7 +87,6 @@ export class UiStatTable extends WebComponent {
 	}
 	render() {
 		const template = this.gridTemplate();
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<section class="table-wrap">
 				<header class="table-head ${this.state.title ? '' : 'is-empty'}">
@@ -95,7 +94,7 @@ export class UiStatTable extends WebComponent {
 					<p class="hint">${this.state.hint}</p>
 				</header>
 				<div class="grid-table" style="grid-template-columns: ${template};">
-					^html${this.buildTableHtml()}
+					^html${this.buildTableHtml}
 				</div>
 			</section>
 		`;

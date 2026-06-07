@@ -69,8 +69,7 @@
 }
 
 .panel button,
-.btn-transmit,
-.tb-icon-btn {
+.btn-transmit {
 	cursor: pointer;
 }
 
