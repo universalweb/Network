@@ -130,7 +130,7 @@ export class TransactionDetailPage extends WebComponent {
 	}
 	render() {
 		this.html `
-			<div class="td-shell">
+			<div class="td-shell" scroll-report>
 				<header class="td-header">
 					<div class="td-title-block">
 						<ui-icon class="td-title-icon" .state=${this.state.titleIconState}></ui-icon>

@@ -20,7 +20,7 @@ export class MobileDashboard extends WebComponent {
 	render() {
 		// eslint-disable-next-line no-unused-expressions
 		this.html `
-			<div class="md-shell">
+			<div class="md-shell" scroll-report>
 				<wallet-amount class="bare"></wallet-amount>
 				<transmit-panel></transmit-panel>
 				<wallet-panel></wallet-panel>

@@ -264,7 +264,7 @@ export class ExplorerPage extends WebComponent {
 						<button class="ex-btn" @click=${this.handleRefresh}>↻ Refresh</button>
 					</div>
 				</div>
-				<div class="ex-table">
+				<div class="ex-table" scroll-report>
 					<div class="ex-row ex-head">
 						<span class="ex-cell ex-id">TX ID</span>
 						<span class="ex-cell ex-type">TYPE</span>

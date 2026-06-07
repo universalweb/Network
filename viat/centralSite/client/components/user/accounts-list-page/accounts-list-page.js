@@ -200,7 +200,7 @@ export class AccountsListPage extends WebComponent {
 						<button class="al-btn" @click=${this.handleRefresh}>↻ Refresh</button>
 					</div>
 				</div>
-				<div class="al-table">
+				<div class="al-table" scroll-report>
 					<div class="al-row al-head">
 						<span class="al-cell al-addr">ADDRESS</span>
 						<span class="al-cell al-balance">BALANCE</span>

@@ -169,7 +169,7 @@ export class SwapPage extends WebComponent {
 	}
 	render() {
 		this.html `
-			<div class="sp-shell">
+			<div class="sp-shell" scroll-report>
 				<div class="sp-frame">
 					<header class="sp-header">
 						<span class="sp-id">SWAP</span>
