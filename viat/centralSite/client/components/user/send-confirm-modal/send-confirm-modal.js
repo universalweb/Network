@@ -118,7 +118,6 @@ export class SendConfirmModal extends WebComponent {
 		}
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<ui-modal #modal .state=${{
 				modal: true,
@@ -137,11 +136,15 @@ export class SendConfirmModal extends WebComponent {
 					<div class="modal-meta">
 						<div class="modal-meta-row">
 							<span class="modal-meta-key">RECIPIENT</span>
-							<span class="modal-meta-val" title="${() => this.state.recipient}">${() => shortAddress(this.state.recipient) || '—'}</span>
+							<span class="modal-meta-val" title="${this.state.recipient}">${() => {
+								return shortAddress(this.state.recipient) || '—';
+							}}</span>
 						</div>
 						<div class="modal-meta-row">
 							<span class="modal-meta-key">AMOUNT</span>
-							<span class="modal-meta-val">${() => this.state.amount || '0'} ⩝</span>
+							<span class="modal-meta-val">${() => {
+								return this.state.amount || '0';
+							}} ⩝</span>
 						</div>
 					</div>
 					<label class="field">
@@ -165,10 +168,14 @@ export class SendConfirmModal extends WebComponent {
 							$value="amount"
 							@keydown=${this.handleKeyDown}>
 					</label>
-					<div class=${classList('modal-error', () => (this.state.error ? 'is-visible' : ''))}>${() => this.state.error}</div>
+					<div class=${classList('modal-error', () => {
+						return (this.state.error ? 'is-visible' : '');
+					})}>${this.state.error}</div>
 					<div class="modal-actions">
-						<button #confirm type="button" class="btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleConfirm}>${() => (this.state.busy ? 'SENDING…' : 'CONFIRM & SEND')}</button>
-						<button type="button" ?disabled=${() => this.state.busy} @click=${this.handleCancel}>CANCEL</button>
+						<button #confirm type="button" class="btn-primary" ?disabled=${this.state.busy} @click=${this.handleConfirm}>${() => {
+							return (this.state.busy ? 'SENDING…' : 'CONFIRM & SEND');
+						}}</button>
+						<button type="button" ?disabled=${this.state.busy} @click=${this.handleCancel}>CANCEL</button>
 					</div>
 				</div>
 			</ui-modal>

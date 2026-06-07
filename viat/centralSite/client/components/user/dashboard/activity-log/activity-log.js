@@ -23,7 +23,6 @@ class ActivityLogEntry extends WebComponent {
 		// embedded <a href> targets. Router intercepts anchor clicks across
 		// the shadow boundary via composedPath, so plain `<a>` is enough —
 		// no manual navigate() wiring.
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<div class="log-entry">
 				<span class="log-ts">${this.state.timestamp}</span>
@@ -146,7 +145,7 @@ export class ActivityLog extends Panel {
 			<div class="output-content">
 				<ui-tabs class="output-tabs-strip"
 					.tabs=${this.tabsForUI}
-					.active=${() => this.state.activeTab}
+					.active=${this.state.activeTab}
 					@tab-change=${this.handleTabChange}></ui-tabs>
 				<div class="output-feed">
 					^html${() => {

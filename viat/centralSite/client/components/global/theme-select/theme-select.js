@@ -52,7 +52,6 @@ export class UIThemeSelect extends WebComponent {
 		this.refs.drop?.hidePopover();
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<button #btn class="ts-btn" popovertarget="theme-drop">
 				^html${() => {
@@ -60,9 +59,7 @@ export class UIThemeSelect extends WebComponent {
 				}}
 			</button>
 			<div #drop class="theme-drop" id="theme-drop" popover="auto"
-				style="${() => {
-					return this.state.dropStyle;
-				}}"
+				style="${this.state.dropStyle}"
 				@beforetoggle=${this.handleBeforeToggle}
 				@click=${this.handlePopupClick}>
 				^html${() => {

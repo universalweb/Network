@@ -94,7 +94,6 @@ export class SignDataModal extends WebComponent {
 		});
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<ui-modal #modal .state=${{
 				modal: true,
@@ -121,10 +120,12 @@ export class SignDataModal extends WebComponent {
 							$value="inputData"></textarea>
 					</label>
 					<div class="modal-actions">
-						<button class="btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleSign}>
-							${() => (this.state.busy ? 'SIGNING…' : 'SIGN WITH PRIMARY KEY')}
+						<button class="btn-primary" ?disabled=${this.state.busy} @click=${this.handleSign}>
+							${() => {
+								return (this.state.busy ? 'SIGNING…' : 'SIGN WITH PRIMARY KEY');
+							}}
 						</button>
-						<button ?disabled=${() => this.state.busy} @click=${this.handleClear}>CLEAR</button>
+						<button ?disabled=${this.state.busy} @click=${this.handleClear}>CLEAR</button>
 					</div>
 					<label class="field">
 						<span class="field-label">SIGNATURE (BASE64) — CLICK TO COPY</span>
@@ -135,10 +136,14 @@ export class SignDataModal extends WebComponent {
 							autocomplete="off"
 							readonly
 							placeholder="signature output appears here after signing"
-							.value=${() => this.state.signatureOutput}
+							.value=${this.state.signatureOutput}
 							@click=${this.handleCopySignature}></textarea>
 					</label>
-					<div class=${classList('sign-status', () => `tone-${this.state.statusTone || 'idle'}`, () => (this.state.statusMessage ? 'is-visible' : ''))}>${() => this.state.statusMessage}</div>
+					<div class=${classList('sign-status', () => {
+						return `tone-${this.state.statusTone || 'idle'}`;
+					}, () => {
+						return (this.state.statusMessage ? 'is-visible' : '');
+					})}>${this.state.statusMessage}</div>
 				</div>
 			</ui-modal>
 		`;

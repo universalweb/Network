@@ -195,14 +195,15 @@ export class AccountDetailPage extends WebComponent {
 		return this.pageHref(this.state.page + 1);
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
-		this.html`
+		this.html `
 			<div class="ad-shell">
 				<header class="ad-header">
 					<div class="ad-title-block">
 						<ui-icon class="ad-title-icon" .state=${this.state.titleIconState}></ui-icon>
 						<span class="ad-title">// ACCOUNT DETAIL</span>
-						<span class="ad-label-tag">${() => labelForAddress(this.state.address)}</span>
+						<span class="ad-label-tag">${() => {
+							return labelForAddress(this.state.address);
+						}}</span>
 					</div>
 					<button class="ad-address" @click=${this.handleCopy} tooltip="Click to copy">
 						<span class="ad-address-text">${this.addressDisplay}</span>
@@ -215,11 +216,15 @@ export class AccountDetailPage extends WebComponent {
 						<span class="ad-pager">
 							<a class="ad-btn"
 								href=${this.prevHref}
-								aria-disabled=${() => String(this.state.page <= 1)}>‹ Prev</a>
-							<span class="ad-page-label">page ${() => this.state.page}</span>
+								aria-disabled=${() => {
+									return String(this.state.page <= 1);
+								}}>‹ Prev</a>
+							<span class="ad-page-label">page ${this.state.page}</span>
 							<a class="ad-btn"
 								href=${this.nextHref}
-								aria-disabled=${() => String(!this.state.hasMore)}>Next ›</a>
+								aria-disabled=${() => {
+									return String(!this.state.hasMore);
+								}}>Next ›</a>
 						</span>
 					</div>
 					<div class="ad-table">

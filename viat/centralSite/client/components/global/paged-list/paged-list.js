@@ -126,9 +126,7 @@ export class PagedList extends WebComponent {
 			return `<div class="pl-empty pl-error">${this.state.error}</div>`;
 		}
 		if (!this.state.items.length) {
-			return typeof this.renderEmpty === 'function'
-				? this.renderEmpty()
-				: '<div class="pl-empty">Nothing here yet.</div>';
+			return typeof this.renderEmpty === 'function' ? this.renderEmpty() : '<div class="pl-empty">Nothing here yet.</div>';
 		}
 		if (typeof this.renderItem !== 'function') {
 			return '<div class="pl-empty">No row renderer configured.</div>';
@@ -144,8 +142,7 @@ export class PagedList extends WebComponent {
 		return typeof this.renderHeader === 'function' ? this.renderHeader() : '';
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
-		this.html`
+		this.html `
 			<div class="pl-shell">
 				<div class="pl-table">
 					^html${this.renderHead}
@@ -154,10 +151,12 @@ export class PagedList extends WebComponent {
 				<div class="pl-pager">
 					<a class="pl-btn"
 						href=${this.prevHref}
-						aria-disabled=${() => String(this.state.page <= 1)}>‹ Prev</a>
+						aria-disabled=${() => {
+							return String(this.state.page <= 1);
+						}}>‹ Prev</a>
 					<span class="pl-status">
 						<span class="pl-num">${this.subtitleCount}</span>
-						<span class="pl-label">${() => this.itemNoun}</span>
+						<span class="pl-label">${this.itemNoun}</span>
 						<span class="pl-sep">·</span>
 						<span class="pl-label">Page</span>
 						<span class="pl-num">${this.subtitlePage}</span>
@@ -165,7 +164,9 @@ export class PagedList extends WebComponent {
 					</span>
 					<a class="pl-btn"
 						href=${this.nextHref}
-						aria-disabled=${() => String(!this.state.hasMore)}>Next ›</a>
+						aria-disabled=${() => {
+							return String(!this.state.hasMore);
+						}}>Next ›</a>
 					<button class="pl-btn pl-refresh" @click=${this.refresh}>↻</button>
 				</div>
 			</div>

@@ -63,7 +63,6 @@ export class WelcomeBackModal extends WebComponent {
 		this.refs.thumb_modal?.open();
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<ui-modal #modal .state=${{
 				modal: true,
@@ -98,26 +97,34 @@ export class WelcomeBackModal extends WebComponent {
 								<span class="modal-head-id">⩝VIAT</span>
 								<span class="modal-head-title">// WELCOME BACK</span>
 							</header>
-							<p class="wb-tagline">${() => this.state.locked ? 'Your profile is loaded — unlock when you\'re ready.' : 'Your profile is loaded and unlocked.'}</p>
+							<p class="wb-tagline">${() => {
+								return (this.state.locked ? 'Your profile is loaded — unlock when you\'re ready.' : 'Your profile is loaded and unlocked.');
+							}}</p>
 						</div>
 					</div>
 					<p class="modal-copy">${() => {
-						return this.state.locked
-							? 'Public data (address, balance, transactions) is live. Private keys stay encrypted until you enter your password — needed only for signing or transmitting.'
-							: 'Sign and transmit are ready. Your private keys are decrypted for this session and never leave the browser.';
+						return this.state.locked ? 'Public data (address, balance, transactions) is live. Private keys stay encrypted until you enter your password — needed only for signing or transmitting.' : 'Sign and transmit are ready. Your private keys are decrypted for this session and never leave the browser.';
 					}}</p>
 					<div class="modal-meta">
 						<div class="modal-meta-row">
 							<span class="modal-meta-key">PROFILE</span>
-							<span class="modal-meta-val">${() => this.state.label || this.state.profileName || '—'}</span>
+							<span class="modal-meta-val">${() => {
+								return this.state.label || this.state.profileName || '—';
+							}}</span>
 						</div>
 						<div class="modal-meta-row">
 							<span class="modal-meta-key">ADDRESS</span>
-							<span class="modal-meta-val" title="${() => this.state.address}">${() => shortAddress(this.state.address)}</span>
+							<span class="modal-meta-val" title="${this.state.address}">${() => {
+								return shortAddress(this.state.address);
+							}}</span>
 						</div>
 						<div class="modal-meta-row">
 							<span class="modal-meta-key">STATUS</span>
-							<span class=${classList('modal-meta-val', () => this.state.locked ? 'is-locked' : 'is-unlocked')}>${() => this.state.locked ? '🔒 LOCKED — public data only' : '🔓 UNLOCKED — ready'}</span>
+							<span class=${classList('modal-meta-val', () => {
+								return (this.state.locked ? 'is-locked' : 'is-unlocked');
+							})}>${() => {
+								return (this.state.locked ? '🔒 LOCKED — public data only' : '🔓 UNLOCKED — ready');
+							}}</span>
 						</div>
 					</div>
 					<div class="wb-thumb-card">
@@ -130,7 +137,9 @@ export class WelcomeBackModal extends WebComponent {
 						</div>
 					</div>
 					<div class="modal-actions">
-						<button type="button" class="btn-primary" ?hidden=${() => !this.state.locked} @click=${this.handleUnlockNow}>UNLOCK NOW</button>
+						<button type="button" class="btn-primary" ?hidden=${() => {
+							return !this.state.locked;
+						}} @click=${this.handleUnlockNow}>UNLOCK NOW</button>
 						<button type="button" @click=${this.handleContinue}>CONTINUE</button>
 					</div>
 					<ui-whitebox-modal #thumb_modal .state=${{

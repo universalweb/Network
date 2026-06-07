@@ -322,7 +322,7 @@ export class SettingsModal extends WebComponent {
 		return this.htmlElement `
 			<div class="${() => {
 				return `sm-status tone-${this.state.statusTone || 'idle'}${this.state.statusMessage ? ' is-visible' : ''}`;
-			}}">${() => this.state.statusMessage}</div>
+			}}">${this.state.statusMessage}</div>
 		`;
 	}
 	renderProfileSection() {
@@ -381,7 +381,10 @@ export class SettingsModal extends WebComponent {
 			['Label', info.label],
 			['Saved at', info.walletSavedAt],
 		];
-		const rowItems = rows.map(([label, value]) => {
+		const rowItems = rows.map(([
+			label,
+			value,
+		]) => {
 			const display = value ? value : '—';
 			const copyAttr = value ? ` data-copy="${value}"` : '';
 			const cls = value ? 'sm-readout is-copyable' : 'sm-readout';
@@ -406,7 +409,7 @@ export class SettingsModal extends WebComponent {
 					<span class="sm-section-title">// NEW SITE WALLET</span>
 				</header>
 				<p class="sm-copy">Generate a new HD site wallet with ed25519 + ML-DSA trapdoor keypairs. No password required to generate — you set the encryption password when saving the wallet.</p>
-				<div class="sm-create-form" ?hidden=${() => this.state.pendingCreate}>
+				<div class="sm-create-form" ?hidden=${this.state.pendingCreate}>
 					<label class="sm-field">
 						<span class="sm-label">WALLET LABEL (optional)</span>
 						<input
@@ -418,24 +421,32 @@ export class SettingsModal extends WebComponent {
 							$value="walletLabel">
 					</label>
 					<div class="sm-actions">
-						<button class="sm-btn sm-btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleCreateWallet}>
-							${() => (this.state.busy ? 'WORKING…' : 'GENERATE WALLET')}
+						<button class="sm-btn sm-btn-primary" ?disabled=${this.state.busy} @click=${this.handleCreateWallet}>
+							${() => {
+								return (this.state.busy ? 'WORKING…' : 'GENERATE WALLET');
+							}}
 						</button>
 					</div>
 				</div>
-				<div class="sm-create-confirm" ?hidden=${() => !this.state.pendingCreate}>
+				<div class="sm-create-confirm" ?hidden=${() => {
+					return !this.state.pendingCreate;
+				}}>
 					<div class="sm-warning">
 						<div class="sm-warning-head">⚠ Replace current wallet?</div>
 						<p class="sm-warning-body">A wallet is already loaded. Generating a new one will replace its keys and seeds in memory. Make sure the current wallet is saved to localStorage or exported before continuing — otherwise it will be lost.</p>
 						<div class="sm-warning-row">
 							<span class="sm-label">CURRENT ADDRESS</span>
-							<div class="sm-readout">${() => this.getWalletInfo().address || '—'}</div>
+							<div class="sm-readout">${() => {
+								return this.getWalletInfo().address || '—';
+							}}</div>
 						</div>
 					</div>
 					<div class="sm-actions">
 						<button class="sm-btn sm-btn-primary" @click=${this.handleSaveFirstThenCreate}>SAVE FIRST</button>
-						<button class="sm-btn sm-btn-danger" ?disabled=${() => this.state.busy} @click=${this.handleConfirmReplace}>
-							${() => (this.state.busy ? 'WORKING…' : 'REPLACE WALLET')}
+						<button class="sm-btn sm-btn-danger" ?disabled=${this.state.busy} @click=${this.handleConfirmReplace}>
+							${() => {
+								return (this.state.busy ? 'WORKING…' : 'REPLACE WALLET');
+							}}
 						</button>
 						<button class="sm-btn" @click=${this.handleCancelCreate}>CANCEL</button>
 					</div>
@@ -482,13 +493,19 @@ export class SettingsModal extends WebComponent {
 						$value="savePassword">
 				</label>
 				<div class="sm-actions">
-					<button class="sm-btn sm-btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleSaveLocal}>
-						${() => (this.state.busy ? 'WORKING…' : 'SAVE TO LOCALSTORAGE')}
+					<button class="sm-btn sm-btn-primary" ?disabled=${this.state.busy} @click=${this.handleSaveLocal}>
+						${() => {
+							return (this.state.busy ? 'WORKING…' : 'SAVE TO LOCALSTORAGE');
+						}}
 					</button>
-					<button class="sm-btn" ?disabled=${() => this.state.busy} @click=${this.handleExportBase64}>
-						${() => (this.state.busy ? '…' : 'EXPORT BASE64')}
+					<button class="sm-btn" ?disabled=${this.state.busy} @click=${this.handleExportBase64}>
+						${() => {
+							return (this.state.busy ? '…' : 'EXPORT BASE64');
+						}}
 					</button>
-					<button class="sm-btn" ?disabled=${() => !this.state.saveResult} @click=${this.handleCopySaveResult}>COPY</button>
+					<button class="sm-btn" ?disabled=${() => {
+						return !this.state.saveResult;
+					}} @click=${this.handleCopySaveResult}>COPY</button>
 				</div>
 				<label class="sm-field">
 					<span class="sm-label">BASE64 CBOR PAYLOAD (CLICK TO COPY)</span>
@@ -499,8 +516,8 @@ export class SettingsModal extends WebComponent {
 						autocomplete="off"
 						readonly
 						placeholder="encrypted wallet output appears here after export"
-						data-copy="${() => this.state.saveResult}"
-						.value=${() => this.state.saveResult}
+						data-copy="${this.state.saveResult}"
+						.value=${this.state.saveResult}
 						@click=${this.handleCopy}></textarea>
 				</label>
 				${this.renderStatus}
@@ -515,11 +532,9 @@ export class SettingsModal extends WebComponent {
 		// every dropdown change and unfocus inputs. The $value bind on <select>
 		// applies the value programmatically, which natively highlights the
 		// matching <option>.
-		const profileOptions = ['<option value="">— select saved profile —</option>'].concat(
-			profiles.map((profileName) => {
-				return `<option value="${profileName}">${profileName}</option>`;
-			}),
-		).join('');
+		const profileOptions = ['<option value="">— select saved profile —</option>'].concat(profiles.map((profileName) => {
+			return `<option value="${profileName}">${profileName}</option>`;
+		})).join('');
 		return this.htmlElement `
 			<div class="sm-section">
 				<header class="sm-section-head">
@@ -542,10 +557,14 @@ export class SettingsModal extends WebComponent {
 						$value="loadPassword">
 				</label>
 				<div class="sm-actions">
-					<button class="sm-btn sm-btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleLoadLocal}>
-						${() => (this.state.busy ? 'LOADING…' : 'LOAD PROFILE')}
+					<button class="sm-btn sm-btn-primary" ?disabled=${this.state.busy} @click=${this.handleLoadLocal}>
+						${() => {
+							return (this.state.busy ? 'LOADING…' : 'LOAD PROFILE');
+						}}
 					</button>
-					<button class="sm-btn" ?disabled=${() => !this.state.selectedProfile} @click=${this.handleDeleteLocal}>DELETE</button>
+					<button class="sm-btn" ?disabled=${() => {
+						return !this.state.selectedProfile;
+					}} @click=${this.handleDeleteLocal}>DELETE</button>
 				</div>
 				<div class="sm-divider">// OR PASTE A PAYLOAD</div>
 				<label class="sm-field">
@@ -559,8 +578,10 @@ export class SettingsModal extends WebComponent {
 						$value="loadBase64"></textarea>
 				</label>
 				<div class="sm-actions">
-					<button class="sm-btn sm-btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleImportPaste}>
-						${() => (this.state.busy ? 'LOADING…' : 'IMPORT PAYLOAD')}
+					<button class="sm-btn sm-btn-primary" ?disabled=${this.state.busy} @click=${this.handleImportPaste}>
+						${() => {
+							return (this.state.busy ? 'LOADING…' : 'IMPORT PAYLOAD');
+						}}
 					</button>
 				</div>
 				${this.renderStatus}
@@ -568,7 +589,6 @@ export class SettingsModal extends WebComponent {
 		`;
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<ui-modal #modal class="sm-modal" .state=${{
 				modal: true,
@@ -579,7 +599,7 @@ export class SettingsModal extends WebComponent {
 				<ui-tabs class="sm-tabs"
 					.tabs=${this.tabsList}
 					.orientation=${'vertical'}
-					.active=${() => this.state.activeSection}
+					.active=${this.state.activeSection}
 					@tab-change=${this.handleTabChange}>
 					<section slot="profile" class="sm-body">${this.renderProfileSection}</section>
 					<section slot="wallet-view" class="sm-body">${this.renderWalletViewSection}</section>

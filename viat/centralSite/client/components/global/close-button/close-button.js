@@ -25,9 +25,8 @@ export class UICloseButton extends WebComponent {
 		});
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
-		this.html`
-			<button class="cb" @click=${this.handleClick} aria-label=${() => this.state.label}>
+		this.html `
+			<button class="cb" @click=${this.handleClick} aria-label=${this.state.label}>
 				<ui-icon class="cb-icon" .state=${this.state.iconState}></ui-icon>
 			</button>
 		`;

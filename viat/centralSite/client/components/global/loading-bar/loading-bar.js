@@ -29,7 +29,6 @@ export class UILoadingBar extends WebComponent {
 		return `${Math.round(clampPercent(this.state.value))}%`;
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<div class=${classList('bar', () => {
 				return this.state.indeterminate && 'is-indeterminate';
@@ -42,18 +41,14 @@ export class UILoadingBar extends WebComponent {
 				aria-valuemin="0"
 				aria-valuemax="100">
 				<div class="bar-track">
-					<div class="bar-fill" style="${() => {
-						return this.fillStyle;
-					}}"></div>
+					<div class="bar-fill" style="${this.fillStyle}"></div>
 				</div>
 				${this.state.showValue ? this.htmlValueLabel() : ''}
 			</div>
 		`;
 	}
 	htmlValueLabel() {
-		return this.htmlElement `<span class="bar-value">${() => {
-			return this.displayValue;
-		}}</span>`;
+		return this.htmlElement `<span class="bar-value">${this.displayValue}</span>`;
 	}
 }
 customElements.define('ui-loading-bar', UILoadingBar);

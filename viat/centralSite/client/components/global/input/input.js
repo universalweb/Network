@@ -56,11 +56,8 @@ export class UIInput extends WebComponent {
 		});
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
-			<div class="${() => {
-				return this.hostClass;
-			}}">
+			<div class="${this.hostClass}">
 				<span class="field-leading"><slot name="leading"></slot></span>
 				<input #input
 					class="field-control"

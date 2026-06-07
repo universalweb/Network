@@ -97,7 +97,6 @@ export class WalletUnlockModal extends WebComponent {
 		}
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<ui-modal #modal .state=${{
 				modal: true,
@@ -116,11 +115,15 @@ export class WalletUnlockModal extends WebComponent {
 					<div class="modal-meta">
 						<div class="modal-meta-row">
 							<span class="modal-meta-key">PROFILE</span>
-							<span class="modal-meta-val">${() => this.state.profileName || '—'}</span>
+							<span class="modal-meta-val">${() => {
+								return this.state.profileName || '—';
+							}}</span>
 						</div>
 						<div class="modal-meta-row">
 							<span class="modal-meta-key">ADDRESS</span>
-							<span class="modal-meta-val" title="${() => this.state.address}">${() => shortAddress(this.state.address)}</span>
+							<span class="modal-meta-val" title="${this.state.address}">${() => {
+								return shortAddress(this.state.address);
+							}}</span>
 						</div>
 					</div>
 					<label class="field">
@@ -133,9 +136,13 @@ export class WalletUnlockModal extends WebComponent {
 							$value="password"
 							@keydown=${this.handleKeyDown}>
 					</label>
-					<div class=${classList('modal-error', () => (this.state.error ? 'is-visible' : ''))}>${() => this.state.error}</div>
+					<div class=${classList('modal-error', () => {
+						return (this.state.error ? 'is-visible' : '');
+					})}>${this.state.error}</div>
 					<div class="modal-actions">
-						<button type="button" class="btn-primary" ?disabled=${() => this.state.busy} @click=${this.handleUnlock}>${() => (this.state.busy ? 'UNLOCKING…' : 'UNLOCK')}</button>
+						<button type="button" class="btn-primary" ?disabled=${this.state.busy} @click=${this.handleUnlock}>${() => {
+							return (this.state.busy ? 'UNLOCKING…' : 'UNLOCK');
+						}}</button>
 						<button type="button" @click=${this.handleCancel}>CANCEL</button>
 					</div>
 				</div>
