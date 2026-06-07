@@ -4,6 +4,14 @@
   width: 100%;
 }
 
+/* Root-class layout — moved out of the universal panel.css (was an app-name
+   leak). The params body scrolls within a bounded min-height. */
+.wallet-params-panel {
+  overflow-y: auto;
+  flex: 0 0 auto;
+  min-height: 13.75rem;
+}
+
 .wallet-params-panel .stat-block {
   gap: var(--space-2);
 }

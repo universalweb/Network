@@ -7,3 +7,13 @@
      show through `--panel-bg`'s default translucency. */
   --panel-bg: rgb(12, 14, 22);
 }
+
+/* Root-class layout — moved out of the universal panel.css (was an app-name
+   leak). The stats body scrolls within a bounded min-height. */
+.stats-panel {
+  overflow-y: auto;
+  flex: 0 0 auto;
+  min-height: 13.75rem;
+  display: flex;
+  flex-direction: column;
+}

@@ -2,6 +2,7 @@ import { Panel } from '../../../global/panel/panel.js';
 export class WalletParams extends Panel {
 	static url = import.meta.url;
 	static styles = {
+		statPanel: '../../shared/stat-panel.css',
 		walletParams: './wallet-params.css',
 	};
 	static state = {
