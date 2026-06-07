@@ -1,7 +1,7 @@
 import '../../global/app-bar/app-bar.js';
 import '../../global/icon/icon.js';
 import '../../global/theme-select/theme-select.js';
-import { SNAP_CURVE, SNAP_MS, WebComponent } from 'webcomponent';
+import { globalState, SNAP_CURVE, SNAP_MS, WebComponent } from 'webcomponent';
 import { clampOffset, offsetIsOpen } from './pulldownOffset.js';
 // `<global-top-bar>` — the Viat top bar. A thin composition over `<ui-app-bar>`:
 // it slots the brand block + theme select and supplies the three action items.
@@ -64,7 +64,19 @@ export class GlobalTopBar extends WebComponent {
 			this.applyScrolled(scrolled === true);
 		});
 		this.observeGlobal('routeView', () => {
+			/*
+			 * Reset BOTH the bar DOM (instant, no flicker) AND the shared
+			 * `environment.scrolled` flag. scroll-report writes that flag only on a
+			 * threshold CROSSING; clearing only the DOM would leave the flag
+			 * stale-true after leaving a scrolled page, so the next page's first
+			 * scroll-down re-writes `true` (no change → no observer → bar never
+			 * re-floats). Resetting the source of truth makes that crossing real
+			 * again. Do not drop the second line — the two are not redundant.
+			 */
 			this.applyScrolled(false);
+			globalState.set({
+				'environment.scrolled': false,
+			});
 		});
 		/*
 		 * Re-float on viewport change. Subscribe to the canonical viewport
