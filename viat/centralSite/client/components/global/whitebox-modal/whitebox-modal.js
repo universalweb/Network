@@ -7,7 +7,9 @@ import { WebComponent } from '../../core/index.js';
 // so it participates in modal stacking, focus management, and Esc routing
 // — including the built-in close / maximize control strip (no bespoke
 // close button to duplicate).
-const VIDEO_EXTENSIONS = new Set(['mp4', 'webm', 'mov', 'm4v', 'ogv']);
+const VIDEO_EXTENSIONS = new Set([
+	'mp4', 'webm', 'mov', 'm4v', 'ogv',
+]);
 function isVideoSrc(src) {
 	const cleaned = String(src ?? '').split('?')[0].split('#')[0];
 	const dot = cleaned.lastIndexOf('.');
@@ -27,7 +29,22 @@ export class UIWhiteboxModal extends WebComponent {
 		caption: '',
 	};
 	open() {
-		this.refs.modal?.open();
+		/*
+		 * Configure the inner <ui-modal> via its OWN assignState (a MERGE that
+		 * keeps its chain defaults) instead of a reactive `.state=` binding. A
+		 * `.state=${literal}` re-applies on any re-render (e.g. a parent feeding
+		 * this whitebox fresh src/caption) and routes through replaceState, which
+		 * wipes ui-modal's `classes: Set(['modal'])` → bare white native dialog +
+		 * a throw on close. modal:true / open:false are already ui-modal defaults.
+		 */
+		const modal = this.refs.modal;
+		if (modal) {
+			modal.assignState({
+				showClose: true,
+				showMaximize: true,
+			});
+			modal.open();
+		}
 	}
 	close() {
 		this.refs.modal?.close();
@@ -36,19 +53,11 @@ export class UIWhiteboxModal extends WebComponent {
 		const src = this.state.src;
 		const video = isVideoSrc(src);
 		const caption = this.state.caption;
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
-			<ui-modal #modal class="whitebox-host" .state=${{
-				modal: true,
-				open: false,
-				showClose: true,
-				showMaximize: true,
-			}} style="--ui-modal-max-width: min(96vw, 1280px); --ui-modal-max-height: 96dvh">
+			<ui-modal #modal class="whitebox-host" style="--ui-modal-max-width: min(96vw, 1280px); --ui-modal-max-height: 96dvh">
 				<div class="wb-shell">
 					<div class="wb-stage">
-						^html${video
-							? `<video class="wb-media" src="${src}" controls playsinline preload="metadata"></video>`
-							: `<img class="wb-media" src="${src}" alt="${this.state.alt}" draggable="false">`}
+						^html${video ? `<video class="wb-media" src="${src}" controls playsinline preload="metadata"></video>` : `<img class="wb-media" src="${src}" alt="${this.state.alt}" draggable="false">`}
 					</div>
 					^html${caption ? `<div class="wb-caption">${caption}</div>` : ''}
 				</div>

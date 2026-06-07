@@ -43,10 +43,26 @@ export class WelcomeBackModal extends WebComponent {
 			this.pendingOpen = true;
 			return;
 		}
-		this.refs.modal?.open();
+		this.revealModal();
 	}
 	close() {
 		this.refs.modal?.close();
+	}
+	/*
+	 * Configure the composed <ui-modal> through its OWN assignState (a MERGE that
+	 * keeps its chain defaults) then open — never a reactive `.state=` binding. A
+	 * `.state=${literal}` re-applies on parent re-renders and routes through the
+	 * child's replaceState, wiping ui-modal's `classes: Set(['modal'])` (→ bare
+	 * white native dialog + a throw on close). showClose is the only non-default.
+	 */
+	revealModal() {
+		const modal = this.refs.modal;
+		if (modal) {
+			modal.assignState({
+				showClose: true,
+			});
+			modal.open();
+		}
 	}
 	handleContinue() {
 		this.close();
@@ -60,15 +76,21 @@ export class WelcomeBackModal extends WebComponent {
 		});
 	}
 	handleThumbClick() {
-		this.refs.thumb_modal?.open();
+		// Same rule as revealModal: feed the whitebox its content via assignState
+		// (merge keeps its own modal defaults) rather than a reactive `.state=`.
+		const modal = this.refs.thumb_modal;
+		if (modal) {
+			modal.assignState({
+				src: './HDSeed.png',
+				alt: 'HD seed tree diagram',
+				caption: 'HD seed tree — deterministic four-pool master entropy.',
+			});
+			modal.open();
+		}
 	}
 	render() {
 		this.html `
-			<ui-modal #modal .state=${{
-				modal: true,
-				open: false,
-				showClose: true,
-			}} style="--ui-modal-max-width: 620px">
+			<ui-modal #modal style="--ui-modal-max-width: 620px">
 				<div class="modal-shell">
 					<div class="wb-hero">
 						<span class="wb-glyph" aria-hidden="true">
@@ -142,11 +164,7 @@ export class WelcomeBackModal extends WebComponent {
 						}} @click=${this.handleUnlockNow}>UNLOCK NOW</button>
 						<button type="button" @click=${this.handleContinue}>CONTINUE</button>
 					</div>
-					<ui-whitebox-modal #thumb_modal .state=${{
-						src: './HDSeed.png',
-						alt: 'HD seed tree diagram',
-						caption: 'HD seed tree — deterministic four-pool master entropy.',
-					}}></ui-whitebox-modal>
+					<ui-whitebox-modal #thumb_modal></ui-whitebox-modal>
 				</div>
 			</ui-modal>
 		`;
@@ -155,7 +173,7 @@ export class WelcomeBackModal extends WebComponent {
 		this.observeGlobal('bootComplete', () => {
 			if (this.pendingOpen && this.globalState.bootComplete) {
 				this.pendingOpen = null;
-				this.refs.modal?.open();
+				this.revealModal();
 			}
 		});
 	}
