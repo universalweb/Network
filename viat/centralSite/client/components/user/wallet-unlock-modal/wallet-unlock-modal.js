@@ -39,7 +39,26 @@ export class WalletUnlockModal extends WebComponent {
 			busy: false,
 			error: '',
 		});
-		this.refs.modal?.open();
+		/*
+		 * Configure the composed <ui-modal> through its OWN assignState (a shallow
+		 * MERGE that preserves its chain defaults) — never a reactive `.state=`
+		 * binding. A `.state=${literal}` here re-applies on the parent re-render
+		 * this very openFor triggers and routes through the child's `set state` →
+		 * replaceState, REPLACING its STATE with only the passed keys. That wipes
+		 * ui-modal's own defaults — chiefly `classes: Set(['modal'])`, which both
+		 * styles the dialog (without it the native <dialog> renders bare white and
+		 * top-anchored) and is dereferenced in handleClose (`classes.delete(...)`
+		 * throws once gone). modal:true / open:false are already ui-modal defaults;
+		 * only these two need overriding.
+		 */
+		const modal = this.refs.modal;
+		if (modal) {
+			modal.assignState({
+				showClose: true,
+				closeOnBackdrop: false,
+			});
+			modal.open();
+		}
 		requestAnimationFrame(() => {
 			this.refs.password?.focus?.();
 		});
@@ -98,12 +117,7 @@ export class WalletUnlockModal extends WebComponent {
 	}
 	render() {
 		this.html `
-			<ui-modal #modal .state=${{
-				modal: true,
-				open: false,
-				showClose: true,
-				closeOnBackdrop: false,
-			}} style="--ui-modal-max-width: 460px">
+			<ui-modal #modal style="--ui-modal-max-width: 460px">
 				<div class="modal-shell">
 					<header class="modal-head">
 						<span class="modal-head-id">⩝VIAT</span>
