@@ -57,10 +57,10 @@ export class PagedList extends WebComponent {
 		});
 		this.loadPage(target);
 	}
-	refresh = () => {
+	refresh() {
 		this.loadedKey = '';
 		this.loadPage(this.state.page);
-	};
+	}
 	async loadPage(page = 1) {
 		if (typeof this.loader !== 'function') {
 			this.assignState({

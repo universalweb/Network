@@ -18,12 +18,12 @@ export class UICloseButton extends WebComponent {
 			size: 'sm',
 		},
 	};
-	handleClick = (domEvent) => {
+	handleClick(domEvent) {
 		this.emit('close-click', {
 			source: this,
 			original: domEvent,
 		});
-	};
+	}
 	render() {
 		this.html `
 			<button class="cb" @click=${this.handleClick} aria-label=${this.state.label}>

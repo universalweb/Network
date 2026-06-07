@@ -114,14 +114,14 @@ export class AccountDetailPage extends WebComponent {
 		}
 		return `${base}page/${page}/`;
 	}
-	handleCopy = async () => {
+	async handleCopy() {
 		await navigator.clipboard?.writeText?.(this.state.address);
 		this.emit('notify', {
 			itemType: 'success',
 			title: 'Copied',
 			message: 'Address copied to clipboard',
 		});
-	};
+	}
 	renderStats() {
 		const account = this.state.account;
 		if (this.state.accountMissing) {

@@ -73,7 +73,7 @@ export class TransactionDetailPage extends WebComponent {
 			transaction: response.transaction ?? response,
 		});
 	}
-	handleCopyId = async () => {
+	async handleCopyId() {
 		try {
 			await navigator.clipboard.writeText(this.state.txId);
 			this.emit('notify', {
@@ -84,7 +84,7 @@ export class TransactionDetailPage extends WebComponent {
 		} catch {
 			// silent
 		}
-	};
+	}
 	renderField(label, value, href, wide) {
 		const safeValue = value ?? '—';
 		const cls = wide ? 'td-field td-field-wide' : 'td-field';
@@ -129,15 +129,16 @@ export class TransactionDetailPage extends WebComponent {
 		`;
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
-		this.html`
+		this.html `
 			<div class="td-shell">
 				<header class="td-header">
 					<div class="td-title-block">
 						<ui-icon class="td-title-icon" .state=${this.state.titleIconState}></ui-icon>
 						<span class="td-title">// TRANSACTION DETAIL</span>
 					</div>
-					<button class="td-copy" @click=${this.handleCopyId} tooltip="Copy transaction ID">${() => this.state.txId || '—'}</button>
+					<button class="td-copy" @click=${this.handleCopyId} tooltip="Copy transaction ID">${() => {
+						return this.state.txId || '—';
+					}}</button>
 				</header>
 				^html${this.renderBody}
 			</div>

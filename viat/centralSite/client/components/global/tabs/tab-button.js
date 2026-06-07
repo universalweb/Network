@@ -35,16 +35,15 @@ export class UITabButton extends WebComponent {
 		// no-op set free, so a redundant sync never churns or warns.
 		this.state.iconState.name = this.state.icon;
 	}
-	handleClick = () => {
+	handleClick() {
 		this.emit('tab-select', {
 			id: this.state.id,
 		});
-	};
+	}
 	focus() {
 		this.refs.button?.focus();
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<button #button class=${classList(
 				'tab-btn',

@@ -72,7 +72,7 @@ export class SendConfirmModal extends WebComponent {
 			error: payload?.error || 'Transmission failed — try again.',
 		});
 	}
-	handleConfirm = () => {
+	handleConfirm() {
 		if (this.state.busy) {
 			return;
 		}
@@ -106,17 +106,17 @@ export class SendConfirmModal extends WebComponent {
 			recipientFormat: this.state.recipientFormat,
 			amount,
 		});
-	};
-	handleCancel = () => {
+	}
+	handleCancel() {
 		this.emit('send-confirm:cancel', {});
 		this.close();
-	};
-	handleKeyDown = (domEvent) => {
+	}
+	handleKeyDown(domEvent) {
 		if (domEvent.key === 'Enter' && !domEvent.shiftKey) {
 			domEvent.preventDefault();
 			this.handleConfirm();
 		}
-	};
+	}
 	render() {
 		this.html `
 			<ui-modal #modal .state=${{

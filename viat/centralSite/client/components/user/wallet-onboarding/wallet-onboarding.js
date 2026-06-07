@@ -90,13 +90,13 @@ export class WalletOnboarding extends WebComponent {
 		});
 		this.refs.modal?.open();
 	}
-	handleClose = () => {
+	handleClose() {
 		this.forced = false;
 		this.assignState({
 			forcedReason: '',
 		});
 		this.refs.modal?.close();
-	};
+	}
 	handleCreateSave() {
 		this.refs.modal?.close();
 		this.emit('wallet:create-save', {
@@ -115,9 +115,9 @@ export class WalletOnboarding extends WebComponent {
 			section: 'wallet-load',
 		});
 	}
-	handleThumbClick = () => {
+	handleThumbClick() {
 		this.refs.thumb_modal?.open();
-	};
+	}
 	subtitleText() {
 		if (this.state.forcedReason) {
 			return this.state.forcedReason;
@@ -137,7 +137,6 @@ export class WalletOnboarding extends WebComponent {
 		return 'No wallet has been saved locally yet. Create & save a wallet to auto-load it on every visit, mint an ephemeral one for this session, or load a saved profile.';
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<ui-modal #modal .state=${{
 				modal: true,

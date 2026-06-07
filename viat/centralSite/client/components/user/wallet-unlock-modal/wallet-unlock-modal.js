@@ -65,7 +65,7 @@ export class WalletUnlockModal extends WebComponent {
 			this.refs.password?.select?.();
 		});
 	}
-	handleUnlock = () => {
+	handleUnlock() {
 		if (this.state.busy) {
 			return;
 		}
@@ -83,19 +83,19 @@ export class WalletUnlockModal extends WebComponent {
 			profileName: this.state.profileName,
 			password: this.state.password,
 		});
-	};
-	handleCancel = () => {
+	}
+	handleCancel() {
 		this.emit('wallet:unlock-cancel', {
 			profileName: this.state.profileName,
 		});
 		this.close();
-	};
-	handleKeyDown = (domEvent) => {
+	}
+	handleKeyDown(domEvent) {
 		if (domEvent.key === 'Enter') {
 			domEvent.preventDefault();
 			this.handleUnlock();
 		}
-	};
+	}
 	render() {
 		this.html `
 			<ui-modal #modal .state=${{

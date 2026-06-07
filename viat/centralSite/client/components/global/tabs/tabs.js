@@ -1,4 +1,6 @@
-import { WebComponent, classList, each, movingIndicator } from '../../core/index.js';
+import {
+	WebComponent, classList, each, movingIndicator,
+} from '../../core/index.js';
 import { UITabButton } from './tab-button.js';
 // `<ui-tabs>` — reusable tab strip + slotted content area with built-in
 // switching animation (sliding indicator bar + cross-fade panel).
@@ -207,13 +209,13 @@ export class UITabs extends WebComponent {
 			this.switching = false;
 		});
 	}
-	handleTabSelect = (domEvent) => {
+	handleTabSelect(domEvent) {
 		const id = domEvent.detail?.data?.id;
 		if (id) {
 			this.setActive(id);
 		}
-	};
-	handleKey = (domEvent) => {
+	}
+	handleKey(domEvent) {
 		// Arrow-key navigation along the tab strip (a11y).
 		const isVertical = this.state.orientation === 'vertical';
 		let delta = 0;
@@ -248,12 +250,11 @@ export class UITabs extends WebComponent {
 			});
 			target?.focus();
 		});
-	};
+	}
 	activeSlotName() {
 		return this.state.active || '';
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<div class=${classList(
 				'tabs',

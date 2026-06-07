@@ -66,7 +66,7 @@ export class TransmitPanel extends Panel {
 		title: 'SEND VIAT',
 		tokenLabel: 'VIAT',
 	};
-	handleRecipientInput = (domEvent) => {
+	handleRecipientInput(domEvent) {
 		const raw = String(domEvent.target.value ?? '');
 		// Pasted-in prefix wins outright — strip it and pin the dropdown.
 		const stripped = stripPrefix(raw.trim());
@@ -85,15 +85,15 @@ export class TransmitPanel extends Panel {
 			next.recipientFormat = detected;
 		}
 		this.assignState(next);
-	};
-	handleFormatChange = (domEvent) => {
+	}
+	handleFormatChange(domEvent) {
 		const next = domEvent.target.value;
 		if (FORMATS.includes(next)) {
 			this.assignState({
 				recipientFormat: next,
 			});
 		}
-	};
+	}
 	handleTransmit() {
 		this.emit('transmit', {
 			amount: this.state.amountValue,

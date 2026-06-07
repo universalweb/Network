@@ -158,10 +158,10 @@ export class ExplorerPage extends WebComponent {
 		const app = document.querySelector('app-view');
 		return app?.ensureSDK ? app.ensureSDK() : null;
 	}
-	handleRefresh = () => {
+	handleRefresh() {
 		this.loadedKey = '';
 		this.loadView(this.state.filter, this.state.page);
-	};
+	}
 	subtitleLabel() {
 		return findFilter(this.state.filter).subtitleLabel;
 	}
@@ -232,8 +232,7 @@ export class ExplorerPage extends WebComponent {
 		return pageHrefFor(this.state.filter, this.state.page + 1);
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
-		this.html`
+		this.html `
 			<div class="ex-shell">
 				<header class="ex-title-header">
 					<div class="ex-title-block">
@@ -254,10 +253,14 @@ export class ExplorerPage extends WebComponent {
 					<div class="ex-controls">
 						<a class="ex-btn"
 							href=${this.prevHref}
-							aria-disabled=${() => String(this.state.page <= 1)}>‹ Prev</a>
+							aria-disabled=${() => {
+								return String(this.state.page <= 1);
+							}}>‹ Prev</a>
 						<a class="ex-btn"
 							href=${this.nextHref}
-							aria-disabled=${() => String(!this.state.hasMore)}>Next ›</a>
+							aria-disabled=${() => {
+								return String(!this.state.hasMore);
+							}}>Next ›</a>
 						<button class="ex-btn" @click=${this.handleRefresh}>↻ Refresh</button>
 					</div>
 				</div>

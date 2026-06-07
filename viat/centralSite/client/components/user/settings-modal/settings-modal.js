@@ -108,13 +108,13 @@ export class SettingsModal extends WebComponent {
 			itemType,
 		});
 	}
-	handleTabChange = (domEvent) => {
+	handleTabChange(domEvent) {
 		const id = domEvent.detail?.data?.active ?? domEvent.detail?.active;
 		if (id && id !== this.state.activeSection) {
 			this.state.activeSection = id;
 			this.setStatus('', '');
 		}
-	};
+	}
 	async handleCopy(domEvent) {
 		const target = domEvent.target?.closest?.('[data-copy]');
 		const value = target?.dataset?.copy;
@@ -184,7 +184,7 @@ export class SettingsModal extends WebComponent {
 		this.notify('Profile updated');
 		this.setStatus('success', 'Profile saved.');
 	}
-	handleThemeChange = (domEvent) => {
+	handleThemeChange(domEvent) {
 		// Two-way: apply the theme immediately for visual feedback and stash
 		// it in profile meta so the next save (or a wallet export) carries
 		// the choice. App.js observes globalState.profile.theme and re-applies
@@ -201,7 +201,7 @@ export class SettingsModal extends WebComponent {
 				theme: id,
 			},
 		});
-	};
+	}
 	handleCreateWallet() {
 		if (this.state.busy) {
 			return;

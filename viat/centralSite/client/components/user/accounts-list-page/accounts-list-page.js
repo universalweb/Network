@@ -114,10 +114,10 @@ export class AccountsListPage extends WebComponent {
 			loading: false,
 		});
 	}
-	handleRefresh = () => {
+	handleRefresh() {
 		this.loadedForPage = 0;
 		this.loadPage(this.state.page);
-	};
+	}
 	subtitleCount() {
 		return formatCount(this.state.totalCount);
 	}
@@ -169,8 +169,7 @@ export class AccountsListPage extends WebComponent {
 		return pageHrefFor(this.state.page + 1);
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
-		this.html`
+		this.html `
 			<div class="al-shell">
 				<header class="al-title-header">
 					<div class="al-title-block">
@@ -190,10 +189,14 @@ export class AccountsListPage extends WebComponent {
 					<div class="al-controls">
 						<a class="al-btn"
 							href=${this.prevHref}
-							aria-disabled=${() => String(this.state.page <= 1)}>‹ Prev</a>
+							aria-disabled=${() => {
+								return String(this.state.page <= 1);
+							}}>‹ Prev</a>
 						<a class="al-btn"
 							href=${this.nextHref}
-							aria-disabled=${() => String(!this.state.hasMore)}>Next ›</a>
+							aria-disabled=${() => {
+								return String(!this.state.hasMore);
+							}}>Next ›</a>
 						<button class="al-btn" @click=${this.handleRefresh}>↻ Refresh</button>
 					</div>
 				</div>

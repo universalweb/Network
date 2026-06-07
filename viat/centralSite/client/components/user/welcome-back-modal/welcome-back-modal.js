@@ -48,20 +48,20 @@ export class WelcomeBackModal extends WebComponent {
 	close() {
 		this.refs.modal?.close();
 	}
-	handleContinue = () => {
+	handleContinue() {
 		this.close();
-	};
-	handleUnlockNow = () => {
+	}
+	handleUnlockNow() {
 		this.close();
 		// Ask AppView to surface the unlock modal with a meaningful reason
 		// rather than reaching across the shadow tree ourselves.
 		this.emit('wallet:request-unlock', {
 			reason: 'Unlock now to enable signing and transactions.',
 		});
-	};
-	handleThumbClick = () => {
+	}
+	handleThumbClick() {
 		this.refs.thumb_modal?.open();
-	};
+	}
 	render() {
 		this.html `
 			<ui-modal #modal .state=${{

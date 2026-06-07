@@ -122,7 +122,7 @@ export class ActivityLog extends Panel {
 	addEntry(entry) {
 		this.state.entries.unshift(this.createEntry(entry));
 	}
-	handleTabChange = (domEvent) => {
+	handleTabChange(domEvent) {
 		const next = domEvent.detail?.data?.active ?? domEvent.detail?.active;
 		if (next && next !== this.state.activeTab) {
 			this.state.activeTab = next;
@@ -130,7 +130,7 @@ export class ActivityLog extends Panel {
 				tab: this.state.activeTab,
 			});
 		}
-	};
+	}
 	entryKey(entry) {
 		return entry.id;
 	}

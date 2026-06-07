@@ -204,10 +204,10 @@ export class UIModal extends WebComponent {
 			});
 		}
 	}
-	handleCloseClick = () => {
+	handleCloseClick() {
 		this.close();
-	};
-	handleToggleMaximize = () => {
+	}
+	handleToggleMaximize() {
 		const classes = this.state.classes;
 		const next = !classes.has('is-maximized');
 		if (next) {
@@ -219,8 +219,8 @@ export class UIModal extends WebComponent {
 		this.emit('modal-maximize', {
 			maximized: next,
 		});
-	};
-	handleToggleMinimize = () => {
+	}
+	handleToggleMinimize() {
 		const classes = this.state.classes;
 		const next = !classes.has('is-minimized');
 		if (next) {
@@ -232,7 +232,7 @@ export class UIModal extends WebComponent {
 		this.emit('modal-minimize', {
 			minimized: next,
 		});
-	};
+	}
 	controlsSideClass() {
 		return this.state.controlsSide === 'left' ? 'controls-left' : 'controls-right';
 	}
@@ -245,7 +245,6 @@ export class UIModal extends WebComponent {
 		// so flipping a flag at runtime cleanly toggles whether the button
 		// is part of the active layout. The flags default to false so a
 		// caller that doesn't opt in gets no controls at all.
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<dialog #dialog class=${classList(this.state.classes, this.controlsSideClass)} tabindex="-1" @click=${this.handleDialogClick} @cancel=${this.handleCancel} @close=${this.handleClose}>
 				<div class="modal-controls">
