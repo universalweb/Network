@@ -140,7 +140,7 @@ export class WalletUnlockModal extends WebComponent {
 						return (this.state.error ? 'is-visible' : '');
 					})}>${this.state.error}</div>
 					<div class="modal-actions">
-						<button type="button" class="btn-primary" ?disabled=${this.state.busy} @click=${this.handleUnlock}>${() => {
+						<button type="button" class="primary" ?disabled=${this.state.busy} @click=${this.handleUnlock}>${() => {
 							return (this.state.busy ? 'UNLOCKING…' : 'UNLOCK');
 						}}</button>
 						<button type="button" @click=${this.handleCancel}>CANCEL</button>

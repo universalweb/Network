@@ -172,7 +172,7 @@ export class SendConfirmModal extends WebComponent {
 						return (this.state.error ? 'is-visible' : '');
 					})}>${this.state.error}</div>
 					<div class="modal-actions">
-						<button #confirm type="button" class="btn-primary" ?disabled=${this.state.busy} @click=${this.handleConfirm}>${() => {
+						<button #confirm type="button" class="primary" ?disabled=${this.state.busy} @click=${this.handleConfirm}>${() => {
 							return (this.state.busy ? 'SENDING…' : 'CONFIRM & SEND');
 						}}</button>
 						<button type="button" ?disabled=${this.state.busy} @click=${this.handleCancel}>CANCEL</button>

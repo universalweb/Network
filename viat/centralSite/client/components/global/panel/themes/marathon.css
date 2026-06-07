@@ -43,22 +43,6 @@
 	background: var(--teal);
 	box-shadow: var(--ph-dot-shadow);
 }
-.panel button,
-.btn-transmit {
-	border-radius: 0;
-	border-color: rgba(255, 21, 128, 0.20);
-	background: rgba(255, 21, 128, 0.06);
-	color: var(--text-main);
-	box-shadow: none;
-	transition: background 0.12s, border-color 0.12s, box-shadow 0.12s, color 0.12s;
-}
-.panel button:hover,
-.btn-transmit:hover {
-	background: var(--teal);
-	border-color: var(--teal);
-	box-shadow: 0 0 18px rgba(255, 21, 128, 0.28);
-	color: #06091A;
-}
 .panel {
 	position: relative;
 }

@@ -25,19 +25,3 @@
 .ph-dot {
 	display: none;
 }
-.panel button,
-.btn-transmit {
-	border-radius: 20px;
-	border-color: transparent;
-	border-block-end-color: rgba(109, 74, 255, 0.28);
-	background: transparent;
-	box-shadow: none;
-	transition: background 0.18s, border-color 0.18s, box-shadow 0.18s;
-}
-.panel button:hover,
-.btn-transmit:hover {
-	background: rgba(109, 74, 255, 0.08);
-	border-color: transparent;
-	border-block-end-color: rgba(167, 139, 250, 0.45);
-	box-shadow: 0 0 12px rgba(109, 74, 255, 0.12);
-}

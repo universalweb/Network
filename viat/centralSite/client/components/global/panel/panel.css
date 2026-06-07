@@ -68,12 +68,6 @@
 	box-shadow: var(--ph-dot-shadow, 0 0 4px var(--teal));
 }
 
-.panel button,
-.btn-transmit {
-	cursor: pointer;
-}
-
-
 /* ══════════════════════════════════════════════════════
 	STATS PANEL
 ══════════════════════════════════════════════════════ */

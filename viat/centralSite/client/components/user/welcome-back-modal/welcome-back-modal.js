@@ -137,7 +137,7 @@ export class WelcomeBackModal extends WebComponent {
 						</div>
 					</div>
 					<div class="modal-actions">
-						<button type="button" class="btn-primary" ?hidden=${() => {
+						<button type="button" class="primary" ?hidden=${() => {
 							return !this.state.locked;
 						}} @click=${this.handleUnlockNow}>UNLOCK NOW</button>
 						<button type="button" @click=${this.handleContinue}>CONTINUE</button>

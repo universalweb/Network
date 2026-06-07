@@ -120,7 +120,7 @@ export class SignDataModal extends WebComponent {
 							$value="inputData"></textarea>
 					</label>
 					<div class="modal-actions">
-						<button class="btn-primary" ?disabled=${this.state.busy} @click=${this.handleSign}>
+						<button class="primary" ?disabled=${this.state.busy} @click=${this.handleSign}>
 							${() => {
 								return (this.state.busy ? 'SIGNING…' : 'SIGN WITH PRIMARY KEY');
 							}}

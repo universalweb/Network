@@ -64,12 +64,12 @@
 		outline-offset: 2px;
 	}
 
-	button.btn-primary {
+	button.primary {
 		background: var(--cyan, var(--popup-bg));
 		color: var(--popup-bg);
 		border-color: var(--cyan, var(--popup-border));
 	}
-	button.btn-primary:hover {
+	button.primary:hover {
 		background: var(--cyan-hover, var(--cyan, var(--popup-bg)));
 		color: var(--popup-bg);
 	}
