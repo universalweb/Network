@@ -40,6 +40,10 @@
 		cursor: not-allowed;
 	}
 
+	/* Universal button: themed via the per-theme --btn-* token set (the same
+	   tokens transmit and other action buttons read), so every bare <button>
+	   gets a polished, theme-consistent look for free. A component class in
+	   uwc.components still wins for bespoke buttons. */
 	button {
 		font-family: inherit;
 		font-size: var(--text-base);
@@ -48,20 +52,43 @@
 		background: var(--btn-bg, transparent);
 		border: var(--border-width) solid
 			var(--btn-border, var(--border-light-color));
-		border-radius: var(--radius-md);
+		border-radius: var(--radius, var(--radius-md));
+		box-shadow: var(--btn-inset, none);
 		padding: var(--space-3) var(--space-6);
 		cursor: pointer;
 		transition:
 			background var(--transition-base),
 			border-color var(--transition-base),
-			color var(--transition-base);
+			box-shadow var(--transition-base),
+			color var(--transition-base),
+			transform var(--transition-base);
 	}
-	button:hover {
+	button:hover:not([disabled]) {
+		background: var(--btn-hover-bg, var(--btn-bg, transparent));
 		border-color: var(--btn-hover-border, var(--cyan));
+		box-shadow: var(--btn-hover-inset, var(--btn-inset, none)),
+			var(--btn-hover-glow, transparent 0 0);
+		color: var(--btn-hover-color, var(--popup-text, var(--text-main)));
+		transform: translateY(-1px);
+	}
+	button:active:not([disabled]) {
+		transform: translateY(0);
 	}
 	button:focus-visible {
 		outline: 2px solid var(--cyan, var(--focus-ring-color));
 		outline-offset: 2px;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		button {
+			transition:
+				background var(--transition-base),
+				border-color var(--transition-base),
+				box-shadow var(--transition-base),
+				color var(--transition-base);
+		}
+		button:hover:not([disabled]) {
+			transform: none;
+		}
 	}
 
 	button.primary {

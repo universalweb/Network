@@ -157,38 +157,19 @@
 	text-transform: uppercase;
 }
 
+/* Layout + identity only — fill, border, inset, radius, themed hover and the
+   lift now come from the universal <button> (elements-forms.css), driven by the
+   same per-theme --btn-* tokens. This class adds the transmit button's unique
+   shape: full-width grid span, frosted backdrop, and the display-font caps. */
 .btn-transmit {
 	grid-column: 1 / -1;
 	padding: var(--space-3) var(--space-4);
-	background: var(--btn-bg);
 	color: var(--text-light);
-	border: 1px solid var(--btn-border);
-	box-shadow: var(--btn-inset);
 	backdrop-filter: blur(4px);
 	font-family: var(--font-display);
 	font-size: var(--text-2xs);
 	font-weight: var(--weight-bold);
 	text-transform: uppercase;
 	letter-spacing: 0.16em;
-	cursor: pointer;
 	appearance: none;
-	border-radius: var(--radius);
-	transition:
-		background 0.2s,
-		border-color 0.2s,
-		box-shadow 0.2s,
-		transform 0.2s;
-}
-
-.btn-transmit:hover {
-	background: var(--btn-hover-bg);
-	border-color: var(--btn-hover-border);
-	box-shadow: var(--btn-hover-inset), var(--btn-hover-glow);
-	color: var(--btn-hover-color, var(--text-light));
-	transform: translateY(-1px);
-}
-
-.btn-transmit:focus-visible {
-	outline: 1px solid var(--focus-ring-color);
-	outline-offset: 2px;
 }
