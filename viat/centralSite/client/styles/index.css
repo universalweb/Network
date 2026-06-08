@@ -12,7 +12,7 @@
 @import '../components/core/styles/modules/effects.css';
 
 /* ── Page-level (light DOM) rules ──────────────────── */
-html { font-size: clamp(14px, 1.3vw, 18px); }
+html { font-size: clamp(14px, 1.3vw, 18px); scrollbar-gutter: stable; }
 @media (min-width: 160em) { html { font-size: clamp(14px, 1vw, 18px); } }
 body {
 	background-color: var(--bg-body);

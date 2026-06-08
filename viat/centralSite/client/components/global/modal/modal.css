@@ -31,6 +31,15 @@
     overlay 0.22s ease allow-discrete,
     display 0.22s ease allow-discrete;
 }
+/* Top-layer (showModal) dialogs must anchor to the VIEWPORT, not the document.
+   The base `.modal` resolves to `position: absolute` against the initial
+   containing block, which scrolls with the page now that the shell uses document
+   scroll (it was masked before by the old overflow:hidden shell). `:modal` scopes
+   this to genuine top-layer modals; `inset:0` + the base `margin:auto` re-centre. */
+.modal:modal {
+  position: fixed;
+  inset: 0;
+}
 /* Flex column ONLY when the dialog is actually open. Author rules win
    specificity ties against the UA's `dialog:not([open]) { display: none }`,
    so writing `display: flex` on `.modal` directly used to make EVERY
