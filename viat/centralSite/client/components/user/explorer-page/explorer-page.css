@@ -237,3 +237,16 @@ a.ex-addr:hover {
 .ex-empty.ex-error {
 	color: var(--color-danger);
 }
+/* Load-more action below the table; the controller toggles `hidden` on the
+   button at exhaustion, so collapse the bar then to avoid a trailing gap. */
+.ex-loadmore-bar {
+	display: flex;
+	justify-content: center;
+}
+.ex-loadmore-bar:not(:has(.ex-loadmore:not([hidden]))) {
+	display: none;
+}
+.ex-loadmore {
+	min-width: 14rem;
+	justify-content: center;
+}

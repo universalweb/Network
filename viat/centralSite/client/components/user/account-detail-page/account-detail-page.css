@@ -122,10 +122,17 @@
 	letter-spacing: 0.14em;
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.55));
 }
-.ad-pager {
+.ad-section-meta {
 	display: inline-flex;
 	gap: var(--space-3);
 	align-items: center;
+}
+.ad-stat-num {
+	color: var(--dark-text-medium);
+	font-variant-numeric: tabular-nums;
+}
+.ad-stat-label {
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 }
 .ad-btn {
 	background: transparent;
@@ -152,11 +159,6 @@ a.ad-btn {
 	display: inline-flex;
 	align-items: center;
 	text-decoration: none;
-}
-.ad-page-label {
-	font-size: var(--text-2xs);
-	letter-spacing: 0.14em;
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 }
 .ad-table {
 	border: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.05));
@@ -238,4 +240,17 @@ a.ad-addr:hover {
 }
 .ad-empty.ad-error {
 	color: var(--color-danger);
+}
+/* Load-more action below the table; the controller toggles `hidden` on the
+   button at exhaustion, so collapse the bar then to avoid a trailing gap. */
+.ad-loadmore-bar {
+	display: flex;
+	justify-content: center;
+}
+.ad-loadmore-bar:not(:has(.ad-loadmore:not([hidden]))) {
+	display: none;
+}
+.ad-loadmore {
+	min-width: 14rem;
+	justify-content: center;
 }

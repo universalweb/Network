@@ -1,5 +1,5 @@
 import '../../global/icon/icon.js';
-import { WebComponent } from '../../core/index.js';
+import { WebComponent, html, remoteList } from '../../core/index.js';
 const PAGE_SIZE = 20;
 const FILTERS = [
 	{
@@ -39,13 +39,6 @@ function formatCount(value) {
 	}
 	return num.toLocaleString('en-US');
 }
-function pageHrefFor(filterId, page) {
-	const filter = findFilter(filterId);
-	if (!page || page <= 1) {
-		return filter.basePath;
-	}
-	return `${filter.basePath}page/${page}/`;
-}
 function shortAddress(value) {
 	if (!value) {
 		return '—';
@@ -84,6 +77,9 @@ function formatTimestamp(value) {
 	}
 	return date.toISOString().replace('T', ' ').replace(/\..+$/, '');
 }
+function txKey(tx) {
+	return tx.id;
+}
 export class ExplorerPage extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -91,9 +87,7 @@ export class ExplorerPage extends WebComponent {
 	};
 	static state = {
 		transactions: [],
-		page: 1,
 		filter: 'all',
-		hasMore: false,
 		totalCount: 0,
 		loading: false,
 		error: '',
@@ -102,74 +96,96 @@ export class ExplorerPage extends WebComponent {
 			size: 'md',
 		},
 	};
-	loadedKey = '';
 	onConnect() {
+		this.on('transactions:loading', this.handleListLoading);
+		this.on('transactions:loaded', this.handleListLoaded);
+		this.on('transactions:error', this.handleListError);
 		this.observeGlobal('api', (api) => {
-			if (api?.ok && !this.state.transactions.length && !this.state.loading) {
-				this.loadView(this.state.filter, this.state.page);
-			}
+			return this.handleApiReady(api);
 		});
 	}
-	onMount() {
-		this.loadView(this.state.filter, this.state.page);
+	/* Pure retry once the chain API is reachable — guarded on an empty list and
+	   null-safe on the controller, so the supersede token + dedupe make it
+	   double-load-proof. */
+	handleApiReady(api) {
+		if (api?.ok && !this.state.transactions.length) {
+			this.remote('transactions')?.reset();
+		}
 	}
-	setView(filter, page) {
-		const normalizedFilter = findFilter(filter).id;
-		const normalizedPage = Number.isFinite(page) && page >= 1 ? page : 1;
-		const key = `${normalizedFilter}|${normalizedPage}`;
-		if (key === this.loadedKey && this.state.transactions.length) {
+	/* Router entry point. The filter is the only routed dimension that matters
+	   now (page-number paging is gone); a real filter change rebinds the loader's
+	   `type` and resets, re-entering the same filter is a no-op so the loaded list
+	   survives back-navigation. */
+	setView(filter) {
+		const normalized = findFilter(filter).id;
+		if (normalized === this.state.filter) {
 			return;
 		}
-		this.assignState({
-			filter: normalizedFilter,
-			page: normalizedPage,
-		});
-		this.loadView(normalizedFilter, normalizedPage);
+		this.state.filter = normalized;
+		this.remote('transactions')?.reset();
 	}
-	async loadView(filter, page = 1) {
-		this.loadedKey = `${filter}|${page}`;
+	handleListLoading() {
 		this.assignState({
 			loading: true,
 			error: '',
 		});
-		const sdk = await this.getSDK();
-		const response = await sdk.listRecentTransactions({
-			page,
-			limit: PAGE_SIZE,
-			type: filter === 'all' ? undefined : filter,
-		});
-		if (!response) {
-			this.assignState({
-				loading: false,
-				error: 'Could not load transactions',
-			});
-			return;
-		}
+	}
+	handleListLoaded() {
+		this.state.loading = false;
+	}
+	handleListError(domEvent) {
 		this.assignState({
-			transactions: response.transactions ?? [],
-			page,
-			filter,
-			hasMore: Boolean(response.pagination?.hasMore),
-			totalCount: response.pagination?.totalCount ?? 0,
 			loading: false,
+			error: domEvent?.detail?.data?.error || 'Could not load transactions',
 		});
 	}
 	async getSDK() {
 		const app = document.querySelector('app-view');
 		return app?.ensureSDK ? app.ensureSDK() : null;
 	}
+	/* Cursor=page bridge (see accounts-list-page). The active filter is read from
+	   state at call time, so a setView()-driven reset reloads with the new type. */
+	async loadTransactions({
+		reset, cursor,
+	}) {
+		const page = reset ? 1 : (cursor ?? 1);
+		const filter = this.state.filter;
+		const sdk = await this.getSDK();
+		if (!sdk) {
+			return null;
+		}
+		const params = {
+			page,
+			limit: PAGE_SIZE,
+		};
+		if (filter !== 'all') {
+			params.type = filter;
+		}
+		const response = await sdk.listRecentTransactions(params);
+		if (!response) {
+			return null;
+		}
+		const hasMore = Boolean(response.pagination?.hasMore);
+		if (page === 1) {
+			this.state.totalCount = response.pagination?.totalCount ?? 0;
+		}
+		return {
+			items: response.transactions ?? [],
+			nextCursor: hasMore ? page + 1 : null,
+			hasMore,
+		};
+	}
 	handleRefresh() {
-		this.loadedKey = '';
-		this.loadView(this.state.filter, this.state.page);
+		this.remote('transactions')?.refresh();
+	}
+	loadedCount() {
+		return formatCount(this.state.transactions.length);
 	}
 	subtitleLabel() {
 		return findFilter(this.state.filter).subtitleLabel;
 	}
-	subtitleCount() {
+	subtitleTotal() {
 		return formatCount(this.state.totalCount);
-	}
-	subtitlePage() {
-		return this.state.page;
 	}
 	subtitleStatus() {
 		if (this.state.loading) {
@@ -180,40 +196,14 @@ export class ExplorerPage extends WebComponent {
 		}
 		return '';
 	}
-	renderRow(tx) {
-		const direction = tx.type === 'mint' ? 'mint' : 'transfer';
-		const txHref = `/tx/${encodeURIComponent(tx.id)}/`;
-		const fromHref = `/account/${encodeURIComponent(tx.from)}/`;
-		const toHref = `/account/${encodeURIComponent(tx.to)}/`;
-		return `
-			<div class="ex-row">
-				<a class="ex-cell ex-id" href="${txHref}" title="${tx.id}">${shortId(tx.id)}</a>
-				<span class="ex-cell ex-type tone-${direction}">${direction.toUpperCase()}</span>
-				<a class="ex-cell ex-addr" href="${fromHref}" title="${tx.from}">${shortAddress(tx.from)}</a>
-				<span class="ex-cell ex-arrow">→</span>
-				<a class="ex-cell ex-addr" href="${toHref}" title="${tx.to}">${shortAddress(tx.to)}</a>
-				<span class="ex-cell ex-amount">${formatAmount(tx.amount)}</span>
-				<span class="ex-cell ex-status">${tx.status || '—'}</span>
-				<span class="ex-cell ex-time">${formatTimestamp(tx.timestamp)}</span>
-			</div>
-		`;
-	}
-	renderRows() {
-		if (this.state.loading && !this.state.transactions.length) {
-			return '<div class="ex-empty">Loading recent transactions…</div>';
+	statusText() {
+		if (this.state.loading) {
+			return 'Loading recent transactions…';
 		}
-		if (this.state.error && !this.state.transactions.length) {
-			return `<div class="ex-empty ex-error">${this.state.error}</div>`;
+		if (this.state.error) {
+			return this.state.error;
 		}
-		if (!this.state.transactions.length) {
-			return '<div class="ex-empty">No transactions yet.</div>';
-		}
-		const list = this.state.transactions;
-		let markup = '';
-		for (let index = 0; index < list.length; index += 1) {
-			markup += this.renderRow(list[index]);
-		}
-		return markup;
+		return 'No transactions yet.';
 	}
 	renderFilters() {
 		let markup = '';
@@ -225,11 +215,27 @@ export class ExplorerPage extends WebComponent {
 		}
 		return markup;
 	}
-	prevHref() {
-		return pageHrefFor(this.state.filter, Math.max(1, this.state.page - 1));
-	}
-	nextHref() {
-		return pageHrefFor(this.state.filter, this.state.page + 1);
+	txRow(tx) {
+		const direction = tx.type === 'mint' ? 'mint' : 'transfer';
+		/* Whole-value class spot: light rows insert a partial `tone-${x}` as a
+		   separate space-delimited token (`tone- mint`), so the prefix must be
+		   pre-joined here and bound as one value. */
+		const typeClass = `ex-cell ex-type tone-${direction}`;
+		const txHref = `/tx/${encodeURIComponent(tx.id)}/`;
+		const fromHref = `/account/${encodeURIComponent(tx.from)}/`;
+		const toHref = `/account/${encodeURIComponent(tx.to)}/`;
+		return html `
+			<div class="ex-row">
+				<a class="ex-cell ex-id" href=${txHref} title=${tx.id}>${shortId(tx.id)}</a>
+				<span class=${typeClass}>${direction.toUpperCase()}</span>
+				<a class="ex-cell ex-addr" href=${fromHref} title=${tx.from}>${shortAddress(tx.from)}</a>
+				<span class="ex-cell ex-arrow">→</span>
+				<a class="ex-cell ex-addr" href=${toHref} title=${tx.to}>${shortAddress(tx.to)}</a>
+				<span class="ex-cell ex-amount">${formatAmount(tx.amount)}</span>
+				<span class="ex-cell ex-status">${tx.status || '—'}</span>
+				<span class="ex-cell ex-time">${formatTimestamp(tx.timestamp)}</span>
+			</div>
+		`;
 	}
 	render() {
 		this.html `
@@ -240,27 +246,16 @@ export class ExplorerPage extends WebComponent {
 						<span class="ex-title">// EXPLORER · RECENT TRANSACTIONS</span>
 					</div>
 					<div class="ex-subtitle">
-						<span class="ex-stat-num">${this.subtitleCount}</span>
+						<span class="ex-stat-num">${this.loadedCount}</span>
+						<span class="ex-stat-label">loaded ·</span>
+						<span class="ex-stat-num">${this.subtitleTotal}</span>
 						<span class="ex-stat-label">${this.subtitleLabel}</span>
-						<span class="ex-stat-sep">·</span>
-						<span class="ex-stat-label">Page</span>
-						<span class="ex-stat-num">${this.subtitlePage}</span>
 						<span class="ex-stat-status">${this.subtitleStatus}</span>
 					</div>
 				</header>
 				<div class="ex-controls-bar">
 					<div class="ex-filters">^html${this.renderFilters}</div>
 					<div class="ex-controls">
-						<a class="ex-btn"
-							href=${this.prevHref}
-							aria-disabled=${() => {
-								return String(this.state.page <= 1);
-							}}>‹ Prev</a>
-						<a class="ex-btn"
-							href=${this.nextHref}
-							aria-disabled=${() => {
-								return String(!this.state.hasMore);
-							}}>Next ›</a>
 						<button class="ex-btn" @click=${this.handleRefresh}>↻ Refresh</button>
 					</div>
 				</div>
@@ -275,7 +270,21 @@ export class ExplorerPage extends WebComponent {
 						<span class="ex-cell ex-status">STATUS</span>
 						<span class="ex-cell ex-time">TIMESTAMP</span>
 					</div>
-					^html${this.renderRows}
+					${remoteList('transactions', this.txRow, {
+						loader: this.loadTransactions,
+						mode: 'both',
+						keyFn: txKey,
+						loadMore: '#load_more',
+						dedupe: true,
+					})}
+					<div class=${() => {
+						return this.state.error ? 'ex-empty ex-error' : 'ex-empty';
+					}} ?hidden=${() => {
+						return this.state.transactions.length > 0;
+					}}>${this.statusText}</div>
+				</div>
+				<div class="ex-loadmore-bar">
+					<button class="ex-btn ex-loadmore" #load_more>LOAD MORE ▾</button>
 				</div>
 			</div>
 		`;
