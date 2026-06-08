@@ -1,6 +1,38 @@
 import '../../../global/tabs/tabs.js';
-import { WebComponent, classList, each } from '../../../core/index.js';
+import { WebComponent, classList, remoteList } from '../../../core/index.js';
 import { Panel } from '../../../global/panel/panel.js';
+const PAGE_SIZE = 25;
+function shortCounterparty(value) {
+	if (!value) {
+		return '—';
+	}
+	return `${value.slice(0, 8)}…${value.slice(-4)}`;
+}
+function formatAmount(value) {
+	if (value == null) {
+		return '0';
+	}
+	const num = Number(value);
+	if (!Number.isFinite(num)) {
+		return String(value);
+	}
+	return num.toLocaleString('en-US');
+}
+function formatTime(iso) {
+	if (!iso) {
+		return '--:--:--';
+	}
+	const date = new Date(iso);
+	if (Number.isNaN(date.getTime())) {
+		return '--:--:--';
+	}
+	return date.toLocaleTimeString('en-GB', {
+		hour12: false,
+	});
+}
+function entryKey(entry) {
+	return entry.id;
+}
 class ActivityLogEntry extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -58,50 +90,111 @@ export class ActivityLog extends Panel {
 			'All', 'Inbound', 'Outbound',
 		],
 		title: 'LOG',
+		loading: false,
+		error: '',
 	};
-	entryMatchesActiveTab(entry, activeTab) {
-		if (activeTab === 'Inbound') {
-			return entry.direction === 'in';
-		}
-		if (activeTab === 'Outbound') {
-			return entry.direction === 'out';
-		}
-		return true;
+	loadedAddress = '';
+	onConnect() {
+		this.on('entries:loading', this.handleListLoading);
+		this.on('entries:loaded', this.handleListLoaded);
+		this.on('entries:error', this.handleListError);
+		this.observeGlobal('wallet', (wallet) => {
+			return this.handleWalletChange(wallet);
+		});
 	}
-	computeVisibleEntries() {
-		const activeTab = this.state.activeTab ?? '';
-		const entries = this.state.entries ?? [];
-		const out = [];
-		for (let i = 0; i < entries.length; i++) {
-			const entry = entries[i];
-			if (this.entryMatchesActiveTab(entry, activeTab)) {
-				out.push({
-					...entry,
-					id: entry?.id ?? i,
-				});
-			}
-		}
-		return out;
+	walletAddress() {
+		return this.globalState.wallet?.address || '';
 	}
-	// Normalize whatever shape the parent seeds (array of strings or array
-	// of objects) into the {id, label} contract <ui-tabs> expects. Keeping
-	// activeTab keyed off the label preserves the existing filter
-	// predicate (`entryMatchesActiveTab` switches on 'Inbound'/'Outbound').
-	tabsForUI() {
-		const tabs = this.state.tabs ?? [];
-		const out = [];
-		for (let i = 0; i < tabs.length; i++) {
-			const tab = tabs[i];
-			const label = typeof tab === 'string' ? tab : tab?.label ?? '';
-			if (!label) {
-				continue;
-			}
-			out.push({
-				id: label,
-				label,
-			});
+	/* The wallet bus fires on any wallet mutation (balance ticks etc.); only an
+	   ADDRESS change is a new history, so reset just on that. */
+	handleWalletChange(wallet) {
+		const address = wallet?.address || '';
+		if (address !== this.loadedAddress) {
+			this.loadedAddress = address;
+			this.remote('entries')?.reset();
 		}
-		return out;
+	}
+	handleListLoading() {
+		this.assignState({
+			loading: true,
+			error: '',
+		});
+	}
+	handleListLoaded() {
+		this.state.loading = false;
+	}
+	handleListError(domEvent) {
+		this.assignState({
+			loading: false,
+			error: domEvent?.detail?.data?.error || 'Could not load activity',
+		});
+	}
+	async getSDK() {
+		const app = document.querySelector('app-view');
+		return app?.ensureSDK ? app.ensureSDK() : null;
+	}
+	/* remoteList loader — the wallet's own tx history, paged via the cursor=page
+	   bridge (see accounts-list-page). Empty-success on no wallet so the mount
+	   auto-load is a clean no-op until a wallet loads. */
+	async loadEntries({
+		reset, cursor,
+	}) {
+		const address = this.walletAddress();
+		if (!address) {
+			return {
+				items: [],
+				nextCursor: null,
+				hasMore: false,
+			};
+		}
+		const page = reset ? 1 : (cursor ?? 1);
+		const sdk = await this.getSDK();
+		if (!sdk) {
+			return null;
+		}
+		const response = await sdk.getAccountTransactions(address, {
+			page,
+			limit: PAGE_SIZE,
+		});
+		if (!response) {
+			return null;
+		}
+		const txs = response.transactions ?? [];
+		const items = [];
+		for (let index = 0; index < txs.length; index += 1) {
+			items.push(this.txToEntry(txs[index], address));
+		}
+		const hasMore = Boolean(response.pagination?.hasMore);
+		return {
+			items,
+			nextCursor: hasMore ? page + 1 : null,
+			hasMore,
+		};
+	}
+	/* Map a chain tx to the entry shape ActivityLogEntry renders. Direction is
+	   relative to the wallet's own address. */
+	txToEntry(tx, walletAddress) {
+		const isInbound = tx.to === walletAddress;
+		const counterparty = isInbound ? tx.from : tx.to;
+		return {
+			direction: isInbound ? 'in' : 'out',
+			id: tx.id ?? '',
+			txHref: tx.id ? `/tx/${encodeURIComponent(tx.id)}/` : '',
+			counterparty: counterparty ?? '',
+			counterpartyHref: counterparty ? `/account/${encodeURIComponent(counterparty)}/` : '',
+			counterpartyShort: shortCounterparty(counterparty),
+			amount: formatAmount(tx.amount),
+			verb: isInbound ? 'from' : 'to',
+			status: tx.status === 'completed' || tx.status === 'confirmed' ? 'ok' : (tx.status || 'pending'),
+			timestamp: formatTime(tx.timestamp),
+		};
+	}
+	/* Real-time hook: a freshly observed tx is prepended to the top through the
+	   controller (so dedupe stays authoritative). Normalize first, in case a
+	   caller passes a partial entry. No live caller yet — exposed for the realtime
+	   transport to drive. */
+	addEntry(entry) {
+		this.remote('entries')?.prepend(this.createEntry(entry));
 	}
 	createEntry(entry = {}) {
 		return {
@@ -114,33 +207,76 @@ export class ActivityLog extends Panel {
 			amount: entry.amount ?? '0',
 			verb: entry.verb ?? '',
 			status: entry.status ?? 'ok',
-			timestamp: entry.timestamp ?? new Date().toLocaleTimeString('en-GB', {
-				hour12: false,
-			}),
+			timestamp: entry.timestamp ?? formatTime(new Date().toISOString()),
 		};
 	}
-	addEntry(entry) {
-		this.state.entries.unshift(this.createEntry(entry));
+	/* Client display predicate for the tab strip (All / Inbound / Outbound),
+	   passed as remoteList's `filter`. */
+	tabKeep(entry) {
+		const activeTab = this.state.activeTab;
+		if (activeTab === 'Inbound') {
+			return entry.direction === 'in';
+		}
+		if (activeTab === 'Outbound') {
+			return entry.direction === 'out';
+		}
+		return true;
+	}
+	visibleCount() {
+		const entries = this.state.entries ?? [];
+		let count = 0;
+		for (let index = 0; index < entries.length; index += 1) {
+			if (this.tabKeep(entries[index])) {
+				count += 1;
+			}
+		}
+		return count;
+	}
+	statusText() {
+		if (this.state.loading) {
+			return 'Loading activity…';
+		}
+		if (this.state.error) {
+			return this.state.error;
+		}
+		return `No ${this.state.activeTab.toLowerCase()} transactions.`;
+	}
+	// Normalize whatever shape the parent seeds (array of strings or array
+	// of objects) into the {id, label} contract <ui-tabs> expects. Keeping
+	// activeTab keyed off the label preserves the existing filter predicate.
+	tabsForUI() {
+		const tabs = this.state.tabs ?? [];
+		const out = [];
+		for (let index = 0; index < tabs.length; index += 1) {
+			const tab = tabs[index];
+			const label = typeof tab === 'string' ? tab : tab?.label ?? '';
+			if (!label) {
+				continue;
+			}
+			out.push({
+				id: label,
+				label,
+			});
+		}
+		return out;
 	}
 	handleTabChange(domEvent) {
 		const next = domEvent.detail?.data?.active ?? domEvent.detail?.active;
 		if (next && next !== this.state.activeTab) {
 			this.state.activeTab = next;
+			/* The display filter (`tabKeep`) reads activeTab, but activeTab is not a
+			   dep of the list spot — only `entries` is. Re-touch entries (same items,
+			   new array ref) so the spot re-runs the filter against the new tab. The
+			   keyed diff (by id) reuses rows; only membership changes. */
+			this.state.entries = this.state.entries.slice();
 			this.emit('tab-change', {
 				tab: this.state.activeTab,
 			});
 		}
 	}
-	entryKey(entry) {
-		return entry.id;
-	}
 	renderBody() {
-		// Use the core <ui-tabs> strip in horizontal mode — no slotted
-		// content (the feed sits BELOW the strip rather than inside any
-		// tab pane). That way the existing entry-filter logic keeps the
-		// single source of truth and we don't re-mount per-tab feeds.
-		// Any change to the global tabs (indicator animation, hover state,
-		// accessibility, mobile icon mode) now flows in automatically.
+		// The core <ui-tabs> strip drives `activeTab`; the feed below renders the
+		// wallet's tx history via remoteList, with `tabKeep` as the display filter.
 		return this.htmlElement `
 			<div class="output-content">
 				<ui-tabs class="output-tabs-strip"
@@ -148,21 +284,22 @@ export class ActivityLog extends Panel {
 					.active=${this.state.activeTab}
 					@tab-change=${this.handleTabChange}></ui-tabs>
 				<div class="output-feed">
-					^html${() => {
-						if (this.computeVisibleEntries().length > 0) {
-							return '';
-						}
-						return `
-							<div class="log-entry">
-								<span class="log-ts">--:--:--</span>
-								<span class="log-tag">∅</span>
-								<span class="log-msg">No ${this.state.activeTab.toLowerCase()} transactions.</span>
-							</div>
-						`;
-					}}
-					${() => {
-						return each(this.computeVisibleEntries(), ActivityLogEntry, this.entryKey);
-					}}
+					${remoteList('entries', ActivityLogEntry, {
+						loader: this.loadEntries,
+						mode: 'button',
+						keyFn: entryKey,
+						filter: (entry) => {
+							return this.tabKeep(entry);
+						},
+						loadMore: '#load_more',
+						dedupe: true,
+					})}
+					<div class="log-empty" ?hidden=${() => {
+						return this.visibleCount() > 0;
+					}}>∅ ${this.statusText}</div>
+					<div class="log-loadmore-bar">
+						<button class="log-btn log-loadmore" #load_more>LOAD MORE ▾</button>
+					</div>
 				</div>
 			</div>
 		`;

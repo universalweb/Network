@@ -1449,67 +1449,13 @@ class AppView extends WebComponent {
 		this.fetchTransactionsForWallet();
 		return account;
 	}
-	async fetchTransactionsForWallet() {
-		const address = this.globalState.wallet?.address;
-		if (!address || this.globalState.api?.ok === false) {
-			return null;
-		}
-		const sdk = await this.ensureSDK();
-		// Server caps at 100 per page; 50 is plenty for the dashboard preview
-		// without thrashing on big histories.
-		const response = await sdk.getAccountTransactions(address, {
-			limit: 50,
-		});
-		const txs = response?.transactions ?? [];
-		const entries = [];
-		for (let i = 0; i < txs.length; i += 1) {
-			entries.push(this.txToActivityEntry(txs[i], address));
-		}
-		// Both desktop and mobile dashboards mount their own activity-log;
-		// seed every instance so the hidden one is ready when the viewport
-		// flips. Replace `entries` wholesale rather than diffing — the
-		// activity log treats it as a reactive array and re-renders.
+	// The activity-log now self-loads the wallet's tx history via remoteList (its
+	// own loader + cursor paging + tx→entry mapping). On an account refresh we
+	// just poke each mounted instance to reload; a wallet-address change resets it
+	// on its own (the log observes the wallet bus). Both dashboards mount one.
+	fetchTransactionsForWallet() {
 		this.applyToAll('activity-log', (log) => {
-			if (log?.state) {
-				log.state.entries = entries;
-			}
-		});
-		return txs;
-	}
-	txToActivityEntry(tx, walletAddress) {
-		const isInbound = tx.to === walletAddress;
-		const direction = isInbound ? 'in' : 'out';
-		const counterparty = isInbound ? tx.from : tx.to;
-		let counterpartyShort = '—';
-		if (counterparty) {
-			counterpartyShort = `${counterparty.slice(0, 8)}…${counterparty.slice(-4)}`;
-		}
-		return {
-			direction,
-			id: tx.id ?? '',
-			// Router intercepts in-app anchor clicks (interceptLinks: true) so
-			// these hrefs route via History API without page reload. Encode
-			// the address — base64 carries `/` and `+`.
-			txHref: tx.id ? `/tx/${encodeURIComponent(tx.id)}/` : '',
-			counterparty: counterparty ?? '',
-			counterpartyHref: counterparty ? `/account/${encodeURIComponent(counterparty)}/` : '',
-			counterpartyShort,
-			amount: formatBalanceShort(tx.amount),
-			verb: isInbound ? 'from' : 'to',
-			status: tx.status === 'completed' || tx.status === 'confirmed' ? 'ok' : (tx.status || 'pending'),
-			timestamp: this.formatTxTimestamp(tx.timestamp),
-		};
-	}
-	formatTxTimestamp(iso) {
-		if (!iso) {
-			return '--:--:--';
-		}
-		const date = new Date(iso);
-		if (Number.isNaN(date.getTime())) {
-			return '--:--:--';
-		}
-		return date.toLocaleTimeString('en-GB', {
-			hour12: false,
+			log.remote?.('entries')?.refresh();
 		});
 	}
 	syncWalletStatsPanel(values) {

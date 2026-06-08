@@ -200,6 +200,24 @@ class RemoteListController {
 		}
 		return this.load(false);
 	}
+	/*
+	 * Prepend a single item to the top of the list — the real-time complement to
+	 * cursor paging (a freshly observed item arriving while history loads below).
+	 * Goes through the controller so the dedupe `seenKeys` stays authoritative: a
+	 * prepended item a later page re-fetches won't double-render. Reassigns the
+	 * array (not `.unshift`) to fire the same reactive setter `load()` uses.
+	 */
+	prepend(item) {
+		if (this.config.dedupe !== false) {
+			const itemKey = this.keyFn(item, 0);
+			if (this.seenKeys.has(itemKey)) {
+				return;
+			}
+			this.seenKeys.add(itemKey);
+		}
+		const current = Array.isArray(this.component.state[this.stateKey]) ? this.component.state[this.stateKey] : [];
+		this.component.state[this.stateKey] = [item].concat(current);
+	}
 	async load(isReset) {
 		const config = this.config;
 		if (!isFunction(config.loader)) {
