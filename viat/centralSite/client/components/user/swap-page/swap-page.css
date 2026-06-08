@@ -6,6 +6,13 @@
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
+	/* Fill the viewport so the frame centers vertically. Under document scroll
+	   the shell is content-height by default, which left `justify-content` with
+	   no slack and pinned the box to the top — the old fixed appView grid used to
+	   supply this height. Min (not fixed) so a tall frame on a short screen grows
+	   the shell and document-scrolls instead of clipping. The padding clears the
+	   fixed top bar / bottom bar so the frame centers in the visible band. */
+	min-height: 100svh;
 	padding: 5.625rem var(--space-4) var(--space-12) var(--space-4);
 	font-family: var(--font-mono, 'JetBrains Mono', monospace);
 	color: var(--text-main);
