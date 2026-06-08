@@ -4,15 +4,12 @@
   width: 100%;
 }
 
-/* Root-class layout — moved out of the universal panel.css (was an app-name
-   leak). Bounded scrollable card: a max-height cap keeps it compact now that the
-   dashboard flows in document scroll (the old bound came from the height:100%
-   chain that the scroll migration removed). */
+/* Content-height like a normal div — the panel grows with its rows; no cap, no
+   inner scroll. The dashboard flows in document scroll, so a long params list
+   just makes the page taller. Add a max-height + overflow only if a panel ever
+   genuinely needs to be a bounded scroll area. */
 .wallet-params-panel {
-  overflow-y: auto;
   flex: 0 0 auto;
-  min-height: 13.75rem;
-  max-height: min(50svh, 30rem);
 }
 
 .wallet-params-panel .stat-block {

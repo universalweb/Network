@@ -43,9 +43,9 @@
 .output-feed {
 	flex: 1;
 	min-height: 0;
-	/* Bounded scrollable card: under document scroll the dashboard flows, so the
-	   feed needs its own cap or it would grow the page indefinitely. */
-	max-height: min(60svh, 40rem);
+	/* Content-height: the feed grows with its entries and the page scrolls
+	   (document scroll). overflow-y stays as a dormant fallback for any layout
+	   that later bounds the panel; it does not cap the height here. */
 	overflow-y: auto;
 	padding: var(--space-4) var(--space-4);
 	display: flex;

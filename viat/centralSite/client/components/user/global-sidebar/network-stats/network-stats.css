@@ -8,12 +8,11 @@
   --panel-bg: rgb(12, 14, 22);
 }
 
-/* Root-class layout — moved out of the universal panel.css (was an app-name
-   leak). The stats body scrolls within a bounded min-height. */
+/* Content-height like a normal div — grows with its rows, no inner scroll. The
+   sidebar shell (.sidebar-shell) is the scroll container, so a long stats list
+   scrolls the sidebar, not a too-short box inside it. */
 .stats-panel {
-  overflow-y: auto;
   flex: 0 0 auto;
-  min-height: 13.75rem;
   display: flex;
   flex-direction: column;
 }
