@@ -71,6 +71,7 @@ class RemoteListController {
 		this.loadToken = 0;
 		this.scroller = null;
 		this.scrollTarget = null;
+		this.paused = false;
 		this.loadMoreElement = null;
 		this.abortController = null;
 		this.scrollReportUninstall = null;
@@ -175,7 +176,7 @@ class RemoteListController {
 	}
 	onScroll() {
 		const scroller = this.scroller;
-		if (!scroller || this.loading || this.exhausted) {
+		if (!scroller || this.loading || this.exhausted || this.paused) {
 			return;
 		}
 		const prefetch = readPrefetchPixels(this.config.prefetch);
@@ -195,7 +196,7 @@ class RemoteListController {
 		return this.reset();
 	}
 	loadMore() {
-		if (this.loading || this.exhausted) {
+		if (this.loading || this.exhausted || this.paused) {
 			return Promise.resolve();
 		}
 		return this.load(false);
