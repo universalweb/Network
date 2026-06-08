@@ -360,10 +360,26 @@ export class ListBinding extends Binding {
 		this.filterFn = filterFn;
 	}
 }
+/*
+	`RemoteListBinding` is a `ListBinding` carrying a remote-load config. It renders
+	through the exact same `ListSpot` path (so `isListBinding` is true → keyed diff +
+	filterFn are inherited verbatim); the only addition is the load controller the
+	template mount-hook attaches when it sees this subtype. Kept here beside the
+	other binding types so the parser/runtime share one binding-type vocabulary.
+*/
+export class RemoteListBinding extends ListBinding {
+	static isRemoteListBinding(source) {
+		return source instanceof RemoteListBinding;
+	}
+	constructor(key, renderFn, keyFn, filterFn, remoteConfig) {
+		super(key, renderFn, keyFn, filterFn);
+		this.remoteConfig = remoteConfig;
+	}
+}
 export function isBindingType(x) {
 	if (!x) {
 		return false;
 	}
 	const c = x.constructor;
-	return c === Binding || c === ListBinding;
+	return c === Binding || c === ListBinding || c === RemoteListBinding;
 }

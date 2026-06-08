@@ -26,6 +26,7 @@ export {
 	filter,
 	html,
 	list,
+	remoteList,
 	styles,
 } from './template.js';
 export { bind, CONTENT_KIND } from './state/binding.js';

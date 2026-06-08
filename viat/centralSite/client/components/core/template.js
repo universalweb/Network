@@ -9,6 +9,7 @@ import {
 import {
 	CONTENT_KIND,
 	ListBinding,
+	RemoteListBinding,
 	addDep,
 	bind,
 	isBindingType,
@@ -16,6 +17,7 @@ import {
 	makeProxy,
 	track,
 } from './state/binding.js';
+import { mountRemoteController } from './state/remoteList.js';
 import { resolveListFilter } from './state/listFilter.js';
 import { STATE_PATH, ensureStateBus, localRealm } from './state/state.js';
 import {
@@ -390,7 +392,7 @@ function resolveRenderKind(renderFn) {
 	}
 	return 'fn';
 }
-function createListElementByKind(kind, renderFn, item) {
+function createListElementByKind(kind, renderFn, item, component) {
 	if (kind === 'tag') {
 		const el = document.createElement(renderFn);
 		el.state = item;
@@ -404,7 +406,13 @@ function createListElementByKind(kind, renderFn, item) {
 		// eslint-disable-next-line new-cap
 		return new renderFn(item);
 	}
-	return createRenderableElement(renderFn(item));
+	/*
+	 * A `'fn'` row renderer is called with the owning component as `this`, so a
+	 * bare method ref (`this.txRow`) reads component state/helpers — same
+	 * semantics as a bare-method-ref content spot. `.call(undefined, …)` when
+	 * the list has no connected spot yet is just a plain call.
+	 */
+	return createRenderableElement(renderFn.call(component, item));
 }
 class ComponentBinding {
 	constructor(value) {
@@ -443,7 +451,7 @@ export class LiveList {
 		this.spot = null;
 	}
 	createElement(item) {
-		return createListElementByKind(this.kind, this.renderFn, item);
+		return createListElementByKind(this.kind, this.renderFn, item, this.spot?.component);
 	}
 	splice(start, deleteCount = 0, ...newItems) {
 		const currentLength = this.items.length;
@@ -529,6 +537,27 @@ export function filter(key, renderFn, test, keyFn = (item, index) => {
 }) {
 	return new ListBinding(key, renderFn, keyFn, resolveListFilter(test));
 }
+function autoKey(item, index) {
+	return item?.key ?? item?.id ?? index;
+}
+/**
+ * `remoteList(key, renderFn, config)` — `list()` plus an async load controller
+ * (infinite-scroll and/or a load-more button + spinner). Renders identically to
+ * `list()`/`filter()` (same `ListSpot`; `renderFn` is a bare method ref or a
+ * component class; `config.filter` reuses the `filter()` predicate verbatim). The
+ * template mount-hook attaches a `RemoteListController` that drives `config.loader`
+ * ({reset, cursor, signal}) → {items, nextCursor, hasMore}), appends pages into
+ * `state[key]`, and exposes `this.remote(key)` for `reset()` / `loadMore()`.
+ * @param {string} key - State key holding the items array.
+ * @param {Function|CustomElementConstructor} renderFn - Row method ref or component class.
+ * @param {object} config - `{ loader, mode, auto, filter, keyFn, spinner, loadMore, prefetch, dedupe, scroller, scrollReport }`.
+ * @returns {RemoteListBinding} The binding to interpolate in the template.
+ */
+export function remoteList(key, renderFn, config = {}) {
+	const keyFn = config.keyFn ?? autoKey;
+	const filterFn = config.filter === undefined ? null : resolveListFilter(config.filter);
+	return new RemoteListBinding(key, renderFn, keyFn, filterFn, config);
+}
 /*
  * `bind.list` — typed LIST variant of the bind family. Wired here, where the
  * list machinery lives, onto the shared `bind` callable (no import circular).
@@ -583,7 +612,7 @@ function lisIndexSet(sources) {
  */
 function updateReusedElement(element, item, itemList) {
 	if (LIGHT_ROW_INSTANCES.has(element)) {
-		patchLightRow(element, itemList.renderFn(item));
+		patchLightRow(element, itemList.renderFn.call(itemList.spot?.component, item));
 		return element;
 	}
 	if (isFunction(element.assignState)) {
@@ -1680,6 +1709,9 @@ function installBindingSpot(plan, el, expr, component) {
 		const listSpot = new ListSpot(el, plan.slotIndex, plan.type, expr, component, bindingKey, expr.renderFn, expr.keyFn, expr.filterFn);
 		listSpot.refresh(null);
 		syncSpotSubscriptions(listSpot, keyDepMap(bindingKey, component));
+		if (RemoteListBinding.isRemoteListBinding(expr)) {
+			mountRemoteController(component, el, expr);
+		}
 		return listSpot;
 	}
 	const propertyIndex = component.propertyIndex;
@@ -2444,6 +2476,9 @@ function installAnchoredTextSpot(plan, resolved, exprs, component) {
 		markAnchored(listSpot, startComment, endComment);
 		listSpot.refresh(null);
 		syncSpotSubscriptions(listSpot, keyDepMap(expr.key, component));
+		if (RemoteListBinding.isRemoteListBinding(expr)) {
+			mountRemoteController(component, parentEl, expr);
+		}
 		return listSpot;
 	}
 	if (isBindingType(expr)) {

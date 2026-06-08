@@ -62,6 +62,7 @@ import {
 	ensurePropertyIndex,
 } from './attrs/staticConfig.js';
 import { createBound, getById, preRender } from './render/factory.js';
+import { disposeRemoteLists, remote } from './state/remoteList.js';
 import { getRef, makeRefsProxy } from './dom/refs.js';
 import { handleObserverCallback, installObserver, uninstallObserver } from './lifecycle/observer.js';
 import { hotKey, hotKeyListeners } from './hotkeys/hotkeys.js';
@@ -616,6 +617,8 @@ const PROTO_METHODS = {
 	uninstallObserver,
 	onEnv,
 	reflectViewport,
+	remote,
+	disposeRemoteLists,
 	removeStyle,
 	removeTimeout: removeComponentTimeout,
 	resolveStyle,
