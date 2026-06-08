@@ -1,74 +1,29 @@
+/* `<paged-list>` chrome only — the table frame, meta bar, pager / LOAD MORE.
+   ROW styling comes from the host via `.importStyles` (injected through this
+   shadow), so the host's `.al-row`/`.ex-cell` grids style the head + rows here. */
 :host {
 	display: block;
-	min-height: 0;
 }
 .pl-shell {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-4);
-	min-height: 0;
 	font-family: var(--font-mono, monospace);
 	color: var(--dark-text-medium);
 }
-.pl-table {
+.pl-bar {
 	display: flex;
-	flex-direction: column;
-	min-height: 0;
-	overflow-y: auto;
-	border: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.05));
-	border-radius: var(--radius-sm);
-	background: rgba(255, 255, 255, 0.01);
-}
-.pl-empty {
-	padding: var(--space-7);
-	text-align: center;
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
-	font-size: var(--text-base);
-}
-.pl-empty.pl-error {
-	color: var(--color-danger);
-}
-.pl-pager {
-	display: inline-flex;
+	flex-wrap: wrap;
 	align-items: center;
-	gap: var(--space-3);
-	padding: var(--space-2) var(--space-3);
+	justify-content: space-between;
+	column-gap: var(--space-5);
+	row-gap: var(--space-3);
+	padding: var(--space-3) var(--space-5);
+	background: rgba(255, 255, 255, 0.015);
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	border-radius: var(--radius-sm);
-	background: rgba(255, 255, 255, 0.015);
-	align-self: stretch;
 }
-.pl-btn {
-	background: transparent;
-	color: var(--dark-text-medium);
-	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.16));
-	padding: var(--space-2) var(--space-3);
-	font-family: var(--font-mono, monospace);
-	font-size: var(--text-2xs);
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
-	cursor: pointer;
-	text-decoration: none;
-	transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
-}
-.pl-btn:hover:not(:disabled):not([aria-disabled='true']) {
-	border-color: var(--teal);
-	color: var(--teal);
-}
-.pl-btn:disabled,
-.pl-btn[aria-disabled='true'] {
-	opacity: 0.35;
-	cursor: not-allowed;
-	pointer-events: none;
-}
-a.pl-btn {
-	display: inline-flex;
-	align-items: center;
-}
-.pl-refresh {
-	margin-inline-start: auto;
-}
-.pl-status {
+.pl-meta {
 	display: inline-flex;
 	align-items: baseline;
 	flex-wrap: wrap;
@@ -86,13 +41,82 @@ a.pl-btn {
 .pl-label {
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 }
-.pl-sep {
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.3));
-}
-.pl-status-text:empty {
+.pl-status:empty {
 	display: none;
 }
-.pl-status-text {
+.pl-status {
 	margin-inline-start: var(--space-2);
 	color: var(--teal);
+}
+.pl-controls {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2);
+}
+.pl-btn {
+	background: transparent;
+	color: var(--dark-text-medium);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.16));
+	padding: var(--space-2) var(--space-3);
+	font-family: var(--font-mono, monospace);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.pl-btn:hover:not(:disabled) {
+	border-color: var(--teal);
+	color: var(--teal);
+}
+.pl-btn:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+.pl-table {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.05));
+	border-radius: var(--radius-sm);
+	background: rgba(255, 255, 255, 0.01);
+}
+.pl-empty {
+	padding: var(--space-7);
+	text-align: center;
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+	font-size: var(--text-base);
+}
+.pl-empty.pl-error {
+	color: var(--color-danger);
+}
+/* Pager (paged style) + LOAD MORE (loadmore style). Each sets display:flex, which
+   beats the UA `[hidden]{display:none}` — so re-assert hidden explicitly. */
+.pl-pager {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-4);
+}
+.pl-page-label {
+	font-size: var(--text-2xs);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+}
+.pl-loadmore-bar {
+	display: flex;
+	justify-content: center;
+}
+.pl-loadmore-bar:not(:has(.pl-loadmore:not([hidden]))) {
+	display: none;
+}
+.pl-loadmore {
+	min-width: 14rem;
+	justify-content: center;
+}
+.pl-pager[hidden],
+.pl-loadmore-bar[hidden] {
+	display: none;
 }

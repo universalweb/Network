@@ -1,3 +1,6 @@
+/* Page chrome only — the title header. The list (table frame, rows, meta, pager /
+   LOAD MORE) is owned by <paged-list>; the row/cell CSS lives in accounts-rows.css
+   and is injected into the wrapper's shadow via `.importStyles`. */
 :host {
 	display: block;
 }
@@ -16,9 +19,6 @@
 	margin-inline-start: auto;
 	margin-inline-end: auto;
 }
-/* Title separated from controls so each gets its own breathing room.
-   Title + stats meta sit centered in one bar; the pager / refresh
-   controls drop into their own bar below. */
 .al-title-header {
 	display: flex;
 	flex-wrap: wrap;
@@ -45,158 +45,4 @@
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	color: var(--dark-text-medium);
-}
-.al-subtitle {
-	display: inline-flex;
-	align-items: baseline;
-	flex-wrap: wrap;
-	column-gap: var(--space-2);
-	row-gap: var(--space-1);
-	font-size: var(--text-xs);
-	text-transform: uppercase;
-	letter-spacing: 0.14em;
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
-}
-.al-controls-bar {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: flex-end;
-	column-gap: var(--space-5);
-	row-gap: var(--space-3);
-	padding: var(--space-3) var(--space-5);
-	background: rgba(255, 255, 255, 0.015);
-	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
-	border-radius: var(--radius-sm);
-}
-.al-stat-num {
-	color: var(--dark-text-medium);
-	font-variant-numeric: tabular-nums;
-}
-.al-stat-label {
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
-}
-.al-stat-sep {
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.3));
-}
-.al-stat-status:empty {
-	display: none;
-}
-.al-stat-status {
-	margin-inline-start: var(--space-2);
-	color: var(--teal);
-}
-.al-controls {
-	display: inline-flex;
-	flex-wrap: wrap;
-	gap: var(--space-2);
-}
-.al-btn {
-	background: transparent;
-	color: var(--dark-text-medium);
-	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.16));
-	padding: var(--space-2) var(--space-3);
-	font-family: var(--font-mono, monospace);
-	font-size: var(--text-xs);
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	cursor: pointer;
-	transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
-}
-.al-btn:hover:not(:disabled):not([aria-disabled='true']) {
-	border-color: var(--teal);
-	color: var(--teal);
-}
-.al-btn:disabled,
-.al-btn[aria-disabled='true'] {
-	opacity: 0.35;
-	cursor: not-allowed;
-	pointer-events: none;
-}
-a.al-btn {
-	display: inline-flex;
-	align-items: center;
-	text-decoration: none;
-}
-.al-table {
-	border: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.05));
-	border-radius: var(--radius-sm);
-	background: rgba(255, 255, 255, 0.01);
-}
-.al-row {
-	display: grid;
-	grid-template-columns: 1.7fr 1fr 1fr 1fr 1.5fr;
-	gap: var(--space-3);
-	padding: var(--space-3) var(--space-3);
-	border-block-end: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.04));
-	font-size: var(--text-sm);
-	align-items: center;
-}
-.al-row:hover:not(.al-head) {
-	background: color-mix(in oklab, var(--teal) 6%, transparent);
-}
-.al-row.al-head {
-	font-size: var(--text-2xs);
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
-	position: sticky;
-	inset-block-start: 0;
-	background: var(--bg-dark);
-	z-index: 1;
-}
-.al-cell {
-	overflow: hidden;
-	white-space: nowrap;
-	text-overflow: ellipsis;
-}
-.al-addr {
-	text-decoration: none;
-	color: var(--dark-text-medium);
-	border-block-end: 1px dashed transparent;
-}
-a.al-addr:hover {
-	color: var(--teal);
-	border-block-end-color: var(--teal);
-}
-.al-balance {
-	text-align: right;
-	color: var(--color-success);
-	font-variant-numeric: tabular-nums;
-}
-.al-totin {
-	text-align: right;
-	color: var(--dark-text-medium);
-	font-variant-numeric: tabular-nums;
-}
-.al-totout {
-	text-align: right;
-	color: var(--color-warning);
-	font-variant-numeric: tabular-nums;
-}
-.al-time {
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
-}
-.al-empty {
-	padding: var(--space-7);
-	text-align: center;
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
-	font-size: var(--text-base);
-}
-.al-empty.al-error {
-	color: var(--color-danger);
-}
-/* Load-more action below the table. The controller toggles `hidden` on the
-   button when the list is exhausted; collapse the whole bar then so no empty
-   gap is left dangling under the last row. */
-.al-loadmore-bar {
-	display: flex;
-	justify-content: center;
-}
-.al-loadmore-bar:not(:has(.al-loadmore:not([hidden]))) {
-	display: none;
-}
-.al-loadmore {
-	min-width: 14rem;
-	justify-content: center;
 }
