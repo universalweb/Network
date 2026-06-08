@@ -70,6 +70,7 @@ class RemoteListController {
 		this.disposed = false;
 		this.loadToken = 0;
 		this.scroller = null;
+		this.scrollTarget = null;
 		this.loadMoreElement = null;
 		this.abortController = null;
 		this.scrollReportUninstall = null;
@@ -110,10 +111,25 @@ class RemoteListController {
 	wireTriggers(anchorElement) {
 		const config = this.config;
 		const explicitScroller = config.scroller ? this.component.getRef(stripHash(config.scroller)) : null;
-		this.scroller = explicitScroller ?? findScrollableAncestor(anchorElement) ?? null;
+		const resolved = explicitScroller ?? findScrollableAncestor(anchorElement);
+		if (resolved) {
+			this.scroller = resolved;
+			this.scrollTarget = resolved;
+		} else {
+			/*
+			 * Documented "else viewport" fallback: under document/body scroll there
+			 * is NO scrollable ancestor element — the page itself scrolls. Measure the
+			 * scrollingElement (correct viewport scrollTop/clientHeight/scrollHeight)
+			 * but listen on the window, where the viewport's scroll event fires (a
+			 * scroll listener on documentElement never fires for the root scroller).
+			 */
+			const ownerDocument = globalThis.document;
+			this.scroller = ownerDocument.scrollingElement ?? ownerDocument.documentElement;
+			this.scrollTarget = globalThis;
+		}
 		const mode = config.mode ?? 'scroll';
-		if ((mode === 'scroll' || mode === 'both') && this.scroller) {
-			this.scroller.addEventListener('scroll', this, {
+		if ((mode === 'scroll' || mode === 'both') && this.scrollTarget) {
+			this.scrollTarget.addEventListener('scroll', this, {
 				passive: true,
 			});
 		}
@@ -132,8 +148,8 @@ class RemoteListController {
 		}
 	}
 	detachDom() {
-		if (this.scroller) {
-			this.scroller.removeEventListener('scroll', this);
+		if (this.scrollTarget) {
+			this.scrollTarget.removeEventListener('scroll', this);
 		}
 		if (this.loadMoreElement) {
 			this.loadMoreElement.removeEventListener('click', this);
@@ -144,6 +160,7 @@ class RemoteListController {
 			this.scrollReportUninstall = null;
 		}
 		this.scroller = null;
+		this.scrollTarget = null;
 	}
 	/* Stable-`this` listener for both the scroller `scroll` and the load-more
 	   `click` — passed as the listener object so there is no per-instance bind. */
