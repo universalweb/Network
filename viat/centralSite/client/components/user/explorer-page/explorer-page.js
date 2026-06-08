@@ -1,23 +1,22 @@
+import '../../global/paged-list/paged-list.js';
 import '../../global/icon/icon.js';
-import { WebComponent, html, remoteList } from '../../core/index.js';
+import { WebComponent, html } from '../../core/index.js';
 const PAGE_SIZE = 20;
+const ROW_STYLES = new URL('./explorer-rows.css', import.meta.url).href;
 const FILTERS = [
 	{
 		id: 'all',
 		label: 'All',
-		subtitleLabel: 'Total',
 		basePath: '/explorer/',
 	},
 	{
 		id: 'mint',
 		label: 'Mints',
-		subtitleLabel: 'Mints',
 		basePath: '/explorer/mints/',
 	},
 	{
 		id: 'transfer',
 		label: 'Transfers',
-		subtitleLabel: 'Transfers',
 		basePath: '/explorer/transfers/',
 	},
 ];
@@ -28,16 +27,6 @@ function findFilter(filterId) {
 		}
 	}
 	return FILTERS[0];
-}
-function formatCount(value) {
-	if (value == null) {
-		return '0';
-	}
-	const num = Number(value);
-	if (!Number.isFinite(num)) {
-		return String(value);
-	}
-	return num.toLocaleString('en-US');
 }
 function shortAddress(value) {
 	if (!value) {
@@ -80,77 +69,65 @@ function formatTimestamp(value) {
 function txKey(tx) {
 	return tx.id;
 }
+function pageHrefFor(filterId, page) {
+	const filter = findFilter(filterId);
+	if (!page || page <= 1) {
+		return filter.basePath;
+	}
+	return `${filter.basePath}page/${page}/`;
+}
+async function getSDK() {
+	const app = document.querySelector('app-view');
+	return app?.ensureSDK ? app.ensureSDK() : null;
+}
 export class ExplorerPage extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
 		explorer: './explorer-page.css',
 	};
 	static state = {
-		transactions: [],
 		filter: 'all',
-		totalCount: 0,
-		loading: false,
-		error: '',
+		rowStyles: ROW_STYLES,
 		titleIconState: {
 			name: 'compass',
 			size: 'md',
 		},
 	};
-	onConnect() {
-		this.on('transactions:loading', this.handleListLoading);
-		this.on('transactions:loaded', this.handleListLoaded);
-		this.on('transactions:error', this.handleListError);
-		this.observeGlobal('api', (api) => {
-			return this.handleApiReady(api);
-		});
-	}
-	/* Pure retry once the chain API is reachable — guarded on an empty list and
-	   null-safe on the controller, so the supersede token + dedupe make it
-	   double-load-proof. */
-	handleApiReady(api) {
-		if (api?.ok && !this.state.transactions.length) {
-			this.remote('transactions')?.reset();
-		}
-	}
-	/* Router entry point. The filter is the only routed dimension that matters
-	   now (page-number paging is gone); a real filter change rebinds the loader's
-	   `type` and resets, re-entering the same filter is a no-op so the loaded list
-	   survives back-navigation. */
+	/* Data + display contract for <paged-list>, one stable bundle merged via
+	   `.state`. The loader + pageHref are arrows so they read the page's reactive
+	   filter; rows are self-contained (no page `this`). */
+	listConfig = {
+		loader: (options) => {
+			return this.loadTransactions(options);
+		},
+		renderRow: this.txRow,
+		keyFn: txKey,
+		renderHead: this.headRow,
+		pageHref: (page) => {
+			return pageHrefFor(this.state.filter, page);
+		},
+		itemNoun: 'transactions',
+		emptyText: 'No transactions yet.',
+		loadingText: 'Loading recent transactions…',
+		pagingStyle: 'loadmore',
+	};
+	/* Router entry: the filter is the routed dimension. A real change rebinds the
+	   loader's type and reloads from page 1; re-entering the same filter is a
+	   no-op so the loaded list survives back-navigation. */
 	setView(filter) {
 		const normalized = findFilter(filter).id;
 		if (normalized === this.state.filter) {
 			return;
 		}
 		this.state.filter = normalized;
-		this.remote('transactions')?.reset();
+		this.refs.list?.refresh();
 	}
-	handleListLoading() {
-		this.assignState({
-			loading: true,
-			error: '',
-		});
-	}
-	handleListLoaded() {
-		this.state.loading = false;
-	}
-	handleListError(domEvent) {
-		this.assignState({
-			loading: false,
-			error: domEvent?.detail?.data?.error || 'Could not load transactions',
-		});
-	}
-	async getSDK() {
-		const app = document.querySelector('app-view');
-		return app?.ensureSDK ? app.ensureSDK() : null;
-	}
-	/* Cursor=page bridge (see accounts-list-page). The active filter is read from
-	   state at call time, so a setView()-driven reset reloads with the new type. */
 	async loadTransactions({
 		reset, cursor,
 	}) {
 		const page = reset ? 1 : (cursor ?? 1);
 		const filter = this.state.filter;
-		const sdk = await this.getSDK();
+		const sdk = await getSDK();
 		if (!sdk) {
 			return null;
 		}
@@ -166,44 +143,12 @@ export class ExplorerPage extends WebComponent {
 			return null;
 		}
 		const hasMore = Boolean(response.pagination?.hasMore);
-		if (page === 1) {
-			this.state.totalCount = response.pagination?.totalCount ?? 0;
-		}
 		return {
 			items: response.transactions ?? [],
 			nextCursor: hasMore ? page + 1 : null,
 			hasMore,
+			totalCount: response.pagination?.totalCount ?? 0,
 		};
-	}
-	handleRefresh() {
-		this.remote('transactions')?.refresh();
-	}
-	loadedCount() {
-		return formatCount(this.state.transactions.length);
-	}
-	subtitleLabel() {
-		return findFilter(this.state.filter).subtitleLabel;
-	}
-	subtitleTotal() {
-		return formatCount(this.state.totalCount);
-	}
-	subtitleStatus() {
-		if (this.state.loading) {
-			return 'syncing…';
-		}
-		if (this.state.error) {
-			return `error: ${this.state.error}`;
-		}
-		return '';
-	}
-	statusText() {
-		if (this.state.loading) {
-			return 'Loading recent transactions…';
-		}
-		if (this.state.error) {
-			return this.state.error;
-		}
-		return 'No transactions yet.';
 	}
 	renderFilters() {
 		let markup = '';
@@ -215,11 +160,22 @@ export class ExplorerPage extends WebComponent {
 		}
 		return markup;
 	}
+	headRow() {
+		return `
+			<div class="ex-row ex-head">
+				<span class="ex-cell ex-id">TX ID</span>
+				<span class="ex-cell ex-type">TYPE</span>
+				<span class="ex-cell ex-addr">FROM</span>
+				<span class="ex-cell ex-arrow"></span>
+				<span class="ex-cell ex-addr">TO</span>
+				<span class="ex-cell ex-amount">AMOUNT</span>
+				<span class="ex-cell ex-status">STATUS</span>
+				<span class="ex-cell ex-time">TIMESTAMP</span>
+			</div>
+		`;
+	}
 	txRow(tx) {
 		const direction = tx.type === 'mint' ? 'mint' : 'transfer';
-		/* Whole-value class spot: light rows insert a partial `tone-${x}` as a
-		   separate space-delimited token (`tone- mint`), so the prefix must be
-		   pre-joined here and bound as one value. */
 		const typeClass = `ex-cell ex-type tone-${direction}`;
 		const txHref = `/tx/${encodeURIComponent(tx.id)}/`;
 		const fromHref = `/account/${encodeURIComponent(tx.from)}/`;
@@ -245,47 +201,13 @@ export class ExplorerPage extends WebComponent {
 						<ui-icon class="ex-title-icon" .state=${this.state.titleIconState}></ui-icon>
 						<span class="ex-title">// EXPLORER · RECENT TRANSACTIONS</span>
 					</div>
-					<div class="ex-subtitle">
-						<span class="ex-stat-num">${this.loadedCount}</span>
-						<span class="ex-stat-label">loaded ·</span>
-						<span class="ex-stat-num">${this.subtitleTotal}</span>
-						<span class="ex-stat-label">${this.subtitleLabel}</span>
-						<span class="ex-stat-status">${this.subtitleStatus}</span>
-					</div>
 				</header>
-				<div class="ex-controls-bar">
-					<div class="ex-filters">^html${this.renderFilters}</div>
-					<div class="ex-controls">
-						<button class="ex-btn" @click=${this.handleRefresh}>↻ Refresh</button>
-					</div>
-				</div>
-				<div class="ex-table">
-					<div class="ex-row ex-head">
-						<span class="ex-cell ex-id">TX ID</span>
-						<span class="ex-cell ex-type">TYPE</span>
-						<span class="ex-cell ex-addr">FROM</span>
-						<span class="ex-cell ex-arrow"></span>
-						<span class="ex-cell ex-addr">TO</span>
-						<span class="ex-cell ex-amount">AMOUNT</span>
-						<span class="ex-cell ex-status">STATUS</span>
-						<span class="ex-cell ex-time">TIMESTAMP</span>
-					</div>
-					${remoteList('transactions', this.txRow, {
-						loader: this.loadTransactions,
-						mode: 'both',
-						keyFn: txKey,
-						loadMore: '#load_more',
-						dedupe: true,
-					})}
-					<div class=${() => {
-						return this.state.error ? 'ex-empty ex-error' : 'ex-empty';
-					}} ?hidden=${() => {
-						return this.state.transactions.length > 0;
-					}}>${this.statusText}</div>
-				</div>
-				<div class="ex-loadmore-bar">
-					<button class="ex-btn ex-loadmore" #load_more>LOAD MORE ▾</button>
-				</div>
+				<paged-list
+					.state=${this.listConfig}
+					.importStyles=${this.state.rowStyles}
+					#list>
+					<div slot="controls" class="ex-filters">^html${this.renderFilters}</div>
+				</paged-list>
 			</div>
 		`;
 	}
