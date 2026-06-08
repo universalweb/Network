@@ -3,6 +3,7 @@ import './ai-chat/ai-chat.js';
 import './help-panel/help-panel.js';
 import './info-panel/info-panel.js';
 import './setup-panel/setup-panel.js';
+import { lockBackgroundScroll, unlockBackgroundScroll } from '../../global/scroll-lock.js';
 import { WebComponent } from 'webcomponent';
 const PULLDOWN_HOTKEYS = [
 	{
@@ -40,6 +41,7 @@ export class GlobalPulldown extends WebComponent {
 			velocity: 0.5,
 		},
 	};
+	scrollLocked = false;
 	open() {
 		this.emit('pulldown:state', {
 			open: true,
@@ -56,9 +58,28 @@ export class GlobalPulldown extends WebComponent {
 	handleClose() {
 		this.emit('pulldown:close', {});
 	}
+	/*
+	 * Lock the background like the modals do — under document scroll the page
+	 * behind the open pulldown would otherwise scroll/chain. Driven by the same
+	 * `pulldown:state` bus signal ui-pulldown animates from, so it catches EVERY
+	 * open/close path (drag, hotkey, button, backdrop). Guarded so this pulldown
+	 * only ever moves the shared lock count by one.
+	 */
+	handlePulldownScrollState(domEvent) {
+		const isOpen = domEvent?.detail?.data?.open === true;
+		if (isOpen && !this.scrollLocked) {
+			lockBackgroundScroll();
+			this.scrollLocked = true;
+		} else if (!isOpen && this.scrollLocked) {
+			unlockBackgroundScroll();
+			this.scrollLocked = false;
+		}
+	}
 	onConnect() {
 		// `data-vw` drives the mobile column-hide rules — see reflectViewport.
 		this.reflectViewport();
+		// Background scroll-lock keyed to the canonical open/close signal.
+		this.delegate('pulldown:state', this.handlePulldownScrollState);
 	}
 	handleBackdropClick(domEvent) {
 		if (domEvent.target !== domEvent.currentTarget) {

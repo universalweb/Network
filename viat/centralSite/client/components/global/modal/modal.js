@@ -1,6 +1,7 @@
 import '../icon/icon.js';
 import '../close-button/close-button.js';
 import { WebComponent, classList } from '../../core/index.js';
+import { lockBackgroundScroll, unlockBackgroundScroll } from '../scroll-lock.js';
 // Base z-index for the first modal. Each subsequent modal that opens
 // receives `baseZ + (stack depth)` so newer modals always paint above
 // older ones — both for native top-layer browsers (where it acts as a
@@ -14,32 +15,6 @@ export class UIModal extends WebComponent {
 	static openStack = [];
 	static topModal() {
 		return UIModal.openStack[UIModal.openStack.length - 1] ?? null;
-	}
-	/*
-	 * Background scroll-lock. The old fixed `overflow:hidden` app shell froze the
-	 * page behind an open modal for free; under document scroll it no longer does,
-	 * so blocking (`:modal`) dialogs lock the root scroller while any are open.
-	 * Counted so nested modals only release the lock once the last one closes; the
-	 * prior inline overflow is saved/restored so we never clobber an author value.
-	 */
-	static scrollLockCount = 0;
-	static priorRootOverflow = '';
-	static lockBackgroundScroll() {
-		if (UIModal.scrollLockCount === 0) {
-			const root = globalThis.document.documentElement;
-			UIModal.priorRootOverflow = root.style.overflow;
-			root.style.overflow = 'hidden';
-		}
-		UIModal.scrollLockCount += 1;
-	}
-	static unlockBackgroundScroll() {
-		if (UIModal.scrollLockCount === 0) {
-			return;
-		}
-		UIModal.scrollLockCount -= 1;
-		if (UIModal.scrollLockCount === 0) {
-			globalThis.document.documentElement.style.overflow = UIModal.priorRootOverflow;
-		}
 	}
 	static url = import.meta.url;
 	static styles = {
@@ -156,7 +131,7 @@ export class UIModal extends WebComponent {
 		}
 		stack.push(this);
 		if (this.state.modal) {
-			UIModal.lockBackgroundScroll();
+			lockBackgroundScroll();
 		}
 		this.applyAutoFocus(dialog);
 		this.state.open = true;
@@ -219,7 +194,7 @@ export class UIModal extends WebComponent {
 			stack.splice(idx, 1);
 		}
 		if (this.state.modal) {
-			UIModal.unlockBackgroundScroll();
+			unlockBackgroundScroll();
 		}
 		const returnValue = domEvent.target?.returnValue ?? '';
 		this.emit('modal-close', {
