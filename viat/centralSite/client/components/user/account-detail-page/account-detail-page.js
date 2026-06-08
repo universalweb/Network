@@ -1,6 +1,8 @@
+import '../../global/paged-list/paged-list.js';
 import '../../global/icon/icon.js';
-import { WebComponent, html, remoteList } from '../../core/index.js';
+import { WebComponent, html } from '../../core/index.js';
 const SYSTEM_ADDRESS = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+const ROW_STYLES = new URL('./account-detail-rows.css', import.meta.url).href;
 function shortAddress(value) {
 	if (!value) {
 		return '—';
@@ -29,16 +31,6 @@ function formatAmount(value) {
 	}
 	return num.toLocaleString('en-US');
 }
-function formatCount(value) {
-	if (value == null) {
-		return '0';
-	}
-	const num = Number(value);
-	if (!Number.isFinite(num)) {
-		return String(value);
-	}
-	return num.toLocaleString('en-US');
-}
 function formatTimestamp(value) {
 	if (!value) {
 		return '—';
@@ -52,8 +44,31 @@ function formatTimestamp(value) {
 function labelForAddress(address) {
 	return address === SYSTEM_ADDRESS ? 'SYSTEM (mint)' : 'ACCOUNT';
 }
-function txKey(tx) {
-	return tx.id;
+function rowKey(item) {
+	return item.id;
+}
+/* Shape a chain tx into a self-contained row item (direction relative to the
+   wallet computed here, so the row needs no page `this`). */
+function shapeTx(tx, address) {
+	const isOut = tx.from === address;
+	const direction = isOut ? 'OUT' : 'IN';
+	const counterparty = isOut ? tx.to : tx.from;
+	return {
+		id: tx.id ?? '',
+		txHref: tx.id ? `/tx/${encodeURIComponent(tx.id)}/` : '',
+		direction,
+		toneClass: isOut ? 'tone-out' : 'tone-in',
+		counterparty: counterparty ?? '',
+		counterpartyHref: counterparty ? `/account/${encodeURIComponent(counterparty)}/` : '',
+		counterpartyShort: shortAddress(counterparty),
+		amountText: `${isOut ? '−' : '+'}${formatAmount(tx.amount)}`,
+		status: tx.status || '—',
+		timestamp: formatTimestamp(tx.timestamp),
+	};
+}
+async function getSDK() {
+	const app = document.querySelector('app-view');
+	return app?.ensureSDK ? app.ensureSDK() : null;
 }
 export class AccountDetailPage extends WebComponent {
 	static url = import.meta.url;
@@ -64,37 +79,34 @@ export class AccountDetailPage extends WebComponent {
 		address: '',
 		account: null,
 		accountMissing: false,
-		transactions: [],
-		totalCount: 0,
-		loading: false,
-		error: '',
+		rowStyles: ROW_STYLES,
 		titleIconState: {
 			name: 'user-round',
 			size: 'md',
 		},
 	};
-	onConnect() {
-		this.on('transactions:loading', this.handleListLoading);
-		this.on('transactions:loaded', this.handleListLoaded);
-		this.on('transactions:error', this.handleListError);
-		this.observeGlobal('api', (api) => {
-			return this.handleApiReady(api);
-		});
-	}
-	/* Pure retry once the chain API is reachable — only meaningful with an address
-	   and an empty list; reloads the header too. Null-safe + dedupe-guarded. */
-	handleApiReady(api) {
-		if (api?.ok && this.state.address && !this.state.transactions.length) {
-			this.loadHeader(this.state.address);
-			this.remote('transactions')?.reset();
-		}
-	}
-	/* Router entry point. Address is the routed dimension: a new address reloads
-	   the one-shot header (getAccount) and resets the tx list controller; the
-	   loader reads state.address at call time. */
+	/* <paged-list> contract. loader + pageHref are page-this arrows (they read the
+	   address); the row is self-contained (data shaped in the loader). */
+	listConfig = {
+		loader: (options) => {
+			return this.loadTransactions(options);
+		},
+		renderRow: this.txRow,
+		keyFn: rowKey,
+		renderHead: this.headRow,
+		pageHref: (page) => {
+			return this.pageHref(page);
+		},
+		itemNoun: 'transactions',
+		emptyText: 'No transactions found.',
+		loadingText: 'Loading transactions…',
+		pagingStyle: 'loadmore',
+	};
+	/* Router entry: address is the routed dimension. A new address reloads the
+	   one-shot header and refreshes the tx list. */
 	setAddress(address) {
 		const next = address || '';
-		if (next === this.state.address && this.state.transactions.length) {
+		if (next === this.state.address && this.refs.list?.state.items.length) {
 			return;
 		}
 		this.state.address = next;
@@ -103,36 +115,13 @@ export class AccountDetailPage extends WebComponent {
 			accountMissing: false,
 		});
 		if (!next) {
-			this.state.transactions = [];
 			return;
 		}
 		this.loadHeader(next);
-		this.remote('transactions')?.reset();
+		this.refs.list?.refresh();
 	}
-	handleListLoading() {
-		this.assignState({
-			loading: true,
-			error: '',
-		});
-	}
-	handleListLoaded() {
-		this.state.loading = false;
-	}
-	handleListError(domEvent) {
-		this.assignState({
-			loading: false,
-			error: domEvent?.detail?.data?.error || 'Could not load transactions',
-		});
-	}
-	async getSDK() {
-		const app = document.querySelector('app-view');
-		return app?.ensureSDK ? app.ensureSDK() : null;
-	}
-	/* The account header — one-shot, separate from the paged tx list. A 404 is
-	   flagged silent in the SDK, so a null account means "no record, history
-	   only", surfaced as accountMissing. */
 	async loadHeader(address) {
-		const sdk = await this.getSDK();
+		const sdk = await getSDK();
 		if (!sdk) {
 			return;
 		}
@@ -143,13 +132,11 @@ export class AccountDetailPage extends WebComponent {
 			accountMissing: !account,
 		});
 	}
-	/* remoteList loader, cursor=page bridge (see accounts-list-page). Returns an
-	   empty success (not null) when there is no address yet, so the mount auto-load
-	   is a clean no-op rather than an error flash before setAddress arrives. */
 	async loadTransactions({
 		reset, cursor,
 	}) {
-		if (!this.state.address) {
+		const address = this.state.address;
+		if (!address) {
 			return {
 				items: [],
 				nextCursor: null,
@@ -157,28 +144,35 @@ export class AccountDetailPage extends WebComponent {
 			};
 		}
 		const page = reset ? 1 : (cursor ?? 1);
-		const sdk = await this.getSDK();
+		const sdk = await getSDK();
 		if (!sdk) {
 			return null;
 		}
-		const response = await sdk.getAccountTransactions(this.state.address, {
+		const response = await sdk.getAccountTransactions(address, {
 			page,
 		});
 		if (!response) {
 			return null;
 		}
-		const hasMore = Boolean(response.pagination?.hasMore);
-		if (page === 1) {
-			this.state.totalCount = response.pagination?.totalCount ?? 0;
+		const txs = response.transactions ?? [];
+		const items = [];
+		for (let index = 0; index < txs.length; index += 1) {
+			items.push(shapeTx(txs[index], address));
 		}
+		const hasMore = Boolean(response.pagination?.hasMore);
 		return {
-			items: response.transactions ?? [],
+			items,
 			nextCursor: hasMore ? page + 1 : null,
 			hasMore,
+			totalCount: response.pagination?.totalCount ?? 0,
 		};
 	}
-	handleRefresh() {
-		this.remote('transactions')?.refresh();
+	pageHref(page) {
+		const base = `/account/${encodeURIComponent(this.state.address)}/`;
+		if (!page || page <= 1) {
+			return base;
+		}
+		return `${base}page/${page}/`;
 	}
 	async handleCopy() {
 		await navigator.clipboard?.writeText?.(this.state.address);
@@ -187,18 +181,6 @@ export class AccountDetailPage extends WebComponent {
 			title: 'Copied',
 			message: 'Address copied to clipboard',
 		});
-	}
-	loadedCount() {
-		return formatCount(this.state.transactions.length);
-	}
-	statusText() {
-		if (this.state.loading) {
-			return 'Loading transactions…';
-		}
-		if (this.state.error) {
-			return this.state.error;
-		}
-		return 'No transactions found.';
 	}
 	addressDisplay() {
 		return this.state.address || 'no address';
@@ -233,26 +215,29 @@ export class AccountDetailPage extends WebComponent {
 			</div>
 		`;
 	}
-	txRow(tx) {
-		const counterparty = tx.from === this.state.address ? tx.to : tx.from;
-		const counterpartyHref = `/account/${encodeURIComponent(counterparty)}/`;
-		const txHref = `/tx/${encodeURIComponent(tx.id)}/`;
-		const direction = tx.from === this.state.address ? 'OUT' : 'IN';
-		const dirLower = direction.toLowerCase();
-		/* Whole-value class spots: light rows split a partial `tone-${x}` into a
-		   separate token, so pre-join the tone class here. */
-		const dirClass = `ad-cell ad-dir tone-${dirLower}`;
-		const amountClass = `ad-cell ad-amount tone-${dirLower}`;
-		const sign = direction === 'IN' ? '+' : '−';
-		const amountText = `${sign}${formatAmount(tx.amount)}`;
+	headRow() {
+		return `
+			<div class="ad-row ad-head">
+				<span class="ad-cell ad-id">TX</span>
+				<span class="ad-cell ad-dir">DIR</span>
+				<span class="ad-cell ad-addr">COUNTERPARTY</span>
+				<span class="ad-cell ad-amount">AMOUNT</span>
+				<span class="ad-cell ad-status">STATUS</span>
+				<span class="ad-cell ad-time">TIMESTAMP</span>
+			</div>
+		`;
+	}
+	txRow(item) {
+		const dirClass = `ad-cell ad-dir ${item.toneClass}`;
+		const amountClass = `ad-cell ad-amount ${item.toneClass}`;
 		return html `
 			<div class="ad-row">
-				<a class="ad-cell ad-id" href=${txHref} title=${tx.id}>${shortId(tx.id)}</a>
-				<span class=${dirClass}>${direction}</span>
-				<a class="ad-cell ad-addr" href=${counterpartyHref} title=${counterparty}>${shortAddress(counterparty)}</a>
-				<span class=${amountClass}>${amountText}</span>
-				<span class="ad-cell ad-status">${tx.status || '—'}</span>
-				<span class="ad-cell ad-time">${formatTimestamp(tx.timestamp)}</span>
+				<a class="ad-cell ad-id" href=${item.txHref} title=${item.id}>${shortId(item.id)}</a>
+				<span class=${dirClass}>${item.direction}</span>
+				<a class="ad-cell ad-addr" href=${item.counterpartyHref} title=${item.counterparty}>${item.counterpartyShort}</a>
+				<span class=${amountClass}>${item.amountText}</span>
+				<span class="ad-cell ad-status">${item.status}</span>
+				<span class="ad-cell ad-time">${item.timestamp}</span>
 			</div>
 		`;
 	}
@@ -275,37 +260,11 @@ export class AccountDetailPage extends WebComponent {
 				<div class="ad-section">
 					<div class="ad-section-head">
 						<span>Transactions</span>
-						<span class="ad-section-meta">
-							<span class="ad-stat-num">${this.loadedCount}</span>
-							<span class="ad-stat-label">loaded</span>
-							<button class="ad-btn" @click=${this.handleRefresh}>↻</button>
-						</span>
 					</div>
-					<div class="ad-table">
-						<div class="ad-row ad-head">
-							<span class="ad-cell ad-id">TX</span>
-							<span class="ad-cell ad-dir">DIR</span>
-							<span class="ad-cell ad-addr">COUNTERPARTY</span>
-							<span class="ad-cell ad-amount">AMOUNT</span>
-							<span class="ad-cell ad-status">STATUS</span>
-							<span class="ad-cell ad-time">TIMESTAMP</span>
-						</div>
-						${remoteList('transactions', this.txRow, {
-							loader: this.loadTransactions,
-							mode: 'both',
-							keyFn: txKey,
-							loadMore: '#load_more',
-							dedupe: true,
-						})}
-						<div class=${() => {
-							return this.state.error ? 'ad-empty ad-error' : 'ad-empty';
-						}} ?hidden=${() => {
-							return this.state.transactions.length > 0;
-						}}>${this.statusText}</div>
-					</div>
-					<div class="ad-loadmore-bar">
-						<button class="ad-btn ad-loadmore" #load_more>LOAD MORE ▾</button>
-					</div>
+					<paged-list
+						.state=${this.listConfig}
+						.importStyles=${this.state.rowStyles}
+						#list></paged-list>
 				</div>
 			</div>
 		`;

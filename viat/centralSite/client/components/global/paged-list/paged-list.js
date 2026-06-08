@@ -109,6 +109,13 @@ export class PagedList extends WebComponent {
 		if (typeof hrefFn !== 'function') {
 			return;
 		}
+		/* Only the VISIBLE page owns the URL. SPA pages stay mounted (hidden); a
+		   background list loading must not replaceState over the active route — that
+		   clobbers the URL and desyncs the router. checkVisibility() is false for a
+		   display:none subtree. */
+		if (typeof this.checkVisibility === 'function' && !this.checkVisibility()) {
+			return;
+		}
 		const url = hrefFn(this.state.currentPage);
 		if (url) {
 			globalThis.history.replaceState(globalThis.history.state, '', url);

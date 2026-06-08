@@ -1,3 +1,6 @@
+/* Page chrome only — header, address, account stats, the section frame. The tx
+   list is owned by <paged-list>; its row CSS is in account-detail-rows.css,
+   injected via `.importStyles`. */
 :host {
 	display: block;
 }
@@ -12,8 +15,7 @@
 }
 .ad-shell > *,
 .ad-shell .ad-stats,
-.ad-shell .ad-section,
-.ad-shell .ad-empty {
+.ad-shell .ad-section {
 	width: 100%;
 	max-width: 51.25rem;
 	margin-inline-start: auto;
@@ -109,8 +111,6 @@
 .ad-section {
 	display: flex;
 	flex-direction: column;
-	min-height: 0;
-	flex: 1;
 	gap: var(--space-3);
 }
 .ad-section-head {
@@ -121,136 +121,4 @@
 	text-transform: uppercase;
 	letter-spacing: 0.14em;
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.55));
-}
-.ad-section-meta {
-	display: inline-flex;
-	gap: var(--space-3);
-	align-items: center;
-}
-.ad-stat-num {
-	color: var(--dark-text-medium);
-	font-variant-numeric: tabular-nums;
-}
-.ad-stat-label {
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
-}
-.ad-btn {
-	background: transparent;
-	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.18));
-	color: var(--dark-text-medium);
-	padding: var(--space-2) var(--space-3);
-	font-family: var(--font-mono, monospace);
-	font-size: var(--text-2xs);
-	text-transform: uppercase;
-	letter-spacing: 0.14em;
-	cursor: pointer;
-}
-.ad-btn:hover:not(:disabled) {
-	border-color: var(--teal);
-	color: var(--teal);
-}
-.ad-btn:disabled,
-.ad-btn[aria-disabled='true'] {
-	opacity: 0.35;
-	cursor: not-allowed;
-	pointer-events: none;
-}
-a.ad-btn {
-	display: inline-flex;
-	align-items: center;
-	text-decoration: none;
-}
-.ad-table {
-	border: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.05));
-	border-radius: var(--radius-sm);
-	background: rgba(255, 255, 255, 0.01);
-}
-.ad-row {
-	display: grid;
-	grid-template-columns: 1.1fr 0.5fr 1.7fr 1fr 0.8fr 1.5fr;
-	gap: var(--space-3);
-	padding: var(--space-3) var(--space-3);
-	border-block-end: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.04));
-	font-size: var(--text-sm);
-	align-items: center;
-}
-.ad-row:hover:not(.ad-head) {
-	background: color-mix(in oklab, var(--teal) 6%, transparent);
-}
-.ad-row.ad-head {
-	font-size: var(--text-2xs);
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
-	position: sticky;
-	inset-block-start: 0;
-	background: var(--bg-dark);
-	z-index: 1;
-}
-.ad-cell {
-	overflow: hidden;
-	white-space: nowrap;
-	text-overflow: ellipsis;
-}
-.ad-id,
-.ad-addr {
-	text-decoration: none;
-	color: var(--dark-text-medium);
-	border-block-end: 1px dashed transparent;
-}
-a.ad-id:hover,
-a.ad-addr:hover {
-	color: var(--teal);
-	border-block-end-color: var(--teal);
-}
-.ad-dir {
-	font-size: var(--text-2xs);
-	letter-spacing: 0.16em;
-	font-weight: var(--weight-semibold);
-}
-.ad-dir.tone-in {
-	color: var(--color-success);
-}
-.ad-dir.tone-out {
-	color: var(--color-warning);
-}
-.ad-amount {
-	text-align: right;
-	font-variant-numeric: tabular-nums;
-}
-.ad-amount.tone-in {
-	color: var(--color-success);
-}
-.ad-amount.tone-out {
-	color: var(--color-warning);
-}
-.ad-status {
-	text-transform: uppercase;
-	letter-spacing: 0.12em;
-	font-size: var(--text-2xs);
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.55));
-}
-.ad-time {
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
-}
-.ad-empty {
-	padding: var(--space-7);
-	text-align: center;
-	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
-}
-.ad-empty.ad-error {
-	color: var(--color-danger);
-}
-/* Load-more action below the table; the controller toggles `hidden` on the
-   button at exhaustion, so collapse the bar then to avoid a trailing gap. */
-.ad-loadmore-bar {
-	display: flex;
-	justify-content: center;
-}
-.ad-loadmore-bar:not(:has(.ad-loadmore:not([hidden]))) {
-	display: none;
-}
-.ad-loadmore {
-	min-width: 14rem;
-	justify-content: center;
 }
