@@ -25,6 +25,7 @@ export {
 	each,
 	filter,
 	html,
+	ifThen,
 	list,
 	remoteList,
 	styles,

@@ -558,6 +558,65 @@ export function remoteList(key, renderFn, config = {}) {
 	const filterFn = config.filter === undefined ? null : resolveListFilter(config.filter);
 	return new RemoteListBinding(key, renderFn, keyFn, filterFn, config);
 }
+/* Resolve an `ifThen` branch to a value the content-kind dispatch understands. A
+   value passes straight through (text/empty, equality-guarded by patchTextStrict);
+   a component class is instantiated ONCE and cached, so a re-evaluation that did
+   NOT flip returns the SAME node and `patchComponentKind` no-ops — no rebuild, no
+   lifecycle churn. Only an actual flip swaps the subtree. Defined before `ifThen`
+   so the factory references a hoisted leaf. */
+function resolveIfThenBranch(branch, branchNodes) {
+	if (branch === null || branch === undefined) {
+		return null;
+	}
+	if (isString(branch) || typeof branch === 'number' || typeof branch === 'boolean') {
+		return branch;
+	}
+	if (isCustomElementConstructor(branch)) {
+		let node = branchNodes.get(branch);
+		if (!node) {
+			const BranchComponent = branch;
+			node = new BranchComponent();
+			branchNodes.set(branch, node);
+		}
+		return node;
+	}
+	if (branch instanceof Node || ComponentBinding.is(branch) || LiveList.isLiveList(branch)) {
+		return branch;
+	}
+	throw new TypeError('ifThen() branch must be a value (string/number/boolean/null), a component class, or built content (Node/comp()/list). For reactive branch markup, use a component class — a raw inline html`` block is not a reactive branch.');
+}
+/**
+ * `ifThen(condition, thenBranch, elseBranch?)` — fine-reactive conditional (named
+ * `ifThen` because `when` shadows the `window.when` browser global). Returns a
+ * thunk the engine installs as a per-spot `ComputedSpot` (NO whole-component
+ * re-render): it tracks only what `condition` reads and patches just this spot
+ * when the result flips.
+ *
+ *   condition  — a state-key STRING (truthy `state[key]`) OR a fn (`() => cond`,
+ *                called with the component as `this`).
+ *   then/else  — a VALUE (string / number / boolean / null → text or empty,
+ *                equality-guarded) OR a component CLASS (instantiated on first
+ *                activation, then cached + reused; the component owns its own
+ *                reactive graph, so its inner content updates independently). A
+ *                pre-built Node / `comp()` / list value is also passed through.
+ *
+ * A flip mounts the entering branch and unmounts the leaving one — a correct
+ * disconnect/reconnect, NOT churn. A raw inline `` html`` `` block is NOT a
+ * reactive branch: it is a value-only `LightTemplate` with no per-spot graph (it
+ * would go stale or rebuild wholesale). Use a component class for reactive markup.
+ * @param {string|Function} condition - State-key, or a boolean-returning fn.
+ * @param {*} thenBranch - Branch shown when the condition is truthy.
+ * @param {*} [elseBranch] - Branch shown otherwise (default: render nothing).
+ * @returns {Function} A thunk to interpolate in a content position: `${ifThen(...)}`.
+ */
+export function ifThen(condition, thenBranch, elseBranch = null) {
+	const conditionIsKey = isString(condition);
+	const branchNodes = new Map();
+	return function ifThenSpot() {
+		const active = conditionIsKey ? Boolean(getValueAtPath(this.state, condition)) : Boolean(condition.call(this));
+		return resolveIfThenBranch(active ? thenBranch : elseBranch, branchNodes);
+	};
+}
 /*
  * `bind.list` — typed LIST variant of the bind family. Wired here, where the
  * list machinery lives, onto the shared `bind` callable (no import circular).

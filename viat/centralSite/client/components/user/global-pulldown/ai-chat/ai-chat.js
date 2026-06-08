@@ -1,5 +1,5 @@
 import '../../../global/status-indicator/status-indicator.js';
-import { WebComponent, filter } from 'webcomponent';
+import { WebComponent, filter, ifThen } from 'webcomponent';
 import { listAllTools } from '../../../core/ai/index.js';
 const DEFAULT_ENDPOINT = 'http://localhost:1234/v1/chat/completions';
 const DEFAULT_MODEL = 'local-model';
@@ -585,9 +585,7 @@ export class AIChat extends WebComponent {
 					<button class="${() => {
 						return `aic-btn${this.state.streaming ? ' is-streaming' : ''}`;
 					}}" @click=${this.handleSubmit}>
-						${() => {
-							return (this.state.streaming ? 'STOP' : 'SEND');
-						}}
+						${ifThen('streaming', 'STOP', 'SEND')}
 					</button>
 				</footer>
 			</div>
