@@ -201,6 +201,18 @@ class RemoteListController {
 		return this.load(false);
 	}
 	/*
+	 * Jump to a specific page/cursor, REPLACING the current window — the paged
+	 * (prev/next) complement to the cumulative loadMore. Unlike reset() (which is
+	 * page 1), it loads the given cursor; seenKeys is cleared because a replace
+	 * starts a fresh window.
+	 */
+	goto(targetCursor) {
+		this.hasMore = true;
+		this.error = '';
+		this.seenKeys.clear();
+		return this.load(true, targetCursor);
+	}
+	/*
 	 * Prepend a single item to the top of the list — the real-time complement to
 	 * cursor paging (a freshly observed item arriving while history loads below).
 	 * Goes through the controller so the dedupe `seenKeys` stays authoritative: a
@@ -218,7 +230,11 @@ class RemoteListController {
 		const current = Array.isArray(this.component.state[this.stateKey]) ? this.component.state[this.stateKey] : [];
 		this.component.state[this.stateKey] = [item].concat(current);
 	}
-	async load(isReset) {
+	/* Core load. `replace` clears+replaces the window (reset / goto), else appends
+	   (loadMore). `cursorOverride` targets a specific page (goto) instead of page 1
+	   (reset, cursor=null) or the running cursor (loadMore). The loader's `reset`
+	   flag means page-1 semantics only — a replace WITHOUT an explicit cursor. */
+	async load(replace, cursorOverride) {
 		const config = this.config;
 		if (!isFunction(config.loader)) {
 			this.error = 'remoteList: no loader configured';
@@ -238,12 +254,19 @@ class RemoteListController {
 		this.abortController?.abort();
 		const abortController = new AbortController();
 		this.abortController = abortController;
+		const hasCursorOverride = cursorOverride !== undefined && cursorOverride !== null;
+		let requestCursor = this.cursor;
+		if (hasCursorOverride) {
+			requestCursor = cursorOverride;
+		} else if (replace) {
+			requestCursor = null;
+		}
 		let result = null;
 		let failure = null;
 		try {
 			result = await config.loader.call(this.component, {
-				reset: isReset,
-				cursor: isReset ? null : this.cursor,
+				reset: replace && !hasCursorOverride,
+				cursor: requestCursor,
 				signal: abortController.signal,
 			});
 		} catch (loadError) {
@@ -262,7 +285,7 @@ class RemoteListController {
 		const incoming = Array.isArray(result.items) ? result.items : [];
 		const additions = config.dedupe === false ? incoming : this.dropDuplicates(incoming);
 		const currentItems = Array.isArray(this.component.state[this.stateKey]) ? this.component.state[this.stateKey] : [];
-		this.component.state[this.stateKey] = isReset ? additions : currentItems.concat(additions);
+		this.component.state[this.stateKey] = replace ? additions : currentItems.concat(additions);
 		this.cursor = result.nextCursor ?? null;
 		this.hasMore = Boolean(result.hasMore);
 		this.reflectRefs();
