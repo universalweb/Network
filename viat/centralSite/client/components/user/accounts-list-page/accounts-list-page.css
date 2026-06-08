@@ -186,3 +186,17 @@ a.al-addr:hover {
 .al-empty.al-error {
 	color: var(--color-danger);
 }
+/* Load-more action below the table. The controller toggles `hidden` on the
+   button when the list is exhausted; collapse the whole bar then so no empty
+   gap is left dangling under the last row. */
+.al-loadmore-bar {
+	display: flex;
+	justify-content: center;
+}
+.al-loadmore-bar:not(:has(.al-loadmore:not([hidden]))) {
+	display: none;
+}
+.al-loadmore {
+	min-width: 14rem;
+	justify-content: center;
+}

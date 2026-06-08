@@ -1,12 +1,6 @@
 import '../../global/icon/icon.js';
-import { WebComponent } from '../../core/index.js';
+import { WebComponent, html, remoteList } from '../../core/index.js';
 const PAGE_SIZE = 20;
-function pageHrefFor(page) {
-	if (!page || page <= 1) {
-		return '/accounts/';
-	}
-	return `/accounts/page/${page}/`;
-}
 function shortAddress(value) {
 	if (!value) {
 		return '—';
@@ -46,6 +40,9 @@ function formatTimestamp(value) {
 	}
 	return date.toISOString().replace('T', ' ').replace(/\..+$/, '');
 }
+function accountKey(account) {
+	return account.address;
+}
 export class AccountsListPage extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -53,8 +50,6 @@ export class AccountsListPage extends WebComponent {
 	};
 	static state = {
 		accounts: [],
-		page: 1,
-		hasMore: false,
 		totalCount: 0,
 		loading: false,
 		error: '',
@@ -63,66 +58,79 @@ export class AccountsListPage extends WebComponent {
 			size: 'md',
 		},
 	};
-	loadedForPage = 0;
 	onConnect() {
+		this.on('accounts:loading', this.handleListLoading);
+		this.on('accounts:loaded', this.handleListLoaded);
+		this.on('accounts:error', this.handleListError);
 		this.observeGlobal('api', (api) => {
-			if (api?.ok && !this.state.accounts.length && !this.state.loading) {
-				this.loadPage(this.state.page);
-			}
+			return this.handleApiReady(api);
 		});
 	}
-	onMount() {
-		this.loadPage(this.state.page);
-	}
-	setPage(page) {
-		const target = Number.isFinite(page) && page >= 1 ? page : 1;
-		if (target === this.loadedForPage && this.state.accounts.length) {
-			return;
+	/* The loader awaits ensureSDK on its own, so remoteList's auto-load is
+	   self-sufficient. This is a pure retry: if the very first auto-load ran
+	   before the chain API was reachable and produced nothing, reload once it is.
+	   Guarded on an empty list + null-safe on the controller, so it can never
+	   double-load (the supersede token + dedupe cover any overlap). */
+	handleApiReady(api) {
+		if (api?.ok && !this.state.accounts.length) {
+			this.remote('accounts')?.reset();
 		}
+	}
+	handleListLoading() {
 		this.assignState({
-			page: target,
+			loading: true,
+			error: '',
 		});
-		this.loadPage(target);
+	}
+	handleListLoaded() {
+		this.state.loading = false;
+	}
+	handleListError(domEvent) {
+		this.assignState({
+			loading: false,
+			error: domEvent?.detail?.data?.error || 'Could not load accounts',
+		});
 	}
 	async getSDK() {
 		const app = document.querySelector('app-view');
 		return app?.ensureSDK ? app.ensureSDK() : null;
 	}
-	async loadPage(page = 1) {
-		this.loadedForPage = page;
-		this.assignState({
-			loading: true,
-			error: '',
-		});
+	/* remoteList loader. The chain API is page-based, remoteList is cursor-based —
+	   the opaque cursor IS the page number: reset → page 1, loadMore → cursor (the
+	   prior nextCursor). nextCursor is the next page while hasMore, else null. */
+	async loadAccounts({
+		reset, cursor,
+	}) {
+		const page = reset ? 1 : (cursor ?? 1);
 		const sdk = await this.getSDK();
+		if (!sdk) {
+			return null;
+		}
 		const response = await sdk.listRecentAccounts({
 			page,
 			limit: PAGE_SIZE,
 		});
 		if (!response) {
-			this.assignState({
-				loading: false,
-				error: 'Could not load accounts',
-			});
-			return;
+			return null;
 		}
-		this.assignState({
-			accounts: response.accounts ?? [],
-			page,
-			hasMore: Boolean(response.pagination?.hasMore),
-			totalCount: response.pagination?.totalCount ?? 0,
-			loading: false,
-		});
+		const hasMore = Boolean(response.pagination?.hasMore);
+		if (page === 1) {
+			this.state.totalCount = response.pagination?.totalCount ?? 0;
+		}
+		return {
+			items: response.accounts ?? [],
+			nextCursor: hasMore ? page + 1 : null,
+			hasMore,
+		};
 	}
 	handleRefresh() {
-		this.loadedForPage = 0;
-		this.loadPage(this.state.page);
+		this.remote('accounts')?.refresh();
 	}
-	subtitleCount() {
+	loadedCount() {
+		return formatCount(this.state.accounts.length);
+	}
+	subtitleTotal() {
 		return formatCount(this.state.totalCount);
-	}
-	subtitlePage() {
-		return this.state.page;
 	}
 	subtitleStatus() {
 		if (this.state.loading) {
@@ -133,40 +141,27 @@ export class AccountsListPage extends WebComponent {
 		}
 		return '';
 	}
-	renderRow(account) {
+	statusText() {
+		if (this.state.loading) {
+			return 'Loading recent accounts…';
+		}
+		if (this.state.error) {
+			return this.state.error;
+		}
+		return 'No accounts yet.';
+	}
+	accountRow(account) {
 		const addr = account.address;
 		const href = `/account/${encodeURIComponent(addr)}/`;
-		return `
+		return html `
 			<div class="al-row">
-				<a class="al-cell al-addr" href="${href}" title="${addr}">${shortAddress(addr)}</a>
+				<a class="al-cell al-addr" href=${href} title=${addr}>${shortAddress(addr)}</a>
 				<span class="al-cell al-balance">${formatAmount(account.balance)}</span>
 				<span class="al-cell al-totin">${formatAmount(account.totalIn)}</span>
 				<span class="al-cell al-totout">${formatAmount(account.totalOut)}</span>
 				<span class="al-cell al-time">${formatTimestamp(account.updatedAt || account.createdAt)}</span>
 			</div>
 		`;
-	}
-	renderRows() {
-		if (this.state.loading && !this.state.accounts.length) {
-			return '<div class="al-empty">Loading recent accounts…</div>';
-		}
-		if (this.state.error && !this.state.accounts.length) {
-			return `<div class="al-empty al-error">${this.state.error}</div>`;
-		}
-		if (!this.state.accounts.length) {
-			return '<div class="al-empty">No accounts yet.</div>';
-		}
-		let markup = '';
-		for (let index = 0; index < this.state.accounts.length; index += 1) {
-			markup += this.renderRow(this.state.accounts[index]);
-		}
-		return markup;
-	}
-	prevHref() {
-		return pageHrefFor(Math.max(1, this.state.page - 1));
-	}
-	nextHref() {
-		return pageHrefFor(this.state.page + 1);
 	}
 	render() {
 		this.html `
@@ -177,26 +172,15 @@ export class AccountsListPage extends WebComponent {
 						<span class="al-title">// ACCOUNTS · RECENTLY UPDATED</span>
 					</div>
 					<div class="al-subtitle">
-						<span class="al-stat-num">${this.subtitleCount}</span>
+						<span class="al-stat-num">${this.loadedCount}</span>
+						<span class="al-stat-label">loaded ·</span>
+						<span class="al-stat-num">${this.subtitleTotal}</span>
 						<span class="al-stat-label">On Chain</span>
-						<span class="al-stat-sep">·</span>
-						<span class="al-stat-label">Page</span>
-						<span class="al-stat-num">${this.subtitlePage}</span>
 						<span class="al-stat-status">${this.subtitleStatus}</span>
 					</div>
 				</header>
 				<div class="al-controls-bar">
 					<div class="al-controls">
-						<a class="al-btn"
-							href=${this.prevHref}
-							aria-disabled=${() => {
-								return String(this.state.page <= 1);
-							}}>‹ Prev</a>
-						<a class="al-btn"
-							href=${this.nextHref}
-							aria-disabled=${() => {
-								return String(!this.state.hasMore);
-							}}>Next ›</a>
 						<button class="al-btn" @click=${this.handleRefresh}>↻ Refresh</button>
 					</div>
 				</div>
@@ -208,7 +192,21 @@ export class AccountsListPage extends WebComponent {
 						<span class="al-cell al-totout">TOTAL OUT</span>
 						<span class="al-cell al-time">UPDATED</span>
 					</div>
-					^html${this.renderRows}
+					${remoteList('accounts', this.accountRow, {
+						loader: this.loadAccounts,
+						mode: 'both',
+						keyFn: accountKey,
+						loadMore: '#load_more',
+						dedupe: true,
+					})}
+					<div class=${() => {
+						return this.state.error ? 'al-empty al-error' : 'al-empty';
+					}} ?hidden=${() => {
+						return this.state.accounts.length > 0;
+					}}>${this.statusText}</div>
+				</div>
+				<div class="al-loadmore-bar">
+					<button class="al-btn al-loadmore" #load_more>LOAD MORE ▾</button>
 				</div>
 			</div>
 		`;
