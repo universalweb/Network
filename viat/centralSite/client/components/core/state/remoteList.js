@@ -72,13 +72,23 @@ class RemoteListController {
 		this.scroller = null;
 		this.scrollTarget = null;
 		this.paused = false;
+		this.page = 1;
+		this.anchorElement = null;
 		this.loadMoreElement = null;
+		this.prevElement = null;
+		this.nextElement = null;
 		this.abortController = null;
 		this.scrollReportUninstall = null;
 		this.seenKeys = new Set();
 	}
 	get exhausted() {
 		return this.started && !this.hasMore;
+	}
+	/* Paged-mode reads: a previous page exists once past page 1; a next page is the
+	   generic `hasMore`. `page` is tracked explicitly in load() (not derived from
+	   `cursor`, which is the NEXT cursor and goes null on the last page). */
+	get hasPrev() {
+		return this.page > 1;
 	}
 	/*
 	 * (Re)wire DOM-attached pieces — resolve the scroller, the near-bottom scroll
@@ -93,6 +103,7 @@ class RemoteListController {
 		if (this.disposed) {
 			return;
 		}
+		this.anchorElement = anchorElement;
 		this.detachDom();
 		this.wireTriggers(anchorElement);
 		if (this.mounted) {
@@ -141,11 +152,25 @@ class RemoteListController {
 				moreRef.addEventListener('click', this);
 			}
 		}
+		if (mode === 'paged') {
+			this.wirePagedButton(config.prev, 'prevElement');
+			this.wirePagedButton(config.next, 'nextElement');
+		}
 		if (config.scrollReport && this.scroller) {
 			const behavior = getBehavior('scroll-report');
 			if (behavior) {
 				this.scrollReportUninstall = behavior.install(this.scroller);
 			}
+		}
+	}
+	/* Resolve a prev/next ref and bind its click. Stored on `field` so detachDom
+	   can unbind on re-wire / mode-switch. A missing ref is fine — a wrapper that
+	   drives prev/next itself (via goPrev/goNext) simply omits the refs. */
+	wirePagedButton(ref, field) {
+		const element = ref ? this.component.getRef(stripHash(ref)) : null;
+		if (element) {
+			this[field] = element;
+			element.addEventListener('click', this);
 		}
 	}
 	detachDom() {
@@ -156,6 +181,14 @@ class RemoteListController {
 			this.loadMoreElement.removeEventListener('click', this);
 			this.loadMoreElement = null;
 		}
+		if (this.prevElement) {
+			this.prevElement.removeEventListener('click', this);
+			this.prevElement = null;
+		}
+		if (this.nextElement) {
+			this.nextElement.removeEventListener('click', this);
+			this.nextElement = null;
+		}
 		if (this.scrollReportUninstall) {
 			this.scrollReportUninstall();
 			this.scrollReportUninstall = null;
@@ -163,16 +196,24 @@ class RemoteListController {
 		this.scroller = null;
 		this.scrollTarget = null;
 	}
-	/* Stable-`this` listener for both the scroller `scroll` and the load-more
-	   `click` — passed as the listener object so there is no per-instance bind. */
+	/* Stable-`this` listener for the scroller `scroll` and the load-more / prev /
+	   next `click`s — passed as the listener object so there is no per-instance
+	   bind. Clicks are routed by `currentTarget` since all three are `click`. */
 	handleEvent(domEvent) {
 		if (domEvent.type === 'scroll') {
 			this.onScroll();
 			return;
 		}
-		if (domEvent.type === 'click') {
-			this.loadMore();
+		const target = domEvent.currentTarget;
+		if (target === this.prevElement) {
+			this.goPrev();
+			return;
 		}
+		if (target === this.nextElement) {
+			this.goNext();
+			return;
+		}
+		this.loadMore();
 	}
 	onScroll() {
 		const scroller = this.scroller;
@@ -212,6 +253,43 @@ class RemoteListController {
 		this.error = '';
 		this.seenKeys.clear();
 		return this.load(true, targetCursor);
+	}
+	/* Paged prev/next — replace-load the adjacent page (the cursor=page bridge: a
+	   page number IS the cursor). Guard at the edges so a disabled-but-clicked
+	   button is a no-op. Both delegate to gotoPage so page validation is one place. */
+	gotoPage(targetPage) {
+		const page = Number.isFinite(targetPage) && targetPage >= 1 ? targetPage : 1;
+		return this.goto(page);
+	}
+	goPrev() {
+		if (this.loading || !this.hasPrev) {
+			return Promise.resolve();
+		}
+		return this.gotoPage(this.page - 1);
+	}
+	goNext() {
+		if (this.loading || !this.hasMore) {
+			return Promise.resolve();
+		}
+		return this.gotoPage(this.page + 1);
+	}
+	/* Runtime mode swap (the loadmore ↔ paged toggle). Re-wires the DOM triggers
+	   against the live anchor (mirrors attach's detach→wire), then — switching INTO
+	   paged — collapses the accumulated window down to the single current page. */
+	setMode(mode) {
+		if (this.config.mode === mode) {
+			return;
+		}
+		this.config.mode = mode;
+		if (this.anchorElement) {
+			this.detachDom();
+			this.wireTriggers(this.anchorElement);
+		}
+		if (mode === 'paged') {
+			this.goto(this.page);
+		} else {
+			this.reflectRefs();
+		}
 	}
 	/*
 	 * Prepend a single item to the top of the list — the real-time complement to
@@ -259,8 +337,12 @@ class RemoteListController {
 		let requestCursor = this.cursor;
 		if (hasCursorOverride) {
 			requestCursor = cursorOverride;
+			this.page = cursorOverride;
 		} else if (replace) {
 			requestCursor = null;
+			this.page = 1;
+		} else if (typeof requestCursor === 'number') {
+			this.page = requestCursor;
 		}
 		let result = null;
 		let failure = null;
@@ -324,6 +406,18 @@ class RemoteListController {
 				exhausted: this.exhausted,
 			}, this.exhausted, blocked);
 		}
+		if (this.prevElement) {
+			const prevBlocked = this.loading || !this.hasPrev;
+			this.applyRefState(this.prevElement, {
+				disabled: prevBlocked,
+			}, false, prevBlocked);
+		}
+		if (this.nextElement) {
+			const nextBlocked = this.loading || !this.hasMore;
+			this.applyRefState(this.nextElement, {
+				disabled: nextBlocked,
+			}, false, nextBlocked);
+		}
 	}
 	/* Reflect status to a ref both ways: `assignState` for a UWC component, and
 	   plain `hidden`/`disabled` attributes for a bare element — so the spinner /
@@ -352,6 +446,7 @@ class RemoteListController {
 			loading: this.loading,
 			error: this.error,
 			exhausted: this.exhausted,
+			page: this.page,
 		});
 	}
 	dispose() {

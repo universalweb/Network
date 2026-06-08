@@ -73,7 +73,6 @@ export class PagedList extends WebComponent {
 			});
 			return;
 		}
-		controller.paused = this.state.pagingStyle === PAGED;
 		const page = Number(this.state.startPage) > 1 ? Number(this.state.startPage) : 1;
 		this.state.currentPage = page;
 		if (page > 1) {
@@ -90,11 +89,10 @@ export class PagedList extends WebComponent {
 	}
 	handleListLoaded() {
 		const controller = this.remote('items');
-		const nextCursor = controller ? controller.cursor : null;
 		this.assignState({
 			loading: false,
 			hasMore: controller ? controller.hasMore : false,
-			currentPage: typeof nextCursor === 'number' ? nextCursor - 1 : this.state.currentPage,
+			currentPage: controller ? controller.page : this.state.currentPage,
 		});
 		this.syncUrl();
 	}
@@ -138,40 +136,24 @@ export class PagedList extends WebComponent {
 		this.state.currentPage = 1;
 		this.remote('items')?.reset();
 	}
-	prevPage() {
-		if (this.state.currentPage <= 1) {
-			return;
-		}
-		this.remote('items')?.goto(this.state.currentPage - 1);
-	}
-	nextPage() {
-		if (!this.state.hasMore) {
-			return;
-		}
-		this.remote('items')?.goto(this.state.currentPage + 1);
-	}
 	/* Public: jump to a page (the host's router calls this on a route change).
-	   Works in both styles — paged shows page N, loadmore starts the window at N. */
+	   Works in both styles — paged shows page N, loadmore starts the window at N.
+	   Prev/Next clicks are wired by the controller (paged mode); this is only the
+	   programmatic route entry. */
 	goToPage(page) {
 		const target = Number.isFinite(page) && page >= 1 ? page : 1;
 		if (target === this.state.currentPage && this.state.items.length) {
 			return;
 		}
 		this.state.currentPage = target;
-		this.remote('items')?.goto(target);
+		this.remote('items')?.gotoPage(target);
 	}
 	toggleStyle() {
 		const next = this.state.pagingStyle === LOADMORE ? PAGED : LOADMORE;
 		this.state.pagingStyle = next;
-		const controller = this.remote('items');
-		if (!controller) {
-			return;
-		}
-		controller.paused = next === PAGED;
-		if (next === PAGED) {
-			// Collapse the accumulated window down to the single current page.
-			controller.goto(this.state.currentPage);
-		}
+		/* Core owns the swap: setMode re-wires triggers (scroll/loadMore ↔ prev/next)
+		   and, switching INTO paged, collapses the window to the current page. */
+		this.remote('items')?.setMode(next === PAGED ? PAGED : 'both');
 	}
 	loadedLabel() {
 		if (this.state.pagingStyle === PAGED) {
@@ -230,9 +212,11 @@ export class PagedList extends WebComponent {
 					^html${this.headHtml}
 					${remoteList('items', this.state.renderRow, {
 						loader: this.runLoader,
-						mode: 'both',
+						mode: this.state.pagingStyle === PAGED ? PAGED : 'both',
 						keyFn: this.state.keyFn,
 						loadMore: '#pl_load_more',
+						prev: '#pl_prev',
+						next: '#pl_next',
 						dedupe: true,
 					})}
 					<div class=${() => {
@@ -244,13 +228,9 @@ export class PagedList extends WebComponent {
 				<div class="pl-pager" ?hidden=${() => {
 					return this.state.pagingStyle !== PAGED;
 				}}>
-					<button class="pl-btn" @click=${this.prevPage} ?disabled=${() => {
-						return this.state.currentPage <= 1;
-					}}>‹ Prev</button>
+					<button class="pl-btn" #pl_prev>‹ Prev</button>
 					<span class="pl-page-label">page ${this.state.currentPage}</span>
-					<button class="pl-btn" @click=${this.nextPage} ?disabled=${() => {
-						return !this.state.hasMore;
-					}}>Next ›</button>
+					<button class="pl-btn" #pl_next>Next ›</button>
 				</div>
 				<div class="pl-loadmore-bar" ?hidden=${() => {
 					return this.state.pagingStyle === PAGED;
