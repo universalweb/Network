@@ -20,7 +20,10 @@ body {
 	font-family: var(--font-mono);
 	font-size: var(--text-base);
 	line-height: var(--leading-normal);
-	width: 100vw; height: 100vh; overflow: hidden;
+	/* Document scroll: the body IS the scroll surface (so mobile chrome collapses
+	   and the fixed app-bar can detach reacting to a real scroll). svh = stable
+	   small-viewport floor; overflow-x hidden guards against a stray h-scrollbar. */
+	width: 100%; min-height: 100svh; overflow-x: hidden;
 	-webkit-font-smoothing: antialiased;
 	cursor: crosshair; user-select: none;
 }

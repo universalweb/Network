@@ -1775,6 +1775,12 @@ class AppView extends WebComponent {
 		}
 		const previousView = this.state.activePage;
 		this.state.activePage = view;
+		// Document scroll now carries across SPA navigations (window.scrollY does
+		// not auto-reset), so a route change must land the new page at the top —
+		// parity with the old fresh-per-scroller behavior. This handler only fires
+		// on a real route change (routeView/routeParams/routeFilter), so it's safe
+		// to reset unconditionally.
+		globalThis.scrollTo(0, 0);
 		const params = this.globalState?.routeParams ?? {};
 		const filter = this.globalState?.routeFilter ?? '';
 		const page = this.pageFromGlobal();

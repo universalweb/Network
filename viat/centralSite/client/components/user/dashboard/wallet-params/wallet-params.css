@@ -5,11 +5,14 @@
 }
 
 /* Root-class layout — moved out of the universal panel.css (was an app-name
-   leak). The params body scrolls within a bounded min-height. */
+   leak). Bounded scrollable card: a max-height cap keeps it compact now that the
+   dashboard flows in document scroll (the old bound came from the height:100%
+   chain that the scroll migration removed). */
 .wallet-params-panel {
   overflow-y: auto;
   flex: 0 0 auto;
   min-height: 13.75rem;
+  max-height: min(50svh, 30rem);
 }
 
 .wallet-params-panel .stat-block {

@@ -227,7 +227,7 @@ export class AccountDetailPage extends WebComponent {
 								}}>Next ›</a>
 						</span>
 					</div>
-					<div class="ad-table" scroll-report>
+					<div class="ad-table">
 						<div class="ad-row ad-head">
 							<span class="ad-cell ad-id">TX</span>
 							<span class="ad-cell ad-dir">DIR</span>

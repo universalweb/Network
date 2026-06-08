@@ -1,10 +1,11 @@
 :host {
-	display: grid;
-	grid-template-rows: 0 minmax(0, 1fr) 0;
-	grid-template-columns: 1fr;
-	width: 100vw;
-	height: 100vh;
-	overflow: hidden;
+	/* Document-scroll shell: a flowing block, not a viewport-clamped grid. The
+	   chrome (ui-app-bar / ui-status-bar / ui-sidebar / dock / pulldown) is all
+	   fixed-position overlay, so it floats over this regardless of layout; the
+	   old grid rows only framed the content track, which now just flows. */
+	display: block;
+	width: 100%;
+	min-height: 100svh;
 	font-family: var(--font-mono);
 	font-size: 0.75rem;
 	line-height: 1.5;
@@ -14,14 +15,11 @@
 	background: transparent;
 }
 .shell-body {
-	grid-row: 2;
-	grid-column: 1;
 	display: grid;
 	grid-template-columns: calc(var(--rail-width, 52px) + 16px) minmax(0, 1fr) 0;
 	gap: 0;
-	overflow: hidden;
 	position: relative;
-	min-height: 0;
+	min-height: 100svh;
 }
 /* The sidebar is a fixed-position flyout in every mode — it overlays the page
    and never reserves a column or displaces dashboard content, so the third
@@ -36,8 +34,6 @@
 	grid-column: 2;
 	display: flex;
 	flex-direction: column;
-	min-height: 0;
-	overflow: hidden;
 }
 .shell-page > .shell-page-view {
 	flex: 1;

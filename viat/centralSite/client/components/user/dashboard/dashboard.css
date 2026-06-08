@@ -1,15 +1,13 @@
 :host {
 	display: block;
-	height: 100%;
-	min-height: 0;
 }
+/* Document scroll: the dashboard flows in the page, it is no longer its own
+   scroll box. The long panels (activity-log / wallet-params) keep an internal
+   cap so the overview stays compact; everything else flows. */
 .dashboard-center {
 	display: flex;
 	flex-direction: column;
-	overflow-y: auto;
-	min-height: 0;
-	height: 100%;
-	padding-block-start: 90px;
+	padding-block-start: 5.625rem;
 	padding-block-end: var(--space-12);
 }
 .center-content {
