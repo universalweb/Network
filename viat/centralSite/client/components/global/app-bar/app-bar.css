@@ -1,14 +1,15 @@
-/* The top bar is a fixed overlay. DEFAULT = flat: full-width, flush to the top
-   and side edges, square, with only a bottom hairline — a classic header. On
-   scroll the host gains `data-scrolled` (set by global-top-bar from the
-   `scroll-report` global flag) and DETACHES into a floating, rounded, shadowed
-   bar. The float is driven by `inset` / radius / shadow, never `transform`, so
-   it composes cleanly with the pulldown drag that owns this element's transform. */
+/* The top bar is a fixed overlay. DEFAULT = floating: detached from the top and
+   side edges, rounded and shadowed — it hovers above the page. On scroll the host
+   gains `data-scrolled` (set by global-top-bar from a window scroll listener) and
+   DOCKS flat: full-width, flush to the edges, square, with only a bottom hairline —
+   a grounded header the content slides under. The state is driven by `inset` /
+   radius / shadow, never `transform`, so it composes cleanly with the pulldown
+   drag that owns this element's transform. */
 :host {
 	display: block;
 	position: fixed;
-	inset-block-start: 0;
-	inset-inline: 0;
+	inset-block-start: 1rem;
+	inset-inline: 1rem;
 	box-sizing: border-box;
 	z-index: 40;
 	transition: inset 0.28s cubic-bezier(0.22, 1, 0.36, 1);
@@ -20,10 +21,11 @@
 	display: flex;
 	align-items: center;
 	background: var(--topbar-bg);
-	border: 1px solid transparent;
-	border-block-end-color: var(--topbar-border, var(--dark-divider));
-	border-radius: 0;
-	box-shadow: none;
+	border: 1px solid var(--topbar-border, var(--dark-divider));
+	border-radius: 0.875rem;
+	box-shadow:
+		0 0.75rem 2.5rem rgba(0, 0, 0, 0.18),
+		inset 0 1px 0 rgba(255, 255, 255, 0.06);
 	min-height: 3.25rem;
 	padding-block: var(--space-3);
 	padding-inline: var(--space-6);
@@ -34,15 +36,14 @@
 		box-shadow 0.28s ease;
 }
 :host([data-scrolled]) {
-	inset-block-start: 1rem;
-	inset-inline: 1rem;
+	inset-block-start: 0;
+	inset-inline: 0;
 }
 :host([data-scrolled]) .app-bar {
-	border-color: var(--topbar-border, var(--dark-divider));
-	border-radius: 0.875rem;
-	box-shadow:
-		0 0.75rem 2.5rem rgba(0, 0, 0, 0.18),
-		inset 0 1px 0 rgba(255, 255, 255, 0.06);
+	border-color: transparent;
+	border-block-end-color: var(--topbar-border, var(--dark-divider));
+	border-radius: 0;
+	box-shadow: none;
 }
 @media (prefers-reduced-motion: reduce) {
 	:host,
