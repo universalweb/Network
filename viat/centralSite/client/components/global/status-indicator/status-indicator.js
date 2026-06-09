@@ -95,7 +95,7 @@ export class UIStatusIndicator extends WebComponent {
 		};
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html`<ui-badge .state=${this.state.badgeView}></ui-badge>`;
 	}
 }

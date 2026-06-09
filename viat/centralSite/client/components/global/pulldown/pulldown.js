@@ -78,7 +78,7 @@ export class UIPullDown extends WebComponent {
 		}, SNAP_MS);
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div #drawer class="pulldown-drawer">
 				<div class="pulldown-content">

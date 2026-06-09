@@ -90,7 +90,7 @@ export class GlobalPulldown extends WebComponent {
 		});
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<ui-pulldown #pulldown
 				.state=${this.state.pulldown}

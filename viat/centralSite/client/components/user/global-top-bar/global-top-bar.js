@@ -272,7 +272,7 @@ export class GlobalTopBar extends WebComponent {
 		}
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<ui-app-bar #appbar .state=${this.state.appBar}>
 				<div slot="start" class="tb-logo">

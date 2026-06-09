@@ -26,7 +26,7 @@ export class AppDashboard extends WebComponent {
 		dashboard: './dashboard.css',
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class="dashboard-center">
 				<div class="center-content">

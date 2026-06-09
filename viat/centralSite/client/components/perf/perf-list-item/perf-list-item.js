@@ -16,7 +16,7 @@ export class PerfListItem extends WebComponent {
 		// to textContent. The two string fields carry `^text` so they render as
 		// inert text nodes — the apples-to-apples equalizer with Lit `${x}` / Vue
 		// `{{ x }}`, both of which text-interpolate (escape) rather than parse HTML.
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class="row">
 				<span class="id">#${this.state.id}</span>

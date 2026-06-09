@@ -145,7 +145,7 @@ export class UITooltip extends WebComponent {
 		shell.hidePopover();
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div #shell
 				class=${classList('tooltip-shell', () => {

@@ -200,7 +200,7 @@ class UwcShootoutList extends WebComponent {
 		// Bare-read keyed list — `each()` rebuilds the LiveList on the items
 		// renderDep change and the list spot keyed-diffs it (create/update/move/
 		// remove per `itemKey`). Same contract as Lit's keyed repeat.
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `${each(this.state.items, PerfListItem, itemKey)}`;
 	}
 }
@@ -227,7 +227,7 @@ class UwcLightShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `${each(this.state.items, perfLightRow, itemKey)}`;
 	}
 }
@@ -246,7 +246,7 @@ class UwcListShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `${list('items', perfLightRow, itemKey)}`;
 	}
 }
@@ -266,7 +266,7 @@ class UwcArrowEachShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `${() => {
 			return each(this.state.items, perfLightRow, itemKey);
 		}}`;
@@ -287,7 +287,7 @@ class UwcNoShadowScopedShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `${each(this.state.items, perfLightRow, itemKey)}`;
 	}
 }
@@ -306,7 +306,7 @@ class UwcNoShadowUnscopedShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `${each(this.state.items, perfLightRow, itemKey)}`;
 	}
 }
@@ -937,7 +937,7 @@ export class FrameworkShootout extends WebComponent {
 			rows: this.state.results,
 			emptyMessage: 'press "Bench all" to populate',
 		};
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class="page">
 				<header class="head">

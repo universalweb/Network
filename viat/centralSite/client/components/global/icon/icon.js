@@ -28,7 +28,7 @@ export class UIIcon extends WebComponent {
 		return `${SPRITE_URL}#${this.state.name}`;
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<svg class="${this.hostClass}" aria-hidden="true">
 				<use href=${this.iconHref}></use>

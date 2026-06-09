@@ -35,23 +35,9 @@
 	}
 }
 
-.field {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-2);
-}
-
-.field-head {
-	display: flex;
-	flex-direction: column;
-	justify-content: flex-start;
-	gap: var(--space-1);
-}
-
-.field.full-width {
-	grid-column: 1 / -1;
-}
-
+/* Layout migrated to framework utilities in the template: .field -> stack gap-2,
+   .field-head -> stack justify-start gap-1, full-width -> col-span-full. The .field
+   class stays for its descendant rule (.field input). */
 .field-label {
 	font-size: var(--text-2xs);
 	text-transform: uppercase;

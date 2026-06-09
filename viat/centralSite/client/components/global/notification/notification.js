@@ -43,7 +43,7 @@ class NotificationItem extends WebComponent {
 		this.beginExit();
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class="notification notification-${this.state.itemType}${this.state.exiting ? ' is-exit' : ''}"
 				role="button" tabindex="0" aria-label="Dismiss notification"
@@ -113,7 +113,7 @@ export class UINotification extends WebComponent {
 		}
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class="notification-stack" @notification-dismiss="${this.handleDismiss}">
 				${list('items', NotificationItem, (item) => {

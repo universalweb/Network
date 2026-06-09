@@ -14,7 +14,7 @@ export class UIToolbar extends WebComponent {
 		actions: [],
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<ui-bar class="toolbar" role="toolbar">
 				<div slot="center" class="toolbar-actions">

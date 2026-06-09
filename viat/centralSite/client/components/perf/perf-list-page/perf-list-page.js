@@ -778,7 +778,7 @@ export class PerfListPage extends WebComponent {
 			rows: this.state.depthHistory,
 			emptyMessage: 'no history',
 		};
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class="page">
 				<header class="head">

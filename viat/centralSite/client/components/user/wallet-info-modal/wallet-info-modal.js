@@ -28,7 +28,7 @@ export class WalletInfoModal extends WebComponent {
 		return `--ui-modal-max-width: ${max}; --ui-modal-max-height: calc(100dvh - 32px)`;
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<ui-modal #modal .state=${{
 				modal: true,

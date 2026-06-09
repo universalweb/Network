@@ -38,7 +38,7 @@ export class UIStatusBar extends WebComponent {
 		return item.label;
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html`
 			<ui-bar class="status-bar">
 				<div slot="start" class="status-cells">

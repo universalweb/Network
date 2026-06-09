@@ -14,7 +14,7 @@ export class UIStatusCell extends WebComponent {
 		divider: true,
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html`
 			<div class=${classList('cell', () => {
 				return this.state.divider && 'cell-divider';

@@ -59,7 +59,7 @@ export class BootScreen extends WebComponent {
 		});
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div #splash class="boot-screen" role="status" aria-live="polite">
 				<div class="bs-stage">

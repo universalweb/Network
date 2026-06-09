@@ -213,7 +213,7 @@ export class UISidebar extends WebComponent {
 		}, SNAP_MS);
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html`
 			<div class="sidebar-edge" #edge></div>
 			<div class="sidebar-backdrop" @click=${this.close}></div>

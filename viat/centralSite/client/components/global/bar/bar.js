@@ -16,7 +16,7 @@ export class UIBar extends WebComponent {
 		orientation: 'horizontal',
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html`
 			<div class=${classList('bar', () => {
 				return `bar-${this.state.orientation || 'horizontal'}`;

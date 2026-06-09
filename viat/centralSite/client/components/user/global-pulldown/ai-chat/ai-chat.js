@@ -137,7 +137,7 @@ class AIChatMessage extends WebComponent {
 		content: '',
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class="${() => {
 				return `aim aim-${this.state.role}`;
@@ -552,7 +552,7 @@ export class AIChat extends WebComponent {
 		return null;
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class="ai-chat">
 				<header class="aic-header">

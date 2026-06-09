@@ -39,7 +39,7 @@ export class PerfFullCard extends WebComponent {
 		this.state.value = 0;
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class="card">
 				<div class="head">

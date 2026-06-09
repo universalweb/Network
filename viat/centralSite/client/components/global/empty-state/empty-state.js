@@ -16,7 +16,7 @@ export class UIEmptyState extends WebComponent {
 		});
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class="empty">
 				${this.state.icon ? this.htmlElement `<div class="empty-icon" aria-hidden="true">${this.state.icon}</div>` : ''}

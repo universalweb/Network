@@ -26,7 +26,7 @@ export class UISkeleton extends WebComponent {
 		return out.join('');
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class=${classList('skeleton', () => {
 				return `variant-${this.state.variant}`;

@@ -179,7 +179,7 @@ export class WalletQr extends WebComponent {
 		}
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class=${() => `wq-wrap${this.state.svg ? ' is-ready' : ' is-empty'}`}>
 				<div class="wq-canvas"

@@ -16,7 +16,7 @@ export class UIAppBar extends WebComponent {
 		actions: [],
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<header class="app-bar">
 				<ui-bar class="app-bar-bar">

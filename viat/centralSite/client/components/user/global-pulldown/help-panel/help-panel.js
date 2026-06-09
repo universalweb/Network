@@ -12,7 +12,7 @@ class HelpShortcutRow extends WebComponent {
 		desc: '',
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class="hp-row">
 				<span class="hp-keys">^html${this.buildKeysMarkup}</span>

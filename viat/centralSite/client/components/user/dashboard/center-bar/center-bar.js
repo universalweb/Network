@@ -43,7 +43,7 @@ export class CenterBar extends WebComponent {
 		},
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html`
 			<ui-toolbar .state=${this.state.toolbar}></ui-toolbar>
 		`;

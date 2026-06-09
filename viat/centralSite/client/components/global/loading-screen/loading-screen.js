@@ -22,7 +22,7 @@ export class UILoadingScreen extends WebComponent {
 		this.state.open = false;
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class=${classList(
 				'loading-screen',

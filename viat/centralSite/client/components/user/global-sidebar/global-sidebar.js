@@ -16,7 +16,7 @@ export class GlobalSidebar extends WebComponent {
 		},
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html`
 			<ui-sidebar .state=${this.state.sidebar}>
 				<network-stats></network-stats>

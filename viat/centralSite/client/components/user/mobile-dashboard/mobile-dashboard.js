@@ -18,7 +18,7 @@ export class MobileDashboard extends WebComponent {
 		mobileDashboard: './mobile-dashboard.css',
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class="md-shell">
 				<wallet-amount class="bare"></wallet-amount>

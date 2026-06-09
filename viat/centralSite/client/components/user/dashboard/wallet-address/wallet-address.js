@@ -51,7 +51,7 @@ export class WalletAddress extends WebComponent {
 		});
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class=${this.hostClasses}
 				tooltip=${this.tooltipText}

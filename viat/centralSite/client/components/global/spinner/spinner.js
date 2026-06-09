@@ -10,7 +10,7 @@ export class UISpinner extends WebComponent {
 		variant: 'ring',
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class=${classList(
 				'spinner',

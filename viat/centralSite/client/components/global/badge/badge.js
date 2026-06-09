@@ -32,7 +32,7 @@ export class UIBadge extends WebComponent {
 		}
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<span #badge class=${classList('badge', () => {
 				return `tone-${this.state.tone}`;

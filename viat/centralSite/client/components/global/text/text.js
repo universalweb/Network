@@ -25,7 +25,7 @@ export class UIText extends WebComponent {
 		truncate: false,
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<span class=${classList(
 				'text',

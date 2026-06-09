@@ -13,7 +13,7 @@ export class UIStack extends WebComponent {
 		inline: false,
 	};
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class=${classList(
 				'stack',

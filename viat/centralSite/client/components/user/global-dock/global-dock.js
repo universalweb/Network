@@ -80,7 +80,7 @@ export class GlobalDock extends WebComponent {
 		}
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+
 		this.html `<ui-dock .state=${this.state.dock}></ui-dock>`;
 	}
 }

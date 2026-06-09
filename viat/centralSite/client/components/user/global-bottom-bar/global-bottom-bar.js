@@ -65,7 +65,7 @@ export class GlobalBottomBar extends WebComponent {
 		});
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html`
 			<ui-status-bar .state=${this.state.statusBar}>
 				<div slot="end" class=${classList('bb-badge', () => {

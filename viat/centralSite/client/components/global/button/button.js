@@ -52,7 +52,7 @@ export class UIButton extends WebComponent {
 		});
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<button class=${classList(
 				'btn',

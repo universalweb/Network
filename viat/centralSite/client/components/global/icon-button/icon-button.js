@@ -88,7 +88,7 @@ export class IconButtonBase extends WebComponent {
 		this.emit(this.state.onClick || 'buttonClick', {});
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html`
 			<ui-button class=${classList('icon-button', this.state.classes, () => {
 				return this.state.active && 'active';

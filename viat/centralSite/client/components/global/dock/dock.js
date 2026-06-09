@@ -88,7 +88,7 @@ export class UIDock extends WebComponent {
 		this.indicator.moveTo(activeButton, snap);
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<ui-bar class="dock">
 				<div slot="center" class="dock-rail">

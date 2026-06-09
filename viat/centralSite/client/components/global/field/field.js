@@ -16,7 +16,7 @@ export class UIField extends WebComponent {
 		return this.state.error || this.state.help;
 	}
 	render() {
-		// eslint-disable-next-line no-unused-expressions
+		
 		this.html `
 			<div class=${classList(
 				'field',

@@ -67,7 +67,7 @@ export default [
 	},
 	{
 		files: ['**/*.md'],
-		language: 'markdown/markdown',
+		language: 'markdown/commonmark',
 		plugins: {
 			markdown,
 		},
@@ -384,7 +384,7 @@ export default [
 			'jsdoc/no-undefined-types': 0,
 			'jsdoc/require-asterisk-prefix': 1,
 			'jsdoc/require-description': 1,
-			'jsdoc/require-description-complete-sentence': 1,
+			'jsdoc/require-description-complete-sentence': 0,
 			'jsdoc/require-example': 0,
 			'jsdoc/require-file-overview': 0,
 			'jsdoc/require-hyphen-before-param-description': 1,
@@ -548,6 +548,8 @@ export default [
 			'no-unused-expressions': [
 				'error',
 				{
+					allowTaggedTemplates: true,
+					ignoreDirectives: true,
 					allowShortCircuit: true,
 					allowTernary: true,
 				},
