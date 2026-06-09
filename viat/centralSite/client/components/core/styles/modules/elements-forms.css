@@ -40,6 +40,32 @@
 		cursor: not-allowed;
 	}
 
+	/* Native toggle / range / color / progress controls. The text-input rule above
+	   also matches these, so reset its chrome here and tint the native control with
+	   accent-color (themed, modern — no custom-control rebuild needed). */
+	input[type='checkbox'],
+	input[type='radio'],
+	input[type='range'],
+	input[type='color'],
+	progress {
+		appearance: auto;
+		accent-color: var(--cyan, var(--teal));
+		padding: 0;
+		border: 0;
+		background: none;
+		box-shadow: none;
+		border-radius: 0;
+		cursor: pointer;
+	}
+	input[type='range'],
+	progress {
+		inline-size: 100%;
+		block-size: auto;
+	}
+	progress {
+		block-size: var(--space-2);
+	}
+
 	/* Universal button: themed via the per-theme --btn-* token set (the same
 	   tokens transmit and other action buttons read), so every bare <button>
 	   gets a polished, theme-consistent look for free. A component class in

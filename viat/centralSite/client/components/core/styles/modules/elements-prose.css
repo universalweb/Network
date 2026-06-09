@@ -124,6 +124,20 @@
 	video {
 		block-size: auto;
 	}
+	table {
+		border-collapse: collapse;
+	}
+	th,
+	td {
+		padding: var(--space-3) var(--space-4);
+		border-block-end: var(--border-width) solid
+			var(--dark-divider, var(--border-light-color));
+		text-align: start;
+	}
+	th {
+		color: var(--text-muted);
+		font-weight: var(--weight-semibold);
+	}
 
 	/* ── .prose — long-form reading layer (additive flow properties) ── */
 	.prose {
@@ -171,19 +185,7 @@
 	}
 	.prose table {
 		width: 100%;
-		border-collapse: collapse;
 		margin-block: var(--space-4);
 		font-size: var(--text-sm);
-	}
-	.prose th,
-	.prose td {
-		padding: var(--space-3) var(--space-4);
-		border-block-end: var(--border-width) solid
-			var(--dark-divider, var(--border-light-color));
-		text-align: start;
-	}
-	.prose th {
-		color: var(--text-muted);
-		font-weight: var(--weight-semibold);
 	}
 }
