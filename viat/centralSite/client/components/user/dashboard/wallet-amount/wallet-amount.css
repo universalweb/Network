@@ -1,6 +1,12 @@
 :host {
 	display: block;
 	flex-shrink: 0;
+	/* Query against the card's OWN width: on the desktop dashboard the card sits in
+	   the center column (narrower than the viewport), so a viewport @media never
+	   fired while the dashboard was shown. `inline-size` makes :host the query
+	   container; the watermark is anchored to .wallet-hero's own position:relative,
+	   so inline-size containment does not relocate it. */
+	container-type: inline-size;
 }
 
 /* ══════════════════════════════════════════════════════
@@ -85,7 +91,12 @@
 	font-size: var(--text-base);
 }
 
-@media (max-width: 26.25em) {
+/* `rem` not `em`: inside @container, `em` resolves against the container's own
+   font-size; `rem` is root-relative (this project's root is 14px) and zoom-safe.
+   One threshold governs both contexts — the desktop card (column width) and the
+   mobile-dashboard `.bare` balance (wallet-amount is ~full-width there, so the
+   container ≈ viewport and the shrink still fires on narrow phones). */
+@container (max-width: 30rem) {
 	.wa-amount-main {
 		font-size: 2.125rem;
 	}

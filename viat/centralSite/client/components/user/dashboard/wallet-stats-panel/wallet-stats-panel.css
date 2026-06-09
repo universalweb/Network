@@ -2,6 +2,9 @@
   display: block;
   flex-shrink: 0;
   width: 100%;
+  /* Query container for stat-panel.css's @container rule (compacts stat-row
+     padding when this panel is narrow). */
+  container-type: inline-size;
 }
 
 .wallet-stats-panel .stat-block {

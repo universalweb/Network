@@ -6,6 +6,9 @@
      panel must carry its own opaque background instead of letting the blur
      show through `--panel-bg`'s default translucency. */
   --panel-bg: rgb(12, 14, 22);
+  /* Query container for stat-panel.css's @container rule. The sidebar is always
+     narrow (~220px), so stat rows read compact here on every viewport. */
+  container-type: inline-size;
 }
 
 /* Content-height like a normal div — grows with its rows, no inner scroll. The

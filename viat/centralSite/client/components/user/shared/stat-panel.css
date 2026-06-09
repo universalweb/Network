@@ -57,7 +57,13 @@
 	box-shadow: var(--stat-bar-fill-shadow, 0 0 6px var(--teal));
 }
 
-@media (max-width: 26.25em) {
+/* Query against the OWNING panel's width, not the viewport. This shared sheet is
+   deliberately `:host`-free (3 panels adopt it — a `:host` here would leak
+   container-type onto all of them), so each owner declares `container-type` on
+   its own :host. network-stats lives in the narrow sidebar, so it now reads
+   compact always — the old viewport @media never fired for a ~220px panel on
+   desktop. `rem` not `em` (root is 14px; @container `em` is the container font). */
+@container (max-width: 30rem) {
 	.stat-block {
 		padding-inline-start: var(--space-4);
 		padding-inline-end: var(--space-4);
