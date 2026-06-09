@@ -1,6 +1,15 @@
 /* ══════════════════════════════════════════════════════
    TRANSMIT FUNDS PANEL
 ══════════════════════════════════════════════════════ */
+/* Query against the panel's OWN width, not the viewport: the panel sits in the
+   dashboard's center grid column (viewport − two 220px rails), so a viewport
+   media query at 420px never fired while the desktop dashboard was shown (≥768px)
+   — the compact body was dead even when the column was ~412px. `@container` flips
+   it on the column's real width. (`.field-addon` is contained by its own
+   `position:relative` parent, so inline-size containment doesn't relocate it.) */
+:host {
+	container-type: inline-size;
+}
 .transmit-panel {
 	flex-shrink: 0;
 }
@@ -12,7 +21,12 @@
 	gap: var(--space-4) var(--space-6);
 }
 
-@media (max-width: 26.25em) {
+/* Threshold tuned to the CONTAINER (the panel), not the viewport. `rem` not `em`:
+   inside `@container`, `em` is the container's own font-size (~10.5px mono here),
+   which would collapse the threshold; `rem` is root-relative (this project's root
+   is 14px) and zoom-safe. 34rem ≈ 476px = where the two form columns stop being
+   comfortable (~230px each) and should stack. */
+@container (max-width: 34rem) {
 	.transmit-body {
 		padding-inline-start: var(--space-4);
 		padding-inline-end: var(--space-4);
