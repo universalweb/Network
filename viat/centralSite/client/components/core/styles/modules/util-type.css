@@ -89,4 +89,66 @@
 	.nowrap-text {
 		white-space: nowrap;
 	}
+	.text-4xl {
+		font-size: var(--text-4xl);
+	}
+	.text-5xl {
+		font-size: var(--text-5xl);
+	}
+	/* Heading-shape utilities — apply a heading's visual size/weight to any element
+	   (decouple semantic level from visual size). Mirror the universal h1–h6. */
+	.h1 {
+		font-size: var(--text-3xl);
+		font-weight: var(--weight-bold);
+		line-height: var(--leading-tight);
+	}
+	.h2 {
+		font-size: var(--text-2xl);
+		font-weight: var(--weight-bold);
+		line-height: var(--leading-tight);
+	}
+	.h3 {
+		font-size: var(--text-xl);
+		font-weight: var(--weight-semibold);
+		line-height: var(--leading-tight);
+	}
+	.h4 {
+		font-size: var(--text-lg);
+		font-weight: var(--weight-semibold);
+	}
+	.h5 {
+		font-size: var(--text-md);
+		font-weight: var(--weight-semibold);
+	}
+	.h6 {
+		font-size: var(--text-base);
+		font-weight: var(--weight-semibold);
+	}
+	.italic {
+		font-style: italic;
+	}
+	.lowercase {
+		text-transform: lowercase;
+	}
+	.capitalize {
+		text-transform: capitalize;
+	}
+	.text-balance {
+		text-wrap: balance;
+	}
+	.text-pretty {
+		text-wrap: pretty;
+	}
+	.text-success {
+		color: var(--color-success);
+	}
+	.text-danger {
+		color: var(--color-danger);
+	}
+	.text-warning {
+		color: var(--color-warning);
+	}
+	.text-info {
+		color: var(--color-info);
+	}
 }
