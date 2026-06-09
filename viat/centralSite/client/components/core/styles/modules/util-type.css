@@ -151,4 +151,22 @@
 	.text-info {
 		color: var(--color-info);
 	}
+	.text-light {
+		color: var(--text-light);
+	}
+	.text-offwhite {
+		color: var(--text-offwhite);
+	}
+	.text-subtle {
+		color: var(--text-subtle);
+	}
+	.text-accent {
+		color: var(--cyan, var(--teal));
+	}
+	.underline {
+		text-decoration: underline;
+	}
+	.no-underline {
+		text-decoration: none;
+	}
 }

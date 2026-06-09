@@ -120,4 +120,67 @@
 	.overflow-y-auto {
 		overflow-y: auto;
 	}
+	.aspect-square {
+		aspect-ratio: 1 / 1;
+	}
+	.aspect-video {
+		aspect-ratio: 16 / 9;
+	}
+	.aspect-auto {
+		aspect-ratio: auto;
+	}
+	.grid-cols-2 {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.grid-cols-3 {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+	.grid-cols-4 {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+	/* Intrinsically responsive grid — no breakpoint variants needed; tracks wrap to
+	   fit the container (pairs with `container-type` on the host for true component
+	   responsiveness). */
+	.grid-auto-fit {
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+	}
+	.col-span-2 {
+		grid-column: span 2;
+	}
+	.col-span-3 {
+		grid-column: span 3;
+	}
+	.col-span-full {
+		grid-column: 1 / -1;
+	}
+	.w-auto {
+		inline-size: auto;
+	}
+	.w-half {
+		inline-size: 50%;
+	}
+	.h-auto {
+		block-size: auto;
+	}
+	.min-h-0 {
+		min-block-size: 0;
+	}
+	.min-h-svh {
+		min-block-size: 100svh;
+	}
+	.max-w-prose {
+		max-inline-size: 65ch;
+	}
+	.max-w-sm {
+		max-inline-size: 24rem;
+	}
+	.max-w-md {
+		max-inline-size: 32rem;
+	}
+	.max-w-lg {
+		max-inline-size: 48rem;
+	}
+	.max-w-full {
+		max-inline-size: 100%;
+	}
 }

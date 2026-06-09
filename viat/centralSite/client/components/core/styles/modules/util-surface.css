@@ -43,6 +43,24 @@
 	.bg-danger {
 		background: color-mix(in srgb, var(--color-danger) 12%, transparent);
 	}
+	.bg-panel {
+		background: var(--bg-panel);
+	}
+	.bg-dark {
+		background: var(--bg-dark);
+	}
+	.bg-body {
+		background: var(--bg-body);
+	}
+	.bg-transparent {
+		background: transparent;
+	}
+	.rounded {
+		border-radius: var(--radius-md);
+	}
+	.border-strong {
+		border: var(--border-width) solid var(--border-color, var(--border-light-color));
+	}
 	/* migrated from base.css */
 	.green-hover:hover {
 		color: var(--green-hover);
