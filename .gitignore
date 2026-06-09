@@ -99,3 +99,4 @@ agent/types/*
 *.png
 *.private.md
 .CLAUDE.MD.swp
+test.js
