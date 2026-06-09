@@ -23,6 +23,7 @@
 import { getBehavior } from '../behaviors/registry.js';
 import { isFunction } from '../utilities.js';
 const SCROLLABLE_OVERFLOW = /(auto|scroll|overlay)/;
+const DEFAULT_MAX_AUTO_FILL = 8;
 function stripHash(refName) {
 	return refName && refName[0] === '#' ? refName.slice(1) : refName;
 }
@@ -80,6 +81,9 @@ class RemoteListController {
 		this.abortController = null;
 		this.scrollReportUninstall = null;
 		this.seenKeys = new Set();
+		this.autoFillCount = 0;
+		this.fillFrame = 0;
+		this.maxAutoFill = Number.isFinite(this.config.maxAutoFill) ? this.config.maxAutoFill : DEFAULT_MAX_AUTO_FILL;
 	}
 	get exhausted() {
 		return this.started && !this.hasMore;
@@ -225,10 +229,91 @@ class RemoteListController {
 			this.loadMore();
 		}
 	}
+	/* Auto-fill applies only to the auto-scroll modes (scroll/both) and only when more
+	   pages exist and nothing else is in flight. Strictly opt-in (config.fillViewport)
+	   so a bounded panel that momentarily falls back to document scroll — short content,
+	   no scrollable ancestor — does not auto-load to fill the whole viewport. */
+	shouldAutoFill() {
+		if (this.config.fillViewport !== true) {
+			return false;
+		}
+		const mode = this.config.mode ?? 'scroll';
+		if (mode !== 'scroll' && mode !== 'both') {
+			return false;
+		}
+		return this.hasMore && !this.loading && !this.paused && !this.disposed;
+	}
+	/*
+	 * True when the rendered list extends past the scroller's visible bottom (there is
+	 * something to scroll to). Measures the LIST's own box (anchorElement — the rows'
+	 * container), NOT scroller.scrollHeight: under document scroll the scroller is the
+	 * whole page, whose height includes chrome / headers / the page's bar-clearance
+	 * padding and would read "filled" even with a near-empty list. Unified across both
+	 * branches — visible bottom is the element scroller's rect bottom, or the layout
+	 * viewport under document scroll.
+	 */
+	isViewportFilled() {
+		const anchor = this.anchorElement;
+		const scroller = this.scroller;
+		if (!anchor || !scroller) {
+			return true;
+		}
+		const listRect = anchor.getBoundingClientRect();
+		if (listRect.height === 0 && listRect.width === 0) {
+			return true;
+		}
+		const prefetch = readPrefetchPixels(this.config.prefetch);
+		return listRect.bottom > this.resolveVisibleBottom(scroller) + prefetch;
+	}
+	/* The scroller's visible bottom edge in viewport coordinates: the layout viewport
+	   under document scroll (scrollTarget is the window), else the element's own rect. */
+	resolveVisibleBottom(scroller) {
+		if (this.scrollTarget === globalThis) {
+			const docElement = globalThis.document.documentElement;
+			return docElement?.clientHeight ?? globalThis.innerHeight;
+		}
+		return scroller.getBoundingClientRect().bottom;
+	}
+	/*
+	 * After a successful load, an infinite-scroll list whose rendered content is shorter
+	 * than the scroller never receives a `scroll` event, so onScroll's near-bottom
+	 * trigger can't fire and paging stalls — a short first page on a tall screen, or a
+	 * filter() hiding most loaded rows. Measure on the next frame (after the patch has
+	 * flushed and laid out) and top up. One frame in flight at a time.
+	 */
+	scheduleFillCheck() {
+		if (this.fillFrame || !this.shouldAutoFill()) {
+			return;
+		}
+		this.fillFrame = requestAnimationFrame(() => {
+			this.runFillCheck();
+		});
+	}
+	/* rAF tail of scheduleFillCheck. Not filled + under cap → append one more page; its
+	   `loaded` re-arms this check, so the list grows until it overflows the fold, the
+	   source exhausts, or the consecutive-auto-fill cap trips — a filter hiding ~every
+	   row must not hammer the loader, so it ends in a `fill-capped` event instead. */
+	runFillCheck() {
+		this.fillFrame = 0;
+		if (!this.shouldAutoFill()) {
+			return;
+		}
+		if (this.isViewportFilled()) {
+			this.autoFillCount = 0;
+			return;
+		}
+		if (this.autoFillCount >= this.maxAutoFill) {
+			this.emit('fill-capped');
+			return;
+		}
+		this.autoFillCount += 1;
+		this.load(false);
+	}
 	reset() {
 		this.cursor = null;
 		this.hasMore = true;
 		this.error = '';
+		this.autoFillCount = 0;
 		this.seenKeys.clear();
 		this.component.state[this.stateKey] = [];
 		return this.load(true);
@@ -251,6 +336,7 @@ class RemoteListController {
 	goto(targetCursor) {
 		this.hasMore = true;
 		this.error = '';
+		this.autoFillCount = 0;
 		this.seenKeys.clear();
 		return this.load(true, targetCursor);
 	}
@@ -376,6 +462,7 @@ class RemoteListController {
 		if (this.exhausted) {
 			this.emit('exhausted');
 		}
+		this.scheduleFillCheck();
 	}
 	dropDuplicates(incoming) {
 		const kept = [];
@@ -452,6 +539,10 @@ class RemoteListController {
 	dispose() {
 		this.disposed = true;
 		this.loadToken += 1;
+		if (this.fillFrame) {
+			cancelAnimationFrame(this.fillFrame);
+			this.fillFrame = 0;
+		}
 		this.abortController?.abort();
 		this.abortController = null;
 		this.detachDom();

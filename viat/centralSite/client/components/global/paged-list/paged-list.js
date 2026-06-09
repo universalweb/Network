@@ -62,6 +62,16 @@ export class PagedList extends WebComponent {
 	onMount() {
 		this.startInitial();
 	}
+	/* fillViewport reveal trigger. This SPA mounts route pages hidden (display:none)
+	   and reveals them on navigation, so the controller's post-load fill check runs
+	   while the list has no layout box and bails. Re-run it when this list becomes
+	   visible — the shared IntersectionObserver fires onIntersect on reveal (and once
+	   on first observe). No-op unless fillViewport is on and the list is short. */
+	onIntersect(isIntersecting) {
+		if (isIntersecting) {
+			this.remote('items')?.scheduleFillCheck();
+		}
+	}
 	/* Drive the first load (controller is auto:false) so it honors startPage and
 	   the active style. Retries on a microtask until the controller has mounted
 	   (it attaches a microtask after the first render). */
@@ -218,6 +228,7 @@ export class PagedList extends WebComponent {
 						prev: '#pl_prev',
 						next: '#pl_next',
 						dedupe: true,
+						fillViewport: true,
 					})}
 					<div class=${() => {
 						return this.state.error ? 'pl-empty pl-error' : 'pl-empty';
