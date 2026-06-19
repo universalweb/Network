@@ -1,6 +1,6 @@
-import { clampOffset, offsetIsOpen } from './pulldownOffset.js';
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { clampOffset, offsetIsOpen } from './pulldownOffset.js';
 test('clampOffset tracks start + delta within the travel span', () => {
 	assert.equal(clampOffset(0, 120, 1000), 120);
 	assert.equal(clampOffset(1000, -300, 1000), 700);

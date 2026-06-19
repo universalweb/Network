@@ -1,16 +1,16 @@
 import { isFunction, isPlainObject, isString } from '../utilities.js';
 import {
-	eachComponent,
-	getComponentById,
-	getComponentId,
-	getTools,
-} from './registry.js';
-import {
 	getDirectChildren,
 	getNameForComponent,
 	getPathForComponent,
 	resolvePath,
 } from './paths.js';
+import {
+	eachComponent,
+	getComponentById,
+	getComponentId,
+	getTools,
+} from './registry.js';
 const MAX_DEPTH = 4;
 const MAX_ARRAY = 50;
 const MAX_STRING = 600;

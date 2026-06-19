@@ -1,6 +1,6 @@
 import '../button/button.js';
 import '../icon/icon.js';
-import { WebComponent, classList } from '../../core/index.js';
+import { classList, WebComponent } from '../../core/index.js';
 /*
  * `<ui-icon-button>` — a thin composition: a `<ui-button>` in its icon variant
  * wrapping a `<ui-icon>`. The two raw primitives stay independent, first-class

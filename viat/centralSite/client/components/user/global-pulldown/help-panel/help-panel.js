@@ -1,4 +1,4 @@
-import { WebComponent, each } from '../../../core/index.js';
+import { each, WebComponent } from '../../../core/index.js';
 import { Panel } from '../../../global/panel/panel.js';
 class HelpShortcutRow extends WebComponent {
 	static url = import.meta.url;
@@ -12,7 +12,7 @@ class HelpShortcutRow extends WebComponent {
 		desc: '',
 	};
 	render() {
-				this.html `
+		this.html `
 			<div class="hp-row">
 				<span class="hp-keys">^html${this.buildKeysMarkup}</span>
 				<span class="hp-desc">${this.state.desc}</span>

@@ -8,8 +8,8 @@ import {
 	joinPath,
 	setValueAtPath,
 } from '../utilities.js';
-import { STATE_PATH, localRealm } from './state.js';
 import { globalRealm } from './globalState.js';
+import { localRealm, STATE_PATH } from './state.js';
 /*
  * ── Content kinds ────────────────────────────────────────────────────
  * Classification of any value that lands in a TEXT-position ${…} spot.

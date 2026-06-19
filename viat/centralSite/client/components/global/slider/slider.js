@@ -27,7 +27,7 @@
 	  <ui-slider .orientation=${'vertical'} .step=${5} .showLabel=${'always'}></ui-slider>
 	──────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, html, list } from 'webcomponent';
+import { html, list, WebComponent } from 'webcomponent';
 // Auto tick marks (marks === true) are skipped past this many detents — a tiny
 // step over a huge range would stamp thousands of dots; pass an explicit marks
 // array when that many are genuinely wanted.

@@ -1,10 +1,10 @@
 /* eslint-disable no-restricted-syntax */
+import { defaultLogger } from '../debug/logger.js';
 import {
-	FRAME_TYPE,
 	decodeFrame,
 	encodeFrame,
+	FRAME_TYPE,
 } from './envelope.js';
-import { defaultLogger } from '../debug/logger.js';
 /*
  * UniversalWebSocket — an all-in-one realtime client that ships with UWC and works
  * on any site. It OWNS a native WebSocket (composition, not inheritance: reconnect

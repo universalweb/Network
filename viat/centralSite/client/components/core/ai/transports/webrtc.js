@@ -1,7 +1,9 @@
 import { defaultLogger } from '../../debug/logger.js';
-const DEFAULT_ICE = [{
-	urls: 'stun:stun.l.google.com:19302',
-}];
+const DEFAULT_ICE = [
+	{
+		urls: 'stun:stun.l.google.com:19302',
+	},
+];
 export class WebRTCTransport {
 	constructor({
 		signalingUrl,

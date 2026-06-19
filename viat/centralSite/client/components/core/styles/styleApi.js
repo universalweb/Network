@@ -1,9 +1,9 @@
-import { applyHeadStyles, mergeStyleEntries } from './headStyles.js';
+import { collectClassChain } from '../attrs/staticConfig.js';
 import {
 	eachArray, hasOwn, isArray, isString,
 } from '../utilities.js';
-import { collectClassChain } from '../attrs/staticConfig.js';
 import { loadSheet } from './css-loader.js';
+import { applyHeadStyles, mergeStyleEntries } from './headStyles.js';
 const sheetCache = new Map();
 const COMPONENT_LAYER = 'uwc.components';
 /**

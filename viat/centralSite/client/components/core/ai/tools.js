@@ -1,10 +1,10 @@
+import { isFunction, isPlainObject, isString } from '../utilities.js';
 import {
 	defineGlobalTool,
 	defineInstanceTool,
 	defineTagTool,
 	listAllTools,
 } from './registry.js';
-import { isFunction, isPlainObject, isString } from '../utilities.js';
 export function defineTool(scope, toolName, def) {
 	if (!isString(toolName) || !toolName.trim()) {
 		throw new TypeError('toolName must be a non-empty string');

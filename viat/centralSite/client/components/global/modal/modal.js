@@ -1,6 +1,6 @@
 import '../icon/icon.js';
 import '../close-button/close-button.js';
-import { WebComponent, classList } from '../../core/index.js';
+import { classList, WebComponent } from '../../core/index.js';
 import { lockBackgroundScroll, unlockBackgroundScroll } from '../scroll-lock.js';
 // Base z-index for the first modal. Each subsequent modal that opens
 // receives `baseZ + (stack depth)` so newer modals always paint above

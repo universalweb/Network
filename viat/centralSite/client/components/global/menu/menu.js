@@ -23,8 +23,8 @@
 	  <ui-menu .placement=${'bottom-end'}><span slot="trigger">⋮</span></ui-menu>
 	──────────────────────────────────────────────────────────────────────
 */
-import { WebComponent } from '../../core/index.js';
 import { computeAnchor } from '../../core/dom/anchor.js';
+import { WebComponent } from '../../core/index.js';
 // Shared by ui-menu + ui-menubar (both inject user labels into ^html item/trigger
 // markup). Named export so the family escapes identically from one source.
 export function escapeHtml(value) {

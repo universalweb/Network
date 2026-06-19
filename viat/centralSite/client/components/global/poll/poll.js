@@ -14,7 +14,7 @@
 	deep-written onto each option (never a per-render enrichment loop).
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, list } from 'webcomponent';
+import { list, WebComponent } from 'webcomponent';
 class UIPollOption extends WebComponent {
 	static url = import.meta.url;
 	static styles = {

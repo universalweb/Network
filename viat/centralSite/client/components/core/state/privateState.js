@@ -35,8 +35,6 @@
  * (they re-read on drain) and only observePrivate consumes it, so the spot and
  * renderDep flush path could be made value-blind to shrink this surface.
  */
-import { ComponentSubscriptionTracker, PathSubscriptions, TrackedBundle } from './pathSubscriptions.js';
-import { addDep, currentTracking } from './binding.js';
 import {
 	getValueAtPath,
 	isArray,
@@ -48,6 +46,8 @@ import {
 	queueAsyncError,
 	setValueAtPath,
 } from '../utilities.js';
+import { addDep, currentTracking } from './binding.js';
+import { ComponentSubscriptionTracker, PathSubscriptions, TrackedBundle } from './pathSubscriptions.js';
 import { STATE_PATH } from './state.js';
 /**
  * Bus for one component's private store. Mirrors ComponentStateBus, but reads

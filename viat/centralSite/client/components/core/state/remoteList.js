@@ -20,8 +20,8 @@
  * persists across re-renders (held in `component.remoteControllers`, keyed by state
  * key); the template mount-hook does get-or-create. Disposed on disconnect.
  */
-import { isFunction, plainEqual } from '../utilities.js';
 import { getBehavior } from '../behaviors/registry.js';
+import { isFunction, plainEqual } from '../utilities.js';
 const SCROLLABLE_OVERFLOW = /(auto|scroll|overlay)/;
 const DEFAULT_MAX_AUTO_FILL = 8;
 function stripHash(refName) {

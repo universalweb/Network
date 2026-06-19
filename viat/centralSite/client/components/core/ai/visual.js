@@ -1,5 +1,5 @@
-import { eachComponent } from './registry.js';
 import { getPathForComponent, pageOverview } from './paths.js';
+import { eachComponent } from './registry.js';
 function snapshot(component, id) {
 	if (!component.isConnected) {
 		return null;

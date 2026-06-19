@@ -1,4 +1,4 @@
-import { WebComponent, remoteList } from '../../core/index.js';
+import { remoteList, WebComponent } from '../../core/index.js';
 /*
  * `<paged-list>` — a reusable remoteList-driven list shell with TWO switchable
  * paging styles:

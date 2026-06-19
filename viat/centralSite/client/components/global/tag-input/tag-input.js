@@ -18,7 +18,7 @@
 	    .max=${8} @tags:change=${e => save(e.detail.data.tags)}></ui-tag-input>
 	──────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, list } from 'webcomponent';
+import { list, WebComponent } from 'webcomponent';
 import { UIChip } from '../chip/chip.js';
 export class UITagInput extends WebComponent {
 	static url = import.meta.url;

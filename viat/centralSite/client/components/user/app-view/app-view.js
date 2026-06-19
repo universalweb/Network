@@ -1,6 +1,6 @@
-import { UINotification } from '../../global/notification/notification.js';
 import VIATClientSDK from 'viat';
 import { WebComponent } from 'webcomponent';
+import { UINotification } from '../../global/notification/notification.js';
 /*
  * `<app-shell>` — the standard primary component shell. Every page mounts one
  * (the wallet app's <app-view> extends it; preview slots its gallery into a

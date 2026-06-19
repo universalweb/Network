@@ -1,7 +1,7 @@
 import '../../../global/tabs/tabs.js';
-import { WebComponent, remoteList } from '../../../core/index.js';
-import { AppView } from '../../app-view/app-view.js';
+import { remoteList, WebComponent } from '../../../core/index.js';
 import { Panel } from '../../../global/panel/panel.js';
+import { AppView } from '../../app-view/app-view.js';
 const PAGE_SIZE = 25;
 function shortCounterparty(value) {
 	if (!value) {

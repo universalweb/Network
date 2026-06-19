@@ -1,5 +1,5 @@
-import { WebComponent } from 'webcomponent';
 import '../../global/status-bar/status-bar.js';
+import { WebComponent } from 'webcomponent';
 // `<global-bottom-bar>` — the Viat status strip. A thin composition over the
 // built-in `<ui-status-bar>`: it supplies the three info cells through config
 // and slots its API-health badge into the bar's `end` region. The badge view

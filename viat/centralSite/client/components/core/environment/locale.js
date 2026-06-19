@@ -1,7 +1,7 @@
 // Writes globalState.environment.locale and listens for languagechange.
 import { emitDelegate } from '../dom/delegate.js';
-import { plainEqual } from '../utilities.js';
 import { globalState } from '../state/globalState.js';
+import { plainEqual } from '../utilities.js';
 let lastSnapshot = null;
 function snapshot() {
 	return {

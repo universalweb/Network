@@ -1,8 +1,8 @@
-import { ComponentSubscriptionTracker, TrackedBundle } from './pathSubscriptions.js';
-import { getValueAtPath, isArray } from '../utilities.js';
-import { ensureStateBus } from './state.js';
-import { globalState } from './globalState.js';
 import { schedule } from '../lifecycle/scheduler.js';
+import { getValueAtPath, isArray } from '../utilities.js';
+import { globalState } from './globalState.js';
+import { ComponentSubscriptionTracker, TrackedBundle } from './pathSubscriptions.js';
+import { ensureStateBus } from './state.js';
 function toList(keys) {
 	return isArray(keys) ? keys : [keys];
 }

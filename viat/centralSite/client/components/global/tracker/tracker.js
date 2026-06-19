@@ -13,7 +13,7 @@
 	label is exposed as the segment's accessible name.
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, html, list } from 'webcomponent';
+import { html, list, WebComponent } from 'webcomponent';
 const TONES = new Set([
 	'accent',
 	'success',

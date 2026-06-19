@@ -1,6 +1,6 @@
 import '../../../global/icon/icon.js';
-import { WebComponent } from '../../../core/index.js';
 import { toQrSvg } from 'viat';
+import { WebComponent } from '../../../core/index.js';
 const EXPORT_SIZE = 512;
 async function svgStringToPngBlob(svgString, size) {
 	const svgBlob = new Blob([svgString], {

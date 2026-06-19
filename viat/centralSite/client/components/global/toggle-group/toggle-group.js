@@ -14,7 +14,7 @@
 	  Multi: .multiple=${true} .values=${['a','c']} → detail.data.values is the active set.
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, list } from 'webcomponent';
+import { list, WebComponent } from 'webcomponent';
 import { UIToggleOption } from './toggle-option.js';
 const SIZES = new Set([
 	'sm',

@@ -1,6 +1,6 @@
 import '../../global/modal/modal.js';
 import '../../global/tabs/tabs.js';
-import { WebComponent } from '../../core/index.js';
+import { WebComponent } from 'webcomponent';
 import { getTheme, setTheme, THEMES } from '../../global/theme-select/theme-manager.js';
 const SECTIONS = [
 	{

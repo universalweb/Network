@@ -30,14 +30,14 @@
  * keyed `unobserve(key)` API to find every subscription on a given path
  * without holding the original handler reference.
  */
+import { Perf } from '../debug/perf.js';
+import { drainGlobalRenders, drainSpots } from '../lifecycle/scheduler.js';
 import {
 	getOrInit,
 	isPromiseLike,
 	pathsOverlap,
 	queueAsyncError,
 } from '../utilities.js';
-import { Perf } from '../debug/perf.js';
-import { drainGlobalRenders, drainSpots } from '../lifecycle/scheduler.js';
 /*
  * Module-static master-flush state — every PathSubscriptions instance shares
  * one microtask hop. `masterFlush` is a first-class module-scope function

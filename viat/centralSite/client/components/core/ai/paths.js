@@ -1,10 +1,10 @@
+import { isString } from '../utilities.js';
 import {
 	getChildren,
 	getParent,
 	getRoots,
 	subscribe,
 } from './registry.js';
-import { isString } from '../utilities.js';
 const SEPARATOR = '.';
 let indexCache = null;
 export function invalidatePathIndex() {

@@ -1,11 +1,11 @@
+import { defaultLogger } from '../../debug/logger.js';
+import { isFunction, isTypeUndefined } from '../../utilities.js';
 import {
 	eachComponent,
 	getComponentId,
 	getTools,
 	subscribe,
 } from '../registry.js';
-import { isFunction, isTypeUndefined } from '../../utilities.js';
-import { defaultLogger } from '../../debug/logger.js';
 function detectMcp() {
 	if (isTypeUndefined(typeof navigator)) {
 		return null;

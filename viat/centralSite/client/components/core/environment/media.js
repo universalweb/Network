@@ -4,8 +4,8 @@
  * when any preference flips.
  */
 import { emitDelegate } from '../dom/delegate.js';
-import { plainEqual } from '../utilities.js';
 import { globalState } from '../state/globalState.js';
+import { plainEqual } from '../utilities.js';
 const queries = {
 	reducedMotion: '(prefers-reduced-motion: reduce)',
 	reducedTransparency: '(prefers-reduced-transparency: reduce)',

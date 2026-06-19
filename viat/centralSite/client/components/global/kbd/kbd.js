@@ -11,7 +11,7 @@
 	Pure presentation — no events. Drives help panels & menu hints.
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, html, list } from 'webcomponent';
+import { html, list, WebComponent } from 'webcomponent';
 /*
  * Modifier-name → glyph map. Matched case-insensitively; an unmapped token
  * falls through to its upper-cased self (so 'k' → 'K', 'F5' → 'F5').

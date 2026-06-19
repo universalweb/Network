@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import { resolveListFilter } from './listFilter.js';
 import test from 'node:test';
+import { resolveListFilter } from './listFilter.js';
 test('a string names a flag that HIDES the item when truthy', () => {
 	const keep = resolveListFilter('hidden');
 	assert.equal(keep({

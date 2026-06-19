@@ -23,8 +23,8 @@
  * carry ONLY the per-component RULE overrides a theme wants — the rules that
  * cannot reach a shadow root from the document level.
  */
-import { hasOwn, isArray } from '../utilities.js';
 import { collectClassChain } from '../attrs/staticConfig.js';
+import { hasOwn, isArray } from '../utilities.js';
 const THEME_KEY_PREFIX = 'theme:';
 /*
  * Layer list is static per class — the chain never changes — so compute it once

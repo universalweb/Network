@@ -3,8 +3,8 @@
  * then re-exports the public API for downstream code. Order is intentional —
  * we register fast/common behaviors first so any ordered iteration favors them.
  */
-import { autoResize } from './autoResize.js';
 import { autofocus } from './autofocus.js';
+import { autoResize } from './autoResize.js';
 import { autoselect } from './autoselect.js';
 import { hotkey } from './hotkey.js';
 import { registerBehavior } from './registry.js';
@@ -19,8 +19,8 @@ registerBehavior(autoResize.name, autoResize);
 registerBehavior(reveal.name, reveal);
 registerBehavior(scrollReport.name, scrollReport);
 export {
-	registerBehavior,
+	behaviorAttrNames,
 	getBehavior,
 	isBehaviorAttr,
-	behaviorAttrNames,
+	registerBehavior,
 } from './registry.js';

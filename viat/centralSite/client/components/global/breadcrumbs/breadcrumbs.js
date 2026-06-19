@@ -12,7 +12,7 @@
 	current (last) crumb.
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, html, list } from 'webcomponent';
+import { html, list, WebComponent } from 'webcomponent';
 /*
  * Separator chevron from the shared Lucide sprite (same source `ui-icon` uses).
  * Every crumb carries a leading chevron; CSS hides it on the first one

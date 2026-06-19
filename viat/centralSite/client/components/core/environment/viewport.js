@@ -6,8 +6,8 @@
  * components subscribe via this.delegate('viewport:resize'/'viewport:change', ...).
  */
 import { emitDelegate } from '../dom/delegate.js';
-import { plainEqual } from '../utilities.js';
 import { globalState } from '../state/globalState.js';
+import { plainEqual } from '../utilities.js';
 import {
 	aspectBucket,
 	heightBucket,

@@ -23,8 +23,8 @@
 	  ]} @menu:select=${e => run(e.detail.data)}></ui-menubar>
 	──────────────────────────────────────────────────────────────────────
 */
-import { UIMenu, escapeHtml } from '../menu/menu.js';
 import { computeAnchor } from '../../core/dom/anchor.js';
+import { escapeHtml, UIMenu } from '../menu/menu.js';
 export class UIMenubar extends UIMenu {
 	static url = import.meta.url;
 	// Reuse the dropdown panel + item styles; menubar.css only adds the trigger strip.

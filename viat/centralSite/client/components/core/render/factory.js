@@ -1,5 +1,5 @@
-import { isFunction } from '../utilities.js';
 import { registry } from '../dom/registry.js';
+import { isFunction } from '../utilities.js';
 export function getById(key) {
 	return registry[key] ?? null;
 }

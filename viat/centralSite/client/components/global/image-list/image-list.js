@@ -14,14 +14,16 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from '../../core/index.js';
-const esc = (value) => String(value).replace(/[&<>"]/g, (char) => {
-	return {
-		'&': '&amp;',
-		'<': '&lt;',
-		'>': '&gt;',
-		'"': '&quot;',
-	}[char];
-});
+const esc = (value) => {
+	return String(value).replace(/[&<>"]/g, (char) => {
+		return {
+			'&': '&amp;',
+			'<': '&lt;',
+			'>': '&gt;',
+			'"': '&quot;',
+		}[char];
+	});
+};
 export class UIImageList extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -60,13 +62,9 @@ export class UIImageList extends WebComponent {
 		let markup = '';
 		for (let index = 0; index < items.length; index += 1) {
 			const item = items[index];
-			const caption = item.title
-				? `<figcaption class="il-caption">${esc(item.title)}</figcaption>`
-				: '';
+			const caption = item.title ? `<figcaption class="il-caption">${esc(item.title)}</figcaption>` : '';
 			const inner = `<img class="il-img" src="${esc(item.src)}" alt="${esc(item.alt || '')}" loading="lazy" style="aspect-ratio:${aspect}">${caption}`;
-			markup += item.href
-				? `<a class="il-cell" href="${esc(item.href)}" data-index="${index}">${inner}</a>`
-				: `<figure class="il-cell" data-index="${index}" tabindex="0">${inner}</figure>`;
+			markup += item.href ? `<a class="il-cell" href="${esc(item.href)}" data-index="${index}">${inner}</a>` : `<figure class="il-cell" data-index="${index}" tabindex="0">${inner}</figure>`;
 		}
 		return markup;
 	}

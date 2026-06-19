@@ -1,5 +1,5 @@
 import '../surface/surface.js';
-import { WebComponent, classList } from '../../core/index.js';
+import { classList, WebComponent } from '../../core/index.js';
 export class UIPanel extends WebComponent {
 	static url = import.meta.url;
 	static styles = {

@@ -1,5 +1,5 @@
-import { WebComponent } from '../../core/index.js';
 import { Perf } from '../../core/debug/perf.js';
+import { WebComponent } from '../../core/index.js';
 /**
  * Module-level propagation tracker. The depth bench:
  *   1. records `startedAt = performance.now()` on the root
@@ -106,7 +106,6 @@ export class PerfDeepNode extends WebComponent {
 	render() {
 		const renderMark = Perf.mark(`depth-L${this.state.depth}`);
 		if (this.state.depth === 0) {
-			
 			this.html `
 				<div class="head">
 					<span class="level">L${this.state.depth}</span>
@@ -117,7 +116,7 @@ export class PerfDeepNode extends WebComponent {
 			Perf.measure(`depth-L${this.state.depth}`, renderMark);
 			return;
 		}
-				this.html `
+		this.html `
 			<div class="head">
 				<span class="level">L${this.state.depth}</span>
 				<span class="val">${this.state.value}</span>

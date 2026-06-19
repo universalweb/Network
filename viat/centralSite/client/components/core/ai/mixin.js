@@ -1,10 +1,6 @@
-import {
-	defineInstanceTool,
-	getComponentId,
-	getTools,
-	registerComponent,
-	unregisterComponent,
-} from './registry.js';
+import { LIFECYCLE_PROMISE } from '../lifecycle/lifecycle.js';
+import { PHASE } from '../lifecycle/phase.js';
+import { isFunction } from '../utilities.js';
 import { describeComponent, sanitize } from './descriptors.js';
 import {
 	getDirectChildren,
@@ -12,9 +8,13 @@ import {
 	getPathForComponent,
 	pageOverview,
 } from './paths.js';
-import { LIFECYCLE_PROMISE } from '../lifecycle/lifecycle.js';
-import { PHASE } from '../lifecycle/phase.js';
-import { isFunction } from '../utilities.js';
+import {
+	defineInstanceTool,
+	getComponentId,
+	getTools,
+	registerComponent,
+	unregisterComponent,
+} from './registry.js';
 import { textPageMap } from './visual.js';
 const APPLIED = Symbol('viat-ai-mixin-applied');
 /*

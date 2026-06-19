@@ -16,7 +16,7 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import '../button/button.js';
-import { WebComponent, list } from '../../core/index.js';
+import { list, WebComponent } from '../../core/index.js';
 class UISpeedDialAction extends WebComponent {
 	static url = import.meta.url;
 	static styles = {

@@ -598,7 +598,22 @@ export default [
 			'require-yield': 'error',
 			semi: ['error', 'always'],
 			'sort-imports': 'off',
-			'simple-import-sort/imports': 'error',
+			// Single group (no blank-line separators) so the sort never fights
+			// `@stylistic/no-multiple-empty-lines: { max: 0 }` — a group-separator
+			// blank line would loop (sort adds it, no-multiple-empty-lines strips
+			// it) and eslint aborts with "circular fixes". One group keeps the
+			// dense zero-blank-line style AND lets imports auto-sort. Order within:
+			// side-effect → node builtins → external → absolute → relative.
+			'simple-import-sort/imports': [
+				'error',
+				{
+					groups: [
+						[
+							'^\\u0000', '^node:', '^@?\\w', '^', '^\\.',
+						],
+					],
+				},
+			],
 			'simple-import-sort/exports': 'error',
 			'sort-keys': 'off',
 			'sort-vars': 'off',

@@ -1,5 +1,5 @@
-import { isPromiseLike, queueAsyncError } from '../utilities.js';
 import { Perf } from '../debug/perf.js';
+import { isPromiseLike, queueAsyncError } from '../utilities.js';
 const usePostTask = typeof scheduler !== 'undefined' && typeof scheduler.postTask === 'function';
 let batch = null;
 let nextFrameQueue = [];

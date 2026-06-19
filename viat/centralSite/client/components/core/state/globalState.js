@@ -1,3 +1,4 @@
+import { defaultLogger } from '../debug/logger.js';
 import {
 	cachedProxy,
 	getValueAtPath,
@@ -9,7 +10,6 @@ import {
 	plainEqual,
 	setValueAtPath,
 } from '../utilities.js';
-import { defaultLogger } from '../debug/logger.js';
 import { PathSubscriptions } from './pathSubscriptions.js';
 /**
  * Reactive bus for a `Store`. Mirrors `ComponentStateBus` in state.js: holds

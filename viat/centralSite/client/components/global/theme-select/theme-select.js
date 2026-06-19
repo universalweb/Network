@@ -1,6 +1,6 @@
 import '../icon/icon.js';
-import { THEMES, setTheme } from './theme-manager.js';
 import { WebComponent } from '../../core/index.js';
+import { setTheme, THEMES } from './theme-manager.js';
 export class UIThemeSelect extends WebComponent {
 	static url = import.meta.url;
 	static styles = {

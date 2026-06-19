@@ -1,5 +1,5 @@
 import '../bar/bar.js';
-import { WebComponent, filter } from 'webcomponent';
+import { filter, WebComponent } from 'webcomponent';
 import { IconButtonBase } from '../icon-button/icon-button.js';
 // `<ui-toolbar>` — an in-place action bar, dropped inside page content. Composes
 // `<ui-bar>` and renders its `actions` config as `<ui-icon-button>`s in the

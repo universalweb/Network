@@ -13,7 +13,7 @@
 	`sortBy`: desc (default) | asc | none. The base for ui-feature-voting.
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, list } from 'webcomponent';
+import { list, WebComponent } from 'webcomponent';
 const COUNT_MS = 500;
 const FLIP_MS = 380;
 const FLIP_SPRING = 'cubic-bezier(0.34, 1.3, 0.64, 1)';

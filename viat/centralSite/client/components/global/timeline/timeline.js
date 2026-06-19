@@ -13,7 +13,7 @@
 	  ]} .orientation=${'vertical'} .density=${'normal'}></ui-timeline>
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, list } from 'webcomponent';
+import { list, WebComponent } from 'webcomponent';
 import { UITimelineItem } from './timeline-item.js';
 export class UITimeline extends WebComponent {
 	static url = import.meta.url;

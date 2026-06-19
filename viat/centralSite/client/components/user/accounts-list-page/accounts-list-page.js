@@ -1,6 +1,6 @@
 import '../../global/paged-list/paged-list.js';
 import '../../global/icon/icon.js';
-import { WebComponent, html } from '../../core/index.js';
+import { html, WebComponent } from '../../core/index.js';
 import { AppView } from '../app-view/app-view.js';
 const PAGE_SIZE = 20;
 const ROW_STYLES = new URL('./accounts-rows.css', import.meta.url).href;

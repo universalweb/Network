@@ -25,8 +25,8 @@
 	  </ui-context-menu>
 	──────────────────────────────────────────────────────────────────────
 */
-import { UIMenu } from '../menu/menu.js';
 import { computeAnchor } from '../../core/dom/anchor.js';
+import { UIMenu } from '../menu/menu.js';
 export class UIContextMenu extends UIMenu {
 	static url = import.meta.url;
 	// Reuse the dropdown's panel + item styles; `context-menu.css` only flips the

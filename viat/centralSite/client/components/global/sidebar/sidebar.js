@@ -1,5 +1,5 @@
-import { SNAP_CURVE, SNAP_MS, WebComponent } from 'webcomponent';
 import '../icon/icon.js';
+import { SNAP_CURVE, SNAP_MS, WebComponent } from 'webcomponent';
 // `<ui-sidebar>` — a responsive drawer. Not a bar; it does not compose
 // `<ui-bar>`. Slots its panel content; offers a backdrop, a close button, and
 // a swipe-to-open/close gesture driven by the shared `dragSnap` engine (axis

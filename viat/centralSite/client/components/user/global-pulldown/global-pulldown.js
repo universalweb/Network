@@ -3,8 +3,8 @@ import './ai-chat/ai-chat.js';
 import './help-panel/help-panel.js';
 import './info-panel/info-panel.js';
 import './setup-panel/setup-panel.js';
-import { lockBackgroundScroll, unlockBackgroundScroll } from '../../global/scroll-lock.js';
 import { WebComponent } from 'webcomponent';
+import { lockBackgroundScroll, unlockBackgroundScroll } from '../../global/scroll-lock.js';
 const PULLDOWN_HOTKEYS = [
 	{
 		id: 'esc',

@@ -3,8 +3,8 @@
  * Chromium-only at the moment; gracefully no-ops elsewhere.
  */
 import { emitDelegate } from '../dom/delegate.js';
-import { plainEqual } from '../utilities.js';
 import { globalState } from '../state/globalState.js';
+import { plainEqual } from '../utilities.js';
 const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
 let lastSnapshot = null;
 function snapshot() {

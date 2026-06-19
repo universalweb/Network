@@ -103,3 +103,5 @@ test.js
 .engram/
 reverted-files.txt
 session-*-changes.md
+*.test.js
+viat/centralSite/client/components/core/state/listFilter.test.js

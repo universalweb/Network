@@ -22,7 +22,7 @@
 	  <ui-json-inspector .data=${payload} .expandDepth=${1}></ui-json-inspector>
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, list } from 'webcomponent';
+import { list, WebComponent } from 'webcomponent';
 import { UIJsonRow } from './json-row.js';
 const STRING_PREVIEW_MAX = 60;
 const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;

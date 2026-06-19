@@ -1,10 +1,10 @@
 import '../../global/ui-stat-table/ui-stat-table.js';
-import { PerfDeepNode, PropagationTracker } from '../perf-deep-node/perf-deep-node.js';
-import { WebComponent, each } from '../../core/index.js';
 import { Perf } from '../../core/debug/perf.js';
+import { each, WebComponent } from '../../core/index.js';
+import { plainEqual } from '../../core/utilities.js';
+import { PerfDeepNode, PropagationTracker } from '../perf-deep-node/perf-deep-node.js';
 import { PerfFullCard } from '../perf-full-card/perf-full-card.js';
 import { PerfListItem } from '../perf-list-item/perf-list-item.js';
-import { plainEqual } from '../../core/utilities.js';
 function itemKey(item) {
 	return item.id;
 }
@@ -778,7 +778,7 @@ export class PerfListPage extends WebComponent {
 			rows: this.state.depthHistory,
 			emptyMessage: 'no history',
 		};
-				this.html `
+		this.html `
 			<div class="page">
 				<header class="head">
 					<h1>UWC Performance Dashboard</h1>

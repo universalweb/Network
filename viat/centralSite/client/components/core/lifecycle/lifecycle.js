@@ -1,3 +1,8 @@
+import { defaultLogger } from '../debug/logger.js';
+import { Perf } from '../debug/perf.js';
+import { registerChild } from '../dom/children.js';
+import { register, unregister } from '../dom/registry.js';
+import { sweepHotkeyEntries } from '../hotkeys/hotkeys.js';
 import {
 	assignPromisePair,
 	clearRealmUnsubs,
@@ -5,12 +10,7 @@ import {
 	fireResolver,
 	isShadowRoot,
 } from '../utilities.js';
-import { register, unregister } from '../dom/registry.js';
-import { defaultLogger } from '../debug/logger.js';
 import { PHASE } from './phase.js';
-import { Perf } from '../debug/perf.js';
-import { registerChild } from '../dom/children.js';
-import { sweepHotkeyEntries } from '../hotkeys/hotkeys.js';
 /**
  * Lifecycle-promise key vocabulary. The single source of truth for every
  * `lifecycle.whenX` key passed as a string argument to fireResolver,

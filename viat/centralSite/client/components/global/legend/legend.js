@@ -15,7 +15,7 @@
 	  el.addEventListener('legend:change', e => chart.toggle(e.detail.data.label));
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, list } from 'webcomponent';
+import { list, WebComponent } from 'webcomponent';
 import { UILegendItem } from './legend-item.js';
 export class UILegend extends WebComponent {
 	static url = import.meta.url;

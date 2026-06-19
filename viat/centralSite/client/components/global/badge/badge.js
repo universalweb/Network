@@ -1,4 +1,4 @@
-import { WebComponent, classList } from '../../core/index.js';
+import { classList, WebComponent } from '../../core/index.js';
 export class UIBadge extends WebComponent {
 	static url = import.meta.url;
 	static styles = {

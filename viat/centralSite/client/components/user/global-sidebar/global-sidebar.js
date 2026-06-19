@@ -1,6 +1,6 @@
-import { WebComponent } from 'webcomponent';
 import './network-stats/network-stats.js';
 import '../../global/sidebar/sidebar.js';
+import { WebComponent } from 'webcomponent';
 // `<global-sidebar>` — the Viat right-hand drawer. A thin composition over the
 // built-in `<ui-sidebar>`: it sets `side: 'right'` and slots the network-stats
 // panel. The drawer machinery — responsive modes, backdrop, close button and

@@ -12,7 +12,7 @@
 	`copy: true` pair owns its own click-to-copy control.
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, list } from 'webcomponent';
+import { list, WebComponent } from 'webcomponent';
 import { UIDetailPair } from './detail-pair.js';
 export class UIDetailList extends WebComponent {
 	static url = import.meta.url;

@@ -19,14 +19,16 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from '../../core/index.js';
-const esc = (value) => String(value).replace(/[&<>"]/g, (char) => {
-	return {
-		'&': '&amp;',
-		'<': '&lt;',
-		'>': '&gt;',
-		'"': '&quot;',
-	}[char];
-});
+const esc = (value) => {
+	return String(value).replace(/[&<>"]/g, (char) => {
+		return {
+			'&': '&amp;',
+			'<': '&lt;',
+			'>': '&gt;',
+			'"': '&quot;',
+		}[char];
+	});
+};
 export class UIRadioGroup extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -76,9 +78,7 @@ export class UIRadioGroup extends WebComponent {
 		`;
 	}
 	renderLegend() {
-		return this.state.legend
-			? `<legend class="radio-legend">${esc(this.state.legend)}</legend>`
-			: '';
+		return this.state.legend ? `<legend class="radio-legend">${esc(this.state.legend)}</legend>` : '';
 	}
 	renderOptions() {
 		const items = Array.isArray(this.state.items) ? this.state.items : [];
@@ -86,9 +86,7 @@ export class UIRadioGroup extends WebComponent {
 		for (let index = 0; index < items.length; index += 1) {
 			const item = items[index];
 			const disabled = item.disabled ? ' disabled' : '';
-			const desc = item.description
-				? `<span class="radio-desc">${esc(item.description)}</span>`
-				: '';
+			const desc = item.description ? `<span class="radio-desc">${esc(item.description)}</span>` : '';
 			markup += `<label class="radio"${item.disabled ? ' data-disabled' : ''}>
 				<input type="radio" name="opt" value="${esc(item.value)}"${disabled}>
 				<span class="radio-control" aria-hidden="true"></span>

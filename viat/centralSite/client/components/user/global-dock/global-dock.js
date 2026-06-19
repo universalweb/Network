@@ -1,5 +1,4 @@
 import '../../global/dock/dock.js';
-
 import { WebComponent } from 'webcomponent';
 // `<global-dock>` — the Viat navigation rail. A thin composition over the
 // built-in `<ui-dock>`: it supplies the six section items and owns the router

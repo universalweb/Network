@@ -22,7 +22,7 @@
 	  </ui-carousel>
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, list } from 'webcomponent';
+import { list, WebComponent } from 'webcomponent';
 function buildIndicators(count, activeIndex) {
 	let markup = '';
 	for (let index = 0; index < count; index += 1) {

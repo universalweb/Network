@@ -1,4 +1,4 @@
-import { WebComponent, flipMorph } from 'webcomponent';
+import { flipMorph, WebComponent } from 'webcomponent';
 // `MorphSurface` — shared base for the cult-ui-style "expand outward" surfaces
 // (floating-panel, popover, expandable-card, morph-drawer). It owns the open/close
 // lifecycle, the FLIP morph (via the shared `flipMorph` helper), trigger-relative

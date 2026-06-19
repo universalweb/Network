@@ -1,18 +1,18 @@
+import { defaultLogger } from '../debug/logger.js';
+import { Perf } from '../debug/perf.js';
+import { allChildren } from '../dom/children.js';
+import { LIFECYCLE_PROMISE } from '../lifecycle/lifecycle.js';
+import { PHASE } from '../lifecycle/phase.js';
+import { nextFrame, queueGlobalRender } from '../lifecycle/scheduler.js';
+import { scanAndResolve } from '../resolver.js';
+import { makeProxy, setCurrentTracking } from '../state/binding.js';
+import { localRealm } from '../state/state.js';
 import {
 	clearUnsubs,
 	fireResolver,
 	isPromiseLike,
 	syncSubsByDiff,
 } from '../utilities.js';
-import { makeProxy, setCurrentTracking } from '../state/binding.js';
-import { LIFECYCLE_PROMISE } from '../lifecycle/lifecycle.js';
-import { defaultLogger } from '../debug/logger.js';
-import { PHASE } from '../lifecycle/phase.js';
-import { Perf } from '../debug/perf.js';
-import { allChildren } from '../dom/children.js';
-import { localRealm } from '../state/state.js';
-import { nextFrame, queueGlobalRender } from '../lifecycle/scheduler.js';
-import { scanAndResolve } from '../resolver.js';
 /**
  * Await a lifecycle phase across a component's children. Returns `undefined`
  * when there are no children to await (sync fast path for leaf components),

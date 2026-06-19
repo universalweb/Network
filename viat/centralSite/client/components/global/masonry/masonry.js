@@ -27,9 +27,7 @@ export class UIMasonry extends WebComponent {
 		// `min` (column-width) takes precedence and gives auto-fit responsiveness;
 		// otherwise a fixed column-count. `--masonry-gap` feeds the per-item bottom
 		// margin (custom props inherit through the slot to the projected children).
-		const track = this.state.min
-			? `column-width:${this.state.min}`
-			: `column-count:${this.state.columns}`;
+		const track = this.state.min ? `column-width:${this.state.min}` : `column-count:${this.state.columns}`;
 		const style = `${track};column-gap:${this.state.gap};--masonry-gap:${this.state.gap}`;
 		this.html `
 			<div class="masonry" style=${style}>

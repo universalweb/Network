@@ -75,12 +75,10 @@ export class UIAnimatedNumber extends WebComponent {
 	format(value) {
 		const decimals = Number(this.state.decimals) || 0;
 		const number = Number(value) || 0;
-		const body = this.state.group
-			? number.toLocaleString(undefined, {
-				minimumFractionDigits: decimals,
-				maximumFractionDigits: decimals,
-			})
-			: number.toFixed(decimals);
+		const body = this.state.group ? number.toLocaleString(undefined, {
+			minimumFractionDigits: decimals,
+			maximumFractionDigits: decimals,
+		}) : number.toFixed(decimals);
 		return `${this.state.pre || ''}${body}${this.state.suffix || ''}`;
 	}
 	render() {

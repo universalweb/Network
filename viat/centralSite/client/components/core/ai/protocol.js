@@ -1,5 +1,4 @@
 import { isFunction, isString } from '../utilities.js';
-import { check } from './permissions.js';
 import {
 	describeComponent,
 	queryByLabel,
@@ -7,17 +6,18 @@ import {
 	resolveByIdOrPath,
 } from './descriptors.js';
 import {
-	getComponentId,
-	getTools,
-	listComponents,
-} from './registry.js';
-import {
 	getPathForComponent,
 	listPaths,
 	pageOverview,
 	peek,
 	resolvePath,
 } from './paths.js';
+import { check } from './permissions.js';
+import {
+	getComponentId,
+	getTools,
+	listComponents,
+} from './registry.js';
 import { highlight, visualPageMap } from './visual.js';
 export const ERROR_CODES = {
 	parse: -32700,

@@ -9,7 +9,7 @@
 	  ]} .tone=${'accent'}></ui-bar-list>
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, html, list } from 'webcomponent';
+import { html, list, WebComponent } from 'webcomponent';
 const TONES = new Set([
 	'accent',
 	'success',

@@ -1,5 +1,5 @@
 import '../../../global/status-indicator/status-indicator.js';
-import { WebComponent, filter, ifThen } from 'webcomponent';
+import { filter, ifThen, WebComponent } from 'webcomponent';
 import { listAllTools } from '../../../core/ai/index.js';
 const DEFAULT_ENDPOINT = 'http://localhost:1234/v1/chat/completions';
 const DEFAULT_MODEL = 'local-model';

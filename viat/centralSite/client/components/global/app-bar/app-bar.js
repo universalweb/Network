@@ -1,5 +1,5 @@
 import '../bar/bar.js';
-import { WebComponent, filter } from 'webcomponent';
+import { filter, WebComponent } from 'webcomponent';
 import { IconButtonBase } from '../icon-button/icon-button.js';
 /*
  * `<ui-app-bar>` — the global top bar. Pure chrome: a fixed-top `<header>`
@@ -16,9 +16,7 @@ export class UIAppBar extends WebComponent {
 	 * Per-theme RULE overrides (structure: float radius / shadow / hairlines)
 	 * in `./themes/{id}.css` — adopted by theme, absent files are graceful.
 	 */
-	static themes = [
-		'gnosis', 'codex',
-	];
+	static themes = ['gnosis', 'codex'];
 	static state = {
 		actions: [],
 	};

@@ -1,4 +1,4 @@
-import { WebComponent, classList } from 'webcomponent';
+import { classList, WebComponent } from 'webcomponent';
 // `<ui-status-cell>` — one key/value cell of a status bar. Promoted from the
 // app-specific bottom-bar-item; `<ui-status-bar>` renders these from its
 // `cells` config via each(). `divider` draws the trailing separator.

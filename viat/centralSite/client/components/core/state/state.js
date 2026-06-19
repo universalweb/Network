@@ -1,8 +1,6 @@
-import {
-	ComponentSubscriptionTracker,
-	PathSubscriptions,
-	TrackedBundle,
-} from './pathSubscriptions.js';
+import { defaultLogger } from '../debug/logger.js';
+import { Perf } from '../debug/perf.js';
+import { PHASE } from '../lifecycle/phase.js';
 import {
 	cachedProxy,
 	getValueAtPath,
@@ -18,9 +16,11 @@ import {
 	queueAsyncError,
 	setValueAtPath,
 } from '../utilities.js';
-import { defaultLogger } from '../debug/logger.js';
-import { PHASE } from '../lifecycle/phase.js';
-import { Perf } from '../debug/perf.js';
+import {
+	ComponentSubscriptionTracker,
+	PathSubscriptions,
+	TrackedBundle,
+} from './pathSubscriptions.js';
 export const STATE_PATH = Symbol('statePath');
 /**
  * Concrete bus for a single component's reactive state. Owns a reference to
@@ -474,9 +474,9 @@ function observeStateKey(component, key, handler, options) {
  * it down by path and the disconnect lifecycle cleans danglers automatically.
  * @param {string|string[]|object} keys - A path, an array of paths, or a `{ path: cb }` map.
  * @param {Function|object} [handler] - Callback for the single-key/array forms; for the
- *   `{ path: cb }` map form this slot is the optional `options` bag instead.
+ * `{ path: cb }` map form this slot is the optional `options` bag instead.
  * @param {object} [options] - `{ immediate, once }`. `immediate` fires the handler now with
- *   the current value (previousValue undefined); `once` detaches after the first fire.
+ * the current value (previousValue undefined); `once` detaches after the first fire.
  * @returns {Subscription|TrackedBundle} Single-key → a Subscription; array/object → a TrackedBundle.
  * @example
  * this.observe('user.name', cb, { immediate: true });

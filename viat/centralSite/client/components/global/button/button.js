@@ -1,4 +1,4 @@
-import { WebComponent, classList } from '../../core/index.js';
+import { classList, WebComponent } from '../../core/index.js';
 import { UIIcon } from '../icon/icon.js';
 export class UIButton extends WebComponent {
 	static url = import.meta.url;

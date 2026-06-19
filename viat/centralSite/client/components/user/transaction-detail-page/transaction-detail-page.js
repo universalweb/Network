@@ -1,6 +1,6 @@
 import '../../global/icon/icon.js';
-import { AppView } from '../app-view/app-view.js';
 import { WebComponent } from '../../core/index.js';
+import { AppView } from '../app-view/app-view.js';
 function formatAmount(value) {
 	if (value == null) {
 		return '0';

@@ -21,7 +21,7 @@
 	  <ui-heatmap .data=${[[1, 4, 9], [2, 0, 7]]} .rowLabels=${['A', 'B']}></ui-heatmap>
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent, html, list } from 'webcomponent';
+import { html, list, WebComponent } from 'webcomponent';
 const DAY_MS = 86400000;
 const WEEK_MS = DAY_MS * 7;
 const DEFAULT_SPAN = DAY_MS * 363;

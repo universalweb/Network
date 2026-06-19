@@ -1,5 +1,5 @@
-import { WebComponent, each } from 'webcomponent';
 import '../bar/bar.js';
+import { each, WebComponent } from 'webcomponent';
 import { UIStatusCell } from './status-cell.js';
 // `<ui-status-bar>` — a bottom-fixed status bar. Composes `<ui-bar>`: the
 // `cells` config renders as `<ui-status-cell>`s in the start region; the `end`
@@ -38,8 +38,7 @@ export class UIStatusBar extends WebComponent {
 		return item.label;
 	}
 	render() {
-		
-		this.html`
+		this.html `
 			<ui-bar class="status-bar">
 				<div slot="start" class="status-cells">
 					${each(this.cellItems(), UIStatusCell, this.cellKey)}

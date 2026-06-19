@@ -26,11 +26,11 @@
  * url() inside a serialized <style> resolves against the document, not the sheet
  * origin; prefer the path form (<link>) when a sheet uses relative url()s.
  */
+import { collectClassChain } from '../attrs/staticConfig.js';
+import { assertStaticStyles } from '../debug/assertions.js';
 import {
 	eachArray, eachObject, hasOwn, isString,
 } from '../utilities.js';
-import { assertStaticStyles } from '../debug/assertions.js';
-import { collectClassChain } from '../attrs/staticConfig.js';
 const linkByHref = new Map();
 const styleBySheet = new WeakMap();
 const injectedClasses = new WeakSet();

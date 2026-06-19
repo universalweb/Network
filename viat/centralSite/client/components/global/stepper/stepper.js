@@ -16,14 +16,16 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from '../../core/index.js';
-const esc = (value) => String(value).replace(/[&<>"]/g, (char) => {
-	return {
-		'&': '&amp;',
-		'<': '&lt;',
-		'>': '&gt;',
-		'"': '&quot;',
-	}[char];
-});
+const esc = (value) => {
+	return String(value).replace(/[&<>"]/g, (char) => {
+		return {
+			'&': '&amp;',
+			'<': '&lt;',
+			'>': '&gt;',
+			'"': '&quot;',
+		}[char];
+	});
+};
 export class UIStepper extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -83,9 +85,7 @@ export class UIStepper extends WebComponent {
 			const glyph = status === 'done' ? '✓' : status === 'error' ? '!' : String(index + 1);
 			const canClick = this.state.clickable && (!this.state.linear || index <= active);
 			const optional = step.optional ? '<span class="st-optional">Optional</span>' : '';
-			const description = step.description
-				? `<span class="st-desc">${esc(step.description)}</span>`
-				: '';
+			const description = step.description ? `<span class="st-desc">${esc(step.description)}</span>` : '';
 			markup += `<li class="st-item" data-status="${status}">
 				<button type="button" class="st-step" data-step="${index}"${canClick ? '' : ' disabled'}${index === active ? ' aria-current="step"' : ''}>
 					<span class="st-node" aria-hidden="true">${glyph}</span>

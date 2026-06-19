@@ -1,6 +1,6 @@
-import { GlobalRegistrator } from '@happy-dom/global-registrator';
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { GlobalRegistrator } from '@happy-dom/global-registrator';
 /*
  * The reactivity core is DOM-coupled and `WebComponent extends HTMLElement`, so
  * the happy-dom globals must exist BEFORE the core module graph loads. Register

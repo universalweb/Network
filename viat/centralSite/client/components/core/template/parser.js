@@ -7,6 +7,7 @@
 	imports only the shared vocabulary, CONTENT_KIND, and the isBindingType guard
 	(all from lower leaves — never from the runtime core).
 */
+import { CONTENT_KIND, isBindingType } from '../state/binding.js';
 import {
 	ANCHOR_END_PREFIX,
 	ANCHOR_START_PREFIX,
@@ -14,7 +15,6 @@ import {
 	SPOT,
 	SPOT_TYPE,
 } from './constants.js';
-import { CONTENT_KIND, isBindingType } from '../state/binding.js';
 const ATTR_NAME_RE = /^[a-zA-Z_:][a-zA-Z0-9_.:-]*$/;
 function attrContext(templateString) {
 	const attrMatch = templateString.match(/([?.])?([\w:-]+)=(["']?)$/);
