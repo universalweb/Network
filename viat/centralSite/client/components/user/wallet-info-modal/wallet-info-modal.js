@@ -1,5 +1,5 @@
 import '../../global/modal/modal.js';
-import { WebComponent, classList } from '../../core/index.js';
+import { WebComponent } from '../../core/index.js';
 /**
  * `<wallet-info-modal>` — long-form explainer modal. Body styling
  * (head / copy / inline code) comes from the shared `modal-chrome.css`;
@@ -28,7 +28,6 @@ export class WalletInfoModal extends WebComponent {
 		return `--ui-modal-max-width: ${max}; --ui-modal-max-height: calc(100dvh - 32px)`;
 	}
 	render() {
-		
 		this.html `
 			<ui-modal #modal .state=${{
 				modal: true,
@@ -36,7 +35,7 @@ export class WalletInfoModal extends WebComponent {
 				showClose: true,
 				showMaximize: true,
 			}} style=${this.modalStyle}>
-				<div class=${classList('modal-shell', () => (this.state.expanded ? 'is-expanded' : ''))}>
+				<div class="modal-shell" ?data-expanded=${this.state.expanded}>
 					<header class="modal-head">
 						<span class="modal-head-id">VIAT</span>
 						<span class="modal-head-title">// HOW WALLETS ARE BUILT</span>
@@ -45,7 +44,7 @@ export class WalletInfoModal extends WebComponent {
 						<img class="wi-img"
 							src="./HDSeed.png"
 							alt="VIAT HD wallet seed derivation diagram"
-							title="Click to expand"
+							tooltip="Click to expand"
 							@click=${this.toggleExpanded}>
 						<figcaption class="wi-caption">${() => {
 							return (this.state.expanded ? 'Click image to collapse' : 'Click image to expand');

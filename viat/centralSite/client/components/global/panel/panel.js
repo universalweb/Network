@@ -12,7 +12,7 @@ export class UIPanel extends WebComponent {
 	 * shadow root. Every Panel subclass inherits this layer via the chain walk.
 	 */
 	static themes = [
-		'midnight', 'dark', 'marathon',
+		'midnight', 'dark', 'marathon', 'hypr', 'gnosis',
 	];
 	static state = {
 		// Reactive class set: subclasses seed it with their own identifier

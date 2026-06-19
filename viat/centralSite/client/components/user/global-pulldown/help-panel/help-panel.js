@@ -12,8 +12,7 @@ class HelpShortcutRow extends WebComponent {
 		desc: '',
 	};
 	render() {
-		
-		this.html `
+				this.html `
 			<div class="hp-row">
 				<span class="hp-keys">^html${this.buildKeysMarkup}</span>
 				<span class="hp-desc">${this.state.desc}</span>

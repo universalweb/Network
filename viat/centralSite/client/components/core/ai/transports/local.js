@@ -5,14 +5,18 @@ function makeId() {
 	return `local-${Date.now().toString(36)}-${counter.toString(36)}`;
 }
 export class LocalTransport {
-	constructor({ globalKey = 'viatAI', expose = true } = {}) {
+	constructor({
+		globalKey = 'viatAI', expose = true,
+	} = {}) {
 		this.globalKey = globalKey;
 		this.expose = expose;
 		this.subscribers = new Set();
 		this.onRequest = null;
 		this.sessionId = null;
 	}
-	start({ sessionId, onRequest }) {
+	start({
+		sessionId, onRequest,
+	}) {
 		this.sessionId = sessionId;
 		this.onRequest = onRequest;
 		if (!this.expose) {

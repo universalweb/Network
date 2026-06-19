@@ -38,7 +38,7 @@
 }
 
 .stat-row .s-val.good {
-	color: var(--teal);
+	color: var(--stat-good-color, var(--teal));
 	text-shadow: var(--stat-good-text-shadow, 0 0 4px var(--teal-glow-soft));
 }
 

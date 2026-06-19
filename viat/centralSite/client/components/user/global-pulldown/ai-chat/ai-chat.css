@@ -85,7 +85,7 @@
 	opacity: 0;
 	transition: opacity 0.18s ease;
 }
-.aic-error.is-visible {
+.aic-error[data-visible] {
 	opacity: 1;
 }
 .aic-input-row {
@@ -132,10 +132,10 @@
 .aic-btn:hover {
 	background: var(--teal);
 }
-.aic-btn.is-streaming {
+.aic-btn[data-streaming] {
 	background: var(--color-danger);
 	color: var(--text-light);
 }
-.aic-btn.is-streaming:hover {
+.aic-btn[data-streaming]:hover {
 	background: var(--color-danger);
 }

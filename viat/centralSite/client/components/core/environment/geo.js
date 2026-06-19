@@ -19,7 +19,10 @@ function update(position) {
 	globalState.set({
 		'environment.geo': value,
 	});
-	emitDelegate('environment:change', { area: 'geo', value });
+	emitDelegate('environment:change', {
+		area: 'geo',
+		value,
+	});
 }
 function fail(error) {
 	globalState.set({

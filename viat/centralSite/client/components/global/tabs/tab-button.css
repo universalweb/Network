@@ -38,13 +38,13 @@
    readers still announce the button's name. The button itself becomes a
    tight square so the rail can shrink to ~52px wide. */
 @media (max-width: 47.9375em) {
-	.tab-btn.has-icon {
+	.tab-btn:has(.tab-btn-icon) {
 		justify-content: center;
 		gap: 0;
 		padding: var(--space-4) 0;
 		width: 100%;
 	}
-	.tab-btn.has-icon .tab-btn-label {
+	.tab-btn:has(.tab-btn-icon) .tab-btn-label {
 		position: absolute;
 		width: 1px;
 		height: 1px;
@@ -56,7 +56,7 @@
 		border: 0;
 	}
 }
-.tab-btn-horizontal {
+[data-orientation='horizontal'] {
 	padding: var(--space-3) var(--space-5);
 	border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
@@ -65,10 +65,10 @@
 	background: rgba(255, 255, 255, 0.03);
 	transform: translateY(-1px);
 }
-.tab-btn-vertical:hover {
+[data-orientation='vertical']:hover {
 	transform: translateX(2px);
 }
-.tab-btn.is-active {
+.tab-btn[aria-selected='true'] {
 	color: var(--teal);
 	border-color: var(--cyan-glow-soft, color-mix(in oklab, var(--teal) 18%, transparent));
 	background: var(--cyan-tint-faint, color-mix(in oklab, var(--teal) 6%, transparent));
@@ -85,7 +85,7 @@
 	.tab-btn:hover {
 		transform: none;
 	}
-	.tab-btn-vertical:hover {
+	[data-orientation='vertical']:hover {
 		transform: none;
 	}
 }

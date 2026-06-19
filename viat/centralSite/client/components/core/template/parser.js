@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-syntax */
 /*
 	Universal Web Components — template parser (extractor).
 	Tokenizes the tagged-template strings + their interpolation contexts into an
@@ -29,11 +28,20 @@ function attrContext(templateString) {
 	};
 }
 function eventContext(templateString) {
-	const eventMatch = templateString.match(/^(?<prefix>[\s\S]*?)@(?<eventName>[\w:-]+)=["']?$/);
+	/*
+	 * `@click.stop.prevent=` — optional dotted modifiers between the event name
+	 * and `=`. The name class excludes `.` so the trailing `(?:\.[\w]+)*` group
+	 * captures the modifier chain (leading dots stripped + split below). Without
+	 * this group a modifier chain falls through to attrContext and mis-parses as
+	 * a `.stop=` PROPERTY spot — the event binding silently never wires.
+	 */
+	const eventMatch = templateString.match(/^(?<prefix>[\s\S]*?)@(?<eventName>[\w:-]+)(?<modifiers>(?:\.\w+)*)=["']?$/);
 	if (eventMatch?.groups?.eventName) {
+		const rawModifiers = eventMatch.groups.modifiers;
 		return {
 			eventName: eventMatch.groups.eventName,
 			prefix: eventMatch.groups.prefix,
+			modifiers: rawModifiers ? rawModifiers.slice(1).split('.') : null,
 			deduceFromExpr: false,
 		};
 	}
@@ -336,6 +344,7 @@ export function buildHTML(strings, exprs) {
 					i: stringIndex,
 					type: SPOT_TYPE.EVENT,
 					eventName: eventBinding.eventName,
+					modifiers: eventBinding.modifiers,
 					deduceFromExpr: false,
 					expr,
 				});

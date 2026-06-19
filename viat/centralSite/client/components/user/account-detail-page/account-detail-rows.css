@@ -44,20 +44,20 @@ a.ad-addr:hover {
 	letter-spacing: 0.16em;
 	font-weight: var(--weight-semibold);
 }
-.ad-dir.tone-in {
+.ad-dir[data-tone='in'] {
 	color: var(--color-success);
 }
-.ad-dir.tone-out {
+.ad-dir[data-tone='out'] {
 	color: var(--color-warning);
 }
 .ad-amount {
 	text-align: right;
 	font-variant-numeric: tabular-nums;
 }
-.ad-amount.tone-in {
+.ad-amount[data-tone='in'] {
 	color: var(--color-success);
 }
-.ad-amount.tone-out {
+.ad-amount[data-tone='out'] {
 	color: var(--color-warning);
 }
 .ad-status {

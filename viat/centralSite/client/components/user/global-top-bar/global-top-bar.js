@@ -43,10 +43,6 @@ export class GlobalTopBar extends WebComponent {
 			],
 		},
 		subtitle: 'COMMAND TERMINAL',
-		sepIconState: {
-			name: 'chevron-right',
-			size: 'xs',
-		},
 	};
 	open = false;
 	naturalTop = 0;
@@ -272,15 +268,18 @@ export class GlobalTopBar extends WebComponent {
 		}
 	}
 	render() {
-		
 		this.html `
 			<ui-app-bar #appbar .state=${this.state.appBar}>
 				<div slot="start" class="tb-logo">
 					<a class="tb-logo-home" href="/" aria-label="Back to dashboard">
-						<span class="tb-logo-mark">⩝</span>
+						<svg class="tb-logo-mark" viewBox="0 0 64 64" aria-hidden="true">
+							<path fill="currentColor" d="M 11.54 15.23 L 16.46 12.77 L 32.8 43.85 L 32 56.14 Z"></path>
+							<path fill="currentColor" d="M 52.46 15.23 L 47.54 12.77 L 31.2 43.85 L 32 56.14 Z"></path>
+							<line stroke="currentColor" stroke-width="5.5" stroke-linecap="square" x1="16" y1="32" x2="48" y2="32"></line>
+						</svg>
 						<span class="tb-logo-text">VIAT</span>
 					</a>
-					<ui-icon class="tb-logo-sep" .state=${this.state.sepIconState}></ui-icon>
+					<ui-icon class="tb-logo-sep" .name=${'chevron-right'} .size=${'xs'}></ui-icon>
 					<span class="tb-subtitle">${this.state.subtitle}</span>
 				</div>
 				<ui-theme-select slot="end"></ui-theme-select>

@@ -18,7 +18,8 @@ import {
 	queueAsyncError,
 	setValueAtPath,
 } from '../utilities.js';
-import { Logger } from '../debug/logger.js';
+import { defaultLogger } from '../debug/logger.js';
+import { PHASE } from '../lifecycle/phase.js';
 import { Perf } from '../debug/perf.js';
 export const STATE_PATH = Symbol('statePath');
 /**
@@ -313,8 +314,8 @@ class StateProxyHandler {
 			return true;
 		}
 		const fullPath = joinPath(this.path, key);
-		if (Logger.perfOn) {
-			Logger.perf('state', reportWastedStateSet, target, key, value, fullPath, this.component);
+		if (defaultLogger.perfOn) {
+			defaultLogger.perf('state', reportWastedStateSet, target, key, value, fullPath, this.component);
 		}
 		Reflect.set(target, key, value);
 		if (pathIsReactive(this.component, fullPath)) {
@@ -419,14 +420,21 @@ export function assignState(partial, options) {
  * per-subscription closure, stable hidden class for JIT monomorphization.
  */
 class StateKeyObserver {
-	constructor(component, handler, previousValue) {
+	constructor(component, handler, previousValue, options) {
 		this.component = component;
 		this.handler = handler;
 		this.previousValue = previousValue;
+		this.fireOnce = options?.once === true;
+		this.subscription = null;
 	}
 	handle(nextValue, changedPath) {
 		const result = this.handler.call(this.component, nextValue, this.previousValue, changedPath);
 		this.previousValue = nextValue;
+		/* `{ once: true }` — detach after the first fire. The subscription is
+		 * idempotent on unsubscribe, so the disconnect sweep re-clearing it no-ops. */
+		if (this.fireOnce && this.subscription) {
+			this.subscription.unsubscribe();
+		}
 		return result;
 	}
 }
@@ -437,14 +445,27 @@ class StateKeyObserver {
  * @param {WebComponent} component - The owning component.
  * @param {string} key - State path to observe.
  * @param {Function} handler - Called as `(nextValue, previousValue, changedPath)`.
+ * @param {object} [options] - `{ immediate, once }`.
  * @returns {Subscription} The bare subscription.
  */
-function observeStateKey(component, key, handler) {
+function observeStateKey(component, key, handler, options) {
 	const statePath = String(key ?? '');
 	const bus = ensureStateBus(component);
 	const previousValue = getValueAtPath(component.STATE, statePath);
-	const observer = new StateKeyObserver(component, handler, previousValue);
-	return bus.subscribe(statePath, StateKeyObserver.prototype.handle, observer);
+	const observer = new StateKeyObserver(component, handler, previousValue, options);
+	const subscription = bus.subscribe(statePath, StateKeyObserver.prototype.handle, observer);
+	observer.subscription = subscription;
+	/* `{ immediate: true }` — seed the handler now with the current value; there
+	 * is no prior value yet, so previousValue is undefined on this first call.
+	 * The immediate fire COUNTS toward `once` (Vue parity): the combo means
+	 * "fire exactly once, right now". */
+	if (options?.immediate === true) {
+		handler.call(component, previousValue, undefined, statePath);
+		if (options.once === true) {
+			subscription.unsubscribe();
+		}
+	}
+	return subscription;
 }
 /**
  * Subscribe to component-state changes. Accepts a single key, an array of keys
@@ -452,21 +473,26 @@ function observeStateKey(component, key, handler) {
  * `Subscription` registers in `this.stateUnsubs` so `unobserve(key)` can tear
  * it down by path and the disconnect lifecycle cleans danglers automatically.
  * @param {string|string[]|object} keys - A path, an array of paths, or a `{ path: cb }` map.
- * @param {Function} [handler] - Callback for the single-key and array forms.
+ * @param {Function|object} [handler] - Callback for the single-key/array forms; for the
+ *   `{ path: cb }` map form this slot is the optional `options` bag instead.
+ * @param {object} [options] - `{ immediate, once }`. `immediate` fires the handler now with
+ *   the current value (previousValue undefined); `once` detaches after the first fire.
  * @returns {Subscription|TrackedBundle} Single-key → a Subscription; array/object → a TrackedBundle.
  * @example
- * this.observe('user.name', cb);
- * this.observe(['a', 'b', 'c'], cb);
- * this.observe({ a: cb1, b: cb2 });
+ * this.observe('user.name', cb, { immediate: true });
+ * this.observe(['a', 'b', 'c'], cb, { once: true });
+ * this.observe({ a: cb1, b: cb2 }, { immediate: true });
  */
-export function observe(keys, handler) {
+export function observe(keys, handler, options) {
 	const stateUnsubs = this.stateUnsubs ??= new ComponentSubscriptionTracker();
-	if (isPlainObject(keys) && handler === undefined) {
+	if (isPlainObject(keys)) {
+		// Map form: the 2nd arg, when a plain object, is the shared options bag.
+		const mapOptions = isPlainObject(handler) ? handler : options;
 		const objKeys = Object.keys(keys);
 		const subscriptions = [];
 		for (let i = 0; i < objKeys.length; i += 1) {
 			const key = objKeys[i];
-			const objectSub = observeStateKey(this, key, keys[key]);
+			const objectSub = observeStateKey(this, key, keys[key], mapOptions);
 			stateUnsubs.add(objectSub);
 			subscriptions.push(objectSub);
 		}
@@ -475,13 +501,13 @@ export function observe(keys, handler) {
 	if (isArray(keys)) {
 		const subscriptions = [];
 		for (let i = 0; i < keys.length; i += 1) {
-			const arraySub = observeStateKey(this, keys[i], handler);
+			const arraySub = observeStateKey(this, keys[i], handler, options);
 			stateUnsubs.add(arraySub);
 			subscriptions.push(arraySub);
 		}
 		return new TrackedBundle(stateUnsubs, subscriptions);
 	}
-	const sub = observeStateKey(this, keys, handler);
+	const sub = observeStateKey(this, keys, handler, options);
 	stateUnsubs.add(sub);
 	return sub;
 }
@@ -506,7 +532,19 @@ export async function updateView() {
 		 */
 		const stateChangeResult = this.onStateChange?.();
 		const stateChangePending = isPromiseLike(stateChangeResult) ? stateChangeResult : null;
-		const renderPending = (this.isConnected && !this.templateBuilt) ? this.renderView() : null;
+		/*
+		 * The FIRST render must not outrun the connect pipeline. `isConnected` is
+		 * the native DOM flag — true the instant the parent inserts the element,
+		 * long before handleConnect's awaited steps (style/theme-sheet fetches)
+		 * finish. An external state write landing in that window used to render
+		 * here, firing render/onMount BEFORE onConnect — inverting the documented
+		 * order and stranding the phase ladder (every promotion in renderView
+		 * guards on the previous phase, so the component stayed un-MOUNTED
+		 * forever). Gate on the pipeline phase instead: pre-CONNECTED writes just
+		 * mutate STATE, and handleConnect's tail updateView (which runs after
+		 * `phase = CONNECTED`) renders them — nothing is lost, order is restored.
+		 */
+		const renderPending = (this.isConnected && !this.templateBuilt && this.atPhase(PHASE.CONNECTED)) ? this.renderView() : null;
 		if (stateChangePending && renderPending) {
 			await Promise.all([stateChangePending, renderPending]);
 		} else if (renderPending) {

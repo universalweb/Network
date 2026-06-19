@@ -16,7 +16,7 @@
 	border-radius: var(--radius-md);
 }
 
-.wq-wrap.is-empty {
+.wq-wrap:not([data-ready]) {
 	padding: var(--space-5) var(--space-4);
 }
 
@@ -30,11 +30,11 @@
 	transition: background 0.15s ease;
 }
 
-.wq-wrap.is-empty .wq-canvas {
+.wq-wrap:not([data-ready]) .wq-canvas {
 	cursor: default;
 }
 
-.wq-wrap.is-ready .wq-canvas:hover {
+.wq-wrap[data-ready] .wq-canvas:hover {
 	background: var(--cyan-glow-medium, color-mix(in oklab, var(--teal) 24%, transparent));
 }
 

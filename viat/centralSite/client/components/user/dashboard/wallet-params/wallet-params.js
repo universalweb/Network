@@ -10,48 +10,27 @@ export class WalletParams extends Panel {
 		id: 'WALLET',
 		title: 'PARAMETERS',
 	};
-	onMount() {
-		this.addEventListener('click', this.handleRowClick);
+	onConnect() {
+		this.delegateTo('click', '[data-copy]', this.handleRowCopy);
 	}
-	findCopyRow(domEvent) {
-		const path = domEvent.composedPath();
-		for (let index = 0; index < path.length; index += 1) {
-			const node = path[index];
-			if (node === this) {
-				return null;
-			}
-			if (node.nodeType === 1 && node.hasAttribute?.('data-copy')) {
-				return node;
-			}
-		}
-		return null;
-	}
-	async handleRowClick(domEvent) {
-		const row = this.findCopyRow(domEvent);
-		if (!row) {
-			return;
-		}
+	async handleRowCopy(domEvent, row) {
 		const value = row.getAttribute('data-copy');
 		if (!value) {
 			return;
 		}
-		try {
-			await navigator.clipboard.writeText(value);
-			this.emit('notify', {
-				itemType: 'copy',
-				message: value,
-				title: 'Parameter Copied',
-			});
-		} catch (clipboardError) {
-			this.emit('notify', {
-				itemType: 'error',
-				message: 'Could not write to clipboard.',
-				title: 'Copy Failed',
-			});
-		}
+		const copied = await this.copyText(value);
+		this.emit('notify', copied ? {
+			itemType: 'copy',
+			message: value,
+			title: 'Parameter Copied',
+		} : {
+			itemType: 'error',
+			message: 'Could not write to clipboard.',
+			title: 'Copy Failed',
+		});
 	}
 	renderBody() {
-		const params = this.globalState.walletParams ?? [];
+		const params = this.global.walletParams ?? [];
 		if (!params.length) {
 			return '<div class="stat-block stat-empty">no wallet loaded</div>';
 		}

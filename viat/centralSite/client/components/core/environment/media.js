@@ -36,8 +36,13 @@ function update() {
 		return;
 	}
 	lastSnapshot = value;
-	globalState.set({ 'environment.media': value });
-	emitDelegate('environment:change', { area: 'media', value });
+	globalState.set({
+		'environment.media': value,
+	});
+	emitDelegate('environment:change', {
+		area: 'media',
+		value,
+	});
 }
 const keys = Object.keys(queries);
 for (let i = 0; i < keys.length; i++) {

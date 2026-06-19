@@ -1,5 +1,5 @@
 import '../../global/modal/modal.js';
-import { WebComponent, classList } from '../../core/index.js';
+import { WebComponent } from '../../core/index.js';
 // `<send-confirm-modal>` — two-stage send dialog used by the AI flow
 // (and reusable from any future call-site). The AI invokes a tool that
 // calls `openFor({to, amount, reason})`; the modal then shows the
@@ -136,7 +136,7 @@ export class SendConfirmModal extends WebComponent {
 					<div class="modal-meta">
 						<div class="modal-meta-row">
 							<span class="modal-meta-key">RECIPIENT</span>
-							<span class="modal-meta-val" title="${this.state.recipient}">${() => {
+							<span class="modal-meta-val" tooltip=${this.state.recipient}>${() => {
 								return shortAddress(this.state.recipient) || '—';
 							}}</span>
 						</div>
@@ -168,9 +168,7 @@ export class SendConfirmModal extends WebComponent {
 							$value="amount"
 							@keydown=${this.handleKeyDown}>
 					</label>
-					<div class=${classList('modal-error', () => {
-						return (this.state.error ? 'is-visible' : '');
-					})}>${this.state.error}</div>
+					<div class="modal-error" ?data-visible=${this.state.error}>${this.state.error}</div>
 					<div class="modal-actions">
 						<button #confirm type="button" class="primary" ?disabled=${this.state.busy} @click=${this.handleConfirm}>${() => {
 							return (this.state.busy ? 'SENDING…' : 'CONFIRM & SEND');

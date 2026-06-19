@@ -1,12 +1,10 @@
 /*
 	dragSnap — the one drag-to-snap gesture engine.
-
 	A press, a drag along a single axis, a release that snaps a panel between
 	two states (open / closed). The global top bar's pulldown handle and the
 	sidebar's swipe each carried a private, line-for-line copy of this — same
 	constants, same pointer bookkeeping, same velocity/travel snap maths. This
 	is the single engine they both compose.
-
 	The engine owns the *mechanic*: the single-pointer lifecycle, document-wide
 	move tracking (a press can drag anywhere), the move-threshold gate that
 	separates a tap from a drag, the velocity + travel-ratio snap verdict,
@@ -14,19 +12,16 @@
 	*visuals*: where the panel sits during the drag and how it animates to the
 	snap point afterwards — supplied through callbacks.
 */
-
 /*
  * Snap-animation timing. The engine never animates; it exports these so every
  * consumer animates the settle with one identical curve.
  */
 export const SNAP_MS = 320;
 export const SNAP_CURVE = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
-
 // Gesture-knob defaults — overridable per call through `options`.
 const DRAG_THRESHOLD_PX = 6; // raw travel before a press becomes a drag
 const SNAP_RATIO = 0.3; // travel fraction (of the snap extent) that flips state
 const SNAP_VELOCITY = 0.5; // px/ms that flips state regardless of distance
-
 /*
  * `opensToward` → the sign of axis movement that opens the panel. A pulldown
  * opens downward (+y); a right-edge drawer opens leftward (-x).
@@ -37,7 +32,6 @@ const OPEN_SIGN = {
 	up: -1,
 	left: -1,
 };
-
 function alwaysTrue() {
 	return true;
 }
@@ -47,10 +41,8 @@ function alwaysFalse() {
 function zero() {
 	return 0;
 }
-
 /*
 	createDragSnap(startElement, options) → { destroy() }
-
 	options:
 	  axis          'x' | 'y'                   — drag axis (default 'y')
 	  opensToward   'down'|'up'|'left'|'right'   — which way opens
@@ -87,7 +79,6 @@ export function createDragSnap(startElement, options = {}) {
 	const onStart = options.onStart;
 	const onMove = options.onMove;
 	const onSettle = options.onSettle;
-
 	let pointerId = null;
 	let dragOrigin = 0;
 	let startTime = 0;
@@ -97,7 +88,6 @@ export function createDragSnap(startElement, options = {}) {
 	let activeSign = 1;
 	let suppressClick = false;
 	let destroyed = false;
-
 	/**
 	 * Keep only the part of `raw` that points in `sign`'s direction; the
 	 * opposite direction reads as zero. This is what locks an opening drag to
@@ -106,7 +96,6 @@ export function createDragSnap(startElement, options = {}) {
 	function keepDirection(raw, sign) {
 		return sign * Math.max(0, sign * raw);
 	}
-
 	function stopTracking() {
 		if (pointerId === null) {
 			return;
@@ -118,7 +107,6 @@ export function createDragSnap(startElement, options = {}) {
 		globalThis.removeEventListener('blur', handleWindowBlur);
 		pointerId = null;
 	}
-
 	function handlePointerDown(domEvent) {
 		if (destroyed || pointerId !== null) {
 			return;
@@ -144,7 +132,6 @@ export function createDragSnap(startElement, options = {}) {
 		doc.addEventListener('pointercancel', handlePointerEnd);
 		globalThis.addEventListener('blur', handleWindowBlur);
 	}
-
 	function handlePointerMove(domEvent) {
 		if (domEvent.pointerId !== pointerId) {
 			return;
@@ -162,7 +149,6 @@ export function createDragSnap(startElement, options = {}) {
 		const progress = span > 0 ? Math.min(1, Math.abs(delta) / span) : 0;
 		onMove?.(progress, delta);
 	}
-
 	function handlePointerEnd(domEvent) {
 		if (domEvent.pointerId !== pointerId) {
 			return;
@@ -185,7 +171,6 @@ export function createDragSnap(startElement, options = {}) {
 		const shouldOpen = startedOpen ? !shouldFlip : shouldFlip;
 		onSettle?.(shouldOpen);
 	}
-
 	function handleWindowBlur() {
 		if (pointerId === null) {
 			return;
@@ -198,7 +183,6 @@ export function createDragSnap(startElement, options = {}) {
 			pointerId,
 		});
 	}
-
 	function handleClick(domEvent) {
 		if (!suppressClick) {
 			return;
@@ -207,11 +191,9 @@ export function createDragSnap(startElement, options = {}) {
 		domEvent.stopPropagation();
 		domEvent.preventDefault();
 	}
-
 	startElement.addEventListener('pointerdown', handlePointerDown);
 	// Capture phase — kill the post-drag click before it reaches any handler.
 	startElement.addEventListener('click', handleClick, true);
-
 	function destroy() {
 		if (destroyed) {
 			return;
@@ -221,12 +203,10 @@ export function createDragSnap(startElement, options = {}) {
 		startElement.removeEventListener('pointerdown', handlePointerDown);
 		startElement.removeEventListener('click', handleClick, true);
 	}
-
 	return {
 		destroy,
 	};
 }
-
 /*
 	this.dragSnap(startElement, options) — the WebComponent prototype method.
 	Same call as createDragSnap, but the controller is filed in `gestureUnsubs`

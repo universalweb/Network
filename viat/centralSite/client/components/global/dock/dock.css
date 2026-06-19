@@ -47,7 +47,7 @@
 	flex-shrink: 0;
 	position: relative;
 }
-:host(.dock-horizontal) .dock-rail {
+:host([data-orientation='horizontal']) .dock-rail {
 	flex-direction: row;
 	justify-content: space-around;
 	padding: var(--space-2) var(--space-2);
@@ -55,32 +55,39 @@
 /* Dock-context sizing + colouring for the composed icon buttons. Scoped under
    the host class so it outranks `<ui-icon-button>`'s own `:host` defaults.
    `color` is inherited, so it crosses the shadow boundary to each `<ui-icon>`. */
-:host(.dock-vertical) ui-icon-button,
-:host(.dock-horizontal) ui-icon-button {
+:host([data-orientation='vertical']) ui-icon-button,
+:host([data-orientation='horizontal']) ui-icon-button {
 	display: flex;
 	justify-content: center;
 	color: var(--icon-color, var(--text-main));
 	transition: color 0.18s ease;
 }
-:host(.dock-vertical) ui-icon-button {
+:host([data-orientation='vertical']) ui-icon-button {
 	width: 100%;
 }
-:host(.dock-horizontal) ui-icon-button {
+:host([data-orientation='horizontal']) ui-icon-button {
 	width: auto;
 	flex: 0 0 auto;
+	/* Bottom-docked = touch context. 44px floor is the WCAG target minimum —
+	   the fluid root is 14px on small viewports, so bare 2.75rem (38.5px)
+	   would undershoot; max() keeps rem-scaling for larger user font sizes. */
+	--btn-hit: max(2.75rem, 44px);
 }
-:host(.dock-vertical) ui-icon-button:hover,
-:host(.dock-horizontal) ui-icon-button:hover {
+:host([data-orientation='vertical']) ui-icon-button:hover,
+:host([data-orientation='horizontal']) ui-icon-button:hover {
 	color: var(--icon-color-hover, var(--cyan));
 }
-:host(.dock-vertical) ui-icon-button.active,
-:host(.dock-horizontal) ui-icon-button.active {
+:host([data-orientation='vertical']) ui-icon-button[data-active],
+:host([data-orientation='horizontal']) ui-icon-button[data-active] {
 	color: var(--icon-color-active, var(--cyan));
 }
 @media (max-width: 47.9375em) {
-	:host(.dock-vertical) ui-icon-button {
+	:host([data-orientation='vertical']) ui-icon-button {
 		width: auto;
 		flex: 0 0 auto;
+		/* Same WCAG touch floor as .dock-horizontal — this media query is the
+		   vertical rail's rotate-to-bottom-bar path. */
+		--btn-hit: max(2.75rem, 44px);
 	}
 }
 /* The sliding active-bar. movingIndicator writes --bar-x/-y/-w/-h on both
@@ -104,29 +111,41 @@
 .active-bar.no-transition {
 	transition: none;
 }
+/* Squeeze-on-transit: while the bar slides between icons it compresses along its
+   travel axis — height when vertical, width when horizontal: one `--bar-squeeze`
+   var driving the opposite scale axis per orientation — then springs back to full
+   as it lands (the class drops on settle). Additive to the existing slide. */
+.active-bar.is-moving {
+	--bar-squeeze: 0.5;
+}
+@media (prefers-reduced-motion: reduce) {
+	.active-bar.is-moving {
+		--bar-squeeze: 1;
+	}
+}
 /* Vertical rail: a 3px bar pinned to the left edge, sliding on Y. */
-:host(.dock-vertical) .active-bar {
+:host([data-orientation='vertical']) .active-bar {
 	inset-block-start: 0;
 	inset-inline-start: 0;
 	width: 0.1875rem;
 	height: var(--bar-h, 38px);
 	border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-	transform: translateY(var(--bar-y, 0));
+	transform: translateY(var(--bar-y, 0)) scaleY(var(--bar-squeeze, 1));
 	box-shadow: -2px 0 8px var(--teal-glow-faint);
 }
 /* Horizontal rail: a 3px underline pinned to the bottom edge, sliding on X. */
-:host(.dock-horizontal) .active-bar {
+:host([data-orientation='horizontal']) .active-bar {
 	inset-block-end: 0;
 	inset-inline-start: 0;
 	height: 0.1875rem;
 	width: var(--bar-w, 38px);
 	border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-	transform: translateX(var(--bar-x, 0));
+	transform: translateX(var(--bar-x, 0)) scaleX(var(--bar-squeeze, 1));
 	box-shadow: 0 -2px 8px var(--teal-glow-faint);
 }
 /* Mobile: a vertical dock rotates to a horizontal bar. */
 @media (max-width: 47.9375em) {
-	:host(.dock-vertical) {
+	:host([data-orientation='vertical']) {
 		flex-direction: row;
 		animation: dock-slide-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
 	}
@@ -140,19 +159,19 @@
 			transform: translateY(0);
 		}
 	}
-	:host(.dock-vertical) .dock-rail {
+	:host([data-orientation='vertical']) .dock-rail {
 		flex-direction: row;
 		justify-content: space-around;
 		padding: var(--space-2) var(--space-2);
 	}
-	:host(.dock-vertical) .active-bar {
+	:host([data-orientation='vertical']) .active-bar {
 		inset-block-start: auto;
 		inset-block-end: 0;
 		inset-inline-start: 0;
 		width: var(--bar-w, 38px);
 		height: 0.1875rem;
 		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-		transform: translateX(var(--bar-x, 0));
+		transform: translateX(var(--bar-x, 0)) scaleX(var(--bar-squeeze, 1));
 		box-shadow: 0 -2px 8px var(--teal-glow-faint);
 	}
 }

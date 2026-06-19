@@ -1,0 +1,42 @@
+:host {
+	display: inline-block;
+}
+.pin-row {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+.pin-box {
+	inline-size: 2.75rem;
+	block-size: 3.25rem;
+	padding: 0;
+	border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.18));
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--bg-panel, transparent);
+	color: var(--text-primary, currentColor);
+	font: inherit;
+	font-size: var(--text-lg, 1.25rem);
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+	caret-color: var(--color-info, #3b82f6);
+	transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.pin-box:hover:not(:disabled) {
+	border-color: var(--surface-border-strong, rgba(255, 255, 255, 0.3));
+}
+.pin-box:focus-visible {
+	outline: none;
+	border-color: var(--color-info, #3b82f6);
+	box-shadow: 0 0 0 2px color-mix(in oklab, var(--color-info, #3b82f6) 35%, transparent);
+}
+/* A filled box reads as "done" via :not(:placeholder-shown) — but these have no
+   placeholder; use the modern :state-less cue of a stronger border when valid. */
+.pin-box:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+@media (prefers-reduced-motion: reduce) {
+	.pin-box {
+		transition: none;
+	}
+}

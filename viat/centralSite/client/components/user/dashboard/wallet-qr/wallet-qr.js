@@ -10,8 +10,12 @@ async function svgStringToPngBlob(svgString, size) {
 	try {
 		const img = await new Promise((resolve, reject) => {
 			const i = new Image();
-			i.onload = () => resolve(i);
-			i.onerror = () => reject(new Error('Could not load QR SVG into an image element.'));
+			i.onload = () => {
+				return resolve(i);
+			};
+			i.onerror = () => {
+				return reject(new Error('Could not load QR SVG into an image element.'));
+			};
 			i.src = url;
 		});
 		const canvas = document.createElement('canvas');
@@ -53,18 +57,12 @@ export class WalletQr extends WebComponent {
 		svg: '',
 		renderedAddress: '',
 		busy: false,
-		// Child-state for the composed download <ui-icon> — a reactive key,
-		// bound bare; no method fabricates it.
-		downloadIconState: {
-			name: 'download',
-			size: 'sm',
-		},
 	};
 	onConnect() {
 		this.observeGlobal('walletAddress', (nextAddress) => {
 			this.refreshSvg(nextAddress);
 		});
-		this.refreshSvg(this.globalState.walletAddress);
+		this.refreshSvg(this.global.walletAddress);
 	}
 	async refreshSvg(address) {
 		const next = `${address ?? ''}`.trim();
@@ -89,7 +87,7 @@ export class WalletQr extends WebComponent {
 					light: '#00000000',
 				},
 			});
-			if (this.globalState.walletAddress !== next) {
+			if (this.global.walletAddress !== next) {
 				return;
 			}
 			this.assignState({
@@ -179,23 +177,22 @@ export class WalletQr extends WebComponent {
 		}
 	}
 	render() {
-		
 		this.html `
-			<div class=${() => `wq-wrap${this.state.svg ? ' is-ready' : ' is-empty'}`}>
+			<div class="wq-wrap" ?data-ready=${this.state.svg}>
 				<div class="wq-canvas"
 					role="button"
 					tabindex="0"
 					tooltip="Click to copy image"
 					@click=${this.handleCopyImage}>
 					<div class="wq-frame">
-						^html${() => this.state.svg || '<div class="wq-empty-msg">no address</div>'}
+						^html${this.state.svg || '<div class="wq-empty-msg">no address</div>'}
 					</div>
 				</div>
 				<button class="wq-download"
 					type="button"
-					?disabled=${() => !this.state.renderedAddress}
+					?disabled=${!this.state.renderedAddress}
 					@click=${this.handleDownload}>
-					<ui-icon class="wq-download-icon" .state=${this.state.downloadIconState}></ui-icon>
+					<ui-icon class="wq-download-icon" .name=${'download'} .size=${'sm'}></ui-icon>
 					<span class="wq-download-label">Download</span>
 				</button>
 			</div>

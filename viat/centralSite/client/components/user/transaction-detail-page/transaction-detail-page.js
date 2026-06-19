@@ -1,4 +1,5 @@
 import '../../global/icon/icon.js';
+import { AppView } from '../app-view/app-view.js';
 import { WebComponent } from '../../core/index.js';
 function formatAmount(value) {
 	if (value == null) {
@@ -30,10 +31,6 @@ export class TransactionDetailPage extends WebComponent {
 		transaction: null,
 		loading: false,
 		error: '',
-		titleIconState: {
-			name: 'receipt',
-			size: 'md',
-		},
 	};
 	previousId = '';
 	setTxId(id) {
@@ -49,17 +46,13 @@ export class TransactionDetailPage extends WebComponent {
 			this.loadTransaction(next);
 		}
 	}
-	async getSDK() {
-		const app = document.querySelector('app-view');
-		return app?.ensureSDK ? app.ensureSDK() : null;
-	}
 	async loadTransaction(id) {
 		this.assignState({
 			loading: true,
 			error: '',
 			transaction: null,
 		});
-		const sdk = await this.getSDK();
+		const sdk = await AppView.ensureSDK();
 		const response = await sdk.getTransaction(id);
 		if (!response) {
 			this.assignState({
@@ -133,7 +126,7 @@ export class TransactionDetailPage extends WebComponent {
 			<div class="td-shell">
 				<header class="td-header">
 					<div class="td-title-block">
-						<ui-icon class="td-title-icon" .state=${this.state.titleIconState}></ui-icon>
+						<ui-icon class="td-title-icon" .name=${'receipt'} .size=${'md'}></ui-icon>
 						<span class="td-title">// TRANSACTION DETAIL</span>
 					</div>
 					<button class="td-copy" @click=${this.handleCopyId} tooltip="Copy transaction ID">${() => {

@@ -1,5 +1,6 @@
 import '../../../global/tabs/tabs.js';
-import { WebComponent, classList, remoteList } from '../../../core/index.js';
+import { WebComponent, remoteList } from '../../../core/index.js';
+import { AppView } from '../../app-view/app-view.js';
 import { Panel } from '../../../global/panel/panel.js';
 const PAGE_SIZE = 25;
 function shortCounterparty(value) {
@@ -54,21 +55,14 @@ class ActivityLogEntry extends WebComponent {
 		// Whole-row reactive read so an entry repaint also refreshes the
 		// embedded <a href> targets. Router intercepts anchor clicks across
 		// the shadow boundary via composedPath, so plain `<a>` is enough —
-		// no manual navigate() wiring.
 		this.html `
 			<div class="log-entry">
 				<span class="log-ts">${this.state.timestamp}</span>
-				<span class=${classList('log-tag', () => {
-					return this.state.direction === 'in' ? 'log-tag-in' : 'log-tag-out';
-				})}>${() => {
-					return this.state.direction === 'in' ? '↙' : '↗';
-				}}</span>
-				<span class=${classList('log-msg', () => {
-					return this.state.status;
-				})}>
-					<a class="log-link log-amount" href="${this.state.txHref}" title="${this.state.id}">${this.state.amount} ⩝</a>
+				<span class="log-tag" data-direction=${this.state.direction}>${this.state.direction === 'in' ? '↙' : '↗'}</span>
+				<span class="log-msg" data-status=${this.state.status}>
+					<a class="log-link log-amount" href="${this.state.txHref}" tooltip=${this.state.id}>${this.state.amount} ⩝</a>
 					<span class="log-verb"> ${this.state.verb} </span>
-					<a class="log-link log-addr" href="${this.state.counterpartyHref}" title="${this.state.counterparty}">${this.state.counterpartyShort}</a>
+					<a class="log-link log-addr" href="${this.state.counterpartyHref}" tooltip=${this.state.counterparty}>${this.state.counterpartyShort}</a>
 				</span>
 			</div>
 		`;
@@ -103,7 +97,7 @@ export class ActivityLog extends Panel {
 		});
 	}
 	walletAddress() {
-		return this.globalState.wallet?.address || '';
+		return this.global.wallet?.address || '';
 	}
 	/* The wallet bus fires on any wallet mutation (balance ticks etc.); only an
 	   ADDRESS change is a new history, so reset just on that. */
@@ -129,10 +123,6 @@ export class ActivityLog extends Panel {
 			error: domEvent?.detail?.data?.error || 'Could not load activity',
 		});
 	}
-	async getSDK() {
-		const app = document.querySelector('app-view');
-		return app?.ensureSDK ? app.ensureSDK() : null;
-	}
 	/* remoteList loader — the wallet's own tx history, paged via the cursor=page
 	   bridge (see accounts-list-page). Empty-success on no wallet so the mount
 	   auto-load is a clean no-op until a wallet loads. */
@@ -148,7 +138,7 @@ export class ActivityLog extends Panel {
 			};
 		}
 		const page = reset ? 1 : (cursor ?? 1);
-		const sdk = await this.getSDK();
+		const sdk = await AppView.ensureSDK();
 		if (!sdk) {
 			return null;
 		}

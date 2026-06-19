@@ -1,3 +1,4 @@
+import './modules/config.js';
 import './modules/environment.js';
 import './modules/plugins-bootstrap.js';
 import './modules/registerRoots.js';
@@ -49,7 +50,11 @@ async function initialize() {
 	const bootScreen = await mountBootScreen();
 	await runPlugins();
 	const app = await AppView.create();
-	globalThis.AppView = app;
+	// Debug handle is lowercase `app` on purpose — a `globalThis.AppView`
+	// holding the INSTANCE would collide with the AppView class, so any
+	// non-importing `AppView.ensureSDK()` would hit the instance getter
+	// instead of the static. Keep the class name free of a global shadow.
+	globalThis.app = app;
 	await app.lifecycle.whenLive;
 	bootScreen.dismiss();
 	return app;

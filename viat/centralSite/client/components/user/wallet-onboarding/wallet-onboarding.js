@@ -32,13 +32,13 @@ export class WalletOnboarding extends WebComponent {
 		this.evaluateVisibility();
 	}
 	currentRouteId() {
-		return this.globalState.routeId || '';
+		return this.global.routeId || '';
 	}
 	requiredForRoute(routeId = this.currentRouteId()) {
 		return WALLET_REQUIRED_ROUTES.has(routeId);
 	}
 	evaluateVisibility() {
-		const info = this.globalState.wallet ?? {};
+		const info = this.global.wallet ?? {};
 		const hasSaved = (info.savedProfiles?.length ?? 0) > 0;
 		const hasActive = Boolean(info.hasWallet);
 		this.assignState({
@@ -55,7 +55,7 @@ export class WalletOnboarding extends WebComponent {
 		// Don't auto-open over the boot splash; the `bootComplete` observer
 		// re-runs this once the splash is gone. `forced` (forceOpen) still
 		// gets through because that's an explicit user/system request.
-		if (!this.forced && !this.globalState.bootComplete) {
+		if (!this.forced && !this.global.bootComplete) {
 			return;
 		}
 		const shouldShow = this.forced || this.requiredForRoute();
@@ -80,7 +80,7 @@ export class WalletOnboarding extends WebComponent {
 		this.evaluateVisibility();
 	}
 	forceOpen(reason = '') {
-		const info = this.globalState.wallet ?? {};
+		const info = this.global.wallet ?? {};
 		if (info.hasWallet) {
 			return;
 		}
@@ -100,13 +100,13 @@ export class WalletOnboarding extends WebComponent {
 	handleCreateSave() {
 		this.refs.modal?.close();
 		this.emit('wallet:create-save', {
-			profileMeta: this.globalState.profile ?? {},
+			profileMeta: this.global.profile ?? {},
 		});
 	}
 	handleCreate() {
 		this.refs.modal?.close();
 		this.emit('wallet:create', {
-			profileMeta: this.globalState.profile ?? {},
+			profileMeta: this.global.profile ?? {},
 		});
 	}
 	handleLoad() {

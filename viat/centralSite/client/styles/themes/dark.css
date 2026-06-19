@@ -4,6 +4,9 @@
    Retro sci-fi. Cyan accent. Angular.
 ─────────────────────────────────────────────────────── */
 :root {
+	/* Dark root → native controls (date/time pickers, spinners, scrollbars, the
+	   native <select> popup) adopt the dark UA palette instead of light-on-light. */
+	color-scheme: dark;
 	/* ── Base Palette ────────────────────────────────── */
 	--bg-body: #0C0C0E;
 	--bg-panel: #141416;
@@ -136,6 +139,9 @@
 	--btn-hover-inset: inset 0 1px 0 rgba(255, 255, 255, 0.14);
 	--btn-hover-glow: 0 0 0 1px rgba(255, 80, 170, 0.08);
 	--btn-hover-color: var(--text-light);
+	/* Primary solid hover brightens within the teal family (base fallback is
+	   midnight mint). */
+	--btn-primary-hover-bg: #19d6d6;
 	--focus-ring-color: rgba(110, 220, 255, 0.75);
 	--green-hover: #43ff6a;
 
@@ -169,6 +175,7 @@
 
 	/* ── Glow Scale ──────────────────────────────────── */
 	--ph-dot-shadow: 0 0 4px var(--teal);
+	--tab-indicator-shadow: 0 0 8px rgba(0, 179, 179, 0.45);
 	--logo-mark-text-shadow: 0 0 10px var(--topbar-accent);
 	--subtitle-text-shadow: 0 0 6px var(--topbar-accent);
 	--indicator-on-shadow: 0 0 8px var(--topbar-accent);

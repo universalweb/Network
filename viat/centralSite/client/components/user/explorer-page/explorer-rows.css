@@ -65,10 +65,10 @@ a.ex-addr:hover {
 	width: max-content;
 	border: 1px solid currentColor;
 }
-.ex-type.tone-mint {
+.ex-type[data-tone='mint'] {
 	color: var(--color-success);
 }
-.ex-type.tone-transfer {
+.ex-type[data-tone='transfer'] {
 	color: var(--teal);
 }
 .ex-time {

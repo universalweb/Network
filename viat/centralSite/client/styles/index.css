@@ -25,34 +25,5 @@ body {
 	   small-viewport floor; overflow-x hidden guards against a stray h-scrollbar. */
 	width: 100%; min-height: 100svh; overflow-x: hidden;
 	-webkit-font-smoothing: antialiased;
-	cursor: crosshair; user-select: none;
-}
-
-/* ── Light-DOM host fixes — apply synchronously, ahead of async shadow adoption ── */
-/*
- * The notification stack is a Popover API element. Its shadow `:host([popover])`
- * reset adopts asynchronously (applyStyles is awaited in handleConnect), so for
- * one frame the bare popover paints the UA default — a centered white box — then
- * jumps top-right once the shadow styles land. That is the "white box on the left,
- * then snaps to the right" flash. index.css is always loaded, so pinning + stripping
- * the UA chrome here makes the host correct from the first paint, no async wait.
- * Mirrors notification-stack.css's :host([popover]) intentionally — the shadow rule
- * is the encapsulated default; this is the light-DOM FOUC guard.
- */
-ui-notification[popover] {
-	position: fixed;
-	inset: auto;
-	inset-block-start: 18px;
-	inset-inline-end: 18px;
-	margin: 0;
-	padding: 0;
-	border: 0;
-	background: transparent;
-	width: auto;
-	height: auto;
-	max-width: none;
-	max-height: none;
-	overflow: visible;
-	z-index: 9999;
-	pointer-events: none;
+	cursor: crosshair;
 }

@@ -8,6 +8,16 @@ export class UIPullDown extends WebComponent {
 	};
 	static state = {
 		open: false,
+		// Drag-to-close is core. The grab handle defaults to the BOTTOM edge — you
+		// grab low and pull the whole sheet up off-screen, which gives a full
+		// viewport-height of travel (a top handle has almost none before it clears
+		// the edge, so it can only close on a fast flick). 'top' | 'bottom' | 'none'
+		// (hidden); skin it with the --pulldown-handle-* custom properties.
+		handlePosition: 'bottom',
+		// With this on you can also drag ANY empty area of the sheet — its own
+		// surface, never the slotted content — not just the handle. Set false to
+		// disable the close gesture entirely.
+		dragToClose: true,
 	};
 	settleTimer = null;
 	onConnect() {
@@ -15,6 +25,78 @@ export class UIPullDown extends WebComponent {
 		this.delegate('pulldown:drag', this.handleDrag);
 		this.delegate('pulldown:state', this.handleState);
 		this.delegate('pulldown:dragend', this.handleDragEnd);
+	}
+	onMount() {
+		this.dataset.handle = this.state.handlePosition;
+		this.installDragClose();
+	}
+	// Drag-up-to-close, built into the base component (bottom-sheet style). The
+	// gesture binds to the whole DRAWER, not just the handle, so any empty area of
+	// the sheet drags it — the `enabled` guard whitelists the sheet's own surface
+	// so slotted content is never hijacked. The shared engine tracks the upward
+	// travel, and onSettle hands the verdict back through `pulldown:state` so the
+	// SAME path animates the drawer AND lets any external bar (global-top-bar)
+	// retract with it. Re-mount safe: a stale controller is dropped before rebinding.
+	installDragClose() {
+		const drawer = this.refs.drawer;
+		if (!drawer) {
+			return;
+		}
+		if (this.dragController) {
+			this.dragController.destroy();
+			this.gestureUnsubs?.delete(this.dragController.destroy);
+		}
+		this.dragController = this.dragSnap(drawer, {
+			axis: 'y',
+			opensToward: 'down',
+			enabled: (domEvent) => {
+				return this.state.open === true && this.state.dragToClose !== false && this.isDragSurface(domEvent);
+			},
+			isOpen: () => {
+				return this.state.open === true;
+			},
+			extent: () => {
+				return globalThis.innerHeight;
+			},
+			onStart: () => {
+				this.handleDragStart();
+			},
+			onMove: (progress, delta) => {
+				this.handleSelfDragMove(delta);
+			},
+			onSettle: (shouldOpen) => {
+				this.handleSelfDragSettle(shouldOpen);
+			},
+		});
+	}
+	// The drag starts only on the sheet's OWN surface — the drawer, the content
+	// wrapper (incl. its handle-clearing padding), or the grab handle — never on
+	// slotted content. Event retargeting reports the real slotted node here (its
+	// root is the document, not our shadow root), so a whitelist of our own
+	// elements cleanly excludes "anything inside it".
+	isDragSurface(domEvent) {
+		const { target } = domEvent;
+		const handle = this.refs.handle;
+		return target === this.refs.drawer ||
+			target === this.refs.content ||
+			target === handle ||
+			handle?.contains(target) === true;
+	}
+	handleSelfDragMove(delta) {
+		const drawer = this.refs.drawer;
+		if (!drawer) {
+			return;
+		}
+		// `delta` is the upward (negative) travel from the resting open position —
+		// translate the drawer to follow the finger 1:1.
+		drawer.style.transform = `translateY(${delta}px)`;
+	}
+	handleSelfDragSettle(shouldOpen) {
+		// handleState owns the settle animation (single source of truth); it does
+		// NOT re-emit, so this can't loop. The emit also lets a host bar retract.
+		this.emit('pulldown:state', {
+			open: shouldOpen,
+		});
 	}
 	handleDragEnd(domEvent) {
 		const data = domEvent.detail.data;
@@ -78,12 +160,12 @@ export class UIPullDown extends WebComponent {
 		}, SNAP_MS);
 	}
 	render() {
-		
 		this.html `
 			<div #drawer class="pulldown-drawer">
-				<div class="pulldown-content">
+				<div #content class="pulldown-content">
 					<slot></slot>
 				</div>
+				<div #handle class="pulldown-handle" aria-hidden="true"></div>
 			</div>
 		`;
 	}

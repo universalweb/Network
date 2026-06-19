@@ -1,4 +1,4 @@
-import { WebComponent, classList } from '../../core/index.js';
+import { WebComponent } from '../../core/index.js';
 export class UISurface extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -13,29 +13,20 @@ export class UISurface extends WebComponent {
 		interactive: false,
 	};
 	render() {
-		
+		/* Enumerated dims → data-* ATTRIBUTES. This supersedes the old `sf-`
+		   class-prefix workaround: an attribute selector can't be matched by the
+		   uwc.util `.surface`/`.tone-*` class utilities at all, so the tones are
+		   self-owned without needing a private namespace. (util's `[data-tone]`
+		   rules set only `--tone-fill`, which surface ignores — no conflict.) */
 		this.html `
-			<div class=${classList(
-				'surface',
-				() => {
-					return `tone-${this.state.tone}`;
-				},
-				() => {
-					return `pad-${this.state.padding}`;
-				},
-				() => {
-					return `radius-${this.state.radius}`;
-				},
-				() => {
-					return `elev-${this.state.elevation}`;
-				},
-				() => {
-					return this.state.border && 'has-border';
-				},
-				() => {
-					return this.state.interactive && 'is-interactive';
-				}
-			)}>
+			<div
+				class="sf"
+				data-tone=${this.state.tone}
+				data-pad=${this.state.padding}
+				data-radius=${this.state.radius}
+				data-elev=${this.state.elevation}
+				?data-border=${this.state.border}
+				?data-interactive=${this.state.interactive}>
 				<slot></slot>
 			</div>
 		`;

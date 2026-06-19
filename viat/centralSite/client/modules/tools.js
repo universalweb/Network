@@ -1,59 +1,9 @@
 import { defineGlobalTool } from '../components/core/ai/index.js';
 import { globalState } from '../components/core/index.js';
-import { listAllTools } from '../components/core/ai/registry.js';
-// Page map + per-tool schemas are NOT shipped in every system prompt.
-// The AI fetches them on demand via these two tools — keeps the steady-
-// state system prompt under ~1.5KB on a typical session and saves the
-// big payload for the rare turn that actually needs it.
-defineGlobalTool('getPageMap', {
-	description: 'Return the live component tree of the page (every component is agent-addressable). Use this when you need to locate a target by path before invoking a verb like highlight / focus / click on it. Returns a multi-line string suitable for direct reading.',
-	inputSchema: {
-		type: 'object',
-		properties: {},
-		additionalProperties: false,
-	},
-	mutating: false,
-	handler: ({ component }) => {
-		const map = typeof component?.aiMap === 'function' ? component.aiMap() : '';
-		return {
-			map: map || '(no map available)',
-		};
-	},
-});
-defineGlobalTool('getToolSchema', {
-	description: 'Return the full input JSON Schema for a single registered tool by name. Use this when you need to know exactly which arguments to pass — the tool digest in the system prompt only lists names + descriptions to keep prompts small.',
-	inputSchema: {
-		type: 'object',
-		properties: {
-			name: {
-				type: 'string',
-				description: 'Exact tool name from the TOOLS digest.',
-			},
-		},
-		required: ['name'],
-		additionalProperties: false,
-	},
-	mutating: false,
-	handler: ({ args }) => {
-		const name = `${args?.name ?? ''}`.trim();
-		if (!name) {
-			return { ok: false, error: 'Missing `name`.' };
-		}
-		const tool = listAllTools().find((entry) => {
-			return entry.name === name;
-		});
-		if (!tool) {
-			return { ok: false, error: `Unknown tool "${name}".` };
-		}
-		return {
-			ok: true,
-			name: tool.name,
-			description: tool.description,
-			mutating: tool.mutating === true,
-			inputSchema: tool.inputSchema ?? { type: 'object' },
-		};
-	},
-});
+/*
+ * App-specific tools only. Universal tools (component verbs, getPageMap,
+ * getToolSchema) live in core/ai/tools.js and register with the framework.
+ */
 defineGlobalTool('getWalletAmount', {
 	description: 'Returns the current wallet amount from globalState (the amount displayed in the wallet UI). Takes no arguments.',
 	inputSchema: {
@@ -94,7 +44,9 @@ defineGlobalTool('sendTransaction', {
 		additionalProperties: false,
 	},
 	mutating: true,
-	handler: ({ component, args }) => {
+	handler: ({
+		component, args,
+	}) => {
 		const to = `${args?.to ?? ''}`.trim();
 		const amount = `${args?.amount ?? ''}`.trim();
 		if (!to) {

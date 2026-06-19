@@ -1,0 +1,10 @@
+/*
+ * Gnosis — app-bar RULE overrides (structural). The floating scrolled bar
+ * drops the heavy soft shadow for the line language: a full hairline border,
+ * 2px corners. Depth is the line, not the blur.
+ */
+:host([data-scrolled]) .app-bar {
+	border-radius: 2px;
+	border-color: rgba(232, 230, 223, 0.16);
+	box-shadow: none;
+}

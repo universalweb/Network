@@ -1,6 +1,6 @@
 import '../../global/modal/modal.js';
 import '../../global/whitebox-modal/whitebox-modal.js';
-import { WebComponent, classList } from '../../core/index.js';
+import { WebComponent } from '../../core/index.js';
 // `<welcome-back-modal>` — replaces the intro modal at boot when a saved
 // profile auto-loaded from localStorage. Mirrors the intro modal's hero
 // (animated VIAT triangle on a gradient chip, headline + tagline) so the
@@ -39,7 +39,7 @@ export class WelcomeBackModal extends WebComponent {
 		// Don't pop over the boot splash — queue the open until bootComplete
 		// flips true. Mirrors the wallet-onboarding gate so both flows feel
 		// consistent ("modal arrives after the splash finishes").
-		if (!this.globalState.bootComplete) {
+		if (!this.global.bootComplete) {
 			this.pendingOpen = true;
 			return;
 		}
@@ -114,17 +114,13 @@ export class WelcomeBackModal extends WebComponent {
 						</div>
 						<div class="modal-meta-row">
 							<span class="modal-meta-key">ADDRESS</span>
-							<span class="modal-meta-val" title="${this.state.address}">${() => {
+							<span class="modal-meta-val" tooltip=${this.state.address}>${() => {
 								return shortAddress(this.state.address);
 							}}</span>
 						</div>
 						<div class="modal-meta-row">
 							<span class="modal-meta-key">STATUS</span>
-							<span class=${classList('modal-meta-val', () => {
-								return (this.state.locked ? 'is-locked' : 'is-unlocked');
-							})}>${() => {
-								return (this.state.locked ? '🔒 LOCKED — public data only' : '🔓 UNLOCKED — ready');
-							}}</span>
+							<span class="modal-meta-val" data-lock=${this.state.locked ? 'locked' : 'unlocked'}>${this.state.locked ? '🔒 LOCKED — public data only' : '🔓 UNLOCKED — ready'}</span>
 						</div>
 					</div>
 					<div class="wb-thumb-card">
@@ -153,7 +149,7 @@ export class WelcomeBackModal extends WebComponent {
 	}
 	onConnect() {
 		this.observeGlobal('bootComplete', () => {
-			if (this.pendingOpen && this.globalState.bootComplete) {
+			if (this.pendingOpen && this.global.bootComplete) {
 				this.pendingOpen = null;
 				this.refs.modal?.open();
 			}

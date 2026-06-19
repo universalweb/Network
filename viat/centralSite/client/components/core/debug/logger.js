@@ -25,7 +25,7 @@ const LEVEL_RANK = Object.freeze({
  * dumps thousands of styled console.log calls through a hot mount (measured at
  * ~2/3 of cold-create wall time — pure console I/O the production build never
  * pays). Opt back into the full trace with `globalThis.CONFIG.logLevel='debug'`
- * at boot, or `Logger.setLevel('debug')` at runtime.
+ * at boot, or `defaultLogger.setLevel('debug')` at runtime.
  */
 const DEFAULT_LEVEL = IS_PRODUCTION ? 'error' : 'info';
 let activeRank = LEVEL_RANK[globalThis.CONFIG?.logLevel] ?? LEVEL_RANK[DEFAULT_LEVEL];
@@ -124,79 +124,244 @@ function ifPerf(method) {
 /**
  * Cheap boolean gate for a hot callsite: true only in dev when `level` is at or
  * below the active rank. Reads only already-declared module state (no forward
- * refs) so it is safe to call from the Logger literal and from setLevel.
+ * refs) so it is safe to call from the Logger instance (and from setLevel).
  */
 function computeFlag(level) {
 	return !IS_PRODUCTION && LEVEL_RANK[level] <= activeRank;
 }
-export const Logger = {
+function setActiveLevel(level) {
+	const rank = LEVEL_RANK[level];
+	if (rank !== undefined) {
+		activeRank = rank;
+	}
+	return activeRank;
+}
+// Pre-bound action fns (gated / passthrough at load) keep instance methods as
+// simple named shorthands (per js-style) with zero per-call wrapper alloc for
+// the control paths. Transforms for default labels happen before delegating.
+const headerAction = gated('info', (text, style) => {
+	console.log(`%c${text}`, resolveHeaderStyle(style));
+});
+const ruleAction = gated('info', (text) => {
+	const bar = '─'.repeat(48);
+	if (text) {
+		console.log(`%c${bar}\n  ${text}\n${bar}`, 'color:#6b7280;font-weight:600;');
+	} else {
+		console.log(`%c${bar}`, 'color:#6b7280;');
+	}
+});
+const groupAction = gated('info', (label, collapsed) => {
+	const fn = collapsed ? 'groupCollapsed' : 'group';
+	console[fn](`%c${label}`, headerStyles.title);
+});
+const traceAction = gated('info', (label, ...args) => {
+	console.trace(`%c[${label}]`, colorMap.debug, ...args);
+});
+const groupEndAction = passthrough('groupEnd');
+const tableAction = passthrough('table');
+const dirAction = passthrough('dir');
+const countAction = passthrough('count');
+const countResetAction = passthrough('countReset');
+const timeAction = passthrough('time');
+const timeLogAction = passthrough('timeLog');
+const timeEndAction = passthrough('timeEnd');
+const clearAction = passthrough('clear');
+const markAction = ifPerf('mark');
+const measureAction = ifPerf('measure');
+const profileAction = ifAvailable('profile', 'info');
+const profileEndAction = ifAvailable('profileEnd', 'info');
+/**
+ * Base logger class. Provides the full logging API (level methods, flags,
+ * passthroughs, debug helpers). Use the pre-exported `defaultLogger` for
+ * app-wide logging or `componentLogger` for component-scoped (set `.label`
+ * or pass label as first arg to methods). Instantiate directly with a
+ * defaultLabel for custom cases.
+ */
+class Logger {
 	/**
-	 * Runtime verbosity control. `setLevel('debug')` restores the full per-render
-	 * trace; `setLevel('warn')` or `'silent'` cuts noise further. No effect in
-	 * production (gated paths are already hard noops). Returns the rank applied.
+	 * Default label bound at construction. When set,
+	 * level-log calls can omit the label arg and it is supplied automatically.
+	 * Sub-labels supported via `log.info('subcat', msg)` → effective label
+	 * becomes "Comp:subcat".
 	 */
+	label = null;
+	constructor(defaultLabel = null) {
+		this.label = defaultLabel;
+	}
+	/**
+	 * Global verbosity. Affects every logger instance. No-op in production.
+	 * @returns {number} the numeric rank that was applied.
+	 */
+	static setLevel(level) {
+		return setActiveLevel(level);
+	}
 	setLevel(level) {
-		const rank = LEVEL_RANK[level];
-		if (rank !== undefined) {
-			activeRank = rank;
-			this.debugOn = computeFlag('debug');
-			this.perfOn = computeFlag('perf');
-		}
+		return Logger.setLevel(level);
+	}
+	/**
+	 * Current verbosity rank (0=silent … 5=perf).
+	 * @returns {number} current active rank.
+	 */
+	static getLevel() {
 		return activeRank;
-	},
+	}
+	/**
+	 * Current verbosity rank (0=silent … 5=perf).
+	 * @returns {number} current active rank.
+	 */
 	getLevel() {
 		return activeRank;
-	},
+	}
 	/*
-	 * Cheap boolean gates for HOT callsites. Wrap a per-render / per-state-write
-	 * log in `if (Logger.debugOn) { … }` so a disabled level skips the call
-	 * ENTIRELY at the callsite — no message string built, no closure allocated,
-	 * no args gathered. A property read + branch, nothing more. Recomputed by
-	 * `setLevel`; false in production. `perfOn` guards the O(n) wasted-set
-	 * deep-compare diagnostics.
+	 * Live boolean gates for hot callsites (per-render etc). A getter read +
+	 * branch lets disabled levels avoid *all* work at the guard site.
+	 * `perfOn` additionally protects the deep-equals inside perf diagnostics.
 	 */
-	debugOn: computeFlag('debug'),
-	perfOn: computeFlag('perf'),
-	info: makeLevelLogger('info'),
-	success: makeLevelLogger('success'),
-	warn: makeLevelLogger('warn'),
-	error: makeLevelLogger('error'),
-	debug: makeLevelLogger('debug'),
-	perf: makeLevelLogger('perf'),
-	header: gated('info', (text, style) => {
-		console.log(`%c${text}`, resolveHeaderStyle(style));
-	}),
-	rule: gated('info', (text) => {
-		const bar = '─'.repeat(48);
-		if (text) {
-			console.log(`%c${bar}\n  ${text}\n${bar}`, 'color:#6b7280;font-weight:600;');
-		} else {
-			console.log(`%c${bar}`, 'color:#6b7280;');
+	get debugOn() {
+		return computeFlag('debug');
+	}
+	get perfOn() {
+		return computeFlag('perf');
+	}
+	// Levelled loggers. The ...callArgs form lets us normalize label when a
+	// defaultLabel is present on this instance without allocating per-method.
+	info(...callArgs) {
+		return this.#levelLog('info', ...callArgs);
+	}
+	success(...callArgs) {
+		return this.#levelLog('success', ...callArgs);
+	}
+	warn(...callArgs) {
+		return this.#levelLog('warn', ...callArgs);
+	}
+	error(...callArgs) {
+		return this.#levelLog('error', ...callArgs);
+	}
+	debug(...callArgs) {
+		return this.#levelLog('debug', ...callArgs);
+	}
+	perf(...callArgs) {
+		return this.#levelLog('perf', ...callArgs);
+	}
+	#levelLog(level, ...callArgs) {
+		if (IS_PRODUCTION && level !== 'error') {
+			return undefined;
 		}
-	}),
-	group: gated('info', (label, collapsed) => {
-		const fn = collapsed ? 'groupCollapsed' : 'group';
-		console[fn](`%c${label}`, headerStyles.title);
-	}),
-	groupEnd: passthrough('groupEnd'),
-	table: passthrough('table'),
-	dir: passthrough('dir'),
-	count: passthrough('count'),
-	countReset: passthrough('countReset'),
-	time: passthrough('time'),
-	timeLog: passthrough('timeLog'),
-	timeEnd: passthrough('timeEnd'),
-	clear: passthrough('clear'),
-	trace: gated('info', (label, ...args) => {
-		console.trace(`%c[${label}]`, colorMap.debug, ...args);
-	}),
-	assert(condition, label, ...args) {
-		console.assert(condition, `%c[${label}]`, colorMap.error, ...args);
-	},
-	mark: ifPerf('mark'),
-	measure: ifPerf('measure'),
-	profile: ifAvailable('profile', 'info'),
-	profileEnd: ifAvailable('profileEnd', 'info'),
+		const rank = LEVEL_RANK[level];
+		if (rank > activeRank) {
+			return undefined;
+		}
+		let label;
+		let msg;
+		let extra;
+		if (this.label === null || this.label === undefined) {
+			label = callArgs[0];
+			msg = callArgs[1];
+			extra = callArgs.slice(2);
+		} else if (callArgs.length > 1 && typeof callArgs[0] === 'string') {
+			label = `${this.label}:${callArgs[0]}`;
+			msg = callArgs[1];
+			extra = callArgs.slice(2);
+		} else {
+			label = this.label;
+			msg = callArgs[0];
+			extra = callArgs.slice(1);
+		}
+		const resolved = typeof msg === 'function' ? msg(...extra) : msg;
+		if (resolved == null) {
+			return;
+		}
+		printLine(level, label, resolved, []);
+	}
+	header(text, style) {
+		return headerAction(text, style);
+	}
+	rule(text) {
+		return ruleAction(text);
+	}
+	group(title, collapsed) {
+		let useLabel = title;
+		let coll = collapsed;
+		if (this.label !== null && this.label !== undefined) {
+			if (arguments.length > 0) {
+				useLabel = `${this.label}:${title}`;
+				coll = collapsed;
+			} else {
+				useLabel = this.label;
+				coll = title;
+			}
+		}
+		return groupAction(useLabel, coll);
+	}
+	groupEnd() {
+		return groupEndAction();
+	}
+	table(...args) {
+		return tableAction(...args);
+	}
+	dir(...args) {
+		return dirAction(...args);
+	}
+	count(...args) {
+		return countAction(...args);
+	}
+	countReset(...args) {
+		return countResetAction(...args);
+	}
+	time(...args) {
+		return timeAction(...args);
+	}
+	timeLog(...args) {
+		return timeLogAction(...args);
+	}
+	timeEnd(...args) {
+		return timeEndAction(...args);
+	}
+	clear(...args) {
+		return clearAction(...args);
+	}
+	trace(...callArgs) {
+		let label;
+		let extraArgs;
+		if (this.label === null || this.label === undefined) {
+			label = callArgs[0];
+			extraArgs = callArgs.slice(1);
+		} else if (callArgs.length > 1 && typeof callArgs[0] === 'string') {
+			label = `${this.label}:${callArgs[0]}`;
+			extraArgs = callArgs.slice(1);
+		} else {
+			label = this.label;
+			extraArgs = callArgs;
+		}
+		return traceAction(label, ...extraArgs);
+	}
+	assert(condition, first, ...args) {
+		let label = first;
+		let rest = args;
+		if (this.label !== null && this.label !== undefined) {
+			if (first !== undefined && typeof first === 'string') {
+				label = `${this.label}:${first}`;
+				rest = args;
+			} else {
+				label = this.label;
+				rest = [first, ...args];
+			}
+		}
+		// else: classic use with explicit label arg
+		console.assert(condition, `%c[${label}]`, colorMap.error, ...rest);
+	}
+	mark(label, ...rest) {
+		return markAction(label, ...rest);
+	}
+	measure(label, ...rest) {
+		return measureAction(label, ...rest);
+	}
+	profile(...args) {
+		return profileAction(...args);
+	}
+	profileEnd(...args) {
+		return profileEndAction(...args);
+	}
 	break(condition) {
 		if (IS_PRODUCTION) {
 			return;
@@ -205,23 +370,55 @@ export const Logger = {
 			// eslint-disable-next-line no-debugger
 			debugger;
 		}
-	},
-	breakOn(label, condition) {
-		if (IS_PRODUCTION || !condition) {
+	}
+	breakOn(first, condition) {
+		let label = first;
+		let cond = condition;
+		if (this.label === null || this.label === undefined) {
+			// no default label: use provided first as label
+		} else if (arguments.length > 1) {
+			label = `${this.label}:${first}`;
+			cond = condition;
+		} else {
+			label = this.label;
+			cond = first;
+		}
+		if (IS_PRODUCTION) {
 			return;
 		}
-		printLine('debug', label, 'breakpoint hit', []);
-		// eslint-disable-next-line no-debugger
-		debugger;
-	},
-	inspect(label, value) {
-		if (IS_PRODUCTION) {
-			return value;
+		if (cond) {
+			printLine('debug', label, 'breakpoint hit', []);
+			// eslint-disable-next-line no-debugger
+			debugger;
 		}
-		console.log(`%c[${label}]`, colorMap.debug, value);
-		console.dir(value, {
+	}
+	inspect(first, value) {
+		let label = first;
+		let val = value;
+		if (this.label === null || this.label === undefined) {
+			// no default
+		} else if (arguments.length > 1) {
+			label = `${this.label}:${first}`;
+			val = value;
+		} else {
+			label = this.label;
+			val = first;
+		}
+		if (IS_PRODUCTION) {
+			return val;
+		}
+		console.log(`%c[${label}]`, colorMap.debug, val);
+		console.dir(val, {
 			depth: null,
 		});
-		return value;
-	},
-};
+		return val;
+	}
+}
+/**
+ * Pre-instantiated loggers for common use.
+ * - defaultLogger: general app-wide logging (pass label as first arg to methods).
+ * - componentLogger: for component code (you can reassign .label or use labels).
+ */
+export const defaultLogger = new Logger();
+export const componentLogger = new Logger();
+defaultLogger.error('Logger initialized at level:', Logger.getLevel());

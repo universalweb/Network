@@ -1,0 +1,56 @@
+:host {
+	display: inline-flex;
+	flex: 0 0 auto;
+}
+.av {
+	--av-size: 2.5rem;
+	block-size: var(--av-size);
+	inline-size: var(--av-size);
+	position: relative;
+	flex: 0 0 auto;
+}
+.av[data-size='xs'] { --av-size: 1.5rem; font-size: var(--text-2xs); }
+.av[data-size='sm'] { --av-size: 2rem; font-size: var(--text-xs); }
+.av[data-size='md'] { --av-size: 2.5rem; font-size: var(--text-sm); }
+.av[data-size='lg'] { --av-size: 3.25rem; font-size: var(--text-lg); }
+.av-img,
+.av-initials {
+	block-size: 100%;
+	inline-size: 100%;
+	display: flex;
+}
+.av-img {
+	object-fit: cover;
+}
+.av-initials {
+	align-items: center;
+	/* Chip background is a fixed-lightness oklch (theme-independent), so the text
+	   is an absolute light value, not a theme token that could go dark. */
+	color: oklch(0.98 0 0);
+	font-weight: var(--weight-semibold);
+	justify-content: center;
+	letter-spacing: 0.02em;
+	line-height: 1;
+	text-transform: uppercase;
+}
+.av[data-shape='circle'] .av-img,
+.av[data-shape='circle'] .av-initials {
+	border-radius: 50%;
+}
+.av[data-shape='square'] .av-img,
+.av[data-shape='square'] .av-initials {
+	border-radius: var(--radius-md);
+}
+.av-status {
+	position: absolute;
+	inset-block-end: 0;
+	inset-inline-end: 0;
+	block-size: 30%;
+	inline-size: 30%;
+	min-block-size: 0.5rem;
+	min-inline-size: 0.5rem;
+	border-radius: 50%;
+	border: 2px solid var(--bg-panel);
+	/* Tone comes from the shared `[data-tone]` fill map (util-surface.css). */
+	background: var(--tone-fill, var(--text-muted));
+}

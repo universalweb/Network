@@ -145,7 +145,6 @@ export class UITooltip extends WebComponent {
 		shell.hidePopover();
 	}
 	render() {
-		
 		this.html `
 			<div #shell
 				class=${classList('tooltip-shell', () => {

@@ -1,0 +1,83 @@
+/*
+ * Hypr — panel RULE overrides, adopted into the panel shadow by theme
+ * (core/environment/themeStyles.js). Tokens live in styles/themes/hypr.css.
+ * Unlayered so it wins over base panel.css.
+ *
+ * THE IDENTITY — "panels focus like Hyprland windows":
+ * at rest a panel wears only the surface's dim hairline (col.inactive_border);
+ * on hover / focus-within an aqua→spring conic gradient RING fades in and
+ * slowly rotates around it (col.active_border + `animations { borders }`).
+ * The header is flat glass with a waybar-style workspace pill for the id and
+ * a square two-tone "active workspace" marker for the dot.
+ */
+/* The focus ring — a 1px masked conic border just inside the surface border.
+   Sits on .panel (pseudo-elements don't render on the ui-surface shadow host);
+   radius tracks the surface's radius-md corner minus the border it sits inside.
+   `--hypr-angle` is REGISTERED in the document token sheet
+   (styles/themes/hypr.css) — @property is ignored inside shadow-adopted
+   sheets; the 0deg fallback keeps the ring painting even unregistered. */
+.panel::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: calc(var(--radius-md, 0.375rem) - 1px);
+	padding: 1px;
+	background: conic-gradient(
+		from var(--hypr-angle, 0deg),
+		#33ccff 0deg,
+		#00ff99 110deg,
+		rgba(51, 204, 255, 0.10) 180deg,
+		#33ccff 250deg,
+		rgba(0, 255, 153, 0.14) 320deg,
+		#33ccff 360deg
+	);
+	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	mask-composite: exclude;
+	opacity: 0;
+	transition: opacity 0.35s ease;
+	pointer-events: none;
+	z-index: 3;
+}
+.panel:hover::after,
+.panel:focus-within::after {
+	opacity: 1;
+	animation: hypr-focus-spin 8s linear infinite;
+}
+@keyframes hypr-focus-spin {
+	to {
+		--hypr-angle: 360deg;
+	}
+}
+/* Header: flat glass, one faint hairline — the ring is the hero, the header
+   stays quiet. */
+.panel-header {
+	position: relative;
+	box-shadow: none;
+	border-block-end: 1px solid rgba(122, 231, 255, 0.07);
+}
+/* Workspace pill — the panel id as a waybar workspace tag. */
+.panel-header .ph-id {
+	display: inline-block;
+	padding: 0.1em 0.55em;
+	border: 1px solid rgba(51, 204, 255, 0.28);
+	border-radius: 999px;
+	background: rgba(51, 204, 255, 0.06);
+	color: #7ae7ff;
+	opacity: 1;
+	letter-spacing: 0.14em;
+}
+/* Active-workspace marker — square, two-tone, no glow circle. */
+.panel-header .ph-dot {
+	display: block;
+	width: 0.3125rem;
+	height: 0.3125rem;
+	border-radius: 1px;
+	background: linear-gradient(135deg, #33ccff 0%, #00ff99 100%);
+	box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.panel:hover::after,
+	.panel:focus-within::after {
+		animation: none;
+	}
+}

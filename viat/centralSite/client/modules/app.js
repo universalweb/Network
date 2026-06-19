@@ -19,10 +19,9 @@ import '../components/user/transaction-detail-page/transaction-detail-page.js';
 import '../components/user/wallet-onboarding/wallet-onboarding.js';
 import './tools.js';
 import '../components/core/tooltips/tooltip.js';
-import VIATClientSDK, * as viatSDK from 'viat';
 import { WebComponent, globalState } from 'webcomponent';
 import { getTheme, setTheme } from '../components/global/theme-select/theme-manager.js';
-import { UINotification } from '../components/global/notification/notification.js';
+import { AppView } from '../components/user/app-view/app-view.js';
 import { URLRouter } from './urlRouter.js';
 const ROUTER_CONFIG = {
 	root: '/',
@@ -127,10 +126,6 @@ const ROUTER_CONFIG = {
 const DOCK_ROUTE_IDS = new Set([
 	'wallet', 'swap', 'explorer', 'accounts',
 ]);
-/*
-	VIAT Client SDK is a high-level interface for interacting with the VIAT cryptocurrency API. It manages wallet creation, transaction signing, and communication with the VIAT network. The SDK abstracts away low-level details of key management and API calls, providing a user-friendly API for developers building on top of VIAT.
-*/
-console.log(VIATClientSDK, viatSDK);
 function bytesToBase64(bytes) {
 	const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
 	let binary = '';
@@ -573,7 +568,7 @@ function backfillProfileIndex() {
 		saveProfileIndex(indexData);
 	}
 }
-class AppView extends WebComponent {
+class WalletApp extends AppView {
 	static url = import.meta.url;
 	static styles = {
 		app: './app.css',
@@ -582,13 +577,12 @@ class AppView extends WebComponent {
 		activePage: 'wallet',
 	};
 	id = 'app';
-	notificationPanel = null;
-	// SDK instance lives on the AppView only — it carries private keys,
-	// hdWalletInstance, and walletSeeds. Never set into globalState; only the
-	// public projection (address, public keys, trapdoor hash, label) lands in
-	// `globalState.wallet`. Profile metadata is mirrored to `globalState.profile`
-	// and rides with save/load via the SDK's `meta.extra` field.
-	sdk = null;
+	// SDK access rides the AppView base — `this.sdk` / `this.ensureSDK()` /
+	// `this.freshSDK()` resolve to the class-owned singleton. The SDK carries
+	// private keys, hdWalletInstance, and walletSeeds. Never set into
+	// globalState; only the public projection (address, public keys, trapdoor
+	// hash, label) lands in `globalState.wallet`. Profile metadata is mirrored
+	// to `globalState.profile` and rides with save/load via `meta.extra`.
 	router = new URLRouter(ROUTER_CONFIG);
 	// Set by `previewProfileMeta` when a password-protected profile is
 	// auto-loaded at boot: holds the un-decrypted package + its raw string
@@ -610,35 +604,18 @@ class AppView extends WebComponent {
 		await WebComponent.preRender(app, document.body);
 		return app;
 	}
-	async ensureSDK() {
-		if (this.sdk) {
-			return this.sdk;
-		}
-		this.sdk = await VIATClientSDK.create();
-		return this.sdk;
-	}
-	async freshSDK() {
-		// The SDK's `set(key, value)` shadows prototype methods with the same
-		// name (e.g. setting `primaryKeypair` / `trapdoorKeypair` replaces the
-		// method references on the instance). A second `setKeypairs()` call on
-		// the same instance therefore tries to invoke an object as a function.
-		// We sidestep that by replacing the instance for any operation that
-		// runs `setKeypairs` from scratch — create and load.
-		this.sdk = await VIATClientSDK.create();
-		return this.sdk;
-	}
 	syncSavedProfiles() {
 		const profiles = listSavedProfiles();
 		globalState.set({
 			wallet: {
-				...(this.globalState.wallet ?? {}),
+				...(this.global.wallet ?? {}),
 				savedProfiles: profiles,
 			},
 		});
 		return profiles;
 	}
 	getProfileMeta() {
-		return this.globalState.profile ?? {};
+		return this.global.profile ?? {};
 	}
 	async syncWalletPublics() {
 		const sdk = this.sdk;
@@ -667,7 +644,7 @@ class AppView extends WebComponent {
 		const trapdoorHashHex = toPublicHex(trapdoorHash);
 		globalState.set({
 			wallet: {
-				...(this.globalState.wallet ?? {}),
+				...(this.global.wallet ?? {}),
 				hasWallet,
 				address: meta?.address ?? '',
 				publicKey: publicKeyHex,
@@ -709,7 +686,7 @@ class AppView extends WebComponent {
 		}
 	}
 	applyProfileAddressDefaults() {
-		const address = this.globalState.wallet?.address;
+		const address = this.global.wallet?.address;
 		if (!address) {
 			return;
 		}
@@ -734,7 +711,7 @@ class AppView extends WebComponent {
 	// across sessions. No-op when the active wallet isn't a saved profile
 	// (freshly created and not yet stored).
 	bumpCurrentProfileUsed() {
-		const label = this.globalState.wallet?.label;
+		const label = this.global.wallet?.label;
 		if (!label) {
 			return;
 		}
@@ -806,7 +783,7 @@ class AppView extends WebComponent {
 			});
 			await this.syncWalletPublics();
 			this.resetProfileToAddress();
-			const profileName = (data.profileName ?? '').trim() || this.globalState.wallet?.address || 'wallet';
+			const profileName = (data.profileName ?? '').trim() || this.global.wallet?.address || 'wallet';
 			const profileMeta = {
 				...this.getProfileMeta(),
 				profileName,
@@ -934,7 +911,7 @@ class AppView extends WebComponent {
 		const lastUsedAt = stats.lastUsedAt || createdAt;
 		globalState.set({
 			wallet: {
-				...(this.globalState.wallet ?? {}),
+				...(this.global.wallet ?? {}),
 				hasWallet: true,
 				locked: true,
 				lockedProfileName: profileName,
@@ -976,7 +953,7 @@ class AppView extends WebComponent {
 		return true;
 	}
 	showWelcomeBack(profileName, locked) {
-		const wallet = this.globalState.wallet ?? {};
+		const wallet = this.global.wallet ?? {};
 		const modal = this.getComponent('welcome-back-modal');
 		modal?.openFor?.({
 			profileName,
@@ -994,7 +971,7 @@ class AppView extends WebComponent {
 		this.ensureWalletUnlocked(data.reason || 'Unlock your wallet to enable signing and transactions.', null);
 	};
 	resetProfileToAddress() {
-		const address = this.globalState.wallet?.address;
+		const address = this.global.wallet?.address;
 		if (!address) {
 			return;
 		}
@@ -1034,7 +1011,7 @@ class AppView extends WebComponent {
 				throw new Error('localStorage is not available in this browser.');
 			}
 			const sdk = await this.ensureSDK();
-			const fallbackName = this.globalState.wallet?.address || this.getProfileMeta().displayName || 'wallet';
+			const fallbackName = this.global.wallet?.address || this.getProfileMeta().displayName || 'wallet';
 			const profileName = (data.profileName ?? '').trim() || fallbackName;
 			const profileMeta = {
 				...this.getProfileMeta(),
@@ -1112,7 +1089,7 @@ class AppView extends WebComponent {
 			this.lockedProfilePkg = null;
 			globalState.set({
 				wallet: {
-					...(this.globalState.wallet ?? {}),
+					...(this.global.wallet ?? {}),
 					locked: false,
 					lockedProfileName: '',
 				},
@@ -1135,7 +1112,7 @@ class AppView extends WebComponent {
 	async handleWalletUnlock(domEvent) {
 		const data = domEvent?.detail?.data ?? {};
 		const password = data.password ?? '';
-		const profileName = (data.profileName ?? this.globalState.wallet?.lockedProfileName ?? '').trim();
+		const profileName = (data.profileName ?? this.global.wallet?.lockedProfileName ?? '').trim();
 		const unlockModal = this.getComponent('wallet-unlock-modal');
 		if (!profileName) {
 			unlockModal?.handleFailure?.('No locked profile to unlock.');
@@ -1157,7 +1134,7 @@ class AppView extends WebComponent {
 			this.lockedProfilePkg = null;
 			globalState.set({
 				wallet: {
-					...(this.globalState.wallet ?? {}),
+					...(this.global.wallet ?? {}),
 					locked: false,
 					lockedProfileName: '',
 				},
@@ -1227,7 +1204,7 @@ class AppView extends WebComponent {
 	// user successfully unlocks — store the original domEvent payload there
 	// so the action runs with the exact same data.
 	ensureWalletUnlocked(reason, intent) {
-		const wallet = this.globalState.wallet ?? {};
+		const wallet = this.global.wallet ?? {};
 		if (!wallet.hasWallet) {
 			this.emit('wallet:onboarding-required', {
 				reason,
@@ -1269,32 +1246,9 @@ class AppView extends WebComponent {
 		});
 		this.applyProfileTheme();
 	}
-	ensureNotificationPanel() {
-		if (this.notificationPanel?.isConnected) {
-			return this.notificationPanel;
-		}
-		this.notificationPanel = new UINotification();
-		// Manual popover puts the host into the browser's top layer so
-		// notifications stack above any open `<dialog>` (e.g. settings,
-		// onboarding). Falls back gracefully on engines without popover
-		// support — z-index inside the panel still wins among siblings.
-		this.notificationPanel.setAttribute('popover', 'manual');
-		document.body.appendChild(this.notificationPanel);
-		if (typeof this.notificationPanel.showPopover === 'function') {
-			try {
-				this.notificationPanel.showPopover();
-			} catch (error) {
-				console.warn('[notify] showPopover failed', error);
-			}
-		}
-		return this.notificationPanel;
-	}
-	handleNotify(domEvent) {
-		this.ensureNotificationPanel().show(domEvent.detail?.data ?? {});
-	}
 	onConnect() {
-		this.reflectViewport();
-		// AppView observes the router's published global keys and reacts;
+		super.onConnect();
+		// WalletApp observes the router's published global keys and reacts;
 		// the router owns URL/history work entirely. See urlRouter.js → publishGlobal.
 		this.observeGlobal([
 			'routeView', 'routeParams', 'routeFilter',
@@ -1303,6 +1257,7 @@ class AppView extends WebComponent {
 		});
 	}
 	onMount() {
+		super.onMount();
 		this.delegate('open-settings', this.handleOpenSettings);
 		this.delegate('toggle-pulldown', this.handleTogglePulldown);
 		this.delegate('dockSelect', this.handleDockSelect);
@@ -1327,7 +1282,6 @@ class AppView extends WebComponent {
 		this.delegate('transmit', this.handleTransmit);
 		this.delegate('faucet:request', this.handleFaucetRequest);
 		this.delegate('wallet:refresh', this.handleWalletRefresh);
-		this.delegate('notify', this.handleNotify);
 		this.syncSavedProfiles();
 		this.checkAPIHealth();
 		this.tryAutoLoadRecentProfile();
@@ -1402,11 +1356,11 @@ class AppView extends WebComponent {
 		return health;
 	}
 	async fetchAccountForWallet() {
-		const address = this.globalState.wallet?.address;
+		const address = this.global.wallet?.address;
 		if (!address) {
 			return null;
 		}
-		if (this.globalState.api?.ok === false) {
+		if (this.global.api?.ok === false) {
 			return null;
 		}
 		const sdk = await this.ensureSDK();
@@ -1431,7 +1385,7 @@ class AppView extends WebComponent {
 				amountFull: formatBalanceShort(balance),
 			},
 			walletPanel: {
-				...(this.globalState.walletPanel ?? {}),
+				...(this.global.walletPanel ?? {}),
 				received: formatBalanceShort(totalIn),
 				sent: formatBalanceShort(totalOut),
 				activity: formatBalanceShort(balance),
@@ -1490,7 +1444,7 @@ class AppView extends WebComponent {
 	// totals, activity-log entries) for the active wallet. No-ops when no
 	// wallet is loaded so it's safe to leave the button enabled.
 	handleWalletRefresh = () => {
-		if (!this.globalState.wallet?.address) {
+		if (!this.global.wallet?.address) {
 			this.emit('notify', {
 				itemType: 'info',
 				title: 'Refresh skipped',
@@ -1501,7 +1455,7 @@ class AppView extends WebComponent {
 		this.fetchAccountForWallet();
 	};
 	async handleFaucetRequest() {
-		if (this.globalState.api?.ok === false) {
+		if (this.global.api?.ok === false) {
 			this.emit('notify', {
 				itemType: 'error',
 				title: 'API offline',
@@ -1509,7 +1463,7 @@ class AppView extends WebComponent {
 			});
 			return null;
 		}
-		const address = this.globalState.wallet?.address;
+		const address = this.global.wallet?.address;
 		if (!address) {
 			this.emit('wallet:onboarding-required', {
 				reason: 'The faucet needs a loaded wallet to mint funds into.',
@@ -1601,10 +1555,10 @@ class AppView extends WebComponent {
 		return tx;
 	}
 	validateTransmit(recipient, amount) {
-		if (this.globalState.api?.ok === false) {
+		if (this.global.api?.ok === false) {
 			return 'API is unreachable — try again once the connection recovers.';
 		}
-		if (!this.globalState.wallet?.hasWallet) {
+		if (!this.global.wallet?.hasWallet) {
 			this.emit('wallet:onboarding-required', {
 				reason: 'Sending a transaction requires a loaded wallet.',
 			});
@@ -1630,7 +1584,7 @@ class AppView extends WebComponent {
 		settings.open();
 	};
 	handleSignOpen = () => {
-		const wallet = this.globalState.wallet ?? {};
+		const wallet = this.global.wallet ?? {};
 		if (!wallet.hasWallet) {
 			this.emit('wallet:onboarding-required', {
 				reason: 'Signing data requires a loaded wallet.',
@@ -1687,12 +1641,12 @@ class AppView extends WebComponent {
 			});
 		}
 	};
-	handleTogglePulldown = () => {
+	handleTogglePulldown() {
 		this.emit('pulldown:state', {
 			open: !this.pulldownIsOpen(),
 		});
-	};
-	handleDockSelect = (domEvent) => {
+	}
+	handleDockSelect(domEvent) {
 		const id = domEvent.detail?.source?.state?.id;
 		if (!DOCK_ROUTE_IDS.has(id) || !this.router.findById(id)) {
 			return;
@@ -1709,13 +1663,13 @@ class AppView extends WebComponent {
 			return;
 		}
 		this.router.navigate(id);
-	};
+	}
 	pageFromGlobal() {
-		const raw = Number(this.globalState?.routeParams?.page);
+		const raw = Number(this.global?.routeParams?.page);
 		return Number.isFinite(raw) && raw >= 1 ? raw : 1;
 	}
 	syncActivePageFromGlobal = () => {
-		const view = this.globalState?.routeView || this.globalState?.routeSection || this.globalState?.routeId || '';
+		const view = this.global?.routeView || this.global?.routeSection || this.global?.routeId || '';
 		if (!view) {
 			return;
 		}
@@ -1727,8 +1681,8 @@ class AppView extends WebComponent {
 		// on a real route change (routeView/routeParams/routeFilter), so it's safe
 		// to reset unconditionally.
 		globalThis.scrollTo(0, 0);
-		const params = this.globalState?.routeParams ?? {};
-		const filter = this.globalState?.routeFilter ?? '';
+		const params = this.global?.routeParams ?? {};
+		const filter = this.global?.routeFilter ?? '';
 		const page = this.pageFromGlobal();
 		if (view === 'transaction' && params.id) {
 			this.getComponent('transaction-detail-page')?.setTxId?.(params.id);
@@ -1750,10 +1704,9 @@ class AppView extends WebComponent {
 		console.log('[AI MAP]\n%s', this.aiMap());
 	}
 	onDisconnect() {
-		// Hotkey entries are released by lifecycle's sweepHotkeyEntries —
-		// nothing to do here for the keyboard.
-		this.notificationPanel?.remove();
-		this.notificationPanel = null;
+		// Hotkey entries are released by lifecycle's sweepHotkeyEntries; the
+		// base sweeps the notification panel.
+		super.onDisconnect();
 	}
 	// Hotkey handlers — prototype methods (not arrow fields). The hotkey
 	// dispatcher does `handler.call(component, keyEvent, combo)`, so `this` is
@@ -1781,7 +1734,6 @@ class AppView extends WebComponent {
 	}
 	render() {
 		// Can't be css hide show for page components the router should be mounting and unmounting them based on the URL; they need to be fully removed from the DOM when not active so their lifecycle disconnects and they stop consuming resources. The router doesn't do this automatically since some pages (e.g. explorer) have nested sub-pages that share the same parent route, so we mount all page components here and let the router delegate which one is active via a wrapper class on the parent.
-		// eslint-disable-next-line no-unused-expressions
 		this.html `
 			<global-top-bar></global-top-bar>
 			<div class="shell-body">
@@ -1839,7 +1791,7 @@ class AppView extends WebComponent {
 		if (mobileDashboard?.lifecycle?.whenRendered) {
 			await mobileDashboard.lifecycle.whenRendered;
 		}
-		this.refs.networkStats.syncLatency?.(this.globalState.api);
+		this.refs.networkStats.syncLatency?.(this.global.api);
 		// Router writes to globalState; AppView's `onConnect` already
 		// subscribed to the keys it cares about. We just kick the router off
 		// — no callback wiring needed.
@@ -1849,5 +1801,5 @@ class AppView extends WebComponent {
 		this.syncActivePageFromGlobal();
 	}
 }
-customElements.define('app-view', AppView);
-export default AppView;
+customElements.define('app-view', WalletApp);
+export default WalletApp;

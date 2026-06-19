@@ -5,7 +5,7 @@ import {
 	subscribe,
 } from '../registry.js';
 import { isFunction, isTypeUndefined } from '../../utilities.js';
-import { Logger } from '../../debug/logger.js';
+import { defaultLogger } from '../../debug/logger.js';
 function detectMcp() {
 	if (isTypeUndefined(typeof navigator)) {
 		return null;
@@ -56,7 +56,7 @@ export class WebMCPTransport {
 		this.onRequest = onRequest;
 		this.mcp = detectMcp();
 		if (!this.mcp) {
-			Logger.warn('ai-mcp', 'navigator.mcp unavailable; transport idle');
+			defaultLogger.warn('ai-mcp', 'navigator.mcp unavailable; transport idle');
 			return;
 		}
 		if (this.autoPublish) {
@@ -118,7 +118,7 @@ export class WebMCPTransport {
 			try {
 				unregister();
 			} catch (error) {
-				Logger.warn('ai-mcp', 'unregister error', error);
+				defaultLogger.warn('ai-mcp', 'unregister error', error);
 			}
 			this.registered.delete(key);
 		});
@@ -149,7 +149,7 @@ export class WebMCPTransport {
 			try {
 				unregister();
 			} catch (error) {
-				Logger.warn('ai-mcp', 'unregister error', error);
+				defaultLogger.warn('ai-mcp', 'unregister error', error);
 			}
 		});
 		this.registered.clear();

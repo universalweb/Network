@@ -16,8 +16,13 @@ function update() {
 		return;
 	}
 	lastSnapshot = value;
-	globalState.set({ 'environment.locale': value });
-	emitDelegate('environment:change', { area: 'locale', value });
+	globalState.set({
+		'environment.locale': value,
+	});
+	emitDelegate('environment:change', {
+		area: 'locale',
+		value,
+	});
 }
 globalThis.addEventListener('languagechange', update);
 update();

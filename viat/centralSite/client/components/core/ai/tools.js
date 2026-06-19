@@ -2,6 +2,7 @@ import {
 	defineGlobalTool,
 	defineInstanceTool,
 	defineTagTool,
+	listAllTools,
 } from './registry.js';
 import { isFunction, isPlainObject, isString } from '../utilities.js';
 export function defineTool(scope, toolName, def) {
@@ -269,6 +270,69 @@ defineGlobalTool('getBounds', {
 			left: rect.left,
 			right: rect.right,
 			bottom: rect.bottom,
+		};
+	},
+});
+/*
+ * Page map + per-tool schemas are NOT shipped in every system prompt.
+ * The AI fetches them on demand via these two tools — keeps the steady-
+ * state system prompt under ~1.5KB on a typical session and saves the
+ * big payload for the rare turn that actually needs it.
+ */
+defineGlobalTool('getPageMap', {
+	description: 'Return the live component tree of the page (every component is agent-addressable). Use this when you need to locate a target by path before invoking a verb like highlight / focus / click on it. Returns a multi-line string suitable for direct reading.',
+	inputSchema: {
+		type: 'object',
+		properties: {},
+		additionalProperties: false,
+	},
+	mutating: false,
+	handler({ component }) {
+		const map = typeof component?.aiMap === 'function' ? component.aiMap() : '';
+		return {
+			map: map || '(no map available)',
+		};
+	},
+});
+defineGlobalTool('getToolSchema', {
+	description: 'Return the full input JSON Schema for a single registered tool by name. Use this when you need to know exactly which arguments to pass — the tool digest in the system prompt only lists names + descriptions to keep prompts small.',
+	inputSchema: {
+		type: 'object',
+		properties: {
+			name: {
+				type: 'string',
+				description: 'Exact tool name from the TOOLS digest.',
+			},
+		},
+		required: ['name'],
+		additionalProperties: false,
+	},
+	mutating: false,
+	handler({ args }) {
+		const toolName = `${args?.name ?? ''}`.trim();
+		if (!toolName) {
+			return {
+				ok: false,
+				error: 'Missing `name`.',
+			};
+		}
+		const tool = listAllTools().find((entry) => {
+			return entry.name === toolName;
+		});
+		if (!tool) {
+			return {
+				ok: false,
+				error: `Unknown tool "${toolName}".`,
+			};
+		}
+		return {
+			ok: true,
+			name: tool.name,
+			description: tool.description,
+			mutating: tool.mutating === true,
+			inputSchema: tool.inputSchema ?? {
+				type: 'object',
+			},
 		};
 	},
 });

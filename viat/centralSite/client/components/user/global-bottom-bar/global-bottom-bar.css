@@ -30,33 +30,33 @@
 	height: 0.5rem;
 	border-radius: 50%;
 	background: currentColor;
-	box-shadow: 0 0 6px currentColor;
+	box-shadow: var(--indicator-on-shadow, 0 0 6px currentColor);
 }
 
-.bb-badge.tone-ok {
+.bb-badge[data-tone='ok'] {
 	color: var(--color-success);
 	border-color: color-mix(in oklab, var(--color-success) 32%, transparent);
 	background: color-mix(in oklab, var(--color-success) 6%, transparent);
 }
 
-.bb-badge.tone-warn {
+.bb-badge[data-tone='warn'] {
 	color: var(--color-warning);
 	border-color: color-mix(in oklab, var(--color-warning) 36%, transparent);
 	background: color-mix(in oklab, var(--color-warning) 7%, transparent);
 }
 
-.bb-badge.tone-bad {
+.bb-badge[data-tone='bad'] {
 	color: var(--color-danger);
 	border-color: color-mix(in oklab, var(--color-danger) 36%, transparent);
 	background: color-mix(in oklab, var(--color-danger) 6%, transparent);
 }
 
-.bb-badge.tone-idle {
+.bb-badge[data-tone='idle'] {
 	color: var(--text-muted, rgba(255, 255, 255, 0.45));
 	border-color: var(--dark-divider, rgba(255, 255, 255, 0.12));
 }
 
-.bb-badge.tone-idle .bb-badge-dot {
+.bb-badge[data-tone='idle'] .bb-badge-dot {
 	box-shadow: none;
 	opacity: 0.6;
 }

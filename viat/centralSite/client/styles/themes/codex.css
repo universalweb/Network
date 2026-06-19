@@ -1,0 +1,237 @@
+/* ── Codex Theme ──────────────────────────────────────
+   The written. Swiss print: WHITE surfaces on a cool
+   slate page under a black square masthead (app-bar
+   theme sub-module), slate ink, thin fine hairlines,
+   flat — structure from line and whitespace, not shadow.
+   EXACTLY ONE color: ultramarine — spent ONLY on active
+   marks (dock bar, active tab, panel dots, bar fills).
+   Hover/focus chrome is ink and slate, never color.
+─────────────────────────────────────────────────────── */
+:root {
+  color-scheme: light;
+
+  /* ── Base Palette — slate grays, white cards. --navy
+     is the chip/stamp fill and pairs with --text-light
+     (ink) on the field-addon chips — they flip together
+     in a light theme. ── */
+  --bg-body: #eef0f3;
+  --bg-panel: #ffffff;
+  --bg-dark: #e3e6eb;
+  --bg-dark-mid: #e9ebef;
+  --navy: #e2e6ec;
+  --navy-light: #5d7ce6;
+  --teal: #1a3fd6;
+  --teal-dim: rgba(26, 63, 214, 0.08);
+  --cyan: #39414d;
+  --cyan-dim: rgba(57, 65, 77, 0.07);
+  --magenta: #2f3640;
+  --magenta-dim: rgba(47, 54, 64, 0.07);
+  --grey-solid: #8b939f;
+  --grey-mid: #d7dbe1;
+
+  /* ── Text (slate ink; "light" = highest-emphasis ink) ── */
+  --text-main: #1e2329;
+  --text-muted: #5d6673;
+  --text-light: #1e2329;
+  --text-offwhite: #454d59;
+
+  /* ── Fonts ───────────────────────────────────────── */
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Inter', sans-serif;
+
+  /* ── Border Colors (the fine lines) ──────────────── */
+  --border-light-color: rgba(30, 35, 41, 0.12);
+
+  /* ── Borders ─────────────────────────────────────── */
+  --border-main: 1px solid rgba(30, 35, 41, 0.18);
+  --border-light: 1px solid var(--border-light-color);
+  --border-dark: 1px solid var(--dark-divider-accent);
+
+  /* ── Surface Tints (slate wash) ──────────────────── */
+  --surface-tint-heavy: rgba(30, 35, 41, 0.08);
+  --surface-tint: rgba(30, 35, 41, 0.05);
+  --surface-tint-soft: rgba(30, 35, 41, 0.035);
+  --surface-tint-faint: rgba(30, 35, 41, 0.022);
+  --surface-tint-ghost: rgba(30, 35, 41, 0.014);
+  --surface-tint-whisper: rgba(30, 35, 41, 0.009);
+  --watermark-text: rgba(30, 35, 41, 0.045);
+
+  /* ── "Dark surface" text family — slate-alphas; every
+     surface is light in Codex ── */
+  --dark-text: rgba(30, 35, 41, 0.55);
+  --dark-text-dim: rgba(30, 35, 41, 0.45);
+  --dark-text-medium: rgba(30, 35, 41, 0.72);
+  --dark-text-bright: rgba(30, 35, 41, 0.86);
+  --dark-heading: rgba(30, 35, 41, 0.42);
+  --dark-heading-sep: rgba(30, 35, 41, 0.16);
+  --dark-text-faint: rgba(30, 35, 41, 0.30);
+  --text-subtle: rgba(30, 35, 41, 0.42);
+
+  /* ── Dividers — slate hairlines ──────────────────── */
+  --dark-divider: rgba(30, 35, 41, 0.11);
+  --dark-divider-subtle: rgba(30, 35, 41, 0.08);
+  --dark-divider-faint: rgba(30, 35, 41, 0.055);
+  --dark-divider-accent: rgba(30, 35, 41, 0.095);
+  --dark-highlight: rgba(30, 35, 41, 0.035);
+
+  /* ── Accent Scale — ultramarine, kept quiet ──────── */
+  --cyan-glow-strong: rgba(26, 63, 214, 0.30);
+  --cyan-glow: rgba(26, 63, 214, 0.22);
+  --cyan-glow-medium: rgba(26, 63, 214, 0.16);
+  --cyan-glow-soft: rgba(26, 63, 214, 0.11);
+  --cyan-glow-faint: rgba(26, 63, 214, 0.07);
+  --cyan-tint: rgba(26, 63, 214, 0.045);
+  --cyan-tint-faint: rgba(26, 63, 214, 0.028);
+  --cyan-scanline: transparent;
+  --cyan-timestamp: rgba(30, 35, 41, 0.50);
+
+  /* ── Teal/Ultramarine Accent Scale ───────────────── */
+  --teal-glow: rgba(26, 63, 214, 0.22);
+  --teal-glow-soft: rgba(26, 63, 214, 0.11);
+  --teal-glow-faint: rgba(26, 63, 214, 0.07);
+
+  /* ── Scrollbar (slate on paper) ──────────────────── */
+  --scrollbar-thumb: rgba(30, 35, 41, 0.18);
+  --scrollbar-thumb-hover: rgba(30, 35, 41, 0.30);
+
+  /* ── Status Colors (functional, desaturated) ─────── */
+  --color-success: #2f7d4f;
+  --color-success-glow: transparent;
+  --color-success-text: #2f7d4f;
+  --color-danger: #c4453d;
+  --color-danger-glow: transparent;
+  --color-warning: #9a7b2d;
+  --color-info: #1a3fd6;
+  --color-warn-text: #c4453d;
+
+  /* ═══════════════════════════════════════════════════
+     COMPONENT THEME TOKENS
+  ═══════════════════════════════════════════════════ */
+
+  /* ── Shape — SQUARE. Fine lines, right angles. ──── */
+  --radius: 0;
+  --radius-lg: 0;
+  --stat-bar-radius: 0;
+  --indicator-radius: 0;
+  --indicator-warn-radius: 0;
+
+  /* ── Input ───────────────────────────────────────── */
+  --input-radius: 0;
+  --input-accent-border: 1px solid rgba(30, 35, 41, 0.14);
+  --input-accent-shadow: none;
+  --field-border-style: solid;
+
+  /* ── Surfaces — white cards, hairline borders ────── */
+  --panel-bg: #ffffff;
+  --surface-border: rgba(30, 35, 41, 0.12);
+
+  /* ── Panel — FLAT; the hairline is the structure ─── */
+  --panel-shadow: none;
+  --panel-hover-shadow: none;
+  --panel-hover-border: rgba(30, 35, 41, 0.32);
+  /* Center toolbar: ruled band, not a levitating plate. */
+  --toolbar-shadow: none;
+  --toolbar-hover-lift: 0;
+  --panel-header-accent: rgba(26, 63, 214, 0.0);
+  --panel-header-left-border: none;
+  --panel-header-bg: transparent;
+  --panel-header-left-accent-width: 0px;
+  --panel-header-border-bottom: 1px solid rgba(30, 35, 41, 0.10);
+  --panel-header-padding: 11px 14px;
+  --panel-header-font-size: 0.62rem;
+  --panel-header-letter-spacing: 0.26em;
+  --panel-header-color: rgba(30, 35, 41, 0.82);
+  --ph-cursor-display: none;
+  --ph-id-opacity: 0.55;
+  --ph-id-letter-spacing: 0.16em;
+
+  /* ── Buttons — white + hairline; hover = INK inversion
+     (print negative, same ink as the masthead). Color is
+     reserved for ACTIVE marks, never hover chrome. ── */
+  --btn-bg: #ffffff;
+  --btn-border: rgba(30, 35, 41, 0.16);
+  --btn-inset: none;
+  --btn-hover-bg: #14171b;
+  --btn-hover-border: #14171b;
+  --btn-hover-inset: none;
+  --btn-hover-glow: none;
+  --btn-hover-color: #ffffff;
+  /* Keyboard/input focus = thin dark slate line, no halo. */
+  --focus-ring-color: rgba(30, 35, 41, 0.55);
+  --focus-ring-glow: transparent;
+  --green-hover: #2f7d4f;
+  /* Primary solid = ink block with paper text; hover lifts
+     the ink a step — never to color. */
+  --btn-primary-bg: #14171b;
+  --btn-primary-border: #14171b;
+  --btn-primary-color: #ffffff;
+  --btn-primary-hover-bg: #262b31;
+  --btn-primary-hover-border: #262b31;
+  --btn-primary-hover-color: #ffffff;
+
+  /* ── Icons (slate; active = ultramarine) ─────────── */
+  --icon-color: #525a66;
+  --icon-color-hover: #1e2329;
+  --icon-color-active: #1a3fd6;
+  --icon-color-disabled: rgba(30, 35, 41, 0.28);
+
+  /* ── Flyout ──────────────────────────────────────── */
+  --flyout-bg: #ffffff;
+  --flyout-border: rgba(30, 35, 41, 0.14);
+  --flyout-radius: 0;
+  /* No shadow — overlays separate by a crisp hairline ring. */
+  --flyout-shadow: 0 0 0 1px rgba(30, 35, 41, 0.18);
+
+  /* ── Inputs / Interactive ────────────────────────── */
+  --input-hover-border: rgba(30, 35, 41, 0.34);
+  --input-hover-glow: transparent;
+  --input-copied-bg: rgba(26, 63, 214, 0.06);
+  --input-copied-border: rgba(26, 63, 214, 0.38);
+
+  /* ── Top Bar (white glass, one hairline) ─────────── */
+  --topbar-bg: rgba(255, 255, 255, 0.82);
+  --topbar-border: rgba(30, 35, 41, 0.12);
+  --topbar-accent: #1a3fd6;
+  --topbar-bottom-border: 1px solid rgba(30, 35, 41, 0.10);
+  --tb-badge-radius: 0;
+  --logo-mark-pattern: none;
+
+  /* ── Popups (white leaf) ─────────────────────────── */
+  --popup-bg: #ffffff;
+  --popup-bg-hover: #f5f6f8;
+  --popup-border: rgba(30, 35, 41, 0.14);
+  --popup-border-hover: rgba(30, 35, 41, 0.28);
+  --popup-accent: #1a3fd6;
+  --popup-shadow: 0 0 0 1px rgba(30, 35, 41, 0.18);
+  --popup-shadow-hover: 0 0 0 1px rgba(30, 35, 41, 0.28);
+  --popup-text: #1e2329;
+
+  /* ── Overlays — hairline rings instead of depth ──── */
+  --modal-shadow: 0 0 0 1px rgba(30, 35, 41, 0.18);
+  --modal-bar-shadow: none;
+  --sidebar-shadow-left: none;
+  --sidebar-shadow-right: none;
+  --pulldown-shadow: none;
+
+  /* ── Surface elevation scale — rings, not depth ──── */
+  --elev-1: none;
+  --elev-2: 0 0 0 1px rgba(30, 35, 41, 0.14);
+  --elev-3: 0 0 0 1px rgba(30, 35, 41, 0.20);
+  --elev-hover: 0 0 0 1px rgba(30, 35, 41, 0.28);
+  --input-error-glow: transparent;
+
+  /* ── Stats — counts read as ink, not accent ──────── */
+  --stat-good-color: #1e2329;
+
+  /* ── Glow Kills (print has no glow) ──────────────── */
+  --tab-indicator-shadow: none;
+  --ph-dot-shadow: none;
+  --logo-mark-text-shadow: none;
+  --subtitle-text-shadow: none;
+  --indicator-on-shadow: none;
+  --stat-good-text-shadow: none;
+  --stat-bar-fill-shadow: none;
+  --wa-underline-shadow: none;
+  --log-in-text-shadow: none;
+  --log-out-text-shadow: none;
+}

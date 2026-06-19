@@ -2,20 +2,19 @@
 	DESCRIPTION: Compile-time state TYPE inference. Walks a class's merged
 	`static state` once and derives a per-path JS-type map plus an auto
 	CONTENT_KIND for the text-position-unambiguous primitive fields.
-
 	The type map is the oracle the template compiler (`.compile`) and the sigil
 	parser read to pick a patch strategy ahead of time — e.g. a `number` field
 	bound in a text position is emitted as a strict `textContent` write with no
 	per-patch markup classification. Explicit `static properties` declarations
 	always OVERRIDE what is inferred here (the caller folds them in last).
-
 	Off-DOM by construction — imports only `CONTENT_KIND` (a frozen vocab) and
 	pure type predicates, so the walker is unit-testable under Bun/Node without
 	a document.
 */
 import { CONTENT_KIND } from '../state/binding.js';
-import { isArray, isMap, isPlainObject, isSet } from '../utilities.js';
-
+import {
+	isArray, isMap, isPlainObject, isSet,
+} from '../utilities.js';
 /**
  * JS-type vocabulary emitted per state path. Single source of truth — the
  * compiler and the sigil parser branch on `STATE_TYPE.X`, never a bare literal.
@@ -36,7 +35,6 @@ export const STATE_TYPE = Object.freeze({
 	OBJECT: 'object',
 	NULL: 'null',
 });
-
 /*
  * Primitive types whose text-position stringification is markup-free, so a TEXT
  * spot bound to such a field can use the strict `textContent` patcher and skip
@@ -48,13 +46,11 @@ const TEXT_SAFE_TYPES = new Set([
 	STATE_TYPE.BOOLEAN,
 	STATE_TYPE.BIGINT,
 ]);
-
 /*
  * Recursion ceiling — guards pathological deep / cyclic static state. Real
  * component state nests a handful of levels at most.
  */
 const MAX_INFER_DEPTH = 8;
-
 function classifyValueType(value) {
 	if (value === null) {
 		return STATE_TYPE.NULL;
@@ -78,7 +74,6 @@ function classifyValueType(value) {
 	 */
 	return valueType;
 }
-
 /**
  * Recurse ONLY into plain objects — their key shape is stable and safely
  * path-addressable. Arrays / Maps / Sets / Nodes / class instances record their
@@ -107,7 +102,6 @@ function walkStateLevel(source, prefix, types, kinds, depth) {
 		}
 	}
 }
-
 /**
  * Walk the merged `static state` once → `{ types, kinds }`.
  *   types — Map<dotPath, STATE_TYPE>   every own non-accessor leaf + container

@@ -2,6 +2,7 @@ import { loadSheet } from './css-loader.js';
 const moduleFiles = {
 	'uwc.reset': 'reset.css',
 	'uwc.elements': 'elements-forms.css',
+	'uwc.elements-buttons': 'elements-buttons.css',
 	'uwc.prose': 'elements-prose.css',
 	'uwc.util-spacing': 'util-spacing.css',
 	'uwc.util-layout': 'util-layout.css',

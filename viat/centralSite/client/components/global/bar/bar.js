@@ -1,4 +1,4 @@
-import { WebComponent, classList } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 // `<ui-bar>` — the shared bar primitive: a themed flex container with three
 // optional regions (start / center / end) plus a default slot. Pure layout —
 // no placement, no fixed-chrome machinery, no behaviour. Every named bar
@@ -16,11 +16,8 @@ export class UIBar extends WebComponent {
 		orientation: 'horizontal',
 	};
 	render() {
-		
-		this.html`
-			<div class=${classList('bar', () => {
-				return `bar-${this.state.orientation || 'horizontal'}`;
-			})}>
+		this.html `
+			<div class="bar" data-orientation=${this.state.orientation || 'horizontal'}>
 				<div class="bar-region bar-start"><slot name="start"></slot></div>
 				<div class="bar-region bar-center"><slot name="center"></slot></div>
 				<div class="bar-region bar-end"><slot name="end"></slot></div>

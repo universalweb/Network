@@ -1,4 +1,4 @@
-import { Logger } from '../debug/logger.js';
+import { defaultLogger } from '../debug/logger.js';
 import { isFunction } from '../utilities.js';
 import { dispatch } from './protocol.js';
 import { subscribe as subscribeRegistry } from './registry.js';
@@ -19,7 +19,9 @@ export class AIHost {
 	}
 	attach(transport) {
 		if (this.transports.has(transport)) {
-			return () => this.detach(transport);
+			return () => {
+				return this.detach(transport);
+			};
 		}
 		this.sessionCounter += 1;
 		const sessionId = this.sessionCounter;
@@ -39,12 +41,14 @@ export class AIHost {
 		});
 		if (startResult?.catch) {
 			startResult.catch((error) => {
-				Logger.error('ai-host', 'transport start failed', error);
+				defaultLogger.error('ai-host', 'transport start failed', error);
 				this.detach(transport);
 			});
 		}
-		Logger.info('ai-host', `transport attached (session=${sessionId})`);
-		return () => this.detach(transport);
+		defaultLogger.info('ai-host', `transport attached (session=${sessionId})`);
+		return () => {
+			return this.detach(transport);
+		};
 	}
 	detach(transport) {
 		if (!this.transports.has(transport)) {
@@ -54,7 +58,7 @@ export class AIHost {
 		try {
 			transport.stop?.();
 		} catch (error) {
-			Logger.warn('ai-host', 'transport stop error', error);
+			defaultLogger.warn('ai-host', 'transport stop error', error);
 		}
 	}
 	broadcast(message) {
@@ -63,7 +67,7 @@ export class AIHost {
 				try {
 					transport.notify(message);
 				} catch (error) {
-					Logger.warn('ai-host', 'broadcast error', error);
+					defaultLogger.warn('ai-host', 'broadcast error', error);
 				}
 			}
 		});
@@ -73,7 +77,7 @@ export class AIHost {
 			try {
 				transport.stop?.();
 			} catch (error) {
-				Logger.warn('ai-host', 'transport stop error', error);
+				defaultLogger.warn('ai-host', 'transport stop error', error);
 			}
 		});
 		this.transports.clear();

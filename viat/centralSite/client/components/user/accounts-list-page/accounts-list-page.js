@@ -1,6 +1,7 @@
 import '../../global/paged-list/paged-list.js';
 import '../../global/icon/icon.js';
 import { WebComponent, html } from '../../core/index.js';
+import { AppView } from '../app-view/app-view.js';
 const PAGE_SIZE = 20;
 const ROW_STYLES = new URL('./accounts-rows.css', import.meta.url).href;
 function shortAddress(value) {
@@ -38,10 +39,6 @@ function accountKey(account) {
 function pageHrefFor(page) {
 	return !page || page <= 1 ? '/accounts/' : `/accounts/page/${page}/`;
 }
-async function getSDK() {
-	const app = document.querySelector('app-view');
-	return app?.ensureSDK ? app.ensureSDK() : null;
-}
 export class AccountsListPage extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -50,10 +47,6 @@ export class AccountsListPage extends WebComponent {
 	static state = {
 		startPage: 1,
 		rowStyles: ROW_STYLES,
-		titleIconState: {
-			name: 'users',
-			size: 'md',
-		},
 	};
 	/* The data + display contract for <paged-list>, merged into its state via
 	   `.state=`. One stable object (a bare `.prop=${this.fn}` spot would be invoked
@@ -85,7 +78,7 @@ export class AccountsListPage extends WebComponent {
 		reset, cursor,
 	}) {
 		const page = reset ? 1 : (cursor ?? 1);
-		const sdk = await getSDK();
+		const sdk = await AppView.ensureSDK();
 		if (!sdk) {
 			return null;
 		}
@@ -136,7 +129,7 @@ export class AccountsListPage extends WebComponent {
 			<div class="al-shell">
 				<header class="al-title-header">
 					<div class="al-title-block">
-						<ui-icon class="al-title-icon" .state=${this.state.titleIconState}></ui-icon>
+						<ui-icon class="al-title-icon" .name=${'users'} .size=${'md'}></ui-icon>
 						<span class="al-title">// ACCOUNTS · RECENTLY UPDATED</span>
 					</div>
 				</header>

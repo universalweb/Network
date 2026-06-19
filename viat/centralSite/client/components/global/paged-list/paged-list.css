@@ -88,7 +88,7 @@
 	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
 	font-size: var(--text-base);
 }
-.pl-empty.pl-error {
+.pl-empty[data-error] {
 	color: var(--color-danger);
 }
 /* Pager (paged style) + LOAD MORE (loadmore style). Each sets display:flex, which

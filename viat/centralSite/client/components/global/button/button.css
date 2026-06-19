@@ -1,3 +1,8 @@
+/* ui-button owns ONLY its host + slot internals. Every variant/tone/size/state
+   VISUAL lives in the framework button module (core/styles/modules/elements-buttons.css),
+   keyed off the data-variant/data-tone/data-size attributes this component sets. This
+   sheet declares NO color/background/border — doing so would re-shadow the framework
+   from uwc.components and resurrect the tone collision. */
 :host {
 	display: inline-flex;
 	flex: 0 0 auto;
@@ -6,47 +11,11 @@
 :host([hidden]) {
 	display: none;
 }
-button {
-	align-items: center;
-	appearance: none;
-	background: transparent;
-	border: 1px solid transparent;
-	box-sizing: border-box;
-	color: inherit;
-	cursor: pointer;
-	display: inline-flex;
-	font: inherit;
-	gap: 0.5em;
-	justify-content: center;
-	margin: 0;
-	min-width: 0;
-	transform: scale(1);
-	transform-origin: center;
-	transition:
-		background 0.18s ease,
-		border-color 0.18s ease,
-		color 0.18s ease,
-		box-shadow 0.18s ease,
-		transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
-	white-space: nowrap;
-	user-select: none;
-}
-button:focus-visible {
-	outline: 1px solid var(--focus-ring-color, var(--teal));
-	outline-offset: 2px;
-}
-button:active:not(:disabled) {
-	transform: scale(0.92);
-	transition-duration: 0.07s;
-	transition-timing-function: cubic-bezier(0.55, 0, 0.85, 0.5);
-}
 .btn-icon {
 	line-height: 1;
 	flex: 0 0 auto;
-	/* Icons inherit the button's current font-size so text and glyph stay
-	   proportional across button sizes. 0.8em keeps the glyph visually
-	   smaller than the label so the label leads. Icon-only buttons restore
-	   the absolute size class below. */
+	/* Glyph tracks the button font-size; 0.8em keeps it subordinate to the label so
+	   the label leads. Icon-only buttons restore the absolute size class. */
 	--icon-size: 0.8em;
 }
 button.is-icon-only .btn-icon {
@@ -55,173 +24,11 @@ button.is-icon-only .btn-icon {
 .btn-label {
 	line-height: 1;
 }
-/* Sizes — font-size drives both text and icon (via --icon-size: 1.1em). */
-button.size-xs {
-	font-size: var(--text-sm);
-	padding: 0.25rem 0.55rem;
-	border-radius: var(--radius-md);
-	min-height: 1.375rem;
-}
-button.size-sm {
-	font-size: var(--text-md);
-	padding: 0.35rem 0.7rem;
-	border-radius: var(--radius-md);
-	min-height: 1.75rem;
-}
-button.size-md {
-	font-size: var(--text-lg);
-	padding: 0.5rem 0.95rem;
-	border-radius: var(--radius-md);
-	min-height: 2.125rem;
-}
-button.size-lg {
-	font-size: var(--text-xl);
-	padding: 0.65rem 1.15rem;
-	border-radius: 9px;
-	min-height: 2.5rem;
-}
-/* SOLID */
-button.var-solid.tone-neutral {
-	background: var(--btn-neutral, rgba(255, 255, 255, 0.08));
-	border-color: var(--btn-neutral-border, rgba(255, 255, 255, 0.14));
-	color: var(--text-main);
-}
-button.var-solid.tone-neutral:hover:not(:disabled) {
-	background: rgba(255, 255, 255, 0.13);
-}
-button.var-solid.tone-primary {
-	background: var(--teal);
-	border-color: var(--teal);
-	color: #06151a;
-}
-button.var-solid.tone-primary:hover:not(:disabled) {
-	background: #7cf2dd;
-}
-button.var-solid.tone-success {
-	background: var(--color-success);
-	border-color: var(--color-success);
-	color: #04231a;
-}
-button.var-solid.tone-success:hover:not(:disabled) {
-	background: var(--color-success);
-}
-button.var-solid.tone-danger {
-	background: var(--color-danger);
-	border-color: var(--color-danger);
-	color: var(--text-light);
-}
-button.var-solid.tone-danger:hover:not(:disabled) {
-	background: var(--color-danger);
-}
-button.var-solid.tone-warning {
-	background: var(--color-warning);
-	border-color: var(--color-warning);
-	color: #261604;
-}
-button.var-solid.tone-warning:hover:not(:disabled) {
-	background: var(--color-warning);
-}
-button.var-solid.tone-subtle {
-	background: rgba(255, 255, 255, 0.04);
-	border-color: rgba(255, 255, 255, 0.08);
-	color: var(--text-main);
-}
-button.var-solid.tone-subtle:hover:not(:disabled) {
-	background: rgba(255, 255, 255, 0.09);
-}
-/* OUTLINE */
-button.var-outline.tone-neutral {
-	border-color: rgba(255, 255, 255, 0.18);
-	color: var(--text-main);
-}
-button.var-outline.tone-primary {
-	border-color: var(--teal);
-	color: var(--teal);
-}
-button.var-outline.tone-success {
-	border-color: var(--color-success);
-	color: var(--color-success);
-}
-button.var-outline.tone-danger {
-	border-color: var(--color-danger);
-	color: var(--color-danger);
-}
-button.var-outline.tone-warning {
-	border-color: var(--color-warning);
-	color: var(--color-warning);
-}
-button.var-outline:hover:not(:disabled) {
-	background: rgba(255, 255, 255, 0.06);
-}
-/* GHOST */
-button.var-ghost.tone-neutral {
-	color: var(--text-main);
-}
-button.var-ghost.tone-primary {
-	color: var(--teal);
-}
-button.var-ghost.tone-success {
-	color: var(--color-success);
-}
-button.var-ghost.tone-danger {
-	color: var(--color-danger);
-}
-button.var-ghost.tone-warning {
-	color: var(--color-warning);
-}
-button.var-ghost:hover:not(:disabled) {
-	background: rgba(255, 255, 255, 0.08);
-}
-/* LINK */
-button.var-link {
-	padding-inline-start: 0;
-	padding-inline-end: 0;
-	min-height: auto;
-	text-decoration: underline;
-	text-underline-offset: 3px;
-}
-button.var-link.tone-primary {
-	color: var(--teal);
-}
-button.var-link.tone-neutral {
-	color: var(--text-main);
-}
-button.var-link:hover:not(:disabled) {
-	text-decoration-thickness: 2px;
-}
-/* ICON variant — square, label hidden, used by IconButton style */
-button.var-icon {
-	padding: 0.4rem;
-	min-height: auto;
-	border-radius: var(--radius-md);
-	color: inherit;
-}
-button.var-icon:hover:not(:disabled) {
-	background: rgba(255, 255, 255, 0.08);
-}
-/* Icon-only buttons — guarantee a square hit area regardless of glyph metrics */
-button.is-icon-only {
-	padding: 0.5rem;
-	min-width: 2rem;
-	min-height: 2rem;
-}
-button.is-icon-only.size-xs { padding: 0.3rem; min-width: 1.6rem; min-height: 1.6rem; }
-button.is-icon-only.size-sm { padding: 0.4rem; min-width: 1.8rem; min-height: 1.8rem; }
-button.is-icon-only.size-lg { padding: 0.6rem; min-width: 2.4rem; min-height: 2.4rem; }
-/* States */
-button.is-disabled,
-button:disabled {
-	cursor: not-allowed;
-	opacity: 0.5;
-}
-button.is-full {
-	width: 100%;
-}
 :host(.is-full) {
 	width: 100%;
 	display: flex;
 }
-/* Loading spinner */
+/* Loading spinner — borrows the button's (now correctly contrasting) text color. */
 .btn-spinner {
 	width: 1em;
 	height: 1em;
@@ -231,20 +38,12 @@ button.is-full {
 	display: inline-block;
 	animation: ui-btn-spin 0.65s linear infinite;
 }
-button.is-loading {
-	cursor: progress;
-}
 @keyframes ui-btn-spin {
 	to {
 		transform: rotate(360deg);
 	}
 }
 @media (prefers-reduced-motion: reduce) {
-	button,
-	button:active:not(:disabled) {
-		transform: none;
-		transition: none;
-	}
 	.btn-spinner {
 		animation-duration: 1.6s;
 	}

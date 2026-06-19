@@ -1,4 +1,4 @@
-import { Logger } from '../../debug/logger.js';
+import { defaultLogger } from '../../debug/logger.js';
 const STATE_OPEN = 1;
 export class WebSocketTransport {
 	constructor({
@@ -46,7 +46,7 @@ export class WebSocketTransport {
 		this.ws = ws;
 		ws.addEventListener('open', () => {
 			this.currentDelay = this.minReconnectMs;
-			Logger.info('ai-ws', `connected ${this.url}`);
+			defaultLogger.info('ai-ws', `connected ${this.url}`);
 			this.startHeartbeat();
 		});
 		ws.addEventListener('message', async (event) => {
@@ -54,7 +54,7 @@ export class WebSocketTransport {
 			try {
 				message = JSON.parse(event.data);
 			} catch (error) {
-				Logger.warn('ai-ws', 'parse error', error);
+				defaultLogger.warn('ai-ws', 'parse error', error);
 				return;
 			}
 			if (!message || message.jsonrpc !== '2.0') {
@@ -69,7 +69,7 @@ export class WebSocketTransport {
 			}
 		});
 		ws.addEventListener('error', (event) => {
-			Logger.warn('ai-ws', 'error', event?.message ?? event);
+			defaultLogger.warn('ai-ws', 'error', event?.message ?? event);
 		});
 		ws.addEventListener('close', () => {
 			this.stopHeartbeat();
@@ -118,7 +118,7 @@ export class WebSocketTransport {
 			this.ws.send(JSON.stringify(message));
 			return true;
 		} catch (error) {
-			Logger.warn('ai-ws', 'send error', error);
+			defaultLogger.warn('ai-ws', 'send error', error);
 			return false;
 		}
 	}
@@ -133,7 +133,7 @@ export class WebSocketTransport {
 		try {
 			this.ws?.close();
 		} catch (error) {
-			Logger.warn('ai-ws', 'close error', error);
+			defaultLogger.warn('ai-ws', 'close error', error);
 		}
 		this.ws = null;
 		this.onRequest = null;

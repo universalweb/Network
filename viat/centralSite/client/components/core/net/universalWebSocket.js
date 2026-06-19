@@ -4,7 +4,7 @@ import {
 	decodeFrame,
 	encodeFrame,
 } from './envelope.js';
-import { Logger } from '../debug/logger.js';
+import { defaultLogger } from '../debug/logger.js';
 /*
  * UniversalWebSocket — an all-in-one realtime client that ships with UWC and works
  * on any site. It OWNS a native WebSocket (composition, not inheritance: reconnect
@@ -108,7 +108,7 @@ export class UniversalWebSocket {
 		}
 		if (domEvent.type === 'open') {
 			this.#reconnectDelay = this.minReconnectMs;
-			Logger.info('uws', `connected ${this.url} (${this.mode})`);
+			defaultLogger.info('uws', `connected ${this.url} (${this.mode})`);
 			this.#startHeartbeat();
 			this.#resolveOpen();
 			return;
@@ -117,7 +117,7 @@ export class UniversalWebSocket {
 			this.#onClose();
 			return;
 		}
-		Logger.warn('uws', 'socket error', domEvent?.message ?? domEvent);
+		defaultLogger.warn('uws', 'socket error', domEvent?.message ?? domEvent);
 	}
 	async #onMessage(domEvent) {
 		const isBinary = typeof domEvent.data !== 'string';
@@ -125,7 +125,7 @@ export class UniversalWebSocket {
 		try {
 			envelope = decodeFrame(domEvent.data, isBinary, this.#cborCodec);
 		} catch (decodeError) {
-			Logger.warn('uws', 'decode error', decodeError);
+			defaultLogger.warn('uws', 'decode error', decodeError);
 			return;
 		}
 		await this.#route(envelope);
@@ -275,7 +275,7 @@ export class UniversalWebSocket {
 		try {
 			frame = encodeFrame(envelope, this.mode, this.#cborCodec);
 		} catch (encodeError) {
-			Logger.warn('uws', 'encode error', encodeError);
+			defaultLogger.warn('uws', 'encode error', encodeError);
 			return false;
 		}
 		this.#ws.send(frame);

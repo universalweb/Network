@@ -99,3 +99,89 @@ export async function leave(options) {
 	await this.animateOut(options);
 	this.remove();
 }
+/* ── FLIP morph — cult-ui "expand outward" surfaces ──────────────────────────
+   A surface that grows OUT of a trigger and shrinks back into it. Pure viewport
+   math (`getBoundingClientRect` + a WAAPI transform), so it is indifferent to
+   shadow/portal boundaries — the trigger can live in a shadow root and the surface
+   in a body-side portal; both measure in the same viewport space. It is
+   interruptible (reverse/cancel the returned handle) and concurrent-safe (per
+   element, unlike a document-global View Transition). The container morphs while a
+   separate content layer fades/staggers in over it (cult-ui's decomposition), so
+   the mid-flight scale distortion is masked. Reduced-motion collapses the geometry
+   to an opacity-only fade. */
+/**
+ * True when the user asked for reduced motion. Read live (not cached) so a
+ * preference change between opens is honoured.
+ * @returns {boolean} True when `(prefers-reduced-motion: reduce)` matches.
+ */
+function prefersReducedMotion() {
+	return globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+}
+/**
+ * The inverse transform that maps a surface's final box back onto a trigger box:
+ * translate the surface's top-left corner onto the trigger's, then scale it down to
+ * the trigger's size. Played to identity, the surface expands trigger → final.
+ * @param {DOMRect} fromRect - The trigger's box (FLIP "first").
+ * @param {DOMRect} toRect - The surface's natural box (FLIP "last").
+ * @returns {string} A CSS transform value (assumes a `top left` transform origin).
+ */
+function invertToTrigger(fromRect, toRect) {
+	const scaleX = toRect.width ? fromRect.width / toRect.width : 1;
+	const scaleY = toRect.height ? fromRect.height / toRect.height : 1;
+	const shiftX = fromRect.left - toRect.left;
+	const shiftY = fromRect.top - toRect.top;
+	return `translate(${shiftX}px, ${shiftY}px) scale(${scaleX}, ${scaleY})`;
+}
+/**
+ * Morph `surface` between its natural rendered box and a collapsed box anchored on
+ * `fromRect` (a trigger's `getBoundingClientRect()`). The surface MUST already sit at
+ * its final position/size and be visible — it is measured here as the FLIP "last".
+ * Forward (default) grows it out of the trigger; `reverse: true` shrinks it back in.
+ * Returns the WAAPI Animation: `await .finished`, keep the handle to drive an
+ * interruptible open↔close, or `.cancel()` to drop the filled effect and restore the
+ * natural box for a fresh re-measure. Reduced-motion → a short opacity-only fade.
+ * @param {Element} surface - The element to morph (already at its final box).
+ * @param {DOMRect} fromRect - The trigger box to grow from / shrink into.
+ * @param {{reverse?: boolean, duration?: number, easing?: string, radiusFrom?: string, radiusTo?: string}} [options] - Morph tuning: `reverse` flips direction (close), `duration` in ms, `easing` curve, and an optional `radiusFrom`/`radiusTo` border-radius morph.
+ * @returns {Animation} The running WAAPI animation handle (`.finished`, `.cancel()`, `.reverse()`).
+ */
+export function flipMorph(surface, fromRect, options = {}) {
+	const reverse = options.reverse === true;
+	const reduced = prefersReducedMotion();
+	const toRect = surface.getBoundingClientRect();
+	let collapsed;
+	let expanded;
+	if (reduced) {
+		collapsed = {
+			opacity: 0,
+		};
+		expanded = {
+			opacity: 1,
+		};
+	} else {
+		surface.style.transformOrigin = 'top left';
+		collapsed = {
+			transform: invertToTrigger(fromRect, toRect),
+			opacity: 0,
+		};
+		expanded = {
+			transform: 'none',
+			opacity: 1,
+		};
+		if (options.radiusFrom != null && options.radiusTo != null) {
+			collapsed.borderRadius = options.radiusFrom;
+			expanded.borderRadius = options.radiusTo;
+		}
+	}
+	return surface.animate(reverse ? [
+		expanded,
+		collapsed,
+	] : [
+		collapsed,
+		expanded,
+	], {
+		duration: reduced ? 120 : (options.duration ?? 380),
+		easing: options.easing ?? 'cubic-bezier(0.34, 1.3, 0.64, 1)',
+		fill: 'both',
+	});
+}

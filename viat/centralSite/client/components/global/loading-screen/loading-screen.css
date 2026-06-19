@@ -14,12 +14,12 @@
 	transition: opacity 0.18s ease-out;
 	z-index: 9999;
 }
-.loading-screen.is-open {
+.loading-screen[data-open] {
 	opacity: 1;
 	pointer-events: auto;
 }
-.loading-screen.is-blocking { cursor: wait; }
-.variant-inline {
+.loading-screen[data-blocking] { cursor: wait; }
+[data-variant='inline'] {
 	background: transparent;
 	backdrop-filter: none;
 	position: absolute;

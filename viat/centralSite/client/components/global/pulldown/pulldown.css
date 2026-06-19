@@ -19,7 +19,7 @@
 	display: block;
 	background: var(--bg-dark);
 	border-block-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
-	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+	box-shadow: var(--pulldown-shadow, 0 12px 32px rgba(0, 0, 0, 0.45));
 }
 .pulldown-drawer.is-fully-open {
 	pointer-events: auto;
@@ -35,12 +35,60 @@
 		backdrop-filter: blur(0) saturate(100%);
 	}
 }
+/* Grab handle — the drag-up-to-close affordance. Defaults to the BOTTOM edge
+   (grab low, pull the whole sheet up off-screen = a full screen-height of
+   travel). Its own pointer-events so it works the moment the panel is
+   interactive. Move it via .handlePosition ('top' | 'bottom' | 'none') and skin
+   it with the --pulldown-handle-* custom properties. */
+.pulldown-handle {
+	position: absolute;
+	inset-block-end: 0;
+	inset-inline: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	block-size: var(--pulldown-handle-size, 1.75rem);
+	cursor: grab;
+	touch-action: none;
+	pointer-events: auto;
+	z-index: 2;
+}
+.pulldown-handle::before {
+	content: '';
+	inline-size: var(--pulldown-handle-width, 2.5rem);
+	block-size: var(--pulldown-handle-thickness, 0.25rem);
+	border-radius: 999px;
+	background: var(--pulldown-handle-color, rgba(255, 255, 255, 0.32));
+}
+.pulldown-handle:active {
+	cursor: grabbing;
+}
+:host([data-handle='top']) .pulldown-handle {
+	inset-block-start: 0;
+	inset-block-end: auto;
+}
+:host([data-handle='none']) .pulldown-handle {
+	display: none;
+}
 .pulldown-content {
 	height: 100%;
 	width: 100%;
 	overflow: hidden;
 	box-sizing: border-box;
 }
+/* Reserve space for the grab handle on whichever edge it lives. */
+:host([data-handle='bottom']) .pulldown-content {
+	padding-block-end: var(--pulldown-handle-size, 1.75rem);
+}
+:host([data-handle='top']) .pulldown-content {
+	padding-block-start: var(--pulldown-handle-size, 1.75rem);
+}
 .pulldown-drawer.is-fully-open .pulldown-content {
 	overflow: auto;
+}
+/* Standing law: gate motion. The slide is JS/drag-driven; drop the blur-in. */
+@media (prefers-reduced-motion: reduce) {
+	.pulldown-drawer.is-fully-open {
+		animation: none;
+	}
 }

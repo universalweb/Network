@@ -13,11 +13,11 @@
 	background: var(--bg-panel, rgba(255, 255, 255, 0.025));
 	cursor: text;
 }
-.aim-user {
+.aim[data-role='user'] {
 	background: var(--cyan-glow-faint, rgba(0, 240, 255, 0.06));
 	border-color: var(--cyan-glow-soft, rgba(0, 240, 255, 0.2));
 }
-.aim-assistant {
+.aim[data-role='assistant'] {
 	background: var(--bg-panel, rgba(255, 255, 255, 0.03));
 }
 .aim-role {
@@ -26,10 +26,10 @@
 	text-transform: uppercase;
 	color: var(--text-muted, rgba(255, 255, 255, 0.45));
 }
-.aim-user .aim-role {
+.aim[data-role='user'] .aim-role {
 	color: var(--cyan);
 }
-.aim-assistant .aim-role {
+.aim[data-role='assistant'] .aim-role {
 	color: var(--teal);
 }
 .aim-content {

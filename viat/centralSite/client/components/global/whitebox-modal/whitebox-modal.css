@@ -34,7 +34,6 @@
 	width: auto;
 	height: auto;
 	object-fit: contain;
-	user-select: none;
 	border-radius: var(--radius-sm);
 }
 .wb-caption {

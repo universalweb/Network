@@ -12,26 +12,26 @@ export class UIIcon extends WebComponent {
 		spin: false,
 		animate: '',
 	};
-	get hostClass() {
-		const parts = [
-			'icon', `size-${this.state.size}`, `tone-${this.state.tone}`,
-		];
-		if (this.state.spin) {
-			parts.push('is-spinning');
-		}
-		if (this.state.animate) {
-			parts.push(`anim-${this.state.animate}`);
-		}
-		return parts.join(' ');
-	}
-	iconHref() {
-		return `${SPRITE_URL}#${this.state.name}`;
-	}
+	/*
+	 * size / tone / animate are enumerated single-value dimensions, so they ride
+	 * as data-* ATTRIBUTES (decorated by attribute selectors in icon.css), not
+	 * classes. A `tone-*` CLASS would collide with the framework's uwc.util
+	 * `.tone-*` text utilities (which win by layer order) and silently override
+	 * the icon's intended tone; a `[data-tone]` attribute cannot be matched by a
+	 * class selector, so the collision is structurally impossible. spin is an
+	 * additive boolean → a boolean attribute. Bare reads keep every spot reactive
+	 * through the patch pass — no imperative class-string getter needed.
+	 */
 	render() {
-		
 		this.html `
-			<svg class="${this.hostClass}" aria-hidden="true">
-				<use href=${this.iconHref}></use>
+			<svg
+				class="icon"
+				data-size=${this.state.size}
+				data-tone=${this.state.tone}
+				data-animate=${this.state.animate}
+				?data-spin=${this.state.spin}
+				aria-hidden="true">
+				<use href=${`${SPRITE_URL}#${this.state.name}`}></use>
 			</svg>
 		`;
 	}

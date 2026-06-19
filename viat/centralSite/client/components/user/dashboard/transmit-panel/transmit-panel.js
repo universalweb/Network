@@ -105,10 +105,8 @@ export class TransmitPanel extends Panel {
 	renderBody() {
 		return this.htmlElement `
 			<div class="transmit-body">
-				<div class="field stack gap-2">
-					<div class="stack justify-start gap-1">
-						<div class="field-label">${this.state.amountLabel}</div>
-					</div>
+				<div class="field">
+					<label for="amount">${this.state.amountLabel}</label>
 					<div class="field-with-addon">
 						<input id="amount" type="text"
 							placeholder="${this.state.amountPlaceholder}"
@@ -116,14 +114,12 @@ export class TransmitPanel extends Panel {
 						<div class="field-addon">${this.state.tokenLabel}</div>
 					</div>
 				</div>
-				<div class="field stack gap-2">
-					<div class="stack justify-start gap-1">
-						<div class="field-label">${this.state.gasLabel}</div>
-					</div>
+				<div class="field">
+					<label for="gas">${this.state.gasLabel}</label>
 					<input id="gas" type="text" $value="gasValue" readonly>
 				</div>
-				<div class="field stack gap-2 col-span-full">
-					<div class="field-label">${this.state.recipientLabel}</div>
+				<div class="field col-span-full">
+					<label for="recipient">${this.state.recipientLabel}</label>
 					<div class="field-with-addon recipient-with-addon">
 						<input id="recipient" type="text"
 							placeholder="${this.state.recipientPlaceholder}"

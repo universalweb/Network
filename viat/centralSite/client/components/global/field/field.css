@@ -8,12 +8,12 @@
 	gap: 0.35rem;
 	min-width: 0;
 }
-.is-inline {
+[data-inline] {
 	flex-direction: row;
 	align-items: center;
 	gap: 0.7rem;
 }
-.is-inline .field-body { flex: 1 1 auto; min-width: 0; }
+[data-inline] .field-body { flex: 1 1 auto; min-width: 0; }
 .field-label {
 	color: var(--text-light, rgba(255, 255, 255, 0.85));
 	font-size: var(--text-xs);
@@ -22,7 +22,7 @@
 	line-height: 1.3;
 	text-transform: uppercase;
 }
-.is-inline .field-label {
+[data-inline] .field-label {
 	letter-spacing: 0.04em;
 	text-transform: none;
 	font-size: var(--text-sm);
@@ -40,8 +40,8 @@
 	line-height: 1.35;
 	min-height: 1em;
 }
-.has-error .field-hint { color: var(--color-danger); }
-.has-error .field-label { color: var(--color-danger); }
+[data-error] .field-hint { color: var(--color-danger); }
+[data-error] .field-label { color: var(--color-danger); }
 /* Sizes (cascade through to nested control if it reads field size cues) */
-.size-sm .field-label { font-size: var(--text-2xs); }
-.size-lg .field-label { font-size: var(--text-sm); }
+[data-size='sm'] .field-label { font-size: var(--text-2xs); }
+[data-size='lg'] .field-label { font-size: var(--text-sm); }

@@ -1,0 +1,31 @@
+:host {
+	display: inline-block;
+	inline-size: 6rem;
+	block-size: 2rem;
+}
+.spark {
+	inline-size: 100%;
+	block-size: 100%;
+	overflow: visible;
+	--viz: var(--cyan);
+}
+/* tone sets the viz color via data-tone (no collision — these set --viz, not
+   `color`; converting is consistency with the data-* standard). */
+[data-tone='accent']  { --viz: var(--cyan); }
+[data-tone='success'] { --viz: var(--color-success); }
+[data-tone='warning'] { --viz: var(--color-warning); }
+[data-tone='danger']  { --viz: var(--color-danger); }
+[data-tone='info']    { --viz: var(--color-info); }
+[data-tone='neutral'] { --viz: var(--text-muted); }
+.spark-line {
+	fill: none;
+	stroke: var(--viz);
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	vector-effect: non-scaling-stroke;
+}
+.spark-area {
+	fill: color-mix(in oklab, var(--viz) 18%, transparent);
+	stroke: none;
+}

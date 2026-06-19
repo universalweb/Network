@@ -1,16 +1,25 @@
 import '../bar/bar.js';
-import { WebComponent, each, movingIndicator } from 'webcomponent';
-import { IconButtonBase } from '../icon-button/icon-button.js';
+import { list, movingIndicator, WebComponent } from 'webcomponent';
+import { DockIconButton } from './dockIconButton.js';
 // `<ui-dock>` — a navigation rail. Composes a `<ui-bar>`, renders its `items`
 // as `<ui-icon-button>`s, and tracks the selected item with a sliding
-// active-bar driven by the shared movingIndicator engine. `activeId` is a prop
-// — the consumer drives it (e.g. from the router); the dock never reads the
-// router itself. Per-item `hidden` drops an item reactively.
+// active-bar driven by the shared movingIndicator engine. A click OPTIMISTICALLY
+// self-highlights — the dock listens on its OWN host for each item's activation
+// channel (`onClick`, default `dock:select`) and sets `activeId` itself, so the
+// bar moves out of the box with no consumer wiring. `activeId` stays a prop: a controlling consumer
+// (e.g. global-dock from the router) can still drive/reconcile it — its wholesale
+// `.state=` re-apply just overwrites the optimistic value with the real one.
+// The dock never reads the router itself. Per-item `hidden` drops an item.
 export class UIDock extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
 		dock: './dock.css',
 	};
+	/*
+	 * Per-theme RULE overrides (active-bar geometry, rail hairlines) in
+	 * `./themes/{id}.css` — adopted by theme, absent files are graceful.
+	 */
+	static themes = ['gnosis', 'codex'];
 	static state = {
 		items: [],
 		orientation: 'vertical',
@@ -18,34 +27,11 @@ export class UIDock extends WebComponent {
 		activeId: '',
 	};
 	indicator = null;
-	dockItems() {
-		// Genuine computation feeding each(): drop hidden items, mark the
-		// active one. Not a child `.state` fabricator — this is a list source.
-		const items = this.state.items || [];
-		const activeId = this.state.activeId || '';
-		const out = [];
-		for (let index = 0; index < items.length; index += 1) {
-			const item = items[index];
-			if (item.hidden) {
-				continue;
-			}
-			out.push({
-				id: item.id,
-				icon: item.icon,
-				tooltip: item.tooltip,
-				animate: item.animate || '',
-				onClick: item.onClick || 'dock:select',
-				active: item.id === activeId,
-			});
-		}
-		return out;
-	}
-	itemKey(item) {
-		return item.id;
-	}
+	barSettleTimer = 0;
 	onConnect() {
-		this.classList.toggle('dock-horizontal', this.state.orientation === 'horizontal');
-		this.classList.toggle('dock-vertical', this.state.orientation !== 'horizontal');
+		// Host decoration as a data-* attribute (CSS targets :host([data-orientation]))
+		// rather than imperative class toggles — orientation is a one-time enumerated dim.
+		this.dataset.orientation = this.state.orientation === 'horizontal' ? 'horizontal' : 'vertical';
 		this.observeAsync('activeId', () => {
 			this.syncActiveBar();
 		});
@@ -54,6 +40,22 @@ export class UIDock extends WebComponent {
 				this.syncActiveBar();
 			});
 		});
+		this.on('dock:select', this.handleItemSelect);
+		/*
+		 * Reconcile AFTER subscribing. On a RECONNECT the observers re-register
+		 * here while activeId may have changed since the disconnect — the
+		 * mount-time snap only runs once, so catch up now. On first connect the
+		 * indicator isn't built yet and this no-ops.
+		 */
+		this.syncActiveBar(true);
+	}
+	handleItemSelect(domEvent) {
+		// The icon-button is the event source; its `id` is the section to highlight.
+		const id = domEvent.detail?.source?.state?.id;
+		if (!id) {
+			return;
+		}
+		this.state.activeId = id;
 	}
 	onMount() {
 		this.indicator = movingIndicator(this.refs.active_bar, {
@@ -86,14 +88,30 @@ export class UIDock extends WebComponent {
 			return button.state.id === activeId;
 		}) : null;
 		this.indicator.moveTo(activeButton, snap);
+		this.squeezeOnTransit(snap, activeButton);
+	}
+	/* Squash-and-stretch flourish: a real slide between icons (not a snap/first-show)
+	   compresses the bar along its travel axis mid-flight, then lets it spring back
+	   to full as it settles — the class drops one slide-duration later so the
+	   `--bar-squeeze` reset rides the same spring. CSS owns the geometry; this only
+	   marks "in transit". */
+	squeezeOnTransit(snap, activeButton) {
+		const bar = this.refs.active_bar;
+		if (!bar || snap || !activeButton) {
+			return;
+		}
+		bar.classList.add('is-moving');
+		this.removeTimeout(this.barSettleTimer);
+		this.barSettleTimer = this.setTimeout(() => {
+			bar.classList.remove('is-moving');
+		}, 450);
 	}
 	render() {
-		
 		this.html `
 			<ui-bar class="dock">
 				<div slot="center" class="dock-rail">
 					<div class="active-bar" #active_bar></div>
-					${each(this.dockItems(), IconButtonBase, this.itemKey)}
+					${list('items', DockIconButton)}
 				</div>
 			</ui-bar>
 		`;

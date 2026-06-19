@@ -1,6 +1,7 @@
 import '../../global/paged-list/paged-list.js';
 import '../../global/icon/icon.js';
 import { WebComponent, html } from '../../core/index.js';
+import { AppView } from '../app-view/app-view.js';
 const PAGE_SIZE = 20;
 const ROW_STYLES = new URL('./explorer-rows.css', import.meta.url).href;
 const FILTERS = [
@@ -76,10 +77,6 @@ function pageHrefFor(filterId, page) {
 	}
 	return `${filter.basePath}page/${page}/`;
 }
-async function getSDK() {
-	const app = document.querySelector('app-view');
-	return app?.ensureSDK ? app.ensureSDK() : null;
-}
 export class ExplorerPage extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -88,10 +85,6 @@ export class ExplorerPage extends WebComponent {
 	static state = {
 		filter: 'all',
 		rowStyles: ROW_STYLES,
-		titleIconState: {
-			name: 'compass',
-			size: 'md',
-		},
 	};
 	/* Data + display contract for <paged-list>, one stable bundle merged via
 	   `.state`. The loader + pageHref are arrows so they read the page's reactive
@@ -127,7 +120,7 @@ export class ExplorerPage extends WebComponent {
 	}) {
 		const page = reset ? 1 : (cursor ?? 1);
 		const filter = this.state.filter;
-		const sdk = await getSDK();
+		const sdk = await AppView.ensureSDK();
 		if (!sdk) {
 			return null;
 		}
@@ -176,14 +169,13 @@ export class ExplorerPage extends WebComponent {
 	}
 	txRow(tx) {
 		const direction = tx.type === 'mint' ? 'mint' : 'transfer';
-		const typeClass = `ex-cell ex-type tone-${direction}`;
 		const txHref = `/tx/${encodeURIComponent(tx.id)}/`;
 		const fromHref = `/account/${encodeURIComponent(tx.from)}/`;
 		const toHref = `/account/${encodeURIComponent(tx.to)}/`;
 		return html `
 			<div class="ex-row">
 				<a class="ex-cell ex-id" href=${txHref} title=${tx.id}>${shortId(tx.id)}</a>
-				<span class=${typeClass}>${direction.toUpperCase()}</span>
+				<span class="ex-cell ex-type" data-tone=${direction}>${direction.toUpperCase()}</span>
 				<a class="ex-cell ex-addr" href=${fromHref} title=${tx.from}>${shortAddress(tx.from)}</a>
 				<span class="ex-cell ex-arrow">→</span>
 				<a class="ex-cell ex-addr" href=${toHref} title=${tx.to}>${shortAddress(tx.to)}</a>
@@ -198,7 +190,7 @@ export class ExplorerPage extends WebComponent {
 			<div class="ex-shell">
 				<header class="ex-title-header">
 					<div class="ex-title-block">
-						<ui-icon class="ex-title-icon" .state=${this.state.titleIconState}></ui-icon>
+						<ui-icon class="ex-title-icon" .name=${'compass'} .size=${'md'}></ui-icon>
 						<span class="ex-title">// EXPLORER · RECENT TRANSACTIONS</span>
 					</div>
 				</header>

@@ -1,7 +1,7 @@
 import '../../global/modal/modal.js';
 import '../../global/tabs/tabs.js';
-import { THEMES, getTheme, setTheme } from '../../global/theme-select/theme-manager.js';
 import { WebComponent } from '../../core/index.js';
+import { getTheme, setTheme, THEMES } from '../../global/theme-select/theme-manager.js';
 const SECTIONS = [
 	{
 		id: 'profile',
@@ -91,10 +91,10 @@ export class SettingsModal extends WebComponent {
 		this.refs.modal?.close();
 	}
 	getWalletInfo() {
-		return this.globalState.wallet ?? {};
+		return this.global.wallet ?? {};
 	}
 	getProfile() {
-		return this.globalState.profile ?? {};
+		return this.global.profile ?? {};
 	}
 	setStatus(tone, message) {
 		this.assignState({
@@ -329,8 +329,8 @@ export class SettingsModal extends WebComponent {
 		const address = this.getWalletInfo().address ?? '';
 		const shortAddress = address && address.length > 18 ? `${address.slice(0, 16)}…` : address;
 		const placeholderText = shortAddress ? `defaults to wallet address (${shortAddress})` : 'defaults to wallet address';
-		const themeOptions = THEMES.map((t) => {
-			return `<option value="${t.id}">${t.label}</option>`;
+		const themeOptions = [...THEMES.values()].map((themeEntry) => {
+			return `<option value="${themeEntry.id}">${themeEntry.label}</option>`;
 		}).join('');
 		return this.htmlElement `
 			<div class="sm-section">

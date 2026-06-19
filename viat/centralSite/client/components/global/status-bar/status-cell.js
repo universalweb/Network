@@ -14,15 +14,10 @@ export class UIStatusCell extends WebComponent {
 		divider: true,
 	};
 	render() {
-		
-		this.html`
-			<div class=${classList('cell', () => {
-				return this.state.divider && 'cell-divider';
-			})}>
+		this.html `
+			<div class="cell" ?data-divider=${this.state.divider}>
 				<span class="cell-key">${this.state.label}</span>
-				<span class=${classList('cell-val', () => {
-					return this.state.valueClass;
-				})}>${this.state.value}</span>
+				<span class=${classList('cell-val', this.state.valueClass)}>${this.state.value}</span>
 			</div>
 		`;
 	}

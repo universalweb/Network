@@ -1,0 +1,67 @@
+:host {
+	display: block;
+}
+:host([hidden]) {
+	display: none;
+}
+.divider {
+	--divider-color: var(--surface-border, var(--dark-divider, rgba(255, 255, 255, 0.12)));
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+}
+/* ── Bare rule (no label) ──────────────────────────────────────────────
+   The two `.divider-line` spans and the empty label collapse; the `.divider`
+   itself carries the rule, so an unlabeled divider is a single hairline. */
+.divider:not([data-labeled]) > * {
+	display: none;
+}
+.divider[data-orientation='horizontal']:not([data-labeled]) {
+	block-size: 0;
+	inline-size: 100%;
+	border-block-start: 1px solid var(--divider-color);
+}
+.divider[data-orientation='vertical'] {
+	display: inline-block;
+	inline-size: 0;
+	min-block-size: 1em;
+	align-self: stretch;
+	border-inline-start: 1px solid var(--divider-color);
+	vertical-align: middle;
+}
+/* ── Labeled (horizontal only) ─────────────────────────────────────────── */
+.divider[data-labeled] {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	inline-size: 100%;
+}
+.divider[data-labeled] .divider-line {
+	display: block;
+	flex: 1 1 0;
+	block-size: 0;
+	border-block-start: 1px solid var(--divider-color);
+}
+.divider[data-labeled] .divider-label {
+	display: block;
+	flex: 0 0 auto;
+	font-size: var(--text-2xs, 0.7rem);
+	font-weight: var(--weight-semibold, 600);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+/* ── Variant ─────────────────────────────────────────────────────────────
+   Dashed swaps the solid border for a dashed one on whichever edge is the rule. */
+.divider[data-variant='dashed'][data-orientation='horizontal']:not([data-labeled]),
+.divider[data-variant='dashed'][data-labeled] .divider-line {
+	border-block-start-style: dashed;
+}
+.divider[data-variant='dashed'][data-orientation='vertical'] {
+	border-inline-start-style: dashed;
+}
+/* ── Inset (margin on the rule's own axis) ───────────────────────────────── */
+.divider[data-orientation='horizontal'][data-inset='start'] { margin-inline-start: 1rem; }
+.divider[data-orientation='horizontal'][data-inset='end'] { margin-inline-end: 1rem; }
+.divider[data-orientation='horizontal'][data-inset='both'] { margin-inline: 1rem; }
+.divider[data-orientation='vertical'][data-inset='start'] { margin-block-start: 0.5rem; }
+.divider[data-orientation='vertical'][data-inset='end'] { margin-block-end: 0.5rem; }
+.divider[data-orientation='vertical'][data-inset='both'] { margin-block: 0.5rem; }

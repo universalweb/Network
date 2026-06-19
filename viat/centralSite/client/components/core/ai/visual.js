@@ -105,7 +105,10 @@ function renderTreeNode(nodeName, node, prefix, isLast, isRoot, lines) {
 	const childPrefix = isRoot ? prefix : prefix + (isLast ? '    ' : '│   ');
 	const childEntries = Object.entries(node.children);
 	for (let i = 0; i < childEntries.length; i++) {
-		const [childName, childNode] = childEntries[i];
+		const [
+			childName,
+			childNode,
+		] = childEntries[i];
 		renderTreeNode(childName, childNode, childPrefix, i === childEntries.length - 1, false, lines);
 	}
 }
@@ -114,7 +117,10 @@ export function textPageMap(opts = {}) {
 	const lines = [];
 	const rootEntries = Object.entries(overview);
 	for (let i = 0; i < rootEntries.length; i++) {
-		const [rootName, rootNode] = rootEntries[i];
+		const [
+			rootName,
+			rootNode,
+		] = rootEntries[i];
 		renderTreeNode(rootName, rootNode, '', i === rootEntries.length - 1, true, lines);
 	}
 	return lines.join('\n');

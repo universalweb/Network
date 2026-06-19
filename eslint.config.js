@@ -1,12 +1,13 @@
-import * as ts_api_utils from 'ts-api-utils';
-import { LanguageVariant } from 'typescript';
-import globals from 'globals';
-import jsdoc from 'eslint-plugin-jsdoc';
 import json from '@eslint/json';
 import markdown from '@eslint/markdown';
-import security from 'eslint-plugin-security';
-import sonarjs from 'eslint-plugin-sonarjs';
 import stylisticJs from '@stylistic/eslint-plugin';
+import jsdoc from 'eslint-plugin-jsdoc';
+import security from 'eslint-plugin-security';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import sonarjs from 'eslint-plugin-sonarjs';
+import globals from 'globals';
+import * as ts_api_utils from 'ts-api-utils';
+import { LanguageVariant } from 'typescript';
 const globalsObject = {};
 const customGlobals = {
 	globalThis: 'readonly',
@@ -63,6 +64,7 @@ export default [
 		},
 		plugins: {
 			'@typescript-eslint': ts_api_utils,
+			'simple-import-sort': simpleImportSort,
 		},
 	},
 	{
@@ -96,6 +98,7 @@ export default [
 			'@stylistic': stylisticJs,
 			sonarjs,
 			security,
+			'simple-import-sort': simpleImportSort,
 		},
 		rules: {
 			'sonarjs/cognitive-complexity': 'warn',
@@ -508,7 +511,23 @@ export default [
 				},
 			],
 			'no-regex-spaces': 'error',
-			'no-restricted-globals': 'error',
+			'no-restricted-globals': [
+				'error',
+				'status',
+				'name',
+				'type',
+				'event',
+				'alert',
+				'confirm',
+				'prompt',
+				'fetch',
+				'location',
+				'history',
+				'open',
+				'find',
+				'parent',
+				'length',
+			],
 			'no-restricted-imports': 'off',
 			'no-restricted-modules': 'off',
 			'no-restricted-syntax': [
@@ -578,21 +597,9 @@ export default [
 			radix: 'error',
 			'require-yield': 'error',
 			semi: ['error', 'always'],
-			'sort-imports': [
-				'error',
-				{
-					allowSeparatedGroups: false,
-					ignoreCase: false,
-					ignoreDeclarationSort: false,
-					ignoreMemberSort: false,
-					memberSyntaxSortOrder: [
-						'none',
-						'all',
-						'multiple',
-						'single',
-					],
-				},
-			],
+			'sort-imports': 'off',
+			'simple-import-sort/imports': 'error',
+			'simple-import-sort/exports': 'error',
 			'sort-keys': 'off',
 			'sort-vars': 'off',
 			'unicode-bom': 'off',

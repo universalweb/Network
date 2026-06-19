@@ -19,7 +19,6 @@
 	flex-direction: column;
 	overflow: hidden;
 	min-height: 0;
-	cursor: crosshair;
 }
 
 .panel-header {

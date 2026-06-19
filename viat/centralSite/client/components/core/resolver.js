@@ -2,14 +2,12 @@
 	Component resolver — scans rendered DOM for undefined custom elements and
 	dynamically imports the module that defines them, so callers don't have to
 	hand-import every tag they use.
-
 	Tag → path convention: `<root>-<rest>`. The first `-` splits a registered
 	root prefix from the rest; `_` in the rest is the path separator (so `-`
 	stays free for multi-word segments); the last segment is also the file name.
 		ui-button                  -> <ui>/button/button.js
 		ui-wallet-panel            -> <ui>/wallet-panel/wallet-panel.js
 		user-dashboard_center-bar  -> <user>/dashboard/center-bar/center-bar.js
-
 	A tag with no `-` is a native element, never a component — the `:not(:defined)`
 	scan never matches those. A tag whose prefix is not a registered root is a
 	foreign component the resolver leaves alone (manual import, as before).

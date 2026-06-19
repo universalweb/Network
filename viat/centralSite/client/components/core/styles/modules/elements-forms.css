@@ -40,6 +40,50 @@
 		cursor: not-allowed;
 	}
 
+	/* Customizable <select> — progressive enhancement (Chrome 135+), gated by
+	   @supports so FF/Safari keep the native popup (degrades-to-functional, the
+	   standing posture). A BARE <select> needs no author <button>/<selectedcontent>:
+	   the UA synthesizes them, and these rules theme the synthesized button (via the
+	   block above), the picker popup, the chevron and the options through the
+	   --select-* tokens. UNIVERSAL on purpose — every <select> (and <ui-select>'s
+	   inner one) gets the styled picker for free; a component that paints its own
+	   chevron flips appearance inside its own layer (e.g. transmit-panel). */
+	@supports (appearance: base-select) {
+		select {
+			appearance: base-select;
+		}
+		select::picker-icon {
+			color: var(--select-chevron-color, var(--text-muted));
+			transition: rotate var(--transition-base);
+		}
+		select:open::picker-icon {
+			rotate: 180deg;
+		}
+		select::picker(select) {
+			appearance: base-select;
+			background: var(--select-picker-bg, var(--popup-bg));
+			border: var(--border-width) solid
+				var(--select-picker-border, var(--popup-border));
+			border-radius: var(--select-picker-radius, var(--radius-md));
+			box-shadow: var(--select-picker-shadow, var(--popup-shadow));
+			padding: var(--space-1);
+		}
+		select option {
+			padding: var(--space-2) var(--space-3);
+			border-radius: var(--radius-sm);
+			color: var(--select-option-color, var(--popup-text, var(--text-main)));
+			background: transparent;
+		}
+		select option:hover,
+		select option:focus {
+			background: var(--select-option-hover-bg,
+				color-mix(in oklab, var(--teal) 14%, transparent));
+		}
+		select option:checked {
+			color: var(--select-option-checked-color, var(--cyan, var(--teal)));
+		}
+	}
+
 	/* Native toggle / range / color / progress controls. The text-input rule above
 	   also matches these, so reset its chrome here and tint the native control with
 	   accent-color (themed, modern — no custom-control rebuild needed). */
@@ -64,6 +108,24 @@
 	}
 	progress {
 		block-size: var(--space-2);
+	}
+
+	/* Native date / time / month / week inputs already inherit the text-input
+	   chrome above (themed background / color / border, so the in-field text reads
+	   in every theme). The pop-up calendar itself is UA-drawn — unreachable by CSS
+	   — so it follows `color-scheme` (set per theme on :root). accent-color tints
+	   the picker's selected day and the spin arrows to the active accent, matching
+	   the rest of the form controls with no custom-control rebuild. */
+	input[type='date'],
+	input[type='time'],
+	input[type='datetime-local'],
+	input[type='month'],
+	input[type='week'] {
+		accent-color: var(--cyan, var(--teal));
+	}
+	input::-webkit-calendar-picker-indicator {
+		cursor: pointer;
+		border-radius: var(--radius-xs);
 	}
 
 	/* Universal button: themed via the per-theme --btn-* token set (the same
@@ -101,7 +163,7 @@
 		transform: translateY(0);
 	}
 	button:focus-visible {
-		outline: 2px solid var(--cyan, var(--focus-ring-color));
+		outline: 2px solid var(--focus-ring-color, var(--cyan));
 		outline-offset: 2px;
 	}
 	@media (prefers-reduced-motion: reduce) {
@@ -142,6 +204,22 @@
 		font-size: var(--text-sm);
 		color: var(--text-muted);
 		letter-spacing: 0.04em;
+	}
+
+	/* Form-field object scope — a themeable label+control wrapper. MINIMAL: a sane
+	   vertical default + the --field-* hooks; utilities own layout overrides. Use a
+	   real <label> child, NOT a .field-label class (semantic-tag law). Lives in
+	   uwc.base so a component's own .field (uwc.components) and any utility win. */
+	.field {
+		display: flex;
+		flex-direction: column;
+		gap: var(--field-gap, var(--space-2));
+	}
+	.field > label {
+		color: var(--field-label-color, var(--text-muted));
+	}
+	.field:focus-within > label {
+		color: var(--field-accent, var(--cyan));
 	}
 	hr {
 		border: 0;

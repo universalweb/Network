@@ -138,7 +138,7 @@ export function drainSpots() {
 }
 /*
  * ── Per-microtask global-render drain ────────────────────────────────
- * A component that bare-reads `this.globalState.x` subscribes a renderDep on
+ * A component that bare-reads `this.global.x` subscribes a renderDep on
  * the SHARED global bus. Unlike a per-component state bus, the global bus has
  * no onFlush→updateView hook (one bus serves every component), so its renderDep
  * subscribers (markRenderDirtyGlobal) enqueue here instead. drainGlobalRenders

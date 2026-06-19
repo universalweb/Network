@@ -14,7 +14,6 @@ export class UIToolbar extends WebComponent {
 		actions: [],
 	};
 	render() {
-		
 		this.html `
 			<ui-bar class="toolbar" role="toolbar">
 				<div slot="center" class="toolbar-actions">

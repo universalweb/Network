@@ -1,0 +1,32 @@
+:host {
+	display: inline-block;
+	/* Inherit the surrounding type so the effect works for mono captions and
+	   display headlines alike; `pre-wrap` keeps typed spaces and lets it wrap. */
+	white-space: pre-wrap;
+}
+.tw-text {
+	white-space: inherit;
+}
+/* `hidden` must beat .tw-cursor's display: so cursor=false truly hides it. */
+[hidden] {
+	display: none !important;
+}
+.tw-cursor {
+	display: inline-block;
+	inline-size: 0.08em;
+	block-size: 1.05em;
+	margin-inline-start: 0.06em;
+	vertical-align: text-bottom;
+	background: currentColor;
+	animation: tw-blink 1s steps(2, start) infinite;
+}
+@keyframes tw-blink {
+	50% {
+		opacity: 0;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.tw-cursor {
+		animation: none;
+	}
+}

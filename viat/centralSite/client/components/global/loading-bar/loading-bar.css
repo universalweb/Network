@@ -22,7 +22,7 @@
 	height: 100%;
 	transition: width 0.18s ease-out;
 }
-.bar.is-indeterminate .bar-fill {
+.bar[data-indeterminate] .bar-fill {
 	animation: bar-indeterminate 1.3s linear infinite;
 	width: 35% !important;
 }
@@ -35,4 +35,10 @@
 @keyframes bar-indeterminate {
 	0%   { transform: translateX(-100%); }
 	100% { transform: translateX(320%); }
+}
+/* Standing law: gate motion. Slow the indeterminate sweep and drop the
+   width-fill transition for reduced-motion users. */
+@media (prefers-reduced-motion: reduce) {
+	.bar-fill { transition: none; }
+	.bar[data-indeterminate] .bar-fill { animation-duration: 3s; }
 }

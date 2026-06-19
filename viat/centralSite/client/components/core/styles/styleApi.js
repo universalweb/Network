@@ -154,7 +154,7 @@ function injectLightStyles(ComponentClass, styleMap, tagSelector) {
 		return;
 	}
 	lightStyleClasses.add(ComponentClass);
-	/*
+	/**
 	 * Framework module sheets (owner === the WebComponent base) are GLOBAL — they
 	 * reach light DOM via styles/index.css @imports, so they must NOT be scoped to
 	 * this tag or re-layered (doing so would scope-trap the reset/utilities and

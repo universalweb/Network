@@ -1,0 +1,202 @@
+/* ── Hypr Theme ──────────────────────────────────────
+   Hyprland rice. Deep void base, glassy aqua-washed
+   surfaces, the signature aqua→spring gradient
+   (#33ccff→#00ff99), 10px rounding, terminal mono.
+   Panel identity = the rotating FOCUS RING sub-module
+   (components/global/panel/themes/hypr.css).
+───────────────────────────────────────────────────── */
+/* Registered here (document scope) because @property is ignored inside
+   shadow-adopted sheets; the panel sub-module animates it. */
+@property --hypr-angle {
+	syntax: '<angle>';
+	inherits: false;
+	initial-value: 0deg;
+}
+:root {
+  /* Dark root → native controls (date/time pickers, spinners, scrollbars, the
+     native <select> popup) adopt the dark UA palette instead of light-on-light. */
+  color-scheme: dark;
+  /* ── Base Palette ────────────────────────────────── */
+  --bg-body: #0a0c12;
+  --bg-panel: #0e1119;
+  --bg-dark: #060810;
+  --bg-dark-mid: #0a0d15;
+  --navy: #121726;
+  --navy-light: #8ab8e8;
+  --teal: #33ccff;
+  --teal-dim: rgba(51, 204, 255, 0.10);
+  --cyan: #7ae7ff;
+  --cyan-dim: rgba(122, 231, 255, 0.10);
+  --magenta: #d78cf6;
+  --magenta-dim: rgba(215, 140, 246, 0.10);
+  --grey-solid: #46506e;
+  --grey-mid: #1b2030;
+
+  /* ── Text ────────────────────────────────────────── */
+  --text-main: #dde4f5;
+  --text-muted: #5f6c94;
+  --text-light: #ffffff;
+  --text-offwhite: #a8b4d4;
+
+  /* ── Fonts ───────────────────────────────────────── */
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Inter', sans-serif;
+
+  /* ── Border Colors ───────────────────────────────── */
+  --border-light-color: rgba(122, 231, 255, 0.09);
+
+  /* ── Borders (full shorthand) ────────────────────── */
+  --border-main: 1px solid rgba(122, 231, 255, 0.12);
+  --border-light: 1px solid var(--border-light-color);
+  --border-dark: 1px solid var(--dark-divider-accent);
+
+  /* ── Surface Tints (aqua glass wash) ─────────────── */
+  --surface-tint-heavy: rgba(51, 204, 255, 0.09);
+  --surface-tint: rgba(51, 204, 255, 0.05);
+  --surface-tint-soft: rgba(51, 204, 255, 0.032);
+  --surface-tint-faint: rgba(51, 204, 255, 0.020);
+  --surface-tint-ghost: rgba(51, 204, 255, 0.013);
+  --surface-tint-whisper: rgba(51, 204, 255, 0.008);
+  --watermark-text: rgba(51, 204, 255, 0.022);
+
+  /* ── Dark Surface Text ───────────────────────────── */
+  --dark-text: rgba(190, 208, 240, 0.52);
+  --dark-text-dim: rgba(190, 208, 240, 0.42);
+  --dark-text-medium: rgba(190, 208, 240, 0.70);
+  --dark-text-bright: rgba(190, 208, 240, 0.85);
+  --dark-heading: rgba(255, 255, 255, 0.38);
+  --dark-heading-sep: rgba(255, 255, 255, 0.16);
+  --dark-text-faint: rgba(255, 255, 255, 0.26);
+
+  /* ── Dark Surface Dividers ───────────────────────── */
+  --dark-divider: rgba(122, 231, 255, 0.065);
+  --dark-divider-subtle: rgba(122, 231, 255, 0.045);
+  --dark-divider-faint: rgba(122, 231, 255, 0.028);
+  --dark-divider-accent: rgba(122, 231, 255, 0.055);
+  --dark-highlight: rgba(122, 231, 255, 0.025);
+
+  /* ── Aqua Accent Scale ───────────────────────────── */
+  --cyan-glow-strong: rgba(51, 204, 255, 0.46);
+  --cyan-glow: rgba(51, 204, 255, 0.34);
+  --cyan-glow-medium: rgba(51, 204, 255, 0.25);
+  --cyan-glow-soft: rgba(51, 204, 255, 0.18);
+  --cyan-glow-faint: rgba(51, 204, 255, 0.10);
+  --cyan-tint: rgba(51, 204, 255, 0.052);
+  --cyan-tint-faint: rgba(51, 204, 255, 0.032);
+  --cyan-scanline: rgba(51, 204, 255, 0.010);
+  --cyan-timestamp: rgba(122, 231, 255, 0.55);
+
+  /* ── Teal/Aqua Accent Scale ──────────────────────── */
+  --teal-glow: rgba(51, 204, 255, 0.36);
+  --teal-glow-soft: rgba(51, 204, 255, 0.22);
+  --teal-glow-faint: rgba(51, 204, 255, 0.14);
+
+  /* ── Scrollbar ───────────────────────────────────── */
+  --scrollbar-thumb: rgba(51, 204, 255, 0.16);
+  --scrollbar-thumb-hover: rgba(51, 204, 255, 0.30);
+
+  /* ── Status Colors ───────────────────────────────── */
+  --color-success: #00e69a;
+  --color-success-glow: rgba(0, 230, 154, 0.30);
+  --color-success-text: rgba(0, 230, 154, 0.88);
+  --color-danger: #ff5c7a;
+  --color-danger-glow: rgba(255, 92, 122, 0.30);
+  --color-warning: #fbbf24;
+  --color-info: #60a5fa;
+  --color-warn-text: rgba(215, 140, 246, 0.88);
+
+  /* ═══════════════════════════════════════════════════
+     COMPONENT THEME TOKENS
+  ═══════════════════════════════════════════════════ */
+
+  /* ── Shape (hyprland rounding) ───────────────────── */
+  --radius: 10px;
+  --radius-lg: 16px;
+  --stat-bar-radius: 4px;
+  --indicator-radius: 50%;
+  --indicator-warn-radius: 50%;
+
+  /* ── Input ───────────────────────────────────────── */
+  --input-radius: 10px;
+  --input-accent-border: var(--border-light);
+  --input-accent-shadow: none;
+  --field-border-style: solid;
+
+  /* ── Panel — glass at rest; the FOCUS RING (panel/themes/hypr.css
+     sub-module) is the identity: dim hairline at rest, rotating aqua→spring
+     conic ring on hover/focus-within, like a Hyprland active window border.
+     Header stays flat glass so the ring is the hero. ── */
+  --panel-shadow: 0 1px 4px rgba(0, 0, 0, 0.50),
+    0 8px 22px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(122, 231, 255, 0.045);
+  --panel-hover-shadow: 0 2px 8px rgba(0, 0, 0, 0.55),
+    0 16px 34px rgba(0, 0, 0, 0.42),
+    0 0 26px rgba(51, 204, 255, 0.12),
+    inset 0 1px 0 rgba(122, 231, 255, 0.07);
+  --panel-hover-border: rgba(51, 204, 255, 0.20);
+  --panel-header-accent: rgba(51, 204, 255, 0.0);
+  --panel-header-bg: rgba(122, 231, 255, 0.028);
+  --panel-header-left-accent-width: 0px;
+  --panel-header-border-bottom: none;
+
+  /* ── Buttons ─────────────────────────────────────── */
+  --btn-bg: transparent;
+  --btn-border: rgba(51, 204, 255, 0.22);
+  --btn-inset: none;
+  --btn-hover-bg: rgba(51, 204, 255, 0.09);
+  --btn-hover-border: rgba(122, 231, 255, 0.42);
+  --btn-hover-inset: none;
+  --btn-hover-glow: 0 0 14px rgba(51, 204, 255, 0.15);
+  --btn-hover-color: var(--text-light);
+  /* Primary solid hover stays in the aqua family (base fallback is mint). */
+  --btn-primary-hover-bg: #7ae7ff;
+  --focus-ring-color: rgba(51, 204, 255, 0.75);
+  --green-hover: #00e69a;
+
+  /* ── Flyout ──────────────────────────────────────── */
+  --flyout-bg: rgba(9, 12, 19, 0.96);
+  --flyout-border: rgba(51, 204, 255, 0.18);
+  --flyout-radius: 12px;
+  --flyout-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.62),
+    0 4px 10px rgba(0, 0, 0, 0.40),
+    0 0 0 1px rgba(51, 204, 255, 0.10),
+    inset 0 1px 0 rgba(122, 231, 255, 0.05);
+
+  /* ── Inputs / Interactive ────────────────────────── */
+  --input-hover-border: rgba(51, 204, 255, 0.46);
+  --input-hover-glow: rgba(51, 204, 255, 0.10);
+  --input-copied-bg: rgba(51, 204, 255, 0.12);
+  --input-copied-border: rgba(51, 204, 255, 0.44);
+
+  /* ── Top Bar ─────────────────────────────────────── */
+  --topbar-bg: rgba(122, 231, 255, 0.024);
+  --topbar-border: rgba(122, 231, 255, 0.09);
+  --topbar-accent: var(--teal);
+  --topbar-bottom-border: 1px solid rgba(51, 204, 255, 0.15);
+  --tb-badge-radius: 20px;
+  --logo-mark-pattern: linear-gradient(135deg, #33ccff 0%, #00ff99 100%);
+
+  /* ── Popups (tooltip + notification) ─────────────── */
+  --popup-bg: rgba(8, 10, 16, 0.94);
+  --popup-bg-hover: rgba(11, 14, 21, 0.97);
+  --popup-border: rgba(51, 204, 255, 0.22);
+  --popup-border-hover: rgba(51, 204, 255, 0.42);
+  --popup-accent: var(--teal);
+  --popup-shadow: 0 8px 32px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(51, 204, 255, 0.08),
+    inset 0 1px 0 rgba(122, 231, 255, 0.04);
+  --popup-text: var(--text-main);
+
+  /* ── Glow Scale (restrained neon) ────────────────── */
+  --ph-dot-shadow: 0 0 6px var(--teal);
+  --tab-indicator-shadow: 0 0 8px rgba(51, 204, 255, 0.45);
+  --logo-mark-text-shadow: 0 0 10px rgba(51, 204, 255, 0.45);
+  --subtitle-text-shadow: none;
+  --indicator-on-shadow: 0 0 10px rgba(51, 204, 255, 0.50);
+  --stat-good-text-shadow: none;
+  --stat-bar-fill-shadow: 0 0 6px rgba(51, 204, 255, 0.45);
+  --wa-underline-shadow: 0 0 8px rgba(51, 204, 255, 0.45);
+  --log-in-text-shadow: none;
+  --log-out-text-shadow: none;
+}

@@ -1,0 +1,80 @@
+:host {
+	display: block;
+}
+/* Hover lifts the player forward — raise the host so the scaled frame paints
+   over its neighbours in the gallery grid instead of being clipped beneath. */
+:host(:hover) {
+	position: relative;
+	z-index: 1;
+}
+.hv {
+	position: relative;
+	inline-size: 100%;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	border-radius: var(--radius-lg);
+	background: linear-gradient(135deg, color-mix(in oklab, var(--cyan) 18%, var(--bg-dark)), var(--bg-dark));
+	cursor: pointer;
+	transform-origin: center;
+	transition:
+		transform var(--dur-base) var(--ease-spring),
+		box-shadow var(--dur-base) var(--ease-out, ease);
+}
+/* The animated expand — the player springs up + lifts as it starts playing. The
+   pop size is the --hv-hover-scale knob: 1.14 default (a larger, cult-ui-style
+   lift), retunable per-instance via the `hoverScale` state or globally by a theme
+   overriding the custom property. */
+.hv:hover {
+	transform: scale(var(--hv-hover-scale, 1.14));
+	box-shadow: 0 1.25rem 3rem -0.75rem color-mix(in oklab, var(--cyan) 40%, transparent);
+}
+.hv-video,
+.hv-poster {
+	position: absolute;
+	inset: 0;
+	inline-size: 100%;
+	block-size: 100%;
+	object-fit: cover;
+}
+.hv-poster {
+	transition: opacity var(--dur-base) var(--ease-out, ease);
+}
+.hv[data-playing] .hv-poster {
+	opacity: 0;
+}
+.hv-overlay {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	background: color-mix(in oklab, var(--bg-body) 30%, transparent);
+	pointer-events: none;
+	transition: opacity var(--dur-base) var(--ease-out, ease);
+}
+.hv[data-playing] .hv-overlay {
+	opacity: 0;
+}
+.hv-play {
+	display: grid;
+	place-items: center;
+	inline-size: 3rem;
+	block-size: 3rem;
+	border-radius: 50%;
+	background: color-mix(in oklab, var(--teal) 85%, transparent);
+	color: var(--bg-body);
+	transition: transform var(--dur-fast) var(--ease-spring);
+}
+.hv:hover .hv-play {
+	transform: scale(1.1);
+}
+@media (prefers-reduced-motion: reduce) {
+	.hv,
+	.hv-poster,
+	.hv-overlay,
+	.hv-play {
+		transition: none;
+	}
+	.hv:hover {
+		transform: none;
+	}
+}

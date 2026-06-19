@@ -778,8 +778,7 @@ export class PerfListPage extends WebComponent {
 			rows: this.state.depthHistory,
 			emptyMessage: 'no history',
 		};
-		
-		this.html `
+				this.html `
 			<div class="page">
 				<header class="head">
 					<h1>UWC Performance Dashboard</h1>

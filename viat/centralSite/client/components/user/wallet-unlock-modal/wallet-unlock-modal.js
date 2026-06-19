@@ -1,5 +1,5 @@
 import '../../global/modal/modal.js';
-import { WebComponent, classList } from '../../core/index.js';
+import { WebComponent } from '../../core/index.js';
 // `<wallet-unlock-modal>` — small password prompt that appears when the user
 // triggers an action requiring a private key (sign / send) while only the
 // public metadata of a saved profile is loaded. AppView calls `openFor(...)`
@@ -121,7 +121,7 @@ export class WalletUnlockModal extends WebComponent {
 						</div>
 						<div class="modal-meta-row">
 							<span class="modal-meta-key">ADDRESS</span>
-							<span class="modal-meta-val" title="${this.state.address}">${() => {
+							<span class="modal-meta-val" tooltip=${this.state.address}>${() => {
 								return shortAddress(this.state.address);
 							}}</span>
 						</div>
@@ -136,9 +136,7 @@ export class WalletUnlockModal extends WebComponent {
 							$value="password"
 							@keydown=${this.handleKeyDown}>
 					</label>
-					<div class=${classList('modal-error', () => {
-						return (this.state.error ? 'is-visible' : '');
-					})}>${this.state.error}</div>
+					<div class="modal-error" ?data-visible=${this.state.error}>${this.state.error}</div>
 					<div class="modal-actions">
 						<button type="button" class="primary" ?disabled=${this.state.busy} @click=${this.handleUnlock}>${() => {
 							return (this.state.busy ? 'UNLOCKING…' : 'UNLOCK');

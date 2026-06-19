@@ -9,7 +9,7 @@ import {
 	plainEqual,
 	setValueAtPath,
 } from '../utilities.js';
-import { Logger } from '../debug/logger.js';
+import { defaultLogger } from '../debug/logger.js';
 import { PathSubscriptions } from './pathSubscriptions.js';
 /**
  * Reactive bus for a `Store`. Mirrors `ComponentStateBus` in state.js: holds
@@ -70,8 +70,8 @@ class StoreProxyHandler {
 			return true;
 		}
 		const fullPath = joinPath(this.path, key);
-		if (Logger.perfOn) {
-			Logger.perf('globalState', reportWastedStoreSet, obj, key, value, fullPath);
+		if (defaultLogger.perfOn) {
+			defaultLogger.perf('globalState', reportWastedStoreSet, obj, key, value, fullPath);
 		}
 		Reflect.set(obj, key, value);
 		this.store.bus.notify(fullPath);

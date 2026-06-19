@@ -18,7 +18,7 @@
 		border-color 0.18s ease,
 		box-shadow 0.18s ease;
 }
-.field-shell:hover:not(.is-disabled) {
+.field-shell:hover:not([data-disabled]) {
 	background: var(--input-bg-hover, rgba(255, 255, 255, 0.06));
 	border-color: var(--input-border-hover, rgba(255, 255, 255, 0.2));
 }
@@ -27,24 +27,24 @@
 	border-color: var(--focus-ring-color, var(--teal));
 	box-shadow: 0 0 0 3px var(--focus-ring-glow, rgba(94, 234, 212, 0.18));
 }
-/* Sizes */
-.size-sm { font-size: var(--text-sm);  min-height: 1.75rem; padding: 0 0.55rem; }
-.size-md { font-size: var(--text-md); min-height: 2.125rem; padding: 0 0.7rem; }
-.size-lg { font-size: var(--text-lg);  min-height: 2.5rem; padding: 0 0.9rem; }
-/* Tones */
-.tone-error.field-shell {
+/* Sizes — data-size attribute, not a `size-*` class. */
+[data-size='sm'] { font-size: var(--text-sm);  min-height: 1.75rem; padding: 0 0.55rem; }
+[data-size='md'] { font-size: var(--text-md); min-height: 2.125rem; padding: 0 0.7rem; }
+[data-size='lg'] { font-size: var(--text-lg);  min-height: 2.5rem; padding: 0 0.9rem; }
+/* Tones — data-tone attribute (immune to the uwc.util `.tone-*` text override). */
+.field-shell[data-tone='error'] {
 	border-color: var(--color-danger);
 }
-.tone-error.field-shell:focus-within {
+.field-shell[data-tone='error']:focus-within {
 	border-color: var(--color-danger);
-	box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22);
+	box-shadow: 0 0 0 3px var(--input-error-glow, rgba(239, 68, 68, 0.22));
 }
 /* States */
-.is-disabled {
+[data-disabled] {
 	opacity: 0.55;
 	cursor: not-allowed;
 }
-.is-readonly {
+[data-readonly] {
 	background: var(--input-bg-readonly, rgba(255, 255, 255, 0.02));
 }
 /* Slots */
@@ -60,11 +60,16 @@
 .field-trailing:empty {
 	display: none;
 }
-/* The actual input */
+/* The actual input. The .field-shell owns the focus ring (:focus-within draws
+   it around the WHOLE control), so the inner input fully opts out of the base
+   uwc.base `input:focus-visible` treatment — not just the outline but also its
+   box-shadow ring, which would otherwise paint a second ring INSET inside the
+   shell. This rule is uwc.components, so it beats uwc.base by layer order. */
 .field-control {
 	appearance: none;
 	background: transparent;
 	border: 0;
+	box-shadow: none;
 	color: inherit;
 	flex: 1 1 auto;
 	font: inherit;

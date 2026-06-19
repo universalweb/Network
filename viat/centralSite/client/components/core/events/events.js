@@ -170,6 +170,17 @@ export function on(eventName, handlerFunction, options) {
 	return this.addEvent(eventName, handlerFunction, this, options);
 }
 /**
+ * Thin wrapper over `addEvent` that pins the element to the component itself.
+ * Returns the same `EventEntry` addEvent returns, so callers can hold it and
+ * call `entry.unsubscribe()`. Validation lives in `addEvent`.
+ * @param {Function} handlerFunction - The event handler also used as the event name via .name or .constructor.name.
+ * @param {AddEventListenerOptions} [options] - Native listener options.
+ * @returns {EventEntry} The subscription entry.
+ */
+export function onFn(handlerFunction, options) {
+	return on(handlerFunction.name || handlerFunction?.constructor.name, handlerFunction, options);
+}
+/**
  * Like `on`, but merges `once: true` into options so the listener fires a
  * single time (`EventEntry.handleEvent` honors `fireOnce`).
  * @param {string} eventName - The event name.

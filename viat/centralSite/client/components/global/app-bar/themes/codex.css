@@ -1,0 +1,35 @@
+/*
+ * Codex — the app bar is a BLACK SQUARE MASTHEAD: a constant full-bleed ink
+ * band over the paper page (a newspaper nameplate), replacing the floating
+ * glass chrome. Structural override: the float inset, radius, border and
+ * shadow all go; the band is identical in both scroll states, so the
+ * detach/dock dance becomes a no-op. Slotted brand + action content re-skins
+ * to paper-on-ink through the custom props it already consumes — custom
+ * properties inherit along the flattened tree, so values set here reach the
+ * slotted light DOM.
+ */
+:host {
+	inset-block-start: 0;
+	inset-inline: 0;
+}
+.app-bar {
+	background: #14171b;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+	backdrop-filter: none;
+	--text-light: #f4f5f7;
+	--topbar-accent: #ffffff;
+	--icon-color: #e8eaee;
+	--icon-color-hover: #ffffff;
+	--dark-heading-sep: rgba(255, 255, 255, 0.34);
+	--ts-chip-color: #f4f5f7;
+	--ts-chip-bg: rgba(255, 255, 255, 0.06);
+	--ts-chip-border: rgba(255, 255, 255, 0.22);
+	--ts-chip-bg-hover: rgba(255, 255, 255, 0.12);
+	--ts-chip-border-hover: rgba(255, 255, 255, 0.4);
+}
+:host([data-scrolled]) .app-bar {
+	border: 0;
+	box-shadow: none;
+}

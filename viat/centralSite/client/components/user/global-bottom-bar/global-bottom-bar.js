@@ -1,4 +1,4 @@
-import { WebComponent, classList } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 import '../../global/status-bar/status-bar.js';
 // `<global-bottom-bar>` — the Viat status strip. A thin composition over the
 // built-in `<ui-status-bar>`: it supplies the three info cells through config
@@ -39,7 +39,7 @@ export class GlobalBottomBar extends WebComponent {
 		});
 	}
 	syncBadge() {
-		const api = this.globalState.api ?? null;
+		const api = this.global.api ?? null;
 		if (!api) {
 			this.assignState({
 				badgeTone: 'idle',
@@ -65,12 +65,9 @@ export class GlobalBottomBar extends WebComponent {
 		});
 	}
 	render() {
-		
-		this.html`
+		this.html `
 			<ui-status-bar .state=${this.state.statusBar}>
-				<div slot="end" class=${classList('bb-badge', () => {
-					return `tone-${this.state.badgeTone}`;
-				})} tooltip=${this.state.badgeTooltip}>
+				<div slot="end" class="bb-badge" data-tone=${this.state.badgeTone} tooltip=${this.state.badgeTooltip}>
 					<span class="bb-badge-dot"></span>
 					<span class="bb-badge-text">${this.state.badgeText}</span>
 				</div>

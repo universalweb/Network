@@ -42,8 +42,8 @@ export class UIModal extends WebComponent {
 		// has to opt in explicitly to surface a control. Toggling a flag at
 		// runtime cleanly hides/reveals the button via the `?hidden`
 		// attribute binding without DOM rebuilds. `showMaximize` reveals a
-		// single expand/restore toggle (icon morphs to match the
-		// `is-maximized` class on the dialog); `showMinimize` reveals the
+		// single expand/restore toggle (icon morphs to match the host's
+		// `data-window='maximized'` state); `showMinimize` reveals the
 		// separate collapse button; `showClose` reveals the animated × via
 		// <ui-close-button>.
 		showClose: false,
@@ -52,35 +52,22 @@ export class UIModal extends WebComponent {
 		// 'right' = Windows-style (min, max, close left→right, anchored right).
 		// 'left'  = macOS-style (close, min, max left→right, anchored left).
 		controlsSide: 'right',
-		// Reactive class set for the dialog. Handlers mutate it directly
-		// (`.add('is-maximized')` / `.delete(...)`) and the framework's
-		// class-list spot diffs tokens onto the element — no derived
-		// `dialogClass()` function needed, no whole-attribute rewrites, no
-		// duplicated boolean flags. The set is the source of truth for
-		// transient window state; events still emit booleans derived from
-		// `.has(...)` so external listeners stay simple.
-		classes: new Set(['modal']),
+		// Optional window-bar title (native-OS-window style). Empty string = no
+		// title shown; the bar still appears whenever any control flag is set.
+		// Opt-in per modal — existing modals keep their in-body heading untouched.
+		title: '',
 		// Optional continuation callback. Fires once when the modal closes
 		// (any path — button, Escape, backdrop, programmatic). Receives
 		// `{ returnValue, source }`. Self-clears after firing so the same
 		// modal reopened with a different intent doesn't accidentally
 		// re-invoke a stale handler.
 		afterAction: null,
-		// Child-state for the composed window-control <ui-icon>s — reactive
-		// keys on the one state tree, bound bare in render(); not loose fields.
-		maximizeIconState: {
-			name: 'maximize-2',
-			size: 'sm',
-		},
-		restoreIconState: {
-			name: 'minimize-2',
-			size: 'sm',
-		},
-		minimizeIconState: {
-			name: 'minus',
-			size: 'sm',
-		},
 	};
+	onConnect() {
+		// Seed the host window-state attribute so it always reflects 'normal'
+		// until a control toggles it — mirrors the dock's data-orientation seed.
+		this.dataset.window = 'normal';
+	}
 	handleDialogClick(domEvent) {
 		// Backdrop-close is part of the base modal contract — every modal
 		// gets it by default. Only an explicit `closeOnBackdrop: false`
@@ -182,10 +169,9 @@ export class UIModal extends WebComponent {
 	}
 	handleClose(domEvent) {
 		this.state.open = false;
-		// Reset transient window-state on close so the next open() starts at
-		// the default size, not whatever the user left it at.
-		this.state.classes.delete('is-maximized');
-		this.state.classes.delete('is-minimized');
+		// Reset window-state on close so the next open() starts at the default
+		// size, not whatever the user left it at.
+		this.dataset.window = 'normal';
 		// Drop ourselves from the shared open-stack so the next opener picks
 		// the correct top z-index.
 		const stack = UIModal.openStack;
@@ -214,34 +200,38 @@ export class UIModal extends WebComponent {
 	handleCloseClick() {
 		this.close();
 	}
+	/* Window-state is a single enumerated dimension — 'normal' | 'maximized' |
+	   'minimized' — reflected onto the HOST as `data-window`, the single source of
+	   truth. The size styling lives on the inner `<dialog>` (a different shadow
+	   tree) but is driven from the host: ui-modal's own CSS reads
+	   `:host([data-window='maximized']) .modal…`, and slotted consumers
+	   (settings-modal) read `.sm-modal[data-window='maximized']` across the shadow
+	   boundary. The enum makes "maximized AND minimized" structurally impossible —
+	   no class-Set token discipline needed — mirroring the dock's data-orientation. */
 	handleToggleMaximize() {
-		const classes = this.state.classes;
-		const next = !classes.has('is-maximized');
-		if (next) {
-			classes.add('is-maximized');
-			classes.delete('is-minimized');
-		} else {
-			classes.delete('is-maximized');
-		}
+		const next = this.dataset.window === 'maximized' ? 'normal' : 'maximized';
+		this.dataset.window = next;
 		this.emit('modal-maximize', {
-			maximized: next,
+			maximized: next === 'maximized',
 		});
 	}
 	handleToggleMinimize() {
-		const classes = this.state.classes;
-		const next = !classes.has('is-minimized');
-		if (next) {
-			classes.add('is-minimized');
-			classes.delete('is-maximized');
-		} else {
-			classes.delete('is-minimized');
-		}
+		const next = this.dataset.window === 'minimized' ? 'normal' : 'minimized';
+		this.dataset.window = next;
 		this.emit('modal-minimize', {
-			minimized: next,
+			minimized: next === 'minimized',
 		});
 	}
 	controlsSideClass() {
 		return this.state.controlsSide === 'left' ? 'controls-left' : 'controls-right';
+	}
+	// Window bar (reserved space + frosted background + body top-padding) only
+	// exists when there's something to put in it — a control or a title. A
+	// control-less, title-less modal stays a plain content box with no phantom bar.
+	barClass() {
+		const modalState = this.state;
+		const hasTitle = typeof modalState.title === 'string' && modalState.title.length > 0;
+		return (modalState.showClose === true || modalState.showMaximize === true || modalState.showMinimize === true || hasTitle) ? 'has-bar' : '';
 	}
 	render() {
 		// The control buttons are emitted inline in the main template so the
@@ -253,22 +243,17 @@ export class UIModal extends WebComponent {
 		// is part of the active layout. The flags default to false so a
 		// caller that doesn't opt in gets no controls at all.
 		this.html `
-			<dialog #dialog class=${classList(this.state.classes, this.controlsSideClass)} tabindex="-1" @click=${this.handleDialogClick} @cancel=${this.handleCancel} @close=${this.handleClose}>
+			<dialog #dialog class=${classList('modal', this.controlsSideClass, this.barClass)} tabindex="-1" @click=${this.handleDialogClick} @cancel=${this.handleCancel} @close=${this.handleClose}>
 				<div class="modal-controls">
-					<button type="button" class="mc-btn mc-min" aria-label="Minimize" ?hidden=${() => {
-						return this.state.showMinimize !== true;
-					}} @click=${this.handleToggleMinimize}>
-						<ui-icon class="mc-icon" .state=${this.state.minimizeIconState}></ui-icon>
+					<div class="modal-title">${this.state.title}</div>
+					<button type="button" class="mc-btn mc-min" aria-label="Minimize" ?hidden=${this.state.showMinimize !== true} @click=${this.handleToggleMinimize}>
+						<ui-icon class="mc-icon" .name=${'minus'} .size=${'sm'}></ui-icon>
 					</button>
-					<button type="button" class="mc-btn mc-max" aria-label="Toggle size" ?hidden=${() => {
-						return this.state.showMaximize !== true;
-					}} @click=${this.handleToggleMaximize}>
-						<ui-icon class="mc-icon mc-icon-grow" .state=${this.state.maximizeIconState}></ui-icon>
-						<ui-icon class="mc-icon mc-icon-shrink" .state=${this.state.restoreIconState}></ui-icon>
+					<button type="button" class="mc-btn mc-max" aria-label="Toggle size" ?hidden=${this.state.showMaximize !== true} @click=${this.handleToggleMaximize}>
+						<ui-icon class="mc-icon mc-icon-grow" .name=${'maximize-2'} .size=${'sm'}></ui-icon>
+						<ui-icon class="mc-icon mc-icon-shrink" .name=${'minimize-2'} .size=${'sm'}></ui-icon>
 					</button>
-					<ui-close-button class="mc-close" ?hidden=${() => {
-						return this.state.showClose !== true;
-					}} @close-click=${this.handleCloseClick}></ui-close-button>
+					<ui-close-button class="mc-close" ?hidden=${this.state.showClose !== true} @close-click=${this.handleCloseClick}></ui-close-button>
 				</div>
 				<div class="modal-body"><slot></slot></div>
 			</dialog>

@@ -63,7 +63,9 @@ function findFromParams(params) {
  */
 const handlers = new Map();
 handlers.set('ai.listComponents', () => {
-	return listComponents().map(({ id, component }) => {
+	return listComponents().map(({
+		id, component,
+	}) => {
 		return {
 			id,
 			path: getPathForComponent(component),
@@ -186,7 +188,9 @@ handlers.set('ai.callTool', async (params, ctx) => {
 	return result ?? null;
 });
 handlers.set('ai.queryByTag', (params) => {
-	return queryByTag(params?.tag).map(({ id, component }) => {
+	return queryByTag(params?.tag).map(({
+		id, component,
+	}) => {
 		return {
 			id,
 			path: getPathForComponent(component),
@@ -195,7 +199,9 @@ handlers.set('ai.queryByTag', (params) => {
 	});
 });
 handlers.set('ai.queryByLabel', (params) => {
-	return queryByLabel(params?.query).map(({ id, component }) => {
+	return queryByLabel(params?.query).map(({
+		id, component,
+	}) => {
 		return {
 			id,
 			path: getPathForComponent(component),

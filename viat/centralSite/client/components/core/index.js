@@ -2,8 +2,8 @@
 	Universal Web Components — public surface.
 	Re-exports the curated public API. Deep imports continue to work for advanced use.
 */
-import { WebComponent } from './base.js';
 import { applyAiMixin } from './ai/mixin.js';
+import { WebComponent } from './base.js';
 applyAiMixin(WebComponent);
 /*
  * Make WebComponent reachable without an import — `class X extends WebComponent`
@@ -12,36 +12,30 @@ applyAiMixin(WebComponent);
 globalThis.WebComponent ??= WebComponent;
 export {
 	ClassList,
-	Store,
-	WebComponent,
 	classList,
 	globalState,
 	liveChildren,
 	registerChild,
 	registry,
+	Store,
+	WebComponent,
 } from './base.js';
 export {
-	comp,
-	each,
-	filter,
-	html,
-	ifThen,
-	list,
-	remoteList,
-	styles,
-} from './template.js';
-export { bind, CONTENT_KIND } from './state/binding.js';
-export { assignState } from './state/state.js';
+	behaviorAttrNames,
+	getBehavior,
+	isBehaviorAttr,
+	registerBehavior,
+} from './behaviors/index.js';
 export {
-	getRoots,
-	registerRoot,
-	resolveTag,
-	resolveTagUrl,
-	scanAndResolve,
-} from './resolver.js';
-export { getRef, makeRefsProxy, registerRef } from './dom/refs.js';
-export { setDocumentTitle, syncDocumentTitle } from './dom/documentTitle.js';
+	componentLogger,
+	defaultLogger,
+	IS_PRODUCTION,
+} from './debug/logger.js';
+export { computeAnchor } from './dom/anchor.js';
+export { flipMorph } from './dom/animation.js';
 export { allChildren } from './dom/children.js';
+export { DelegateEntry, emitDelegate } from './dom/delegate.js';
+export { setDocumentTitle, syncDocumentTitle } from './dom/documentTitle.js';
 export {
 	appendTo,
 	findComponent,
@@ -52,21 +46,35 @@ export {
 	ifAssign,
 	prependTo,
 } from './dom/dom.js';
-export { DelegateEntry, emitDelegate } from './dom/delegate.js';
-export { canonicalizeCombo, registerHotkey } from './hotkeys/hotkeys.js';
-export { createDragSnap, SNAP_MS, SNAP_CURVE } from './gestures/dragSnap.js';
-export { movingIndicator } from './indicator/movingIndicator.js';
-export {
-	registerBehavior,
-	getBehavior,
-	isBehaviorAttr,
-	behaviorAttrNames,
-} from './behaviors/index.js';
 export { setInert } from './dom/inert.js';
-export { UniversalWebSocket } from './net/universalWebSocket.js';
-export { FRAME_TYPE } from './net/envelope.js';
-export { nextFrame, schedule } from './lifecycle/scheduler.js';
+export { getRef, makeRefsProxy, registerRef } from './dom/refs.js';
+export { createDragSnap, SNAP_CURVE, SNAP_MS } from './gestures/dragSnap.js';
+export { createDragTrack } from './gestures/dragTrack.js';
+export { canonicalizeCombo, registerHotkey } from './hotkeys/hotkeys.js';
+export { movingIndicator } from './indicator/movingIndicator.js';
 export { atPhase } from './lifecycle/phase.js';
+export { nextFrame, schedule } from './lifecycle/scheduler.js';
+export { FRAME_TYPE } from './net/envelope.js';
+export { UniversalWebSocket } from './net/universalWebSocket.js';
+export {
+	getRoots,
+	registerRoot,
+	resolveTag,
+	resolveTagUrl,
+	scanAndResolve,
+} from './resolver.js';
+export { bind, CONTENT_KIND } from './state/binding.js';
+export { assignState } from './state/state.js';
+export {
+	comp,
+	each,
+	filter,
+	html,
+	ifThen,
+	list,
+	remoteList,
+	styles,
+} from './template.js';
 export {
 	addInterval,
 	clearIntervals,
@@ -75,7 +83,6 @@ export {
 	setComponentTimeout,
 	stopInterval,
 } from './timers.js';
-export { Logger, IS_PRODUCTION } from './debug/logger.js';
 export {
 	assign,
 	assignPromisePair,

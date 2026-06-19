@@ -183,4 +183,19 @@
 	.max-w-full {
 		max-inline-size: 100%;
 	}
+	/* Establish an inline-size query container so this element (or its descendants)
+	   can use @container size queries / cqi units — the component-scoped alternative
+	   to viewport @media. NOTE: container-type:inline-size also establishes layout
+	   containment, so the box sizes against its contents (block-size derives from
+	   content) — opt in deliberately. Pairs with .grid-auto-fit / any @container CSS. */
+	.cq {
+		container-type: inline-size;
+	}
+	/* Auto-grow a form control to its content — textarea height / input inline-size.
+	   Chrome 123+; harmlessly ignored elsewhere (the control keeps its rows/size, so
+	   it degrades to a fixed field). PAIR WITH min/max-block-size (or min/max-height)
+	   bounds on the element, or it grows unbounded / collapses. */
+	.autosize {
+		field-sizing: content;
+	}
 }

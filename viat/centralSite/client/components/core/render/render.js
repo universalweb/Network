@@ -6,7 +6,7 @@ import {
 } from '../utilities.js';
 import { makeProxy, setCurrentTracking } from '../state/binding.js';
 import { LIFECYCLE_PROMISE } from '../lifecycle/lifecycle.js';
-import { Logger } from '../debug/logger.js';
+import { defaultLogger } from '../debug/logger.js';
 import { PHASE } from '../lifecycle/phase.js';
 import { Perf } from '../debug/perf.js';
 import { allChildren } from '../dom/children.js';
@@ -203,8 +203,8 @@ export async function renderView() {
 			const renderResult = this.render?.();
 			setCurrentTracking(null);
 			if (isPromiseLike(renderResult)) {
-				if (Logger.debugOn) {
-					Logger.debug(this.constructor.name, `[${this.tagName}] async render(): reads after the first await are untracked — move async work to beforeRender`);
+				if (defaultLogger.debugOn) {
+					defaultLogger.debug(this.constructor.name, `[${this.tagName}] async render(): reads after the first await are untracked — move async work to beforeRender`);
 				}
 				await renderResult;
 			}
@@ -252,8 +252,8 @@ export async function renderView() {
 		 */
 			this.isRendering = false;
 			this.finishRender(renderedResolver);
-			if (Logger.debugOn) {
-				Logger.debug(this.constructor.name, `[${this.tagName}] patch pass (no re-render)`);
+			if (defaultLogger.debugOn) {
+				defaultLogger.debug(this.constructor.name, `[${this.tagName}] patch pass (no re-render)`);
 			}
 			return;
 		}
@@ -271,8 +271,8 @@ export async function renderView() {
 				await onRenderResult;
 			}
 		}
-		if (Logger.debugOn) {
-			Logger.debug(this.constructor.name, `[${this.tagName}] onRender called`);
+		if (defaultLogger.debugOn) {
+			defaultLogger.debug(this.constructor.name, `[${this.tagName}] onRender called`);
 		}
 		if (sequence !== this.renderSeq) {
 			this.finishRender(renderedResolver);

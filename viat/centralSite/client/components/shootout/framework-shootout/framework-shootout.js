@@ -200,8 +200,7 @@ class UwcShootoutList extends WebComponent {
 		// Bare-read keyed list — `each()` rebuilds the LiveList on the items
 		// renderDep change and the list spot keyed-diffs it (create/update/move/
 		// remove per `itemKey`). Same contract as Lit's keyed repeat.
-		
-		this.html `${each(this.state.items, PerfListItem, itemKey)}`;
+				this.html `${each(this.state.items, PerfListItem, itemKey)}`;
 	}
 }
 customElements.define('uwc-shootout-list', UwcShootoutList);
@@ -227,8 +226,7 @@ class UwcLightShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		
-		this.html `${each(this.state.items, perfLightRow, itemKey)}`;
+				this.html `${each(this.state.items, perfLightRow, itemKey)}`;
 	}
 }
 customElements.define('uwc-light-shootout-list', UwcLightShootoutList);
@@ -246,8 +244,7 @@ class UwcListShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		
-		this.html `${list('items', perfLightRow, itemKey)}`;
+				this.html `${list('items', perfLightRow, itemKey)}`;
 	}
 }
 customElements.define('uwc-list-shootout-list', UwcListShootoutList);
@@ -266,8 +263,7 @@ class UwcArrowEachShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		
-		this.html `${() => {
+				this.html `${() => {
 			return each(this.state.items, perfLightRow, itemKey);
 		}}`;
 	}
@@ -287,8 +283,7 @@ class UwcNoShadowScopedShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		
-		this.html `${each(this.state.items, perfLightRow, itemKey)}`;
+				this.html `${each(this.state.items, perfLightRow, itemKey)}`;
 	}
 }
 customElements.define('uwc-noshadow-scoped-shootout-list', UwcNoShadowScopedShootoutList);
@@ -306,8 +301,7 @@ class UwcNoShadowUnscopedShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		
-		this.html `${each(this.state.items, perfLightRow, itemKey)}`;
+				this.html `${each(this.state.items, perfLightRow, itemKey)}`;
 	}
 }
 customElements.define('uwc-noshadow-unscoped-shootout-list', UwcNoShadowUnscopedShootoutList);
@@ -937,8 +931,7 @@ export class FrameworkShootout extends WebComponent {
 			rows: this.state.results,
 			emptyMessage: 'press "Bench all" to populate',
 		};
-		
-		this.html `
+				this.html `
 			<div class="page">
 				<header class="head">
 					<h1>Framework Shootout — UWC strategies vs Lit 3 vs Vue 3</h1>

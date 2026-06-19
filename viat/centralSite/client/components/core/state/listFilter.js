@@ -20,6 +20,12 @@ export function resolveListFilter(test) {
 		return test;
 	}
 	if (typeof test === 'string') {
+		/*
+		 * Closes over the flag name once — resolved at `filter()` build time, NOT
+		 * per item or per render (the list spot keeps this one predicate for its
+		 * whole life). The keyed diff in template.js applies it in a single named
+		 * loop (`buildListView`), so there is no per-item function allocation.
+		 */
 		return function keepUnlessFlag(item) {
 			return !item?.[test];
 		};

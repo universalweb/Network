@@ -1,16 +1,17 @@
 import '../button/button.js';
 import '../icon/icon.js';
 import { WebComponent, classList } from '../../core/index.js';
-// `<ui-icon-button>` — a thin composition: a `<ui-button>` in its icon variant
-// wrapping a `<ui-icon>`. The two raw primitives stay independent, first-class
-// framework elements; this only pairs them so every piece of chrome (dock, top
-// bar, toolbar) gets one consistent icon control instead of three near-copies.
-//
-// Configured by the flat keys `icon` / `tooltip` / `size` / `animate`. The two
-// child-state bundles `buttonState` / `iconState` are declared reactive keys on
-// the one state tree — `onConnect` composes them from the flat keys and keeps
-// them in step. render() binds them straight, `.state=${this.state.X}`; no
-// per-render method ever fabricates a child's state object (Doctrine 7).
+/*
+ * `<ui-icon-button>` — a thin composition: a `<ui-button>` in its icon variant
+ * wrapping a `<ui-icon>`. The two raw primitives stay independent, first-class
+ * framework elements; this only pairs them so every piece of chrome (dock, top
+ * bar, toolbar) gets one consistent icon control instead of three near-copies.
+ *
+ * Configured by the flat keys `icon` / `tooltip` / `size` / `animate`, bound
+ * straight onto the children as direct `.prop=` bindings — each bare read is a
+ * tracked renderDep, so a flat-key change patches the exact child property.
+ * No child-state bundles, no observers, no sync methods.
+ */
 export class IconButtonBase extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -25,18 +26,7 @@ export class IconButtonBase extends WebComponent {
 		tooltip: '',
 		size: 'md',
 		animate: '',
-		onClick: '',
-		// Child-state bundles — composed in onConnect, bound bare in render().
-		buttonState: {
-			variant: 'icon',
-			tone: 'neutral',
-			title: '',
-		},
-		iconState: {
-			name: '',
-			size: 'md',
-			animate: '',
-		},
+		onClick: 'buttonClick',
 	};
 	constructor(state = {}, config = {}) {
 		super(state, {
@@ -44,58 +34,30 @@ export class IconButtonBase extends WebComponent {
 			tooltips: config.tooltips ?? true,
 		});
 	}
-	onConnect() {
-		// Compose the child bundles from the flat config before the first
-		// render, then keep them in step — list-driven instances may receive
-		// their `icon` / `tooltip` after connect, so the watches are required,
-		// not just future-proofing.
-		this.syncButtonState();
-		this.syncIconState();
-		this.observe('tooltip', () => {
-			this.syncButtonState();
-		});
-		this.observe('icon', () => {
-			this.syncIconState();
-		});
-		this.observe('size', () => {
-			this.syncIconState();
-		});
-		this.observe('animate', () => {
-			this.syncIconState();
-		});
-	}
-	syncButtonState() {
-		this.state.buttonState = {
-			variant: 'icon',
-			tone: 'neutral',
-			title: this.state.tooltip,
-		};
-	}
-	syncIconState() {
-		this.state.iconState = {
-			name: this.state.icon,
-			size: this.state.size,
-			animate: this.state.animate,
-		};
-	}
 	onMount() {
-		this.classList.toggle('active', Boolean(this.state.active));
+		// Host-level `data-active` — reflected so parent CSS (dock, toolbar)
+		// can paint the active control via `ui-icon-button[data-active]`. A
+		// component can't `?attr` its own host in its own template, so this
+		// reflection is the one sanctioned imperative host-decoration path.
 		this.observe('active', (next) => {
-			this.classList.toggle('active', Boolean(next));
+			this.toggleAttribute('data-active', Boolean(next));
+		}, {
+			immediate: true,
 		});
 	}
 	handleActivate() {
-		this.emit(this.state.onClick || 'buttonClick', {});
+		this.emit(this.state.onClick || 'buttonClick', this.state);
 	}
 	render() {
-		
-		this.html`
-			<ui-button class=${classList('icon-button', this.state.classes, () => {
-				return this.state.active && 'active';
+		this.html `
+			<ui-button class=${classList('icon-button', this.state.classes, {
+				active: this.state.active,
 			})}
-				.state=${this.state.buttonState}
+				.variant=${'icon'}
+				.tone=${'neutral'}
+				.tooltip=${this.state.tooltip}
 				@buttonClick=${this.handleActivate}>
-				<ui-icon slot="lead" .state=${this.state.iconState}></ui-icon>
+				<ui-icon slot="lead" .name=${this.state.icon} .size=${this.state.size} .animate=${this.state.animate}></ui-icon>
 			</ui-button>
 		`;
 	}

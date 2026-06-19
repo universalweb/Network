@@ -76,4 +76,12 @@ function schedule() {
 }
 globalThis.addEventListener('resize', schedule);
 globalThis.addEventListener('orientationchange', schedule);
+/*
+ * Mobile browser-chrome show/hide (URL-bar collapse/expand) changes the
+ * viewport height WITHOUT a reliable window `resize` — `visualViewport`'s
+ * resize event is the signal that always fires (it also covers pinch-zoom
+ * settles). Routes into the same rAF-coalesced tick; the snapshot dedupe
+ * makes the desktop overlap with the window listener free.
+ */
+globalThis.visualViewport?.addEventListener('resize', schedule);
 tick();

@@ -6,7 +6,7 @@ import {
 	isShadowRoot,
 } from '../utilities.js';
 import { register, unregister } from '../dom/registry.js';
-import { Logger } from '../debug/logger.js';
+import { defaultLogger } from '../debug/logger.js';
 import { PHASE } from './phase.js';
 import { Perf } from '../debug/perf.js';
 import { registerChild } from '../dom/children.js';
@@ -60,7 +60,7 @@ function resolveParentHost(component) {
 }
 function runLifecycleStep(component, handlerName, label) {
 	return component[handlerName]().catch((error) => {
-		Logger.error('WebComponent', `[${component.tagName}] ${label} error:`, error);
+		defaultLogger.error('WebComponent', `[${component.tagName}] ${label} error:`, error);
 		component.onLifecycleError(error);
 	});
 }
@@ -79,8 +79,8 @@ export function disconnectedCallback() {
 export async function handleConnect() {
 	const perfMark = Perf.mark('connect');
 	register(this);
-	if (Logger.debugOn) {
-		Logger.debug('WebComponent', `[${this.tagName}] connectedCallback`);
+	if (defaultLogger.debugOn) {
+		defaultLogger.debug('WebComponent', `[${this.tagName}] connectedCallback`);
 	}
 	attachToParent(this, resolveParentHost(this));
 	/*
@@ -125,8 +125,8 @@ export async function handleConnect() {
 	Perf.measure('connect', perfMark);
 }
 export async function handleMove() {
-	if (Logger.debugOn) {
-		Logger.debug('WebComponent', `[${this.tagName}] connectedMoveCallback`);
+	if (defaultLogger.debugOn) {
+		defaultLogger.debug('WebComponent', `[${this.tagName}] connectedMoveCallback`);
 	}
 	const oldParent = this.parentComponent;
 	this.unregisterFromParent?.();
@@ -138,8 +138,8 @@ export async function handleDisconnect() {
 	await this.pendingConnect;
 	this.pendingConnect = null;
 	unregister(this);
-	if (Logger.debugOn) {
-		Logger.debug('WebComponent', `[${this.tagName}] disconnectedCallback`);
+	if (defaultLogger.debugOn) {
+		defaultLogger.debug('WebComponent', `[${this.tagName}] disconnectedCallback`);
 	}
 	this.unregisterFromParent?.();
 	this.unregisterFromParent = null;

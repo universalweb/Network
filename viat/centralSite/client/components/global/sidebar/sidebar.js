@@ -1,4 +1,4 @@
-import { WebComponent, SNAP_MS, SNAP_CURVE } from 'webcomponent';
+import { SNAP_CURVE, SNAP_MS, WebComponent } from 'webcomponent';
 import '../icon/icon.js';
 // `<ui-sidebar>` — a responsive drawer. Not a bar; it does not compose
 // `<ui-bar>`. Slots its panel content; offers a backdrop, a close button, and
@@ -25,10 +25,11 @@ export class UISidebar extends WebComponent {
 		backdrop: true,
 		closeButton: true,
 		responsive: true,
-		closeIconState: {
-			name: 'x',
-			size: 'md',
-		},
+		// The open()/close()/toggle() METHODS are the trigger API — a project wires
+		// its own button to them (the Viat shell binds its top-bar button this way).
+		// A document hotkey is offered for zero-wiring control (auto-swept on
+		// disconnect; '' opts out — the shell sets the \ | keys in app.js instead).
+		hotkey: '\\',
 	};
 	shellWidth = 0;
 	dragFromOpen = false;
@@ -37,7 +38,7 @@ export class UISidebar extends WebComponent {
 		if (!this.state.responsive) {
 			return 'flyout';
 		}
-		const viewport = this.globalState.environment?.viewport;
+		const viewport = this.global.environment?.viewport;
 		if (!viewport) {
 			return 'coverup';
 		}
@@ -56,20 +57,14 @@ export class UISidebar extends WebComponent {
 	get defaultOpen() {
 		return this.mode === 'flyout';
 	}
-	get hostClasses() {
-		const parts = ['sidebar', `side-${this.state.side}`, `mode-${this.mode}`];
-		if (!this.state.backdrop) {
-			parts.push('no-backdrop');
-		}
-		if (!this.state.closeButton) {
-			parts.push('no-close');
-		}
-		return parts.join(' ');
-	}
+	// toggle() delegates to open/close so there's ONE code path per direction —
+	// the same two methods any external trigger button calls.
 	toggle() {
-		const next = !this.attrs.open;
-		this.attrs.open = next;
-		this.attrs.inert = !next;
+		if (this.attrs.open) {
+			this.close();
+		} else {
+			this.openSidebar();
+		}
 	}
 	close() {
 		this.attrs.open = false;
@@ -78,6 +73,17 @@ export class UISidebar extends WebComponent {
 	openSidebar() {
 		this.attrs.open = true;
 		this.attrs.inert = false;
+	}
+	onConnect() {
+		// Document-level shortcut, registered once per connect (auto-swept on
+		// disconnect). Empty `hotkey` opts out. Lives in onConnect — hotkeys need no
+		// refs and must not re-register on every render.
+		if (this.state.hotkey) {
+			this.hotKey(this.state.hotkey, this.handleHotkey);
+		}
+	}
+	handleHotkey() {
+		this.toggle();
 	}
 	onMount() {
 		this.applyMode();
@@ -98,7 +104,14 @@ export class UISidebar extends WebComponent {
 	// (xxl) threshold. Between crossings the top bar's toggle button is free
 	// to override it.
 	applyMode() {
-		this.classList.value = this.hostClasses;
+		/* Host decoration as data-* ATTRIBUTES (CSS targets :host([data-side])
+		   /:host([data-mode]) …), set imperatively here because the host isn't
+		   template-rendered and `mode` is a viewport-derived getter. Replaces the
+		   old `this.classList.value = hostClasses` string-builder. */
+		this.dataset.side = this.state.side;
+		this.dataset.mode = this.mode;
+		this.toggleAttribute('data-no-backdrop', !this.state.backdrop);
+		this.toggleAttribute('data-no-close', !this.state.closeButton);
 		const wantOpen = this.defaultOpen;
 		if (wantOpen !== this.lastDefaultOpen) {
 			if (wantOpen) {
@@ -213,13 +226,12 @@ export class UISidebar extends WebComponent {
 		}, SNAP_MS);
 	}
 	render() {
-		
-		this.html`
+		this.html `
 			<div class="sidebar-edge" #edge></div>
 			<div class="sidebar-backdrop" @click=${this.close}></div>
 			<aside class="sidebar-shell" #shell>
 				<button #close type="button" class="sidebar-close" aria-label="Close sidebar" @click=${this.close}>
-					<ui-icon .state=${this.state.closeIconState}></ui-icon>
+					<ui-icon .name=${'x'} .size=${'md'}></ui-icon>
 				</button>
 				<slot></slot>
 			</aside>

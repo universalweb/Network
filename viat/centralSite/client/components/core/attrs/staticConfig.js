@@ -78,9 +78,7 @@ function foldStateSource(merged, source, mergeObjects) {
 			continue;
 		}
 		const priorDescriptor = Object.getOwnPropertyDescriptor(merged, key);
-		const priorValue = priorDescriptor && !priorDescriptor.get && !priorDescriptor.set
-			? priorDescriptor.value
-			: undefined;
+		const priorValue = priorDescriptor && !priorDescriptor.get && !priorDescriptor.set ? priorDescriptor.value : undefined;
 		copyDescriptor(merged, key, {
 			value: deepMerge(priorValue, descriptor.value),
 			writable: true,

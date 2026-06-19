@@ -13,16 +13,10 @@ export class WalletAddress extends WebComponent {
 			tooltips: config.tooltips ?? true,
 		});
 	}
-	tooltipText() {
-		return this.state.copied ? 'Copied!' : 'Copy address';
-	}
-	hostClasses() {
-		return `wallet-address${this.state.copied ? ' copied' : ''}`;
-	}
 	addressText() {
 		// Pure address — anything decorative (labels, prefixes) breaks
 		// paste-into-wallet flows. Keep this string clipboard-clean.
-		return this.globalState.walletAddress ?? '';
+		return this.global.walletAddress ?? '';
 	}
 	async handleCopy() {
 		const accepted = await this.copyText(this.addressText());
@@ -51,13 +45,12 @@ export class WalletAddress extends WebComponent {
 		});
 	}
 	render() {
-		
 		this.html `
-			<div class=${this.hostClasses}
-				tooltip=${this.tooltipText}
+			<div class="wallet-address" ?data-copied=${this.state.copied}
+				tooltip=${this.state.copied ? 'Copied!' : 'Copy address'}
 				@click=${this.handleCopy}
 				role="button"
-				tabindex="0">${() => this.globalState.walletAddress || 'no wallet'}</div>
+				tabindex="0">${this.global.walletAddress || 'no wallet'}</div>
 		`;
 	}
 }

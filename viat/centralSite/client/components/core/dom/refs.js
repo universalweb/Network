@@ -5,7 +5,9 @@ const REF_NAME_RE = /^[a-z_][a-z0-9_]*$/;
  * method (no `delete` keyword), stable iteration, and avoids the dictionary-
  * mode deopt that a churning plain object would hit.
  */
-const FINALIZER = new FinalizationRegistry(({ map, name: refName }) => {
+const FINALIZER = new FinalizationRegistry(({
+	map, name: refName,
+}) => {
 	if (map.get(refName)?.deref() === undefined) {
 		map.delete(refName);
 	}

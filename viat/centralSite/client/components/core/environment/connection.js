@@ -24,8 +24,13 @@ function update() {
 		return;
 	}
 	lastSnapshot = value;
-	globalState.set({ 'environment.connection': value });
-	emitDelegate('environment:change', { area: 'connection', value });
+	globalState.set({
+		'environment.connection': value,
+	});
+	emitDelegate('environment:change', {
+		area: 'connection',
+		value,
+	});
 }
 if (conn) {
 	conn.addEventListener('change', update);

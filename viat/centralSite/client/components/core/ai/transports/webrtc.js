@@ -1,4 +1,4 @@
-import { Logger } from '../../debug/logger.js';
+import { defaultLogger } from '../../debug/logger.js';
 const DEFAULT_ICE = [{
 	urls: 'stun:stun.l.google.com:19302',
 }];
@@ -48,7 +48,7 @@ export class WebRTCTransport {
 			}
 		});
 		this.pc.addEventListener('connectionstatechange', () => {
-			Logger.info('ai-rtc', `pc state ${this.pc?.connectionState}`);
+			defaultLogger.info('ai-rtc', `pc state ${this.pc?.connectionState}`);
 		});
 		this.pc.addEventListener('datachannel', (event) => {
 			this.bindChannel(event.channel);
@@ -67,17 +67,17 @@ export class WebRTCTransport {
 	bindChannel(channel) {
 		channel.binaryType = 'arraybuffer';
 		channel.addEventListener('open', () => {
-			Logger.info('ai-rtc', 'data channel open');
+			defaultLogger.info('ai-rtc', 'data channel open');
 		});
 		channel.addEventListener('close', () => {
-			Logger.info('ai-rtc', 'data channel closed');
+			defaultLogger.info('ai-rtc', 'data channel closed');
 		});
 		channel.addEventListener('message', async (event) => {
 			let message;
 			try {
 				message = JSON.parse(event.data);
 			} catch (error) {
-				Logger.warn('ai-rtc', 'parse error', error);
+				defaultLogger.warn('ai-rtc', 'parse error', error);
 				return;
 			}
 			if (!message || message.jsonrpc !== '2.0') {
@@ -108,13 +108,13 @@ export class WebRTCTransport {
 				try {
 					message = JSON.parse(event.data);
 				} catch (error) {
-					Logger.warn('ai-rtc-sig', 'parse error', error);
+					defaultLogger.warn('ai-rtc-sig', 'parse error', error);
 					return;
 				}
 				await this.handleSignal(message);
 			});
 			ws.addEventListener('close', () => {
-				Logger.info('ai-rtc-sig', 'signal closed');
+				defaultLogger.info('ai-rtc-sig', 'signal closed');
 			});
 		});
 	}
@@ -133,7 +133,7 @@ export class WebRTCTransport {
 				try {
 					await this.pc.addIceCandidate(candidate);
 				} catch (error) {
-					Logger.warn('ai-rtc-sig', 'addIceCandidate failed', error);
+					defaultLogger.warn('ai-rtc-sig', 'addIceCandidate failed', error);
 				}
 			}
 			return;
@@ -146,7 +146,7 @@ export class WebRTCTransport {
 			try {
 				await this.pc.addIceCandidate(message.candidate);
 			} catch (error) {
-				Logger.warn('ai-rtc-sig', 'addIceCandidate failed', error);
+				defaultLogger.warn('ai-rtc-sig', 'addIceCandidate failed', error);
 			}
 		}
 	}
@@ -163,7 +163,7 @@ export class WebRTCTransport {
 			this.channel.send(JSON.stringify(message));
 			return true;
 		} catch (error) {
-			Logger.warn('ai-rtc', 'send error', error);
+			defaultLogger.warn('ai-rtc', 'send error', error);
 			return false;
 		}
 	}
@@ -175,17 +175,17 @@ export class WebRTCTransport {
 		try {
 			this.channel?.close();
 		} catch (error) {
-			Logger.warn('ai-rtc', 'channel close error', error);
+			defaultLogger.warn('ai-rtc', 'channel close error', error);
 		}
 		try {
 			this.pc?.close();
 		} catch (error) {
-			Logger.warn('ai-rtc', 'pc close error', error);
+			defaultLogger.warn('ai-rtc', 'pc close error', error);
 		}
 		try {
 			this.signal?.close();
 		} catch (error) {
-			Logger.warn('ai-rtc', 'signal close error', error);
+			defaultLogger.warn('ai-rtc', 'signal close error', error);
 		}
 		this.channel = null;
 		this.pc = null;

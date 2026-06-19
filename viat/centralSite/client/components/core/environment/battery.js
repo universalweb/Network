@@ -19,15 +19,22 @@ function snapshot() {
 }
 function update() {
 	const value = snapshot();
-	globalState.set({ 'environment.battery': value });
-	emitDelegate('environment:change', { area: 'battery', value });
+	globalState.set({
+		'environment.battery': value,
+	});
+	emitDelegate('environment:change', {
+		area: 'battery',
+		value,
+	});
 }
 export async function requestBattery() {
 	if (manager || typeof navigator.getBattery !== 'function') {
 		return manager;
 	}
 	manager = await navigator.getBattery();
-	['levelchange', 'chargingchange', 'chargingtimechange', 'dischargingtimechange'].forEach((eventName) => {
+	[
+		'levelchange', 'chargingchange', 'chargingtimechange', 'dischargingtimechange',
+	].forEach((eventName) => {
 		manager.addEventListener(eventName, update);
 	});
 	update();

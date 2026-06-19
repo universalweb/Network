@@ -23,12 +23,12 @@
   font-weight: var(--weight-bold);
 }
 
-.log-tag-in {
+.log-tag[data-direction='in'] {
   color: var(--color-success);
   text-shadow: var(--log-in-text-shadow, 0 0 5px var(--color-success-glow));
 }
 
-.log-tag-out {
+.log-tag[data-direction='out'] {
   color: var(--color-danger);
   text-shadow: var(--log-out-text-shadow, 0 0 5px var(--color-danger-glow));
 }
@@ -38,11 +38,11 @@
   word-break: break-all;
 }
 
-.log-msg.ok {
+.log-msg[data-status='ok'] {
   color: var(--color-success-text);
 }
 
-.log-msg.warn {
+.log-msg[data-status='warn'] {
   color: var(--color-warn-text);
 }
 

@@ -5,6 +5,9 @@
    Zero radius. Stencil geometry. Saturated blue dark.
 ───────────────────────────────────────────────────── */
 :root {
+  /* Dark root → native controls (date/time pickers, spinners, scrollbars, the
+     native <select> popup) adopt the dark UA palette instead of light-on-light. */
+  color-scheme: dark;
   /* ── Base Palette ────────────────────────────────── */
   --bg-body: #06091A;
   --bg-panel: #0A0D20;
@@ -140,6 +143,9 @@
   --btn-hover-inset: inset 0 1px 0 rgba(255, 150, 200, 0.16);
   --btn-hover-glow: 0 0 18px rgba(255, 21, 128, 0.28);
   --btn-hover-color: #06091A;
+  /* Primary solid hover brightens within the magenta family (base fallback
+     is midnight mint). */
+  --btn-primary-hover-bg: #ff4d9e;
   --focus-ring-color: rgba(255, 21, 128, 0.82);
   --green-hover: #00E5A0;
 
@@ -185,6 +191,7 @@
 
   /* ── Glow Scale ──────────────────────────────────── */
   --ph-dot-shadow: 0 0 6px var(--teal), 0 0 16px rgba(255, 21, 128, 0.65);
+  --tab-indicator-shadow: 0 0 8px rgba(255, 21, 128, 0.45);
   --logo-mark-text-shadow: 0 0 12px rgba(255, 21, 128, 0.90);
   --subtitle-text-shadow: 0 0 6px rgba(255, 21, 128, 0.60);
   --indicator-on-shadow: 0 0 8px var(--teal), 0 0 20px rgba(255, 21, 128, 0.55);

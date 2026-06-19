@@ -1,5 +1,5 @@
 import '../../global/modal/modal.js';
-import { WebComponent, classList } from '../../core/index.js';
+import { WebComponent } from '../../core/index.js';
 /* `<sign-data-modal>` — arbitrary-data signing dialog. Chrome comes from the
    shared modal-chrome.css + base element styles; the warning banner and status
    line are colocated in sign-data-modal.css. */
@@ -139,11 +139,7 @@ export class SignDataModal extends WebComponent {
 							.value=${this.state.signatureOutput}
 							@click=${this.handleCopySignature}></textarea>
 					</label>
-					<div class=${classList('sign-status', () => {
-						return `tone-${this.state.statusTone || 'idle'}`;
-					}, () => {
-						return (this.state.statusMessage ? 'is-visible' : '');
-					})}>${this.state.statusMessage}</div>
+					<div class="sign-status" data-tone=${this.state.statusTone || 'idle'} ?data-visible=${this.state.statusMessage}>${this.state.statusMessage}</div>
 				</div>
 			</ui-modal>
 		`;

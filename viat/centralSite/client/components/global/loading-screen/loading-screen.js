@@ -1,5 +1,5 @@
 import '../spinner/spinner.js';
-import { WebComponent, classList } from '../../core/index.js';
+import { WebComponent } from '../../core/index.js';
 export class UILoadingScreen extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -22,25 +22,15 @@ export class UILoadingScreen extends WebComponent {
 		this.state.open = false;
 	}
 	render() {
-		
 		this.html `
-			<div class=${classList(
-				'loading-screen',
-				() => {
-					return `variant-${this.state.variant}`;
-				},
-				() => {
-					return this.state.open && 'is-open';
-				},
-				() => {
-					return this.state.blocking && 'is-blocking';
-				}
-			)}
+			<div
+				class="loading-screen"
+				data-variant=${this.state.variant}
+				?data-open=${this.state.open}
+				?data-blocking=${this.state.blocking}
 				role="status"
 				aria-live="polite"
-				aria-hidden="${() => {
-					return (this.state.open ? 'false' : 'true');
-				}}">
+				aria-hidden=${this.state.open ? 'false' : 'true'}>
 				<div class="loading-card">
 					<ui-spinner .state=${{
 						label: '',

@@ -39,7 +39,6 @@ export class PerfFullCard extends WebComponent {
 		this.state.value = 0;
 	}
 	render() {
-		
 		this.html `
 			<div class="card">
 				<div class="head">

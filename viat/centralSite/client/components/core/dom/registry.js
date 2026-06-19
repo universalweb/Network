@@ -1,4 +1,4 @@
-import { Logger } from '../debug/logger.js';
+import { defaultLogger } from '../debug/logger.js';
 import { isString } from '../utilities.js';
 const store = new Map();
 function getRegistryKey(component) {
@@ -24,7 +24,7 @@ export function register(component) {
 	if (!key) {
 		return;
 	}
-	Logger.debug('registry', 'register', key);
+	defaultLogger.debug('registry', 'register', key);
 	store.set(key, component);
 }
 export function unregister(component) {

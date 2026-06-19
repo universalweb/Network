@@ -137,14 +137,9 @@ class AIChatMessage extends WebComponent {
 		content: '',
 	};
 	render() {
-		
 		this.html `
-			<div class="${() => {
-				return `aim aim-${this.state.role}`;
-			}}">
-				<div class="aim-role">${() => {
-					return (this.state.role === 'user' ? 'YOU' : 'AI');
-				}}</div>
+			<div class="aim" data-role=${this.state.role}>
+				<div class="aim-role">${this.state.role === 'user' ? 'YOU' : 'AI'}</div>
 				<div class="aim-content">${this.state.content}</div>
 			</div>
 		`;
@@ -552,7 +547,6 @@ export class AIChat extends WebComponent {
 		return null;
 	}
 	render() {
-		
 		this.html `
 			<div class="ai-chat">
 				<header class="aic-header">
@@ -570,21 +564,17 @@ export class AIChat extends WebComponent {
 				<div #log class="aic-log">
 					${filter('messages', AIChatMessage, 'hidden')}
 				</div>
-				<div class="${() => {
-					return `aic-error${this.state.errorText ? ' is-visible' : ''}`;
-				}}">${this.state.errorText}</div>
+				<div class="aic-error" ?data-visible=${this.state.errorText}>${this.state.errorText}</div>
 				<footer class="aic-input-row">
 					<textarea #input
 						name="local-ai-input"
-						class="aic-input"
+						class="aic-input autosize"
 						placeholder="Message local AI…"
 						rows="2"
 						$value="inputValue"
 						?disabled=${this.state.streaming}
 						@keydown=${this.handleKeyDown}></textarea>
-					<button class="${() => {
-						return `aic-btn${this.state.streaming ? ' is-streaming' : ''}`;
-					}}" @click=${this.handleSubmit}>
+					<button class="aic-btn" ?data-streaming=${this.state.streaming} @click=${this.handleSubmit}>
 						${ifThen('streaming', 'STOP', 'SEND')}
 					</button>
 				</footer>

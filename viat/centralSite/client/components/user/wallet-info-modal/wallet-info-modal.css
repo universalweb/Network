@@ -21,7 +21,7 @@
 	display: block;
 	transition: max-width 0.32s ease, max-height 0.32s ease, border-color 0.18s ease;
 }
-.modal-shell.is-expanded .wi-img {
+.modal-shell[data-expanded] .wi-img {
 	cursor: zoom-out;
 	max-width: 100%;
 	max-height: none;

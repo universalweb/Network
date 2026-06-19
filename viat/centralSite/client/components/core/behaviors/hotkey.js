@@ -10,7 +10,6 @@
  * event is the activation.
  */
 import { registerHotkey } from '../hotkeys/hotkeys.js';
-
 function activateFromTemplate(keyEvent, combo) {
 	// `this` is the element the behavior was installed on.
 	this.dispatchEvent(new CustomEvent('hotkey', {
@@ -22,7 +21,6 @@ function activateFromTemplate(keyEvent, combo) {
 		},
 	}));
 }
-
 export const hotkey = {
 	name: 'hotkey',
 	install(element, combo) {

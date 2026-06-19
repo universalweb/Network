@@ -12,11 +12,17 @@ export class UIAppBar extends WebComponent {
 	static styles = {
 		appBar: './app-bar.css',
 	};
+	/*
+	 * Per-theme RULE overrides (structure: float radius / shadow / hairlines)
+	 * in `./themes/{id}.css` — adopted by theme, absent files are graceful.
+	 */
+	static themes = [
+		'gnosis', 'codex',
+	];
 	static state = {
 		actions: [],
 	};
 	render() {
-		
 		this.html `
 			<header class="app-bar">
 				<ui-bar class="app-bar-bar">

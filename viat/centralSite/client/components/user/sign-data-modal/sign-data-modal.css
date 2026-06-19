@@ -29,8 +29,8 @@
 	opacity: 0;
 	transition: opacity 0.18s ease, color 0.18s ease;
 }
-.sign-status.is-visible { opacity: 1; }
-.sign-status.tone-info { color: var(--text-muted, var(--popup-text)); }
-.sign-status.tone-success { color: var(--color-success-text); }
-.sign-status.tone-error { color: var(--color-danger); }
-.sign-status.tone-warn { color: var(--color-warn-text); }
+.sign-status[data-visible] { opacity: 1; }
+.sign-status[data-tone='info'] { color: var(--text-muted, var(--popup-text)); }
+.sign-status[data-tone='success'] { color: var(--color-success-text); }
+.sign-status[data-tone='error'] { color: var(--color-danger); }
+.sign-status[data-tone='warn'] { color: var(--color-warn-text); }

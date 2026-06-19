@@ -1,0 +1,88 @@
+:host {
+	display: block;
+}
+.opt {
+	position: relative;
+	display: block;
+	inline-size: 100%;
+	padding: 0;
+	border: 1px solid var(--dark-divider);
+	border-radius: var(--radius-sm);
+	background: var(--bg-dark);
+	color: var(--text-main);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+	overflow: hidden;
+	transition: border-color var(--dur-fast) var(--ease-out, ease);
+}
+.opt:hover,
+.opt[data-selected] {
+	border-color: var(--teal);
+}
+.opt[data-revealed] {
+	cursor: default;
+}
+/* The tally bar lives behind the content; its width tracks `percentage`, so the
+   lock-time write springs it open from zero. */
+.opt-bar {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: 0;
+	inline-size: 0;
+	background: color-mix(in oklab, var(--teal) 18%, transparent);
+	pointer-events: none;
+	transition: inline-size var(--dur-slow) var(--ease-spring);
+}
+.opt[data-selected] .opt-bar {
+	background: color-mix(in oklab, var(--teal) 30%, transparent);
+}
+.opt-face {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-3);
+}
+.opt-mark {
+	flex: none;
+	inline-size: 1rem;
+	block-size: 1rem;
+	border: 2px solid var(--text-muted);
+	/* circle (radio) vs square (checkbox) — inherited from the parent .poll. */
+	border-radius: var(--poll-indicator-radius, 50%);
+	transition:
+		border-color var(--dur-fast) var(--ease-out, ease),
+		background var(--dur-fast) var(--ease-out, ease);
+}
+.opt[data-selected] .opt-mark {
+	border-color: var(--teal);
+	background: radial-gradient(circle at center, var(--teal) 0 45%, transparent 47%);
+}
+.opt-text {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+}
+.opt-label {
+	font-size: var(--text-sm);
+	font-weight: var(--weight-medium);
+}
+.opt-desc {
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+}
+.opt-pct {
+	flex: none;
+	font-size: var(--text-sm);
+	font-weight: var(--weight-semibold);
+	color: var(--teal);
+	font-variant-numeric: tabular-nums;
+}
+@media (prefers-reduced-motion: reduce) {
+	.opt-bar {
+		transition: none;
+	}
+}

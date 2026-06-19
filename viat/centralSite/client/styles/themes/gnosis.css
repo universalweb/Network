@@ -1,0 +1,202 @@
+/* ── Gnosis Theme ─────────────────────────────────────
+   The hidden. Esoteric instrument panel: depth from LINE
+   and SPACE, not shadow. Neutral near-black (no blue
+   cast), bone type, hairline structure, 2px boxy radius,
+   wide-tracked sectional headers. Jade accent, used
+   scarcely; alchemical gold for warnings. Zero glow.
+   Panel identity = registration crosses that awaken on
+   hover (components/global/panel/themes/gnosis.css).
+─────────────────────────────────────────────────────── */
+:root {
+  /* Dark root → native controls (date/time pickers, spinners, scrollbars, the
+     native <select> popup) adopt the dark UA palette instead of light-on-light. */
+  color-scheme: dark;
+  /* ── Base Palette ────────────────────────────────── */
+  --bg-body: #0e0e10;
+  --bg-panel: #121214;
+  --bg-dark: #09090b;
+  --bg-dark-mid: #0e0e10;
+  --navy: #1a1a1e;
+  --navy-light: #9aa0ab;
+  --teal: #35e0a1;
+  --teal-dim: rgba(53, 224, 161, 0.09);
+  --cyan: #8ef0cd;
+  --cyan-dim: rgba(142, 240, 205, 0.08);
+  --magenta: #e8b93e;
+  --magenta-dim: rgba(232, 185, 62, 0.10);
+  --grey-solid: #5d6068;
+  --grey-mid: #232327;
+
+  /* ── Text (bone, warm) ───────────────────────────── */
+  --text-main: #e8e6df;
+  --text-muted: #7d7b73;
+  --text-light: #f7f6f1;
+  --text-offwhite: #c8c6bd;
+
+  /* ── Fonts ───────────────────────────────────────── */
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Inter', sans-serif;
+
+  /* ── Border Colors (the structure) ───────────────── */
+  --border-light-color: rgba(232, 230, 223, 0.10);
+
+  /* ── Borders ─────────────────────────────────────── */
+  --border-main: 1px solid rgba(232, 230, 223, 0.16);
+  --border-light: 1px solid var(--border-light-color);
+  --border-dark: 1px solid var(--dark-divider-accent);
+
+  /* ── Surface Tints (bone wash) ───────────────────── */
+  --surface-tint-heavy: rgba(232, 230, 223, 0.09);
+  --surface-tint: rgba(232, 230, 223, 0.055);
+  --surface-tint-soft: rgba(232, 230, 223, 0.035);
+  --surface-tint-faint: rgba(232, 230, 223, 0.022);
+  --surface-tint-ghost: rgba(232, 230, 223, 0.013);
+  --surface-tint-whisper: rgba(232, 230, 223, 0.008);
+  --watermark-text: rgba(232, 230, 223, 0.028);
+
+  /* ── Dark Surface Text ───────────────────────────── */
+  --dark-text: rgba(226, 224, 216, 0.50);
+  --dark-text-dim: rgba(226, 224, 216, 0.40);
+  --dark-text-medium: rgba(226, 224, 216, 0.68);
+  --dark-text-bright: rgba(226, 224, 216, 0.82);
+  --dark-heading: rgba(247, 246, 241, 0.36);
+  --dark-heading-sep: rgba(247, 246, 241, 0.14);
+  --dark-text-faint: rgba(247, 246, 241, 0.24);
+
+  /* ── Dark Surface Dividers (hairlines) ───────────── */
+  --dark-divider: rgba(232, 230, 223, 0.09);
+  --dark-divider-subtle: rgba(232, 230, 223, 0.065);
+  --dark-divider-faint: rgba(232, 230, 223, 0.04);
+  --dark-divider-accent: rgba(232, 230, 223, 0.075);
+  --dark-highlight: rgba(232, 230, 223, 0.03);
+
+  /* ── Jade Accent Scale (scarce, no glow) ─────────── */
+  --cyan-glow-strong: rgba(53, 224, 161, 0.36);
+  --cyan-glow: rgba(53, 224, 161, 0.26);
+  --cyan-glow-medium: rgba(53, 224, 161, 0.19);
+  --cyan-glow-soft: rgba(53, 224, 161, 0.13);
+  --cyan-glow-faint: rgba(53, 224, 161, 0.08);
+  --cyan-tint: rgba(53, 224, 161, 0.045);
+  --cyan-tint-faint: rgba(53, 224, 161, 0.028);
+  --cyan-scanline: transparent;
+  --cyan-timestamp: rgba(142, 240, 205, 0.50);
+
+  /* ── Teal/Jade Accent Scale ──────────────────────── */
+  --teal-glow: rgba(53, 224, 161, 0.26);
+  --teal-glow-soft: rgba(53, 224, 161, 0.13);
+  --teal-glow-faint: rgba(53, 224, 161, 0.08);
+
+  /* ── Scrollbar ───────────────────────────────────── */
+  --scrollbar-thumb: rgba(232, 230, 223, 0.12);
+  --scrollbar-thumb-hover: rgba(232, 230, 223, 0.22);
+
+  /* ── Status Colors (ink-flat, glow-free) ─────────── */
+  --color-success: #35e0a1;
+  --color-success-glow: transparent;
+  --color-success-text: rgba(53, 224, 161, 0.88);
+  --color-danger: #e5484d;
+  --color-danger-glow: transparent;
+  --color-warning: #e8b93e;
+  --color-info: #6aa5ff;
+  --color-warn-text: rgba(232, 185, 62, 0.90);
+
+  /* ═══════════════════════════════════════════════════
+     COMPONENT THEME TOKENS
+  ═══════════════════════════════════════════════════ */
+
+  /* ── Shape (boxy, sharp) ─────────────────────────── */
+  --radius: 2px;
+  --radius-lg: 4px;
+  --stat-bar-radius: 0;
+  --indicator-radius: 0;
+  --indicator-warn-radius: 0;
+
+  /* ── Input ───────────────────────────────────────── */
+  --input-radius: 2px;
+  --input-accent-border: 1px solid rgba(232, 230, 223, 0.12);
+  --input-accent-shadow: none;
+  --field-border-style: solid;
+
+  /* ── Panel — NO shadow; structure is the hairline ── */
+  --panel-shadow: none;
+  --panel-hover-shadow: none;
+  --panel-hover-border: rgba(53, 224, 161, 0.50);
+  /* Center toolbar follows the same law: ruled band, no plate, no lift. */
+  --toolbar-shadow: none;
+  --toolbar-hover-lift: 0;
+  --panel-header-accent: rgba(53, 224, 161, 0.0);
+  --panel-header-left-border: none;
+  --panel-header-bg: transparent;
+  --panel-header-left-accent-width: 0px;
+  --panel-header-border-bottom: 1px solid rgba(232, 230, 223, 0.10);
+  --panel-header-padding: 12px 16px;
+  --panel-header-font-size: 0.60rem;
+  --panel-header-letter-spacing: 0.42em;
+  --panel-header-color: rgba(232, 230, 223, 0.85);
+  --ph-cursor-display: none;
+  --ph-id-opacity: 0.50;
+  --ph-id-letter-spacing: 0.22em;
+
+  /* ── Buttons (hairline, jade awakening) ──────────── */
+  --btn-bg: transparent;
+  --btn-border: rgba(232, 230, 223, 0.16);
+  --btn-inset: none;
+  --btn-hover-bg: rgba(53, 224, 161, 0.07);
+  --btn-hover-border: rgba(53, 224, 161, 0.50);
+  --btn-hover-inset: none;
+  --btn-hover-glow: none;
+  --btn-hover-color: var(--text-light);
+  /* Primary solid hover brightens within the jade family (base fallback is
+     midnight mint). */
+  --btn-primary-hover-bg: #5cebb8;
+  --focus-ring-color: rgba(53, 224, 161, 0.70);
+  --green-hover: #35e0a1;
+
+  /* ── Flyout ──────────────────────────────────────── */
+  --flyout-bg: #121214;
+  --flyout-border: rgba(232, 230, 223, 0.12);
+  --flyout-radius: 4px;
+  --flyout-shadow: 0 12px 32px rgba(0, 0, 0, 0.50);
+
+  /* ── Inputs / Interactive ────────────────────────── */
+  --input-hover-border: rgba(53, 224, 161, 0.42);
+  --input-hover-glow: transparent;
+  --input-copied-bg: rgba(53, 224, 161, 0.08);
+  --input-copied-border: rgba(53, 224, 161, 0.40);
+
+  /* ── Top Bar (quiet glass, hairline) ─────────────── */
+  --topbar-bg: rgba(14, 14, 16, 0.60);
+  --topbar-border: rgba(232, 230, 223, 0.10);
+  --topbar-accent: var(--teal);
+  --topbar-bottom-border: 1px solid rgba(232, 230, 223, 0.09);
+  --tb-badge-radius: 2px;
+  --logo-mark-pattern: none;
+
+  /* ── Popups ──────────────────────────────────────── */
+  --popup-bg: #131315;
+  --popup-bg-hover: #18181a;
+  --popup-border: rgba(232, 230, 223, 0.14);
+  --popup-border-hover: rgba(53, 224, 161, 0.34);
+  --popup-accent: var(--teal);
+  --popup-shadow: 0 12px 36px rgba(0, 0, 0, 0.48);
+  --popup-text: var(--text-main);
+
+  /* ── Glow Kills (the language has none) ──────────── */
+  --tab-indicator-shadow: none;
+  --ph-dot-shadow: none;
+  --input-error-glow: transparent;
+  /* Page-level surface elevation: none — structure is the hairline.
+     (Overlays keep --popup-shadow; they float above the page.) */
+  --elev-1: none;
+  --elev-2: none;
+  --elev-3: none;
+  --elev-hover: none;
+  --logo-mark-text-shadow: none;
+  --subtitle-text-shadow: none;
+  --indicator-on-shadow: none;
+  --stat-good-text-shadow: none;
+  --stat-bar-fill-shadow: none;
+  --wa-underline-shadow: none;
+  --log-in-text-shadow: none;
+  --log-out-text-shadow: none;
+}

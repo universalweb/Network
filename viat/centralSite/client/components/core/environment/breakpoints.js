@@ -17,11 +17,26 @@ export const heightBreakpoints = {
 	tall: Infinity,
 };
 export const aspectBuckets = [
-	{ name: 'tall', max: 1 },
-	{ name: 'square', max: 1.2 },
-	{ name: 'standard', max: 1.6 },
-	{ name: 'wide', max: 2.1 },
-	{ name: 'ultra-wide', max: Infinity },
+	{
+		name: 'tall',
+		max: 1,
+	},
+	{
+		name: 'square',
+		max: 1.2,
+	},
+	{
+		name: 'standard',
+		max: 1.6,
+	},
+	{
+		name: 'wide',
+		max: 2.1,
+	},
+	{
+		name: 'ultra-wide',
+		max: Infinity,
+	},
 ];
 function pickBreakpoint(value, table) {
 	const keys = Object.keys(table);

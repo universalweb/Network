@@ -230,22 +230,14 @@ export class PagedList extends WebComponent {
 						dedupe: true,
 						fillViewport: true,
 					})}
-					<div class=${() => {
-						return this.state.error ? 'pl-empty pl-error' : 'pl-empty';
-					}} ?hidden=${() => {
-						return this.state.items.length > 0;
-					}}>${this.statusText}</div>
+					<div class="pl-empty" ?data-error=${this.state.error} ?hidden=${this.state.items.length > 0}>${this.statusText}</div>
 				</div>
-				<div class="pl-pager" ?hidden=${() => {
-					return this.state.pagingStyle !== PAGED;
-				}}>
+				<div class="pl-pager" ?hidden=${this.state.pagingStyle !== PAGED}>
 					<button class="pl-btn" #pl_prev>‹ Prev</button>
 					<span class="pl-page-label">page ${this.state.currentPage}</span>
 					<button class="pl-btn" #pl_next>Next ›</button>
 				</div>
-				<div class="pl-loadmore-bar" ?hidden=${() => {
-					return this.state.pagingStyle === PAGED;
-				}}>
+				<div class="pl-loadmore-bar" ?hidden=${this.state.pagingStyle === PAGED}>
 					<button class="pl-btn pl-loadmore" #pl_load_more>LOAD MORE ▾</button>
 				</div>
 			</div>

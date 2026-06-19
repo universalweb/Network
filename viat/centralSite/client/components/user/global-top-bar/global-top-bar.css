@@ -42,19 +42,16 @@
 	outline-offset: 2px;
 }
 
+/* The ⩝ mark as inline SVG (same geometry as the onboarding wo-mark) —
+   centers naturally on the bar's flex midline and scales crisply, following
+   the theme accent via currentColor. The old text glyph needed a 40px font
+   + baseline hacks to approximate the same box. */
 .tb-logo-mark {
-	display: inline-flex;
-	align-items: self-end;
-	justify-content: center;
-	width: 1.5625rem;
-	height: 2rem;
-	font-family: var(--font-mono);
-	font-size: 40px;
-	font-weight: var(--weight-normal);
-	line-height: 1;
+	display: block;
+	width: 1.5rem;
+	height: 1.5rem;
+	flex: 0 0 auto;
 	color: var(--topbar-accent);
-	text-shadow: var(--logo-mark-text-shadow, none);
-	user-select: none;
 }
 
 .tb-logo-sep {

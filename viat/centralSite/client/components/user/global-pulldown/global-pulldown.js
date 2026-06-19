@@ -39,6 +39,11 @@ export class GlobalPulldown extends WebComponent {
 			trigger: 'main',
 			threshold: 0.3,
 			velocity: 0.5,
+			// ui-pulldown defaults to a bottom grab handle, but this overlay fills its
+			// whole surface with ai-chat (compose box anchored at the bottom) and is
+			// already dismissed by the top-bar pull gesture + backdrop click — so opt
+			// the handle out rather than float a grab strip over the chat controls.
+			handlePosition: 'none',
 		},
 	};
 	scrollLocked = false;
@@ -90,7 +95,6 @@ export class GlobalPulldown extends WebComponent {
 		});
 	}
 	render() {
-		
 		this.html `
 			<ui-pulldown #pulldown
 				.state=${this.state.pulldown}

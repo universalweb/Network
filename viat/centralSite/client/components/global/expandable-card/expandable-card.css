@@ -1,0 +1,200 @@
+:host {
+	display: block;
+}
+/* Collapsed card — the trigger. A subtle hover lift; it stays put when the expanded
+   surface morphs out of it (no layout shift). */
+.ec-card {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	inline-size: 100%;
+	padding: var(--space-4);
+	text-align: start;
+	background: var(--popup-bg);
+	border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 18%, transparent));
+	border-radius: var(--radius-lg, 0.75rem);
+	color: var(--text-main);
+	font-family: var(--font-mono, 'JetBrains Mono', monospace);
+	cursor: pointer;
+	transition:
+		transform var(--dur-fast) var(--ease-spring-subtle),
+		border-color var(--dur-fast) ease,
+		box-shadow var(--dur-fast) ease;
+}
+.ec-card:hover {
+	transform: translateY(-2px);
+	border-color: var(--teal);
+	box-shadow: 0 12px 28px -12px rgb(0 0 0 / 0.5);
+}
+.ec-card:active {
+	transform: translateY(0) scale(0.99);
+}
+.ec-card:focus-visible {
+	outline: none;
+	border-color: var(--focus-ring-color, var(--cyan));
+	box-shadow: 0 0 0 2px color-mix(in oklab, var(--focus-ring-color, var(--cyan)) 45%, transparent);
+}
+.ec-card-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+}
+.ec-card-title {
+	font-size: var(--text-sm);
+	font-weight: var(--weight-semibold);
+	letter-spacing: 0.04em;
+}
+.ec-card-chevron {
+	color: var(--text-muted, rgb(255 255 255 / 0.5));
+	transition: transform var(--dur-base) var(--ease-spring-subtle);
+}
+.ec-card[aria-expanded='true'] .ec-card-chevron {
+	transform: rotate(180deg);
+}
+.ec-card-summary {
+	margin: 0;
+	font-size: var(--text-xs);
+	line-height: 1.5;
+	color: var(--text-muted, rgb(255 255 255 / 0.6));
+}
+/* Overlay + dim scrim — the expanded card should stand above the page. */
+.ec-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-floating, 900);
+	pointer-events: none;
+	visibility: hidden;
+}
+.ec-overlay[data-open] {
+	pointer-events: auto;
+	visibility: visible;
+}
+.ec-backdrop {
+	position: absolute;
+	inset: 0;
+	background: color-mix(in oklab, rgb(4 6 12) 0%, transparent);
+	backdrop-filter: blur(0);
+	-webkit-backdrop-filter: blur(0);
+	transition:
+		background var(--dur-base) ease,
+		backdrop-filter var(--dur-base) ease;
+}
+.ec-overlay[data-open] .ec-backdrop {
+	background: color-mix(in oklab, rgb(4 6 12) 42%, transparent);
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
+}
+/* Expanded surface — morphs out of the card's box (anchored at its top-left), at
+   least as wide as the card, growing to a comfortable reading width. */
+.ec-surface {
+	position: absolute;
+	inset-block-start: var(--ms-anchor-top, 0px);
+	inset-inline-start: var(--ms-anchor-left, 0px);
+	display: flex;
+	flex-direction: column;
+	min-inline-size: var(--ec-card-w, 16rem);
+	inline-size: max(var(--ec-card-w, 16rem), 24rem);
+	max-inline-size: calc(100vw - 2rem);
+	max-block-size: min(80dvh, 38rem);
+	background: var(--popup-bg);
+	border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 26%, transparent));
+	border-radius: var(--radius-lg, 0.75rem);
+	box-shadow: var(--modal-shadow,
+		0 24px 64px rgb(0 0 0 / 0.6),
+		0 0 0 1px color-mix(in oklab, var(--teal) 8%, transparent));
+	color: var(--popup-text, var(--text-main));
+	font-family: var(--font-mono, 'JetBrains Mono', monospace);
+	overflow: hidden;
+}
+.ec-head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+	border-block-end: 1px solid color-mix(in oklab, var(--popup-border, var(--teal)) 22%, transparent);
+}
+.ec-title {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	font-size: var(--text-sm);
+	font-weight: var(--weight-semibold);
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.ec-close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	flex: none;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--radius-md);
+	color: var(--text-muted, rgb(255 255 255 / 0.5));
+	cursor: pointer;
+	transition:
+		color var(--dur-fast) ease,
+		border-color var(--dur-fast) ease,
+		background var(--dur-fast) ease,
+		transform var(--dur-fast) var(--ease-spring-subtle);
+}
+.ec-close:hover {
+	color: var(--text-main);
+	border-color: var(--dark-divider, rgb(255 255 255 / 0.18));
+	background: rgb(255 255 255 / 0.04);
+}
+.ec-close:active {
+	transform: scale(0.9);
+}
+.ec-body {
+	min-block-size: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: var(--space-4);
+	font-size: var(--text-xs);
+	line-height: 1.5;
+}
+/* Content fades in over the container morph (masks the scale distortion). */
+.ec-overlay[data-open] .ec-head,
+.ec-overlay[data-open] .ec-body {
+	animation: ec-rise var(--dur-base) var(--ease-spring-subtle) both;
+}
+.ec-overlay[data-open] .ec-head {
+	animation-delay: 0.06s;
+}
+.ec-overlay[data-open] .ec-body {
+	animation-delay: 0.12s;
+}
+@keyframes ec-rise {
+	from {
+		opacity: 0;
+		transform: translateY(0.5rem);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.ec-card,
+	.ec-card-chevron,
+	.ec-close {
+		transition: border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+	}
+	.ec-card:hover,
+	.ec-card:active,
+	.ec-close:active {
+		transform: none;
+	}
+	.ec-backdrop {
+		transition: none;
+	}
+	.ec-overlay[data-open] .ec-head,
+	.ec-overlay[data-open] .ec-body {
+		animation: none;
+	}
+}

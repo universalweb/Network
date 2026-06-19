@@ -11,7 +11,7 @@
 	height: 100%;
 	white-space: nowrap;
 }
-.cell-divider {
+.cell[data-divider] {
 	border-inline-end: 1px solid var(--dark-divider);
 }
 .cell-key {

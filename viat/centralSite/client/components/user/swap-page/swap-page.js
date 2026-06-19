@@ -49,17 +49,6 @@ export class SwapPage extends WebComponent {
 		ratePerBtc: DEFAULT_RATE_VIAT_PER_BTC,
 		status: '',
 		statusTone: '',
-		// Child-state for the composed <ui-icon>s — reactive keys, bound bare;
-		// no method or render-local fabricates them. `assetIconState` serves the
-		// icon-bearing asset (BTC); the glyph asset (VIAT) renders a span.
-		flipIconState: {
-			name: 'arrow-up-down',
-			size: 'md',
-		},
-		assetIconState: {
-			name: 'bitcoin',
-			size: 'md',
-		},
 	};
 	get fromAsset() {
 		return ASSETS[this.state.fromSymbol];
@@ -95,7 +84,7 @@ export class SwapPage extends WebComponent {
 		if (asset.glyph) {
 			return this.htmlElement `<span class="sp-glyph">${asset.glyph}</span>`;
 		}
-		return this.htmlElement `<ui-icon class="sp-icon" .state=${this.state.assetIconState}></ui-icon>`;
+		return this.htmlElement `<ui-icon class="sp-icon" .name=${'bitcoin'} .size=${'md'}></ui-icon>`;
 	}
 	flipDirection() {
 		const next = this.state.fromSymbol === 'VIAT' ? 'BTC' : 'VIAT';
@@ -145,7 +134,7 @@ export class SwapPage extends WebComponent {
 	renderFlipButton() {
 		return this.htmlElement `
 			<button class="sp-flip" @click=${this.handleFlip} aria-label="Flip swap direction" tooltip="Flip direction">
-				<ui-icon class="sp-flip-icon" .state=${this.state.flipIconState}></ui-icon>
+				<ui-icon class="sp-flip-icon" .name=${'arrow-up-down'} .size=${'md'}></ui-icon>
 			</button>
 		`;
 	}
@@ -180,9 +169,7 @@ export class SwapPage extends WebComponent {
 					${this.renderToCard}
 					<div class="sp-rate">RATE · <span class="sp-rate-value">${this.rateLineText}</span></div>
 					<button class="sp-execute" @click=${this.handleExecute}>EXECUTE SWAP</button>
-					<div class="${() => {
-						return `sp-status tone-${this.state.statusTone || 'idle'}${this.state.status ? ' is-visible' : ''}`;
-					}}">${this.state.status}</div>
+					<div class="sp-status" data-tone=${this.state.statusTone || 'idle'} ?data-visible=${this.state.status}>${this.state.status}</div>
 				</div>
 			</div>
 		`;

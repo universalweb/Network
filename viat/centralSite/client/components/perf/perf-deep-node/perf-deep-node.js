@@ -117,8 +117,7 @@ export class PerfDeepNode extends WebComponent {
 			Perf.measure(`depth-L${this.state.depth}`, renderMark);
 			return;
 		}
-		
-		this.html `
+				this.html `
 			<div class="head">
 				<span class="level">L${this.state.depth}</span>
 				<span class="val">${this.state.value}</span>

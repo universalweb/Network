@@ -34,7 +34,7 @@
   background: var(--popup-bg-hover);
   border-color: var(--popup-border-hover);
   transform: translateX(-3px) scale(1.01);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--popup-shadow-hover, 0 12px 32px rgba(0, 0, 0, 0.4));
 }
 
 .notification:active {
@@ -42,18 +42,19 @@
   transition-duration: 0.08s;
 }
 
-.notification.is-exit {
+.notification[data-exit] {
   opacity: 0;
   filter: blur(4px);
   transform: translate3d(30px, -8px, 0) scale(0.96);
   animation: notification-out 0.26s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
-.notification-copy {
+/* itemType → data-type attribute (enumerated), not a `notification-*` class. */
+[data-type='copy'] {
   border-inline-start-color: var(--teal);
 }
 
-.notification-error {
+[data-type='error'] {
   border-inline-start-color: var(--magenta);
 }
 
@@ -143,7 +144,7 @@
     transition-duration: 0.12s !important;
   }
   .notification:hover { transform: none; }
-  .notification.is-exit {
+  .notification[data-exit] {
     animation: none;
     opacity: 0;
     transform: none;

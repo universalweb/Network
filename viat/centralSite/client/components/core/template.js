@@ -1,4 +1,26 @@
 /* eslint-disable no-restricted-syntax */
+import { behaviorAttrNames, getBehavior } from './behaviors/index.js';
+import { defaultLogger, IS_PRODUCTION } from './debug/logger.js';
+import { Perf } from './debug/perf.js';
+import { projectPortals, removePortals } from './dom/portal.js';
+import { captureLightChildren, projectLightChildren } from './dom/projection.js';
+import { isValidRefName, registerRef } from './dom/refs.js';
+import { markSpotDirty } from './lifecycle/scheduler.js';
+import {
+	addDep,
+	bind,
+	CONTENT_KIND,
+	isBindingType,
+	ListBinding,
+	makeGlobalProxy,
+	makeProxy,
+	RemoteListBinding,
+	track,
+} from './state/binding.js';
+import { globalRealm, globalState } from './state/globalState.js';
+import { resolveListFilter } from './state/listFilter.js';
+import { mountRemoteController } from './state/remoteList.js';
+import { ensureStateBus, localRealm, STATE_PATH } from './state/state.js';
 import {
 	ANCHOR_END_PREFIX,
 	ANCHOR_START_PREFIX,
@@ -7,20 +29,6 @@ import {
 	SPOT_TYPE,
 } from './template/constants.js';
 import {
-	CONTENT_KIND,
-	ListBinding,
-	RemoteListBinding,
-	addDep,
-	bind,
-	isBindingType,
-	makeGlobalProxy,
-	makeProxy,
-	track,
-} from './state/binding.js';
-import { mountRemoteController } from './state/remoteList.js';
-import { resolveListFilter } from './state/listFilter.js';
-import { STATE_PATH, ensureStateBus, localRealm } from './state/state.js';
-import {
 	bareAttrMarkerAttribute,
 	bindMarkerAttribute,
 	buildHTML,
@@ -28,8 +36,6 @@ import {
 	inferBareAttrName,
 	multiAttrMarkerAttribute,
 } from './template/parser.js';
-import { behaviorAttrNames, getBehavior } from './behaviors/index.js';
-import { captureLightChildren, projectLightChildren } from './dom/projection.js';
 import {
 	clearRealmUnsubs,
 	clearUnsubs,
@@ -40,17 +46,12 @@ import {
 	getValueAtPath,
 	isElement,
 	isFunction,
+	isPlainObject,
 	isString,
 	setValueAtPath,
 	syncSubsByDiff,
 	toBase64Url,
 } from './utilities.js';
-import { isValidRefName, registerRef } from './dom/refs.js';
-import { projectPortals, removePortals } from './dom/portal.js';
-import { Perf } from './debug/perf.js';
-import { IS_PRODUCTION, Logger } from './debug/logger.js';
-import { globalRealm, globalState } from './state/globalState.js';
-import { markSpotDirty } from './lifecycle/scheduler.js';
 const SUBEVENT_ATTRS = behaviorAttrNames();
 /**
  * Behavior-attribute attribute application. The template extractor strips the
@@ -425,15 +426,16 @@ class ComponentBinding {
 export function comp(value) {
 	return new ComponentBinding(value);
 }
+function liveListItemKey(item, index) {
+	return index;
+}
 export class LiveList {
 	items = [];
 	renderFn;
 	keyFn;
 	kind = null;
 	spot = null;
-	constructor(renderFn, keyFn = (item, index) => {
-		return index;
-	}) {
+	constructor(renderFn, keyFn = liveListItemKey) {
 		this.renderFn = renderFn;
 		this.keyFn = keyFn;
 		this.kind = resolveRenderKind(renderFn);
@@ -504,9 +506,10 @@ export class LiveList {
 		return this.items[Symbol.iterator]();
 	}
 }
-export function each(items, renderFn, keyFn = (item, index) => {
+function defaultEachKeyFn(item, index) {
 	return index;
-}) {
+}
+export function each(items, renderFn, keyFn = defaultEachKeyFn) {
 	const listItem = new LiveList(renderFn, keyFn);
 	if (Array.isArray(items) && items.length) {
 		/*
@@ -520,9 +523,10 @@ export function each(items, renderFn, keyFn = (item, index) => {
 	}
 	return listItem;
 }
-export function list(key, renderFn, keyFn = (item, index) => {
+function defaultListKeyFn(item, index) {
 	return item?.key ?? item?.id ?? index;
-}) {
+}
+export function list(key, renderFn, keyFn = defaultListKeyFn) {
 	return new ListBinding(key, renderFn, keyFn);
 }
 /**
@@ -532,9 +536,7 @@ export function list(key, renderFn, keyFn = (item, index) => {
  * string flag name to hide on (`'hidden'`). Auto-keys by `key ?? id ?? index`,
  * exactly like `list`; `list` itself stays filter-free and light.
  */
-export function filter(key, renderFn, test, keyFn = (item, index) => {
-	return item?.key ?? item?.id ?? index;
-}) {
+export function filter(key, renderFn, test, keyFn = defaultListKeyFn) {
 	return new ListBinding(key, renderFn, keyFn, resolveListFilter(test));
 }
 function autoKey(item, index) {
@@ -830,6 +832,19 @@ function patchList(spot, itemList) {
 	 */
 	if (reordered) {
 		const stable = lisIndexSet(sources);
+		/*
+		 * Atomic, state-preserving reorder for RETAINED rows: moveBefore relocates
+		 * a still-connected element WITHOUT firing disconnect/connect, so the row
+		 * keeps its lifecycle phase, reactive subscriptions, focus and in-flight
+		 * animations across the move. A plain insertBefore on a connected node
+		 * tears it down and rebuilds it — every lifecycle hook (onConnect / onMount
+		 * / onLive) re-fires on a simple swap. New rows (source -1) are detached, so
+		 * they can ONLY insertBefore (moveBefore requires a connected node). Falls
+		 * back to insertBefore when the platform lacks moveBefore or the anchor
+		 * detached mid-patch (moveBefore throws on a disconnected receiver). Mirrors
+		 * portal.js's movePortalChildren.
+		 */
+		const canMove = typeof anchor.moveBefore === 'function' && anchor.isConnected;
 		let nextSibling = tail;
 		for (let i = itemCount - 1; i >= 0; i--) {
 			const element = elements[i];
@@ -841,7 +856,11 @@ function patchList(spot, itemList) {
 				 */
 				anchor.insertBefore(element, nextSibling);
 			} else if (!stable.has(i) && element.nextSibling !== nextSibling) {
-				anchor.insertBefore(element, nextSibling);
+				if (canMove) {
+					anchor.moveBefore(element, nextSibling);
+				} else {
+					anchor.insertBefore(element, nextSibling);
+				}
 			}
 			nextSibling = element;
 		}
@@ -1087,7 +1106,7 @@ function warnHtmlInText(spot, value) {
 		return;
 	}
 	htmlInTextWarned.add(spot);
-	Logger.warn('template', formatHtmlInTextWarning, spot, value);
+	defaultLogger.warn('template', formatHtmlInTextWarning, spot, value);
 }
 /**
  * The text patcher — straight textContent (via `valueToText`), no markup scan.
@@ -1285,16 +1304,77 @@ function bindSpotKind(spot, value) {
 function reportAsyncSpotError(error) {
 	console.error('[template] async spot error:', error);
 }
+/**
+ * Apply an object-valued `style=${{...}}` binding (styleMap parity) per-property
+ * instead of stringifying it to `[object Object]`. Dashed (`background-color`)
+ * and custom (`--gap`) keys go through `setProperty`; camelCase / single-word
+ * keys assign directly (`style.color`). `null` / `undefined` / `false` values
+ * drop the property. Keys present last patch but absent now are removed, so the
+ * binding is diff-driven across updates. `spot.prevStyleKeys` tracks the applied
+ * set on the spot (no per-element WeakMap needed — one spot owns one style attr).
+ * Called from BOTH value-application paths: first render / BindingSpot drain
+ * (patchSpotBody) and the patch-pass re-render (updateSpot's ATTR branch).
+ * @param {object} spot - The ATTR spot whose element receives the styles.
+ * @param {object} value - The plain-object style map.
+ */
+function applyStyleObject(spot, value) {
+	const elementStyle = spot.el.style;
+	/*
+	 * Mixed-form binding (string last patch, object now): the string apply
+	 * replaced the WHOLE attribute, so its properties aren't in prevStyleKeys and
+	 * would linger under per-key diffing. Wipe the inline styles first — the
+	 * string already clobbered any externally-set inline styles, so the wipe
+	 * loses nothing the binding didn't already own.
+	 */
+	if (spot.styleWasString) {
+		elementStyle.cssText = '';
+		spot.styleWasString = false;
+	}
+	const previousKeys = spot.prevStyleKeys;
+	const nextKeys = new Set();
+	const keys = Object.keys(value);
+	for (let keyIndex = 0; keyIndex < keys.length; keyIndex++) {
+		const styleKey = keys[keyIndex];
+		const styleValue = value[styleKey];
+		if (styleValue === null || styleValue === undefined || styleValue === false) {
+			continue;
+		}
+		nextKeys.add(styleKey);
+		if (styleKey.includes('-')) {
+			elementStyle.setProperty(styleKey, String(styleValue));
+		} else {
+			elementStyle[styleKey] = styleValue;
+		}
+	}
+	if (previousKeys) {
+		const staleKeys = [...previousKeys];
+		for (let staleIndex = 0; staleIndex < staleKeys.length; staleIndex++) {
+			const staleKey = staleKeys[staleIndex];
+			if (nextKeys.has(staleKey)) {
+				continue;
+			}
+			if (staleKey.includes('-')) {
+				elementStyle.removeProperty(staleKey);
+			} else {
+				elementStyle[staleKey] = '';
+			}
+		}
+	}
+	spot.prevStyleKeys = nextKeys;
+}
+async function patchSpotBodyPromise(value, spot, token) {
+	value.catch(reportAsyncSpotError);
+	const item = await value;
+	if (spot.patchToken !== token) {
+		return;
+	}
+	patchSpot(spot, item);
+}
 function patchSpotBody(spot, value) {
 	if (value instanceof Promise) {
 		const token = (spot.patchToken ?? 0) + 1;
 		spot.patchToken = token;
-		value.then((v) => {
-			if (spot.patchToken !== token) {
-				return;
-			}
-			patchSpot(spot, v);
-		}, reportAsyncSpotError);
+		patchSpotBodyPromise(value, spot, token);
 		return;
 	}
 	if (spot.type === SPOT_TYPE.TEXT) {
@@ -1396,6 +1476,10 @@ function patchSpotBody(spot, value) {
 		}
 		return;
 	}
+	if (spot.attr === 'style' && isPlainObject(value)) {
+		applyStyleObject(spot, value);
+		return;
+	}
 	let str;
 	if (spot.attr === 'class' && ClassList.isClassList(value)) {
 		const desired = new Set();
@@ -1403,6 +1487,12 @@ function patchSpotBody(spot, value) {
 		str = [...desired].join(' ');
 	} else {
 		str = String(value ?? '');
+	}
+	if (spot.attr === 'style') {
+		/* String apply replaces the whole attribute — reset the object-key
+		 * tracking and mark so the next object apply wipes string residue. */
+		spot.prevStyleKeys = null;
+		spot.styleWasString = true;
 	}
 	if (spot.el.getAttribute(spot.attr) !== str) {
 		spot.el.setAttribute(spot.attr, str);
@@ -1424,7 +1514,29 @@ function dispatchEventSpotListener(domEvent) {
 	if (!spot) {
 		return undefined;
 	}
-	return spot.component.runEventHandler(spot.expr, domEvent, this, domEvent.type);
+	/*
+	 * `.self` — fire only when the event originated on THIS element (the listener
+	 * host = currentTarget = `this`), not bubbled up from a descendant.
+	 */
+	if (spot.modSelf && domEvent.target !== this) {
+		return undefined;
+	}
+	if (spot.modStop) {
+		domEvent.stopPropagation();
+	}
+	if (spot.modPrevent) {
+		domEvent.preventDefault();
+	}
+	const result = spot.component.runEventHandler(spot.expr, domEvent, this, domEvent.type);
+	/*
+	 * `.once` — detach after the first dispatch. Done manually (not native
+	 * `{ once: true }`) so the EVENT_SPOTS map entry is removed in lockstep with
+	 * the listener; a native once would strand the map entry.
+	 */
+	if (spot.modOnce) {
+		spot.unsubscribe();
+	}
+	return result;
 }
 /**
  * Abstract base for every template spot. Spots are the per-DOM-node patchers
@@ -1526,6 +1638,46 @@ class BindingSpot extends Spot {
 	}
 }
 /**
+ * Resolve a list spot's bound state into the array the keyed diff renders.
+ * Replaces `Array.prototype.filter` on the refresh hot path: an unfiltered
+ * array passes through by reference (the LiveList copies it once downstream),
+ * while a filter or a plain-object source is collected in a single named pass.
+ * Plain objects render their values in key order — previously dropped entirely
+ * (`Array.isArray(…) ? … : []`). The predicate is the documented keep-form
+ * `(item, index) => boolean`; the source index is passed so flag/keyed tests
+ * stay stable, not the post-filter view index.
+ * @param {*} rawItems - The bound state value (array, plain object, or other).
+ * @param {(item: any, index: number) => boolean | null} filterFn - Keep-predicate, or null to keep all.
+ * @returns {Array} The items to hand to the keyed diff.
+ */
+function buildListView(rawItems, filterFn) {
+	if (Array.isArray(rawItems)) {
+		if (!filterFn) {
+			return rawItems;
+		}
+		const view = [];
+		for (let index = 0; index < rawItems.length; index++) {
+			const item = rawItems[index];
+			if (filterFn(item, index)) {
+				view.push(item);
+			}
+		}
+		return view;
+	}
+	if (isPlainObject(rawItems)) {
+		const keys = Object.keys(rawItems);
+		const view = [];
+		for (let index = 0; index < keys.length; index++) {
+			const item = rawItems[keys[index]];
+			if (!filterFn || filterFn(item, index)) {
+				view.push(item);
+			}
+		}
+		return view;
+	}
+	return [];
+}
+/**
  * Keyed list — `each(items, render, keyFn)` / `list(key, …)` /
  * `liveList(…)`. Owns `keyMap` (key → element) and `liveList` handle.
  */
@@ -1572,7 +1724,7 @@ class ListSpot extends Spot {
 			component, bindingKey, renderFn, keyFn, filterFn,
 		} = this;
 		const rawItems = resolveBindingValue(component, bindingKey);
-		const itemsArray = Array.isArray(rawItems) ? rawItems : [];
+		const viewItems = buildListView(rawItems, filterFn);
 		/*
 		 * Partial in-place update is only safe when the change is a *deep*
 		 * path inside an existing item (`items.i.foo`), meaning the array
@@ -1590,14 +1742,14 @@ class ListSpot extends Spot {
 			changedPath !== bindingKey &&
 			changedPath.startsWith(`${bindingKey}.`) &&
 			this.keyMap &&
-			itemsArray.length === this.keyMap.size
+			viewItems.length === this.keyMap.size
 		) {
 			const subPath = changedPath.slice(bindingKey.length + 1);
 			const firstDot = subPath.indexOf('.');
 			if (firstDot !== -1) {
 				const index = Number(subPath.slice(0, firstDot));
 				if (!Number.isNaN(index)) {
-					const itemAtIndex = itemsArray[index];
+					const itemAtIndex = viewItems[index];
 					if (itemAtIndex !== undefined) {
 						const itemKey = keyFn(itemAtIndex, index);
 						const element = this.keyMap.get(itemKey);
@@ -1609,7 +1761,6 @@ class ListSpot extends Spot {
 				}
 			}
 		}
-		const viewItems = filterFn ? itemsArray.filter(filterFn) : itemsArray;
 		patchSpot(this, each(viewItems, renderFn, keyFn));
 	}
 	unsubscribe() {
@@ -1744,7 +1895,7 @@ class ClassListSpot extends Spot {
  * `dispatchEventSpotListener` looking up the spot by element + event type.
  */
 class EventSpot extends Spot {
-	constructor(el, slotIndex, eventName, expr, component) {
+	constructor(el, slotIndex, eventName, expr, component, modifiers) {
 		super();
 		this.type = SPOT_TYPE.EVENT;
 		this.el = el;
@@ -1752,13 +1903,68 @@ class EventSpot extends Spot {
 		this.eventName = eventName;
 		this.expr = expr;
 		this.component = component;
+		/*
+		 * `@click.stop.prevent.once.self.capture.passive` modifiers, resolved once
+		 * to boolean fields read on the dispatch hot path. `capture` and `passive`
+		 * are native addEventListener options (capture also keys add/remove — see
+		 * unsubscribe); `stop`/`prevent`/`self`/`once` are applied at dispatch.
+		 * `mod`-prefixed so the field never reads as a global (`stop`/`self`).
+		 */
+		this.modifiers = modifiers ?? null;
+		this.modStop = false;
+		this.modPrevent = false;
+		this.modSelf = false;
+		this.modOnce = false;
+		this.modCapture = false;
+		this.modPassive = false;
+		if (modifiers) {
+			for (let modIndex = 0; modIndex < modifiers.length; modIndex++) {
+				const modifier = modifiers[modIndex];
+				if (modifier === 'stop') {
+					this.modStop = true;
+				} else if (modifier === 'prevent') {
+					this.modPrevent = true;
+				} else if (modifier === 'self') {
+					this.modSelf = true;
+				} else if (modifier === 'once') {
+					this.modOnce = true;
+				} else if (modifier === 'capture') {
+					this.modCapture = true;
+				} else if (modifier === 'passive') {
+					this.modPassive = true;
+				} else if (defaultLogger.debugOn) {
+					defaultLogger.debug('template', `[event] unknown @${eventName} modifier ".${modifier}" — ignored`);
+				}
+			}
+		}
+	}
+	/**
+	 * Native addEventListener options. `undefined` for the common no-modifier
+	 * spot so the listener is registered exactly as before. `capture`/`passive`
+	 * only ride here; `once` is handled manually in the dispatcher (the shared
+	 * listener must stay consistent with the EVENT_SPOTS map).
+	 * @returns {AddEventListenerOptions|undefined} Listener options or undefined.
+	 */
+	listenerOptions() {
+		if (!this.modifiers) {
+			return undefined;
+		}
+		return {
+			capture: this.modCapture,
+			passive: this.modPassive,
+		};
 	}
 	unsubscribe() {
 		const map = EVENT_SPOTS.get(this.el);
 		if (map) {
 			map.delete(this.eventName);
 		}
-		this.el.removeEventListener(this.eventName, dispatchEventSpotListener);
+		/*
+		 * removeEventListener matches on (type, listener, capture) — pass the same
+		 * capture flag used at add time or the listener leaks (capture-mismatched
+		 * removal silently no-ops).
+		 */
+		this.el.removeEventListener(this.eventName, dispatchEventSpotListener, this.modCapture);
 		super.unsubscribe();
 	}
 }
@@ -1818,14 +2024,14 @@ function installMultiAttrSpot(plan, el, parts, component) {
 	return spot;
 }
 function installEventSpot(plan, el, eventName, expr, component) {
-	const spot = new EventSpot(el, plan.slotIndex, eventName, expr, component);
+	const spot = new EventSpot(el, plan.slotIndex, eventName, expr, component, plan.modifiers);
 	let map = EVENT_SPOTS.get(el);
 	if (!map) {
 		map = new Map();
 		EVENT_SPOTS.set(el, map);
 	}
 	map.set(eventName, spot);
-	el.addEventListener(eventName, dispatchEventSpotListener);
+	el.addEventListener(eventName, dispatchEventSpotListener, spot.listenerOptions());
 	return spot;
 }
 /**
@@ -2136,6 +2342,7 @@ function buildSpotPlan(map, entry) {
 			slotIndex: entry.i,
 			path: lookup.path,
 			eventName: isDeduce ? null : entry.eventName,
+			modifiers: isDeduce ? null : (entry.modifiers ?? null),
 			deduceFromExpr: isDeduce,
 		};
 	}
@@ -2238,7 +2445,10 @@ function buildSpotPlan(map, entry) {
 	}
 	return null;
 }
-const DOLLAR_BIND_ATTR_RE = /^\$(\w+)$/;
+/* `$value.number.trim.lazy` — optional dotted modifiers after the bound attr
+   name. Without the trailing group a modifier chain fails the match entirely
+   and the whole two-way binding is silently dropped. */
+const DOLLAR_BIND_ATTR_RE = /^\$(\w+)((?:\.\w+)*)$/;
 function normalizeBindKey(rawKey) {
 	if (rawKey.startsWith('state.')) {
 		return rawKey.slice(6);
@@ -2295,9 +2505,11 @@ function extractDataBindPlans(fragment) {
 			}
 			const path = getNodePath(el, fragment);
 			if (path) {
+				const rawModifiers = match[2];
 				plans.push({
 					path,
 					key: normalizeBindKey(rawKey),
+					modifiers: rawModifiers ? rawModifiers.slice(1).split('.') : null,
 				});
 			}
 			el.removeAttribute(attrName);
@@ -2412,7 +2624,20 @@ function dispatchDataBindInput() {
 	if (!spot) {
 		return;
 	}
-	setValueAtPath(spot.component.stateProxy, spot.bindingKey, spot.isCheck ? this.checked : this.value);
+	if (spot.isCheck) {
+		setValueAtPath(spot.component.stateProxy, spot.bindingKey, this.checked);
+		return;
+	}
+	let domValue = this.value;
+	if (spot.modTrim) {
+		domValue = domValue.trim();
+	}
+	if (spot.modNumber) {
+		// `.number` — coerce to a float; keep the raw string on NaN (Vue parity).
+		const parsed = parseFloat(domValue);
+		domValue = Number.isNaN(parsed) ? domValue : parsed;
+	}
+	setValueAtPath(spot.component.stateProxy, spot.bindingKey, domValue);
 }
 /**
  * `data-bind="key"` HTML-attribute two-way binding (cousin of TwoWaySpot —
@@ -2423,12 +2648,34 @@ function dispatchDataBindInput() {
  * subscription (already an `unsubs` entry) and the WeakMap / DOM listener.
  */
 class DataBindSpot {
-	constructor(el, stateKey, component) {
+	constructor(el, stateKey, component, modifiers) {
 		this.el = el;
 		this.component = component;
 		this.bindingKey = stateKey;
-		this.eventType = domInputEvent(el);
 		this.isCheck = el.type === 'checkbox' || el.type === 'radio';
+		/*
+		 * `$value` modifiers: `.number`/`.trim` transform the DOM→state write
+		 * (dispatchDataBindInput); `.lazy` listens on `change` instead of `input`
+		 * so state updates on blur/commit, not per keystroke.
+		 */
+		this.modNumber = false;
+		this.modTrim = false;
+		let lazy = false;
+		if (modifiers) {
+			for (let modIndex = 0; modIndex < modifiers.length; modIndex++) {
+				const modifier = modifiers[modIndex];
+				if (modifier === 'number') {
+					this.modNumber = true;
+				} else if (modifier === 'trim') {
+					this.modTrim = true;
+				} else if (modifier === 'lazy') {
+					lazy = true;
+				} else if (defaultLogger.debugOn) {
+					defaultLogger.debug('template', `[databind] unknown $-bind modifier ".${modifier}" on "${stateKey}" — ignored`);
+				}
+			}
+		}
+		this.eventType = lazy ? 'change' : domInputEvent(el);
 		this.busSubscription = null;
 	}
 	handle(nextValue) {
@@ -2447,8 +2694,8 @@ class DataBindSpot {
 		}
 	}
 }
-function installDataBind(el, stateKey, component, unsubs) {
-	const spot = new DataBindSpot(el, stateKey, component);
+function installDataBind(el, stateKey, component, unsubs, modifiers) {
+	const spot = new DataBindSpot(el, stateKey, component, modifiers);
 	DATA_BIND_SPOTS.set(el, spot);
 	el.addEventListener(spot.eventType, dispatchDataBindInput);
 	spot.busSubscription = subscribeStatePath(component, stateKey, DataBindSpot.prototype.handle, spot);
@@ -2768,7 +3015,7 @@ function instantiateRecipe(recipe, exprs, component) {
 		if (!el) {
 			continue;
 		}
-		installDataBind(el, dataBindPlans[bindIndex].key, component, unsubs);
+		installDataBind(el, dataBindPlans[bindIndex].key, component, unsubs, dataBindPlans[bindIndex].modifiers);
 	}
 	if (subeventPlans) {
 		for (let subeventIndex = 0; subeventIndex < subeventPlans.length; subeventIndex++) {
@@ -2822,17 +3069,20 @@ function updateSpot(spot, newExpr, component) {
 		spot.expr = newExpr;
 		return;
 	}
-	if (spot.type === SPOT_TYPE.ATTR) {
-		const str = String(newExpr ?? '');
-		if (!applySubeventAttr(spot.el, spot.attr, str)) {
-			if (spot.el.getAttribute(spot.attr) !== str) {
-				spot.el.setAttribute(spot.attr, str);
-			}
-		}
-		spot.expr = newExpr;
-		return;
-	}
-	if (spot.type === SPOT_TYPE.TEXT || spot.type === SPOT_TYPE.BARE_ATTR || spot.type === SPOT_TYPE.BOOL_ATTR || spot.type === SPOT_TYPE.PROP) {
+	/*
+	 * ATTR routes through patchSpot like every other patchable type — the old
+	 * inline ATTR copy here DRIFTED from patchSpotBody (String()-ified falsy
+	 * values first render removes, fed subevent behaviors the stringified value
+	 * instead of the raw one, clobbered style objects). One application path =
+	 * parity with first render by construction.
+	 */
+	if (
+		spot.type === SPOT_TYPE.TEXT ||
+		spot.type === SPOT_TYPE.ATTR ||
+		spot.type === SPOT_TYPE.BARE_ATTR ||
+		spot.type === SPOT_TYPE.BOOL_ATTR ||
+		spot.type === SPOT_TYPE.PROP
+	) {
 		patchSpot(spot, newExpr);
 		spot.expr = newExpr;
 	}

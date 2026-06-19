@@ -1,5 +1,10 @@
 /* ── Variables – Light Theme (default) ────────────── */
 :root {
+	/* Tell the UA this root is light so native controls — date/time pickers,
+	   number spinners, scrollbars, the FF/Safari native <select> popup — render
+	   in-theme. CSS custom properties can't reach UA-drawn surfaces; color-scheme
+	   is the only lever, so it lives here in the token root, per theme. */
+	color-scheme: light;
 	/* ── Base Palette ────────────────────────────────── */
 	--bg-body: #EEF0F4;
 	--bg-panel: #F8F9FB;
@@ -112,6 +117,12 @@
 	--stat-bar-radius: 0;
 	--indicator-radius: 50%;
 	--rail-width: 3.25rem;
+	/* Vertical space the floating mobile bottom dock occupies, measured from the
+	   viewport's block-end edge to the dock's top: WCAG hit target (44px floor,
+	   rem-scaling above it) + rail/host padding + hairline + the dock's own
+	   bottom offset (safe-area aware). Pages add this as block-end clearance so
+	   content can scroll past the dock. */
+	--dock-h: calc(max(2.75rem, 44px) + var(--space-2) * 4 + 2px + max(var(--space-3), env(safe-area-inset-bottom, 0px)));
 
 	/* ── Panel ───────────────────────────────────────── */
 	--panel-shadow:
@@ -143,6 +154,29 @@
 	--input-hover-glow: rgba(0, 102, 102, 0.1);
 	--input-copied-bg: rgba(0, 102, 102, 0.1);
 	--input-copied-border: var(--teal);
+
+	/* ── Fields (form-field object scope; themes retint) ──
+	   Theming hooks for the .field wrapper (label + control).
+	   Structural gap stays on the --space scale; colour hooks
+	   are theme-overridable. */
+	--field-gap: var(--space-2);
+	--field-label-color: var(--text-muted);
+	--field-accent: var(--cyan, var(--teal));
+
+	/* ── Select (customizable base-select picker; themes retint) ──
+	   Hooks for the Chrome-135+ <select> picker popup + options. Where
+	   appearance:base-select is unsupported (FF/Safari) these go unused —
+	   the native popup shows instead — so they cost nothing on the degrade
+	   path. A bare <select> needs no author markup; the UA synthesizes the
+	   button + chevron and these tokens theme the synthesized parts. */
+	--select-picker-bg: var(--popup-bg);
+	--select-picker-border: var(--popup-border);
+	--select-picker-shadow: var(--popup-shadow);
+	--select-picker-radius: var(--radius-md);
+	--select-option-color: var(--popup-text, var(--text-main));
+	--select-option-hover-bg: color-mix(in oklab, var(--teal) 14%, transparent);
+	--select-option-checked-color: var(--cyan, var(--teal));
+	--select-chevron-color: var(--text-muted);
 
 	/* ── Icons (state colors used by ui-icon consumers) ── */
 	--icon-color: var(--text-offwhite);

@@ -1,0 +1,69 @@
+:host {
+	display: block;
+}
+.bc {
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: var(--text-sm);
+}
+.bc-list {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.bc-item {
+	display: inline-flex;
+	align-items: center;
+	min-inline-size: 0;
+}
+.bc-link {
+	color: var(--text-muted);
+	text-decoration: none;
+	letter-spacing: 0.03em;
+	padding: var(--space-1) var(--space-2);
+	border-radius: var(--radius-sm, 0.35rem);
+	transition: color 0.15s ease, background 0.15s ease;
+}
+.bc-link:hover {
+	color: var(--cyan);
+	background: color-mix(in oklab, var(--cyan) 8%, transparent);
+}
+.bc-link:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--cyan));
+	outline-offset: 1px;
+}
+.bc-current {
+	color: var(--text-main);
+	font-weight: var(--weight-semibold, 600);
+	letter-spacing: 0.03em;
+	padding: var(--space-1) var(--space-2);
+	max-inline-size: 22ch;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+/* Leading chevron on every crumb; hidden on the first so position is pure CSS. */
+.bc-sep {
+	inline-size: 0.95em;
+	block-size: 0.95em;
+	margin-inline-end: var(--space-2);
+	color: var(--text-muted);
+	opacity: 0.55;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	overflow: visible;
+}
+.bc-item:first-child .bc-sep {
+	display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.bc-link {
+		transition: none;
+	}
+}

@@ -59,7 +59,6 @@ export class BootScreen extends WebComponent {
 		});
 	}
 	render() {
-		
 		this.html `
 			<div #splash class="boot-screen" role="status" aria-live="polite">
 				<div class="bs-stage">

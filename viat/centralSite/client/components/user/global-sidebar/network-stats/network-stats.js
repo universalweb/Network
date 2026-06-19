@@ -48,7 +48,7 @@ export class NetworkStats extends Panel {
 		this.observeGlobal('api', (api) => {
 			return this.syncLatency(api);
 		});
-		this.syncLatency(this.globalState.api);
+		this.syncLatency(this.global.api);
 	}
 	syncLatency(api) {
 		const rows = this.state.networkData;

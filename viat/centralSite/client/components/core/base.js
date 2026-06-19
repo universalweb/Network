@@ -5,25 +5,51 @@
  * observer, styleApi, timers, factory, attrs, staticConfig) and are folded onto
  * the prototype by the `assign()` call at the bottom of this file.
  */
+import { makeAttrsProxy } from './attrs/attrs.js';
+import {
+	collectClassChain,
+	ensureMergedAttrs,
+	ensureMergedConfig,
+	ensureMergedProperties,
+	ensureMergedState,
+	ensurePropertyIndex,
+} from './attrs/staticConfig.js';
+import { writeTextToClipboard } from './clipboard.js';
+import { assertComponentConfig } from './debug/assertions.js';
+import { componentLogger, defaultLogger } from './debug/logger.js';
+import { Perf } from './debug/perf.js';
+import { confirmPrompt } from './dialogs/confirm.js';
 import * as animationMethods from './dom/animation.js';
-import * as contextMethods from './state/context.js';
+import {
+	clearDelegateListeners,
+	delegate,
+	delegateTo,
+	installScopedDelegate,
+	onEnv,
+} from './dom/delegate.js';
 import * as dom from './dom/dom.js';
+import { setInert } from './dom/inert.js';
+import { getRef, makeRefsProxy } from './dom/refs.js';
+import { applyViewportBucket, reflectViewport } from './environment/reflectViewport.js';
+import { applyThemeStyles, handleThemeChange, syncThemeStyles } from './environment/themeStyles.js';
 import * as eventMethods from './events/events.js';
+import { dragSnap } from './gestures/dragSnap.js';
+import { dragTrack } from './gestures/dragTrack.js';
+import { hotKey, hotKeyListeners } from './hotkeys/hotkeys.js';
 import * as lifecycle from './lifecycle/lifecycle.js';
-import * as privateStateMethods from './state/privateState.js';
+import { handleObserverCallback, installObserver, uninstallObserver } from './lifecycle/observer.js';
+import { atPhase, PHASE, phaseGetters } from './lifecycle/phase.js';
+import { nextFrame } from './lifecycle/scheduler.js';
+import { createBound, getById, preRender } from './render/factory.js';
 import * as renderMethods from './render/render.js';
-import * as sharedStyles from './styles/shared-styles.js';
+import { bind, makeGlobalProxy } from './state/binding.js';
+import * as contextMethods from './state/context.js';
+import { globalState } from './state/globalState.js';
+import * as privateStateMethods from './state/privateState.js';
+import { disposeRemoteLists, remote } from './state/remoteList.js';
 import * as stateMethods from './state/state.js';
 import * as subscriptions from './state/subscriptions.js';
-import { PHASE, atPhase, phaseGetters } from './lifecycle/phase.js';
-import {
-	addInterval,
-	clearIntervals,
-	clearTimeouts,
-	removeComponentTimeout,
-	setComponentTimeout,
-	stopInterval,
-} from './timers.js';
+import * as sharedStyles from './styles/shared-styles.js';
 import {
 	addStyle,
 	applyStyles,
@@ -36,8 +62,20 @@ import {
 	resolveStyle,
 	styleSheet,
 } from './styles/styleApi.js';
-import { applyThemeStyles, handleThemeChange, syncThemeStyles } from './environment/themeStyles.js';
-import { applyViewportBucket, reflectViewport } from './environment/reflectViewport.js';
+import {
+	initTemplateRuntime,
+	templateCleanup,
+	templateHtml,
+	templateHtmlElement,
+} from './template.js';
+import {
+	addInterval,
+	clearIntervals,
+	clearTimeouts,
+	removeComponentTimeout,
+	setComponentTimeout,
+	stopInterval,
+} from './timers.js';
 import {
 	assign,
 	deepMerge,
@@ -45,47 +83,10 @@ import {
 	keysOf,
 	smartClone,
 } from './utilities.js';
-import { bind, makeGlobalProxy } from './state/binding.js';
-import {
-	clearDelegateListeners,
-	delegate,
-	delegateTo,
-	installScopedDelegate,
-	onEnv,
-} from './dom/delegate.js';
-import {
-	collectClassChain,
-	ensureMergedAttrs,
-	ensureMergedConfig,
-	ensureMergedProperties,
-	ensureMergedState,
-	ensurePropertyIndex,
-} from './attrs/staticConfig.js';
-import { createBound, getById, preRender } from './render/factory.js';
-import { disposeRemoteLists, remote } from './state/remoteList.js';
-import { getRef, makeRefsProxy } from './dom/refs.js';
-import { handleObserverCallback, installObserver, uninstallObserver } from './lifecycle/observer.js';
-import { hotKey, hotKeyListeners } from './hotkeys/hotkeys.js';
-import {
-	initTemplateRuntime,
-	templateCleanup,
-	templateHtml,
-	templateHtmlElement,
-} from './template.js';
-import { Logger } from './debug/logger.js';
-import { Perf } from './debug/perf.js';
-import { assertComponentConfig } from './debug/assertions.js';
-import { confirmPrompt } from './dialogs/confirm.js';
-import { dragSnap } from './gestures/dragSnap.js';
-import { globalState } from './state/globalState.js';
-import { makeAttrsProxy } from './attrs/attrs.js';
-import { nextFrame } from './lifecycle/scheduler.js';
-import { setInert } from './dom/inert.js';
-import { writeTextToClipboard } from './clipboard.js';
 export { liveChildren, registerChild } from './dom/children.js';
-export { classList, ClassList } from './template.js';
-export { Store, globalState } from './state/globalState.js';
 export { registry } from './dom/registry.js';
+export { globalState, Store } from './state/globalState.js';
+export { ClassList, classList } from './template.js';
 /**
  * Base class for every custom element in the framework. Extends the native
  * `HTMLElement` with reactive `static state`, tagged-template rendering,
@@ -426,8 +427,8 @@ export class WebComponent extends HTMLElement {
 		this.upgradeShadowedProperties();
 		this.createConnectCyclePromises();
 		this.createWhenDestroyedPromise();
-		if (Logger.debugOn) {
-			Logger.debug('WebComponent', `[${this.tagName}] Constructor`);
+		if (defaultLogger.debugOn) {
+			defaultLogger.debug('WebComponent', `[${this.tagName}] Constructor`);
 		}
 		Perf.measure('construct', perfMark);
 	}
@@ -539,12 +540,14 @@ export class WebComponent extends HTMLElement {
 		this.replaceState(value);
 	}
 	/**
-	 * Accessor for the shared global store. Mirrors `state`'s render/write split:
-	 * a per-instance dep-recording proxy during render tracking (rebuilt if the
-	 * global proxy identity changed), the raw store proxy otherwise.
+	 * Accessor for the shared global store, exposed as `this.global`. Mirrors
+	 * `state`'s render/write split: a per-instance dep-recording proxy during
+	 * render tracking (rebuilt if the global proxy identity changed), the raw
+	 * store proxy otherwise. The module-level `globalState` Store keeps its name;
+	 * only this component accessor is `global`.
 	 * @returns {object} The global state proxy.
 	 */
-	get globalState() {
+	get global() {
 		if (this.renderTracking) {
 			if (!this.globalRenderProxy || this.globalRenderProxyState !== globalState.proxy) {
 				this.globalRenderProxy = makeGlobalProxy(globalState.proxy, this);
@@ -606,6 +609,7 @@ const PROTO_METHODS = {
 	delegate,
 	delegateTo,
 	dragSnap,
+	dragTrack,
 	forkStyleMap,
 	handleObserverCallback,
 	hasStyle,

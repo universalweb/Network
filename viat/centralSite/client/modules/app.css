@@ -10,7 +10,6 @@
 	font-size: 0.75rem;
 	line-height: 1.5;
 	color: var(--text-main);
-	user-select: none;
 	-webkit-font-smoothing: antialiased;
 	background: transparent;
 }
@@ -75,6 +74,9 @@
 :host([data-vw="sm"]) .shell-page {
 	grid-row: 1;
 	grid-column: 1;
+	/* The dock floats over the page's block-end edge — reserve its height so
+	   document-scrolled content can travel fully above it (never trapped under). */
+	padding-block-end: calc(var(--dock-h) + var(--space-4));
 }
 /* Bottom bar is permanently suppressed on mobile — the dock takes its
    vertical slot. The sidebar is intentionally NOT hidden here: its own

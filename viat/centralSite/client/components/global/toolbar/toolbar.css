@@ -23,7 +23,7 @@ ui-icon-button {
 ui-icon-button:hover {
 	color: var(--icon-color-hover, var(--cyan));
 }
-ui-icon-button.active,
+ui-icon-button[data-active],
 ui-icon-button[active] {
 	color: var(--icon-color-active, var(--cyan));
 }

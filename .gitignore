@@ -100,3 +100,6 @@ agent/types/*
 *.private.md
 .CLAUDE.MD.swp
 test.js
+.engram/
+reverted-files.txt
+session-*-changes.md

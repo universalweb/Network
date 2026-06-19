@@ -26,8 +26,7 @@ export class AppDashboard extends WebComponent {
 		dashboard: './dashboard.css',
 	};
 	render() {
-		
-		this.html `
+				this.html `
 			<div class="dashboard-center">
 				<div class="center-content">
 					<center-bar></center-bar>

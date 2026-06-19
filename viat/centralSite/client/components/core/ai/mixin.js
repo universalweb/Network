@@ -198,7 +198,7 @@ export const aiMethods = {
 		return this.emit(eventLabel, data);
 	},
 	aiGlobalState() {
-		return sanitize(this.globalState, 0);
+		return sanitize(this.global, 0);
 	},
 	aiWaitFor(phaseName) {
 		const promiseKey = WHEN_BY_PHASE[phaseName];
@@ -268,10 +268,10 @@ export function applyAiMixin(WebComponent, opts = {}) {
 	const proto = WebComponent.prototype;
 	Object.assign(proto, aiMethods);
 	if (opts.autoRegister !== false) {
-		wrapAfter(proto, 'connectedCallback', function aiAfterConnect(component) {
+		wrapAfter(proto, 'connectedCallback', (component) => {
 			component.aiRegister();
 		});
-		wrapBefore(proto, 'disconnectedCallback', function aiBeforeDisconnect(component) {
+		wrapBefore(proto, 'disconnectedCallback', (component) => {
 			component.aiUnregister();
 		});
 	}

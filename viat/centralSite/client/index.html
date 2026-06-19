@@ -1,66 +1,14 @@
 <!doctype html>
 <html lang="en">
 	<head>
-		<script>
-			// Set a global configuration object before any other scripts run
-			globalThis.CONFIG = {
-				production: false, // Change to true in production
-				/*
-				 * Dev log verbosity (see core/debug/logger.js LEVEL_RANK).
-				 *   'info'  — default: boot banners + warnings, per-render flood muted
-				 *   'debug' — full per-render lifecycle trace (patch pass / onRender / disconnect)
-				 *   'perf'  — debug + WASTED-SET detection: an O(n) deep-compare on every
-				 *             state write that flags redundant "set the same value" writes
-				 *             ("are we setting things too much"). Noisiest; dev-only cost.
-				 * Drop back to 'info' (or remove) to quiet the console and shed the compare.
-				 */
-				logLevel: 'perf',
-			};
-		</script>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<!-- Anchor every relative URL to the site root so SPA routes like
 			 /swap/ don't resolve assets against the current pathname. -->
 		<base href="/" />
 		<title>⩝ VIAT :: TERMINAL: COMMAND & CONTROL</title>
-		<link
-			rel="preload"
-			href="components/global/icon/sprite.svg"
-			as="image"
-			type="image/svg+xml"
-		/>
 		<link rel="stylesheet" href="styles/index.css" />
 		<link id="theme-sheet" rel="stylesheet" href="styles/themes/midnight.css" />
-		<!--
-			Theme boot — paint the SAVED theme on the very first frame.
-			The theme <link> above is static, so a saved non-midnight theme would
-			paint midnight first, then swap after the JS boot runs setTheme() — a
-			visible flash. This blocking inline script rewrites the (still
-			render-blocking) link's href to the saved theme before first paint, so
-			the correct colours land immediately. theme-manager's
-			setTheme(getTheme()) then finds the href already correct and no-ops its
-			swap (its href !== link.href guard). Keep the id list in sync with
-			THEMES in theme-manager.js; every theme is currently mode "dark". No CSP
-			in this app, so an inline boot script is allowed.
-		-->
-		<script>
-			(function () {
-				var THEMES = ['midnight', 'dark', 'noir', 'marathon'];
-				var saved;
-				try {
-					saved = localStorage.getItem('theme.mode');
-				} catch (error) {
-					saved = null;
-				}
-				var theme = THEMES.indexOf(saved) === -1 ? 'midnight' : saved;
-				var root = document.documentElement;
-				root.dataset.theme = theme;
-				root.dataset.themeMode = 'dark';
-				if (theme !== 'midnight') {
-					document.getElementById('theme-sheet').href = 'styles/themes/' + theme + '.css';
-				}
-			})();
-		</script>
 		<!-- Import map must appear before any module that uses the mapped specifier -->
 		<script type="importmap">
 			{
@@ -71,7 +19,6 @@
 				}
 			}
 		</script>
-		<!-- Load scripts normally -->
 		<script type="module" src="/index.js?v=2605101"></script>
 	</head>
 

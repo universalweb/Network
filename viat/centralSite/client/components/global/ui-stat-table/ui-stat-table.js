@@ -86,8 +86,7 @@ export class UiStatTable extends WebComponent {
 		return parts.join('');
 	}
 	render() {
-		const template = this.gridTemplate();
-		this.html `
+		const template = this.gridTemplate();		this.html `
 			<section class="table-wrap">
 				<header class="table-head ${this.state.title ? '' : 'is-empty'}">
 					<h3>${this.state.title}</h3>

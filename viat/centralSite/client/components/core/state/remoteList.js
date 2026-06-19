@@ -20,8 +20,8 @@
  * persists across re-renders (held in `component.remoteControllers`, keyed by state
  * key); the template mount-hook does get-or-create. Disposed on disconnect.
  */
+import { isFunction, plainEqual } from '../utilities.js';
 import { getBehavior } from '../behaviors/registry.js';
-import { isFunction } from '../utilities.js';
 const SCROLLABLE_OVERFLOW = /(auto|scroll|overlay)/;
 const DEFAULT_MAX_AUTO_FILL = 8;
 function stripHash(refName) {
@@ -315,7 +315,16 @@ class RemoteListController {
 		this.error = '';
 		this.autoFillCount = 0;
 		this.seenKeys.clear();
-		this.component.state[this.stateKey] = [];
+		/*
+		 * Skip a wasted []→[] reassign. The state set trap only ref-equality-skips,
+		 * so a fresh [] over an already-empty list still notifies → a no-op patch
+		 * pass (dev "wasted set" warning AND a real prod re-render). Clearing a
+		 * non-empty list still runs.
+		 */
+		const currentItems = this.component.state[this.stateKey];
+		if (!Array.isArray(currentItems) || currentItems.length > 0) {
+			this.component.state[this.stateKey] = [];
+		}
 		return this.load(true);
 	}
 	refresh() {
@@ -454,7 +463,18 @@ class RemoteListController {
 		const incoming = Array.isArray(result.items) ? result.items : [];
 		const additions = config.dedupe === false ? incoming : this.dropDuplicates(incoming);
 		const currentItems = Array.isArray(this.component.state[this.stateKey]) ? this.component.state[this.stateKey] : [];
-		this.component.state[this.stateKey] = replace ? additions : currentItems.concat(additions);
+		const nextItems = replace ? additions : currentItems.concat(additions);
+		/*
+		 * Reuse the existing reference when the result is structurally identical.
+		 * The set trap only ref-equality-skips, so a new-but-equal array (an empty
+		 * result over an empty list, or a reset that returns the same page) would
+		 * notify → a no-op patch pass (dev "wasted set" + a real prod re-render).
+		 * plainEqual bails on a length mismatch first, so the load-more concat path
+		 * (always longer) pays only a length check.
+		 */
+		if (!plainEqual(currentItems, nextItems)) {
+			this.component.state[this.stateKey] = nextItems;
+		}
 		this.cursor = result.nextCursor ?? null;
 		this.hasMore = Boolean(result.hasMore);
 		this.reflectRefs();

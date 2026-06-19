@@ -35,10 +35,12 @@
 	}
 }
 
-/* Layout migrated to framework utilities in the template: .field -> stack gap-2,
-   .field-head -> stack justify-start gap-1, full-width -> col-span-full. The .field
-   class stays for its descendant rule (.field input). */
-.field-label {
+/* Layout now comes from the framework .field scope (uwc.base: flex column + gap).
+   .field stays as this object's theming scope and for its descendant rules
+   (.field input, .field label). Labels are semantic <label for> (semantic-tag law);
+   the transmit terminal look (small uppercase, wide-tracked) lives on .field label
+   and beats the base <label> via uwc.components. */
+.field label {
 	font-size: var(--text-2xs);
 	text-transform: uppercase;
 	letter-spacing: 0.18em;
@@ -75,12 +77,14 @@
 	box-shadow: inset 0 -1px 0 var(--cyan-glow);
 }
 
+/* Focus rides the canonical per-theme focus token (every theme defines it),
+   so e.g. codex gets its thin slate line instead of the accent color. */
 .field input:focus {
-	border-color: var(--topbar-accent);
-	border-block-end-color: var(--topbar-accent);
+	border-color: var(--focus-ring-color, var(--topbar-accent));
+	border-block-end-color: var(--focus-ring-color, var(--topbar-accent));
 	box-shadow:
-		inset 0 -1px 0 var(--topbar-accent),
-		inset 0 0 0 1px var(--topbar-accent);
+		inset 0 -1px 0 var(--focus-ring-color, var(--topbar-accent)),
+		inset 0 0 0 1px var(--focus-ring-color, var(--topbar-accent));
 }
 
 .field input[readonly] {
@@ -144,17 +148,28 @@
 	transition: background-color 0.15s, color 0.15s;
 }
 .field-addon-select:hover {
-	color: var(--topbar-accent, var(--text-light));
+	color: var(--icon-color-hover, var(--topbar-accent, var(--text-light)));
 	background-color: var(--surface-tint-soft);
 }
 .field-addon-select:focus-visible {
-	outline: 1px solid var(--topbar-accent, var(--cyan-glow));
+	outline: 1px solid var(--focus-ring-color, var(--topbar-accent, var(--cyan-glow)));
 	outline-offset: -2px;
 }
 .field-addon-select option {
 	background: var(--popup-bg);
 	color: var(--text-main);
 	text-transform: uppercase;
+}
+/* Chrome 135+ customizable select: drop the hand-painted chevron and let the
+   base-select picker (themed universally in elements-forms.css via --select-*)
+   take over with a real ::picker-icon. FF/Safari ignore this block and keep the
+   appearance:none + gradient-chevron fallback above — degrades-to-functional. */
+@supports (appearance: base-select) {
+	.field-addon-select {
+		appearance: base-select;
+		background-image: none;
+		padding-inline-end: var(--space-5);
+	}
 }
 
 /* Layout + identity only — fill, border, inset, radius, themed hover and the
@@ -164,7 +179,6 @@
 .btn-transmit {
 	grid-column: 1 / -1;
 	padding: var(--space-3) var(--space-4);
-	color: var(--text-light);
 	backdrop-filter: blur(4px);
 	font-family: var(--font-display);
 	font-size: var(--text-2xs);

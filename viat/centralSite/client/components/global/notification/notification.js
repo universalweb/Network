@@ -1,4 +1,4 @@
-import { WebComponent, list } from '../../core/index.js';
+import { list, WebComponent } from '../../core/index.js';
 const DEFAULT_TIMEOUT = 3200;
 class NotificationItem extends WebComponent {
 	static url = import.meta.url;
@@ -43,9 +43,11 @@ class NotificationItem extends WebComponent {
 		this.beginExit();
 	}
 	render() {
-		
 		this.html `
-			<div class="notification notification-${this.state.itemType}${this.state.exiting ? ' is-exit' : ''}"
+			<div
+				class="notification"
+				data-type=${this.state.itemType}
+				?data-exit=${this.state.exiting}
 				role="button" tabindex="0" aria-label="Dismiss notification"
 				@click=${this.beginExit}
 				@keydown=${this.handleKey}
@@ -54,7 +56,7 @@ class NotificationItem extends WebComponent {
 					<div class="notification-title">${this.state.title}</div>
 					<div class="notification-message">${this.state.message}</div>
 				</div>
-				<ui-icon class="notification-close" name="x" size="sm"></ui-icon>
+				<ui-icon class="notification-close" .name=${'x'} .size=${'sm'}></ui-icon>
 			</div>
 		`;
 	}
@@ -69,6 +71,24 @@ export class UINotification extends WebComponent {
 		items: [],
 	};
 	nextId = 0;
+	onConnect() {
+		/*
+		 * The host owns its top-layer requirement: manual popover so the stack
+		 * lands above any open <dialog>. Mounters must not need an external
+		 * setAttribute('popover') dance (the preview page mounted bare and
+		 * show() threw NotSupportedError). Explicit popover= markup still wins;
+		 * engines without popover support fall back to z-index stacking.
+		 */
+		if (typeof this.showPopover !== 'function') {
+			return;
+		}
+		if (!this.hasAttribute('popover')) {
+			this.setAttribute('popover', 'manual');
+		}
+		if (!this.matches(':popover-open')) {
+			this.showPopover();
+		}
+	}
 	show(spec = {}) {
 		const message = spec.message;
 		if (!message) {
@@ -113,9 +133,8 @@ export class UINotification extends WebComponent {
 		}
 	}
 	render() {
-		
 		this.html `
-			<div class="notification-stack" @notification-dismiss="${this.handleDismiss}">
+			<div class="notification-stack" @notification-dismiss=${this.handleDismiss}>
 				${list('items', NotificationItem, (item) => {
 					return item.id;
 				})}

@@ -11,11 +11,12 @@ import terser from '@rollup/plugin-terser';
  *
  * What the build strips for a clean, log-free benchmark target:
  *   1. `globalThis.CONFIG?.production` → `true`  — forces IS_PRODUCTION on, so
- *      every non-error Logger method collapses to the captured noop and the
- *      dev log-level machinery folds away.
- *   2. `Logger.debugOn` / `Logger.perfOn` → `false` — turns each hot guard into
- *      `if (false) { … }`, which terser's dead_code pass deletes ENTIRELY:
- *      the guard, the Logger.debug/perf call, and the message string all go.
+ *      every non-error default/componentLogger method collapses to the captured noop
+ *      and the dev log-level machinery folds away.
+ *   2. `defaultLogger.debugOn` / `defaultLogger.perfOn` (and same for componentLogger)
+ *      → `false` — turns each hot guard into `if (false) { … }`, which terser's
+ *      dead_code pass deletes ENTIRELY: the guard, the logger call, and the message
+ *      string all go.
  *
  * Run:  pnpm run build:core      (→ client/components/core/dist/core.js)
  * Test: point the importmap's `webcomponent` specifier at the bundle instead
@@ -40,8 +41,10 @@ export default {
 			delimiters: ['', ''],
 			values: {
 				'globalThis.CONFIG?.production': 'true',
-				'Logger.debugOn': 'false',
-				'Logger.perfOn': 'false',
+				'defaultLogger.debugOn': 'false',
+				'defaultLogger.perfOn': 'false',
+				'componentLogger.debugOn': 'false',
+				'componentLogger.perfOn': 'false',
 				// The bundle lives in core/dist/, but base.css/tooltip.css load
 				// relative to `import.meta.url` (now the bundle's own URL). Re-anchor
 				// the two core assets up one level so they still resolve. base.css is

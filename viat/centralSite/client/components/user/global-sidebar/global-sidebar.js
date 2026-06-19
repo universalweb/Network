@@ -13,11 +13,14 @@ export class GlobalSidebar extends WebComponent {
 	static state = {
 		sidebar: {
 			side: 'right',
+			// The Viat shell drives the drawer via the global-top-bar button + the
+			// \ / | hotkeys (app.js) calling open()/close()/toggle() — so the built-in
+			// hotkey is opted out here to avoid a double-bound key.
+			hotkey: '',
 		},
 	};
 	render() {
-		
-		this.html`
+		this.html `
 			<ui-sidebar .state=${this.state.sidebar}>
 				<network-stats></network-stats>
 			</ui-sidebar>

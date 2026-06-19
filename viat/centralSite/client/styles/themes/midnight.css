@@ -2,6 +2,9 @@
    Dark minimalist. Violet accent. Rounded everything.
 ───────────────────────────────────────────────────── */
 :root {
+  /* Dark root → native controls (date/time pickers, spinners, scrollbars, the
+     native <select> popup) adopt the dark UA palette instead of light-on-light. */
+  color-scheme: dark;
   /* ── Base Palette ────────────────────────────────── */
   --bg-body: #07080c;
   --bg-panel: #0c0d12;

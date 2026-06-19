@@ -1,6 +1,7 @@
 import '../../global/paged-list/paged-list.js';
 import '../../global/icon/icon.js';
 import { WebComponent, html } from '../../core/index.js';
+import { AppView } from '../app-view/app-view.js';
 const SYSTEM_ADDRESS = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const ROW_STYLES = new URL('./account-detail-rows.css', import.meta.url).href;
 function shortAddress(value) {
@@ -57,7 +58,7 @@ function shapeTx(tx, address) {
 		id: tx.id ?? '',
 		txHref: tx.id ? `/tx/${encodeURIComponent(tx.id)}/` : '',
 		direction,
-		toneClass: isOut ? 'tone-out' : 'tone-in',
+		tone: isOut ? 'out' : 'in',
 		counterparty: counterparty ?? '',
 		counterpartyHref: counterparty ? `/account/${encodeURIComponent(counterparty)}/` : '',
 		counterpartyShort: shortAddress(counterparty),
@@ -65,10 +66,6 @@ function shapeTx(tx, address) {
 		status: tx.status || '—',
 		timestamp: formatTimestamp(tx.timestamp),
 	};
-}
-async function getSDK() {
-	const app = document.querySelector('app-view');
-	return app?.ensureSDK ? app.ensureSDK() : null;
 }
 export class AccountDetailPage extends WebComponent {
 	static url = import.meta.url;
@@ -80,10 +77,6 @@ export class AccountDetailPage extends WebComponent {
 		account: null,
 		accountMissing: false,
 		rowStyles: ROW_STYLES,
-		titleIconState: {
-			name: 'user-round',
-			size: 'md',
-		},
 	};
 	/* <paged-list> contract. loader + pageHref are page-this arrows (they read the
 	   address); the row is self-contained (data shaped in the loader). */
@@ -121,7 +114,7 @@ export class AccountDetailPage extends WebComponent {
 		this.refs.list?.refresh();
 	}
 	async loadHeader(address) {
-		const sdk = await getSDK();
+		const sdk = await AppView.ensureSDK();
 		if (!sdk) {
 			return;
 		}
@@ -144,7 +137,7 @@ export class AccountDetailPage extends WebComponent {
 			};
 		}
 		const page = reset ? 1 : (cursor ?? 1);
-		const sdk = await getSDK();
+		const sdk = await AppView.ensureSDK();
 		if (!sdk) {
 			return null;
 		}
@@ -228,14 +221,12 @@ export class AccountDetailPage extends WebComponent {
 		`;
 	}
 	txRow(item) {
-		const dirClass = `ad-cell ad-dir ${item.toneClass}`;
-		const amountClass = `ad-cell ad-amount ${item.toneClass}`;
 		return html `
 			<div class="ad-row">
 				<a class="ad-cell ad-id" href=${item.txHref} title=${item.id}>${shortId(item.id)}</a>
-				<span class=${dirClass}>${item.direction}</span>
+				<span class="ad-cell ad-dir" data-tone=${item.tone}>${item.direction}</span>
 				<a class="ad-cell ad-addr" href=${item.counterpartyHref} title=${item.counterparty}>${item.counterpartyShort}</a>
-				<span class=${amountClass}>${item.amountText}</span>
+				<span class="ad-cell ad-amount" data-tone=${item.tone}>${item.amountText}</span>
 				<span class="ad-cell ad-status">${item.status}</span>
 				<span class="ad-cell ad-time">${item.timestamp}</span>
 			</div>
@@ -246,7 +237,7 @@ export class AccountDetailPage extends WebComponent {
 			<div class="ad-shell">
 				<header class="ad-header">
 					<div class="ad-title-block">
-						<ui-icon class="ad-title-icon" .state=${this.state.titleIconState}></ui-icon>
+						<ui-icon class="ad-title-icon" .name=${'user-round'} .size=${'md'}></ui-icon>
 						<span class="ad-title">// ACCOUNT DETAIL</span>
 						<span class="ad-label-tag">${() => {
 							return labelForAddress(this.state.address);

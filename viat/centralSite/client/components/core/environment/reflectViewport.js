@@ -22,6 +22,6 @@ export function reflectViewport() {
 	this.delegate('viewport:change', this.applyViewportBucket);
 }
 export function applyViewportBucket() {
-	const bucket = this.globalState?.environment?.viewport?.w ?? 'lg';
+	const bucket = this.global?.environment?.viewport?.w ?? 'lg';
 	this.setAttribute('data-vw', bucket);
 }

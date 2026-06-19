@@ -38,7 +38,20 @@ export function setCurrentTracking(value) {
 }
 export class Binding {
 	constructor(key, value, kind = null) {
-		this.key = key;
+		/*
+		 * Scope is resolved ONCE here, at the authoring boundary: a `global.`
+		 * prefix targets the shared global store, everything else is local. The
+		 * flag is carried alongside a BARE path so no downstream code re-parses a
+		 * string to pick a realm (and a local key literally named `global` can
+		 * never alias the global store).
+		 */
+		if (key.startsWith('global.')) {
+			this.global = true;
+			this.key = key.slice(7);
+		} else {
+			this.global = false;
+			this.key = key;
+		}
 		this.value = value;
 		/*
 		 * Declared CONTENT_KIND from a typed bind — null means auto-classify

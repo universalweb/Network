@@ -1,5 +1,5 @@
-import { WebComponent } from 'webcomponent';
 import '../../../global/toolbar/toolbar.js';
+import { WebComponent } from 'webcomponent';
 // `<center-bar>` — the Viat dashboard action bar. A thin composition over the
 // built-in `<ui-toolbar>`: it supplies the four wallet actions through config.
 // The rounded-panel chrome (surface, hover lift) is this host's own CSS.
@@ -43,8 +43,7 @@ export class CenterBar extends WebComponent {
 		},
 	};
 	render() {
-		
-		this.html`
+		this.html `
 			<ui-toolbar .state=${this.state.toolbar}></ui-toolbar>
 		`;
 	}

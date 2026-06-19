@@ -1,0 +1,7 @@
+:host {
+	display: inline-block;
+}
+.animated-number {
+	font-variant-numeric: tabular-nums;
+	font-feature-settings: 'tnum';
+}

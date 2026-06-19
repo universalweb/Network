@@ -208,13 +208,19 @@ export function listAllTools() {
 		out.push({
 			name: toolName,
 			description: def.description ?? '',
-			inputSchema: def.inputSchema ?? { type: 'object' },
+			inputSchema: def.inputSchema ?? {
+				type: 'object',
+			},
 			mutating: def.mutating === true,
 		});
 	}
-	globalTools.forEach((def, toolName) => push(toolName, def));
+	globalTools.forEach((def, toolName) => {
+		return push(toolName, def);
+	});
 	components.forEach((component) => {
-		getTools(component).forEach((def, toolName) => push(toolName, def));
+		getTools(component).forEach((def, toolName) => {
+			return push(toolName, def);
+		});
 	});
 	return out;
 }

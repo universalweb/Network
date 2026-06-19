@@ -1,4 +1,4 @@
-import { WebComponent, classList } from '../../core/index.js';
+import { WebComponent } from '../../core/index.js';
 function clampPercent(value) {
 	if (typeof value !== 'number' || Number.isNaN(value)) {
 		return 0;
@@ -22,33 +22,26 @@ export class UILoadingBar extends WebComponent {
 		showValue: false,
 		value: 0,
 	};
-	get fillStyle() {
-		return `width:${clampPercent(this.state.value)}%`;
-	}
-	get displayValue() {
-		return `${Math.round(clampPercent(this.state.value))}%`;
+	/* Single clamped source for the fill width, aria-valuenow, and the readout. */
+	get percent() {
+		return clampPercent(this.state.value);
 	}
 	render() {
 		this.html `
-			<div class=${classList('bar', () => {
-				return this.state.indeterminate && 'is-indeterminate';
-			})}
+			<div
+				class="bar"
+				?data-indeterminate=${this.state.indeterminate}
 				role="progressbar"
-				aria-label="${this.state.label}"
-				aria-valuenow="${() => {
-					return clampPercent(this.state.value);
-				}}"
+				aria-label=${this.state.label}
+				aria-valuenow=${this.percent}
 				aria-valuemin="0"
 				aria-valuemax="100">
 				<div class="bar-track">
-					<div class="bar-fill" style="${this.fillStyle}"></div>
+					<div class="bar-fill" style=${`width:${this.percent}%`}></div>
 				</div>
-				${this.state.showValue ? this.htmlValueLabel() : ''}
+				${this.state.showValue ? this.htmlElement `<span class="bar-value">${`${Math.round(this.percent)}%`}</span>` : ''}
 			</div>
 		`;
-	}
-	htmlValueLabel() {
-		return this.htmlElement `<span class="bar-value">${this.displayValue}</span>`;
 	}
 }
 customElements.define('ui-loading-bar', UILoadingBar);
