@@ -1,0 +1,190 @@
+:host {
+	display: block;
+	-webkit-user-select: text;
+	user-select: text;
+}
+/*
+ * The stream/rich branches toggle via ?hidden; an explicit `display` on either
+ * would beat the UA [hidden] rule (the documented [hidden]-vs-author-display
+ * footgun), so scope the !important guard here.
+ */
+[hidden] {
+	display: none !important;
+}
+.aim {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding-block: var(--space-3);
+	padding-inline: var(--space-4);
+	border-radius: var(--radius-md);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.06));
+	background: var(--bg-panel, rgba(255, 255, 255, 0.025));
+	cursor: text;
+}
+.aim[data-role='user'] {
+	background: var(--cyan-glow-faint, rgba(0, 240, 255, 0.06));
+	border-color: var(--cyan-glow-soft, rgba(0, 240, 255, 0.2));
+}
+.aim[data-role='assistant'] {
+	background: var(--bg-panel, rgba(255, 255, 255, 0.03));
+}
+.aim-head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+.aim-dot {
+	inline-size: 0.5rem;
+	block-size: 0.5rem;
+	border-radius: 50%;
+	background: var(--tone-dot, var(--text-muted, rgba(255, 255, 255, 0.4)));
+	flex: none;
+}
+.aim-role {
+	font-size: var(--text-xs);
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--text-muted, rgba(255, 255, 255, 0.45));
+}
+.aim[data-role='user'] {
+	--tone-dot: var(--cyan);
+}
+.aim[data-role='assistant'] {
+	--tone-dot: var(--teal);
+}
+.aim[data-role='user'] .aim-role {
+	color: var(--cyan);
+}
+.aim[data-role='assistant'] .aim-role {
+	color: var(--teal);
+}
+.aim-time {
+	font-size: var(--text-xs);
+	color: var(--text-muted, rgba(255, 255, 255, 0.4));
+	font-variant-numeric: tabular-nums;
+}
+.aim-copy {
+	margin-inline-start: auto;
+	display: inline-flex;
+	align-items: center;
+	padding: var(--space-1);
+	border: none;
+	background: transparent;
+	color: var(--text-muted, rgba(255, 255, 255, 0.45));
+	border-radius: var(--radius-sm, 0.25rem);
+	cursor: pointer;
+	transition: color 0.15s ease, background 0.15s ease;
+}
+.aim-copy:hover {
+	color: var(--text-main);
+	background: var(--bg-hover, rgba(255, 255, 255, 0.06));
+}
+.aim-copy:focus-visible {
+	outline: 2px solid var(--cyan, currentColor);
+	outline-offset: 1px;
+}
+@media (prefers-reduced-motion: reduce) {
+	.aim-copy {
+		transition: none;
+	}
+}
+.aim-stream,
+.aim-md {
+	font-size: var(--text-md);
+	line-height: 1.55;
+	color: var(--text-main);
+	overflow-wrap: break-word;
+	cursor: text;
+}
+.aim-stream,
+.aim-plain {
+	white-space: pre-wrap;
+}
+.aim-rich {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+/* Rendered-markdown blocks (output of markdownToHtml, injected via ^html). */
+.aim-md > :first-child {
+	margin-block-start: 0;
+}
+.aim-md > :last-child {
+	margin-block-end: 0;
+}
+.md-p {
+	margin-block: 0.5em;
+}
+.md-h {
+	margin-block: 0.8em 0.4em;
+	line-height: 1.25;
+	font-weight: 600;
+	color: var(--text-strong, var(--text-main));
+}
+.md-h1 {
+	font-size: 1.4em;
+}
+.md-h2 {
+	font-size: 1.25em;
+}
+.md-h3 {
+	font-size: 1.12em;
+}
+.md-h4,
+.md-h5,
+.md-h6 {
+	font-size: 1em;
+}
+.md-list {
+	margin-block: 0.5em;
+	padding-inline-start: 1.4em;
+}
+.md-li {
+	margin-block: 0.2em;
+}
+.md-link {
+	color: var(--cyan, currentColor);
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
+}
+.md-link:hover {
+	text-decoration-thickness: 2px;
+}
+.md-icode {
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 0.92em;
+	padding-block: 0.05em;
+	padding-inline: 0.35em;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: var(--bg-code, rgba(255, 255, 255, 0.08));
+	overflow-wrap: anywhere;
+}
+.md-quote {
+	margin-block: 0.5em;
+	padding-inline-start: 0.9em;
+	border-inline-start: 3px solid var(--cyan-glow-soft, rgba(0, 240, 255, 0.25));
+	color: var(--text-muted, rgba(255, 255, 255, 0.7));
+}
+.md-hr {
+	margin-block: 0.9em;
+	border: none;
+	border-block-start: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+}
+.md-table {
+	width: 100%;
+	margin-block: 0.6em;
+	border-collapse: collapse;
+	font-size: 0.95em;
+}
+.md-table th,
+.md-table td {
+	padding-block: 0.35em;
+	padding-inline: 0.6em;
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.1));
+	text-align: start;
+}
+.md-table th {
+	font-weight: 600;
+	background: var(--bg-panel, rgba(255, 255, 255, 0.04));
+}

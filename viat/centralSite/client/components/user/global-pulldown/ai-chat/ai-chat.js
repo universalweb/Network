@@ -1,6 +1,7 @@
 import '../../../global/status-indicator/status-indicator.js';
 import { filter, ifThen, WebComponent } from 'webcomponent';
 import { listAllTools } from '../../../core/ai/index.js';
+import { UIAiMessage } from '../../../global/ai-message/ai-message.js';
 const DEFAULT_ENDPOINT = 'http://localhost:1234/v1/chat/completions';
 const DEFAULT_MODEL = 'local-model';
 const SSE_DELIMITER = '\n\n';
@@ -40,7 +41,7 @@ function parseViatCommands(text) {
 	VIAT_CMD_REGEX.lastIndex = 0;
 	let match = VIAT_CMD_REGEX.exec(text);
 	while (match !== null) {
-		const name = match[1];
+		const toolName = match[1];
 		const callId = match[2].trim();
 		const argsRaw = match[3];
 		// Parse defensively — a malformed args payload should not nuke the
@@ -58,11 +59,11 @@ function parseViatCommands(text) {
 				};
 			}
 		}
-		const key = `${name}|${callId}`;
+		const key = `${toolName}|${callId}`;
 		if (!seen.has(key)) {
 			seen.add(key);
 			out.push({
-				name,
+				name: toolName,
 				callId,
 				args,
 			});
@@ -71,9 +72,9 @@ function parseViatCommands(text) {
 	}
 	return out;
 }
-function formatAiResponse(name, callId, value) {
+function formatAiResponse(toolName, callId, value) {
 	const payload = value === undefined ? 'null' : JSON.stringify(value);
-	return `$AI.CMD[${name}, ${callId}, ${payload}]`;
+	return `$AI.CMD[${toolName}, ${callId}, ${payload}]`;
 }
 // Short tool digest — name + description + mutating flag. NO inputSchema
 // here. Callers fetch the full schema on demand via the `getToolSchema`
@@ -126,26 +127,6 @@ function buildSystemPrompt(toolsDigest) {
 		'You then say: "Your wallet holds 250,000 VIAT."',
 	].join('\n');
 }
-class AIChatMessage extends WebComponent {
-	static url = import.meta.url;
-	static styles = {
-		message: './ai-chat-message.css',
-	};
-	static state = {
-		id: '',
-		role: 'user',
-		content: '',
-	};
-	render() {
-		this.html `
-			<div class="aim" data-role=${this.state.role}>
-				<div class="aim-role">${this.state.role === 'user' ? 'YOU' : 'AI'}</div>
-				<div class="aim-content">${this.state.content}</div>
-			</div>
-		`;
-	}
-}
-customElements.define('ai-chat-message', AIChatMessage);
 export class AIChat extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -163,6 +144,7 @@ export class AIChat extends WebComponent {
 	};
 	controller = null;
 	healthController = null;
+	streamingMessageId = null;
 	messageSeq = 0;
 	hasProbed = false;
 	onMount() {
@@ -362,11 +344,17 @@ export class AIChat extends WebComponent {
 		const id = this.nextId();
 		const msg = {
 			id,
+			// `role` feeds the API payload; `author` feeds the <ui-ai-message>
+			// display state (its state key avoids the native `role` prop footgun).
 			role,
+			author: role,
 			content,
 		};
 		if (opts?.hidden) {
 			msg.hidden = true;
+		}
+		if (opts?.streaming) {
+			msg.streaming = true;
 		}
 		this.state.messages.push(msg);
 		return id;
@@ -378,6 +366,28 @@ export class AIChat extends WebComponent {
 				list[i] = {
 					...list[i],
 					content,
+				};
+				return;
+			}
+		}
+	}
+	finishStream() {
+		// Settle the in-flight assistant message: replace it with streaming:
+		// false so the keyed list-diff pushes the final state into the child,
+		// which then parses the completed content ONCE (markdown + code). Called
+		// on EVERY terminal path — clean completion, abort, error — so an
+		// interrupted reply still renders (its partial content settles fine).
+		const id = this.streamingMessageId;
+		if (!id) {
+			return;
+		}
+		this.streamingMessageId = null;
+		const list = this.state.messages;
+		for (let i = list.length - 1; i >= 0; i--) {
+			if (list[i].id === id) {
+				list[i] = {
+					...list[i],
+					streaming: false,
 				};
 				return;
 			}
@@ -431,6 +441,7 @@ export class AIChat extends WebComponent {
 		this.controller?.abort();
 		this.controller = null;
 		this.state.streaming = false;
+		this.finishStream();
 	}
 	handleStreamError(streamErr) {
 		if (streamErr?.name === 'AbortError') {
@@ -439,6 +450,7 @@ export class AIChat extends WebComponent {
 		this.state.connectionState = 'offline';
 		this.state.streaming = false;
 		this.controller = null;
+		this.finishStream();
 	}
 	handleKeyDown(domEvent) {
 		if (domEvent.key === 'Enter' && !domEvent.shiftKey) {
@@ -488,7 +500,12 @@ export class AIChat extends WebComponent {
 			return;
 		}
 		this.state.connectionState = 'online';
-		const assistantId = this.pushMessage('assistant', '');
+		// Push the placeholder as STREAMING so the child shows live escaped text
+		// and withholds the markdown parse until finishStream() clears the flag.
+		const assistantId = this.pushMessage('assistant', '', {
+			streaming: true,
+		});
+		this.streamingMessageId = assistantId;
 		const reader = response.body.getReader();
 		const decoder = new TextDecoder('utf-8');
 		let buffer = '';
@@ -526,6 +543,7 @@ export class AIChat extends WebComponent {
 		}
 		this.state.streaming = false;
 		this.controller = null;
+		this.finishStream();
 		await this.dispatchCommandsIn(assistantId, depth);
 	}
 	parseSseEvent(eventText) {
@@ -562,7 +580,7 @@ export class AIChat extends WebComponent {
 					<span class="aic-endpoint">${this.state.endpoint}</span>
 				</header>
 				<div #log class="aic-log">
-					${filter('messages', AIChatMessage, 'hidden')}
+					${filter('messages', UIAiMessage, 'hidden')}
 				</div>
 				<div class="aic-error" ?data-visible=${this.state.errorText}>${this.state.errorText}</div>
 				<footer class="aic-input-row">

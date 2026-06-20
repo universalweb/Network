@@ -1,0 +1,55 @@
+:host {
+	display: block;
+}
+/* Mode/answer rows toggle via ?hidden; guard the [hidden]-vs-display footgun. */
+[hidden] {
+	display: none !important;
+}
+.inq {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	border: 1px solid var(--cyan-glow-soft, rgba(0, 240, 255, 0.22));
+	border-radius: var(--radius-md);
+	background: var(--cyan-glow-faint, rgba(0, 240, 255, 0.05));
+	padding-block: var(--space-3);
+	padding-inline: var(--space-3);
+}
+.inq-head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+.inq-icon {
+	flex: none;
+	color: var(--cyan, currentColor);
+}
+.inq-q {
+	font-size: var(--text-sm);
+	line-height: 1.45;
+	color: var(--text-main);
+}
+.inq-choice {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+.inq-text {
+	display: flex;
+	gap: var(--space-2);
+}
+.inq-input {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+}
+.inq-answer {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-sm);
+	color: var(--color-success, oklch(0.78 0.16 155));
+}
+.inq-answer-text {
+	color: var(--text-main);
+	overflow-wrap: anywhere;
+}

@@ -10,7 +10,7 @@ import '../components/global/sidebar/sidebar.js';
    so the `tooltip=` behavior's lazy `whenDefined('ui-tooltip')` would hang here
    forever without this side-effect import — no tooltips would ever show. */
 import '../components/core/tooltips/tooltip.js';
-import { WebComponent, html } from 'webcomponent';
+import { html, WebComponent } from 'webcomponent';
 import { BootScreen } from '../components/global/boot-screen/boot-screen.js';
 class PreviewView extends WebComponent {
 	static id = 'preview-view';
@@ -883,6 +883,11 @@ class PreviewView extends WebComponent {
 				icon: 'table',
 			},
 			{
+				id: 'ai',
+				label: 'AI',
+				icon: 'sparkles',
+			},
+			{
 				id: 'overlays',
 				label: 'Overlays',
 				icon: 'layers',
@@ -891,6 +896,49 @@ class PreviewView extends WebComponent {
 				id: 'shell',
 				label: 'Shell',
 				icon: 'panels-top-left',
+			},
+		],
+		aiAssistantContent: '## Swap quote\n\nHere is the **route** for your swap:\n\n- via UDSP relay\n- est. fee `0.002 VIAT`\n\n```js\nconst quote = await viat.swap({ from: "VIAT", to: "UDSP" });\nconsole.log(quote.rate);\n```\n\nProceed when ready.',
+		aiReasoningText: 'User wants a swap quote.\n1. Check liquidity on the UDSP relay.\n2. Compute fee = base + slippage.\n3. Return a concise route summary.',
+		aiPlanSteps: [
+			{
+				label: 'Fetch balance',
+				status: 'done',
+			},
+			{
+				label: 'Compute swap route',
+				status: 'active',
+				detail: 'estimating via UDSP relay',
+			},
+			{
+				label: 'Submit transaction',
+				status: 'pending',
+			},
+		],
+		aiToolArgs: {
+			account: 'main',
+			include: ['pending'],
+		},
+		aiToolResult: {
+			amount: '250,000',
+			symbol: 'VIAT',
+		},
+		aiSources: [
+			{
+				title: 'Viat whitepaper — settlement',
+				url: 'https://viat.example/whitepaper',
+				snippet: 'Post-quantum settlement with native DNS.',
+			},
+			{
+				title: 'UDSP transport spec',
+				url: 'https://viat.example/udsp',
+			},
+		],
+		aiInquireOptions: [
+			'Mainnet',
+			{
+				label: 'Testnet',
+				value: 'test',
 			},
 		],
 		selectOptions: [
@@ -1767,6 +1815,35 @@ class PreviewView extends WebComponent {
 								<ui-chip .label=${'Large'} .size=${'lg'}></ui-chip>
 								<ui-chip .label=${'Disabled'} .disabled=${true} .removable=${true}></ui-chip>
 							</ui-stack>
+						</ui-stack>
+					</ui-surface>
+				</section>
+
+				<section class="demo" data-cat="ai" ?hidden=${() => {
+					return this.demoHidden('ai', 'UIAiMessage ai chat message reasoning plan tool call sources approval inquire markdown code stream');
+				}}>
+					<div class="preview-section-head">
+						<ui-text .variant=${'overline'} .tone=${'accent'}>UIAiMessage · AI blocks</ui-text>
+						<ui-text .variant=${'caption'} .tone=${'muted'}>markdown + fenced code · streaming/settled · reasoning · plan · tool-call · sources · approval · inquire</ui-text>
+					</div>
+					<ui-surface .state=${{
+						tone: 'panel',
+						padding: 'lg',
+						radius: 'lg',
+						border: true,
+					}}>
+						<ui-stack .state=${{
+							direction: 'column',
+							gap: 'md',
+						}}>
+							<ui-ai-message .author=${'user'} .content=${'Get me a swap quote for VIAT → UDSP'}></ui-ai-message>
+							<ui-ai-message .author=${'assistant'} .content=${this.state.aiAssistantContent}></ui-ai-message>
+							<ui-ai-reasoning .text=${this.state.aiReasoningText} .expanded=${true}></ui-ai-reasoning>
+							<ui-ai-plan .steps=${this.state.aiPlanSteps}></ui-ai-plan>
+							<ui-ai-tool-call .name=${'getWalletAmount'} .args=${this.state.aiToolArgs} .result=${this.state.aiToolResult} .status=${'done'} .expanded=${true}></ui-ai-tool-call>
+							<ui-ai-sources .sources=${this.state.aiSources}></ui-ai-sources>
+							<ui-ai-approval .name=${'sendFunds'} .summary=${'Send 100 VIAT to bob.viat'} .args=${this.state.aiToolArgs}></ui-ai-approval>
+							<ui-ai-inquire .question=${'Which network should I use?'} .mode=${'choice'} .options=${this.state.aiInquireOptions}></ui-ai-inquire>
 						</ui-stack>
 					</ui-surface>
 				</section>
