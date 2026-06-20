@@ -1,6 +1,10 @@
 :host {
 	display: block;
 }
+/* Respect a parent's ?hidden toggle — :host display would beat the UA rule. */
+:host([hidden]) {
+	display: none;
+}
 .air {
 	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	border-radius: var(--radius-md);

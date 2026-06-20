@@ -1,30 +1,19 @@
-import '../../../global/status-indicator/status-indicator.js';
-import { filter, ifThen, WebComponent } from 'webcomponent';
+/*
+ * `<ai-chat>` — the VIAT agent chat. A thin app component that COMPOSES the
+ * reusable global `<ui-ai-chat>` (which owns the UI, message model, and the
+ * OpenAI-compatible bridge transport) and layers ONLY the Viat-specific agent
+ * protocol on top: the `$VIAT.CMD[…]` / `$AI.CMD[…]` tool round-trip, the Viat
+ * system prompt + live tool digest, page-tree agent addressing, and the
+ * connection-aware priming nudge. No UI, no SSE, no message bookkeeping here —
+ * all of that is the global component's job. The two are deliberately de-glued:
+ * `ui-ai-chat` carries zero Viat knowledge.
+ */
+import '../../../global/ai-chat/ai-chat.js';
+import { isFunction, isShadowRoot, WebComponent } from 'webcomponent';
 import { listAllTools } from '../../../core/ai/index.js';
-import { UIAiMessage } from '../../../global/ai-message/ai-message.js';
-const DEFAULT_ENDPOINT = 'http://localhost:1234/v1/chat/completions';
+const DEFAULT_ENDPOINT = 'http://localhost:1234/v1';
 const DEFAULT_MODEL = 'local-model';
-const SSE_DELIMITER = '\n\n';
-const SSE_DATA_PREFIX = 'data:';
-const SSE_DONE = '[DONE]';
-const HEALTH_TIMEOUT_MS = 2500;
 const PRIMING_USER_MESSAGE = 'Reply in ONE short sentence (under 20 words) inviting me to give a command. If you need page context, call getPageMap. If you need a tool\'s input schema, call getToolSchema.';
-// LM Studio mirrors the OpenAI spec, so `GET /v1/models` is a cheap
-// liveness probe that returns the list of loaded models on a 200. The
-// chat-completions endpoint we use for actual messages lives at the same
-// base; deriving the probe URL from the chat URL keeps a single user-
-// configurable endpoint.
-function deriveHealthURL(chatEndpoint) {
-	const trimmed = String(chatEndpoint ?? '').trim();
-	if (!trimmed) {
-		return '';
-	}
-	const idx = trimmed.indexOf('/v1/');
-	if (idx < 0) {
-		return '';
-	}
-	return `${trimmed.slice(0, idx + 4)}models`;
-}
 // Two flavours:
 //   $VIAT.CMD[name, id]                      → call with empty args
 //   $VIAT.CMD[name, id, {"k":"v", …}]        → call with JSON args
@@ -44,10 +33,9 @@ function parseViatCommands(text) {
 		const toolName = match[1];
 		const callId = match[2].trim();
 		const argsRaw = match[3];
-		// Parse defensively — a malformed args payload should not nuke the
-		// whole command stream. We surface the parse failure as the args
-		// payload `{ _parseError: '…' }` so the tool handler can decide
-		// whether to bail or proceed with defaults.
+		// Parse defensively — a malformed args payload should not nuke the whole
+		// command stream. We surface the parse failure as the args payload
+		// `{ _parseError: '…' }` so the tool handler can bail or use defaults.
 		let args = {};
 		if (argsRaw) {
 			try {
@@ -76,28 +64,24 @@ function formatAiResponse(toolName, callId, value) {
 	const payload = value === undefined ? 'null' : JSON.stringify(value);
 	return `$AI.CMD[${toolName}, ${callId}, ${payload}]`;
 }
-// Short tool digest — name + description + mutating flag. NO inputSchema
-// here. Callers fetch the full schema on demand via the `getToolSchema`
-// tool so the system prompt stays tight and we don't bloat every chat
-// turn with unused JSON shapes.
+// Short tool digest — name + description + mutating flag. NO inputSchema here;
+// callers fetch the full schema on demand via `getToolSchema` so the system
+// prompt stays tight rather than bloating every turn with unused JSON shapes.
 function formatToolDigest(tools) {
 	if (!tools.length) {
 		return '(no tools registered)';
 	}
 	const lines = [];
-	for (let i = 0; i < tools.length; i++) {
-		const tool = tools[i];
+	for (let index = 0; index < tools.length; index += 1) {
+		const tool = tools[index];
 		const mutTag = tool.mutating ? ' [MUT]' : '';
 		lines.push(`- ${tool.name}${mutTag}: ${tool.description || '(no description)'}`);
 	}
 	return lines.join('\n');
 }
-// Minimal system prompt. Page map + per-tool input schemas are NO LONGER
-// embedded here — every byte that ships every turn is a tax on first-
-// response latency for local models. The AI fetches them on demand:
-//   - `getPageMap`      → returns the live component tree
-//   - `getToolSchema`   → returns one tool's full input schema by name
-// That cuts the system prompt from ~10KB to ~1.5KB on a typical session.
+// Minimal system prompt. Page map + per-tool input schemas are fetched on demand
+// (`getPageMap` / `getToolSchema`) rather than embedded — every byte shipped each
+// turn taxes first-response latency on local models.
 function buildSystemPrompt(toolsDigest) {
 	return [
 		'You are the LOCAL AGENT for Viat — a post-quantum cryptocurrency. You run inside the user\'s Viat Wallet client. Be concise and direct.',
@@ -135,468 +119,136 @@ export class AIChat extends WebComponent {
 	static state = {
 		endpoint: DEFAULT_ENDPOINT,
 		model: DEFAULT_MODEL,
-		messages: [],
-		inputValue: '',
-		streaming: false,
-		errorText: '',
 		systemPrompt: '',
-		connectionState: 'offline',
 	};
-	controller = null;
-	healthController = null;
-	streamingMessageId = null;
-	messageSeq = 0;
-	hasProbed = false;
-	onMount() {
+	// Tool round-trip depth — incremented per command-bearing turn, reset on the
+	// final prose answer (no commands) or at the cap. Lives HERE so the global
+	// transport stays oblivious to the Viat protocol loop.
+	roundTripDepth = 0;
+	onConnect() {
 		this.delegate('pulldown:open', this.handlePulldownOpen);
+	}
+	onMount() {
 		this.refreshSystemPrompt();
-		// Keep the log pinned to the newest message. This is an EFFECT, not a
-		// render trigger — the template now patches the message list spot
-		// surgically, so the component never re-renders on a new message or a
-		// streamed token. `observe` defers through the scheduler, so the scroll
-		// runs after the list/text spots have committed their DOM.
-		this.observeAsync('messages', this.handleLogScroll);
-		// No reason to run this at start leave it as is commented out
-		// this.checkConnection();
-	}
-	handleLogScroll() {
-		const logEl = this.refs.log;
-		if (logEl) {
-			logEl.scrollTop = logEl.scrollHeight;
-		}
-	}
-	onDisconnect() {
-		this.controller?.abort();
-		this.controller = null;
-		this.healthController?.abort();
-		this.healthController = null;
-		this.state.streaming = false;
-	}
-	handlePulldownOpen() {
-		this.refreshSystemPrompt();
-		// Re-check on every open so the badge reflects the current state
-		// (the LM Studio server might have started/stopped while the
-		// pulldown was closed). The priming message only fires once the
-		// probe resolves online — keeps the user from staring at the
-		// "DISCONNECTED" badge while a doomed POST hangs.
-		this.checkConnection().then((isOnline) => {
-			if (isOnline) {
-				this.maybePrime();
-			}
-		});
-	}
-	async checkConnection() {
-		// Single in-flight probe — abort any prior one so a slow probe
-		// can't overwrite a fresher result.
-		this.healthController?.abort();
-		const controller = new AbortController();
-		this.healthController = controller;
-		const url = deriveHealthURL(this.state.endpoint);
-		if (!url) {
-			this.state.connectionState = 'offline';
-			return false;
-		}
-		/*
-		 * Surface the transient 'checking' only on the FIRST probe (no settled
-		 * result yet). Every pulldown open re-checks; with a real (slow) probe the
-		 * async scheduler flushes the intermediate, so re-confirming an unchanged
-		 * connection — online OR offline — would flap the badge label/tone and
-		 * re-pulse it on every open (CONNECTED→CHECKING→CONNECTED, or
-		 * DISCONNECTED→CHECKING→DISCONNECTED). Re-checks resolve silently to their
-		 * result below; only a genuine change moves the badge.
-		 */
-		if (!this.hasProbed) {
-			this.hasProbed = true;
-			this.state.connectionState = 'checking';
-		}
-		const timeoutId = this.setTimeout(() => {
-			controller.abort();
-		}, HEALTH_TIMEOUT_MS);
-		try {
-			const response = await fetch(url, {
-				method: 'GET',
-				signal: controller.signal,
-			});
-			clearTimeout(timeoutId);
-			if (this.healthController !== controller) {
-				return this.state.connectionState === 'online';
-			}
-			const ok = response.ok;
-			this.state.connectionState = ok ? 'online' : 'offline';
-			this.healthController = null;
-			return ok;
-		} catch (probeError) {
-			clearTimeout(timeoutId);
-			if (this.healthController !== controller) {
-				return this.state.connectionState === 'online';
-			}
-			this.state.connectionState = 'offline';
-			this.healthController = null;
-			return false;
-		}
 	}
 	refreshSystemPrompt() {
 		const tools = formatToolDigest(listAllTools());
 		this.state.systemPrompt = buildSystemPrompt(tools);
 	}
+	handlePulldownOpen() {
+		// Re-digest tools + re-probe on every open; prime once we know we're online
+		// (so the user never stares at a DISCONNECTED badge behind a doomed POST).
+		this.refreshSystemPrompt();
+		this.primeWhenOnline();
+	}
+	async primeWhenOnline() {
+		const chat = this.refs.chat;
+		if (!chat) {
+			return;
+		}
+		const isOnline = await chat.checkConnection();
+		if (isOnline) {
+			this.maybePrime();
+		}
+	}
 	hasAssistantReply() {
-		const list = this.state.messages;
-		for (let i = 0; i < list.length; i++) {
-			const msg = list[i];
-			if (msg.role === 'assistant' && msg.content) {
+		const chat = this.refs.chat;
+		if (!chat) {
+			return false;
+		}
+		const list = chat.state.messages;
+		for (let index = 0; index < list.length; index += 1) {
+			if (list[index].role === 'assistant' && list[index].content) {
 				return true;
 			}
 		}
 		return false;
 	}
 	maybePrime() {
-		if (this.state.streaming) {
+		const chat = this.refs.chat;
+		if (!chat || chat.state.streaming || this.hasAssistantReply()) {
 			return;
 		}
-		if (this.hasAssistantReply()) {
-			return;
-		}
-		this.state.errorText = '';
-		this.pushMessage('user', PRIMING_USER_MESSAGE, {
+		chat.continueWith('user', PRIMING_USER_MESSAGE, {
 			hidden: true,
 		});
-		this.streamReply(0).catch((streamErr) => {
-			return this.handleStreamError(streamErr);
-		});
 	}
-	runCommand(cmd) {
-		const root = this.findPageRoot();
-		const tools = root.aiTools();
-		const def = tools.get(cmd.name);
-		if (!def) {
-			return Promise.resolve(formatAiResponse(cmd.name, cmd.callId, {
-				error: `Unknown tool "${cmd.name}"`,
-			}));
-		}
-		const invocation = Promise.resolve(def.handler({
-			component: root,
-			args: cmd.args ?? {},
-			ctx: {
-				source: 'ai-chat',
-			},
-		}));
-		return invocation
-			.then((value) => {
-				return formatAiResponse(cmd.name, cmd.callId, value);
-			})
-			.catch((toolErr) => {
-				return formatAiResponse(cmd.name, cmd.callId, {
-					error: toolErr?.message ?? 'Tool error',
-				});
-			});
-	}
-	async dispatchCommandsIn(assistantId, depth) {
-		if (depth >= MAX_TOOL_ROUND_TRIPS) {
-			return;
-		}
-		const list = this.state.messages;
-		let msg = null;
-		for (let i = list.length - 1; i >= 0; i--) {
-			if (list[i].id === assistantId) {
-				msg = list[i];
-				break;
-			}
-		}
-		if (!msg || !msg.content) {
-			return;
-		}
-		const commands = parseViatCommands(msg.content);
-		if (!commands.length) {
-			return;
-		}
-		const responses = await Promise.all(commands.map((cmd) => {
-			return this.runCommand(cmd);
-		}));
-		const replyText = responses.join('\n');
-		console.log('[AI ROUND-TRIP]', {
-			depth,
-			commands,
-			replyText,
-		});
-		this.pushMessage('user', replyText, {
-			hidden: true,
-		});
-		await this.streamReply(depth + 1).catch((streamErr) => {
-			return this.handleStreamError(streamErr);
-		});
-	}
+	// Walk up the shadow tree to the page root that exposes the agent surface
+	// (`aiMap`) — every Viat component is agent-addressable through it.
 	findPageRoot() {
 		let cursor = this;
 		while (true) {
 			const rootNode = cursor.getRootNode();
-			const host = rootNode instanceof ShadowRoot ? rootNode.host : null;
-			if (!host || typeof host.aiMap !== 'function') {
+			const host = isShadowRoot(rootNode) ? rootNode.host : null;
+			if (!host || !isFunction(host.aiMap)) {
 				return cursor;
 			}
 			cursor = host;
 		}
 	}
-	nextId() {
-		this.messageSeq += 1;
-		return `m${this.messageSeq}`;
-	}
-	pushMessage(role, content, opts) {
-		const id = this.nextId();
-		const msg = {
-			id,
-			// `role` feeds the API payload; `author` feeds the <ui-ai-message>
-			// display state (its state key avoids the native `role` prop footgun).
-			role,
-			author: role,
-			content,
-		};
-		if (opts?.hidden) {
-			msg.hidden = true;
-		}
-		if (opts?.streaming) {
-			msg.streaming = true;
-		}
-		this.state.messages.push(msg);
-		return id;
-	}
-	replaceContent(id, content) {
-		const list = this.state.messages;
-		for (let i = list.length - 1; i >= 0; i--) {
-			if (list[i].id === id) {
-				list[i] = {
-					...list[i],
-					content,
-				};
-				return;
-			}
-		}
-	}
-	finishStream() {
-		// Settle the in-flight assistant message: replace it with streaming:
-		// false so the keyed list-diff pushes the final state into the child,
-		// which then parses the completed content ONCE (markdown + code). Called
-		// on EVERY terminal path — clean completion, abort, error — so an
-		// interrupted reply still renders (its partial content settles fine).
-		const id = this.streamingMessageId;
-		if (!id) {
-			return;
-		}
-		this.streamingMessageId = null;
-		const list = this.state.messages;
-		for (let i = list.length - 1; i >= 0; i--) {
-			if (list[i].id === id) {
-				list[i] = {
-					...list[i],
-					streaming: false,
-				};
-				return;
-			}
-		}
-	}
-	buildPayload(excludeId) {
-		const list = this.state.messages;
-		const out = [];
-		if (this.state.systemPrompt) {
-			out.push({
-				role: 'system',
-				content: this.state.systemPrompt,
+	async runCommand(cmd) {
+		const root = this.findPageRoot();
+		const tools = root.aiTools();
+		const def = tools.get(cmd.name);
+		if (!def) {
+			return formatAiResponse(cmd.name, cmd.callId, {
+				error: `Unknown tool "${cmd.name}"`,
 			});
 		}
-		for (let i = 0; i < list.length; i++) {
-			const msg = list[i];
-			if (msg.id === excludeId) {
-				continue;
-			}
-			out.push({
-				role: msg.role,
-				content: msg.content,
-			});
-		}
-		return {
-			model: this.state.model,
-			messages: out,
-			stream: true,
-		};
-	}
-	handleSubmit() {
-		if (this.state.streaming) {
-			this.handleAbort();
-			return;
-		}
-		this.handleSend();
-	}
-	handleSend() {
-		const text = this.state.inputValue.trim();
-		if (!text) {
-			return;
-		}
-		this.state.inputValue = '';
-		this.state.errorText = '';
-		this.pushMessage('user', text);
-		this.streamReply(0).catch((streamErr) => {
-			return this.handleStreamError(streamErr);
-		});
-	}
-	handleAbort() {
-		this.controller?.abort();
-		this.controller = null;
-		this.state.streaming = false;
-		this.finishStream();
-	}
-	handleStreamError(streamErr) {
-		if (streamErr?.name === 'AbortError') {
-			return;
-		}
-		this.state.connectionState = 'offline';
-		this.state.streaming = false;
-		this.controller = null;
-		this.finishStream();
-	}
-	handleKeyDown(domEvent) {
-		if (domEvent.key === 'Enter' && !domEvent.shiftKey) {
-			domEvent.preventDefault();
-			this.handleSend();
-		}
-	}
-	handleClear() {
-		this.handleAbort();
-		this.state.messages = [];
-		this.state.errorText = '';
-	}
-	async streamReply(depth = 0) {
-		this.state.streaming = true;
-		this.state.connectionState = 'connecting';
-		const controller = new AbortController();
-		this.controller = controller;
-		const payload = this.buildPayload(null);
-		let response;
 		try {
-			response = await fetch(this.state.endpoint, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
+			const value = await def.handler({
+				component: root,
+				args: cmd.args ?? {},
+				ctx: {
+					source: 'ai-chat',
 				},
-				body: JSON.stringify(payload),
-				signal: controller.signal,
 			});
-		} catch (fetchErr) {
-			if (fetchErr?.name !== 'AbortError') {
-				this.state.connectionState = 'offline';
-			}
-			this.state.streaming = false;
-			this.controller = null;
-			return;
-		}
-		if (!response.ok) {
-			this.state.connectionState = 'offline';
-			this.state.streaming = false;
-			this.controller = null;
-			return;
-		}
-		if (!response.body) {
-			this.state.connectionState = 'offline';
-			this.state.streaming = false;
-			this.controller = null;
-			return;
-		}
-		this.state.connectionState = 'online';
-		// Push the placeholder as STREAMING so the child shows live escaped text
-		// and withholds the markdown parse until finishStream() clears the flag.
-		const assistantId = this.pushMessage('assistant', '', {
-			streaming: true,
-		});
-		this.streamingMessageId = assistantId;
-		const reader = response.body.getReader();
-		const decoder = new TextDecoder('utf-8');
-		let buffer = '';
-		let accumulated = '';
-		let finished = false;
-		while (true) {
-			const chunk = await reader.read();
-			if (chunk.done) {
-				break;
-			}
-			buffer += decoder.decode(chunk.value, {
-				stream: true,
+			return formatAiResponse(cmd.name, cmd.callId, value);
+		} catch (toolError) {
+			return formatAiResponse(cmd.name, cmd.callId, {
+				error: toolError?.message ?? 'Tool error',
 			});
-			let sepIndex = buffer.indexOf(SSE_DELIMITER);
-			while (sepIndex !== -1) {
-				const eventText = buffer.slice(0, sepIndex);
-				buffer = buffer.slice(sepIndex + SSE_DELIMITER.length);
-				const parsed = this.parseSseEvent(eventText);
-				if (parsed === SSE_DONE) {
-					finished = true;
-					break;
-				}
-				if (parsed) {
-					const delta = parsed?.choices?.[0]?.delta?.content;
-					if (delta) {
-						accumulated += delta;
-						this.replaceContent(assistantId, accumulated);
-					}
-				}
-				sepIndex = buffer.indexOf(SSE_DELIMITER);
-			}
-			if (finished) {
-				break;
-			}
 		}
-		this.state.streaming = false;
-		this.controller = null;
-		this.finishStream();
-		await this.dispatchCommandsIn(assistantId, depth);
 	}
-	parseSseEvent(eventText) {
-		const lines = eventText.split('\n');
-		for (let i = 0; i < lines.length; i++) {
-			const line = lines[i];
-			if (!line.startsWith(SSE_DATA_PREFIX)) {
-				continue;
-			}
-			const payload = line.slice(SSE_DATA_PREFIX.length).trim();
-			if (payload === SSE_DONE) {
-				return SSE_DONE;
-			}
-			if (!payload) {
-				return null;
-			}
-			return JSON.parse(payload);
+	handleTurnComplete(domEvent) {
+		const content = domEvent.detail?.data?.content ?? '';
+		const commands = parseViatCommands(content);
+		if (!commands.length) {
+			// Final prose answer — the chain is done.
+			this.roundTripDepth = 0;
+			return;
 		}
-		return null;
+		if (this.roundTripDepth >= MAX_TOOL_ROUND_TRIPS) {
+			this.roundTripDepth = 0;
+			return;
+		}
+		this.roundTripDepth += 1;
+		this.dispatchCommands(commands);
+	}
+	async dispatchCommands(commands) {
+		const pending = [];
+		for (let index = 0; index < commands.length; index += 1) {
+			pending.push(this.runCommand(commands[index]));
+		}
+		const responses = await Promise.all(pending);
+		const chat = this.refs.chat;
+		if (!chat) {
+			return;
+		}
+		// Feed the tool replies back as a HIDDEN user turn → the global streams
+		// the agent's next turn → emits turn-complete → we loop until no commands.
+		chat.continueWith('user', responses.join('\n'), {
+			hidden: true,
+		});
 	}
 	render() {
 		this.html `
-			<div class="ai-chat">
-				<header class="aic-header">
-					<div class="aic-titlebar">
-						<div class="aic-title-group">
-							<span class="aic-title">LOCAL AI</span>
-							<ui-status-indicator .status=${this.state.connectionState}></ui-status-indicator>
-						</div>
-						<button class="aic-clear" @click=${this.handleClear} ?disabled=${() => {
-							return this.state.messages.length === 0 && !this.state.streaming;
-						}}>CLEAR</button>
-					</div>
-					<span class="aic-endpoint">${this.state.endpoint}</span>
-				</header>
-				<div #log class="aic-log">
-					${filter('messages', UIAiMessage, 'hidden')}
-				</div>
-				<div class="aic-error" ?data-visible=${this.state.errorText}>${this.state.errorText}</div>
-				<footer class="aic-input-row">
-					<textarea #input
-						name="local-ai-input"
-						class="aic-input autosize"
-						placeholder="Message local AI…"
-						rows="2"
-						$value="inputValue"
-						?disabled=${this.state.streaming}
-						@keydown=${this.handleKeyDown}></textarea>
-					<button class="aic-btn" ?data-streaming=${this.state.streaming} @click=${this.handleSubmit}>
-						${ifThen('streaming', 'STOP', 'SEND')}
-					</button>
-				</footer>
-			</div>
+			<ui-ai-chat #chat
+				.endpoint=${this.state.endpoint}
+				.model=${this.state.model}
+				.systemPrompt=${this.state.systemPrompt}
+				.title=${'LOCAL AI'}
+				@ai-chat:turn-complete=${this.handleTurnComplete}></ui-ai-chat>
 		`;
 	}
 }

@@ -1,4 +1,5 @@
 import '../code-block/code-block.js';
+import '../ai-reasoning/ai-reasoning.js';
 import { html, list, WebComponent } from 'webcomponent';
 import { segmentMarkdown } from './markdown.js';
 /*
@@ -27,6 +28,10 @@ export class UIAiMessage extends WebComponent {
 		// Stream gate: true → live escaped text; false → settled, parsed parts.
 		// Most messages (user turns, restored history) arrive already settled.
 		streaming: false,
+		// The agent's thinking (bridge `reasoning_content`). Streams live into a
+		// collapsible block ABOVE the answer, independent of the stream/settled
+		// toggle; empty = no block.
+		reasoning: '',
 		// Epoch ms (0 = no timestamp shown).
 		time: 0,
 		parts: [],
@@ -129,6 +134,7 @@ export class UIAiMessage extends WebComponent {
 						<ui-icon class="aim-copy-icon" .name=${this.state.copied ? 'check' : 'copy'} .size=${'xs'}></ui-icon>
 					</button>
 				</header>
+				<ui-ai-reasoning class="aim-reasoning" ?hidden=${!this.state.reasoning} .text=${this.state.reasoning} .streaming=${this.state.streaming} .expanded=${this.state.streaming}></ui-ai-reasoning>
 				<div class="aim-stream" ?hidden=${!this.state.streaming}>${this.state.content}</div>
 				<div class="aim-rich" ?hidden=${this.state.streaming}>${list('parts', this.renderPart, this.partKey)}</div>
 			</div>
