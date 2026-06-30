@@ -24,7 +24,7 @@ export function getComponentsArray(tag) {
 	const out = [];
 	const buckets = getHostChildren(this);
 	for (const list of buckets.values()) {
-		for (let index = 0; index < list.length; index++) {
+		for (let index = 0, listLength = list.length; index < listLength; index++) {
 			out.push(list[index]);
 		}
 	}
@@ -40,7 +40,7 @@ export function getComponentsArray(tag) {
 function firstComponentInBuckets(host, search) {
 	const children = getHostChildren(host);
 	for (const list of children.values()) {
-		for (let index = 0; index < list.length; index++) {
+		for (let index = 0, listLength = list.length; index < listLength; index++) {
 			if (search(list[index])) {
 				return list[index];
 			}
@@ -59,7 +59,7 @@ function collectComponentsInBuckets(host, search) {
 	const results = [];
 	const children = getHostChildren(host);
 	for (const list of children.values()) {
-		for (let index = 0; index < list.length; index++) {
+		for (let index = 0, listLength = list.length; index < listLength; index++) {
 			if (search(list[index])) {
 				results.push(list[index]);
 			}
@@ -85,7 +85,7 @@ export function findComponent(tag, predicate) {
 		} else if (!predicate) {
 			return list[0];
 		}
-		for (let index = 0; index < list.length; index++) {
+		for (let index = 0, listLength = list.length; index < listLength; index++) {
 			if (predicate(list[index])) {
 				return list[index];
 			}
@@ -115,7 +115,7 @@ export function findComponents(tag, predicate) {
 			return list.slice();
 		}
 		const results = [];
-		for (let index = 0; index < list.length; index++) {
+		for (let index = 0, listLength = list.length; index < listLength; index++) {
 			if (predicate(list[index])) {
 				results.push(list[index]);
 			}
@@ -139,7 +139,7 @@ export function prependTo(target) {
 }
 export function ifAssign(target) {
 	const keys = Object.keys(target);
-	for (let keyIndex = 0; keyIndex < keys.length; keyIndex++) {
+	for (let keyIndex = 0, keysLength = keys.length; keyIndex < keysLength; keyIndex++) {
 		const key = keys[keyIndex];
 		if (hasValue(this.state[key])) {
 			this.state[key] = target[key];

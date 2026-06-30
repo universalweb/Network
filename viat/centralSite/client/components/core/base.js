@@ -107,7 +107,7 @@ function foldStaticStateTemplate(component, ownedProvidedKeys) {
 	const mergedState = component.constructor.ensureMergedState();
 	const mergedDescriptors = Object.getOwnPropertyDescriptors(mergedState);
 	const mergedKeys = Object.getOwnPropertyNames(mergedDescriptors);
-	for (let mergedIndex = 0; mergedIndex < mergedKeys.length; mergedIndex += 1) {
+	for (let mergedIndex = 0, mergedKeysLength = mergedKeys.length; mergedIndex < mergedKeysLength; mergedIndex += 1) {
 		const mergedKey = mergedKeys[mergedIndex];
 		const descriptor = mergedDescriptors[mergedKey];
 		if (descriptor.get || descriptor.set) {
@@ -146,7 +146,7 @@ function materializeInstanceState(component, providedState) {
 	}
 	if (mergeObjects) {
 		const argStateKeys = keysOf(providedState);
-		for (let argIndex = 0; argIndex < argStateKeys.length; argIndex += 1) {
+		for (let argIndex = 0, argStateKeysLength = argStateKeys.length; argIndex < argStateKeysLength; argIndex += 1) {
 			const argKey = argStateKeys[argIndex];
 			component.STATE[argKey] = deepMerge(component.STATE[argKey], providedState[argKey]);
 		}

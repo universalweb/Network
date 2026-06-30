@@ -24,7 +24,7 @@ export function assertStaticStyles(styles, className) {
 		throw new TypeError(`${className}.styles must be an object map of { name: CSSStyleSheet | string | null }.`);
 	}
 	const keys = Object.keys(styles);
-	for (let index = 0; index < keys.length; index++) {
+	for (let index = 0, keysLength = keys.length; index < keysLength; index++) {
 		assertStaticStyleEntry(keys[index], styles[keys[index]], className);
 	}
 }

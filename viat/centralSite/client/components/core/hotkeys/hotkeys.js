@@ -65,7 +65,7 @@ const EMPTY_REGISTRATION = {
 export function canonicalizeCombo(spec) {
 	const tokens = String(spec).toLowerCase().split('+');
 	const parts = [];
-	for (let index = 0; index < tokens.length; index += 1) {
+	for (let index = 0, tokensLength = tokens.length; index < tokensLength; index += 1) {
 		let token = tokens[index].trim();
 		if (!token) {
 			continue;
@@ -218,7 +218,7 @@ function isEditableTarget(node) {
 }
 function comboHasBypassModifier(canonical) {
 	const tokens = canonical.split('+');
-	for (let index = 0; index < tokens.length; index += 1) {
+	for (let index = 0, tokensLength = tokens.length; index < tokensLength; index += 1) {
 		if (BYPASS_MODIFIERS.has(tokens[index])) {
 			return true;
 		}

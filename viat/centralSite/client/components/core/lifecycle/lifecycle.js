@@ -204,13 +204,13 @@ export function destroy() {
 	return this.lifecycle.whenDestroyed;
 }
 export function resolveStrandedConnectCyclePromises() {
-	for (let keyIndex = 0; keyIndex < CONNECT_CYCLE_KEYS.length; keyIndex++) {
+	for (let keyIndex = 0, connectCycleKeysLength = CONNECT_CYCLE_KEYS.length; keyIndex < connectCycleKeysLength; keyIndex++) {
 		fireResolver(this.lifecycle, CONNECT_CYCLE_KEYS[keyIndex]);
 	}
 	this.lifecycle.treeVisiblePromise = null;
 }
 export function createConnectCyclePromises() {
-	for (let keyIndex = 0; keyIndex < CONNECT_CYCLE_KEYS.length; keyIndex++) {
+	for (let keyIndex = 0, connectCycleKeysLength = CONNECT_CYCLE_KEYS.length; keyIndex < connectCycleKeysLength; keyIndex++) {
 		assignPromisePair(this.lifecycle, CONNECT_CYCLE_KEYS[keyIndex]);
 	}
 	this.lifecycle.treeVisiblePromise = null;
