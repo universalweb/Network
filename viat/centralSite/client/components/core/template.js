@@ -134,7 +134,8 @@ export function styles(styleObject) {
 	}
 	let cssText = '';
 	const keys = Object.keys(styleObject);
-	for (let index = 0, keysLength = keys.length; index < keysLength; index++) {
+	const keysLength = keys.length;
+	for (let index = 0; index < keysLength; index++) {
 		const prop = keys[index];
 		const value = styleObject[prop];
 		if (value === null || value === undefined || value === false) {
@@ -149,7 +150,8 @@ function addTokens(source, target) {
 		return;
 	}
 	const tokens = source.split(/\s+/);
-	for (let index = 0, tokensLength = tokens.length; index < tokensLength; index++) {
+	const tokensLength = tokens.length;
+	for (let index = 0; index < tokensLength; index++) {
 		const token = tokens[index];
 		if (token) {
 			target.add(token);
@@ -157,7 +159,8 @@ function addTokens(source, target) {
 	}
 }
 function applyClassListItems(items, desired, deps, component) {
-	for (let index = 0, itemsLength = items.length; index < itemsLength; index++) {
+	const itemsLength = items.length;
+	for (let index = 0; index < itemsLength; index++) {
 		const item = items[index];
 		if (isString(item)) {
 			addTokens(item, desired);
@@ -231,7 +234,8 @@ function applyClassListItems(items, desired, deps, component) {
 			continue;
 		}
 		const keys = Object.keys(item);
-		for (let keyIndex = 0, keysLength = keys.length; keyIndex < keysLength; keyIndex++) {
+		const keysLength = keys.length;
+		for (let keyIndex = 0; keyIndex < keysLength; keyIndex++) {
 			const key = keys[keyIndex];
 			const value = item[key];
 			let resolved = value;
@@ -347,7 +351,8 @@ export function html(strings, ...values) {
  */
 const LIGHT_ROW_INSTANCES = new WeakMap();
 function assertLightTemplate(recipe, values) {
-	for (let valueIndex = 0, valuesLength = values.length; valueIndex < valuesLength; valueIndex++) {
+	const valuesLength = values.length;
+	for (let valueIndex = 0; valueIndex < valuesLength; valueIndex++) {
 		const value = values[valueIndex];
 		if (isFunction(value) || isBindingType(value)) {
 			throw new TypeError('each() html row expressions must be plain values — compute inline (`${item.x * 2}`), not `${() => …}` or a binding.');
@@ -369,10 +374,11 @@ function instantiateLightRow(lightTemplate) {
 	 * before any anchored install shifts child indices, then install.
 	 */
 	const spotResolved = new Array(spotPlans.length);
-	for (let spotIndex = 0, spotPlansLength = spotPlans.length; spotIndex < spotPlansLength; spotIndex++) {
+	const spotPlansLength = spotPlans.length;
+	for (let spotIndex = 0; spotIndex < spotPlansLength; spotIndex++) {
 		spotResolved[spotIndex] = resolveSpotNode(spotPlans[spotIndex], fragment);
 	}
-	for (let spotIndex = 0, spotPlansLength = spotPlans.length; spotIndex < spotPlansLength; spotIndex++) {
+	for (let spotIndex = 0; spotIndex < spotPlansLength; spotIndex++) {
 		const spot = installSpotFromPlan(spotPlans[spotIndex], spotResolved[spotIndex], values, null);
 		if (spot) {
 			spots.push(spot);
@@ -488,7 +494,8 @@ export class LiveList {
 			const fragment = document.createDocumentFragment();
 			this.spot.keyMap ??= new Map();
 			this.spot.prevItemMap ??= new Map();
-			for (let insertIndex = 0, newItemsLength = newItems.length; insertIndex < newItemsLength; insertIndex++) {
+			const newItemsLength = newItems.length;
+			for (let insertIndex = 0; insertIndex < newItemsLength; insertIndex++) {
 				const newItem = newItems[insertIndex];
 				const itemKey = this.keyFn(newItem, normalStart + insertIndex);
 				const element = this.createElement(newItem);
@@ -705,7 +712,8 @@ function updateReusedElement(element, item, itemList) {
  */
 function sameKeyOrder(items, keyFn, oldMap) {
 	const keyIterator = oldMap.keys();
-	for (let index = 0, itemsLength = items.length; index < itemsLength; index++) {
+	const itemsLength = items.length;
+	for (let index = 0; index < itemsLength; index++) {
 		if (keyFn(items[index], index) !== keyIterator.next().value) {
 			return false;
 		}
@@ -792,7 +800,8 @@ function patchList(spot, itemList) {
 	 */
 	const oldKeys = [...oldMap.keys()];
 	const oldOrder = new Map();
-	for (let oldIndex = 0, oldKeysLength = oldKeys.length; oldIndex < oldKeysLength; oldIndex++) {
+	const oldKeysLength = oldKeys.length;
+	for (let oldIndex = 0; oldIndex < oldKeysLength; oldIndex++) {
 		oldOrder.set(oldKeys[oldIndex], oldIndex);
 	}
 	/*
@@ -831,7 +840,8 @@ function patchList(spot, itemList) {
 	}
 	// Remove the old elements that were not reused.
 	const staleEntries = [...oldMap.entries()];
-	for (let staleIndex = 0, staleEntriesLength = staleEntries.length; staleIndex < staleEntriesLength; staleIndex++) {
+	const staleEntriesLength = staleEntries.length;
+	for (let staleIndex = 0; staleIndex < staleEntriesLength; staleIndex++) {
 		const staleElement = staleEntries[staleIndex][1];
 		cleanupTemplateNode(staleElement);
 		staleElement.remove();
@@ -1003,7 +1013,8 @@ function syncSpotSubscriptions(spot, deps) {
 	}
 	if (store.size) {
 		const realms = [...store.keys()];
-		for (let realmIndex = 0, realmsLength = realms.length; realmIndex < realmsLength; realmIndex++) {
+		const realmsLength = realms.length;
+		for (let realmIndex = 0; realmIndex < realmsLength; realmIndex++) {
 			const realm = realms[realmIndex];
 			if (!deps.has(realm)) {
 				clearUnsubs(store.get(realm));
@@ -1345,7 +1356,8 @@ function applyStyleObject(spot, value) {
 	const previousKeys = spot.prevStyleKeys;
 	const nextKeys = new Set();
 	const keys = Object.keys(value);
-	for (let keyIndex = 0, keysLength = keys.length; keyIndex < keysLength; keyIndex++) {
+	const keysLength = keys.length;
+	for (let keyIndex = 0; keyIndex < keysLength; keyIndex++) {
 		const styleKey = keys[keyIndex];
 		const styleValue = value[styleKey];
 		if (styleValue === null || styleValue === undefined || styleValue === false) {
@@ -1360,7 +1372,8 @@ function applyStyleObject(spot, value) {
 	}
 	if (previousKeys) {
 		const staleKeys = [...previousKeys];
-		for (let staleIndex = 0, staleKeysLength = staleKeys.length; staleIndex < staleKeysLength; staleIndex++) {
+		const staleKeysLength = staleKeys.length;
+		for (let staleIndex = 0; staleIndex < staleKeysLength; staleIndex++) {
 			const staleKey = staleKeys[staleIndex];
 			if (nextKeys.has(staleKey)) {
 				continue;
@@ -1709,7 +1722,8 @@ function buildListView(rawItems, filterFn) {
 			return rawItems;
 		}
 		const view = [];
-		for (let index = 0, rawItemsLength = rawItems.length; index < rawItemsLength; index++) {
+		const rawItemsLength = rawItems.length;
+		for (let index = 0; index < rawItemsLength; index++) {
 			const item = rawItems[index];
 			if (filterFn(item, index)) {
 				view.push(item);
@@ -1720,7 +1734,8 @@ function buildListView(rawItems, filterFn) {
 	if (isPlainObject(rawItems)) {
 		const keys = Object.keys(rawItems);
 		const view = [];
-		for (let index = 0, keysLength = keys.length; index < keysLength; index++) {
+		const keysLength = keys.length;
+		for (let index = 0; index < keysLength; index++) {
 			const item = rawItems[keys[index]];
 			if (!filterFn || filterFn(item, index)) {
 				view.push(item);
@@ -1766,7 +1781,8 @@ class ListSpot extends Spot {
 		this.pendingPaths = null;
 		if (paths && paths.length > 1) {
 			let lastResult;
-			for (let pathIndex = 0, pathsLength = paths.length; pathIndex < pathsLength; pathIndex++) {
+			const pathsLength = paths.length;
+			for (let pathIndex = 0; pathIndex < pathsLength; pathIndex++) {
 				lastResult = this.refresh(paths[pathIndex]);
 			}
 			return lastResult;
@@ -1877,7 +1893,8 @@ class MultiAttrSpot extends Spot {
 		const parts = this.parts;
 		const allDeps = new Map();
 		let result = '';
-		for (let partIndex = 0, partsLength = parts.length; partIndex < partsLength; partIndex++) {
+		const partsLength = parts.length;
+		for (let partIndex = 0; partIndex < partsLength; partIndex++) {
 			const part = parts[partIndex];
 			if (part.literal !== undefined) {
 				result += part.literal;
@@ -1924,7 +1941,8 @@ class ClassListSpot extends Spot {
 		const parts = this.parts;
 		const desired = new Set();
 		const deps = new Map();
-		for (let partIndex = 0, partsLength = parts.length; partIndex < partsLength; partIndex++) {
+		const partsLength = parts.length;
+		for (let partIndex = 0; partIndex < partsLength; partIndex++) {
 			const part = parts[partIndex];
 			if (part.literal !== undefined) {
 				addTokens(part.literal, desired);
@@ -1972,7 +1990,8 @@ class EventSpot extends Spot {
 		this.modCapture = false;
 		this.modPassive = false;
 		if (modifiers) {
-			for (let modIndex = 0, modifiersLength = modifiers.length; modIndex < modifiersLength; modIndex++) {
+			const modifiersLength = modifiers.length;
+			for (let modIndex = 0; modIndex < modifiersLength; modIndex++) {
 				const modifier = modifiers[modIndex];
 				if (modifier === 'stop') {
 					this.modStop = true;
@@ -2243,7 +2262,8 @@ function getNodePath(node, root) {
 }
 function walkPath(root, path) {
 	let node = root;
-	for (let pathIndex = 0, pathLength = path.length; pathIndex < pathLength; pathIndex++) {
+	const pathLength = path.length;
+	for (let pathIndex = 0; pathIndex < pathLength; pathIndex++) {
 		node = node.childNodes[path[pathIndex]];
 	}
 	return node;
@@ -2277,7 +2297,8 @@ function isAllDigitsFrom(value, from) {
 	if (value.length === from) {
 		return false;
 	}
-	for (let charIndex = from, valueLength = value.length; charIndex < valueLength; charIndex++) {
+	const valueLength = value.length;
+	for (let charIndex = from; charIndex < valueLength; charIndex++) {
 		const code = value.charCodeAt(charIndex);
 		if (code < 48 || code > 57) {
 			return false;
@@ -2300,7 +2321,8 @@ function isMarkerAttr(attrName, value) {
 function buildMarkerMap(fragment) {
 	const map = new Map();
 	const markedNodes = fragment.querySelectorAll('[data-uwc]');
-	for (let nodeIndex = 0, markedNodesLength = markedNodes.length; nodeIndex < markedNodesLength; nodeIndex++) {
+	const markedNodesLength = markedNodes.length;
+	for (let nodeIndex = 0; nodeIndex < markedNodesLength; nodeIndex++) {
 		const node = markedNodes[nodeIndex];
 		const path = getNodePath(node, fragment);
 		if (!path) {
@@ -2308,7 +2330,8 @@ function buildMarkerMap(fragment) {
 		}
 		node.removeAttribute('data-uwc');
 		const attrs = node.attributes;
-		for (let attrIndex = 0, attrsLength = attrs.length; attrIndex < attrsLength; attrIndex++) {
+		const attrsLength = attrs.length;
+		for (let attrIndex = 0; attrIndex < attrsLength; attrIndex++) {
 			const attrName = attrs[attrIndex].name;
 			const attrValue = attrs[attrIndex].value;
 			if (!isMarkerAttr(attrName, attrValue)) {
@@ -2537,7 +2560,8 @@ function normalizeBindKey(rawKey) {
 function extractDataBindPlans(fragment) {
 	const plans = [];
 	const dataBindNodes = fragment.querySelectorAll('[data-bind]');
-	for (let nodeIndex = 0, dataBindNodesLength = dataBindNodes.length; nodeIndex < dataBindNodesLength; nodeIndex++) {
+	const dataBindNodesLength = dataBindNodes.length;
+	for (let nodeIndex = 0; nodeIndex < dataBindNodesLength; nodeIndex++) {
 		const element = dataBindNodes[nodeIndex];
 		const stateKey = element.dataset.bind;
 		if (!stateKey) {
@@ -2554,7 +2578,8 @@ function extractDataBindPlans(fragment) {
 		element.removeAttribute('data-bind');
 	}
 	const atBindNodes = fragment.querySelectorAll('*');
-	for (let nodeIndex = 0, atBindNodesLength = atBindNodes.length; nodeIndex < atBindNodesLength; nodeIndex++) {
+	const atBindNodesLength = atBindNodes.length;
+	for (let nodeIndex = 0; nodeIndex < atBindNodesLength; nodeIndex++) {
 		const element = atBindNodes[nodeIndex];
 		const stateKey = element.getAttribute('@bind');
 		if (!stateKey) {
@@ -2571,7 +2596,8 @@ function extractDataBindPlans(fragment) {
 		element.removeAttribute('@bind');
 	}
 	const dollarBindNodes = fragment.querySelectorAll('*');
-	for (let nodeIndex = 0, dollarBindNodesLength = dollarBindNodes.length; nodeIndex < dollarBindNodesLength; nodeIndex++) {
+	const dollarBindNodesLength = dollarBindNodes.length;
+	for (let nodeIndex = 0; nodeIndex < dollarBindNodesLength; nodeIndex++) {
 		const element = dollarBindNodes[nodeIndex];
 		const attrs = element.attributes;
 		for (let attrIndex = attrs.length - 1; attrIndex >= 0; attrIndex--) {
@@ -2610,7 +2636,8 @@ function extractSubeventPlans(fragment) {
 	const plans = [];
 	for (const attrName of SUBEVENT_ATTRS) {
 		const elements = fragment.querySelectorAll(`[${attrName}]`);
-		for (let nodeIndex = 0, elementsLength = elements.length; nodeIndex < elementsLength; nodeIndex++) {
+		const elementsLength = elements.length;
+		for (let nodeIndex = 0; nodeIndex < elementsLength; nodeIndex++) {
 			const element = elements[nodeIndex];
 			const rawValue = element.getAttribute(attrName);
 			element.removeAttribute(attrName);
@@ -2638,7 +2665,8 @@ function extractSubeventPlans(fragment) {
 function extractRefPlans(fragment) {
 	const plans = [];
 	const refNodes = fragment.querySelectorAll('*');
-	for (let nodeIndex = 0, refNodesLength = refNodes.length; nodeIndex < refNodesLength; nodeIndex++) {
+	const refNodesLength = refNodes.length;
+	for (let nodeIndex = 0; nodeIndex < refNodesLength; nodeIndex++) {
 		const element = refNodes[nodeIndex];
 		const attrs = element.attributes;
 		for (let attrIndex = attrs.length - 1; attrIndex >= 0; attrIndex--) {
@@ -2673,7 +2701,8 @@ function prepareRecipe(strings) {
 	const fragment = template.content;
 	const markerMap = buildMarkerMap(fragment);
 	const spotPlans = [];
-	for (let entryIndex = 0, metaLength = meta.length; entryIndex < metaLength; entryIndex++) {
+	const metaLength = meta.length;
+	for (let entryIndex = 0; entryIndex < metaLength; entryIndex++) {
 		const plan = buildSpotPlan(markerMap, meta[entryIndex]);
 		if (plan) {
 			spotPlans.push(plan);
@@ -2747,7 +2776,8 @@ class DataBindSpot {
 		this.modTrim = false;
 		let lazy = false;
 		if (modifiers) {
-			for (let modIndex = 0, modifiersLength = modifiers.length; modIndex < modifiersLength; modIndex++) {
+			const modifiersLength = modifiers.length;
+			for (let modIndex = 0; modIndex < modifiersLength; modIndex++) {
 				const modifier = modifiers[modIndex];
 				if (modifier === 'number') {
 					this.modNumber = true;
@@ -2792,7 +2822,8 @@ function installDataBind(el, stateKey, component, unsubs, modifiers) {
 }
 function buildMultiParts(planParts, exprs) {
 	const parts = new Array(planParts.length);
-	for (let partIndex = 0, planPartsLength = planParts.length; partIndex < planPartsLength; partIndex++) {
+	const planPartsLength = planParts.length;
+	for (let partIndex = 0; partIndex < planPartsLength; partIndex++) {
 		const part = planParts[partIndex];
 		if (part.literal === undefined) {
 			parts[partIndex] = {
@@ -3010,16 +3041,19 @@ function cleanupSpots(spots) {
 	if (!spots || !spots.length) {
 		return;
 	}
-	for (let spotIndex = 0, spotsLength = spots.length; spotIndex < spotsLength; spotIndex++) {
+	const spotsLength = spots.length;
+	for (let spotIndex = 0; spotIndex < spotsLength; spotIndex++) {
 		spots[spotIndex].unsubscribe();
 	}
 }
 function collectBoundKeys(spots, dataBindPlans) {
 	const keys = new Set();
-	for (let spotIndex = 0, spotsLength = spots.length; spotIndex < spotsLength; spotIndex++) {
+	const spotsLength = spots.length;
+	for (let spotIndex = 0; spotIndex < spotsLength; spotIndex++) {
 		const spot = spots[spotIndex];
 		if (spot.type === SPOT_TYPE.MULTI_ATTR || spot.type === SPOT_TYPE.CLASS_LIST) {
-			for (let partIndex = 0, partsLength = spot.parts.length; partIndex < partsLength; partIndex++) {
+			const partsLength = spot.parts.length;
+			for (let partIndex = 0; partIndex < partsLength; partIndex++) {
 				const part = spot.parts[partIndex];
 				if (isBindingType(part.expr)) {
 					keys.add(part.expr.key);
@@ -3036,7 +3070,8 @@ function collectBoundKeys(spots, dataBindPlans) {
 		}
 	}
 	if (dataBindPlans) {
-		for (let planIndex = 0, dataBindPlansLength = dataBindPlans.length; planIndex < dataBindPlansLength; planIndex++) {
+		const dataBindPlansLength = dataBindPlans.length;
+		for (let planIndex = 0; planIndex < dataBindPlansLength; planIndex++) {
 			const plan = dataBindPlans[planIndex];
 			if (plan.key) {
 				keys.add(plan.key);
@@ -3073,34 +3108,38 @@ function instantiateRecipe(recipe, exprs, component) {
 	 */
 	const spotInstallMark = Perf.mark('spotInstall');
 	const spotResolved = new Array(spotPlans.length);
-	for (let spotIndex = 0, spotPlansLength = spotPlans.length; spotIndex < spotPlansLength; spotIndex++) {
+	const spotPlansLength = spotPlans.length;
+	for (let spotIndex = 0; spotIndex < spotPlansLength; spotIndex++) {
 		spotResolved[spotIndex] = resolveSpotNode(spotPlans[spotIndex], fragment);
 	}
 	const dataBindEls = new Array(dataBindPlans.length);
-	for (let bindIndex = 0, dataBindPlansLength = dataBindPlans.length; bindIndex < dataBindPlansLength; bindIndex++) {
+	const dataBindPlansLength = dataBindPlans.length;
+	for (let bindIndex = 0; bindIndex < dataBindPlansLength; bindIndex++) {
 		dataBindEls[bindIndex] = walkPath(fragment, dataBindPlans[bindIndex].path);
 	}
 	const subeventEls = subeventPlans ? new Array(subeventPlans.length) : null;
 	if (subeventPlans) {
-		for (let subeventIndex = 0, subeventPlansLength = subeventPlans.length; subeventIndex < subeventPlansLength; subeventIndex++) {
+		const subeventPlansLength = subeventPlans.length;
+		for (let subeventIndex = 0; subeventIndex < subeventPlansLength; subeventIndex++) {
 			subeventEls[subeventIndex] = walkPath(fragment, subeventPlans[subeventIndex].path);
 		}
 	}
 	const refEls = refPlans ? new Array(refPlans.length) : null;
 	if (refPlans) {
-		for (let refIndex = 0, refPlansLength = refPlans.length; refIndex < refPlansLength; refIndex++) {
+		const refPlansLength = refPlans.length;
+		for (let refIndex = 0; refIndex < refPlansLength; refIndex++) {
 			refEls[refIndex] = walkPath(fragment, refPlans[refIndex].path);
 		}
 	}
 	// PHASE 2 — install. Anchored insertions are now safe (every node captured).
-	for (let spotIndex = 0, spotPlansLength = spotPlans.length; spotIndex < spotPlansLength; spotIndex++) {
+	for (let spotIndex = 0; spotIndex < spotPlansLength; spotIndex++) {
 		const spot = installSpotFromPlan(spotPlans[spotIndex], spotResolved[spotIndex], exprs, component);
 		if (spot) {
 			spots.push(spot);
 		}
 	}
 	Perf.measure('spotInstall', spotInstallMark);
-	for (let bindIndex = 0, dataBindPlansLength = dataBindPlans.length; bindIndex < dataBindPlansLength; bindIndex++) {
+	for (let bindIndex = 0; bindIndex < dataBindPlansLength; bindIndex++) {
 		const el = dataBindEls[bindIndex];
 		if (!el) {
 			continue;
@@ -3108,7 +3147,8 @@ function instantiateRecipe(recipe, exprs, component) {
 		installDataBind(el, dataBindPlans[bindIndex].key, component, unsubs, dataBindPlans[bindIndex].modifiers);
 	}
 	if (subeventPlans) {
-		for (let subeventIndex = 0, subeventPlansLength = subeventPlans.length; subeventIndex < subeventPlansLength; subeventIndex++) {
+		const subeventPlansLength = subeventPlans.length;
+		for (let subeventIndex = 0; subeventIndex < subeventPlansLength; subeventIndex++) {
 			const el = subeventEls[subeventIndex];
 			if (!el) {
 				continue;
@@ -3130,7 +3170,8 @@ function instantiateRecipe(recipe, exprs, component) {
 		}
 	}
 	if (refPlans) {
-		for (let refIndex = 0, refPlansLength = refPlans.length; refIndex < refPlansLength; refIndex++) {
+		const refPlansLength = refPlans.length;
+		for (let refIndex = 0; refIndex < refPlansLength; refIndex++) {
 			const el = refEls[refIndex];
 			if (!el) {
 				continue;
@@ -3200,7 +3241,8 @@ function isStateProxyValue(value) {
  */
 function syncSpotParts(parts, newExprs) {
 	let changed = false;
-	for (let partIndex = 0, partsLength = parts.length; partIndex < partsLength; partIndex++) {
+	const partsLength = parts.length;
+	for (let partIndex = 0; partIndex < partsLength; partIndex++) {
 		const part = parts[partIndex];
 		if (part.exprIndex === undefined) {
 			continue;
@@ -3217,7 +3259,8 @@ function updateTemplateSpots(state, newExprs, component) {
 	const {
 		spots, prevExprs,
 	} = state;
-	for (let spotIndex = 0, spotsLength = spots.length; spotIndex < spotsLength; spotIndex++) {
+	const spotsLength = spots.length;
+	for (let spotIndex = 0; spotIndex < spotsLength; spotIndex++) {
 		const spot = spots[spotIndex];
 		if (spot.type === SPOT_TYPE.MULTI_ATTR) {
 			if (syncSpotParts(spot.parts, newExprs)) {

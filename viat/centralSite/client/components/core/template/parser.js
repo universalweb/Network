@@ -297,7 +297,8 @@ export function buildHTML(strings, exprs) {
 	const meta = [];
 	let attrAccum = null;
 	let pendingMethodClose = false;
-	for (let stringIndex = 0, stringsLength = strings.length; stringIndex < stringsLength; stringIndex++) {
+	const stringsLength = strings.length;
+	for (let stringIndex = 0; stringIndex < stringsLength; stringIndex++) {
 		let effectiveString = strings[stringIndex];
 		const nextString = strings[stringIndex + 1] ?? '';
 		/*

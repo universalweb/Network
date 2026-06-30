@@ -263,7 +263,8 @@ class ReactiveCollection {
 		}
 		const keys = this.asMap ? [...this.target.keys()] : [...this.target];
 		this.target.clear();
-		for (let keyIndex = 0, keysLength = keys.length; keyIndex < keysLength; keyIndex++) {
+		const keysLength = keys.length;
+		for (let keyIndex = 0; keyIndex < keysLength; keyIndex++) {
 			this.notifyKey(keys[keyIndex]);
 		}
 	}
@@ -526,7 +527,8 @@ export function replaceState(state = {}) {
 	if (this.stateBus) {
 		const stateBus = this.stateBus;
 		const paths = [...stateBus.subs.keys()];
-		for (let pathIndex = 0, pathsLength = paths.length; pathIndex < pathsLength; pathIndex++) {
+		const pathsLength = paths.length;
+		for (let pathIndex = 0; pathIndex < pathsLength; pathIndex++) {
 			stateBus.notify(paths[pathIndex]);
 		}
 	}
@@ -549,7 +551,8 @@ export function assignState(partial, options) {
 	const silent = options?.silent === true;
 	const keys = Object.keys(partial);
 	let touched = false;
-	for (let keyIndex = 0, keysLength = keys.length; keyIndex < keysLength; keyIndex++) {
+	const keysLength = keys.length;
+	for (let keyIndex = 0; keyIndex < keysLength; keyIndex++) {
 		const key = keys[keyIndex];
 		const next = partial[key];
 		if (this.STATE[key] === next) {
@@ -641,7 +644,8 @@ export function observe(keys, handler, options) {
 		const mapOptions = isPlainObject(handler) ? handler : options;
 		const objKeys = Object.keys(keys);
 		const subscriptions = [];
-		for (let keyIndex = 0, objKeysLength = objKeys.length; keyIndex < objKeysLength; keyIndex += 1) {
+		const objKeysLength = objKeys.length;
+		for (let keyIndex = 0; keyIndex < objKeysLength; keyIndex += 1) {
 			const key = objKeys[keyIndex];
 			const objectSub = observeStateKey(this, key, keys[key], mapOptions);
 			stateUnsubs.add(objectSub);
@@ -651,7 +655,8 @@ export function observe(keys, handler, options) {
 	}
 	if (isArray(keys)) {
 		const subscriptions = [];
-		for (let keyIndex = 0, keysLength = keys.length; keyIndex < keysLength; keyIndex += 1) {
+		const keysLength = keys.length;
+		for (let keyIndex = 0; keyIndex < keysLength; keyIndex += 1) {
 			const arraySub = observeStateKey(this, keys[keyIndex], handler, options);
 			stateUnsubs.add(arraySub);
 			subscriptions.push(arraySub);
@@ -731,7 +736,8 @@ function findPrototypeSetterDescriptor(instance, key) {
 }
 export function upgradeShadowedProperties() {
 	const ownKeys = Object.getOwnPropertyNames(this);
-	for (let keyIndex = 0, ownKeysLength = ownKeys.length; keyIndex < ownKeysLength; keyIndex += 1) {
+	const ownKeysLength = ownKeys.length;
+	for (let keyIndex = 0; keyIndex < ownKeysLength; keyIndex += 1) {
 		const key = ownKeys[keyIndex];
 		/*
 		 * Deep-state pre-init rescue. A parent's `.state.x=` that committed while

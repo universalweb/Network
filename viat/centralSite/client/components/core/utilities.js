@@ -111,18 +111,21 @@ export function callFn(fn) {
 	fn();
 }
 export function eachArray(arr, fn) {
-	for (let index = 0, arrLength = arr.length; index < arrLength; index++) {
+	const arrLength = arr.length;
+	for (let index = 0; index < arrLength; index++) {
 		fn(arr[index], index);
 	}
 }
 export function eachObject(obj, fn) {
 	const keys = Object.keys(obj);
-	for (let index = 0, keysLength = keys.length; index < keysLength; index++) {
+	const keysLength = keys.length;
+	for (let index = 0; index < keysLength; index++) {
 		fn(keys[index], obj[keys[index]]);
 	}
 }
 export function eachNodeList(list, fn) {
-	for (let index = 0, listLength = list.length; index < listLength; index++) {
+	const listLength = list.length;
+	for (let index = 0; index < listLength; index++) {
 		fn(list[index], index);
 	}
 }
@@ -182,7 +185,8 @@ export function getValueAtPath(source, path) {
 		return source;
 	}
 	let value = source;
-	for (let index = 0, partsLength = parts.length; index < partsLength; index++) {
+	const partsLength = parts.length;
+	for (let index = 0; index < partsLength; index++) {
 		if (value == null) {
 			return undefined;
 		}
@@ -318,7 +322,8 @@ export function clearRealmUnsubs(store) {
  */
 export function syncSubsByDiff(current, nextKeys, subscribe, context) {
 	const entries = [...current.entries()];
-	for (let index = 0, entriesLength = entries.length; index < entriesLength; index += 1) {
+	const entriesLength = entries.length;
+	for (let index = 0; index < entriesLength; index += 1) {
 		const key = entries[index][0];
 		if (!nextKeys.has(key)) {
 			disposeItem(entries[index][1]);
@@ -326,7 +331,8 @@ export function syncSubsByDiff(current, nextKeys, subscribe, context) {
 		}
 	}
 	const nextArray = [...nextKeys];
-	for (let index = 0, nextArrayLength = nextArray.length; index < nextArrayLength; index += 1) {
+	const nextArrayLength = nextArray.length;
+	for (let index = 0; index < nextArrayLength; index += 1) {
 		const key = nextArray[index];
 		if (!current.has(key)) {
 			current.set(key, subscribe(key, context));
@@ -351,7 +357,8 @@ export function deepMerge(existing, incoming) {
 			...existing,
 		};
 		const keys = Object.keys(incoming);
-		for (let index = 0, keysLength = keys.length; index < keysLength; index++) {
+		const keysLength = keys.length;
+		for (let index = 0; index < keysLength; index++) {
 			const key = keys[index];
 			out[key] = deepMerge(existing[key], incoming[key]);
 		}
@@ -390,7 +397,8 @@ export function smartClone(value) {
 	}
 	if (isArray(value)) {
 		const out = new Array(value.length);
-		for (let index = 0, valueLength = value.length; index < valueLength; index++) {
+		const valueLength = value.length;
+		for (let index = 0; index < valueLength; index++) {
 			out[index] = smartClone(value[index]);
 		}
 		return out;
@@ -404,7 +412,8 @@ export function smartClone(value) {
 	if (isPlainObject(value)) {
 		const out = {};
 		const keys = Object.keys(value);
-		for (let index = 0, keysLength = keys.length; index < keysLength; index++) {
+		const keysLength = keys.length;
+		for (let index = 0; index < keysLength; index++) {
 			const key = keys[index];
 			out[key] = smartClone(value[key]);
 		}
@@ -420,7 +429,8 @@ export function setValueAtPath(source, path, value) {
 	const parts = path.split('.');
 	const finalKey = parts.pop();
 	let cursor = source;
-	for (let index = 0, partsLength = parts.length; index < partsLength; index++) {
+	const partsLength = parts.length;
+	for (let index = 0; index < partsLength; index++) {
 		const part = parts[index];
 		if (!isPlainObject(cursor[part]) && !isArray(cursor[part])) {
 			cursor[part] = {};

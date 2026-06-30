@@ -32,7 +32,8 @@ function awaitChildren(component, fieldName) {
 		return undefined;
 	}
 	const childPromises = new Array(children.length);
-	for (let childIndex = 0, childrenLength = children.length; childIndex < childrenLength; childIndex++) {
+	const childrenLength = children.length;
+	for (let childIndex = 0; childIndex < childrenLength; childIndex++) {
 		childPromises[childIndex] = children[childIndex].lifecycle[fieldName];
 	}
 	return Promise.all(childPromises);
@@ -110,7 +111,8 @@ export function subscribeRenderDeps(deps) {
 	// Dispose realms that vanished from this render (e.g. stopped reading global).
 	if (store.size) {
 		const realms = [...store.keys()];
-		for (let realmIndex = 0, realmsLength = realms.length; realmIndex < realmsLength; realmIndex++) {
+		const realmsLength = realms.length;
+		for (let realmIndex = 0; realmIndex < realmsLength; realmIndex++) {
 			const realm = realms[realmIndex];
 			if (!deps || !deps.has(realm)) {
 				clearUnsubs(store.get(realm));
@@ -122,7 +124,8 @@ export function subscribeRenderDeps(deps) {
 		return;
 	}
 	const entries = [...deps];
-	for (let entryIndex = 0, entriesLength = entries.length; entryIndex < entriesLength; entryIndex++) {
+	const entriesLength = entries.length;
+	for (let entryIndex = 0; entryIndex < entriesLength; entryIndex++) {
 		const realm = entries[entryIndex][0];
 		const paths = entries[entryIndex][1];
 		let submap = store.get(realm);

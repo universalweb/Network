@@ -26,7 +26,8 @@ function computeMerged(ComponentClass, fieldName) {
 	}
 	const chain = collectClassChain(ComponentClass);
 	const merged = {};
-	for (let index = 0, chainLength = chain.length; index < chainLength; index++) {
+	const chainLength = chain.length;
+	for (let index = 0; index < chainLength; index++) {
 		const classRef = chain[index];
 		if (hasOwn(classRef, fieldName)) {
 			assign(merged, classRef[fieldName]);
@@ -68,7 +69,8 @@ function copyDescriptor(target, key, descriptor) {
 function foldStateSource(merged, source, mergeObjects) {
 	const descriptors = Object.getOwnPropertyDescriptors(source);
 	const keys = Object.keys(descriptors);
-	for (let index = 0, keysLength = keys.length; index < keysLength; index++) {
+	const keysLength = keys.length;
+	for (let index = 0; index < keysLength; index++) {
 		const key = keys[index];
 		const descriptor = descriptors[key];
 		if (descriptor.get || descriptor.set) {
@@ -118,7 +120,8 @@ function computeMergedState(ComponentClass) {
 		return merged;
 	}
 	const chain = collectClassChain(ComponentClass);
-	for (let index = 0, chainLength = chain.length; index < chainLength; index++) {
+	const chainLength = chain.length;
+	for (let index = 0; index < chainLength; index++) {
 		const classRef = chain[index];
 		if (!hasOwn(classRef, 'state')) {
 			continue;
@@ -158,7 +161,8 @@ export function ensureMergedProperties(ComponentClass) {
 function collectAccessors(mergedState, getters, setters) {
 	const descriptors = Object.getOwnPropertyDescriptors(mergedState);
 	const keys = Object.getOwnPropertyNames(descriptors);
-	for (let index = 0, keysLength = keys.length; index < keysLength; index++) {
+	const keysLength = keys.length;
+	for (let index = 0; index < keysLength; index++) {
 		const key = keys[index];
 		const descriptor = descriptors[key];
 		if (descriptor.get) {
@@ -201,7 +205,8 @@ export function ensurePropertyIndex(ComponentClass) {
 	const nonReactivePaths = new Set();
 	const getters = new Map();
 	const setters = new Map();
-	for (let index = 0, pathsLength = paths.length; index < pathsLength; index++) {
+	const pathsLength = paths.length;
+	for (let index = 0; index < pathsLength; index++) {
 		const path = paths[index];
 		const descriptor = merged[path];
 		if (!descriptor) {
