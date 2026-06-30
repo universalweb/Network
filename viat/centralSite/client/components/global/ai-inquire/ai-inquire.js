@@ -77,7 +77,7 @@ export class UIAiInquire extends WebComponent {
 		this.html `
 			<section class="inq" data-mode=${this.state.mode}>
 				<header class="inq-head">
-					<ui-icon class="inq-icon" .name=${'circle-help'} .size=${'sm'}></ui-icon>
+					<ui-icon class="inq-icon" .state.name=${'circle-help'} .state.size=${'sm'}></ui-icon>
 					<span class="inq-q">${this.state.question}</span>
 				</header>
 				<div class="inq-choice" ?hidden=${!this.choiceOpen} @click=${this.handleOptionClick}>
@@ -88,7 +88,7 @@ export class UIAiInquire extends WebComponent {
 					<button type="submit" data-variant="solid" data-tone="primary" data-size="sm">Send</button>
 				</form>
 				<div class="inq-answer" ?hidden=${!this.state.answered}>
-					<ui-icon class="inq-answer-icon" .name=${'check'} .size=${'xs'}></ui-icon>
+					<ui-icon class="inq-answer-icon" .state.name=${'check'} .state.size=${'xs'}></ui-icon>
 					<span class="inq-answer-text">${this.state.answered}</span>
 				</div>
 			</section>

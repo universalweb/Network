@@ -266,11 +266,11 @@ export class UICalendar extends WebComponent {
 			<div class="cal" data-density=${this.state.density} data-mode=${this.state.selectMode} ?data-events=${this.state.showEvents}>
 				<div class="cal-head">
 					<button class="cal-nav" type="button" tooltip="Previous month" aria-label="Previous month" @click=${this.handlePrev}>
-						<ui-icon .name=${'chevron-left'} .size=${'sm'}></ui-icon>
+						<ui-icon .state.name=${'chevron-left'} .state.size=${'sm'}></ui-icon>
 					</button>
 					<span class="cal-title">${this.monthTitle}</span>
 					<button class="cal-nav" type="button" tooltip="Next month" aria-label="Next month" @click=${this.handleNext}>
-						<ui-icon .name=${'chevron-right'} .size=${'sm'}></ui-icon>
+						<ui-icon .state.name=${'chevron-right'} .state.size=${'sm'}></ui-icon>
 					</button>
 					<button class="cal-today" type="button" @click=${this.handleToday}>Today</button>
 				</div>

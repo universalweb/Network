@@ -1,13 +1,13 @@
 :host {
 	display: block;
 }
-/* Document scroll: the dashboard flows in the page, it is no longer its own
-   scroll box. The long panels (activity-log / wallet-params) keep an internal
-   cap so the overview stays compact; everything else flows. */
+/* The dashboard flows inside the shell scroll surface — it is not its own scroll
+   box, and the fixed top-bar clearance is owned by .shell-scroll (app.css), so there
+   is no top padding here. The long panels (activity-log / wallet-params) keep an
+   internal cap so the overview stays compact; everything else flows. */
 .dashboard-center {
 	display: flex;
 	flex-direction: column;
-	padding-block-start: 5.625rem;
 	padding-block-end: var(--space-12);
 }
 .center-content {

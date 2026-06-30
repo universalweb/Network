@@ -39,6 +39,7 @@ export { setDocumentTitle, syncDocumentTitle } from './dom/documentTitle.js';
 export {
 	appendTo,
 	findComponent,
+	findComponents,
 	getComponent,
 	getComponentRoot,
 	getComponents,
@@ -48,8 +49,8 @@ export {
 } from './dom/dom.js';
 export { setInert } from './dom/inert.js';
 export { getRef, makeRefsProxy, registerRef } from './dom/refs.js';
-export { createDragSnap, SNAP_CURVE, SNAP_MS } from './gestures/dragSnap.js';
-export { createDragTrack } from './gestures/dragTrack.js';
+export { DragSnap, SNAP_CURVE, SNAP_MS } from './gestures/dragSnap.js';
+export { DragTrack } from './gestures/dragTrack.js';
 export { canonicalizeCombo, registerHotkey } from './hotkeys/hotkeys.js';
 export { movingIndicator } from './indicator/movingIndicator.js';
 export { atPhase } from './lifecycle/phase.js';

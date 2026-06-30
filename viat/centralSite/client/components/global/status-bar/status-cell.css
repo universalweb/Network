@@ -11,8 +11,10 @@
 	height: 100%;
 	white-space: nowrap;
 }
-.cell[data-divider] {
-	border-inline-end: 1px solid var(--dark-divider);
+/* Trailing separator between cells — positional, never after the last cell.
+   The bar sets `--status-cell-divider: none` (via [data-flat]) to disable. */
+:host(:not(:last-child)) .cell {
+	border-inline-end: var(--status-cell-divider, 1px solid var(--dark-divider));
 }
 .cell-key {
 	font-family: var(--font-display);

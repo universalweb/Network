@@ -24,7 +24,7 @@ export function register(component) {
 	if (!key) {
 		return;
 	}
-	defaultLogger.debug('registry', 'register', key);
+	defaultLogger.debug('registry', `${component.constructor.name}<${component.localName}>`, key);
 	store.set(key, component);
 }
 export function unregister(component) {

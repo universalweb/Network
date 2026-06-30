@@ -65,7 +65,7 @@ export class UIYoutubeVideoPlayer extends WebComponent {
 			<button class="yt-facade" type="button" aria-label=${this.state.videoTitle ? `Play video: ${this.state.videoTitle}` : 'Play video'} @click=${this.handlePlay}>
 				<img class="yt-thumb" src=${this.thumbnailUrl()} alt="" loading="lazy">
 				<span class="yt-scrim" aria-hidden="true"></span>
-				<span class="yt-play" aria-hidden="true"><ui-icon .name=${'play'} .size=${'lg'}></ui-icon></span>
+				<span class="yt-play" aria-hidden="true"><ui-icon .state.name=${'play'} .state.size=${'lg'}></ui-icon></span>
 				<span class="yt-title" ?hidden=${!this.state.videoTitle}>${this.state.videoTitle}</span>
 			</button>
 		`;

@@ -38,11 +38,11 @@ class UISpeedDialAction extends WebComponent {
 			<div class="sd-action">
 				<span class="sd-action-label" ?hidden=${!this.state.label}>${this.state.label}</span>
 				<ui-button class="sd-action-btn"
-					.variant=${'solid'}
-					.tone=${this.state.tone}
-					.size=${'sm'}
-					.leadicon=${this.state.icon}
-					.tooltip=${this.state.label}
+					.state.variant=${'solid'}
+					.state.tone=${this.state.tone}
+					.state.size=${'sm'}
+					.state.leadicon=${this.state.icon}
+					.state.tooltip=${this.state.label}
 					@buttonClick=${this.handleClick}></ui-button>
 			</div>
 		`;
@@ -131,10 +131,10 @@ export class UISpeedDial extends WebComponent {
 					${list('actions', UISpeedDialAction, this.actionKey)}
 				</ul>
 				<ui-button class="sd-trigger"
-					.variant=${'solid'}
-					.tone=${this.state.tone}
-					.size=${'lg'}
-					.leadicon=${this.state.icon}
+					.state.variant=${'solid'}
+					.state.tone=${this.state.tone}
+					.state.size=${'lg'}
+					.state.leadicon=${this.state.icon}
 					@buttonClick=${this.handleTriggerClick}></ui-button>
 			</div>
 		`;

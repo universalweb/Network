@@ -154,6 +154,7 @@
 		"@cldmv/sizeofvar": "^1.0.4",
 		"@eslint/json": "^1.2.0",
 		"@eslint/markdown": "^8.0.1",
+		"@happy-dom/global-registrator": "20.10.5",
 		"@rollup/plugin-commonjs": "^29.0.2",
 		"@rollup/plugin-inject": "^5.0.5",
 		"@rollup/plugin-node-resolve": "^16.0.3",
@@ -169,6 +170,7 @@
 		"eslint-plugin-security": "^4.0.0",
 		"eslint-plugin-sonarjs": "^4.0.3",
 		"globals": "^17.5.0",
+		"happy-dom": "20.10.5",
 		"lucide-static": "^1.14.0",
 		"ts-api-utils": "^2.5.0"
 	},

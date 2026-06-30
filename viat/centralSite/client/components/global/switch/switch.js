@@ -22,8 +22,8 @@ export class UISwitch extends WebComponent {
 		size: 'md',
 		label: '',
 	};
-	// Reactive `checked` contract on the prototype so a `.checked=` binding (or a
-	// plain `el.checked =`) routes through tracked state, like ui-status-indicator.
+	// `.checked=` already auto-routes into state (every state key does); this
+	// explicit setter exists ONLY to coerce the incoming value to a strict boolean.
 	get checked() {
 		return this.state.checked;
 	}

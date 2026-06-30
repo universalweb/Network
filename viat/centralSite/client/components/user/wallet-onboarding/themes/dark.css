@@ -1,0 +1,27 @@
+/*
+ * Dark — wallet-onboarding RULE overrides, adopted into the shadow by theme.
+ * Tokens live in styles/themes/dark.css. x.ai treatment: pill CTAs, a
+ * white-fill primary, calm sans labels (no mono wide-tracked caps).
+ */
+.wo-btn {
+	border-radius: var(--ui-btn-radius);
+	font-family: var(--font-display);
+	font-weight: 500;
+	font-size: var(--text-sm);
+	letter-spacing: normal;
+}
+.wo-btn-primary {
+	background: var(--btn-primary-bg);
+	border-color: var(--btn-primary-border);
+	color: var(--btn-primary-color);
+}
+.wo-btn-primary:hover {
+	background: var(--btn-primary-hover-bg);
+	border-color: var(--btn-primary-hover-border);
+	color: var(--btn-primary-hover-color);
+}
+.wo-readmore {
+	font-family: var(--font-display);
+	letter-spacing: normal;
+	text-transform: none;
+}

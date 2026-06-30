@@ -76,7 +76,9 @@
    the morph. The overlay's visibility gate hides it at rest regardless. */
 .fp-panel {
 	position: absolute;
-	inset-block-start: calc(var(--ms-anchor-top, 0px) + var(--space-2));
+	/* Gap is baked into the JS anchor (MorphSurface.anchorGap) so flip puts it on the
+	   trigger-facing edge — do NOT re-add --space-2 here. */
+	inset-block-start: var(--ms-anchor-top, 0px);
 	inset-inline-start: var(--ms-anchor-left, 0px);
 	display: flex;
 	flex-direction: column;
@@ -95,6 +97,9 @@
 	overflow: hidden;
 }
 .fp-head {
+	/* Header chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
 	display: flex;
 	align-items: center;
 	gap: var(--space-3);

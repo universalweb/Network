@@ -45,7 +45,7 @@ export class UIFloatingPanel extends MorphSurface {
 					<header class="fp-head">
 						<span class="fp-title">${this.state.heading}</span>
 						<button class="fp-close" type="button" aria-label="Close" @click=${this.handleCloseClick}>
-							<ui-icon .name=${'x'} .size=${'sm'}></ui-icon>
+							<ui-icon .state.name=${'x'} .state.size=${'sm'}></ui-icon>
 						</button>
 					</header>
 					<div class="fp-body"><slot></slot></div>

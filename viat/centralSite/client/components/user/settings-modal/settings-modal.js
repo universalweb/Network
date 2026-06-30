@@ -597,9 +597,9 @@ export class SettingsModal extends WebComponent {
 				showMaximize: true,
 			}}>
 				<ui-tabs class="sm-tabs"
-					.tabs=${this.tabsList}
-					.orientation=${'vertical'}
-					.active=${this.state.activeSection}
+					.state.tabs=${this.tabsList}
+					.state.orientation=${'vertical'}
+					.state.active=${this.state.activeSection}
 					@tab-change=${this.handleTabChange}>
 					<section slot="profile" class="sm-body">${this.renderProfileSection}</section>
 					<section slot="wallet-view" class="sm-body">${this.renderWalletViewSection}</section>

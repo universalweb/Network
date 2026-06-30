@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 /*
 	Universal Web Components — template parser (extractor).
 	Tokenizes the tagged-template strings + their interpolation contexts into an
@@ -17,7 +18,13 @@ import {
 } from './constants.js';
 const ATTR_NAME_RE = /^[a-zA-Z_:][a-zA-Z0-9_.:-]*$/;
 function attrContext(templateString) {
-	const attrMatch = templateString.match(/([?.])?([\w:-]+)=(["']?)$/);
+	/*
+	 * The name class includes `.` so a dotted PROPERTY path survives as a single
+	 * token — `.state.size=` → sigil `.`, name `state.size`. That is the explicit
+	 * deep-state channel the commit layer routes through `setValueAtPath`; without
+	 * the dot the `.state` segment would split off and leak into the markup.
+	 */
+	const attrMatch = templateString.match(/([?.])?([\w.:-]+)=(["']?)$/);
 	if (!attrMatch) {
 		return null;
 	}
@@ -62,14 +69,51 @@ export function bindMarkerAttribute(index) {
 	return `${BIND_MARKER}-${index}`;
 }
 function bindContext(templateString) {
-	const m = (/^(?<prefix>[\s\S]*?)@bind=["']?$/).exec(templateString);
-	return m ? m.groups.prefix : null;
+	const match = (/^(?<prefix>[\s\S]*?)@bind=["']?$/).exec(templateString);
+	return match ? match.groups.prefix : null;
+}
+/*
+ * `.methodName(${value})` — invoke a method on the element with the resolved
+ * value as the sole argument. Detected ONLY inside an open tag (mirrors
+ * `bareAttrContext`'s tag-position guard) so a literal `fn.call(${x})` sitting
+ * in TEXT can never misfire as a call. The closing `)` lives at the head of the
+ * NEXT static string; it is validated here and stripped on the next iteration.
+ * Single argument only — a non-`)` follow is a multi-arg form we do not parse.
+ */
+const METHOD_CALL_RE = /\.([a-zA-Z_$][\w$]*)\($/;
+const METHOD_CLOSE_RE = /^\s*\)/;
+function methodCallContext(currentString, nextString, htmlSoFar) {
+	const match = currentString.match(METHOD_CALL_RE);
+	if (!match) {
+		return null;
+	}
+	if (!METHOD_CLOSE_RE.test(nextString)) {
+		return null;
+	}
+	/*
+	 * Confirm the call sits INSIDE an open tag, not in text. The `<tagName`
+	 * opener may live in an EARLIER static string (a multi-interpolation tag like
+	 * `<x .a=${1} .grow(${2})>`), so test the full markup up to the match —
+	 * accumulated html plus this string's prefix — for an unclosed `<`. A bare
+	 * `fn.call(${x})` in text has a closed tag before it and is rejected.
+	 */
+	const markup = htmlSoFar + currentString.slice(0, match.index);
+	if (markup.lastIndexOf('<') <= markup.lastIndexOf('>')) {
+		return null;
+	}
+	return {
+		method: match[1],
+		prefix: currentString.slice(0, match.index),
+	};
 }
 export function bareAttrMarkerAttribute(index) {
 	return `data-attr-expr-${index}`;
 }
 export function multiAttrMarkerAttribute(index) {
 	return `data-multi-attr-${index}`;
+}
+export function methodMarkerAttribute(index) {
+	return `data-uwc-method-${index}`;
 }
 const ATTR_OPEN_RE = /([?.])?([\w:-]+)=(["'])([^"']*)$/;
 function detectAttrOpen(currentString, nextString) {
@@ -252,9 +296,18 @@ export function buildHTML(strings, exprs) {
 	let html = '';
 	const meta = [];
 	let attrAccum = null;
+	let pendingMethodClose = false;
 	for (let stringIndex = 0; stringIndex < strings.length; stringIndex++) {
 		let effectiveString = strings[stringIndex];
 		const nextString = strings[stringIndex + 1] ?? '';
+		/*
+		 * The previous slot was a `.method(${value})` call; its closing `)` opens
+		 * this static string. Strip it so the paren never reaches the markup.
+		 */
+		if (pendingMethodClose) {
+			effectiveString = effectiveString.replace(METHOD_CLOSE_RE, '');
+			pendingMethodClose = false;
+		}
 		if (attrAccum) {
 			const closeIdx = effectiveString.indexOf(attrAccum.quote);
 			if (closeIdx === -1) {
@@ -314,7 +367,16 @@ export function buildHTML(strings, exprs) {
 		}
 		const bindPrefix = bindContext(effectiveString);
 		const eventBinding = bindPrefix === null ? eventContext(effectiveString) : null;
-		html += bindPrefix === null ? (eventBinding?.prefix ?? effectiveString) : bindPrefix;
+		const methodCall = bindPrefix === null && !eventBinding ? methodCallContext(effectiveString, nextString, html) : null;
+		if (bindPrefix !== null) {
+			html += bindPrefix;
+		} else if (eventBinding) {
+			html += eventBinding.prefix;
+		} else if (methodCall) {
+			html += methodCall.prefix;
+		} else {
+			html += effectiveString;
+		}
 		if (stringIndex >= exprs.length) {
 			continue;
 		}
@@ -326,6 +388,17 @@ export function buildHTML(strings, exprs) {
 				type: SPOT_TYPE.BIND,
 				expr,
 			});
+			continue;
+		}
+		if (methodCall) {
+			html += `data-uwc ${methodMarkerAttribute(stringIndex)}="expr${stringIndex}"`;
+			meta.push({
+				i: stringIndex,
+				type: SPOT_TYPE.METHOD,
+				method: methodCall.method,
+				expr,
+			});
+			pendingMethodClose = true;
 			continue;
 		}
 		if (eventBinding) {

@@ -1,36 +1,27 @@
-import { each, WebComponent } from '../../../core/index.js';
+import '../../../global/kbd/kbd.js';
+import { list, WebComponent } from '../../../core/index.js';
 import { Panel } from '../../../global/panel/panel.js';
 class HelpShortcutRow extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
 		row: './help-panel-row.css',
 	};
+	// The shortcut item lands over these defaults when the list binds it as the
+	// row's state — no parent-side normalization. `<ui-kbd>` owns the cap/glyph
+	// rendering; the row just lays out keys + description.
 	static state = {
 		id: '',
 		keys: [],
-		joiner: '/',
+		separator: '+',
 		desc: '',
 	};
 	render() {
 		this.html `
 			<div class="hp-row">
-				<span class="hp-keys">^html${this.buildKeysMarkup}</span>
+				<ui-kbd .state.keys=${this.state.keys} .state.separator=${this.state.separator}></ui-kbd>
 				<span class="hp-desc">${this.state.desc}</span>
 			</div>
 		`;
-	}
-	buildKeysMarkup() {
-		const keys = this.state.keys ?? [];
-		const joiner = this.state.joiner ?? '/';
-		const joinerClass = joiner === '+' ? 'hp-plus' : 'hp-sep';
-		let markup = '';
-		for (let i = 0; i < keys.length; i++) {
-			if (i > 0) {
-				markup += `<span class="${joinerClass}">${joiner}</span>`;
-			}
-			markup += `<kbd>${keys[i]}</kbd>`;
-		}
-		return markup;
 	}
 }
 customElements.define('help-shortcut-row', HelpShortcutRow);
@@ -39,42 +30,44 @@ export class HelpPanel extends Panel {
 	static styles = {
 		help: './help-panel.css',
 	};
+	// Pulldown hotkeys are this panel's own structural config (app-component tier
+	// rule) — they live here, not passed in. `list('shortcuts', …)` binds the key
+	// directly; each item lands over HelpShortcutRow's static-state defaults and is
+	// keyed by `id` via the default keyFn (no keyFn arg needed).
 	static state = {
 		classes: new Set(['help-panel']),
 		id: 'AGENT',
 		showDot: true,
 		title: 'HOTKEYS',
-		shortcuts: [],
+		shortcuts: [
+			{
+				id: 'esc',
+				keys: ['Esc'],
+				desc: 'Close pulldown',
+			},
+			{
+				id: 'send',
+				keys: ['Enter'],
+				desc: 'Send message',
+			},
+			{
+				id: 'newline',
+				keys: ['Shift', 'Enter'],
+				desc: 'Newline in chat',
+			},
+			{
+				id: 'toggle',
+				keys: ['~', '`'],
+				separator: '/',
+				desc: 'Toggle pulldown',
+			},
+		],
 	};
-	set shortcuts(list) {
-		this.state.shortcuts = Array.isArray(list) ? list : [];
-	}
-	get shortcuts() {
-		return this.state.shortcuts;
-	}
-	normalizedShortcuts() {
-		const list = this.state.shortcuts ?? [];
-		const out = [];
-		for (let i = 0; i < list.length; i++) {
-			const item = list[i];
-			out.push({
-				id: item.id ?? `s${i}`,
-				keys: item.keys ?? [],
-				joiner: item.joiner ?? '/',
-				desc: item.desc ?? '',
-			});
-		}
-		return out;
-	}
 	renderBody() {
 		return this.htmlElement `
 			<div class="hp-body">
 				<div class="hp-list">
-					${() => {
-						return each(this.normalizedShortcuts(), HelpShortcutRow, (item) => {
-							return item.id;
-						});
-					}}
+					${list('shortcuts', HelpShortcutRow)}
 				</div>
 			</div>
 		`;

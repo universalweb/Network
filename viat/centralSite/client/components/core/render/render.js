@@ -32,8 +32,8 @@ function awaitChildren(component, fieldName) {
 		return undefined;
 	}
 	const childPromises = new Array(children.length);
-	for (let i = 0; i < children.length; i++) {
-		childPromises[i] = children[i].lifecycle[fieldName];
+	for (let childIndex = 0; childIndex < children.length; childIndex++) {
+		childPromises[childIndex] = children[childIndex].lifecycle[fieldName];
 	}
 	return Promise.all(childPromises);
 }
@@ -162,6 +162,7 @@ export async function renderView() {
 		this.renderDepDirty = false;
 		this.isRendering = true;
 		let renderSkipped = false;
+		// TODO: WE NEED TO NOT USE TRY CATCH FOR THIS AT ALL. WE NEED TO ONLY USE CATCH IF ITS AN ASYNC FUNCTION. We can use .catch and await on the function or promise to catch errors. This is because try/catch is very expensive and slows down the code significantly. Then we can catch the error and handle it gracefully and eliminate the need for a try/catch block entirely.
 		try {
 			if (this.beforeRender) {
 				const beforeResult = this.beforeRender();
@@ -204,7 +205,7 @@ export async function renderView() {
 			setCurrentTracking(null);
 			if (isPromiseLike(renderResult)) {
 				if (defaultLogger.debugOn) {
-					defaultLogger.debug(this.constructor.name, `[${this.tagName}] async render(): reads after the first await are untracked — move async work to beforeRender`);
+					defaultLogger.error(`ASYNC-RENDER`, `${this.constructor.name}<${this.localName}> async render(): reads after the first await are untracked — move async work to beforeRender`);
 				}
 				await renderResult;
 			}
@@ -252,8 +253,9 @@ export async function renderView() {
 		 */
 			this.isRendering = false;
 			this.finishRender(renderedResolver);
-			if (defaultLogger.debugOn) {
-				defaultLogger.debug(this.constructor.name, `[${this.tagName}] patch pass (no re-render)`);
+			// TODO: Need to handle this so for some components this can be muted
+			if (defaultLogger.debugOn && this.config.debugPatchOn !== false) {
+				defaultLogger.debug('PATCH-PASS', this.state, `${this.constructor.name}<${this.localName}> (no re-render)`);
 			}
 			return;
 		}
@@ -267,19 +269,19 @@ export async function renderView() {
 		 */
 		if (this.onRender) {
 			const onRenderResult = this.onRender();
-			if (onRenderResult && typeof onRenderResult.then === 'function') {
+			if (isPromiseLike(onRenderResult)) {
 				await onRenderResult;
 			}
 		}
 		if (defaultLogger.debugOn) {
-			defaultLogger.debug(this.constructor.name, `[${this.tagName}] onRender called`);
+			defaultLogger.debug('onRender', `${this.constructor.name}<${this.localName}>`);
 		}
 		if (sequence !== this.renderSeq) {
 			this.finishRender(renderedResolver);
 			return;
 		}
 		const renderedResult = this.handleRendered(sequence, wasFirstRender, renderedResolver);
-		if (renderedResult && typeof renderedResult.then === 'function') {
+		if (isPromiseLike(renderedResult)) {
 			await renderedResult;
 		}
 		if (!wasFirstRender) {
@@ -289,11 +291,11 @@ export async function renderView() {
 		this.firstRenderDone = true;
 		this.isRendering = false;
 		const mountResult = this.handleMount();
-		if (mountResult && typeof mountResult.then === 'function') {
+		if (isPromiseLike(mountResult)) {
 			await mountResult;
 		}
 		const liveResult = this.handleLive();
-		if (liveResult && typeof liveResult.then === 'function') {
+		if (isPromiseLike(liveResult)) {
 			await liveResult;
 		}
 	} finally {
@@ -321,7 +323,7 @@ export function handleRendered(sequence, wasFirstRender, renderedResolver) {
 	}
 	if (this.onRendered) {
 		const result = this.onRendered();
-		if (result && typeof result.then === 'function') {
+		if (isPromiseLike(result)) {
 			return handleRenderedAsyncTail(this, sequence, wasFirstRender, renderedResolver, result);
 		}
 	}
@@ -339,7 +341,7 @@ async function handleRenderedAsync(component, sequence, wasFirstRender, rendered
 	}
 	if (component.onRendered) {
 		const result = component.onRendered();
-		if (result && typeof result.then === 'function') {
+		if (isPromiseLike(result)) {
 			await result;
 		}
 	}
@@ -375,7 +377,7 @@ export function handleMount() {
 	}
 	if (this.onMount) {
 		const result = this.onMount();
-		if (result && typeof result.then === 'function') {
+		if (isPromiseLike(result)) {
 			return handleMountAsyncTail(this, result);
 		}
 	}
@@ -393,7 +395,7 @@ async function handleMountAsync(component, childPromise) {
 	}
 	if (component.onMount) {
 		const result = component.onMount();
-		if (result && typeof result.then === 'function') {
+		if (isPromiseLike(result)) {
 			await result;
 		}
 	}

@@ -38,7 +38,7 @@ export class UIAiPlan extends WebComponent {
 		const status = step.status || 'pending';
 		return html `
 			<li class="aip-step" data-status=${status}>
-				<ui-icon class="aip-mark" .name=${statusIcon(status)} .size=${'sm'} ?spin=${status === 'active'}></ui-icon>
+				<ui-icon class="aip-mark" .state.name=${statusIcon(status)} .state.size=${'sm'} ?spin=${status === 'active'}></ui-icon>
 				<span class="aip-text">
 					<span class="aip-label">${step.label}</span>
 					<span class="aip-detail">${step.detail || ''}</span>
@@ -50,7 +50,7 @@ export class UIAiPlan extends WebComponent {
 		this.html `
 			<section class="aip">
 				<header class="aip-head" ?hidden=${!this.state.label}>
-					<ui-icon class="aip-head-icon" .name=${'list-checks'} .size=${'sm'}></ui-icon>
+					<ui-icon class="aip-head-icon" .state.name=${'list-checks'} .state.size=${'sm'}></ui-icon>
 					<span class="aip-title">${this.state.label}</span>
 				</header>
 				<ol class="aip-list">${list('steps', this.renderStep, this.stepKey)}</ol>

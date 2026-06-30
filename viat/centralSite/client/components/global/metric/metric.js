@@ -56,7 +56,7 @@ export class UIMetric extends WebComponent {
 					<span class="mtc-value">${this.state.value}</span>
 					<span class="mtc-delta" data-delta=${this.deltaTone()} ?hidden=${!this.deltaShown}>${this.deltaText}</span>
 				</div>
-				<ui-sparkline class="mtc-spark" ?hidden=${!this.hasTrend} .values=${this.state.trend} .variant=${'area'} .tone=${this.state.tone}></ui-sparkline>
+				<ui-sparkline class="mtc-spark" ?hidden=${!this.hasTrend} .state.values=${this.state.trend} .state.variant=${'area'} .state.tone=${this.state.tone}></ui-sparkline>
 			</div>
 		`;
 	}

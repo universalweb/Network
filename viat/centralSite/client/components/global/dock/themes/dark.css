@@ -1,0 +1,18 @@
+/*
+ * Dark — dock RULE overrides, adopted into the dock shadow by theme. Tokens
+ * (container bg / radius / border / active-bar colour) live in
+ * styles/themes/dark.css. x.ai aesthetic: rail items stay flat on hover (only
+ * the glyph colour reacts); the selected item carries a soft wash.
+ */
+:host([data-orientation='vertical']) ui-icon-button,
+:host([data-orientation='horizontal']) ui-icon-button {
+	border-radius: var(--radius-md);
+	padding-block: 0.45rem;
+	transition:
+		background 0.18s ease,
+		color 0.18s ease;
+}
+:host([data-orientation='vertical']) ui-icon-button[data-active],
+:host([data-orientation='horizontal']) ui-icon-button[data-active] {
+	background: oklch(1 0 0 / 0.09);
+}

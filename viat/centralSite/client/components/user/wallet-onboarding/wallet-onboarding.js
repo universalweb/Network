@@ -10,6 +10,14 @@ export class WalletOnboarding extends WebComponent {
 	static styles = {
 		walletOnboarding: './wallet-onboarding.css',
 	};
+	/*
+	 * Per-theme RULE overrides live in `./themes/{id}.css` and are adopted into
+	 * the shadow root by theme — the document-level theme sheet only carries
+	 * tokens. Dark recasts the CTAs to x.ai pills with a white-fill primary.
+	 */
+	static themes = [
+		'dark',
+	];
 	static state = {
 		visible: false,
 		hasSaved: false,

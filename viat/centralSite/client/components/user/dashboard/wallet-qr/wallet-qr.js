@@ -192,7 +192,7 @@ export class WalletQr extends WebComponent {
 					type="button"
 					?disabled=${!this.state.renderedAddress}
 					@click=${this.handleDownload}>
-					<ui-icon class="wq-download-icon" .name=${'download'} .size=${'sm'}></ui-icon>
+					<ui-icon class="wq-download-icon" .state.name=${'download'} .state.size=${'sm'}></ui-icon>
 					<span class="wq-download-label">Download</span>
 				</button>
 			</div>

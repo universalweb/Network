@@ -5,30 +5,6 @@ import './info-panel/info-panel.js';
 import './setup-panel/setup-panel.js';
 import { WebComponent } from 'webcomponent';
 import { lockBackgroundScroll, unlockBackgroundScroll } from '../../global/scroll-lock.js';
-const PULLDOWN_HOTKEYS = [
-	{
-		id: 'esc',
-		keys: ['Esc'],
-		desc: 'Close pulldown',
-	},
-	{
-		id: 'send',
-		keys: ['Enter'],
-		desc: 'Send message',
-	},
-	{
-		id: 'newline',
-		keys: ['Shift', 'Enter'],
-		joiner: '+',
-		desc: 'Newline in chat',
-	},
-	{
-		id: 'toggle',
-		keys: ['~', '`'],
-		joiner: '/',
-		desc: 'Toggle pulldown',
-	},
-];
 export class GlobalPulldown extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -109,7 +85,7 @@ export class GlobalPulldown extends WebComponent {
 						<aside class="gpd-col gpd-col-help">
 							<info-panel></info-panel>
 							<setup-panel></setup-panel>
-							<help-panel .shortcuts=${PULLDOWN_HOTKEYS}></help-panel>
+							<help-panel></help-panel>
 						</aside>
 						<section class="gpd-col gpd-col-chat">
 							<ai-chat></ai-chat>

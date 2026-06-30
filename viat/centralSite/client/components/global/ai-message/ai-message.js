@@ -113,7 +113,7 @@ export class UIAiMessage extends WebComponent {
 		// button + dedent); `plain` → escaped literal text; `text` → rendered
 		// markdown injected as pre-escaped, renderer-safe html.
 		if (part.kind === 'code') {
-			return html `<ui-code-block .code=${part.code} .language=${part.lang}></ui-code-block>`;
+			return html `<ui-code-block .state.code=${part.code} .state.language=${part.lang}></ui-code-block>`;
 		}
 		if (part.kind === 'plain') {
 			return html `<div class="aim-plain">${part.text}</div>`;
@@ -131,10 +131,10 @@ export class UIAiMessage extends WebComponent {
 					<span class="aim-role">${this.roleLabel}</span>
 					<time class="aim-time" ?hidden=${!this.state.time}>${this.timeLabel}</time>
 					<button class="aim-copy" type="button" ?hidden=${this.state.streaming} tooltip="Copy message" @click=${this.handleCopy}>
-						<ui-icon class="aim-copy-icon" .name=${this.state.copied ? 'check' : 'copy'} .size=${'xs'}></ui-icon>
+						<ui-icon class="aim-copy-icon" .state.name=${this.state.copied ? 'check' : 'copy'} .state.size=${'xs'}></ui-icon>
 					</button>
 				</header>
-				<ui-ai-reasoning class="aim-reasoning" ?hidden=${!this.state.reasoning} .text=${this.state.reasoning} .streaming=${this.state.streaming} .expanded=${this.state.streaming}></ui-ai-reasoning>
+				<ui-ai-reasoning class="aim-reasoning" ?hidden=${!this.state.reasoning} .state.text=${this.state.reasoning} .state.streaming=${this.state.streaming} .state.expanded=${this.state.streaming}></ui-ai-reasoning>
 				<div class="aim-stream" ?hidden=${!this.state.streaming}>${this.state.content}</div>
 				<div class="aim-rich" ?hidden=${this.state.streaming}>${list('parts', this.renderPart, this.partKey)}</div>
 			</div>

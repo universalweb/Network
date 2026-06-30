@@ -1,9 +1,10 @@
 /*
  * Shared background scroll-lock for full-viewport overlays (modals, the pulldown).
  *
- * Under document scroll an open overlay no longer freezes the page behind it the
- * way the old fixed `overflow:hidden` app shell did, so each overlay locks the
- * root scroller while it is open. The count is REFERENCE-COUNTED at module scope
+ * The app shell's inner scroll surface (`.shell-scroll`) — not the document — is what
+ * scrolls, so each overlay freezes THAT surface (see `setScrollLockTarget`) while it is
+ * open, falling back to the document element until a target is set. The count is
+ * REFERENCE-COUNTED at module scope
  * (ES modules are singletons) so every overlay shares ONE count: the lock releases
  * only when the LAST overlay closes, regardless of close order. Per-overlay
  * counters would break here — a modal opened over an open pulldown and closed
@@ -13,29 +14,44 @@
  * release so an author-set value is never clobbered.
  */
 let activeLockCount = 0;
-let priorRootOverflow = '';
+let priorOverflow = '';
+let lockedElement = null;
+let preferredTarget = null;
 /**
- * Acquire one background scroll-lock (call once when an overlay opens). The root
- * scroller's overflow is set to hidden on the first acquisition.
+ * Designate the element whose overflow is frozen while an overlay is open. The app
+ * shell points this at its inner scroll surface (`.shell-scroll`) because the document
+ * itself no longer scrolls. Falls back to the document element when never set.
+ */
+export function setScrollLockTarget(element) {
+	preferredTarget = element ?? null;
+}
+function resolveScrollLockTarget() {
+	return preferredTarget ?? globalThis.document.documentElement;
+}
+/**
+ * Acquire one background scroll-lock (call once when an overlay opens). The scroll
+ * surface's overflow is set to hidden on the first acquisition; the locked element is
+ * captured so the matching release restores the SAME one even if the target changes.
  */
 export function lockBackgroundScroll() {
 	if (activeLockCount === 0) {
-		const root = globalThis.document.documentElement;
-		priorRootOverflow = root.style.overflow;
-		root.style.overflow = 'hidden';
+		lockedElement = resolveScrollLockTarget();
+		priorOverflow = lockedElement.style.overflow;
+		lockedElement.style.overflow = 'hidden';
 	}
 	activeLockCount += 1;
 }
 /**
- * Release one background scroll-lock (call once when an overlay closes). The root
- * scroller is restored to its prior overflow only when the last lock is released.
+ * Release one background scroll-lock (call once when an overlay closes). The locked
+ * element is restored to its prior overflow only when the last lock is released.
  */
 export function unlockBackgroundScroll() {
 	if (activeLockCount === 0) {
 		return;
 	}
 	activeLockCount -= 1;
-	if (activeLockCount === 0) {
-		globalThis.document.documentElement.style.overflow = priorRootOverflow;
+	if (activeLockCount === 0 && lockedElement) {
+		lockedElement.style.overflow = priorOverflow;
+		lockedElement = null;
 	}
 }

@@ -247,11 +247,11 @@ export class UIModal extends WebComponent {
 				<div class="modal-controls">
 					<div class="modal-title">${this.state.title}</div>
 					<button type="button" class="mc-btn mc-min" aria-label="Minimize" ?hidden=${this.state.showMinimize !== true} @click=${this.handleToggleMinimize}>
-						<ui-icon class="mc-icon" .name=${'minus'} .size=${'sm'}></ui-icon>
+						<ui-icon class="mc-icon" .state.name=${'minus'} .state.size=${'sm'}></ui-icon>
 					</button>
 					<button type="button" class="mc-btn mc-max" aria-label="Toggle size" ?hidden=${this.state.showMaximize !== true} @click=${this.handleToggleMaximize}>
-						<ui-icon class="mc-icon mc-icon-grow" .name=${'maximize-2'} .size=${'sm'}></ui-icon>
-						<ui-icon class="mc-icon mc-icon-shrink" .name=${'minimize-2'} .size=${'sm'}></ui-icon>
+						<ui-icon class="mc-icon mc-icon-grow" .state.name=${'maximize-2'} .state.size=${'sm'}></ui-icon>
+						<ui-icon class="mc-icon mc-icon-shrink" .state.name=${'minimize-2'} .state.size=${'sm'}></ui-icon>
 					</button>
 					<ui-close-button class="mc-close" ?hidden=${this.state.showClose !== true} @close-click=${this.handleCloseClick}></ui-close-button>
 				</div>

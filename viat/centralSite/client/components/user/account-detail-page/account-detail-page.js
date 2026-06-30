@@ -237,7 +237,7 @@ export class AccountDetailPage extends WebComponent {
 			<div class="ad-shell">
 				<header class="ad-header">
 					<div class="ad-title-block">
-						<ui-icon class="ad-title-icon" .name=${'user-round'} .size=${'md'}></ui-icon>
+						<ui-icon class="ad-title-icon" .state.name=${'user-round'} .state.size=${'md'}></ui-icon>
 						<span class="ad-title">// ACCOUNT DETAIL</span>
 						<span class="ad-label-tag">${() => {
 							return labelForAddress(this.state.address);

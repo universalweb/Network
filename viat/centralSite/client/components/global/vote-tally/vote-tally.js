@@ -83,7 +83,7 @@ class UIVoteItem extends WebComponent {
 		this.html `
 			<div class="vote" ?data-voted=${this.state.voted}>
 				<button class="vote-up" type="button" aria-pressed=${this.state.voted} aria-label="Upvote" @click=${this.handleUp}>
-					<ui-icon class="vote-chevron" .name=${'chevron-up'} .size=${'sm'}></ui-icon>
+					<ui-icon class="vote-chevron" .state.name=${'chevron-up'} .state.size=${'sm'}></ui-icon>
 					<span class="vote-count">${this.state.shownVotes}</span>
 				</button>
 				<span class="vote-text">
@@ -225,9 +225,9 @@ export class UIVoteTally extends WebComponent {
 						?hidden=${this.state.sortBy === 'none'}
 						tooltip="Toggle sort order"
 						@click=${this.toggleSort}>
-						<ui-icon .name=${() => {
+						<ui-icon .state.name=${() => {
 							return this.state.sortBy === 'asc' ? 'arrow-up-narrow-wide' : 'arrow-down-wide-narrow';
-						}} .size=${'sm'}></ui-icon>
+						}} .state.size=${'sm'}></ui-icon>
 					</button>
 				</div>
 				<div class="tally-list" #votelist @vote-toggle=${this.handleVote}>

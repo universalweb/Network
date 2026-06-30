@@ -1,4 +1,7 @@
 :host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
 	display: contents;
 }
 .pulldown-drawer {

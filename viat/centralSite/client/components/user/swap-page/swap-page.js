@@ -84,7 +84,7 @@ export class SwapPage extends WebComponent {
 		if (asset.glyph) {
 			return this.htmlElement `<span class="sp-glyph">${asset.glyph}</span>`;
 		}
-		return this.htmlElement `<ui-icon class="sp-icon" .name=${'bitcoin'} .size=${'md'}></ui-icon>`;
+		return this.htmlElement `<ui-icon class="sp-icon" .state.name=${'bitcoin'} .state.size=${'md'}></ui-icon>`;
 	}
 	flipDirection() {
 		const next = this.state.fromSymbol === 'VIAT' ? 'BTC' : 'VIAT';
@@ -134,7 +134,7 @@ export class SwapPage extends WebComponent {
 	renderFlipButton() {
 		return this.htmlElement `
 			<button class="sp-flip" @click=${this.handleFlip} aria-label="Flip swap direction" tooltip="Flip direction">
-				<ui-icon class="sp-flip-icon" .name=${'arrow-up-down'} .size=${'md'}></ui-icon>
+				<ui-icon class="sp-flip-icon" .state.name=${'arrow-up-down'} .state.size=${'md'}></ui-icon>
 			</button>
 		`;
 	}

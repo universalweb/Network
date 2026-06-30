@@ -89,25 +89,25 @@ export function createElementFromHTML(htmlString) {
 export function resolveTarget(target) {
 	return isString(target) ? document.querySelector(target) : target;
 }
-export const callFn = (fn) => {
+export function callFn(fn) {
 	fn();
-};
-export const eachArray = (arr, fn) => {
-	for (let i = 0; i < arr.length; i++) {
-		fn(arr[i], i);
+}
+export function eachArray(arr, fn) {
+	for (let index = 0; index < arr.length; index++) {
+		fn(arr[index], index);
 	}
-};
-export const eachObject = (obj, fn) => {
+}
+export function eachObject(obj, fn) {
 	const keys = Object.keys(obj);
-	for (let i = 0; i < keys.length; i++) {
-		fn(keys[i], obj[keys[i]]);
+	for (let index = 0; index < keys.length; index++) {
+		fn(keys[index], obj[keys[index]]);
 	}
-};
-export const eachNodeList = (list, fn) => {
-	for (let i = 0; i < list.length; i++) {
-		fn(list[i], i);
+}
+export function eachNodeList(list, fn) {
+	for (let index = 0; index < list.length; index++) {
+		fn(list[index], index);
 	}
-};
+}
 export function queueAsyncError(error) {
 	queueMicrotask(() => {
 		throw error;
@@ -164,11 +164,11 @@ export function getValueAtPath(source, path) {
 		return source;
 	}
 	let value = source;
-	for (let i = 0; i < parts.length; i++) {
+	for (let index = 0; index < parts.length; index++) {
 		if (value == null) {
 			return undefined;
 		}
-		const key = parts[i];
+		const key = parts[index];
 		if (isSet(value)) {
 			value = value.has(key);
 		} else if (isMap(value)) {
@@ -227,6 +227,15 @@ export function fireResolver(target, pairName) {
 		target[pairName] = CACHED_RESOLVED_PROMISE;
 	}
 }
+async function awaitHookResult(result, component, errorHandler) {
+	try {
+		await result;
+		return true;
+	} catch (error) {
+		component[errorHandler](error);
+		return false;
+	}
+}
 export function runHook(component, hookName, args, errorHandler = 'onLifecycleError') {
 	if (!component[hookName]) {
 		return true;
@@ -241,17 +250,12 @@ export function runHook(component, hookName, args, errorHandler = 'onLifecycleEr
 	if (!isPromiseLike(result)) {
 		return true;
 	}
-	return result.then(() => {
-		return true;
-	}, (error) => {
-		component[errorHandler](error);
-		return false;
-	});
+	return awaitHookResult(result, component, errorHandler);
 }
 /**
  * Polymorphic disposer: invokes `.unsubscribe()` on a Subscription instance,
- * or calls a plain function for legacy disposers (dragSnap's controller.destroy,
- * the closure handles returned by watchGlobal's stopWatching pattern, etc.).
+ * or calls a plain function for legacy disposers (the closure handles returned
+ * by watchGlobal's stopWatching pattern, etc.).
  * Module-scope so `set.forEach(disposeItem)` reuses one function reference.
  */
 export function disposeItem(item) {
@@ -296,16 +300,16 @@ export function clearRealmUnsubs(store) {
  */
 export function syncSubsByDiff(current, nextKeys, subscribe, context) {
 	const entries = [...current.entries()];
-	for (let i = 0; i < entries.length; i += 1) {
-		const key = entries[i][0];
+	for (let index = 0; index < entries.length; index += 1) {
+		const key = entries[index][0];
 		if (!nextKeys.has(key)) {
-			disposeItem(entries[i][1]);
+			disposeItem(entries[index][1]);
 			current.delete(key);
 		}
 	}
 	const nextArray = [...nextKeys];
-	for (let i = 0; i < nextArray.length; i += 1) {
-		const key = nextArray[i];
+	for (let index = 0; index < nextArray.length; index += 1) {
+		const key = nextArray[index];
 		if (!current.has(key)) {
 			current.set(key, subscribe(key, context));
 		}
@@ -329,8 +333,8 @@ export function deepMerge(existing, incoming) {
 			...existing,
 		};
 		const keys = Object.keys(incoming);
-		for (let i = 0; i < keys.length; i++) {
-			const key = keys[i];
+		for (let index = 0; index < keys.length; index++) {
+			const key = keys[index];
 			out[key] = deepMerge(existing[key], incoming[key]);
 		}
 		return out;
@@ -356,18 +360,20 @@ export function deepMerge(existing, incoming) {
  *                             mutate it by reference anyway, and deep-cloning
  *                             keyed-collection entries forks singletons)
  *   - Class instances, Date, RegExp, functions, primitives: pass through
- * Used by the framework to materialize instance state from instance-supplied
- * templates. `static state` is never run through this — it's a shared
- * class-level template by design (opt in via `static cloneStaticState = true`).
+ * Used by the framework to materialize instance state: the constructor clones each
+ * container value of the chain-merged `static state` template per instance (base.js), so
+ * every component owns its own outer objects/arrays/Maps/Sets while primitives, functions,
+ * and class instances are shared by assignment. Provided constructor state is NOT cloned
+ * (caller-owned) — only the keys it does not carry fall back to a cloned static default.
  */
 export function smartClone(value) {
-	if (value === null || typeof value !== 'object') {
+	if (!isObject(value)) {
 		return value;
 	}
 	if (isArray(value)) {
 		const out = new Array(value.length);
-		for (let i = 0; i < value.length; i++) {
-			out[i] = smartClone(value[i]);
+		for (let index = 0; index < value.length; index++) {
+			out[index] = smartClone(value[index]);
 		}
 		return out;
 	}
@@ -380,8 +386,8 @@ export function smartClone(value) {
 	if (isPlainObject(value)) {
 		const out = {};
 		const keys = Object.keys(value);
-		for (let i = 0; i < keys.length; i++) {
-			const key = keys[i];
+		for (let index = 0; index < keys.length; index++) {
+			const key = keys[index];
 			out[key] = smartClone(value[key]);
 		}
 		return out;
@@ -396,8 +402,8 @@ export function setValueAtPath(source, path, value) {
 	const parts = path.split('.');
 	const finalKey = parts.pop();
 	let cursor = source;
-	for (let i = 0; i < parts.length; i++) {
-		const part = parts[i];
+	for (let index = 0; index < parts.length; index++) {
+		const part = parts[index];
 		if (!isPlainObject(cursor[part]) && !isArray(cursor[part])) {
 			cursor[part] = {};
 		}

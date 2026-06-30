@@ -15,7 +15,6 @@ import {
 	ensurePropertyIndex,
 } from './attrs/staticConfig.js';
 import { writeTextToClipboard } from './clipboard.js';
-import { assertComponentConfig } from './debug/assertions.js';
 import { componentLogger, defaultLogger } from './debug/logger.js';
 import { Perf } from './debug/perf.js';
 import { confirmPrompt } from './dialogs/confirm.js';
@@ -79,6 +78,9 @@ import {
 import {
 	assign,
 	deepMerge,
+	hasOwn,
+	isFunction,
+	isObject,
 	isPlainObject,
 	keysOf,
 	smartClone,
@@ -87,6 +89,71 @@ export { liveChildren, registerChild } from './dom/children.js';
 export { registry } from './dom/registry.js';
 export { globalState, Store } from './state/globalState.js';
 export { ClassList, classList } from './template.js';
+/**
+ * Fold the chain-merged `static state` template into a component's per-instance `STATE`.
+ * Each container value is smartClone'd so every instance owns its own outer
+ * objects/arrays/Maps/Sets; primitives, functions, and class instances are assigned by
+ * reference. Accessor descriptors (`get`/`set` declared in `static state`) are skipped —
+ * they live on the class propertyIndex and the state proxies dispatch them via
+ * `.call(component)`, never installed on the instance STATE. `ownedProvidedKeys`, when
+ * non-null, names the provided-state keys that a wholesale overwrite will replace, so
+ * cloning their default would only be discarded — skip them (the "clone only what's
+ * missing" optimization). With `mergeObjects` the clone is the deep-merge base, so the
+ * caller passes null and every default is cloned.
+ * @param {WebComponent} component - The instance whose STATE to seed.
+ * @param {object|null} ownedProvidedKeys - Provided state when its keys should skip cloning, else null.
+ */
+function foldStaticStateTemplate(component, ownedProvidedKeys) {
+	const mergedState = component.constructor.ensureMergedState();
+	const mergedDescriptors = Object.getOwnPropertyDescriptors(mergedState);
+	const mergedKeys = Object.getOwnPropertyNames(mergedDescriptors);
+	for (let mergedIndex = 0; mergedIndex < mergedKeys.length; mergedIndex += 1) {
+		const mergedKey = mergedKeys[mergedIndex];
+		const descriptor = mergedDescriptors[mergedKey];
+		if (descriptor.get || descriptor.set) {
+			continue;
+		}
+		if (ownedProvidedKeys && hasOwn(ownedProvidedKeys, mergedKey)) {
+			continue;
+		}
+		const mergedValue = descriptor.value;
+		if (isObject(mergedValue)) {
+			component.STATE[mergedKey] = smartClone(mergedValue);
+		} else {
+			component.STATE[mergedKey] = mergedValue;
+		}
+	}
+}
+/**
+ * Materialize a component's per-instance `STATE`: the chain-merged `static state` template
+ * smart-cloned in (unless `skipStaticState`), then the caller-provided `state` folded on
+ * top — adopted caller-owned via `assign` (provided containers shared by reference, never
+ * cloned), or deep-merged onto the cloned defaults when `mergeObjects` is set. The provided
+ * `state` is already function-resolved by the constructor. A subclass class-field
+ * `state = {…}` is NOT supported — it shadows the prototype accessor and breaks reactivity;
+ * use `static state` for class-level defaults.
+ * @param {WebComponent} component - The instance whose STATE to build.
+ * @param {*} providedState - The function-resolved constructor-arg state.
+ */
+function materializeInstanceState(component, providedState) {
+	const providedIsObject = isPlainObject(providedState);
+	const mergeObjects = component.config.mergeObjects;
+	if (!component.config.skipStaticState) {
+		foldStaticStateTemplate(component, providedIsObject && !mergeObjects ? providedState : null);
+	}
+	if (!providedIsObject) {
+		return;
+	}
+	if (mergeObjects) {
+		const argStateKeys = keysOf(providedState);
+		for (let argIndex = 0; argIndex < argStateKeys.length; argIndex += 1) {
+			const argKey = argStateKeys[argIndex];
+			component.STATE[argKey] = deepMerge(component.STATE[argKey], providedState[argKey]);
+		}
+		return;
+	}
+	assign(component.STATE, providedState);
+}
 /**
  * Base class for every custom element in the framework. Extends the native
  * `HTMLElement` with reactive `static state`, tagged-template rendering,
@@ -112,6 +179,84 @@ export class WebComponent extends HTMLElement {
 		...sharedStyles.uwcBase,
 	};
 	/**
+	 * Resolve the framework config and the property index, attach the shadow root
+	 * (unless `static useShadow === false`), compile styles, then build the
+	 * per-instance `STATE`: chain-merged `static state` smart-cloned in, then the
+	 * constructor-arg `state` folded on top (assigned, or deep-merged when
+	 * `config.mergeObjects` is set). Finishes by wiring the reactive proxy + bus
+	 * and rescuing any pre-upgrade `.foo=` assignments. Prefer `Klass.create()`.
+	 * @param {object} [state] - Per-instance state, folded over the static defaults.
+	 * @param {object} [config] - Per-instance config; carries the framework knobs (`skipStaticState` / `mergeState` / `mergeObjects` / `debugPatchOn`) and merges over the class `static config`.
+	 */
+	constructor(state = {}, config) {
+		super();
+		const perfMark = Perf.mark('construct');
+		/*
+		 * Resolve the `static properties` schema index once (cached per class).
+		 * The state proxies read it to honor `react: false`, declared kinds,
+		 * and computed accessors from `static state`.
+		 */
+		this.propertyIndex = ensurePropertyIndex(this.constructor);
+		/*
+		 * Resolve the framework config first — subsequent pipeline steps branch
+		 * on `this.config`. The instance-field knob defaults seed it, the class
+		 * `static config` folds over them, then the ctor-arg `config` wins last.
+		 * `skipStaticState` / `mergeObjects` are read from `this.config` here; the
+		 * merge-chain knobs (`mergeState` / `mergeObjects`) are ALSO read from the
+		 * class's merged config by `ensureMergedState`, which caches on the class.
+		 */
+		assign(this.config, this.constructor.ensureMergedConfig());
+		if (config) {
+			assign(this.config, config);
+		}
+		/**
+		 * Shadow DOM is the default. `static useShadow = false` opts into light-DOM
+		 * rendering: the template renders into the host element itself (every
+		 * render target already falls back to `this`), and styles are scoped via
+		 * `@scope (tag)` injected into the document — unless `static scopeStyles
+		 * === false`, which emits unscoped global CSS into `<head>` instead (the
+		 * plain-HTML-component mode; see applyStyles / headStyles.js). The ABSENCE
+		 * of `this.shadowRoot` IS the light-mode signal everywhere — no separate
+		 * instance flag. `<slot>` / `<slot name>` content projection is emulated
+		 * for light DOM (see dom/projection.js); the CSS-only `::slotted` /
+		 * `:host-context` pseudos remain shadow-exclusive.
+		 */
+		if (this.constructor.useShadow !== false) {
+			this.attachShadow({
+				mode: 'open',
+			});
+		}
+		this.constructor.ensureCompiledStyles();
+		initTemplateRuntime(this);
+		this.attrs = makeAttrsProxy(this, this.constructor.ensureMergedAttrs());
+		/*
+		 * Per-instance STATE — the chain-merged `static state` template (smart-cloned for
+		 * isolation) with the provided `state` folded on top. A FUNCTION `state` arg is the
+		 * per-construction escape hatch: invoked here, its return used as the state (the
+		 * static template + smartClone already give fresh CONTAINERS, so a function is only
+		 * needed for freshly COMPUTED values). See materializeInstanceState.
+		 */
+		const providedState = isFunction(state) ? state() : state;
+		materializeInstanceState(this, providedState);
+		this.onInit?.(providedState, config);
+		this.initState();
+		/*
+		 * Lazy-property rescue: parents may have assigned `.state=${…}` (or
+		 * any other accessor-backed `.foo=`) on this element before its
+		 * class was loaded, creating an own data prop that now shadows the
+		 * prototype's getter/setter pair. Migrate those shadows through the
+		 * proper channel now that STATE + stateProxy are ready — subclass
+		 * setters that do `this.state.x = …` need the proxy to exist.
+		 */
+		this.upgradeShadowedProperties();
+		this.createConnectCyclePromises();
+		this.createWhenDestroyedPromise();
+		if (defaultLogger.debugOn) {
+			defaultLogger.debug('Constructor', `${this.constructor.name}<${this.localName}>`);
+		}
+		Perf.measure('construct', perfMark);
+	}
+	/**
 	 * Light-DOM style isolation knob, consulted only when `useShadow === false`.
 	 * `true` (default): styles are scoped to the tag via `@scope (tag)` injected
 	 * into the document. `false`: NO isolation — `static styles` become normal
@@ -121,6 +266,17 @@ export class WebComponent extends HTMLElement {
 	static scopeStyles = true;
 	static state = {};
 	static attrs = {};
+	/**
+	 * Non-reactive construction-time config, chain-merged via `ensureMergedConfig`
+	 * and folded onto each instance's `config`. Also the home of the framework
+	 * behavior knobs — a subclass overrides one with `static config = { … }`:
+	 * `mergeState` / `mergeObjects` govern how `ensureMergedState` folds the class
+	 * chain; `skipStaticState` opts an instance out of the static-state pipeline;
+	 * `debugPatchOn` gates patch-pass debug logging. Base defaults for the merge
+	 * knobs live on the instance `config` field below — the chain-merge fast-path
+	 * skips base `static config` for direct subclasses, so the instance field is
+	 * their robust home; the reads all treat an absent knob as its default.
+	 */
 	static config = {};
 	/**
 	 * `static properties` — per-path state schema: `{ 'a.b': { kind, react } }`.
@@ -129,18 +285,9 @@ export class WebComponent extends HTMLElement {
 	 * Accessor descriptors (`get foo()` / `set foo()`) written in `static
 	 * state` are collected into the same propertyIndex and dispatched by the
 	 * state proxies via `.call(component)` — no per-instance `.bind` cost.
+	 * 	TODO: Instead of per path scheme being something like 'a.b' we need to mirror the static state object structure {a: b:{}} and have a schema that mirrors the static state structure so we can have a more natural way to define the schema for the state. When proxies are working they must also traverse the properties object/path to keep track of the current path and match the properties object to it.
 	 */
 	static properties = {};
-	/**
-	 * Framework behavior knobs. Class-shape decisions, naturally inherited
-	 * through the static prototype chain — a subclass declares the override.
-	 * `mergeState` and `mergeObjects` govern how `ensureMergedState` folds
-	 * the class chain; `skipStaticState` lets an instance opt out of the
-	 * static state pipeline entirely.
-	 */
-	static mergeState = true;
-	static mergeObjects = false;
-	static skipStaticState = false;
 	/**
 	 * Type guard for WebComponent instances.
 	 * @param {unknown} source - Value to test.
@@ -152,14 +299,6 @@ export class WebComponent extends HTMLElement {
 	static getById = getById;
 	static preRender = preRender;
 	static createBound = createBound;
-	/**
-	 * Validate a constructor config bundle, throwing on unknown or invalid keys.
-	 * Runs from `create()` before construction so misconfiguration fails loud.
-	 * @param {object} [config] - The config bundle to validate.
-	 */
-	static assertConfig(config = {}) {
-		assertComponentConfig(config);
-	}
 	/**
 	 * Build a constructable stylesheet from a CSS source.
 	 * @param {string|CSSStyleSheet} source - CSS text or an existing sheet.
@@ -303,137 +442,21 @@ export class WebComponent extends HTMLElement {
 	 * @returns {Promise<WebComponent>} The constructed instance.
 	 */
 	static async create(state, config = {}) {
-		this.assertConfig(config);
 		return new this(await state, config);
 	}
 	/**
-	 * Resolve framework flags and the property index, attach the shadow root
-	 * (unless `static useShadow === false`), compile styles, then build the
-	 * per-instance `STATE`: chain-merged `static state` smart-cloned in, then the
-	 * constructor-arg `state` folded on top (assigned, or deep-merged when
-	 * `mergeObjects` is set). Finishes by wiring the reactive proxy + bus and
-	 * rescuing any pre-upgrade `.foo=` assignments. Prefer `Klass.create()`.
-	 * @param {object} [state] - Per-instance state, folded over the static defaults.
-	 * @param {object} [config] - Per-instance config, asserted then merged.
-	 * @param {object} [flags] - Per-instance framework flags (`skipStaticState` / `mergeState` / `mergeObjects`) that override the statics.
+	 * Per-instance framework config: the merge-knob defaults seed it, then the
+	 * class `static config` and the ctor-arg `config` fold over it (in that order
+	 * of precedence). These three are the base knob home (the chain-merge
+	 * fast-path skips base `static config`). `debugPatchOn` is intentionally
+	 * absent — its render read defaults it on when unset; a component opts out
+	 * via `static config`.
 	 */
-	constructor(state = {}, config, flags) {
-		super();
-		const perfMark = Perf.mark('construct');
-		/*
-		 * Framework flags resolved first — subsequent pipeline steps branch on
-		 * `this.flags`. Class-level statics seed the defaults (with standard
-		 * JS static inheritance), then ctor-arg `flags` override per-instance.
-		 * Only `skipStaticState` is consulted from `this.flags` here; the
-		 * merge-chain flags (`mergeState`/`mergeObjects`) read from the class
-		 * because `ensureMergedState` caches its result on the class.
-		 */
-		this.flags.skipStaticState = this.constructor.skipStaticState === true;
-		this.flags.mergeState = this.constructor.mergeState !== false;
-		this.flags.mergeObjects = this.constructor.mergeObjects === true;
-		if (flags) {
-			assign(this.flags, flags);
-		}
-		/*
-		 * Resolve the `static properties` schema index once (cached per class).
-		 * The state proxies read it to honor `react: false`, declared kinds,
-		 * and computed accessors from `static state`.
-		 */
-		this.propertyIndex = ensurePropertyIndex(this.constructor);
-		assign(this.config, this.constructor.ensureMergedConfig());
-		if (config) {
-			this.constructor.assertConfig(config);
-			assign(this.config, config);
-		}
-		/**
-		 * Shadow DOM is the default. `static useShadow = false` opts into light-DOM
-		 * rendering: the template renders into the host element itself (every
-		 * render target already falls back to `this`), and styles are scoped via
-		 * `@scope (tag)` injected into the document — unless `static scopeStyles
-		 * === false`, which emits unscoped global CSS into `<head>` instead (the
-		 * plain-HTML-component mode; see applyStyles / headStyles.js). The ABSENCE
-		 * of `this.shadowRoot` IS the light-mode signal everywhere — no separate
-		 * instance flag. `<slot>` / `<slot name>` content projection is emulated
-		 * for light DOM (see dom/projection.js); the CSS-only `::slotted` /
-		 * `:host-context` pseudos remain shadow-exclusive.
-		 */
-		if (this.constructor.useShadow !== false) {
-			this.attachShadow({
-				mode: 'open',
-			});
-		}
-		this.constructor.ensureCompiledStyles();
-		initTemplateRuntime(this);
-		this.attrs = makeAttrsProxy(this, this.constructor.ensureMergedAttrs());
-		/**
-		 * `static state` is a class-level template — chain-merged across the
-		 * inheritance line via flag-aware folding, cached on the class, then
-		 * smart-cloned per instance so every component owns its own outer
-		 * containers. Primitives pass through as direct assigns. Constructor-
-		 * arg `state` is treated as caller-owned: no smartClone, no deep
-		 * traversal (unless `mergeObjects` is on, in which case it deep-
-		 * merges into the static-cloned containers via `deepMerge`).
-		 * Subclass class-field `state = {…}` is NOT supported — the class
-		 * field shadows the prototype accessor and silently breaks reactivity.
-		 * Use `static state` for class-level defaults.
-		 */
-		if (!this.flags.skipStaticState) {
-			const mergedState = this.constructor.ensureMergedState();
-			const mergedDescriptors = Object.getOwnPropertyDescriptors(mergedState);
-			const mergedKeys = Object.getOwnPropertyNames(mergedDescriptors);
-			for (let mergedIndex = 0; mergedIndex < mergedKeys.length; mergedIndex += 1) {
-				const mergedKey = mergedKeys[mergedIndex];
-				const descriptor = mergedDescriptors[mergedKey];
-				if (descriptor.get || descriptor.set) {
-					/*
-					 * Accessor descriptors live on the class's propertyIndex
-					 * (collected by ensurePropertyIndex). The state proxies
-					 * dispatch them via `.call(component)` — no per-instance
-					 * `.bind`, no install on the instance STATE. The proxy
-					 * short-circuits BEFORE Reflect.get / Reflect.set so the
-					 * absence of a STATE entry never falls through.
-					 */
-					continue;
-				}
-				const mergedValue = descriptor.value;
-				if (mergedValue === null || typeof mergedValue !== 'object') {
-					this.STATE[mergedKey] = mergedValue;
-				} else {
-					this.STATE[mergedKey] = smartClone(mergedValue);
-				}
-			}
-		}
-		if (isPlainObject(state)) {
-			if (this.flags.mergeObjects) {
-				const argStateKeys = keysOf(state);
-				for (let argIndex = 0; argIndex < argStateKeys.length; argIndex += 1) {
-					const argKey = argStateKeys[argIndex];
-					this.STATE[argKey] = deepMerge(this.STATE[argKey], state[argKey]);
-				}
-			} else {
-				assign(this.STATE, state);
-			}
-		}
-		this.onInit?.(state, config, flags);
-		this.initState();
-		/*
-		 * Lazy-property rescue: parents may have assigned `.state=${…}` (or
-		 * any other accessor-backed `.foo=`) on this element before its
-		 * class was loaded, creating an own data prop that now shadows the
-		 * prototype's getter/setter pair. Migrate those shadows through the
-		 * proper channel now that STATE + stateProxy are ready — subclass
-		 * setters that do `this.state.x = …` need the proxy to exist.
-		 */
-		this.upgradeShadowedProperties();
-		this.createConnectCyclePromises();
-		this.createWhenDestroyedPromise();
-		if (defaultLogger.debugOn) {
-			defaultLogger.debug('WebComponent', `[${this.tagName}] Constructor`);
-		}
-		Perf.measure('construct', perfMark);
-	}
-	config = {};
-	flags = {};
+	config = {
+		mergeState: true,
+		mergeObjects: false,
+		skipStaticState: false,
+	};
 	lifecycle = {};
 	isWebComponent = true;
 	propertyIndex = null;
@@ -557,14 +580,13 @@ export class WebComponent extends HTMLElement {
 		}
 		return globalState.proxy;
 	}
-	atPhase = atPhase;
 	/**
 	 * Default lifecycle-error sink — logs with the element's tag name.
 	 * Override to route errors elsewhere (telemetry, a UI fallback).
 	 * @param {unknown} error - The thrown lifecycle error.
 	 */
 	onLifecycleError(error) {
-		console.error(`[${this.localName}] lifecycle error:`, error);
+		componentLogger.error('LIFECYCLE', `${this.constructor.name}<${this.localName}>`, this, this.state, error);
 	}
 	/**
 	 * Default render-error sink — logs with the element's tag name. Override
@@ -572,7 +594,21 @@ export class WebComponent extends HTMLElement {
 	 * @param {unknown} error - The thrown render error.
 	 */
 	onRenderError(error) {
-		console.error(`[${this.localName}] render error:`, error);
+		componentLogger.error('RENDER', `${this.constructor.name}<${this.localName}>`, this, this.state, error);
+	}
+	debug(...args) {
+		if (componentLogger.debugOn) {
+			componentLogger.debug(`${this.constructor.name}<${this.localName}>`, this, this.state, ...args);
+		}
+	}
+	logInfo(...args) {
+		componentLogger.info(`[${this.localName}]`, this, this.state, ...args);
+	}
+	warnInfo(...args) {
+		componentLogger.warn(`[${this.localName}]`, this, this.state, ...args);
+	}
+	traceInfo(...args) {
+		componentLogger.trace(`[${this.localName}]`, this, this.state, ...args);
 	}
 	/**
 	 * Await the next animation frame.
@@ -593,6 +629,7 @@ const PROTO_METHODS = {
 	applyStyles,
 	applyThemeStyles,
 	applyViewportBucket,
+	atPhase,
 	handleThemeChange,
 	syncThemeStyles,
 	/*

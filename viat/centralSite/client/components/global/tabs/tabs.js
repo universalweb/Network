@@ -1,4 +1,4 @@
-import { each, movingIndicator, WebComponent } from '../../core/index.js';
+import { list, movingIndicator, WebComponent } from '../../core/index.js';
 import { UITabButton } from './tab-button.js';
 // `<ui-tabs>` — reusable tab strip + slotted content area with built-in
 // switching animation: a sliding indicator bar plus a content swap that is
@@ -51,66 +51,24 @@ export class UITabs extends WebComponent {
 		// (x=left/right, y=up/down) — or force 'x' / 'y' / 'diagonal'.
 		slideAxis: 'auto',
 	};
-	// Per-prop convenience setters so parents can write `.tabs=`, `.active=`,
-	// `.orientation=` instead of bundling everything into `.state=${…}`. They
-	// are thin pass-throughs into reactive state — no hand-rolled upgrade
-	// dance needed; the framework's `upgradeShadowedProperties` rescues any
-	// pre-upgrade assignments by routing them through these setters.
-	get tabs() {
-		return this.state?.tabs;
-	}
-	set tabs(value) {
-		if (!this.state) {
-			return;
-		}
-		this.state.tabs = Array.isArray(value) ? value : [];
-	}
-	get active() {
-		return this.state?.active;
-	}
-	set active(value) {
-		if (!this.state) {
-			return;
-		}
-		this.state.active = value ?? '';
-	}
-	get orientation() {
-		return this.state?.orientation;
-	}
-	set orientation(value) {
-		if (!this.state) {
-			return;
-		}
-		this.state.orientation = value ?? 'horizontal';
-	}
-	get transition() {
-		return this.state?.transition;
-	}
-	set transition(value) {
-		if (!this.state) {
-			return;
-		}
-		this.state.transition = value || 'fade';
-	}
-	get slideAxis() {
-		return this.state?.slideAxis;
-	}
-	set slideAxis(value) {
-		if (!this.state) {
-			return;
-		}
-		this.state.slideAxis = value || 'auto';
-	}
+	// No per-prop accessors: every top-level `static state` key is auto-installed
+	// as a reactive routing property, so `.tabs=`/`.active=`/`.orientation=`/
+	// `.transition=`/`.slideAxis=` flow straight into state. Unset props fall back
+	// to the static-state defaults above.
 	switching = false;
 	stripObserver = null;
 	indicatorController = null;
 	onConnect() {
 		this.observeAsync('active', (next, prev) => {
 			if (prev !== next) {
+				// Flags BEFORE the indicator — `syncIndicator` locates the active
+				// button via its `active` state, which the flag write must set first.
+				this.syncActiveFlags();
 				this.syncIndicator();
 			}
 		});
 		this.observeAsync('tabs', () => {
+			this.syncActiveFlags();
 			this.syncIndicator();
 		});
 		this.observeAsync('orientation', () => {
@@ -128,6 +86,9 @@ export class UITabs extends WebComponent {
 		if (!this.state.active && this.state.tabs?.length) {
 			this.state.active = this.state.tabs[0].id;
 		}
+		// Initial flag pass — buttons first render with the default `active:false`;
+		// the `active` observer only fires on subsequent changes, so seed it here.
+		this.syncActiveFlags();
 		// `syncIndicator` reads layout. Resync whenever the strip's size
 		// changes — covers the "tabs mounted inside a not-yet-shown <dialog>"
 		// case where the first rAF still reports zero size.
@@ -148,30 +109,23 @@ export class UITabs extends WebComponent {
 		this.indicatorController?.destroy();
 		this.indicatorController = null;
 	}
-	// Enrich every state.tabs item with the parent-owned `active` flag and
-	// `orientation`. Re-runs whenever any of those change — the list-binding's
-	// keyed diff (by tab.id) then routes the updated item to each existing
-	// <ui-tab-button> via assignState, so per-button state stays in sync
-	// without any imperative push from outside.
-	itemsForList() {
-		const tabs = this.state.tabs ?? [];
-		const activeId = this.state.active ?? '';
-		const orientation = this.state.orientation || 'horizontal';
-		const out = [];
-		for (let index = 0; index < tabs.length; index += 1) {
-			const tab = tabs[index];
-			out.push({
-				id: tab.id,
-				label: tab.label,
-				icon: tab.icon || '',
-				active: tab.id === activeId,
-				orientation,
-			});
+	// Shared single-select: write the `active` flag onto the bound `state.tabs`
+	// items at event/observe-time — NEVER a per-render enrichment loop. The deep
+	// write fires `tabs.{i}.active`, which the list binding routes into that one
+	// <ui-tab-button> via assignState. Orientation is shared group STYLING and
+	// rides a CSS custom property on the strip (tabs.css), not a per-item flag.
+	syncActiveFlags() {
+		const tabs = this.state.tabs;
+		if (!tabs?.length) {
+			return;
 		}
-		return out;
-	}
-	tabKey(item) {
-		return item.id;
+		const activeId = this.state.active;
+		for (let index = 0; index < tabs.length; index += 1) {
+			const isActive = tabs[index].id === activeId;
+			if (tabs[index].active !== isActive) {
+				this.state.tabs[index].active = isActive;
+			}
+		}
 	}
 	syncIndicator(skipTransition = false) {
 		const controller = this.indicatorController;
@@ -397,7 +351,7 @@ export class UITabs extends WebComponent {
 					@keydown=${this.handleKey}
 					#strip>
 					<div class="tab-indicator" #indicator></div>
-					${each(this.itemsForList(), UITabButton, this.tabKey)}
+					${list('tabs', UITabButton)}
 				</div>
 				<div class="tab-content" #content>
 					<slot name=${this.state.active || ''}></slot>

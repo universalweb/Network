@@ -20,7 +20,12 @@ import {
 import { globalRealm, globalState } from './state/globalState.js';
 import { resolveListFilter } from './state/listFilter.js';
 import { mountRemoteController } from './state/remoteList.js';
-import { ensureStateBus, localRealm, STATE_PATH } from './state/state.js';
+import {
+	ensureStateBus,
+	linkStateCarrier,
+	localRealm,
+	STATE_PATH,
+} from './state/state.js';
 import {
 	ANCHOR_END_PREFIX,
 	ANCHOR_START_PREFIX,
@@ -34,6 +39,7 @@ import {
 	buildHTML,
 	eventMarkerAttribute,
 	inferBareAttrName,
+	methodMarkerAttribute,
 	multiAttrMarkerAttribute,
 } from './template/parser.js';
 import {
@@ -42,11 +48,12 @@ import {
 	createElementFromHTML,
 	disposeItem,
 	eachArray,
-	eachNodeList,
 	getValueAtPath,
 	isElement,
 	isFunction,
+	isMap,
 	isPlainObject,
+	isSet,
 	isString,
 	setValueAtPath,
 	syncSubsByDiff,
@@ -70,7 +77,7 @@ function applySubeventAttr(el, attrName, value) {
 		el.removeAttribute(attrName);
 	}
 	const behavior = getBehavior(attrName);
-	if (behavior && typeof behavior.applyValue === 'function') {
+	if (behavior && isFunction(behavior.applyValue)) {
 		behavior.applyValue(el, value);
 		return true;
 	}
@@ -135,29 +142,28 @@ export function styles(styleObject) {
 	return cssText;
 }
 function addTokens(source, target) {
-	if (typeof source !== 'string') {
+	if (!isString(source)) {
 		return;
 	}
 	const tokens = source.split(/\s+/);
-	for (let i = 0; i < tokens.length; i++) {
-		const token = tokens[i];
+	for (let index = 0; index < tokens.length; index++) {
+		const token = tokens[index];
 		if (token) {
 			target.add(token);
 		}
 	}
 }
 function applyClassListItems(items, desired, deps, component) {
-	for (let i = 0; i < items.length; i++) {
-		const item = items[i];
-		const t = typeof item;
-		if (t === 'string') {
+	for (let index = 0; index < items.length; index++) {
+		const item = items[index];
+		if (isString(item)) {
 			addTokens(item, desired);
 			continue;
 		}
 		if (item == null || item === false) {
 			continue;
 		}
-		if (t === 'function') {
+		if (isFunction(item)) {
 			let evalValue;
 			if (component) {
 				const evaluated = evaluateTrackedExpression(component, item);
@@ -166,7 +172,7 @@ function applyClassListItems(items, desired, deps, component) {
 			} else {
 				evalValue = item();
 			}
-			if (typeof evalValue === 'string') {
+			if (isString(evalValue)) {
 				addTokens(evalValue, desired);
 			} else if (evalValue) {
 				applyClassListItems([evalValue], desired, deps, component);
@@ -179,19 +185,19 @@ function applyClassListItems(items, desired, deps, component) {
 				addDep(deps, keyRealm.realm, keyRealm.path);
 			}
 			const value = component ? resolveBindingValue(component, item.key) : item.value;
-			if (typeof value === 'string') {
+			if (isString(value)) {
 				addTokens(value, desired);
 			} else if (value) {
 				applyClassListItems([value], desired, deps, component);
 			}
 			continue;
 		}
-		if (item instanceof Set) {
-			item.forEach((v) => {
-				if (typeof v === 'string') {
-					desired.add(v);
+		if (isSet(item)) {
+			for (const token of item) {
+				if (isString(token)) {
+					desired.add(token);
 				}
-			});
+			}
 			const carrier = item[STATE_PATH];
 			if (carrier) {
 				addDep(deps, carrier.realm, carrier.path);
@@ -206,12 +212,15 @@ function applyClassListItems(items, desired, deps, component) {
 			}
 			continue;
 		}
-		if (item instanceof Map) {
-			item.forEach((v, k) => {
-				if (v && typeof k === 'string') {
-					desired.add(k);
+		if (isMap(item)) {
+			for (const [
+				token,
+				enabled,
+			] of item) {
+				if (enabled && isString(token)) {
+					desired.add(token);
 				}
-			});
+			}
 			const carrier = item[STATE_PATH];
 			if (carrier) {
 				addDep(deps, carrier.realm, carrier.path);
@@ -219,11 +228,11 @@ function applyClassListItems(items, desired, deps, component) {
 			continue;
 		}
 		const keys = Object.keys(item);
-		for (let j = 0; j < keys.length; j++) {
-			const key = keys[j];
+		for (let keyIndex = 0; keyIndex < keys.length; keyIndex++) {
+			const key = keys[keyIndex];
 			const value = item[key];
 			let resolved = value;
-			if (typeof value === 'function') {
+			if (isFunction(value)) {
 				if (component) {
 					const evaluated = evaluateTrackedExpression(component, value);
 					mergeDepMap(deps, evaluated.deps);
@@ -239,16 +248,16 @@ function applyClassListItems(items, desired, deps, component) {
 	}
 }
 function diffClassList(el, current, desired) {
-	current.forEach((token) => {
+	for (const token of current) {
 		if (!desired.has(token)) {
 			el.classList.remove(token);
 		}
-	});
-	desired.forEach((token) => {
+	}
+	for (const token of desired) {
 		if (!current.has(token)) {
 			el.classList.add(token);
 		}
-	});
+	}
 }
 const TEMPLATE_CLEANUP = Symbol('templateCleanup');
 const BINDABLE_TAGS = new Set([
@@ -341,7 +350,7 @@ function assertLightTemplate(recipe, values) {
 			throw new TypeError('each() html row expressions must be plain values — compute inline (`${item.x * 2}`), not `${() => …}` or a binding.');
 		}
 	}
-	if ((recipe.refPlans && recipe.refPlans.length) || (recipe.dataBindPlans && recipe.dataBindPlans.length) || (recipe.subeventPlans && recipe.subeventPlans.length)) {
+	if ((recipe?.refPlans?.length) || (recipe?.dataBindPlans?.length) || (recipe?.subeventPlans?.length)) {
 		throw new TypeError('each() html row does not support #refs, two-way bindings, or behaviors — use the component (class) kind for those.');
 	}
 }
@@ -635,8 +644,8 @@ function lisIndexSet(sources) {
 	const sourceCount = sources.length;
 	const predecessor = new Array(sourceCount);
 	const tails = [];
-	for (let i = 0; i < sourceCount; i++) {
-		const value = sources[i];
+	for (let sourceIndex = 0; sourceIndex < sourceCount; sourceIndex++) {
+		const value = sources[sourceIndex];
 		if (value < 0) {
 			continue;
 		}
@@ -650,11 +659,11 @@ function lisIndexSet(sources) {
 				high = mid;
 			}
 		}
-		predecessor[i] = low > 0 ? tails[low - 1] : -1;
+		predecessor[sourceIndex] = low > 0 ? tails[low - 1] : -1;
 		if (low === tails.length) {
-			tails.push(i);
+			tails.push(sourceIndex);
 		} else {
-			tails[low] = i;
+			tails[low] = sourceIndex;
 		}
 	}
 	const stable = new Set();
@@ -728,9 +737,9 @@ function patchList(spot, itemList) {
 	 */
 	if (oldMap.size === 0) {
 		const fragment = itemCount > 1 ? document.createDocumentFragment() : null;
-		for (let i = 0; i < itemCount; i++) {
-			const item = items[i];
-			const key = keyFn(item, i);
+		for (let itemIndex = 0; itemIndex < itemCount; itemIndex++) {
+			const item = items[itemIndex];
+			const key = keyFn(item, itemIndex);
 			const element = itemList.createElement(item);
 			newMap.set(key, element);
 			prevItemMap.set(key, item);
@@ -762,8 +771,8 @@ function patchList(spot, itemList) {
 	 */
 	if (itemCount === oldMap.size && sameKeyOrder(items, keyFn, oldMap)) {
 		const keyIterator = oldMap.keys();
-		for (let i = 0; i < itemCount; i++) {
-			const item = items[i];
+		for (let itemIndex = 0; itemIndex < itemCount; itemIndex++) {
+			const item = items[itemIndex];
 			const key = keyIterator.next().value;
 			if (item !== prevItemMap.get(key)) {
 				oldMap.set(key, updateReusedElement(oldMap.get(key), item, itemList));
@@ -792,9 +801,9 @@ function patchList(spot, itemList) {
 	const sources = new Array(itemCount);
 	let reordered = false;
 	let highestOldSeen = -1;
-	for (let i = 0; i < itemCount; i++) {
-		const item = items[i];
-		const key = keyFn(item, i);
+	for (let itemIndex = 0; itemIndex < itemCount; itemIndex++) {
+		const item = items[itemIndex];
+		const key = keyFn(item, itemIndex);
 		let element = oldMap.get(key);
 		if (element) {
 			oldMap.delete(key);
@@ -802,7 +811,7 @@ function patchList(spot, itemList) {
 				element = updateReusedElement(element, item, itemList);
 			}
 			const source = oldOrder.get(key);
-			sources[i] = source;
+			sources[itemIndex] = source;
 			if (source < highestOldSeen) {
 				reordered = true;
 			} else {
@@ -810,10 +819,10 @@ function patchList(spot, itemList) {
 			}
 		} else {
 			element = itemList.createElement(item);
-			sources[i] = -1;
+			sources[itemIndex] = -1;
 			reordered = true;
 		}
-		elements[i] = element;
+		elements[itemIndex] = element;
 		newMap.set(key, element);
 		prevItemMap.set(key, item);
 	}
@@ -844,18 +853,18 @@ function patchList(spot, itemList) {
 		 * detached mid-patch (moveBefore throws on a disconnected receiver). Mirrors
 		 * portal.js's movePortalChildren.
 		 */
-		const canMove = typeof anchor.moveBefore === 'function' && anchor.isConnected;
+		const canMove = isFunction(anchor.moveBefore) && anchor.isConnected;
 		let nextSibling = tail;
-		for (let i = itemCount - 1; i >= 0; i--) {
-			const element = elements[i];
-			if (sources[i] === -1) {
+		for (let itemIndex = itemCount - 1; itemIndex >= 0; itemIndex--) {
+			const element = elements[itemIndex];
+			if (sources[itemIndex] === -1) {
 				/*
 				 * Freshly created and still detached — its `nextSibling` is null and
 				 * can't signal "already placed", so always insert at the slot
 				 * (covers append-at-end, where the target nextSibling is also null).
 				 */
 				anchor.insertBefore(element, nextSibling);
-			} else if (!stable.has(i) && element.nextSibling !== nextSibling) {
+			} else if (!stable.has(itemIndex) && element.nextSibling !== nextSibling) {
 				if (canMove) {
 					anchor.moveBefore(element, nextSibling);
 				} else {
@@ -1099,7 +1108,7 @@ function formatHtmlInTextWarning(spot, value) {
 	return `[${tag}] markup string rendered as TEXT (escaped). If HTML is intended use ^html / bind.html / static properties {kind:'html'}. value="${value.slice(0, 80)}"`;
 }
 function warnHtmlInText(spot, value) {
-	if (spot.declaredKind || typeof value !== 'string' || htmlInTextWarned.has(spot)) {
+	if (spot.declaredKind || !isString(value) || htmlInTextWarned.has(spot)) {
 		return;
 	}
 	if (!HTML_TAGLIKE_RE.test(value)) {
@@ -1273,7 +1282,7 @@ function bindSpotKind(spot, value) {
 	 * The common case — a string at a declared-HTML spot — skips this branch and
 	 * stays on the fast cached path with no re-classification.
 	 */
-	if (kind === CONTENT_KIND.HTML && value !== null && value !== undefined && typeof value !== 'string') {
+	if (kind === CONTENT_KIND.HTML && value !== null && value !== undefined && !isString(value)) {
 		kind = classifyContentKind(value);
 	}
 	spot.contentKind = kind;
@@ -1459,11 +1468,52 @@ function patchSpotBody(spot, value) {
 		 * safe; every other property still assigns directly.
 		 */
 		if (spot.attr === 'state' && isFunction(spot.el.assignState)) {
-			spot.el.assignState(value);
+			const childElement = spot.el;
+			childElement.assignState(value);
+			/*
+			 * `.state=` carry-down. When the passed value is a SHARED reactive
+			 * proxy, a deep mutation made through the owner's proxy notifies only
+			 * the OWNER's bus — the child holds the same object by reference but
+			 * its own bus never hears the deep path, so the shallow merge above
+			 * no-ops and nothing below re-reads. Bridge the child's bus to the
+			 * source realm so each deep change is re-delivered as a child-relative
+			 * path. A plain literal carries no realm, so it is left as a one-shot.
+			 */
+			if (isStateProxyValue(value)) {
+				linkStateCarrier(childElement, value[STATE_PATH]);
+			}
+			return;
+		}
+		/*
+		 * `.state.path=` is the explicit deep-state channel — the one sanctioned
+		 * way a parent writes into a child's reactive state. Writing through the
+		 * child's state proxy (not a bare element property) routes the assignment
+		 * to the proxy set trap so the nested key notifies and re-patches. The
+		 * proxy already no-ops an unchanged leaf, so no extra arg-diff is needed.
+		 */
+		if (spot.el.state && spot.attr.startsWith('state.')) {
+			setValueAtPath(spot.el.state, spot.attr.slice(6), value);
 			return;
 		}
 		if (spot.el[spot.attr] !== value) {
 			spot.el[spot.attr] = value;
+		}
+		return;
+	}
+	if (spot.type === SPOT_TYPE.METHOD) {
+		/*
+		 * `.method(${value})` — invoke the element method with the resolved arg.
+		 * Skip an unchanged arg after the first call so a side-effecting method
+		 * does not fire on every unrelated patch pass (mirrors the PROP guard).
+		 * A non-function name is a silent no-op rather than a throw.
+		 */
+		if (spot.methodCalled === true && value === spot.lastMethodArg) {
+			return;
+		}
+		spot.methodCalled = true;
+		spot.lastMethodArg = value;
+		if (isFunction(spot.el[spot.attr])) {
+			spot.el[spot.attr](value);
 		}
 		return;
 	}
@@ -1597,10 +1647,10 @@ class Spot {
  * any `${bindingExpr}` whose expr resolves to a single state path.
  */
 class BindingSpot extends Spot {
-	constructor(el, slotIndex, type, attr, expr, component, bindingKey, declaredKind) {
+	constructor(el, slotIndex, spotType, attr, expr, component, bindingKey, declaredKind) {
 		super();
 		this.kind = SPOT_KIND.BINDING;
-		this.type = type;
+		this.type = spotType;
 		this.attr = attr;
 		this.el = el;
 		this.slotIndex = slotIndex;
@@ -1682,15 +1732,16 @@ function buildListView(rawItems, filterFn) {
  * `liveList(…)`. Owns `keyMap` (key → element) and `liveList` handle.
  */
 class ListSpot extends Spot {
-	constructor(el, slotIndex, type, expr, component, bindingKey, renderFn, keyFn, filterFn = null) {
+	constructor(el, slotIndex, spotType, expr, component, bindingKey, renderFn, keyFn, filterFn = null) {
 		super();
 		this.kind = SPOT_KIND.LIST;
-		this.type = type;
+		this.type = spotType;
 		this.el = el;
 		this.slotIndex = slotIndex;
 		this.expr = expr;
 		this.component = component;
 		this.bindingKey = bindingKey;
+		this.bindingKeyPrefix = `${bindingKey}.`;
 		this.renderFn = renderFn;
 		this.keyFn = keyFn;
 		this.filterFn = filterFn;
@@ -1712,8 +1763,8 @@ class ListSpot extends Spot {
 		this.pendingPaths = null;
 		if (paths && paths.length > 1) {
 			let lastResult;
-			for (let i = 0; i < paths.length; i++) {
-				lastResult = this.refresh(paths[i]);
+			for (let pathIndex = 0; pathIndex < paths.length; pathIndex++) {
+				lastResult = this.refresh(paths[pathIndex]);
 			}
 			return lastResult;
 		}
@@ -1740,7 +1791,7 @@ class ListSpot extends Spot {
 			!filterFn &&
 			changedPath &&
 			changedPath !== bindingKey &&
-			changedPath.startsWith(`${bindingKey}.`) &&
+			changedPath.startsWith(this.bindingKeyPrefix) &&
 			this.keyMap &&
 			viewItems.length === this.keyMap.size
 		) {
@@ -1779,10 +1830,10 @@ class ListSpot extends Spot {
  * refresh so deps stay accurate.
  */
 class ComputedSpot extends Spot {
-	constructor(el, slotIndex, type, attr, expr, component, declaredKind) {
+	constructor(el, slotIndex, spotType, attr, expr, component, declaredKind) {
 		super();
 		this.kind = SPOT_KIND.COMPUTED;
-		this.type = type;
+		this.type = spotType;
 		this.attr = attr;
 		this.el = el;
 		this.slotIndex = slotIndex;
@@ -1933,7 +1984,7 @@ class EventSpot extends Spot {
 				} else if (modifier === 'passive') {
 					this.modPassive = true;
 				} else if (defaultLogger.debugOn) {
-					defaultLogger.debug('template', `[event] unknown @${eventName} modifier ".${modifier}" — ignored`);
+					defaultLogger.debug('Template EventSpot', `[event] unknown @${eventName} modifier ".${modifier}" — ignored`);
 				}
 			}
 		}
@@ -2042,9 +2093,9 @@ function installEventSpot(plan, el, eventName, expr, component) {
  * the base behavior (no-op for empty unsubs/depMap).
  */
 class StaticSpot extends Spot {
-	constructor(el, slotIndex, type, attr, expr, declaredKind) {
+	constructor(el, slotIndex, spotType, attr, expr, declaredKind) {
 		super();
-		this.type = type;
+		this.type = spotType;
 		this.attr = attr;
 		this.el = el;
 		this.slotIndex = slotIndex;
@@ -2119,9 +2170,9 @@ function dispatchTwoWayInput() {
  * scope `dispatchTwoWayInput` dispatched via the `TWO_WAY_SPOTS` WeakMap.
  */
 class TwoWaySpot extends Spot {
-	constructor(el, slotIndex, type, attr, expr, component, bindingKey, twoWayAttr, twoWayEvent) {
+	constructor(el, slotIndex, spotType, attr, expr, component, bindingKey, twoWayAttr, twoWayEvent) {
 		super();
-		this.type = type;
+		this.type = spotType;
 		this.attr = attr;
 		this.el = el;
 		this.slotIndex = slotIndex;
@@ -2189,8 +2240,8 @@ function getNodePath(node, root) {
 }
 function walkPath(root, path) {
 	let node = root;
-	for (let i = 0; i < path.length; i++) {
-		node = node.childNodes[path[i]];
+	for (let pathIndex = 0; pathIndex < path.length; pathIndex++) {
+		node = node.childNodes[path[pathIndex]];
 	}
 	return node;
 }
@@ -2223,8 +2274,8 @@ function isAllDigitsFrom(value, from) {
 	if (value.length === from) {
 		return false;
 	}
-	for (let i = from; i < value.length; i++) {
-		const code = value.charCodeAt(i);
+	for (let charIndex = from; charIndex < value.length; charIndex++) {
+		const code = value.charCodeAt(charIndex);
 		if (code < 48 || code > 57) {
 			return false;
 		}
@@ -2245,16 +2296,18 @@ function isMarkerAttr(attrName, value) {
 }
 function buildMarkerMap(fragment) {
 	const map = new Map();
-	eachNodeList(fragment.querySelectorAll('[data-uwc]'), (node) => {
+	const markedNodes = fragment.querySelectorAll('[data-uwc]');
+	for (let nodeIndex = 0; nodeIndex < markedNodes.length; nodeIndex++) {
+		const node = markedNodes[nodeIndex];
 		const path = getNodePath(node, fragment);
 		if (!path) {
-			return;
+			continue;
 		}
 		node.removeAttribute('data-uwc');
 		const attrs = node.attributes;
-		for (let i = 0; i < attrs.length; i++) {
-			const attrName = attrs[i].name;
-			const attrValue = attrs[i].value;
+		for (let attrIndex = 0; attrIndex < attrs.length; attrIndex++) {
+			const attrName = attrs[attrIndex].name;
+			const attrValue = attrs[attrIndex].value;
 			if (!isMarkerAttr(attrName, attrValue)) {
 				continue;
 			}
@@ -2263,7 +2316,7 @@ function buildMarkerMap(fragment) {
 				path,
 			});
 		}
-	});
+	}
 	/*
 	 * Second pass: anchored text-spot comment markers (`uwc:N` / `uwc/N`).
 	 * querySelectorAll only sees elements, so comments need their own walk. Keyed
@@ -2289,6 +2342,16 @@ function buildMarkerMap(fragment) {
 function lookupMarker(map, attrName, attrValue) {
 	return map.get(`${attrName}|${attrValue}`);
 }
+function mapSpotPart(part) {
+	if (part.literal !== undefined) {
+		return {
+			literal: part.literal,
+		};
+	}
+	return {
+		exprIndex: part.exprIndex,
+	};
+}
 function buildSpotPlan(map, entry) {
 	if (entry.type === SPOT_TYPE.BIND) {
 		const markerAttr = bindMarkerAttribute(entry.i);
@@ -2310,16 +2373,7 @@ function buildSpotPlan(map, entry) {
 			return null;
 		}
 		lookup.el.removeAttribute(markerAttr);
-		const parts = entry.parts.map((part) => {
-			if (part.literal !== undefined) {
-				return {
-					literal: part.literal,
-				};
-			}
-			return {
-				exprIndex: part.exprIndex,
-			};
-		});
+		const parts = entry.parts.map(mapSpotPart);
 		return {
 			type: SPOT_TYPE.MULTI_ATTR,
 			slotIndex: entry.i,
@@ -2420,6 +2474,25 @@ function buildSpotPlan(map, entry) {
 			attr: entry.attr,
 		};
 	}
+	if (entry.type === SPOT_TYPE.METHOD) {
+		const markerAttr = methodMarkerAttribute(entry.i);
+		const lookup = lookupMarker(map, markerAttr, `expr${entry.i}`);
+		if (!lookup) {
+			return null;
+		}
+		lookup.el.removeAttribute(markerAttr);
+		/*
+		 * The method name rides in the `attr` slot so the existing binding /
+		 * computed / static install dispatch needs no METHOD-specific arm — only
+		 * the patch step branches, calling `el[method](value)` instead of assigning.
+		 */
+		return {
+			type: SPOT_TYPE.METHOD,
+			slotIndex: entry.i,
+			path: lookup.path,
+			attr: entry.method,
+		};
+	}
 	if (entry.type === SPOT_TYPE.BOOL_ATTR || entry.type === SPOT_TYPE.PROP) {
 		const sigilChar = entry.type === SPOT_TYPE.BOOL_ATTR ? '?' : '.';
 		/*
@@ -2460,50 +2533,56 @@ function normalizeBindKey(rawKey) {
 }
 function extractDataBindPlans(fragment) {
 	const plans = [];
-	eachNodeList(fragment.querySelectorAll('[data-bind]'), (el) => {
-		const stateKey = el.dataset.bind;
+	const dataBindNodes = fragment.querySelectorAll('[data-bind]');
+	for (let nodeIndex = 0; nodeIndex < dataBindNodes.length; nodeIndex++) {
+		const element = dataBindNodes[nodeIndex];
+		const stateKey = element.dataset.bind;
 		if (!stateKey) {
-			return;
+			continue;
 		}
-		const path = getNodePath(el, fragment);
+		const path = getNodePath(element, fragment);
 		if (!path) {
-			return;
+			continue;
 		}
 		plans.push({
 			path,
 			key: normalizeBindKey(stateKey),
 		});
-		el.removeAttribute('data-bind');
-	});
-	eachNodeList(fragment.querySelectorAll('*'), (el) => {
-		const stateKey = el.getAttribute('@bind');
+		element.removeAttribute('data-bind');
+	}
+	const atBindNodes = fragment.querySelectorAll('*');
+	for (let nodeIndex = 0; nodeIndex < atBindNodes.length; nodeIndex++) {
+		const element = atBindNodes[nodeIndex];
+		const stateKey = element.getAttribute('@bind');
 		if (!stateKey) {
-			return;
+			continue;
 		}
-		const path = getNodePath(el, fragment);
+		const path = getNodePath(element, fragment);
 		if (!path) {
-			return;
+			continue;
 		}
 		plans.push({
 			path,
 			key: normalizeBindKey(stateKey),
 		});
-		el.removeAttribute('@bind');
-	});
-	eachNodeList(fragment.querySelectorAll('*'), (el) => {
-		const attrs = el.attributes;
-		for (let i = attrs.length - 1; i >= 0; i--) {
-			const attrName = attrs[i].name;
+		element.removeAttribute('@bind');
+	}
+	const dollarBindNodes = fragment.querySelectorAll('*');
+	for (let nodeIndex = 0; nodeIndex < dollarBindNodes.length; nodeIndex++) {
+		const element = dollarBindNodes[nodeIndex];
+		const attrs = element.attributes;
+		for (let attrIndex = attrs.length - 1; attrIndex >= 0; attrIndex--) {
+			const attrName = attrs[attrIndex].name;
 			const match = DOLLAR_BIND_ATTR_RE.exec(attrName);
 			if (!match) {
 				continue;
 			}
-			const rawKey = attrs[i].value;
+			const rawKey = attrs[attrIndex].value;
 			if (!rawKey) {
-				el.removeAttribute(attrName);
+				element.removeAttribute(attrName);
 				continue;
 			}
-			const path = getNodePath(el, fragment);
+			const path = getNodePath(element, fragment);
 			if (path) {
 				const rawModifiers = match[2];
 				plans.push({
@@ -2512,9 +2591,9 @@ function extractDataBindPlans(fragment) {
 					modifiers: rawModifiers ? rawModifiers.slice(1).split('.') : null,
 				});
 			}
-			el.removeAttribute(attrName);
+			element.removeAttribute(attrName);
 		}
-	});
+	}
 	return plans;
 }
 /*
@@ -2526,14 +2605,15 @@ function extractDataBindPlans(fragment) {
 const SPOT_MARKER_RE = /^expr\d+$/;
 function extractSubeventPlans(fragment) {
 	const plans = [];
-	SUBEVENT_ATTRS.forEach((attrName) => {
+	for (const attrName of SUBEVENT_ATTRS) {
 		const elements = fragment.querySelectorAll(`[${attrName}]`);
-		eachNodeList(elements, (el) => {
-			const rawValue = el.getAttribute(attrName);
-			el.removeAttribute(attrName);
-			const path = getNodePath(el, fragment);
+		for (let nodeIndex = 0; nodeIndex < elements.length; nodeIndex++) {
+			const element = elements[nodeIndex];
+			const rawValue = element.getAttribute(attrName);
+			element.removeAttribute(attrName);
+			const path = getNodePath(element, fragment);
 			if (!path) {
-				return;
+				continue;
 			}
 			/*
 			 * Interpolated subevent attr (`tooltip=${expr}`): the captured
@@ -2548,25 +2628,27 @@ function extractSubeventPlans(fragment) {
 				attrName,
 				value: isMarker ? undefined : rawValue,
 			});
-		});
-	});
+		}
+	}
 	return plans;
 }
 function extractRefPlans(fragment) {
 	const plans = [];
-	eachNodeList(fragment.querySelectorAll('*'), (el) => {
-		const attrs = el.attributes;
-		for (let i = attrs.length - 1; i >= 0; i--) {
-			const attrName = attrs[i].name;
+	const refNodes = fragment.querySelectorAll('*');
+	for (let nodeIndex = 0; nodeIndex < refNodes.length; nodeIndex++) {
+		const element = refNodes[nodeIndex];
+		const attrs = element.attributes;
+		for (let attrIndex = attrs.length - 1; attrIndex >= 0; attrIndex--) {
+			const attrName = attrs[attrIndex].name;
 			if (attrName.charCodeAt(0) !== 35) {
 				continue;
 			}
 			const refName = attrName.slice(1);
-			el.removeAttribute(attrName);
+			element.removeAttribute(attrName);
 			if (!isValidRefName(refName)) {
 				throw new SyntaxError(`Invalid #ref name "${refName}". Use lowercase letters, digits, and underscore only ("_" not "-" for word separators). Example: <input #email_field>.`);
 			}
-			const path = getNodePath(el, fragment);
+			const path = getNodePath(element, fragment);
 			if (path) {
 				plans.push({
 					path,
@@ -2574,7 +2656,7 @@ function extractRefPlans(fragment) {
 				});
 			}
 		}
-	});
+	}
 	return plans;
 }
 function prepareRecipe(strings) {
@@ -2588,12 +2670,12 @@ function prepareRecipe(strings) {
 	const fragment = template.content;
 	const markerMap = buildMarkerMap(fragment);
 	const spotPlans = [];
-	eachArray(meta, (entry) => {
-		const plan = buildSpotPlan(markerMap, entry);
+	for (let entryIndex = 0; entryIndex < meta.length; entryIndex++) {
+		const plan = buildSpotPlan(markerMap, meta[entryIndex]);
 		if (plan) {
 			spotPlans.push(plan);
 		}
-	});
+	}
 	const dataBindPlans = extractDataBindPlans(fragment);
 	const subeventPlans = extractSubeventPlans(fragment);
 	const refPlans = extractRefPlans(fragment);
@@ -2671,7 +2753,7 @@ class DataBindSpot {
 				} else if (modifier === 'lazy') {
 					lazy = true;
 				} else if (defaultLogger.debugOn) {
-					defaultLogger.debug('template', `[databind] unknown $-bind modifier ".${modifier}" on "${stateKey}" — ignored`);
+					defaultLogger.debug('Template DataBindSpot', `[databind] unknown $-bind modifier ".${modifier}" on "${stateKey}" — ignored`);
 				}
 			}
 		}
@@ -2707,15 +2789,15 @@ function installDataBind(el, stateKey, component, unsubs, modifiers) {
 }
 function buildMultiParts(planParts, exprs) {
 	const parts = new Array(planParts.length);
-	for (let i = 0; i < planParts.length; i++) {
-		const part = planParts[i];
+	for (let partIndex = 0; partIndex < planParts.length; partIndex++) {
+		const part = planParts[partIndex];
 		if (part.literal === undefined) {
-			parts[i] = {
+			parts[partIndex] = {
 				exprIndex: part.exprIndex,
 				expr: exprs[part.exprIndex],
 			};
 		} else {
-			parts[i] = {
+			parts[partIndex] = {
 				literal: part.literal,
 			};
 		}
@@ -2869,8 +2951,13 @@ function installSpotFromPlan(plan, resolved, exprs, component) {
 			];
 			return installClassListSpot(plan, el, singletonParts, component);
 		}
-	} else if (plan.type === SPOT_TYPE.BOOL_ATTR || plan.type === SPOT_TYPE.PROP) {
-		// passthrough — resolvedType/attr already set
+	} else if (plan.type === SPOT_TYPE.BOOL_ATTR || plan.type === SPOT_TYPE.PROP || plan.type === SPOT_TYPE.METHOD) {
+		/*
+		 * METHOD rides the same binding/computed/static dispatch as PROP — a static
+		 * arg calls once and repatches on re-render, a `bind()` arg re-calls
+		 * surgically, a `() =>` arg re-calls on dep change. Only the patch step
+		 * differs (call vs assign), keyed off `resolvedType`.
+		 */
 	} else {
 		return null;
 	}
@@ -2920,17 +3007,17 @@ function cleanupSpots(spots) {
 	if (!spots || !spots.length) {
 		return;
 	}
-	for (let i = 0; i < spots.length; i++) {
-		spots[i].unsubscribe();
+	for (let spotIndex = 0; spotIndex < spots.length; spotIndex++) {
+		spots[spotIndex].unsubscribe();
 	}
 }
 function collectBoundKeys(spots, dataBindPlans) {
 	const keys = new Set();
-	for (let i = 0; i < spots.length; i++) {
-		const spot = spots[i];
+	for (let spotIndex = 0; spotIndex < spots.length; spotIndex++) {
+		const spot = spots[spotIndex];
 		if (spot.type === SPOT_TYPE.MULTI_ATTR || spot.type === SPOT_TYPE.CLASS_LIST) {
-			for (let j = 0; j < spot.parts.length; j++) {
-				const part = spot.parts[j];
+			for (let partIndex = 0; partIndex < spot.parts.length; partIndex++) {
+				const part = spot.parts[partIndex];
 				if (isBindingType(part.expr)) {
 					keys.add(part.expr.key);
 				}
@@ -2946,8 +3033,8 @@ function collectBoundKeys(spots, dataBindPlans) {
 		}
 	}
 	if (dataBindPlans) {
-		for (let i = 0; i < dataBindPlans.length; i++) {
-			const plan = dataBindPlans[i];
+		for (let planIndex = 0; planIndex < dataBindPlans.length; planIndex++) {
+			const plan = dataBindPlans[planIndex];
 			if (plan.key) {
 				keys.add(plan.key);
 			}
@@ -3033,7 +3120,7 @@ function instantiateRecipe(recipe, exprs, component) {
 			const behavior = getBehavior(plan.attrName);
 			if (behavior?.install) {
 				const cleanup = behavior.install(el, plan.value, component);
-				if (typeof cleanup === 'function') {
+				if (isFunction(cleanup)) {
 					unsubs.push(cleanup);
 				}
 			}
@@ -3081,7 +3168,8 @@ function updateSpot(spot, newExpr, component) {
 		spot.type === SPOT_TYPE.ATTR ||
 		spot.type === SPOT_TYPE.BARE_ATTR ||
 		spot.type === SPOT_TYPE.BOOL_ATTR ||
-		spot.type === SPOT_TYPE.PROP
+		spot.type === SPOT_TYPE.PROP ||
+		spot.type === SPOT_TYPE.METHOD
 	) {
 		patchSpot(spot, newExpr);
 		spot.expr = newExpr;
@@ -3109,8 +3197,8 @@ function isStateProxyValue(value) {
  */
 function syncSpotParts(parts, newExprs) {
 	let changed = false;
-	for (let i = 0; i < parts.length; i++) {
-		const part = parts[i];
+	for (let partIndex = 0; partIndex < parts.length; partIndex++) {
+		const part = parts[partIndex];
 		if (part.exprIndex === undefined) {
 			continue;
 		}
@@ -3126,8 +3214,8 @@ function updateTemplateSpots(state, newExprs, component) {
 	const {
 		spots, prevExprs,
 	} = state;
-	for (let i = 0; i < spots.length; i++) {
-		const spot = spots[i];
+	for (let spotIndex = 0; spotIndex < spots.length; spotIndex++) {
+		const spot = spots[spotIndex];
 		if (spot.type === SPOT_TYPE.MULTI_ATTR) {
 			if (syncSpotParts(spot.parts, newExprs)) {
 				spot.refresh();
@@ -3163,7 +3251,14 @@ function updateTemplateSpots(state, newExprs, component) {
 		}
 		updateSpot(spot, newVal, component);
 	}
-	state.prevExprs = newExprs.slice();
+	/*
+	 * Retain the exprs array directly — no copy. Every caller on the patch path
+	 * (templateHtml / templateHtmlElement / patchLightRow) passes a freshly minted
+	 * single-use array and returns before any instantiate, and prevExprs is only
+	 * ever read — so there is nothing to alias against. (The INSTALL sites still
+	 * `.slice()` because there the array is shared with instantiateRecipe.)
+	 */
+	state.prevExprs = newExprs;
 }
 /**
  * Per-instance template runtime: plain fields, no closures. All template

@@ -12,18 +12,21 @@
 @import '../components/core/styles/modules/effects.css';
 
 /* ── Page-level (light DOM) rules ──────────────────── */
-html { font-size: clamp(14px, 1.3vw, 18px); scrollbar-gutter: stable; }
+html { font-size: clamp(14px, 1.3vw, 18px); block-size: 100%; }
 @media (min-width: 160em) { html { font-size: clamp(14px, 1vw, 18px); } }
 body {
 	background-color: var(--bg-body);
 	color: var(--text-main);
-	font-family: var(--font-mono);
+	/* Themes may opt into a sans body via --font-body; mono stays the default
+	   so every existing theme paints exactly as before. */
+	font-family: var(--font-body, var(--font-mono));
 	font-size: var(--text-base);
 	line-height: var(--leading-normal);
-	/* Document scroll: the body IS the scroll surface (so mobile chrome collapses
-	   and the fixed app-bar can detach reacting to a real scroll). svh = stable
-	   small-viewport floor; overflow-x hidden guards against a stray h-scrollbar. */
-	width: 100%; min-height: 100svh; overflow-x: hidden;
+	/* The document itself does NOT scroll: the app shell mounts a fixed, full-viewport
+	   inner scroll surface (app.css .shell-scroll) so the content's scrollbar lives
+	   BEHIND the fixed top/bottom bars instead of the native viewport scrollbar painting
+	   over them. Lock the page box so only that inner surface scrolls. */
+	width: 100%; block-size: 100%; overflow: hidden;
 	-webkit-font-smoothing: antialiased;
 	cursor: crosshair;
 }

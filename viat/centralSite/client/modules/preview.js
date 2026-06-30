@@ -10,6 +10,9 @@ import '../components/global/sidebar/sidebar.js';
    so the `tooltip=` behavior's lazy `whenDefined('ui-tooltip')` would hang here
    forever without this side-effect import — no tooltips would ever show. */
 import '../components/core/tooltips/tooltip.js';
+/* Carry-down pattern demo (demo-carry-top/mid/leaf) — preview-only showcase of
+   `.state=` shared-object deep-mutation propagation; not on the resolver path. */
+import '../components/preview/carry-down-demo/carry-down-demo.js';
 import { html, WebComponent } from 'webcomponent';
 import { BootScreen } from '../components/global/boot-screen/boot-screen.js';
 class PreviewView extends WebComponent {
@@ -92,7 +95,7 @@ class PreviewView extends WebComponent {
 		demoQty: 2,
 		animValue: 9410,
 		wizardStep: 1,
-		/* Stable reference — an inline `.items=${[…]}` literal would mint a new
+		/* Stable reference — an inline `.state.items=${[…]}` literal would mint a new
 		   array every patch pass and trip the engine's "wasted set" guard. */
 		breadcrumbItems: [
 			{
@@ -262,52 +265,56 @@ class PreviewView extends WebComponent {
 		],
 		/* Carousels deep-write `active` onto their own slide objects, so each
 		   instance owns a distinct array. */
-		featureCarouselSlides: [
-			{
-				id: 'speed',
-				eyebrow: 'Performance',
-				heading: 'Sub-second finality',
-				description: 'Transactions settle before you blink.',
-				tone: 'accent',
-			},
-			{
-				id: 'verify',
-				eyebrow: 'Trust',
-				heading: 'Verifiable by anyone',
-				description: 'Every state transition is provable.',
-				tone: 'success',
-			},
-			{
-				id: 'zero',
-				eyebrow: 'Footprint',
-				heading: 'Zero dependencies',
-				description: 'Hand-rolled, audit-friendly, lean.',
-				tone: 'info',
-			},
-		],
-		loadingCarouselSlides: [
-			{
-				id: 'tip1',
-				eyebrow: 'Tip',
-				heading: 'Hardware wallets',
-				description: 'Connect a Ledger for cold-key signing.',
-				tone: 'accent',
-			},
-			{
-				id: 'tip2',
-				eyebrow: 'Tip',
-				heading: 'Batch your sends',
-				description: 'Group transfers into one signature.',
-				tone: 'warning',
-			},
-			{
-				id: 'tip3',
-				eyebrow: 'Tip',
-				heading: 'Name service',
-				description: 'Send to human-readable names.',
-				tone: 'success',
-			},
-		],
+		featureCarouselSlides() {
+			return [
+				{
+					id: 'speed',
+					eyebrow: 'Performance',
+					heading: 'Sub-second finality',
+					description: 'Transactions settle before you blink.',
+					tone: 'accent',
+				},
+				{
+					id: 'verify',
+					eyebrow: 'Trust',
+					heading: 'Verifiable by anyone',
+					description: 'Every state transition is provable.',
+					tone: 'success',
+				},
+				{
+					id: 'zero',
+					eyebrow: 'Footprint',
+					heading: 'Zero dependencies',
+					description: 'Hand-rolled, audit-friendly, lean.',
+					tone: 'info',
+				},
+			];
+		},
+		loadingCarouselSlides() {
+			return [
+				{
+					id: 'tip1',
+					eyebrow: 'Tip',
+					heading: 'Hardware wallets',
+					description: 'Connect a Ledger for cold-key signing.',
+					tone: 'accent',
+				},
+				{
+					id: 'tip2',
+					eyebrow: 'Tip',
+					heading: 'Batch your sends',
+					description: 'Group transfers into one signature.',
+					tone: 'warning',
+				},
+				{
+					id: 'tip3',
+					eyebrow: 'Tip',
+					heading: 'Name service',
+					description: 'Send to human-readable names.',
+					tone: 'success',
+				},
+			];
+		},
 		baseCarouselSlides: [
 			{
 				id: 'b1',
@@ -529,20 +536,20 @@ class PreviewView extends WebComponent {
 		   interpolation); `\${` keeps the binding sigils literal in the displayed code. */
 		switchExample: `
 <ui-switch
-  .checked=\${this.state.darkMode}
-  .label=\${'Dark mode'}
+  .state.checked=\${this.state.darkMode}
+  .state.label=\${'Dark mode'}
   @switch:change=\${this.handleToggle}>
 </ui-switch>`,
 		accordionExample: `
-<ui-accordion .summary=\${'What is UWC?'} .group=\${'faq'}>
+<ui-accordion .state.summary=\${'What is UWC?'} .state.group=\${'faq'}>
   <p>Siblings sharing a group are a native one-open accordion.</p>
 </ui-accordion>`,
 		alertExample: `
-<ui-alert .tone=\${'warning'} .heading=\${'Unsynced'} .dismissible=\${true}>
+<ui-alert .state.tone=\${'warning'} .state.heading=\${'Unsynced'} .state.dismissible=\${true}>
   Local state is ahead of the network.
 </ui-alert>`,
 		breadcrumbsExample: `
-<ui-breadcrumbs .items=\${[
+<ui-breadcrumbs .state.items=\${[
   { label: 'Explorer', href: '/explorer' },
   { label: 'Block 4821', href: '/explorer/4821' },
   { label: 'Tx 0x9f3a…c2' }
@@ -556,98 +563,107 @@ class PreviewView extends WebComponent {
 <ui-icon-button .state=\${{ icon: 'info', tooltip: 'Details' }}></ui-icon-button>`,
 		codeBlockExample: `
 <ui-code-block
-  .language=\${'js'}
-  .code=\${mySourceString}>
+  .state.language=\${'js'}
+  .state.code=\${mySourceString}>
 </ui-code-block>`,
 		sparklineExample: `
 <ui-sparkline
-  .values=\${[4, 7, 5, 9, 8, 12, 10, 14]}
-  .variant=\${'area'}
-  .tone=\${'success'}>
+  .state.values=\${[4, 7, 5, 9, 8, 12, 10, 14]}
+  .state.variant=\${'area'}
+  .state.tone=\${'success'}>
 </ui-sparkline>`,
+		carryDownExample: `
+// top owns ONE shared object, passes it down by reference
+<demo-carry-mid .state=\${this.state.payload}></demo-carry-mid>
+
+// mid renders the shared array through list()
+render() { this.html\`\${list('items', DemoCarryLeaf)}\`; }
+
+// ancestor-origin deep write at the top → the leaf re-renders
+this.state.payload.items[0].tooltip = 'Wallet 1';`,
 		svgBandsExample: `
 <ui-svg-bands
-  .shape=\${'battlement'}
-  .segments=\${16}
-  .tone=\${'accent'}>
+  .state.shape=\${'battlement'}
+  .state.segments=\${16}
+  .state.tone=\${'accent'}>
 </ui-svg-bands>`,
 		typewriterExample: `
 <ui-typewriter
-  .phrases=\${['Fast finality.', 'Verifiable state.']}
-  .loop=\${true}>
+  .state.phrases=\${['Fast finality.', 'Verifiable state.']}
+  .state.loop=\${true}>
 </ui-typewriter>`,
 		pollExample: `
 <ui-poll
-  .question=\${'Which should we build first?'}
-  .options=\${[
+  .state.question=\${'Which should we build first?'}
+  .state.options=\${[
     { id: 'a', label: 'Wallet', votes: 142 },
     { id: 'b', label: 'Staking', votes: 98 },
   ]}>
 </ui-poll>`,
 		voteTallyExample: `
 <ui-vote-tally
-  .heading=\${'Most wanted'}
-  .items=\${[
+  .state.heading=\${'Most wanted'}
+  .state.items=\${[
     { id: 'a', label: 'Dark mode', votes: 42 },
     { id: 'b', label: 'Mobile app', votes: 88 },
   ]}>
 </ui-vote-tally>`,
 		carouselExample: `
 <ui-feature-carousel
-  .slides=\${[
+  .state.slides=\${[
     { id: 'a', eyebrow: 'New', heading: 'Fast', description: '…' },
     { id: 'b', eyebrow: 'New', heading: 'Final', description: '…' },
   ]}>
 </ui-feature-carousel>`,
 		videoPlayerExample: `
-<ui-hover-video-player .src=\${'/clip.mp4'}></ui-hover-video-player>
-<ui-youtube-video-player .videoId=\${'aqz-KE-bpKQ'}></ui-youtube-video-player>`,
+<ui-hover-video-player .state.src=\${'/clip.mp4'}></ui-hover-video-player>
+<ui-youtube-video-player .state.videoId=\${'aqz-KE-bpKQ'}></ui-youtube-video-player>`,
 		colorPickerExample: `
 <ui-color-picker
-  .color=\${'#6366f1'} .alpha=\${85} .format=\${'rgba'}
+  .state.color=\${'#6366f1'} .state.alpha=\${85} .state.format=\${'rgba'}
   @color-change=\${this.handleColor}>
 </ui-color-picker>`,
 		tagInputExample: `
 <ui-tag-input
-  .tags=\${['react', 'vue']} .placeholder=\${'Add framework…'}
-  .max=\${8} @tags:change=\${e => save(e.detail.data.tags)}>
+  .state.tags=\${['react', 'vue']} .state.placeholder=\${'Add framework…'}
+  .state.max=\${8} @tags:change=\${e => save(e.detail.data.tags)}>
 </ui-tag-input>`,
 		sliderExample: `
-<ui-slider .value=\${40} @slider:change=\${e => save(e.detail.data.value)}></ui-slider>
-<ui-slider .range=\${true} .low=\${20} .high=\${70} .marks=\${true}
-  .showLabel=\${'always'}></ui-slider>
-<ui-slider .orientation=\${'vertical'} .step=\${5} .valueSuffix=\${'%'}></ui-slider>`,
+<ui-slider .state.value=\${40} @slider:change=\${e => save(e.detail.data.value)}></ui-slider>
+<ui-slider .state.range=\${true} .state.low=\${20} .state.high=\${70} .state.marks=\${true}
+  .state.showLabel=\${'always'}></ui-slider>
+<ui-slider .state.orientation=\${'vertical'} .state.step=\${5} .state.valueSuffix=\${'%'}></ui-slider>`,
 		calendarExample: `
 <ui-calendar @date-change=\${this.handlePick}></ui-calendar>
 <ui-range-calendar @range-change=\${this.handleRange}></ui-range-calendar>
-<ui-event-calendar .events=\${events}></ui-event-calendar>
+<ui-event-calendar .state.events=\${events}></ui-event-calendar>
 <ui-mini-calendar></ui-mini-calendar>`,
 		progressRingExample: `
 <ui-progress-ring
-  .value=\${72}
-  .size=\${'lg'}
-  .thresholds=\${[{ at: 90, tone: 'danger' }]}>
+  .state.value=\${72}
+  .state.size=\${'lg'}
+  .state.thresholds=\${[{ at: 90, tone: 'danger' }]}>
 </ui-progress-ring>`,
 		trackerExample: `
-<ui-tracker .segments=\${[
+<ui-tracker .state.segments=\${[
   { tone: 'success', label: 'block 4820 · ok' },
   { tone: 'warning', label: 'slow finality' },
   { tone: 'danger',  label: 'missed' },
 ]}></ui-tracker>`,
 		barListExample: `
-<ui-bar-list .items=\${[
+<ui-bar-list .state.items=\${[
   { label: '0xA1…f2', value: 9410, href: '#/accounts/0xA1f2' },
   { label: '0xB7…c9', value: 6120 },
-]} .tone=\${'accent'}></ui-bar-list>`,
+]} .state.tone=\${'accent'}></ui-bar-list>`,
 		timelineExample: `
-<ui-timeline .items=\${[
+<ui-timeline .state.items=\${[
   { time: '12:04', label: 'Block sealed', tone: 'success', icon: 'check' },
   { time: '12:03', label: 'Slow finality', description: '1.8s', tone: 'warning' },
-]} .orientation=\${'vertical'}></ui-timeline>`,
+]} .state.orientation=\${'vertical'}></ui-timeline>`,
 		jsonInspectorExample: `
 <ui-json-inspector
-  .data=\${blockPayload}
-  .expandDepth=\${1}></ui-json-inspector>
+  .state.data=\${blockPayload}
+  .state.expandDepth=\${1}></ui-json-inspector>
 <!-- search filters to matches + ancestors · per-row copy-path · type tints -->`,
 		heatmapMatrix: [
 			[
@@ -735,33 +751,33 @@ class PreviewView extends WebComponent {
 			},
 		],
 		heatmapExample: `
-<ui-heatmap .mode=\${'calendar'} .data=\${[
+<ui-heatmap .state.mode=\${'calendar'} .state.data=\${[
   { date: '2026-01-02', value: 4 }, { date: '2026-01-15', value: 18 },
 ]}></ui-heatmap>
-<ui-heatmap .data=\${[[12, 4, 9], [3, 18, 14]]}
-  .rowLabels=\${['A', 'B']} .colLabels=\${['x', 'y', 'z']}></ui-heatmap>`,
+<ui-heatmap .state.data=\${[[12, 4, 9], [3, 18, 14]]}
+  .state.rowLabels=\${['A', 'B']} .state.colLabels=\${['x', 'y', 'z']}></ui-heatmap>`,
 		metricExample: `
 <ui-metric
-  .label=\${'TPS (peak)'} .value=\${'9,410'}
-  .delta=\${12.4} .trend=\${[6, 7, 9, 11, 13, 14]}
-  .tone=\${'accent'}>
+  .state.label=\${'TPS (peak)'} .state.value=\${'9,410'}
+  .state.delta=\${12.4} .state.trend=\${[6, 7, 9, 11, 13, 14]}
+  .state.tone=\${'accent'}>
 </ui-metric>`,
 		detailListExample: `
-<ui-detail-list .columns=\${2} .pairs=\${[
+<ui-detail-list .state.columns=\${2} .state.pairs=\${[
   { label: 'Hash', value: '0x9f3a…c2', mono: true, copy: true },
   { label: 'Block', value: '4,182,907', mono: true },
   { label: 'Status', value: 'Confirmed' },
 ]}></ui-detail-list>`,
 		kbdExample: `
-<ui-kbd .keys=\${['cmd', 'k']}></ui-kbd>
-<ui-kbd .keys=\${['ctrl', 'shift', 'p']}></ui-kbd>
-<ui-kbd .keys=\${['esc']}></ui-kbd>`,
+<ui-kbd .state.keys=\${['cmd', 'k']}></ui-kbd>
+<ui-kbd .state.keys=\${['ctrl', 'shift', 'p']}></ui-kbd>
+<ui-kbd .state.keys=\${['esc']}></ui-kbd>`,
 		legendExample: `
-<ui-legend .series=\${[
+<ui-legend .state.series=\${[
   { label: 'TPS',      color: 'var(--cyan)' },
   { label: 'Finality', color: 'var(--color-success)' },
   { label: 'Missed',   color: 'var(--color-danger)' },
-]} .interactive=\${true}></ui-legend>`,
+]} .state.interactive=\${true}></ui-legend>`,
 		kbdKeysCmdK: ['cmd', 'k'],
 		kbdKeysCtrlShiftP: [
 			'ctrl', 'shift', 'p',
@@ -790,13 +806,13 @@ class PreviewView extends WebComponent {
   <ui-button .state=\${{ label: 'Month', variant: 'outline' }}></ui-button>
 </ui-button-group>`,
 		avatarExample: `
-<ui-avatar .name=\${'Ada Lovelace'} .size=\${'lg'}></ui-avatar>
-<ui-avatar .name=\${'0xA1f2…c4'} .shape=\${'square'} .status=\${'online'}></ui-avatar>
-<ui-avatar .src=\${'/u/42.png'} .name=\${'Grace H.'}></ui-avatar>`,
+<ui-avatar .state.name=\${'Ada Lovelace'} .state.size=\${'lg'}></ui-avatar>
+<ui-avatar .state.name=\${'0xA1f2…c4'} .state.shape=\${'square'} .state.status=\${'online'}></ui-avatar>
+<ui-avatar .state.src=\${'/u/42.png'} .state.name=\${'Grace H.'}></ui-avatar>`,
 		toggleGroupExample: `
-<ui-toggle-group .items=\${[
+<ui-toggle-group .state.items=\${[
   { value: '1h', label: '1H' }, { value: '24h', label: '24H' }, { value: '7d', label: '7D' },
-]} .value=\${'24h'}></ui-toggle-group>`,
+]} .state.value=\${'24h'}></ui-toggle-group>`,
 		bgBtnDay: {
 			label: 'Day',
 			variant: 'outline',
@@ -1556,22 +1572,22 @@ class PreviewView extends WebComponent {
 						</button>
 					</nav>
 					<div class="rail-foot">
-						<ui-text .variant=${'overline'} .tone=${'muted'}>theme</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'muted'}>theme</ui-text>
 						<ui-theme-select></ui-theme-select>
 					</div>
 				</aside>
 				<main class="stage">
 					<header class="stage-head">
-						<ui-text .variant=${'display'} .tone=${'accent'}>Component Index</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>tier-0 atoms · viat / universal-web-components · this gallery is built from the components it shows</ui-text>
+						<ui-text .state.variant=${'display'} .state.tone=${'accent'}>Component Index</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>tier-0 atoms · viat / universal-web-components · this gallery is built from the components it shows</ui-text>
 					</header>
 
 					<section class="demo" data-cat="layout" ?hidden=${() => {
 						return this.demoHidden('layout', 'UISurface surface tones');
 					}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UISurface</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>tones · padding · radius · elevation · interactive</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UISurface</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>tones · padding · radius · elevation · interactive</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -1584,47 +1600,47 @@ class PreviewView extends WebComponent {
 								tone: 'panel',
 								padding: 'md',
 								radius: 'md',
-							}}><ui-text .variant=${'caption'} .tone=${'muted'}>panel</ui-text></ui-surface>
+							}}><ui-text .state.variant=${'caption'} .state.tone=${'muted'}>panel</ui-text></ui-surface>
 							<ui-surface .state=${{
 								tone: 'subtle',
 								padding: 'md',
 								radius: 'md',
-							}}><ui-text .variant=${'caption'} .tone=${'muted'}>subtle</ui-text></ui-surface>
+							}}><ui-text .state.variant=${'caption'} .state.tone=${'muted'}>subtle</ui-text></ui-surface>
 							<ui-surface .state=${{
 								tone: 'popup',
 								padding: 'md',
 								radius: 'md',
-							}}><ui-text .variant=${'caption'} .tone=${'muted'}>popup</ui-text></ui-surface>
+							}}><ui-text .state.variant=${'caption'} .state.tone=${'muted'}>popup</ui-text></ui-surface>
 							<ui-surface .state=${{
 								tone: 'success',
 								padding: 'md',
 								radius: 'md',
-							}}><ui-text .variant=${'caption'} .tone=${'muted'}>success</ui-text></ui-surface>
+							}}><ui-text .state.variant=${'caption'} .state.tone=${'muted'}>success</ui-text></ui-surface>
 							<ui-surface .state=${{
 								tone: 'danger',
 								padding: 'md',
 								radius: 'md',
-							}}><ui-text .variant=${'caption'} .tone=${'muted'}>danger</ui-text></ui-surface>
+							}}><ui-text .state.variant=${'caption'} .state.tone=${'muted'}>danger</ui-text></ui-surface>
 							<ui-surface .state=${{
 								tone: 'accent',
 								padding: 'md',
 								radius: 'md',
 								elevation: '2',
-							}}><ui-text .variant=${'caption'} .tone=${'muted'}>accent · elev 2</ui-text></ui-surface>
+							}}><ui-text .state.variant=${'caption'} .state.tone=${'muted'}>accent · elev 2</ui-text></ui-surface>
 							<ui-surface .state=${{
 								tone: 'panel',
 								padding: 'md',
 								radius: 'md',
 								elevation: '3',
 								border: true,
-							}}><ui-text .variant=${'caption'} .tone=${'muted'}>panel · elev 3 · border</ui-text></ui-surface>
+							}}><ui-text .state.variant=${'caption'} .state.tone=${'muted'}>panel · elev 3 · border</ui-text></ui-surface>
 							<ui-surface .state=${{
 								tone: 'panel',
 								padding: 'md',
 								radius: 'md',
 								interactive: true,
 								border: true,
-							}}><ui-text .variant=${'caption'} .tone=${'muted'}>interactive · hover</ui-text></ui-surface>
+							}}><ui-text .state.variant=${'caption'} .state.tone=${'muted'}>interactive · hover</ui-text></ui-surface>
 						</div>
 					</ui-surface>
 				</section>
@@ -1633,8 +1649,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('layout', 'UIStack stack layout flex');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIStack</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>flex layout · direction · gap · align · justify</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIStack</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>flex layout · direction · gap · align · justify</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -1656,17 +1672,17 @@ class PreviewView extends WebComponent {
 										tone: 'accent',
 										padding: 'sm',
 										radius: 'sm',
-									}}><ui-text .variant=${'caption'}>A</ui-text></ui-surface>
+									}}><ui-text .state.variant=${'caption'}>A</ui-text></ui-surface>
 									<ui-surface .state=${{
 										tone: 'accent',
 										padding: 'sm',
 										radius: 'sm',
-									}}><ui-text .variant=${'caption'}>B</ui-text></ui-surface>
+									}}><ui-text .state.variant=${'caption'}>B</ui-text></ui-surface>
 									<ui-surface .state=${{
 										tone: 'accent',
 										padding: 'sm',
 										radius: 'sm',
-									}}><ui-text .variant=${'caption'}>C</ui-text></ui-surface>
+									}}><ui-text .state.variant=${'caption'}>C</ui-text></ui-surface>
 								</ui-stack>
 							</ui-surface>
 							<ui-surface .state=${{
@@ -1682,17 +1698,17 @@ class PreviewView extends WebComponent {
 										tone: 'accent',
 										padding: 'sm',
 										radius: 'sm',
-									}}><ui-text .variant=${'caption'}>A</ui-text></ui-surface>
+									}}><ui-text .state.variant=${'caption'}>A</ui-text></ui-surface>
 									<ui-surface .state=${{
 										tone: 'accent',
 										padding: 'sm',
 										radius: 'sm',
-									}}><ui-text .variant=${'caption'}>B</ui-text></ui-surface>
+									}}><ui-text .state.variant=${'caption'}>B</ui-text></ui-surface>
 									<ui-surface .state=${{
 										tone: 'accent',
 										padding: 'sm',
 										radius: 'sm',
-									}}><ui-text .variant=${'caption'}>C</ui-text></ui-surface>
+									}}><ui-text .state.variant=${'caption'}>C</ui-text></ui-surface>
 								</ui-stack>
 							</ui-surface>
 							<ui-surface .state=${{
@@ -1709,17 +1725,17 @@ class PreviewView extends WebComponent {
 										tone: 'accent',
 										padding: 'sm',
 										radius: 'sm',
-									}}><ui-text .variant=${'caption'}>A</ui-text></ui-surface>
+									}}><ui-text .state.variant=${'caption'}>A</ui-text></ui-surface>
 									<ui-surface .state=${{
 										tone: 'accent',
 										padding: 'sm',
 										radius: 'sm',
-									}}><ui-text .variant=${'caption'}>B</ui-text></ui-surface>
+									}}><ui-text .state.variant=${'caption'}>B</ui-text></ui-surface>
 									<ui-surface .state=${{
 										tone: 'accent',
 										padding: 'sm',
 										radius: 'sm',
-									}}><ui-text .variant=${'caption'}>C</ui-text></ui-surface>
+									}}><ui-text .state.variant=${'caption'}>C</ui-text></ui-surface>
 								</ui-stack>
 							</ui-surface>
 						</div>
@@ -1730,8 +1746,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('layout', 'UIDivider divider separator rule');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIDivider</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>horizontal · vertical · labeled · dashed · inset</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIDivider</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>horizontal · vertical · labeled · dashed · inset</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -1743,21 +1759,21 @@ class PreviewView extends WebComponent {
 							direction: 'column',
 							gap: 'md',
 						}}>
-							<ui-text .variant=${'body'}>Section above the rule</ui-text>
+							<ui-text .state.variant=${'body'}>Section above the rule</ui-text>
 							<ui-divider></ui-divider>
-							<ui-text .variant=${'body'}>Section below the rule</ui-text>
-							<ui-divider .label=${'OR'}></ui-divider>
-							<ui-divider .variant=${'dashed'}></ui-divider>
+							<ui-text .state.variant=${'body'}>Section below the rule</ui-text>
+							<ui-divider .state.label=${'OR'}></ui-divider>
+							<ui-divider .state.variant=${'dashed'}></ui-divider>
 							<ui-stack .state=${{
 								direction: 'row',
 								gap: 'md',
 								align: 'center',
 							}}>
-								<ui-text .variant=${'caption'} .tone=${'muted'}>Left</ui-text>
-								<ui-divider .orientation=${'vertical'}></ui-divider>
-								<ui-text .variant=${'caption'} .tone=${'muted'}>Middle</ui-text>
-								<ui-divider .orientation=${'vertical'}></ui-divider>
-								<ui-text .variant=${'caption'} .tone=${'muted'}>Right</ui-text>
+								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Left</ui-text>
+								<ui-divider .state.orientation=${'vertical'}></ui-divider>
+								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Middle</ui-text>
+								<ui-divider .state.orientation=${'vertical'}></ui-divider>
+								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Right</ui-text>
 							</ui-stack>
 						</ui-stack>
 					</ui-surface>
@@ -1767,8 +1783,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UIChip chip tag token filter removable selectable');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIChip</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>tones · removable ✕ · selectable filter · sizes</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIChip</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>tones · removable ✕ · selectable filter · sizes</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -1786,12 +1802,12 @@ class PreviewView extends WebComponent {
 								wrap: true,
 								align: 'center',
 							}}>
-								<ui-chip .label=${'Neutral'}></ui-chip>
-								<ui-chip .label=${'Success'} .tone=${'success'}></ui-chip>
-								<ui-chip .label=${'Warning'} .tone=${'warning'}></ui-chip>
-								<ui-chip .label=${'Danger'} .tone=${'danger'}></ui-chip>
-								<ui-chip .label=${'Info'} .tone=${'info'}></ui-chip>
-								<ui-chip .label=${'Accent'} .tone=${'accent'}></ui-chip>
+								<ui-chip .state.label=${'Neutral'}></ui-chip>
+								<ui-chip .state.label=${'Success'} .state.tone=${'success'}></ui-chip>
+								<ui-chip .state.label=${'Warning'} .state.tone=${'warning'}></ui-chip>
+								<ui-chip .state.label=${'Danger'} .state.tone=${'danger'}></ui-chip>
+								<ui-chip .state.label=${'Info'} .state.tone=${'info'}></ui-chip>
+								<ui-chip .state.label=${'Accent'} .state.tone=${'accent'}></ui-chip>
 							</ui-stack>
 							<ui-stack .state=${{
 								direction: 'row',
@@ -1799,9 +1815,9 @@ class PreviewView extends WebComponent {
 								wrap: true,
 								align: 'center',
 							}}>
-								<ui-chip .label=${'React'} .value=${'react'} .removable=${true}></ui-chip>
-								<ui-chip .label=${'Vue'} .value=${'vue'} .tone=${'success'} .removable=${true}></ui-chip>
-								<ui-chip .label=${'Svelte'} .value=${'svelte'} .tone=${'warning'} .removable=${true}></ui-chip>
+								<ui-chip .state.label=${'React'} .state.value=${'react'} .state.removable=${true}></ui-chip>
+								<ui-chip .state.label=${'Vue'} .state.value=${'vue'} .state.tone=${'success'} .state.removable=${true}></ui-chip>
+								<ui-chip .state.label=${'Svelte'} .state.value=${'svelte'} .state.tone=${'warning'} .state.removable=${true}></ui-chip>
 							</ui-stack>
 							<ui-stack .state=${{
 								direction: 'row',
@@ -1809,11 +1825,11 @@ class PreviewView extends WebComponent {
 								wrap: true,
 								align: 'center',
 							}}>
-								<ui-chip .label=${'Filter on'} .interactive=${true} .selected=${true} .tone=${'accent'}></ui-chip>
-								<ui-chip .label=${'Filter off'} .interactive=${true} .tone=${'accent'}></ui-chip>
-								<ui-chip .label=${'Small'} .size=${'sm'}></ui-chip>
-								<ui-chip .label=${'Large'} .size=${'lg'}></ui-chip>
-								<ui-chip .label=${'Disabled'} .disabled=${true} .removable=${true}></ui-chip>
+								<ui-chip .state.label=${'Filter on'} .state.interactive=${true} .state.selected=${true} .state.tone=${'accent'}></ui-chip>
+								<ui-chip .state.label=${'Filter off'} .state.interactive=${true} .state.tone=${'accent'}></ui-chip>
+								<ui-chip .state.label=${'Small'} .state.size=${'sm'}></ui-chip>
+								<ui-chip .state.label=${'Large'} .state.size=${'lg'}></ui-chip>
+								<ui-chip .state.label=${'Disabled'} .state.disabled=${true} .state.removable=${true}></ui-chip>
 							</ui-stack>
 						</ui-stack>
 					</ui-surface>
@@ -1823,8 +1839,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('ai', 'UIAiMessage ai chat message reasoning plan tool call sources approval inquire markdown code stream');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIAiMessage · AI blocks</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>markdown + fenced code · streaming/settled · reasoning · plan · tool-call · sources · approval · inquire</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIAiMessage · AI blocks</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>markdown + fenced code · streaming/settled · reasoning · plan · tool-call · sources · approval · inquire</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -1836,14 +1852,14 @@ class PreviewView extends WebComponent {
 							direction: 'column',
 							gap: 'md',
 						}}>
-							<ui-ai-message .author=${'user'} .content=${'Get me a swap quote for VIAT → UDSP'}></ui-ai-message>
-							<ui-ai-message .author=${'assistant'} .content=${this.state.aiAssistantContent}></ui-ai-message>
-							<ui-ai-reasoning .text=${this.state.aiReasoningText} .expanded=${true}></ui-ai-reasoning>
-							<ui-ai-plan .steps=${this.state.aiPlanSteps}></ui-ai-plan>
-							<ui-ai-tool-call .name=${'getWalletAmount'} .args=${this.state.aiToolArgs} .result=${this.state.aiToolResult} .status=${'done'} .expanded=${true}></ui-ai-tool-call>
-							<ui-ai-sources .sources=${this.state.aiSources}></ui-ai-sources>
-							<ui-ai-approval .name=${'sendFunds'} .summary=${'Send 100 VIAT to bob.viat'} .args=${this.state.aiToolArgs}></ui-ai-approval>
-							<ui-ai-inquire .question=${'Which network should I use?'} .mode=${'choice'} .options=${this.state.aiInquireOptions}></ui-ai-inquire>
+							<ui-ai-message .state.author=${'user'} .state.content=${'Get me a swap quote for VIAT → UDSP'}></ui-ai-message>
+							<ui-ai-message .state.author=${'assistant'} .state.content=${this.state.aiAssistantContent}></ui-ai-message>
+							<ui-ai-reasoning .state.text=${this.state.aiReasoningText} .state.expanded=${true}></ui-ai-reasoning>
+							<ui-ai-plan .state.steps=${this.state.aiPlanSteps}></ui-ai-plan>
+							<ui-ai-tool-call .state.name=${'getWalletAmount'} .state.args=${this.state.aiToolArgs} .state.result=${this.state.aiToolResult} .state.status=${'done'} .state.expanded=${true}></ui-ai-tool-call>
+							<ui-ai-sources .state.sources=${this.state.aiSources}></ui-ai-sources>
+							<ui-ai-approval .state.name=${'sendFunds'} .state.summary=${'Send 100 VIAT to bob.viat'} .state.args=${this.state.aiToolArgs}></ui-ai-approval>
+							<ui-ai-inquire .state.question=${'Which network should I use?'} .state.mode=${'choice'} .state.options=${this.state.aiInquireOptions}></ui-ai-inquire>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -1852,8 +1868,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('forms', 'UIRadioGroup radio group options native single select');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIRadioGroup</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>native radios · descriptions · disabled option · arrow-key roving</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIRadioGroup</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>native radios · descriptions · disabled option · arrow-key roving</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -1867,14 +1883,14 @@ class PreviewView extends WebComponent {
 							wrap: true,
 						}}>
 							<ui-radio-group
-								.legend=${'Plan'}
-								.value=${this.state.radioPlanValue}
-								.items=${this.state.radioPlanItems}></ui-radio-group>
+								.state.legend=${'Plan'}
+								.state.value=${this.state.radioPlanValue}
+								.state.items=${this.state.radioPlanItems}></ui-radio-group>
 							<ui-radio-group
-								.legend=${'Range'}
-								.orientation=${'horizontal'}
-								.value=${'24h'}
-								.items=${this.state.toggleRangeItems}></ui-radio-group>
+								.state.legend=${'Range'}
+								.state.orientation=${'horizontal'}
+								.state.value=${'24h'}
+								.state.items=${this.state.toggleRangeItems}></ui-radio-group>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -1883,8 +1899,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('forms', 'UIPinInput pin OTP one-time code passcode unlock');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIPinInput</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>segmented OTP · auto-advance · backspace/arrow/paste · numeric filter · masked</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIPinInput</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>segmented OTP · auto-advance · backspace/arrow/paste · numeric filter · masked</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -1897,9 +1913,9 @@ class PreviewView extends WebComponent {
 							gap: 'lg',
 							wrap: true,
 						}}>
-							<ui-pin-input .length=${6} .type=${'numeric'} @pin:complete=${this.handlePinComplete} @pin:input=${this.handlePinInput}></ui-pin-input>
-							<ui-pin-input .length=${4} .type=${'numeric'} .masked=${true} @pin:complete=${this.handlePinComplete}></ui-pin-input>
-							<ui-text .variant=${'caption'} .tone=${'muted'}>${this.state.pinResult || 'enter a code'}</ui-text>
+							<ui-pin-input .state.length=${6} .state.type=${'numeric'} @pin:complete=${this.handlePinComplete} @pin:input=${this.handlePinInput}></ui-pin-input>
+							<ui-pin-input .state.length=${4} .state.type=${'numeric'} .state.masked=${true} @pin:complete=${this.handlePinComplete}></ui-pin-input>
+							<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>${this.state.pinResult || 'enter a code'}</ui-text>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -1908,8 +1924,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('layout', 'UICard card media structured header actions');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UICard</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>media · header · body · actions · auto-collapsing regions</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UICard</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>media · header · body · actions · auto-collapsing regions</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -1923,9 +1939,9 @@ class PreviewView extends WebComponent {
 							wrap: true,
 							align: 'start',
 						}}>
-							<ui-card style="max-inline-size: 260px" .heading=${'Atlas Rig'} .subheading=${'Sector 7 · online'} .interactive=${true}>
+							<ui-card style="max-inline-size: 260px" .state.heading=${'Atlas Rig'} .state.subheading=${'Sector 7 · online'} .state.interactive=${true}>
 								<div slot="media" style="block-size: 120px; background: linear-gradient(135deg, var(--cyan), var(--color-info));"></div>
-								<ui-text .variant=${'body'} .tone=${'muted'}>Composited surface with a media banner, title row, body and an actions footer.</ui-text>
+								<ui-text .state.variant=${'body'} .state.tone=${'muted'}>Composited surface with a media banner, title row, body and an actions footer.</ui-text>
 								<div slot="actions">
 									<ui-button .state=${{
 										label: 'Open',
@@ -1939,8 +1955,8 @@ class PreviewView extends WebComponent {
 									}}></ui-button>
 								</div>
 							</ui-card>
-							<ui-card style="max-inline-size: 260px" .heading=${'No-media card'} .subheading=${'Header + body only'}>
-								<ui-text .variant=${'body'} .tone=${'muted'}>With no media or actions slotted, those regions collapse — no empty chrome.</ui-text>
+							<ui-card style="max-inline-size: 260px" .state.heading=${'No-media card'} .state.subheading=${'Header + body only'}>
+								<ui-text .state.variant=${'body'} .state.tone=${'muted'}>With no media or actions slotted, those regions collapse — no empty chrome.</ui-text>
 							</ui-card>
 						</ui-stack>
 					</ui-surface>
@@ -1950,8 +1966,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('layout', 'UIMasonry masonry grid gallery columns multicol');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIMasonry</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>native multicolumn · balanced columns · column-major fill</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIMasonry</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>native multicolumn · balanced columns · column-major fill</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -1959,37 +1975,37 @@ class PreviewView extends WebComponent {
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-masonry .columns=${3} .gap=${'0.75rem'}>
+						<ui-masonry .state.columns=${3} .state.gap=${'0.75rem'}>
 							<ui-surface .state=${{
 								tone: 'subtle',
 								padding: 'md',
 								radius: 'md',
-							}}><ui-text .variant=${'caption'} .tone=${'muted'}>Short tile</ui-text></ui-surface>
+							}}><ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Short tile</ui-text></ui-surface>
 							<ui-surface .state=${{
 								tone: 'accent',
 								padding: 'md',
 								radius: 'md',
-							}}><ui-text .variant=${'caption'}>A taller tile with two lines of copy so the masonry packing is visible across columns.</ui-text></ui-surface>
+							}}><ui-text .state.variant=${'caption'}>A taller tile with two lines of copy so the masonry packing is visible across columns.</ui-text></ui-surface>
 							<ui-surface .state=${{
 								tone: 'subtle',
 								padding: 'md',
 								radius: 'md',
-							}}><ui-text .variant=${'caption'} .tone=${'muted'}>Tile</ui-text></ui-surface>
+							}}><ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Tile</ui-text></ui-surface>
 							<ui-surface .state=${{
 								tone: 'success',
 								padding: 'md',
 								radius: 'md',
-							}}><ui-text .variant=${'caption'}>Medium tile with a single sentence of filler.</ui-text></ui-surface>
+							}}><ui-text .state.variant=${'caption'}>Medium tile with a single sentence of filler.</ui-text></ui-surface>
 							<ui-surface .state=${{
 								tone: 'subtle',
 								padding: 'md',
 								radius: 'md',
-							}}><ui-text .variant=${'caption'} .tone=${'muted'}>Short</ui-text></ui-surface>
+							}}><ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Short</ui-text></ui-surface>
 							<ui-surface .state=${{
 								tone: 'warning',
 								padding: 'md',
 								radius: 'md',
-							}}><ui-text .variant=${'caption'}>Another tile, slightly longer than its neighbour to vary the column heights.</ui-text></ui-surface>
+							}}><ui-text .state.variant=${'caption'}>Another tile, slightly longer than its neighbour to vary the column heights.</ui-text></ui-surface>
 						</ui-masonry>
 					</ui-surface>
 				</section>
@@ -1998,8 +2014,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('actions', 'UIFab fab floating action button');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIFab</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>circular · extended pill · tones (shown inline via position=static)</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIFab</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>circular · extended pill · tones (shown inline via position=static)</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2013,9 +2029,9 @@ class PreviewView extends WebComponent {
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-fab .icon=${'plus'} .label=${'Add'} .position=${'static'} @fab:click=${this.handleFabClick}></ui-fab>
-							<ui-fab .icon=${'star'} .label=${'Favourite'} .extended=${true} .tone=${'success'} .position=${'static'}></ui-fab>
-							<ui-fab .icon=${'settings'} .tone=${'danger'} .size=${'md'} .position=${'static'}></ui-fab>
+							<ui-fab .state.icon=${'plus'} .state.label=${'Add'} .state.position=${'static'} @fab:click=${this.handleFabClick}></ui-fab>
+							<ui-fab .state.icon=${'star'} .state.label=${'Favourite'} .state.extended=${true} .state.tone=${'success'} .state.position=${'static'}></ui-fab>
+							<ui-fab .state.icon=${'settings'} .state.tone=${'danger'} .state.size=${'md'} .state.position=${'static'}></ui-fab>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -2024,8 +2040,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('actions', 'UISpeedDial speed dial fab actions menu fan out');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UISpeedDial</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>fan-out actions · click (up) & hover (right) · staggered reveal</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UISpeedDial</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>fan-out actions · click (up) & hover (right) · staggered reveal</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2040,8 +2056,8 @@ class PreviewView extends WebComponent {
 							justify: 'around',
 							wrap: true,
 						}}>
-							<ui-speed-dial .icon=${'plus'} .position=${'static'} .direction=${'up'} .actions=${this.speedDialActions} @speed-dial:action=${this.handleSpeedDialAction}></ui-speed-dial>
-							<ui-speed-dial .icon=${'share-2'} .tone=${'accent'} .trigger=${'hover'} .position=${'static'} .direction=${'down'} .actions=${this.speedDialActions} @speed-dial:action=${this.handleSpeedDialAction}></ui-speed-dial>
+							<ui-speed-dial .state.icon=${'plus'} .state.position=${'static'} .state.direction=${'up'} .state.actions=${this.speedDialActions} @speed-dial:action=${this.handleSpeedDialAction}></ui-speed-dial>
+							<ui-speed-dial .state.icon=${'share-2'} .state.tone=${'accent'} .state.trigger=${'hover'} .state.position=${'static'} .state.direction=${'down'} .state.actions=${this.speedDialActions} @speed-dial:action=${this.handleSpeedDialAction}></ui-speed-dial>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -2050,8 +2066,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('actions', 'UIPagination pagination pages numbered navigation');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIPagination</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>numbered · ellipsis · first/prev/next/last</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIPagination</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>numbered · ellipsis · first/prev/next/last</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2063,8 +2079,8 @@ class PreviewView extends WebComponent {
 							direction: 'column',
 							gap: 'md',
 						}}>
-							<ui-pagination .page=${this.state.demoPage} .count=${42} @page:change=${this.handleDemoPage}></ui-pagination>
-							<ui-text .variant=${'caption'} .tone=${'muted'}>Page ${this.state.demoPage} of 42</ui-text>
+							<ui-pagination .state.page=${this.state.demoPage} .state.count=${42} @page:change=${this.handleDemoPage}></ui-pagination>
+							<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Page ${this.state.demoPage} of 42</ui-text>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -2073,8 +2089,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('forms', 'UINumberStepper number stepper quantity amount input');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UINumberStepper</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>± input · min/max · precision · suffix (NOT the wizard stepper)</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UINumberStepper</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>± input · min/max · precision · suffix (NOT the wizard stepper)</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2088,9 +2104,9 @@ class PreviewView extends WebComponent {
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-number-stepper .value=${this.state.demoQty} .min=${0} .max=${10} @stepper:change=${this.handleDemoQty}></ui-number-stepper>
-							<ui-number-stepper .value=${1.5} .step=${0.5} .precision=${1} .suffix=${'×'}></ui-number-stepper>
-							<ui-text .variant=${'caption'} .tone=${'muted'}>Qty: ${this.state.demoQty}</ui-text>
+							<ui-number-stepper .state.value=${this.state.demoQty} .state.min=${0} .state.max=${10} @stepper:change=${this.handleDemoQty}></ui-number-stepper>
+							<ui-number-stepper .state.value=${1.5} .state.step=${0.5} .state.precision=${1} .state.suffix=${'×'}></ui-number-stepper>
+							<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Qty: ${this.state.demoQty}</ui-text>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -2099,8 +2115,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UIAnimatedNumber animated number count up roll kpi');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIAnimatedNumber</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>rAF count-up · grouping · decimals · prefix/suffix</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIAnimatedNumber</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>rAF count-up · grouping · decimals · prefix/suffix</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2114,9 +2130,9 @@ class PreviewView extends WebComponent {
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-text .variant=${'display'} .tone=${'accent'}><ui-animated-number .value=${this.state.animValue} .group=${true}></ui-animated-number></ui-text>
-							<ui-animated-number .value=${1.84} .decimals=${2} .suffix=${'s'}></ui-animated-number>
-							<ui-animated-number .value=${128.4} .pre=${'$'} .decimals=${2}></ui-animated-number>
+							<ui-text .state.variant=${'display'} .state.tone=${'accent'}><ui-animated-number .state.value=${this.state.animValue} .state.group=${true}></ui-animated-number></ui-text>
+							<ui-animated-number .state.value=${1.84} .state.decimals=${2} .state.suffix=${'s'}></ui-animated-number>
+							<ui-animated-number .state.value=${128.4} .state.pre=${'$'} .state.decimals=${2}></ui-animated-number>
 							<ui-button .state=${{
 								label: 'Roll',
 								variant: 'outline',
@@ -2131,8 +2147,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UIImageList image list gallery grid masonry photos');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIImageList</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>responsive grid · captions · click-to-select</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIImageList</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>responsive grid · captions · click-to-select</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2140,7 +2156,7 @@ class PreviewView extends WebComponent {
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-image-list .columns=${3} .gap=${'0.5rem'} .items=${this.galleryItems}></ui-image-list>
+						<ui-image-list .state.columns=${3} .state.gap=${'0.5rem'} .state.items=${this.galleryItems}></ui-image-list>
 					</ui-surface>
 				</section>
 
@@ -2148,8 +2164,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('feedback', 'UIStepper stepper wizard progress steps');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIStepper</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>wizard progress · done/active/upcoming · linear (click back only)</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIStepper</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>wizard progress · done/active/upcoming · linear (click back only)</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2161,7 +2177,7 @@ class PreviewView extends WebComponent {
 							direction: 'column',
 							gap: 'lg',
 						}}>
-							<ui-stepper .active=${this.state.wizardStep} .steps=${this.wizardSteps} @step:change=${this.handleWizardStep}></ui-stepper>
+							<ui-stepper .state.active=${this.state.wizardStep} .state.steps=${this.wizardSteps} @step:change=${this.handleWizardStep}></ui-stepper>
 							<ui-button .state=${{
 								label: 'Next step',
 								tone: 'primary',
@@ -2175,8 +2191,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('overlays', 'UIMenu menu dropdown context popover');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIMenu</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>native top-layer popover · flip/shift placement · keyboard roving · kbd hints · danger</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIMenu</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>native top-layer popover · flip/shift placement · keyboard roving · kbd hints · danger</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2190,12 +2206,12 @@ class PreviewView extends WebComponent {
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-menu .label=${'Actions ▾'} .items=${this.menuItems} @menu:select=${this.handleMenuSelect}></ui-menu>
-							<ui-menu .label=${'Align end ▾'} .placement=${'bottom-end'} .items=${this.menuItems} @menu:select=${this.handleMenuSelect}></ui-menu>
+							<ui-menu .state.label=${'Actions ▾'} .state.items=${this.menuItems} @menu:select=${this.handleMenuSelect}></ui-menu>
+							<ui-menu .state.label=${'Align end ▾'} .state.placement=${'bottom-end'} .state.items=${this.menuItems} @menu:select=${this.handleMenuSelect}></ui-menu>
 							<div style="transform: translateZ(0); overflow: hidden; padding: 0.75rem; border: 1px dashed var(--surface-border, rgba(255, 255, 255, 0.2)); border-radius: 0.5rem;">
-								<ui-menu .label=${'Inside transform ▾'} .items=${this.menuItems} @menu:select=${this.handleMenuSelect}></ui-menu>
+								<ui-menu .state.label=${'Inside transform ▾'} .state.items=${this.menuItems} @menu:select=${this.handleMenuSelect}></ui-menu>
 							</div>
-							<ui-text .variant=${'caption'} .tone=${'muted'}>last menu sits in a clipped+transformed box — it still escapes (top layer)</ui-text>
+							<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>last menu sits in a clipped+transformed box — it still escapes (top layer)</ui-text>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -2204,8 +2220,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('overlays', 'UIContextMenu context-menu right-click');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIContextMenu</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>right-click / long-press · opens at cursor · reuses ui-menu schema + roving + dismiss</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIContextMenu</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>right-click / long-press · opens at cursor · persistent (click-out / Esc) by default · opt into closeOnLeave to dismiss on pointer-leave</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2219,12 +2235,15 @@ class PreviewView extends WebComponent {
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-context-menu .items=${this.menuItems} @menu:select=${this.handleMenuSelect}>
-								<div style="display: grid; place-items: center; inline-size: 16rem; block-size: 7rem; border: 1px dashed var(--surface-border, rgba(255, 255, 255, 0.25)); border-radius: 0.5rem; color: var(--text-muted, rgba(255, 255, 255, 0.6));">Right-click anywhere in this area</div>
+							<ui-context-menu .state.items=${this.menuItems} @menu:select=${this.handleMenuSelect}>
+								<div style="display: grid; place-items: center; inline-size: 16rem; block-size: 7rem; border: 1px dashed var(--surface-border, rgba(255, 255, 255, 0.25)); border-radius: 0.5rem; color: var(--text-muted, rgba(255, 255, 255, 0.6));">Right-click — persistent (click out / Esc)</div>
+							</ui-context-menu>
+							<ui-context-menu .state.items=${this.menuItems} .state.closeOnLeave=${true} @menu:select=${this.handleMenuSelect}>
+								<div style="display: grid; place-items: center; inline-size: 16rem; block-size: 7rem; border: 1px dashed var(--surface-border, rgba(255, 255, 255, 0.25)); border-radius: 0.5rem; color: var(--text-muted, rgba(255, 255, 255, 0.6));">Right-click — closes on leave</div>
 							</ui-context-menu>
 							<div style="transform: translateZ(0); overflow: hidden; padding: 0.75rem; border: 1px dashed var(--surface-border, rgba(255, 255, 255, 0.2)); border-radius: 0.5rem;">
-								<ui-context-menu .items=${this.menuItems} @menu:select=${this.handleMenuSelect}>
-									<div style="display: grid; place-items: center; inline-size: 11rem; block-size: 5rem; color: var(--text-muted, rgba(255, 255, 255, 0.6));">Right-click (clipped box)</div>
+								<ui-context-menu .state.items=${this.menuItems} .state.closeOnLeave=${true} @menu:select=${this.handleMenuSelect}>
+									<div style="display: grid; place-items: center; inline-size: 11rem; block-size: 5rem; color: var(--text-muted, rgba(255, 255, 255, 0.6));">Right-click (clipped box · closes on leave)</div>
 								</ui-context-menu>
 							</div>
 						</ui-stack>
@@ -2235,8 +2254,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('overlays', 'UIMenubar menubar app menu File Edit View');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIMenubar</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>horizontal app menu · one shared panel · arrow-key roving · hover-switch when open</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIMenubar</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>horizontal app menu · one shared panel · arrow-key roving · hover-switch when open</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2244,7 +2263,7 @@ class PreviewView extends WebComponent {
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-menubar .menus=${this.menubarMenus} @menu:select=${this.handleMenuSelect}></ui-menubar>
+						<ui-menubar .state.menus=${this.menubarMenus} @menu:select=${this.handleMenuSelect}></ui-menubar>
 					</ui-surface>
 				</section>
 
@@ -2252,8 +2271,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('typography', 'UIText text typography heading');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIText</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>variants · tones</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIText</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>variants · tones</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2265,17 +2284,17 @@ class PreviewView extends WebComponent {
 							direction: 'column',
 							gap: 'sm',
 						}}>
-							<ui-text .variant=${'display'}>Display heading</ui-text>
-							<ui-text .variant=${'h1'}>Heading 1</ui-text>
-							<ui-text .variant=${'h2'}>Heading 2</ui-text>
-							<ui-text .variant=${'h3'} .tone=${'accent'}>Heading 3 · accent</ui-text>
-							<ui-text .variant=${'body'}>Body copy stays readable at the comfortable default size.</ui-text>
-							<ui-text .variant=${'caption'} .tone=${'muted'}>Caption · muted tone for secondary info</ui-text>
-							<ui-text .variant=${'overline'} .tone=${'accent'}>overline · uppercase tracker</ui-text>
-							<ui-text .variant=${'mono'}>monospace_for_addresses_and_codes</ui-text>
-							<ui-text .variant=${'body'} .tone=${'success'}>success</ui-text>
-							<ui-text .variant=${'body'} .tone=${'warning'}>warning</ui-text>
-							<ui-text .variant=${'body'} .tone=${'danger'}>danger</ui-text>
+							<ui-text .state.variant=${'display'}>Display heading</ui-text>
+							<ui-text .state.variant=${'h1'}>Heading 1</ui-text>
+							<ui-text .state.variant=${'h2'}>Heading 2</ui-text>
+							<ui-text .state.variant=${'h3'} .state.tone=${'accent'}>Heading 3 · accent</ui-text>
+							<ui-text .state.variant=${'body'}>Body copy stays readable at the comfortable default size.</ui-text>
+							<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Caption · muted tone for secondary info</ui-text>
+							<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>overline · uppercase tracker</ui-text>
+							<ui-text .state.variant=${'mono'}>monospace_for_addresses_and_codes</ui-text>
+							<ui-text .state.variant=${'body'} .state.tone=${'success'}>success</ui-text>
+							<ui-text .state.variant=${'body'} .state.tone=${'warning'}>warning</ui-text>
+							<ui-text .state.variant=${'body'} .state.tone=${'danger'}>danger</ui-text>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -2284,8 +2303,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('typography', 'UIIcon icon');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIIcon</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>sizes · tones · spin</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIIcon</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>sizes · tones · spin</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2358,8 +2377,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('typography', 'UITypewriter typewriter char stream typing animation cursor');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UITypewriter</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>char-stream · looping phrases · blinking caret · reduced-motion safe</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UITypewriter</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>char-stream · looping phrases · blinking caret · reduced-motion safe</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2371,14 +2390,14 @@ class PreviewView extends WebComponent {
 							direction: 'column',
 							gap: 'lg',
 						}}>
-							<ui-text .variant=${'h3'} .tone=${'default'}>
-								<ui-typewriter .phrases=${this.state.typewriterPhrases} .loop=${true}></ui-typewriter>
+							<ui-text .state.variant=${'h3'} .state.tone=${'default'}>
+								<ui-typewriter .state.phrases=${this.state.typewriterPhrases} .state.loop=${true}></ui-typewriter>
 							</ui-text>
-							<ui-text .variant=${'body'} .tone=${'muted'}>
-								<ui-typewriter .text=${'A one-shot line that types once and rests.'} .speed=${40}></ui-typewriter>
+							<ui-text .state.variant=${'body'} .state.tone=${'muted'}>
+								<ui-typewriter .state.text=${'A one-shot line that types once and rests.'} .state.speed=${40}></ui-typewriter>
 							</ui-text>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.typewriterExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.typewriterExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -2386,8 +2405,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('actions', 'UIButton button action');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIButton</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>tones × variants × sizes · tap snap built in</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIButton</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>tones × variants × sizes · tap snap built in</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2529,7 +2548,7 @@ class PreviewView extends WebComponent {
 									label: 'Click me',
 									tone: 'primary',
 								}} @buttonClick=${this.bumpClick}></ui-button>
-								<ui-text .variant=${'caption'} .tone=${'muted'}>clicks: ${this.state.clickCount}</ui-text>
+								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>clicks: ${this.state.clickCount}</ui-text>
 							</ui-stack>
 						</ui-stack>
 					</ui-surface>
@@ -2539,8 +2558,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('forms', 'UIInput input form field');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIInput</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>sizes · tones · disabled · readonly</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIInput</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>sizes · tones · disabled · readonly</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2595,7 +2614,7 @@ class PreviewView extends WebComponent {
 									tone: 'error',
 								}}></ui-input>
 							</ui-stack>
-							<ui-text .variant=${'caption'} .tone=${'muted'}>live email value: <ui-text .variant=${'mono'}>${this.state.emailValue || '(empty)'}</ui-text></ui-text>
+							<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>live email value: <ui-text .state.variant=${'mono'}>${this.state.emailValue || '(empty)'}</ui-text></ui-text>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -2604,8 +2623,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('forms', 'UIField field label form');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIField</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>labelled wrapper · help · error · required</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIField</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>labelled wrapper · help · error · required</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2658,8 +2677,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('forms', 'UIPoll poll vote choice feature widget results percentage bars');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIPoll</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>select → lock → spring-grown % bars · base / choice (instant) / feature / widget (multi)</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIPoll</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>select → lock → spring-grown % bars · base / choice (instant) / feature / widget (multi)</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2673,12 +2692,12 @@ class PreviewView extends WebComponent {
 							wrap: true,
 							align: 'start',
 						}}>
-							<ui-poll .question=${'Which should we build first?'} .options=${this.state.pollBaseOptions}></ui-poll>
-							<ui-choice-poll .question=${'Pick your top priority (instant)'} .options=${this.state.pollChoiceOptions}></ui-choice-poll>
-							<ui-feature-poll .question=${'Vote on the next feature'} .options=${this.state.pollFeatureOptions}></ui-feature-poll>
-							<ui-poll-widget .question=${'Select all you want (multi)'} .options=${this.state.pollWidgetOptions} .multiple=${true}></ui-poll-widget>
+							<ui-poll .state.question=${'Which should we build first?'} .state.options=${this.state.pollBaseOptions}></ui-poll>
+							<ui-choice-poll .state.question=${'Pick your top priority (instant)'} .state.options=${this.state.pollChoiceOptions}></ui-choice-poll>
+							<ui-feature-poll .state.question=${'Vote on the next feature'} .state.options=${this.state.pollFeatureOptions}></ui-feature-poll>
+							<ui-poll-widget .state.question=${'Select all you want (multi)'} .state.options=${this.state.pollWidgetOptions} .state.multiple=${true}></ui-poll-widget>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.pollExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.pollExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -2686,8 +2705,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('forms', 'UIColorPicker color picker hue saturation lightness hex swatch presets');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIColorPicker</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>HSL square (drag) · hue + alpha dials · format DROPDOWN (HEX / RGB / RGBA / HSL / HSLA) · default .color / .alpha / .format props · preset grid · emits color-change</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIColorPicker</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>HSL square (drag) · hue + alpha dials · format DROPDOWN (HEX / RGB / RGBA / HSL / HSLA) · default .color / .alpha / .format props · preset grid · emits color-change</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2701,10 +2720,10 @@ class PreviewView extends WebComponent {
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-color-picker .color=${'#6366f1'} .alpha=${85} .format=${'rgba'} @color-change=${this.handleColorChange}></ui-color-picker>
-							<ui-text .variant=${'body'} .tone=${'muted'}>Selected: ${this.state.pickedColor}</ui-text>
+							<ui-color-picker .state.color=${'#6366f1'} .state.alpha=${85} .state.format=${'rgba'} @color-change=${this.handleColorChange}></ui-color-picker>
+							<ui-text .state.variant=${'body'} .state.tone=${'muted'}>Selected: ${this.state.pickedColor}</ui-text>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.colorPickerExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.colorPickerExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -2712,8 +2731,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('forms', 'UITagInput tag chip token input filter label removable paste');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UITagInput</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>token field of removable ui-chips · Enter / comma commits · Backspace removes last · paste splits · max · emits tags:change</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UITagInput</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>token field of removable ui-chips · Enter / comma commits · Backspace removes last · paste splits · max · emits tags:change</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2725,10 +2744,10 @@ class PreviewView extends WebComponent {
 							direction: 'column',
 							gap: 'md',
 						}}>
-							<ui-tag-input .tags=${this.state.tagValues} .placeholder=${'Add a tag…'} .max=${8} @tags:change=${this.handleTagsChange}></ui-tag-input>
-							<ui-text .variant=${'body'} .tone=${'muted'}>Tags: ${this.state.tagReadout}</ui-text>
+							<ui-tag-input .state.tags=${this.state.tagValues} .state.placeholder=${'Add a tag…'} .state.max=${8} @tags:change=${this.handleTagsChange}></ui-tag-input>
+							<ui-text .state.variant=${'body'} .state.tone=${'muted'}>Tags: ${this.state.tagReadout}</ui-text>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.tagInputExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.tagInputExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -2736,8 +2755,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('forms', 'UISlider range dual thumb marks ticks vertical value label step keyboard');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UISlider</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>single + dual-thumb range · drag / click / keyboard · marks · value bubble · vertical · controlled primitives · emits slider:input + slider:change</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UISlider</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>single + dual-thumb range · drag / click / keyboard · marks · value bubble · vertical · controlled primitives · emits slider:input + slider:change</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2753,19 +2772,19 @@ class PreviewView extends WebComponent {
 								direction: 'column',
 								gap: 'sm',
 							}}>
-								<ui-slider .value=${40} @slider:change=${this.handleSliderChange}></ui-slider>
-								<ui-text .variant=${'body'} .tone=${'muted'}>Value: ${this.state.sliderReadout}</ui-text>
+								<ui-slider .state.value=${40} @slider:change=${this.handleSliderChange}></ui-slider>
+								<ui-text .state.variant=${'body'} .state.tone=${'muted'}>Value: ${this.state.sliderReadout}</ui-text>
 							</ui-stack>
 							<ui-stack .state=${{
 								direction: 'column',
 								gap: 'sm',
 							}}>
-								<ui-slider .range=${true} .low=${20} .high=${70} .marks=${true} .step=${10} .showLabel=${'always'} @slider:change=${this.handleRangeSlider}></ui-slider>
-								<ui-text .variant=${'body'} .tone=${'muted'}>Range: ${this.state.sliderRangeReadout}</ui-text>
+								<ui-slider .state.range=${true} .state.low=${20} .state.high=${70} .state.marks=${true} .state.step=${10} .state.showLabel=${'always'} @slider:change=${this.handleRangeSlider}></ui-slider>
+								<ui-text .state.variant=${'body'} .state.tone=${'muted'}>Range: ${this.state.sliderRangeReadout}</ui-text>
 							</ui-stack>
-							<ui-slider .orientation=${'vertical'} .value=${60} .step=${5} .valueSuffix=${'%'} .showLabel=${'always'}></ui-slider>
+							<ui-slider .state.orientation=${'vertical'} .state.value=${60} .state.step=${5} .state.valueSuffix=${'%'} .state.showLabel=${'always'}></ui-slider>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.sliderExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.sliderExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -2773,8 +2792,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('forms', 'UICalendar calendar date picker range event month mini schedule day grid');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UICalendar</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>one engine · single-date · range · event/month chips · compact mini — all share grid + nav</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UICalendar</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>one engine · single-date · range · event/month chips · compact mini — all share grid + nav</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2796,27 +2815,27 @@ class PreviewView extends WebComponent {
 									direction: 'column',
 									gap: 'sm',
 								}}>
-									<ui-text .variant=${'caption'} .tone=${'muted'}>Single · ${this.state.pickedDate || '(pick a day)'}</ui-text>
+									<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Single · ${this.state.pickedDate || '(pick a day)'}</ui-text>
 									<ui-calendar @date-change=${this.handleDatePick}></ui-calendar>
 								</ui-stack>
 								<ui-stack .state=${{
 									direction: 'column',
 									gap: 'sm',
 								}}>
-									<ui-text .variant=${'caption'} .tone=${'muted'}>Range · ${this.state.pickedRange || '(pick start → end)'}</ui-text>
+									<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Range · ${this.state.pickedRange || '(pick start → end)'}</ui-text>
 									<ui-range-calendar @range-change=${this.handleRangePick}></ui-range-calendar>
 								</ui-stack>
 								<ui-stack .state=${{
 									direction: 'column',
 									gap: 'sm',
 								}}>
-									<ui-text .variant=${'caption'} .tone=${'muted'}>Mini</ui-text>
+									<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Mini</ui-text>
 									<ui-mini-calendar></ui-mini-calendar>
 								</ui-stack>
 							</ui-stack>
-							<ui-event-calendar .viewYear=${2026} .viewMonth=${5} .events=${this.state.calendarEvents}></ui-event-calendar>
+							<ui-event-calendar .state.viewYear=${2026} .state.viewMonth=${5} .state.events=${this.state.calendarEvents}></ui-event-calendar>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.calendarExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.calendarExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -2824,8 +2843,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('feedback', 'UIBadge badge');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIBadge</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>existing · entrance pop + value-change pulse</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIBadge</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>existing · entrance pop + value-change pulse</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2900,8 +2919,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('feedback', 'UISpinner spinner loading');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UISpinner</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>sizes · variants · label</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UISpinner</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>sizes · variants · label</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2943,8 +2962,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('feedback', 'UISkeleton skeleton placeholder');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UISkeleton</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>text · multi-line · circle · rect</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UISkeleton</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>text · multi-line · circle · rect</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2982,8 +3001,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('feedback', 'UILoadingBar loading bar progress');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UILoadingBar</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>determinate · value label · indeterminate</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UILoadingBar</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>determinate · value label · indeterminate</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3014,8 +3033,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('feedback', 'UIEmptyState empty placeholder');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIEmptyState</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>title · hint · icon · action</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIEmptyState</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>title · hint · icon · action</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3057,8 +3076,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UIPanel panel chrome');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIPanel</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>id · title · status dot chrome</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIPanel</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>id · title · status dot chrome</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3088,8 +3107,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('forms', 'UIThemeSelect theme select popover');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIThemeSelect</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>popover theme switcher</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIThemeSelect</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>popover theme switcher</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3105,8 +3124,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('overlays', 'UIModal modal dialog');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIModal</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>native dialog · backdrop dismiss</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIModal</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>native dialog · backdrop dismiss</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3128,8 +3147,8 @@ class PreviewView extends WebComponent {
 									direction: 'column',
 									gap: 'md',
 								}}>
-									<ui-text .variant=${'h3'} .tone=${'accent'}>Confirm transfer</ui-text>
-									<ui-text .variant=${'body'} .tone=${'muted'}>This sends 12.4 VIAT to the selected address. This action cannot be undone.</ui-text>
+									<ui-text .state.variant=${'h3'} .state.tone=${'accent'}>Confirm transfer</ui-text>
+									<ui-text .state.variant=${'body'} .state.tone=${'muted'}>This sends 12.4 VIAT to the selected address. This action cannot be undone.</ui-text>
 									<ui-stack .state=${{
 										direction: 'row',
 										gap: 'sm',
@@ -3154,8 +3173,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('overlays', 'UIFloatingPanel floating panel morph expand outward cult-ui surface');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIFloatingPanel</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>cult-ui morph · grows out of its trigger · spring open + staggered content · esc / click-away to close</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIFloatingPanel</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>cult-ui morph · grows out of its trigger · spring open + staggered content · esc / click-away to close</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3163,15 +3182,15 @@ class PreviewView extends WebComponent {
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-floating-panel .label=${'Filters ▾'} .heading=${'Filter results'} .footer=${true}>
+						<ui-floating-panel .state.label=${'Filters ▾'} .state.heading=${'Filter results'} .state.footer=${true}>
 							<ui-stack .state=${{
 								direction: 'column',
 								gap: 'sm',
 							}}>
-								<ui-text .variant=${'body'} .tone=${'muted'}>Refine the result set — the panel grows out of its trigger, and the header, body, and footer rise in on a stagger.</ui-text>
-								<ui-text .variant=${'caption'} .tone=${'muted'}>· Only my accounts</ui-text>
-								<ui-text .variant=${'caption'} .tone=${'muted'}>· Hide zero-value rows</ui-text>
-								<ui-text .variant=${'caption'} .tone=${'muted'}>· Include pending transfers</ui-text>
+								<ui-text .state.variant=${'body'} .state.tone=${'muted'}>Refine the result set — the panel grows out of its trigger, and the header, body, and footer rise in on a stagger.</ui-text>
+								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>· Only my accounts</ui-text>
+								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>· Hide zero-value rows</ui-text>
+								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>· Include pending transfers</ui-text>
 							</ui-stack>
 							<div slot="footer">
 								<ui-button .state=${{
@@ -3187,8 +3206,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('overlays', 'UIPopover popover morph compact account menu');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIPopover</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>compact morph · snappier spring · transparent click-catcher (no scrim)</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIPopover</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>compact morph · snappier spring · transparent click-catcher (no scrim)</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3196,13 +3215,13 @@ class PreviewView extends WebComponent {
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-popover .label=${'Account ▾'} .heading=${'Signed in as'}>
+						<ui-popover .state.label=${'Account ▾'} .state.heading=${'Signed in as'}>
 							<ui-stack .state=${{
 								direction: 'column',
 								gap: 'sm',
 							}}>
-								<ui-text .variant=${'body'}>0xA1B2…9F3A</ui-text>
-								<ui-text .variant=${'caption'} .tone=${'muted'}>Switch wallet · Settings · Sign out</ui-text>
+								<ui-text .state.variant=${'body'}>0xA1B2…9F3A</ui-text>
+								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Switch wallet · Settings · Sign out</ui-text>
 							</ui-stack>
 						</ui-popover>
 					</ui-surface>
@@ -3212,8 +3231,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('overlays', 'UIExpandableCard expandable card morph in place validator');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIExpandableCard</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>expands in place · morphs out of its own card · click to expand, esc / click-away to close</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIExpandableCard</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>expands in place · morphs out of its own card · click to expand, esc / click-away to close</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3221,13 +3240,13 @@ class PreviewView extends WebComponent {
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-expandable-card .heading=${'Validator node #7'} .summary=${'3 peers · 12ms latency · synced'}>
+						<ui-expandable-card .state.heading=${'Validator node #7'} .state.summary=${'3 peers · 12ms latency · synced'}>
 							<ui-stack .state=${{
 								direction: 'column',
 								gap: 'md',
 							}}>
-								<ui-text .variant=${'body'} .tone=${'muted'}>Full node detail morphs out of the card. Uptime 99.98%, last block 4,821,330, region eu-west.</ui-text>
-								<ui-text .variant=${'caption'} .tone=${'muted'}>Peers: 3 · Inbound 1.2MB/s · Outbound 0.8MB/s</ui-text>
+								<ui-text .state.variant=${'body'} .state.tone=${'muted'}>Full node detail morphs out of the card. Uptime 99.98%, last block 4,821,330, region eu-west.</ui-text>
+								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Peers: 3 · Inbound 1.2MB/s · Outbound 0.8MB/s</ui-text>
 							</ui-stack>
 						</ui-expandable-card>
 					</ui-surface>
@@ -3237,8 +3256,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('overlays', 'UIMorphDrawer drawer morph edge node details');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIMorphDrawer</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>right-edge drawer · flies out of its trigger + grows · esc / click-away to close</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIMorphDrawer</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>right-edge drawer · flies out of its trigger + grows · esc / click-away to close</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3246,13 +3265,13 @@ class PreviewView extends WebComponent {
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-morph-drawer .label=${'Details ▸'} .heading=${'Node details'}>
+						<ui-morph-drawer .state.label=${'Details ▸'} .state.heading=${'Node details'}>
 							<ui-stack .state=${{
 								direction: 'column',
 								gap: 'md',
 							}}>
-								<ui-text .variant=${'body'} .tone=${'muted'}>A full-height drawer that morphs out of the trigger button rather than a plain slide.</ui-text>
-								<ui-text .variant=${'caption'} .tone=${'muted'}>Address · Public key · Trapdoor hash · Saved at</ui-text>
+								<ui-text .state.variant=${'body'} .state.tone=${'muted'}>A full-height drawer that morphs out of the trigger button rather than a plain slide.</ui-text>
+								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Address · Public key · Trapdoor hash · Saved at</ui-text>
 							</ui-stack>
 						</ui-morph-drawer>
 					</ui-surface>
@@ -3262,8 +3281,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('overlays', 'UIModal controls maximize minimize');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIModal · built-in controls</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>opt-in close / maximize / minimize buttons · controlsSide · afterAction</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIModal · built-in controls</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>opt-in close / maximize / minimize buttons · controlsSide · afterAction</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3303,8 +3322,8 @@ class PreviewView extends WebComponent {
 									direction: 'column',
 									gap: 'md',
 								}}>
-									<ui-text .variant=${'h3'} .tone=${'accent'}>Built-in controls · right</ui-text>
-									<ui-text .variant=${'body'} .tone=${'muted'}>Minimize collapses the body to a 240×46 strip; maximize fills the viewport; close dismisses. State resets to default on close.</ui-text>
+									<ui-text .state.variant=${'h3'} .state.tone=${'accent'}>Built-in controls · right</ui-text>
+									<ui-text .state.variant=${'body'} .state.tone=${'muted'}>Minimize collapses the body to a 240×46 strip; maximize fills the viewport; close dismisses. State resets to default on close.</ui-text>
 								</ui-stack>
 							</ui-surface>
 						</ui-modal>
@@ -3322,8 +3341,8 @@ class PreviewView extends WebComponent {
 									direction: 'column',
 									gap: 'md',
 								}}>
-									<ui-text .variant=${'h3'} .tone=${'accent'}>macOS-style</ui-text>
-									<ui-text .variant=${'body'} .tone=${'muted'}>Same buttons, anchored left with close-first ordering done via CSS order (DOM stays unchanged).</ui-text>
+									<ui-text .state.variant=${'h3'} .state.tone=${'accent'}>macOS-style</ui-text>
+									<ui-text .state.variant=${'body'} .state.tone=${'muted'}>Same buttons, anchored left with close-first ordering done via CSS order (DOM stays unchanged).</ui-text>
 								</ui-stack>
 							</ui-surface>
 						</ui-modal>
@@ -3340,8 +3359,8 @@ class PreviewView extends WebComponent {
 									direction: 'column',
 									gap: 'md',
 								}}>
-									<ui-text .variant=${'h3'} .tone=${'accent'}>afterAction</ui-text>
-									<ui-text .variant=${'body'} .tone=${'muted'}>When you close this modal the registered callback fires with the close returnValue. Watch the confirm-behavior section below.</ui-text>
+									<ui-text .state.variant=${'h3'} .state.tone=${'accent'}>afterAction</ui-text>
+									<ui-text .state.variant=${'body'} .state.tone=${'muted'}>When you close this modal the registered callback fires with the close returnValue. Watch the confirm-behavior section below.</ui-text>
 								</ui-stack>
 							</ui-surface>
 						</ui-modal>
@@ -3352,8 +3371,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('actions', 'UICloseButton close button');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UICloseButton</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>rotate-on-hover × · same animation used by the built-in modal close</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UICloseButton</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>rotate-on-hover × · same animation used by the built-in modal close</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3367,7 +3386,7 @@ class PreviewView extends WebComponent {
 							align: 'center',
 						}}>
 							<ui-close-button></ui-close-button>
-							<ui-text .variant=${'caption'} .tone=${'muted'}>hover → rotate(90deg); active → rotate(180deg)</ui-text>
+							<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>hover → rotate(90deg); active → rotate(180deg)</ui-text>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -3376,8 +3395,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('layout', 'UITabs tabs navigation');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UITabs</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>animated tab strip · cross-fade or direction-aware slide swap · vertical & horizontal</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UITabs</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>animated tab strip · cross-fade or direction-aware slide swap · vertical & horizontal</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3389,73 +3408,73 @@ class PreviewView extends WebComponent {
 							direction: 'column',
 							gap: 'lg',
 						}}>
-							<ui-tabs .transition=${'slide'} .tabs=${this.state.tabsHorizontal}>
+							<ui-tabs .state.transition=${'slide'} .state.tabs=${this.state.tabsHorizontal}>
 									<ui-surface slot="overview" .state=${{
 										tone: 'subtle',
 										padding: 'md',
 										radius: 'md',
 									}}>
-										<ui-text .variant=${'body'}>Slide mode · direction-aware. Click across tabs — content slides in from the side you travelled (left/right) with a motion blur. Axis follows orientation; force x / y / diagonal via slideAxis.</ui-text>
+										<ui-text .state.variant=${'body'}>Slide mode · direction-aware. Click across tabs — content slides in from the side you travelled (left/right) with a motion blur. Axis follows orientation; force x / y / diagonal via slideAxis.</ui-text>
 									</ui-surface>
 									<ui-surface slot="security" .state=${{
 										tone: 'subtle',
 										padding: 'md',
 										radius: 'md',
 									}}>
-										<ui-text .variant=${'body'}>Security panel · arrives from the right when you advance, the left when you go back.</ui-text>
+										<ui-text .state.variant=${'body'}>Security panel · arrives from the right when you advance, the left when you go back.</ui-text>
 									</ui-surface>
 									<ui-surface slot="advanced" .state=${{
 										tone: 'subtle',
 										padding: 'md',
 										radius: 'md',
 									}}>
-										<ui-text .variant=${'body'}>Advanced panel · the indicator bubble still slides underneath.</ui-text>
+										<ui-text .state.variant=${'body'}>Advanced panel · the indicator bubble still slides underneath.</ui-text>
 									</ui-surface>
 								</ui-tabs>
-								<ui-tabs .tabs=${this.state.tabsHorizontal}>
+								<ui-tabs .state.tabs=${this.state.tabsHorizontal}>
 								<ui-surface slot="overview" .state=${{
 									tone: 'subtle',
 									padding: 'md',
 									radius: 'md',
 								}}>
-									<ui-text .variant=${'body'}>Horizontal tabs · overview panel.</ui-text>
+									<ui-text .state.variant=${'body'}>Horizontal tabs · overview panel.</ui-text>
 								</ui-surface>
 								<ui-surface slot="security" .state=${{
 									tone: 'subtle',
 									padding: 'md',
 									radius: 'md',
 								}}>
-									<ui-text .variant=${'body'}>Security panel content.</ui-text>
+									<ui-text .state.variant=${'body'}>Security panel content.</ui-text>
 								</ui-surface>
 								<ui-surface slot="advanced" .state=${{
 									tone: 'subtle',
 									padding: 'md',
 									radius: 'md',
 								}}>
-									<ui-text .variant=${'body'}>Advanced panel content.</ui-text>
+									<ui-text .state.variant=${'body'}>Advanced panel content.</ui-text>
 								</ui-surface>
 							</ui-tabs>
-							<ui-tabs .orientation=${'vertical'} .tabs=${this.state.tabsVertical}>
+							<ui-tabs .state.orientation=${'vertical'} .state.tabs=${this.state.tabsVertical}>
 								<ui-surface slot="profile" .state=${{
 									tone: 'subtle',
 									padding: 'md',
 									radius: 'md',
 								}}>
-									<ui-text .variant=${'body'}>Vertical tabs · profile panel.</ui-text>
+									<ui-text .state.variant=${'body'}>Vertical tabs · profile panel.</ui-text>
 								</ui-surface>
 								<ui-surface slot="wallet" .state=${{
 									tone: 'subtle',
 									padding: 'md',
 									radius: 'md',
 								}}>
-									<ui-text .variant=${'body'}>Wallet panel.</ui-text>
+									<ui-text .state.variant=${'body'}>Wallet panel.</ui-text>
 								</ui-surface>
 								<ui-surface slot="theme" .state=${{
 									tone: 'subtle',
 									padding: 'md',
 									radius: 'md',
 								}}>
-									<ui-text .variant=${'body'}>Theme panel.</ui-text>
+									<ui-text .state.variant=${'body'}>Theme panel.</ui-text>
 								</ui-surface>
 							</ui-tabs>
 						</ui-stack>
@@ -3466,8 +3485,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('overlays', 'confirm dialog promise');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>this.confirm()</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>imperative this.confirm(message) · ui-modal backed · returns Promise&lt;boolean&gt;</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>this.confirm()</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>imperative this.confirm(message) · ui-modal backed · returns Promise&lt;boolean&gt;</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3485,7 +3504,7 @@ class PreviewView extends WebComponent {
 								label: 'Delete wallet',
 								tone: 'danger',
 							}} @click=${this.doDestructiveAction}></ui-button>
-							<ui-text .variant=${'caption'} .tone=${'muted'}>last result: ${this.state.confirmResult}</ui-text>
+							<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>last result: ${this.state.confirmResult}</ui-text>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -3494,8 +3513,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('overlays', 'UINotification notification toast');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UINotification</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>stacked toasts · default · error</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UINotification</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>stacked toasts · default · error</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3526,8 +3545,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('overlays', 'UILoadingScreen loading overlay');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UILoadingScreen</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>blocking overlay · auto-closes after 2s</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UILoadingScreen</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>blocking overlay · auto-closes after 2s</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3547,8 +3566,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('overlays', 'BootScreen boot splash');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>BootScreen</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>full-screen splash · auto-dismisses after 2s</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>BootScreen</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>full-screen splash · auto-dismisses after 2s</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3567,8 +3586,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('forms', 'UISelect select dropdown picker');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UISelect</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>styled native picker · options · disabled option · change event</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UISelect</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>styled native picker · options · disabled option · change event</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3586,7 +3605,7 @@ class PreviewView extends WebComponent {
 								value: this.state.selectValue,
 								options: this.state.selectOptions,
 							}} @change=${this.syncSelect}></ui-select>
-							<ui-text .variant=${'caption'} .tone=${'muted'}>selected: <ui-text .variant=${'mono'}>${this.state.selectValue}</ui-text></ui-text>
+							<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>selected: <ui-text .state.variant=${'mono'}>${this.state.selectValue}</ui-text></ui-text>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -3595,8 +3614,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('actions', 'UIIconButton icon button');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIIconButton</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>icon-only button · tooltip · sizes · active state · tap snap</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIIconButton</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>icon-only button · tooltip · sizes · active state · tap snap</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3645,8 +3664,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('forms', 'UIToolbar toolbar actions');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIToolbar</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>ui-bar + icon-button action row · tooltips</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIToolbar</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>ui-bar + icon-button action row · tooltips</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3664,8 +3683,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('layout', 'UIBar bar regions start center end');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIBar</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>three-region layout primitive · start / center / end slots</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIBar</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>three-region layout primitive · start / center / end slots</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3674,8 +3693,8 @@ class PreviewView extends WebComponent {
 						border: true,
 					}}>
 						<ui-bar class="demo-bar">
-							<ui-text slot="start" .variant=${'mono'} .tone=${'accent'}>⩝ START</ui-text>
-							<ui-text slot="center" .variant=${'caption'} .tone=${'muted'}>center region</ui-text>
+							<ui-text slot="start" .state.variant=${'mono'} .state.tone=${'accent'}>⩝ START</ui-text>
+							<ui-text slot="center" .state.variant=${'caption'} .state.tone=${'muted'}>center region</ui-text>
 							<ui-badge slot="end" .state=${{
 								label: 'END',
 								tone: 'accent',
@@ -3688,8 +3707,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('feedback', 'UIStatusIndicator status online offline');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIStatusIndicator</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>online · connecting · offline · reactive .status= binding</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIStatusIndicator</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>online · connecting · offline · reactive .status= binding</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3703,15 +3722,15 @@ class PreviewView extends WebComponent {
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-status-indicator .status=${'online'}></ui-status-indicator>
-							<ui-status-indicator .status=${'connecting'}></ui-status-indicator>
-							<ui-status-indicator .status=${'offline'}></ui-status-indicator>
+							<ui-status-indicator .state.status=${'online'}></ui-status-indicator>
+							<ui-status-indicator .state.status=${'connecting'}></ui-status-indicator>
+							<ui-status-indicator .state.status=${'offline'}></ui-status-indicator>
 							<ui-stack .state=${{
 								direction: 'row',
 								gap: 'sm',
 								align: 'center',
 							}}>
-								<ui-status-indicator .status=${this.state.statusValue}></ui-status-indicator>
+								<ui-status-indicator .state.status=${this.state.statusValue}></ui-status-indicator>
 								<ui-button .state=${{
 									label: 'Cycle',
 									size: 'sm',
@@ -3726,8 +3745,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UIStatTable stat table data grid');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIStatTable</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>columns · rows · grid-template widths · title + hint</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIStatTable</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>columns · rows · grid-template widths · title + hint</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3748,8 +3767,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UIPagedList paged list load more');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>PagedList</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>load-more pager · synthetic loader (3 pages × 8 rows) · head row</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>PagedList</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>load-more pager · synthetic loader (3 pages × 8 rows) · head row</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3765,8 +3784,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('overlays', 'UIWhiteboxModal whitebox lightbox image');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIWhiteboxModal</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>media lightbox · image / video · caption · maximize</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIWhiteboxModal</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>media lightbox · image / video · caption · maximize</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3791,8 +3810,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('shell', 'UIDock dock navigation rail');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIDock</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>icon rail · active bar · horizontal & vertical orientation</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIDock</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>icon rail · active bar · horizontal & vertical orientation</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3826,14 +3845,14 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('shell', 'UIAppBar app bar top masthead');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIAppBar</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>fixed top masthead · action cluster · framed via contain</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIAppBar</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>fixed top masthead · action cluster · framed via contain</ui-text>
 					</div>
 					<div class="shell-frame shell-frame-bar">
 						<ui-app-bar .state=${{
 							actions: this.state.appBarActions,
 						}}>
-							<ui-text slot="brand" .variant=${'mono'} .tone=${'accent'}>⩝ VIAT</ui-text>
+							<ui-text slot="brand" .state.variant=${'mono'} .state.tone=${'accent'}>⩝ VIAT</ui-text>
 						</ui-app-bar>
 					</div>
 				</section>
@@ -3842,8 +3861,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('shell', 'UIStatusBar status bar bottom cells');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIStatusBar</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>fixed bottom bar · info cells · dividers · framed via contain</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIStatusBar</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>fixed bottom bar · info cells · dividers · framed via contain</ui-text>
 					</div>
 					<div class="shell-frame shell-frame-bar">
 						<ui-status-bar .state=${{
@@ -3857,8 +3876,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('shell', 'UISidebar UIPulldown drawer overlay');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UISidebar · UIPulldown</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>app-shell overlays · pulldown opens live + drag the sheet up to close · sidebar is a REAL right-edge drawer driven by open/close/toggle methods + hotkey + swipe</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UISidebar · UIPulldown</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>app-shell overlays · pulldown opens live + drag the sheet up to close · sidebar is a REAL right-edge drawer driven by open/close/toggle methods + hotkey + swipe</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3877,7 +3896,7 @@ class PreviewView extends WebComponent {
 									label: 'Open pulldown',
 									tone: 'primary',
 								}} @buttonClick=${this.openPulldownDemo}></ui-button>
-								<ui-text .variant=${'caption'} .tone=${'muted'}>UIPulldown — the agent overlay slides from the top edge over the whole viewport. Open here; close from inside, or drag the sheet (anywhere on its empty surface, or the bottom grab handle) up.</ui-text>
+								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>UIPulldown — the agent overlay slides from the top edge over the whole viewport. Open here; close from inside, or drag the sheet (anywhere on its empty surface, or the bottom grab handle) up.</ui-text>
 							</div>
 							<div class="demo-shell-controls">
 								<ui-stack .state=${{
@@ -3901,14 +3920,14 @@ class PreviewView extends WebComponent {
 										size: 'sm',
 									}} @buttonClick=${this.toggleSidebarDemo}></ui-button>
 								</ui-stack>
-								<ui-text .variant=${'caption'} .tone=${'muted'}>UISidebar — a real right-edge drawer. The component ships the open() / close() / toggle() methods (these three buttons call them — toggle() flips, so one button both opens and closes), the ⌘B / Ctrl+B hotkey, and swipe / drag-to-close. Wire any button to those methods; no baked-in button.</ui-text>
+								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>UISidebar — a real right-edge drawer. The component ships the open() / close() / toggle() methods (these three buttons call them — toggle() flips, so one button both opens and closes), the ⌘B / Ctrl+B hotkey, and swipe / drag-to-close. Wire any button to those methods; no baked-in button.</ui-text>
 							</div>
 						</ui-stack>
 					</ui-surface>
-					<ui-sidebar #sidebar_demo .side=${'right'} .hotkey=${'mod+b'}>
+					<ui-sidebar #sidebar_demo .state.side=${'right'} .state.hotkey=${'mod+b'}>
 						<nav class="demo-sidebar-nav">
 							<div class="demo-sidebar-head">
-								<ui-text .variant=${'overline'} .tone=${'muted'}>UISidebar · right drawer</ui-text>
+								<ui-text .state.variant=${'overline'} .state.tone=${'muted'}>UISidebar · right drawer</ui-text>
 							</div>
 							<a class="demo-sidebar-link" href="#">Wallet</a>
 							<a class="demo-sidebar-link" href="#">Explorer</a>
@@ -3918,7 +3937,7 @@ class PreviewView extends WebComponent {
 					</ui-sidebar>
 					<ui-pulldown #pulldown_demo>
 						<div class="demo-pulldown-panel">
-							<ui-text .variant=${'body'}>Agent overlay — slides from the top edge. Drag the top handle up to close.</ui-text>
+							<ui-text .state.variant=${'body'}>Agent overlay — slides from the top edge. Drag the top handle up to close.</ui-text>
 							<ui-button .state=${{
 								label: 'Close',
 								size: 'sm',
@@ -3932,8 +3951,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('forms', 'UISwitch switch toggle checked');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UISwitch</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>checked · label · sizes · disabled · @switch:change reactive binding</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UISwitch</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>checked · label · sizes · disabled · @switch:change reactive binding</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3948,15 +3967,15 @@ class PreviewView extends WebComponent {
 							wrap: true,
 						}}>
 							<ui-switch
-								.checked=${this.state.switchChecked}
-								.label=${'Dark mode'}
+								.state.checked=${this.state.switchChecked}
+								.state.label=${'Dark mode'}
 								@switch:change=${this.syncSwitch}></ui-switch>
-							<ui-text .variant=${'mono'} .tone=${'muted'}>state.switchChecked = ${this.state.switchChecked}</ui-text>
-							<ui-switch .size=${'sm'} .label=${'Small'}></ui-switch>
-							<ui-switch .checked=${true} .label=${'On by default'}></ui-switch>
-							<ui-switch .disabled=${true} .label=${'Disabled'}></ui-switch>
+							<ui-text .state.variant=${'mono'} .state.tone=${'muted'}>state.switchChecked = ${this.state.switchChecked}</ui-text>
+							<ui-switch .state.size=${'sm'} .state.label=${'Small'}></ui-switch>
+							<ui-switch .state.checked=${true} .state.label=${'On by default'}></ui-switch>
+							<ui-switch .state.disabled=${true} .state.label=${'Disabled'}></ui-switch>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.switchExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.switchExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -3964,8 +3983,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('layout', 'UIHoverVideoPlayer UIYoutubeVideoPlayer video player hover play youtube lite facade iframe');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>Video players</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>hover-to-play (muted, resets on leave) · YouTube lite facade (iframe loads only on click)</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>Video players</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>hover-to-play (muted, resets on leave) · YouTube lite facade (iframe loads only on click)</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -3979,10 +3998,10 @@ class PreviewView extends WebComponent {
 							wrap: true,
 							align: 'start',
 						}}>
-							<ui-hover-video-player .src=${this.state.hoverVideoSrc} style="max-inline-size: 28rem; inline-size: 100%"></ui-hover-video-player>
-							<ui-youtube-video-player .videoId=${this.state.youtubeVideoId} .videoTitle=${'Big Buck Bunny'} style="max-inline-size: 28rem; inline-size: 100%"></ui-youtube-video-player>
+							<ui-hover-video-player .state.src=${this.state.hoverVideoSrc} style="max-inline-size: 28rem; inline-size: 100%"></ui-hover-video-player>
+							<ui-youtube-video-player .state.videoId=${this.state.youtubeVideoId} .state.videoTitle=${'Big Buck Bunny'} style="max-inline-size: 28rem; inline-size: 100%"></ui-youtube-video-player>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.videoPlayerExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.videoPlayerExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -3990,8 +4009,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('layout', 'UICarousel carousel feature loading slider track autoplay fade slide dots progress');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UICarousel</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>feature (fade + dots + click-advance) · loading (slide + progress bars + arrows) · autoplay pauses on hover</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UICarousel</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>feature (fade + dots + click-advance) · loading (slide + progress bars + arrows) · autoplay pauses on hover</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4005,11 +4024,11 @@ class PreviewView extends WebComponent {
 							wrap: true,
 							align: 'start',
 						}}>
-							<ui-carousel .slides=${this.state.baseCarouselSlides} .arrows=${true} style="max-inline-size: 30rem; inline-size: 100%"></ui-carousel>
-							<ui-feature-carousel .slides=${this.state.featureCarouselSlides} style="max-inline-size: 30rem; inline-size: 100%"></ui-feature-carousel>
-							<ui-loading-carousel .slides=${this.state.loadingCarouselSlides} style="max-inline-size: 30rem; inline-size: 100%"></ui-loading-carousel>
+							<ui-carousel .state.slides=${this.state.baseCarouselSlides} .state.arrows=${true} style="max-inline-size: 30rem; inline-size: 100%"></ui-carousel>
+							<ui-feature-carousel .state.slides=${this.state.featureCarouselSlides()} style="max-inline-size: 30rem; inline-size: 100%"></ui-feature-carousel>
+							<ui-loading-carousel .state.slides=${this.state.loadingCarouselSlides()} style="max-inline-size: 30rem; inline-size: 100%"></ui-loading-carousel>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.carouselExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.carouselExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4017,8 +4036,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('layout', 'UIAccordion accordion collapsible details');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIAccordion</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>native details · shared group = one-open · animated open height</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIAccordion</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>native details · shared group = one-open · animated open height</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4030,17 +4049,17 @@ class PreviewView extends WebComponent {
 							direction: 'column',
 							gap: 'sm',
 						}}>
-							<ui-accordion .summary=${'What is UWC?'} .group=${'faq'} .open=${true}>
-								<ui-text .tone=${'muted'}>A zero-dependency, compiler-free custom-element framework — Lit-style templates, surgical patch passes, no build step.</ui-text>
+							<ui-accordion .state.summary=${'What is UWC?'} .state.group=${'faq'} .state.open=${true}>
+								<ui-text .state.tone=${'muted'}>A zero-dependency, compiler-free custom-element framework — Lit-style templates, surgical patch passes, no build step.</ui-text>
 							</ui-accordion>
-							<ui-accordion .summary=${'Why native details?'} .group=${'faq'}>
-								<ui-text .tone=${'muted'}>Siblings sharing a group are a browser-native exclusive accordion. Opening this one closes the others — zero JS.</ui-text>
+							<ui-accordion .state.summary=${'Why native details?'} .state.group=${'faq'}>
+								<ui-text .state.tone=${'muted'}>Siblings sharing a group are a browser-native exclusive accordion. Opening this one closes the others — zero JS.</ui-text>
 							</ui-accordion>
-							<ui-accordion .summary=${'Disabled row'} .group=${'faq'} .disabled=${true}>
-								<ui-text .tone=${'muted'}>Unreachable while disabled.</ui-text>
+							<ui-accordion .state.summary=${'Disabled row'} .state.group=${'faq'} .state.disabled=${true}>
+								<ui-text .state.tone=${'muted'}>Unreachable while disabled.</ui-text>
 							</ui-accordion>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.accordionExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.accordionExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4048,8 +4067,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('feedback', 'UIAlert alert callout tone dismissible');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIAlert</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>tone (info · success · warning · danger) · title · dismissible · slot body</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIAlert</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>tone (info · success · warning · danger) · title · dismissible · slot body</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4061,12 +4080,12 @@ class PreviewView extends WebComponent {
 							direction: 'column',
 							gap: 'md',
 						}}>
-							<ui-alert .tone=${'info'} .heading=${'Heads up'}>The next block settles in roughly two seconds.</ui-alert>
-							<ui-alert .tone=${'success'} .heading=${'Confirmed'}>Transaction included at block 4,182,907.</ui-alert>
-							<ui-alert .tone=${'warning'} .heading=${'Unsynced'} .dismissible=${true}>Local state is ahead of the network.</ui-alert>
-							<ui-alert .tone=${'danger'} .heading=${'Signature rejected'} .dismissible=${true}>The keypair did not match the sender address.</ui-alert>
+							<ui-alert .state.tone=${'info'} .state.heading=${'Heads up'}>The next block settles in roughly two seconds.</ui-alert>
+							<ui-alert .state.tone=${'success'} .state.heading=${'Confirmed'}>Transaction included at block 4,182,907.</ui-alert>
+							<ui-alert .state.tone=${'warning'} .state.heading=${'Unsynced'} .state.dismissible=${true}>Local state is ahead of the network.</ui-alert>
+							<ui-alert .state.tone=${'danger'} .state.heading=${'Signature rejected'} .state.dismissible=${true}>The keypair did not match the sender address.</ui-alert>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.alertExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.alertExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4074,8 +4093,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('shell', 'UIBreadcrumbs breadcrumb path navigation');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIBreadcrumbs</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>items · links + current page · separators · ellipsis overflow</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIBreadcrumbs</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>items · links + current page · separators · ellipsis overflow</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4083,8 +4102,8 @@ class PreviewView extends WebComponent {
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-breadcrumbs .items=${this.state.breadcrumbItems}></ui-breadcrumbs>
-						<ui-code-block .language=${'html'} .code=${this.state.breadcrumbsExample}></ui-code-block>
+						<ui-breadcrumbs .state.items=${this.state.breadcrumbItems}></ui-breadcrumbs>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.breadcrumbsExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4092,8 +4111,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('feedback', 'tooltip behavior hover hint');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>tooltip behavior</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>declarative tooltip= attribute · no import · hover-capable devices only</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>tooltip behavior</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>declarative tooltip= attribute · no import · hover-capable devices only</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4118,7 +4137,7 @@ class PreviewView extends WebComponent {
 							}}></ui-icon-button>
 							<ui-text tooltip="Even plain text accepts a tooltip">Hover this label</ui-text>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.tooltipExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.tooltipExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4126,8 +4145,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UICodeBlock code block syntax copy');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UICodeBlock</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>language label · dedented · XSS-safe text render · one-click copy</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UICodeBlock</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>language label · dedented · XSS-safe text render · one-click copy</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4135,7 +4154,7 @@ class PreviewView extends WebComponent {
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-code-block .language=${'js'} .code=${this.state.codeBlockExample}></ui-code-block>
+						<ui-code-block .state.language=${'js'} .state.code=${this.state.codeBlockExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4143,8 +4162,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UIMetric KPI metric card stat delta sparkline');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIMetric</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>KPI card · big value · signed delta · trend sparkline · tone spine</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIMetric</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>KPI card · big value · signed delta · trend sparkline · tone spine</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4153,11 +4172,11 @@ class PreviewView extends WebComponent {
 						border: true,
 					}}>
 						<div class="grid">
-							<ui-metric .label=${'TPS (peak)'} .value=${'9,410'} .delta=${12.4} .trend=${this.state.metricTrendTps} .tone=${'accent'}></ui-metric>
-							<ui-metric .label=${'Finality'} .value=${'1.8s'} .delta=${-8.2} .invertDelta=${true} .trend=${this.state.metricTrendFinality} .tone=${'success'}></ui-metric>
-							<ui-metric .label=${'Validators'} .value=${'128'} .delta=${1.6} .hint=${'24h'} .trend=${this.state.sparkValues} .tone=${'info'}></ui-metric>
+							<ui-metric .state.label=${'TPS (peak)'} .state.value=${'9,410'} .state.delta=${12.4} .state.trend=${this.state.metricTrendTps} .state.tone=${'accent'}></ui-metric>
+							<ui-metric .state.label=${'Finality'} .state.value=${'1.8s'} .state.delta=${-8.2} .state.invertDelta=${true} .state.trend=${this.state.metricTrendFinality} .state.tone=${'success'}></ui-metric>
+							<ui-metric .state.label=${'Validators'} .state.value=${'128'} .state.delta=${1.6} .state.hint=${'24h'} .state.trend=${this.state.sparkValues} .state.tone=${'info'}></ui-metric>
 						</div>
-						<ui-code-block .language=${'html'} .code=${this.state.metricExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.metricExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4165,8 +4184,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UISparkline sparkline trend chart line area');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UISparkline</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>hand-rolled SVG · line / area · tone scale · non-scaling stroke</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UISparkline</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>hand-rolled SVG · line / area · tone scale · non-scaling stroke</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4180,11 +4199,29 @@ class PreviewView extends WebComponent {
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-sparkline .values=${this.state.sparkValues} .variant=${'line'} .tone=${'accent'}></ui-sparkline>
-							<ui-sparkline .values=${this.state.sparkValues} .variant=${'area'} .tone=${'success'}></ui-sparkline>
-							<ui-sparkline .values=${this.state.metricTrendFinality} .variant=${'area'} .tone=${'danger'}></ui-sparkline>
+							<ui-sparkline .state.values=${this.state.sparkValues} .state.variant=${'line'} .state.tone=${'accent'}></ui-sparkline>
+							<ui-sparkline .state.values=${this.state.sparkValues} .state.variant=${'area'} .state.tone=${'success'}></ui-sparkline>
+							<ui-sparkline .state.values=${this.state.metricTrendFinality} .state.variant=${'area'} .state.tone=${'danger'}></ui-sparkline>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.sparklineExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.sparklineExample}></ui-code-block>
+					</ui-surface>
+				</section>
+
+				<section class="demo" data-cat="data" ?hidden=${() => {
+					return this.demoHidden('data', 'carry-down state share reactive proxy propagation shared object deep mutation dock .state=');
+				}}>
+					<div class="preview-section-head">
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>State Carry-Down</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>one shared object passed by .state= · an ancestor-origin deep write flows through list() to the leaf · mirrors GlobalDock → UIDock → DockIconButton</ui-text>
+					</div>
+					<ui-surface .state=${{
+						tone: 'panel',
+						padding: 'lg',
+						radius: 'lg',
+						border: true,
+					}}>
+						<demo-carry-top></demo-carry-top>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.carryDownExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4192,8 +4229,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UISvgBands svg bands decorative divider edge battlement zigzag wave');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UISvgBands</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>parametric SVG edge band · zigzag / battlement / steep / wave · stroke or fill · flip</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UISvgBands</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>parametric SVG edge band · zigzag / battlement / steep / wave · stroke or fill · flip</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4205,14 +4242,14 @@ class PreviewView extends WebComponent {
 							direction: 'column',
 							gap: 'lg',
 						}}>
-							<ui-svg-bands .shape=${'zigzag'} .segments=${20} .tone=${'accent'} style="--band-height: 2rem"></ui-svg-bands>
-							<ui-svg-bands .shape=${'battlement'} .segments=${14} .tone=${'success'} style="--band-height: 2rem"></ui-svg-bands>
-							<ui-svg-bands .shape=${'steep'} .segments=${16} .tone=${'warning'} style="--band-height: 2rem"></ui-svg-bands>
-							<ui-svg-bands .shape=${'wave'} .segments=${10} .tone=${'info'} style="--band-height: 2.25rem"></ui-svg-bands>
-							<ui-svg-bands .shape=${'battlement'} .segments=${14} .fill=${true} .tone=${'accent'} style="--band-height: 2.25rem"></ui-svg-bands>
-							<ui-svg-bands .shape=${'wave'} .segments=${10} .fill=${true} .flip=${true} .tone=${'danger'} style="--band-height: 2.25rem"></ui-svg-bands>
+							<ui-svg-bands .state.shape=${'zigzag'} .state.segments=${20} .state.tone=${'accent'} style="--band-height: 2rem"></ui-svg-bands>
+							<ui-svg-bands .state.shape=${'battlement'} .state.segments=${14} .state.tone=${'success'} style="--band-height: 2rem"></ui-svg-bands>
+							<ui-svg-bands .state.shape=${'steep'} .state.segments=${16} .state.tone=${'warning'} style="--band-height: 2rem"></ui-svg-bands>
+							<ui-svg-bands .state.shape=${'wave'} .state.segments=${10} .state.tone=${'info'} style="--band-height: 2.25rem"></ui-svg-bands>
+							<ui-svg-bands .state.shape=${'battlement'} .state.segments=${14} .state.fill=${true} .state.tone=${'accent'} style="--band-height: 2.25rem"></ui-svg-bands>
+							<ui-svg-bands .state.shape=${'wave'} .state.segments=${10} .state.fill=${true} .state.flip=${true} .state.tone=${'danger'} style="--band-height: 2.25rem"></ui-svg-bands>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.svgBandsExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.svgBandsExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4220,8 +4257,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UIVoteTally vote tally upvote leaderboard feature voting count-up flip reorder');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIVoteTally</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>upvote toggle · count-up roll · FLIP reorder on re-rank · base / feature-voting</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIVoteTally</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>upvote toggle · count-up roll · FLIP reorder on re-rank · base / feature-voting</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4235,10 +4272,10 @@ class PreviewView extends WebComponent {
 							wrap: true,
 							align: 'start',
 						}}>
-							<ui-vote-tally .heading=${'Most wanted'} .items=${this.state.voteTallyItems}></ui-vote-tally>
-							<ui-feature-voting .heading=${'Feature requests'} .items=${this.state.featureVotingItems}></ui-feature-voting>
+							<ui-vote-tally .state.heading=${'Most wanted'} .state.items=${this.state.voteTallyItems}></ui-vote-tally>
+							<ui-feature-voting .state.heading=${'Feature requests'} .state.items=${this.state.featureVotingItems}></ui-feature-voting>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.voteTallyExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.voteTallyExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4246,8 +4283,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('feedback', 'UIProgressRing radial gauge progress dial');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIProgressRing</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>radial gauge · sizes · centre value · threshold recolor</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIProgressRing</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>radial gauge · sizes · centre value · threshold recolor</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4261,11 +4298,11 @@ class PreviewView extends WebComponent {
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-progress-ring .value=${38} .size=${'sm'} .tone=${'accent'}></ui-progress-ring>
-							<ui-progress-ring .value=${72} .size=${'md'} .tone=${'success'}></ui-progress-ring>
-							<ui-progress-ring .value=${94} .size=${'lg'} .thresholds=${this.state.ringThresholds}></ui-progress-ring>
+							<ui-progress-ring .state.value=${38} .state.size=${'sm'} .state.tone=${'accent'}></ui-progress-ring>
+							<ui-progress-ring .state.value=${72} .state.size=${'md'} .state.tone=${'success'}></ui-progress-ring>
+							<ui-progress-ring .state.value=${94} .state.size=${'lg'} .state.thresholds=${this.state.ringThresholds}></ui-progress-ring>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.progressRingExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.progressRingExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4273,8 +4310,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UITracker status squares uptime health bars');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UITracker</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>status squares · per-segment tone + label · uptime / finality history</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UITracker</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>status squares · per-segment tone + label · uptime / finality history</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4282,8 +4319,8 @@ class PreviewView extends WebComponent {
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-tracker .segments=${this.state.trackerSegments} .label=${'Recent block finality'}></ui-tracker>
-						<ui-code-block .language=${'html'} .code=${this.state.trackerExample}></ui-code-block>
+						<ui-tracker .state.segments=${this.state.trackerSegments} .state.label=${'Recent block finality'}></ui-tracker>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.trackerExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4291,8 +4328,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UITimeline timeline event stream history audit log activity vertical horizontal');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UITimeline</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>event stream · time/label/description · tone dots + icons · connector rail · vertical (default) or horizontal · density</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UITimeline</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>event stream · time/label/description · tone dots + icons · connector rail · vertical (default) or horizontal · density</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4305,10 +4342,10 @@ class PreviewView extends WebComponent {
 							gap: 'xl',
 							wrap: true,
 						}}>
-							<ui-timeline .items=${this.state.timelineEvents} .orientation=${'vertical'}></ui-timeline>
-							<ui-timeline .items=${this.state.timelineEvents} .orientation=${'horizontal'} .density=${'compact'}></ui-timeline>
+							<ui-timeline .state.items=${this.state.timelineEvents} .state.orientation=${'vertical'}></ui-timeline>
+							<ui-timeline .state.items=${this.state.timelineEvents} .state.orientation=${'horizontal'} .state.density=${'compact'}></ui-timeline>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.timelineExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.timelineExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4316,8 +4353,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UIJsonInspector json entity inspector tree collapsible payload type tint copy path search filter depth tx block agent tool io');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIJsonInspector</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>collapsible tree for any value / JSON string · type-tinted · per-row copy-path · live search (matches + ancestors, force-expanded) · starting depth · cycle-safe</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIJsonInspector</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>collapsible tree for any value / JSON string · type-tinted · per-row copy-path · live search (matches + ancestors, force-expanded) · starting depth · cycle-safe</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4325,8 +4362,8 @@ class PreviewView extends WebComponent {
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-json-inspector #json_demo .data=${this.state.jsonSample} .expandDepth=${1}></ui-json-inspector>
-						<ui-code-block .language=${'html'} .code=${this.state.jsonInspectorExample}></ui-code-block>
+						<ui-json-inspector #json_demo .state.data=${this.state.jsonSample} .state.expandDepth=${1}></ui-json-inspector>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.jsonInspectorExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4334,8 +4371,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UIHeatmap heatmap calendar matrix value color scale tooltip legend activity density tx per day github contributions');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIHeatmap</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>matrix or GitHub-style calendar · continuous value→color (themeable) · per-cell tooltip · legend · UTC date math · emits heatmap:cell</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIHeatmap</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>matrix or GitHub-style calendar · continuous value→color (themeable) · per-cell tooltip · legend · UTC date math · emits heatmap:cell</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4347,10 +4384,10 @@ class PreviewView extends WebComponent {
 							direction: 'column',
 							gap: 'xl',
 						}}>
-							<ui-heatmap #heatmap_cal .mode=${'calendar'} .data=${this.state.heatmapCalendar}></ui-heatmap>
-							<ui-heatmap #heatmap_mat .data=${this.state.heatmapMatrix} .rowLabels=${this.state.heatmapMatrixRows} .colLabels=${this.state.heatmapMatrixCols} .showValues=${true}></ui-heatmap>
+							<ui-heatmap #heatmap_cal .state.mode=${'calendar'} .state.data=${this.state.heatmapCalendar}></ui-heatmap>
+							<ui-heatmap #heatmap_mat .state.data=${this.state.heatmapMatrix} .state.rowLabels=${this.state.heatmapMatrixRows} .state.colLabels=${this.state.heatmapMatrixCols} .state.showValues=${true}></ui-heatmap>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.heatmapExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.heatmapExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4358,8 +4395,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UIBarList ranked horizontal bars top accounts');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIBarList</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>ranked bars · proportional scale · linkable rows · value labels</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIBarList</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>ranked bars · proportional scale · linkable rows · value labels</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4367,8 +4404,8 @@ class PreviewView extends WebComponent {
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-bar-list .items=${this.state.barListItems} .tone=${'accent'}></ui-bar-list>
-						<ui-code-block .language=${'html'} .code=${this.state.barListExample}></ui-code-block>
+						<ui-bar-list .state.items=${this.state.barListItems} .state.tone=${'accent'}></ui-bar-list>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.barListExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4376,8 +4413,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UIDetailList key value description grid copy');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIDetailList</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>key/value grid · multi-column · click-to-copy values · entity attributes</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIDetailList</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>key/value grid · multi-column · click-to-copy values · entity attributes</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4385,8 +4422,8 @@ class PreviewView extends WebComponent {
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-detail-list .columns=${2} .pairs=${this.state.detailPairs}></ui-detail-list>
-						<ui-code-block .language=${'html'} .code=${this.state.detailListExample}></ui-code-block>
+						<ui-detail-list .state.columns=${2} .state.pairs=${this.state.detailPairs}></ui-detail-list>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.detailListExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4394,8 +4431,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UIKbd keyboard shortcut keycap hint hotkey');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIKbd</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>keyboard-shortcut hint · modifier glyphs · keycaps · help/menu hints</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIKbd</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>keyboard-shortcut hint · modifier glyphs · keycaps · help/menu hints</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4409,13 +4446,13 @@ class PreviewView extends WebComponent {
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-kbd .keys=${this.state.kbdKeysCmdK}></ui-kbd>
-							<ui-kbd .keys=${this.state.kbdKeysCtrlShiftP}></ui-kbd>
-							<ui-kbd .keys=${this.state.kbdKeysAltEnter}></ui-kbd>
-							<ui-kbd .keys=${this.state.kbdKeysEsc}></ui-kbd>
-							<ui-kbd .keys=${this.state.kbdKeysUpDown}></ui-kbd>
+							<ui-kbd .state.keys=${this.state.kbdKeysCmdK}></ui-kbd>
+							<ui-kbd .state.keys=${this.state.kbdKeysCtrlShiftP}></ui-kbd>
+							<ui-kbd .state.keys=${this.state.kbdKeysAltEnter}></ui-kbd>
+							<ui-kbd .state.keys=${this.state.kbdKeysEsc}></ui-kbd>
+							<ui-kbd .state.keys=${this.state.kbdKeysUpDown}></ui-kbd>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.kbdExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.kbdExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4423,8 +4460,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UILegend chart legend series swatch interactive toggle');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UILegend</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>chart legend · caller-supplied colours · click to toggle a series · emits legend:change</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UILegend</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>chart legend · caller-supplied colours · click to toggle a series · emits legend:change</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4432,8 +4469,8 @@ class PreviewView extends WebComponent {
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-legend .series=${this.state.legendSeries} .interactive=${true}></ui-legend>
-						<ui-code-block .language=${'html'} .code=${this.state.legendExample}></ui-code-block>
+						<ui-legend .state.series=${this.state.legendSeries} .state.interactive=${true}></ui-legend>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.legendExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4441,8 +4478,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('actions', 'UIButtonGroup segmented attached button cluster toolbar');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIButtonGroup</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>attached button cluster · squared inner corners · horizontal / vertical · toolbar clusters</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIButtonGroup</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>attached button cluster · squared inner corners · horizontal / vertical · toolbar clusters</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4461,13 +4498,13 @@ class PreviewView extends WebComponent {
 								<ui-button .state=${this.state.bgBtnWeek}></ui-button>
 								<ui-button .state=${this.state.bgBtnMonth}></ui-button>
 							</ui-button-group>
-							<ui-button-group .orientation=${'vertical'}>
+							<ui-button-group .state.orientation=${'vertical'}>
 								<ui-button .state=${this.state.bgBtnDay}></ui-button>
 								<ui-button .state=${this.state.bgBtnWeek}></ui-button>
 								<ui-button .state=${this.state.bgBtnMonth}></ui-button>
 							</ui-button-group>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.buttonGroupExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.buttonGroupExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4475,8 +4512,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('data', 'UIAvatar avatar initials identicon hue status dot');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIAvatar</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>initials fallback · deterministic hue from name · circle / square · status dot · sizes</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIAvatar</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>initials fallback · deterministic hue from name · circle / square · status dot · sizes</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4490,14 +4527,14 @@ class PreviewView extends WebComponent {
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-avatar .name=${'Ada Lovelace'} .size=${'lg'} .status=${'online'}></ui-avatar>
-							<ui-avatar .name=${'Grace Hopper'} .size=${'md'} .status=${'away'}></ui-avatar>
-							<ui-avatar .name=${'0xA1f2…c4'} .shape=${'square'} .size=${'md'} .status=${'busy'}></ui-avatar>
-							<ui-avatar .name=${'Validator 07'} .size=${'sm'}></ui-avatar>
-							<ui-avatar .initials=${'VX'} .size=${'sm'} .status=${'offline'}></ui-avatar>
-							<ui-avatar .name=${'Network Ops'} .size=${'xs'}></ui-avatar>
+							<ui-avatar .state.name=${'Ada Lovelace'} .state.size=${'lg'} .state.status=${'online'}></ui-avatar>
+							<ui-avatar .state.name=${'Grace Hopper'} .state.size=${'md'} .state.status=${'away'}></ui-avatar>
+							<ui-avatar .state.name=${'0xA1f2…c4'} .state.shape=${'square'} .state.size=${'md'} .state.status=${'busy'}></ui-avatar>
+							<ui-avatar .state.name=${'Validator 07'} .state.size=${'sm'}></ui-avatar>
+							<ui-avatar .state.initials=${'VX'} .state.size=${'sm'} .state.status=${'offline'}></ui-avatar>
+							<ui-avatar .state.name=${'Network Ops'} .state.size=${'xs'}></ui-avatar>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.avatarExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.avatarExample}></ui-code-block>
 					</ui-surface>
 				</section>
 
@@ -4505,8 +4542,8 @@ class PreviewView extends WebComponent {
 					return this.demoHidden('actions', 'UIToggleGroup segmented control single multi range toggle');
 				}}>
 					<div class="preview-section-head">
-						<ui-text .variant=${'overline'} .tone=${'accent'}>UIToggleGroup</ui-text>
-						<ui-text .variant=${'caption'} .tone=${'muted'}>segmented control · single (range) or multi-select · emits toggle:change</ui-text>
+						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIToggleGroup</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>segmented control · single (range) or multi-select · emits toggle:change</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4520,10 +4557,10 @@ class PreviewView extends WebComponent {
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-toggle-group .items=${this.state.toggleRangeItems} .value=${'24h'}></ui-toggle-group>
-							<ui-toggle-group .items=${this.state.toggleViewItems} .multiple=${true} .values=${this.state.toggleViewActive} .size=${'sm'}></ui-toggle-group>
+							<ui-toggle-group .state.items=${this.state.toggleRangeItems} .state.value=${'24h'}></ui-toggle-group>
+							<ui-toggle-group .state.items=${this.state.toggleViewItems} .state.multiple=${true} .state.values=${this.state.toggleViewActive} .state.size=${'sm'}></ui-toggle-group>
 						</ui-stack>
-						<ui-code-block .language=${'html'} .code=${this.state.toggleGroupExample}></ui-code-block>
+						<ui-code-block .state.language=${'html'} .state.code=${this.state.toggleGroupExample}></ui-code-block>
 					</ui-surface>
 				</section>
 

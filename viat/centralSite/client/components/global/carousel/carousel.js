@@ -118,10 +118,10 @@ export class UICarousel extends WebComponent {
 		// A full re-render rebuilds the shadow tree, so the viewport is a NEW element
 		// and any prior gesture is bound to a discarded node. Destroy it before
 		// rebinding — otherwise a re-render (the gallery toggles section visibility)
-		// stacks installs and one swipe settles N times. Drop the dead destroy from
-		// the auto-clean set too, so it doesn't accumulate across re-renders.
+		// stacks installs and one swipe settles N times. Drop the dead controller
+		// from the auto-clean set too, so it doesn't accumulate across re-renders.
 		if (this.dragController) {
-			this.gestureUnsubs?.delete(this.dragController.destroy);
+			this.gestureUnsubs?.delete(this.dragController);
 			this.dragController.destroy();
 		}
 		// One detent = one viewport width. The gesture tracks document-wide moves,
@@ -380,10 +380,10 @@ export class UICarousel extends WebComponent {
 						${list('slides', UICarouselSlide, this.slideKey)}
 					</div>
 					<button class="nav prev" type="button" ?hidden=${!this.state.arrows} tooltip="Previous" aria-label="Previous slide" @click=${this.handlePrev}>
-						<ui-icon .name=${'chevron-left'} .size=${'sm'}></ui-icon>
+						<ui-icon .state.name=${'chevron-left'} .state.size=${'sm'}></ui-icon>
 					</button>
 					<button class="nav next" type="button" ?hidden=${!this.state.arrows} tooltip="Next" aria-label="Next slide" @click=${this.handleNext}>
-						<ui-icon .name=${'chevron-right'} .size=${'sm'}></ui-icon>
+						<ui-icon .state.name=${'chevron-right'} .state.size=${'sm'}></ui-icon>
 					</button>
 				</div>
 				<div class="dots" ?hidden=${this.state.indicators === 'none'} @click=${this.handleDotClick}>^html${this.indicatorMarkup()}</div>

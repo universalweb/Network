@@ -53,11 +53,11 @@ export class IconButtonBase extends WebComponent {
 			<ui-button class=${classList('icon-button', this.state.classes, {
 				active: this.state.active,
 			})}
-				.variant=${'icon'}
-				.tone=${'neutral'}
-				.tooltip=${this.state.tooltip}
+				.state.variant=${'icon'}
+				.state.tone=${'neutral'}
+				.state.tooltip=${this.state.tooltip}
 				@buttonClick=${this.handleActivate}>
-				<ui-icon slot="lead" .name=${this.state.icon} .size=${this.state.size} .animate=${this.state.animate}></ui-icon>
+				<ui-icon slot="lead" .state.name=${this.state.icon} .state.size=${this.state.size} .state.animate=${this.state.animate}></ui-icon>
 			</ui-button>
 		`;
 	}

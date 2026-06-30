@@ -52,7 +52,7 @@ export class UIAiSources extends WebComponent {
 		this.html `
 			<section class="ais">
 				<header class="ais-head" ?hidden=${!this.state.label}>
-					<ui-icon class="ais-head-icon" .name=${'book-open'} .size=${'sm'}></ui-icon>
+					<ui-icon class="ais-head-icon" .state.name=${'book-open'} .state.size=${'sm'}></ui-icon>
 					<span class="ais-title-head">${this.state.label}</span>
 				</header>
 				<ol class="ais-list">${list('sources', this.renderSource, this.sourceKey)}</ol>

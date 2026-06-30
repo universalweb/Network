@@ -69,8 +69,8 @@ export class UISlider extends WebComponent {
 	activeThumb = null;
 	activePointerId = null;
 	dragRect = null;
-	// Reactive accessors so a `.value=` / `.low=` / `.high=` host binding (or a
-	// plain `el.value =`) routes through tracked state, like ui-switch's `checked`.
+	// `.value=` / `.low=` / `.high=` already auto-route into state (every state key
+	// does); these explicit setters exist ONLY to coerce the incoming value to a Number.
 	get value() {
 		return this.state.value;
 	}

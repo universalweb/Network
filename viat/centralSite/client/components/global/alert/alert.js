@@ -48,13 +48,13 @@ export class UIAlert extends WebComponent {
 	render() {
 		this.html `
 			<div class="al" role="alert" data-tone=${this.state.tone} ?hidden=${!this.state.open}>
-				<ui-icon class="al-icon" ?hidden=${!this.toneIcon} .name=${this.toneIcon} .size=${'sm'}></ui-icon>
+				<ui-icon class="al-icon" ?hidden=${!this.toneIcon} .state.name=${this.toneIcon} .state.size=${'sm'}></ui-icon>
 				<div class="al-content">
 					<p class="al-title" ?hidden=${!this.state.heading}>${this.state.heading}</p>
 					<div class="al-body"><slot></slot></div>
 				</div>
 				<button class="al-dismiss" type="button" tooltip="Dismiss" ?hidden=${!this.state.dismissible} @click=${this.handleDismiss}>
-					<ui-icon .name=${'x'} .size=${'xs'}></ui-icon>
+					<ui-icon .state.name=${'x'} .state.size=${'xs'}></ui-icon>
 				</button>
 			</div>
 		`;

@@ -93,7 +93,13 @@ export class UIMenu extends WebComponent {
 			// entrance transition hook (see menu.css `.is-open`).
 			surface.classList.add('is-open');
 			this.activeIndex = -1;
-			this.focusFirst();
+			// Focus the PANEL, not the first item: an opened menu must show no
+			// pre-highlighted item (normal until hover / arrow / click). Keyboard
+			// roving still works — the panel is the keydown target and ArrowDown
+			// enters the list (move() from activeIndex -1 lands on the first item).
+			surface.focus({
+				preventScroll: true,
+			});
 			this.armLeaveWatch();
 		} else {
 			surface.classList.remove('is-open');
@@ -124,10 +130,10 @@ export class UIMenu extends WebComponent {
 		}
 		// Pad bridges the trigger↔panel gap (the placement offset + slack).
 		const pad = (Number(this.state.offset) || 6) + 6;
-		const trigger = this.refs.trigger;
-		const overTrigger = trigger ? withinPaddedRect(trigger.getBoundingClientRect(), domEvent.clientX, domEvent.clientY, pad) : false;
+		const region = this.keepOpenRect();
+		const overRegion = region ? withinPaddedRect(region, domEvent.clientX, domEvent.clientY, pad) : false;
 		const overSurface = withinPaddedRect(surface.getBoundingClientRect(), domEvent.clientX, domEvent.clientY, pad);
-		if (overTrigger || overSurface) {
+		if (overRegion || overSurface) {
 			// Arm only once the pointer is genuinely inside, so a keyboard-opened
 			// menu (pointer parked elsewhere) doesn't close on the first stray move.
 			this.pointerArmed = true;
@@ -136,6 +142,12 @@ export class UIMenu extends WebComponent {
 		if (this.pointerArmed) {
 			surface.hidePopover();
 		}
+	}
+	// The non-panel region whose hover keeps the menu open. For a dropdown it is the
+	// trigger button; ui-context-menu overrides it to the slotted target box (it has
+	// no trigger). Returns a rect-like ({left,top,right,bottom}) or null.
+	keepOpenRect() {
+		return this.refs.trigger ? this.refs.trigger.getBoundingClientRect() : null;
 	}
 	position() {
 		const trigger = this.refs.trigger;
@@ -238,7 +250,7 @@ export class UIMenu extends WebComponent {
 				popovertarget="menu-pop" aria-haspopup="menu" aria-expanded="false">
 				<slot name="trigger">${this.state.label}</slot>
 			</button>
-			<div #surface class="menu-surface" id="menu-pop" popover="auto" role="menu"
+			<div #surface class="menu-surface" id="menu-pop" popover="auto" role="menu" tabindex="-1"
 				@toggle=${this.handleToggle} @click=${this.handleClick} @keydown=${this.handleKey}>
 				^html${this.renderItems}
 			</div>

@@ -1,4 +1,7 @@
 :host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
 	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
@@ -85,7 +88,7 @@
 	:host([data-orientation='vertical']) ui-icon-button {
 		width: auto;
 		flex: 0 0 auto;
-		/* Same WCAG touch floor as .dock-horizontal — this media query is the
+		/* Same WCAG touch floor as [data-orientation='horizontal'] — this media query is the
 		   vertical rail's rotate-to-bottom-bar path. */
 		--btn-hit: max(2.75rem, 44px);
 	}

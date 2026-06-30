@@ -77,6 +77,9 @@
 	overflow: hidden;
 }
 .dr-head {
+	/* Header chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
 	display: flex;
 	align-items: center;
 	gap: var(--space-3);

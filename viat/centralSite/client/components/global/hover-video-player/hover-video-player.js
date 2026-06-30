@@ -85,7 +85,7 @@ export class UIHoverVideoPlayer extends WebComponent {
 					playsinline muted></video>
 				<img class="hv-poster" ?hidden=${!this.state.poster} src=${this.state.poster || ''} alt="" aria-hidden="true">
 				<span class="hv-overlay" aria-hidden="true">
-					<span class="hv-play"><ui-icon .name=${'play'} .size=${'md'}></ui-icon></span>
+					<span class="hv-play"><ui-icon .state.name=${'play'} .state.size=${'md'}></ui-icon></span>
 				</span>
 			</div>
 		`;

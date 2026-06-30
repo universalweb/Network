@@ -44,7 +44,7 @@ export class UIPullDown extends WebComponent {
 		}
 		if (this.dragController) {
 			this.dragController.destroy();
-			this.gestureUnsubs?.delete(this.dragController.destroy);
+			this.gestureUnsubs?.delete(this.dragController);
 		}
 		this.dragController = this.dragSnap(drawer, {
 			axis: 'y',

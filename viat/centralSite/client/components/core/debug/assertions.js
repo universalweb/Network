@@ -4,12 +4,6 @@ import {
 export function isComponentConfig(config) {
 	return isObject(config) && !isArray(config) && !isPromiseLike(config) && !isFunction(config.replaceSync);
 }
-export function assertComponentConfig(config) {
-	if (isComponentConfig(config)) {
-		return;
-	}
-	throw new TypeError('WebComponent constructor expects a config object.');
-}
 export function assertStaticStyleEntry(styleName, value, className) {
 	if (value === undefined || value === null) {
 		return;
@@ -30,7 +24,7 @@ export function assertStaticStyles(styles, className) {
 		throw new TypeError(`${className}.styles must be an object map of { name: CSSStyleSheet | string | null }.`);
 	}
 	const keys = Object.keys(styles);
-	for (let i = 0; i < keys.length; i++) {
-		assertStaticStyleEntry(keys[i], styles[keys[i]], className);
+	for (let index = 0; index < keys.length; index++) {
+		assertStaticStyleEntry(keys[index], styles[keys[index]], className);
 	}
 }

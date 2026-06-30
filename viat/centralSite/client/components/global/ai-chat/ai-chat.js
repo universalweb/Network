@@ -330,7 +330,7 @@ export class UIAiChat extends WebComponent {
 					<div class="aic-titlebar">
 						<div class="aic-title-group">
 							<span class="aic-title">${this.state.title}</span>
-							<ui-status-indicator .status=${this.state.status}></ui-status-indicator>
+							<ui-status-indicator .state.status=${this.state.status}></ui-status-indicator>
 						</div>
 						<button class="aic-clear" type="button" @click=${this.handleClear} ?disabled=${this.clearDisabled}>CLEAR</button>
 					</div>

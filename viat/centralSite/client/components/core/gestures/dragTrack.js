@@ -15,11 +15,15 @@
 	dragSnap so every gesture settles on one identical curve.
 */
 import { SNAP_CURVE, SNAP_MS } from './dragSnap.js';
+import { lockSelection, unlockSelection } from './selectionLock.js';
 export { SNAP_CURVE, SNAP_MS };
 // Gesture-knob defaults — overridable per call through `options`.
-const DRAG_THRESHOLD_PX = 8; // raw travel before a press becomes a drag
-const STEP_RATIO = 0.25; // travel fraction (of one detent) that commits a step
-const STEP_VELOCITY = 0.4; // px/ms fling that commits a step regardless of distance
+// Raw travel before a press becomes a drag.
+const DRAG_THRESHOLD_PX = 8;
+// Travel fraction (of one detent) that commits a step.
+const STEP_RATIO = 0.25;
+// px/ms fling that commits a step regardless of distance.
+const STEP_VELOCITY = 0.4;
 function alwaysTrue() {
 	return true;
 }
@@ -27,7 +31,7 @@ function zero() {
 	return 0;
 }
 /*
-	createDragTrack(startElement, options) → { destroy() }
+	DragTrack.create(startElement, options) → DragTrack
 	options:
 	  axis          'x' | 'y'                    — drag axis (default 'x')
 	  threshold     px before a press is a drag             (default 8)
@@ -43,154 +47,238 @@ function zero() {
 	                                 travel, `progress` is |delta|/extent clamped
 	  onSettle(step)               — release verdict; `step` is -1 | 0 | +1
 	                                 (0 = snap home). A vetoed step yields 0.
+	The controller files itself as an EventListenerObject (it implements
+	`handleEvent`), so a single instance reference serves as every listener and
+	there are no per-instance handler closures to track. Tear it down with
+	`destroy()`; `unsubscribe()` is the same teardown under the `disposeItem`
+	protocol name.
 */
-export function createDragTrack(startElement, options = {}) {
-	if (!startElement) {
-		return {
-			destroy() {},
-		};
+export class DragTrack {
+	#startElement;
+	#clientAxis;
+	#threshold;
+	#stepRatio;
+	#stepVelocity;
+	#isEnabled;
+	#extent;
+	#canStep;
+	#onStart;
+	#onMove;
+	#onSettle;
+	#pointerId = null;
+	#dragOrigin = 0;
+	#startTime = 0;
+	#delta = 0;
+	#dragMoved = false;
+	#suppressClick = false;
+	#destroyed = false;
+	/**
+	 * The construction path — prefer this over `new DragTrack()`. Builds the
+	 * controller and, when there is a start element, wires its press/click
+	 * listeners. A missing element yields an inert controller whose `destroy()`
+	 * is a safe no-op.
+	 * @returns {DragTrack} the wired (or inert) controller.
+	 */
+	static create(startElement, options = {}) {
+		const controller = new DragTrack(startElement, options);
+		controller.#listen();
+		return controller;
 	}
-	const axis = options.axis === 'y' ? 'y' : 'x';
-	const clientAxis = axis === 'y' ? 'clientY' : 'clientX';
-	const threshold = options.threshold ?? DRAG_THRESHOLD_PX;
-	const stepRatio = options.stepRatio ?? STEP_RATIO;
-	const stepVelocity = options.stepVelocity ?? STEP_VELOCITY;
-	const isEnabled = options.enabled || alwaysTrue;
-	const extent = options.extent || zero;
-	const canStep = options.canStep || alwaysTrue;
-	const onStart = options.onStart;
-	const onMove = options.onMove;
-	const onSettle = options.onSettle;
-	let pointerId = null;
-	let dragOrigin = 0;
-	let startTime = 0;
-	let delta = 0;
-	let dragMoved = false;
-	let suppressClick = false;
-	let destroyed = false;
-	function stopTracking() {
-		if (pointerId === null) {
+	constructor(startElement, options = {}) {
+		this.#startElement = startElement || null;
+		const axis = options.axis === 'y' ? 'y' : 'x';
+		this.#clientAxis = axis === 'y' ? 'clientY' : 'clientX';
+		this.#threshold = options.threshold ?? DRAG_THRESHOLD_PX;
+		this.#stepRatio = options.stepRatio ?? STEP_RATIO;
+		this.#stepVelocity = options.stepVelocity ?? STEP_VELOCITY;
+		this.#isEnabled = options.enabled || alwaysTrue;
+		this.#extent = options.extent || zero;
+		this.#canStep = options.canStep || alwaysTrue;
+		this.#onStart = options.onStart;
+		this.#onMove = options.onMove;
+		this.#onSettle = options.onSettle;
+	}
+	/**
+	 * The DOM dispatches every registered event here because the instance is the
+	 * listener. Route each type to its handler; the start element's press/click
+	 * and the document's move/end/blur all funnel through this one entry point.
+	 */
+	handleEvent(domEvent) {
+		switch (domEvent.type) {
+			case 'pointerdown':
+				this.#onPointerDown(domEvent);
+				break;
+			case 'pointermove':
+				this.#onPointerMove(domEvent);
+				break;
+			case 'pointerup':
+			case 'pointercancel':
+				this.#onPointerEnd(domEvent);
+				break;
+			case 'blur':
+				this.#onWindowBlur();
+				break;
+			case 'click':
+				this.#onClick(domEvent);
+				break;
+			default:
+				break;
+		}
+	}
+	#listen() {
+		const startElement = this.#startElement;
+		if (!startElement) {
+			return;
+		}
+		startElement.addEventListener('pointerdown', this);
+		// Capture phase — kill the post-drag click before it reaches any handler.
+		startElement.addEventListener('click', this, true);
+	}
+	#startTracking() {
+		const doc = globalThis.document;
+		doc.addEventListener('pointermove', this);
+		doc.addEventListener('pointerup', this);
+		doc.addEventListener('pointercancel', this);
+		globalThis.addEventListener('blur', this);
+		// Suppress drag-selection for the press lifetime. Paired with the release
+		// below; the pointerId guard keeps the ref-count balanced on double-stop.
+		lockSelection();
+	}
+	#stopTracking() {
+		if (this.#pointerId === null) {
 			return;
 		}
 		const doc = globalThis.document;
-		doc.removeEventListener('pointermove', handlePointerMove);
-		doc.removeEventListener('pointerup', handlePointerEnd);
-		doc.removeEventListener('pointercancel', handlePointerEnd);
-		globalThis.removeEventListener('blur', handleWindowBlur);
-		pointerId = null;
+		doc.removeEventListener('pointermove', this);
+		doc.removeEventListener('pointerup', this);
+		doc.removeEventListener('pointercancel', this);
+		globalThis.removeEventListener('blur', this);
+		this.#pointerId = null;
+		unlockSelection();
 	}
-	function handlePointerDown(domEvent) {
-		if (destroyed || pointerId !== null) {
+	#onPointerDown(domEvent) {
+		if (this.#destroyed || this.#pointerId !== null) {
 			return;
 		}
 		if (domEvent.button !== undefined && domEvent.button !== 0) {
 			return;
 		}
-		if (!isEnabled(domEvent)) {
+		if (!this.#isEnabled(domEvent)) {
 			return;
 		}
-		pointerId = domEvent.pointerId;
-		dragOrigin = domEvent[clientAxis];
-		startTime = performance.now();
-		delta = 0;
-		dragMoved = false;
-		suppressClick = false;
-		const doc = globalThis.document;
-		doc.addEventListener('pointermove', handlePointerMove);
-		doc.addEventListener('pointerup', handlePointerEnd);
-		doc.addEventListener('pointercancel', handlePointerEnd);
-		globalThis.addEventListener('blur', handleWindowBlur);
+		this.#pointerId = domEvent.pointerId;
+		this.#dragOrigin = domEvent[this.#clientAxis];
+		this.#startTime = performance.now();
+		this.#delta = 0;
+		this.#dragMoved = false;
+		this.#suppressClick = false;
+		this.#startTracking();
 	}
-	function handlePointerMove(domEvent) {
-		if (domEvent.pointerId !== pointerId) {
+	#onPointerMove(domEvent) {
+		if (domEvent.pointerId !== this.#pointerId) {
 			return;
 		}
-		// Free axis — keep the sign. A leftward drag (negative) advances; a
-		// rightward drag (positive) goes back. The consumer reads the sign.
-		delta = domEvent[clientAxis] - dragOrigin;
-		if (!dragMoved) {
-			if (Math.abs(delta) <= threshold) {
+		/*
+		 * Free axis — keep the sign. A leftward drag (negative) advances; a
+		 * rightward drag (positive) goes back. The consumer reads the sign.
+		 */
+		this.#delta = domEvent[this.#clientAxis] - this.#dragOrigin;
+		if (!this.#dragMoved) {
+			if (Math.abs(this.#delta) <= this.#threshold) {
 				return;
 			}
-			dragMoved = true;
-			onStart?.();
+			this.#dragMoved = true;
+			this.#onStart?.();
 		}
-		const span = extent();
-		const progress = span > 0 ? Math.min(1, Math.abs(delta) / span) : 0;
-		onMove?.(delta, progress);
+		const span = this.#extent();
+		const progress = span > 0 ? Math.min(1, Math.abs(this.#delta) / span) : 0;
+		this.#onMove?.(this.#delta, progress);
 	}
-	function handlePointerEnd(domEvent) {
-		if (domEvent.pointerId !== pointerId) {
+	#onPointerEnd(domEvent) {
+		if (domEvent.pointerId !== this.#pointerId) {
 			return;
 		}
-		stopTracking();
-		if (!dragMoved) {
+		this.#settle();
+	}
+	#onWindowBlur() {
+		if (this.#pointerId === null) {
+			return;
+		}
+		/*
+		 * Losing the window mid-drag counts as a release — settle on the travel so
+		 * far against the live pointer id.
+		 */
+		this.#settle();
+	}
+	#settle() {
+		this.#stopTracking();
+		if (!this.#dragMoved) {
 			return;
 		}
 		/**
 		 * A real drag occurred — the click the browser synthesizes next is a side
 		 * effect of the press, not an intent (e.g. advance-on-click). Swallow it.
 		 */
-		suppressClick = true;
-		const elapsed = Math.max(performance.now() - startTime, 1);
-		const distance = Math.abs(delta);
+		this.#suppressClick = true;
+		const elapsed = Math.max(performance.now() - this.#startTime, 1);
+		const distance = Math.abs(this.#delta);
 		const speed = distance / elapsed;
-		const span = extent();
+		const span = this.#extent();
 		const ratio = span > 0 ? distance / span : 0;
-		const commit = ratio >= stepRatio || speed >= stepVelocity;
-		// Dragging the track left (delta < 0) moves toward the NEXT detent (+1);
-		// dragging right (delta > 0) moves toward the PREVIOUS detent (-1).
+		const commit = ratio >= this.#stepRatio || speed >= this.#stepVelocity;
+		/*
+		 * Dragging the track left (delta < 0) moves toward the NEXT detent (+1);
+		 * dragging right (delta > 0) moves toward the PREVIOUS detent (-1).
+		 */
 		let step = 0;
-		if (commit && delta !== 0) {
-			const direction = delta < 0 ? 1 : -1;
-			if (canStep(direction)) {
+		if (commit && this.#delta !== 0) {
+			const direction = this.#delta < 0 ? 1 : -1;
+			if (this.#canStep(direction)) {
 				step = direction;
 			}
 		}
-		onSettle?.(step);
+		this.#onSettle?.(step);
 	}
-	function handleWindowBlur() {
-		if (pointerId === null) {
+	#onClick(domEvent) {
+		if (!this.#suppressClick) {
 			return;
 		}
-		// Losing the window mid-drag counts as a release — settle on the travel so
-		// far against the live pointer id.
-		handlePointerEnd({
-			pointerId,
-		});
-	}
-	function handleClick(domEvent) {
-		if (!suppressClick) {
-			return;
-		}
-		suppressClick = false;
+		this.#suppressClick = false;
 		domEvent.stopPropagation();
 		domEvent.preventDefault();
 	}
-	startElement.addEventListener('pointerdown', handlePointerDown);
-	// Capture phase — kill the post-drag click before it reaches any handler.
-	startElement.addEventListener('click', handleClick, true);
-	function destroy() {
-		if (destroyed) {
+	destroy() {
+		if (this.#destroyed) {
 			return;
 		}
-		destroyed = true;
-		stopTracking();
-		startElement.removeEventListener('pointerdown', handlePointerDown);
-		startElement.removeEventListener('click', handleClick, true);
+		this.#destroyed = true;
+		this.#stopTracking();
+		const startElement = this.#startElement;
+		if (startElement) {
+			startElement.removeEventListener('pointerdown', this);
+			startElement.removeEventListener('click', this, true);
+		}
 	}
-	return {
-		destroy,
-	};
+	/**
+	 * Adapter for the polymorphic `disposeItem` disposer protocol, which calls
+	 * `.unsubscribe()` on Subscription-like items. Filing the instance under this
+	 * name lets `gestureUnsubs` hold the controller itself instead of a bare
+	 * `destroy` reference that would lose `this` when invoked detached.
+	 */
+	unsubscribe() {
+		this.destroy();
+	}
 }
 /*
 	this.dragTrack(startElement, options) — the WebComponent prototype method.
-	Same call as createDragTrack, but the controller is filed in `gestureUnsubs`
-	and destroyed automatically on disconnect — the auto-cleanup contract that
-	`this.dragSnap()`, `this.hotKey()`, and `this.delegate()` already follow.
+	Same call as DragTrack.create, but the controller is filed in `gestureUnsubs`
+	and torn down automatically on disconnect — the auto-cleanup contract that
+	`this.dragSnap()`, `this.hotKey()`, and `this.delegate()` already follow. The
+	instance itself is filed (not its bare `destroy`) so `disposeItem` invokes
+	`.unsubscribe()` with `this` intact.
 */
 export function dragTrack(startElement, options) {
-	const controller = createDragTrack(startElement, options);
-	(this.gestureUnsubs ??= new Set()).add(controller.destroy);
+	const controller = DragTrack.create(startElement, options);
+	(this.gestureUnsubs ??= new Set()).add(controller);
 	return controller;
 }

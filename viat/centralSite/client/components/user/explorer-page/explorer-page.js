@@ -190,7 +190,7 @@ export class ExplorerPage extends WebComponent {
 			<div class="ex-shell">
 				<header class="ex-title-header">
 					<div class="ex-title-block">
-						<ui-icon class="ex-title-icon" .name=${'compass'} .size=${'md'}></ui-icon>
+						<ui-icon class="ex-title-icon" .state.name=${'compass'} .state.size=${'md'}></ui-icon>
 						<span class="ex-title">// EXPLORER · RECENT TRANSACTIONS</span>
 					</div>
 				</header>

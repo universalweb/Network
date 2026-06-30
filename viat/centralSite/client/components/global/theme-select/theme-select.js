@@ -23,7 +23,7 @@ export class UIThemeSelect extends WebComponent {
 				<span class="ts-label">${() => {
 					return this.currentLabel;
 				}}</span>
-				<ui-icon class="ts-arrow" .name=${'chevron-down'} .size=${'xs'}></ui-icon>
+				<ui-icon class="ts-arrow" .state.name=${'chevron-down'} .state.size=${'xs'}></ui-icon>
 			</button>
 			<div #drop class="theme-drop" id="theme-drop" popover="auto"
 				@click=${this.handlePopupClick}>

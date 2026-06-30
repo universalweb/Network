@@ -34,7 +34,7 @@ export class AppDashboard extends WebComponent {
 						<div class="center-stack">
 							<wallet-panel></wallet-panel>
 							<wallet-stats-panel></wallet-stats-panel>
-							<help-panel .shortcuts=${DASHBOARD_HOTKEYS}></help-panel>
+							<help-panel .state.shortcuts=${DASHBOARD_HOTKEYS}></help-panel>
 						</div>
 						<div class="center-stack">
 							<wallet-amount></wallet-amount>

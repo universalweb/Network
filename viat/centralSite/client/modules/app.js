@@ -19,7 +19,8 @@ import '../components/user/transaction-detail-page/transaction-detail-page.js';
 import '../components/user/wallet-onboarding/wallet-onboarding.js';
 import './tools.js';
 import '../components/core/tooltips/tooltip.js';
-import { WebComponent, globalState } from 'webcomponent';
+import { globalState, WebComponent } from 'webcomponent';
+import { setScrollLockTarget } from '../components/global/scroll-lock.js';
 import { getTheme, setTheme } from '../components/global/theme-select/theme-manager.js';
 import { AppView } from '../components/user/app-view/app-view.js';
 import { URLRouter } from './urlRouter.js';
@@ -481,6 +482,7 @@ function forgetProfileFromIndex(profileName) {
 	}
 	const indexData = loadProfileIndex();
 	if (indexData[profileName]) {
+		// TODO: Need to use Map not object for indexData. delete is a bad op in JS.
 		delete indexData[profileName];
 		saveProfileIndex(indexData);
 	}
@@ -1647,7 +1649,7 @@ class WalletApp extends AppView {
 		});
 	}
 	handleDockSelect(domEvent) {
-		const id = domEvent.detail?.source?.state?.id;
+		const id = domEvent.detail?.data?.id;
 		if (!DOCK_ROUTE_IDS.has(id) || !this.router.findById(id)) {
 			return;
 		}
@@ -1668,19 +1670,18 @@ class WalletApp extends AppView {
 		const raw = Number(this.global?.routeParams?.page);
 		return Number.isFinite(raw) && raw >= 1 ? raw : 1;
 	}
-	syncActivePageFromGlobal = () => {
+	syncActivePageFromGlobal() {
 		const view = this.global?.routeView || this.global?.routeSection || this.global?.routeId || '';
 		if (!view) {
 			return;
 		}
 		const previousView = this.state.activePage;
 		this.state.activePage = view;
-		// Document scroll now carries across SPA navigations (window.scrollY does
-		// not auto-reset), so a route change must land the new page at the top —
-		// parity with the old fresh-per-scroller behavior. This handler only fires
-		// on a real route change (routeView/routeParams/routeFilter), so it's safe
-		// to reset unconditionally.
-		globalThis.scrollTo(0, 0);
+		// A route change must land the new page at the top. The inner .shell-scroll
+		// surface is the scroller now (not the document), so reset IT. This handler
+		// only fires on a real route change, so resetting unconditionally is safe;
+		// scroll-report then publishes scrolled=false and the top bar settles flat.
+		this.refs.shellscroll?.scrollTo(0, 0);
 		const params = this.global?.routeParams ?? {};
 		const filter = this.global?.routeFilter ?? '';
 		const page = this.pageFromGlobal();
@@ -1699,7 +1700,7 @@ class WalletApp extends AppView {
 			// account-detail / transaction-detail pages.
 			this.fetchAccountForWallet();
 		}
-	};
+	}
 	onVisible() {
 		console.log('[AI MAP]\n%s', this.aiMap());
 	}
@@ -1736,6 +1737,7 @@ class WalletApp extends AppView {
 		// Can't be css hide show for page components the router should be mounting and unmounting them based on the URL; they need to be fully removed from the DOM when not active so their lifecycle disconnects and they stop consuming resources. The router doesn't do this automatically since some pages (e.g. explorer) have nested sub-pages that share the same parent route, so we mount all page components here and let the router delegate which one is active via a wrapper class on the parent.
 		this.html `
 			<global-top-bar></global-top-bar>
+			<div class="shell-scroll" #shellscroll scroll-report>
 			<div class="shell-body">
 				<div class="${() => {
 					return `shell-page is-page-${this.state.activePage}`;
@@ -1748,8 +1750,9 @@ class WalletApp extends AppView {
 					<account-detail-page class="shell-page-view"></account-detail-page>
 					<transaction-detail-page class="shell-page-view"></transaction-detail-page>
 				</div>
-				<global-sidebar></global-sidebar>
 			</div>
+			</div>
+			<global-sidebar></global-sidebar>
 			<global-bottom-bar></global-bottom-bar>
 			<global-dock></global-dock>
 			<global-pulldown></global-pulldown>
@@ -1765,6 +1768,9 @@ class WalletApp extends AppView {
 	get refs() {
 		const dashboard = this.getComponent('app-dashboard');
 		return {
+			// The inner scroll surface (a plain div, so not a component lookup) — reached
+			// through the framework ref proxy this custom getter otherwise shadows.
+			shellscroll: super.refs.shellscroll,
 			dashboard,
 			activityLog: dashboard?.getComponent('activity-log'),
 			globalBottomBar: this.getComponent('global-bottom-bar'),
@@ -1781,6 +1787,9 @@ class WalletApp extends AppView {
 		};
 	}
 	async onRender() {
+		// Point the shared background scroll-lock at the inner scroll surface — overlays
+		// (modals, pulldown) must freeze IT, not the document, which no longer scrolls.
+		setScrollLockTarget(this.refs.shellscroll ?? null);
 		// Chrome-only bootstrap: wait for both dashboards to render, sync the
 		// network latency readout from the live API, then start the router.
 		// Both <app-dashboard> and <mobile-dashboard> mount in parallel; await

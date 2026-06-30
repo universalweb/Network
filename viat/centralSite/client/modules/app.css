@@ -1,11 +1,12 @@
 :host {
-	/* Document-scroll shell: a flowing block, not a viewport-clamped grid. The
-	   chrome (ui-app-bar / ui-status-bar / ui-sidebar / dock / pulldown) is all
-	   fixed-position overlay, so it floats over this regardless of layout; the
-	   old grid rows only framed the content track, which now just flows. */
+	/* App-shell host. The content scrolls inside a fixed, full-viewport inner
+	   surface (.shell-scroll) that sits BELOW the fixed chrome bars, so the content
+	   scrollbar paints behind the bars instead of the native viewport scrollbar
+	   painting over them. The host itself does not scroll. */
 	display: block;
 	width: 100%;
-	min-height: 100svh;
+	block-size: 100%;
+	overflow: hidden;
 	font-family: var(--font-mono);
 	font-size: 0.75rem;
 	line-height: 1.5;
@@ -13,12 +14,25 @@
 	-webkit-font-smoothing: antialiased;
 	background: transparent;
 }
+/* The single scroll surface: a fixed full-viewport box UNDER the chrome bars
+   (z-index 40). Its scrollbar runs full-height behind both bars; the block-axis
+   padding keeps content clear of them so nothing is trapped underneath. */
+.shell-scroll {
+	position: fixed;
+	inset: 0;
+	z-index: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+	overscroll-behavior: contain;
+	padding-block-start: var(--top-bar-clearance);
+	padding-block-end: var(--bottom-bar-clearance);
+}
 .shell-body {
 	display: grid;
 	grid-template-columns: calc(var(--rail-width, 52px) + 16px) minmax(0, 1fr) 0;
 	gap: 0;
 	position: relative;
-	min-height: 100svh;
+	min-block-size: 100%;
 }
 /* The sidebar is a fixed-position flyout in every mode — it overlays the page
    and never reserves a column or displaces dashboard content, so the third
@@ -74,8 +88,12 @@
 :host([data-vw="sm"]) .shell-page {
 	grid-row: 1;
 	grid-column: 1;
-	/* The dock floats over the page's block-end edge — reserve its height so
-	   document-scrolled content can travel fully above it (never trapped under). */
+}
+/* Mobile: the bottom bar is suppressed and the fixed dock takes its slot, so the
+   scroll surface reserves the dock's height (not the status bar's) at the block-end
+   so content can travel fully above the dock. */
+:host([data-vw="xs"]) .shell-scroll,
+:host([data-vw="sm"]) .shell-scroll {
 	padding-block-end: calc(var(--dock-h) + var(--space-4));
 }
 /* Bottom bar is permanently suppressed on mobile — the dock takes its

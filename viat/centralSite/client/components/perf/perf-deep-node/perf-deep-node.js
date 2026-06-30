@@ -47,13 +47,11 @@ export const PropagationTracker = {
 	},
 };
 /**
- * Recursive depth-propagation node. The framework's PROP spot writes
- * `child[key] = value` directly — for that write to route into state and
- * trigger reactivity, the child needs a prototype setter. We declare
- * `set depth/value/token/maxDepth` here so the upgrade-shadow rescue
- * (`findPrototypeSetterDescriptor`) routes any parent assign through
- * `this.state` and fires the path bus. This is the framework-blessed
- * pattern for exposing reactive props via dot-bindings.
+ * Recursive depth-propagation node. Each top-level `static state` key is auto-
+ * installed as a reactive routing accessor on the prototype (the framework's
+ * `so a parent's `.state.depth=`/`.state.value=`/`.state.token=`/
+ * `.state.maxDepth=` dot-binding flows straight into `this.state` — no hand-written
+ * setter needed.
  */
 export class PerfDeepNode extends WebComponent {
 	static url = import.meta.url;
@@ -66,30 +64,6 @@ export class PerfDeepNode extends WebComponent {
 		token: 0,
 		maxDepth: 0,
 	};
-	set depth(next) {
-		this.state.depth = next;
-	}
-	get depth() {
-		return this.state.depth;
-	}
-	set value(next) {
-		this.state.value = next;
-	}
-	get value() {
-		return this.state.value;
-	}
-	set token(next) {
-		this.state.token = next;
-	}
-	get token() {
-		return this.state.token;
-	}
-	set maxDepth(next) {
-		this.state.maxDepth = next;
-	}
-	get maxDepth() {
-		return this.state.maxDepth;
-	}
 	onMount() {
 		this.observe('token', this.handleTokenChange);
 	}
@@ -122,7 +96,7 @@ export class PerfDeepNode extends WebComponent {
 				<span class="val">${this.state.value}</span>
 				<span class="token">tok ${this.state.token}</span>
 			</div>
-			<perf-deep-node .depth=${this.state.depth - 1} .value=${this.state.value} .token=${this.state.token} .maxDepth=${this.state.maxDepth}></perf-deep-node>
+			<perf-deep-node .state.depth=${this.state.depth - 1} .state.value=${this.state.value} .state.token=${this.state.token} .state.maxDepth=${this.state.maxDepth}></perf-deep-node>
 		`;
 		Perf.measure(`depth-L${this.state.depth}`, renderMark);
 	}

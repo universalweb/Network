@@ -3,9 +3,6 @@ import '../../global/icon/icon.js';
 import '../../global/theme-select/theme-select.js';
 import { SNAP_CURVE, SNAP_MS, WebComponent } from 'webcomponent';
 import { clampOffset, offsetIsOpen } from './pulldownOffset.js';
-/* Detach threshold — the bar floats once the document is scrolled past this many
-   px. Matches the old `scroll-report` SCROLL_THRESHOLD so the feel is unchanged. */
-const SCROLL_THRESHOLD = 8;
 // `<global-top-bar>` — the Viat top bar. A thin composition over `<ui-app-bar>`:
 // it slots the brand block + theme select and supplies the three action items.
 // The drag-to-open-pulldown coupling lives *here*, not in the built-in — it
@@ -52,19 +49,20 @@ export class GlobalTopBar extends WebComponent {
 		this.delegate('pulldown:state', this.handlePulldownState);
 		this.reflectViewport();
 		/*
-		 * Adaptive flat → float, driven by DOCUMENT scroll. The page is the scroll
-		 * surface now (see app.css / index.css un-clamp), so the bar watches the
-		 * window directly — the old per-page `scroll-report` relay existed only
-		 * because inner-scroll `scroll` events are composed:false and never reached
-		 * here. Managed via `addEvent` (auto-swept on disconnect, no AbortController).
+		 * Adaptive flat → float, driven by the inner content scroll surface. The page
+		 * itself no longer scrolls (app.css / index.css lock it); `.shell-scroll` carries
+		 * the `scroll-report` behavior, which publishes its scrolled state to
+		 * `globalState.environment.scrolled`. Bind that flag here — `scroll` events are
+		 * composed:false and never escape the scroller's shadow, so the shared flag is the
+		 * relay. Auto-swept on disconnect (no listener / AbortController to manage).
 		 */
-		this.addEvent('scroll', this.handleWindowScroll, globalThis, {
-			passive: true,
+		this.observeGlobal('environment.scrolled', (scrolled) => {
+			this.applyScrolled(!!scrolled);
 		});
 		/*
-		 * A route change lands a fresh page; AppView resets the document scroll to
-		 * top, so reset the bar to flat instantly here to avoid a one-frame float
-		 * before the scroll listener catches up.
+		 * A route change lands a fresh page; AppView resets the scroll surface to top,
+		 * so reset the bar to flat instantly here to avoid a one-frame float before the
+		 * scroll-report flag catches up.
 		 */
 		this.observeGlobal('routeView', () => {
 			this.applyScrolled(false);
@@ -78,9 +76,6 @@ export class GlobalTopBar extends WebComponent {
 		 * AbortController to manage.
 		 */
 		this.delegate('viewport:resize', this.handleResize);
-	}
-	handleWindowScroll() {
-		this.applyScrolled(globalThis.scrollY > SCROLL_THRESHOLD);
 	}
 	applyScrolled(scrolled) {
 		this.refs.appbar?.toggleAttribute('data-scrolled', scrolled);
@@ -279,7 +274,7 @@ export class GlobalTopBar extends WebComponent {
 						</svg>
 						<span class="tb-logo-text">VIAT</span>
 					</a>
-					<ui-icon class="tb-logo-sep" .name=${'chevron-right'} .size=${'xs'}></ui-icon>
+					<ui-icon class="tb-logo-sep" .state.name=${'chevron-right'} .state.size=${'xs'}></ui-icon>
 					<span class="tb-subtitle">${this.state.subtitle}</span>
 				</div>
 				<ui-theme-select slot="end"></ui-theme-select>

@@ -74,22 +74,22 @@ export class UIAiToolCall extends WebComponent {
 		this.html `
 			<details class="atc" data-status=${this.state.status} ?open=${this.state.expanded} @toggle=${this.handleToggle}>
 				<summary class="atc-summary">
-					<ui-icon class="atc-tool" .name=${'wrench'} .size=${'sm'}></ui-icon>
+					<ui-icon class="atc-tool" .state.name=${'wrench'} .state.size=${'sm'}></ui-icon>
 					<code class="atc-name">${this.state.name}</code>
 					<span class="atc-status">
-						<ui-icon class="atc-status-icon" .name=${this.statusIcon} .size=${'xs'} ?spin=${this.state.status === 'running'}></ui-icon>
+						<ui-icon class="atc-status-icon" .state.name=${this.statusIcon} .state.size=${'xs'} ?spin=${this.state.status === 'running'}></ui-icon>
 						<span class="atc-status-label">${this.statusLabel}</span>
 					</span>
-					<ui-icon class="atc-chevron" .name=${'chevron-down'} .size=${'sm'}></ui-icon>
+					<ui-icon class="atc-chevron" .state.name=${'chevron-down'} .state.size=${'sm'}></ui-icon>
 				</summary>
 				<div class="atc-body">
 					<div class="atc-section">
 						<span class="atc-section-label">Arguments</span>
-						<ui-json-inspector #argsview .expandDepth=${1} .rootLabel=${'args'}></ui-json-inspector>
+						<ui-json-inspector #argsview .state.expandDepth=${1} .state.rootLabel=${'args'}></ui-json-inspector>
 					</div>
 					<div class="atc-section" ?hidden=${!this.hasResult}>
 						<span class="atc-section-label">Result</span>
-						<ui-json-inspector #resultview .expandDepth=${1} .rootLabel=${'result'}></ui-json-inspector>
+						<ui-json-inspector #resultview .state.expandDepth=${1} .state.rootLabel=${'result'}></ui-json-inspector>
 					</div>
 				</div>
 			</details>

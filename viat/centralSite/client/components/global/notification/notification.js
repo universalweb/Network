@@ -56,7 +56,7 @@ class NotificationItem extends WebComponent {
 					<div class="notification-title">${this.state.title}</div>
 					<div class="notification-message">${this.state.message}</div>
 				</div>
-				<ui-icon class="notification-close" .name=${'x'} .size=${'sm'}></ui-icon>
+				<ui-icon class="notification-close" .state.name=${'x'} .state.size=${'sm'}></ui-icon>
 			</div>
 		`;
 	}

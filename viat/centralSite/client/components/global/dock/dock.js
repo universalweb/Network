@@ -19,7 +19,9 @@ export class UIDock extends WebComponent {
 	 * Per-theme RULE overrides (active-bar geometry, rail hairlines) in
 	 * `./themes/{id}.css` — adopted by theme, absent files are graceful.
 	 */
-	static themes = ['gnosis', 'codex'];
+	static themes = [
+		'gnosis', 'codex', 'dark',
+	];
 	static state = {
 		items: [],
 		orientation: 'vertical',
@@ -52,6 +54,7 @@ export class UIDock extends WebComponent {
 	handleItemSelect(domEvent) {
 		// The icon-button is the event source; its `id` is the section to highlight.
 		const id = domEvent.detail?.source?.state?.id;
+		this.logInfo('handleItemSelect', id, domEvent);
 		if (!id) {
 			return;
 		}
@@ -84,7 +87,7 @@ export class UIDock extends WebComponent {
 			return;
 		}
 		const activeId = this.state.activeId || '';
-		const activeButton = activeId ? this.findComponent('ui-icon-button', (button) => {
+		const activeButton = activeId ? this.findComponent('dock-icon-button', (button) => {
 			return button.state.id === activeId;
 		}) : null;
 		this.indicator.moveTo(activeButton, snap);

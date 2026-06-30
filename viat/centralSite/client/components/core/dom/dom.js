@@ -1,5 +1,6 @@
 import {
-	eachObject, hasValue, isFunction, resolveTarget,
+	hasValue, isFunction, isString,
+	resolveTarget,
 } from '../utilities.js';
 import { getHostChildren, liveChildren } from './children.js';
 export function getComponent(tag) {
@@ -21,50 +22,110 @@ export function getComponentsArray(tag) {
 		return list ? list.slice() : [];
 	}
 	const out = [];
-	getHostChildren(this).forEach((list) => {
-		for (let i = 0; i < list.length; i++) {
-			out.push(list[i]);
+	const buckets = getHostChildren(this);
+	for (const list of buckets.values()) {
+		for (let index = 0; index < list.length; index++) {
+			out.push(list[index]);
 		}
-	});
+	}
 	return out;
+}
+/**
+ * Walk every child bucket and return the first component the search accepts,
+ * without allocating a flat array. Stops at the first match.
+ * @param {WebComponent} host - Host whose child buckets are scanned.
+ * @param {(component: WebComponent) => boolean} search - Match test.
+ * @returns {WebComponent|null} The first match, or null.
+ */
+function firstComponentInBuckets(host, search) {
+	const children = getHostChildren(host);
+	for (const list of children.values()) {
+		for (let index = 0; index < list.length; index++) {
+			if (search(list[index])) {
+				return list[index];
+			}
+		}
+	}
+	return null;
+}
+/**
+ * Walk every child bucket and collect every component the search accepts into a
+ * fresh array, without allocating an intermediate flat array first.
+ * @param {WebComponent} host - Host whose child buckets are scanned.
+ * @param {(component: WebComponent) => boolean} search - Match test.
+ * @returns {WebComponent[]} A fresh array of every match (empty when none).
+ */
+function collectComponentsInBuckets(host, search) {
+	const results = [];
+	const children = getHostChildren(host);
+	for (const list of children.values()) {
+		for (let index = 0; index < list.length; index++) {
+			if (search(list[index])) {
+				results.push(list[index]);
+			}
+		}
+	}
+	return results;
 }
 /**
  * Find the first child component matching `predicate`. Tag-narrowed: linear
  * scan of the matching bucket. No-tag: iterates every bucket without
  * allocating a flat array, stopping at the first match.
- * @param {string} tag - Element tag to narrow by (falsy = search all).
- * @param {(component: WebComponent) => boolean} predicate - Match test.
+ * @param {string|((component: WebComponent) => boolean)} tag - Element tag to
+ * narrow by, or a search function to run against every component.
+ * @param {(component: WebComponent) => boolean} [predicate] - Match test, used
+ * when `tag` narrows by element tag.
  * @returns {WebComponent|null} The first match, or null.
  */
 export function findComponent(tag, predicate) {
-	if (!isFunction(predicate)) {
-		return null;
-	}
-	if (tag) {
+	if (isString(tag)) {
 		const list = liveChildren(this, tag.toLowerCase());
 		if (!list) {
-			return null;
-		}
-		for (let i = 0; i < list.length; i++) {
-			if (predicate(list[i])) {
-				return list[i];
-			}
-		}
-		return null;
-	}
-	let match = null;
-	getHostChildren(this).forEach((list) => {
-		if (match) {
 			return;
+		} else if (!predicate) {
+			return list[0];
 		}
-		for (let i = 0; i < list.length; i++) {
-			if (predicate(list[i])) {
-				match = list[i];
-				return;
+		for (let index = 0; index < list.length; index++) {
+			if (predicate(list[index])) {
+				return list[index];
 			}
 		}
-	});
-	return match;
+		return;
+	}
+	if (isFunction(tag)) {
+		return firstComponentInBuckets(this, tag);
+	}
+}
+/**
+ * Find every child component matching the search. Tag-narrowed: linear scan of
+ * the matching bucket. No-tag: iterates every bucket without allocating a flat
+ * array first, collecting all matches.
+ * @param {string|((component: WebComponent) => boolean)} tag - Element tag to
+ * narrow by, or a search function to run against every component.
+ * @param {(component: WebComponent) => boolean} [predicate] - Match test, used
+ * when `tag` narrows by element tag.
+ * @returns {WebComponent[]} A fresh array of every match (empty when none).
+ */
+export function findComponents(tag, predicate) {
+	if (isString(tag)) {
+		const list = liveChildren(this, tag.toLowerCase());
+		if (!list) {
+			return [];
+		} else if (!predicate) {
+			return list.slice();
+		}
+		const results = [];
+		for (let index = 0; index < list.length; index++) {
+			if (predicate(list[index])) {
+				results.push(list[index]);
+			}
+		}
+		return results;
+	}
+	if (isFunction(tag)) {
+		return collectComponentsInBuckets(this, tag);
+	}
+	return [];
 }
 export function getComponentRoot() {
 	// Light-DOM (no-shadow) components render into the host element itself.
@@ -77,10 +138,12 @@ export function prependTo(target) {
 	return resolveTarget(target)?.prepend(this);
 }
 export function ifAssign(target) {
-	eachObject(target, (key, value) => {
+	const keys = Object.keys(target);
+	for (let keyIndex = 0; keyIndex < keys.length; keyIndex++) {
+		const key = keys[keyIndex];
 		if (hasValue(this.state[key])) {
-			this.state[key] = value;
+			this.state[key] = target[key];
 		}
-	});
+	}
 	return target;
 }

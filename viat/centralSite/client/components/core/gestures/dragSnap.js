@@ -12,6 +12,7 @@
 	*visuals*: where the panel sits during the drag and how it animates to the
 	snap point afterwards — supplied through callbacks.
 */
+import { lockSelection, unlockSelection } from './selectionLock.js';
 /*
  * Snap-animation timing. The engine never animates; it exports these so every
  * consumer animates the settle with one identical curve.
@@ -19,9 +20,12 @@
 export const SNAP_MS = 320;
 export const SNAP_CURVE = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
 // Gesture-knob defaults — overridable per call through `options`.
-const DRAG_THRESHOLD_PX = 6; // raw travel before a press becomes a drag
-const SNAP_RATIO = 0.3; // travel fraction (of the snap extent) that flips state
-const SNAP_VELOCITY = 0.5; // px/ms that flips state regardless of distance
+// Raw travel before a press becomes a drag.
+const DRAG_THRESHOLD_PX = 6;
+// Travel fraction (of the snap extent) that flips state.
+const SNAP_RATIO = 0.3;
+// px/ms that flips state regardless of distance.
+const SNAP_VELOCITY = 0.5;
 /*
  * `opensToward` → the sign of axis movement that opens the panel. A pulldown
  * opens downward (+y); a right-edge drawer opens leftward (-x).
@@ -41,8 +45,17 @@ function alwaysFalse() {
 function zero() {
 	return 0;
 }
+/**
+ * Keep only the part of `raw` that points in `sign`'s direction; the opposite
+ * direction reads as zero. This is what locks an opening drag to opening
+ * movement and a closing drag to closing movement.
+ * @returns {number} the direction-clamped travel.
+ */
+function keepDirection(raw, sign) {
+	return sign * Math.max(0, sign * raw);
+}
 /*
-	createDragSnap(startElement, options) → { destroy() }
+	DragSnap.create(startElement, options) → DragSnap
 	options:
 	  axis          'x' | 'y'                   — drag axis (default 'y')
 	  opensToward   'down'|'up'|'left'|'right'   — which way opens
@@ -58,163 +71,235 @@ function zero() {
 	  onStart(startedOpen)          — fired once, when the drag clears threshold
 	  onMove(progress, delta)       — every tracked move; consumer positions
 	  onSettle(shouldOpen)          — release verdict; consumer animates + commits
+	The controller files itself as an EventListenerObject (it implements
+	`handleEvent`), so a single instance reference serves as every listener and
+	there are no per-instance handler closures to track. Tear it down with
+	`destroy()`; `unsubscribe()` is the same teardown under the `disposeItem`
+	protocol name.
 */
-export function createDragSnap(startElement, options = {}) {
-	if (!startElement) {
-		return {
-			destroy() {},
-		};
-	}
-	const axis = options.axis === 'x' ? 'x' : 'y';
-	const clientAxis = axis === 'x' ? 'clientX' : 'clientY';
-	const opensToward = options.opensToward || (axis === 'x' ? 'right' : 'down');
-	const openSign = OPEN_SIGN[opensToward] ?? 1;
-	const threshold = options.threshold ?? DRAG_THRESHOLD_PX;
-	const snapRatio = options.snapRatio ?? SNAP_RATIO;
-	const snapVelocity = options.snapVelocity ?? SNAP_VELOCITY;
-	const isEnabled = options.enabled || alwaysTrue;
-	const isOpen = options.isOpen || alwaysFalse;
-	const extent = options.extent || zero;
-	const snapExtent = options.snapExtent || extent;
-	const onStart = options.onStart;
-	const onMove = options.onMove;
-	const onSettle = options.onSettle;
-	let pointerId = null;
-	let dragOrigin = 0;
-	let startTime = 0;
-	let delta = 0;
-	let dragMoved = false;
-	let startedOpen = false;
-	let activeSign = 1;
-	let suppressClick = false;
-	let destroyed = false;
+export class DragSnap {
+	#startElement;
+	#clientAxis;
+	#openSign;
+	#threshold;
+	#snapRatio;
+	#snapVelocity;
+	#isEnabled;
+	#isOpen;
+	#extent;
+	#snapExtent;
+	#onStart;
+	#onMove;
+	#onSettle;
+	#pointerId = null;
+	#dragOrigin = 0;
+	#startTime = 0;
+	#delta = 0;
+	#dragMoved = false;
+	#startedOpen = false;
+	#activeSign = 1;
+	#suppressClick = false;
+	#destroyed = false;
 	/**
-	 * Keep only the part of `raw` that points in `sign`'s direction; the
-	 * opposite direction reads as zero. This is what locks an opening drag to
-	 * opening movement and a closing drag to closing movement.
+	 * The construction path — prefer this over `new DragSnap()`. Builds the
+	 * controller and, when there is a start element, wires its press/click
+	 * listeners. A missing element yields an inert controller whose `destroy()`
+	 * is a safe no-op.
+	 * @returns {DragSnap} the wired (or inert) controller.
 	 */
-	function keepDirection(raw, sign) {
-		return sign * Math.max(0, sign * raw);
+	static create(startElement, options = {}) {
+		const controller = new DragSnap(startElement, options);
+		controller.#listen();
+		return controller;
 	}
-	function stopTracking() {
-		if (pointerId === null) {
+	constructor(startElement, options = {}) {
+		this.#startElement = startElement || null;
+		const axis = options.axis === 'x' ? 'x' : 'y';
+		this.#clientAxis = axis === 'x' ? 'clientX' : 'clientY';
+		const opensToward = options.opensToward || (axis === 'x' ? 'right' : 'down');
+		this.#openSign = OPEN_SIGN[opensToward] ?? 1;
+		this.#threshold = options.threshold ?? DRAG_THRESHOLD_PX;
+		this.#snapRatio = options.snapRatio ?? SNAP_RATIO;
+		this.#snapVelocity = options.snapVelocity ?? SNAP_VELOCITY;
+		this.#isEnabled = options.enabled || alwaysTrue;
+		this.#isOpen = options.isOpen || alwaysFalse;
+		this.#extent = options.extent || zero;
+		this.#snapExtent = options.snapExtent || this.#extent;
+		this.#onStart = options.onStart;
+		this.#onMove = options.onMove;
+		this.#onSettle = options.onSettle;
+	}
+	/**
+	 * The DOM dispatches every registered event here because the instance is the
+	 * listener. Route each type to its handler; the start element's press/click
+	 * and the document's move/end/blur all funnel through this one entry point.
+	 */
+	handleEvent(domEvent) {
+		switch (domEvent.type) {
+			case 'pointerdown':
+				this.#onPointerDown(domEvent);
+				break;
+			case 'pointermove':
+				this.#onPointerMove(domEvent);
+				break;
+			case 'pointerup':
+			case 'pointercancel':
+				this.#onPointerEnd(domEvent);
+				break;
+			case 'blur':
+				this.#onWindowBlur();
+				break;
+			case 'click':
+				this.#onClick(domEvent);
+				break;
+			default:
+				break;
+		}
+	}
+	#listen() {
+		const startElement = this.#startElement;
+		if (!startElement) {
+			return;
+		}
+		startElement.addEventListener('pointerdown', this);
+		// Capture phase — kill the post-drag click before it reaches any handler.
+		startElement.addEventListener('click', this, true);
+	}
+	#startTracking() {
+		const doc = globalThis.document;
+		doc.addEventListener('pointermove', this);
+		doc.addEventListener('pointerup', this);
+		doc.addEventListener('pointercancel', this);
+		globalThis.addEventListener('blur', this);
+		// Suppress drag-selection for the press lifetime. Paired with the release
+		// below; the pointerId guard keeps the ref-count balanced on double-stop.
+		lockSelection();
+	}
+	#stopTracking() {
+		if (this.#pointerId === null) {
 			return;
 		}
 		const doc = globalThis.document;
-		doc.removeEventListener('pointermove', handlePointerMove);
-		doc.removeEventListener('pointerup', handlePointerEnd);
-		doc.removeEventListener('pointercancel', handlePointerEnd);
-		globalThis.removeEventListener('blur', handleWindowBlur);
-		pointerId = null;
+		doc.removeEventListener('pointermove', this);
+		doc.removeEventListener('pointerup', this);
+		doc.removeEventListener('pointercancel', this);
+		globalThis.removeEventListener('blur', this);
+		this.#pointerId = null;
+		unlockSelection();
 	}
-	function handlePointerDown(domEvent) {
-		if (destroyed || pointerId !== null) {
+	#onPointerDown(domEvent) {
+		if (this.#destroyed || this.#pointerId !== null) {
 			return;
 		}
 		if (domEvent.button !== undefined && domEvent.button !== 0) {
 			return;
 		}
-		if (!isEnabled(domEvent)) {
+		if (!this.#isEnabled(domEvent)) {
 			return;
 		}
-		pointerId = domEvent.pointerId;
-		dragOrigin = domEvent[clientAxis];
-		startTime = performance.now();
-		delta = 0;
-		dragMoved = false;
-		suppressClick = false;
-		startedOpen = isOpen() === true;
+		this.#pointerId = domEvent.pointerId;
+		this.#dragOrigin = domEvent[this.#clientAxis];
+		this.#startTime = performance.now();
+		this.#delta = 0;
+		this.#dragMoved = false;
+		this.#suppressClick = false;
+		this.#startedOpen = this.#isOpen() === true;
 		// A drag from the closed state opens; from the open state it closes.
-		activeSign = startedOpen ? -openSign : openSign;
-		const doc = globalThis.document;
-		doc.addEventListener('pointermove', handlePointerMove);
-		doc.addEventListener('pointerup', handlePointerEnd);
-		doc.addEventListener('pointercancel', handlePointerEnd);
-		globalThis.addEventListener('blur', handleWindowBlur);
+		this.#activeSign = this.#startedOpen ? -this.#openSign : this.#openSign;
+		this.#startTracking();
 	}
-	function handlePointerMove(domEvent) {
-		if (domEvent.pointerId !== pointerId) {
+	#onPointerMove(domEvent) {
+		if (domEvent.pointerId !== this.#pointerId) {
 			return;
 		}
-		const raw = domEvent[clientAxis] - dragOrigin;
-		delta = keepDirection(raw, activeSign);
-		if (!dragMoved) {
-			if (Math.abs(raw) <= threshold) {
+		const raw = domEvent[this.#clientAxis] - this.#dragOrigin;
+		this.#delta = keepDirection(raw, this.#activeSign);
+		if (!this.#dragMoved) {
+			if (Math.abs(raw) <= this.#threshold) {
 				return;
 			}
-			dragMoved = true;
-			onStart?.(startedOpen);
+			this.#dragMoved = true;
+			this.#onStart?.(this.#startedOpen);
 		}
-		const span = extent();
-		const progress = span > 0 ? Math.min(1, Math.abs(delta) / span) : 0;
-		onMove?.(progress, delta);
+		const span = this.#extent();
+		const progress = span > 0 ? Math.min(1, Math.abs(this.#delta) / span) : 0;
+		this.#onMove?.(progress, this.#delta);
 	}
-	function handlePointerEnd(domEvent) {
-		if (domEvent.pointerId !== pointerId) {
+	#onPointerEnd(domEvent) {
+		if (domEvent.pointerId !== this.#pointerId) {
 			return;
 		}
-		stopTracking();
-		if (!dragMoved) {
-			return;
-		}
-		/**
-		 * A real drag occurred — the click the browser synthesizes next is a
-		 * side effect of the press, not an intent. Swallow it.
-		 */
-		suppressClick = true;
-		const elapsed = Math.max(performance.now() - startTime, 1);
-		const distance = Math.abs(delta);
-		const speed = distance / elapsed;
-		const basis = snapExtent();
-		const ratio = basis > 0 ? distance / basis : 0;
-		const shouldFlip = ratio >= snapRatio || speed >= snapVelocity;
-		const shouldOpen = startedOpen ? !shouldFlip : shouldFlip;
-		onSettle?.(shouldOpen);
+		this.#settle();
 	}
-	function handleWindowBlur() {
-		if (pointerId === null) {
+	#onWindowBlur() {
+		if (this.#pointerId === null) {
 			return;
 		}
 		/*
-		 * Losing the window mid-drag counts as a release — settle on the
-		 * distance travelled so far.
+		 * Losing the window mid-drag counts as a release — settle on the distance
+		 * travelled so far.
 		 */
-		handlePointerEnd({
-			pointerId,
-		});
+		this.#settle();
 	}
-	function handleClick(domEvent) {
-		if (!suppressClick) {
+	#settle() {
+		this.#stopTracking();
+		if (!this.#dragMoved) {
 			return;
 		}
-		suppressClick = false;
+		/**
+		 * A real drag occurred — the click the browser synthesizes next is a side
+		 * effect of the press, not an intent. Swallow it.
+		 */
+		this.#suppressClick = true;
+		const elapsed = Math.max(performance.now() - this.#startTime, 1);
+		const distance = Math.abs(this.#delta);
+		const speed = distance / elapsed;
+		const basis = this.#snapExtent();
+		const ratio = basis > 0 ? distance / basis : 0;
+		const shouldFlip = ratio >= this.#snapRatio || speed >= this.#snapVelocity;
+		const shouldOpen = this.#startedOpen ? !shouldFlip : shouldFlip;
+		this.#onSettle?.(shouldOpen);
+	}
+	#onClick(domEvent) {
+		if (!this.#suppressClick) {
+			return;
+		}
+		this.#suppressClick = false;
 		domEvent.stopPropagation();
 		domEvent.preventDefault();
 	}
-	startElement.addEventListener('pointerdown', handlePointerDown);
-	// Capture phase — kill the post-drag click before it reaches any handler.
-	startElement.addEventListener('click', handleClick, true);
-	function destroy() {
-		if (destroyed) {
+	destroy() {
+		if (this.#destroyed) {
 			return;
 		}
-		destroyed = true;
-		stopTracking();
-		startElement.removeEventListener('pointerdown', handlePointerDown);
-		startElement.removeEventListener('click', handleClick, true);
+		this.#destroyed = true;
+		this.#stopTracking();
+		const startElement = this.#startElement;
+		if (startElement) {
+			startElement.removeEventListener('pointerdown', this);
+			startElement.removeEventListener('click', this, true);
+		}
 	}
-	return {
-		destroy,
-	};
+	/**
+	 * Adapter for the polymorphic `disposeItem` disposer protocol, which calls
+	 * `.unsubscribe()` on Subscription-like items. Filing the instance under this
+	 * name lets `gestureUnsubs` hold the controller itself instead of a bare
+	 * `destroy` reference that would lose `this` when invoked detached.
+	 */
+	unsubscribe() {
+		this.destroy();
+	}
 }
 /*
 	this.dragSnap(startElement, options) — the WebComponent prototype method.
-	Same call as createDragSnap, but the controller is filed in `gestureUnsubs`
-	and destroyed automatically on disconnect — the auto-cleanup contract that
-	`this.hotKey()` and `this.delegate()` already follow.
+	Same call as DragSnap.create, but the controller is filed in `gestureUnsubs`
+	and torn down automatically on disconnect — the auto-cleanup contract that
+	`this.dragTrack()`, `this.hotKey()`, and `this.delegate()` already follow. The
+	instance itself is filed (not its bare `destroy`) so `disposeItem` invokes
+	`.unsubscribe()` with `this` intact.
 */
 export function dragSnap(startElement, options) {
-	const controller = createDragSnap(startElement, options);
-	(this.gestureUnsubs ??= new Set()).add(controller.destroy);
+	const controller = DragSnap.create(startElement, options);
+	(this.gestureUnsubs ??= new Set()).add(controller);
 	return controller;
 }

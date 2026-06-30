@@ -1,187 +1,223 @@
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Chakra+Petch:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
 
 /* ── Dark Theme ───────────────────────────────────────
-   Retro sci-fi. Cyan accent. Angular.
+   xAI docs aesthetic. Monochrome, near-black, flat.
+   White primary CTA. No neon glow — subtle hairline borders.
 ─────────────────────────────────────────────────────── */
 :root {
 	/* Dark root → native controls (date/time pickers, spinners, scrollbars, the
 	   native <select> popup) adopt the dark UA palette instead of light-on-light. */
 	color-scheme: dark;
-	/* ── Base Palette ────────────────────────────────── */
-	--bg-body: #0C0C0E;
-	--bg-panel: #141416;
-	--bg-dark: #0A0A0C;
-	--bg-dark-mid: #111113;
-	--navy: #18181B;
-	--navy-light: #a0a0a8;
-	--teal: #00B3B3;
-	--teal-dim: rgba(0, 179, 179, 0.10);
-	--cyan: #00F0FF;
-	--cyan-dim: rgba(0, 240, 255, 0.10);
-	--magenta: #FF0055;
-	--magenta-dim: rgba(255, 0, 85, 0.10);
-	--grey-solid: #6B7280;
-	--grey-mid: #3A3A40;
+	/* ── Base Palette — pure-neutral oklch ramp (hue/chroma 0) ──
+	   docs.x.ai: page bg is hsl(0 0% 4%) = #0a0a0a (oklch L 0.145), surfaces
+	   barely a step above it — flat near-black, delineated by hairline borders
+	   rather than fill contrast. */
+	--bg-body: oklch(0.145 0 0);
+	--bg-panel: oklch(0.175 0 0);
+	--bg-dark: oklch(0.11 0 0);
+	--bg-dark-mid: oklch(0.16 0 0);
+	--navy: oklch(0.225 0 0);
+	--navy-light: oklch(0.62 0 0);
+	/* Accents collapse to light neutrals — x.ai reserves chroma for status only. */
+	--teal: oklch(0.92 0 0);
+	--teal-dim: oklch(0.92 0 0 / 0.08);
+	--cyan: oklch(0.97 0 0);
+	--cyan-dim: oklch(0.97 0 0 / 0.08);
+	--magenta: oklch(0.6 0.15 16);
+	--magenta-dim: oklch(0.6 0.15 16 / 0.1);
+	--grey-solid: oklch(0.62 0 0);
+	--grey-mid: oklch(0.34 0 0);
 
-	/* ── Text ────────────────────────────────────────── */
-	--text-main: #E2E6EE;
-	--text-muted: #6B7894;
-	--text-light: #FFFFFF;
-	--text-offwhite: #9AA0AE;
+	/* ── Text — x.ai uses a SOFT light foreground (222 19% 86%), not pure white;
+	   pure white is reserved for emphasis / primary fills. ── */
+	--text-main: oklch(0.88 0.012 250);
+	--text-muted: oklch(0.64 0.005 250);
+	--text-light: oklch(1 0 0);
+	--text-offwhite: oklch(0.76 0.006 250);
 
 	/* ── Fonts ───────────────────────────────────────── */
-	--font-mono: 'Share Tech Mono', monospace;
-	--font-display: 'Chakra Petch', sans-serif;
+	--font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+	--font-display: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+	--font-body: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
 
 	/* ── Border Colors ───────────────────────────────── */
-	--border-light-color: rgba(255, 255, 255, 0.08);
+	--border-light-color: oklch(1 0 0 / 0.09);
 
 	/* ── Borders ─────────────────────────────────────── */
-	--border-main: 1px solid rgba(255, 255, 255, 0.12);
+	--border-main: 1px solid oklch(1 0 0 / 0.12);
 	--border-light: 1px solid var(--border-light-color);
 	--border-dark: 1px solid var(--dark-divider-accent);
 
 	/* ── Surface Tints ──────────────────────────────── */
-	--surface-tint-heavy: rgba(255, 255, 255, 0.10);
-	--surface-tint: rgba(255, 255, 255, 0.06);
-	--surface-tint-soft: rgba(255, 255, 255, 0.04);
-	--surface-tint-faint: rgba(255, 255, 255, 0.025);
-	--surface-tint-ghost: rgba(255, 255, 255, 0.02);
-	--surface-tint-whisper: rgba(255, 255, 255, 0.015);
-	--watermark-text: rgba(255, 255, 255, 0.03);
+	--surface-tint-heavy: oklch(1 0 0 / 0.1);
+	--surface-tint: oklch(1 0 0 / 0.06);
+	--surface-tint-soft: oklch(1 0 0 / 0.04);
+	--surface-tint-faint: oklch(1 0 0 / 0.025);
+	--surface-tint-ghost: oklch(1 0 0 / 0.02);
+	--surface-tint-whisper: oklch(1 0 0 / 0.015);
+	--watermark-text: oklch(1 0 0 / 0.03);
 
 	/* ── Dark Surface Text ───────────────────────────── */
-	--dark-text: rgba(200, 210, 230, 0.5);
-	--dark-text-dim: rgba(200, 210, 230, 0.45);
-	--dark-text-medium: rgba(200, 210, 230, 0.7);
-	--dark-text-bright: rgba(200, 210, 230, 0.75);
-	--dark-heading: rgba(255, 255, 255, 0.35);
-	--dark-heading-sep: rgba(255, 255, 255, 0.2);
-	--dark-text-faint: rgba(255, 255, 255, 0.3);
+	--dark-text: oklch(0.85 0 0 / 0.5);
+	--dark-text-dim: oklch(0.85 0 0 / 0.45);
+	--dark-text-medium: oklch(0.85 0 0 / 0.7);
+	--dark-text-bright: oklch(0.85 0 0 / 0.75);
+	--dark-heading: oklch(1 0 0 / 0.4);
+	--dark-heading-sep: oklch(1 0 0 / 0.2);
+	--dark-text-faint: oklch(1 0 0 / 0.3);
 
 	/* ── Dark Surface Dividers ───────────────────────── */
-	--dark-divider: rgba(255, 255, 255, 0.07);
-	--dark-divider-subtle: rgba(255, 255, 255, 0.05);
-	--dark-divider-faint: rgba(255, 255, 255, 0.04);
-	--dark-divider-accent: rgba(255, 255, 255, 0.06);
-	--dark-highlight: rgba(255, 255, 255, 0.03);
+	--dark-divider: oklch(1 0 0 / 0.07);
+	--dark-divider-subtle: oklch(1 0 0 / 0.05);
+	--dark-divider-faint: oklch(1 0 0 / 0.04);
+	--dark-divider-accent: oklch(1 0 0 / 0.06);
+	--dark-highlight: oklch(1 0 0 / 0.03);
 
-	/* ── Cyan Accent Scale ───────────────────────────── */
-	--cyan-glow-strong: rgba(0, 240, 255, 0.45);
-	--cyan-glow: rgba(0, 240, 255, 0.35);
-	--cyan-glow-medium: rgba(0, 240, 255, 0.3);
-	--cyan-glow-soft: rgba(0, 240, 255, 0.24);
-	--cyan-glow-faint: rgba(0, 240, 255, 0.15);
-	--cyan-tint: rgba(0, 240, 255, 0.06);
-	--cyan-tint-faint: rgba(0, 240, 255, 0.05);
-	--cyan-scanline: rgba(0, 240, 255, 0.015);
-	--cyan-timestamp: rgba(0, 240, 255, 0.5);
+	/* ── Accent Scale — flat, white-on-black (formerly cyan neon) ── */
+	--cyan-glow-strong: oklch(1 0 0 / 0.22);
+	--cyan-glow: oklch(1 0 0 / 0.16);
+	--cyan-glow-medium: oklch(1 0 0 / 0.12);
+	--cyan-glow-soft: oklch(1 0 0 / 0.1);
+	--cyan-glow-faint: oklch(1 0 0 / 0.06);
+	--cyan-tint: oklch(1 0 0 / 0.05);
+	--cyan-tint-faint: oklch(1 0 0 / 0.04);
+	--cyan-scanline: oklch(1 0 0 / 0.015);
+	--cyan-timestamp: oklch(0.8 0 0);
 
-	/* ── Teal Accent Scale ───────────────────────────── */
-	--teal-glow: rgba(0, 179, 179, 0.4);
-	--teal-glow-soft: rgba(0, 179, 179, 0.3);
+	/* ── Secondary Accent Scale (formerly teal) ──────── */
+	--teal-glow: oklch(1 0 0 / 0.14);
+	--teal-glow-soft: oklch(1 0 0 / 0.1);
 
-	/* ── Status Colors ───────────────────────────────── */
-	--color-success: #4affde;
-	--color-success-glow: rgba(74, 255, 224, 0.4);
-	--color-success-text: rgba(74, 255, 224, 0.8);
-	--color-danger: #ff5f5f;
-	--color-danger-glow: rgba(255, 95, 95, 0.4);
-	--color-warning: #fbbf24;
-	--color-info: #60a5fa;
-	--color-warn-text: rgba(255, 0, 85, 0.9);
+	/* ── Status Colors — the only chroma in the theme ── */
+	--color-success: oklch(0.78 0.14 160);
+	--color-success-glow: oklch(0.78 0.14 160 / 0.35);
+	--color-success-text: oklch(0.82 0.11 160);
+	--color-danger: oklch(0.65 0.19 22);
+	--color-danger-glow: oklch(0.65 0.19 22 / 0.35);
+	--color-warning: oklch(0.8 0.13 80);
+	--color-info: oklch(0.7 0.1 240);
+	--color-warn-text: oklch(0.66 0.17 18 / 0.95);
 
 	/* ═══════════════════════════════════════════════════
 	   COMPONENT THEME TOKENS
 	═══════════════════════════════════════════════════ */
 
-	/* ── Shape ───────────────────────────────────────── */
-	--radius: 4px;
-	--radius-lg: 6px;
-	--stat-bar-radius: 0px;
+	/* ── Shape — x.ai rounds generously (8px base) and PILLS every button ── */
+	--radius: 8px;
+	--radius-sm: 5px;
+	--radius-md: 8px;
+	--radius-lg: 12px;
+	--radius-xl: 16px;
+	/* The x.ai signature: buttons + icon buttons are fully rounded pills/circles. */
+	--ui-btn-radius: 9999px;
+	--stat-bar-radius: 3px;
 	--indicator-radius: 50%;
-	--indicator-warn-radius: 0px;
+	--indicator-warn-radius: 2px;
+
+	/* ── Surface elevation — flat: trade depth for a hairline ring ── */
+	--surface-border: oklch(1 0 0 / 0.08);
+	--elev-1: 0 1px 2px oklch(0 0 0 / 0.4);
+	--elev-2: 0 4px 14px oklch(0 0 0 / 0.35);
+	--elev-3: 0 12px 32px oklch(0 0 0 / 0.45);
+	--elev-hover: 0 6px 20px oklch(0 0 0 / 0.4);
 
 	/* ── Input ───────────────────────────────────────── */
-	--input-radius: 4px;
-	--input-accent-border: 1px solid var(--cyan-glow-faint);
-	--input-accent-shadow: inset 0 -1px 0 var(--cyan-glow-soft);
+	--input-radius: 8px;
+	--input-accent-border: 1px solid oklch(1 0 0 / 0.1);
+	--input-accent-shadow: none;
 	--field-border-style: solid;
 
-	/* ── Panel ───────────────────────────────────────── */
+	/* ── Panel header — x.ai titling: sans, sentence-case, calm tracking,
+	   no uppercase / wide-tracked mono, no left accent bar ── */
+	--panel-header-padding: 0.65rem 0.9rem;
+	--panel-header-font-size: 0.8125rem;
+	--panel-header-text-transform: none;
+	--panel-header-letter-spacing: -0.005em;
+	--panel-header-color: var(--text-main);
+	--panel-header-left-border: none;
+	--ph-id-font-size: 0.6875rem;
+	--ph-id-letter-spacing: 0;
+	--ph-id-opacity: 0.6;
+
+	/* ── Panel — flat, hairline-bordered ─────────────── */
 	--panel-shadow:
-		0 1px 2px rgba(0, 0, 0, 0.3),
-		0 4px 8px rgba(0, 0, 0, 0.2),
-		inset 0 1px 0 rgba(255, 255, 255, 0.04);
+		0 1px 2px oklch(0 0 0 / 0.4),
+		0 4px 12px oklch(0 0 0 / 0.25);
 	--panel-hover-shadow:
-		0 2px 4px rgba(0, 0, 0, 0.35),
-		0 8px 16px rgba(0, 0, 0, 0.25),
-		0 0 12px var(--cyan-glow-faint),
-		inset 0 1px 0 rgba(255, 255, 255, 0.06),
-		inset 0 0 8px var(--cyan-tint);
-	--panel-hover-border: var(--cyan-glow-soft);
-	--panel-header-accent: var(--cyan-glow-strong);
+		0 2px 4px oklch(0 0 0 / 0.45),
+		0 10px 24px oklch(0 0 0 / 0.3),
+		inset 0 1px 0 oklch(1 0 0 / 0.05);
+	--panel-hover-border: oklch(1 0 0 / 0.16);
+	--panel-header-accent: oklch(1 0 0 / 0.18);
 	--panel-header-bg: linear-gradient(
 		90deg,
-		rgba(0, 240, 255, 0.06) 0%,
-		rgba(0, 240, 255, 0.02) 40%,
+		oklch(1 0 0 / 0.04) 0%,
+		oklch(1 0 0 / 0.01) 40%,
 		transparent 100%
 	);
 	--panel-header-left-accent-width: 2px;
 	--panel-header-border-bottom: none;
 
 	/* ── Buttons ─────────────────────────────────────── */
-	--btn-bg: rgba(90, 145, 255, 0.14);
-	--btn-border: rgba(120, 180, 255, 0.28);
-	--btn-inset: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-	--btn-hover-bg: rgba(255, 74, 162, 0.22);
-	--btn-hover-border: rgba(255, 116, 186, 0.5);
-	--btn-hover-inset: inset 0 1px 0 rgba(255, 255, 255, 0.14);
-	--btn-hover-glow: 0 0 0 1px rgba(255, 80, 170, 0.08);
+	--btn-bg: oklch(1 0 0 / 0.06);
+	--btn-border: oklch(1 0 0 / 0.12);
+	--btn-neutral: oklch(1 0 0 / 0.07);
+	--btn-neutral-border: oklch(1 0 0 / 0.13);
+	/* Flat — x.ai buttons carry NO top inner-highlight. The generic
+	   `button { box-shadow: var(--btn-inset) }` (elements-forms.css) otherwise
+	   floats a top-only line on every non-filled / icon button. */
+	--btn-inset: none;
+	--btn-hover-bg: oklch(1 0 0 / 0.12);
+	--btn-hover-border: oklch(1 0 0 / 0.2);
+	--btn-hover-inset: none;
+	--btn-hover-glow: none;
 	--btn-hover-color: var(--text-light);
-	/* Primary solid hover brightens within the teal family (base fallback is
-	   midnight mint). */
-	--btn-primary-hover-bg: #19d6d6;
-	--focus-ring-color: rgba(110, 220, 255, 0.75);
-	--green-hover: #43ff6a;
+	/* Primary solid = the x.ai signature white CTA with near-black label. */
+	--btn-primary-bg: oklch(1 0 0);
+	--btn-primary-border: oklch(1 0 0);
+	--btn-primary-color: oklch(0.17 0 0);
+	--btn-primary-hover-bg: oklch(0.9 0 0);
+	--btn-primary-hover-border: oklch(0.9 0 0);
+	--btn-primary-hover-color: oklch(0.15 0 0);
+	--focus-ring-color: oklch(1 0 0 / 0.7);
+	--green-hover: oklch(0.8 0.15 155);
 
 	/* ── Inputs / Interactive ────────────────────────── */
-	--input-hover-border: rgba(110, 220, 255, 0.38);
-	--input-hover-glow: rgba(110, 220, 255, 0.12);
-	--input-copied-bg: rgba(110, 220, 255, 0.14);
-	--input-copied-border: rgba(110, 220, 255, 0.42);
+	--input-hover-border: oklch(1 0 0 / 0.22);
+	--input-hover-glow: oklch(1 0 0 / 0.06);
+	--input-copied-bg: oklch(1 0 0 / 0.08);
+	--input-copied-border: oklch(1 0 0 / 0.25);
 
 	/* ── Top Bar ─────────────────────────────────────── */
-	--topbar-bg: rgba(255, 255, 255, 0.05);
-	--topbar-border: rgba(255, 255, 255, 0.2);
-	--topbar-accent: var(--cyan);
-	--topbar-bottom-border: 1px solid var(--cyan-glow-faint);
-	--tb-badge-radius: 0px;
+	--topbar-bg: oklch(1 0 0 / 0.03);
+	--topbar-border: oklch(1 0 0 / 0.1);
+	--topbar-accent: var(--text-light);
+	--topbar-bottom-border: 1px solid oklch(1 0 0 / 0.08);
+	--tb-badge-radius: 4px;
 	--logo-mark-pattern: repeating-linear-gradient(45deg,
-			var(--cyan), var(--cyan) 2px,
+			oklch(1 0 0 / 0.6), oklch(1 0 0 / 0.6) 2px,
 			transparent 2px, transparent 5px);
 
 	/* ── Popups ──────────────────────────────────────── */
-	--popup-bg: rgba(14, 20, 31, 0.9);
-	--popup-bg-hover: rgba(20, 28, 43, 0.94);
-	--popup-border: rgba(110, 220, 255, 0.26);
-	--popup-border-hover: rgba(110, 220, 255, 0.42);
-	--popup-accent: var(--cyan-glow-strong);
+	--popup-bg: oklch(0.18 0 0 / 0.96);
+	--popup-bg-hover: oklch(0.22 0 0 / 0.97);
+	--popup-border: oklch(1 0 0 / 0.12);
+	--popup-border-hover: oklch(1 0 0 / 0.2);
+	--popup-accent: oklch(1 0 0 / 0.18);
 	--popup-shadow:
-		0 8px 22px rgba(0, 0, 0, 0.35),
-		0 0 0 1px rgba(110, 220, 255, 0.06),
-		inset 0 1px 0 rgba(255, 255, 255, 0.05);
+		0 8px 24px oklch(0 0 0 / 0.5),
+		0 0 0 1px oklch(1 0 0 / 0.04);
 	--popup-text: var(--text-light);
 
-	/* ── Glow Scale ──────────────────────────────────── */
-	--ph-dot-shadow: 0 0 4px var(--teal);
-	--tab-indicator-shadow: 0 0 8px rgba(0, 179, 179, 0.45);
-	--logo-mark-text-shadow: 0 0 10px var(--topbar-accent);
-	--subtitle-text-shadow: 0 0 6px var(--topbar-accent);
-	--indicator-on-shadow: 0 0 8px var(--topbar-accent);
-	--stat-good-text-shadow: 0 0 4px var(--teal-glow-soft);
-	--stat-bar-fill-shadow: 0 0 6px var(--teal);
-	--wa-underline-shadow: 0 0 8px var(--cyan);
-	--log-in-text-shadow: 0 0 5px var(--color-success-glow);
-	--log-out-text-shadow: 0 0 5px var(--color-danger-glow);
+	/* ── Glow Scale — flattened (x.ai has no neon glow) ── */
+	--ph-dot-shadow: none;
+	--tab-indicator-shadow: none;
+	--logo-mark-text-shadow: none;
+	--subtitle-text-shadow: none;
+	--indicator-on-shadow: 0 0 6px oklch(1 0 0 / 0.3);
+	--stat-good-text-shadow: none;
+	--stat-bar-fill-shadow: none;
+	--wa-underline-shadow: none;
+	--log-in-text-shadow: none;
+	--log-out-text-shadow: none;
 }

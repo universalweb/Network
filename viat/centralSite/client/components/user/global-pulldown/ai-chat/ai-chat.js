@@ -244,10 +244,10 @@ export class AIChat extends WebComponent {
 	render() {
 		this.html `
 			<ui-ai-chat #chat
-				.endpoint=${this.state.endpoint}
-				.model=${this.state.model}
-				.systemPrompt=${this.state.systemPrompt}
-				.title=${'LOCAL AI'}
+				.state.endpoint=${this.state.endpoint}
+				.state.model=${this.state.model}
+				.state.systemPrompt=${this.state.systemPrompt}
+				.state.title=${'LOCAL AI'}
 				@ai-chat:turn-complete=${this.handleTurnComplete}></ui-ai-chat>
 		`;
 	}

@@ -4,7 +4,7 @@
 	open height animates via `interpolate-size: allow-keywords` + `::details-content`
 	(progressive — degrades to an instant open where unsupported).
 	── STANDARD INTERACTION ─────────────────────────────────────────────
-	  <ui-accordion .summary=${'Advanced'} .group=${'settings'}>
+	  <ui-accordion .state.summary=${'Ad vanced'} .state.group=${'settings'}>
 	    <p>Body content goes in the default slot.</p>
 	  </ui-accordion>
 	`group` keeps sibling accordions mutually exclusive (one-open accordion): opening
@@ -72,7 +72,7 @@ export class UIAccordion extends WebComponent {
 				@toggle=${this.handleToggle}>
 				<summary class="ac-summary" ?inert=${this.state.disabled}>
 					<span class="ac-title">${this.state.summary}</span>
-					<ui-icon class="ac-chevron" .name=${'chevron-down'} .size=${'sm'}></ui-icon>
+					<ui-icon class="ac-chevron" .state.name=${'chevron-down'} .state.size=${'sm'}></ui-icon>
 				</summary>
 				<div class="ac-body"><slot></slot></div>
 			</details>

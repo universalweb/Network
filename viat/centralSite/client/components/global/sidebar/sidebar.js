@@ -231,7 +231,7 @@ export class UISidebar extends WebComponent {
 			<div class="sidebar-backdrop" @click=${this.close}></div>
 			<aside class="sidebar-shell" #shell>
 				<button #close type="button" class="sidebar-close" aria-label="Close sidebar" @click=${this.close}>
-					<ui-icon .name=${'x'} .size=${'md'}></ui-icon>
+					<ui-icon .state.name=${'x'} .state.size=${'md'}></ui-icon>
 				</button>
 				<slot></slot>
 			</aside>

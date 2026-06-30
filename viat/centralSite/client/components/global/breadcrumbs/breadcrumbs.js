@@ -31,7 +31,11 @@ export class UIBreadcrumbs extends WebComponent {
 	/* Light html row per crumb — items pass through as-is; `html` auto-escapes
 	   label/href. The crumb is a link when it has an href, else current text. */
 	crumbRow(item) {
-		return item && item.href ? html `<li class="bc-item"><svg class="bc-sep" viewBox="0 0 24 24" aria-hidden="true"><use href=${CHEVRON_HREF}></use></svg><a class="bc-link" href=${item.href}>${item?.label}</a></li>` : html `<li class="bc-item"><svg class="bc-sep" viewBox="0 0 24 24" aria-hidden="true"><use href=${CHEVRON_HREF}></use></svg><span class="bc-current" aria-current="page">${item?.label}</span></li>`;
+		return item && item.href ? html `<li class="bc-item">
+		<svg class="bc-sep" viewBox="0 0 24 24" aria-hidden="true"><use href=${CHEVRON_HREF}></use></svg>
+		<a class="bc-link" href=${item.href}>${item?.label}</a></li>` : html `<li class="bc-item">
+		<svg class="bc-sep" viewBox="0 0 24 24" aria-hidden="true"><use href=${CHEVRON_HREF}></use></svg>
+		<span class="bc-current" aria-current="page">${item?.label}</span></li>`;
 	}
 	render() {
 		this.html `

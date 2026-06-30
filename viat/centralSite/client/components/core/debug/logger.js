@@ -1,3 +1,4 @@
+import { isFunction, isString } from '../utilities.js';
 export const IS_PRODUCTION = globalThis.CONFIG?.production === true;
 /*
  * Numeric severity ranks. A line prints only when its rank ≤ the active
@@ -89,17 +90,20 @@ function printLine(level, label, message, args) {
  * a fresh closure per call. In production the whole logger is replaced by a
  * noop so the formatter never runs and args never get gathered into an array.
  */
+function printLevelLine(level, label, msg, ...args) {
+	const resolved = isFunction(msg) ? msg(...args) : msg;
+	if (resolved == null) {
+		return;
+	}
+	printLine(level, label, resolved, []);
+}
 function makeLevelLogger(level) {
 	return gated(level, (label, msg, ...args) => {
-		const resolved = typeof msg === 'function' ? msg(...args) : msg;
-		if (resolved == null) {
-			return;
-		}
-		printLine(level, label, resolved, []);
+		printLevelLine(level, label, msg, ...args);
 	});
 }
 function resolveHeaderStyle(style) {
-	if (typeof style === 'string' && style.includes(':')) {
+	if (isString(style) && style.includes(':')) {
 		return style;
 	}
 	return headerStyles[style] || headerStyles.banner;
@@ -139,24 +143,28 @@ function setActiveLevel(level) {
 // Pre-bound action fns (gated / passthrough at load) keep instance methods as
 // simple named shorthands (per js-style) with zero per-call wrapper alloc for
 // the control paths. Transforms for default labels happen before delegating.
-const headerAction = gated('info', (text, style) => {
+function logHeader(text, style) {
 	console.log(`%c${text}`, resolveHeaderStyle(style));
-});
-const ruleAction = gated('info', (text) => {
+}
+function logRule(text) {
 	const bar = '─'.repeat(48);
 	if (text) {
 		console.log(`%c${bar}\n  ${text}\n${bar}`, 'color:#6b7280;font-weight:600;');
 	} else {
 		console.log(`%c${bar}`, 'color:#6b7280;');
 	}
-});
-const groupAction = gated('info', (label, collapsed) => {
-	const fn = collapsed ? 'groupCollapsed' : 'group';
-	console[fn](`%c${label}`, headerStyles.title);
-});
-const traceAction = gated('info', (label, ...args) => {
+}
+function logGroup(label, collapsed) {
+	const method = collapsed ? 'groupCollapsed' : 'group';
+	console[method](`%c${label}`, headerStyles.title);
+}
+function logTrace(label, ...args) {
 	console.trace(`%c[${label}]`, colorMap.debug, ...args);
-});
+}
+const headerAction = gated('info', logHeader);
+const ruleAction = gated('info', logRule);
+const groupAction = gated('info', logGroup);
+const traceAction = gated('info', logTrace);
 const groupEndAction = passthrough('groupEnd');
 const tableAction = passthrough('table');
 const dirAction = passthrough('dir');
@@ -258,7 +266,7 @@ class Logger {
 			label = callArgs[0];
 			msg = callArgs[1];
 			extra = callArgs.slice(2);
-		} else if (callArgs.length > 1 && typeof callArgs[0] === 'string') {
+		} else if (callArgs.length > 1 && isString(callArgs[0])) {
 			label = `${this.label}:${callArgs[0]}`;
 			msg = callArgs[1];
 			extra = callArgs.slice(2);
@@ -267,7 +275,7 @@ class Logger {
 			msg = callArgs[0];
 			extra = callArgs.slice(1);
 		}
-		const resolved = typeof msg === 'function' ? msg(...extra) : msg;
+		const resolved = isFunction(msg) ? msg(...extra) : msg;
 		if (resolved == null) {
 			return;
 		}
@@ -281,17 +289,17 @@ class Logger {
 	}
 	group(title, collapsed) {
 		let useLabel = title;
-		let coll = collapsed;
+		let resolvedCollapsed = collapsed;
 		if (this.label !== null && this.label !== undefined) {
 			if (arguments.length > 0) {
 				useLabel = `${this.label}:${title}`;
-				coll = collapsed;
+				resolvedCollapsed = collapsed;
 			} else {
 				useLabel = this.label;
-				coll = title;
+				resolvedCollapsed = title;
 			}
 		}
-		return groupAction(useLabel, coll);
+		return groupAction(useLabel, resolvedCollapsed);
 	}
 	groupEnd() {
 		return groupEndAction();
@@ -326,7 +334,7 @@ class Logger {
 		if (this.label === null || this.label === undefined) {
 			label = callArgs[0];
 			extraArgs = callArgs.slice(1);
-		} else if (callArgs.length > 1 && typeof callArgs[0] === 'string') {
+		} else if (callArgs.length > 1 && isString(callArgs[0])) {
 			label = `${this.label}:${callArgs[0]}`;
 			extraArgs = callArgs.slice(1);
 		} else {
@@ -339,7 +347,7 @@ class Logger {
 		let label = first;
 		let rest = args;
 		if (this.label !== null && this.label !== undefined) {
-			if (first !== undefined && typeof first === 'string') {
+			if (first !== undefined && isString(first)) {
 				label = `${this.label}:${first}`;
 				rest = args;
 			} else {
@@ -373,20 +381,20 @@ class Logger {
 	}
 	breakOn(first, condition) {
 		let label = first;
-		let cond = condition;
+		let resolvedCondition = condition;
 		if (this.label === null || this.label === undefined) {
 			// no default label: use provided first as label
 		} else if (arguments.length > 1) {
 			label = `${this.label}:${first}`;
-			cond = condition;
+			resolvedCondition = condition;
 		} else {
 			label = this.label;
-			cond = first;
+			resolvedCondition = first;
 		}
 		if (IS_PRODUCTION) {
 			return;
 		}
-		if (cond) {
+		if (resolvedCondition) {
 			printLine('debug', label, 'breakpoint hit', []);
 			// eslint-disable-next-line no-debugger
 			debugger;
@@ -394,24 +402,24 @@ class Logger {
 	}
 	inspect(first, value) {
 		let label = first;
-		let val = value;
+		let resolvedValue = value;
 		if (this.label === null || this.label === undefined) {
 			// no default
 		} else if (arguments.length > 1) {
 			label = `${this.label}:${first}`;
-			val = value;
+			resolvedValue = value;
 		} else {
 			label = this.label;
-			val = first;
+			resolvedValue = first;
 		}
 		if (IS_PRODUCTION) {
-			return val;
+			return resolvedValue;
 		}
-		console.log(`%c[${label}]`, colorMap.debug, val);
-		console.dir(val, {
+		console.log(`%c[${label}]`, colorMap.debug, resolvedValue);
+		console.dir(resolvedValue, {
 			depth: null,
 		});
-		return val;
+		return resolvedValue;
 	}
 }
 /**
@@ -420,5 +428,5 @@ class Logger {
  * - componentLogger: for component code (you can reassign .label or use labels).
  */
 export const defaultLogger = new Logger();
-export const componentLogger = new Logger();
+export const componentLogger = new Logger('WebComponent');
 defaultLogger.error('Logger initialized at level:', Logger.getLevel());

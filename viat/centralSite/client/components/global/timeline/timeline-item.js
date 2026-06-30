@@ -36,7 +36,7 @@ export class UITimelineItem extends WebComponent {
 		`;
 	}
 	markerIcon() {
-		return this.state.icon ? this.htmlElement `<ui-icon .name=${this.state.icon} .size=${'xs'}></ui-icon>` : '';
+		return this.state.icon ? this.htmlElement `<ui-icon .state.name=${this.state.icon} .state.size=${'xs'}></ui-icon>` : '';
 	}
 	timeNode() {
 		return this.state.time ? this.htmlElement `<span class="tli-time">${this.state.time}</span>` : '';

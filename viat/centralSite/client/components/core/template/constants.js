@@ -23,6 +23,7 @@ export const SPOT_TYPE = Object.freeze({
 	CLASS_LIST: 'class-list',
 	EVENT: 'event',
 	BIND: 'bind',
+	METHOD: 'method',
 });
 /**
  * Spot kind vocabulary. Identifies the Spot subclass family — set in each

@@ -22,6 +22,9 @@
 }
 
 .panel-header {
+	/* Header chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
 	padding: var(--panel-header-padding, 6px 14px 6px 10px);
 	border-block-end: var(--panel-header-border-bottom, var(--border-light));
 	border-inline-start: var(--panel-header-left-border, var(--panel-header-left-accent-width, 2px) solid var(--panel-header-accent));

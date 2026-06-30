@@ -104,6 +104,105 @@ function pathIsReactive(component, fullPath) {
 	}
 	return !propertyIndex.nonReactivePaths.has(fullPath);
 }
+/**
+ * Forwards deep changes on a SOURCE bus subtree to a CHILD component's own bus,
+ * translating the absolute source path to the child-relative path. Installed
+ * when a parent passes a SHARED reactive object via `.state=`: the child holds
+ * the same object by reference, but a deep mutation made through the source
+ * proxy notifies only the source's bus — so without this bridge the child's
+ * spots never re-read. Delivering the precise deep path (not a blanket re-fire)
+ * lets a list spot take its force-assign partial branch, which a top-level
+ * notify would skip for an unchanged item reference. One instance per linked
+ * child; the handler lives on the prototype so the bus dispatches
+ * `handler.call(target, value, changedPath)` with zero per-link closure.
+ */
+class StateCarrierForwarder {
+	constructor(childComponent, sourcePath) {
+		this.childComponent = childComponent;
+		this.sourcePath = sourcePath;
+		this.prefixLength = sourcePath.length + 1;
+	}
+	forward(value, changedPath) {
+		/*
+		 * A change AT or above the source path (the whole shared object replaced)
+		 * is already delivered by the `.state=` re-merge; only DEEP sub-paths
+		 * need bridging. Gated by the child's own `pathIsReactive` so a
+		 * child-declared `react:false` path stays inert.
+		 */
+		if (changedPath.length <= this.prefixLength) {
+			return;
+		}
+		const relativePath = changedPath.slice(this.prefixLength);
+		if (pathIsReactive(this.childComponent, relativePath)) {
+			notifyStateChange(this.childComponent, relativePath);
+		}
+	}
+}
+/**
+ * Bridge a child's reactive bus to the SOURCE realm of a shared object passed
+ * via `.state=`, so deep mutations made through the source proxy reach the
+ * child's spots. Idempotent per (child, source bus + path): re-applying the same
+ * `.state=` value reuses the live bridge; a different source (or a bridge torn
+ * down by a disconnect) replaces it. The carrier subscription lives on the
+ * FOREIGN source bus, NOT in the child's own-state `stateUnsubs` path-tracker —
+ * co-mingling the two keyspaces let an `unobserve(key)` on a same-named child
+ * key tear the bridge down as collateral (`removeByKey` is path-keyed and the
+ * carrier was bucketed under the SOURCE path). It is stored on
+ * `childComponent.stateCarrier` and released by `unlinkStateCarrier` in the
+ * disconnect sweep. The stored carrier also records the `sourceComponent` so the
+ * REVERSE leg (forwardSharedWriteToSource) can mirror a child-origin top-level write
+ * back onto the source — the carrier is the single home for both directions.
+ * @param {WebComponent} childComponent - The component receiving `.state=`.
+ * @param {object} carrier - The incoming proxy's `{realm, path}` carrier.
+ */
+export function linkStateCarrier(childComponent, carrier) {
+	const sourceBus = carrier.realm?.bus;
+	const sourcePath = carrier.path;
+	/*
+	 * A ROOT carrier — `.state=${this.state}` passes the WHOLE state, path ''.
+	 * There is no subtree prefix to strip, and by `pathsOverlap` semantics a ''
+	 * subscription never matches a deep changed path, so the bridge could not
+	 * fire anyway. Skip it: whole-state sharing keeps its existing double-proxy +
+	 * `.state=` re-merge behavior. Only a NAMED subtree (`.state=${this.state.dock}`)
+	 * gets the bridge — the carry-down pattern this targets.
+	 */
+	if (!sourceBus || sourcePath === '') {
+		return;
+	}
+	const existing = childComponent.stateCarrier;
+	const existingLive = existing && existing.subscription.handler;
+	if (existingLive && existing.sourceBus === sourceBus && existing.sourcePath === sourcePath) {
+		return;
+	}
+	if (existingLive) {
+		existing.subscription.unsubscribe();
+	}
+	const forwarder = new StateCarrierForwarder(childComponent, sourcePath);
+	const subscription = sourceBus.subscribe(sourcePath, StateCarrierForwarder.prototype.forward, forwarder, true);
+	childComponent.stateCarrier = {
+		sourceBus,
+		sourcePath,
+		subscription,
+		sourceComponent: carrier.realm.component,
+	};
+}
+/**
+ * Release a child's `.state=` carrier bridge. The carrier subscription lives on
+ * a FOREIGN bus (the source component's), so it is deliberately absent from this
+ * component's `stateUnsubs` path-tracker and the disconnect sweep would miss it —
+ * the disconnect lifecycle calls this alongside `stateUnsubs.clear()`. Idempotent:
+ * a child that never received a shared `.state=` has no carrier; a re-disconnect
+ * finds the subscription already torn down (`unsubscribe` is itself idempotent).
+ * @param {WebComponent} component - The component whose carrier to release.
+ */
+export function unlinkStateCarrier(component) {
+	const carrier = component.stateCarrier;
+	if (!carrier) {
+		return;
+	}
+	carrier.subscription.unsubscribe();
+	component.stateCarrier = null;
+}
 function throwCollectionMutate() {
 	throw new Error('Do not mutate Map/Set proxy properties directly. Use .set() or .add() instead.');
 }
@@ -164,8 +263,8 @@ class ReactiveCollection {
 		}
 		const keys = this.asMap ? [...this.target.keys()] : [...this.target];
 		this.target.clear();
-		for (let i = 0; i < keys.length; i++) {
-			this.notifyKey(keys[i]);
+		for (let keyIndex = 0; keyIndex < keys.length; keyIndex++) {
+			this.notifyKey(keys[keyIndex]);
 		}
 	}
 	has(key) {
@@ -174,8 +273,8 @@ class ReactiveCollection {
 	get(key) {
 		return this.target.get(key);
 	}
-	forEach(cb) {
-		return this.target.forEach(cb);
+	forEach(callback) {
+		return this.target.forEach(callback);
 	}
 	keys() {
 		return this.target.keys();
@@ -239,6 +338,67 @@ function reportWastedStateSet(target, key, value, fullPath, component) {
 	return `[${component.tagName}] wasted set on "${fullPath}" — new value is structurally equal to current but a different reference; reuse the existing reference to avoid re-render.`;
 }
 /**
+ * Reverse leg of the `.state=` carrier. A child that received a shared object via
+ * `.state=${parent.state.foo}` holds the source's NESTED objects by reference — so a
+ * deep write already reaches the parent through the shared proxy. But a TOP-LEVEL
+ * PRIMITIVE (e.g. `activeId`) was copied by VALUE at merge time and cannot be shared by
+ * reference, so a child-origin write to it would otherwise never reach the parent's
+ * object. Mirror such a write back onto the source proxy so the shared object stays in
+ * sync from EITHER origin. Three constraints keep it safe and loop-free. Only TOP-LEVEL
+ * writes reach here (the set trap gates on `path === ''`); nested keys already share via
+ * the double-proxy, so they need no mirror. Only keys the SOURCE already owns are mirrored
+ * — a child-private key (declared in the child's own `static state`, absent from the
+ * passed object) stays local. And the mirror is skipped when the source already holds the
+ * value: a no-op, and the echo break — the mirror write notifies the source bus, whose
+ * forward carrier only re-NOTIFIES the child (no write back through the child proxy), so
+ * the exchange converges. The initial `.state=` merge writes raw `STATE` via `assignState`
+ * (not through the proxy), so it never triggers this leg — only genuine
+ * `child.state.key = value` writes do.
+ * @param {WebComponent} childComponent - The component whose state was written.
+ * @param {string} key - The top-level state key that changed.
+ * @param {*} value - The newly written value.
+ */
+function forwardSharedWriteToSource(childComponent, key, value) {
+	const carrier = childComponent.stateCarrier;
+	if (!carrier || !carrier.sourceComponent) {
+		return;
+	}
+	const sourceComponent = carrier.sourceComponent;
+	const sourceObject = getValueAtPath(sourceComponent.STATE, carrier.sourcePath);
+	if (!sourceObject || !hasOwn(sourceObject, key) || sourceObject[key] === value) {
+		return;
+	}
+	setValueAtPath(sourceComponent.stateProxy, joinPath(carrier.sourcePath, key), value);
+}
+/**
+ * Top-level accessor dispatch for the state set-trap — a `set foo(v)` declared in
+ * `static state`, fired with `this === component`. Notifies the path so spots / renderDeps
+ * subscribed to the key re-evaluate (the new getter value is read on next access). A
+ * getter-only declaration silently rejects the write — matching `Reflect.set` on a
+ * getter-only accessor descriptor. Returns true when the key was an accessor (the write
+ * is fully handled here); false to fall through to plain state assignment.
+ * @param {WebComponent} component - The owning component.
+ * @param {string} key - The top-level key being written.
+ * @param {*} value - The value to pass to the setter.
+ * @returns {boolean} True when the key is an accessor and the write is handled.
+ */
+function applyTopLevelAccessor(component, key, value) {
+	const propertyIndex = component.propertyIndex;
+	if (!propertyIndex?.hasAccessors) {
+		return false;
+	}
+	const setter = propertyIndex.setters.get(key);
+	if (setter) {
+		setter.call(component, value);
+		const accessorPath = String(key);
+		if (pathIsReactive(component, accessorPath)) {
+			notifyStateChange(component, accessorPath);
+		}
+		return true;
+	}
+	return propertyIndex.getters.has(key);
+}
+/**
  * Single trap shape shared by every state proxy. Methods live on the prototype
  * so JIT can monomorphize get/set/deleteProperty across all instances; each
  * proxy only pays for a 2-field handler instance, not 3 fresh closures.
@@ -250,8 +410,8 @@ class StateProxyHandler {
 		this.component = component;
 		this.path = path;
 	}
-	static create(obj, component, path = '') {
-		return cachedProxy(component.proxyCache, obj, path, StateProxyHandler, component);
+	static create(target, component, path = '') {
+		return cachedProxy(component.proxyCache, target, path, StateProxyHandler, component);
 	}
 	static build(target, path, component) {
 		return new Proxy(target, new StateProxyHandler(component, path));
@@ -272,43 +432,26 @@ class StateProxyHandler {
 			}
 		}
 		const propertyValue = Reflect.get(target, key);
-		const nestedPath = joinPath(this.path, key);
+		/*
+		 * Only container values get a child proxy, so compute the nested path
+		 * lazily inside each branch — a primitive leaf read (the common
+		 * `this.state.user.name` case) skips the joinPath string allocation.
+		 */
 		if (isPlainObject(propertyValue) || isArray(propertyValue)) {
-			return StateProxyHandler.create(propertyValue, this.component, nestedPath);
+			return StateProxyHandler.create(propertyValue, this.component, joinPath(this.path, key));
 		}
 		if (isSet(propertyValue)) {
-			return makeCollectionProxy(propertyValue, this.component, nestedPath, false);
+			return makeCollectionProxy(propertyValue, this.component, joinPath(this.path, key), false);
 		}
 		if (isMap(propertyValue)) {
-			return makeCollectionProxy(propertyValue, this.component, nestedPath, true);
+			return makeCollectionProxy(propertyValue, this.component, joinPath(this.path, key), true);
 		}
 		return propertyValue;
 	}
 	set(target, key, value) {
-		/**
-		 * Top-level accessor dispatch — declared via `set foo(v)` in `static
-		 * state`. Fires with `this === component`. Notify the path so spots /
-		 * renderDeps subscribed to this key re-evaluate (the new getter value
-		 * is read on next access). A getter-only declaration (no setter)
-		 * silently rejects writes — matches Reflect.set on a getter-only
-		 * accessor descriptor.
-		 */
-		if (this.path === '') {
-			const propertyIndex = this.component.propertyIndex;
-			if (propertyIndex?.hasAccessors) {
-				const setter = propertyIndex.setters.get(key);
-				if (setter) {
-					setter.call(this.component, value);
-					const accessorPath = String(key);
-					if (pathIsReactive(this.component, accessorPath)) {
-						notifyStateChange(this.component, accessorPath);
-					}
-					return true;
-				}
-				if (propertyIndex.getters.has(key)) {
-					return true;
-				}
-			}
+		const isTopLevel = this.path === '';
+		if (isTopLevel && applyTopLevelAccessor(this.component, key, value)) {
+			return true;
 		}
 		if (target[key] === value) {
 			return true;
@@ -320,6 +463,14 @@ class StateProxyHandler {
 		Reflect.set(target, key, value);
 		if (pathIsReactive(this.component, fullPath)) {
 			notifyStateChange(this.component, fullPath);
+		}
+		/*
+		 * A top-level write may mirror back to a `.state=` source (see
+		 * forwardSharedWriteToSource). Gated on the top-level flag so nested writes —
+		 * already shared by reference — skip the carrier lookup entirely.
+		 */
+		if (isTopLevel) {
+			forwardSharedWriteToSource(this.component, key, value);
 		}
 		return true;
 	}
@@ -375,8 +526,8 @@ export function replaceState(state = {}) {
 	if (this.stateBus) {
 		const stateBus = this.stateBus;
 		const paths = [...stateBus.subs.keys()];
-		for (let i = 0; i < paths.length; i++) {
-			stateBus.notify(paths[i]);
+		for (let pathIndex = 0; pathIndex < paths.length; pathIndex++) {
+			stateBus.notify(paths[pathIndex]);
 		}
 	}
 	return this.updateView();
@@ -398,8 +549,8 @@ export function assignState(partial, options) {
 	const silent = options?.silent === true;
 	const keys = Object.keys(partial);
 	let touched = false;
-	for (let i = 0; i < keys.length; i++) {
-		const key = keys[i];
+	for (let keyIndex = 0; keyIndex < keys.length; keyIndex++) {
+		const key = keys[keyIndex];
 		const next = partial[key];
 		if (this.STATE[key] === next) {
 			continue;
@@ -490,8 +641,8 @@ export function observe(keys, handler, options) {
 		const mapOptions = isPlainObject(handler) ? handler : options;
 		const objKeys = Object.keys(keys);
 		const subscriptions = [];
-		for (let i = 0; i < objKeys.length; i += 1) {
-			const key = objKeys[i];
+		for (let keyIndex = 0; keyIndex < objKeys.length; keyIndex += 1) {
+			const key = objKeys[keyIndex];
 			const objectSub = observeStateKey(this, key, keys[key], mapOptions);
 			stateUnsubs.add(objectSub);
 			subscriptions.push(objectSub);
@@ -500,16 +651,16 @@ export function observe(keys, handler, options) {
 	}
 	if (isArray(keys)) {
 		const subscriptions = [];
-		for (let i = 0; i < keys.length; i += 1) {
-			const arraySub = observeStateKey(this, keys[i], handler, options);
+		for (let keyIndex = 0; keyIndex < keys.length; keyIndex += 1) {
+			const arraySub = observeStateKey(this, keys[keyIndex], handler, options);
 			stateUnsubs.add(arraySub);
 			subscriptions.push(arraySub);
 		}
 		return new TrackedBundle(stateUnsubs, subscriptions);
 	}
-	const sub = observeStateKey(this, keys, handler, options);
-	stateUnsubs.add(sub);
-	return sub;
+	const subscription = observeStateKey(this, keys, handler, options);
+	stateUnsubs.add(subscription);
+	return subscription;
 }
 /**
  * Tear down every observer this component has on `key`. Looks up the tracker
@@ -568,20 +719,33 @@ export async function updateView() {
  * @returns {PropertyDescriptor|null} The setter descriptor, or null if none found.
  */
 function findPrototypeSetterDescriptor(instance, key) {
-	let proto = Object.getPrototypeOf(instance);
-	while (proto && proto !== HTMLElement.prototype) {
-		const descriptor = Object.getOwnPropertyDescriptor(proto, key);
+	let currentPrototype = Object.getPrototypeOf(instance);
+	while (currentPrototype && currentPrototype !== HTMLElement.prototype) {
+		const descriptor = Object.getOwnPropertyDescriptor(currentPrototype, key);
 		if (descriptor) {
 			return descriptor.set ? descriptor : null;
 		}
-		proto = Object.getPrototypeOf(proto);
+		currentPrototype = Object.getPrototypeOf(currentPrototype);
 	}
 	return null;
 }
 export function upgradeShadowedProperties() {
 	const ownKeys = Object.getOwnPropertyNames(this);
-	for (let i = 0; i < ownKeys.length; i += 1) {
-		const key = ownKeys[i];
+	for (let keyIndex = 0; keyIndex < ownKeys.length; keyIndex += 1) {
+		const key = ownKeys[keyIndex];
+		/*
+		 * Deep-state pre-init rescue. A parent's `.state.x=` that committed while
+		 * this element was still an undefined custom element (no live `.state`)
+		 * landed as a dotted own property `el['state.x']` via the commit
+		 * fallthrough. The dotted key has no prototype setter, so the accessor
+		 * rescue below would skip it — route it into reactive state now that the
+		 * proxy is live. Mirrors the auto-router's own-prop rescue so a lazily
+		 * upgraded child never drops a parent's first-render deep write.
+		 */
+		if (key.charCodeAt(0) === 115 && key.startsWith('state.')) {
+			setValueAtPath(this.state, key.slice(6), this[key]);
+			continue;
+		}
 		const descriptor = findPrototypeSetterDescriptor(this, key);
 		if (!descriptor) {
 			continue;

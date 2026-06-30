@@ -37,9 +37,9 @@ const KEY_ALIASES = {
  * Modifiers that let a bare combo fire while a field is focused (input guard).
  * `shift` is excluded — `Shift`+key is ordinary typing, not a shortcut.
  */
-const BYPASS_MODIFIERS = [
+const BYPASS_MODIFIERS = new Set([
 	'alt', 'ctrl', 'meta',
-];
+]);
 /*
  * `KeyboardEvent.key` values for the modifier keys themselves — never held;
  * their state is read from the event's modifier flags instead.
@@ -219,7 +219,7 @@ function isEditableTarget(node) {
 function comboHasBypassModifier(canonical) {
 	const tokens = canonical.split('+');
 	for (let index = 0; index < tokens.length; index += 1) {
-		if (BYPASS_MODIFIERS.indexOf(tokens[index]) !== -1) {
+		if (BYPASS_MODIFIERS.has(tokens[index])) {
 			return true;
 		}
 	}

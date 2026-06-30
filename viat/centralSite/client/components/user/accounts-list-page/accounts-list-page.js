@@ -129,7 +129,7 @@ export class AccountsListPage extends WebComponent {
 			<div class="al-shell">
 				<header class="al-title-header">
 					<div class="al-title-block">
-						<ui-icon class="al-title-icon" .name=${'users'} .size=${'md'}></ui-icon>
+						<ui-icon class="al-title-icon" .state.name=${'users'} .state.size=${'md'}></ui-icon>
 						<span class="al-title">// ACCOUNTS · RECENTLY UPDATED</span>
 					</div>
 				</header>

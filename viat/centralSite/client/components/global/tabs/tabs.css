@@ -1,4 +1,7 @@
 :host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
 	display: block;
 	min-height: 0;
 }
@@ -27,10 +30,17 @@
 	gap: var(--space-1);
 	border-block-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
 	padding: 0 var(--space-2);
+	/* Per-orientation button box — inherits into each <ui-tab-button> shadow. */
+	--tab-btn-pad: var(--space-3) var(--space-5);
+	--tab-btn-radius: var(--radius-sm) var(--radius-sm) 0 0;
+	--tab-btn-hover-transform: translateY(-1px);
 }
 [data-orientation='vertical'] .tab-strip {
 	flex-direction: column;
 	gap: var(--space-2);
+	--tab-btn-pad: var(--space-3) var(--space-4);
+	--tab-btn-radius: var(--radius-sm);
+	--tab-btn-hover-transform: translateX(2px);
 	/* Inner top inset (default 0) lets a host clear an overlaid window bar while
 	   the strip's background still fills the full height behind the frosted glass. */
 	padding: calc(var(--space-5) + var(--tabs-top-inset, 0px)) var(--space-3) var(--space-5);

@@ -153,6 +153,37 @@ export class UIContextMenu extends UIMenu {
 			this.disarmDismiss();
 		}
 	}
+	// closeOnLeave keep-open region. There is NO trigger button — the slotted content
+	// IS the boxed target, so the menu must persist while the pointer is over EITHER
+	// the panel (handled by the base) or the box, and close only when it leaves both.
+	// The host is display:contents (no box of its own), so measure the union of the
+	// slotted children's rects rather than the host.
+	keepOpenRect() {
+		const nodes = this.children;
+		let minLeft = Infinity;
+		let minTop = Infinity;
+		let maxRight = -Infinity;
+		let maxBottom = -Infinity;
+		for (let index = 0; index < nodes.length; index += 1) {
+			const rect = nodes[index].getBoundingClientRect();
+			if (rect.width === 0 && rect.height === 0) {
+				continue;
+			}
+			minLeft = Math.min(minLeft, rect.left);
+			minTop = Math.min(minTop, rect.top);
+			maxRight = Math.max(maxRight, rect.right);
+			maxBottom = Math.max(maxBottom, rect.bottom);
+		}
+		if (minLeft === Infinity) {
+			return null;
+		}
+		return {
+			left: minLeft,
+			top: minTop,
+			right: maxRight,
+			bottom: maxBottom,
+		};
+	}
 	position() {
 		const surface = this.refs.surface;
 		if (!surface) {
@@ -181,7 +212,7 @@ export class UIContextMenu extends UIMenu {
 	render() {
 		this.html `
 			<slot></slot>
-			<div #surface class="menu-surface" popover="manual" role="menu"
+			<div #surface class="menu-surface" popover="manual" role="menu" tabindex="-1"
 				@toggle=${this.handleToggle} @click=${this.handleClick} @keydown=${this.handleKey}>
 				^html${this.renderItems}
 			</div>

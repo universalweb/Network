@@ -270,8 +270,8 @@ export class ActivityLog extends Panel {
 		return this.htmlElement `
 			<div class="output-content">
 				<ui-tabs class="output-tabs-strip"
-					.tabs=${this.tabsForUI}
-					.active=${this.state.activeTab}
+					.state.tabs=${this.tabsForUI}
+					.state.active=${this.state.activeTab}
 					@tab-change=${this.handleTabChange}></ui-tabs>
 				<div class="output-feed">
 					${remoteList('entries', ActivityLogEntry, {

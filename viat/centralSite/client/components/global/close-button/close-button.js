@@ -21,7 +21,7 @@ export class UICloseButton extends WebComponent {
 	render() {
 		this.html `
 			<button class="cb" @click=${this.handleClick} aria-label=${this.state.label}>
-				<ui-icon class="cb-icon" .name=${'x'} .size=${'sm'}></ui-icon>
+				<ui-icon class="cb-icon" .state.name=${'x'} .state.size=${'sm'}></ui-icon>
 			</button>
 		`;
 	}

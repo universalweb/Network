@@ -47,7 +47,7 @@ export class UIExpandableCard extends MorphSurface {
 				@click=${this.handleTriggerClick}>
 				<div class="ec-card-head">
 					<span class="ec-card-title">${this.state.heading}</span>
-					<ui-icon class="ec-card-chevron" .name=${'chevron-down'} .size=${'sm'}></ui-icon>
+					<ui-icon class="ec-card-chevron" .state.name=${'chevron-down'} .state.size=${'sm'}></ui-icon>
 				</div>
 				<p class="ec-card-summary">${this.state.summary}</p>
 			</button>
@@ -57,7 +57,7 @@ export class UIExpandableCard extends MorphSurface {
 					<header class="ec-head">
 						<span class="ec-title">${this.state.heading}</span>
 						<button class="ec-close" type="button" aria-label="Close" @click=${this.handleCloseClick}>
-							<ui-icon .name=${'x'} .size=${'sm'}></ui-icon>
+							<ui-icon .state.name=${'x'} .state.size=${'sm'}></ui-icon>
 						</button>
 					</header>
 					<div class="ec-body"><slot></slot></div>

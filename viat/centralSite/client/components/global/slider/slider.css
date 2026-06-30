@@ -1,4 +1,7 @@
 :host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
 	display: block;
 	/* Theme surface — every visual knob defaulted so a bare <ui-slider> looks
 	   right and a consumer can retheme without touching the shadow. */

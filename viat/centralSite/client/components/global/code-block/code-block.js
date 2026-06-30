@@ -70,7 +70,7 @@ export class UICodeBlock extends WebComponent {
 				<figcaption class="cb-bar">
 					<span class="cb-lang">${this.state.language || 'code'}</span>
 					<button class="cb-copy" type="button" tooltip="Copy to clipboard" @click=${this.handleCopy}>
-						<ui-icon class="cb-copy-icon" .name=${this.state.copied ? 'check' : 'copy'} .size=${'xs'}></ui-icon>
+						<ui-icon class="cb-copy-icon" .state.name=${this.state.copied ? 'check' : 'copy'} .state.size=${'xs'}></ui-icon>
 						<span class="cb-copy-text">${this.state.copied ? 'Copied' : 'Copy'}</span>
 					</button>
 				</figcaption>

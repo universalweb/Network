@@ -37,6 +37,9 @@ export class UITypewriter extends WebComponent {
 		loop: false,
 		cursor: true,
 	};
+	static config = {
+		debugPatchOn: false,
+	};
 	onConnect() {
 		// Cursor position + phase live off-state — only `displayed` drives render.
 		this.phraseIndex = 0;

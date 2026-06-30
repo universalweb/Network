@@ -48,7 +48,7 @@ export class UIMorphDrawer extends MorphSurface {
 					<header class="dr-head">
 						<span class="dr-title">${this.state.heading}</span>
 						<button class="dr-close" type="button" aria-label="Close" @click=${this.handleCloseClick}>
-							<ui-icon .name=${'x'} .size=${'sm'}></ui-icon>
+							<ui-icon .state.name=${'x'} .state.size=${'sm'}></ui-icon>
 						</button>
 					</header>
 					<div class="dr-body"><slot></slot></div>

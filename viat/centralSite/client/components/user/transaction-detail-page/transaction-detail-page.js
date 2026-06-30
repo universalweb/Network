@@ -126,7 +126,7 @@ export class TransactionDetailPage extends WebComponent {
 			<div class="td-shell">
 				<header class="td-header">
 					<div class="td-title-block">
-						<ui-icon class="td-title-icon" .name=${'receipt'} .size=${'md'}></ui-icon>
+						<ui-icon class="td-title-icon" .state.name=${'receipt'} .state.size=${'md'}></ui-icon>
 						<span class="td-title">// TRANSACTION DETAIL</span>
 					</div>
 					<button class="td-copy" @click=${this.handleCopyId} tooltip="Copy transaction ID">${() => {

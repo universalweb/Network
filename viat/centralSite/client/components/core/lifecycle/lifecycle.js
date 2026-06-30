@@ -3,11 +3,13 @@ import { Perf } from '../debug/perf.js';
 import { registerChild } from '../dom/children.js';
 import { register, unregister } from '../dom/registry.js';
 import { sweepHotkeyEntries } from '../hotkeys/hotkeys.js';
+import { unlinkStateCarrier } from '../state/state.js';
 import {
 	assignPromisePair,
 	clearRealmUnsubs,
 	clearUnsubs,
 	fireResolver,
+	isPromiseLike,
 	isShadowRoot,
 } from '../utilities.js';
 import { PHASE } from './phase.js';
@@ -58,11 +60,20 @@ function resolveParentHost(component) {
 	const root = component.getRootNode();
 	return isShadowRoot(root) ? root.host : component.parentElement;
 }
-function runLifecycleStep(component, handlerName, label) {
-	return component[handlerName]().catch((error) => {
+async function runLifecycleStep(component, handlerName, label) {
+	try {
+		await component[handlerName]();
+	} catch (error) {
 		defaultLogger.error('WebComponent', `[${component.tagName}] ${label} error:`, error);
 		component.onLifecycleError(error);
-	});
+	}
+}
+async function runDisconnectedDestroy(component) {
+	try {
+		await component.handleDestroy();
+	} catch (error) {
+		component.onLifecycleError(error);
+	}
 }
 export function connectedCallback() {
 	if (!this.firstRenderDone) {
@@ -80,7 +91,7 @@ export async function handleConnect() {
 	const perfMark = Perf.mark('connect');
 	register(this);
 	if (defaultLogger.debugOn) {
-		defaultLogger.debug('WebComponent', `[${this.tagName}] connectedCallback`);
+		defaultLogger.debug('connectedCallback', `${this.constructor.name}<${this.localName}>`);
 	}
 	attachToParent(this, resolveParentHost(this));
 	/*
@@ -91,7 +102,7 @@ export async function handleConnect() {
 	 * when applyStyles actually returns a promise.
 	 */
 	const stylesResult = this.applyStyles();
-	if (stylesResult && typeof stylesResult.then === 'function') {
+	if (isPromiseLike(stylesResult)) {
 		await stylesResult;
 	}
 	/*
@@ -101,7 +112,7 @@ export async function handleConnect() {
 	 * returns null, no await); only themed components pay the sheet-load await.
 	 */
 	const themeResult = this.applyThemeStyles();
-	if (themeResult && typeof themeResult.then === 'function') {
+	if (isPromiseLike(themeResult)) {
 		await themeResult;
 	}
 	/**
@@ -111,7 +122,7 @@ export async function handleConnect() {
 	 */
 	if (this.onConnect) {
 		const connectResult = this.onConnect();
-		if (connectResult && typeof connectResult.then === 'function') {
+		if (isPromiseLike(connectResult)) {
 			await connectResult;
 		}
 	}
@@ -126,7 +137,7 @@ export async function handleConnect() {
 }
 export async function handleMove() {
 	if (defaultLogger.debugOn) {
-		defaultLogger.debug('WebComponent', `[${this.tagName}] connectedMoveCallback`);
+		defaultLogger.debug('connectedMoveCallback', `${this.constructor.name}<${this.localName}>`);
 	}
 	const oldParent = this.parentComponent;
 	this.unregisterFromParent?.();
@@ -139,7 +150,7 @@ export async function handleDisconnect() {
 	this.pendingConnect = null;
 	unregister(this);
 	if (defaultLogger.debugOn) {
-		defaultLogger.debug('WebComponent', `[${this.tagName}] disconnectedCallback`);
+		defaultLogger.debug('disconnectedCallback', `${this.constructor.name}<${this.localName}>`);
 	}
 	this.unregisterFromParent?.();
 	this.unregisterFromParent = null;
@@ -153,6 +164,7 @@ export async function handleDisconnect() {
 	this.clearTimeouts();
 	this.clearIntervals();
 	this.stateUnsubs?.clear();
+	unlinkStateCarrier(this);
 	this.globalUnsubs?.clear();
 	this.clearDelegateListeners();
 	sweepHotkeyEntries(this.hotkeyEntries);
@@ -187,21 +199,19 @@ export function destroy() {
 	if (this.isConnected) {
 		this.remove();
 	} else {
-		this.handleDestroy().catch((error) => {
-			this.onLifecycleError(error);
-		});
+		runDisconnectedDestroy(this);
 	}
 	return this.lifecycle.whenDestroyed;
 }
 export function resolveStrandedConnectCyclePromises() {
-	for (let i = 0; i < CONNECT_CYCLE_KEYS.length; i++) {
-		fireResolver(this.lifecycle, CONNECT_CYCLE_KEYS[i]);
+	for (let keyIndex = 0; keyIndex < CONNECT_CYCLE_KEYS.length; keyIndex++) {
+		fireResolver(this.lifecycle, CONNECT_CYCLE_KEYS[keyIndex]);
 	}
 	this.lifecycle.treeVisiblePromise = null;
 }
 export function createConnectCyclePromises() {
-	for (let i = 0; i < CONNECT_CYCLE_KEYS.length; i++) {
-		assignPromisePair(this.lifecycle, CONNECT_CYCLE_KEYS[i]);
+	for (let keyIndex = 0; keyIndex < CONNECT_CYCLE_KEYS.length; keyIndex++) {
+		assignPromisePair(this.lifecycle, CONNECT_CYCLE_KEYS[keyIndex]);
 	}
 	this.lifecycle.treeVisiblePromise = null;
 }

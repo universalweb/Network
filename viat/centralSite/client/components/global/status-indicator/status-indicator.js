@@ -3,10 +3,6 @@
 	<ui-badge> and derives the badge label + tone from a single `status` value.
 	Use anywhere a feature needs an online/offline indicator.
 	── STANDARD INTERACTION ─────────────────────────────────────────────
-	Drive it through the `status` property, bound with `bind()` so the change
-	is a surgical spot patch — never a re-render of the parent:
-	  import { bind } from 'webcomponent';
-	  <ui-status-indicator .status=${bind('connectionState')}></ui-status-indicator>
 	Imperative writes work too — `status` is a prototype accessor over
 	reactive state, and a pre-upgrade write is rescued by the base ctor:
 	  indicator.status = 'online';
@@ -20,9 +16,13 @@ import '../badge/badge.js';
 import { WebComponent } from 'webcomponent';
 export class UIStatusIndicator extends WebComponent {
 	static url = import.meta.url;
-	// Config table — static so callers can query the constructor for the
-	// valid states and their badge presentation:
-	//   Object.keys(UIStatusIndicator.STATUS_VIEW)  →  the accepted values
+	static styles = {
+		indicator: './status-indicator.css',
+	};
+	/*
+		Config table — static so callers can query the constructor for the valid states and their badge presentation:
+		Object.keys(UIStatusIndicator.STATUS_VIEW)  →  the accepted values
+	*/
 	static STATUS_VIEW = {
 		online: {
 			label: 'CONNECTED',
@@ -33,7 +33,7 @@ export class UIStatusIndicator extends WebComponent {
 			tone: 'warning',
 		},
 		connecting: {
-			label: 'CHECKING',
+			label: 'CONNECTING',
 			tone: 'warning',
 		},
 		offline: {
@@ -41,32 +41,34 @@ export class UIStatusIndicator extends WebComponent {
 			tone: 'danger',
 		},
 	};
-	static styles = {
-		indicator: './status-indicator.css',
-	};
 	static state = {
-		status: 'offline',
+		get status() {
+			return this.STATE.status ?? 'offline';
+		},
+		set status(value) {
+			const view = UIStatusIndicator.STATUS_VIEW[value];
+			const next = view ? value : 'offline';
+			if (next === this.state.status) {
+				return;
+			}
+			this.STATE.status = next;
+			this.state.view = view ?? UIStatusIndicator.STATUS_VIEW.offline;
+		},
+		view: UIStatusIndicator.STATUS_VIEW.offline,
 	};
-	// The contract surface. A `.status=` template binding (or a plain
-	// `el.status =`) routes through reactive state. Lives on the prototype —
-	// NOT inside `static state` — so the assignment is actually intercepted.
+	// TODO: The status method is still here for convenience, but we should consider making it where the logic lives instead of in the state setter.
 	get status() {
 		return this.state.status;
 	}
 	set status(value) {
-		this.state.status = this.constructor.STATUS_VIEW[value] ? value : 'offline';
-	}
-	// Resolve the badge view for the current status. The `?? offline` guard
-	// covers direct state writes that bypass the normalizing accessor.
-	statusView() {
-		const table = this.constructor.STATUS_VIEW;
-		return table[this.state.status] ?? table.offline;
+		if (value === this.state.status) {
+			return;
+		}
+		this.state.status = value;
 	}
 	render() {
 		this.html `
-			<ui-badge .dot=${true} .size=${'sm'}
-				.label=${this.statusView().label}
-				.tone=${this.statusView().tone}></ui-badge>
+			<ui-badge .state=${this.state.view} .state.dot=${true} .state.size=${'sm'}></ui-badge>
 		`;
 	}
 }

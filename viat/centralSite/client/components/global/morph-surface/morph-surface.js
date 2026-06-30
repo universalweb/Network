@@ -1,4 +1,4 @@
-import { flipMorph, WebComponent } from 'webcomponent';
+import { computeAnchor, flipMorph, WebComponent } from 'webcomponent';
 // `MorphSurface` — shared base for the cult-ui-style "expand outward" surfaces
 // (floating-panel, popover, expandable-card, morph-drawer). It owns the open/close
 // lifecycle, the FLIP morph (via the shared `flipMorph` helper), trigger-relative
@@ -56,20 +56,36 @@ export class MorphSurface extends WebComponent {
 		this.morphAnim?.cancel();
 		this.morphAnim = null;
 	}
-	// Default anchoring: surface top-left just under the trigger, in CONTAINING-BLOCK-
-	// relative coords (subtract the overlay's own origin) so a transformed/contained
-	// ancestor can't knock it off viewport-0. The CSS adds the gap token, keeping raw
-	// coords pure. Subclasses with edge/own-rect geometry override this.
+	// Gap between trigger and surface, in px. Lives in JS (not CSS) so the flip math
+	// can place it on the trigger-FACING edge — a flipped-up surface needs the gap
+	// ABOVE the trigger, not below. Mirrors --space-2 (0.25rem @ 16px root).
+	anchorGap() {
+		return 4;
+	}
+	// Default anchoring: flip + shift like the menu family. If the surface would
+	// overflow below the trigger and fits above, it opens UPWARD; the cross-axis is
+	// clamped to the viewport. Coords are CONTAINING-BLOCK-relative (subtract the
+	// overlay's own origin) so a transformed/contained ancestor can't knock it off
+	// viewport-0. computeAnchor needs the surface's REAL size, so it is measured here
+	// (already revealed + CSS-capped by max-block-size before this runs). Subclasses
+	// with edge/own-rect geometry override this.
 	positionSurface() {
 		const overlay = this.refs.overlay;
 		const surface = this.refs.surface;
 		if (!overlay || !surface) {
 			return;
 		}
-		const rect = this.fromRect();
 		const overlayBox = overlay.getBoundingClientRect();
-		surface.style.setProperty('--ms-anchor-top', `${rect.bottom - overlayBox.top}px`);
-		surface.style.setProperty('--ms-anchor-left', `${rect.left - overlayBox.left}px`);
+		const placed = computeAnchor(this.fromRect(), {
+			width: surface.offsetWidth,
+			height: surface.offsetHeight,
+		}, {
+			placement: 'bottom-start',
+			offset: this.anchorGap(),
+		});
+		surface.style.setProperty('--ms-anchor-top', `${placed.top - overlayBox.top}px`);
+		surface.style.setProperty('--ms-anchor-left', `${placed.left - overlayBox.left}px`);
+		surface.dataset.placement = placed.placement;
 	}
 	runOpen() {
 		if (this.state.open) {

@@ -52,7 +52,9 @@
 }
 .pp-surface {
 	position: absolute;
-	inset-block-start: calc(var(--ms-anchor-top, 0px) + var(--space-2));
+	/* Gap is baked into the JS anchor (MorphSurface.anchorGap) so flip puts it on the
+	   trigger-facing edge — do NOT re-add --space-2 here. */
+	inset-block-start: var(--ms-anchor-top, 0px);
 	inset-inline-start: var(--ms-anchor-left, 0px);
 	display: flex;
 	flex-direction: column;

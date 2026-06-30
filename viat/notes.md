@@ -1,1 +1,0 @@
-# VIAT NOTES

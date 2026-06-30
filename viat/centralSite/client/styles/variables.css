@@ -123,6 +123,15 @@
 	   bottom offset (safe-area aware). Pages add this as block-end clearance so
 	   content can scroll past the dock. */
 	--dock-h: calc(max(2.75rem, 44px) + var(--space-2) * 4 + 2px + max(var(--space-3), env(safe-area-inset-bottom, 0px)));
+	/* Heights of the fixed global chrome bars + the block-axis clearance the inner
+	   scroll surface (app.css .shell-scroll) reserves so content starts below the
+	   top bar and ends above the bottom bar — keeping the content's scrollbar behind
+	   both bars. Top clearance = the bar's floating offset (1rem) + its height; the
+	   bottom clearance is the status bar on desktop and the dock on mobile (app.css). */
+	--top-bar-height: 3.25rem;
+	--status-bar-height: 2.5rem;
+	--top-bar-clearance: calc(1rem + var(--top-bar-height) + var(--space-4));
+	--bottom-bar-clearance: calc(var(--status-bar-height) + var(--space-4));
 
 	/* ── Panel ───────────────────────────────────────── */
 	--panel-shadow:

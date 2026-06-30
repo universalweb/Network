@@ -1,4 +1,7 @@
 :host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
 	display: inline-block;
 }
 /* ── Trigger ─────────────────────────────────────────────────────────────── */
@@ -52,6 +55,12 @@
 .menu-surface.is-open {
 	opacity: 1;
 	transform: none;
+}
+/* The panel takes focus on open (so keyboard roving works) but must never paint
+   its own ring — items show focus, the container never does. :focus covers the
+   :focus-visible subset, so a keyboard-open won't outline the whole panel. */
+.menu-surface:focus {
+	outline: none;
 }
 /* ── Items ───────────────────────────────────────────────────────────────── */
 .menu-item {

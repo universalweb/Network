@@ -46,13 +46,13 @@ export class UIFab extends WebComponent {
 			<div class="fab" data-position=${this.state.position} ?data-extended=${this.state.extended}>
 				<ui-button
 					class="fab-btn"
-					.variant=${'solid'}
-					.tone=${this.state.tone}
-					.size=${this.state.size}
-					.leadicon=${this.state.icon}
-					.label=${label}
-					.tooltip=${this.state.extended ? '' : this.state.label}
-					.disabled=${this.state.disabled}
+					.state.variant=${'solid'}
+					.state.tone=${this.state.tone}
+					.state.size=${this.state.size}
+					.state.leadicon=${this.state.icon}
+					.state.label=${label}
+					.state.tooltip=${this.state.extended ? '' : this.state.label}
+					.state.disabled=${this.state.disabled}
 					@buttonClick=${this.handleClick}></ui-button>
 			</div>
 		`;
