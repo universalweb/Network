@@ -49,10 +49,13 @@ import {
 	disposeItem,
 	eachArray,
 	getValueAtPath,
+	isArrayBuffer,
 	isElement,
 	isFunction,
 	isMap,
+	isNode,
 	isPlainObject,
+	isPromise,
 	isSet,
 	isString,
 	setValueAtPath,
@@ -591,7 +594,7 @@ function resolveIfThenBranch(branch, branchNodes) {
 		}
 		return node;
 	}
-	if (branch instanceof Node || ComponentBinding.is(branch) || LiveList.isLiveList(branch)) {
+	if (isNode(branch) || ComponentBinding.is(branch) || LiveList.isLiveList(branch)) {
 		return branch;
 	}
 	throw new TypeError('ifThen() branch must be a value (string/number/boolean/null), a component class, or built content (Node/comp()/list). For reactive branch markup, use a component class — a raw inline html`` block is not a reactive branch.');
@@ -1084,7 +1087,7 @@ function valueToText(value) {
 	if (typeof value !== 'object') {
 		return String(value);
 	}
-	if (ArrayBuffer.isView(value) || value instanceof ArrayBuffer) {
+	if (ArrayBuffer.isView(value) || isArrayBuffer(value)) {
 		return toBase64Url(value);
 	}
 	return jsonDisplay(value);
@@ -1156,7 +1159,7 @@ function classifyContentKind(value) {
 	if (LiveList.isLiveList(value)) {
 		return CONTENT_KIND.LIST;
 	}
-	if (ComponentBinding.is(value) || value instanceof Node) {
+	if (ComponentBinding.is(value) || isNode(value)) {
 		return CONTENT_KIND.COMPONENT;
 	}
 	/*
@@ -1380,7 +1383,7 @@ async function patchSpotBodyPromise(value, spot, token) {
 	patchSpot(spot, item);
 }
 function patchSpotBody(spot, value) {
-	if (value instanceof Promise) {
+	if (isPromise(value)) {
 		const token = (spot.patchToken ?? 0) + 1;
 		spot.patchToken = token;
 		patchSpotBodyPromise(value, spot, token);

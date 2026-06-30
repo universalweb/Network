@@ -23,8 +23,20 @@ export function isElement(value) {
 export function isShadowRoot(value) {
 	return value instanceof ShadowRoot;
 }
+export function isNode(value) {
+	return value instanceof Node;
+}
+export function isHTMLElement(value) {
+	return value instanceof HTMLElement;
+}
+export function isCSSStyleSheet(value) {
+	return value instanceof CSSStyleSheet;
+}
 export function isPromiseLike(value) {
 	return value !== null && typeof value === 'object' && isFunction(value.then);
+}
+export function isPromise(value) {
+	return value instanceof Promise;
 }
 export function isError(value) {
 	return value instanceof Error;
@@ -52,6 +64,12 @@ export function isMap(value) {
 }
 export function isSet(value) {
 	return value instanceof Set;
+}
+export function isArrayBuffer(value) {
+	return value instanceof ArrayBuffer;
+}
+export function isUint8Array(value) {
+	return value instanceof Uint8Array;
 }
 export function assign(target, ...sources) {
 	return Object.assign(target, ...sources);
@@ -421,9 +439,9 @@ export function setValueAtPath(source, path, value) {
  */
 export function toBase64Url(source) {
 	let bytes;
-	if (source instanceof Uint8Array) {
+	if (isUint8Array(source)) {
 		bytes = source;
-	} else if (source instanceof ArrayBuffer) {
+	} else if (isArrayBuffer(source)) {
 		bytes = new Uint8Array(source);
 	} else {
 		bytes = new Uint8Array(source.buffer, source.byteOffset, source.byteLength);

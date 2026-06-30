@@ -29,7 +29,7 @@
 import { collectClassChain } from '../attrs/staticConfig.js';
 import { assertStaticStyles } from '../debug/assertions.js';
 import {
-	eachArray, eachObject, hasOwn, isString,
+	eachArray, eachObject, hasOwn, isCSSStyleSheet, isString,
 } from '../utilities.js';
 const linkByHref = new Map();
 const styleBySheet = new WeakMap();
@@ -91,7 +91,7 @@ function injectStyleEntry(entry) {
 	if (value === null || value === undefined) {
 		return;
 	}
-	if (value instanceof CSSStyleSheet) {
+	if (isCSSStyleSheet(value)) {
 		ensureHeadStyle(value);
 		return;
 	}

@@ -1,5 +1,6 @@
 import {
 	cachedProxy,
+	isArrayBuffer,
 	isFunction,
 	isMap,
 	isObject,
@@ -112,7 +113,7 @@ class TrackingFactory {
 		 * breaks `ArrayBuffer.isView` downstream (e.g. template display →
 		 * base64url) and serves no reactive purpose.
 		 */
-		if (!isObject(value) || ArrayBuffer.isView(value) || value instanceof ArrayBuffer) {
+		if (!isObject(value) || ArrayBuffer.isView(value) || isArrayBuffer(value)) {
 			return value;
 		}
 		return cachedProxy(this.cache, value, path, TrackingProxyHandler, this);

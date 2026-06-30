@@ -1,5 +1,5 @@
 import {
-	isArray, isFunction, isObject, isPromiseLike, isString,
+	isArray, isCSSStyleSheet, isFunction, isObject, isPromiseLike, isString,
 } from '../utilities.js';
 export function isComponentConfig(config) {
 	return isObject(config) && !isArray(config) && !isPromiseLike(config) && !isFunction(config.replaceSync);
@@ -8,7 +8,7 @@ export function assertStaticStyleEntry(styleName, value, className) {
 	if (value === undefined || value === null) {
 		return;
 	}
-	if (value instanceof CSSStyleSheet) {
+	if (isCSSStyleSheet(value)) {
 		return;
 	}
 	if (isString(value)) {

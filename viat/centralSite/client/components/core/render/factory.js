@@ -1,5 +1,5 @@
 import { registry } from '../dom/registry.js';
-import { isFunction } from '../utilities.js';
+import { isFunction, isHTMLElement } from '../utilities.js';
 export function getById(key) {
 	return registry[key] ?? null;
 }
@@ -9,7 +9,7 @@ export async function preRender(element, mount, options = {}) {
 	element.style.cssText += ';opacity:0;pointer-events:none;will-change:opacity';
 	if (isFunction(mount)) {
 		mount(element);
-	} else if (mount instanceof HTMLElement) {
+	} else if (isHTMLElement(mount)) {
 		mount.appendChild(element);
 		console.log('Pre-render Appended element to mount point', mount);
 	}

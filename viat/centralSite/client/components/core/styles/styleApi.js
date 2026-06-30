@@ -1,6 +1,6 @@
 import { collectClassChain } from '../attrs/staticConfig.js';
 import {
-	eachArray, hasOwn, isArray, isString,
+	eachArray, hasOwn, isArray, isCSSStyleSheet, isString,
 } from '../utilities.js';
 import { loadSheet } from './css-loader.js';
 import { applyHeadStyles, mergeStyleEntries } from './headStyles.js';
@@ -21,7 +21,7 @@ function sheetIsFrameworkOwned(owner) {
 	return owner === globalThis.WebComponent || (owner && owner.name === 'WebComponent');
 }
 function reLayer(sheet) {
-	if (!(sheet instanceof CSSStyleSheet)) {
+	if (!isCSSStyleSheet(sheet)) {
 		return sheet;
 	}
 	const rules = sheet.cssRules;
@@ -65,7 +65,7 @@ export async function compileStyles(ComponentClass) {
 		if (value === null || value === undefined) {
 			return;
 		}
-		if (value instanceof CSSStyleSheet) {
+		if (isCSSStyleSheet(value)) {
 			ordered.push({
 				key,
 				sheet: value,
@@ -137,7 +137,7 @@ function scopeHostSelectors(cssText) {
 		.replace(/:host(?![-\w(])/g, ':scope');
 }
 function buildScopedSheet(sheet, tagSelector) {
-	if (!(sheet instanceof CSSStyleSheet)) {
+	if (!isCSSStyleSheet(sheet)) {
 		return null;
 	}
 	const rules = sheet.cssRules;
@@ -226,7 +226,7 @@ export function forkStyleMap() {
 	return this.styleMap;
 }
 export async function resolveStyle(sheetOrPath, baseUrl) {
-	if (sheetOrPath instanceof CSSStyleSheet) {
+	if (isCSSStyleSheet(sheetOrPath)) {
 		return sheetOrPath;
 	}
 	if (!isString(sheetOrPath)) {
