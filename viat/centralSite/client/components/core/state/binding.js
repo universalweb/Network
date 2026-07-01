@@ -293,11 +293,14 @@ export function makeProxy(state, component) {
  * with component=null and the const globalRealm, so a per-component copy was
  * always behaviorally identical and one shared instance serves every component
  * during render tracking (dep attribution rides the ambient currentTracking at
- * trap time, never anything baked into the proxy). Keyed on the source argument
- * so it self-invalidates if globalState.proxy identity ever changes. Only two
- * future changes would slip past this and need an explicit clear here: a
- * swappable globalRealm (closed over below), or a `globalState.STATE = {}` wipe
- * that rebuilds state under the SAME proxy object.
+ * trap time, never anything baked into the proxy). Keyed on the source proxy
+ * identity: a correct global reset MUST rebuild globalState.proxy (a Proxy's
+ * target is fixed at construction — it cannot be repointed), so any reset yields
+ * a fresh identity and this memo self-invalidates on the next call; a mutate-in-
+ * place clear of the existing state object stays correct too, via live
+ * read-through. The one case a single-slot memo cannot cover is multiple /
+ * swappable realms — that belongs with the deferred per-component arbitrary-store
+ * work, which would re-key this cache per realm.
  */
 let cachedGlobalSource = null;
 let cachedGlobalProxy = null;
