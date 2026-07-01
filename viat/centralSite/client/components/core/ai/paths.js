@@ -11,8 +11,8 @@ export function invalidatePathIndex() {
 	indexCache = null;
 }
 subscribe(invalidatePathIndex);
-function dashToCamel(match, ch) {
-	return ch.toUpperCase();
+function dashToCamel(match, char) {
+	return char.toUpperCase();
 }
 function tagSlug(component) {
 	const tag = component.tagName.toLowerCase();
@@ -31,10 +31,10 @@ function nameSegment(component, takenNames) {
 	}
 	const base = tagSlug(component);
 	let candidate = base;
-	let n = 2;
+	let suffix = 2;
 	while (takenNames.has(candidate)) {
-		candidate = `${base}${n}`;
-		n += 1;
+		candidate = `${base}${suffix}`;
+		suffix += 1;
 	}
 	return candidate;
 }

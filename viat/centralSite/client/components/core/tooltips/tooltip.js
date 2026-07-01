@@ -35,45 +35,45 @@ export class UITooltip extends WebComponent {
 		this.isOpen = false;
 	}
 	calcPosition(targetRect, placement) {
-		const w = this.shellW;
-		const h = this.shellH;
+		const shellWidth = this.shellW;
+		const shellHeight = this.shellH;
 		let x;
 		let y;
 		if (placement === 'top') {
-			x = targetRect.left + ((targetRect.width - w) / 2);
-			y = targetRect.top - h - GAP;
+			x = targetRect.left + ((targetRect.width - shellWidth) / 2);
+			y = targetRect.top - shellHeight - GAP;
 		} else if (placement === 'bottom') {
-			x = targetRect.left + ((targetRect.width - w) / 2);
+			x = targetRect.left + ((targetRect.width - shellWidth) / 2);
 			y = targetRect.bottom + GAP;
 		} else if (placement === 'left') {
-			x = targetRect.left - w - GAP;
-			y = targetRect.top + ((targetRect.height - h) / 2);
+			x = targetRect.left - shellWidth - GAP;
+			y = targetRect.top + ((targetRect.height - shellHeight) / 2);
 		} else {
 			x = targetRect.right + GAP;
-			y = targetRect.top + ((targetRect.height - h) / 2);
+			y = targetRect.top + ((targetRect.height - shellHeight) / 2);
 		}
 		return {
-			x: clamp(x, EDGE_MARGIN, globalThis.innerWidth - w - EDGE_MARGIN),
-			y: clamp(y, EDGE_MARGIN, globalThis.innerHeight - h - EDGE_MARGIN),
+			x: clamp(x, EDGE_MARGIN, globalThis.innerWidth - shellWidth - EDGE_MARGIN),
+			y: clamp(y, EDGE_MARGIN, globalThis.innerHeight - shellHeight - EDGE_MARGIN),
 		};
 	}
 	pickPlacement(targetRect) {
-		const w = this.shellW;
-		const h = this.shellH;
+		const shellWidth = this.shellW;
+		const shellHeight = this.shellH;
 		const spaceTop = targetRect.top;
 		const spaceBottom = globalThis.innerHeight - targetRect.bottom;
 		const spaceLeft = targetRect.left;
 		const spaceRight = globalThis.innerWidth - targetRect.right;
-		if (spaceTop >= h + GAP + EDGE_MARGIN) {
+		if (spaceTop >= shellHeight + GAP + EDGE_MARGIN) {
 			return 'top';
 		}
-		if (spaceBottom >= h + GAP + EDGE_MARGIN) {
+		if (spaceBottom >= shellHeight + GAP + EDGE_MARGIN) {
 			return 'bottom';
 		}
-		if (spaceRight >= w + GAP + EDGE_MARGIN) {
+		if (spaceRight >= shellWidth + GAP + EDGE_MARGIN) {
 			return 'right';
 		}
-		if (spaceLeft >= w + GAP + EDGE_MARGIN) {
+		if (spaceLeft >= shellWidth + GAP + EDGE_MARGIN) {
 			return 'left';
 		}
 		return spaceBottom >= spaceTop ? 'bottom' : 'top';

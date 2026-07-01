@@ -21,17 +21,17 @@ function sanitize(value, depth) {
 	if (value === null || value === undefined) {
 		return value;
 	}
-	const t = typeof value;
-	if (t === 'number' || t === 'boolean') {
+	const valueType = typeof value;
+	if (valueType === 'number' || valueType === 'boolean') {
 		return value;
 	}
-	if (t === 'string') {
+	if (valueType === 'string') {
 		return value.length > MAX_STRING ? `${value.slice(0, MAX_STRING)}…` : value;
 	}
-	if (t === 'function') {
+	if (valueType === 'function') {
 		return '[fn]';
 	}
-	if (t === 'symbol' || t === 'bigint') {
+	if (valueType === 'symbol' || valueType === 'bigint') {
 		return value.toString();
 	}
 	if (Array.isArray(value)) {
@@ -59,7 +59,7 @@ function sanitize(value, depth) {
 		}
 		return out;
 	}
-	return `[${t}]`;
+	return `[${valueType}]`;
 }
 function describeTools(component) {
 	const tools = getTools(component);

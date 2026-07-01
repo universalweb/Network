@@ -1,8 +1,8 @@
 // On focus, select all text in the input/textarea.
 function handleFocus(focusEvent) {
-	const el = focusEvent.currentTarget;
-	if (typeof el.select === 'function') {
-		el.select();
+	const element = focusEvent.currentTarget;
+	if (typeof element.select === 'function') {
+		element.select();
 	}
 }
 export const autoselect = {

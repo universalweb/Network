@@ -37,12 +37,12 @@ function ensureRefsMap(component) {
 export function isValidRefName(refName) {
 	return REF_NAME_RE.test(refName);
 }
-export function registerRef(component, refName, el) {
+export function registerRef(component, refName, element) {
 	const map = ensureRefsMap(component);
-	const ref = new WeakRef(el);
+	const ref = new WeakRef(element);
 	map.set(refName, ref);
 	const token = {};
-	FINALIZER.register(el, {
+	FINALIZER.register(element, {
 		map,
 		name: refName,
 	}, token);

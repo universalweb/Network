@@ -30,13 +30,13 @@ function getObserver() {
 export const reveal = {
 	name: 'reveal',
 	install(element, value) {
-		const obs = getObserver();
+		const sharedObserver = getObserver();
 		elements.set(element, {
 			rootMargin: value || null,
 		});
-		obs.observe(element);
+		sharedObserver.observe(element);
 		return function uninstall() {
-			obs.unobserve(element);
+			sharedObserver.unobserve(element);
 			elements.delete(element);
 		};
 	},

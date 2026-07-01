@@ -390,10 +390,10 @@ export class RemoteListBinding extends ListBinding {
 		this.remoteConfig = remoteConfig;
 	}
 }
-export function isBindingType(x) {
-	if (!x) {
+export function isBindingType(value) {
+	if (!value) {
 		return false;
 	}
-	const c = x.constructor;
-	return c === Binding || c === ListBinding || c === RemoteListBinding;
+	const ctor = value.constructor;
+	return ctor === Binding || ctor === ListBinding || ctor === RemoteListBinding;
 }

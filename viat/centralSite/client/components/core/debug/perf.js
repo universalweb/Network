@@ -35,11 +35,11 @@ function getRecord(category) {
 	}
 	return entry;
 }
-function quantile(sortedSamples, p) {
+function quantile(sortedSamples, fraction) {
 	if (!sortedSamples.length) {
 		return 0;
 	}
-	const index = Math.min(sortedSamples.length - 1, Math.floor(sortedSamples.length * p));
+	const index = Math.min(sortedSamples.length - 1, Math.floor(sortedSamples.length * fraction));
 	return sortedSamples[index];
 }
 export const Perf = {
@@ -134,12 +134,12 @@ function walkAllComponents(root, sink) {
 	}
 	const all = root.querySelectorAll('*');
 	for (let i = 0; i < all.length; i++) {
-		const el = all[i];
-		if (el.isWebComponent) {
-			sink.push(el);
+		const element = all[i];
+		if (element.isWebComponent) {
+			sink.push(element);
 		}
-		if (el.shadowRoot) {
-			walkAllComponents(el.shadowRoot, sink);
+		if (element.shadowRoot) {
+			walkAllComponents(element.shadowRoot, sink);
 		}
 	}
 }
@@ -184,12 +184,12 @@ function census() {
 	let totalHotkeys = 0;
 	let totalRefs = 0;
 	for (let i = 0; i < all.length; i++) {
-		const el = all[i];
-		const tag = el.tagName.toLowerCase();
+		const element = all[i];
+		const tag = element.tagName.toLowerCase();
 		byTag.set(tag, (byTag.get(tag) ?? 0) + 1);
-		const phase = el.phase ?? '(unset)';
+		const phase = element.phase ?? '(unset)';
 		byPhase.set(phase, (byPhase.get(phase) ?? 0) + 1);
-		const counts = readSubscriptionCounts(el);
+		const counts = readSubscriptionCounts(element);
 		totalStateSubs += counts.stateSubs;
 		totalRenderDeps += counts.renderDeps;
 		totalStateUnsubs += counts.stateUnsubs;
