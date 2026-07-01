@@ -263,7 +263,7 @@ export async function dispatch(message, ctx = {}) {
 			result: result ?? null,
 		};
 	} catch (error) {
-		if (error && typeof error.code === 'number' && typeof error.message === 'string') {
+		if (error && typeof error.code === 'number' && isString(error.message)) {
 			return {
 				jsonrpc: '2.0',
 				id,

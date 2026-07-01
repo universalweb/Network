@@ -150,7 +150,7 @@ function getOrCreateScopeRecord(scope, eventName) {
 			 */
 			const path = domEvent.composedPath();
 			const deepTarget = path.length ? path[0] : domEvent.target;
-			if (!deepTarget || typeof deepTarget.closest !== 'function') {
+			if (!deepTarget || !isFunction(deepTarget.closest)) {
 				return;
 			}
 			const inScope = path.indexOf(scope) !== -1;

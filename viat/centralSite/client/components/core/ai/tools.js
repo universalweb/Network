@@ -288,7 +288,7 @@ defineGlobalTool('getPageMap', {
 	},
 	mutating: false,
 	handler({ component }) {
-		const map = typeof component?.aiMap === 'function' ? component.aiMap() : '';
+		const map = isFunction(component?.aiMap) ? component.aiMap() : '';
 		return {
 			map: map || '(no map available)',
 		};
