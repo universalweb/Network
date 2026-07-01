@@ -244,7 +244,7 @@ function openTagName(markup, openIndex, limit) {
  * spot case), the parent's open tag just closed (`html` ends with a non-self-
  * closing `>`), and the last `<` in `html` opens a real, content-hostable
  * element (not a `</…>` close, not a `<!…` comment, not void / raw-text). When
- * all hold the spot OWNS the element outright → `spot.el = parent`, every
+ * all hold the spot OWNS the element outright → `spot.element = parent`, every
  * patcher works against the real element, and there is NO wrapper, NO
  * `display:contents`, NO `pointer-events:none` (so the text stays selectable).
  */
@@ -465,7 +465,7 @@ export function buildHTML(strings, exprs) {
 		} else if (canElideTextWrapper(html, nextString)) {
 			/**
 			 * Whole-content spot — fold the marker onto the parent's open tag (drop
-			 * the trailing `>`, re-add it after the marker). `spot.el` becomes the
+			 * the trailing `>`, re-add it after the marker). `spot.element` becomes the
 			 * parent element itself: no wrapper node, no display/pointer-events hack.
 			 */
 			html = `${html.slice(0, html.length - 1)} data-uwc ${SPOT}="${stringIndex}">`;

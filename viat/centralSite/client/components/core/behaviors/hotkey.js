@@ -4,7 +4,7 @@
  * (core/hotkeys/hotkeys.js) with the programmatic `this.hotKey()`.
  *
  * On a match the element fires a custom `hotkey` event (bubbling, composed);
- * the consumer wires it declaratively — `<el hotkey="mod+k" @hotkey=${this.go}>`.
+ * the consumer wires it declaratively — `<element hotkey="mod+k" @hotkey=${this.go}>`.
  * No synthetic `.click()` — that would conflate keyboard activation with
  * pointer input and force every click-watching handler to disambiguate. The
  * event is the activation.

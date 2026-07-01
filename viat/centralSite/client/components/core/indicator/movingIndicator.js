@@ -13,7 +13,7 @@
 function noop() {}
 /*
 	MovingIndicator(indicatorElement, options) — construct via the static
-	`MovingIndicator.create(el, opts)`, or the `movingIndicator(el, opts)` entry
+	`MovingIndicator.create(element, opts)`, or the `movingIndicator(element, opts)` entry
 	below (which returns a no-op handle when given no element).
 	options:
 	  prefix        CSS custom-property stem — writes
@@ -106,7 +106,7 @@ const NOOP_INDICATOR = Object.freeze({
 	destroy: noop,
 });
 /**
- * Backwards-compatible entry — preserves the original `movingIndicator(el, opts)`
+ * Backwards-compatible entry — preserves the original `movingIndicator(element, opts)`
  * call shape. Returns a live `MovingIndicator` when given an element, or the
  * shared no-op handle when not.
  */

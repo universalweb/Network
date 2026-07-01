@@ -7,7 +7,7 @@
  * so a portaled child COMPONENT keeps its lifecycle, reactive subscriptions, and
  * phase intact; a plain `appendChild` would disconnect→reconnect it and a late
  * `handleDisconnect` would then strip the reconnected child's subscriptions. The
- * moved nodes keep their Spot references (`Spot.el` is a direct node handle), so
+ * moved nodes keep their Spot references (`Spot.element` is a direct node handle), so
  * reactive patches keep applying in place wherever the content now lives — the
  * engine needs no portal-awareness, and a patch pass leaves it untouched.
  *
@@ -38,7 +38,7 @@
  * rebuild (old wrappers cleared before re-projection) and disconnect (via
  * `cleanupTemplate`), so a portal never outlives its owner. Disconnect teardown is
  * ASYNC: `handleDisconnect` first awaits `pendingConnect`, so the wrapper is removed
- * a scheduler macrotask after `el.remove()`, not synchronously — a test polling on
+ * a scheduler macrotask after `element.remove()`, not synchronously — a test polling on
  * microtasks must span a frame. The one edge this does not serialize is a PATHOLOGICAL
  * rapid disconnect→reconnect before that connect settles (a pre-existing framework
  * async-disconnect trait, not portal-specific); settled mount/live/unmount, patch,

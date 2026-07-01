@@ -52,24 +52,24 @@ function defineProbe(body) {
  * on `this.pendingConnect`; awaiting it is the deterministic first-render flush.
  * Reactive re-renders batch through the scheduler, drained on `nextFrame()`. */
 async function mount(tag) {
-	const el = document.createElement(tag);
-	document.body.appendChild(el);
-	await el.pendingConnect;
-	return el;
+	const element = document.createElement(tag);
+	document.body.appendChild(element);
+	await element.pendingConnect;
+	return element;
 }
-function root(el) {
-	return el.shadowRoot ?? el;
+function root(element) {
+	return element.shadowRoot ?? element;
 }
 test('harness: a component renders state and reacts to a mutation', async () => {
 	const tag = defineProbe((component) => {
 		component.html `<span>${component.state.count}</span>`;
 	});
-	const el = await mount(tag);
-	const span = root(el).querySelector('span');
+	const element = await mount(tag);
+	const span = root(element).querySelector('span');
 	assert.ok(span, 'rendered a <span>');
 	assert.equal(span.textContent, '0');
-	el.state.count = 5;
-	await el.nextFrame();
+	element.state.count = 5;
+	await element.nextFrame();
 	assert.equal(span.textContent, '5', 'reactive update reflected');
 });
 function defineComponent(staticState, renderBody) {
@@ -90,14 +90,14 @@ test('A: $value="key" two-way on local state round-trips DOM↔state', async () 
 	}, (component) => {
 		component.html `<input $value="name">`;
 	});
-	const el = await mount(tag);
-	const input = root(el).querySelector('input');
+	const element = await mount(tag);
+	const input = root(element).querySelector('input');
 	assert.equal(input.value, 'ada', 'state → DOM (initial)');
 	input.value = 'grace';
 	input.dispatchEvent(new Event('input'));
-	assert.equal(el.state.name, 'grace', 'DOM → state (writeback)');
-	el.state.name = 'lin';
-	await el.nextFrame();
+	assert.equal(element.state.name, 'grace', 'DOM → state (writeback)');
+	element.state.name = 'lin';
+	await element.nextFrame();
 	assert.equal(input.value, 'lin', 'state → DOM (reactive)');
 });
 test('A2: inferred two-way value=${() => state.x} round-trips (uses realmForKey)', async () => {
@@ -108,12 +108,12 @@ test('A2: inferred two-way value=${() => state.x} round-trips (uses realmForKey)
 			return component.state.city;
 		}}>`;
 	});
-	const el = await mount(tag);
-	const input = root(el).querySelector('input');
+	const element = await mount(tag);
+	const input = root(element).querySelector('input');
 	assert.equal(input.value, 'oslo', 'state → DOM (initial)');
 	input.value = 'kyoto';
 	input.dispatchEvent(new Event('input'));
-	assert.equal(el.state.city, 'kyoto', 'DOM → state writeback wired');
+	assert.equal(element.state.city, 'kyoto', 'DOM → state writeback wired');
 });
 /* ── Group B: GLOBAL read via this.global (must stay green) ──────────────── */
 test('B: this.global.<key> renders and reacts to globalState.set', async () => {
@@ -124,13 +124,13 @@ test('B: this.global.<key> renders and reacts to globalState.set', async () => {
 	const tag = defineComponent({}, (component) => {
 		component.html `<span>${component.global[key]}</span>`;
 	});
-	const el = await mount(tag);
-	const span = root(el).querySelector('span');
+	const element = await mount(tag);
+	const span = root(element).querySelector('span');
 	assert.equal(span.textContent, 'dark', 'global → DOM (initial)');
 	globalState.set({
 		[key]: 'light',
 	});
-	await el.nextFrame();
+	await element.nextFrame();
 	assert.equal(span.textContent, 'light', 'global mutation reflected');
 });
 /* ── Group C: latent 2007 bug — non-anchored reactive bind('x') content spot.

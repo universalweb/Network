@@ -9,14 +9,14 @@ function itemKey(item) {
 	return item.id;
 }
 function buildPerfListItemElement(item) {
-	const el = new PerfListItem();
-	el.state = item;
-	return el;
+	const domElement = new PerfListItem();
+	domElement.state = item;
+	return domElement;
 }
 function buildPerfFullCardElement(item) {
-	const el = new PerfFullCard();
-	el.state = item;
-	return el;
+	const domElement = new PerfFullCard();
+	domElement.state = item;
+	return domElement;
 }
 const REPORT_COLUMNS = [
 	{
@@ -501,10 +501,10 @@ export class PerfListPage extends WebComponent {
 		const fragment = document.createDocumentFragment();
 		const children = new Array(items.length);
 		for (let i = 0; i < items.length; i++) {
-			const el = new PerfListItem();
-			el.state = items[i];
-			fragment.appendChild(el);
-			children[i] = el;
+			const domElement = new PerfListItem();
+			domElement.state = items[i];
+			fragment.appendChild(domElement);
+			children[i] = domElement;
 		}
 		container.replaceChildren(fragment);
 		this.manualChildren = children;

@@ -66,30 +66,30 @@ const SUBEVENT_ATTRS = behaviorAttrNames();
  * Behavior-attribute attribute application. The template extractor strips the
  * raw `tooltip="…"` / `hotkey="…"` etc. attributes; this function reflects the
  * (possibly dynamic) value to the behavior. If the behavior exposes an
- * `applyValue(el, value)` hook, it owns the update — typically by writing a
+ * `applyValue(element, value)` hook, it owns the update — typically by writing a
  * WeakMap registry instead of mutating the DOM (tooltip lives here). For
  * legacy behaviors with no hook the value is reflected into a sibling
  * `data-<name>` attribute that the behavior reads on demand.
  */
-function applySubeventAttr(el, attrName, value) {
+function applySubeventAttr(element, attrName, value) {
 	if (!SUBEVENT_ATTRS.has(attrName)) {
 		return false;
 	}
-	if (el.hasAttribute(attrName)) {
-		el.removeAttribute(attrName);
+	if (element.hasAttribute(attrName)) {
+		element.removeAttribute(attrName);
 	}
 	const behavior = getBehavior(attrName);
 	if (behavior && isFunction(behavior.applyValue)) {
-		behavior.applyValue(el, value);
+		behavior.applyValue(element, value);
 		return true;
 	}
 	const isEmpty = value == null || value === false || value === '';
 	if (isEmpty) {
-		el.removeAttribute(`data-${attrName}`);
+		element.removeAttribute(`data-${attrName}`);
 		return true;
 	}
 	const next = value === true ? '' : String(value);
-	el.setAttribute(`data-${attrName}`, next);
+	element.setAttribute(`data-${attrName}`, next);
 	return true;
 }
 export class ClassList {
@@ -186,10 +186,10 @@ function applyClassListItems(items, desired, deps, component) {
 		}
 		if (isBindingType(item)) {
 			if (component) {
-				const keyRealm = realmForKey(item.key, component);
+				const keyRealm = realmForBinding(item, component);
 				addDep(deps, keyRealm.realm, keyRealm.path);
 			}
-			const value = component ? resolveBindingValue(component, item.key) : item.value;
+			const value = component ? resolveBindingValueForBinding(component, item) : item.value;
 			if (isString(value)) {
 				addTokens(value, desired);
 			} else if (value) {
@@ -253,15 +253,15 @@ function applyClassListItems(items, desired, deps, component) {
 		}
 	}
 }
-function diffClassList(el, current, desired) {
+function diffClassList(element, current, desired) {
 	for (const token of current) {
 		if (!desired.has(token)) {
-			el.classList.remove(token);
+			element.classList.remove(token);
 		}
 	}
 	for (const token of desired) {
 		if (!current.has(token)) {
-			el.classList.add(token);
+			element.classList.add(token);
 		}
 	}
 }
@@ -284,7 +284,7 @@ function cleanupTemplateNode(node) {
 /**
  * Remove every node strictly BETWEEN an anchored spot's two comment markers,
  * leaving the comments themselves in place. The anchored counterpart to a
- * wrapper's `el.textContent = ''` / `el.innerHTML =` wipe — it touches only the
+ * wrapper's `element.textContent = ''` / `element.innerHTML =` wipe — it touches only the
  * spot's own range, never the static siblings that share the parent element.
  * `cleanupTemplateNode` runs per removed node (idempotent) so nested template
  * instances (list rows, html fragments) release their spots/subscriptions.
@@ -412,9 +412,9 @@ function resolveRenderKind(renderFn) {
 }
 function createListElementByKind(kind, renderFn, item, component) {
 	if (kind === 'tag') {
-		const el = document.createElement(renderFn);
-		el.state = item;
-		return el;
+		const element = document.createElement(renderFn);
+		element.state = item;
+		return element;
 	}
 	if (kind === 'class') {
 		/*
@@ -502,7 +502,7 @@ export class LiveList {
 				this.spot.prevItemMap.set(itemKey, newItem);
 				fragment.append(element);
 			}
-			const container = this.spot.anchored ? this.spot.startComment.parentNode : this.spot.el;
+			const container = this.spot.anchored ? this.spot.startComment.parentNode : this.spot.element;
 			const tail = this.spot.anchored ? this.spot.endComment : null;
 			container.insertBefore(fragment, refElement ?? tail);
 		}
@@ -735,7 +735,7 @@ function patchList(spot, itemList) {
 	 * its end (tail = null). Anchored partial: the parent shared with statics,
 	 * inserting before the end comment so the list stays inside its range.
 	 */
-	const anchor = spot.anchored ? spot.startComment.parentNode : spot.el;
+	const anchor = spot.anchored ? spot.startComment.parentNode : spot.element;
 	const tail = spot.anchored ? spot.endComment : null;
 	const oldMap = spot.keyMap ?? new Map();
 	const prevItemMap = spot.prevItemMap ?? new Map();
@@ -933,6 +933,23 @@ function realmForKey(key, component) {
 		path: key,
 	};
 }
+/*
+ * Flag-carry realm resolution for a Binding — the read-side twin of the split in
+ * `Binding`'s constructor. Scope was resolved ONCE at authoring time into a
+ * `.global` flag + a BARE `.key`, so the realm comes from the flag; downstream
+ * never re-parses the (already prefix-stripped) key string. Using `realmForKey`
+ * on a binding's bare key would silently resolve a `global.` bind to LOCAL.
+ */
+function realmForBinding(binding, component) {
+	return {
+		realm: binding.global ? globalRealm : localRealm(component),
+		path: binding.key,
+	};
+}
+function resolveBindingValueForBinding(component, binding) {
+	const resolved = realmForBinding(binding, component);
+	return resolved.realm.read(resolved.path);
+}
 // A one-entry dependency Map<realm, Set<path>> for a single keyed binding.
 function singleDepMap(realm, path) {
 	const depMap = new Map();
@@ -940,11 +957,12 @@ function singleDepMap(realm, path) {
 	return depMap;
 }
 /**
- * One-entry dep Map straight from a binding key + component (bind / list / $value
- * spots whose single key is fixed at install).
+ * One-entry dep Map straight from a Binding + component (bind / list spots whose
+ * single key is fixed at install). Flag-aware — routes a global bind to the
+ * global realm even though the key string is prefix-stripped.
  */
-function keyDepMap(key, component) {
-	const resolved = realmForKey(key, component);
+function bindingDepMap(binding, component) {
+	const resolved = realmForBinding(binding, component);
 	return singleDepMap(resolved.realm, resolved.path);
 }
 /**
@@ -1036,23 +1054,23 @@ function syncSpotSubscriptions(spot, deps) {
  * patches skip kind detection. Hot path is one virtual call per patch.
  */
 function patchListKind(spot, value) {
-	if (!spot.keyMap && spot.el.firstChild) {
-		spot.el.textContent = '';
+	if (!spot.keyMap && spot.element.firstChild) {
+		spot.element.textContent = '';
 	}
 	patchList(spot, value);
 }
 function patchComponentKind(spot, value) {
 	const node = ComponentBinding.is(value) ? value.value : value;
-	if (spot.el.firstChild === node) {
+	if (spot.element.firstChild === node) {
 		return;
 	}
-	spot.el.textContent = '';
+	spot.element.textContent = '';
 	if (node) {
-		spot.el.appendChild(node);
+		spot.element.appendChild(node);
 	}
 }
 function patchHtmlKind(spot, value) {
-	spot.el.innerHTML = String(value ?? '');
+	spot.element.innerHTML = String(value ?? '');
 }
 /*
  * JSON-for-display replacer: BigInt-safe (stringified — wallet amounts survive)
@@ -1138,8 +1156,8 @@ function patchTextStrict(spot, value) {
 		warnHtmlInText(spot, value);
 	}
 	const str = valueToText(value);
-	if (spot.el.textContent !== str) {
-		spot.el.textContent = str;
+	if (spot.element.textContent !== str) {
+		spot.element.textContent = str;
 	}
 }
 /**
@@ -1222,7 +1240,7 @@ function patchHtmlAnchored(spot, value) {
 	}
 	/*
 	 * Parse via an INERT <template> — script-inert, matching the wrapper path's
-	 * `el.innerHTML` semantics. NOT `Range.createContextualFragment`, which is an
+	 * `element.innerHTML` semantics. NOT `Range.createContextualFragment`, which is an
 	 * XSS sink that EXECUTES embedded <script>. Then splice the parsed nodes into
 	 * the comment-bounded range. (Also drops the per-patch Range allocation.)
 	 */
@@ -1245,7 +1263,7 @@ function patchComponentAnchored(spot, value) {
 function patchListAnchored(spot, value) {
 	/**
 	 * If the range still holds leftover text/html from a prior kind, drop it
-	 * before the keyed build (the wrapper path relied on `el.textContent=''`).
+	 * before the keyed build (the wrapper path relied on `element.textContent=''`).
 	 */
 	if (!spot.keyMap && spot.startComment.nextSibling !== spot.endComment) {
 		clearRange(spot.startComment, spot.endComment);
@@ -1309,7 +1327,7 @@ function bindSpotKind(spot, value) {
 		 * belongs to the app — never force it (keeps text selectable / copyable,
 		 * fixes the unclickable `<button>${x}</button>`).
 		 */
-		spot.el.style.pointerEvents = spotKeepsInteractive(kind, value) ? '' : 'none';
+		spot.element.style.pointerEvents = spotKeepsInteractive(kind, value) ? '' : 'none';
 	}
 }
 /**
@@ -1335,7 +1353,7 @@ function reportAsyncSpotError(error) {
  * @param {object} value - The plain-object style map.
  */
 function applyStyleObject(spot, value) {
-	const elementStyle = spot.el.style;
+	const elementStyle = spot.element.style;
 	/*
 	 * Mixed-form binding (string last patch, object now): the string apply
 	 * replaced the WHOLE attribute, so its properties aren't in prevStyleKeys and
@@ -1422,8 +1440,8 @@ function patchSpotBody(spot, value) {
 						clearRange(spot.startComment, spot.endComment);
 					}
 					spot.textNode = null;
-				} else if (spot.el.textContent !== '') {
-					spot.el.textContent = '';
+				} else if (spot.element.textContent !== '') {
+					spot.element.textContent = '';
 				}
 				return;
 			}
@@ -1433,33 +1451,33 @@ function patchSpotBody(spot, value) {
 		return;
 	}
 	if (spot.type === SPOT_TYPE.BARE_ATTR) {
-		if (applySubeventAttr(spot.el, spot.attr, value)) {
+		if (applySubeventAttr(spot.element, spot.attr, value)) {
 			return;
 		}
 		if (value === false || value === null || value === undefined || value === '') {
-			if (spot.el.hasAttribute(spot.attr)) {
-				spot.el.removeAttribute(spot.attr);
+			if (spot.element.hasAttribute(spot.attr)) {
+				spot.element.removeAttribute(spot.attr);
 			}
 			return;
 		}
 		if (value === true) {
-			if (!spot.el.hasAttribute(spot.attr)) {
-				spot.el.setAttribute(spot.attr, '');
+			if (!spot.element.hasAttribute(spot.attr)) {
+				spot.element.setAttribute(spot.attr, '');
 			}
 			return;
 		}
 		const bareStr = String(value);
-		if (spot.el.getAttribute(spot.attr) !== bareStr) {
-			spot.el.setAttribute(spot.attr, bareStr);
+		if (spot.element.getAttribute(spot.attr) !== bareStr) {
+			spot.element.setAttribute(spot.attr, bareStr);
 		}
 		return;
 	}
 	if (spot.type === SPOT_TYPE.BOOL_ATTR) {
-		const has = spot.el.hasAttribute(spot.attr);
+		const has = spot.element.hasAttribute(spot.attr);
 		if (value && !has) {
-			spot.el.setAttribute(spot.attr, '');
+			spot.element.setAttribute(spot.attr, '');
 		} else if (!value && has) {
-			spot.el.removeAttribute(spot.attr);
+			spot.element.removeAttribute(spot.attr);
 		}
 		return;
 	}
@@ -1477,8 +1495,8 @@ function patchSpotBody(spot, value) {
 		 * `assignState` no-ops on a non-object value, so non-object `.state=` is
 		 * safe; every other property still assigns directly.
 		 */
-		if (spot.attr === 'state' && isFunction(spot.el.assignState)) {
-			const childElement = spot.el;
+		if (spot.attr === 'state' && isFunction(spot.element.assignState)) {
+			const childElement = spot.element;
 			childElement.assignState(value);
 			/*
 			 * `.state=` carry-down. When the passed value is a SHARED reactive
@@ -1501,12 +1519,12 @@ function patchSpotBody(spot, value) {
 		 * to the proxy set trap so the nested key notifies and re-patches. The
 		 * proxy already no-ops an unchanged leaf, so no extra arg-diff is needed.
 		 */
-		if (spot.el.state && spot.attr.startsWith('state.')) {
-			setValueAtPath(spot.el.state, spot.attr.slice(6), value);
+		if (spot.element.state && spot.attr.startsWith('state.')) {
+			setValueAtPath(spot.element.state, spot.attr.slice(6), value);
 			return;
 		}
-		if (spot.el[spot.attr] !== value) {
-			spot.el[spot.attr] = value;
+		if (spot.element[spot.attr] !== value) {
+			spot.element[spot.attr] = value;
 		}
 		return;
 	}
@@ -1522,17 +1540,17 @@ function patchSpotBody(spot, value) {
 		}
 		spot.methodCalled = true;
 		spot.lastMethodArg = value;
-		if (isFunction(spot.el[spot.attr])) {
-			spot.el[spot.attr](value);
+		if (isFunction(spot.element[spot.attr])) {
+			spot.element[spot.attr](value);
 		}
 		return;
 	}
-	if (applySubeventAttr(spot.el, spot.attr, value)) {
+	if (applySubeventAttr(spot.element, spot.attr, value)) {
 		return;
 	}
 	if (value === '' || value === null || value === undefined || value === false) {
-		if (spot.el.hasAttribute(spot.attr)) {
-			spot.el.removeAttribute(spot.attr);
+		if (spot.element.hasAttribute(spot.attr)) {
+			spot.element.removeAttribute(spot.attr);
 		}
 		return;
 	}
@@ -1554,8 +1572,8 @@ function patchSpotBody(spot, value) {
 		spot.prevStyleKeys = null;
 		spot.styleWasString = true;
 	}
-	if (spot.el.getAttribute(spot.attr) !== str) {
-		spot.el.setAttribute(spot.attr, str);
+	if (spot.element.getAttribute(spot.attr) !== str) {
+		spot.element.setAttribute(spot.attr, str);
 	}
 }
 function patchSpot(spot, value) {
@@ -1657,12 +1675,12 @@ class Spot {
  * any `${bindingExpr}` whose expr resolves to a single state path.
  */
 class BindingSpot extends Spot {
-	constructor(el, slotIndex, spotType, attr, expr, component, bindingKey, declaredKind) {
+	constructor(element, slotIndex, spotType, attr, expr, component, bindingKey, declaredKind) {
 		super();
 		this.kind = SPOT_KIND.BINDING;
 		this.type = spotType;
 		this.attr = attr;
-		this.el = el;
+		this.element = element;
 		this.slotIndex = slotIndex;
 		this.expr = expr;
 		this.component = component;
@@ -1694,7 +1712,7 @@ class BindingSpot extends Spot {
 		patchSpot(this, this.pendingValue);
 	}
 	refresh() {
-		patchSpot(this, resolveBindingValue(this.component, this.bindingKey));
+		patchSpot(this, resolveBindingValueForBinding(this.component, this.expr));
 	}
 }
 /**
@@ -1744,11 +1762,11 @@ function buildListView(rawItems, filterFn) {
  * `liveList(…)`. Owns `keyMap` (key → element) and `liveList` handle.
  */
 class ListSpot extends Spot {
-	constructor(el, slotIndex, spotType, expr, component, bindingKey, renderFn, keyFn, filterFn = null) {
+	constructor(element, slotIndex, spotType, expr, component, bindingKey, renderFn, keyFn, filterFn = null) {
 		super();
 		this.kind = SPOT_KIND.LIST;
 		this.type = spotType;
-		this.el = el;
+		this.element = element;
 		this.slotIndex = slotIndex;
 		this.expr = expr;
 		this.component = component;
@@ -1787,7 +1805,7 @@ class ListSpot extends Spot {
 		const {
 			component, bindingKey, renderFn, keyFn, filterFn,
 		} = this;
-		const rawItems = resolveBindingValue(component, bindingKey);
+		const rawItems = resolveBindingValueForBinding(component, this.expr);
 		const viewItems = buildListView(rawItems, filterFn);
 		/*
 		 * Partial in-place update is only safe when the change is a *deep*
@@ -1843,12 +1861,12 @@ class ListSpot extends Spot {
  * refresh so deps stay accurate.
  */
 class ComputedSpot extends Spot {
-	constructor(el, slotIndex, spotType, attr, expr, component, declaredKind) {
+	constructor(element, slotIndex, spotType, attr, expr, component, declaredKind) {
 		super();
 		this.kind = SPOT_KIND.COMPUTED;
 		this.type = spotType;
 		this.attr = attr;
-		this.el = el;
+		this.element = element;
 		this.slotIndex = slotIndex;
 		this.expr = expr;
 		this.component = component;
@@ -1872,12 +1890,12 @@ class ComputedSpot extends Spot {
 }
 /** Multi-interpolation attribute: `<div data-x="a${b}c${d}e">`. */
 class MultiAttrSpot extends Spot {
-	constructor(el, slotIndex, attr, parts, component) {
+	constructor(element, slotIndex, attr, parts, component) {
 		super();
 		this.kind = SPOT_KIND.MULTI;
 		this.type = SPOT_TYPE.MULTI_ATTR;
 		this.attr = attr;
-		this.el = el;
+		this.element = element;
 		this.slotIndex = slotIndex;
 		this.parts = parts;
 		this.component = component;
@@ -1896,9 +1914,9 @@ class MultiAttrSpot extends Spot {
 			}
 			const expr = part.expr;
 			if (isBindingType(expr)) {
-				const keyRealm = realmForKey(expr.key, component);
+				const keyRealm = realmForBinding(expr, component);
 				addDep(allDeps, keyRealm.realm, keyRealm.path);
-				result += resolveBindingValue(component, expr.key) ?? '';
+				result += resolveBindingValueForBinding(component, expr) ?? '';
 				continue;
 			}
 			if (isFunction(expr)) {
@@ -1909,9 +1927,9 @@ class MultiAttrSpot extends Spot {
 			}
 			result += expr ?? '';
 		}
-		if (!applySubeventAttr(this.el, this.attr, result)) {
-			if (this.el.getAttribute(this.attr) !== result) {
-				this.el.setAttribute(this.attr, result);
+		if (!applySubeventAttr(this.element, this.attr, result)) {
+			if (this.element.getAttribute(this.attr) !== result) {
+				this.element.setAttribute(this.attr, result);
 			}
 		}
 		syncSpotSubscriptions(this, allDeps);
@@ -1919,12 +1937,12 @@ class MultiAttrSpot extends Spot {
 }
 /** `class=` binding — token-level diff via `applyClassListItems`. */
 class ClassListSpot extends Spot {
-	constructor(el, slotIndex, parts, component) {
+	constructor(element, slotIndex, parts, component) {
 		super();
 		this.kind = SPOT_KIND.CLASS;
 		this.type = SPOT_TYPE.CLASS_LIST;
 		this.attr = 'class';
-		this.el = el;
+		this.element = element;
 		this.slotIndex = slotIndex;
 		this.parts = parts;
 		this.component = component;
@@ -1950,7 +1968,7 @@ class ClassListSpot extends Spot {
 			applyClassListItems([expr], desired, deps, component);
 		}
 		const current = this.classListCurrent ?? new Set();
-		diffClassList(this.el, current, desired);
+		diffClassList(this.element, current, desired);
 		this.classListCurrent = desired;
 		syncSpotSubscriptions(this, deps);
 	}
@@ -1961,10 +1979,10 @@ class ClassListSpot extends Spot {
  * `dispatchEventSpotListener` looking up the spot by element + event type.
  */
 class EventSpot extends Spot {
-	constructor(el, slotIndex, eventName, expr, component, modifiers) {
+	constructor(element, slotIndex, eventName, expr, component, modifiers) {
 		super();
 		this.type = SPOT_TYPE.EVENT;
-		this.el = el;
+		this.element = element;
 		this.slotIndex = slotIndex;
 		this.eventName = eventName;
 		this.expr = expr;
@@ -2022,7 +2040,7 @@ class EventSpot extends Spot {
 		};
 	}
 	unsubscribe() {
-		const map = EVENT_SPOTS.get(this.el);
+		const map = EVENT_SPOTS.get(this.element);
 		if (map) {
 			map.delete(this.eventName);
 		}
@@ -2031,18 +2049,18 @@ class EventSpot extends Spot {
 		 * capture flag used at add time or the listener leaks (capture-mismatched
 		 * removal silently no-ops).
 		 */
-		this.el.removeEventListener(this.eventName, dispatchEventSpotListener, this.modCapture);
+		this.element.removeEventListener(this.eventName, dispatchEventSpotListener, this.modCapture);
 		super.unsubscribe();
 	}
 }
-function installBindingSpot(plan, el, expr, component) {
+function installBindingSpot(plan, element, expr, component) {
 	const bindingKey = expr.key;
 	if (ListBinding.isListBinding(expr)) {
-		const listSpot = new ListSpot(el, plan.slotIndex, plan.type, expr, component, bindingKey, expr.renderFn, expr.keyFn, expr.filterFn);
+		const listSpot = new ListSpot(element, plan.slotIndex, plan.type, expr, component, bindingKey, expr.renderFn, expr.keyFn, expr.filterFn);
 		listSpot.refresh(null);
-		syncSpotSubscriptions(listSpot, keyDepMap(bindingKey, component));
+		syncSpotSubscriptions(listSpot, bindingDepMap(expr, component));
 		if (RemoteListBinding.isRemoteListBinding(expr)) {
-			mountRemoteController(component, el, expr);
+			mountRemoteController(component, element, expr);
 		}
 		return listSpot;
 	}
@@ -2053,7 +2071,7 @@ function installBindingSpot(plan, el, expr, component) {
 	 * kind for the path.
 	 */
 	const declaredKind = plan.declaredKind ?? expr.kind ?? propertyIndex?.kinds.get(bindingKey) ?? null;
-	const spot = new BindingSpot(el, plan.slotIndex, plan.type, plan.attr, expr, component, bindingKey, declaredKind);
+	const spot = new BindingSpot(element, plan.slotIndex, plan.type, plan.attr, expr, component, bindingKey, declaredKind);
 	spot.elided = plan.elided === true;
 	/*
 	 * A path declared `react: false` in `static properties` is a static one-shot —
@@ -2065,40 +2083,40 @@ function installBindingSpot(plan, el, expr, component) {
 		return spot;
 	}
 	spot.refresh();
-	syncSpotSubscriptions(spot, new Set([bindingKey]));
+	syncSpotSubscriptions(spot, bindingDepMap(expr, component));
 	return spot;
 }
-function installComputedSpot(plan, el, expr, component) {
+function installComputedSpot(plan, element, expr, component) {
 	/*
 	 * A `^text`/`^html` sigil on the spot wins; else a typed bind given a
 	 * function (`this.bind.text(() => …)`) tags it with a content kind; a plain
 	 * `${() => …}` leaves it undefined → auto-classified at patch time.
 	 */
 	const declaredKind = plan.declaredKind ?? expr.contentKind ?? null;
-	const spot = new ComputedSpot(el, plan.slotIndex, plan.type, plan.attr, expr, component, declaredKind);
+	const spot = new ComputedSpot(element, plan.slotIndex, plan.type, plan.attr, expr, component, declaredKind);
 	spot.elided = plan.elided === true;
 	spot.refresh();
 	return spot;
 }
-function installClassListSpot(plan, el, parts, component) {
-	const spot = new ClassListSpot(el, plan.slotIndex, parts, component);
+function installClassListSpot(plan, element, parts, component) {
+	const spot = new ClassListSpot(element, plan.slotIndex, parts, component);
 	spot.refresh();
 	return spot;
 }
-function installMultiAttrSpot(plan, el, parts, component) {
-	const spot = new MultiAttrSpot(el, plan.slotIndex, plan.attr, parts, component);
+function installMultiAttrSpot(plan, element, parts, component) {
+	const spot = new MultiAttrSpot(element, plan.slotIndex, plan.attr, parts, component);
 	spot.refresh();
 	return spot;
 }
-function installEventSpot(plan, el, eventName, expr, component) {
-	const spot = new EventSpot(el, plan.slotIndex, eventName, expr, component, plan.modifiers);
-	let map = EVENT_SPOTS.get(el);
+function installEventSpot(plan, element, eventName, expr, component) {
+	const spot = new EventSpot(element, plan.slotIndex, eventName, expr, component, plan.modifiers);
+	let map = EVENT_SPOTS.get(element);
 	if (!map) {
 		map = new Map();
-		EVENT_SPOTS.set(el, map);
+		EVENT_SPOTS.set(element, map);
 	}
 	map.set(eventName, spot);
-	el.addEventListener(eventName, dispatchEventSpotListener, spot.listenerOptions());
+	element.addEventListener(eventName, dispatchEventSpotListener, spot.listenerOptions());
 	return spot;
 }
 /**
@@ -2109,11 +2127,11 @@ function installEventSpot(plan, el, eventName, expr, component) {
  * the base behavior (no-op for empty unsubs/depMap).
  */
 class StaticSpot extends Spot {
-	constructor(el, slotIndex, spotType, attr, expr, declaredKind) {
+	constructor(element, slotIndex, spotType, attr, expr, declaredKind) {
 		super();
 		this.type = spotType;
 		this.attr = attr;
-		this.el = el;
+		this.element = element;
 		this.slotIndex = slotIndex;
 		this.expr = expr;
 		/*
@@ -2130,35 +2148,35 @@ class StaticSpot extends Spot {
 		this.textNode = null;
 	}
 }
-function domAttrForElement(el) {
-	if (el.type === 'checkbox' || el.type === 'radio') {
+function domAttrForElement(element) {
+	if (element.type === 'checkbox' || element.type === 'radio') {
 		return 'checked';
 	}
-	if (el.tagName === 'SELECT') {
+	if (element.tagName === 'SELECT') {
 		return 'selectedIndex';
 	}
 	return 'value';
 }
-function readDomProp(el, attr) {
+function readDomProp(element, attr) {
 	if (attr === 'checked') {
-		return el.checked;
+		return element.checked;
 	}
 	if (attr === 'selectedIndex') {
-		return el.selectedIndex;
+		return element.selectedIndex;
 	}
-	return el.value;
+	return element.value;
 }
-function setDomProp(el, attr, value) {
+function setDomProp(element, attr, value) {
 	if (attr === 'checked') {
-		el.checked = Boolean(value);
+		element.checked = Boolean(value);
 	} else if (attr === 'selectedIndex') {
-		el.selectedIndex = Number(value ?? -1);
+		element.selectedIndex = Number(value ?? -1);
 	} else {
-		el.value = String(value ?? '');
+		element.value = String(value ?? '');
 	}
 }
-function domInputEvent(el) {
-	if (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'radio') {
+function domInputEvent(element) {
+	if (element.tagName === 'SELECT' || element.type === 'checkbox' || element.type === 'radio') {
 		return 'change';
 	}
 	return 'input';
@@ -2186,11 +2204,11 @@ function dispatchTwoWayInput() {
  * scope `dispatchTwoWayInput` dispatched via the `TWO_WAY_SPOTS` WeakMap.
  */
 class TwoWaySpot extends Spot {
-	constructor(el, slotIndex, spotType, attr, expr, component, bindingKey, twoWayAttr, twoWayEvent) {
+	constructor(element, slotIndex, spotType, attr, expr, component, bindingKey, twoWayAttr, twoWayEvent) {
 		super();
 		this.type = spotType;
 		this.attr = attr;
-		this.el = el;
+		this.element = element;
 		this.slotIndex = slotIndex;
 		this.expr = expr;
 		this.component = component;
@@ -2199,38 +2217,38 @@ class TwoWaySpot extends Spot {
 		this.twoWayEvent = twoWayEvent;
 	}
 	handle(nextValue) {
-		setDomProp(this.el, this.twoWayAttr, nextValue);
+		setDomProp(this.element, this.twoWayAttr, nextValue);
 	}
 	unsubscribe() {
-		const map = TWO_WAY_SPOTS.get(this.el);
+		const map = TWO_WAY_SPOTS.get(this.element);
 		if (map) {
 			map.delete(this.twoWayEvent);
 		}
-		this.el.removeEventListener(this.twoWayEvent, dispatchTwoWayInput);
+		this.element.removeEventListener(this.twoWayEvent, dispatchTwoWayInput);
 		super.unsubscribe();
 	}
 }
-function installTwoWaySpot(plan, el, expr, component, explicitKey) {
+function installTwoWaySpot(plan, element, expr, component, explicitKey) {
 	const key = explicitKey ?? expr.key;
-	const attr = plan.attr ?? domAttrForElement(el);
-	const eventType = domInputEvent(el);
-	const spot = new TwoWaySpot(el, plan.slotIndex, plan.type, attr, expr, component, key, attr, eventType);
-	setDomProp(el, attr, resolveBindingValue(component, key));
-	if (el.hasAttribute('value')) {
-		el.removeAttribute('value');
+	const attr = plan.attr ?? domAttrForElement(element);
+	const eventType = domInputEvent(element);
+	const spot = new TwoWaySpot(element, plan.slotIndex, plan.type, attr, expr, component, key, attr, eventType);
+	setDomProp(element, attr, resolveBindingValue(component, key));
+	if (element.hasAttribute('value')) {
+		element.removeAttribute('value');
 	}
-	if (el.hasAttribute('checked')) {
-		el.removeAttribute('checked');
+	if (element.hasAttribute('checked')) {
+		element.removeAttribute('checked');
 	}
 	const boundRealm = realmForKey(key, component);
 	spot.unsubs.push(boundRealm.realm.bus.subscribe(boundRealm.path, TwoWaySpot.prototype.handle, spot));
-	let map = TWO_WAY_SPOTS.get(el);
+	let map = TWO_WAY_SPOTS.get(element);
 	if (!map) {
 		map = new Map();
-		TWO_WAY_SPOTS.set(el, map);
+		TWO_WAY_SPOTS.set(element, map);
 	}
 	map.set(eventType, spot);
-	el.addEventListener(eventType, dispatchTwoWayInput);
+	element.addEventListener(eventType, dispatchTwoWayInput);
 	return spot;
 }
 const TEMPLATE_RECIPES = new WeakMap();
@@ -2332,7 +2350,7 @@ function buildMarkerMap(fragment) {
 				continue;
 			}
 			map.set(`${attrName}|${attrValue}`, {
-				el: node,
+				element: node,
 				path,
 			});
 		}
@@ -2350,7 +2368,7 @@ function buildMarkerMap(fragment) {
 			const path = getNodePath(commentNode, fragment);
 			if (path) {
 				map.set(data, {
-					el: commentNode,
+					element: commentNode,
 					path,
 				});
 			}
@@ -2379,7 +2397,7 @@ function buildSpotPlan(map, entry) {
 		if (!lookup) {
 			return null;
 		}
-		lookup.el.removeAttribute(markerAttr);
+		lookup.element.removeAttribute(markerAttr);
 		return {
 			type: SPOT_TYPE.BIND,
 			slotIndex: entry.i,
@@ -2392,7 +2410,7 @@ function buildSpotPlan(map, entry) {
 		if (!lookup) {
 			return null;
 		}
-		lookup.el.removeAttribute(markerAttr);
+		lookup.element.removeAttribute(markerAttr);
 		const parts = entry.parts.map(mapSpotPart);
 		return {
 			type: SPOT_TYPE.MULTI_ATTR,
@@ -2410,7 +2428,7 @@ function buildSpotPlan(map, entry) {
 		if (!lookup) {
 			return null;
 		}
-		lookup.el.removeAttribute(markerAttr);
+		lookup.element.removeAttribute(markerAttr);
 		return {
 			type: SPOT_TYPE.EVENT,
 			slotIndex: entry.i,
@@ -2440,13 +2458,13 @@ function buildSpotPlan(map, entry) {
 		if (!lookup) {
 			return null;
 		}
-		lookup.el.removeAttribute(SPOT);
+		lookup.element.removeAttribute(SPOT);
 		if (!entry.elided) {
 			/*
 			 * Wrapper <span> only — a folded marker sits on a real element that
 			 * already lays itself out; `display:contents` would wrongly collapse it.
 			 */
-			lookup.el.style.display = 'contents';
+			lookup.element.style.display = 'contents';
 		}
 		return {
 			type: SPOT_TYPE.TEXT,
@@ -2462,7 +2480,7 @@ function buildSpotPlan(map, entry) {
 		if (!lookup) {
 			return null;
 		}
-		lookup.el.removeAttribute(markerAttr);
+		lookup.element.removeAttribute(markerAttr);
 		return {
 			type: SPOT_TYPE.BARE_ATTR,
 			slotIndex: entry.i,
@@ -2485,7 +2503,7 @@ function buildSpotPlan(map, entry) {
 		 * leaks into the rendered DOM.
 		 */
 		if (!SUBEVENT_ATTRS.has(entry.attr)) {
-			lookup.el.removeAttribute(entry.attr);
+			lookup.element.removeAttribute(entry.attr);
 		}
 		return {
 			type: SPOT_TYPE.ATTR,
@@ -2500,11 +2518,11 @@ function buildSpotPlan(map, entry) {
 		if (!lookup) {
 			return null;
 		}
-		lookup.el.removeAttribute(markerAttr);
+		lookup.element.removeAttribute(markerAttr);
 		/*
 		 * The method name rides in the `attr` slot so the existing binding /
 		 * computed / static install dispatch needs no METHOD-specific arm — only
-		 * the patch step branches, calling `el[method](value)` instead of assigning.
+		 * the patch step branches, calling `element[method](value)` instead of assigning.
 		 */
 		return {
 			type: SPOT_TYPE.METHOD,
@@ -2519,7 +2537,7 @@ function buildSpotPlan(map, entry) {
 		 * The HTML parser lowercases attribute names, so a camelCase binding
 		 * (`.textContent`, `.importStyles`, `?ariaHidden`) lands in the DOM as a
 		 * lowercase marker. Look up / remove by the lowercased name, but KEEP the
-		 * original-case `entry.attr` in the plan — `el[attr]` must hit the real
+		 * original-case `entry.attr` in the plan — `element[attr]` must hit the real
 		 * case-sensitive DOM/JS property. Without this, camelCase `.prop=` /
 		 * `?attr=` bindings silently produced no spot.
 		 */
@@ -2528,7 +2546,7 @@ function buildSpotPlan(map, entry) {
 		if (!lookup) {
 			return null;
 		}
-		lookup.el.removeAttribute(domAttr);
+		lookup.element.removeAttribute(domAttr);
 		return {
 			type: entry.type,
 			slotIndex: entry.i,
@@ -2756,11 +2774,11 @@ function dispatchDataBindInput() {
  * subscription (already an `unsubs` entry) and the WeakMap / DOM listener.
  */
 class DataBindSpot {
-	constructor(el, stateKey, component, modifiers) {
-		this.el = el;
+	constructor(element, stateKey, component, modifiers) {
+		this.element = element;
 		this.component = component;
 		this.bindingKey = stateKey;
-		this.isCheck = el.type === 'checkbox' || el.type === 'radio';
+		this.isCheck = element.type === 'checkbox' || element.type === 'radio';
 		/*
 		 * `$value` modifiers: `.number`/`.trim` transform the DOM→state write
 		 * (dispatchDataBindInput); `.lazy` listens on `change` instead of `input`
@@ -2784,29 +2802,29 @@ class DataBindSpot {
 				}
 			}
 		}
-		this.eventType = lazy ? 'change' : domInputEvent(el);
+		this.eventType = lazy ? 'change' : domInputEvent(element);
 		this.busSubscription = null;
 	}
 	handle(nextValue) {
 		if (this.isCheck) {
-			this.el.checked = Boolean(nextValue);
+			this.element.checked = Boolean(nextValue);
 		} else {
-			this.el.value = String(nextValue ?? '');
+			this.element.value = String(nextValue ?? '');
 		}
 	}
 	unsubscribe() {
-		DATA_BIND_SPOTS.delete(this.el);
-		this.el.removeEventListener(this.eventType, dispatchDataBindInput);
+		DATA_BIND_SPOTS.delete(this.element);
+		this.element.removeEventListener(this.eventType, dispatchDataBindInput);
 		if (this.busSubscription) {
 			this.busSubscription.unsubscribe();
 			this.busSubscription = null;
 		}
 	}
 }
-function installDataBind(el, stateKey, component, unsubs, modifiers) {
-	const spot = new DataBindSpot(el, stateKey, component, modifiers);
-	DATA_BIND_SPOTS.set(el, spot);
-	el.addEventListener(spot.eventType, dispatchDataBindInput);
+function installDataBind(element, stateKey, component, unsubs, modifiers) {
+	const spot = new DataBindSpot(element, stateKey, component, modifiers);
+	DATA_BIND_SPOTS.set(element, spot);
+	element.addEventListener(spot.eventType, dispatchDataBindInput);
 	spot.busSubscription = subscribeStatePath(component, stateKey, DataBindSpot.prototype.handle, spot);
 	unsubs.push(spot);
 	const currentValue = getValueAtPath(component.STATE, stateKey);
@@ -2849,9 +2867,9 @@ function resolveTwoWaySourceValue(component, inferredKey) {
 	const resolved = realmForKey(inferredKey, component);
 	return resolved.realm.read(resolved.path);
 }
-function inferTwoWayBindingKey(component, expr, type, el, attr) {
+function inferTwoWayBindingKey(component, expr, type, element, attr) {
 	const isBindableField = (type === SPOT_TYPE.ATTR || type === SPOT_TYPE.BARE_ATTR) &&
-		BINDABLE_TAGS.has(el.tagName) &&
+		BINDABLE_TAGS.has(element.tagName) &&
 		BINDABLE_ATTRS.has(attr);
 	if (!isBindableField) {
 		return null;
@@ -2891,7 +2909,7 @@ function installAnchoredTextSpot(plan, resolved, exprs, component) {
 		const listSpot = new ListSpot(parentEl, plan.slotIndex, SPOT_TYPE.TEXT, expr, component, expr.key, expr.renderFn, expr.keyFn, expr.filterFn);
 		markAnchored(listSpot, startComment, endComment);
 		listSpot.refresh(null);
-		syncSpotSubscriptions(listSpot, keyDepMap(expr.key, component));
+		syncSpotSubscriptions(listSpot, bindingDepMap(expr, component));
 		if (RemoteListBinding.isRemoteListBinding(expr)) {
 			mountRemoteController(component, parentEl, expr);
 		}
@@ -2909,7 +2927,7 @@ function installAnchoredTextSpot(plan, resolved, exprs, component) {
 			return spot;
 		}
 		spot.refresh();
-		syncSpotSubscriptions(spot, keyDepMap(bindingKey, component));
+		syncSpotSubscriptions(spot, bindingDepMap(expr, component));
 		return spot;
 	}
 	if (isFunction(expr)) {
@@ -2928,8 +2946,8 @@ function installSpotFromPlan(plan, resolved, exprs, component) {
 	if (plan.anchored) {
 		return installAnchoredTextSpot(plan, resolved, exprs, component);
 	}
-	const el = resolved;
-	if (!el) {
+	const element = resolved;
+	if (!element) {
 		return null;
 	}
 	if (plan.type === SPOT_TYPE.MULTI_ATTR) {
@@ -2941,23 +2959,23 @@ function installSpotFromPlan(plan, resolved, exprs, component) {
 		 * handled by the same machinery in `applyClassListItems`.
 		 */
 		if (plan.attr === 'class') {
-			return installClassListSpot(plan, el, parts, component);
+			return installClassListSpot(plan, element, parts, component);
 		}
-		return installMultiAttrSpot(plan, el, parts, component);
+		return installMultiAttrSpot(plan, element, parts, component);
 	}
 	const expr = exprs[plan.slotIndex];
 	if (plan.type === SPOT_TYPE.BIND) {
 		if (!isBindingType(expr)) {
 			return null;
 		}
-		return installTwoWaySpot(plan, el, expr, component);
+		return installTwoWaySpot(plan, element, expr, component);
 	}
 	if (plan.type === SPOT_TYPE.EVENT) {
 		if (plan.deduceFromExpr && (expr === undefined || expr === null || expr === false)) {
 			return null;
 		}
 		const eventName = deduceEventName(plan, expr);
-		return installEventSpot(plan, el, eventName, expr, component);
+		return installEventSpot(plan, element, eventName, expr, component);
 	}
 	const resolvedType = plan.type;
 	let resolvedAttr = plan.attr;
@@ -2977,7 +2995,7 @@ function installSpotFromPlan(plan, resolved, exprs, component) {
 					expr,
 				},
 			];
-			return installClassListSpot(plan, el, singletonParts, component);
+			return installClassListSpot(plan, element, singletonParts, component);
 		}
 	} else if (plan.type === SPOT_TYPE.BOOL_ATTR || plan.type === SPOT_TYPE.PROP || plan.type === SPOT_TYPE.METHOD) {
 		/*
@@ -2995,36 +3013,36 @@ function installSpotFromPlan(plan, resolved, exprs, component) {
 	};
 	if (isBindingType(expr)) {
 		const autoTwoWay = (resolvedType === SPOT_TYPE.ATTR || resolvedType === SPOT_TYPE.BARE_ATTR) &&
-			BINDABLE_TAGS.has(el.tagName) &&
+			BINDABLE_TAGS.has(element.tagName) &&
 			BINDABLE_ATTRS.has(resolvedAttr);
 		if (autoTwoWay) {
-			return installTwoWaySpot(resolvedPlan, el, expr, component);
+			return installTwoWaySpot(resolvedPlan, element, expr, component);
 		}
-		return installBindingSpot(resolvedPlan, el, expr, component);
+		return installBindingSpot(resolvedPlan, element, expr, component);
 	}
 	if (isFunction(expr)) {
-		const inferredKey = inferTwoWayBindingKey(component, expr, resolvedType, el, resolvedAttr);
+		const inferredKey = inferTwoWayBindingKey(component, expr, resolvedType, element, resolvedAttr);
 		if (inferredKey) {
-			return installTwoWaySpot(resolvedPlan, el, expr, component, inferredKey);
+			return installTwoWaySpot(resolvedPlan, element, expr, component, inferredKey);
 		}
-		return installComputedSpot(resolvedPlan, el, expr, component);
+		return installComputedSpot(resolvedPlan, element, expr, component);
 	}
 	/*
 	 * Static literal value — patch once now; updateTemplateSpots will repatch
 	 * on re-render if the expr changes.
 	 */
-	const staticSpot = new StaticSpot(el, plan.slotIndex, resolvedType, resolvedAttr, expr, plan.declaredKind);
+	const staticSpot = new StaticSpot(element, plan.slotIndex, resolvedType, resolvedAttr, expr, plan.declaredKind);
 	staticSpot.elided = plan.elided === true;
 	if (resolvedType === SPOT_TYPE.TEXT) {
 		if (ListBinding.isListBinding(expr)) {
 			staticSpot.patch = patchListKind;
 			if (!staticSpot.elided) {
-				el.style.pointerEvents = '';
+				element.style.pointerEvents = '';
 			}
 		} else if (ComponentBinding.is(expr)) {
 			staticSpot.patch = patchComponentKind;
 			if (!staticSpot.elided) {
-				el.style.pointerEvents = '';
+				element.style.pointerEvents = '';
 			}
 		}
 	}
@@ -3134,17 +3152,17 @@ function instantiateRecipe(recipe, exprs, component) {
 	}
 	Perf.measure('spotInstall', spotInstallMark);
 	for (let bindIndex = 0; bindIndex < dataBindPlansLength; bindIndex++) {
-		const el = dataBindEls[bindIndex];
-		if (!el) {
+		const element = dataBindEls[bindIndex];
+		if (!element) {
 			continue;
 		}
-		installDataBind(el, dataBindPlans[bindIndex].key, component, unsubs, dataBindPlans[bindIndex].modifiers);
+		installDataBind(element, dataBindPlans[bindIndex].key, component, unsubs, dataBindPlans[bindIndex].modifiers);
 	}
 	if (subeventPlans) {
 		const subeventPlansLength = subeventPlans.length;
 		for (let subeventIndex = 0; subeventIndex < subeventPlansLength; subeventIndex++) {
-			const el = subeventEls[subeventIndex];
-			if (!el) {
+			const element = subeventEls[subeventIndex];
+			if (!element) {
 				continue;
 			}
 			/*
@@ -3156,7 +3174,7 @@ function instantiateRecipe(recipe, exprs, component) {
 			const plan = subeventPlans[subeventIndex];
 			const behavior = getBehavior(plan.attrName);
 			if (behavior?.install) {
-				const cleanup = behavior.install(el, plan.value, component);
+				const cleanup = behavior.install(element, plan.value, component);
 				if (isFunction(cleanup)) {
 					unsubs.push(cleanup);
 				}
@@ -3166,11 +3184,11 @@ function instantiateRecipe(recipe, exprs, component) {
 	if (refPlans) {
 		const refPlansLength = refPlans.length;
 		for (let refIndex = 0; refIndex < refPlansLength; refIndex++) {
-			const el = refEls[refIndex];
-			if (!el) {
+			const element = refEls[refIndex];
+			if (!element) {
 				continue;
 			}
-			unsubs.push(registerRef(component, refPlans[refIndex].name, el));
+			unsubs.push(registerRef(component, refPlans[refIndex].name, element));
 		}
 	}
 	const instance = {

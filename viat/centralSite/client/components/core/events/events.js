@@ -6,7 +6,7 @@
  *
  *   this.on(name, h, options?)        — listen on the component itself
  *   this.once(name, h, options?)      — same, but auto-detach on first fire
- *   this.addEvent(name,h,el?,opts?)   — listen on ANY element (defaults to this)
+ *   this.addEvent(name,h,element?,opts?)   — listen on ANY element (defaults to this)
  *   this.listener(handler)            — cached EventListener-object for raw
  *                                       addEventListener wiring when you do
  *                                       NOT want auto-tracking

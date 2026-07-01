@@ -683,7 +683,7 @@ assign(
 );
 Object.defineProperties(WebComponent.prototype, phaseGetters);
 /*
- * `.importStyles=${sheet}` (or `el.importStyles = sheet`) — a write-only accessor
+ * `.importStyles=${sheet}` (or `element.importStyles = sheet`) — a write-only accessor
  * so a parent can push styles through a child's shadow boundary declaratively.
  */
 Object.defineProperty(WebComponent.prototype, 'importStyles', {

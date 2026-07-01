@@ -35,7 +35,7 @@ export async function preRender(element, mount, options = {}) {
 	element.style.opacity = '';
 	element.style.pointerEvents = '';
 	element.style.willChange = '';
-	this.debug('Pre-render', mount);
+	element.debug('Pre-render', mount);
 	return element;
 }
 /**

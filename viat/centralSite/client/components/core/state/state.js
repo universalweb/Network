@@ -742,7 +742,7 @@ export function upgradeShadowedProperties() {
 		/*
 		 * Deep-state pre-init rescue. A parent's `.state.x=` that committed while
 		 * this element was still an undefined custom element (no live `.state`)
-		 * landed as a dotted own property `el['state.x']` via the commit
+		 * landed as a dotted own property `element['state.x']` via the commit
 		 * fallthrough. The dotted key has no prototype setter, so the accessor
 		 * rescue below would skip it — route it into reactive state now that the
 		 * proxy is live. Mirrors the auto-router's own-prop rescue so a lazily

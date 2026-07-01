@@ -307,15 +307,15 @@ globalThis.cssTest = cssTest;
 // ── Task 11: util-elevation.css ──
 {
 	const vars = await fetchSheet('./styles/variables.css');
-	const el = await fetchSheet('./components/core/styles/modules/util-elevation.css');
+	const domElement = await fetchSheet('./components/core/styles/modules/util-elevation.css');
 	cssTest.record(
 		'.shadow-0 = none',
-		cssTest.inShadow([vars, el], '<div class="shadow-0" id="t">x</div>', '#t', 'boxShadow'),
+		cssTest.inShadow([vars, domElement], '<div class="shadow-0" id="t">x</div>', '#t', 'boxShadow'),
 		'none'
 	);
 	cssTest.record(
 		'.shadow-3 is non-empty',
-		(cssTest.inShadow([vars, el], '<div class="shadow-3" id="t">x</div>', '#t', 'boxShadow') === 'none') ? 'no' : 'yes',
+		(cssTest.inShadow([vars, domElement], '<div class="shadow-3" id="t">x</div>', '#t', 'boxShadow') === 'none') ? 'no' : 'yes',
 		'yes'
 	);
 	cssTest.render();
