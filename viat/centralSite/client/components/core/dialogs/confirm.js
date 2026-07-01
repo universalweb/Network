@@ -72,6 +72,39 @@ async function ensureModal() {
 	 */
 	await modalElement.lifecycle.whenRendered;
 }
+/*
+ * Promise executor for a single confirm cycle — a named top-level function
+ * (per the no-anonymous-executor rule) rather than an inline arrow. Closes over
+ * the module singleton refs; each call gets a fresh `settled` guard + per-cycle
+ * accept/cancel/close listeners that tear themselves down on the first resolve.
+ */
+function confirmExecutor(resolve) {
+	let settled = false;
+	function settle(accepted) {
+		if (settled) {
+			return;
+		}
+		settled = true;
+		acceptButton.removeEventListener('click', onAccept);
+		cancelButton.removeEventListener('click', onCancel);
+		modalElement.removeEventListener('modal-close', onClose);
+		modalElement.close();
+		resolve(accepted);
+	}
+	function onAccept() {
+		settle(true);
+	}
+	function onCancel() {
+		settle(false);
+	}
+	function onClose() {
+		settle(false);
+	}
+	acceptButton.addEventListener('click', onAccept);
+	cancelButton.addEventListener('click', onCancel);
+	modalElement.addEventListener('modal-close', onClose);
+	modalElement.open();
+}
 /**
  * Public entry point. Module-internal name avoids shadowing the global
  * `confirm` binding (per CLAUDE.md) — it is exposed on the prototype as
@@ -80,31 +113,5 @@ async function ensureModal() {
 export async function confirmPrompt(message) {
 	await ensureModal();
 	messageNode.textContent = String(message);
-	return new Promise((resolve) => {
-		let settled = false;
-		function settle(accepted) {
-			if (settled) {
-				return;
-			}
-			settled = true;
-			acceptButton.removeEventListener('click', onAccept);
-			cancelButton.removeEventListener('click', onCancel);
-			modalElement.removeEventListener('modal-close', onClose);
-			modalElement.close();
-			resolve(accepted);
-		}
-		function onAccept() {
-			settle(true);
-		}
-		function onCancel() {
-			settle(false);
-		}
-		function onClose() {
-			settle(false);
-		}
-		acceptButton.addEventListener('click', onAccept);
-		cancelButton.addEventListener('click', onCancel);
-		modalElement.addEventListener('modal-close', onClose);
-		modalElement.open();
-	});
+	return new Promise(confirmExecutor);
 }
