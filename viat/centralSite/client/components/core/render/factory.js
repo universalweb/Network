@@ -11,7 +11,6 @@ export async function preRender(element, mount, options = {}) {
 		mount(element);
 	} else if (isHTMLElement(mount)) {
 		mount.appendChild(element);
-		console.log('Pre-render Appended element to mount point', mount);
 	}
 	if (element.isWebComponent) {
 		await element.lifecycle.whenLive;
@@ -36,6 +35,7 @@ export async function preRender(element, mount, options = {}) {
 	element.style.opacity = '';
 	element.style.pointerEvents = '';
 	element.style.willChange = '';
+	this.debug('Pre-render', mount);
 	return element;
 }
 /**
