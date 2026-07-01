@@ -575,7 +575,7 @@ export class WebComponent extends HTMLElement {
 	get global() {
 		if (this.renderTracking) {
 			if (!this.globalRenderProxy || this.globalRenderProxyState !== globalState.proxy) {
-				this.globalRenderProxy = makeGlobalProxy(globalState.proxy, this);
+				this.globalRenderProxy = makeGlobalProxy(globalState.proxy);
 				this.globalRenderProxyState = globalState.proxy;
 			}
 			return this.globalRenderProxy;

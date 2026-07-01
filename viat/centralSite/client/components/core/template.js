@@ -906,7 +906,7 @@ function ensureRenderProxies(component) {
 	}
 	const currentGlobal = globalState.proxy;
 	if (!component.globalRenderProxy || component.globalRenderProxyState !== currentGlobal) {
-		component.globalRenderProxy = makeGlobalProxy(currentGlobal, component);
+		component.globalRenderProxy = makeGlobalProxy(currentGlobal);
 		component.globalRenderProxyState = currentGlobal;
 	}
 }
