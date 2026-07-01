@@ -104,12 +104,67 @@ function detachEnvMaster(eventName) {
 /*
  * — Scoped delegation (Tier 3) — one master per (scope, eventName) pair —
  *
- * Each scope element holds a `WeakMap<scope, Map<eventName, scopeRecord>>`.
- * The `scopeRecord` IS the EventListener — DOM spec: any object with a
+ * Each scope element holds a `WeakMap<scope, Map<eventName, ScopeRecord>>`.
+ * A `ScopeRecord` IS the EventListener — DOM spec: any object with a
  * `handleEvent` method qualifies. On dispatch, walk entries and resolve
  * each entry's selector via native `closest()` (no JS composedPath loop).
  */
 const scopeMastersByScope = new WeakMap();
+class ScopeRecord {
+	eventName = '';
+	scope = null;
+	entries = new Set();
+	static create(scope, eventName) {
+		const record = new ScopeRecord();
+		record.scope = scope;
+		record.eventName = eventName;
+		return record;
+	}
+	handleEvent(domEvent) {
+		if (!this.entries.size) {
+			return;
+		}
+		/*
+		 * Shadow-DOM-aware dispatch.
+		 *
+		 * `domEvent.target` is RETARGETED to the closest non-shadow
+		 * ancestor when the event leaves a shadow tree — for events that
+		 * crossed shadow boundaries it points at the shadow host, not the
+		 * deep element the user actually interacted with. Calling
+		 * `.closest(selector)` on the host walks UP into light DOM, so
+		 * matches inside the shadow tree are missed entirely.
+		 *
+		 * `composedPath()` gives the full bottom-up path INCLUDING shadow
+		 * descendants. `path[0]` is the real deep target; `.closest()`
+		 * from there finds matches anywhere along the path.
+		 *
+		 * `scope.contains(matchedTarget)` also doesn't cross shadow
+		 * boundaries — a button inside a shadow tree fails `contains`
+		 * against `document` even though the event reached document.
+		 * Fall back to "does the composedPath traverse scope?" which is
+		 * always true for events that actually fired through `scope`.
+		 */
+		const path = domEvent.composedPath();
+		const deepTarget = path.length ? path[0] : domEvent.target;
+		if (!deepTarget || !isFunction(deepTarget.closest)) {
+			return;
+		}
+		const inScope = path.indexOf(this.scope) !== -1;
+		const snapshot = Array.from(this.entries);
+		const snapshotLength = snapshot.length;
+		for (let index = 0; index < snapshotLength; index++) {
+			const entry = snapshot[index];
+			const matchedTarget = deepTarget.closest(entry.selector);
+			if (!matchedTarget) {
+				continue;
+			}
+			if (!inScope && !this.scope.contains(matchedTarget)) {
+				continue;
+			}
+			entry.invoke(domEvent, matchedTarget);
+		}
+	}
+}
 function getOrCreateScopeRecord(scope, eventName) {
 	let perScope = scopeMastersByScope.get(scope);
 	if (!perScope) {
@@ -120,54 +175,7 @@ function getOrCreateScopeRecord(scope, eventName) {
 	if (existing) {
 		return existing;
 	}
-	const record = {
-		eventName,
-		scope,
-		entries: new Set(),
-		handleEvent(domEvent) {
-			if (!record.entries.size) {
-				return;
-			}
-			/*
-			 * Shadow-DOM-aware dispatch.
-			 *
-			 * `domEvent.target` is RETARGETED to the closest non-shadow
-			 * ancestor when the event leaves a shadow tree — for events that
-			 * crossed shadow boundaries it points at the shadow host, not the
-			 * deep element the user actually interacted with. Calling
-			 * `.closest(selector)` on the host walks UP into light DOM, so
-			 * matches inside the shadow tree are missed entirely.
-			 *
-			 * `composedPath()` gives the full bottom-up path INCLUDING shadow
-			 * descendants. `path[0]` is the real deep target; `.closest()`
-			 * from there finds matches anywhere along the path.
-			 *
-			 * `scope.contains(matchedTarget)` also doesn't cross shadow
-			 * boundaries — a button inside a shadow tree fails `contains`
-			 * against `document` even though the event reached document.
-			 * Fall back to "does the composedPath traverse scope?" which is
-			 * always true for events that actually fired through `scope`.
-			 */
-			const path = domEvent.composedPath();
-			const deepTarget = path.length ? path[0] : domEvent.target;
-			if (!deepTarget || !isFunction(deepTarget.closest)) {
-				return;
-			}
-			const inScope = path.indexOf(scope) !== -1;
-			const snapshot = Array.from(record.entries);
-			for (let i = 0; i < snapshot.length; i++) {
-				const entry = snapshot[i];
-				const matchedTarget = deepTarget.closest(entry.selector);
-				if (!matchedTarget) {
-					continue;
-				}
-				if (!inScope && !scope.contains(matchedTarget)) {
-					continue;
-				}
-				entry.invoke(domEvent, matchedTarget);
-			}
-		},
-	};
+	const record = ScopeRecord.create(scope, eventName);
 	scope.addEventListener(eventName, record);
 	perScope.set(eventName, record);
 	return record;
