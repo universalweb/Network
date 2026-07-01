@@ -1,7 +1,7 @@
 import { isFunction } from '../utilities.js';
 const granted = new Set();
 let policy = null;
-let prompt = null;
+let promptHandler = null;
 let defaultMutatingPolicy = 'prompt';
 function key(sessionId, tool, componentId) {
 	return `${sessionId}|${componentId ?? '*'}|${tool}`;
@@ -10,7 +10,7 @@ export function setPolicy(fn) {
 	policy = isFunction(fn) ? fn : null;
 }
 export function setPrompt(fn) {
-	prompt = isFunction(fn) ? fn : null;
+	promptHandler = isFunction(fn) ? fn : null;
 }
 export function setDefaultMutatingPolicy(value) {
 	if (value === 'allow' || value === 'deny' || value === 'prompt') {
@@ -38,10 +38,10 @@ export async function check(action, ctx) {
 	if (granted.has(grantKey)) {
 		return true;
 	}
-	if (!prompt) {
+	if (!promptHandler) {
 		return false;
 	}
-	const ok = await prompt(action, ctx);
+	const ok = await promptHandler(action, ctx);
 	if (ok) {
 		granted.add(grantKey);
 	}

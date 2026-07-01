@@ -61,14 +61,14 @@ export class WebMCPTransport {
 		}
 		if (this.autoPublish) {
 			this.publishAll();
-			this.unsubscribeRegistry = subscribe((event) => {
-				if (event.type === 'componentAdded') {
-					const component = this.findById(event.id);
+			this.unsubscribeRegistry = subscribe((registryEvent) => {
+				if (registryEvent.type === 'componentAdded') {
+					const component = this.findById(registryEvent.id);
 					if (component) {
-						this.publishComponent(event.id, component);
+						this.publishComponent(registryEvent.id, component);
 					}
-				} else if (event.type === 'componentRemoved') {
-					this.unpublishComponent(event.id);
+				} else if (registryEvent.type === 'componentRemoved') {
+					this.unpublishComponent(registryEvent.id);
 				}
 			});
 		}

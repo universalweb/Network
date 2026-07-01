@@ -41,19 +41,19 @@ export class WebRTCTransport {
 		this.pc = new RTCPeerConnection({
 			iceServers: this.iceServers,
 		});
-		this.pc.addEventListener('icecandidate', (event) => {
-			if (event.candidate) {
+		this.pc.addEventListener('icecandidate', (iceEvent) => {
+			if (iceEvent.candidate) {
 				this.sendSignal({
 					type: 'ice',
-					candidate: event.candidate.toJSON(),
+					candidate: iceEvent.candidate.toJSON(),
 				});
 			}
 		});
 		this.pc.addEventListener('connectionstatechange', () => {
 			defaultLogger.info('ai-rtc', `pc state ${this.pc?.connectionState}`);
 		});
-		this.pc.addEventListener('datachannel', (event) => {
-			this.bindChannel(event.channel);
+		this.pc.addEventListener('datachannel', (dataChannelEvent) => {
+			this.bindChannel(dataChannelEvent.channel);
 		});
 		const channel = this.pc.createDataChannel(this.channelLabel, {
 			ordered: true,
@@ -74,10 +74,10 @@ export class WebRTCTransport {
 		channel.addEventListener('close', () => {
 			defaultLogger.info('ai-rtc', 'data channel closed');
 		});
-		channel.addEventListener('message', async (event) => {
+		channel.addEventListener('message', async (messageEvent) => {
 			let message;
 			try {
-				message = JSON.parse(event.data);
+				message = JSON.parse(messageEvent.data);
 			} catch (error) {
 				defaultLogger.warn('ai-rtc', 'parse error', error);
 				return;
@@ -102,13 +102,13 @@ export class WebRTCTransport {
 			ws.addEventListener('open', () => {
 				resolve();
 			});
-			ws.addEventListener('error', (event) => {
-				reject(event);
+			ws.addEventListener('error', (errorEvent) => {
+				reject(errorEvent);
 			});
-			ws.addEventListener('message', async (event) => {
+			ws.addEventListener('message', async (messageEvent) => {
 				let message;
 				try {
-					message = JSON.parse(event.data);
+					message = JSON.parse(messageEvent.data);
 				} catch (error) {
 					defaultLogger.warn('ai-rtc-sig', 'parse error', error);
 					return;

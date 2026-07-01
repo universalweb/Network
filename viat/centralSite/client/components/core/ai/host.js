@@ -13,8 +13,8 @@ export class AIHost {
 	constructor() {
 		this.transports = new Set();
 		this.sessionCounter = 0;
-		this.unsubscribeRegistry = subscribeRegistry((event) => {
-			this.broadcast(makeNotification(event.type, event));
+		this.unsubscribeRegistry = subscribeRegistry((registryEvent) => {
+			this.broadcast(makeNotification(registryEvent.type, registryEvent));
 		});
 	}
 	attach(transport) {

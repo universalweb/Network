@@ -49,10 +49,10 @@ export class WebSocketTransport {
 			defaultLogger.info('ai-ws', `connected ${this.url}`);
 			this.startHeartbeat();
 		});
-		ws.addEventListener('message', async (event) => {
+		ws.addEventListener('message', async (messageEvent) => {
 			let message;
 			try {
-				message = JSON.parse(event.data);
+				message = JSON.parse(messageEvent.data);
 			} catch (error) {
 				defaultLogger.warn('ai-ws', 'parse error', error);
 				return;
@@ -68,8 +68,8 @@ export class WebSocketTransport {
 				this.send(reply);
 			}
 		});
-		ws.addEventListener('error', (event) => {
-			defaultLogger.warn('ai-ws', 'error', event?.message ?? event);
+		ws.addEventListener('error', (errorEvent) => {
+			defaultLogger.warn('ai-ws', 'error', errorEvent?.message ?? errorEvent);
 		});
 		ws.addEventListener('close', () => {
 			this.stopHeartbeat();

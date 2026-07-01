@@ -72,10 +72,10 @@ export function computeAnchor(anchor, floating, options = {}) {
 		side = OPPOSITE[side];
 	}
 	const vertical = side === 'top' || side === 'bottom';
-	let top;
+	let topPosition;
 	let left;
 	if (vertical) {
-		top = side === 'bottom' ? anchor.bottom + offset : anchor.top - offset - floating.height;
+		topPosition = side === 'bottom' ? anchor.bottom + offset : anchor.top - offset - floating.height;
 		if (align === 'end') {
 			left = anchor.right - floating.width;
 		} else if (align === 'center') {
@@ -86,22 +86,22 @@ export function computeAnchor(anchor, floating, options = {}) {
 	} else {
 		left = side === 'right' ? anchor.right + offset : anchor.left - offset - floating.width;
 		if (align === 'end') {
-			top = anchor.bottom - floating.height;
+			topPosition = anchor.bottom - floating.height;
 		} else if (align === 'center') {
-			top = anchor.top + ((anchor.height - floating.height) / 2);
+			topPosition = anchor.top + ((anchor.height - floating.height) / 2);
 		} else {
-			top = anchor.top;
+			topPosition = anchor.top;
 		}
 	}
 	if (options.shift ?? true) {
 		if (vertical) {
 			left = clamp(left, padding, viewportWidth - floating.width - padding);
 		} else {
-			top = clamp(top, padding, viewportHeight - floating.height - padding);
+			topPosition = clamp(topPosition, padding, viewportHeight - floating.height - padding);
 		}
 	}
 	return {
-		top,
+		top: topPosition,
 		left,
 		placement: `${side}-${align}`,
 	};
