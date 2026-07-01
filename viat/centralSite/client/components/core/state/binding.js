@@ -288,8 +288,26 @@ export function makeProxy(state, component) {
 	const realm = component ? localRealm(component) : null;
 	return new TrackingFactory(source, realm, component ?? null).create(state ?? {}, '');
 }
+/*
+ * Module-level memo. The global render proxy is component-INDEPENDENT — built
+ * with component=null and the const globalRealm, so a per-component copy was
+ * always behaviorally identical and one shared instance serves every component
+ * during render tracking (dep attribution rides the ambient currentTracking at
+ * trap time, never anything baked into the proxy). Keyed on the source argument
+ * so it self-invalidates if globalState.proxy identity ever changes. Only two
+ * future changes would slip past this and need an explicit clear here: a
+ * swappable globalRealm (closed over below), or a `globalState.STATE = {}` wipe
+ * that rebuilds state under the SAME proxy object.
+ */
+let cachedGlobalSource = null;
+let cachedGlobalProxy = null;
 export function makeGlobalProxy(globalState) {
-	return new TrackingFactory(globalState, globalRealm, null).create(globalState ?? {}, '');
+	if (cachedGlobalProxy && cachedGlobalSource === globalState) {
+		return cachedGlobalProxy;
+	}
+	cachedGlobalSource = globalState;
+	cachedGlobalProxy = new TrackingFactory(globalState, globalRealm, null).create(globalState ?? {}, '');
+	return cachedGlobalProxy;
 }
 /**
  * One-way reactive reference to a state path — a surgical binding spot that

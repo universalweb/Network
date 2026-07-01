@@ -498,8 +498,6 @@ export class WebComponent extends HTMLElement {
 	renderTracking = false;
 	renderProxy = null;
 	renderProxyState = null;
-	globalRenderProxy = null;
-	globalRenderProxyState = null;
 	intervals = null;
 	phase = PHASE.CREATED;
 	isRendering = false;
@@ -566,19 +564,16 @@ export class WebComponent extends HTMLElement {
 	}
 	/**
 	 * Accessor for the shared global store, exposed as `this.global`. Mirrors
-	 * `state`'s render/write split: a per-instance dep-recording proxy during
-	 * render tracking (rebuilt if the global proxy identity changed), the raw
-	 * store proxy otherwise. The module-level `globalState` Store keeps its name;
-	 * only this component accessor is `global`.
+	 * `state`'s render/write split: a dep-recording proxy during render tracking
+	 * (memoized module-side by `makeGlobalProxy` — the global proxy is
+	 * component-independent, so all components share one instance), the raw store
+	 * proxy otherwise. The module-level `globalState` Store keeps its name; only
+	 * this component accessor is `global`.
 	 * @returns {object} The global state proxy.
 	 */
 	get global() {
 		if (this.renderTracking) {
-			if (!this.globalRenderProxy || this.globalRenderProxyState !== globalState.proxy) {
-				this.globalRenderProxy = makeGlobalProxy(globalState.proxy);
-				this.globalRenderProxyState = globalState.proxy;
-			}
-			return this.globalRenderProxy;
+			return makeGlobalProxy(globalState.proxy);
 		}
 		return globalState.proxy;
 	}

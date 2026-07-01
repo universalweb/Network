@@ -12,12 +12,11 @@ import {
 	CONTENT_KIND,
 	isBindingType,
 	ListBinding,
-	makeGlobalProxy,
 	makeProxy,
 	RemoteListBinding,
 	track,
 } from './state/binding.js';
-import { globalRealm, globalState } from './state/globalState.js';
+import { globalRealm } from './state/globalState.js';
 import { resolveListFilter } from './state/listFilter.js';
 import { mountRemoteController } from './state/remoteList.js';
 import {
@@ -903,11 +902,6 @@ function ensureRenderProxies(component) {
 	if (!component.renderProxy || component.renderProxyState !== currentState) {
 		component.renderProxy = makeProxy(currentState, component);
 		component.renderProxyState = currentState;
-	}
-	const currentGlobal = globalState.proxy;
-	if (!component.globalRenderProxy || component.globalRenderProxyState !== currentGlobal) {
-		component.globalRenderProxy = makeGlobalProxy(currentGlobal);
-		component.globalRenderProxyState = currentGlobal;
 	}
 }
 function evaluateTrackedExpression(component, expr) {
