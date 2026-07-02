@@ -13,6 +13,7 @@ import {
 	ensureMergedProperties,
 	ensureMergedState,
 	ensurePropertyIndex,
+	resolveStores,
 } from './attrs/staticConfig.js';
 import { writeTextToClipboard } from './clipboard.js';
 import { componentLogger, defaultLogger } from './debug/logger.js';
@@ -41,7 +42,7 @@ import { atPhase, PHASE, phaseGetters } from './lifecycle/phase.js';
 import { nextFrame } from './lifecycle/scheduler.js';
 import { createBound, getById, preRender } from './render/factory.js';
 import * as renderMethods from './render/render.js';
-import { bind, makeGlobalProxy } from './state/binding.js';
+import { bind, makeGlobalProxy, makeStoreProxy } from './state/binding.js';
 import * as contextMethods from './state/context.js';
 import { globalState } from './state/globalState.js';
 import * as privateStateMethods from './state/privateState.js';
@@ -199,6 +200,11 @@ export class WebComponent extends HTMLElement {
 		 * and computed accessors from `static state`.
 		 */
 		this.propertyIndex = ensurePropertyIndex(this.constructor);
+		/*
+		 * Wire `this.<storeName>` accessors for any `static stores` (once per
+		 * class). Cheap no-op for the common case of no declared stores.
+		 */
+		wireStoreAccessors(this.constructor);
 		/*
 		 * Resolve the framework config first — subsequent pipeline steps branch
 		 * on `this.config`. The instance-field knob defaults seed it, the class
@@ -614,6 +620,50 @@ export class WebComponent extends HTMLElement {
 	nextFrame() {
 		return nextFrame();
 	}
+}
+/*
+ * Named-store accessors are wired once per class (memoized in STORE_ACCESSORS_WIRED)
+ * the first time an instance is constructed. `this.state` and `this.global` are
+ * the defaults; a `static stores = { name: aStore }` entry adds `this.name` as a
+ * distinct PROPERTY resolving to that store's tracking proxy — a separate accessor
+ * means a separate realm, so store paths can never collide with local/global keys.
+ * Defined after the class so the built-in-name guard can reference
+ * `WebComponent.prototype`; the constructor calls the hoisted declaration.
+ */
+const STORE_ACCESSORS_WIRED = new WeakSet();
+function defineStoreAccessor(ComponentClass, storeName, store) {
+	Object.defineProperty(ComponentClass.prototype, storeName, {
+		configurable: true,
+		get() {
+			if (this.renderTracking) {
+				return makeStoreProxy(store);
+			}
+			return store.proxy;
+		},
+	});
+}
+function wireStoreAccessors(ComponentClass) {
+	if (STORE_ACCESSORS_WIRED.has(ComponentClass)) {
+		return;
+	}
+	const stores = resolveStores(ComponentClass);
+	const storeNames = keysOf(stores);
+	const storeNamesLength = storeNames.length;
+	for (let nameIndex = 0; nameIndex < storeNamesLength; nameIndex++) {
+		const storeName = storeNames[nameIndex];
+		/*
+		 * Reject any name that resolves to a built-in on WebComponent.prototype
+		 * (state / global / render / html / on / emit / …). An INHERITED store
+		 * accessor from a superclass lives on that subclass's prototype, NOT on
+		 * WebComponent.prototype, so the merge case re-defines it here cleanly.
+		 * Mark wired only AFTER success so a misconfigured class keeps throwing.
+		 */
+		if (storeName in WebComponent.prototype) {
+			throw new Error(`static stores: "${storeName}" collides with a built-in accessor — rename the store.`);
+		}
+		defineStoreAccessor(ComponentClass, storeName, stores[storeName]);
+	}
+	STORE_ACCESSORS_WIRED.add(ComponentClass);
 }
 /**
  * Directly-imported instance methods folded onto the prototype below. These are

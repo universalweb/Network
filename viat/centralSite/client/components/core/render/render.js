@@ -133,7 +133,7 @@ export function subscribeRenderDeps(deps) {
 			submap = new Map();
 			store.set(realm, submap);
 		}
-		const handler = realm.global ? this.markRenderDirtyGlobal : this.markRenderDirty;
+		const handler = realm.sharedBus ? this.markRenderDirtyGlobal : this.markRenderDirty;
 		syncSubsByDiff(submap, paths, subscribeRealmDep, {
 			realm,
 			handler,

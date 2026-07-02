@@ -9,7 +9,7 @@ import {
 	joinPath,
 	setValueAtPath,
 } from '../utilities.js';
-import { globalRealm } from './globalState.js';
+import { globalRealm, storeRealm } from './globalState.js';
 import { localRealm, STATE_PATH } from './state.js';
 /*
  * ── Content kinds ────────────────────────────────────────────────────
@@ -311,6 +311,26 @@ export function makeGlobalProxy(globalState) {
 	cachedGlobalSource = globalState;
 	cachedGlobalProxy = new TrackingFactory(globalState, globalRealm, null).create(globalState ?? {}, '');
 	return cachedGlobalProxy;
+}
+const storeProxyCache = new WeakMap();
+/**
+ * Per-store render-tracking proxy — the named-store twin of `makeGlobalProxy`.
+ * Component-INDEPENDENT (dep attribution rides the ambient `currentTracking` at
+ * trap time, never baked into the proxy), so one shared tracking proxy per store
+ * serves every component that reads `this.<storeName>` during render. Memoized on
+ * the store's `proxy` identity — which `Store.replaceState` preserves via its
+ * in-place reset — so the memo survives a store reset with no rebuild.
+ * @param {Store} store - The store to build a tracking proxy for.
+ * @returns {Proxy} The dep-tracking proxy attributing reads to the store's realm.
+ */
+export function makeStoreProxy(store) {
+	const source = store.proxy;
+	let proxy = storeProxyCache.get(source);
+	if (!proxy) {
+		proxy = new TrackingFactory(source, storeRealm(store), null).create(source, '');
+		storeProxyCache.set(source, proxy);
+	}
+	return proxy;
 }
 /**
  * One-way reactive reference to a state path — a surgical binding spot that

@@ -204,6 +204,15 @@ export const globalState = Store.create();
 export const globalRealm = {
 	bus: globalState.bus,
 	global: true,
+	/*
+	 * `sharedBus` — the bus is shared across every component (no per-component
+	 * `onFlush → updateView`), so a renderDep on this realm must ENQUEUE the
+	 * component into the global-render drain rather than rely on its own bus
+	 * flush. Named-store realms share this trait; the local realm does not (its
+	 * bus is the component's own stateBus). render.js picks the dirty marker off
+	 * this flag.
+	 */
+	sharedBus: true,
 	read(path) {
 		return getValueAtPath(globalState.proxy, path);
 	},
@@ -213,3 +222,32 @@ export const globalRealm = {
 		});
 	},
 };
+const storeRealms = new WeakMap();
+/**
+ * The reactive realm for a named `Store` — the object-reference channel that a
+ * `this.<storeName>` tracking proxy attributes its dependencies to. Mirrors
+ * `globalRealm`: `sharedBus: true` because a store's bus serves every component
+ * that declares it. Memoized per store so the realm identity — which keys both
+ * the render dep-map and the subscription submap — is stable across renders.
+ * @param {Store} store - The store to wrap.
+ * @returns {{bus: object, sharedBus: boolean, read: Function, write: Function}} The store's realm.
+ */
+export function storeRealm(store) {
+	let realm = storeRealms.get(store);
+	if (!realm) {
+		realm = {
+			bus: store.bus,
+			sharedBus: true,
+			read(path) {
+				return getValueAtPath(store.proxy, path);
+			},
+			write(path, value) {
+				store.set({
+					[path]: value,
+				});
+			},
+		};
+		storeRealms.set(store, realm);
+	}
+	return realm;
+}

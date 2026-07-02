@@ -48,6 +48,18 @@ function ensureMerged(ComponentClass, fieldName, cacheName) {
 	return merged;
 }
 /**
+ * Chain-merged `static stores` table for a class (root → leaf, leaf wins),
+ * cached on the class as `mergedStores`. A subclass inherits its ancestors'
+ * named stores and may add or override entries — the store-merge-on-extension
+ * the named-store design calls for. Reuses the generic `ensureMerged` machinery
+ * that backs `static properties`.
+ * @param {Function} ComponentClass - The component class.
+ * @returns {object} The merged { storeName: Store } table.
+ */
+export function resolveStores(ComponentClass) {
+	return ensureMerged(ComponentClass, 'stores', 'mergedStores');
+}
+/**
  * Config-aware static state merger. Walks the class chain root → leaf and folds
  * each ancestor's `static state` into an accumulator. Behavior switches on the
  * class's merged `static config` knobs:
