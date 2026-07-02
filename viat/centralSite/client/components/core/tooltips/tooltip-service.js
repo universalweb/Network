@@ -179,11 +179,7 @@ export function detachTooltip(element) {
 /*
  * (No module-load wiring. The `<ui-tooltip>` element is created lazily on
  * the first hover via `ensureTooltip()` inside `showFor`. There are no
- */
-// global scroll/pointerdown listeners — the cursor moving off the element
-/*
+ * global scroll/pointerdown listeners — the cursor moving off the element
  * fires `pointerleave` and hides via the per-element path, which covers the
  * common cases without a globally-attached listener.)
- * Pre-warm the tooltip element so the first real hover shows instantly.
- * ensureTooltip().catch(() => {});
  */
