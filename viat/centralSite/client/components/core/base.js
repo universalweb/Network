@@ -158,6 +158,36 @@ function materializeInstanceState(component, providedState) {
 	assign(component.STATE, providedState);
 }
 /**
+ * Proxy handler behind `this.stores` — the namespaced reactive-store access
+ * (`this.stores.shop.count`). The proxy TARGET is the class's chain-merged
+ * `static stores` table, so enumeration (`Object.keys` / `in`) reflects the
+ * declared names for free; this handler only intercepts reads to hand back the
+ * right per-store proxy for the component's current mode. The namespace is
+ * read-only — stores are declared statically (`static stores`), never assigned
+ * through the namespace.
+ */
+class StoresNamespaceHandler {
+	constructor(component) {
+		this.component = component;
+	}
+	get(storesTable, storeName) {
+		const store = storesTable[storeName];
+		if (!store) {
+			return undefined;
+		}
+		if (this.component.renderTracking) {
+			return makeStoreProxy(store);
+		}
+		return store.proxy;
+	}
+	set(storesTable, storeName) {
+		throw new Error(`this.stores.${String(storeName)} is read-only — declare stores via static stores.`);
+	}
+	deleteProperty(storesTable, storeName) {
+		throw new Error(`this.stores.${String(storeName)} cannot be deleted — the store table is static.`);
+	}
+}
+/**
  * Base class for every custom element in the framework. Extends the native
  * `HTMLElement` with reactive `static state`, tagged-template rendering,
  * scoped stylesheets, lifecycle hooks, and a per-instance subscription system.
@@ -200,11 +230,6 @@ export class WebComponent extends HTMLElement {
 		 * and computed accessors from `static state`.
 		 */
 		this.propertyIndex = ensurePropertyIndex(this.constructor);
-		/*
-		 * Wire `this.<storeName>` accessors for any `static stores` (once per
-		 * class). Cheap no-op for the common case of no declared stores.
-		 */
-		wireStoreAccessors(this.constructor);
 		/*
 		 * Resolve the framework config first — subsequent pipeline steps branch
 		 * on `this.config`. The instance-field knob defaults seed it, the class
@@ -504,6 +529,7 @@ export class WebComponent extends HTMLElement {
 	renderTracking = false;
 	renderProxy = null;
 	renderProxyState = null;
+	storesNamespace = null;
 	intervals = null;
 	phase = PHASE.CREATED;
 	isRendering = false;
@@ -584,6 +610,22 @@ export class WebComponent extends HTMLElement {
 		return globalState.proxy;
 	}
 	/**
+	 * Namespaced access to the class's declared reactive stores:
+	 * `this.stores.<name>.path`. ONE reserved property (`stores`) instead of one
+	 * per store name, so a store can never collide with a component method or
+	 * field — everything store-shaped lives exactly where you expect it. The
+	 * namespace is a lazy per-instance Proxy whose target is the class's merged
+	 * `static stores` table (so `Object.keys(this.stores)` / `in` enumerate the
+	 * declared names); each store read resolves through the same split as
+	 * `state` / `global` — the store's dep-tracking proxy during render
+	 * tracking, the raw store proxy otherwise.
+	 * @returns {Proxy} The stores namespace.
+	 */
+	get stores() {
+		this.storesNamespace ??= new Proxy(resolveStores(this.constructor), new StoresNamespaceHandler(this));
+		return this.storesNamespace;
+	}
+	/**
 	 * Default lifecycle-error sink — logs with the element's tag name.
 	 * Override to route errors elsewhere (telemetry, a UI fallback).
 	 * @param {unknown} error - The thrown lifecycle error.
@@ -620,50 +662,6 @@ export class WebComponent extends HTMLElement {
 	nextFrame() {
 		return nextFrame();
 	}
-}
-/*
- * Named-store accessors are wired once per class (memoized in STORE_ACCESSORS_WIRED)
- * the first time an instance is constructed. `this.state` and `this.global` are
- * the defaults; a `static stores = { name: aStore }` entry adds `this.name` as a
- * distinct PROPERTY resolving to that store's tracking proxy — a separate accessor
- * means a separate realm, so store paths can never collide with local/global keys.
- * Defined after the class so the built-in-name guard can reference
- * `WebComponent.prototype`; the constructor calls the hoisted declaration.
- */
-const STORE_ACCESSORS_WIRED = new WeakSet();
-function defineStoreAccessor(ComponentClass, storeName, store) {
-	Object.defineProperty(ComponentClass.prototype, storeName, {
-		configurable: true,
-		get() {
-			if (this.renderTracking) {
-				return makeStoreProxy(store);
-			}
-			return store.proxy;
-		},
-	});
-}
-function wireStoreAccessors(ComponentClass) {
-	if (STORE_ACCESSORS_WIRED.has(ComponentClass)) {
-		return;
-	}
-	const stores = resolveStores(ComponentClass);
-	const storeNames = keysOf(stores);
-	const storeNamesLength = storeNames.length;
-	for (let nameIndex = 0; nameIndex < storeNamesLength; nameIndex++) {
-		const storeName = storeNames[nameIndex];
-		/*
-		 * Reject any name that resolves to a built-in on WebComponent.prototype
-		 * (state / global / render / html / on / emit / …). An INHERITED store
-		 * accessor from a superclass lives on that subclass's prototype, NOT on
-		 * WebComponent.prototype, so the merge case re-defines it here cleanly.
-		 * Mark wired only AFTER success so a misconfigured class keeps throwing.
-		 */
-		if (storeName in WebComponent.prototype) {
-			throw new Error(`static stores: "${storeName}" collides with a built-in accessor — rename the store.`);
-		}
-		defineStoreAccessor(ComponentClass, storeName, stores[storeName]);
-	}
-	STORE_ACCESSORS_WIRED.add(ComponentClass);
 }
 /**
  * Directly-imported instance methods folded onto the prototype below. These are
