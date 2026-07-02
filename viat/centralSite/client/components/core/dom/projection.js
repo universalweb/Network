@@ -54,7 +54,8 @@ function slotNameOf(node) {
 }
 function collectForSlot(nodes, slotName) {
 	const matched = [];
-	for (let index = 0; index < nodes.length; index++) {
+	const nodesLength = nodes.length;
+	for (let index = 0; index < nodesLength; index++) {
 		if (slotNameOf(nodes[index]) === slotName) {
 			matched.push(nodes[index]);
 		}
@@ -70,7 +71,8 @@ function unwrapSlot(slotElement) {
 }
 function fillSlot(slotElement, matched) {
 	const slotParent = slotElement.parentNode;
-	for (let index = 0; index < matched.length; index++) {
+	const matchedLength = matched.length;
+	for (let index = 0; index < matchedLength; index++) {
 		slotParent.insertBefore(matched[index], slotElement);
 	}
 	slotParent.removeChild(slotElement);
@@ -89,7 +91,8 @@ export function projectLightChildren(component) {
 	}
 	const nodes = capturedChildren.get(component) ?? [];
 	const filledNames = new Set();
-	for (let slotIndex = 0; slotIndex < slots.length; slotIndex++) {
+	const slotsLength = slots.length;
+	for (let slotIndex = 0; slotIndex < slotsLength; slotIndex++) {
 		const slotElement = slots[slotIndex];
 		const slotName = slotElement.getAttribute('name') || '';
 		/*

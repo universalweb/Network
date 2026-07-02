@@ -486,7 +486,8 @@ class RemoteListController {
 	}
 	dropDuplicates(incoming) {
 		const kept = [];
-		for (let index = 0; index < incoming.length; index += 1) {
+		const incomingLength = incoming.length;
+		for (let index = 0; index < incomingLength; index += 1) {
 			const item = incoming[index];
 			const itemKey = this.keyFn(item, index);
 			if (this.seenKeys.has(itemKey)) {

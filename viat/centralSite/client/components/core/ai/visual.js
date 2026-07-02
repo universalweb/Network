@@ -104,24 +104,26 @@ function renderTreeNode(nodeName, node, prefix, isLast, isRoot, lines) {
 	}
 	const childPrefix = isRoot ? prefix : prefix + (isLast ? '    ' : '│   ');
 	const childEntries = Object.entries(node.children);
-	for (let i = 0; i < childEntries.length; i++) {
+	const childEntriesLength = childEntries.length;
+	for (let index = 0; index < childEntriesLength; index++) {
 		const [
 			childName,
 			childNode,
-		] = childEntries[i];
-		renderTreeNode(childName, childNode, childPrefix, i === childEntries.length - 1, false, lines);
+		] = childEntries[index];
+		renderTreeNode(childName, childNode, childPrefix, index === childEntriesLength - 1, false, lines);
 	}
 }
 export function textPageMap(opts = {}) {
 	const overview = pageOverview(opts);
 	const lines = [];
 	const rootEntries = Object.entries(overview);
-	for (let i = 0; i < rootEntries.length; i++) {
+	const rootEntriesLength = rootEntries.length;
+	for (let index = 0; index < rootEntriesLength; index++) {
 		const [
 			rootName,
 			rootNode,
-		] = rootEntries[i];
-		renderTreeNode(rootName, rootNode, '', i === rootEntries.length - 1, true, lines);
+		] = rootEntries[index];
+		renderTreeNode(rootName, rootNode, '', index === rootEntriesLength - 1, true, lines);
 	}
 	return lines.join('\n');
 }

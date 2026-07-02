@@ -11,8 +11,9 @@ function getTagChildren(host, tag) {
 	});
 }
 function pushAll(target, source) {
-	for (let i = 0; i < source.length; i++) {
-		target.push(source[i]);
+	const sourceLength = source.length;
+	for (let index = 0; index < sourceLength; index++) {
+		target.push(source[index]);
 	}
 }
 export function registerChild(host, element) {

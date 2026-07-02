@@ -64,15 +64,17 @@ class PathIndexBuilder {
 		}
 		const childArray = [...kids];
 		const childTaken = new Set();
-		for (let i = 0; i < childArray.length; i += 1) {
-			this.visit(childArray[i], fullPath, childTaken);
+		const childArrayLength = childArray.length;
+		for (let index = 0; index < childArrayLength; index += 1) {
+			this.visit(childArray[index], fullPath, childTaken);
 		}
 	}
 	build() {
 		const rootList = getRoots();
 		const rootTaken = new Set();
-		for (let i = 0; i < rootList.length; i += 1) {
-			this.visit(rootList[i], '', rootTaken);
+		const rootListLength = rootList.length;
+		for (let index = 0; index < rootListLength; index += 1) {
+			this.visit(rootList[index], '', rootTaken);
 		}
 		return this;
 	}

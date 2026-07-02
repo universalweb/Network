@@ -125,8 +125,9 @@ export class Store {
 		}
 		const proxy = this.proxy;
 		const keys = Object.keys(updates);
-		for (let i = 0; i < keys.length; i++) {
-			const key = keys[i];
+		const keysLength = keys.length;
+		for (let index = 0; index < keysLength; index++) {
+			const key = keys[index];
 			const value = updates[key];
 			const current = getValueAtPath(proxy, key);
 			if (current === value) {

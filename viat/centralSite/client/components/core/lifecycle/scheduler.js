@@ -8,7 +8,8 @@ function runNextFrameQueue() {
 	const callbacks = nextFrameQueue;
 	nextFrameQueue = [];
 	nextFrameScheduled = false;
-	for (let index = 0; index < callbacks.length; index++) {
+	const callbacksLength = callbacks.length;
+	for (let index = 0; index < callbacksLength; index++) {
 		callbacks[index]();
 	}
 }
@@ -39,9 +40,10 @@ async function flush() {
 	 * (e.g. `Spot.prototype.runTask`) serve as the task across many targets
 	 * without colliding in the batch map. */
 	const entries = [...currentBatch.tasks.entries()];
-	for (let i = 0; i < entries.length; i++) {
-		const key = entries[i][0];
-		const task = entries[i][1];
+	const entriesLength = entries.length;
+	for (let index = 0; index < entriesLength; index++) {
+		const key = entries[index][0];
+		const task = entries[index][1];
 		const result = key === task ? task() : task.call(key);
 		if (isPromiseLike(result)) {
 			pendingTasks.push(result);
@@ -49,9 +51,10 @@ async function flush() {
 	}
 	if (pendingTasks.length) {
 		const settledResults = await Promise.allSettled(pendingTasks);
-		for (let i = 0; i < settledResults.length; i++) {
-			if (settledResults[i].status === 'rejected') {
-				queueAsyncError(settledResults[i].reason);
+		const settledResultsLength = settledResults.length;
+		for (let index = 0; index < settledResultsLength; index++) {
+			if (settledResults[index].status === 'rejected') {
+				queueAsyncError(settledResults[index].reason);
 			}
 		}
 	}
@@ -132,7 +135,8 @@ export function drainSpots() {
 	 */
 	const spots = [...dirtySpots];
 	dirtySpots.clear();
-	for (let index = 0; index < spots.length; index++) {
+	const spotsLength = spots.length;
+	for (let index = 0; index < spotsLength; index++) {
 		spots[index].drain();
 	}
 }
@@ -155,7 +159,8 @@ export function drainGlobalRenders() {
 	}
 	const components = [...pendingGlobalRenders];
 	pendingGlobalRenders.clear();
-	for (let index = 0; index < components.length; index++) {
+	const componentsLength = components.length;
+	for (let index = 0; index < componentsLength; index++) {
 		const result = components[index].updateView();
 		if (isPromiseLike(result)) {
 			result.catch(queueAsyncError);

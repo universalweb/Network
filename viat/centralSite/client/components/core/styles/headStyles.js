@@ -72,7 +72,8 @@ function ensureHeadLink(href) {
 function serializeSheet(sheet) {
 	const rules = sheet.cssRules;
 	let cssText = '';
-	for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
+	const rulesLength = rules.length;
+	for (let ruleIndex = 0; ruleIndex < rulesLength; ruleIndex++) {
 		cssText += `${rules[ruleIndex].cssText}\n`;
 	}
 	return cssText;
@@ -124,7 +125,8 @@ export function applyHeadStyles(ComponentClass) {
 	 */
 	const frameworkBase = collectClassChain(ComponentClass)[0];
 	const entries = [...mergeStyleEntries(ComponentClass).values()];
-	for (let index = 0; index < entries.length; index++) {
+	const entriesLength = entries.length;
+	for (let index = 0; index < entriesLength; index++) {
 		const entry = entries[index];
 		if (entry.owner === frameworkBase) {
 			continue;

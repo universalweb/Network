@@ -26,7 +26,8 @@ function reLayer(sheet) {
 	}
 	const rules = sheet.cssRules;
 	let cssText = '';
-	for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
+	const rulesLength = rules.length;
+	for (let ruleIndex = 0; ruleIndex < rulesLength; ruleIndex++) {
 		cssText += `${rules[ruleIndex].cssText}\n`;
 	}
 	const layered = new CSSStyleSheet();
@@ -142,7 +143,8 @@ function buildScopedSheet(sheet, tagSelector) {
 	}
 	const rules = sheet.cssRules;
 	let cssText = '';
-	for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
+	const rulesLength = rules.length;
+	for (let ruleIndex = 0; ruleIndex < rulesLength; ruleIndex++) {
 		cssText += `${rules[ruleIndex].cssText}\n`;
 	}
 	const scoped = new CSSStyleSheet();
@@ -170,7 +172,8 @@ function injectLightStyles(ComponentClass, styleMap, tagSelector) {
 	const entries = mergeStyleEntries(ComponentClass);
 	const pairs = [...styleMap];
 	const scoped = [];
-	for (let index = 0; index < pairs.length; index++) {
+	const pairsLength = pairs.length;
+	for (let index = 0; index < pairsLength; index++) {
 		const key = pairs[index][0];
 		const entry = entries.get(key);
 		if (entry && entry.owner === frameworkBase) {
@@ -277,7 +280,8 @@ export function importStyles(source) {
 		return;
 	}
 	const list = isArray(source) ? source : [source];
-	for (let index = 0; index < list.length; index++) {
+	const listLength = list.length;
+	for (let index = 0; index < listLength; index++) {
 		this.addStyle(`imported-${index}`, list[index]);
 	}
 }

@@ -15,12 +15,13 @@ const queries = {
 	hover: '(hover: hover)',
 	pointerFine: '(pointer: fine)',
 };
+const keys = Object.keys(queries);
+const keysLength = keys.length;
 let lastSnapshot = null;
 function read() {
 	const out = {};
-	const keys = Object.keys(queries);
-	for (let i = 0; i < keys.length; i++) {
-		const key = keys[i];
+	for (let keyIndex = 0; keyIndex < keysLength; keyIndex++) {
+		const key = keys[keyIndex];
 		const mql = globalThis.matchMedia(queries[key]);
 		if (key === 'colorScheme') {
 			out[key] = mql.matches ? 'dark' : 'light';
@@ -44,8 +45,7 @@ function update() {
 		value,
 	});
 }
-const keys = Object.keys(queries);
-for (let i = 0; i < keys.length; i++) {
-	globalThis.matchMedia(queries[keys[i]]).addEventListener('change', update);
+for (let keyIndex = 0; keyIndex < keysLength; keyIndex++) {
+	globalThis.matchMedia(queries[keys[keyIndex]]).addEventListener('change', update);
 }
 update();

@@ -7,8 +7,9 @@ function toList(keys) {
 	return isArray(keys) ? keys : [keys];
 }
 function trackUnsubs(set, subscriptions) {
-	for (let i = 0; i < subscriptions.length; i += 1) {
-		set.add(subscriptions[i]);
+	const subscriptionsLength = subscriptions.length;
+	for (let index = 0; index < subscriptionsLength; index += 1) {
+		set.add(subscriptions[index]);
 	}
 	return new TrackedBundle(set, subscriptions);
 }
@@ -71,8 +72,9 @@ function observeAsyncKey(component, key, callback, options) {
 export function observeAsync(keys, callback, options) {
 	const keyList = toList(keys);
 	const subscriptions = new Array(keyList.length);
-	for (let i = 0; i < keyList.length; i++) {
-		subscriptions[i] = observeAsyncKey(this, keyList[i], callback, options);
+	const keyListLength = keyList.length;
+	for (let keyIndex = 0; keyIndex < keyListLength; keyIndex++) {
+		subscriptions[keyIndex] = observeAsyncKey(this, keyList[keyIndex], callback, options);
 	}
 	return trackUnsubs(this.stateUnsubs ??= new ComponentSubscriptionTracker(), subscriptions);
 }
@@ -101,8 +103,9 @@ function observeGlobalKey(callback, key) {
 export function observeGlobal(keys, callback) {
 	const keyList = toList(keys);
 	const subscriptions = new Array(keyList.length);
-	for (let i = 0; i < keyList.length; i++) {
-		subscriptions[i] = observeGlobalKey(callback, keyList[i]);
+	const keyListLength = keyList.length;
+	for (let keyIndex = 0; keyIndex < keyListLength; keyIndex++) {
+		subscriptions[keyIndex] = observeGlobalKey(callback, keyList[keyIndex]);
 	}
 	return trackUnsubs(this.globalUnsubs ??= new ComponentSubscriptionTracker(), subscriptions);
 }

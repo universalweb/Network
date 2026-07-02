@@ -217,15 +217,17 @@ export function observePrivate(privateProxy, keys, handler) {
 	if (isPlainObject(keys) && handler === undefined) {
 		const objKeys = Object.keys(keys);
 		const subscriptions = [];
-		for (let i = 0; i < objKeys.length; i += 1) {
-			subscriptions.push(bus.subscribe(objKeys[i], keys[objKeys[i]]));
+		const objKeysLength = objKeys.length;
+		for (let keyIndex = 0; keyIndex < objKeysLength; keyIndex += 1) {
+			subscriptions.push(bus.subscribe(objKeys[keyIndex], keys[objKeys[keyIndex]]));
 		}
 		return new TrackedBundle(new ComponentSubscriptionTracker(), subscriptions);
 	}
 	if (isArray(keys)) {
 		const subscriptions = [];
-		for (let i = 0; i < keys.length; i += 1) {
-			subscriptions.push(bus.subscribe(keys[i], handler));
+		const keysLength = keys.length;
+		for (let keyIndex = 0; keyIndex < keysLength; keyIndex += 1) {
+			subscriptions.push(bus.subscribe(keys[keyIndex], handler));
 		}
 		return new TrackedBundle(new ComponentSubscriptionTracker(), subscriptions);
 	}

@@ -128,7 +128,8 @@ export function projectPortals(component, renderRoot) {
 		return;
 	}
 	const wrappers = [];
-	for (let index = 0; index < markers.length; index++) {
+	const markersLength = markers.length;
+	for (let index = 0; index < markersLength; index++) {
 		const marker = markers[index];
 		const target = resolvePortalTarget(marker.getAttribute('to'));
 		if (!target) {
@@ -158,7 +159,8 @@ export function removePortals(component) {
 	if (!wrappers) {
 		return;
 	}
-	for (let index = 0; index < wrappers.length; index++) {
+	const wrappersLength = wrappers.length;
+	for (let index = 0; index < wrappersLength; index++) {
 		wrappers[index].remove();
 	}
 	portalWrappers.delete(component);

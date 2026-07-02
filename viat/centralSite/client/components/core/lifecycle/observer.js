@@ -31,8 +31,9 @@ function ensureSharedObserver() {
 		return null;
 	}
 	sharedObserver = new IntersectionObserver((entries) => {
-		for (let i = 0; i < entries.length; i++) {
-			const entry = entries[i];
+		const entriesLength = entries.length;
+		for (let index = 0; index < entriesLength; index++) {
+			const entry = entries[index];
 			const component = componentRegistry.get(entry.target);
 			if (component) {
 				handleObserverCallback.call(component, entry);

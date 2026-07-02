@@ -219,8 +219,9 @@ export function off(eventName, handlerFunction, options) {
 	const trimmedEventName = eventName.trim();
 	const matchCapture = options === undefined ? null : getCaptureFlag(options);
 	const snapshot = Array.from(entries);
-	for (let i = 0; i < snapshot.length; i++) {
-		const entry = snapshot[i];
+	const snapshotLength = snapshot.length;
+	for (let index = 0; index < snapshotLength; index++) {
+		const entry = snapshot[index];
 		if (entry.eventName !== trimmedEventName) {
 			continue;
 		}
@@ -251,8 +252,9 @@ export function clearEventListeners() {
 		return;
 	}
 	const snapshot = Array.from(entries);
-	for (let i = 0; i < snapshot.length; i++) {
-		snapshot[i].unsubscribe();
+	const snapshotLength = snapshot.length;
+	for (let index = 0; index < snapshotLength; index++) {
+		snapshot[index].unsubscribe();
 	}
 	entries.clear();
 }

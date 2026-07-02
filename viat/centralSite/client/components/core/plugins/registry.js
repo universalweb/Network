@@ -22,8 +22,9 @@ export function listPlugins() {
 }
 export async function runPlugins() {
 	const pluginList = [...plugins.values()];
-	for (let i = 0; i < pluginList.length; i++) {
-		const plugin = pluginList[i];
+	const pluginListLength = pluginList.length;
+	for (let pluginIndex = 0; pluginIndex < pluginListLength; pluginIndex++) {
+		const plugin = pluginList[pluginIndex];
 		if (ran.has(plugin)) {
 			continue;
 		}

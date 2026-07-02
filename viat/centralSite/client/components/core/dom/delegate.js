@@ -52,8 +52,9 @@ function dispatchBus(domEvent) {
 		return;
 	}
 	const snapshot = Array.from(bucket);
-	for (let i = 0; i < snapshot.length; i++) {
-		snapshot[i].invoke(domEvent, null);
+	const snapshotLength = snapshot.length;
+	for (let index = 0; index < snapshotLength; index++) {
+		snapshot[index].invoke(domEvent, null);
 	}
 }
 function ensureBusMaster(eventName) {
@@ -83,8 +84,9 @@ function dispatchEnv(domEvent) {
 		return;
 	}
 	const snapshot = Array.from(bucket);
-	for (let i = 0; i < snapshot.length; i++) {
-		snapshot[i].invoke(domEvent, null);
+	const snapshotLength = snapshot.length;
+	for (let index = 0; index < snapshotLength; index++) {
+		snapshot[index].invoke(domEvent, null);
 	}
 }
 function ensureEnvMaster(eventName) {
@@ -448,8 +450,9 @@ export function clearDelegateListeners() {
 		return;
 	}
 	const snapshot = Array.from(entries);
-	for (let i = 0; i < snapshot.length; i++) {
-		snapshot[i].unsubscribe();
+	const snapshotLength = snapshot.length;
+	for (let index = 0; index < snapshotLength; index++) {
+		snapshot[index].unsubscribe();
 	}
 	entries.clear();
 }

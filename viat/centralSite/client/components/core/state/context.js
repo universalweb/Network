@@ -43,7 +43,8 @@ export function provide(key, value) {
 	if (consumers && consumers.size) {
 		/* Snapshot — a consumer's re-render can re-inject and mutate the Set. */
 		const snapshot = [...consumers];
-		for (let index = 0; index < snapshot.length; index++) {
+		const snapshotLength = snapshot.length;
+		for (let index = 0; index < snapshotLength; index++) {
 			snapshot[index].receiveContextUpdate();
 		}
 	}

@@ -37,8 +37,9 @@ function diffBuckets(before, after) {
 	const keys = [
 		'w', 'h', 'orientation', 'aspect', 'touch',
 	];
-	for (let i = 0; i < keys.length; i++) {
-		const key = keys[i];
+	const keysLength = keys.length;
+	for (let keyIndex = 0; keyIndex < keysLength; keyIndex++) {
+		const key = keys[keyIndex];
 		if (!before || before[key] !== after[key]) {
 			changed[key] = {
 				from: before?.[key] ?? null,

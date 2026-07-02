@@ -48,7 +48,8 @@ function themedLayers(ComponentClass) {
 	}
 	const chain = collectClassChain(ComponentClass);
 	const layers = [];
-	for (let chainIndex = 0; chainIndex < chain.length; chainIndex++) {
+	const chainLength = chain.length;
+	for (let chainIndex = 0; chainIndex < chainLength; chainIndex++) {
 		const layerClass = chain[chainIndex];
 		if (hasOwn(layerClass, 'themes') && isArray(layerClass.themes) && hasOwn(layerClass, 'url')) {
 			layers.push({
@@ -71,7 +72,8 @@ function themedLayers(ComponentClass) {
  */
 export async function syncThemeStyles(themeId) {
 	const layers = themedLayers(this.constructor);
-	for (let layerIndex = 0; layerIndex < layers.length; layerIndex++) {
+	const layersLength = layers.length;
+	for (let layerIndex = 0; layerIndex < layersLength; layerIndex++) {
 		const {
 			layerClass, key,
 		} = layers[layerIndex];

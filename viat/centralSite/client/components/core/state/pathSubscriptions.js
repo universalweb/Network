@@ -68,8 +68,9 @@ function masterFlush() {
 	 */
 	const instances = [...SCHEDULED];
 	SCHEDULED.clear();
-	for (let i = 0; i < instances.length; i++) {
-		instances[i].flush();
+	const instancesLength = instances.length;
+	for (let index = 0; index < instancesLength; index++) {
+		instances[index].flush();
 	}
 	/*
 	 * Every bus has fired its subscribers (renderDep dirties + spot dirties) —
@@ -119,22 +120,26 @@ export class ComponentSubscriptionTracker {
 		}
 		const subs = [...bucket];
 		this.byPath.delete(path);
-		for (let i = 0; i < subs.length; i += 1) {
-			subs[i].unsubscribe();
+		const subsLength = subs.length;
+		for (let index = 0; index < subsLength; index += 1) {
+			subs[index].unsubscribe();
 		}
 	}
 	clear() {
 		const all = [];
 		const buckets = [...this.byPath.values()];
-		for (let i = 0; i < buckets.length; i += 1) {
-			const subs = [...buckets[i]];
-			for (let j = 0; j < subs.length; j += 1) {
-				all.push(subs[j]);
+		const bucketsLength = buckets.length;
+		for (let bucketIndex = 0; bucketIndex < bucketsLength; bucketIndex += 1) {
+			const subs = [...buckets[bucketIndex]];
+			const subsLength = subs.length;
+			for (let subIndex = 0; subIndex < subsLength; subIndex += 1) {
+				all.push(subs[subIndex]);
 			}
 		}
 		this.byPath.clear();
-		for (let i = 0; i < all.length; i += 1) {
-			all[i].unsubscribe();
+		const allLength = all.length;
+		for (let index = 0; index < allLength; index += 1) {
+			all[index].unsubscribe();
 		}
 	}
 }
@@ -152,9 +157,10 @@ export class TrackedBundle {
 	unsubscribe() {
 		const tracker = this.tracker;
 		const subs = this.subscriptions;
-		for (let i = 0; i < subs.length; i += 1) {
-			subs[i].unsubscribe();
-			tracker.delete(subs[i]);
+		const subsLength = subs.length;
+		for (let index = 0; index < subsLength; index += 1) {
+			subs[index].unsubscribe();
+			tracker.delete(subs[index]);
 		}
 	}
 }
@@ -252,9 +258,10 @@ export class PathSubscriptions {
 			 * mutation if a handler subscribes/unsubscribes during dispatch.
 			 */
 			const entries = [...this.subs.entries()];
-			for (let i = 0; i < entries.length; i++) {
-				const subscriptionPath = entries[i][0];
-				const subscriptions = entries[i][1];
+			const entriesLength = entries.length;
+			for (let index = 0; index < entriesLength; index++) {
+				const subscriptionPath = entries[index][0];
+				const subscriptions = entries[index][1];
 				if (!subscriptions.size) {
 					continue;
 				}
@@ -270,18 +277,21 @@ export class PathSubscriptions {
 				 * exits exactly as the original `break` did, with zero extra cost.
 				 */
 				let subscriptionArray = null;
+				let subscriptionArrayLength = 0;
 				let value;
 				let hasMultiPath = false;
-				for (let j = 0; j < changed.length; j++) {
-					if (!pathsOverlap(subscriptionPath, changed[j])) {
+				const changedLength = changed.length;
+				for (let changedIndex = 0; changedIndex < changedLength; changedIndex++) {
+					if (!pathsOverlap(subscriptionPath, changed[changedIndex])) {
 						continue;
 					}
-					const changedPath = changed[j];
+					const changedPath = changed[changedIndex];
 					if (!subscriptionArray) {
 						value = this.getValue(subscriptionPath);
 						subscriptionArray = [...subscriptions];
-						for (let k = 0; k < subscriptionArray.length; k++) {
-							const subscription = subscriptionArray[k];
+						subscriptionArrayLength = subscriptionArray.length;
+						for (let subscriptionIndex = 0; subscriptionIndex < subscriptionArrayLength; subscriptionIndex++) {
+							const subscription = subscriptionArray[subscriptionIndex];
 							if (subscription.multiPath) {
 								hasMultiPath = true;
 							}
@@ -292,8 +302,8 @@ export class PathSubscriptions {
 						}
 						continue;
 					}
-					for (let k = 0; k < subscriptionArray.length; k++) {
-						const subscription = subscriptionArray[k];
+					for (let subscriptionIndex = 0; subscriptionIndex < subscriptionArrayLength; subscriptionIndex++) {
+						const subscription = subscriptionArray[subscriptionIndex];
 						if (subscription.multiPath) {
 							fireSubscription(subscription, value, changedPath);
 						}

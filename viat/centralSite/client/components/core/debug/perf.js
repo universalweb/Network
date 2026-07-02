@@ -99,9 +99,10 @@ export const Perf = {
 	report() {
 		const rows = [];
 		const entries = [...records.entries()];
-		for (let i = 0; i < entries.length; i++) {
-			const category = entries[i][0];
-			const entry = entries[i][1];
+		const entriesLength = entries.length;
+		for (let index = 0; index < entriesLength; index++) {
+			const category = entries[index][0];
+			const entry = entries[index][1];
 			const avg = entry.count > 0 ? entry.total / entry.count : 0;
 			const sorted = [...entry.samples].sort((a, b) => {
 				return a - b;
@@ -133,8 +134,9 @@ function walkAllComponents(root, sink) {
 		return;
 	}
 	const all = root.querySelectorAll('*');
-	for (let i = 0; i < all.length; i++) {
-		const element = all[i];
+	const allLength = all.length;
+	for (let index = 0; index < allLength; index++) {
+		const element = all[index];
 		if (element.isWebComponent) {
 			sink.push(element);
 		}
@@ -183,8 +185,9 @@ function census() {
 	let totalDelegates = 0;
 	let totalHotkeys = 0;
 	let totalRefs = 0;
-	for (let i = 0; i < all.length; i++) {
-		const element = all[i];
+	const allLength = all.length;
+	for (let index = 0; index < allLength; index++) {
+		const element = all[index];
 		const tag = element.tagName.toLowerCase();
 		byTag.set(tag, (byTag.get(tag) ?? 0) + 1);
 		const phase = element.phase ?? '(unset)';
@@ -407,7 +410,8 @@ async function bench(label, fn, options) {
 		return left - right;
 	});
 	let total = 0;
-	for (let index = 0; index < samples.length; index++) {
+	const samplesLength = samples.length;
+	for (let index = 0; index < samplesLength; index++) {
 		total += samples[index];
 	}
 	const meanMs = total / timedRuns;

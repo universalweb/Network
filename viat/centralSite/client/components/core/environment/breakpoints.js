@@ -40,9 +40,10 @@ export const aspectBuckets = [
 ];
 function pickBreakpoint(value, table) {
 	const keys = Object.keys(table);
-	for (let i = 0; i < keys.length; i++) {
-		if (value < table[keys[i]]) {
-			return keys[i];
+	const keysLength = keys.length;
+	for (let keyIndex = 0; keyIndex < keysLength; keyIndex++) {
+		if (value < table[keys[keyIndex]]) {
+			return keys[keyIndex];
 		}
 	}
 	return keys[keys.length - 1];
@@ -54,9 +55,10 @@ export function heightBucket(height) {
 	return pickBreakpoint(height, heightBreakpoints);
 }
 export function aspectBucket(ratio) {
-	for (let i = 0; i < aspectBuckets.length; i++) {
-		if (ratio < aspectBuckets[i].max) {
-			return aspectBuckets[i].name;
+	const aspectBucketsLength = aspectBuckets.length;
+	for (let bucketIndex = 0; bucketIndex < aspectBucketsLength; bucketIndex++) {
+		if (ratio < aspectBuckets[bucketIndex].max) {
+			return aspectBuckets[bucketIndex].name;
 		}
 	}
 	return aspectBuckets[aspectBuckets.length - 1].name;
