@@ -517,21 +517,16 @@ export function replaceState(state = {}) {
 	 * rebuild — orphans every one of those subscriptions and silently
 	 * recreates every child custom element on each parent update (badge
 	 * constructors fire over and over) and yanks focus out of any focused
-	 * input. Re-firing each currently-subscribed path is enough: the bus
-	 * coalesces them into a single microtask flush and each spot patches
-	 * its DOM in place against the fresh STATE. There is no native
-	 * "notify-all" path (`pathsOverlap('', x)` matches only the literal
-	 * empty string), hence the explicit walk over `subs`.
+	 * input. Re-firing every live subscription is enough: the bus coalesces
+	 * into a single microtask flush and each spot patches its DOM in place
+	 * against the fresh STATE. `notifyAll()` is the bus's replacement
+	 * primitive — one flag, one O(subs) dispatch pass with each bucket fired
+	 * at its own path (the old per-path notify walk made the flush match
+	 * N changed paths against N subscriptions, quadratic on spot-heavy
+	 * components).
 	 * TODO: Consider a diff check instead of blind notify-all, but that has to be balanced against the cost of the diff itself and the fact that many updates are full replacements where every path changes.
 	 */
-	if (this.stateBus) {
-		const stateBus = this.stateBus;
-		const paths = [...stateBus.subs.keys()];
-		const pathsLength = paths.length;
-		for (let pathIndex = 0; pathIndex < pathsLength; pathIndex++) {
-			stateBus.notify(paths[pathIndex]);
-		}
-	}
+	this.stateBus?.notifyAll();
 	return this.updateView();
 }
 /**

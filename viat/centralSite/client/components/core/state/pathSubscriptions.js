@@ -29,12 +29,24 @@
  * carries enough state (`bus`, `path`, `handler`) for the component-side
  * keyed `unobserve(key)` API to find every subscription on a given path
  * without holding the original handler reference.
+ *
+ * Overlap matching is index-driven, not scan-driven. The bus maintains a
+ * segment trie mirroring the `subs` map (one terminal per live bucket),
+ * updated ONLY when a bucket is created or deleted — the subscription
+ * vocabulary boundary, not the per-subscribe hot path (dep re-syncs diff
+ * against existing buckets, so steady-state subscribe/unsubscribe never
+ * touches the index). `flush` walks the trie once per changed path
+ * (ancestors along the spine, descendants below the endpoint) and then
+ * dispatches in `subs` insertion order — O(changed·depth + matches + subs)
+ * instead of the former O(subs × changed) pairwise scan, which went
+ * quadratic when a state replacement notified every subscribed path.
+ * `notifyAll()` skips matching entirely: one flag, one O(subs) pass.
  */
 import { Perf } from '../debug/perf.js';
 import { drainGlobalRenders, drainSpots } from '../lifecycle/scheduler.js';
 import {
-	getOrInit,
 	isPromiseLike,
+	parsePath,
 	pathsOverlap,
 	queueAsyncError,
 } from '../utilities.js';
@@ -45,8 +57,49 @@ import {
  */
 const SCHEDULED = new Set();
 let masterPending = false;
-function makeSubscriptionSet() {
-	return new Set();
+/**
+ * One node of a bus's segment-trie subscription index. The trie mirrors the
+ * `subs` map exactly: a node carries a non-null `path` iff a live bucket for
+ * that full path exists (the bijection is enforced by routing every bucket
+ * create/delete through `bucketFor`/`dropBucket`). `subtreeTerminals` counts
+ * live buckets at-or-below the node and drives physical retention — a node is
+ * detached the moment its count reaches zero, so by induction every reachable
+ * node has a terminal somewhere below it and the descendant walk never visits
+ * dead branches.
+ */
+class PathIndexNode {
+	children = new Map();
+	path = null;
+	subtreeTerminals = 0;
+	constructor(parentNode, segment) {
+		this.parent = parentNode;
+		this.segment = segment;
+	}
+	static create(parentNode, segment) {
+		return new PathIndexNode(parentNode, segment);
+	}
+}
+function appendOverlap(overlapsByPath, subscriptionPath, changedPath) {
+	const list = overlapsByPath.get(subscriptionPath);
+	if (list) {
+		list.push(changedPath);
+		return;
+	}
+	overlapsByPath.set(subscriptionPath, [changedPath]);
+}
+/*
+ * Depth-first over the index below `node` — every terminal strictly below a
+ * changed path is a descendant subscription ('items.0.x' under changed
+ * 'items'). Pure traversal: no user code runs during the match phase, so the
+ * trie cannot mutate mid-walk (handlers fire later, in the dispatch phase).
+ */
+function collectSubtreeOverlaps(node, changedPath, overlapsByPath) {
+	for (const child of node.children.values()) {
+		if (child.path !== null) {
+			appendOverlap(overlapsByPath, child.path, changedPath);
+		}
+		collectSubtreeOverlaps(child, changedPath, overlapsByPath);
+	}
 }
 function fireSubscription(subscription, value, changedPath) {
 	const handler = subscription.handler;
@@ -193,7 +246,7 @@ export class Subscription {
 		 * Default false keeps renderDeps / observers / bindings at once-per-batch.
 		 */
 		this.multiPath = multiPath === true;
-		const subscriptions = getOrInit(bus.subs, path, makeSubscriptionSet);
+		const subscriptions = bus.bucketFor(path);
 		subscriptions.add(this);
 		this.subscriptions = subscriptions;
 	}
@@ -203,7 +256,7 @@ export class Subscription {
 		}
 		this.subscriptions.delete(this);
 		if (!this.subscriptions.size) {
-			this.bus.subs.delete(this.path);
+			this.bus.dropBucket(this.path, this.subscriptions);
 		}
 		this.handler = null;
 		this.target = null;
@@ -213,7 +266,10 @@ export class Subscription {
 export class PathSubscriptions {
 	subs = new Map();
 	pending = new Set();
+	pendingAll = false;
 	flushScheduled = false;
+	indexRoot = PathIndexNode.create(null, '');
+	nodesByPath = new Map();
 	/**
 	 * Abstract — subclasses MUST override. Resolves the current value at a
 	 * given path against the bus's backing store; used by `flush` to hand
@@ -233,8 +289,101 @@ export class PathSubscriptions {
 	subscribe(path, handler, target, multiPath) {
 		return new Subscription(this, path, handler, target, multiPath);
 	}
+	/**
+	 * The only bucket-creation path — pairs the `subs` entry with its index
+	 * terminal so the trie and the map can never disagree. Called from the
+	 * `Subscription` constructor.
+	 */
+	bucketFor(path) {
+		let bucket = this.subs.get(path);
+		if (!bucket) {
+			bucket = new Set();
+			this.subs.set(path, bucket);
+			this.indexPath(path);
+		}
+		return bucket;
+	}
+	/**
+	 * The only bucket-deletion path. The identity guard makes a stale call
+	 * (an already-replaced bucket) a no-op instead of deleting a live
+	 * successor bucket.
+	 */
+	dropBucket(path, bucket) {
+		if (bucket !== undefined && this.subs.get(path) !== bucket) {
+			return;
+		}
+		if (!this.subs.delete(path)) {
+			return;
+		}
+		this.unindexPath(path);
+	}
+	indexPath(path) {
+		const parts = parsePath(path);
+		if (!parts) {
+			/*
+			 * The '' bucket lives only in `subs` — an empty path overlaps
+			 * nothing but itself (no dot boundary exists against it), so
+			 * `collectOverlaps` special-cases it instead of the trie.
+			 */
+			return;
+		}
+		let node = this.indexRoot;
+		const partsLength = parts.length;
+		for (let partIndex = 0; partIndex < partsLength; partIndex++) {
+			const segment = parts[partIndex];
+			let child = node.children.get(segment);
+			if (!child) {
+				child = PathIndexNode.create(node, segment);
+				node.children.set(segment, child);
+			}
+			node = child;
+		}
+		node.path = path;
+		for (let spine = node; spine; spine = spine.parent) {
+			spine.subtreeTerminals += 1;
+		}
+		this.nodesByPath.set(path, node);
+	}
+	unindexPath(path) {
+		const node = this.nodesByPath.get(path);
+		if (!node) {
+			return;
+		}
+		this.nodesByPath.delete(path);
+		node.path = null;
+		for (let spine = node; spine; spine = spine.parent) {
+			spine.subtreeTerminals -= 1;
+		}
+		let candidate = node;
+		while (candidate.parent && candidate.subtreeTerminals === 0) {
+			candidate.parent.children.delete(candidate.segment);
+			candidate = candidate.parent;
+		}
+	}
 	notify(path) {
+		if (this.pendingAll) {
+			return;
+		}
 		this.pending.add(path);
+		this.scheduleFlush();
+	}
+	/**
+	 * Batch-notify every subscribed path in one flag — the state-replacement
+	 * primitive. The flush dispatches each bucket exactly once with its own
+	 * path as the changed path, skipping overlap matching entirely (O(subs)
+	 * instead of notifying N paths and matching N×N). Callers replacing a
+	 * whole backing store (component `replaceState`, a future store reset)
+	 * use this instead of walking `subs.keys()` and notifying each.
+	 */
+	notifyAll() {
+		if (this.pendingAll) {
+			return;
+		}
+		this.pendingAll = true;
+		this.pending.clear();
+		this.scheduleFlush();
+	}
+	scheduleFlush() {
 		if (this.flushScheduled) {
 			return;
 		}
@@ -248,70 +397,169 @@ export class PathSubscriptions {
 	flush() {
 		const perfMark = Perf.mark('busFlush');
 		this.flushScheduled = false;
-		const changed = [...this.pending];
+		const replaceAll = this.pendingAll;
+		this.pendingAll = false;
+		const changed = replaceAll ? null : [...this.pending];
 		this.pending.clear();
 		if (this.subs.size) {
-			/*
-			 * Snapshot entries + handlers per the codebase pattern: indexed
-			 * for-loop over Array snapshots avoids forEach callbacks (which
-			 * would re-introduce per-call closures), and is safe under
-			 * mutation if a handler subscribes/unsubscribes during dispatch.
-			 */
-			const entries = [...this.subs.entries()];
-			const entriesLength = entries.length;
-			for (let index = 0; index < entriesLength; index++) {
-				const subscriptionPath = entries[index][0];
-				const subscriptions = entries[index][1];
-				if (!subscriptions.size) {
-					continue;
-				}
-				/*
-				 * Coalesced contract: every subscriber fires AT MOST ONCE per
-				 * batch, on the FIRST overlapping changed path, with the latest
-				 * value at its path. EXCEPTION: a `multiPath` subscriber (list
-				 * spots) also fires on each SUBSEQUENT overlapping path so a
-				 * batch of sibling deep mutations (`items.0.x` + `items.1.x`)
-				 * reaches it as every path, not just the first. The first-overlap
-				 * pass detects whether any subscriber is multiPath; if none is
-				 * (the common case — renderDeps / observers / bindings), the loop
-				 * exits exactly as the original `break` did, with zero extra cost.
-				 */
-				let subscriptionArray = null;
-				let subscriptionArrayLength = 0;
-				let value;
-				let hasMultiPath = false;
-				const changedLength = changed.length;
-				for (let changedIndex = 0; changedIndex < changedLength; changedIndex++) {
-					if (!pathsOverlap(subscriptionPath, changed[changedIndex])) {
-						continue;
-					}
-					const changedPath = changed[changedIndex];
-					if (!subscriptionArray) {
-						value = this.getValue(subscriptionPath);
-						subscriptionArray = [...subscriptions];
-						subscriptionArrayLength = subscriptionArray.length;
-						for (let subscriptionIndex = 0; subscriptionIndex < subscriptionArrayLength; subscriptionIndex++) {
-							const subscription = subscriptionArray[subscriptionIndex];
-							if (subscription.multiPath) {
-								hasMultiPath = true;
-							}
-							fireSubscription(subscription, value, changedPath);
-						}
-						if (!hasMultiPath) {
-							break;
-						}
-						continue;
-					}
-					for (let subscriptionIndex = 0; subscriptionIndex < subscriptionArrayLength; subscriptionIndex++) {
-						const subscription = subscriptionArray[subscriptionIndex];
-						if (subscription.multiPath) {
-							fireSubscription(subscription, value, changedPath);
-						}
-					}
-				}
+			if (replaceAll) {
+				this.dispatchAll();
+			} else if (changed.length === 1) {
+				this.dispatchSingle(changed[0]);
+			} else if (changed.length) {
+				this.dispatchChanged(changed);
 			}
 		}
 		this.onFlush();
 		Perf.measure('busFlush', perfMark);
+	}
+	/**
+	 * Single-changed-path dispatch — the dominant flush shape (one mutation
+	 * per microtask batch). With exactly one changed path the multiPath
+	 * replay pass is unreachable (a replay needs a SECOND overlapping path),
+	 * so one direct overlap test per bucket beats building the trie match
+	 * map; the trie earns its keep only on multi-path batches.
+	 */
+	dispatchSingle(changedPath) {
+		const entries = [...this.subs.entries()];
+		const entriesLength = entries.length;
+		for (let index = 0; index < entriesLength; index++) {
+			const subscriptionPath = entries[index][0];
+			const subscriptions = entries[index][1];
+			if (!subscriptions.size || !pathsOverlap(subscriptionPath, changedPath)) {
+				continue;
+			}
+			const value = this.getValue(subscriptionPath);
+			const subscriptionArray = [...subscriptions];
+			const subscriptionArrayLength = subscriptionArray.length;
+			for (let subscriptionIndex = 0; subscriptionIndex < subscriptionArrayLength; subscriptionIndex++) {
+				fireSubscription(subscriptionArray[subscriptionIndex], value, changedPath);
+			}
+		}
+	}
+	/**
+	 * Match phase — pure, runs before any handler. One trie walk per changed
+	 * path: terminals along the spine are ancestor-or-exact subscriptions
+	 * ('user' catches changed 'user.name'), terminals below the endpoint are
+	 * descendant subscriptions ('items.0.x' catches changed 'items'). Returns
+	 * Map<subscriptionPath, overlapping changed paths in notify order> — the
+	 * per-bucket list the dispatch phase consumes exactly as the old pairwise
+	 * scan did, so the observable contract is unchanged.
+	 */
+	collectOverlaps(changed) {
+		const overlapsByPath = new Map();
+		const hasEmptyPathBucket = this.subs.has('');
+		const changedLength = changed.length;
+		for (let changedIndex = 0; changedIndex < changedLength; changedIndex++) {
+			const changedPath = changed[changedIndex];
+			const parts = parsePath(changedPath);
+			if (!parts) {
+				/*
+				 * An empty changed path overlaps only the literal '' bucket
+				 * (no dot boundary exists against an empty string).
+				 */
+				if (hasEmptyPathBucket) {
+					appendOverlap(overlapsByPath, '', changedPath);
+				}
+				continue;
+			}
+			let node = this.indexRoot;
+			let reachedEnd = true;
+			const partsLength = parts.length;
+			for (let partIndex = 0; partIndex < partsLength; partIndex++) {
+				node = node.children.get(parts[partIndex]);
+				if (!node) {
+					reachedEnd = false;
+					break;
+				}
+				if (node.path !== null) {
+					appendOverlap(overlapsByPath, node.path, changedPath);
+				}
+			}
+			if (reachedEnd) {
+				collectSubtreeOverlaps(node, changedPath, overlapsByPath);
+			}
+		}
+		return overlapsByPath;
+	}
+	/**
+	 * Dispatch phase. Iterates the `subs` snapshot in insertion order — the
+	 * same bucket order, `getValue` timing, and lazy bucket snapshot as the
+	 * former pairwise loop, so handler-observable behavior is identical; only
+	 * the overlap discovery changed (precomputed lists instead of rescans).
+	 *
+	 * Coalesced contract: every subscriber fires AT MOST ONCE per batch, on
+	 * the FIRST overlapping changed path, with the latest value at its path.
+	 * EXCEPTION: a `multiPath` subscriber (list spots) also fires on each
+	 * SUBSEQUENT overlapping path so a batch of sibling deep mutations
+	 * (`items.0.x` + `items.1.x`) reaches it as every path, not just the
+	 * first.
+	 */
+	dispatchChanged(changed) {
+		const overlapsByPath = this.collectOverlaps(changed);
+		if (!overlapsByPath.size) {
+			return;
+		}
+		const entries = [...this.subs.entries()];
+		const entriesLength = entries.length;
+		for (let index = 0; index < entriesLength; index++) {
+			const subscriptionPath = entries[index][0];
+			const subscriptions = entries[index][1];
+			if (!subscriptions.size) {
+				continue;
+			}
+			const overlapping = overlapsByPath.get(subscriptionPath);
+			if (!overlapping) {
+				continue;
+			}
+			const value = this.getValue(subscriptionPath);
+			const subscriptionArray = [...subscriptions];
+			const subscriptionArrayLength = subscriptionArray.length;
+			let hasMultiPath = false;
+			for (let subscriptionIndex = 0; subscriptionIndex < subscriptionArrayLength; subscriptionIndex++) {
+				const subscription = subscriptionArray[subscriptionIndex];
+				if (subscription.multiPath) {
+					hasMultiPath = true;
+				}
+				fireSubscription(subscription, value, overlapping[0]);
+			}
+			if (!hasMultiPath) {
+				continue;
+			}
+			const overlappingLength = overlapping.length;
+			for (let overlapIndex = 1; overlapIndex < overlappingLength; overlapIndex++) {
+				for (let subscriptionIndex = 0; subscriptionIndex < subscriptionArrayLength; subscriptionIndex++) {
+					const subscription = subscriptionArray[subscriptionIndex];
+					if (subscription.multiPath) {
+						fireSubscription(subscription, value, overlapping[overlapIndex]);
+					}
+				}
+			}
+		}
+	}
+	/**
+	 * `notifyAll` dispatch — every bucket fires exactly once with its own
+	 * path as the changed path. Deliberately simpler than the old caller-side
+	 * "notify every subscribed path" replacement idiom: a multiPath
+	 * subscriber gets ONE fire at its own path (a full-value replacement
+	 * makes per-descendant replays redundant — the list spot's keyed diff
+	 * re-patches every row from the replaced value in that single pass).
+	 */
+	dispatchAll() {
+		const entries = [...this.subs.entries()];
+		const entriesLength = entries.length;
+		for (let index = 0; index < entriesLength; index++) {
+			const subscriptionPath = entries[index][0];
+			const subscriptions = entries[index][1];
+			if (!subscriptions.size) {
+				continue;
+			}
+			const value = this.getValue(subscriptionPath);
+			const subscriptionArray = [...subscriptions];
+			const subscriptionArrayLength = subscriptionArray.length;
+			for (let subscriptionIndex = 0; subscriptionIndex < subscriptionArrayLength; subscriptionIndex++) {
+				fireSubscription(subscriptionArray[subscriptionIndex], value, subscriptionPath);
+			}
+		}
 	}
 }
