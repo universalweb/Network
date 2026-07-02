@@ -1,6 +1,6 @@
 import { LIFECYCLE_PROMISE } from '../lifecycle/lifecycle.js';
 import { PHASE } from '../lifecycle/phase.js';
-import { isFunction } from '../utilities.js';
+import { isFunction, isShadowRoot } from '../utilities.js';
 import { describeComponent, sanitize } from './descriptors.js';
 import {
 	getDirectChildren,
@@ -33,7 +33,7 @@ const WHEN_BY_PHASE = {
 };
 function findAiAncestor(element) {
 	const root = element.getRootNode();
-	const parentHost = root instanceof ShadowRoot ? root.host : element.parentElement;
+	const parentHost = isShadowRoot(root) ? root.host : element.parentElement;
 	if (parentHost && getComponentId(parentHost)) {
 		return parentHost;
 	}
@@ -42,8 +42,9 @@ function findAiAncestor(element) {
 function collectAttrSnapshot(component) {
 	const out = {};
 	const list = component.attributes;
-	for (let i = 0; i < list.length; i++) {
-		out[list[i].name] = list[i].value;
+	const listLength = list.length;
+	for (let index = 0; index < listLength; index++) {
+		out[list[index].name] = list[index].value;
 	}
 	return out;
 }
@@ -64,9 +65,10 @@ function collectBounds(component) {
 }
 function walkSubtree(component, visitor) {
 	const kids = getDirectChildren(component);
-	for (let i = 0; i < kids.length; i++) {
-		visitor(kids[i]);
-		walkSubtree(kids[i], visitor);
+	const kidsLength = kids.length;
+	for (let index = 0; index < kidsLength; index++) {
+		visitor(kids[index]);
+		walkSubtree(kids[index], visitor);
 	}
 }
 function makeMatcher(filter) {

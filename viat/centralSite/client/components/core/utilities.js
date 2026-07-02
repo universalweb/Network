@@ -71,6 +71,9 @@ export function isArrayBuffer(value) {
 export function isUint8Array(value) {
 	return value instanceof Uint8Array;
 }
+export function isDate(value) {
+	return value instanceof Date;
+}
 export function assign(target, ...sources) {
 	return Object.assign(target, ...sources);
 }

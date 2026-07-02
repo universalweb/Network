@@ -1,4 +1,6 @@
-import { isFunction, isPlainObject, isString } from '../utilities.js';
+import {
+	isElement, isFunction, isPlainObject, isString,
+} from '../utilities.js';
 import {
 	defineGlobalTool,
 	defineInstanceTool,
@@ -18,7 +20,7 @@ export function defineTool(scope, toolName, def) {
 	if (isString(scope) && scope.startsWith('tag:')) {
 		return defineTagTool(scope.slice(4), toolName, def);
 	}
-	if (scope instanceof Element) {
+	if (isElement(scope)) {
 		return defineInstanceTool(scope, toolName, def);
 	}
 	throw new TypeError('scope must be "global", "tag:<tagname>", or a component instance');
@@ -35,8 +37,9 @@ function setStatePath(target, path, value) {
 	const parts = path.split('.');
 	const last = parts.pop();
 	let cursor = target;
-	for (let i = 0; i < parts.length; i++) {
-		const part = parts[i];
+	const partsLength = parts.length;
+	for (let index = 0; index < partsLength; index++) {
+		const part = parts[index];
 		if (!isPlainObject(cursor[part]) && !Array.isArray(cursor[part])) {
 			cursor[part] = {};
 		}

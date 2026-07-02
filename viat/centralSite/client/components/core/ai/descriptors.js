@@ -1,4 +1,6 @@
-import { isFunction, isPlainObject, isString } from '../utilities.js';
+import {
+	isDate, isElement, isFunction, isPlainObject, isString,
+} from '../utilities.js';
 import {
 	getDirectChildren,
 	getNameForComponent,
@@ -37,25 +39,27 @@ function sanitize(value, depth) {
 	if (Array.isArray(value)) {
 		const sliced = value.slice(0, MAX_ARRAY);
 		const out = new Array(sliced.length);
-		for (let i = 0; i < sliced.length; i++) {
-			out[i] = sanitize(sliced[i], depth + 1);
+		const slicedLength = sliced.length;
+		for (let index = 0; index < slicedLength; index++) {
+			out[index] = sanitize(sliced[index], depth + 1);
 		}
 		if (value.length > MAX_ARRAY) {
 			out.push(`[+${value.length - MAX_ARRAY} more]`);
 		}
 		return out;
 	}
-	if (value instanceof Element) {
+	if (isElement(value)) {
 		return `<${value.tagName.toLowerCase()}${value.id ? `#${value.id}` : ''}>`;
 	}
-	if (value instanceof Date) {
+	if (isDate(value)) {
 		return value.toISOString();
 	}
 	if (isPlainObject(value)) {
 		const out = {};
 		const keys = Object.keys(value);
-		for (let i = 0; i < keys.length; i++) {
-			out[keys[i]] = sanitize(value[keys[i]], depth + 1);
+		const keysLength = keys.length;
+		for (let index = 0; index < keysLength; index++) {
+			out[keys[index]] = sanitize(value[keys[index]], depth + 1);
 		}
 		return out;
 	}
@@ -94,8 +98,9 @@ function describeBounds(component) {
 function collectAttributes(component) {
 	const out = {};
 	const attrs = component.attributes;
-	for (let i = 0; i < attrs.length; i++) {
-		out[attrs[i].name] = attrs[i].value;
+	const attrsLength = attrs.length;
+	for (let index = 0; index < attrsLength; index++) {
+		out[attrs[index].name] = attrs[index].value;
 	}
 	return out;
 }
@@ -176,7 +181,7 @@ export function resolveReference(reference) {
 	if (!reference) {
 		return null;
 	}
-	if (reference instanceof Element) {
+	if (isElement(reference)) {
 		return reference;
 	}
 	if (!isString(reference)) {

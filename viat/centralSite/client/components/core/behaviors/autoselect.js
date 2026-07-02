@@ -1,7 +1,8 @@
+import { isFunction } from '../utilities.js';
 // On focus, select all text in the input/textarea.
 function handleFocus(focusEvent) {
 	const element = focusEvent.currentTarget;
-	if (typeof element.select === 'function') {
+	if (isFunction(element.select)) {
 		element.select();
 	}
 }

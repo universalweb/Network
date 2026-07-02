@@ -11,6 +11,7 @@
  * correlation (ASK/REPLY/ERROR); `method` route name (ASK/NOTIFY); `data` params
  * (ASK/NOTIFY) or result (REPLY); `error` { code, message } (ERROR only).
  */
+import { isUint8Array } from '../utilities.js';
 export const FRAME_TYPE = Object.freeze({
 	ASK: 'ask',
 	REPLY: 'reply',
@@ -50,7 +51,7 @@ export function decodeFrame(raw, isBinary, cborCodec) {
 		if (!cborCodec) {
 			throw new Error('UniversalWebSocket: binary frame received without a CBOR codec');
 		}
-		const bytes = raw instanceof Uint8Array ? raw : new Uint8Array(raw);
+		const bytes = isUint8Array(raw) ? raw : new Uint8Array(raw);
 		return cborCodec.decode(bytes);
 	}
 	return JSON.parse(raw);
