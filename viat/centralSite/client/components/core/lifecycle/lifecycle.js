@@ -95,6 +95,13 @@ export async function handleConnect() {
 	}
 	attachToParent(this, resolveParentHost(this));
 	/*
+	 * AI-registry participation. Opt-in via the AI mixin, hence optional-chained
+	 * (no-op when absent). Runs here — right after parent attach, before styles /
+	 * onConnect / render — to preserve the timing of the former connectedCallback
+	 * monkey-patch without wrapping the callback.
+	 */
+	this.aiRegister?.();
+	/*
 	 * `await this.applyStyles()` used to queue a microtask EVERY instance
 	 * even when the styleMap was already populated (warm path, instances
 	 * 2..N of the class — synchronous adoptedStyleSheets assign). For a
@@ -146,6 +153,12 @@ export async function handleMove() {
 	await this.onMove?.(oldParent, this.parentComponent);
 }
 export async function handleDisconnect() {
+	/*
+	 * Leave the AI registry synchronously, before `await this.pendingConnect`, so
+	 * rapid connect/disconnect churn (list recycling) never strands a detached
+	 * component in the registry. Opt-in mixin, hence optional-chained.
+	 */
+	this.aiUnregister?.();
 	await this.pendingConnect;
 	this.pendingConnect = null;
 	unregister(this);

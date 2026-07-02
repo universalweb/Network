@@ -240,40 +240,19 @@ export const aiMethods = {
 		return found;
 	},
 };
-function wrapAfter(target, hookName, after) {
-	const original = target[hookName];
-	target[hookName] = function aiAfterHook(...args) {
-		let result;
-		if (isFunction(original)) {
-			result = original.apply(this, args);
-		}
-		after(this);
-		return result;
-	};
-}
-function wrapBefore(target, hookName, before) {
-	const original = target[hookName];
-	target[hookName] = function aiBeforeHook(...args) {
-		before(this);
-		if (isFunction(original)) {
-			return original.apply(this, args);
-		}
-		return undefined;
-	};
-}
-export function applyAiMixin(WebComponent, opts = {}) {
+/*
+ * Auto register/unregister is driven natively by the framework lifecycle:
+ * `handleConnect` calls `this.aiRegister?.()` and `handleDisconnect` calls
+ * `this.aiUnregister?.()` (optional-chained so both are no-ops when this mixin
+ * was never applied). This replaces the former `connectedCallback` /
+ * `disconnectedCallback` monkey-patch — the only prototype-wrapping site in the
+ * core — bringing AI in line with how every other subsystem (observer, remote
+ * lists, hotkeys, gestures) hooks the connect/disconnect cycle.
+ */
+export function applyAiMixin(WebComponent) {
 	if (!WebComponent || WebComponent[APPLIED]) {
 		return;
 	}
-	const proto = WebComponent.prototype;
-	Object.assign(proto, aiMethods);
-	if (opts.autoRegister !== false) {
-		wrapAfter(proto, 'connectedCallback', (component) => {
-			component.aiRegister();
-		});
-		wrapBefore(proto, 'disconnectedCallback', (component) => {
-			component.aiUnregister();
-		});
-	}
+	Object.assign(WebComponent.prototype, aiMethods);
 	WebComponent[APPLIED] = true;
 }
