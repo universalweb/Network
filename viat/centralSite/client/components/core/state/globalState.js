@@ -148,6 +148,49 @@ export class Store {
 	observe(key, handler) {
 		return this.bus.subscribe(key, handler);
 	}
+	/**
+	 * Replace the whole store in place, preserving `STATE` (and therefore
+	 * `proxy`) identity. A Proxy target is immutable, so `store.STATE = {}`
+	 * would strand `store.proxy` on the old object; instead we null out the
+	 * keys the new state drops (null-as-absent — the same hidden-class-stable
+	 * convention as `deleteProperty`) and overwrite the rest directly, bypassing
+	 * the per-key `set` trap so N writes cost N assignments, not N notifies.
+	 *
+	 * Identity preservation is the whole point: every `globalRealm.read`, the
+	 * shared global render proxy (memoized on `globalState.proxy` identity), and
+	 * every captured `this.global` reference keep resolving against the live
+	 * proxy with no rebuild. `proxyCache` is left as-is — it is keyed by target
+	 * object, so replaced children fall out of reachability and GC while any
+	 * child object reused by reference keeps its valid cached proxy.
+	 *
+	 * A single `bus.notifyAll()` fans the change to every subscriber once, at
+	 * its own path (O(subs), no N×N overlap scan) — dropped keys fire with the
+	 * resolved `null`, so a subscriber at a removed path re-renders empty rather
+	 * than reading stale.
+	 * @param {object} nextState - The replacement top-level state object.
+	 */
+	replaceState(nextState) {
+		const next = isPlainObject(nextState) ? nextState : {};
+		if (plainEqual(this.STATE, next)) {
+			return;
+		}
+		const state = this.STATE;
+		const currentKeys = Object.keys(state);
+		const currentKeysLength = currentKeys.length;
+		for (let index = 0; index < currentKeysLength; index++) {
+			const key = currentKeys[index];
+			if (!hasOwn(next, key)) {
+				state[key] = null;
+			}
+		}
+		const nextKeys = Object.keys(next);
+		const nextKeysLength = nextKeys.length;
+		for (let index = 0; index < nextKeysLength; index++) {
+			const key = nextKeys[index];
+			state[key] = next[key];
+		}
+		this.bus.notifyAll();
+	}
 }
 export const globalState = Store.create();
 /*
