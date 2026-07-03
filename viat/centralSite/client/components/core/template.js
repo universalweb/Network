@@ -1,4 +1,5 @@
 /* eslint-disable no-restricted-syntax */
+import { resolveStores } from './attrs/staticConfig.js';
 import { behaviorAttrNames, getBehavior } from './behaviors/index.js';
 import { defaultLogger, IS_PRODUCTION } from './debug/logger.js';
 import { Perf } from './debug/perf.js';
@@ -16,7 +17,7 @@ import {
 	RemoteListBinding,
 	track,
 } from './state/binding.js';
-import { globalRealm } from './state/globalState.js';
+import { globalRealm, storeRealm } from './state/globalState.js';
 import { resolveListFilter } from './state/listFilter.js';
 import { mountRemoteController } from './state/remoteList.js';
 import {
@@ -298,21 +299,6 @@ function clearRange(startComment, endComment) {
 		node = next;
 	}
 }
-function createRenderableElement(value) {
-	if (LightTemplate.is(value)) {
-		return instantiateLightRow(value);
-	}
-	if (isString(value)) {
-		return createElementFromHTML(value);
-	}
-	if (isElement(value)) {
-		return value;
-	}
-	throw new TypeError('List render functions must return an Element or HTML string.');
-}
-function isCustomElementConstructor(source) {
-	return isFunction(source) && source.prototype instanceof HTMLElement;
-}
 /**
  * ── Lightweight list rows ───────────────────────────────────────────────────
  * A list row that does NOT pay for a custom element + shadow root + async
@@ -340,6 +326,21 @@ class LightTemplate {
 	static is(source) {
 		return source instanceof LightTemplate;
 	}
+}
+function createRenderableElement(value) {
+	if (LightTemplate.is(value)) {
+		return instantiateLightRow(value);
+	}
+	if (isString(value)) {
+		return createElementFromHTML(value);
+	}
+	if (isElement(value)) {
+		return value;
+	}
+	throw new TypeError('List render functions must return an Element or HTML string.');
+}
+function isCustomElementConstructor(source) {
+	return isFunction(source) && source.prototype instanceof HTMLElement;
 }
 export function html(strings, ...values) {
 	return new LightTemplate(strings, values);
@@ -934,13 +935,26 @@ function realmForKey(key, component) {
 	};
 }
 /*
- * Flag-carry realm resolution for a Binding — the read-side twin of the split in
- * `Binding`'s constructor. Scope was resolved ONCE at authoring time into a
- * `.global` flag + a BARE `.key`, so the realm comes from the flag; downstream
- * never re-parses the (already prefix-stripped) key string. Using `realmForKey`
- * on a binding's bare key would silently resolve a `global.` bind to LOCAL.
+ * Channel-carry realm resolution for a Binding — the read-side twin of
+ * `parseBindingChannel` in the Binding constructor. The channel was resolved
+ * ONCE at authoring into `.global` / `.storeName` + a BARE `.key`, so the realm
+ * comes from the carried data; downstream never re-parses the key string (using
+ * `realmForKey` on a binding's bare key would silently resolve it LOCAL). A
+ * `stores.<name>.` binding resolves the Store instance against the component
+ * CLASS's merged `static stores` table here, at spot install — an undeclared
+ * name is an authoring error and throws with the offending key.
  */
 function realmForBinding(binding, component) {
+	if (binding.storeName !== null) {
+		const store = resolveStores(component.constructor)[binding.storeName];
+		if (!store) {
+			throw new Error(`<${component.localName}> binds "stores.${binding.storeName}.${binding.key}" but declares no store "${binding.storeName}" in static stores.`);
+		}
+		return {
+			realm: storeRealm(store),
+			path: binding.key,
+		};
+	}
 	return {
 		realm: binding.global ? globalRealm : localRealm(component),
 		path: binding.key,

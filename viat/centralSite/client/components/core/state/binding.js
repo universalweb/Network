@@ -37,22 +37,75 @@ export let currentTracking = null;
 export function setCurrentTracking(value) {
 	currentTracking = value;
 }
+/**
+ * Resolve a keyed binding's CHANNEL once, at the authoring boundary. The key
+ * mirrors the component property access it stands for (an optional leading
+ * `this.` is accepted and stripped):
+ *
+ *     bind('items')                → local state  (bare = shorthand for state.*)
+ *     bind('state.items')          → local state, explicit
+ *     bind('global.things')        → the shared global store
+ *     bind('stores.shop.items')    → the named store `shop` from `static stores`
+ *
+ * A DOTTED key must name its channel — any other first segment throws. This is
+ * deliberate enforcement, not convenience: the channel vocabulary is FIXED
+ * (state / global / stores), so a state key can never alias a store name (the
+ * D/E misroute class), and every deep path reads exactly like the property
+ * chain it binds. Bare keys keep the local shorthand, so a top-level local key
+ * literally named `global` or `stores` stays local.
+ * @param {string} rawKey - The authored binding key.
+ * @returns {{global: boolean, storeName: string|null, key: string}} The carried channel + bare path.
+ */
+function parseBindingChannel(rawKey) {
+	const key = rawKey.startsWith('this.') ? rawKey.slice(5) : rawKey;
+	const dotIndex = key.indexOf('.');
+	if (dotIndex === -1) {
+		return {
+			global: false,
+			storeName: null,
+			key,
+		};
+	}
+	const channel = key.slice(0, dotIndex);
+	const rest = key.slice(dotIndex + 1);
+	if (channel === 'state') {
+		return {
+			global: false,
+			storeName: null,
+			key: rest,
+		};
+	}
+	if (channel === 'global') {
+		return {
+			global: true,
+			storeName: null,
+			key: rest,
+		};
+	}
+	if (channel === 'stores') {
+		const nameEnd = rest.indexOf('.');
+		if (nameEnd === -1) {
+			throw new Error(`bind/list key "${rawKey}": bind a path WITHIN the store — stores.${rest}.<path>.`);
+		}
+		return {
+			global: false,
+			storeName: rest.slice(0, nameEnd),
+			key: rest.slice(nameEnd + 1),
+		};
+	}
+	throw new Error(`bind/list key "${rawKey}": a dotted key must name its channel — state.<path>, global.<path>, or stores.<name>.<path>. Bare keys (no dot) are the state shorthand.`);
+}
 export class Binding {
 	constructor(key, value, kind = null) {
 		/*
-		 * Scope is resolved ONCE here, at the authoring boundary: a `global.`
-		 * prefix targets the shared global store, everything else is local. The
-		 * flag is carried alongside a BARE path so no downstream code re-parses a
-		 * string to pick a realm (and a local key literally named `global` can
-		 * never alias the global store).
+		 * Channel is resolved ONCE here (see parseBindingChannel) and carried as
+		 * data — a `global` flag, an optional `storeName`, and a BARE path — so
+		 * no downstream code re-parses a string to pick a realm.
 		 */
-		if (key.startsWith('global.')) {
-			this.global = true;
-			this.key = key.slice(7);
-		} else {
-			this.global = false;
-			this.key = key;
-		}
+		const channel = parseBindingChannel(key);
+		this.global = channel.global;
+		this.storeName = channel.storeName;
+		this.key = channel.key;
 		this.value = value;
 		/*
 		 * Declared CONTENT_KIND from a typed bind — null means auto-classify
@@ -334,13 +387,15 @@ export function makeStoreProxy(store) {
 }
 /**
  * One-way reactive reference to a state path — a surgical binding spot that
- * patches in place without re-running render(). `bind('a.b')` auto-classifies
+ * patches in place without re-running render(). The key names its channel per
+ * `parseBindingChannel`: `bind('items')` (local shorthand), `bind('state.a.b')`,
+ * `bind('global.x')`, `bind('stores.shop.items')`. The binding auto-classifies
  * its content kind (or reads it from the component's `static properties`); the
  * typed variants (`bind.text` / `bind.html` / `bind.component` / `bind.list`)
  * DECLARE the kind so the engine skips classification. Each variant also
  * accepts a function → a computed spot carrying the kind. Exposed on every
  * component as `this.bind` — no import needed.
- * @param {string} stateKey - The state path to bind.
+ * @param {string} stateKey - The channel-prefixed (or bare local) path to bind.
  * @param {*} [currentValue] - Optional captured current value.
  * @returns {Binding} The binding descriptor the template engine consumes.
  * @example
