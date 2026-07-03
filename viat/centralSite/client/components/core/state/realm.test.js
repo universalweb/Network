@@ -270,3 +270,95 @@ test('I: ${bind("msg")} beside static text uses the anchored path and reacts', a
 	await el.nextFrame();
 	assert.match(div.textContent, /prefix\s*bye/, 'anchored bind spot reacts to state change');
 });
+/* ── Group J: a component reading `this.global.<key>` must re-render after
+ *   globalState.replaceState — the store-reset path (StoreBus.onFlush is a no-op;
+ *   the render is driven by drainGlobalRenders in masterFlush, a DIFFERENT path
+ *   than component-state flushes). Appended last: replaceState replaces the WHOLE
+ *   global store, so it must not run before other global-key tests. ─────────── */
+test('J: this.global.<key> re-renders after globalState.replaceState (store reset via drainGlobalRenders)', async () => {
+	const key = `probeReset${probeSeq}`;
+	globalState.set({
+		[key]: 'first',
+	});
+	const tag = defineComponent({}, (component) => {
+		component.html `<span>${component.global[key]}</span>`;
+	});
+	const element = await mount(tag);
+	const span = root(element).querySelector('span');
+	assert.equal(span.textContent, 'first', 'global → DOM (initial)');
+	globalState.replaceState({
+		[key]: 'second',
+	});
+	await element.nextFrame();
+	assert.equal(span.textContent, 'second', 'component re-rendered against the replaced store');
+});
+/* ── Group K: CHANNEL-ENFORCED keys — the key's first segment names its channel
+ *   (state. / global. / stores.<name>.), bare keys stay the local shorthand,
+ *   an optional leading `this.` is stripped, and any OTHER dotted first segment
+ *   throws at authoring time (parseBindingChannel). ───────────────────────── */
+test('K1: ${bind("state.msg")} — explicit local channel renders and reacts', async () => {
+	const tag = defineComponent({
+		msg: 'hi',
+	}, (component) => {
+		component.html `<div>${bind('state.msg')}</div>`;
+	});
+	const el = await mount(tag);
+	const div = root(el).querySelector('div');
+	assert.equal(div.textContent, 'hi', 'explicit state. channel resolves local');
+	el.state.msg = 'bye';
+	await el.nextFrame();
+	assert.equal(div.textContent, 'bye', 'explicit state. bind reacts');
+});
+test('K2: list("state.items") — explicit local channel renders rows and reacts', async () => {
+	const tag = defineComponent({
+		items: [
+			{
+				id: 1,
+			},
+		],
+	}, (component) => {
+		component.html `<ul>${list('state.items', 'div', rowId)}</ul>`;
+	});
+	const el = await mount(tag);
+	const ul = root(el).querySelector('ul');
+	assert.equal(ul.querySelectorAll('div').length, 1, 'explicit state. list renders LOCAL rows');
+	el.state.items = [
+		{
+			id: 1,
+		},
+		{
+			id: 2,
+		},
+	];
+	await el.nextFrame();
+	assert.equal(ul.querySelectorAll('div').length, 2, 'explicit state. list reacts to mutation');
+});
+test('K3: a leading `this.` is stripped — bind("this.state.msg") mirrors the property access', async () => {
+	const tag = defineComponent({
+		msg: 'mirror',
+	}, (component) => {
+		component.html `<div>${bind('this.state.msg')}</div>`;
+	});
+	const el = await mount(tag);
+	assert.equal(root(el).querySelector('div').textContent, 'mirror', 'this.-prefixed key resolves identically');
+});
+test('K4: a dotted key with an unknown channel throws at authoring time', () => {
+	assert.throws(() => {
+		return bind('user.name');
+	}, /must name its channel/, 'deep local paths must be written state.user.name');
+	assert.throws(() => {
+		return list('config.rows', 'div', rowId);
+	}, /must name its channel/, 'list enforces the same channel vocabulary');
+});
+test('K5: a bare key literally named `global` stays LOCAL (the shorthand guards the E invariant)', async () => {
+	globalState.set({
+		global: 'GLOBAL-WRONG',
+	});
+	const tag = defineComponent({
+		global: 'local-bare',
+	}, (component) => {
+		component.html `<div>${bind('global')}</div>`;
+	});
+	const el = await mount(tag);
+	assert.equal(root(el).querySelector('div').textContent, 'local-bare', 'no dot → local shorthand, never the global store');
+});
