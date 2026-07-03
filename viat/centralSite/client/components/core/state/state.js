@@ -526,7 +526,30 @@ export function replaceState(state = {}) {
 	 * components).
 	 * TODO: Consider a diff check instead of blind notify-all, but that has to be balanced against the cost of the diff itself and the fact that many updates are full replacements where every path changes.
 	 */
-	this.stateBus?.notifyAll();
+	/*
+	 * Notify-ONLY when a reactive bus exists (mirrors assignState) — the flush's
+	 * `onFlush → updateView` renders AND fires `onStateChange` exactly once.
+	 * `flush()` calls `onFlush()` UNCONDITIONALLY (after its `if (this.subs.size)`
+	 * block), so even a bus with zero live subscriptions still drives that one
+	 * updateView — that is what guarantees onStateChange fires once, not zero
+	 * (do NOT move onFlush inside the subs guard). The old shape ALSO called
+	 * updateView() here, double-invoking both: the immediate call renders nothing
+	 * (notifyAll only SCHEDULES the flush, so templateBuilt is still true), it
+	 * merely re-fired onStateChange. Two intentional shifts fall out: onStateChange
+	 * is now async on the `.state=` path (patch already is — they now match), and
+	 * N replaceState calls in one tick coalesce to a SINGLE onStateChange
+	 * (notifyAll early-returns on pendingAll). The flush microtask is queued
+	 * above, so an awaiting caller still resumes after the reflected view.
+	 */
+	if (this.stateBus) {
+		this.stateBus.notifyAll();
+		return Promise.resolve();
+	}
+	/*
+	 * No reactive bus (render never read state, no observers) — nothing will
+	 * flush, so drive the single updateView directly; it fires onStateChange
+	 * once and renders. Rare: most components create a bus on first state use.
+	 */
 	return this.updateView();
 }
 /**
