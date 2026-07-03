@@ -65,19 +65,25 @@ function sanitize(value, depth) {
 	}
 	return `[${valueType}]`;
 }
-function describeTools(component) {
+export function describeTool(def, toolName) {
+	return {
+		name: toolName,
+		description: def.description ?? '',
+		inputSchema: def.inputSchema ?? {
+			type: 'object',
+		},
+		mutating: def.mutating === true,
+	};
+}
+export function describeTools(component) {
 	const tools = getTools(component);
 	const out = [];
-	tools.forEach((def, toolName) => {
-		out.push({
-			name: toolName,
-			description: def.description ?? '',
-			inputSchema: def.inputSchema ?? {
-				type: 'object',
-			},
-			mutating: def.mutating === true,
-		});
-	});
+	for (const [
+		toolName,
+		def,
+	] of tools) {
+		out.push(describeTool(def, toolName));
+	}
 	return out;
 }
 function describeBounds(component) {

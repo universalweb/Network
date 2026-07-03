@@ -1,6 +1,8 @@
 import { isFunction, isString } from '../utilities.js';
 import {
 	describeComponent,
+	describeTool,
+	describeTools,
 	queryByLabel,
 	queryByTag,
 	resolveByIdOrPath,
@@ -125,38 +127,25 @@ handlers.set('ai.queryState', (params) => {
 });
 handlers.set('ai.listTools', (params) => {
 	if (params?.id || params?.path) {
-		const component = findFromParams(params);
-		const list = [];
-		getTools(component).forEach((def, toolName) => {
-			list.push({
-				name: toolName,
-				description: def.description ?? '',
-				inputSchema: def.inputSchema ?? {
-					type: 'object',
-				},
-				mutating: def.mutating === true,
-			});
-		});
-		return list;
+		return describeTools(findFromParams(params));
 	}
 	const seen = new Set();
 	const list = [];
-	listComponents().forEach(({ component }) => {
-		getTools(component).forEach((def, toolName) => {
+	const components = listComponents();
+	const componentsLength = components.length;
+	for (let index = 0; index < componentsLength; index++) {
+		const component = components[index].component;
+		for (const [
+			toolName,
+			def,
+		] of getTools(component)) {
 			if (seen.has(toolName)) {
-				return;
+				continue;
 			}
 			seen.add(toolName);
-			list.push({
-				name: toolName,
-				description: def.description ?? '',
-				inputSchema: def.inputSchema ?? {
-					type: 'object',
-				},
-				mutating: def.mutating === true,
-			});
-		});
-	});
+			list.push(describeTool(def, toolName));
+		}
+	}
 	return list;
 });
 handlers.set('ai.callTool', async (params, ctx) => {

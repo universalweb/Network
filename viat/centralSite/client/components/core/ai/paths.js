@@ -148,13 +148,13 @@ function buildOverviewNode(component, depth, opts) {
 	}
 	const out = {};
 	const nameByComponent = getIndex().nameByComponent;
-	kids.forEach((child) => {
+	for (const child of kids) {
 		const segment = nameByComponent.get(child);
 		if (!segment) {
-			return;
+			continue;
 		}
 		out[segment] = buildOverviewNode(child, depth - 1, opts);
-	});
+	}
 	node.children = out;
 	return node;
 }
@@ -168,13 +168,16 @@ export function pageOverview(opts = {}) {
 		};
 	}
 	const out = {};
-	getRoots().forEach((root) => {
+	const roots = getRoots();
+	const rootsLength = roots.length;
+	for (let index = 0; index < rootsLength; index++) {
+		const root = roots[index];
 		const segment = nameByComponent.get(root);
 		if (!segment) {
-			return;
+			continue;
 		}
 		out[segment] = buildOverviewNode(root, depth - 1, opts);
-	});
+	}
 	return out;
 }
 export function peek(path, opts = {}) {
