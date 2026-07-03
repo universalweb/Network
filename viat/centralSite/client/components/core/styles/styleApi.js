@@ -36,9 +36,12 @@ function reLayer(sheet) {
 }
 export function styleSheet(source, metaUrl) {
 	if (isArray(source)) {
-		return Promise.all(source.map((sourceItem) => {
-			return styleSheet(sourceItem, metaUrl);
-		}));
+		const sheetTasks = [];
+		const sourceLength = source.length;
+		for (let sourceIndex = 0; sourceIndex < sourceLength; sourceIndex++) {
+			sheetTasks.push(styleSheet(source[sourceIndex], metaUrl));
+		}
+		return Promise.all(sheetTasks);
 	}
 	const key = metaUrl ? new URL(source, metaUrl).toString() : source;
 	if (sheetCache.has(key)) {
@@ -54,24 +57,37 @@ export function styleSheet(source, metaUrl) {
 	sheetCache.set(key, sheet);
 	return sheet;
 }
+/*
+ * Load one styles entry into its pre-inserted slot. A named async helper so the
+ * per-entry loads still run CONCURRENTLY (each call is pushed unawaited into
+ * `tasks`; compileStyles gathers them with one Promise.all) — awaiting inline
+ * in the entry loop would serialize every sheet fetch.
+ */
+async function fillSheetSlot(slot, value, owner) {
+	const sheet = await styleSheet(value, owner.url);
+	slot.sheet = sheetIsFrameworkOwned(owner) ? sheet : reLayer(sheet);
+}
 export async function compileStyles(ComponentClass) {
 	const merged = mergeStyleEntries(ComponentClass);
 	const ordered = [];
 	const tasks = [];
-	merged.forEach((entry, key) => {
+	for (const [
+		key,
+		entry,
+	] of merged) {
 		const {
 			owner,
 			value,
 		} = entry;
 		if (value === null || value === undefined) {
-			return;
+			continue;
 		}
 		if (isCSSStyleSheet(value)) {
 			ordered.push({
 				key,
 				sheet: value,
 			});
-			return;
+			continue;
 		}
 		if (!hasOwn(owner, 'url')) {
 			throw new TypeError(`${owner.name}.styles.${key}: relative path "${value}" requires \`static url = import.meta.url\` on ${owner.name}.`);
@@ -81,29 +97,35 @@ export async function compileStyles(ComponentClass) {
 			sheet: null,
 		};
 		ordered.push(slot);
-		tasks.push(styleSheet(value, owner.url).then((sheet) => {
-			slot.sheet = sheetIsFrameworkOwned(owner) ? sheet : reLayer(sheet);
-		}));
-	});
+		tasks.push(fillSheetSlot(slot, value, owner));
+	}
 	await Promise.all(tasks);
 	const map = new Map();
-	eachArray(ordered, (slot) => {
-		map.set(slot.key, slot.sheet);
-	});
+	const orderedLength = ordered.length;
+	for (let slotIndex = 0; slotIndex < orderedLength; slotIndex++) {
+		map.set(ordered[slotIndex].key, ordered[slotIndex].sheet);
+	}
 	return {
 		map,
 		array: Object.freeze([...map.values()]),
 	};
 }
+/*
+ * Compile + stamp the class-level caches. The returned promise IS the memo
+ * (ensureCompiledStyles stores it as `compiledStylesPromise`), so the sync
+ * fields land exactly when it settles — same contract as the old .then chain.
+ */
+async function compileAndCacheStyles(ComponentClass) {
+	const result = await compileStyles(ComponentClass);
+	ComponentClass.compiledStyles = result.map;
+	ComponentClass.compiledStylesArray = result.array;
+	return result;
+}
 export function ensureCompiledStyles(ComponentClass) {
 	if (hasOwn(ComponentClass, 'compiledStylesPromise')) {
 		return ComponentClass.compiledStylesPromise;
 	}
-	const promise = compileStyles(ComponentClass).then((result) => {
-		ComponentClass.compiledStyles = result.map;
-		ComponentClass.compiledStylesArray = result.array;
-		return result;
-	});
+	const promise = compileAndCacheStyles(ComponentClass);
 	Object.defineProperty(ComponentClass, 'compiledStylesPromise', {
 		value: promise,
 		configurable: true,

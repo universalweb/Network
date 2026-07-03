@@ -733,7 +733,10 @@ Object.defineProperties(WebComponent.prototype, phaseGetters);
 /*
  * `.importStyles=${sheet}` (or `element.importStyles = sheet`) — a write-only accessor
  * so a parent can push styles through a child's shadow boundary declaratively.
+ * Write-only is the contract: it is a push channel into adoptedStyleSheets, and a
+ * getter would imply a readable "current value" that does not exist.
  */
+// eslint-disable-next-line accessor-pairs
 Object.defineProperty(WebComponent.prototype, 'importStyles', {
 	set: importStyles,
 	configurable: true,

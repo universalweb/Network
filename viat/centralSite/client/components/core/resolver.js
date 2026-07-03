@@ -34,6 +34,24 @@ export function resolveTagUrl(tag) {
 	return `${base}/${segments.join('/')}/${segments[segments.length - 1]}.js`;
 }
 /**
+ * One tag's import task. On success the returned promise settles when the tag
+ * is DEFINED (whenDefined), on failure it resolves undefined after recording
+ * the tag as failed — a load error is an expected outcome here (bad path,
+ * offline), reported once and remembered so the resolver never re-fetches it.
+ */
+async function importTag(tag, url) {
+	try {
+		await import(url);
+	} catch (error) {
+		inFlight.delete(tag);
+		failed.add(tag);
+		console.error(`[resolver] failed to load <${tag}> from ${url}`, error);
+		return undefined;
+	}
+	inFlight.delete(tag);
+	return customElements.whenDefined(tag);
+}
+/**
  * Imports the module for one tag. Returns a Promise that settles when the tag
  * is defined, or null when there's nothing to do (already defined / unknown
  * root / known-failed). Concurrent and repeat calls share one in-flight task.
@@ -53,14 +71,7 @@ export function resolveTag(tag) {
 	if (!url) {
 		return null;
 	}
-	const task = import(url).then(() => {
-		inFlight.delete(tag);
-		return customElements.whenDefined(tag);
-	}, (error) => {
-		inFlight.delete(tag);
-		failed.add(tag);
-		console.error(`[resolver] failed to load <${tag}> from ${url}`, error);
-	});
+	const task = importTag(tag, url);
 	inFlight.set(tag, task);
 	return task;
 }

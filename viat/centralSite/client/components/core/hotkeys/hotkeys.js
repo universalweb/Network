@@ -108,13 +108,12 @@ function physicalId(keyEvent, glyph) {
  * would double-count and never match a `~` registration.
  */
 function shiftIsMeaningful() {
-	let meaningful = false;
-	heldKeys.forEach((glyph) => {
+	for (const glyph of heldKeys) {
 		if (glyph.length > 1 || (glyph >= 'a' && glyph <= 'z')) {
-			meaningful = true;
+			return true;
 		}
-	});
-	return meaningful;
+	}
+	return false;
 }
 function comboFromEvent(keyEvent) {
 	const parts = [];
@@ -130,11 +129,11 @@ function comboFromEvent(keyEvent) {
 	if (keyEvent.shiftKey && shiftIsMeaningful()) {
 		parts.push('shift');
 	}
-	heldKeys.forEach((glyph) => {
+	for (const glyph of heldKeys) {
 		if (parts.indexOf(glyph) === -1) {
 			parts.push(glyph);
 		}
-	});
+	}
 	parts.sort();
 	return parts.join('+');
 }
@@ -243,29 +242,33 @@ function dispatch(canonical, keyEvent) {
 	const isRepeat = keyEvent.repeat === true;
 	let handlerRan = false;
 	let blockDefault = false;
-	bucket.forEach((entry) => {
+	/*
+	 * Deleting a dead entry mid-iteration is safe: Set iteration order is
+	 * insertion order and a removed member is simply not revisited.
+	 */
+	for (const entry of bucket) {
 		const target = entry.targetRef.deref();
 		if (!target) {
 			bucket.delete(entry);
 			finalizationRegistry.unregister(entry);
-			return;
+			continue;
 		}
 		if (target.isConnected === false) {
-			return;
+			continue;
 		}
 		const options = entry.options;
 		if (isRepeat && !options.allowRepeat) {
-			return;
+			continue;
 		}
 		if (bareWhileTyping && !options.whileTyping) {
-			return;
+			continue;
 		}
 		handlerRan = true;
 		if (options.preventDefault !== false) {
 			blockDefault = true;
 		}
 		invokeHandler(entry, target, keyEvent, canonical);
-	});
+	}
 	if (bucket.size === 0) {
 		registry.delete(canonical);
 		if (registry.size === 0) {
@@ -362,12 +365,11 @@ export function hotKeyListeners(combo) {
 	if (!bucket) {
 		return others;
 	}
-	const component = this;
-	bucket.forEach((entry) => {
+	for (const entry of bucket) {
 		const target = entry.targetRef.deref();
-		if (target && target !== component && others.indexOf(target) === -1) {
+		if (target && target !== this && others.indexOf(target) === -1) {
 			others.push(target);
 		}
-	});
+	}
 	return others;
 }

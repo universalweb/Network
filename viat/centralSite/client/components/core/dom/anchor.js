@@ -30,6 +30,27 @@ function clamp(value, min, max) {
 	}
 	return Math.min(Math.max(value, min), max);
 }
+/*
+ * Whether the floating box fits on `candidate` side of the anchor within the
+ * padded viewport. First-class module function (not a per-call closure) — the
+ * geometry rides in as arguments, so computeAnchor allocates nothing to ask
+ * the flip question twice.
+ */
+function fitsOn(candidate, anchor, floating, offset, padding, viewportWidth, viewportHeight) {
+	if (candidate === 'bottom') {
+		return anchor.bottom + offset + floating.height <= viewportHeight - padding;
+	}
+	if (candidate === 'top') {
+		return anchor.top - offset - floating.height >= padding;
+	}
+	if (candidate === 'right') {
+		return anchor.right + offset + floating.width <= viewportWidth - padding;
+	}
+	if (candidate === 'left') {
+		return anchor.left - offset - floating.width >= padding;
+	}
+	return true;
+}
 /**
  * @param {{top:number,left:number,bottom:number,right:number,width:number,height:number}} anchor
  * The anchor's viewport rect (e.g. trigger.getBoundingClientRect()).
@@ -52,24 +73,12 @@ export function computeAnchor(anchor, floating, options = {}) {
 	const parts = String(options.placement ?? 'bottom-start').split('-');
 	let side = parts[0];
 	const align = parts[1] ?? 'start';
-	const fitsOn = (candidate) => {
-		if (candidate === 'bottom') {
-			return anchor.bottom + offset + floating.height <= viewportHeight - padding;
-		}
-		if (candidate === 'top') {
-			return anchor.top - offset - floating.height >= padding;
-		}
-		if (candidate === 'right') {
-			return anchor.right + offset + floating.width <= viewportWidth - padding;
-		}
-		if (candidate === 'left') {
-			return anchor.left - offset - floating.width >= padding;
-		}
-		return true;
-	};
 	// Flip ONLY when the request overflows and the opposite genuinely fits.
-	if ((options.flip ?? true) && !fitsOn(side) && fitsOn(OPPOSITE[side])) {
-		side = OPPOSITE[side];
+	if (options.flip ?? true) {
+		const requestedFits = fitsOn(side, anchor, floating, offset, padding, viewportWidth, viewportHeight);
+		if (!requestedFits && fitsOn(OPPOSITE[side], anchor, floating, offset, padding, viewportWidth, viewportHeight)) {
+			side = OPPOSITE[side];
+		}
 	}
 	const vertical = side === 'top' || side === 'bottom';
 	let topPosition;

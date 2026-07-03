@@ -91,6 +91,25 @@ function scheduleShow() {
 	}
 	scheduledShowFrame = requestAnimationFrame(processScheduledShow);
 }
+/*
+ * A tooltip-element load failure is non-fatal by contract (the page just has
+ * no tooltips); the pending show/hide simply drops. Resolving null instead of
+ * rethrowing keeps the fire-and-forget helpers below rejection-free.
+ */
+function swallowTooltipLoadFailure() {
+	return null;
+}
+async function hideWhenReady(ready) {
+	const tip = await ready.catch(swallowTooltipLoadFailure);
+	tip?.hide();
+}
+async function showWhenReady(ready, element, text) {
+	const tip = await ready.catch(swallowTooltipLoadFailure);
+	tip?.show({
+		text,
+		targetRect: element.getBoundingClientRect(),
+	});
+}
 function hide() {
 	if (scheduledShowFrame) {
 		cancelAnimationFrame(scheduledShowFrame);
@@ -100,9 +119,7 @@ function hide() {
 	if (!tooltipReady) {
 		return;
 	}
-	tooltipReady.then((tip) => {
-		tip.hide();
-	}).catch(() => {});
+	hideWhenReady(tooltipReady);
 }
 /**
  * — Value registry API — used by `behaviors/tooltip.js` (install + applyValue).
@@ -123,12 +140,7 @@ export function setTooltipText(element, value) {
 	 */
 	if (tooltipReady && currentActiveTarget() === element) {
 		if (text) {
-			tooltipReady.then((tip) => {
-				tip.show({
-					text,
-					targetRect: element.getBoundingClientRect(),
-				});
-			}).catch(() => {});
+			showWhenReady(tooltipReady, element, text);
 		} else {
 			hide();
 		}

@@ -1,25 +1,26 @@
-export function setInert(shouldBeInert) {
+function isFiniteAnimation(animation) {
+	return animation.effect?.getTiming?.()?.iterations !== Infinity;
+}
+function animationFinished(animation) {
+	return animation.finished;
+}
+export async function setInert(shouldBeInert) {
 	this.inertSequence += 1;
 	const token = this.inertSequence;
 	if (!shouldBeInert) {
 		this.toggleAttribute('inert', false);
-		return Promise.resolve();
+		return;
 	}
 	const animations = this.getAnimations({
 		subtree: true,
 	});
-	const finite = animations.filter((animation) => {
-		return animation.effect?.getTiming?.()?.iterations !== Infinity;
-	});
+	const finite = animations.filter(isFiniteAnimation);
 	if (!finite.length) {
 		this.toggleAttribute('inert', true);
-		return Promise.resolve();
+		return;
 	}
-	return Promise.allSettled(finite.map((animation) => {
-		return animation.finished;
-	})).then(() => {
-		if (this.inertSequence === token && this.isConnected) {
-			this.toggleAttribute('inert', true);
-		}
-	});
+	await Promise.allSettled(finite.map(animationFinished));
+	if (this.inertSequence === token && this.isConnected) {
+		this.toggleAttribute('inert', true);
+	}
 }

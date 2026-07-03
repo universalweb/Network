@@ -127,10 +127,18 @@ export class UITooltip extends WebComponent {
 		if (textChanged) {
 			const token = ++this.slideToken;
 			this.setTimeout(() => {
-				if (this.slideToken === token && this.state.sliding !== false) {
-					this.state.sliding = false;
-				}
+				this.onSlideEnd(token);
 			}, SLIDE_MS);
+		}
+	}
+	/*
+	 * Slide settle — token-guarded so a newer show() supersedes a stale timer.
+	 * Named method with a thin timer forward (deferred host callbacks lose
+	 * `this`; the logic lives here, not in the arrow).
+	 */
+	onSlideEnd(token) {
+		if (this.slideToken === token && this.state.sliding !== false) {
+			this.state.sliding = false;
 		}
 	}
 	hide() {

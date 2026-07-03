@@ -64,9 +64,22 @@ function ensureLayer() {
 	highlightLayer = layer;
 	return layer;
 }
+function noopDispose() {}
+function removeHighlightBox(box) {
+	box.remove();
+}
+/*
+ * Fade-then-remove, driven entirely through setTimeout's extra-args form —
+ * first-class module functions with the box passed as the timer argument, so
+ * the fade chain allocates no closures.
+ */
+function fadeHighlightBox(box) {
+	box.style.opacity = '0';
+	setTimeout(removeHighlightBox, 200, box);
+}
 export function highlight(component, opts = {}) {
 	if (!component?.isConnected) {
-		return () => {};
+		return noopDispose;
 	}
 	const duration = opts.duration ?? 1200;
 	const color = opts.color ?? '#22d3ee';
@@ -75,16 +88,12 @@ export function highlight(component, opts = {}) {
 	const box = document.createElement('div');
 	box.style.cssText = `position:absolute;left:${rect.x}px;top:${rect.y}px;width:${rect.width}px;height:${rect.height}px;border:2px solid ${color};border-radius:6px;box-shadow:0 0 0 2px ${color}40;transition:opacity 200ms;`;
 	layer.appendChild(box);
-	const remove = () => {
-		box.remove();
-	};
 	if (duration > 0) {
-		setTimeout(() => {
-			box.style.opacity = '0';
-			setTimeout(remove, 200);
-		}, duration);
+		setTimeout(fadeHighlightBox, duration, box);
 	}
-	return remove;
+	return function removeHighlight() {
+		removeHighlightBox(box);
+	};
 }
 export function clearHighlights() {
 	if (highlightLayer) {

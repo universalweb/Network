@@ -23,6 +23,21 @@ export function handleObserverCallback(entry) {
 		this.onVisible?.();
 	}
 }
+/*
+ * The shared observer's dispatch — a first-class module function (the observer
+ * invokes it with no useful `this`); each entry routes to its component via
+ * the element registry.
+ */
+function dispatchIntersectionEntries(entries) {
+	const entriesLength = entries.length;
+	for (let index = 0; index < entriesLength; index++) {
+		const entry = entries[index];
+		const component = componentRegistry.get(entry.target);
+		if (component) {
+			handleObserverCallback.call(component, entry);
+		}
+	}
+}
 function ensureSharedObserver() {
 	if (sharedObserver) {
 		return sharedObserver;
@@ -30,16 +45,7 @@ function ensureSharedObserver() {
 	if (isTypeUndefined(typeof IntersectionObserver)) {
 		return null;
 	}
-	sharedObserver = new IntersectionObserver((entries) => {
-		const entriesLength = entries.length;
-		for (let index = 0; index < entriesLength; index++) {
-			const entry = entries[index];
-			const component = componentRegistry.get(entry.target);
-			if (component) {
-				handleObserverCallback.call(component, entry);
-			}
-		}
-	}, {
+	sharedObserver = new IntersectionObserver(dispatchIntersectionEntries, {
 		threshold: 0,
 	});
 	return sharedObserver;

@@ -21,9 +21,15 @@ const moduleFiles = {
  * instances, NOT promises — a promise would fall through to the string-path
  * branch and throw `requires static url` (WebComponent has no static url).
  */
-const resolved = await Promise.all(Object.entries(moduleFiles).map((pair) => {
-	return loadSheet(new URL(`./modules/${pair[1]}`, import.meta.url)).then((sheet) => {
-		return [pair[0], sheet];
-	});
-}));
+async function resolveModuleSheet([
+	key,
+	file,
+]) {
+	const sheet = await loadSheet(new URL(`./modules/${file}`, import.meta.url));
+	return [
+		key,
+		sheet,
+	];
+}
+const resolved = await Promise.all(Object.entries(moduleFiles).map(resolveModuleSheet));
 export const uwcBase = Object.fromEntries(resolved);

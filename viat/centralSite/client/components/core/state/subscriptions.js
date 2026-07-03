@@ -76,7 +76,8 @@ export function observeAsync(keys, callback, options) {
 	for (let keyIndex = 0; keyIndex < keyListLength; keyIndex++) {
 		subscriptions[keyIndex] = observeAsyncKey(this, keyList[keyIndex], callback, options);
 	}
-	return trackUnsubs(this.stateUnsubs ??= new ComponentSubscriptionTracker(), subscriptions);
+	this.stateUnsubs ??= new ComponentSubscriptionTracker();
+	return trackUnsubs(this.stateUnsubs, subscriptions);
 }
 /**
  * Sync global-state observer. User callback fires WITHOUT a bound `this`
@@ -107,7 +108,8 @@ export function observeGlobal(keys, callback) {
 	for (let keyIndex = 0; keyIndex < keyListLength; keyIndex++) {
 		subscriptions[keyIndex] = observeGlobalKey(callback, keyList[keyIndex]);
 	}
-	return trackUnsubs(this.globalUnsubs ??= new ComponentSubscriptionTracker(), subscriptions);
+	this.globalUnsubs ??= new ComponentSubscriptionTracker();
+	return trackUnsubs(this.globalUnsubs, subscriptions);
 }
 /**
  * Tear down every globalState observer this component has on `key`. Same
