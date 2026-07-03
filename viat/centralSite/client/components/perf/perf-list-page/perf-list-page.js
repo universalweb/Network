@@ -190,7 +190,7 @@ const ARCHITECTURE_ROWS = [
 		cells: [
 			'2 · Reactive state',
 			'state/*',
-			'STATE Proxy + per-component PathSubscriptions bus + smartClone of static state',
+			'STATE Proxy + trie-indexed PathSubscriptions bus (notifyAll = O(subs) state-replacement primitive) + named stores (static stores → this.stores.*) + smartClone of static state',
 		],
 	},
 	{

@@ -2,6 +2,7 @@ import '../../global/ui-stat-table/ui-stat-table.js';
 import { Perf } from '../../core/debug/perf.js';
 import {
 	each, html, list,
+	Store,
 	WebComponent,
 } from '../../core/index.js';
 import { PerfListItem } from '../../perf/perf-list-item/perf-list-item.js';
@@ -77,6 +78,21 @@ function mutateEvery10th(context) {
 	}
 	return out;
 }
+/*
+ * Fresh full-size data where EVERY value differs from the pre-state — the
+ * replace op's payload. `replaceState` (component and Store alike) no-ops on
+ * `plainEqual` states, so an identical rebuild would measure nothing; shifting
+ * every value forces the full replacement path: STATE swap + notifyAll (one
+ * O(subs) dispatch) + every row patched.
+ */
+function shiftedItems(context) {
+	const out = buildItems(context.count);
+	const outLength = out.length;
+	for (let index = 0; index < outLength; index++) {
+		out[index].value += 1;
+	}
+	return out;
+}
 function swapRows(context) {
 	const out = context.preItems.slice();
 	if (out.length < 4) {
@@ -139,6 +155,13 @@ const SHOOTOUT_OPS = [
 		label: 'update all',
 		makePre: fullItems,
 		makeNext: fullItems,
+	},
+	{
+		id: 'replace',
+		label: 'replace st',
+		makePre: fullItems,
+		makeNext: shiftedItems,
+		useReplace: true,
 	},
 	{
 		id: 'update10th',
@@ -249,6 +272,28 @@ class UwcListShootoutList extends WebComponent {
 	}
 }
 customElements.define('uwc-list-shootout-list', UwcListShootoutList);
+// ── UWC STORE list() — a named shared Store (`static stores`) driving
+// `list('stores.bench.items')`. The ListSpot subscribes on the STORE bus (the
+// sharedBus realm — same drain as global), and writes go through `store.set` /
+// `store.replaceState` — racing the named-store path end-to-end against the
+// local-state strategies. One store, one column: no cross-column interference. ──
+const shootoutBenchStore = Store.create();
+shootoutBenchStore.set({
+	items: [],
+});
+class UwcStoreShootoutList extends WebComponent {
+	static url = import.meta.url;
+	static styles = {
+		row: SHOOTOUT_ROW_SHEET,
+	};
+	static stores = {
+		bench: shootoutBenchStore,
+	};
+	render() {
+		this.html `${list('stores.bench.items', perfLightRow, itemKey)}`;
+	}
+}
+customElements.define('uwc-store-shootout-list', UwcStoreShootoutList);
 // ── UWC arrow-each — `${() => each(…)}`. The arrow compiles to a ComputedSpot:
 // evaluated inside a tracking session (captures `items` as a dep), routed through
 // the LIST patcher, then subscribed DIRECTLY to that dep — render-less like list(),
@@ -389,6 +434,11 @@ class UwcAdapter {
 	setItems(items) {
 		this.root.state.items = items;
 	}
+	replaceItems(items) {
+		this.root.replaceState({
+			items,
+		});
+	}
 	rowCount() {
 		return this.root.shadowRoot ? this.root.shadowRoot.querySelectorAll('perf-list-item').length : 0;
 	}
@@ -515,6 +565,11 @@ class UwcVariantAdapter {
 	setItems(items) {
 		this.root.state.items = items;
 	}
+	replaceItems(items) {
+		this.root.replaceState({
+			items,
+		});
+	}
 	listRoot() {
 		return this.queryLight ? this.root : this.root.shadowRoot;
 	}
@@ -527,6 +582,24 @@ class UwcVariantAdapter {
 		await Promise.resolve();
 		await Promise.resolve();
 		await Promise.resolve();
+	}
+}
+/*
+ * Store-column adapter — identical drain/count surface to the variants, but
+ * writes land on the shared Store: `set` for ops, `replaceState` for the
+ * replace op (the Store's notifyAll replacement primitive). Lit/Vue have no
+ * replaceItems — BenchRun falls back to setItems, their idiom for replace.
+ */
+class UwcStoreAdapter extends UwcVariantAdapter {
+	setItems(items) {
+		shootoutBenchStore.set({
+			items,
+		});
+	}
+	replaceItems(items) {
+		shootoutBenchStore.replaceState({
+			items,
+		});
 	}
 }
 class LitAdapter {
@@ -612,6 +685,13 @@ const ADAPTER_SPECS = [
 		queryLight: false,
 	},
 	{
+		kind: 'store',
+		label: 'UWC store list()',
+		libTag: 'shared Store bus · render-less keyed',
+		tag: 'uwc-store-shootout-list',
+		queryLight: false,
+	},
+	{
 		kind: 'variant',
 		label: 'UWC arrow-each',
 		libTag: 'render-less computed () => each()',
@@ -651,6 +731,9 @@ function makeAdapter(spec, host) {
 	if (spec.kind === 'vue') {
 		return new VueAdapter(host);
 	}
+	if (spec.kind === 'store') {
+		return new UwcStoreAdapter(host, spec.label, spec.tag, spec.queryLight);
+	}
 	return new UwcVariantAdapter(host, spec.label, spec.tag, spec.queryLight);
 }
 // One bench scenario: establish `pre` (untimed setup), then time `next`. Held
@@ -681,10 +764,15 @@ class BenchRun {
 		}
 	}
 	async run() {
-		this.adapter.setItems(this.operation.makeNext({
+		const next = this.operation.makeNext({
 			count: this.count,
 			preItems: this.preItems,
-		}));
+		});
+		if (this.operation.useReplace && this.adapter.replaceItems) {
+			this.adapter.replaceItems(next);
+		} else {
+			this.adapter.setItems(next);
+		}
 		await this.adapter.applied();
 	}
 }
@@ -927,7 +1015,7 @@ export class FrameworkShootout extends WebComponent {
 	render() {
 		const resultTableState = {
 			title: 'Per-operation comparison — p50 latency (ms), fully applied',
-			hint: 'Each cell = median time for the operation to be FULLY APPLIED (framework + row-children DOM committed). create/append build rows; updateAll/upd-10th/precision/swap reuse keys (precision = a fixed scattered handful — the scalpel test); remove ½/clear shrink. ×ratio vs UWC. Same five-spot row across every column.',
+			hint: 'Each cell = median time for the operation to be FULLY APPLIED (framework + row-children DOM committed). create/append build rows; updateAll/upd-10th/precision/swap reuse keys (precision = a fixed scattered handful — the scalpel test); replace = full-state replacement, every value changed (UWC: replaceState/notifyAll; Lit/Vue: fresh-array assignment, their replace idiom); remove ½/clear shrink. ×ratio vs UWC. Same five-spot row across every column.',
 			columns: RESULT_COLUMNS,
 			rows: this.state.results,
 			emptyMessage: 'press "Bench all" to populate',
