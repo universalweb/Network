@@ -30,17 +30,23 @@
  * keyed `unobserve(key)` API to find every subscription on a given path
  * without holding the original handler reference.
  *
- * Overlap matching is index-driven, not scan-driven. The bus maintains a
- * segment trie mirroring the `subs` map (one terminal per live bucket),
- * updated ONLY when a bucket is created or deleted — the subscription
- * vocabulary boundary, not the per-subscribe hot path (dep re-syncs diff
- * against existing buckets, so steady-state subscribe/unsubscribe never
- * touches the index). `flush` walks the trie once per changed path
- * (ancestors along the spine, descendants below the endpoint) and then
- * dispatches in `subs` insertion order — O(changed·depth + matches + subs)
- * instead of the former O(subs × changed) pairwise scan, which went
- * quadratic when a state replacement notified every subscribed path.
- * `notifyAll()` skips matching entirely: one flag, one O(subs) pass.
+ * Overlap matching is index-driven, not scan-driven — but the segment trie is
+ * built LAZILY. Subscribe/unsubscribe only flip an `indexDirty` flag (O(1), no
+ * node allocation); the trie is (re)built from the live `subs` keys the first
+ * time a MULTI-PATH flush needs overlap matching AND the path vocabulary
+ * changed since the last build. This keeps a create-storm of buckets that
+ * never sees a multi-path flush entirely trie-free (eager per-subscribe
+ * indexing was the measured create/append tax), while repeated multi-path
+ * flushes with a stable vocabulary reuse the cached trie. Rebuilding from
+ * `subs` (the source of truth) rather than maintaining the trie incrementally
+ * means it can never drift out of bijection with the map. `collectOverlaps`
+ * walks the trie once per changed path (ancestors along the spine, descendants
+ * below the endpoint) and dispatches in `subs` insertion order —
+ * O(changed·depth + matches + subs) instead of the former O(subs × changed)
+ * pairwise scan, which went quadratic when a state replacement notified every
+ * subscribed path. The single-path flush (`dispatchSingle`, the dominant
+ * shape) and `notifyAll()` never consult the trie at all — a component that
+ * only ever sees one mutation per batch builds no index.
  */
 import { Perf } from '../debug/perf.js';
 import { drainGlobalRenders, drainSpots } from '../lifecycle/scheduler.js';
@@ -58,26 +64,47 @@ import {
 const SCHEDULED = new Set();
 let masterPending = false;
 /**
- * One node of a bus's segment-trie subscription index. The trie mirrors the
- * `subs` map exactly: a node carries a non-null `path` iff a live bucket for
- * that full path exists (the bijection is enforced by routing every bucket
- * create/delete through `bucketFor`/`dropBucket`). `subtreeTerminals` counts
- * live buckets at-or-below the node and drives physical retention — a node is
- * detached the moment its count reaches zero, so by induction every reachable
- * node has a terminal somewhere below it and the descendant walk never visits
- * dead branches.
+ * One node of a bus's segment-trie subscription index. A node carries a
+ * non-null `path` iff it terminates a live subscription bucket. The trie is
+ * rebuilt wholesale from the live `subs` keys (see `buildIndex`), so every
+ * terminal is by construction a live bucket and the descendant walk never
+ * visits a dead branch — no retention counter or parent back-pointer needed.
  */
 class PathIndexNode {
 	children = new Map();
 	path = null;
-	subtreeTerminals = 0;
-	constructor(parentNode, segment) {
-		this.parent = parentNode;
-		this.segment = segment;
+	static create() {
+		return new PathIndexNode();
 	}
-	static create(parentNode, segment) {
-		return new PathIndexNode(parentNode, segment);
+}
+/*
+ * Build a fresh segment trie from the live subscription paths. Called only by
+ * `ensureIndex`, only when a multi-path flush needs overlap matching and the
+ * vocabulary changed since the last build. The '' bucket is skipped exactly as
+ * the old incremental indexer did — an empty path has no dot boundary, so
+ * `collectOverlaps` matches it separately against `subs`.
+ */
+function buildIndex(subs) {
+	const indexRoot = PathIndexNode.create();
+	for (const path of subs.keys()) {
+		const parts = parsePath(path);
+		if (!parts) {
+			continue;
+		}
+		let node = indexRoot;
+		const partsLength = parts.length;
+		for (let partIndex = 0; partIndex < partsLength; partIndex++) {
+			const segment = parts[partIndex];
+			let child = node.children.get(segment);
+			if (!child) {
+				child = PathIndexNode.create();
+				node.children.set(segment, child);
+			}
+			node = child;
+		}
+		node.path = path;
 	}
+	return indexRoot;
 }
 function appendOverlap(overlapsByPath, subscriptionPath, changedPath) {
 	const list = overlapsByPath.get(subscriptionPath);
@@ -268,8 +295,13 @@ export class PathSubscriptions {
 	pending = new Set();
 	pendingAll = false;
 	flushScheduled = false;
-	indexRoot = PathIndexNode.create(null, '');
-	nodesByPath = new Map();
+	/*
+	 * Lazily-built overlap index. `indexRoot` stays null until the first
+	 * multi-path flush; `indexDirty` (starts true) flips whenever a bucket is
+	 * created or dropped so the next multi-path flush rebuilds from live subs.
+	 */
+	indexRoot = null;
+	indexDirty = true;
 	/**
 	 * Abstract — subclasses MUST override. Resolves the current value at a
 	 * given path against the bus's backing store; used by `flush` to hand
@@ -299,7 +331,7 @@ export class PathSubscriptions {
 		if (!bucket) {
 			bucket = new Set();
 			this.subs.set(path, bucket);
-			this.indexPath(path);
+			this.indexDirty = true;
 		}
 		return bucket;
 	}
@@ -315,49 +347,18 @@ export class PathSubscriptions {
 		if (!this.subs.delete(path)) {
 			return;
 		}
-		this.unindexPath(path);
+		this.indexDirty = true;
 	}
-	indexPath(path) {
-		const parts = parsePath(path);
-		if (!parts) {
-			/*
-			 * The '' bucket lives only in `subs` — an empty path overlaps
-			 * nothing but itself (no dot boundary exists against it), so
-			 * `collectOverlaps` special-cases it instead of the trie.
-			 */
-			return;
-		}
-		let node = this.indexRoot;
-		const partsLength = parts.length;
-		for (let partIndex = 0; partIndex < partsLength; partIndex++) {
-			const segment = parts[partIndex];
-			let child = node.children.get(segment);
-			if (!child) {
-				child = PathIndexNode.create(node, segment);
-				node.children.set(segment, child);
-			}
-			node = child;
-		}
-		node.path = path;
-		for (let spine = node; spine; spine = spine.parent) {
-			spine.subtreeTerminals += 1;
-		}
-		this.nodesByPath.set(path, node);
-	}
-	unindexPath(path) {
-		const node = this.nodesByPath.get(path);
-		if (!node) {
-			return;
-		}
-		this.nodesByPath.delete(path);
-		node.path = null;
-		for (let spine = node; spine; spine = spine.parent) {
-			spine.subtreeTerminals -= 1;
-		}
-		let candidate = node;
-		while (candidate.parent && candidate.subtreeTerminals === 0) {
-			candidate.parent.children.delete(candidate.segment);
-			candidate = candidate.parent;
+	/**
+	 * Rebuild the overlap trie from the live `subs` keys iff the vocabulary
+	 * changed since the last build. Called at the top of `collectOverlaps`
+	 * (multi-path flushes only) — single-path flushes and `notifyAll` never
+	 * reach it, so a bus that only sees those never allocates an index.
+	 */
+	ensureIndex() {
+		if (this.indexDirty) {
+			this.indexRoot = buildIndex(this.subs);
+			this.indexDirty = false;
 		}
 	}
 	notify(path) {
@@ -447,6 +448,7 @@ export class PathSubscriptions {
 	 * scan did, so the observable contract is unchanged.
 	 */
 	collectOverlaps(changed) {
+		this.ensureIndex();
 		const overlapsByPath = new Map();
 		const hasEmptyPathBucket = this.subs.has('');
 		const changedLength = changed.length;
