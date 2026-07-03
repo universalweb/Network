@@ -2,27 +2,28 @@ import { Perf } from '../debug/perf.js';
 import { isPromiseLike, queueAsyncError } from '../utilities.js';
 const usePostTask = typeof scheduler !== 'undefined' && typeof scheduler.postTask === 'function';
 let batch = null;
-let nextFrameQueue = [];
-let nextFrameScheduled = false;
-function runNextFrameQueue() {
-	const callbacks = nextFrameQueue;
-	nextFrameQueue = [];
-	nextFrameScheduled = false;
-	const callbacksLength = callbacks.length;
-	for (let index = 0; index < callbacksLength; index++) {
-		callbacks[index]();
-	}
+let nextFramePromise = null;
+let nextFrameResolve = null;
+function resolveNextFrame() {
+	const resolve = nextFrameResolve;
+	nextFramePromise = null;
+	nextFrameResolve = null;
+	resolve();
 }
-function captureNextFrameResolve(resolve) {
-	nextFrameQueue.push(resolve);
-}
+/*
+ * Every awaiter within one frame shares a SINGLE promise — one allocation per
+ * frame instead of one per caller, and no resolver queue. `.then` reactions
+ * fire in call order, matching the old per-caller queue. State resets BEFORE
+ * resolve() so a nextFrame() call from inside an awaiter books the NEXT frame.
+ */
 export function nextFrame() {
-	const promise = new Promise(captureNextFrameResolve);
-	if (!nextFrameScheduled) {
-		nextFrameScheduled = true;
-		requestAnimationFrame(runNextFrameQueue);
+	if (!nextFramePromise) {
+		const deferred = Promise.withResolvers();
+		nextFramePromise = deferred.promise;
+		nextFrameResolve = deferred.resolve;
+		requestAnimationFrame(resolveNextFrame);
 	}
-	return promise;
+	return nextFramePromise;
 }
 async function flush() {
 	const perfMark = Perf.mark('schedulerFlush');
@@ -32,24 +33,26 @@ async function flush() {
 		Perf.measure('schedulerFlush', perfMark);
 		return;
 	}
-	const pendingTasks = [];
+	let pendingTasks = null;
 	/** Iterate `Map<key, task>` entries; when `key !== task`, the key IS the
 	 * target object (a Spot, typically) and the task is dispatched via
 	 * `task.call(target)`. When `key === task`, no target was provided — plain
 	 * function call. This dedup-by-target shape lets a single prototype method
 	 * (e.g. `Spot.prototype.runTask`) serve as the task across many targets
-	 * without colliding in the batch map. */
-	const entries = [...currentBatch.tasks.entries()];
-	const entriesLength = entries.length;
-	for (let index = 0; index < entriesLength; index++) {
-		const key = entries[index][0];
-		const task = entries[index][1];
+	 * without colliding in the batch map. Iterated LIVE (no snapshot): `batch`
+	 * was nulled above, so a task that schedules new work writes to the NEXT
+	 * batch — this Map cannot mutate mid-loop. `pendingTasks` is lazy — the
+	 * all-sync flush (the common case) allocates nothing here. */
+	for (const [
+		key,
+		task,
+	] of currentBatch.tasks) {
 		const result = key === task ? task() : task.call(key);
 		if (isPromiseLike(result)) {
-			pendingTasks.push(result);
+			(pendingTasks ??= []).push(result);
 		}
 	}
-	if (pendingTasks.length) {
+	if (pendingTasks) {
 		const settledResults = await Promise.allSettled(pendingTasks);
 		const settledResultsLength = settledResults.length;
 		for (let index = 0; index < settledResultsLength; index++) {

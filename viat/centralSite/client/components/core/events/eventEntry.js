@@ -24,6 +24,18 @@ function queueEntryError(error, domEvent, component, eventName) {
 		});
 	});
 }
+/*
+ * Await-based settle instead of `.catch` — a bare thenable passes
+ * `isPromiseLike` with only `.then`; `await` normalizes it. Named module fn
+ * with context as args = no per-dispatch closure on the hottest event path.
+ */
+async function settleEntryResult(result, domEvent, component, eventName) {
+	try {
+		await result;
+	} catch (error) {
+		queueEntryError(error, domEvent, component, eventName);
+	}
+}
 export class EventEntry {
 	componentRef = null;
 	elementRef = null;
@@ -85,9 +97,7 @@ export class EventEntry {
 		const element = this.elementRef.deref() || domEvent.currentTarget;
 		const result = this.handler.call(component, domEvent, element, this.eventName);
 		if (isPromiseLike(result)) {
-			result.catch((error) => {
-				queueEntryError(error, domEvent, component, this.eventName);
-			});
+			settleEntryResult(result, domEvent, component, this.eventName);
 		}
 		return result;
 	}

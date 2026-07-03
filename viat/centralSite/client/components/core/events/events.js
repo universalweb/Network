@@ -56,15 +56,27 @@ export function handleEventError(error, domEvent, element, eventName) {
 		});
 	});
 }
+/*
+ * Await-based settle instead of `.catch` — a bare thenable passes
+ * `isPromiseLike` with only `.then`, so `.catch` is not guaranteed to exist;
+ * `await` normalizes any thenable. Named module fn with the context passed as
+ * args = no per-dispatch closure. Invoked UNAWAITED — a side-observer of the
+ * result the caller already holds.
+ */
+async function settleHandlerResult(component, result, domEvent, element, eventName) {
+	try {
+		await result;
+	} catch (error) {
+		component.handleEventError(error, domEvent, element, eventName);
+	}
+}
 export function runEventHandler(handlerFunction, domEvent, element, eventName = domEvent?.type) {
 	if (!isFunction(handlerFunction)) {
 		return undefined;
 	}
 	const result = handlerFunction.call(this, domEvent, element, eventName);
 	if (isPromiseLike(result)) {
-		result.catch((error) => {
-			return this.handleEventError(error, domEvent, element, eventName);
-		});
+		settleHandlerResult(this, result, domEvent, element, eventName);
 	}
 	return result;
 }

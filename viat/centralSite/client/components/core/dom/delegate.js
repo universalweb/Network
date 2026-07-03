@@ -211,6 +211,18 @@ function queueDelegateError(error, domEvent, owner, eventName) {
 		});
 	});
 }
+/*
+ * Await-based settle instead of `.catch` — a bare thenable passes
+ * `isPromiseLike` with only `.then`; `await` normalizes it. Named module fn
+ * with context as args = no per-dispatch closure.
+ */
+async function settleDelegateResult(result, domEvent, owner, eventName) {
+	try {
+		await result;
+	} catch (error) {
+		queueDelegateError(error, domEvent, owner, eventName);
+	}
+}
 export class DelegateEntry {
 	ownerRef = null;
 	kind = '';
@@ -262,9 +274,7 @@ export class DelegateEntry {
 		const thisArg = owner || matchTarget || null;
 		const result = this.handler.call(thisArg, domEvent, matchTarget || owner, this.eventName);
 		if (isPromiseLike(result)) {
-			result.catch((error) => {
-				queueDelegateError(error, domEvent, owner, this.eventName);
-			});
+			settleDelegateResult(result, domEvent, owner, this.eventName);
 		}
 	}
 	/**
