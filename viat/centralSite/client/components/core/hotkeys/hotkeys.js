@@ -108,7 +108,7 @@ function physicalId(keyEvent, glyph) {
  * would double-count and never match a `~` registration.
  */
 function shiftIsMeaningful() {
-	for (const glyph of heldKeys) {
+	for (const glyph of heldKeys.values()) {
 		if (glyph.length > 1 || (glyph >= 'a' && glyph <= 'z')) {
 			return true;
 		}
@@ -129,7 +129,7 @@ function comboFromEvent(keyEvent) {
 	if (keyEvent.shiftKey && shiftIsMeaningful()) {
 		parts.push('shift');
 	}
-	for (const glyph of heldKeys) {
+	for (const glyph of heldKeys.values()) {
 		if (parts.indexOf(glyph) === -1) {
 			parts.push(glyph);
 		}
