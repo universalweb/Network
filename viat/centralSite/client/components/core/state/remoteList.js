@@ -79,7 +79,7 @@ class RemoteListController {
 		this.prevElement = null;
 		this.nextElement = null;
 		this.abortController = null;
-		this.scrollReportUninstall = null;
+		this.scrollReportBehavior = null;
 		this.seenKeys = new Set();
 		this.autoFillCount = 0;
 		this.fillFrame = 0;
@@ -163,7 +163,10 @@ class RemoteListController {
 		if (config.scrollReport && this.scroller) {
 			const behavior = getBehavior('scroll-report');
 			if (behavior) {
-				this.scrollReportUninstall = behavior.install(this.scroller);
+				/* Singleton-behavior contract: hold the behavior, uninstall by
+				   handing the element back — no per-install closure to store. */
+				behavior.install(this.scroller);
+				this.scrollReportBehavior = behavior;
 			}
 		}
 	}
@@ -193,9 +196,9 @@ class RemoteListController {
 			this.nextElement.removeEventListener('click', this);
 			this.nextElement = null;
 		}
-		if (this.scrollReportUninstall) {
-			this.scrollReportUninstall();
-			this.scrollReportUninstall = null;
+		if (this.scrollReportBehavior) {
+			this.scrollReportBehavior.uninstall(this.scroller);
+			this.scrollReportBehavior = null;
 		}
 		this.scroller = null;
 		this.scrollTarget = null;

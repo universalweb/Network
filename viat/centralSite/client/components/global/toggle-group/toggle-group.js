@@ -5,13 +5,14 @@
 	selection only: it stamps `item.active` at EVENT/observe time (never a per-render
 	loop) and the deep flag write flows to the child through the list binding. Sizing
 	is group config → CSS custom properties on the container (no per-item copies).
-	Single mode tracks `value`; multi mode tracks `values[]`. Emits `toggle:change`.
+	Single mode tracks `value`; multi mode tracks `values[]`. Emits `toggle-group:change`.
 	── STANDARD INTERACTION ─────────────────────────────────────────────
-	  <ui-toggle-group .items=${[
+	  <ui-toggle-group .state.items=${[
 	    { value: '1h', label: '1H' }, { value: '24h', label: '24H' }, { value: '7d', label: '7D' },
-	  ]} .value=${'24h'}></ui-toggle-group>
-	  el.addEventListener('toggle:change', e => setRange(e.detail.data.value));
-	  Multi: .multiple=${true} .values=${['a','c']} → detail.data.values is the active set.
+	  ]} .state.value=${'24h'}></ui-toggle-group>
+	  A parent listens with a template event, never addEventListener:
+	  <ui-toggle-group … @toggle-group:change=${this.handleRange}></ui-toggle-group>   // e.detail.data.value
+	  Multi: .state.multiple=${true} .state.values=${['a','c']} → detail.data.values is the active set.
 	─────────────────────────────────────────────────────────────────────
 */
 import { list, WebComponent } from 'webcomponent';
@@ -83,7 +84,7 @@ export class UIToggleGroup extends WebComponent {
 		} else {
 			this.state.value = value;
 		}
-		this.emit('toggle:change', {
+		this.emit('toggle-group:change', {
 			value: this.state.multiple === true ? value : this.state.value,
 			values: this.state.multiple === true ? this.state.values : [this.state.value],
 		});
@@ -93,7 +94,7 @@ export class UIToggleGroup extends WebComponent {
 			<div
 				class="tg"
 				data-size=${SIZES.has(this.state.size) ? this.state.size : 'md'}
-				role="group" @toggle-select=${this.handleSelect}>
+				role="group" @toggle-group:select=${this.handleSelect}>
 				${list('items', UIToggleOption, this.optionKey)}
 			</div>
 		`;

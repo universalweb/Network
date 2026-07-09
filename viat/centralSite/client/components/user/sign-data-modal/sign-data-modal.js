@@ -75,13 +75,13 @@ export class SignDataModal extends WebComponent {
 			this.emit('notify', {
 				itemType: 'copy',
 				message: 'Signature copied to clipboard.',
-				title: 'Signature Copied',
+				heading: 'Signature Copied',
 			});
 		} catch (clipboardError) {
 			this.emit('notify', {
 				itemType: 'error',
 				message: 'Could not copy signature.',
-				title: 'Copy Failed',
+				heading: 'Copy Failed',
 			});
 		}
 	}

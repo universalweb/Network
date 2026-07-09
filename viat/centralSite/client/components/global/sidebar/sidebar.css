@@ -5,14 +5,21 @@
 	inset-block-end: 0;
 	pointer-events: none;
 	z-index: 30;
-	--shell-closed-x: 100%;
+	/* Gap between the drawer's outer (docked) edge and the window edge so it reads
+	   as a floating panel. It exceeds the shell scroll surface's reserved ~11px
+	   scrollbar gutter (app.css `.shell-scroll`) so the panel clears the scrollbar
+	   instead of sitting on it. Folded into `--shell-closed-x` (the hide distance)
+	   so translateX still carries the panel fully off-screen past the float gap —
+	   otherwise a float-wide sliver would peek while closed. */
+	--sidebar-float: var(--space-6);
+	--shell-closed-x: calc(100% + var(--sidebar-float));
 }
 :host([data-side='right']) {
 	inset-inline-end: 0;
 }
 :host([data-side='left']) {
 	inset-inline-start: 0;
-	--shell-closed-x: -100%;
+	--shell-closed-x: calc(-100% - var(--sidebar-float));
 }
 
 /* ── FLYOUT — xl / xxl ───────────────────────────────────────────────────
@@ -98,10 +105,10 @@
 	transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 }
 :host([data-side='right']) .sidebar-shell {
-	inset-inline-end: 0;
+	inset-inline-end: var(--sidebar-float);
 }
 :host([data-side='left']) .sidebar-shell {
-	inset-inline-start: 0;
+	inset-inline-start: var(--sidebar-float);
 }
 /* While dragging, JS inlines `transition: none` so the shell tracks 1:1. */
 .sidebar-shell.is-dragging {
@@ -123,8 +130,10 @@
 /* Cover-up shell — frosted glass: a near-transparent tint over a backdrop
    blur, with an edge border + shadow. */
 :host([data-mode='coverup']) .sidebar-shell {
-	width: 100vw;
-	max-width: 26.25rem;
+	/* Subtract the float from the full-bleed width so the drawer still fits inside
+	   the window once it is inset off the docked edge (otherwise it would overhang
+	   the opposite edge on phones). Capped at the same max as before. */
+	width: min(calc(100dvw - var(--sidebar-float)), 26.25rem);
 	touch-action: pan-y;
 	background: var(--sidebar-shell-bg, rgba(8, 10, 16, 0.55));
 	backdrop-filter: blur(16px);

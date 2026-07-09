@@ -1,13 +1,19 @@
-import { remoteList, WebComponent } from '../../core/index.js';
+import { list, RemoteListEngine, WebComponent } from '../../core/index.js';
 /*
- * `<paged-list>` — a reusable remoteList-driven list shell with TWO switchable
+ * `<paged-list>` — a reusable remote-loaded list shell with TWO switchable
  * paging styles:
- *   - loadmore: cumulative (scroll + LOAD MORE button), rows accumulate;
- *   - paged:    prev/next, one page at a time (replace) via the controller's goto().
- * It owns the table frame, the load controller, the meta/status line, the pager /
- * LOAD MORE, empty/error/loading, refresh, and the style toggle. URL sync is
- * delegated to the host's `pageHref(page)` (replaceState — no history spam). Rows
- * render in this shadow, styled by the host's `importStyles` sheet.
+ *   - loadmore: cumulative (sentinel auto-load + LOAD MORE button), rows accumulate;
+ *   - paged:    prev/next, one page at a time (replace) via the engine's goto().
+ * It owns the table frame, the meta/status line, the pager / LOAD MORE,
+ * empty/error/loading, refresh, and the style toggle. URL sync is delegated to
+ * the host's `pageHref(page)` (replaceState — no history spam). Rows render in
+ * this shadow, styled by the host's `importStyles` sheet.
+ *
+ * Loading is driven by a headless `RemoteListEngine` (core/state/
+ * remoteListEngine.js): created in onConnect, handed the sentinel in
+ * onRendered, disposed in onDisconnect. The engine writes the reactive
+ * `state.items` + `state.itemsStatus` scope this template binds — no event
+ * mirroring, no ref-wired listeners; buttons are plain template `@click`.
  *
  * The host passes its data contract as ONE bundle through `.state` (the framework's
  * child-merge: preserves this component's runtime-state defaults, adds the host's
@@ -15,17 +21,17 @@ import { remoteList, WebComponent } from '../../core/index.js';
  *
  *   // host: a stable field (NOT a render-local)
  *   listConfig = { loader, renderRow, keyFn, renderHead, pageHref,
- *                  itemNoun, emptyText, loadingText, pagingStyle, startPage };
+ *                  itemNoun, emptyMessage, loadingMessage, pagingStyle, startPage };
  *   <paged-list .state=${this.listConfig} .importStyles=${ROW_STYLES} #list></paged-list>
  *
  *   loader({reset,cursor,signal}) => {items, nextCursor, hasMore, totalCount?}
- *   renderRow / keyFn  — remoteList renderFn + key (rows must be self-contained:
+ *   renderRow / keyFn  — list renderFn + key (rows must be self-contained:
  *                        shape row data in the loader, not from page `this`)
  *   renderHead()       — header-row markup string
  *   pageHref(page)     — URL for the page (omit → no URL sync)
  *
- * The cursor IS the page number (the host's cursor=page bridge), so the wrapper
- * derives the current page as `cursor - 1`.
+ * The cursor IS the page number (the host's cursor=page bridge), so the engine
+ * tracks the current page directly in `itemsStatus.page`.
  */
 const PAGED = 'paged';
 const LOADMORE = 'loadmore';
@@ -35,13 +41,18 @@ export class PagedList extends WebComponent {
 		pagedList: './paged-list.css',
 	};
 	static state = {
-		// runtime
+		// runtime (written by the RemoteListEngine)
 		items: [],
-		totalCount: 0,
-		loading: false,
-		error: '',
-		currentPage: 1,
-		hasMore: false,
+		itemsStatus: {
+			loading: false,
+			error: '',
+			hasMore: true,
+			exhausted: false,
+			page: 1,
+			hasPrev: false,
+			totalCount: 0,
+			started: false,
+		},
 		// host contract (filled via `.state=${listConfig}`)
 		loader: null,
 		renderRow: null,
@@ -50,67 +61,42 @@ export class PagedList extends WebComponent {
 		pageHref: null,
 		startPage: 1,
 		itemNoun: 'items',
-		emptyText: 'Nothing here yet.',
-		loadingText: 'Loading…',
+		emptyMessage: 'Nothing here yet.',
+		loadingMessage: 'Loading…',
 		pagingStyle: LOADMORE,
 	};
 	onConnect() {
-		this.on('items:loading', this.handleListLoading);
-		this.on('items:loaded', this.handleListLoaded);
-		this.on('items:error', this.handleListError);
-	}
-	onMount() {
-		this.startInitial();
-	}
-	/* fillViewport reveal trigger. This SPA mounts route pages hidden (display:none)
-	   and reveals them on navigation, so the controller's post-load fill check runs
-	   while the list has no layout box and bails. Re-run it when this list becomes
-	   visible — the shared IntersectionObserver fires onIntersect on reveal (and once
-	   on first observe). No-op unless fillViewport is on and the list is short. */
-	onIntersect(isIntersecting) {
-		if (isIntersecting) {
-			this.remote('items')?.scheduleFillCheck();
-		}
-	}
-	/* Drive the first load (controller is auto:false) so it honors startPage and
-	   the active style. Retries on a microtask until the controller has mounted
-	   (it attaches a microtask after the first render). */
-	startInitial() {
-		const controller = this.remote('items');
-		if (!controller) {
-			queueMicrotask(() => {
-				return this.startInitial();
+		/* Dispose is terminal — a reconnect builds a fresh engine (its first
+		   attach re-runs the auto-load, matching a fresh mount). */
+		if (!this.list || this.list.disposed) {
+			this.list = RemoteListEngine.create(this, {
+				key: 'items',
+				loader: this.state.loader,
+				keyFn: this.state.keyFn || undefined,
+				mode: this.state.pagingStyle === PAGED ? PAGED : 'both',
+				startPage: this.state.startPage,
+				dedupe: true,
 			});
-			return;
 		}
-		const page = Number(this.state.startPage) > 1 ? Number(this.state.startPage) : 1;
-		this.state.currentPage = page;
-		if (page > 1) {
-			controller.goto(page);
-		} else {
-			controller.reset();
-		}
+		/* Status is reactive; this hook is the URL side-effect only. */
+		this.on('items:loaded', this.handleListLoaded);
 	}
-	handleListLoading() {
-		this.assignState({
-			loading: true,
-			error: '',
+	/*
+	 * onRendered runs on the first render AND every full re-render (skipped on
+	 * patch passes) — exactly when the sentinel node may be new. The engine's
+	 * attach is idempotent: it re-arms the observer on a fresh sentinel and only
+	 * the FIRST call kicks the auto-load (honoring startPage).
+	 */
+	onRendered() {
+		this.list?.attach({
+			sentinel: this.refs.pl_sentinel,
 		});
+	}
+	onDisconnect() {
+		this.list?.dispose();
 	}
 	handleListLoaded() {
-		const controller = this.remote('items');
-		this.assignState({
-			loading: false,
-			hasMore: controller ? controller.hasMore : false,
-			currentPage: controller ? controller.page : this.state.currentPage,
-		});
 		this.syncUrl();
-	}
-	handleListError(domEvent) {
-		this.assignState({
-			loading: false,
-			error: domEvent?.detail?.data?.error || 'Could not load results',
-		});
 	}
 	syncUrl() {
 		const hrefFn = this.state.pageHref;
@@ -124,55 +110,49 @@ export class PagedList extends WebComponent {
 		if (typeof this.checkVisibility === 'function' && !this.checkVisibility()) {
 			return;
 		}
-		const url = hrefFn(this.state.currentPage);
+		const url = hrefFn(this.state.itemsStatus.page);
 		if (url) {
 			globalThis.history.replaceState(globalThis.history.state, '', url);
 		}
 	}
-	/* remoteList's loader (called with `this` = wrapper) → host loader; captures the
-	   optional totalCount on a fresh window for the meta line. */
-	async runLoader(options) {
-		const loaderFn = this.state.loader;
-		if (typeof loaderFn !== 'function') {
-			return null;
-		}
-		const result = await loaderFn(options);
-		if (result && options.reset && typeof result.totalCount === 'number') {
-			this.state.totalCount = result.totalCount;
-		}
-		return result;
-	}
 	refresh() {
-		this.state.currentPage = 1;
-		this.remote('items')?.reset();
+		this.list?.reset();
 	}
 	/* Public: jump to a page (the host's router calls this on a route change).
 	   Works in both styles — paged shows page N, loadmore starts the window at N.
-	   Prev/Next clicks are wired by the controller (paged mode); this is only the
+	   Prev/Next clicks route through handlePrev/handleNext; this is only the
 	   programmatic route entry. */
 	goToPage(page) {
 		const target = Number.isFinite(page) && page >= 1 ? page : 1;
-		if (target === this.state.currentPage && this.state.items.length) {
+		if (target === this.state.itemsStatus.page && this.state.items.length) {
 			return;
 		}
-		this.state.currentPage = target;
-		this.remote('items')?.gotoPage(target);
+		this.list?.gotoPage(target);
 	}
 	toggleStyle() {
 		const next = this.state.pagingStyle === LOADMORE ? PAGED : LOADMORE;
 		this.state.pagingStyle = next;
-		/* Core owns the swap: setMode re-wires triggers (scroll/loadMore ↔ prev/next)
-		   and, switching INTO paged, collapses the window to the current page. */
-		this.remote('items')?.setMode(next === PAGED ? PAGED : 'both');
+		/* The engine owns the swap: setMode re-arms/disarms the sentinel and,
+		   switching INTO paged, collapses the window to the current page. */
+		this.list?.setMode(next === PAGED ? PAGED : 'both');
+	}
+	handleLoadMore() {
+		this.list?.loadMore();
+	}
+	handlePrev() {
+		this.list?.goPrev();
+	}
+	handleNext() {
+		this.list?.goNext();
 	}
 	loadedLabel() {
 		if (this.state.pagingStyle === PAGED) {
-			return `page ${this.state.currentPage}`;
+			return `page ${this.state.itemsStatus.page}`;
 		}
 		return `${this.state.items.length.toLocaleString('en-US')} loaded`;
 	}
 	totalLabel() {
-		return Number(this.state.totalCount || 0).toLocaleString('en-US');
+		return Number(this.state.itemsStatus.totalCount || 0).toLocaleString('en-US');
 	}
 	styleToggleLabel() {
 		return this.state.pagingStyle === PAGED ? '≡ Load more' : '⊞ Paged';
@@ -183,23 +163,32 @@ export class PagedList extends WebComponent {
 	}
 	/* Transient status for the meta line (hidden when idle via `.pl-status:empty`). */
 	metaStatus() {
-		if (this.state.loading) {
+		if (this.state.itemsStatus.loading) {
 			return 'syncing…';
 		}
-		if (this.state.error) {
-			return `error: ${this.state.error}`;
+		if (this.state.itemsStatus.error) {
+			return `error: ${this.state.itemsStatus.error}`;
 		}
 		return '';
 	}
 	/* The empty/loading/error block (shown only when there are no rows). */
 	statusText() {
-		if (this.state.loading) {
-			return this.state.loadingText;
+		if (this.state.itemsStatus.loading) {
+			return this.state.loadingMessage;
 		}
-		if (this.state.error) {
-			return this.state.error;
+		if (this.state.itemsStatus.error) {
+			return this.state.itemsStatus.error;
 		}
-		return this.state.emptyText;
+		return this.state.emptyMessage;
+	}
+	moreDisabled() {
+		return this.state.itemsStatus.loading || this.state.itemsStatus.exhausted;
+	}
+	prevDisabled() {
+		return this.state.itemsStatus.loading || !this.state.itemsStatus.hasPrev;
+	}
+	nextDisabled() {
+		return this.state.itemsStatus.loading || !this.state.itemsStatus.hasMore;
 	}
 	render() {
 		this.html `
@@ -220,25 +209,17 @@ export class PagedList extends WebComponent {
 				</div>
 				<div class="pl-table">
 					^html${this.headHtml}
-					${remoteList('items', this.state.renderRow, {
-						loader: this.runLoader,
-						mode: this.state.pagingStyle === PAGED ? PAGED : 'both',
-						keyFn: this.state.keyFn,
-						loadMore: '#pl_load_more',
-						prev: '#pl_prev',
-						next: '#pl_next',
-						dedupe: true,
-						fillViewport: true,
-					})}
-					<div class="pl-empty" ?data-error=${this.state.error} ?hidden=${this.state.items.length > 0}>${this.statusText}</div>
+					${list('items', this.state.renderRow, this.state.keyFn || undefined)}
+					<div class="pl-empty" ?data-error=${this.state.itemsStatus.error} ?hidden=${this.state.items.length > 0}>${this.statusText}</div>
+					<div class="pl-sentinel" #pl_sentinel aria-hidden="true"></div>
 				</div>
 				<div class="pl-pager" ?hidden=${this.state.pagingStyle !== PAGED}>
-					<button class="pl-btn" #pl_prev>‹ Prev</button>
-					<span class="pl-page-label">page ${this.state.currentPage}</span>
-					<button class="pl-btn" #pl_next>Next ›</button>
+					<button class="pl-btn" @click=${this.handlePrev} ?disabled=${this.prevDisabled}>‹ Prev</button>
+					<span class="pl-page-label">page ${this.state.itemsStatus.page}</span>
+					<button class="pl-btn" @click=${this.handleNext} ?disabled=${this.nextDisabled}>Next ›</button>
 				</div>
 				<div class="pl-loadmore-bar" ?hidden=${this.state.pagingStyle === PAGED}>
-					<button class="pl-btn pl-loadmore" #pl_load_more>LOAD MORE ▾</button>
+					<button class="pl-btn pl-loadmore" @click=${this.handleLoadMore} ?disabled=${this.moreDisabled}>LOAD MORE ▾</button>
 				</div>
 			</div>
 		`;

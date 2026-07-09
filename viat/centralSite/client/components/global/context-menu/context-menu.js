@@ -15,7 +15,7 @@
 	── EVENTS ───────────────────────────────────────────────────────────
 	  menu:select { value, index }   (inherited from ui-menu)
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-context-menu .items=${[
+	  <ui-context-menu .state.items=${[
 	    { label: 'Open', value: 'open', kbd: '↵' },
 	    { label: 'Rename', value: 'rename' },
 	    { separator: true },
@@ -26,7 +26,9 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import { computeAnchor } from '../../core/dom/anchor.js';
+import { list } from '../../core/index.js';
 import { UIMenu } from '../menu/menu.js';
+import { UIMenuItem } from '../menu/menu-item.js';
 export class UIContextMenu extends UIMenu {
 	static url = import.meta.url;
 	// Reuse the dropdown's panel + item styles; `context-menu.css` only flips the
@@ -37,7 +39,8 @@ export class UIContextMenu extends UIMenu {
 	};
 	static state = {
 		items: [],
-		placement: 'bottom-start',
+		side: 'bottom',
+		align: 'start',
 		offset: 2,
 		// OPT-IN leave-close. A cursor-summoned menu defaults to PERSISTENT (opens AT
 		// the pointer with no trigger to fall back onto → it must not vanish when the
@@ -59,7 +62,7 @@ export class UIContextMenu extends UIMenu {
 		this.on('contextmenu', this.handleContextMenu);
 		// Listen on the document bus for ANY context menu opening — an exclusive menu
 		// closes itself when a DIFFERENT one opens (single-menu OS behavior).
-		this.delegate('ui-context-menu:open', this.handleSiblingOpen);
+		this.delegate('context-menu:open', this.handleSiblingOpen);
 	}
 	handleSiblingOpen(domEvent) {
 		if (domEvent.detail?.source === this || this.state.exclusive !== true) {
@@ -101,7 +104,7 @@ export class UIContextMenu extends UIMenu {
 			surface.showPopover();
 			// Announce on the document bus so other EXCLUSIVE context menus close —
 			// `emit`'s detail.source is this menu, so siblings skip the emitter.
-			this.emit('ui-context-menu:open', {});
+			this.emit('context-menu:open', {});
 		}
 		// Arm own outside-dismiss only AFTER another frame, so the opening gesture's
 		// own trailing pointerup/click can't instantly close it (the rebuilt-the-bug trap).
@@ -202,7 +205,7 @@ export class UIContextMenu extends UIMenu {
 			width: surface.offsetWidth,
 			height: surface.offsetHeight,
 		}, {
-			placement: this.state.placement,
+			placement: `${this.state.side}-${this.state.align}`,
 			offset: Number(this.state.offset) || 2,
 		});
 		surface.style.top = `${placed.top}px`;
@@ -213,8 +216,8 @@ export class UIContextMenu extends UIMenu {
 		this.html `
 			<slot></slot>
 			<div #surface class="menu-surface" popover="manual" role="menu" tabindex="-1"
-				@toggle=${this.handleToggle} @click=${this.handleClick} @keydown=${this.handleKey}>
-				^html${this.renderItems}
+				@toggle=${this.handleToggle} @menu-item:select=${this.handleSelect} @keydown=${this.handleKey}>
+				${list('items', UIMenuItem)}
 			</div>
 		`;
 	}

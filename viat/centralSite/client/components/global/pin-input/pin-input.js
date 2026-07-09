@@ -15,16 +15,16 @@
 	Value flows OUT via `syncValue` (read boxes → state.value + events) and IN via an
 	echo-guarded `observe('value')` (for `.value=` / programmatic set + `clear()`).
 	── EVENTS ───────────────────────────────────────────────────────────
-	  pin:input    { value }   on every change
-	  pin:complete { value }   when all boxes are filled (autosubmit)
+	  pin-input:input    { value }   on every change
+	  pin-input:complete { value }   when all boxes are filled (autosubmit)
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-pin-input .length=${6} .type=${'numeric'} @pin:complete=${e => unlock(e.detail.data.value)}></ui-pin-input>
-	  <ui-pin-input .value=${this.state.code} .masked=${true} @pin:input=${e => this.state.code = e.detail.data.value}></ui-pin-input>
+	  <ui-pin-input .state.length=${6} .state.type=${'numeric'} @pin-input:complete=${e => unlock(e.detail.data.value)}></ui-pin-input>
+	  <ui-pin-input .state.value=${this.state.code} .state.masked=${true} @pin-input:input=${e => this.state.code = e.detail.data.value}></ui-pin-input>
 	  // reset after a failed attempt: pin.clear()  (or set .value back to '')
 	──────────────────────────────────────────────────────────────────────
 */
-import { WebComponent } from '../../core/index.js';
-import { escapeHtml } from '../menu/menu.js';
+import { WebComponent } from 'webcomponent';
+import { escapeHtml } from '../../core/utilities.js';
 export class UIPinInput extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -37,7 +37,7 @@ export class UIPinInput extends WebComponent {
 		type: 'numeric',
 		masked: false,
 		disabled: false,
-		// Emit pin:complete when every box is filled.
+		// Emit pin-input:complete when every box is filled.
 		autosubmit: true,
 	};
 	boxAt(index) {
@@ -55,11 +55,11 @@ export class UIPinInput extends WebComponent {
 	syncValue() {
 		const value = this.readBoxes();
 		this.state.value = value;
-		this.emit('pin:input', {
+		this.emit('pin-input:input', {
 			value,
 		});
 		if (value.length === this.state.length && this.state.autosubmit) {
-			this.emit('pin:complete', {
+			this.emit('pin-input:complete', {
 				value,
 			});
 		}

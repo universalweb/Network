@@ -27,7 +27,7 @@ export class UIAiPlan extends WebComponent {
 	};
 	static state = {
 		label: 'Plan',
-		steps: [],
+		items: [],
 	};
 	stepKey(step) {
 		return step.id ?? step.label;
@@ -53,7 +53,7 @@ export class UIAiPlan extends WebComponent {
 					<ui-icon class="aip-head-icon" .state.name=${'list-checks'} .state.size=${'sm'}></ui-icon>
 					<span class="aip-title">${this.state.label}</span>
 				</header>
-				<ol class="aip-list">${list('steps', this.renderStep, this.stepKey)}</ol>
+				<ol class="aip-list">${list('items', this.renderStep, this.stepKey)}</ol>
 			</section>
 		`;
 	}

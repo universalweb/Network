@@ -91,8 +91,8 @@ export class AccountDetailPage extends WebComponent {
 			return this.pageHref(page);
 		},
 		itemNoun: 'transactions',
-		emptyText: 'No transactions found.',
-		loadingText: 'Loading transactions…',
+		emptyMessage: 'No transactions found.',
+		loadingMessage: 'Loading transactions…',
 		pagingStyle: 'loadmore',
 	};
 	/* Router entry: address is the routed dimension. A new address reloads the

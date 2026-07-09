@@ -7,7 +7,7 @@ import { MorphSurface } from '../morph-surface/morph-surface.js';
 // machinery + "anchor under the trigger" positioning from MorphSurface.
 //
 // Usage:
-//   <ui-popover .label=${'Account ▾'} .heading=${'Signed in as'}>
+//   <ui-popover .state.label=${'Account ▾'} .state.heading=${'Signed in as'}>
 //     …popover content…
 //   </ui-popover>
 export class UIPopover extends MorphSurface {

@@ -42,7 +42,9 @@ import { atPhase, PHASE, phaseGetters } from './lifecycle/phase.js';
 import { nextFrame } from './lifecycle/scheduler.js';
 import { createBound, getById, preRender } from './render/factory.js';
 import * as renderMethods from './render/render.js';
-import { bind, makeGlobalProxy, makeStoreProxy } from './state/binding.js';
+import {
+	bind, makeGlobalProxy, makeStoreProxy, notifyAttrChange,
+} from './state/binding.js';
 import * as contextMethods from './state/context.js';
 import { globalState } from './state/globalState.js';
 import * as privateStateMethods from './state/privateState.js';
@@ -72,6 +74,7 @@ import {
 	addInterval,
 	clearIntervals,
 	clearTimeouts,
+	createComponentTimeout,
 	removeComponentTimeout,
 	setComponentTimeout,
 	stopInterval,
@@ -404,6 +407,26 @@ export class WebComponent extends HTMLElement {
 		return keysOf(ensureMergedAttrs(this));
 	}
 	/**
+	 * Custom Elements reactivity contract — the other half of `observedAttributes`.
+	 * Makes the `this.attrs.*` channel reactive: a change to an observed attribute
+	 * (external `setAttribute` or an imperative `this.attrs.x = …` write, which
+	 * routes through `setAttribute`) notifies the component's bus on the attr's
+	 * namespaced path, so any spot that READ `this.attrs.<name>` during render
+	 * re-patches. A change no spot read hits no subscriber and skips the repaint.
+	 * `oldValue === newValue` guards the redundant fire `setAttribute`-to-same-value
+	 * still enqueues; the `isConnected` gate drops parse-time callbacks (initial
+	 * values are read live at first render).
+	 * @param {string} attributeName - The changed attribute name.
+	 * @param {string|null} oldValue - Previous value.
+	 * @param {string|null} newValue - Current value.
+	 */
+	attributeChangedCallback(attributeName, oldValue, newValue) {
+		if (oldValue === newValue || !this.isConnected) {
+			return;
+		}
+		notifyAttrChange(this, attributeName);
+	}
+	/**
 	 * Compile this class's `static styles` into constructable stylesheets.
 	 * @param {typeof WebComponent} ComponentClass - Class whose styles to compile.
 	 * @returns {Promise} Resolves with the compiled `{ map, array }` result.
@@ -688,6 +711,7 @@ const PROTO_METHODS = {
 	clearDelegateListeners,
 	confirm: confirmPrompt,
 	copyText: writeTextToClipboard,
+	createTimeout: createComponentTimeout,
 	delegate,
 	delegateTo,
 	dragSnap,

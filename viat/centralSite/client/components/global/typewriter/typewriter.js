@@ -6,8 +6,8 @@
 	deleting, and the hold each get their own cadence. Motion-sensitive users get
 	the final text instantly — no stream.
 	── STANDARD USAGE ───────────────────────────────────────────────────
-	  <ui-typewriter .phrases=${['Fast.', 'Final.', 'Verifiable.']} .loop=${true}></ui-typewriter>
-	  <ui-typewriter .text=${'One-shot headline.'}></ui-typewriter>
+	  <ui-typewriter .state.phrases=${['Fast.', 'Final.', 'Verifiable.']} .state.loop=${true}></ui-typewriter>
+	  <ui-typewriter .state.text=${'One-shot headline.'}></ui-typewriter>
 	─────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from 'webcomponent';

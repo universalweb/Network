@@ -6,7 +6,7 @@
  * (no markup ever reaches the DOM as html — reasoning is prose, not a render
  * target). While `streaming` the brain glyph pulses and the label reads
  * "Thinking…". Drive it with `.text`, optional `.label`, `.expanded`,
- * `.streaming`. Emits `reasoning:toggle` { open }.
+ * `.streaming`. Emits `ai-reasoning:toggle` { open }.
  */
 import '../icon/icon.js';
 import { WebComponent } from 'webcomponent';
@@ -36,7 +36,7 @@ export class UIAiReasoning extends WebComponent {
 			return;
 		}
 		this.state.expanded = next;
-		this.emit('reasoning:toggle', {
+		this.emit('ai-reasoning:toggle', {
 			open: next,
 		});
 	}

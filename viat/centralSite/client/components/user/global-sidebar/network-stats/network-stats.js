@@ -18,7 +18,7 @@ export class NetworkStats extends Panel {
 			},
 		],
 		classes: new Set(['stats-panel']),
-		id: 'NET',
+		panelId: 'NET',
 		networkData: [
 			{
 				className: 'good',
@@ -42,7 +42,7 @@ export class NetworkStats extends Panel {
 				value: 'HTTPS',
 			},
 		],
-		title: 'NODE STATUS',
+		heading: 'NODE STATUS',
 	};
 	onConnect() {
 		this.observeGlobal('api', (api) => {

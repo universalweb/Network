@@ -6,8 +6,8 @@
 	ui-choice-poll / ui-feature-poll / ui-poll-widget (thin preset subclasses).
 	── STANDARD USAGE ───────────────────────────────────────────────────
 	  <ui-poll
-	    .question=${'Which ships first?'}
-	    .options=${[{ id: 'a', label: 'Wallet', votes: 12 }, …]}>
+	    .state.question=${'Which ships first?'}
+	    .state.items=${[{ id: 'a', label: 'Wallet', votes: 12 }, …]}>
 	  </ui-poll>
 	`multiple` → checkbox multi-select; `instant` → single-select locks on pick
 	(no Vote button). Percentages + the user's +1 are computed at lock-time and
@@ -37,7 +37,7 @@ class UIPollOption extends WebComponent {
 	handleClick() {
 		// The child only announces intent; the parent owns selection in both
 		// modes (single = exclusive, multi = toggle) via event-time deep writes.
-		this.emit('poll-option-select', {
+		this.emit('poll:select', {
 			id: this.state.id,
 		});
 	}
@@ -69,7 +69,7 @@ export class UIPoll extends WebComponent {
 		poll: './poll.css',
 	};
 	static state = {
-		options: [],
+		items: [],
 		question: '',
 		multiple: false,
 		instant: false,
@@ -92,7 +92,7 @@ export class UIPoll extends WebComponent {
 		if (id === undefined || id === null) {
 			return;
 		}
-		const options = this.state.options;
+		const options = this.state.items;
 		let anySelected = false;
 		for (let index = 0; index < options.length; index += 1) {
 			const option = options[index];
@@ -117,7 +117,7 @@ export class UIPoll extends WebComponent {
 		if (this.state.locked) {
 			return;
 		}
-		const options = this.state.options;
+		const options = this.state.items;
 		let anySelected = false;
 		for (let index = 0; index < options.length; index += 1) {
 			if (options[index].selected) {
@@ -149,7 +149,7 @@ export class UIPoll extends WebComponent {
 			showResults: true,
 			totalVotes: total,
 		});
-		this.emit('poll-vote', {
+		this.emit('poll:vote', {
 			totalVotes: total,
 		});
 	}
@@ -167,8 +167,8 @@ export class UIPoll extends WebComponent {
 				?data-locked=${this.state.locked}
 				?data-multiple=${this.state.multiple}>
 				<p class="poll-q" ?hidden=${!this.state.question}>${this.state.question}</p>
-				<div class="poll-opts" @poll-option-select=${this.handleSelect}>
-					${list('options', UIPollOption, this.optionKey)}
+				<div class="poll-opts" @poll:select=${this.handleSelect}>
+					${list('items', UIPollOption, this.optionKey)}
 				</div>
 				<div class="poll-foot" ?hidden=${this.state.instant}>
 					<ui-button .state=${{
@@ -176,7 +176,7 @@ export class UIPoll extends WebComponent {
 						tone: 'primary',
 						size: 'sm',
 						disabled: this.voteDisabled(),
-					}} @buttonClick=${this.handleVoteClick}></ui-button>
+					}} @button:click=${this.handleVoteClick}></ui-button>
 					<span class="poll-total" ?hidden=${!this.state.showResults}>${this.state.totalVotes} votes</span>
 				</div>
 			</div>

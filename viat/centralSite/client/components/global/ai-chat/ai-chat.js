@@ -30,16 +30,16 @@ export class UIAiChat extends WebComponent {
 		endpoint: '',
 		model: 'local-model',
 		systemPrompt: '',
-		title: 'AI CHAT',
+		heading: 'AI CHAT',
 		placeholder: 'Send a message…',
 		// true → emit ai-chat:submit and run NO built-in transport (full override).
 		manual: false,
-		messages: [],
+		items: [],
 		inputValue: '',
 		streaming: false,
 		// offline | checking | connecting | online
 		status: 'offline',
-		errorText: '',
+		error: '',
 	};
 	controller = null;
 	healthController = null;
@@ -50,7 +50,7 @@ export class UIAiChat extends WebComponent {
 	streamReasoning = '';
 	onMount() {
 		// Pin the log to the newest message (effect, not a render trigger).
-		this.observeAsync('messages', this.handleLogScroll);
+		this.observeAsync('items', this.handleLogScroll);
 		if (this.state.endpoint) {
 			this.checkConnection();
 		}
@@ -63,7 +63,7 @@ export class UIAiChat extends WebComponent {
 		this.state.streaming = false;
 	}
 	get clearDisabled() {
-		return this.state.messages.length === 0 && !this.state.streaming;
+		return this.state.items.length === 0 && !this.state.streaming;
 	}
 	handleLogScroll() {
 		const logEl = this.refs.log;
@@ -77,7 +77,7 @@ export class UIAiChat extends WebComponent {
 		return `m${this.messageSeq}`;
 	}
 	findMessage(id) {
-		const list = this.state.messages;
+		const list = this.state.items;
 		for (let index = list.length - 1; index >= 0; index -= 1) {
 			if (list[index].id === id) {
 				return index;
@@ -102,7 +102,7 @@ export class UIAiChat extends WebComponent {
 		if (opts?.streaming) {
 			msg.streaming = true;
 		}
-		this.state.messages.push(msg);
+		this.state.items.push(msg);
 		return id;
 	}
 	patchMessage(id, patch) {
@@ -110,8 +110,8 @@ export class UIAiChat extends WebComponent {
 		if (index < 0) {
 			return;
 		}
-		this.state.messages[index] = {
-			...this.state.messages[index],
+		this.state.items[index] = {
+			...this.state.items[index],
 			...patch,
 		};
 	}
@@ -158,7 +158,7 @@ export class UIAiChat extends WebComponent {
 		});
 	}
 	setError(text) {
-		this.state.errorText = text;
+		this.state.error = text;
 		if (text) {
 			this.emit('ai-chat:error', {
 				message: text,
@@ -190,7 +190,7 @@ export class UIAiChat extends WebComponent {
 				content: this.state.systemPrompt,
 			});
 		}
-		const list = this.state.messages;
+		const list = this.state.items;
 		for (let index = 0; index < list.length; index += 1) {
 			out.push({
 				role: list[index].role,
@@ -199,13 +199,13 @@ export class UIAiChat extends WebComponent {
 		}
 		return {
 			model: this.state.model,
-			messages: out,
+			items: out,
 			stream: true,
 		};
 	}
 	async runTurn() {
 		this.state.streaming = true;
-		this.state.errorText = '';
+		this.state.error = '';
 		this.setStatus('connecting');
 		const controller = new AbortController();
 		this.controller = controller;
@@ -261,11 +261,11 @@ export class UIAiChat extends WebComponent {
 			this.hasProbed = true;
 			this.setStatus('checking');
 		}
-		const timeoutId = this.setTimeout(() => {
+		const abortTimer = this.setTimeout(() => {
 			controller.abort();
 		}, HEALTH_TIMEOUT_MS);
 		const online = await probeModels(this.state.endpoint, controller.signal);
-		this.removeTimeout(timeoutId);
+		abortTimer.clear();
 		// A newer probe superseded this one — let its result stand.
 		if (this.healthController !== controller) {
 			return this.state.status === 'online';
@@ -281,7 +281,7 @@ export class UIAiChat extends WebComponent {
 			return;
 		}
 		this.state.inputValue = '';
-		this.state.errorText = '';
+		this.state.error = '';
 		this.emit('ai-chat:submit', {
 			text,
 		});
@@ -319,8 +319,8 @@ export class UIAiChat extends WebComponent {
 	// Public: reset the conversation (aborts any in-flight stream).
 	clear() {
 		this.handleAbort();
-		this.state.messages = [];
-		this.state.errorText = '';
+		this.state.items = [];
+		this.state.error = '';
 		this.emit('ai-chat:clear', {});
 	}
 	render() {
@@ -329,7 +329,7 @@ export class UIAiChat extends WebComponent {
 				<header class="aic-header">
 					<div class="aic-titlebar">
 						<div class="aic-title-group">
-							<span class="aic-title">${this.state.title}</span>
+							<span class="aic-title">${this.state.heading}</span>
 							<ui-status-indicator .state.status=${this.state.status}></ui-status-indicator>
 						</div>
 						<button class="aic-clear" type="button" @click=${this.handleClear} ?disabled=${this.clearDisabled}>CLEAR</button>
@@ -337,9 +337,9 @@ export class UIAiChat extends WebComponent {
 					<span class="aic-endpoint" ?hidden=${!this.state.endpoint}>${this.state.endpoint}</span>
 				</header>
 				<div #log class="aic-log">
-					${filter('messages', UIAiMessage, 'hidden')}
+					${filter('items', UIAiMessage, 'hidden')}
 				</div>
-				<div class="aic-error" ?data-visible=${this.state.errorText}>${this.state.errorText}</div>
+				<div class="aic-error" ?data-visible=${this.state.error}>${this.state.error}</div>
 				<footer class="aic-input-row">
 					<textarea #input
 						name="ai-chat-input"

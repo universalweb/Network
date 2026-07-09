@@ -23,6 +23,7 @@ export class WebRTCTransport {
 		this.pc = null;
 		this.channel = null;
 		this.signal = null;
+		this.signalReady = null;
 		this.alive = true;
 		this.onRequest = null;
 		this.pendingCandidates = [];
@@ -41,20 +42,9 @@ export class WebRTCTransport {
 		this.pc = new RTCPeerConnection({
 			iceServers: this.iceServers,
 		});
-		this.pc.addEventListener('icecandidate', (iceEvent) => {
-			if (iceEvent.candidate) {
-				this.sendSignal({
-					type: 'ice',
-					candidate: iceEvent.candidate.toJSON(),
-				});
-			}
-		});
-		this.pc.addEventListener('connectionstatechange', () => {
-			defaultLogger.info('ai-rtc', `pc state ${this.pc?.connectionState}`);
-		});
-		this.pc.addEventListener('datachannel', (dataChannelEvent) => {
-			this.bindChannel(dataChannelEvent.channel);
-		});
+		this.pc.addEventListener('icecandidate', this);
+		this.pc.addEventListener('connectionstatechange', this);
+		this.pc.addEventListener('datachannel', this);
 		const channel = this.pc.createDataChannel(this.channelLabel, {
 			ordered: true,
 		});
@@ -68,57 +58,112 @@ export class WebRTCTransport {
 	}
 	bindChannel(channel) {
 		channel.binaryType = 'arraybuffer';
-		channel.addEventListener('open', () => {
-			defaultLogger.info('ai-rtc', 'data channel open');
-		});
-		channel.addEventListener('close', () => {
-			defaultLogger.info('ai-rtc', 'data channel closed');
-		});
-		channel.addEventListener('message', async (messageEvent) => {
-			let message;
-			try {
-				message = JSON.parse(messageEvent.data);
-			} catch (error) {
-				defaultLogger.warn('ai-rtc', 'parse error', error);
-				return;
-			}
-			if (!message || message.jsonrpc !== '2.0') {
-				return;
-			}
-			if (!message.method) {
-				return;
-			}
-			const reply = await this.onRequest(message);
-			if (reply) {
-				this.send(reply);
-			}
-		});
+		channel.addEventListener('open', this);
+		channel.addEventListener('close', this);
+		channel.addEventListener('message', this);
 		this.channel = channel;
 	}
 	openSignaling() {
-		return new Promise((resolve, reject) => {
-			const ws = new WebSocket(this.buildSignalingUrl(), this.signalingProtocol);
-			this.signal = ws;
-			ws.addEventListener('open', () => {
-				resolve();
-			});
-			ws.addEventListener('error', (errorEvent) => {
-				reject(errorEvent);
-			});
-			ws.addEventListener('message', async (messageEvent) => {
-				let message;
-				try {
-					message = JSON.parse(messageEvent.data);
-				} catch (error) {
-					defaultLogger.warn('ai-rtc-sig', 'parse error', error);
-					return;
-				}
-				await this.handleSignal(message);
-			});
-			ws.addEventListener('close', () => {
-				defaultLogger.info('ai-rtc-sig', 'signal closed');
-			});
-		});
+		const ws = new WebSocket(this.buildSignalingUrl(), this.signalingProtocol);
+		this.signal = ws;
+		const pending = Promise.withResolvers();
+		this.signalReady = pending;
+		ws.addEventListener('open', this);
+		ws.addEventListener('error', this);
+		ws.addEventListener('message', this);
+		ws.addEventListener('close', this);
+		return pending.promise;
+	}
+	/*
+	 * The transport is the sole listener for all three targets (handleEvent
+	 * contract — zero handler closures); events route by currentTarget first
+	 * (signal WS and data channel share event-type names), then by type.
+	 */
+	handleEvent(rtcEvent) {
+		if (rtcEvent.currentTarget === this.signal) {
+			return this.handleSignalEvent(rtcEvent);
+		}
+		if (rtcEvent.currentTarget === this.pc) {
+			return this.handlePeerEvent(rtcEvent);
+		}
+		return this.handleChannelEvent(rtcEvent);
+	}
+	handleSignalEvent(signalEvent) {
+		if (signalEvent.type === 'message') {
+			return this.handleSignalMessage(signalEvent);
+		}
+		if (signalEvent.type === 'open') {
+			this.signalReady?.resolve();
+			this.signalReady = null;
+			return;
+		}
+		if (signalEvent.type === 'error') {
+			this.signalReady?.reject(signalEvent);
+			this.signalReady = null;
+			return;
+		}
+		if (signalEvent.type === 'close') {
+			defaultLogger.info('ai-rtc-sig', 'signal closed');
+		}
+	}
+	async handleSignalMessage(messageEvent) {
+		let message;
+		try {
+			message = JSON.parse(messageEvent.data);
+		} catch (error) {
+			defaultLogger.warn('ai-rtc-sig', 'parse error', error);
+			return;
+		}
+		await this.handleSignal(message);
+	}
+	handlePeerEvent(peerEvent) {
+		if (peerEvent.type === 'icecandidate') {
+			if (peerEvent.candidate) {
+				this.sendSignal({
+					type: 'ice',
+					candidate: peerEvent.candidate.toJSON(),
+				});
+			}
+			return;
+		}
+		if (peerEvent.type === 'datachannel') {
+			this.bindChannel(peerEvent.channel);
+			return;
+		}
+		if (peerEvent.type === 'connectionstatechange') {
+			defaultLogger.info('ai-rtc', `pc state ${this.pc?.connectionState}`);
+		}
+	}
+	handleChannelEvent(channelEvent) {
+		if (channelEvent.type === 'message') {
+			return this.handleChannelMessage(channelEvent);
+		}
+		if (channelEvent.type === 'open') {
+			defaultLogger.info('ai-rtc', 'data channel open');
+			return;
+		}
+		if (channelEvent.type === 'close') {
+			defaultLogger.info('ai-rtc', 'data channel closed');
+		}
+	}
+	async handleChannelMessage(messageEvent) {
+		let message;
+		try {
+			message = JSON.parse(messageEvent.data);
+		} catch (error) {
+			defaultLogger.warn('ai-rtc', 'parse error', error);
+			return;
+		}
+		if (!message || message.jsonrpc !== '2.0') {
+			return;
+		}
+		if (!message.method) {
+			return;
+		}
+		const reply = await this.onRequest(message);
+		if (reply) {
+			this.send(reply);
+		}
 	}
 	async handleSignal(message) {
 		if (!this.pc) {
@@ -192,6 +237,7 @@ export class WebRTCTransport {
 		this.channel = null;
 		this.pc = null;
 		this.signal = null;
+		this.signalReady = null;
 		this.onRequest = null;
 		this.pendingCandidates = [];
 		this.remoteSet = false;

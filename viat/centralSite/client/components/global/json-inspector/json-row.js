@@ -5,7 +5,7 @@
 	preview string, type, depth, path) — never the live subtree — so the keyed list
 	diff is cheap and no large object is cloned per row. The parent owns the data +
 	expand-set and re-flattens; a row only renders what it was handed and emits
-	`jsonrow:toggle` { path } on click. Copy-path is self-contained via `copyText`.
+	`json-row:toggle` { path } on click. Copy-path is self-contained via `copyText`.
 */
 import { WebComponent } from 'webcomponent';
 const COPY_FLASH_MS = 1000;
@@ -32,7 +32,7 @@ export class UIJsonRow extends WebComponent {
 		if (this.state.expandable !== true) {
 			return;
 		}
-		this.emit('jsonrow:toggle', {
+		this.emit('json-row:toggle', {
 			path: this.state.path,
 		});
 	}

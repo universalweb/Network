@@ -6,9 +6,9 @@ export class SetupPanel extends Panel {
 	};
 	static state = {
 		classes: new Set(['setup-panel']),
-		id: 'AGENT',
+		panelId: 'AGENT',
 		showDot: true,
-		title: 'LMSTUDIO SETUP',
+		heading: 'LMSTUDIO SETUP',
 	};
 	renderBody() {
 		return this.htmlElement `

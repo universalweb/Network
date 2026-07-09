@@ -78,12 +78,12 @@ export class ActivityLog extends Panel {
 		activeTab: 'All',
 		classes: new Set(['output-panel']),
 		entries: [],
-		id: 'ACTIVITY',
+		panelId: 'ACTIVITY',
 		showDot: true,
 		tabs: [
 			'All', 'Inbound', 'Outbound',
 		],
-		title: 'LOG',
+		heading: 'LOG',
 		loading: false,
 		error: '',
 	};
@@ -251,7 +251,7 @@ export class ActivityLog extends Panel {
 		return out;
 	}
 	handleTabChange(domEvent) {
-		const next = domEvent.detail?.data?.active ?? domEvent.detail?.active;
+		const next = domEvent.detail?.data?.id;
 		if (next && next !== this.state.activeTab) {
 			this.state.activeTab = next;
 			/* The display filter (`tabKeep`) reads activeTab, but activeTab is not a
@@ -259,7 +259,7 @@ export class ActivityLog extends Panel {
 			   new array ref) so the spot re-runs the filter against the new tab. The
 			   keyed diff (by id) reuses rows; only membership changes. */
 			this.state.entries = this.state.entries.slice();
-			this.emit('tab-change', {
+			this.emit('tabs:change', {
 				tab: this.state.activeTab,
 			});
 		}
@@ -270,9 +270,9 @@ export class ActivityLog extends Panel {
 		return this.htmlElement `
 			<div class="output-content">
 				<ui-tabs class="output-tabs-strip"
-					.state.tabs=${this.tabsForUI}
-					.state.active=${this.state.activeTab}
-					@tab-change=${this.handleTabChange}></ui-tabs>
+					.state.items=${this.tabsForUI}
+					.state.activeIndex=${this.state.activeTab}
+					@tabs:change=${this.handleTabChange}></ui-tabs>
 				<div class="output-feed">
 					${remoteList('entries', ActivityLogEntry, {
 						loader: this.loadEntries,

@@ -9,7 +9,14 @@
  * pointer input and force every click-watching handler to disambiguate. The
  * event is the activation.
  */
-import { registerHotkey } from '../hotkeys/hotkeys.js';
+import { createHotkeyEntry, releaseHotkeyEntry } from '../hotkeys/hotkeys.js';
+/*
+ * element → registry entry. The entry is the teardown handle; keeping it here
+ * (instead of a per-install unregister closure) makes uninstall a WeakMap read.
+ * The `WeakRef` + `FinalizationRegistry` net inside hotkeys.js still covers the
+ * abnormal path where an element is GC'd without teardown.
+ */
+const entryByElement = new WeakMap();
 function activateFromTemplate(keyEvent, combo) {
 	// `this` is the element the behavior was installed on.
 	this.dispatchEvent(new CustomEvent('hotkey', {
@@ -21,15 +28,20 @@ function activateFromTemplate(keyEvent, combo) {
 		},
 	}));
 }
-export const hotkey = {
-	name: 'hotkey',
+class HotkeyBehavior {
+	name = 'hotkey';
 	install(element, combo) {
-		/*
-		 * Template-installed hotkeys: behaviors track an unregister function,
-		 * not the entry — there is no component-side `hotkeyEntries` for a
-		 * raw element. The entry stays anonymous in the registry and the
-		 * `WeakRef` + `FinalizationRegistry` net handles the abnormal path.
-		 */
-		return registerHotkey(element, combo, activateFromTemplate, 'template').unregister;
-	},
-};
+		const entry = createHotkeyEntry(element, combo, activateFromTemplate, 'template');
+		if (entry) {
+			entryByElement.set(element, entry);
+		}
+	}
+	uninstall(element) {
+		const entry = entryByElement.get(element);
+		if (entry) {
+			releaseHotkeyEntry(entry);
+			entryByElement.delete(element);
+		}
+	}
+}
+export const hotkey = new HotkeyBehavior();

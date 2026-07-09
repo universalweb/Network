@@ -14,6 +14,7 @@ import {
 	orientationOf,
 	widthBucket,
 } from './breakpoints.js';
+import { isTouch } from './device.js';
 let scheduled = false;
 let lastSnapshot = null;
 function snapshot() {
@@ -29,7 +30,7 @@ function snapshot() {
 		h: heightBucket(height),
 		orientation: orientationOf(ratio),
 		aspect: aspectBucket(ratio),
-		touch: navigator.maxTouchPoints > 0,
+		touch: isTouch,
 	};
 }
 function diffBuckets(before, after) {

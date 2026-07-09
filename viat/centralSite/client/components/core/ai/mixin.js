@@ -6,6 +6,7 @@ import {
 	getDirectChildren,
 	getNameForComponent,
 	getPathForComponent,
+	invalidatePathIndex,
 	pageOverview,
 } from './paths.js';
 import {
@@ -13,6 +14,7 @@ import {
 	getComponentId,
 	getTools,
 	registerComponent,
+	suppressNotifications,
 	unregisterComponent,
 } from './registry.js';
 import { textPageMap } from './visual.js';
@@ -245,16 +247,73 @@ export const aiMethods = {
 /*
  * Auto register/unregister is driven natively by the framework lifecycle:
  * `handleConnect` calls `this.aiRegister?.()` and `handleDisconnect` calls
- * `this.aiUnregister?.()` (optional-chained so both are no-ops when this mixin
- * was never applied). This replaces the former `connectedCallback` /
- * `disconnectedCallback` monkey-patch — the only prototype-wrapping site in the
- * core — bringing AI in line with how every other subsystem (observer, remote
- * lists, hotkeys, gestures) hooks the connect/disconnect cycle.
+ * `this.aiUnregister?.()` — both OPTIONAL-CHAINED, so until the mixin is applied
+ * they are genuine no-ops and every component connects/disconnects with ZERO
+ * AI-registry cost. The mixin is NOT applied at load; `enableAiFor` arms it on
+ * demand (see `enableAi` in the core barrel). This is the lazy replacement for
+ * the former unconditional `applyAiMixin(WebComponent)` at the index barrel,
+ * which had defeated the optional-chaining by making the methods always present.
  */
 export function applyAiMixin(WebComponent) {
 	if (!WebComponent || WebComponent[APPLIED]) {
-		return;
+		return false;
 	}
 	Object.assign(WebComponent.prototype, aiMethods);
 	WebComponent[APPLIED] = true;
+	return true;
+}
+function registerElementTree(collection) {
+	const total = collection.length;
+	for (let index = 0; index < total; index += 1) {
+		registerElementSubtree(collection[index]);
+	}
+}
+/*
+ * PRE-ORDER: register the node BEFORE descending, so a parent always has its id
+ * before a child's `findAiAncestor` looks it up — register children first and
+ * they resolve no ancestor and become false roots. Walk the shadow tree (the
+ * component's rendered children) then the light tree (slotted children); the
+ * `componentIds` guard in registerComponent makes any overlap a cheap no-op.
+ */
+function registerElementSubtree(node) {
+	if (isFunction(node.aiRegister)) {
+		node.aiRegister();
+	}
+	const shadow = node.shadowRoot;
+	if (shadow) {
+		registerElementTree(shadow.children);
+	}
+	registerElementTree(node.children);
+}
+/*
+ * One-time backfill run when AI arms mid-session: components that mounted before
+ * arming are absent from the registry, so an agent connecting now would see an
+ * empty page. Walk the live DOM once and register the whole tree (notifications
+ * suppressed for the bulk pass — see registry.js), then invalidate the path index
+ * so the next lookup rebuilds against the freshly-populated tree.
+ */
+export function backfillAiRegistry() {
+	const body = globalThis.document?.body;
+	if (!body) {
+		return;
+	}
+	suppressNotifications(true);
+	try {
+		registerElementTree(body.children);
+	} finally {
+		suppressNotifications(false);
+	}
+	invalidatePathIndex();
+}
+/*
+ * Arm AI for a component class: apply the mixin once, then backfill the live tree
+ * ONLY on the first arm (applyAiMixin returns false thereafter, so repeated calls
+ * are cheap no-ops — later mounts/unmounts keep the registry current through the
+ * normal lifecycle). Class-parameterized to keep this module decoupled from base.js;
+ * the core barrel binds it to `WebComponent` as the no-arg `enableAi()`.
+ */
+export function enableAiFor(WebComponentClass) {
+	if (applyAiMixin(WebComponentClass)) {
+		backfillAiRegistry();
+	}
 }

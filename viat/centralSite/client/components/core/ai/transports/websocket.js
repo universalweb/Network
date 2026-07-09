@@ -38,47 +38,70 @@ export class WebSocketTransport {
 		this.onRequest = onRequest;
 		this.connect();
 	}
+	/*
+	 * The transport itself is the listener (handleEvent contract): one object
+	 * registered for all four socket events — no per-connect handler closures,
+	 * and every reconnect reuses the same listener identity.
+	 */
 	connect() {
 		if (!this.alive) {
 			return;
 		}
 		const ws = new WebSocket(this.buildUrl(), this.protocols);
 		this.ws = ws;
-		ws.addEventListener('open', () => {
-			this.currentDelay = this.minReconnectMs;
-			defaultLogger.info('ai-ws', `connected ${this.url}`);
-			this.startHeartbeat();
-		});
-		ws.addEventListener('message', async (messageEvent) => {
-			let message;
-			try {
-				message = JSON.parse(messageEvent.data);
-			} catch (error) {
-				defaultLogger.warn('ai-ws', 'parse error', error);
-				return;
-			}
-			if (!message || message.jsonrpc !== '2.0') {
-				return;
-			}
-			if (!message.method) {
-				return;
-			}
-			const reply = await this.onRequest(message);
-			if (reply) {
-				this.send(reply);
-			}
-		});
-		ws.addEventListener('error', (errorEvent) => {
-			defaultLogger.warn('ai-ws', 'error', errorEvent?.message ?? errorEvent);
-		});
-		ws.addEventListener('close', () => {
-			this.stopHeartbeat();
-			this.ws = null;
-			if (!this.alive || !this.reconnect) {
-				return;
-			}
-			this.scheduleReconnect();
-		});
+		ws.addEventListener('open', this);
+		ws.addEventListener('message', this);
+		ws.addEventListener('error', this);
+		ws.addEventListener('close', this);
+	}
+	handleEvent(socketEvent) {
+		if (socketEvent.type === 'message') {
+			return this.handleSocketMessage(socketEvent);
+		}
+		if (socketEvent.type === 'open') {
+			return this.handleSocketOpen();
+		}
+		if (socketEvent.type === 'close') {
+			return this.handleSocketClose();
+		}
+		if (socketEvent.type === 'error') {
+			return this.handleSocketError(socketEvent);
+		}
+	}
+	handleSocketOpen() {
+		this.currentDelay = this.minReconnectMs;
+		defaultLogger.info('ai-ws', `connected ${this.url}`);
+		this.startHeartbeat();
+	}
+	async handleSocketMessage(messageEvent) {
+		let message;
+		try {
+			message = JSON.parse(messageEvent.data);
+		} catch (error) {
+			defaultLogger.warn('ai-ws', 'parse error', error);
+			return;
+		}
+		if (!message || message.jsonrpc !== '2.0') {
+			return;
+		}
+		if (!message.method) {
+			return;
+		}
+		const reply = await this.onRequest(message);
+		if (reply) {
+			this.send(reply);
+		}
+	}
+	handleSocketError(errorEvent) {
+		defaultLogger.warn('ai-ws', 'error', errorEvent?.message ?? errorEvent);
+	}
+	handleSocketClose() {
+		this.stopHeartbeat();
+		this.ws = null;
+		if (!this.alive || !this.reconnect) {
+			return;
+		}
+		this.scheduleReconnect();
 	}
 	scheduleReconnect() {
 		clearTimeout(this.reconnectTimer);
@@ -87,21 +110,25 @@ export class WebSocketTransport {
 		}, this.currentDelay);
 		this.currentDelay = Math.min(this.currentDelay * 2, this.maxReconnectMs);
 	}
+	sendHeartbeat() {
+		if (this.ws?.readyState !== STATE_OPEN) {
+			return;
+		}
+		this.send({
+			jsonrpc: '2.0',
+			method: 'ai.heartbeat',
+			params: {
+				t: Date.now(),
+			},
+		});
+	}
 	startHeartbeat() {
 		this.stopHeartbeat();
 		if (!this.heartbeatMs) {
 			return;
 		}
 		this.heartbeatTimer = setInterval(() => {
-			if (this.ws?.readyState === STATE_OPEN) {
-				this.send({
-					jsonrpc: '2.0',
-					method: 'ai.heartbeat',
-					params: {
-						t: Date.now(),
-					},
-				});
-			}
+			this.sendHeartbeat();
 		}, this.heartbeatMs);
 	}
 	stopHeartbeat() {

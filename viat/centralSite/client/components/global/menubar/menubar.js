@@ -17,14 +17,17 @@
 	── EVENTS ───────────────────────────────────────────────────────────
 	  menu:select { value, index, menu }   (menu = index of the top-level menu)
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-menubar .menus=${[
+	  <ui-menubar .state.menus=${[
 	    { label: 'File', items: [{ label: 'New', value: 'new', kbd: '⌘N' }, { separator: true }, { label: 'Quit', value: 'quit', danger: true }] },
 	    { label: 'Edit', items: [{ label: 'Undo', value: 'undo', kbd: '⌘Z' }, { label: 'Redo', value: 'redo' }] },
 	  ]} @menu:select=${e => run(e.detail.data)}></ui-menubar>
 	──────────────────────────────────────────────────────────────────────
 */
 import { computeAnchor } from '../../core/dom/anchor.js';
-import { escapeHtml, UIMenu } from '../menu/menu.js';
+import { list } from 'webcomponent';
+import { escapeHtml } from '../../core/utilities.js';
+import { UIMenu } from '../menu/menu.js';
+import { UIMenuItem } from '../menu/menu-item.js';
 export class UIMenubar extends UIMenu {
 	static url = import.meta.url;
 	// Reuse the dropdown panel + item styles; menubar.css only adds the trigger strip.
@@ -35,7 +38,8 @@ export class UIMenubar extends UIMenu {
 	static state = {
 		menus: [],
 		items: [],
-		placement: 'bottom-start',
+		side: 'bottom',
+		align: 'start',
 		offset: 4,
 	};
 	// Which top-level menu's panel is open (-1 = none). NOT reactive — switching
@@ -229,7 +233,7 @@ export class UIMenubar extends UIMenu {
 			width: surface.offsetWidth,
 			height: surface.offsetHeight,
 		}, {
-			placement: this.state.placement,
+			placement: `${this.state.side}-${this.state.align}`,
 			offset: Number(this.state.offset) || 4,
 		});
 		surface.style.top = `${placed.top}px`;
@@ -256,8 +260,8 @@ export class UIMenubar extends UIMenu {
 				^html${this.renderTriggers}
 			</div>
 			<div #surface class="menu-surface" popover="auto" role="menu"
-				@toggle=${this.handleToggle} @click=${this.handleClick} @keydown=${this.handleKey}>
-				^html${this.renderItems}
+				@toggle=${this.handleToggle} @menu-item:select=${this.handleSelect} @keydown=${this.handleKey}>
+				${list('items', UIMenuItem)}
 			</div>
 		`;
 	}

@@ -11,7 +11,7 @@ class NotificationItem extends WebComponent {
 		itemType: 'default',
 		message: '',
 		timeout: 0,
-		title: 'Notification',
+		heading: 'Notification',
 	};
 	onConnect() {
 		const { timeout } = this.STATE;
@@ -31,7 +31,7 @@ class NotificationItem extends WebComponent {
 		if (domEvent.animationName !== 'notification-out') {
 			return;
 		}
-		this.emit('notification-dismiss', {
+		this.emit('notification:dismiss', {
 			id: this.STATE.id,
 		});
 	}
@@ -53,7 +53,7 @@ class NotificationItem extends WebComponent {
 				@keydown=${this.handleKey}
 				@animationend=${this.handleAnimationEnd}>
 				<div class="notification-body">
-					<div class="notification-title">${this.state.title}</div>
+					<div class="notification-title">${this.state.heading}</div>
 					<div class="notification-message">${this.state.message}</div>
 				</div>
 				<ui-icon class="notification-close" .state.name=${'x'} .state.size=${'sm'}></ui-icon>
@@ -100,7 +100,7 @@ export class UINotification extends WebComponent {
 			itemType: spec.itemType ?? 'default',
 			message,
 			timeout: spec.timeout ?? DEFAULT_TIMEOUT,
-			title: spec.title ?? 'Notification',
+			heading: spec.heading ?? 'Notification',
 		});
 		// Re-promote the popover into the top layer so the stack lands above
 		// any modal that opened after the notification host was first shown.
@@ -134,7 +134,7 @@ export class UINotification extends WebComponent {
 	}
 	render() {
 		this.html `
-			<div class="notification-stack" @notification-dismiss=${this.handleDismiss}>
+			<div class="notification-stack" @notification:dismiss=${this.handleDismiss}>
 				${list('items', NotificationItem, (item) => {
 					return item.id;
 				})}

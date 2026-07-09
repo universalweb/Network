@@ -1,5 +1,5 @@
 import '../modal/modal.js';
-import { WebComponent } from '../../core/index.js';
+import { WebComponent } from 'webcomponent';
 // `<ui-whitebox-modal>` — bright-background modal sized around its media
 // payload. Drop in an image or video URL via state, call `.open()`, and the
 // modal centers the content on white with a large, obvious close icon at
@@ -27,6 +27,12 @@ export class UIWhiteboxModal extends WebComponent {
 		src: '',
 		alt: '',
 		caption: '',
+		modal: {
+			modal: true,
+			open: false,
+			showClose: true,
+			showMaximize: true,
+		},
 	};
 	open() {
 		this.refs.modal?.open();
@@ -34,22 +40,23 @@ export class UIWhiteboxModal extends WebComponent {
 	close() {
 		this.refs.modal?.close();
 	}
-	render() {
+	mediaNode() {
 		const src = this.state.src;
 		const video = isVideoSrc(src);
+		return video ? this.htmlElement`<video class="wb-media" src="${src}" controls playsinline preload="metadata"></video>` : this.htmlElement`<img class="wb-media" src="${src}" alt="${this.state.alt}" draggable="false">`;
+	}
+	captionNode() {
 		const caption = this.state.caption;
-		this.html `
-			<ui-modal #modal class="whitebox-host" .state=${{
-				modal: true,
-				open: false,
-				showClose: true,
-				showMaximize: true,
-			}} style="--ui-modal-max-width: min(96vw, 1280px); --ui-modal-max-height: 96dvh">
+		return caption ? this.htmlElement`<div class="wb-caption">${caption}</div>` : '';
+	}
+	render() {
+		this.html`
+			<ui-modal #modal class="whitebox-host" .state=${this.state.modal} style="--ui-modal-max-width: min(96vw, 1280px); --ui-modal-max-height: 96dvh">
 				<div class="wb-shell">
 					<div class="wb-stage">
-						^html${video ? `<video class="wb-media" src="${src}" controls playsinline preload="metadata"></video>` : `<img class="wb-media" src="${src}" alt="${this.state.alt}" draggable="false">`}
+						${this.mediaNode}
 					</div>
-					^html${caption ? `<div class="wb-caption">${caption}</div>` : ''}
+					${this.captionNode}
 				</div>
 			</ui-modal>
 		`;

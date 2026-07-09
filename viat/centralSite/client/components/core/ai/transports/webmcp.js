@@ -1,11 +1,12 @@
 import { defaultLogger } from '../../debug/logger.js';
 import { isFunction, isTypeUndefined } from '../../utilities.js';
 import {
-	eachComponent,
-	getComponentId,
+	componentEntries,
+	getComponentById,
 	getTools,
 	subscribe,
 } from '../registry.js';
+function noopUnregister() {}
 function detectMcp() {
 	if (isTypeUndefined(typeof navigator)) {
 		return null;
@@ -42,7 +43,7 @@ export class WebMCPTransport {
 	constructor({
 		siteName, autoPublish = true,
 	} = {}) {
-		this.siteName = siteName ?? (typeof location !== 'undefined' ? location.hostname : 'site');
+		this.siteName = siteName ?? globalThis.location?.hostname ?? 'site';
 		this.autoPublish = autoPublish;
 		this.registered = new Map();
 		this.onRequest = null;
@@ -62,38 +63,42 @@ export class WebMCPTransport {
 		if (this.autoPublish) {
 			this.publishAll();
 			this.unsubscribeRegistry = subscribe((registryEvent) => {
-				if (registryEvent.type === 'componentAdded') {
-					const component = this.findById(registryEvent.id);
-					if (component) {
-						this.publishComponent(registryEvent.id, component);
-					}
-				} else if (registryEvent.type === 'componentRemoved') {
-					this.unpublishComponent(registryEvent.id);
-				}
+				this.onRegistryEvent(registryEvent);
 			});
 		}
 	}
-	findById(id) {
-		let found = null;
-		eachComponent((component, currentId) => {
-			if (currentId === id) {
-				found = component;
+	onRegistryEvent(registryEvent) {
+		if (registryEvent.type === 'componentAdded') {
+			const component = getComponentById(registryEvent.id);
+			if (component) {
+				this.publishComponent(registryEvent.id, component);
 			}
-		});
-		return found;
+			return;
+		}
+		if (registryEvent.type === 'componentRemoved') {
+			this.unpublishComponent(registryEvent.id);
+		}
 	}
 	publishAll() {
-		eachComponent((component, id) => {
+		for (const [
+			id,
+			component,
+		] of componentEntries()) {
 			this.publishComponent(id, component);
-		});
+		}
 	}
 	publishComponent(id, component) {
 		const tools = getTools(component);
-		tools.forEach((def, toolName) => {
+		for (const [
+			toolName,
+			def,
+		] of tools) {
 			const key = buildToolKey(id, toolName);
 			if (this.registered.has(key)) {
-				return;
+				continue;
 			}
+			/* The executor arrow is the MCP-forced callback shape (needs id/tool
+			   context) — a thin async forward to the named method. */
 			const descriptor = buildToolDescriptor(id, toolName, def, async (args) => {
 				return this.invokeRemoteTool(id, toolName, args);
 			});
@@ -105,15 +110,19 @@ export class WebMCPTransport {
 					return unregister.unregister();
 				});
 			} else {
-				this.registered.set(key, () => {});
+				this.registered.set(key, noopUnregister);
 			}
-		});
+		}
 	}
 	unpublishComponent(id) {
 		const prefix = `${id}:`;
-		this.registered.forEach((unregister, key) => {
+		/* Map for…of tolerates deleting the current entry. */
+		for (const [
+			key,
+			unregister,
+		] of this.registered) {
 			if (!key.startsWith(prefix)) {
-				return;
+				continue;
 			}
 			try {
 				unregister();
@@ -121,7 +130,7 @@ export class WebMCPTransport {
 				defaultLogger.warn('ai-mcp', 'unregister error', error);
 			}
 			this.registered.delete(key);
-		});
+		}
 	}
 	async invokeRemoteTool(id, toolName, args) {
 		const reply = await this.onRequest({
@@ -145,13 +154,13 @@ export class WebMCPTransport {
 	stop() {
 		this.unsubscribeRegistry?.();
 		this.unsubscribeRegistry = null;
-		this.registered.forEach((unregister) => {
+		for (const unregister of this.registered.values()) {
 			try {
 				unregister();
 			} catch (error) {
 				defaultLogger.warn('ai-mcp', 'unregister error', error);
 			}
-		});
+		}
 		this.registered.clear();
 		this.mcp = null;
 		this.onRequest = null;
@@ -159,9 +168,15 @@ export class WebMCPTransport {
 }
 export function getMcpToolDescriptors() {
 	const out = [];
-	eachComponent((component, id) => {
+	for (const [
+		id,
+		component,
+	] of componentEntries()) {
 		const tools = getTools(component);
-		tools.forEach((def, toolName) => {
+		for (const [
+			toolName,
+			def,
+		] of tools) {
 			out.push({
 				name: buildToolKey(id, toolName),
 				description: def.description ?? '',
@@ -174,8 +189,8 @@ export function getMcpToolDescriptors() {
 					mutating: def.mutating === true,
 				},
 			});
-		});
-	});
+		}
+	}
 	return out;
 }
 export { detectMcp };

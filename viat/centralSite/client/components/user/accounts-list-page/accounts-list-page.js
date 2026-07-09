@@ -59,8 +59,8 @@ export class AccountsListPage extends WebComponent {
 		renderHead: this.headRow,
 		pageHref: this.pageHref,
 		itemNoun: 'accounts on chain',
-		emptyText: 'No accounts yet.',
-		loadingText: 'Loading recent accounts…',
+		emptyMessage: 'No accounts yet.',
+		loadingMessage: 'Loading recent accounts…',
 		pagingStyle: 'loadmore',
 	};
 	/* Router entry: a route page-number → the list's start/current page. */

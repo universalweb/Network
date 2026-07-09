@@ -24,12 +24,12 @@ export class GlobalPulldown extends WebComponent {
 	};
 	scrollLocked = false;
 	open() {
-		this.emit('pulldown:state', {
+		this.emit('pulldown:toggle', {
 			open: true,
 		});
 	}
 	close() {
-		this.emit('pulldown:state', {
+		this.emit('pulldown:toggle', {
 			open: false,
 		});
 	}
@@ -42,7 +42,7 @@ export class GlobalPulldown extends WebComponent {
 	/*
 	 * Lock the background like the modals do — under document scroll the page
 	 * behind the open pulldown would otherwise scroll/chain. Driven by the same
-	 * `pulldown:state` bus signal ui-pulldown animates from, so it catches EVERY
+	 * `pulldown:toggle` bus signal ui-pulldown animates from, so it catches EVERY
 	 * open/close path (drag, hotkey, button, backdrop). Guarded so this pulldown
 	 * only ever moves the shared lock count by one.
 	 */
@@ -60,13 +60,13 @@ export class GlobalPulldown extends WebComponent {
 		// `data-vw` drives the mobile column-hide rules — see reflectViewport.
 		this.reflectViewport();
 		// Background scroll-lock keyed to the canonical open/close signal.
-		this.delegate('pulldown:state', this.handlePulldownScrollState);
+		this.delegate('pulldown:toggle', this.handlePulldownScrollState);
 	}
 	handleBackdropClick(domEvent) {
 		if (domEvent.target !== domEvent.currentTarget) {
 			return;
 		}
-		this.emit('pulldown:state', {
+		this.emit('pulldown:toggle', {
 			open: false,
 		});
 	}

@@ -4,6 +4,18 @@ export class UIInput extends WebComponent {
 	static styles = {
 		input: './input.css',
 	};
+	/*
+	 * `spellcheck` rides the reactive HOST-attribute channel (`this.attrs.spellcheck`,
+	 * set as `<ui-input spellcheck="false">`), not state — the key shadows
+	 * HTMLElement.prototype.spellcheck, so a state key would invite a bare
+	 * `.spellcheck=` binding that silently sets the native DOM prop. Declared a
+	 * STRING (enumerated `"true"`/`"false"`), NOT a boolean: boolean attrs are
+	 * presence-only (add/remove, like `disabled`) — which would make the intended
+	 * `spellcheck="false"` read as "present → on", the inverse of intent.
+	 */
+	static attrs = {
+		spellcheck: 'true',
+	};
 	static state = {
 		value: '',
 		placeholder: '',
@@ -15,7 +27,6 @@ export class UIInput extends WebComponent {
 		name: '',
 		autocomplete: '',
 		inputmode: '',
-		spellcheck: true,
 		maxlength: 0,
 		minlength: 0,
 		pattern: '',
@@ -34,32 +45,25 @@ export class UIInput extends WebComponent {
 	}
 	handleInput(domEvent) {
 		// Absorb the native event: `input`/`change` are composed:true, so they leak out
-		// of this shadow and reach a consumer's `@input`/`@change` ALONGSIDE the custom
-		// event we re-emit — and the native one has no `detail.data`, so the documented
-		// `e.detail.data.value` read throws. stopPropagation (NOT stopImmediate) blocks
-		// only bubbling; the same-element `$value` @bind still fires, so state.value tracks.
+		// of this shadow and reach consumers ALONGSIDE our namespaced re-emit.
+		// stopPropagation (NOT stopImmediate) blocks only bubbling; the same-element
+		// `$value` @bind still fires, so state.value tracks.
 		domEvent.stopPropagation();
-		this.emit('input', {
+		this.emit('input:input', {
 			value: domEvent.target.value,
-			source: this,
 		});
 	}
 	handleChange(domEvent) {
 		domEvent.stopPropagation();
-		this.emit('change', {
+		this.emit('input:change', {
 			value: domEvent.target.value,
-			source: this,
 		});
 	}
 	handleFocus() {
-		this.emit('focus', {
-			source: this,
-		});
+		this.emit('input:focus', {});
 	}
 	handleBlur() {
-		this.emit('blur', {
-			source: this,
-		});
+		this.emit('input:blur', {});
 	}
 	render() {
 		this.html `
@@ -81,7 +85,7 @@ export class UIInput extends WebComponent {
 					$value="value"
 					?disabled=${this.state.disabled}
 					?readonly=${this.state.readonly}
-					?spellcheck=${this.state.spellcheck}
+					spellcheck=${this.attrs.spellcheck}
 					@input=${this.handleInput}
 					@change=${this.handleChange}
 					@focus=${this.handleFocus}

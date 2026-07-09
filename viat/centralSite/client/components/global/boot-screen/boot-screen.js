@@ -11,9 +11,9 @@ export class BootScreen extends WebComponent {
 		bootScreen: './boot-screen.css',
 	};
 	static state = {
-		title: '',
-		subtitle: '',
-		extraSubtitle: '',
+		heading: '',
+		subheading: '',
+		extraSubheading: '',
 		logo: '',
 		barState: {
 			indeterminate: true,
@@ -65,11 +65,11 @@ export class BootScreen extends WebComponent {
 					<div class="bs-glow"></div>
 					${this.bind('logo')}
 					<div class="bs-titles">
-						<div class="bs-title">${this.state.title}</div>
-						<div class="bs-subtitle">${this.state.subtitle}</div>
+						<div class="bs-title">${this.state.heading}</div>
+						<div class="bs-subtitle">${this.state.subheading}</div>
 					</div>
 					<ui-loading-bar .state=${this.state.barState}></ui-loading-bar>
-					<div class="bs-subtitle">${this.state.extraSubtitle}</div>
+					<div class="bs-subtitle">${this.state.extraSubheading}</div>
 				</div>
 			</div>
 		`;

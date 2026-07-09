@@ -3,9 +3,9 @@
 	otherwise initials on a deterministic colour derived from `name` (same name → same
 	hue, every render). Optional status dot (online/away/busy/offline → tone tokens).
 	── STANDARD INTERACTION ─────────────────────────────────────────────
-	  <ui-avatar .src=${'/u/42.png'} .name=${'Ada Lovelace'} .size=${'lg'}></ui-avatar>
-	  <ui-avatar .name=${'0xA1f2…c4'} .shape=${'square'} .status=${'online'}></ui-avatar>
-	  <ui-avatar .initials=${'AL'}></ui-avatar>   (explicit initials override)
+	  <ui-avatar .state.src=${'/u/42.png'} .state.name=${'Ada Lovelace'} .state.size=${'lg'}></ui-avatar>
+	  <ui-avatar .state.name=${'0xA1f2…c4'} .state.shape=${'square'} .state.status=${'online'}></ui-avatar>
+	  <ui-avatar .state.initials=${'AL'}></ui-avatar>   (explicit initials override)
 	─────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from 'webcomponent';

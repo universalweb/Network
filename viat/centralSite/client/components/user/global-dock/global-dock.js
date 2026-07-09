@@ -3,7 +3,7 @@ import { WebComponent } from 'webcomponent';
 // `<global-dock>` — the Viat navigation rail. A thin composition over the
 // built-in `<ui-dock>`: it supplies the six section items and owns the router
 // coupling — the `dockSelect` event and `observeGlobal('routeSection')` both
-// drive `<ui-dock>`'s `activeId`. The built-in never reads the router.]
+// drive `<ui-dock>`'s `activeIndex`. The built-in never reads the router.]
 export class GlobalDock extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -11,10 +11,10 @@ export class GlobalDock extends WebComponent {
 	};
 	static state = {
 		dock: {
-			// A complete config — `global-dock` mutates `activeId`, which
+			// A complete config — `global-dock` mutates `activeIndex`, which
 			// re-applies `.state=` on a patch pass; a re-applied `.state=`
 			// wholesale-replaces, so every key the built-in needs must be here.
-			activeId: '',
+			activeIndex: '',
 			orientation: 'vertical',
 			showActiveBar: true,
 			items: [
@@ -22,25 +22,25 @@ export class GlobalDock extends WebComponent {
 					id: 'wallet',
 					icon: 'wallet',
 					tooltip: 'Wallet',
-					animate: 'bob',
+					animated: 'bob',
 				},
 				{
 					id: 'explorer',
 					icon: 'compass',
 					tooltip: 'Explorer',
-					animate: 'compass',
+					animated: 'compass',
 				},
 				{
 					id: 'accounts',
 					icon: 'users',
 					tooltip: 'Accounts',
-					animate: 'hop',
+					animated: 'hop',
 				},
 				{
 					id: 'swap',
 					icon: 'repeat-2',
 					tooltip: 'Swap',
-					animate: 'flip',
+					animated: 'flip',
 				},
 				{
 					id: 'exchange',
@@ -63,21 +63,21 @@ export class GlobalDock extends WebComponent {
 		// event: <ui-dock> emits `dock:select` on EVERY item click (re-taps included)
 		// and self-highlights optimistically; we translate that into the app's
 		// `dockSelect` command. We deliberately do NOT trigger navigation off the
-		// `dock.activeId` STATE — that back-edge (state → command → state) is what made
+		// `dock.activeIndex` STATE — that back-edge (state → command → state) is what made
 		// the dock/router cycle, and it swallowed re-taps (a same-value write never fires).
 		this.on('dock:select', this.handleDockClick);
 		// DISPLAY flows DOWN, one-way: `routeSection` is the source of truth, the rail
 		// is its projection. This reconciles the highlight; it never navigates, so no
 		// cycle can form regardless of write-dedup or the router's current-section guard.
 		this.observeGlobal('routeSection', (sectionId) => {
-			this.state.dock.activeId = sectionId || '';
+			this.state.dock.activeIndex = sectionId || '';
 		});
 	}
 	handleDockClick(domEvent) {
-		// The clicked icon-button is the event source — same payload shape <ui-dock>
-		// reads in handleItemSelect. Emitting on every click (not on an activeId change)
+		// The clicked icon-button row reports its `id` — same payload shape <ui-dock>
+		// reads in handleItemSelect. Emitting on every click (not on an activeIndex change)
 		// is what makes re-tap-to-refresh reachable in AppView.handleDockSelect.
-		const id = domEvent.detail?.source?.state?.id;
+		const id = domEvent.detail?.data?.id;
 		if (!id) {
 			return;
 		}

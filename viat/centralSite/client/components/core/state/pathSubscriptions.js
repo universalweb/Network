@@ -296,6 +296,17 @@ export class PathSubscriptions {
 	pendingAll = false;
 	flushScheduled = false;
 	/*
+	 * O(1) count of NESTED (dotted) subscription paths — maintained at the two
+	 * bucket chokepoints (`bucketFor` / `dropBucket`, the same lines that flip
+	 * `indexDirty`, so it can never drift from `subs`). When it is 0 every bucket
+	 * is a bare top-level key (or ''), so a single changed path overlaps AT MOST
+	 * ONE bucket — its exact key, or its first segment (the sole possible bare
+	 * ancestor; any longer prefix would itself be dotted, hence absent, and a
+	 * descendant would need a dotted sub). `dispatchSingle` reads this to take the
+	 * flat fast path — one Map.get, no O(subs) scan, no per-flush snapshot.
+	 */
+	nestedPathCount = 0;
+	/*
 	 * Lazily-built overlap index. `indexRoot` stays null until the first
 	 * multi-path flush; `indexDirty` (starts true) flips whenever a bucket is
 	 * created or dropped so the next multi-path flush rebuilds from live subs.
@@ -332,6 +343,9 @@ export class PathSubscriptions {
 			bucket = new Set();
 			this.subs.set(path, bucket);
 			this.indexDirty = true;
+			if (path.includes('.')) {
+				this.nestedPathCount += 1;
+			}
 		}
 		return bucket;
 	}
@@ -348,6 +362,9 @@ export class PathSubscriptions {
 			return;
 		}
 		this.indexDirty = true;
+		if (path.includes('.')) {
+			this.nestedPathCount -= 1;
+		}
 	}
 	/**
 	 * Rebuild the overlap trie from the live `subs` keys iff the vocabulary
@@ -422,6 +439,21 @@ export class PathSubscriptions {
 	 * map; the trie earns its keep only on multi-path batches.
 	 */
 	dispatchSingle(changedPath) {
+		/*
+		 * Flat fast path — no nested subscription exists (nestedPathCount === 0), so
+		 * `changedPath` overlaps AT MOST ONE bucket: its exact key when flat, else
+		 * its first segment (the only bare-key ancestor — a longer prefix would be
+		 * dotted, hence absent; a descendant would need a dotted sub). One Map.get
+		 * finds it; the O(subs) scan and the per-flush `[...subs.entries()]` snapshot
+		 * are skipped. The dominant flush shape in flat-state components (~97% of the
+		 * reactive surface here). ≤1 bucket ⇒ dispatch order is trivially preserved.
+		 */
+		if (this.nestedPathCount === 0) {
+			const dotIndex = changedPath.indexOf('.');
+			const bucketPath = dotIndex === -1 ? changedPath : changedPath.slice(0, dotIndex);
+			this.dispatchBucket(bucketPath, changedPath);
+			return;
+		}
 		const entries = [...this.subs.entries()];
 		const entriesLength = entries.length;
 		for (let index = 0; index < entriesLength; index++) {
@@ -436,6 +468,27 @@ export class PathSubscriptions {
 			for (let subscriptionIndex = 0; subscriptionIndex < subscriptionArrayLength; subscriptionIndex++) {
 				fireSubscription(subscriptionArray[subscriptionIndex], value, changedPath);
 			}
+		}
+	}
+	/**
+	 * Fire every subscriber in ONE bucket (resolved by path) with the value at the
+	 * bucket's own subscription path. Snapshots the bucket before firing so a
+	 * handler that unsubscribes a sibling mid-dispatch is suppressed by
+	 * `fireSubscription`'s null-handler guard — identical once-per-batch semantics
+	 * to the scan path, which this shares on the flat fast path.
+	 * @param {string} bucketPath - The subscription path whose bucket to fire.
+	 * @param {string} changedPath - The changed path handed to each subscriber.
+	 */
+	dispatchBucket(bucketPath, changedPath) {
+		const subscriptions = this.subs.get(bucketPath);
+		if (!subscriptions || !subscriptions.size) {
+			return;
+		}
+		const value = this.getValue(bucketPath);
+		const subscriptionArray = [...subscriptions];
+		const subscriptionArrayLength = subscriptionArray.length;
+		for (let subscriptionIndex = 0; subscriptionIndex < subscriptionArrayLength; subscriptionIndex++) {
+			fireSubscription(subscriptionArray[subscriptionIndex], value, changedPath);
 		}
 	}
 	/**

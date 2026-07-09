@@ -13,11 +13,3 @@
 	border-radius: 0;
 	box-shadow: none;
 }
-@media (max-width: 47.9375em) {
-	:host([data-orientation='vertical']) .active-bar {
-		width: var(--bar-w, 38px);
-		height: 2px;
-		border-radius: 0;
-		box-shadow: none;
-	}
-}

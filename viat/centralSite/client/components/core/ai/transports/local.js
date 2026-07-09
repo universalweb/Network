@@ -22,6 +22,12 @@ export class LocalTransport {
 		if (!this.expose) {
 			return;
 		}
+		/*
+		 * Deliberately an object of arrows, NOT a class instance: viatAI is a
+		 * public global console/agent API whose methods must survive
+		 * destructuring (`const { request } = viatAI`) — prototype methods
+		 * would lose `this`. One object per start(); allocation is a non-issue.
+		 */
 		const api = {
 			sessionId,
 			request: (method, params) => {
@@ -52,7 +58,7 @@ export class LocalTransport {
 		globalThis[this.globalKey] = api;
 	}
 	notify(message) {
-		this.subscribers.forEach((handler) => {
+		for (const handler of this.subscribers) {
 			try {
 				handler(message);
 			} catch (error) {
@@ -60,7 +66,7 @@ export class LocalTransport {
 					throw error;
 				});
 			}
-		});
+		}
 	}
 	stop() {
 		this.subscribers.clear();

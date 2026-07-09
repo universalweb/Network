@@ -2,7 +2,7 @@
 	One segment in a <ui-toggle-group>. Receives its item as-is ({value, label?,
 	disabled?, active?}) and owns its whole render from those fields + defaults —
 	the label falls back to the value here, not in a parent loop. Sizing inherits
-	from the container's CSS custom properties. On click it emits `toggle-select`
+	from the container's CSS custom properties. On click it emits `toggle-group:select`
 	(detail.data.value); the parent owns the selection decision and stamps `active`
 	back onto the bound item.
 */
@@ -22,7 +22,7 @@ export class UIToggleOption extends WebComponent {
 		if (this.state.disabled === true) {
 			return;
 		}
-		this.emit('toggle-select', {
+		this.emit('toggle-group:select', {
 			value: this.state.value,
 		});
 	}

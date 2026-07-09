@@ -3,7 +3,7 @@ import { WebComponent } from '../../core/index.js';
 // One tab in a <ui-tabs> strip. Lives as its own custom element so the parent
 // can locate the active button via `findComponent` instead of reaching through
 // shadow DOM with a `.querySelector`. The parent passes the raw tab item as-is
-// (`list('tabs', UITabButton)`) and writes the shared `active` flag onto the
+// (`list('items', UITabButton)`) and writes the shared `active` flag onto the
 // bound item at event-time (UITabs.syncActiveFlags) — the list binding routes
 // the change in via `assignState`. Orientation styling is inherited from a CSS
 // custom property the strip sets, not a per-item prop.
@@ -19,7 +19,7 @@ export class UITabButton extends WebComponent {
 		active: false,
 	};
 	handleClick() {
-		this.emit('tab-select', {
+		this.emit('tab-button:select', {
 			id: this.state.id,
 		});
 	}

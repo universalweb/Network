@@ -10,7 +10,7 @@ import {
 	setValueAtPath,
 } from '../utilities.js';
 import { globalRealm, storeRealm } from './globalState.js';
-import { localRealm, STATE_PATH } from './state.js';
+import { ensureStateBus, localRealm, STATE_PATH } from './state.js';
 /*
  * ── Content kinds ────────────────────────────────────────────────────
  * Classification of any value that lands in a TEXT-position ${…} spot.
@@ -133,6 +133,27 @@ export function addDep(depMap, realm, path) {
 		depMap.set(realm, paths);
 	}
 	paths.add(path);
+}
+/*
+ * Reactive host-ATTRIBUTE channel — the `this.attrs.*` twin of state tracking.
+ * Attr deps ride the component's OWN `ComponentStateBus` (via `localRealm`), so
+ * they inherit its `onFlush → updateView` patch-pass kick and microtask
+ * batching for free — a dedicated bus would flip the dirty flag but never
+ * repaint. The `attr:` path prefix keeps attr buckets distinct from same-named
+ * state keys on that shared bus (the dep map is realm-keyed too, so this is
+ * belt-and-suspenders). `trackAttrRead` mirrors the state proxy's dep record;
+ * `notifyAttrChange` fires from `attributeChangedCallback` for every observed
+ * attribute — a change with no matching read-subscriber hits no bucket and
+ * `onFlush`'s clean-template guard skips the repaint (precise, not blanket).
+ */
+const ATTR_DEP_PREFIX = 'attr:';
+export function trackAttrRead(component, key) {
+	if (currentTracking) {
+		addDep(currentTracking, localRealm(component), ATTR_DEP_PREFIX + key);
+	}
+}
+export function notifyAttrChange(component, key) {
+	ensureStateBus(component).notify(ATTR_DEP_PREFIX + key);
 }
 /**
  * Per-(source, prefix) factory carrying the proxy cache, the dep prefix, and

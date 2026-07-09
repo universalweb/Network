@@ -1,45 +1,25 @@
-import { WebComponent } from '../../core/index.js';
-/* Escape for BOTH text content and the double-quoted value attribute below, so a
-   consumer-supplied option label/value (which may be user data — e.g. saved
-   profile names) can never inject markup. Mirrors ui-stat-table's escapeHtml,
-   plus the quote needed for attribute context. */
-function escapeHtml(value) {
-	return String(value ?? '')
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;');
-}
-function buildOptions(options, selectedValue) {
-	let markup = '';
-	for (let index = 0; index < options.length; index += 1) {
-		const option = options[index];
-		const disabledAttr = option.disabled === true ? ' disabled' : '';
-		const selectedAttr = option.value === selectedValue ? ' selected' : '';
-		markup += `<option value="${escapeHtml(option.value)}"${disabledAttr}${selectedAttr}>${escapeHtml(option.label)}</option>`;
-	}
-	return markup;
-}
+import { html, list, WebComponent } from 'webcomponent';
 /**
  * <ui-select> — a thin, themeable wrapper over a native <select> that picks up the
- * framework's customizable base-select picker (Chrome 135+) automatically and
- * degrades to the native popup in FF/Safari, since the inner element stays a real
- * <select>. Built ahead of need for future RICH-option selects; the three existing
- * app selects use the lean CSS path instead.
+ * framework's customizable base-select picker (Chrome 135+); the inner element
+ * stays a real <select>. Built ahead of need for future RICH-option selects; the
+ * three existing app selects use the lean CSS path instead.
  *
  * Blank-slate base primitive (components/global tier): no hardcoded content — the
- * caller passes `options` + `value`. Options render as ONE escaped HTML-string spot
- * (the ui-stat-table pattern: patches innerHTML once, the right cost shape for a
- * small option list, and immune to markup injection via escapeHtml). The picker
- * look is themed entirely by the universal `select` rules + `--select-*` tokens
- * (set them on the <ui-select> element to retint a single instance).
+ * caller passes `items` + `value`. Options are rendered by the list machinery
+ * (`list('items', this.renderOption)`) as light <option> rows: <option> is a native
+ * child of <select> and can't legally be wrapped in a custom element, so it is a
+ * light html row, not a ui-* child component. Each option auto-escapes its label.
+ * The list is the select's SOLE content (no surrounding whitespace) so the spot
+ * elides onto the <select> and options land as direct children — required for
+ * Chromium's base-select picker face to update on first pick.
  *
- * Selection lives INSIDE the option string (the `selected` attribute on the
- * matching option), not a separate `.value=` prop binding: the content spot runs
- * after the attribute spots, so a `.value=` set would land on an empty select and
- * default to the first option. Marking `selected` in the freshly-rebuilt markup
- * honours both initial and PROGRAMMATIC value changes, even after the select is
- * dirtied (new option elements aren't dirty).
+ * Selection is CONTROLLED but kept OUT of the render path (mirrors ui-radio-group):
+ * `value` marks no option `selected`, so an items change reuses the option rows
+ * without a value round-trip. A programmatic `.value` change — or a fresh options
+ * render — is reconciled imperatively via `syncValue`, which sets the native
+ * control's `.value`. This avoids the old spot-order footgun (a `.value=` set landing
+ * on an empty select) without rebuilding the list on every selection.
  */
 export class UISelect extends WebComponent {
 	static url = import.meta.url;
@@ -47,26 +27,42 @@ export class UISelect extends WebComponent {
 		select: './select.css',
 	};
 	static state = {
-		// Currently-selected value (mirrored to the matching option's `selected`
-		// attribute in buildOptions, see the class note on why not `.value=`).
 		value: '',
 		// [{ value, label, disabled? }]
-		options: [],
+		items: [],
 		disabled: false,
 	};
+	onMount() {
+		this.syncValue();
+		/*
+		 * Reconcile after both a programmatic value change AND an items re-render
+		 * (fresh <option> rows don't carry the prior selection). Async so the
+		 * options land before the value is applied.
+		 */
+		this.observeAsync('value', this.syncValue);
+		this.observeAsync('items', this.syncValue);
+	}
+	syncValue() {
+		const control = this.refs.control;
+		if (control) {
+			control.value = String(this.state.value);
+		}
+	}
 	handleChange(domEvent) {
+		// Swallow the native composed change so consumers only see select:change.
+		domEvent.stopPropagation();
 		const nextValue = domEvent.target.value;
 		this.state.value = nextValue;
-		this.emit('change', {
+		this.emit('select:change', {
 			value: nextValue,
 		});
 	}
+	renderOption(item) {
+		return html`<option value=${item.value} ?disabled=${item.disabled}>${item.label}</option>`;
+	}
 	render() {
-		this.html `
-			<select #control ?disabled=${this.state.disabled} @change=${this.handleChange}>^html${() => {
-				return buildOptions(this.state.options, this.state.value);
-			}}</select>
-		`;
+		// Sole-content list (no whitespace) so the spot elides onto <select>.
+		this.html`<select #control ?disabled=${this.state.disabled} @change=${this.handleChange}>${list('items', this.renderOption)}</select>`;
 	}
 }
 customElements.define('ui-select', UISelect);

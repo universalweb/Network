@@ -11,6 +11,12 @@
 	font-family: var(--font-mono, monospace);
 	color: var(--dark-text-medium);
 }
+/* Near-bottom trigger surface for the load engine's IntersectionObserver —
+   needs a real (if hairline) box to intersect; never visible content. */
+.pl-sentinel {
+	block-size: 1px;
+	margin-block: 0;
+}
 .pl-bar {
 	display: flex;
 	flex-wrap: wrap;

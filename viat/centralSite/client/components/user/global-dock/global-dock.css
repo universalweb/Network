@@ -11,14 +11,18 @@
 :host {
 	position: fixed;
 	inset-block: 0;
-	inset-inline-start: 0;
+	/* Float the rail off the inline-start window edge. Done with the position
+	   inset, not padding: a base reset zeroes host padding here (position/inset
+	   are honored), so `padding-inline` would collapse to 0 and the rail would sit
+	   flush against the edge. Vertical float needs nothing — the rail is centered
+	   in the full-height host by `justify-content: center`. */
+	inset-inline-start: var(--space-5);
 	inline-size: fit-content;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: stretch;
 	box-sizing: border-box;
-	padding: var(--space-2) var(--space-1);
 	z-index: var(--z-dock, 40);
 	pointer-events: none;
 }

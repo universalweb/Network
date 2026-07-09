@@ -55,7 +55,7 @@ export class UIModal extends WebComponent {
 		// Optional window-bar title (native-OS-window style). Empty string = no
 		// title shown; the bar still appears whenever any control flag is set.
 		// Opt-in per modal — existing modals keep their in-body heading untouched.
-		title: '',
+		heading: '',
 		// Optional continuation callback. Fires once when the modal closes
 		// (any path — button, Escape, backdrop, programmatic). Receives
 		// `{ returnValue, source }`. Self-clears after firing so the same
@@ -122,7 +122,7 @@ export class UIModal extends WebComponent {
 		}
 		this.applyAutoFocus(dialog);
 		this.state.open = true;
-		this.emit('modal-open');
+		this.emit('modal:open');
 	}
 	applyAutoFocus(dialog) {
 		const auto = this.state.autoFocus;
@@ -155,15 +155,12 @@ export class UIModal extends WebComponent {
 		dialog.close(returnValue);
 	}
 	handleCancel(domEvent) {
-		const cancelEvent = new CustomEvent('modal-cancel', {
-			bubbles: true,
+		// Preventable intent: emit() returns dispatchEvent's verdict, so a listener's
+		// preventDefault() vetoes the Esc-close by cancelling the inner dialog cancel.
+		const proceed = this.emit('modal:cancel', {}, {
 			cancelable: true,
-			composed: true,
-			detail: {
-				source: this,
-			},
 		});
-		if (this.dispatchEvent(cancelEvent) === false) {
+		if (proceed === false) {
 			domEvent.preventDefault();
 		}
 	}
@@ -183,10 +180,10 @@ export class UIModal extends WebComponent {
 			unlockBackgroundScroll();
 		}
 		const returnValue = domEvent.target?.returnValue ?? '';
-		this.emit('modal-close', {
+		this.emit('modal:close', {
 			returnValue,
 		});
-		// Fire the continuation callback last so listeners on `modal-close`
+		// Fire the continuation callback last so listeners on `modal:close`
 		// see the state change before the next-step logic runs.
 		const callback = this.state.afterAction;
 		if (typeof callback === 'function') {
@@ -211,14 +208,14 @@ export class UIModal extends WebComponent {
 	handleToggleMaximize() {
 		const next = this.dataset.window === 'maximized' ? 'normal' : 'maximized';
 		this.dataset.window = next;
-		this.emit('modal-maximize', {
+		this.emit('modal:maximize', {
 			maximized: next === 'maximized',
 		});
 	}
 	handleToggleMinimize() {
 		const next = this.dataset.window === 'minimized' ? 'normal' : 'minimized';
 		this.dataset.window = next;
-		this.emit('modal-minimize', {
+		this.emit('modal:minimize', {
 			minimized: next === 'minimized',
 		});
 	}
@@ -230,7 +227,7 @@ export class UIModal extends WebComponent {
 	// control-less, title-less modal stays a plain content box with no phantom bar.
 	barClass() {
 		const modalState = this.state;
-		const hasTitle = typeof modalState.title === 'string' && modalState.title.length > 0;
+		const hasTitle = typeof modalState.heading === 'string' && modalState.heading.length > 0;
 		return (modalState.showClose === true || modalState.showMaximize === true || modalState.showMinimize === true || hasTitle) ? 'has-bar' : '';
 	}
 	render() {
@@ -245,7 +242,7 @@ export class UIModal extends WebComponent {
 		this.html `
 			<dialog #dialog class=${classList('modal', this.controlsSideClass, this.barClass)} tabindex="-1" @click=${this.handleDialogClick} @cancel=${this.handleCancel} @close=${this.handleClose}>
 				<div class="modal-controls">
-					<div class="modal-title">${this.state.title}</div>
+					<div class="modal-title">${this.state.heading}</div>
 					<button type="button" class="mc-btn mc-min" aria-label="Minimize" ?hidden=${this.state.showMinimize !== true} @click=${this.handleToggleMinimize}>
 						<ui-icon class="mc-icon" .state.name=${'minus'} .state.size=${'sm'}></ui-icon>
 					</button>
@@ -253,7 +250,7 @@ export class UIModal extends WebComponent {
 						<ui-icon class="mc-icon mc-icon-grow" .state.name=${'maximize-2'} .state.size=${'sm'}></ui-icon>
 						<ui-icon class="mc-icon mc-icon-shrink" .state.name=${'minimize-2'} .state.size=${'sm'}></ui-icon>
 					</button>
-					<ui-close-button class="mc-close" ?hidden=${this.state.showClose !== true} @close-click=${this.handleCloseClick}></ui-close-button>
+					<ui-close-button class="mc-close" ?hidden=${this.state.showClose !== true} @close-button:click=${this.handleCloseClick}></ui-close-button>
 				</div>
 				<div class="modal-body"><slot></slot></div>
 			</dialog>

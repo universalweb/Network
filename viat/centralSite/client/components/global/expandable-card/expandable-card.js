@@ -8,7 +8,7 @@ import { MorphSurface } from '../morph-surface/morph-surface.js';
 // width as the expanded floor.
 //
 // Usage:
-//   <ui-expandable-card .heading=${'Network node'} .summary=${'3 peers · 12ms'}>
+//   <ui-expandable-card .state.heading=${'Network node'} .state.summary=${'3 peers · 12ms'}>
 //     …expanded detail…
 //   </ui-expandable-card>
 export class UIExpandableCard extends MorphSurface {

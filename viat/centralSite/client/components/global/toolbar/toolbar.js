@@ -11,13 +11,13 @@ export class UIToolbar extends WebComponent {
 		toolbar: './toolbar.css',
 	};
 	static state = {
-		actions: [],
+		items: [],
 	};
 	render() {
 		this.html `
 			<ui-bar class="toolbar" role="toolbar">
 				<div slot="center" class="toolbar-actions">
-					${filter('actions', IconButtonBase, 'hidden')}
+					${filter('items', IconButtonBase, 'hidden')}
 				</div>
 				<slot></slot>
 			</ui-bar>

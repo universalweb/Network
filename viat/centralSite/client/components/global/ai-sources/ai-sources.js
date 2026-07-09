@@ -26,11 +26,11 @@ function safeHref(url) {
 export class UIAiSources extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
-		sources: './ai-sources.css',
+		items: './ai-sources.css',
 	};
 	static state = {
 		label: 'Sources',
-		sources: [],
+		items: [],
 	};
 	sourceKey(source) {
 		return source.id ?? source.url ?? source.title;
@@ -55,7 +55,7 @@ export class UIAiSources extends WebComponent {
 					<ui-icon class="ais-head-icon" .state.name=${'book-open'} .state.size=${'sm'}></ui-icon>
 					<span class="ais-title-head">${this.state.label}</span>
 				</header>
-				<ol class="ais-list">${list('sources', this.renderSource, this.sourceKey)}</ol>
+				<ol class="ais-list">${list('items', this.renderSource, this.sourceKey)}</ol>
 			</section>
 		`;
 	}

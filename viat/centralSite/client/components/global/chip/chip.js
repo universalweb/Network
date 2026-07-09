@@ -8,10 +8,16 @@
 	── EVENTS ───────────────────────────────────────────────────────────
 	  chip:click  { value, selected }   fired on activation (when `interactive`)
 	  chip:remove { value }             fired by the ✕ or Delete/Backspace
+	  (payload arrives under event.detail.data; parents listen with @chip:remove=)
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-chip .label=${'React'} .value=${'react'} .removable=${true}></ui-chip>
-	  <ui-chip .label=${'Active'} .interactive=${true} .selected=${true}></ui-chip>
-	  el.addEventListener('chip:remove', e => drop(e.detail.data.value));
+	  Push data through the .state channel — a bare .label= sets a dead DOM
+	  property and does NOT reach state:
+	    <ui-chip .state.label=${'React'} .state.value=${'react'} .state.removable=${true}></ui-chip>
+	    <ui-chip .state.label=${'Active'} .state.interactive=${true} .state.selected=${true}></ui-chip>
+	  Or pass a whole reactive state object down (stays live via .state= carry-down):
+	    <ui-chip .state=${this.state.reactChip}></ui-chip>
+	  A parent consumes events with a template listener, never addEventListener:
+	    <div @chip:remove=${this.handleChipRemove}>…</div>   // reads e.detail.data.value
 	──────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from '../../core/index.js';

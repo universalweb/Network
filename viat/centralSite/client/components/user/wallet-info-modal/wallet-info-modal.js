@@ -13,6 +13,12 @@ export class WalletInfoModal extends WebComponent {
 	};
 	static state = {
 		expanded: false,
+		modal: {
+			modal: true,
+			open: false,
+			showClose: true,
+			showMaximize: true,
+		},
 	};
 	open() {
 		this.refs.modal?.open();
@@ -23,18 +29,16 @@ export class WalletInfoModal extends WebComponent {
 	toggleExpanded() {
 		this.state.expanded = !this.state.expanded;
 	}
+	captionText() {
+		return this.state.expanded ? 'Click image to collapse' : 'Click image to expand';
+	}
 	modalStyle() {
 		const max = this.state.expanded ? 'min(1400px, calc(100vw - 32px))' : 'min(720px, calc(100vw - 32px))';
 		return `--ui-modal-max-width: ${max}; --ui-modal-max-height: calc(100dvh - 32px)`;
 	}
 	render() {
-		this.html `
-			<ui-modal #modal .state=${{
-				modal: true,
-				open: false,
-				showClose: true,
-				showMaximize: true,
-			}} style=${this.modalStyle}>
+		this.html`
+			<ui-modal #modal .state=${this.state.modal} style=${this.modalStyle}>
 				<div class="modal-shell" ?data-expanded=${this.state.expanded}>
 					<header class="modal-head">
 						<span class="modal-head-id">VIAT</span>
@@ -46,9 +50,7 @@ export class WalletInfoModal extends WebComponent {
 							alt="VIAT HD wallet seed derivation diagram"
 							tooltip="Click to expand"
 							@click=${this.toggleExpanded}>
-						<figcaption class="wi-caption">${() => {
-							return (this.state.expanded ? 'Click image to collapse' : 'Click image to expand');
-						}}</figcaption>
+						<figcaption class="wi-caption">${this.captionText}</figcaption>
 					</figure>
 					<p class="modal-copy">A VIAT site wallet is a <strong>post-quantum hierarchical deterministic</strong> identity. Instead of treating a private key as the root, the system builds wallets from four independent high-entropy <em>master pools</em>. Three of them are bound to scheme-specific metadata and combined into one final fixed-size seed; the fourth supplies random data for operations that need it.</p>
 					<h3 class="info-section">Master entropy pools</h3>

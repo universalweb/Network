@@ -28,9 +28,9 @@ export class UIThemeSelect extends WebComponent {
 			<div #drop class="theme-drop" id="theme-drop" popover="auto"
 				@click=${this.handlePopupClick}>
 				^html${() => {
-					const activeId = this.global.theme;
+					const activeTheme = this.global.theme;
 					return [...THEMES.values()].map((themeEntry) => {
-						const active = themeEntry.id === activeId ? ' active' : '';
+						const active = themeEntry.id === activeTheme ? ' active' : '';
 						return `<button class="theme-option${active}" data-theme-id="${themeEntry.id}">${themeEntry.label}</button>`;
 					}).join('');
 				}}

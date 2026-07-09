@@ -6,9 +6,9 @@
 	`^html` branch. `label` is text-interpolated (escaped) — no raw injection.
 	── USAGE ────────────────────────────────────────────────────────────
 	  <ui-divider></ui-divider>
-	  <ui-divider .label=${'OR'}></ui-divider>
-	  <ui-divider .orientation=${'vertical'}></ui-divider>
-	  <ui-divider .variant=${'dashed'} .inset=${'both'}></ui-divider>
+	  <ui-divider .state.label=${'OR'}></ui-divider>
+	  <ui-divider .state.orientation=${'vertical'}></ui-divider>
+	  <ui-divider .state.variant=${'dashed'} .state.inset=${'both'}></ui-divider>
 	──────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from '../../core/index.js';

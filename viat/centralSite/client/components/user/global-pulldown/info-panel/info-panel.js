@@ -6,9 +6,9 @@ export class InfoPanel extends Panel {
 	};
 	static state = {
 		classes: new Set(['info-panel']),
-		id: 'AGENT',
+		panelId: 'AGENT',
 		showDot: true,
-		title: 'LOCAL AI',
+		heading: 'LOCAL AI',
 	};
 	renderBody() {
 		return this.htmlElement `

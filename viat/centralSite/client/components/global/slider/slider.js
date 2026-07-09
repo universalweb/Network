@@ -22,9 +22,9 @@
 	  slider:input  { value } | { low, high }   live, every tracked move / key
 	  slider:change { value } | { low, high }   on release / key commit
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-slider .value=${40} .min=${0} .max=${100} @slider:change=${e => save(e.detail.data.value)}></ui-slider>
-	  <ui-slider .range=${true} .low=${20} .high=${70} .marks=${true}></ui-slider>
-	  <ui-slider .orientation=${'vertical'} .step=${5} .showLabel=${'always'}></ui-slider>
+	  <ui-slider .state.value=${40} .state.min=${0} .state.max=${100} @slider:change=${e => save(e.detail.data.value)}></ui-slider>
+	  <ui-slider .state.range=${true} .state.low=${20} .state.high=${70} .state.marks=${true}></ui-slider>
+	  <ui-slider .state.orientation=${'vertical'} .state.step=${5} .state.showLabel=${'always'}></ui-slider>
 	──────────────────────────────────────────────────────────────────────
 */
 import { html, list, WebComponent } from 'webcomponent';
@@ -69,8 +69,9 @@ export class UISlider extends WebComponent {
 	activeThumb = null;
 	activePointerId = null;
 	dragRect = null;
-	// `.value=` / `.low=` / `.high=` already auto-route into state (every state key
-	// does); these explicit setters exist ONLY to coerce the incoming value to a Number.
+	// `.value=` / `.low=` / `.high=` reach state through these explicit setters (a bare
+	// dotted prop no longer auto-routes), which coerce the incoming value to a Number.
+	// Templates use the `.state.value=` channel; these serve DOM-property / attr writes.
 	get value() {
 		return this.state.value;
 	}

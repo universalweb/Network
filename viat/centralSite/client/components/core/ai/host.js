@@ -1,5 +1,6 @@
 import { defaultLogger } from '../debug/logger.js';
-import { isFunction } from '../utilities.js';
+import { isFunction, isPromiseLike } from '../utilities.js';
+import { enableAiFor } from './mixin.js';
 import { dispatch } from './protocol.js';
 import { subscribe as subscribeRegistry } from './registry.js';
 function makeNotification(type, payload) {
@@ -9,15 +10,38 @@ function makeNotification(type, payload) {
 		params: payload,
 	};
 }
+/*
+ * Async settle for a transport whose start() returned a thenable — awaits it
+ * unobserved (context as args, invoked unawaited) so a startup failure logs
+ * and detaches instead of surfacing as an unhandled rejection.
+ */
+async function settleTransportStart(aiHost, startResult, transport) {
+	try {
+		await startResult;
+	} catch (error) {
+		defaultLogger.error('ai-host', 'transport start failed', error);
+		aiHost.detach(transport);
+	}
+}
 export class AIHost {
 	constructor() {
 		this.transports = new Set();
 		this.sessionCounter = 0;
 		this.unsubscribeRegistry = subscribeRegistry((registryEvent) => {
-			this.broadcast(makeNotification(registryEvent.type, registryEvent));
+			this.onRegistryEvent(registryEvent);
 		});
 	}
+	onRegistryEvent(registryEvent) {
+		this.broadcast(makeNotification(registryEvent.type, registryEvent));
+	}
 	attach(transport) {
+		/*
+		 * A transport attaching is an agent arriving — the moment AI is genuinely
+		 * needed, so arm the lazy registry here (idempotent; backfills the live tree
+		 * once). Sourced off globalThis so the AI module stays decoupled from base.js
+		 * (mirrors the class-parameterized mixin); a no-op if the core never loaded.
+		 */
+		enableAiFor(globalThis.WebComponent);
 		if (this.transports.has(transport)) {
 			return () => {
 				return this.detach(transport);
@@ -39,11 +63,8 @@ export class AIHost {
 				this.detach(transport);
 			},
 		});
-		if (startResult?.catch) {
-			startResult.catch((error) => {
-				defaultLogger.error('ai-host', 'transport start failed', error);
-				this.detach(transport);
-			});
+		if (isPromiseLike(startResult)) {
+			settleTransportStart(this, startResult, transport);
 		}
 		defaultLogger.info('ai-host', `transport attached (session=${sessionId})`);
 		return () => {
@@ -62,24 +83,27 @@ export class AIHost {
 		}
 	}
 	broadcast(message) {
-		this.transports.forEach((transport) => {
-			if (isFunction(transport.notify)) {
-				try {
-					transport.notify(message);
-				} catch (error) {
-					defaultLogger.warn('ai-host', 'broadcast error', error);
-				}
+		/* Set for…of is delete-safe: a notify() that detaches mid-broadcast just
+		   drops the entry from the remaining iteration. */
+		for (const transport of this.transports) {
+			if (!isFunction(transport.notify)) {
+				continue;
 			}
-		});
+			try {
+				transport.notify(message);
+			} catch (error) {
+				defaultLogger.warn('ai-host', 'broadcast error', error);
+			}
+		}
 	}
 	destroy() {
-		this.transports.forEach((transport) => {
+		for (const transport of this.transports) {
 			try {
 				transport.stop?.();
 			} catch (error) {
 				defaultLogger.warn('ai-host', 'transport stop error', error);
 			}
-		});
+		}
 		this.transports.clear();
 		this.unsubscribeRegistry?.();
 		this.unsubscribeRegistry = null;

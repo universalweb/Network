@@ -20,9 +20,9 @@ export class UIPanel extends WebComponent {
 		// modifier tokens via `.add(...)` / `.delete(...)`. Framework's
 		// class-list spot diffs tokens onto the <aside> element.
 		classes: new Set(),
-		id: '',
+		panelId: '',
 		showDot: true,
-		title: '',
+		heading: '',
 		// Child-state for the composed <ui-surface> — a reactive key on the
 		// one state tree, bound bare in render(); no method fabricates it.
 		surfaceState: {
@@ -45,7 +45,7 @@ export class UIPanel extends WebComponent {
 				<aside class=${classList('panel', this.state.classes)}>
 					<div class="panel-header">
 						<span>
-							<span class="ph-id">${this.state.id}</span> // ${this.state.title}
+							<span class="ph-id">${this.state.panelId}</span> // ${this.state.heading}
 						</span>
 						^html${this.renderDot}
 					</div>

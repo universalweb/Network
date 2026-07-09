@@ -7,7 +7,7 @@ import { MorphSurface } from '../morph-surface/morph-surface.js';
 // rect). A touch slower than the panel to suit the larger travel.
 //
 // Usage:
-//   <ui-morph-drawer .label=${'Details ▸'} .heading=${'Node details'}>
+//   <ui-morph-drawer .state.label=${'Details ▸'} .state.heading=${'Node details'}>
 //     …drawer content…
 //   </ui-morph-drawer>
 export class UIMorphDrawer extends MorphSurface {

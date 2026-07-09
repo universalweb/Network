@@ -10,7 +10,7 @@
 	    <ui-button .state=${{ label: 'Week',  variant: 'outline' }}></ui-button>
 	    <ui-button .state=${{ label: 'Month', variant: 'outline' }}></ui-button>
 	  </ui-button-group>
-	  <ui-button-group .orientation=${'vertical'}> … </ui-button-group>
+	  <ui-button-group .state.orientation=${'vertical'}> … </ui-button-group>
 	─────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from 'webcomponent';

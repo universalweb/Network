@@ -8,11 +8,11 @@
 	── EVENTS ───────────────────────────────────────────────────────────
 	  speed-dial:action { value }
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-speed-dial .icon=${'plus'} .actions=${[
+	  <ui-speed-dial .state.icon=${'plus'} .state.items=${[
 	    { icon: 'file', label: 'New file', value: 'file' },
 	    { icon: 'folder', label: 'New folder', value: 'folder' },
 	  ]} @speed-dial:action=${e => create(e.detail.data.value)}></ui-speed-dial>
-	  <ui-speed-dial .icon=${'share'} .trigger=${'hover'} .direction=${'left'} .position=${'bottom-start'}></ui-speed-dial>
+	  <ui-speed-dial .state.icon=${'share'} .state.trigger=${'hover'} .state.direction=${'left'} .state.position=${'bottom-start'}></ui-speed-dial>
 	──────────────────────────────────────────────────────────────────────
 */
 import '../button/button.js';
@@ -29,7 +29,7 @@ class UISpeedDialAction extends WebComponent {
 		tone: 'neutral',
 	};
 	handleClick() {
-		this.emit('sd-action', {
+		this.emit('speed-dial-action:click', {
 			value: this.state.value,
 		});
 	}
@@ -43,7 +43,7 @@ class UISpeedDialAction extends WebComponent {
 					.state.size=${'sm'}
 					.state.leadicon=${this.state.icon}
 					.state.tooltip=${this.state.label}
-					@buttonClick=${this.handleClick}></ui-button>
+					@button:click=${this.handleClick}></ui-button>
 			</div>
 		`;
 	}
@@ -57,7 +57,7 @@ export class UISpeedDial extends WebComponent {
 	static state = {
 		icon: 'plus',
 		tone: 'primary',
-		actions: [],
+		items: [],
 		// up · down · left · right — which way the cluster fans out
 		direction: 'up',
 		// click (toggle) · hover (open on enter, close on leave)
@@ -85,10 +85,7 @@ export class UISpeedDial extends WebComponent {
 		}
 	}
 	cancelClose() {
-		if (this.closeTimer) {
-			this.removeTimeout(this.closeTimer);
-			this.closeTimer = null;
-		}
+		this.closeTimer?.clear();
 	}
 	handleTriggerClick() {
 		this.state.open = !this.state.open;
@@ -101,12 +98,16 @@ export class UISpeedDial extends WebComponent {
 	}
 	handlePointerLeave() {
 		if (this.state.trigger === 'hover') {
-			this.cancelClose();
-			this.closeTimer = this.setTimeout(() => {
-				this.closeTimer = null;
-				this.closeDial();
-			}, 150);
+			(this.closeTimer ??= this.createTimeout(this.onCloseTimer, 150)).run();
 		}
+	}
+	/*
+	 * Reusable close timer's callback — close the dial after the hover-out grace
+	 * period. run() supersedes any pending close, so a re-enter (cancelClose) then
+	 * re-leave just re-arms the same handle.
+	 */
+	onCloseTimer(component) {
+		component.closeDial();
 	}
 	handleAction(domEvent) {
 		this.emit('speed-dial:action', {
@@ -126,16 +127,16 @@ export class UISpeedDial extends WebComponent {
 				?data-rotate=${this.state.rotateTrigger}
 				@pointerenter=${this.handlePointerEnter}
 				@pointerleave=${this.handlePointerLeave}
-				@sd-action=${this.handleAction}>
+				@speed-dial-action:click=${this.handleAction}>
 				<ul class="sd-actions">
-					${list('actions', UISpeedDialAction, this.actionKey)}
+					${list('items', UISpeedDialAction, this.actionKey)}
 				</ul>
 				<ui-button class="sd-trigger"
 					.state.variant=${'solid'}
 					.state.tone=${this.state.tone}
 					.state.size=${'lg'}
 					.state.leadicon=${this.state.icon}
-					@buttonClick=${this.handleTriggerClick}></ui-button>
+					@button:click=${this.handleTriggerClick}></ui-button>
 			</div>
 		`;
 	}

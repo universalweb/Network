@@ -18,8 +18,9 @@
 	max-width: min(260px, calc(100vw - 24px));
 	border: 1px solid var(--popup-border);
 	border-radius: var(--radius-lg);
-	background: var(--popup-bg);
-	backdrop-filter: blur(10px);
+	background: var(--popup-glass-bg, var(--popup-bg));
+	backdrop-filter: var(--popup-glass-blur, blur(10px));
+	-webkit-backdrop-filter: var(--popup-glass-blur, blur(10px));
 	box-shadow: var(--popup-shadow);
 	color: var(--popup-text);
 	font-size: 0.625rem;

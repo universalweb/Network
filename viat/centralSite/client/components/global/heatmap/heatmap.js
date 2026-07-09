@@ -17,8 +17,8 @@
 	by REFERENCE, so `getUTC*` keeps working straight off state (verified). `data`
 	therefore lives in reactive state like any sibling list component.
 	── STANDARD USAGE ───────────────────────────────────────────────────
-	  <ui-heatmap .mode=${'calendar'} .data=${[{ date: '2026-01-03', value: 5 }]}></ui-heatmap>
-	  <ui-heatmap .data=${[[1, 4, 9], [2, 0, 7]]} .rowLabels=${['A', 'B']}></ui-heatmap>
+	  <ui-heatmap .state.mode=${'calendar'} .state.data=${[{ date: '2026-01-03', value: 5 }]}></ui-heatmap>
+	  <ui-heatmap .state.data=${[[1, 4, 9], [2, 0, 7]]} .state.rowLabels=${['A', 'B']}></ui-heatmap>
 	─────────────────────────────────────────────────────────────────────
 */
 import { html, list, WebComponent } from 'webcomponent';
@@ -476,7 +476,7 @@ export class UIHeatmap extends WebComponent {
 		if (!item) {
 			return;
 		}
-		this.emit('heatmap:cell', {
+		this.emit('heatmap:select', {
 			value: item.value,
 			col: item.col,
 			row: item.row,

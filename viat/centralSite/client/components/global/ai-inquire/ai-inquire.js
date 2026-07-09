@@ -1,11 +1,11 @@
 /*
  * `<ui-ai-inquire>` — the agent asking the USER a question mid-task, either as
  * multiple-choice buttons or a free-text reply. On answer it locks, shows the
- * chosen value, and emits `inquire:answer` { value } so the chat can feed the
+ * chosen value, and emits `ai-inquire:answer` { value } so the chat can feed the
  * reply back as the next user turn. Choice clicks are container-delegated (one
  * listener; each button carries data-value and has no inner nodes, so the event
  * target IS the button — no closest()). Drive with `.question`, `.mode`
- * ('choice' | 'text'), `.options` ([string | { label, value }]), `.placeholder`.
+ * ('choice' | 'text'), `.items` ([string | { label, value }]), `.placeholder`.
  */
 import '../icon/icon.js';
 import {
@@ -28,7 +28,7 @@ export class UIAiInquire extends WebComponent {
 	static state = {
 		question: '',
 		mode: 'choice',
-		options: [],
+		items: [],
 		placeholder: 'Type a reply…',
 		inputValue: '',
 		answered: '',
@@ -69,7 +69,7 @@ export class UIAiInquire extends WebComponent {
 			return;
 		}
 		this.state.answered = value;
-		this.emit('inquire:answer', {
+		this.emit('ai-inquire:answer', {
 			value,
 		});
 	}
@@ -81,7 +81,7 @@ export class UIAiInquire extends WebComponent {
 					<span class="inq-q">${this.state.question}</span>
 				</header>
 				<div class="inq-choice" ?hidden=${!this.choiceOpen} @click=${this.handleOptionClick}>
-					${list('options', this.renderOption, this.optionKey)}
+					${list('items', this.renderOption, this.optionKey)}
 				</div>
 				<form class="inq-text" ?hidden=${!this.textOpen} @submit=${this.handleSubmit}>
 					<input class="inq-input" $value="inputValue" placeholder=${this.state.placeholder}>

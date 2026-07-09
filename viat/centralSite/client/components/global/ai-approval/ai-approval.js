@@ -2,7 +2,7 @@
  * `<ui-ai-approval>` — human-in-the-loop gate for a pending (usually mutating)
  * agent tool call. Shows what the agent wants to run (name + summary + args via
  * <ui-json-inspector>) and Approve / Reject actions. On a decision it locks the
- * buttons, paints the outcome, and emits `approval:decision`
+ * buttons, paints the outcome, and emits `ai-approval:decision`
  * { decision: 'approved' | 'rejected', name, callId } — the chat withholds the
  * tool round-trip until approval arrives. Drive with `.name`, `.callId`,
  * `.summary`, `.args`; read `.decided` ('' | 'approved' | 'rejected').
@@ -58,7 +58,7 @@ export class UIAiApproval extends WebComponent {
 			return;
 		}
 		this.state.decided = decision;
-		this.emit('approval:decision', {
+		this.emit('ai-approval:decision', {
 			decision,
 			name: this.state.name,
 			callId: this.state.callId,

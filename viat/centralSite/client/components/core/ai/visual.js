@@ -1,5 +1,5 @@
 import { getPathForComponent, pageOverview } from './paths.js';
-import { eachComponent } from './registry.js';
+import { componentEntries } from './registry.js';
 function snapshot(component, id) {
 	if (!component.isConnected) {
 		return null;
@@ -24,19 +24,22 @@ export function visualPageMap(opts = {}) {
 	const onlyVisible = opts.onlyVisible === true;
 	const onlyInViewport = opts.onlyInViewport === true;
 	const components = [];
-	eachComponent((component, id) => {
+	for (const [
+		id,
+		component,
+	] of componentEntries()) {
 		const snap = snapshot(component, id);
 		if (!snap) {
-			return;
+			continue;
 		}
 		if (onlyVisible && !snap.visible) {
-			return;
+			continue;
 		}
 		if (onlyInViewport && !snap.inViewport) {
-			return;
+			continue;
 		}
 		components.push(snap);
-	});
+	}
 	return {
 		viewport: {
 			w: globalThis.innerWidth,
@@ -47,7 +50,7 @@ export function visualPageMap(opts = {}) {
 		},
 		document: {
 			title: document.title,
-			url: location.href,
+			url: globalThis.location.href,
 		},
 		components,
 	};
@@ -101,7 +104,10 @@ export function clearHighlights() {
 	}
 }
 function renderTreeNode(nodeName, node, prefix, isLast, isRoot, lines) {
-	const branch = isRoot ? '' : (isLast ? '└── ' : '├── ');
+	let branch = '';
+	if (!isRoot) {
+		branch = isLast ? '└── ' : '├── ';
+	}
 	const tagPart = node.tag ? ` <${node.tag}>` : '';
 	const phasePart = node.phase ? ` :${node.phase}` : '';
 	const visPart = node.visible === true ? ' 👁' : '';

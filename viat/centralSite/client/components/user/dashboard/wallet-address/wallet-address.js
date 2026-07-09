@@ -31,7 +31,7 @@ export class WalletAddress extends WebComponent {
 		this.emit('notify', {
 			itemType: 'copy',
 			message: this.addressText() || 'Wallet address copied to clipboard.',
-			title: 'Address Copied',
+			heading: 'Address Copied',
 		});
 		this.setTimeout(() => {
 			this.state.copied = false;
@@ -41,7 +41,7 @@ export class WalletAddress extends WebComponent {
 		this.emit('notify', {
 			itemType: 'error',
 			message: 'Could not write to clipboard.',
-			title: 'Copy Failed',
+			heading: 'Copy Failed',
 		});
 	}
 	render() {

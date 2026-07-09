@@ -7,8 +7,8 @@ export class WalletParams extends Panel {
 	};
 	static state = {
 		classes: new Set(['wallet-params-panel']),
-		id: 'WALLET',
-		title: 'PARAMETERS',
+		panelId: 'WALLET',
+		heading: 'PARAMETERS',
 	};
 	onConnect() {
 		this.delegateTo('click', '[data-copy]', this.handleRowCopy);
@@ -22,11 +22,11 @@ export class WalletParams extends Panel {
 		this.emit('notify', copied ? {
 			itemType: 'copy',
 			message: value,
-			title: 'Parameter Copied',
+			heading: 'Parameter Copied',
 		} : {
 			itemType: 'error',
 			message: 'Could not write to clipboard.',
-			title: 'Copy Failed',
+			heading: 'Copy Failed',
 		});
 	}
 	renderBody() {

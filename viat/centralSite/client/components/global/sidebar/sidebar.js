@@ -17,7 +17,6 @@ export class UISidebar extends WebComponent {
 	};
 	static attrs = {
 		open: false,
-		inert: true,
 	};
 	static state = {
 		side: 'right',
@@ -68,11 +67,9 @@ export class UISidebar extends WebComponent {
 	}
 	close() {
 		this.attrs.open = false;
-		this.attrs.inert = true;
 	}
 	openSidebar() {
 		this.attrs.open = true;
-		this.attrs.inert = false;
 	}
 	onConnect() {
 		// Document-level shortcut, registered once per connect (auto-swept on
@@ -88,7 +85,7 @@ export class UISidebar extends WebComponent {
 	onMount() {
 		this.applyMode();
 		this.delegate('viewport:change', this.handleViewportChange);
-		this.delegate('toggle-sidebar', this.handleToggleEvent);
+		this.delegate('sidebar:toggle', this.handleToggleEvent);
 		if (this.state.swipe) {
 			this.installSwipe();
 		}
@@ -210,9 +207,11 @@ export class UISidebar extends WebComponent {
 		if (!shell) {
 			return;
 		}
-		const closedOffset = this.state.side === 'left' ? -this.shellWidth : this.shellWidth;
 		shell.style.transition = `transform ${SNAP_MS}ms ${SNAP_CURVE}`;
-		shell.style.transform = open ? 'translateX(0)' : `translateX(${closedOffset}px)`;
+		// Closed target reads from the CSS var, which folds in the float gap, so the
+		// settle lands exactly where the stylesheet's resting closed state sits — no
+		// last-frame jump when the inline transform is cleared below. Open is identity.
+		shell.style.transform = open ? 'translateX(0)' : 'translateX(var(--shell-closed-x))';
 		if (open) {
 			this.openSidebar();
 		} else {
@@ -226,10 +225,18 @@ export class UISidebar extends WebComponent {
 		}, SNAP_MS);
 	}
 	render() {
+		/*
+		 * inert rides the SHELL, not the host. Inerting the host would also suppress
+		 * pointer events on the edge swipe-sensor (inert kills pointerdown across the
+		 * whole shadow subtree — verified), the very sensor the CSS keeps live while
+		 * closed so the drawer can be dragged open. The off-screen panel is the only
+		 * thing that must leave the tab/interaction tree; derive it reactively from
+		 * `this.attrs.open` (the reactive attrs channel re-patches on open/close).
+		 */
 		this.html `
 			<div class="sidebar-edge" #edge></div>
 			<div class="sidebar-backdrop" @click=${this.close}></div>
-			<aside class="sidebar-shell" #shell>
+			<aside class="sidebar-shell" #shell ?inert=${!this.attrs.open}>
 				<button #close type="button" class="sidebar-close" aria-label="Close sidebar" @click=${this.close}>
 					<ui-icon .state.name=${'x'} .state.size=${'md'}></ui-icon>
 				</button>

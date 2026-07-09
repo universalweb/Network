@@ -6,15 +6,15 @@ import { UITabButton } from './tab-button.js';
 // `transition:'slide'`, axis follows orientation or an explicit `slideAxis`).
 //
 // Usage:
-//   <ui-tabs .state=${{ tabs: SECTIONS, active: 'profile', orientation: 'vertical' }}
-//            @tab-change=${this.handleTabChange}>
+//   <ui-tabs .state=${{ items: SECTIONS, activeIndex: 'profile', orientation: 'vertical' }}
+//            @tabs:change=${this.handleTabChange}>
 //     <section slot="profile">…</section>
 //     <section slot="wallet-view">…</section>
 //   </ui-tabs>
 //
-// Each `tab.id` doubles as the slot name. Active tab's slot is shown; the
-// component animates the swap. The strip emits `tab-change`
-// (detail: { active, previous, source }) after a click but BEFORE the
+// Each `item.id` doubles as the slot name. The active item's slot is shown; the
+// component animates the swap. The strip emits `tabs:change`
+// (detail.data: { id, previousId }) after a click but BEFORE the
 // cross-fade in finishes, so parents see the state change immediately.
 //
 // Children are <ui-tab-button> components rendered through the framework's
@@ -40,8 +40,8 @@ export class UITabs extends WebComponent {
 		tabs: './tabs.css',
 	};
 	static state = {
-		tabs: [],
-		active: '',
+		items: [],
+		activeIndex: '',
 		orientation: 'horizontal',
 		// Content-swap animation. 'fade' (default — every existing strip keeps its
 		// behaviour) | 'slide' (direction-aware: panel slides + blurs in from the
@@ -51,15 +51,11 @@ export class UITabs extends WebComponent {
 		// (x=left/right, y=up/down) — or force 'x' / 'y' / 'diagonal'.
 		slideAxis: 'auto',
 	};
-	// No per-prop accessors: every top-level `static state` key is auto-installed
-	// as a reactive routing property, so `.tabs=`/`.active=`/`.orientation=`/
-	// `.transition=`/`.slideAxis=` flow straight into state. Unset props fall back
-	// to the static-state defaults above.
 	switching = false;
 	stripObserver = null;
 	indicatorController = null;
 	onConnect() {
-		this.observeAsync('active', (next, prev) => {
+		this.observeAsync('activeIndex', (next, prev) => {
 			if (prev !== next) {
 				// Flags BEFORE the indicator — `syncIndicator` locates the active
 				// button via its `active` state, which the flag write must set first.
@@ -67,7 +63,7 @@ export class UITabs extends WebComponent {
 				this.syncIndicator();
 			}
 		});
-		this.observeAsync('tabs', () => {
+		this.observeAsync('items', () => {
 			this.syncActiveFlags();
 			this.syncIndicator();
 		});
@@ -82,9 +78,9 @@ export class UITabs extends WebComponent {
 		this.indicatorController = movingIndicator(this.refs.indicator, {
 			prefix: 'ind',
 		});
-		// Seed `active` to the first tab when the parent doesn't pass one.
-		if (!this.state.active && this.state.tabs?.length) {
-			this.state.active = this.state.tabs[0].id;
+		// Seed `activeIndex` to the first item when the parent doesn't pass one.
+		if (!this.state.activeIndex && this.state.items?.length) {
+			this.state.activeIndex = this.state.items[0].id;
 		}
 		// Initial flag pass — buttons first render with the default `active:false`;
 		// the `active` observer only fires on subsequent changes, so seed it here.
@@ -109,21 +105,21 @@ export class UITabs extends WebComponent {
 		this.indicatorController?.destroy();
 		this.indicatorController = null;
 	}
-	// Shared single-select: write the `active` flag onto the bound `state.tabs`
-	// items at event/observe-time — NEVER a per-render enrichment loop. The deep
-	// write fires `tabs.{i}.active`, which the list binding routes into that one
+	// Shared single-select: write the `active` flag onto the bound `state.items`
+	// at event/observe-time — NEVER a per-render enrichment loop. The deep
+	// write fires `items.{i}.active`, which the list binding routes into that one
 	// <ui-tab-button> via assignState. Orientation is shared group STYLING and
 	// rides a CSS custom property on the strip (tabs.css), not a per-item flag.
 	syncActiveFlags() {
-		const tabs = this.state.tabs;
-		if (!tabs?.length) {
+		const items = this.state.items;
+		if (!items?.length) {
 			return;
 		}
-		const activeId = this.state.active;
-		for (let index = 0; index < tabs.length; index += 1) {
-			const isActive = tabs[index].id === activeId;
-			if (tabs[index].active !== isActive) {
-				this.state.tabs[index].active = isActive;
+		const activeIndex = this.state.activeIndex;
+		for (let index = 0; index < items.length; index += 1) {
+			const isActive = items[index].id === activeIndex;
+			if (items[index].active !== isActive) {
+				this.state.items[index].active = isActive;
 			}
 		}
 	}
@@ -249,15 +245,15 @@ export class UITabs extends WebComponent {
 		};
 	}
 	async setActive(id) {
-		if (!id || id === this.state.active || this.switching) {
+		if (!id || id === this.state.activeIndex || this.switching) {
 			return;
 		}
-		const previous = this.state.active;
-		const tabs = this.state.tabs ?? [];
-		const prevIndex = tabs.findIndex((tab) => {
-			return tab.id === previous;
+		const previousId = this.state.activeIndex;
+		const items = this.state.items ?? [];
+		const prevIndex = items.findIndex((tab) => {
+			return tab.id === previousId;
 		});
-		const nextIndex = tabs.findIndex((tab) => {
+		const nextIndex = items.findIndex((tab) => {
 			return tab.id === id;
 		});
 		// Forward (1) toward a later tab, backward (-1) toward an earlier one. A
@@ -269,7 +265,7 @@ export class UITabs extends WebComponent {
 		let outgoing;
 		// Animate the outgoing panel out before flipping the slot name so the user
 		// sees the old content leave instead of popping out.
-		if (content && previous) {
+		if (content && previousId) {
 			outgoing = content.animate(swapFrames.out, {
 				duration: swapFrames.outMs,
 				easing: swapFrames.outEase,
@@ -281,11 +277,10 @@ export class UITabs extends WebComponent {
 				// Interrupted — fall through and swap anyway.
 			}
 		}
-		this.state.active = id;
-		this.emit('tab-change', {
-			active: id,
-			previous,
-			source: this,
+		this.state.activeIndex = id;
+		this.emit('tabs:change', {
+			id,
+			previousId,
 		});
 		// Wait one frame so the slot projection updates to the new panel before
 		// animating it in. Cancel the outgoing first so its pinned end state
@@ -325,12 +320,12 @@ export class UITabs extends WebComponent {
 			return;
 		}
 		domEvent.preventDefault();
-		const tabs = this.state.tabs;
-		const currentIndex = tabs.findIndex((tab) => {
-			return tab.id === this.state.active;
+		const items = this.state.items;
+		const currentIndex = items.findIndex((tab) => {
+			return tab.id === this.state.activeIndex;
 		});
-		const nextIndex = (currentIndex + delta + tabs.length) % tabs.length;
-		const nextTab = tabs[nextIndex];
+		const nextIndex = (currentIndex + delta + items.length) % items.length;
+		const nextTab = items[nextIndex];
 		if (!nextTab) {
 			return;
 		}
@@ -347,14 +342,14 @@ export class UITabs extends WebComponent {
 			<div class="tabs" data-orientation=${this.state.orientation || 'horizontal'} data-transition=${this.state.transition || 'fade'}>
 				<div class="tab-strip"
 					role="tablist"
-					@tab-select=${this.handleTabSelect}
+					@tab-button:select=${this.handleTabSelect}
 					@keydown=${this.handleKey}
 					#strip>
 					<div class="tab-indicator" #indicator></div>
-					${list('tabs', UITabButton)}
+					${list('items', UITabButton)}
 				</div>
 				<div class="tab-content" #content>
-					<slot name=${this.state.active || ''}></slot>
+					<slot name=${this.state.activeIndex || ''}></slot>
 				</div>
 			</div>
 		`;

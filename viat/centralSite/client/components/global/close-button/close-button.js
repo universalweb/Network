@@ -12,11 +12,8 @@ export class UICloseButton extends WebComponent {
 	static state = {
 		label: 'Close',
 	};
-	handleClick(domEvent) {
-		this.emit('close-click', {
-			source: this,
-			original: domEvent,
-		});
+	handleClick() {
+		this.emit('close-button:click', {});
 	}
 	render() {
 		this.html `

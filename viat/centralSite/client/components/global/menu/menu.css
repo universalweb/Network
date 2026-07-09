@@ -62,56 +62,7 @@
 .menu-surface:focus {
 	outline: none;
 }
-/* ── Items ───────────────────────────────────────────────────────────────── */
-.menu-item {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	inline-size: 100%;
-	padding: 0.4rem 0.55rem;
-	border: 0;
-	border-radius: 0.35rem;
-	background: transparent;
-	color: inherit;
-	font: inherit;
-	font-size: var(--text-sm, 0.85rem);
-	text-align: start;
-	cursor: pointer;
-	white-space: nowrap;
-}
-.menu-item:hover:not(:disabled),
-.menu-item:focus-visible {
-	outline: none;
-	background: var(--surface-tint, rgba(255, 255, 255, 0.08));
-}
-.menu-item:disabled {
-	opacity: 0.45;
-	cursor: not-allowed;
-}
-.menu-item.is-danger {
-	color: var(--color-danger, #ef4444);
-}
-.menu-check {
-	flex: 0 0 auto;
-	inline-size: 1em;
-	text-align: center;
-	color: var(--color-success, #10b981);
-}
-.menu-label {
-	flex: 1 1 auto;
-}
-.menu-kbd {
-	flex: 0 0 auto;
-	margin-inline-start: 1.5rem;
-	font-size: var(--text-2xs, 0.7rem);
-	color: var(--text-muted, rgba(255, 255, 255, 0.5));
-	letter-spacing: 0.04em;
-}
-.menu-sep {
-	block-size: 1px;
-	margin: 0.3rem 0.2rem;
-	background: var(--surface-border, rgba(255, 255, 255, 0.12));
-}
+/* Item + separator styles now live in menu-item.css (the <ui-menu-item> shadow). */
 @media (prefers-reduced-motion: reduce) {
 	.menu-trigger {
 		transition: none;

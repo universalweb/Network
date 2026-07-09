@@ -9,7 +9,7 @@
 	cult-ui-style lift). 0 keeps the CSS default (--hv-hover-scale fallback), so a
 	theme can also retune it globally via that custom property.
 	── STANDARD USAGE ───────────────────────────────────────────────────
-	  <ui-hover-video-player .src=${'/clip.mp4'} .poster=${'/clip.jpg'} .hoverScale=${1.2}></ui-hover-video-player>
+	  <ui-hover-video-player .state.src=${'/clip.mp4'} .state.poster=${'/clip.jpg'} .state.hoverScale=${1.2}></ui-hover-video-player>
 	─────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from 'webcomponent';
@@ -55,18 +55,21 @@ export class UIHoverVideoPlayer extends WebComponent {
 	}
 	handleEnter() {
 		if (this.state.delay > 0) {
-			this.playTimer = this.setTimeout(() => {
-				this.playVideo();
-			}, this.state.delay);
+			this.playTimer = this.setTimeout(this.playOnTimer, this.state.delay);
 			return;
 		}
 		this.playVideo();
 	}
+	/*
+	 * Delayed-play timer's callback (hover-intent debounce). Created + armed per
+	 * enter with the live `state.delay`; handleLeave clears it. The handle passes
+	 * the component as arg 1.
+	 */
+	playOnTimer(component) {
+		component.playVideo();
+	}
 	handleLeave() {
-		if (this.playTimer) {
-			this.removeTimeout(this.playTimer);
-			this.playTimer = null;
-		}
+		this.playTimer?.clear();
 		const video = this.refs.video;
 		if (video) {
 			video.pause();

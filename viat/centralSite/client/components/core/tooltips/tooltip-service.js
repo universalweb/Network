@@ -16,13 +16,13 @@
  *   - `enterListener` schedules a single `tip.show()` per animation frame via
  *     `requestAnimationFrame`. Rapid enter→leave→enter sequences coalesce so
  *     we never trigger redundant layout reads or DOM mutations within a frame.
- *   - On touch-only devices (`(hover: hover)` = false), `attachTooltip` and
- *     `detachTooltip` are no-ops — no listeners installed, no tooltip element
- *     pre-warmed, no globals registered. Pure dead weight skipped.
+ *   - On phones the behavior module exports a no-op pair instead, so
+ *     `attachTooltip` / `detachTooltip` are never called — no listeners
+ *     installed, no tooltip element pre-warmed, no globals registered.
  *
- * (No hover-capability check inside this file — the caller `behaviors/tooltip.js`
- * only dynamically imports this module when `(hover: hover)` is true. By the
- * time we evaluate, hover is guaranteed.)
+ * (No device check inside this file — `behaviors/tooltip.js` gates on
+ * `isMobile` from `environment/device.js` and only wires the real behavior —
+ * and loads the `<ui-tooltip>` element definition — off phones.)
  * WeakMap value store. Element key → text string. GC-safe; an element removed
  * from the DOM and dropped from all refs takes its entry with it.
  */

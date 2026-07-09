@@ -15,7 +15,7 @@ export class UIStatusCell extends WebComponent {
 		valueClass: '',
 	};
 	render() {
-		this.html `
+		this.html`
 			<div class="cell">
 				<span class="cell-key">${this.state.label}</span>
 				<span class=${classList('cell-val', this.state.valueClass)}>${this.state.value}</span>

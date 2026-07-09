@@ -10,7 +10,7 @@ export class UIIcon extends WebComponent {
 		size: 'md',
 		tone: 'default',
 		spin: false,
-		animate: '',
+		animated: '',
 	};
 	/*
 	 * size / tone / animate are enumerated single-value dimensions, so they ride
@@ -28,7 +28,7 @@ export class UIIcon extends WebComponent {
 				class="icon"
 				data-size=${this.state.size}
 				data-tone=${this.state.tone}
-				data-animate=${this.state.animate}
+				data-animate=${this.state.animated}
 				?data-spin=${this.state.spin}
 				aria-hidden="true">
 				<use href=${`${SPRITE_URL}#${this.state.name}`}></use>

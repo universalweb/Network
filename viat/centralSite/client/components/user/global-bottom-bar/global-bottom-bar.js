@@ -12,7 +12,7 @@ export class GlobalBottomBar extends WebComponent {
 	};
 	static state = {
 		statusBar: {
-			cells: [
+			items: [
 				{
 					label: 'Client',
 					value: 'Web',

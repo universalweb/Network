@@ -8,7 +8,7 @@
 	slot adds no chrome. `heading`/`subheading` avoid the native `title`/`open`
 	prop-name footgun.
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-card .heading=${'Atlas Rig'} .subheading=${'Sector 7'} .interactive=${true}>
+	  <ui-card .state.heading=${'Atlas Rig'} .state.subheading=${'Sector 7'} .state.interactive=${true}>
 	    <img slot="media" src="rig.jpg" alt="">
 	    <ui-avatar slot="avatar" …></ui-avatar>
 	    <ui-icon-button slot="header-action" …></ui-icon-button>
@@ -18,13 +18,7 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import '../surface/surface.js';
-import { WebComponent } from '../../core/index.js';
-const COLLAPSIBLE_REGIONS = [
-	'.card-media',
-	'.card-avatar',
-	'.card-header-action',
-	'.card-actions',
-];
+import { WebComponent } from 'webcomponent';
 export class UICard extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -48,10 +42,10 @@ export class UICard extends WebComponent {
 	onMount() {
 		// Empty optional regions collapse: toggle `hidden` on each wrapper from its
 		// slot's assigned elements, so no media/avatar/action chrome shows unfilled.
-		// Query the shadow root by class — a `#camelCase` ref is lowercased by the
-		// HTML parser (becomes `this.refs.mediawrap`), so ref-by-name is a footgun.
-		for (let index = 0; index < COLLAPSIBLE_REGIONS.length; index += 1) {
-			this.wireCollapse(this.shadowRoot.querySelector(COLLAPSIBLE_REGIONS[index]));
+		// Use #refs (lowercased) instead of querySelector per UWC modern practice.
+		const wraps = ['mediawrap', 'avatarwrap', 'headeractionwrap', 'actionswrap'];
+		for (let index = 0; index < wraps.length; index += 1) {
+			this.wireCollapse(this.refs[wraps[index]]);
 		}
 	}
 	wireCollapse(wrap) {
@@ -74,17 +68,17 @@ export class UICard extends WebComponent {
 		this.html `
 			<ui-surface .state=${surfaceState}>
 				<article class="card" ?data-interactive=${this.state.interactive}>
-					<div class="card-media"><slot name="media"></slot></div>
+					<div class="card-media" #mediawrap><slot name="media"></slot></div>
 					<header class="card-header" ?data-show=${hasHead}>
-						<div class="card-avatar"><slot name="avatar"></slot></div>
+						<div class="card-avatar" #avatarwrap><slot name="avatar"></slot></div>
 						<div class="card-heads">
 							<h3 class="card-heading">${this.state.heading}</h3>
 							<p class="card-subheading">${this.state.subheading}</p>
 						</div>
-						<div class="card-header-action"><slot name="header-action"></slot></div>
+						<div class="card-header-action" #headeractionwrap><slot name="header-action"></slot></div>
 					</header>
 					<div class="card-body"><slot></slot></div>
-					<div class="card-actions"><slot name="actions"></slot></div>
+					<div class="card-actions" #actionswrap><slot name="actions"></slot></div>
 				</article>
 			</ui-surface>
 		`;

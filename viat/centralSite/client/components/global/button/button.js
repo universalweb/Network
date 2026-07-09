@@ -10,9 +10,7 @@ export class UIButton extends WebComponent {
 	 * shadow root by theme (unlayered, so they beat the uwc.base button module).
 	 * Dark flattens the icon-variant hover — no wash, no border.
 	 */
-	static themes = [
-		'dark',
-	];
+	static themes = ['dark'];
 	static state = {
 		tone: 'neutral',
 		variant: 'solid',
@@ -41,9 +39,9 @@ export class UIButton extends WebComponent {
 	}
 	/*
 	 * Lead/trail render as ELEMENTS via htmlElement, never as ^html strings —
-	 * a string-built `<ui-icon name="x">` carries a bare attribute, and bare
-	 * attributes do not reach component state (UWC is property/state-first),
-	 * so the icon renders blank. `.name=` props route through the accessor.
+	 * a string-built `<ui-icon name="x">` carries a bare HTML attribute, which does
+	 * not reach ui-icon's state (there is no attribute→state mirror), so the icon
+	 * renders blank. As an element it takes the `.state.name=` channel instead.
 	 */
 	renderLead() {
 		if (this.state.loading) {
@@ -69,9 +67,7 @@ export class UIButton extends WebComponent {
 			domEvent.stopImmediatePropagation();
 			return;
 		}
-		this.emit('buttonClick', {
-			source: this,
-		});
+		this.emit('button:click', {});
 	}
 	render() {
 		this.html `

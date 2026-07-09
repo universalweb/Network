@@ -12,31 +12,20 @@
 	checkmark + danger + separators; per-item ICONS are v2 (they'd force a child
 	component and cross-shadow focus).
 	── EVENTS ───────────────────────────────────────────────────────────
-	  menu:select { value, index }
+	  menu:select { value, item, index }
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-menu .label=${'Actions ▾'} .items=${[
+	  <ui-menu .state.label=${'Actions ▾'} .state.items=${[
 	    { label: 'Rename', value: 'rename', kbd: '⌘R' },
 	    { label: 'Duplicate', value: 'dup' },
 	    { separator: true },
 	    { label: 'Delete', value: 'del', danger: true },
 	  ]} @menu:select=${e => run(e.detail.data.value)}></ui-menu>
-	  <ui-menu .placement=${'bottom-end'}><span slot="trigger">⋮</span></ui-menu>
+	  <ui-menu .state.align=${'end'}><span slot="trigger">⋮</span></ui-menu>
 	──────────────────────────────────────────────────────────────────────
 */
 import { computeAnchor } from '../../core/dom/anchor.js';
-import { WebComponent } from '../../core/index.js';
-// Shared by ui-menu + ui-menubar (both inject user labels into ^html item/trigger
-// markup). Named export so the family escapes identically from one source.
-export function escapeHtml(value) {
-	return String(value).replace(/[&<>"]/g, (char) => {
-		return {
-			'&': '&amp;',
-			'<': '&lt;',
-			'>': '&gt;',
-			'"': '&quot;',
-		}[char];
-	});
-}
+import { list, WebComponent } from '../../core/index.js';
+import { UIMenuItem } from './menu-item.js';
 // True when (x,y) sits inside `rect` grown by `pad` on every edge. The pad
 // bridges the trigger↔panel offset gap so a pointer crossing it isn't read as
 // "left the menu".
@@ -54,11 +43,25 @@ export class UIMenu extends WebComponent {
 	static state = {
 		items: [],
 		label: 'Menu',
-		placement: 'bottom-start',
+		// Which viewport side the panel opens from (bottom | top | left | right).
+		side: 'bottom',
+		/*
+		 * Cross-axis alignment under the trigger: start | center | end. Center by
+		 * default — reads more balanced than a left/right edge.
+		 */
+		align: 'center',
 		offset: 6,
-		// Close when the pointer leaves the trigger+panel region (the dropdown
-		// default). ui-context-menu opts out — a cursor-summoned menu must persist
-		// until pick / Esc, not vanish on a stray drift.
+		/*
+		 * Grow the trigger to the dropdown's content width so button + panel read as one
+		 * block (edges flush under the center placement). `min-` sizing, so a trigger
+		 * whose own label is wider is never clipped. Off = natural trigger width.
+		 */
+		matchWidth: false,
+		/*
+		 * Close when the pointer leaves the trigger+panel region (the dropdown default).
+		 * ui-context-menu opts out — a cursor-summoned menu must persist until pick / Esc,
+		 * not vanish on a stray drift.
+		 */
 		closeOnLeave: true,
 	};
 	// Tracks the keyboard-focused item; NOT reactive (open/close must not re-render
@@ -155,11 +158,20 @@ export class UIMenu extends WebComponent {
 		if (!trigger || !surface) {
 			return;
 		}
+		const surfaceWidth = surface.offsetWidth;
+		if (this.state.matchWidth) {
+			/*
+			 * Match the trigger to the (content-sized) dropdown width BEFORE measuring the
+			 * trigger rect below, so a center placement lands the two flush. `min-` never
+			 * shrinks a wider trigger; the reflow from the read on the next line applies it.
+			 */
+			trigger.style.minInlineSize = `${surfaceWidth}px`;
+		}
 		const placed = computeAnchor(trigger.getBoundingClientRect(), {
-			width: surface.offsetWidth,
+			width: surfaceWidth,
 			height: surface.offsetHeight,
 		}, {
-			placement: this.state.placement,
+			placement: `${this.state.side}-${this.state.align}`,
 			offset: Number(this.state.offset) || 6,
 		});
 		surface.style.top = `${placed.top}px`;
@@ -167,10 +179,18 @@ export class UIMenu extends WebComponent {
 		surface.dataset.placement = placed.placement;
 	}
 	focusItem(index) {
-		const button = this.refs.surface?.querySelector(`button[data-index="${index}"]`);
-		if (button) {
+		const item = this.state.items[index];
+		if (!item) {
+			return;
+		}
+		// Locate the row COMPONENT by a stable field and call its focus() — no
+		// shadow-piercing querySelector (the tabs roving pattern).
+		const row = this.findComponent('ui-menu-item', (candidate) => {
+			return candidate.state.value === item.value;
+		});
+		if (row) {
 			this.activeIndex = index;
-			button.focus();
+			row.focus();
 		}
 	}
 	focusFirst() {
@@ -226,12 +246,15 @@ export class UIMenu extends WebComponent {
 				break;
 		}
 	}
-	handleClick(domEvent) {
-		const button = domEvent.target.closest('button[data-index]');
-		if (!button || button.disabled) {
-			return;
-		}
-		this.selectIndex(Number(button.dataset.index));
+	// ONE container listener for the row components' `menu-item:select` event (HARD RULE
+	// — no per-item listeners, no closest()). Resolves the index from state.items by value.
+	handleSelect(domEvent) {
+		domEvent.stopPropagation();
+		const value = domEvent.detail?.data?.value;
+		const index = this.state.items.findIndex((candidate) => {
+			return candidate && candidate.value === value;
+		});
+		this.selectIndex(index);
 	}
 	selectIndex(index) {
 		const item = this.state.items[index];
@@ -240,37 +263,22 @@ export class UIMenu extends WebComponent {
 		}
 		this.emit('menu:select', {
 			value: item.value,
+			item,
 			index,
 		});
 		this.refs.surface?.hidePopover();
 	}
 	render() {
-		this.html `
+		this.html`
 			<button #trigger class="menu-trigger" type="button"
 				popovertarget="menu-pop" aria-haspopup="menu" aria-expanded="false">
 				<slot name="trigger">${this.state.label}</slot>
 			</button>
 			<div #surface class="menu-surface" id="menu-pop" popover="auto" role="menu" tabindex="-1"
-				@toggle=${this.handleToggle} @click=${this.handleClick} @keydown=${this.handleKey}>
-				^html${this.renderItems}
+				@toggle=${this.handleToggle} @menu-item:select=${this.handleSelect} @keydown=${this.handleKey}>
+				${list('items', UIMenuItem)}
 			</div>
 		`;
-	}
-	renderItems() {
-		const items = Array.isArray(this.state.items) ? this.state.items : [];
-		let markup = '';
-		for (let index = 0; index < items.length; index += 1) {
-			const item = items[index];
-			if (item.separator) {
-				markup += '<div class="menu-sep" role="separator"></div>';
-				continue;
-			}
-			const classes = `menu-item${item.danger ? ' is-danger' : ''}${item.checked ? ' is-checked' : ''}`;
-			const check = `<span class="menu-check" aria-hidden="true">${item.checked ? '✓' : ''}</span>`;
-			const kbd = item.kbd ? `<span class="menu-kbd">${escapeHtml(item.kbd)}</span>` : '';
-			markup += `<button type="button" class="${classes}" role="menuitem" data-index="${index}" tabindex="-1"${item.disabled ? ' disabled aria-disabled="true"' : ''}>${check}<span class="menu-label">${escapeHtml(item.label)}</span>${kbd}</button>`;
-		}
-		return markup;
 	}
 }
 customElements.define('ui-menu', UIMenu);

@@ -17,8 +17,8 @@
 	ui-loading-carousel (slide + progress + loop).
 	── STANDARD USAGE ───────────────────────────────────────────────────
 	  <ui-carousel
-	    .slides=${[{ id: 'a', heading: 'Fast', description: '…' }, …]}
-	    .transition=${'fade'} .autoplay=${true}>
+	    .state.items=${[{ id: 'a', heading: 'Fast', description: '…' }, …]}
+	    .state.transition=${'fade'} .state.autoplay=${true}>
 	  </ui-carousel>
 	─────────────────────────────────────────────────────────────────────
 */
@@ -75,7 +75,7 @@ export class UICarousel extends WebComponent {
 		carousel: './carousel.css',
 	};
 	static state = {
-		slides: [],
+		items: [],
 		activeIndex: 0,
 		transition: 'slide',
 		indicators: 'dots',
@@ -93,7 +93,7 @@ export class UICarousel extends WebComponent {
 	dragController = null;
 	onConnect() {
 		// Mark the active slide the moment slides bind (covers pre-connect set).
-		this.observe('slides', () => {
+		this.observe('items', () => {
 			this.syncActive();
 		}, {
 			immediate: true,
@@ -155,7 +155,7 @@ export class UICarousel extends WebComponent {
 			return true;
 		}
 		const next = this.state.activeIndex + step;
-		return next >= 0 && next <= this.state.slides.length - 1;
+		return next >= 0 && next <= this.state.items.length - 1;
 	}
 	handleDragStart() {
 		this.slideWidth = this.measureViewport();
@@ -186,7 +186,7 @@ export class UICarousel extends WebComponent {
 			return delta;
 		}
 		const atFirst = this.state.activeIndex === 0;
-		const atLast = this.state.activeIndex === this.state.slides.length - 1;
+		const atLast = this.state.activeIndex === this.state.items.length - 1;
 		if ((atFirst && delta > 0) || (atLast && delta < 0)) {
 			return delta * 0.35;
 		}
@@ -253,13 +253,13 @@ export class UICarousel extends WebComponent {
 		} else if (canonical === 'home') {
 			this.goTo(0);
 		} else {
-			this.goTo(this.state.slides.length - 1);
+			this.goTo(this.state.items.length - 1);
 		}
 		keyEvent.preventDefault();
 		this.restartAutoplay();
 	}
 	syncActive() {
-		const slides = this.state.slides;
+		const slides = this.state.items;
 		const active = this.state.activeIndex;
 		for (let index = 0; index < slides.length; index += 1) {
 			const want = index === active;
@@ -271,7 +271,7 @@ export class UICarousel extends WebComponent {
 		}
 	}
 	goTo(index) {
-		const count = this.state.slides.length;
+		const count = this.state.items.length;
 		if (count === 0) {
 			return;
 		}
@@ -286,12 +286,12 @@ export class UICarousel extends WebComponent {
 		}
 		this.state.activeIndex = next;
 		this.syncActive();
-		this.emit('carousel-change', {
+		this.emit('carousel:change', {
 			index: next,
 		});
 	}
 	startAutoplay() {
-		if (!this.state.autoplay || this.state.slides.length < 2) {
+		if (!this.state.autoplay || this.state.items.length < 2) {
 			return;
 		}
 		this.stopAutoplay();
@@ -361,7 +361,7 @@ export class UICarousel extends WebComponent {
 		if (this.state.indicators === 'none') {
 			return '';
 		}
-		return buildIndicators(this.state.slides.length, this.state.activeIndex);
+		return buildIndicators(this.state.items.length, this.state.activeIndex);
 	}
 	render() {
 		this.html `
@@ -377,7 +377,7 @@ export class UICarousel extends WebComponent {
 				@pointerleave=${this.handlePointerLeave}>
 				<div #viewport class="viewport" tabindex=${this.viewportTabIndex} role="group" aria-roledescription="carousel" aria-label="Carousel">
 					<div #track class="track" style=${this.trackStyle} @click=${this.handleSlideClick}>
-						${list('slides', UICarouselSlide, this.slideKey)}
+						${list('items', UICarouselSlide, this.slideKey)}
 					</div>
 					<button class="nav prev" type="button" ?hidden=${!this.state.arrows} tooltip="Previous" aria-label="Previous slide" @click=${this.handlePrev}>
 						<ui-icon .state.name=${'chevron-left'} .state.size=${'sm'}></ui-icon>

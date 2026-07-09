@@ -20,6 +20,7 @@ registerBehavior(reveal.name, reveal);
 registerBehavior(scrollReport.name, scrollReport);
 export {
 	behaviorAttrNames,
+	BehaviorTeardown,
 	getBehavior,
 	isBehaviorAttr,
 	registerBehavior,

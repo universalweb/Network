@@ -7,10 +7,10 @@
 	layout custom properties INHERITED into every child shadow (so two timelines
 	can share one items array without fighting over it). Display-only.
 	── STANDARD USAGE ───────────────────────────────────────────────────
-	  <ui-timeline .items=${[
+	  <ui-timeline .state.items=${[
 	    { time: '12:04', label: 'Block 4821 sealed', tone: 'success', icon: 'check' },
 	    { time: '12:03', label: 'Slow finality', description: '1.8s', tone: 'warning' },
-	  ]} .orientation=${'vertical'} .density=${'normal'}></ui-timeline>
+	  ]} .state.orientation=${'vertical'} .state.density=${'normal'}></ui-timeline>
 	─────────────────────────────────────────────────────────────────────
 */
 import { list, WebComponent } from 'webcomponent';

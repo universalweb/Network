@@ -41,6 +41,7 @@ export {
 	registerMethod,
 } from './protocol.js';
 export {
+	componentEntries,
 	defineGlobalTool,
 	defineInstanceTool,
 	defineTagTool,

@@ -3,8 +3,8 @@
 	signed delta, and an optional trend sparkline. The dashboard's top-row atom.
 	Composes <ui-sparkline> for the trend.
 	── STANDARD INTERACTION ─────────────────────────────────────────────
-	  <ui-metric .label=${'TPS (peak)'} .value=${'9,410'} .delta=${12.4}
-	    .trend=${[3, 5, 4, 8, 7, 11, 9]} .tone=${'accent'}></ui-metric>
+	  <ui-metric .state.label=${'TPS (peak)'} .state.value=${'9,410'} .state.delta=${12.4}
+	    .state.values=${[3, 5, 4, 8, 7, 11, 9]} .state.tone=${'accent'}></ui-metric>
 	`delta` is a signed number; rising reads success / falling reads danger —
 	set `invertDelta` when down is good (e.g. latency). `deltaSuffix` defaults '%'.
 	─────────────────────────────────────────────────────────────────────
@@ -27,10 +27,10 @@ export class UIMetric extends WebComponent {
 		delta: null,
 		deltaSuffix: '%',
 		invertDelta: false,
-		trend: [],
+		values: [],
 	};
 	get hasTrend() {
-		return Array.isArray(this.state.trend) && this.state.trend.length > 1;
+		return Array.isArray(this.state.values) && this.state.values.length > 1;
 	}
 	get deltaShown() {
 		return isNumber(this.state.delta) && this.state.delta !== 0;
@@ -56,7 +56,7 @@ export class UIMetric extends WebComponent {
 					<span class="mtc-value">${this.state.value}</span>
 					<span class="mtc-delta" data-delta=${this.deltaTone()} ?hidden=${!this.deltaShown}>${this.deltaText}</span>
 				</div>
-				<ui-sparkline class="mtc-spark" ?hidden=${!this.hasTrend} .state.values=${this.state.trend} .state.variant=${'area'} .state.tone=${this.state.tone}></ui-sparkline>
+				<ui-sparkline class="mtc-spark" ?hidden=${!this.hasTrend} .state.values=${this.state.values} .state.variant=${'area'} .state.tone=${this.state.tone}></ui-sparkline>
 			</div>
 		`;
 	}

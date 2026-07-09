@@ -6,7 +6,7 @@ export class UIField extends WebComponent {
 	};
 	static state = {
 		label: '',
-		help: '',
+		hint: '',
 		error: '',
 		required: false,
 		inline: false,
@@ -15,7 +15,7 @@ export class UIField extends WebComponent {
 	/* error wins over help — read in two spots (hint visibility + hint text), so it
 	   stays a getter rather than inlining the expression twice. */
 	get hintText() {
-		return this.state.error || this.state.help;
+		return this.state.error || this.state.hint;
 	}
 	render() {
 		this.html `

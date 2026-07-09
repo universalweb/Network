@@ -67,8 +67,8 @@
 [data-orientation='horizontal'] .tab-indicator {
 	inset-inline-start: var(--ind-x, 0);
 	width: var(--ind-w, 0);
-	inset-block-end: -1px;
-	height: 2px;
+	inset-block-end: 0px;
+	height: 1px;
 	transition:
 		left 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
 		width 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -77,8 +77,8 @@
 [data-orientation='vertical'] .tab-indicator {
 	inset-block-start: var(--ind-y, 0);
 	height: var(--ind-h, 0);
-	inset-inline-start: -1px;
-	width: 2px;
+	inset-inline-start: 0px;
+	width: 1px;
 	transition:
 		top 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
 		height 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),

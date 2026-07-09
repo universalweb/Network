@@ -7,9 +7,9 @@ export class WalletPanel extends Panel {
 		walletPanel: './wallet-panel.css',
 	};
 	static state = {
-		id: 'WALLET',
+		panelId: 'WALLET',
 		showDot: true,
-		title: 'ADDRESS',
+		heading: 'ADDRESS',
 	};
 	renderBody() {
 		return `

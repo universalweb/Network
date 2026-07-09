@@ -40,7 +40,22 @@ class ComponentStateBus extends PathSubscriptions {
 		return getValueAtPath(this.component.STATE, path);
 	}
 	onFlush() {
-		const result = this.component.updateView();
+		const component = this.component;
+		/*
+		 * updateView's render side is already gated on `!templateBuilt`, so a flush
+		 * that left templateBuilt === true (a surgical spot batch — bind()/list/
+		 * two-way patched in place via drainSpots, no bare `${this.state.x}`
+		 * renderDep to flip the flag) has exactly ONE residual task: `onStateChange?.()`.
+		 * With no such hook, updateView is a pure no-op that STILL allocates a promise
+		 * every flush (it is async) — skip it. A renderDep flip (templateBuilt false)
+		 * or a live onStateChange both fall through to the real call, so the render
+		 * path and the once-per-flush onStateChange contract (incl. replaceState's
+		 * zero-subs guarantee, which keys on the hook's presence) stay intact.
+		 */
+		if (component.templateBuilt === true && !component.onStateChange) {
+			return;
+		}
+		const result = component.updateView();
 		if (isPromiseLike(result)) {
 			result.catch(queueAsyncError);
 		}
@@ -342,7 +357,7 @@ function reportWastedStateSet(target, key, value, fullPath, component) {
  * Reverse leg of the `.state=` carrier. A child that received a shared object via
  * `.state=${parent.state.foo}` holds the source's NESTED objects by reference — so a
  * deep write already reaches the parent through the shared proxy. But a TOP-LEVEL
- * PRIMITIVE (e.g. `activeId`) was copied by VALUE at merge time and cannot be shared by
+ * PRIMITIVE (e.g. `activeIndex`) was copied by VALUE at merge time and cannot be shared by
  * reference, so a child-origin write to it would otherwise never reach the parent's
  * object. Mirror such a write back onto the source proxy so the shared object stays in
  * sync from EITHER origin. Three constraints keep it safe and loop-free. Only TOP-LEVEL
@@ -524,7 +539,16 @@ export function replaceState(state = {}) {
 	 * at its own path (the old per-path notify walk made the flush match
 	 * N changed paths against N subscriptions, quadratic on spot-heavy
 	 * components).
-	 * TODO: Consider a diff check instead of blind notify-all, but that has to be balanced against the cost of the diff itself and the fact that many updates are full replacements where every path changes.
+	 * NOT a diff check (evaluated + rejected — see render-performance.private.md #2):
+	 * `assignState` already IS the per-key-diff partial path (`if (STATE[key] ===
+	 * next) continue;` → notify only changed keys) and is what keyed-list reuse
+	 * calls. `replaceState` is the deliberate WHOLESALE swap; usage is full-
+	 * replacement-dominated (bench "replace", list-row whole-item), where every key
+	 * changes — so `dispatchAll` (fire each bucket once, NO overlap trie) is already
+	 * optimal. A top-level ref-diff would route that all-changed case through the
+	 * costlier `dispatchChanged` trie build, slow the very "replace" benchmark, AND
+	 * risk dropping a reused-nested-ref-mutated-in-place update that `dispatchAll`
+	 * catches. Callers wanting partial semantics use `assignState`.
 	 */
 	/*
 	 * Notify-ONLY when a reactive bus exists (mirrors assignState) — the flush's

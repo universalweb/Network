@@ -18,7 +18,6 @@ import '../components/user/account-detail-page/account-detail-page.js';
 import '../components/user/transaction-detail-page/transaction-detail-page.js';
 import '../components/user/wallet-onboarding/wallet-onboarding.js';
 import './tools.js';
-import '../components/core/tooltips/tooltip.js';
 import { globalState, WebComponent } from 'webcomponent';
 import { setScrollLockTarget } from '../components/global/scroll-lock.js';
 import { getTheme, setTheme } from '../components/global/theme-select/theme-manager.js';
@@ -744,7 +743,7 @@ class WalletApp extends AppView {
 		this.emit('notify', {
 			message,
 			itemType: 'error',
-			title: 'Wallet error',
+			heading: 'Wallet error',
 		});
 	}
 	async handleWalletCreate(domEvent) {
@@ -815,7 +814,7 @@ class WalletApp extends AppView {
 			});
 			this.emit('notify', {
 				itemType: 'success',
-				title: 'Wallet saved',
+				heading: 'Wallet saved',
 				message: `Profile "${profileName.slice(0, 16)}…" stored locally — will auto-load next time.`,
 			});
 		} catch (error) {
@@ -1316,7 +1315,7 @@ class WalletApp extends AppView {
 		const endpoint = detail.endpoint || 'request';
 		this.emit('notify', {
 			itemType: 'error',
-			title: `API ${status}`,
+			heading: `API ${status}`,
 			message: `${endpoint} — ${detail.message || 'failed'}`,
 		});
 	};
@@ -1449,7 +1448,7 @@ class WalletApp extends AppView {
 		if (!this.global.wallet?.address) {
 			this.emit('notify', {
 				itemType: 'info',
-				title: 'Refresh skipped',
+				heading: 'Refresh skipped',
 				message: 'Load a wallet first — nothing to refresh yet.',
 			});
 			return;
@@ -1460,7 +1459,7 @@ class WalletApp extends AppView {
 		if (this.global.api?.ok === false) {
 			this.emit('notify', {
 				itemType: 'error',
-				title: 'API offline',
+				heading: 'API offline',
 				message: 'Faucet unavailable — API is unreachable.',
 			});
 			return null;
@@ -1482,7 +1481,7 @@ class WalletApp extends AppView {
 		const amount = tx?.amount ? `${tx.amount} VIAT` : 'test funds';
 		this.emit('notify', {
 			itemType: 'success',
-			title: 'Faucet Sent',
+			heading: 'Faucet Sent',
 			message: `Minted ${amount}${tx?.id ? ` (tx ${tx.id.slice(0, 12)}…)` : ''}`,
 		});
 		this.fetchAccountForWallet();
@@ -1501,7 +1500,7 @@ class WalletApp extends AppView {
 			const message = `Invalid ${recipientFormat} address: ${err?.message ?? err}`;
 			this.emit('notify', {
 				itemType: 'error',
-				title: 'Transmit failed',
+				heading: 'Transmit failed',
 				message,
 			});
 			this.emit('transmit:result', {
@@ -1514,7 +1513,7 @@ class WalletApp extends AppView {
 		if (validation) {
 			this.emit('notify', {
 				itemType: 'error',
-				title: 'Transmit failed',
+				heading: 'Transmit failed',
 				message: validation,
 			});
 			this.emit('transmit:result', {
@@ -1545,7 +1544,7 @@ class WalletApp extends AppView {
 		}
 		this.emit('notify', {
 			itemType: 'success',
-			title: 'Transaction Sent',
+			heading: 'Transaction Sent',
 			message: `Tx ${tx?.transaction?.id?.slice?.(0, 12) ?? 'submitted'} — ${amount} VIAT to ${recipient.slice(0, 16)}…`,
 		});
 		this.emit('transmit:result', {
@@ -1639,12 +1638,12 @@ class WalletApp extends AppView {
 			this.emit('notify', {
 				message: error?.message || 'Sign failed',
 				itemType: 'error',
-				title: 'Sign error',
+				heading: 'Sign error',
 			});
 		}
 	};
 	handleTogglePulldown() {
-		this.emit('pulldown:state', {
+		this.emit('pulldown:toggle', {
 			open: !this.pulldownIsOpen(),
 		});
 	}
@@ -1717,18 +1716,18 @@ class WalletApp extends AppView {
 		if (!this.pulldownIsOpen()) {
 			return;
 		}
-		this.emit('pulldown:state', {
+		this.emit('pulldown:toggle', {
 			open: false,
 		});
 		keyEvent.preventDefault();
 	}
 	handleTogglePulldownHotkey() {
-		this.emit('pulldown:state', {
+		this.emit('pulldown:toggle', {
 			open: !this.pulldownIsOpen(),
 		});
 	}
 	handleToggleSidebarHotkey() {
-		this.emit('toggle-sidebar', {});
+		this.emit('sidebar:toggle', {});
 	}
 	pulldownIsOpen() {
 		return this.getComponent('global-pulldown')?.refs?.pulldown?.state?.open === true;

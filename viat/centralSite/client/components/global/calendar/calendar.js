@@ -3,12 +3,12 @@
 	build). One base owns the grid math, month navigation, and selection; config
 	flips it between modes, so ui-range-calendar / ui-event-calendar /
 	ui-mini-calendar are thin presets over the same engine.
-	  • selectMode 'single' → pick one day (emits date-change).
-	  • selectMode 'range'  → pick start → end, the span fills (emits range-change).
+	  • selectMode 'single' → pick one day (emits calendar:change).
+	  • selectMode 'range'  → pick start → end, the span fills (emits calendar:range-change).
 	  • showEvents          → render event chips inside day cells.
 	  • density 'compact'   → tight mini layout.
 	── STANDARD USAGE ───────────────────────────────────────────────────
-	  <ui-calendar @date-change=${this.handlePick}></ui-calendar>
+	  <ui-calendar @calendar:change=${this.handlePick}></ui-calendar>
 	─────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from 'webcomponent';
@@ -138,10 +138,10 @@ export class UICalendar extends WebComponent {
 		selectMode: 'single',
 		density: 'normal',
 		showEvents: false,
-		selected: '',
+		value: '',
 		rangeStart: '',
 		rangeEnd: '',
-		events: [],
+		items: [],
 	};
 	onConnect() {
 		if (!this.state.viewYear) {
@@ -197,9 +197,9 @@ export class UICalendar extends WebComponent {
 			return;
 		}
 		// Re-clicking the active day clears it, freeing the next pick.
-		this.state.selected = this.state.selected === iso ? '' : iso;
-		this.emit('date-change', {
-			date: this.state.selected,
+		this.state.value = this.state.value === iso ? '' : iso;
+		this.emit('calendar:change', {
+			value: this.state.value,
 		});
 	}
 	applyRange(iso) {
@@ -225,7 +225,7 @@ export class UICalendar extends WebComponent {
 		} else {
 			this.state.rangeEnd = iso;
 		}
-		this.emit('range-change', {
+		this.emit('calendar:range-change', {
 			from: this.state.rangeStart,
 			to: this.state.rangeEnd,
 		});
@@ -240,7 +240,7 @@ export class UICalendar extends WebComponent {
 	}
 	gridHtml() {
 		const matrix = buildMonthMatrix(this.state.viewYear, this.state.viewMonth, this.state.weekStart, this.todayIso());
-		const selected = this.state.selected;
+		const selected = this.state.value;
 		const rangeStart = this.state.rangeStart;
 		const rangeEnd = this.state.rangeEnd;
 		const context = {
@@ -249,7 +249,7 @@ export class UICalendar extends WebComponent {
 			rangeEnd,
 			isRange: this.state.selectMode === 'range',
 		};
-		const events = this.state.showEvents ? this.state.events : [];
+		const events = this.state.showEvents ? this.state.items : [];
 		let markup = '';
 		for (let index = 0; index < matrix.length; index += 1) {
 			const cell = matrix[index];

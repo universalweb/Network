@@ -109,7 +109,7 @@ export class SettingsModal extends WebComponent {
 		});
 	}
 	handleTabChange(domEvent) {
-		const id = domEvent.detail?.data?.active ?? domEvent.detail?.active;
+		const id = domEvent.detail?.data?.id;
 		if (id && id !== this.state.activeSection) {
 			this.state.activeSection = id;
 			this.setStatus('', '');
@@ -597,10 +597,10 @@ export class SettingsModal extends WebComponent {
 				showMaximize: true,
 			}}>
 				<ui-tabs class="sm-tabs"
-					.state.tabs=${this.tabsList}
+					.state.items=${this.tabsList}
 					.state.orientation=${'vertical'}
-					.state.active=${this.state.activeSection}
-					@tab-change=${this.handleTabChange}>
+					.state.activeIndex=${this.state.activeSection}
+					@tabs:change=${this.handleTabChange}>
 					<section slot="profile" class="sm-body">${this.renderProfileSection}</section>
 					<section slot="wallet-view" class="sm-body">${this.renderWalletViewSection}</section>
 					<section slot="wallet-create" class="sm-body">${this.renderWalletCreateSection}</section>

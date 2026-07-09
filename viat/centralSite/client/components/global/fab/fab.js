@@ -8,11 +8,11 @@
 	circle for an icon+label pill. The icon is passed as `.leadicon=` so ui-button
 	renders it through the property accessor (a string `<ui-icon name=…>` would be blank).
 	── EVENTS ───────────────────────────────────────────────────────────
-	  fab:click { source }
+	  fab:click {} (emitter under event.detail.source)
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-fab .icon=${'plus'} .label=${'New'} @fab:click=${this.create}></ui-fab>
-	  <ui-fab .icon=${'edit'} .label=${'Compose'} .extended=${true} .position=${'bottom-start'}></ui-fab>
-	  <ui-fab .icon=${'plus'} .position=${'static'}></ui-fab>   <!-- inline, not fixed -->
+	  <ui-fab .state.icon=${'plus'} .state.label=${'New'} @fab:click=${this.create}></ui-fab>
+	  <ui-fab .state.icon=${'edit'} .state.label=${'Compose'} .state.extended=${true} .state.position=${'bottom-start'}></ui-fab>
+	  <ui-fab .state.icon=${'plus'} .state.position=${'static'}></ui-fab>   <!-- inline, not fixed -->
 	──────────────────────────────────────────────────────────────────────
 */
 import '../button/button.js';
@@ -33,11 +33,9 @@ export class UIFab extends WebComponent {
 		disabled: false,
 	};
 	handleClick(domEvent) {
-		// Swallow the composed button's bubbling buttonClick so only fab:click surfaces.
+		// Swallow the composed button's bubbling button:click so only fab:click surfaces.
 		domEvent.stopPropagation();
-		this.emit('fab:click', {
-			source: this,
-		});
+		this.emit('fab:click', {});
 	}
 	render() {
 		// Label only shows in the extended pill; otherwise it becomes the a11y tooltip.
@@ -53,7 +51,7 @@ export class UIFab extends WebComponent {
 					.state.label=${label}
 					.state.tooltip=${this.state.extended ? '' : this.state.label}
 					.state.disabled=${this.state.disabled}
-					@buttonClick=${this.handleClick}></ui-button>
+					@button:click=${this.handleClick}></ui-button>
 			</div>
 		`;
 	}

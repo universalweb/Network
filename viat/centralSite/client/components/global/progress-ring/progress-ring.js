@@ -4,8 +4,8 @@
 	percentage (or a slotted label). Optional `thresholds` recolor the arc as the
 	value crosses bands (e.g. turn danger past 90% capacity).
 	── STANDARD INTERACTION ─────────────────────────────────────────────
-	  <ui-progress-ring .value=${72} .tone=${'accent'} .size=${'lg'}></ui-progress-ring>
-	  <ui-progress-ring .value=${94} .thresholds=${[{ at: 90, tone: 'danger' }]}></ui-progress-ring>
+	  <ui-progress-ring .state.value=${72} .state.tone=${'accent'} .state.size=${'lg'}></ui-progress-ring>
+	  <ui-progress-ring .state.value=${94} .state.thresholds=${[{ at: 90, tone: 'danger' }]}></ui-progress-ring>
 	─────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from 'webcomponent';

@@ -1,18 +1,19 @@
 /*
 	DESCRIPTION: ui-legend — a chart legend. Binds `series[]` ({label, color})
 	straight off state via `list()` — items pass through as-is and each
-	<ui-legend-item> owns its render AND its own hidden toggle. The parent owns
+	<ui-legend-item> owns its render AND its own muted toggle. The parent owns
 	only the group concerns: it stamps `interactive` onto items at observe-time
-	(never a per-render loop) and aggregates the children's hidden set at
-	event-time into `legend:change` (detail.data = {label, active, hidden[]},
-	hidden = labels) so a host chart can show/hide series. Blank-slate primitive —
+	(never a per-render loop) and aggregates the children's muted set at
+	event-time into `legend:change` (detail.data = {label, active, muted[]},
+	muted = labels) so a host chart can show/hide series. Blank-slate primitive —
 	colours are caller-supplied; it invents none.
 	── STANDARD INTERACTION ─────────────────────────────────────────────
-	  <ui-legend .series=${[
+	  <ui-legend .state.items=${[
 	    { label: 'TPS',      color: 'var(--cyan)' },
 	    { label: 'Finality', color: 'var(--color-success)' },
-	  ]} .interactive=${true}></ui-legend>
-	  el.addEventListener('legend:change', e => chart.toggle(e.detail.data.label));
+	  ]} .state.interactive=${true}></ui-legend>
+	  A parent listens with a template event, never addEventListener:
+	  <ui-legend … @legend:change=${this.handleLegendChange}></ui-legend>   // e.detail.data.label
 	─────────────────────────────────────────────────────────────────────
 */
 import { list, WebComponent } from 'webcomponent';
@@ -23,7 +24,7 @@ export class UILegend extends WebComponent {
 		legend: './legend.css',
 	};
 	static state = {
-		series: [],
+		items: [],
 		interactive: false,
 	};
 	onConnect() {
@@ -39,7 +40,7 @@ export class UILegend extends WebComponent {
 		this.syncInteractive();
 	}
 	syncInteractive() {
-		const series = this.state.series;
+		const series = this.state.items;
 		if (!Array.isArray(series)) {
 			return;
 		}
@@ -58,23 +59,23 @@ export class UILegend extends WebComponent {
 		}
 		/* The child already flipped itself; aggregate the group's hidden set from
 		   the live children (event-time, direct shadow children). */
-		const hidden = [];
+		const muted = [];
 		const items = this.getComponentsArray('ui-legend-item');
 		for (let index = 0; index < items.length; index += 1) {
-			if (items[index].state.hidden === true) {
-				hidden.push(items[index].state.label);
+			if (items[index].state.muted === true) {
+				muted.push(items[index].state.label);
 			}
 		}
 		this.emit('legend:change', {
 			label: data.label,
 			active: data.active,
-			hidden,
+			muted,
 		});
 	}
 	render() {
 		this.html `
-			<div class="lg" role="list" @legend-select=${this.handleSelect}>
-				${list('series', UILegendItem)}
+			<div class="lg" role="list" @legend:select=${this.handleSelect}>
+				${list('items', UILegendItem)}
 			</div>
 		`;
 	}

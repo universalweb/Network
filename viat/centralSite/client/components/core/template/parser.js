@@ -211,15 +211,21 @@ function detectTextSigil(currentString) {
 	};
 }
 /*
- * Void elements take no children; raw-text / restricted-content elements don't
- * parse child markup the way a folded marker on the parent would need. A text
- * spot inside any of these keeps its wrapper.
+ * Void elements take no children; true HTML raw-text elements don't parse child
+ * markup (comments become literal text), so a text spot inside them keeps its
+ * wrapper. `select` / `option` / `optgroup` are NOT raw-text — they only accept
+ * restricted children — and MUST stay off this list: putting them here forced a
+ * `display:contents` <span> around `list()` options and a nested span around
+ * each option label, which breaks Chromium's base-select picker face for some
+ * entries (first pick doesn't stick / needs a second click). With them off the
+ * list, the list spot elides or anchors onto <select> so <option> nodes are
+ * direct children, and option labels elide onto the option as textContent.
  */
 const VOID_ELEMENT_TAGS = new Set([
 	'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr',
 ]);
 const RAW_TEXT_TAGS = new Set([
-	'script', 'style', 'textarea', 'title', 'select', 'option', 'optgroup',
+	'script', 'style', 'textarea', 'title',
 ]);
 const TAG_NAME_TERMINATORS = new Set([
 	' ', '>', '/', '\t', '\n', '\r',

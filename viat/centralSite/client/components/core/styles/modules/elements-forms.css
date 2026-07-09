@@ -61,7 +61,9 @@
 		}
 		select::picker(select) {
 			appearance: base-select;
-			background: var(--select-picker-bg, var(--popup-bg));
+			background: var(--select-picker-bg, var(--popup-glass-bg, var(--popup-bg)));
+			backdrop-filter: var(--popup-glass-blur, none);
+			-webkit-backdrop-filter: var(--popup-glass-blur, none);
 			border: var(--border-width) solid
 				var(--select-picker-border, var(--popup-border));
 			border-radius: var(--select-picker-radius, var(--radius-md));

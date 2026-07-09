@@ -5,10 +5,10 @@
 	props in the string, so nothing renders blank. Controlled: clicking clamps and
 	emits; the consumer owns `page`.
 	── EVENTS ───────────────────────────────────────────────────────────
-	  page:change { page }
+	  pagination:change { page }
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-pagination .page=${3} .count=${42} @page:change=${e => load(e.detail.data.page)}></ui-pagination>
-	  <ui-pagination .page=${1} .count=${9} .siblings=${2} .showEdges=${false}></ui-pagination>
+	  <ui-pagination .state.page=${3} .state.count=${42} @pagination:change=${e => load(e.detail.data.page)}></ui-pagination>
+	  <ui-pagination .state.page=${1} .state.count=${9} .state.siblings=${2} .state.showEdges=${false}></ui-pagination>
 	──────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from '../../core/index.js';
@@ -29,7 +29,7 @@ export class UIPagination extends WebComponent {
 		const target = Math.min(Math.max(1, page), total);
 		if (target !== this.state.page) {
 			this.state.page = target;
-			this.emit('page:change', {
+			this.emit('pagination:change', {
 				page: target,
 			});
 		}

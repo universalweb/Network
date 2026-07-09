@@ -5,7 +5,7 @@
 	── STANDARD INTERACTION ─────────────────────────────────────────────
 	Public surface is the reactive `checked` accessor + a `switch:change` event
 	(two-way `$checked` is native-element-only, so a host binding uses `.checked=`):
-	  <ui-switch .checked=${this.state.darkMode} .label=${'Dark mode'}
+	  <ui-switch .state.checked=${this.state.darkMode} .state.label=${'Dark mode'}
 	    @switch:change=${this.handleToggle}></ui-switch>
 	Sizes: 'sm' | 'md' | 'lg'.
 	─────────────────────────────────────────────────────────────────────
@@ -22,8 +22,8 @@ export class UISwitch extends WebComponent {
 		size: 'md',
 		label: '',
 	};
-	// `.checked=` already auto-routes into state (every state key does); this
-	// explicit setter exists ONLY to coerce the incoming value to a strict boolean.
+	// `.checked=` reaches state through this explicit setter (a bare dotted prop no
+	// longer auto-routes), which coerces the incoming value to a strict boolean.
 	get checked() {
 		return this.state.checked;
 	}

@@ -324,7 +324,7 @@ export default [
 				},
 			],
 			'@stylistic/template-curly-spacing': ['error', 'never'],
-			'@stylistic/template-tag-spacing': ['error', 'always'],
+			'@stylistic/template-tag-spacing': ['error', 'never'],
 			'@stylistic/wrap-iife': ['error', 'any'],
 			'@stylistic/wrap-regex': 'error',
 			'@stylistic/yield-star-spacing': ['error', 'after'],
@@ -631,6 +631,21 @@ export default [
 			'valid-typeof': 'error',
 			'vars-on-top': 'error',
 			yoda: 'off',
+		},
+	},
+	{
+		/*
+		 * The AI surface speaks JSON-RPC + JSON-Schema — `type` PROPERTY keys are
+		 * non-negotiable wire format (inputSchema.type, notification payloads),
+		 * so only the `type` VARIABLE ban applies there. Renaming the keys would
+		 * break MCP-compatible agents.
+		 */
+		files: ['**/components/core/ai/**/*.js'],
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				'VariableDeclarator[id.name="type"]',
+			],
 		},
 	},
 ];

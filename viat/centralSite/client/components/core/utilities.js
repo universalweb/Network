@@ -23,6 +23,24 @@ export function isElement(value) {
 export function isShadowRoot(value) {
 	return value instanceof ShadowRoot;
 }
+/*
+ * Escape the five markup-significant chars for safe interpolation into a raw
+ * `^html` string. The lookup map + replacer are module-scope (allocated once),
+ * not per-call. Prefer auto-escaped `${…}` textContent / `list()` rows over this
+ * — it exists only for the residual trusted-markup builders.
+ */
+const HTML_ESCAPES = {
+	'&': '&amp;',
+	'<': '&lt;',
+	'>': '&gt;',
+	'"': '&quot;',
+};
+function replaceHtmlChar(char) {
+	return HTML_ESCAPES[char];
+}
+export function escapeHtml(value) {
+	return String(value).replace(/[&<>"]/g, replaceHtmlChar);
+}
 export function isNode(value) {
 	return value instanceof Node;
 }
@@ -171,12 +189,25 @@ export function pathsOverlap(a, b) {
 	return false;
 }
 const PARSED_PATHS = new Map();
+/*
+ * Bound the split-path cache. Dynamic list-index paths (`items.4821.label`) mint
+ * a unique key per row, so an unbounded Map pins one small array per path ever
+ * seen — a slow leak across a long session churning large lists. At the cap, drop
+ * the whole cache: consumers (getValueAtPath / buildIndex / collectOverlaps) read
+ * the returned array locally and never retain it by identity, so a cold re-split
+ * is transparent. The check rides ONLY the cache-miss branch, so a cache hit (the
+ * hot path) still pays a single Map.get.
+ */
+const PARSED_PATHS_CAP = 10000;
 export function parsePath(path) {
 	if (!path) {
 		return null;
 	}
 	let parts = PARSED_PATHS.get(path);
 	if (!parts) {
+		if (PARSED_PATHS.size >= PARSED_PATHS_CAP) {
+			PARSED_PATHS.clear();
+		}
 		parts = path.split('.');
 		PARSED_PATHS.set(path, parts);
 	}

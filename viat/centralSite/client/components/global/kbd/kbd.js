@@ -5,9 +5,9 @@
 	own modifier-name → glyph inline (cmd→⌘, shift→⇧, …); the joining separator
 	is pure CSS (`.kbd-cap:not(:first-child)::before`, fed by `--kbd-sep`).
 	── STANDARD INTERACTION ─────────────────────────────────────────────
-	  <ui-kbd .keys=${['cmd', 'k']}></ui-kbd>          → ⌘ + K
-	  <ui-kbd .keys=${['ctrl', 'shift', 'p']}></ui-kbd> → ⌃ + ⇧ + P
-	  <ui-kbd .keys=${['esc']} .separator=${' '}></ui-kbd>
+	  <ui-kbd .state.values=${['cmd', 'k']}></ui-kbd>          → ⌘ + K
+	  <ui-kbd .state.values=${['ctrl', 'shift', 'p']}></ui-kbd> → ⌃ + ⇧ + P
+	  <ui-kbd .state.values=${['esc']} .state.separator=${' '}></ui-kbd>
 	Pure presentation — no events. Drives help panels & menu hints.
 	─────────────────────────────────────────────────────────────────────
 */
@@ -56,7 +56,7 @@ export class UIKbd extends WebComponent {
 		kbd: './kbd.css',
 	};
 	static state = {
-		keys: [],
+		values: [],
 		separator: '+',
 	};
 	sepStyle() {
@@ -76,7 +76,7 @@ export class UIKbd extends WebComponent {
 	render() {
 		this.html `
 			<kbd class="kbd" role="group" style=${this.sepStyle}>
-				${list('keys', this.keyCap, this.keyId)}
+				${list('values', this.keyCap, this.keyId)}
 			</kbd>
 		`;
 	}

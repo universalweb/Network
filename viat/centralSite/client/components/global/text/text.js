@@ -1,14 +1,15 @@
 import { WebComponent } from '../../core/index.js';
 /**
  * Typographic text primitive. Two content modes, same styling:
- *   - SLOT (trusted/composed): `<ui-text .variant=${'h1'}>Heading</ui-text>` — the
+ *   - SLOT (trusted/composed): `<ui-text .state.variant=${'h1'}>Heading</ui-text>` — the
  *     caller owns what goes inside. Drive variant/tone/align/weight via the
- *     property (`.variant=`) or `.state=` form — UWC is property/state-first and
- *     has no attribute→state mirror, so a bare `variant="h1"` attribute is inert.
- *   - VALUE (untrusted/safe): `<ui-text .value=${userInput}></ui-text>` — the
+ *     `.state.` channel (`.state.variant=${'h1'}`, or `.state=` for a whole
+ *     object) — a bare `.variant=` sets a dead DOM property and a bare
+ *     `variant="h1"` attribute is inert (there is no attribute→state mirror).
+ *   - VALUE (untrusted/safe): `<ui-text .state.value=${userInput}></ui-text>` — the
  *     text flows in as DATA and is rendered via the `^text` sigil →
  *     `textContent`, so any markup in it is inert (never parsed as HTML). This
- *     is the XSS-safe path: passing untrusted strings as `.value` can never
+ *     is the XSS-safe path: passing untrusted strings as `.state.value` can never
  *     execute, unlike slotting them where the parent's auto-classifying spot
  *     might innerHTML them before this component sees them.
  * `value` defaults to '' → empty `^text` spot, slot renders as before.

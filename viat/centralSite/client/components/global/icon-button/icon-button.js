@@ -7,7 +7,7 @@ import { classList, WebComponent } from '../../core/index.js';
  * framework elements; this only pairs them so every piece of chrome (dock, top
  * bar, toolbar) gets one consistent icon control instead of three near-copies.
  *
- * Configured by the flat keys `icon` / `tooltip` / `size` / `animate`, bound
+ * Configured by the flat keys `icon` / `tooltip` / `size` / `animated`, bound
  * straight onto the children as direct `.prop=` bindings — each bare read is a
  * tracked renderDep, so a flat-key change patches the exact child property.
  * No child-state bundles, no observers, no sync methods.
@@ -25,8 +25,8 @@ export class IconButtonBase extends WebComponent {
 		icon: '',
 		tooltip: '',
 		size: 'md',
-		animate: '',
-		onClick: 'buttonClick',
+		animated: '',
+		emitName: 'icon-button:click',
 	};
 	constructor(state = {}, config = {}) {
 		super(state, {
@@ -46,7 +46,14 @@ export class IconButtonBase extends WebComponent {
 		});
 	}
 	handleActivate() {
-		this.emit(this.state.onClick || 'buttonClick', this.state);
+		const {
+			id, icon, active,
+		} = this.state;
+		this.emit(this.state.emitName || 'icon-button:click', {
+			id,
+			icon,
+			active,
+		});
 	}
 	render() {
 		this.html `
@@ -56,8 +63,8 @@ export class IconButtonBase extends WebComponent {
 				.state.variant=${'icon'}
 				.state.tone=${'neutral'}
 				.state.tooltip=${this.state.tooltip}
-				@buttonClick=${this.handleActivate}>
-				<ui-icon slot="lead" .state.name=${this.state.icon} .state.size=${this.state.size} .state.animate=${this.state.animate}></ui-icon>
+				@button:click=${this.handleActivate}>
+				<ui-icon slot="lead" .state.name=${this.state.icon} .state.size=${this.state.size} .state.animated=${this.state.animated}></ui-icon>
 			</ui-button>
 		`;
 	}

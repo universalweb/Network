@@ -8,11 +8,11 @@ export class WalletStatsPanel extends Panel {
 	static state = {
 		activity: '0',
 		classes: new Set(['wallet-stats-panel']),
-		id: 'ADDRESS',
+		panelId: 'ADDRESS',
 		received: '0',
 		sent: '0',
 		showDot: true,
-		title: 'STATS',
+		heading: 'STATS',
 	};
 	onConnect() {
 		this.delegateTo('click', '[data-copy]', this.handleRowCopy);
@@ -26,11 +26,11 @@ export class WalletStatsPanel extends Panel {
 		this.emit('notify', copied ? {
 			itemType: 'copy',
 			message: value,
-			title: 'Stat Copied',
+			heading: 'Stat Copied',
 		} : {
 			itemType: 'error',
 			message: 'Could not write to clipboard.',
-			title: 'Copy Failed',
+			heading: 'Copy Failed',
 		});
 	}
 	statsRows() {

@@ -2,7 +2,7 @@ import '../bar/bar.js';
 import { filter, WebComponent } from 'webcomponent';
 import { UIStatusCell } from './status-cell.js';
 // `<ui-status-bar>` — a bottom-fixed status bar. Composes `<ui-bar>`: the
-// `cells` config renders as `<ui-status-cell>`s in the start region; the `end`
+// `items` config renders as `<ui-status-cell>`s in the start region; the `end`
 // slot takes a trailing region (e.g. a connection badge). Pure chrome — no
 // app content baked in. Per-cell `hidden` drops a cell reactively (the `filter`
 // keep-predicate), and the inter-cell separator is positional CSS (status-cell.css)
@@ -13,7 +13,7 @@ export class UIStatusBar extends WebComponent {
 		statusBar: './status-bar.css',
 	};
 	static state = {
-		cells: [],
+		items: [],
 		dividers: true,
 	};
 	// Cells carry no id → key by the stable `label`.
@@ -21,10 +21,10 @@ export class UIStatusBar extends WebComponent {
 		return item.label;
 	}
 	render() {
-		this.html `
+		this.html`
 			<ui-bar class="status-bar">
 				<div slot="start" class="status-cells" ?data-flat=${!this.state.dividers}>
-					${filter('cells', UIStatusCell, 'hidden', this.cellKey)}
+					${filter('items', UIStatusCell, 'hidden', this.cellKey)}
 				</div>
 				<slot slot="end" name="end"></slot>
 			</ui-bar>

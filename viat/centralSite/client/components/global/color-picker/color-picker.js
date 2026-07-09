@@ -3,7 +3,7 @@
 	A saturation/lightness square (pointer-drag), a hue slider, an ALPHA slider
 	(its own dial, checkerboard track), a format DROPDOWN (HEX / RGB / RGBA / HSL /
 	HSLA — pick directly, no click-through), and a preset swatch grid all stay in
-	sync on one HSL+alpha source of truth. Emits `color-change` with { hex, rgb,
+	sync on one HSL+alpha source of truth. Emits `color-picker:change` with { hex, rgb,
 	rgba, hsl, hsla, alpha, format, value }. Wrap it in ui-popover for a
 	trigger-driven picker.
 	── CUSTOMIZE (defaults) ──────────────────────────────────────────────
@@ -12,11 +12,13 @@
 	            notation carries it (rgba/hsla), else .alpha wins.
 	  .alpha    0..100 starting transparency.   .format  starting field notation.
 	── STANDARD USAGE ───────────────────────────────────────────────────
-	  <ui-color-picker .color=${'#6366f1'} .alpha=${85} .format=${'rgba'}
-	    @color-change=${this.handleColor}></ui-color-picker>
+	  <ui-color-picker .state.color=${'#6366f1'} .state.alpha=${85} .state.format=${'rgba'}
+	    @color-picker:change=${this.handleColor}></ui-color-picker>
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent } from 'webcomponent';
+import {
+	each, html, list, WebComponent,
+} from 'webcomponent';
 const HEX6 = /^#?[0-9a-fA-F]{6}$/;
 const HEX_PRESET = /^#[0-9a-fA-F]{3,8}$/;
 // The value field cycles through these on each format-button press.
@@ -214,21 +216,6 @@ function detectFormat(raw) {
 	}
 	return 'hex';
 }
-function buildPresets(presets, hue, saturation, lightness) {
-	let markup = '';
-	for (let index = 0; index < presets.length; index += 1) {
-		const hex = presets[index];
-		if (!HEX_PRESET.test(hex)) {
-			continue;
-		}
-		// Match on HSL, not hex: storing HSL means hex→hsl→hex drifts by rounding
-		// (e.g. #22c55e → #21c45d), so a hex-equality check would never light up.
-		const hsl = hexToHsl(hex);
-		const on = (hsl[0] === hue && hsl[1] === saturation && hsl[2] === lightness) ? ' data-on="true"' : '';
-		markup += `<button type="button" class="cp-swatch" data-color="${hex}"${on} style="background:${hex}" aria-label="${hex}"></button>`;
-	}
-	return markup;
-}
 export class UIColorPicker extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -261,6 +248,20 @@ export class UIColorPicker extends WebComponent {
 	onMount() {
 		this.applyDefaultColor();
 		this.reflectValue();
+		/*
+		 * The format <select> and the active-preset outline both depend on state the
+		 * list/each spots don't track (`format`; `hue`/`saturation`/`lightness`), so
+		 * they are reconciled imperatively — the same value-out-of-render-path shape
+		 * ui-select and ui-radio-group use for controlled native inputs.
+		 */
+		this.syncFormat();
+		this.syncActiveSwatch();
+		this.observe('format', this.syncFormat);
+		this.observe([
+			'hue',
+			'saturation',
+			'lightness',
+		], this.syncActiveSwatch);
 	}
 	// Seed the HSL+alpha state from a `.color` default in any notation, once. The
 	// parsed alpha is adopted ONLY when the notation carried one (rgba/hsla), so a
@@ -341,8 +342,8 @@ export class UIColorPicker extends WebComponent {
 	alphaTrackStyle() {
 		return `--cp-alpha-color: ${this.cssColor()}`;
 	}
-	presetMarkup() {
-		return buildPresets(this.state.presets, this.state.hue, this.state.saturation, this.state.lightness);
+	renderSwatch(hex) {
+		return html`<button type="button" class="cp-swatch" data-color=${hex} style=${`background:${hex}`} aria-label=${hex}></button>`;
 	}
 	// One source for the emitted payload. `hex` (6-digit) and `hsl` keep their
 	// original meaning for existing consumers; alpha-aware forms are additive.
@@ -366,13 +367,35 @@ export class UIColorPicker extends WebComponent {
 	}
 	emitChange() {
 		this.reflectValue();
-		this.emit('color-change', this.colorPayload());
+		this.emit('color-picker:change', this.colorPayload());
 	}
 	reflectValue() {
 		const input = this.refs.valueinput;
 		// Don't clobber the field while the user is typing in it.
 		if (input && !input.matches(':focus')) {
 			input.value = this.formatValue();
+		}
+	}
+	syncFormat() {
+		const control = this.refs.formatselect;
+		if (control) {
+			control.value = this.state.format;
+		}
+	}
+	syncActiveSwatch() {
+		const swatches = this.refs.presets?.querySelectorAll('.cp-swatch');
+		if (!swatches) {
+			return;
+		}
+		const hue = this.state.hue;
+		const saturation = this.state.saturation;
+		const lightness = this.state.lightness;
+		const swatchesLength = swatches.length;
+		for (let index = 0; index < swatchesLength; index += 1) {
+			const swatch = swatches[index];
+			const hsl = hexToHsl(swatch.dataset.color);
+			const isOn = hsl[0] === hue && hsl[1] === saturation && hsl[2] === lightness;
+			swatch.toggleAttribute('data-on', isOn);
 		}
 	}
 	updateFromSquare(domEvent) {
@@ -420,14 +443,8 @@ export class UIColorPicker extends WebComponent {
 		this.state.format = domEvent.target.value;
 		this.emitChange();
 	}
-	formatOptions() {
-		let markup = '';
-		for (let index = 0; index < FORMATS.length; index += 1) {
-			const fmt = FORMATS[index];
-			const selected = fmt === this.state.format ? ' selected' : '';
-			markup += `<option value="${fmt}"${selected}>${fmt.toUpperCase()}</option>`;
-		}
-		return markup;
+	formatOption(fmt) {
+		return html`<option value=${fmt}>${fmt.toUpperCase()}</option>`;
 	}
 	handleValue(domEvent) {
 		const parsed = parseColor(domEvent.target.value, this.state.format);
@@ -441,7 +458,7 @@ export class UIColorPicker extends WebComponent {
 			alpha: parsed.alpha,
 		});
 		// Emit WITHOUT reflectValue — rewriting the field mid-type fights the user.
-		this.emit('color-change', this.colorPayload());
+		this.emit('color-picker:change', this.colorPayload());
 	}
 	handlePreset(domEvent) {
 		const hex = domEvent.target?.dataset?.color;
@@ -457,7 +474,7 @@ export class UIColorPicker extends WebComponent {
 		this.emitChange();
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="cp">
 				<div
 					class="cp-square" #square
@@ -480,9 +497,9 @@ export class UIColorPicker extends WebComponent {
 				</div>
 				<div class="cp-value">
 					<input class="cp-input" #valueinput type="text" spellcheck="false" @input=${this.handleValue} aria-label="Color value">
-					<select class="cp-format" #formatselect @change=${this.handleFormatChange} aria-label="Color format">^html${this.formatOptions}</select>
+					<select class="cp-format" #formatselect @change=${this.handleFormatChange} aria-label="Color format">${each(FORMATS, this.formatOption)}</select>
 				</div>
-				<div class="cp-presets" @click=${this.handlePreset}>^html${this.presetMarkup()}</div>
+				<div class="cp-presets" #presets @click=${this.handlePreset}>${list('presets', this.renderSwatch)}</div>
 			</div>
 		`;
 	}

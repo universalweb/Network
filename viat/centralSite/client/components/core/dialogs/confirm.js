@@ -87,7 +87,7 @@ function confirmExecutor(resolve) {
 		settled = true;
 		acceptButton.removeEventListener('click', onAccept);
 		cancelButton.removeEventListener('click', onCancel);
-		modalElement.removeEventListener('modal-close', onClose);
+		modalElement.removeEventListener('modal:close', onClose);
 		modalElement.close();
 		resolve(accepted);
 	}
@@ -102,7 +102,7 @@ function confirmExecutor(resolve) {
 	}
 	acceptButton.addEventListener('click', onAccept);
 	cancelButton.addEventListener('click', onCancel);
-	modalElement.addEventListener('modal-close', onClose);
+	modalElement.addEventListener('modal:close', onClose);
 	modalElement.open();
 }
 /**

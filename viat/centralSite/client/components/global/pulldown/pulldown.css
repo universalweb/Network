@@ -77,6 +77,14 @@
 	height: 100%;
 	width: 100%;
 	overflow: hidden;
+	/* Always reserve the scrollbar gutter. The content is `overflow: hidden` at
+	   rest and flips to `overflow: auto` only while `.is-fully-open`; without a
+	   reserved gutter the vertical scrollbar appears/vanishes on that toggle,
+	   changing the content width by the scrollbar's ~11px. Since the drawer fills
+	   the viewport, that reflow reads as "the whole page jumps sideways" the
+	   instant a drag-to-close begins (is-fully-open is dropped). Reserving the
+	   gutter in BOTH states holds the width constant — no shift. */
+	scrollbar-gutter: stable;
 	box-sizing: border-box;
 }
 /* Reserve space for the grab handle on whichever edge it lives. */

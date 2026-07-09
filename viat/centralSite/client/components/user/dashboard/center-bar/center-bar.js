@@ -10,33 +10,33 @@ export class CenterBar extends WebComponent {
 	};
 	static state = {
 		toolbar: {
-			actions: [
+			items: [
 				{
 					id: 'faucet',
 					icon: 'droplets',
 					size: 'sm',
-					onClick: 'faucet:request',
+					emitName: 'faucet:request',
 					tooltip: 'Faucet — mint test VIAT',
 				},
 				{
 					id: 'sign-data',
 					icon: 'file-signature',
 					size: 'sm',
-					onClick: 'sign:open',
+					emitName: 'sign:open',
 					tooltip: 'Sign arbitrary data',
 				},
 				{
 					id: 'refresh-account',
 					icon: 'refresh-cw',
 					size: 'sm',
-					onClick: 'wallet:refresh',
+					emitName: 'wallet:refresh',
 					tooltip: 'Refresh balance, totals, and activity log',
 				},
 				{
 					id: 'wallet-info',
 					icon: 'info',
 					size: 'sm',
-					onClick: 'info:open',
+					emitName: 'info:open',
 					tooltip: 'How wallets are built',
 				},
 			],

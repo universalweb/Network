@@ -100,8 +100,8 @@ export class ExplorerPage extends WebComponent {
 			return pageHrefFor(this.state.filter, page);
 		},
 		itemNoun: 'transactions',
-		emptyText: 'No transactions yet.',
-		loadingText: 'Loading recent transactions…',
+		emptyMessage: 'No transactions yet.',
+		loadingMessage: 'Loading recent transactions…',
 		pagingStyle: 'loadmore',
 	};
 	/* Router entry: the filter is the routed dimension. A real change rebinds the

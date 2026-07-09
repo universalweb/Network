@@ -71,7 +71,7 @@ export class TransactionDetailPage extends WebComponent {
 			await navigator.clipboard.writeText(this.state.txId);
 			this.emit('notify', {
 				itemType: 'success',
-				title: 'Copied',
+				heading: 'Copied',
 				message: 'Transaction ID copied',
 			});
 		} catch {

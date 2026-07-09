@@ -18,7 +18,7 @@ export class UIAppBar extends WebComponent {
 	 */
 	static themes = ['gnosis', 'codex'];
 	static state = {
-		actions: [],
+		items: [],
 	};
 	render() {
 		this.html `
@@ -28,7 +28,7 @@ export class UIAppBar extends WebComponent {
 					<slot slot="center" name="center"></slot>
 					<div slot="end" class="app-bar-end">
 						<slot name="end"></slot>
-						${filter('actions', IconButtonBase, 'hidden')}
+						${filter('items', IconButtonBase, 'hidden')}
 					</div>
 				</ui-bar>
 			</header>

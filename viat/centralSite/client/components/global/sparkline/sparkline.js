@@ -4,7 +4,7 @@
 	filled into an area. Stretches to its box via preserveAspectRatio="none" +
 	non-scaling-stroke (crisp 1.5px line at any width). The KPI-card gateway.
 	── STANDARD INTERACTION ─────────────────────────────────────────────
-	  <ui-sparkline .values=${[3, 5, 4, 8, 7, 11]} .variant=${'area'} .tone=${'success'}></ui-sparkline>
+	  <ui-sparkline .state.values=${[3, 5, 4, 8, 7, 11]} .state.variant=${'area'} .state.tone=${'success'}></ui-sparkline>
 	`tone` maps to the shared token scale (accent/success/warning/danger/info/neutral).
 	─────────────────────────────────────────────────────────────────────
 */

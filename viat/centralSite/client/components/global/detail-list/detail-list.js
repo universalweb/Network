@@ -3,7 +3,7 @@
 	Description Lists): label → value rows, optionally multi-column and copyable.
 	The entity-attributes surface (tx detail, account fields, settings).
 	── STANDARD INTERACTION ─────────────────────────────────────────────
-	  <ui-detail-list .columns=${2} .pairs=${[
+	  <ui-detail-list .state.columns=${2} .state.items=${[
 	    { label: 'Hash',   value: '0x9f3a…c2', mono: true, copy: true },
 	    { label: 'Block',  value: '4,182,907', mono: true },
 	    { label: 'Status', value: 'Confirmed' },
@@ -20,7 +20,7 @@ export class UIDetailList extends WebComponent {
 		detailList: './detail-list.css',
 	};
 	static state = {
-		pairs: [],
+		items: [],
 		columns: 1,
 	};
 	render() {
@@ -28,7 +28,7 @@ export class UIDetailList extends WebComponent {
 			<dl class="dtl" style=${() => {
 				return `--dtl-cols:${this.state.columns}`;
 			}}>
-				${list('pairs', UIDetailPair, this.pairKey)}
+				${list('items', UIDetailPair, this.pairKey)}
 			</dl>
 		`;
 	}

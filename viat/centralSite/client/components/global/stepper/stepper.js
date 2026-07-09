@@ -8,11 +8,11 @@
 	── EVENTS ───────────────────────────────────────────────────────────
 	  step:change { index }
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-stepper .active=${1} .steps=${[
+	  <ui-stepper .state.activeIndex=${1} .state.items=${[
 	    { label: 'Account' },
 	    { label: 'Details', description: 'Profile & prefs' },
 	    { label: 'Review', optional: true },
-	  ]} @step:change=${e => goStep(e.detail.data.index)}></ui-stepper>
+	  ]} @stepper:change=${e => goStep(e.detail.data.index)}></ui-stepper>
 	──────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from '../../core/index.js';
@@ -32,22 +32,22 @@ export class UIStepper extends WebComponent {
 		stepper: './stepper.css',
 	};
 	static state = {
-		steps: [],
-		active: 0,
+		items: [],
+		activeIndex: 0,
 		orientation: 'horizontal',
 		linear: true,
 		clickable: true,
 	};
 	goTo(index) {
-		if (index === this.state.active) {
+		if (index === this.state.activeIndex) {
 			return;
 		}
 		// Linear wizards only allow stepping back to a completed node.
-		if (this.state.linear && index > this.state.active) {
+		if (this.state.linear && index > this.state.activeIndex) {
 			return;
 		}
-		this.state.active = index;
-		this.emit('step:change', {
+		this.state.activeIndex = index;
+		this.emit('stepper:change', {
 			index,
 		});
 	}
@@ -69,8 +69,8 @@ export class UIStepper extends WebComponent {
 		`;
 	}
 	renderSteps() {
-		const steps = Array.isArray(this.state.steps) ? this.state.steps : [];
-		const active = Number(this.state.active) || 0;
+		const steps = Array.isArray(this.state.items) ? this.state.items : [];
+		const active = Number(this.state.activeIndex) || 0;
 		let markup = '';
 		for (let index = 0; index < steps.length; index += 1) {
 			const step = steps[index];

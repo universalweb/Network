@@ -15,27 +15,27 @@ export class GlobalTopBar extends WebComponent {
 	};
 	static state = {
 		appBar: {
-			actions: [
+			items: [
 				{
 					id: 'agent',
 					icon: 'bot',
 					tooltip: 'Local Agent',
-					onClick: 'toggle-pulldown',
-					animate: 'rainbow',
+					emitName: 'toggle-pulldown',
+					animated: 'rainbow',
 				},
 				{
 					id: 'settings',
 					icon: 'settings',
 					tooltip: 'Settings',
-					onClick: 'open-settings',
-					animate: 'settings',
+					emitName: 'open-settings',
+					animated: 'settings',
 				},
 				{
 					id: 'sidebar',
 					icon: 'panel-left',
 					tooltip: 'Sidebar',
-					onClick: 'toggle-sidebar',
-					animate: 'sidebar',
+					emitName: 'sidebar:toggle',
+					animated: 'sidebar',
 				},
 			],
 		},
@@ -46,7 +46,7 @@ export class GlobalTopBar extends WebComponent {
 	naturalBottom = 0;
 	dragStartOffset = 0;
 	onConnect() {
-		this.delegate('pulldown:state', this.handlePulldownState);
+		this.delegate('pulldown:toggle', this.handlePulldownState);
 		this.reflectViewport();
 		/*
 		 * Adaptive flat → float, driven by the inner content scroll surface. The page
@@ -57,7 +57,7 @@ export class GlobalTopBar extends WebComponent {
 		 * relay. Auto-swept on disconnect (no listener / AbortController to manage).
 		 */
 		this.observeGlobal('environment.scrolled', (scrolled) => {
-			this.applyScrolled(!!scrolled);
+			this.applyScrolled(Boolean(scrolled));
 		});
 		/*
 		 * A route change lands a fresh page; AppView resets the scroll surface to top,
@@ -178,12 +178,20 @@ export class GlobalTopBar extends WebComponent {
 		appBar.style.transform = 'none';
 		const rect = appBar.getBoundingClientRect();
 		appBar.style.transform = previousTransform;
+		// Flush the restored position while the transition is STILL suppressed, so
+		// it commits as the bar's painted baseline. The `getBoundingClientRect`
+		// above forced a layout with `transform: none` — leaving offset 0 (the very
+		// top) as the last painted value. Without this second flush, a `snapTo`
+		// that sets `transition` + `transform` immediately after would animate the
+		// bar FROM 0 down to its target: on release it "shoots up to the top then
+		// springs back down to the bottom".
+		appBar.getBoundingClientRect();
 		appBar.style.transition = previousTransition;
 		this.naturalTop = rect.top;
 		this.naturalBottom = rect.bottom;
 	}
 	handlePulldownState(domEvent) {
-		// Ignore our own `pulldown:state` emissions; react only when the
+		// Ignore our own `pulldown:toggle` emissions; react only when the
 		// pulldown is opened or closed by some other route.
 		if (domEvent.target === this) {
 			return;
@@ -242,7 +250,7 @@ export class GlobalTopBar extends WebComponent {
 		const wasOpen = this.open;
 		this.open = willOpen;
 		appBar.style.zIndex = willOpen ? '100' : '';
-		this.emit('pulldown:state', {
+		this.emit('pulldown:toggle', {
 			open: willOpen,
 		});
 		this.emit('pulldown:dragend', {

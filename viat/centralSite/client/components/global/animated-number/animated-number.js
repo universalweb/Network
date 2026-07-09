@@ -4,9 +4,9 @@
 	`nextFrame()` loop, `isDisconnected` guard, reduced-motion bail) so KPIs can roll
 	without duplicating that logic a third time. Rolls on every `value` change.
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-animated-number .value=${9410} .group=${true}></ui-animated-number>
-	  <ui-animated-number .value=${1.84} .decimals=${2} .suffix=${'s'}></ui-animated-number>
-	  <ui-animated-number .value=${128.4} .pre=${'$'} .decimals=${2}></ui-animated-number>
+	  <ui-animated-number .state.value=${9410} .state.group=${true}></ui-animated-number>
+	  <ui-animated-number .state.value=${1.84} .state.decimals=${2} .state.suffix=${'s'}></ui-animated-number>
+	  <ui-animated-number .state.value=${128.4} .state.pre=${'$'} .state.decimals=${2}></ui-animated-number>
 	NB: the prepend key is `pre`, NOT `prefix` — `Element.prototype.prefix` is a
 	read-only native getter, so a `.prefix=` binding throws (same footgun as title/open).
 	──────────────────────────────────────────────────────────────────────

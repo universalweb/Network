@@ -5,17 +5,17 @@
 	Backspace on an empty input removes the last; pasting delimited text splits
 	into many; the ✕ on a chip removes it.
 	── OWNERSHIP ─────────────────────────────────────────────────────────
-	  UNCONTROLLED, like the codebase's other collection components: `.tags`
+	  UNCONTROLLED, like the codebase's other collection components: `.state.values=`
 	  (strings OR {label,value}) is the INITIAL value, read once on mount; the
 	  component then owns the live list internally (`liveTags`) and reports every
 	  change via events. No writeback needed — and no controlled-echo wasted-set.
 	── EVENTS ───────────────────────────────────────────────────────────
-	  tags:change { tags: string[] }   the full value list after any change
-	  tag:add     { value }            a single addition
-	  tag:remove  { value }            a single removal
+	  tag-input:change { values: string[] }  the full value list after any change
+	  tag-input:add     { value }            a single addition
+	  tag-input:remove  { value }            a single removal
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-tag-input .tags=${['react', 'vue']} .placeholder=${'Add framework…'}
-	    .max=${8} @tags:change=${e => save(e.detail.data.tags)}></ui-tag-input>
+	  <ui-tag-input .state.values=${['react', 'vue']} .state.placeholder=${'Add framework…'}
+	    .state.max=${8} @tag-input:change=${e => save(e.detail.data.values)}></ui-tag-input>
 	──────────────────────────────────────────────────────────────────────
 */
 import { list, WebComponent } from 'webcomponent';
@@ -26,7 +26,7 @@ export class UITagInput extends WebComponent {
 		tagInput: './tag-input.css',
 	};
 	static state = {
-		tags: [],
+		values: [],
 		// Reactive render buffer — chip-state objects derived from `liveTags`,
 		// rebuilt only on a real mutation so list() keyed-diffs the chips.
 		tagItems: [],
@@ -40,17 +40,17 @@ export class UITagInput extends WebComponent {
 		delimiter: ',',
 	};
 	// The live source of truth — normalized {label, value} objects. Seeded from the
-	// `.tags` prop once on connect; never re-read from it after (uncontrolled).
+	// `values` seed once on connect; never re-read from it after (uncontrolled).
 	liveTags = [];
 	onConnect() {
-		const seed = Array.isArray(this.state.tags) ? this.state.tags : [];
+		const seed = Array.isArray(this.state.values) ? this.state.values : [];
 		this.liveTags = seed.map((tag) => {
 			return {
 				label: this.tagLabel(tag),
 				value: this.tagValue(tag),
 			};
 		});
-		// Observe only the PRIMITIVE group props (never `tags` — that's seed-only, and
+		// Observe only the PRIMITIVE group props (never `values` — that's seed-only, and
 		// observing an array prop is what reintroduces the controlled wasted-set echo).
 		// This keeps the chips reactive to runtime disabled/size/tone/removable changes.
 		this.observe([
@@ -124,7 +124,7 @@ export class UITagInput extends WebComponent {
 			},
 		];
 		this.rebuildItems();
-		this.emit('tag:add', {
+		this.emit('tag-input:add', {
 			value: text,
 		});
 		this.emitChange();
@@ -139,7 +139,7 @@ export class UITagInput extends WebComponent {
 		}
 		this.liveTags = next;
 		this.rebuildItems();
-		this.emit('tag:remove', {
+		this.emit('tag-input:remove', {
 			value,
 		});
 		this.emitChange();
@@ -151,8 +151,8 @@ export class UITagInput extends WebComponent {
 		this.removeTag(this.liveTags[this.liveTags.length - 1].value);
 	}
 	emitChange() {
-		this.emit('tags:change', {
-			tags: this.currentValues(),
+		this.emit('tag-input:change', {
+			values: this.currentValues(),
 		});
 	}
 	commitInput() {

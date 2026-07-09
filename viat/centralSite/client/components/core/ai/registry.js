@@ -9,6 +9,17 @@ const instanceTools = new WeakMap();
 const globalTools = new Map();
 const subscribers = new Set();
 let counter = 0;
+/*
+ * Suppressed during a bulk backfill (enableAi arming): registering the whole live
+ * tree at once would otherwise fire one `componentAdded` per node at every
+ * subscriber (path-cache thrash + a JSON-RPC object per node broadcast at the
+ * agent that just connected). The backfill invalidates the path index once when
+ * it finishes instead.
+ */
+let notificationsSuppressed = false;
+export function suppressNotifications(suppressed) {
+	notificationsSuppressed = suppressed === true;
+}
 function makeId(component) {
 	if (isString(component.id) && component.id.length) {
 		return component.id;
@@ -16,16 +27,19 @@ function makeId(component) {
 	counter += 1;
 	return `${component.tagName.toLowerCase()}.${counter}`;
 }
-function notify(event) {
-	subscribers.forEach((fn) => {
+function notify(registryEvent) {
+	if (notificationsSuppressed) {
+		return;
+	}
+	for (const fn of subscribers) {
 		try {
-			fn(event);
+			fn(registryEvent);
 		} catch (error) {
 			queueMicrotask(() => {
 				throw error;
 			});
 		}
-	});
+	}
 }
 function recordParent(component, parentComponent) {
 	if (parentComponent) {
@@ -106,6 +120,13 @@ export function eachComponent(fn) {
 	components.forEach((component, id) => {
 		fn(component, id);
 	});
+}
+/*
+ * Live [id, component] iterator — lets callers scan with a plain for…of
+ * (zero callback closures, early-exit capable) instead of eachComponent.
+ */
+export function componentEntries() {
+	return components.entries();
 }
 export function listComponents() {
 	const out = [];

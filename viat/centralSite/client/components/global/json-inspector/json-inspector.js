@@ -3,7 +3,7 @@
 	JSON string (raw tx/block payloads, agent tool I/O). Type-tinted values,
 	per-row copy-PATH, live search/filter, and a starting depth limit.
 	ARCHITECTURE — FLAT ROWS, PARENT OWNS THE DATA. The component holds the value +
-	the expand-set and re-flattens the *visible* nodes into `rows`; each row is a
+	the expand-set and re-flattens the *visible* nodes into `items`; each row is a
 	<ui-json-row> carrying only primitive display fields (a string preview, type,
 	depth, path) — NEVER the live subtree. That keeps the keyed-list diff cheap and
 	sidesteps deep-cloning a payload into every node (the wrong fit for recursive
@@ -19,7 +19,7 @@
 	ancestors, force-expanding the path to reveal the hit; clearing it restores the
 	manual expand-set.
 	── STANDARD USAGE ───────────────────────────────────────────────────
-	  <ui-json-inspector .data=${payload} .expandDepth=${1}></ui-json-inspector>
+	  <ui-json-inspector .state.data=${payload} .state.expandDepth=${1}></ui-json-inspector>
 	─────────────────────────────────────────────────────────────────────
 */
 import { list, WebComponent } from 'webcomponent';
@@ -70,7 +70,7 @@ export class UIJsonInspector extends WebComponent {
 		expandDepth: 1,
 		filter: '',
 		copyPath: true,
-		rows: [],
+		items: [],
 	};
 	expandedSet = new Set();
 	rootValue = null;
@@ -201,7 +201,7 @@ export class UIJsonInspector extends WebComponent {
 			return;
 		}
 		this.rowsSignature = signature;
-		this.state.rows = rows;
+		this.state.items = rows;
 	}
 	collect(entry, path, depth, rowsOut, filterText, seen) {
 		const value = entry.value;
@@ -286,7 +286,7 @@ export class UIJsonInspector extends WebComponent {
 		return row.id;
 	}
 	hasRows() {
-		return this.state.rows.length > 0;
+		return this.state.items.length > 0;
 	}
 	clearHidden() {
 		return this.state.filter === '';
@@ -300,8 +300,8 @@ export class UIJsonInspector extends WebComponent {
 					<button type="button" class="ji-btn" @click=${this.expandAll}>Expand all</button>
 					<button type="button" class="ji-btn" @click=${this.collapseAll}>Collapse all</button>
 				</div>
-				<div class="ji-tree" role="tree" @jsonrow:toggle=${this.handleToggle}>
-					${list('rows', UIJsonRow, this.rowKey)}
+				<div class="ji-tree" role="tree" @json-row:toggle=${this.handleToggle}>
+					${list('items', UIJsonRow, this.rowKey)}
 					<div class="ji-empty" ?hidden=${this.hasRows}>No matches</div>
 				</div>
 			</div>

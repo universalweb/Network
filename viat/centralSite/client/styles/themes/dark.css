@@ -41,7 +41,9 @@
 	--font-body: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
 
 	/* ── Border Colors ───────────────────────────────── */
-	--border-light-color: oklch(1 0 0 / 0.09);
+	/* Crisper hairline — matches the settings modal's 0.12 border so panels read
+	   as sharply delineated surfaces rather than fading into the body. */
+	--border-light-color: oklch(1 0 0 / 0.12);
 
 	/* ── Borders ─────────────────────────────────────── */
 	--border-main: 1px solid oklch(1 0 0 / 0.12);
@@ -105,8 +107,9 @@
 	/* ── Shape — x.ai rounds generously (8px base) and PILLS every button ── */
 	--radius: 8px;
 	--radius-sm: 5px;
-	--radius-md: 8px;
-	--radius-lg: 12px;
+	/* Panels/surfaces round to the settings modal's 12px window radius (was 8px). */
+	--radius-md: 12px;
+	--radius-lg: 14px;
 	--radius-xl: 16px;
 	/* The x.ai signature: buttons + icon buttons are fully rounded pills/circles. */
 	--ui-btn-radius: 9999px;
@@ -114,12 +117,19 @@
 	--indicator-radius: 50%;
 	--indicator-warn-radius: 2px;
 
-	/* ── Surface elevation — flat: trade depth for a hairline ring ── */
-	--surface-border: oklch(1 0 0 / 0.08);
-	--elev-1: 0 1px 2px oklch(0 0 0 / 0.4);
-	--elev-2: 0 4px 14px oklch(0 0 0 / 0.35);
-	--elev-3: 0 12px 32px oklch(0 0 0 / 0.45);
-	--elev-hover: 0 6px 20px oklch(0 0 0 / 0.4);
+	/* ── Surface elevation — the settings-modal treatment: a top inner-highlight
+	   "lifted glass" edge over a real drop shadow (was flat, near-shadowless). The
+	   inset hairline is the load-bearing bit — it catches light on the top edge so
+	   the surface reads as lifted off the body, exactly like the modal window. ── */
+	--surface-border: oklch(1 0 0 / 0.12);
+	--surface-lift: inset 0 1px 0 oklch(1 0 0 / 0.05);
+	--elev-1: var(--surface-lift), 0 1px 2px oklch(0 0 0 / 0.4), 0 3px 8px oklch(0 0 0 / 0.26);
+	--elev-2: var(--surface-lift), 0 4px 14px oklch(0 0 0 / 0.4), 0 12px 28px -6px oklch(0 0 0 / 0.34);
+	--elev-3: inset 0 1px 0 oklch(1 0 0 / 0.06), 0 12px 32px oklch(0 0 0 / 0.5), 0 24px 56px -12px oklch(0 0 0 / 0.44);
+	--elev-hover: inset 0 1px 0 oklch(1 0 0 / 0.06), 0 8px 24px oklch(0 0 0 / 0.44);
+	/* Panels read `--shadow-2` (via the `.surface` utility). Override the flat base
+	   value with the same lifted-edge + elevation so every panel floats like the modal. */
+	--shadow-2: var(--surface-lift), 0 2px 6px oklch(0 0 0 / 0.34), 0 10px 26px -8px oklch(0 0 0 / 0.4);
 
 	/* ── Input ───────────────────────────────────────── */
 	--input-radius: 8px;
@@ -189,8 +199,13 @@
 	--input-copied-border: oklch(1 0 0 / 0.25);
 
 	/* ── Top Bar ─────────────────────────────────────── */
-	--topbar-bg: oklch(1 0 0 / 0.03);
-	--topbar-border: oklch(1 0 0 / 0.1);
+	/* Frosted glass, like the settings-modal window bar: a translucent dark tint
+	   that lets the blurred page show through (the bar's own `backdrop-filter` does
+	   the blur) instead of the near-invisible 3%-white it was. */
+	--topbar-bg: oklch(0.18 0 0 / 0.6);
+	--topbar-border: oklch(1 0 0 / 0.12);
+	/* Bottom status bar shares the frosted treatment (its own backdrop-filter). */
+	--status-bar-bg: oklch(0.14 0 0 / 0.62);
 	--topbar-accent: var(--text-light);
 	--topbar-bottom-border: 1px solid oklch(1 0 0 / 0.08);
 	--tb-badge-radius: 4px;
@@ -201,6 +216,13 @@
 	/* ── Popups ──────────────────────────────────────── */
 	--popup-bg: oklch(0.18 0 0 / 0.96);
 	--popup-bg-hover: oklch(0.22 0 0 / 0.97);
+	/* Frosted variant for transient popups (tooltips, the native-select picker) —
+	   more translucent than `--popup-bg` and paired with a blur so they glass over
+	   the content behind, matching the modal window bar. Kept SEPARATE from
+	   `--popup-bg` so the settings-modal surface (the reference) stays fully opaque
+	   and readable. Other themes fall back to `--popup-bg` + no blur. */
+	--popup-glass-bg: oklch(0.19 0 0 / 0.78);
+	--popup-glass-blur: blur(0.875rem) saturate(1.3);
 	--popup-border: oklch(1 0 0 / 0.12);
 	--popup-border-hover: oklch(1 0 0 / 0.2);
 	--popup-accent: oklch(1 0 0 / 0.18);

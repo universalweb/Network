@@ -9,7 +9,9 @@
  * `ui-ai-chat` carries zero Viat knowledge.
  */
 import '../../../global/ai-chat/ai-chat.js';
-import { isFunction, isShadowRoot, WebComponent } from 'webcomponent';
+import {
+	enableAi, isFunction, isShadowRoot, WebComponent,
+} from 'webcomponent';
 import { listAllTools } from '../../../core/ai/index.js';
 const DEFAULT_ENDPOINT = 'http://localhost:1234/v1';
 const DEFAULT_MODEL = 'local-model';
@@ -136,6 +138,14 @@ export class AIChat extends WebComponent {
 		this.state.systemPrompt = buildSystemPrompt(tools);
 	}
 	handlePulldownOpen() {
+		/*
+		 * The agent is being opened — this is the moment AI is needed, so arm the
+		 * lazy AI registry now (idempotent; the first open applies the mixin and
+		 * backfills the live component tree). It must run BEFORE refreshSystemPrompt
+		 * so the tool digest and page addressing (aiTools / aiMap / findPageRoot) see
+		 * the whole page rather than an empty registry.
+		 */
+		enableAi();
 		// Re-digest tools + re-probe on every open; prime once we know we're online
 		// (so the user never stares at a DISCONNECTED badge behind a doomed POST).
 		this.refreshSystemPrompt();
@@ -247,7 +257,7 @@ export class AIChat extends WebComponent {
 				.state.endpoint=${this.state.endpoint}
 				.state.model=${this.state.model}
 				.state.systemPrompt=${this.state.systemPrompt}
-				.state.title=${'LOCAL AI'}
+				.state.heading=${'LOCAL AI'}
 				@ai-chat:turn-complete=${this.handleTurnComplete}></ui-ai-chat>
 		`;
 	}

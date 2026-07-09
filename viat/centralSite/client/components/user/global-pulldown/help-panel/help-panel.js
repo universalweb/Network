@@ -18,7 +18,7 @@ class HelpShortcutRow extends WebComponent {
 	render() {
 		this.html `
 			<div class="hp-row">
-				<ui-kbd .state.keys=${this.state.keys} .state.separator=${this.state.separator}></ui-kbd>
+				<ui-kbd .state.values=${this.state.keys} .state.separator=${this.state.separator}></ui-kbd>
 				<span class="hp-desc">${this.state.desc}</span>
 			</div>
 		`;
@@ -36,9 +36,9 @@ export class HelpPanel extends Panel {
 	// keyed by `id` via the default keyFn (no keyFn arg needed).
 	static state = {
 		classes: new Set(['help-panel']),
-		id: 'AGENT',
+		panelId: 'AGENT',
 		showDot: true,
-		title: 'HOTKEYS',
+		heading: 'HOTKEYS',
 		shortcuts: [
 			{
 				id: 'esc',

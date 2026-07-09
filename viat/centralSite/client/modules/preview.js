@@ -6,10 +6,6 @@ import '../components/global/ui-stat-table/ui-stat-table.js';
 /* ui-sidebar is fixed-position app-shell chrome only summoned here on demand, so
    it's pulled in explicitly rather than left to a lazy first-render resolve. */
 import '../components/global/sidebar/sidebar.js';
-/* ui-tooltip lives under core/ (not the global/<tag> path the resolver scans),
-   so the `tooltip=` behavior's lazy `whenDefined('ui-tooltip')` would hang here
-   forever without this side-effect import — no tooltips would ever show. */
-import '../components/core/tooltips/tooltip.js';
 /* Carry-down pattern demo (demo-carry-top/mid/leaf) — preview-only showcase of
    `.state=` shared-object deep-mutation propagation; not on the resolver path. */
 import '../components/preview/carry-down-demo/carry-down-demo.js';
@@ -595,7 +591,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 		pollExample: `
 <ui-poll
   .state.question=\${'Which should we build first?'}
-  .state.options=\${[
+  .state.items=\${[
     { id: 'a', label: 'Wallet', votes: 142 },
     { id: 'b', label: 'Staking', votes: 98 },
   ]}>
@@ -610,7 +606,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 </ui-vote-tally>`,
 		carouselExample: `
 <ui-feature-carousel
-  .state.slides=\${[
+  .state.items=\${[
     { id: 'a', eyebrow: 'New', heading: 'Fast', description: '…' },
     { id: 'b', eyebrow: 'New', heading: 'Final', description: '…' },
   ]}>
@@ -621,12 +617,12 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 		colorPickerExample: `
 <ui-color-picker
   .state.color=\${'#6366f1'} .state.alpha=\${85} .state.format=\${'rgba'}
-  @color-change=\${this.handleColor}>
+  @color-picker:change=\${this.handleColor}>
 </ui-color-picker>`,
 		tagInputExample: `
 <ui-tag-input
-  .state.tags=\${['react', 'vue']} .state.placeholder=\${'Add framework…'}
-  .state.max=\${8} @tags:change=\${e => save(e.detail.data.tags)}>
+  .state.values=\${['react', 'vue']} .state.placeholder=\${'Add framework…'}
+  .state.max=\${8} @tag-input:change=\${e => save(e.detail.data.values)}>
 </ui-tag-input>`,
 		sliderExample: `
 <ui-slider .state.value=\${40} @slider:change=\${e => save(e.detail.data.value)}></ui-slider>
@@ -634,9 +630,9 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
   .state.showLabel=\${'always'}></ui-slider>
 <ui-slider .state.orientation=\${'vertical'} .state.step=\${5} .state.valueSuffix=\${'%'}></ui-slider>`,
 		calendarExample: `
-<ui-calendar @date-change=\${this.handlePick}></ui-calendar>
-<ui-range-calendar @range-change=\${this.handleRange}></ui-range-calendar>
-<ui-event-calendar .state.events=\${events}></ui-event-calendar>
+<ui-calendar @calendar:change=\${this.handlePick}></ui-calendar>
+<ui-range-calendar @calendar:range-change=\${this.handleRange}></ui-range-calendar>
+<ui-event-calendar .state.items=\${events}></ui-event-calendar>
 <ui-mini-calendar></ui-mini-calendar>`,
 		progressRingExample: `
 <ui-progress-ring
@@ -759,21 +755,21 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 		metricExample: `
 <ui-metric
   .state.label=\${'TPS (peak)'} .state.value=\${'9,410'}
-  .state.delta=\${12.4} .state.trend=\${[6, 7, 9, 11, 13, 14]}
+  .state.delta=\${12.4} .state.values=\${[6, 7, 9, 11, 13, 14]}
   .state.tone=\${'accent'}>
 </ui-metric>`,
 		detailListExample: `
-<ui-detail-list .state.columns=\${2} .state.pairs=\${[
+<ui-detail-list .state.columns=\${2} .state.items=\${[
   { label: 'Hash', value: '0x9f3a…c2', mono: true, copy: true },
   { label: 'Block', value: '4,182,907', mono: true },
   { label: 'Status', value: 'Confirmed' },
 ]}></ui-detail-list>`,
 		kbdExample: `
-<ui-kbd .state.keys=\${['cmd', 'k']}></ui-kbd>
-<ui-kbd .state.keys=\${['ctrl', 'shift', 'p']}></ui-kbd>
-<ui-kbd .state.keys=\${['esc']}></ui-kbd>`,
+<ui-kbd .state.values=\${['cmd', 'k']}></ui-kbd>
+<ui-kbd .state.values=\${['ctrl', 'shift', 'p']}></ui-kbd>
+<ui-kbd .state.values=\${['esc']}></ui-kbd>`,
 		legendExample: `
-<ui-legend .state.series=\${[
+<ui-legend .state.items=\${[
   { label: 'TPS',      color: 'var(--cyan)' },
   { label: 'Finality', color: 'var(--color-success)' },
   { label: 'Missed',   color: 'var(--color-danger)' },
@@ -1042,28 +1038,28 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 				id: 'wallet',
 				icon: 'wallet',
 				tooltip: 'Wallet',
-				animate: 'bob',
+				animated: 'bob',
 			},
 			{
 				id: 'explorer',
 				icon: 'compass',
 				tooltip: 'Explorer',
-				animate: 'compass',
+				animated: 'compass',
 			},
 			{
 				id: 'accounts',
 				icon: 'users',
 				tooltip: 'Accounts',
-				animate: 'hop',
+				animated: 'hop',
 			},
 			{
 				id: 'swap',
 				icon: 'arrow-left-right',
 				tooltip: 'Swap',
-				animate: 'flip',
+				animated: 'flip',
 			},
 		],
-		dockActiveId: 'explorer',
+		dockActiveIndex: 'explorer',
 		appBarActions: [
 			{
 				id: 'agent',
@@ -1266,8 +1262,8 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 			return row.id;
 		},
 		itemNoun: 'rows',
-		emptyText: 'No rows.',
-		loadingText: 'Loading rows…',
+		emptyMessage: 'No rows.',
+		loadingMessage: 'Loading rows…',
 		pagingStyle: 'loadmore',
 	};
 	bumpClick() {
@@ -1285,7 +1281,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 	handleTagsChange(domEvent) {
 		// ui-tag-input is uncontrolled — `.tags` is the seed, the component owns the
 		// live list. Just reflect the reported values; no writeback to tagValues.
-		const tags = domEvent.detail?.data?.tags ?? [];
+		const tags = domEvent.detail?.data?.values ?? [];
 		this.state.tagReadout = tags.length ? tags.join(', ') : '(empty)';
 	}
 	handleSliderChange(domEvent) {
@@ -1296,7 +1292,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 		this.state.sliderRangeReadout = `${data.low} – ${data.high}`;
 	}
 	handleDatePick(domEvent) {
-		this.state.pickedDate = domEvent.detail?.data?.date ?? '';
+		this.state.pickedDate = domEvent.detail?.data?.value ?? '';
 	}
 	handleRangePick(domEvent) {
 		const range = domEvent.detail?.data;
@@ -1335,13 +1331,13 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 	}
 	notifyDefault() {
 		this.refs.notify.show({
-			title: 'Heads up',
+			heading: 'Heads up',
 			message: 'A default notification just landed.',
 		});
 	}
 	notifyError() {
 		this.refs.notify.show({
-			title: 'Transfer failed',
+			heading: 'Transfer failed',
 			message: 'The node rejected the transaction.',
 			itemType: 'error',
 		});
@@ -1349,7 +1345,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 	showLoadingScreen() {
 		const loadingScreen = this.refs.loading;
 		loadingScreen.open({
-			title: 'Syncing chain',
+			heading: 'Syncing chain',
 			message: 'Verifying post-quantum proofs…',
 		});
 		this.setTimeout(() => {
@@ -1425,13 +1421,13 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 		this.state.pinResult = `complete → ${domEvent.detail?.data?.value}`;
 	}
 	openPulldownDemo() {
-		// ui-pulldown opens off the `pulldown:state` document-bus event.
-		this.emit('pulldown:state', {
+		// ui-pulldown opens off the `pulldown:toggle` document-bus event.
+		this.emit('pulldown:toggle', {
 			open: true,
 		});
 	}
 	closePulldownDemo() {
-		this.emit('pulldown:state', {
+		this.emit('pulldown:toggle', {
 			open: false,
 		});
 	}
@@ -1855,11 +1851,11 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							<ui-ai-message .state.author=${'user'} .state.content=${'Get me a swap quote for VIAT → UDSP'}></ui-ai-message>
 							<ui-ai-message .state.author=${'assistant'} .state.content=${this.state.aiAssistantContent}></ui-ai-message>
 							<ui-ai-reasoning .state.text=${this.state.aiReasoningText} .state.expanded=${true}></ui-ai-reasoning>
-							<ui-ai-plan .state.steps=${this.state.aiPlanSteps}></ui-ai-plan>
+							<ui-ai-plan .state.items=${this.state.aiPlanSteps}></ui-ai-plan>
 							<ui-ai-tool-call .state.name=${'getWalletAmount'} .state.args=${this.state.aiToolArgs} .state.result=${this.state.aiToolResult} .state.status=${'done'} .state.expanded=${true}></ui-ai-tool-call>
-							<ui-ai-sources .state.sources=${this.state.aiSources}></ui-ai-sources>
+							<ui-ai-sources .state.items=${this.state.aiSources}></ui-ai-sources>
 							<ui-ai-approval .state.name=${'sendFunds'} .state.summary=${'Send 100 VIAT to bob.viat'} .state.args=${this.state.aiToolArgs}></ui-ai-approval>
-							<ui-ai-inquire .state.question=${'Which network should I use?'} .state.mode=${'choice'} .state.options=${this.state.aiInquireOptions}></ui-ai-inquire>
+							<ui-ai-inquire .state.question=${'Which network should I use?'} .state.mode=${'choice'} .state.items=${this.state.aiInquireOptions}></ui-ai-inquire>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -1913,8 +1909,8 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							gap: 'lg',
 							wrap: true,
 						}}>
-							<ui-pin-input .state.length=${6} .state.type=${'numeric'} @pin:complete=${this.handlePinComplete} @pin:input=${this.handlePinInput}></ui-pin-input>
-							<ui-pin-input .state.length=${4} .state.type=${'numeric'} .state.masked=${true} @pin:complete=${this.handlePinComplete}></ui-pin-input>
+							<ui-pin-input .state.length=${6} .state.type=${'numeric'} @pin-input:complete=${this.handlePinComplete} @pin-input:input=${this.handlePinInput}></ui-pin-input>
+							<ui-pin-input .state.length=${4} .state.type=${'numeric'} .state.masked=${true} @pin-input:complete=${this.handlePinComplete}></ui-pin-input>
 							<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>${this.state.pinResult || 'enter a code'}</ui-text>
 						</ui-stack>
 					</ui-surface>
@@ -2056,8 +2052,8 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							justify: 'around',
 							wrap: true,
 						}}>
-							<ui-speed-dial .state.icon=${'plus'} .state.position=${'static'} .state.direction=${'up'} .state.actions=${this.speedDialActions} @speed-dial:action=${this.handleSpeedDialAction}></ui-speed-dial>
-							<ui-speed-dial .state.icon=${'share-2'} .state.tone=${'accent'} .state.trigger=${'hover'} .state.position=${'static'} .state.direction=${'down'} .state.actions=${this.speedDialActions} @speed-dial:action=${this.handleSpeedDialAction}></ui-speed-dial>
+							<ui-speed-dial .state.icon=${'plus'} .state.position=${'static'} .state.direction=${'up'} .state.items=${this.speedDialActions} @speed-dial:action=${this.handleSpeedDialAction}></ui-speed-dial>
+							<ui-speed-dial .state.icon=${'share-2'} .state.tone=${'accent'} .state.trigger=${'hover'} .state.position=${'static'} .state.direction=${'down'} .state.items=${this.speedDialActions} @speed-dial:action=${this.handleSpeedDialAction}></ui-speed-dial>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -2079,7 +2075,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							direction: 'column',
 							gap: 'md',
 						}}>
-							<ui-pagination .state.page=${this.state.demoPage} .state.count=${42} @page:change=${this.handleDemoPage}></ui-pagination>
+							<ui-pagination .state.page=${this.state.demoPage} .state.count=${42} @pagination:change=${this.handleDemoPage}></ui-pagination>
 							<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Page ${this.state.demoPage} of 42</ui-text>
 						</ui-stack>
 					</ui-surface>
@@ -2104,7 +2100,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-number-stepper .state.value=${this.state.demoQty} .state.min=${0} .state.max=${10} @stepper:change=${this.handleDemoQty}></ui-number-stepper>
+							<ui-number-stepper .state.value=${this.state.demoQty} .state.min=${0} .state.max=${10} @number-stepper:change=${this.handleDemoQty}></ui-number-stepper>
 							<ui-number-stepper .state.value=${1.5} .state.step=${0.5} .state.precision=${1} .state.suffix=${'×'}></ui-number-stepper>
 							<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Qty: ${this.state.demoQty}</ui-text>
 						</ui-stack>
@@ -2138,7 +2134,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 								variant: 'outline',
 								tone: 'primary',
 								size: 'sm',
-							}} @buttonClick=${this.rollAnim}></ui-button>
+							}} @button:click=${this.rollAnim}></ui-button>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -2177,12 +2173,12 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							direction: 'column',
 							gap: 'lg',
 						}}>
-							<ui-stepper .state.active=${this.state.wizardStep} .state.steps=${this.wizardSteps} @step:change=${this.handleWizardStep}></ui-stepper>
+							<ui-stepper .state.activeIndex=${this.state.wizardStep} .state.items=${this.wizardSteps} @stepper:change=${this.handleWizardStep}></ui-stepper>
 							<ui-button .state=${{
 								label: 'Next step',
 								tone: 'primary',
 								size: 'sm',
-							}} @buttonClick=${this.wizardNext}></ui-button>
+							}} @button:click=${this.wizardNext}></ui-button>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -2207,7 +2203,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							wrap: true,
 						}}>
 							<ui-menu .state.label=${'Actions ▾'} .state.items=${this.menuItems} @menu:select=${this.handleMenuSelect}></ui-menu>
-							<ui-menu .state.label=${'Align end ▾'} .state.placement=${'bottom-end'} .state.items=${this.menuItems} @menu:select=${this.handleMenuSelect}></ui-menu>
+							<ui-menu .state.label=${'Align end ▾'} .state.align=${'end'} .state.items=${this.menuItems} @menu:select=${this.handleMenuSelect}></ui-menu>
 							<div style="transform: translateZ(0); overflow: hidden; padding: 0.75rem; border: 1px dashed var(--surface-border, rgba(255, 255, 255, 0.2)); border-radius: 0.5rem;">
 								<ui-menu .state.label=${'Inside transform ▾'} .state.items=${this.menuItems} @menu:select=${this.handleMenuSelect}></ui-menu>
 							</div>
@@ -2368,7 +2364,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 								tone: 'primary',
 								variant: 'outline',
 								size: 'sm',
-							}} @buttonClick=${this.toggleSpin}></ui-button>
+							}} @button:click=${this.toggleSpin}></ui-button>
 						</ui-stack>
 					</ui-surface>
 				</section>
@@ -2547,7 +2543,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 								<ui-button .state=${{
 									label: 'Click me',
 									tone: 'primary',
-								}} @buttonClick=${this.bumpClick}></ui-button>
+								}} @button:click=${this.bumpClick}></ui-button>
 								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>clicks: ${this.state.clickCount}</ui-text>
 							</ui-stack>
 						</ui-stack>
@@ -2581,19 +2577,19 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 									type: 'email',
 									placeholder: 'sm size · email',
 									size: 'sm',
-								}} @input=${this.syncEmail}></ui-input>
+								}} @input:input=${this.syncEmail}></ui-input>
 								<ui-input .state=${{
 									value: this.state.emailValue,
 									type: 'email',
 									placeholder: 'md size (default)',
 									size: 'md',
-								}} @input=${this.syncEmail}></ui-input>
+								}} @input:input=${this.syncEmail}></ui-input>
 								<ui-input .state=${{
 									value: this.state.emailValue,
 									type: 'email',
 									placeholder: 'lg size',
 									size: 'lg',
-								}} @input=${this.syncEmail}></ui-input>
+								}} @input:input=${this.syncEmail}></ui-input>
 							</ui-stack>
 							<ui-stack .state=${{
 								direction: 'row',
@@ -2638,14 +2634,14 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 						}}>
 							<ui-field .state=${{
 								label: 'Email address',
-								help: 'We\'ll never share your email.',
+								hint: 'We\'ll never share your email.',
 								required: true,
 							}}>
 								<ui-input .state=${{
 									value: this.state.emailValue,
 									type: 'email',
 									placeholder: 'you@example.com',
-								}} @input=${this.syncEmail}></ui-input>
+								}} @input:input=${this.syncEmail}></ui-input>
 							</ui-field>
 							<ui-field .state=${{
 								label: 'Search',
@@ -2656,18 +2652,18 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 									type: 'search',
 									placeholder: 'try anything',
 									tone: 'error',
-								}} @input=${this.syncSearch}></ui-input>
+								}} @input:input=${this.syncSearch}></ui-input>
 							</ui-field>
 							<ui-field .state=${{
 								label: 'Amount',
-								help: 'inline layout',
+								hint: 'inline layout',
 								inline: true,
 							}}>
 								<ui-input .state=${{
 									value: this.state.amountValue,
 									type: 'number',
 									placeholder: '0.00',
-								}} @input=${this.syncAmount}></ui-input>
+								}} @input:input=${this.syncAmount}></ui-input>
 							</ui-field>
 						</ui-stack>
 					</ui-surface>
@@ -2692,10 +2688,10 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							wrap: true,
 							align: 'start',
 						}}>
-							<ui-poll .state.question=${'Which should we build first?'} .state.options=${this.state.pollBaseOptions}></ui-poll>
-							<ui-choice-poll .state.question=${'Pick your top priority (instant)'} .state.options=${this.state.pollChoiceOptions}></ui-choice-poll>
-							<ui-feature-poll .state.question=${'Vote on the next feature'} .state.options=${this.state.pollFeatureOptions}></ui-feature-poll>
-							<ui-poll-widget .state.question=${'Select all you want (multi)'} .state.options=${this.state.pollWidgetOptions} .state.multiple=${true}></ui-poll-widget>
+							<ui-poll .state.question=${'Which should we build first?'} .state.items=${this.state.pollBaseOptions}></ui-poll>
+							<ui-choice-poll .state.question=${'Pick your top priority (instant)'} .state.items=${this.state.pollChoiceOptions}></ui-choice-poll>
+							<ui-feature-poll .state.question=${'Vote on the next feature'} .state.items=${this.state.pollFeatureOptions}></ui-feature-poll>
+							<ui-poll-widget .state.question=${'Select all you want (multi)'} .state.items=${this.state.pollWidgetOptions} .state.multiple=${true}></ui-poll-widget>
 						</ui-stack>
 						<ui-code-block .state.language=${'html'} .state.code=${this.state.pollExample}></ui-code-block>
 					</ui-surface>
@@ -2706,7 +2702,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 				}}>
 					<div class="preview-section-head">
 						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIColorPicker</ui-text>
-						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>HSL square (drag) · hue + alpha dials · format DROPDOWN (HEX / RGB / RGBA / HSL / HSLA) · default .color / .alpha / .format props · preset grid · emits color-change</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>HSL square (drag) · hue + alpha dials · format DROPDOWN (HEX / RGB / RGBA / HSL / HSLA) · default .color / .alpha / .format props · preset grid · emits color-picker:change</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2720,7 +2716,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-color-picker .state.color=${'#6366f1'} .state.alpha=${85} .state.format=${'rgba'} @color-change=${this.handleColorChange}></ui-color-picker>
+							<ui-color-picker .state.color=${'#6366f1'} .state.alpha=${85} .state.format=${'rgba'} @color-picker:change=${this.handleColorChange}></ui-color-picker>
 							<ui-text .state.variant=${'body'} .state.tone=${'muted'}>Selected: ${this.state.pickedColor}</ui-text>
 						</ui-stack>
 						<ui-code-block .state.language=${'html'} .state.code=${this.state.colorPickerExample}></ui-code-block>
@@ -2732,7 +2728,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 				}}>
 					<div class="preview-section-head">
 						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UITagInput</ui-text>
-						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>token field of removable ui-chips · Enter / comma commits · Backspace removes last · paste splits · max · emits tags:change</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>token field of removable ui-chips · Enter / comma commits · Backspace removes last · paste splits · max · emits tag-input:change</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -2744,7 +2740,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							direction: 'column',
 							gap: 'md',
 						}}>
-							<ui-tag-input .state.tags=${this.state.tagValues} .state.placeholder=${'Add a tag…'} .state.max=${8} @tags:change=${this.handleTagsChange}></ui-tag-input>
+							<ui-tag-input .state.values=${this.state.tagValues} .state.placeholder=${'Add a tag…'} .state.max=${8} @tag-input:change=${this.handleTagsChange}></ui-tag-input>
 							<ui-text .state.variant=${'body'} .state.tone=${'muted'}>Tags: ${this.state.tagReadout}</ui-text>
 						</ui-stack>
 						<ui-code-block .state.language=${'html'} .state.code=${this.state.tagInputExample}></ui-code-block>
@@ -2816,14 +2812,14 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 									gap: 'sm',
 								}}>
 									<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Single · ${this.state.pickedDate || '(pick a day)'}</ui-text>
-									<ui-calendar @date-change=${this.handleDatePick}></ui-calendar>
+									<ui-calendar @calendar:change=${this.handleDatePick}></ui-calendar>
 								</ui-stack>
 								<ui-stack .state=${{
 									direction: 'column',
 									gap: 'sm',
 								}}>
 									<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>Range · ${this.state.pickedRange || '(pick start → end)'}</ui-text>
-									<ui-range-calendar @range-change=${this.handleRangePick}></ui-range-calendar>
+									<ui-range-calendar @calendar:range-change=${this.handleRangePick}></ui-range-calendar>
 								</ui-stack>
 								<ui-stack .state=${{
 									direction: 'column',
@@ -2833,7 +2829,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 									<ui-mini-calendar></ui-mini-calendar>
 								</ui-stack>
 							</ui-stack>
-							<ui-event-calendar .state.viewYear=${2026} .state.viewMonth=${5} .state.events=${this.state.calendarEvents}></ui-event-calendar>
+							<ui-event-calendar .state.viewYear=${2026} .state.viewMonth=${5} .state.items=${this.state.calendarEvents}></ui-event-calendar>
 						</ui-stack>
 						<ui-code-block .state.language=${'html'} .state.code=${this.state.calendarExample}></ui-code-block>
 					</ui-surface>
@@ -2909,7 +2905,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 									label: 'Bump (test pulse)',
 									size: 'sm',
 									variant: 'outline',
-								}} @buttonClick=${this.bumpBadge}></ui-button>
+								}} @button:click=${this.bumpBadge}></ui-button>
 							</ui-stack>
 						</ui-stack>
 					</ui-surface>
@@ -3053,7 +3049,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 								radius: 'md',
 							}}>
 								<ui-empty-state .state=${{
-									title: 'No transactions yet',
+									heading: 'No transactions yet',
 								}}></ui-empty-state>
 							</ui-surface>
 							<ui-surface .state=${{
@@ -3063,7 +3059,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							}}>
 								<ui-empty-state .state=${{
 									icon: '⊘',
-									title: 'Wallet is empty',
+									heading: 'Wallet is empty',
 									hint: 'Fund your wallet to get started.',
 									actionLabel: 'Open faucet',
 								}}></ui-empty-state>
@@ -3091,12 +3087,12 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							wrap: true,
 						}}>
 							<ui-panel .state=${{
-								id: 'WALLET',
-								title: 'ADDRESS',
+								panelId: 'WALLET',
+								heading: 'ADDRESS',
 							}}></ui-panel>
 							<ui-panel .state=${{
-								id: 'NET',
-								title: 'STATUS',
+								panelId: 'NET',
+								heading: 'STATUS',
 								showDot: false,
 							}}></ui-panel>
 						</ui-stack>
@@ -3136,7 +3132,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 						<ui-button .state=${{
 							label: 'Open modal',
 							tone: 'primary',
-						}} @buttonClick=${this.openModal}></ui-button>
+						}} @button:click=${this.openModal}></ui-button>
 						<ui-modal #modal>
 							<ui-surface .state=${{
 								tone: 'popup',
@@ -3157,11 +3153,11 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 										<ui-button .state=${{
 											label: 'Cancel',
 											variant: 'ghost',
-										}} @buttonClick=${this.closeModal}></ui-button>
+										}} @button:click=${this.closeModal}></ui-button>
 										<ui-button .state=${{
 											label: 'Confirm',
 											tone: 'primary',
-										}} @buttonClick=${this.closeModal}></ui-button>
+										}} @button:click=${this.closeModal}></ui-button>
 									</ui-stack>
 								</ui-stack>
 							</ui-surface>
@@ -3298,16 +3294,16 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							<ui-button .state=${{
 								label: 'Windows-style (right)',
 								tone: 'primary',
-							}} @buttonClick=${this.openControlsModal}></ui-button>
+							}} @button:click=${this.openControlsModal}></ui-button>
 							<ui-button .state=${{
 								label: 'macOS-style (left)',
 								tone: 'primary',
 								variant: 'outline',
-							}} @buttonClick=${this.openMacModal}></ui-button>
+							}} @button:click=${this.openMacModal}></ui-button>
 							<ui-button .state=${{
 								label: 'With afterAction callback',
 								variant: 'ghost',
-							}} @buttonClick=${this.openMaximizedStartModal}></ui-button>
+							}} @button:click=${this.openMaximizedStartModal}></ui-button>
 						</ui-stack>
 						<ui-modal #controls_modal .state=${{
 							showClose: true,
@@ -3408,7 +3404,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							direction: 'column',
 							gap: 'lg',
 						}}>
-							<ui-tabs .state.transition=${'slide'} .state.tabs=${this.state.tabsHorizontal}>
+							<ui-tabs .state.transition=${'slide'} .state.items=${this.state.tabsHorizontal}>
 									<ui-surface slot="overview" .state=${{
 										tone: 'subtle',
 										padding: 'md',
@@ -3431,7 +3427,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 										<ui-text .state.variant=${'body'}>Advanced panel · the indicator bubble still slides underneath.</ui-text>
 									</ui-surface>
 								</ui-tabs>
-								<ui-tabs .state.tabs=${this.state.tabsHorizontal}>
+								<ui-tabs .state.items=${this.state.tabsHorizontal}>
 								<ui-surface slot="overview" .state=${{
 									tone: 'subtle',
 									padding: 'md',
@@ -3454,7 +3450,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 									<ui-text .state.variant=${'body'}>Advanced panel content.</ui-text>
 								</ui-surface>
 							</ui-tabs>
-							<ui-tabs .state.orientation=${'vertical'} .state.tabs=${this.state.tabsVertical}>
+							<ui-tabs .state.orientation=${'vertical'} .state.items=${this.state.tabsVertical}>
 								<ui-surface slot="profile" .state=${{
 									tone: 'subtle',
 									padding: 'md',
@@ -3531,11 +3527,11 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							<ui-button .state=${{
 								label: 'Push notification',
 								tone: 'primary',
-							}} @buttonClick=${this.notifyDefault}></ui-button>
+							}} @button:click=${this.notifyDefault}></ui-button>
 							<ui-button .state=${{
 								label: 'Push error',
 								tone: 'danger',
-							}} @buttonClick=${this.notifyError}></ui-button>
+							}} @button:click=${this.notifyError}></ui-button>
 						</ui-stack>
 						<ui-notification #notify></ui-notification>
 					</ui-surface>
@@ -3557,7 +3553,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 						<ui-button .state=${{
 							label: 'Show loading screen',
 							tone: 'primary',
-						}} @buttonClick=${this.showLoadingScreen}></ui-button>
+						}} @button:click=${this.showLoadingScreen}></ui-button>
 						<ui-loading-screen #loading></ui-loading-screen>
 					</ui-surface>
 				</section>
@@ -3578,7 +3574,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 						<ui-button .state=${{
 							label: 'Show boot screen',
 							tone: 'primary',
-						}} @buttonClick=${this.showBootScreen}></ui-button>
+						}} @button:click=${this.showBootScreen}></ui-button>
 					</ui-surface>
 				</section>
 
@@ -3603,8 +3599,8 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 						}}>
 							<ui-select .state=${{
 								value: this.state.selectValue,
-								options: this.state.selectOptions,
-							}} @change=${this.syncSelect}></ui-select>
+								items: this.state.selectOptions,
+							}} @select:change=${this.syncSelect}></ui-select>
 							<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>selected: <ui-text .state.variant=${'mono'}>${this.state.selectValue}</ui-text></ui-text>
 						</ui-stack>
 					</ui-surface>
@@ -3654,7 +3650,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 								icon: 'settings',
 								tooltip: 'Spin on hover',
 								size: 'md',
-								animate: 'compass',
+								animated: 'compass',
 							}}></ui-icon-button>
 						</ui-stack>
 					</ui-surface>
@@ -3674,7 +3670,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 						border: true,
 					}}>
 						<ui-toolbar .state=${{
-							actions: this.state.toolbarActions,
+							items: this.state.toolbarActions,
 						}}></ui-toolbar>
 					</ui-surface>
 				</section>
@@ -3735,7 +3731,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 									label: 'Cycle',
 									size: 'sm',
 									variant: 'outline',
-								}} @buttonClick=${this.cycleStatus}></ui-button>
+								}} @button:click=${this.cycleStatus}></ui-button>
 							</ui-stack>
 						</ui-stack>
 					</ui-surface>
@@ -3755,10 +3751,10 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 						border: true,
 					}}>
 						<ui-stat-table .state=${{
-							title: 'NETWORK',
+							heading: 'NETWORK',
 							hint: 'live · 24h delta',
 							columns: this.state.statTableColumns,
-							rows: this.state.statTableRows,
+							items: this.state.statTableRows,
 						}}></ui-stat-table>
 					</ui-surface>
 				</section>
@@ -3797,7 +3793,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							label: 'Open lightbox',
 							tone: 'primary',
 							leadicon: 'image',
-						}} @buttonClick=${this.openWhitebox}></ui-button>
+						}} @button:click=${this.openWhitebox}></ui-button>
 						<ui-whitebox-modal #whitebox .state=${{
 							src: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"><rect width="640" height="360" fill="%230A1128"/><text x="320" y="190" font-family="monospace" font-size="40" fill="%2300F0FF" text-anchor="middle">⩝ VIAT</text></svg>',
 							alt: 'VIAT placeholder',
@@ -3827,13 +3823,13 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 						}}>
 							<ui-dock .state=${{
 								items: this.state.dockItems,
-								activeId: this.state.dockActiveId,
+								activeIndex: this.state.dockActiveIndex,
 								orientation: 'vertical',
 								showActiveBar: true,
 							}}></ui-dock>
 							<ui-dock .state=${{
 								items: this.state.dockItems,
-								activeId: this.state.dockActiveId,
+								activeIndex: this.state.dockActiveIndex,
 								orientation: 'horizontal',
 								showActiveBar: true,
 							}}></ui-dock>
@@ -3850,7 +3846,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 					</div>
 					<div class="shell-frame shell-frame-bar">
 						<ui-app-bar .state=${{
-							actions: this.state.appBarActions,
+							items: this.state.appBarActions,
 						}}>
 							<ui-text slot="brand" .state.variant=${'mono'} .state.tone=${'accent'}>⩝ VIAT</ui-text>
 						</ui-app-bar>
@@ -3866,7 +3862,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 					</div>
 					<div class="shell-frame shell-frame-bar">
 						<ui-status-bar .state=${{
-							cells: this.state.statusCells,
+							items: this.state.statusCells,
 							dividers: true,
 						}}></ui-status-bar>
 					</div>
@@ -3895,7 +3891,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 								<ui-button .state=${{
 									label: 'Open pulldown',
 									tone: 'primary',
-								}} @buttonClick=${this.openPulldownDemo}></ui-button>
+								}} @button:click=${this.openPulldownDemo}></ui-button>
 								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>UIPulldown — the agent overlay slides from the top edge over the whole viewport. Open here; close from inside, or drag the sheet (anywhere on its empty surface, or the bottom grab handle) up.</ui-text>
 							</div>
 							<div class="demo-shell-controls">
@@ -3908,17 +3904,17 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 										label: 'Open',
 										tone: 'primary',
 										size: 'sm',
-									}} @buttonClick=${this.openSidebarDemo}></ui-button>
+									}} @button:click=${this.openSidebarDemo}></ui-button>
 									<ui-button .state=${{
 										label: 'Close',
 										variant: 'outline',
 										size: 'sm',
-									}} @buttonClick=${this.closeSidebarDemo}></ui-button>
+									}} @button:click=${this.closeSidebarDemo}></ui-button>
 									<ui-button .state=${{
 										label: 'Toggle',
 										variant: 'outline',
 										size: 'sm',
-									}} @buttonClick=${this.toggleSidebarDemo}></ui-button>
+									}} @button:click=${this.toggleSidebarDemo}></ui-button>
 								</ui-stack>
 								<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>UISidebar — a real right-edge drawer. The component ships the open() / close() / toggle() methods (these three buttons call them — toggle() flips, so one button both opens and closes), the ⌘B / Ctrl+B hotkey, and swipe / drag-to-close. Wire any button to those methods; no baked-in button.</ui-text>
 							</div>
@@ -3942,7 +3938,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 								label: 'Close',
 								size: 'sm',
 								variant: 'ghost',
-							}} @buttonClick=${this.closePulldownDemo}></ui-button>
+							}} @button:click=${this.closePulldownDemo}></ui-button>
 						</div>
 					</ui-pulldown>
 				</section>
@@ -4024,9 +4020,9 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							wrap: true,
 							align: 'start',
 						}}>
-							<ui-carousel .state.slides=${this.state.baseCarouselSlides} .state.arrows=${true} style="max-inline-size: 30rem; inline-size: 100%"></ui-carousel>
-							<ui-feature-carousel .state.slides=${this.state.featureCarouselSlides()} style="max-inline-size: 30rem; inline-size: 100%"></ui-feature-carousel>
-							<ui-loading-carousel .state.slides=${this.state.loadingCarouselSlides()} style="max-inline-size: 30rem; inline-size: 100%"></ui-loading-carousel>
+							<ui-carousel .state.items=${this.state.baseCarouselSlides} .state.arrows=${true} style="max-inline-size: 30rem; inline-size: 100%"></ui-carousel>
+							<ui-feature-carousel .state.items=${this.state.featureCarouselSlides()} style="max-inline-size: 30rem; inline-size: 100%"></ui-feature-carousel>
+							<ui-loading-carousel .state.items=${this.state.loadingCarouselSlides()} style="max-inline-size: 30rem; inline-size: 100%"></ui-loading-carousel>
 						</ui-stack>
 						<ui-code-block .state.language=${'html'} .state.code=${this.state.carouselExample}></ui-code-block>
 					</ui-surface>
@@ -4172,9 +4168,9 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 						border: true,
 					}}>
 						<div class="grid">
-							<ui-metric .state.label=${'TPS (peak)'} .state.value=${'9,410'} .state.delta=${12.4} .state.trend=${this.state.metricTrendTps} .state.tone=${'accent'}></ui-metric>
-							<ui-metric .state.label=${'Finality'} .state.value=${'1.8s'} .state.delta=${-8.2} .state.invertDelta=${true} .state.trend=${this.state.metricTrendFinality} .state.tone=${'success'}></ui-metric>
-							<ui-metric .state.label=${'Validators'} .state.value=${'128'} .state.delta=${1.6} .state.hint=${'24h'} .state.trend=${this.state.sparkValues} .state.tone=${'info'}></ui-metric>
+							<ui-metric .state.label=${'TPS (peak)'} .state.value=${'9,410'} .state.delta=${12.4} .state.values=${this.state.metricTrendTps} .state.tone=${'accent'}></ui-metric>
+							<ui-metric .state.label=${'Finality'} .state.value=${'1.8s'} .state.delta=${-8.2} .state.invertDelta=${true} .state.values=${this.state.metricTrendFinality} .state.tone=${'success'}></ui-metric>
+							<ui-metric .state.label=${'Validators'} .state.value=${'128'} .state.delta=${1.6} .state.hint=${'24h'} .state.values=${this.state.sparkValues} .state.tone=${'info'}></ui-metric>
 						</div>
 						<ui-code-block .state.language=${'html'} .state.code=${this.state.metricExample}></ui-code-block>
 					</ui-surface>
@@ -4319,7 +4315,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-tracker .state.segments=${this.state.trackerSegments} .state.label=${'Recent block finality'}></ui-tracker>
+						<ui-tracker .state.items=${this.state.trackerSegments} .state.label=${'Recent block finality'}></ui-tracker>
 						<ui-code-block .state.language=${'html'} .state.code=${this.state.trackerExample}></ui-code-block>
 					</ui-surface>
 				</section>
@@ -4372,7 +4368,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 				}}>
 					<div class="preview-section-head">
 						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIHeatmap</ui-text>
-						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>matrix or GitHub-style calendar · continuous value→color (themeable) · per-cell tooltip · legend · UTC date math · emits heatmap:cell</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>matrix or GitHub-style calendar · continuous value→color (themeable) · per-cell tooltip · legend · UTC date math · emits heatmap:select</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',
@@ -4422,7 +4418,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-detail-list .state.columns=${2} .state.pairs=${this.state.detailPairs}></ui-detail-list>
+						<ui-detail-list .state.columns=${2} .state.items=${this.state.detailPairs}></ui-detail-list>
 						<ui-code-block .state.language=${'html'} .state.code=${this.state.detailListExample}></ui-code-block>
 					</ui-surface>
 				</section>
@@ -4446,11 +4442,11 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 							align: 'center',
 							wrap: true,
 						}}>
-							<ui-kbd .state.keys=${this.state.kbdKeysCmdK}></ui-kbd>
-							<ui-kbd .state.keys=${this.state.kbdKeysCtrlShiftP}></ui-kbd>
-							<ui-kbd .state.keys=${this.state.kbdKeysAltEnter}></ui-kbd>
-							<ui-kbd .state.keys=${this.state.kbdKeysEsc}></ui-kbd>
-							<ui-kbd .state.keys=${this.state.kbdKeysUpDown}></ui-kbd>
+							<ui-kbd .state.values=${this.state.kbdKeysCmdK}></ui-kbd>
+							<ui-kbd .state.values=${this.state.kbdKeysCtrlShiftP}></ui-kbd>
+							<ui-kbd .state.values=${this.state.kbdKeysAltEnter}></ui-kbd>
+							<ui-kbd .state.values=${this.state.kbdKeysEsc}></ui-kbd>
+							<ui-kbd .state.values=${this.state.kbdKeysUpDown}></ui-kbd>
 						</ui-stack>
 						<ui-code-block .state.language=${'html'} .state.code=${this.state.kbdExample}></ui-code-block>
 					</ui-surface>
@@ -4469,7 +4465,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 						radius: 'lg',
 						border: true,
 					}}>
-						<ui-legend .state.series=${this.state.legendSeries} .state.interactive=${true}></ui-legend>
+						<ui-legend .state.items=${this.state.legendSeries} .state.interactive=${true}></ui-legend>
 						<ui-code-block .state.language=${'html'} .state.code=${this.state.legendExample}></ui-code-block>
 					</ui-surface>
 				</section>
@@ -4543,7 +4539,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 				}}>
 					<div class="preview-section-head">
 						<ui-text .state.variant=${'overline'} .state.tone=${'accent'}>UIToggleGroup</ui-text>
-						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>segmented control · single (range) or multi-select · emits toggle:change</ui-text>
+						<ui-text .state.variant=${'caption'} .state.tone=${'muted'}>segmented control · single (range) or multi-select · emits toggle-group:change</ui-text>
 					</div>
 					<ui-surface .state=${{
 						tone: 'panel',

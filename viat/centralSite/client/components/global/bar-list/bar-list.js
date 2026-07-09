@@ -3,10 +3,10 @@
 	BarList). Each row is a label sitting on a proportional bar with its value at
 	the end; bars scale to the largest value. A row with `href` is a link.
 	── STANDARD INTERACTION ─────────────────────────────────────────────
-	  <ui-bar-list .items=${[
+	  <ui-bar-list .state.items=${[
 	    { label: '0xA1…f2', value: 9410, href: '/accounts/0xA1f2' },
 	    { label: '0xB7…c9', value: 6120 },
-	  ]} .tone=${'accent'}></ui-bar-list>
+	  ]} .state.tone=${'accent'}></ui-bar-list>
 	─────────────────────────────────────────────────────────────────────
 */
 import { html, list, WebComponent } from 'webcomponent';

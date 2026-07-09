@@ -2,12 +2,13 @@
  * `tooltip="…"` declarative behavior.
  *
  * Phone gate: on phones, tooltips are useless (touch can't preview without
- * commit, screens too small), so the exported behavior is a no-op pair —
- * `install: noop`, `applyValue: noop`. The template install pipeline still
- * calls them (which suppresses the fallback dataset write in
- * `applySubeventAttr`) but no listeners attach, no WeakMap entry is written,
- * no `<ui-tooltip>` element is ever created. On every other device (desktop
- * incl. touchscreen, tablet incl. iPad with a mouse) the real behavior runs.
+ * commit, screens too small), so the exported behavior is a no-op singleton —
+ * `install`/`applyValue` do nothing and no `uninstall` exists, so the template
+ * pipeline queues no teardown. The install pipeline still calls `install`
+ * (which suppresses the fallback dataset write in `applySubeventAttr`) but no
+ * listeners attach, no WeakMap entry is written, no `<ui-tooltip>` element is
+ * ever created. On every other device (desktop incl. touchscreen, tablet incl.
+ * iPad with a mouse) the real behavior runs.
  *
  * `tooltips/tooltip-service.js` is a STATIC import — it has zero module-load
  * side effects (just function definitions + a WeakMap; the `<ui-tooltip>`
@@ -21,46 +22,54 @@
  * The DOM is never the source of truth on either path — no `data-tooltip`
  * attribute, no dataset write, no marker. Listener wiring and value tracking
  * happen via shared `EventListener`-object singletons and a WeakMap registry
- * inside the service module.
+ * inside the service module. The behavior holds NO per-install state at all,
+ * so `uninstall(element)` is a plain prototype method — zero closures per
+ * tooltipped element.
  */
+import { isMobile } from '../environment/device.js';
 import {
 	attachTooltip,
 	clearTooltipText,
 	detachTooltip,
 	setTooltipText,
 } from '../tooltips/tooltip-service.js';
-function noop() {}
+import { queueAsyncError } from '../utilities.js';
 /*
- * Same regex as `environment/device.js` `detectDeviceType` mobile branch —
- * kept inline (one regex test) so the behavior file pulls in zero imports
- * just to make this decision.
+ * The `<ui-tooltip>` element definition is owned HERE, not by app entry files.
+ * Fire-and-forget dynamic import: it never blocks behavior registration, and
+ * `tooltip-service.js` awaits `customElements.whenDefined('ui-tooltip')` before
+ * first show, so any load-order race resolves itself. On phones the no-op
+ * behavior ships instead and the element module is never fetched at all. A
+ * failed fetch is non-fatal by contract (the page just has no tooltips).
  */
-const IS_MOBILE = (/Mobi|iPhone|iPod|Android.*Mobile/i).test(navigator.userAgent || '');
-const realTooltip = {
-	name: 'tooltip',
+if (!isMobile) {
+	import('../tooltips/tooltip.js').catch(queueAsyncError);
+}
+class TooltipBehavior {
+	name = 'tooltip';
+	/**
+	 * Static `tooltip="literal"` passes the literal text here; interpolated
+	 * `tooltip=${expr}` passes `value === undefined` (the ATTR spot supplies
+	 * the live value through `applyValue`). Either way, attach the pointer
+	 * listeners now so the element is hover-ready immediately.
+	 */
 	install(element, value) {
-		/**
-		 * Static `tooltip="literal"` passes the literal text here; interpolated
-		 * `tooltip=${expr}` passes `value === undefined` (the ATTR spot supplies
-		 * the live value through `applyValue`). Either way, attach the pointer
-		 * listeners now so the element is hover-ready immediately.
-		 */
 		if (value !== undefined) {
 			setTooltipText(element, value);
 		}
 		attachTooltip(element);
-		return function uninstall() {
-			detachTooltip(element);
-			clearTooltipText(element);
-		};
-	},
+	}
+	uninstall(element) {
+		detachTooltip(element);
+		clearTooltipText(element);
+	}
 	applyValue(element, value) {
 		setTooltipText(element, value);
-	},
-};
-const noopTooltip = {
-	name: 'tooltip',
-	install: noop,
-	applyValue: noop,
-};
-export const tooltip = IS_MOBILE ? noopTooltip : realTooltip;
+	}
+}
+class NoopTooltipBehavior {
+	name = 'tooltip';
+	install() {}
+	applyValue() {}
+}
+export const tooltip = isMobile ? new NoopTooltipBehavior() : new TooltipBehavior();

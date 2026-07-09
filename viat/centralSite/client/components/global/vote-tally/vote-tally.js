@@ -7,8 +7,8 @@
 	    seats (measure → keyed moveBefore relocates the nodes → invert → play).
 	── STANDARD USAGE ───────────────────────────────────────────────────
 	  <ui-vote-tally
-	    .heading=${'Most wanted'}
-	    .items=${[{ id: 'a', label: 'Dark mode', votes: 42 }, …]}>
+	    .state.heading=${'Most wanted'}
+	    .state.items=${[{ id: 'a', label: 'Dark mode', votes: 42 }, …]}>
 	  </ui-vote-tally>
 	`sortBy`: desc (default) | asc | none. The base for ui-feature-voting.
 	─────────────────────────────────────────────────────────────────────
@@ -75,7 +75,7 @@ class UIVoteItem extends WebComponent {
 		this.counting = false;
 	}
 	handleUp() {
-		this.emit('vote-toggle', {
+		this.emit('vote-tally:toggle', {
 			id: this.state.id,
 		});
 	}
@@ -230,7 +230,7 @@ export class UIVoteTally extends WebComponent {
 						}} .state.size=${'sm'}></ui-icon>
 					</button>
 				</div>
-				<div class="tally-list" #votelist @vote-toggle=${this.handleVote}>
+				<div class="tally-list" #votelist @vote-tally:toggle=${this.handleVote}>
 					${list('items', UIVoteItem, this.itemKey)}
 				</div>
 			</div>

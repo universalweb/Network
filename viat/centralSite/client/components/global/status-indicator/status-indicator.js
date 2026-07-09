@@ -67,7 +67,7 @@ export class UIStatusIndicator extends WebComponent {
 		this.state.status = value;
 	}
 	render() {
-		this.html `
+		this.html`
 			<ui-badge .state=${this.state.view} .state.dot=${true} .state.size=${'sm'}></ui-badge>
 		`;
 	}

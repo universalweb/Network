@@ -4,7 +4,7 @@
 	the user clicks; only then does the iframe mount (fast first paint, no tracker
 	until intent). Accepts a bare video id or any youtube.com / youtu.be URL.
 	── STANDARD USAGE ───────────────────────────────────────────────────
-	  <ui-youtube-video-player .videoId=${'aqz-KE-bpKQ'} .videoTitle=${'Big Buck Bunny'}></ui-youtube-video-player>
+	  <ui-youtube-video-player .state.videoId=${'aqz-KE-bpKQ'} .state.videoTitle=${'Big Buck Bunny'}></ui-youtube-video-player>
 	─────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from 'webcomponent';
@@ -56,7 +56,7 @@ export class UIYoutubeVideoPlayer extends WebComponent {
 	}
 	handlePlay() {
 		this.state.playing = true;
-		this.emit('youtube-play', {
+		this.emit('youtube-video-player:play', {
 			videoId: extractId(this.state.videoId),
 		});
 	}

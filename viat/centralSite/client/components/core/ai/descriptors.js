@@ -8,7 +8,7 @@ import {
 	resolvePath,
 } from './paths.js';
 import {
-	eachComponent,
+	componentEntries,
 	getComponentById,
 	getComponentId,
 	getTools,
@@ -164,17 +164,18 @@ export function describeComponent(component, opts = {}) {
 	}
 	if (includeChildren) {
 		const kids = getDirectChildren(component);
-		desc.children = kids.map((child) => {
-			return {
-				name: getNameForComponent(child),
-				path: getPathForComponent(child),
-				id: getComponentId(child),
-				tag: child.tagName.toLowerCase(),
-				phase: child.phase ?? null,
-			};
-		});
+		desc.children = kids.map(describeChildNode);
 	}
 	return desc;
+}
+function describeChildNode(child) {
+	return {
+		name: getNameForComponent(child),
+		path: getPathForComponent(child),
+		id: getComponentId(child),
+		tag: child.tagName.toLowerCase(),
+		phase: child.phase ?? null,
+	};
 }
 export function inspect(reference, opts) {
 	const component = resolveReference(reference);
@@ -213,15 +214,24 @@ export function resolveByIdOrPath(params) {
 export function queryByTag(tag) {
 	const target = String(tag).toLowerCase();
 	const out = [];
-	eachComponent((component, id) => {
+	for (const [
+		id,
+		component,
+	] of componentEntries()) {
 		if (component.tagName.toLowerCase() === target) {
 			out.push({
 				id,
 				component,
 			});
 		}
-	});
+	}
 	return out;
+}
+function matchesLabelQuery(component, needle) {
+	const label = component.getAttribute('aria-label') ?? component.constructor.aiLabel ?? '';
+	const description = component.constructor.aiDescription ?? '';
+	const text = component.textContent ?? '';
+	return label.toLowerCase().includes(needle) || description.toLowerCase().includes(needle) || text.toLowerCase().includes(needle);
 }
 export function queryByLabel(query) {
 	if (!isString(query) || !query.trim()) {
@@ -229,17 +239,17 @@ export function queryByLabel(query) {
 	}
 	const needle = query.trim().toLowerCase();
 	const out = [];
-	eachComponent((component, id) => {
-		const label = component.getAttribute('aria-label') ?? component.constructor.aiLabel ?? '';
-		const description = component.constructor.aiDescription ?? '';
-		const text = component.textContent ?? '';
-		if (label.toLowerCase().includes(needle) || description.toLowerCase().includes(needle) || text.toLowerCase().includes(needle)) {
+	for (const [
+		id,
+		component,
+	] of componentEntries()) {
+		if (matchesLabelQuery(component, needle)) {
 			out.push({
 				id,
 				component,
 			});
 		}
-	});
+	}
 	return out;
 }
 export { sanitize };

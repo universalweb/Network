@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-syntax */
 import { resolveStores } from './attrs/staticConfig.js';
-import { behaviorAttrNames, getBehavior } from './behaviors/index.js';
+import { behaviorAttrNames, BehaviorTeardown, getBehavior } from './behaviors/index.js';
 import { defaultLogger, IS_PRODUCTION } from './debug/logger.js';
 import { Perf } from './debug/perf.js';
 import { projectPortals, removePortals } from './dom/portal.js';
@@ -3188,9 +3188,9 @@ function instantiateRecipe(recipe, exprs, component) {
 			const plan = subeventPlans[subeventIndex];
 			const behavior = getBehavior(plan.attrName);
 			if (behavior?.install) {
-				const cleanup = behavior.install(element, plan.value, component);
-				if (isFunction(cleanup)) {
-					unsubs.push(cleanup);
+				behavior.install(element, plan.value, component);
+				if (behavior.uninstall) {
+					unsubs.push(new BehaviorTeardown(behavior, element));
 				}
 			}
 		}

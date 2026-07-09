@@ -17,6 +17,15 @@
 		inset 1px 0 0 rgba(255, 255, 255, 0.03);
 	animation: dock-slide-in 2080ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+/* Entrance direction follows the axis: the vertical rail slides in from the
+   inline-start edge (base :host above); a horizontal (mobile / bottom-docked)
+   dock slides UP from the block-end instead. `:where()` pins this to :host
+   specificity (0,1,0) so the prefers-reduced-motion reset below still wins on
+   source order — moving the animation onto a bare `:host([data-orientation])`
+   (0,2,0) would silently out-rank it and re-enable motion for those users. */
+:host(:where([data-orientation='horizontal'])) {
+	animation: dock-slide-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
 @keyframes dock-slide-in {
 	from {
 		opacity: 0;
@@ -25,6 +34,16 @@
 	to {
 		opacity: 1;
 		transform: translateX(0);
+	}
+}
+@keyframes dock-slide-up {
+	from {
+		opacity: 0;
+		transform: translateY(100%);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
 	}
 }
 @media (prefers-reduced-motion: reduce) {
@@ -44,7 +63,7 @@
 	align-items: center;
 	width: 100%;
 	/* Symmetric inline padding insets the icon column from the panel's rounded
-	   edges (the desktop rail). Mobile + horizontal rules below re-set this. */
+	   edges (the vertical desktop rail). The horizontal rule below re-sets it. */
 	padding: var(--space-3);
 	gap: var(--space-2);
 	flex-shrink: 0;
@@ -84,15 +103,6 @@
 :host([data-orientation='horizontal']) ui-icon-button[data-active] {
 	color: var(--icon-color-active, var(--cyan));
 }
-@media (max-width: 47.9375em) {
-	:host([data-orientation='vertical']) ui-icon-button {
-		width: auto;
-		flex: 0 0 auto;
-		/* Same WCAG touch floor as [data-orientation='horizontal'] — this media query is the
-		   vertical rail's rotate-to-bottom-bar path. */
-		--btn-hit: max(2.75rem, 44px);
-	}
-}
 /* The sliding active-bar. movingIndicator writes --bar-x/-y/-w/-h on both
    axes; each orientation honours its own pair, exactly like the tab strip. */
 .active-bar {
@@ -129,8 +139,9 @@
 /* Vertical rail: a 3px bar pinned to the left edge, sliding on Y. */
 :host([data-orientation='vertical']) .active-bar {
 	inset-block-start: 0;
-	inset-inline-start: 0;
-	width: 0.1875rem;
+	inset-inline-start: 0px;
+	inset-block-end: 0px;
+	width: 1px;
 	height: var(--bar-h, 38px);
 	border-radius: var(--radius-sm) 0 0 var(--radius-sm);
 	transform: translateY(var(--bar-y, 0)) scaleY(var(--bar-squeeze, 1));
@@ -140,41 +151,9 @@
 :host([data-orientation='horizontal']) .active-bar {
 	inset-block-end: 0;
 	inset-inline-start: 0;
-	height: 0.1875rem;
+	height: 1px;
 	width: var(--bar-w, 38px);
 	border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 	transform: translateX(var(--bar-x, 0)) scaleX(var(--bar-squeeze, 1));
 	box-shadow: 0 -2px 8px var(--teal-glow-faint);
-}
-/* Mobile: a vertical dock rotates to a horizontal bar. */
-@media (max-width: 47.9375em) {
-	:host([data-orientation='vertical']) {
-		flex-direction: row;
-		animation: dock-slide-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
-	}
-	@keyframes dock-slide-up {
-		from {
-			opacity: 0;
-			transform: translateY(100%);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-	:host([data-orientation='vertical']) .dock-rail {
-		flex-direction: row;
-		justify-content: space-around;
-		padding: var(--space-2) var(--space-2);
-	}
-	:host([data-orientation='vertical']) .active-bar {
-		inset-block-start: auto;
-		inset-block-end: 0;
-		inset-inline-start: 0;
-		width: var(--bar-w, 38px);
-		height: 0.1875rem;
-		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-		transform: translateX(var(--bar-x, 0)) scaleX(var(--bar-squeeze, 1));
-		box-shadow: 0 -2px 8px var(--teal-glow-faint);
-	}
 }

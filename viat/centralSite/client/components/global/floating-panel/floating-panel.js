@@ -9,7 +9,7 @@ import { MorphSurface } from '../morph-surface/morph-surface.js';
 // in over it (CSS) — cult-ui's container-vs-content decomposition.
 //
 // Usage:
-//   <ui-floating-panel .label=${'Filters ▾'} .heading=${'Filter results'} .footer=${true}>
+//   <ui-floating-panel .state.label=${'Filters ▾'} .state.heading=${'Filter results'} .state.footer=${true}>
 //     …panel body…
 //     <div slot="footer">…actions…</div>
 //   </ui-floating-panel>

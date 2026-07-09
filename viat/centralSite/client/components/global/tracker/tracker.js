@@ -3,7 +3,7 @@
 	uptime bars). Each segment is a thin bar tinted by its tone; together they
 	read as a dense health/uptime history at a glance.
 	── STANDARD INTERACTION ─────────────────────────────────────────────
-	  <ui-tracker .segments=${[
+	  <ui-tracker .state.items=${[
 	    { tone: 'success', label: 'block 4821 · ok' },
 	    { tone: 'success' },
 	    { tone: 'warning', label: 'slow finality' },
@@ -31,7 +31,7 @@ export class UITracker extends WebComponent {
 		tracker: './tracker.css',
 	};
 	static state = {
-		segments: [],
+		items: [],
 		label: '',
 	};
 	/* Light html row per segment — segments pass through as-is (bare tone string
@@ -46,7 +46,7 @@ export class UITracker extends WebComponent {
 	render() {
 		this.html `
 			<div class="trk" role="img" aria-label=${this.state.label}>
-				${list('segments', this.segmentRow)}
+				${list('items', this.segmentRow)}
 			</div>
 		`;
 	}

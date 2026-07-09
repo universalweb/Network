@@ -10,9 +10,8 @@
  * from a live keydown. Importing this module is inert — listeners attach lazily
  * on the first `registerHotkey()` and detach when the registry empties.
  */
+import { isApple } from '../environment/device.js';
 import { getOrInit, isPromiseLike, queueAsyncError } from '../utilities.js';
-const platform = typeof navigator !== 'undefined' ? (navigator.userAgentData?.platform || navigator.platform || '') : '';
-const isMac = (/mac|iphone|ipad|ipod/i).test(platform);
 // Spec-token aliases → canonical. Canonical modifiers: ctrl, alt, shift, meta.
 const MODIFIER_ALIASES = {
 	cmd: 'meta',
@@ -72,7 +71,7 @@ export function canonicalizeCombo(spec) {
 			continue;
 		}
 		if (token === 'mod') {
-			token = isMac ? 'meta' : 'ctrl';
+			token = isApple ? 'meta' : 'ctrl';
 		} else if (MODIFIER_ALIASES[token]) {
 			token = MODIFIER_ALIASES[token];
 		} else if (KEY_ALIASES[token]) {
@@ -302,21 +301,20 @@ export function sweepHotkeyEntries(entries) {
 	entries.clear();
 }
 /**
- * Low-level registration shared by both front-ends. `target` is a WebComponent
+ * Low-level registration shared by every front-end. `target` is a WebComponent
  * (programmatic) or an Element (template). `options`: { whileTyping, allowRepeat,
  * preventDefault }.
  *
- * Returns `{ entry, unregister }`. The `entry` IS the teardown handle — it is
- * its own key in every Set it lives in (the registry bucket and the
- * component's `hotkeyEntries`), so removal is always O(1) and never has to
- * search. Callers that only want manual release ignore `entry` and call
- * `unregister()`; framework-internal callers (`hotKey()` below) capture the
- * entry into the component's set so lifecycle sweep needs no closures.
+ * Returns the entry, or `null` when `combo` canonicalises to empty. The entry
+ * IS the teardown handle — it is its own key in every Set it lives in (the
+ * registry bucket and the component's `hotkeyEntries`), so removal is always
+ * O(1) and never has to search: pass it to `releaseHotkeyEntry`. Allocation-
+ * free beyond the entry itself — no wrapper object, no unregister closure.
  */
-export function registerHotkey(target, combo, handler, source, options) {
+export function createHotkeyEntry(target, combo, handler, source, options) {
 	const canonical = canonicalizeCombo(combo);
 	if (!canonical) {
-		return EMPTY_REGISTRATION;
+		return null;
 	}
 	const entry = {
 		combo: canonical,
@@ -328,6 +326,20 @@ export function registerHotkey(target, combo, handler, source, options) {
 	getOrInit(registry, canonical, makeEntrySet).add(entry);
 	ensureMasterListener();
 	finalizationRegistry.register(target, entry, entry);
+	return entry;
+}
+/**
+ * Public wrapper for consumers that want a self-contained `{ entry, unregister }`
+ * binding. Framework-internal paths (the template behavior, `hotKey()` below)
+ * use `createHotkeyEntry` + `releaseHotkeyEntry` directly and skip this
+ * allocation.
+ * TODO: we should refactor this to be a class based approach where we can have static properties and methods that can be used to register behaviours or plugins like hotkeys. This should be applied to the rest of the codebase for things that return a function unregister.
+ */
+export function registerHotkey(target, combo, handler, source, options) {
+	const entry = createHotkeyEntry(target, combo, handler, source, options);
+	if (!entry) {
+		return EMPTY_REGISTRATION;
+	}
 	return {
 		entry,
 		unregister() {
@@ -339,19 +351,19 @@ export function registerHotkey(target, combo, handler, source, options) {
  * Programmatic front-end — mixed onto WebComponent.prototype by base.js, so
  * `this` is the component. The entry itself is tracked in `this.hotkeyEntries`
  * (no per-registration closure stored) and released by the lifecycle sweep on
- * disconnect. The returned releaser is for the rare manual-release case; if
- * the caller drops it, it is collected — only the entry stays live.
+ * disconnect. The returned releaser is the public API for the rare manual-
+ * release case; if the caller drops it, it is collected — only the entry
+ * stays live.
  */
 export function hotKey(combo, callback, options) {
 	const component = this;
-	const binding = registerHotkey(component, combo, callback, 'api', options);
-	const entry = binding.entry;
+	const entry = createHotkeyEntry(component, combo, callback, 'api', options);
 	if (!entry) {
-		return binding.unregister;
+		return EMPTY_REGISTRATION.unregister;
 	}
 	(component.hotkeyEntries ??= new Set()).add(entry);
 	return function releaseHotkey() {
-		binding.unregister();
+		releaseHotkeyEntry(entry);
 		component.hotkeyEntries?.delete(entry);
 	};
 }

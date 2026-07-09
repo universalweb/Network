@@ -3,7 +3,7 @@
 	crumbs; a crumb with `href` is a link, one without (the current page) is plain
 	aria-current text.
 	── STANDARD INTERACTION ─────────────────────────────────────────────
-	  <ui-breadcrumbs .items=${[
+	  <ui-breadcrumbs .state.items=${[
 	    { label: 'Explorer', href: '/explorer' },
 	    { label: 'Block 4821', href: '/explorer/4821' },
 	    { label: 'Tx 0x9f…', }

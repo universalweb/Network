@@ -8,8 +8,8 @@
 	so the visual order is not left-to-right reading order. Correct for galleries /
 	pin boards; if you need strict row order, this is the wrong primitive.
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-masonry .columns=${3} .gap=${'1rem'}> …cards… </ui-masonry>
-	  <ui-masonry .min=${'220px'} .gap=${'0.75rem'}> …cards… </ui-masonry>
+	  <ui-masonry .state.columns=${3} .state.gap=${'1rem'}> …cards… </ui-masonry>
+	  <ui-masonry .state.min=${'220px'} .state.gap=${'0.75rem'}> …cards… </ui-masonry>
 	──────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from '../../core/index.js';

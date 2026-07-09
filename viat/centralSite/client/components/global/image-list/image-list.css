@@ -5,49 +5,9 @@
 	display: grid;
 	inline-size: 100%;
 }
-.il-cell {
-	position: relative;
-	display: block;
-	margin: 0;
-	overflow: hidden;
-	cursor: pointer;
-	text-decoration: none;
-	color: inherit;
-	background: var(--surface-tint, rgba(255, 255, 255, 0.04));
-}
-.image-list[data-radius='none'] .il-cell { border-radius: 0; }
-.image-list[data-radius='sm'] .il-cell { border-radius: var(--radius-sm, 0.25rem); }
-.image-list[data-radius='md'] .il-cell { border-radius: var(--radius-md, 0.5rem); }
-.image-list[data-radius='lg'] .il-cell { border-radius: var(--radius-lg, 0.75rem); }
-.il-img {
-	display: block;
-	inline-size: 100%;
-	block-size: 100%;
-	object-fit: cover;
-	transition: transform 0.25s ease;
-	will-change: transform;
-}
-.il-cell:hover .il-img {
-	transform: scale(1.05);
-}
-.il-caption {
-	position: absolute;
-	inset-inline: 0;
-	inset-block-end: 0;
-	padding: 0.6rem 0.5rem 0.4rem;
-	font-size: var(--text-xs, 0.75rem);
-	color: #fff;
-	background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-	pointer-events: none;
-}
-.il-cell:focus-visible {
-	outline: 2px solid var(--color-info, #3b82f6);
-	outline-offset: -2px;
-}
-@media (prefers-reduced-motion: reduce) {
-	.il-img,
-	.il-cell:hover .il-img {
-		transition: none;
-		transform: none;
-	}
-}
+/* Each cell is a ui-image-cell host; the radius clips its shadow content (the host
+   sets overflow:hidden), so a corner value belongs on the host, not an inner node. */
+.image-list[data-radius='none'] ui-image-cell { border-radius: 0; }
+.image-list[data-radius='sm'] ui-image-cell { border-radius: var(--radius-sm, 0.25rem); }
+.image-list[data-radius='md'] ui-image-cell { border-radius: var(--radius-md, 0.5rem); }
+.image-list[data-radius='lg'] ui-image-cell { border-radius: var(--radius-lg, 0.75rem); }

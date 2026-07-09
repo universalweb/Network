@@ -141,11 +141,11 @@ test('C: ${this.bind("msg")} (sole child, reactive) subscribes without throwing'
 	}, (component) => {
 		component.html `<div>${bind('msg')}</div>`;
 	});
-	const el = await mount(tag);
-	const div = root(el).querySelector('div');
+	const element = await mount(tag);
+	const div = root(element).querySelector('div');
 	assert.equal(div.textContent, 'hi', 'initial bind render');
-	el.state.msg = 'bye';
-	await el.nextFrame();
+	element.state.msg = 'bye';
+	await element.nextFrame();
 	assert.equal(div.textContent, 'bye', 'bind spot reacts to state change');
 });
 /* ── Group D: invariant — DataBindSpot ($value/data-bind) is LOCAL-ONLY.
@@ -163,8 +163,8 @@ test('D: $value="global.x" via DataBindSpot reads LOCAL state, never the global 
 	}, (component) => {
 		component.html `<input $value="global.x">`;
 	});
-	const el = await mount(tag);
-	const input = root(el).querySelector('input');
+	const element = await mount(tag);
+	const input = root(element).querySelector('input');
 	assert.equal(input.value, 'local-right', 'DataBindSpot resolves global.x against LOCAL state');
 });
 /* ── Group E: invariant — a LOCAL top-level key NAMED `global` is local, never
@@ -185,12 +185,12 @@ test('E: inferred two-way to a top-level key named `global` round-trips to LOCAL
 			return component.state.global;
 		}}>`;
 	});
-	const el = await mount(tag);
-	const input = root(el).querySelector('input');
+	const element = await mount(tag);
+	const input = root(element).querySelector('input');
 	assert.equal(input.value, 'local-seed', 'reads LOCAL state.global, not globalState.global');
 	input.value = 'typed';
 	input.dispatchEvent(new Event('input'));
-	assert.equal(el.state.global, 'typed', 'writeback reaches LOCAL state.global');
+	assert.equal(element.state.global, 'typed', 'writeback reaches LOCAL state.global');
 });
 /* ── Group F: GLOBAL keyed binding — bind('global.x') resolves to the global
  *   store (the intended `global.` precedence). Must stay green. ──────────── */
@@ -201,8 +201,8 @@ test('F: ${bind("global.gx")} resolves to the GLOBAL store', async () => {
 	const tag = defineComponent({}, (component) => {
 		component.html `<b>${bind('global.gx')}</b>`;
 	});
-	const el = await mount(tag);
-	const node = root(el).querySelector('b');
+	const element = await mount(tag);
+	const node = root(element).querySelector('b');
 	assert.equal(node.textContent, 'from-global', 'global. keyed binding reads globalState');
 });
 /* ── Group G: classList with a keyed Binding item resolves the LOCAL realm
@@ -213,12 +213,12 @@ test('G: classList(base, bind("extra")) reads LOCAL state for the token', async 
 	}, (component) => {
 		component.html `<span class=${classList('base', bind('extra'))}></span>`;
 	});
-	const el = await mount(tag);
-	const span = root(el).querySelector('span');
+	const element = await mount(tag);
+	const span = root(element).querySelector('span');
 	assert.ok(span.classList.contains('base'), 'static token present');
 	assert.ok(span.classList.contains('hot'), 'keyed token from LOCAL state present');
-	el.state.extra = 'cold';
-	await el.nextFrame();
+	element.state.extra = 'cold';
+	await element.nextFrame();
 	assert.ok(span.classList.contains('cold'), 'classList reacts to local state change');
 	assert.ok(!span.classList.contains('hot'), 'stale token removed');
 });
@@ -237,10 +237,10 @@ test('H: list("items", "div", keyFn) renders LOCAL rows and reacts to mutation',
 	}, (component) => {
 		component.html `<ul>${list('items', 'div', rowId)}</ul>`;
 	});
-	const el = await mount(tag);
-	const ul = root(el).querySelector('ul');
+	const element = await mount(tag);
+	const ul = root(element).querySelector('ul');
 	assert.equal(ul.querySelectorAll('div').length, 2, 'initial row count from LOCAL state.items');
-	el.state.items = [
+	element.state.items = [
 		{
 			id: 1,
 		},
@@ -251,7 +251,7 @@ test('H: list("items", "div", keyFn) renders LOCAL rows and reacts to mutation',
 			id: 3,
 		},
 	];
-	await el.nextFrame();
+	await element.nextFrame();
 	assert.equal(ul.querySelectorAll('div').length, 3, 'list spot re-renders on LOCAL items mutation');
 });
 /* ── Group I: ANCHORED binding — a static sibling forces the comment-anchored
@@ -263,11 +263,11 @@ test('I: ${bind("msg")} beside static text uses the anchored path and reacts', a
 	}, (component) => {
 		component.html `<div>prefix ${bind('msg')}</div>`;
 	});
-	const el = await mount(tag);
-	const div = root(el).querySelector('div');
+	const element = await mount(tag);
+	const div = root(element).querySelector('div');
 	assert.match(div.textContent, /prefix\s*hi/, 'anchored bind renders beside the static sibling');
-	el.state.msg = 'bye';
-	await el.nextFrame();
+	element.state.msg = 'bye';
+	await element.nextFrame();
 	assert.match(div.textContent, /prefix\s*bye/, 'anchored bind spot reacts to state change');
 });
 /* ── Group J: a component reading `this.global.<key>` must re-render after
@@ -302,11 +302,11 @@ test('K1: ${bind("state.msg")} — explicit local channel renders and reacts', a
 	}, (component) => {
 		component.html `<div>${bind('state.msg')}</div>`;
 	});
-	const el = await mount(tag);
-	const div = root(el).querySelector('div');
+	const element = await mount(tag);
+	const div = root(element).querySelector('div');
 	assert.equal(div.textContent, 'hi', 'explicit state. channel resolves local');
-	el.state.msg = 'bye';
-	await el.nextFrame();
+	element.state.msg = 'bye';
+	await element.nextFrame();
 	assert.equal(div.textContent, 'bye', 'explicit state. bind reacts');
 });
 test('K2: list("state.items") — explicit local channel renders rows and reacts', async () => {
@@ -319,10 +319,10 @@ test('K2: list("state.items") — explicit local channel renders rows and reacts
 	}, (component) => {
 		component.html `<ul>${list('state.items', 'div', rowId)}</ul>`;
 	});
-	const el = await mount(tag);
-	const ul = root(el).querySelector('ul');
+	const element = await mount(tag);
+	const ul = root(element).querySelector('ul');
 	assert.equal(ul.querySelectorAll('div').length, 1, 'explicit state. list renders LOCAL rows');
-	el.state.items = [
+	element.state.items = [
 		{
 			id: 1,
 		},
@@ -330,7 +330,7 @@ test('K2: list("state.items") — explicit local channel renders rows and reacts
 			id: 2,
 		},
 	];
-	await el.nextFrame();
+	await element.nextFrame();
 	assert.equal(ul.querySelectorAll('div').length, 2, 'explicit state. list reacts to mutation');
 });
 test('K3: a leading `this.` is stripped — bind("this.state.msg") mirrors the property access', async () => {
@@ -339,8 +339,8 @@ test('K3: a leading `this.` is stripped — bind("this.state.msg") mirrors the p
 	}, (component) => {
 		component.html `<div>${bind('this.state.msg')}</div>`;
 	});
-	const el = await mount(tag);
-	assert.equal(root(el).querySelector('div').textContent, 'mirror', 'this.-prefixed key resolves identically');
+	const element = await mount(tag);
+	assert.equal(root(element).querySelector('div').textContent, 'mirror', 'this.-prefixed key resolves identically');
 });
 test('K4: a dotted key with an unknown channel throws at authoring time', () => {
 	assert.throws(() => {
@@ -359,6 +359,6 @@ test('K5: a bare key literally named `global` stays LOCAL (the shorthand guards 
 	}, (component) => {
 		component.html `<div>${bind('global')}</div>`;
 	});
-	const el = await mount(tag);
-	assert.equal(root(el).querySelector('div').textContent, 'local-bare', 'no dot → local shorthand, never the global store');
+	const element = await mount(tag);
+	assert.equal(root(element).querySelector('div').textContent, 'local-bare', 'no dot → local shorthand, never the global store');
 });

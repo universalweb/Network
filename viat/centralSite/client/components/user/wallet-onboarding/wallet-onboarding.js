@@ -15,9 +15,7 @@ export class WalletOnboarding extends WebComponent {
 	 * the shadow root by theme — the document-level theme sheet only carries
 	 * tokens. Dark recasts the CTAs to x.ai pills with a white-fill primary.
 	 */
-	static themes = [
-		'dark',
-	];
+	static themes = ['dark'];
 	static state = {
 		visible: false,
 		hasSaved: false,

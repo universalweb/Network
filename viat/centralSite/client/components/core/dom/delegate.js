@@ -23,7 +23,7 @@
  * Tier 2 (`delegate`) is a pure pub/sub bus: one master listener at
  * `document` per event name, flat `Map<eventName, Set<DelegateEntry>>`.
  * No selector, no `composedPath` JS traversal, no subevent dot-notation.
- * `viewport:change`, `pulldown:state`, etc. are the canonical event names.
+ * `viewport:change`, `pulldown:toggle`, etc. are the canonical event names.
  *
  * Tier 3 (`delegateTo`) is scoped delegation: one master listener at the
  * caller-provided `scope` (default: the component itself) per event name,

@@ -118,7 +118,7 @@ export class SendConfirmModal extends WebComponent {
 		}
 	}
 	render() {
-		this.html `
+		this.html`
 			<ui-modal #modal .state=${{
 				modal: true,
 				open: false,

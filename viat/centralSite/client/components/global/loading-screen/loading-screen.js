@@ -9,7 +9,7 @@ export class UILoadingScreen extends WebComponent {
 		blocking: true,
 		message: '',
 		open: false,
-		title: 'Loading',
+		heading: 'Loading',
 		variant: 'overlay',
 	};
 	open(detail = {}) {
@@ -38,7 +38,7 @@ export class UILoadingScreen extends WebComponent {
 						variant: 'ring',
 					}}></ui-spinner>
 					<div class="loading-text">
-						<div class="loading-title">${this.state.title}</div>
+						<div class="loading-title">${this.state.heading}</div>
 						${this.state.message ? this.htmlElement `<div class="loading-message">${this.state.message}</div>` : ''}
 					</div>
 				</div>

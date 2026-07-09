@@ -8,8 +8,8 @@
 	── EVENTS ───────────────────────────────────────────────────────────
 	  stepper:change { value }
 	── USAGE ────────────────────────────────────────────────────────────
-	  <ui-number-stepper .value=${1} .min=${0} .max=${10} @stepper:change=${e => setQty(e.detail.data.value)}></ui-number-stepper>
-	  <ui-number-stepper .value=${0.5} .step=${0.1} .precision=${1} .suffix=${'×'}></ui-number-stepper>
+	  <ui-number-stepper .state.value=${1} .state.min=${0} .state.max=${10} @number-stepper:change=${e => setQty(e.detail.data.value)}></ui-number-stepper>
+	  <ui-number-stepper .state.value=${0.5} .state.step=${0.1} .state.precision=${1} .state.suffix=${'×'}></ui-number-stepper>
 	──────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from '../../core/index.js';
@@ -50,7 +50,7 @@ export class UINumberStepper extends WebComponent {
 		const next = this.clamp(value);
 		if (next !== this.state.value) {
 			this.state.value = next;
-			this.emit('stepper:change', {
+			this.emit('number-stepper:change', {
 				value: next,
 			});
 		} else if (this.refs.input) {

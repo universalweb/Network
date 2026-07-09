@@ -57,13 +57,13 @@ export class TransmitPanel extends Panel {
 		classes: new Set(['transmit-panel']),
 		gasLabel: 'Gas',
 		gasValue: '0',
-		id: 'TX',
+		panelId: 'TX',
 		recipientLabel: 'Recipient Address',
 		recipientPlaceholder: 'viat1...',
 		recipientValue: '',
 		recipientFormat: 'base64url',
 		showDot: true,
-		title: 'SEND VIAT',
+		heading: 'SEND VIAT',
 		tokenLabel: 'VIAT',
 	};
 	handleRecipientInput(domEvent) {

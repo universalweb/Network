@@ -3,6 +3,7 @@ import { Perf } from '../../core/debug/perf.js';
 import {
 	each, html, list,
 	Store,
+	userAgent,
 	WebComponent,
 } from '../../core/index.js';
 import { PerfListItem } from '../../perf/perf-list-item/perf-list-item.js';
@@ -1005,7 +1006,7 @@ export class FrameworkShootout extends WebComponent {
 			count,
 			iterations,
 			gcHonest: honest,
-			userAgent: globalThis.navigator?.userAgent ?? '',
+			userAgent,
 			ms: Object.fromEntries([...samplesByFramework.entries()]),
 		};
 		this.state.historyCount = this.saveRun(runRecord);

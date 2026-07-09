@@ -2,7 +2,7 @@
 	DESCRIPTION: ui-alert — inline callout / banner. Tone drives the accent bar,
 	background tint and leading icon; the message rides the default slot.
 	── STANDARD INTERACTION ─────────────────────────────────────────────
-	  <ui-alert .tone=${'warning'} .heading=${'Unsynced'} .dismissible=${true}>
+	  <ui-alert .state.tone=${'warning'} .state.heading=${'Unsynced'} .state.dismissible=${true}>
 	    Your local state is ahead of the network.
 	  </ui-alert>
 	Tones: 'info' | 'success' | 'warning' | 'danger' (each maps to an existing
