@@ -1,0 +1,97 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: inline-flex;
+	flex: 0 0 auto;
+}
+.badge {
+	align-items: center;
+	border: 1px solid transparent;
+	border-radius: 999px;
+	display: inline-flex;
+	font-weight: var(--weight-semibold);
+	gap: 0.35em;
+	letter-spacing: 0.04em;
+	line-height: 1;
+	padding: 0.25em 0.65em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	transform-origin: center;
+	will-change: transform, box-shadow;
+}
+/* Entrance is a ONE-SHOT class (removed on its animationend), not a resting rule
+   on `.badge`. If `badge-in` lived on the base rule, removing `is-pulsing` after a
+   pulse would revert animation-name to `badge-in` and replay the entrance pop —
+   the phantom "second pulse". With the resting badge carrying no animation, the
+   pulse class toggles cleanly with nothing to fall back to. */
+.badge.is-entering {
+	animation: badge-in 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.badge.is-pulsing {
+	animation: badge-pulse 0.46s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes badge-in {
+	0%   { opacity: 0; transform: scale(0.4); }
+	60%  { opacity: 1; transform: scale(1.08); }
+	100% { opacity: 1; transform: scale(1); }
+}
+@keyframes badge-pulse {
+	0%   { transform: scale(1); box-shadow: 0 0 0 0 currentColor; }
+	35%  { transform: scale(1.18); box-shadow: 0 0 0 6px transparent; }
+	100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.badge.is-entering,
+	.badge.is-pulsing {
+		animation: none;
+	}
+}
+[data-size='sm'] { font-size: var(--text-2xs); padding: 0.18em 0.55em; }
+[data-size='md'] { font-size: var(--text-sm); }
+[data-size='lg'] { font-size: var(--text-md); padding: 0.32em 0.85em; }
+/* Tones — data-tone ATTRIBUTE so badge's intended full-tone `color` wins; a
+   `tone-*` class would be overridden by the uwc.util `.tone-*` text utilities. */
+[data-tone='neutral'] {
+	background: var(--badge-neutral-bg, rgba(255, 255, 255, 0.08));
+	border-color: var(--badge-neutral-border, rgba(255, 255, 255, 0.15));
+	color: var(--badge-neutral-text, currentColor);
+}
+[data-tone='success'] {
+	background: rgba(16, 185, 129, 0.18);
+	border-color: rgba(16, 185, 129, 0.4);
+	color: var(--color-success);
+}
+[data-tone='warning'] {
+	background: rgba(245, 158, 11, 0.18);
+	border-color: rgba(245, 158, 11, 0.4);
+	color: var(--color-warning);
+}
+[data-tone='danger'] {
+	background: rgba(239, 68, 68, 0.18);
+	border-color: rgba(239, 68, 68, 0.4);
+	color: var(--color-danger);
+}
+[data-tone='info'] {
+	background: rgba(59, 130, 246, 0.18);
+	border-color: rgba(59, 130, 246, 0.4);
+	color: var(--color-info);
+}
+[data-tone='accent'] {
+	background: rgba(99, 102, 241, 0.22);
+	border-color: rgba(99, 102, 241, 0.45);
+	color: var(--color-info);
+}
+.badge-dot {
+	background: currentColor;
+	border-radius: 50%;
+	flex: 0 0 auto;
+	height: 0.5em;
+	width: 0.5em;
+}
+/* The dot is a stable element (no per-render `^html` re-injection); show it only
+   when the badge opts in via `has-dot`, so a dot-less badge renders none. */
+.badge:not(.has-dot) .badge-dot {
+	display: none;
+}
+.badge-label { display: inline-block; }

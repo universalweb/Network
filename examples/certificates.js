@@ -8,7 +8,7 @@ const uwProfile = await cryptoID();
 // await uwProfile.saveToKeychain('profile.cert', `${dirname}/profiles`, 'password');
 const domainCert = await domainCertificate();
 await domainCert.generate({
-	entity: 'universalweb.io',
+	entity: 'viat.network',
 	// ownerHash: profile.getSignature(),
 	signatureAlgorithm: 0,
 	ciphers: [

@@ -1,0 +1,218 @@
+:host {
+	display: inline-block;
+}
+/* ── Trigger ─────────────────────────────────────────────────────────────────
+   Micro-feedback: a spring scale on hover (1.05) and press (0.95) — cult-ui's
+   trigger feel, part of making the whole UI feel alive. Gated below. */
+.fp-trigger {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-4);
+	background: var(--bg-dark, color-mix(in oklab, var(--popup-bg) 80%, black));
+	border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
+	border-radius: var(--radius-md);
+	color: var(--text-main);
+	font-family: var(--font-mono, 'JetBrains Mono', monospace);
+	font-size: var(--text-xs);
+	letter-spacing: 0.04em;
+	cursor: pointer;
+	transition:
+		transform var(--dur-fast) var(--ease-spring-subtle),
+		border-color var(--dur-fast) ease,
+		color var(--dur-fast) ease,
+		background var(--dur-fast) ease;
+}
+.fp-trigger:hover {
+	transform: scale(1.05);
+	border-color: var(--teal);
+	color: var(--teal);
+}
+.fp-trigger:active {
+	transform: scale(0.95);
+}
+.fp-trigger:focus-visible {
+	outline: none;
+	border-color: var(--focus-ring-color, var(--cyan));
+	box-shadow: 0 0 0 2px color-mix(in oklab, var(--focus-ring-color, var(--cyan)) 45%, transparent);
+}
+/* ── Overlay (in-shadow, position: fixed) ────────────────────────────────────
+   A full-viewport positioning context for the backdrop + panel — fixed, so it
+   escapes ancestor overflow without a portal (which would break the panel's slot).
+   Hidden and inert at rest; `data-open` (set imperatively alongside the WAAPI
+   morph) reveals it. */
+.fp-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-floating, 900);
+	pointer-events: none;
+	visibility: hidden;
+	/* Stagger step for the content rise — one knob tunes the whole cascade. */
+	--fp-stagger: 0.06s;
+}
+.fp-overlay[data-open] {
+	pointer-events: auto;
+	visibility: visible;
+}
+.fp-backdrop {
+	position: absolute;
+	inset: 0;
+	background: color-mix(in oklab, rgb(4 6 12) 0%, transparent);
+	backdrop-filter: blur(0);
+	-webkit-backdrop-filter: blur(0);
+	transition:
+		background var(--dur-base) ease,
+		backdrop-filter var(--dur-base) ease;
+}
+.fp-overlay[data-open] .fp-backdrop {
+	background: color-mix(in oklab, rgb(4 6 12) 38%, transparent);
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
+}
+/* ── Panel ───────────────────────────────────────────────────────────────────
+   Anchored under the trigger in viewport coords (JS sets the raw rect as vars; the
+   gap token is added here so spacing stays themeable). Opacity + transform are owned
+   entirely by the WAAPI `flipMorph` — no CSS transition on them, so nothing fights
+   the morph. The overlay's visibility gate hides it at rest regardless. */
+.fp-panel {
+	position: absolute;
+	/* Gap is baked into the JS anchor (MorphSurface.anchorGap) so flip puts it on the
+	   trigger-facing edge — do NOT re-add --space-2 here. */
+	inset-block-start: var(--ms-anchor-top, 0px);
+	inset-inline-start: var(--ms-anchor-left, 0px);
+	display: flex;
+	flex-direction: column;
+	min-inline-size: 14rem;
+	inline-size: max-content;
+	max-inline-size: min(22rem, calc(100vw - 2rem));
+	max-block-size: min(70dvh, 32rem);
+	background: var(--popup-bg);
+	border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
+	border-radius: var(--radius-lg, 0.75rem);
+	box-shadow: var(--modal-shadow,
+		0 24px 64px rgb(0 0 0 / 0.6),
+		0 0 0 1px color-mix(in oklab, var(--teal) 8%, transparent));
+	color: var(--popup-text, var(--text-main));
+	font-family: var(--font-mono, 'JetBrains Mono', monospace);
+	overflow: hidden;
+}
+.fp-head {
+	/* Header chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+	border-block-end: 1px solid color-mix(in oklab, var(--popup-border, var(--teal)) 22%, transparent);
+}
+.fp-title {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	font-size: var(--text-sm);
+	font-weight: var(--weight-semibold);
+	letter-spacing: 0.04em;
+	color: var(--text-main);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.fp-close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	flex: none;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--radius-md);
+	color: var(--text-muted, rgb(255 255 255 / 0.5));
+	cursor: pointer;
+	transition:
+		color var(--dur-fast) ease,
+		border-color var(--dur-fast) ease,
+		background var(--dur-fast) ease,
+		transform var(--dur-fast) var(--ease-spring-subtle);
+}
+.fp-close:hover {
+	color: var(--text-main);
+	border-color: var(--dark-divider, rgb(255 255 255 / 0.18));
+	background: rgb(255 255 255 / 0.04);
+}
+.fp-close:active {
+	transform: scale(0.9);
+}
+.fp-body {
+	min-block-size: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: var(--space-4);
+	font-size: var(--text-xs);
+	line-height: 1.5;
+}
+.fp-foot {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--space-2);
+	padding: var(--space-3) var(--space-4);
+	border-block-start: 1px solid color-mix(in oklab, var(--popup-border, var(--teal)) 22%, transparent);
+}
+.fp-foot[hidden] {
+	display: none;
+}
+/* ── Content stagger ─────────────────────────────────────────────────────────
+   The container springs via WAAPI; the header/body/footer rise + fade in over it
+   on a stagger, so the brief container-scale distortion is masked (cult-ui's
+   container-vs-content split). Re-runs each open because `data-open` toggles the
+   rule's presence. */
+@keyframes fp-rise {
+	from {
+		opacity: 0;
+		transform: translateY(0.625rem) scale(0.96);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+.fp-overlay[data-open] .fp-head,
+.fp-overlay[data-open] .fp-body,
+.fp-overlay[data-open] .fp-foot {
+	animation: fp-rise var(--dur-base) var(--ease-spring-subtle) both;
+}
+.fp-overlay[data-open] .fp-head {
+	animation-delay: calc(var(--fp-stagger) * 1);
+}
+.fp-overlay[data-open] .fp-body {
+	animation-delay: calc(var(--fp-stagger) * 2);
+}
+.fp-overlay[data-open] .fp-foot {
+	animation-delay: calc(var(--fp-stagger) * 3);
+}
+/* ── Reduced motion ──────────────────────────────────────────────────────────
+   flipMorph already drops to an opacity-only fade; kill the trigger spring, the
+   content stagger, and the backdrop transition to match. */
+@media (prefers-reduced-motion: reduce) {
+	.fp-trigger,
+	.fp-close {
+		transition:
+			border-color var(--dur-fast) ease,
+			color var(--dur-fast) ease,
+			background var(--dur-fast) ease;
+	}
+	.fp-trigger:hover,
+	.fp-trigger:active,
+	.fp-close:active {
+		transform: none;
+	}
+	.fp-backdrop {
+		transition: none;
+	}
+	.fp-overlay[data-open] .fp-head,
+	.fp-overlay[data-open] .fp-body,
+	.fp-overlay[data-open] .fp-foot {
+		animation: none;
+	}
+}

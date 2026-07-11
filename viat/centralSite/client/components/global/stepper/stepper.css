@@ -1,0 +1,131 @@
+:host {
+	display: block;
+}
+.stepper {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.25rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.stepper[data-orientation='vertical'] {
+	flex-direction: column;
+	align-items: stretch;
+}
+.st-item {
+	display: flex;
+	align-items: flex-start;
+	flex: 0 0 auto;
+}
+/* Connector is positional chrome — grows between non-last steps (not a list row). */
+.st-item:not(:last-child) {
+	flex: 1 1 auto;
+}
+.st-item:not(:last-child)::after {
+	content: '';
+	flex: 1 1 auto;
+	align-self: center;
+	min-inline-size: 1.5rem;
+	block-size: 2px;
+	margin-inline: 0.25rem;
+	background: var(--surface-border, rgba(255, 255, 255, 0.18));
+}
+.st-item:not(:last-child)[data-connector='done']::after {
+	background: var(--color-success, #10b981);
+}
+.stepper[data-orientation='vertical'] .st-item {
+	flex-direction: column;
+	flex: 0 0 auto;
+}
+.stepper[data-orientation='vertical'] .st-item:not(:last-child)::after {
+	inline-size: 2px;
+	block-size: auto;
+	min-inline-size: 0;
+	min-block-size: 1rem;
+	margin: 0.1rem 0 0.1rem 1.05rem;
+	align-self: flex-start;
+	flex: 1 1 auto;
+}
+/* ── Step button ─────────────────────────────────────────────────────────── */
+.st-step {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.25rem 0.5rem;
+	border: 0;
+	background: transparent;
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+	border-radius: var(--radius-md, 0.5rem);
+	transition: background 0.14s ease, color 0.14s ease;
+}
+.st-step:disabled {
+	cursor: default;
+}
+.st-step:hover:not(:disabled) {
+	background: var(--surface-tint, rgba(255, 255, 255, 0.05));
+}
+.st-step:focus-visible {
+	outline: 2px solid var(--color-info, #3b82f6);
+	outline-offset: 2px;
+}
+/* ── Node (numbered circle) ──────────────────────────────────────────────── */
+.st-node {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	inline-size: 1.6rem;
+	block-size: 1.6rem;
+	border-radius: 50%;
+	border: 2px solid currentColor;
+	font-size: var(--text-xs, 0.75rem);
+	font-weight: var(--weight-semibold, 600);
+	line-height: 1;
+	transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+.st-text {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.25;
+}
+.st-label {
+	font-size: var(--text-sm, 0.85rem);
+	font-weight: var(--weight-medium, 500);
+}
+.st-optional {
+	font-size: var(--text-2xs, 0.7rem);
+	color: var(--text-muted, rgba(255, 255, 255, 0.45));
+}
+.st-desc {
+	font-size: var(--text-xs, 0.72rem);
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+}
+/* ── Status colors ───────────────────────────────────────────────────────── */
+.st-item[data-status='active'] .st-step { color: var(--color-info, #3b82f6); }
+.st-item[data-status='active'] .st-node {
+	background: var(--color-info, #3b82f6);
+	border-color: var(--color-info, #3b82f6);
+	color: #fff;
+}
+.st-item[data-status='done'] .st-step { color: var(--text-primary, currentColor); }
+.st-item[data-status='done'] .st-node {
+	background: var(--color-success, #10b981);
+	border-color: var(--color-success, #10b981);
+	color: #fff;
+}
+.st-item[data-status='error'] .st-step { color: var(--color-danger, #ef4444); }
+.st-item[data-status='error'] .st-node {
+	background: var(--color-danger, #ef4444);
+	border-color: var(--color-danger, #ef4444);
+	color: #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+	.st-step,
+	.st-node {
+		transition: none;
+	}
+}

@@ -1,0 +1,77 @@
+/* Row/cell CSS for the explorer tx list. Injected into <paged-list>'s shadow via
+   `.importStyles` so the header + data rows (rendered there) are styled and
+   column-aligned. The page's chrome (title, filter tabs) stays in explorer-page.css. */
+.ex-row {
+	display: grid;
+	grid-template-columns: 1.1fr 0.75fr 1.6fr 0.3fr 1.6fr 0.9fr 0.8fr 1.5fr;
+	gap: var(--space-3);
+	padding: var(--space-3) var(--space-3);
+	border-block-end: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.04));
+	font-size: var(--text-sm);
+	align-items: center;
+	transition: background 0.12s ease;
+}
+.ex-row:hover:not(.ex-head) {
+	background: color-mix(in oklab, var(--teal) 6%, transparent);
+}
+.ex-row.ex-head {
+	font-size: var(--text-2xs);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+	border-block-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	position: sticky;
+	inset-block-start: 0;
+	background: var(--bg-dark);
+	z-index: 1;
+}
+.ex-cell {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.ex-id,
+.ex-addr {
+	color: var(--dark-text-medium);
+	text-decoration: none;
+	border-block-end: 1px dashed transparent;
+}
+a.ex-id:hover,
+a.ex-addr:hover {
+	color: var(--teal);
+	border-block-end-color: var(--teal);
+}
+.ex-arrow {
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+	text-align: center;
+}
+.ex-amount {
+	text-align: right;
+	color: var(--color-success);
+	font-variant-numeric: tabular-nums;
+}
+.ex-status {
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	font-size: var(--text-2xs);
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.55));
+}
+.ex-type {
+	font-size: var(--text-2xs);
+	letter-spacing: 0.16em;
+	font-weight: var(--weight-semibold);
+	padding: var(--space-1) var(--space-2);
+	border-radius: var(--radius-xs);
+	width: max-content;
+	border: 1px solid currentColor;
+}
+.ex-type[data-tone='mint'] {
+	color: var(--color-success);
+}
+.ex-type[data-tone='transfer'] {
+	color: var(--teal);
+}
+.ex-time {
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+	font-size: var(--text-xs);
+}

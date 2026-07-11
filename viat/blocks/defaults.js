@@ -33,9 +33,12 @@ export const typeNames = {
 	audit: 'audit',
 	hybridWallet: 'hybridWallet',
 	quantumWallet: 'quantumWallet',
+	generic: 'generic',
 	genesis: 'genesis',
 	genesisWallet: 'genesisWallet',
 	genesisAudit: 'genesisAudit',
+	walletAnchor: 'walletAnchor',
+	receiptAnchor: 'receiptAnchor',
 };
 export const typeNamesPlural = {
 	transaction: 'transactions',
@@ -44,9 +47,12 @@ export const typeNamesPlural = {
 	audit: 'audits',
 	hybridWallet: 'hybridWallets',
 	quantumWallet: 'quantumWallets',
+	generic: 'generic',
 	genesis: 'genesis',
 	genesisWallet: 'wallets',
 	genesisAudit: 'audits',
+	walletAnchor: 'walletAnchors',
+	receiptAnchor: 'receiptAnchors',
 };
 export const walletTypes = {
 	wallet: {

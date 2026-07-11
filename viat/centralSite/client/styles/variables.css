@@ -1,0 +1,294 @@
+/* ── Variables – Light Theme (default) ────────────── */
+:root {
+	/* Tell the UA this root is light so native controls — date/time pickers,
+	   number spinners, scrollbars, the FF/Safari native <select> popup — render
+	   in-theme. CSS custom properties can't reach UA-drawn surfaces; color-scheme
+	   is the only lever, so it lives here in the token root, per theme. */
+	color-scheme: light;
+	/* ── Base Palette ────────────────────────────────── */
+	--bg-body: #EEF0F4;
+	--bg-panel: #F8F9FB;
+	--bg-dark: #070C1E;
+	--bg-dark-mid: #0E1528;
+	--navy: #0A1128;
+	--navy-light: #6e8ce0;
+	--teal: #006666;
+	--teal-dim: rgba(0, 102, 102, 0.12);
+	--cyan: #00F0FF;
+	--cyan-dim: rgba(0, 240, 255, 0.12);
+	--magenta: #FF0055;
+	--magenta-dim: rgba(255, 0, 85, 0.12);
+	--grey-solid: #9A9FA8;
+	--grey-mid: #3D4458;
+
+	/* ── Text ────────────────────────────────────────── */
+	--text-main: #070C1E;
+	--text-muted: #5A6480;
+	--text-light: #FFFFFF;
+	--text-offwhite: #CDD0D8;
+
+	/* ── Fonts ───────────────────────────────────────── */
+	--font-mono: 'Share Tech Mono', monospace;
+	--font-display: 'Chakra Petch', sans-serif;
+	--font-icon: 'JetBrainsMonoNL NF', 'JetBrainsMono NFP', 'Sora', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+
+	/* ── Border Colors ───────────────────────────────── */
+	--border-light-color: rgba(10, 17, 40, 0.18);
+
+	/* ── Borders (full shorthand) ────────────────────── */
+	--border-main: 1px solid var(--navy);
+	--border-light: 1px solid var(--border-light-color);
+	--border-dark: 1px solid var(--dark-divider-accent);
+
+	/* ── Light Surface Tints ─────────────────────────── */
+	--surface-tint-heavy: rgba(10, 17, 40, 0.16);
+	--surface-tint: rgba(10, 17, 40, 0.1);
+	--surface-tint-soft: rgba(10, 17, 40, 0.04);
+	--surface-tint-faint: rgba(10, 17, 40, 0.03);
+	--surface-tint-ghost: rgba(10, 17, 40, 0.025);
+	--surface-tint-whisper: rgba(10, 17, 40, 0.02);
+	--watermark-text: rgba(10, 17, 40, 0.04);
+
+	/* ── Dark Surface Text ───────────────────────────── */
+	--dark-text: rgba(200, 210, 230, 0.5);
+	--dark-text-dim: rgba(200, 210, 230, 0.45);
+	--dark-text-medium: rgba(200, 210, 230, 0.7);
+	--dark-text-bright: rgba(200, 210, 230, 0.75);
+	--dark-heading: rgba(255, 255, 255, 0.35);
+	--dark-heading-sep: rgba(255, 255, 255, 0.2);
+	--dark-text-faint: rgba(255, 255, 255, 0.3);
+	--text-subtle: rgba(255, 255, 255, 0.4);
+
+	/* ── Dark Surface Dividers ───────────────────────── */
+	--dark-divider: rgba(255, 255, 255, 0.07);
+	--dark-divider-subtle: rgba(255, 255, 255, 0.05);
+	--dark-divider-faint: rgba(255, 255, 255, 0.04);
+	--dark-divider-accent: rgba(255, 255, 255, 0.06);
+	--dark-highlight: rgba(255, 255, 255, 0.03);
+
+	/* ── Cyan Accent Scale ───────────────────────────── */
+	--cyan-glow-strong: rgba(0, 240, 255, 0.45);
+	--cyan-glow: rgba(0, 240, 255, 0.35);
+	--cyan-glow-medium: rgba(0, 240, 255, 0.3);
+	--cyan-glow-soft: rgba(0, 240, 255, 0.24);
+	--cyan-glow-faint: rgba(0, 240, 255, 0.15);
+	--cyan-tint: rgba(0, 240, 255, 0.06);
+	--cyan-tint-faint: rgba(0, 240, 255, 0.05);
+	--cyan-scanline: rgba(0, 240, 255, 0.015);
+	--cyan-timestamp: rgba(0, 240, 255, 0.5);
+
+	/* ── Teal Accent Scale ───────────────────────────── */
+	--teal-glow: rgba(0, 102, 102, 0.4);
+	--teal-glow-soft: rgba(0, 102, 102, 0.3);
+	--teal-glow-faint: rgba(0, 255, 255, 0.2);
+
+	/* ── Scrollbar tokens ────────────────────────────────
+	   Single source of truth for every scrollbar in the app.
+	   Themes override these to re-skin the scrollbars globally
+	   without touching component CSS. `core/styles/base.css`
+	   applies them to every shadow root via the universal
+	   selector, and `styles/index.css` mirrors them onto the
+	   light-DOM scrollbars (html / page-level scroll). */
+	--scrollbar-size: 0.3125rem;
+	--scrollbar-radius: 0.25rem;
+	--scrollbar-track: transparent;
+	--scrollbar-thumb: var(--cyan-glow-faint);
+	--scrollbar-thumb-hover: var(--cyan-glow-soft);
+	--scrollbar-corner: transparent;
+	--scrollbar-firefox-width: thin;
+
+	/* ── Status Colors ───────────────────────────────── */
+	--color-success: #4affde;
+	--color-success-glow: rgba(74, 255, 224, 0.4);
+	--color-success-text: rgba(74, 255, 224, 0.8);
+	--color-danger: #ff5f5f;
+	--color-danger-glow: rgba(255, 95, 95, 0.4);
+	--color-warning: #f59e0b;
+	--color-info: #3b82f6;
+	--color-warn-text: rgba(255, 0, 85, 0.9);
+
+	/* ═══════════════════════════════════════════════════
+	   COMPONENT THEME TOKENS
+	═══════════════════════════════════════════════════ */
+
+	/* ── Shape ───────────────────────────────────────── */
+	--radius: 0.25rem;
+	--radius-lg: 0.375rem;
+	--stat-bar-radius: 0;
+	--indicator-radius: 50%;
+	--rail-width: 3.25rem;
+	/* Vertical space the floating mobile bottom dock occupies, measured from the
+	   viewport's block-end edge to the dock's top: WCAG hit target (44px floor,
+	   rem-scaling above it) + rail/host padding + hairline + the dock's own
+	   bottom offset (safe-area aware). Pages add this as block-end clearance so
+	   content can scroll past the dock. */
+	--dock-h: calc(max(2.75rem, 44px) + var(--space-2) * 4 + 2px + max(var(--space-3), env(safe-area-inset-bottom, 0px)));
+	/* Heights of the fixed global chrome bars + the block-axis clearance the inner
+	   scroll surface (app.css .shell-scroll) reserves so content starts below the
+	   top bar and ends above the bottom bar — keeping the content's scrollbar behind
+	   both bars. Top clearance = the bar's floating offset (1rem) + its height; the
+	   bottom clearance is the status bar on desktop and the dock on mobile (app.css). */
+	--top-bar-height: 3.25rem;
+	--status-bar-height: 2.5rem;
+	--top-bar-clearance: calc(1rem + var(--top-bar-height) + var(--space-4));
+	--bottom-bar-clearance: calc(var(--status-bar-height) + var(--space-4));
+
+	/* ── Panel ───────────────────────────────────────── */
+	--panel-shadow:
+		0 1px 2px rgba(0, 0, 0, 0.15),
+		0 4px 8px rgba(0, 0, 0, 0.08),
+		inset 0 1px 0 rgba(255, 255, 255, 0.6);
+	--panel-hover-shadow:
+		0 2px 4px rgba(0, 0, 0, 0.2),
+		0 8px 16px rgba(0, 0, 0, 0.12),
+		0 0 12px var(--cyan-glow-faint),
+		inset 0 1px 0 rgba(255, 255, 255, 0.8);
+	--panel-hover-border: var(--teal);
+	--panel-header-accent: var(--teal);
+
+	/* ── Buttons ─────────────────────────────────────── */
+	--btn-bg: rgba(10, 17, 40, 0.08);
+	--btn-border: rgba(10, 17, 40, 0.2);
+	--btn-inset: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+	--btn-hover-bg: rgba(255, 0, 85, 0.08);
+	--btn-hover-border: rgba(255, 0, 85, 0.3);
+	--btn-hover-inset: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+	--btn-hover-glow: 0 0 0 1px rgba(255, 0, 85, 0.06);
+	--btn-hover-color: var(--text-light);
+	--focus-ring-color: rgba(0, 102, 102, 0.8);
+	--green-hover: #00aa44;
+
+	/* ── Inputs / Interactive ────────────────────────── */
+	--input-hover-border: var(--teal);
+	--input-hover-glow: rgba(0, 102, 102, 0.1);
+	--input-copied-bg: rgba(0, 102, 102, 0.1);
+	--input-copied-border: var(--teal);
+
+	/* ── Fields (form-field object scope; themes retint) ──
+	   Theming hooks for the .field wrapper (label + control).
+	   Structural gap stays on the --space scale; colour hooks
+	   are theme-overridable. */
+	--field-gap: var(--space-2);
+	--field-label-color: var(--text-muted);
+	--field-accent: var(--cyan, var(--teal));
+
+	/* ── Select (customizable base-select picker; themes retint) ──
+	   Hooks for the Chrome-135+ <select> picker popup + options. Where
+	   appearance:base-select is unsupported (FF/Safari) these go unused —
+	   the native popup shows instead — so they cost nothing on the degrade
+	   path. A bare <select> needs no author markup; the UA synthesizes the
+	   button + chevron and these tokens theme the synthesized parts. */
+	--select-picker-bg: var(--popup-bg);
+	--select-picker-border: var(--popup-border);
+	--select-picker-shadow: var(--popup-shadow);
+	--select-picker-radius: var(--radius-md);
+	--select-option-color: var(--popup-text, var(--text-main));
+	--select-option-hover-bg: color-mix(in oklab, var(--teal) 14%, transparent);
+	--select-option-checked-color: var(--cyan, var(--teal));
+	--select-chevron-color: var(--text-muted);
+
+	/* ── Icons (state colors used by ui-icon consumers) ── */
+	--icon-color: var(--text-offwhite);
+	--icon-color-hover: var(--text-light);
+	--icon-color-active: var(--text-light);
+	--icon-color-disabled: var(--dark-text-faint);
+
+	/* ── Top Bar ─────────────────────────────────────── */
+	--topbar-bg: rgba(10, 17, 40, 0.05);
+	--topbar-border: rgba(10, 17, 40, 0.15);
+	--topbar-accent: var(--teal);
+	--logo-mark-pattern: repeating-linear-gradient(45deg,
+			var(--teal), var(--teal) 2px,
+			transparent 2px, transparent 5px);
+
+	/* ── Popups (tooltip + notification) ─────────────── */
+	--popup-bg: rgba(255, 255, 255, 0.96);
+	--popup-bg-hover: rgba(248, 250, 253, 0.98);
+	--popup-border: rgba(10, 17, 40, 0.15);
+	--popup-border-hover: rgba(10, 17, 40, 0.28);
+	--popup-accent: var(--teal);
+	--popup-shadow:
+		0 8px 22px rgba(0, 0, 0, 0.12),
+		0 0 0 1px rgba(10, 17, 40, 0.08),
+		inset 0 1px 0 rgba(255, 255, 255, 0.8);
+	--popup-text: var(--text-main);
+
+	/* ── Spacing scale (structural, rem) ─────────────────
+	   rem (not px) so every gap scales with the fluid root
+	   (html font-size: clamp(14px,1.3vw,18px)) AND with a
+	   user's browser font-size preference — adaptive layout
+	   + accessibility. px-equivalents at the 16px reference
+	   shown inline. */
+	--space-0: 0;
+	--space-1: 0.125rem; /* 2px */
+	--space-2: 0.25rem; /* 4px */
+	--space-3: 0.5rem; /* 8px */
+	--space-4: 0.75rem; /* 12px */
+	--space-5: 1rem; /* 16px */
+	--space-6: 1.25rem; /* 20px */
+	--space-7: 1.5rem; /* 24px */
+	--space-8: 2rem; /* 32px */
+	--space-9: 2.5rem; /* 40px */
+	--space-10: 3rem; /* 48px */
+	--space-11: 3.5rem; /* 56px */
+	--space-12: 4rem; /* 64px */
+
+	/* ── Type scale (structural) ─────────────────────── */
+	--text-2xs: 0.625rem;
+	--text-xs: 0.6875rem;
+	--text-sm: 0.75rem;
+	--text-base: 0.8125rem;
+	--text-md: 0.875rem;
+	--text-lg: 1rem;
+	--text-xl: 1.125rem;
+	--text-2xl: 1.375rem;
+	--text-3xl: 1.75rem;
+	--text-4xl: 2.25rem;
+	--text-5xl: 3rem;
+	--leading-tight: 1.2;
+	--leading-normal: 1.45;
+	--leading-loose: 1.6;
+
+	/* ── Font weight (structural) ────────────────────── */
+	--weight-normal: 400;
+	--weight-medium: 500;
+	--weight-semibold: 600;
+	--weight-bold: 700;
+
+	/* ── Radius scale (rem; themeable lg/xl, keep aliases) ─
+	   rem so corners scale with the adaptive UI. Themes may
+	   still override --radius-lg in px for a fixed corner
+	   identity (marathon 0 / noir 20). px-equiv at 16px ref. */
+	--radius-xs: 0.125rem; /* 2px */
+	--radius-sm: 0.25rem; /* 4px */
+	--radius-md: 0.375rem; /* 6px */
+	--radius-lg: 0.625rem; /* 10px */
+	--radius-xl: 1rem; /* 16px */
+	--radius-pill: 999px;
+
+	/* ── Elevation scale (themeable — dark themes override) ── */
+	--shadow-0: none;
+	--shadow-1: 0 1px 2px rgba(0, 0, 0, 0.08);
+	--shadow-2: 0 2px 4px rgba(0, 0, 0, 0.10), 0 1px 2px rgba(0, 0, 0, 0.06);
+	--shadow-3: 0 4px 8px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08);
+	--shadow-4: 0 8px 16px rgba(0, 0, 0, 0.14), 0 4px 8px rgba(0, 0, 0, 0.10);
+	--shadow-5: 0 16px 32px rgba(0, 0, 0, 0.18), 0 8px 16px rgba(0, 0, 0, 0.12);
+
+	/* ── z-index scale (structural) ──────────────────── */
+	--z-base: 0;
+	--z-dropdown: 1000;
+	--z-sticky: 1100;
+	--z-modal: 1300;
+	--z-popover: 1400;
+	--z-tooltip: 1500;
+	--z-toast: 1600;
+
+	/* ── Transition scale (structural) ───────────────── */
+	--transition-fast: 0.12s ease;
+	--transition-base: 0.18s ease;
+	--transition-slow: 0.28s ease;
+
+	/* ── Border width (structural) ───────────────────── */
+	--border-width: 1px;
+	--border-width-thick: 2px;
+}

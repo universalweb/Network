@@ -1,0 +1,73 @@
+:host {
+	display: block;
+}
+/* Respect a parent's ?hidden toggle — :host display would beat the UA rule. */
+:host([hidden]) {
+	display: none;
+}
+.air {
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-radius: var(--radius-md);
+	background: var(--bg-panel, rgba(255, 255, 255, 0.02));
+}
+.air-summary {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding-block: var(--space-2);
+	padding-inline: var(--space-3);
+	cursor: pointer;
+	color: var(--text-muted, rgba(255, 255, 255, 0.6));
+	list-style: none;
+}
+.air-summary::-webkit-details-marker {
+	display: none;
+}
+.air-summary:focus-visible {
+	outline: 2px solid var(--cyan, currentColor);
+	outline-offset: -2px;
+	border-radius: var(--radius-md);
+}
+.air-label {
+	font-size: var(--text-xs);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+.air-chevron {
+	margin-inline-start: auto;
+	transition: transform 0.2s ease;
+}
+.air[open] .air-chevron {
+	transform: rotate(180deg);
+}
+.air-body {
+	margin-block-start: var(--space-1);
+	padding-block: var(--space-2) var(--space-3);
+	padding-inline: var(--space-3);
+	border-block-start: 1px dashed var(--dark-divider, rgba(255, 255, 255, 0.06));
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+	line-height: 1.5;
+	font-size: var(--text-sm);
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+}
+.air[data-streaming] .air-brain {
+	animation: air-pulse 1.4s ease-in-out infinite;
+}
+@keyframes air-pulse {
+	0%,
+	100% {
+		opacity: 0.4;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.air-chevron {
+		transition: none;
+	}
+	.air[data-streaming] .air-brain {
+		animation: none;
+	}
+}

@@ -1,0 +1,189 @@
+/* ══════════════════════════════════════════════════════
+   TRANSMIT FUNDS PANEL
+══════════════════════════════════════════════════════ */
+/* Query against the panel's OWN width, not the viewport: the panel sits in the
+   dashboard's center grid column (viewport − two 220px rails), so a viewport
+   media query at 420px never fired while the desktop dashboard was shown (≥768px)
+   — the compact body was dead even when the column was ~412px. `@container` flips
+   it on the column's real width. (`.field-addon` is contained by its own
+   `position:relative` parent, so inline-size containment doesn't relocate it.) */
+:host {
+	container-type: inline-size;
+}
+.transmit-panel {
+	flex-shrink: 0;
+}
+
+.transmit-body {
+	padding: var(--space-5) var(--space-7);
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--space-4) var(--space-6);
+}
+
+/* Threshold tuned to the CONTAINER (the panel), not the viewport. `rem` not `em`:
+   inside `@container`, `em` is the container's own font-size (~10.5px mono here),
+   which would collapse the threshold; `rem` is root-relative (this project's root
+   is 14px) and zoom-safe. 34rem ≈ 476px = where the two form columns stop being
+   comfortable (~230px each) and should stack. */
+@container (max-width: 34rem) {
+	.transmit-body {
+		padding-inline-start: var(--space-4);
+		padding-inline-end: var(--space-4);
+		grid-template-columns: 1fr;
+		gap: var(--space-3);
+	}
+}
+
+/* Layout now comes from the framework .field scope (uwc.base: flex column + gap).
+   .field stays as this object's theming scope and for its descendant rules
+   (.field input, .field label). Labels are semantic <label for> (semantic-tag law);
+   the transmit terminal look (small uppercase, wide-tracked) lives on .field label
+   and beats the base <label> via uwc.components. */
+.field label {
+	font-size: var(--text-2xs);
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	color: var(--text-main);
+	opacity: 0.75;
+	font-weight: var(--weight-semibold);
+}
+
+.field input {
+	background: var(--surface-tint-faint);
+	border: var(--border-light);
+	border-block-end: var(--input-accent-border, 1px solid var(--cyan-glow-soft));
+	box-shadow: var(
+		--input-accent-shadow,
+		inset 0 -1px 0 var(--cyan-glow-soft)
+	);
+	padding: var(--space-3) var(--space-3);
+	font-family: var(--font-mono);
+	font-size: var(--text-base);
+	color: var(--text-main);
+	outline: none;
+	width: 100%;
+	border-radius: var(--input-radius, var(--radius));
+	transition:
+		border-color 0.15s,
+		box-shadow 0.15s,
+		background 0.15s;
+}
+
+.field input:hover {
+	border-color: var(--cyan-glow-faint);
+	border-block-end-color: var(--cyan-glow);
+	background: var(--surface-tint-soft);
+	box-shadow: inset 0 -1px 0 var(--cyan-glow);
+}
+
+/* Focus rides the canonical per-theme focus token (every theme defines it),
+   so e.g. codex gets its thin slate line instead of the accent color. */
+.field input:focus {
+	border-color: var(--focus-ring-color, var(--topbar-accent));
+	border-block-end-color: var(--focus-ring-color, var(--topbar-accent));
+	box-shadow:
+		inset 0 -1px 0 var(--focus-ring-color, var(--topbar-accent)),
+		inset 0 0 0 1px var(--focus-ring-color, var(--topbar-accent));
+}
+
+.field input[readonly] {
+	color: var(--text-muted);
+	cursor: not-allowed;
+	background: var(--surface-tint-whisper);
+}
+
+.field-with-addon {
+	position: relative;
+	overflow: hidden;
+}
+
+.field-with-addon input {
+	padding-inline-end: var(--space-11);
+}
+
+.field-addon {
+	position: absolute;
+	inset-inline-end: 0;
+	inset-block-start: 0;
+	inset-block-end: 0;
+	min-width: 3.25rem;
+	background: var(--navy);
+	border-inline-start: 1px solid var(--border-light-color);
+	border-block-end: none;
+	box-sizing: border-box;
+	color: var(--text-light);
+	font-size: var(--text-2xs);
+	font-family: var(--font-mono);
+	letter-spacing: 0.05em;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+/* Recipient addon doubles as a format picker. Native <select> chrome is
+   stripped (`appearance: none`) and a CSS chevron is painted into the
+   background so it visually matches the static VIAT addon next door. */
+.recipient-with-addon input {
+	padding-inline-end: 76px;
+}
+.field-addon-select {
+	appearance: none;
+	-webkit-appearance: none;
+	border: none;
+	border-inline-start: 1px solid var(--border-light-color);
+	outline: none;
+	min-width: 4.375rem;
+	padding: 0 var(--space-6) 0 var(--space-4);
+	cursor: pointer;
+	text-transform: uppercase;
+	font-weight: var(--weight-semibold);
+	background-image:
+		linear-gradient(135deg, transparent 50%, currentColor 50%, currentColor 62%, transparent 62%),
+		linear-gradient(45deg, transparent 50%, currentColor 50%, currentColor 62%, transparent 62%);
+	background-position:
+		calc(100% - 12px) calc(50% - 1px),
+		calc(100% - 8px) calc(50% - 1px);
+	background-size: 5px 5px, 5px 5px;
+	background-repeat: no-repeat;
+	transition: background-color 0.15s, color 0.15s;
+}
+.field-addon-select:hover {
+	color: var(--icon-color-hover, var(--topbar-accent, var(--text-light)));
+	background-color: var(--surface-tint-soft);
+}
+.field-addon-select:focus-visible {
+	outline: 1px solid var(--focus-ring-color, var(--topbar-accent, var(--cyan-glow)));
+	outline-offset: -2px;
+}
+.field-addon-select option {
+	background: var(--popup-bg);
+	color: var(--text-main);
+	text-transform: uppercase;
+}
+/* Chrome 135+ customizable select: drop the hand-painted chevron and let the
+   base-select picker (themed universally in elements-forms.css via --select-*)
+   take over with a real ::picker-icon. FF/Safari ignore this block and keep the
+   appearance:none + gradient-chevron fallback above — degrades-to-functional. */
+@supports (appearance: base-select) {
+	.field-addon-select {
+		appearance: base-select;
+		background-image: none;
+		padding-inline-end: var(--space-5);
+	}
+}
+
+/* Layout + identity only — fill, border, inset, radius, themed hover and the
+   lift now come from the universal <button> (elements-forms.css), driven by the
+   same per-theme --btn-* tokens. This class adds the transmit button's unique
+   shape: full-width grid span, frosted backdrop, and the display-font caps. */
+.btn-transmit {
+	grid-column: 1 / -1;
+	padding: var(--space-3) var(--space-4);
+	backdrop-filter: blur(4px);
+	font-family: var(--font-display);
+	font-size: var(--text-2xs);
+	font-weight: var(--weight-bold);
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+	appearance: none;
+}

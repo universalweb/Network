@@ -1,0 +1,101 @@
+:host {
+	display: block;
+}
+.jr {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding-block: 0.125rem;
+	padding-inline: calc(var(--depth, 0) * var(--json-indent, 1.05rem)) 0.25rem;
+	font-family: inherit;
+	font-size: 0.8125rem;
+	line-height: 1.55;
+	border-radius: var(--radius-sm, 0.25rem);
+	cursor: default;
+}
+.jr:hover {
+	background: var(--json-row-hover, color-mix(in oklab, currentColor 7%, transparent));
+}
+.jr[data-matched] {
+	background: var(--json-match-bg, color-mix(in oklab, gold 24%, transparent));
+}
+.jr-caret {
+	flex: none;
+	inline-size: 1rem;
+	block-size: 1rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--text-muted);
+	font-size: 0.7rem;
+	cursor: pointer;
+}
+.jr-caret:disabled {
+	visibility: hidden;
+	cursor: default;
+}
+.jr-key {
+	color: var(--json-key, currentColor);
+}
+.jr-key[data-index] {
+	color: var(--json-index, var(--text-muted));
+}
+.jr-sep {
+	margin-inline-start: -0.25rem;
+	color: var(--text-muted);
+}
+.jr-value {
+	min-inline-size: 0;
+	overflow: hidden;
+	color: var(--json-value, currentColor);
+	white-space: pre;
+	text-overflow: ellipsis;
+}
+.jr-value[data-type='string'] {
+	color: var(--json-string);
+}
+.jr-value[data-type='number'] {
+	color: var(--json-number);
+}
+.jr-value[data-type='boolean'] {
+	color: var(--json-boolean);
+}
+.jr-value[data-type='null'],
+.jr-value[data-type='undefined'] {
+	color: var(--json-null);
+	font-style: italic;
+}
+.jr-value[data-type='object'],
+.jr-value[data-type='array'] {
+	color: var(--text-muted);
+}
+.jr-copy {
+	flex: none;
+	margin: 0;
+	margin-inline-start: auto;
+	padding: 0.1rem 0.3rem;
+	border: 0;
+	background: none;
+	color: var(--text-muted);
+	font-size: 0.75rem;
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity var(--dur-fast, 0.15s) var(--ease-out, ease);
+}
+.jr:hover .jr-copy,
+.jr-copy:focus-visible {
+	opacity: 1;
+}
+.jr-copy[data-copied] {
+	color: var(--success, oklch(0.72 0.17 150));
+	opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+	.jr-copy {
+		transition: none;
+	}
+}

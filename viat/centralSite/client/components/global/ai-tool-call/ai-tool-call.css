@@ -1,0 +1,92 @@
+:host {
+	display: block;
+}
+.atc {
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.1));
+	border-radius: var(--radius-md);
+	background: var(--bg-panel, rgba(255, 255, 255, 0.025));
+	overflow: hidden;
+}
+.atc[data-status='running'] {
+	border-color: var(--cyan-glow-soft, rgba(0, 240, 255, 0.25));
+}
+.atc[data-status='error'] {
+	border-color: color-mix(in oklab, var(--color-danger, oklch(0.68 0.2 25)) 45%, transparent);
+}
+.atc-summary {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding-block: var(--space-2);
+	padding-inline: var(--space-3);
+	cursor: pointer;
+	list-style: none;
+}
+.atc-summary::-webkit-details-marker {
+	display: none;
+}
+.atc-summary:focus-visible {
+	outline: 2px solid var(--cyan, currentColor);
+	outline-offset: -2px;
+}
+.atc-tool {
+	flex: none;
+	color: var(--text-muted, rgba(255, 255, 255, 0.5));
+}
+.atc-name {
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: var(--text-sm);
+	color: var(--text-main);
+	overflow-wrap: anywhere;
+}
+.atc-status {
+	margin-inline-start: auto;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-xs);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--atc-tone, var(--text-muted, rgba(255, 255, 255, 0.5)));
+}
+.atc[data-status='running'] {
+	--atc-tone: var(--cyan, oklch(0.8 0.13 200));
+}
+.atc[data-status='done'] {
+	--atc-tone: var(--color-success, oklch(0.78 0.16 155));
+}
+.atc[data-status='error'] {
+	--atc-tone: var(--color-danger, oklch(0.68 0.2 25));
+}
+.atc-chevron {
+	flex: none;
+	color: var(--text-muted, rgba(255, 255, 255, 0.4));
+	transition: transform 0.2s ease;
+}
+.atc[open] .atc-chevron {
+	transform: rotate(180deg);
+}
+.atc-body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding-block: var(--space-2) var(--space-3);
+	padding-inline: var(--space-3);
+	border-block-start: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.06));
+}
+.atc-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+.atc-section-label {
+	font-size: var(--text-xs);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-muted, rgba(255, 255, 255, 0.45));
+}
+@media (prefers-reduced-motion: reduce) {
+	.atc-chevron {
+		transition: none;
+	}
+}

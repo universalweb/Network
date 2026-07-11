@@ -1,0 +1,87 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: inline-flex;
+	flex: 0 0 auto;
+	min-width: 0;
+}
+.tab-btn {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: var(--space-3);
+	/* Orientation-dependent box rides inherited custom props the strip sets per
+	   `data-orientation` (tabs.css); fallbacks are the vertical defaults. */
+	padding: var(--tab-btn-pad, var(--space-3) var(--space-4));
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--tab-btn-radius, var(--radius-sm));
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+	font-family: var(--font-mono, monospace);
+	font-size: var(--text-xs);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.18s ease;
+	width: 100%;
+}
+.tab-btn-icon {
+	display: inline-flex;
+	flex-shrink: 0;
+	color: inherit;
+}
+.tab-btn-label {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+/* Mobile: tabs with an icon switch to icon-only. The label is hidden via
+   accessibility-preserving `clip-path` rather than display:none so screen
+   readers still announce the button's name. The button itself becomes a
+   tight square so the rail can shrink to ~52px wide. */
+@media (max-width: 47.9375em) {
+	.tab-btn:has(.tab-btn-icon) {
+		justify-content: center;
+		gap: 0;
+		padding: var(--space-4) 0;
+		width: 100%;
+	}
+	.tab-btn:has(.tab-btn-icon) .tab-btn-label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+}
+.tab-btn:hover {
+	color: var(--text-main);
+	background: rgba(255, 255, 255, 0.03);
+	/* Hover nudge axis follows orientation via the strip's custom prop. */
+	transform: var(--tab-btn-hover-transform, translateY(-1px));
+}
+.tab-btn[aria-selected='true'] {
+	color: var(--teal);
+	border-color: var(--cyan-glow-soft, color-mix(in oklab, var(--teal) 18%, transparent));
+	background: var(--cyan-tint-faint, color-mix(in oklab, var(--teal) 6%, transparent));
+	transform: none;
+}
+.tab-btn:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 2px color-mix(in oklab, var(--cyan) 35%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+	.tab-btn {
+		transition: color 0.15s ease, background 0.15s ease;
+	}
+	.tab-btn:hover {
+		transform: none;
+	}
+}

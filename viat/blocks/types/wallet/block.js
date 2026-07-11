@@ -65,6 +65,7 @@ export class WalletBlock extends Block {
 		return this.filesystem.getFileURL(await this.getAddress());
 	}
 	// blockSchema = walletBlockSchema;
+	isSigned = true;
 	typeName = typeNames.wallet;
 }
 export default WalletBlock;

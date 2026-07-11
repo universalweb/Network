@@ -12,17 +12,24 @@ export const x25519 = x25519KeyExchange({
 	hash,
 });
 export default x25519;
-// const client = await x25519.keyExchangeKeypair();
-// const server = await x25519.keyExchangeKeypair();
-// await x25519.clientInitializeSession(client, server);
-// await x25519.serverInitializeSession(server, client, client.publicKey);
-// console.log('client', client);
-// console.log('server', server);
-// // Copy used because of cleanup
-// const clientPublicKey = Buffer.from(client.publicKey);
-// await x25519.clientSetSession(client, server, server.nextSession.publicKey);
-// console.log('client', client);
-// await x25519.serverSetSession(server, {
-// 	publicKey: clientPublicKey
-// }, server);
-// console.log('server', server);
+/*
+ * Mimics the UDSP client↔server handshake to document the packet flow + internal steps.
+ * x25519 is symmetric DH: the intro round alone lands a full mutual session — the client derives
+ * against the server's public, the server derives the mirror against the client's. No ciphertext,
+ * no second round needed for agreement. Run with `await example()`.
+ */
+export async function example() {
+	const scheme = x25519;
+	// Random key pairs — client ephemeral, server long-term. Straight to the handshake, no cert.
+	const client = await scheme.clientEphemeralKeypair();
+	client.logInfo = console.log;
+	const server = await scheme.serverEphemeralKeypair();
+	server.logInfo = console.log;
+	// CLIENT: derive the session against the server public, then stage the intro (its own public key)
+	await scheme.onClientInitialization(client, server);
+	// PACKET 1  client → server : clientPublic(32)
+	await scheme.onClientIntroHeader(server, client, client.publicKey);
+	// Both sides now hold the identical session — confirm.
+	console.log('x25519 session:', scheme.compareSessionkeysThrow(client, server));
+}
+// await example();

@@ -1,0 +1,141 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+  display: inline-block;
+}
+/* `--ts-chip-*` hooks let a surface re-skin the trigger chip without touching
+   the dropdown (which stays on the global popup tokens) — e.g. codex's ink
+   masthead sets them to paper-on-ink from the app-bar theme sub-module. */
+.ts-btn {
+  /* Anchor for the dropdown's native CSS anchor positioning (paired in
+     .theme-drop). Scoped to this shadow root, so multiple instances never
+     collide. */
+  anchor-name: --ts-trigger;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--ts-chip-bg, var(--cyan-tint-faint));
+  border: 1px solid var(--ts-chip-border, var(--cyan-glow-medium));
+  border-radius: var(--tb-badge-radius, 20px);
+  color: var(--ts-chip-color, var(--cyan));
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.15em;
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: border-color 0.2s, background 0.2s;
+  white-space: nowrap;
+}
+.ts-btn:hover {
+  background: var(--ts-chip-bg-hover, var(--cyan-tint));
+  border-color: var(--ts-chip-border-hover, var(--cyan-glow-strong));
+}
+.ts-arrow {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--ts-chip-color, var(--cyan));
+  opacity: 0.6;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ts-btn[aria-expanded='true'] .ts-arrow {
+  transform: rotate(180deg);
+}
+.theme-drop {
+  margin: 0;
+  /* Native CSS anchor positioning: the popover pins to .ts-btn and the browser
+     keeps it on-screen, flipping block (up/down) and inline (left/right) when a
+     placement would overflow the viewport. `span-inline-end` left-aligns the
+     menu with the trigger's start edge and grows toward the end, so a narrow
+     trigger ("Hypr") no longer drags the wider menu off the left edge. Replaces
+     the old getBoundingClientRect measurement + inline-style writes. */
+  position-anchor: --ts-trigger;
+  position-area: block-end span-inline-end;
+  margin-block-start: var(--space-2);
+  position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+  padding: 0;
+  border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
+  border-radius: var(--menu-radius, var(--radius, 0.625rem));
+  min-width: 7.5rem;
+  background: var(--popup-bg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px color-mix(in oklab, var(--teal) 8%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  transition:
+    opacity 0.15s ease,
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    overlay 0.15s ease allow-discrete,
+    display 0.15s ease allow-discrete;
+}
+.theme-drop:not(:popover-open) {
+  opacity: 0;
+  transform: scale(0.97) translateY(-5px);
+  /* `display: flex` above unconditionally keeps the popover in the layout
+     and in the top layer, so even with opacity 0 it kept catching pointer
+     events. Restoring the UA default `display: none` for the closed state
+     fully removes it. The `display ... allow-discrete` transition lets
+     the close animation still play before the swap. */
+  display: none;
+  pointer-events: none;
+}
+@starting-style {
+  .theme-drop:popover-open {
+    opacity: 0;
+    transform: scale(0.97) translateY(-5px);
+  }
+}
+.theme-drop::backdrop {
+  background: transparent;
+}
+.theme-option {
+  background: transparent;
+  border: none;
+  border-block-end: 1px solid var(--dark-divider-faint, rgba(255, 255, 255, 0.022));
+  /* The framework styles every <button> with --radius-md; in a stacked list
+     that rounds the hover/active fill on every row. Square the rows and round
+     only the two list ends below so the items read as one seamless menu. */
+  border-radius: 0;
+  color: var(--text-offwhite);
+  font-family: inherit;
+  font-size: var(--text-2xs);
+  letter-spacing: 0.15em;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  text-transform: uppercase;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.15s, color 0.15s;
+}
+.theme-option:first-child {
+  border-start-start-radius: var(--menu-radius, var(--radius, 0.625rem));
+  border-start-end-radius: var(--menu-radius, var(--radius, 0.625rem));
+}
+.theme-option:last-child {
+  border-block-end: none;
+  border-end-start-radius: var(--menu-radius, var(--radius, 0.625rem));
+  border-end-end-radius: var(--menu-radius, var(--radius, 0.625rem));
+}
+.theme-option:hover {
+  background: var(--surface-tint, rgba(255, 255, 255, 0.05));
+  color: var(--text-main);
+}
+.theme-option[data-active] {
+  color: var(--cyan);
+  background: var(--cyan-tint-faint, color-mix(in oklab, var(--teal) 3.4%, transparent));
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-drop {
+    transition: opacity 0.1s ease, overlay 0.1s ease allow-discrete, display 0.1s ease allow-discrete;
+    transform: none;
+  }
+  .theme-drop:not(:popover-open) { transform: none; }
+  @starting-style {
+    .theme-drop:popover-open { transform: none; }
+  }
+}

@@ -1,0 +1,213 @@
+:host {
+	display: block;
+}
+/* `hidden` must win over the explicit display: rules below (.nav/.dots) — an
+   author display declaration otherwise overrides the UA [hidden] display:none. */
+[hidden] {
+	display: none !important;
+}
+.carousel {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	inline-size: 100%;
+}
+.viewport {
+	position: relative;
+	overflow: hidden;
+	border-radius: var(--radius-lg);
+	/* Intentional media stage — dark by default so slides / video letterbox
+	   cleanly. Exposed as a hook so a theme can restage it (e.g. a light gallery)
+	   without forking the component. */
+	background: var(--carousel-viewport-bg, var(--bg-dark));
+}
+/* DRAG: claim the horizontal pan for the gesture (vertical still scrolls the
+   page); grab affordance + select-lock so a drag never paints a text selection.
+   Without `touch-action: pan-y` the browser swallows the horizontal pointermove
+   on touch and the gesture silently dies. */
+[data-drag='on'] .viewport {
+	touch-action: pan-y;
+	cursor: grab;
+}
+[data-drag='on'] .viewport.is-dragging {
+	cursor: grabbing;
+	user-select: none;
+}
+/* KEYBOARD: a keyboard-only ring on the focusable viewport (offset inward so the
+   rounded corners aren't clipped by overflow:hidden); pointer focus stays quiet. */
+.viewport:focus {
+	outline: none;
+}
+.viewport:focus-visible {
+	outline: 0.125rem solid var(--cyan);
+	outline-offset: -0.125rem;
+}
+/* SLIDE: a flex row that translates by activeIndex; each slide is full-width. */
+[data-transition='slide'] .track {
+	display: flex;
+	transition: transform var(--dur-slow) var(--ease-spring);
+}
+[data-transition='slide'] ui-carousel-slide {
+	flex: 0 0 100%;
+	min-inline-size: 0;
+}
+/* FADE: slides stack in one grid cell and cross-fade + scale. */
+[data-transition='fade'] .track {
+	display: grid;
+}
+[data-transition='fade'] ui-carousel-slide {
+	grid-area: 1 / 1;
+	opacity: 0;
+	transform: scale(0.96);
+	pointer-events: none;
+	transition:
+		opacity var(--dur-base) var(--ease-out, ease),
+		transform var(--dur-base) var(--ease-spring);
+}
+[data-transition='fade'] ui-carousel-slide[data-active] {
+	opacity: 1;
+	transform: scale(1);
+	pointer-events: auto;
+}
+.nav {
+	position: absolute;
+	inset-block-start: 50%;
+	transform: translateY(-50%);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 2rem;
+	block-size: 2rem;
+	/* padding:0 is load-bearing — the global button style injects asymmetric
+	   padding that, under border-box, swells the fixed 2rem box into an ellipse;
+	   zero it so width==height and the radius reads as a true circle. Shape is the
+	   `--carousel-arrow-radius` knob (data-arrow-shape: circle | rounded | square). */
+	padding: 0;
+	border: none;
+	border-radius: var(--carousel-arrow-radius, 50%);
+	/* Transparent by default — the disc must NOT obscure the media (the old scrim +
+	   backdrop blur are gone). The glyph stays light (the stage is dark) with a
+	   drop-shadow so it reads over any frame, bright or dark. Both bg and glyph are
+	   hooks for full theme control. */
+	background: var(--carousel-arrow-bg, transparent);
+	color: var(--carousel-arrow-color, color-mix(in oklab, white 92%, transparent));
+	filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+	cursor: pointer;
+	transition:
+		background var(--dur-fast) var(--ease-out, ease),
+		opacity var(--dur-fast) var(--ease-out, ease),
+		transform var(--dur-fast) var(--ease-spring);
+}
+.nav:hover {
+	/* A faint accent wash on hover — still mostly see-through, just enough to
+	   register the target. Fully overridable per theme. */
+	background: var(--carousel-arrow-hover-bg, color-mix(in oklab, var(--teal) 32%, transparent));
+}
+.nav:active {
+	transform: translateY(-50%) scale(0.9);
+}
+.nav.prev {
+	inset-inline-start: var(--space-2);
+}
+.nav.next {
+	inset-inline-end: var(--space-2);
+}
+/* ARROW SHAPE: circle is the default (50% fallback on the knob); rounded softens
+   to the mid radius, square is sharp. The prop is set on .carousel and inherits
+   down to the absolutely-positioned .nav buttons. */
+[data-arrow-shape='rounded'] {
+	--carousel-arrow-radius: var(--radius-md, 0.5rem);
+}
+[data-arrow-shape='square'] {
+	--carousel-arrow-radius: 0;
+}
+/* REVEAL: hide the arrows until the carousel is hovered or keyboard-focused, so
+   the transparent discs never sit over the media while idle. Default keeps them
+   always visible. pointer-events track opacity so a hidden arrow is never a hidden
+   hit target. */
+[data-arrow-reveal='on'] .nav {
+	opacity: 0;
+	pointer-events: none;
+}
+[data-arrow-reveal='on']:hover .nav,
+[data-arrow-reveal='on']:focus-within .nav {
+	opacity: 1;
+	pointer-events: auto;
+}
+.dots {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+}
+.dot {
+	position: relative;
+	padding: 0;
+	border: none;
+	background: none;
+	cursor: pointer;
+	overflow: hidden;
+}
+.dot-fill {
+	display: block;
+	pointer-events: none;
+	background: var(--carousel-dot-active, var(--teal));
+}
+/* DOTS — small pills; the active one widens + fills. */
+[data-indicators='dots'] .dot {
+	inline-size: 0.5rem;
+	block-size: 0.5rem;
+	border-radius: 999px;
+	/* Adaptive pip — --dark-divider is white-alpha and vanishes on a light page;
+	   the adaptive --surface-tint-heavy reads in every theme. --carousel-dot-* hooks
+	   let a theme restyle the rail. */
+	background: var(--carousel-dot-color, var(--surface-tint-heavy));
+	transition:
+		inline-size var(--dur-fast) var(--ease-spring),
+		background var(--dur-fast) var(--ease-out, ease);
+}
+[data-indicators='dots'] .dot[data-on] {
+	inline-size: 1.25rem;
+	background: var(--carousel-dot-active, var(--teal));
+}
+[data-indicators='dots'] .dot-fill {
+	display: none;
+}
+/* PROGRESS — bars; the active one fills across the autoplay interval. */
+[data-indicators='progress'] .dot {
+	inline-size: 2.5rem;
+	block-size: 0.25rem;
+	border-radius: 999px;
+	background: var(--carousel-dot-color, var(--surface-tint-heavy));
+}
+[data-indicators='progress'] .dot-fill {
+	inline-size: 100%;
+	block-size: 100%;
+	transform: scaleX(0);
+	transform-origin: left center;
+	border-radius: inherit;
+}
+[data-indicators='progress'] .dot[data-on] .dot-fill {
+	animation: carousel-progress var(--carousel-interval, 4000ms) linear forwards;
+}
+@keyframes carousel-progress {
+	from {
+		transform: scaleX(0);
+	}
+	to {
+		transform: scaleX(1);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	[data-transition='slide'] .track,
+	[data-transition='fade'] ui-carousel-slide {
+		transition: none;
+	}
+	[data-indicators='progress'] .dot[data-on] .dot-fill {
+		animation: none;
+		transform: scaleX(1);
+	}
+	.nav:active {
+		transform: translateY(-50%);
+	}
+}

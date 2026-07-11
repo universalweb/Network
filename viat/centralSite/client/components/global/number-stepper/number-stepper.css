@@ -1,0 +1,75 @@
+:host {
+	display: inline-block;
+}
+.number-stepper {
+	display: inline-flex;
+	align-items: stretch;
+	border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.14));
+	border-radius: var(--radius-md, 0.5rem);
+	overflow: hidden;
+	background: var(--bg-panel, transparent);
+}
+.number-stepper[data-disabled] {
+	opacity: 0.55;
+}
+.ns-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 2rem;
+	border: 0;
+	background: transparent;
+	color: var(--text-primary, currentColor);
+	font-size: var(--text-md, 1rem);
+	line-height: 1;
+	cursor: pointer;
+	transition: background 0.14s ease;
+}
+.ns-btn:hover:not(:disabled) {
+	background: var(--surface-tint, rgba(255, 255, 255, 0.08));
+}
+.ns-btn:active:not(:disabled) {
+	background: var(--surface-tint-strong, rgba(255, 255, 255, 0.14));
+}
+.ns-btn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+.ns-dec {
+	border-inline-end: 1px solid var(--surface-border, rgba(255, 255, 255, 0.14));
+}
+.ns-inc {
+	border-inline-start: 1px solid var(--surface-border, rgba(255, 255, 255, 0.14));
+}
+.ns-input {
+	inline-size: 3.5rem;
+	min-inline-size: 0;
+	border: 0;
+	background: transparent;
+	color: var(--text-primary, currentColor);
+	font: inherit;
+	text-align: center;
+	padding: 0.35rem 0.25rem;
+}
+.ns-input:focus {
+	outline: none;
+	background: var(--surface-tint, rgba(255, 255, 255, 0.05));
+}
+.ns-input:disabled {
+	cursor: not-allowed;
+}
+.ns-suffix {
+	display: inline-flex;
+	align-items: center;
+	padding-inline-end: 0.5rem;
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+	font-size: var(--text-sm, 0.8rem);
+}
+.ns-suffix[hidden] {
+	display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.ns-btn {
+		transition: none;
+	}
+}

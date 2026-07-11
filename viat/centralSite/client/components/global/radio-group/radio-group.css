@@ -1,0 +1,104 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: block;
+}
+.radio-group {
+	border: 0;
+	margin: 0;
+	padding: 0;
+	min-inline-size: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.6rem;
+}
+.radio-group[data-orientation='horizontal'] {
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 1.25rem;
+}
+.radio-legend {
+	padding: 0;
+	margin-block-end: 0.2rem;
+	font-size: var(--text-sm, 0.8rem);
+	font-weight: var(--weight-semibold, 600);
+	color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+}
+/* The native input is visually hidden but keeps focus + keyboard roving; the
+   `.radio-control` faux dot mirrors its :checked/:focus state via sibling combinators. */
+.radio {
+	/* Positioning context for the visually-hidden input below. WITHOUT it the
+	   absolutely-positioned 1px input has no positioned ancestor → its containing
+	   block is the ICB (html); with inset auto it resolves to its STATIC flow
+	   position and, escaping the overflow:auto scroller above, focusing it (label
+	   click / arrow roving) scrolls the BODY to that far offset — the same bug ui-switch
+	   had. Anchoring here keeps the input local to its row. */
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+	gap: 0.55rem;
+	cursor: pointer;
+	color: var(--text-primary, currentColor);
+}
+.radio[data-disabled] {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+.radio input[type='radio'] {
+	position: absolute;
+	/* Pin to the row's top-start corner so the 1px control never falls back to its
+	   static flow position (see the position:relative note on .radio). */
+	inset-block-start: 0;
+	inset-inline-start: 0;
+	inline-size: 1px;
+	block-size: 1px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	opacity: 0;
+	pointer-events: none;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+.radio-control {
+	flex: 0 0 auto;
+	inline-size: 1.05em;
+	block-size: 1.05em;
+	margin-block-start: 0.1em;
+	border: 2px solid var(--surface-border, rgba(255, 255, 255, 0.35));
+	border-radius: 50%;
+	background: transparent;
+	transition:
+		border-color 0.15s ease,
+		box-shadow 0.15s ease;
+}
+.radio input:checked + .radio-control {
+	border-color: var(--color-info, #3b82f6);
+	box-shadow: inset 0 0 0 0.28em var(--color-info, #3b82f6);
+}
+.radio input:focus-visible + .radio-control {
+	outline: 2px solid var(--color-info, #3b82f6);
+	outline-offset: 2px;
+}
+.radio-text {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	line-height: 1.3;
+}
+.radio-label {
+	font-size: var(--text-sm, 0.85rem);
+	font-weight: var(--weight-medium, 500);
+}
+.radio-desc {
+	font-size: var(--text-xs, 0.75rem);
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+}
+@media (prefers-reduced-motion: reduce) {
+	.radio-control {
+		transition: none;
+	}
+}

@@ -1,0 +1,15 @@
+/*
+ * Codex — dock RULE overrides (structural). The active-bar becomes a crisp
+ * 2px ULTRAMARINE rule, square-cut, glow-free — one of the theme's few color
+ * moments. Geometry still rides the movingIndicator engine.
+ */
+:host([data-orientation='vertical']) .active-bar {
+	width: 2px;
+	border-radius: 0;
+	box-shadow: none;
+}
+:host([data-orientation='horizontal']) .active-bar {
+	height: 2px;
+	border-radius: 0;
+	box-shadow: none;
+}

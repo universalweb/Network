@@ -1,0 +1,29 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: inline-flex;
+	flex: 0 0 auto;
+}
+.tg {
+	display: inline-flex;
+	background: color-mix(in oklab, var(--bg-panel) 70%, transparent);
+	border: 1px solid color-mix(in oklab, var(--text-primary, currentColor) 14%, transparent);
+	border-radius: var(--radius-md);
+	padding: 0.2rem;
+	gap: 0.2rem;
+}
+/* Group sizing is config, not per-item state — the options read these inherited
+   custom properties through the shadow boundary. */
+[data-size='sm'] {
+	--tg-opt-font: var(--text-xs);
+	--tg-opt-pad: 0.3rem 0.6rem;
+}
+[data-size='md'] {
+	--tg-opt-font: var(--text-sm);
+	--tg-opt-pad: 0.4rem 0.8rem;
+}
+[data-size='lg'] {
+	--tg-opt-font: var(--text-md);
+	--tg-opt-pad: 0.5rem 1rem;
+}

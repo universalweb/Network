@@ -1,0 +1,165 @@
+:host {
+	display: contents;
+}
+.boot-screen {
+	position: fixed;
+	inset: 0;
+	z-index: 10000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--bg-dark);
+	color: var(--text-main);
+	font-family: var(--font-mono);
+	opacity: 1;
+	transition: opacity 420ms cubic-bezier(0.4, 0, 0.2, 1);
+	pointer-events: auto;
+}
+.boot-screen.is-closing {
+	opacity: 0;
+	pointer-events: none;
+}
+.bs-stage {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-6);
+	padding: var(--space-8) var(--space-7);
+	min-width: 20rem;
+	max-width: min(86vw, 440px);
+}
+/* The logo arrives as a caller-supplied HTML string in state; the framework
+   wraps that spot in a <span>. display:contents drops the wrapper box so the
+   injected <svg class="bs-mark"> is the real flex child of .bs-stage. */
+.bs-stage > span {
+	display: contents;
+}
+.bs-glow {
+	position: absolute;
+	inset-block-start: -20%;
+	inset-inline-start: 50%;
+	width: 22.5rem;
+	height: 22.5rem;
+	transform: translateX(-50%);
+	background: radial-gradient(circle, var(--cyan-glow, color-mix(in oklab, var(--teal) 32%, transparent)) 0%, transparent 64%);
+	filter: blur(40px);
+	pointer-events: none;
+	z-index: 0;
+	/* The breathing pulse lives HERE — opacity + transform only, so it runs on
+	   the compositor and never repaints the mark. This is what keeps the boot
+	   animation smooth while the main thread is busy initialising the app. */
+	will-change: opacity, transform;
+	animation: bs-glow-pulse 4s ease-in-out infinite;
+}
+.bs-mark {
+	position: relative;
+	z-index: 1;
+	width: clamp(160px, 26vw, 280px);
+	height: clamp(160px, 26vw, 280px);
+	overflow: visible;
+	/* STATIC V-halo. Previously this drop-shadow stack was animated (bs-pulse),
+	   forcing a full filter repaint of a ~360px region every frame during boot —
+	   the single most expensive thing on the splash. The breathing motion moved
+	   to the composited .bs-glow layer above; the mark now paints its halo once. */
+	filter:
+		drop-shadow(0 4px 6px rgba(0, 0, 0, 0.55))
+		drop-shadow(0 0 18px color-mix(in oklab, var(--cyan) 62%, transparent))
+		drop-shadow(0 0 34px rgba(94, 234, 212, 0.32));
+}
+.bs-leg-left,
+.bs-leg-right,
+.bs-dash {
+	transform-box: fill-box;
+}
+.bs-leg-left {
+	transform-origin: 100% 100%;
+	animation: bs-leg-left-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.bs-leg-right {
+	transform-origin: 0% 100%;
+	animation: bs-leg-right-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.bs-dash {
+	transform-origin: center;
+	animation: bs-dash-in 0.55s 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes bs-leg-left-in {
+	0% {
+		opacity: 0;
+		transform: translate(48px, -38px);
+	}
+	100% {
+		opacity: 1;
+		transform: translate(0, 0);
+	}
+}
+@keyframes bs-leg-right-in {
+	0% {
+		opacity: 0;
+		transform: translate(-48px, 38px);
+	}
+	100% {
+		opacity: 1;
+		transform: translate(0, 0);
+	}
+}
+@keyframes bs-dash-in {
+	0% {
+		opacity: 0;
+		transform: scaleX(0);
+	}
+	100% {
+		opacity: 1;
+		transform: scaleX(1);
+	}
+}
+.bs-titles {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-2);
+	text-align: center;
+}
+.bs-title {
+	font-size: var(--text-md);
+	letter-spacing: 0.28em;
+	text-transform: uppercase;
+	color: var(--text-muted, rgba(255, 255, 255, 0.7));
+}
+.bs-subtitle {
+	font-size: var(--text-xs);
+	letter-spacing: 0.32em;
+	text-transform: uppercase;
+	color: var(--text-subtle);
+}
+.boot-screen ui-loading-bar {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	max-width: 17.5rem;
+	--bar-track: var(--cyan-glow-faint, color-mix(in oklab, var(--teal) 10%, transparent));
+	--accent: var(--teal);
+	--accent-2: var(--cyan-glow-strong, color-mix(in oklab, var(--teal) 44%, transparent));
+}
+@keyframes bs-glow-pulse {
+	0%, 100% {
+		opacity: 0.7;
+		transform: translateX(-50%) scale(1);
+	}
+	50% {
+		opacity: 1;
+		transform: translateX(-50%) scale(1.1);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.bs-glow,
+	.bs-mark,
+	.bs-leg-left,
+	.bs-leg-right,
+	.bs-dash {
+		animation: none;
+	}
+}

@@ -1,0 +1,201 @@
+:host {
+	display: block;
+	position: fixed;
+	inset-block-start: 0;
+	inset-block-end: 0;
+	pointer-events: none;
+	z-index: 30;
+	/* Gap between the drawer's outer (docked) edge and the window edge so it reads
+	   as a floating panel. It exceeds the shell scroll surface's reserved ~11px
+	   scrollbar gutter (app.css `.shell-scroll`) so the panel clears the scrollbar
+	   instead of sitting on it. Folded into `--shell-closed-x` (the hide distance)
+	   so translateX still carries the panel fully off-screen past the float gap —
+	   otherwise a float-wide sliver would peek while closed. */
+	--sidebar-float: var(--space-6);
+	--shell-closed-x: calc(100% + var(--sidebar-float));
+}
+:host([data-side='right']) {
+	inset-inline-end: 0;
+}
+:host([data-side='left']) {
+	inset-inline-start: 0;
+	--shell-closed-x: calc(-100% - var(--sidebar-float));
+}
+
+/* ── FLYOUT — xl / xxl ───────────────────────────────────────────────────
+   Large screens that fit the dashboard's full max width (1536px) with room
+   beside it: a BARE flyout — no shell background, no close button, no page
+   backdrop. The slotted panel carries its own solid surface. Slides in from
+   the edge; hidden by default, shown by default only on a very wide (xxl)
+   screen. */
+:host([data-mode='flyout']) {
+	width: 0;
+	/* Below the global top bar (z-index 40): the bare flyout spans the full
+	   viewport height, so a higher z-index would swallow the top bar's
+	   toggle button. The frosted top padding clears the bar visually. */
+	z-index: 30;
+}
+
+/* ── COVER-UP — xs / sm / md / lg ────────────────────────────────────────
+   Narrower screens, where the drawer would sit over dashboard content: a
+   frosted shell + full-page frosted backdrop, with a close button and
+   drag-to-close. */
+:host([data-mode='coverup']) {
+	width: 0;
+	z-index: 60;
+}
+
+/* Edge swipe sensor — a thin off-screen strip, live only while the drawer is
+   closed, so it can be dragged in with nothing else to grab. */
+.sidebar-edge {
+	position: fixed;
+	inset-block-start: 0;
+	inset-block-end: 0;
+	width: 1.125rem;
+	pointer-events: none;
+	touch-action: none;
+	z-index: 1;
+}
+:host([data-side='right']) .sidebar-edge {
+	inset-inline-end: 0;
+}
+:host([data-side='left']) .sidebar-edge {
+	inset-inline-start: 0;
+}
+:host(:not([open])) .sidebar-edge {
+	pointer-events: auto;
+}
+
+/* Backdrop — cover-up only. Transparent + blur, never a dark scrim: the page
+   stays visible but pushed back behind frosted glass. */
+.sidebar-backdrop {
+	position: fixed;
+	inset: 0;
+	background: transparent;
+	backdrop-filter: blur(7px);
+	-webkit-backdrop-filter: blur(7px);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.28s ease;
+	z-index: -1;
+}
+:host([data-mode='flyout']) .sidebar-backdrop,
+:host([data-no-backdrop]) .sidebar-backdrop {
+	display: none;
+}
+:host([data-mode='coverup'][open]) .sidebar-backdrop {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* ── Shell — the panel container ───────────────────────────────────────── */
+.sidebar-shell {
+	position: absolute;
+	inset-block-start: 0;
+	inset-block-end: 0;
+	display: flex;
+	flex-direction: column;
+	overflow-x: hidden;
+	overflow-y: auto;
+	box-sizing: border-box;
+	pointer-events: auto;
+	padding-block-end: var(--space-12);
+	will-change: transform;
+	transform: translateX(var(--shell-closed-x));
+	transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+:host([data-side='right']) .sidebar-shell {
+	inset-inline-end: var(--sidebar-float);
+}
+:host([data-side='left']) .sidebar-shell {
+	inset-inline-start: var(--sidebar-float);
+}
+/* While dragging, JS inlines `transition: none` so the shell tracks 1:1. */
+.sidebar-shell.is-dragging {
+	transition: none;
+}
+:host([open]) .sidebar-shell {
+	transform: translateX(0);
+}
+
+/* Bare flyout shell — no background, no border, no shadow: purely a
+   positioner. The slotted panel supplies its own solid surface. The extra
+   top padding lifts the panel clear of the floating global top bar. */
+:host([data-mode='flyout']) .sidebar-shell {
+	width: 18.75rem;
+	background: transparent;
+	padding-block-start: 120px;
+}
+
+/* Cover-up shell — frosted glass: a near-transparent tint over a backdrop
+   blur, with an edge border + shadow. */
+:host([data-mode='coverup']) .sidebar-shell {
+	/* Subtract the float from the full-bleed width so the drawer still fits inside
+	   the window once it is inset off the docked edge (otherwise it would overhang
+	   the opposite edge on phones). Capped at the same max as before. */
+	width: min(calc(100dvw - var(--sidebar-float)), 26.25rem);
+	touch-action: pan-y;
+	background: var(--sidebar-shell-bg, rgba(8, 10, 16, 0.55));
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	padding-block-start: 90px;
+}
+:host([data-side='right'][data-mode='coverup']) .sidebar-shell {
+	border-inline-start: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	box-shadow: var(--sidebar-shadow-right, -8px 0 24px rgba(0, 0, 0, 0.35));
+}
+:host([data-side='left'][data-mode='coverup']) .sidebar-shell {
+	border-inline-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	box-shadow: var(--sidebar-shadow-left, 8px 0 24px rgba(0, 0, 0, 0.35));
+}
+
+/* Close button — cover-up only. The bare flyout is dismissed via the top
+   bar's toggle or a swipe; it carries no close affordance of its own. */
+.sidebar-close {
+	position: absolute;
+	inset-block-start: 12px;
+	inset-inline-end: 12px;
+	width: 2.25rem;
+	height: 2.25rem;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	border-radius: var(--radius-md);
+	color: var(--text-muted, rgba(255, 255, 255, 0.6));
+	cursor: pointer;
+	padding: 0;
+	z-index: 2;
+	transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+:host([data-side='left']) .sidebar-close {
+	inset-inline-end: auto;
+	inset-inline-start: 12px;
+}
+:host([data-mode='coverup']) .sidebar-close {
+	display: inline-flex;
+}
+:host([data-no-close]) .sidebar-close {
+	display: none;
+}
+.sidebar-close:hover {
+	color: var(--text-main);
+	border-color: var(--dark-divider, rgba(255, 255, 255, 0.18));
+	background: rgba(255, 255, 255, 0.04);
+}
+.sidebar-close:active {
+	transform: scale(0.92);
+}
+.sidebar-close:focus-visible {
+	outline: none;
+	border-color: var(--cyan);
+	box-shadow: 0 0 0 2px color-mix(in oklab, var(--cyan) 25%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+	.sidebar-shell,
+	.sidebar-backdrop,
+	.sidebar-close {
+		transition: none;
+	}
+}

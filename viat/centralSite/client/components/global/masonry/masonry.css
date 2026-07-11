@@ -1,0 +1,17 @@
+:host {
+	display: block;
+}
+.masonry {
+	/* column-count / column-width + column-gap are set inline from state. */
+	inline-size: 100%;
+}
+/* Each projected child is a self-contained tile: never split across a column
+   break, full column width, and gap-spaced below. `display: inline-block` is the
+   reliable multicol item box (block children can still fragment in some engines). */
+.masonry ::slotted(*) {
+	display: inline-block;
+	inline-size: 100%;
+	margin-block-end: var(--masonry-gap, 1rem);
+	break-inside: avoid;
+	-webkit-column-break-inside: avoid;
+}

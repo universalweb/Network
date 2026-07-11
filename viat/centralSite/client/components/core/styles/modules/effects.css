@@ -1,0 +1,211 @@
+/* uwc.util — CSS-only "wild" visual effects + hero/overlay scaffolding.
+   Pure CSS (no WebGL); ships standalone and provides the layout chrome a future
+   shader component (hero-dithering / liquid-metal — separate plan) composes with.
+   uwc-fx-* keyframes are prefixed to avoid collision. */
+@layer uwc.util {
+	/* ── Scaffolding ── */
+	.hero {
+		position: relative;
+		display: grid;
+		min-height: 60vh;
+		isolation: isolate;
+	}
+	.hero-split {
+		grid-template-columns: 1fr 1fr;
+		align-items: center;
+		gap: var(--space-9);
+	}
+	.full-bleed {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+	}
+	.overlay {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+	.backdrop {
+		position: fixed;
+		inset: 0;
+		background: rgba(7, 12, 30, 0.6);
+		z-index: var(--z-modal);
+	}
+	.blend-screen {
+		mix-blend-mode: screen;
+	}
+	.blend-overlay {
+		mix-blend-mode: overlay;
+	}
+	.blend-multiply {
+		mix-blend-mode: multiply;
+	}
+	.blend-difference {
+		mix-blend-mode: difference;
+	}
+
+	/* ── Effects ── */
+	.fx-glow {
+		box-shadow: 0 0 24px var(--cyan-glow, rgba(0, 240, 255, 0.35));
+	}
+	.fx-glow-magenta {
+		box-shadow: 0 0 24px var(--magenta-dim, rgba(255, 0, 85, 0.4));
+	}
+	.fx-text-glow {
+		text-shadow: 0 0 12px var(--cyan-glow, rgba(0, 240, 255, 0.5));
+	}
+
+	@keyframes uwc-fx-gradient-pan {
+		0% {
+			background-position: 0% 50%;
+		}
+		50% {
+			background-position: 100% 50%;
+		}
+		100% {
+			background-position: 0% 50%;
+		}
+	}
+	.fx-gradient-animate {
+		background: linear-gradient(
+			120deg,
+			var(--navy),
+			var(--teal),
+			var(--cyan),
+			var(--magenta)
+		);
+		background-size: 300% 300%;
+		animation: uwc-fx-gradient-pan 12s ease infinite;
+	}
+
+	.fx-grain::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		opacity: 0.06;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+	}
+
+	.fx-scanlines::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: repeating-linear-gradient(
+			0deg,
+			transparent 0 2px,
+			var(--cyan-scanline, rgba(0, 240, 255, 0.015)) 2px 3px
+		);
+	}
+
+	@keyframes uwc-fx-aurora {
+		0%,
+		100% {
+			transform: translate3d(-10%, -10%, 0) rotate(0deg);
+		}
+		50% {
+			transform: translate3d(10%, 10%, 0) rotate(180deg);
+		}
+	}
+	.fx-aurora {
+		position: relative;
+		overflow: hidden;
+	}
+	.fx-aurora::before {
+		content: '';
+		position: absolute;
+		inset: -40%;
+		background:
+			radial-gradient(
+				closest-side,
+				var(--cyan-glow, rgba(0, 240, 255, 0.35)),
+				transparent
+			),
+			radial-gradient(
+				closest-side,
+				var(--magenta-dim, rgba(255, 0, 85, 0.3)),
+				transparent
+			);
+		background-repeat: no-repeat;
+		background-position:
+			0 0,
+			100% 100%;
+		filter: blur(40px);
+		animation: uwc-fx-aurora 18s ease-in-out infinite;
+		pointer-events: none;
+	}
+
+	@keyframes uwc-fx-beam {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+	.fx-border-beam {
+		position: relative;
+		isolation: isolate;
+	}
+	.fx-border-beam::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		padding: 1px;
+		border-radius: inherit;
+		background: conic-gradient(
+			from 0deg,
+			transparent 70%,
+			var(--cyan, #00f0ff)
+		);
+		animation: uwc-fx-beam 4s linear infinite;
+		-webkit-mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		-webkit-mask-composite: xor;
+		mask-composite: exclude;
+		pointer-events: none;
+	}
+
+	.fx-glass {
+		background: rgba(255, 255, 255, 0.06);
+		backdrop-filter: blur(12px) saturate(1.4);
+		-webkit-backdrop-filter: blur(12px) saturate(1.4);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: var(--radius-lg);
+	}
+
+	@keyframes uwc-fx-shimmer-sweep {
+		from {
+			transform: translateX(-100%);
+		}
+		to {
+			transform: translateX(100%);
+		}
+	}
+	.fx-shimmer {
+		position: relative;
+		overflow: hidden;
+	}
+	.fx-shimmer::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(
+			100deg,
+			transparent 30%,
+			rgba(255, 255, 255, 0.18) 50%,
+			transparent 70%
+		);
+		animation: uwc-fx-shimmer-sweep 1.8s linear infinite;
+		pointer-events: none;
+	}
+}
+/* Accessibility kill-switch — unlayered + !important. */
+@media (prefers-reduced-motion: reduce) {
+	.fx-gradient-animate,
+	.fx-aurora::before,
+	.fx-border-beam::before,
+	.fx-shimmer::after {
+		animation: none !important;
+	}
+}

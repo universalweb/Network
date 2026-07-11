@@ -1,0 +1,77 @@
+/* Page chrome only — title header + the filter tabs (slotted into <paged-list>'s
+   controls slot; slotted content stays in this shadow's scope, so these rules
+   style it). The list frame + rows are owned by <paged-list>; row CSS is in
+   explorer-rows.css, injected via `.importStyles`. */
+:host {
+	display: block;
+}
+.ex-shell {
+	display: flex;
+	flex-direction: column;
+	padding: 8.75rem var(--space-4) var(--space-12) var(--space-4);
+	gap: var(--space-5);
+	box-sizing: border-box;
+	color: var(--dark-text-medium);
+	font-family: var(--font-mono, monospace);
+}
+.ex-shell > * {
+	width: 100%;
+	max-width: var(--center-max-width, 1280px);
+	margin-inline-start: auto;
+	margin-inline-end: auto;
+}
+.ex-title-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	column-gap: var(--space-5);
+	row-gap: var(--space-3);
+	padding: var(--space-4) var(--space-5);
+	background: rgba(255, 255, 255, 0.015);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-radius: var(--radius-sm);
+}
+.ex-title-block {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-3);
+	color: var(--teal);
+}
+.ex-title-icon {
+	color: var(--teal);
+}
+.ex-title {
+	font-size: var(--text-md);
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--dark-text-medium);
+}
+.ex-filters {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+}
+.ex-tab {
+	display: inline-flex;
+	align-items: center;
+	padding: var(--space-2) var(--space-3);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	background: transparent;
+	cursor: pointer;
+	text-decoration: none;
+	transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.ex-tab:hover {
+	color: var(--teal);
+	border-color: var(--teal);
+}
+.ex-tab.is-active {
+	color: var(--teal);
+	border-color: var(--teal);
+	background: color-mix(in oklab, var(--teal) 8%, transparent);
+}

@@ -1,0 +1,207 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: block;
+	/* Theme surface — every visual knob defaulted so a bare <ui-slider> looks
+	   right and a consumer can retheme without touching the shadow. */
+	--slider-track-size: 0.375rem;
+	--slider-thumb-size: 1.125rem;
+	--slider-radius: 999px;
+	--slider-fill: var(--teal);
+	--slider-track-color: var(--border-light-color, var(--dark-divider));
+	--slider-thumb-color: var(--surface-raised, var(--bg-elevated, #fff));
+	--slider-thumb-border: var(--slider-fill);
+	--slider-tick-color: var(--text-muted);
+	--slider-length: 12rem; /* the long axis when vertical */
+}
+.sl {
+	position: relative;
+}
+.sl[data-disabled] {
+	opacity: 0.55;
+	pointer-events: none;
+}
+/* ── Track: pointer surface + positioning context ─────────────────────── */
+.sl-track {
+	position: relative;
+	display: flex;
+	align-items: center;
+	inline-size: 100%;
+	block-size: var(--slider-thumb-size);
+	cursor: pointer;
+	touch-action: none; /* claim the gesture; don't let the page scroll-steal */
+}
+.sl-rail {
+	position: absolute;
+	inset-inline: 0;
+	inset-block-start: 50%;
+	translate: 0 -50%;
+	block-size: var(--slider-track-size);
+	border-radius: var(--slider-radius);
+	background: var(--slider-track-color);
+}
+.sl-fill {
+	position: absolute;
+	inset-block-start: 50%;
+	translate: 0 -50%;
+	block-size: var(--slider-track-size);
+	border-radius: var(--slider-radius);
+	background: var(--slider-fill);
+	/* Single: 0 → --val. Overridden below for range. */
+	inset-inline-start: 0;
+	inline-size: var(--val, 0%);
+}
+.sl[data-range] .sl-fill {
+	inset-inline-start: var(--lo, 0%);
+	inline-size: calc(var(--hi, 0%) - var(--lo, 0%));
+}
+/* ── Thumb ────────────────────────────────────────────────────────────── */
+.sl-thumb {
+	position: absolute;
+	inset-block-start: 50%;
+	inline-size: var(--slider-thumb-size);
+	block-size: var(--slider-thumb-size);
+	margin: 0;
+	padding: 0;
+	border: 2px solid var(--slider-thumb-border);
+	border-radius: 50%;
+	background: var(--slider-thumb-color);
+	box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+	cursor: grab;
+	translate: -50% -50%;
+	transition: box-shadow var(--dur-fast, 0.15s) var(--ease-out, ease);
+}
+/* Single thumb tracks --val; in range mode the main thumb is the low one. */
+.sl-thumb {
+	inset-inline-start: var(--val, 0%);
+}
+.sl[data-range] .sl-thumb {
+	inset-inline-start: var(--lo, 0%);
+}
+.sl[data-range] .sl-thumb-high {
+	inset-inline-start: var(--hi, 0%);
+}
+.sl-thumb:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 4px color-mix(in oklab, var(--slider-fill) 30%, transparent);
+}
+.sl[data-dragging] .sl-thumb {
+	cursor: grabbing;
+}
+/* ── Value bubble ─────────────────────────────────────────────────────── */
+.sl-bubble {
+	position: absolute;
+	inset-block-end: calc(100% + var(--space-2, 0.5rem));
+	inset-inline-start: 50%;
+	translate: -50% 0;
+	padding: var(--space-1, 0.25rem) var(--space-2, 0.5rem);
+	border-radius: var(--radius-sm, 0.25rem);
+	background: var(--slider-fill);
+	color: #fff;
+	font-size: 0.75rem;
+	line-height: 1;
+	white-space: nowrap;
+	pointer-events: none;
+	opacity: 0;
+	scale: 0.85;
+	transform-origin: bottom center;
+	transition:
+		opacity var(--dur-fast, 0.15s) var(--ease-out, ease),
+		scale var(--dur-fast, 0.15s) var(--ease-out, ease);
+}
+/* 'auto' reveals on hover / keyboard focus / active drag; 'always' pins it. */
+.sl[data-label='auto'] .sl-thumb:hover .sl-bubble,
+.sl[data-label='auto'] .sl-thumb:focus-visible .sl-bubble,
+.sl[data-label='auto'][data-dragging] .sl-thumb .sl-bubble,
+.sl[data-label='always'] .sl-bubble {
+	opacity: 1;
+	scale: 1;
+}
+.sl[data-label='off'] .sl-bubble {
+	display: none;
+}
+/* ── Marks ────────────────────────────────────────────────────────────── */
+.sl-mark {
+	position: absolute;
+	inset-block-start: 50%;
+	inset-inline-start: var(--pos, 0%);
+	inline-size: 0.25rem;
+	block-size: 0.25rem;
+	border-radius: 50%;
+	background: var(--slider-tick-color);
+	translate: -50% -50%;
+	pointer-events: none;
+}
+.sl-mark-label {
+	position: absolute;
+	inset-block-start: calc(100% + var(--space-1, 0.25rem));
+	inset-inline-start: 50%;
+	translate: -50% 0;
+	font-size: 0.6875rem;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+/* ── Vertical ─────────────────────────────────────────────────────────── */
+.sl[data-orientation='vertical'] .sl-track {
+	flex-direction: column;
+	justify-content: center;
+	inline-size: var(--slider-thumb-size);
+	block-size: var(--slider-length);
+}
+.sl[data-orientation='vertical'] .sl-rail {
+	inset-inline: auto;
+	inset-inline-start: 50%;
+	inset-block: 0;
+	translate: -50% 0;
+	inline-size: var(--slider-track-size);
+	block-size: auto;
+}
+.sl[data-orientation='vertical'] .sl-fill {
+	inset-inline-start: 50%;
+	translate: -50% 0;
+	inline-size: var(--slider-track-size);
+	/* Value grows UP from the bottom. */
+	inset-block-end: 0;
+	inset-block-start: auto;
+	block-size: var(--val, 0%);
+}
+.sl[data-orientation='vertical'][data-range] .sl-fill {
+	inset-block-end: var(--lo, 0%);
+	block-size: calc(var(--hi, 0%) - var(--lo, 0%));
+}
+.sl[data-orientation='vertical'] .sl-thumb {
+	inset-block-start: auto;
+	inset-inline-start: 50%;
+	inset-block-end: var(--val, 0%);
+	translate: -50% 50%;
+}
+.sl[data-orientation='vertical'][data-range] .sl-thumb {
+	inset-block-end: var(--lo, 0%);
+}
+.sl[data-orientation='vertical'][data-range] .sl-thumb-high {
+	inset-block-end: var(--hi, 0%);
+}
+.sl[data-orientation='vertical'] .sl-bubble {
+	inset-block-end: 50%;
+	inset-inline-start: calc(100% + var(--space-2, 0.5rem));
+	translate: 0 50%;
+	transform-origin: center left;
+}
+.sl[data-orientation='vertical'] .sl-mark {
+	inset-block-start: auto;
+	inset-inline-start: 50%;
+	inset-block-end: var(--pos, 0%);
+	translate: -50% 50%;
+}
+.sl[data-orientation='vertical'] .sl-mark-label {
+	inset-block-start: 50%;
+	inset-inline-start: calc(100% + var(--space-1, 0.25rem));
+	translate: 0 -50%;
+}
+@media (prefers-reduced-motion: reduce) {
+	.sl-thumb,
+	.sl-bubble {
+		transition: none;
+	}
+}

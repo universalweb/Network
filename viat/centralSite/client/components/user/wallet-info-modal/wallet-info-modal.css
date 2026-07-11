@@ -1,0 +1,46 @@
+:host {
+	display: contents;
+}
+/* head/copy/code come from the shared `modal-chrome.css`; the section
+   heading (`.info-section`) and click-to-expand figure are bespoke here. */
+.wi-figure {
+	margin: var(--space-4) 0 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-3);
+}
+.wi-img {
+	max-width: 100%;
+	max-height: calc(100svh - 320px);
+	height: auto;
+	border-radius: var(--radius-md);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	background: transparent;
+	cursor: zoom-in;
+	display: block;
+	transition: max-width 0.32s ease, max-height 0.32s ease, border-color 0.18s ease;
+}
+.modal-shell[data-expanded] .wi-img {
+	cursor: zoom-out;
+	max-width: 100%;
+	max-height: none;
+}
+.wi-img:hover {
+	border-color: var(--input-hover-border, color-mix(in oklab, var(--teal) 44%, transparent));
+}
+.wi-caption {
+	font-size: var(--text-2xs);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--text-muted, rgba(255, 255, 255, 0.45));
+}
+
+.info-section {
+	margin: var(--space-3) 0 0;
+	font-size: var(--text-xs);
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--cyan, var(--popup-text));
+	font-weight: var(--weight-semibold);
+}

@@ -1,0 +1,113 @@
+:host {
+	display: block;
+	flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   VERBOSE OUTPUT / ACTIVITY LOG PANEL
+══════════════════════════════════════════════════════ */
+.output-panel {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	background: var(--bg-dark);
+	min-height: 21.875rem;
+	border-radius: var(--radius);
+	border: var(--panel-border, var(--border-light));
+	box-shadow: var(--panel-shadow);
+	transition:
+		border-color 0.25s,
+		box-shadow 0.25s;
+}
+
+.output-panel:hover {
+	border-color: var(--panel-hover-border);
+	box-shadow: var(--panel-hover-shadow);
+}
+
+.output-panel .panel-header {
+	background: var(--dark-highlight);
+	border-block-end: 1px solid var(--dark-divider);
+	color: var(--dark-heading);
+}
+
+/* Tab strip — uses the core <ui-tabs> component now; no bespoke styling
+   needed here. Just a thin separator so the strip reads as part of the
+   panel's header band. */
+.output-tabs-strip {
+	display: block;
+	flex-shrink: 0;
+	border-block-end: 1px solid var(--dark-divider);
+}
+
+.output-feed {
+	flex: 1;
+	min-height: 0;
+	/* Content-height: the feed grows with its entries and the page scrolls
+	   (document scroll). overflow-y stays as a dormant fallback for any layout
+	   that later bounds the panel; it does not cap the height here. */
+	overflow-y: auto;
+	padding: var(--space-4) var(--space-4);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	position: relative;
+}
+
+/* Empty / loading / error message when no entries pass the active tab filter. */
+.log-empty {
+	padding: var(--space-5) var(--space-4);
+	text-align: center;
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+	font-size: var(--text-sm);
+	letter-spacing: 0.08em;
+}
+
+/* LOAD MORE action; the controller hides the button at exhaustion → collapse
+   the bar so no empty gap trails the feed. */
+.log-loadmore-bar {
+	display: flex;
+	justify-content: center;
+	padding-block-start: var(--space-2);
+}
+.log-loadmore-bar:not(:has(.log-loadmore:not([hidden]))) {
+	display: none;
+}
+.log-btn {
+	background: transparent;
+	color: var(--dark-text-medium);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.16));
+	padding: var(--space-2) var(--space-4);
+	font-family: var(--font-mono, monospace);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: border-color 0.15s ease, color 0.15s ease;
+}
+.log-btn:hover:not(:disabled) {
+	border-color: var(--teal);
+	color: var(--teal);
+}
+.log-btn:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+}
+
+/* CRT scanline overlay — purely cosmetic. `pointer-events: none` is
+   load-bearing: without it the pseudo-element sits over every log entry
+   and steals every click, leaving the tx-hash + counterparty links
+   inert and the panel's `cursor: crosshair` showing through. */
+.output-feed::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: repeating-linear-gradient(
+		transparent,
+		transparent 3px,
+		var(--cyan-scanline) 3px,
+		var(--cyan-scanline) 4px
+	);
+}
+

@@ -1,0 +1,13 @@
+/* <ui-select> shell only. The inner <select> inherits its full look — base
+   styling, focus ring, and the base-select picker theming — from the universal
+   elements-forms.css adopted into every shadow root, driven by the --select-*
+   tokens (which inherit across the shadow boundary, so a consumer retints by
+   setting them on the <ui-select> element). Nothing to restyle here; just let
+   the control fill the host so layout utilities on <ui-select> size it. */
+:host {
+	display: inline-flex;
+	min-inline-size: 0;
+}
+select {
+	inline-size: 100%;
+}

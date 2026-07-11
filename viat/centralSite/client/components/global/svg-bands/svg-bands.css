@@ -1,0 +1,38 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	block-size: var(--band-height, 1.5rem);
+}
+.band {
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+	overflow: visible;
+	--viz: var(--cyan);
+}
+/* tone sets the silhouette color via data-tone (sets --viz, not `color`, so no
+   collision); `current` inherits the surrounding text color per the divider's
+   stroke=currentColor intent. */
+[data-tone='accent']  { --viz: var(--cyan); }
+[data-tone='success'] { --viz: var(--color-success); }
+[data-tone='warning'] { --viz: var(--color-warning); }
+[data-tone='danger']  { --viz: var(--color-danger); }
+[data-tone='info']    { --viz: var(--color-info); }
+[data-tone='neutral'] { --viz: var(--text-muted); }
+[data-tone='current'] { --viz: currentColor; }
+/* flip mirrors the band so the same shape can cap a section's top edge. */
+[data-flip='true'] {
+	transform: scaleY(-1);
+}
+.band-path {
+	fill: none;
+	stroke: var(--viz);
+	stroke-width: var(--band-stroke, 2);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	vector-effect: non-scaling-stroke;
+}
+[data-fill='true'] .band-path {
+	fill: var(--viz);
+	stroke: none;
+}

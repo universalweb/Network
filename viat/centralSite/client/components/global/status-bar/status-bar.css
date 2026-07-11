@@ -1,0 +1,31 @@
+:host {
+	display: block;
+	position: fixed;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
+	inset-block-end: 0;
+	z-index: 40;
+	box-sizing: border-box;
+	overflow: hidden;
+	background: var(--status-bar-bg, var(--bg-dark));
+	/* Frosted glass over the content scrolling behind, matching the top bar / modal
+	   window bar. No-op where `--status-bar-bg` is opaque (other themes), so it only
+	   reads once the bg is translucent. */
+	backdrop-filter: var(--status-bar-backdrop, blur(0.625rem) saturate(1.2));
+	-webkit-backdrop-filter: var(--status-bar-backdrop, blur(0.625rem) saturate(1.2));
+	border-block-start: 1px solid var(--status-bar-border, var(--dark-divider));
+}
+.status-bar {
+	--bar-height: var(--status-bar-height, 40px);
+	--bar-padding: 0 var(--space-5);
+	--bar-gap: var(--space-3);
+}
+.status-cells {
+	display: flex;
+	align-items: center;
+	height: 100%;
+}
+/* `dividers:false` → kill the inherited separator the cells draw. */
+.status-cells[data-flat] {
+	--status-cell-divider: none;
+}

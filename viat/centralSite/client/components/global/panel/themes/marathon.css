@@ -1,0 +1,68 @@
+/*
+ * Marathon — panel RULE overrides, adopted into the panel shadow by theme.
+ * Tokens live in styles/themes/marathon.css. Unlayered so it wins over base
+ * panel.css. The most decorated theme: gradient header rail + corner brackets.
+ */
+.panel-header {
+	position: relative;
+	font-family: var(--font-display);
+	font-weight: 700;
+	background: linear-gradient(
+		180deg,
+		rgba(255, 21, 128, 0.10) 0%,
+		rgba(43, 127, 255, 0.04) 100%
+	) !important;
+	border-inline-start: none !important;
+	box-shadow: none;
+}
+.panel-header::before {
+	content: '';
+	position: absolute;
+	inset: 0 0 auto 0;
+	height: 2px;
+	background: linear-gradient(
+		90deg,
+		var(--teal) 0%,
+		rgba(43, 127, 255, 0.60) 60%,
+		transparent 100%
+	);
+	box-shadow: 0 0 10px rgba(255, 21, 128, 0.55);
+}
+.panel-header::after {
+	content: '';
+	position: absolute;
+	inset: auto 0 0 0;
+	height: 1px;
+	background: rgba(43, 127, 255, 0.12);
+}
+.ph-dot {
+	display: block;
+	width: 5px;
+	height: 5px;
+	border-radius: 0;
+	background: var(--teal);
+	box-shadow: var(--ph-dot-shadow);
+}
+.panel {
+	position: relative;
+}
+.panel::before,
+.panel::after {
+	content: '';
+	position: absolute;
+	width: 8px;
+	height: 8px;
+	opacity: 0.40;
+}
+.panel::before {
+	inset-block-start: 0;
+	inset-inline-start: 0;
+	border-block-start: 1px solid var(--teal);
+	border-inline-start: 1px solid var(--teal);
+}
+.panel::after {
+	inset-block-end: 0;
+	inset-inline-end: 0;
+	border-block-end: 1px solid var(--teal);
+	border-inline-end: 1px solid var(--teal);
+}

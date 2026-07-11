@@ -1,0 +1,91 @@
+:host {
+	display: block;
+	width: 100%;
+}
+.field-shell {
+	align-items: center;
+	background: var(--input-bg, rgba(255, 255, 255, 0.04));
+	border: 1px solid var(--input-border, rgba(255, 255, 255, 0.12));
+	border-radius: var(--radius-md, 8px);
+	box-sizing: border-box;
+	color: inherit;
+	display: flex;
+	gap: 0.45rem;
+	min-width: 0;
+	padding: 0 0.7rem;
+	transition:
+		background 0.18s ease,
+		border-color 0.18s ease,
+		box-shadow 0.18s ease;
+}
+.field-shell:hover:not([data-disabled]) {
+	background: var(--input-bg-hover, rgba(255, 255, 255, 0.06));
+	border-color: var(--input-border-hover, rgba(255, 255, 255, 0.2));
+}
+.field-shell:focus-within {
+	background: var(--input-bg-focus, rgba(255, 255, 255, 0.07));
+	border-color: var(--focus-ring-color, var(--teal));
+	box-shadow: 0 0 0 3px var(--focus-ring-glow, rgba(94, 234, 212, 0.18));
+}
+/* Sizes — data-size attribute, not a `size-*` class. */
+[data-size='sm'] { font-size: var(--text-sm);  min-height: 1.75rem; padding: 0 0.55rem; }
+[data-size='md'] { font-size: var(--text-md); min-height: 2.125rem; padding: 0 0.7rem; }
+[data-size='lg'] { font-size: var(--text-lg);  min-height: 2.5rem; padding: 0 0.9rem; }
+/* Tones — data-tone attribute (immune to the uwc.util `.tone-*` text override). */
+.field-shell[data-tone='error'] {
+	border-color: var(--color-danger);
+}
+.field-shell[data-tone='error']:focus-within {
+	border-color: var(--color-danger);
+	box-shadow: 0 0 0 3px var(--input-error-glow, rgba(239, 68, 68, 0.22));
+}
+/* States */
+[data-disabled] {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+[data-readonly] {
+	background: var(--input-bg-readonly, rgba(255, 255, 255, 0.02));
+}
+/* Slots */
+.field-leading,
+.field-trailing {
+	display: inline-flex;
+	align-items: center;
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+	flex: 0 0 auto;
+	line-height: 1;
+}
+.field-leading:empty,
+.field-trailing:empty {
+	display: none;
+}
+/* The actual input. The .field-shell owns the focus ring (:focus-within draws
+   it around the WHOLE control), so the inner input fully opts out of the base
+   uwc.base `input:focus-visible` treatment — not just the outline but also its
+   box-shadow ring, which would otherwise paint a second ring INSET inside the
+   shell. This rule is uwc.components, so it beats uwc.base by layer order. */
+.field-control {
+	appearance: none;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+	color: inherit;
+	flex: 1 1 auto;
+	font: inherit;
+	line-height: 1.4;
+	margin: 0;
+	min-width: 0;
+	outline: 0;
+	padding: 0.4rem 0;
+	width: 100%;
+}
+.field-control::placeholder {
+	color: var(--text-subtle);
+}
+.field-control:disabled {
+	cursor: not-allowed;
+}
+@media (prefers-reduced-motion: reduce) {
+	.field-shell { transition: none; }
+}

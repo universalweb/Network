@@ -1,0 +1,14 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: inline-flex;
+	flex: 0 0 auto;
+	box-sizing: border-box;
+}
+:host(:hover) {
+	--ui-icon-anim-state: ;
+}
+ui-icon {
+	pointer-events: none;
+}

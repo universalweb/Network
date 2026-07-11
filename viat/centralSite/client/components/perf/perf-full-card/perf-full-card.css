@@ -1,0 +1,98 @@
+:host {
+	display: block;
+	margin: 6px 0;
+	background: rgba(255, 255, 255, 0.025);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 6px;
+	color: rgba(255, 255, 255, 0.9);
+	font-family: 'JetBrains Mono', ui-monospace, monospace;
+	font-size: 11px;
+	overflow: hidden;
+}
+.card {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 6px;
+	padding: 8px 10px;
+}
+.head {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+}
+.title {
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.95);
+}
+.badge {
+	padding: 1px 7px;
+	border-radius: 999px;
+	font-size: 9px;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+.badge.even {
+	background: rgba(99, 102, 241, 0.16);
+	color: #a5b4fc;
+}
+.badge.odd {
+	background: rgba(244, 114, 182, 0.12);
+	color: #f9a8d4;
+}
+.body {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 4px 10px;
+	font-variant-numeric: tabular-nums;
+}
+.field {
+	display: flex;
+	flex-direction: column;
+}
+.field .k {
+	color: rgba(255, 255, 255, 0.4);
+	font-size: 9px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+.field .v {
+	color: rgba(255, 255, 255, 0.92);
+}
+.field .v.accent {
+	color: #6366f1;
+}
+.actions {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+.actions button {
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	background: rgba(255, 255, 255, 0.03);
+	color: rgba(255, 255, 255, 0.85);
+	border-radius: 4px;
+	padding: 3px 8px;
+	font-family: inherit;
+	font-size: 10px;
+	cursor: pointer;
+}
+.actions button:hover {
+	background: rgba(255, 255, 255, 0.07);
+}
+.actions input {
+	flex: 1;
+	background: rgba(0, 0, 0, 0.25);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 4px;
+	color: rgba(255, 255, 255, 0.92);
+	font-family: inherit;
+	font-size: 10px;
+	padding: 3px 6px;
+}
+.meta {
+	display: flex;
+	justify-content: space-between;
+	color: rgba(255, 255, 255, 0.35);
+	font-size: 9px;
+}

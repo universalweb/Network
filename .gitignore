@@ -85,7 +85,23 @@ tigerbeetle/*
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-prototype*.html
-
 /data/
 viat/neural/
+.github/agents/*
+.github/hooks/*
+.github/copilot-instructions.md
+.agents/*
+agent/types/*
+.remember/*
+.claude/*
+.playwright/*
+.playwright-mcp/*
+*.png
+*.private.md
+.CLAUDE.MD.swp
+test.js
+.engram/
+.installation0/
+reverted-files.txt
+session-*-changes.md
+*.test.js

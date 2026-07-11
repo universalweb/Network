@@ -1,0 +1,199 @@
+:host {
+	display: block;
+	inline-size: 15rem;
+}
+.cp {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-3);
+	border: 1px solid var(--dark-divider);
+	border-radius: var(--radius-lg);
+	background: var(--bg-panel);
+	font-family: var(--font-mono, monospace);
+	/* One diagonal tile, laid twice with an offset = the transparency checkerboard
+	   behind the alpha dial + preview swatch (theme-independent, like the
+	   white/black SV gradients below). */
+	--cp-checker: linear-gradient(45deg, rgba(0, 0, 0, 0.22) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.22) 75%);
+}
+.cp-square {
+	position: relative;
+	inline-size: 100%;
+	block-size: 9rem;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+	cursor: crosshair;
+	touch-action: none;
+}
+.cp-sat,
+.cp-light {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+.cp-sat {
+	background: linear-gradient(to right, #fff, transparent);
+}
+.cp-light {
+	background: linear-gradient(to bottom, transparent, #000);
+}
+.cp-cursor {
+	position: absolute;
+	inline-size: 0.875rem;
+	block-size: 0.875rem;
+	border-radius: 50%;
+	border: 2px solid #fff;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+}
+.cp-controls {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+.cp-preview {
+	flex: none;
+	inline-size: 2.25rem;
+	block-size: 2.25rem;
+	border-radius: var(--radius-xs);
+	border: 1px solid var(--dark-divider);
+	/* Lay the (possibly translucent) colour over the checkerboard so alpha shows. */
+	background-color: #fff;
+	background-image:
+		linear-gradient(var(--cp-color, #fff), var(--cp-color, #fff)),
+		var(--cp-checker), var(--cp-checker);
+	background-size: auto, 0.6rem 0.6rem, 0.6rem 0.6rem;
+	background-position: 0 0, 0 0, 0.3rem 0.3rem;
+}
+.cp-dials {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+.cp-hue,
+.cp-alpha {
+	-webkit-appearance: none;
+	appearance: none;
+	inline-size: 100%;
+	block-size: 0.75rem;
+	border-radius: 999px;
+	cursor: pointer;
+}
+.cp-hue {
+	background: linear-gradient(
+		to right,
+		hsl(0, 100%, 50%), hsl(60, 100%, 50%), hsl(120, 100%, 50%),
+		hsl(180, 100%, 50%), hsl(240, 100%, 50%), hsl(300, 100%, 50%), hsl(360, 100%, 50%)
+	);
+}
+.cp-alpha {
+	/* Transparent → opaque current colour, over the same checkerboard. */
+	background-color: #fff;
+	background-image:
+		linear-gradient(to right, transparent, var(--cp-alpha-color, #fff)),
+		var(--cp-checker), var(--cp-checker);
+	background-size: auto, 0.6rem 0.6rem, 0.6rem 0.6rem;
+	background-position: 0 0, 0 0, 0.3rem 0.3rem;
+}
+.cp-hue::-webkit-slider-thumb,
+.cp-alpha::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	inline-size: 1rem;
+	block-size: 1rem;
+	border-radius: 50%;
+	background: #fff;
+	border: 2px solid rgba(0, 0, 0, 0.35);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+	cursor: pointer;
+}
+.cp-hue::-moz-range-thumb,
+.cp-alpha::-moz-range-thumb {
+	inline-size: 1rem;
+	block-size: 1rem;
+	border-radius: 50%;
+	background: #fff;
+	border: 2px solid rgba(0, 0, 0, 0.35);
+	cursor: pointer;
+}
+.cp-value {
+	display: flex;
+	align-items: stretch;
+	gap: var(--space-2);
+}
+.cp-input {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	padding: var(--space-2);
+	border: 1px solid var(--dark-divider);
+	border-radius: var(--radius-xs);
+	background: var(--bg-dark);
+	color: var(--text-main);
+	font: inherit;
+	text-transform: uppercase;
+}
+.cp-input:focus-visible {
+	outline: 2px solid var(--teal);
+	outline-offset: 1px;
+}
+.cp-format {
+	flex: none;
+	-webkit-appearance: none;
+	appearance: none;
+	padding-block: var(--space-2);
+	/* Right padding clears the caret below. */
+	padding-inline: var(--space-2) var(--space-6);
+	border: 1px solid var(--dark-divider);
+	border-radius: var(--radius-xs);
+	background-color: var(--bg-dark);
+	/* Chevron caret (the native one is hidden by appearance:none). Muted stroke,
+	   baked-in like the checkerboard above — a data-URI asset, not a theme token. */
+	background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2012%2012'%3E%3Cpath%20d='M2.5%204.5%206%208l3.5-3.5'%20fill='none'%20stroke='%2399a3b3'%20stroke-width='1.4'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right var(--space-2) center;
+	background-size: 0.7rem;
+	color: var(--text-muted);
+	font: inherit;
+	font-size: var(--text-xs);
+	letter-spacing: 0.04em;
+	cursor: pointer;
+	transition:
+		color var(--dur-fast) var(--ease-out, ease),
+		border-color var(--dur-fast) var(--ease-out, ease);
+}
+.cp-format:hover {
+	color: var(--text-main);
+	border-color: var(--teal);
+}
+.cp-format:focus-visible {
+	outline: 2px solid var(--teal);
+	outline-offset: 1px;
+}
+.cp-presets {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: var(--space-2);
+}
+.cp-swatch {
+	aspect-ratio: 1;
+	padding: 0;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	border-radius: var(--radius-xs);
+	cursor: pointer;
+	transition: transform var(--dur-fast) var(--ease-spring);
+}
+.cp-swatch:hover {
+	transform: scale(1.12);
+}
+.cp-swatch[data-on] {
+	outline: 2px solid #fff;
+	outline-offset: 1px;
+}
+@media (prefers-reduced-motion: reduce) {
+	.cp-swatch,
+	.cp-format {
+		transition: none;
+	}
+}

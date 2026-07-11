@@ -1,0 +1,67 @@
+:host {
+	display: inline-flex;
+	flex: 0 0 auto;
+}
+.spinner {
+	align-items: center;
+	display: inline-flex;
+	gap: 0.5rem;
+	color: var(--accent, #6366f1);
+}
+.spinner-svg {
+	animation: spinner-rotate 1.1s linear infinite;
+	display: block;
+}
+[data-size='sm'] .spinner-svg { width: 0.875rem; height: 0.875rem; }
+[data-size='md'] .spinner-svg { width: 1.375rem; height: 1.375rem; }
+[data-size='lg'] .spinner-svg { width: 2.25rem; height: 2.25rem; }
+[data-size='xl'] .spinner-svg { width: 3.5rem; height: 3.5rem; }
+.spinner-track {
+	stroke: currentColor;
+	stroke-width: 4;
+	opacity: 0.18;
+}
+.spinner-arc {
+	stroke: currentColor;
+	stroke-width: 4;
+	stroke-linecap: round;
+	stroke-dasharray: 90 150;
+	stroke-dashoffset: 0;
+	animation: spinner-dash 1.4s ease-in-out infinite;
+}
+[data-variant='bars'] .spinner-svg { display: none; }
+[data-variant='bars']::before {
+	content: '';
+	display: inline-block;
+	width: 1.4em;
+	height: 0.6em;
+	background:
+		linear-gradient(currentColor 0 0) 0 50%/0.25em 100% no-repeat,
+		linear-gradient(currentColor 0 0) 50% 50%/0.25em 100% no-repeat,
+		linear-gradient(currentColor 0 0) 100% 50%/0.25em 100% no-repeat;
+	animation: spinner-bars 0.9s linear infinite;
+}
+.spinner-label {
+	color: var(--text-muted, currentColor);
+	font-size: 0.85em;
+	letter-spacing: 0.04em;
+}
+@keyframes spinner-rotate {
+	100% { transform: rotate(360deg); }
+}
+@keyframes spinner-dash {
+	0% { stroke-dasharray: 1 150; stroke-dashoffset: 0; }
+	50% { stroke-dasharray: 90 150; stroke-dashoffset: -28; }
+	100% { stroke-dasharray: 90 150; stroke-dashoffset: -118; }
+}
+@keyframes spinner-bars {
+	0%, 100% { background-size: 0.25em 100%, 0.25em 60%, 0.25em 80%; }
+	50% { background-size: 0.25em 60%, 0.25em 100%, 0.25em 60%; }
+}
+/* Standing law: gate motion. A spinner must still signal "working", so slow
+   the animations for reduced-motion users rather than freezing them. */
+@media (prefers-reduced-motion: reduce) {
+	.spinner-svg { animation-duration: 2.4s; }
+	.spinner-arc { animation-duration: 2.8s; }
+	[data-variant='bars']::before { animation-duration: 1.8s; }
+}

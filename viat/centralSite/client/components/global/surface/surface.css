@@ -1,0 +1,73 @@
+/*
+	Tones/padding/radius/elevation ride as data-* ATTRIBUTES on the inner `.sf`
+	div. An attribute selector cannot be matched by the global classless UTILITIES
+	in `uwc.util` (`.surface`, `.tone-*`, …) — so the component's styling is fully
+	self-owned WITHOUT the old `sf-` class-name workaround. (util's own
+	`[data-tone]` rules set only `--tone-fill`, which this component never reads,
+	so they don't conflict with the `background` set here.)
+*/
+:host {
+	display: block;
+	box-sizing: border-box;
+}
+.sf {
+	box-sizing: border-box;
+	color: inherit;
+	transition:
+		background 0.2s ease,
+		border-color 0.2s ease,
+		box-shadow 0.28s ease,
+		transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Tones — mapped to theme tokens (color-mix tints over the panel) so they read
+   distinctly under every theme, never hard-coded colors. */
+[data-tone='transparent'] { background: transparent; }
+[data-tone='neutral']     { background: color-mix(in oklab, var(--bg-panel) 92%, var(--cyan) 8%); }
+[data-tone='subtle']      { background: var(--bg-body); }
+[data-tone='panel']       { background: var(--bg-panel); }
+[data-tone='popup']       { background: var(--popup-bg, var(--bg-panel)); }
+[data-tone='inverse']     { background: var(--text-primary, #f5f6fa); color: var(--bg-body, #0b0d14); }
+[data-tone='success']     { background: color-mix(in oklab, var(--color-success) 12%, var(--bg-panel)); }
+[data-tone='warning']     { background: color-mix(in oklab, var(--color-warning) 12%, var(--bg-panel)); }
+[data-tone='danger']      { background: color-mix(in oklab, var(--color-danger) 12%, var(--bg-panel)); }
+[data-tone='info']        { background: color-mix(in oklab, var(--color-info) 12%, var(--bg-panel)); }
+[data-tone='accent']      { background: color-mix(in oklab, var(--cyan) 12%, var(--bg-panel)); }
+/* Padding */
+[data-pad='none'] { padding: 0; }
+[data-pad='xs']   { padding: 0.25rem; }
+[data-pad='sm']   { padding: 0.5rem; }
+[data-pad='md']   { padding: 0.875rem; }
+[data-pad='lg']   { padding: 1.25rem; }
+[data-pad='xl']   { padding: 1.75rem; }
+/* Radius */
+[data-radius='none'] { border-radius: 0; }
+[data-radius='sm']   { border-radius: var(--radius-sm, 0.25rem); }
+[data-radius='md']   { border-radius: var(--radius-md, 0.5rem); }
+[data-radius='lg']   { border-radius: var(--radius-lg, 0.75rem); }
+[data-radius='xl']   { border-radius: var(--radius-xl, 1.125rem); }
+[data-radius='full'] { border-radius: 999px; }
+/* Border */
+[data-border] { border: 1px solid var(--surface-border, var(--dark-divider, rgba(255, 255, 255, 0.08))); }
+/* Elevation — themable scale; flat themes swap depth for hairline rings. */
+[data-elev='0'] { box-shadow: none; }
+[data-elev='1'] { box-shadow: var(--elev-1, 0 2px 6px rgba(0, 0, 0, 0.18)); }
+[data-elev='2'] { box-shadow: var(--elev-2, 0 6px 16px rgba(0, 0, 0, 0.28)); }
+[data-elev='3'] { box-shadow: var(--elev-3, 0 14px 36px rgba(0, 0, 0, 0.38)); }
+/* Interactive */
+[data-interactive] { cursor: pointer; }
+[data-interactive]:hover {
+	transform: translateY(-1px);
+	box-shadow: var(--elev-hover, 0 8px 22px rgba(0, 0, 0, 0.32));
+}
+[data-interactive]:active {
+	transform: translateY(0);
+	transition-duration: 0.08s;
+}
+@media (prefers-reduced-motion: reduce) {
+	.sf,
+	[data-interactive]:hover,
+	[data-interactive]:active {
+		transform: none;
+		transition: none;
+	}
+}

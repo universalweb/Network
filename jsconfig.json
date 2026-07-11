@@ -1,9 +1,18 @@
 {
-	"allowJs": true,
-	"checkJs": true,
-	"noImplicitAny": true,
 	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": false,
+		"noImplicitAny": false,
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"target": "ESNext",
+		"strict": true,
+		"strictNullChecks": true,
+		"experimentalDecorators": false,
 		"paths": {
+			"webcomponent": [
+				"./viat/centralSite/client/components/core/index.js"
+			],
 			"#certificate": [
 				"./udsp/certificate/index.js"
 			],
@@ -94,13 +103,7 @@
 			"#watch": [
 				"./utilities/watch.js"
 			]
-		},
-		"module": "NodeNext",
-		"moduleResolution": "NodeNext",
-		"target": "ESNext",
-		"jsx": "react",
-		"strictNullChecks": true,
-		"experimentalDecorators": true
+		}
 	},
 	"exclude": [
 		"**/build/*",

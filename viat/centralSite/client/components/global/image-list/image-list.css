@@ -1,0 +1,13 @@
+:host {
+	display: block;
+}
+.image-list {
+	display: grid;
+	inline-size: 100%;
+}
+/* Each cell is a ui-image-cell host; the radius clips its shadow content (the host
+   sets overflow:hidden), so a corner value belongs on the host, not an inner node. */
+.image-list[data-radius='none'] ui-image-cell { border-radius: 0; }
+.image-list[data-radius='sm'] ui-image-cell { border-radius: var(--radius-sm, 0.25rem); }
+.image-list[data-radius='md'] ui-image-cell { border-radius: var(--radius-md, 0.5rem); }
+.image-list[data-radius='lg'] ui-image-cell { border-radius: var(--radius-lg, 0.75rem); }

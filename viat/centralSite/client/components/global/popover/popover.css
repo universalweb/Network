@@ -1,0 +1,121 @@
+:host {
+	display: inline-block;
+}
+.pp-trigger {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-3);
+	background: var(--bg-dark, color-mix(in oklab, var(--popup-bg) 80%, black));
+	border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
+	border-radius: var(--radius-md);
+	color: var(--text-main);
+	font-family: var(--font-mono, 'JetBrains Mono', monospace);
+	font-size: var(--text-xs);
+	letter-spacing: 0.04em;
+	cursor: pointer;
+	transition:
+		transform var(--dur-fast) var(--ease-spring-subtle),
+		border-color var(--dur-fast) ease,
+		color var(--dur-fast) ease;
+}
+.pp-trigger:hover {
+	transform: scale(1.05);
+	border-color: var(--teal);
+	color: var(--teal);
+}
+.pp-trigger:active {
+	transform: scale(0.95);
+}
+.pp-trigger:focus-visible {
+	outline: none;
+	border-color: var(--focus-ring-color, var(--cyan));
+	box-shadow: 0 0 0 2px color-mix(in oklab, var(--focus-ring-color, var(--cyan)) 45%, transparent);
+}
+/* Overlay: fixed viewport layer (in-shadow, not portaled). */
+.pp-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-floating, 900);
+	pointer-events: none;
+	visibility: hidden;
+}
+.pp-overlay[data-open] {
+	pointer-events: auto;
+	visibility: visible;
+}
+/* Transparent click-catcher — a popover dismisses on outside click but must NOT dim
+   the page (that's the floating-panel's job). */
+.pp-backdrop {
+	position: absolute;
+	inset: 0;
+}
+.pp-surface {
+	position: absolute;
+	/* Gap is baked into the JS anchor (MorphSurface.anchorGap) so flip puts it on the
+	   trigger-facing edge — do NOT re-add --space-2 here. */
+	inset-block-start: var(--ms-anchor-top, 0px);
+	inset-inline-start: var(--ms-anchor-left, 0px);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-inline-size: 11rem;
+	inline-size: max-content;
+	max-inline-size: min(18rem, calc(100vw - 2rem));
+	max-block-size: min(60dvh, 24rem);
+	padding: var(--space-2);
+	background: var(--popup-bg);
+	border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
+	border-radius: var(--radius-md);
+	box-shadow: var(--popup-shadow,
+		0 16px 40px rgb(0 0 0 / 0.5),
+		0 0 0 1px color-mix(in oklab, var(--teal) 8%, transparent));
+	color: var(--popup-text, var(--text-main));
+	font-family: var(--font-mono, 'JetBrains Mono', monospace);
+	overflow: hidden auto;
+}
+.pp-heading {
+	padding: var(--space-1) var(--space-2);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--text-muted, rgb(255 255 255 / 0.5));
+}
+.pp-heading[hidden] {
+	display: none;
+}
+.pp-body {
+	padding: var(--space-1) var(--space-2);
+	font-size: var(--text-xs);
+	line-height: 1.5;
+}
+/* Content fade (single, no per-part stagger — the surface is compact). The container
+   morph is WAAPI; this just fades the content in over it. */
+.pp-overlay[data-open] .pp-body,
+.pp-overlay[data-open] .pp-heading {
+	animation: pp-fade var(--dur-base) var(--ease-out) both;
+	animation-delay: 0.05s;
+}
+@keyframes pp-fade {
+	from {
+		opacity: 0;
+		transform: translateY(0.375rem);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.pp-trigger {
+		transition: border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+	}
+	.pp-trigger:hover,
+	.pp-trigger:active {
+		transform: none;
+	}
+	.pp-overlay[data-open] .pp-body,
+	.pp-overlay[data-open] .pp-heading {
+		animation: none;
+	}
+}

@@ -1,0 +1,71 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: block;
+}
+.pagination {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	flex-wrap: wrap;
+}
+.pg-nav,
+.pg-page {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-inline-size: 2rem;
+	block-size: 2rem;
+	padding: 0 0.5rem;
+	border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.12));
+	border-radius: var(--radius-md, 0.5rem);
+	background: transparent;
+	color: var(--text-primary, currentColor);
+	font: inherit;
+	font-size: var(--text-sm, 0.85rem);
+	cursor: pointer;
+	transition:
+		background 0.14s ease,
+		border-color 0.14s ease,
+		transform 0.1s ease;
+}
+.pg-nav:hover:not(:disabled),
+.pg-page:hover:not([data-active]) {
+	background: var(--surface-tint, rgba(255, 255, 255, 0.06));
+	border-color: var(--surface-border-strong, rgba(255, 255, 255, 0.22));
+}
+.pg-nav:active:not(:disabled),
+.pg-page:active {
+	transform: translateY(1px);
+}
+.pg-page[data-active] {
+	background: var(--color-info, #3b82f6);
+	border-color: var(--color-info, #3b82f6);
+	color: #fff;
+	font-weight: var(--weight-semibold, 600);
+	cursor: default;
+}
+.pg-nav:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+.pg-nav:focus-visible,
+.pg-page:focus-visible {
+	outline: 2px solid var(--color-info, #3b82f6);
+	outline-offset: 2px;
+}
+.pg-gap {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-inline-size: 2rem;
+	block-size: 2rem;
+	color: var(--text-muted, rgba(255, 255, 255, 0.5));
+}
+@media (prefers-reduced-motion: reduce) {
+	.pg-nav,
+	.pg-page {
+		transition: none;
+	}
+}

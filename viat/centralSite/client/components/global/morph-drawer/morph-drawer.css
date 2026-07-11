@@ -1,0 +1,171 @@
+:host {
+	display: inline-block;
+}
+.dr-trigger {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-2) var(--space-4);
+	background: var(--bg-dark, color-mix(in oklab, var(--popup-bg) 80%, black));
+	border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
+	border-radius: var(--radius-md);
+	color: var(--text-main);
+	font-family: var(--font-mono, 'JetBrains Mono', monospace);
+	font-size: var(--text-xs);
+	letter-spacing: 0.04em;
+	cursor: pointer;
+	transition:
+		transform var(--dur-fast) var(--ease-spring-subtle),
+		border-color var(--dur-fast) ease,
+		color var(--dur-fast) ease;
+}
+.dr-trigger:hover {
+	transform: scale(1.05);
+	border-color: var(--teal);
+	color: var(--teal);
+}
+.dr-trigger:active {
+	transform: scale(0.95);
+}
+.dr-trigger:focus-visible {
+	outline: none;
+	border-color: var(--focus-ring-color, var(--cyan));
+	box-shadow: 0 0 0 2px color-mix(in oklab, var(--focus-ring-color, var(--cyan)) 45%, transparent);
+}
+.dr-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-floating, 900);
+	pointer-events: none;
+	visibility: hidden;
+}
+.dr-overlay[data-open] {
+	pointer-events: auto;
+	visibility: visible;
+}
+.dr-backdrop {
+	position: absolute;
+	inset: 0;
+	background: color-mix(in oklab, rgb(4 6 12) 0%, transparent);
+	backdrop-filter: blur(0);
+	-webkit-backdrop-filter: blur(0);
+	transition:
+		background var(--dur-base) ease,
+		backdrop-filter var(--dur-base) ease;
+}
+.dr-overlay[data-open] .dr-backdrop {
+	background: color-mix(in oklab, rgb(4 6 12) 44%, transparent);
+	backdrop-filter: blur(5px);
+	-webkit-backdrop-filter: blur(5px);
+}
+/* Drawer pinned to the inline-end (right in LTR) edge, full block height. The morph
+   grows it out of the trigger; CSS owns where it lands. */
+.dr-surface {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-end: 0;
+	display: flex;
+	flex-direction: column;
+	inline-size: min(26rem, 92vw);
+	background: var(--popup-bg);
+	border-inline-start: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 26%, transparent));
+	box-shadow: var(--modal-shadow,
+		-24px 0 64px rgb(0 0 0 / 0.55),
+		0 0 0 1px color-mix(in oklab, var(--teal) 8%, transparent));
+	color: var(--popup-text, var(--text-main));
+	font-family: var(--font-mono, 'JetBrains Mono', monospace);
+	overflow: hidden;
+}
+.dr-head {
+	/* Header chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-4) var(--space-3) var(--space-4) var(--space-5);
+	border-block-end: 1px solid color-mix(in oklab, var(--popup-border, var(--teal)) 22%, transparent);
+}
+.dr-title {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	font-size: var(--text-sm);
+	font-weight: var(--weight-semibold);
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.dr-close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.875rem;
+	block-size: 1.875rem;
+	flex: none;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--radius-md);
+	color: var(--text-muted, rgb(255 255 255 / 0.5));
+	cursor: pointer;
+	transition:
+		color var(--dur-fast) ease,
+		border-color var(--dur-fast) ease,
+		background var(--dur-fast) ease,
+		transform var(--dur-fast) var(--ease-spring-subtle);
+}
+.dr-close:hover {
+	color: var(--text-main);
+	border-color: var(--dark-divider, rgb(255 255 255 / 0.18));
+	background: rgb(255 255 255 / 0.04);
+}
+.dr-close:active {
+	transform: scale(0.9);
+}
+.dr-body {
+	min-block-size: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: var(--space-5);
+	font-size: var(--text-xs);
+	line-height: 1.6;
+}
+/* Content rises in over the morph on a stagger. */
+.dr-overlay[data-open] .dr-head,
+.dr-overlay[data-open] .dr-body {
+	animation: dr-rise var(--dur-slow) var(--ease-spring-subtle) both;
+}
+.dr-overlay[data-open] .dr-head {
+	animation-delay: 0.08s;
+}
+.dr-overlay[data-open] .dr-body {
+	animation-delay: 0.16s;
+}
+@keyframes dr-rise {
+	from {
+		opacity: 0;
+		transform: translateX(0.75rem);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.dr-trigger,
+	.dr-close {
+		transition: border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+	}
+	.dr-trigger:hover,
+	.dr-trigger:active,
+	.dr-close:active {
+		transform: none;
+	}
+	.dr-backdrop {
+		transition: none;
+	}
+	.dr-overlay[data-open] .dr-head,
+	.dr-overlay[data-open] .dr-body {
+		animation: none;
+	}
+}

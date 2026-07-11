@@ -1,0 +1,17 @@
+onlyBuiltDependencies:
+  - "@noble"
+  - "@rollup"
+  - cbor-extract
+  - cbor-x
+  - core-js
+  - electron
+  - esbuild
+  - lmdb
+  - lru-cache
+  - node-seal
+  - os
+  - os-utils
+  - pqclean
+  - rollup
+  - sodium-native
+  - xxhash-addon

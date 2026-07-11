@@ -1,249 +1,35 @@
-// KYBER & x25519 KEY EXCHANGE WITH BUILT IN DOMAIN CERTIFICATE & SERVER AUTHENTICATION WITH Perfect Forward Secrecy
-/*
-	Create User Kyber keypair send to server
-	Server creates Kyber shared Secret & encapsulates it via user's public kyber key
-	Server sends cipher text in the header & encrypted intro frame to the user
-	Server sets the session with the new secret keys
-	User first decapsulates ciphertext with user's private kyber key located in the header
-	User then sets the session with the new secret keys
-	Make sure to create a transmit and receive keys so both are unique to add an extra layer of security
-*/
-// TODO: Consider Array instead of concat
-import { assign, isNotArray } from '@universalweb/utilitylib';
-import {
-	clearBuffer,
-	clearBuffers,
-	int32,
-	randomBuffer,
-	toBase64,
-	toHex,
-} from '#utilities/cryptography/utils';
-import hash from '../hash/shake.js';
-import { introHeaderRPC } from '#udsp/rpc/headerRPC';
-import keyExchange from './keyExchange.js';
-import kyber768 from './kyber768.js';
-import pqclean from 'pqclean';
-import x25519 from './x25519.js';
-const publicKeySize = x25519.publicKeySize + kyber768.publicKeySize;
-const privateKeySize = x25519.privateKeySize + kyber768.privateKeySize;
-const {
-	schemeName,
-	PrivateKey,
-	PublicKey,
-} = kyber768;
-export function getKyberKey(source) {
-	return source.subarray(int32);
-}
+/**
+ * Kyber768_x25519 — hybrid X25519 + ML-KEM-768 key exchange (native node:crypto provider).
+ * Composed from HybridKeyExchange + an X25519Pair (DH) and a KyberNativePair (KEM). The wire
+ * public key is x25519Public(32) ‖ kyberPublic(1184); the channel holds if EITHER primitive holds.
+ * Pqclean original preserved in legacy-pqclean/.
+ */
+import { HybridKeyExchange } from './HybridKeyExchange.js';
+import { KyberNativePair } from './pairs/kyberNativePair.js';
+import { X25519Pair } from './pairs/x25519Pair.js';
+import { int32 } from '#utilities/cryptography/utils';
+import shake256 from '../hash/shake.js';
+// Split helpers over the concatenated buffer (x25519 first int32 bytes, KEM remainder)
 export function getX25519Key(source) {
 	return source.subarray(0, int32);
+}
+export function getKyberKey(source) {
+	return source.subarray(int32);
 }
 export function get25519KeyCopy(source) {
 	return Buffer.copyBytesFrom(source, 0, int32);
 }
-export function getX25519Keypair(source) {
-	return {
-		publicKey: getX25519Key(source.publicKey),
-		privateKey: getX25519Key(source.privateKey),
-	};
-}
-export function getKyberKeypair(source) {
-	const kyberKeypair = {};
-	if (source.publicKey) {
-		kyberKeypair.publicKey = getKyberKey(source.publicKey);
-	}
-	if (source.privateKey) {
-		kyberKeypair.privateKey = getKyberKey(source.privateKey);
-	}
-	return kyberKeypair;
-}
-async function certificateKeyExchangeKeypair() {
-	const x25519Keypair = await x25519.certificateKeyExchangeKeypair();
-	const kyberKeypair = await kyber768.certificateKeyExchangeKeypair();
-	const target = {
-		publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
-		privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey]),
-	};
-	return target;
-}
-async function keyExchangeKeypair() {
-	const x25519Keypair = await x25519.keyExchangeKeypair();
-	const kyberKeypairInstance = await kyber768.keyExchangeKeypair();
-	// const kyberKeypair = await kyber768.exportKeypair(kyberKeypairInstance);
-	const target = {
-		// publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
-		// privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey]),
-		x25519Keypair,
-		kyberKeypair: kyberKeypairInstance,
-	};
-	return target;
-}
-async function arrayKeyExchangeKeypair() {
-	const x25519Keypair = await x25519.clientEphemeralKeypair();
-	const kyberKeypair = await kyber768.keyExchangeKeypair();
-	return [
-		[x25519Keypair.publicKey, kyberKeypair.publicKey],
-		[x25519Keypair.privateKey,	kyberKeypair.privateKey],
-	];
-}
-async function arrayToObjectKeyExchangeKeypair(source) {
-	if (!source || isNotArray(source) || source.length !== 2) {
-		return;
-	}
-	const [
-		publicKey,
-		privateKey,
-	] = source;
-	const target = {
-		x25519Keypair: {
-			publicKey: publicKey[0],
-			privateKey: privateKey[0],
-		},
-		kyberKeypair: {
-			publicKey: publicKey[1],
-			privateKey: privateKey[1],
-		},
-	};
-	return target;
-}
-async function clientEphemeralKeypair() {
-	const x25519Keypair = await x25519.clientEphemeralKeypair();
-	const kyberKeypair = await kyber768.keyExchangeKeypair();
-	const publicKeyBufferKyber = Buffer.from(await kyberKeypair.publicKey.export());
-	const publicKeyBuffer = Buffer.concat([x25519Keypair.publicKey, publicKeyBufferKyber]);
-	const target = {
-		x25519Keypair,
-		kyberKeypair,
-		publicKeyBuffer,
-	};
-	return target;
-}
-async function serverEphemeralKeypair(source) {
-	const x25519Keypair = await x25519.keyExchangeKeypair(source);
-	source.x25519Keypair = x25519Keypair;
-	return source;
-}
-async function kyber768InitializeKeypair(source, target = {}) {
-	if (source.publicKey) {
-		target.publicKey = new PublicKey(schemeName, source.publicKey);
-	}
-	if (source.privateKey) {
-		target.privateKey = new PrivateKey(schemeName, source.privateKey);
-	}
-	return target;
-}
-async function initializeKeypair(keypair, target) {
-	const x25519KeypairRaw = await getX25519Keypair(keypair);
-	const kyberKeypairRaw = await getKyberKeypair(keypair);
-	console.log('kyberKeypairRaw', kyberKeypairRaw);
-	const x25519Keypair = await x25519.initializeKeypair(x25519KeypairRaw);
-	const kyberKeypair = await kyber768InitializeKeypair(kyberKeypairRaw);
-	if (target) {
-		target.x25519Keypair = x25519Keypair;
-		target.kyberKeypair = kyberKeypair;
-		return target;
-	}
-	return {
-		x25519Keypair,
-		kyberKeypair,
-	};
-}
-async function isKeypairInitialized(source) {
-	if (source.x25519Keypair && source.kyberKeypair) {
-		return true;
-	}
-	return false;
-}
-async function initializeCertificateKeypair(keypair, target) {
-	const result = await initializeKeypair(keypair, target);
-	return result;
-}
-async function exportKeypair(source) {
-	const x25519Keypair = await x25519.exportKeypair(source.x25519Keypair);
-	const kyberKeypair = await kyber768.exportKeypair(source.kyberKeypair);
-	const target = {
-		publicKey: Buffer.concat([x25519Keypair.publicKey, kyberKeypair.publicKey]),
-		privateKey: Buffer.concat([x25519Keypair.privateKey, kyberKeypair.privateKey]),
-	};
-	return target;
-}
-export const kyber768_x25519 = keyExchange({
+const algorithm = 'ml-kem-768';
+export const kyber768_x25519 = new HybridKeyExchange({
 	name: 'kyber768_x25519',
 	alias: 'kyber768_x25519',
-	description: 'Crystals-Kyber768 with X25519 and SHAKE256.',
+	description: 'X25519 with ML-KEM-768 (native) and SHAKE256.',
 	id: 3,
-	x25519,
-	kyber768,
-	keyExchangeKeypair,
-	clientEphemeralKeypair,
-	serverEphemeralKeypair,
-	initializeCertificateKeypair,
-	exportKeypair,
-	initializeKeypair,
-	isKeypairInitialized,
-	arrayKeyExchangeKeypair,
-	arrayToObjectKeyExchangeKeypair,
-	// partial initial encryption on first packet
-	async clientInitializeSession(source, destination) {
-		source.x25519Keypair.sharedSecret = await x25519.getSharedSecret(source.x25519Keypair, destination.x25519Keypair);
-	},
-	async serverClientCreation(client, server) {
-		client.x25519Keypair = assign({}, server.x25519Keypair);
-		client.kyberKeypair = assign({}, server.kyberKeypair);
-	},
-	async createServerSession(source, destination, target, x25519KeypairSharedSecret, kyberKeypairSharedSecret) {
-		const sessionKeyHash = await this.hash.concatHash512(
-			x25519KeypairSharedSecret,
-			kyberKeypairSharedSecret,
-			destination.x25519Keypair.publicKey,
-			source.x25519Keypair.publicKey
-		);
-		clearBuffer(x25519KeypairSharedSecret);
-		clearBuffer(kyberKeypairSharedSecret);
-		const receiveKey = sessionKeyHash.subarray(this.sessionKeySize);
-		const transmitKey = sessionKeyHash.subarray(0, this.sessionKeySize);
-		if (target) {
-			target.sessionKeyHash = sessionKeyHash;
-			target.receiveKey = receiveKey;
-			target.transmitKey = transmitKey;
-			return target;
-		}
-		return {
-			sessionKeyHash,
-			receiveKey,
-			transmitKey,
-		};
-	},
-	// do first shared secret then generate next and create new session keys already?
-	async serverInitializeSession(source, destination, clientCipherData) {
-		destination.x25519Keypair.publicKey = getX25519Key(clientCipherData);
-		const x25519KeypairSharedSecret = await x25519.getSharedSecret(source.x25519Keypair, destination.x25519Keypair);
-		assign(source.x25519Keypair = await x25519.keyExchangeKeypair());
-		const x25519KeypairSharedSecretNextSession = await x25519.getSharedSecret(source.x25519Keypair, destination.x25519Keypair);
-		const kyberClientPublicKey = await kyber768.initializePublicKey(getKyberKey(clientCipherData));
-		const {
-			cipherData,
-			sharedSecret,
-		} = await kyber768.encapsulate(kyberClientPublicKey);
-		source.cipherData = Buffer.concat([source.x25519Keypair.nextSession.publicKey, cipherData]);
-		clearBuffer(cipherData);
-		await this.createServerSession(source, destination, source, x25519KeypairSharedSecret, sharedSecret);
-	},
-	async serverSendIntro(source, destination, frame, header) {
-		console.log('Send Server Intro', source.cipherData);
-		header[0] = introHeaderRPC;
-		header[1] = source.cipherData;
-	},
-	hash,
-	noneQuatumPublicKeySize: x25519.publicKeySize,
-	noneQuatumPrivateKeySize: x25519.privateKeySize,
-	quantumPublicKeySize: kyber768.publicKeySize,
-	quantumPrivateKeySize: kyber768.privateKeySize,
-	publicKeySize,
-	privateKeySize,
-	clientPublicKeySize: publicKeySize,
-	clientPrivateKeySize: privateKeySize,
-	serverPublicKeySize: publicKeySize,
-	serverPrivateKeySize: privateKeySize,
+	hash: shake256,
+	dh: X25519Pair.create({}),
+	kem: KyberNativePair.create({
+		algorithm,
+	}),
 	cipherSuiteCompatibility: {
 		recommended: 3,
 		postQuantumRecommended: 3,
@@ -254,37 +40,31 @@ export const kyber768_x25519 = keyExchange({
 		2: true,
 		3: true,
 	},
-	preferred: true,
-	preferredPostQuantum: true,
 	speed: 0,
 	security: 1,
 });
 export default kyber768_x25519;
-// const clint = await kyber768_x25519.clientEphemeralKeypair();
-// const cert = await kyber768_x25519.certificateKeyExchangeKeypair();
-// console.log('cert', cert);
-// const srvr = {};
-// await kyber768_x25519.initializeCertificateKeypair(cert, srvr);
-// console.log('server', srvr);
-// console.log('publicKeySize', publicKeySize);
-// await kyber768_x25519.clientInitializeSession(clint, srvr);
-// console.log('clientInitializeSession', clint);
-// console.log('server', srvr);
-// await kyber768_x25519.serverInitializeSession(srvr, clint, clint.publicKeyBuffer);
-// console.log('server', srvr);
-// await kyber768.clientSetSession(client, srvr, srvr.cipherData);
-// console.log(client);
-// const frme = [];
-// await kyber768.sendClientExtendedSynchronizationHeader(client, srvr, frme);
-// console.log(frme);
-// console.log(srvr);
-// await kyber768.serverExtendedSynchronization(srvr, client, [
-// 	undefined,
-// 	undefined,
-// 	frme[0]
-// ]);
-// await kyber768.sendServerExtendedSynchronization(server, client);
-// console.log('server', server);
-// await kyber768.clientExtendedSynchronizationHeader(client, server);
-// console.log('client', client);
-// console.log('server', server);
+/*
+ * Mimics the UDSP client↔server handshake to document the packet flow + internal steps.
+ * Hybrid = Kyber ONE way (client→server long-term) + x25519 TWO way (client eph × server long-term).
+ * Fast auth, single round-trip. Run with `await example()`.
+ */
+export async function example() {
+	const scheme = kyber768_x25519;
+	// Random key pairs — server long-term (x25519 ‖ Kyber), client ephemeral x25519. No cert.
+	const server = await scheme.keyExchangeKeypair();
+	server.logInfo = console.log;
+	const client = await scheme.clientEphemeralKeypair();
+	client.logInfo = console.log;
+	// CLIENT: derive the session off the server key pair, then stage the intro payload
+	await scheme.onClientInitialization(client, server);
+	// PACKET 1  client → server : x25519Public(32) ‖ kyberCiphertext(1088) = 1120 bytes
+	await scheme.onClientIntroHeader(server, client, client.cipherData);
+	// PACKET 2  server → client : intro reply (bare ack — the session is already established server-side)
+	const serverHeader = [];
+	await scheme.createServerIntro(server, client, [], serverHeader);
+	await scheme.onServerIntroHeader(client, server, serverHeader[2], serverHeader);
+	// Compare to confirm both sides derived the identical session
+	console.log('hybrid session:', scheme.compareSessionkeysThrow(client, server));
+}
+// await example();

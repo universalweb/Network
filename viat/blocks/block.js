@@ -44,18 +44,49 @@ export class Block {
 				await this.config(data, config, ...args);
 			}
 		}
+		this.normalizeValues();
+		return this;
+	}
+	/*
+		Restore intended numeric types after a decode — cbor-x drifts integers both ways: a value
+		authored bigint but < 2^64 comes back as a JS number (state-anchor ids → coerce to bigint),
+		while a value authored number but > 2^32 comes back as a bigint (timestamp ≈ Date.now() →
+		coerce to number). Both re-encode to identical bytes under Option B, so the hash is unaffected.
+		Subtypes override to add their own value fields (e.g. transaction amounts) and call super.
+	*/
+	normalizeValues() {
+		const priorState = this.getMeta('priorState');
+		if (priorState && typeof priorState.id === 'number' && Number.isInteger(priorState.id)) {
+			priorState.id = BigInt(priorState.id);
+		}
+		const futureState = this.getMeta('futureState');
+		if (futureState && typeof futureState.id === 'number' && Number.isInteger(futureState.id)) {
+			futureState.id = BigInt(futureState.id);
+		}
+		const timestamp = this.getMeta('timestamp');
+		if (typeof timestamp === 'bigint') {
+			this.setMeta('timestamp', Number(timestamp));
+		}
 		return this;
 	}
 	async finalize() {
 		await this.setDefaults();
-		await this.setHash();
+		if (this.isSigned) {
+			await this.setPreHash();
+		} else {
+			await this.setHash();
+		}
 		return this;
+	}
+	get isDeterministic() {
+		return !this.isSigned;
 	}
 	setFilesystem(typeName) {
 		this.filesystem = this.filesystemConfig[typeName];
 		return this;
 	}
 	version = version;
+	isSigned = false;
 	typeName = 'generic';
 	blockType = blockTypes.generic;
 	fileType = fileExtensions.generic;

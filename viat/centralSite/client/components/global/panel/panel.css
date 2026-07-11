@@ -1,0 +1,59 @@
+:host {
+  display: block;
+  width: 100%;
+  flex-shrink: 0;
+}
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* ── Shared panel styles ─────────────────────────────
+   Container background / border / radius / shadow now provided by the
+   internal <ui-surface>. Panel only owns the header + body layout below.
+*/
+.panel {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	min-height: 0;
+}
+
+.panel-header {
+	/* Header chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	padding: var(--panel-header-padding, 6px 14px 6px 10px);
+	border-block-end: var(--panel-header-border-bottom, var(--border-light));
+	border-inline-start: var(--panel-header-left-border, var(--panel-header-left-accent-width, 2px) solid var(--panel-header-accent));
+	background: var(--panel-header-bg, var(--bg-dark-mid));
+	font-family: var(--font-mono);
+	font-size: var(--panel-header-font-size, 0.5625rem);
+	text-transform: var(--panel-header-text-transform, uppercase);
+	letter-spacing: var(--panel-header-letter-spacing, 0.18em);
+	color: var(--panel-header-color, var(--dark-text));
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-shrink: 0;
+	gap: var(--space-3);
+}
+
+.panel-header .ph-id {
+	color: var(--cyan);
+	font-size: var(--ph-id-font-size, 0.5rem);
+	letter-spacing: var(--ph-id-letter-spacing, 0.12em);
+	opacity: var(--ph-id-opacity, 0.8);
+	margin-inline-end: var(--space-2);
+}
+
+.panel-header .ph-dot {
+	display: var(--ph-dot-display, block);
+	width: 0.3125rem;
+	height: 0.3125rem;
+	background: var(--teal);
+	border-radius: var(--indicator-radius);
+	box-shadow: var(--ph-dot-shadow, 0 0 4px var(--teal));
+}

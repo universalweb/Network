@@ -1,0 +1,243 @@
+/* uwc.base — themeable button variant/tone/size system, keyed off data-* ATTRIBUTES.
+   Decorates the <button> TAG directly (no `.btn` class), so any bare <button> — or a
+   component's inner <button> — opts in with data-variant / data-tone / data-size and
+   gets the full polished treatment for free.
+
+   Attribute-keyed ON PURPOSE: a `tone-*` CLASS on the button collides with the
+   uwc.util `.tone-*` TEXT utilities, which sit in the LAST cascade layer
+   (`@layer uwc.reset, uwc.base, uwc.components, uwc.util`) and therefore override a
+   solid button's contrast text regardless of specificity → invisible label (the
+   "Delete wallet" bug). A `[data-tone]` attribute never matches a `.tone-*` utility,
+   so the collision is structurally impossible.
+
+   Lives in uwc.base so a bespoke component class (uwc.components) still wins. */
+@layer uwc.base {
+	/* Base — layout + motion shared by every variant. */
+	button[data-variant] {
+		align-items: center;
+		appearance: none;
+		background: transparent;
+		border: 1px solid transparent;
+		color: inherit;
+		cursor: pointer;
+		display: inline-flex;
+		font: inherit;
+		gap: 0.5em;
+		justify-content: center;
+		margin: 0;
+		min-inline-size: 0;
+		transform: scale(1);
+		transform-origin: center;
+		transition:
+			background 0.18s ease,
+			border-color 0.18s ease,
+			color 0.18s ease,
+			box-shadow 0.18s ease,
+			transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+		white-space: nowrap;
+	}
+	button[data-variant]:focus-visible {
+		outline: 1px solid var(--focus-ring-color, var(--teal));
+		outline-offset: 2px;
+	}
+	/* The variant model uses an active-scale, not a hover-lift. Neutralize the
+	   generic uwc.base `button:hover` translateY (elements-forms.css) — same layer,
+	   so this higher-specificity rule wins and the button stays put on hover. */
+	button[data-variant]:hover:not(:disabled) {
+		transform: scale(1);
+	}
+	button[data-variant]:active:not(:disabled) {
+		transform: scale(0.92);
+		transition-duration: 0.07s;
+		transition-timing-function: cubic-bezier(0.55, 0, 0.85, 0.5);
+	}
+
+	/* Sizes — font-size drives both text and the inherited icon glyph. */
+	button[data-size='xs'] {
+		font-size: var(--text-sm);
+		padding: 0.25rem 0.55rem;
+		border-radius: var(--ui-btn-radius, var(--radius-md));
+		min-block-size: 1.375rem;
+	}
+	button[data-size='sm'] {
+		font-size: var(--text-md);
+		padding: 0.35rem 0.7rem;
+		border-radius: var(--ui-btn-radius, var(--radius-md));
+		min-block-size: 1.75rem;
+	}
+	button[data-size='md'] {
+		font-size: var(--text-lg);
+		padding: 0.5rem 0.95rem;
+		border-radius: var(--ui-btn-radius, var(--radius-md));
+		min-block-size: 2.125rem;
+	}
+	button[data-size='lg'] {
+		font-size: var(--text-xl);
+		padding: 0.65rem 1.15rem;
+		border-radius: var(--ui-btn-radius, 9px);
+		min-block-size: 2.5rem;
+	}
+
+	/* SOLID — each tone is a fill + contrasting-text PAIR (NOT --tone-fill, which is a
+	   single color with no text pair and no primary/subtle). Token-hooked so a theme
+	   recasts the accent button without editing this sheet. */
+	button[data-variant='solid'][data-tone='neutral'] {
+		background: var(--btn-neutral, rgba(255, 255, 255, 0.08));
+		border-color: var(--btn-neutral-border, rgba(255, 255, 255, 0.14));
+		color: var(--text-main);
+	}
+	button[data-variant='solid'][data-tone='neutral']:hover:not(:disabled) {
+		background: rgba(255, 255, 255, 0.13);
+	}
+	button[data-variant='solid'][data-tone='primary'] {
+		background: var(--btn-primary-bg, var(--teal));
+		border-color: var(--btn-primary-border, var(--teal));
+		color: var(--btn-primary-color, #06151a);
+	}
+	button[data-variant='solid'][data-tone='primary']:hover:not(:disabled) {
+		background: var(--btn-primary-hover-bg, #7cf2dd);
+		border-color: var(--btn-primary-hover-border, var(--btn-primary-hover-bg, #7cf2dd));
+		color: var(--btn-primary-hover-color, var(--btn-primary-color, #06151a));
+	}
+	button[data-variant='solid'][data-tone='success'] {
+		background: var(--color-success);
+		border-color: var(--color-success);
+		color: #04231a;
+	}
+	button[data-variant='solid'][data-tone='danger'] {
+		background: var(--color-danger);
+		border-color: var(--color-danger);
+		color: var(--text-light);
+	}
+	button[data-variant='solid'][data-tone='warning'] {
+		background: var(--color-warning);
+		border-color: var(--color-warning);
+		color: #261604;
+	}
+	button[data-variant='solid'][data-tone='subtle'] {
+		background: rgba(255, 255, 255, 0.04);
+		border-color: rgba(255, 255, 255, 0.08);
+		color: var(--text-main);
+	}
+	button[data-variant='solid'][data-tone='subtle']:hover:not(:disabled) {
+		background: rgba(255, 255, 255, 0.09);
+	}
+
+	/* OUTLINE — tone tints border + text; shared faint wash on hover. */
+	button[data-variant='outline'][data-tone='neutral'] {
+		border-color: rgba(255, 255, 255, 0.18);
+		color: var(--text-main);
+	}
+	button[data-variant='outline'][data-tone='primary'] {
+		border-color: var(--teal);
+		color: var(--teal);
+	}
+	button[data-variant='outline'][data-tone='success'] {
+		border-color: var(--color-success);
+		color: var(--color-success);
+	}
+	button[data-variant='outline'][data-tone='danger'] {
+		border-color: var(--color-danger);
+		color: var(--color-danger);
+	}
+	button[data-variant='outline'][data-tone='warning'] {
+		border-color: var(--color-warning);
+		color: var(--color-warning);
+	}
+	button[data-variant='outline']:hover:not(:disabled) {
+		background: rgba(255, 255, 255, 0.06);
+	}
+
+	/* GHOST — tone text only; wash on hover. */
+	button[data-variant='ghost'][data-tone='neutral'] {
+		color: var(--text-main);
+	}
+	button[data-variant='ghost'][data-tone='primary'] {
+		color: var(--teal);
+	}
+	button[data-variant='ghost'][data-tone='success'] {
+		color: var(--color-success);
+	}
+	button[data-variant='ghost'][data-tone='danger'] {
+		color: var(--color-danger);
+	}
+	button[data-variant='ghost'][data-tone='warning'] {
+		color: var(--color-warning);
+	}
+	button[data-variant='ghost']:hover:not(:disabled) {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	/* LINK — inline text-link affordance. */
+	button[data-variant='link'] {
+		padding-inline: 0;
+		min-block-size: auto;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	button[data-variant='link'][data-tone='primary'] {
+		color: var(--teal);
+	}
+	button[data-variant='link'][data-tone='neutral'] {
+		color: var(--text-main);
+	}
+	button[data-variant='link']:hover:not(:disabled) {
+		text-decoration-thickness: 2px;
+	}
+
+	/* ICON — square chrome-light button. */
+	button[data-variant='icon'] {
+		padding: 0.4rem;
+		min-block-size: auto;
+		border-radius: var(--ui-btn-radius, var(--radius-md));
+		color: inherit;
+	}
+	button[data-variant='icon']:hover:not(:disabled) {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	/* Icon-only — guarantee a square hit area regardless of glyph metrics. `--btn-hit`
+	   (inherits across the shadow boundary) lets a host raise the floor — e.g. a dock
+	   sets a WCAG ≥44px touch target on mobile. */
+	button[data-variant].is-icon-only {
+		padding: 0.5rem;
+		min-inline-size: var(--btn-hit, 2rem);
+		min-block-size: var(--btn-hit, 2rem);
+	}
+	button[data-variant].is-icon-only[data-size='xs'] {
+		padding: 0.3rem;
+		min-inline-size: var(--btn-hit, 1.6rem);
+		min-block-size: var(--btn-hit, 1.6rem);
+	}
+	button[data-variant].is-icon-only[data-size='sm'] {
+		padding: 0.4rem;
+		min-inline-size: var(--btn-hit, 1.8rem);
+		min-block-size: var(--btn-hit, 1.8rem);
+	}
+	button[data-variant].is-icon-only[data-size='lg'] {
+		padding: 0.6rem;
+		min-inline-size: var(--btn-hit, 2.4rem);
+		min-block-size: var(--btn-hit, 2.4rem);
+	}
+
+	/* States. */
+	button[data-variant].is-disabled,
+	button[data-variant]:disabled {
+		cursor: not-allowed;
+		opacity: 0.5;
+	}
+	button[data-variant].is-full {
+		inline-size: 100%;
+	}
+	button[data-variant].is-loading {
+		cursor: progress;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		button[data-variant],
+		button[data-variant]:active:not(:disabled) {
+			transform: none;
+			transition: none;
+		}
+	}
+}

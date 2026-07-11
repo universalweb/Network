@@ -1,0 +1,31 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: block;
+}
+.sd-action {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+/* Label rides as a small pill beside the mini-button. */
+.sd-action-label {
+	order: -1;
+	padding: 0.2rem 0.5rem;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: var(--bg-panel, rgba(20, 22, 30, 0.95));
+	border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.12));
+	color: var(--text-primary, currentColor);
+	font-size: var(--text-xs, 0.75rem);
+	white-space: nowrap;
+	box-shadow: var(--elev-1, 0 2px 6px rgba(0, 0, 0, 0.25));
+}
+.sd-action-label[hidden] {
+	display: none;
+}
+.sd-action-btn {
+	--ui-btn-radius: 999px;
+	border-radius: 999px;
+	box-shadow: var(--elev-2, 0 6px 16px rgba(0, 0, 0, 0.28));
+}

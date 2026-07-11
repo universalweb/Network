@@ -112,7 +112,7 @@ export async function publicDomainCertificate(...args) {
 // const thisPath = currentPath(import.meta);
 // const exampleCert = await domainCertificate();
 // await exampleCert.generate({
-// 	entity: 'universalweb.io',
+// 	entity: 'viat.network',
 // 	// ownerHash: profile.getSignature(),
 // 	signatureAlgorithm: 0,
 // 	ciphers: [

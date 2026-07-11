@@ -31,45 +31,84 @@ const methods = {
 		const hashed = await this.hash512(Buffer.concat([hash, receiver]));
 		return hashed;
 	},
-	async hashData() {
-		const binary = await this.exportDataBinary();
+	/* Pick the hash width from this block's configured hashSize. */
+	async hashBySize(binary) {
+		if (!binary) {
+			return;
+		}
+		if (this.hashSize === 32) {
+			return this.hash256(binary);
+		}
 		if (this.hashSize === 64) {
 			return this.hash512(binary);
-		} else if (this.hashSize === 32) {
-			return this.hash256(binary);
-		} else if (this.hashSize > 64 && this.hashXOFConfig) {
-			return this.hashXOFData();
+		}
+		if (this.hashSize > 64 && this.hashXOFConfig) {
+			return this.hashXOF(binary, this.hashXOFConfig);
 		}
 		return this.hash512(binary);
 	},
+	async hashData() {
+		return this.hashBySize(await this.exportDataBinary());
+	},
 	async hashXOFData(config) {
-		const binary = await this.exportDataBinary();
-		return this.hashXOF(binary, config || this.hashXOFConfig);
+		return this.hashXOF(await this.exportDataBinary(), config || this.hashXOFConfig);
 	},
 	async hashMeta() {
-		const binary = await this.exportMetaBinary();
-		return this.hash512(binary);
+		return this.hash512(await this.exportMetaBinary());
 	},
 	async hashCore() {
-		const binary = await this.exportCoreBinary();
+		return this.hash512(await this.exportCoreBinary());
 	},
 	async hashBlock() {
-		const binary = await this.exportBinary();
-		return this.hash512(binary);
+		return this.hash512(await this.exportBinary());
 	},
 	async hashBlockShort() {
-		const binary = await this.exportBinary();
-		return this.hash256(binary);
+		return this.hash256(await this.exportBinary());
 	},
 	async hashXOFBlock(config) {
-		const binary = await this.exportBinary();
-		return this.hashXOF(binary, config);
+		return this.hashXOF(await this.exportBinary(), config);
+	},
+	/**
+	 * The pre-hash is H(DATA) — the message the owner signs. It commits all block
+	 * details (meta + core) and survives signature pruning. Signed blocks only.
+	 */
+	async setPreHash() {
+		this.set('preHash', await this.hashData());
+		return this;
+	},
+	async getPreHash() {
+		if (!this.get('preHash')) {
+			await this.setPreHash();
+		}
+		return this.get('preHash');
+	},
+	/**
+	 * The chain-reference hash. Deterministic blocks hash DATA directly. Signed
+	 * blocks hash preHash ‖ signature (Option A) so the signature is bound into
+	 * the id other blocks reference — no signature swap without changing identity.
+	 * Returns undefined for a signed block that is not yet signed.
+	 */
+	async hashFinal() {
+		if (!this.isSigned) {
+			return this.hashData();
+		}
+		const signature = this.get('signature');
+		if (!signature) {
+			return;
+		}
+		const preHash = await this.getPreHash();
+		return this.hashBySize(Buffer.concat([preHash, signature]));
 	},
 	async setHash() {
-		await this.set('hash', await this.hashData());
+		const hash = await this.hashFinal();
+		if (hash) {
+			this.set('hash', hash);
+		}
+		return this;
 	},
 	async setHashXOF(options) {
-		await this.set('hash', await this.hashXOFData(options));
+		this.set('hash', await this.hashXOFData(options));
+		return this;
 	},
 	async getHash() {
 		if (!this.get('hash')) {

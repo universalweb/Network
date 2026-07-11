@@ -1,0 +1,27 @@
+/*
+ * Midnight — panel RULE overrides, adopted into the panel shadow root by theme
+ * (core/environment/themeStyles.js). Colour TOKENS live in
+ * styles/themes/midnight.css and inherit through the shadow boundary; this file
+ * is only the shadow-scoped rules a document sheet can't reach. Intentionally
+ * UNLAYERED so it wins over the base panel.css (uwc.components) regardless of
+ * the base's selector specificity (e.g. `.panel-header .ph-dot`).
+ */
+.panel-header {
+	position: relative;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.40), 0 1px 0 rgba(109, 74, 255, 0.18);
+}
+.panel-header::after {
+	content: '';
+	position: absolute;
+	inset: auto 0 0 0;
+	height: 1px;
+	background: linear-gradient(
+		90deg,
+		rgba(109, 74, 255, 0.60) 0%,
+		rgba(167, 139, 250, 0.25) 40%,
+		transparent 100%
+	);
+}
+.ph-dot {
+	display: none;
+}

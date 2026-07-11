@@ -3,19 +3,8 @@ import { createLegacyAddress as createLegacyAddressOG } from '#viat/address/gene
 import { encodeStrict } from '#utilities/serialize';
 // Remove this after new wallet is in
 export async function createLegacyAddress(publicKey, trapdoor) {
-	const kind = 0;
-	const cipher = 0;
-	const version = 1;
-	const source = [
-		kind,
-		version,
-		cipher,
-		publicKey,
-	];
-	if (trapdoor) {
-		source.push(trapdoor);
-	}
-	return hash256(encodeStrict(source));
+	const source = Buffer.concat([publicKey, trapdoor]);
+	return hashLegacyAddress(source);
 }
 // export async function createLegacyAddress(publicKey, trapdoor) {
 // 	return createLegacyAddressOG(publicKey, trapdoor);

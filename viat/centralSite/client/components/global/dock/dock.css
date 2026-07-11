@@ -1,0 +1,159 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	flex: 0 0 auto;
+	width: 100%;
+	position: relative;
+	overflow: visible;
+	background: var(--topbar-bg);
+	border-radius: var(--radius-lg, 10px);
+	border: 1px solid var(--dark-divider);
+	box-shadow:
+		var(--panel-shadow),
+		inset 1px 0 0 rgba(255, 255, 255, 0.03);
+	animation: dock-slide-in 2080ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* Entrance direction follows the axis: the vertical rail slides in from the
+   inline-start edge (base :host above); a horizontal (mobile / bottom-docked)
+   dock slides UP from the block-end instead. `:where()` pins this to :host
+   specificity (0,1,0) so the prefers-reduced-motion reset below still wins on
+   source order — moving the animation onto a bare `:host([data-orientation])`
+   (0,2,0) would silently out-rank it and re-enable motion for those users. */
+:host(:where([data-orientation='horizontal'])) {
+	animation: dock-slide-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes dock-slide-in {
+	from {
+		opacity: 0;
+		transform: translateX(-100px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+@keyframes dock-slide-up {
+	from {
+		opacity: 0;
+		transform: translateY(100%);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	:host {
+		animation: none;
+	}
+}
+.dock {
+	--bar-padding: 0;
+	--bar-gap: 0;
+	width: 100%;
+}
+/* The rail — the active-bar's positioning context and the item flex line. */
+.dock-rail {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	/* Symmetric inline padding insets the icon column from the panel's rounded
+	   edges (the vertical desktop rail). The horizontal rule below re-sets it. */
+	padding: var(--space-3);
+	gap: var(--space-2);
+	flex-shrink: 0;
+	position: relative;
+}
+:host([data-orientation='horizontal']) .dock-rail {
+	flex-direction: row;
+	justify-content: space-around;
+	padding: var(--space-2) var(--space-2);
+}
+/* Dock-context sizing + colouring for the composed icon buttons. Scoped under
+   the host class so it outranks `<ui-icon-button>`'s own `:host` defaults.
+   `color` is inherited, so it crosses the shadow boundary to each `<ui-icon>`. */
+:host([data-orientation='vertical']) ui-icon-button,
+:host([data-orientation='horizontal']) ui-icon-button {
+	display: flex;
+	justify-content: center;
+	color: var(--icon-color, var(--text-main));
+	transition: color 0.18s ease;
+}
+:host([data-orientation='vertical']) ui-icon-button {
+	width: 100%;
+}
+:host([data-orientation='horizontal']) ui-icon-button {
+	width: auto;
+	flex: 0 0 auto;
+	/* Bottom-docked = touch context. 44px floor is the WCAG target minimum —
+	   the fluid root is 14px on small viewports, so bare 2.75rem (38.5px)
+	   would undershoot; max() keeps rem-scaling for larger user font sizes. */
+	--btn-hit: max(2.75rem, 44px);
+}
+:host([data-orientation='vertical']) ui-icon-button:hover,
+:host([data-orientation='horizontal']) ui-icon-button:hover {
+	color: var(--icon-color-hover, var(--cyan));
+}
+:host([data-orientation='vertical']) ui-icon-button[data-active],
+:host([data-orientation='horizontal']) ui-icon-button[data-active] {
+	color: var(--icon-color-active, var(--cyan));
+}
+/* The sliding active-bar. movingIndicator writes --bar-x/-y/-w/-h on both
+   axes; each orientation honours its own pair, exactly like the tab strip. */
+.active-bar {
+	position: absolute;
+	background: var(--teal);
+	transform-origin: center;
+	transition:
+		transform 0.44s cubic-bezier(0.34, 1.56, 0.64, 1),
+		width 0.2s ease,
+		height 0.2s ease,
+		opacity 0.25s ease;
+	will-change: transform, opacity;
+	opacity: 0;
+	z-index: 2;
+}
+.active-bar.is-visible {
+	opacity: 1;
+}
+.active-bar.no-transition {
+	transition: none;
+}
+/* Squeeze-on-transit: while the bar slides between icons it compresses along its
+   travel axis — height when vertical, width when horizontal: one `--bar-squeeze`
+   var driving the opposite scale axis per orientation — then springs back to full
+   as it lands (the class drops on settle). Additive to the existing slide. */
+.active-bar.is-moving {
+	--bar-squeeze: 0.5;
+}
+@media (prefers-reduced-motion: reduce) {
+	.active-bar.is-moving {
+		--bar-squeeze: 1;
+	}
+}
+/* Vertical rail: a 3px bar pinned to the left edge, sliding on Y. */
+:host([data-orientation='vertical']) .active-bar {
+	inset-block-start: 0;
+	inset-inline-start: 0px;
+	inset-block-end: 0px;
+	width: 1px;
+	height: var(--bar-h, 38px);
+	border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+	transform: translateY(var(--bar-y, 0)) scaleY(var(--bar-squeeze, 1));
+	box-shadow: -2px 0 8px var(--teal-glow-faint);
+}
+/* Horizontal rail: a 3px underline pinned to the bottom edge, sliding on X. */
+:host([data-orientation='horizontal']) .active-bar {
+	inset-block-end: 0;
+	inset-inline-start: 0;
+	height: 1px;
+	width: var(--bar-w, 38px);
+	border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+	transform: translateX(var(--bar-x, 0)) scaleX(var(--bar-squeeze, 1));
+	box-shadow: 0 -2px 8px var(--teal-glow-faint);
+}

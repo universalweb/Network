@@ -1,0 +1,113 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: block;
+	min-height: 0;
+}
+.tabs {
+	display: grid;
+	min-height: 0;
+	height: 100%;
+}
+[data-orientation='horizontal'] {
+	grid-template-rows: auto minmax(0, 1fr);
+	grid-template-columns: 1fr;
+}
+[data-orientation='vertical'] {
+	grid-template-columns: var(--tab-strip-width, auto) minmax(0, 1fr);
+	grid-template-rows: minmax(0, 1fr);
+}
+.tab-strip {
+	position: relative;
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	font-family: var(--font-mono, monospace);
+}
+[data-orientation='horizontal'] .tab-strip {
+	flex-direction: row;
+	gap: var(--space-1);
+	border-block-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	padding: 0 var(--space-2);
+	/* Per-orientation button box — inherits into each <ui-tab-button> shadow. */
+	--tab-btn-pad: var(--space-3) var(--space-5);
+	--tab-btn-radius: var(--radius-sm) var(--radius-sm) 0 0;
+	--tab-btn-hover-transform: translateY(-1px);
+}
+[data-orientation='vertical'] .tab-strip {
+	flex-direction: column;
+	gap: var(--space-2);
+	--tab-btn-pad: var(--space-3) var(--space-4);
+	--tab-btn-radius: var(--radius-sm);
+	--tab-btn-hover-transform: translateX(2px);
+	/* Inner top inset (default 0) lets a host clear an overlaid window bar while
+	   the strip's background still fills the full height behind the frosted glass. */
+	padding: calc(var(--space-5) + var(--tabs-top-inset, 0px)) var(--space-3) var(--space-5);
+	background: var(--bg-dark);
+	border-inline-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	overflow-y: auto;
+}
+.tab-indicator {
+	position: absolute;
+	background: var(--teal);
+	border-radius: var(--radius-xs);
+	opacity: 0;
+	pointer-events: none;
+	/* Glow is themable — flat/print themes kill it, neon themes recolor it
+	   (fallback = midnight). */
+	box-shadow: var(--tab-indicator-shadow, 0 0 8px rgba(94, 234, 212, 0.45));
+}
+.tab-indicator.is-visible {
+	opacity: 1;
+}
+.tab-indicator.no-transition {
+	transition: none !important;
+}
+[data-orientation='horizontal'] .tab-indicator {
+	inset-inline-start: var(--ind-x, 0);
+	width: var(--ind-w, 0);
+	inset-block-end: 0px;
+	height: 1px;
+	transition:
+		left 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		width 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		opacity 0.2s ease;
+}
+[data-orientation='vertical'] .tab-indicator {
+	inset-block-start: var(--ind-y, 0);
+	height: var(--ind-h, 0);
+	inset-inline-start: 0px;
+	width: 1px;
+	transition:
+		top 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		height 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		opacity 0.2s ease;
+}
+.tab-content {
+	min-width: 0;
+	min-height: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+/* SLIDE mode only: clip the travelling panel's transform spill at the grid root
+   so the sideways slide never bleeds past the component or spawns a scrollbar.
+   `clip` (not hidden) adds no scroll container; scoped to slide so fade strips —
+   incl. the settings modal's height chain — are byte-for-byte unaffected. */
+.tabs[data-transition='slide'] {
+	overflow: clip;
+}
+/* Mobile: vertical strip becomes a tight icon rail. Shrink padding so a
+   `--tab-strip-width: 56px` from the consumer leaves real estate for the
+   actual button. */
+@media (max-width: 47.9375em) {
+	[data-orientation='vertical'] .tab-strip {
+		padding: var(--space-4) var(--space-2);
+		gap: var(--space-2);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.tab-indicator {
+		transition: opacity 0.2s ease;
+	}
+}

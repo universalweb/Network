@@ -1,0 +1,76 @@
+:host {
+	display: block;
+}
+.yt {
+	position: relative;
+	inline-size: 100%;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	border-radius: var(--radius-lg);
+	background: var(--bg-dark);
+}
+.yt-facade {
+	position: absolute;
+	inset: 0;
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+	padding: 0;
+	border: none;
+	background: none;
+	cursor: pointer;
+}
+.yt-thumb {
+	position: absolute;
+	inset: 0;
+	inline-size: 100%;
+	block-size: 100%;
+	object-fit: cover;
+}
+.yt-scrim {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(to top, color-mix(in oklab, var(--bg-body) 75%, transparent), transparent 55%);
+}
+.yt-play {
+	position: absolute;
+	inset-block-start: 50%;
+	inset-inline-start: 50%;
+	transform: translate(-50%, -50%);
+	display: grid;
+	place-items: center;
+	inline-size: 4rem;
+	block-size: 4rem;
+	border-radius: 50%;
+	background: color-mix(in oklab, var(--color-danger) 90%, transparent);
+	color: var(--text-main);
+	transition:
+		transform var(--dur-fast) var(--ease-spring),
+		background var(--dur-fast) var(--ease-out, ease);
+}
+.yt-facade:hover .yt-play {
+	transform: translate(-50%, -50%) scale(1.1);
+	background: var(--color-danger);
+}
+.yt-title {
+	position: absolute;
+	inset-inline: var(--space-3);
+	inset-block-end: var(--space-3);
+	font-size: var(--text-sm);
+	font-weight: var(--weight-semibold);
+	color: var(--text-main);
+	text-align: start;
+}
+.yt-frame {
+	position: absolute;
+	inset: 0;
+	inline-size: 100%;
+	block-size: 100%;
+	border: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.yt-play,
+	.yt-facade:hover .yt-play {
+		transition: none;
+	}
+}

@@ -1,0 +1,115 @@
+:host {
+	/* App-shell host. The content scrolls inside a fixed, full-viewport inner
+	   surface (.shell-scroll) that sits BELOW the fixed chrome bars, so the content
+	   scrollbar paints behind the bars instead of the native viewport scrollbar
+	   painting over them. The host itself does not scroll. */
+	display: block;
+	width: 100%;
+	block-size: 100%;
+	overflow: hidden;
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+	line-height: 1.5;
+	color: var(--text-main);
+	-webkit-font-smoothing: antialiased;
+	background: transparent;
+}
+/* The single scroll surface: a fixed full-viewport box UNDER the chrome bars
+   (z-index 40). Its scrollbar runs full-height behind both bars; the block-axis
+   padding keeps content clear of them so nothing is trapped underneath. */
+.shell-scroll {
+	position: fixed;
+	inset: 0;
+	z-index: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+	/* Always reserve the vertical scrollbar's gutter. This is the app's ONLY
+	   scroll surface, and every full-viewport overlay (pulldown, modals) freezes
+	   it via scroll-lock.js by flipping it to `overflow: hidden` while open. Without
+	   a reserved gutter that toggle removes the ~11px scrollbar, the content area
+	   widens by 11px, and the whole page jumps sideways on open/close. Reserving
+	   the gutter holds the content width constant whether the scrollbar is shown
+	   (scrolling) or suppressed (locked). Fixed chrome bars resolve against the
+	   viewport, not this box, so they are unaffected. */
+	scrollbar-gutter: stable;
+	overscroll-behavior: contain;
+	padding-block-start: var(--top-bar-clearance);
+	padding-block-end: var(--bottom-bar-clearance);
+}
+.shell-body {
+	display: grid;
+	grid-template-columns: calc(var(--rail-width, 52px) + 16px) minmax(0, 1fr) 0;
+	gap: 0;
+	position: relative;
+	min-block-size: 100%;
+}
+/* The sidebar is a fixed-position flyout in every mode — it overlays the page
+   and never reserves a column or displaces dashboard content, so the third
+   track stays 0. See ui-sidebar#mode. */
+.shell-body > * {
+	min-width: 0;
+	min-height: 0;
+}
+/* Column 2 is the content track; column 1 is the empty gutter the fixed
+   `global-dock` overlay floats over (the dock no longer lives in the grid). */
+.shell-page {
+	grid-column: 2;
+	display: flex;
+	flex-direction: column;
+}
+.shell-page > .shell-page-view {
+	flex: 1;
+	min-height: 0;
+}
+.shell-page:not(.is-page-wallet) > app-dashboard,
+.shell-page:not(.is-page-wallet) > mobile-dashboard,
+.shell-page:not(.is-page-swap) > swap-page,
+.shell-page:not(.is-page-explorer) > explorer-page,
+.shell-page:not(.is-page-accounts) > accounts-list-page,
+.shell-page:not(.is-page-account) > account-detail-page,
+.shell-page:not(.is-page-transaction) > transaction-detail-page {
+	display: none;
+}
+/* Viewport-scoped dashboard swap. Both <app-dashboard> and
+   <mobile-dashboard> are mounted side-by-side in the wallet page slot;
+   each viewport bucket hides the wrong one so only the correct layout
+   is visible (and tabbable) at any time. */
+:host([data-vw="md"]) mobile-dashboard,
+:host([data-vw="lg"]) mobile-dashboard,
+:host([data-vw="xl"]) mobile-dashboard,
+:host([data-vw="xxl"]) mobile-dashboard {
+	display: none;
+}
+:host([data-vw="xs"]) app-dashboard,
+:host([data-vw="sm"]) app-dashboard {
+	display: none;
+}
+/* Mobile (xs/sm < 768px): the page fills the shell as a single cell; the dock
+   is a fixed bottom overlay (global-dock.css) floating above it, and the
+   bottom-bar is suppressed. The sidebar is left alone: it runs in
+   `mode-coverup` here and floats as its own drawer. */
+:host([data-vw="xs"]) .shell-body,
+:host([data-vw="sm"]) .shell-body {
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-rows: minmax(0, 1fr);
+}
+:host([data-vw="xs"]) .shell-page,
+:host([data-vw="sm"]) .shell-page {
+	grid-row: 1;
+	grid-column: 1;
+}
+/* Mobile: the bottom bar is suppressed and the fixed dock takes its slot, so the
+   scroll surface reserves the dock's height (not the status bar's) at the block-end
+   so content can travel fully above the dock. */
+:host([data-vw="xs"]) .shell-scroll,
+:host([data-vw="sm"]) .shell-scroll {
+	padding-block-end: calc(var(--dock-h) + var(--space-4));
+}
+/* Bottom bar is permanently suppressed on mobile — the dock takes its
+   vertical slot. The sidebar is intentionally NOT hidden here: its own
+   mode-coverup CSS keeps the shell translated off-screen until the user
+   opens it, and hiding it outright would kill the swipe-open gesture. */
+:host([data-vw="xs"]) global-bottom-bar,
+:host([data-vw="sm"]) global-bottom-bar {
+	display: none;
+}

@@ -1,0 +1,46 @@
+/* Host is layout-neutral; the inner `.fab` owns positioning so `data-position`
+   can live on a normal element (a component can't `?attr` its own host). */
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: contents;
+}
+.fab {
+	position: fixed;
+	z-index: var(--z-fab, 50);
+}
+.fab[data-position='static'] {
+	position: static;
+	z-index: auto;
+}
+.fab[data-position='bottom-end'] { inset-block-end: 1.5rem; inset-inline-end: 1.5rem; }
+.fab[data-position='bottom-start'] { inset-block-end: 1.5rem; inset-inline-start: 1.5rem; }
+.fab[data-position='top-end'] { inset-block-start: 1.5rem; inset-inline-end: 1.5rem; }
+.fab[data-position='top-start'] { inset-block-start: 1.5rem; inset-inline-start: 1.5rem; }
+/* `--ui-btn-radius` pierces into ui-button's shadow → the inner <button> goes
+   pill/circular; the matching host radius keeps the elevation shadow rounded. */
+.fab-btn {
+	--ui-btn-radius: 999px;
+	border-radius: 999px;
+	box-shadow: var(--elev-3, 0 14px 36px rgba(0, 0, 0, 0.38));
+	transition:
+		transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1),
+		box-shadow 0.16s ease;
+	will-change: transform;
+}
+.fab-btn:hover {
+	transform: translateY(-2px) scale(1.03);
+	box-shadow: var(--elev-hover, 0 18px 42px rgba(0, 0, 0, 0.45));
+}
+.fab-btn:active {
+	transform: translateY(0) scale(0.98);
+}
+@media (prefers-reduced-motion: reduce) {
+	.fab-btn,
+	.fab-btn:hover,
+	.fab-btn:active {
+		transform: none;
+		transition: none;
+	}
+}

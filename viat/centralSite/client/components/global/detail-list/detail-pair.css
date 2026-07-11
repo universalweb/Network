@@ -1,0 +1,78 @@
+/* The host IS the row (a grid cell of the parent's .dtl grid). */
+:host {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 1rem;
+	padding-block: 0.45rem;
+	border-block-end: 1px solid color-mix(in oklab, var(--text-muted) 10%, transparent);
+	min-inline-size: 0;
+	font-family: var(--font-mono, ui-monospace, monospace);
+}
+.dtl-label {
+	flex: 0 0 auto;
+	font-size: var(--text-xs);
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+.dtl-value {
+	margin: 0;
+	min-inline-size: 0;
+	font-size: var(--text-sm);
+	color: var(--text-main);
+	text-align: end;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.dtl-value[data-mono] {
+	font-variant-numeric: tabular-nums;
+}
+.dtl-copy {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.4rem;
+	max-inline-size: 100%;
+	padding: 0;
+	border: 0;
+	background: none;
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	transition: color 0.15s ease;
+}
+.dtl-copy:hover {
+	color: var(--cyan);
+}
+.dtl-copy:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--cyan));
+	outline-offset: 2px;
+	border-radius: var(--radius-xs, 2px);
+}
+.dtl-copy-hint {
+	flex: 0 0 auto;
+	font-size: var(--text-2xs);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	opacity: 0;
+	transition: opacity 0.15s ease;
+}
+.dtl-copy:hover .dtl-copy-hint {
+	opacity: 0.7;
+}
+.dtl-copy[data-copied] .dtl-copy-hint {
+	opacity: 1;
+	color: var(--color-success);
+}
+@media (prefers-reduced-motion: reduce) {
+	.dtl-copy,
+	.dtl-copy-hint {
+		transition: none;
+	}
+}

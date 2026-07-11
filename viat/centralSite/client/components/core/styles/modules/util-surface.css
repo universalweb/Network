@@ -1,0 +1,81 @@
+/* uwc.util — surface, border, and tone utilities. */
+@layer uwc.util {
+	.surface {
+		background: var(--bg-panel);
+		border: var(--border-width) solid var(--border-light-color);
+		border-radius: var(--radius-md);
+	}
+	.panel {
+		background: var(--bg-panel);
+		border: var(--border-width) solid var(--border-light-color);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-2);
+	}
+	.border {
+		border: var(--border-width) solid var(--border-light-color);
+	}
+	.border-top {
+		border-top: var(--border-width) solid var(--border-light-color);
+	}
+	.border-bottom {
+		border-bottom: var(--border-width) solid var(--border-light-color);
+	}
+	.divider {
+		border: 0;
+		border-top: var(--border-width) solid
+			var(--dark-divider, var(--border-light-color));
+	}
+	.tone-success {
+		color: var(--color-success-text);
+	}
+	.tone-danger {
+		color: var(--color-danger);
+	}
+	.tone-warn {
+		color: var(--color-warn-text);
+	}
+	.tone-info {
+		color: var(--cyan);
+	}
+	/* Fill-tone surface — the SINGLE tone→pure-color map for VIZ FILLS (status
+	   dots, tracker segments, bar fills). Carry `data-tone="success"` on the
+	   element and read `var(--tone-fill)`; each component applies its own
+	   treatment (solid fill, color-mix, border). Distinct from the `.tone-*`
+	   CLASSES above, which set TEXT color via the softer `-text` variants — a
+	   fill needs the pure `--color-*` token, not the text variant. Attribute
+	   selector, so no class-name collision and no inherited `color` leak. */
+	[data-tone='accent']  { --tone-fill: var(--cyan); }
+	[data-tone='success'] { --tone-fill: var(--color-success); }
+	[data-tone='warning'] { --tone-fill: var(--color-warning); }
+	[data-tone='danger']  { --tone-fill: var(--color-danger); }
+	[data-tone='info']    { --tone-fill: var(--color-info); }
+	[data-tone='neutral'] { --tone-fill: var(--text-muted); }
+	.bg-success {
+		background: color-mix(in srgb, var(--color-success) 12%, transparent);
+	}
+	.bg-danger {
+		background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+	}
+	.bg-panel {
+		background: var(--bg-panel);
+	}
+	.bg-dark {
+		background: var(--bg-dark);
+	}
+	.bg-body {
+		background: var(--bg-body);
+	}
+	.bg-transparent {
+		background: transparent;
+	}
+	.rounded {
+		border-radius: var(--radius-md);
+	}
+	.border-strong {
+		border: var(--border-width) solid var(--border-color, var(--border-light-color));
+	}
+	/* migrated from base.css */
+	.green-hover:hover {
+		color: var(--green-hover);
+	}
+}

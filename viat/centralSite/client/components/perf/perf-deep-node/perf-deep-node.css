@@ -1,0 +1,33 @@
+:host {
+	display: block;
+	padding: 4px 6px 4px 10px;
+	margin: 0 0 0 6px;
+	border-left: 1px solid rgba(99, 102, 241, 0.18);
+	font-family: 'JetBrains Mono', ui-monospace, monospace;
+	font-size: 10px;
+	color: rgba(255, 255, 255, 0.78);
+}
+.head {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+}
+.level {
+	color: rgba(255, 255, 255, 0.35);
+	min-width: 38px;
+}
+.val {
+	color: #6366f1;
+	font-variant-numeric: tabular-nums;
+	min-width: 60px;
+}
+.token {
+	color: rgba(255, 255, 255, 0.3);
+	font-size: 9px;
+}
+:host(.leaf) {
+	border-left-color: rgba(244, 114, 182, 0.4);
+}
+:host(.leaf) .val {
+	color: #f9a8d4;
+}

@@ -1,0 +1,21 @@
+:host {
+	display: block;
+}
+.hp-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-2);
+	border-radius: var(--radius-sm);
+}
+.hp-row:hover {
+	background: rgba(255, 255, 255, 0.025);
+}
+.hp-desc {
+	font-family: var(--font-mono);
+	font-size: var(--text-xs);
+	line-height: 1.35;
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+	text-align: right;
+}

@@ -1,0 +1,19 @@
+/*
+ * Dark — panel RULE overrides, adopted into the panel shadow by theme. Tokens
+ * live in styles/themes/dark.css. Unlayered so it wins over base panel.css.
+ * x.ai aesthetic: sans titling, flat header — no mono uppercase, no underglow.
+ */
+.panel-header {
+	/* panel.css hardcodes the mono font; x.ai titles are sans/medium. */
+	font-family: var(--font-display);
+	font-weight: 500;
+	box-shadow: none;
+}
+.panel-header::after {
+	/* No neon underline — a single hairline border carries the separation. */
+	display: none;
+}
+.panel-header .ph-id {
+	font-family: var(--font-mono);
+	font-weight: 400;
+}

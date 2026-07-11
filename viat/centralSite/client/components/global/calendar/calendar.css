@@ -1,0 +1,239 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: block;
+	inline-size: 18rem;
+}
+:host([data-density='compact']),
+.cal[data-density='compact'] {
+	inline-size: auto;
+}
+/* Event calendars are month-grid widgets, not pickers — let the host fill its
+   container so the inner .cal[data-events] 100% actually spans full width
+   (without this the shared :host 18rem cap pins it to picker size). */
+:host(ui-event-calendar) {
+	inline-size: 100%;
+}
+.cal {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding: var(--space-3);
+	/* Surface vocabulary, same as .surface / .panel: --bg-panel + the adaptive
+	   --border-light-color (redefined per theme, dark-on-light / light-on-dark) so
+	   the card edge reads in every theme — NOT the white-alpha --dark-divider that
+	   vanishes on a light page. Both go through a --cal-* hook so a theme can skin
+	   the calendar specifically without touching the global surface tokens. */
+	border: var(--border-width, 1px) solid var(--cal-border, var(--border-light-color));
+	border-radius: var(--radius-lg);
+	background: var(--cal-bg, var(--bg-panel));
+	font-family: var(--font-mono, monospace);
+}
+.cal[data-events] {
+	inline-size: 100%;
+}
+.cal-head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+}
+.cal-title {
+	flex: 1 1 auto;
+	text-align: center;
+	font-size: var(--text-sm);
+	font-weight: var(--weight-semibold);
+	color: var(--text-main);
+}
+.cal-nav {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: var(--radius-xs);
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	transition:
+		color var(--dur-fast) var(--ease-out, ease),
+		background var(--dur-fast) var(--ease-out, ease),
+		transform var(--dur-fast) var(--ease-spring);
+}
+.cal-nav:hover {
+	/* Adaptive hover tint — never the near-black --bg-dark (which equals --text-main
+	   in the light theme → the black-on-black bug). --surface-tint sits over the
+	   panel and stays readable in every theme; --cal-control-* lets a theme retune. */
+	color: var(--cal-control-hover-color, var(--text-main));
+	background: var(--cal-control-hover-bg, var(--surface-tint));
+}
+.cal-nav:active {
+	transform: scale(0.9);
+}
+.cal-today {
+	padding: var(--space-1) var(--space-2);
+	border: var(--border-width, 1px) solid var(--cal-control-border, var(--border-light-color));
+	border-radius: var(--radius-xs);
+	background: transparent;
+	color: var(--text-muted);
+	font: inherit;
+	font-size: var(--text-xs);
+	cursor: pointer;
+	transition: color var(--dur-fast) var(--ease-out, ease), border-color var(--dur-fast) var(--ease-out, ease);
+}
+.cal-today:hover {
+	color: var(--cal-accent, var(--teal));
+	border-color: var(--cal-accent, var(--teal));
+}
+.cal-weekdays,
+.cal-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 0.15rem;
+}
+.cal-wd {
+	padding-block: var(--space-1);
+	text-align: center;
+	font-size: var(--text-2xs, 0.7rem);
+	font-weight: var(--weight-semibold);
+	color: var(--text-muted);
+	text-transform: uppercase;
+}
+.cal-cell {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	aspect-ratio: 1;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: var(--radius-xs);
+	background: transparent;
+	color: var(--text-main);
+	font: inherit;
+	font-size: var(--text-sm);
+	cursor: pointer;
+	transition:
+		background var(--dur-fast) var(--ease-out, ease),
+		color var(--dur-fast) var(--ease-out, ease),
+		transform var(--dur-fast) var(--ease-spring);
+}
+.cal-cell > * {
+	pointer-events: none;
+}
+.cal-cell:hover:not([disabled], [data-selected], [data-range-start], [data-range-end], [data-in-range]) {
+	/* Neutral hover ONLY on plain days — the selected/range cells are excluded so
+	   their accent fill is never masked by the tint on hover (a hovered selection
+	   must keep reading as selected). The :not() list holds specificity at one attr,
+	   so [data-selected] still loses to nothing here. see .cal-nav:hover — adaptive
+	   tint, never the near-black --bg-dark. */
+	background: var(--cal-cell-hover-bg, var(--surface-tint));
+}
+.cal-cell:active:not([disabled]) {
+	transform: scale(0.92);
+}
+/* Keyboard focus — a themed ring on the accent so cells/nav are operable by
+   keyboard without the bare UA outline; pointer focus stays quiet. */
+.cal-cell:focus-visible,
+.cal-nav:focus-visible,
+.cal-today:focus-visible {
+	outline: 0.125rem solid var(--cal-focus-ring, var(--cal-accent, var(--teal)));
+	outline-offset: -0.125rem;
+}
+.cal-cell:focus:not(:focus-visible),
+.cal-nav:focus:not(:focus-visible),
+.cal-today:focus:not(:focus-visible) {
+	outline: none;
+}
+.cal-cell[data-out] {
+	color: var(--text-muted);
+	opacity: 0.4;
+	cursor: default;
+}
+.cal-cell[data-today] {
+	border-color: var(--cal-accent, var(--teal));
+}
+.cal-cell[data-selected],
+.cal-cell[data-range-start],
+.cal-cell[data-range-end] {
+	background: var(--cal-accent, var(--teal));
+	color: var(--cal-on-accent, var(--bg-body));
+	font-weight: var(--weight-semibold);
+}
+.cal-cell[data-in-range] {
+	background: color-mix(in oklab, var(--cal-accent, var(--teal)) 22%, transparent);
+	border-radius: 0;
+}
+.cal-cell[data-range-start] {
+	border-start-end-radius: 0;
+	border-end-end-radius: 0;
+}
+.cal-cell[data-range-end] {
+	border-start-start-radius: 0;
+	border-end-start-radius: 0;
+}
+/* Compact (mini) — tighter cells + type. */
+.cal[data-density='compact'] {
+	gap: var(--space-1);
+	padding: var(--space-2);
+}
+.cal[data-density='compact'] .cal-cell {
+	font-size: var(--text-xs);
+	border-radius: 50%;
+}
+.cal[data-density='compact'] .cal-title {
+	font-size: var(--text-xs);
+}
+/* Event view — taller cells with the number top-left and stacked chips. */
+.cal[data-events] .cal-cell {
+	aspect-ratio: auto;
+	min-block-size: 4.25rem;
+	flex-direction: column;
+	align-items: stretch;
+	justify-content: flex-start;
+	gap: 0.15rem;
+	padding: var(--space-1);
+}
+.cal[data-events] .cal-num {
+	font-size: var(--text-xs);
+	text-align: end;
+}
+.cal-chips {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	min-block-size: 0;
+}
+/* flex display beats UA [hidden] — re-assert none */
+.cal-chips[hidden],
+.cal-chip[hidden] {
+	display: none;
+}
+.cal-chip {
+	overflow: hidden;
+	padding: 0.05rem 0.3rem;
+	border-radius: var(--radius-xs);
+	font-size: var(--text-2xs, 0.7rem);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	background: color-mix(in oklab, var(--chip, var(--cyan)) 22%, transparent);
+	color: var(--text-main);
+	border-inline-start: 2px solid var(--chip, var(--cyan));
+	text-align: start;
+}
+.cal-chip[data-tone='accent'] { --chip: var(--cyan); }
+.cal-chip[data-tone='success'] { --chip: var(--color-success); }
+.cal-chip[data-tone='warning'] { --chip: var(--color-warning); }
+.cal-chip[data-tone='danger'] { --chip: var(--color-danger); }
+.cal-chip[data-tone='info'] { --chip: var(--color-info); }
+@media (prefers-reduced-motion: reduce) {
+	.cal-nav,
+	.cal-nav:active,
+	.cal-cell,
+	.cal-cell:active:not([disabled]) {
+		transition: none;
+		transform: none;
+	}
+}

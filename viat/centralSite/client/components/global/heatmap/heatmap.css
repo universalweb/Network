@@ -1,0 +1,106 @@
+:host {
+	display: block;
+	/* Two props retheme the whole ramp; cell size + gap tune density. */
+	--heat-color: var(--teal, oklch(0.72 0.13 220));
+	--heat-track: var(--surface-sunken, color-mix(in oklab, currentColor 8%, transparent));
+	--hm-cell: 0.85rem;
+	--hm-gap: 0.18rem;
+	--hm-radius: 0.18rem;
+}
+.hm {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, 0.5rem);
+}
+/* Matrix cells default larger than the GitHub-calendar squares so text column
+   headers + optional in-cell values fit without colliding (pure-colour matrices
+   can shrink --hm-cell back down). */
+.hm[data-mode='matrix'] {
+	--hm-cell: 1.6rem;
+}
+.hm-scroll {
+	overflow-x: auto;
+	padding-block-end: 0.25rem;
+}
+.hm-grid {
+	position: relative;
+	display: grid;
+	gap: var(--hm-gap);
+	inline-size: max-content;
+	justify-content: start;
+	align-items: center;
+}
+.hm-cell {
+	inline-size: var(--hm-cell);
+	block-size: var(--hm-cell);
+	aspect-ratio: 1;
+	border-radius: var(--hm-radius);
+	background: var(--heat-track);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+.hm-cell.is-empty {
+	cursor: default;
+	box-shadow: inset 0 0 0 1px color-mix(in oklab, currentColor 6%, transparent);
+}
+.hm-val {
+	pointer-events: none;
+	font-size: 0.5rem;
+	line-height: 1;
+	color: color-mix(in oklab, currentColor 75%, transparent);
+}
+.hm-label {
+	font-size: 0.6875rem;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+.hm-col-label,
+.hm-month-label {
+	text-align: start;
+	align-self: end;
+	padding-block-end: 0.15rem;
+}
+.hm-row-label,
+.hm-weekday-label {
+	justify-self: end;
+	padding-inline-end: 0.3rem;
+}
+.hm-tip {
+	position: absolute;
+	z-index: 2;
+	padding: 0.25rem 0.45rem;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: var(--surface-inverse, oklch(0.22 0.02 250));
+	color: var(--text-on-inverse, #fff);
+	font-size: 0.6875rem;
+	line-height: 1.2;
+	white-space: nowrap;
+	pointer-events: none;
+	translate: -50% calc(-100% - 0.3rem);
+	opacity: 0;
+	transition: opacity var(--dur-fast, 0.12s) var(--ease-out, ease);
+}
+.hm-tip[data-show='true'] {
+	opacity: 1;
+}
+.hm-legend {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.6875rem;
+	color: var(--text-muted);
+}
+.hm-legend-ramp {
+	inline-size: 4.5rem;
+	block-size: 0.5rem;
+	border-radius: 999px;
+	background: linear-gradient(to right, var(--heat-track), var(--heat-color));
+}
+@media (prefers-reduced-motion: reduce) {
+	.hm-tip {
+		transition: none;
+	}
+}

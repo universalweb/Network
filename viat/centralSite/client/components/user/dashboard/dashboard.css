@@ -1,0 +1,38 @@
+:host {
+	display: block;
+}
+/* The dashboard flows inside the shell scroll surface — it is not its own scroll
+   box, and the fixed top-bar clearance is owned by .shell-scroll (app.css), so there
+   is no top padding here. The long panels (activity-log / wallet-params) keep an
+   internal cap so the overview stays compact; everything else flows. */
+.dashboard-center {
+	display: flex;
+	flex-direction: column;
+	padding-block-end: var(--space-12);
+}
+.center-content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	padding: var(--space-4);
+	width: 100%;
+	max-width: var(--center-max-width, 1536px);
+	margin: 0 auto;
+	box-sizing: border-box;
+}
+.center-columns {
+	display: grid;
+	grid-template-columns: 220px minmax(0, 1fr) 220px;
+	gap: var(--space-4);
+	width: 100%;
+	align-items: start;
+}
+.center-stack {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	min-width: 0;
+}
+/* Mobile is handled entirely by the separate <mobile-dashboard>
+   component (mounted as a sibling in the wallet page slot and toggled
+   via the app-view viewport class) — no media queries here. */

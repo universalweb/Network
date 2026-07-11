@@ -1,0 +1,124 @@
+:host {
+	display: block;
+	flex-shrink: 0;
+	/* Query against the card's OWN width: on the desktop dashboard the card sits in
+	   the center column (narrower than the viewport), so a viewport @media never
+	   fired while the dashboard was shown. `inline-size` makes :host the query
+	   container; the watermark is anchored to .wallet-hero's own position:relative,
+	   so inline-size containment does not relocate it. */
+	container-type: inline-size;
+}
+
+/* ══════════════════════════════════════════════════════
+   WALLET HERO
+══════════════════════════════════════════════════════ */
+.wallet-hero {
+	padding: var(--space-7) var(--space-8) var(--space-6);
+	flex-shrink: 0;
+	border-radius: var(--radius);
+	background: var(--bg-panel);
+	border: var(--panel-border, var(--border-light));
+	box-shadow: var(--panel-shadow);
+	overflow: hidden;
+	position: relative;
+	transition:
+		border-color 0.25s,
+		box-shadow 0.25s;
+}
+
+.wallet-hero::before {
+	content: 'VIAT BALANCE';
+	position: absolute;
+	inset-block-start: 10px;
+	inset-inline-end: 18px;
+	font-size: 2rem;
+	font-weight: var(--weight-bold);
+	letter-spacing: 2px;
+	color: var(--watermark-text);
+	user-select: none;
+}
+
+.wallet-hero:hover {
+	border-color: var(--panel-hover-border);
+	box-shadow: var(--panel-hover-shadow);
+}
+
+.wa-label {
+	font-family: var(--font-display);
+	font-size: 0.4375rem;
+	text-transform: uppercase;
+	letter-spacing: 0.3em;
+	color: var(--text-muted);
+	margin-block-end: var(--space-3);
+}
+
+.wa-amount-main {
+	font-size: 4.5rem;
+	font-family: var(--font-mono);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-main);
+	letter-spacing: -2px;
+	line-height: 1;
+}
+
+/* `bare` mode — used by <mobile-dashboard> so the balance reads as part
+   of the page background instead of as a card. Strip the panel chrome
+   (background, border, shadow, padding) and let the typography do the
+   work. The bigger font + the watermark "VIAT BALANCE" still anchor it
+   as a hero region, just unbounded. */
+:host(.bare) .wallet-hero {
+	padding: var(--space-3) var(--space-2) var(--space-2);
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	border-radius: 0;
+}
+:host(.bare) .wallet-hero:hover {
+	border-color: transparent;
+	box-shadow: none;
+}
+:host(.bare) .wallet-hero::before {
+	font-size: 1.5rem;
+	opacity: 0.5;
+	inset-block-start: 0;
+	inset-inline-end: 0;
+}
+:host(.bare) .wa-amount-main {
+	font-size: 3.75rem;
+	letter-spacing: -2px;
+}
+:host(.bare) .wa-amount-full {
+	font-size: var(--text-base);
+}
+
+/* `rem` not `em`: inside @container, `em` resolves against the container's own
+   font-size; `rem` is root-relative (this project's root is 14px) and zoom-safe.
+   One threshold governs both contexts — the desktop card (column width) and the
+   mobile-dashboard `.bare` balance (wallet-amount is ~full-width there, so the
+   container ≈ viewport and the shrink still fires on narrow phones). */
+@container (max-width: 30rem) {
+	.wa-amount-main {
+		font-size: 2.125rem;
+	}
+	:host(.bare) .wa-amount-main {
+		font-size: 3rem;
+	}
+}
+
+.wa-coin-info {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin-block-start: var(--space-3);
+}
+
+.wa-coin-symbol {
+	color: var(--text-light);
+}
+
+.wa-amount-full {
+	font-size: var(--text-xs);
+	font-family: var(--font-mono);
+	color: var(--text-muted);
+	letter-spacing: 0.04em;
+}

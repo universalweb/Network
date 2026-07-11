@@ -1,0 +1,277 @@
+:host {
+	display: contents;
+}
+/* The modal owns the outer frame — width/height are driven through its
+   `--ui-modal-max-width` / `--ui-modal-max-height` vars, defaulted via
+   the desktop rule below and overridden full-bleed on mobile. The
+   pre-modal `.sm-shell` div is gone; the tabs component is now the
+   single child and fills the modal body via `display: flex` on it. */
+.sm-modal {
+	--ui-modal-max-width: min(1120px, calc(100vw - 48px));
+	--ui-modal-max-height: calc(100dvh - 64px);
+	/* The tabs sidebar paints a full-height background, so opt OUT of the core
+	   modal-body top clearance and inset the strip + content areas instead — the
+	   sidebar bg then flows up under the frosted window bar with no gap. */
+	--modal-body-pad-top: 0;
+	color: var(--text-main);
+	font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+.sm-tabs {
+	display: flex;
+	width: 100%;
+	/* DEFINITE height (not a min-height floor) so ui-tabs' grid bounds its single
+	   row and .tab-strip / .tab-content each scroll INTERNALLY. A floor let a tall
+	   tab (e.g. WALLET with many rows) grow the host unbounded, so the inner
+	   overflow:auto never engaged and the whole body scrolled (tab-strip and all),
+	   or nothing scrolled on a trackpad. Subtract the modal inset (64px) + the
+	   window-bar clearance (bar 2.75rem + space-5) the core .modal-body now adds. */
+	block-size: min(540px, calc(100dvh - 64px));
+	/* Inset (bar 2.75rem + space-5) pushed INTO the strip + content tops so the
+	   sidebar bg flows full-height under the frosted bar. */
+	--tabs-top-inset: calc(2.75rem + var(--space-5));
+	--tab-strip-width: 220px;
+}
+/* Maximized: the dialog grows to 100dvh but the definite `.sm-tabs` height above
+   stays capped, so the tab content scroll area never grew with it. The modal
+   reflects its window-state onto the host as `data-window` (a slotted child can't
+   see the inner dialog's state). Two rules cooperate: the modal's own
+   `[data-window='maximized']` grows `.modal-body` (`flex: 1 1 auto`) to the full
+   100dvh dialog — giving it a DEFINITE height — and this rule then lets `.sm-tabs`
+   take 100% of it. `.modal-controls` is absolutely positioned, so `.modal-body` is
+   the sole in-flow child, and the slot is `display:contents`, so 100% resolves. */
+.sm-modal[data-window='maximized'] .sm-tabs {
+	block-size: 100%;
+}
+.sm-body {
+	min-width: 0;
+	min-height: 0;
+	overflow-y: auto;
+	/* `auto`, not `contain`: .tab-content is the actual scroller and .sm-body sits
+	   inside it. With `contain`, .sm-body absorbs trackpad/wheel deltas and refuses
+	   to chain them to .tab-content, so the content never scrolls on a trackpad.
+	   `auto` lets the wheel chain through to the real scroller. */
+	overscroll-behavior: auto;
+	/* Top = bar clearance (inset) + breathing room so content starts below the
+	   frosted bar and scrolls under it; the panel bg flows up behind the glass. */
+	padding-inline: var(--space-9);
+	padding-block: calc(var(--tabs-top-inset, 0px) + var(--space-4)) var(--space-10);
+}
+/* Mobile: take the full screen and shrink the vertical rail to an
+   icon-only strip. The modal already supports `--ui-modal-max-*` =
+   `100*` for a true edge-to-edge dialog, so we just override both. */
+@media (max-width: 47.9375em) {
+	.sm-modal {
+		--ui-modal-max-width: 100vw;
+		--ui-modal-max-height: 100dvh;
+	}
+	.sm-tabs {
+		/* Definite height (see desktop rule) minus the mobile window-bar clearance
+		   (bar 3.25rem + space-5) so .tab-content scrolls inside the full-bleed
+		   dialog instead of overflowing it. */
+		block-size: 100dvh;
+		--tabs-top-inset: calc(3.25rem + var(--space-5));
+		--tab-strip-width: 56px;
+	}
+	.sm-body {
+		padding-inline: var(--space-5);
+		padding-block: calc(var(--tabs-top-inset, 0px) + var(--space-4)) var(--space-8);
+	}
+}
+.sm-section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	min-width: 0;
+}
+.sm-section-head {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-3);
+	font-size: var(--text-sm);
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+.sm-section-id {
+	color: var(--cyan);
+	opacity: 0.8;
+}
+.sm-section-title {
+	color: var(--text-main);
+}
+.sm-copy {
+	margin: 0;
+	font-size: var(--text-xs);
+	line-height: 1.5;
+	color: var(--text-muted, rgba(255, 255, 255, 0.6));
+}
+.sm-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	min-width: 0;
+}
+.sm-label {
+	font-size: var(--text-2xs);
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--text-muted, rgba(255, 255, 255, 0.45));
+}
+.sm-textarea,
+.sm-input {
+	box-sizing: border-box;
+	width: 100%;
+	padding: var(--space-3) var(--space-4);
+	background: var(--bg-dark);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	border-radius: var(--radius-sm);
+	color: var(--text-main);
+	font-family: inherit;
+	font-size: var(--text-xs);
+	letter-spacing: 0.04em;
+	resize: vertical;
+	transition: border-color 0.15s ease;
+}
+.sm-textarea:focus,
+.sm-input:focus {
+	outline: none;
+	border-color: var(--teal);
+}
+.sm-readout {
+	padding: var(--space-3) var(--space-4);
+	background: var(--bg-dark);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-radius: var(--radius-sm);
+	color: var(--text-main);
+	font-family: inherit;
+	font-size: var(--text-xs);
+	letter-spacing: 0.04em;
+	word-break: break-all;
+	min-height: 1em;
+	transition:
+		border-color 0.15s ease,
+		color 0.15s ease;
+}
+.sm-readout.is-copyable {
+	cursor: copy;
+}
+.sm-readout.is-copyable:hover {
+	border-color: var(--teal);
+	color: var(--teal);
+}
+.sm-textarea.is-copyable {
+	cursor: copy;
+}
+.sm-grid {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+.sm-divider {
+	margin: var(--space-2) 0 var(--space-2);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--text-muted, rgba(255, 255, 255, 0.4));
+}
+.sm-copy code {
+	padding: 1px var(--space-2);
+	background: var(--bg-dark);
+	border-radius: var(--radius-xs);
+	font-family: inherit;
+	font-size: var(--text-xs);
+}
+.sm-actions {
+	display: flex;
+	gap: var(--space-3);
+}
+.sm-btn {
+	padding: var(--space-3) var(--space-5);
+	background: transparent;
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	border-radius: var(--radius-sm);
+	color: var(--text-muted, rgba(255, 255, 255, 0.7));
+	font-family: inherit;
+	font-size: var(--text-xs);
+	letter-spacing: 0.18em;
+	cursor: pointer;
+	transition:
+		border-color 0.15s ease,
+		color 0.15s ease,
+		background 0.15s ease;
+}
+.sm-btn:hover:not(:disabled) {
+	border-color: var(--teal);
+	color: var(--teal);
+}
+.sm-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+.sm-btn-primary {
+	border-color: var(--teal);
+	color: var(--teal);
+}
+.sm-btn-primary:hover:not(:disabled) {
+	background: var(--cyan-tint-faint, color-mix(in oklab, var(--teal) 6%, transparent));
+}
+.sm-btn-danger {
+	border-color: color-mix(in oklab, var(--color-danger) 50%, transparent);
+	color: var(--color-danger);
+}
+.sm-btn-danger:hover:not(:disabled) {
+	border-color: var(--color-danger);
+	background: color-mix(in oklab, var(--color-danger) 8%, transparent);
+	color: var(--color-danger);
+}
+.sm-create-form,
+.sm-create-confirm {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+}
+.sm-warning {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-4) var(--space-5);
+	border: 1px solid color-mix(in oklab, var(--color-danger) 35%, transparent);
+	border-radius: var(--radius-sm);
+	background: color-mix(in oklab, var(--color-danger) 6%, transparent);
+}
+.sm-warning-head {
+	font-size: var(--text-xs);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--color-danger);
+}
+.sm-warning-body {
+	margin: 0;
+	font-size: var(--text-xs);
+	line-height: 1.5;
+	color: var(--text-muted, rgba(255, 255, 255, 0.7));
+}
+.sm-warning-row {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+.sm-status {
+	margin-block-start: var(--space-2);
+	font-size: var(--text-xs);
+	line-height: 1.4;
+	min-height: 1em;
+	opacity: 0;
+	transition: opacity 0.18s ease;
+}
+.sm-status[data-visible] {
+	opacity: 1;
+}
+.sm-status[data-tone='info'] {
+	color: var(--text-muted, rgba(255, 255, 255, 0.6));
+}
+.sm-status[data-tone='success'] {
+	color: var(--color-success);
+}
+.sm-status[data-tone='error'] {
+	color: var(--color-danger);
+}

@@ -1,0 +1,51 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: inline-flex;
+	flex: 0 0 auto;
+}
+.btng {
+	display: inline-flex;
+	flex-direction: row;
+}
+.btng[data-orientation='vertical'] {
+	flex-direction: column;
+}
+/* Each slotted button squares ALL corners by default; first/last re-round their
+   outer edge. `--ui-btn-radius` inherits across the shadow boundary into the inner
+   <button> (ui-button reads `var(--ui-btn-radius, …)`). */
+::slotted(*) {
+	--ui-btn-radius: 0;
+	position: relative;
+}
+/* Horizontal: round the inline (start/end) edges; overlap to collapse 1px borders. */
+.btng:not([data-orientation='vertical']) ::slotted(:first-child) {
+	--ui-btn-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+.btng:not([data-orientation='vertical']) ::slotted(:last-child) {
+	--ui-btn-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+.btng:not([data-orientation='vertical']) ::slotted(:not(:first-child)) {
+	margin-inline-start: -1px;
+}
+/* Vertical: round the block (top/bottom) edges. */
+.btng[data-orientation='vertical'] ::slotted(:first-child) {
+	--ui-btn-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.btng[data-orientation='vertical'] ::slotted(:last-child) {
+	--ui-btn-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+.btng[data-orientation='vertical'] ::slotted(:not(:first-child)) {
+	margin-block-start: -1px;
+}
+/* A lone button keeps its full radius. */
+::slotted(:only-child) {
+	--ui-btn-radius: var(--radius-md);
+	margin: 0;
+}
+/* Raise the hovered/focused segment so its full border outlines above neighbours. */
+::slotted(:hover),
+::slotted(:focus-within) {
+	z-index: 1;
+}

@@ -1,0 +1,79 @@
+:host {
+	display: block;
+	/* Type palette + chrome — every knob defaulted (with an oklch fallback behind
+	   each theme token) so a bare <ui-json-inspector> reads right, and these
+	   inherit through the row shadows since custom properties cross the boundary. */
+	--json-string: var(--green, oklch(0.74 0.15 150));
+	--json-number: var(--teal, oklch(0.72 0.13 220));
+	--json-boolean: var(--purple, oklch(0.68 0.2 300));
+	--json-null: var(--text-muted);
+	--json-key: var(--text-strong, currentColor);
+	--json-index: var(--text-muted);
+	--json-match-bg: color-mix(in oklab, var(--warning, oklch(0.8 0.16 85)) 24%, transparent);
+	--json-row-hover: color-mix(in oklab, currentColor 7%, transparent);
+	--json-indent: 1.05rem;
+	--json-max-height: 24rem;
+	font-family: var(--font-mono, ui-monospace, "SF Mono", monospace);
+}
+.ji {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2, 0.5rem);
+	padding: var(--space-2, 0.5rem);
+	border: 1px solid var(--border-light-color, var(--dark-divider));
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--surface-sunken, var(--bg-elevated, transparent));
+}
+.ji-toolbar {
+	display: flex;
+	gap: var(--space-2, 0.5rem);
+	align-items: center;
+}
+.ji-search {
+	flex: 1;
+	min-inline-size: 0;
+	padding: 0.35rem 0.6rem;
+	border: 1px solid var(--border-light-color, var(--dark-divider));
+	border-radius: var(--radius-sm, 0.25rem);
+	background: var(--surface-raised, transparent);
+	color: inherit;
+	font: inherit;
+	font-size: 0.8125rem;
+}
+.ji-search:focus-visible {
+	outline: none;
+	border-color: var(--teal, currentColor);
+	box-shadow: 0 0 0 3px color-mix(in oklab, var(--teal, currentColor) 25%, transparent);
+}
+.ji-btn {
+	flex: none;
+	padding: 0.35rem 0.6rem;
+	border: 1px solid var(--border-light-color, var(--dark-divider));
+	border-radius: var(--radius-sm, 0.25rem);
+	background: transparent;
+	color: var(--text-muted);
+	font: inherit;
+	font-size: 0.75rem;
+	cursor: pointer;
+	transition: color var(--dur-fast, 0.15s) var(--ease-out, ease);
+}
+.ji-btn:hover {
+	color: inherit;
+}
+.ji-tree {
+	display: flex;
+	flex-direction: column;
+	overflow: auto;
+	max-block-size: var(--json-max-height);
+}
+.ji-empty {
+	padding: var(--space-3, 0.75rem);
+	color: var(--text-muted);
+	font-size: 0.8125rem;
+	text-align: center;
+}
+@media (prefers-reduced-motion: reduce) {
+	.ji-btn {
+		transition: none;
+	}
+}

@@ -1,0 +1,48 @@
+/* `global-dock` is a top-level FIXED overlay — a global chrome layer like
+   `global-pulldown`, not a cell inside the shell grid. It no longer occupies an
+   opaque grid row that revealed the black app body behind it ("the black box");
+   it floats over the page so content flows full-height behind it.
+
+   Desktop: a vertical rail pinned to the inline-start edge, icons centred in the
+   viewport height — mirrors the old `.shell-dock-rail` column (rail-width + the
+   reserved gutter the shell still keeps as empty spacer).
+   Mobile (xs/sm, via the host's `data-vw`): a translucent glass bar across the
+   block-end edge, so the page is visible scrolling behind it. */
+:host {
+	position: fixed;
+	inset-block: 0;
+	/* Float the rail off the inline-start window edge. Done with the position
+	   inset, not padding: a base reset zeroes host padding here (position/inset
+	   are honored), so `padding-inline` would collapse to 0 and the rail would sit
+	   flush against the edge. Vertical float needs nothing — the rail is centered
+	   in the full-height host by `justify-content: center`. */
+	inset-inline-start: var(--space-5);
+	inline-size: fit-content;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: stretch;
+	box-sizing: border-box;
+	z-index: var(--z-dock, 40);
+	pointer-events: none;
+}
+/* Only the rail itself is interactive; the tall empty span on desktop must let
+   clicks fall through to the fixed top bar it overlaps at the inline-start edge. */
+:host > * {
+	pointer-events: auto;
+}
+:host([data-vw="xs"]),
+:host([data-vw="sm"]) {
+	inset-block: auto max(var(--space-3), env(safe-area-inset-bottom));
+	inset-inline-start: 50%;
+	transform: translateX(-50%);
+	inline-size: fit-content;
+	max-inline-size: calc(100% - var(--space-5) * 2);
+	flex-direction: row;
+	justify-content: center;
+	padding: var(--space-2);
+	background: var(--dock-mobile-bg, color-mix(in oklab, var(--popup-bg, rgba(7, 8, 12, 0.95)) 68%, transparent));
+	backdrop-filter: blur(0.75rem) saturate(1.2);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.06));
+	border-radius: var(--radius-lg, 0.75rem);
+}

@@ -6,6 +6,38 @@ import { clearBuffer } from '#utilities/cryptography/utils';
 export class KeyExchange {
 	constructor(config) {
 		assign(this, config);
+		if (this.keyPair) {
+			this.applyKeyPair();
+		}
+	}
+	/**
+	 * Adopt an injected KeyExchangeKeyPair adapter as the source of truth for key sizes and
+	 * primitive operations, keeping the protocol logic provider-agnostic (native / pqclean / noble).
+	 * Schemes that supply their own methods (x25519, hybrids) simply omit keyPair and are untouched.
+	 */
+	applyKeyPair() {
+		const keyPair = this.keyPair;
+		this.publicKeySize = keyPair.publicKeySize;
+		this.privateKeySize = keyPair.privateKeySize;
+		this.seedSize = keyPair.seedSize;
+		this.clientPublicKeySize = keyPair.publicKeySize;
+		this.clientPrivateKeySize = keyPair.privateKeySize;
+		this.serverPublicKeySize = keyPair.publicKeySize;
+		this.serverPrivateKeySize = keyPair.privateKeySize;
+		this.isKEM = keyPair.isKEM;
+		this.isDH = keyPair.isDH;
+	}
+	async keyExchangeKeypair(seed) {
+		return this.keyPair.generate(seed);
+	}
+	async encapsulate(publicKey) {
+		return this.keyPair.encapsulate(publicKey);
+	}
+	async decapsulate(ciphertext, privateKey) {
+		return this.keyPair.decapsulate(ciphertext, privateKey);
+	}
+	async deriveSharedSecret(privateKey, peerPublicKey) {
+		return this.keyPair.deriveSharedSecret(privateKey, peerPublicKey);
 	}
 	async clientEphemeralKeypair(destination) {
 		const generatedKeypair = await this.keyExchangeKeypair();
@@ -189,7 +221,16 @@ export class KeyExchange {
 		return assign({}, source);
 	}
 	async initializePublicKey(source) {
+		if (this.keyPair) {
+			return this.keyPair.importPublicKey(source?.publicKey || source);
+		}
 		return source?.publicKey || source;
+	}
+	async initializePrivateKey(source) {
+		if (this.keyPair) {
+			return this.keyPair.importPrivateKey(source?.privateKey || source);
+		}
+		return source?.privateKey || source;
 	}
 	compareSessionkeys(client, server) {
 		if (!client.receiveKey || !client.transmitKey) {

@@ -1,0 +1,245 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
+
+/* ── Dark Theme ───────────────────────────────────────
+   xAI docs aesthetic. Monochrome, near-black, flat.
+   White primary CTA. No neon glow — subtle hairline borders.
+─────────────────────────────────────────────────────── */
+:root {
+	/* Dark root → native controls (date/time pickers, spinners, scrollbars, the
+	   native <select> popup) adopt the dark UA palette instead of light-on-light. */
+	color-scheme: dark;
+	/* ── Base Palette — pure-neutral oklch ramp (hue/chroma 0) ──
+	   docs.x.ai: page bg is hsl(0 0% 4%) = #0a0a0a (oklch L 0.145), surfaces
+	   barely a step above it — flat near-black, delineated by hairline borders
+	   rather than fill contrast. */
+	--bg-body: oklch(0.145 0 0);
+	--bg-panel: oklch(0.175 0 0);
+	--bg-dark: oklch(0.11 0 0);
+	--bg-dark-mid: oklch(0.16 0 0);
+	--navy: oklch(0.225 0 0);
+	--navy-light: oklch(0.62 0 0);
+	/* Accents collapse to light neutrals — x.ai reserves chroma for status only. */
+	--teal: oklch(0.92 0 0);
+	--teal-dim: oklch(0.92 0 0 / 0.08);
+	--cyan: oklch(0.97 0 0);
+	--cyan-dim: oklch(0.97 0 0 / 0.08);
+	--magenta: oklch(0.6 0.15 16);
+	--magenta-dim: oklch(0.6 0.15 16 / 0.1);
+	--grey-solid: oklch(0.62 0 0);
+	--grey-mid: oklch(0.34 0 0);
+
+	/* ── Text — x.ai uses a SOFT light foreground (222 19% 86%), not pure white;
+	   pure white is reserved for emphasis / primary fills. ── */
+	--text-main: oklch(0.88 0.012 250);
+	--text-muted: oklch(0.64 0.005 250);
+	--text-light: oklch(1 0 0);
+	--text-offwhite: oklch(0.76 0.006 250);
+
+	/* ── Fonts ───────────────────────────────────────── */
+	--font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+	--font-display: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+	--font-body: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+	/* ── Border Colors ───────────────────────────────── */
+	/* Crisper hairline — matches the settings modal's 0.12 border so panels read
+	   as sharply delineated surfaces rather than fading into the body. */
+	--border-light-color: oklch(1 0 0 / 0.12);
+
+	/* ── Borders ─────────────────────────────────────── */
+	--border-main: 1px solid oklch(1 0 0 / 0.12);
+	--border-light: 1px solid var(--border-light-color);
+	--border-dark: 1px solid var(--dark-divider-accent);
+
+	/* ── Surface Tints ──────────────────────────────── */
+	--surface-tint-heavy: oklch(1 0 0 / 0.1);
+	--surface-tint: oklch(1 0 0 / 0.06);
+	--surface-tint-soft: oklch(1 0 0 / 0.04);
+	--surface-tint-faint: oklch(1 0 0 / 0.025);
+	--surface-tint-ghost: oklch(1 0 0 / 0.02);
+	--surface-tint-whisper: oklch(1 0 0 / 0.015);
+	--watermark-text: oklch(1 0 0 / 0.03);
+
+	/* ── Dark Surface Text ───────────────────────────── */
+	--dark-text: oklch(0.85 0 0 / 0.5);
+	--dark-text-dim: oklch(0.85 0 0 / 0.45);
+	--dark-text-medium: oklch(0.85 0 0 / 0.7);
+	--dark-text-bright: oklch(0.85 0 0 / 0.75);
+	--dark-heading: oklch(1 0 0 / 0.4);
+	--dark-heading-sep: oklch(1 0 0 / 0.2);
+	--dark-text-faint: oklch(1 0 0 / 0.3);
+
+	/* ── Dark Surface Dividers ───────────────────────── */
+	--dark-divider: oklch(1 0 0 / 0.07);
+	--dark-divider-subtle: oklch(1 0 0 / 0.05);
+	--dark-divider-faint: oklch(1 0 0 / 0.04);
+	--dark-divider-accent: oklch(1 0 0 / 0.06);
+	--dark-highlight: oklch(1 0 0 / 0.03);
+
+	/* ── Accent Scale — flat, white-on-black (formerly cyan neon) ── */
+	--cyan-glow-strong: oklch(1 0 0 / 0.22);
+	--cyan-glow: oklch(1 0 0 / 0.16);
+	--cyan-glow-medium: oklch(1 0 0 / 0.12);
+	--cyan-glow-soft: oklch(1 0 0 / 0.1);
+	--cyan-glow-faint: oklch(1 0 0 / 0.06);
+	--cyan-tint: oklch(1 0 0 / 0.05);
+	--cyan-tint-faint: oklch(1 0 0 / 0.04);
+	--cyan-scanline: oklch(1 0 0 / 0.015);
+	--cyan-timestamp: oklch(0.8 0 0);
+
+	/* ── Secondary Accent Scale (formerly teal) ──────── */
+	--teal-glow: oklch(1 0 0 / 0.14);
+	--teal-glow-soft: oklch(1 0 0 / 0.1);
+
+	/* ── Status Colors — the only chroma in the theme ── */
+	--color-success: oklch(0.78 0.14 160);
+	--color-success-glow: oklch(0.78 0.14 160 / 0.35);
+	--color-success-text: oklch(0.82 0.11 160);
+	--color-danger: oklch(0.65 0.19 22);
+	--color-danger-glow: oklch(0.65 0.19 22 / 0.35);
+	--color-warning: oklch(0.8 0.13 80);
+	--color-info: oklch(0.7 0.1 240);
+	--color-warn-text: oklch(0.66 0.17 18 / 0.95);
+
+	/* ═══════════════════════════════════════════════════
+	   COMPONENT THEME TOKENS
+	═══════════════════════════════════════════════════ */
+
+	/* ── Shape — x.ai rounds generously (8px base) and PILLS every button ── */
+	--radius: 8px;
+	--radius-sm: 5px;
+	/* Panels/surfaces round to the settings modal's 12px window radius (was 8px). */
+	--radius-md: 12px;
+	--radius-lg: 14px;
+	--radius-xl: 16px;
+	/* The x.ai signature: buttons + icon buttons are fully rounded pills/circles. */
+	--ui-btn-radius: 9999px;
+	--stat-bar-radius: 3px;
+	--indicator-radius: 50%;
+	--indicator-warn-radius: 2px;
+
+	/* ── Surface elevation — the settings-modal treatment: a top inner-highlight
+	   "lifted glass" edge over a real drop shadow (was flat, near-shadowless). The
+	   inset hairline is the load-bearing bit — it catches light on the top edge so
+	   the surface reads as lifted off the body, exactly like the modal window. ── */
+	--surface-border: oklch(1 0 0 / 0.12);
+	--surface-lift: inset 0 1px 0 oklch(1 0 0 / 0.05);
+	--elev-1: var(--surface-lift), 0 1px 2px oklch(0 0 0 / 0.4), 0 3px 8px oklch(0 0 0 / 0.26);
+	--elev-2: var(--surface-lift), 0 4px 14px oklch(0 0 0 / 0.4), 0 12px 28px -6px oklch(0 0 0 / 0.34);
+	--elev-3: inset 0 1px 0 oklch(1 0 0 / 0.06), 0 12px 32px oklch(0 0 0 / 0.5), 0 24px 56px -12px oklch(0 0 0 / 0.44);
+	--elev-hover: inset 0 1px 0 oklch(1 0 0 / 0.06), 0 8px 24px oklch(0 0 0 / 0.44);
+	/* Panels read `--shadow-2` (via the `.surface` utility). Override the flat base
+	   value with the same lifted-edge + elevation so every panel floats like the modal. */
+	--shadow-2: var(--surface-lift), 0 2px 6px oklch(0 0 0 / 0.34), 0 10px 26px -8px oklch(0 0 0 / 0.4);
+
+	/* ── Input ───────────────────────────────────────── */
+	--input-radius: 8px;
+	--input-accent-border: 1px solid oklch(1 0 0 / 0.1);
+	--input-accent-shadow: none;
+	--field-border-style: solid;
+
+	/* ── Panel header — x.ai titling: sans, sentence-case, calm tracking,
+	   no uppercase / wide-tracked mono, no left accent bar ── */
+	--panel-header-padding: 0.65rem 0.9rem;
+	--panel-header-font-size: 0.8125rem;
+	--panel-header-text-transform: none;
+	--panel-header-letter-spacing: -0.005em;
+	--panel-header-color: var(--text-main);
+	--panel-header-left-border: none;
+	--ph-id-font-size: 0.6875rem;
+	--ph-id-letter-spacing: 0;
+	--ph-id-opacity: 0.6;
+
+	/* ── Panel — flat, hairline-bordered ─────────────── */
+	--panel-shadow:
+		0 1px 2px oklch(0 0 0 / 0.4),
+		0 4px 12px oklch(0 0 0 / 0.25);
+	--panel-hover-shadow:
+		0 2px 4px oklch(0 0 0 / 0.45),
+		0 10px 24px oklch(0 0 0 / 0.3),
+		inset 0 1px 0 oklch(1 0 0 / 0.05);
+	--panel-hover-border: oklch(1 0 0 / 0.16);
+	--panel-header-accent: oklch(1 0 0 / 0.18);
+	--panel-header-bg: linear-gradient(
+		90deg,
+		oklch(1 0 0 / 0.04) 0%,
+		oklch(1 0 0 / 0.01) 40%,
+		transparent 100%
+	);
+	--panel-header-left-accent-width: 2px;
+	--panel-header-border-bottom: none;
+
+	/* ── Buttons ─────────────────────────────────────── */
+	--btn-bg: oklch(1 0 0 / 0.06);
+	--btn-border: oklch(1 0 0 / 0.12);
+	--btn-neutral: oklch(1 0 0 / 0.07);
+	--btn-neutral-border: oklch(1 0 0 / 0.13);
+	/* Flat — x.ai buttons carry NO top inner-highlight. The generic
+	   `button { box-shadow: var(--btn-inset) }` (elements-forms.css) otherwise
+	   floats a top-only line on every non-filled / icon button. */
+	--btn-inset: none;
+	--btn-hover-bg: oklch(1 0 0 / 0.12);
+	--btn-hover-border: oklch(1 0 0 / 0.2);
+	--btn-hover-inset: none;
+	--btn-hover-glow: none;
+	--btn-hover-color: var(--text-light);
+	/* Primary solid = the x.ai signature white CTA with near-black label. */
+	--btn-primary-bg: oklch(1 0 0);
+	--btn-primary-border: oklch(1 0 0);
+	--btn-primary-color: oklch(0.17 0 0);
+	--btn-primary-hover-bg: oklch(0.9 0 0);
+	--btn-primary-hover-border: oklch(0.9 0 0);
+	--btn-primary-hover-color: oklch(0.15 0 0);
+	--focus-ring-color: oklch(1 0 0 / 0.7);
+	--green-hover: oklch(0.8 0.15 155);
+
+	/* ── Inputs / Interactive ────────────────────────── */
+	--input-hover-border: oklch(1 0 0 / 0.22);
+	--input-hover-glow: oklch(1 0 0 / 0.06);
+	--input-copied-bg: oklch(1 0 0 / 0.08);
+	--input-copied-border: oklch(1 0 0 / 0.25);
+
+	/* ── Top Bar ─────────────────────────────────────── */
+	/* Frosted glass, like the settings-modal window bar: a translucent dark tint
+	   that lets the blurred page show through (the bar's own `backdrop-filter` does
+	   the blur) instead of the near-invisible 3%-white it was. */
+	--topbar-bg: oklch(0.18 0 0 / 0.6);
+	--topbar-border: oklch(1 0 0 / 0.12);
+	/* Bottom status bar shares the frosted treatment (its own backdrop-filter). */
+	--status-bar-bg: oklch(0.14 0 0 / 0.62);
+	--topbar-accent: var(--text-light);
+	--topbar-bottom-border: 1px solid oklch(1 0 0 / 0.08);
+	--tb-badge-radius: 4px;
+	--logo-mark-pattern: repeating-linear-gradient(45deg,
+			oklch(1 0 0 / 0.6), oklch(1 0 0 / 0.6) 2px,
+			transparent 2px, transparent 5px);
+
+	/* ── Popups ──────────────────────────────────────── */
+	--popup-bg: oklch(0.18 0 0 / 0.96);
+	--popup-bg-hover: oklch(0.22 0 0 / 0.97);
+	/* Frosted variant for transient popups (tooltips, the native-select picker) —
+	   more translucent than `--popup-bg` and paired with a blur so they glass over
+	   the content behind, matching the modal window bar. Kept SEPARATE from
+	   `--popup-bg` so the settings-modal surface (the reference) stays fully opaque
+	   and readable. Other themes fall back to `--popup-bg` + no blur. */
+	--popup-glass-bg: oklch(0.19 0 0 / 0.78);
+	--popup-glass-blur: blur(0.875rem) saturate(1.3);
+	--popup-border: oklch(1 0 0 / 0.12);
+	--popup-border-hover: oklch(1 0 0 / 0.2);
+	--popup-accent: oklch(1 0 0 / 0.18);
+	--popup-shadow:
+		0 8px 24px oklch(0 0 0 / 0.5),
+		0 0 0 1px oklch(1 0 0 / 0.04);
+	--popup-text: var(--text-light);
+
+	/* ── Glow Scale — flattened (x.ai has no neon glow) ── */
+	--ph-dot-shadow: none;
+	--tab-indicator-shadow: none;
+	--logo-mark-text-shadow: none;
+	--subtitle-text-shadow: none;
+	--indicator-on-shadow: 0 0 6px oklch(1 0 0 / 0.3);
+	--stat-good-text-shadow: none;
+	--stat-bar-fill-shadow: none;
+	--wa-underline-shadow: none;
+	--log-in-text-shadow: none;
+	--log-out-text-shadow: none;
+}

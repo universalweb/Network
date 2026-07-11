@@ -1,0 +1,82 @@
+:host {
+	display: block;
+}
+/* ui-surface owns tone/elevation/border/radius; the article clips the media to the
+   surface's rounded corners and stacks the regions. */
+ui-surface {
+	display: block;
+	overflow: hidden;
+}
+.card {
+	display: flex;
+	flex-direction: column;
+	block-size: 100%;
+}
+.card[data-interactive] {
+	cursor: pointer;
+}
+/* ── Media ───────────────────────────────────────────────────────────────── */
+.card-media {
+	display: block;
+}
+.card-media::slotted(img),
+.card-media::slotted(video),
+.card-media::slotted(picture) {
+	display: block;
+	inline-size: 100%;
+	block-size: auto;
+	object-fit: cover;
+}
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.card-header {
+	display: none;
+	align-items: flex-start;
+	gap: 0.75rem;
+	padding: 1rem 1.1rem 0;
+}
+.card-header[data-show] {
+	display: flex;
+}
+.card-avatar {
+	flex: 0 0 auto;
+}
+.card-heads {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+}
+.card-heading {
+	margin: 0;
+	font-size: var(--text-md, 1rem);
+	font-weight: var(--weight-semibold, 600);
+	line-height: 1.25;
+	color: var(--text-primary, currentColor);
+}
+.card-heading:empty {
+	display: none;
+}
+.card-subheading {
+	margin: 0.15rem 0 0;
+	font-size: var(--text-sm, 0.8rem);
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+	line-height: 1.35;
+}
+.card-subheading:empty {
+	display: none;
+}
+.card-header-action {
+	flex: 0 0 auto;
+	margin-inline-start: auto;
+	margin-block-start: -0.25rem;
+}
+/* ── Body ────────────────────────────────────────────────────────────────── */
+.card-body {
+	flex: 1 1 auto;
+	padding: 0.9rem 1.1rem;
+}
+/* ── Actions ─────────────────────────────────────────────────────────────── */
+.card-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0 1.1rem 1rem;
+}

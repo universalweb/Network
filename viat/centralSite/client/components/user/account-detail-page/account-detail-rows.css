@@ -1,0 +1,71 @@
+/* Row/cell CSS for the account-detail tx list. Injected into <paged-list>'s
+   shadow via `.importStyles`. The account header + stats stay on the page
+   (account-detail-page.css). */
+.ad-row {
+	display: grid;
+	grid-template-columns: 1.1fr 0.5fr 1.7fr 1fr 0.8fr 1.5fr;
+	gap: var(--space-3);
+	padding: var(--space-3) var(--space-3);
+	border-block-end: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.04));
+	font-size: var(--text-sm);
+	align-items: center;
+}
+.ad-row:hover:not(.ad-head) {
+	background: color-mix(in oklab, var(--teal) 6%, transparent);
+}
+.ad-row.ad-head {
+	font-size: var(--text-2xs);
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+	position: sticky;
+	inset-block-start: 0;
+	background: var(--bg-dark);
+	z-index: 1;
+}
+.ad-cell {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.ad-id,
+.ad-addr {
+	text-decoration: none;
+	color: var(--dark-text-medium);
+	border-block-end: 1px dashed transparent;
+}
+a.ad-id:hover,
+a.ad-addr:hover {
+	color: var(--teal);
+	border-block-end-color: var(--teal);
+}
+.ad-dir {
+	font-size: var(--text-2xs);
+	letter-spacing: 0.16em;
+	font-weight: var(--weight-semibold);
+}
+.ad-dir[data-tone='in'] {
+	color: var(--color-success);
+}
+.ad-dir[data-tone='out'] {
+	color: var(--color-warning);
+}
+.ad-amount {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+.ad-amount[data-tone='in'] {
+	color: var(--color-success);
+}
+.ad-amount[data-tone='out'] {
+	color: var(--color-warning);
+}
+.ad-status {
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	font-size: var(--text-2xs);
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.55));
+}
+.ad-time {
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+}

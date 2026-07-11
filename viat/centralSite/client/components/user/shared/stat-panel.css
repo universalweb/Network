@@ -1,0 +1,71 @@
+/* Shared stats-panel vocabulary — the key/value stat rows, block grouping, and
+ * latency bar used by the stats-style panels (network-stats, wallet-stats-panel,
+ * wallet-params). Imported via each panel's `static styles`; NOT in the universal
+ * panel.css (a generic panel primitive shouldn't carry one app pattern's styling).
+ * Root-class layout (.stats-panel / .wallet-params-panel scroll + min-height)
+ * lives in each owning panel's own CSS; this file is only the shared content. */
+
+.stat-block {
+	padding: var(--space-4) var(--space-5);
+	border-block-end: var(--border-light);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+
+.stat-block-title {
+	font-size: 0.5rem;
+	text-transform: uppercase;
+	letter-spacing: 0.2em;
+	color: var(--text-muted);
+	padding-block-end: var(--space-2);
+	border-block-end: var(--border-light);
+}
+
+.stat-row {
+	display: flex;
+	justify-content: space-between;
+	font-size: var(--text-xs);
+}
+
+.stat-row .s-key {
+	color: var(--text-muted);
+}
+
+.stat-row .s-val {
+	color: var(--text-main);
+	font-weight: var(--weight-semibold);
+}
+
+.stat-row .s-val.good {
+	color: var(--stat-good-color, var(--teal));
+	text-shadow: var(--stat-good-text-shadow, 0 0 4px var(--teal-glow-soft));
+}
+
+.stat-latency-bar {
+	height: 0.1875rem;
+	background: var(--surface-tint);
+	border-radius: var(--stat-bar-radius);
+	margin-block-start: var(--space-2);
+	overflow: hidden;
+}
+
+.stat-latency-fill {
+	height: 100%;
+	width: 18%;
+	background: var(--teal);
+	box-shadow: var(--stat-bar-fill-shadow, 0 0 6px var(--teal));
+}
+
+/* Query against the OWNING panel's width, not the viewport. This shared sheet is
+   deliberately `:host`-free (3 panels adopt it — a `:host` here would leak
+   container-type onto all of them), so each owner declares `container-type` on
+   its own :host. network-stats lives in the narrow sidebar, so it now reads
+   compact always — the old viewport @media never fired for a ~220px panel on
+   desktop. `rem` not `em` (root is 14px; @container `em` is the container font). */
+@container (max-width: 30rem) {
+	.stat-block {
+		padding-inline-start: var(--space-4);
+		padding-inline-end: var(--space-4);
+	}
+}

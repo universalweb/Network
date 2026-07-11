@@ -1,0 +1,117 @@
+:host {
+	display: block;
+	flex-shrink: 0;
+	width: 100%;
+}
+
+.wq-wrap {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: var(--space-3);
+	padding: var(--space-4);
+	margin-block-start: var(--space-2);
+	background: var(--surface-tint-faint, rgba(255, 255, 255, 0.022));
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-radius: var(--radius-md);
+}
+
+.wq-wrap:not([data-ready]) {
+	padding: var(--space-5) var(--space-4);
+}
+
+.wq-canvas {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+	padding: var(--space-2);
+	transition: background 0.15s ease;
+}
+
+.wq-wrap:not([data-ready]) .wq-canvas {
+	cursor: default;
+}
+
+.wq-wrap[data-ready] .wq-canvas:hover {
+	background: var(--cyan-glow-medium, color-mix(in oklab, var(--teal) 24%, transparent));
+}
+
+.wq-canvas:focus-visible {
+	outline: 1px solid var(--focus-ring-color, color-mix(in oklab, var(--teal) 72%, transparent));
+	outline-offset: 2px;
+}
+
+.wq-frame {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	border-radius: var(--radius-md);
+	pointer-events: none;
+}
+
+.wq-canvas svg {
+	width: 100%;
+	max-width: 12.5rem;
+	height: auto;
+	display: block;
+	image-rendering: pixelated;
+	shape-rendering: crispEdges;
+	/* Lets pointermove/click target the .wq-canvas wrapper so the framework
+	   tooltip subevent and click handler fire regardless of which QR module
+	   the cursor is over. */
+	pointer-events: none;
+}
+
+.wq-empty-msg {
+	font-family: var(--font-mono);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--text-muted, rgba(255, 255, 255, 0.45));
+}
+
+.wq-download {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-4);
+	background: transparent;
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	border-radius: var(--radius-sm);
+	color: var(--text-muted, rgba(255, 255, 255, 0.65));
+	font-family: var(--font-mono);
+	font-size: var(--text-xs);
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition:
+		border-color 0.15s ease,
+		color 0.15s ease,
+		background 0.15s ease;
+}
+.wq-download .wq-download-icon {
+	--icon-size: 0.8em;
+}
+
+.wq-download:hover:not(:disabled) {
+	border-color: var(--teal);
+	color: var(--teal);
+	background: color-mix(in oklab, var(--teal) 6%, transparent);
+}
+
+.wq-download:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.wq-download ui-icon {
+	display: inline-flex;
+}
+
+.wq-download-label {
+	line-height: 1;
+}

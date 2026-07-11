@@ -1,0 +1,319 @@
+/*
+ * Component-index gallery. Theme-adaptive: every colour rides a theme token
+ * (var(--cyan), var(--bg-*), var(--text-*)) so the page reskins with the active
+ * theme. rail = sticky category nav, stage = scrolling demo column.
+ */
+:host {
+	display: block;
+	block-size: 100svh;
+	overflow: hidden;
+	background: var(--bg-body);
+	color: var(--text-main);
+	font-family: var(--font-display, system-ui);
+}
+/*
+ * The page itself never scrolls: the gallery pins to the viewport, the rail
+ * is its own fixed column, and the stage is the one scroll box.
+ */
+.gallery {
+	display: grid;
+	grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr);
+	block-size: 100svh;
+}
+
+/* ── Rail ─────────────────────────────────────────────── */
+.rail {
+	min-block-size: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	padding: 1.25rem 1rem;
+	box-sizing: border-box;
+	background: color-mix(in oklch, var(--bg-panel) 70%, var(--cyan) 4%);
+	border-inline-end: 1px solid color-mix(in oklch, var(--cyan) 22%, transparent);
+	overflow-y: auto;
+}
+.rail-brand {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding-block-end: 0.75rem;
+	border-block-end: 1px dashed color-mix(in oklch, var(--cyan) 20%, transparent);
+}
+.rail-glyph {
+	font-size: 1.5rem;
+	line-height: 1;
+	color: var(--cyan);
+	text-shadow: 0 0 0.75rem var(--cyan-glow, transparent);
+}
+.rail-brand-text {
+	display: flex;
+	flex-direction: column;
+	font-family: var(--font-display);
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	font-size: 1rem;
+}
+.rail-brand-text small {
+	font-family: var(--font-mono);
+	font-weight: 400;
+	font-size: 0.6rem;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+.rail-search {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding-inline: 0.6rem;
+	border: 1px solid color-mix(in oklch, var(--cyan) 18%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: color-mix(in oklch, var(--bg-body) 80%, transparent);
+}
+.rail-search:focus-within {
+	border-color: var(--cyan);
+	box-shadow: 0 0 0 1px color-mix(in oklch, var(--cyan) 40%, transparent);
+}
+.rail-search-input {
+	flex: 1;
+	min-inline-size: 0;
+	border: 0;
+	/* .rail-search owns the focus ring (:focus-within) around the whole box;
+	   the inner input opts out of the base input:focus-visible box-shadow so it
+	   doesn't paint a second ring inset inside the search box. */
+	box-shadow: none;
+	background: transparent;
+	color: var(--text-main);
+	font-family: var(--font-mono);
+	font-size: 0.8rem;
+	padding-block: 0.5rem;
+	outline: none;
+}
+.rail-search-input::placeholder {
+	color: var(--text-muted);
+}
+.rail-nav {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	flex: 1;
+}
+.rail-cat {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	inline-size: 100%;
+	padding: 0.5rem 0.65rem;
+	border: 0;
+	border-inline-start: 2px solid transparent;
+	border-radius: var(--radius-sm, 0.35rem);
+	background: transparent;
+	color: var(--text-muted);
+	font-family: var(--font-mono);
+	font-size: 0.78rem;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	text-align: start;
+	cursor: pointer;
+	transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+.rail-cat:hover {
+	background: color-mix(in oklch, var(--cyan) 8%, transparent);
+	color: var(--text-main);
+}
+.rail-cat[data-on] {
+	background: color-mix(in oklch, var(--cyan) 14%, transparent);
+	border-inline-start-color: var(--cyan);
+	color: var(--cyan);
+}
+.rail-cat-icon {
+	flex: 0 0 auto;
+	opacity: 0.85;
+}
+.rail-foot {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	padding-block-start: 0.75rem;
+	border-block-start: 1px dashed color-mix(in oklch, var(--cyan) 20%, transparent);
+}
+
+/* ── Stage ────────────────────────────────────────────── */
+.stage {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	padding: clamp(1.25rem, 3vw, 2.5rem);
+	box-sizing: border-box;
+	container-type: inline-size;
+	min-block-size: 0;
+	overflow-y: auto;
+	scrollbar-gutter: stable;
+}
+.stage-head {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	padding-block-end: 1rem;
+	border-block-end: 1px dashed color-mix(in oklch, var(--cyan) 20%, transparent);
+}
+
+/* ── Demo card ────────────────────────────────────────── */
+.demo {
+	display: flex;
+	flex-direction: column;
+	gap: 0.85rem;
+	scroll-margin-block-start: 1.5rem;
+	/* `backwards`, NOT `both`: a transform-animating element kept alive by `fill: both`
+	   resolves its transform to `matrix(1,0,0,1,0,0)` (identity, but not `none`) forever,
+	   which makes every `.demo` a containing block for `position: fixed` — confining the
+	   morph-surface overlays (floating-panel/popover/expandable-card/morph-drawer) to
+	   their section instead of the stage. The entrance's end state equals the natural
+	   state, so releasing the fill after it plays costs nothing visually. */
+	animation: demo-in 0.32s ease backwards;
+}
+/* `.demo { display:flex }` outranks the UA `[hidden]{display:none}`, so the
+   filter predicate's hidden attribute needs an explicit, higher-specificity rule. */
+.demo[hidden] {
+	display: none;
+}
+.preview-section-head {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	padding-inline-start: 0.7rem;
+	border-inline-start: 2px solid var(--cyan);
+}
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+	gap: 0.75rem;
+}
+.cluster {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+/* ── Shell frames (contain → fixed children box inside) ─── */
+.shell-frame {
+	position: relative;
+	contain: layout paint;
+	overflow: hidden;
+	border: 1px solid color-mix(in oklch, var(--cyan) 18%, transparent);
+	border-radius: var(--radius-lg, 0.75rem);
+	background: color-mix(in oklch, var(--bg-body) 60%, var(--bg-panel));
+}
+.shell-frame-bar {
+	block-size: 7rem;
+}
+.demo-pulldown-panel {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	align-items: flex-start;
+	padding: 1rem 1.25rem;
+}
+.demo-shell-controls {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	align-items: flex-start;
+	flex: 1 1 16rem;
+	min-inline-size: 0;
+}
+.demo-sidebar-nav {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	padding: 1.25rem;
+	background: var(--bg-panel);
+	border-inline-start: 2px solid color-mix(in oklch, var(--cyan) 30%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	box-shadow: -8px 0 24px rgba(0, 0, 0, 0.28);
+}
+.demo-sidebar-inline {
+	flex: 0 0 auto;
+	min-inline-size: 13rem;
+}
+.demo-sidebar-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	margin-block-end: 0.5rem;
+}
+.demo-sidebar-link {
+	color: var(--text-muted);
+	text-decoration: none;
+	padding: 0.4rem 0.6rem;
+	border-radius: var(--radius-sm, 0.35rem);
+	font-size: var(--text-sm);
+	transition: color 0.15s ease, background 0.15s ease;
+}
+.demo-sidebar-link:hover {
+	color: var(--cyan);
+	background: color-mix(in oklab, var(--cyan) 8%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+	.demo-sidebar-link {
+		transition: none;
+	}
+}
+.demo-bar {
+	inline-size: 100%;
+}
+
+/* ── PagedList demo host only (rows live in shadow via importStyles) ── */
+.demo-paged {
+	display: block;
+	inline-size: 100%;
+}
+
+@keyframes demo-in {
+	from {
+		opacity: 0;
+		transform: translateY(0.5rem);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* ── Responsive: collapse rail to a top strip ─────────── */
+@media (max-width: 48rem) {
+	.gallery {
+		grid-template-columns: 1fr;
+		grid-template-rows: auto minmax(0, 1fr);
+	}
+	.rail {
+		block-size: auto;
+		overflow-y: visible;
+		border-inline-end: 0;
+		border-block-end: 1px solid color-mix(in oklch, var(--cyan) 22%, transparent);
+	}
+	.rail-nav {
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+	.rail-cat {
+		inline-size: auto;
+		border-inline-start: 0;
+		border-block-end: 2px solid transparent;
+	}
+	.rail-cat[data-on] {
+		border-inline-start: 0;
+		border-block-end-color: var(--cyan);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.demo {
+		animation: none;
+	}
+	.rail-cat {
+		transition: none;
+	}
+}

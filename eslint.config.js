@@ -1,12 +1,13 @@
-import * as ts_api_utils from 'ts-api-utils';
-import globals from 'globals';
-import jsdoc from 'eslint-plugin-jsdoc';
 import json from '@eslint/json';
-import markdown from "@eslint/markdown";
-import security from 'eslint-plugin-security';
-import sonarjs from 'eslint-plugin-sonarjs';
+import markdown from '@eslint/markdown';
 import stylisticJs from '@stylistic/eslint-plugin';
-import {LanguageVariant} from 'typescript';
+import jsdoc from 'eslint-plugin-jsdoc';
+import security from 'eslint-plugin-security';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import sonarjs from 'eslint-plugin-sonarjs';
+import globals from 'globals';
+import * as ts_api_utils from 'ts-api-utils';
+import { LanguageVariant } from 'typescript';
 const globalsObject = {};
 const customGlobals = {
 	globalThis: 'readonly',
@@ -55,19 +56,22 @@ export default [
 			'**/*.mjs',
 		],
 		languageOptions: {
-		  parser: '@typescript-eslint/parser',
-		  parserOptions: {
-			ecmaVersion: 'latest',
-			sourceType: 'module',
-		  },
+			parser: '@typescript-eslint/parser',
+			parserOptions: {
+				ecmaVersion: 'latest',
+				sourceType: 'module',
+			},
 		},
-		plugins: {'@typescript-eslint': ts_api_utils},
-	  },
+		plugins: {
+			'@typescript-eslint': ts_api_utils,
+			'simple-import-sort': simpleImportSort,
+		},
+	},
 	{
 		files: ['**/*.md'],
-		language: 'markdown/markdown',
+		language: 'markdown/commonmark',
 		plugins: {
-			markdown: markdown,
+			markdown,
 		},
 	},
 	{
@@ -94,6 +98,7 @@ export default [
 			'@stylistic': stylisticJs,
 			sonarjs,
 			security,
+			'simple-import-sort': simpleImportSort,
 		},
 		rules: {
 			'sonarjs/cognitive-complexity': 'warn',
@@ -319,7 +324,7 @@ export default [
 				},
 			],
 			'@stylistic/template-curly-spacing': ['error', 'never'],
-			'@stylistic/template-tag-spacing': ['error', 'always'],
+			'@stylistic/template-tag-spacing': ['error', 'never'],
 			'@stylistic/wrap-iife': ['error', 'any'],
 			'@stylistic/wrap-regex': 'error',
 			'@stylistic/yield-star-spacing': ['error', 'after'],
@@ -382,7 +387,7 @@ export default [
 			'jsdoc/no-undefined-types': 0,
 			'jsdoc/require-asterisk-prefix': 1,
 			'jsdoc/require-description': 1,
-			'jsdoc/require-description-complete-sentence': 1,
+			'jsdoc/require-description-complete-sentence': 0,
 			'jsdoc/require-example': 0,
 			'jsdoc/require-file-overview': 0,
 			'jsdoc/require-hyphen-before-param-description': 1,
@@ -506,7 +511,22 @@ export default [
 				},
 			],
 			'no-regex-spaces': 'error',
-			'no-restricted-globals': 'error',
+			'no-restricted-globals': [
+				'error',
+				'status',
+				'name',
+				'type',
+				'event',
+				'alert',
+				'confirm',
+				'prompt',
+				'location',
+				'history',
+				'open',
+				'find',
+				'parent',
+				'length',
+			],
 			'no-restricted-imports': 'off',
 			'no-restricted-modules': 'off',
 			'no-restricted-syntax': [
@@ -546,13 +566,25 @@ export default [
 			'no-unused-expressions': [
 				'error',
 				{
+					allowTaggedTemplates: true,
+					ignoreDirectives: true,
 					allowShortCircuit: true,
 					allowTernary: true,
 				},
 			],
 			'no-unused-labels': 'error',
 			'no-unused-vars': 'off',
-			'no-use-before-define': 'error',
+			'no-use-before-define': [
+				'error', {
+					functions: false,
+					classes: true,
+					variables: true,
+					allowNamedExports: false,
+					enums: true,
+					typedefs: true,
+					ignoreTypeReferences: true,
+				},
+			],
 			'no-useless-call': 'error',
 			'no-useless-computed-key': 'error',
 			'no-useless-concat': 'error',
@@ -574,21 +606,24 @@ export default [
 			radix: 'error',
 			'require-yield': 'error',
 			semi: ['error', 'always'],
-			'sort-imports': [
+			'sort-imports': 'off',
+			// Single group (no blank-line separators) so the sort never fights
+			// `@stylistic/no-multiple-empty-lines: { max: 0 }` — a group-separator
+			// blank line would loop (sort adds it, no-multiple-empty-lines strips
+			// it) and eslint aborts with "circular fixes". One group keeps the
+			// dense zero-blank-line style AND lets imports auto-sort. Order within:
+			// side-effect → node builtins → external → absolute → relative.
+			'simple-import-sort/imports': [
 				'error',
 				{
-					allowSeparatedGroups: false,
-					ignoreCase: false,
-					ignoreDeclarationSort: false,
-					ignoreMemberSort: false,
-					memberSyntaxSortOrder: [
-						'none',
-						'all',
-						'multiple',
-						'single',
+					groups: [
+						[
+							'^\\u0000', '^node:', '^@?\\w', '^', '^\\.',
+						],
 					],
 				},
 			],
+			'simple-import-sort/exports': 'error',
 			'sort-keys': 'off',
 			'sort-vars': 'off',
 			'unicode-bom': 'off',
@@ -596,6 +631,21 @@ export default [
 			'valid-typeof': 'error',
 			'vars-on-top': 'error',
 			yoda: 'off',
+		},
+	},
+	{
+		/*
+		 * The AI surface speaks JSON-RPC + JSON-Schema — `type` PROPERTY keys are
+		 * non-negotiable wire format (inputSchema.type, notification payloads),
+		 * so only the `type` VARIABLE ban applies there. Renaming the keys would
+		 * break MCP-compatible agents.
+		 */
+		files: ['**/components/core/ai/**/*.js'],
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				'VariableDeclarator[id.name="type"]',
+			],
 		},
 	},
 ];

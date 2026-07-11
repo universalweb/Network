@@ -1,0 +1,49 @@
+:host {
+	display: inline-flex;
+}
+.ring {
+	position: relative;
+	display: inline-flex;
+	aspect-ratio: 1;
+	--viz: var(--cyan);
+}
+[data-size='sm'] { inline-size: 2.75rem; }
+[data-size='md'] { inline-size: 4rem; }
+[data-size='lg'] { inline-size: 5.5rem; }
+[data-tone='accent']  { --viz: var(--cyan); }
+[data-tone='success'] { --viz: var(--color-success); }
+[data-tone='warning'] { --viz: var(--color-warning); }
+[data-tone='danger']  { --viz: var(--color-danger); }
+[data-tone='info']    { --viz: var(--color-info); }
+[data-tone='neutral'] { --viz: var(--text-muted); }
+.ring-svg {
+	inline-size: 100%;
+	block-size: 100%;
+	/* Sweep from 12 o'clock instead of 3 o'clock. */
+	transform: rotate(-90deg);
+}
+.ring-track {
+	fill: none;
+	stroke: color-mix(in oklab, var(--text-muted) 22%, transparent);
+}
+.ring-ind {
+	fill: none;
+	stroke: var(--viz);
+	stroke-linecap: round;
+	transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ring-center {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: var(--text-xs);
+	font-weight: var(--weight-semibold, 600);
+	color: var(--text-main);
+}
+@media (prefers-reduced-motion: reduce) {
+	.ring-ind {
+		transition: none;
+	}
+}

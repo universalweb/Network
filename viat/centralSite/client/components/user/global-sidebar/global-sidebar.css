@@ -1,0 +1,5 @@
+/* The drawer itself is `<ui-sidebar>` (fixed, themed). This host is a
+   passthrough — it contributes no box of its own. */
+:host {
+	display: contents;
+}

@@ -1,0 +1,106 @@
+/* Host is layout-neutral; `.speed-dial` owns corner positioning so `data-position`
+   lives on a normal element (no host-attr reflection). */
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: contents;
+}
+.speed-dial {
+	position: fixed;
+	z-index: var(--z-fab, 50);
+	inline-size: max-content;
+}
+.speed-dial[data-position='static'] {
+	/* relative (not static) so the absolute action cluster still anchors to it */
+	position: relative;
+	display: inline-block;
+}
+.speed-dial[data-position='bottom-end'] { inset-block-end: 1.5rem; inset-inline-end: 1.5rem; }
+.speed-dial[data-position='bottom-start'] { inset-block-end: 1.5rem; inset-inline-start: 1.5rem; }
+.speed-dial[data-position='top-end'] { inset-block-start: 1.5rem; inset-inline-end: 1.5rem; }
+.speed-dial[data-position='top-start'] { inset-block-start: 1.5rem; inset-inline-start: 1.5rem; }
+/* ── Trigger ─────────────────────────────────────────────────────────────── */
+.sd-trigger {
+	--ui-btn-radius: 999px;
+	border-radius: 999px;
+	box-shadow: var(--elev-3, 0 14px 36px rgba(0, 0, 0, 0.38));
+	transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s ease;
+	will-change: transform;
+}
+.speed-dial[data-open][data-rotate] .sd-trigger {
+	transform: rotate(45deg);
+}
+/* ── Actions cluster — absolute so it never shifts the trigger ────────────── */
+.sd-actions {
+	position: absolute;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	display: flex;
+	gap: 0.7rem;
+	pointer-events: none;
+}
+.speed-dial[data-direction='up'] .sd-actions {
+	inset-block-end: 100%;
+	inset-inline-start: 50%;
+	transform: translateX(-50%);
+	margin-block-end: 0.7rem;
+	flex-direction: column-reverse;
+	align-items: center;
+}
+.speed-dial[data-direction='down'] .sd-actions {
+	inset-block-start: 100%;
+	inset-inline-start: 50%;
+	transform: translateX(-50%);
+	margin-block-start: 0.7rem;
+	flex-direction: column;
+	align-items: center;
+}
+.speed-dial[data-direction='left'] .sd-actions {
+	inset-inline-end: 100%;
+	inset-block-start: 50%;
+	transform: translateY(-50%);
+	margin-inline-end: 0.7rem;
+	flex-direction: row-reverse;
+	align-items: center;
+}
+.speed-dial[data-direction='right'] .sd-actions {
+	inset-inline-start: 100%;
+	inset-block-start: 50%;
+	transform: translateY(-50%);
+	margin-inline-start: 0.7rem;
+	flex-direction: row;
+	align-items: center;
+}
+/* Each action host fades + scales in; staggered from the trigger outward.
+   Geometry stays put — only transform/opacity animate (GPU-composited). */
+ui-speed-dial-action {
+	opacity: 0;
+	transform: scale(0.5);
+	transition: opacity 0.16s ease, transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.speed-dial[data-open] .sd-actions {
+	pointer-events: auto;
+}
+.speed-dial[data-open] ui-speed-dial-action {
+	opacity: 1;
+	transform: scale(1);
+}
+.speed-dial[data-open] ui-speed-dial-action:nth-child(1) { transition-delay: 0.02s; }
+.speed-dial[data-open] ui-speed-dial-action:nth-child(2) { transition-delay: 0.05s; }
+.speed-dial[data-open] ui-speed-dial-action:nth-child(3) { transition-delay: 0.08s; }
+.speed-dial[data-open] ui-speed-dial-action:nth-child(4) { transition-delay: 0.11s; }
+.speed-dial[data-open] ui-speed-dial-action:nth-child(5) { transition-delay: 0.14s; }
+.speed-dial[data-open] ui-speed-dial-action:nth-child(n + 6) { transition-delay: 0.16s; }
+@media (prefers-reduced-motion: reduce) {
+	.sd-trigger,
+	.speed-dial[data-open][data-rotate] .sd-trigger,
+	ui-speed-dial-action {
+		transition: none;
+		transform: none;
+	}
+	.speed-dial[data-open][data-rotate] .sd-trigger {
+		transform: rotate(45deg);
+	}
+}

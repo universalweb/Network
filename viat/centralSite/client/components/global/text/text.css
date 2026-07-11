@@ -1,0 +1,65 @@
+:host {
+	display: inline-block;
+	min-width: 0;
+}
+.text {
+	display: inline-block;
+	font-family: inherit;
+	color: inherit;
+	margin: 0;
+	min-width: 0;
+}
+/* Variants — keyed off data-variant, never a `var-*` class. */
+[data-variant='display'] {
+	font-family: var(--font-display, inherit);
+	font-size: 2.25rem;
+	font-weight: 800;
+	line-height: 1.1;
+	letter-spacing: -0.01em;
+}
+[data-variant='h1'] { font-size: var(--text-3xl); font-weight: var(--weight-bold); line-height: 1.2; }
+[data-variant='h2'] { font-size: var(--text-2xl); font-weight: var(--weight-bold); line-height: 1.25; }
+[data-variant='h3'] { font-size: var(--text-xl); font-weight: var(--weight-bold); line-height: 1.3; }
+[data-variant='h4'] { font-size: var(--text-lg); font-weight: var(--weight-bold); line-height: 1.35; letter-spacing: 0.01em; }
+[data-variant='h5'] { font-size: var(--text-md); font-weight: var(--weight-bold); line-height: 1.4; letter-spacing: 0.02em; text-transform: uppercase; }
+[data-variant='body']    { font-size: var(--text-md); font-weight: var(--weight-normal); line-height: 1.5; }
+[data-variant='caption'] { font-size: var(--text-sm);  font-weight: var(--weight-normal); line-height: 1.4; }
+[data-variant='overline'] {
+	font-size: var(--text-2xs);
+	font-weight: var(--weight-bold);
+	letter-spacing: 0.16em;
+	line-height: 1.4;
+	text-transform: uppercase;
+}
+[data-variant='mono'] {
+	font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+	font-size: var(--text-base);
+	font-weight: var(--weight-normal);
+}
+/* Tones — data-tone ATTRIBUTE, not a `tone-*` class (which the uwc.util text
+   utilities would override; danger/warning resolve to near-white there). */
+[data-tone='default'] { color: currentColor; }
+[data-tone='muted']   { color: var(--text-muted,   rgba(255, 255, 255, 0.55)); }
+[data-tone='subtle']  { color: var(--text-subtle); }
+[data-tone='success'] { color: var(--color-success); }
+[data-tone='warning'] { color: var(--color-warning); }
+[data-tone='danger']  { color: var(--color-danger); }
+[data-tone='info']    { color: var(--color-info); }
+[data-tone='accent']  { color: var(--teal); }
+[data-tone='inverse'] { color: #0b0d14; }
+/* Align */
+[data-align='start']  { text-align: start; }
+[data-align='center'] { text-align: center; }
+[data-align='end']    { text-align: end; }
+/* Weight overrides */
+[data-weight='regular']  { font-weight: var(--weight-normal); }
+[data-weight='medium']   { font-weight: var(--weight-medium); }
+[data-weight='semibold'] { font-weight: var(--weight-semibold); }
+[data-weight='bold']     { font-weight: var(--weight-bold); }
+/* Truncate */
+[data-truncate] {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

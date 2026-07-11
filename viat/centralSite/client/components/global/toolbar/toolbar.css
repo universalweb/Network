@@ -1,0 +1,29 @@
+:host {
+	display: block;
+}
+/* Intrinsic height (no fixed `--bar-height`): the bar sizes to the action row
+   plus its own block padding, so the icon-button hover pills sit inset with
+   even breathing room on every side instead of filling the bar edge-to-edge. */
+.toolbar {
+	--bar-padding: var(--space-3) var(--space-5);
+	--bar-gap: var(--space-3);
+}
+.toolbar-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+/* Toolbar-context colouring for the composed icon buttons. `color` is an
+   inherited property, so it crosses the shadow boundary down to each
+   `<ui-icon>`'s currentColor. */
+ui-icon-button {
+	color: var(--icon-color, var(--text-main));
+	transition: color 0.15s ease;
+}
+ui-icon-button:hover {
+	color: var(--icon-color-hover, var(--cyan));
+}
+ui-icon-button[data-active],
+ui-icon-button[active] {
+	color: var(--icon-color-active, var(--cyan));
+}

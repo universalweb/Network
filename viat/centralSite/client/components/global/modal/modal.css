@@ -1,0 +1,306 @@
+:host {
+  display: contents;
+}
+
+.modal {
+  --modal-bar-h: 2.75rem;
+  box-sizing: border-box;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
+  border-radius: var(--radius-lg, 12px);
+  background: var(--popup-bg);
+  color: var(--popup-text);
+  box-shadow: var(--modal-shadow,
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px color-mix(in oklab, var(--teal) 8%, transparent));
+  max-width: var(--ui-modal-max-width, min(640px, calc(100vw - 32px)));
+  /* `100dvh` accounts for mobile browser chrome (URL bar showing/hiding)
+     where `100vh` either reports the largest possible value and clips, or
+     locks to the initial value and leaves dead space. `100dvh` shrinks the
+     ceiling so the modal never extends past the visible viewport. */
+  max-height: var(--ui-modal-max-height, calc(100dvh - 32px));
+  overflow: hidden;
+  position: relative;
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  transform-origin: center;
+  will-change: transform, opacity;
+  transition:
+    opacity 0.22s ease,
+    transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-radius 0.2s ease,
+    overlay 0.22s ease allow-discrete,
+    display 0.22s ease allow-discrete;
+}
+/* Top-layer (showModal) dialogs must anchor to the VIEWPORT, not the document.
+   The base `.modal` resolves to `position: absolute` against the initial
+   containing block, which scrolls with the page now that the shell uses document
+   scroll (it was masked before by the old overflow:hidden shell). `:modal` scopes
+   this to genuine top-layer modals; `inset:0` + the base `margin:auto` re-centre. */
+.modal:modal {
+  position: fixed;
+  inset: 0;
+}
+/* Flex column ONLY when the dialog is actually open. Author rules win
+   specificity ties against the UA's `dialog:not([open]) { display: none }`,
+   so writing `display: flex` on `.modal` directly used to make EVERY
+   nested closed modal still render and silently pad its parent's layout
+   (a hidden thumbnail-lightbox dialog was inflating the wallet-onboarding
+   shell by ~430px). Scoping to `[open]` keeps the UA's display:none in
+   force for closed dialogs while still giving open ones a flex column. */
+.modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+.modal-body {
+  /* Two-part behavior:
+     1. When content fits inside the modal's `max-height`, the body is
+        sized to its content (no `flex-grow` → no stretching into empty
+        flex space). The dialog's `height: fit-content` (UA default) then
+        shrink-wraps around it, so the modal stays content-sized and the
+        backdrop reveals real space above/below — the modal looks
+        properly *centered* on tall viewports.
+     2. When content is taller than the modal's `max-height`, the body
+        shrinks (`flex-shrink: 1` + `min-height: 0` to override flex's
+        default `min-height: auto`) to fit inside the capped modal and
+        scrolls its overflow internally. */
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+/* Window bar — a reserved, frosted title bar pinned to the modal top. It gets
+   its bar treatment only when `.has-bar` is set (a control or a title exists),
+   so a plain content modal shows no phantom bar. Semi-transparent + slight blur
+   so scrolled content passes UNDER the glass; a modern shadow + hairline give
+   depth. The matching `.modal-body` top padding (below) reserves the bar height
+   plus breathing room — the SINGLE source of top clearance, so per-modal shells
+   no longer add their own. The bar spans the full width and stays put while the
+   body scrolls beneath it. */
+.modal-controls {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  block-size: var(--modal-bar-h);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-inline: var(--space-3);
+  z-index: 3;
+}
+.modal.has-bar .modal-controls {
+  background: color-mix(in oklab, var(--popup-bg) 72%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-block-end: 1px solid
+    color-mix(in oklab, var(--popup-border, var(--teal)) 26%, transparent);
+  box-shadow: var(--modal-bar-shadow, 0 6px 18px -8px rgba(0, 0, 0, 0.45));
+}
+.modal.has-bar .modal-body {
+  /* Single source of bar clearance for normal modals. A modal whose content
+     paints its OWN full-height background (e.g. the settings tabs sidebar) sets
+     --modal-body-pad-top:0 and insets its inner areas instead, so the background
+     flows up under the frosted bar seamlessly rather than starting below a gap. */
+  padding-block-start: var(--modal-body-pad-top, calc(var(--modal-bar-h) + var(--space-5)));
+}
+/* Title fills the bar opposite the controls; truncates rather than wrapping. */
+.modal-title {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  padding-inline-start: var(--space-2);
+  font-family: var(--font-display, inherit);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.04em;
+  color: var(--text-muted, var(--popup-text));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* macOS-style: controls left, title right — via `order`, DOM stays simple. */
+.modal.controls-left .modal-title { order: 10; padding-inline: 0 var(--space-2); text-align: end; }
+.modal.controls-left .mc-close { order: 1; }
+.modal.controls-left .mc-min   { order: 2; }
+.modal.controls-left .mc-max   { order: 3; }
+.mc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-muted, rgba(255, 255, 255, 0.4));
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Author display: inline-flex above overrides the UA default of
+   display: none for [hidden] elements, so the framework's ?hidden binding
+   correctly toggles the attribute but the button still paints. Force it
+   back on every control flavor so showMinimize/showMaximize/showClose
+   all hide cleanly when their flag is anything other than literal true. */
+.mc-btn[hidden],
+.mc-close[hidden] {
+  display: none !important;
+}
+.mc-btn .mc-icon {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease, opacity 0.2s ease;
+}
+.mc-btn:hover {
+  color: var(--text-main);
+  border-color: var(--dark-divider, rgba(255, 255, 255, 0.18));
+  background: rgba(255, 255, 255, 0.04);
+}
+.mc-btn:active { transform: scale(0.92); }
+.mc-btn:focus-visible {
+  outline: none;
+  border-color: var(--focus-ring-color, var(--cyan));
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--focus-ring-color, var(--cyan)) 45%, transparent);
+}
+/* Per-button hover micro-animations on the icon itself. */
+.mc-min:hover .mc-icon {
+  transform: translateY(2px) scaleX(1.1);
+  color: var(--teal);
+}
+.mc-max:hover .mc-icon-grow,
+.mc-max:hover .mc-icon-shrink {
+  color: var(--cyan);
+}
+/* Expand/restore single toggle — both icons live in the same button slot
+   and crossfade with a rotate+scale morph so it reads as one icon
+   transforming rather than two icons swapping. The currently-visible one
+   matches the modal's actual size state (host data-window). */
+.mc-max {
+  position: relative;
+}
+.mc-max .mc-icon-grow,
+.mc-max .mc-icon-shrink {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    opacity 0.26s ease,
+    transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 0.2s ease;
+}
+.mc-max .mc-icon-grow {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+.mc-max .mc-icon-shrink {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.5);
+}
+:host([data-window='maximized']) .mc-max .mc-icon-grow {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.5);
+}
+:host([data-window='maximized']) .mc-max .mc-icon-shrink {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+/* Maximized — fill the viewport. `100dvh` for the same mobile-chrome
+   reason as the default `max-height` above. */
+:host([data-window='maximized']) .modal {
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  border-radius: 0;
+  margin: 0;
+}
+/* Maximized body MUST grow to fill the 100dvh dialog. The base rule keeps it
+   `flex: 0 1 auto` (content-sized, so a short modal shrink-wraps + centers) — but
+   that leaves the body's height INDEFINITE, so a slotted child's `height: 100%`
+   (settings-modal's tab grid) collapses to `auto` and the dialog shows dead space
+   below the content. Growing the body makes its block size definite (the dialog's
+   IS definite at 100dvh), so the `100%` chain resolves through the
+   `display: contents` slot down to the inner scroll areas. */
+:host([data-window='maximized']) .modal-body {
+  flex: 1 1 auto;
+}
+/* Minimized — collapse the body so only the control strip remains. */
+:host([data-window='minimized']) .modal-body { display: none; }
+:host([data-window='minimized']) .modal {
+  width: 15rem;
+  height: var(--modal-bar-h);
+  max-height: var(--modal-bar-h);
+}
+.modal:not([open]) {
+  opacity: 0;
+  transform: scale(0.92) translateY(14px);
+  transition:
+    opacity 0.16s ease,
+    transform 0.18s cubic-bezier(0.55, 0, 0.85, 0.5),
+    overlay 0.18s ease allow-discrete,
+    display 0.18s ease allow-discrete;
+}
+
+@starting-style {
+  .modal[open] {
+    opacity: 0;
+    transform: scale(0.92) translateY(14px);
+  }
+}
+
+.modal::backdrop {
+  background: rgba(4, 6, 12, 0.55);
+  backdrop-filter: blur(6px);
+  opacity: 1;
+  transition:
+    opacity 0.28s ease,
+    backdrop-filter 0.28s ease,
+    overlay 0.28s ease allow-discrete,
+    display 0.28s ease allow-discrete;
+}
+
+.modal:not([open])::backdrop {
+  opacity: 0;
+  backdrop-filter: blur(0);
+}
+
+@starting-style {
+  .modal[open]::backdrop {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+}
+
+/* Mobile: a taller window bar + larger control hit-targets (≥44px per WCAG).
+   The body clearance tracks --modal-bar-h, so it scales automatically. */
+@media (max-width: 47.9375em) {
+  .modal { --modal-bar-h: 3.25rem; }
+  .mc-btn,
+  .mc-close {
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+  }
+  .mc-btn .mc-icon { transform: scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal {
+    transition: opacity 0.12s ease, overlay 0.12s ease allow-discrete, display 0.12s ease allow-discrete;
+    transform: none;
+  }
+  .modal:not([open]) { transform: none; }
+  @starting-style {
+    .modal[open] { transform: none; }
+  }
+  .mc-btn,
+  .mc-btn .mc-icon {
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+  .mc-btn:hover .mc-icon,
+  .mc-btn:active { transform: none; }
+  .mc-max .mc-icon-grow,
+  .mc-max .mc-icon-shrink {
+    transition: color 0.15s ease, opacity 0.15s ease;
+    transform: none;
+  }
+}

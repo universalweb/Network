@@ -1,0 +1,86 @@
+:host {
+	display: block;
+}
+.vote {
+	display: flex;
+	align-items: stretch;
+	gap: var(--space-3);
+	padding: var(--space-2);
+	/* Surface vocabulary, like the calendar card — adaptive --border-light-color +
+	   --bg-panel so the row reads as a card in every theme. NOT --bg-dark (near-black
+	   == --text-main in light → black-on-black label) nor --dark-divider (white-alpha,
+	   invisible on a light page). --vote-* hooks let a theme restyle the row (e.g.
+	   set --vote-bg: var(--bg-dark) to restore a deep-black card in a dark theme). */
+	border: 1px solid var(--vote-border, var(--border-light-color));
+	border-radius: var(--radius-sm);
+	background: var(--vote-bg, var(--bg-panel));
+}
+.vote-up {
+	flex: none;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.1rem;
+	min-inline-size: 3rem;
+	padding: var(--space-2) var(--space-1);
+	border: 1px solid var(--vote-control-border, var(--border-light-color));
+	border-radius: var(--radius-xs);
+	background: transparent;
+	color: var(--text-muted);
+	font: inherit;
+	cursor: pointer;
+	transition:
+		border-color var(--dur-fast) var(--ease-out, ease),
+		color var(--dur-fast) var(--ease-out, ease),
+		background var(--dur-fast) var(--ease-out, ease),
+		transform var(--dur-fast) var(--ease-spring);
+}
+.vote-up:hover {
+	border-color: var(--teal);
+	color: var(--text-main);
+}
+.vote-up:active {
+	transform: scale(0.95);
+}
+.vote[data-voted] .vote-up {
+	border-color: var(--teal);
+	background: color-mix(in oklab, var(--teal) 16%, transparent);
+	color: var(--teal);
+}
+.vote-chevron {
+	transition: transform var(--dur-fast) var(--ease-spring);
+}
+.vote[data-voted] .vote-chevron {
+	transform: translateY(-2px);
+}
+.vote-count {
+	font-size: var(--text-sm);
+	font-weight: var(--weight-semibold);
+	font-variant-numeric: tabular-nums;
+}
+.vote-text {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 0.1rem;
+}
+.vote-label {
+	font-size: var(--text-sm);
+	font-weight: var(--weight-medium);
+	color: var(--text-main);
+}
+.vote-desc {
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+	.vote-up,
+	.vote-up:active,
+	.vote-chevron {
+		transition: none;
+		transform: none;
+	}
+}

@@ -1,0 +1,101 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: inline-flex;
+	flex: 0 0 auto;
+}
+.chip {
+	align-items: center;
+	border: 1px solid transparent;
+	border-radius: 999px;
+	display: inline-flex;
+	gap: 0.4em;
+	font-weight: var(--weight-medium, 500);
+	line-height: 1;
+	padding: 0.3em 0.7em;
+	white-space: nowrap;
+	transform-origin: center;
+	transition:
+		background 0.16s ease,
+		border-color 0.16s ease,
+		transform 0.12s ease;
+	will-change: transform;
+}
+/* Sizes */
+.chip[data-size='sm'] { font-size: var(--text-2xs, 0.7rem); padding: 0.24em 0.6em; gap: 0.32em; }
+.chip[data-size='md'] { font-size: var(--text-sm, 0.8rem); }
+.chip[data-size='lg'] { font-size: var(--text-md, 0.95rem); padding: 0.38em 0.9em; }
+/* ── Interactivity ───────────────────────────────────────────────────────── */
+.chip[data-interactive] { cursor: pointer; }
+.chip[data-interactive]:hover { transform: translateY(-1px); }
+.chip[data-interactive]:active { transform: translateY(0); }
+.chip:focus-visible {
+	outline: 2px solid var(--color-info, #3b82f6);
+	outline-offset: 2px;
+}
+.chip[data-disabled] {
+	cursor: not-allowed;
+	opacity: 0.5;
+	pointer-events: none;
+}
+/* ── Tones (data-tone ATTRIBUTE so the util `.tone-*` text rules can't win) ─ */
+.chip[data-tone='neutral'] {
+	background: var(--chip-neutral-bg, rgba(255, 255, 255, 0.07));
+	border-color: rgba(255, 255, 255, 0.14);
+	color: var(--text-primary, currentColor);
+}
+.chip[data-tone='success'] { background: rgba(16, 185, 129, 0.16); border-color: rgba(16, 185, 129, 0.38); color: var(--color-success); }
+.chip[data-tone='warning'] { background: rgba(245, 158, 11, 0.16); border-color: rgba(245, 158, 11, 0.38); color: var(--color-warning); }
+.chip[data-tone='danger'] { background: rgba(239, 68, 68, 0.16); border-color: rgba(239, 68, 68, 0.38); color: var(--color-danger); }
+.chip[data-tone='info'] { background: rgba(59, 130, 246, 0.16); border-color: rgba(59, 130, 246, 0.38); color: var(--color-info); }
+.chip[data-tone='accent'] { background: rgba(99, 102, 241, 0.2); border-color: rgba(99, 102, 241, 0.42); color: var(--color-info); }
+/* Selected — fill with the tone's own color for a clear pressed state. */
+.chip[data-selected][data-interactive] {
+	background: color-mix(in oklab, currentColor 22%, transparent);
+	border-color: currentColor;
+}
+/* ── Leading slot (avatar/icon) ──────────────────────────────────────────── */
+.chip-leading {
+	display: none;
+	align-items: center;
+	margin-inline-start: -0.15em;
+}
+.chip-leading::slotted(*) {
+	block-size: 1.25em;
+	inline-size: 1.25em;
+	border-radius: 50%;
+	object-fit: cover;
+}
+.chip:has(.chip-leading ::slotted(*)) .chip-leading { display: inline-flex; }
+.chip-label { display: inline-block; }
+/* ── Remove ✕ ────────────────────────────────────────────────────────────── */
+.chip-remove {
+	display: none;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: 0;
+	border-radius: 50%;
+	color: inherit;
+	cursor: pointer;
+	font-size: 1.15em;
+	line-height: 0;
+	margin-inline-end: -0.25em;
+	opacity: 0.65;
+	padding: 0.1em;
+	transition: opacity 0.12s ease, background 0.12s ease;
+}
+.chip[data-removable] .chip-remove { display: inline-flex; }
+.chip-remove:hover {
+	opacity: 1;
+	background: color-mix(in oklab, currentColor 18%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+	.chip,
+	.chip[data-interactive]:hover,
+	.chip[data-interactive]:active {
+		transform: none;
+		transition: none;
+	}
+}

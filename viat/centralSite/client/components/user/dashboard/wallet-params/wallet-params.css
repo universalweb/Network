@@ -1,0 +1,48 @@
+:host {
+  display: block;
+  flex-shrink: 0;
+  width: 100%;
+  /* Query container for stat-panel.css's @container rule (compacts stat-row
+     padding when this panel is narrow). */
+  container-type: inline-size;
+}
+
+/* Content-height like a normal div — the panel grows with its rows; no cap, no
+   inner scroll. The dashboard flows in document scroll, so a long params list
+   just makes the page taller. Add a max-height + overflow only if a panel ever
+   genuinely needs to be a bounded scroll area. */
+.wallet-params-panel {
+  flex: 0 0 auto;
+}
+
+.wallet-params-panel .stat-block {
+  gap: var(--space-2);
+}
+
+.wallet-params-panel .stat-row {
+  padding: var(--space-2) var(--space-2);
+  margin: 0 -6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.wallet-params-panel .stat-row:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.wallet-params-panel .stat-row:hover .s-key {
+  color: var(--text-main);
+}
+
+.wallet-params-panel .stat-row:focus-visible {
+  outline: 1px solid var(--focus-ring-color);
+  outline-offset: 1px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.wallet-params-panel .stat-empty {
+  color: var(--text-muted, rgba(255, 255, 255, 0.45));
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+}

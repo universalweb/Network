@@ -1,0 +1,38 @@
+:host {
+	display: block;
+	/* Density knobs — set on the host, inherited into every <ui-timeline-item>
+	   shadow (custom properties cross the boundary), so one declaration sizes the
+	   rows without touching the item objects. */
+	--tl-row-gap: var(--space-5);
+	--tl-dot-size: 0.9rem;
+	--tl-rail-size: 1.5rem;
+}
+:host([data-density='compact']) {
+	--tl-row-gap: var(--space-3);
+	--tl-dot-size: 0.7rem;
+	--tl-rail-size: 1.25rem;
+}
+.tl {
+	display: flex;
+	flex-direction: column;
+}
+/* Horizontal — flip the parent track to a row AND publish the layout props the
+   children read (inherited through the shadow boundary). Vertical is the bare
+   default (every --tli-* falls back inside the child CSS). */
+:host([data-orientation='horizontal']) .tl {
+	flex-direction: row;
+	overflow-x: auto;
+	padding-block-end: var(--space-2);
+}
+:host([data-orientation='horizontal']) {
+	--tli-cols: none;
+	--tli-rows: var(--tl-rail-size, 1.5rem) 1fr;
+	--tli-row-gap: var(--space-2);
+	--tli-min-w: 9rem;
+	--tli-rail-flow: row;
+	--tli-dot-margin: 0 0 0 0.1rem;
+	--tli-line-w: auto;
+	--tli-line-h: 2px;
+	--tli-line-margin: 0 0.25rem;
+	--tli-body-pad: 0 var(--tl-row-gap, 1.25rem) 0 0;
+}

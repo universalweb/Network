@@ -1,0 +1,8 @@
+/* The Viat wrapper only fills the pulldown surface — the composed
+   <ui-ai-chat> owns the chat UI, scrolling, and composer. */
+:host {
+	display: flex;
+	flex: 1;
+	min-block-size: 0;
+	inline-size: 100%;
+}

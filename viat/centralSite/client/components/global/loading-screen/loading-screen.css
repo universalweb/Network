@@ -1,0 +1,50 @@
+:host {
+	display: contents;
+}
+.loading-screen {
+	align-items: center;
+	background: rgba(0, 0, 0, 0.45);
+	backdrop-filter: blur(6px);
+	display: flex;
+	inset: 0;
+	justify-content: center;
+	opacity: 0;
+	pointer-events: none;
+	position: fixed;
+	transition: opacity 0.18s ease-out;
+	z-index: 9999;
+}
+.loading-screen[data-open] {
+	opacity: 1;
+	pointer-events: auto;
+}
+.loading-screen[data-blocking] { cursor: wait; }
+[data-variant='inline'] {
+	background: transparent;
+	backdrop-filter: none;
+	position: absolute;
+}
+.loading-card {
+	align-items: center;
+	background: var(--bg-panel);
+	border: var(--border-light, 1px solid rgba(255, 255, 255, 0.1));
+	border-radius: var(--radius, 8px);
+	box-shadow: var(--panel-shadow, 0 12px 36px rgba(0, 0, 0, 0.5));
+	color: currentColor;
+	display: flex;
+	flex-direction: column;
+	gap: 0.9rem;
+	max-width: min(80vw, 360px);
+	padding: 1.4rem 1.6rem;
+	text-align: center;
+}
+.loading-title {
+	font-size: var(--text-lg);
+	font-weight: var(--weight-bold);
+	letter-spacing: 0.06em;
+}
+.loading-message {
+	color: var(--text-muted, currentColor);
+	font-size: var(--text-md);
+	margin-block-start: 0.2rem;
+}

@@ -1,0 +1,82 @@
+:host {
+	display: block;
+	/* interpolate-size inherits down to ::details-content, enabling the
+	   block-size: 0 → auto transition below. Set high so the keyword animation is
+	   available to the whole disclosure. */
+	interpolate-size: allow-keywords;
+}
+.ac {
+	border: 1px solid var(--popup-border, color-mix(in oklab, var(--cyan) 16%, transparent));
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--bg-panel);
+	overflow: hidden;
+}
+.ac-summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: var(--space-4) var(--space-5);
+	cursor: pointer;
+	list-style: none;
+	font-family: var(--font-display, system-ui);
+	font-weight: var(--weight-semibold, 600);
+	color: var(--text-main);
+	transition: background 0.16s ease, color 0.16s ease;
+}
+/* Strip the default UA disclosure triangle (we draw our own chevron). */
+.ac-summary::-webkit-details-marker {
+	display: none;
+}
+.ac-summary::marker {
+	content: '';
+}
+.ac-summary:hover {
+	background: color-mix(in oklab, var(--cyan) 6%, transparent);
+}
+.ac-summary:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--cyan));
+	outline-offset: -2px;
+}
+.ac[data-disabled] .ac-summary {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+.ac-title {
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.ac-chevron {
+	flex: 0 0 auto;
+	color: var(--text-muted);
+	transition: rotate 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ac[open] .ac-chevron {
+	rotate: 180deg;
+}
+.ac-body {
+	padding: 0 var(--space-5) var(--space-5);
+	color: var(--text-soft, var(--text-main));
+	line-height: var(--leading-relaxed, 1.6);
+}
+@supports (interpolate-size: allow-keywords) {
+	.ac::details-content {
+		block-size: 0;
+		overflow: hidden;
+		transition: block-size 0.28s ease, content-visibility 0.28s ease allow-discrete;
+	}
+	.ac[open]::details-content {
+		block-size: auto;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.ac-chevron,
+	.ac-summary {
+		transition: none;
+	}
+	.ac::details-content {
+		transition: none;
+	}
+}

@@ -1,0 +1,101 @@
+:host {
+	display: contents;
+}
+.gpd-content {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	padding: var(--space-7) var(--space-4) 0 var(--space-4);
+	color: var(--text-main);
+	font-family: var(--font-mono);
+	box-sizing: border-box;
+	width: 100%;
+	cursor: pointer;
+}
+/* Desktop-only banner that explains why the AI chat column is missing on
+   narrow viewports. Hidden by default; surfaced via the mobile breakpoint
+   block below using `:host-context()` so it reaches up to the app-view's
+   viewport class across shadow roots. */
+.gpd-mobile-notice {
+	display: none;
+	max-width: var(--center-max-width, 1536px);
+	margin: 0 auto var(--space-4) auto;
+	padding: var(--space-4) var(--space-4);
+	background: var(--popup-bg-alt, rgba(255, 255, 255, 0.04));
+	border: 1px solid var(--popup-border, rgba(255, 255, 255, 0.1));
+	border-inline-start: 3px solid var(--cyan);
+	border-radius: var(--radius-md, 6px);
+	cursor: auto;
+}
+.gpd-mobile-notice-id {
+	display: block;
+	font-size: var(--text-2xs);
+	letter-spacing: 0.18em;
+	color: var(--cyan);
+	font-weight: var(--weight-semibold);
+	margin-block-end: var(--space-2);
+}
+.gpd-mobile-notice-body {
+	margin: 0;
+	font-size: var(--text-sm);
+	line-height: 1.5;
+	color: var(--text-muted, rgba(255, 255, 255, 0.7));
+}
+.gpd-columns {
+	display: grid;
+	grid-template-columns: 220px minmax(0, 1fr) 220px;
+	gap: var(--space-4);
+	flex: 1;
+	min-height: 0;
+	align-items: start;
+	width: 100%;
+	max-width: var(--center-max-width, 1536px);
+	margin: 0 auto;
+	cursor: auto;
+}
+.gpd-col {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+.gpd-col-help {
+	gap: var(--space-4);
+	overflow-y: auto;
+	padding-inline-end: var(--space-2);
+	padding-block-end: 220px;
+}
+.gpd-col-chat {
+	min-height: 0;
+	padding-block-end: 220px;
+}
+/* Mobile + small-tablet (xs/sm/md): show the desktop-only notice, hide
+   the AI chat column entirely, and collapse the 3-col grid to a single
+   column so the help/info/setup panels get the full width. The spacer
+   column is also dropped — it was only there to balance the help column
+   visually against the chat. Plain `:host([data-vw="..."])` form
+   (component self-applies the bucket via `reflectViewport`) so we don't
+   rely on `:host-context()` — that selector is missing from Safari
+   <16.4 / older iPhone WebViews and would silently no-op there. */
+:host([data-vw="xs"]) .gpd-mobile-notice,
+:host([data-vw="sm"]) .gpd-mobile-notice,
+:host([data-vw="md"]) .gpd-mobile-notice {
+	display: block;
+}
+:host([data-vw="xs"]) .gpd-col-chat,
+:host([data-vw="sm"]) .gpd-col-chat,
+:host([data-vw="md"]) .gpd-col-chat,
+:host([data-vw="xs"]) .gpd-col-spacer,
+:host([data-vw="sm"]) .gpd-col-spacer,
+:host([data-vw="md"]) .gpd-col-spacer {
+	display: none;
+}
+:host([data-vw="xs"]) .gpd-columns,
+:host([data-vw="sm"]) .gpd-columns,
+:host([data-vw="md"]) .gpd-columns {
+	grid-template-columns: minmax(0, 1fr);
+}
+:host([data-vw="xs"]) .gpd-col-help,
+:host([data-vw="sm"]) .gpd-col-help,
+:host([data-vw="md"]) .gpd-col-help {
+	padding-inline-end: 0;
+}

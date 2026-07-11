@@ -1,0 +1,16 @@
+/*
+ * Gnosis — dock RULE overrides (structural). The sliding active-bar thins to
+ * a 1px jade HAIRLINE, square-cut, glow-free — the same line language as the
+ * panel registration crosses. Geometry (--bar-x/-y/-w/-h) still comes from
+ * the movingIndicator engine; only the stroke changes.
+ */
+:host([data-orientation='vertical']) .active-bar {
+	width: 1px;
+	border-radius: 0;
+	box-shadow: none;
+}
+:host([data-orientation='horizontal']) .active-bar {
+	height: 1px;
+	border-radius: 0;
+	box-shadow: none;
+}

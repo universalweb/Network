@@ -1,0 +1,51 @@
+:host {
+	display: inline-flex;
+	flex: 0 0 auto;
+}
+.lg-item {
+	align-items: center;
+	background: none;
+	border: 0;
+	color: var(--text-secondary, currentColor);
+	display: inline-flex;
+	font: inherit;
+	font-size: var(--text-xs);
+	gap: 0.45em;
+	line-height: 1;
+	padding: 0;
+}
+button.lg-item {
+	cursor: pointer;
+	transition: opacity 0.18s ease;
+}
+button.lg-item:hover {
+	color: var(--text-primary, currentColor);
+}
+.lg-item[aria-pressed='false'] {
+	opacity: 0.4;
+}
+.lg-item[aria-pressed='false'] .lg-swatch {
+	background: color-mix(in oklab, currentColor 30%, transparent) !important;
+}
+.lg-item[aria-pressed='false'] .lg-label {
+	text-decoration: line-through;
+}
+.lg-swatch {
+	block-size: 0.75em;
+	border-radius: 0.2em;
+	flex: 0 0 auto;
+	inline-size: 0.75em;
+}
+.lg-label {
+	white-space: nowrap;
+}
+button.lg-item:focus-visible {
+	border-radius: 0.25em;
+	outline: 2px solid var(--color-info, currentColor);
+	outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+	button.lg-item {
+		transition: none;
+	}
+}

@@ -1,0 +1,34 @@
+:host {
+  display: block;
+  flex-shrink: 0;
+  width: 100%;
+  /* Query container for stat-panel.css's @container rule (compacts stat-row
+     padding when this panel is narrow). */
+  container-type: inline-size;
+}
+
+.wallet-stats-panel .stat-block {
+  gap: var(--space-2);
+}
+
+.wallet-stats-panel .stat-row {
+  padding: var(--space-2) var(--space-2);
+  margin: 0 -6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.wallet-stats-panel .stat-row:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.wallet-stats-panel .stat-row:hover .s-key {
+  color: var(--text-main);
+}
+
+.wallet-stats-panel .stat-row:focus-visible {
+  outline: 1px solid var(--focus-ring-color);
+  outline-offset: 1px;
+  background: rgba(255, 255, 255, 0.04);
+}

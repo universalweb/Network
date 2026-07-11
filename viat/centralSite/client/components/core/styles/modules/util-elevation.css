@@ -1,0 +1,42 @@
+/* uwc.util — elevation utilities (themeable via --shadow-*). */
+@layer uwc.util {
+	.shadow-0 {
+		box-shadow: var(--shadow-0);
+	}
+	.shadow-1 {
+		box-shadow: var(--shadow-1);
+	}
+	.shadow-2 {
+		box-shadow: var(--shadow-2);
+	}
+	.shadow-3 {
+		box-shadow: var(--shadow-3);
+	}
+	.shadow-4 {
+		box-shadow: var(--shadow-4);
+	}
+	.shadow-5 {
+		box-shadow: var(--shadow-5);
+	}
+	.rounded-xs {
+		border-radius: var(--radius-xs);
+	}
+	.rounded-sm {
+		border-radius: var(--radius-sm);
+	}
+	.rounded-md {
+		border-radius: var(--radius-md);
+	}
+	.rounded-lg {
+		border-radius: var(--radius-lg);
+	}
+	.rounded-xl {
+		border-radius: var(--radius-xl);
+	}
+	.rounded-pill {
+		border-radius: var(--radius-pill);
+	}
+	.rounded-none {
+		border-radius: 0;
+	}
+}

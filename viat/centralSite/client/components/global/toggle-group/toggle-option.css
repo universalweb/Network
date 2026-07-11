@@ -1,0 +1,48 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: inline-flex;
+	flex: 0 0 auto;
+}
+.tg-btn {
+	appearance: none;
+	background: transparent;
+	border: 0;
+	border-radius: calc(var(--radius-md) - 0.15rem);
+	color: var(--text-secondary, currentColor);
+	cursor: pointer;
+	font: inherit;
+	/* Sizing inherits from the group container (see toggle-group.css). */
+	font-size: var(--tg-opt-font, var(--text-sm));
+	font-weight: var(--weight-semibold);
+	inline-size: 100%;
+	letter-spacing: 0.02em;
+	line-height: 1;
+	padding: var(--tg-opt-pad, 0.4rem 0.8rem);
+	transition:
+		background 0.16s ease,
+		color 0.16s ease;
+	white-space: nowrap;
+}
+.tg-btn:hover:not([aria-pressed='true']):not(:disabled) {
+	color: var(--text-primary, currentColor);
+	background: color-mix(in oklab, var(--text-primary, currentColor) 8%, transparent);
+}
+.tg-btn[aria-pressed='true'] {
+	background: color-mix(in oklab, var(--cyan, var(--color-info)) 22%, transparent);
+	color: var(--text-primary, currentColor);
+}
+.tg-btn:focus-visible {
+	outline: 2px solid var(--color-info, currentColor);
+	outline-offset: 1px;
+}
+.tg-btn:disabled {
+	cursor: not-allowed;
+	opacity: 0.45;
+}
+@media (prefers-reduced-motion: reduce) {
+	.tg-btn {
+		transition: none;
+	}
+}

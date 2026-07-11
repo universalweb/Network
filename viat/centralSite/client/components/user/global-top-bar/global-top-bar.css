@@ -1,0 +1,85 @@
+/* The bar itself is `<ui-app-bar>` (fixed, themed). This host is a passthrough;
+   it only styles the brand block it slots into the app bar's `start` region. */
+:host {
+	display: contents;
+}
+
+.tb-logo {
+	font-family: var(--font-display);
+	font-size: var(--text-md);
+	font-weight: var(--weight-bold);
+	color: var(--text-light);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	display: flex;
+	align-items: center;
+	min-width: 0;
+	gap: var(--space-3);
+}
+
+/* Home link wrapping the ⩝ mark + VIAT wordmark — an anchor, so the router
+   intercepts the click and routes to / without a full reload. */
+.tb-logo-home {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-3);
+	color: inherit;
+	font: inherit;
+	text-decoration: none;
+	border-radius: var(--radius-md);
+	padding: var(--space-1) var(--space-2);
+	margin: -2px -4px;
+	transition: color 0.15s ease, background 0.15s ease;
+}
+
+.tb-logo-home:hover {
+	color: var(--topbar-accent);
+	background: rgba(255, 255, 255, 0.03);
+}
+
+.tb-logo-home:focus-visible {
+	outline: 1px solid var(--focus-ring-color, var(--topbar-accent));
+	outline-offset: 2px;
+}
+
+/* The ⩝ mark as inline SVG (same geometry as the onboarding wo-mark) —
+   centers naturally on the bar's flex midline and scales crisply, following
+   the theme accent via currentColor. The old text glyph needed a 40px font
+   + baseline hacks to approximate the same box. */
+.tb-logo-mark {
+	display: block;
+	width: 1.5rem;
+	height: 1.5rem;
+	flex: 0 0 auto;
+	color: var(--topbar-accent);
+}
+
+.tb-logo-sep {
+	color: var(--dark-heading-sep);
+	font-weight: 300;
+}
+
+.tb-subtitle {
+	display: inline-block;
+	font-size: var(--text-2xs);
+	color: var(--topbar-accent);
+	letter-spacing: 0.24em;
+	text-shadow: var(--subtitle-text-shadow, none);
+	opacity: 0.8;
+}
+
+/* Mobile + small-tablet (xs/sm/md): the theme dropdown moves into the settings
+   modal, and the chevron separator + COMMAND TERMINAL subtitle drop out, to
+   keep the bar uncluttered when horizontal room is scarce. The viewport class
+   is mirrored onto this host by `syncViewportClass`. */
+:host([data-vw="xs"]) ui-theme-select,
+:host([data-vw="sm"]) ui-theme-select,
+:host([data-vw="md"]) ui-theme-select,
+:host([data-vw="xs"]) .tb-logo-sep,
+:host([data-vw="sm"]) .tb-logo-sep,
+:host([data-vw="md"]) .tb-logo-sep,
+:host([data-vw="xs"]) .tb-subtitle,
+:host([data-vw="sm"]) .tb-subtitle,
+:host([data-vw="md"]) .tb-subtitle {
+	display: none;
+}

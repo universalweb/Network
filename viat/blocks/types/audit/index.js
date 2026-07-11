@@ -24,6 +24,7 @@ export class AuditBlock extends Block {
 		return block;
 	}
 	async setDefaults() {
+		await super.setDefaults();
 		this.setCore({
 			state: {
 				prior: {},
@@ -60,14 +61,3 @@ export class AuditBlock extends Block {
 	typeName = typeNames.audit;
 }
 export default AuditBlock;
-// const amy = await wallet();
-// console.log(await amy.exportObject());
-const exampleBlock = await AuditBlock.create();
-await exampleBlock.finalize();
-// await exampleBlock.sign(amy);
-console.log(exampleBlock.block);
-// console.log(await exampleBlock.estimateBlockSize());
-// console.log('getDirectory', await exampleBlock.getDirectory());
-// console.log('getFile', await exampleBlock.getFile());
-// console.log('getFileURL', await exampleBlock.getFileURL());
-// console.log(exampleBlock.filesystem);

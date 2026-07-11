@@ -1,0 +1,15 @@
+:host {
+	display: block;
+}
+.md-shell {
+	display: flex;
+	flex-direction: column;
+	/* Top: generous breathing room beyond the fixed top bar (52px bar + 16px
+	   float gap = ~78px) — the extra ~50px gives the wallet hero negative space
+	   so the balance anchors the page. Bottom: just a normal gap — the dock
+	   clearance is owned by `.shell-page` (app.css) for every page uniformly. */
+	padding-block: 8rem var(--space-4);
+	padding-inline: var(--space-4);
+	gap: var(--space-4);
+	box-sizing: border-box;
+}

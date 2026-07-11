@@ -1,0 +1,40 @@
+/* Host wraps the trigger strip; the shared panel renders in the top layer (popover)
+   so it's unaffected by host layout. (:host{display:inline-block} comes from the
+   reused menu.css.) The .menu-surface + .menu-item rules also come from menu.css. */
+.menubar {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: flex;
+	align-items: center;
+	gap: 0.15rem;
+	padding: 0.2rem;
+	border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.14));
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--bg-panel, transparent);
+}
+.menubar-trigger {
+	padding: 0.35rem 0.65rem;
+	border: 0;
+	border-radius: var(--radius-sm, 0.35rem);
+	background: transparent;
+	color: var(--text-primary, currentColor);
+	font: inherit;
+	font-size: var(--text-sm, 0.85rem);
+	line-height: 1.2;
+	cursor: pointer;
+	transition: background 0.12s ease;
+}
+.menubar-trigger:hover,
+.menubar-trigger[aria-expanded='true'] {
+	background: var(--surface-tint, rgba(255, 255, 255, 0.08));
+}
+.menubar-trigger:focus-visible {
+	outline: 2px solid var(--color-info, #3b82f6);
+	outline-offset: -2px;
+}
+@media (prefers-reduced-motion: reduce) {
+	.menubar-trigger {
+		transition: none;
+	}
+}

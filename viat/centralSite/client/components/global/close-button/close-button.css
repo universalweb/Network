@@ -1,0 +1,55 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: inline-flex;
+}
+.cb {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.875rem;
+	height: 1.875rem;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--radius-md);
+	color: var(--text-muted, rgba(255, 255, 255, 0.4));
+	cursor: pointer;
+	padding: 0;
+	transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.cb-icon {
+	transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
+}
+.cb:hover {
+	color: var(--text-main);
+	border-color: var(--dark-divider, rgba(255, 255, 255, 0.18));
+	background: rgba(255, 255, 255, 0.04);
+}
+.cb:hover .cb-icon {
+	transform: rotate(90deg) scale(1.05);
+	color: var(--color-danger);
+}
+.cb:active {
+	transform: scale(0.92);
+}
+.cb:active .cb-icon {
+	transform: rotate(180deg) scale(0.9);
+	transition-duration: 0.12s;
+}
+.cb:focus-visible {
+	outline: none;
+	border-color: var(--cyan);
+	box-shadow: 0 0 0 2px color-mix(in oklab, var(--cyan) 25%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+	.cb,
+	.cb-icon {
+		transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+	}
+	.cb:hover .cb-icon,
+	.cb:active,
+	.cb:active .cb-icon {
+		transform: none;
+	}
+}

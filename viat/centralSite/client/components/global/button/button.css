@@ -1,0 +1,53 @@
+/* ui-button owns ONLY its host + slot internals. Every variant/tone/size/state
+   VISUAL lives in the framework button module (core/styles/modules/elements-buttons.css),
+   keyed off the data-variant/data-tone/data-size attributes this component sets. This
+   sheet declares NO color/background/border — doing so would re-shadow the framework
+   from uwc.components and resurrect the tone collision. */
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: inline-flex;
+	flex: 0 0 auto;
+	box-sizing: border-box;
+}
+:host([hidden]) {
+	display: none;
+}
+.btn-icon {
+	line-height: 1;
+	flex: 0 0 auto;
+	/* Glyph tracks the button font-size; 0.8em keeps it subordinate to the label so
+	   the label leads. Icon-only buttons restore the absolute size class. */
+	--icon-size: 0.8em;
+}
+button.is-icon-only .btn-icon {
+	--icon-size: initial;
+}
+.btn-label {
+	line-height: 1;
+}
+:host(.is-full) {
+	width: 100%;
+	display: flex;
+}
+/* Loading spinner — borrows the button's (now correctly contrasting) text color. */
+.btn-spinner {
+	width: 1em;
+	height: 1em;
+	border: 2px solid currentColor;
+	border-inline-end-color: transparent;
+	border-radius: 50%;
+	display: inline-block;
+	animation: ui-btn-spin 0.65s linear infinite;
+}
+@keyframes ui-btn-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.btn-spinner {
+		animation-duration: 1.6s;
+	}
+}

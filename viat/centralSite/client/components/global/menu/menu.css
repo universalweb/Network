@@ -1,0 +1,74 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: inline-block;
+}
+/* ── Trigger ─────────────────────────────────────────────────────────────── */
+.menu-trigger {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.4rem 0.7rem;
+	border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.14));
+	border-radius: var(--radius-md, 0.5rem);
+	background: transparent;
+	color: var(--text-primary, currentColor);
+	font: inherit;
+	cursor: pointer;
+	transition: background 0.14s ease, border-color 0.14s ease;
+}
+.menu-trigger:hover {
+	background: var(--surface-tint, rgba(255, 255, 255, 0.06));
+	border-color: var(--surface-border-strong, rgba(255, 255, 255, 0.22));
+}
+.menu-trigger:focus-visible {
+	outline: 2px solid var(--color-info, #3b82f6);
+	outline-offset: 2px;
+}
+/* ── Panel (native popover → top layer) ──────────────────────────────────────
+   Positioned by JS (computeAnchor) on toggle; starts hidden so the default
+   centered paint never shows. `inset:auto`+`margin:0` clear the UA centering. */
+.menu-surface {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	min-inline-size: 11rem;
+	max-inline-size: min(20rem, calc(100vw - 1rem));
+	max-block-size: min(60dvh, 22rem);
+	overflow: hidden auto;
+	padding: 0.3rem;
+	background: var(--popup-bg, var(--bg-panel, #14161e));
+	border: 1px solid var(--popup-border, var(--surface-border, rgba(255, 255, 255, 0.14)));
+	border-radius: var(--radius-md, 0.5rem);
+	box-shadow: var(--popup-shadow, 0 16px 40px rgb(0 0 0 / 0.5));
+	color: var(--popup-text, var(--text-primary, #f5f6fa));
+	opacity: 0;
+	transform: translateY(-4px);
+	transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.menu-surface:popover-open {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+.menu-surface.is-open {
+	opacity: 1;
+	transform: none;
+}
+/* The panel takes focus on open (so keyboard roving works) but must never paint
+   its own ring — items show focus, the container never does. :focus covers the
+   :focus-visible subset, so a keyboard-open won't outline the whole panel. */
+.menu-surface:focus {
+	outline: none;
+}
+/* Item + separator styles now live in menu-item.css (the <ui-menu-item> shadow). */
+@media (prefers-reduced-motion: reduce) {
+	.menu-trigger {
+		transition: none;
+	}
+	.menu-surface {
+		transition: none;
+		transform: none;
+	}
+}

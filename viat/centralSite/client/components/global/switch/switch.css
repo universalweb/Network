@@ -1,0 +1,102 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: inline-flex;
+}
+.sw {
+	/* Track geometry as tokens so the size variants only retune three numbers and
+	   the thumb travel derives from them (travel = width − height). */
+	--sw-w: 2.5rem;
+	--sw-h: 1.4rem;
+	--sw-pad: 0.18rem;
+	/* Positioning context for the visually-hidden .sw-input. WITHOUT this the
+	   absolutely-positioned input has no positioned ancestor, so its containing
+	   block is the initial one (html). With top/inset auto it then resolves to
+	   its STATIC flow position — and because it escapes any overflow:auto scroller
+	   above it, a switch sitting far down a long page pins html.scrollHeight to
+	   that offset (a ~16000px empty tail on the preview gallery). Anchoring here
+	   keeps the input local to the switch. */
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-3);
+	cursor: pointer;
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: var(--text-sm);
+	color: var(--text-main);
+}
+.sw[data-size='sm'] {
+	--sw-w: 2rem;
+	--sw-h: 1.15rem;
+	font-size: var(--text-xs);
+}
+.sw[data-size='lg'] {
+	--sw-w: 3.1rem;
+	--sw-h: 1.7rem;
+	font-size: var(--text-md);
+}
+/* The real control stays focusable but visually collapsed; clicking the <label>
+   toggles it, Space toggles when focused. */
+.sw-input {
+	position: absolute;
+	/* Pin to the switch's top-start corner so the 1px control never falls back to
+	   its static flow position (see the position:relative note on .sw). */
+	inset-block-start: 0;
+	inset-inline-start: 0;
+	inline-size: 1px;
+	block-size: 1px;
+	opacity: 0;
+	margin: 0;
+	pointer-events: none;
+}
+.sw-track {
+	position: relative;
+	flex: 0 0 auto;
+	box-sizing: border-box;
+	inline-size: var(--sw-w);
+	block-size: var(--sw-h);
+	border-radius: 999px;
+	background: var(--sw-track-off, color-mix(in oklab, var(--text-muted) 32%, transparent));
+	border: 1px solid color-mix(in oklab, var(--text-muted) 25%, transparent);
+	transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.sw-thumb {
+	position: absolute;
+	inset-block-start: 50%;
+	inset-inline-start: var(--sw-pad);
+	inline-size: calc(var(--sw-h) - var(--sw-pad) * 2);
+	block-size: calc(var(--sw-h) - var(--sw-pad) * 2);
+	border-radius: 50%;
+	background: var(--sw-thumb, #fff);
+	translate: 0 -50%;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+	transition: translate 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.sw-input:checked + .sw-track {
+	background: var(--sw-track-on, var(--cyan));
+	border-color: var(--sw-track-on, var(--cyan));
+}
+.sw-input:checked + .sw-track .sw-thumb {
+	/* Travel = track width − track height; the thumb starts and ends one --sw-pad
+	   from each edge, so the symmetric inset cancels out of the delta. */
+	translate: calc(var(--sw-w) - var(--sw-h)) -50%;
+}
+.sw-input:focus-visible + .sw-track {
+	box-shadow: 0 0 0 2px var(--focus-ring-color, var(--cyan));
+}
+.sw-input:disabled + .sw-track {
+	opacity: 0.5;
+}
+.sw:has(.sw-input:disabled) {
+	cursor: not-allowed;
+}
+.sw-label {
+	letter-spacing: 0.04em;
+}
+@media (prefers-reduced-motion: reduce) {
+	.sw-track,
+	.sw-thumb {
+		transition: none;
+	}
+}

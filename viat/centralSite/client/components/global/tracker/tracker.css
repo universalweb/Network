@@ -1,0 +1,35 @@
+:host {
+	display: block;
+}
+.trk {
+	display: flex;
+	gap: 0.15rem;
+	align-items: stretch;
+	block-size: 1.75rem;
+}
+.trk-seg {
+	flex: 1 1 0;
+	min-inline-size: 0.18rem;
+	border-radius: var(--radius-xs, 2px);
+	/* Tone comes from the shared `[data-tone]` fill map (util-surface.css); the
+	   segment applies its own 70% mix so the bar reads as a tint, not a slab. */
+	background: color-mix(in oklab, var(--tone-fill, var(--text-muted)) 70%, transparent);
+	transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.trk-seg:hover {
+	transform: scaleY(1.08);
+	opacity: 0.85;
+}
+/* Neutral = inactive / unknown — mixed weaker than the active tones so it recedes
+   and never reads as a "filled" segment (the whole point of a health bar). */
+.trk-seg[data-tone='neutral'] {
+	background: color-mix(in oklab, var(--tone-fill, var(--text-muted)) 30%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+	.trk-seg {
+		transition: none;
+	}
+	.trk-seg:hover {
+		transform: none;
+	}
+}

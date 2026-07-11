@@ -1,0 +1,10 @@
+/* Host must not generate a box — the wrapped target lays out as if ui-context-menu
+   weren't there. (Overrides the inherited menu.css `:host{display:inline-block}`;
+   loaded second so it wins on source order.) The surface + item rules come from
+   menu.css; the popover renders in the top layer regardless of host display. */
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: contents;
+}

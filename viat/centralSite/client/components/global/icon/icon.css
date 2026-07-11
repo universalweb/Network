@@ -1,0 +1,166 @@
+:host {
+	display: inline-flex;
+	flex: 0 0 auto;
+	color: currentColor;
+	transition: color 0.15s ease;
+}
+:host(:hover) {
+	color: var(--icon-color-hover, currentColor);
+}
+:host([active]),
+:host(.active) {
+	color: var(--icon-color-active, currentColor);
+}
+:host([disabled]),
+:host(.disabled) {
+	color: var(--icon-color-disabled, currentColor);
+}
+.icon {
+	display: inline-block;
+	flex: 0 0 auto;
+	overflow: visible;
+	color: currentColor;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+/* Sizes — width/height drive the box; SVG scales to fit. Keyed off the
+   data-size ATTRIBUTE the component sets, never a `size-*` class.
+   `--icon-size` lets an ancestor override the class default with an em-relative
+   value, so a host whose font-size changes (e.g. ui-button at different sizes)
+   can keep icons proportional to its text. */
+[data-size='xs'] { width: var(--icon-size, 0.875rem); height: var(--icon-size, 0.875rem); }
+[data-size='sm'] { width: var(--icon-size, 1rem);     height: var(--icon-size, 1rem); }
+[data-size='md'] { width: var(--icon-size, 1.125rem); height: var(--icon-size, 1.125rem); }
+[data-size='lg'] { width: var(--icon-size, 1.5rem);   height: var(--icon-size, 1.5rem); }
+[data-size='xl'] { width: var(--icon-size, 2rem);     height: var(--icon-size, 2rem); }
+/* Tones — data-tone ATTRIBUTE, NOT a `tone-*` class. A class would collide with
+   the uwc.util `.tone-*` text utilities (which outrank component CSS by layer
+   order) and override the icon's intended tone; an attribute selector cannot be
+   matched by the utility's class selector, so the tone here always wins. */
+[data-tone='default'] { color: currentColor; }
+[data-tone='muted']   { color: var(--text-muted, rgba(255, 255, 255, 0.55)); }
+[data-tone='subtle']  { color: var(--text-subtle); }
+[data-tone='success'] { color: var(--color-success); }
+[data-tone='warning'] { color: var(--color-warning); }
+[data-tone='danger']  { color: var(--color-danger); }
+[data-tone='info']    { color: var(--color-info); }
+[data-tone='accent']  { color: var(--teal); }
+/* Spin */
+[data-spin] {
+	animation: ui-icon-spin 1.05s linear infinite;
+	transform-origin: center;
+}
+@keyframes ui-icon-spin {
+	from { transform: rotate(0deg); }
+	to   { transform: rotate(360deg); }
+}
+/* Named animations — inactive by default. An ancestor (icon-button) or
+   :host(:hover) sets --ui-icon-anim-state to an empty value, which makes the
+   `animation` shorthand resolve and start. On mouse-leave the var goes
+   invalid, the `animation` declaration drops out whole, and the shared
+   `transition` eases the icon back to its default shape instead of freezing
+   on whatever frame it was mid-cycle. */
+:host(:hover) {
+	--ui-icon-anim-state: ;
+}
+[data-animate] {
+	transition:
+		transform 0.3s ease,
+		color 0.3s ease,
+		filter 0.3s ease,
+		opacity 0.3s ease;
+}
+[data-animate='rainbow'] {
+	animation: var(--ui-icon-anim-state) ui-icon-rainbow 3.6s linear infinite;
+}
+@keyframes ui-icon-rainbow {
+	0%   { color: #ff5d8f; filter: hue-rotate(0deg) drop-shadow(0 0 4px currentColor); }
+	25%  { color: #ffd24a; filter: hue-rotate(90deg) drop-shadow(0 0 5px currentColor); }
+	50%  { color: #4ade80; filter: hue-rotate(180deg) drop-shadow(0 0 6px currentColor); }
+	75%  { color: var(--color-info); filter: hue-rotate(270deg) drop-shadow(0 0 5px currentColor); }
+	100% { color: #ff5d8f; filter: hue-rotate(360deg) drop-shadow(0 0 4px currentColor); }
+}
+[data-animate='bob'] {
+	transform-origin: 50% 80%;
+	animation: var(--ui-icon-anim-state) ui-icon-bob 1.1s cubic-bezier(0.36, 0, 0.36, 1) infinite;
+}
+@keyframes ui-icon-bob {
+	0%, 100% { transform: translateY(0) rotate(0deg); }
+	20%      { transform: translateY(-1.2px) rotate(-4deg); }
+	40%      { transform: translateY(-1.5px) rotate(4deg); }
+	60%      { transform: translateY(0) rotate(0deg); }
+}
+[data-animate='settings'] {
+	transform-origin: center;
+	animation: var(--ui-icon-anim-state) ui-icon-settings 2.4s linear infinite;
+}
+@keyframes ui-icon-settings {
+	from { transform: rotate(0deg); }
+	to   { transform: rotate(360deg); }
+}
+[data-animate='sidebar'] {
+	animation: var(--ui-icon-anim-state) ui-icon-sidebar 1s ease-in-out infinite;
+}
+@keyframes ui-icon-sidebar {
+	0%, 100% { transform: translateX(0); opacity: 0.95; }
+	50%      { transform: translateX(-2px); opacity: 0.6; }
+}
+[data-animate='flip'] {
+	transform-origin: center;
+	transform-style: preserve-3d;
+	animation: var(--ui-icon-anim-state) ui-icon-flip 1.2s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+}
+@keyframes ui-icon-flip {
+	0%   { transform: rotateY(0deg); }
+	50%  { transform: rotateY(180deg); }
+	100% { transform: rotateY(360deg); }
+}
+/* Compass / Explorer — a needle hunt: sweep left/right with eased
+   reversal so it reads like a real compass settling on a bearing, plus a
+   subtle cyan glow pulse to sell the "scanning" vibe. */
+[data-animate='compass'] {
+	transform-origin: center;
+	animation:
+		var(--ui-icon-anim-state) ui-icon-compass-sweep 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite,
+		var(--ui-icon-anim-state) ui-icon-compass-glow 2s ease-in-out infinite;
+}
+@keyframes ui-icon-compass-sweep {
+	0%   { transform: rotate(0deg); }
+	20%  { transform: rotate(-32deg); }
+	35%  { transform: rotate(-18deg); }
+	55%  { transform: rotate(38deg); }
+	70%  { transform: rotate(24deg); }
+	85%  { transform: rotate(-6deg); }
+	100% { transform: rotate(0deg); }
+}
+@keyframes ui-icon-compass-glow {
+	0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+	50%      { filter: drop-shadow(0 0 6px var(--cyan)); }
+}
+/* Accounts / Users — a friendly "hello" bounce: scale + drop with a
+   gentle head-tilt and a teal glow pulse so the group of people feels
+   alive without descending into chaos. */
+[data-animate='hop'] {
+	transform-origin: 50% 80%;
+	animation:
+		var(--ui-icon-anim-state) ui-icon-hop 1.3s cubic-bezier(0.34, 1.56, 0.64, 1) infinite,
+		var(--ui-icon-anim-state) ui-icon-hop-glow 1.3s ease-in-out infinite;
+}
+@keyframes ui-icon-hop {
+	0%   { transform: translateY(0) scale(1) rotate(0deg); }
+	25%  { transform: translateY(-2.5px) scale(1.08) rotate(-5deg); }
+	50%  { transform: translateY(0) scale(1) rotate(0deg); }
+	75%  { transform: translateY(-1.5px) scale(1.06) rotate(5deg); }
+	100% { transform: translateY(0) scale(1) rotate(0deg); }
+}
+@keyframes ui-icon-hop-glow {
+	0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+	50%      { filter: drop-shadow(0 0 5px var(--teal)); }
+}
+@media (prefers-reduced-motion: reduce) {
+	[data-spin] { animation-duration: 2.5s; }
+	[data-animate] { animation: none; }
+}

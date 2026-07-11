@@ -1,0 +1,72 @@
+:host {
+	display: block;
+}
+/* Several rows toggle via ?hidden; guard against the [hidden]-vs-display foot-
+   gun so an explicit display can't override the UA rule. */
+[hidden] {
+	display: none !important;
+}
+.apv {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	border: 1px solid color-mix(in oklab, var(--color-warning, oklch(0.8 0.16 80)) 40%, transparent);
+	border-radius: var(--radius-md);
+	background: color-mix(in oklab, var(--color-warning, oklch(0.8 0.16 80)) 8%, var(--bg-panel, rgba(255, 255, 255, 0.02)));
+	padding-block: var(--space-3);
+	padding-inline: var(--space-3);
+}
+.apv[data-decided='rejected'] {
+	border-color: color-mix(in oklab, var(--color-danger, oklch(0.68 0.2 25)) 40%, transparent);
+	background: color-mix(in oklab, var(--color-danger, oklch(0.68 0.2 25)) 7%, var(--bg-panel, rgba(255, 255, 255, 0.02)));
+}
+.apv[data-decided='approved'] {
+	border-color: color-mix(in oklab, var(--color-success, oklch(0.78 0.16 155)) 40%, transparent);
+	background: color-mix(in oklab, var(--color-success, oklch(0.78 0.16 155)) 7%, var(--bg-panel, rgba(255, 255, 255, 0.02)));
+}
+.apv-head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+.apv-icon {
+	flex: none;
+	color: var(--color-warning, oklch(0.8 0.16 80));
+}
+.apv-title {
+	font-size: var(--text-xs);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-main);
+}
+.apv-name {
+	margin-inline-start: auto;
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: var(--text-sm);
+	color: var(--text-muted, rgba(255, 255, 255, 0.6));
+	overflow-wrap: anywhere;
+}
+.apv-summary {
+	margin: 0;
+	font-size: var(--text-sm);
+	line-height: 1.5;
+	color: var(--text-main);
+}
+.apv-actions {
+	display: flex;
+	gap: var(--space-2);
+}
+.apv-outcome {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+	font-size: var(--text-xs);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+.apv-outcome[data-decided='approved'] {
+	color: var(--color-success, oklch(0.78 0.16 155));
+}
+.apv-outcome[data-decided='rejected'] {
+	color: var(--color-danger, oklch(0.68 0.2 25));
+}

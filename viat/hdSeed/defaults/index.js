@@ -198,7 +198,7 @@ export const PROPERTY_LOOKUP = {};
 VALID_PROPERTY_NAMES.forEach((propName) => {
 	PROPERTY_NAMES[propName] && (PROPERTY_LOOKUP[propName] = createReverseLookup(PROPERTY_NAMES[propName]));
 });
-console.log('PROPERTY_LOOKUP', PROPERTY_LOOKUP);
+// console.log('PROPERTY_LOOKUP', PROPERTY_LOOKUP);
 const defaultOptions = {
 	DIRECTION,
 	RELATIONSHIP,

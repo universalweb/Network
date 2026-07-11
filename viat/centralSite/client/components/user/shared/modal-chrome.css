@@ -1,0 +1,98 @@
+/* Shared modal chrome — the slimmed, renamed successor to the genuinely shared
+ * rules of the retired legacy-dialog.css. Imported by the user modals via their
+ * `static styles` (owner = the modal class, so the framework re-layers this into
+ * uwc.components). Form-control rules are gone — base elements-forms.css covers
+ * input/textarea/button/code/label. Single-consumer chrome lives in each owning
+ * modal. NOT registered in the framework manifest: it loads only into modals
+ * that import it, instead of into every shadow root. */
+
+.modal-shell {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-5);
+	/* The core modal's window-bar reserves its own top clearance via .modal-body
+	   padding (single source of clearance), so the shell only pads inline + bottom. */
+	padding-inline: var(--space-7);
+	padding-block: 0 var(--space-7);
+	color: var(--popup-text);
+	font-family: var(--font-mono, ui-monospace, monospace);
+}
+.modal-head {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-3);
+}
+.modal-head-id {
+	font-weight: var(--weight-bold);
+	color: var(--cyan, var(--popup-text));
+	letter-spacing: 0.04em;
+}
+.modal-head-title {
+	color: var(--text-muted, var(--popup-text));
+	font-size: var(--text-sm);
+	letter-spacing: 0.06em;
+}
+.modal-copy {
+	margin: 0;
+	font-size: var(--text-md);
+	line-height: 1.45;
+}
+.modal-copy strong { color: var(--popup-text); }
+.modal-copy em { font-style: italic; color: var(--popup-text); }
+.modal-meta {
+	display: grid;
+	gap: var(--space-2);
+	background: var(--popup-bg-alt, rgba(255, 255, 255, 0.03));
+	border: 1px solid var(--popup-border);
+	border-radius: var(--radius-md, 6px);
+	padding: var(--space-4) var(--space-4);
+	font-size: var(--text-sm);
+}
+.modal-meta-row {
+	display: grid;
+	grid-template-columns: 86px 1fr;
+	gap: var(--space-4);
+	align-items: baseline;
+}
+.modal-meta-key {
+	color: var(--text-muted, var(--popup-text));
+	letter-spacing: 0.06em;
+}
+.modal-meta-val {
+	color: var(--popup-text);
+	word-break: break-all;
+}
+.modal-meta-val[data-lock='locked'] { color: var(--color-warn-text); }
+.modal-meta-val[data-lock='unlocked'] { color: var(--color-success-text); }
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+.field-label {
+	font-size: var(--text-xs);
+	color: var(--text-muted, var(--popup-text));
+	letter-spacing: 0.06em;
+}
+.modal-error {
+	min-height: 1.125rem;
+	font-size: var(--text-sm);
+	color: var(--color-danger);
+	opacity: 0;
+	transition: opacity 0.15s ease;
+}
+.modal-error[data-visible] { opacity: 1; }
+.modal-actions {
+	display: flex;
+	gap: var(--space-3);
+	justify-content: flex-end;
+}
+/* Click-to-copy modifier for base inputs/textareas. */
+input.is-copyable, textarea.is-copyable {
+	cursor: pointer;
+	word-break: break-all;
+}
+input.is-copyable:hover, textarea.is-copyable:hover {
+	border-color: var(--cyan, var(--popup-border));
+	color: var(--cyan, var(--popup-text));
+}

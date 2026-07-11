@@ -1,0 +1,77 @@
+/* The top bar is a fixed overlay. DEFAULT = floating: detached from the top and
+   side edges, rounded and shadowed — it hovers above the page. On scroll the host
+   gains `data-scrolled` (set by global-top-bar from a window scroll listener) and
+   DOCKS flat: full-width, flush to the edges, square, with only a bottom hairline —
+   a grounded header the content slides under. The state is driven by `inset` /
+   radius / shadow, never `transform`, so it composes cleanly with the pulldown
+   drag that owns this element's transform. */
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: block;
+	position: fixed;
+	inset-block-start: 1rem;
+	inset-inline: 1rem;
+	box-sizing: border-box;
+	z-index: 40;
+	transition: inset 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.app-bar {
+	box-sizing: border-box;
+	/* Centre the composed bar within the min-height so the brand + actions sit
+	   on the vertical midline, not pinned to the top. */
+	display: flex;
+	align-items: center;
+	background: var(--topbar-bg);
+	border: 1px solid var(--topbar-border, var(--dark-divider));
+	border-radius: 0.875rem;
+	box-shadow:
+		0 0.75rem 2.5rem rgba(0, 0, 0, 0.18),
+		inset 0 1px 0 rgba(255, 255, 255, 0.06);
+	min-height: 3.25rem;
+	padding-block: var(--space-3);
+	padding-inline: var(--space-6);
+	backdrop-filter: blur(0.375rem);
+	transition:
+		border-radius 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+		border-color 0.28s ease,
+		box-shadow 0.28s ease;
+}
+:host([data-scrolled]) {
+	inset-block-start: 0;
+	inset-inline: 0;
+}
+:host([data-scrolled]) .app-bar {
+	border-color: transparent;
+	border-block-end-color: var(--topbar-border, var(--dark-divider));
+	border-radius: 0;
+	box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	:host,
+	.app-bar {
+		transition: none;
+	}
+}
+.app-bar-bar {
+	--bar-padding: 0;
+	--bar-gap: var(--space-5);
+	width: 100%;
+}
+.app-bar-end {
+	display: flex;
+	align-items: center;
+	gap: var(--space-5);
+}
+/* App-bar-context colouring for the composed action buttons. Scoped under
+   `.app-bar-end` so it outranks `<ui-icon-button>`'s own `:host` defaults. */
+.app-bar-end ui-icon-button {
+	color: var(--icon-color, var(--text-offwhite));
+	opacity: 0.75;
+	transition: color 0.15s ease, opacity 0.15s ease;
+}
+.app-bar-end ui-icon-button:hover {
+	color: var(--icon-color-hover, var(--topbar-accent));
+	opacity: 1;
+}

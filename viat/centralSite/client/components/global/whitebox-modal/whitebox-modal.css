@@ -1,0 +1,47 @@
+:host {
+	display: contents;
+}
+/* Whitebox shell — inherits everything from the active theme's popup-*
+   tokens, so dark / midnight / marathon / noir all skin the lightbox
+   automatically. Close + maximize controls come from the core <ui-modal>
+   control strip (showClose / showMaximize) — no per-component close
+   button to maintain. */
+.wb-shell {
+	position: relative;
+	background: var(--popup-bg);
+	color: var(--popup-text);
+	border-radius: var(--radius-lg, 10px);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-width: 13.75rem;
+}
+.wb-stage {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	max-height: calc(96svh - 60px);
+	background: var(--popup-bg);
+	padding: var(--space-5);
+	box-sizing: border-box;
+}
+.wb-media {
+	display: block;
+	max-width: 100%;
+	max-height: calc(96svh - 96px);
+	width: auto;
+	height: auto;
+	object-fit: contain;
+	border-radius: var(--radius-sm);
+}
+.wb-caption {
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: var(--text-sm);
+	color: var(--text-muted, var(--popup-text));
+	padding: var(--space-3) var(--space-5) var(--space-4);
+	text-align: center;
+	max-width: 100%;
+	box-sizing: border-box;
+}

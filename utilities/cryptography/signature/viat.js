@@ -140,7 +140,8 @@ export async function signPartial(message, source) {
 	return encodeStrict(signatureArray);
 }
 export async function verifyEach(signatureArg, message, source) {
-	const signature = (isBuffer(signatureArg)) ? await decode(signatureArg) : signatureArg;
+	/* signPartial/signMethod return encodeStrict(array) — a Uint8Array, not a Buffer — so decode anything not already an array. */
+	const signature = isArray(signatureArg) ? signatureArg : await decode(signatureArg);
 	if (!isArray(signature)) {
 		return false;
 	}

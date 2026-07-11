@@ -1,0 +1,105 @@
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: contents;
+}
+.pulldown-drawer {
+	position: fixed;
+	inset-block-start: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
+	height: 100svh;
+	overflow: hidden;
+	z-index: 90;
+	pointer-events: none;
+	display: none;
+	transform: translateY(-100%);
+	will-change: transform;
+}
+.pulldown-drawer.is-active,
+.pulldown-drawer.is-open {
+	display: block;
+	background: var(--bg-dark);
+	border-block-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	box-shadow: var(--pulldown-shadow, 0 12px 32px rgba(0, 0, 0, 0.45));
+}
+.pulldown-drawer.is-fully-open {
+	pointer-events: auto;
+	background: color-mix(in srgb, var(--bg-dark) 62%, transparent);
+	-webkit-backdrop-filter: blur(18px) saturate(140%);
+	backdrop-filter: blur(18px) saturate(140%);
+	animation: pulldown-blur-in 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes pulldown-blur-in {
+	from {
+		background: var(--bg-dark);
+		-webkit-backdrop-filter: blur(0) saturate(100%);
+		backdrop-filter: blur(0) saturate(100%);
+	}
+}
+/* Grab handle — the drag-up-to-close affordance. Defaults to the BOTTOM edge
+   (grab low, pull the whole sheet up off-screen = a full screen-height of
+   travel). Its own pointer-events so it works the moment the panel is
+   interactive. Move it via .handlePosition ('top' | 'bottom' | 'none') and skin
+   it with the --pulldown-handle-* custom properties. */
+.pulldown-handle {
+	position: absolute;
+	inset-block-end: 0;
+	inset-inline: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	block-size: var(--pulldown-handle-size, 1.75rem);
+	cursor: grab;
+	touch-action: none;
+	pointer-events: auto;
+	z-index: 2;
+}
+.pulldown-handle::before {
+	content: '';
+	inline-size: var(--pulldown-handle-width, 2.5rem);
+	block-size: var(--pulldown-handle-thickness, 0.25rem);
+	border-radius: 999px;
+	background: var(--pulldown-handle-color, rgba(255, 255, 255, 0.32));
+}
+.pulldown-handle:active {
+	cursor: grabbing;
+}
+:host([data-handle='top']) .pulldown-handle {
+	inset-block-start: 0;
+	inset-block-end: auto;
+}
+:host([data-handle='none']) .pulldown-handle {
+	display: none;
+}
+.pulldown-content {
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	/* Always reserve the scrollbar gutter. The content is `overflow: hidden` at
+	   rest and flips to `overflow: auto` only while `.is-fully-open`; without a
+	   reserved gutter the vertical scrollbar appears/vanishes on that toggle,
+	   changing the content width by the scrollbar's ~11px. Since the drawer fills
+	   the viewport, that reflow reads as "the whole page jumps sideways" the
+	   instant a drag-to-close begins (is-fully-open is dropped). Reserving the
+	   gutter in BOTH states holds the width constant — no shift. */
+	scrollbar-gutter: stable;
+	box-sizing: border-box;
+}
+/* Reserve space for the grab handle on whichever edge it lives. */
+:host([data-handle='bottom']) .pulldown-content {
+	padding-block-end: var(--pulldown-handle-size, 1.75rem);
+}
+:host([data-handle='top']) .pulldown-content {
+	padding-block-start: var(--pulldown-handle-size, 1.75rem);
+}
+.pulldown-drawer.is-fully-open .pulldown-content {
+	overflow: auto;
+}
+/* Standing law: gate motion. The slide is JS/drag-driven; drop the blur-in. */
+@media (prefers-reduced-motion: reduce) {
+	.pulldown-drawer.is-fully-open {
+		animation: none;
+	}
+}

@@ -1,0 +1,314 @@
+/* uwc.util — pre-built animation library. Named .anim-* classes pair with the
+   animateIn/animateOut helpers ({ className }) or stand alone (loops). Keyframes
+   are uwc-prefixed to avoid collision with component-local keyframes. Duration is
+   themeable via --anim-duration (default 0.35s). Reduced-motion kill-switch below. */
+@layer uwc.util {
+	/* ── Motion tokens ─────────────────────────────────────────────────────
+	   One scale for the whole UI so motion reads as a single language and
+	   "mixed by context" is a token choice, not a scattered magic number.
+	   Springs are CSS approximations of the cult-ui Framer-Motion springs
+	   (bounce 0.05 → subtle, 0.1 → spring). Use --dur-fast + --ease-out for
+	   frequent/utility interactions (inputs, rows, hovers); --dur-base/slow +
+	   --ease-spring for moments (modals, expanding panels, the dock bar,
+	   toasts, success). Themes retune motion by overriding these. */
+	:host,
+	:root {
+		--dur-instant: 0.1s;
+		--dur-fast: 0.18s;
+		--dur-base: 0.3s;
+		--dur-slow: 0.4s;
+		--dur-slower: 0.6s;
+		--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+		--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+		--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+		--ease-spring-subtle: cubic-bezier(0.34, 1.3, 0.64, 1);
+	}
+	@keyframes uwc-fade-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+	@keyframes uwc-fade-out {
+		from {
+			opacity: 1;
+		}
+		to {
+			opacity: 0;
+		}
+	}
+	@keyframes uwc-fade-in-up {
+		from {
+			opacity: 0;
+			transform: translateY(8px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	@keyframes uwc-fade-in-down {
+		from {
+			opacity: 0;
+			transform: translateY(-8px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	@keyframes uwc-fade-in-left {
+		from {
+			opacity: 0;
+			transform: translateX(-8px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	@keyframes uwc-fade-in-right {
+		from {
+			opacity: 0;
+			transform: translateX(8px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	@keyframes uwc-fade-out-up {
+		from {
+			opacity: 1;
+			transform: none;
+		}
+		to {
+			opacity: 0;
+			transform: translateY(-8px);
+		}
+	}
+	@keyframes uwc-fade-out-down {
+		from {
+			opacity: 1;
+			transform: none;
+		}
+		to {
+			opacity: 0;
+			transform: translateY(8px);
+		}
+	}
+	@keyframes uwc-zoom-in {
+		from {
+			opacity: 0;
+			transform: scale(0.92);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	@keyframes uwc-zoom-out {
+		from {
+			opacity: 1;
+			transform: none;
+		}
+		to {
+			opacity: 0;
+			transform: scale(0.92);
+		}
+	}
+	@keyframes uwc-pop-in {
+		0% {
+			opacity: 0;
+			transform: scale(0.8);
+		}
+		70% {
+			transform: scale(1.04);
+		}
+		100% {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	@keyframes uwc-slide-in-up {
+		from {
+			transform: translateY(100%);
+		}
+		to {
+			transform: none;
+		}
+	}
+	@keyframes uwc-slide-in-down {
+		from {
+			transform: translateY(-100%);
+		}
+		to {
+			transform: none;
+		}
+	}
+	@keyframes uwc-slide-in-left {
+		from {
+			transform: translateX(-100%);
+		}
+		to {
+			transform: none;
+		}
+	}
+	@keyframes uwc-slide-in-right {
+		from {
+			transform: translateX(100%);
+		}
+		to {
+			transform: none;
+		}
+	}
+	@keyframes uwc-spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+	@keyframes uwc-pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.5;
+		}
+	}
+	@keyframes uwc-bounce {
+		0%,
+		100% {
+			transform: none;
+		}
+		50% {
+			transform: translateY(-25%);
+		}
+	}
+	@keyframes uwc-breathe {
+		0%,
+		100% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.04);
+		}
+	}
+	@keyframes uwc-float {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(-6px);
+		}
+	}
+	@keyframes uwc-ping {
+		0% {
+			transform: scale(1);
+			opacity: 1;
+		}
+		75%,
+		100% {
+			transform: scale(2);
+			opacity: 0;
+		}
+	}
+
+	/* intro */
+	.anim-fade-in {
+		animation: uwc-fade-in var(--anim-duration, 0.35s) ease both;
+	}
+	.anim-fade-in-up {
+		animation: uwc-fade-in-up var(--anim-duration, 0.35s) ease both;
+	}
+	.anim-fade-in-down {
+		animation: uwc-fade-in-down var(--anim-duration, 0.35s) ease both;
+	}
+	.anim-fade-in-left {
+		animation: uwc-fade-in-left var(--anim-duration, 0.35s) ease both;
+	}
+	.anim-fade-in-right {
+		animation: uwc-fade-in-right var(--anim-duration, 0.35s) ease both;
+	}
+	.anim-zoom-in {
+		animation: uwc-zoom-in var(--anim-duration, 0.35s)
+			cubic-bezier(0.34, 1.4, 0.64, 1) both;
+	}
+	.anim-pop-in {
+		animation: uwc-pop-in var(--anim-duration, 0.35s)
+			cubic-bezier(0.34, 1.4, 0.64, 1) both;
+	}
+	.anim-slide-in-up {
+		animation: uwc-slide-in-up var(--anim-duration, 0.35s) ease both;
+	}
+	.anim-slide-in-down {
+		animation: uwc-slide-in-down var(--anim-duration, 0.35s) ease both;
+	}
+	.anim-slide-in-left {
+		animation: uwc-slide-in-left var(--anim-duration, 0.35s) ease both;
+	}
+	.anim-slide-in-right {
+		animation: uwc-slide-in-right var(--anim-duration, 0.35s) ease both;
+	}
+	/* outro */
+	.anim-fade-out {
+		animation: uwc-fade-out var(--anim-duration, 0.35s) ease both;
+	}
+	.anim-fade-out-up {
+		animation: uwc-fade-out-up var(--anim-duration, 0.35s) ease both;
+	}
+	.anim-fade-out-down {
+		animation: uwc-fade-out-down var(--anim-duration, 0.35s) ease both;
+	}
+	.anim-zoom-out {
+		animation: uwc-zoom-out var(--anim-duration, 0.35s) ease both;
+	}
+	/* loops */
+	.anim-spin {
+		animation: uwc-spin 1s linear infinite;
+	}
+	.anim-pulse {
+		animation: uwc-pulse 2s ease-in-out infinite;
+	}
+	.anim-bounce {
+		animation: uwc-bounce 1s ease-in-out infinite;
+	}
+	.anim-breathe {
+		animation: uwc-breathe 3s ease-in-out infinite;
+	}
+	.anim-float {
+		animation: uwc-float 3s ease-in-out infinite;
+	}
+	.anim-ping {
+		animation: uwc-ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+	}
+	/* modifiers */
+	.anim-fast {
+		animation-duration: 0.18s;
+	}
+	.anim-slow {
+		animation-duration: 0.6s;
+	}
+	.anim-delay-1 {
+		animation-delay: 0.08s;
+	}
+	.anim-delay-2 {
+		animation-delay: 0.16s;
+	}
+	.anim-delay-3 {
+		animation-delay: 0.24s;
+	}
+	.anim-infinite {
+		animation-iteration-count: infinite;
+	}
+}
+/* Accessibility kill-switch — unlayered + !important so it wins decisively. */
+@media (prefers-reduced-motion: reduce) {
+	[class*='anim-'] {
+		animation-duration: 0.001ms !important;
+		animation-iteration-count: 1 !important;
+	}
+}

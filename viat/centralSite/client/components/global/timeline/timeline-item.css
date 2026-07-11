@@ -1,0 +1,74 @@
+:host {
+	display: block;
+}
+/* All the vertical↔horizontal swing lives in --tli-* props (parent publishes the
+   horizontal set; vertical is the fallback baked into each var()). */
+.tli {
+	display: grid;
+	grid-template-columns: var(--tli-cols, var(--tl-rail-size, 1.5rem) 1fr);
+	grid-template-rows: var(--tli-rows, auto);
+	column-gap: var(--space-3);
+	row-gap: var(--tli-row-gap, 0);
+	min-inline-size: var(--tli-min-w, auto);
+}
+.tli-rail {
+	display: flex;
+	flex-direction: var(--tli-rail-flow, column);
+	align-items: center;
+}
+.tli-dot {
+	flex: none;
+	inline-size: var(--tl-dot-size, 0.9rem);
+	block-size: var(--tl-dot-size, 0.9rem);
+	margin: var(--tli-dot-margin, 0.2rem 0 0 0);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	/* Tone comes from the shared [data-tone] fill map (util-surface.css) applied
+	   to the dot; neutral / unset falls back to the muted text colour. */
+	background: var(--tone-fill, var(--text-muted));
+	color: var(--timeline-dot-icon, #fff);
+	box-shadow: 0 0 0 0.2rem color-mix(in oklab, var(--tone-fill, var(--text-muted)) 16%, transparent);
+}
+.tli-dot ui-icon {
+	--icon-size: calc(var(--tl-dot-size, 0.9rem) * 0.7);
+}
+.tli-line {
+	flex: 1 1 auto;
+	inline-size: var(--tli-line-w, 2px);
+	block-size: var(--tli-line-h, auto);
+	margin: var(--tli-line-margin, 0.2rem 0);
+	border-radius: 999px;
+	background: var(--timeline-line, var(--border-light-color, rgba(255, 255, 255, 0.14)));
+}
+.tli-body {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	padding: var(--tli-body-pad, 0 0 var(--tl-row-gap, 1.25rem) 0);
+}
+.tli-time {
+	font-size: var(--text-xs);
+	color: var(--text-muted);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.02em;
+}
+.tli-label {
+	color: var(--text-main);
+	font-weight: 600;
+	line-height: 1.3;
+}
+.tli-desc {
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+	line-height: 1.45;
+}
+/* Last row: drop the trailing connector + spacer so the stream ends clean
+   (works for both orientations — the single shorthand collapses to 0). */
+:host(:last-child) .tli-line {
+	display: none;
+}
+:host(:last-child) {
+	--tli-body-pad: 0;
+}

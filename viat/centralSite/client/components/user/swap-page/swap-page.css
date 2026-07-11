@@ -1,0 +1,196 @@
+:host {
+	display: block;
+}
+.sp-shell {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	/* Fill the viewport so the frame centers vertically. Under document scroll
+	   the shell is content-height by default, which left `justify-content` with
+	   no slack and pinned the box to the top — the old fixed appView grid used to
+	   supply this height. Min (not fixed) so a tall frame on a short screen grows
+	   the shell and document-scrolls instead of clipping. The padding clears the
+	   fixed top bar / bottom bar so the frame centers in the visible band. */
+	min-height: 100svh;
+	padding: 5.625rem var(--space-4) var(--space-12) var(--space-4);
+	font-family: var(--font-mono, 'JetBrains Mono', monospace);
+	color: var(--text-main);
+	box-sizing: border-box;
+}
+.sp-frame {
+	width: 100%;
+	max-width: 28.75rem;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	padding: var(--space-6) var(--space-6) var(--space-7) var(--space-6);
+	background: var(--bg-panel, color-mix(in oklab, var(--bg-body) 78%, transparent));
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-radius: 14px;
+	/* The frame is a floating sheet — it shares the modal's themed elevation. */
+	box-shadow: var(--modal-shadow, 0 24px 64px rgba(0, 0, 0, 0.45));
+	animation: sp-frame-in 440ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes sp-frame-in {
+	from { opacity: 0; transform: translateY(16px) scale(0.97); }
+	to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.sp-header {
+	display: flex;
+	align-items: baseline;
+	gap: var(--space-3);
+	font-size: var(--text-sm);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+}
+.sp-id {
+	color: var(--cyan);
+	opacity: 0.85;
+}
+.sp-title {
+	color: var(--text-main);
+}
+.sp-card {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding: var(--space-4) var(--space-5);
+	background: var(--bg-dark);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.1));
+	border-radius: 10px;
+}
+.sp-card-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: var(--text-2xs);
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--text-muted, rgba(255, 255, 255, 0.45));
+}
+.sp-card-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-4);
+}
+.sp-amount {
+	flex: 1;
+	min-width: 0;
+	background: transparent;
+	border: none;
+	color: var(--text-main);
+	font-family: inherit;
+	font-size: 1.5rem;
+	letter-spacing: 0.02em;
+	padding: var(--space-2) 0;
+	outline: none;
+}
+.sp-amount:focus {
+	color: var(--teal);
+}
+.sp-amount-out {
+	color: var(--text-muted, rgba(255, 255, 255, 0.85));
+	font-feature-settings: 'tnum';
+}
+.sp-asset {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-4);
+	background: var(--cyan-tint-faint, color-mix(in oklab, var(--teal) 5%, transparent));
+	border: 1px solid var(--cyan-glow-soft, color-mix(in oklab, var(--teal) 18%, transparent));
+	border-radius: 999px;
+	flex-shrink: 0;
+}
+.sp-glyph,
+.sp-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	animation: sp-asset-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.sp-glyph {
+	font-size: var(--text-lg);
+	line-height: 1;
+	color: var(--teal);
+}
+.sp-icon {
+	color: #f7931a;
+}
+@keyframes sp-asset-in {
+	from { opacity: 0; transform: scale(0.4) rotate(-12deg); }
+	60% { opacity: 1; transform: scale(1.08) rotate(0); }
+	to { opacity: 1; transform: scale(1) rotate(0); }
+}
+.sp-asset-symbol {
+	font-size: var(--text-xs);
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--text-main);
+}
+.sp-flip-row {
+	display: flex;
+	justify-content: center;
+	margin: -4px 0;
+}
+.sp-flip {
+	width: 2.5rem;
+	height: 2.5rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--bg-dark);
+	border: 1px solid var(--cyan-glow-soft, color-mix(in oklab, var(--teal) 22%, transparent));
+	border-radius: 50%;
+	color: var(--teal);
+	cursor: pointer;
+	transition: border-color 0.15s ease, background 0.15s ease, transform 0.2s ease;
+}
+.sp-flip:hover {
+	border-color: var(--teal);
+	background: var(--cyan-tint-faint, color-mix(in oklab, var(--teal) 6%, transparent));
+	transform: rotate(180deg);
+}
+.sp-flip-icon {
+	color: var(--teal);
+}
+.sp-rate {
+	margin-block-start: var(--space-2);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.16em;
+	color: var(--text-muted, rgba(255, 255, 255, 0.5));
+}
+.sp-rate-value {
+	color: var(--text-main);
+	letter-spacing: 0.06em;
+}
+.sp-execute {
+	margin-block-start: var(--space-2);
+	padding: var(--space-4) var(--space-5);
+	background: var(--cyan-tint-faint, color-mix(in oklab, var(--teal) 8%, transparent));
+	border: 1px solid var(--teal);
+	border-radius: var(--radius-md);
+	color: var(--teal);
+	font-family: inherit;
+	font-size: var(--text-sm);
+	letter-spacing: 0.22em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: background 0.15s ease, color 0.15s ease;
+}
+.sp-execute:hover {
+	background: var(--cyan-tint, color-mix(in oklab, var(--teal) 14%, transparent));
+}
+.sp-status {
+	font-size: var(--text-xs);
+	line-height: 1.4;
+	min-height: 1em;
+	opacity: 0;
+	transition: opacity 0.18s ease;
+}
+.sp-status[data-visible] {
+	opacity: 1;
+}
+.sp-status[data-tone='success'] { color: var(--color-success); }
+.sp-status[data-tone='error'] { color: var(--color-danger); }

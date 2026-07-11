@@ -1,0 +1,44 @@
+:host {
+	display: block;
+	width: 100%;
+}
+.bar {
+	align-items: center;
+	display: flex;
+	gap: 0.5rem;
+	width: 100%;
+}
+.bar-track {
+	background: var(--bar-track, rgba(255, 255, 255, 0.08));
+	border-radius: 999px;
+	flex: 1 1 auto;
+	height: 0.375rem;
+	overflow: hidden;
+	position: relative;
+}
+.bar-fill {
+	background: linear-gradient(90deg, var(--accent, #6366f1), var(--accent-2, #ec4899));
+	border-radius: inherit;
+	height: 100%;
+	transition: width 0.18s ease-out;
+}
+.bar[data-indeterminate] .bar-fill {
+	animation: bar-indeterminate 1.3s linear infinite;
+	width: 35% !important;
+}
+.bar-value {
+	color: var(--text-muted, currentColor);
+	font-size: 0.8em;
+	min-width: 3.2em;
+	text-align: right;
+}
+@keyframes bar-indeterminate {
+	0%   { transform: translateX(-100%); }
+	100% { transform: translateX(320%); }
+}
+/* Standing law: gate motion. Slow the indeterminate sweep and drop the
+   width-fill transition for reduced-motion users. */
+@media (prefers-reduced-motion: reduce) {
+	.bar-fill { transition: none; }
+	.bar[data-indeterminate] .bar-fill { animation-duration: 3s; }
+}
