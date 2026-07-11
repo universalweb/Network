@@ -7,7 +7,7 @@
  * and an optional `.label` heading.
  */
 import '../icon/icon.js';
-import { html, list, WebComponent } from 'webcomponent';
+import { html, WebComponent } from 'webcomponent';
 function statusIcon(status) {
 	if (status === 'done') {
 		return 'circle-check';
@@ -53,7 +53,7 @@ export class UIAiPlan extends WebComponent {
 					<ui-icon class="aip-head-icon" .state.name=${'list-checks'} .state.size=${'sm'}></ui-icon>
 					<span class="aip-title">${this.state.label}</span>
 				</header>
-				<ol class="aip-list">${list('items', this.renderStep, this.stepKey)}</ol>
+				<ol class="aip-list">${this.list('items', this.renderStep, this.stepKey)}</ol>
 			</section>
 		`;
 	}

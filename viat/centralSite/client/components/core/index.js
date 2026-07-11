@@ -102,16 +102,16 @@ export {
 	scanAndResolve,
 } from './resolver.js';
 export { bind, CONTENT_KIND } from './state/binding.js';
-export { RemoteListEngine } from './state/remoteListEngine.js';
+export { CollectionEngine } from './state/collectionEngine.js';
 export { assignState } from './state/state.js';
 export {
+	collection,
 	comp,
 	each,
 	filter,
 	html,
 	ifThen,
 	list,
-	remoteList,
 	styles,
 } from './template.js';
 export {

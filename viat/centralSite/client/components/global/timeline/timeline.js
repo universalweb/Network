@@ -13,7 +13,7 @@
 	  ]} .state.orientation=${'vertical'} .state.density=${'normal'}></ui-timeline>
 	─────────────────────────────────────────────────────────────────────
 */
-import { list, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 import { UITimelineItem } from './timeline-item.js';
 export class UITimeline extends WebComponent {
 	static url = import.meta.url;
@@ -45,7 +45,7 @@ export class UITimeline extends WebComponent {
 	render() {
 		this.html `
 			<div class="tl" role="list">
-				${list('items', UITimelineItem, this.itemKey)}
+				${this.list('items', UITimelineItem, this.itemKey)}
 			</div>
 		`;
 	}

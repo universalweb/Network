@@ -11,7 +11,7 @@
 	Pure presentation — no events. Drives help panels & menu hints.
 	─────────────────────────────────────────────────────────────────────
 */
-import { html, list, WebComponent } from 'webcomponent';
+import { html, WebComponent } from 'webcomponent';
 /*
  * Modifier-name → glyph map. Matched case-insensitively; an unmapped token
  * falls through to its upper-cased self (so 'k' → 'K', 'F5' → 'F5').
@@ -76,7 +76,7 @@ export class UIKbd extends WebComponent {
 	render() {
 		this.html `
 			<kbd class="kbd" role="group" style=${this.sepStyle}>
-				${list('values', this.keyCap, this.keyId)}
+				${this.list('values', this.keyCap, this.keyId)}
 			</kbd>
 		`;
 	}

@@ -492,19 +492,20 @@ export class ListBinding extends Binding {
 	}
 }
 /*
-	`RemoteListBinding` is a `ListBinding` carrying a remote-load config. It renders
-	through the exact same `ListSpot` path (so `isListBinding` is true → keyed diff +
-	filterFn are inherited verbatim); the only addition is the load controller the
-	template mount-hook attaches when it sees this subtype. Kept here beside the
-	other binding types so the parser/runtime share one binding-type vocabulary.
+	`CollectionBinding` is a `ListBinding` carrying a load-controller config. It
+	renders through the exact same `ListSpot` path (so `isListBinding` is true →
+	keyed diff + filterFn are inherited verbatim); the only addition is the load
+	controller the template mount-hook attaches when it sees this subtype. Kept
+	here beside the other binding types so the parser/runtime share one binding-type
+	vocabulary.
 */
-export class RemoteListBinding extends ListBinding {
-	static isRemoteListBinding(source) {
-		return source instanceof RemoteListBinding;
+export class CollectionBinding extends ListBinding {
+	static isCollectionBinding(source) {
+		return source instanceof CollectionBinding;
 	}
-	constructor(key, renderFn, keyFn, filterFn, remoteConfig) {
+	constructor(key, renderFn, keyFn, filterFn, collectionConfig) {
 		super(key, renderFn, keyFn, filterFn);
-		this.remoteConfig = remoteConfig;
+		this.collectionConfig = collectionConfig;
 	}
 }
 export function isBindingType(value) {
@@ -512,5 +513,5 @@ export function isBindingType(value) {
 		return false;
 	}
 	const ctor = value.constructor;
-	return ctor === Binding || ctor === ListBinding || ctor === RemoteListBinding;
+	return ctor === Binding || ctor === ListBinding || ctor === CollectionBinding;
 }

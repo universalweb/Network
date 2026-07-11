@@ -1,9 +1,9 @@
 /*
 	DESCRIPTION: ui-pagination — numbered page navigation with first/prev/next/last
-	and ellipsis truncation (paged-list only has prev/next). Buttons are NATIVE with
-	unicode glyphs built as a pure string + one delegated click handler — no `ui-*`
-	props in the string, so nothing renders blank. Controlled: clicking clamps and
-	emits; the consumer owns `page`.
+	and ellipsis truncation (paged-list only has prev/next). Slots rebuild into
+	`state.items` and render via `list('items', this.slotRow)` (light html — no
+	`^html` string builder). Controlled: clicking clamps and emits; the consumer
+	owns `page`.
 	── EVENTS ───────────────────────────────────────────────────────────
 	  pagination:change { page }
 	── USAGE ────────────────────────────────────────────────────────────
@@ -11,7 +11,7 @@
 	  <ui-pagination .state.page=${1} .state.count=${9} .state.siblings=${2} .state.showEdges=${false}></ui-pagination>
 	──────────────────────────────────────────────────────────────────────
 */
-import { WebComponent } from '../../core/index.js';
+import { html, WebComponent } from 'webcomponent';
 export class UIPagination extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -23,7 +23,17 @@ export class UIPagination extends WebComponent {
 		siblings: 1,
 		boundaries: 1,
 		showEdges: true,
+		// Derived nav/page/gap slots for list() — rebuilt at observe-time.
+		items: [],
 	};
+	onConnect() {
+		this.observe('page', this.syncSlots);
+		this.observe('count', this.syncSlots);
+		this.observe('siblings', this.syncSlots);
+		this.observe('boundaries', this.syncSlots);
+		this.observe('showEdges', this.syncSlots);
+		this.syncSlots();
+	}
 	goTo(page) {
 		const total = Math.max(1, Number(this.state.count) || 1);
 		const target = Math.min(Math.max(1, page), total);
@@ -41,74 +51,103 @@ export class UIPagination extends WebComponent {
 		}
 		this.goTo(Number(button.dataset.page));
 	}
-	/* Returns the visible slots: page numbers and '…' gap markers. Standard
-	   boundaries/siblings windowing — full range when it fits. */
+	/* Returns the visible page numbers and '…' gap markers. */
 	pages(page, total) {
 		const siblings = Number(this.state.siblings) || 1;
 		const boundaries = Number(this.state.boundaries) || 1;
 		const range = (start, end) => {
-			const out = [];
+			const values = [];
 			for (let value = start; value <= end; value += 1) {
 				if (value >= 1 && value <= total) {
-					out.push(value);
+					values.push(value);
 				}
 			}
-			return out;
+			return values;
 		};
-		const totalSlots = siblings * 2 + 3 + boundaries * 2;
+		const totalSlots = (siblings * 2) + 3 + (boundaries * 2);
 		if (total <= totalSlots) {
 			return range(1, total);
 		}
 		const leftSibling = Math.max(page - siblings, boundaries + 2);
 		const rightSibling = Math.min(page + siblings, total - boundaries - 1);
-		const out = range(1, boundaries);
+		const slots = range(1, boundaries);
 		if (leftSibling > boundaries + 2) {
-			out.push('…');
+			slots.push('…');
 		} else {
-			out.push(...range(boundaries + 1, leftSibling - 1));
+			slots.push(...range(boundaries + 1, leftSibling - 1));
 		}
-		out.push(...range(leftSibling, rightSibling));
+		slots.push(...range(leftSibling, rightSibling));
 		if (rightSibling < total - boundaries - 1) {
-			out.push('…');
+			slots.push('…');
 		} else {
-			out.push(...range(rightSibling + 1, total - boundaries));
+			slots.push(...range(rightSibling + 1, total - boundaries));
 		}
-		out.push(...range(total - boundaries + 1, total));
-		return out;
+		slots.push(...range(total - boundaries + 1, total));
+		return slots;
 	}
-	render() {
-		this.html `
-			<nav class="pagination" aria-label="Pagination" @click=${this.handleClick}>
-				^html${this.renderItems}
-			</nav>
-		`;
-	}
-	renderItems() {
+	syncSlots() {
 		const page = Math.max(1, Number(this.state.page) || 1);
 		const total = Math.max(1, Number(this.state.count) || 1);
-		const navButton = (cls, glyph, target, disabled, label) => {
-			return `<button type="button" class="pg-nav ${cls}" data-page="${target}"${disabled ? ' disabled' : ''} aria-label="${label}">${glyph}</button>`;
+		const slots = [];
+		let seq = 0;
+		const pushNav = (cls, glyph, target, disabled, label) => {
+			slots.push({
+				id: `nav-${cls}`,
+				kind: 'nav',
+				cls,
+				glyph,
+				page: target,
+				disabled,
+				label,
+			});
 		};
-		const parts = [];
 		if (this.state.showEdges) {
-			parts.push(navButton('pg-first', '«', 1, page <= 1, 'First page'));
+			pushNav('pg-first', '«', 1, page <= 1, 'First page');
 		}
-		parts.push(navButton('pg-prev', '‹', page - 1, page <= 1, 'Previous page'));
-		const slots = this.pages(page, total);
-		for (let index = 0; index < slots.length; index += 1) {
-			const slot = slots[index];
+		pushNav('pg-prev', '‹', page - 1, page <= 1, 'Previous page');
+		const pageSlots = this.pages(page, total);
+		const pageSlotCount = pageSlots.length;
+		for (let index = 0; index < pageSlotCount; index += 1) {
+			const slot = pageSlots[index];
 			if (slot === '…') {
-				parts.push('<span class="pg-gap" aria-hidden="true">…</span>');
+				slots.push({
+					id: `gap-${seq}`,
+					kind: 'gap',
+				});
+				seq += 1;
 			} else {
-				const active = slot === page;
-				parts.push(`<button type="button" class="pg-page" data-page="${slot}"${active ? ' data-active aria-current="page"' : ''}>${slot}</button>`);
+				slots.push({
+					id: `page-${slot}`,
+					kind: 'page',
+					page: slot,
+					active: slot === page,
+				});
 			}
 		}
-		parts.push(navButton('pg-next', '›', page + 1, page >= total, 'Next page'));
+		pushNav('pg-next', '›', page + 1, page >= total, 'Next page');
 		if (this.state.showEdges) {
-			parts.push(navButton('pg-last', '»', total, page >= total, 'Last page'));
+			pushNav('pg-last', '»', total, page >= total, 'Last page');
 		}
-		return parts.join('');
+		this.state.items = slots;
+	}
+	slotRow(item) {
+		if (item.kind === 'gap') {
+			return html`<span class="pg-gap" aria-hidden="true">…</span>`;
+		}
+		if (item.kind === 'nav') {
+			return html`<button type="button" class=${`pg-nav ${item.cls}`} data-page=${item.page} ?disabled=${item.disabled} aria-label=${item.label}>${item.glyph}</button>`;
+		}
+		return html`<button type="button" class="pg-page" data-page=${item.page} ?data-active=${item.active} aria-current=${item.active ? 'page' : false}>${item.page}</button>`;
+	}
+	slotKey(item) {
+		return item.id;
+	}
+	render() {
+		this.html`
+			<nav class="pagination" aria-label="Pagination" @click=${this.handleClick}>
+				${this.list('items', this.slotRow, this.slotKey)}
+			</nav>
+		`;
 	}
 }
 customElements.define('ui-pagination', UIPagination);

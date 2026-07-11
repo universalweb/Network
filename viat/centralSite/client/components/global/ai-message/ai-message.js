@@ -1,6 +1,6 @@
 import '../code-block/code-block.js';
 import '../ai-reasoning/ai-reasoning.js';
-import { html, list, WebComponent } from 'webcomponent';
+import { html, WebComponent } from 'webcomponent';
 import { segmentMarkdown } from './markdown.js';
 /*
  * `<ui-ai-message>` — one chat message row AND the content-part dispatcher for
@@ -136,7 +136,7 @@ export class UIAiMessage extends WebComponent {
 				</header>
 				<ui-ai-reasoning class="aim-reasoning" ?hidden=${!this.state.reasoning} .state.text=${this.state.reasoning} .state.streaming=${this.state.streaming} .state.expanded=${this.state.streaming}></ui-ai-reasoning>
 				<div class="aim-stream" ?hidden=${!this.state.streaming}>${this.state.content}</div>
-				<div class="aim-rich" ?hidden=${this.state.streaming}>${list('parts', this.renderPart, this.partKey)}</div>
+				<div class="aim-rich" ?hidden=${this.state.streaming}>${this.list('parts', this.renderPart, this.partKey)}</div>
 			</div>
 		`;
 	}

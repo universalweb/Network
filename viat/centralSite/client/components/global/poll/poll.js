@@ -14,7 +14,7 @@
 	deep-written onto each option (never a per-render enrichment loop).
 	─────────────────────────────────────────────────────────────────────
 */
-import { list, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 class UIPollOption extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -168,7 +168,7 @@ export class UIPoll extends WebComponent {
 				?data-multiple=${this.state.multiple}>
 				<p class="poll-q" ?hidden=${!this.state.question}>${this.state.question}</p>
 				<div class="poll-opts" @poll:select=${this.handleSelect}>
-					${list('items', UIPollOption, this.optionKey)}
+					${this.list('items', UIPollOption, this.optionKey)}
 				</div>
 				<div class="poll-foot" ?hidden=${this.state.instant}>
 					<ui-button .state=${{

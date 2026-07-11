@@ -169,7 +169,8 @@ export async function handleDisconnect() {
 	this.unregisterFromParent = null;
 	this.parentComponent = null;
 	this.uninstallObserver();
-	this.disposeRemoteLists();
+	this.disposeCollections();
+	this.disposeLists();
 	this.visibleFired = false;
 	this.isIntersecting = false;
 	this.isIntersected = false;

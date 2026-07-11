@@ -125,7 +125,7 @@
   background: var(--surface-tint, rgba(255, 255, 255, 0.05));
   color: var(--text-main);
 }
-.theme-option.active {
+.theme-option[data-active] {
   color: var(--cyan);
   background: var(--cyan-tint-faint, color-mix(in oklab, var(--teal) 3.4%, transparent));
 }

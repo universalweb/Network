@@ -22,7 +22,7 @@
 	  <ui-json-inspector .state.data=${payload} .state.expandDepth=${1}></ui-json-inspector>
 	─────────────────────────────────────────────────────────────────────
 */
-import { list, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 import { UIJsonRow } from './json-row.js';
 const STRING_PREVIEW_MAX = 60;
 const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
@@ -301,7 +301,7 @@ export class UIJsonInspector extends WebComponent {
 					<button type="button" class="ji-btn" @click=${this.collapseAll}>Collapse all</button>
 				</div>
 				<div class="ji-tree" role="tree" @json-row:toggle=${this.handleToggle}>
-					${list('items', UIJsonRow, this.rowKey)}
+					${this.list('items', UIJsonRow, this.rowKey)}
 					<div class="ji-empty" ?hidden=${this.hasRows}>No matches</div>
 				</div>
 			</div>

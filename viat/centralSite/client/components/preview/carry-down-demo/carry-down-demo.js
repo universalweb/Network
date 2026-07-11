@@ -1,9 +1,9 @@
-import { list, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 /*
  * Carry-down showcase — mirrors the live GlobalDock → UIDock → DockIconButton
  * chain. `demo-carry-top` owns ONE shared object (`payload.items`) and passes it
  * down by reference via `.state=`; `demo-carry-mid` renders that array through
- * `list()`. A button mutates `payload.items[N].tooltip` at the TOP — an
+ * `this.list()`. A button mutates `payload.items[N].tooltip` at the TOP — an
  * ANCESTOR-origin deep write — and the leaf two boundaries below re-renders,
  * proving the `.state=` carrier bridges deep mutations to every component that
  * holds the shared object (without it, only the top's own readout would update).
@@ -18,7 +18,7 @@ export class DemoCarryLeaf extends WebComponent {
 		tooltip: '',
 	};
 	render() {
-		this.html `<span class="cd-leaf">${this.state.tooltip}</span>`;
+		this.html`<span class="cd-leaf">${this.state.tooltip}</span>`;
 	}
 }
 customElements.define('demo-carry-leaf', DemoCarryLeaf);
@@ -31,7 +31,7 @@ export class DemoCarryMid extends WebComponent {
 		items: [],
 	};
 	render() {
-		this.html `<div class="cd-row">${list('items', DemoCarryLeaf)}</div>`;
+		this.html`<div class="cd-row">${this.list('items', DemoCarryLeaf)}</div>`;
 	}
 }
 customElements.define('demo-carry-mid', DemoCarryMid);
@@ -78,7 +78,7 @@ export class DemoCarryTop extends WebComponent {
 		return this.state.payload.items[0].tooltip;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="cd-demo">
 				<div class="cd-controls">
 					<button class="cd-btn" @click=${this.bumpFirst}>mutate items[0] at the top</button>

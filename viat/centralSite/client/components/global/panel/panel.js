@@ -1,5 +1,11 @@
 import '../surface/surface.js';
 import { classList, WebComponent } from '../../core/index.js';
+/*
+	ui-panel — shell for dashboard/pulldown panels. Body is a bare method spot
+	(`${this.renderBody}`) so subclasses return `this.htmlElement\`…\`` (Element —
+	content spots do NOT mount bare html`` / LightTemplate; that JSON-stringifies).
+	One root only. Nested lists: ${this.list(...)} inside the htmlElement. NOT ^html.
+*/
 export class UIPanel extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -37,19 +43,19 @@ export class UIPanel extends WebComponent {
 		return '';
 	}
 	renderDot() {
-		return this.state.showDot ? '<div class="ph-dot"></div>' : '';
+		return this.state.showDot ? this.htmlElement`<div class="ph-dot"></div>` : '';
 	}
 	render() {
-		this.html `
+		this.html`
 			<ui-surface .state=${this.state.surfaceState}>
 				<aside class=${classList('panel', this.state.classes)}>
 					<div class="panel-header">
 						<span>
 							<span class="ph-id">${this.state.panelId}</span> // ${this.state.heading}
 						</span>
-						^html${this.renderDot}
+						${this.renderDot}
 					</div>
-					<div class="panel-body">^html${this.renderBody}</div>
+					<div class="panel-body">${this.renderBody}</div>
 				</aside>
 			</ui-surface>
 		`;

@@ -1404,13 +1404,13 @@ class WalletApp extends AppView {
 		this.fetchTransactionsForWallet();
 		return account;
 	}
-	// The activity-log now self-loads the wallet's tx history via remoteList (its
+	// The activity-log now self-loads the wallet's tx history via collection (its
 	// own loader + cursor paging + tx→entry mapping). On an account refresh we
 	// just poke each mounted instance to reload; a wallet-address change resets it
 	// on its own (the log observes the wallet bus). Both dashboards mount one.
 	fetchTransactionsForWallet() {
 		this.applyToAll('activity-log', (log) => {
-			log.remote?.('entries')?.refresh();
+			log.collection?.('entries')?.refresh();
 		});
 	}
 	syncWalletStatsPanel(values) {

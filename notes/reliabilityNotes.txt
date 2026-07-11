@@ -1,9 +1,0 @@
-Need to revist state numbers 
-client side and server side need a state for incoming and outgoing request data
-readyState and state has to have different numbers for outgoing and incoming numbers
-clear timeout checks
-server side skips state 1 from setup to pathready
-calculate latency
-update state when skipping a level
-ensure that Path Paramaters Headers Data is followed in that order
-enforce data sizes

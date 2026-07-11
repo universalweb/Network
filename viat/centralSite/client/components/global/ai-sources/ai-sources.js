@@ -6,7 +6,7 @@
  * with `.sources` and an optional `.label` heading.
  */
 import '../icon/icon.js';
-import { html, list, WebComponent } from 'webcomponent';
+import { html, WebComponent } from 'webcomponent';
 // Origin host for the source's badge — regex parse (no URL ctor / try-catch) so
 // a relative or malformed url just yields an empty host instead of throwing.
 function hostOf(url) {
@@ -55,7 +55,7 @@ export class UIAiSources extends WebComponent {
 					<ui-icon class="ais-head-icon" .state.name=${'book-open'} .state.size=${'sm'}></ui-icon>
 					<span class="ais-title-head">${this.state.label}</span>
 				</header>
-				<ol class="ais-list">${list('items', this.renderSource, this.sourceKey)}</ol>
+				<ol class="ais-list">${this.list('items', this.renderSource, this.sourceKey)}</ol>
 			</section>
 		`;
 	}

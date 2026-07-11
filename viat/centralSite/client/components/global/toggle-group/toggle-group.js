@@ -15,7 +15,7 @@
 	  Multi: .state.multiple=${true} .state.values=${['a','c']} → detail.data.values is the active set.
 	─────────────────────────────────────────────────────────────────────
 */
-import { list, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 import { UIToggleOption } from './toggle-option.js';
 const SIZES = new Set([
 	'sm',
@@ -95,7 +95,7 @@ export class UIToggleGroup extends WebComponent {
 				class="tg"
 				data-size=${SIZES.has(this.state.size) ? this.state.size : 'md'}
 				role="group" @toggle-group:select=${this.handleSelect}>
-				${list('items', UIToggleOption, this.optionKey)}
+				${this.list('items', UIToggleOption, this.optionKey)}
 			</div>
 		`;
 	}

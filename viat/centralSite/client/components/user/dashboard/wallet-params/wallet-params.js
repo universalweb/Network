@@ -1,3 +1,4 @@
+import { html } from 'webcomponent';
 import { Panel } from '../../../global/panel/panel.js';
 export class WalletParams extends Panel {
 	static url = import.meta.url;
@@ -9,9 +10,29 @@ export class WalletParams extends Panel {
 		classes: new Set(['wallet-params-panel']),
 		panelId: 'WALLET',
 		heading: 'PARAMETERS',
+		items: [],
 	};
 	onConnect() {
 		this.delegateTo('click', '[data-copy]', this.handleRowCopy);
+		this.observeGlobal('walletParams', this.syncParams);
+		this.syncParams();
+	}
+	syncParams() {
+		const params = this.global.walletParams ?? [];
+		const next = [];
+		const count = params.length;
+		for (let index = 0; index < count; index += 1) {
+			const entry = params[index];
+			next.push({
+				id: entry.key ?? index,
+				key: entry.key,
+				label: entry.label ?? entry.key,
+				value: entry.value,
+				copyValue: entry.copyValue ?? entry.value,
+				className: entry.className,
+			});
+		}
+		this.state.items = next;
 	}
 	async handleRowCopy(domEvent, row) {
 		const value = row.getAttribute('data-copy');
@@ -29,24 +50,24 @@ export class WalletParams extends Panel {
 			heading: 'Copy Failed',
 		});
 	}
+	statRow(row) {
+		const copyText = `${row.label}: ${row.copyValue}`;
+		const className = row.className ? `s-val ${row.className}` : 's-val';
+		return html`<div class="stat-row is-copyable" data-copy=${copyText} tabindex="0" role="button">
+			<span class="s-key">${row.key}</span>
+			<span class=${className}>${row.value}</span>
+		</div>`;
+	}
+	statKey(row) {
+		return row.id;
+	}
 	renderBody() {
-		const params = this.global.walletParams ?? [];
-		if (!params.length) {
-			return '<div class="stat-block stat-empty">no wallet loaded</div>';
+		if (!this.state.items.length) {
+			return this.htmlElement`<div class="stat-block stat-empty">no wallet loaded</div>`;
 		}
-		return `
+		return this.htmlElement`
 			<div class="stat-block">
-				${params.map((p) => {
-					const label = p.label ?? p.key;
-					const copyText = `${label}: ${p.copyValue ?? p.value}`;
-					const escaped = copyText.replace(/"/g, '&quot;');
-					return `
-						<div class="stat-row is-copyable" data-copy="${escaped}" tabindex="0" role="button">
-							<span class="s-key">${p.key}</span>
-							<span class="s-val ${p.className ?? ''}">${p.value}</span>
-						</div>
-					`;
-				}).join('')}
+				${this.list('items', this.statRow, this.statKey)}
 			</div>
 		`;
 	}

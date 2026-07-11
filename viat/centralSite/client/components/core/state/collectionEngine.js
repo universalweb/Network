@@ -1,5 +1,5 @@
 /*
- * RemoteListEngine — the HEADLESS remote-load engine behind list-driven
+ * CollectionEngine — the HEADLESS async-load engine behind list-driven
  * components (paged-list, feeds). No element, no template binding, no DOM
  * wiring of its own: the HOST component owns the markup (rows via `list()`/
  * `filter()`, buttons via template `@click`, a sentinel div) and the engine
@@ -22,24 +22,36 @@
  *     must not hammer the loader) → `${key}:fill-capped`; a manual
  *     `loadMore()` resets the cap.
  *
- * Host contract — create in `onConnect` (state proxy must be live), hand the
- * sentinel over in `onRendered` (refs exist; re-runs on full re-renders so a
- * recreated sentinel re-arms), dispose in `onDisconnect`:
+ * Host contract (preferred — dual-mode `this.collection`):
  *
- *   onConnect()  { this.list ??= RemoteListEngine.create(this, config); }
- *   onRendered() { this.list.attach({ sentinel: this.refs.sentinel }); }
- *   onDisconnect() { this.list.dispose(); this.list = null; }
+ *   onConnect() {
+ *     this.collection('items', { loader, mode, startPage, dedupe, keyFn, … });
+ *   }
+ *   onRendered() { this.collection('items')?.attach({ sentinel: this.refs.s }); }
+ *   // load: this.collection('items')?.loadMore() / reset / setMode / …
+ *   // paint: ${this.list('items', Row)}  — never store the handle on this.list
  *
- * config: { key='items', loader, keyFn, filter (PURE (item, filterArg) =>
- * boolean), filterArg, mode ('scroll'|'button'|'both'|'paged'), auto=true,
- * startPage=1, dedupe=true, prefetch (px → IO bottom rootMargin),
- * maxAutoFill=8, scrollReport=false }. The loader is invoked with
- * `this` = host. Events (side-effect hooks — status is already reactive):
- * `${key}:loading|loaded|error|exhausted|fill-capped` via host.emit.
+ * `this.collection(key, plainConfig)` ensure-registers a CollectionEngine on
+ * `component.collections` (same map as template CollectionController). Dispose
+ * via lifecycle `disposeCollections` (or handle.dispose()).
+ *
+ * Low-level: CollectionEngine.create(host, config) still works; prefer ensure.
+ *
+ * config: { key (set from ensure key), loader, keyFn, filter (PURE),
+ * filterArg, mode ('scroll'|'button'|'both'|'paged'), auto=true,
+ * startPage=1, dedupe=true, prefetch (px), maxAutoFill=8, scrollReport=false }.
+ * Loader runs with `this` = host. Events: `${key}:loading|loaded|error|…`.
  */
 import { getBehavior } from '../behaviors/registry.js';
 import { nextFrame } from '../lifecycle/scheduler.js';
-import { isFunction, plainEqual } from '../utilities.js';
+import { track } from './binding.js';
+import { STATE_PATH } from './state.js';
+import {
+	getValueAtPath,
+	isFunction,
+	isPlainObject,
+	plainEqual,
+} from '../utilities.js';
 const SCROLLABLE_OVERFLOW = /(auto|scroll|overlay)/;
 const DEFAULT_MAX_AUTO_FILL = 8;
 /* Same default identity a ListSpot uses — key ?? id ?? index. */
@@ -88,12 +100,12 @@ function dispatchSentinelEntries(entries) {
 		}
 	}
 }
-export class RemoteListEngine {
+export class CollectionEngine {
 	static create(host, config) {
-		return new RemoteListEngine(host, config);
+		return new CollectionEngine(host, config);
 	}
 	static is(source) {
-		return source instanceof RemoteListEngine;
+		return source instanceof CollectionEngine;
 	}
 	constructor(host, config = {}) {
 		this.host = host;
@@ -468,7 +480,7 @@ export class RemoteListEngine {
 		const config = this.config;
 		if (!isFunction(config.loader)) {
 			this.writeStatus({
-				error: 'remoteList: no loader configured',
+				error: 'collection: no loader configured',
 			});
 			return;
 		}
@@ -569,7 +581,11 @@ export class RemoteListEngine {
 		});
 	}
 	dispose() {
+		if (this.disposed) {
+			return;
+		}
 		this.disposed = true;
+		this.clearConfigWatch();
 		this.loadToken += 1;
 		this.abortController?.abort();
 		this.abortController = null;
@@ -578,4 +594,263 @@ export class RemoteListEngine {
 		this.sentinelElement = null;
 		this.seenKeys.clear();
 	}
+	/**
+	 * Apply a subset of config on an already-live engine (ensure re-entry).
+	 * Mode changes go through setMode (sentinel + paged collapse).
+	 * @param {object} config - Partial engine config.
+	 */
+	applyConfig(config) {
+		if (!config || this.disposed) {
+			return;
+		}
+		if (config.loader != null) {
+			this.config.loader = config.loader;
+		}
+		if (isFunction(config.keyFn)) {
+			this.config.keyFn = config.keyFn;
+		} else if (config.keyFn === undefined || config.keyFn === null) {
+			// allow clearing custom keyFn back to default only when explicitly null
+		}
+		if (config.dedupe != null) {
+			this.config.dedupe = config.dedupe !== false;
+		}
+		if (config.auto != null) {
+			this.config.auto = config.auto !== false;
+		}
+		if (config.startPage != null) {
+			this.config.startPage = config.startPage;
+		}
+		if (config.prefetch != null) {
+			this.config.prefetch = config.prefetch;
+		}
+		if (Number.isFinite(config.maxAutoFill)) {
+			this.config.maxAutoFill = config.maxAutoFill;
+		}
+		if (config.filterArg !== undefined) {
+			this.filterArg = config.filterArg;
+		}
+		if (isFunction(config.filter)) {
+			this.config.filter = config.filter;
+		}
+		if (config.mode != null && config.mode !== this.config.mode) {
+			this.setMode(config.mode);
+		}
+	}
+	/** Tear down reactive config watchers (ensure factory / { from } bindings). */
+	clearConfigWatch() {
+		this.configWatchBundle?.unsubscribe?.();
+		this.configWatchBundle = null;
+		this.configWatchPaths = null;
+		this.configFactory = null;
+		this.configSource = null;
+	}
+}
+/*
+ * Reactive config resolution for ensure:
+ *  1) Live state object — this.collection(key, this.state.itemsConfig)
+ *     (proxy carries STATE_PATH; observe that path for nested writes)
+ *  2) Factory fn — track(this.state reads) → observe those paths → re-apply
+ *  3) Plain object with { from: 'stateKey', map? } fields
+ *  4) Plain snapshot — one-shot (no watchers)
+ */
+const CONFIG_LIVE = 'live';
+const CONFIG_FACTORY = 'factory';
+const CONFIG_PLAIN = 'plain';
+function isFromBinding(value) {
+	return isPlainObject(value) && typeof value.from === 'string';
+}
+function liveStatePath(value) {
+	const meta = value?.[STATE_PATH];
+	if (!meta || typeof meta.path !== 'string' || meta.path === '') {
+		return null;
+	}
+	return meta.path;
+}
+function flattenDepPaths(deps) {
+	const paths = [];
+	if (!deps) {
+		return paths;
+	}
+	for (const pathSet of deps.values()) {
+		for (const path of pathSet) {
+			paths.push(path);
+		}
+	}
+	return paths;
+}
+/**
+ * Resolve a plain config, expanding `{ from, map }` reactive field descriptors.
+ * @param {object} host - Component instance.
+ * @param {object} config - Ensure config.
+ * @returns {{ resolved: object, paths: string[] }} Snapshot + watched paths.
+ */
+function resolvePlainConfig(host, config) {
+	const resolved = {};
+	const paths = [];
+	const keys = Object.keys(config);
+	const keyCount = keys.length;
+	for (let index = 0; index < keyCount; index += 1) {
+		const field = keys[index];
+		const value = config[field];
+		if (isFromBinding(value)) {
+			paths.push(value.from);
+			const raw = getValueAtPath(host.state, value.from);
+			resolved[field] = isFunction(value.map) ? value.map.call(host, raw) : raw;
+		} else {
+			resolved[field] = value;
+		}
+	}
+	return {
+		resolved,
+		paths,
+	};
+}
+/**
+ * Resolve config from a factory under state tracking (same dep system as templates).
+ * @param {object} host - Component instance.
+ * @param {Function} configFactory - `function () { return { loader, mode, … }; }`
+ * @returns {{ resolved: object, paths: string[] }} Snapshot + watched paths.
+ */
+function resolveFactoryConfig(host, configFactory) {
+	const tracked = track(configFactory, host);
+	if (!isPlainObject(tracked.value)) {
+		throw new TypeError('this.collection(key, factory): factory must return a plain config object');
+	}
+	return {
+		resolved: tracked.value,
+		paths: flattenDepPaths(tracked.deps),
+	};
+}
+/**
+ * Snapshot a live state config object (proxy). Nested writes under its path
+ * re-fire via a single observe on the root path (path-overlap bus).
+ * @param {object} liveConfig - this.state.itemsConfig (state proxy subtree).
+ * @param {string} configPath - STATE path e.g. 'itemsConfig'.
+ * @returns {{ resolved: object, paths: string[] }}
+ */
+function resolveLiveConfig(liveConfig, configPath) {
+	const resolved = {};
+	const keys = Object.keys(liveConfig);
+	const keyCount = keys.length;
+	for (let index = 0; index < keyCount; index += 1) {
+		const field = keys[index];
+		resolved[field] = liveConfig[field];
+	}
+	return {
+		resolved,
+		paths: [configPath],
+	};
+}
+function wireConfigWatch(host, handle, key, source, mode, livePath) {
+	handle.clearConfigWatch();
+	let resolve;
+	if (mode === CONFIG_FACTORY) {
+		resolve = () => {
+			return resolveFactoryConfig(host, source);
+		};
+	} else if (mode === CONFIG_LIVE) {
+		resolve = () => {
+			// Re-read the live proxy from state so we always see latest keys/values
+			const live = getValueAtPath(host.state, livePath);
+			if (!isPlainObject(live)) {
+				return {
+					resolved: {},
+					paths: [livePath],
+				};
+			}
+			return resolveLiveConfig(live, livePath);
+		};
+	} else {
+		resolve = () => {
+			return resolvePlainConfig(host, source);
+		};
+	}
+	const first = resolve();
+	handle.applyConfig(first.resolved);
+	const paths = first.paths;
+	if (!paths.length || !isFunction(host.observeAsync)) {
+		return first.resolved;
+	}
+	const onConfigDep = () => {
+		if (handle.disposed) {
+			return;
+		}
+		const next = resolve();
+		handle.applyConfig(next.resolved);
+		const nextPaths = next.paths;
+		const prevPaths = handle.configWatchPaths;
+		if (mode !== CONFIG_LIVE && !pathSetsEqual(prevPaths, nextPaths)) {
+			wireConfigWatch(host, handle, key, source, mode, livePath);
+		}
+	};
+	handle.configWatchPaths = paths.slice();
+	handle.configFactory = mode === CONFIG_FACTORY ? source : null;
+	handle.configSource = source;
+	handle.configLivePath = livePath || null;
+	handle.configWatchBundle = host.observeAsync(paths, onConfigDep);
+	return first.resolved;
+}
+function pathSetsEqual(left, right) {
+	if (!left || !right || left.length !== right.length) {
+		return false;
+	}
+	const seen = new Set(left);
+	const rightLength = right.length;
+	for (let index = 0; index < rightLength; index += 1) {
+		if (!seen.has(right[index])) {
+			return false;
+		}
+	}
+	return true;
+}
+/**
+ * `this.collection(key, config | factory | this.state.itemsConfig)` — get-or-create
+ * a headless CollectionEngine. Config is reactive when:
+ *   - live state object (`this.state.itemsConfig` — preferred; one proxy bag),
+ *   - factory fn that reads `this.state.*` (deps tracked),
+ *   - plain object with `{ from: 'stateKey', map? }` field descriptors.
+ * Re-entry updates the same instance. Do not mix with template collection on one key.
+ * @param {string} key - State array key (also `${key}Status`).
+ * @param {object|Function} configOrFactory - Live state bag, snapshot, or factory.
+ * @returns {CollectionEngine} Live handle.
+ */
+export function ensureCollection(key, configOrFactory = {}) {
+	const isFactory = isFunction(configOrFactory);
+	if (!isFactory && !isPlainObject(configOrFactory)) {
+		throw new TypeError(
+			'this.collection(key, config): config must be a plain object or a factory function'
+		);
+	}
+	const livePath = !isFactory ? liveStatePath(configOrFactory) : null;
+	const mode = isFactory ? CONFIG_FACTORY : (livePath ? CONFIG_LIVE : CONFIG_PLAIN);
+	let registry = this.collections;
+	if (!registry) {
+		registry = new Map();
+		this.collections = registry;
+	}
+	let handle = registry.get(key);
+	if (handle && !handle.disposed && CollectionEngine.is(handle)) {
+		wireConfigWatch(this, handle, key, configOrFactory, mode, livePath);
+		return handle;
+	}
+	if (handle && !CollectionEngine.is(handle)) {
+		throw new Error(
+			`this.collection("${key}", config): key already used by a template collection controller`
+		);
+	}
+	let initial;
+	if (mode === CONFIG_FACTORY) {
+		initial = resolveFactoryConfig(this, configOrFactory);
+	} else if (mode === CONFIG_LIVE) {
+		initial = resolveLiveConfig(configOrFactory, livePath);
+	} else {
+		initial = resolvePlainConfig(this, configOrFactory);
+	}
+	handle = CollectionEngine.create(this, {
+		...initial.resolved,
+		key,
+	});
+	registry.set(key, handle);
+	wireConfigWatch(this, handle, key, configOrFactory, mode, livePath);
+	return handle;
 }

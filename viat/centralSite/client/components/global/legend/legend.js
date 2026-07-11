@@ -16,7 +16,7 @@
 	  <ui-legend … @legend:change=${this.handleLegendChange}></ui-legend>   // e.detail.data.label
 	─────────────────────────────────────────────────────────────────────
 */
-import { list, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 import { UILegendItem } from './legend-item.js';
 export class UILegend extends WebComponent {
 	static url = import.meta.url;
@@ -75,7 +75,7 @@ export class UILegend extends WebComponent {
 	render() {
 		this.html `
 			<div class="lg" role="list" @legend:select=${this.handleSelect}>
-				${list('items', UILegendItem)}
+				${this.list('items', UILegendItem)}
 			</div>
 		`;
 	}

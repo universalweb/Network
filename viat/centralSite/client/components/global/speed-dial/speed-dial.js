@@ -16,7 +16,7 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import '../button/button.js';
-import { list, WebComponent } from '../../core/index.js';
+import { WebComponent } from '../../core/index.js';
 class UISpeedDialAction extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -129,7 +129,7 @@ export class UISpeedDial extends WebComponent {
 				@pointerleave=${this.handlePointerLeave}
 				@speed-dial-action:click=${this.handleAction}>
 				<ul class="sd-actions">
-					${list('items', UISpeedDialAction, this.actionKey)}
+					${this.list('items', UISpeedDialAction, this.actionKey)}
 				</ul>
 				<ui-button class="sd-trigger"
 					.state.variant=${'solid'}

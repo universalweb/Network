@@ -1,7 +1,7 @@
 /*
- * `remoteList` controller — the load orchestration behind the `remoteList(key,
+ * `collection` controller — the load orchestration behind the `collection(key,
  * renderFn, config)` binding. Rendering/filtering/keying are 100% inherited from
- * ListBinding → ListSpot; this file owns ONLY the remote-load lifecycle:
+ * ListBinding → ListSpot; this file owns ONLY the async load lifecycle:
  *
  *   - resolve the scroll container (config.scroller ref, else nearest scrollable
  *     ancestor) — it is both the near-bottom trigger surface AND the scroll-report
@@ -17,10 +17,11 @@
  *     behavior — never reimplemented).
  *
  * Items live in `component.state[key]` (the one reactive surface). The controller
- * persists across re-renders (held in `component.remoteControllers`, keyed by state
+ * persists across re-renders (held in `component.collections`, keyed by state
  * key); the template mount-hook does get-or-create. Disposed on disconnect.
  */
 import { getBehavior } from '../behaviors/registry.js';
+import { CollectionEngine } from './collectionEngine.js';
 import { isFunction, plainEqual } from '../utilities.js';
 const SCROLLABLE_OVERFLOW = /(auto|scroll|overlay)/;
 const DEFAULT_MAX_AUTO_FILL = 8;
@@ -53,14 +54,14 @@ function readPrefetchPixels(prefetch) {
 	}
 	return 0;
 }
-class RemoteListController {
+class CollectionController {
 	static create(component, stateKey, binding) {
-		return new RemoteListController(component, stateKey, binding);
+		return new CollectionController(component, stateKey, binding);
 	}
 	constructor(component, stateKey, binding) {
 		this.component = component;
 		this.stateKey = stateKey;
-		this.config = binding.remoteConfig;
+		this.config = binding.collectionConfig;
 		this.keyFn = binding.keyFn;
 		this.cursor = null;
 		this.hasMore = true;
@@ -414,7 +415,7 @@ class RemoteListController {
 	async load(replace, cursorOverride) {
 		const config = this.config;
 		if (!isFunction(config.loader)) {
-			this.error = 'remoteList: no loader configured';
+			this.error = 'collection: no loader configured';
 			this.reflectRefs();
 			return;
 		}
@@ -574,26 +575,31 @@ class RemoteListController {
 	}
 }
 /**
- * Get-or-create the controller for a RemoteListBinding and mount it once. Called
+ * Get-or-create the controller for a CollectionBinding and mount it once. Called
  * by the template mount-hook after the ListSpot renders. Idempotent across
- * re-renders: the controller persists in `component.remoteControllers`, so a later
+ * re-renders: the controller persists in `component.collections`, so a later
  * mount returns the same instance (its scroll wiring lives on the stable scroller,
  * not the re-created rows).
  * @param {WebComponent} component - The owning component.
  * @param {Element} anchorElement - The list spot's container/anchor (scroller auto-detect start).
- * @param {RemoteListBinding} binding - The binding carrying `key` + `remoteConfig`.
- * @returns {RemoteListController} The mounted controller.
+ * @param {CollectionBinding} binding - The binding carrying `key` + `collectionConfig`.
+ * @returns {CollectionController} The mounted controller.
  */
-export function mountRemoteController(component, anchorElement, binding) {
+export function mountCollection(component, anchorElement, binding) {
 	const stateKey = binding.key;
-	let registry = component.remoteControllers;
+	let registry = component.collections;
 	if (!registry) {
 		registry = new Map();
-		component.remoteControllers = registry;
+		component.collections = registry;
 	}
 	let controller = registry.get(stateKey);
+	if (controller && CollectionEngine.is(controller)) {
+		throw new Error(
+			`collection("${stateKey}"): key already used by this.collection(key, config) ensure — use a different key or only one path`
+		);
+	}
 	if (!controller) {
-		controller = RemoteListController.create(component, stateKey, binding);
+		controller = CollectionController.create(component, stateKey, binding);
 		registry.set(stateKey, controller);
 	}
 	/*
@@ -608,20 +614,22 @@ export function mountRemoteController(component, anchorElement, binding) {
 	return controller;
 }
 /**
- * `this.remote(key)` — the controller handle for a mounted remoteList. Drives
+ * `this.collection(key)` — the controller handle for a mounted collection. Drives
  * `reset()` / `loadMore()` / `refresh()` and reads `loading` / `error` / `exhausted`.
- * @param {string} stateKey - The remoteList's state key (its first arg).
- * @returns {RemoteListController|null} The controller, or null if none.
+ * Row find/search for the same key: `this.list(key)` (ListHandle registered by
+ * the ListSpot that powers every collection binding).
+ * @param {string} stateKey - The collection's state key (its first arg).
+ * @returns {CollectionController|null} The controller, or null if none.
  */
-export function remote(stateKey) {
-	return this.remoteControllers?.get(stateKey) ?? null;
+export function collectionCtrl(stateKey) {
+	return this.collections?.get(stateKey) ?? null;
 }
 /**
- * Dispose every remoteList controller on this component (scroll listeners,
+ * Dispose every collection controller on this component (scroll listeners,
  * in-flight fetches, scroll-report). Called from `handleDisconnect`.
  */
-export function disposeRemoteLists() {
-	const registry = this.remoteControllers;
+export function disposeCollections() {
+	const registry = this.collections;
 	if (!registry) {
 		return;
 	}
@@ -629,5 +637,5 @@ export function disposeRemoteLists() {
 		controller.dispose();
 	}
 	registry.clear();
-	this.remoteControllers = null;
+	this.collections = null;
 }

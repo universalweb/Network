@@ -1,7 +1,7 @@
 /*
 	DESCRIPTION: ui-menubar — a horizontal application menu bar (MUI/desktop
 	"Menubar": File / Edit / View …). Extends `ui-menu` to reuse its item layer
-	wholesale — `renderItems`, `handleClick`, `selectIndex`, and the roving
+	wholesale — list rows, `handleClick`, `selectIndex`, and the roving
 	`move`/`focusItem`/`enabledIndexes`/`focusFirst` all operate on
 	`this.state.items`, and the native-Popover dismiss + `computeAnchor` placement
 	come along for free.
@@ -12,6 +12,9 @@
 	newly-active trigger. That's smoother than a fade-out/fade-in and keeps everything
 	in ONE shadow root, so trigger roving (Arrow Left/Right) and hover-switch need no
 	cross-shadow focus plumbing.
+	Triggers render via `list('menus', this.triggerRow)` (light html — auto-escaped
+	labels; no escapeHtml / `^html` string builder). Roving tabindex + aria-expanded
+	stay imperative on the live buttons (accepted focusItem pattern).
 	Inherited `activeIndex` keeps its base meaning (focused item WITHIN the panel);
 	`openMenu` (ours) is which top-level menu's panel is open (-1 = none).
 	── EVENTS ───────────────────────────────────────────────────────────
@@ -23,9 +26,8 @@
 	  ]} @menu:select=${e => run(e.detail.data)}></ui-menubar>
 	──────────────────────────────────────────────────────────────────────
 */
+import { html } from 'webcomponent';
 import { computeAnchor } from '../../core/dom/anchor.js';
-import { list } from 'webcomponent';
-import { escapeHtml } from '../../core/utilities.js';
 import { UIMenu } from '../menu/menu.js';
 import { UIMenuItem } from '../menu/menu-item.js';
 export class UIMenubar extends UIMenu {
@@ -53,12 +55,28 @@ export class UIMenubar extends UIMenu {
 	// Stashed by Escape (handled before native dismiss) so the close path can return
 	// focus to the invoking trigger; -1 when the close was an outside-click dismiss.
 	escFocusReturn = -1;
+	onConnect() {
+		super.onConnect?.();
+		this.observe('menus', this.stampMenuIndexes);
+		this.stampMenuIndexes();
+	}
+	/* Stamp menuIndex onto each top-level menu so light rows can bind data-menu. */
+	stampMenuIndexes() {
+		const menus = this.state.menus;
+		if (!Array.isArray(menus)) {
+			return;
+		}
+		const count = menus.length;
+		for (let index = 0; index < count; index += 1) {
+			menus[index].menuIndex = index;
+		}
+	}
 	triggerButton(index) {
 		if (index < 0) {
 			return null;
 		}
-		// Same accepted pattern as UIMenu.focusItem: query the raw-^html row inside a
-		// captured ref (the triggers can't carry #refs — they're an injected string).
+		// Same accepted pattern as UIMenu.focusItem: query the raw list row inside a
+		// captured ref (triggers stay light html — no child component registry).
 		return this.refs.bar?.querySelector(`button[data-menu="${index}"]`);
 	}
 	setTriggerExpanded(index, expanded) {
@@ -253,26 +271,27 @@ export class UIMenubar extends UIMenu {
 		});
 		this.refs.surface?.hidePopover();
 	}
+	/* Light html trigger — label auto-escaped. tabindex/aria-expanded owned
+	   imperatively by setFocusedTrigger / setTriggerExpanded after mount. */
+	triggerRow(item) {
+		const index = item.menuIndex;
+		const tabIndex = index === this.focusedTrigger ? 0 : -1;
+		return html`<button type="button" class="menubar-trigger" role="menuitem" aria-haspopup="menu" aria-expanded="false" data-menu=${index} tabindex=${tabIndex}>${item.label}</button>`;
+	}
+	menuKey(item, index) {
+		return item.id ?? item.label ?? index;
+	}
 	render() {
-		this.html `
+		this.html`
 			<div #bar class="menubar" role="menubar"
 				@click=${this.handleBarClick} @keydown=${this.handleBarKey} @pointerover=${this.handleBarHover}>
-				^html${this.renderTriggers}
+				${this.list('menus', this.triggerRow, this.menuKey)}
 			</div>
 			<div #surface class="menu-surface" popover="auto" role="menu"
 				@toggle=${this.handleToggle} @menu-item:select=${this.handleSelect} @keydown=${this.handleKey}>
-				${list('items', UIMenuItem)}
+				${this.list('items', UIMenuItem)}
 			</div>
 		`;
-	}
-	renderTriggers() {
-		const menus = Array.isArray(this.state.menus) ? this.state.menus : [];
-		let markup = '';
-		for (let index = 0; index < menus.length; index += 1) {
-			const tabindex = index === this.focusedTrigger ? '0' : '-1';
-			markup += `<button type="button" class="menubar-trigger" role="menuitem" aria-haspopup="menu" aria-expanded="false" data-menu="${index}" tabindex="${tabindex}">${escapeHtml(menus[index].label)}</button>`;
-		}
-		return markup;
 	}
 }
 customElements.define('ui-menubar', UIMenubar);

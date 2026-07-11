@@ -24,7 +24,7 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import { computeAnchor } from '../../core/dom/anchor.js';
-import { list, WebComponent } from '../../core/index.js';
+import { WebComponent } from '../../core/index.js';
 import { UIMenuItem } from './menu-item.js';
 // True when (x,y) sits inside `rect` grown by `pad` on every edge. The pad
 // bridges the trigger↔panel offset gap so a pointer crossing it isn't read as
@@ -276,7 +276,7 @@ export class UIMenu extends WebComponent {
 			</button>
 			<div #surface class="menu-surface" id="menu-pop" popover="auto" role="menu" tabindex="-1"
 				@toggle=${this.handleToggle} @menu-item:select=${this.handleSelect} @keydown=${this.handleKey}>
-				${list('items', UIMenuItem)}
+				${this.list('items', UIMenuItem)}
 			</div>
 		`;
 	}

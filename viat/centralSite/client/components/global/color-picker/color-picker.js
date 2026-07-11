@@ -16,9 +16,7 @@
 	    @color-picker:change=${this.handleColor}></ui-color-picker>
 	─────────────────────────────────────────────────────────────────────
 */
-import {
-	each, html, list, WebComponent,
-} from 'webcomponent';
+import { html, WebComponent } from 'webcomponent';
 const HEX6 = /^#?[0-9a-fA-F]{6}$/;
 const HEX_PRESET = /^#[0-9a-fA-F]{3,8}$/;
 // The value field cycles through these on each format-button press.
@@ -382,17 +380,21 @@ export class UIColorPicker extends WebComponent {
 			control.value = this.state.format;
 		}
 	}
+	/* Prefer list handle rows over querySelectorAll — same key as this.list('presets', …). */
 	syncActiveSwatch() {
-		const swatches = this.refs.presets?.querySelectorAll('.cp-swatch');
-		if (!swatches) {
+		const handle = this.list('presets');
+		if (!handle) {
 			return;
 		}
 		const hue = this.state.hue;
 		const saturation = this.state.saturation;
 		const lightness = this.state.lightness;
-		const swatchesLength = swatches.length;
-		for (let index = 0; index < swatchesLength; index += 1) {
-			const swatch = swatches[index];
+		const count = handle.size;
+		for (let index = 0; index < count; index += 1) {
+			const swatch = handle.at(index);
+			if (!swatch) {
+				continue;
+			}
 			const hsl = hexToHsl(swatch.dataset.color);
 			const isOn = hsl[0] === hue && hsl[1] === saturation && hsl[2] === lightness;
 			swatch.toggleAttribute('data-on', isOn);
@@ -497,9 +499,9 @@ export class UIColorPicker extends WebComponent {
 				</div>
 				<div class="cp-value">
 					<input class="cp-input" #valueinput type="text" spellcheck="false" @input=${this.handleValue} aria-label="Color value">
-					<select class="cp-format" #formatselect @change=${this.handleFormatChange} aria-label="Color format">${each(FORMATS, this.formatOption)}</select>
+					<select class="cp-format" #formatselect @change=${this.handleFormatChange} aria-label="Color format">${this.each(FORMATS, this.formatOption)}</select>
 				</div>
-				<div class="cp-presets" #presets @click=${this.handlePreset}>${list('presets', this.renderSwatch)}</div>
+				<div class="cp-presets" #presets @click=${this.handlePreset}>${this.list('presets', this.renderSwatch)}</div>
 			</div>
 		`;
 	}

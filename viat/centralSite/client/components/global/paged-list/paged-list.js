@@ -1,37 +1,19 @@
-import { list, RemoteListEngine, WebComponent } from '../../core/index.js';
+import { WebComponent } from '../../core/index.js';
 /*
- * `<paged-list>` — a reusable remote-loaded list shell with TWO switchable
+ * `<paged-list>` — a reusable collection-loaded list shell with TWO switchable
  * paging styles:
  *   - loadmore: cumulative (sentinel auto-load + LOAD MORE button), rows accumulate;
- *   - paged:    prev/next, one page at a time (replace) via the engine's goto().
- * It owns the table frame, the meta/status line, the pager / LOAD MORE,
- * empty/error/loading, refresh, and the style toggle. URL sync is delegated to
- * the host's `pageHref(page)` (replaceState — no history spam). Rows render in
- * this shadow, styled by the host's `importStyles` sheet.
+ *   - paged:    prev/next, one page at a time (replace) via the collection handle.
  *
- * Loading is driven by a headless `RemoteListEngine` (core/state/
- * remoteListEngine.js): created in onConnect, handed the sentinel in
- * onRendered, disposed in onDisconnect. The engine writes the reactive
- * `state.items` + `state.itemsStatus` scope this template binds — no event
- * mirroring, no ref-wired listeners; buttons are plain template `@click`.
+ * Loading (preferred API):
+ *   this.collection('items', this.state.itemsConfig)  // live reactive config bag
+ *   this.collection('items')?.attach / loadMore / …
+ * Paint:
+ *   ${this.list('items', renderRow)}
  *
- * The host passes its data contract as ONE bundle through `.state` (the framework's
- * child-merge: preserves this component's runtime-state defaults, adds the host's
- * keys; proxy-safe + upgrade-rescued, unlike a plain field or a #private setter):
- *
- *   // host: a stable field (NOT a render-local)
- *   listConfig = { loader, renderRow, keyFn, renderHead, pageHref,
- *                  itemNoun, emptyMessage, loadingMessage, pagingStyle, startPage };
- *   <paged-list .state=${this.listConfig} .importStyles=${ROW_STYLES} #list></paged-list>
- *
- *   loader({reset,cursor,signal}) => {items, nextCursor, hasMore, totalCount?}
- *   renderRow / keyFn  — list renderFn + key (rows must be self-contained:
- *                        shape row data in the loader, not from page `this`)
- *   renderHead()       — header-row markup string
- *   pageHref(page)     — URL for the page (omit → no URL sync)
- *
- * The cursor IS the page number (the host's cursor=page bridge), so the engine
- * tracks the current page directly in `itemsStatus.page`.
+ * Host still merges flat listConfig fields (loader, keyFn, pagingStyle, …);
+ * onConnect mirrors them into itemsConfig so existing hosts need no change.
+ * Writes to itemsConfig (or those flat keys) re-apply the engine automatically.
  */
 const PAGED = 'paged';
 const LOADMORE = 'loadmore';
@@ -41,7 +23,6 @@ export class PagedList extends WebComponent {
 		pagedList: './paged-list.css',
 	};
 	static state = {
-		// runtime (written by the RemoteListEngine)
 		items: [],
 		itemsStatus: {
 			loading: false,
@@ -53,7 +34,15 @@ export class PagedList extends WebComponent {
 			totalCount: 0,
 			started: false,
 		},
-		// host contract (filled via `.state=${listConfig}`)
+		// Engine config bag — preferred source for this.collection('items', …)
+		itemsConfig: {
+			loader: null,
+			keyFn: null,
+			mode: 'both',
+			startPage: 1,
+			dedupe: true,
+		},
+		// Host listConfig flat fields (mirrored into itemsConfig)
 		loader: null,
 		renderRow: null,
 		keyFn: null,
@@ -64,36 +53,40 @@ export class PagedList extends WebComponent {
 		emptyMessage: 'Nothing here yet.',
 		loadingMessage: 'Loading…',
 		pagingStyle: LOADMORE,
+		// 0-or-1 slot so host renderHead html`` mounts via list() (content
+		// spots stringify LightTemplate — only list/htmlElement accept it).
+		_head: [],
 	};
 	onConnect() {
-		/* Dispose is terminal — a reconnect builds a fresh engine (its first
-		   attach re-runs the auto-load, matching a fresh mount). */
-		if (!this.list || this.list.disposed) {
-			this.list = RemoteListEngine.create(this, {
-				key: 'items',
-				loader: this.state.loader,
-				keyFn: this.state.keyFn || undefined,
-				mode: this.state.pagingStyle === PAGED ? PAGED : 'both',
-				startPage: this.state.startPage,
-				dedupe: true,
-			});
-		}
-		/* Status is reactive; this hook is the URL side-effect only. */
+		// Flat host fields → itemsConfig, then ensure on the live proxy bag.
+		this.syncItemsConfig();
+		this.syncHeadSlot();
+		this.observe([
+			'loader',
+			'keyFn',
+			'startPage',
+			'pagingStyle',
+		], this.syncItemsConfig);
+		this.observe('renderHead', this.syncHeadSlot);
+		this.collection('items', this.state.itemsConfig);
 		this.on('items:loaded', this.handleListLoaded);
 	}
-	/*
-	 * onRendered runs on the first render AND every full re-render (skipped on
-	 * patch passes) — exactly when the sentinel node may be new. The engine's
-	 * attach is idempotent: it re-arms the observer on a fresh sentinel and only
-	 * the FIRST call kicks the auto-load (honoring startPage).
+	/**
+	 * Keep itemsConfig in sync with flat host listConfig / chrome fields.
+	 * Collection ensure watches itemsConfig — engine applyConfig runs on writes.
 	 */
+	syncItemsConfig() {
+		const cfg = this.state.itemsConfig;
+		cfg.loader = this.state.loader;
+		cfg.keyFn = this.state.keyFn || null;
+		cfg.startPage = this.state.startPage;
+		cfg.mode = this.state.pagingStyle === PAGED ? PAGED : 'both';
+		cfg.dedupe = true;
+	}
 	onRendered() {
-		this.list?.attach({
+		this.collection('items')?.attach({
 			sentinel: this.refs.pl_sentinel,
 		});
-	}
-	onDisconnect() {
-		this.list?.dispose();
 	}
 	handleListLoaded() {
 		this.syncUrl();
@@ -103,10 +96,6 @@ export class PagedList extends WebComponent {
 		if (typeof hrefFn !== 'function') {
 			return;
 		}
-		/* Only the VISIBLE page owns the URL. SPA pages stay mounted (hidden); a
-		   background list loading must not replaceState over the active route — that
-		   clobbers the URL and desyncs the router. checkVisibility() is false for a
-		   display:none subtree. */
 		if (typeof this.checkVisibility === 'function' && !this.checkVisibility()) {
 			return;
 		}
@@ -116,34 +105,29 @@ export class PagedList extends WebComponent {
 		}
 	}
 	refresh() {
-		this.list?.reset();
+		this.collection('items')?.reset();
 	}
-	/* Public: jump to a page (the host's router calls this on a route change).
-	   Works in both styles — paged shows page N, loadmore starts the window at N.
-	   Prev/Next clicks route through handlePrev/handleNext; this is only the
-	   programmatic route entry. */
 	goToPage(page) {
 		const target = Number.isFinite(page) && page >= 1 ? page : 1;
 		if (target === this.state.itemsStatus.page && this.state.items.length) {
 			return;
 		}
-		this.list?.gotoPage(target);
+		this.collection('items')?.gotoPage(target);
 	}
 	toggleStyle() {
+		// UI chrome + itemsConfig.mode (collection watches itemsConfig → setMode)
 		const next = this.state.pagingStyle === LOADMORE ? PAGED : LOADMORE;
 		this.state.pagingStyle = next;
-		/* The engine owns the swap: setMode re-arms/disarms the sentinel and,
-		   switching INTO paged, collapses the window to the current page. */
-		this.list?.setMode(next === PAGED ? PAGED : 'both');
+		this.state.itemsConfig.mode = next === PAGED ? PAGED : 'both';
 	}
 	handleLoadMore() {
-		this.list?.loadMore();
+		this.collection('items')?.loadMore();
 	}
 	handlePrev() {
-		this.list?.goPrev();
+		this.collection('items')?.goPrev();
 	}
 	handleNext() {
-		this.list?.goNext();
+		this.collection('items')?.goNext();
 	}
 	loadedLabel() {
 		if (this.state.pagingStyle === PAGED) {
@@ -157,11 +141,17 @@ export class PagedList extends WebComponent {
 	styleToggleLabel() {
 		return this.state.pagingStyle === PAGED ? '≡ Load more' : '⊞ Paged';
 	}
-	headHtml() {
+	syncHeadSlot() {
+		this.state._head = typeof this.state.renderHead === 'function' ? [0] : [];
+	}
+	/** list() row for the optional head — host may return html`` / Element / string. */
+	paintHead() {
 		const headFn = this.state.renderHead;
 		return typeof headFn === 'function' ? headFn() : '';
 	}
-	/* Transient status for the meta line (hidden when idle via `.pl-status:empty`). */
+	headKey() {
+		return 'head';
+	}
 	metaStatus() {
 		if (this.state.itemsStatus.loading) {
 			return 'syncing…';
@@ -171,7 +161,6 @@ export class PagedList extends WebComponent {
 		}
 		return '';
 	}
-	/* The empty/loading/error block (shown only when there are no rows). */
 	statusText() {
 		if (this.state.itemsStatus.loading) {
 			return this.state.loadingMessage;
@@ -191,7 +180,7 @@ export class PagedList extends WebComponent {
 		return this.state.itemsStatus.loading || !this.state.itemsStatus.hasMore;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="pl-shell">
 				<div class="pl-bar">
 					<div class="pl-meta">
@@ -208,8 +197,8 @@ export class PagedList extends WebComponent {
 					</div>
 				</div>
 				<div class="pl-table">
-					^html${this.headHtml}
-					${list('items', this.state.renderRow, this.state.keyFn || undefined)}
+					${this.list('_head', this.paintHead, this.headKey)}
+					${this.list('items', this.state.renderRow, this.state.keyFn || undefined)}
 					<div class="pl-empty" ?data-error=${this.state.itemsStatus.error} ?hidden=${this.state.items.length > 0}>${this.statusText}</div>
 					<div class="pl-sentinel" #pl_sentinel aria-hidden="true"></div>
 				</div>

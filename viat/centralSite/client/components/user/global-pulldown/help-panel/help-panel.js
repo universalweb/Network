@@ -1,5 +1,5 @@
 import '../../../global/kbd/kbd.js';
-import { list, WebComponent } from '../../../core/index.js';
+import { WebComponent } from '../../../core/index.js';
 import { Panel } from '../../../global/panel/panel.js';
 class HelpShortcutRow extends WebComponent {
 	static url = import.meta.url;
@@ -67,7 +67,7 @@ export class HelpPanel extends Panel {
 		return this.htmlElement `
 			<div class="hp-body">
 				<div class="hp-list">
-					${list('shortcuts', HelpShortcutRow)}
+					${this.list('shortcuts', HelpShortcutRow)}
 				</div>
 			</div>
 		`;

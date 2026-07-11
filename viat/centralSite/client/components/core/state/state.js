@@ -433,6 +433,13 @@ class StateProxyHandler {
 		return new Proxy(target, new StateProxyHandler(component, path));
 	}
 	get(target, key) {
+		// Live path meta for ensure/collection(this.state.itemsConfig) and tooling.
+		if (key === STATE_PATH) {
+			return {
+				path: this.path,
+				component: this.component,
+			};
+		}
 		if (isSymbol(key)) {
 			return Reflect.get(target, key);
 		}

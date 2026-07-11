@@ -16,7 +16,7 @@
  * Also emits `ai-chat:status` { status } and `ai-chat:error` { message }.
  */
 import '../status-indicator/status-indicator.js';
-import { filter, ifThen, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 import { UIAiMessage } from '../ai-message/ai-message.js';
 import { probeModels, streamChat } from './bridge.js';
 const HEALTH_TIMEOUT_MS = 2500;
@@ -337,7 +337,7 @@ export class UIAiChat extends WebComponent {
 					<span class="aic-endpoint" ?hidden=${!this.state.endpoint}>${this.state.endpoint}</span>
 				</header>
 				<div #log class="aic-log">
-					${filter('items', UIAiMessage, 'hidden')}
+					${this.filter('items', UIAiMessage, 'hidden')}
 				</div>
 				<div class="aic-error" ?data-visible=${this.state.error}>${this.state.error}</div>
 				<footer class="aic-input-row">
@@ -350,7 +350,7 @@ export class UIAiChat extends WebComponent {
 						?disabled=${this.state.streaming}
 						@keydown=${this.handleKeyDown}></textarea>
 					<button class="aic-btn" type="button" ?data-streaming=${this.state.streaming} @click=${this.handleSubmit}>
-						${ifThen('streaming', 'STOP', 'SEND')}
+						${this.ifThen('streaming', 'STOP', 'SEND')}
 					</button>
 				</footer>
 			</div>

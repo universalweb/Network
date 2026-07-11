@@ -1,4 +1,4 @@
-import { list, movingIndicator, WebComponent } from '../../core/index.js';
+import { movingIndicator, WebComponent } from '../../core/index.js';
 import { UITabButton } from './tab-button.js';
 // `<ui-tabs>` — reusable tab strip + slotted content area with built-in
 // switching animation: a sliding indicator bar plus a content swap that is
@@ -346,7 +346,7 @@ export class UITabs extends WebComponent {
 					@keydown=${this.handleKey}
 					#strip>
 					<div class="tab-indicator" #indicator></div>
-					${list('items', UITabButton)}
+					${this.list('items', UITabButton)}
 				</div>
 				<div class="tab-content" #content>
 					<slot name=${this.state.activeIndex || ''}></slot>

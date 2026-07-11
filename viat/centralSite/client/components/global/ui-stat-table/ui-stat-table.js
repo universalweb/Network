@@ -1,18 +1,10 @@
-import { isArray, isObject, WebComponent } from 'webcomponent';
-function escapeHtml(value) {
-	return String(value ?? '')
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;');
-}
+import { html, isArray, isObject, WebComponent } from 'webcomponent';
 /**
  * Reusable CSS-grid stat table. All cells live in a single grid container so
- * columns align across header + data rows regardless of row count. The body is
- * rendered as ONE HTML-string spot (`^html${buildTableHtml}`): the header + every
- * data cell are flat grid children with NO per-row wrapper (a row element would
- * break the shared column grid), so a light-row list is the wrong shape here — a
- * single innerHTML patch is the right, injection-safe (escapeHtml) cost for the
- * small read-only tables a dashboard needs.
+ * columns align across header + data rows regardless of row count. Header + data
+ * cells are flat grid children (no per-row wrapper — that would break the shared
+ * column grid). Rendered via `list('cells', this.cellRow)` light html rows —
+ * auto-escaped text, no local escapeHtml / `^html` string builder.
  *
  * Usage:
  *   <ui-stat-table .state=${{
@@ -43,7 +35,15 @@ export class UiStatTable extends WebComponent {
 		columns: [],
 		items: [],
 		emptyMessage: 'no rows',
+		// Flat grid cells for list() — rebuilt when columns/items change.
+		cells: [],
 	};
+	onConnect() {
+		this.observe('columns', this.syncCells);
+		this.observe('items', this.syncCells);
+		this.observe('emptyMessage', this.syncCells);
+		this.syncCells();
+	}
 	gridTemplate() {
 		const columns = this.state.columns;
 		const columnsLength = columns.length;
@@ -70,27 +70,56 @@ export class UiStatTable extends WebComponent {
 		}
 		return cells;
 	}
-	buildTableHtml() {
+	syncCells() {
 		const columns = this.state.columns;
 		const items = this.state.items;
-		const parts = [];
+		const next = [];
 		const columnsLength = columns.length;
 		for (let index = 0; index < columnsLength; index += 1) {
-			parts.push(`<span class="cell head-cell">${escapeHtml(columns[index].label ?? columns[index].id)}</span>`);
+			const column = columns[index];
+			next.push({
+				id: `h-${column.id ?? index}`,
+				text: column.label ?? column.id ?? '',
+				head: true,
+				empty: false,
+			});
 		}
 		if (!items.length) {
-			parts.push(`<div class="empty">${escapeHtml(this.state.emptyMessage)}</div>`);
-			return parts.join('');
+			next.push({
+				id: 'empty',
+				text: this.state.emptyMessage,
+				head: false,
+				empty: true,
+			});
+			this.state.cells = next;
+			return;
 		}
 		const itemsLength = items.length;
 		for (let rowIndex = 0; rowIndex < itemsLength; rowIndex += 1) {
-			const cells = this.resolveCells(items[rowIndex], columns);
-			const cellsLength = cells.length;
-			for (let cellIndex = 0; cellIndex < cellsLength; cellIndex += 1) {
-				parts.push(`<span class="cell data-cell">${escapeHtml(cells[cellIndex])}</span>`);
+			const row = items[rowIndex];
+			const rowKey = isObject(row) && row.key != null ? row.key : rowIndex;
+			const values = this.resolveCells(row, columns);
+			const valuesLength = values.length;
+			for (let cellIndex = 0; cellIndex < valuesLength; cellIndex += 1) {
+				next.push({
+					id: `c-${rowKey}-${cellIndex}`,
+					text: values[cellIndex] == null ? '' : String(values[cellIndex]),
+					head: false,
+					empty: false,
+				});
 			}
 		}
-		return parts.join('');
+		this.state.cells = next;
+	}
+	cellRow(item) {
+		if (item.empty) {
+			return html`<div class="empty">${item.text}</div>`;
+		}
+		const className = item.head ? 'cell head-cell' : 'cell data-cell';
+		return html`<span class=${className}>${item.text}</span>`;
+	}
+	cellKey(item) {
+		return item.id;
 	}
 	render() {
 		const template = this.gridTemplate();
@@ -101,7 +130,7 @@ export class UiStatTable extends WebComponent {
 					<p class="hint">${this.state.hint}</p>
 				</header>
 				<div class="grid-table" style=${`grid-template-columns: ${template};`}>
-					^html${this.buildTableHtml}
+					${this.list('cells', this.cellRow, this.cellKey)}
 				</div>
 			</section>
 		`;

@@ -1,3 +1,4 @@
+import { html } from 'webcomponent';
 import { Panel } from '../../../global/panel/panel.js';
 export class WalletStatsPanel extends Panel {
 	static url = import.meta.url;
@@ -13,9 +14,37 @@ export class WalletStatsPanel extends Panel {
 		sent: '0',
 		showDot: true,
 		heading: 'STATS',
+		items: [],
 	};
 	onConnect() {
 		this.delegateTo('click', '[data-copy]', this.handleRowCopy);
+		this.observe('received', this.syncRows);
+		this.observe('sent', this.syncRows);
+		this.observe('activity', this.syncRows);
+		this.syncRows();
+	}
+	syncRows() {
+		this.state.items = [
+			{
+				id: 'rx',
+				key: 'TXs Received',
+				label: 'Transactions Received',
+				value: this.state.received,
+				className: 'good',
+			},
+			{
+				id: 'tx',
+				key: 'TXs Sent',
+				label: 'Transactions Sent',
+				value: this.state.sent,
+			},
+			{
+				id: 'total',
+				key: 'Total TXs',
+				label: 'Total Transactions',
+				value: this.state.activity,
+			},
+		];
 	}
 	async handleRowCopy(domEvent, row) {
 		const value = row.getAttribute('data-copy');
@@ -33,41 +62,22 @@ export class WalletStatsPanel extends Panel {
 			heading: 'Copy Failed',
 		});
 	}
-	statsRows() {
-		return [
-			{
-				key: 'TXs Received',
-				label: 'Transactions Received',
-				value: this.state.received,
-				className: 'good',
-			},
-			{
-				key: 'TXs Sent',
-				label: 'Transactions Sent',
-				value: this.state.sent,
-			},
-			{
-				key: 'Total TXs',
-				label: 'Total Transactions',
-				value: this.state.activity,
-			},
-		];
+	statRow(row) {
+		const label = row.label ?? row.key;
+		const copyText = `${label}: ${row.value}`;
+		const className = row.className ? `s-val ${row.className}` : 's-val';
+		return html`<div class="stat-row is-copyable" data-copy=${copyText} tabindex="0" role="button">
+			<span class="s-key">${row.key}</span>
+			<span class=${className}>${row.value}</span>
+		</div>`;
+	}
+	statKey(row) {
+		return row.id;
 	}
 	renderBody() {
-		const rows = this.statsRows();
-		return `
+		return this.htmlElement`
 			<div class="stat-block">
-				${rows.map((row) => {
-					const label = row.label ?? row.key;
-					const copyText = `${label}: ${row.value}`;
-					const escaped = copyText.replace(/"/g, '&quot;');
-					return `
-						<div class="stat-row is-copyable" data-copy="${escaped}" tabindex="0" role="button">
-							<span class="s-key">${row.key}</span>
-							<span class="s-val ${row.className ?? ''}">${row.value}</span>
-						</div>
-					`;
-				}).join('')}
+				${this.list('items', this.statRow, this.statKey)}
 			</div>
 		`;
 	}

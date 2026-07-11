@@ -181,7 +181,7 @@ export class AccountDetailPage extends WebComponent {
 	renderStats() {
 		const account = this.state.account;
 		if (this.state.accountMissing) {
-			return `
+			return this.htmlElement`
 				<div class="ad-stats ad-stats-missing">
 					<span class="ad-stat-key">No account record</span>
 					<span class="ad-stat-val">Address has transaction history only</span>
@@ -189,9 +189,9 @@ export class AccountDetailPage extends WebComponent {
 			`;
 		}
 		if (!account) {
-			return '<div class="ad-stats ad-stats-loading">Loading account…</div>';
+			return this.htmlElement`<div class="ad-stats ad-stats-loading">Loading account…</div>`;
 		}
-		return `
+		return this.htmlElement`
 			<div class="ad-stats">
 				<div class="ad-stat">
 					<span class="ad-stat-key">Balance</span>
@@ -209,7 +209,7 @@ export class AccountDetailPage extends WebComponent {
 		`;
 	}
 	headRow() {
-		return `
+		return html`
 			<div class="ad-row ad-head">
 				<span class="ad-cell ad-id">TX</span>
 				<span class="ad-cell ad-dir">DIR</span>
@@ -221,7 +221,7 @@ export class AccountDetailPage extends WebComponent {
 		`;
 	}
 	txRow(item) {
-		return html `
+		return html`
 			<div class="ad-row">
 				<a class="ad-cell ad-id" href=${item.txHref} title=${item.id}>${shortId(item.id)}</a>
 				<span class="ad-cell ad-dir" data-tone=${item.tone}>${item.direction}</span>
@@ -233,7 +233,7 @@ export class AccountDetailPage extends WebComponent {
 		`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="ad-shell">
 				<header class="ad-header">
 					<div class="ad-title-block">
@@ -247,7 +247,7 @@ export class AccountDetailPage extends WebComponent {
 						<span class="ad-address-text">${this.addressDisplay}</span>
 					</button>
 				</header>
-				^html${this.renderStats}
+				${this.renderStats}
 				<div class="ad-section">
 					<div class="ad-section-head">
 						<span>Transactions</span>

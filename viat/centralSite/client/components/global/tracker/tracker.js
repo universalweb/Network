@@ -13,7 +13,7 @@
 	label is exposed as the segment's accessible name.
 	─────────────────────────────────────────────────────────────────────
 */
-import { html, list, WebComponent } from 'webcomponent';
+import { html, WebComponent } from 'webcomponent';
 const TONES = new Set([
 	'accent',
 	'success',
@@ -46,7 +46,7 @@ export class UITracker extends WebComponent {
 	render() {
 		this.html `
 			<div class="trk" role="img" aria-label=${this.state.label}>
-				${list('items', this.segmentRow)}
+				${this.list('items', this.segmentRow)}
 			</div>
 		`;
 	}

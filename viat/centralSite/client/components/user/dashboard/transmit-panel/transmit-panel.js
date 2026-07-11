@@ -103,13 +103,13 @@ export class TransmitPanel extends Panel {
 		});
 	}
 	renderBody() {
-		return this.htmlElement `
+		return this.htmlElement`
 			<div class="transmit-body">
 				<div class="field">
 					<label for="amount">${this.state.amountLabel}</label>
 					<div class="field-with-addon">
 						<input id="amount" type="text"
-							placeholder="${this.state.amountPlaceholder}"
+							placeholder=${this.state.amountPlaceholder}
 							$value="amountValue">
 						<div class="field-addon">${this.state.tokenLabel}</div>
 					</div>
@@ -122,7 +122,7 @@ export class TransmitPanel extends Panel {
 					<label for="recipient">${this.state.recipientLabel}</label>
 					<div class="field-with-addon recipient-with-addon">
 						<input id="recipient" type="text"
-							placeholder="${this.state.recipientPlaceholder}"
+							placeholder=${this.state.recipientPlaceholder}
 							.value=${this.state.recipientValue}
 							@input=${this.handleRecipientInput}>
 						<select class="field-addon field-addon-select"

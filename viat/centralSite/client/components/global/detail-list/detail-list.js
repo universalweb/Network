@@ -12,7 +12,7 @@
 	`copy: true` pair owns its own click-to-copy control.
 	─────────────────────────────────────────────────────────────────────
 */
-import { list, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 import { UIDetailPair } from './detail-pair.js';
 export class UIDetailList extends WebComponent {
 	static url = import.meta.url;
@@ -28,7 +28,7 @@ export class UIDetailList extends WebComponent {
 			<dl class="dtl" style=${() => {
 				return `--dtl-cols:${this.state.columns}`;
 			}}>
-				${list('items', UIDetailPair, this.pairKey)}
+				${this.list('items', UIDetailPair, this.pairKey)}
 			</dl>
 		`;
 	}

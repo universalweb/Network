@@ -1,5 +1,5 @@
 import '../../global/icon/icon.js';
-import { WebComponent } from '../../core/index.js';
+import { html, WebComponent } from '../../core/index.js';
 import { AppView } from '../app-view/app-view.js';
 function formatAmount(value) {
 	if (value == null) {
@@ -80,36 +80,32 @@ export class TransactionDetailPage extends WebComponent {
 	}
 	renderField(label, value, href, wide) {
 		const safeValue = value ?? '—';
-		const cls = wide ? 'td-field td-field-wide' : 'td-field';
+		const className = wide ? 'td-field td-field-wide' : 'td-field';
 		if (href) {
-			return `
-				<div class="${cls}">
-					<span class="td-key">${label}</span>
-					<a class="td-val td-link" href="${href}">${safeValue}</a>
-				</div>
-			`;
-		}
-		return `
-			<div class="${cls}">
+			return html`<div class=${className}>
 				<span class="td-key">${label}</span>
-				<span class="td-val">${safeValue}</span>
-			</div>
-		`;
+				<a class="td-val td-link" href=${href}>${safeValue}</a>
+			</div>`;
+		}
+		return html`<div class=${className}>
+			<span class="td-key">${label}</span>
+			<span class="td-val">${safeValue}</span>
+		</div>`;
 	}
 	renderBody() {
 		if (this.state.loading) {
-			return '<div class="td-empty">Loading transaction…</div>';
+			return this.htmlElement`<div class="td-empty">Loading transaction…</div>`;
 		}
 		if (this.state.error) {
-			return `<div class="td-empty td-error">${this.state.error}</div>`;
+			return this.htmlElement`<div class="td-empty td-error">${this.state.error}</div>`;
 		}
 		const tx = this.state.transaction;
 		if (!tx) {
-			return '<div class="td-empty">Transaction not found.</div>';
+			return this.htmlElement`<div class="td-empty">Transaction not found.</div>`;
 		}
 		const fromHref = `/account/${encodeURIComponent(tx.from)}/`;
 		const toHref = `/account/${encodeURIComponent(tx.to)}/`;
-		return `
+		return this.htmlElement`
 			<div class="td-grid">
 				${this.renderField('Type', (tx.type || 'transfer').toUpperCase())}
 				${this.renderField('Status', (tx.status || '—').toUpperCase())}
@@ -122,7 +118,7 @@ export class TransactionDetailPage extends WebComponent {
 		`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="td-shell">
 				<header class="td-header">
 					<div class="td-title-block">
@@ -133,7 +129,7 @@ export class TransactionDetailPage extends WebComponent {
 						return this.state.txId || '—';
 					}}</button>
 				</header>
-				^html${this.renderBody}
+				${this.renderBody}
 			</div>
 		`;
 	}

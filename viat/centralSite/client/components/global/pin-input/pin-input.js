@@ -3,17 +3,15 @@
 	"PinInput"): N single-character boxes with auto-advance, backspace-to-previous,
 	arrow nav, paste/SMS-autofill distribution, and an optional numeric filter +
 	masking. Use case: wallet unlock / one-time codes.
-	ARCHITECTURE (same deviation + defense as the menu family): the boxes are raw
-	`^html` <input>s in ONE shadow root with CONTAINER-DELEGATED events — NOT a
-	`list()` of child components — because cross-box FOCUS coordination (advance,
-	backspace-to-prev, paste spread) IS the feature; a child-per-box would force
-	cross-shadow focus plumbing and make it worse. Focus moves via
-	`this.refs.boxes.querySelector('[data-index]')` (the accepted UIMenu.focusItem
-	pattern). The boxes are UNCONTROLLED: `renderBoxes` reads only length/masked/
-	disabled/type — NEVER `value` — so writing `state.value` on each keystroke does
-	NOT re-render the boxes (which would destroy the focused <input> and its caret).
-	Value flows OUT via `syncValue` (read boxes → state.value + events) and IN via an
-	echo-guarded `observe('value')` (for `.value=` / programmatic set + `clear()`).
+	ARCHITECTURE: boxes are light `list('boxes', this.boxRow)` <input>s in ONE
+	shadow root with CONTAINER-DELEGATED events — NOT a child component per box —
+	because cross-box FOCUS coordination (advance, backspace-to-prev, paste spread)
+	IS the feature. Focus moves via `this.refs.boxes.querySelector('[data-index]')`
+	(accepted focusItem pattern). The boxes are UNCONTROLLED: `boxRow` never reads
+	`value`, and `boxes` only rebuilds when `length` changes, so typing does not
+	destroy focused inputs. Value flows OUT via `syncValue` and IN via an
+	echo-guarded `observe('value')`. masked/type/disabled mid-life → imperative
+	attr sync (no list rebuild).
 	── EVENTS ───────────────────────────────────────────────────────────
 	  pin-input:input    { value }   on every change
 	  pin-input:complete { value }   when all boxes are filled (autosubmit)
@@ -23,8 +21,7 @@
 	  // reset after a failed attempt: pin.clear()  (or set .value back to '')
 	──────────────────────────────────────────────────────────────────────
 */
-import { WebComponent } from 'webcomponent';
-import { escapeHtml } from '../../core/utilities.js';
+import { html, WebComponent } from 'webcomponent';
 export class UIPinInput extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -39,7 +36,53 @@ export class UIPinInput extends WebComponent {
 		disabled: false,
 		// Emit pin-input:complete when every box is filled.
 		autosubmit: true,
+		// Structural keys only — never holds digit values (uncontrolled inputs).
+		boxes: [],
 	};
+	onConnect() {
+		this.syncBoxes();
+		// Async so the list remount lands before reflectValue re-pushes digits.
+		this.observeAsync('length', this.handleLengthChange);
+		this.observe('masked', this.syncBoxAttrs);
+		this.observe('type', this.syncBoxAttrs);
+		this.observe('disabled', this.syncBoxAttrs);
+	}
+	/* Rebuild the keyed box list when length changes (structure only). */
+	syncBoxes() {
+		const count = Math.max(0, Number(this.state.length) || 0);
+		const prev = this.state.boxes;
+		if (prev.length === count) {
+			return;
+		}
+		const next = [];
+		for (let index = 0; index < count; index += 1) {
+			next.push({
+				id: index,
+			});
+		}
+		this.state.boxes = next;
+	}
+	handleLengthChange() {
+		this.syncBoxes();
+		// After the list remounts empty inputs, re-push any controlled value.
+		this.reflectValue(this.state.value);
+	}
+	/* Mid-session masked/type/disabled — patch live inputs; do not rebuild. */
+	syncBoxAttrs() {
+		const count = this.state.boxes.length;
+		const inputType = this.state.masked ? 'password' : 'text';
+		const inputMode = this.state.type === 'numeric' ? 'numeric' : 'text';
+		const disabled = this.state.disabled;
+		for (let index = 0; index < count; index += 1) {
+			const box = this.boxAt(index);
+			if (!box) {
+				continue;
+			}
+			box.type = inputType;
+			box.inputMode = inputMode;
+			box.disabled = disabled;
+		}
+	}
 	boxAt(index) {
 		return this.refs.boxes?.querySelector(`input[data-index="${index}"]`);
 	}
@@ -106,6 +149,7 @@ export class UIPinInput extends WebComponent {
 		this.observe('value', this.reflectValue, {
 			immediate: true,
 		});
+		this.syncBoxAttrs();
 	}
 	handleInput(domEvent) {
 		const box = domEvent.target;
@@ -200,26 +244,26 @@ export class UIPinInput extends WebComponent {
 		// maxlength=1 filled box silently swallows the keypress (no input event).
 		domEvent.target.select?.();
 	}
+	/* Light html row — never interpolates value (uncontrolled). Attrs seed once;
+	   masked/type/disabled updates use syncBoxAttrs. */
+	boxRow(item) {
+		const index = item.id;
+		const inputType = this.state.masked ? 'password' : 'text';
+		const inputMode = this.state.type === 'numeric' ? 'numeric' : 'text';
+		const autoComplete = index === 0 ? 'one-time-code' : 'off';
+		return html`<input class="pin-box" data-index=${index} type=${inputType} inputmode=${inputMode} maxlength="1" aria-label=${`Digit ${index + 1}`} autocomplete=${autoComplete} ?disabled=${this.state.disabled}>`;
+	}
+	boxKey(item) {
+		return item.id;
+	}
 	render() {
-		this.html `
+		this.html`
 			<div #boxes class="pin-row" role="group"
 				@input=${this.handleInput} @keydown=${this.handleKey}
 				@paste=${this.handlePaste} @focusin=${this.handleFocusIn}>
-				^html${this.renderBoxes}
+				${this.list('boxes', this.boxRow, this.boxKey)}
 			</div>
 		`;
-	}
-	renderBoxes() {
-		const count = Number(this.state.length) || 0;
-		const inputType = this.state.masked ? 'password' : 'text';
-		const inputMode = this.state.type === 'numeric' ? 'numeric' : 'text';
-		const disabled = this.state.disabled ? ' disabled' : '';
-		let markup = '';
-		for (let index = 0; index < count; index += 1) {
-			const otc = index === 0 ? ' autocomplete="one-time-code"' : ' autocomplete="off"';
-			markup += `<input class="pin-box" data-index="${index}" type="${inputType}" inputmode="${escapeHtml(inputMode)}" maxlength="1" aria-label="Digit ${index + 1}"${otc}${disabled}>`;
-		}
-		return markup;
 	}
 }
 customElements.define('ui-pin-input', UIPinInput);

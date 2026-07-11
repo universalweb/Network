@@ -47,11 +47,9 @@ export const PropagationTracker = {
 	},
 };
 /**
- * Recursive depth-propagation node. Each top-level `static state` key is auto-
- * installed as a reactive routing accessor on the prototype (the framework's
- * `so a parent's `.state.depth=`/`.state.value=`/`.state.token=`/
- * `.state.maxDepth=` dot-binding flows straight into `this.state` — no hand-written
- * setter needed.
+ * Recursive depth-propagation node. Parent binds nested state via the explicit
+ * `.state.key=` channel (`.state.depth=` / `.state.value=` / `.state.token=` /
+ * `.state.maxDepth=`) — the auto-router is gone; bare `.depth=` is a plain DOM prop.
  */
 export class PerfDeepNode extends WebComponent {
 	static url = import.meta.url;
@@ -80,7 +78,7 @@ export class PerfDeepNode extends WebComponent {
 	render() {
 		const renderMark = Perf.mark(`depth-L${this.state.depth}`);
 		if (this.state.depth === 0) {
-			this.html `
+			this.html`
 				<div class="head">
 					<span class="level">L${this.state.depth}</span>
 					<span class="val">${this.state.value}</span>
@@ -90,7 +88,7 @@ export class PerfDeepNode extends WebComponent {
 			Perf.measure(`depth-L${this.state.depth}`, renderMark);
 			return;
 		}
-		this.html `
+		this.html`
 			<div class="head">
 				<span class="level">L${this.state.depth}</span>
 				<span class="val">${this.state.value}</span>

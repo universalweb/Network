@@ -23,24 +23,6 @@ export function isElement(value) {
 export function isShadowRoot(value) {
 	return value instanceof ShadowRoot;
 }
-/*
- * Escape the five markup-significant chars for safe interpolation into a raw
- * `^html` string. The lookup map + replacer are module-scope (allocated once),
- * not per-call. Prefer auto-escaped `${…}` textContent / `list()` rows over this
- * — it exists only for the residual trusted-markup builders.
- */
-const HTML_ESCAPES = {
-	'&': '&amp;',
-	'<': '&lt;',
-	'>': '&gt;',
-	'"': '&quot;',
-};
-function replaceHtmlChar(char) {
-	return HTML_ESCAPES[char];
-}
-export function escapeHtml(value) {
-	return String(value).replace(/[&<>"]/g, replaceHtmlChar);
-}
 export function isNode(value) {
 	return value instanceof Node;
 }

@@ -21,7 +21,7 @@
 	  <ui-heatmap .state.data=${[[1, 4, 9], [2, 0, 7]]} .state.rowLabels=${['A', 'B']}></ui-heatmap>
 	─────────────────────────────────────────────────────────────────────
 */
-import { html, list, WebComponent } from 'webcomponent';
+import { html, WebComponent } from 'webcomponent';
 const DAY_MS = 86400000;
 const WEEK_MS = DAY_MS * 7;
 const DEFAULT_SPAN = DAY_MS * 363;
@@ -498,7 +498,7 @@ export class UIHeatmap extends WebComponent {
 				<div class="hm-scroll">
 					<div #grid class="hm-grid" style=${this.state.templateStyle}
 						@pointermove=${this.handlePointerMove} @pointerleave=${this.hideTip} @click=${this.handleClick}>
-						${list('items', this.cellRow, this.itemKey)}
+						${this.list('items', this.cellRow, this.itemKey)}
 						<div #tip class="hm-tip" data-show="false" role="status"></div>
 					</div>
 				</div>

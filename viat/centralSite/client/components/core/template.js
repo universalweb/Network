@@ -10,16 +10,17 @@ import { markSpotDirty } from './lifecycle/scheduler.js';
 import {
 	addDep,
 	bind,
+	CollectionBinding,
 	CONTENT_KIND,
 	isBindingType,
 	ListBinding,
 	makeProxy,
-	RemoteListBinding,
 	track,
 } from './state/binding.js';
+import { mountCollection } from './state/collection.js';
 import { globalRealm, storeRealm } from './state/globalState.js';
 import { resolveListFilter } from './state/listFilter.js';
-import { mountRemoteController } from './state/remoteList.js';
+import { registerListHandle, unregisterListHandle } from './state/listHandle.js';
 import {
 	ensureStateBus,
 	linkStateCarrier,
@@ -562,22 +563,22 @@ function autoKey(item, index) {
 	return item?.key ?? item?.id ?? index;
 }
 /**
- * `remoteList(key, renderFn, config)` — `list()` plus an async load controller
+ * `collection(key, renderFn, config)` — `list()` plus an async load controller
  * (infinite-scroll and/or a load-more button + spinner). Renders identically to
  * `list()`/`filter()` (same `ListSpot`; `renderFn` is a bare method ref or a
  * component class; `config.filter` reuses the `filter()` predicate verbatim). The
- * template mount-hook attaches a `RemoteListController` that drives `config.loader`
+ * template mount-hook attaches a `CollectionController` that drives `config.loader`
  * ({reset, cursor, signal}) → {items, nextCursor, hasMore}), appends pages into
- * `state[key]`, and exposes `this.remote(key)` for `reset()` / `loadMore()`.
+ * `state[key]`, and exposes `this.collection(key)` for `reset()` / `loadMore()`.
  * @param {string} key - State key holding the items array.
  * @param {Function|CustomElementConstructor} renderFn - Row method ref or component class.
  * @param {object} config - `{ loader, mode, auto, filter, keyFn, spinner, loadMore, prefetch, dedupe, scroller, scrollReport }`.
- * @returns {RemoteListBinding} The binding to interpolate in the template.
+ * @returns {CollectionBinding} The binding to interpolate in the template.
  */
-export function remoteList(key, renderFn, config = {}) {
+export function collection(key, renderFn, config = {}) {
 	const keyFn = config.keyFn ?? autoKey;
 	const filterFn = config.filter === undefined ? null : resolveListFilter(config.filter);
-	return new RemoteListBinding(key, renderFn, keyFn, filterFn, config);
+	return new CollectionBinding(key, renderFn, keyFn, filterFn, config);
 }
 /* Resolve an `ifThen` branch to a value the content-kind dispatch understands. A
    value passes straight through (text/empty, equality-guarded by patchTextStrict);
@@ -1798,6 +1799,10 @@ class ListSpot extends Spot {
 		this.startComment = null;
 		this.endComment = null;
 		this.textNode = null;
+		// Imperative handle: this.list(key) after mount.
+		if (component && bindingKey) {
+			registerListHandle(component, this);
+		}
 	}
 	/** Drains `pendingPaths` and replays the refresh once per accumulated path
 	 *  (since each path may take different branches between full re-diff and
@@ -1849,9 +1854,21 @@ class ListSpot extends Spot {
 					if (itemAtIndex !== undefined) {
 						const itemKey = keyFn(itemAtIndex, index);
 						const element = this.keyMap.get(itemKey);
-						if (isFunction(element?.assignState)) {
-							element.assignState(itemAtIndex);
-							return;
+						if (element) {
+							/*
+							 * Deep write on an existing item (`items.i.foo`). Component
+							 * rows take assignState. Light html rows keep the SAME item
+							 * ref, so patchList's `item !== prev` gate would skip them —
+							 * force re-run of the row fn (carousel dots, stepper flags).
+							 */
+							if (isFunction(element.assignState)) {
+								element.assignState(itemAtIndex);
+								return;
+							}
+							if (LIGHT_ROW_INSTANCES.has(element) && this.liveList) {
+								updateReusedElement(element, itemAtIndex, this.liveList);
+								return;
+							}
 						}
 					}
 				}
@@ -1860,6 +1877,9 @@ class ListSpot extends Spot {
 		patchSpot(this, each(viewItems, renderFn, keyFn));
 	}
 	unsubscribe() {
+		if (this.component && this.bindingKey) {
+			unregisterListHandle(this.component, this);
+		}
 		if (this.liveList && this.liveList.disconnectSpot) {
 			this.liveList.disconnectSpot();
 		}
@@ -2073,8 +2093,8 @@ function installBindingSpot(plan, element, expr, component) {
 		const listSpot = new ListSpot(element, plan.slotIndex, plan.type, expr, component, bindingKey, expr.renderFn, expr.keyFn, expr.filterFn);
 		listSpot.refresh(null);
 		syncSpotSubscriptions(listSpot, bindingDepMap(expr, component));
-		if (RemoteListBinding.isRemoteListBinding(expr)) {
-			mountRemoteController(component, element, expr);
+		if (CollectionBinding.isCollectionBinding(expr)) {
+			mountCollection(component, element, expr);
 		}
 		return listSpot;
 	}
@@ -2924,8 +2944,8 @@ function installAnchoredTextSpot(plan, resolved, exprs, component) {
 		markAnchored(listSpot, startComment, endComment);
 		listSpot.refresh(null);
 		syncSpotSubscriptions(listSpot, bindingDepMap(expr, component));
-		if (RemoteListBinding.isRemoteListBinding(expr)) {
-			mountRemoteController(component, parentEl, expr);
+		if (CollectionBinding.isCollectionBinding(expr)) {
+			mountCollection(component, parentEl, expr);
 		}
 		return listSpot;
 	}

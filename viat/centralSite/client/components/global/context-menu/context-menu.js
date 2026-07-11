@@ -26,7 +26,7 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import { computeAnchor } from '../../core/dom/anchor.js';
-import { list } from '../../core/index.js';
+
 import { UIMenu } from '../menu/menu.js';
 import { UIMenuItem } from '../menu/menu-item.js';
 export class UIContextMenu extends UIMenu {
@@ -217,7 +217,7 @@ export class UIContextMenu extends UIMenu {
 			<slot></slot>
 			<div #surface class="menu-surface" popover="manual" role="menu" tabindex="-1"
 				@toggle=${this.handleToggle} @menu-item:select=${this.handleSelect} @keydown=${this.handleKey}>
-				${list('items', UIMenuItem)}
+				${this.list('items', UIMenuItem)}
 			</div>
 		`;
 	}

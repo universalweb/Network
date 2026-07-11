@@ -22,15 +22,7 @@
 	  </ui-carousel>
 	─────────────────────────────────────────────────────────────────────
 */
-import { list, WebComponent } from 'webcomponent';
-function buildIndicators(count, activeIndex) {
-	let markup = '';
-	for (let index = 0; index < count; index += 1) {
-		const on = index === activeIndex ? ' data-on="true"' : '';
-		markup += `<button type="button" class="dot" data-index="${index}"${on} aria-label="Go to slide ${index + 1}"><span class="dot-fill"></span></button>`;
-	}
-	return markup;
-}
+import { html, WebComponent } from 'webcomponent';
 class UICarouselSlide extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -55,7 +47,7 @@ class UICarouselSlide extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<article class="slide" data-tone=${this.state.tone}>
 				<span class="slide-media" ?hidden=${Boolean(this.state.image)} aria-hidden="true"></span>
 				<img class="slide-img" ?hidden=${!this.state.image} src=${this.state.image || ''} alt="" loading="lazy">
@@ -88,21 +80,56 @@ export class UICarousel extends WebComponent {
 		keyboard: true,
 		arrowShape: 'circle',
 		arrowReveal: false,
+		// Dot/progress indicator keys — rebuilt from items.length + activeIndex.
+		dots: [],
 	};
 	slideWidth = 0;
 	dragController = null;
 	onConnect() {
 		// Mark the active slide the moment slides bind (covers pre-connect set).
-		this.observe('items', () => {
-			this.syncActive();
-		}, {
+		this.observe('items', this.handleItemsChange, {
 			immediate: true,
 		});
+		this.observe('activeIndex', this.syncDots);
+		this.observe('indicators', this.syncDots);
 		// Keyboard nav binds here, not onMount: the hotkey registry is document-
 		// level (no refs needed) and onConnect fires once per connect, so it never
 		// double-registers on a re-render the way an onMount gesture install would.
 		// The lifecycle sweep releases the entries on disconnect.
 		this.installKeys();
+	}
+	handleItemsChange() {
+		this.syncActive();
+		this.syncDots();
+	}
+	/* Structural dots list + on flags (tabs-style deep write for the active dot). */
+	syncDots() {
+		if (this.state.indicators === 'none') {
+			if (this.state.dots.length) {
+				this.state.dots = [];
+			}
+			return;
+		}
+		const count = this.state.items.length;
+		const active = this.state.activeIndex;
+		const dots = this.state.dots;
+		if (dots.length !== count) {
+			const next = [];
+			for (let index = 0; index < count; index += 1) {
+				next.push({
+					id: index,
+					on: index === active,
+				});
+			}
+			this.state.dots = next;
+			return;
+		}
+		for (let index = 0; index < count; index += 1) {
+			const want = index === active;
+			if (Boolean(dots[index].on) !== want) {
+				dots[index].on = want;
+			}
+		}
 	}
 	onMount() {
 		this.startAutoplay();
@@ -319,16 +346,22 @@ export class UICarousel extends WebComponent {
 		this.restartAutoplay();
 	}
 	handleDotClick(domEvent) {
-		const raw = domEvent.target?.dataset?.index;
-		if (raw === undefined) {
+		const button = domEvent.target.closest('button.dot');
+		if (!button) {
 			return;
 		}
-		const index = Number(raw);
+		const index = Number(button.dataset.index);
 		if (Number.isNaN(index)) {
 			return;
 		}
 		this.goTo(index);
 		this.restartAutoplay();
+	}
+	dotRow(item) {
+		return html`<button type="button" class="dot" data-index=${item.id} ?data-on=${item.on} aria-label=${`Go to slide ${item.id + 1}`}><span class="dot-fill"></span></button>`;
+	}
+	dotKey(item) {
+		return item.id;
 	}
 	handleSlideClick() {
 		if (!this.state.advanceOnClick) {
@@ -357,14 +390,8 @@ export class UICarousel extends WebComponent {
 	intervalStyle() {
 		return `--carousel-interval: ${Number(this.state.interval) || 0}ms`;
 	}
-	indicatorMarkup() {
-		if (this.state.indicators === 'none') {
-			return '';
-		}
-		return buildIndicators(this.state.items.length, this.state.activeIndex);
-	}
 	render() {
-		this.html `
+		this.html`
 			<div
 				class="carousel"
 				data-transition=${this.state.transition}
@@ -377,7 +404,7 @@ export class UICarousel extends WebComponent {
 				@pointerleave=${this.handlePointerLeave}>
 				<div #viewport class="viewport" tabindex=${this.viewportTabIndex} role="group" aria-roledescription="carousel" aria-label="Carousel">
 					<div #track class="track" style=${this.trackStyle} @click=${this.handleSlideClick}>
-						${list('items', UICarouselSlide, this.slideKey)}
+						${this.list('items', UICarouselSlide, this.slideKey)}
 					</div>
 					<button class="nav prev" type="button" ?hidden=${!this.state.arrows} tooltip="Previous" aria-label="Previous slide" @click=${this.handlePrev}>
 						<ui-icon .state.name=${'chevron-left'} .state.size=${'sm'}></ui-icon>
@@ -386,7 +413,7 @@ export class UICarousel extends WebComponent {
 						<ui-icon .state.name=${'chevron-right'} .state.size=${'sm'}></ui-icon>
 					</button>
 				</div>
-				<div class="dots" ?hidden=${this.state.indicators === 'none'} @click=${this.handleDotClick}>^html${this.indicatorMarkup()}</div>
+				<div class="dots" ?hidden=${this.state.indicators === 'none'} @click=${this.handleDotClick}>${this.list('dots', this.dotRow, this.dotKey)}</div>
 			</div>
 		`;
 	}

@@ -1,3 +1,4 @@
+import { html } from 'webcomponent';
 import { Panel } from '../../../global/panel/panel.js';
 export class NetworkStats extends Panel {
 	static url = import.meta.url;
@@ -8,10 +9,12 @@ export class NetworkStats extends Panel {
 	static state = {
 		chainStatus: [
 			{
+				id: 'block',
 				key: 'Block',
 				value: '0',
 			},
 			{
+				id: 'status',
 				className: 'good',
 				key: 'Status',
 				value: 'In Sync',
@@ -21,23 +24,28 @@ export class NetworkStats extends Panel {
 		panelId: 'NET',
 		networkData: [
 			{
+				id: 'peers',
 				className: 'good',
 				key: 'Peers',
 				value: '1 Active',
 			},
 			{
+				id: 'network',
 				key: 'Network',
 				value: 'Viat Mainnet v1',
 			},
 			{
+				id: 'latency',
 				className: 'good',
 				key: 'Latency',
 				value: '—ms',
 			},
 			{
+				id: 'latency-bar',
 				rowType: 'latency-bar',
 			},
 			{
+				id: 'connection',
 				key: 'Connection',
 				value: 'HTTPS',
 			},
@@ -45,9 +53,7 @@ export class NetworkStats extends Panel {
 		heading: 'NODE STATUS',
 	};
 	onConnect() {
-		this.observeGlobal('api', (api) => {
-			return this.syncLatency(api);
-		});
+		this.observeGlobal('api', this.syncLatency);
 		this.syncLatency(this.global.api);
 	}
 	syncLatency(api) {
@@ -62,42 +68,40 @@ export class NetworkStats extends Panel {
 		} else if (api && api.ok === false) {
 			tone = 'bad';
 		}
-		const next = rows.map((row) => {
-			if (row.key !== 'Latency') {
-				return row;
+		const count = rows.length;
+		for (let index = 0; index < count; index += 1) {
+			if (rows[index].key === 'Latency') {
+				rows[index].value = latency;
+				rows[index].className = tone;
+				return;
 			}
-			return {
-				...row,
-				value: latency,
-				className: tone,
-			};
-		});
-		this.assignState({
-			networkData: next,
-		});
+		}
 	}
-	renderRows(rows) {
-		return rows.map((r) => {
-			if (r.rowType === 'latency-bar') {
-				return `<div class="stat-latency-bar"><div class="stat-latency-fill" style="${r.style ?? ''}"></div></div>`;
-			}
-			return `
-				<div class="stat-row">
-					<span class="s-key">${r.key}</span>
-					<span class="s-val ${r.className ?? ''}" ${r.style ? `style="${r.style}"` : ''}>${r.value}</span>
-				</div>
-			`;
-		}).join('');
+	statRow(row) {
+		if (row.rowType === 'latency-bar') {
+			return html`<div class="stat-latency-bar"><div class="stat-latency-fill" style=${row.style || ''}></div></div>`;
+		}
+		const className = row.className ? `s-val ${row.className}` : 's-val';
+		return html`<div class="stat-row">
+			<span class="s-key">${row.key}</span>
+			<span class=${className} style=${row.style || false}>${row.value}</span>
+		</div>`;
+	}
+	statKey(row, index) {
+		return row.id ?? row.key ?? index;
 	}
 	renderBody() {
-		return `
-			<div class="stat-block">
-				<div class="stat-block-title">NETWORK DATA</div>
-				${this.renderRows(this.state.networkData)}
-			</div>
-			<div class="stat-block">
-				<div class="stat-block-title">CHAIN STATUS</div>
-				${this.renderRows(this.state.chainStatus)}
+		// htmlElement requires exactly one root — wrap the two blocks.
+		return this.htmlElement`
+			<div class="stat-body">
+				<div class="stat-block">
+					<div class="stat-block-title">NETWORK DATA</div>
+					${this.list('networkData', this.statRow, this.statKey)}
+				</div>
+				<div class="stat-block">
+					<div class="stat-block-title">CHAIN STATUS</div>
+					${this.list('chainStatus', this.statRow, this.statKey)}
+				</div>
 			</div>
 		`;
 	}

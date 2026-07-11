@@ -37,10 +37,10 @@ export class UIMenuItem extends WebComponent {
 	}
 	render() {
 		if (this.state.separator) {
-			this.html `<div class="menu-sep" role="separator"></div>`;
+			this.html`<div class="menu-sep" role="separator"></div>`;
 			return;
 		}
-		this.html `
+		this.html`
 			<button #button
 				type="button"
 				class="menu-item"
@@ -55,7 +55,7 @@ export class UIMenuItem extends WebComponent {
 				<span class="menu-check" aria-hidden="true">${this.state.checked ? '✓' : ''}</span>
 				<span class="menu-label">${this.state.label || this.state.value}</span>
 				${() => {
-					return this.state.kbd ? this.htmlElement `<span class="menu-kbd">${this.state.kbd}</span>` : '';
+					return this.state.kbd ? this.htmlElement`<span class="menu-kbd">${this.state.kbd}</span>` : '';
 				}}
 			</button>
 		`;

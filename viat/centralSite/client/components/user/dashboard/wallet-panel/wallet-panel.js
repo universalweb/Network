@@ -12,7 +12,7 @@ export class WalletPanel extends Panel {
 		heading: 'ADDRESS',
 	};
 	renderBody() {
-		return `
+		return this.htmlElement`
 			<div class="addr-wrap">
 				<wallet-address></wallet-address>
 				<div class="copy-hint">CLICK TO COPY</div>

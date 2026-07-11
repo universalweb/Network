@@ -8,9 +8,7 @@
  * ('choice' | 'text'), `.items` ([string | { label, value }]), `.placeholder`.
  */
 import '../icon/icon.js';
-import {
-	html, isString, list, WebComponent,
-} from 'webcomponent';
+import { html, isString, WebComponent } from 'webcomponent';
 function optionValue(option) {
 	return isString(option) ? option : option.value;
 }
@@ -81,7 +79,7 @@ export class UIAiInquire extends WebComponent {
 					<span class="inq-q">${this.state.question}</span>
 				</header>
 				<div class="inq-choice" ?hidden=${!this.choiceOpen} @click=${this.handleOptionClick}>
-					${list('items', this.renderOption, this.optionKey)}
+					${this.list('items', this.renderOption, this.optionKey)}
 				</div>
 				<form class="inq-text" ?hidden=${!this.textOpen} @submit=${this.handleSubmit}>
 					<input class="inq-input" $value="inputValue" placeholder=${this.state.placeholder}>

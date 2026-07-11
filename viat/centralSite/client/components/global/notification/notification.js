@@ -1,4 +1,4 @@
-import { list, WebComponent } from '../../core/index.js';
+import { WebComponent } from '../../core/index.js';
 const DEFAULT_TIMEOUT = 3200;
 class NotificationItem extends WebComponent {
 	static url = import.meta.url;
@@ -132,12 +132,13 @@ export class UINotification extends WebComponent {
 			this.dismiss(id);
 		}
 	}
+	itemKey(item) {
+		return item.id;
+	}
 	render() {
-		this.html `
+		this.html`
 			<div class="notification-stack" @notification:dismiss=${this.handleDismiss}>
-				${list('items', NotificationItem, (item) => {
-					return item.id;
-				})}
+				${this.list('items', NotificationItem, this.itemKey)}
 			</div>
 		`;
 	}

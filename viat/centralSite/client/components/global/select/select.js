@@ -1,4 +1,4 @@
-import { html, list, WebComponent } from 'webcomponent';
+import { html, WebComponent } from 'webcomponent';
 /**
  * <ui-select> — a thin, themeable wrapper over a native <select> that picks up the
  * framework's customizable base-select picker (Chrome 135+); the inner element
@@ -62,7 +62,7 @@ export class UISelect extends WebComponent {
 	}
 	render() {
 		// Sole-content list (no whitespace) so the spot elides onto <select>.
-		this.html`<select #control ?disabled=${this.state.disabled} @change=${this.handleChange}>${list('items', this.renderOption)}</select>`;
+		this.html`<select #control ?disabled=${this.state.disabled} @change=${this.handleChange}>${this.list('items', this.renderOption)}</select>`;
 	}
 }
 customElements.define('ui-select', UISelect);

@@ -1,8 +1,22 @@
 import '../../../global/tabs/tabs.js';
-import { remoteList, WebComponent } from '../../../core/index.js';
+import { WebComponent } from '../../../core/index.js';
 import { Panel } from '../../../global/panel/panel.js';
 import { AppView } from '../../app-view/app-view.js';
 const PAGE_SIZE = 25;
+const TAB_ITEMS = [
+	{
+		id: 'All',
+		label: 'All',
+	},
+	{
+		id: 'Inbound',
+		label: 'Inbound',
+	},
+	{
+		id: 'Outbound',
+		label: 'Outbound',
+	},
+];
 function shortCounterparty(value) {
 	if (!value) {
 		return '—';
@@ -34,6 +48,20 @@ function formatTime(iso) {
 function entryKey(entry) {
 	return entry.id;
 }
+/* Pure list keep-predicate — reads the display flag written at load/tab-change.
+   ListSpot calls filter bare (no `this`); no per-render arrow. */
+function entryVisible(entry) {
+	return !entry.hidden;
+}
+function keepForTab(entry, activeTab) {
+	if (activeTab === 'Inbound') {
+		return entry.direction === 'in';
+	}
+	if (activeTab === 'Outbound') {
+		return entry.direction === 'out';
+	}
+	return true;
+}
 class ActivityLogEntry extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -50,19 +78,20 @@ class ActivityLogEntry extends WebComponent {
 		verb: '',
 		status: '',
 		timestamp: '',
+		hidden: false,
 	};
 	render() {
 		// Whole-row reactive read so an entry repaint also refreshes the
 		// embedded <a href> targets. Router intercepts anchor clicks across
 		// the shadow boundary via composedPath, so plain `<a>` is enough —
-		this.html `
+		this.html`
 			<div class="log-entry">
 				<span class="log-ts">${this.state.timestamp}</span>
 				<span class="log-tag" data-direction=${this.state.direction}>${this.state.direction === 'in' ? '↙' : '↗'}</span>
 				<span class="log-msg" data-status=${this.state.status}>
-					<a class="log-link log-amount" href="${this.state.txHref}" tooltip=${this.state.id}>${this.state.amount} ⩝</a>
+					<a class="log-link log-amount" href=${this.state.txHref} tooltip=${this.state.id}>${this.state.amount} ⩝</a>
 					<span class="log-verb"> ${this.state.verb} </span>
-					<a class="log-link log-addr" href="${this.state.counterpartyHref}" tooltip=${this.state.counterparty}>${this.state.counterpartyShort}</a>
+					<a class="log-link log-addr" href=${this.state.counterpartyHref} tooltip=${this.state.counterparty}>${this.state.counterpartyShort}</a>
 				</span>
 			</div>
 		`;
@@ -78,23 +107,30 @@ export class ActivityLog extends Panel {
 		activeTab: 'All',
 		classes: new Set(['output-panel']),
 		entries: [],
+		// Stable collection bag (not a per-render inline object).
+		entriesConfig: {
+			loader: null,
+			mode: 'button',
+			keyFn: entryKey,
+			filter: entryVisible,
+			loadMore: '#load_more',
+			dedupe: true,
+		},
+		// ui-tabs items as-is — no method-fabricated array each paint.
+		tabItems: TAB_ITEMS,
 		panelId: 'ACTIVITY',
 		showDot: true,
-		tabs: [
-			'All', 'Inbound', 'Outbound',
-		],
 		heading: 'LOG',
 		loading: false,
 		error: '',
 	};
 	loadedAddress = '';
 	onConnect() {
+		this.state.entriesConfig.loader = this.loadEntries;
 		this.on('entries:loading', this.handleListLoading);
 		this.on('entries:loaded', this.handleListLoaded);
 		this.on('entries:error', this.handleListError);
-		this.observeGlobal('wallet', (wallet) => {
-			return this.handleWalletChange(wallet);
-		});
+		this.observeGlobal('wallet', this.handleWalletChange);
 	}
 	walletAddress() {
 		return this.global.wallet?.address || '';
@@ -105,7 +141,7 @@ export class ActivityLog extends Panel {
 		const address = wallet?.address || '';
 		if (address !== this.loadedAddress) {
 			this.loadedAddress = address;
-			this.remote('entries')?.reset();
+			this.collection('entries')?.reset();
 		}
 	}
 	handleListLoading() {
@@ -116,6 +152,7 @@ export class ActivityLog extends Panel {
 	}
 	handleListLoaded() {
 		this.state.loading = false;
+		this.applyTabVisibility();
 	}
 	handleListError(domEvent) {
 		this.assignState({
@@ -123,7 +160,7 @@ export class ActivityLog extends Panel {
 			error: domEvent?.detail?.data?.error || 'Could not load activity',
 		});
 	}
-	/* remoteList loader — the wallet's own tx history, paged via the cursor=page
+	/* collection loader — the wallet's own tx history, paged via the cursor=page
 	   bridge (see accounts-list-page). Empty-success on no wallet so the mount
 	   auto-load is a clean no-op until a wallet loads. */
 	async loadEntries({
@@ -150,9 +187,12 @@ export class ActivityLog extends Panel {
 			return null;
 		}
 		const txs = response.transactions ?? [];
+		const activeTab = this.state.activeTab;
 		const items = [];
 		for (let index = 0; index < txs.length; index += 1) {
-			items.push(this.txToEntry(txs[index], address));
+			const entry = this.txToEntry(txs[index], address);
+			entry.hidden = !keepForTab(entry, activeTab);
+			items.push(entry);
 		}
 		const hasMore = Boolean(response.pagination?.hasMore);
 		return {
@@ -177,6 +217,7 @@ export class ActivityLog extends Panel {
 			verb: isInbound ? 'from' : 'to',
 			status: tx.status === 'completed' || tx.status === 'confirmed' ? 'ok' : (tx.status || 'pending'),
 			timestamp: formatTime(tx.timestamp),
+			hidden: false,
 		};
 	}
 	/* Real-time hook: a freshly observed tx is prepended to the top through the
@@ -184,7 +225,9 @@ export class ActivityLog extends Panel {
 	   caller passes a partial entry. No live caller yet — exposed for the realtime
 	   transport to drive. */
 	addEntry(entry) {
-		this.remote('entries')?.prepend(this.createEntry(entry));
+		const next = this.createEntry(entry);
+		next.hidden = !keepForTab(next, this.state.activeTab);
+		this.collection('entries')?.prepend(next);
 	}
 	createEntry(entry = {}) {
 		return {
@@ -198,25 +241,33 @@ export class ActivityLog extends Panel {
 			verb: entry.verb ?? '',
 			status: entry.status ?? 'ok',
 			timestamp: entry.timestamp ?? formatTime(new Date().toISOString()),
+			hidden: false,
 		};
 	}
-	/* Client display predicate for the tab strip (All / Inbound / Outbound),
-	   passed as remoteList's `filter`. */
-	tabKeep(entry) {
+	/* Stamp `hidden` for the active tab, then retouch the array so the list
+	   filter re-runs (keyed diff reuses rows; only membership flips). */
+	applyTabVisibility() {
 		const activeTab = this.state.activeTab;
-		if (activeTab === 'Inbound') {
-			return entry.direction === 'in';
+		const entries = this.state.entries;
+		if (!Array.isArray(entries) || !entries.length) {
+			return;
 		}
-		if (activeTab === 'Outbound') {
-			return entry.direction === 'out';
+		const count = entries.length;
+		for (let index = 0; index < count; index += 1) {
+			const entry = entries[index];
+			const wantHidden = !keepForTab(entry, activeTab);
+			if (Boolean(entry.hidden) !== wantHidden) {
+				entry.hidden = wantHidden;
+			}
 		}
-		return true;
+		this.state.entries = entries.slice();
 	}
 	visibleCount() {
 		const entries = this.state.entries ?? [];
 		let count = 0;
-		for (let index = 0; index < entries.length; index += 1) {
-			if (this.tabKeep(entries[index])) {
+		const entryCount = entries.length;
+		for (let index = 0; index < entryCount; index += 1) {
+			if (!entries[index].hidden) {
 				count += 1;
 			}
 		}
@@ -231,59 +282,26 @@ export class ActivityLog extends Panel {
 		}
 		return `No ${this.state.activeTab.toLowerCase()} transactions.`;
 	}
-	// Normalize whatever shape the parent seeds (array of strings or array
-	// of objects) into the {id, label} contract <ui-tabs> expects. Keeping
-	// activeTab keyed off the label preserves the existing filter predicate.
-	tabsForUI() {
-		const tabs = this.state.tabs ?? [];
-		const out = [];
-		for (let index = 0; index < tabs.length; index += 1) {
-			const tab = tabs[index];
-			const label = typeof tab === 'string' ? tab : tab?.label ?? '';
-			if (!label) {
-				continue;
-			}
-			out.push({
-				id: label,
-				label,
-			});
-		}
-		return out;
-	}
 	handleTabChange(domEvent) {
 		const next = domEvent.detail?.data?.id;
 		if (next && next !== this.state.activeTab) {
 			this.state.activeTab = next;
-			/* The display filter (`tabKeep`) reads activeTab, but activeTab is not a
-			   dep of the list spot — only `entries` is. Re-touch entries (same items,
-			   new array ref) so the spot re-runs the filter against the new tab. The
-			   keyed diff (by id) reuses rows; only membership changes. */
-			this.state.entries = this.state.entries.slice();
+			this.applyTabVisibility();
 			this.emit('tabs:change', {
 				tab: this.state.activeTab,
 			});
 		}
 	}
 	renderBody() {
-		// The core <ui-tabs> strip drives `activeTab`; the feed below renders the
-		// wallet's tx history via remoteList, with `tabKeep` as the display filter.
-		return this.htmlElement `
+		// Stable tabs + collection bag — no method-fabricated arrays / per-render config.
+		return this.htmlElement`
 			<div class="output-content">
 				<ui-tabs class="output-tabs-strip"
-					.state.items=${this.tabsForUI}
+					.state.items=${this.state.tabItems}
 					.state.activeIndex=${this.state.activeTab}
 					@tabs:change=${this.handleTabChange}></ui-tabs>
 				<div class="output-feed">
-					${remoteList('entries', ActivityLogEntry, {
-						loader: this.loadEntries,
-						mode: 'button',
-						keyFn: entryKey,
-						filter: (entry) => {
-							return this.tabKeep(entry);
-						},
-						loadMore: '#load_more',
-						dedupe: true,
-					})}
+					${this.collection('entries', ActivityLogEntry, this.state.entriesConfig)}
 					<div class="log-empty" ?hidden=${() => {
 						return this.visibleCount() > 0;
 					}}>∅ ${this.statusText}</div>

@@ -265,35 +265,10 @@
 	inline-size: 100%;
 }
 
-/* ── PagedList demo rows ──────────────────────────────── */
+/* ── PagedList demo host only (rows live in shadow via importStyles) ── */
 .demo-paged {
 	display: block;
 	inline-size: 100%;
-}
-.demo-paged-row {
-	display: grid;
-	grid-template-columns: 4rem 1fr auto;
-	gap: 1rem;
-	align-items: center;
-	padding: 0.5rem 0.75rem;
-	border-block-end: 1px solid color-mix(in oklch, var(--cyan) 10%, transparent);
-}
-.demo-paged-head {
-	color: var(--text-muted);
-	font-size: 0.7rem;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-}
-.demo-mono {
-	font-family: var(--font-mono);
-	font-size: 0.8rem;
-}
-.demo-paged-id {
-	color: var(--cyan);
-}
-.demo-paged-amount {
-	text-align: end;
-	color: var(--text-main);
 }
 
 @keyframes demo-in {

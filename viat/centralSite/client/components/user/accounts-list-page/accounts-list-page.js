@@ -72,7 +72,7 @@ export class AccountsListPage extends WebComponent {
 		this.state.startPage = target;
 		this.refs.list?.goToPage(target);
 	}
-	/* remoteList loader (self-contained: module getSDK, returns totalCount; no
+	/* collection loader (self-contained: module getSDK, returns totalCount; no
 	   instance state), cursor=page bridge. */
 	async loadAccounts({
 		reset, cursor,
@@ -101,7 +101,7 @@ export class AccountsListPage extends WebComponent {
 		return pageHrefFor(page);
 	}
 	headRow() {
-		return `
+		return html`
 			<div class="al-row al-head">
 				<span class="al-cell al-addr">ADDRESS</span>
 				<span class="al-cell al-balance">BALANCE</span>
@@ -114,7 +114,7 @@ export class AccountsListPage extends WebComponent {
 	accountRow(account) {
 		const addr = account.address;
 		const href = `/account/${encodeURIComponent(addr)}/`;
-		return html `
+		return html`
 			<div class="al-row">
 				<a class="al-cell al-addr" href=${href} title=${addr}>${shortAddress(addr)}</a>
 				<span class="al-cell al-balance">${formatAmount(account.balance)}</span>
@@ -125,7 +125,7 @@ export class AccountsListPage extends WebComponent {
 		`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="al-shell">
 				<header class="al-title-header">
 					<div class="al-title-block">

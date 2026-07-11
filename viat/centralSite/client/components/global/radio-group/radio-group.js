@@ -18,7 +18,7 @@
 	  ]} @radio-group:change=${this.handlePlanChange}></ui-radio-group>   // e.detail.data.value
 	──────────────────────────────────────────────────────────────────────
 */
-import { list, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 class UIRadioOption extends WebComponent {
 	static useShadow = false;
 	static state = {
@@ -95,7 +95,7 @@ export class UIRadioGroup extends WebComponent {
 				?disabled=${this.state.disabled}
 				@change=${this.handleChange}>
 				${this.renderLegend}
-				${list('items', UIRadioOption, this.optionKey)}
+				${this.list('items', UIRadioOption, this.optionKey)}
 			</fieldset>
 		`;
 	}

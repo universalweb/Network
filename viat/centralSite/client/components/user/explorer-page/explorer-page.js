@@ -21,6 +21,20 @@ const FILTERS = [
 		basePath: '/explorer/transfers/',
 	},
 ];
+function filtersAsItems(activeId) {
+	const items = [];
+	const count = FILTERS.length;
+	for (let index = 0; index < count; index += 1) {
+		const filter = FILTERS[index];
+		items.push({
+			id: filter.id,
+			label: filter.label,
+			basePath: filter.basePath,
+			active: filter.id === activeId,
+		});
+	}
+	return items;
+}
 function findFilter(filterId) {
 	for (let index = 0; index < FILTERS.length; index += 1) {
 		if (FILTERS[index].id === filterId) {
@@ -85,10 +99,18 @@ export class ExplorerPage extends WebComponent {
 	static state = {
 		filter: 'all',
 		rowStyles: ROW_STYLES,
+		filterItems: filtersAsItems('all'),
 	};
-	/* Data + display contract for <paged-list>, one stable bundle merged via
-	   `.state`. The loader + pageHref are arrows so they read the page's reactive
-	   filter; rows are self-contained (no page `this`). */
+	onConnect() {
+		this.observe('filter', this.syncFilterItems);
+		this.syncFilterItems();
+	}
+	syncFilterItems() {
+		this.state.filterItems = filtersAsItems(this.state.filter);
+	}
+	/* paged-list contract — stable instance object merged once via `.state=`.
+	   Loader/pageHref are class-field arrows so they close over page `this`
+	   (engine .call(host) for loader; pageHref is invoked bare). */
 	listConfig = {
 		loader: (options) => {
 			return this.loadTransactions(options);
@@ -143,18 +165,15 @@ export class ExplorerPage extends WebComponent {
 			totalCount: response.pagination?.totalCount ?? 0,
 		};
 	}
-	renderFilters() {
-		let markup = '';
-		for (let index = 0; index < FILTERS.length; index += 1) {
-			const filter = FILTERS[index];
-			const isActive = filter.id === this.state.filter;
-			const cls = isActive ? 'ex-tab is-active' : 'ex-tab';
-			markup += `<a class="${cls}" href="${filter.basePath}" aria-current="${isActive ? 'page' : 'false'}">${filter.label}</a>`;
-		}
-		return markup;
+	filterRow(item) {
+		const className = item.active ? 'ex-tab is-active' : 'ex-tab';
+		return html`<a class=${className} href=${item.basePath} aria-current=${item.active ? 'page' : 'false'}>${item.label}</a>`;
+	}
+	filterKey(item) {
+		return item.id;
 	}
 	headRow() {
-		return `
+		return html`
 			<div class="ex-row ex-head">
 				<span class="ex-cell ex-id">TX ID</span>
 				<span class="ex-cell ex-type">TYPE</span>
@@ -172,7 +191,7 @@ export class ExplorerPage extends WebComponent {
 		const txHref = `/tx/${encodeURIComponent(tx.id)}/`;
 		const fromHref = `/account/${encodeURIComponent(tx.from)}/`;
 		const toHref = `/account/${encodeURIComponent(tx.to)}/`;
-		return html `
+		return html`
 			<div class="ex-row">
 				<a class="ex-cell ex-id" href=${txHref} title=${tx.id}>${shortId(tx.id)}</a>
 				<span class="ex-cell ex-type" data-tone=${direction}>${direction.toUpperCase()}</span>
@@ -186,7 +205,7 @@ export class ExplorerPage extends WebComponent {
 		`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="ex-shell">
 				<header class="ex-title-header">
 					<div class="ex-title-block">
@@ -198,7 +217,7 @@ export class ExplorerPage extends WebComponent {
 					.state=${this.listConfig}
 					.importStyles=${this.state.rowStyles}
 					#list>
-					<div slot="controls" class="ex-filters">^html${this.renderFilters}</div>
+					<div slot="controls" class="ex-filters">${this.list('filterItems', this.filterRow, this.filterKey)}</div>
 				</paged-list>
 			</div>
 		`;

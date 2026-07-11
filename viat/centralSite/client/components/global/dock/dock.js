@@ -1,5 +1,5 @@
 import '../bar/bar.js';
-import { list, movingIndicator, WebComponent } from 'webcomponent';
+import { movingIndicator, WebComponent } from 'webcomponent';
 import { DockIconButton } from './dockIconButton.js';
 /*
  * Width buckets (from environment/breakpoints.js) below the sm / 768px edge. A
@@ -167,7 +167,7 @@ export class UIDock extends WebComponent {
 			<ui-bar class="dock">
 				<div slot="center" class="dock-rail">
 					<div class="active-bar" #active_bar></div>
-					${list('items', DockIconButton)}
+					${this.list('items', DockIconButton)}
 				</div>
 			</ui-bar>
 		`;

@@ -45,21 +45,22 @@ export class UIButton extends WebComponent {
 	 */
 	renderLead() {
 		if (this.state.loading) {
-			return this.htmlElement `<span class="btn-spinner" aria-hidden="true"></span>`;
+			return this.htmlElement`<span class="btn-spinner" aria-hidden="true"></span>`;
 		}
 		if (this.state.leadicon) {
-			return this.htmlElement `<ui-icon class="btn-icon lead" .state.name=${this.state.leadicon} .state.size=${'sm'}></ui-icon>`;
+			return this.htmlElement`<ui-icon class="btn-icon lead" .state.name=${this.state.leadicon} .state.size=${'sm'}></ui-icon>`;
 		}
 		return '';
 	}
 	renderTrail() {
 		if (this.state.trailicon) {
-			return this.htmlElement `<ui-icon class="btn-icon trail" .state.name=${this.state.trailicon} .state.size=${'sm'}></ui-icon>`;
+			return this.htmlElement`<ui-icon class="btn-icon trail" .state.name=${this.state.trailicon} .state.size=${'sm'}></ui-icon>`;
 		}
 		return '';
 	}
+	/* Same ternary as before — htmlElement so label is escaped (raw string + ^html was XSS). */
 	renderLabel() {
-		return this.state.label ? `<span class="btn-label">${this.state.label}</span>` : '';
+		return this.state.label ? this.htmlElement`<span class="btn-label">${this.state.label}</span>` : '';
 	}
 	handleClick(domEvent) {
 		if (this.state.disabled || this.state.loading) {
@@ -70,7 +71,7 @@ export class UIButton extends WebComponent {
 		this.emit('button:click', {});
 	}
 	render() {
-		this.html `
+		this.html`
 			<button
 				data-variant=${this.state.variant || 'solid'}
 				data-tone=${this.state.tone || 'neutral'}
@@ -95,7 +96,7 @@ export class UIButton extends WebComponent {
 				@click=${this.handleClick}>
 				${this.renderLead}
 				<slot name="lead"></slot>
-				^html${this.renderLabel}
+				${this.renderLabel}
 				<slot></slot>
 				${this.renderTrail}
 				<slot name="trail"></slot>

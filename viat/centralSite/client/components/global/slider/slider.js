@@ -27,7 +27,7 @@
 	  <ui-slider .state.orientation=${'vertical'} .state.step=${5} .state.showLabel=${'always'}></ui-slider>
 	──────────────────────────────────────────────────────────────────────
 */
-import { html, list, WebComponent } from 'webcomponent';
+import { html, WebComponent } from 'webcomponent';
 // Auto tick marks (marks === true) are skipped past this many detents — a tiny
 // step over a huge range would stamp thousands of dots; pass an explicit marks
 // array when that many are genuinely wanted.
@@ -441,7 +441,7 @@ export class UISlider extends WebComponent {
 					@pointercancel=${this.handlePointerUp}>
 					<span class="sl-rail"></span>
 					<span class="sl-fill"></span>
-					${list('markItems', this.markNode, this.markKey)}
+					${this.list('markItems', this.markNode, this.markKey)}
 					<button #thumbmain class="sl-thumb" type="button"
 						data-thumb=${this.mainKey} role="slider"
 						aria-orientation=${this.state.orientation}

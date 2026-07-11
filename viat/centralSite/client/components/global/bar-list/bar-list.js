@@ -9,7 +9,7 @@
 	  ]} .state.tone=${'accent'}></ui-bar-list>
 	─────────────────────────────────────────────────────────────────────
 */
-import { html, list, WebComponent } from 'webcomponent';
+import { html, WebComponent } from 'webcomponent';
 const TONES = new Set([
 	'accent',
 	'success',
@@ -63,7 +63,7 @@ export class UIBarList extends WebComponent {
 	render() {
 		this.html `
 			<ol class="bl" data-tone=${this.toneClass}>
-				${list('items', this.barRow)}
+				${this.list('items', this.barRow)}
 			</ol>
 		`;
 	}

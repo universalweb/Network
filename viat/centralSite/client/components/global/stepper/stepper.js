@@ -1,12 +1,17 @@
 /*
 	DESCRIPTION: ui-stepper — a multi-step WIZARD progress indicator (MUI "Stepper").
-	DISTINCT from ui-number-stepper (the ±  amount control). Renders numbered nodes +
+	DISTINCT from ui-number-stepper (the ± amount control). Renders numbered nodes +
 	connectors with done/active/error states; in `linear` mode you can only step back
 	to completed nodes, never jump ahead. Indicator only — the consumer owns the step
-	panels and advances `active`. Native buttons + unicode glyphs (✓ done, ! error) as
-	a pure string, so nothing renders blank.
+	panels and advances `activeIndex`.
+	Items render via `list('items', this.stepRow)` (light html rows — auto-escaped
+	labels/descriptions; no escapeHtml / `^html` string builder). Connectors are
+	positional CSS (`:not(:last-child)::after`), not per-item list entries.
+	Shared single-select chrome (`status` / `glyph` / `canClick`) is written onto
+	the bound items at observe-time (tabs pattern) so list rows patch without a
+	per-render enrichment map.
 	── EVENTS ───────────────────────────────────────────────────────────
-	  step:change { index }
+	  stepper:change { index }
 	── USAGE ────────────────────────────────────────────────────────────
 	  <ui-stepper .state.activeIndex=${1} .state.items=${[
 	    { label: 'Account' },
@@ -15,17 +20,7 @@
 	  ]} @stepper:change=${e => goStep(e.detail.data.index)}></ui-stepper>
 	──────────────────────────────────────────────────────────────────────
 */
-import { WebComponent } from '../../core/index.js';
-const esc = (value) => {
-	return String(value).replace(/[&<>"]/g, (char) => {
-		return {
-			'&': '&amp;',
-			'<': '&lt;',
-			'>': '&gt;',
-			'"': '&quot;',
-		}[char];
-	});
-};
+import { html, WebComponent } from 'webcomponent';
 export class UIStepper extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -38,6 +33,47 @@ export class UIStepper extends WebComponent {
 		linear: true,
 		clickable: true,
 	};
+	onConnect() {
+		this.observe('activeIndex', this.syncStepMeta);
+		this.observe('items', this.syncStepMeta);
+		this.observe('linear', this.syncStepMeta);
+		this.observe('clickable', this.syncStepMeta);
+		this.syncStepMeta();
+	}
+	/* Deep-write display flags onto bound items (tabs-style). List rows patch via
+	   the items key; never a per-render map in render(). */
+	syncStepMeta() {
+		const items = this.state.items;
+		if (!Array.isArray(items)) {
+			return;
+		}
+		const active = Number(this.state.activeIndex) || 0;
+		const count = items.length;
+		const clickable = this.state.clickable;
+		const linear = this.state.linear;
+		for (let index = 0; index < count; index += 1) {
+			const step = items[index];
+			let status = 'upcoming';
+			if (step.error) {
+				status = 'error';
+			} else if (index < active) {
+				status = 'done';
+			} else if (index === active) {
+				status = 'active';
+			}
+			step.status = status;
+			step.stepIndex = index;
+			let glyph = String(index + 1);
+			if (status === 'done') {
+				glyph = '✓';
+			} else if (status === 'error') {
+				glyph = '!';
+			}
+			step.glyph = glyph;
+			step.canClick = clickable && (!linear || index <= active);
+			step.connectorDone = index < active;
+		}
+	}
 	goTo(index) {
 		if (index === this.state.activeIndex) {
 			return;
@@ -61,45 +97,32 @@ export class UIStepper extends WebComponent {
 		}
 		this.goTo(Number(button.dataset.step));
 	}
+	/* Light html row — plain values only (nested html`` stringifies as TEXT). */
+	stepRow(item) {
+		const optionalLabel = item.optional ? 'Optional' : '';
+		const description = item.description || '';
+		return html`<li class="st-item" data-status=${item.status || 'upcoming'} data-connector=${item.connectorDone ? 'done' : 'upcoming'}>
+			<button type="button" class="st-step" data-step=${item.stepIndex}
+				?disabled=${!item.canClick}
+				aria-current=${item.status === 'active' ? 'step' : false}>
+				<span class="st-node" aria-hidden="true">${item.glyph}</span>
+				<span class="st-text">
+					<span class="st-label">${item.label}</span>
+					<span class="st-optional" ?hidden=${!optionalLabel}>${optionalLabel}</span>
+					<span class="st-desc" ?hidden=${!description}>${description}</span>
+				</span>
+			</button>
+		</li>`;
+	}
+	stepKey(item, index) {
+		return item.id ?? item.label ?? index;
+	}
 	render() {
-		this.html `
+		this.html`
 			<ol class="stepper" data-orientation=${this.state.orientation} @click=${this.handleClick}>
-				^html${this.renderSteps}
+				${this.list('items', this.stepRow, this.stepKey)}
 			</ol>
 		`;
-	}
-	renderSteps() {
-		const steps = Array.isArray(this.state.items) ? this.state.items : [];
-		const active = Number(this.state.activeIndex) || 0;
-		let markup = '';
-		for (let index = 0; index < steps.length; index += 1) {
-			const step = steps[index];
-			let status = 'upcoming';
-			if (step.error) {
-				status = 'error';
-			} else if (index < active) {
-				status = 'done';
-			} else if (index === active) {
-				status = 'active';
-			}
-			const glyph = status === 'done' ? '✓' : status === 'error' ? '!' : String(index + 1);
-			const canClick = this.state.clickable && (!this.state.linear || index <= active);
-			const optional = step.optional ? '<span class="st-optional">Optional</span>' : '';
-			const description = step.description ? `<span class="st-desc">${esc(step.description)}</span>` : '';
-			markup += `<li class="st-item" data-status="${status}">
-				<button type="button" class="st-step" data-step="${index}"${canClick ? '' : ' disabled'}${index === active ? ' aria-current="step"' : ''}>
-					<span class="st-node" aria-hidden="true">${glyph}</span>
-					<span class="st-text">
-						<span class="st-label">${esc(step.label)}</span>
-						${optional}${description}
-					</span>
-				</button>
-			</li>`;
-			if (index < steps.length - 1) {
-				markup += `<li class="st-connector" data-status="${index < active ? 'done' : 'upcoming'}" aria-hidden="true"></li>`;
-			}
-		}
-		return markup;
 	}
 }
 customElements.define('ui-stepper', UIStepper);

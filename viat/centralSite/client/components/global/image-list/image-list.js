@@ -13,7 +13,7 @@
 	  ]} @image-list:select=${this.handleOpen}></ui-image-list>   // e.detail.data.item
 	──────────────────────────────────────────────────────────────────────
 */
-import { list, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 import { UIImageCell } from './image-cell.js';
 export class UIImageList extends WebComponent {
 	static url = import.meta.url;
@@ -55,7 +55,7 @@ export class UIImageList extends WebComponent {
 		const style = `grid-template-columns: repeat(${Number(this.state.columns) || 3}, 1fr); gap: ${this.state.gap}; --il-aspect: ${this.state.aspect};`;
 		this.html`
 			<div class="image-list" data-radius=${this.state.radius} style=${style} @image-cell:select=${this.handleSelect}>
-				${list('items', UIImageCell, this.itemKey)}
+				${this.list('items', UIImageCell, this.itemKey)}
 				<slot></slot>
 			</div>
 		`;

@@ -1,7 +1,17 @@
 import '../../global/modal/modal.js';
 import '../../global/tabs/tabs.js';
-import { WebComponent } from 'webcomponent';
+import { html, WebComponent } from 'webcomponent';
 import { getTheme, setTheme, THEMES } from '../../global/theme-select/theme-manager.js';
+function themesAsOptions() {
+	const items = [];
+	for (const theme of THEMES.values()) {
+		items.push({
+			id: theme.id,
+			label: theme.label,
+		});
+	}
+	return items;
+}
 const SECTIONS = [
 	{
 		id: 'profile',
@@ -50,6 +60,9 @@ export class SettingsModal extends WebComponent {
 		displayName: '',
 		handle: '',
 		themeId: getTheme(),
+		themeOptions: themesAsOptions(),
+		walletRows: [],
+		profileOptions: [],
 	};
 	onConnect() {
 		this.delegate('wallet:saved', this.handleWalletSaved);
@@ -60,6 +73,83 @@ export class SettingsModal extends WebComponent {
 			this.syncProfileDrafts(nextProfile ?? {});
 		});
 		this.syncProfileDrafts(this.getProfile());
+		this.syncWalletRows();
+		this.syncProfileOptions();
+	}
+	themeOption(item) {
+		return html`<option value=${item.id}>${item.label}</option>`;
+	}
+	themeKey(item) {
+		return item.id;
+	}
+	syncWalletRows() {
+		const info = this.getWalletInfo();
+		this.state.walletRows = [
+			{
+				id: 'address',
+				label: 'Address',
+				value: info.address,
+			},
+			{
+				id: 'publicKey',
+				label: 'Public key (ed25519)',
+				value: info.publicKey,
+			},
+			{
+				id: 'trapdoorPublicKey',
+				label: 'Trapdoor public key (ML-DSA-44)',
+				value: info.trapdoorPublicKey,
+			},
+			{
+				id: 'trapdoorHash',
+				label: 'Trapdoor hash',
+				value: info.trapdoorHash,
+			},
+			{
+				id: 'label',
+				label: 'Label',
+				value: info.label,
+			},
+			{
+				id: 'walletSavedAt',
+				label: 'Saved at',
+				value: info.walletSavedAt,
+			},
+		];
+	}
+	walletRow(item) {
+		const display = item.value ? item.value : '—';
+		const className = item.value ? 'sm-readout is-copyable' : 'sm-readout';
+		return html`<div class="sm-field">
+			<span class="sm-label">${item.label}</span>
+			<div class=${className} data-copy=${item.value || false}>${display}</div>
+		</div>`;
+	}
+	walletRowKey(item) {
+		return item.id;
+	}
+	syncProfileOptions() {
+		const profiles = this.getWalletInfo().savedProfiles ?? [];
+		const next = [
+			{
+				id: '',
+				label: '— select saved profile —',
+			},
+		];
+		const count = profiles.length;
+		for (let index = 0; index < count; index += 1) {
+			next.push({
+				id: profiles[index],
+				label: profiles[index],
+			});
+		}
+		this.state.profileOptions = next;
+	}
+	profileOption(item) {
+		return html`<option value=${item.id}>${item.label}</option>`;
+	}
+	profileKey(item) {
+		return item.id || '__empty';
 	}
 	syncProfileDrafts(profile) {
 		const nextDisplay = profile.displayName ?? '';
@@ -153,6 +243,8 @@ export class SettingsModal extends WebComponent {
 		const profileName = domEvent.detail?.data?.profileName ?? '';
 		this.setStatus('success', `Saved as profile "${profileName}".`);
 		this.notify(`Saved wallet profile "${profileName}"`);
+		this.syncProfileOptions();
+		this.syncWalletRows();
 	}
 	handleWalletDeletedLocal(domEvent) {
 		const profileName = domEvent.detail?.data?.profileName ?? '';
@@ -160,6 +252,7 @@ export class SettingsModal extends WebComponent {
 		if (this.state.selectedProfile === profileName) {
 			this.state.selectedProfile = '';
 		}
+		this.syncProfileOptions();
 	}
 	handleWalletState(domEvent) {
 		const phase = domEvent.detail?.data?.phase;
@@ -172,6 +265,8 @@ export class SettingsModal extends WebComponent {
 			this.setStatus('error', errorMessage || 'Operation failed.');
 		}
 		this.state.busy = false;
+		this.syncWalletRows();
+		this.syncProfileOptions();
 	}
 	handleProfileSave() {
 		this.emit('profile:update', {
@@ -319,20 +414,17 @@ export class SettingsModal extends WebComponent {
 	}
 	tabsList = SECTIONS;
 	renderStatus() {
-		return this.htmlElement `
-			<div class="${() => {
+		return this.htmlElement`
+			<div class=${() => {
 				return `sm-status tone-${this.state.statusTone || 'idle'}${this.state.statusMessage ? ' is-visible' : ''}`;
-			}}">${this.state.statusMessage}</div>
+			}}>${this.state.statusMessage}</div>
 		`;
 	}
 	renderProfileSection() {
 		const address = this.getWalletInfo().address ?? '';
 		const shortAddress = address && address.length > 18 ? `${address.slice(0, 16)}…` : address;
 		const placeholderText = shortAddress ? `defaults to wallet address (${shortAddress})` : 'defaults to wallet address';
-		const themeOptions = [...THEMES.values()].map((themeEntry) => {
-			return `<option value="${themeEntry.id}">${themeEntry.label}</option>`;
-		}).join('');
-		return this.htmlElement `
+		return this.htmlElement`
 			<div class="sm-section">
 				<header class="sm-section-head">
 					<span class="sm-section-id">PROFILE</span>
@@ -346,7 +438,7 @@ export class SettingsModal extends WebComponent {
 						class="sm-input"
 						spellcheck="false"
 						autocomplete="off"
-						placeholder="${placeholderText}"
+						placeholder=${placeholderText}
 						$value="displayName">
 				</label>
 				<label class="sm-field">
@@ -356,12 +448,12 @@ export class SettingsModal extends WebComponent {
 						class="sm-input"
 						spellcheck="false"
 						autocomplete="off"
-						placeholder="${placeholderText}"
+						placeholder=${placeholderText}
 						$value="handle">
 				</label>
 				<label class="sm-field">
 					<span class="sm-label">THEME</span>
-					<select class="sm-input" $value="themeId" @change=${this.handleThemeChange}>^html${themeOptions}</select>
+					<select class="sm-input" $value="themeId" @change=${this.handleThemeChange}>${this.list('themeOptions', this.themeOption, this.themeKey)}</select>
 				</label>
 				<p class="sm-copy">Theme is applied immediately and saved with the profile — when a wallet is loaded the theme follows it.</p>
 				<div class="sm-actions">
@@ -372,37 +464,20 @@ export class SettingsModal extends WebComponent {
 		`;
 	}
 	renderWalletViewSection() {
-		const info = this.getWalletInfo();
-		const rows = [
-			['Address', info.address],
-			['Public key (ed25519)', info.publicKey],
-			['Trapdoor public key (ML-DSA-44)', info.trapdoorPublicKey],
-			['Trapdoor hash', info.trapdoorHash],
-			['Label', info.label],
-			['Saved at', info.walletSavedAt],
-		];
-		const rowItems = rows.map(([
-			label,
-			value,
-		]) => {
-			const display = value ? value : '—';
-			const copyAttr = value ? ` data-copy="${value}"` : '';
-			const cls = value ? 'sm-readout is-copyable' : 'sm-readout';
-			return `<div class="sm-field"><span class="sm-label">${label}</span><div class="${cls}"${copyAttr}>${display}</div></div>`;
-		}).join('');
-		return this.htmlElement `
+		this.syncWalletRows();
+		return this.htmlElement`
 			<div class="sm-section">
 				<header class="sm-section-head">
 					<span class="sm-section-id">WALLET</span>
 					<span class="sm-section-title">// PROPERTIES (CLICK TO COPY)</span>
 				</header>
 				<p class="sm-copy">Public projection of the active wallet. Private keys and seeds stay in memory on the app instance and are never written to global state.</p>
-				<div class="sm-grid" @click=${this.handleCopy}>^html${rowItems}</div>
+				<div class="sm-grid" @click=${this.handleCopy}>${this.list('walletRows', this.walletRow, this.walletRowKey)}</div>
 			</div>
 		`;
 	}
 	renderWalletCreateSection() {
-		return this.htmlElement `
+		return this.htmlElement`
 			<div class="sm-section">
 				<header class="sm-section-head">
 					<span class="sm-section-id">CREATE</span>
@@ -465,7 +540,7 @@ export class SettingsModal extends WebComponent {
 		} else if (profile.displayName) {
 			placeholderName = `defaults to "${profile.displayName}"`;
 		}
-		return this.htmlElement `
+		return this.htmlElement`
 			<div class="sm-section">
 				<header class="sm-section-head">
 					<span class="sm-section-id">SAVE</span>
@@ -479,7 +554,7 @@ export class SettingsModal extends WebComponent {
 						class="sm-input"
 						spellcheck="false"
 						autocomplete="off"
-						placeholder="${placeholderName}"
+						placeholder=${placeholderName}
 						$value="saveName">
 				</label>
 				<label class="sm-field">
@@ -516,7 +591,7 @@ export class SettingsModal extends WebComponent {
 						autocomplete="off"
 						readonly
 						placeholder="encrypted wallet output appears here after export"
-						data-copy="${this.state.saveResult}"
+						data-copy=${this.state.saveResult}
 						.value=${this.state.saveResult}
 						@click=${this.handleCopy}></textarea>
 				</label>
@@ -525,17 +600,13 @@ export class SettingsModal extends WebComponent {
 		`;
 	}
 	renderWalletLoadSection() {
-		const info = this.getWalletInfo();
-		const profiles = info.savedProfiles ?? [];
 		// Note: do NOT read `this.state.selectedProfile` here — it would mark
 		// selectedProfile as a render dep, causing the section to rebuild on
 		// every dropdown change and unfocus inputs. The $value bind on <select>
 		// applies the value programmatically, which natively highlights the
 		// matching <option>.
-		const profileOptions = ['<option value="">— select saved profile —</option>'].concat(profiles.map((profileName) => {
-			return `<option value="${profileName}">${profileName}</option>`;
-		})).join('');
-		return this.htmlElement `
+		this.syncProfileOptions();
+		return this.htmlElement`
 			<div class="sm-section">
 				<header class="sm-section-head">
 					<span class="sm-section-id">LOAD</span>
@@ -544,7 +615,7 @@ export class SettingsModal extends WebComponent {
 				<p class="sm-copy">Load a saved wallet from localStorage by profile name, or paste a wallet payload (JSON or base64 CBOR — format auto-detected).</p>
 				<label class="sm-field">
 					<span class="sm-label">SAVED PROFILES</span>
-					<select class="sm-input" $value="selectedProfile">^html${profileOptions}</select>
+					<select class="sm-input" $value="selectedProfile">${this.list('profileOptions', this.profileOption, this.profileKey)}</select>
 				</label>
 				<label class="sm-field">
 					<span class="sm-label">PASSWORD</span>
@@ -589,7 +660,7 @@ export class SettingsModal extends WebComponent {
 		`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<ui-modal #modal class="sm-modal" .state=${{
 				modal: true,
 				open: false,

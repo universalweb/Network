@@ -1,5 +1,5 @@
 import '../bar/bar.js';
-import { filter, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 import { IconButtonBase } from '../icon-button/icon-button.js';
 /*
  * `<ui-app-bar>` — the global top bar. Pure chrome: a fixed-top `<header>`
@@ -28,7 +28,7 @@ export class UIAppBar extends WebComponent {
 					<slot slot="center" name="center"></slot>
 					<div slot="end" class="app-bar-end">
 						<slot name="end"></slot>
-						${filter('items', IconButtonBase, 'hidden')}
+						${this.filter('items', IconButtonBase, 'hidden')}
 					</div>
 				</ui-bar>
 			</header>

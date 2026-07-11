@@ -1,4 +1,4 @@
-import { WebComponent } from '../../core/index.js';
+import { html, WebComponent } from '../../core/index.js';
 export class UISkeleton extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -10,29 +10,40 @@ export class UISkeleton extends WebComponent {
 		radius: '0.25rem',
 		variant: 'text',
 		width: '100%',
+		// Structural line keys for list() — rebuilt when lines/variant change.
+		lineItems: [],
 	};
-	/* Raw placeholder markup (pure display, no interactivity) → an `^html` string is
-	   correct here; a list()/child would be overkill for non-reactive bars. Multi-line
-	   text variant taper the last line to 70%; every other variant is a single bar at
-	   the requested width. Called as a bare method ref, so its state reads are tracked. */
-	renderMarkup() {
-		const {
-			variant, lines, width, height, radius,
-		} = this.state;
-		if (variant !== 'text' || lines <= 1) {
-			return `<span class="skeleton-line" style="width:${width};height:${height};border-radius:${radius}"></span>`;
+	onConnect() {
+		this.observe('lines', this.syncLines);
+		this.observe('variant', this.syncLines);
+		this.syncLines();
+	}
+	/* Pure-display bars: list of light rows (no ^html string builder). Multi-line
+	   text variant tapers the last line to 70%; other variants are one bar. */
+	syncLines() {
+		const multi = this.state.variant === 'text' && Number(this.state.lines) > 1;
+		const count = multi ? Math.max(1, Number(this.state.lines) || 1) : 1;
+		const next = [];
+		for (let index = 0; index < count; index += 1) {
+			next.push({
+				id: index,
+				taper: multi && index === count - 1,
+			});
 		}
-		let markup = '';
-		for (let index = 0; index < lines; index++) {
-			const lineWidth = index === lines - 1 ? '70%' : '100%';
-			markup += `<span class="skeleton-line" style="width:${lineWidth};height:${height};border-radius:${radius}"></span>`;
-		}
-		return markup;
+		this.state.lineItems = next;
+	}
+	lineRow(item) {
+		const width = item.taper ? '70%' : this.state.width;
+		const style = `width:${width};height:${this.state.height};border-radius:${this.state.radius}`;
+		return html`<span class="skeleton-line" style=${style}></span>`;
+	}
+	lineKey(item) {
+		return item.id;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="skeleton" data-variant=${this.state.variant} aria-busy="true" aria-live="polite">
-				^html${this.renderMarkup}
+				${this.list('lineItems', this.lineRow, this.lineKey)}
 			</div>
 		`;
 	}

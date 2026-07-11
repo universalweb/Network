@@ -1,5 +1,5 @@
 import '../bar/bar.js';
-import { filter, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 import { UIStatusCell } from './status-cell.js';
 // `<ui-status-bar>` — a bottom-fixed status bar. Composes `<ui-bar>`: the
 // `items` config renders as `<ui-status-cell>`s in the start region; the `end`
@@ -24,7 +24,7 @@ export class UIStatusBar extends WebComponent {
 		this.html`
 			<ui-bar class="status-bar">
 				<div slot="start" class="status-cells" ?data-flat=${!this.state.dividers}>
-					${filter('items', UIStatusCell, 'hidden', this.cellKey)}
+					${this.filter('items', UIStatusCell, 'hidden', this.cellKey)}
 				</div>
 				<slot slot="end" name="end"></slot>
 			</ui-bar>

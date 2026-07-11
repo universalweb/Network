@@ -11,6 +11,8 @@ import '../components/global/sidebar/sidebar.js';
 import '../components/preview/carry-down-demo/carry-down-demo.js';
 import { html, WebComponent } from 'webcomponent';
 import { BootScreen } from '../components/global/boot-screen/boot-screen.js';
+/* Row/head CSS for <paged-list> shadow — host .demo-paged stays in preview.css. */
+const PAGED_ROW_STYLES = new URL('./preview-paged-rows.css', import.meta.url).href;
 class PreviewView extends WebComponent {
 	static id = 'preview-view';
 	static url = import.meta.url;
@@ -572,8 +574,8 @@ class PreviewView extends WebComponent {
 // top owns ONE shared object, passes it down by reference
 <demo-carry-mid .state=\${this.state.payload}></demo-carry-mid>
 
-// mid renders the shared array through list()
-render() { this.html\`\${list('items', DemoCarryLeaf)}\`; }
+// mid renders the shared array through this.list()
+render() { this.html\`\${this.list('items', DemoCarryLeaf)}\`; }
 
 // ancestor-origin deep write at the top → the leaf re-renders
 this.state.payload.items[0].tooltip = 'Wallet 1';`,
@@ -1266,6 +1268,7 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 		loadingMessage: 'Loading rows…',
 		pagingStyle: 'loadmore',
 	};
+	pagedRowStyles = PAGED_ROW_STYLES;
 	bumpClick() {
 		this.state.clickCount = this.state.clickCount + 1;
 	}
@@ -1484,10 +1487,9 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 		`;
 	}
 	pagedHead() {
-		// paged-list consumes renderHead via `^html` — it wants a raw markup
-		// STRING, not an html`` template (which would serialize to its spot form).
-		// Static markup, no interpolation, so a plain string is XSS-safe.
-		return `
+		// paged-list mounts renderHead via list('_head') — return html`` (not a
+		// raw string; not a content-spot LightTemplate dump).
+		return html`
 			<div class="demo-paged-row demo-paged-head">
 				<span class="demo-mono">#</span>
 				<span class="demo-mono">HASH</span>
@@ -3772,7 +3774,11 @@ this.state.payload.items[0].tooltip = 'Wallet 1';`,
 						radius: 'lg',
 						border: true,
 					}}>
-						<paged-list class="demo-paged" .state=${this.listConfig}></paged-list>
+						<paged-list
+							class="demo-paged"
+							.state=${this.listConfig}
+							.importStyles=${this.pagedRowStyles}
+						></paged-list>
 					</ui-surface>
 				</section>
 

@@ -45,10 +45,12 @@ import * as renderMethods from './render/render.js';
 import {
 	bind, makeGlobalProxy, makeStoreProxy, notifyAttrChange,
 } from './state/binding.js';
+import { collectionCtrl, disposeCollections } from './state/collection.js';
+import { ensureCollection } from './state/collectionEngine.js';
+import { disposeLists, listCtrl } from './state/listHandle.js';
 import * as contextMethods from './state/context.js';
 import { globalState } from './state/globalState.js';
 import * as privateStateMethods from './state/privateState.js';
-import { disposeRemoteLists, remote } from './state/remoteList.js';
 import * as stateMethods from './state/state.js';
 import * as subscriptions from './state/subscriptions.js';
 import * as sharedStyles from './styles/shared-styles.js';
@@ -65,7 +67,13 @@ import {
 	styleSheet,
 } from './styles/styleApi.js';
 import {
+	collection as collectionBinding,
+	comp,
+	each,
+	filter,
+	ifThen,
 	initTemplateRuntime,
+	list as listBinding,
 	templateCleanup,
 	templateHtml,
 	templateHtmlElement,
@@ -686,6 +694,47 @@ export class WebComponent extends HTMLElement {
 		return nextFrame();
 	}
 }
+/*
+ * Dual-mode `this.collection`:
+ *   this.collection(key)                         → handle
+ *   this.collection(key, this.state.itemsConfig)  → ensure Engine (preferred reactive bag)
+ *   this.collection(key, { loader, … })          → ensure (snapshot / { from })
+ *   this.collection(key, () => ({ … }))          → ensure (tracked factory)
+ *   this.collection(key, Row, config?)           → template binding (list + load)
+ * Free-function `import { collection }` stays the template factory only.
+ */
+function isCustomElementConstructor(source) {
+	return typeof source === 'function'
+		&& source.prototype
+		&& Object.prototype.isPrototypeOf.call(HTMLElement.prototype, source.prototype);
+}
+function collection(key, rowOrConfig, config) {
+	if (arguments.length < 2) {
+		return collectionCtrl.call(this, key);
+	}
+	// Plain config → ensure Engine.
+	if (isPlainObject(rowOrConfig)) {
+		return ensureCollection.call(this, key, rowOrConfig);
+	}
+	// Function that is NOT a custom-element class → reactive config factory.
+	// (Row classes are HTMLElement subclasses; light row fns for collection
+	// template use the 3-arg form: collection(key, rowFn, config).)
+	if (isFunction(rowOrConfig) && arguments.length === 2 && !isCustomElementConstructor(rowOrConfig)) {
+		return ensureCollection.call(this, key, rowOrConfig);
+	}
+	return collectionBinding(key, rowOrConfig, config ?? {});
+}
+/*
+ * `this.list(key)` → ListHandle (find/search/row access after mount);
+ * `this.list(key, renderFn, keyFn?)` → binding factory for templates.
+ * Free-function export stays the factory only (`import { list }`).
+ */
+function list(key, renderFn, keyFn) {
+	if (arguments.length < 2) {
+		return listCtrl.call(this, key);
+	}
+	return listBinding(key, renderFn, keyFn);
+}
 /**
  * Directly-imported instance methods folded onto the prototype below. These are
  * standalone functions (not part of a topic-file namespace) plus a few aliases
@@ -705,6 +754,21 @@ const PROTO_METHODS = {
 	 * .component / .list). Shared, stateless, no import needed in templates.
 	 */
 	bind,
+	/*
+	 * Template helpers as instance methods. Dual-mode:
+	 *   this.list(key, Row) → binding; this.list(key) → ListHandle
+	 *   this.collection(key, Row, cfg) → binding
+	 *   this.collection(key, { loader, … }) → ensure Engine (onConnect)
+	 *   this.collection(key) → load handle
+	 * Prefer these so callers only import `WebComponent`. Do NOT put
+	 * `classList` here — it would shadow the native DOM `Element.classList`.
+	 */
+	comp,
+	each,
+	filter,
+	ifThen,
+	list,
+	collection,
 	clearIntervals,
 	clearTimeouts,
 	cleanupTemplate: templateCleanup,
@@ -727,8 +791,8 @@ const PROTO_METHODS = {
 	uninstallObserver,
 	onEnv,
 	reflectViewport,
-	remote,
-	disposeRemoteLists,
+	disposeCollections,
+	disposeLists,
 	removeStyle,
 	removeTimeout: removeComponentTimeout,
 	resolveStyle,

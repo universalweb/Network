@@ -1,5 +1,5 @@
 import '../bar/bar.js';
-import { filter, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 import { IconButtonBase } from '../icon-button/icon-button.js';
 // `<ui-toolbar>` — an in-place action bar, dropped inside page content. Composes
 // `<ui-bar>` and renders its `actions` config as `<ui-icon-button>`s in the
@@ -17,7 +17,7 @@ export class UIToolbar extends WebComponent {
 		this.html `
 			<ui-bar class="toolbar" role="toolbar">
 				<div slot="center" class="toolbar-actions">
-					${filter('items', IconButtonBase, 'hidden')}
+					${this.filter('items', IconButtonBase, 'hidden')}
 				</div>
 				<slot></slot>
 			</ui-bar>

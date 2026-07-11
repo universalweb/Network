@@ -11,7 +11,7 @@
 		"experimentalDecorators": false,
 		"paths": {
 			"webcomponent": [
-				"./viat/centralSite/client/components/core/base.js"
+				"./viat/centralSite/client/components/core/index.js"
 			],
 			"#certificate": [
 				"./udsp/certificate/index.js"

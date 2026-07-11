@@ -12,7 +12,7 @@
 	current (last) crumb.
 	─────────────────────────────────────────────────────────────────────
 */
-import { html, list, WebComponent } from 'webcomponent';
+import { html, WebComponent } from 'webcomponent';
 /*
  * Separator chevron from the shared Lucide sprite (same source `ui-icon` uses).
  * Every crumb carries a leading chevron; CSS hides it on the first one
@@ -41,7 +41,7 @@ export class UIBreadcrumbs extends WebComponent {
 		this.html `
 			<nav class="bc" aria-label="Breadcrumb">
 				<ol class="bc-list">
-					${list('items', this.crumbRow)}
+					${this.list('items', this.crumbRow)}
 				</ol>
 			</nav>
 		`;

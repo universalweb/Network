@@ -101,6 +101,7 @@ agent/types/*
 .CLAUDE.MD.swp
 test.js
 .engram/
+.installation0/
 reverted-files.txt
 session-*-changes.md
 *.test.js

@@ -7,11 +7,14 @@
 	  • selectMode 'range'  → pick start → end, the span fills (emits calendar:range-change).
 	  • showEvents          → render event chips inside day cells.
 	  • density 'compact'   → tight mini layout.
+	Weekday labels + day cells render via `list()` light html rows (auto-escaped
+	chip labels; no escapeText / `^html` string builder). Grid rebuilds into
+	`state.days` / `state.weekdays` at observe-time.
 	── STANDARD USAGE ───────────────────────────────────────────────────
 	  <ui-calendar @calendar:change=${this.handlePick}></ui-calendar>
 	─────────────────────────────────────────────────────────────────────
 */
-import { WebComponent } from 'webcomponent';
+import { html, WebComponent } from 'webcomponent';
 const MONTH_NAMES = [
 	'January',
 	'February',
@@ -52,6 +55,7 @@ function orderedWeekdays(weekStart) {
 function pushCell(cells, year, month, day, inMonth, todayIso) {
 	const iso = isoOf(year, month, day);
 	cells.push({
+		id: iso,
 		day,
 		iso,
 		inMonth,
@@ -80,51 +84,55 @@ function buildMonthMatrix(year, month, weekStart, todayIso) {
 	}
 	return cells;
 }
-function escapeText(value) {
-	return String(value ?? '')
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;');
+function applyCellFlags(cell, context) {
+	cell.isSelected = !context.isRange && cell.iso === context.selected;
+	cell.isRangeStart = context.isRange && cell.iso === context.rangeStart;
+	cell.isRangeEnd = context.isRange && cell.iso === context.rangeEnd;
+	cell.isInRange = Boolean(context.isRange &&
+		context.rangeStart &&
+		context.rangeEnd &&
+		cell.iso > context.rangeStart &&
+		cell.iso < context.rangeEnd);
 }
-function buildChips(events, iso) {
-	let out = '';
-	let count = 0;
-	for (let index = 0; index < events.length; index += 1) {
-		if (events[index].date !== iso) {
+/* Flatten up to 3 event chips onto the cell as plain fields — light day rows
+   cannot nest html`` / arrays (those stringify as TEXT JSON). */
+function applyCellChips(cell, items, showEvents) {
+	cell.chip0 = '';
+	cell.chip0Tone = 'accent';
+	cell.chip1 = '';
+	cell.chip1Tone = 'accent';
+	cell.chip2 = '';
+	cell.chip2Tone = 'accent';
+	cell.hasChips = false;
+	if (!showEvents || !Array.isArray(items)) {
+		return;
+	}
+	const iso = cell.iso;
+	let slot = 0;
+	const itemCount = items.length;
+	for (let index = 0; index < itemCount; index += 1) {
+		const eventItem = items[index];
+		if (eventItem.date !== iso) {
 			continue;
 		}
-		count += 1;
-		if (count > 3) {
+		const rawTone = eventItem.tone || 'accent';
+		const tone = TONE_TOKEN.test(rawTone) ? rawTone : 'accent';
+		const label = eventItem.label || '';
+		if (slot === 0) {
+			cell.chip0 = label;
+			cell.chip0Tone = tone;
+		} else if (slot === 1) {
+			cell.chip1 = label;
+			cell.chip1Tone = tone;
+		} else {
+			cell.chip2 = label;
+			cell.chip2Tone = tone;
+			slot = 3;
 			break;
 		}
-		const rawTone = events[index].tone || 'accent';
-		const tone = TONE_TOKEN.test(rawTone) ? rawTone : 'accent';
-		out += `<span class="cal-chip" data-tone="${tone}">${escapeText(events[index].label)}</span>`;
+		slot += 1;
 	}
-	return out ? `<span class="cal-chips">${out}</span>` : '';
-}
-// Per-cell selection/decoration flags. Kept out of gridHtml so the grid loop
-// stays a simple assembler (and under the cognitive-complexity bar).
-function cellFlags(cell, context) {
-	let flags = cell.inMonth ? '' : ' data-out';
-	if (cell.isToday) {
-		flags += ' data-today';
-	}
-	if (context.isRange) {
-		if (cell.iso === context.rangeStart) {
-			flags += ' data-range-start';
-		}
-		if (cell.iso === context.rangeEnd) {
-			flags += ' data-range-end';
-		}
-		if (context.rangeStart && context.rangeEnd && cell.iso > context.rangeStart && cell.iso < context.rangeEnd) {
-			flags += ' data-in-range';
-		}
-	} else if (cell.iso === context.selected) {
-		flags += ' data-selected';
-	}
-	return flags;
+	cell.hasChips = slot > 0;
 }
 export class UICalendar extends WebComponent {
 	static url = import.meta.url;
@@ -142,6 +150,8 @@ export class UICalendar extends WebComponent {
 		rangeStart: '',
 		rangeEnd: '',
 		items: [],
+		weekdays: [],
+		days: [],
 	};
 	onConnect() {
 		if (!this.state.viewYear) {
@@ -151,6 +161,16 @@ export class UICalendar extends WebComponent {
 				viewMonth: now.getMonth(),
 			});
 		}
+		this.observe('viewYear', this.syncGrid);
+		this.observe('viewMonth', this.syncGrid);
+		this.observe('weekStart', this.syncGrid);
+		this.observe('value', this.syncGrid);
+		this.observe('rangeStart', this.syncGrid);
+		this.observe('rangeEnd', this.syncGrid);
+		this.observe('selectMode', this.syncGrid);
+		this.observe('showEvents', this.syncGrid);
+		this.observe('items', this.syncGrid);
+		this.syncGrid();
 	}
 	todayIso() {
 		const now = new Date();
@@ -158,6 +178,41 @@ export class UICalendar extends WebComponent {
 	}
 	monthTitle() {
 		return `${MONTH_NAMES[this.state.viewMonth] || ''} ${this.state.viewYear}`;
+	}
+	syncGrid() {
+		const weekStart = this.state.weekStart;
+		const labels = orderedWeekdays(weekStart);
+		const weekdays = [];
+		for (let index = 0; index < labels.length; index += 1) {
+			weekdays.push({
+				id: index,
+				label: labels[index],
+			});
+		}
+		const matrix = buildMonthMatrix(
+			this.state.viewYear,
+			this.state.viewMonth,
+			weekStart,
+			this.todayIso()
+		);
+		const context = {
+			selected: this.state.value,
+			rangeStart: this.state.rangeStart,
+			rangeEnd: this.state.rangeEnd,
+			isRange: this.state.selectMode === 'range',
+		};
+		const showEvents = this.state.showEvents;
+		const items = this.state.items;
+		const matrixLength = matrix.length;
+		for (let index = 0; index < matrixLength; index += 1) {
+			const cell = matrix[index];
+			applyCellFlags(cell, context);
+			applyCellChips(cell, items, showEvents);
+		}
+		this.assignState({
+			weekdays,
+			days: matrix,
+		});
 	}
 	shiftMonth(delta) {
 		let month = this.state.viewMonth + delta;
@@ -188,7 +243,8 @@ export class UICalendar extends WebComponent {
 		});
 	}
 	handleGridClick(domEvent) {
-		const iso = domEvent.target?.dataset?.iso;
+		const button = domEvent.target.closest('button.cal-cell');
+		const iso = button?.dataset?.iso;
 		if (!iso) {
 			return;
 		}
@@ -230,39 +286,37 @@ export class UICalendar extends WebComponent {
 			to: this.state.rangeEnd,
 		});
 	}
-	weekdayHtml() {
-		const labels = orderedWeekdays(this.state.weekStart);
-		let out = '';
-		for (let index = 0; index < labels.length; index += 1) {
-			out += `<span class="cal-wd">${labels[index]}</span>`;
-		}
-		return out;
+	weekdayRow(item) {
+		return html`<span class="cal-wd">${item.label}</span>`;
 	}
-	gridHtml() {
-		const matrix = buildMonthMatrix(this.state.viewYear, this.state.viewMonth, this.state.weekStart, this.todayIso());
-		const selected = this.state.value;
-		const rangeStart = this.state.rangeStart;
-		const rangeEnd = this.state.rangeEnd;
-		const context = {
-			selected,
-			rangeStart,
-			rangeEnd,
-			isRange: this.state.selectMode === 'range',
-		};
-		const events = this.state.showEvents ? this.state.items : [];
-		let markup = '';
-		for (let index = 0; index < matrix.length; index += 1) {
-			const cell = matrix[index];
-			const flags = cellFlags(cell, context);
-			const isoAttr = cell.inMonth ? ` data-iso="${cell.iso}"` : '';
-			const disabledAttr = cell.inMonth ? '' : ' disabled';
-			const chips = events.length ? buildChips(events, cell.iso) : '';
-			markup += `<button type="button" class="cal-cell"${isoAttr}${flags}${disabledAttr} aria-label="${cell.iso}"><span class="cal-num">${cell.day}</span>${chips}</button>`;
-		}
-		return markup;
+	weekdayKey(item) {
+		return item.id;
+	}
+	/* Light day row — plain values only (no nested html`` / chip arrays). */
+	dayRow(cell) {
+		return html`<button type="button" class="cal-cell"
+			data-iso=${cell.inMonth ? cell.iso : false}
+			?data-out=${!cell.inMonth}
+			?data-today=${cell.isToday}
+			?data-selected=${cell.isSelected}
+			?data-range-start=${cell.isRangeStart}
+			?data-range-end=${cell.isRangeEnd}
+			?data-in-range=${cell.isInRange}
+			?disabled=${!cell.inMonth}
+			aria-label=${cell.iso}>
+			<span class="cal-num">${cell.day}</span>
+			<span class="cal-chips" ?hidden=${!cell.hasChips}>
+				<span class="cal-chip" data-tone=${cell.chip0Tone} ?hidden=${!cell.chip0}>${cell.chip0}</span>
+				<span class="cal-chip" data-tone=${cell.chip1Tone} ?hidden=${!cell.chip1}>${cell.chip1}</span>
+				<span class="cal-chip" data-tone=${cell.chip2Tone} ?hidden=${!cell.chip2}>${cell.chip2}</span>
+			</span>
+		</button>`;
+	}
+	dayKey(cell) {
+		return cell.id;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="cal" data-density=${this.state.density} data-mode=${this.state.selectMode} ?data-events=${this.state.showEvents}>
 				<div class="cal-head">
 					<button class="cal-nav" type="button" tooltip="Previous month" aria-label="Previous month" @click=${this.handlePrev}>
@@ -274,8 +328,8 @@ export class UICalendar extends WebComponent {
 					</button>
 					<button class="cal-today" type="button" @click=${this.handleToday}>Today</button>
 				</div>
-				<div class="cal-weekdays">^html${this.weekdayHtml()}</div>
-				<div class="cal-grid" @click=${this.handleGridClick}>^html${this.gridHtml()}</div>
+				<div class="cal-weekdays">${this.list('weekdays', this.weekdayRow, this.weekdayKey)}</div>
+				<div class="cal-grid" @click=${this.handleGridClick}>${this.list('days', this.dayRow, this.dayKey)}</div>
 			</div>
 		`;
 	}

@@ -206,6 +206,11 @@
 	gap: 0.1rem;
 	min-block-size: 0;
 }
+/* flex display beats UA [hidden] — re-assert none */
+.cal-chips[hidden],
+.cal-chip[hidden] {
+	display: none;
+}
 .cal-chip {
 	overflow: hidden;
 	padding: 0.05rem 0.3rem;

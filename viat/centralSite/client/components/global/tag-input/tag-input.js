@@ -18,7 +18,7 @@
 	    .state.max=${8} @tag-input:change=${e => save(e.detail.data.values)}></ui-tag-input>
 	──────────────────────────────────────────────────────────────────────
 */
-import { list, WebComponent } from 'webcomponent';
+import { WebComponent } from 'webcomponent';
 import { UIChip } from '../chip/chip.js';
 export class UITagInput extends WebComponent {
 	static url = import.meta.url;
@@ -191,10 +191,10 @@ export class UITagInput extends WebComponent {
 		this.refs.input?.focus();
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="ti" ?data-disabled=${this.state.disabled}
 				@click=${this.focusInput} @chip:remove=${this.handleChipRemove}>
-				${list('tagItems', UIChip, this.tagKey)}
+				${this.list('tagItems', UIChip, this.tagKey)}
 				<input #input class="ti-input" type="text"
 					placeholder=${this.state.placeholder}
 					?disabled=${this.state.disabled}
