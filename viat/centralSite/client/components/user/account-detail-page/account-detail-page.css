@@ -7,7 +7,9 @@
 .ad-shell {
 	display: flex;
 	flex-direction: column;
-	padding: 8.75rem var(--space-4) var(--space-12) var(--space-4);
+	/* Shared page pad — chrome clearance is on .shell-scroll, not here. */
+	padding-block: var(--page-pad-block-start) var(--page-pad-block-end);
+	padding-inline: var(--page-pad-inline);
 	gap: var(--space-5);
 	box-sizing: border-box;
 	color: var(--dark-text-medium);

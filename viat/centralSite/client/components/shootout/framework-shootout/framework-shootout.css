@@ -57,6 +57,16 @@
 	font-family: 'JetBrains Mono', ui-monospace, monospace;
 	font-size: 14px;
 }
+.controls .skip-lit {
+	cursor: pointer;
+	user-select: none;
+}
+.controls .skip-lit input {
+	accent-color: #6366f1;
+	cursor: pointer;
+	width: 14px;
+	height: 14px;
+}
 .controls button {
 	background: #1a1a24;
 	border: 1px solid rgba(99, 102, 241, 0.3);

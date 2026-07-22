@@ -1,57 +1,48 @@
-/* eslint-disable no-restricted-syntax */
 import { resolveStores } from './attrs/staticConfig.js';
 import { behaviorAttrNames, BehaviorTeardown, getBehavior } from './behaviors/index.js';
 import { defaultLogger, IS_PRODUCTION } from './debug/logger.js';
 import { Perf } from './debug/perf.js';
 import { projectPortals, removePortals } from './dom/portal.js';
 import { captureLightChildren, projectLightChildren } from './dom/projection.js';
-import { isValidRefName, registerRef } from './dom/refs.js';
+import { registerRef } from './dom/refs.js';
 import { markSpotDirty } from './lifecycle/scheduler.js';
 import {
 	addDep,
-	bind,
-	CollectionBinding,
 	CONTENT_KIND,
+	ensureRenderProxies,
 	isBindingType,
 	ListBinding,
-	makeProxy,
 	track,
 } from './state/binding.js';
-import { mountCollection } from './state/collection.js';
 import { globalRealm, storeRealm } from './state/globalState.js';
-import { resolveListFilter } from './state/listFilter.js';
-import { registerListHandle, unregisterListHandle } from './state/listHandle.js';
 import {
 	ensureStateBus,
 	linkStateCarrier,
 	localRealm,
 	STATE_PATH,
 } from './state/state.js';
+import { SPOT_KIND, SPOT_TYPE } from './template/constants.js';
 import {
-	ANCHOR_END_PREFIX,
-	ANCHOR_START_PREFIX,
-	SPOT,
-	SPOT_KIND,
-	SPOT_TYPE,
-} from './template/constants.js';
+	isCustomElementConstructor,
+	ListSpot,
+	LiveList,
+	patchListAnchored,
+	patchListKind,
+} from './template/list.js';
+import { inferBareAttrName } from './template/parser.js';
+import { getRecipe, resolveRecipeNodes } from './template/planner.js';
 import {
-	bareAttrMarkerAttribute,
-	bindMarkerAttribute,
-	buildHTML,
-	eventMarkerAttribute,
-	inferBareAttrName,
-	methodMarkerAttribute,
-	multiAttrMarkerAttribute,
-} from './template/parser.js';
+	cleanupTemplateNode,
+	clearRange,
+	Spot,
+	TEMPLATE_CLEANUP,
+} from './template/spot.js';
 import {
-	clearRealmUnsubs,
 	clearUnsubs,
-	createElementFromHTML,
 	disposeItem,
 	eachArray,
 	getValueAtPath,
 	isArrayBuffer,
-	isElement,
 	isFunction,
 	isMap,
 	isNode,
@@ -63,6 +54,13 @@ import {
 	syncSubsByDiff,
 	toBase64Url,
 } from './utilities.js';
+/*
+ * Public list surface re-exported from the list half of the split, so every
+ * pre-split importer of template.js keeps its entry point.
+ */
+export {
+	each, filter, html, list, LiveList,
+} from './template/list.js';
 const SUBEVENT_ATTRS = behaviorAttrNames();
 /**
  * Behavior-attribute attribute application. The template extractor strips the
@@ -101,10 +99,6 @@ export class ClassList {
 	isClassList = true;
 	constructor(...items) {
 		this.items = items;
-	}
-	async create(...args) {
-		const source = new ClassList(...args);
-		return source;
 	}
 }
 export function classList(...items) {
@@ -159,6 +153,23 @@ function addTokens(source, target) {
 		}
 	}
 }
+function splitClassTokens(source) {
+	const tokens = source.split(/\s+/);
+	const filtered = [];
+	const tokensLength = tokens.length;
+	for (let index = 0; index < tokensLength; index++) {
+		if (tokens[index]) {
+			filtered.push(tokens[index]);
+		}
+	}
+	return filtered;
+}
+function addTokenList(tokens, target) {
+	const tokensLength = tokens.length;
+	for (let index = 0; index < tokensLength; index++) {
+		target.add(tokens[index]);
+	}
+}
 function applyClassListItems(items, desired, deps, component) {
 	const itemsLength = items.length;
 	for (let index = 0; index < itemsLength; index++) {
@@ -171,14 +182,9 @@ function applyClassListItems(items, desired, deps, component) {
 			continue;
 		}
 		if (isFunction(item)) {
-			let evalValue;
-			if (component) {
-				const evaluated = evaluateTrackedExpression(component, item);
-				mergeDepMap(deps, evaluated.deps);
-				evalValue = evaluated.value;
-			} else {
-				evalValue = item();
-			}
+			const evaluated = evaluateTrackedExpression(component, item);
+			mergeDepMap(deps, evaluated.deps);
+			const evalValue = evaluated.value;
 			if (isString(evalValue)) {
 				addTokens(evalValue, desired);
 			} else if (evalValue) {
@@ -187,11 +193,13 @@ function applyClassListItems(items, desired, deps, component) {
 			continue;
 		}
 		if (isBindingType(item)) {
-			if (component) {
-				const keyRealm = realmForBinding(item, component);
-				addDep(deps, keyRealm.realm, keyRealm.path);
-			}
-			const value = component ? resolveBindingValueForBinding(component, item) : item.value;
+			/*
+			 * One realm resolution serves BOTH the dep record and the read —
+			 * the old shape resolved twice per Binding part per refresh.
+			 */
+			const keyRealm = realmForBinding(item, component);
+			addDep(deps, keyRealm.realm, keyRealm.path);
+			const value = keyRealm.realm.read(keyRealm.path);
 			if (isString(value)) {
 				addTokens(value, desired);
 			} else if (value) {
@@ -267,173 +275,10 @@ function diffClassList(element, current, desired) {
 		}
 	}
 }
-const TEMPLATE_CLEANUP = Symbol('templateCleanup');
 const BINDABLE_TAGS = new Set([
 	'INPUT', 'SELECT', 'TEXTAREA',
 ]);
 const BINDABLE_ATTRS = new Set(['value', 'checked']);
-function cleanupTemplateNode(node) {
-	if (!node) {
-		return;
-	}
-	const cleanup = node[TEMPLATE_CLEANUP];
-	if (!isFunction(cleanup)) {
-		return;
-	}
-	node[TEMPLATE_CLEANUP] = null;
-	cleanup(node);
-}
-/**
- * Remove every node strictly BETWEEN an anchored spot's two comment markers,
- * leaving the comments themselves in place. The anchored counterpart to a
- * wrapper's `element.textContent = ''` / `element.innerHTML =` wipe — it touches only the
- * spot's own range, never the static siblings that share the parent element.
- * `cleanupTemplateNode` runs per removed node (idempotent) so nested template
- * instances (list rows, html fragments) release their spots/subscriptions.
- */
-function clearRange(startComment, endComment) {
-	let node = startComment.nextSibling;
-	while (node && node !== endComment) {
-		const next = node.nextSibling;
-		cleanupTemplateNode(node);
-		node.remove();
-		node = next;
-	}
-}
-/**
- * ── Lightweight list rows ───────────────────────────────────────────────────
- * A list row that does NOT pay for a custom element + shadow root + async
- * lifecycle. The standalone `html` tag returns a LightTemplate {strings,
- * values}; the list clones the SHARED recipe (parsed once via getRecipe, same
- * as a component) into plain DOM and RETAINS the spots, so updates are surgical
- * textContent/attr writes — no component, no subscription, no re-parse, no
- * rebuild. ~10× cheaper to create than a full component row. For data lists
- * that need no per-row encapsulation or state; rows needing those keep the
- * `class` component kind of each()/list().
- *
- * Constraints (thrown loud, never silent):
- *   • exactly one root element per row;
- *   • value-only expressions — compute inline (`${item.value * 2}`), never
- *     `${() => …}` or a binding (those need a component's reactive graph);
- *   • no `#ref`, `$two-way`, behaviors, or `@event` spots.
- * String values render as textContent by default (XSS-safe, like everywhere in
- * UWC); opt into markup per-spot with `^html${str}` only for trusted HTML.
- */
-class LightTemplate {
-	constructor(strings, values) {
-		this.strings = strings;
-		this.values = values;
-	}
-	static is(source) {
-		return source instanceof LightTemplate;
-	}
-}
-function createRenderableElement(value) {
-	if (LightTemplate.is(value)) {
-		return instantiateLightRow(value);
-	}
-	if (isString(value)) {
-		return createElementFromHTML(value);
-	}
-	if (isElement(value)) {
-		return value;
-	}
-	throw new TypeError('List render functions must return an Element or HTML string.');
-}
-function isCustomElementConstructor(source) {
-	return isFunction(source) && source.prototype instanceof HTMLElement;
-}
-export function html(strings, ...values) {
-	return new LightTemplate(strings, values);
-}
-/*
- * root element → { spots, prevExprs }. WeakMap so a removed row's retained
- * spots clear on GC with zero bookkeeping.
- */
-const LIGHT_ROW_INSTANCES = new WeakMap();
-function assertLightTemplate(recipe, values) {
-	const valuesLength = values.length;
-	for (let valueIndex = 0; valueIndex < valuesLength; valueIndex++) {
-		const value = values[valueIndex];
-		if (isFunction(value) || isBindingType(value)) {
-			throw new TypeError('each() html row expressions must be plain values — compute inline (`${item.x * 2}`), not `${() => …}` or a binding.');
-		}
-	}
-	if ((recipe?.refPlans?.length) || (recipe?.dataBindPlans?.length) || (recipe?.subeventPlans?.length)) {
-		throw new TypeError('each() html row does not support #refs, two-way bindings, or behaviors — use the component (class) kind for those.');
-	}
-}
-function instantiateLightRow(lightTemplate) {
-	const recipe = getRecipe(lightTemplate.strings);
-	const values = lightTemplate.values;
-	assertLightTemplate(recipe, values);
-	const fragment = recipe.fragment.cloneNode(true);
-	const spotPlans = recipe.spotPlans;
-	const spots = [];
-	/*
-	 * Two-phase (see instantiateRecipe): resolve all nodes on the pristine clone
-	 * before any anchored install shifts child indices, then install.
-	 */
-	const spotResolved = new Array(spotPlans.length);
-	const spotPlansLength = spotPlans.length;
-	for (let spotIndex = 0; spotIndex < spotPlansLength; spotIndex++) {
-		spotResolved[spotIndex] = resolveSpotNode(spotPlans[spotIndex], fragment);
-	}
-	for (let spotIndex = 0; spotIndex < spotPlansLength; spotIndex++) {
-		const spot = installSpotFromPlan(spotPlans[spotIndex], spotResolved[spotIndex], values, null);
-		if (spot) {
-			spots.push(spot);
-		}
-	}
-	if (fragment.children.length !== 1) {
-		throw new TypeError('each() html row must have exactly one root element.');
-	}
-	const root = fragment.firstElementChild;
-	LIGHT_ROW_INSTANCES.set(root, {
-		spots,
-		prevExprs: values.slice(),
-	});
-	return root;
-}
-function patchLightRow(element, lightTemplate) {
-	const instance = LIGHT_ROW_INSTANCES.get(element);
-	if (!instance) {
-		return false;
-	}
-	updateTemplateSpots(instance, lightTemplate.values, null);
-	return true;
-}
-function resolveRenderKind(renderFn) {
-	if (isString(renderFn)) {
-		return 'tag';
-	}
-	if (isCustomElementConstructor(renderFn)) {
-		return 'class';
-	}
-	return 'fn';
-}
-function createListElementByKind(kind, renderFn, item, component) {
-	if (kind === 'tag') {
-		const element = document.createElement(renderFn);
-		element.state = item;
-		return element;
-	}
-	if (kind === 'class') {
-		/*
-		 * `renderFn` is the caller-supplied list constructor (the `each()` render
-		 * arg) — a dynamic class whose lowercase binding name we don't control.
-		 */
-		// eslint-disable-next-line new-cap
-		return new renderFn(item);
-	}
-	/*
-	 * A `'fn'` row renderer is called with the owning component as `this`, so a
-	 * bare method ref (`this.txRow`) reads component state/helpers — same
-	 * semantics as a bare-method-ref content spot. `.call(undefined, …)` when
-	 * the list has no connected spot yet is just a plain call.
-	 */
-	return createRenderableElement(renderFn.call(component, item));
-}
 class ComponentBinding {
 	constructor(value) {
 		this.value = value;
@@ -445,141 +290,18 @@ class ComponentBinding {
 export function comp(value) {
 	return new ComponentBinding(value);
 }
-function liveListItemKey(item, index) {
-	return index;
-}
-export class LiveList {
-	items = [];
-	renderFn;
-	keyFn;
-	kind = null;
-	spot = null;
-	constructor(renderFn, keyFn = liveListItemKey) {
-		this.renderFn = renderFn;
-		this.keyFn = keyFn;
-		this.kind = resolveRenderKind(renderFn);
-	}
-	get length() {
-		return this.items.length;
-	}
-	static isLiveList(source) {
-		return source instanceof LiveList;
-	}
-	connectSpot(spot) {
-		this.spot = spot;
-	}
-	disconnectSpot() {
-		this.spot = null;
-	}
-	createElement(item) {
-		return createListElementByKind(this.kind, this.renderFn, item, this.spot?.component);
-	}
-	splice(start, deleteCount = 0, ...newItems) {
-		const currentLength = this.items.length;
-		const normalStart = start < 0 ? Math.max(0, currentLength + start) : Math.min(start, currentLength);
-		const refItem = this.items[normalStart + deleteCount];
-		const refKey = refItem === undefined ? null : this.keyFn(refItem, normalStart + deleteCount);
-		const refElement = this.spot && refKey !== null ? (this.spot.keyMap?.get(refKey) ?? null) : null;
-		if (this.spot) {
-			for (let deleteIndex = normalStart; deleteIndex < normalStart + deleteCount && deleteIndex < currentLength; deleteIndex++) {
-				const itemKey = this.keyFn(this.items[deleteIndex], deleteIndex);
-				const element = this.spot.keyMap?.get(itemKey);
-				cleanupTemplateNode(element);
-				element?.remove();
-				this.spot.keyMap?.delete(itemKey);
-				this.spot.prevItemMap?.delete(itemKey);
-			}
-		}
-		this.items.splice(normalStart, deleteCount, ...newItems);
-		if (newItems.length && this.spot) {
-			const fragment = document.createDocumentFragment();
-			this.spot.keyMap ??= new Map();
-			this.spot.prevItemMap ??= new Map();
-			const newItemsLength = newItems.length;
-			for (let insertIndex = 0; insertIndex < newItemsLength; insertIndex++) {
-				const newItem = newItems[insertIndex];
-				const itemKey = this.keyFn(newItem, normalStart + insertIndex);
-				const element = this.createElement(newItem);
-				this.spot.keyMap.set(itemKey, element);
-				this.spot.prevItemMap.set(itemKey, newItem);
-				fragment.append(element);
-			}
-			const container = this.spot.anchored ? this.spot.startComment.parentNode : this.spot.element;
-			const tail = this.spot.anchored ? this.spot.endComment : null;
-			container.insertBefore(fragment, refElement ?? tail);
-		}
-		return this;
-	}
-	push(...items) {
-		return this.splice(this.items.length, 0, ...items);
-	}
-	unshift(...items) {
-		return this.splice(0, 0, ...items);
-	}
-	pop() {
-		return this.items.length ? this.splice(this.items.length - 1, 1) : this;
-	}
-	shift() {
-		return this.items.length ? this.splice(0, 1) : this;
-	}
-	[Symbol.iterator]() {
-		return this.items[Symbol.iterator]();
-	}
-}
-function defaultEachKeyFn(item, index) {
-	return index;
-}
-export function each(items, renderFn, keyFn = defaultEachKeyFn) {
-	const listItem = new LiveList(renderFn, keyFn);
-	if (Array.isArray(items) && items.length) {
-		/*
-		 * Own a shallow copy directly. The fresh LiveList has no spot yet, so
-		 * `push(...items)` would only populate `items` anyway — but the spread
-		 * passes N args through splice (cost scales with N: ~10µs/call @5k); a
-		 * native slice is far cheaper and the copy keeps imperative liveList
-		 * mutations off the caller's array.
-		 */
-		listItem.items = items.slice();
-	}
-	return listItem;
-}
-function defaultListKeyFn(item, index) {
-	return item?.key ?? item?.id ?? index;
-}
-export function list(key, renderFn, keyFn = defaultListKeyFn) {
-	return new ListBinding(key, renderFn, keyFn);
-}
-/**
- * `filter(stateKey, ChildClass, test, keyFn?)` — `list()` plus a predicate. Only
- * the items `test` keeps are rendered; the filtered view is recomputed whenever
- * the bound array changes. `test` is a keep-predicate `(item) => boolean` or a
- * string flag name to hide on (`'hidden'`). Auto-keys by `key ?? id ?? index`,
- * exactly like `list`; `list` itself stays filter-free and light.
+/*
+ * Sync hand-off from a ComputedSpot refresh to an evaluating ifThen thunk.
+ * The branch-node cache must live on the SPOT: every render pass re-runs
+ * `${ifThen(...)}` and mints a fresh thunk, so closure-held cache state dies
+ * with it — after any full re-render the next condition flip would
+ * re-instantiate its branch component (lifecycle churn + lost branch state).
+ * Tracking windows are synchronous, so a module slot set for the duration of
+ * one evaluation cannot interleave; evaluateTrackedExpression resets it on
+ * every entry, so a throwing expression cannot leak a stale spot into a
+ * later evaluation.
  */
-export function filter(key, renderFn, test, keyFn = defaultListKeyFn) {
-	return new ListBinding(key, renderFn, keyFn, resolveListFilter(test));
-}
-function autoKey(item, index) {
-	return item?.key ?? item?.id ?? index;
-}
-/**
- * `collection(key, renderFn, config)` — `list()` plus an async load controller
- * (infinite-scroll and/or a load-more button + spinner). Renders identically to
- * `list()`/`filter()` (same `ListSpot`; `renderFn` is a bare method ref or a
- * component class; `config.filter` reuses the `filter()` predicate verbatim). The
- * template mount-hook attaches a `CollectionController` that drives `config.loader`
- * ({reset, cursor, signal}) → {items, nextCursor, hasMore}), appends pages into
- * `state[key]`, and exposes `this.collection(key)` for `reset()` / `loadMore()`.
- * @param {string} key - State key holding the items array.
- * @param {Function|CustomElementConstructor} renderFn - Row method ref or component class.
- * @param {object} config - `{ loader, mode, auto, filter, keyFn, spinner, loadMore, prefetch, dedupe, scroller, scrollReport }`.
- * @returns {CollectionBinding} The binding to interpolate in the template.
- */
-export function collection(key, renderFn, config = {}) {
-	const keyFn = config.keyFn ?? autoKey;
-	const filterFn = config.filter === undefined ? null : resolveListFilter(config.filter);
-	return new CollectionBinding(key, renderFn, keyFn, filterFn, config);
-}
+let ifThenHostSpot = null;
 /* Resolve an `ifThen` branch to a value the content-kind dispatch understands. A
    value passes straight through (text/empty, equality-guarded by patchTextStrict);
    a component class is instantiated ONCE and cached, so a re-evaluation that did
@@ -607,6 +329,11 @@ function resolveIfThenBranch(branch, branchNodes) {
 	}
 	throw new TypeError('ifThen() branch must be a value (string/number/boolean/null), a component class, or built content (Node/comp()/list). For reactive branch markup, use a component class — a raw inline html`` block is not a reactive branch.');
 }
+// True when an ifThen branch resolves to node-kind content (vs a plain value).
+function isNodeBranch(branch) {
+	return isCustomElementConstructor(branch) || isNode(branch) ||
+		ComponentBinding.is(branch) || LiveList.isLiveList(branch);
+}
 /**
  * `ifThen(condition, thenBranch, elseBranch?)` — fine-reactive conditional (named
  * `ifThen` because `when` shadows the `window.when` browser global). Returns a
@@ -633,263 +360,42 @@ function resolveIfThenBranch(branch, branchNodes) {
  */
 export function ifThen(condition, thenBranch, elseBranch = null) {
 	const conditionIsKey = isString(condition);
-	const branchNodes = new Map();
+	/*
+	 * Lazy — the closure cache only serves evaluations with NO host spot (see
+	 * below); minting it eagerly allocated a dead Map per render pass once a
+	 * host spot existed (the common case).
+	 */
+	let branchNodes = null;
+	/*
+	 * MIXED ifThen (one branch node-kind, the other a plain value): the spot's
+	 * content patcher locks to COMPONENT on first patch, and a later primitive
+	 * would crash appendChild (or, flipped, a node would stringify through the
+	 * TEXT patcher). Coerce value branches to CACHED Text nodes so the spot is
+	 * node-kind from its first evaluation — identity-stable, so the component
+	 * short-circuit still no-ops when nothing flipped. Value-only ifThens keep
+	 * the plain TEXT path (equality-guarded by patchTextStrict).
+	 */
+	const mixedBranches = isNodeBranch(thenBranch) || isNodeBranch(elseBranch);
 	return function ifThenSpot() {
-		const active = conditionIsKey ? Boolean(getValueAtPath(this.state, condition)) : Boolean(condition.call(this));
-		return resolveIfThenBranch(active ? thenBranch : elseBranch, branchNodes);
-	};
-}
-/*
- * `bind.list` — typed LIST variant of the bind family. Wired here, where the
- * list machinery lives, onto the shared `bind` callable (no import circular).
- */
-bind.list = list;
-/**
- * Longest increasing subsequence over `sources` (each entry is a reused
- * element's OLD dom-order index, or -1 for a freshly created element). Returns
- * the Set of array indices that form the LIS — those elements are already in
- * correct relative order and need NO dom move. O(n log n). This is the core
- * that turns a 2-item swap from O(n) insertBefore calls into O(1) moves.
- */
-function lisIndexSet(sources) {
-	const sourceCount = sources.length;
-	const predecessor = new Array(sourceCount);
-	const tails = [];
-	for (let sourceIndex = 0; sourceIndex < sourceCount; sourceIndex++) {
-		const value = sources[sourceIndex];
-		if (value < 0) {
-			continue;
-		}
-		let low = 0;
-		let high = tails.length;
-		while (low < high) {
-			const mid = (low + high) >> 1;
-			if (sources[tails[mid]] < value) {
-				low = mid + 1;
-			} else {
-				high = mid;
-			}
-		}
-		predecessor[sourceIndex] = low > 0 ? tails[low - 1] : -1;
-		if (low === tails.length) {
-			tails.push(sourceIndex);
-		} else {
-			tails[low] = sourceIndex;
-		}
-	}
-	const stable = new Set();
-	let walk = tails.length ? tails[tails.length - 1] : -1;
-	while (walk >= 0) {
-		stable.add(walk);
-		walk = predecessor[walk];
-	}
-	return stable;
-}
-/**
- * Patch a retained element to `item` in place — the per-element update used by the
- * keyed diff. Light rows re-run their row fn and repatch retained spots; components
- * take `assignState`; anything else is replaced (returns the replacement so the
- * caller refreshes its key map).
- */
-function updateReusedElement(element, item, itemList) {
-	if (LIGHT_ROW_INSTANCES.has(element)) {
-		patchLightRow(element, itemList.renderFn.call(itemList.spot?.component, item));
-		return element;
-	}
-	if (isFunction(element.assignState)) {
-		element.assignState(item);
-		return element;
-	}
-	const replacement = itemList.createElement(item);
-	cleanupTemplateNode(element);
-	element.replaceWith(replacement);
-	return replacement;
-}
-/**
- * True when `items` produces exactly the existing keys in the existing DOM order
- * (a Map's insertion order == its DOM order here). Caller guarantees equal counts.
- * The cheap gate for patchList's no-structural-change fast path; each key is
- * computed once (the general path would too), so a hit pays no extra keyFn work.
- */
-function sameKeyOrder(items, keyFn, oldMap) {
-	const keyIterator = oldMap.keys();
-	const itemsLength = items.length;
-	for (let index = 0; index < itemsLength; index++) {
-		if (keyFn(items[index], index) !== keyIterator.next().value) {
-			return false;
-		}
-	}
-	return true;
-}
-function patchList(spot, itemList) {
-	if (spot.liveList && spot.liveList !== itemList && spot.liveList.disconnectSpot) {
-		spot.liveList.disconnectSpot();
-	}
-	if (itemList.connectSpot) {
-		itemList.connectSpot(spot);
-	}
-	spot.liveList = itemList;
-	const {
-		items, keyFn,
-	} = itemList;
-	/*
-	 * Container + tail boundary. Tier-1 / wrapper: the element itself, append at
-	 * its end (tail = null). Anchored partial: the parent shared with statics,
-	 * inserting before the end comment so the list stays inside its range.
-	 */
-	const anchor = spot.anchored ? spot.startComment.parentNode : spot.element;
-	const tail = spot.anchored ? spot.endComment : null;
-	const oldMap = spot.keyMap ?? new Map();
-	const prevItemMap = spot.prevItemMap ?? new Map();
-	const newMap = new Map();
-	const itemCount = items.length;
-	/**
-	 * Fast path — first mount (no existing keyed children): straight append, one
-	 * fragment for the multi-item case.
-	 */
-	if (oldMap.size === 0) {
-		const fragment = itemCount > 1 ? document.createDocumentFragment() : null;
-		for (let itemIndex = 0; itemIndex < itemCount; itemIndex++) {
-			const item = items[itemIndex];
-			const key = keyFn(item, itemIndex);
-			const element = itemList.createElement(item);
-			newMap.set(key, element);
-			prevItemMap.set(key, item);
-			if (fragment) {
-				fragment.append(element);
-			} else {
-				anchor.insertBefore(element, tail);
-			}
-		}
-		if (fragment) {
-			anchor.insertBefore(fragment, tail);
-		}
-		spot.keyMap = newMap;
-		spot.prevItemMap = prevItemMap;
-		return;
-	}
-	/*
-	 * Fast path — no structural change: identical key set in identical order (the
-	 * common update / in-place-mutation case). Skips the whole reorder apparatus
-	 * (oldOrder map, sources / elements / staleEntries arrays, LIS) and patches each
-	 * retained element in place — strictly fewer ops, same DOM work (only changed
-	 * rows touch the DOM). Any add / remove / move breaks sameKeyOrder and falls
-	 * through to the general keyed diff. oldMap stays the keyMap (Map.set on an
-	 * existing key keeps insertion / DOM order, so a replaced element just updates
-	 * its slot). Strictly fewer ops than the general path; the saving is noise at
-	 * small N but grows with N (measured: +0.5ms @5k, +0.9ms @10k on the pure-
-	 * bookkeeping signal), and `sameKeyOrder` bails on the first mismatch so a
-	 * reorder / add / remove pays ~nothing before falling through.
-	 */
-	if (itemCount === oldMap.size && sameKeyOrder(items, keyFn, oldMap)) {
-		const keyIterator = oldMap.keys();
-		for (let itemIndex = 0; itemIndex < itemCount; itemIndex++) {
-			const item = items[itemIndex];
-			const key = keyIterator.next().value;
-			if (item !== prevItemMap.get(key)) {
-				oldMap.set(key, updateReusedElement(oldMap.get(key), item, itemList));
-				prevItemMap.set(key, item);
-			}
-		}
-		spot.keyMap = oldMap;
-		spot.prevItemMap = prevItemMap;
-		return;
-	}
-	/*
-	 * Snapshot old dom order (Map insertion order == dom order) so each reused
-	 * element carries its previous index for the LIS.
-	 */
-	const oldKeys = [...oldMap.keys()];
-	const oldOrder = new Map();
-	const oldKeysLength = oldKeys.length;
-	for (let oldIndex = 0; oldIndex < oldKeysLength; oldIndex++) {
-		oldOrder.set(oldKeys[oldIndex], oldIndex);
-	}
-	/*
-	 * Phase 1 — resolve every new item to an element (reuse / update-in-place /
-	 * create), recording each reused element's old index. `reordered` stays
-	 * false for a pure in-order update or a tail trim, letting phase 2 bail.
-	 */
-	const elements = new Array(itemCount);
-	const sources = new Array(itemCount);
-	let reordered = false;
-	let highestOldSeen = -1;
-	for (let itemIndex = 0; itemIndex < itemCount; itemIndex++) {
-		const item = items[itemIndex];
-		const key = keyFn(item, itemIndex);
-		let element = oldMap.get(key);
-		if (element) {
-			oldMap.delete(key);
-			if (item !== prevItemMap.get(key)) {
-				element = updateReusedElement(element, item, itemList);
-			}
-			const source = oldOrder.get(key);
-			sources[itemIndex] = source;
-			if (source < highestOldSeen) {
-				reordered = true;
-			} else {
-				highestOldSeen = source;
-			}
-		} else {
-			element = itemList.createElement(item);
-			sources[itemIndex] = -1;
-			reordered = true;
-		}
-		elements[itemIndex] = element;
-		newMap.set(key, element);
-		prevItemMap.set(key, item);
-	}
-	// Remove the old elements that were not reused.
-	const staleEntries = [...oldMap.entries()];
-	const staleEntriesLength = staleEntries.length;
-	for (let staleIndex = 0; staleIndex < staleEntriesLength; staleIndex++) {
-		const staleElement = staleEntries[staleIndex][1];
-		cleanupTemplateNode(staleElement);
-		staleElement.remove();
-		prevItemMap.delete(staleEntries[staleIndex][0]);
-	}
-	/**
-	 * Phase 2 — minimal-move positioning, walking backwards so each element's
-	 * final next-sibling is already placed. Elements inside the LIS of `sources`
-	 * keep their slot; only reordered or new elements are inserted.
-	 */
-	if (reordered) {
-		const stable = lisIndexSet(sources);
 		/*
-		 * Atomic, state-preserving reorder for RETAINED rows: moveBefore relocates
-		 * a still-connected element WITHOUT firing disconnect/connect, so the row
-		 * keeps its lifecycle phase, reactive subscriptions, focus and in-flight
-		 * animations across the move. A plain insertBefore on a connected node
-		 * tears it down and rebuilds it — every lifecycle hook (onConnect / onMount
-		 * / onLive) re-fires on a simple swap. New rows (source -1) are detached, so
-		 * they can ONLY insertBefore (moveBefore requires a connected node). Falls
-		 * back to insertBefore when the platform lacks moveBefore or the anchor
-		 * detached mid-patch (moveBefore throws on a disconnected receiver). Mirrors
-		 * portal.js's movePortalChildren.
+		 * Prefer the host spot's cache — it survives the per-render thunk
+		 * replacement (updateSpot swaps `spot.expr` for every fresh render's
+		 * thunk). The closure Map only serves evaluations with no host spot.
 		 */
-		const canMove = isFunction(anchor.moveBefore) && anchor.isConnected;
-		let nextSibling = tail;
-		for (let itemIndex = itemCount - 1; itemIndex >= 0; itemIndex--) {
-			const element = elements[itemIndex];
-			if (sources[itemIndex] === -1) {
-				/*
-				 * Freshly created and still detached — its `nextSibling` is null and
-				 * can't signal "already placed", so always insert at the slot
-				 * (covers append-at-end, where the target nextSibling is also null).
-				 */
-				anchor.insertBefore(element, nextSibling);
-			} else if (!stable.has(itemIndex) && element.nextSibling !== nextSibling) {
-				if (canMove) {
-					anchor.moveBefore(element, nextSibling);
-				} else {
-					anchor.insertBefore(element, nextSibling);
-				}
+		const cache = ifThenHostSpot ? (ifThenHostSpot.branchNodes ??= new Map()) : (branchNodes ??= new Map());
+		const active = conditionIsKey ? Boolean(getValueAtPath(this.state, condition)) : Boolean(condition.call(this));
+		const resolved = resolveIfThenBranch(active ? thenBranch : elseBranch, cache);
+		if (mixedBranches && resolved !== null && !isNode(resolved) &&
+			!ComponentBinding.is(resolved) && !LiveList.isLiveList(resolved)) {
+			let valueNode = cache.get(resolved);
+			if (!valueNode) {
+				valueNode = document.createTextNode(String(resolved));
+				cache.set(resolved, valueNode);
 			}
-			nextSibling = element;
+			return valueNode;
 		}
-	}
-	spot.keyMap = newMap;
-	spot.prevItemMap = prevItemMap;
+		return resolved;
+	};
 }
 function clearSubscriptions(subscriptions = []) {
 	eachArray(subscriptions, disposeItem);
@@ -899,19 +405,19 @@ function resolveBindingValue(component, bindingKey) {
 	const resolved = realmForKey(bindingKey, component);
 	return resolved.realm.read(resolved.path);
 }
-function ensureRenderProxies(component) {
-	const currentState = component.STATE ?? {};
-	if (!component.renderProxy || component.renderProxyState !== currentState) {
-		component.renderProxy = makeProxy(currentState, component);
-		component.renderProxyState = currentState;
-	}
-}
-function evaluateTrackedExpression(component, expr) {
+function evaluateTrackedExpression(component, expr, hostSpot = null) {
+	/*
+	 * Reset-on-entry (not just clear-on-exit): a throwing expression skips the
+	 * inline clear below, and the next evaluation of ANY expression must not
+	 * inherit the stale ifThen host.
+	 */
+	ifThenHostSpot = hostSpot;
 	ensureRenderProxies(component);
 	const previousRenderTracking = component.renderTracking;
 	component.renderTracking = true;
 	const result = track(expr, component);
 	component.renderTracking = previousRenderTracking;
+	ifThenHostSpot = null;
 	return result;
 }
 function subscribeStatePath(component, statePath, handler, target) {
@@ -945,7 +451,8 @@ function realmForKey(key, component) {
  * CLASS's merged `static stores` table here, at spot install — an undeclared
  * name is an authoring error and throws with the offending key.
  */
-function realmForBinding(binding, component) {
+// Exported for the list half of the split (ListSpot's install-time realm cache).
+export function realmForBinding(binding, component) {
 	if (binding.storeName !== null) {
 		const store = resolveStores(component.constructor)[binding.storeName];
 		if (!store) {
@@ -961,7 +468,8 @@ function realmForBinding(binding, component) {
 		path: binding.key,
 	};
 }
-function resolveBindingValueForBinding(component, binding) {
+// Exported for the list half of the split (ListSpot.refresh) — see template/list.js.
+export function resolveBindingValueForBinding(component, binding) {
 	const resolved = realmForBinding(binding, component);
 	return resolved.realm.read(resolved.path);
 }
@@ -1068,12 +576,6 @@ function syncSpotSubscriptions(spot, deps) {
  * Text-position spots cache a specialized patcher in spot.patch so subsequent
  * patches skip kind detection. Hot path is one virtual call per patch.
  */
-function patchListKind(spot, value) {
-	if (!spot.keyMap && spot.element.firstChild) {
-		spot.element.textContent = '';
-	}
-	patchList(spot, value);
-}
 function patchComponentKind(spot, value) {
 	const node = ComponentBinding.is(value) ? value.value : value;
 	if (spot.element.firstChild === node) {
@@ -1275,17 +777,6 @@ function patchComponentAnchored(spot, value) {
 		spot.startComment.parentNode.insertBefore(node, spot.endComment);
 	}
 }
-function patchListAnchored(spot, value) {
-	/**
-	 * If the range still holds leftover text/html from a prior kind, drop it
-	 * before the keyed build (the wrapper path relied on `element.textContent=''`).
-	 */
-	if (!spot.keyMap && spot.startComment.nextSibling !== spot.endComment) {
-		clearRange(spot.startComment, spot.endComment);
-	}
-	spot.textNode = null;
-	patchList(spot, value);
-}
 const CONTENT_PATCHERS_ANCHORED = {
 	[CONTENT_KIND.EMPTY]: patchTextAnchored,
 	[CONTENT_KIND.TEXT]: patchTextAnchored,
@@ -1346,13 +837,15 @@ function bindSpotKind(spot, value) {
 	}
 }
 /**
- * Module-scope error reporter — replaces the per-fire `.catch((error) => …)`
- * arrow. The `.then` callback still allocates a closure per fire (it MUST
- * capture `spot` + the per-fire `token` to reject stale resolutions, and
- * `.then` callbacks have no `this` binding). One closure saved out of two.
+ * Named rejection converter for async spot values. Returns a sentinel so
+ * `patchSpotBodyPromise` (deliberately unawaited) never rejects — the old
+ * bare `await value` re-threw after the report, so every failed async spot
+ * still surfaced as an unhandledrejection.
  */
+const ASYNC_SPOT_FAILED = Symbol('asyncSpotFailed');
 function reportAsyncSpotError(error) {
-	console.error('[template] async spot error:', error);
+	defaultLogger.error('template', 'async spot error', error);
+	return ASYNC_SPOT_FAILED;
 }
 /**
  * Apply an object-valued `style=${{...}}` binding (styleMap parity) per-property
@@ -1415,9 +908,8 @@ function applyStyleObject(spot, value) {
 	spot.prevStyleKeys = nextKeys;
 }
 async function patchSpotBodyPromise(value, spot, token) {
-	value.catch(reportAsyncSpotError);
-	const item = await value;
-	if (spot.patchToken !== token) {
+	const item = await value.then(undefined, reportAsyncSpotError);
+	if (item === ASYNC_SPOT_FAILED || spot.patchToken !== token) {
 		return;
 	}
 	patchSpot(spot, item);
@@ -1573,14 +1065,13 @@ function patchSpotBody(spot, value) {
 		applyStyleObject(spot, value);
 		return;
 	}
-	let str;
-	if (spot.attr === 'class' && ClassList.isClassList(value)) {
-		const desired = new Set();
-		applyClassListItems(value.items, desired, new Map(), null);
-		str = [...desired].join(' ');
-	} else {
-		str = String(value ?? '');
-	}
+	/*
+	 * A ClassList can never reach the ATTR tail: install routes `class=` to
+	 * installClassListSpot and BARE_ATTR returns earlier — the old defensive
+	 * branch here was provably dead (and was applyClassListItems' only
+	 * null-component caller).
+	 */
+	const str = String(value ?? '');
 	if (spot.attr === 'style') {
 		/* String apply replaces the whole attribute — reset the object-key
 		 * tracking and mark so the next object apply wipes string residue. */
@@ -1591,27 +1082,39 @@ function patchSpotBody(spot, value) {
 		spot.element.setAttribute(spot.attr, str);
 	}
 }
-function patchSpot(spot, value) {
+// Exported for the list half of the split (ListSpot / light rows) — see template/list.js.
+export function patchSpot(spot, value) {
 	const perfMark = Perf.mark('patch');
 	const result = patchSpotBody(spot, value);
 	Perf.measure('patch', perfMark);
 	return result;
 }
 const EVENT_SPOTS = new WeakMap();
-function dispatchEventSpotListener(domEvent) {
-	const map = EVENT_SPOTS.get(this);
+// @engram em:network/code/click-click-capture-collided-in-two-layers-parser-marker-att — the inner layer; the parser marker name in template/parser.js is the outer
+/*
+ * One element can carry both an `@click` and an `@click.capture` spot — two
+ * native registrations that differ only by capture phase. The per-element map is
+ * therefore keyed by phase as well as name; keying by name alone let the second
+ * spot overwrite the first while both registrations stayed live, so the survivor
+ * fired on both phases and the other never ran at all.
+ */
+function eventSpotKey(eventName, capture) {
+	return `${eventName}|${capture}`;
+}
+function dispatchEventSpot(host, domEvent, capture) {
+	const map = EVENT_SPOTS.get(host);
 	if (!map) {
 		return undefined;
 	}
-	const spot = map.get(domEvent.type);
+	const spot = map.get(eventSpotKey(domEvent.type, capture));
 	if (!spot) {
 		return undefined;
 	}
 	/*
 	 * `.self` — fire only when the event originated on THIS element (the listener
-	 * host = currentTarget = `this`), not bubbled up from a descendant.
+	 * host = currentTarget), not bubbled up from a descendant.
 	 */
-	if (spot.modSelf && domEvent.target !== this) {
+	if (spot.modSelf && domEvent.target !== host) {
 		return undefined;
 	}
 	if (spot.modStop) {
@@ -1620,7 +1123,7 @@ function dispatchEventSpotListener(domEvent) {
 	if (spot.modPrevent) {
 		domEvent.preventDefault();
 	}
-	const result = spot.component.runEventHandler(spot.expr, domEvent, this, domEvent.type);
+	const result = spot.component.runEventHandler(spot.expr, domEvent, host, domEvent.type);
 	/*
 	 * `.once` — detach after the first dispatch. Done manually (not native
 	 * `{ once: true }`) so the EVENT_SPOTS map entry is removed in lockstep with
@@ -1631,59 +1134,25 @@ function dispatchEventSpotListener(domEvent) {
 	}
 	return result;
 }
-/**
- * Abstract base for every template spot. Spots are the per-DOM-node patchers
- * built from a recipe plan. The class hierarchy below replaces the old plain-
- * object spot shapes — `this`-using prototype methods eliminate the per-spot
- * `.bind(null, spot)` allocations that used to back `updateHandler` /
- * `refreshTask`. Subscribed via the bus's `target` arg → bus dispatches
- * `Spot.prototype.handle.call(spot, …)` with zero per-spot closure.
+/*
+ * Two dispatchers rather than one, because a listener cannot recover the capture
+ * flag it was registered with: at the target element both the capturing and the
+ * bubbling registration report AT_TARGET, so the phase is genuinely ambiguous.
+ * Binding the flag to the listener IDENTITY resolves it — each dispatcher is a
+ * module-level function that hands its own fixed flag to the shared body, and
+ * addEventListener/removeEventListener key on that same identity.
  */
-class Spot {
-	constructor() {
-		this.unsubs = [];
-		this.depMap = null;
-		this.pendingPaths = null;
+function dispatchEventSpotCapture(domEvent) {
+	return dispatchEventSpot(this, domEvent, true);
+}
+function dispatchEventSpotBubble(domEvent) {
+	return dispatchEventSpot(this, domEvent, false);
+}
+function eventSpotDispatcher(capture) {
+	if (capture) {
+		return dispatchEventSpotCapture;
 	}
-	/** Bus handler. Marks the spot dirty for the single per-microtask drain
-	 *  (drainSpots at the tail of masterFlush) — Set membership is the dedup, so
-	 *  N deps firing for one spot in a flush still drain it once. List spots
-	 *  accumulate changed paths so the drain can decide between per-item
-	 *  assignState (partial) and full re-diff.
-	 *
-	 *  The signature must match the bus's 2-arg dispatch: fireSubscription calls
-	 *  `handler.call(target, value, changedPath)`. List spots read `changedPath`
-	 *  from the second parameter — a 3-arg shape would park it in the wrong slot
-	 *  and feed `undefined`, collapsing every in-place deep mutation onto the
-	 *  same-ref-skipping full re-diff and never reaching the DOM. */
-	handle(_value, changedPath) {
-		if (this.kind === SPOT_KIND.LIST) {
-			if (!this.pendingPaths) {
-				this.pendingPaths = [];
-			}
-			this.pendingPaths.push(changedPath);
-		}
-		markSpotDirty(this);
-	}
-	/** Drain hook — runs once per microtask in drainSpots. Default re-evaluates
-	 *  via refresh(); BindingSpot overrides to apply its captured value. */
-	drain() {
-		return this.refresh();
-	}
-	/** Virtual. Subclasses with reactive deps override. */
-	refresh() {
-		return undefined;
-	}
-	unsubscribe() {
-		if (this.depMap) {
-			clearRealmUnsubs(this.depMap);
-			this.depMap = null;
-		}
-		if (this.unsubs && this.unsubs.length) {
-			this.unsubs = clearSubscriptions(this.unsubs);
-		}
-		this.pendingPaths = null;
-	}
+	return dispatchEventSpotBubble;
 }
 /**
  * One-way state-path watcher. `this.bind('foo')` / `${this.state.foo}` /
@@ -1701,6 +1170,19 @@ class BindingSpot extends Spot {
 		this.component = component;
 		this.bindingKey = bindingKey;
 		this.declaredKind = declaredKind;
+		/*
+		 * The binding's realm is callsite-constant (updateSpot swaps `expr` only
+		 * for an identically-keyed binding), so resolve it ONCE at install —
+		 * refresh was re-running the store lookup + realm object build per call.
+		 */
+		if (component && isBindingType(expr)) {
+			const keyRealm = realmForBinding(expr, component);
+			this.realm = keyRealm.realm;
+			this.realmPath = keyRealm.path;
+		} else {
+			this.realm = null;
+			this.realmPath = null;
+		}
 		this.contentKind = null;
 		this.patch = null;
 		this.pendingValue = undefined;
@@ -1724,169 +1206,21 @@ class BindingSpot extends Spot {
 		markSpotDirty(this);
 	}
 	drain() {
-		patchSpot(this, this.pendingValue);
+		const pendingValue = this.pendingValue;
+		/*
+		 * Release the captured value once patched — holding it until the next
+		 * handle() pinned a possibly-large object for the spot's lifetime.
+		 */
+		this.pendingValue = undefined;
+		patchSpot(this, pendingValue);
 	}
 	refresh() {
+		const realm = this.realm;
+		if (realm !== null) {
+			patchSpot(this, realm.read(this.realmPath));
+			return;
+		}
 		patchSpot(this, resolveBindingValueForBinding(this.component, this.expr));
-	}
-}
-/**
- * Resolve a list spot's bound state into the array the keyed diff renders.
- * Replaces `Array.prototype.filter` on the refresh hot path: an unfiltered
- * array passes through by reference (the LiveList copies it once downstream),
- * while a filter or a plain-object source is collected in a single named pass.
- * Plain objects render their values in key order — previously dropped entirely
- * (`Array.isArray(…) ? … : []`). The predicate is the documented keep-form
- * `(item, index) => boolean`; the source index is passed so flag/keyed tests
- * stay stable, not the post-filter view index.
- * @param {*} rawItems - The bound state value (array, plain object, or other).
- * @param {(item: any, index: number) => boolean | null} filterFn - Keep-predicate, or null to keep all.
- * @returns {Array} The items to hand to the keyed diff.
- */
-function buildListView(rawItems, filterFn) {
-	if (Array.isArray(rawItems)) {
-		if (!filterFn) {
-			return rawItems;
-		}
-		const view = [];
-		const rawItemsLength = rawItems.length;
-		for (let index = 0; index < rawItemsLength; index++) {
-			const item = rawItems[index];
-			if (filterFn(item, index)) {
-				view.push(item);
-			}
-		}
-		return view;
-	}
-	if (isPlainObject(rawItems)) {
-		const keys = Object.keys(rawItems);
-		const view = [];
-		const keysLength = keys.length;
-		for (let index = 0; index < keysLength; index++) {
-			const item = rawItems[keys[index]];
-			if (!filterFn || filterFn(item, index)) {
-				view.push(item);
-			}
-		}
-		return view;
-	}
-	return [];
-}
-/**
- * Keyed list — `each(items, render, keyFn)` / `list(key, …)` /
- * `liveList(…)`. Owns `keyMap` (key → element) and `liveList` handle.
- */
-class ListSpot extends Spot {
-	constructor(element, slotIndex, spotType, expr, component, bindingKey, renderFn, keyFn, filterFn = null) {
-		super();
-		this.kind = SPOT_KIND.LIST;
-		this.type = spotType;
-		this.element = element;
-		this.slotIndex = slotIndex;
-		this.expr = expr;
-		this.component = component;
-		this.bindingKey = bindingKey;
-		this.bindingKeyPrefix = `${bindingKey}.`;
-		this.renderFn = renderFn;
-		this.keyFn = keyFn;
-		this.filterFn = filterFn;
-		this.keyMap = null;
-		this.liveList = null;
-		this.prevItemMap = null;
-		this.patch = null;
-		// anchored partial list: patchList targets (startComment.parentNode, endComment).
-		this.anchored = false;
-		this.startComment = null;
-		this.endComment = null;
-		this.textNode = null;
-		// Imperative handle: this.list(key) after mount.
-		if (component && bindingKey) {
-			registerListHandle(component, this);
-		}
-	}
-	/** Drains `pendingPaths` and replays the refresh once per accumulated path
-	 *  (since each path may take different branches between full re-diff and
-	 *  per-item assignState — see comment in refresh()). */
-	drain() {
-		const paths = this.pendingPaths;
-		this.pendingPaths = null;
-		if (paths && paths.length > 1) {
-			let lastResult;
-			const pathsLength = paths.length;
-			for (let pathIndex = 0; pathIndex < pathsLength; pathIndex++) {
-				lastResult = this.refresh(paths[pathIndex]);
-			}
-			return lastResult;
-		}
-		return this.refresh(paths ? paths[0] : null);
-	}
-	refresh(changedPath = null) {
-		const {
-			component, bindingKey, renderFn, keyFn, filterFn,
-		} = this;
-		const rawItems = resolveBindingValueForBinding(component, this.expr);
-		const viewItems = buildListView(rawItems, filterFn);
-		/*
-		 * Partial in-place update is only safe when the change is a *deep*
-		 * path inside an existing item (`items.i.foo`), meaning the array
-		 * shape is unchanged. Top-level changes (`items.i`) can be array-
-		 * shape ops (unshift/push/splice/swap) that fire multiple sub-paths,
-		 * but the subscription only sees the first one — taking the partial
-		 * branch then would skip the rest of the changes. A filtered list is
-		 * excluded entirely: a deep change may flip a filtered flag (a
-		 * membership change), and the filtered view's indices no longer line
-		 * up with the source array's — so it always takes the full keyed diff.
-		 */
-		if (
-			!filterFn &&
-			changedPath &&
-			changedPath !== bindingKey &&
-			changedPath.startsWith(this.bindingKeyPrefix) &&
-			this.keyMap &&
-			viewItems.length === this.keyMap.size
-		) {
-			const subPath = changedPath.slice(bindingKey.length + 1);
-			const firstDot = subPath.indexOf('.');
-			if (firstDot !== -1) {
-				const index = Number(subPath.slice(0, firstDot));
-				if (!Number.isNaN(index)) {
-					const itemAtIndex = viewItems[index];
-					if (itemAtIndex !== undefined) {
-						const itemKey = keyFn(itemAtIndex, index);
-						const element = this.keyMap.get(itemKey);
-						if (element) {
-							/*
-							 * Deep write on an existing item (`items.i.foo`). Component
-							 * rows take assignState. Light html rows keep the SAME item
-							 * ref, so patchList's `item !== prev` gate would skip them —
-							 * force re-run of the row fn (carousel dots, stepper flags).
-							 */
-							if (isFunction(element.assignState)) {
-								element.assignState(itemAtIndex);
-								return;
-							}
-							if (LIGHT_ROW_INSTANCES.has(element) && this.liveList) {
-								updateReusedElement(element, itemAtIndex, this.liveList);
-								return;
-							}
-						}
-					}
-				}
-			}
-		}
-		patchSpot(this, each(viewItems, renderFn, keyFn));
-	}
-	unsubscribe() {
-		if (this.component && this.bindingKey) {
-			unregisterListHandle(this.component, this);
-		}
-		if (this.liveList && this.liveList.disconnectSpot) {
-			this.liveList.disconnectSpot();
-		}
-		this.liveList = null;
-		this.keyMap = null;
-		this.prevItemMap = null;
-		super.unsubscribe();
 	}
 }
 /**
@@ -1912,12 +1246,14 @@ class ComputedSpot extends Spot {
 		this.startComment = null;
 		this.endComment = null;
 		this.textNode = null;
+		// ifThen branch-node cache (lazy) — survives per-render thunk swaps.
+		this.branchNodes = null;
 	}
 	refresh() {
 		const {
 			value,
 			deps,
-		} = evaluateTrackedExpression(this.component, this.expr);
+		} = evaluateTrackedExpression(this.component, this.expr, this);
 		patchSpot(this, value);
 		syncSpotSubscriptions(this, deps);
 	}
@@ -1950,7 +1286,7 @@ class MultiAttrSpot extends Spot {
 			if (isBindingType(expr)) {
 				const keyRealm = realmForBinding(expr, component);
 				addDep(allDeps, keyRealm.realm, keyRealm.path);
-				result += resolveBindingValueForBinding(component, expr) ?? '';
+				result += keyRealm.realm.read(keyRealm.path) ?? '';
 				continue;
 			}
 			if (isFunction(expr)) {
@@ -1981,6 +1317,17 @@ class ClassListSpot extends Spot {
 		this.parts = parts;
 		this.component = component;
 		this.classListCurrent = null;
+		/*
+		 * Static literals never change — split them into token arrays ONCE here
+		 * instead of regex-splitting the same strings on every refresh.
+		 */
+		const partsLength = parts.length;
+		const literalTokens = new Array(partsLength);
+		for (let partIndex = 0; partIndex < partsLength; partIndex++) {
+			const literal = parts[partIndex].literal;
+			literalTokens[partIndex] = literal === undefined ? null : splitClassTokens(literal);
+		}
+		this.literalTokens = literalTokens;
 	}
 	refresh() {
 		const component = this.component;
@@ -1991,7 +1338,7 @@ class ClassListSpot extends Spot {
 		for (let partIndex = 0; partIndex < partsLength; partIndex++) {
 			const part = parts[partIndex];
 			if (part.literal !== undefined) {
-				addTokens(part.literal, desired);
+				addTokenList(this.literalTokens[partIndex], desired);
 				continue;
 			}
 			const expr = part.expr;
@@ -2010,7 +1357,8 @@ class ClassListSpot extends Spot {
 /**
  * DOM event handler spot (`@click=${fn}` / `@${namedFn}`). No bus
  * subscription — the WeakMap-keyed listener pattern dispatches through
- * `dispatchEventSpotListener` looking up the spot by element + event type.
+ * `dispatchEventSpotCapture`/`dispatchEventSpotBubble`, looking up the spot by
+ * element + event type + capture phase.
  */
 class EventSpot extends Spot {
 	constructor(element, slotIndex, eventName, expr, component, modifiers) {
@@ -2076,14 +1424,16 @@ class EventSpot extends Spot {
 	unsubscribe() {
 		const map = EVENT_SPOTS.get(this.element);
 		if (map) {
-			map.delete(this.eventName);
+			map.delete(eventSpotKey(this.eventName, this.modCapture));
 		}
 		/*
-		 * removeEventListener matches on (type, listener, capture) — pass the same
-		 * capture flag used at add time or the listener leaks (capture-mismatched
-		 * removal silently no-ops).
+		 * removeEventListener matches on (type, listener, capture) — every one of
+		 * the three must be what add time used, or the removal silently no-ops and
+		 * the listener leaks. `modCapture` is the source of truth for both the
+		 * dispatcher identity and the flag; `listenerOptions()` is not, since it
+		 * collapses to undefined on the no-modifier path.
 		 */
-		this.element.removeEventListener(this.eventName, dispatchEventSpotListener, this.modCapture);
+		this.element.removeEventListener(this.eventName, eventSpotDispatcher(this.modCapture), this.modCapture);
 		super.unsubscribe();
 	}
 }
@@ -2093,9 +1443,6 @@ function installBindingSpot(plan, element, expr, component) {
 		const listSpot = new ListSpot(element, plan.slotIndex, plan.type, expr, component, bindingKey, expr.renderFn, expr.keyFn, expr.filterFn);
 		listSpot.refresh(null);
 		syncSpotSubscriptions(listSpot, bindingDepMap(expr, component));
-		if (CollectionBinding.isCollectionBinding(expr)) {
-			mountCollection(component, element, expr);
-		}
 		return listSpot;
 	}
 	const propertyIndex = component.propertyIndex;
@@ -2149,8 +1496,8 @@ function installEventSpot(plan, element, eventName, expr, component) {
 		map = new Map();
 		EVENT_SPOTS.set(element, map);
 	}
-	map.set(eventName, spot);
-	element.addEventListener(eventName, dispatchEventSpotListener, spot.listenerOptions());
+	map.set(eventSpotKey(eventName, spot.modCapture), spot);
+	element.addEventListener(eventName, eventSpotDispatcher(spot.modCapture), spot.listenerOptions());
 	return spot;
 }
 /**
@@ -2220,12 +1567,17 @@ function writeBoundValue(component, key, value) {
 	resolved.realm.write(resolved.path, value);
 }
 const TWO_WAY_SPOTS = new WeakMap();
-function dispatchTwoWayInput() {
+function dispatchTwoWayInput(domEvent) {
 	const map = TWO_WAY_SPOTS.get(this);
 	if (!map) {
 		return;
 	}
-	const spot = map.get(this.eventTypeKey ?? 'input') ?? map.get('input') ?? map.get('change');
+	/*
+	 * Key off the event that actually fired (`this` is the DOM element, the
+	 * listener target), falling back across both channels so a single-spot
+	 * element still resolves regardless of which channel it registered.
+	 */
+	const spot = map.get(domEvent.type) ?? map.get('input') ?? map.get('change');
 	if (!spot) {
 		return;
 	}
@@ -2275,7 +1627,7 @@ function installTwoWaySpot(plan, element, expr, component, explicitKey) {
 		element.removeAttribute('checked');
 	}
 	const boundRealm = realmForKey(key, component);
-	spot.unsubs.push(boundRealm.realm.bus.subscribe(boundRealm.path, TwoWaySpot.prototype.handle, spot));
+	(spot.unsubs ??= []).push(boundRealm.realm.bus.subscribe(boundRealm.path, TwoWaySpot.prototype.handle, spot));
 	let map = TWO_WAY_SPOTS.get(element);
 	if (!map) {
 		map = new Map();
@@ -2284,499 +1636,6 @@ function installTwoWaySpot(plan, element, expr, component, explicitKey) {
 	map.set(eventType, spot);
 	element.addEventListener(eventType, dispatchTwoWayInput);
 	return spot;
-}
-const TEMPLATE_RECIPES = new WeakMap();
-function getNodePath(node, root) {
-	const path = [];
-	let current = node;
-	while (current !== root) {
-		const parentNode = current.parentNode;
-		if (!parentNode) {
-			return null;
-		}
-		let index = 0;
-		let sibling = parentNode.firstChild;
-		while (sibling && sibling !== current) {
-			sibling = sibling.nextSibling;
-			index += 1;
-		}
-		path.push(index);
-		current = parentNode;
-	}
-	path.reverse();
-	return path;
-}
-function walkPath(root, path) {
-	let node = root;
-	const pathLength = path.length;
-	for (let pathIndex = 0; pathIndex < pathLength; pathIndex++) {
-		node = node.childNodes[path[pathIndex]];
-	}
-	return node;
-}
-/**
- * Resolve a plan's DOM node(s) on the (still-pristine) clone. Anchored plans
- * resolve BOTH comment markers; every other plan resolves its single element.
- * Callers MUST resolve every plan before installing any of them — an anchored
- * install inserts content between its comments, shifting later markers' child
- * indices, so paths are only valid before the first insertion.
- */
-function resolveSpotNode(plan, fragment) {
-	if (plan.anchored) {
-		return {
-			startComment: walkPath(fragment, plan.startPath),
-			endComment: walkPath(fragment, plan.endPath),
-		};
-	}
-	return walkPath(fragment, plan.path);
-}
-/**
- * Only the patterns below are lookup keys — anything else on a [data-uwc]
- * node is a static attribute that no spot will ever query, so storing it
- * just bloats the map. Filtering at index time saves the entries and the
- * per-entry composite-string allocation.
- *   data-*=""                — void markers (bind/multi/bare-attr/uwc-evfn)
- *   data-expr="<digits>"     — text-spot marker
- *   <any-name>="expr<digits>" — interpolated attr / bool-attr / prop / named event
- */
-function isAllDigitsFrom(value, from) {
-	if (value.length === from) {
-		return false;
-	}
-	const valueLength = value.length;
-	for (let charIndex = from; charIndex < valueLength; charIndex++) {
-		const code = value.charCodeAt(charIndex);
-		if (code < 48 || code > 57) {
-			return false;
-		}
-	}
-	return true;
-}
-function isMarkerAttr(attrName, value) {
-	if (value === '') {
-		return attrName.startsWith('data-');
-	}
-	if (value.charCodeAt(0) === 101 && value.startsWith('expr')) {
-		return isAllDigitsFrom(value, 4);
-	}
-	if (attrName === 'data-expr') {
-		return isAllDigitsFrom(value, 0);
-	}
-	return false;
-}
-function buildMarkerMap(fragment) {
-	const map = new Map();
-	const markedNodes = fragment.querySelectorAll('[data-uwc]');
-	const markedNodesLength = markedNodes.length;
-	for (let nodeIndex = 0; nodeIndex < markedNodesLength; nodeIndex++) {
-		const node = markedNodes[nodeIndex];
-		const path = getNodePath(node, fragment);
-		if (!path) {
-			continue;
-		}
-		node.removeAttribute('data-uwc');
-		const attrs = node.attributes;
-		const attrsLength = attrs.length;
-		for (let attrIndex = 0; attrIndex < attrsLength; attrIndex++) {
-			const attrName = attrs[attrIndex].name;
-			const attrValue = attrs[attrIndex].value;
-			if (!isMarkerAttr(attrName, attrValue)) {
-				continue;
-			}
-			map.set(`${attrName}|${attrValue}`, {
-				element: node,
-				path,
-			});
-		}
-	}
-	/*
-	 * Second pass: anchored text-spot comment markers (`uwc:N` / `uwc/N`).
-	 * querySelectorAll only sees elements, so comments need their own walk. Keyed
-	 * by raw comment data (contains no `|`, so never collides with attr keys).
-	 */
-	const commentWalker = document.createTreeWalker(fragment, NodeFilter.SHOW_COMMENT);
-	let commentNode = commentWalker.nextNode();
-	while (commentNode) {
-		const data = commentNode.data;
-		if ((data.startsWith(ANCHOR_START_PREFIX) || data.startsWith(ANCHOR_END_PREFIX)) && isAllDigitsFrom(data, ANCHOR_START_PREFIX.length)) {
-			const path = getNodePath(commentNode, fragment);
-			if (path) {
-				map.set(data, {
-					element: commentNode,
-					path,
-				});
-			}
-		}
-		commentNode = commentWalker.nextNode();
-	}
-	return map;
-}
-function lookupMarker(map, attrName, attrValue) {
-	return map.get(`${attrName}|${attrValue}`);
-}
-function mapSpotPart(part) {
-	if (part.literal !== undefined) {
-		return {
-			literal: part.literal,
-		};
-	}
-	return {
-		exprIndex: part.exprIndex,
-	};
-}
-function buildSpotPlan(map, entry) {
-	if (entry.type === SPOT_TYPE.BIND) {
-		const markerAttr = bindMarkerAttribute(entry.i);
-		const lookup = lookupMarker(map, markerAttr, '');
-		if (!lookup) {
-			return null;
-		}
-		lookup.element.removeAttribute(markerAttr);
-		return {
-			type: SPOT_TYPE.BIND,
-			slotIndex: entry.i,
-			path: lookup.path,
-		};
-	}
-	if (entry.type === SPOT_TYPE.MULTI_ATTR) {
-		const markerAttr = multiAttrMarkerAttribute(entry.i);
-		const lookup = lookupMarker(map, markerAttr, '');
-		if (!lookup) {
-			return null;
-		}
-		lookup.element.removeAttribute(markerAttr);
-		const parts = entry.parts.map(mapSpotPart);
-		return {
-			type: SPOT_TYPE.MULTI_ATTR,
-			slotIndex: entry.i,
-			path: lookup.path,
-			attr: entry.attr,
-			parts,
-		};
-	}
-	if (entry.type === SPOT_TYPE.EVENT) {
-		const isDeduce = entry.deduceFromExpr === true;
-		const markerAttr = isDeduce ? `data-uwc-evfn-${entry.i}` : eventMarkerAttribute(entry.eventName);
-		const markerValue = isDeduce ? '' : `expr${entry.i}`;
-		const lookup = lookupMarker(map, markerAttr, markerValue);
-		if (!lookup) {
-			return null;
-		}
-		lookup.element.removeAttribute(markerAttr);
-		return {
-			type: SPOT_TYPE.EVENT,
-			slotIndex: entry.i,
-			path: lookup.path,
-			eventName: isDeduce ? null : entry.eventName,
-			modifiers: isDeduce ? null : (entry.modifiers ?? null),
-			deduceFromExpr: isDeduce,
-		};
-	}
-	if (entry.type === SPOT_TYPE.TEXT) {
-		if (entry.anchored) {
-			const startLookup = map.get(`${ANCHOR_START_PREFIX}${entry.i}`);
-			const endLookup = map.get(`${ANCHOR_END_PREFIX}${entry.i}`);
-			if (!startLookup || !endLookup) {
-				return null;
-			}
-			return {
-				type: SPOT_TYPE.TEXT,
-				slotIndex: entry.i,
-				anchored: true,
-				startPath: startLookup.path,
-				endPath: endLookup.path,
-				declaredKind: entry.declaredKind ?? null,
-			};
-		}
-		const lookup = lookupMarker(map, SPOT, String(entry.i));
-		if (!lookup) {
-			return null;
-		}
-		lookup.element.removeAttribute(SPOT);
-		if (!entry.elided) {
-			/*
-			 * Wrapper <span> only — a folded marker sits on a real element that
-			 * already lays itself out; `display:contents` would wrongly collapse it.
-			 */
-			lookup.element.style.display = 'contents';
-		}
-		return {
-			type: SPOT_TYPE.TEXT,
-			slotIndex: entry.i,
-			path: lookup.path,
-			declaredKind: entry.declaredKind ?? null,
-			elided: entry.elided === true,
-		};
-	}
-	if (entry.type === SPOT_TYPE.BARE_ATTR) {
-		const markerAttr = bareAttrMarkerAttribute(entry.i);
-		const lookup = lookupMarker(map, markerAttr, '');
-		if (!lookup) {
-			return null;
-		}
-		lookup.element.removeAttribute(markerAttr);
-		return {
-			type: SPOT_TYPE.BARE_ATTR,
-			slotIndex: entry.i,
-			path: lookup.path,
-		};
-	}
-	if (entry.type === SPOT_TYPE.ATTR) {
-		const lookup = lookupMarker(map, entry.attr, `expr${entry.i}`);
-		if (!lookup) {
-			return null;
-		}
-		/*
-		 * Subevent attrs (tooltip, hotkey, …) must stay on the element so
-		 * the later `extractSubeventPlans` pass can capture them and emit
-		 * the install plan that runs the behavior's install hook. Removing
-		 * here was the bug: `tooltip=${expr}` produced an ATTR spot but no
-		 * subeventPlan, so the behavior never installed. extractSubeventPlans
-		 * removes the attribute itself after recording the plan; for non-
-		 * subevent attrs we still strip it here so the marker text never
-		 * leaks into the rendered DOM.
-		 */
-		if (!SUBEVENT_ATTRS.has(entry.attr)) {
-			lookup.element.removeAttribute(entry.attr);
-		}
-		return {
-			type: SPOT_TYPE.ATTR,
-			slotIndex: entry.i,
-			path: lookup.path,
-			attr: entry.attr,
-		};
-	}
-	if (entry.type === SPOT_TYPE.METHOD) {
-		const markerAttr = methodMarkerAttribute(entry.i);
-		const lookup = lookupMarker(map, markerAttr, `expr${entry.i}`);
-		if (!lookup) {
-			return null;
-		}
-		lookup.element.removeAttribute(markerAttr);
-		/*
-		 * The method name rides in the `attr` slot so the existing binding /
-		 * computed / static install dispatch needs no METHOD-specific arm — only
-		 * the patch step branches, calling `element[method](value)` instead of assigning.
-		 */
-		return {
-			type: SPOT_TYPE.METHOD,
-			slotIndex: entry.i,
-			path: lookup.path,
-			attr: entry.method,
-		};
-	}
-	if (entry.type === SPOT_TYPE.BOOL_ATTR || entry.type === SPOT_TYPE.PROP) {
-		const sigilChar = entry.type === SPOT_TYPE.BOOL_ATTR ? '?' : '.';
-		/*
-		 * The HTML parser lowercases attribute names, so a camelCase binding
-		 * (`.textContent`, `.importStyles`, `?ariaHidden`) lands in the DOM as a
-		 * lowercase marker. Look up / remove by the lowercased name, but KEEP the
-		 * original-case `entry.attr` in the plan — `element[attr]` must hit the real
-		 * case-sensitive DOM/JS property. Without this, camelCase `.prop=` /
-		 * `?attr=` bindings silently produced no spot.
-		 */
-		const domAttr = `${sigilChar}${entry.attr}`.toLowerCase();
-		const lookup = lookupMarker(map, domAttr, `expr${entry.i}`);
-		if (!lookup) {
-			return null;
-		}
-		lookup.element.removeAttribute(domAttr);
-		return {
-			type: entry.type,
-			slotIndex: entry.i,
-			path: lookup.path,
-			attr: entry.attr,
-		};
-	}
-	return null;
-}
-/* `$value.number.trim.lazy` — optional dotted modifiers after the bound attr
-   name. Without the trailing group a modifier chain fails the match entirely
-   and the whole two-way binding is silently dropped. */
-const DOLLAR_BIND_ATTR_RE = /^\$(\w+)((?:\.\w+)*)$/;
-function normalizeBindKey(rawKey) {
-	if (rawKey.startsWith('state.')) {
-		return rawKey.slice(6);
-	}
-	if (rawKey.startsWith('globalState.')) {
-		return `global.${rawKey.slice(12)}`;
-	}
-	return rawKey;
-}
-function extractDataBindPlans(fragment) {
-	const plans = [];
-	const dataBindNodes = fragment.querySelectorAll('[data-bind]');
-	const dataBindNodesLength = dataBindNodes.length;
-	for (let nodeIndex = 0; nodeIndex < dataBindNodesLength; nodeIndex++) {
-		const element = dataBindNodes[nodeIndex];
-		const stateKey = element.dataset.bind;
-		if (!stateKey) {
-			continue;
-		}
-		const path = getNodePath(element, fragment);
-		if (!path) {
-			continue;
-		}
-		plans.push({
-			path,
-			key: normalizeBindKey(stateKey),
-		});
-		element.removeAttribute('data-bind');
-	}
-	const atBindNodes = fragment.querySelectorAll('*');
-	const atBindNodesLength = atBindNodes.length;
-	for (let nodeIndex = 0; nodeIndex < atBindNodesLength; nodeIndex++) {
-		const element = atBindNodes[nodeIndex];
-		const stateKey = element.getAttribute('@bind');
-		if (!stateKey) {
-			continue;
-		}
-		const path = getNodePath(element, fragment);
-		if (!path) {
-			continue;
-		}
-		plans.push({
-			path,
-			key: normalizeBindKey(stateKey),
-		});
-		element.removeAttribute('@bind');
-	}
-	const dollarBindNodes = fragment.querySelectorAll('*');
-	const dollarBindNodesLength = dollarBindNodes.length;
-	for (let nodeIndex = 0; nodeIndex < dollarBindNodesLength; nodeIndex++) {
-		const element = dollarBindNodes[nodeIndex];
-		const attrs = element.attributes;
-		for (let attrIndex = attrs.length - 1; attrIndex >= 0; attrIndex--) {
-			const attrName = attrs[attrIndex].name;
-			const match = DOLLAR_BIND_ATTR_RE.exec(attrName);
-			if (!match) {
-				continue;
-			}
-			const rawKey = attrs[attrIndex].value;
-			if (!rawKey) {
-				element.removeAttribute(attrName);
-				continue;
-			}
-			const path = getNodePath(element, fragment);
-			if (path) {
-				const rawModifiers = match[2];
-				plans.push({
-					path,
-					key: normalizeBindKey(rawKey),
-					modifiers: rawModifiers ? rawModifiers.slice(1).split('.') : null,
-				});
-			}
-			element.removeAttribute(attrName);
-		}
-	}
-	return plans;
-}
-/*
- * A parser-emitted spot marker — `expr0`, `expr1`, … — encodes "this attr
- * is interpolated; the real value comes from an ATTR spot patch." Used to
- * distinguish static subevent values from placeholder markers in
- * extractSubeventPlans so the install path doesn't stomp the patch.
- */
-const SPOT_MARKER_RE = /^expr\d+$/;
-function extractSubeventPlans(fragment) {
-	const plans = [];
-	for (const attrName of SUBEVENT_ATTRS) {
-		const elements = fragment.querySelectorAll(`[${attrName}]`);
-		const elementsLength = elements.length;
-		for (let nodeIndex = 0; nodeIndex < elementsLength; nodeIndex++) {
-			const element = elements[nodeIndex];
-			const rawValue = element.getAttribute(attrName);
-			element.removeAttribute(attrName);
-			const path = getNodePath(element, fragment);
-			if (!path) {
-				continue;
-			}
-			/*
-			 * Interpolated subevent attr (`tooltip=${expr}`): the captured
-			 * value is a marker like "expr3" — the corresponding ATTR spot
-			 * will patch the real value into `data-<attrName>` at first
-			 * render. Skip the install-time dataset write by passing
-			 * undefined so the patch wins.
-			 */
-			const isMarker = SPOT_MARKER_RE.test(rawValue);
-			plans.push({
-				path,
-				attrName,
-				value: isMarker ? undefined : rawValue,
-			});
-		}
-	}
-	return plans;
-}
-function extractRefPlans(fragment) {
-	const plans = [];
-	const refNodes = fragment.querySelectorAll('*');
-	const refNodesLength = refNodes.length;
-	for (let nodeIndex = 0; nodeIndex < refNodesLength; nodeIndex++) {
-		const element = refNodes[nodeIndex];
-		const attrs = element.attributes;
-		for (let attrIndex = attrs.length - 1; attrIndex >= 0; attrIndex--) {
-			const attrName = attrs[attrIndex].name;
-			if (attrName.charCodeAt(0) !== 35) {
-				continue;
-			}
-			const refName = attrName.slice(1);
-			element.removeAttribute(attrName);
-			if (!isValidRefName(refName)) {
-				throw new SyntaxError(`Invalid #ref name "${refName}". Use lowercase letters, digits, and underscore only ("_" not "-" for word separators). Example: <input #email_field>.`);
-			}
-			const path = getNodePath(element, fragment);
-			if (path) {
-				plans.push({
-					path,
-					name: refName,
-				});
-			}
-		}
-	}
-	return plans;
-}
-function prepareRecipe(strings) {
-	const placeholderExprs = new Array(Math.max(0, strings.length - 1));
-	const {
-		html: markup,
-		meta,
-	} = buildHTML(strings, placeholderExprs);
-	const template = document.createElement('template');
-	template.innerHTML = markup;
-	const fragment = template.content;
-	const markerMap = buildMarkerMap(fragment);
-	const spotPlans = [];
-	const metaLength = meta.length;
-	for (let entryIndex = 0; entryIndex < metaLength; entryIndex++) {
-		const plan = buildSpotPlan(markerMap, meta[entryIndex]);
-		if (plan) {
-			spotPlans.push(plan);
-		}
-	}
-	const dataBindPlans = extractDataBindPlans(fragment);
-	const subeventPlans = extractSubeventPlans(fragment);
-	const refPlans = extractRefPlans(fragment);
-	return {
-		fragment,
-		spotPlans,
-		dataBindPlans,
-		subeventPlans,
-		refPlans,
-		/* Detect a <portal> ONCE per template literal (recipe is cached), so the
-		 * per-render relocation pass is gated to templates that actually use it —
-		 * every portal-free component pays zero query cost on each build. */
-		hasPortal: Boolean(fragment.querySelector('portal')),
-		isStatic: !spotPlans.length && !dataBindPlans.length && !subeventPlans.length && !refPlans.length,
-	};
-}
-function getRecipe(strings) {
-	let recipe = TEMPLATE_RECIPES.get(strings);
-	if (!recipe) {
-		recipe = prepareRecipe(strings);
-		TEMPLATE_RECIPES.set(strings, recipe);
-	}
-	return recipe;
 }
 const DATA_BIND_SPOTS = new WeakMap();
 function dispatchDataBindInput() {
@@ -2897,10 +1756,6 @@ function deduceEventName(plan, expr) {
 	}
 	return fnName;
 }
-function resolveTwoWaySourceValue(component, inferredKey) {
-	const resolved = realmForKey(inferredKey, component);
-	return resolved.realm.read(resolved.path);
-}
 function inferTwoWayBindingKey(component, expr, type, element, attr) {
 	const isBindableField = (type === SPOT_TYPE.ATTR || type === SPOT_TYPE.BARE_ATTR) &&
 		BINDABLE_TAGS.has(element.tagName) &&
@@ -2914,7 +1769,7 @@ function inferTwoWayBindingKey(component, expr, type, element, attr) {
 		return null;
 	}
 	const inferredKey = single.realm.global ? `global.${single.path}` : single.path;
-	const sourceValue = resolveTwoWaySourceValue(component, inferredKey);
+	const sourceValue = resolveBindingValue(component, inferredKey);
 	return sourceValue === evaluated.value ? inferredKey : null;
 }
 function markAnchored(spot, startComment, endComment) {
@@ -2944,9 +1799,6 @@ function installAnchoredTextSpot(plan, resolved, exprs, component) {
 		markAnchored(listSpot, startComment, endComment);
 		listSpot.refresh(null);
 		syncSpotSubscriptions(listSpot, bindingDepMap(expr, component));
-		if (CollectionBinding.isCollectionBinding(expr)) {
-			mountCollection(component, parentEl, expr);
-		}
 		return listSpot;
 	}
 	if (isBindingType(expr)) {
@@ -2976,7 +1828,8 @@ function installAnchoredTextSpot(plan, resolved, exprs, component) {
 	patchSpot(staticSpot, expr);
 	return staticSpot;
 }
-function installSpotFromPlan(plan, resolved, exprs, component) {
+// Exported for the list half of the split (light-row instantiation) — see template/list.js.
+export function installSpotFromPlan(plan, resolved, exprs, component) {
 	if (plan.anchored) {
 		return installAnchoredTextSpot(plan, resolved, exprs, component);
 	}
@@ -3153,28 +2006,41 @@ function instantiateRecipe(recipe, exprs, component) {
 	 * references up front keeps paths valid. Phase 2 only moves captured refs.
 	 */
 	const spotInstallMark = Perf.mark('spotInstall');
+	/*
+	 * One TreeWalker sweep resolves every plan family's nodes by pre-order slot
+	 * (see planner.js resolveRecipeNodes) — no per-plan root walks.
+	 */
+	const resolvedNodes = resolveRecipeNodes(fragment, recipe.resolveTargets);
 	const spotResolved = new Array(spotPlans.length);
 	const spotPlansLength = spotPlans.length;
 	for (let spotIndex = 0; spotIndex < spotPlansLength; spotIndex++) {
-		spotResolved[spotIndex] = resolveSpotNode(spotPlans[spotIndex], fragment);
+		const plan = spotPlans[spotIndex];
+		if (plan.anchored) {
+			spotResolved[spotIndex] = {
+				startComment: resolvedNodes[plan.startSlot],
+				endComment: resolvedNodes[plan.endSlot],
+			};
+		} else {
+			spotResolved[spotIndex] = resolvedNodes[plan.nodeSlot];
+		}
 	}
 	const dataBindEls = new Array(dataBindPlans.length);
 	const dataBindPlansLength = dataBindPlans.length;
 	for (let bindIndex = 0; bindIndex < dataBindPlansLength; bindIndex++) {
-		dataBindEls[bindIndex] = walkPath(fragment, dataBindPlans[bindIndex].path);
+		dataBindEls[bindIndex] = resolvedNodes[dataBindPlans[bindIndex].nodeSlot];
 	}
 	const subeventEls = subeventPlans ? new Array(subeventPlans.length) : null;
 	if (subeventPlans) {
 		const subeventPlansLength = subeventPlans.length;
 		for (let subeventIndex = 0; subeventIndex < subeventPlansLength; subeventIndex++) {
-			subeventEls[subeventIndex] = walkPath(fragment, subeventPlans[subeventIndex].path);
+			subeventEls[subeventIndex] = resolvedNodes[subeventPlans[subeventIndex].nodeSlot];
 		}
 	}
 	const refEls = refPlans ? new Array(refPlans.length) : null;
 	if (refPlans) {
 		const refPlansLength = refPlans.length;
 		for (let refIndex = 0; refIndex < refPlansLength; refIndex++) {
-			refEls[refIndex] = walkPath(fragment, refPlans[refIndex].path);
+			refEls[refIndex] = resolvedNodes[refPlans[refIndex].nodeSlot];
 		}
 	}
 	// PHASE 2 — install. Anchored insertions are now safe (every node captured).
@@ -3301,7 +2167,8 @@ function syncSpotParts(parts, newExprs) {
 	}
 	return changed;
 }
-function updateTemplateSpots(state, newExprs, component) {
+// Exported for the list half of the split (light-row repatch) — see template/list.js.
+export function updateTemplateSpots(state, newExprs, component) {
 	const {
 		spots, prevExprs,
 	} = state;
@@ -3361,19 +2228,22 @@ function updateTemplateSpots(state, newExprs, component) {
  * once `replaceChildren` detaches them; we don't pay for a full subtree walk.
  */
 export function initTemplateRuntime(component) {
-	component.tplUnsubs = [];
-	component.tplState = null;
-	component.tplBoundKeys = new Set();
-	component.tplCleanupNodes = new Set();
 	/*
-	 * One entry per `this.htmlElement` call site. Keyed by the tagged-
-	 * template strings array so re-entering the same call site returns the
-	 * same root element with its spots patched in place. Without this,
-	 * patterns like `${this.renderBody}` (computed spot → `htmlElement`)
-	 * would mint a fresh subtree on every dep change, ripping focus out of
-	 * any focused input every time the user typed.
+	 * All four containers are lazy (`??=` at their single write sites): a leaf
+	 * component with no unsubs / htmlElement calls pays zero allocations here —
+	 * this runs once per construct, 500× on a big list mount.
+	 * `htmlElementCache` (allocated in templateHtmlElement) is keyed by the
+	 * tagged-template strings array so re-entering the same call site returns
+	 * the same root element with its spots patched in place — without it,
+	 * patterns like `${this.renderBody}` (computed spot → `htmlElement`) would
+	 * mint a fresh subtree on every dep change, ripping focus out of any
+	 * focused input every time the user typed.
 	 */
-	component.htmlElementCache = new Map();
+	component.tplUnsubs = null;
+	component.tplState = null;
+	component.tplBoundKeys = null;
+	component.tplCleanupNodes = null;
+	component.htmlElementCache = null;
 }
 function runCleanupOnNode(node) {
 	cleanupTemplateNode(node);
@@ -3386,14 +2256,16 @@ function runTemplateCleanup(component) {
 	if (component.tplState) {
 		cleanupSpots(component.tplState.spots);
 	}
-	eachArray(component.tplUnsubs, disposeItem);
-	component.tplUnsubs = [];
-	if (component.tplCleanupNodes.size) {
+	if (component.tplUnsubs) {
+		eachArray(component.tplUnsubs, disposeItem);
+		component.tplUnsubs = null;
+	}
+	if (component.tplCleanupNodes?.size) {
 		component.tplCleanupNodes.forEach(runCleanupOnNode);
 		component.tplCleanupNodes.clear();
 	}
 	component.tplState = null;
-	component.tplBoundKeys = new Set();
+	component.tplBoundKeys = null;
 	component.htmlElementCache?.clear();
 }
 export function templateCleanup() {
@@ -3459,13 +2331,11 @@ export function templateHtmlElement(strings, ...exprs) {
 	 * same root, which lets `patchComponentKind`'s `firstChild === node`
 	 * short-circuit fire and leaves focus, selection, and IME state alone.
 	 */
-	const cache = this.htmlElementCache;
-	if (cache) {
-		const cached = cache.get(strings);
-		if (cached) {
-			updateTemplateSpots(cached.tplState, exprs, this);
-			return cached.element;
-		}
+	const cache = this.htmlElementCache ??= new Map();
+	const cached = cache.get(strings);
+	if (cached) {
+		updateTemplateSpots(cached.tplState, exprs, this);
+		return cached.element;
 	}
 	const recipe = getRecipe(strings);
 	const instance = instantiateRecipe(recipe, exprs, this);
@@ -3477,16 +2347,14 @@ export function templateHtmlElement(strings, ...exprs) {
 	const element = instance.fragment.firstElementChild;
 	HTML_ELEMENT_INSTANCES.set(element, instance);
 	element[TEMPLATE_CLEANUP] = cleanupHtmlElementInstance;
-	this.tplCleanupNodes?.add(element);
-	if (cache) {
-		cache.set(strings, {
-			element,
-			tplState: {
-				strings,
-				spots: instance.spots,
-				prevExprs: exprs.slice(),
-			},
-		});
-	}
+	(this.tplCleanupNodes ??= new Set()).add(element);
+	cache.set(strings, {
+		element,
+		tplState: {
+			strings,
+			spots: instance.spots,
+			prevExprs: exprs.slice(),
+		},
+	});
 	return element;
 }

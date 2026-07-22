@@ -27,7 +27,7 @@ export class UIPopover extends MorphSurface {
 		return 200;
 	}
 	render() {
-		this.html `
+		this.html`
 			<button
 				class="pp-trigger"
 				type="button"

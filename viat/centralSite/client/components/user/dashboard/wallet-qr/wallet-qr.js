@@ -177,7 +177,7 @@ export class WalletQr extends WebComponent {
 		}
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="wq-wrap" ?data-ready=${this.state.svg}>
 				<div class="wq-canvas"
 					role="button"

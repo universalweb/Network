@@ -18,7 +18,7 @@ export class UISurface extends WebComponent {
 		   uwc.util `.surface`/`.tone-*` class utilities at all, so the tones are
 		   self-owned without needing a private namespace. (util's `[data-tone]`
 		   rules set only `--tone-fill`, which surface ignores — no conflict.) */
-		this.html `
+		this.html`
 			<div
 				class="sf"
 				data-tone=${this.state.tone}

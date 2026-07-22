@@ -239,7 +239,7 @@ export class UIModal extends WebComponent {
 		// so flipping a flag at runtime cleanly toggles whether the button
 		// is part of the active layout. The flags default to false so a
 		// caller that doesn't opt in gets no controls at all.
-		this.html `
+		this.html`
 			<dialog #dialog class=${classList('modal', this.controlsSideClass, this.barClass)} tabindex="-1" @click=${this.handleDialogClick} @cancel=${this.handleCancel} @close=${this.handleClose}>
 				<div class="modal-controls">
 					<div class="modal-title">${this.state.heading}</div>

@@ -324,7 +324,7 @@ export class UIAiChat extends WebComponent {
 		this.emit('ai-chat:clear', {});
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="aic">
 				<header class="aic-header">
 					<div class="aic-titlebar">

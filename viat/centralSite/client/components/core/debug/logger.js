@@ -83,25 +83,6 @@ function printLine(level, label, message, args) {
 		console[method](head, style, message);
 	}
 }
-/**
- * Lazy-message functions may return null/undefined to skip the log entirely.
- * When `msg` is a function, any extra args after it are forwarded — callsites
- * pass a hoisted (module-level) formatter + plain data instead of allocating
- * a fresh closure per call. In production the whole logger is replaced by a
- * noop so the formatter never runs and args never get gathered into an array.
- */
-function printLevelLine(level, label, msg, ...args) {
-	const resolved = isFunction(msg) ? msg(...args) : msg;
-	if (resolved == null) {
-		return;
-	}
-	printLine(level, label, resolved, []);
-}
-function makeLevelLogger(level) {
-	return gated(level, (label, msg, ...args) => {
-		printLevelLine(level, label, msg, ...args);
-	});
-}
 function resolveHeaderStyle(style) {
 	if (isString(style) && style.includes(':')) {
 		return style;
@@ -251,6 +232,13 @@ class Logger {
 	perf(...callArgs) {
 		return this.#levelLog('perf', ...callArgs);
 	}
+	/*
+	 * Lazy-message form: a function `msg` is invoked with the trailing args
+	 * (module-level formatter + data beats a per-call closure) and may return
+	 * null/undefined to skip the line. Plain form: trailing args are DATA and
+	 * are forwarded to the console — dropping them loses the error objects
+	 * and state snapshots the error sinks pass.
+	 */
 	#levelLog(level, ...callArgs) {
 		if (IS_PRODUCTION && level !== 'error') {
 			return undefined;
@@ -275,11 +263,18 @@ class Logger {
 			msg = callArgs[0];
 			extra = callArgs.slice(1);
 		}
-		const resolved = isFunction(msg) ? msg(...extra) : msg;
-		if (resolved == null) {
+		if (isFunction(msg)) {
+			const resolved = msg(...extra);
+			if (resolved == null) {
+				return;
+			}
+			printLine(level, label, resolved, []);
 			return;
 		}
-		printLine(level, label, resolved, []);
+		if (msg == null) {
+			return;
+		}
+		printLine(level, label, msg, extra);
 	}
 	header(text, style) {
 		return headerAction(text, style);
@@ -429,4 +424,4 @@ class Logger {
  */
 export const defaultLogger = new Logger();
 export const componentLogger = new Logger('WebComponent');
-defaultLogger.error('Logger initialized at level:', Logger.getLevel());
+defaultLogger.info('Logger initialized at level:', Logger.getLevel());

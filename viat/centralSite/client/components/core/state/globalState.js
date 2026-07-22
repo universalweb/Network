@@ -123,27 +123,47 @@ export class Store {
 		if (!isPlainObject(updates)) {
 			return;
 		}
-		const proxy = this.proxy;
 		const keys = Object.keys(updates);
 		const keysLength = keys.length;
 		for (let index = 0; index < keysLength; index++) {
 			const key = keys[index];
-			const value = updates[key];
-			const current = getValueAtPath(proxy, key);
-			if (current === value) {
-				continue;
-			}
-			/**
-			 * Drop structurally-equal writes here so we don't pay re-render
-			 * cost on fresh-but-identical objects (the wasted-set perf
-			 * warning's whole motivation). Direct proxy mutations still warn
-			 * — callers who reach past `Store.set` opt out of the guard.
-			 */
-			if (plainEqual(current, value)) {
-				continue;
-			}
-			setValueAtPath(proxy, key, value);
+			this.setOne(key, updates[key]);
 		}
+	}
+	// @engram em:network/code/tk-35-x11-x12-x18-shipped-raw-state-guard-setone-channel-mem — X11/X12: raw-STATE guard + setOne (91.8x same-ref skip)
+	/**
+	 * Single-key write with the equality guard — the primitive `set` loops
+	 * over and `StoreRealm.write` calls directly (no `{[path]: value}` detour
+	 * per two-way write). Wrappers intercepting store writes must wrap BOTH
+	 * `set` and `setOne`.
+	 *
+	 * The guard reads `this.STATE` RAW. The proxy read wrapped object values
+	 * in a child proxy, so `current === value` could never hit for a reused
+	 * stored ref and every object write fell through to a plainEqual walked
+	 * entirely through get traps. Raw reads restore the O(1) identity skip,
+	 * and the deep compare — still the guard for fresh-but-structurally-equal
+	 * objects (the wasted-set warning's whole motivation) — runs untrapped.
+	 * The pathMap probe keeps the one skip only the proxy read caught, a
+	 * caller passing back the memoized child proxy, as an identity hit:
+	 * `getValueAtPath(proxy, key)` always returns
+	 * `proxyCache.get(rawCurrent).get(key)`, so two map hits replicate the
+	 * old comparison without minting proxies. Writes still go through the
+	 * proxy so the set trap notifies; direct proxy mutations still warn —
+	 * callers who reach past the store API opt out of the guard.
+	 */
+	setOne(key, value) {
+		const current = getValueAtPath(this.STATE, key);
+		if (current === value) {
+			return;
+		}
+		const pathMap = this.proxyCache.get(current);
+		if (pathMap && pathMap.get(key) === value) {
+			return;
+		}
+		if (plainEqual(current, value)) {
+			return;
+		}
+		setValueAtPath(this.proxy, key, value);
 	}
 	observe(key, handler) {
 		return this.bus.subscribe(key, handler);
@@ -200,53 +220,46 @@ export const globalState = Store.create();
  * two-way writes go through the realm directly — no string parsing, and
  * local / global / private channels never co-mingle. This is the shared
  */
-// global realm singleton; per-component local realms live in state.js.
-export const globalRealm = {
-	bus: globalState.bus,
-	global: true,
-	/*
-	 * `sharedBus` — the bus is shared across every component (no per-component
-	 * `onFlush → updateView`), so a renderDep on this realm must ENQUEUE the
-	 * component into the global-render drain rather than rely on its own bus
-	 * flush. Named-store realms share this trait; the local realm does not (its
-	 * bus is the component's own stateBus). render.js picks the dirty marker off
-	 * this flag.
-	 */
-	sharedBus: true,
+/**
+ * Reactive realm for a `Store` — the shared-bus channel a `this.global.*` /
+ * `this.<storeName>.*` tracking proxy attributes its dependencies to. A CLASS
+ * (not a per-store object literal with fresh `read`/`write` closures): the
+ * store rides an instance field and the accessors live on the prototype, so
+ * every store realm shares one monomorphic shape with zero per-store closure.
+ * `sharedBus: true` — the store's bus serves every component (no per-component
+ * `onFlush → updateView`), so a renderDep on this realm ENQUEUES the component
+ * into the global-render drain instead of relying on its own bus flush; the
+ * local realm (state.js) carries `sharedBus: false`. render.js picks the dirty
+ * marker off this flag, now a monomorphic own-property read across realm types.
+ */
+class StoreRealm {
+	constructor(store) {
+		this.store = store;
+		this.bus = store.bus;
+		this.global = true;
+		this.sharedBus = true;
+	}
 	read(path) {
-		return getValueAtPath(globalState.proxy, path);
-	},
+		return getValueAtPath(this.store.proxy, path);
+	}
 	write(path, value) {
-		globalState.set({
-			[path]: value,
-		});
-	},
-};
+		this.store.setOne(path, value);
+	}
+}
+// global realm singleton; per-component local realms live in state.js.
+export const globalRealm = new StoreRealm(globalState);
 const storeRealms = new WeakMap();
 /**
- * The reactive realm for a named `Store` — the object-reference channel that a
- * `this.<storeName>` tracking proxy attributes its dependencies to. Mirrors
- * `globalRealm`: `sharedBus: true` because a store's bus serves every component
- * that declares it. Memoized per store so the realm identity — which keys both
- * the render dep-map and the subscription submap — is stable across renders.
+ * The reactive realm for a named `Store`. Memoized per store so the realm
+ * identity — which keys both the render dep-map and the subscription submap —
+ * is stable across renders.
  * @param {Store} store - The store to wrap.
- * @returns {{bus: object, sharedBus: boolean, read: Function, write: Function}} The store's realm.
+ * @returns {StoreRealm} The store's realm.
  */
 export function storeRealm(store) {
 	let realm = storeRealms.get(store);
 	if (!realm) {
-		realm = {
-			bus: store.bus,
-			sharedBus: true,
-			read(path) {
-				return getValueAtPath(store.proxy, path);
-			},
-			write(path, value) {
-				store.set({
-					[path]: value,
-				});
-			},
-		};
+		realm = new StoreRealm(store);
 		storeRealms.set(store, realm);
 	}
 	return realm;

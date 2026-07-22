@@ -7,13 +7,16 @@ import {
 	hasOwn,
 	isArray,
 	isMap,
+	isObject,
 	isPlainObject,
 	isPromiseLike,
 	isSet,
 	isSymbol,
 	joinPath,
+	pathsOverlap,
 	plainEqual,
 	queueAsyncError,
+	runHook,
 	setValueAtPath,
 } from '../utilities.js';
 import {
@@ -30,14 +33,124 @@ export const STATE_PATH = Symbol('statePath');
  * component's `updateView` and forwards any async rejection to the global
  * error queue (matching the pre-refactor config-arrow behavior).
  */
-// TODO: Consider manual class / prototype upgrading of existing objects to avoid creating new ones
 class ComponentStateBus extends PathSubscriptions {
+	/*
+	 * The local renderDep Set channel (see render.js subscribeRenderDeps). Bare
+	 * `${this.state.x}` reads all share one idempotent handler
+	 * (markRenderDirty), one target (the component), the once-per-batch
+	 * contract, and this 1:1 bus — so they need no Subscription objects and no
+	 * buckets: one lazy Set of paths replaces per-dep Subscription + bucket-Set
+	 * + unsub-map machinery on the create path. `nestedRenderDepCount` keeps
+	 * the flat fast path honest: 0 dotted deps ⇒ a changed path overlaps at
+	 * most its exact key or its first segment — two O(1) probes.
+	 */
+	// @engram em:network/concept/renderdep-set-channel-local-render-deps-need-no-subscription — why local renderDeps need no Subscription objects; global/private realms stay on the legacy route
+	renderDeps = null;
+	nestedRenderDepCount = 0;
 	constructor(component) {
 		super();
 		this.component = component;
 	}
 	getValue(path) {
 		return getValueAtPath(this.component.STATE, path);
+	}
+	/**
+	 * Re-sync the channel to this render pass's tracked local deps. Unchanged
+	 * vocabularies (the overwhelmingly common warm pass) run two zero-alloc
+	 * probe loops; adds/removes adjust in place. `null`/empty clears — the
+	 * template stopped reading local state bare.
+	 * @param {Set<string>|null} nextPaths - The pass's tracked local dep paths.
+	 */
+	syncRenderDeps(nextPaths) {
+		const current = this.renderDeps;
+		if (!nextPaths || nextPaths.size === 0) {
+			if (current !== null && current.size) {
+				current.clear();
+				this.nestedRenderDepCount = 0;
+			}
+			return;
+		}
+		if (current === null) {
+			const fresh = new Set();
+			let freshNested = 0;
+			for (const path of nextPaths) {
+				fresh.add(path);
+				if (path.indexOf('.') !== -1) {
+					freshNested += 1;
+				}
+			}
+			this.renderDeps = fresh;
+			this.nestedRenderDepCount = freshNested;
+			return;
+		}
+		let nested = this.nestedRenderDepCount;
+		for (const path of current) {
+			if (!nextPaths.has(path)) {
+				current.delete(path);
+				if (path.indexOf('.') !== -1) {
+					nested -= 1;
+				}
+			}
+		}
+		for (const path of nextPaths) {
+			if (!current.has(path)) {
+				current.add(path);
+				if (path.indexOf('.') !== -1) {
+					nested += 1;
+				}
+			}
+		}
+		this.nestedRenderDepCount = nested;
+	}
+	clearRenderDeps() {
+		if (this.renderDeps !== null) {
+			this.renderDeps = null;
+			this.nestedRenderDepCount = 0;
+		}
+	}
+	/*
+	 * flush() calls this before the bucket dispatch and outside its `subs`
+	 * gate. First overlapping path wins — the dirty flag is idempotent, so
+	 * short-circuiting preserves the once-per-batch contract. renderDep
+	 * handlers ignore the bus-passed value, so no getValue runs here at all.
+	 */
+	matchRenderDeps(replaceAll, changed) {
+		const renderDeps = this.renderDeps;
+		if (renderDeps === null || renderDeps.size === 0) {
+			return;
+		}
+		if (replaceAll) {
+			this.component.markRenderDirty();
+			return;
+		}
+		const changedLength = changed.length;
+		for (let index = 0; index < changedLength; index++) {
+			if (this.renderDepHit(changed[index])) {
+				this.component.markRenderDirty();
+				return;
+			}
+		}
+	}
+	renderDepHit(changedPath) {
+		const renderDeps = this.renderDeps;
+		if (renderDeps.has(changedPath)) {
+			return true;
+		}
+		/*
+		 * All-flat deps: the only other possible overlap is the changed path's
+		 * first segment (a deeper write under a bare dep — 'a.b' hits dep 'a').
+		 * Any dotted dep forces the full overlap scan; dep sets are small.
+		 */
+		if (this.nestedRenderDepCount === 0) {
+			const dotIndex = changedPath.indexOf('.');
+			return dotIndex !== -1 && renderDeps.has(changedPath.slice(0, dotIndex));
+		}
+		for (const depPath of renderDeps) {
+			if (pathsOverlap(depPath, changedPath)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	onFlush() {
 		const component = this.component;
@@ -87,6 +200,13 @@ class LocalRealm {
 		this.component = component;
 		this.bus = ensureStateBus(component);
 		this.global = false;
+		/*
+		 * Own the flag so render.js's `realm.sharedBus` marker pick is a
+		 * monomorphic own-property read across every realm type (StoreRealm
+		 * sets it true). The local bus IS the component's stateBus, so its
+		 * onFlush → updateView already drives the render; not shared.
+		 */
+		this.sharedBus = false;
 	}
 	read(path) {
 		return getValueAtPath(this.component.STATE, path);
@@ -244,6 +364,7 @@ class ReactiveCollection {
 		this.component = component;
 		this.path = path;
 		this.asMap = asMap;
+		this.carrier = null;
 	}
 	notifyKey(key) {
 		notifyStateChange(this.component, joinPath(this.path, key));
@@ -327,10 +448,15 @@ class CollectionProxyHandler {
 	}
 	get(facade, key, receiver) {
 		if (key === STATE_PATH) {
-			return {
+			/*
+			 * Singleton handler → cache the carrier on the per-(target,path)
+			 * facade. localRealm(component) and path are stable for its life.
+			 */
+			facade.carrier ??= {
 				realm: localRealm(facade.component),
 				path: facade.path,
 			};
+			return facade.carrier;
 		}
 		return Reflect.get(facade, key, receiver);
 	}
@@ -425,6 +551,9 @@ class StateProxyHandler {
 	constructor(component, path) {
 		this.component = component;
 		this.path = path;
+		this.carrier = null;
+		// Per-key child-proxy cache — skips joinPath + WeakMap/Map on hot re-reads.
+		this.children = null;
 	}
 	static create(target, component, path = '') {
 		return cachedProxy(component.proxyCache, target, path, StateProxyHandler, component);
@@ -432,13 +561,43 @@ class StateProxyHandler {
 	static build(target, path, component) {
 		return new Proxy(target, new StateProxyHandler(component, path));
 	}
+	/*
+	 * Resolve a nested container to its proxy. Handler-local Map keyed by
+	 * property key; hit when the raw source identity is unchanged. Miss still
+	 * goes through cachedProxy so cross-handler aliasing stays correct.
+	 */
+	childProxy(key, propertyValue) {
+		const entry = this.children?.get(key);
+		if (entry && entry.source === propertyValue) {
+			return entry.proxy;
+		}
+		const nestedPath = entry?.path ?? joinPath(this.path, key);
+		let proxy;
+		if (isArray(propertyValue) || isPlainObject(propertyValue)) {
+			proxy = StateProxyHandler.create(propertyValue, this.component, nestedPath);
+		} else if (isSet(propertyValue)) {
+			proxy = makeCollectionProxy(propertyValue, this.component, nestedPath, false);
+		} else if (isMap(propertyValue)) {
+			proxy = makeCollectionProxy(propertyValue, this.component, nestedPath, true);
+		} else {
+			return propertyValue;
+		}
+		(this.children ??= new Map()).set(key, {
+			source: propertyValue,
+			path: nestedPath,
+			proxy,
+		});
+		return proxy;
+	}
 	get(target, key) {
 		// Live path meta for ensure/collection(this.state.itemsConfig) and tooling.
 		if (key === STATE_PATH) {
-			return {
+			// Per-(target,path) handler — path/component immutable, cache once.
+			this.carrier ??= {
 				path: this.path,
 				component: this.component,
 			};
+			return this.carrier;
 		}
 		if (isSymbol(key)) {
 			return Reflect.get(target, key);
@@ -456,20 +615,13 @@ class StateProxyHandler {
 		}
 		const propertyValue = Reflect.get(target, key);
 		/*
-		 * Only container values get a child proxy, so compute the nested path
-		 * lazily inside each branch — a primitive leaf read (the common
-		 * `this.state.user.name` case) skips the joinPath string allocation.
+		 * Primitive leaf (the common `this.state.user.name` case): bail before
+		 * container checks + joinPath. Only objects reach the branches below.
 		 */
-		if (isPlainObject(propertyValue) || isArray(propertyValue)) {
-			return StateProxyHandler.create(propertyValue, this.component, joinPath(this.path, key));
+		if (!isObject(propertyValue)) {
+			return propertyValue;
 		}
-		if (isSet(propertyValue)) {
-			return makeCollectionProxy(propertyValue, this.component, joinPath(this.path, key), false);
-		}
-		if (isMap(propertyValue)) {
-			return makeCollectionProxy(propertyValue, this.component, joinPath(this.path, key), true);
-		}
-		return propertyValue;
+		return this.childProxy(key, propertyValue);
 	}
 	set(target, key, value) {
 		const isTopLevel = this.path === '';
@@ -560,7 +712,7 @@ export function replaceState(state = {}) {
 	/*
 	 * Notify-ONLY when a reactive bus exists (mirrors assignState) — the flush's
 	 * `onFlush → updateView` renders AND fires `onStateChange` exactly once.
-	 * `flush()` calls `onFlush()` UNCONDITIONALLY (after its `if (this.subs.size)`
+	 * `flush()` calls `onFlush()` UNCONDITIONALLY (after its subs-gated dispatch
 	 * block), so even a bus with zero live subscriptions still drives that one
 	 * updateView — that is what guarantees onStateChange fires once, not zero
 	 * (do NOT move onFlush inside the subs guard). The old shape ALSO called
@@ -580,8 +732,11 @@ export function replaceState(state = {}) {
 	 * No reactive bus (render never read state, no observers) — nothing will
 	 * flush, so drive the single updateView directly; it fires onStateChange
 	 * once and renders. Rare: most components create a bus on first state use.
+	 * updateView returns undefined when it finished inline; replaceState's
+	 * contract is a thenable either way (the bus branch above returns one), so
+	 * normalize rather than leak the fast path's undefined to `.then` callers.
 	 */
-	return this.updateView();
+	return this.updateView() ?? Promise.resolve();
 }
 /**
  * Shallow-merge a partial patch into top-level state. Bypasses the per-key
@@ -622,7 +777,7 @@ export function assignState(partial, options) {
  * via bus `target` — one shared prototype method serves every observer; no
  * per-subscription closure, stable hidden class for JIT monomorphization.
  */
-class StateKeyObserver {
+export class StateKeyObserver {
 	constructor(component, handler, previousValue, options) {
 		this.component = component;
 		this.handler = handler;
@@ -725,41 +880,64 @@ export function observe(keys, handler, options) {
 export function unobserve(key) {
 	this.stateUnsubs?.removeByKey(String(key ?? ''));
 }
-export async function updateView() {
+/**
+ * Kick this component's view for one flush. Returns undefined when everything
+ * completed synchronously — an eligible patch pass (renderView's fast path) with
+ * no async onStateChange never yields, so allocating a promise to represent
+ * finished work was pure waste on the dominant re-render path. Callers already
+ * gate on `isPromiseLike` (the bus onFlush below, context.js, privateState.js,
+ * scheduler.js), and `await undefined` is harmless at the two await sites, so
+ * the undefined-or-Promise contract costs them nothing.
+ * @returns {Promise<void>|undefined} A Promise when async work is pending, else undefined.
+ */
+export function updateView() {
 	const perfMark = Perf.mark('updateView');
-	try {
-		/*
-		 * Start both side-effects synchronously (preserving call order), then await
-		 * only what is actually pending. The first-render hot path is a single
-		 * task (renderView, no onStateChange) — awaiting it directly skips the
-		 * per-child `Promise.all([…])` array + wrapper microtask the batch form
-		 * otherwise pays N times during a list create.
-		 */
-		const stateChangeResult = this.onStateChange?.();
-		const stateChangePending = isPromiseLike(stateChangeResult) ? stateChangeResult : null;
-		/*
-		 * The FIRST render must not outrun the connect pipeline. `isConnected` is
-		 * the native DOM flag — true the instant the parent inserts the element,
-		 * long before handleConnect's awaited steps (style/theme-sheet fetches)
-		 * finish. An external state write landing in that window used to render
-		 * here, firing render/onMount BEFORE onConnect — inverting the documented
-		 * order and stranding the phase ladder (every promotion in renderView
-		 * guards on the previous phase, so the component stayed un-MOUNTED
-		 * forever). Gate on the pipeline phase instead: pre-CONNECTED writes just
-		 * mutate STATE, and handleConnect's tail updateView (which runs after
-		 * `phase = CONNECTED`) renders them — nothing is lost, order is restored.
-		 */
-		const renderPending = (this.isConnected && !this.templateBuilt && this.atPhase(PHASE.CONNECTED)) ? this.renderView() : null;
-		if (stateChangePending && renderPending) {
-			await Promise.all([stateChangePending, renderPending]);
-		} else if (renderPending) {
-			await renderPending;
-		} else if (stateChangePending) {
-			await stateChangePending;
-		}
-	} finally {
+	/*
+	 * Start both side-effects synchronously (preserving call order), then await
+	 * only what is actually pending. The first-render hot path is a single
+	 * task (renderView, no onStateChange) — awaiting it directly skips the
+	 * per-child `Promise.all([…])` array + wrapper microtask the batch form
+	 * otherwise pays N times during a list create. `onStateChange` runs through
+	 * runHook so a throwing hook routes to the 'lifecycleError' event instead of
+	 * killing this flush's render; renderView never REJECTS. Its sync fast path may
+	 * THROW raw when an app render() body throws — the failure contract: that
+	 * is an app bug and unwinds to its origin, no framework laundering.
+	 */
+	const stateChangeOutcome = runHook(this, 'onStateChange');
+	const stateChangePending = isPromiseLike(stateChangeOutcome) ? stateChangeOutcome : null;
+	/*
+	 * The FIRST render must not outrun the connect pipeline. `isConnected` is
+	 * the native DOM flag — true the instant the parent inserts the element,
+	 * long before handleConnect's awaited steps (style/theme-sheet fetches)
+	 * finish. An external state write landing in that window used to render
+	 * here, firing render/onMount BEFORE onConnect — inverting the documented
+	 * order and stranding the phase ladder (every promotion in renderView
+	 * guards on the previous phase, so the component stayed un-MOUNTED
+	 * forever). Gate on the pipeline phase instead: pre-CONNECTED writes just
+	 * mutate STATE, and handleConnect's tail updateView (which runs after
+	 * `phase = CONNECTED`) renders them — nothing is lost, order is restored.
+	 */
+	const renderPending = (this.isConnected && !this.templateBuilt && this.atPhase(PHASE.CONNECTED)) ? this.renderView() : null;
+	/*
+	 * renderView returns undefined when it took the synchronous patch-pass fast
+	 * path — the render is already DONE, not pending. With no async onStateChange
+	 * either, the whole flush finished inline and there is nothing to await.
+	 */
+	if (!stateChangePending && !renderPending) {
 		Perf.measure('updateView', perfMark);
+		return undefined;
 	}
+	return settleUpdateView(stateChangePending, renderPending, perfMark);
+}
+async function settleUpdateView(stateChangePending, renderPending, perfMark) {
+	if (stateChangePending && renderPending) {
+		await Promise.all([stateChangePending, renderPending]);
+	} else if (renderPending) {
+		await renderPending;
+	} else {
+		await stateChangePending;
+	}
+	Perf.measure('updateView', perfMark);
 }
 /**
  * Custom Elements lazy-property rescue. When a parent template assigns a prop
@@ -772,18 +950,45 @@ export async function updateView() {
  * @param {string} key - The shadowed property name.
  * @returns {PropertyDescriptor|null} The setter descriptor, or null if none found.
  */
-function findPrototypeSetterDescriptor(instance, key) {
-	let currentPrototype = Object.getPrototypeOf(instance);
+// @engram em:network/code/tk-33-shipped-profile-ranked-startup-fast-paths-s3-rescue-ma — this walk was ~30% of a 300-row list create before the per-class cache
+/*
+ * Per-class rescue map: prototype → Map<key, setterDescriptor|null>. The
+ * prototype chain is static after module load (all accessors land at class
+ * definition), so the answer to "does own key K shadow a chain setter?" is a
+ * per-class constant — walking the chain with getOwnPropertyDescriptor per own
+ * key per CONSTRUCT was the single largest JS cost of a 300-row list create.
+ * Nearest-proto-level-wins is preserved by first-seen-wins during the single
+ * walk; a nearest data property (a method) maps to null exactly like the old
+ * walk returning null. An accessor added to a prototype AFTER the first
+ * construct would be missed — none exist, and the fold is module-load-time.
+ */
+const ACCESSOR_RESCUE_MAPS = new WeakMap();
+function ensureAccessorRescueMap(instance) {
+	const prototype = Object.getPrototypeOf(instance);
+	let rescueMap = ACCESSOR_RESCUE_MAPS.get(prototype);
+	if (rescueMap !== undefined) {
+		return rescueMap;
+	}
+	rescueMap = new Map();
+	let currentPrototype = prototype;
 	while (currentPrototype && currentPrototype !== HTMLElement.prototype) {
-		const descriptor = Object.getOwnPropertyDescriptor(currentPrototype, key);
-		if (descriptor) {
-			return descriptor.set ? descriptor : null;
+		const names = Object.getOwnPropertyNames(currentPrototype);
+		const namesLength = names.length;
+		for (let nameIndex = 0; nameIndex < namesLength; nameIndex += 1) {
+			const key = names[nameIndex];
+			if (rescueMap.has(key)) {
+				continue;
+			}
+			const descriptor = Object.getOwnPropertyDescriptor(currentPrototype, key);
+			rescueMap.set(key, descriptor.set ? descriptor : null);
 		}
 		currentPrototype = Object.getPrototypeOf(currentPrototype);
 	}
-	return null;
+	ACCESSOR_RESCUE_MAPS.set(prototype, rescueMap);
+	return rescueMap;
 }
 export function upgradeShadowedProperties() {
+	const rescueMap = ensureAccessorRescueMap(this);
 	const ownKeys = Object.getOwnPropertyNames(this);
 	const ownKeysLength = ownKeys.length;
 	for (let keyIndex = 0; keyIndex < ownKeysLength; keyIndex += 1) {
@@ -801,7 +1006,7 @@ export function upgradeShadowedProperties() {
 			setValueAtPath(this.state, key.slice(6), this[key]);
 			continue;
 		}
-		const descriptor = findPrototypeSetterDescriptor(this, key);
+		const descriptor = rescueMap.get(key);
 		if (!descriptor) {
 			continue;
 		}

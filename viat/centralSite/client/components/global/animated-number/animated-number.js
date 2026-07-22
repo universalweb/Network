@@ -82,7 +82,7 @@ export class UIAnimatedNumber extends WebComponent {
 		return `${this.state.pre || ''}${body}${this.state.suffix || ''}`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<span class="animated-number" role="status">${this.format(this.state.shown)}</span>
 		`;
 	}

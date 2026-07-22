@@ -65,7 +65,7 @@ export class GlobalBottomBar extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<ui-status-bar .state=${this.state.statusBar}>
 				<div slot="end" class="bb-badge" data-tone=${this.state.badgeTone} tooltip=${this.state.badgeTooltip}>
 					<span class="bb-badge-dot"></span>

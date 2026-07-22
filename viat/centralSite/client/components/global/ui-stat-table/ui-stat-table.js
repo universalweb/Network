@@ -1,4 +1,6 @@
-import { html, isArray, isObject, WebComponent } from 'webcomponent';
+import {
+	html, isArray, isObject, WebComponent,
+} from 'webcomponent';
 /**
  * Reusable CSS-grid stat table. All cells live in a single grid container so
  * columns align across header + data rows regardless of row count. Header + data

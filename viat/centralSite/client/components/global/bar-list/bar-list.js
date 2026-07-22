@@ -58,10 +58,10 @@ export class UIBarList extends WebComponent {
 	barRow(item) {
 		const pct = Math.max(2, Math.round(((Number(item?.value) || 0) / this.barScale) * 100));
 		const value = formatValue(item?.value);
-		return item && item.href ? html `<li class="bl-row"><div class="bl-track"><span class="bl-bar" style=${`inline-size:${pct}%`}></span><a class="bl-label bl-link" href=${item.href}>${item?.label}</a></div><span class="bl-value">${value}</span></li>` : html `<li class="bl-row"><div class="bl-track"><span class="bl-bar" style=${`inline-size:${pct}%`}></span><span class="bl-label">${item?.label}</span></div><span class="bl-value">${value}</span></li>`;
+		return item && item.href ? html`<li class="bl-row"><div class="bl-track"><span class="bl-bar" style=${`inline-size:${pct}%`}></span><a class="bl-label bl-link" href=${item.href}>${item?.label}</a></div><span class="bl-value">${value}</span></li>` : html`<li class="bl-row"><div class="bl-track"><span class="bl-bar" style=${`inline-size:${pct}%`}></span><span class="bl-label">${item?.label}</span></div><span class="bl-value">${value}</span></li>`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<ol class="bl" data-tone=${this.toneClass}>
 				${this.list('items', this.barRow)}
 			</ol>

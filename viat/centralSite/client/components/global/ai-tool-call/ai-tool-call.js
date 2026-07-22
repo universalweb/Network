@@ -71,7 +71,7 @@ export class UIAiToolCall extends WebComponent {
 		this.state.expanded = next;
 	}
 	render() {
-		this.html `
+		this.html`
 			<details class="atc" data-status=${this.state.status} ?open=${this.state.expanded} @toggle=${this.handleToggle}>
 				<summary class="atc-summary">
 					<ui-icon class="atc-tool" .state.name=${'wrench'} .state.size=${'sm'}></ui-icon>

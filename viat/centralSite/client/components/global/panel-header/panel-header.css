@@ -1,0 +1,60 @@
+:host {
+	display: block;
+	flex-shrink: 0;
+}
+
+.ph {
+	/* Header chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--panel-header-padding, var(--space-4) var(--space-4) var(--space-3));
+	border-block-end: 1px solid color-mix(in oklab, var(--dark-divider, rgba(255, 255, 255, 0.1)) 100%, transparent);
+	flex-shrink: 0;
+}
+
+.ph-start {
+	grid-column: 1;
+	justify-self: start;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-inline-size: 0;
+}
+
+.ph-heading {
+	grid-column: 2;
+	justify-self: center;
+	text-align: center;
+	min-inline-size: 0;
+	max-inline-size: 100%;
+	font-family: var(--font-display, inherit);
+	font-size: var(--text-sm);
+	font-weight: var(--weight-semibold, 600);
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text-main);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.ph-end {
+	grid-column: 3;
+	justify-self: end;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-inline-size: 0;
+}
+
+.ph-close {
+	flex-shrink: 0;
+}
+
+.ph-close[hidden] {
+	display: none;
+}

@@ -114,6 +114,17 @@ export class WebMCPTransport {
 			}
 		}
 	}
+	/*
+	 * Third-party unregister callbacks (browser-agent MCP surface) are
+	 * uncheckable external code — best-effort teardown, warn and continue.
+	 */
+	safeUnregister(unregister) {
+		try {
+			unregister();
+		} catch (error) {
+			defaultLogger.warn('ai-mcp', 'unregister error', error);
+		}
+	}
 	unpublishComponent(id) {
 		const prefix = `${id}:`;
 		/* Map for…of tolerates deleting the current entry. */
@@ -124,11 +135,7 @@ export class WebMCPTransport {
 			if (!key.startsWith(prefix)) {
 				continue;
 			}
-			try {
-				unregister();
-			} catch (error) {
-				defaultLogger.warn('ai-mcp', 'unregister error', error);
-			}
+			this.safeUnregister(unregister);
 			this.registered.delete(key);
 		}
 	}
@@ -155,11 +162,7 @@ export class WebMCPTransport {
 		this.unsubscribeRegistry?.();
 		this.unsubscribeRegistry = null;
 		for (const unregister of this.registered.values()) {
-			try {
-				unregister();
-			} catch (error) {
-				defaultLogger.warn('ai-mcp', 'unregister error', error);
-			}
+			this.safeUnregister(unregister);
 		}
 		this.registered.clear();
 		this.mcp = null;

@@ -65,7 +65,7 @@ export class UIAiApproval extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<section class="apv" data-decided=${this.state.decided || 'pending'}>
 				<header class="apv-head">
 					<ui-icon class="apv-icon" .state.name=${'circle-alert'} .state.size=${'sm'}></ui-icon>

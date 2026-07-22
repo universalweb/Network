@@ -68,13 +68,13 @@ export class UIKbd extends WebComponent {
 	/* Light html row — plain values only; the key string is displayed as-is.
 	   Keyed by the token itself (a shortcut never repeats a key). */
 	keyCap(token) {
-		return html `<span class="kbd-cap"><kbd class="kbd-key">${capFor(token)}</kbd></span>`;
+		return html`<span class="kbd-cap"><kbd class="kbd-key">${capFor(token)}</kbd></span>`;
 	}
 	keyId(token) {
 		return token;
 	}
 	render() {
-		this.html `
+		this.html`
 			<kbd class="kbd" role="group" style=${this.sepStyle}>
 				${this.list('values', this.keyCap, this.keyId)}
 			</kbd>

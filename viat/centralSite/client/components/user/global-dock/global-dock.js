@@ -86,7 +86,7 @@ export class GlobalDock extends WebComponent {
 		});
 	}
 	render() {
-		this.html `<ui-dock #dock .state=${this.state.dock}></ui-dock>`;
+		this.html`<ui-dock #dock .state=${this.state.dock}></ui-dock>`;
 	}
 }
 customElements.define('global-dock', GlobalDock);

@@ -30,16 +30,7 @@ export function enableAi() {
  * works once the `webcomponent` package has been loaded anywhere in the app.
  */
 globalThis.WebComponent ??= WebComponent;
-export {
-	ClassList,
-	classList,
-	globalState,
-	liveChildren,
-	registerChild,
-	registry,
-	Store,
-	WebComponent,
-} from './base.js';
+export { WebComponent } from './base.js';
 export {
 	behaviorAttrNames,
 	getBehavior,
@@ -53,22 +44,30 @@ export {
 } from './debug/logger.js';
 export { computeAnchor } from './dom/anchor.js';
 export { flipMorph } from './dom/animation.js';
-export { allChildren } from './dom/children.js';
+export {
+	allChildren, allConnectedComponents, liveChildren, registerChild, trackComponent, unregisterChild, untrackComponent,
+} from './dom/children.js';
 export { DelegateEntry, emitDelegate } from './dom/delegate.js';
 export { setDocumentTitle, syncDocumentTitle } from './dom/documentTitle.js';
 export {
 	appendTo,
-	findComponent,
-	findComponents,
-	getComponent,
+	findChild,
+	findChildren,
+	getChild,
+	getChildren,
 	getComponentRoot,
-	getComponents,
-	getComponentsArray,
 	ifAssign,
 	prependTo,
 } from './dom/dom.js';
 export { setInert } from './dom/inert.js';
 export { getRef, makeRefsProxy, registerRef } from './dom/refs.js';
+export { registry } from './dom/registry.js';
+export {
+	findComponent,
+	findComponentGlobal,
+	findComponents,
+	findComponentsGlobal,
+} from './dom/search.js';
 export {
 	browser,
 	deviceType,
@@ -103,9 +102,11 @@ export {
 } from './resolver.js';
 export { bind, CONTENT_KIND } from './state/binding.js';
 export { CollectionEngine } from './state/collectionEngine.js';
+export { globalState, Store } from './state/globalState.js';
 export { assignState } from './state/state.js';
 export {
-	collection,
+	ClassList,
+	classList,
 	comp,
 	each,
 	filter,

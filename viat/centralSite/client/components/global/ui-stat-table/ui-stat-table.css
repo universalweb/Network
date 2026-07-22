@@ -2,11 +2,18 @@
 	display: block;
 	font-family: 'JetBrains Mono', ui-monospace, monospace;
 }
+/*
+ * Scrolls instead of clipping: cells ellipsize on overflow, so a dense table
+ * (the shootout races 10 columns) would silently swallow the very number it
+ * exists to show. A column that declares a min track width (`minmax(…)`) pushes
+ * the grid past the wrap and scrolls here rather than truncating.
+ */
 .table-wrap {
 	background: rgba(255, 255, 255, 0.02);
 	border: 1px solid rgba(255, 255, 255, 0.08);
 	border-radius: var(--radius-md);
-	overflow: hidden;
+	overflow-x: auto;
+	overflow-y: hidden;
 }
 .table-head {
 	padding: var(--space-3) var(--space-4) var(--space-2);

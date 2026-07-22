@@ -18,11 +18,18 @@ import '../components/user/account-detail-page/account-detail-page.js';
 import '../components/user/transaction-detail-page/transaction-detail-page.js';
 import '../components/user/wallet-onboarding/wallet-onboarding.js';
 import './tools.js';
+import VIATClientSDK from 'viat';
 import { globalState, WebComponent } from 'webcomponent';
+import { AppShell } from '../components/global/app-shell/app-shell.js';
 import { setScrollLockTarget } from '../components/global/scroll-lock.js';
 import { getTheme, setTheme } from '../components/global/theme-select/theme-manager.js';
-import { AppView } from '../components/user/app-view/app-view.js';
 import { URLRouter } from './urlRouter.js';
+/*
+ *   - SDK singleton: class-owned (`AppView.ensureSDK()` / `AppView.freshSDK()`).
+ *     The SDK carries private keys and walletSeeds — it stays off globalState;
+ *     consumers call the statics (or `this.sdk` / `this.ensureSDK()` from a
+ *     subclass) instead of importing a registry module.
+ */
 const ROUTER_CONFIG = {
 	root: '/',
 	routes: [
@@ -569,7 +576,7 @@ function backfillProfileIndex() {
 		saveProfileIndex(indexData);
 	}
 }
-class WalletApp extends AppView {
+class AppView extends AppShell {
 	static url = import.meta.url;
 	static styles = {
 		app: './app.css',
@@ -578,6 +585,39 @@ class WalletApp extends AppView {
 		activePage: 'wallet',
 	};
 	id = 'app';
+	/*
+	 * SDK singleton — page-global, class-owned. Statics reference `AppView`
+	 * explicitly so subclasses share the ONE instance instead of shadowing it.
+	 */
+	static sdk = null;
+	static async ensureSDK() {
+		if (AppView.sdk) {
+			return AppView.sdk;
+		}
+		AppView.sdk = await VIATClientSDK.create();
+		return AppView.sdk;
+	}
+	/*
+	 * The SDK's `set(key, value)` shadows prototype methods with the same name
+	 * (setting `primaryKeypair` / `trapdoorKeypair` replaces the method refs on
+	 * the instance), so a second `setKeypairs()` on one instance would invoke an
+	 * object as a function. Any operation that runs `setKeypairs` from scratch
+	 * (create / load) swaps the whole instance through here instead.
+	 */
+	static async freshSDK() {
+		AppView.sdk = await VIATClientSDK.create();
+		return AppView.sdk;
+	}
+	// Instance conveniences so subclass handlers read naturally.
+	get sdk() {
+		return AppView.sdk;
+	}
+	ensureSDK() {
+		return AppView.ensureSDK();
+	}
+	freshSDK() {
+		return AppView.freshSDK();
+	}
 	// SDK access rides the AppView base — `this.sdk` / `this.ensureSDK()` /
 	// `this.freshSDK()` resolve to the class-owned singleton. The SDK carries
 	// private keys, hdWalletInstance, and walletSeeds. Never set into
@@ -600,9 +640,20 @@ class WalletApp extends AppView {
 	// to the modal (close on success / show inline error on failure) instead
 	// of letting it pass through silently.
 	sendConfirmActive = false;
-	static async create(state, config) {
+	/**
+	 * Construct + pre-render under `mount` (default document.body).
+	 * Under the boot splash pass `{ fade: false }` so the splash owns reveal.
+	 * @param {object} [state]
+	 * @param {object} [config]
+	 * @param {{ mount?: HTMLElement|Function, fade?: boolean, duration?: number }} [options]
+	 */
+	static async create(state, config, options = {}) {
 		const app = new this(await state, config);
-		await WebComponent.preRender(app, document.body);
+		const mount = options.mount ?? document.body;
+		await WebComponent.preRender(app, mount, {
+			fade: options.fade ?? false,
+			duration: options.duration,
+		});
 		return app;
 	}
 	syncSavedProfiles() {
@@ -955,7 +1006,7 @@ class WalletApp extends AppView {
 	}
 	showWelcomeBack(profileName, locked) {
 		const wallet = this.global.wallet ?? {};
-		const modal = this.getComponent('welcome-back-modal');
+		const modal = this.getChild('welcome-back-modal');
 		modal?.openFor?.({
 			profileName,
 			address: wallet.address || '',
@@ -1114,7 +1165,7 @@ class WalletApp extends AppView {
 		const data = domEvent?.detail?.data ?? {};
 		const password = data.password ?? '';
 		const profileName = (data.profileName ?? this.global.wallet?.lockedProfileName ?? '').trim();
-		const unlockModal = this.getComponent('wallet-unlock-modal');
+		const unlockModal = this.getChild('wallet-unlock-modal');
 		if (!profileName) {
 			unlockModal?.handleFailure?.('No locked profile to unlock.');
 			return;
@@ -1182,7 +1233,7 @@ class WalletApp extends AppView {
 		}
 		this.sendConfirmActive = false;
 		const data = domEvent?.detail?.data ?? {};
-		const modal = this.getComponent('send-confirm-modal');
+		const modal = this.getChild('send-confirm-modal');
 		modal?.handleResult?.(data);
 	};
 	runPendingAction() {
@@ -1216,7 +1267,7 @@ class WalletApp extends AppView {
 			return true;
 		}
 		this.pendingAction = typeof intent === 'function' ? intent : null;
-		const unlockModal = this.getComponent('wallet-unlock-modal');
+		const unlockModal = this.getChild('wallet-unlock-modal');
 		unlockModal?.openFor?.({
 			profileName: wallet.lockedProfileName || wallet.label || '',
 			address: wallet.address || '',
@@ -1249,13 +1300,14 @@ class WalletApp extends AppView {
 	}
 	onConnect() {
 		super.onConnect();
-		// WalletApp observes the router's published global keys and reacts;
-		// the router owns URL/history work entirely. See urlRouter.js → publishGlobal.
-		this.observeGlobal([
-			'routeView', 'routeParams', 'routeFilter',
-		], () => {
-			this.syncActivePageFromGlobal();
-		});
+		/*
+		 * The shell only needs the RESOLVED active view — page components observe
+		 * the route keys they each care about. `routeActiveView` also closes a gap
+		 * the old `routeView, routeParams, routeFilter` list had: a route that
+		 * changed only `section` or `id` left all three structurally equal, so the
+		 * observer never fired even though the active page had changed.
+		 */
+		this.observeGlobal('routeActiveView', this.syncActivePageFromGlobal);
 	}
 	onMount() {
 		super.onMount();
@@ -1322,7 +1374,7 @@ class WalletApp extends AppView {
 	handleOnboardingRequired = (domEvent) => {
 		// Sensitive actions (sign / send / faucet) call this when no wallet is
 		// loaded to force-open the onboarding modal regardless of current route.
-		const onboarding = this.getComponent('wallet-onboarding');
+		const onboarding = this.getChild('wallet-onboarding');
 		const reason = domEvent?.detail?.data?.reason;
 		onboarding?.forceOpen?.(reason);
 	};
@@ -1373,73 +1425,28 @@ class WalletApp extends AppView {
 		const balance = account?.balance ?? '0';
 		const totalIn = account?.totalIn ?? '0';
 		const totalOut = account?.totalOut ?? '0';
+		// ONE account object — the raw server record plus every display value
+		// derived from it. The old split (account + walletAmount + walletPanel)
+		// wrote the same fetch's data to three keys, so a consumer had to know
+		// which slice carried which field. Now anything wallet-related
+		// subscribes to `account` wholesale and gets the lot.
 		globalState.set({
 			account: {
 				...(account ?? {}),
 				fetchedAt: new Date().toISOString(),
 				exists: Boolean(account),
 				notFound: !account,
-			},
-			walletAmount: {
-				label: 'RESOURCE ALLOCATION',
 				amount: formatBalanceShort(balance),
 				amountFull: formatBalanceShort(balance),
-			},
-			walletPanel: {
-				...(this.global.walletPanel ?? {}),
 				received: formatBalanceShort(totalIn),
 				sent: formatBalanceShort(totalOut),
 				activity: formatBalanceShort(balance),
 			},
 		});
-		this.syncWalletStatsPanel({
-			received: formatBalanceShort(totalIn),
-			sent: formatBalanceShort(totalOut),
-			activity: formatBalanceShort(balance),
-		});
-		// Transactions for the activity log piggy-back on every account
-		// refresh — the same round-trip that fetched the balance also
-		// gives us the user's recent tx list. Fire-and-forget; the activity
-		// log shows "No transactions" while it waits.
-		this.fetchTransactionsForWallet();
+		// No imperative fan-out after this write. Every wallet component
+		// subscribes to `account` and updates itself no matter where it lives —
+		// including instances that mount LATER, which a push could never reach.
 		return account;
-	}
-	// The activity-log now self-loads the wallet's tx history via collection (its
-	// own loader + cursor paging + tx→entry mapping). On an account refresh we
-	// just poke each mounted instance to reload; a wallet-address change resets it
-	// on its own (the log observes the wallet bus). Both dashboards mount one.
-	fetchTransactionsForWallet() {
-		this.applyToAll('activity-log', (log) => {
-			log.collection?.('entries')?.refresh();
-		});
-	}
-	syncWalletStatsPanel(values) {
-		this.applyToAll('wallet-stats-panel', (panel) => {
-			if (panel?.state) {
-				Object.assign(panel.state, values);
-			}
-		});
-	}
-	applyToAll(tagName, fn) {
-		// `getComponents` only finds direct shadow children, so it misses
-		// anything nested inside <app-dashboard> / <mobile-dashboard>. Walk
-		// both dashboards explicitly so shared children (transmit-panel,
-		// center-bar, activity-log, wallet-stats-panel) get updated in both
-		// the visible and hidden instance.
-		const roots = [
-			this.getComponent('app-dashboard'),
-			this.getComponent('mobile-dashboard'),
-		];
-		for (let r = 0; r < roots.length; r += 1) {
-			const root = roots[r];
-			if (!root) {
-				continue;
-			}
-			const list = root.getComponents(tagName) || [];
-			for (let index = 0; index < list.length; index += 1) {
-				fn(list[index]);
-			}
-		}
 	}
 	// Center-bar refresh button — pulls a fresh account snapshot (balance,
 	// totals, activity-log entries) for the active wallet. No-ops when no
@@ -1575,7 +1582,7 @@ class WalletApp extends AppView {
 	}
 	handleOpenSettings = (domEvent) => {
 		const data = domEvent?.detail?.data ?? {};
-		const settings = this.getComponent('settings-modal');
+		const settings = this.getChild('settings-modal');
 		if (!settings) {
 			return;
 		}
@@ -1595,14 +1602,14 @@ class WalletApp extends AppView {
 		// Opening the sign modal is harmless while locked — we only need to
 		// gate the actual sign-execute step. Lets the user paste/type data
 		// while we wait for them to confirm signing.
-		const modal = this.getComponent('sign-data-modal');
+		const modal = this.getChild('sign-data-modal');
 		if (!modal) {
 			return;
 		}
 		modal.open();
 	};
 	handleInfoOpen = () => {
-		const modal = this.getComponent('wallet-info-modal');
+		const modal = this.getChild('wallet-info-modal');
 		if (!modal) {
 			return;
 		}
@@ -1665,12 +1672,9 @@ class WalletApp extends AppView {
 		}
 		this.router.navigate(id);
 	}
-	pageFromGlobal() {
-		const raw = Number(this.global?.routeParams?.page);
-		return Number.isFinite(raw) && raw >= 1 ? raw : 1;
-	}
 	syncActivePageFromGlobal() {
-		const view = this.global?.routeView || this.global?.routeSection || this.global?.routeId || '';
+		// The router publishes the resolved view; the fallback chain lives there.
+		const view = this.global?.routeActiveView || '';
 		if (!view) {
 			return;
 		}
@@ -1681,18 +1685,14 @@ class WalletApp extends AppView {
 		// only fires on a real route change, so resetting unconditionally is safe;
 		// scroll-report then publishes scrolled=false and the top bar settles flat.
 		this.refs.shellscroll?.scrollTo(0, 0);
-		const params = this.global?.routeParams ?? {};
-		const filter = this.global?.routeFilter ?? '';
-		const page = this.pageFromGlobal();
-		if (view === 'transaction' && params.id) {
-			this.getComponent('transaction-detail-page')?.setTxId?.(params.id);
-		} else if (view === 'account' && params.address) {
-			this.getComponent('account-detail-page')?.setAddress?.(params.address, page);
-		} else if (view === 'explorer') {
-			this.getComponent('explorer-page')?.setView?.(filter || 'all', page);
-		} else if (view === 'accounts') {
-			this.getComponent('accounts-list-page')?.setPage?.(page);
-		} else if (view === 'wallet' && previousView !== 'wallet') {
+		/*
+		 * No page is targeted from here. Each page component observes
+		 * `routeActiveView` (plus the route keys it needs) and drives ITSELF —
+		 * they all stay mounted, so each one guards on being the active view.
+		 * The shell's only remaining route job is the wallet dashboard refresh,
+		 * which is an app-level data fetch rather than a page instruction.
+		 */
+		if (view === 'wallet' && previousView !== 'wallet') {
 			// Entering the dashboard from elsewhere — pull a fresh account
 			// snapshot so balance, totals and the activity feed reflect any
 			// state the user picked up while they were on the explorer /
@@ -1730,11 +1730,11 @@ class WalletApp extends AppView {
 		this.emit('sidebar:toggle', {});
 	}
 	pulldownIsOpen() {
-		return this.getComponent('global-pulldown')?.refs?.pulldown?.state?.open === true;
+		return this.getChild('global-pulldown')?.refs?.pulldown?.state?.open === true;
 	}
 	render() {
 		// Can't be css hide show for page components the router should be mounting and unmounting them based on the URL; they need to be fully removed from the DOM when not active so their lifecycle disconnects and they stop consuming resources. The router doesn't do this automatically since some pages (e.g. explorer) have nested sub-pages that share the same parent route, so we mount all page components here and let the router delegate which one is active via a wrapper class on the parent.
-		this.html `
+		this.html`
 			<global-top-bar></global-top-bar>
 			<div class="shell-scroll" #shellscroll scroll-report>
 			<div class="shell-body">
@@ -1765,41 +1765,41 @@ class WalletApp extends AppView {
 		`;
 	}
 	get refs() {
-		const dashboard = this.getComponent('app-dashboard');
+		const dashboard = this.getChild('app-dashboard');
 		return {
 			// The inner scroll surface (a plain div, so not a component lookup) — reached
 			// through the framework ref proxy this custom getter otherwise shadows.
 			shellscroll: super.refs.shellscroll,
 			dashboard,
-			activityLog: dashboard?.getComponent('activity-log'),
-			globalBottomBar: this.getComponent('global-bottom-bar'),
-			globalDock: this.getComponent('global-dock'),
-			networkStats: this.getComponent('global-sidebar')?.getComponent('network-stats'),
-			centerBar: dashboard?.getComponent('center-bar'),
-			globalTopBar: this.getComponent('global-top-bar'),
-			globalPulldown: this.getComponent('global-pulldown'),
-			transmitPanel: dashboard?.getComponent('transmit-panel'),
-			walletAmount: dashboard?.getComponent('wallet-amount'),
-			walletPanel: dashboard?.getComponent('wallet-panel'),
-			walletStatsPanel: dashboard?.getComponent('wallet-stats-panel'),
-			walletParams: dashboard?.getComponent('wallet-params'),
+			activityLog: dashboard?.getChild('activity-log'),
+			globalBottomBar: this.getChild('global-bottom-bar'),
+			globalDock: this.getChild('global-dock'),
+			networkStats: this.getChild('global-sidebar')?.getChild('network-stats'),
+			centerBar: dashboard?.getChild('center-bar'),
+			globalTopBar: this.getChild('global-top-bar'),
+			globalPulldown: this.getChild('global-pulldown'),
+			transmitPanel: dashboard?.getChild('transmit-panel'),
+			walletAmount: dashboard?.getChild('wallet-amount'),
+			walletPanel: dashboard?.getChild('wallet-panel'),
+			walletStatsPanel: dashboard?.getChild('wallet-stats-panel'),
+			walletParams: dashboard?.getChild('wallet-params'),
 		};
 	}
 	async onRender() {
 		// Point the shared background scroll-lock at the inner scroll surface — overlays
 		// (modals, pulldown) must freeze IT, not the document, which no longer scrolls.
 		setScrollLockTarget(this.refs.shellscroll ?? null);
-		// Chrome-only bootstrap: wait for both dashboards to render, sync the
-		// network latency readout from the live API, then start the router.
-		// Both <app-dashboard> and <mobile-dashboard> mount in parallel; await
-		// each so their subtree exists before the router publishes the route.
-		const dashboard = this.getComponent('app-dashboard');
-		const mobileDashboard = this.getComponent('mobile-dashboard');
+		// Chrome-only bootstrap: wait for both dashboards to render, then start
+		// the router. Both <app-dashboard> and <mobile-dashboard> mount in
+		// parallel; await each so their subtree exists before the router
+		// publishes the route. No latency push here — <network-stats> observes
+		// `api` and self-seeds from it on connect.
+		const dashboard = this.getChild('app-dashboard');
+		const mobileDashboard = this.getChild('mobile-dashboard');
 		await dashboard.lifecycle.whenRendered;
 		if (mobileDashboard?.lifecycle?.whenRendered) {
 			await mobileDashboard.lifecycle.whenRendered;
 		}
-		this.refs.networkStats.syncLatency?.(this.global.api);
 		// Router writes to globalState; AppView's `onConnect` already
 		// subscribed to the keys it cares about. We just kick the router off
 		// — no callback wiring needed.
@@ -1809,5 +1809,5 @@ class WalletApp extends AppView {
 		this.syncActivePageFromGlobal();
 	}
 }
-customElements.define('app-view', WalletApp);
-export default WalletApp;
+customElements.define('app-view', AppView);
+export default AppView;

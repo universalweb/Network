@@ -78,7 +78,7 @@ export class UIHoverVideoPlayer extends WebComponent {
 		this.state.playing = false;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="hv" style=${this.hoverVars} ?data-playing=${this.state.playing} @pointerenter=${this.handleEnter} @pointerleave=${this.handleLeave}>
 				<video
 					#video class="hv-video"

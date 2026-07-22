@@ -66,7 +66,7 @@ export class UIAccordion extends WebComponent {
 		}
 	}
 	render() {
-		this.html `
+		this.html`
 			<details class="ac" ?open=${this.state.open} ?data-disabled=${this.state.disabled}
 				name=${this.state.group || null}
 				@toggle=${this.handleToggle}>

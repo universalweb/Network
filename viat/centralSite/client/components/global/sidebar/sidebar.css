@@ -5,14 +5,13 @@
 	inset-block-end: 0;
 	pointer-events: none;
 	z-index: 30;
-	/* Gap between the drawer's outer (docked) edge and the window edge so it reads
-	   as a floating panel. It exceeds the shell scroll surface's reserved ~11px
-	   scrollbar gutter (app.css `.shell-scroll`) so the panel clears the scrollbar
-	   instead of sitting on it. Folded into `--shell-closed-x` (the hide distance)
-	   so translateX still carries the panel fully off-screen past the float gap —
-	   otherwise a float-wide sliver would peek while closed. */
+	/* Gap between the drawer's outer (docked) edge and the window edge — flyout
+	   only. Coverup + full zero this so the shell can sit flush / full-bleed.
+	   Folded into `--shell-closed-x` (the hide distance) so translateX still
+	   carries the panel fully off-screen past any float gap. */
 	--sidebar-float: var(--space-6);
 	--shell-closed-x: calc(100% + var(--sidebar-float));
+	--sidebar-inline-pad: 0px;
 }
 :host([data-side='right']) {
 	inset-inline-end: 0;
@@ -22,12 +21,9 @@
 	--shell-closed-x: calc(-100% - var(--sidebar-float));
 }
 
-/* ── FLYOUT — xl / xxl ───────────────────────────────────────────────────
-   Large screens that fit the dashboard's full max width (1536px) with room
-   beside it: a BARE flyout — no shell background, no close button, no page
-   backdrop. The slotted panel carries its own solid surface. Slides in from
-   the edge; hidden by default, shown by default only on a very wide (xxl)
-   screen. */
+/* ── FLYOUT — ultra-wide ─────────────────────────────────────────────────
+   Room beside the dashboard at full max-width: bare flyout, float gap, no
+   shell chrome. The slotted panel carries its own solid surface. */
 :host([data-mode='flyout']) {
 	width: 0;
 	/* Below the global top bar (z-index 40): the bare flyout spans the full
@@ -36,17 +32,38 @@
 	z-index: 30;
 }
 
-/* ── COVER-UP — xs / sm / md / lg ────────────────────────────────────────
-   Narrower screens, where the drawer would sit over dashboard content: a
-   frosted shell + full-page frosted backdrop, with a close button and
-   drag-to-close. */
+/* ── COVER-UP — mid widths ───────────────────────────────────────────────
+   Drawer overlays dashboard content: frosted shell + backdrop, flush to the
+   docked edge (no float gap — that spacing is flyout-only). Host stays a
+   zero-width edge anchor so the shell can grow inward via width + docked inset. */
 :host([data-mode='coverup']) {
 	width: 0;
 	z-index: 60;
+	--sidebar-float: 0px;
+	--sidebar-inline-pad: var(--space-3);
 }
 
-/* Edge swipe sensor — a thin off-screen strip, live only while the drawer is
-   closed, so it can be dragged in with nothing else to grab. */
+/* ── FULL — narrow / mobile ──────────────────────────────────────────────
+   Full-viewport menu: host is the full viewport (NOT width:0). A zero-width
+   host made inset-inline-start/end:0 + width:100dvw on the shell resolve off
+   the docked edge (content painted outside the window). Full-bleed host is
+   the containing block so the shell can fill the screen like coverup's
+   inward-growing panel. */
+:host([data-mode='full']) {
+	/* Override side-only docking: span the whole viewport. */
+	inset-inline-start: 0;
+	inset-inline-end: 0;
+	width: auto;
+	z-index: 60;
+	--sidebar-float: 0px;
+	--shell-closed-x: 100%;
+	--sidebar-inline-pad: var(--space-5);
+}
+:host([data-side='left'][data-mode='full']) {
+	--shell-closed-x: -100%;
+}
+
+/* Edge swipe sensor — thin strip while closed. Hidden in full mode (no edge). */
 .sidebar-edge {
 	position: fixed;
 	inset-block-start: 0;
@@ -65,9 +82,13 @@
 :host(:not([open])) .sidebar-edge {
 	pointer-events: auto;
 }
+:host([data-mode='full']) .sidebar-edge {
+	display: none;
+	pointer-events: none;
+	width: 0;
+}
 
-/* Backdrop — cover-up only. Transparent + blur, never a dark scrim: the page
-   stays visible but pushed back behind frosted glass. */
+/* Backdrop — coverup + full. Transparent + blur, never a dark scrim. */
 .sidebar-backdrop {
 	position: fixed;
 	inset: 0;
@@ -83,7 +104,8 @@
 :host([data-no-backdrop]) .sidebar-backdrop {
 	display: none;
 }
-:host([data-mode='coverup'][open]) .sidebar-backdrop {
+:host([data-mode='coverup'][open]) .sidebar-backdrop,
+:host([data-mode='full'][open]) .sidebar-backdrop {
 	opacity: 1;
 	pointer-events: auto;
 }
@@ -100,6 +122,7 @@
 	box-sizing: border-box;
 	pointer-events: auto;
 	padding-block-end: var(--space-12);
+	padding-inline: var(--sidebar-inline-pad);
 	will-change: transform;
 	transform: translateX(var(--shell-closed-x));
 	transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
@@ -118,27 +141,31 @@
 	transform: translateX(0);
 }
 
-/* Bare flyout shell — no background, no border, no shadow: purely a
-   positioner. The slotted panel supplies its own solid surface. The extra
-   top padding lifts the panel clear of the floating global top bar. */
+/* Bare flyout shell — no background, no border, no shadow: pure positioner.
+   Float gap lives on inset via --sidebar-float; content has no extra inline pad. */
 :host([data-mode='flyout']) .sidebar-shell {
 	width: 18.75rem;
 	background: transparent;
-	padding-block-start: 120px;
+	padding-block-start: var(--top-bar-clearance);
+	--sidebar-inline-pad: 0px;
 }
 
-/* Cover-up shell — frosted glass: a near-transparent tint over a backdrop
-   blur, with an edge border + shadow. */
-:host([data-mode='coverup']) .sidebar-shell {
-	/* Subtract the float from the full-bleed width so the drawer still fits inside
-	   the window once it is inset off the docked edge (otherwise it would overhang
-	   the opposite edge on phones). Capped at the same max as before. */
-	width: min(calc(100dvw - var(--sidebar-float)), 26.25rem);
+/* Shared overlay chrome — coverup + full (frost, scroll, top clearance).
+   Width / docking differ per mode below. */
+:host(:is([data-mode='coverup'], [data-mode='full'])) .sidebar-shell {
 	touch-action: pan-y;
-	background: var(--sidebar-shell-bg, rgba(8, 10, 16, 0.55));
-	backdrop-filter: blur(16px);
-	-webkit-backdrop-filter: blur(16px);
-	padding-block-start: 90px;
+	background: var(--sidebar-shell-bg, color-mix(in oklab, var(--bg-body, #080a10) 55%, transparent));
+	backdrop-filter: blur(16px) saturate(1.2);
+	-webkit-backdrop-filter: blur(16px) saturate(1.2);
+	padding-block-start: var(--top-bar-clearance);
+	/* Slot content must fill the shell width so panels/stats are visible. */
+	min-inline-size: 0;
+}
+
+/* Cover-up shell — partial width, flush to docked edge (float = 0). Grows
+   inward from the edge anchor (same pattern as flyout width + docked inset). */
+:host([data-mode='coverup']) .sidebar-shell {
+	width: min(100dvw, 26.25rem);
 }
 :host([data-side='right'][data-mode='coverup']) .sidebar-shell {
 	border-inline-start: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
@@ -149,8 +176,27 @@
 	box-shadow: var(--sidebar-shadow-left, 8px 0 24px rgba(0, 0, 0, 0.35));
 }
 
-/* Close button — cover-up only. The bare flyout is dismissed via the top
-   bar's toggle or a swipe; it carries no close affordance of its own. */
+/* Full shell — fills the full-bleed host. Equal inline pad via --sidebar-inline-pad.
+   Do NOT dual-set start+end insets against a zero-width host (that painted
+   off-screen); host is full-viewport in this mode so inset 0 + 100% is correct. */
+:host([data-mode='full']) .sidebar-shell {
+	width: 100%;
+	max-width: 100%;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
+	background: var(--sidebar-shell-bg, color-mix(in oklab, var(--bg-body, #080a10) 72%, transparent));
+	backdrop-filter: blur(20px) saturate(1.25);
+	-webkit-backdrop-filter: blur(20px) saturate(1.25);
+	padding-inline: var(--sidebar-inline-pad);
+}
+/* Ensure slotted children (network-stats / panels) stretch in full + coverup. */
+:host(:is([data-mode='coverup'], [data-mode='full'])) .sidebar-shell > ::slotted(*) {
+	inline-size: 100%;
+	max-inline-size: 100%;
+	box-sizing: border-box;
+}
+
+/* Close button — coverup + full. Bare flyout uses top-bar toggle / swipe only. */
 .sidebar-close {
 	position: absolute;
 	inset-block-start: 12px;
@@ -173,7 +219,8 @@
 	inset-inline-end: auto;
 	inset-inline-start: 12px;
 }
-:host([data-mode='coverup']) .sidebar-close {
+:host([data-mode='coverup']) .sidebar-close,
+:host([data-mode='full']) .sidebar-close {
 	display: inline-flex;
 }
 :host([data-no-close]) .sidebar-close {

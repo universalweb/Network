@@ -6,36 +6,17 @@
  * wrapper closure, no `.bind`, no arrow field. Handler `this` is bound via
  * `handler.call(component, …)` inside `handleEvent`.
  *
- * The same entry doubles as the abort-signal listener — `domEvent.type === 'abort'`
- * is the in-method branch for that role. One object, two callsite roles.
+ * The same entry doubles as the abort-signal listener — a dispatch whose target
+ * IS the signal is the in-method branch for that role. One object, two callsite
+ * roles, separated by target because `abort` is also a real DOM event name.
  *
  * `componentRef` and `elementRef` are WeakRefs so the entry never pins either —
  * stale derefs short-circuit the dispatch and self-detach.
  */
 import {
-	isError, isFunction, isObject, isPromiseLike,
+	isFunction, isObject, isPromiseLike, weakRefFor,
 } from '../utilities.js';
-function queueEntryError(error, domEvent, component, eventName) {
-	queueMicrotask(() => {
-		throw Object.assign(isError(error) ? error : new Error(String(error)), {
-			element: component,
-			event: domEvent,
-			eventName,
-		});
-	});
-}
-/*
- * Await-based settle instead of `.catch` — a bare thenable passes
- * `isPromiseLike` with only `.then`; `await` normalizes it. Named module fn
- * with context as args = no per-dispatch closure on the hottest event path.
- */
-async function settleEntryResult(result, domEvent, component, eventName) {
-	try {
-		await result;
-	} catch (error) {
-		queueEntryError(error, domEvent, component, eventName);
-	}
-}
+import { settleEventResult } from './settle.js';
 export class EventEntry {
 	componentRef = null;
 	elementRef = null;
@@ -47,8 +28,12 @@ export class EventEntry {
 	fireOnce = false;
 	static create(component, eventName, handler, element, options) {
 		const entry = new EventEntry();
-		entry.componentRef = new WeakRef(component);
-		entry.elementRef = new WeakRef(element || component);
+		/*
+		 * weakRefFor dedupes — on the dominant on() route element IS the
+		 * component, so both fields hold the one cached WeakRef.
+		 */
+		entry.componentRef = weakRefFor(component);
+		entry.elementRef = weakRefFor(element || component);
 		entry.eventName = eventName;
 		entry.handler = handler;
 		entry.options = options || null;
@@ -66,12 +51,19 @@ export class EventEntry {
 	 */
 	handleEvent(domEvent) {
 		const component = this.componentRef.deref();
-		if (domEvent.type === 'abort') {
+		// @engram em:network/code/evententry-dual-role-branch-must-key-on-the-dispatch-target- — why the role branch keys on target, not on type === 'abort'
+		if (this.signal !== null && domEvent.target === this.signal) {
 			/*
 			 * Signal aborted. The browser already detached this entry from the
 			 * element's listener list (that is how `{ signal }` works on
 			 * addEventListener). Clear our bookkeeping; the abort registration
 			 * was `{ once: true }` so it self-detaches.
+			 *
+			 * Keyed on the TARGET, never on `type === 'abort'`: `abort` is a real
+			 * DOM event (img / video / XHR fire it), so a type check swallowed
+			 * genuine `on('abort')` subscribers. Only the signal role dispatches
+			 * with the signal as target, so this separates the two roles even when
+			 * one entry serves an 'abort' subscription that also carries a signal.
 			 */
 			if (component) {
 				component.eventEntries?.delete(this);
@@ -97,7 +89,7 @@ export class EventEntry {
 		const element = this.elementRef.deref() || domEvent.currentTarget;
 		const result = this.handler.call(component, domEvent, element, this.eventName);
 		if (isPromiseLike(result)) {
-			settleEntryResult(result, domEvent, component, this.eventName);
+			settleEventResult(result, component, domEvent, element, this.eventName);
 		}
 		return result;
 	}
@@ -125,7 +117,7 @@ export class EventEntry {
 		if (this.signal) {
 			/*
 			 * Entry doubles as the abort listener — same object, same
-			 * `handleEvent`, branched by `domEvent.type === 'abort'`.
+			 * `handleEvent`, branched by whether the dispatch target is the signal.
 			 */
 			this.signal.addEventListener('abort', this, {
 				once: true,

@@ -24,7 +24,7 @@ export class UIDetailList extends WebComponent {
 		columns: 1,
 	};
 	render() {
-		this.html `
+		this.html`
 			<dl class="dtl" style=${() => {
 				return `--dtl-cols:${this.state.columns}`;
 			}}>

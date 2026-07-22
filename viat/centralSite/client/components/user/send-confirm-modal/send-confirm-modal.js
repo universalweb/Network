@@ -1,5 +1,5 @@
 import '../../global/modal/modal.js';
-import { WebComponent } from '../../core/index.js';
+import { WebComponent } from 'webcomponent';
 // `<send-confirm-modal>` — two-stage send dialog used by the AI flow
 // (and reusable from any future call-site). The AI invokes a tool that
 // calls `openFor({to, amount, reason})`; the modal then shows the
@@ -30,6 +30,12 @@ export class SendConfirmModal extends WebComponent {
 		reason: '',
 		busy: false,
 		error: '',
+		modal: {
+			modal: true,
+			open: false,
+			showClose: true,
+			closeOnBackdrop: false,
+		},
 	};
 	openFor(options = {}) {
 		this.assignState({
@@ -41,15 +47,23 @@ export class SendConfirmModal extends WebComponent {
 			error: '',
 		});
 		this.refs.modal?.open();
-		requestAnimationFrame(() => {
-			if (!this.state.recipient) {
-				this.refs.recipient?.focus?.();
-			} else if (!this.state.amount) {
-				this.refs.amount?.focus?.();
-			} else {
+		if (!this.focusInitialFieldTick) {
+			this.focusInitialFieldTick = () => {
+				this.focusInitialField();
+			};
+		}
+		requestAnimationFrame(this.focusInitialFieldTick);
+	}
+	focusInitialField() {
+		if (this.state.recipient) {
+			if (this.state.amount) {
 				this.refs.confirm?.focus?.();
+				return;
 			}
-		});
+			this.refs.amount?.focus?.();
+			return;
+		}
+		this.refs.recipient?.focus?.();
 	}
 	close() {
 		this.refs.modal?.close();
@@ -119,12 +133,7 @@ export class SendConfirmModal extends WebComponent {
 	}
 	render() {
 		this.html`
-			<ui-modal #modal .state=${{
-				modal: true,
-				open: false,
-				showClose: true,
-				closeOnBackdrop: false,
-			}} style="--ui-modal-max-width: 520px">
+			<ui-modal #modal .state=${this.state.modal} style="--ui-modal-max-width: 520px">
 				<div class="modal-shell">
 					<header class="modal-head">
 						<span class="modal-head-id">SEND</span>

@@ -4,10 +4,7 @@ import stylisticJs from '@stylistic/eslint-plugin';
 import jsdoc from 'eslint-plugin-jsdoc';
 import security from 'eslint-plugin-security';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
-import sonarjs from 'eslint-plugin-sonarjs';
 import globals from 'globals';
-import * as ts_api_utils from 'ts-api-utils';
-import { LanguageVariant } from 'typescript';
 const globalsObject = {};
 const customGlobals = {
 	globalThis: 'readonly',
@@ -49,25 +46,6 @@ export default [
 		},
 	},
 	{
-		files: ['**/*.{ts,tsx}'],
-		ignores: [
-			'node_modules/*',
-			'.eslintignore',
-			'**/*.mjs',
-		],
-		languageOptions: {
-			parser: '@typescript-eslint/parser',
-			parserOptions: {
-				ecmaVersion: 'latest',
-				sourceType: 'module',
-			},
-		},
-		plugins: {
-			'@typescript-eslint': ts_api_utils,
-			'simple-import-sort': simpleImportSort,
-		},
-	},
-	{
 		files: ['**/*.md'],
 		language: 'markdown/commonmark',
 		plugins: {
@@ -96,12 +74,10 @@ export default [
 		plugins: {
 			jsdoc,
 			'@stylistic': stylisticJs,
-			sonarjs,
 			security,
 			'simple-import-sort': simpleImportSort,
 		},
 		rules: {
-			'sonarjs/cognitive-complexity': 'warn',
 			'security/detect-object-injection': 'off',
 			'@stylistic/array-bracket-newline': [
 				'error',
@@ -520,6 +496,7 @@ export default [
 				'alert',
 				'confirm',
 				'prompt',
+				'fetch',
 				'location',
 				'history',
 				'open',

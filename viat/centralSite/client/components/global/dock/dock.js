@@ -135,7 +135,7 @@ export class UIDock extends WebComponent {
 			return;
 		}
 		const activeIndex = this.state.activeIndex || '';
-		const activeButton = activeIndex ? this.findComponent('dock-icon-button', (button) => {
+		const activeButton = activeIndex ? this.findChild('dock-icon-button', (button) => {
 			return button.state.id === activeIndex;
 		}) : null;
 		this.indicator.moveTo(activeButton, snap);

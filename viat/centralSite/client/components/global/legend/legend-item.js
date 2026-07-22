@@ -29,7 +29,7 @@ export class UILegendItem extends WebComponent {
 	}
 	render() {
 		if (this.state.interactive === true) {
-			this.html `
+			this.html`
 				<button #item type="button" class="lg-item"
 					aria-pressed=${this.state.muted ? 'false' : 'true'}
 					@click=${this.handleClick}>
@@ -39,7 +39,7 @@ export class UILegendItem extends WebComponent {
 			`;
 			return;
 		}
-		this.html `
+		this.html`
 			<span class="lg-item" role="listitem">
 				<span class="lg-swatch" style=${`background:${this.state.color}`}></span>
 				<span class="lg-label">${this.state.label}</span>

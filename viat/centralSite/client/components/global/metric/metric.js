@@ -46,7 +46,7 @@ export class UIMetric extends WebComponent {
 		return `${arrow} ${Math.abs(this.state.delta)}${this.state.deltaSuffix}`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="mtc" data-tone=${this.state.tone}>
 				<div class="mtc-head">
 					<span class="mtc-label">${this.state.label}</span>

@@ -61,7 +61,7 @@ export class UIYoutubeVideoPlayer extends WebComponent {
 		});
 	}
 	facadeFragment() {
-		return this.htmlElement `
+		return this.htmlElement`
 			<button class="yt-facade" type="button" aria-label=${this.state.videoTitle ? `Play video: ${this.state.videoTitle}` : 'Play video'} @click=${this.handlePlay}>
 				<img class="yt-thumb" src=${this.thumbnailUrl()} alt="" loading="lazy">
 				<span class="yt-scrim" aria-hidden="true"></span>
@@ -71,7 +71,7 @@ export class UIYoutubeVideoPlayer extends WebComponent {
 		`;
 	}
 	playerFragment() {
-		return this.htmlElement `
+		return this.htmlElement`
 			<iframe
 				class="yt-frame"
 				src=${this.embedUrl()}
@@ -81,7 +81,7 @@ export class UIYoutubeVideoPlayer extends WebComponent {
 		`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="yt" ?data-playing=${this.state.playing}>
 				${() => {
 					return this.state.playing ? this.playerFragment() : this.facadeFragment();

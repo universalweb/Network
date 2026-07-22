@@ -1,5 +1,5 @@
 import '../../global/modal/modal.js';
-import { WebComponent } from '../../core/index.js';
+import { WebComponent } from 'webcomponent';
 // `<wallet-unlock-modal>` — small password prompt that appears when the user
 // triggers an action requiring a private key (sign / send) while only the
 // public metadata of a saved profile is loaded. AppView calls `openFor(...)`
@@ -29,6 +29,12 @@ export class WalletUnlockModal extends WebComponent {
 		password: '',
 		busy: false,
 		error: '',
+		modal: {
+			modal: true,
+			open: false,
+			showClose: true,
+			closeOnBackdrop: false,
+		},
 	};
 	openFor(options = {}) {
 		this.assignState({
@@ -40,9 +46,23 @@ export class WalletUnlockModal extends WebComponent {
 			error: '',
 		});
 		this.refs.modal?.open();
-		requestAnimationFrame(() => {
-			this.refs.password?.focus?.();
-		});
+		this.schedulePasswordFocus();
+	}
+	schedulePasswordFocus(select) {
+		if (!this.passwordFocusTick) {
+			this.passwordFocusTick = () => {
+				this.focusPasswordField();
+			};
+		}
+		this.passwordFocusSelect = Boolean(select);
+		requestAnimationFrame(this.passwordFocusTick);
+	}
+	focusPasswordField() {
+		const passwordField = this.refs.password;
+		passwordField?.focus?.();
+		if (this.passwordFocusSelect) {
+			passwordField?.select?.();
+		}
 	}
 	close() {
 		this.refs.modal?.close();
@@ -60,10 +80,7 @@ export class WalletUnlockModal extends WebComponent {
 			busy: false,
 			error: message || 'Wrong password — try again.',
 		});
-		requestAnimationFrame(() => {
-			this.refs.password?.focus?.();
-			this.refs.password?.select?.();
-		});
+		this.schedulePasswordFocus(true);
 	}
 	handleUnlock() {
 		if (this.state.busy) {
@@ -97,13 +114,8 @@ export class WalletUnlockModal extends WebComponent {
 		}
 	}
 	render() {
-		this.html `
-			<ui-modal #modal .state=${{
-				modal: true,
-				open: false,
-				showClose: true,
-				closeOnBackdrop: false,
-			}} style="--ui-modal-max-width: 460px">
+		this.html`
+			<ui-modal #modal .state=${this.state.modal} style="--ui-modal-max-width: 460px">
 				<div class="modal-shell">
 					<header class="modal-head">
 						<span class="modal-head-id">⩝VIAT</span>

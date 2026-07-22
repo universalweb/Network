@@ -71,7 +71,7 @@ export class UIChip extends WebComponent {
 	}
 	render() {
 		const interactive = this.state.interactive;
-		this.html `
+		this.html`
 			<span class="chip"
 				data-tone=${this.state.tone}
 				data-size=${this.state.size}

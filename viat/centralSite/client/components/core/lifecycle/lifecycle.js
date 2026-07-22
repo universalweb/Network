@@ -1,24 +1,33 @@
 import { defaultLogger } from '../debug/logger.js';
 import { Perf } from '../debug/perf.js';
-import { registerChild } from '../dom/children.js';
+import {
+	registerChild, trackComponent, unregisterChild, untrackComponent,
+} from '../dom/children.js';
 import { register, unregister } from '../dom/registry.js';
 import { sweepHotkeyEntries } from '../hotkeys/hotkeys.js';
 import { unlinkStateCarrier } from '../state/state.js';
 import {
-	assignPromisePair,
 	clearRealmUnsubs,
 	clearUnsubs,
-	fireResolver,
+	hasAnyKey,
 	isPromiseLike,
 	isShadowRoot,
+	queueAsyncError,
+	runHook,
 } from '../utilities.js';
 import { PHASE } from './phase.js';
 /**
  * Lifecycle-promise key vocabulary. The single source of truth for every
- * `lifecycle.whenX` key passed as a string argument to fireResolver,
- * assignPromisePair, or awaitChildren. Dot-notation accesses (`x.lifecycle.whenLive`)
- * keep the idiomatic property form; renaming a key still requires touching
- * those, but at least every dynamic-key call site reads from one place.
+ * `lifecycle.whenX` key passed as a string argument to awaitChildren.
+ * Dot-notation accesses (`x.lifecycle.whenLive`) keep the idiomatic property
+ * form — they resolve through the Lifecycle class's lazy getters
+ * (lifecyclePromises.js), which also owns the fire/arm slot machinery.
+ *
+ * Deliberately NO `whenDisconnected`: disconnect is a RECURRING transition, and a
+ * one-shot promise is the wrong primitive (it would have to be re-armed every
+ * cycle — which was a footgun). Nothing consumed it. Observe disconnect via the
+ * `onDisconnect` hook, `phase === 'disconnected'` / `isDisconnected`, or the
+ * native `disconnectedCallback`.
  */
 export const LIFECYCLE_PROMISE = Object.freeze({
 	CONNECTED: 'whenConnected',
@@ -28,30 +37,10 @@ export const LIFECYCLE_PROMISE = Object.freeze({
 	VISIBLE: 'whenVisible',
 	DESTROYED: 'whenDestroyed',
 });
-/*
- * The forward connect-cycle promises: created on connect, re-armed after a
- * disconnect (so a reconnect / DOM move gets fresh ones), and resolved as
- * "stranded" if the element disconnects before the cycle completes (so awaiters
- * of whenLive/etc. on an early-detached element never hang). One array drives
- * both create + stranded-resolve since the sets are identical.
- *
- * Deliberately NO `whenDisconnected`: disconnect is a RECURRING transition, and a
- * one-shot promise is the wrong primitive (it would have to be re-armed every
- * cycle — which was a footgun). Nothing consumed it. Observe disconnect via the
- * `onDisconnect` hook, `phase === 'disconnected'` / `isDisconnected`, or the
- * native `disconnectedCallback`.
- */
-const CONNECT_CYCLE_KEYS = [
-	LIFECYCLE_PROMISE.CONNECTED,
-	LIFECYCLE_PROMISE.RENDERED,
-	LIFECYCLE_PROMISE.MOUNTED,
-	LIFECYCLE_PROMISE.LIVE,
-	LIFECYCLE_PROMISE.VISIBLE,
-];
 function attachToParent(component, parentHost) {
 	if (parentHost && parentHost.isWebComponent) {
 		component.parentComponent = parentHost;
-		component.unregisterFromParent = registerChild(parentHost, component);
+		registerChild(parentHost, component);
 		return;
 	}
 	component.parentComponent = null;
@@ -60,36 +49,50 @@ function resolveParentHost(component) {
 	const root = component.getRootNode();
 	return isShadowRoot(root) ? root.host : component.parentElement;
 }
-async function runLifecycleStep(component, handlerName, label) {
+/*
+ * Generation-scoped settle for handleConnect. Self-clears pendingConnect only
+ * when THIS connect attempt is still current — a reconnect that bumps
+ * connectGeneration leaves the newer pendingConnect intact.
+ */
+async function settleConnect(component, generation) {
 	try {
-		await component[handlerName]();
+		await component.handleConnect();
 	} catch (error) {
-		defaultLogger.error('WebComponent', `[${component.tagName}] ${label} error:`, error);
-		component.onLifecycleError(error);
+		queueAsyncError(error);
+	}
+	if (component.connectGeneration === generation) {
+		component.pendingConnect = null;
 	}
 }
-async function runDisconnectedDestroy(component) {
-	try {
-		await component.handleDestroy();
-	} catch (error) {
-		component.onLifecycleError(error);
-	}
-}
+/*
+ * Custom-element callback boundary — no try/catch wrapper. User hooks inside
+ * the handlers are contained by runHook (→ 'lifecycleError' event) and the render
+ * pipeline never rejects, so a rejection reaching these `.catch`es is a
+ * framework invariant breach: queueAsyncError surfaces it as an uncaught
+ * async error without taking down the DOM callback or the connect cycle.
+ */
 export function connectedCallback() {
 	if (!this.firstRenderDone) {
 		this.classList.add('mounting');
 	}
-	this.pendingConnect = runLifecycleStep(this, 'handleConnect', 'Connected');
+	this.connectGeneration = (this.connectGeneration | 0) + 1;
+	this.pendingConnect = settleConnect(this, this.connectGeneration);
 }
 export function connectedMoveCallback() {
-	runLifecycleStep(this, 'handleMove', 'Move');
+	this.handleMove().catch(queueAsyncError);
 }
 export function disconnectedCallback() {
-	runLifecycleStep(this, 'handleDisconnect', 'Disconnected');
+	this.handleDisconnect().catch(queueAsyncError);
 }
 export async function handleConnect() {
 	const perfMark = Perf.mark('connect');
 	register(this);
+	/*
+	 * Join the flat connected roster (the class-level search substrate) here,
+	 * next to the id registry, so membership tracks the same connect/disconnect
+	 * pair. Paired with untrackComponent in handleDisconnect.
+	 */
+	trackComponent(this);
 	if (defaultLogger.debugOn) {
 		defaultLogger.debug('connectedCallback', `${this.constructor.name}<${this.localName}>`);
 	}
@@ -105,12 +108,14 @@ export async function handleConnect() {
 	 * `await this.applyStyles()` used to queue a microtask EVERY instance
 	 * even when the styleMap was already populated (warm path, instances
 	 * 2..N of the class — synchronous adoptedStyleSheets assign). For a
-	 * 500-item list that was ~25ms of pure microtask overhead. Only await
-	 * when applyStyles actually returns a promise.
+	 * 500-item list that was ~25ms of pure microtask overhead. runHook
+	 * returns a non-thenable on the warm path (no await) and contains a
+	 * sheet-load failure (→ 'lifecycleError' event) so the connect cycle still
+	 * reaches render — style-less beats never-rendered.
 	 */
-	const stylesResult = this.applyStyles();
-	if (isPromiseLike(stylesResult)) {
-		await stylesResult;
+	const stylesOutcome = runHook(this, 'applyStyles');
+	if (isPromiseLike(stylesOutcome)) {
+		await stylesOutcome;
 	}
 	/*
 	 * Per-component theme sub-modules — adopt the active theme's rule sheet(s)
@@ -118,24 +123,22 @@ export async function handleConnect() {
 	 * for a component with no `static themes` layer (cached empty layer list →
 	 * returns null, no await); only themed components pay the sheet-load await.
 	 */
-	const themeResult = this.applyThemeStyles();
-	if (isPromiseLike(themeResult)) {
-		await themeResult;
+	const themeOutcome = runHook(this, 'applyThemeStyles');
+	if (isPromiseLike(themeOutcome)) {
+		await themeOutcome;
 	}
-	/**
-	 * Same pattern for `onConnect` — components without an `onConnect`
-	 * hook used to pay one microtask for `await undefined`. Only await if
-	 * the hook exists AND its return is a thenable.
+	/*
+	 * Same pattern for `onConnect` — runHook skips an absent hook without
+	 * allocating, so hookless components pay no microtask, and a throwing
+	 * hook routes to the 'lifecycleError' event instead of aborting the connect.
 	 */
-	if (this.onConnect) {
-		const connectResult = this.onConnect();
-		if (isPromiseLike(connectResult)) {
-			await connectResult;
-		}
+	const connectOutcome = runHook(this, 'onConnect');
+	if (isPromiseLike(connectOutcome)) {
+		await connectOutcome;
 	}
 	this.phase = PHASE.CONNECTED;
-	fireResolver(this.lifecycle, LIFECYCLE_PROMISE.CONNECTED);
-	if (Object.keys(this.STATE).length) {
+	this.lifecycle.fireConnected();
+	if (hasAnyKey(this.STATE)) {
 		await this.updateView();
 	} else {
 		await this.renderView();
@@ -147,26 +150,39 @@ export async function handleMove() {
 		defaultLogger.debug('connectedMoveCallback', `${this.constructor.name}<${this.localName}>`);
 	}
 	const oldParent = this.parentComponent;
-	this.unregisterFromParent?.();
-	this.unregisterFromParent = null;
+	unregisterChild(this);
 	attachToParent(this, resolveParentHost(this));
-	await this.onMove?.(oldParent, this.parentComponent);
+	const moveOutcome = runHook(this, 'onMove', [oldParent, this.parentComponent]);
+	if (isPromiseLike(moveOutcome)) {
+		await moveOutcome;
+	}
 }
 export async function handleDisconnect() {
 	/*
-	 * Leave the AI registry synchronously, before `await this.pendingConnect`, so
+	 * Leave the AI registry synchronously, before any await of pendingConnect, so
 	 * rapid connect/disconnect churn (list recycling) never strands a detached
 	 * component in the registry. Opt-in mixin, hence optional-chained.
 	 */
 	this.aiUnregister?.();
-	await this.pendingConnect;
+	/*
+	 * Capture-await-recheck: a settled connect already cleared pendingConnect
+	 * (sync teardown path — zero microtask). An in-flight connect is awaited;
+	 * if a reconnect landed during the await, abort teardown of the LIVE element.
+	 */
+	const awaited = this.pendingConnect;
+	if (awaited) {
+		await awaited;
+		if (this.isConnected) {
+			return;
+		}
+	}
 	this.pendingConnect = null;
 	unregister(this);
+	untrackComponent(this);
 	if (defaultLogger.debugOn) {
 		defaultLogger.debug('disconnectedCallback', `${this.constructor.name}<${this.localName}>`);
 	}
-	this.unregisterFromParent?.();
-	this.unregisterFromParent = null;
+	unregisterChild(this);
 	this.parentComponent = null;
 	this.uninstallObserver();
 	this.disposeCollections();
@@ -189,21 +205,44 @@ export async function handleDisconnect() {
 	this.cleanupTemplate();
 	this.templateBuilt = false;
 	this.firstRenderDone = false;
-	this.isRendering = false;
 	clearRealmUnsubs(this.renderDepUnsubs);
+	this.stateBus?.clearRenderDeps();
 	this.clearEventListeners();
 	this.resolveStrandedConnectCyclePromises();
-	await this.onDisconnect?.();
+	const disconnectOutcome = runHook(this, 'onDisconnect');
+	if (isPromiseLike(disconnectOutcome)) {
+		await disconnectOutcome;
+	}
 	this.phase = PHASE.DISCONNECTED;
-	this.createConnectCyclePromises();
+	// @engram em:network/code/destroy-must-settle-the-lifecycle-slots-re-arm-is-only-for-a — both strand routes, and the reconnect invariant this must not break
+	/*
+	 * Re-arm ONLY for a cycle that can actually happen again. The re-arm resets
+	 * the settled connect-cycle slots to PENDING so a RECONNECT hands out fresh
+	 * promises — but on a destroy there is no next connect, so re-arming there
+	 * left a post-destroy `whenConnected` read arming a deferred nothing would
+	 * ever fire. handleDestroy owns the settle for this path.
+	 */
 	if (this.pendingDestroy) {
 		await this.handleDestroy();
+		return;
 	}
+	this.createConnectCyclePromises();
 }
 export async function handleDestroy() {
-	await this.onDestroy?.();
+	const destroyOutcome = runHook(this, 'onDestroy');
+	if (isPromiseLike(destroyOutcome)) {
+		await destroyOutcome;
+	}
 	this.phase = PHASE.DESTROYED;
-	fireResolver(this.lifecycle, LIFECYCLE_PROMISE.DESTROYED);
+	/*
+	 * Destroy is a terminal settle path — the always-settle contract has to hold
+	 * here or an awaiter hangs forever. Covers the route that never touches
+	 * handleDisconnect at all: `destroy()` on a never-connected element calls
+	 * straight through, leaving slots that were never settled. Idempotent after a
+	 * disconnect settle (an already-SETTLED slot re-settles to the same state).
+	 */
+	this.resolveStrandedConnectCyclePromises();
+	this.lifecycle.fireDestroyed();
 }
 export function destroy() {
 	if (this.phase === PHASE.DESTROYED) {
@@ -213,24 +252,13 @@ export function destroy() {
 	if (this.isConnected) {
 		this.remove();
 	} else {
-		runDisconnectedDestroy(this);
+		this.handleDestroy().catch(queueAsyncError);
 	}
 	return this.lifecycle.whenDestroyed;
 }
 export function resolveStrandedConnectCyclePromises() {
-	const connectCycleKeysLength = CONNECT_CYCLE_KEYS.length;
-	for (let keyIndex = 0; keyIndex < connectCycleKeysLength; keyIndex++) {
-		fireResolver(this.lifecycle, CONNECT_CYCLE_KEYS[keyIndex]);
-	}
-	this.lifecycle.treeVisiblePromise = null;
+	this.lifecycle.fireConnectCycle();
 }
 export function createConnectCyclePromises() {
-	const connectCycleKeysLength = CONNECT_CYCLE_KEYS.length;
-	for (let keyIndex = 0; keyIndex < connectCycleKeysLength; keyIndex++) {
-		assignPromisePair(this.lifecycle, CONNECT_CYCLE_KEYS[keyIndex]);
-	}
-	this.lifecycle.treeVisiblePromise = null;
-}
-export function createWhenDestroyedPromise() {
-	assignPromisePair(this.lifecycle, LIFECYCLE_PROMISE.DESTROYED);
+	this.lifecycle.armConnectCycle();
 }

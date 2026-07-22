@@ -41,7 +41,7 @@ export class UIAiReasoning extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<details class="air" ?open=${this.state.expanded} ?data-streaming=${this.state.streaming} @toggle=${this.handleToggle}>
 				<summary class="air-summary">
 					<ui-icon class="air-brain" .state.name=${'brain'} .state.size=${'sm'}></ui-icon>

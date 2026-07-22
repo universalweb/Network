@@ -1,6 +1,6 @@
 /*
  * CollectionEngine — the HEADLESS async-load engine behind list-driven
- * components (paged-list, feeds). No element, no template binding, no DOM
+ * components (ui-collection, feeds). No element, no template binding, no DOM
  * wiring of its own: the HOST component owns the markup (rows via `list()`/
  * `filter()`, buttons via template `@click`, a sentinel div) and the engine
  * owns the load orchestration:
@@ -32,8 +32,8 @@
  *   // paint: ${this.list('items', Row)}  — never store the handle on this.list
  *
  * `this.collection(key, plainConfig)` ensure-registers a CollectionEngine on
- * `component.collections` (same map as template CollectionController). Dispose
- * via lifecycle `disposeCollections` (or handle.dispose()).
+ * `component.collections`. Dispose via lifecycle `disposeCollections` (or
+ * handle.dispose()).
  *
  * Low-level: CollectionEngine.create(host, config) still works; prefer ensure.
  *
@@ -44,14 +44,14 @@
  */
 import { getBehavior } from '../behaviors/registry.js';
 import { nextFrame } from '../lifecycle/scheduler.js';
-import { track } from './binding.js';
-import { STATE_PATH } from './state.js';
 import {
 	getValueAtPath,
 	isFunction,
 	isPlainObject,
 	plainEqual,
 } from '../utilities.js';
+import { track } from './binding.js';
+import { STATE_PATH } from './state.js';
 const SCROLLABLE_OVERFLOW = /(auto|scroll|overlay)/;
 const DEFAULT_MAX_AUTO_FILL = 8;
 /* Same default identity a ListSpot uses — key ?? id ?? index. */
@@ -83,6 +83,64 @@ function readPrefetchPixels(prefetch) {
 		return parseFloat(prefetch) || 0;
 	}
 	return 0;
+}
+/**
+ * Resolve the request cursor + page for a load, shared by the headless engine
+ * and the template-bound controller (their status substrates differ — reactive
+ * `${key}Status` vs flat fields — but the request math is identical). An
+ * explicit cursor (goto) targets that page; a replace without one is page 1
+ * (reset — the only case the loader's `reset` flag signals); otherwise the
+ * running cursor, whose page is the number itself or the caller's current page.
+ * @param {*} runningCursor - The engine's current cursor.
+ * @param {number} currentPage - The caller's current page (used when the cursor isn't numeric).
+ * @param {boolean} replace - True for a window-replacing load (reset/goto).
+ * @param {*} [cursorOverride] - An explicit target cursor (goto), else undefined/null.
+ * @returns {{cursor: *, page: number, reset: boolean}} The resolved request.
+ */
+export function resolveLoadRequest(runningCursor, currentPage, replace, cursorOverride) {
+	if (cursorOverride !== undefined && cursorOverride !== null) {
+		return {
+			cursor: cursorOverride,
+			page: cursorOverride,
+			reset: false,
+		};
+	}
+	if (replace) {
+		return {
+			cursor: null,
+			page: 1,
+			reset: true,
+		};
+	}
+	return {
+		cursor: runningCursor,
+		page: typeof runningCursor === 'number' ? runningCursor : currentPage,
+		reset: false,
+	};
+}
+/**
+ * Filter a freshly-loaded page to the items not already seen, recording each
+ * kept item's key. Shared by the engine and the controller — the dedupe pass
+ * was byte-identical in both (its double-maintenance was a real tk:20 cost).
+ * Mutates `seenKeys` (the caller's authoritative dedupe set) in place.
+ * @param {Array} incoming - The loader's returned page.
+ * @param {(item: any, index: number) => any} keyFn - Item identity function.
+ * @param {Set} seenKeys - The running set of seen keys.
+ * @returns {Array} The subset of `incoming` not previously seen.
+ */
+export function dropDuplicates(incoming, keyFn, seenKeys) {
+	const kept = [];
+	const incomingLength = incoming.length;
+	for (let index = 0; index < incomingLength; index += 1) {
+		const item = incoming[index];
+		const itemKey = keyFn(item, index);
+		if (seenKeys.has(itemKey)) {
+			continue;
+		}
+		seenKeys.add(itemKey);
+		kept.push(item);
+	}
+	return kept;
 }
 /*
  * sentinel element → owning engine. The IO callback is ONE shared module
@@ -449,31 +507,6 @@ export class CollectionEngine {
 		}
 		this.host.state[this.key] = [item].concat(this.items);
 	}
-	/* Resolve the request cursor + page for a load: an explicit cursor (goto)
-	   targets that page; a replace without one is page 1 (reset — the only case
-	   the loader's `reset` flag signals); otherwise the running cursor. */
-	resolveRequest(replace, cursorOverride) {
-		if (cursorOverride !== undefined && cursorOverride !== null) {
-			return {
-				cursor: cursorOverride,
-				page: cursorOverride,
-				reset: false,
-			};
-		}
-		if (replace) {
-			return {
-				cursor: null,
-				page: 1,
-				reset: true,
-			};
-		}
-		const cursor = this.cursor;
-		return {
-			cursor,
-			page: typeof cursor === 'number' ? cursor : this.status.page,
-			reset: false,
-		};
-	}
 	/* Core load. `replace` clears+replaces the window (reset / goto), else
 	   appends (loadMore). `cursorOverride` targets a specific page (goto). */
 	async load(replace, cursorOverride) {
@@ -484,7 +517,12 @@ export class CollectionEngine {
 			});
 			return;
 		}
-		if (this.status.loading) {
+		/*
+		 * A replace-load (reset/goto) SUPERSEDES an in-flight load — the token
+		 * bump + abort turn the stale response into a no-op; only additive
+		 * loads are gated, else the supersede machinery is unreachable.
+		 */
+		if (this.status.loading && !replace) {
 			return;
 		}
 		const token = this.loadToken + 1;
@@ -492,7 +530,7 @@ export class CollectionEngine {
 		this.abortController?.abort();
 		const abortController = new AbortController();
 		this.abortController = abortController;
-		const request = this.resolveRequest(replace, cursorOverride);
+		const request = resolveLoadRequest(this.cursor, this.status.page, replace, cursorOverride);
 		this.writeStatus({
 			loading: true,
 			started: true,
@@ -524,7 +562,7 @@ export class CollectionEngine {
 			return;
 		}
 		const incoming = Array.isArray(result.items) ? result.items : [];
-		const additions = config.dedupe ? this.dropDuplicates(incoming) : incoming;
+		const additions = config.dedupe ? dropDuplicates(incoming, config.keyFn, this.seenKeys) : incoming;
 		const currentItems = this.items;
 		const nextItems = replace ? additions : currentItems.concat(additions);
 		/*
@@ -552,20 +590,6 @@ export class CollectionEngine {
 			this.emitEvent('exhausted');
 		}
 		this.rearmAfterLoad();
-	}
-	dropDuplicates(incoming) {
-		const kept = [];
-		const incomingLength = incoming.length;
-		for (let index = 0; index < incomingLength; index += 1) {
-			const item = incoming[index];
-			const itemKey = this.config.keyFn(item, index);
-			if (this.seenKeys.has(itemKey)) {
-				continue;
-			}
-			this.seenKeys.add(itemKey);
-			kept.push(item);
-		}
-		return kept;
 	}
 	emitEvent(suffix) {
 		const status = this.status;
@@ -608,8 +632,9 @@ export class CollectionEngine {
 		}
 		if (isFunction(config.keyFn)) {
 			this.config.keyFn = config.keyFn;
-		} else if (config.keyFn === undefined || config.keyFn === null) {
-			// allow clearing custom keyFn back to default only when explicitly null
+		} else if (config.keyFn === null) {
+			// Explicit null clears a custom keyFn back to the default.
+			this.config.keyFn = autoKey;
 		}
 		if (config.dedupe != null) {
 			this.config.dedupe = config.dedupe !== false;
@@ -817,26 +842,20 @@ function pathSetsEqual(left, right) {
 export function ensureCollection(key, configOrFactory = {}) {
 	const isFactory = isFunction(configOrFactory);
 	if (!isFactory && !isPlainObject(configOrFactory)) {
-		throw new TypeError(
-			'this.collection(key, config): config must be a plain object or a factory function'
-		);
+		throw new TypeError('this.collection(key, config): config must be a plain object or a factory function');
 	}
-	const livePath = !isFactory ? liveStatePath(configOrFactory) : null;
-	const mode = isFactory ? CONFIG_FACTORY : (livePath ? CONFIG_LIVE : CONFIG_PLAIN);
+	const livePath = isFactory ? null : liveStatePath(configOrFactory);
+	const configMode = livePath ? CONFIG_LIVE : CONFIG_PLAIN;
+	const mode = isFactory ? CONFIG_FACTORY : configMode;
 	let registry = this.collections;
 	if (!registry) {
 		registry = new Map();
 		this.collections = registry;
 	}
 	let handle = registry.get(key);
-	if (handle && !handle.disposed && CollectionEngine.is(handle)) {
+	if (handle && !handle.disposed) {
 		wireConfigWatch(this, handle, key, configOrFactory, mode, livePath);
 		return handle;
-	}
-	if (handle && !CollectionEngine.is(handle)) {
-		throw new Error(
-			`this.collection("${key}", config): key already used by a template collection controller`
-		);
 	}
 	let initial;
 	if (mode === CONFIG_FACTORY) {
@@ -853,4 +872,29 @@ export function ensureCollection(key, configOrFactory = {}) {
 	registry.set(key, handle);
 	wireConfigWatch(this, handle, key, configOrFactory, mode, livePath);
 	return handle;
+}
+/**
+ * `this.collection(key)` — the live handle for a mounted collection: drives
+ * `reset()` / `loadMore()` / `attach()` / `gotoPage()` / … and reads its
+ * reactive `${key}Status`. Row find/search for the same key: `this.list(key)`.
+ * @param {string} stateKey - The collection's state key (its first arg).
+ * @returns {CollectionEngine|null} The engine, or null if none registered.
+ */
+export function collectionCtrl(stateKey) {
+	return this.collections?.get(stateKey) ?? null;
+}
+/**
+ * Dispose every collection engine on this component (in-flight fetches, the
+ * IntersectionObserver, scroll-report). Called from `handleDisconnect`.
+ */
+export function disposeCollections() {
+	const registry = this.collections;
+	if (!registry) {
+		return;
+	}
+	for (const handle of registry.values()) {
+		handle.dispose();
+	}
+	// Drop the last ref — Map.clear() before null is wasted work.
+	this.collections = null;
 }

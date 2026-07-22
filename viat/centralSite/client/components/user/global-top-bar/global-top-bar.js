@@ -24,6 +24,13 @@ export class GlobalTopBar extends WebComponent {
 					animated: 'rainbow',
 				},
 				{
+					id: 'notifications',
+					icon: 'bell',
+					tooltip: 'Notifications',
+					emitName: 'notification-center:toggle',
+					animated: '',
+				},
+				{
 					id: 'settings',
 					icon: 'settings',
 					tooltip: 'Settings',
@@ -271,20 +278,18 @@ export class GlobalTopBar extends WebComponent {
 		}
 	}
 	render() {
-		this.html `
+		this.html`
 			<ui-app-bar #appbar .state=${this.state.appBar}>
-				<div slot="start" class="tb-logo">
-					<a class="tb-logo-home" href="/" aria-label="Back to dashboard">
-						<svg class="tb-logo-mark" viewBox="0 0 64 64" aria-hidden="true">
-							<path fill="currentColor" d="M 11.54 15.23 L 16.46 12.77 L 32.8 43.85 L 32 56.14 Z"></path>
-							<path fill="currentColor" d="M 52.46 15.23 L 47.54 12.77 L 31.2 43.85 L 32 56.14 Z"></path>
-							<line stroke="currentColor" stroke-width="5.5" stroke-linecap="square" x1="16" y1="32" x2="48" y2="32"></line>
-						</svg>
-						<span class="tb-logo-text">VIAT</span>
-					</a>
-					<ui-icon class="tb-logo-sep" .state.name=${'chevron-right'} .state.size=${'xs'}></ui-icon>
-					<span class="tb-subtitle">${this.state.subtitle}</span>
-				</div>
+				<a slot="start" class="tb-logo" href="/" aria-label="Back to dashboard">
+					<svg class="tb-logo-mark" viewBox="0 0 64 64" aria-hidden="true">
+						<path fill="currentColor" d="M 11.54 15.23 L 16.46 12.77 L 32.8 43.85 L 32 56.14 Z"></path>
+						<path fill="currentColor" d="M 52.46 15.23 L 47.54 12.77 L 31.2 43.85 L 32 56.14 Z"></path>
+						<line stroke="currentColor" stroke-width="5.5" stroke-linecap="square" x1="16" y1="32" x2="48" y2="32"></line>
+					</svg>
+				</a>
+				<span slot="start" class="tb-logo-text">VIAT</span>
+				<ui-icon slot="start" class="tb-logo-sep" .state.name=${'chevron-right'} .state.size=${'xs'}></ui-icon>
+				<span slot="start" class="tb-subtitle">${this.state.subtitle}</span>
 				<ui-theme-select slot="end"></ui-theme-select>
 			</ui-app-bar>
 		`;

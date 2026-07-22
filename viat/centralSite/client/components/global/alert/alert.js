@@ -46,7 +46,7 @@ export class UIAlert extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="al" role="alert" data-tone=${this.state.tone} ?hidden=${!this.state.open}>
 				<ui-icon class="al-icon" ?hidden=${!this.toneIcon} .state.name=${this.toneIcon} .state.size=${'sm'}></ui-icon>
 				<div class="al-content">

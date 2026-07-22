@@ -68,7 +68,7 @@ export class UISvgBands extends WebComponent {
 		return buildBand(this.state.shape, Number(this.state.segments) || 1, Number(this.state.amplitude), this.state.fill);
 	}
 	render() {
-		this.html `
+		this.html`
 			<svg
 				class="band"
 				data-tone=${this.state.tone}

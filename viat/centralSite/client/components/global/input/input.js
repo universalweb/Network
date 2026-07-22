@@ -66,7 +66,7 @@ export class UIInput extends WebComponent {
 		this.emit('input:blur', {});
 	}
 	render() {
-		this.html `
+		this.html`
 			<div
 				class="field-shell"
 				data-tone=${this.state.tone}

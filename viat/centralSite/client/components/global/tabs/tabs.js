@@ -130,7 +130,7 @@ export class UITabs extends WebComponent {
 		}
 		// `moveTo` measures the button and writes both axes; the orientation
 		// CSS picks the pair it honours. A falsy active button hides it.
-		const activeBtn = this.findComponent('ui-tab-button', (btn) => {
+		const activeBtn = this.findChild('ui-tab-button', (btn) => {
 			return btn.state.active;
 		});
 		controller.moveTo(activeBtn, skipTransition);
@@ -331,14 +331,14 @@ export class UITabs extends WebComponent {
 		}
 		this.setActive(nextTab.id);
 		requestAnimationFrame(() => {
-			const target = this.findComponent('ui-tab-button', (btn) => {
+			const target = this.findChild('ui-tab-button', (btn) => {
 				return btn.state.id === nextTab.id;
 			});
 			target?.focus();
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="tabs" data-orientation=${this.state.orientation || 'horizontal'} data-transition=${this.state.transition || 'fade'}>
 				<div class="tab-strip"
 					role="tablist"

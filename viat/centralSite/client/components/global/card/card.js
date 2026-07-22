@@ -43,7 +43,9 @@ export class UICard extends WebComponent {
 		// Empty optional regions collapse: toggle `hidden` on each wrapper from its
 		// slot's assigned elements, so no media/avatar/action chrome shows unfilled.
 		// Use #refs (lowercased) instead of querySelector per UWC modern practice.
-		const wraps = ['mediawrap', 'avatarwrap', 'headeractionwrap', 'actionswrap'];
+		const wraps = [
+			'mediawrap', 'avatarwrap', 'headeractionwrap', 'actionswrap',
+		];
 		for (let index = 0; index < wraps.length; index += 1) {
 			this.wireCollapse(this.refs[wraps[index]]);
 		}
@@ -65,7 +67,7 @@ export class UICard extends WebComponent {
 			interactive: this.state.interactive,
 		};
 		const hasHead = Boolean(this.state.heading || this.state.subheading);
-		this.html `
+		this.html`
 			<ui-surface .state=${surfaceState}>
 				<article class="card" ?data-interactive=${this.state.interactive}>
 					<div class="card-media" #mediawrap><slot name="media"></slot></div>

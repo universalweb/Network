@@ -170,10 +170,6 @@ export function listCtrl(stateKey) {
  * Clear list handles on disconnect (spots already unsubscribed).
  */
 export function disposeLists() {
-	const registry = this.lists;
-	if (!registry) {
-		return;
-	}
-	registry.clear();
+	// Drop the last ref — Map.clear() before null is wasted work.
 	this.lists = null;
 }

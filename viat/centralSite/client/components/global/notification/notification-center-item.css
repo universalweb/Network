@@ -1,0 +1,81 @@
+:host {
+	display: block;
+}
+
+.nc-item {
+	position: relative;
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: var(--space-3);
+	align-items: start;
+	padding: var(--space-3) var(--space-4);
+	border-radius: var(--radius-lg);
+	border: 1px solid color-mix(in oklab, var(--dark-divider, rgba(255, 255, 255, 0.1)) 100%, transparent);
+	background: color-mix(in oklab, var(--bg-panel, rgba(255, 255, 255, 0.04)) 100%, transparent);
+	cursor: pointer;
+	transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.nc-item:hover {
+	background: color-mix(in oklab, var(--bg-panel, rgba(255, 255, 255, 0.08)) 100%, transparent);
+	border-color: color-mix(in oklab, var(--teal, #0ff) 28%, transparent);
+}
+
+.nc-item[data-unseen] {
+	border-inline-start: 2px solid var(--teal, var(--popup-accent));
+}
+
+.nc-item[data-muted] {
+	opacity: 0.72;
+}
+
+.nc-item[data-type='error'] {
+	border-inline-start-color: var(--magenta, #f05);
+}
+
+.nc-item-body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-width: 0;
+}
+
+.nc-item-title {
+	font-size: var(--text-2xs);
+	font-weight: var(--weight-bold, 700);
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text-light, var(--text-main));
+}
+
+.nc-item-message {
+	font-size: var(--text-xs);
+	line-height: 1.4;
+	color: var(--text-main);
+	word-break: break-word;
+}
+
+.nc-item-close {
+	appearance: none;
+	border: 0;
+	background: transparent;
+	color: var(--text-muted);
+	padding: var(--space-1);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	/* Always visible in the center (touch + pointer); Mac Notification Center keeps the control available. */
+	opacity: 0.7;
+	transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.nc-item:hover .nc-item-close,
+.nc-item-close:focus-visible {
+	opacity: 1;
+	color: var(--text-light, var(--text-main));
+	background: color-mix(in oklab, var(--text-light, white) 8%, transparent);
+}
+
+.nc-item-close:focus-visible {
+	outline: 1px solid var(--focus-ring-color);
+	outline-offset: 2px;
+}

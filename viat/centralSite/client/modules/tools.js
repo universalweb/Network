@@ -4,6 +4,21 @@ import { globalState } from '../components/core/index.js';
  * App-specific tools only. Universal tools (component verbs, getPageMap,
  * getToolSchema) live in core/ai/tools.js and register with the framework.
  */
+/*
+ * The displayed amounts live on the single `account` object alongside the raw
+ * server record, so this reads the two display fields off it rather than a
+ * separate walletAmount key.
+ */
+function getWalletAmountFromState() {
+	const account = globalState.get()?.account;
+	if (!account) {
+		return null;
+	}
+	return {
+		amount: account.amount ?? null,
+		amountFull: account.amountFull ?? null,
+	};
+}
 defineGlobalTool('getWalletAmount', {
 	description: 'Returns the current wallet amount from globalState (the amount displayed in the wallet UI). Takes no arguments.',
 	inputSchema: {
@@ -12,9 +27,7 @@ defineGlobalTool('getWalletAmount', {
 		additionalProperties: false,
 	},
 	mutating: false,
-	handler: () => {
-		return globalState.get()?.walletAmount ?? null;
-	},
+	handler: getWalletAmountFromState,
 });
 // AI-facing send entrypoint. We INTENTIONALLY don't send straight from a
 // tool call — the human stays in the loop. The tool just pops the

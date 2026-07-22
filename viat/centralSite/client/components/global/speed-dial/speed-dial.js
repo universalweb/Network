@@ -34,7 +34,7 @@ class UISpeedDialAction extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="sd-action">
 				<span class="sd-action-label" ?hidden=${!this.state.label}>${this.state.label}</span>
 				<ui-button class="sd-action-btn"
@@ -119,7 +119,7 @@ export class UISpeedDial extends WebComponent {
 		return item.value;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="speed-dial"
 				data-position=${this.state.position}
 				data-direction=${this.state.direction}

@@ -185,7 +185,7 @@ export class UIMenu extends WebComponent {
 		}
 		// Locate the row COMPONENT by a stable field and call its focus() — no
 		// shadow-piercing querySelector (the tabs roving pattern).
-		const row = this.findComponent('ui-menu-item', (candidate) => {
+		const row = this.findChild('ui-menu-item', (candidate) => {
 			return candidate.state.value === item.value;
 		});
 		if (row) {

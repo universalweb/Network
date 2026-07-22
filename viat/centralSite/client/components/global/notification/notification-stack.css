@@ -1,40 +1,81 @@
 :host {
-  position: fixed;
-  inset-block-start: 18px;
-  inset-inline-end: 18px;
-  z-index: 9999;
+	position: fixed;
+	/* Default corner — data-position on host overrides via rules below. */
+	inset-block-start: 1.125rem;
+	inset-inline-end: 1.125rem;
+	inset-block-end: auto;
+	inset-inline-start: auto;
+	z-index: var(--z-toast, 1600);
+	pointer-events: none;
 }
 
-/* Popover host inherits user-agent styles (white bg, border, centered via
-   inset:0 + margin:auto). Reset those so the stack stays pinned top-right
-   with no chrome and clicks pass through to siblings below. */
+/* Popover host inherits UA chrome (white bg, border, centered). Reset so the
+   stack stays pinned with no chrome and clicks pass through empty space. */
 :host([popover]) {
-  inset: auto;
-  inset-block-start: 18px;
-  inset-inline-end: 18px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  width: auto;
-  height: auto;
-  max-width: none;
-  max-height: none;
-  overflow: visible;
-  pointer-events: none;
+	inset: auto;
+	inset-block-start: 1.125rem;
+	inset-inline-end: 1.125rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	width: auto;
+	height: auto;
+	max-width: none;
+	max-height: none;
+	overflow: visible;
+	pointer-events: none;
+}
+
+/* Position config — toast corner. Center pane is always from the inline-end. */
+:host([data-position='top-end']),
+:host([popover][data-position='top-end']) {
+	inset-block-start: 1.125rem;
+	inset-inline-end: 1.125rem;
+	inset-block-end: auto;
+	inset-inline-start: auto;
+}
+:host([data-position='top-start']),
+:host([popover][data-position='top-start']) {
+	inset-block-start: 1.125rem;
+	inset-inline-start: 1.125rem;
+	inset-block-end: auto;
+	inset-inline-end: auto;
+}
+:host([data-position='bottom-end']),
+:host([popover][data-position='bottom-end']) {
+	inset-block-end: 1.125rem;
+	inset-inline-end: 1.125rem;
+	inset-block-start: auto;
+	inset-inline-start: auto;
+}
+:host([data-position='bottom-start']),
+:host([popover][data-position='bottom-start']) {
+	inset-block-end: 1.125rem;
+	inset-inline-start: 1.125rem;
+	inset-block-start: auto;
+	inset-inline-end: auto;
 }
 
 .notification-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-3);
-  max-width: min(360px, calc(100vw - 36px));
-  pointer-events: auto;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: var(--space-3);
+	max-width: min(22.5rem, calc(100vw - 2.25rem));
+	pointer-events: auto;
+}
+:host([data-position='top-start']) .notification-stack,
+:host([data-position='bottom-start']) .notification-stack {
+	align-items: flex-start;
+}
+:host([data-position='bottom-end']) .notification-stack,
+:host([data-position='bottom-start']) .notification-stack {
+	flex-direction: column-reverse;
 }
 
 .notification-stack > * {
-  transition: transform 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
-  pointer-events: auto;
+	transition: transform 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
+	pointer-events: auto;
 }

@@ -80,6 +80,21 @@ export function assign(target, ...sources) {
 export function hasOwn(obj, key) {
 	return Object.hasOwn(obj, key);
 }
+/**
+ * Zero-allocation emptiness probe. `Object.keys(obj).length === 0` allocates the
+ * whole keys array purely to read its length; a for-in that returns on the first
+ * own key avoids it. Hot: every connect probes `STATE` emptiness.
+ * @param {object} obj - The object to test.
+ * @returns {boolean} True when `obj` has at least one own enumerable key.
+ */
+export function hasAnyKey(obj) {
+	for (const key in obj) {
+		if (Object.hasOwn(obj, key)) {
+			return true;
+		}
+	}
+	return false;
+}
 export function keysOf(obj) {
 	return Object.keys(obj);
 }
@@ -146,12 +161,17 @@ export function plainEqual(a, b) {
 	}
 	if (isPlainObject(a) || isArray(a)) {
 		const keys = Object.keys(a);
-		if (keys.length !== Object.keys(b).length) {
+		const keysLength = keys.length;
+		if (keysLength !== Object.keys(b).length) {
 			return false;
 		}
-		return keys.every((key) => {
-			return plainEqual(a[key], b[key]);
-		});
+		for (let index = 0; index < keysLength; index++) {
+			const key = keys[index];
+			if (!plainEqual(a[key], b[key])) {
+				return false;
+			}
+		}
+		return true;
 	}
 	return false;
 }
@@ -225,6 +245,23 @@ export function getOrInit(map, key, factory) {
 	}
 	return entry;
 }
+// @engram em:network/code/events-e7-e8-shared-customevent-init-weakreffor-one-ref-per- — the sharing-safety argument, grep-verified
+/*
+ * One WeakRef per target, ever — every subscription surface (EventEntry,
+ * DelegateEntry, hotkeys, cached listeners) refs the same few components, so a
+ * fresh WeakRef per registration is pure garbage. Safe to share because a
+ * WeakRef is immutable and nothing keys on WeakRef identity; the ephemeron
+ * entry dies with its target, so the cache pins nothing.
+ */
+const weakRefCache = new WeakMap();
+export function weakRefFor(target) {
+	let ref = weakRefCache.get(target);
+	if (ref === undefined) {
+		ref = new WeakRef(target);
+		weakRefCache.set(target, ref);
+	}
+	return ref;
+}
 /**
  * Cache-or-build a path-keyed proxy. `builder` is any object exposing a
  * `static build(target, path, extra1, extra2)` method — typically the
@@ -265,16 +302,43 @@ export function fireResolver(target, pairName) {
 		target[pairName] = CACHED_RESOLVED_PROMISE;
 	}
 }
-async function awaitHookResult(result, component, errorHandler) {
+/*
+ * Shared init for error-channel emits — cancelable is the handled-signal:
+ * a listener that recovers calls preventDefault(); unprevented falls through
+ * to the raw rethrow. Module-static, zero per-error allocation.
+ */
+const ERROR_EMIT_OPTIONS = {
+	cancelable: true,
+};
+/**
+ * Error-as-event channel — failures surface as a cancelable, bubbling,
+ * composed CustomEvent on the owning component (detail.data = the error), the
+ * same bus shape as every other framework event, so apps handle them where
+ * they handle everything else: `@renderError` in a template, addEventListener
+ * on the element, or one delegated listener on an app shell (they bubble).
+ * preventDefault() marks the error HANDLED. Nobody preventing → the original
+ * error rethrows raw via queueAsyncError — silence is impossible, the default
+ * is loud. This mirrors the platform's own contract (ErrorEvent /
+ * unhandledrejection: preventDefault suppresses the default report).
+ * @param {WebComponent} component - The component the failure belongs to.
+ * @param {string} eventName - 'renderError' | 'lifecycleError'.
+ * @param {unknown} error - The failure, delivered as `detail.data`.
+ */
+export function emitError(component, eventName, error) {
+	if (component.emit(eventName, error, ERROR_EMIT_OPTIONS)) {
+		queueAsyncError(error);
+	}
+}
+async function awaitHookResult(result, component, errorEvent) {
 	try {
 		await result;
 		return true;
 	} catch (error) {
-		component[errorHandler](error);
+		emitError(component, errorEvent, error);
 		return false;
 	}
 }
-export function runHook(component, hookName, args, errorHandler = 'onLifecycleError') {
+export function runHook(component, hookName, args, errorEvent = 'lifecycleError') {
 	if (!component[hookName]) {
 		return true;
 	}
@@ -282,13 +346,13 @@ export function runHook(component, hookName, args, errorHandler = 'onLifecycleEr
 	try {
 		result = args ? component[hookName](...args) : component[hookName]();
 	} catch (error) {
-		component[errorHandler](error);
+		emitError(component, errorEvent, error);
 		return false;
 	}
 	if (!isPromiseLike(result)) {
 		return true;
 	}
-	return awaitHookResult(result, component, errorHandler);
+	return awaitHookResult(result, component, errorEvent);
 }
 /**
  * Polymorphic disposer: invokes `.unsubscribe()` on a Subscription instance,
@@ -311,6 +375,27 @@ export function clearUnsubs(set) {
 	set.clear();
 }
 /**
+ * Lifecycle disconnect sweep for a Set of subscription ENTRIES (EventEntry /
+ * DelegateEntry). Distinct from `clearUnsubs` above: that one disposes a set of
+ * polymorphic disposers via `disposeItem`, this one tears down entries that
+ * REMOVE THEMSELVES from the very set being walked (both `unsubscribe()`
+ * implementations end in `owner.<field>?.delete(this)`), so the snapshot is
+ * load-bearing, not defensive. The trailing `clear()` is the defensive half —
+ * by then the set is already empty.
+ * @param {Set<{unsubscribe: Function}>} entries - The owner's entry set.
+ */
+export function sweepEntrySet(entries) {
+	if (!entries?.size) {
+		return;
+	}
+	const snapshot = Array.from(entries);
+	const snapshotLength = snapshot.length;
+	for (let index = 0; index < snapshotLength; index++) {
+		snapshot[index].unsubscribe();
+	}
+	entries.clear();
+}
+/**
  * Tear down a 2-level realm unsub store (Map<realm, Map<path, unsub>>): dispose
  * every per-realm submap, then drop the realms. `forEach(clearUnsubs)` passes
  * each submap as clearUnsubs's first arg (extra forEach args ignored).
@@ -322,13 +407,33 @@ export function clearRealmUnsubs(store) {
 	store.forEach(clearUnsubs);
 	store.clear();
 }
+// @engram em:network/code/tk-35-x6-tk-32-known-3-shipped-setvalueatpath-parsepath-sync — KNOWN-3: skip-probe bake-in covers both call sites (8.39x unchanged)
+/*
+ * Fast membership probe for syncSubsByDiff's common case: sizes equal AND every
+ * next key already subscribed. When true the diff below is provably a no-op — it
+ * would dispose nothing (every current key is still in nextKeys) and subscribe
+ * nothing (every next key is already in current) — so returning early elides its
+ * two [...spread] snapshots. O(k) tests, zero allocation.
+ */
+function sameMembership(current, nextKeys) {
+	if (current.size !== nextKeys.size) {
+		return false;
+	}
+	for (const key of nextKeys) {
+		if (!current.has(key)) {
+			return false;
+		}
+	}
+	return true;
+}
 /**
  * Keep `current` (Map<key, sub>) in sync with `nextKeys` (Set<key>) by:
  *   - disposing the subscription for any key dropped
  *   - subscribing only for keys newly added
  * Returns the same `current` map (now updated). Stable keys keep their
  * subscription reference so we don't churn subscribers when state shapes
- * are unchanged.
+ * are unchanged — the sameMembership probe short-circuits straight to that
+ * no-op on the overwhelmingly common unchanged-deps pass.
  *
  * `subscribe` is invoked as `subscribe(key, context)` — the optional 4th
  * arg carries per-call data (component, spot, …) so callers can pass a
@@ -337,6 +442,9 @@ export function clearRealmUnsubs(store) {
  * second parameter.
  */
 export function syncSubsByDiff(current, nextKeys, subscribe, context) {
+	if (sameMembership(current, nextKeys)) {
+		return current;
+	}
 	const entries = [...current.entries()];
 	const entriesLength = entries.length;
 	for (let index = 0; index < entriesLength; index += 1) {
@@ -437,23 +545,30 @@ export function smartClone(value) {
 	}
 	return value;
 }
+// @engram em:network/code/tk-35-x6-tk-32-known-3-shipped-setvalueatpath-parsepath-sync — X6: cache reuse, never pop (1.53x)
+/*
+ * Descend via the shared parsePath cache (write paths share the read path's
+ * vocabulary, so hits are near-guaranteed) and address the final key BY INDEX.
+ * Never parts.pop(): the returned array is the cached instance every future read
+ * of this path reuses, so mutating it would corrupt them. The single-key path
+ * keeps its includes('.') shortcut to skip the Map lookup entirely.
+ */
 export function setValueAtPath(source, path, value) {
 	if (!path.includes('.')) {
 		source[path] = value;
 		return;
 	}
-	const parts = path.split('.');
-	const finalKey = parts.pop();
+	const parts = parsePath(path);
+	const lastIndex = parts.length - 1;
 	let cursor = source;
-	const partsLength = parts.length;
-	for (let index = 0; index < partsLength; index++) {
+	for (let index = 0; index < lastIndex; index++) {
 		const part = parts[index];
 		if (!isPlainObject(cursor[part]) && !isArray(cursor[part])) {
 			cursor[part] = {};
 		}
 		cursor = cursor[part];
 	}
-	cursor[finalKey] = value;
+	cursor[parts[lastIndex]] = value;
 }
 /**
  * Buffer / TypedArray / DataView / ArrayBuffer → URL-safe base64 string

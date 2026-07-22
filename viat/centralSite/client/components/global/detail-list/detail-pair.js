@@ -31,7 +31,7 @@ export class UIDetailPair extends WebComponent {
 	}
 	render() {
 		if (this.state.copy === true) {
-			this.html `
+			this.html`
 				<dt class="dtl-label">${this.state.label}</dt>
 				<dd class="dtl-value" ?data-mono=${this.state.mono}>
 					<button #button type="button" class="dtl-copy" ?data-copied=${this.state.copied}
@@ -43,7 +43,7 @@ export class UIDetailPair extends WebComponent {
 			`;
 			return;
 		}
-		this.html `
+		this.html`
 			<dt class="dtl-label">${this.state.label}</dt>
 			<dd class="dtl-value" ?data-mono=${this.state.mono}>${this.state.value}</dd>
 		`;

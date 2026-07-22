@@ -33,7 +33,7 @@ export class UIToggleOption extends WebComponent {
 		/* No is-active/data-active class — the active style keys off the
 		   aria-pressed='true' the button already carries (the ARIA state IS the
 		   style hook). Bare compounds throughout: reactive via the patch pass. */
-		this.html `
+		this.html`
 			<button #button
 				class="tg-btn"
 				type="button"

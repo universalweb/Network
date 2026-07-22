@@ -65,7 +65,7 @@ export class UICodeBlock extends WebComponent {
 		}, 1400);
 	}
 	render() {
-		this.html `
+		this.html`
 			<figure class="cb">
 				<figcaption class="cb-bar">
 					<span class="cb-lang">${this.state.language || 'code'}</span>

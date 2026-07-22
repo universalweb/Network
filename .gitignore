@@ -28,6 +28,7 @@ node_modules
 # Test cases #
 ############
 tests/*
+*/benchmarks/*
 
 # VIAT SITE #
 ############
@@ -104,4 +105,3 @@ test.js
 .installation0/
 reverted-files.txt
 session-*-changes.md
-*.test.js

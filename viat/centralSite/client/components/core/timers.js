@@ -56,7 +56,8 @@ class ComponentTimeout {
 	 * gets the component (arg 1) and this handle (arg 2, for self-reschedule).
 	 */
 	invoke(timer) {
-		timer.component.timeouts?.delete(timer.id);
+		// Armed ⇒ timeouts Set exists (run() always creates it).
+		timer.component.timeouts.delete(timer.id);
 		timer.id = 0;
 		timer.callback(timer.component, timer);
 	}
@@ -66,7 +67,8 @@ class ComponentTimeout {
 	clear() {
 		if (this.id) {
 			clearTimeout(this.id);
-			this.component.timeouts?.delete(this.id);
+			// Armed ⇒ timeouts Set exists (run() always creates it).
+			this.component.timeouts.delete(this.id);
 			this.id = 0;
 		}
 	}

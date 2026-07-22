@@ -1,0 +1,222 @@
+/* `<paged-list>` chrome only — the table frame, meta bar, pager / LOAD MORE.
+   ROW styling comes from the host via `.importStyles` (injected through this
+   shadow), so the host's `.al-row`/`.ex-cell` grids style the head + rows here. */
+:host {
+	display: block;
+	/* Load-more / end-of-results / loading tokens — override per theme or per
+	   consumer (`<ui-collection style="--uic-loadmore-fg: …">`). */
+	--uic-loadmore-fg: var(--teal, #14b8a6);
+	--uic-loadmore-bg: transparent;
+	--uic-loadmore-border: var(--dark-divider, rgba(255, 255, 255, 0.16));
+	--uic-loadmore-hover-fg: var(--dark-bg, #0b0f10);
+	--uic-loadmore-hover-bg: var(--teal, #14b8a6);
+	--uic-end-fg: var(--dark-text-dim, rgba(255, 255, 255, 0.4));
+	--uic-loading-fg: var(--teal, #14b8a6);
+}
+.pl-shell {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	font-family: var(--font-mono, monospace);
+	color: var(--dark-text-medium);
+}
+/* Near-bottom trigger surface for the load engine's IntersectionObserver —
+   needs a real (if hairline) box to intersect; never visible content. */
+.pl-sentinel {
+	block-size: 1px;
+	margin-block: 0;
+}
+.pl-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	column-gap: var(--space-5);
+	row-gap: var(--space-3);
+	padding: var(--space-3) var(--space-5);
+	background: rgba(255, 255, 255, 0.015);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-radius: var(--radius-sm);
+}
+.pl-meta {
+	display: inline-flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	column-gap: var(--space-2);
+	row-gap: var(--space-1);
+	font-size: var(--text-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.14em;
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+}
+.pl-num {
+	color: var(--dark-text-medium);
+	font-variant-numeric: tabular-nums;
+}
+.pl-label {
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+}
+.pl-status:empty {
+	display: none;
+}
+.pl-status {
+	margin-inline-start: var(--space-2);
+	color: var(--teal);
+}
+.pl-controls {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2);
+}
+.pl-btn {
+	background: transparent;
+	color: var(--dark-text-medium);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.16));
+	padding: var(--space-2) var(--space-3);
+	font-family: var(--font-mono, monospace);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.pl-btn:hover:not(:disabled) {
+	border-color: var(--teal);
+	color: var(--teal);
+}
+.pl-btn:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+.pl-table {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--dark-divider-subtle, rgba(255, 255, 255, 0.05));
+	border-radius: var(--radius-sm);
+	background: rgba(255, 255, 255, 0.01);
+}
+.pl-empty {
+	padding: var(--space-7);
+	text-align: center;
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+	font-size: var(--text-base);
+}
+.pl-empty[data-error] {
+	color: var(--color-danger);
+}
+/* Pager (paged style) + LOAD MORE (loadmore style). Each sets display:flex, which
+   beats the UA `[hidden]{display:none}` — so re-assert hidden explicitly. */
+.pl-pager {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-4);
+}
+.pl-page-label {
+	font-size: var(--text-2xs);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--dark-text-dim, rgba(255, 255, 255, 0.45));
+}
+.pl-loadmore-bar {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-block-size: var(--space-6);
+}
+/* Collapse the foot during the initial load, when none of its three states is
+   showing (the empty/status area carries the message then). */
+.pl-loadmore-bar:not(:has(> :not([hidden]))) {
+	display: none;
+}
+/* LOAD MORE — its OWN themable treatment (not the generic .pl-btn); the arrow
+   bobs to read as "more below", and the button doubles as the manual fallback
+   in scroll ('both') mode. */
+.pl-loadmore {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	min-width: 14rem;
+	padding: var(--space-3) var(--space-5);
+	font-family: var(--font-mono, monospace);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--uic-loadmore-fg);
+	background: var(--uic-loadmore-bg);
+	border: 1px solid var(--uic-loadmore-border);
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.pl-loadmore:hover {
+	color: var(--uic-loadmore-hover-fg);
+	background: var(--uic-loadmore-hover-bg);
+	border-color: var(--uic-loadmore-hover-bg);
+}
+.pl-loadmore-arrow {
+	animation: uic-bob 1.4s ease-in-out infinite;
+}
+/* End-of-results — short + distinct: uppercase text flanked by hairlines. */
+.pl-end {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-4);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--uic-end-fg);
+}
+.pl-end::before,
+.pl-end::after {
+	content: '';
+	inline-size: var(--space-5);
+	block-size: 1px;
+	background: currentColor;
+	opacity: 0.5;
+}
+/* Loading-more — spinner + label at the end of the list where rows append. */
+.pl-loading-more {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding: var(--space-3);
+	font-size: var(--text-2xs);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--uic-loading-fg);
+}
+.pl-spinner {
+	inline-size: 0.75rem;
+	block-size: 0.75rem;
+	border: 2px solid currentColor;
+	border-block-start-color: transparent;
+	border-radius: 50%;
+	animation: uic-spin 0.7s linear infinite;
+}
+@keyframes uic-bob {
+	0%, 100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(2px);
+	}
+}
+@keyframes uic-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+/* Author display:… beats the UA `[hidden]{display:none}` — re-assert hidden on
+   each foot state (and the pager / bar) explicitly. */
+.pl-pager[hidden],
+.pl-loadmore-bar[hidden],
+.pl-loadmore[hidden],
+.pl-loading-more[hidden],
+.pl-end[hidden] {
+	display: none;
+}

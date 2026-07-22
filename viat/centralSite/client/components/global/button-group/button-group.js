@@ -23,7 +23,7 @@ export class UIButtonGroup extends WebComponent {
 		orientation: 'horizontal',
 	};
 	render() {
-		this.html `
+		this.html`
 			<div class="btng" data-orientation=${this.state.orientation} role="group">
 				<slot></slot>
 			</div>

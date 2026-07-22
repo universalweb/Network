@@ -140,6 +140,15 @@ export function drainSpots() {
 	dirtySpots.clear();
 	const spotsLength = spots.length;
 	for (let index = 0; index < spotsLength; index++) {
+		/*
+		 * Invoked BARE by the bus-layer failure contract (see
+		 * pathSubscriptions.js subscribe/masterFlush): drain() runs app-authored
+		 * template expressions and app getters, and app code owns its own
+		 * failure — a throw unwinds this drain raw at its origin. Documented
+		 * cost: the remaining dequeued spots and drainGlobalRenders are skipped
+		 * for that microtask; a spot re-dirties on its next state change, so
+		 * nothing wedges permanently.
+		 */
 		spots[index].drain();
 	}
 }

@@ -21,7 +21,7 @@ export class UITimelineItem extends WebComponent {
 		tone: 'neutral',
 	};
 	render() {
-		this.html `
+		this.html`
 			<div class="tli" role="listitem">
 				<div class="tli-rail" aria-hidden="true">
 					<span class="tli-dot" data-tone=${this.state.tone || 'neutral'}>${this.markerIcon}</span>
@@ -36,13 +36,13 @@ export class UITimelineItem extends WebComponent {
 		`;
 	}
 	markerIcon() {
-		return this.state.icon ? this.htmlElement `<ui-icon .state.name=${this.state.icon} .state.size=${'xs'}></ui-icon>` : '';
+		return this.state.icon ? this.htmlElement`<ui-icon .state.name=${this.state.icon} .state.size=${'xs'}></ui-icon>` : '';
 	}
 	timeNode() {
-		return this.state.time ? this.htmlElement `<span class="tli-time">${this.state.time}</span>` : '';
+		return this.state.time ? this.htmlElement`<span class="tli-time">${this.state.time}</span>` : '';
 	}
 	descNode() {
-		return this.state.description ? this.htmlElement `<span class="tli-desc">${this.state.description}</span>` : '';
+		return this.state.description ? this.htmlElement`<span class="tli-desc">${this.state.description}</span>` : '';
 	}
 }
 customElements.define('ui-timeline-item', UITimelineItem);

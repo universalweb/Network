@@ -425,12 +425,12 @@ export class UISlider extends WebComponent {
 	markNode(mark) {
 		const pos = this.toPercent(mark.value);
 		if (mark.label != null) {
-			return html `<span class="sl-mark" style=${`--pos:${pos}%`}><span class="sl-mark-label">${mark.label}</span></span>`;
+			return html`<span class="sl-mark" style=${`--pos:${pos}%`}><span class="sl-mark-label">${mark.label}</span></span>`;
 		}
-		return html `<span class="sl-mark" style=${`--pos:${pos}%`}></span>`;
+		return html`<span class="sl-mark" style=${`--pos:${pos}%`}></span>`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="sl" data-orientation=${this.state.orientation}
 				?data-range=${this.state.range} ?data-disabled=${this.state.disabled}
 				?data-dragging=${this.state.dragging} data-label=${this.state.showLabel}>

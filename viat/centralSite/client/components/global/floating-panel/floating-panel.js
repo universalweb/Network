@@ -27,7 +27,7 @@ export class UIFloatingPanel extends MorphSurface {
 		footer: false,
 	};
 	render() {
-		this.html `
+		this.html`
 			<button
 				class="fp-trigger"
 				type="button"

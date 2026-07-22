@@ -60,7 +60,7 @@ export class UILegend extends WebComponent {
 		/* The child already flipped itself; aggregate the group's hidden set from
 		   the live children (event-time, direct shadow children). */
 		const muted = [];
-		const items = this.getComponentsArray('ui-legend-item');
+		const items = this.getChildren('ui-legend-item');
 		for (let index = 0; index < items.length; index += 1) {
 			if (items[index].state.muted === true) {
 				muted.push(items[index].state.label);
@@ -73,7 +73,7 @@ export class UILegend extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="lg" role="list" @legend:select=${this.handleSelect}>
 				${this.list('items', UILegendItem)}
 			</div>

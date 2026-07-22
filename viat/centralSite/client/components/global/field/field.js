@@ -18,7 +18,7 @@ export class UIField extends WebComponent {
 		return this.state.error || this.state.hint;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div
 				class="field"
 				data-size=${this.state.size}

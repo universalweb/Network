@@ -1,19 +1,22 @@
 :host {
 	display: block;
+	/* Swap centers the frame in the remaining view; tweak these without
+	   forking the shared page-pad defaults used by dashboard / accounts / explorer. */
+	--page-pad-block-start: var(--space-8);
+	--page-pad-block-end: var(--space-8);
 }
 .sp-shell {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	/* Fill the viewport so the frame centers vertically. Under document scroll
-	   the shell is content-height by default, which left `justify-content` with
-	   no slack and pinned the box to the top — the old fixed appView grid used to
-	   supply this height. Min (not fixed) so a tall frame on a short screen grows
-	   the shell and document-scrolls instead of clipping. The padding clears the
-	   fixed top bar / bottom bar so the frame centers in the visible band. */
-	min-height: 100svh;
-	padding: 5.625rem var(--space-4) var(--space-12) var(--space-4);
+	/* Fill the scroll surface's content box (chrome already cleared by
+	   .shell-scroll) so justify-content can center. Min (not fixed) so a tall
+	   frame on a short screen grows the shell and document-scrolls instead of
+	   clipping. Page pad stays overridable via --page-pad-* on :host. */
+	min-block-size: calc(100svh - var(--top-bar-clearance) - var(--bottom-bar-clearance));
+	padding-block: var(--page-pad-block-start) var(--page-pad-block-end);
+	padding-inline: var(--page-pad-inline);
 	font-family: var(--font-mono, 'JetBrains Mono', monospace);
 	color: var(--text-main);
 	box-sizing: border-box;

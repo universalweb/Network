@@ -56,7 +56,7 @@ export function setCurrentTracking(value) {
  * @param {string} rawKey - The authored binding key.
  * @returns {{global: boolean, storeName: string|null, key: string}} The carried channel + bare path.
  */
-function parseBindingChannel(rawKey) {
+function buildBindingChannel(rawKey) {
 	const key = rawKey.startsWith('this.') ? rawKey.slice(5) : rawKey;
 	const dotIndex = key.indexOf('.');
 	if (dotIndex === -1) {
@@ -94,6 +94,29 @@ function parseBindingChannel(rawKey) {
 		};
 	}
 	throw new Error(`bind/list key "${rawKey}": a dotted key must name its channel — state.<path>, global.<path>, or stores.<name>.<path>. Bare keys (no dot) are the state shorthand.`);
+}
+/*
+ * Channel parses are memoized — binding keys are static template strings, a
+ * bounded vocabulary re-parsed on every Binding construction every render
+ * pass. The cached channel object is SHARED across Binding instances:
+ * consumers copy its scalar fields out and must never mutate or retain it.
+ * At the cap the whole cache drops (a cold re-parse is transparent) and the
+ * check rides only the miss branch, mirroring PARSED_PATHS in utilities.js.
+ * A throwing key propagates before caching, so bad keys re-throw every call.
+ */
+const PARSED_CHANNELS = new Map();
+const PARSED_CHANNELS_CAP = 10000;
+// @engram em:network/code/tk-35-x11-x12-x18-shipped-raw-state-guard-setone-channel-mem — X18: channel memo (6.5x Binding ctor)
+function parseBindingChannel(rawKey) {
+	let channel = PARSED_CHANNELS.get(rawKey);
+	if (!channel) {
+		if (PARSED_CHANNELS.size >= PARSED_CHANNELS_CAP) {
+			PARSED_CHANNELS.clear();
+		}
+		channel = buildBindingChannel(rawKey);
+		PARSED_CHANNELS.set(rawKey, channel);
+	}
+	return channel;
 }
 export class Binding {
 	constructor(key, value, kind = null) {
@@ -156,44 +179,6 @@ export function notifyAttrChange(component, key) {
 	ensureStateBus(component).notify(ATTR_DEP_PREFIX + key);
 }
 /**
- * Per-(source, prefix) factory carrying the proxy cache, the dep prefix, and
- * the upstream `source` proxy that writes route through. `setValue` is a
- * prototype method — zero per-factory arrow allocations. Sites that wrote
- * through the old `makeSetter` arrow now call `factory.setValue(path, value)`
- * directly; the trap is responsible for the source-null fallback.
- */
-class TrackingFactory {
-	constructor(source, realm, component) {
-		this.source = source ?? null;
-		this.realm = realm;
-		this.cache = new WeakMap();
-		/*
-		 * Component reference — null for the global proxy. Used by the
-		 * tracking proxy to dispatch top-level accessor getters via
-		 * `.call(component)` and to read the class's propertyIndex (which
-		 * declares `react: false` paths, declared kinds, and accessor maps).
-		 */
-		this.component = component ?? null;
-		this.propertyIndex = component?.propertyIndex ?? null;
-	}
-	setValue(path, value) {
-		setValueAtPath(this.source, path, value);
-	}
-	create(value, path = '') {
-		/*
-		 * Binary buffers (TypedArray / DataView / ArrayBuffer) are LEAF values —
-		 * replaced wholesale, never element-mutated reactively — so pass them
-		 * through raw instead of wrapping each in a tracking proxy. Wrapping
-		 * breaks `ArrayBuffer.isView` downstream (e.g. template display →
-		 * base64url) and serves no reactive purpose.
-		 */
-		if (!isObject(value) || ArrayBuffer.isView(value) || isArrayBuffer(value)) {
-			return value;
-		}
-		return cachedProxy(this.cache, value, path, TrackingProxyHandler, this);
-	}
-}
-/**
  * Dep-tracking facade for a Set/Map under the tracking proxy. Every operation
  * lives on the prototype — one function shape across every collection facade,
  * zero closures + zero `.bind` per instance. Mirrors the `ReactiveCollection`
@@ -212,6 +197,8 @@ class TrackingCollection {
 		this.target = target;
 		this.factory = factory;
 		this.path = path;
+		this.sizePath = joinPath(path, 'size');
+		this.carrier = null;
 	}
 	has(key) {
 		return this.target.has(key);
@@ -249,7 +236,7 @@ class TrackingCollection {
 		if (currentTracking) {
 			const factory = this.factory;
 			const propertyIndex = factory.propertyIndex;
-			const nestedPath = joinPath(this.path, 'size');
+			const nestedPath = this.sizePath;
 			if (!propertyIndex || !propertyIndex.hasNonReactive || !propertyIndex.nonReactivePaths.has(nestedPath)) {
 				addDep(currentTracking, factory.realm, nestedPath);
 			}
@@ -271,10 +258,16 @@ class TrackingCollectionProxyHandler {
 	static instance = new TrackingCollectionProxyHandler();
 	get(facade, key, receiver) {
 		if (key === STATE_PATH) {
-			return {
+			/*
+			 * Cache the carrier on the facade (which is per-(target,path)); the
+			 * handler is a singleton, so it cannot hold per-path state. realm and
+			 * path are immutable for the facade's life.
+			 */
+			facade.carrier ??= {
 				realm: facade.factory.realm,
 				path: facade.path,
 			};
+			return facade.carrier;
 		}
 		return Reflect.get(facade, key, receiver);
 	}
@@ -301,6 +294,9 @@ class TrackingProxyHandler {
 	constructor(factory, path) {
 		this.factory = factory;
 		this.path = path;
+		this.carrier = null;
+		// Per-key child-proxy cache — skips joinPath + WeakMap/Map on hot re-reads.
+		this.children = null;
 	}
 	static build(target, path, factory) {
 		if (isSet(target) || isMap(target)) {
@@ -309,13 +305,34 @@ class TrackingProxyHandler {
 		}
 		return new Proxy(target, new TrackingProxyHandler(factory, path));
 	}
+	/*
+	 * Resolve a nested container to its tracking proxy. Handler-local Map keyed
+	 * by property key; hit when the raw source identity is unchanged. Miss still
+	 * goes through the factory cache so aliasing stays correct.
+	 */
+	childProxy(key, propertyValue, nestedPath) {
+		const entry = this.children?.get(key);
+		if (entry && entry.source === propertyValue) {
+			return entry.proxy;
+		}
+		const path = entry?.path ?? nestedPath ?? joinPath(this.path, key);
+		const proxy = this.factory.create(propertyValue, path);
+		(this.children ??= new Map()).set(key, {
+			source: propertyValue,
+			path,
+			proxy,
+		});
+		return proxy;
+	}
 	get(target, key) {
 		const factory = this.factory;
 		if (key === STATE_PATH) {
-			return {
+			// Per-(target,path) handler — realm and path are immutable, cache once.
+			this.carrier ??= {
 				realm: factory.realm,
 				path: this.path,
 			};
+			return this.carrier;
 		}
 		if (isSymbol(key)) {
 			return Reflect.get(target, key);
@@ -336,31 +353,86 @@ class TrackingProxyHandler {
 			return propertyIndex.getters.get(key).call(factory.component);
 		}
 		const propertyValue = Reflect.get(target, key);
-		const nestedPath = joinPath(this.path, key);
+		// Lazy nestedPath — only allocate when a consumer (dep track / child proxy) needs it.
+		let nestedPath;
 		if (!isFunction(propertyValue) && currentTracking) {
+			nestedPath = joinPath(this.path, key);
 			if (!propertyIndex || !propertyIndex.hasNonReactive || !propertyIndex.nonReactivePaths.has(nestedPath)) {
 				addDep(currentTracking, factory.realm, nestedPath);
 			}
 		}
 		if (isObject(propertyValue)) {
-			return factory.create(propertyValue, nestedPath);
+			return this.childProxy(key, propertyValue, nestedPath);
 		}
 		return propertyValue;
 	}
 	set(target, key, nextValue) {
 		const factory = this.factory;
-		const nestedPath = joinPath(this.path, key);
 		if (factory.source) {
-			factory.setValue(nestedPath, nextValue);
+			factory.setValue(joinPath(this.path, key), nextValue);
 			return true;
 		}
 		return Reflect.set(target, key, nextValue);
+	}
+}
+/**
+ * Per-(source, prefix) factory carrying the proxy cache, the dep prefix, and
+ * the upstream `source` proxy that writes route through. `setValue` is a
+ * prototype method — zero per-factory arrow allocations. Sites that wrote
+ * through the old `makeSetter` arrow now call `factory.setValue(path, value)`
+ * directly; the trap is responsible for the source-null fallback. Declared
+ * AFTER the handler classes it instantiates through `cachedProxy`, so every
+ * class reference in this module points backward.
+ */
+class TrackingFactory {
+	constructor(source, realm, component) {
+		this.source = source ?? null;
+		this.realm = realm;
+		this.cache = new WeakMap();
+		/*
+		 * Component reference — null for the global proxy. Used by the
+		 * tracking proxy to dispatch top-level accessor getters via
+		 * `.call(component)` and to read the class's propertyIndex (which
+		 * declares `react: false` paths, declared kinds, and accessor maps).
+		 */
+		this.component = component ?? null;
+		this.propertyIndex = component?.propertyIndex ?? null;
+	}
+	setValue(path, value) {
+		setValueAtPath(this.source, path, value);
+	}
+	create(value, path = '') {
+		/*
+		 * Binary buffers (TypedArray / DataView / ArrayBuffer) are LEAF values —
+		 * replaced wholesale, never element-mutated reactively — so pass them
+		 * through raw instead of wrapping each in a tracking proxy. Wrapping
+		 * breaks `ArrayBuffer.isView` downstream (e.g. template display →
+		 * base64url) and serves no reactive purpose.
+		 */
+		if (!isObject(value) || ArrayBuffer.isView(value) || isArrayBuffer(value)) {
+			return value;
+		}
+		return cachedProxy(this.cache, value, path, TrackingProxyHandler, this);
 	}
 }
 export function makeProxy(state, component) {
 	const source = component?.stateProxy ?? state;
 	const realm = component ? localRealm(component) : null;
 	return new TrackingFactory(source, realm, component ?? null).create(state ?? {}, '');
+}
+/**
+ * Memoized per-component render proxy — rebuilt only when the backing STATE
+ * object identity changes (replaceState). The single shared implementation for
+ * every render/tracking entry point (render passes and tracked template
+ * expressions alike).
+ * @param {WebComponent} component - The component whose render proxy to ensure.
+ */
+export function ensureRenderProxies(component) {
+	const currentState = component.STATE ?? {};
+	if (!component.renderProxy || component.renderProxyState !== currentState) {
+		component.renderProxy = makeProxy(currentState, component);
+		component.renderProxyState = currentState;
+	}
 }
 /*
  * Module-level memo. The global render proxy is component-INDEPENDENT — built
@@ -491,27 +563,10 @@ export class ListBinding extends Binding {
 		this.filterFn = filterFn;
 	}
 }
-/*
-	`CollectionBinding` is a `ListBinding` carrying a load-controller config. It
-	renders through the exact same `ListSpot` path (so `isListBinding` is true →
-	keyed diff + filterFn are inherited verbatim); the only addition is the load
-	controller the template mount-hook attaches when it sees this subtype. Kept
-	here beside the other binding types so the parser/runtime share one binding-type
-	vocabulary.
-*/
-export class CollectionBinding extends ListBinding {
-	static isCollectionBinding(source) {
-		return source instanceof CollectionBinding;
-	}
-	constructor(key, renderFn, keyFn, filterFn, collectionConfig) {
-		super(key, renderFn, keyFn, filterFn);
-		this.collectionConfig = collectionConfig;
-	}
-}
 export function isBindingType(value) {
 	if (!value) {
 		return false;
 	}
 	const ctor = value.constructor;
-	return ctor === Binding || ctor === ListBinding || ctor === CollectionBinding;
+	return ctor === Binding || ctor === ListBinding;
 }

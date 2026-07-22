@@ -45,7 +45,7 @@ export class WalletAddress extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="wallet-address" ?data-copied=${this.state.copied}
 				tooltip=${this.state.copied ? 'Copied!' : 'Copy address'}
 				@click=${this.handleCopy}

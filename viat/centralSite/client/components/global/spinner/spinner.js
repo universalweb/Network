@@ -10,7 +10,7 @@ export class UISpinner extends WebComponent {
 		variant: 'ring',
 	};
 	render() {
-		this.html `
+		this.html`
 			<div
 				class="spinner"
 				data-size=${this.state.size}

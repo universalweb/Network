@@ -488,12 +488,12 @@ export class UIHeatmap extends WebComponent {
 	}
 	cellRow(item) {
 		if (item.kind === 'cell') {
-			return html `<div class=${item.cls} data-index=${item.cellIndex} style=${item.style}><span class="hm-val">${item.text}</span></div>`;
+			return html`<div class=${item.cls} data-index=${item.cellIndex} style=${item.style}><span class="hm-val">${item.text}</span></div>`;
 		}
-		return html `<div class=${item.cls} style=${item.style}>${item.text}</div>`;
+		return html`<div class=${item.cls} style=${item.style}>${item.text}</div>`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="hm" data-mode=${this.state.mode}>
 				<div class="hm-scroll">
 					<div #grid class="hm-grid" style=${this.state.templateStyle}

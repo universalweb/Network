@@ -132,6 +132,13 @@
 	--status-bar-height: 2.5rem;
 	--top-bar-clearance: calc(1rem + var(--top-bar-height) + var(--space-4));
 	--bottom-bar-clearance: calc(var(--status-bar-height) + var(--space-4));
+	/* Page content inset — chrome clearance is owned by app.css `.shell-scroll`.
+	   Pages share these defaults; override on a page host for layout-specific
+	   spacing (e.g. swap centers in the view and tweaks block-start). Do NOT
+	   re-encode top-bar height here — that double-stacks clearance. */
+	--page-pad-inline: var(--space-5);
+	--page-pad-block-start: var(--space-5);
+	--page-pad-block-end: var(--space-12);
 
 	/* ── Panel ───────────────────────────────────────── */
 	--panel-shadow:

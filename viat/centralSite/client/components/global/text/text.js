@@ -34,7 +34,7 @@ export class UIText extends WebComponent {
 		truncate: false,
 	};
 	render() {
-		this.html `
+		this.html`
 			<span
 				class="text"
 				data-variant=${this.state.variant}

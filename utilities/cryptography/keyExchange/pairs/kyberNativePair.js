@@ -7,10 +7,10 @@
  *   public  → raw 1184-byte key
  *   private → raw 64-byte FIPS 203 seed (d‖z); the expanded 2400-byte dk lives only in the KeyObject.
  */
-import { int32, int64 } from '#utilities/cryptography/utils';
-import { KemKeyPair } from './KeyExchangeKeyPair.js';
 import crypto from 'node:crypto';
 import { findItem } from '@universalweb/utilitylib';
+import { int32, int64 } from '#utilities/cryptography/utils';
+import { KemKeyPair } from './KeyExchangeKeyPair.js';
 const algoList = [
 	{
 		name: 'ml-kem-768',

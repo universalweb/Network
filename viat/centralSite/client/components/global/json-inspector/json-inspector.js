@@ -292,7 +292,7 @@ export class UIJsonInspector extends WebComponent {
 		return this.state.filter === '';
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="ji">
 				<div class="ji-toolbar">
 					<input #search class="ji-search" type="search" placeholder="Filter keys & values…" $value="filter" aria-label="Filter">

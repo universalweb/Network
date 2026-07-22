@@ -16,7 +16,7 @@ export class UIBar extends WebComponent {
 		orientation: 'horizontal',
 	};
 	render() {
-		this.html `
+		this.html`
 			<div class="bar" data-orientation=${this.state.orientation || 'horizontal'}>
 				<div class="bar-region bar-start"><slot name="start"></slot></div>
 				<div class="bar-region bar-center"><slot name="center"></slot></div>

@@ -30,7 +30,7 @@ export class UIMorphDrawer extends MorphSurface {
 	// the trigger. The morph still grows it from `fromRect()` (the trigger).
 	positionSurface() {}
 	render() {
-		this.html `
+		this.html`
 			<button
 				class="dr-trigger"
 				type="button"

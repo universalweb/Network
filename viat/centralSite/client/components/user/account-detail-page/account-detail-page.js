@@ -1,7 +1,7 @@
-import '../../global/paged-list/paged-list.js';
 import '../../global/icon/icon.js';
+import AppView from '../../../modules/app.js';
 import { html, WebComponent } from '../../core/index.js';
-import { AppView } from '../app-view/app-view.js';
+import { COLLECTION_EVENT } from '../../global/ui-collection/ui-collection.js';
 const SYSTEM_ADDRESS = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const ROW_STYLES = new URL('./account-detail-rows.css', import.meta.url).href;
 function shortAddress(value) {
@@ -78,7 +78,7 @@ export class AccountDetailPage extends WebComponent {
 		accountMissing: false,
 		rowStyles: ROW_STYLES,
 	};
-	/* <paged-list> contract. loader + pageHref are page-this arrows (they read the
+	/* <ui-collection> contract. loader + pageHref are page-this arrows (they read the
 	   address); the row is self-contained (data shaped in the loader). */
 	listConfig = {
 		loader: (options) => {
@@ -95,8 +95,27 @@ export class AccountDetailPage extends WebComponent {
 		loadingMessage: 'Loading transactions…',
 		pagingStyle: 'loadmore',
 	};
-	/* Router entry: address is the routed dimension. A new address reloads the
-	   one-shot header and refreshes the tx list. */
+	/* Route-driven, not pushed. Pages stay MOUNTED (the shell hides inactive ones
+	   with CSS), so the routeActiveView guard is what keeps this page inert while
+	   another one is showing. */
+	onConnect() {
+		this.observeGlobal([
+			'routeActiveView',
+			'routeParams',
+		], this.handleRoute);
+		this.handleRoute();
+	}
+	handleRoute() {
+		if (this.global.routeActiveView !== 'account') {
+			return;
+		}
+		const address = this.global.routeParams?.address;
+		if (address) {
+			this.setAddress(address);
+		}
+	}
+	/* Address is the routed dimension. A new address reloads the one-shot header
+	   and asks the list to reload. */
 	setAddress(address) {
 		const next = address || '';
 		if (next === this.state.address && this.refs.list?.state.items.length) {
@@ -111,7 +130,7 @@ export class AccountDetailPage extends WebComponent {
 			return;
 		}
 		this.loadHeader(next);
-		this.refs.list?.refresh();
+		this.emit(COLLECTION_EVENT.REFRESH);
 	}
 	async loadHeader(address) {
 		const sdk = await AppView.ensureSDK();
@@ -252,10 +271,10 @@ export class AccountDetailPage extends WebComponent {
 					<div class="ad-section-head">
 						<span>Transactions</span>
 					</div>
-					<paged-list
+					<ui-collection
 						.state=${this.listConfig}
 						.importStyles=${this.state.rowStyles}
-						#list></paged-list>
+						#list></ui-collection>
 				</div>
 			</div>
 		`;

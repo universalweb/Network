@@ -1,7 +1,7 @@
-import '../../global/paged-list/paged-list.js';
 import '../../global/icon/icon.js';
+import AppView from '../../../modules/app.js';
 import { html, WebComponent } from '../../core/index.js';
-import { AppView } from '../app-view/app-view.js';
+import { COLLECTION_EVENT } from '../../global/ui-collection/ui-collection.js';
 const PAGE_SIZE = 20;
 const ROW_STYLES = new URL('./accounts-rows.css', import.meta.url).href;
 function shortAddress(value) {
@@ -39,6 +39,11 @@ function accountKey(account) {
 function pageHrefFor(page) {
 	return !page || page <= 1 ? '/accounts/' : `/accounts/page/${page}/`;
 }
+/* Route page-number → a 1-based page, defaulting to 1 for absent/garbage. */
+function pageFromParams(routeParams) {
+	const raw = Number(routeParams?.page);
+	return Number.isFinite(raw) && raw >= 1 ? raw : 1;
+}
 export class AccountsListPage extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -48,7 +53,7 @@ export class AccountsListPage extends WebComponent {
 		startPage: 1,
 		rowStyles: ROW_STYLES,
 	};
-	/* The data + display contract for <paged-list>, merged into its state via
+	/* The data + display contract for <ui-collection>, merged into its state via
 	   `.state=`. One stable object (a bare `.prop=${this.fn}` spot would be invoked
 	   by the engine). Accounts rows are self-contained (module getSDK, loader
 	   returns totalCount, row reads only its item), so plain method refs are fine. */
@@ -63,14 +68,30 @@ export class AccountsListPage extends WebComponent {
 		loadingMessage: 'Loading recent accounts…',
 		pagingStyle: 'loadmore',
 	};
-	/* Router entry: a route page-number → the list's start/current page. */
+	/* Route-driven, not pushed. Pages stay MOUNTED (the shell hides inactive ones
+	   with CSS), so the routeActiveView guard keeps this page inert while another
+	   one is showing. */
+	onConnect() {
+		this.observeGlobal([
+			'routeActiveView',
+			'routeParams',
+		], this.handleRoute);
+		this.handleRoute();
+	}
+	handleRoute() {
+		if (this.global.routeActiveView !== 'accounts') {
+			return;
+		}
+		this.setPage(pageFromParams(this.global.routeParams));
+	}
+	/* A route page-number → the list's start/current page. */
 	setPage(page) {
 		const target = Number.isFinite(page) && page >= 1 ? page : 1;
 		if (target === this.state.startPage) {
 			return;
 		}
 		this.state.startPage = target;
-		this.refs.list?.goToPage(target);
+		this.emit(COLLECTION_EVENT.GO_TO_PAGE, target);
 	}
 	/* collection loader (self-contained: module getSDK, returns totalCount; no
 	   instance state), cursor=page bridge. */
@@ -133,10 +154,10 @@ export class AccountsListPage extends WebComponent {
 						<span class="al-title">// ACCOUNTS · RECENTLY UPDATED</span>
 					</div>
 				</header>
-				<paged-list
+				<ui-collection
 					.state=${this.listConfig}
 					.importStyles=${this.state.rowStyles}
-					#list></paged-list>
+					#list></ui-collection>
 			</div>
 		`;
 	}

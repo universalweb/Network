@@ -16,7 +16,7 @@ export class UIStack extends WebComponent {
 		/* All dims are enumerated/boolean → data-* attributes (stack.css decorates
 		   them). Notably `gap-*` as a class collided with the uwc.util `.gap-*`
 		   spacing utilities; `[data-gap]` is immune. */
-		this.html `
+		this.html`
 			<div
 				class="stack"
 				data-dir=${this.state.direction}

@@ -40,69 +40,111 @@
  * — no arrow fields, no `.bind`, no per-registration wrapper closure
  * beyond the entry itself.
  */
+import { createBusEvent } from '../events/events.js';
+import { settleEventResult } from '../events/settle.js';
 import {
-	isError, isFunction, isObject, isPromiseLike, isString,
+	isFunction, isObject, isPromiseLike, isString, sweepEntrySet, weakRefFor,
 } from '../utilities.js';
-// — Bus registry (Tier 2) — one master at `document` per event name —
-const busRegistry = new Map();
-const busMasters = new Set();
-function dispatchBus(domEvent) {
-	const bucket = busRegistry.get(domEvent.type);
-	if (!bucket || bucket.size === 0) {
-		return;
+/*
+ * — Master registry (Tiers 2 and 4) — one master listener per (target,
+ *   eventName), fanning out to that event's entry bucket.
+ *
+ * The registry INSTANCE is the EventListener (DOM spec: any object with a
+ * `handleEvent` qualifies), exactly like ScopeRecord below. That is what makes
+ * one class serve both tiers: `removeEventListener(name, this, options)` matches
+ * by instance identity, so there is no per-target dispatcher function to keep
+ * paired with its own `add`/`remove` calls — which is precisely what the two
+ * hand-written copies existed to arrange.
+ *
+ * The target is resolved LAZILY on first attach, not in the constructor: these
+ * are module-load singletons, and `document` must not be touched at import time
+ * (delegate.js is imported by module graphs that load before a DOM exists).
+ *
+ * Snapshot before dispatch. Live Set iteration would change two contract-
+ * sensitive cases vs a snapshot: a handler that unsubscribes a not-yet-visited
+ * sibling for THIS event would skip it (snapshot still fires it), and a handler
+ * that ADDS a listener for this event would receive the in-flight event
+ * (snapshot doesn't — matching native DOM, where mid-dispatch additions don't
+ * fire). Every delegate call site was written against snapshot semantics;
+ * changing them is a deliberate, test-first pass, not a dedup rider.
+ */
+const MASTER_DOCUMENT = 'document';
+class MasterRegistry {
+	buckets = new Map();
+	attached = new Set();
+	target = null;
+	constructor(targetKind, options) {
+		this.targetKind = targetKind;
+		this.options = options;
 	}
-	const snapshot = Array.from(bucket);
-	const snapshotLength = snapshot.length;
-	for (let index = 0; index < snapshotLength; index++) {
-		snapshot[index].invoke(domEvent, null);
+	resolveTarget() {
+		if (this.target === null) {
+			this.target = this.targetKind === MASTER_DOCUMENT ? document : globalThis;
+		}
+		return this.target;
+	}
+	handleEvent(domEvent) {
+		const bucket = this.buckets.get(domEvent.type);
+		if (!bucket || bucket.size === 0) {
+			return;
+		}
+		const snapshot = Array.from(bucket);
+		const snapshotLength = snapshot.length;
+		for (let index = 0; index < snapshotLength; index++) {
+			snapshot[index].invoke(domEvent, null);
+		}
+	}
+	ensureMaster(eventName) {
+		if (this.attached.has(eventName)) {
+			return;
+		}
+		this.resolveTarget().addEventListener(eventName, this, this.options);
+		this.attached.add(eventName);
+	}
+	detachMaster(eventName) {
+		if (!this.attached.has(eventName)) {
+			return;
+		}
+		this.resolveTarget().removeEventListener(eventName, this, this.options);
+		this.attached.delete(eventName);
+	}
+	/**
+	 * Add an entry to its event's bucket, attaching the master on first use.
+	 * @param {string} eventName - The delegated event type.
+	 * @param {object} entry - The DelegateEntry to register.
+	 */
+	addEntry(eventName, entry) {
+		let bucket = this.buckets.get(eventName);
+		if (!bucket) {
+			bucket = new Set();
+			this.buckets.set(eventName, bucket);
+		}
+		bucket.add(entry);
+		this.ensureMaster(eventName);
+	}
+	/**
+	 * Remove an entry, detaching the master once its bucket empties.
+	 * @param {string} eventName - The delegated event type.
+	 * @param {object} entry - The DelegateEntry to remove.
+	 */
+	removeEntry(eventName, entry) {
+		const bucket = this.buckets.get(eventName);
+		if (!bucket) {
+			return;
+		}
+		bucket.delete(entry);
+		if (bucket.size === 0) {
+			this.buckets.delete(eventName);
+			this.detachMaster(eventName);
+		}
 	}
 }
-function ensureBusMaster(eventName) {
-	if (busMasters.has(eventName)) {
-		return;
-	}
-	document.addEventListener(eventName, dispatchBus, {
-		capture: true,
-	});
-	busMasters.add(eventName);
-}
-function detachBusMaster(eventName) {
-	if (!busMasters.has(eventName)) {
-		return;
-	}
-	document.removeEventListener(eventName, dispatchBus, {
-		capture: true,
-	});
-	busMasters.delete(eventName);
-}
-// — Environment registry (Tier 4) — one master at `globalThis` per event name —
-const envRegistry = new Map();
-const envMasters = new Set();
-function dispatchEnv(domEvent) {
-	const bucket = envRegistry.get(domEvent.type);
-	if (!bucket || bucket.size === 0) {
-		return;
-	}
-	const snapshot = Array.from(bucket);
-	const snapshotLength = snapshot.length;
-	for (let index = 0; index < snapshotLength; index++) {
-		snapshot[index].invoke(domEvent, null);
-	}
-}
-function ensureEnvMaster(eventName) {
-	if (envMasters.has(eventName)) {
-		return;
-	}
-	globalThis.addEventListener(eventName, dispatchEnv);
-	envMasters.add(eventName);
-}
-function detachEnvMaster(eventName) {
-	if (!envMasters.has(eventName)) {
-		return;
-	}
-	globalThis.removeEventListener(eventName, dispatchEnv);
-	envMasters.delete(eventName);
-}
+// Tier 2 — one master at `document` per event name.
+const busRegistry = new MasterRegistry(MASTER_DOCUMENT, {
+	capture: true,
+});
+// Tier 4 — one master at `globalThis` per event name.
+const envRegistry = new MasterRegistry('global', undefined);
 /*
  * — Scoped delegation (Tier 3) — one master per (scope, eventName) pair —
  *
@@ -152,6 +194,7 @@ class ScopeRecord {
 			return;
 		}
 		const inScope = path.indexOf(this.scope) !== -1;
+		// Snapshot before dispatch — same contract as dispatchBus.
 		const snapshot = Array.from(this.entries);
 		const snapshotLength = snapshot.length;
 		for (let index = 0; index < snapshotLength; index++) {
@@ -202,27 +245,6 @@ function releaseScopeRecord(scope, eventName, entry) {
 	}
 }
 // — DelegateEntry class — mirrors `EventEntry` shape —
-function queueDelegateError(error, domEvent, owner, eventName) {
-	queueMicrotask(() => {
-		throw Object.assign(isError(error) ? error : new Error(String(error)), {
-			element: owner,
-			event: domEvent,
-			eventName,
-		});
-	});
-}
-/*
- * Await-based settle instead of `.catch` — a bare thenable passes
- * `isPromiseLike` with only `.then`; `await` normalizes it. Named module fn
- * with context as args = no per-dispatch closure.
- */
-async function settleDelegateResult(result, domEvent, owner, eventName) {
-	try {
-		await result;
-	} catch (error) {
-		queueDelegateError(error, domEvent, owner, eventName);
-	}
-}
 export class DelegateEntry {
 	ownerRef = null;
 	kind = '';
@@ -241,7 +263,7 @@ export class DelegateEntry {
 		 * auto-unsubscribes on owner GC. Lifetime = page lifetime unless the
 		 * caller explicitly calls `entry.unsubscribe()`.
 		 */
-		entry.ownerRef = owner ? new WeakRef(owner) : null;
+		entry.ownerRef = owner ? weakRefFor(owner) : null;
 		entry.kind = kind;
 		entry.eventName = eventName;
 		entry.handler = handler;
@@ -274,7 +296,7 @@ export class DelegateEntry {
 		const thisArg = owner || matchTarget || null;
 		const result = this.handler.call(thisArg, domEvent, matchTarget || owner, this.eventName);
 		if (isPromiseLike(result)) {
-			settleDelegateResult(result, domEvent, owner, this.eventName);
+			settleEventResult(result, owner, domEvent, matchTarget || owner, this.eventName);
 		}
 	}
 	/**
@@ -293,6 +315,14 @@ export class DelegateEntry {
 		if (this.signal?.aborted) {
 			return this;
 		}
+		/*
+		 * Scoped entries are one-shot: unsubscribe() released the scope
+		 * reference for GC, so a re-subscribe has nothing to attach to —
+		 * create a fresh delegate instead of throwing into the WeakMap.
+		 */
+		if (this.kind === 'scoped' && !this.scope) {
+			return this;
+		}
 		// Owner-less entries skip the deref guard — they have no owner to GC.
 		let owner = null;
 		if (this.ownerRef) {
@@ -302,21 +332,9 @@ export class DelegateEntry {
 			}
 		}
 		if (this.kind === 'bus') {
-			let bucket = busRegistry.get(this.eventName);
-			if (!bucket) {
-				bucket = new Set();
-				busRegistry.set(this.eventName, bucket);
-			}
-			bucket.add(this);
-			ensureBusMaster(this.eventName);
+			busRegistry.addEntry(this.eventName, this);
 		} else if (this.kind === 'env') {
-			let bucket = envRegistry.get(this.eventName);
-			if (!bucket) {
-				bucket = new Set();
-				envRegistry.set(this.eventName, bucket);
-			}
-			bucket.add(this);
-			ensureEnvMaster(this.eventName);
+			envRegistry.addEntry(this.eventName, this);
 		} else if (this.kind === 'scoped') {
 			const record = getOrCreateScopeRecord(this.scope, this.eventName);
 			record.entries.add(this);
@@ -338,23 +356,9 @@ export class DelegateEntry {
 			return this;
 		}
 		if (this.kind === 'bus') {
-			const bucket = busRegistry.get(this.eventName);
-			if (bucket) {
-				bucket.delete(this);
-				if (bucket.size === 0) {
-					busRegistry.delete(this.eventName);
-					detachBusMaster(this.eventName);
-				}
-			}
+			busRegistry.removeEntry(this.eventName, this);
 		} else if (this.kind === 'env') {
-			const bucket = envRegistry.get(this.eventName);
-			if (bucket) {
-				bucket.delete(this);
-				if (bucket.size === 0) {
-					envRegistry.delete(this.eventName);
-					detachEnvMaster(this.eventName);
-				}
-			}
+			envRegistry.removeEntry(this.eventName, this);
 		} else if (this.kind === 'scoped') {
 			releaseScopeRecord(this.scope, this.eventName, this);
 		}
@@ -388,32 +392,36 @@ export class DelegateEntry {
  * @returns {DelegateEntry} The subscription entry.
  */
 export function delegate(eventName, handler, options) {
-	if (!isString(eventName) || !eventName.trim()) {
+	const trimmedEventName = isString(eventName) ? eventName.trim() : '';
+	if (!trimmedEventName) {
 		throw new TypeError('eventName must be a non-empty string');
 	}
 	if (!isFunction(handler)) {
 		throw new TypeError('handler must be a function');
 	}
-	const entry = DelegateEntry.create(this, 'bus', eventName.trim(), handler, options);
+	const entry = DelegateEntry.create(this, 'bus', trimmedEventName, handler, options);
 	entry.subscribe();
 	return entry;
 }
 export function onEnv(eventName, handler, options) {
-	if (!isString(eventName) || !eventName.trim()) {
+	const trimmedEventName = isString(eventName) ? eventName.trim() : '';
+	if (!trimmedEventName) {
 		throw new TypeError('eventName must be a non-empty string');
 	}
 	if (!isFunction(handler)) {
 		throw new TypeError('handler must be a function');
 	}
-	const entry = DelegateEntry.create(this, 'env', eventName.trim(), handler, options);
+	const entry = DelegateEntry.create(this, 'env', trimmedEventName, handler, options);
 	entry.subscribe();
 	return entry;
 }
 function installScopedDelegateInternal(owner, eventName, selector, handler, scope, options) {
-	if (!isString(eventName) || !eventName.trim()) {
+	const trimmedEventName = isString(eventName) ? eventName.trim() : '';
+	if (!trimmedEventName) {
 		throw new TypeError('eventName must be a non-empty string');
 	}
-	if (!isString(selector) || !selector.trim()) {
+	const trimmedSelector = isString(selector) ? selector.trim() : '';
+	if (!trimmedSelector) {
 		throw new TypeError('selector must be a non-empty string');
 	}
 	if (!isFunction(handler)) {
@@ -428,8 +436,8 @@ function installScopedDelegateInternal(owner, eventName, selector, handler, scop
 	if (!resolvedScope) {
 		throw new TypeError('scope must be provided when no owner is bound');
 	}
-	const entry = DelegateEntry.create(owner, 'scoped', eventName.trim(), handler, options);
-	entry.selector = selector.trim();
+	const entry = DelegateEntry.create(owner, 'scoped', trimmedEventName, handler, options);
+	entry.selector = trimmedSelector;
 	entry.scope = resolvedScope;
 	entry.subscribe();
 	return entry;
@@ -455,16 +463,7 @@ export function installScopedDelegate(eventName, selector, handler, scope, optio
 }
 // — Lifecycle sweep — mixed onto the prototype, called by `lifecycle.js` —
 export function clearDelegateListeners() {
-	const entries = this.delegateEntries;
-	if (!entries?.size) {
-		return;
-	}
-	const snapshot = Array.from(entries);
-	const snapshotLength = snapshot.length;
-	for (let index = 0; index < snapshotLength; index++) {
-		snapshot[index].unsubscribe();
-	}
-	entries.clear();
+	sweepEntrySet(this.delegateEntries);
 }
 /**
  * Publish onto the document bus from a non-component caller. Services
@@ -475,12 +474,5 @@ export function clearDelegateListeners() {
  * @param {*} [data] - The payload placed on `detail.data`.
  */
 export function emitDelegate(eventName, data) {
-	document.dispatchEvent(new CustomEvent(eventName, {
-		bubbles: true,
-		composed: true,
-		detail: {
-			data,
-			source: null,
-		},
-	}));
+	document.dispatchEvent(createBusEvent(eventName, data, null, undefined));
 }

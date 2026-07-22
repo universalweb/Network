@@ -1,7 +1,7 @@
-import '../../global/paged-list/paged-list.js';
 import '../../global/icon/icon.js';
+import AppView from '../../../modules/app.js';
 import { html, WebComponent } from '../../core/index.js';
-import { AppView } from '../app-view/app-view.js';
+import { COLLECTION_EVENT } from '../../global/ui-collection/ui-collection.js';
 const PAGE_SIZE = 20;
 const ROW_STYLES = new URL('./explorer-rows.css', import.meta.url).href;
 const FILTERS = [
@@ -104,11 +104,25 @@ export class ExplorerPage extends WebComponent {
 	onConnect() {
 		this.observe('filter', this.syncFilterItems);
 		this.syncFilterItems();
+		/* Route-driven, not pushed. Pages stay MOUNTED (the shell hides inactive
+		   ones with CSS), so the routeActiveView guard keeps this page inert
+		   while another one is showing. */
+		this.observeGlobal([
+			'routeActiveView',
+			'routeFilter',
+		], this.handleRoute);
+		this.handleRoute();
+	}
+	handleRoute() {
+		if (this.global.routeActiveView !== 'explorer') {
+			return;
+		}
+		this.setView(this.global.routeFilter || 'all');
 	}
 	syncFilterItems() {
 		this.state.filterItems = filtersAsItems(this.state.filter);
 	}
-	/* paged-list contract — stable instance object merged once via `.state=`.
+	/* ui-collection contract — stable instance object merged once via `.state=`.
 	   Loader/pageHref are class-field arrows so they close over page `this`
 	   (engine .call(host) for loader; pageHref is invoked bare). */
 	listConfig = {
@@ -126,16 +140,16 @@ export class ExplorerPage extends WebComponent {
 		loadingMessage: 'Loading recent transactions…',
 		pagingStyle: 'loadmore',
 	};
-	/* Router entry: the filter is the routed dimension. A real change rebinds the
-	   loader's type and reloads from page 1; re-entering the same filter is a
-	   no-op so the loaded list survives back-navigation. */
+	/* The filter is the routed dimension. A real change rebinds the loader's type
+	   and reloads from page 1; re-entering the same filter is a no-op so the
+	   loaded list survives back-navigation. */
 	setView(filter) {
 		const normalized = findFilter(filter).id;
 		if (normalized === this.state.filter) {
 			return;
 		}
 		this.state.filter = normalized;
-		this.refs.list?.refresh();
+		this.emit(COLLECTION_EVENT.REFRESH);
 	}
 	async loadTransactions({
 		reset, cursor,
@@ -213,12 +227,12 @@ export class ExplorerPage extends WebComponent {
 						<span class="ex-title">// EXPLORER · RECENT TRANSACTIONS</span>
 					</div>
 				</header>
-				<paged-list
+				<ui-collection
 					.state=${this.listConfig}
 					.importStyles=${this.state.rowStyles}
 					#list>
 					<div slot="controls" class="ex-filters">${this.list('filterItems', this.filterRow, this.filterKey)}</div>
-				</paged-list>
+				</ui-collection>
 			</div>
 		`;
 	}

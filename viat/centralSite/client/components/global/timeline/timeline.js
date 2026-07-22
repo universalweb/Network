@@ -43,7 +43,7 @@ export class UITimeline extends WebComponent {
 		return item.id ?? item.label ?? item.time;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="tl" role="list">
 				${this.list('items', UITimelineItem, this.itemKey)}
 			</div>

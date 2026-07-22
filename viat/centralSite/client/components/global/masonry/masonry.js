@@ -29,7 +29,7 @@ export class UIMasonry extends WebComponent {
 		// margin (custom props inherit through the slot to the projected children).
 		const track = this.state.min ? `column-width:${this.state.min}` : `column-count:${this.state.columns}`;
 		const style = `${track};column-gap:${this.state.gap};--masonry-gap:${this.state.gap}`;
-		this.html `
+		this.html`
 			<div class="masonry" style=${style}>
 				<slot></slot>
 			</div>

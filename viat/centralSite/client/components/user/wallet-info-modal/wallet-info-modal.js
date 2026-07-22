@@ -1,5 +1,5 @@
 import '../../global/modal/modal.js';
-import { WebComponent } from '../../core/index.js';
+import { WebComponent } from 'webcomponent';
 /**
  * `<wallet-info-modal>` — long-form explainer modal. Body styling
  * (head / copy / inline code) comes from the shared `modal-chrome.css`;

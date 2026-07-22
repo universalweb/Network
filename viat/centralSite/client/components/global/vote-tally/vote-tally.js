@@ -80,7 +80,7 @@ class UIVoteItem extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="vote" ?data-voted=${this.state.voted}>
 				<button class="vote-up" type="button" aria-pressed=${this.state.voted} aria-label="Upvote" @click=${this.handleUp}>
 					<ui-icon class="vote-chevron" .state.name=${'chevron-up'} .state.size=${'sm'}></ui-icon>
@@ -216,7 +216,7 @@ export class UIVoteTally extends WebComponent {
 		}
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="tally" data-variant=${this.state.variant}>
 				<div class="tally-head" ?hidden=${!this.state.heading}>
 					<span class="tally-title">${this.state.heading}</span>

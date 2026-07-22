@@ -1,0 +1,14 @@
+/* UWC CSS cascade harness page chrome — pairs with cssCascadeTests.js. */
+body {
+	font: 13px ui-monospace, monospace;
+	background: #0e1528;
+	color: #cdd0d8;
+	padding: 20px;
+}
+.pass {
+	color: #4affde;
+}
+.fail {
+	color: #ff5f5f;
+	font-weight: 700;
+}

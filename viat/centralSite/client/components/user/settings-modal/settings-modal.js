@@ -63,6 +63,12 @@ export class SettingsModal extends WebComponent {
 		themeOptions: themesAsOptions(),
 		walletRows: [],
 		profileOptions: [],
+		modal: {
+			modal: true,
+			open: false,
+			showClose: true,
+			showMaximize: true,
+		},
 	};
 	onConnect() {
 		this.delegate('wallet:saved', this.handleWalletSaved);
@@ -661,12 +667,7 @@ export class SettingsModal extends WebComponent {
 	}
 	render() {
 		this.html`
-			<ui-modal #modal class="sm-modal" .state=${{
-				modal: true,
-				open: false,
-				showClose: true,
-				showMaximize: true,
-			}}>
+			<ui-modal #modal class="sm-modal" .state=${this.state.modal}>
 				<ui-tabs class="sm-tabs"
 					.state.items=${this.tabsList}
 					.state.orientation=${'vertical'}

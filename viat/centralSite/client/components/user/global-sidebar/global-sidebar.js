@@ -20,7 +20,7 @@ export class GlobalSidebar extends WebComponent {
 		},
 	};
 	render() {
-		this.html `
+		this.html`
 			<ui-sidebar .state=${this.state.sidebar}>
 				<network-stats></network-stats>
 			</ui-sidebar>

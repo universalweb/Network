@@ -1,12 +1,14 @@
+/*
+ * Entry — boot splash FIRST, then dynamic-load the rest of the app.
+ *
+ * Static imports here are intentionally lean: only config + BootScreen so the
+ * splash can paint before AppView / SDK / user components start downloading.
+ * Everything else is dynamic-imported inside the boot pipeline after the
+ * splash is live (see modules/boot-pipeline.js).
+ */
 import './modules/config.js';
-import './modules/environment.js';
-import './modules/plugins-bootstrap.js';
-import './modules/registerRoots.js';
-import AppView from './modules/app.js';
 import { BootScreen } from './components/global/boot-screen/boot-screen.js';
-import VIATClientSDK from 'viat';
-import { isAgent } from '@universalweb/utilitylib';
-import { runPlugins } from './components/core/plugins/registry.js';
+import { BootPipeline } from './modules/boot-pipeline.js';
 console.log('VIAT Central Site - Client');
 // The boot-screen mark — the animated VIAT "V". Supplied as the logo so the
 // global <boot-screen> component stays a content-free base slate.
@@ -33,9 +35,9 @@ const VIAT_BOOT_LOGO = `
 `;
 async function mountBootScreen() {
 	const bootScreen = new BootScreen({
-		title: 'WELCOME TO VIAT',
-		subtitle: 'Command and Control Terminal',
-		extraSubtitle: 'LOCAL AI ENABLED',
+		heading: 'WELCOME TO VIAT',
+		subheading: 'Command and Control Terminal',
+		extraSubheading: 'LOCAL AI ENABLED',
 		logo: VIAT_BOOT_LOGO,
 		barState: {
 			indeterminate: true,
@@ -45,26 +47,71 @@ async function mountBootScreen() {
 	document.body.appendChild(bootScreen);
 	return bootScreen;
 }
-async function initialize() {
-	console.log('APP LOADING');
-	const bootScreen = await mountBootScreen();
-	await runPlugins();
-	const app = await AppView.create();
+/**
+ * Dynamic-import the app tree only after the splash is mounted.
+ * Marks pipeline phases so callers can `pipeline.waitFor('app-ready')` etc.
+ * @param {BootPipeline} pipeline
+ */
+async function loadApp(pipeline) {
+	pipeline.bootScreen?.setStatus('Loading environment');
+	// Parallel module graph: env / plugins registry side-effects / roots / AppView.
+	// plugins-bootstrap only registers; runPlugins() is ordered after imports settle.
+	const [
+		_env,
+		_pluginsBootstrap,
+		_roots,
+		pluginsRegistry,
+		appModule,
+	] = await Promise.all([
+		import('./modules/environment.js'),
+		import('./modules/plugins-bootstrap.js'),
+		import('./modules/registerRoots.js'),
+		import('./components/core/plugins/registry.js'),
+		import('./modules/app.js'),
+	]);
+	pipeline.mark('modules-loaded');
+	pipeline.bootScreen?.setStatus('Running plugins');
+	await pluginsRegistry.runPlugins();
+	pipeline.mark('plugins-ran');
+	pipeline.bootScreen?.setStatus('Rendering app');
+	const AppView = appModule.default;
+	// Pre-render under the splash (opacity 0, no fade) so whenLive means the
+	// full tree is painted + live before we ever drop the boot screen.
+	const app = await AppView.create(undefined, undefined, {
+		mount: document.body,
+		fade: false,
+	});
+	pipeline.app = app;
 	// Debug handle is lowercase `app` on purpose — a `globalThis.AppView`
 	// holding the INSTANCE would collide with the AppView class, so any
 	// non-importing `AppView.ensureSDK()` would hit the instance getter
 	// instead of the static. Keep the class name free of a global shadow.
 	globalThis.app = app;
-	await app.lifecycle.whenLive;
-	bootScreen.dismiss();
+	pipeline.mark('app-ready');
+	// preRender already appended; mark explicitly so waiters can key on it.
+	pipeline.mark('app-appended');
+	return app;
+}
+async function initialize() {
+	console.log('APP LOADING');
+	const pipeline = new BootPipeline({
+		mountBoot: mountBootScreen,
+		loadApp,
+	});
+	// Observable from the console / other modules: globalThis.boot.phase, waitFor, etc.
+	globalThis.boot = pipeline;
+	const app = await pipeline.run();
 	return app;
 }
 async function onReady() {
 	console.log('Doc state', document.readyState);
 	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', initialize);
-	} else {
-		await initialize();
+		await new Promise((resolve) => {
+			document.addEventListener('DOMContentLoaded', resolve, {
+				once: true,
+			});
+		});
 	}
+	await initialize();
 }
 await onReady();

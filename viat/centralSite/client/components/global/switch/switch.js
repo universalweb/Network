@@ -40,7 +40,7 @@ export class UISwitch extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<label class="sw" data-size=${this.state.size}>
 				<input class="sw-input" type="checkbox" role="switch"
 					.checked=${this.state.checked}

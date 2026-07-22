@@ -38,7 +38,7 @@ export class UIAiSources extends WebComponent {
 	renderSource(source) {
 		// Light rows can't embed a nested html`` fragment (it serializes), so the
 		// snippet span is always emitted and hidden via `.ais-snippet:empty`.
-		return html `
+		return html`
 			<li class="ais-item">
 				<a class="ais-link" href=${safeHref(source.url)} target="_blank" rel="noopener noreferrer">
 					<span class="ais-title">${source.title || source.url}</span>
@@ -49,7 +49,7 @@ export class UIAiSources extends WebComponent {
 		`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<section class="ais">
 				<header class="ais-head" ?hidden=${!this.state.label}>
 					<ui-icon class="ais-head-icon" .state.name=${'book-open'} .state.size=${'sm'}></ui-icon>

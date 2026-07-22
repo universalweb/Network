@@ -56,23 +56,23 @@ export class UIAvatar extends WebComponent {
 		status: '',
 	};
 	render() {
-		this.html `
+		this.html`
 			<div class="av" data-size=${SIZES.has(this.state.size) ? this.state.size : 'md'} data-shape=${this.state.shape === 'square' ? 'square' : 'circle'}>
 				${() => {
 					const src = String(this.state.src ?? '').trim();
 					if (src !== '') {
-						return this.htmlElement `<img class="av-img" src=${src} alt=${this.state.name || 'avatar'} loading="lazy">`;
+						return this.htmlElement`<img class="av-img" src=${src} alt=${this.state.name || 'avatar'} loading="lazy">`;
 					}
 					const initials = this.state.initials || initialsFor(this.state.name);
 					const hue = hueFor(this.state.name || this.state.initials);
-					return this.htmlElement `<span class="av-initials" style=${`background:oklch(0.62 0.13 ${hue})`} aria-hidden="true">${initials}</span>`;
+					return this.htmlElement`<span class="av-initials" style=${`background:oklch(0.62 0.13 ${hue})`} aria-hidden="true">${initials}</span>`;
 				}}
 				${() => {
 					const tone = STATUS_TONES.get(String(this.state.status));
 					if (!tone) {
 						return '';
 					}
-					return this.htmlElement `<span class="av-status" data-tone=${tone} tooltip=${this.state.status} role="img" aria-label=${this.state.status}></span>`;
+					return this.htmlElement`<span class="av-status" data-tone=${tone} tooltip=${this.state.status} role="img" aria-label=${this.state.status}></span>`;
 				}}
 			</div>
 		`;

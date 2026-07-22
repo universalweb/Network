@@ -56,7 +56,7 @@ export class IconButtonBase extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<ui-button class=${classList('icon-button', this.state.classes, {
 				active: this.state.active,
 			})}

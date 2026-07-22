@@ -88,7 +88,7 @@ export class UISparkline extends WebComponent {
 		return path;
 	}
 	render() {
-		this.html `
+		this.html`
 			<svg
 				class="spark"
 				data-tone=${this.state.tone}

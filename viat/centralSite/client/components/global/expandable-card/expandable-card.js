@@ -36,7 +36,7 @@ export class UIExpandableCard extends MorphSurface {
 		surface.style.setProperty('--ec-card-w', `${rect.width}px`);
 	}
 	render() {
-		this.html `
+		this.html`
 			<button
 				class="ec-card"
 				type="button"

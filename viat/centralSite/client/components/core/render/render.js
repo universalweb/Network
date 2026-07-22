@@ -5,11 +5,11 @@ import { LIFECYCLE_PROMISE } from '../lifecycle/lifecycle.js';
 import { PHASE } from '../lifecycle/phase.js';
 import { nextFrame, queueGlobalRender } from '../lifecycle/scheduler.js';
 import { scanAndResolve } from '../resolver.js';
-import { makeProxy, setCurrentTracking } from '../state/binding.js';
+import { ensureRenderProxies, setCurrentTracking } from '../state/binding.js';
 import { localRealm } from '../state/state.js';
 import {
 	clearUnsubs,
-	fireResolver,
+	emitError,
 	isPromiseLike,
 	syncSubsByDiff,
 } from '../utilities.js';
@@ -38,11 +38,15 @@ function awaitChildren(component, fieldName) {
 	}
 	return Promise.all(childPromises);
 }
-export function finishRender(resolver) {
-	resolver();
-	if (this.lifecycle.whenRenderedResolver === resolver) {
-		this.lifecycle.whenRenderedResolver = null;
-	}
+/**
+ * Settle this pass's `whenRendered` slot. The epoch captured at pass start is
+ * the pass-ownership token: a stale epoch (the slot settled and re-armed for a
+ * newer pass since) no-ops inside `fireRendered`, exactly like the old
+ * captured-resolver identity guard — with no per-pass deferred allocation.
+ * @param {number} renderedEpoch - The epoch captured at the pass's start.
+ */
+export function finishRender(renderedEpoch) {
+	this.lifecycle.fireRendered(renderedEpoch);
 }
 export function invalidateRender() {
 	this.templateBuilt = false;
@@ -67,7 +71,7 @@ export function markRenderDirty() {
 	/*
 	 * A tracked renderDep changed — the next renderView is a PATCH PASS:
 	 * render() re-runs and updateTemplateSpots patches the spots in place,
-	 * but the structural lifecycle is skipped. See renderView's isPatchPass.
+	 * but the structural lifecycle is skipped. See renderPass's isPatchPass.
 	 */
 	this.renderDepDirty = true;
 }
@@ -108,201 +112,420 @@ function subscribeRealmDep(path, ctx) {
  */
 export function subscribeRenderDeps(deps) {
 	const store = this.renderDepUnsubs;
-	// Dispose realms that vanished from this render (e.g. stopped reading global).
+	/*
+	 * Dispose NON-LOCAL realms that vanished from this render (e.g. stopped
+	 * reading global). The local realm never enters `store` — it lives on the
+	 * bus's Set channel below. Map delete-during-iteration is spec-safe; no
+	 * user code runs mid-loop (dispose → Subscription.unsubscribe only).
+	 */
 	if (store.size) {
-		const realms = [...store.keys()];
-		const realmsLength = realms.length;
-		for (let realmIndex = 0; realmIndex < realmsLength; realmIndex++) {
-			const realm = realms[realmIndex];
+		for (const [
+			realm,
+			submap,
+		] of store) {
 			if (!deps || !deps.has(realm)) {
-				clearUnsubs(store.get(realm));
+				clearUnsubs(submap);
 				store.delete(realm);
 			}
 		}
 	}
-	if (!deps || deps.size === 0) {
-		return;
-	}
-	const entries = [...deps];
-	const entriesLength = entries.length;
-	for (let entryIndex = 0; entryIndex < entriesLength; entryIndex++) {
-		const realm = entries[entryIndex][0];
-		const paths = entries[entryIndex][1];
-		let submap = store.get(realm);
-		if (!submap) {
-			submap = new Map();
-			store.set(realm, submap);
-		}
-		const handler = realm.sharedBus ? this.markRenderDirtyGlobal : this.markRenderDirty;
-		syncSubsByDiff(submap, paths, subscribeRealmDep, {
+	/*
+	 * LOCAL deps route to the bus's Set channel — no Subscription objects, no
+	 * buckets, no submap (see ComponentStateBus.syncRenderDeps). A pass with
+	 * no local deps must still SYNC (clear) a previously populated channel,
+	 * so the local set is picked out first and synced once at the end.
+	 */
+	const localBus = this.stateBus;
+	let localPaths = null;
+	if (deps && deps.size) {
+		for (const [
 			realm,
-			handler,
-			component: this,
-		});
+			paths,
+		] of deps) {
+			if (localBus !== null && realm.bus === localBus) {
+				localPaths = paths;
+				continue;
+			}
+			let submap = store.get(realm);
+			if (!submap) {
+				submap = new Map();
+				store.set(realm, submap);
+			}
+			const handler = realm.sharedBus ? this.markRenderDirtyGlobal : this.markRenderDirty;
+			syncSubsByDiff(submap, paths, subscribeRealmDep, {
+				realm,
+				handler,
+				component: this,
+			});
+		}
+	}
+	if (localBus !== null) {
+		localBus.syncRenderDeps(localPaths);
 	}
 }
-export async function renderView() {
+/**
+ * Typed render-pass failure. A hook that throws or rejects must surface as a
+ * RETURN VALUE, never as a rejection of renderView's promise — an unsettled
+ * `whenRendered` wedges every ancestor's awaitChildren(...) forever. Async
+ * rejections convert at their await sites via `.then(undefined,
+ * onRenderRejected)`; a synchronous hook throw rejects renderPass's promise
+ * and converts once at renderView's boundary, so the ASYNC path needs no
+ * try/catch — the fulfilled path is straight-line control flow.
+ *
+ * The sync fast path (patchPassSync) sits OUTSIDE this machinery by the
+ * failure contract: it has no async boundary, so a throwing render() body
+ * propagates raw to the caller (app bug, app stack, fail fast) — patchPassSync
+ * orders its mutations so that raw throw can wedge nothing.
+ */
+class RenderFailure {
+	constructor(reason) {
+		this.reason = reason;
+	}
+	static is(value) {
+		return value instanceof RenderFailure;
+	}
+}
+function onRenderRejected(reason) {
+	return new RenderFailure(reason);
+}
+/**
+ * Terminal bookkeeping for a failed pass: settle `whenRendered` and release
+ * the mount/live gates so ancestors awaiting this child proceed instead of
+ * hanging, THEN report through the `renderError` event channel (emitError —
+ * preventDefault marks handled, unprevented rethrows raw). Gates fire FIRST
+ * so a throwing app error-listener cannot wedge them. The gate fires are
+ * unconditional because a settled slot's fire is a no-op — cheaper and safer
+ * than guessing which gates this pass owed (`firstRenderDone` flips mid-pass
+ * before handleMount). A failed first render leaves
+ * `firstRenderDone`/`templateBuilt` false, so the next state write or
+ * invalidateRender re-runs the full first-render lifecycle — the phase ladder
+ * heals itself on the first successful pass.
+ */
+function failRenderPass(component, renderedEpoch, reason) {
+	component.finishRender(renderedEpoch);
+	component.lifecycle.fireMounted();
+	component.lifecycle.fireLive();
+	emitError(component, 'renderError', reason);
+}
+/**
+ * Boundary recovery for a hook that threw SYNCHRONOUSLY (a render/onRendered/
+ * onMount body before its first await). Tracking windows are synchronous, so
+ * at this microtask the module-global can only be this pass's leftover —
+ * clear it unconditionally. The CURRENT epoch stands in for the pass's local
+ * binding (unreachable here): if the slot already settled, fireRendered
+ * no-ops on state, the old null-resolver tolerance.
+ */
+function recoverRenderPass(component, reason) {
+	setCurrentTracking(null);
+	component.renderTracking = false;
+	failRenderPass(component, component.lifecycle.renderedEpoch, reason);
+}
+/**
+ * Is this pass eligible for the synchronous fast path? Every condition is a
+ * settled fact by the time a renderDep fires, so the answer costs four reads:
+ * the component has rendered at least once (`renderIsSync` is only meaningful
+ * after that), this pass was triggered purely by a tracked dep, render() is
+ * known-synchronous, and there is no `beforeRender` hook to await. A component
+ * WITH beforeRender simply takes the async path, where that hook still runs —
+ * eligibility narrows the fast lane, it never skips work.
+ * @param {WebComponent} component - The component about to render.
+ * @returns {boolean} True when the pass can run start-to-finish synchronously.
+ */
+function canPatchSync(component) {
+	return component.firstRenderDone === true &&
+		component.renderDepDirty === true &&
+		component.renderIsSync === true &&
+		!component.beforeRender;
+}
+/**
+ * The whole point of R1: a patch pass driven by a tracked `${this.state.x}` read
+ * does only synchronous work — render() re-runs, updateTemplateSpots patches the
+ * spots in place, deps re-subscribe — yet it used to be wrapped in
+ * updateView→renderView→renderPass→.then, ~6 promises and 3+ microtask hops for
+ * a body that never yields. The bus discards updateView's promise anyway
+ * (state.js onFlush only arms `.catch`), so all of it was waste. Collapsing the
+ * chain measures 3.79× on the scaffolding (benchmarks/patch-pass-chain.bench.js).
+ *
+ * Mirrors renderPass's patch-pass branch exactly, minus the structural lifecycle
+ * (onRender/onRendered/awaitChildren) that a patch pass already skips. The
+ * renderSeq bump + post-render check are kept even though nothing can yield
+ * mid-pass: render() may synchronously re-enter via invalidateRender, and the
+ * check is two reads.
+ * @param {WebComponent} component - The component to patch.
+ * @returns {PromiseLike|undefined} Undefined once the patch has landed; the
+ * thenable render() unexpectedly returned when the pass had to be abandoned, for
+ * renderView to settle through rescueAsyncRender.
+ */
+function patchPassSync(component) {
+	component.templateBuilt = false;
+	const sequence = ++component.renderSeq;
+	const renderDeps = new Map();
+	component.renderDepDirty = false;
+	component.renderTracking = true;
+	ensureRenderProxies(component);
+	setCurrentTracking(renderDeps);
+	/*
+	 * App code, invoked BARE by the failure contract (the same bare-eval
+	 * track() in state/binding.js has always used): a throwing render() body is
+	 * an app bug and propagates raw. Safe without cleanup because every leak a
+	 * throw leaves is inert or self-healing: whenRendered is NOT yet re-armed
+	 * (the epoch arms below, after app code — nothing can wedge on it), the
+	 * open tracking window records into a dead map nobody commits and every
+	 * pass entry overwrites it, and the renderTracking flag resets at the next
+	 * pass start (templateBuilt stays false, so the next state write always
+	 * reaches updateView).
+	 */
+	const renderResult = component.render();
+	setCurrentTracking(null);
+	component.renderTracking = false;
+	const renderedEpoch = component.lifecycle.armRendered();
+	/*
+	 * A render that returns a thenable despite renderIsSync (a body that turned
+	 * conditionally async after its first pass) must not have its spots committed
+	 * against a half-built template. Abandon the pass and RETURN the thenable:
+	 * dropping it would leak an unhandled rejection, and an unsettled lifecycle
+	 * promise wedges every ancestor awaiting this child. renderView hands it to
+	 * rescueAsyncRender, which settles it through the normal failure boundary and
+	 * then drives a real async pass — renderIsSync self-corrects there.
+	 */
+	if (isPromiseLike(renderResult)) {
+		component.renderIsSync = false;
+		component.renderDepDirty = true;
+		component.finishRender(renderedEpoch);
+		return renderResult;
+	}
+	if (sequence !== component.renderSeq) {
+		component.finishRender(renderedEpoch);
+		return;
+	}
+	scanAndResolve(component.shadowRoot ?? component);
+	const boundKeys = component.tplBoundKeys;
+	if (boundKeys && boundKeys.size) {
+		const localPaths = renderDeps.get(localRealm(component));
+		if (localPaths) {
+			boundKeys.forEach(localPaths.delete, localPaths);
+		}
+	}
+	component.subscribeRenderDeps(renderDeps);
+	component.templateBuilt = true;
+	component.finishRender(renderedEpoch);
+	if (defaultLogger.debugOn && component.config?.debugPatchOn !== false) {
+		defaultLogger.debug('PATCH-PASS', component.state, `${component.constructor.name}<${component.localName}> (no re-render, sync)`);
+	}
+}
+/**
+ * Never-rejecting render boundary, sync fast path first. An eligible patch pass
+ * runs start-to-finish with zero promises and returns undefined; every other
+ * pass keeps the async chain. Callers must therefore treat the return as
+ * undefined-or-Promise (`const p = x.renderView(); if (p) await p;`) — the same
+ * idiom handleRendered/handleMount/awaitChildren already use in this file.
+ *
+ * The fast path carries NO try — the failure contract: a throwing render()
+ * body is an app bug and unwinds RAW at its origin (matching the bus dispatch
+ * and spot drain). patchPassSync sequences its mutations so a raw throw leaves
+ * nothing wedged or corrupted — the epoch arms only AFTER the app call, so
+ * whenRendered is never left pending (the silent-ancestor-hang hazard that
+ * used to justify the catch). The dangling Perf mark on a throw is debug-tool
+ * noise, not state. The async path is unchanged: rejection-based typed
+ * returns (RenderFailure), no try there either.
+ * @returns {Promise<void>|undefined} A Promise on the async path, else undefined.
+ */
+// @engram em:network/code/r1-shipped-sync-patch-pass-fast-path-3-79x-chain-collapse-it — why the chain collapsed, the caller contract, and why the browser cannot measure this
+export function renderView() {
+	if (canPatchSync(this)) {
+		const perfMark = Perf.mark('renderView');
+		const abandonedRender = patchPassSync(this);
+		Perf.measure('renderView', perfMark);
+		if (abandonedRender) {
+			return rescueAsyncRender(this, abandonedRender);
+		}
+		return undefined;
+	}
+	return renderViewAsync(this);
+}
+/**
+ * Salvage the rare pass that patchPassSync abandoned because a known-sync
+ * render() returned a thenable. Settling it here keeps renderView's never-reject
+ * contract (a dropped rejection is unhandled; a dropped promise can wedge an
+ * awaiter), and the follow-up pass is what actually lands the patch — the
+ * abandoned one committed nothing. render() runs twice on this path, which is
+ * the correct trade for a body that changed shape mid-life.
+ * @param {WebComponent} component - The component whose pass was abandoned.
+ * @param {PromiseLike} abandonedRender - The thenable render() unexpectedly returned.
+ */
+async function rescueAsyncRender(component, abandonedRender) {
+	const outcome = await abandonedRender.then(undefined, onRenderRejected);
+	if (RenderFailure.is(outcome)) {
+		recoverRenderPass(component, outcome.reason);
+		return;
+	}
+	await renderViewAsync(component);
+}
+async function renderViewAsync(component) {
 	const perfMark = Perf.mark('renderView');
-	try {
-		this.templateBuilt = false;
-		const sequence = ++this.renderSeq;
-		if (!this.lifecycle.whenRenderedResolver) {
-			const deferred = Promise.withResolvers();
-			this.lifecycle.whenRendered = deferred.promise;
-			this.lifecycle.whenRenderedResolver = deferred.resolve;
+	const outcome = await renderPass(component).then(undefined, onRenderRejected);
+	if (RenderFailure.is(outcome)) {
+		recoverRenderPass(component, outcome.reason);
+	}
+	Perf.measure('renderView', perfMark);
+}
+async function renderPass(component) {
+	component.templateBuilt = false;
+	const sequence = ++component.renderSeq;
+	const renderedEpoch = component.lifecycle.armRendered();
+	const renderDeps = new Map();
+	const wasFirstRender = !component.firstRenderDone;
+	/*
+	 * A patch pass is a re-render triggered purely by a tracked renderDep
+	 * (a bare `${this.state.x}` read). render() still re-runs so
+	 * updateTemplateSpots can patch the changed spots in place — but the
+	 * structural lifecycle (onRender, onRendered, awaitChildren) is skipped:
+	 * those exist for first render and explicit invalidateRender only.
+	 */
+	const isPatchPass = !wasFirstRender && component.renderDepDirty === true;
+	component.renderDepDirty = false;
+	let renderSkipped = false;
+	if (component.beforeRender) {
+		const beforeResult = component.beforeRender();
+		if (isPromiseLike(beforeResult)) {
+			const awaitedBefore = await beforeResult.then(undefined, onRenderRejected);
+			if (RenderFailure.is(awaitedBefore)) {
+				return failRenderPass(component, renderedEpoch, awaitedBefore.reason);
+			}
+			if (awaitedBefore === false) {
+				renderSkipped = true;
+			}
+		} else if (beforeResult === false) {
+			renderSkipped = true;
 		}
-		const renderedResolver = this.lifecycle.whenRenderedResolver;
-		const renderDeps = new Map();
-		const wasFirstRender = !this.firstRenderDone;
+	}
+	/*
+	 * A skipped or superseded pass keeps the PREVIOUS render's dep
+	 * subscriptions — a skip means "don't rebuild now", not "stop reacting".
+	 * Tearing them down here would freeze the component permanently.
+	 */
+	if (sequence !== component.renderSeq || renderSkipped) {
+		component.finishRender(renderedEpoch);
+		return;
+	}
+	component.renderTracking = true;
+	ensureRenderProxies(component);
+	/*
+	 * Dependency tracking spans only the synchronous body of render().
+	 * currentTracking is module-global, so it is cleared before any await
+	 * yields — otherwise an interleaving component's render absorbs, or is
+	 * absorbed into, the wrong dep set. A synchronous throw from render()
+	 * skips the inline clear and lands in recoverRenderPass, which clears it
+	 * on the very next microtask — before any other tracking window can open.
+	 * If render() is async, reads after its first await are untracked by
+	 * design; do async prep in beforeRender instead.
+	 */
+	setCurrentTracking(renderDeps);
+	const renderResult = component.render?.();
+	setCurrentTracking(null);
+	/*
+	 * Teach canPatchSync from what render() actually returned, so later patch
+	 * passes can skip this whole async chain. A component with no render() stays
+	 * ineligible — patchPassSync calls render() unconditionally.
+	 */
+	component.renderIsSync = component.render ? !isPromiseLike(renderResult) : false;
+	if (isPromiseLike(renderResult)) {
+		if (defaultLogger.debugOn) {
+			defaultLogger.error(`ASYNC-RENDER`, `${component.constructor.name}<${component.localName}> async render(): reads after the first await are untracked — move async work to beforeRender`);
+		}
+		const awaitedRender = await renderResult.then(undefined, onRenderRejected);
+		if (RenderFailure.is(awaitedRender)) {
+			if (sequence === component.renderSeq) {
+				component.renderTracking = false;
+			}
+			return failRenderPass(component, renderedEpoch, awaitedRender.reason);
+		}
+	}
+	if (sequence !== component.renderSeq) {
+		component.finishRender(renderedEpoch);
+		return;
+	}
+	/*
+	 * Fire-and-forget: lazy-load any undefined custom elements this render
+	 * produced. Non-blocking so the parent's whenRendered doesn't wait —
+	 * lazy children upgrade on their own once their module lands.
+	 */
+	scanAndResolve(component.shadowRoot ?? component);
+	component.renderTracking = false;
+	const boundKeys = component.tplBoundKeys;
+	if (boundKeys && boundKeys.size) {
 		/*
-		 * A patch pass is a re-render triggered purely by a tracked renderDep
-		 * (a bare `${this.state.x}` read). render() still re-runs so
-		 * updateTemplateSpots can patch the changed spots in place — but the
-		 * structural lifecycle (onRender, onRendered, awaitChildren) is skipped:
-		 * those exist for first render and explicit invalidateRender only.
+		 * Two-way-bound keys are LOCAL state paths; drop them from the
+		 * local realm's path set so the renderDep and the $value spot
+		 * don't double-subscribe. `Set.prototype.delete` is the iteratee,
+		 * the local path set its thisArg — zero arrow allocation.
 		 */
-		const isPatchPass = !wasFirstRender && this.renderDepDirty === true;
-		this.renderDepDirty = false;
-		this.isRendering = true;
-		let renderSkipped = false;
-		// TODO: WE NEED TO NOT USE TRY CATCH FOR THIS AT ALL. WE NEED TO ONLY USE CATCH IF ITS AN ASYNC FUNCTION. We can use .catch and await on the function or promise to catch errors. This is because try/catch is very expensive and slows down the code significantly. Then we can catch the error and handle it gracefully and eliminate the need for a try/catch block entirely.
-		try {
-			if (this.beforeRender) {
-				const beforeResult = this.beforeRender();
-				if (isPromiseLike(beforeResult)) {
-					const awaitedResult = await beforeResult;
-					if (awaitedResult === false) {
-						renderSkipped = true;
-					}
-				} else if (beforeResult === false) {
-					renderSkipped = true;
-				}
-			}
-			if (sequence !== this.renderSeq) {
-				this.isRendering = false;
-				this.finishRender(renderedResolver);
-				return;
-			}
-			if (renderSkipped) {
-				this.isRendering = false;
-				this.finishRender(renderedResolver);
-				return;
-			}
-			this.renderTracking = true;
-			const currentState = this.STATE ?? {};
-			if (!this.renderProxy || this.renderProxyState !== currentState) {
-				this.renderProxy = makeProxy(currentState, this);
-				this.renderProxyState = currentState;
-			}
-			/*
-			 * Dependency tracking spans only the synchronous body of render().
-			 * currentTracking is module-global, so it is cleared before any await
-			 * yields — otherwise an interleaving component's render absorbs, or is
-			 * absorbed into, the wrong dep set. A synchronous throw from render()
-			 * skips this line but is caught by the outer finally, which clears it
-			 * too. If render() is async, reads after its first await are untracked
-			 * by design; do async prep in beforeRender instead.
-			 */
-			setCurrentTracking(renderDeps);
-			const renderResult = this.render?.();
-			setCurrentTracking(null);
-			if (isPromiseLike(renderResult)) {
-				if (defaultLogger.debugOn) {
-					defaultLogger.error(`ASYNC-RENDER`, `${this.constructor.name}<${this.localName}> async render(): reads after the first await are untracked — move async work to beforeRender`);
-				}
-				await renderResult;
-			}
-			if (sequence !== this.renderSeq) {
-				this.isRendering = false;
-				this.finishRender(renderedResolver);
-				return;
-			}
-			/*
-			 * Fire-and-forget: lazy-load any undefined custom elements this render
-			 * produced. Non-blocking so the parent's whenRendered doesn't wait —
-			 * lazy children upgrade on their own once their module lands.
-			 */
-			scanAndResolve(this.shadowRoot ?? this);
-		} finally {
-		// Safety net: a synchronous throw from render() skips the inline clear.
-			setCurrentTracking(null);
-			if (sequence === this.renderSeq) {
-				this.renderTracking = false;
-				const boundKeys = this.tplBoundKeys;
-				if (boundKeys && boundKeys.size) {
-				/*
-				 * Two-way-bound keys are LOCAL state paths; drop them from the
-				 * local realm's path set so the renderDep and the $value spot
-				 * don't double-subscribe. `Set.prototype.delete` is the iteratee,
-				 * the local path set its thisArg — zero arrow allocation.
-				 */
-					const localPaths = renderDeps.get(localRealm(this));
-					if (localPaths) {
-						boundKeys.forEach(localPaths.delete, localPaths);
-					}
-				}
-				this.subscribeRenderDeps(renderDeps);
-			}
+		const localPaths = renderDeps.get(localRealm(component));
+		if (localPaths) {
+			boundKeys.forEach(localPaths.delete, localPaths);
 		}
-		if (sequence !== this.renderSeq) {
-			this.finishRender(renderedResolver);
-			return;
-		}
-		this.templateBuilt = true;
-		if (isPatchPass) {
+	}
+	component.subscribeRenderDeps(renderDeps);
+	component.templateBuilt = true;
+	if (isPatchPass) {
 		/*
 		 * Spots already patched in place by updateTemplateSpots; renderDeps
-		 * re-subscribed in the finally above. No structural lifecycle.
+		 * re-subscribed above. No structural lifecycle.
 		 */
-			this.isRendering = false;
-			this.finishRender(renderedResolver);
-			// TODO: Need to handle this so for some components this can be muted
-			if (defaultLogger.debugOn && this.config.debugPatchOn !== false) {
-				defaultLogger.debug('PATCH-PASS', this.state, `${this.constructor.name}<${this.localName}> (no re-render)`);
+		component.finishRender(renderedEpoch);
+		if (defaultLogger.debugOn && component.config?.debugPatchOn !== false) {
+			defaultLogger.debug('PATCH-PASS', component.state, `${component.constructor.name}<${component.localName}> (no re-render)`);
+		}
+		return;
+	}
+	/**
+	 * Optional lifecycle hooks: `await this.onRender?.()` used to queue
+	 * one microtask per instance even when the hook was undefined (the
+	 * `await undefined` pattern). For 500 leaf components without
+	 * onRender/onRendered/onMount, that was ~3 wasted microtasks each
+	 * = ~75ms across the list. Skip the await when the hook is missing
+	 * or returns a non-thenable.
+	 */
+	if (component.onRender) {
+		const onRenderResult = component.onRender();
+		if (isPromiseLike(onRenderResult)) {
+			const awaitedOnRender = await onRenderResult.then(undefined, onRenderRejected);
+			if (RenderFailure.is(awaitedOnRender)) {
+				return failRenderPass(component, renderedEpoch, awaitedOnRender.reason);
 			}
-			return;
 		}
-		/**
-		 * Optional lifecycle hooks: `await this.onRender?.()` used to queue
-		 * one microtask per instance even when the hook was undefined (the
-		 * `await undefined` pattern). For 500 leaf components without
-		 * onRender/onRendered/onMount, that was ~3 wasted microtasks each
-		 * = ~75ms across the list. Skip the await when the hook is missing
-		 * or returns a non-thenable.
-		 */
-		if (this.onRender) {
-			const onRenderResult = this.onRender();
-			if (isPromiseLike(onRenderResult)) {
-				await onRenderResult;
-			}
+	}
+	if (defaultLogger.debugOn) {
+		defaultLogger.debug('onRender', `${component.constructor.name}<${component.localName}>`);
+	}
+	if (sequence !== component.renderSeq) {
+		component.finishRender(renderedEpoch);
+		return;
+	}
+	const renderedResult = component.handleRendered(sequence, wasFirstRender, renderedEpoch);
+	if (isPromiseLike(renderedResult)) {
+		const awaitedRendered = await renderedResult.then(undefined, onRenderRejected);
+		if (RenderFailure.is(awaitedRendered)) {
+			return failRenderPass(component, renderedEpoch, awaitedRendered.reason);
 		}
-		if (defaultLogger.debugOn) {
-			defaultLogger.debug('onRender', `${this.constructor.name}<${this.localName}>`);
+	}
+	if (!wasFirstRender) {
+		return;
+	}
+	component.firstRenderDone = true;
+	const mountResult = component.handleMount();
+	if (isPromiseLike(mountResult)) {
+		const awaitedMount = await mountResult.then(undefined, onRenderRejected);
+		if (RenderFailure.is(awaitedMount)) {
+			return failRenderPass(component, renderedEpoch, awaitedMount.reason);
 		}
-		if (sequence !== this.renderSeq) {
-			this.finishRender(renderedResolver);
-			return;
+	}
+	const liveResult = component.handleLive();
+	if (isPromiseLike(liveResult)) {
+		const awaitedLive = await liveResult.then(undefined, onRenderRejected);
+		if (RenderFailure.is(awaitedLive)) {
+			return failRenderPass(component, renderedEpoch, awaitedLive.reason);
 		}
-		const renderedResult = this.handleRendered(sequence, wasFirstRender, renderedResolver);
-		if (isPromiseLike(renderedResult)) {
-			await renderedResult;
-		}
-		if (!wasFirstRender) {
-			this.isRendering = false;
-			return;
-		}
-		this.firstRenderDone = true;
-		this.isRendering = false;
-		const mountResult = this.handleMount();
-		if (isPromiseLike(mountResult)) {
-			await mountResult;
-		}
-		const liveResult = this.handleLive();
-		if (isPromiseLike(liveResult)) {
-			await liveResult;
-		}
-	} finally {
-		Perf.measure('renderView', perfMark);
 	}
 }
 /**
@@ -312,34 +535,34 @@ export async function renderView() {
  * stays a non-Promise return — the caller checks before awaiting.
  * @param {number} sequence - The render sequence this pass belongs to.
  * @param {boolean} wasFirstRender - True on the component's first render.
- * @param {Function} renderedResolver - Resolves the `whenRendered` promise.
+ * @param {number} renderedEpoch - The whenRendered epoch captured at pass start.
  * @returns {Promise<void>|undefined} A Promise when async work is pending, else undefined.
  */
-export function handleRendered(sequence, wasFirstRender, renderedResolver) {
+export function handleRendered(sequence, wasFirstRender, renderedEpoch) {
 	const childPromise = awaitChildren(this, LIFECYCLE_PROMISE.RENDERED);
 	if (childPromise) {
-		return handleRenderedAsync(this, sequence, wasFirstRender, renderedResolver, childPromise);
+		return handleRenderedAsync(this, sequence, wasFirstRender, renderedEpoch, childPromise);
 	}
 	if (sequence !== this.renderSeq) {
-		this.finishRender(renderedResolver);
+		this.finishRender(renderedEpoch);
 		return undefined;
 	}
 	if (this.onRendered) {
 		const result = this.onRendered();
 		if (isPromiseLike(result)) {
-			return handleRenderedAsyncTail(this, sequence, wasFirstRender, renderedResolver, result);
+			return handleRenderedAsyncTail(this, sequence, wasFirstRender, renderedEpoch, result);
 		}
 	}
 	if (wasFirstRender && this.phase === PHASE.CONNECTED) {
 		this.phase = PHASE.RENDERED;
 	}
-	this.finishRender(renderedResolver);
+	this.finishRender(renderedEpoch);
 	return undefined;
 }
-async function handleRenderedAsync(component, sequence, wasFirstRender, renderedResolver, childPromise) {
+async function handleRenderedAsync(component, sequence, wasFirstRender, renderedEpoch, childPromise) {
 	await childPromise;
 	if (sequence !== component.renderSeq) {
-		component.finishRender(renderedResolver);
+		component.finishRender(renderedEpoch);
 		return;
 	}
 	if (component.onRendered) {
@@ -351,18 +574,18 @@ async function handleRenderedAsync(component, sequence, wasFirstRender, rendered
 	if (wasFirstRender && component.phase === PHASE.CONNECTED) {
 		component.phase = PHASE.RENDERED;
 	}
-	component.finishRender(renderedResolver);
+	component.finishRender(renderedEpoch);
 }
-async function handleRenderedAsyncTail(component, sequence, wasFirstRender, renderedResolver, onRenderedResult) {
+async function handleRenderedAsyncTail(component, sequence, wasFirstRender, renderedEpoch, onRenderedResult) {
 	await onRenderedResult;
 	if (sequence !== component.renderSeq) {
-		component.finishRender(renderedResolver);
+		component.finishRender(renderedEpoch);
 		return;
 	}
 	if (wasFirstRender && component.phase === PHASE.CONNECTED) {
 		component.phase = PHASE.RENDERED;
 	}
-	component.finishRender(renderedResolver);
+	component.finishRender(renderedEpoch);
 }
 /**
  * Run the mount lifecycle. Mirrors `handleRendered` — skips the async wrapper
@@ -375,7 +598,7 @@ export function handleMount() {
 		return handleMountAsync(this, childPromise);
 	}
 	if (!this.isConnected) {
-		fireResolver(this.lifecycle, LIFECYCLE_PROMISE.MOUNTED);
+		this.lifecycle.fireMounted();
 		return undefined;
 	}
 	if (this.onMount) {
@@ -387,13 +610,13 @@ export function handleMount() {
 	if (this.phase === PHASE.RENDERED) {
 		this.phase = PHASE.MOUNTED;
 	}
-	fireResolver(this.lifecycle, LIFECYCLE_PROMISE.MOUNTED);
+	this.lifecycle.fireMounted();
 	return undefined;
 }
 async function handleMountAsync(component, childPromise) {
 	await childPromise;
 	if (!component.isConnected) {
-		fireResolver(component.lifecycle, LIFECYCLE_PROMISE.MOUNTED);
+		component.lifecycle.fireMounted();
 		return;
 	}
 	if (component.onMount) {
@@ -405,31 +628,44 @@ async function handleMountAsync(component, childPromise) {
 	if (component.phase === PHASE.RENDERED) {
 		component.phase = PHASE.MOUNTED;
 	}
-	fireResolver(component.lifecycle, LIFECYCLE_PROMISE.MOUNTED);
+	component.lifecycle.fireMounted();
 }
 async function handleMountAsyncTail(component, onMountResult) {
 	await onMountResult;
 	if (component.phase === PHASE.RENDERED) {
 		component.phase = PHASE.MOUNTED;
 	}
-	fireResolver(component.lifecycle, LIFECYCLE_PROMISE.MOUNTED);
+	component.lifecycle.fireMounted();
 }
 export async function handleLive() {
 	await nextFrame();
 	if (!this.isConnected) {
-		fireResolver(this.lifecycle, LIFECYCLE_PROMISE.LIVE);
+		this.lifecycle.fireLive();
 		return;
 	}
 	this.classList.remove('mounting');
-	await awaitChildren(this, LIFECYCLE_PROMISE.LIVE);
-	if (!this.isConnected) {
-		fireResolver(this.lifecycle, LIFECYCLE_PROMISE.LIVE);
-		return;
+	/*
+	 * awaitChildren is undefined for leaves and onLive is absent on most
+	 * components — awaiting either unconditionally cost two microtasks per leaf
+	 * first-mount, against this file's own stated guard idiom.
+	 */
+	const childPromise = awaitChildren(this, LIFECYCLE_PROMISE.LIVE);
+	if (childPromise) {
+		await childPromise;
+		if (!this.isConnected) {
+			this.lifecycle.fireLive();
+			return;
+		}
 	}
-	await this.onLive?.();
+	if (this.onLive) {
+		const liveOutcome = this.onLive();
+		if (isPromiseLike(liveOutcome)) {
+			await liveOutcome;
+		}
+	}
 	if (this.phase === PHASE.MOUNTED) {
 		this.phase = PHASE.LIVE;
 	}
-	fireResolver(this.lifecycle, LIFECYCLE_PROMISE.LIVE);
+	this.lifecycle.fireLive();
 	this.installObserver();
 }

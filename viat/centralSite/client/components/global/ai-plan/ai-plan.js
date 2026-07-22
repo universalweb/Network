@@ -36,7 +36,7 @@ export class UIAiPlan extends WebComponent {
 		// Light rows can't embed a nested html`` fragment (it serializes), so the
 		// detail span is always emitted and hidden via `.aip-detail:empty` in CSS.
 		const status = step.status || 'pending';
-		return html `
+		return html`
 			<li class="aip-step" data-status=${status}>
 				<ui-icon class="aip-mark" .state.name=${statusIcon(status)} .state.size=${'sm'} ?spin=${status === 'active'}></ui-icon>
 				<span class="aip-text">
@@ -47,7 +47,7 @@ export class UIAiPlan extends WebComponent {
 		`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<section class="aip">
 				<header class="aip-head" ?hidden=${!this.state.label}>
 					<ui-icon class="aip-head-icon" .state.name=${'list-checks'} .state.size=${'sm'}></ui-icon>

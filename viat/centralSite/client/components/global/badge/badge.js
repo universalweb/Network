@@ -45,7 +45,7 @@ export class UIBadge extends WebComponent {
 		   the uwc.util `.tone-*` text utilities override badge's intended full-tone
 		   `color` (forcing near-white for danger/warning). classList stays for the
 		   imperatively-toggled animation classes (is-entering/is-pulsing) + has-dot. */
-		this.html `
+		this.html`
 			<span #badge
 				class=${classList('badge', () => {
 					return this.state.dot && 'has-dot';

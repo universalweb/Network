@@ -1,6 +1,6 @@
 /*
 	DESCRIPTION: ui-pagination — numbered page navigation with first/prev/next/last
-	and ellipsis truncation (paged-list only has prev/next). Slots rebuild into
+	and ellipsis truncation (ui-collection only has prev/next). Slots rebuild into
 	`state.items` and render via `list('items', this.slotRow)` (light html — no
 	`^html` string builder). Controlled: clicking clamps and emits; the consumer
 	owns `page`.

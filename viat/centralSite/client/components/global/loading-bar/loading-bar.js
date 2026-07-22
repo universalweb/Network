@@ -27,7 +27,7 @@ export class UILoadingBar extends WebComponent {
 		return clampPercent(this.state.value);
 	}
 	render() {
-		this.html `
+		this.html`
 			<div
 				class="bar"
 				?data-indeterminate=${this.state.indeterminate}
@@ -39,7 +39,7 @@ export class UILoadingBar extends WebComponent {
 				<div class="bar-track">
 					<div class="bar-fill" style=${`width:${this.percent}%`}></div>
 				</div>
-				${this.state.showValue ? this.htmlElement `<span class="bar-value">${`${Math.round(this.percent)}%`}</span>` : ''}
+				${this.state.showValue ? this.htmlElement`<span class="bar-value">${`${Math.round(this.percent)}%`}</span>` : ''}
 			</div>
 		`;
 	}

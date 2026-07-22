@@ -113,18 +113,18 @@ export class UIAiMessage extends WebComponent {
 		// button + dedent); `plain` → escaped literal text; `text` → rendered
 		// markdown injected as pre-escaped, renderer-safe html.
 		if (part.kind === 'code') {
-			return html `<ui-code-block .state.code=${part.code} .state.language=${part.lang}></ui-code-block>`;
+			return html`<ui-code-block .state.code=${part.code} .state.language=${part.lang}></ui-code-block>`;
 		}
 		if (part.kind === 'plain') {
-			return html `<div class="aim-plain">${part.text}</div>`;
+			return html`<div class="aim-plain">${part.text}</div>`;
 		}
-		return html `<div class="aim-md">^html${part.html}</div>`;
+		return html`<div class="aim-md">^html${part.html}</div>`;
 	}
 	partKey(part) {
 		return part.id;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="aim" data-role=${this.state.author}>
 				<header class="aim-head">
 					<span class="aim-dot" aria-hidden="true"></span>

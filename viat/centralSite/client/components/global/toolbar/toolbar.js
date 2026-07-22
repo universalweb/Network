@@ -14,7 +14,7 @@ export class UIToolbar extends WebComponent {
 		items: [],
 	};
 	render() {
-		this.html `
+		this.html`
 			<ui-bar class="toolbar" role="toolbar">
 				<div slot="center" class="toolbar-actions">
 					${this.filter('items', IconButtonBase, 'hidden')}

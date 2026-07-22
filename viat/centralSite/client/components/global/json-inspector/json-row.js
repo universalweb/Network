@@ -72,7 +72,7 @@ export class UIJsonRow extends WebComponent {
 		return this.state.copied ? '✓' : '⧉';
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="jr" role="treeitem" data-type=${this.state.type} ?data-matched=${this.state.matched}
 				aria-level=${this.ariaLevel} aria-expanded=${this.ariaExpanded} style=${this.indentVar}
 				@click=${this.handleToggle}>

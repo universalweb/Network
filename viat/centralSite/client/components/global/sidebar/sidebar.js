@@ -3,13 +3,22 @@ import { SNAP_CURVE, SNAP_MS, WebComponent } from 'webcomponent';
 // `<ui-sidebar>` — a responsive drawer. Not a bar; it does not compose
 // `<ui-bar>`. Slots its panel content; offers a backdrop, a close button, and
 // a swipe-to-open/close gesture driven by the shared `dragSnap` engine (axis
-// x). When `responsive` is on, the flyout / cover-up mode is derived from the
-// viewport. First production consumer of the Phase 0 gesture engine.
-// Minimum viewport width for the BARE flyout. Narrower than this the drawer
-// would overlap the dashboard, so the frosted cover-up runs instead. Derived:
-// the dashboard's 1536px max-width, centred past the 68px dock rail, clears a
-// 300px drawer only at ≈2204px — rounded up here for a comfortable gap.
+// x). When `responsive` is on, mode is derived from the live viewport width:
+//
+//   flyout  — ultra-wide: bare panel beside content (float gap off the edge)
+//   coverup — mid: frosted overlay drawer (flush to edge, no float gap)
+//   full    — narrow: full-viewport menu (no edge strip, equal inline pad)
+//
+// Mode is re-applied on every `viewport:resize` (not only bucket changes) so
+// crossing the numeric thresholds below is reactive mid-resize.
+// Bare flyout only when the dashboard's max width (1536px) + dock rail + drawer
+// all fit side-by-side — ≈2204px, rounded up for a comfortable gap.
 const FLYOUT_MIN_WIDTH = 2300;
+// Below this: full-screen menu. Matches the app shell's mobile bucket (sm = 768).
+const FULL_MAX_WIDTH = 768;
+const MODES = new Set([
+	'flyout', 'coverup', 'full',
+]);
 export class UISidebar extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -24,6 +33,8 @@ export class UISidebar extends WebComponent {
 		backdrop: true,
 		closeButton: true,
 		responsive: true,
+		// Optional force: 'flyout' | 'coverup' | 'full' | '' (auto from viewport).
+		mode: '',
 		// The open()/close()/toggle() METHODS are the trigger API — a project wires
 		// its own button to them (the Viat shell binds its top-bar button this way).
 		// A document hotkey is offered for zero-wiring control (auto-swept on
@@ -33,31 +44,39 @@ export class UISidebar extends WebComponent {
 	shellWidth = 0;
 	dragFromOpen = false;
 	lastDefaultOpen = null;
+	lastMode = null;
+	/**
+	 * Resolved layout mode. Forced `state.mode` wins when valid; otherwise
+	 * width thresholds (and short-height demotion from flyout → coverup).
+	 */
 	get mode() {
+		const forced = this.state.mode;
+		if (forced && MODES.has(forced)) {
+			return forced;
+		}
 		if (!this.state.responsive) {
 			return 'flyout';
 		}
-		const viewport = this.global.environment?.viewport;
-		if (!viewport) {
+		const view = this.global.environment?.viewport;
+		if (!view) {
 			return 'coverup';
 		}
-		// A BARE flyout only when the viewport genuinely has room: wide enough
-		// to hold the dashboard at its full max width AND the drawer beside it
-		// without overlap (see FLYOUT_MIN_WIDTH). Anything narrower, or
-		// height-starved, gets the frosted cover-up drawer instead.
-		if (viewport.width >= FLYOUT_MIN_WIDTH && viewport.h !== 'short') {
+		const width = view.width ?? 0;
+		if (width < FULL_MAX_WIDTH) {
+			return 'full';
+		}
+		// Ultra-wide + enough vertical room → bare flyout. Height-starved wide
+		// screens still get coverup so the drawer does not crowd the chrome.
+		if (width >= FLYOUT_MIN_WIDTH && view.h !== 'short') {
 			return 'flyout';
 		}
 		return 'coverup';
 	}
-	// Every bare flyout is, by definition, on a screen wide enough to host it
-	// without crowding the dashboard — so show it by default. The cover-up
-	// never opens itself.
+	// Bare flyout defaults open (room beside the dashboard). Coverup + full
+	// never auto-open — user opens via toggle / swipe / hotkey.
 	get defaultOpen() {
 		return this.mode === 'flyout';
 	}
-	// toggle() delegates to open/close so there's ONE code path per direction —
-	// the same two methods any external trigger button calls.
 	toggle() {
 		if (this.attrs.open) {
 			this.close();
@@ -72,9 +91,6 @@ export class UISidebar extends WebComponent {
 		this.attrs.open = true;
 	}
 	onConnect() {
-		// Document-level shortcut, registered once per connect (auto-swept on
-		// disconnect). Empty `hotkey` opts out. Lives in onConnect — hotkeys need no
-		// refs and must not re-register on every render.
 		if (this.state.hotkey) {
 			this.hotKey(this.state.hotkey, this.handleHotkey);
 		}
@@ -84,8 +100,16 @@ export class UISidebar extends WebComponent {
 	}
 	onMount() {
 		this.applyMode();
+		// resize = every coalesced size tick (crosses FLYOUT/FULL thresholds mid-bucket).
+		// change = bucket transitions (w/h/orientation) — still applied for completeness.
+		this.delegate('viewport:resize', this.handleViewportChange);
 		this.delegate('viewport:change', this.handleViewportChange);
 		this.delegate('sidebar:toggle', this.handleToggleEvent);
+		// Forced mode writes from outside re-apply host data-mode without a resize.
+		this.observe('mode', this.handleModeStateChange);
+		this.observe('side', this.handleModeStateChange);
+		this.observe('backdrop', this.handleModeStateChange);
+		this.observe('closeButton', this.handleModeStateChange);
 		if (this.state.swipe) {
 			this.installSwipe();
 		}
@@ -96,19 +120,24 @@ export class UISidebar extends WebComponent {
 	handleViewportChange() {
 		this.applyMode();
 	}
-	// Reconcile host classes with the current mode, and apply the default
-	// visibility — but only when the viewport crosses the "show by default"
-	// (xxl) threshold. Between crossings the top bar's toggle button is free
-	// to override it.
+	handleModeStateChange() {
+		this.applyMode();
+	}
+	/**
+	 * Sync host data-* for CSS and open/close defaults when the resolved mode
+	 * (or defaultOpen policy) crosses a threshold. Idempotent.
+	 */
 	applyMode() {
+		const nextMode = this.mode;
 		/* Host decoration as data-* ATTRIBUTES (CSS targets :host([data-side])
-		   /:host([data-mode]) …), set imperatively here because the host isn't
-		   template-rendered and `mode` is a viewport-derived getter. Replaces the
-		   old `this.classList.value = hostClasses` string-builder. */
+		   /:host([data-mode]) …), set imperatively because the host isn't
+		   template-rendered and `mode` is a viewport-derived getter. */
 		this.dataset.side = this.state.side;
-		this.dataset.mode = this.mode;
+		this.dataset.mode = nextMode;
 		this.toggleAttribute('data-no-backdrop', !this.state.backdrop);
 		this.toggleAttribute('data-no-close', !this.state.closeButton);
+		const modeChanged = nextMode !== this.lastMode;
+		this.lastMode = nextMode;
 		const wantOpen = this.defaultOpen;
 		if (wantOpen !== this.lastDefaultOpen) {
 			if (wantOpen) {
@@ -118,10 +147,21 @@ export class UISidebar extends WebComponent {
 			}
 			this.lastDefaultOpen = wantOpen;
 		}
+		// Mode swap while open: clear any mid-drag inline transform so the new
+		// shell geometry (full vs partial width) takes over cleanly.
+		if (modeChanged && !this.refs.shell?.classList.contains('is-dragging')) {
+			const shell = this.refs.shell;
+			if (shell) {
+				shell.style.transform = '';
+				shell.style.transition = '';
+			}
+		}
 	}
 	installSwipe() {
 		const opensToward = this.state.side === 'left' ? 'right' : 'left';
 		// The off-screen edge sensor — always initiates an opening drag.
+		// CSS hides it in full mode (no edge strip); dragSnap no-ops when
+		// the target has no hit area.
 		this.dragSnap(this.refs.edge, {
 			axis: 'x',
 			opensToward,
@@ -202,17 +242,17 @@ export class UISidebar extends WebComponent {
 	settleDrag(shouldOpen) {
 		this.snapTo(shouldOpen);
 	}
-	snapTo(open) {
+	snapTo(shouldOpen) {
 		const shell = this.refs.shell;
 		if (!shell) {
 			return;
 		}
 		shell.style.transition = `transform ${SNAP_MS}ms ${SNAP_CURVE}`;
-		// Closed target reads from the CSS var, which folds in the float gap, so the
-		// settle lands exactly where the stylesheet's resting closed state sits — no
-		// last-frame jump when the inline transform is cleared below. Open is identity.
-		shell.style.transform = open ? 'translateX(0)' : 'translateX(var(--shell-closed-x))';
-		if (open) {
+		// Closed target reads from the CSS var, which folds in the float gap (when
+		// any), so the settle lands exactly where the stylesheet's resting closed
+		// state sits — no last-frame jump when the inline transform is cleared.
+		shell.style.transform = shouldOpen ? 'translateX(0)' : 'translateX(var(--shell-closed-x))';
+		if (shouldOpen) {
 			this.openSidebar();
 		} else {
 			this.close();
@@ -233,7 +273,7 @@ export class UISidebar extends WebComponent {
 		 * thing that must leave the tab/interaction tree; derive it reactively from
 		 * `this.attrs.open` (the reactive attrs channel re-patches on open/close).
 		 */
-		this.html `
+		this.html`
 			<div class="sidebar-edge" #edge></div>
 			<div class="sidebar-backdrop" @click=${this.close}></div>
 			<aside class="sidebar-shell" #shell ?inert=${!this.attrs.open}>

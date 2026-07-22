@@ -29,7 +29,7 @@ export class UIDivider extends WebComponent {
 		// A label only lays out on the horizontal axis; a vertical divider is always a
 		// bare rule. `?data-labeled` flips the inner layout from rule → flex-with-text.
 		const labeled = this.state.orientation === 'horizontal' && this.state.label !== '';
-		this.html `
+		this.html`
 			<div class="divider"
 				data-orientation=${this.state.orientation}
 				data-variant=${this.state.variant}

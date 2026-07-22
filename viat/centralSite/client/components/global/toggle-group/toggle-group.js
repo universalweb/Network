@@ -90,7 +90,7 @@ export class UIToggleGroup extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<div
 				class="tg"
 				data-size=${SIZES.has(this.state.size) ? this.state.size : 'md'}

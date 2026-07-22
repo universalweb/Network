@@ -1,0 +1,113 @@
+/* Edge slide-out — frosted surface from the inline start/end edge. */
+
+:host {
+	/* Host is the fixed overlay when not portaled; display:contents would
+	   orphan the host from layout and break drag refs / portal hosts. */
+	display: block;
+	position: fixed;
+	inset: 0;
+	z-index: calc(var(--z-toast, 1600) + 10);
+	pointer-events: none;
+}
+
+:host([data-open]) {
+	pointer-events: auto;
+}
+
+.slideout {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+.slideout[data-open] {
+	pointer-events: auto;
+}
+
+.sl-backdrop {
+	position: absolute;
+	inset: 0;
+	background: transparent;
+	backdrop-filter: blur(0);
+	-webkit-backdrop-filter: blur(0);
+	opacity: 0;
+	transition:
+		opacity 0.32s ease,
+		backdrop-filter 0.32s ease;
+}
+
+.sl-backdrop[hidden] {
+	display: none;
+}
+
+.slideout[data-open] .sl-backdrop {
+	opacity: 1;
+	backdrop-filter: blur(6px) saturate(1.1);
+	-webkit-backdrop-filter: blur(6px) saturate(1.1);
+}
+
+.sl-panel {
+	position: absolute;
+	inset-block: var(--space-4);
+	display: flex;
+	flex-direction: column;
+	inline-size: min(24rem, calc(100dvw - var(--space-8)));
+	border-radius: var(--radius-xl, 1.125rem);
+	border: 1px solid color-mix(in oklab, var(--dark-divider, rgba(255, 255, 255, 0.12)) 90%, transparent);
+	background: color-mix(in oklab, var(--bg-body, #0a0c12) 62%, transparent);
+	backdrop-filter: blur(28px) saturate(1.35);
+	-webkit-backdrop-filter: blur(28px) saturate(1.35);
+	box-shadow:
+		0 24px 64px rgba(0, 0, 0, 0.45),
+		inset 0 1px 0 color-mix(in oklab, white 8%, transparent);
+	opacity: 0.92;
+	transition:
+		transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+		opacity 0.28s ease;
+	overflow: hidden;
+	pointer-events: auto;
+	/* Vertical scroll stays with the browser; horizontal is dismiss. */
+	touch-action: pan-y;
+	cursor: grab;
+}
+
+/* Default: inline-end (right in LTR). */
+.slideout[data-side='end'] .sl-panel,
+.slideout:not([data-side]) .sl-panel {
+	inset-inline-end: var(--space-4);
+	transform: translateX(calc(100% + var(--space-6)));
+}
+
+.slideout[data-side='start'] .sl-panel {
+	inset-inline-start: var(--space-4);
+	transform: translateX(calc(-100% - var(--space-6)));
+}
+
+.slideout[data-open] .sl-panel {
+	transform: translateX(0);
+	opacity: 1;
+}
+
+.sl-panel.is-dragging {
+	transition: none;
+	cursor: grabbing;
+}
+
+.sl-panel :is(button, a, [role='button']) {
+	cursor: pointer;
+}
+
+.sl-body {
+	display: flex;
+	flex-direction: column;
+	min-block-size: 0;
+	flex: 1;
+	overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sl-backdrop,
+	.sl-panel {
+		transition-duration: 0.01ms;
+	}
+}

@@ -21,7 +21,7 @@ export class UIAppBar extends WebComponent {
 		items: [],
 	};
 	render() {
-		this.html `
+		this.html`
 			<header class="app-bar">
 				<ui-bar class="app-bar-bar">
 					<slot slot="start" name="start"></slot>

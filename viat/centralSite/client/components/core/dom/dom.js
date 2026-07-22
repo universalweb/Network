@@ -1,136 +1,129 @@
 import {
-	hasValue, isFunction, isString,
+	hasValue, isString,
 	resolveTarget,
 } from '../utilities.js';
-import { getHostChildren, liveChildren } from './children.js';
-export function getComponent(tag) {
-	return liveChildren(this, tag?.toLowerCase())[0] ?? null;
-}
-export function getComponents(tag) {
-	return liveChildren(this, tag?.toLowerCase());
-}
-/**
- * Snapshot child components into a fresh array (callers can't mutate the live
- * registry). Tag-narrowed: copies the matching bucket. No-tag: walks every
- * bucket and copies all components.
- * @param {string} [tag] - Optional element tag to narrow by.
- * @returns {WebComponent[]} A fresh array of matching child components.
+import { allChildren, getHostChildren, liveChildren } from './children.js';
+import { matchesSearch, searchPredicate } from './search.js';
+/*
+ * ── Direct-child lookup ──────────────────────────────────────────────
+ * Every lookup in this file searches ONE level: the host's directly registered
+ * children. For a search that descends the whole subtree (children, their
+ * children, and so on) use findComponent / findComponents from dom/search.js.
+ * The scope is in the name — "child" is one level, "component" is any depth.
+ *
+ * All four share the search-argument shape used by the deep and class-level
+ * searches: `(tag, predicate)` narrows by tag then tests the predicate,
+ * `(predicate)` alone tests every child, `(tag)` alone takes the first of that
+ * tag. One grammar across the whole surface.
  */
-export function getComponentsArray(tag) {
-	if (tag) {
-		const list = liveChildren(this, tag.toLowerCase());
-		return list ? list.slice() : [];
-	}
-	const out = [];
-	const buckets = getHostChildren(this);
-	for (const list of buckets.values()) {
-		const listLength = list.length;
-		for (let index = 0; index < listLength; index++) {
-			out.push(list[index]);
-		}
-	}
-	return out;
-}
 /**
- * Walk every child bucket and return the first component the search accepts,
- * without allocating a flat array. Stops at the first match.
+ * Walk every child bucket, stopping at the first match. Avoids the flat-array
+ * materialization the tag-narrowed path gets from `liveChildren`.
  * @param {WebComponent} host - Host whose child buckets are scanned.
- * @param {(component: WebComponent) => boolean} search - Match test.
+ * @param {string|null} tag - Lowercased tag to narrow by, or null for any.
+ * @param {Function|null} predicate - Match test, or null for any.
  * @returns {WebComponent|null} The first match, or null.
  */
-function firstComponentInBuckets(host, search) {
-	const children = getHostChildren(host);
-	for (const list of children.values()) {
-		const listLength = list.length;
-		for (let index = 0; index < listLength; index++) {
-			if (search(list[index])) {
-				return list[index];
+function firstChildInBuckets(host, tag, predicate) {
+	const buckets = getHostChildren(host);
+	for (const bucket of buckets.values()) {
+		for (const child of bucket) {
+			if (matchesSearch(child, tag, predicate)) {
+				return child;
 			}
 		}
 	}
 	return null;
 }
 /**
- * Walk every child bucket and collect every component the search accepts into a
- * fresh array, without allocating an intermediate flat array first.
+ * Walk every child bucket and collect every match into a fresh array.
  * @param {WebComponent} host - Host whose child buckets are scanned.
- * @param {(component: WebComponent) => boolean} search - Match test.
+ * @param {string|null} tag - Lowercased tag to narrow by, or null for any.
+ * @param {Function|null} predicate - Match test, or null for any.
  * @returns {WebComponent[]} A fresh array of every match (empty when none).
  */
-function collectComponentsInBuckets(host, search) {
+function collectChildrenInBuckets(host, tag, predicate) {
 	const results = [];
-	const children = getHostChildren(host);
-	for (const list of children.values()) {
-		const listLength = list.length;
-		for (let index = 0; index < listLength; index++) {
-			if (search(list[index])) {
-				results.push(list[index]);
+	const buckets = getHostChildren(host);
+	for (const bucket of buckets.values()) {
+		for (const child of bucket) {
+			if (matchesSearch(child, tag, predicate)) {
+				results.push(child);
 			}
 		}
 	}
 	return results;
 }
 /**
- * Find the first child component matching `predicate`. Tag-narrowed: linear
- * scan of the matching bucket. No-tag: iterates every bucket without
- * allocating a flat array, stopping at the first match.
- * @param {string|((component: WebComponent) => boolean)} tag - Element tag to
- * narrow by, or a search function to run against every component.
- * @param {(component: WebComponent) => boolean} [predicate] - Match test, used
- * when `tag` narrows by element tag.
- * @returns {WebComponent|null} The first match, or null.
+ * First direct child with this tag.
+ * @param {string} [tag] - Element tag to narrow by; omitted returns the first child of any tag.
+ * @returns {WebComponent|null} The first matching child, or null.
  */
-export function findComponent(tag, predicate) {
-	if (isString(tag)) {
-		const list = liveChildren(this, tag.toLowerCase());
-		if (!list) {
-			return;
-		} else if (!predicate) {
-			return list[0];
-		}
-		const listLength = list.length;
-		for (let index = 0; index < listLength; index++) {
-			if (predicate(list[index])) {
-				return list[index];
-			}
-		}
-		return;
+export function getChild(tag) {
+	if (!isString(tag)) {
+		return firstChildInBuckets(this, null, null);
 	}
-	if (isFunction(tag)) {
-		return firstComponentInBuckets(this, tag);
-	}
+	return liveChildren(this, tag.toLowerCase())[0] ?? null;
 }
 /**
- * Find every child component matching the search. Tag-narrowed: linear scan of
- * the matching bucket. No-tag: iterates every bucket without allocating a flat
- * array first, collecting all matches.
- * @param {string|((component: WebComponent) => boolean)} tag - Element tag to
- * narrow by, or a search function to run against every component.
- * @param {(component: WebComponent) => boolean} [predicate] - Match test, used
- * when `tag` narrows by element tag.
+ * Direct children with this tag, as a fresh array. ALWAYS an array — the
+ * no-tag case collects every bucket instead of leaking the live tag Map, which
+ * silently broke `.length` / index loops on the caller side.
+ * @param {string} [tag] - Element tag to narrow by; omitted returns every direct child.
+ * @returns {WebComponent[]} A fresh array of matching children (empty when none).
+ */
+export function getChildren(tag) {
+	if (!isString(tag)) {
+		return allChildren(this);
+	}
+	return liveChildren(this, tag.toLowerCase());
+}
+/**
+ * First direct child matching the search.
+ * @param {string|Function} [tag] - Tag to narrow by, or a predicate to test every child.
+ * @param {Function} [predicate] - Match test, when `tag` narrows by tag.
+ * @returns {WebComponent|null} The first match, or null — never undefined.
+ */
+export function findChild(tag, predicate) {
+	const searchedPredicate = searchPredicate(tag, predicate);
+	if (!isString(tag)) {
+		return firstChildInBuckets(this, null, searchedPredicate);
+	}
+	const list = liveChildren(this, tag.toLowerCase());
+	if (searchedPredicate === null) {
+		return list[0] ?? null;
+	}
+	const listLength = list.length;
+	for (let index = 0; index < listLength; index++) {
+		if (searchedPredicate(list[index]) === true) {
+			return list[index];
+		}
+	}
+	return null;
+}
+/**
+ * Every direct child matching the search.
+ * @param {string|Function} [tag] - Tag to narrow by, or a predicate to test every child.
+ * @param {Function} [predicate] - Match test, when `tag` narrows by tag.
  * @returns {WebComponent[]} A fresh array of every match (empty when none).
  */
-export function findComponents(tag, predicate) {
-	if (isString(tag)) {
-		const list = liveChildren(this, tag.toLowerCase());
-		if (!list) {
-			return [];
-		} else if (!predicate) {
-			return list.slice();
-		}
-		const results = [];
-		const listLength = list.length;
-		for (let index = 0; index < listLength; index++) {
-			if (predicate(list[index])) {
-				results.push(list[index]);
-			}
-		}
-		return results;
+export function findChildren(tag, predicate) {
+	const searchedPredicate = searchPredicate(tag, predicate);
+	if (!isString(tag)) {
+		return collectChildrenInBuckets(this, null, searchedPredicate);
 	}
-	if (isFunction(tag)) {
-		return collectComponentsInBuckets(this, tag);
+	const list = liveChildren(this, tag.toLowerCase());
+	if (searchedPredicate === null) {
+		return list;
 	}
-	return [];
+	const results = [];
+	const listLength = list.length;
+	for (let index = 0; index < listLength; index++) {
+		if (searchedPredicate(list[index]) === true) {
+			results.push(list[index]);
+		}
+	}
+	return results;
 }
 export function getComponentRoot() {
 	// Light-DOM (no-shadow) components render into the host element itself.

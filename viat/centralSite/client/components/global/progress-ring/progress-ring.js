@@ -70,7 +70,7 @@ export class UIProgressRing extends WebComponent {
 		return this.state.tone;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div
 				class="ring"
 				data-size=${this.state.size}

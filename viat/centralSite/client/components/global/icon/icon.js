@@ -23,7 +23,7 @@ export class UIIcon extends WebComponent {
 	 * through the patch pass — no imperative class-string getter needed.
 	 */
 	render() {
-		this.html `
+		this.html`
 			<svg
 				class="icon"
 				data-size=${this.state.size}

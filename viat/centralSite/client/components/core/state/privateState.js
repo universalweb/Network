@@ -36,6 +36,7 @@
  * renderDep flush path could be made value-blind to shrink this surface.
  */
 import {
+	cachedProxy,
 	getValueAtPath,
 	isArray,
 	isObject,
@@ -47,7 +48,7 @@ import {
 	setValueAtPath,
 } from '../utilities.js';
 import { addDep, currentTracking } from './binding.js';
-import { ComponentSubscriptionTracker, PathSubscriptions, TrackedBundle } from './pathSubscriptions.js';
+import { PathSubscriptions, TrackedBundle } from './pathSubscriptions.js';
 import { STATE_PATH } from './state.js';
 /**
  * Bus for one component's private store. Mirrors ComponentStateBus, but reads
@@ -86,6 +87,8 @@ class PrivateRealm {
 		this.component = component;
 		this.bus = bus;
 		this.global = false;
+		// Own-property flag for render.js's monomorphic sharedBus marker pick.
+		this.sharedBus = false;
 		this.private = true;
 		this.cache = new WeakMap();
 		/*
@@ -115,16 +118,19 @@ class PrivateProxyHandler {
 	constructor(realm, path) {
 		this.realm = realm;
 		this.path = path;
+		this.carrier = null;
 	}
 	static build(target, path, realm) {
 		return new Proxy(target, new PrivateProxyHandler(realm, path));
 	}
 	get(target, key) {
 		if (key === STATE_PATH) {
-			return {
+			// Per-(target,path) handler — realm and path are immutable, cache once.
+			this.carrier ??= {
 				realm: this.realm,
 				path: this.path,
 			};
+			return this.carrier;
 		}
 		if (isSymbol(key)) {
 			return Reflect.get(target, key);
@@ -135,19 +141,7 @@ class PrivateProxyHandler {
 			addDep(currentTracking, this.realm, nestedPath);
 		}
 		if (isPlainObject(propertyValue) || isArray(propertyValue)) {
-			const cache = this.realm.cache;
-			let pathMap = cache.get(propertyValue);
-			if (!pathMap) {
-				pathMap = new Map();
-				cache.set(propertyValue, pathMap);
-			}
-			const existing = pathMap.get(nestedPath);
-			if (existing) {
-				return existing;
-			}
-			const proxy = PrivateProxyHandler.build(propertyValue, nestedPath, this.realm);
-			pathMap.set(nestedPath, proxy);
-			return proxy;
+			return cachedProxy(this.realm.cache, propertyValue, nestedPath, PrivateProxyHandler, this.realm);
 		}
 		return propertyValue;
 	}
@@ -221,7 +215,7 @@ export function observePrivate(privateProxy, keys, handler) {
 		for (let keyIndex = 0; keyIndex < objKeysLength; keyIndex += 1) {
 			subscriptions.push(bus.subscribe(objKeys[keyIndex], keys[objKeys[keyIndex]]));
 		}
-		return new TrackedBundle(new ComponentSubscriptionTracker(), subscriptions);
+		return new TrackedBundle(null, subscriptions);
 	}
 	if (isArray(keys)) {
 		const subscriptions = [];
@@ -229,7 +223,7 @@ export function observePrivate(privateProxy, keys, handler) {
 		for (let keyIndex = 0; keyIndex < keysLength; keyIndex += 1) {
 			subscriptions.push(bus.subscribe(keys[keyIndex], handler));
 		}
-		return new TrackedBundle(new ComponentSubscriptionTracker(), subscriptions);
+		return new TrackedBundle(null, subscriptions);
 	}
 	return bus.subscribe(String(keys ?? ''), handler);
 }

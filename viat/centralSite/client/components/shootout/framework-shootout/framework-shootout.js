@@ -6,7 +6,7 @@ import {
 	userAgent,
 	WebComponent,
 } from '../../core/index.js';
-import { PerfListItem } from '../../perf/perf-list-item/perf-list-item.js';
+import { PerfListItem } from '../../perf/list-item/perf-list-item.js';
 // CDN ESM URLs — pinned to majors, fetched once at module load. Top-level await
 // is fine in modern modules and matches our "no build step" stance.
 //   Lit 3:  https://esm.sh/lit@3 — tagged-template + custom-element runtime
@@ -215,6 +215,38 @@ function iterationsForCount(count) {
 	}
 	return 14;
 }
+/*
+ * A WALL-CLOCK guard, not a fairness judgement — the Lit numbers are real and
+ * worth showing. Lit's weak spot is specifically TEARDOWN: measured in-harness it
+ * still beats UWC on create/append at 400 rows, while remove-½ costs 52.8ms
+ * (×37.7 vs UWC); by 1000 rows remove-½ is 378ms and clear 2371ms (×456), which
+ * alone stretches a full 9-column sweep past 90s, and `repeat` eventually
+ * OOM-crashes the tab (~10k). So above this cap Lit sits out to keep the
+ * UWC-vs-Vue large-N sweep usable; the `skip Lit` checkbox is the explicit
+ * control at any size. Either way the omission is surfaced in the run status,
+ * never silent.
+ *
+ * Measure teardown ONLY through `Perf.bench` (warmup + GC discipline). Ad-hoc
+ * create→clear loops disagree with it by up to 100× on the same op — Lit's
+ * teardown cost is highly sensitive to GC and accumulated DOM, so a naive
+ * timing loop is not evidence here.
+ */
+const LIT_LABEL = 'Lit 3';
+const LIT_ROW_CAP = 500;
+function notLitAdapter(adapter) {
+	return adapter.label !== LIT_LABEL;
+}
+// Why the Lit column is absent from a run — an opt-out and the automatic
+// clear-knee guard read differently, so a missing column is never ambiguous.
+function litStatusNote(litSkipped, litCapped) {
+	if (litSkipped) {
+		return ' · Lit skipped (UWC vs Vue only)';
+	}
+	if (litCapped) {
+		return ` · Lit auto-dropped >${LIT_ROW_CAP} rows (clear-knee guard)`;
+	}
+	return '';
+}
 // ── UWC implementation — keyed each(), the mirror of Lit repeat / Vue v-for ──
 class UwcShootoutList extends WebComponent {
 	static url = import.meta.url;
@@ -225,7 +257,7 @@ class UwcShootoutList extends WebComponent {
 		// Bare-read keyed list — `each()` rebuilds the LiveList on the items
 		// renderDep change and the list spot keyed-diffs it (create/update/move/
 		// remove per `itemKey`). Same contract as Lit's keyed repeat.
-		this.html `${each(this.state.items, PerfListItem, itemKey)}`;
+		this.html`${each(this.state.items, PerfListItem, itemKey)}`;
 	}
 }
 customElements.define('uwc-shootout-list', UwcShootoutList);
@@ -233,7 +265,7 @@ customElements.define('uwc-shootout-list', UwcShootoutList);
 // component / shadow / lifecycle). Same five-spot row shape; the list clones a
 // shared recipe and surgically patches retained spots. ─────────────────────────
 function perfLightRow(item) {
-	return html `
+	return html`
 		<div class="row">
 			<span class="id">#${item.id}</span>
 			<span class="label">${item.label}</span>
@@ -251,7 +283,7 @@ class UwcLightShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		this.html `${each(this.state.items, perfLightRow, itemKey)}`;
+		this.html`${each(this.state.items, perfLightRow, itemKey)}`;
 	}
 }
 customElements.define('uwc-light-shootout-list', UwcLightShootoutList);
@@ -269,7 +301,7 @@ class UwcListShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		this.html `${list('items', perfLightRow, itemKey)}`;
+		this.html`${list('items', perfLightRow, itemKey)}`;
 	}
 }
 customElements.define('uwc-list-shootout-list', UwcListShootoutList);
@@ -291,7 +323,7 @@ class UwcStoreShootoutList extends WebComponent {
 		bench: shootoutBenchStore,
 	};
 	render() {
-		this.html `${list('stores.bench.items', perfLightRow, itemKey)}`;
+		this.html`${list('stores.bench.items', perfLightRow, itemKey)}`;
 	}
 }
 customElements.define('uwc-store-shootout-list', UwcStoreShootoutList);
@@ -310,7 +342,7 @@ class UwcArrowEachShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		this.html `${() => {
+		this.html`${() => {
 			return each(this.state.items, perfLightRow, itemKey);
 		}}`;
 	}
@@ -330,7 +362,7 @@ class UwcNoShadowScopedShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		this.html `${each(this.state.items, perfLightRow, itemKey)}`;
+		this.html`${each(this.state.items, perfLightRow, itemKey)}`;
 	}
 }
 customElements.define('uwc-noshadow-scoped-shootout-list', UwcNoShadowScopedShootoutList);
@@ -348,7 +380,7 @@ class UwcNoShadowUnscopedShootoutList extends WebComponent {
 		items: [],
 	};
 	render() {
-		this.html `${each(this.state.items, perfLightRow, itemKey)}`;
+		this.html`${each(this.state.items, perfLightRow, itemKey)}`;
 	}
 }
 customElements.define('uwc-noshadow-unscoped-shootout-list', UwcNoShadowUnscopedShootoutList);
@@ -376,8 +408,8 @@ class LitShootoutList extends LitElement {
 		return this;
 	}
 	render() {
-		return litHtml `${litRepeat(this.items, itemKey, (item) => {
-			return litHtml `
+		return litHtml`${litRepeat(this.items, itemKey, (item) => {
+			return litHtml`
 				<div class="row">
 					<span class="id">#${item.id}</span>
 					<span class="label">${item.label}</span>
@@ -621,18 +653,16 @@ class LitAdapter {
 		this.root.items = items;
 	}
 	rowCount() {
-		return this.root.querySelectorAll('lit-list-item').length;
+		return this.root.querySelectorAll('.row').length;
 	}
+	/*
+	 * `updateComplete` IS the whole signal: this column renders INLINE `.row`
+	 * divs via keyed `repeat` (no per-row custom element), so the rows commit
+	 * within the host's own update — there is nothing else to await. The fair
+	 * mirror of the UWC variants' microtask drain.
+	 */
 	async applied() {
 		await this.root.updateComplete;
-		const rows = this.root.querySelectorAll('lit-list-item');
-		const pending = new Array(rows.length);
-		for (let index = 0; index < rows.length; index++) {
-			pending[index] = rows[index].updateComplete;
-		}
-		if (pending.length) {
-			await Promise.all(pending);
-		}
 	}
 }
 class VueAdapter {
@@ -778,31 +808,47 @@ class BenchRun {
 	}
 }
 // ── Results table ────────────────────────────────────────────────────────────
+/*
+ * `max-content` floor, not a pixel guess: cells are nowrap+ellipsis, so a track
+ * narrower than its widest cell silently eats the ×ratio — the one number this
+ * table exists to show — and a fixed floor only moves the guess (`min|p50 ×ratio`
+ * runs 9 chars to 19: `0.00|0.10` vs `12.50|13.70 ×118.16`). Sizing each track to
+ * its own widest cell can't be wrong at any value; the grid then overflows and
+ * `.table-wrap` scrolls, so nothing is truncated at any viewport.
+ */
+const RESULT_OP_TRACK = 'minmax(max-content, 1fr)';
 function buildResultColumns() {
 	const columns = new Array(SHOOTOUT_OPS.length + 1);
 	columns[0] = {
 		id: 'framework',
 		label: 'framework',
-		width: '1.1fr',
+		width: 'minmax(max-content, 1.1fr)',
 	};
 	for (let index = 0; index < SHOOTOUT_OPS.length; index++) {
 		columns[index + 1] = {
 			id: SHOOTOUT_OPS[index].id,
 			label: SHOOTOUT_OPS[index].label,
+			width: RESULT_OP_TRACK,
 		};
 	}
 	return columns;
 }
 const RESULT_COLUMNS = buildResultColumns();
-function formatCell(p50Ms, baselineP50Ms) {
-	if (p50Ms == null) {
+/*
+ * Cell = `min|p50` ms, with the ×ratio computed on MIN — the GC/scheduler-noise-
+ * free floor is the stable regression metric (a shifted p50 is usually a stray GC
+ * pause, not a real change), while p50 stays visible as the typical-case number.
+ */
+function formatCell(cell, baselineCell) {
+	if (cell == null) {
 		return '—';
 	}
-	if (baselineP50Ms == null || baselineP50Ms <= 0) {
-		return p50Ms.toFixed(2);
+	const pair = `${cell.min.toFixed(2)}|${cell.p50.toFixed(2)}`;
+	if (baselineCell == null || baselineCell.min <= 0) {
+		return pair;
 	}
-	const ratio = p50Ms / baselineP50Ms;
-	return `${p50Ms.toFixed(2)} · ×${ratio.toFixed(2)}`;
+	const ratio = cell.min / baselineCell.min;
+	return `${pair} ×${ratio.toFixed(2)}`;
 }
 function buildResultRows(samplesByFramework, baselineLabel) {
 	const baseline = samplesByFramework.get(baselineLabel);
@@ -857,6 +903,7 @@ export class FrameworkShootout extends WebComponent {
 	static state = {
 		count: 50,
 		busy: false,
+		skipLit: false,
 		bootStatus: 'ready — Lit + Vue loaded from CDN.',
 		status: 'idle — press "Bench all" to run every operation on each framework.',
 		results: [],
@@ -961,7 +1008,10 @@ export class FrameworkShootout extends WebComponent {
 					return benchRun.setup();
 				},
 			});
-			cells[operation.id] = row ? row.p50Ms : null;
+			cells[operation.id] = row ? {
+				min: row.minMs,
+				p50: row.p50Ms,
+			} : null;
 		}
 		adapter.setItems([]);
 		await adapter.applied();
@@ -974,8 +1024,19 @@ export class FrameworkShootout extends WebComponent {
 		this.state.busy = true;
 		const count = this.state.count;
 		const iterations = iterationsForCount(count);
-		const adapters = this.adapters;
-		this.state.status = `benching ${count} items × ${SHOOTOUT_OPS.length} ops × ${adapters.length} columns…`;
+		let adapters = this.adapters;
+		/*
+		 * Two independent reasons to sit Lit out — an explicit opt-out (race UWC
+		 * against Vue alone, at any size) and the automatic guard above the
+		 * measured clear knee. Distinguished in the status so a missing column is
+		 * always attributable, never a silent gap.
+		 */
+		const litSkipped = this.state.skipLit;
+		const litCapped = !litSkipped && count > LIT_ROW_CAP;
+		if (litSkipped || litCapped) {
+			adapters = adapters.filter(notLitAdapter);
+		}
+		this.state.status = `benching ${count} items × ${SHOOTOUT_OPS.length} ops × ${adapters.length} columns…${litStatusNote(litSkipped, litCapped)}`;
 		/*
 		 * Prime each column OUTSIDE measurement: mount it, then run one full
 		 * create→settle→clear cycle. This warms the per-type caches the first timed
@@ -1006,22 +1067,26 @@ export class FrameworkShootout extends WebComponent {
 			count,
 			iterations,
 			gcHonest: honest,
+			// A persisted baseline must say WHY a column is absent, or a later
+			// reader mistakes an opted-out Lit for a regression to zero.
+			litSkipped,
+			litCapped,
 			userAgent,
 			ms: Object.fromEntries([...samplesByFramework.entries()]),
 		};
 		this.state.historyCount = this.saveRun(runRecord);
-		this.state.status = `done · ${count} items · p50 ms per op · ×ratio vs UWC · ${this.state.historyCount} runs saved${honest ? '' : ' · (heap not GC-honest — relaunch Chrome with --expose-gc)'}`;
+		this.state.status = `done · ${count} items · min|p50 ms per op · ×ratio vs UWC (on min) · ${this.state.historyCount} runs saved${litStatusNote(litSkipped, litCapped)}${honest ? '' : ' · (heap not GC-honest — relaunch Chrome with --expose-gc)'}`;
 		this.state.busy = false;
 	}
 	render() {
 		const resultTableState = {
-			title: 'Per-operation comparison — p50 latency (ms), fully applied',
-			hint: 'Each cell = median time for the operation to be FULLY APPLIED (framework + row-children DOM committed). create/append build rows; updateAll/upd-10th/precision/swap reuse keys (precision = a fixed scattered handful — the scalpel test); replace = full-state replacement, every value changed (UWC: replaceState/notifyAll; Lit/Vue: fresh-array assignment, their replace idiom); remove ½/clear shrink. ×ratio vs UWC. Same five-spot row across every column.',
+			heading: 'Per-operation comparison — min|p50 latency (ms), fully applied',
+			hint: 'Each cell = min|p50 ms for the operation to be FULLY APPLIED (framework + row-children DOM committed); min (the GC/scheduler-noise-free floor) is the stable regression metric and drives the ×ratio, p50 is the typical case. create/append build rows; updateAll/upd-10th/precision/swap reuse keys (precision = a fixed scattered handful — the scalpel test); replace = full-state replacement, every value changed (UWC: replaceState/notifyAll; Lit/Vue: fresh-array assignment, their replace idiom); remove ½/clear shrink. ×ratio vs UWC. Same five-spot row across every column.',
 			columns: RESULT_COLUMNS,
-			rows: this.state.results,
+			items: this.state.results,
 			emptyMessage: 'press "Bench all" to populate',
 		};
-		this.html `
+		this.html`
 			<div class="page">
 				<header class="head">
 					<h1>Framework Shootout — UWC strategies vs Lit 3 vs Vue 3</h1>
@@ -1032,6 +1097,10 @@ export class FrameworkShootout extends WebComponent {
 					<label>
 						items
 						<input type="number" min="1" max="20000" step="100" .value=${String(this.state.count)} @input=${this.onCountInput}>
+					</label>
+					<label class="skip-lit" tooltip="Sit the Lit column out and race UWC against Vue alone. Lit's keyed repeat teardown degrades superlinearly past ~500 rows and dominates the sweep's wall-clock.">
+						<input type="checkbox" $checked="skipLit" ?disabled=${this.state.busy}>
+						skip Lit
 					</label>
 					<button @click=${this.benchAll} ?disabled=${this.state.busy}>Bench all</button>
 					<button @click=${this.clearAll} ?disabled=${this.state.busy}>Clear lists</button>

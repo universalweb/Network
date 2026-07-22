@@ -26,7 +26,6 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import { computeAnchor } from '../../core/dom/anchor.js';
-
 import { UIMenu } from '../menu/menu.js';
 import { UIMenuItem } from '../menu/menu-item.js';
 export class UIContextMenu extends UIMenu {
@@ -213,7 +212,7 @@ export class UIContextMenu extends UIMenu {
 		surface.dataset.placement = placed.placement;
 	}
 	render() {
-		this.html `
+		this.html`
 			<slot></slot>
 			<div #surface class="menu-surface" popover="manual" role="menu" tabindex="-1"
 				@toggle=${this.handleToggle} @menu-item:select=${this.handleSelect} @keydown=${this.handleKey}>

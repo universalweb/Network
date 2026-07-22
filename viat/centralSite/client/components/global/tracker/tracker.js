@@ -41,10 +41,10 @@ export class UITracker extends WebComponent {
 		const isString = typeof segment === 'string';
 		const tone = normalizeTone(isString ? segment : segment?.tone);
 		const label = isString ? '' : segment?.label;
-		return label ? html `<span class="trk-seg" data-tone=${tone} aria-label=${label}></span>` : html `<span class="trk-seg" data-tone=${tone} aria-hidden="true"></span>`;
+		return label ? html`<span class="trk-seg" data-tone=${tone} aria-label=${label}></span>` : html`<span class="trk-seg" data-tone=${tone} aria-hidden="true"></span>`;
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="trk" role="img" aria-label=${this.state.label}>
 				${this.list('items', this.segmentRow)}
 			</div>

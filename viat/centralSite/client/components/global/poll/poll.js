@@ -42,7 +42,7 @@ class UIPollOption extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<button
 				class="opt" type="button"
 				?data-selected=${this.state.selected}
@@ -160,7 +160,7 @@ export class UIPoll extends WebComponent {
 		return Boolean(this.state.locked || !this.state.hasSelection);
 	}
 	render() {
-		this.html `
+		this.html`
 			<div
 				class="poll"
 				data-variant=${this.state.variant}

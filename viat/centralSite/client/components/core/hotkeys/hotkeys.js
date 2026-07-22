@@ -11,7 +11,8 @@
  * on the first `registerHotkey()` and detach when the registry empties.
  */
 import { isApple } from '../environment/device.js';
-import { getOrInit, isPromiseLike, queueAsyncError } from '../utilities.js';
+import { settleEventResult } from '../events/settle.js';
+import { getOrInit, isPromiseLike, weakRefFor } from '../utilities.js';
 // Spec-token aliases → canonical. Canonical modifiers: ctrl, alt, shift, meta.
 const MODIFIER_ALIASES = {
 	cmd: 'meta',
@@ -91,8 +92,47 @@ export function canonicalizeCombo(spec) {
  */
 const heldKeys = new Map();
 let masterAttached = false;
+// @engram em:network/code/hotkeys-e1-e9-3-lossless-keydown-caches-the-synthetic-repeat — invalidation contract + how the probe tests prove the cache is consulted
+/*
+ * Repeat-combo cache. OS auto-repeat fires keydown storms with an unchanged
+ * (code, modifier-bits) pair, and only the last-pressed key repeats — so the
+ * canonical combo cannot differ between consecutive repeats. Valid only while
+ * heldKeys is untouched since the cache write: every mutation site either
+ * refreshes it (onKeydown) or clears it (keyup, blur, detach, codeless event).
+ * `null` is the empty sentinel — `KeyboardEvent.code` is never null.
+ */
+let repeatCode = null;
+let repeatBits = 0;
+let repeatCanonical = '';
+/*
+ * Bypass-ness is fixed per canonical string, and comboHasBypassModifier only
+ * runs for canonicals with a live bucket, so this is bounded by registered
+ * combos. Cleared with the registry when the master listener detaches.
+ */
+const bypassCache = new Map();
 function isModifierKey(rawKey) {
 	return MODIFIER_KEYS.has(rawKey);
+}
+/*
+ * All four flags, shift included — releasing Shift mid-repeat never reaches
+ * onKeyup's invalidation (modifier keyups early-return), so the bits compare
+ * is what catches it.
+ */
+function modifierBits(keyEvent) {
+	let bits = 0;
+	if (keyEvent.ctrlKey) {
+		bits |= 1;
+	}
+	if (keyEvent.altKey) {
+		bits |= 2;
+	}
+	if (keyEvent.metaKey) {
+		bits |= 4;
+	}
+	if (keyEvent.shiftKey) {
+		bits |= 8;
+	}
+	return bits;
 }
 function normalizeEventKey(rawKey) {
 	const lower = rawKey.toLowerCase();
@@ -141,9 +181,36 @@ function onKeydown(keyEvent) {
 	if (!rawKey || isModifierKey(rawKey)) {
 		return;
 	}
+	const bits = modifierBits(keyEvent);
+	/*
+	 * Repeat hit — the held set is provably unchanged (any mutation cleared the
+	 * cache), so skip the Map.set and the whole combo rebuild.
+	 */
+	if (keyEvent.repeat === true && keyEvent.code === repeatCode && bits === repeatBits) {
+		dispatch(repeatCanonical, keyEvent);
+		return;
+	}
 	const glyph = normalizeEventKey(rawKey);
 	heldKeys.set(physicalId(keyEvent, glyph), glyph);
-	dispatch(comboFromEvent(keyEvent), keyEvent);
+	let canonical;
+	/*
+	 * Ordinary typing fast path: no modifier flags and one held key means the
+	 * only heldKeys value is the glyph just set — identical to what
+	 * comboFromEvent's collect+sort+join would produce for a single part.
+	 */
+	if (bits === 0 && heldKeys.size === 1) {
+		canonical = glyph;
+	} else {
+		canonical = comboFromEvent(keyEvent);
+	}
+	if (keyEvent.code) {
+		repeatCode = keyEvent.code;
+		repeatBits = bits;
+		repeatCanonical = canonical;
+	} else {
+		repeatCode = null;
+	}
+	dispatch(canonical, keyEvent);
 }
 function onKeyup(keyEvent) {
 	const rawKey = keyEvent.key;
@@ -151,9 +218,11 @@ function onKeyup(keyEvent) {
 		return;
 	}
 	heldKeys.delete(physicalId(keyEvent, normalizeEventKey(rawKey)));
+	repeatCode = null;
 }
 function clearHeld() {
 	heldKeys.clear();
+	repeatCode = null;
 }
 function ensureMasterListener() {
 	if (masterAttached) {
@@ -181,6 +250,8 @@ function detachMasterListener() {
 	});
 	globalThis.removeEventListener('blur', clearHeld);
 	heldKeys.clear();
+	repeatCode = null;
+	bypassCache.clear();
 }
 /*
  * Registry: canonicalCombo → Set<Entry>. Each Entry holds a WeakRef to its
@@ -216,19 +287,33 @@ function isEditableTarget(node) {
 	return node.isContentEditable === true;
 }
 function comboHasBypassModifier(canonical) {
-	const tokens = canonical.split('+');
-	const tokensLength = tokens.length;
-	for (let index = 0; index < tokensLength; index += 1) {
-		if (BYPASS_MODIFIERS.has(tokens[index])) {
-			return true;
+	let bypass = bypassCache.get(canonical);
+	if (bypass === undefined) {
+		bypass = false;
+		const tokens = canonical.split('+');
+		const tokensLength = tokens.length;
+		for (let index = 0; index < tokensLength; index += 1) {
+			if (BYPASS_MODIFIERS.has(tokens[index])) {
+				bypass = true;
+				break;
+			}
 		}
+		bypassCache.set(canonical, bypass);
 	}
-	return false;
+	return bypass;
 }
+// @engram em:network/code/ispromiselike-gates-catch-at-6-sites-2-were-live-crashes-use — why isPromiseLike + .catch is a bug at any user-handler boundary
+/*
+ * The combo is the hotkey's event name, and there is no element — the master
+ * listener sits on `document`, so the target IS the owner. Settling (not
+ * `.catch`) because isPromiseLike only proves `.then` exists: a bare thenable
+ * has no `.catch` to call, which threw a TypeError inside dispatch and took the
+ * remaining hotkeys of that keystroke down with it.
+ */
 function invokeHandler(entry, target, keyEvent, canonical) {
 	const result = entry.handler.call(target, keyEvent, canonical);
 	if (isPromiseLike(result)) {
-		result.catch(queueAsyncError);
+		settleEventResult(result, target, keyEvent, null, canonical);
 	}
 }
 function dispatch(canonical, keyEvent) {
@@ -321,7 +406,7 @@ export function createHotkeyEntry(target, combo, handler, source, options) {
 		handler,
 		options: options || EMPTY_OPTIONS,
 		source: source || 'api',
-		targetRef: new WeakRef(target),
+		targetRef: weakRefFor(target),
 	};
 	getOrInit(registry, canonical, makeEntrySet).add(entry);
 	ensureMasterListener();
@@ -333,7 +418,6 @@ export function createHotkeyEntry(target, combo, handler, source, options) {
  * binding. Framework-internal paths (the template behavior, `hotKey()` below)
  * use `createHotkeyEntry` + `releaseHotkeyEntry` directly and skip this
  * allocation.
- * TODO: we should refactor this to be a class based approach where we can have static properties and methods that can be used to register behaviours or plugins like hotkeys. This should be applied to the rest of the codebase for things that return a function unregister.
  */
 export function registerHotkey(target, combo, handler, source, options) {
 	const entry = createHotkeyEntry(target, combo, handler, source, options);

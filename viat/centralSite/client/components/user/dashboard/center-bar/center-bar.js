@@ -43,7 +43,7 @@ export class CenterBar extends WebComponent {
 		},
 	};
 	render() {
-		this.html `
+		this.html`
 			<ui-toolbar .state=${this.state.toolbar}></ui-toolbar>
 		`;
 	}

@@ -16,12 +16,12 @@ export class UIEmptyState extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<div class="empty">
-				${this.state.icon ? this.htmlElement `<div class="empty-icon" aria-hidden="true">${this.state.icon}</div>` : ''}
+				${this.state.icon ? this.htmlElement`<div class="empty-icon" aria-hidden="true">${this.state.icon}</div>` : ''}
 				<div class="empty-title">${this.state.heading}</div>
-				${this.state.hint ? this.htmlElement `<div class="empty-hint">${this.state.hint}</div>` : ''}
-				${this.state.actionLabel ? this.htmlElement `<button class="empty-action" type="button" @click=${this.handleAction}>${this.state.actionLabel}</button>` : ''}
+				${this.state.hint ? this.htmlElement`<div class="empty-hint">${this.state.hint}</div>` : ''}
+				${this.state.actionLabel ? this.htmlElement`<button class="empty-action" type="button" @click=${this.handleAction}>${this.state.actionLabel}</button>` : ''}
 			</div>
 		`;
 	}

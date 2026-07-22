@@ -1,6 +1,6 @@
 import '../../global/modal/modal.js';
 import '../../global/whitebox-modal/whitebox-modal.js';
-import { WebComponent } from '../../core/index.js';
+import { WebComponent } from 'webcomponent';
 // `<welcome-back-modal>` — replaces the intro modal at boot when a saved
 // profile auto-loaded from localStorage. Mirrors the intro modal's hero
 // (animated VIAT triangle on a gradient chip, headline + tagline) so the
@@ -27,6 +27,16 @@ export class WelcomeBackModal extends WebComponent {
 		address: '',
 		label: '',
 		locked: false,
+		modal: {
+			modal: true,
+			open: false,
+			showClose: true,
+		},
+		thumbModal: {
+			src: './HDSeed.png',
+			alt: 'HD seed tree diagram',
+			caption: 'HD seed tree — deterministic four-pool master entropy.',
+		},
 	};
 	pendingOpen = null;
 	openFor(options = {}) {
@@ -63,12 +73,8 @@ export class WelcomeBackModal extends WebComponent {
 		this.refs.thumb_modal?.open();
 	}
 	render() {
-		this.html `
-			<ui-modal #modal .state=${{
-				modal: true,
-				open: false,
-				showClose: true,
-			}} style="--ui-modal-max-width: 620px">
+		this.html`
+			<ui-modal #modal .state=${this.state.modal} style="--ui-modal-max-width: 620px">
 				<div class="modal-shell">
 					<div class="wb-hero">
 						<span class="wb-glyph" aria-hidden="true">
@@ -138,11 +144,7 @@ export class WelcomeBackModal extends WebComponent {
 						}} @click=${this.handleUnlockNow}>UNLOCK NOW</button>
 						<button type="button" @click=${this.handleContinue}>CONTINUE</button>
 					</div>
-					<ui-whitebox-modal #thumb_modal .state=${{
-						src: './HDSeed.png',
-						alt: 'HD seed tree diagram',
-						caption: 'HD seed tree — deterministic four-pool master entropy.',
-					}}></ui-whitebox-modal>
+					<ui-whitebox-modal #thumb_modal .state=${this.state.thumbModal}></ui-whitebox-modal>
 				</div>
 			</ui-modal>
 		`;

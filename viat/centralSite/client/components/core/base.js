@@ -13,6 +13,8 @@ import {
 	ensureMergedProperties,
 	ensureMergedState,
 	ensurePropertyIndex,
+	ensureResolvedConfig,
+	ensureStateFoldPlan,
 	resolveStores,
 } from './attrs/staticConfig.js';
 import { writeTextToClipboard } from './clipboard.js';
@@ -30,6 +32,9 @@ import {
 import * as dom from './dom/dom.js';
 import { setInert } from './dom/inert.js';
 import { getRef, makeRefsProxy } from './dom/refs.js';
+import {
+	findComponent, findComponentGlobal, findComponents, findComponentsGlobal,
+} from './dom/search.js';
 import { applyViewportBucket, reflectViewport } from './environment/reflectViewport.js';
 import { applyThemeStyles, handleThemeChange, syncThemeStyles } from './environment/themeStyles.js';
 import * as eventMethods from './events/events.js';
@@ -37,6 +42,7 @@ import { dragSnap } from './gestures/dragSnap.js';
 import { dragTrack } from './gestures/dragTrack.js';
 import { hotKey, hotKeyListeners } from './hotkeys/hotkeys.js';
 import * as lifecycle from './lifecycle/lifecycle.js';
+import { Lifecycle } from './lifecycle/lifecyclePromises.js';
 import { handleObserverCallback, installObserver, uninstallObserver } from './lifecycle/observer.js';
 import { atPhase, PHASE, phaseGetters } from './lifecycle/phase.js';
 import { nextFrame } from './lifecycle/scheduler.js';
@@ -45,11 +51,10 @@ import * as renderMethods from './render/render.js';
 import {
 	bind, makeGlobalProxy, makeStoreProxy, notifyAttrChange,
 } from './state/binding.js';
-import { collectionCtrl, disposeCollections } from './state/collection.js';
-import { ensureCollection } from './state/collectionEngine.js';
-import { disposeLists, listCtrl } from './state/listHandle.js';
+import { collectionCtrl, disposeCollections, ensureCollection } from './state/collectionEngine.js';
 import * as contextMethods from './state/context.js';
 import { globalState } from './state/globalState.js';
+import { disposeLists, listCtrl } from './state/listHandle.js';
 import * as privateStateMethods from './state/privateState.js';
 import * as stateMethods from './state/state.js';
 import * as subscriptions from './state/subscriptions.js';
@@ -67,7 +72,6 @@ import {
 	styleSheet,
 } from './styles/styleApi.js';
 import {
-	collection as collectionBinding,
 	comp,
 	each,
 	filter,
@@ -94,13 +98,17 @@ import {
 	isFunction,
 	isObject,
 	isPlainObject,
+	isPromiseLike,
 	keysOf,
 	smartClone,
 } from './utilities.js';
-export { liveChildren, registerChild } from './dom/children.js';
-export { registry } from './dom/registry.js';
-export { globalState, Store } from './state/globalState.js';
-export { ClassList, classList } from './template.js';
+/*
+ * The promise-state tail of `WebComponent.create` — split out so the dominant
+ * plain-object create never enters an async frame.
+ */
+async function createWithAwaitedState(ComponentClass, statePromise, config) {
+	return new ComponentClass(await statePromise, config);
+}
 /**
  * Fold the chain-merged `static state` template into a component's per-instance `STATE`.
  * Each container value is smartClone'd so every instance owns its own outer
@@ -116,25 +124,25 @@ export { ClassList, classList } from './template.js';
  * @param {object|null} ownedProvidedKeys - Provided state when its keys should skip cloning, else null.
  */
 function foldStaticStateTemplate(component, ownedProvidedKeys) {
-	const mergedState = component.constructor.ensureMergedState();
-	const mergedDescriptors = Object.getOwnPropertyDescriptors(mergedState);
-	const mergedKeys = Object.getOwnPropertyNames(mergedDescriptors);
-	const mergedKeysLength = mergedKeys.length;
-	for (let mergedIndex = 0; mergedIndex < mergedKeysLength; mergedIndex += 1) {
-		const mergedKey = mergedKeys[mergedIndex];
-		const descriptor = mergedDescriptors[mergedKey];
-		if (descriptor.get || descriptor.set) {
+	/*
+	 * The per-class fold plan (staticConfig.ensureStateFoldPlan) pre-filters the
+	 * accessors and precomputes the data key/value + clone-flag arrays once, so
+	 * this per-instance path is a flat indexed loop — no descriptor bag, no
+	 * accessor scan per construct (this runs 500× on a list mount).
+	 */
+	const plan = component.constructor.ensureStateFoldPlan();
+	const keys = plan.keys;
+	const values = plan.values;
+	const cloneFlags = plan.clone;
+	const STATE = component.STATE;
+	const keysLength = keys.length;
+	for (let index = 0; index < keysLength; index += 1) {
+		const key = keys[index];
+		if (ownedProvidedKeys && hasOwn(ownedProvidedKeys, key)) {
 			continue;
 		}
-		if (ownedProvidedKeys && hasOwn(ownedProvidedKeys, mergedKey)) {
-			continue;
-		}
-		const mergedValue = descriptor.value;
-		if (isObject(mergedValue)) {
-			component.STATE[mergedKey] = smartClone(mergedValue);
-		} else {
-			component.STATE[mergedKey] = mergedValue;
-		}
+		const value = values[index];
+		STATE[key] = cloneFlags[index] ? smartClone(value) : value;
 	}
 }
 /**
@@ -243,16 +251,16 @@ export class WebComponent extends HTMLElement {
 		this.propertyIndex = ensurePropertyIndex(this.constructor);
 		/*
 		 * Resolve the framework config first — subsequent pipeline steps branch
-		 * on `this.config`. The instance-field knob defaults seed it, the class
-		 * `static config` folds over them, then the ctor-arg `config` wins last.
-		 * `skipStaticState` / `mergeObjects` are read from `this.config` here; the
-		 * merge-chain knobs (`mergeState` / `mergeObjects`) are ALSO read from the
-		 * class's merged config by `ensureMergedState`, which caches on the class.
+		 * on `this.config`. The dominant no-ctor-config construction SHARES the
+		 * class's frozen resolvedConfig (knob defaults + chain-merged `static
+		 * config`) — zero per-instance allocation; a ctor-arg config forks a
+		 * per-instance copy with the arg winning last. `skipStaticState` /
+		 * `mergeObjects` are read from `this.config` here; the merge-chain knobs
+		 * are ALSO read from the class's merged config by `ensureMergedState`,
+		 * which caches on the class.
 		 */
-		assign(this.config, this.constructor.ensureMergedConfig());
-		if (config) {
-			assign(this.config, config);
-		}
+		const resolvedConfig = ensureResolvedConfig(this.constructor);
+		this.config = config ? assign(assign({}, resolvedConfig), config) : resolvedConfig;
 		/**
 		 * Shadow DOM is the default. `static useShadow = false` opts into light-DOM
 		 * rendering: the template renders into the host element itself (every
@@ -292,9 +300,12 @@ export class WebComponent extends HTMLElement {
 		 * proper channel now that STATE + stateProxy are ready — subclass
 		 * setters that do `this.state.x = …` need the proxy to exist.
 		 */
+		/*
+		 * Lifecycle promise slots start PENDING by construction (Lifecycle class
+		 * field defaults) — no arm call and no promise minting here; slots arm
+		 * lazily on first read and re-arm on reconnect.
+		 */
 		this.upgradeShadowedProperties();
-		this.createConnectCyclePromises();
-		this.createWhenDestroyedPromise();
 		if (defaultLogger.debugOn) {
 			defaultLogger.debug('Constructor', `${this.constructor.name}<${this.localName}>`);
 		}
@@ -329,7 +340,6 @@ export class WebComponent extends HTMLElement {
 	 * Accessor descriptors (`get foo()` / `set foo()`) written in `static
 	 * state` are collected into the same propertyIndex and dispatched by the
 	 * state proxies via `.call(component)` — no per-instance `.bind` cost.
-	 * 	TODO: Instead of per path scheme being something like 'a.b' we need to mirror the static state object structure {a: b:{}} and have a schema that mirrors the static state structure so we can have a more natural way to define the schema for the state. When proxies are working they must also traverse the properties object/path to keep track of the current path and match the properties object to it.
 	 */
 	static properties = {};
 	/**
@@ -341,6 +351,29 @@ export class WebComponent extends HTMLElement {
 		return source instanceof WebComponent;
 	}
 	static getById = getById;
+	/**
+	 * Document-wide search: the first CONNECTED component matching the search,
+	 * anywhere, scanning the flat connected roster in connect order. The
+	 * no-starting-point form — a console probe or an agent tool locating a
+	 * component it cannot navigate to. Use the instance `findComponent` when
+	 * you have a host and want its subtree.
+	 * @param {string|Function} [tag] - Tag to narrow by, or a predicate to test every component.
+	 * @param {Function} [predicate] - Match test, when `tag` narrows by tag.
+	 * @returns {WebComponent|null} The first match, or null.
+	 */
+	static findComponent(tag, predicate) {
+		return findComponentGlobal(tag, predicate);
+	}
+	/**
+	 * Document-wide search: every CONNECTED component matching the search, in
+	 * connect order.
+	 * @param {string|Function} [tag] - Tag to narrow by, or a predicate to test every component.
+	 * @param {Function} [predicate] - Match test, when `tag` narrows by tag.
+	 * @returns {WebComponent[]} A fresh array of every match (empty when none).
+	 */
+	static findComponents(tag, predicate) {
+		return findComponentsGlobal(tag, predicate);
+	}
 	static preRender = preRender;
 	static createBound = createBound;
 	/**
@@ -372,6 +405,15 @@ export class WebComponent extends HTMLElement {
 	 */
 	static ensureMergedState(ComponentClass = this) {
 		return ensureMergedState(ComponentClass);
+	}
+	/**
+	 * Resolve and cache the per-class state fold plan (data key/value + clone-flag
+	 * arrays) consumed by per-instance state materialization.
+	 * @param {typeof WebComponent} [ComponentClass] - Class to resolve.
+	 * @returns {{keys: string[], values: unknown[], clone: boolean[]}} The fold plan.
+	 */
+	static ensureStateFoldPlan(ComponentClass = this) {
+		return ensureStateFoldPlan(ComponentClass);
 	}
 	/**
 	 * Resolve and cache the chain-merged `static attrs` map for a class.
@@ -491,37 +533,37 @@ export class WebComponent extends HTMLElement {
 		stash.style.cssText = 'position:absolute;left:-99999px;top:0;width:1px;height:1px;overflow:hidden;pointer-events:none;';
 		document.body.appendChild(stash);
 		stash.appendChild(probe);
-		try {
-			await probe.lifecycle?.whenRendered;
-		} finally {
-			stash.remove();
-		}
+		// whenRendered never rejects — the render pipeline contains hook failures.
+		await probe.lifecycle?.whenRendered;
+		stash.remove();
 	}
 	/**
-	 * Preferred construction entry point. Asserts the config, awaits `state`
-	 * (so callers can pass a promise), then constructs. Use `Klass.create(...)`
-	 * over `new Klass(...)` so async setup and validation run up front.
+	 * Preferred construction entry point. Accepts `state` as a value OR a
+	 * promise; only the promise case pays an await (a plain object constructs
+	 * synchronously and returns pre-resolved — an unconditional `await state`
+	 * cost a microtask on every create). Use `Klass.create(...)` over
+	 * `new Klass(...)` so async setup and validation run up front.
 	 * @param {object|Promise<object>} [state] - Constructor state (may be a promise).
-	 * @param {object} [config] - Per-instance config, asserted before construction.
+	 * @param {object} [config] - Per-instance config, forked over the class config.
 	 * @returns {Promise<WebComponent>} The constructed instance.
 	 */
-	static async create(state, config = {}) {
-		return new this(await state, config);
+	static create(state, config) {
+		if (isPromiseLike(state)) {
+			return createWithAwaitedState(this, state, config);
+		}
+		return Promise.resolve(new this(state, config));
 	}
 	/**
-	 * Per-instance framework config: the merge-knob defaults seed it, then the
-	 * class `static config` and the ctor-arg `config` fold over it (in that order
-	 * of precedence). These three are the base knob home (the chain-merge
-	 * fast-path skips base `static config`). `debugPatchOn` is intentionally
-	 * absent — its render read defaults it on when unset; a component opts out
-	 * via `static config`.
+	 * Per-instance framework config, assigned in the constructor: the class's
+	 * frozen `resolvedConfig` (knob defaults + chain-merged `static config`)
+	 * shared as-is, or a per-instance fork when a ctor-arg config overrides it.
+	 * Declared here (null) so the field sits in the class-field shape; the knob
+	 * defaults live in staticConfig's CONFIG_KNOB_DEFAULTS. `debugPatchOn` is
+	 * intentionally absent — its render read defaults it on when unset; a
+	 * component opts out via `static config`.
 	 */
-	config = {
-		mergeState: true,
-		mergeObjects: false,
-		skipStaticState: false,
-	};
-	lifecycle = {};
+	config = null;
+	lifecycle = new Lifecycle();
 	isWebComponent = true;
 	propertyIndex = null;
 	STATE = {};
@@ -560,10 +602,17 @@ export class WebComponent extends HTMLElement {
 	renderTracking = false;
 	renderProxy = null;
 	renderProxyState = null;
+	/*
+	 * Learned on the first render from what render() actually RETURNED — a fact,
+	 * not a signature sniff (`render.constructor !== AsyncFunction` misses a sync
+	 * render that returns a promise). Gates the synchronous patch-pass fast path;
+	 * false until the first render proves otherwise, so the very first pass always
+	 * takes the full async lifecycle.
+	 */
+	renderIsSync = false;
 	storesNamespace = null;
 	intervals = null;
 	phase = PHASE.CREATED;
-	isRendering = false;
 	isIntersecting = false;
 	isIntersected = false;
 	isVisible = false;
@@ -572,7 +621,6 @@ export class WebComponent extends HTMLElement {
 	intersectObserved = false;
 	visibleFired = false;
 	renderSeq = 0;
-	unregisterFromParent = null;
 	timeouts = null;
 	pendingConnect = null;
 	styleMap = null;
@@ -656,22 +704,15 @@ export class WebComponent extends HTMLElement {
 		this.storesNamespace ??= new Proxy(resolveStores(this.constructor), new StoresNamespaceHandler(this));
 		return this.storesNamespace;
 	}
-	/**
-	 * Default lifecycle-error sink — logs with the element's tag name.
-	 * Override to route errors elsewhere (telemetry, a UI fallback).
-	 * @param {unknown} error - The thrown lifecycle error.
+	/*
+	 * Framework failures surface as EVENTS, not method hooks: 'renderError'
+	 * (async-lane render/hook failures) and 'lifecycleError' (runHook-routed
+	 * lifecycle hooks) — cancelable, bubbling, composed; detail.data is the
+	 * error. preventDefault() marks it handled; unprevented errors rethrow raw
+	 * through queueAsyncError (see utilities.js emitError). Sync-lane render
+	 * throws never emit — they propagate raw to window's ErrorEvent (the
+	 * platform's own error-as-event channel).
 	 */
-	onLifecycleError(error) {
-		componentLogger.error('LIFECYCLE', `${this.constructor.name}<${this.localName}>`, this, this.state, error);
-	}
-	/**
-	 * Default render-error sink — logs with the element's tag name. Override
-	 * to render a fallback or report the failure.
-	 * @param {unknown} error - The thrown render error.
-	 */
-	onRenderError(error) {
-		componentLogger.error('RENDER', `${this.constructor.name}<${this.localName}>`, this, this.state, error);
-	}
 	debug(...args) {
 		if (componentLogger.debugOn) {
 			componentLogger.debug(`${this.constructor.name}<${this.localName}>`, this, this.state, ...args);
@@ -695,34 +736,18 @@ export class WebComponent extends HTMLElement {
 	}
 }
 /*
- * Dual-mode `this.collection`:
- *   this.collection(key)                         → handle
+ * Dual-mode `this.collection` (headless CollectionEngine — rows paint via
+ * `${this.list(key, Row)}` / `${this.filter(...)}` after ensure):
+ *   this.collection(key)                          → handle
  *   this.collection(key, this.state.itemsConfig)  → ensure Engine (preferred reactive bag)
- *   this.collection(key, { loader, … })          → ensure (snapshot / { from })
- *   this.collection(key, () => ({ … }))          → ensure (tracked factory)
- *   this.collection(key, Row, config?)           → template binding (list + load)
- * Free-function `import { collection }` stays the template factory only.
+ *   this.collection(key, { loader, … })           → ensure (snapshot / { from })
+ *   this.collection(key, () => ({ … }))           → ensure (tracked factory)
  */
-function isCustomElementConstructor(source) {
-	return typeof source === 'function'
-		&& source.prototype
-		&& Object.prototype.isPrototypeOf.call(HTMLElement.prototype, source.prototype);
-}
-function collection(key, rowOrConfig, config) {
+function collection(key, configOrFactory) {
 	if (arguments.length < 2) {
 		return collectionCtrl.call(this, key);
 	}
-	// Plain config → ensure Engine.
-	if (isPlainObject(rowOrConfig)) {
-		return ensureCollection.call(this, key, rowOrConfig);
-	}
-	// Function that is NOT a custom-element class → reactive config factory.
-	// (Row classes are HTMLElement subclasses; light row fns for collection
-	// template use the 3-arg form: collection(key, rowFn, config).)
-	if (isFunction(rowOrConfig) && arguments.length === 2 && !isCustomElementConstructor(rowOrConfig)) {
-		return ensureCollection.call(this, key, rowOrConfig);
-	}
-	return collectionBinding(key, rowOrConfig, config ?? {});
+	return ensureCollection.call(this, key, configOrFactory);
 }
 /*
  * `this.list(key)` → ListHandle (find/search/row access after mount);
@@ -757,7 +782,6 @@ const PROTO_METHODS = {
 	/*
 	 * Template helpers as instance methods. Dual-mode:
 	 *   this.list(key, Row) → binding; this.list(key) → ListHandle
-	 *   this.collection(key, Row, cfg) → binding
 	 *   this.collection(key, { loader, … }) → ensure Engine (onConnect)
 	 *   this.collection(key) → load handle
 	 * Prefer these so callers only import `WebComponent`. Do NOT put
@@ -799,6 +823,14 @@ const PROTO_METHODS = {
 	setTimeout: setComponentTimeout,
 	setInert,
 	stopInterval,
+	/*
+	 * Deep subtree search (dom/search.js) — breadth-first over the child
+	 * registry, so the shallowest match wins. Named without "child" precisely
+	 * because they are NOT one level: getChild/findChild are direct children,
+	 * findComponent/findComponents are any depth.
+	 */
+	findComponent,
+	findComponents,
 };
 /*
  * Fold every topic file's exported methods (plus PROTO_METHODS) onto the

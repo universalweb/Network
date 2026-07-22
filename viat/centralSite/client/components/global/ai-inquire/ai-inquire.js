@@ -41,7 +41,7 @@ export class UIAiInquire extends WebComponent {
 		return optionValue(option);
 	}
 	renderOption(option) {
-		return html `<button type="button" class="inq-opt" data-variant="outline" data-size="sm" data-value=${String(optionValue(option))}>${optionLabel(option)}</button>`;
+		return html`<button type="button" class="inq-opt" data-variant="outline" data-size="sm" data-value=${String(optionValue(option))}>${optionLabel(option)}</button>`;
 	}
 	handleOptionClick(domEvent) {
 		if (this.state.answered) {
@@ -72,7 +72,7 @@ export class UIAiInquire extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<section class="inq" data-mode=${this.state.mode}>
 				<header class="inq-head">
 					<ui-icon class="inq-icon" .state.name=${'circle-help'} .state.size=${'sm'}></ui-icon>

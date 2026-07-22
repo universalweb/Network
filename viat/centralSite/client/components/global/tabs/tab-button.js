@@ -30,7 +30,7 @@ export class UITabButton extends WebComponent {
 		/* No is-active/has-icon classes: active styling keys off aria-selected,
 		   the icon-only treatment off `:has(.tab-btn-icon)` (see tab-button.css).
 		   Orientation styling rides inherited CSS custom props from the strip. */
-		this.html `
+		this.html`
 			<button #button
 				class="tab-btn"
 				type="button"
@@ -40,7 +40,7 @@ export class UITabButton extends WebComponent {
 				data-tab-id=${this.state.id}
 				tooltip=${this.state.label}
 				@click=${this.handleClick}>
-				${this.state.icon ? this.htmlElement `<ui-icon class="tab-btn-icon" .state.name=${this.state.icon} .state.size=${'sm'}></ui-icon>` : ''}
+				${this.state.icon ? this.htmlElement`<ui-icon class="tab-btn-icon" .state.name=${this.state.icon} .state.size=${'sm'}></ui-icon>` : ''}
 				<span class="tab-btn-label">${this.state.label}</span>
 			</button>
 		`;

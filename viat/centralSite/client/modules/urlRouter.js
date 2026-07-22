@@ -355,6 +355,15 @@ export class URLRouter {
 			routeFilter: route.filter ?? '',
 			routeParams: route.params ?? {},
 			routeQuery: route.query ?? {},
+			/*
+			 * The RESOLVED active page, published once here rather than left for
+			 * each consumer to re-derive. Every page component self-guards on
+			 * this one key ("am I the active view?"), so the view/section/id
+			 * fallback chain lives in exactly one place — and a route that
+			 * changes only `section` or `id` still re-fires observers that would
+			 * otherwise watch `routeView` alone and miss it.
+			 */
+			routeActiveView: route.view || route.section || route.id || '',
 		});
 	}
 	on(handler) {

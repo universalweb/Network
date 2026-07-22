@@ -71,7 +71,7 @@ export class GlobalPulldown extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<ui-pulldown #pulldown
 				.state=${this.state.pulldown}
 				@pulldown:open=${this.handleOpen}

@@ -76,7 +76,7 @@ export class UINumberStepper extends WebComponent {
 		const value = Number(this.state.value) || 0;
 		const atMin = this.state.min != null && value <= Number(this.state.min);
 		const atMax = this.state.max != null && value >= Number(this.state.max);
-		this.html `
+		this.html`
 			<div class="number-stepper" ?data-disabled=${this.state.disabled}>
 				<button class="ns-btn ns-dec" type="button" aria-label="Decrease"
 					?disabled=${this.state.disabled || atMin} @click=${this.handleDec}>−</button>

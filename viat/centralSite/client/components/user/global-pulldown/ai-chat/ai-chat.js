@@ -252,7 +252,7 @@ export class AIChat extends WebComponent {
 		});
 	}
 	render() {
-		this.html `
+		this.html`
 			<ui-ai-chat #chat
 				.state.endpoint=${this.state.endpoint}
 				.state.model=${this.state.model}
