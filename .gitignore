@@ -28,7 +28,7 @@ node_modules
 # Test cases #
 ############
 tests/*
-*/benchmarks/*
+benchmarks/*
 
 # VIAT SITE #
 ############
