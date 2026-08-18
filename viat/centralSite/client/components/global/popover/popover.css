@@ -1,6 +1,7 @@
 :host {
 	display: inline-block;
 }
+
 .pp-trigger {
 	display: inline-flex;
 	align-items: center;
@@ -32,28 +33,48 @@
 	border-color: var(--focus-ring-color, var(--cyan));
 	box-shadow: 0 0 0 2px color-mix(in oklab, var(--focus-ring-color, var(--cyan)) 45%, transparent);
 }
-/* Overlay: fixed viewport layer (in-shadow, not portaled). */
+.pp-trigger[aria-expanded='true'] {
+	border-color: var(--teal, var(--cyan));
+	color: var(--teal, var(--cyan));
+}
+
+/* Overlay: fixed viewport layer. Native popover top-layer escapes clip;
+   UA popover chrome is reset so this stays a full-bleed layer. */
 .pp-overlay {
 	position: fixed;
 	inset: 0;
-	z-index: var(--z-floating, 900);
+	inline-size: auto;
+	block-size: auto;
+	margin: 0;
+	border: none;
+	padding: 0;
+	overflow: visible;
+	background: transparent;
+	z-index: var(--z-floating);
 	pointer-events: none;
 	visibility: hidden;
 }
 .pp-overlay[data-open] {
-	pointer-events: auto;
+	/* Host overlay stays inert so it cannot steal the trigger hover. */
+	pointer-events: none;
 	visibility: visible;
 }
-/* Transparent click-catcher — a popover dismisses on outside click but must NOT dim
-   the page (that's the floating-panel's job). */
+
+/* Transparent click-catcher — dismiss on outside click; do NOT dim the page. */
 .pp-backdrop {
 	position: absolute;
 	inset: 0;
+	pointer-events: auto;
 }
+.pp-overlay[data-hover] .pp-backdrop {
+	/* Hover mode: leave-watch owns dismiss. Backdrop must not cover the trigger. */
+	pointer-events: none;
+}
+
 .pp-surface {
 	position: absolute;
-	/* Gap is baked into the JS anchor (MorphSurface.anchorGap) so flip puts it on the
-	   trigger-facing edge — do NOT re-add --space-2 here. */
+	pointer-events: auto;
+	/* Gap baked into JS anchor (MorphSurface.anchorGap / state.offset). */
 	inset-block-start: var(--ms-anchor-top, 0px);
 	inset-inline-start: var(--ms-anchor-left, 0px);
 	display: flex;
@@ -61,10 +82,10 @@
 	gap: var(--space-1);
 	min-inline-size: 11rem;
 	inline-size: max-content;
-	max-inline-size: min(18rem, calc(100vw - 2rem));
+	max-inline-size: min(20rem, calc(100vw - 2rem));
 	max-block-size: min(60dvh, 24rem);
-	padding: var(--space-2);
-	background: var(--popup-bg);
+	padding: var(--space-3);
+	background: var(--popup-glass-bg, var(--popup-bg));
 	border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
 	border-radius: var(--radius-md);
 	box-shadow: var(--popup-shadow,
@@ -72,28 +93,99 @@
 		0 0 0 1px color-mix(in oklab, var(--teal) 8%, transparent));
 	color: var(--popup-text, var(--text-main));
 	font-family: var(--font-mono, 'JetBrains Mono', monospace);
+	-webkit-backdrop-filter: var(--popup-glass-blur, blur(0.625rem) saturate(1.25));
+	backdrop-filter: var(--popup-glass-blur, blur(0.625rem) saturate(1.25));
 	overflow: hidden auto;
 }
+
+/* Arrow — points toward trigger; placement from data-side. */
+.pp-arrow {
+	position: absolute;
+	inline-size: 0.55rem;
+	block-size: 0.55rem;
+	background: inherit;
+	border: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 22%, transparent));
+	transform: rotate(45deg);
+	pointer-events: none;
+	z-index: 1;
+}
+.pp-arrow[hidden] {
+	display: none !important;
+}
+.pp-surface[data-side='bottom'] .pp-arrow {
+	inset-block-start: -0.3rem;
+	inset-inline-start: 50%;
+	margin-inline-start: -0.28rem;
+	border-inline-end: 0;
+	border-block-end: 0;
+}
+.pp-surface[data-side='top'] .pp-arrow {
+	inset-block-end: -0.3rem;
+	inset-inline-start: 50%;
+	margin-inline-start: -0.28rem;
+	border-inline-start: 0;
+	border-block-start: 0;
+}
+.pp-surface[data-side='left'] .pp-arrow {
+	inset-inline-end: -0.3rem;
+	inset-block-start: 50%;
+	margin-block-start: -0.28rem;
+	border-inline-start: 0;
+	border-block-end: 0;
+}
+.pp-surface[data-side='right'] .pp-arrow {
+	inset-inline-start: -0.3rem;
+	inset-block-start: 50%;
+	margin-block-start: -0.28rem;
+	border-inline-end: 0;
+	border-block-start: 0;
+}
+.pp-surface[data-align='start'][data-side='bottom'] .pp-arrow,
+.pp-surface[data-align='start'][data-side='top'] .pp-arrow {
+	inset-inline-start: 1.25rem;
+	margin-inline-start: 0;
+}
+.pp-surface[data-align='end'][data-side='bottom'] .pp-arrow,
+.pp-surface[data-align='end'][data-side='top'] .pp-arrow {
+	inset-inline-start: auto;
+	inset-inline-end: 1.25rem;
+	margin-inline-start: 0;
+}
+
 .pp-heading {
-	padding: var(--space-1) var(--space-2);
-	font-size: var(--text-2xs);
-	letter-spacing: 0.16em;
-	text-transform: uppercase;
-	color: var(--text-muted, rgb(255 255 255 / 0.5));
+	padding: 0 var(--space-1);
+	font-size: var(--text-sm, 0.875rem);
+	font-weight: var(--weight-semibold, 600);
+	letter-spacing: 0.02em;
+	color: var(--text-main);
+	line-height: 1.3;
 }
 .pp-heading[hidden] {
-	display: none;
+	display: none !important;
 }
+
+.pp-description {
+	margin: 0;
+	padding: 0 var(--space-1);
+	font-size: var(--text-xs);
+	line-height: 1.45;
+	color: var(--text-muted, rgb(255 255 255 / 0.55));
+}
+.pp-description[hidden] {
+	display: none !important;
+}
+
 .pp-body {
-	padding: var(--space-1) var(--space-2);
+	padding: var(--space-1);
 	font-size: var(--text-xs);
 	line-height: 1.5;
 }
-/* Content fade (single, no per-part stagger — the surface is compact). The container
-   morph is WAAPI; this just fades the content in over it. */
+
+/* Content fade over the morph. */
 .pp-overlay[data-open] .pp-body,
-.pp-overlay[data-open] .pp-heading {
-	animation: pp-fade var(--dur-base) var(--ease-out) both;
+.pp-overlay[data-open] .pp-heading,
+.pp-overlay[data-open] .pp-description {
+	animation: pp-fade var(--dur-base, 0.22s) var(--ease-out, ease-out) both;
 	animation-delay: 0.05s;
 }
 @keyframes pp-fade {
@@ -106,6 +198,7 @@
 		transform: none;
 	}
 }
+
 @media (prefers-reduced-motion: reduce) {
 	.pp-trigger {
 		transition: border-color var(--dur-fast) ease, color var(--dur-fast) ease;
@@ -115,7 +208,8 @@
 		transform: none;
 	}
 	.pp-overlay[data-open] .pp-body,
-	.pp-overlay[data-open] .pp-heading {
+	.pp-overlay[data-open] .pp-heading,
+	.pp-overlay[data-open] .pp-description {
 		animation: none;
 	}
 }

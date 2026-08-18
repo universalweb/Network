@@ -1,0 +1,20 @@
+/* OSM-specific chrome on top of shared leaflet host styles. */
+:host {
+	--osm-badge: oklch(0.55 0.12 145);
+}
+
+.lf-root::after {
+	content: 'OSM';
+	position: absolute;
+	inset-block-end: 0.4rem;
+	inset-inline-start: 0.4rem;
+	z-index: 1;
+	padding: 0.15rem 0.4rem;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: color-mix(in oklab, var(--bg-body, Canvas) 88%, transparent);
+	color: var(--osm-badge, var(--text-muted));
+	font-size: 0.65rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	pointer-events: none;
+}

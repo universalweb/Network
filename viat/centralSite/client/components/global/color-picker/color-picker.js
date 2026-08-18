@@ -335,10 +335,15 @@ export class UIColorPicker extends WebComponent {
 	previewStyle() {
 		return `--cp-color: ${this.cssColorAlpha()}`;
 	}
+	// Both sliders inherit these: hue thumb = opaque `--cp-alpha-color`,
+	// alpha thumb = current color at alpha (`--cp-color`) over the checkerboard.
+	colorVars() {
+		return `--cp-color: ${this.cssColorAlpha()}; --cp-alpha-color: ${this.cssColor()}`;
+	}
 	// The alpha track fades transparent → the current opaque color (over the
 	// checkerboard baked into the CSS), so the dial reads as a transparency ramp.
 	alphaTrackStyle() {
-		return `--cp-alpha-color: ${this.cssColor()}`;
+		return `--cp-alpha-color: ${this.cssColor()}; --cp-color: ${this.cssColorAlpha()}`;
 	}
 	renderSwatch(hex) {
 		return html`<button type="button" class="cp-swatch" data-color=${hex} style=${`background:${hex}`} aria-label=${hex}></button>`;
@@ -477,7 +482,7 @@ export class UIColorPicker extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="cp">
+			<div class="cp" style=${this.colorVars}>
 				<div
 					class="cp-square" #square
 					style=${this.hueLayerStyle}
@@ -493,7 +498,7 @@ export class UIColorPicker extends WebComponent {
 				<div class="cp-controls">
 					<span class="cp-preview" style=${this.previewStyle} aria-hidden="true"></span>
 					<div class="cp-dials">
-						<input class="cp-hue" type="range" min="0" max="360" value=${this.state.hue} @input=${this.handleHue} aria-label="Hue">
+						<input class="cp-hue" type="range" min="0" max="360" value=${this.state.hue} style=${this.colorVars} @input=${this.handleHue} aria-label="Hue">
 						<input class="cp-alpha" type="range" min="0" max="100" value=${this.state.alpha} style=${this.alphaTrackStyle} @input=${this.handleAlpha} aria-label="Alpha">
 					</div>
 				</div>

@@ -1,0 +1,176 @@
+:host {
+	display: flex;
+	min-inline-size: 0;
+	flex: var(--seg-flex, 1 1 0);
+	position: relative;
+}
+
+.seg {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+	gap: var(--seg-gap, 0.85rem);
+	inline-size: 100%;
+	min-inline-size: 0;
+	padding: var(--seg-pad, 0.65rem 1rem);
+	border-radius: var(--seg-item-radius, 0.75rem);
+	color: inherit;
+	text-decoration: none;
+	background: transparent;
+	border: 0;
+	transform: translate3d(0, 0, 0);
+	transition:
+		transform 0.2s ease,
+		background 0.2s ease;
+}
+
+.seg[data-interactive] {
+	cursor: pointer;
+}
+
+.seg[data-interactive]:hover {
+	transform: translate3d(0, -0.1rem, 0);
+	background: color-mix(in oklab, var(--text-muted) 8%, transparent);
+}
+
+.seg[data-interactive]:focus-visible {
+	outline: 2px solid var(--color-info, currentColor);
+	outline-offset: 2px;
+}
+
+/* ── Icon tile ─────────────────────────────────────────── */
+.seg-icon {
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	inline-size: var(--seg-icon-size, 2.65rem);
+	block-size: var(--seg-icon-size, 2.65rem);
+	border-radius: var(--seg-icon-radius, 0.75rem);
+	color: var(--seg-accent, var(--cyan));
+	background: linear-gradient(
+		145deg,
+		color-mix(in oklab, var(--seg-accent, var(--cyan)) 28%, transparent),
+		color-mix(in oklab, var(--seg-accent, var(--cyan)) 12%, var(--bg-panel))
+	);
+	border: 1px solid color-mix(in oklab, var(--seg-accent, var(--cyan)) 35%, transparent);
+	box-shadow: 0 0.25rem 0.75rem color-mix(in oklab, var(--seg-accent, var(--cyan)) 18%, transparent);
+	transition:
+		transform 0.2s ease,
+		border-color 0.2s ease;
+}
+
+.seg[data-interactive]:hover .seg-icon {
+	transform: scale(1.06);
+	border-color: color-mix(in oklab, var(--seg-accent, var(--cyan)) 55%, transparent);
+}
+
+.seg-icon[hidden] {
+	display: none !important;
+}
+
+/* Tone → accent (shared [data-tone] seeds --tone-fill; we map our own accent) */
+.seg[data-tone='accent']  { --seg-accent: var(--cyan); }
+.seg[data-tone='success'] { --seg-accent: var(--color-success); }
+.seg[data-tone='warning'] { --seg-accent: var(--color-warning); }
+.seg[data-tone='danger']  { --seg-accent: var(--color-danger); }
+.seg[data-tone='info']    { --seg-accent: var(--color-info); }
+.seg[data-tone='neutral'] { --seg-accent: var(--text-muted); }
+
+/* ── Structured body ───────────────────────────────────── */
+.seg-body {
+	display: flex;
+	flex-direction: column;
+	gap: 0.28rem;
+	min-inline-size: 0;
+	flex: 1 1 auto;
+}
+
+.seg-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.5rem;
+	min-inline-size: 0;
+}
+
+.seg-label {
+	font-family: var(--font-display, inherit);
+	font-size: var(--seg-label-size, 0.88rem);
+	font-weight: var(--weight-semibold, 650);
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+	line-height: 1.25;
+	color: var(--text-main, var(--text-primary, inherit));
+	min-inline-size: 0;
+	overflow-wrap: anywhere;
+}
+
+.seg-hint {
+	flex-shrink: 0;
+	font-size: var(--text-2xs, 0.7rem);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	opacity: 0.85;
+}
+
+.seg-hint[hidden],
+.seg-value[hidden],
+.seg-desc[hidden] {
+	display: none !important;
+}
+
+.seg-value {
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: var(--seg-value-size, 1.35rem);
+	font-weight: var(--weight-bold, 700);
+	font-variant-numeric: tabular-nums;
+	line-height: 1.15;
+	color: var(--seg-accent, var(--text-main, inherit));
+	overflow-wrap: anywhere;
+}
+
+.seg-desc {
+	font-size: var(--seg-desc-size, 0.88rem);
+	line-height: 1.5;
+	color: var(--text-muted);
+	overflow-wrap: anywhere;
+}
+
+/* Inter-item divider — geometry via custom props so the strip can flip axis */
+:host(:not(:last-child))::after {
+	content: '';
+	position: absolute;
+	inset-block-start: var(--seg-div-block-start, var(--seg-divider-inset, 0.35rem));
+	inset-block-end: var(--seg-div-block-end, var(--seg-divider-inset, 0.35rem));
+	inset-inline-start: var(--seg-div-inline-start, auto);
+	inset-inline-end: var(--seg-div-inline-end, 0);
+	inline-size: var(--seg-div-inline-size, 1px);
+	block-size: var(--seg-div-block-size, auto);
+	background: var(
+		--seg-divider,
+		linear-gradient(
+			var(--seg-div-angle, 180deg),
+			transparent 0%,
+			color-mix(in oklab, var(--text-muted) 20%, transparent) 12%,
+			color-mix(in oklab, var(--cyan) 45%, transparent) 50%,
+			color-mix(in oklab, var(--text-muted) 20%, transparent) 88%,
+			transparent 100%
+		)
+	);
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.seg,
+	.seg-icon {
+		transition: none;
+	}
+
+	.seg[data-interactive]:hover,
+	.seg[data-interactive]:hover .seg-icon {
+		transform: none;
+	}
+}

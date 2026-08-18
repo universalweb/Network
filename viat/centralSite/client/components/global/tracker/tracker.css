@@ -1,35 +1,290 @@
 :host {
 	display: block;
 }
+.trk-root {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	position: relative;
+}
 .trk {
 	display: flex;
-	gap: 0.15rem;
+	gap: 0.18rem;
 	align-items: stretch;
-	block-size: 1.75rem;
+	block-size: 1.85rem;
+	padding-block: 0.4rem 0.7rem;
+	overflow-x: auto;
+	overflow-y: hidden;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: thin;
 }
 .trk-seg {
-	flex: 1 1 0;
-	min-inline-size: 0.18rem;
+	flex: 1 1 auto;
+	min-inline-size: 1.2rem;
+	margin: 0;
+	padding: 0;
+	border: 1px solid transparent;
 	border-radius: var(--radius-xs, 2px);
-	/* Tone comes from the shared `[data-tone]` fill map (util-surface.css); the
-	   segment applies its own 70% mix so the bar reads as a tint, not a slab. */
-	background: color-mix(in oklab, var(--tone-fill, var(--text-muted)) 70%, transparent);
-	transition: opacity 0.15s ease, transform 0.15s ease;
+	/* Tone from shared [data-tone] fill map (util-surface.css). */
+	background: color-mix(in oklab, var(--tone-fill, var(--text-muted)) 72%, transparent);
+	cursor: pointer;
+	position: relative;
+	scale: 1 1;
+	transition:
+		scale 0.22s cubic-bezier(0.34, 1.2, 0.64, 1),
+		box-shadow 0.22s ease,
+		border-color 0.18s ease,
+		filter 0.18s ease,
+		opacity 0.18s ease;
 }
 .trk-seg:hover {
-	transform: scaleY(1.08);
-	opacity: 0.85;
+	scale: 1.08 1.24;
+	border-color: color-mix(in oklab, var(--tone-fill, var(--text-main)) 78%, white);
+	box-shadow:
+		0 0 0 1px color-mix(in oklab, var(--tone-fill, var(--text-main)) 42%, transparent),
+		0 6px 16px color-mix(in oklab, var(--tone-fill, #000) 34%, transparent);
+	filter: brightness(1.08);
+	opacity: 1;
+	z-index: 1;
 }
-/* Neutral = inactive / unknown — mixed weaker than the active tones so it recedes
-   and never reads as a "filled" segment (the whole point of a health bar). */
+.trk-seg:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal));
+	outline-offset: 1px;
+	z-index: 2;
+}
+.trk-seg:focus:not(:focus-visible) {
+	outline: none;
+}
+.trk-seg[data-active='true'] {
+	scale: 1.06 1.38;
+	opacity: 1;
+	filter: brightness(1.12);
+	border-color: color-mix(in oklab, var(--tone-fill, var(--text-main)) 80%, white);
+	box-shadow:
+		0 0 0 1.5px color-mix(in oklab, var(--tone-fill, var(--text-main)) 80%, white),
+		0 4px 14px color-mix(in oklab, var(--tone-fill, #000) 38%, transparent);
+	z-index: 2;
+}
+.trk-seg[data-active='true']::after {
+	content: '';
+	position: absolute;
+	inset-inline: 18%;
+	inset-block-end: -0.62rem;
+	block-size: 0.18rem;
+	border-radius: 999px;
+	background: var(--tone-fill, var(--text-main));
+	box-shadow: 0 0 8px color-mix(in oklab, var(--tone-fill, currentColor) 55%, transparent);
+}
+/* Neutral = inactive / unknown — mixed weaker so it recedes. */
 .trk-seg[data-tone='neutral'] {
 	background: color-mix(in oklab, var(--tone-fill, var(--text-muted)) 30%, transparent);
 }
-@media (prefers-reduced-motion: reduce) {
-	.trk-seg {
-		transition: none;
+/*
+ * Inline expand — sits under the bar, no full-viewport scrim (unlike
+ * ui-expandable-card). Grows in place so the tracker stays in document flow.
+ */
+.trk-detail {
+	--trk-caret: 50%;
+	position: relative;
+	margin-block-start: 1.15rem;
+	padding: 0;
+	border: 1px solid color-mix(in oklch, var(--tone-fill, var(--text-muted)) 28%, transparent);
+	border-radius: var(--radius-md, 0.55rem);
+	background:
+		linear-gradient(
+			180deg,
+			color-mix(in oklab, var(--tone-fill, transparent) 10%, transparent),
+			transparent 2.4rem
+		),
+		color-mix(in oklab, var(--bg-panel, var(--bg-body, #12141a)) 94%, transparent);
+	box-shadow:
+		0 10px 28px color-mix(in oklch, #000 20%, transparent),
+		inset 0 1px 0 color-mix(in oklch, #fff 8%, transparent);
+	animation: trk-detail-in 0.26s cubic-bezier(0.34, 1.35, 0.64, 1);
+	overflow: hidden;
+}
+.trk-detail[hidden] {
+	display: none;
+}
+.trk-detail::before {
+	content: '';
+	position: absolute;
+	inset-block-start: -0.38rem;
+	inset-inline-start: var(--trk-caret);
+	translate: -50% 0;
+	inline-size: 0.7rem;
+	block-size: 0.7rem;
+	background: inherit;
+	background-color: color-mix(in oklab, var(--bg-panel, var(--bg-body, #12141a)) 94%, transparent);
+	border-block-start: 1px solid color-mix(in oklch, var(--tone-fill, var(--text-muted)) 28%, transparent);
+	border-inline-start: 1px solid color-mix(in oklch, var(--tone-fill, var(--text-muted)) 28%, transparent);
+	rotate: 45deg;
+	transition: inset-inline-start 0.28s cubic-bezier(0.34, 1.05, 0.64, 1);
+	z-index: 1;
+	pointer-events: none;
+}
+.trk-detail-viewport {
+	overflow: hidden;
+	transition: block-size 0.28s cubic-bezier(0.34, 1.05, 0.64, 1);
+}
+.trk-detail-pane {
+	padding: 0.8rem 0.9rem 0.85rem;
+}
+.trk-detail-pane[data-slide='next'] {
+	animation: trk-slide-next 0.28s cubic-bezier(0.34, 1.1, 0.64, 1);
+}
+.trk-detail-pane[data-slide='prev'] {
+	animation: trk-slide-prev 0.28s cubic-bezier(0.34, 1.1, 0.64, 1);
+}
+.trk-detail-pane[data-slide='in'] {
+	animation: trk-slide-in 0.26s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+.trk-detail-head {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-block-end: 0.4rem;
+}
+.trk-detail-swatch {
+	flex: 0 0 auto;
+	inline-size: 0.65rem;
+	block-size: 0.65rem;
+	border-radius: 2px;
+	background: color-mix(in oklab, var(--tone-fill, var(--text-muted)) 88%, transparent);
+	box-shadow: 0 0 0 1px color-mix(in oklab, var(--tone-fill, currentColor) 35%, transparent);
+}
+.trk-detail-title {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	font-size: var(--text-xs, 0.75rem);
+	font-weight: var(--weight-semibold, 600);
+	letter-spacing: 0.04em;
+	color: var(--text-main);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.trk-detail-close {
+	flex: 0 0 auto;
+	inline-size: 1.5rem;
+	block-size: 1.5rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-xs, 0.25rem);
+	background: transparent;
+	color: var(--text-muted);
+	font: inherit;
+	font-size: 1.1rem;
+	line-height: 1;
+	cursor: pointer;
+}
+.trk-detail-close:hover {
+	color: var(--text-main);
+	background: color-mix(in oklch, var(--text-muted) 14%, transparent);
+}
+.trk-detail-close:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal));
+	outline-offset: 1px;
+}
+.trk-detail-icon[hidden] {
+	display: none !important;
+}
+.trk-detail-label,
+.trk-detail-meta {
+	font-size: 0.68rem;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+	margin-block-end: 0.2rem;
+}
+.trk-detail-label[hidden],
+.trk-detail-meta[hidden],
+.trk-detail-actions[hidden] {
+	display: none !important;
+}
+.trk-detail-body {
+	font-size: var(--text-xs, 0.75rem);
+	line-height: 1.5;
+	color: var(--text-muted);
+	word-break: break-word;
+}
+.trk-detail-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	margin-block-start: 0.6rem;
+}
+.trk-action {
+	margin: 0;
+	padding: 0.22rem 0.55rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 28%, transparent);
+	border-radius: var(--radius-xs, 0.25rem);
+	background: color-mix(in oklab, var(--bg-body, #0b0d14) 70%, transparent);
+	color: var(--text-main);
+	font: inherit;
+	font-size: 0.68rem;
+	letter-spacing: 0.03em;
+	cursor: pointer;
+}
+.trk-action:hover {
+	border-color: var(--tone-fill, var(--teal));
+	color: var(--tone-fill, var(--teal));
+}
+.trk-action:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal));
+	outline-offset: 1px;
+}
+@keyframes trk-detail-in {
+	from {
+		opacity: 0;
+		transform: translateY(-0.3rem);
 	}
-	.trk-seg:hover {
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@keyframes trk-slide-next {
+	from {
+		opacity: 0.28;
+		transform: translateX(1.15rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+@keyframes trk-slide-prev {
+	from {
+		opacity: 0.28;
+		transform: translateX(-1.15rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+@keyframes trk-slide-in {
+	from {
+		opacity: 0;
+		transform: translateY(-0.2rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.trk-seg,
+	.trk-seg:hover,
+	.trk-seg[data-active='true'],
+	.trk-detail,
+	.trk-detail::before,
+	.trk-detail-viewport,
+	.trk-detail-pane[data-slide] {
+		transition: none;
+		animation: none;
 		transform: none;
+		scale: 1 1;
 	}
 }

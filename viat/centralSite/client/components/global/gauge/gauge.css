@@ -1,0 +1,90 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	max-inline-size: 16rem;
+	color: var(--text-main);
+}
+
+.gg {
+	display: grid;
+	justify-items: center;
+	position: relative;
+	--gg-fill: var(--cyan, oklch(0.72 0.14 210));
+}
+
+.gg[data-tone='accent'] {
+	--gg-fill: var(--cyan, oklch(0.72 0.14 210));
+}
+.gg[data-tone='success'] {
+	--gg-fill: var(--color-success, oklch(0.72 0.17 145));
+}
+.gg[data-tone='warning'] {
+	--gg-fill: var(--color-warning, oklch(0.8 0.16 85));
+}
+.gg[data-tone='danger'] {
+	--gg-fill: var(--color-danger, oklch(0.62 0.2 25));
+}
+.gg[data-tone='info'] {
+	--gg-fill: var(--color-info, oklch(0.7 0.12 250));
+}
+.gg[data-tone='neutral'] {
+	--gg-fill: var(--text-muted, oklch(0.6 0.02 250));
+}
+
+.gg-svg {
+	inline-size: 100%;
+	aspect-ratio: 200 / 120;
+	overflow: visible;
+}
+
+.gg-track {
+	fill: color-mix(in oklab, var(--border-color, currentColor) 28%, transparent);
+	stroke: none;
+}
+
+.gg-value {
+	fill: var(--gg-fill);
+	stroke: none;
+}
+
+.gg-readout {
+	display: grid;
+	justify-items: center;
+	gap: 0.15rem;
+}
+
+.gg[data-readout='overlay'] .gg-readout {
+	inset-block-end: 0.85rem;
+	inset-inline: 0;
+	margin-block-start: 0;
+	pointer-events: none;
+	position: absolute;
+}
+
+.gg[data-readout='below'] .gg-readout {
+	margin-block-start: 0.15rem;
+	position: static;
+}
+
+/* Default / legacy look when data-readout is absent */
+.gg:not([data-readout]) .gg-readout {
+	margin-block-start: -1.75rem;
+}
+
+.gg-value-text {
+	font-size: var(--text-lg, 1.25rem);
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.gg-label {
+	font-size: var(--text-xs, 0.75rem);
+	color: var(--text-muted, var(--text-main));
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.gg-label[hidden],
+.gg-value-text[hidden] {
+	display: none !important;
+}

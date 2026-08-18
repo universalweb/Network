@@ -1,5 +1,17 @@
+/*
+ * Host MUST generate a box. `display: contents` on a shadow host that owns a
+ * native <dialog> breaks Chromium top-layer hit-testing: the open dialog still
+ * paints and reports geometry, but elementsFromPoint / click / focus never
+ * reach it (or its slotted light DOM). Fixed inset + pointer-events:none keeps
+ * the host out of layout and out of the pointer path; the dialog re-enables
+ * hits on itself.
+ */
 :host {
-  display: contents;
+  display: block;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .modal {
@@ -22,6 +34,8 @@
   max-height: var(--ui-modal-max-height, calc(100dvh - 32px));
   overflow: hidden;
   position: relative;
+  /* Host is pointer-events:none — re-enable hits on the dialog surface. */
+  pointer-events: auto;
   opacity: 1;
   transform: scale(1) translateY(0);
   transform-origin: center;
@@ -88,8 +102,19 @@
   gap: var(--space-1);
   padding-inline: var(--space-3);
   z-index: 3;
+  /*
+   * Without a bar the strip still paints an empty absolute hit target over the
+   * top of the dialog — ui-command's search field lived under it and could not
+   * be clicked or focused after open. Hide when unused; re-enable pointer hits
+   * only on real chrome when the bar is present.
+   */
+  pointer-events: none;
+}
+.modal:not(.has-bar) .modal-controls {
+  display: none;
 }
 .modal.has-bar .modal-controls {
+  pointer-events: auto;
   background: color-mix(in oklab, var(--popup-bg) 72%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);

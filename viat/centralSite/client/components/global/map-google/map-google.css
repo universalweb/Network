@@ -1,0 +1,135 @@
+:host {
+	display: block;
+	position: relative;
+	inline-size: 100%;
+	block-size: 100%;
+	min-block-size: 16rem;
+	container-type: size;
+	color: var(--text-main);
+}
+
+/* ?hidden must beat .gm-overlay { display: grid } — same footgun as poll/ai-inquire. */
+[hidden] {
+	display: none !important;
+}
+
+.gm-root {
+	position: relative;
+	inline-size: 100%;
+	block-size: 100%;
+	min-block-size: inherit;
+	overflow: hidden;
+	border-radius: var(--radius-lg, 0.75rem);
+	background: var(--bg-elevated, var(--bg-body));
+	border: 1px solid
+		color-mix(in oklab, var(--border-color, currentColor) 40%, transparent);
+}
+
+.gm-canvas {
+	position: absolute;
+	inset: 0;
+	inline-size: 100%;
+	block-size: 100%;
+}
+
+.gm-canvas:empty {
+	/* Keep layout before the Maps API mounts into the node. */
+}
+
+.gm-overlay {
+	position: absolute;
+	inset-inline: 0;
+	inset-block-start: 0;
+	z-index: 2;
+	display: grid;
+	place-items: center;
+	block-size: 100%;
+	padding: var(--space-4, 1rem);
+	background: color-mix(in oklab, var(--bg-body) 72%, transparent);
+	backdrop-filter: blur(0.25rem);
+	text-align: center;
+	pointer-events: none;
+}
+
+.gm-overlay[data-interactive] {
+	pointer-events: auto;
+}
+
+.gm-status {
+	display: grid;
+	gap: var(--space-2, 0.5rem);
+	justify-items: center;
+	max-inline-size: 28rem;
+}
+
+.gm-status-label {
+	font-size: var(--text-sm, 0.875rem);
+	font-weight: var(--weight-semibold, 600);
+	color: var(--text-main);
+}
+
+.gm-status-msg {
+	font-size: var(--text-xs, 0.75rem);
+	color: var(--text-muted, var(--text-main));
+	line-height: 1.4;
+}
+
+.gm-status[data-tone='danger'] .gm-status-label {
+	color: var(--color-danger, oklch(0.62 0.2 25));
+}
+
+.gm-marker-pin {
+	display: grid;
+	place-items: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	border-radius: 50% 50% 50% 0;
+	transform: rotate(-45deg);
+	background: var(--tone-fill, var(--color-accent, oklch(0.65 0.16 250)));
+	color: oklch(0.98 0.01 100);
+	box-shadow: 0 0.15rem 0.4rem color-mix(in oklab, black 28%, transparent);
+	border: 2px solid color-mix(in oklab, white 70%, transparent);
+	cursor: pointer;
+}
+
+.gm-marker-pin > span {
+	transform: rotate(45deg);
+	font-size: 0.65rem;
+	font-weight: 700;
+	line-height: 1;
+	max-inline-size: 1.1rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.gm-marker-pin[data-active] {
+	outline: 2px solid var(--color-accent, oklch(0.7 0.16 250));
+	outline-offset: 2px;
+	scale: 1.12;
+}
+
+.gm-cluster {
+	display: grid;
+	place-items: center;
+	inline-size: 2.25rem;
+	block-size: 2.25rem;
+	border-radius: 50%;
+	background: color-mix(
+		in oklab,
+		var(--color-accent, oklch(0.65 0.16 250)) 88%,
+		black
+	);
+	color: oklch(0.98 0.01 100);
+	font-size: var(--text-xs, 0.75rem);
+	font-weight: 700;
+	border: 2px solid color-mix(in oklab, white 55%, transparent);
+	box-shadow: 0 0.15rem 0.45rem color-mix(in oklab, black 30%, transparent);
+	cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.gm-marker-pin[data-active] {
+		scale: 1;
+	}
+}

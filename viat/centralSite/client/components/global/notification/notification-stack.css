@@ -5,7 +5,7 @@
 	inset-inline-end: 1.125rem;
 	inset-block-end: auto;
 	inset-inline-start: auto;
-	z-index: var(--z-toast, 1600);
+	z-index: var(--z-toast);
 	pointer-events: none;
 }
 

@@ -14,7 +14,7 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from 'webcomponent';
-import { UIImageCell } from './image-cell.js';
+import { UIImageCell } from '../image-cell/image-cell.js';
 export class UIImageList extends WebComponent {
 	static url = import.meta.url;
 	static styles = {

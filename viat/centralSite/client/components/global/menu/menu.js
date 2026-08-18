@@ -23,13 +23,14 @@
 	  <ui-menu .state.align=${'end'}><span slot="trigger">⋮</span></ui-menu>
 	──────────────────────────────────────────────────────────────────────
 */
-import { computeAnchor } from '../../core/dom/anchor.js';
+import { applyAnchor, computeAnchor } from '../../core/dom/anchor.js';
+import { HideOnScroll } from '../../core/dom/hideOnScroll.js';
 import { WebComponent } from '../../core/index.js';
-import { UIMenuItem } from './menu-item.js';
+import { UIMenuItem } from '../menu-item/menu-item.js';
 // True when (x,y) sits inside `rect` grown by `pad` on every edge. The pad
 // bridges the trigger↔panel offset gap so a pointer crossing it isn't read as
-// "left the menu".
-function withinPaddedRect(rect, pointerX, pointerY, pad) {
+// "left the menu". Exported for nav-section / other leave-watch consumers.
+export function withinPaddedRect(rect, pointerX, pointerY, pad) {
 	return pointerX >= rect.left - pad &&
 		pointerX <= rect.right + pad &&
 		pointerY >= rect.top - pad &&
@@ -38,6 +39,7 @@ function withinPaddedRect(rect, pointerX, pointerY, pad) {
 export class UIMenu extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
+		menuSurface: './menu-surface.css',
 		menu: './menu.css',
 	};
 	static state = {
@@ -63,6 +65,9 @@ export class UIMenu extends WebComponent {
 		 * not vanish on a stray drift.
 		 */
 		closeOnLeave: true,
+		// Close when the page (or any ancestor scroll root) scrolls. Shared
+		// HideOnScroll util — menubar/nav-section also use it.
+		closeOnScroll: true,
 	};
 	// Tracks the keyboard-focused item; NOT reactive (open/close must not re-render
 	// the panel, which would tear down the live native popover).
@@ -82,6 +87,20 @@ export class UIMenu extends WebComponent {
 			}
 		}
 		return out;
+	}
+	ensureScrollHide() {
+		this.scrollHide ??= new HideOnScroll(this, 'closeFromScroll', {
+			keepOpen: () => {
+				return this.refs.surface;
+			},
+		});
+		return this.scrollHide;
+	}
+	closeFromScroll() {
+		if (this.state.closeOnScroll === false) {
+			return;
+		}
+		this.refs.surface?.hidePopover();
 	}
 	handleToggle(domEvent) {
 		const isOpen = domEvent.newState === 'open';
@@ -104,7 +123,11 @@ export class UIMenu extends WebComponent {
 				preventScroll: true,
 			});
 			this.armLeaveWatch();
+			if (this.state.closeOnScroll !== false) {
+				this.ensureScrollHide().attach();
+			}
 		} else {
+			this.scrollHide?.detach();
 			surface.classList.remove('is-open');
 			this.disarmLeaveWatch();
 		}
@@ -152,31 +175,34 @@ export class UIMenu extends WebComponent {
 	keepOpenRect() {
 		return this.refs.trigger ? this.refs.trigger.getBoundingClientRect() : null;
 	}
+	/* Placement anchor element. Split-button / menubar override when the visual
+	   anchor is a cluster or a bar trigger, not `#trigger`. */
+	anchorElement() {
+		return this.refs.trigger ?? null;
+	}
 	position() {
-		const trigger = this.refs.trigger;
+		const anchor = this.anchorElement();
 		const surface = this.refs.surface;
-		if (!trigger || !surface) {
+		if (!anchor || !surface) {
 			return;
 		}
 		const surfaceWidth = surface.offsetWidth;
-		if (this.state.matchWidth) {
+		if (this.state.matchWidth && anchor === this.refs.trigger) {
 			/*
 			 * Match the trigger to the (content-sized) dropdown width BEFORE measuring the
 			 * trigger rect below, so a center placement lands the two flush. `min-` never
 			 * shrinks a wider trigger; the reflow from the read on the next line applies it.
 			 */
-			trigger.style.minInlineSize = `${surfaceWidth}px`;
+			anchor.style.minInlineSize = `${surfaceWidth}px`;
 		}
-		const placed = computeAnchor(trigger.getBoundingClientRect(), {
+		const placed = computeAnchor(anchor.getBoundingClientRect(), {
 			width: surfaceWidth,
 			height: surface.offsetHeight,
 		}, {
 			placement: `${this.state.side}-${this.state.align}`,
 			offset: Number(this.state.offset) || 6,
 		});
-		surface.style.top = `${placed.top}px`;
-		surface.style.left = `${placed.left}px`;
-		surface.dataset.placement = placed.placement;
+		applyAnchor(surface, placed);
 	}
 	focusItem(index) {
 		const item = this.state.items[index];
@@ -185,7 +211,7 @@ export class UIMenu extends WebComponent {
 		}
 		// Locate the row COMPONENT by a stable field and call its focus() — no
 		// shadow-piercing querySelector (the tabs roving pattern).
-		const row = this.findChild('ui-menu-item', (candidate) => {
+		const row = this.findComponent('ui-menu-item', (candidate) => {
 			return candidate.state.value === item.value;
 		});
 		if (row) {
@@ -265,7 +291,9 @@ export class UIMenu extends WebComponent {
 			value: item.value,
 			item,
 			index,
+			href: item.href,
 		});
+		// Navigation is native when the row is an <a href> — do not location.assign.
 		this.refs.surface?.hidePopover();
 	}
 	render() {

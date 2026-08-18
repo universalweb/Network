@@ -1,0 +1,73 @@
+:host {
+	display: block;
+}
+:host([hidden]) {
+	display: none;
+}
+.aisug {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-3);
+	padding-block: var(--space-4);
+	padding-inline: var(--space-3);
+	text-align: center;
+}
+.aisug-head {
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+	font-size: var(--text-xs);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+.aisug-list {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--space-2);
+	max-inline-size: 36rem;
+}
+.aisug-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding-block: var(--space-2);
+	padding-inline: var(--space-3);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	border-radius: var(--radius-md);
+	background: var(--bg-panel, rgba(255, 255, 255, 0.03));
+	color: var(--text-main);
+	font: inherit;
+	font-size: var(--text-sm);
+	line-height: 1.35;
+	cursor: pointer;
+	transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.aisug-chip:hover:not(:disabled) {
+	border-color: var(--teal, var(--accent, currentColor));
+	color: var(--teal, var(--accent, currentColor));
+	background: color-mix(in oklab, var(--teal, var(--accent, currentColor)) 8%, transparent);
+}
+.aisug-chip:focus-visible {
+	outline: 2px solid var(--cyan, currentColor);
+	outline-offset: 2px;
+}
+.aisug-chip:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+.aisug-icon,
+.aisug-label {
+	pointer-events: none;
+}
+.aisug-icon {
+	flex: none;
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+}
+.aisug-icon[hidden] {
+	display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.aisug-chip {
+		transition: none;
+	}
+}

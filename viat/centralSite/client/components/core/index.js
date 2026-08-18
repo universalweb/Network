@@ -42,7 +42,7 @@ export {
 	defaultLogger,
 	IS_PRODUCTION,
 } from './debug/logger.js';
-export { computeAnchor } from './dom/anchor.js';
+export { applyAnchor, computeAnchor, positionOverlay } from './dom/anchor.js';
 export { flipMorph } from './dom/animation.js';
 export {
 	allChildren, allConnectedComponents, liveChildren, registerChild, trackComponent, unregisterChild, untrackComponent,
@@ -68,6 +68,13 @@ export {
 	findComponents,
 	findComponentsGlobal,
 } from './dom/search.js';
+export {
+	applyViewLazy,
+	applyViewPaint,
+	observeAll,
+	observeInView,
+	unobserve as unobserveInView,
+} from './dom/viewPort.js';
 export {
 	browser,
 	deviceType,
@@ -100,6 +107,9 @@ export {
 	resolveTagUrl,
 	scanAndResolve,
 } from './resolver.js';
+export {
+	RouteLayer, Router, ROUTER_CONFIG, routerStore,
+} from './routing/router.js';
 export { bind, CONTENT_KIND } from './state/binding.js';
 export { CollectionEngine } from './state/collectionEngine.js';
 export { globalState, Store } from './state/globalState.js';
@@ -108,11 +118,14 @@ export {
 	ClassList,
 	classList,
 	comp,
+	componentHTML,
+	componentPartial,
 	each,
 	filter,
 	html,
 	ifThen,
 	list,
+	Partial,
 	styles,
 } from './template.js';
 export {

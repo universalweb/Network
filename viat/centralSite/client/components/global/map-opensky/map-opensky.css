@@ -1,0 +1,32 @@
+/* OpenSky host reuses Leaflet chrome; light brand accent on status chip. */
+:host {
+	display: block;
+	position: relative;
+	inline-size: 100%;
+	block-size: 100%;
+	min-block-size: 14rem;
+}
+
+.osky-badge {
+	position: absolute;
+	z-index: 500;
+	inset-block-start: 0.5rem;
+	inset-inline-end: 0.5rem;
+	padding: 0.2rem 0.45rem;
+	border-radius: var(--radius-sm, 0.35rem);
+	font-size: var(--text-xs, 0.75rem);
+	font-weight: var(--weight-semibold, 600);
+	letter-spacing: 0.02em;
+	color: oklch(0.98 0.01 100);
+	background: color-mix(in oklab, oklch(0.45 0.12 250) 88%, black);
+	pointer-events: none;
+	box-shadow: 0 1px 4px color-mix(in oklab, black 35%, transparent);
+}
+
+.osky-badge[data-tone='danger'] {
+	background: color-mix(in oklab, var(--color-danger, oklch(0.55 0.2 25)) 90%, black);
+}
+
+.osky-badge[data-loading] {
+	opacity: 0.85;
+}

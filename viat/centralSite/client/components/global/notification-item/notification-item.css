@@ -1,0 +1,165 @@
+:host {
+	display: block;
+}
+
+.notification {
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	/* Tight gap — close-button owns its own hit target (1.875rem). */
+	gap: var(--space-2);
+	align-items: start;
+	width: min(22.5rem, calc(100vw - 2.25rem));
+	/* Symmetric pad; close column is not double-padded. */
+	padding: var(--space-3);
+	padding-inline-end: var(--space-2);
+	border: 1px solid var(--popup-border);
+	border-inline-start: 2px solid var(--popup-accent);
+	border-radius: var(--radius-lg);
+	background: var(--popup-bg);
+	backdrop-filter: blur(14px) saturate(1.15);
+	-webkit-backdrop-filter: blur(14px) saturate(1.15);
+	box-shadow: var(--popup-shadow);
+	color: var(--popup-text);
+	cursor: pointer;
+	transform: translateX(0);
+	opacity: 1;
+	will-change: transform, opacity, filter;
+	animation: notification-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+	transition:
+		opacity 0.22s ease,
+		transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+		border-color 0.22s ease,
+		background 0.22s ease,
+		box-shadow 0.22s ease;
+}
+
+.notification:hover {
+	background: var(--popup-bg-hover);
+	border-color: var(--popup-border-hover);
+	transform: translateX(-3px) scale(1.01);
+	box-shadow: var(--popup-shadow-hover, 0 12px 32px rgba(0, 0, 0, 0.4));
+}
+
+.notification:active {
+	transform: translateX(-1px) scale(0.99);
+	transition-duration: 0.08s;
+}
+
+.notification[data-exit] {
+	opacity: 0;
+	filter: blur(4px);
+	transform: translate3d(30px, -8px, 0) scale(0.96);
+	animation: notification-out 0.26s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+[data-type='copy'] {
+	border-inline-start-color: var(--teal);
+}
+
+[data-type='error'] {
+	border-inline-start-color: var(--magenta);
+}
+
+.notification-body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	min-width: 0;
+	/* Match close-button top alignment with title cap height. */
+	padding-block-start: 0.1rem;
+}
+
+.notification-title {
+	font-family: var(--font-display);
+	font-size: var(--text-2xs);
+	font-weight: var(--weight-bold);
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--text-light);
+}
+
+.notification-message {
+	font-size: var(--text-xs);
+	line-height: 1.4;
+	color: var(--popup-text);
+	word-break: break-word;
+}
+
+/*
+ * ui-close-button owns size/padding/hover chrome — only reveal + grid placement.
+ * Do not add padding here (that was the double-pad bug).
+ */
+.notification-close {
+	flex: 0 0 auto;
+	align-self: start;
+	opacity: 0;
+	transition: opacity 0.15s ease;
+	/* Nudge into the card’s end edge without stacking host padding on the ×. */
+	margin-block-start: calc(-1 * var(--space-1));
+	margin-inline-end: calc(-1 * var(--space-1));
+}
+
+.notification:hover .notification-close,
+.notification:focus-within .notification-close,
+.notification-close:focus-within {
+	opacity: 1;
+}
+
+@media (hover: none), (pointer: coarse) {
+	.notification-close {
+		opacity: 1;
+	}
+}
+
+@keyframes notification-in {
+	0% {
+		opacity: 0;
+		filter: blur(8px);
+		transform: translate3d(56px, -18px, 0) scale(0.9);
+	}
+	55% {
+		opacity: 1;
+		filter: blur(0);
+		transform: translate3d(-10px, 2px, 0) scale(1.025);
+	}
+	78% {
+		transform: translate3d(3px, -1px, 0) scale(0.995);
+	}
+	100% {
+		opacity: 1;
+		filter: blur(0);
+		transform: translate3d(0, 0, 0) scale(1);
+	}
+}
+
+@keyframes notification-out {
+	0% {
+		opacity: 1;
+		filter: blur(0);
+		transform: translate3d(0, 0, 0) scale(1);
+	}
+	100% {
+		opacity: 0;
+		filter: blur(4px);
+		transform: translate3d(48px, -8px, 0) scale(0.92);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.notification {
+		animation: none;
+		transition-duration: 0.12s !important;
+	}
+	.notification:hover {
+		transform: none;
+	}
+	.notification[data-exit] {
+		animation: none;
+		opacity: 0;
+		transform: none;
+	}
+	.notification-close {
+		transition: none;
+	}
+}

@@ -87,7 +87,15 @@
 .tab-content {
 	min-width: 0;
 	min-height: 0;
+	/*
+	 * Scroll when a host constrains height (settings modal, fixed panel). Do NOT
+	 * set overscroll-behavior:contain here — that traps wheel events even when
+	 * the pane isn't overflowing, so a parent scroller (preview .stage) freezes
+	 * under the cursor on any ui-tabs demo. Opt into trap via host data-scroll-trap.
+	 */
 	overflow-y: auto;
+}
+:host([data-scroll-trap]) .tab-content {
 	overscroll-behavior: contain;
 }
 /* SLIDE mode only: clip the travelling panel's transform spill at the grid root

@@ -1,0 +1,103 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	user-select: none;
+	-webkit-user-select: none;
+}
+.lb {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	min-inline-size: 0;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 22%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--bg-panel, var(--bg-body, #111));
+	overflow: hidden;
+}
+.lb[data-disabled] {
+	opacity: 0.55;
+	pointer-events: none;
+}
+.lb-filter {
+	margin: 0.4rem 0.4rem 0;
+	inline-size: calc(100% - 0.8rem);
+	min-block-size: 2rem;
+	padding-block: 0.3rem;
+	padding-inline: 0.55rem;
+	font-size: var(--text-sm, 0.875rem);
+}
+.lb-filter[hidden] {
+	display: none;
+}
+.lb-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	max-block-size: 16rem;
+	overflow: auto;
+	padding: 0.3rem;
+	outline: none;
+}
+.lb-list:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--focus-ring-color, var(--teal, #14b8a6));
+}
+.lb-item {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	inline-size: 100%;
+	padding-block: 0.45rem;
+	padding-inline: 0.6rem;
+	border: 0;
+	border-radius: 0.35rem;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-size: var(--text-sm, 0.875rem);
+	text-align: start;
+	cursor: pointer;
+}
+/* display:flex above beats the UA [hidden] rule without this override. */
+.lb-item[hidden] {
+	display: none;
+}
+.lb-item:hover:not(:disabled),
+.lb-item[data-focused],
+.lb[data-multiple] .lb-item[data-active] {
+	background: color-mix(in oklch, var(--text-primary, currentColor) 8%, transparent);
+}
+/* Membership (selected) + single-select current (active without multi). */
+.lb-item[data-selected],
+.lb:not([data-multiple]) .lb-item[data-active] {
+	background: color-mix(in oklch, var(--teal, #14b8a6) 18%, transparent);
+}
+.lb-item:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+.lb:not([data-multiple]) .lb-check {
+	display: none;
+}
+.lb-check {
+	flex: 0 0 1em;
+	inline-size: 1em;
+	color: var(--color-success, #10b981);
+	text-align: center;
+}
+.lb-label {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+}
+.lb-empty {
+	padding: 0.6rem 0.65rem;
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+}
+.lb-empty[hidden] {
+	display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.lb-item {
+		transition: none;
+	}
+}

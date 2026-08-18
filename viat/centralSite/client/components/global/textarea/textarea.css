@@ -1,0 +1,50 @@
+:host {
+	display: block;
+	inline-size: 100%;
+}
+.ta-shell {
+	display: flex;
+	background: var(--input-bg, rgba(255, 255, 255, 0.04));
+	border: 1px solid var(--input-border, rgba(255, 255, 255, 0.12));
+	border-radius: var(--radius-md, 0.5rem);
+	box-sizing: border-box;
+	transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.ta-shell:hover:not([data-disabled]) {
+	background: var(--input-bg-hover, rgba(255, 255, 255, 0.06));
+	border-color: var(--input-border-hover, rgba(255, 255, 255, 0.2));
+}
+.ta-shell:focus-within {
+	border-color: var(--focus-ring-color, var(--teal, oklch(0.72 0.12 180)));
+	box-shadow: 0 0 0 3px var(--focus-ring-glow, color-mix(in oklch, var(--teal, oklch(0.72 0.12 180)) 28%, transparent));
+}
+.ta-shell[data-size='sm'] { font-size: var(--text-sm); }
+.ta-shell[data-size='md'] { font-size: var(--text-md, 0.95rem); }
+.ta-shell[data-size='lg'] { font-size: var(--text-lg); }
+.ta-shell[data-tone='error'],
+.ta-shell[data-invalid] {
+	border-color: var(--color-danger, oklch(0.58 0.2 25));
+}
+.ta-shell[data-disabled] {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+.ta-control {
+	appearance: none;
+	inline-size: 100%;
+	min-block-size: 5rem;
+	margin: 0;
+	padding: 0.65rem 0.75rem;
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+	outline: 0;
+	resize: vertical;
+	color: inherit;
+	font: inherit;
+	line-height: 1.45;
+	field-sizing: content;
+}
+.ta-control:disabled {
+	cursor: not-allowed;
+}

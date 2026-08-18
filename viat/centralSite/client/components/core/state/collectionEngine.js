@@ -43,6 +43,7 @@
  * Loader runs with `this` = host. Events: `${key}:loading|loaded|error|…`.
  */
 import { getBehavior } from '../behaviors/registry.js';
+import { findScrollableAncestor } from '../dom/scrollRoot.js';
 import { nextFrame } from '../lifecycle/scheduler.js';
 import {
 	getValueAtPath,
@@ -52,28 +53,10 @@ import {
 } from '../utilities.js';
 import { track } from './binding.js';
 import { STATE_PATH } from './state.js';
-const SCROLLABLE_OVERFLOW = /(auto|scroll|overlay)/;
 const DEFAULT_MAX_AUTO_FILL = 8;
 /* Same default identity a ListSpot uses — key ?? id ?? index. */
 function autoKey(item, index) {
 	return item?.key ?? item?.id ?? index;
-}
-/*
- * Walk up (crossing shadow boundaries via the host) for the nearest element
- * that actually scrolls — the IntersectionObserver root candidate. Best-effort:
- * no scrollable ancestor (document scroll) → null root = the viewport.
- */
-function findScrollableAncestor(startElement) {
-	let node = startElement;
-	while (node && node.nodeType === 1) {
-		const overflowY = getComputedStyle(node).overflowY;
-		if (SCROLLABLE_OVERFLOW.test(overflowY) && node.scrollHeight > node.clientHeight) {
-			return node;
-		}
-		const ancestor = node.parentNode;
-		node = ancestor && ancestor.nodeType === 11 ? ancestor.host : ancestor;
-	}
-	return null;
 }
 function readPrefetchPixels(prefetch) {
 	if (typeof prefetch === 'number') {

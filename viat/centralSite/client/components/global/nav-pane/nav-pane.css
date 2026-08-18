@@ -1,0 +1,61 @@
+/*
+ * Pane chrome. Link rows live in ui-nav-link. Width follows content with a
+ * menu-like min so short lists do not collapse under the viewport seed size.
+ * Slide/opacity from host data-active + --nav-slide (parent-stamped).
+ */
+:host {
+	display: block;
+	box-sizing: border-box;
+	position: absolute;
+	inset-block-start: 0;
+	inset-inline-start: 0;
+	/* Content-sized — small floor so empty panes don't collapse; no 11rem clamp. */
+	inline-size: max-content;
+	min-inline-size: 8rem;
+	max-inline-size: min(42rem, calc(100vw - 2rem));
+	/* CSS-owned slide — parent only writes --nav-slide + data-active. */
+	transform: translateX(calc(var(--nav-slide, 0) * 100% + var(--nav-slide, 0) * 0.75rem));
+	opacity: 0;
+	pointer-events: none;
+	transition:
+		transform 0.28s cubic-bezier(0.34, 1.1, 0.64, 1),
+		opacity 0.2s ease;
+	will-change: transform, opacity;
+}
+:host([data-active]) {
+	opacity: 1;
+	pointer-events: auto;
+}
+.nav-pane-inner {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	padding: 0.3rem;
+	box-sizing: border-box;
+	min-inline-size: 8rem;
+}
+.nav-links {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	min-inline-size: 100%;
+}
+.nav-links[hidden] {
+	display: none;
+}
+/*
+ * Slot wrapper must not add padding (empty-slot bottom pad bug). Pane-inner
+ * owns the only inset; an unassigned <slot> has zero box size.
+ */
+.nav-slot {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	min-inline-size: 0;
+	padding: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+	:host {
+		transition: none;
+	}
+}

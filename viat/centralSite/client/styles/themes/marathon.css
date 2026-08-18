@@ -180,6 +180,8 @@
   /* ── Popups ──────────────────────────────────────── */
   --popup-bg: rgba(6, 9, 26, 0.97);
   --popup-bg-hover: rgba(9, 12, 32, 0.99);
+  --popup-glass-bg: rgba(6, 9, 26, 0.8);
+  --popup-glass-blur: blur(0.75rem) saturate(1.25);
   --popup-border: rgba(255, 21, 128, 0.24);
   --popup-border-hover: rgba(255, 21, 128, 0.48);
   --popup-accent: var(--teal);

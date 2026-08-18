@@ -6,8 +6,12 @@
 	root prefix from the rest; `_` in the rest is the path separator (so `-`
 	stays free for multi-word segments); the last segment is also the file name.
 		ui-button                  -> <ui>/button/button.js
-		ui-wallet-panel            -> <ui>/wallet-panel/wallet-panel.js
+		ui-menu-item               -> <ui>/menu-item/menu-item.js
+		ui-map-google              -> <ui>/map-google/map-google.js
 		user-dashboard_center-bar  -> <user>/dashboard/center-bar/center-bar.js
+	Every auto-resolvable tag owns a folder named after the tag (minus the root
+	prefix). Parent modules still import their children for eager define; bare
+	use of a child tag also resolves without the parent.
 	A tag with no `-` is a native element, never a component — the `:not(:defined)`
 	scan never matches those. A tag whose prefix is not a registered root is a
 	foreign component the resolver leaves alone (manual import, as before).

@@ -1,0 +1,128 @@
+:host {
+	display: block;
+}
+.ap {
+	display: flex;
+	gap: 1rem;
+	align-items: stretch;
+	padding: 0.85rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
+	border-radius: var(--radius-lg, 0.75rem);
+	background: var(--bg-panel, color-mix(in oklch, currentColor 4%, transparent));
+	container-type: inline-size;
+}
+.ap[data-artwork='banner'] {
+	flex-direction: column;
+}
+.ap[data-artwork='hidden'] {
+	gap: 0;
+}
+.ap-art {
+	flex: none;
+	overflow: hidden;
+	border-radius: var(--radius-md, 0.5rem);
+}
+.ap[data-artwork='cover'] .ap-art {
+	inline-size: 6.5rem;
+	block-size: 6.5rem;
+}
+.ap[data-artwork='disc'] .ap-art {
+	inline-size: 6.5rem;
+	block-size: 6.5rem;
+	border-radius: 999px;
+}
+.ap[data-artwork='banner'] .ap-art {
+	inline-size: 100%;
+	block-size: 8rem;
+}
+.ap-art-img {
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+	object-fit: cover;
+}
+.ap[data-artwork='disc'][data-playing] .ap-art-img {
+	animation: ap-spin 8s linear infinite;
+}
+.ap-body {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	justify-content: center;
+	gap: 0.55rem;
+	min-inline-size: 0;
+}
+.ap-heading {
+	font-weight: 600;
+	line-height: 1.3;
+}
+.ap-artist {
+	color: var(--text-muted);
+	font-size: 0.8125rem;
+}
+.ap-seek-row {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+}
+.ap-time {
+	flex: none;
+	min-inline-size: 2.4rem;
+	color: var(--text-muted);
+	font-size: 0.75rem;
+	font-variant-numeric: tabular-nums;
+}
+.ap-seek,
+.ap-vol {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	accent-color: var(--teal, var(--cyan, oklch(0.75 0.12 195)));
+}
+.ap-vol {
+	max-inline-size: 5.5rem;
+}
+.ap-transport {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+.ap-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 2rem;
+	block-size: 2rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 999px;
+	background: color-mix(in oklch, currentColor 8%, transparent);
+	color: inherit;
+	cursor: pointer;
+}
+.ap-play {
+	inline-size: 2.4rem;
+	block-size: 2.4rem;
+	background: color-mix(in oklch, var(--teal, var(--cyan, oklch(0.75 0.12 195))) 22%, transparent);
+}
+.ap-btn:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 2px;
+}
+@keyframes ap-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.ap[data-artwork='disc'][data-playing] .ap-art-img {
+		animation: none;
+	}
+}
+@container (max-inline-size: 28rem) {
+	.ap[data-artwork='cover'],
+	.ap[data-artwork='disc'] {
+		flex-direction: column;
+		align-items: center;
+	}
+}

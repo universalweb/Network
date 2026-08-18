@@ -2,7 +2,7 @@
 	position: fixed;
 	left: 0;
 	top: 0;
-	z-index: 10000;
+	z-index: var(--z-tooltip);
 	pointer-events: none;
 }
 

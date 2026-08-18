@@ -1,0 +1,77 @@
+:host {
+	display: block;
+}
+:host([data-group-start]) {
+	margin-block-start: 0.35rem;
+}
+:host([data-group-start])::before {
+	color: var(--text-muted, rgba(255, 255, 255, 0.45));
+	content: attr(data-group);
+	display: block;
+	font-size: var(--text-2xs, 0.7rem);
+	font-weight: var(--weight-semibold);
+	letter-spacing: 0.08em;
+	padding-block: 0.35rem 0.2rem;
+	padding-inline: 0.55rem;
+	text-transform: uppercase;
+}
+.cmd-option {
+	align-items: center;
+	background: transparent;
+	border: 0;
+	border-radius: 0.35rem;
+	box-sizing: border-box;
+	color: inherit;
+	cursor: pointer;
+	display: flex;
+	font: inherit;
+	font-size: var(--text-sm, 0.85rem);
+	gap: 0.5rem;
+	inline-size: 100%;
+	padding-block: 0.4rem;
+	padding-inline: 0.55rem;
+	text-align: start;
+	white-space: nowrap;
+}
+.cmd-option[data-active],
+.cmd-option:hover:not([data-disabled]) {
+	background: var(--surface-tint, rgba(255, 255, 255, 0.08));
+}
+.cmd-option:focus-visible {
+	background: var(--surface-tint, rgba(255, 255, 255, 0.08));
+	outline: 1px solid var(--focus-ring-color, var(--teal));
+	outline-offset: 1px;
+}
+.cmd-option[data-disabled] {
+	cursor: not-allowed;
+	opacity: 0.45;
+	pointer-events: none;
+}
+.cmd-icon[hidden],
+.cmd-kbd[hidden] {
+	display: none;
+}
+.cmd-icon {
+	flex: 0 0 auto;
+}
+.cmd-label {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.cmd-kbd {
+	flex: 0 0 auto;
+	margin-inline-start: 1.25rem;
+}
+.cmd-sep {
+	background: var(--surface-border, rgba(255, 255, 255, 0.12));
+	block-size: 1px;
+	margin-block: 0.3rem;
+	margin-inline: 0.2rem;
+}
+@media (prefers-reduced-motion: reduce) {
+	.cmd-option {
+		transition: none;
+	}
+}

@@ -1,0 +1,72 @@
+:host {
+	display: block;
+}
+.ol {
+	display: flex;
+	flex-direction: column;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--bg-panel, transparent);
+	overflow: hidden;
+}
+.ol-head {
+	padding: 0.45rem 0.7rem;
+	border-block-end: 1px solid color-mix(in oklch, var(--text-muted) 14%, transparent);
+	color: var(--text-muted);
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+.ol-list {
+	display: flex;
+	flex-direction: column;
+	padding: 0.25rem;
+}
+.ol-item {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.25rem 0.3rem;
+	border-radius: var(--radius-sm, 0.25rem);
+}
+.ol-item:hover {
+	background: color-mix(in oklch, currentColor 6%, transparent);
+}
+.ol-item[data-disabled] {
+	opacity: 0.45;
+	pointer-events: none;
+}
+.ol-label {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+}
+.ol-handle,
+.ol-btn {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: none;
+	color: var(--text-muted);
+	cursor: pointer;
+}
+.ol-handle {
+	cursor: grab;
+	touch-action: none;
+}
+.ol-handle:focus-visible,
+.ol-btn:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 1px;
+}

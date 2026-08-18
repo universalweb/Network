@@ -1,0 +1,69 @@
+:host {
+	display: block;
+	max-inline-size: 100%;
+}
+.im {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	margin: 0;
+	min-inline-size: 0;
+}
+.im-hit {
+	display: block;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	inline-size: 100%;
+	cursor: zoom-in;
+	border-radius: inherit;
+}
+.im-hit:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 2px;
+}
+.im-img {
+	display: block;
+	inline-size: 100%;
+	block-size: auto;
+	max-inline-size: 100%;
+	object-fit: cover;
+}
+.im[data-fit='contain'] .im-img {
+	object-fit: contain;
+}
+.im[data-radius='none'] .im-img,
+.im[data-radius='none'] .im-hit {
+	border-radius: 0;
+}
+.im[data-radius='sm'] .im-img,
+.im[data-radius='sm'] .im-hit {
+	border-radius: var(--radius-sm, 0.25rem);
+}
+.im[data-radius='md'] .im-img,
+.im[data-radius='md'] .im-hit {
+	border-radius: var(--radius-md, 0.5rem);
+}
+.im[data-radius='lg'] .im-img,
+.im[data-radius='lg'] .im-hit {
+	border-radius: var(--radius-lg, 0.75rem);
+}
+.im[data-radius='full'] .im-img,
+.im[data-radius='full'] .im-hit {
+	border-radius: 999px;
+}
+.im[data-shadow='sm'] .im-img {
+	box-shadow: var(--shadow-soft-sm, var(--shadow-1));
+}
+.im[data-shadow='md'] .im-img {
+	box-shadow: var(--shadow-soft-md, var(--shadow-3));
+}
+.im[data-shadow='lg'] .im-img {
+	box-shadow: var(--shadow-soft-lg, var(--shadow-5));
+}
+.im-cap {
+	margin: 0;
+	color: var(--text-muted);
+	font-size: 0.8125rem;
+}

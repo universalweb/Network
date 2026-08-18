@@ -1,0 +1,65 @@
+/*
+ * Host + viewport shell. Trigger chrome → nav-trigger.css; panel chrome →
+ * menu-surface.css; pane slide → nav-pane.css.
+ */
+:host {
+	display: inline-flex;
+	max-inline-size: 100%;
+	user-select: none;
+	-webkit-user-select: none;
+}
+.nav-section {
+	display: inline-flex;
+	align-items: center;
+	position: relative;
+}
+.nav-bar {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.15rem;
+}
+/* Mega panel: widen max + drop list padding so panes own their inset. */
+.nav-surface.menu-surface {
+	/* Content-driven min — don't force the 11rem menu-list floor on mega panes. */
+	min-inline-size: 0;
+	max-inline-size: min(42rem, calc(100vw - 1rem));
+	max-block-size: min(70dvh, 32rem);
+	padding: 0;
+	overflow: hidden;
+	border-radius: var(--radius-lg, var(--radius-md, 0.75rem));
+	/* First-open enter: fade + soft scale (only when not already open). */
+	transform: translateY(-0.35rem) scale(0.97);
+	opacity: 0;
+	transition:
+		opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+		transform 0.26s cubic-bezier(0.34, 1.15, 0.64, 1);
+	transform-origin: top center;
+}
+.nav-surface.menu-surface.is-open {
+	opacity: 1;
+	transform: none;
+}
+/* Switching while open: keep position stable — no re-enter bounce. */
+.nav-surface.menu-surface.is-open[data-switch] {
+	transition:
+		opacity 0.12s ease,
+		transform 0.12s ease;
+}
+.nav-viewport {
+	position: relative;
+	overflow: hidden;
+	/* Small seed — layoutPanels grows to content; avoid looking “stuck” at 12rem. */
+	inline-size: 8rem;
+	block-size: 2.5rem;
+	transition:
+		inline-size 0.28s cubic-bezier(0.34, 1.05, 0.64, 1),
+		block-size 0.28s cubic-bezier(0.34, 1.05, 0.64, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+	.nav-viewport,
+	.nav-surface.menu-surface {
+		transition: none;
+		transform: none;
+	}
+}

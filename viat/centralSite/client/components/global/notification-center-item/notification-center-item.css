@@ -1,0 +1,83 @@
+:host {
+	display: block;
+}
+
+/*
+ * One element owns fill + border + type accent — same vocabulary as
+ * ui-notification-item. Do NOT put the accent on a ui-surface host: surface
+ * paints fill on its inner .sf, so host borders/inset shadows read as colored
+ * bars *behind* the card.
+ */
+.nc-item {
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: var(--space-2);
+	align-items: start;
+	padding: var(--space-3);
+	padding-inline-end: var(--space-2);
+	border: 1px solid var(--surface-border, var(--dark-divider, rgba(255, 255, 255, 0.08)));
+	border-inline-start: 2px solid var(--popup-accent, var(--teal, oklch(0.72 0.12 200)));
+	border-radius: var(--radius-lg, 0.75rem);
+	background: var(--bg-panel, rgba(255, 255, 255, 0.04));
+	color: var(--text-main);
+	cursor: pointer;
+	transition:
+		background 0.15s ease,
+		border-color 0.15s ease;
+}
+
+.nc-item:hover {
+	background: color-mix(in oklab, var(--bg-panel, rgba(255, 255, 255, 0.04)) 92%, white 8%);
+	border-color: color-mix(in oklab, var(--teal, #0ff) 28%, transparent);
+}
+
+.nc-item[data-muted] {
+	opacity: 0.72;
+}
+
+.nc-item[data-type='error'] {
+	border-inline-start-color: var(--magenta, var(--color-danger, oklch(0.65 0.2 25)));
+}
+
+.nc-item[data-type='copy'] {
+	border-inline-start-color: var(--teal, oklch(0.75 0.1 180));
+}
+
+.nc-item[data-unseen] .nc-item-title {
+	color: var(--text-main);
+}
+
+.nc-item-body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+	min-width: 0;
+	padding-block-start: 0.15rem;
+}
+
+.nc-item-title {
+	font-size: var(--text-2xs);
+	font-weight: var(--weight-bold, 700);
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text-light, var(--text-main));
+}
+
+.nc-item-message {
+	font-size: var(--text-xs);
+	line-height: 1.4;
+	color: var(--text-main);
+	word-break: break-word;
+}
+
+/*
+ * ui-close-button owns hit size (1.875rem) and hover spin — no extra padding.
+ * Slight negative margin counters card pad so × sits in the corner cleanly.
+ */
+.nc-item-close {
+	flex: 0 0 auto;
+	align-self: start;
+	margin-block-start: calc(-1 * var(--space-1));
+	margin-inline-end: calc(-1 * var(--space-1));
+}

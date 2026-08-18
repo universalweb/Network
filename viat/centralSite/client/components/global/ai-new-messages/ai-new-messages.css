@@ -1,0 +1,39 @@
+:host {
+	display: flex;
+	justify-content: center;
+	pointer-events: none;
+}
+.ainm {
+	pointer-events: auto;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding-block: var(--space-2);
+	padding-inline: var(--space-3);
+	border: 1px solid color-mix(in oklab, var(--teal, var(--accent, currentColor)) 40%, transparent);
+	border-radius: 999px;
+	background: color-mix(in oklab, var(--teal, var(--accent, currentColor)) 14%, var(--bg-panel, #0a0c12));
+	color: var(--teal, var(--accent, currentColor));
+	font: inherit;
+	font-size: var(--text-xs);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	cursor: pointer;
+	box-shadow: 0 0.35rem 1rem color-mix(in oklab, #000 35%, transparent);
+	transition: background 0.15s ease, border-color 0.15s ease;
+}
+.ainm:hover {
+	background: color-mix(in oklab, var(--teal, var(--accent, currentColor)) 22%, var(--bg-panel, #0a0c12));
+}
+.ainm:focus-visible {
+	outline: 2px solid var(--cyan, currentColor);
+	outline-offset: 2px;
+}
+.ainm[hidden] {
+	display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.ainm {
+		transition: none;
+	}
+}

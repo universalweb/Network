@@ -1,7 +1,9 @@
 import '../../global/app-bar/app-bar.js';
 import '../../global/icon/icon.js';
 import '../../global/theme-select/theme-select.js';
-import { SNAP_CURVE, SNAP_MS, WebComponent } from 'webcomponent';
+import {
+	routerStore, SNAP_CURVE, SNAP_MS, WebComponent,
+} from 'webcomponent';
 import { clampOffset, offsetIsOpen } from './pulldownOffset.js';
 // `<global-top-bar>` — the Viat top bar. A thin composition over `<ui-app-bar>`:
 // it slots the brand block + theme select and supplies the three action items.
@@ -10,6 +12,9 @@ import { clampOffset, offsetIsOpen } from './pulldownOffset.js';
 // `pulldown:*` protocol the pulldown component listens for.
 export class GlobalTopBar extends WebComponent {
 	static url = import.meta.url;
+	static stores = {
+		router: routerStore,
+	};
 	static styles = {
 		globalTopBar: './global-top-bar.css',
 	};
@@ -52,8 +57,11 @@ export class GlobalTopBar extends WebComponent {
 	naturalTop = 0;
 	naturalBottom = 0;
 	dragStartOffset = 0;
+	externalDragLive = false;
 	onConnect() {
 		this.delegate('pulldown:toggle', this.handlePulldownState);
+		this.delegate('pulldown:dragstart', this.handleExternalDragStart);
+		this.delegate('pulldown:drag', this.handleExternalDrag);
 		this.reflectViewport();
 		/*
 		 * Adaptive flat → float, driven by the inner content scroll surface. The page
@@ -71,9 +79,7 @@ export class GlobalTopBar extends WebComponent {
 		 * so reset the bar to flat instantly here to avoid a one-frame float before the
 		 * scroll-report flag catches up.
 		 */
-		this.observeGlobal('routeView', () => {
-			this.applyScrolled(false);
-		});
+		this.observeStore('router', 'view', this.handleRouteChange);
 		/*
 		 * Re-float on viewport change. Subscribe to the canonical viewport
 		 * service (`viewport:resize`) rather than a raw `resize` listener: it
@@ -83,6 +89,9 @@ export class GlobalTopBar extends WebComponent {
 		 * AbortController to manage.
 		 */
 		this.delegate('viewport:resize', this.handleResize);
+	}
+	handleRouteChange() {
+		this.applyScrolled(false);
 	}
 	applyScrolled(scrolled) {
 		this.refs.appbar?.toggleAttribute('data-scrolled', scrolled);
@@ -200,14 +209,57 @@ export class GlobalTopBar extends WebComponent {
 	handlePulldownState(domEvent) {
 		// Ignore our own `pulldown:toggle` emissions; react only when the
 		// pulldown is opened or closed by some other route.
-		if (domEvent.target === this) {
+		if (this.isOwnPulldownEvent(domEvent)) {
 			return;
 		}
 		const targetOpen = domEvent.detail?.data?.open === true;
-		if (targetOpen === this.open) {
+		// A pulldown-origin drag already moved the bar 1:1. Snap even when the
+		// committed open flag matches — otherwise an aborted close leaves the
+		// bar stranded mid-travel while the sheet springs back.
+		const mustSnap = this.externalDragLive === true;
+		this.externalDragLive = false;
+		if (targetOpen === this.open && !mustSnap) {
 			return;
 		}
 		this.snapTo(targetOpen);
+	}
+	isOwnPulldownEvent(domEvent) {
+		return domEvent.target === this || domEvent.detail?.source === this;
+	}
+	/*
+	 * Pulldown-origin drag (handle / frost). Pin the bar to the live sheet
+	 * edge instead of waiting for pulldown:toggle, which only fires on settle
+	 * and then snaps the bar from the bottom to the top.
+	 */
+	handleExternalDragStart(domEvent) {
+		if (this.isOwnPulldownEvent(domEvent)) {
+			return;
+		}
+		this.externalDragLive = true;
+		this.dragStartOffset = this.currentRenderedOffset();
+		this.measureNatural();
+		const appBar = this.refs.appbar;
+		if (!appBar) {
+			return;
+		}
+		appBar.style.transition = 'none';
+		appBar.style.transform = `translateY(${this.dragStartOffset}px)`;
+	}
+	handleExternalDrag(domEvent) {
+		if (this.isOwnPulldownEvent(domEvent)) {
+			return;
+		}
+		const appBar = this.refs.appbar;
+		const data = domEvent.detail?.data;
+		if (!appBar || typeof data?.delta !== 'number') {
+			return;
+		}
+		// Same start+delta clamp as a bar-origin drag — 1:1 with the sheet, not
+		// a progress-scaled remap that leaves the bar at the bottom until the
+		// drawer finishes its full viewport travel.
+		const targetY = clampOffset(this.dragStartOffset, data.delta, this.maxOffset());
+		appBar.style.transition = 'none';
+		appBar.style.transform = `translateY(${targetY}px)`;
 	}
 	handleDragStart() {
 		// Capture where the bar actually is RIGHT NOW (mid-snap included), then

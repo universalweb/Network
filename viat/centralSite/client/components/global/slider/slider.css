@@ -97,10 +97,17 @@
 	translate: -50% 0;
 	padding: var(--space-1, 0.25rem) var(--space-2, 0.5rem);
 	border-radius: var(--radius-sm, 0.25rem);
-	background: var(--slider-fill);
-	color: #fff;
+	/*
+	 * Theme-surface bubble — never white-on-light-teal. Fill alone is often a
+	 * soft accent that fails contrast with #fff on light/pastel themes.
+	 */
+	background: var(--slider-bubble-bg, var(--surface-raised, var(--bg-elevated, var(--bg-panel, #1a1a1a))));
+	color: var(--slider-bubble-color, var(--text-color, var(--text, #f4f4f5)));
+	border: 1px solid color-mix(in oklch, var(--text-muted, #888) 28%, transparent);
+	box-shadow: 0 2px 8px color-mix(in oklch, #000 28%, transparent);
 	font-size: 0.75rem;
 	line-height: 1;
+	font-variant-numeric: tabular-nums;
 	white-space: nowrap;
 	pointer-events: none;
 	opacity: 0;

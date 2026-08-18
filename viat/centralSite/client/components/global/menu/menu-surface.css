@@ -1,0 +1,44 @@
+/* Shared dropdown panel chrome — NO :host rules (imported by menu, menubar,
+   nav-section, context-menu, split-button; a shared :host would leak). */
+.menu-surface {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	min-inline-size: 11rem;
+	max-inline-size: min(20rem, calc(100vw - 1rem));
+	max-block-size: min(60dvh, 22rem);
+	overflow: hidden auto;
+	padding: 0.3rem;
+	/* Glass fill — not solid --popup-bg (that stays opaque for modals/cards). */
+	background: var(--popup-glass-bg, var(--popup-bg, var(--bg-panel, #14161e)));
+	border: 1px solid var(--popup-border, var(--surface-border, rgba(255, 255, 255, 0.14)));
+	border-radius: var(--radius-md, 0.5rem);
+	box-shadow: var(--popup-shadow, 0 16px 40px rgb(0 0 0 / 0.5));
+	color: var(--popup-text, var(--text-primary, #f5f6fa));
+	/* Frost — slight blur through semi-transparent glass fill. */
+	-webkit-backdrop-filter: var(--popup-glass-blur, blur(0.625rem) saturate(1.25));
+	backdrop-filter: var(--popup-glass-blur, blur(0.625rem) saturate(1.25));
+	opacity: 0;
+	transform: translateY(-4px);
+	transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.menu-surface:popover-open {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+.menu-surface.is-open {
+	opacity: 1;
+	transform: none;
+}
+/* The panel takes focus on open (so keyboard roving works) but must never paint
+   its own ring — items show focus, the container never does. */
+.menu-surface:focus {
+	outline: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.menu-surface {
+		transition: none;
+		transform: none;
+	}
+}

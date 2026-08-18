@@ -1,0 +1,113 @@
+:host {
+	display: block;
+	inline-size: 100%;
+}
+.fu {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+}
+.fu[data-disabled] {
+	opacity: 0.55;
+	pointer-events: none;
+}
+.fu-input {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+.fu-zone {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.45rem;
+	min-block-size: 8rem;
+	padding: 1rem;
+	border: 1px dashed color-mix(in oklch, var(--text-muted) 40%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: color-mix(in oklch, var(--bg-panel, #111) 80%, transparent);
+	cursor: pointer;
+}
+.fu[data-over] .fu-zone {
+	border-color: var(--teal, #14b8a6);
+	background: color-mix(in oklch, var(--teal, #14b8a6) 12%, transparent);
+}
+.fu-icon {
+	opacity: 0.55;
+}
+.fu-drop {
+	font-size: var(--text-sm, 0.875rem);
+	color: var(--text-muted);
+	text-align: center;
+}
+.fu-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.fu-list[hidden],
+.fu-empty[hidden],
+.fu-actions[hidden] {
+	display: none;
+}
+.fu-row {
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+	padding-block: 0.4rem;
+	padding-inline: 0.55rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
+	border-radius: var(--radius-sm, 0.35rem);
+	background: var(--bg-panel, transparent);
+}
+.fu-name {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: var(--text-sm, 0.875rem);
+}
+.fu-size {
+	flex: 0 0 auto;
+	font-size: var(--text-xs, 0.75rem);
+	color: var(--text-muted);
+}
+.fu-remove {
+	flex: 0 0 auto;
+	inline-size: 1.6rem;
+	block-size: 1.6rem;
+	padding: 0;
+	border: 0;
+	border-radius: 999px;
+	background: transparent;
+	color: inherit;
+	font-size: 1.1rem;
+	line-height: 1;
+	cursor: pointer;
+}
+.fu-remove:hover {
+	background: color-mix(in oklch, var(--color-danger, #ef4444) 16%, transparent);
+}
+.fu-empty {
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+}
+.fu-actions {
+	display: flex;
+	justify-content: flex-end;
+}
+@media (prefers-reduced-motion: reduce) {
+	.fu-zone,
+	.fu-remove {
+		transition: none;
+	}
+}

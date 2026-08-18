@@ -1,184 +1,13 @@
-import '../icon/icon.js';
+import '../button/button.js';
+import '../icon-button/icon-button.js';
 import '../slideout/slideout.js';
 import { WebComponent } from '../../core/index.js';
+import { NotificationCenterItem } from '../notification-center-item/notification-center-item.js';
+import { NotificationItem } from '../notification-item/notification-item.js';
 const DEFAULT_TIMEOUT = 3200;
 const POSITIONS = new Set([
 	'top-end', 'top-start', 'bottom-end', 'bottom-start',
 ]);
-/*
- * Toast row. Click body → hide or remove (host `clickAction`). Close (X) always
- * removes. Timeout auto-hides by default; pass `autoRemove: true` on show() to
- * delete instead (Mac-style notification center keeps hidden items until X).
- */
-class NotificationItem extends WebComponent {
-	static url = import.meta.url;
-	static styles = {
-		notification: './notification.css',
-	};
-	static state = {
-		exiting: false,
-		itemId: null,
-		itemType: 'default',
-		message: '',
-		timeout: 0,
-		heading: 'Notification',
-		autoRemove: false,
-		muted: false,
-		seen: false,
-	};
-	onConnect() {
-		const { timeout } = this.STATE;
-		if (timeout > 0) {
-			this.setTimeout(this.beginTimeoutExit, timeout);
-		}
-	}
-	beginTimeoutExit() {
-		if (this.state.exiting) {
-			return;
-		}
-		if (this.state.autoRemove) {
-			this.beginRemove();
-			return;
-		}
-		this.beginHide();
-	}
-	beginHide() {
-		if (this.state.exiting) {
-			return;
-		}
-		this.state.exiting = true;
-		this._exitKind = 'hide';
-	}
-	beginRemove() {
-		if (this.state.exiting) {
-			return;
-		}
-		this.state.exiting = true;
-		this._exitKind = 'remove';
-	}
-	handleAnimationEnd(domEvent) {
-		if (domEvent.animationName !== 'notification-out') {
-			return;
-		}
-		const itemId = this.STATE.itemId;
-		if (this._exitKind === 'remove') {
-			this.emit('notification:remove', {
-				id: itemId,
-			});
-			return;
-		}
-		this.emit('notification:hide', {
-			id: itemId,
-		});
-	}
-	handleBodyActivate(domEvent) {
-		if (domEvent.type === 'keydown' && domEvent.key !== 'Enter' && domEvent.key !== ' ') {
-			return;
-		}
-		if (domEvent.type === 'keydown') {
-			domEvent.preventDefault();
-		}
-		this.emit('notification:activate', {
-			id: this.STATE.itemId,
-		});
-	}
-	handleCloseClick(domEvent) {
-		domEvent.stopPropagation();
-		this.beginRemove();
-	}
-	render() {
-		this.html`
-			<div
-				class="notification"
-				data-type=${this.state.itemType}
-				?data-exit=${this.state.exiting}
-				role="button"
-				tabindex="0"
-				aria-label="Notification"
-				@click=${this.handleBodyActivate}
-				@keydown=${this.handleBodyActivate}
-				@animationend=${this.handleAnimationEnd}>
-				<div class="notification-body">
-					<div class="notification-title">${this.state.heading}</div>
-					<div class="notification-message">${this.state.message}</div>
-				</div>
-				<button
-					type="button"
-					class="notification-close"
-					aria-label="Remove notification"
-					@click=${this.handleCloseClick}>
-					<ui-icon .state.name=${'x'} .state.size=${'sm'}></ui-icon>
-				</button>
-			</div>
-		`;
-	}
-}
-customElements.define('ui-notification-item', NotificationItem);
-/*
- * Center-pane row — always shows close (X); body click hides from center list
- * only when the host clickAction is 'remove', otherwise just marks seen/hide.
- * Center lists every un-removed item (including those already dismissed as toasts).
- */
-class NotificationCenterItem extends WebComponent {
-	static url = import.meta.url;
-	static styles = {
-		notificationCenterItem: './notification-center-item.css',
-	};
-	static state = {
-		itemId: null,
-		itemType: 'default',
-		message: '',
-		heading: 'Notification',
-		muted: false,
-		seen: false,
-		createdAt: 0,
-	};
-	handleActivate(domEvent) {
-		if (domEvent.type === 'keydown' && domEvent.key !== 'Enter' && domEvent.key !== ' ') {
-			return;
-		}
-		if (domEvent.type === 'keydown') {
-			domEvent.preventDefault();
-		}
-		this.emit('notification:activate', {
-			id: this.STATE.itemId,
-		});
-	}
-	handleCloseClick(domEvent) {
-		domEvent.stopPropagation();
-		this.emit('notification:remove', {
-			id: this.STATE.itemId,
-		});
-	}
-	render() {
-		this.html`
-			<div
-				class="nc-item"
-				data-type=${this.state.itemType}
-				?data-muted=${this.state.muted}
-				?data-unseen=${() => {
-					return !this.state.seen;
-				}}
-				role="button"
-				tabindex="0"
-				@click=${this.handleActivate}
-				@keydown=${this.handleActivate}>
-				<div class="nc-item-body">
-					<div class="nc-item-title">${this.state.heading}</div>
-					<div class="nc-item-message">${this.state.message}</div>
-				</div>
-				<button
-					type="button"
-					class="nc-item-close"
-					aria-label="Remove notification"
-					@click=${this.handleCloseClick}>
-					<ui-icon .state.name=${'x'} .state.size=${'sm'}></ui-icon>
-				</button>
-			</div>
-		`;
-	}
-}
-customElements.define('ui-notification-center-item', NotificationCenterItem);
 /**
  * `<ui-notification>` — toast stack + Tahoe-style notification center.
  *
@@ -392,16 +221,18 @@ export class UINotification extends WebComponent {
 					@slideout:close=${this.handleSlideoutClose}
 					@notification:activate=${this.handleActivate}
 					@notification:remove=${this.handleRemove}>
-					<button
+					<ui-icon-button
 						slot="header-end"
-						type="button"
 						class="nc-clear"
 						?hidden=${() => {
 							return !this.hasItems();
 						}}
-						@click=${this.handleClearAll}>
-						Clear All
-					</button>
+						.state.icon=${'trash-2'}
+						.state.tooltip=${'Clear all'}
+						.state.variant=${'ghost'}
+						.state.tone=${'primary'}
+						.state.size=${'sm'}
+						@icon-button:click=${this.handleClearAll}></ui-icon-button>
 					<div class="nc-list">
 						${this.list('items', NotificationCenterItem)}
 						<div class="nc-empty" ?hidden=${() => {

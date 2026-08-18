@@ -57,7 +57,9 @@
 	rotate: 180deg;
 }
 .ac-body {
-	padding: 0 var(--space-5) var(--space-5);
+	/* Match summary padding so the body is not jammed under the header. */
+	padding-block: var(--space-4) var(--space-5);
+	padding-inline: var(--space-5);
 	color: var(--text-soft, var(--text-main));
 	line-height: var(--leading-relaxed, 1.6);
 }

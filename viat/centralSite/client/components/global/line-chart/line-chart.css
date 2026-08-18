@@ -1,0 +1,84 @@
+:host {
+	container-type: inline-size;
+	display: block;
+	inline-size: 100%;
+	min-block-size: 12rem;
+	color: var(--text-main);
+}
+
+.lc {
+	block-size: 100%;
+	min-block-size: inherit;
+	--lc-series: var(--cyan, oklch(0.72 0.14 210));
+}
+
+.lc-svg-stack {
+	display: grid;
+	inline-size: 100%;
+	aspect-ratio: 400 / 220;
+	min-block-size: 11rem;
+	position: relative;
+}
+
+/* Base axes + light ticks + partial series/hits share one cell */
+.lc-svg-stack > .lc-base,
+.lc-svg-stack > .lc-layer,
+.lc-svg-stack > .chart-series-svg,
+.lc-svg-stack > .chart-hit-svg {
+	grid-area: 1 / 1;
+	inline-size: 100%;
+	block-size: 100%;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.lc-base {
+	pointer-events: none;
+}
+
+.lc-layer {
+	pointer-events: none;
+}
+
+.lc-grid {
+	fill: none;
+	stroke: color-mix(in oklab, var(--border-color, currentColor) 35%, transparent);
+	stroke-width: 1;
+	vector-effect: non-scaling-stroke;
+}
+
+.lc-line {
+	fill: none;
+	stroke: var(--lc-series);
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	vector-effect: non-scaling-stroke;
+}
+
+.lc-area {
+	fill: color-mix(in oklab, var(--lc-series) 22%, transparent);
+	stroke: none;
+}
+
+.lc-tick {
+	fill: var(--text-muted, var(--text-main));
+	font-size: 10px;
+}
+
+.lc-legend {
+	display: block;
+	min-inline-size: 0;
+}
+
+.lc-empty {
+	display: grid;
+	place-items: center;
+	min-block-size: 11rem;
+	color: var(--text-muted, var(--text-main));
+	font-size: var(--text-sm, 0.875rem);
+}
+
+.lc-empty[hidden] {
+	display: none !important;
+}

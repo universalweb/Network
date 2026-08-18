@@ -15,11 +15,7 @@ export class GlobalPulldown extends WebComponent {
 			trigger: 'main',
 			threshold: 0.3,
 			velocity: 0.5,
-			// ui-pulldown defaults to a bottom grab handle, but this overlay fills its
-			// whole surface with ai-chat (compose box anchored at the bottom) and is
-			// already dismissed by the top-bar pull gesture + backdrop click — so opt
-			// the handle out rather than float a grab strip over the chat controls.
-			handlePosition: 'none',
+			handlePosition: 'bottom',
 		},
 	};
 	scrollLocked = false;
@@ -62,21 +58,13 @@ export class GlobalPulldown extends WebComponent {
 		// Background scroll-lock keyed to the canonical open/close signal.
 		this.delegate('pulldown:toggle', this.handlePulldownScrollState);
 	}
-	handleBackdropClick(domEvent) {
-		if (domEvent.target !== domEvent.currentTarget) {
-			return;
-		}
-		this.emit('pulldown:toggle', {
-			open: false,
-		});
-	}
 	render() {
 		this.html`
 			<ui-pulldown #pulldown
 				.state=${this.state.pulldown}
 				@pulldown:open=${this.handleOpen}
 				@pulldown:close=${this.handleClose}>
-				<div class="gpd-content" @click=${this.handleBackdropClick}>
+				<div class="gpd-content">
 					<div class="gpd-mobile-notice" role="status">
 						<span class="gpd-mobile-notice-id">⩝ LOCAL AGENT</span>
 						<p class="gpd-mobile-notice-body">The Local AI chat is desktop-only for now — it streams from a local LLM endpoint that needs a keyboard-friendly workflow. The help and info panels below stay available on every screen size.</p>

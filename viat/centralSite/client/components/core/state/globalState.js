@@ -70,6 +70,7 @@ class StoreProxyHandler {
 			return true;
 		}
 		const fullPath = joinPath(this.path, key);
+		// Dev-only waste detect under perf; hot path stays === only.
 		if (defaultLogger.perfOn) {
 			defaultLogger.perf('globalState', reportWastedStoreSet, obj, key, value, fullPath);
 		}
@@ -115,6 +116,9 @@ export class Store {
 		store.bus = new StoreBus(store);
 		store.proxy = StoreProxyHandler.create(store, store.STATE);
 		return store;
+	}
+	static is(value) {
+		return value instanceof Store;
 	}
 	get(key) {
 		return key === undefined ? this.proxy : getValueAtPath(this.proxy, key);

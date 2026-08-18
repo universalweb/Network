@@ -1,0 +1,68 @@
+:host {
+	container-type: inline-size;
+	display: block;
+	inline-size: 100%;
+	min-block-size: 14rem;
+	color: var(--text-main);
+}
+
+.rc {
+	justify-items: center;
+}
+
+.rc .chart-plot-area {
+	inline-size: 100%;
+	justify-items: center;
+	max-inline-size: 18rem;
+}
+
+.rc-svg-stack {
+	aspect-ratio: 1;
+	display: grid;
+	inline-size: 100%;
+	position: relative;
+}
+
+.rc-svg-stack > .rc-layer,
+.rc-svg-stack > .chart-series-svg,
+.rc-svg-stack > .chart-hit-svg {
+	block-size: 100%;
+	grid-area: 1 / 1;
+	inline-size: 100%;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.rc-ring {
+	fill: none;
+	stroke: color-mix(in oklab, var(--border-color, currentColor) 40%, transparent);
+	stroke-width: 1;
+}
+
+.rc-axis {
+	stroke: color-mix(in oklab, var(--border-color, currentColor) 45%, transparent);
+	stroke-width: 1;
+}
+
+.rc-label {
+	fill: var(--text-muted, var(--text-main));
+	font-size: 0.625rem;
+}
+
+.rc-legend {
+	display: block;
+	justify-self: center;
+	min-inline-size: 0;
+}
+
+.rc-empty {
+	color: var(--text-muted, var(--text-main));
+	display: grid;
+	font-size: var(--text-sm, 0.875rem);
+	min-block-size: 12rem;
+	place-items: center;
+}
+
+.rc-empty[hidden] {
+	display: none !important;
+}

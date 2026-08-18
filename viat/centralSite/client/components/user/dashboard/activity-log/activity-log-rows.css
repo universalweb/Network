@@ -1,0 +1,73 @@
+/* Row/cell CSS for the activity-log tx feed. Injected into <ui-collection>'s
+   shadow via `.importStyles` (same pattern as account-detail-rows.css) so the
+   light `html` rows render in the shared collection row format. The panel frame,
+   tabs and feed chrome stay on the panel (activity-log.css). */
+.log-row {
+	display: grid;
+	grid-template-columns: 70px 60px 1fr;
+	gap: var(--space-3);
+	align-items: center;
+	padding: var(--space-2) var(--space-3);
+	border-block-end: 1px solid var(--dark-divider-faint);
+	font-size: var(--text-2xs);
+}
+.log-row:last-child {
+	border-block-end: none;
+}
+.log-row:hover {
+	background: color-mix(in oklab, var(--teal) 6%, transparent);
+}
+.log-ts {
+	color: var(--cyan-timestamp);
+}
+.log-tag {
+	font-weight: var(--weight-bold);
+}
+.log-tag[data-direction='in'] {
+	color: var(--color-success);
+	text-shadow: var(--log-in-text-shadow, 0 0 5px var(--color-success-glow));
+}
+.log-tag[data-direction='out'] {
+	color: var(--color-danger);
+	text-shadow: var(--log-out-text-shadow, 0 0 5px var(--color-danger-glow));
+}
+/* min-inline-size:0 lets the message column shrink so its links ellipsize
+   instead of forcing the grid wider than the panel. */
+.log-msg {
+	min-inline-size: 0;
+	color: var(--dark-text-bright);
+	word-break: break-all;
+}
+.log-msg[data-status='ok'] {
+	color: var(--color-success-text);
+}
+.log-msg[data-status='warn'] {
+	color: var(--color-warn-text);
+}
+/* Embedded tx-hash / counterparty-address links inside a log row. Inherit the
+   row's color so direction tinting still reads at a glance, but pick up an
+   accent on hover so users learn they're navigable. */
+.log-link {
+	color: inherit;
+	text-decoration: none;
+	border-block-end: 1px dotted currentColor;
+	transition: color 0.12s ease, border-color 0.12s ease;
+}
+.log-link:hover,
+.log-link:focus-visible {
+	color: var(--cyan, var(--color-success-text));
+	border-block-end-color: var(--cyan, var(--color-success-text));
+	outline: none;
+}
+.log-amount {
+	font-weight: var(--weight-semibold);
+}
+.log-verb {
+	color: var(--text-muted, var(--dark-text-bright));
+	opacity: 0.7;
+}
+@media (prefers-reduced-motion: reduce) {
+	.log-link {
+		transition: none;
+	}
+}

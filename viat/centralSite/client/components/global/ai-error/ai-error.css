@@ -1,0 +1,82 @@
+:host {
+	display: block;
+}
+:host([hidden]) {
+	display: none;
+}
+.aier {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+	padding-block: var(--space-3);
+	padding-inline: var(--space-3);
+	border: 1px solid color-mix(in oklab, var(--color-danger, oklch(0.68 0.2 25)) 40%, transparent);
+	border-radius: var(--radius-md);
+	background: color-mix(in oklab, var(--color-danger, oklch(0.68 0.2 25)) 8%, var(--bg-panel, rgba(255, 255, 255, 0.02)));
+}
+.aier[hidden] {
+	display: none;
+}
+.aier[data-kind='rate-limit'],
+.aier[data-kind='quota'] {
+	border-color: color-mix(in oklab, var(--color-warning, oklch(0.8 0.16 80)) 40%, transparent);
+	background: color-mix(in oklab, var(--color-warning, oklch(0.8 0.16 80)) 8%, var(--bg-panel, rgba(255, 255, 255, 0.02)));
+}
+.aier[data-kind='offline'] {
+	border-color: color-mix(in oklab, var(--text-muted, rgba(255, 255, 255, 0.45)) 35%, transparent);
+	background: var(--bg-panel, rgba(255, 255, 255, 0.03));
+}
+.aier-head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+}
+.aier-icon {
+	flex: none;
+	color: var(--color-danger, oklch(0.68 0.2 25));
+}
+.aier[data-kind='rate-limit'] .aier-icon,
+.aier[data-kind='quota'] .aier-icon {
+	color: var(--color-warning, oklch(0.8 0.16 80));
+}
+.aier[data-kind='offline'] .aier-icon {
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+}
+.aier-title {
+	font-size: var(--text-xs);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-main);
+}
+.aier-dismiss {
+	margin-inline-start: auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.15rem;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+	cursor: pointer;
+}
+.aier-dismiss:hover {
+	color: var(--text-main);
+}
+.aier-dismiss[hidden] {
+	display: none;
+}
+.aier-message {
+	margin: 0;
+	font-size: var(--text-sm);
+	line-height: 1.45;
+	color: var(--text-main);
+	overflow-wrap: anywhere;
+}
+.aier-actions {
+	display: flex;
+	gap: var(--space-2);
+}
+.aier-actions[hidden] {
+	display: none;
+}

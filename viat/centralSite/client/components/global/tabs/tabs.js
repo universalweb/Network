@@ -1,5 +1,5 @@
 import { movingIndicator, WebComponent } from '../../core/index.js';
-import { UITabButton } from './tab-button.js';
+import { UITabButton } from '../tab-button/tab-button.js';
 // `<ui-tabs>` — reusable tab strip + slotted content area with built-in
 // switching animation: a sliding indicator bar plus a content swap that is
 // either a cross-fade (default) or a direction-aware slide+blur (opt-in

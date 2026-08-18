@@ -1,9 +1,13 @@
 import '../../../global/tabs/tabs.js';
 import AppView from '../../../../modules/app.js';
-import { WebComponent } from '../../../core/index.js';
+import { html } from '../../../core/index.js';
+import { COLLECTION_EVENT } from '../../../global/collection/collection.js';
 import { Panel } from '../../../global/panel/panel.js';
-import { COLLECTION_EVENT } from '../../../global/ui-collection/ui-collection.js';
 const PAGE_SIZE = 25;
+/* Row CSS injected into <ui-collection>'s shadow via `.importStyles`, so the
+   light `html` rows render in the shared collection row format — same pattern as
+   account-detail-rows.css / explorer-rows.css. */
+const ROW_STYLES = new URL('./activity-log-rows.css', import.meta.url).href;
 const TAB_ITEMS = [
 	{
 		id: 'All',
@@ -61,41 +65,6 @@ function keepForTab(entry, activeTab) {
 	}
 	return true;
 }
-class ActivityLogEntry extends WebComponent {
-	static url = import.meta.url;
-	static styles = {
-		entry: './activity-log-entry.css',
-	};
-	static state = {
-		direction: '',
-		id: '',
-		txHref: '',
-		counterparty: '',
-		counterpartyHref: '',
-		counterpartyShort: '',
-		amount: '',
-		verb: '',
-		status: '',
-		timestamp: '',
-	};
-	render() {
-		// Whole-row reactive read so an entry repaint also refreshes the
-		// embedded <a href> targets. Router intercepts anchor clicks across
-		// the shadow boundary via composedPath, so plain `<a>` is enough —
-		this.html`
-			<div class="log-entry">
-				<span class="log-ts">${this.state.timestamp}</span>
-				<span class="log-tag" data-direction=${this.state.direction}>${this.state.direction === 'in' ? '↙' : '↗'}</span>
-				<span class="log-msg" data-status=${this.state.status}>
-					<a class="log-link log-amount" href=${this.state.txHref} tooltip=${this.state.id}>${this.state.amount} ⩝</a>
-					<span class="log-verb"> ${this.state.verb} </span>
-					<a class="log-link log-addr" href=${this.state.counterpartyHref} tooltip=${this.state.counterparty}>${this.state.counterpartyShort}</a>
-				</span>
-			</div>
-		`;
-	}
-}
-customElements.define('activity-log-entry', ActivityLogEntry);
 export class ActivityLog extends Panel {
 	static url = import.meta.url;
 	static styles = {
@@ -111,6 +80,8 @@ export class ActivityLog extends Panel {
 		heading: 'LOG',
 		// Tab-aware empty text handed to the feed (updated on tab change).
 		feedEmpty: 'No all transactions.',
+		// Row CSS pushed into <ui-collection>'s shadow via `.importStyles`.
+		rowStyles: ROW_STYLES,
 	};
 	loadedAddress = '';
 	/* <ui-collection> contract — one stable object merged via `.state=`. The
@@ -122,7 +93,7 @@ export class ActivityLog extends Panel {
 		loader: (options) => {
 			return this.loadEntries(options);
 		},
-		renderRow: ActivityLogEntry,
+		renderRow: this.txRow,
 		keyFn: entryKey,
 		filter: keepForTab,
 		// Button-only: manual LOAD MORE, no scroll auto-load (the feed lives in a
@@ -206,7 +177,7 @@ export class ActivityLog extends Panel {
 			hasMore,
 		};
 	}
-	/* Map a chain tx to the entry shape ActivityLogEntry renders. Direction is
+	/* Map a chain tx to the entry shape the row renders. Direction is
 	   relative to the wallet's own address. */
 	txToEntry(tx, walletAddress) {
 		const isInbound = tx.to === walletAddress;
@@ -223,6 +194,24 @@ export class ActivityLog extends Panel {
 			status: tx.status === 'completed' || tx.status === 'confirmed' ? 'ok' : (tx.status || 'pending'),
 			timestamp: formatTime(tx.timestamp),
 		};
+	}
+	/* Light `html` row rendered directly into <ui-collection>'s .pl-table and
+	   styled via the importStyles-injected activity-log-rows.css — same pattern as
+	   account-detail's txRow. Value-only expressions per the light-row contract;
+	   the router intercepts anchor clicks across the shadow boundary via
+	   composedPath, so plain `<a>` is enough. */
+	txRow(entry) {
+		return html`
+			<div class="log-row">
+				<span class="log-ts">${entry.timestamp}</span>
+				<span class="log-tag" data-direction=${entry.direction}>${entry.direction === 'in' ? '↙' : '↗'}</span>
+				<span class="log-msg" data-status=${entry.status}>
+					<a class="log-link log-amount" href=${entry.txHref} title=${entry.id}>${entry.amount} ⩝</a>
+					<span class="log-verb"> ${entry.verb} </span>
+					<a class="log-link log-addr" href=${entry.counterpartyHref} title=${entry.counterparty}>${entry.counterpartyShort}</a>
+				</span>
+			</div>
+		`;
 	}
 	handleTabChange(domEvent) {
 		const next = domEvent.detail?.data?.id;
@@ -248,6 +237,7 @@ export class ActivityLog extends Panel {
 					.state=${this.feedConfig}
 					.state.filterArg=${this.state.activeTab}
 					.state.emptyMessage=${this.state.feedEmpty}
+					.importStyles=${this.state.rowStyles}
 					#feed></ui-collection>
 			</div>
 		`;

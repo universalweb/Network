@@ -27,13 +27,15 @@
 */
 import { computeAnchor } from '../../core/dom/anchor.js';
 import { UIMenu } from '../menu/menu.js';
-import { UIMenuItem } from '../menu/menu-item.js';
+import { UIMenuItem } from '../menu-item/menu-item.js';
 export class UIContextMenu extends UIMenu {
 	static url = import.meta.url;
 	// Reuse the dropdown's panel + item styles; `context-menu.css` only flips the
 	// host to display:contents (it must not box the wrapped target).
 	static styles = {
-		menu: '../menu/menu.css',
+		// Drop UIMenu's menu.css (:host + .menu-trigger) — context has no trigger chrome.
+		menu: null,
+		menuSurface: '../menu/menu-surface.css',
 		context: './context-menu.css',
 	};
 	static state = {

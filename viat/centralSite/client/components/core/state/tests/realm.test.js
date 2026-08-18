@@ -222,6 +222,48 @@ test('G: classList(base, bind("extra")) reads LOCAL state for the token', async 
 	assert.ok(span.classList.contains('cold'), 'classList reacts to local state change');
 	assert.ok(!span.classList.contains('hot'), 'stale token removed');
 });
+/* Method-returned ClassList must unwrap — ui-button's `class=${this.controlClass}`
+ * path. Without ClassList.isClassList in applyClassListItems, Object.keys emits
+ * the instance fields `isClassList`+`items` and every real token is lost. */
+test('G2: class=${methodReturningClassList} unwraps ClassList tokens', async () => {
+	const tag = `probe-classlist-method-${probeSeq++}`;
+	class Probe extends WebComponent {
+		static state = {
+			iconOnly: true,
+			circle: true,
+			full: false,
+		};
+		controlClass() {
+			return classList(
+				() => {
+					return this.state.iconOnly && 'is-icon-only';
+				},
+				() => {
+					return this.state.circle && 'is-circle';
+				},
+				() => {
+					return this.state.full && 'is-full';
+				}
+			);
+		}
+		render() {
+			this.html`<button class=${this.controlClass} type="button">x</button>`;
+		}
+	}
+	customElements.define(tag, Probe);
+	const element = await mount(tag);
+	const button = root(element).querySelector('button');
+	assert.ok(button.classList.contains('is-icon-only'), 'is-icon-only from method ClassList');
+	assert.ok(button.classList.contains('is-circle'), 'is-circle from method ClassList');
+	assert.ok(!button.classList.contains('is-full'), 'false token omitted');
+	assert.ok(!button.classList.contains('isClassList'), 'ClassList field must NOT become a class');
+	assert.ok(!button.classList.contains('items'), 'ClassList.items must NOT become a class');
+	element.state.full = true;
+	element.state.iconOnly = false;
+	await element.nextFrame();
+	assert.ok(button.classList.contains('is-full'), 'method ClassList reacts to state');
+	assert.ok(!button.classList.contains('is-icon-only'), 'stale method token removed');
+});
 /* ── Group H: LOCAL list() spot (exercises ListSpot.refresh →
  *   resolveBindingValue with the carried flag). Must stay green. ─────────── */
 test('H: list("items", "div", keyFn) renders LOCAL rows and reacts to mutation', async () => {

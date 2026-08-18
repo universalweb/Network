@@ -1,0 +1,228 @@
+:host {
+	display: block;
+}
+.gy {
+	display: flex;
+	flex-direction: column;
+	inline-size: 100%;
+	gap: 0.75rem;
+	--gy-radius: var(--radius-md, 0.5rem);
+}
+.gy[data-radius='none'] {
+	--gy-radius: 0;
+}
+.gy[data-radius='sm'] {
+	--gy-radius: var(--radius-sm, 0.25rem);
+}
+.gy[data-radius='md'] {
+	--gy-radius: var(--radius-md, 0.5rem);
+}
+.gy[data-radius='lg'] {
+	--gy-radius: var(--radius-lg, 0.75rem);
+}
+.gy-toolbar {
+	display: flex;
+	justify-content: flex-end;
+}
+.gy[data-layout='grid'] > .gy-toolbar,
+.gy[data-layout='grid'] > .gy-stage {
+	display: none;
+}
+.gy[data-layout='viewer']:not([data-thumbs]) > .gy-thumbs {
+	display: none;
+}
+.gy-tools {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.15rem;
+}
+.gy-tools:not([data-flip]) [data-tool='flip'],
+.gy-tools:not([data-zoom]) [data-tool='zoom'],
+.gy-tools:not([data-rotate]) [data-tool='rotate'],
+.gy-tools:not([data-download]) [data-tool='download'],
+.gy-tools:not([data-open]) [data-tool='close'] {
+	display: none;
+}
+.gy-stage {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-block-size: 12rem;
+	background: color-mix(in oklch, var(--bg-panel, currentColor) 8%, transparent);
+	border-radius: var(--gy-radius, var(--radius-md, 0.5rem));
+	overflow: hidden;
+}
+.gy-figure {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	margin: 0;
+	inline-size: 100%;
+	cursor: zoom-in;
+}
+.gy-full {
+	max-inline-size: 100%;
+	max-block-size: 22rem;
+	object-fit: contain;
+	border-radius: var(--gy-radius, var(--radius-md, 0.5rem));
+	transform-origin: center center;
+	transition: transform 0.2s ease;
+}
+.gy-full-cap {
+	margin: 0;
+	color: var(--text-muted);
+	font-size: 0.85rem;
+}
+.gy-thumbs {
+	display: flex;
+	gap: 0.5rem;
+	overflow-x: auto;
+	padding-block: 0.15rem;
+	scrollbar-width: thin;
+}
+.gy[data-layout='viewer'] .gy-thumbs > ui-gallery-thumb {
+	flex: none;
+	inline-size: 4.5rem;
+}
+.gy[data-layout='grid'] .gy-thumbs {
+	display: grid;
+	overflow: visible;
+}
+.gt {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	cursor: zoom-in;
+	min-inline-size: 0;
+	text-align: start;
+}
+.gt:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 2px;
+}
+.gt-img {
+	display: block;
+	inline-size: 100%;
+	aspect-ratio: 1;
+	object-fit: cover;
+	border-radius: var(--gy-radius, var(--radius-md, 0.5rem));
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.gt[data-active] .gt-img {
+	box-shadow: 0 0 0 2px var(--teal, var(--cyan, oklch(0.75 0.12 195)));
+	transform: scale(1.05);
+}
+.gt-cap {
+	overflow: hidden;
+	color: var(--text-muted);
+	font-size: 0.75rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.gy-lb {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	inset: 0;
+	inline-size: 100vw;
+	block-size: 100dvh;
+	max-inline-size: none;
+	max-block-size: none;
+	margin: 0;
+	padding: 1.25rem;
+	border: 0;
+	background: color-mix(in oklch, #000 78%, transparent);
+	color: #fff;
+}
+.gy-lb:not([data-thumbs]) > .gy-thumbs {
+	display: none;
+}
+.gy-lb > .gy-thumbs {
+	flex: none;
+}
+.gy-lb > .gy-thumbs > ui-gallery-thumb {
+	flex: none;
+	inline-size: 4.5rem;
+}
+.gy-lb::backdrop {
+	background: color-mix(in oklch, #000 72%, transparent);
+}
+.gy-lb-bar {
+	position: absolute;
+	inset-block-start: 0.75rem;
+	inset-inline: 0.75rem;
+	z-index: 2;
+}
+.gy-lb-stage {
+	flex: 1 1 auto;
+	inline-size: 100%;
+	block-size: auto;
+	min-block-size: 0;
+	background: transparent;
+	overflow: visible;
+}
+.gy-lb .gy-full {
+	max-inline-size: min(92vw, 72rem);
+	max-block-size: min(78dvh, 100%);
+}
+.gy-lb .gy-full-cap {
+	color: color-mix(in oklch, #fff 80%, transparent);
+}
+.gy-lb .gy-figure {
+	cursor: default;
+}
+.gy-nav,
+.gy-x {
+	position: absolute;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0;
+	padding: 0.45rem;
+	border: 0;
+	border-radius: 999px;
+	background: color-mix(in oklch, #000 45%, transparent);
+	color: #fff;
+	cursor: pointer;
+	z-index: 1;
+}
+.gy-nav:focus-visible,
+.gy-x:focus-visible {
+	outline: 2px solid #fff;
+	outline-offset: 2px;
+}
+.gy-prev {
+	inset-block-start: 50%;
+	inset-inline-start: 0.75rem;
+	translate: 0 -50%;
+}
+.gy-next {
+	inset-block-start: 50%;
+	inset-inline-end: 0.75rem;
+	translate: 0 -50%;
+}
+.gy-x {
+	inset-block-start: 0.75rem;
+	inset-inline-end: 0.75rem;
+}
+@media (prefers-reduced-motion: reduce) {
+	.gy-full,
+	.gt-img,
+	.gy-nav,
+	.gy-x {
+		transition: none;
+	}
+	.gt[data-active] .gt-img {
+		transform: none;
+	}
+}

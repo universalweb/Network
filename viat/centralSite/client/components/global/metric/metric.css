@@ -1,10 +1,16 @@
 :host {
 	display: block;
+	min-inline-size: 0;
+	max-inline-size: 100%;
 }
 .mtc {
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
+	min-inline-size: 0;
+	max-inline-size: 100%;
+	overflow: hidden;
+	container-type: inline-size;
 	padding: 0.9rem 1.05rem;
 	border: 1px solid color-mix(in oklab, var(--text-muted) 14%, transparent);
 	border-inline-start: 3px solid var(--viz);
@@ -23,8 +29,14 @@
 	align-items: baseline;
 	justify-content: space-between;
 	gap: 0.5rem;
+	min-inline-size: 0;
+	max-inline-size: 100%;
 }
 .mtc-label {
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 	font-family: var(--font-mono, ui-monospace, monospace);
 	font-size: var(--text-2xs);
 	letter-spacing: 0.08em;
@@ -32,6 +44,11 @@
 	color: var(--text-muted);
 }
 .mtc-hint {
+	flex: 0 1 auto;
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 	font-size: var(--text-2xs);
 	color: var(--text-muted);
 	opacity: 0.7;
@@ -40,16 +57,23 @@
 	display: flex;
 	align-items: baseline;
 	gap: 0.6rem;
+	min-inline-size: 0;
+	max-inline-size: 100%;
 }
 .mtc-value {
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 	font-family: var(--font-mono, ui-monospace, monospace);
-	font-size: var(--text-2xl);
+	font-size: clamp(1rem, 14cqi, var(--text-2xl, 1.5rem));
 	font-weight: var(--weight-bold, 700);
 	line-height: 1;
 	color: var(--text-main);
 	font-variant-numeric: tabular-nums;
 }
 .mtc-delta {
+	flex: 0 0 auto;
 	font-size: var(--text-xs);
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;
@@ -58,6 +82,7 @@
 [data-delta='danger']  { color: var(--color-danger); }
 .mtc-spark {
 	inline-size: 100%;
+	max-inline-size: 100%;
 	block-size: 2.25rem;
 	margin-block-start: 0.15rem;
 }

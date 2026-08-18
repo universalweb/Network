@@ -23,111 +23,107 @@ import { globalState, WebComponent } from 'webcomponent';
 import { AppShell } from '../components/global/app-shell/app-shell.js';
 import { setScrollLockTarget } from '../components/global/scroll-lock.js';
 import { getTheme, setTheme } from '../components/global/theme-select/theme-manager.js';
-import { URLRouter } from './urlRouter.js';
 /*
  *   - SDK singleton: class-owned (`AppView.ensureSDK()` / `AppView.freshSDK()`).
  *     The SDK carries private keys and walletSeeds — it stays off globalState;
  *     consumers call the statics (or `this.sdk` / `this.ensureSDK()` from a
  *     subclass) instead of importing a registry module.
  */
-const ROUTER_CONFIG = {
-	root: '/',
-	routes: [
-		// `section` controls which dock button stays lit; `view` controls which
-		// page component is unhidden via the `is-page-${view}` body class. They
-		// diverge for detail pages — /tx/:id/ keeps the explorer dock active
-		// while showing the transaction-detail view.
-		{
-			id: 'wallet',
-			path: '/',
-			section: 'wallet',
-			view: 'wallet',
-		},
-		{
-			id: 'swap',
-			path: '/swap/',
-			section: 'swap',
-			view: 'swap',
-		},
-		// Explorer — `all` and `mint` variants, each with an optional `/page/:page/`
-		// tail. Routes are matched in order; literal segments win over `:page`
-		// captures, so `/explorer/mints/` resolves to the `mint` route before
-		// the page form ever runs.
-		{
-			id: 'explorer',
-			path: '/explorer/',
-			section: 'explorer',
-			view: 'explorer',
-			filter: 'all',
-		},
-		{
-			id: 'explorerPage',
-			path: '/explorer/page/:page/',
-			section: 'explorer',
-			view: 'explorer',
-			filter: 'all',
-		},
-		{
-			id: 'explorerMints',
-			path: '/explorer/mints/',
-			section: 'explorer',
-			view: 'explorer',
-			filter: 'mint',
-		},
-		{
-			id: 'explorerMintsPage',
-			path: '/explorer/mints/page/:page/',
-			section: 'explorer',
-			view: 'explorer',
-			filter: 'mint',
-		},
-		{
-			id: 'explorerTransfers',
-			path: '/explorer/transfers/',
-			section: 'explorer',
-			view: 'explorer',
-			filter: 'transfer',
-		},
-		{
-			id: 'explorerTransfersPage',
-			path: '/explorer/transfers/page/:page/',
-			section: 'explorer',
-			view: 'explorer',
-			filter: 'transfer',
-		},
-		{
-			id: 'accounts',
-			path: '/accounts/',
-			section: 'accounts',
-			view: 'accounts',
-		},
-		{
-			id: 'accountsPage',
-			path: '/accounts/page/:page/',
-			section: 'accounts',
-			view: 'accounts',
-		},
-		// Detail pages intentionally omit `section` — dock self-sync (see
-		// global-dock.js / observeGlobal('routeId')) leaves all dock buttons
-		// inactive when the current route has no section, which is exactly
-		// what we want on a deep-linked detail view.
-		{
-			id: 'transaction',
-			path: '/tx/:id/',
-			view: 'transaction',
-		},
-		{
-			id: 'account',
-			path: '/account/:address/',
-			view: 'account',
-		},
-		{
-			id: 'accountPage',
-			path: '/account/:address/page/:page/',
-			view: 'account',
-		},
-	],
-};
+// Route table. `section` controls which dock button stays lit; `view` controls
+// which page component is unhidden — the shell reflects it as the host attribute
+// `:host([data-route-view='<view>'])`. They diverge for detail pages: /tx/:id/
+// keeps no section (dock blank) while showing the transaction-detail view.
+const APP_ROUTES = [
+	{
+		id: 'wallet',
+		path: '/',
+		section: 'wallet',
+		view: 'wallet',
+	},
+	{
+		id: 'swap',
+		path: '/swap/',
+		section: 'swap',
+		view: 'swap',
+	},
+	// Explorer — `all` and `mint` variants, each with an optional `/page/:page/`
+	// tail. Routes are matched in order; literal segments win over `:page`
+	// captures, so `/explorer/mints/` resolves to the `mint` route before
+	// the page form ever runs.
+	{
+		id: 'explorer',
+		path: '/explorer/',
+		section: 'explorer',
+		view: 'explorer',
+		filter: 'all',
+	},
+	{
+		id: 'explorerPage',
+		path: '/explorer/page/:page/',
+		section: 'explorer',
+		view: 'explorer',
+		filter: 'all',
+	},
+	{
+		id: 'explorerMints',
+		path: '/explorer/mints/',
+		section: 'explorer',
+		view: 'explorer',
+		filter: 'mint',
+	},
+	{
+		id: 'explorerMintsPage',
+		path: '/explorer/mints/page/:page/',
+		section: 'explorer',
+		view: 'explorer',
+		filter: 'mint',
+	},
+	{
+		id: 'explorerTransfers',
+		path: '/explorer/transfers/',
+		section: 'explorer',
+		view: 'explorer',
+		filter: 'transfer',
+	},
+	{
+		id: 'explorerTransfersPage',
+		path: '/explorer/transfers/page/:page/',
+		section: 'explorer',
+		view: 'explorer',
+		filter: 'transfer',
+	},
+	{
+		id: 'accounts',
+		path: '/accounts/',
+		section: 'accounts',
+		view: 'accounts',
+	},
+	{
+		id: 'accountsPage',
+		path: '/accounts/page/:page/',
+		section: 'accounts',
+		view: 'accounts',
+	},
+	// Detail pages intentionally omit `section` — the dock projects the router
+	// store's `section` (global-dock syncActiveFromRoute), so a route with no
+	// section leaves all dock buttons inactive, which is exactly what we want on
+	// a deep-linked detail view.
+	{
+		id: 'transaction',
+		path: '/tx/:id/',
+		view: 'transaction',
+	},
+	{
+		id: 'account',
+		path: '/account/:address/',
+		view: 'account',
+	},
+	{
+		id: 'accountPage',
+		path: '/account/:address/page/:page/',
+		view: 'account',
+	},
+];
 // Dock ids that should change the URL on click. Routes with parameters
 // (transaction, account) aren't dock-launched — they're reached via links.
 const DOCK_ROUTE_IDS = new Set([
@@ -581,9 +577,7 @@ class AppView extends AppShell {
 	static styles = {
 		app: './app.css',
 	};
-	static state = {
-		activePage: 'wallet',
-	};
+	static routes = APP_ROUTES;
 	id = 'app';
 	/*
 	 * SDK singleton — page-global, class-owned. Statics reference `AppView`
@@ -624,7 +618,7 @@ class AppView extends AppShell {
 	// globalState; only the public projection (address, public keys, trapdoor
 	// hash, label) lands in `globalState.wallet`. Profile metadata is mirrored
 	// to `globalState.profile` and rides with save/load via `meta.extra`.
-	router = new URLRouter(ROUTER_CONFIG);
+	// The router is provided by AppShell (created from `static routes` above).
 	// Set by `previewProfileMeta` when a password-protected profile is
 	// auto-loaded at boot: holds the un-decrypted package + its raw string
 	// so the eventual `wallet:unlock` round-trip can decrypt without a
@@ -1301,13 +1295,13 @@ class AppView extends AppShell {
 	onConnect() {
 		super.onConnect();
 		/*
-		 * The shell only needs the RESOLVED active view — page components observe
-		 * the route keys they each care about. `routeActiveView` also closes a gap
-		 * the old `routeView, routeParams, routeFilter` list had: a route that
-		 * changed only `section` or `id` left all three structurally equal, so the
-		 * observer never fired even though the active page had changed.
+		 * AppShell already reflects the active view onto the host (data-route-view)
+		 * and starts the router. AppView only needs the app-level reactions to a
+		 * view change — reset the scroll surface and refresh the wallet dashboard on
+		 * re-entry. No `immediate`: the router primed before this subscription, so
+		 * boot doesn't spuriously scroll-reset or refetch.
 		 */
-		this.observeGlobal('routeActiveView', this.syncActivePageFromGlobal);
+		this.observeStore('router', 'activeView', this.handleActiveViewChange);
 	}
 	onMount() {
 		super.onMount();
@@ -1672,25 +1666,20 @@ class AppView extends AppShell {
 		}
 		this.router.navigate(id);
 	}
-	syncActivePageFromGlobal() {
-		// The router publishes the resolved view; the fallback chain lives there.
-		const view = this.global?.routeActiveView || '';
+	handleActiveViewChange(view, previousView) {
 		if (!view) {
 			return;
 		}
-		const previousView = this.state.activePage;
-		this.state.activePage = view;
 		// A route change must land the new page at the top. The inner .shell-scroll
-		// surface is the scroller now (not the document), so reset IT. This handler
-		// only fires on a real route change, so resetting unconditionally is safe;
-		// scroll-report then publishes scrolled=false and the top bar settles flat.
+		// surface is the scroller now (not the document), so reset IT. scroll-report
+		// then publishes scrolled=false and the top bar settles flat.
 		this.refs.shellscroll?.scrollTo(0, 0);
 		/*
-		 * No page is targeted from here. Each page component observes
-		 * `routeActiveView` (plus the route keys it needs) and drives ITSELF —
-		 * they all stay mounted, so each one guards on being the active view.
-		 * The shell's only remaining route job is the wallet dashboard refresh,
-		 * which is an app-level data fetch rather than a page instruction.
+		 * No page is targeted from here. Each page component observes the router
+		 * store (activeView plus the route keys it needs) and drives ITSELF — they
+		 * all stay mounted, so each one guards on being the active view. The shell's
+		 * only remaining route job is the wallet dashboard refresh — an app-level
+		 * data fetch rather than a page instruction.
 		 */
 		if (view === 'wallet' && previousView !== 'wallet') {
 			// Entering the dashboard from elsewhere — pull a fresh account
@@ -1699,9 +1688,6 @@ class AppView extends AppShell {
 			// account-detail / transaction-detail pages.
 			this.fetchAccountForWallet();
 		}
-	}
-	onVisible() {
-		console.log('[AI MAP]\n%s', this.aiMap());
 	}
 	onDisconnect() {
 		// Hotkey entries are released by lifecycle's sweepHotkeyEntries; the
@@ -1733,14 +1719,16 @@ class AppView extends AppShell {
 		return this.getChild('global-pulldown')?.refs?.pulldown?.state?.open === true;
 	}
 	render() {
-		// Can't be css hide show for page components the router should be mounting and unmounting them based on the URL; they need to be fully removed from the DOM when not active so their lifecycle disconnects and they stop consuming resources. The router doesn't do this automatically since some pages (e.g. explorer) have nested sub-pages that share the same parent route, so we mount all page components here and let the router delegate which one is active via a wrapper class on the parent.
+		// All page components stay MOUNTED; the active one is shown by CSS keyed on
+		// the host's `data-route-view` attribute (AppShell.reflectRouteView). Each
+		// page self-guards on the router store's activeView, so an inactive page
+		// stays inert without unmounting — deliberate, since explorer sub-pages
+		// share one parent route and must not churn their subtree on a filter change.
 		this.html`
 			<global-top-bar></global-top-bar>
 			<div class="shell-scroll" #shellscroll scroll-report>
 			<div class="shell-body">
-				<div class="${() => {
-					return `shell-page is-page-${this.state.activePage}`;
-				}}">
+				<div class="shell-page">
 					<app-dashboard class="shell-page-view"></app-dashboard>
 					<mobile-dashboard class="shell-page-view"></mobile-dashboard>
 					<swap-page class="shell-page-view"></swap-page>
@@ -1754,6 +1742,7 @@ class AppView extends AppShell {
 			<global-sidebar></global-sidebar>
 			<global-bottom-bar></global-bottom-bar>
 			<global-dock></global-dock>
+			<ui-to-top></ui-to-top>
 			<global-pulldown></global-pulldown>
 			<settings-modal></settings-modal>
 			<sign-data-modal></sign-data-modal>
@@ -1785,28 +1774,16 @@ class AppView extends AppShell {
 			walletParams: dashboard?.getChild('wallet-params'),
 		};
 	}
-	async onRender() {
+	onRender() {
 		// Point the shared background scroll-lock at the inner scroll surface — overlays
 		// (modals, pulldown) must freeze IT, not the document, which no longer scrolls.
-		setScrollLockTarget(this.refs.shellscroll ?? null);
-		// Chrome-only bootstrap: wait for both dashboards to render, then start
-		// the router. Both <app-dashboard> and <mobile-dashboard> mount in
-		// parallel; await each so their subtree exists before the router
-		// publishes the route. No latency push here — <network-stats> observes
-		// `api` and self-seeds from it on connect.
-		const dashboard = this.getChild('app-dashboard');
-		const mobileDashboard = this.getChild('mobile-dashboard');
-		await dashboard.lifecycle.whenRendered;
-		if (mobileDashboard?.lifecycle?.whenRendered) {
-			await mobileDashboard.lifecycle.whenRendered;
-		}
-		// Router writes to globalState; AppView's `onConnect` already
-		// subscribed to the keys it cares about. We just kick the router off
-		// — no callback wiring needed.
-		this.router.start();
-		// Initial sync: deep-linked first paint, dock/page components mount
-		// after the router publishes, so reapply once they're alive.
-		this.syncActivePageFromGlobal();
+		// Routing is created + primed in AppShell.onConnect and started in
+		// AppShell.onMount (after all descendants mount), so nothing to bootstrap here.
+		const shellScroll = this.refs.shellscroll ?? null;
+		setScrollLockTarget(shellScroll);
+		// Shadow-DOM scroll surface is not reachable via scrollSelector; bind the
+		// element directly so ui-to-top watches/scrolls the real shell scroller.
+		this.findComponent('ui-to-top')?.setScrollTarget(shellScroll);
 	}
 }
 customElements.define('app-view', AppView);

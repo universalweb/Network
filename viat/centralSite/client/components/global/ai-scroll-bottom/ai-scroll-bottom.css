@@ -1,0 +1,33 @@
+:host {
+	display: contents;
+}
+.aisb {
+	position: absolute;
+	inset-block-end: var(--space-3);
+	inset-inline-end: var(--space-3);
+	z-index: 2;
+	opacity: 0;
+	pointer-events: none;
+	transform: translateY(0.35rem);
+	transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.aisb[data-position='static'] {
+	position: static;
+	inset: auto;
+	opacity: 1;
+	pointer-events: auto;
+	transform: none;
+}
+.aisb[data-visible] {
+	opacity: 1;
+	pointer-events: auto;
+	transform: none;
+}
+.aisb[aria-hidden='true'] {
+	visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+	.aisb {
+		transition: none;
+	}
+}

@@ -1,24 +1,6 @@
 /* Notification-center body chrome — surface/header live on <ui-slideout>. */
 
-.nc-clear {
-	appearance: none;
-	border: 0;
-	background: transparent;
-	color: var(--teal, var(--text-muted));
-	font: inherit;
-	font-size: var(--text-2xs);
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	cursor: pointer;
-	padding: var(--space-2) var(--space-3);
-	border-radius: var(--radius-sm);
-	transition: background 0.15s ease, color 0.15s ease;
-}
-
-.nc-clear:hover {
-	background: color-mix(in oklab, var(--teal, currentColor) 12%, transparent);
-}
-
+/* Clear All is a <ui-button ghost sm> in the slideout header slot. */
 .nc-clear[hidden] {
 	display: none;
 }

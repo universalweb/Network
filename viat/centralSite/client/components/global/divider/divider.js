@@ -24,7 +24,12 @@ export class UIDivider extends WebComponent {
 		variant: 'solid',
 		inset: 'none',
 		label: '',
+		// decorative — hides from the a11y tree (pure visual rule).
+		decorative: false,
 	};
+	separatorRole() {
+		return this.state.decorative ? 'none' : 'separator';
+	}
 	render() {
 		// A label only lays out on the horizontal axis; a vertical divider is always a
 		// bare rule. `?data-labeled` flips the inner layout from rule → flex-with-text.
@@ -35,8 +40,10 @@ export class UIDivider extends WebComponent {
 				data-variant=${this.state.variant}
 				data-inset=${this.state.inset}
 				?data-labeled=${labeled}
-				role="separator"
-				aria-orientation=${this.state.orientation}>
+				?data-decorative=${this.state.decorative}
+				role=${this.separatorRole}
+				aria-orientation=${this.state.orientation}
+				?aria-hidden=${this.state.decorative}>
 				<span class="divider-line" aria-hidden="true"></span>
 				<span class="divider-label">${this.state.label}</span>
 				<span class="divider-line" aria-hidden="true"></span>

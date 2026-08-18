@@ -1,0 +1,112 @@
+:host {
+	display: block;
+	min-inline-size: 0;
+	container-type: inline-size;
+	container-name: segment-strip;
+}
+
+.strip {
+	--seg-flex: 1 1 0;
+	--seg-gap: 0.85rem;
+	--seg-pad: 0.65rem 1rem;
+	--seg-icon-size: 2.65rem;
+	--seg-icon-radius: 0.75rem;
+	--seg-item-radius: 0.75rem;
+	--seg-label-size: 0.88rem;
+	--seg-value-size: 1.35rem;
+	--seg-desc-size: 0.88rem;
+	--seg-divider-inset: 0.35rem;
+	/* Vertical hairline between equal columns (default axis) */
+	--seg-div-angle: 180deg;
+	--seg-div-block-start: var(--seg-divider-inset, 0.35rem);
+	--seg-div-block-end: var(--seg-divider-inset, 0.35rem);
+	--seg-div-inline-start: auto;
+	--seg-div-inline-end: 0;
+	--seg-div-inline-size: 1px;
+	--seg-div-block-size: auto;
+
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	flex-wrap: nowrap;
+	gap: 0;
+	min-inline-size: 0;
+	padding: clamp(0.85rem, 2vw, 1.2rem) clamp(0.65rem, 1.6vw, 1rem);
+	border-radius: var(--seg-shell-radius, 1.15rem);
+	background:
+		linear-gradient(
+			145deg,
+			color-mix(in oklab, var(--bg-panel) 88%, var(--cyan) 12%) 0%,
+			color-mix(in oklab, var(--bg-panel) 96%, transparent) 55%,
+			var(--bg-panel) 100%
+		);
+	border: 1px solid color-mix(in oklab, var(--text-muted) 22%, transparent);
+	box-shadow:
+		var(--elev-2, 0 1rem 2.5rem color-mix(in oklab, #000 42%, transparent)),
+		0 0 0 1px color-mix(in oklab, #fff 4%, transparent) inset,
+		0 0 2.5rem color-mix(in oklab, var(--cyan) 8%, transparent);
+	backdrop-filter: blur(0.625rem) saturate(1.15);
+	-webkit-backdrop-filter: blur(0.625rem) saturate(1.15);
+	color: var(--text-main, inherit);
+}
+
+/* Size scale — drives child custom properties via inheritance */
+.strip[data-size='sm'] {
+	--seg-pad: 0.45rem 0.7rem;
+	--seg-gap: 0.65rem;
+	--seg-icon-size: 2.1rem;
+	--seg-icon-radius: 0.6rem;
+	--seg-item-radius: 0.6rem;
+	--seg-label-size: 0.75rem;
+	--seg-value-size: 1.1rem;
+	--seg-desc-size: 0.78rem;
+	padding: 0.65rem 0.55rem;
+	border-radius: 0.9rem;
+}
+
+.strip[data-size='lg'] {
+	--seg-pad: 0.85rem 1.15rem;
+	--seg-gap: 1rem;
+	--seg-icon-size: 3rem;
+	--seg-icon-radius: 0.85rem;
+	--seg-label-size: 0.95rem;
+	--seg-value-size: 1.55rem;
+	--seg-desc-size: 0.95rem;
+	padding: 1.15rem 1.1rem;
+	border-radius: 1.35rem;
+}
+
+/* Content-sized segments instead of equal columns */
+.strip:not([data-equal]) {
+	--seg-flex: 0 1 auto;
+	justify-content: center;
+}
+
+/* Kill inter-cell dividers (children read --seg-divider) */
+.strip[data-flat] {
+	--seg-divider: none;
+}
+
+/* Stack + horizontal rules when the host is narrow */
+@container segment-strip (max-width: 36rem) {
+	.strip {
+		flex-direction: column;
+		--seg-flex: 1 1 auto;
+		--seg-div-angle: 90deg;
+		--seg-div-block-start: auto;
+		--seg-div-block-end: 0;
+		--seg-div-inline-start: 0.75rem;
+		--seg-div-inline-end: 0.75rem;
+		--seg-div-inline-size: auto;
+		--seg-div-block-size: 1px;
+		padding: 0.85rem;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.strip {
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
+	}
+}

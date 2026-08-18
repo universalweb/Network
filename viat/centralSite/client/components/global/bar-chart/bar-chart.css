@@ -1,0 +1,64 @@
+:host {
+	container-type: inline-size;
+	display: block;
+	inline-size: 100%;
+	min-block-size: 12rem;
+	color: var(--text-main);
+}
+
+.bc {
+	--bc-series: var(--cyan, oklch(0.72 0.14 210));
+}
+
+/* Stacked partial mini-SVGs (same cell) — grid under bars under ticks. */
+.bc-svg-stack {
+	display: grid;
+	inline-size: 100%;
+	aspect-ratio: 400 / 220;
+	min-block-size: 11rem;
+	position: relative;
+}
+
+.bc-svg-stack > .bc-layer {
+	grid-area: 1 / 1;
+	inline-size: 100%;
+	block-size: 100%;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.bc-layer .bc-bar {
+	pointer-events: auto;
+}
+
+.bc-grid {
+	stroke: color-mix(in oklab, var(--border-color, currentColor) 35%, transparent);
+	stroke-width: 1;
+	vector-effect: non-scaling-stroke;
+}
+
+.bc-bar {
+	fill: var(--bc-series);
+}
+
+.bc-tick {
+	fill: var(--text-muted, var(--text-main));
+	font-size: 10px;
+}
+
+.bc-legend {
+	display: block;
+	min-inline-size: 0;
+}
+
+.bc-empty {
+	display: grid;
+	place-items: center;
+	min-block-size: 11rem;
+	color: var(--text-muted, var(--text-main));
+	font-size: var(--text-sm, 0.875rem);
+}
+
+.bc-empty[hidden] {
+	display: none !important;
+}

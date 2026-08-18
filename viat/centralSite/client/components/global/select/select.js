@@ -31,6 +31,9 @@ export class UISelect extends WebComponent {
 		// [{ value, label, disabled? }]
 		items: [],
 		disabled: false,
+		invalid: false,
+		size: 'md',
+		placeholder: '',
 	};
 	onMount() {
 		this.syncValue();
@@ -62,7 +65,21 @@ export class UISelect extends WebComponent {
 	}
 	render() {
 		// Sole-content list (no whitespace) so the spot elides onto <select>.
-		this.html`<select #control ?disabled=${this.state.disabled} @change=${this.handleChange}>${this.list('items', this.renderOption)}</select>`;
+		// Optional empty placeholder option when value is empty.
+		this.html`
+			<select #control class="sl-control"
+				data-size=${this.state.size}
+				?disabled=${this.state.disabled}
+				aria-invalid=${this.state.invalid ? 'true' : 'false'}
+				@change=${this.handleChange}>${this.placeholderOption}${this.list('items', this.renderOption)}</select>
+		`;
+	}
+	placeholderOption() {
+		const text = this.state.placeholder;
+		if (!text) {
+			return '';
+		}
+		return this.htmlElement`<option value="" ?disabled=${true} ?hidden=${Boolean(this.state.value)}>${text}</option>`;
 	}
 }
 customElements.define('ui-select', UISelect);

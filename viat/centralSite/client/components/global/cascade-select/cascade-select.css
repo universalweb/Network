@@ -1,0 +1,67 @@
+:host {
+	display: block;
+	position: relative;
+	inline-size: 100%;
+}
+.cs[data-disabled] {
+	opacity: 0.55;
+	pointer-events: none;
+}
+.cs-trigger {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	inline-size: 100%;
+	min-block-size: 2.125rem;
+	padding-block: 0.4rem;
+	padding-inline: 0.7rem;
+	border: 1px solid var(--input-border, rgba(255, 255, 255, 0.12));
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--input-bg, rgba(255, 255, 255, 0.04));
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+.cs-trigger:focus-visible {
+	outline: none;
+	border-color: var(--focus-ring-color, var(--teal));
+	box-shadow: 0 0 0 3px var(--focus-ring-glow, color-mix(in oklch, var(--teal) 25%, transparent));
+}
+.cs-value,
+.cs-placeholder {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	font-size: var(--text-sm, 0.875rem);
+}
+.cs-placeholder {
+	color: var(--text-muted);
+}
+.cs-value[hidden],
+.cs-placeholder[hidden] {
+	display: none;
+}
+.cs-icon {
+	flex: 0 0 auto;
+	opacity: 0.55;
+}
+.cs-panel {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	z-index: var(--z-dropdown, 1000);
+	display: flex;
+	align-items: stretch;
+	gap: 0.35rem;
+	padding: 0.35rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 22%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--popup-glass-bg, var(--bg-panel, var(--bg-body, #111)));
+	box-shadow: 0 12px 36px color-mix(in oklch, #000 35%, transparent);
+}
+.cs-col {
+	min-inline-size: 10rem;
+}
+.cs-col[hidden] {
+	display: none;
+}

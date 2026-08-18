@@ -1,0 +1,21 @@
+:host {
+	display: block;
+	inline-size: 100%;
+}
+.ar {
+	position: relative;
+	inline-size: 100%;
+	overflow: hidden;
+	border-radius: inherit;
+}
+.ar-inner {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: stretch;
+}
+.ar-inner > ::slotted(*) {
+	inline-size: 100%;
+	block-size: 100%;
+	object-fit: cover;
+}

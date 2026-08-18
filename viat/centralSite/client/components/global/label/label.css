@@ -1,0 +1,30 @@
+:host {
+	display: block;
+}
+.lb {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+}
+.lb[data-disabled] {
+	opacity: 0.55;
+}
+.lb-text {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.25rem;
+	font-family: var(--font-display, system-ui, sans-serif);
+	font-size: var(--text-sm, 0.875rem);
+	font-weight: 500;
+	color: var(--text-main);
+	letter-spacing: -0.01em;
+	cursor: default;
+}
+.lb-req {
+	color: var(--color-danger, oklch(0.58 0.2 25));
+}
+.lb-desc {
+	font-size: var(--text-xs, 0.75rem);
+	color: var(--text-muted);
+	line-height: 1.4;
+}

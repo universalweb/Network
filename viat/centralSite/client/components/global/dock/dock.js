@@ -1,6 +1,6 @@
 import '../bar/bar.js';
 import { movingIndicator, WebComponent } from 'webcomponent';
-import { DockIconButton } from './dockIconButton.js';
+import { DockIconButton } from '../dock-icon-button/dock-icon-button.js';
 /*
  * Width buckets (from environment/breakpoints.js) below the sm / 768px edge. A
  * dock sitting in one of these collapses from a vertical side rail to a
@@ -135,7 +135,7 @@ export class UIDock extends WebComponent {
 			return;
 		}
 		const activeIndex = this.state.activeIndex || '';
-		const activeButton = activeIndex ? this.findChild('dock-icon-button', (button) => {
+		const activeButton = activeIndex ? this.findChild('ui-dock-icon-button', (button) => {
 			return button.state.id === activeIndex;
 		}) : null;
 		this.indicator.moveTo(activeButton, snap);

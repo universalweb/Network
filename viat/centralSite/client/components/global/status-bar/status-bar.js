@@ -1,6 +1,6 @@
 import '../bar/bar.js';
 import { WebComponent } from 'webcomponent';
-import { UIStatusCell } from './status-cell.js';
+import { UIStatusCell } from '../status-cell/status-cell.js';
 // `<ui-status-bar>` — a bottom-fixed status bar. Composes `<ui-bar>`: the
 // `items` config renders as `<ui-status-cell>`s in the start region; the `end`
 // slot takes a trailing region (e.g. a connection badge). Pure chrome — no

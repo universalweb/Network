@@ -55,6 +55,21 @@
 	background: color-mix(in oklab, currentColor 22%, transparent);
 	border-color: currentColor;
 }
+/* Selected + interactive — leading check (independent of removable). */
+.chip-check {
+	display: none;
+	align-items: center;
+	inline-size: 1em;
+	block-size: 1em;
+	flex: 0 0 auto;
+}
+.chip[data-selected][data-interactive] .chip-check {
+	display: inline-flex;
+}
+.chip-check ui-icon {
+	inline-size: 1em;
+	block-size: 1em;
+}
 /* ── Leading slot (avatar/icon) ──────────────────────────────────────────── */
 .chip-leading {
 	display: none;

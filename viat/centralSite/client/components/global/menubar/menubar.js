@@ -27,14 +27,16 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import { html } from 'webcomponent';
-import { computeAnchor } from '../../core/dom/anchor.js';
+import { HideOnScroll } from '../../core/dom/hideOnScroll.js';
 import { UIMenu } from '../menu/menu.js';
-import { UIMenuItem } from '../menu/menu-item.js';
+import { UIMenuItem } from '../menu-item/menu-item.js';
 export class UIMenubar extends UIMenu {
 	static url = import.meta.url;
 	// Reuse the dropdown panel + item styles; menubar.css only adds the trigger strip.
 	static styles = {
-		menu: '../menu/menu.css',
+		// Drop UIMenu's menu.css (:host + .menu-trigger) — we only need the panel.
+		menu: null,
+		menuSurface: '../menu/menu-surface.css',
 		menubar: './menubar.css',
 	};
 	static state = {
@@ -43,6 +45,8 @@ export class UIMenubar extends UIMenu {
 		side: 'bottom',
 		align: 'start',
 		offset: 4,
+		// Close the open panel when the page (or any ancestor) scrolls.
+		closeOnScroll: true,
 	};
 	// Which top-level menu's panel is open (-1 = none). NOT reactive — switching
 	// menus drives the panel via the `items` swap, not a re-render of this field.
@@ -59,6 +63,25 @@ export class UIMenubar extends UIMenu {
 		super.onConnect?.();
 		this.observe('menus', this.stampMenuIndexes);
 		this.stampMenuIndexes();
+		// Shared core util — autohide open menu when the page scrolls.
+		this.scrollHide ??= new HideOnScroll(this, 'closeFromScroll', {
+			keepOpen: () => {
+				return this.refs.surface;
+			},
+		});
+	}
+	onDisconnect() {
+		this.scrollHide?.detach();
+		super.onDisconnect?.();
+	}
+	closeFromScroll() {
+		if (this.state.closeOnScroll === false) {
+			return;
+		}
+		if (this.openMenu < 0) {
+			return;
+		}
+		this.refs.surface?.hidePopover();
 	}
 	/* Stamp menuIndex onto each top-level menu so light rows can bind data-menu. */
 	stampMenuIndexes() {
@@ -230,7 +253,11 @@ export class UIMenubar extends UIMenu {
 			if (this.keyboardOpen) {
 				this.focusFirst();
 			}
+			if (this.state.closeOnScroll !== false) {
+				this.scrollHide?.attach();
+			}
 		} else {
+			this.scrollHide?.detach();
 			surface.classList.remove('is-open');
 			const closing = this.openMenu;
 			this.openMenu = -1;
@@ -241,22 +268,9 @@ export class UIMenubar extends UIMenu {
 			}
 		}
 	}
-	position() {
-		const surface = this.refs.surface;
-		const trigger = this.triggerButton(this.openMenu);
-		if (!surface || !trigger) {
-			return;
-		}
-		const placed = computeAnchor(trigger.getBoundingClientRect(), {
-			width: surface.offsetWidth,
-			height: surface.offsetHeight,
-		}, {
-			placement: `${this.state.side}-${this.state.align}`,
-			offset: Number(this.state.offset) || 4,
-		});
-		surface.style.top = `${placed.top}px`;
-		surface.style.left = `${placed.left}px`;
-		surface.dataset.placement = placed.placement;
+	/* Anchor under the open menubar trigger (not the inherited #trigger). */
+	anchorElement() {
+		return this.triggerButton(this.openMenu);
 	}
 	// Adds the top-level menu index to the inherited select payload.
 	selectIndex(index) {

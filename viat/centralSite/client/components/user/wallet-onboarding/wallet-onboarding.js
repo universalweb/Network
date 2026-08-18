@@ -1,12 +1,15 @@
 import '../../global/modal/modal.js';
 import '../../global/whitebox-modal/whitebox-modal.js';
-import { WebComponent } from 'webcomponent';
+import { routerStore, WebComponent } from 'webcomponent';
 // Routes where a wallet is required to actually use the page. On every other
 // route (explorer, transaction detail, account detail, etc.) we leave the
 // modal closed so people can read/browse without being interrupted.
 const WALLET_REQUIRED_ROUTES = new Set(['wallet', 'swap']);
 export class WalletOnboarding extends WebComponent {
 	static url = import.meta.url;
+	static stores = {
+		router: routerStore,
+	};
 	static styles = {
 		walletOnboarding: './wallet-onboarding.css',
 	};
@@ -44,9 +47,7 @@ export class WalletOnboarding extends WebComponent {
 		}
 		this.state.modal.autoFocus = this.createWalletFocus;
 		this.delegate('wallet:state', this.handleWalletState);
-		this.observeGlobal('routeId', (next) => {
-			this.handleRouteChange(next);
-		});
+		this.observeStore('router', 'id', this.handleRouteChange);
 		// Wait for the boot screen to fully tear itself down before we ever
 		// auto-surface the create-wallet modal — otherwise the modal pops in
 		// over the splash and the user sees both at once.
@@ -58,7 +59,7 @@ export class WalletOnboarding extends WebComponent {
 		this.evaluateVisibility();
 	}
 	currentRouteId() {
-		return this.global.routeId || '';
+		return this.stores.router.id || '';
 	}
 	requiredForRoute(routeId = this.currentRouteId()) {
 		return WALLET_REQUIRED_ROUTES.has(routeId);

@@ -1,0 +1,29 @@
+/* Host participates as the row — no nested <tr>. */
+:host {
+	display: table-row;
+	cursor: default;
+	color: var(--text-main);
+}
+:host(:hover) {
+	background: color-mix(in oklch, var(--bg-panel) 55%, transparent);
+}
+/* Promote cells into the host row box. */
+.tb-row {
+	display: contents;
+}
+.tb-td {
+	display: table-cell;
+	/* Inherit density pad from parent .tb (custom props pierce shadow). */
+	padding-block: var(--tb-cell-pad-block, 0.65rem);
+	padding-inline: var(--tb-cell-pad-inline, 0.85rem);
+	text-align: start;
+	vertical-align: middle;
+	border-block-end: 1px solid color-mix(in oklch, var(--text-muted) 12%, transparent);
+	color: inherit;
+}
+.tb-td[data-align='end'] {
+	text-align: end;
+}
+.tb-td[data-align='center'] {
+	text-align: center;
+}

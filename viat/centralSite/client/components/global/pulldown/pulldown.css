@@ -2,16 +2,21 @@
 	/* Interactive control chrome — never paint a text selection on a click or drag. */
 	user-select: none;
 	-webkit-user-select: none;
-	display: contents;
+	/* Overlay host — same box model as ui-slideout, so frost is a real hit target. */
+	display: block;
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-floating);
+	pointer-events: none;
+}
+:host([data-open]) {
+	pointer-events: auto;
 }
 .pulldown-drawer {
-	position: fixed;
-	inset-block-start: 0;
-	inset-inline-start: 0;
-	inset-inline-end: 0;
+	position: absolute;
+	inset: 0;
 	height: 100svh;
 	overflow: hidden;
-	z-index: 90;
 	pointer-events: none;
 	display: none;
 	transform: translateY(-100%);
@@ -73,9 +78,20 @@
 :host([data-handle='none']) .pulldown-handle {
 	display: none;
 }
+/* Event surface behind slotted columns — click + drag/flick close. */
+.pulldown-backdrop {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: auto;
+}
 .pulldown-content {
+	position: relative;
+	z-index: 1;
+	pointer-events: none;
 	height: 100%;
 	width: 100%;
+	/* Slotted roots stay interactive; empty frost falls through to #backdrop. */
 	overflow: hidden;
 	/* Always reserve the scrollbar gutter. The content is `overflow: hidden` at
 	   rest and flips to `overflow: auto` only while `.is-fully-open`; without a

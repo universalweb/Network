@@ -21,6 +21,10 @@ export class UIButton extends WebComponent {
 		disabled: false,
 		loading: false,
 		fullwidth: false,
+		// True disc — equal hit box + full radius. Icon-only FABs / speed-dial /
+		// to-top set this; consumers must NOT fake it with --ui-btn-radius alone
+		// (that yields a pill when width ≠ height after size padding).
+		circle: false,
 		// Tooltip text — pass via `.tooltip` / `.state` (NOT a bare `tooltip=`
 		// attribute). The global `tooltip=` behavior attaches to whatever element
 		// carries it; a bare attribute lands on the HOST, but the inner <button> is
@@ -30,6 +34,15 @@ export class UIButton extends WebComponent {
 		// property — a `title=`/`.title=` binding sets the OS tooltip and never reaches
 		// state, leaving this one empty; that's the trap this key name avoids.)
 		tooltip: '',
+		// Native Popover API invoker — must land on the real <button>, not a CE host
+		// (light-dismiss + toggle race). Empty = attribute omitted.
+		popoverTarget: '',
+		// Optional expanded mirror for menu invokers (string 'true'|'false'|'').
+		expanded: '',
+		hasPopup: '',
+		// When set, render a real <a data-variant> (⌘-click / middle-click work).
+		href: '',
+		target: '',
 	};
 	constructor(state = {}, config = {}) {
 		super(state, {
@@ -68,31 +81,71 @@ export class UIButton extends WebComponent {
 			domEvent.stopImmediatePropagation();
 			return;
 		}
-		this.emit('button:click', {});
+		this.emit('button:click', {
+			href: this.state.href || undefined,
+		});
+	}
+	controlClass() {
+		return classList(
+			() => {
+				return this.state.disabled && 'is-disabled';
+			},
+			() => {
+				return this.state.loading && 'is-loading';
+			},
+			() => {
+				return this.state.fullwidth && 'is-full';
+			},
+			() => {
+				return !this.state.label && 'is-icon-only';
+			},
+			() => {
+				return this.state.circle && 'is-circle';
+			}
+		);
 	}
 	render() {
+		const variant = this.state.variant || 'solid';
+		const tone = this.state.tone || 'neutral';
+		const size = this.state.size || 'md';
+		const label = this.state.tooltip || this.state.label;
+		// Real anchor when href is set — native ⌘-click / middle-click / status URL.
+		if (this.state.href) {
+			this.html`
+				<a
+					data-variant=${variant}
+					data-tone=${tone}
+					data-size=${size}
+					class=${this.controlClass}
+					href=${this.state.href}
+					target=${this.state.target || undefined}
+					rel=${this.state.target === '_blank' ? 'noopener noreferrer' : undefined}
+					aria-disabled=${this.state.disabled || this.state.loading ? 'true' : 'false'}
+					aria-label=${label}
+					tooltip=${this.state.tooltip}
+					@click=${this.handleClick}>
+					${this.renderLead}
+					<slot name="lead"></slot>
+					${this.renderLabel}
+					<slot></slot>
+					${this.renderTrail}
+					<slot name="trail"></slot>
+				</a>
+			`;
+			return;
+		}
 		this.html`
 			<button
-				data-variant=${this.state.variant || 'solid'}
-				data-tone=${this.state.tone || 'neutral'}
-				data-size=${this.state.size || 'md'}
-				class=${classList(
-					() => {
-						return this.state.disabled && 'is-disabled';
-					},
-					() => {
-						return this.state.loading && 'is-loading';
-					},
-					() => {
-						return this.state.fullwidth && 'is-full';
-					},
-					() => {
-						return !this.state.label && 'is-icon-only';
-					}
-				)}
+				data-variant=${variant}
+				data-tone=${tone}
+				data-size=${size}
+				class=${this.controlClass}
 				?disabled=${this.state.disabled || this.state.loading}
-				aria-label=${this.state.tooltip || this.state.label}
+				aria-label=${label}
 				tooltip=${this.state.tooltip}
+				popovertarget=${this.state.popoverTarget || undefined}
+				aria-expanded=${this.state.expanded || undefined}
+				aria-haspopup=${this.state.hasPopup || undefined}
 				@click=${this.handleClick}>
 				${this.renderLead}
 				<slot name="lead"></slot>

@@ -1,0 +1,106 @@
+:host {
+	display: block;
+}
+.tr {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	min-inline-size: 0;
+}
+.tr[data-disabled] {
+	opacity: 0.55;
+	pointer-events: none;
+}
+.tr-search {
+	inline-size: 100%;
+	min-block-size: 2.125rem;
+	padding-inline: 0.7rem;
+	border: 1px solid var(--input-border, color-mix(in oklch, var(--text-muted) 28%, transparent));
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--input-bg, color-mix(in oklch, currentColor 4%, transparent));
+	color: inherit;
+	font: inherit;
+}
+.tr-search:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 2px;
+}
+.tr-tree {
+	display: flex;
+	flex-direction: column;
+	min-inline-size: 0;
+	padding: 0.2rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--bg-panel, transparent);
+}
+.tr-empty {
+	padding: 0.65rem 0.75rem;
+	color: var(--text-muted);
+	font-size: 0.8125rem;
+}
+.tn {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	min-block-size: 1.85rem;
+	padding-block: 0.15rem;
+	padding-inline: calc(0.35rem + (var(--depth, 0) * 1.05rem)) 0.5rem;
+	border-radius: var(--radius-sm, 0.25rem);
+	cursor: pointer;
+	color: var(--text-main, inherit);
+}
+.tn:hover {
+	background: color-mix(in oklch, currentColor 7%, transparent);
+}
+.tn[data-selected] {
+	background: color-mix(in oklch, var(--teal, var(--cyan, oklch(0.75 0.12 195))) 18%, transparent);
+}
+.tn[data-focused] {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: -2px;
+}
+.tn[data-disabled] {
+	opacity: 0.45;
+	pointer-events: none;
+}
+.tn-caret {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.15rem;
+	block-size: 1.15rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	border-radius: var(--radius-sm, 0.25rem);
+}
+.tn-caret:disabled {
+	visibility: hidden;
+	cursor: default;
+}
+.tn-caret:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 1px;
+}
+.tn-icon {
+	flex: none;
+	color: var(--text-muted);
+}
+.tn-label {
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+	line-height: 1.35;
+}
+@media (prefers-reduced-motion: reduce) {
+	.tn {
+		transition: none;
+	}
+}

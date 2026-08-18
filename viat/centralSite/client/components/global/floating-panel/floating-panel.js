@@ -4,8 +4,8 @@ import { MorphSurface } from '../morph-surface/morph-surface.js';
 // shrinks back into it. All morph/dismiss/anchor machinery lives in `MorphSurface`;
 // this only supplies the trigger + panel markup and inherits the base's "anchor under
 // the trigger" positioning + default spring. The overlay stays in THIS shadow (NOT a
-// `<portal>` — that would orphan the panel's <slot>); `position: fixed` already
-// escapes ancestor overflow. The container springs while header/body/footer stagger
+// `<portal>` — that would orphan the panel's <slot>) and uses `popover="manual"`
+// so the native top-layer escapes ancestor overflow. The container springs while header/body/footer stagger
 // in over it (CSS) — cult-ui's container-vs-content decomposition.
 //
 // Usage:
@@ -39,7 +39,7 @@ export class UIFloatingPanel extends MorphSurface {
 				@click=${this.handleTriggerClick}>
 				<slot name="trigger">${this.state.label}</slot>
 			</button>
-			<div class="fp-overlay" #overlay>
+			<div class="fp-overlay" #overlay popover="manual">
 				<div class="fp-backdrop" @click=${this.handleBackdropClick}></div>
 				<div class="fp-panel" #surface role="dialog" aria-label=${this.state.heading}>
 					<header class="fp-head">

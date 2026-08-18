@@ -8,7 +8,7 @@
 }
 .fab {
 	position: fixed;
-	z-index: var(--z-fab, 50);
+	z-index: var(--z-fab);
 }
 .fab[data-position='static'] {
 	position: static;
@@ -18,16 +18,18 @@
 .fab[data-position='bottom-start'] { inset-block-end: 1.5rem; inset-inline-start: 1.5rem; }
 .fab[data-position='top-end'] { inset-block-start: 1.5rem; inset-inline-end: 1.5rem; }
 .fab[data-position='top-start'] { inset-block-start: 1.5rem; inset-inline-start: 1.5rem; }
-/* `--ui-btn-radius` pierces into ui-button's shadow → the inner <button> goes
-   pill/circular; the matching host radius keeps the elevation shadow rounded. */
+/* Disc comes from ui-button `.state.circle` (is-circle). Extended = pill: radius
+   only (width follows label). Host radius matches so elevation stays rounded. */
 .fab-btn {
-	--ui-btn-radius: 999px;
 	border-radius: 999px;
 	box-shadow: var(--elev-3, 0 14px 36px rgba(0, 0, 0, 0.38));
 	transition:
 		transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1),
 		box-shadow 0.16s ease;
 	will-change: transform;
+}
+.fab[data-extended] .fab-btn {
+	--ui-btn-radius: 999px;
 }
 .fab-btn:hover {
 	transform: translateY(-2px) scale(1.03);

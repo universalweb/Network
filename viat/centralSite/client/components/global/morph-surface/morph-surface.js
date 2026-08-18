@@ -1,4 +1,5 @@
 import { computeAnchor, flipMorph, WebComponent } from 'webcomponent';
+import { HideOnScroll } from '../../core/dom/hideOnScroll.js';
 // `MorphSurface` — shared base for the cult-ui-style "expand outward" surfaces
 // (floating-panel, popover, expandable-card, morph-drawer). It owns the open/close
 // lifecycle, the FLIP morph (via the shared `flipMorph` helper), trigger-relative
@@ -9,8 +10,10 @@ import { computeAnchor, flipMorph, WebComponent } from 'webcomponent';
 //
 // CONTRACT — the subclass template MUST expose these refs:
 //   #trigger  the box the surface grows OUT of (default `fromRect()` source)
-//   #overlay  a `position: fixed` viewport layer (NOT portaled — a `<portal>` would
-//             orphan the surface's <slot>; fixed already escapes ancestor overflow)
+//   #overlay  a `position: fixed` viewport layer. Put `popover="manual"` on it so
+//             the native top-layer escapes ancestor overflow / content-visibility
+//             / transform containing blocks. Do NOT `<portal>` — that orphans
+//             the surface's <slot>. `position: fixed` alone does NOT escape.
 //   #surface  the morphing surface element (the flipMorph target)
 // and read the shared anchor vars in its CSS:
 //   inset-block-start: calc(var(--ms-anchor-top, 0px) + <gap>);
@@ -52,9 +55,44 @@ export class MorphSurface extends WebComponent {
 		this.delegate('viewport:resize', this.handleViewportChange);
 	}
 	onDisconnect() {
+		this.scrollHide?.detach();
 		this.unbindDismiss();
 		this.morphAnim?.cancel();
 		this.morphAnim = null;
+	}
+	ensureScrollHide() {
+		this.scrollHide ??= new HideOnScroll(this, 'closeFromScroll', {
+			keepOpen: () => {
+				return this.refs.surface;
+			},
+		});
+		return this.scrollHide;
+	}
+	closeFromScroll() {
+		if (this.state.open) {
+			this.runClose();
+		}
+	}
+	showOverlayPopover() {
+		const overlay = this.refs.overlay;
+		if (!overlay || !overlay.hasAttribute('popover')) {
+			return;
+		}
+		if (typeof overlay.showPopover !== 'function') {
+			return;
+		}
+		if (!overlay.matches(':popover-open')) {
+			overlay.showPopover();
+		}
+	}
+	hideOverlayPopover() {
+		const overlay = this.refs.overlay;
+		if (!overlay || typeof overlay.hidePopover !== 'function') {
+			return;
+		}
+		if (overlay.matches(':popover-open')) {
+			overlay.hidePopover();
+		}
 	}
 	// Gap between trigger and surface, in px. Lives in JS (not CSS) so the flip math
 	// can place it on the trigger-FACING edge — a flipped-up surface needs the gap
@@ -102,18 +140,21 @@ export class MorphSurface extends WebComponent {
 		// frame: no flash.
 		this.morphAnim?.cancel();
 		overlay.setAttribute('data-open', '');
+		this.showOverlayPopover();
 		this.positionSurface();
 		this.morphAnim = flipMorph(surface, this.fromRect(), {
 			duration: this.openDuration(),
 			easing: this.springEasing(),
 		});
 		this.bindDismiss();
+		this.ensureScrollHide().attach();
 	}
 	runClose() {
 		if (!this.state.open) {
 			return;
 		}
 		this.state.open = false;
+		this.scrollHide?.detach();
 		this.unbindDismiss();
 		const surface = this.refs.surface;
 		if (!surface) {
@@ -131,6 +172,7 @@ export class MorphSurface extends WebComponent {
 		anim.finished.then(() => {
 			if (this.morphAnim === anim && !this.state.open) {
 				this.refs.overlay?.removeAttribute('data-open');
+				this.hideOverlayPopover();
 			}
 		}).catch(() => {});
 	}

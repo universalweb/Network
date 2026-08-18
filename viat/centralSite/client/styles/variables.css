@@ -208,7 +208,7 @@
 			var(--teal), var(--teal) 2px,
 			transparent 2px, transparent 5px);
 
-	/* ── Popups (tooltip + notification) ─────────────── */
+	/* ── Popups (menu / nav / tooltip surfaces) ───────── */
 	--popup-bg: rgba(255, 255, 255, 0.96);
 	--popup-bg-hover: rgba(248, 250, 253, 0.98);
 	--popup-border: rgba(10, 17, 40, 0.15);
@@ -219,6 +219,12 @@
 		0 0 0 1px rgba(10, 17, 40, 0.08),
 		inset 0 1px 0 rgba(255, 255, 255, 0.8);
 	--popup-text: var(--text-main);
+	/* Frosted glass for transient dropdowns (menu / nav / tooltip / select
+	   picker). Kept SEPARATE from --popup-bg so solid surfaces (modals, cards)
+	   stay fully readable; glass is more translucent + blurred. Themes may
+	   deepen --popup-glass-bg; defaults glass over content behind. */
+	--popup-glass-bg: rgba(255, 255, 255, 0.78);
+	--popup-glass-blur: blur(0.625rem) saturate(1.25);
 
 	/* ── Spacing scale (structural, rem) ─────────────────
 	   rem (not px) so every gap scales with the fluid root
@@ -280,15 +286,82 @@
 	--shadow-3: 0 4px 8px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08);
 	--shadow-4: 0 8px 16px rgba(0, 0, 0, 0.14), 0 4px 8px rgba(0, 0, 0, 0.10);
 	--shadow-5: 0 16px 32px rgba(0, 0, 0, 0.18), 0 8px 16px rgba(0, 0, 0, 0.12);
+	/* Soft modern drops (layered ambient + contact) */
+	--shadow-soft-sm:
+		0 1px 2px rgba(0, 0, 0, 0.04),
+		0 2px 8px rgba(0, 0, 0, 0.06);
+	--shadow-soft-md:
+		0 2px 4px rgba(0, 0, 0, 0.04),
+		0 8px 24px rgba(0, 0, 0, 0.08);
+	--shadow-soft-lg:
+		0 4px 8px rgba(0, 0, 0, 0.05),
+		0 16px 40px rgba(0, 0, 0, 0.12);
+	/* Floating / popup depth */
+	--shadow-float:
+		0 8px 16px -4px rgba(0, 0, 0, 0.12),
+		0 20px 48px -8px rgba(0, 0, 0, 0.18);
+	--shadow-popup:
+		0 0 0 1px rgba(0, 0, 0, 0.04),
+		0 12px 32px rgba(0, 0, 0, 0.16),
+		0 4px 8px rgba(0, 0, 0, 0.06);
+	/* Directional edge lifts */
+	--shadow-up: 0 -6px 16px -4px rgba(0, 0, 0, 0.12);
+	--shadow-down: 0 6px 16px -4px rgba(0, 0, 0, 0.12);
+	--shadow-left: -6px 0 16px -4px rgba(0, 0, 0, 0.12);
+	--shadow-right: 6px 0 16px -4px rgba(0, 0, 0, 0.12);
+	/* Inset wells */
+	--shadow-inset-sm: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+	--shadow-inset-md: inset 0 2px 6px rgba(0, 0, 0, 0.12);
+	/* Focus / glow rings (pair with theme accent) */
+	--shadow-ring:
+		0 0 0 2px var(--bg-body, #fff),
+		0 0 0 4px var(--focus-ring-color, var(--teal, #2dd4bf));
+	--shadow-glow-sm: 0 0 12px color-mix(in oklab, var(--teal, #2dd4bf) 35%, transparent);
+	--shadow-glow-md: 0 0 24px color-mix(in oklab, var(--teal, #2dd4bf) 40%, transparent);
+	/* Text shadows */
+	--text-shadow-0: none;
+	--text-shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.18);
+	--text-shadow-md: 0 1px 2px rgba(0, 0, 0, 0.22), 0 2px 8px rgba(0, 0, 0, 0.12);
+	--text-shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.28), 0 6px 16px rgba(0, 0, 0, 0.16);
+	--text-shadow-soft: 0 1px 12px rgba(0, 0, 0, 0.2);
+	--text-shadow-outline:
+		0 0 1px rgba(0, 0, 0, 0.55),
+		0 1px 2px rgba(0, 0, 0, 0.35);
+	--text-shadow-glow: 0 0 12px color-mix(in oklab, var(--teal, #2dd4bf) 55%, transparent);
 
-	/* ── z-index scale (structural) ──────────────────── */
+	/* ── z-index scale (structural) ────────────────────
+	   Canonical doc: components/core/styles/z-index.md
+	   Global / overlay layers MUST use these tokens — never invent bare
+	   integers for fixed/sticky chrome. Local stacking inside a single
+	   component (badge over avatar, chart tip over series) may use 1–9.
+
+	   Order low → high:
+	     base → raised → sticky-local → dock → fab → dropdown → sticky
+	     → floating → modal → popover → tooltip → toast → max
+
+	   Notes:
+	   - Native `popover` / top-layer UI skips z-index (above everything).
+	   - `--z-sticky-local` = sticky INSIDE a scrollport (section heads, table
+	     thead). Keep it in the 1–9 local band so it cannot paint over sibling
+	     columns (nav rails) or app chrome. Parent scroller should use
+	     `isolation: isolate` when it coexists with a side rail.
+	   - `--z-sticky` = viewport-fixed/sticky APP chrome only (app-bar).
+	   - FAB sits BELOW app sticky chrome so a fixed dial never covers it.
+	   - `--z-floating` is for in-tree fixed morph overlays (panel/drawer/
+	     expandable-card) that are NOT top-layer popovers. */
 	--z-base: 0;
+	--z-raised: 10;
+	--z-sticky-local: 5;
+	--z-dock: 100;
+	--z-fab: 200;
 	--z-dropdown: 1000;
 	--z-sticky: 1100;
+	--z-floating: 1200;
 	--z-modal: 1300;
 	--z-popover: 1400;
 	--z-tooltip: 1500;
 	--z-toast: 1600;
+	--z-max: 10000;
 
 	/* ── Transition scale (structural) ───────────────── */
 	--transition-fast: 0.12s ease;

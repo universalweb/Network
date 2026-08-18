@@ -175,6 +175,8 @@
   /* ── Popups ──────────────────────────────────────── */
   --popup-bg: #131315;
   --popup-bg-hover: #18181a;
+  --popup-glass-bg: rgba(19, 19, 21, 0.82);
+  --popup-glass-blur: blur(0.625rem) saturate(1.25);
   --popup-border: rgba(232, 230, 223, 0.14);
   --popup-border-hover: rgba(53, 224, 161, 0.34);
   --popup-accent: var(--teal);

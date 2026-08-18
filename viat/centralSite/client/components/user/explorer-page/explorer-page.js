@@ -1,7 +1,7 @@
 import '../../global/icon/icon.js';
 import AppView from '../../../modules/app.js';
-import { html, WebComponent } from '../../core/index.js';
-import { COLLECTION_EVENT } from '../../global/ui-collection/ui-collection.js';
+import { html, routerStore, WebComponent } from '../../core/index.js';
+import { COLLECTION_EVENT } from '../../global/collection/collection.js';
 const PAGE_SIZE = 20;
 const ROW_STYLES = new URL('./explorer-rows.css', import.meta.url).href;
 const FILTERS = [
@@ -91,13 +91,30 @@ function pageHrefFor(filterId, page) {
 	}
 	return `${filter.basePath}page/${page}/`;
 }
+function pageFromParams(params) {
+	const raw = Number(params?.page);
+	return Number.isFinite(raw) && raw >= 1 ? raw : 1;
+}
+function pageFromLoadOptions(_reset, cursor) {
+	if (cursor != null && cursor !== '') {
+		const page = Number(cursor);
+		if (Number.isFinite(page) && page >= 1) {
+			return page;
+		}
+	}
+	return 1;
+}
 export class ExplorerPage extends WebComponent {
 	static url = import.meta.url;
+	static stores = {
+		router: routerStore,
+	};
 	static styles = {
 		explorer: './explorer-page.css',
 	};
 	static state = {
 		filter: 'all',
+		startPage: 1,
 		rowStyles: ROW_STYLES,
 		filterItems: filtersAsItems('all'),
 	};
@@ -105,19 +122,21 @@ export class ExplorerPage extends WebComponent {
 		this.observe('filter', this.syncFilterItems);
 		this.syncFilterItems();
 		/* Route-driven, not pushed. Pages stay MOUNTED (the shell hides inactive
-		   ones with CSS), so the routeActiveView guard keeps this page inert
-		   while another one is showing. */
-		this.observeGlobal([
-			'routeActiveView',
-			'routeFilter',
+		   ones with CSS), so the router store's activeView guard keeps this page
+		   inert while another one is showing. */
+		this.observeStore('router', [
+			'activeView',
+			'filter',
+			'params',
 		], this.handleRoute);
 		this.handleRoute();
 	}
 	handleRoute() {
-		if (this.global.routeActiveView !== 'explorer') {
+		if (this.stores.router.activeView !== 'explorer') {
 			return;
 		}
-		this.setView(this.global.routeFilter || 'all');
+		this.setView(this.stores.router.filter || 'all');
+		this.setPage(pageFromParams(this.stores.router.params));
 	}
 	syncFilterItems() {
 		this.state.filterItems = filtersAsItems(this.state.filter);
@@ -135,6 +154,8 @@ export class ExplorerPage extends WebComponent {
 		pageHref: (page) => {
 			return pageHrefFor(this.state.filter, page);
 		},
+		/* Visible-page URL: scroll up rewrites /page/N/ down, not only peak load. */
+		pageSize: PAGE_SIZE,
 		itemNoun: 'transactions',
 		emptyMessage: 'No transactions yet.',
 		loadingMessage: 'Loading recent transactions…',
@@ -149,12 +170,22 @@ export class ExplorerPage extends WebComponent {
 			return;
 		}
 		this.state.filter = normalized;
+		// New filter restarts at page 1; route page is reapplied by setPage after.
+		this.state.startPage = 1;
 		this.emit(COLLECTION_EVENT.REFRESH);
+	}
+	setPage(page) {
+		const target = Number.isFinite(page) && page >= 1 ? page : 1;
+		if (target === this.state.startPage) {
+			return;
+		}
+		this.state.startPage = target;
+		this.emit(COLLECTION_EVENT.GO_TO_PAGE, target);
 	}
 	async loadTransactions({
 		reset, cursor,
 	}) {
-		const page = reset ? 1 : (cursor ?? 1);
+		const page = pageFromLoadOptions(reset, cursor);
 		const filter = this.state.filter;
 		const sdk = await AppView.ensureSDK();
 		if (!sdk) {
@@ -229,6 +260,7 @@ export class ExplorerPage extends WebComponent {
 				</header>
 				<ui-collection
 					.state=${this.listConfig}
+					.state.startPage=${this.state.startPage}
 					.importStyles=${this.state.rowStyles}
 					#list>
 					<div slot="controls" class="ex-filters">${this.list('filterItems', this.filterRow, this.filterKey)}</div>

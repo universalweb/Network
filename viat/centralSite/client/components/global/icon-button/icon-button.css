@@ -5,10 +5,22 @@
 	display: inline-flex;
 	flex: 0 0 auto;
 	box-sizing: border-box;
+	/* Nested solid buttons: glyph tracks button text, never standalone hover white. */
+	--icon-color-hover: currentColor;
+	--icon-color-active: currentColor;
 }
 :host(:hover) {
 	--ui-icon-anim-state: ;
 }
 ui-icon {
 	pointer-events: none;
+	color: currentColor;
+	/* Split / speed-dial open spin — same --ui-btn-icon-rotate token as ui-button. */
+	transform: rotate(var(--ui-btn-icon-rotate, 0deg));
+	transition: transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1), color 0.15s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+	ui-icon {
+		transition: none;
+	}
 }

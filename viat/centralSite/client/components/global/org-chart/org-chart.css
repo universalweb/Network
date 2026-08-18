@@ -1,0 +1,100 @@
+:host {
+	display: block;
+}
+.oc {
+	display: flex;
+	justify-content: center;
+	overflow: auto;
+	padding: 0.5rem;
+}
+.oc-node {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-inline-size: 0;
+}
+.oc-card {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.45rem;
+	min-inline-size: 9rem;
+	max-inline-size: 14rem;
+	padding: 0.65rem 0.75rem;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 20%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--bg-panel, color-mix(in oklch, currentColor 4%, transparent));
+	box-shadow: var(--shadow-soft-sm, none);
+	cursor: pointer;
+}
+.oc-card:hover {
+	border-color: color-mix(in oklch, var(--teal, var(--cyan, oklch(0.75 0.12 195))) 40%, transparent);
+}
+.oc-node[data-selected] .oc-card {
+	border-color: var(--teal, var(--cyan, oklch(0.75 0.12 195)));
+	background: color-mix(in oklch, var(--teal, var(--cyan, oklch(0.75 0.12 195))) 12%, transparent);
+}
+.oc-card:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal, var(--cyan)));
+	outline-offset: 2px;
+}
+.oc-toggle {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.25rem;
+	block-size: 1.25rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--text-muted);
+	cursor: pointer;
+}
+.oc-icon {
+	flex: none;
+	color: var(--text-muted);
+}
+.oc-copy {
+	min-inline-size: 0;
+}
+.oc-name {
+	font-weight: 600;
+	line-height: 1.3;
+}
+.oc-author {
+	color: var(--text-muted);
+	font-size: 0.75rem;
+}
+.oc-desc {
+	margin-block-start: 0.2rem;
+	color: var(--text-muted);
+	font-size: 0.75rem;
+}
+.oc-kids {
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 1.1rem 1.35rem;
+	position: relative;
+	padding-block-start: 1.35rem;
+}
+.oc-kids::before {
+	content: '';
+	position: absolute;
+	inset-inline-start: 50%;
+	inset-block-start: 0;
+	block-size: 1.35rem;
+	border-inline-start: 1px solid color-mix(in oklch, var(--text-muted) 35%, transparent);
+}
+.oc-kids > :not(:only-child) {
+	position: relative;
+}
+.oc-kids > :not(:only-child)::before {
+	content: '';
+	position: absolute;
+	inset-inline-start: 50%;
+	inset-block-start: -1.35rem;
+	block-size: 1.35rem;
+	border-inline-start: 1px solid color-mix(in oklch, var(--text-muted) 35%, transparent);
+}

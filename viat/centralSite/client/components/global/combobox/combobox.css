@@ -1,0 +1,56 @@
+:host {
+	display: block;
+	position: relative;
+	inline-size: 100%;
+}
+.cb-control {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding-inline: 0.7rem;
+	min-block-size: 2.125rem;
+	border: 1px solid var(--input-border, rgba(255,255,255,0.12));
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--input-bg, rgba(255,255,255,0.04));
+}
+.cb-control:focus-within {
+	border-color: var(--focus-ring-color, var(--teal));
+	box-shadow: 0 0 0 3px var(--focus-ring-glow, color-mix(in oklch, var(--teal) 25%, transparent));
+}
+.cb[data-disabled] {
+	opacity: 0.55;
+	pointer-events: none;
+}
+.cb-input {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+	outline: 0;
+	color: inherit;
+	font: inherit;
+	padding-block: 0.45rem;
+}
+.cb-icon {
+	opacity: 0.55;
+	flex: 0 0 auto;
+}
+.cb-list {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	z-index: var(--z-dropdown, 1000);
+	max-block-size: 14rem;
+	overflow: auto;
+	padding: 0.3rem;
+	border-radius: var(--radius-md, 0.5rem);
+	border: 1px solid color-mix(in oklch, var(--text-muted) 22%, transparent);
+	background: var(--popup-glass-bg, var(--bg-panel, var(--bg-body, #111)));
+	box-shadow: 0 12px 36px color-mix(in oklch, #000 35%, transparent);
+}
+.cb-empty {
+	padding: 0.6rem 0.65rem;
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+}

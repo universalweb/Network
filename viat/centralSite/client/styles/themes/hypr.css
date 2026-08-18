@@ -180,6 +180,8 @@
   /* ── Popups (tooltip + notification) ─────────────── */
   --popup-bg: rgba(8, 10, 16, 0.94);
   --popup-bg-hover: rgba(11, 14, 21, 0.97);
+  --popup-glass-bg: rgba(8, 10, 16, 0.78);
+  --popup-glass-blur: blur(0.75rem) saturate(1.3);
   --popup-border: rgba(51, 204, 255, 0.22);
   --popup-border-hover: rgba(51, 204, 255, 0.42);
   --popup-accent: var(--teal);

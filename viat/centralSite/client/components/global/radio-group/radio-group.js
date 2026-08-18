@@ -19,29 +19,8 @@
 	──────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from 'webcomponent';
-class UIRadioOption extends WebComponent {
-	static useShadow = false;
-	static state = {
-		value: '',
-		label: '',
-		description: '',
-		disabled: false,
-	};
-	render() {
-		this.html`<label class="radio" ?data-disabled=${this.state.disabled}>
-			<input type="radio" name="opt" value=${this.state.value} ?disabled=${this.state.disabled}>
-			<span class="radio-control" aria-hidden="true"></span>
-			<span class="radio-text">
-				<span class="radio-label">${this.state.label}</span>
-				${this.renderDescription}
-			</span>
-		</label>`;
-	}
-	renderDescription() {
-		return this.state.description ? this.htmlElement`<span class="radio-desc">${this.state.description}</span>` : '';
-	}
-}
-customElements.define('ui-radio-option', UIRadioOption);
+import { UIRadioOption } from '../radio-option/radio-option.js';
+
 export class UIRadioGroup extends WebComponent {
 	static url = import.meta.url;
 	static styles = {

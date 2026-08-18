@@ -4,6 +4,14 @@
 	color: currentColor;
 	transition: color 0.15s ease;
 }
+:host([hidden]) {
+	display: none;
+}
+/*
+ * Standalone icon hover tint. Nested glyphs (inside ui-button / ui-icon-button)
+ * pin --icon-color-hover to currentColor so solid primary/success never flash
+ * --text-light white on dark themes when the pointer is over the icon box.
+ */
 :host(:hover) {
 	color: var(--icon-color-hover, currentColor);
 }

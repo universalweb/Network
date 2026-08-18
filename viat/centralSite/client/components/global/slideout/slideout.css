@@ -6,7 +6,7 @@
 	display: block;
 	position: fixed;
 	inset: 0;
-	z-index: calc(var(--z-toast, 1600) + 10);
+	z-index: calc(var(--z-toast) + 10);
 	pointer-events: none;
 }
 

@@ -310,7 +310,7 @@ function patchPassSync(component) {
 	component.templateBuilt = true;
 	component.finishRender(renderedEpoch);
 	if (defaultLogger.debugOn && component.config?.debugPatchOn !== false) {
-		defaultLogger.debug('PATCH-PASS', component.state, `${component.constructor.name}<${component.localName}> (no re-render, sync)`);
+		// defaultLogger.debug('PATCH-PASS', component.state, `${component.constructor.name}<${component.localName}> (no re-render, sync)`);
 	}
 }
 /**
@@ -474,7 +474,7 @@ async function renderPass(component) {
 		 */
 		component.finishRender(renderedEpoch);
 		if (defaultLogger.debugOn && component.config?.debugPatchOn !== false) {
-			defaultLogger.debug('PATCH-PASS', component.state, `${component.constructor.name}<${component.localName}> (no re-render)`);
+			// defaultLogger.debug('PATCH-PASS', component.state, `${component.constructor.name}<${component.localName}> (no re-render)`);
 		}
 		return;
 	}
@@ -496,7 +496,7 @@ async function renderPass(component) {
 		}
 	}
 	if (defaultLogger.debugOn) {
-		defaultLogger.debug('onRender', `${component.constructor.name}<${component.localName}>`);
+		// defaultLogger.debug('onRender', `${component.constructor.name}<${component.localName}>`);
 	}
 	if (sequence !== component.renderSeq) {
 		component.finishRender(renderedEpoch);

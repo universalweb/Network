@@ -155,16 +155,30 @@
 .cal-cell[data-today] {
 	border-color: var(--cal-accent, var(--teal));
 }
+/*
+ * Selection is a translucent accent wash + border, NOT a solid fill. Solid
+ * `--cal-accent` + `--cal-on-accent` (often bg-body) collapses to unreadable
+ * text on themes where those tokens are close. Tint keeps day numbers on
+ * `--text-main` while still reading as selected.
+ */
 .cal-cell[data-selected],
 .cal-cell[data-range-start],
 .cal-cell[data-range-end] {
-	background: var(--cal-accent, var(--teal));
-	color: var(--cal-on-accent, var(--bg-body));
+	background: color-mix(in oklab, var(--cal-accent, var(--teal)) 26%, transparent);
+	color: var(--text-main);
+	border-color: var(--cal-accent, var(--teal));
 	font-weight: var(--weight-semibold);
 }
+.cal-cell[data-selected][data-today],
+.cal-cell[data-range-start][data-today],
+.cal-cell[data-range-end][data-today] {
+	/* Today ring stays; selection wash sits underneath. */
+	box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cal-accent, var(--teal)) 55%, transparent);
+}
 .cal-cell[data-in-range] {
-	background: color-mix(in oklab, var(--cal-accent, var(--teal)) 22%, transparent);
+	background: color-mix(in oklab, var(--cal-accent, var(--teal)) 14%, transparent);
 	border-radius: 0;
+	color: var(--text-main);
 }
 .cal-cell[data-range-start] {
 	border-start-end-radius: 0;

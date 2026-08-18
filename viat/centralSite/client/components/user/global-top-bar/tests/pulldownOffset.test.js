@@ -15,6 +15,12 @@ test('clampOffset never teleports: a down-drag from the top stays near the top',
 	   keeps the bar a delta away from where it actually was — no jump. */
 	assert.equal(clampOffset(0, 60, 1208), 60);
 });
+test('close-drag from open reaches home after bar travel, not full viewport', () => {
+	const max = 1000;
+	assert.equal(clampOffset(max, -max, max), 0);
+	assert.equal(clampOffset(max, -(max + 80), max), 0);
+	assert.equal(clampOffset(max, -300, max), 700);
+});
 test('offsetIsOpen splits on the halfway line', () => {
 	assert.equal(offsetIsOpen(0, 1000), false);
 	assert.equal(offsetIsOpen(600, 1000), true);

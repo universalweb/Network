@@ -171,6 +171,8 @@
   /* ── Popups (tooltip + notification) ─────────────── */
   --popup-bg: rgba(7, 8, 12, 0.95);
   --popup-bg-hover: rgba(10, 11, 18, 0.98);
+  --popup-glass-bg: rgba(7, 8, 12, 0.78);
+  --popup-glass-blur: blur(0.75rem) saturate(1.3);
   --popup-border: rgba(109, 74, 255, 0.22);
   --popup-border-hover: rgba(109, 74, 255, 0.40);
   --popup-accent: var(--teal);

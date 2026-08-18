@@ -8,28 +8,32 @@
 }
 .speed-dial {
 	position: fixed;
-	z-index: var(--z-fab, 50);
+	z-index: var(--z-fab);
 	inline-size: max-content;
 }
 .speed-dial[data-position='static'] {
-	/* relative (not static) so the absolute action cluster still anchors to it */
+	/* relative (not static) so the absolute action cluster still anchors to it.
+	   Drop the fab layer — a residual z-index elevates the dial over sticky
+	   page chrome (preview cat headers) even when it is in-flow. */
 	position: relative;
 	display: inline-block;
+	z-index: auto;
 }
 .speed-dial[data-position='bottom-end'] { inset-block-end: 1.5rem; inset-inline-end: 1.5rem; }
 .speed-dial[data-position='bottom-start'] { inset-block-end: 1.5rem; inset-inline-start: 1.5rem; }
 .speed-dial[data-position='top-end'] { inset-block-start: 1.5rem; inset-inline-end: 1.5rem; }
 .speed-dial[data-position='top-start'] { inset-block-start: 1.5rem; inset-inline-start: 1.5rem; }
-/* ── Trigger ─────────────────────────────────────────────────────────────── */
+/* ── Trigger ───────────────────────────────────────────────────────────────
+   Disc via ui-button `.state.circle`. Open spin is ICON-ONLY through
+   `--ui-btn-icon-rotate` (button.css on .btn-icon) — never host transform
+   (that rotated the whole chrome into a skewed disc). */
 .sd-trigger {
-	--ui-btn-radius: 999px;
 	border-radius: 999px;
 	box-shadow: var(--elev-3, 0 14px 36px rgba(0, 0, 0, 0.38));
-	transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s ease;
-	will-change: transform;
+	transition: box-shadow 0.16s ease;
 }
 .speed-dial[data-open][data-rotate] .sd-trigger {
-	transform: rotate(45deg);
+	--ui-btn-icon-rotate: 45deg;
 }
 /* ── Actions cluster — absolute so it never shifts the trigger ────────────── */
 .sd-actions {
@@ -94,13 +98,12 @@ ui-speed-dial-action {
 .speed-dial[data-open] ui-speed-dial-action:nth-child(5) { transition-delay: 0.14s; }
 .speed-dial[data-open] ui-speed-dial-action:nth-child(n + 6) { transition-delay: 0.16s; }
 @media (prefers-reduced-motion: reduce) {
-	.sd-trigger,
-	.speed-dial[data-open][data-rotate] .sd-trigger,
 	ui-speed-dial-action {
 		transition: none;
 		transform: none;
 	}
+	/* Still show the open × — skip the spin animation only (token is static). */
 	.speed-dial[data-open][data-rotate] .sd-trigger {
-		transform: rotate(45deg);
+		--ui-btn-icon-rotate: 45deg;
 	}
 }

@@ -1,0 +1,61 @@
+:host {
+	display: block;
+	min-inline-size: 0;
+}
+.aise {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding-block: var(--space-2);
+	padding-inline: var(--space-3);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.1));
+	border-radius: var(--radius-md);
+	background: var(--bg-panel, rgba(255, 255, 255, 0.03));
+	transition: border-color 0.15s ease;
+}
+.aise:focus-within {
+	border-color: var(--teal, var(--accent, currentColor));
+}
+.aise-icon {
+	flex: none;
+	color: var(--text-muted, rgba(255, 255, 255, 0.5));
+}
+.aise-input {
+	flex: 1;
+	min-inline-size: 0;
+	border: none;
+	background: transparent;
+	color: var(--text-main);
+	font: inherit;
+	font-size: var(--text-sm);
+	outline: none;
+}
+.aise-input::placeholder {
+	color: var(--text-muted, rgba(255, 255, 255, 0.4));
+}
+.aise-input::-webkit-search-cancel-button {
+	display: none;
+}
+.aise-clear {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.1rem;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-muted, rgba(255, 255, 255, 0.5));
+	cursor: pointer;
+}
+.aise-clear:hover {
+	color: var(--text-main);
+}
+.aise-clear[hidden] {
+	display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.aise {
+		transition: none;
+	}
+}

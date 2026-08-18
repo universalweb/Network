@@ -1,0 +1,89 @@
+:host {
+	container-type: inline-size;
+	display: block;
+	inline-size: 100%;
+	min-block-size: 12rem;
+	color: var(--text-main);
+}
+
+.pc {
+	--pc-series: var(--cyan, oklch(0.72 0.14 210));
+}
+
+.pc-chart {
+	position: relative;
+	inline-size: 100%;
+	max-inline-size: 14rem;
+	justify-self: center;
+}
+
+.pc-svg-stack {
+	display: grid;
+	inline-size: 100%;
+	aspect-ratio: 1;
+	position: relative;
+}
+
+.pc-svg-stack > svg {
+	grid-area: 1 / 1;
+	inline-size: 100%;
+	block-size: 100%;
+	overflow: visible;
+}
+
+.pc-slice-svg {
+	pointer-events: none;
+}
+
+.pc-slice-svg .pc-slice {
+	pointer-events: auto;
+}
+
+.pc-total-svg {
+	pointer-events: none;
+}
+
+.pc-slice {
+	fill: var(--pc-series);
+	stroke: color-mix(in oklab, var(--bg-body, Canvas) 70%, transparent);
+	stroke-width: 1.5;
+	cursor: pointer;
+	transition: opacity 0.15s ease, filter 0.12s ease;
+}
+
+.pc-slice:hover,
+.pc-slice.is-hover {
+	opacity: 0.88;
+	filter: brightness(1.1);
+}
+
+.pc-total {
+	fill: var(--text-main);
+	font-size: 14px;
+	font-weight: 650;
+	pointer-events: none;
+}
+
+.pc-legend {
+	display: block;
+	min-inline-size: 0;
+}
+
+.pc-empty {
+	display: grid;
+	place-items: center;
+	min-block-size: 11rem;
+	color: var(--text-muted, var(--text-main));
+	font-size: var(--text-sm, 0.875rem);
+}
+
+.pc-empty[hidden],
+.chart-plot-area[hidden] {
+	display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pc-slice {
+		transition: none;
+	}
+}

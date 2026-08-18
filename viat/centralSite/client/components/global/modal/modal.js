@@ -6,7 +6,8 @@ import { lockBackgroundScroll, unlockBackgroundScroll } from '../scroll-lock.js'
 // receives `baseZ + (stack depth)` so newer modals always paint above
 // older ones — both for native top-layer browsers (where it acts as a
 // belt-and-suspenders) and for any popover/tooltip layered above.
-const MODAL_BASE_Z = 1000;
+// Matches --z-modal from the structural z-index scale (variables.css).
+const MODAL_BASE_Z = 1300;
 export class UIModal extends WebComponent {
 	// Shared stack of currently-open UIModal instances. Older first, top of
 	// stack last. Used to compute z-index on open and to identify the

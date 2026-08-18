@@ -19,11 +19,11 @@
 	ancestors, force-expanding the path to reveal the hit; clearing it restores the
 	manual expand-set.
 	── STANDARD USAGE ───────────────────────────────────────────────────
-	  <ui-json-inspector .state.data=${payload} .state.expandDepth=${1}></ui-json-inspector>
+	  <ui-json-inspector .data=${payload} .state.expandDepth=${1}></ui-json-inspector>
 	─────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from 'webcomponent';
-import { UIJsonRow } from './json-row.js';
+import { UIJsonRow } from '../json-row/json-row.js';
 const STRING_PREVIEW_MAX = 60;
 const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 const MAX_DEPTH = 100;

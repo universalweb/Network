@@ -11,6 +11,8 @@ import { registerBehavior } from './registry.js';
 import { reveal } from './reveal.js';
 import { scrollReport } from './scrollReport.js';
 import { tooltip } from './tooltip.js';
+import { viewLazy } from './viewLazy.js';
+import { viewPaint } from './viewPaint.js';
 registerBehavior(tooltip.name, tooltip);
 registerBehavior(hotkey.name, hotkey);
 registerBehavior(autofocus.name, autofocus);
@@ -18,6 +20,8 @@ registerBehavior(autoselect.name, autoselect);
 registerBehavior(autoResize.name, autoResize);
 registerBehavior(reveal.name, reveal);
 registerBehavior(scrollReport.name, scrollReport);
+registerBehavior(viewPaint.name, viewPaint);
+registerBehavior(viewLazy.name, viewLazy);
 export {
 	behaviorAttrNames,
 	BehaviorTeardown,

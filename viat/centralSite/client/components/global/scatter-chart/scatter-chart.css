@@ -1,0 +1,67 @@
+:host {
+	container-type: inline-size;
+	display: block;
+	inline-size: 100%;
+	min-block-size: 12rem;
+	color: var(--text-main);
+}
+
+.sc {
+	--sc-series: var(--cyan, oklch(0.72 0.14 210));
+}
+
+/* Stacked partial mini-SVGs (same cell) — grid under dots under ticks. */
+.sc-svg-stack {
+	display: grid;
+	inline-size: 100%;
+	aspect-ratio: 400 / 220;
+	min-block-size: 11rem;
+	position: relative;
+}
+
+.sc-svg-stack > .sc-layer {
+	grid-area: 1 / 1;
+	inline-size: 100%;
+	block-size: 100%;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.sc-layer .sc-dot {
+	pointer-events: auto;
+}
+
+.sc-grid {
+	stroke: color-mix(in oklab, var(--border-color, currentColor) 30%, transparent);
+	stroke-width: 1;
+	vector-effect: non-scaling-stroke;
+}
+
+.sc-dot {
+	fill: var(--sc-series);
+	stroke: color-mix(in oklab, var(--bg-body, Canvas) 55%, transparent);
+	stroke-width: 1;
+	cursor: pointer;
+}
+
+.sc-tick {
+	fill: var(--text-muted, var(--text-main));
+	font-size: 10px;
+}
+
+.sc-legend {
+	display: block;
+	min-inline-size: 0;
+}
+
+.sc-empty {
+	display: grid;
+	place-items: center;
+	min-block-size: 11rem;
+	color: var(--text-muted, var(--text-main));
+	font-size: var(--text-sm, 0.875rem);
+}
+
+.sc-empty[hidden] {
+	display: none !important;
+}

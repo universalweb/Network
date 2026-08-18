@@ -25,6 +25,13 @@
 	background: var(--bg-dark);
 	z-index: 1;
 }
+/* Column splits so header labels read as distinct fields. */
+.ex-row.ex-head > .ex-cell {
+	padding-inline: var(--space-2);
+}
+.ex-row.ex-head > .ex-cell:not(:last-child) {
+	border-inline-end: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+}
 .ex-cell {
 	overflow: hidden;
 	white-space: nowrap;

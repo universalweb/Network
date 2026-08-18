@@ -1,0 +1,27 @@
+:host {
+	display: inline-block;
+	position: relative;
+}
+.hc {
+	position: relative;
+	display: inline-flex;
+}
+.hc-trigger {
+	display: inline-flex;
+}
+.hc-surface {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	z-index: var(--z-popover, 1400);
+	min-inline-size: 12rem;
+	max-inline-size: min(22rem, 90vw);
+	padding: 0.85rem 1rem;
+	border-radius: var(--radius-md, 0.5rem);
+	border: 1px solid color-mix(in oklch, var(--text-muted) 22%, transparent);
+	background: var(--popup-glass-bg, var(--bg-panel, var(--bg-body, #111)));
+	color: var(--text-main);
+	box-shadow: 0 12px 40px color-mix(in oklch, #000 35%, transparent);
+	font-size: var(--text-sm, 0.875rem);
+	line-height: 1.45;
+}

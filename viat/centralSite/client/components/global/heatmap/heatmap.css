@@ -41,10 +41,26 @@
 	align-items: center;
 	justify-content: center;
 	overflow: hidden;
+	position: relative;
+	transition:
+		box-shadow var(--dur-fast, 0.12s) ease,
+		transform var(--dur-fast, 0.12s) ease;
 }
 .hm-cell.is-empty {
 	cursor: default;
 	box-shadow: inset 0 0 0 1px color-mix(in oklab, currentColor 6%, transparent);
+}
+.hm-cell:hover:not(.is-empty) {
+	transform: scale(1.12);
+	box-shadow: 0 0 0 1.5px color-mix(in oklab, var(--heat-color) 75%, white);
+	z-index: 1;
+}
+.hm-cell[data-active='true'] {
+	transform: scale(1.08);
+	box-shadow:
+		0 0 0 2px var(--heat-color),
+		0 0 0 3px var(--bg-panel, Canvas);
+	z-index: 2;
 }
 .hm-val {
 	pointer-events: none;
@@ -68,24 +84,6 @@
 	justify-self: end;
 	padding-inline-end: 0.3rem;
 }
-.hm-tip {
-	position: absolute;
-	z-index: 2;
-	padding: 0.25rem 0.45rem;
-	border-radius: var(--radius-sm, 0.25rem);
-	background: var(--surface-inverse, oklch(0.22 0.02 250));
-	color: var(--text-on-inverse, #fff);
-	font-size: 0.6875rem;
-	line-height: 1.2;
-	white-space: nowrap;
-	pointer-events: none;
-	translate: -50% calc(-100% - 0.3rem);
-	opacity: 0;
-	transition: opacity var(--dur-fast, 0.12s) var(--ease-out, ease);
-}
-.hm-tip[data-show='true'] {
-	opacity: 1;
-}
 .hm-legend {
 	display: inline-flex;
 	align-items: center;
@@ -100,7 +98,10 @@
 	background: linear-gradient(to right, var(--heat-track), var(--heat-color));
 }
 @media (prefers-reduced-motion: reduce) {
-	.hm-tip {
+	.hm-cell,
+	.hm-cell:hover:not(.is-empty),
+	.hm-cell[data-active='true'] {
 		transition: none;
+		transform: none;
 	}
 }

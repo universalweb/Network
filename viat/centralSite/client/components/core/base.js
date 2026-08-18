@@ -81,6 +81,8 @@ import {
 	templateCleanup,
 	templateHtml,
 	templateHtmlElement,
+	templatePartial,
+	templatePlainHTML,
 } from './template.js';
 import {
 	addInterval,
@@ -584,6 +586,7 @@ export class WebComponent extends HTMLElement {
 	globalUnsubs = null;
 	eventEntries = null;
 	stateUnsubs = null;
+	storeUnsubs = null;
 	delegateEntries = null;
 	hotkeyEntries = null;
 	gestureUnsubs = null;
@@ -811,6 +814,8 @@ const PROTO_METHODS = {
 	hotKeyListeners,
 	html: templateHtml,
 	htmlElement: templateHtmlElement,
+	partial: templatePartial,
+	plainHTML: templatePlainHTML,
 	installObserver,
 	uninstallObserver,
 	onEnv,

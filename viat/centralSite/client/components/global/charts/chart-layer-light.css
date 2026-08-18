@@ -1,0 +1,98 @@
+/*
+	Light mini-SVG series + hit layers (componentPartial / this.partial).
+	Replaces ui-chart-hit / ui-chart-series-layer :host stacking rules.
+	Parent stack (.lc-svg-stack / .rc-svg-stack) places roots on one cell.
+*/
+.chart-series-svg,
+.chart-hit-svg {
+	display: block;
+	grid-area: 1 / 1;
+	inline-size: 100%;
+	block-size: 100%;
+	min-block-size: 0;
+	min-inline-size: 0;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.chart-series-area {
+	fill: color-mix(in oklab, var(--chart-series-color, currentColor) 22%, transparent);
+	pointer-events: none;
+	stroke: none;
+}
+
+.chart-series-area[hidden] {
+	display: none !important;
+}
+
+.chart-series-stroke {
+	cursor: pointer;
+	fill: none;
+	/* Edge hit so vertex hits above can win */
+	pointer-events: stroke;
+	stroke: var(--chart-series-color, currentColor);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	vector-effect: non-scaling-stroke;
+}
+
+.chart-series-stroke[data-variant='line'] {
+	stroke-width: 2;
+}
+
+.chart-series-stroke[data-variant='radar'] {
+	stroke-width: 2.5;
+}
+
+.chart-series-stroke:hover,
+.chart-series-stroke:focus-visible {
+	filter: brightness(1.08);
+}
+
+.chart-hit-target {
+	cursor: pointer;
+	fill: transparent;
+	pointer-events: all;
+	stroke: transparent;
+	stroke-width: 0;
+	transition:
+		fill var(--dur-fast, 0.12s) ease,
+		stroke var(--dur-fast, 0.12s) ease,
+		stroke-width var(--dur-fast, 0.12s) ease;
+}
+
+.chart-hit-target[data-marker='hover']:hover,
+.chart-hit-target[data-marker='hover']:focus-visible {
+	fill: color-mix(in oklab, var(--chart-mark-color, currentColor) 22%, transparent);
+	stroke: color-mix(in oklab, var(--chart-mark-color, currentColor) 45%, transparent);
+	stroke-width: 2;
+}
+
+.chart-hit-target[data-marker='always'] {
+	fill: var(--chart-mark-color, currentColor);
+	stroke: color-mix(in oklab, var(--bg-body, Canvas) 55%, transparent);
+	stroke-width: 1;
+}
+
+.chart-hit-target[data-marker='always']:hover,
+.chart-hit-target[data-marker='always']:focus-visible {
+	fill: color-mix(in oklab, var(--chart-mark-color, currentColor) 85%, white);
+	stroke: var(--chart-mark-color, currentColor);
+	stroke-width: 1.5;
+}
+
+.chart-hit-target[data-marker='never'] {
+	fill: transparent;
+	stroke: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.chart-hit-target {
+		transition: none;
+	}
+
+	.chart-series-stroke:hover,
+	.chart-series-stroke:focus-visible {
+		filter: none;
+	}
+}

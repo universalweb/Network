@@ -1,39 +1,39 @@
 /* ── Codex Theme ──────────────────────────────────────
-   The written. Swiss print: WHITE surfaces on a cool
-   slate page under a black square masthead (app-bar
-   theme sub-module), slate ink, thin fine hairlines,
-   flat — structure from line and whitespace, not shadow.
-   EXACTLY ONE color: ultramarine — spent ONLY on active
-   marks (dock bar, active tab, panel dots, bar fills).
-   Hover/focus chrome is ink and slate, never color.
+   Hybrid: Codex STRUCTURE (square, hairline, whitespace)
+   + PrimeVue Aura-light COLOR (off-white ground, white
+   cards, dark-gray body text). EXACTLY ONE hue:
+   ultramarine — spent ONLY on active marks (dock bar,
+   active tab, panel dots, bar fills). Body text is ink,
+   never cyan/blue. Hover/focus chrome is ink and slate.
 ─────────────────────────────────────────────────────── */
 :root {
   color-scheme: light;
 
-  /* ── Base Palette — slate grays, white cards. --navy
-     is the chip/stamp fill and pairs with --text-light
-     (ink) on the field-addon chips — they flip together
-     in a light theme. ── */
-  --bg-body: #eef0f3;
+  /* ── Base Palette — Aura-like off-white ground, white
+     cards. --cyan is INK (not a hue). --teal is the sole
+     ultramarine accent for active marks. --navy is the
+     chip/stamp fill and pairs with --text-light (ink)
+     on field-addon chips — they flip together. ── */
+  --bg-body: #f4f5f7;
   --bg-panel: #ffffff;
-  --bg-dark: #e3e6eb;
-  --bg-dark-mid: #e9ebef;
-  --navy: #e2e6ec;
+  --bg-dark: #eceef1;
+  --bg-dark-mid: #f0f1f3;
+  --navy: #e8eaee;
   --navy-light: #5d7ce6;
   --teal: #1a3fd6;
   --teal-dim: rgba(26, 63, 214, 0.08);
-  --cyan: #39414d;
-  --cyan-dim: rgba(57, 65, 77, 0.07);
+  --cyan: #3a4048;
+  --cyan-dim: rgba(58, 64, 72, 0.07);
   --magenta: #2f3640;
   --magenta-dim: rgba(47, 54, 64, 0.07);
   --grey-solid: #8b939f;
-  --grey-mid: #d7dbe1;
+  --grey-mid: #d9dce1;
 
-  /* ── Text (slate ink; "light" = highest-emphasis ink) ── */
-  --text-main: #1e2329;
-  --text-muted: #5d6673;
-  --text-light: #1e2329;
-  --text-offwhite: #454d59;
+  /* ── Text — dark gray body (Aura slate), NEVER blue ── */
+  --text-main: #2a2f36;
+  --text-muted: #5c6570;
+  --text-light: #2a2f36;
+  --text-offwhite: #4a525c;
 
   /* ── Fonts ───────────────────────────────────────── */
   --font-mono: 'JetBrains Mono', monospace;
@@ -115,11 +115,18 @@
   --indicator-radius: 0;
   --indicator-warn-radius: 0;
 
-  /* ── Input ───────────────────────────────────────── */
+  /* ── Input — white field, ink hairline (Aura off-white
+     page, not a translucent white-on-dark wash) ────── */
   --input-radius: 0;
-  --input-accent-border: 1px solid rgba(30, 35, 41, 0.14);
+  --input-accent-border: 1px solid rgba(42, 47, 54, 0.16);
   --input-accent-shadow: none;
   --field-border-style: solid;
+  --input-bg: #ffffff;
+  --input-bg-hover: #f7f8f9;
+  --input-bg-focus: #ffffff;
+  --input-bg-readonly: #f4f5f6;
+  --input-border: rgba(42, 47, 54, 0.16);
+  --input-border-hover: rgba(42, 47, 54, 0.34);
 
   /* ── Surfaces — white cards, hairline borders ────── */
   --panel-bg: #ffffff;
@@ -199,6 +206,8 @@
   /* ── Popups (white leaf) ─────────────────────────── */
   --popup-bg: #ffffff;
   --popup-bg-hover: #f5f6f8;
+  --popup-glass-bg: rgba(255, 255, 255, 0.82);
+  --popup-glass-blur: blur(0.625rem) saturate(1.2);
   --popup-border: rgba(30, 35, 41, 0.14);
   --popup-border-hover: rgba(30, 35, 41, 0.28);
   --popup-accent: #1a3fd6;

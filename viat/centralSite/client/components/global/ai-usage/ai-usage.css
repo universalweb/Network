@@ -1,0 +1,46 @@
+:host {
+	display: inline-flex;
+}
+.aius {
+	display: inline-flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	padding-block: var(--space-1);
+	padding-inline: var(--space-2);
+	border-radius: var(--radius-sm);
+	background: var(--bg-panel, rgba(255, 255, 255, 0.03));
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+	font-size: var(--text-xs);
+	font-variant-numeric: tabular-nums;
+}
+.aius[hidden] {
+	display: none;
+}
+.aius-icon {
+	flex: none;
+	opacity: 0.7;
+}
+.aius-title {
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+.aius-title[hidden],
+.aius-stat[hidden] {
+	display: none;
+}
+.aius-stat {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.25rem;
+}
+.aius-k {
+	opacity: 0.65;
+	text-transform: lowercase;
+}
+.aius-v {
+	color: var(--text-main);
+}
+.aius-cost .aius-v {
+	color: var(--teal, var(--accent, currentColor));
+}

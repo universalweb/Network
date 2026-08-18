@@ -4,7 +4,10 @@
 	inset-block-start: 0;
 	inset-block-end: 0;
 	pointer-events: none;
-	z-index: 30;
+	/* Below dock chrome (--z-dock): flyout spans full viewport height and must
+	   not swallow the top-bar toggle. Coverup/full lift above dock so the drawer
+	   can overlay page content. */
+	z-index: calc(var(--z-dock) - 10);
 	/* Gap between the drawer's outer (docked) edge and the window edge — flyout
 	   only. Coverup + full zero this so the shell can sit flush / full-bleed.
 	   Folded into `--shell-closed-x` (the hide distance) so translateX still
@@ -26,10 +29,10 @@
    shell chrome. The slotted panel carries its own solid surface. */
 :host([data-mode='flyout']) {
 	width: 0;
-	/* Below the global top bar (z-index 40): the bare flyout spans the full
+	/* Below the global top bar (--z-dock): the bare flyout spans the full
 	   viewport height, so a higher z-index would swallow the top bar's
 	   toggle button. The frosted top padding clears the bar visually. */
-	z-index: 30;
+	z-index: calc(var(--z-dock) - 10);
 }
 
 /* ── COVER-UP — mid widths ───────────────────────────────────────────────
@@ -38,7 +41,7 @@
    zero-width edge anchor so the shell can grow inward via width + docked inset. */
 :host([data-mode='coverup']) {
 	width: 0;
-	z-index: 60;
+	z-index: calc(var(--z-dock) + 20);
 	--sidebar-float: 0px;
 	--sidebar-inline-pad: var(--space-3);
 }
@@ -54,7 +57,7 @@
 	inset-inline-start: 0;
 	inset-inline-end: 0;
 	width: auto;
-	z-index: 60;
+	z-index: calc(var(--z-dock) + 20);
 	--sidebar-float: 0px;
 	--shell-closed-x: 100%;
 	--sidebar-inline-pad: var(--space-5);

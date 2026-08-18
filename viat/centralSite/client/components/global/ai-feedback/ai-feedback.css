@@ -1,0 +1,50 @@
+:host {
+	display: inline-flex;
+}
+.aifb {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+}
+.aifb-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-muted, rgba(255, 255, 255, 0.5));
+	cursor: pointer;
+	transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.aifb-btn:hover:not(:disabled) {
+	color: var(--text-main);
+	background: var(--bg-panel, rgba(255, 255, 255, 0.04));
+}
+.aifb-btn:focus-visible {
+	outline: 2px solid var(--cyan, currentColor);
+	outline-offset: 1px;
+}
+.aifb-btn:disabled {
+	cursor: default;
+	opacity: 0.45;
+}
+.aifb-btn[data-active] {
+	opacity: 1;
+	color: var(--teal, var(--accent, currentColor));
+	border-color: color-mix(in oklab, var(--teal, var(--accent, currentColor)) 35%, transparent);
+	background: color-mix(in oklab, var(--teal, var(--accent, currentColor)) 10%, transparent);
+}
+.aifb-btn[data-action='down'][data-active] {
+	color: var(--color-danger, oklch(0.68 0.2 25));
+	border-color: color-mix(in oklab, var(--color-danger, oklch(0.68 0.2 25)) 35%, transparent);
+	background: color-mix(in oklab, var(--color-danger, oklch(0.68 0.2 25)) 10%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+	.aifb-btn {
+		transition: none;
+	}
+}

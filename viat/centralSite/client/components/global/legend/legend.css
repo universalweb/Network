@@ -1,10 +1,100 @@
 :host {
 	display: block;
+	min-inline-size: 0;
 }
+
 .lg {
 	align-items: center;
 	column-gap: 1.1em;
 	display: flex;
 	flex-wrap: wrap;
 	row-gap: 0.45em;
+}
+
+.lg[data-orientation='vertical'] {
+	align-items: stretch;
+	flex-direction: column;
+	flex-wrap: nowrap;
+	row-gap: 0.4em;
+}
+
+.lg[data-align='start'] {
+	justify-content: flex-start;
+}
+
+.lg[data-align='center'] {
+	justify-content: center;
+}
+
+.lg[data-align='end'] {
+	justify-content: flex-end;
+}
+
+.lg[data-orientation='vertical'][data-align='center'] {
+	align-items: center;
+}
+
+.lg[data-orientation='vertical'][data-align='end'] {
+	align-items: flex-end;
+}
+
+/* Flat legend rows (was ui-legend-item shadow) */
+.lg-item {
+	align-items: center;
+	background: none;
+	border: 0;
+	color: var(--text-secondary, currentColor);
+	display: inline-flex;
+	font: inherit;
+	font-size: var(--text-xs);
+	gap: 0.45em;
+	line-height: 1;
+	padding: 0;
+}
+button.lg-item {
+	cursor: pointer;
+	transition: opacity 0.18s ease;
+}
+button.lg-item:hover {
+	color: var(--text-primary, currentColor);
+}
+.lg-item[aria-pressed='false'] {
+	opacity: 0.4;
+}
+.lg-item[aria-pressed='false'] .lg-swatch {
+	background: color-mix(in oklab, currentColor 30%, transparent) !important;
+}
+.lg-item[aria-pressed='false'] .lg-label {
+	text-decoration: line-through;
+}
+.lg-swatch {
+	block-size: 0.75em;
+	border-radius: 0.2em;
+	flex: 0 0 auto;
+	inline-size: 0.75em;
+}
+.lg-label {
+	white-space: nowrap;
+}
+.lg-detail {
+	color: var(--text-muted, var(--text-secondary, currentColor));
+	font-variant-numeric: tabular-nums;
+	margin-inline-start: 0.15em;
+	opacity: 0.9;
+}
+.lg-detail[hidden] {
+	display: none !important;
+}
+.lg-item[aria-pressed='false'] .lg-detail {
+	opacity: 0.5;
+}
+button.lg-item:focus-visible {
+	border-radius: 0.25em;
+	outline: 2px solid var(--color-info, currentColor);
+	outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+	button.lg-item {
+		transition: none;
+	}
 }

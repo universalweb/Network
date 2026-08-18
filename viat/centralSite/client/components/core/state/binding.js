@@ -556,11 +556,17 @@ export class ListBinding extends Binding {
 	static isListBinding(source) {
 		return source instanceof ListBinding;
 	}
-	constructor(key, renderFn, keyFn, filterFn = null) {
+	/**
+	 * @param {string} key - State path.
+	 * @param {*} renderFn - Row render (class or light fn).
+	 * @param {{keyFn:Function, filterFn?:Function|null, virtual?:object|null}} options
+	 */
+	constructor(key, renderFn, options) {
 		super(key, null);
 		this.renderFn = renderFn;
-		this.keyFn = keyFn;
-		this.filterFn = filterFn;
+		this.keyFn = options.keyFn;
+		this.filterFn = options.filterFn ?? null;
+		this.virtual = options.virtual ?? null;
 	}
 }
 export function isBindingType(value) {

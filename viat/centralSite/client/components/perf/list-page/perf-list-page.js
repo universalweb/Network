@@ -1,4 +1,4 @@
-import '../../global/ui-stat-table/ui-stat-table.js';
+import '../../global/stat-table/stat-table.js';
 import { Perf } from '../../core/debug/perf.js';
 import { each, WebComponent } from '../../core/index.js';
 import { plainEqual } from '../../core/utilities.js';

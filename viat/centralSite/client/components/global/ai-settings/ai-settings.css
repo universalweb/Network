@@ -1,0 +1,93 @@
+:host {
+	display: block;
+}
+.aist {
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.08));
+	border-radius: var(--radius-md);
+	background: var(--bg-panel, rgba(255, 255, 255, 0.02));
+}
+.aist-summary {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding-block: var(--space-2);
+	padding-inline: var(--space-3);
+	cursor: pointer;
+	color: var(--text-muted, rgba(255, 255, 255, 0.6));
+	list-style: none;
+}
+.aist-summary::-webkit-details-marker {
+	display: none;
+}
+.aist-summary:focus-visible {
+	outline: 2px solid var(--cyan, currentColor);
+	outline-offset: -2px;
+	border-radius: var(--radius-md);
+}
+.aist-title {
+	font-size: var(--text-xs);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+.aist-chevron {
+	margin-inline-start: auto;
+	transition: transform 0.2s ease;
+}
+.aist[open] .aist-chevron {
+	transform: rotate(180deg);
+}
+.aist-body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+	padding-block: var(--space-2) var(--space-3);
+	padding-inline: var(--space-3);
+	border-block-start: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.06));
+}
+.aist-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+.aist-field-label {
+	font-size: var(--text-xs);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+}
+.aist-field-label em {
+	font-style: normal;
+	font-variant-numeric: tabular-nums;
+	color: var(--text-main);
+	margin-inline-start: var(--space-2);
+}
+.aist-field input[type='range'] {
+	inline-size: 100%;
+	accent-color: var(--teal, var(--accent, currentColor));
+}
+.aist-field input[type='number'],
+.aist-prompt {
+	font: inherit;
+	font-size: var(--text-sm);
+	color: var(--text-main);
+	background: var(--bg-panel, rgba(255, 255, 255, 0.04));
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.1));
+	border-radius: var(--radius-sm);
+	padding-block: var(--space-2);
+	padding-inline: var(--space-3);
+	outline: none;
+}
+.aist-prompt {
+	resize: vertical;
+	min-block-size: 4rem;
+	line-height: 1.45;
+}
+.aist-field input:focus,
+.aist-prompt:focus {
+	border-color: var(--teal, var(--accent, currentColor));
+}
+@media (prefers-reduced-motion: reduce) {
+	.aist-chevron {
+		transition: none;
+	}
+}

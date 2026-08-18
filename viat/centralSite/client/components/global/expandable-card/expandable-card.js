@@ -51,7 +51,7 @@ export class UIExpandableCard extends MorphSurface {
 				</div>
 				<p class="ec-card-summary">${this.state.summary}</p>
 			</button>
-			<div class="ec-overlay" #overlay>
+			<div class="ec-overlay" #overlay popover="manual">
 				<div class="ec-backdrop" @click=${this.handleBackdropClick}></div>
 				<div class="ec-surface" #surface role="dialog" aria-label=${this.state.heading}>
 					<header class="ec-head">

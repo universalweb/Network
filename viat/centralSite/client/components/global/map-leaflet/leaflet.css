@@ -1,0 +1,123 @@
+:host {
+	display: block;
+	position: relative;
+	inline-size: 100%;
+	block-size: 100%;
+	min-block-size: 16rem;
+	container-type: size;
+	color: var(--text-main);
+	/* Leaflet default marker icons expect relative image paths; host tokens keep chrome on-theme. */
+	--leaflet-tile-filter: none;
+}
+
+/* ?hidden must beat .lf-overlay { display: grid } — same footgun as poll/ai-inquire. */
+[hidden] {
+	display: none !important;
+}
+
+.lf-root {
+	position: relative;
+	inline-size: 100%;
+	block-size: 100%;
+	min-block-size: inherit;
+	overflow: hidden;
+	border-radius: var(--radius-lg, 0.75rem);
+	background: var(--bg-elevated, var(--bg-body));
+	border: 1px solid
+		color-mix(in oklab, var(--border-color, currentColor) 40%, transparent);
+}
+
+.lf-canvas {
+	position: absolute;
+	inset: 0;
+	inline-size: 100%;
+	block-size: 100%;
+	z-index: 0;
+}
+
+/* Leaflet injects .leaflet-* into the canvas; keep controls readable in dark themes. */
+.lf-canvas :global(.leaflet-control-attribution),
+.lf-canvas .leaflet-control-attribution {
+	background: color-mix(in oklab, var(--bg-body) 85%, transparent);
+	color: var(--text-muted, var(--text-main));
+	font-size: var(--text-xs, 0.75rem);
+}
+
+.lf-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	display: grid;
+	place-items: center;
+	padding: var(--space-4, 1rem);
+	background: color-mix(in oklab, var(--bg-body) 72%, transparent);
+	backdrop-filter: blur(0.25rem);
+	text-align: center;
+	pointer-events: none;
+}
+
+.lf-overlay[data-interactive] {
+	pointer-events: auto;
+}
+
+.lf-status {
+	display: grid;
+	gap: var(--space-2, 0.5rem);
+	justify-items: center;
+	max-inline-size: 28rem;
+}
+
+.lf-status-label {
+	font-size: var(--text-sm, 0.875rem);
+	font-weight: var(--weight-semibold, 600);
+}
+
+.lf-status-msg {
+	font-size: var(--text-xs, 0.75rem);
+	color: var(--text-muted, var(--text-main));
+	line-height: 1.4;
+}
+
+.lf-status[data-tone='danger'] .lf-status-label {
+	color: var(--color-danger, oklch(0.62 0.2 25));
+}
+
+/* Heading-rotated aircraft marker (item.marker === 'plane'). */
+.lf-canvas :global(.lf-plane-marker),
+.lf-canvas .lf-plane-marker {
+	background: transparent;
+	border: 0;
+}
+
+.lf-canvas :global(.lf-plane),
+.lf-canvas .lf-plane {
+	display: grid;
+	place-items: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	transform: rotate(var(--lf-plane-heading, 0deg));
+	filter: drop-shadow(0 0.1rem 0.15rem color-mix(in oklab, black 40%, transparent));
+	cursor: pointer;
+}
+
+.lf-canvas :global(.lf-plane svg),
+.lf-canvas .lf-plane svg {
+	inline-size: 1.35rem;
+	block-size: 1.35rem;
+	fill: var(--lf-plane-color, oklch(0.72 0.17 145));
+	stroke: oklch(0.98 0.01 100);
+	stroke-width: 1.2;
+	paint-order: stroke fill;
+}
+
+.lf-canvas :global(.lf-plane.is-active),
+.lf-canvas .lf-plane.is-active {
+	scale: 1.15;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lf-canvas :global(.lf-plane),
+	.lf-canvas .lf-plane {
+		transition: none;
+	}
+}

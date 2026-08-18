@@ -35,7 +35,14 @@
 .dr-overlay {
 	position: fixed;
 	inset: 0;
-	z-index: var(--z-floating, 900);
+	inline-size: auto;
+	block-size: auto;
+	margin: 0;
+	border: none;
+	padding: 0;
+	overflow: visible;
+	background: transparent;
+	z-index: var(--z-floating);
 	pointer-events: none;
 	visibility: hidden;
 }
@@ -67,13 +74,15 @@
 	display: flex;
 	flex-direction: column;
 	inline-size: min(26rem, 92vw);
-	background: var(--popup-bg);
+	background: var(--popup-glass-bg, var(--popup-bg));
 	border-inline-start: 1px solid var(--popup-border, color-mix(in oklab, var(--teal) 26%, transparent));
 	box-shadow: var(--modal-shadow,
 		-24px 0 64px rgb(0 0 0 / 0.55),
 		0 0 0 1px color-mix(in oklab, var(--teal) 8%, transparent));
 	color: var(--popup-text, var(--text-main));
 	font-family: var(--font-mono, 'JetBrains Mono', monospace);
+	-webkit-backdrop-filter: var(--popup-glass-blur, blur(0.625rem) saturate(1.25));
+	backdrop-filter: var(--popup-glass-blur, blur(0.625rem) saturate(1.25));
 	overflow: hidden;
 }
 .dr-head {

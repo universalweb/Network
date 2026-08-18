@@ -25,8 +25,17 @@ let preferredTarget = null;
 export function setScrollLockTarget(element) {
 	preferredTarget = element ?? null;
 }
-function resolveScrollLockTarget() {
+/**
+ * The live scroll surface freezes for overlays and that back-to-top should
+ * scroll. Prefers the app shell's designated target (`.shell-scroll`); falls
+ * back to the document element when none has been set yet.
+ * @returns {Element} The designated scroll surface, or `documentElement`.
+ */
+export function getScrollLockTarget() {
 	return preferredTarget ?? globalThis.document.documentElement;
+}
+function resolveScrollLockTarget() {
+	return getScrollLockTarget();
 }
 /**
  * Acquire one background scroll-lock (call once when an overlay opens). The scroll

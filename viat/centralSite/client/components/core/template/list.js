@@ -1,7 +1,8 @@
 /*
  * Keyed-list machinery — the list half of the template engine: light rows
- * (`html` tagged rows without a component), `LiveList` + `each()` / `list()` /
- * `filter()` factories, the LIS-based keyed diff
+ * (`componentHTML` plain bags / `componentPartial` feature bags), shared
+ * `Partial` renderers (define once → pass as list/each renderFn), `LiveList` +
+ * `each()` / `list()` / `filter()` factories, the LIS-based keyed diff
  * (`patchList`), and `ListSpot`. Split out of template.js; the two modules
  * form a DELIBERATE import cycle — the runtime core dispatches LIST content
  * to `patchListKind` / `patchListAnchored` (hoisted function declarations,
@@ -10,6 +11,10 @@
  * runtime only. Anything BOTH sides need at eval time lives in the leaves
  * (`template/spot.js`, `template/planner.js`).
  */
+import {
+	BehaviorTeardown,
+	getBehavior,
+} from '../behaviors/index.js';
 import {
 	bind,
 	isBindingType,
@@ -31,39 +36,57 @@ import {
 	isPlainObject,
 	isString,
 } from '../utilities.js';
-import { SPOT_KIND } from './constants.js';
+import { SPOT_KIND, SPOT_TYPE } from './constants.js';
+import { resolveListOptions } from './listOptions.js';
+import { ListVirtualController } from './listVirtual.js';
+import { Partial } from './partial.js';
 import { getRecipe, resolveRecipeNodes } from './planner.js';
-import { cleanupTemplateNode, clearRange, Spot } from './spot.js';
+import {
+	cleanupTemplateNode, clearRange, Spot, TEMPLATE_CLEANUP,
+} from './spot.js';
+export { Partial } from './partial.js';
 /**
- * ── Lightweight list rows ───────────────────────────────────────────────────
- * A list row that does NOT pay for a custom element + shadow root + async
- * lifecycle. The standalone `html` tag returns a LightTemplate {strings,
- * values}; the list clones the SHARED recipe (parsed once via getRecipe, same
- * as a component) into plain DOM and RETAINS the spots, so updates are surgical
- * textContent/attr writes — no component, no subscription, no re-parse, no
- * rebuild. ~10× cheaper to create than a full component row. For data lists
- * that need no per-row encapsulation or state; rows needing those keep the
- * `class` component kind of each()/list().
- *
- * Constraints (thrown loud, never silent):
- *   • exactly one root element per row;
- *   • value-only expressions — compute inline (`${item.value * 2}`), never
- *     `${() => …}` or a binding (those need a component's reactive graph);
- *   • no `#ref`, `$two-way`, behaviors, or `@event` spots.
- * String values render as textContent by default (XSS-safe, like everywhere in
- * UWC); opt into markup per-spot with `^html${str}` only for trusted HTML.
+ * ── Plain light (`componentHTML` / `this.plainHTML`) ───────────────────────
+ * Multi-instance list cells without CE cost. Returns a bag {strings, values,
+ * owner?}; list materializes via shared recipe clone + retained spots.
+ * Never call-site cached. No behaviors / @events / #refs / two-way.
  */
-class LightTemplate {
-	constructor(strings, values) {
+export class ComponentHTMLTemplate {
+	constructor(strings, values, owner = null) {
 		this.strings = strings;
 		this.values = values;
+		this.owner = owner;
 	}
 	static is(source) {
-		return source instanceof LightTemplate;
+		return source instanceof ComponentHTMLTemplate;
 	}
 }
-function createRenderableElement(value) {
-	if (LightTemplate.is(value)) {
+/** @deprecated Use ComponentHTMLTemplate — kept for instanceof at old call sites. */
+export class LightTemplate extends ComponentHTMLTemplate {
+	static is(source) {
+		return source instanceof ComponentHTMLTemplate;
+	}
+}
+/**
+ * ── Feature light (`componentPartial` / `this.partial`) ────────────────────
+ * Same multi-instance bag shape + host-owned tooltip= / @events at materialize.
+ * Never call-site cached (unlike this.htmlElement).
+ */
+export class ComponentPartialTemplate {
+	constructor(strings, values, owner = null) {
+		this.strings = strings;
+		this.values = values;
+		this.owner = owner;
+	}
+	static is(source) {
+		return source instanceof ComponentPartialTemplate;
+	}
+}
+function createRenderableElement(value, component, item, itemIndex) {
+	if (ComponentPartialTemplate.is(value)) {
+		return instantiatePartialRow(value, component, item, itemIndex);
+	}
+	if (ComponentHTMLTemplate.is(value)) {
 		return instantiateLightRow(value);
 	}
 	if (isString(value)) {
@@ -72,42 +95,110 @@ function createRenderableElement(value) {
 	if (isElement(value)) {
 		return value;
 	}
-	throw new TypeError('List render functions must return an Element or HTML string.');
+	throw new TypeError('List render functions must return componentHTML/componentPartial, an Element, or an HTML string.');
 }
 export function isCustomElementConstructor(source) {
 	return isFunction(source) && source.prototype instanceof HTMLElement;
 }
-export function html(strings, ...values) {
-	return new LightTemplate(strings, values);
-}
-/*
- * root element → { spots, prevExprs }. WeakMap so a removed row's retained
- * spots clear on GC with zero bookkeeping.
+/**
+ * Free plain-light factory (rename of free `html`). Same behavior as before.
+ * @param {TemplateStringsArray} strings
+ * @param {...*} values
+ * @returns {ComponentHTMLTemplate}
  */
+export function componentHTML(strings, ...values) {
+	return new ComponentHTMLTemplate(strings, values, null);
+}
+/** @deprecated Use componentHTML — temporary alias (same function reference). */
+export const html = componentHTML;
+/**
+ * Free feature-light factory — multi-instance; behaviors install when list
+ * materializes with a host.
+ * @param {TemplateStringsArray} strings
+ * @param {...*} values
+ * @returns {ComponentPartialTemplate}
+ */
+export function componentPartial(strings, ...values) {
+	return new ComponentPartialTemplate(strings, values, null);
+}
+/**
+ * Method twin of componentHTML — stamps owner = this (optional optimisations).
+ * @param {TemplateStringsArray} strings
+ * @param {...*} values
+ * @returns {ComponentHTMLTemplate}
+ */
+export function templatePlainHTML(strings, ...values) {
+	return new ComponentHTMLTemplate(strings, values, this);
+}
+/**
+ * Method twin of componentPartial — stamps owner = this.
+ * @param {TemplateStringsArray} strings
+ * @param {...*} values
+ * @returns {ComponentPartialTemplate}
+ */
+export function templatePartial(strings, ...values) {
+	return new ComponentPartialTemplate(strings, values, this);
+}
 const LIGHT_ROW_INSTANCES = new WeakMap();
+/** @type {WeakMap<Element, {spots:Array, prevExprs:Array, unsubs:Array, host:*, item:*, itemIndex:number}>} */
+export const PARTIAL_ROW_INSTANCES = new WeakMap();
 function assertLightTemplate(recipe, values) {
 	const valuesLength = values.length;
 	for (let valueIndex = 0; valueIndex < valuesLength; valueIndex++) {
 		const value = values[valueIndex];
 		if (isFunction(value) || isBindingType(value)) {
-			throw new TypeError('each() html row expressions must be plain values — compute inline (`${item.x * 2}`), not `${() => …}` or a binding.');
+			throw new TypeError('componentHTML expressions must be plain values — compute inline (`${item.x * 2}`), not `${() => …}` or a binding. For tooltip=/@events use componentPartial.');
 		}
 	}
 	if ((recipe?.refPlans?.length) || (recipe?.dataBindPlans?.length) || (recipe?.subeventPlans?.length)) {
-		throw new TypeError('each() html row does not support #refs, two-way bindings, or behaviors — use the component (class) kind for those.');
+		throw new TypeError('componentHTML does not support #refs, two-way bindings, or behaviors — use componentPartial for tooltip=/@events or a component class row.');
 	}
 }
-function instantiateLightRow(lightTemplate) {
-	const recipe = getRecipe(lightTemplate.strings);
-	const values = lightTemplate.values;
-	assertLightTemplate(recipe, values);
+function assertPartialTemplate(recipe, values) {
+	if (recipe?.refPlans?.length) {
+		throw new TypeError('componentPartial does not support #refs — use a component class row.');
+	}
+	if (recipe?.dataBindPlans?.length) {
+		throw new TypeError('componentPartial does not support two-way bindings — use a component class row.');
+	}
+	const subeventPlans = recipe?.subeventPlans;
+	if (subeventPlans) {
+		const subeventCount = subeventPlans.length;
+		for (let subeventIndex = 0; subeventIndex < subeventCount; subeventIndex++) {
+			const attrName = subeventPlans[subeventIndex].attrName;
+			if (attrName !== 'tooltip') {
+				throw new TypeError(`componentPartial only allows tooltip= among behaviors (got "${attrName}").`);
+			}
+		}
+	}
+	const spotPlans = recipe?.spotPlans;
+	if (!spotPlans) {
+		return;
+	}
+	const spotCount = spotPlans.length;
+	for (let spotIndex = 0; spotIndex < spotCount; spotIndex++) {
+		const plan = spotPlans[spotIndex];
+		if (plan.type === SPOT_TYPE.MULTI_ATTR || plan.type === SPOT_TYPE.CLASS_LIST) {
+			continue;
+		}
+		const value = values[plan.slotIndex];
+		if (plan.type === SPOT_TYPE.EVENT) {
+			if (value != null && !isFunction(value)) {
+				throw new TypeError('componentPartial @event handlers must be functions (host method refs).');
+			}
+			continue;
+		}
+		if (isFunction(value) || isBindingType(value)) {
+			throw new TypeError('componentPartial non-event expressions must be plain values — no `${() => …}` or bindings.');
+		}
+	}
+}
+function resolveLightFragment(strings, values, component, assertFn) {
+	const recipe = getRecipe(strings);
+	assertFn(recipe, values);
 	const fragment = recipe.fragment.cloneNode(true);
 	const spotPlans = recipe.spotPlans;
 	const spots = [];
-	/*
-	 * Two-phase (see instantiateRecipe): resolve all nodes on the pristine clone
-	 * before any anchored install shifts child indices, then install.
-	 */
 	const resolvedNodes = resolveRecipeNodes(fragment, recipe.resolveTargets);
 	const spotResolved = new Array(spotPlans.length);
 	const spotPlansLength = spotPlans.length;
@@ -123,20 +214,29 @@ function instantiateLightRow(lightTemplate) {
 		}
 	}
 	for (let spotIndex = 0; spotIndex < spotPlansLength; spotIndex++) {
-		const spot = installSpotFromPlan(spotPlans[spotIndex], spotResolved[spotIndex], values, null);
+		const spot = installSpotFromPlan(spotPlans[spotIndex], spotResolved[spotIndex], values, component);
 		if (spot) {
 			spots.push(spot);
 		}
 	}
 	if (fragment.children.length !== 1) {
-		throw new TypeError('each() html row must have exactly one root element.');
+		throw new TypeError('componentHTML/componentPartial must have exactly one root element.');
 	}
-	const root = fragment.firstElementChild;
-	LIGHT_ROW_INSTANCES.set(root, {
+	return {
+		recipe,
+		root: fragment.firstElementChild,
 		spots,
+		resolvedNodes,
+	};
+}
+function instantiateLightRow(lightTemplate) {
+	const values = lightTemplate.values;
+	const built = resolveLightFragment(lightTemplate.strings, values, null, assertLightTemplate);
+	LIGHT_ROW_INSTANCES.set(built.root, {
+		spots: built.spots,
 		prevExprs: values.slice(),
 	});
-	return root;
+	return built.root;
 }
 function patchLightRow(element, lightTemplate) {
 	const instance = LIGHT_ROW_INSTANCES.get(element);
@@ -146,16 +246,130 @@ function patchLightRow(element, lightTemplate) {
 	updateTemplateSpots(instance, lightTemplate.values, null);
 	return true;
 }
+function cleanupPartialRow(node) {
+	const instance = PARTIAL_ROW_INSTANCES.get(node);
+	if (!instance) {
+		return;
+	}
+	if (instance.unsubs) {
+		const unsubs = instance.unsubs;
+		const unsubCount = unsubs.length;
+		for (let unsubIndex = 0; unsubIndex < unsubCount; unsubIndex++) {
+			const entry = unsubs[unsubIndex];
+			if (entry && isFunction(entry.unsubscribe)) {
+				entry.unsubscribe();
+			}
+		}
+	}
+	const spots = instance.spots;
+	const spotCount = spots.length;
+	for (let spotIndex = 0; spotIndex < spotCount; spotIndex++) {
+		const spot = spots[spotIndex];
+		if (spot && isFunction(spot.unsubscribe)) {
+			spot.unsubscribe();
+		}
+	}
+	PARTIAL_ROW_INSTANCES.delete(node);
+}
+function installPartialBehaviors(recipe, resolvedNodes, host, unsubs) {
+	const subeventPlans = recipe.subeventPlans;
+	if (!subeventPlans || !subeventPlans.length) {
+		return;
+	}
+	const subeventCount = subeventPlans.length;
+	for (let subeventIndex = 0; subeventIndex < subeventCount; subeventIndex++) {
+		const plan = subeventPlans[subeventIndex];
+		const element = resolvedNodes[plan.nodeSlot];
+		if (!element) {
+			continue;
+		}
+		const behavior = getBehavior(plan.attrName);
+		if (behavior?.install) {
+			behavior.install(element, plan.value, host);
+			if (behavior.uninstall) {
+				unsubs.push(new BehaviorTeardown(behavior, element));
+			}
+		}
+	}
+}
+function stampPartialEventRoots(spots, root) {
+	const spotCount = spots.length;
+	for (let spotIndex = 0; spotIndex < spotCount; spotIndex++) {
+		const spot = spots[spotIndex];
+		if (spot && spot.type === SPOT_TYPE.EVENT) {
+			spot.partialRoot = root;
+		}
+	}
+}
+function instantiatePartialRow(partialTemplate, component, item, itemIndex) {
+	const host = partialTemplate.owner || component;
+	if (!host) {
+		throw new TypeError('componentPartial requires a host component at list materialize (use this.partial or a list on a component).');
+	}
+	const values = partialTemplate.values;
+	const built = resolveLightFragment(partialTemplate.strings, values, host, assertPartialTemplate);
+	const unsubs = [];
+	installPartialBehaviors(built.recipe, built.resolvedNodes, host, unsubs);
+	stampPartialEventRoots(built.spots, built.root);
+	const instance = {
+		spots: built.spots,
+		prevExprs: values.slice(),
+		unsubs,
+		host,
+		item,
+		itemIndex: itemIndex ?? 0,
+	};
+	PARTIAL_ROW_INSTANCES.set(built.root, instance);
+	built.root[TEMPLATE_CLEANUP] = cleanupPartialRow;
+	return built.root;
+}
+function patchPartialRow(element, partialTemplate, component, item, itemIndex) {
+	const instance = PARTIAL_ROW_INSTANCES.get(element);
+	if (!instance) {
+		return false;
+	}
+	const host = partialTemplate.owner || component || instance.host;
+	updateTemplateSpots(instance, partialTemplate.values, host);
+	instance.item = item;
+	instance.itemIndex = itemIndex ?? instance.itemIndex;
+	instance.host = host;
+	return true;
+}
 function resolveRenderKind(renderFn) {
 	if (isString(renderFn)) {
 		return 'tag';
+	}
+	if (Partial.is(renderFn)) {
+		return 'partial';
 	}
 	if (isCustomElementConstructor(renderFn)) {
 		return 'class';
 	}
 	return 'fn';
 }
-function createListElementByKind(kind, renderFn, item, component) {
+/**
+ * Invoke a list row renderer. `'fn'` uses host as `this` (bare method ref).
+ * `'partial'` is a shared Partial — same host-as-this, via Partial.render.
+ * @param {*} renderFn - LiveList.renderFn (function or Partial).
+ * @param {string} kind - resolveRenderKind result (`fn` | `partial`).
+ * @param {object|null|undefined} component - List host.
+ * @param {*} item - Current row item.
+ * @param {number} [itemIndex] - Absolute row index when known.
+ * @returns {*} - Row bag, Element, or HTML string.
+ */
+function invokeListRenderFn(renderFn, kind, component, item, itemIndex) {
+	if (kind === 'partial') {
+		return renderFn.render(item, component, itemIndex);
+	}
+	/*
+	 * A `'fn'` row renderer is called with the owning component as `this`, so a
+	 * bare method ref (`this.txRow`) reads component state/helpers — same
+	 * semantics as a bare-method-ref content spot. `.call(undefined, …)` when
+	 * the list has no connected spot yet is just a plain call.
+	 */
+	return renderFn.call(component, item, itemIndex);
+}
+function createListElementByKind(kind, renderFn, item, component, itemIndex) {
 	if (kind === 'tag') {
 		const element = document.createElement(renderFn);
 		element.state = item;
@@ -169,13 +383,12 @@ function createListElementByKind(kind, renderFn, item, component) {
 		// eslint-disable-next-line new-cap
 		return new renderFn(item);
 	}
-	/*
-	 * A `'fn'` row renderer is called with the owning component as `this`, so a
-	 * bare method ref (`this.txRow`) reads component state/helpers — same
-	 * semantics as a bare-method-ref content spot. `.call(undefined, …)` when
-	 * the list has no connected spot yet is just a plain call.
-	 */
-	return createRenderableElement(renderFn.call(component, item));
+	return createRenderableElement(
+		invokeListRenderFn(renderFn, kind, component, item, itemIndex),
+		component,
+		item,
+		itemIndex
+	);
 }
 function liveListItemKey(item, index) {
 	return index;
@@ -184,6 +397,8 @@ export class LiveList {
 	items = [];
 	renderFn;
 	keyFn;
+	/** Absolute index base for keyFn (virtual window start); 0 for full lists. */
+	keyIndexOffset = 0;
 	kind = null;
 	spot = null;
 	/*
@@ -210,10 +425,17 @@ export class LiveList {
 	disconnectSpot() {
 		this.spot = null;
 	}
-	createElement(item) {
-		return createListElementByKind(this.kind, this.renderFn, item, this.spot?.component);
+	createElement(item, itemIndex = 0) {
+		return createListElementByKind(this.kind, this.renderFn, item, this.spot?.component, itemIndex);
+	}
+	/** keyFn with absolute index (keyIndexOffset + relative). */
+	resolveKey(item, relativeIndex) {
+		return this.keyFn(item, this.keyIndexOffset + relativeIndex);
 	}
 	splice(start, deleteCount = 0, ...newItems) {
+		if (this.spot?.virtual) {
+			throw new TypeError('virtual list does not support imperative splice/push/pop/shift/unshift — mutate the bound state array and let list() re-diff');
+		}
 		if (!this.ownsItems) {
 			this.items = this.items.slice();
 			this.ownsItems = true;
@@ -221,11 +443,11 @@ export class LiveList {
 		const currentLength = this.items.length;
 		const normalStart = start < 0 ? Math.max(0, currentLength + start) : Math.min(start, currentLength);
 		const refItem = this.items[normalStart + deleteCount];
-		const refKey = refItem === undefined ? null : this.keyFn(refItem, normalStart + deleteCount);
+		const refKey = refItem === undefined ? null : this.resolveKey(refItem, normalStart + deleteCount);
 		const refElement = this.spot && refKey !== null ? (this.spot.keyMap?.get(refKey) ?? null) : null;
 		if (this.spot) {
 			for (let deleteIndex = normalStart; deleteIndex < normalStart + deleteCount && deleteIndex < currentLength; deleteIndex++) {
-				const itemKey = this.keyFn(this.items[deleteIndex], deleteIndex);
+				const itemKey = this.resolveKey(this.items[deleteIndex], deleteIndex);
 				const element = this.spot.keyMap?.get(itemKey);
 				cleanupTemplateNode(element);
 				element?.remove();
@@ -241,8 +463,8 @@ export class LiveList {
 			const newItemsLength = newItems.length;
 			for (let insertIndex = 0; insertIndex < newItemsLength; insertIndex++) {
 				const newItem = newItems[insertIndex];
-				const itemKey = this.keyFn(newItem, normalStart + insertIndex);
-				const element = this.createElement(newItem);
+				const itemKey = this.resolveKey(newItem, normalStart + insertIndex);
+				const element = this.createElement(newItem, normalStart + insertIndex);
 				this.spot.keyMap.set(itemKey, element);
 				this.spot.prevItemMap.set(itemKey, newItem);
 				fragment.append(element);
@@ -272,8 +494,15 @@ export class LiveList {
 function defaultEachKeyFn(item, index) {
 	return index;
 }
-export function each(items, renderFn, keyFn = defaultEachKeyFn) {
-	const listItem = new LiveList(renderFn, keyFn);
+/**
+ * Imperative / static keyed list. 3rd arg is keyFn or options `{ keyFn }`.
+ * `virtual` is rejected — `${each(…)}` installs a StaticSpot with no refresh loop.
+ */
+export function each(items, renderFn, keyFnOrOpts) {
+	const options = resolveListOptions(keyFnOrOpts, defaultEachKeyFn, {
+		allowVirtual: false,
+	});
+	const listItem = new LiveList(renderFn, options.keyFn);
 	if (Array.isArray(items) && items.length) {
 		/*
 		 * Share by reference, copy on first mutation. ListSpot.refresh mints a
@@ -291,18 +520,32 @@ export function each(items, renderFn, keyFn = defaultEachKeyFn) {
 function defaultListKeyFn(item, index) {
 	return item?.key ?? item?.id ?? index;
 }
-export function list(key, renderFn, keyFn = defaultListKeyFn) {
-	return new ListBinding(key, renderFn, keyFn);
+/**
+ * State-bound keyed list. 3rd arg is keyFn or options `{ keyFn?, virtual? }`.
+ * Options are install-frozen on ListSpot (updateSpot only swaps expr).
+ */
+export function list(key, renderFn, keyFnOrOpts) {
+	const options = resolveListOptions(keyFnOrOpts, defaultListKeyFn);
+	return new ListBinding(key, renderFn, {
+		keyFn: options.keyFn,
+		filterFn: null,
+		virtual: options.virtual,
+	});
 }
 /**
- * `filter(stateKey, ChildClass, test, keyFn?)` — `list()` plus a predicate. Only
- * the items `test` keeps are rendered; the filtered view is recomputed whenever
- * the bound array changes. `test` is a keep-predicate `(item) => boolean` or a
- * string flag name to hide on (`'hidden'`). Auto-keys by `key ?? id ?? index`,
- * exactly like `list`; `list` itself stays filter-free and light.
+ * `filter(stateKey, ChildClass, test, keyFnOrOpts?)` — `list()` plus a predicate.
+ * 3rd arg is the keep-test only (function or flag name); options are 4th.
  */
-export function filter(key, renderFn, test, keyFn = defaultListKeyFn) {
-	return new ListBinding(key, renderFn, keyFn, resolveListFilter(test));
+export function filter(key, renderFn, test, keyFnOrOpts) {
+	if (isPlainObject(test)) {
+		throw new TypeError('filter(key, renderFn, test, options?) — 3rd arg is the keep-test (function or flag name); pass options as the 4th argument.');
+	}
+	const options = resolveListOptions(keyFnOrOpts, defaultListKeyFn);
+	return new ListBinding(key, renderFn, {
+		keyFn: options.keyFn,
+		filterFn: resolveListFilter(test),
+		virtual: options.virtual,
+	});
 }
 /*
  * `bind.list` — typed LIST variant of the bind family. Wired here, where the
@@ -356,16 +599,33 @@ function lisIndexSet(sources) {
  * take `assignState`; anything else is replaced (returns the replacement so the
  * caller refreshes its key map).
  */
-function updateReusedElement(element, item, itemList) {
+function updateReusedElement(element, item, itemList, itemIndex = 0) {
+	const component = itemList.spot?.component;
+	/*
+	 * Exclusive branches — a partial root must not fall through to light patch
+	 * or re-instantiate (double EventSpot / tooltip install).
+	 */
+	if (PARTIAL_ROW_INSTANCES.has(element)) {
+		const bag = invokeListRenderFn(itemList.renderFn, itemList.kind, component, item, itemIndex);
+		if (ComponentPartialTemplate.is(bag)) {
+			patchPartialRow(element, bag, component, item, itemIndex);
+			return element;
+		}
+		const partialReplacement = itemList.createElement(item, itemIndex);
+		cleanupTemplateNode(element);
+		element.replaceWith(partialReplacement);
+		return partialReplacement;
+	}
 	if (LIGHT_ROW_INSTANCES.has(element)) {
-		patchLightRow(element, itemList.renderFn.call(itemList.spot?.component, item));
+		const lightBag = invokeListRenderFn(itemList.renderFn, itemList.kind, component, item, itemIndex);
+		patchLightRow(element, lightBag);
 		return element;
 	}
 	if (isFunction(element.assignState)) {
 		element.assignState(item);
 		return element;
 	}
-	const replacement = itemList.createElement(item);
+	const replacement = itemList.createElement(item, itemIndex);
 	cleanupTemplateNode(element);
 	element.replaceWith(replacement);
 	return replacement;
@@ -376,11 +636,11 @@ function updateReusedElement(element, item, itemList) {
  * The cheap gate for patchList's no-structural-change fast path; each key is
  * computed once (the general path would too), so a hit pays no extra keyFn work.
  */
-function sameKeyOrder(items, keyFn, oldMap) {
+function sameKeyOrder(items, itemList, oldMap) {
 	const keyIterator = oldMap.keys();
 	const itemsLength = items.length;
 	for (let index = 0; index < itemsLength; index++) {
-		if (keyFn(items[index], index) !== keyIterator.next().value) {
+		if (itemList.resolveKey(items[index], index) !== keyIterator.next().value) {
 			return false;
 		}
 	}
@@ -394,9 +654,7 @@ export function patchList(spot, itemList) {
 		itemList.connectSpot(spot);
 	}
 	spot.liveList = itemList;
-	const {
-		items, keyFn,
-	} = itemList;
+	const { items } = itemList;
 	/*
 	 * Container + tail boundary. Tier-1 / wrapper: the element itself, append at
 	 * its end (tail = null). Anchored partial: the parent shared with statics,
@@ -416,8 +674,8 @@ export function patchList(spot, itemList) {
 		const fragment = itemCount > 1 ? document.createDocumentFragment() : null;
 		for (let itemIndex = 0; itemIndex < itemCount; itemIndex++) {
 			const item = items[itemIndex];
-			const key = keyFn(item, itemIndex);
-			const element = itemList.createElement(item);
+			const key = itemList.resolveKey(item, itemIndex);
+			const element = itemList.createElement(item, itemIndex);
 			newMap.set(key, element);
 			prevItemMap.set(key, item);
 			if (fragment) {
@@ -446,14 +704,18 @@ export function patchList(spot, itemList) {
 	 * bookkeeping signal), and `sameKeyOrder` bails on the first mismatch so a
 	 * reorder / add / remove pays ~nothing before falling through.
 	 */
-	if (itemCount === oldMap.size && sameKeyOrder(items, keyFn, oldMap)) {
+	if (itemCount === oldMap.size && sameKeyOrder(items, itemList, oldMap)) {
 		const keyIterator = oldMap.keys();
 		for (let itemIndex = 0; itemIndex < itemCount; itemIndex++) {
 			const item = items[itemIndex];
 			const key = keyIterator.next().value;
 			if (item !== prevItemMap.get(key)) {
-				oldMap.set(key, updateReusedElement(oldMap.get(key), item, itemList));
+				oldMap.set(key, updateReusedElement(oldMap.get(key), item, itemList, itemIndex));
 				prevItemMap.set(key, item);
+			} else if (PARTIAL_ROW_INSTANCES.has(oldMap.get(key))) {
+				const partialMeta = PARTIAL_ROW_INSTANCES.get(oldMap.get(key));
+				partialMeta.item = item;
+				partialMeta.itemIndex = itemIndex;
 			}
 		}
 		spot.keyMap = oldMap;
@@ -508,12 +770,16 @@ export function patchList(spot, itemList) {
 	let highestOldSeen = -1;
 	for (let itemIndex = 0; itemIndex < itemCount; itemIndex++) {
 		const item = items[itemIndex];
-		const key = keyFn(item, itemIndex);
+		const key = itemList.resolveKey(item, itemIndex);
 		let element = oldMap.get(key);
 		if (element) {
 			oldMap.delete(key);
 			if (item !== prevItemMap.get(key)) {
-				element = updateReusedElement(element, item, itemList);
+				element = updateReusedElement(element, item, itemList, itemIndex);
+			} else if (PARTIAL_ROW_INSTANCES.has(element)) {
+				const partialMeta = PARTIAL_ROW_INSTANCES.get(element);
+				partialMeta.item = item;
+				partialMeta.itemIndex = itemIndex;
 			}
 			const source = oldOrder.get(key);
 			sources[itemIndex] = source;
@@ -523,7 +789,7 @@ export function patchList(spot, itemList) {
 				highestOldSeen = source;
 			}
 		} else {
-			element = itemList.createElement(item);
+			element = itemList.createElement(item, itemIndex);
 			sources[itemIndex] = -1;
 			reordered = true;
 		}
@@ -651,11 +917,12 @@ function buildListView(rawItems, filterFn) {
 	return [];
 }
 /**
- * Keyed list — `each(items, render, keyFn)` / `list(key, …)` /
- * `liveList(…)`. Owns `keyMap` (key → element) and `liveList` handle.
+ * Keyed list — `list(key, …)` / `filter(…)`. Owns `keyMap` (key → element)
+ * and `liveList` handle. Row options (renderFn/keyFn/filterFn/virtual) are
+ * install-frozen from `expr` — updateSpot only swaps the binding identity.
  */
 export class ListSpot extends Spot {
-	constructor(element, slotIndex, spotType, expr, component, bindingKey, renderFn, keyFn, filterFn = null) {
+	constructor(element, slotIndex, spotType, expr, component, bindingKey) {
 		super();
 		this.kind = SPOT_KIND.LIST;
 		this.type = spotType;
@@ -678,9 +945,12 @@ export class ListSpot extends Spot {
 			this.realm = null;
 			this.realmPath = null;
 		}
-		this.renderFn = renderFn;
-		this.keyFn = keyFn;
-		this.filterFn = filterFn;
+		// Install-frozen — never re-read from this.expr after construct.
+		this.renderFn = expr.renderFn;
+		this.keyFn = expr.keyFn;
+		this.filterFn = expr.filterFn;
+		this.virtual = expr.virtual ?? null;
+		this.virtualController = null;
 		this.keyMap = null;
 		this.liveList = null;
 		this.prevItemMap = null;
@@ -693,6 +963,9 @@ export class ListSpot extends Spot {
 		// Imperative handle: this.list(key) after mount.
 		if (component && bindingKey) {
 			registerListHandle(component, this);
+		}
+		if (this.virtual) {
+			this.virtualController = new ListVirtualController(this, this.virtual);
 		}
 	}
 	/** Drains `pendingPaths` and replays the refresh once per accumulated path
@@ -711,9 +984,13 @@ export class ListSpot extends Spot {
 		}
 		return this.refresh(paths ? paths[0] : null);
 	}
+	/** Scroll/resize re-entry from ListVirtualController (no changedPath). */
+	requestVirtualRefresh() {
+		this.refresh(null);
+	}
 	refresh(changedPath = null) {
 		const {
-			component, bindingKey, renderFn, keyFn, filterFn,
+			component, bindingKey, renderFn, keyFn, filterFn, virtual,
 		} = this;
 		const rawItems = this.realm === null ? resolveBindingValueForBinding(component, this.expr) : this.realm.read(this.realmPath);
 		const viewItems = buildListView(rawItems, filterFn);
@@ -727,14 +1004,17 @@ export class ListSpot extends Spot {
 		 * excluded entirely: a deep change may flip a filtered flag (a
 		 * membership change), and the filtered view's indices no longer line
 		 * up with the source array's — so it always takes the full keyed diff.
+		 *
+		 * Under virtual, keyMap is window-sized so length===keyMap.size is
+		 * always false — membership of the key replaces that gate.
 		 */
+		const mapSizeOk = virtual ? Boolean(this.keyMap) : this.keyMap && viewItems.length === this.keyMap.size;
 		if (
 			!filterFn &&
 			changedPath &&
 			changedPath !== bindingKey &&
 			changedPath.startsWith(this.bindingKeyPrefix) &&
-			this.keyMap &&
-			viewItems.length === this.keyMap.size
+			mapSizeOk
 		) {
 			const subPath = changedPath.slice(bindingKey.length + 1);
 			const firstDot = subPath.indexOf('.');
@@ -748,26 +1028,69 @@ export class ListSpot extends Spot {
 						if (element) {
 							/*
 							 * Deep write on an existing item (`items.i.foo`). Component
-							 * rows take assignState. Light html rows keep the SAME item
-							 * ref, so patchList's `item !== prev` gate would skip them —
-							 * force re-run of the row fn (carousel dots, stepper flags).
+							 * rows take assignState. Light html + feature partial rows keep
+							 * the SAME item ref, so patchList's `item !== prev` gate would
+							 * skip them — force re-run of the row fn (carousel dots,
+							 * legend muted, detail-list copied flash).
+							 * Store the return — a partial-to-non-partial swap replaces the node.
 							 */
 							if (isFunction(element.assignState)) {
 								element.assignState(itemAtIndex);
 								return;
 							}
-							if (LIGHT_ROW_INSTANCES.has(element) && this.liveList) {
-								updateReusedElement(element, itemAtIndex, this.liveList);
+							if (
+								this.liveList &&
+								(LIGHT_ROW_INSTANCES.has(element) || PARTIAL_ROW_INSTANCES.has(element))
+							) {
+								this.keyMap.set(itemKey, updateReusedElement(element, itemAtIndex, this.liveList, index));
 								return;
 							}
+						} else if (virtual) {
+							// Offscreen under the window — state already holds the write.
+							return;
 						}
 					}
 				}
 			}
 		}
+		if (virtual) {
+			this.patchVirtual(viewItems, renderFn, keyFn);
+			return;
+		}
 		patchSpot(this, each(viewItems, renderFn, keyFn));
 	}
+	/**
+	 * Window slice + absolute key offset → patchList, then measure mounted rows.
+	 * @param {Array} viewItems - Full view array.
+	 * @param {*} renderFn - Row render.
+	 * @param {Function} keyFn - Absolute-index keyFn (spot.keyFn).
+	 */
+	patchVirtual(viewItems, renderFn, keyFn) {
+		const controller = this.virtualController;
+		if (!controller) {
+			patchSpot(this, each(viewItems, renderFn, keyFn));
+			return;
+		}
+		if (!controller.attached) {
+			controller.attach();
+		}
+		const slice = controller.recompute(viewItems, keyFn);
+		const live = each(slice.items, renderFn, keyFn);
+		live.keyIndexOffset = slice.start;
+		patchSpot(this, live);
+		// After DOM is in place, measure heights (rAF-coalesced self-heal path also runs).
+		controller.measureMounted(this.keyMap);
+		// Optional host hook (e.g. ui-collection visible-page URL sync).
+		const onWindow = this.onVirtualWindow;
+		if (typeof onWindow === 'function') {
+			onWindow.call(this.component, slice.start, slice.end);
+		}
+	}
 	unsubscribe() {
+		if (this.virtualController) {
+			this.virtualController.detach();
+			this.virtualController = null;
+		}
 		if (this.component && this.bindingKey) {
 			unregisterListHandle(this.component, this);
 		}

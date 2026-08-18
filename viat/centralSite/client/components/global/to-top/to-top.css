@@ -1,0 +1,76 @@
+/* Host is layout-neutral; the inner `.tt` owns positioning so `data-position`
+   can live on a normal element (a component can't `?attr` its own host). */
+:host {
+	/* Interactive control chrome — never paint a text selection on a click or drag. */
+	user-select: none;
+	-webkit-user-select: none;
+	display: contents;
+}
+.tt {
+	position: fixed;
+	/* Above page chrome, sibling to ui-fab. */
+	z-index: var(--z-fab);
+	/* Hidden until the scroll surface clears `threshold`. */
+	opacity: 0;
+	pointer-events: none;
+	transform: translateY(0.5rem) scale(0.92);
+	transition:
+		opacity 0.2s ease,
+		transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+	will-change: opacity, transform;
+}
+.tt[data-visible] {
+	opacity: 1;
+	pointer-events: auto;
+	transform: none;
+}
+.tt[data-position='static'] {
+	position: static;
+	z-index: auto;
+	/* Inline demos always show — no enter animation gate. */
+	opacity: 1;
+	pointer-events: auto;
+	transform: none;
+}
+/* Sit above the taller of the desktop status bar and the mobile dock. */
+.tt[data-position='bottom-end'] {
+	inset-block-end: calc(max(var(--bottom-bar-clearance, 3rem), var(--dock-h, 0px)) + 0.75rem);
+	inset-inline-end: 1.5rem;
+}
+.tt[data-position='bottom-start'] {
+	inset-block-end: calc(max(var(--bottom-bar-clearance, 3rem), var(--dock-h, 0px)) + 0.75rem);
+	inset-inline-start: 1.5rem;
+}
+.tt[data-position='top-end'] {
+	inset-block-start: calc(var(--top-bar-clearance, 4rem) + 0.5rem);
+	inset-inline-end: 1.5rem;
+}
+.tt[data-position='top-start'] {
+	inset-block-start: calc(var(--top-bar-clearance, 4rem) + 0.5rem);
+	inset-inline-start: 1.5rem;
+}
+/* Disc via ui-button `.state.circle`; host radius matches elevation shadow. */
+.tt-btn {
+	border-radius: 999px;
+	box-shadow: var(--elev-3, 0 14px 36px rgba(0, 0, 0, 0.38));
+	transition:
+		transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1),
+		box-shadow 0.16s ease;
+	will-change: transform;
+}
+.tt-btn:hover {
+	transform: translateY(-2px) scale(1.03);
+	box-shadow: var(--elev-hover, 0 18px 42px rgba(0, 0, 0, 0.45));
+}
+.tt-btn:active {
+	transform: translateY(0) scale(0.98);
+}
+@media (prefers-reduced-motion: reduce) {
+	.tt,
+	.tt-btn,
+	.tt-btn:hover,
+	.tt-btn:active {
+		transform: none;
+		transition: none;
+	}
+}

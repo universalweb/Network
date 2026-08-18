@@ -28,6 +28,11 @@ export class UIMetric extends WebComponent {
 		deltaSuffix: '%',
 		invertDelta: false,
 		values: [],
+		// Hover hint. `tooltip`, never `title` — `title` is a native HTMLElement
+		// property that a `.title=` binding would hijack (the button footgun).
+		tooltip: '',
+		// Separate from `hint` (visible text) and from the card tooltip.
+		deltaTooltip: '',
 	};
 	get hasTrend() {
 		return Array.isArray(this.state.values) && this.state.values.length > 1;
@@ -47,14 +52,14 @@ export class UIMetric extends WebComponent {
 	}
 	render() {
 		this.html`
-			<div class="mtc" data-tone=${this.state.tone}>
+			<div class="mtc" data-tone=${this.state.tone} tooltip=${this.state.tooltip}>
 				<div class="mtc-head">
 					<span class="mtc-label">${this.state.label}</span>
 					<span class="mtc-hint" ?hidden=${!this.state.hint}>${this.state.hint}</span>
 				</div>
 				<div class="mtc-row">
 					<span class="mtc-value">${this.state.value}</span>
-					<span class="mtc-delta" data-delta=${this.deltaTone()} ?hidden=${!this.deltaShown}>${this.deltaText}</span>
+					<span class="mtc-delta" data-delta=${this.deltaTone()} tooltip=${this.state.deltaTooltip} ?hidden=${!this.deltaShown}>${this.deltaText}</span>
 				</div>
 				<ui-sparkline class="mtc-spark" ?hidden=${!this.hasTrend} .state.values=${this.state.values} .state.variant=${'area'} .state.tone=${this.state.tone}></ui-sparkline>
 			</div>

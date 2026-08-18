@@ -53,4 +53,41 @@
 	border: 2px solid var(--bg-panel);
 	/* Tone comes from the shared `[data-tone]` fill map (util-surface.css). */
 	background: var(--tone-fill, var(--text-muted));
+	z-index: 1;
+}
+/* Role badge — opposite the status dot so both can show at once. */
+.av-badge {
+	--icon-size: 0.55rem;
+	position: absolute;
+	inset-block-start: -0.05rem;
+	inset-inline-start: -0.05rem;
+	display: grid;
+	place-items: center;
+	block-size: 38%;
+	inline-size: 38%;
+	min-block-size: 0.7rem;
+	min-inline-size: 0.7rem;
+	border-radius: 50%;
+	border: 2px solid var(--bg-panel);
+	background: var(--tone-fill, var(--text-muted));
+	color: oklch(0.98 0 0);
+	z-index: 1;
+	pointer-events: auto;
+}
+.av[data-size='xs'] .av-badge {
+	--icon-size: 0.4rem;
+	min-block-size: 0.55rem;
+	min-inline-size: 0.55rem;
+	border-width: 1px;
+}
+.av[data-size='sm'] .av-badge {
+	--icon-size: 0.48rem;
+}
+.av[data-size='lg'] .av-badge {
+	--icon-size: 0.7rem;
+}
+.av-badge ui-icon {
+	display: grid;
+	place-items: center;
+	color: inherit;
 }

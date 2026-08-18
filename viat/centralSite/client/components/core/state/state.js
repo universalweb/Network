@@ -632,8 +632,25 @@ class StateProxyHandler {
 			return true;
 		}
 		const fullPath = joinPath(this.path, key);
-		if (defaultLogger.perfOn) {
-			defaultLogger.perf('state', reportWastedStateSet, target, key, value, fullPath, this.component);
+		/*
+		 * Structural no-op guard (the "wasted set" case): a NEW reference that is
+		 * plainEqual to the current value. Previously we only LOGGED this under
+		 * perfOn and still wrote+notified — which re-fired observe() handlers and
+		 * list patches on every parent patch pass (preview progress tick → flood).
+		 * Keep the existing ref, skip notify. Silent by design (collectionEngine
+		 * already does the same); a console warn here would re-flood on every
+		 * parent patch that re-applies `.state.items=${…}` with a proxy/clone.
+		 * Primitives already exited on ===.
+		 */
+		const current = target[key];
+		if (
+			current != null &&
+			value != null &&
+			typeof current === 'object' &&
+			typeof value === 'object' &&
+			plainEqual(current, value)
+		) {
+			return true;
 		}
 		Reflect.set(target, key, value);
 		if (pathIsReactive(this.component, fullPath)) {

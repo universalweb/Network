@@ -1,0 +1,37 @@
+:host {
+	display: inline-flex;
+}
+.aiex {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	padding-block: var(--space-2);
+	padding-inline: var(--space-3);
+	border: 1px solid var(--dark-divider, rgba(255, 255, 255, 0.12));
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-muted, rgba(255, 255, 255, 0.55));
+	font: inherit;
+	font-size: var(--text-xs);
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: border-color 0.15s ease, color 0.15s ease;
+}
+.aiex:hover:not(:disabled) {
+	border-color: var(--teal, var(--accent, currentColor));
+	color: var(--teal, var(--accent, currentColor));
+}
+.aiex:focus-visible {
+	outline: 2px solid var(--cyan, currentColor);
+	outline-offset: 1px;
+}
+.aiex:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+@media (prefers-reduced-motion: reduce) {
+	.aiex {
+		transition: none;
+	}
+}

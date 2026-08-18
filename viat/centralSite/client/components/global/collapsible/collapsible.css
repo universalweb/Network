@@ -1,0 +1,44 @@
+:host {
+	display: block;
+}
+.cl-trigger {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	inline-size: 100%;
+	padding: 0.65rem 0.15rem;
+	border: 0;
+	background: transparent;
+	color: var(--text-main);
+	font: inherit;
+	font-weight: 500;
+	text-align: start;
+	cursor: pointer;
+}
+.cl-trigger:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+.cl-heading {
+	flex: 1 1 auto;
+}
+.cl-chevron {
+	transition: transform 0.18s ease;
+	opacity: 0.7;
+}
+.cl[data-open] .cl-chevron {
+	transform: rotate(180deg);
+}
+.cl-panel {
+	overflow: hidden;
+}
+.cl-body {
+	padding-block: 0.25rem 0.75rem;
+	color: var(--text-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+	.cl-chevron {
+		transition: none;
+	}
+}

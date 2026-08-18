@@ -1,0 +1,44 @@
+/* uwc.util — fade edges on overflow scroll containers. */
+@layer uwc.util {
+	.scroll-fade,
+	[data-scroll-fade] {
+		--scroll-fade-size: 1.5rem;
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 var(--scroll-fade-size),
+			#000 calc(100% - var(--scroll-fade-size)),
+			transparent 100%
+		);
+		mask-size: 100% 100%;
+		mask-repeat: no-repeat;
+	}
+	[data-scroll-fade='x'],
+	.scroll-fade-x {
+		mask-image: linear-gradient(
+			to right,
+			transparent 0,
+			#000 var(--scroll-fade-size),
+			#000 calc(100% - var(--scroll-fade-size)),
+			transparent 100%
+		);
+	}
+	[data-scroll-fade='start'],
+	.scroll-fade-start {
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 var(--scroll-fade-size),
+			#000 100%
+		);
+	}
+	[data-scroll-fade='end'],
+	.scroll-fade-end {
+		mask-image: linear-gradient(
+			to bottom,
+			#000 0,
+			#000 calc(100% - var(--scroll-fade-size)),
+			transparent 100%
+		);
+	}
+}

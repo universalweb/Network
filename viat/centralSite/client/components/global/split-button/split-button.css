@@ -1,0 +1,107 @@
+/*
+ * Structure only — colors come from framework button tones on the halves.
+ * Goal: one unified pill (x.ai "Try for free") — shared hover/open paint,
+ * no press squash, chevron INVERTS on open (scaleY flip — not a center spin).
+ */
+:host {
+	display: inline-flex;
+	user-select: none;
+	-webkit-user-select: none;
+	vertical-align: middle;
+	flex: 0 0 auto;
+}
+
+.split {
+	display: inline-flex;
+	align-items: stretch;
+	max-inline-size: 100%;
+	border-radius: 999px;
+	/* Cluster lift — both halves ride the same elevation (one control). */
+	transition: box-shadow 0.16s ease, filter 0.16s ease;
+	box-shadow: var(--elev-1, 0 2px 8px rgba(0, 0, 0, 0.18));
+}
+
+.split:hover,
+.split[data-open] {
+	box-shadow: var(--elev-2, 0 6px 16px rgba(0, 0, 0, 0.28));
+	filter: brightness(1.06);
+}
+
+/* Pill seam — --ui-btn-radius pierces into framework size rules.
+   Kill press-squash: x.ai pill is static on click (chevron motion only). */
+.split-primary {
+	--ui-btn-radius: 999px 0 0 999px;
+	--ui-btn-press-scale: 1;
+	border-start-end-radius: 0;
+	border-end-end-radius: 0;
+}
+
+.split-caret {
+	--ui-btn-radius: 0 999px 999px 0;
+	--ui-btn-press-scale: 1;
+	margin-inline-start: -1px;
+	/* Tight chevron lane; height matches primary via stretch + size tokens. */
+	padding-inline: 0.55em;
+	min-inline-size: 2.25em;
+	inline-size: auto;
+}
+
+/* Cluster filter already unifies hover paint across both halves; keep seam
+   stacking flat so one half doesn't pop above the other as a separate chip. */
+
+/* Divider between label and caret (inset hairline). */
+.split-caret {
+	position: relative;
+}
+.split-caret::before {
+	content: '';
+	position: absolute;
+	inset-block: 22%;
+	inset-inline-start: 0;
+	inline-size: 1px;
+	background: color-mix(in oklab, currentColor 22%, transparent);
+	pointer-events: none;
+	z-index: 2;
+}
+
+/* Chevron — vertical invert (scaleY), not rotate(180). Spin orbits the glyph
+   around its center; scaleY flips through the mid-line so the tip swaps ends
+   without a cartwheel. */
+.split-chevron {
+	display: block;
+	line-height: 1;
+	pointer-events: none;
+	color: currentColor;
+	--icon-color-hover: currentColor;
+	--icon-color-active: currentColor;
+	transform: scaleY(1);
+	transform-origin: center;
+	transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+	will-change: transform;
+}
+.split[data-open] .split-chevron {
+	transform: scaleY(-1);
+}
+
+.split-primary[aria-disabled='true'],
+.split-primary:disabled,
+.split-caret:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.split {
+		transition: none;
+		filter: none;
+	}
+	.split-chevron {
+		transition: none;
+		will-change: auto;
+	}
+	/* Still show inverted open state — skip the motion only. */
+	.split[data-open] .split-chevron {
+		transform: scaleY(-1);
+	}
+}

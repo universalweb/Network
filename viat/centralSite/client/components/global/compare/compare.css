@@ -1,0 +1,107 @@
+:host {
+	display: block;
+	inline-size: 100%;
+}
+.cp {
+	position: relative;
+	overflow: hidden;
+	inline-size: 100%;
+	aspect-ratio: 16 / 10;
+	border: 1px solid var(--surface-border, var(--border-light-color, rgba(30, 35, 41, 0.12)));
+	border-radius: var(--radius-md, 0);
+	background: var(--bg-dark, var(--bg-panel));
+	touch-action: none;
+	user-select: none;
+	cursor: ew-resize;
+}
+.cp[data-orientation='vertical'] {
+	cursor: ns-resize;
+	aspect-ratio: 4 / 5;
+}
+.cp[data-disabled] {
+	cursor: not-allowed;
+	opacity: 0.6;
+	pointer-events: none;
+}
+.cp-layer {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+}
+.cp-layer > ::slotted(*),
+.cp-img {
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+	object-fit: cover;
+}
+.cp-after {
+	clip-path: inset(0 0 0 var(--cp-pos, 50%));
+}
+.cp[data-orientation='vertical'] .cp-after {
+	clip-path: inset(var(--cp-pos, 50%) 0 0 0);
+}
+.cp-handle {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: var(--cp-pos, 50%);
+	translate: -50% 0;
+	inline-size: 1.25rem;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: ew-resize;
+	z-index: 2;
+}
+.cp[data-orientation='vertical'] .cp-handle {
+	inset-inline: 0;
+	inset-block-start: var(--cp-pos, 50%);
+	inset-block-end: auto;
+	inline-size: auto;
+	block-size: 1.25rem;
+	translate: 0 -50%;
+	cursor: ns-resize;
+}
+.cp-handle:focus-visible {
+	outline: 2px solid var(--focus-ring-color, var(--teal));
+	outline-offset: 2px;
+}
+.cp-grip {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: 50%;
+	translate: -50% 0;
+	inline-size: 2px;
+	background: var(--text-main);
+	box-shadow: 0 0 0 1px color-mix(in oklab, var(--bg-panel) 70%, transparent);
+}
+.cp[data-orientation='vertical'] .cp-grip {
+	inset-inline: 0;
+	inset-block-start: 50%;
+	inset-block-end: auto;
+	inline-size: auto;
+	block-size: 2px;
+	translate: 0 -50%;
+}
+.cp-grip::before {
+	content: '';
+	position: absolute;
+	inset-block-start: 50%;
+	inset-inline-start: 50%;
+	translate: -50% -50%;
+	inline-size: 1.1rem;
+	block-size: 1.1rem;
+	border-radius: 999px;
+	border: 2px solid var(--text-main);
+	background: var(--bg-panel);
+	box-shadow: var(--elev-2, 0 0 0 1px rgba(30, 35, 41, 0.14));
+}
+.cp[data-dragging] .cp-grip::before {
+	background: var(--text-main);
+}
+@media (prefers-reduced-motion: reduce) {
+	.cp-after,
+	.cp-handle {
+		transition: none;
+	}
+}

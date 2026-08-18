@@ -23,7 +23,7 @@
 	justify-content: center;
 	align-items: stretch;
 	box-sizing: border-box;
-	z-index: var(--z-dock, 40);
+	z-index: var(--z-dock);
 	pointer-events: none;
 }
 /* Only the rail itself is interactive; the tall empty span on desktop must let

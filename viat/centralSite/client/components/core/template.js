@@ -26,6 +26,7 @@ import {
 	isCustomElementConstructor,
 	ListSpot,
 	LiveList,
+	PARTIAL_ROW_INSTANCES,
 	patchListAnchored,
 	patchListKind,
 } from './template/list.js';
@@ -59,7 +60,16 @@ import {
  * pre-split importer of template.js keeps its entry point.
  */
 export {
-	each, filter, html, list, LiveList,
+	componentHTML,
+	componentPartial,
+	each,
+	filter,
+	html,
+	list,
+	LiveList,
+	Partial,
+	templatePartial,
+	templatePlainHTML,
 } from './template/list.js';
 const SUBEVENT_ATTRS = behaviorAttrNames();
 /**
@@ -179,6 +189,18 @@ function applyClassListItems(items, desired, deps, component) {
 			continue;
 		}
 		if (item == null || item === false) {
+			continue;
+		}
+		/*
+		 * ONE unwrap site for ClassList — whether the binding is a bare
+		 * `class=${classList(...)}`, a method that returns ClassList
+		 * (`class=${this.controlClass}`), a thunk, a Binding value, or nested
+		 * inside arrays. Without this, Object.keys(ClassList) emits the
+		 * instance fields `isClassList` + `items` as class tokens and every
+		 * real token is lost (is-icon-only / is-circle / is-full / is-loading).
+		 */
+		if (ClassList.isClassList(item)) {
+			applyClassListItems(item.items, desired, deps, component);
 			continue;
 		}
 		if (isFunction(item)) {
@@ -1023,11 +1045,26 @@ function patchSpotBody(spot, value) {
 		 * `.state.path=` is the explicit deep-state channel — the one sanctioned
 		 * way a parent writes into a child's reactive state. Writing through the
 		 * child's state proxy (not a bare element property) routes the assignment
-		 * to the proxy set trap so the nested key notifies and re-patches. The
-		 * proxy already no-ops an unchanged leaf, so no extra arg-diff is needed.
+		 * to the proxy set trap so the nested key notifies and re-patches.
+		 *
+		 * Unwrap a live state proxy to its RAW target before write. Re-applying
+		 * `.state.items=${parent.state.rows}` every parent patch pass would otherwise
+		 * hand the child a *proxy wrapper* while the child may already hold the
+		 * raw array (or a prior clone) — === fails, plainEqual warns "wasted set",
+		 * and observe() thrash follows. Storing the shared raw keeps the next
+		 * rebind a strict-equality no-op.
 		 */
 		if (spot.element.state && spot.attr.startsWith('state.')) {
-			setValueAtPath(spot.element.state, spot.attr.slice(6), value);
+			const statePath = spot.attr.slice(6);
+			const writeValue = unwrapReactiveValue(value);
+			// Skip when the child already holds this exact raw ref (common after the
+			// first bind of `.state.items=${parent.state.rows}`). Avoids set-trap
+			// plainEqual work on every parent patch pass.
+			const current = getValueAtPath(spot.element.STATE, statePath);
+			if (current === writeValue) {
+				return;
+			}
+			setValueAtPath(spot.element.state, statePath, writeValue);
 			return;
 		}
 		if (spot.element[spot.attr] !== value) {
@@ -1123,7 +1160,24 @@ function dispatchEventSpot(host, domEvent, capture) {
 	if (spot.modPrevent) {
 		domEvent.preventDefault();
 	}
-	const result = spot.component.runEventHandler(spot.expr, domEvent, host, domEvent.type);
+	/*
+	 * componentPartial list rows: pass current item/index from the row binding
+	 * record (updated on every patchList reuse) so handlers must not close over
+	 * the mount-time item. Signature: handler(domEvent, item, itemIndex).
+	 * Receiver is record.host (template owner), not the list spot alone.
+	 */
+	let result;
+	if (spot.partialRoot) {
+		const partialMeta = PARTIAL_ROW_INSTANCES.get(spot.partialRoot);
+		if (partialMeta) {
+			const owner = partialMeta.host || spot.component;
+			result = spot.expr.call(owner, domEvent, partialMeta.item, partialMeta.itemIndex);
+		} else {
+			result = spot.component.runEventHandler(spot.expr, domEvent, host, domEvent.type);
+		}
+	} else {
+		result = spot.component.runEventHandler(spot.expr, domEvent, host, domEvent.type);
+	}
 	/*
 	 * `.once` — detach after the first dispatch. Done manually (not native
 	 * `{ once: true }`) so the EVENT_SPOTS map entry is removed in lockstep with
@@ -1440,7 +1494,7 @@ class EventSpot extends Spot {
 function installBindingSpot(plan, element, expr, component) {
 	const bindingKey = expr.key;
 	if (ListBinding.isListBinding(expr)) {
-		const listSpot = new ListSpot(element, plan.slotIndex, plan.type, expr, component, bindingKey, expr.renderFn, expr.keyFn, expr.filterFn);
+		const listSpot = new ListSpot(element, plan.slotIndex, plan.type, expr, component, bindingKey);
 		listSpot.refresh(null);
 		syncSpotSubscriptions(listSpot, bindingDepMap(expr, component));
 		return listSpot;
@@ -1795,7 +1849,11 @@ function installAnchoredTextSpot(plan, resolved, exprs, component) {
 	const parentEl = startComment.parentNode;
 	const expr = exprs[plan.slotIndex];
 	if (ListBinding.isListBinding(expr)) {
-		const listSpot = new ListSpot(parentEl, plan.slotIndex, SPOT_TYPE.TEXT, expr, component, expr.key, expr.renderFn, expr.keyFn, expr.filterFn);
+		// Virtual lists need a wrapper host — padding on a shared parent corrupts static siblings.
+		if (expr.virtual) {
+			throw new TypeError('virtual list requires a wrapper host (a `${list(...)}` that is the sole content of an element), not an anchored partial list — padding on a shared parent would corrupt static siblings.');
+		}
+		const listSpot = new ListSpot(parentEl, plan.slotIndex, SPOT_TYPE.TEXT, expr, component, expr.key);
 		markAnchored(listSpot, startComment, endComment);
 		listSpot.refresh(null);
 		syncSpotSubscriptions(listSpot, bindingDepMap(expr, component));
@@ -2144,6 +2202,29 @@ function isStateProxyValue(value) {
 	return value !== null && typeof value === 'object' && value[STATE_PATH] !== undefined;
 }
 /**
+ * Resolve a reactive proxy to the raw value it wraps (shared array/object).
+ * State-proxy meta: `{ component, path }`. Tracking/realm meta: `{ realm, path }`
+ * with `realm.read(path)`. Non-proxies pass through unchanged.
+ * @param {*} value - Possibly a state/tracking proxy.
+ * @returns {*} Raw target or the original value.
+ */
+function unwrapReactiveValue(value) {
+	if (!isStateProxyValue(value)) {
+		return value;
+	}
+	const meta = value[STATE_PATH];
+	if (!meta) {
+		return value;
+	}
+	if (meta.component?.STATE != null) {
+		return getValueAtPath(meta.component.STATE, meta.path);
+	}
+	if (typeof meta.realm?.read === 'function') {
+		return meta.realm.read(meta.path);
+	}
+	return value;
+}
+/**
  * Shared between MULTI_ATTR and CLASS_LIST spot re-render paths. Walks the
  * spot's `parts` array, updates any expression slots whose value changed
  * against the latest `newExprs`, and returns whether any slot changed. Pure
@@ -2212,7 +2293,7 @@ export function updateTemplateSpots(state, newExprs, component) {
 	}
 	/*
 	 * Retain the exprs array directly — no copy. Every caller on the patch path
-	 * (templateHtml / templateHtmlElement / patchLightRow) passes a freshly minted
+	 * (templateHtml / templateHtmlElement / patchLightRow / patchPartialRow) passes a freshly minted
 	 * single-use array and returns before any instantiate, and prevExprs is only
 	 * ever read — so there is nothing to alias against. (The INSTALL sites still
 	 * `.slice()` because there the array is shared with instantiateRecipe.)
@@ -2260,13 +2341,20 @@ function runTemplateCleanup(component) {
 		eachArray(component.tplUnsubs, disposeItem);
 		component.tplUnsubs = null;
 	}
+	/*
+	 * Drop the htmlElement cache BEFORE node cleanup. Cached roots retain their
+	 * spots while merely detached from a content spot (see cleanupHtmlElementInstance);
+	 * a real teardown must clear the cache first so those retain checks no-op and
+	 * spots actually unsubscribe.
+	 */
+	component.htmlElementCache?.clear();
+	component.htmlElementCache = null;
 	if (component.tplCleanupNodes?.size) {
 		component.tplCleanupNodes.forEach(runCleanupOnNode);
 		component.tplCleanupNodes.clear();
 	}
 	component.tplState = null;
 	component.tplBoundKeys = null;
-	component.htmlElementCache?.clear();
 }
 export function templateCleanup() {
 	runTemplateCleanup(this);
@@ -2317,6 +2405,20 @@ function cleanupHtmlElementInstance(node) {
 	if (!instance) {
 		return;
 	}
+	/*
+	 * Cached htmlElement roots must KEEP their spots while merely swapped out of
+	 * a content range (loading ↔ body branch, ifThen host, etc.). clearRange →
+	 * cleanupTemplateNode runs on the detached root; tearing spots down here left
+	 * htmlElementCache holding a DEAD shell — re-entry patched exprs only, never
+	 * re-subscribed ListSpot/BindingSpot, so lists stayed empty after a successful
+	 * load. Retain while the owning component still caches this root; re-arm the
+	 * cleanup hook (cleanupTemplateNode nulls it before calling us).
+	 */
+	const cached = instance.component.htmlElementCache?.get(instance.strings);
+	if (cached?.element === node) {
+		node[TEMPLATE_CLEANUP] = cleanupHtmlElementInstance;
+		return;
+	}
 	HTML_ELEMENT_INSTANCES.delete(node);
 	cleanupSpots(instance.spots);
 	clearSubscriptions(instance.unsubs);
@@ -2334,8 +2436,16 @@ export function templateHtmlElement(strings, ...exprs) {
 	const cache = this.htmlElementCache ??= new Map();
 	const cached = cache.get(strings);
 	if (cached) {
-		updateTemplateSpots(cached.tplState, exprs, this);
-		return cached.element;
+		/*
+		 * Defense: if a forced teardown killed spots while the cache entry
+		 * lingered, drop it and reinstall rather than patching a dead shell.
+		 */
+		if (HTML_ELEMENT_INSTANCES.has(cached.element)) {
+			updateTemplateSpots(cached.tplState, exprs, this);
+			return cached.element;
+		}
+		cache.delete(strings);
+		this.tplCleanupNodes?.delete(cached.element);
 	}
 	const recipe = getRecipe(strings);
 	const instance = instantiateRecipe(recipe, exprs, this);
@@ -2345,16 +2455,23 @@ export function templateHtmlElement(strings, ...exprs) {
 		throw new TypeError('htmlElement requires exactly one root element.');
 	}
 	const element = instance.fragment.firstElementChild;
+	/*
+	 * component + strings ride the instance so cleanup can ask "still cached?"
+	 * without a reverse WeakMap. strings is the call-site singleton key.
+	 */
+	instance.component = this;
+	instance.strings = strings;
 	HTML_ELEMENT_INSTANCES.set(element, instance);
 	element[TEMPLATE_CLEANUP] = cleanupHtmlElementInstance;
 	(this.tplCleanupNodes ??= new Set()).add(element);
+	const tplState = {
+		strings,
+		spots: instance.spots,
+		prevExprs: exprs.slice(),
+	};
 	cache.set(strings, {
 		element,
-		tplState: {
-			strings,
-			spots: instance.spots,
-			prevExprs: exprs.slice(),
-		},
+		tplState,
 	});
 	return element;
 }

@@ -1,0 +1,40 @@
+:host {
+	display: block;
+	min-block-size: 0;
+}
+.sa {
+	position: relative;
+	min-block-size: 0;
+	border-radius: inherit;
+}
+.sa-viewport {
+	block-size: 100%;
+	max-block-size: inherit;
+	overflow: auto;
+	overscroll-behavior: contain;
+	scrollbar-gutter: stable;
+	scrollbar-width: thin;
+	scrollbar-color: color-mix(in oklch, var(--text-muted) 45%, transparent) transparent;
+}
+.sa[data-orientation='vertical'] .sa-viewport {
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+.sa[data-orientation='horizontal'] .sa-viewport {
+	overflow-x: auto;
+	overflow-y: hidden;
+}
+.sa[data-orientation='both'] .sa-viewport {
+	overflow: auto;
+}
+.sa-viewport::-webkit-scrollbar {
+	inline-size: 0.45rem;
+	block-size: 0.45rem;
+}
+.sa-viewport::-webkit-scrollbar-thumb {
+	background: color-mix(in oklch, var(--text-muted) 40%, transparent);
+	border-radius: 999px;
+}
+.sa-viewport::-webkit-scrollbar-track {
+	background: transparent;
+}

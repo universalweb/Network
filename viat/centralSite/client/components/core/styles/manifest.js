@@ -11,6 +11,7 @@ const moduleFiles = {
 	'uwc.util-surface': 'util-surface.css',
 	'uwc.animations': 'animations.css',
 	'uwc.effects': 'effects.css',
+	'uwc.util-scroll-fade': 'util-scroll-fade.css',
 };
 /*
  * Default UWC CSS base — a keyed map of shared, RESOLVED module stylesheets

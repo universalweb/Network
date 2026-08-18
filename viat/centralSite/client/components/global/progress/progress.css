@@ -1,0 +1,362 @@
+:host {
+	display: block;
+	inline-size: 100%;
+}
+
+.pg {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	--pg-fill: var(--cyan, oklch(0.72 0.12 200));
+	--pg-track: color-mix(in oklch, var(--text-muted, oklch(0.6 0 0)) 22%, transparent);
+	--pg-h: 0.5rem;
+	--pg-r: 999px;
+}
+
+/* ── size ─────────────────────────────────────────────────────────── */
+.pg[data-size='sm'] { --pg-h: 0.35rem; }
+.pg[data-size='lg'] { --pg-h: 0.75rem; }
+.pg {
+	--pg-value-size: clamp(0.62rem, calc(var(--pg-h) * 1.15 + 0.3rem), 0.875rem);
+}
+.pg[data-value-position='auto'],
+.pg[data-value-position='above']:not(:has(.pg-label:not([hidden]))) {
+	padding-block-start: 1.1rem;
+}
+.pg[data-size='sm'] {
+	--pg-value-size: clamp(0.58rem, calc(var(--pg-h) * 1.35 + 0.28rem), 0.78rem);
+}
+.pg[data-size='lg'] {
+	--pg-value-size: clamp(0.75rem, calc(var(--pg-h) * 0.95 + 0.2rem), 0.95rem);
+}
+
+/* ── tone → fill ──────────────────────────────────────────────────── */
+.pg[data-tone='primary'] { --pg-fill: var(--text-main, oklch(0.92 0 0)); }
+.pg[data-tone='accent'],
+.pg[data-tone='cyan'] { --pg-fill: var(--cyan, oklch(0.72 0.12 200)); }
+.pg[data-tone='success'] { --pg-fill: var(--color-success, oklch(0.7 0.15 150)); }
+.pg[data-tone='danger'] { --pg-fill: var(--color-danger, oklch(0.58 0.2 25)); }
+.pg[data-tone='warning'] { --pg-fill: var(--color-warning, oklch(0.78 0.15 85)); }
+.pg[data-tone='info'] { --pg-fill: var(--color-info, oklch(0.7 0.12 240)); }
+.pg[data-tone='neutral'] { --pg-fill: var(--text-muted, oklch(0.65 0 0)); }
+
+.pg-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+.pg-head[hidden] { display: none !important; }
+
+.pg-label {
+	font-size: var(--text-xs, 0.75rem);
+	font-weight: var(--weight-medium, 500);
+	color: var(--text-main);
+	letter-spacing: 0.02em;
+}
+
+.pg-row {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+}
+
+.pg-track {
+	position: relative;
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	block-size: var(--pg-h);
+	border-radius: var(--pg-r);
+	background: var(--pg-track);
+	overflow: hidden;
+	isolation: isolate;
+}
+.pg[data-value-position='auto'] .pg-track,
+.pg[data-value-position='above'] .pg-track {
+	overflow: visible;
+	container-type: size;
+	container-name: pg-track;
+}
+/* Segmented hug — track shrinks to the segment row instead of stretching full width. */
+.pg[data-fit='content'] .pg-track {
+	flex: 0 1 auto;
+	inline-size: fit-content;
+	max-inline-size: 100%;
+}
+.pg[data-fit='fill'] .pg-track {
+	flex: 1 1 auto;
+	inline-size: auto;
+}
+
+/* solid / continuous fill */
+.pg-bar {
+	block-size: 100%;
+	border-radius: inherit;
+	background: var(--pg-fill);
+	transform-origin: inline-start center;
+	overflow: hidden;
+}
+.pg[data-animated] .pg-bar {
+	transition:
+		inline-size 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+		background 0.28s ease,
+		filter 0.28s ease,
+		opacity 0.28s ease;
+}
+.pg-bar[hidden] { display: none !important; }
+
+/* ── animation variants (solid track) ─────────────────────────────── */
+.pg[data-variant='striped'] .pg-bar {
+	background-image: repeating-linear-gradient(
+		-45deg,
+		transparent 0,
+		transparent 0.35rem,
+		color-mix(in oklab, white 18%, transparent) 0.35rem,
+		color-mix(in oklab, white 18%, transparent) 0.7rem
+	);
+	background-size: 1.4rem 1.4rem;
+	background-color: var(--pg-fill);
+	animation: pg-stripe 0.9s linear infinite;
+}
+.pg[data-variant='glow'] .pg-bar {
+	box-shadow:
+		0 0 0.65rem color-mix(in oklab, var(--pg-fill) 55%, transparent),
+		0 0 1.25rem color-mix(in oklab, var(--pg-fill) 28%, transparent);
+	filter: saturate(1.15);
+}
+.pg[data-variant='pulse'] .pg-bar {
+	animation: pg-pulse 1.4s ease-in-out infinite;
+}
+.pg[data-variant='liquid'] .pg-bar {
+	background:
+		linear-gradient(
+			90deg,
+			color-mix(in oklab, var(--pg-fill) 70%, black) 0%,
+			var(--pg-fill) 40%,
+			color-mix(in oklab, var(--pg-fill) 80%, white) 55%,
+			var(--pg-fill) 100%
+		);
+	background-size: 200% 100%;
+	animation: pg-liquid 2.2s ease-in-out infinite;
+}
+
+/* indeterminate continuous sweep */
+.pg[data-indeterminate] .pg-bar {
+	inline-size: 38% !important;
+	animation: pg-indeterminate 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.pg[data-indeterminate][data-variant='striped'] .pg-bar {
+	animation:
+		pg-indeterminate 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+		pg-stripe 0.9s linear infinite;
+}
+.pg[data-indeterminate][data-variant='liquid'] .pg-bar {
+	animation:
+		pg-indeterminate 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+		pg-liquid 2.2s ease-in-out infinite;
+}
+.pg[data-indeterminate][data-variant='pulse'] .pg-bar {
+	animation:
+		pg-indeterminate 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+		pg-pulse 1.4s ease-in-out infinite;
+}
+
+/* ── segmented track ──────────────────────────────────────────────── */
+.pg[data-shape]:not([data-shape='none']) .pg-track {
+	overflow: visible;
+	background: transparent;
+	block-size: auto;
+	min-block-size: var(--pg-h);
+}
+.pg-segs {
+	display: flex;
+	align-items: center;
+	gap: 0.28em;
+	inline-size: fit-content;
+	max-inline-size: 100%;
+	block-size: calc(var(--pg-h) * 1.65);
+}
+.pg[data-fit='fill'] .pg-segs {
+	inline-size: 100%;
+}
+.pg-segs[hidden] { display: none !important; }
+
+.pg-seg {
+	flex: 0 0 auto;
+	inline-size: 0.55rem;
+	min-inline-size: 0.28rem;
+	max-inline-size: 1.25rem;
+	block-size: 100%;
+	background: var(--pg-track);
+	transition:
+		background 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+		transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1),
+		opacity 0.3s ease,
+		box-shadow 0.3s ease;
+}
+/* Full-width segmented track — segments grow to fill the host width. */
+.pg[data-fit='fill'] .pg-seg {
+	flex: 1 1 0;
+	inline-size: auto;
+}
+
+/* shapes */
+.pg[data-shape='circle'] .pg-seg {
+	aspect-ratio: 1;
+	block-size: auto;
+	max-block-size: 1.1rem;
+	border-radius: 50%;
+	align-self: center;
+}
+.pg[data-shape='round'] .pg-seg {
+	border-radius: 0.3em;
+}
+.pg[data-shape='square'] .pg-seg {
+	border-radius: 0.08em;
+	aspect-ratio: 1;
+	block-size: auto;
+	max-block-size: 1rem;
+	align-self: center;
+}
+.pg[data-shape='triangle'] .pg-seg {
+	background: transparent;
+	clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+	/* paint via box-shadow inset trick: use background on ::after */
+	position: relative;
+	background: var(--pg-track);
+}
+.pg[data-shape='triangle'] .pg-seg[data-fill='full'],
+.pg[data-shape='triangle'] .pg-seg[data-fill='partial'] {
+	background: var(--pg-fill);
+}
+
+.pg-seg[data-fill='full'] {
+	background: var(--pg-fill);
+	transform: scale(1.05);
+}
+.pg-seg[data-fill='partial'] {
+	background: color-mix(in oklab, var(--pg-fill) 55%, var(--pg-track));
+}
+.pg[data-variant='glow'] .pg-seg[data-fill='full'] {
+	box-shadow: 0 0 0.55rem color-mix(in oklab, var(--pg-fill) 60%, transparent);
+}
+.pg[data-variant='pulse'] .pg-seg[data-fill='full'] {
+	animation: pg-pulse 1.4s ease-in-out infinite;
+	animation-delay: calc(var(--pg-i, 0) * 60ms);
+}
+
+/* indeterminate segment wave */
+.pg[data-indeterminate] .pg-seg {
+	animation: pg-seg-wave 1.2s ease-in-out infinite;
+	animation-delay: calc(var(--pg-i, 0) * 70ms);
+}
+
+/* value readouts — font tracks --pg-h via --pg-value-size */
+.pg-value {
+	font-size: var(--pg-value-size, var(--text-xs, 0.75rem));
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+	font-weight: var(--weight-semibold, 600);
+	color: var(--text-muted);
+	min-inline-size: 0;
+	text-align: end;
+	pointer-events: none;
+}
+.pg-value[hidden] { display: none !important; }
+.pg-value-head {
+	flex: 0 0 auto;
+	min-inline-size: 2.25em;
+	font-weight: var(--weight-medium, 500);
+}
+.pg-track > .pg-value {
+	position: absolute;
+	z-index: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-inline-size: calc(100% - 0.3rem);
+	padding: 0.05em 0.45em;
+	border-radius: 999px;
+	color: var(--text-main);
+	background: color-mix(in oklab, var(--bg-panel, #12141a) 78%, transparent);
+	text-shadow: 0 1px 1px rgb(0 0 0 / 0.45);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.pg-track[data-value-position='center'] > .pg-value,
+.pg-track[data-value-position='auto'] > .pg-value {
+	inset-block-start: 50%;
+	inset-inline-start: 50%;
+	translate: -50% -50%;
+}
+.pg-track[data-value-position='start'] > .pg-value {
+	inset-block-start: 50%;
+	inset-inline-start: 0.35rem;
+	translate: 0 -50%;
+}
+.pg-track[data-value-position='end'] > .pg-value {
+	inset-block-start: 50%;
+	inset-inline-end: 0.35rem;
+	translate: 0 -50%;
+}
+.pg-track[data-value-position='above'] > .pg-value {
+	inset-block-end: 100%;
+	inset-inline-end: 0;
+	margin-block-end: 0.28rem;
+	padding: 0;
+	background: none;
+	text-shadow: none;
+	color: var(--text-muted);
+	font-weight: var(--weight-medium, 500);
+}
+@container pg-track (max-height: 0.9rem) {
+	.pg-value {
+		inset-block-start: auto;
+		inset-inline-start: auto;
+		inset-block-end: 100%;
+		inset-inline-end: 0;
+		translate: 0 0;
+		margin-block-end: 0.28rem;
+	}
+}
+
+@keyframes pg-indeterminate {
+	0% { transform: translateX(-120%); }
+	100% { transform: translateX(320%); }
+}
+@keyframes pg-stripe {
+	to { background-position: 1.4rem 0; }
+}
+@keyframes pg-pulse {
+	0%, 100% { opacity: 1; filter: brightness(1); }
+	50% { opacity: 0.72; filter: brightness(1.15); }
+}
+@keyframes pg-liquid {
+	0% { background-position: 0% 50%; }
+	50% { background-position: 100% 50%; }
+	100% { background-position: 0% 50%; }
+}
+@keyframes pg-seg-wave {
+	0%, 100% {
+		background: var(--pg-track);
+		transform: scale(0.92);
+		opacity: 0.55;
+	}
+	40% {
+		background: var(--pg-fill);
+		transform: scale(1.08);
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pg-bar,
+	.pg-seg,
+	.pg[data-variant] .pg-bar,
+	.pg[data-indeterminate] .pg-bar,
+	.pg[data-indeterminate] .pg-seg {
+		transition: none !important;
+		animation: none !important;
+	}
+}

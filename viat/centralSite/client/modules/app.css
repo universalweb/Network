@@ -15,12 +15,12 @@
 	background: transparent;
 }
 /* The single scroll surface: a fixed full-viewport box UNDER the chrome bars
-   (z-index 40). Its scrollbar runs full-height behind both bars; the block-axis
+   (--z-dock). Its scrollbar runs full-height behind both bars; the block-axis
    padding keeps content clear of them so nothing is trapped underneath. */
 .shell-scroll {
 	position: fixed;
 	inset: 0;
-	z-index: 1;
+	z-index: var(--z-base);
 	overflow-y: auto;
 	overflow-x: hidden;
 	/* Always reserve the vertical scrollbar's gutter. This is the app's ONLY
@@ -61,13 +61,16 @@
 	flex: 1;
 	min-height: 0;
 }
-.shell-page:not(.is-page-wallet) > app-dashboard,
-.shell-page:not(.is-page-wallet) > mobile-dashboard,
-.shell-page:not(.is-page-swap) > swap-page,
-.shell-page:not(.is-page-explorer) > explorer-page,
-.shell-page:not(.is-page-accounts) > accounts-list-page,
-.shell-page:not(.is-page-account) > account-detail-page,
-.shell-page:not(.is-page-transaction) > transaction-detail-page {
+/* Active-page visibility keyed on the host's data-route-view attribute, set by
+   AppShell.reflectRouteView from the router store's activeView. Same page->view
+   mapping as before; detail routes (account/transaction) carry their own view. */
+:host(:not([data-route-view="wallet"])) .shell-page > app-dashboard,
+:host(:not([data-route-view="wallet"])) .shell-page > mobile-dashboard,
+:host(:not([data-route-view="swap"])) .shell-page > swap-page,
+:host(:not([data-route-view="explorer"])) .shell-page > explorer-page,
+:host(:not([data-route-view="accounts"])) .shell-page > accounts-list-page,
+:host(:not([data-route-view="account"])) .shell-page > account-detail-page,
+:host(:not([data-route-view="transaction"])) .shell-page > transaction-detail-page {
 	display: none;
 }
 /* Viewport-scoped dashboard swap. Both <app-dashboard> and

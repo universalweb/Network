@@ -1,0 +1,58 @@
+:host {
+	display: block;
+	position: relative;
+	inline-size: 100%;
+}
+.ms[data-disabled] {
+	opacity: 0.55;
+	pointer-events: none;
+}
+.ms-trigger {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	inline-size: 100%;
+	min-block-size: 2.125rem;
+	padding-block: 0.3rem;
+	padding-inline: 0.55rem;
+	border: 1px solid var(--input-border, rgba(255, 255, 255, 0.12));
+	border-radius: var(--radius-md, 0.5rem);
+	background: var(--input-bg, rgba(255, 255, 255, 0.04));
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+.ms-trigger:focus-visible {
+	outline: none;
+	border-color: var(--focus-ring-color, var(--teal));
+	box-shadow: 0 0 0 3px var(--focus-ring-glow, color-mix(in oklch, var(--teal) 25%, transparent));
+}
+.ms-chips {
+	display: flex;
+	flex: 1 1 auto;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.3rem;
+	min-inline-size: 0;
+}
+.ms-placeholder {
+	color: var(--text-muted);
+	font-size: var(--text-sm, 0.875rem);
+}
+.ms-placeholder[hidden] {
+	display: none;
+}
+.ms-icon {
+	flex: 0 0 auto;
+	opacity: 0.55;
+}
+.ms-panel {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	z-index: var(--z-dropdown, 1000);
+}
+.ms-panel ui-listbox {
+	display: block;
+}

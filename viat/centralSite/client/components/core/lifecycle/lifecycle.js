@@ -196,6 +196,7 @@ export async function handleDisconnect() {
 	this.stateUnsubs?.clear();
 	unlinkStateCarrier(this);
 	this.globalUnsubs?.clear();
+	this.clearStoreObservers();
 	this.clearDelegateListeners();
 	sweepHotkeyEntries(this.hotkeyEntries);
 	clearUnsubs(this.gestureUnsubs);

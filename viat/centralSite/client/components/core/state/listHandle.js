@@ -125,6 +125,40 @@ export class ListHandle {
 			return hay.toLowerCase().includes(needle);
 		});
 	}
+	/**
+	 * Scroll a virtual list so absolute source index is near the viewport top.
+	 * No-op when the spot is not virtual. Offscreen rows stay unmounted until
+	 * the next window recompute after scroll.
+	 * @param {number} absoluteIndex - Source index.
+	 */
+	scrollToIndex(absoluteIndex) {
+		const controller = this.spot?.virtualController;
+		const spot = this.spot;
+		if (!controller || !spot) {
+			return;
+		}
+		controller.scrollToIndex(absoluteIndex, this.items, spot.keyFn);
+		spot.requestVirtualRefresh();
+	}
+	/**
+	 * Scroll a virtual list to the first item whose keyFn matches itemKey.
+	 * @param {*} itemKey - keyFn result.
+	 */
+	scrollToKey(itemKey) {
+		const items = this.items;
+		const spot = this.spot;
+		if (!items || !spot?.virtualController) {
+			return;
+		}
+		const count = items.length;
+		const keyFn = spot.keyFn;
+		for (let index = 0; index < count; index++) {
+			if (keyFn(items[index], index) === itemKey) {
+				this.scrollToIndex(index);
+				return;
+			}
+		}
+	}
 }
 /**
  * Get-or-create + attach a ListHandle for a ListSpot.

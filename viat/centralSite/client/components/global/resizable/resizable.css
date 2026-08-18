@@ -1,0 +1,87 @@
+:host {
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+	min-block-size: 8rem;
+	min-inline-size: 0;
+	box-sizing: border-box;
+}
+.rz {
+	display: flex;
+	inline-size: 100%;
+	block-size: 100%;
+	min-block-size: inherit;
+	min-inline-size: 0;
+}
+.rz[data-orientation='vertical'] {
+	flex-direction: column;
+}
+.rz-pane {
+	min-inline-size: 0;
+	min-block-size: 0;
+	overflow: auto;
+}
+.rz-end {
+	flex: 1 1 auto;
+}
+.rz-handle {
+	flex: 0 0 0.35rem;
+	flex-shrink: 0;
+	background: color-mix(in oklch, var(--text-muted) 18%, transparent);
+	cursor: col-resize;
+	touch-action: none;
+	position: relative;
+	z-index: 2;
+	transition: background 0.12s ease;
+	/* Expand the hit target past the painted rail without changing layout. */
+	isolation: isolate;
+	pointer-events: auto;
+}
+.rz-handle::before {
+	content: '';
+	position: absolute;
+	inset-block: 0;
+	inset-inline: -0.4rem;
+	z-index: 1;
+}
+/* Collapsed pane: keep the handle painted and grow the hit target into the open pane. */
+.rz[data-collapsed-start] .rz-handle::before {
+	inset-inline-start: 0;
+	inset-inline-end: -0.7rem;
+}
+.rz[data-collapsed-end] .rz-handle::before {
+	inset-inline-end: 0;
+	inset-inline-start: -0.7rem;
+}
+.rz[data-orientation='vertical'] .rz-handle {
+	cursor: row-resize;
+	flex-basis: 0.35rem;
+}
+.rz[data-orientation='vertical'] .rz-handle::before {
+	inset-inline: 0;
+	inset-block: -0.4rem;
+}
+.rz[data-orientation='vertical'][data-collapsed-start] .rz-handle::before {
+	inset-block-start: 0;
+	inset-block-end: -0.7rem;
+	inset-inline: 0;
+}
+.rz[data-orientation='vertical'][data-collapsed-end] .rz-handle::before {
+	inset-block-end: 0;
+	inset-block-start: -0.7rem;
+	inset-inline: 0;
+}
+.rz-handle:hover,
+.rz-handle:focus-visible,
+:host([data-dragging]) .rz-handle {
+	background: color-mix(in oklch, var(--cyan, oklch(0.72 0.12 200)) 55%, transparent);
+	outline: none;
+}
+.rz-handle:focus-visible {
+	box-shadow: 0 0 0 2px color-mix(in oklch, var(--cyan, oklch(0.72 0.12 200)) 45%, transparent);
+}
+.rz[data-disabled] .rz-handle {
+	cursor: default;
+	pointer-events: none;
+	opacity: 0.4;
+}

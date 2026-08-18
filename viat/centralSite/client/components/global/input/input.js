@@ -1,4 +1,11 @@
-import { WebComponent } from '../../core/index.js';
+import { hasValue } from '@universalweb/utilitylib';
+import { WebComponent } from 'webcomponent';
+const PLACEHOLDER_CASES = new Set([
+	'upper',
+	'first',
+	'lower',
+	'none',
+]);
 export class UIInput extends WebComponent {
 	static url = import.meta.url;
 	static styles = {
@@ -19,6 +26,9 @@ export class UIInput extends WebComponent {
 	static state = {
 		value: '',
 		placeholder: '',
+		// Native <input type>. Name is the HTML attr; eslint bans `type` as a
+		// JS identifier because it shadows the global — keep the attr name.
+		/* eslint-disable-next-line no-restricted-syntax -- native input type attr */
 		type: 'text',
 		disabled: false,
 		readonly: false,
@@ -30,10 +40,35 @@ export class UIInput extends WebComponent {
 		maxlength: 0,
 		minlength: 0,
 		pattern: '',
+		// Native constraint attrs (number / date / file).
+		accept: '',
+		min: '',
+		max: '',
+		step: '',
+		multiple: false,
+		// Invalid chrome (aria-invalid); also forces tone=error when true.
+		invalid: false,
 		// Hover hint. `tooltip`, never `title` — `title` is a native HTMLElement property
 		// that a `.title=` binding would hijack before it reached state (the button footgun).
 		tooltip: '',
+		// ::placeholder text-transform. Enumerated dim → data-placeholder-case.
+		placeholderCase: 'upper',
 	};
+	placeholderCaseToken() {
+		if (PLACEHOLDER_CASES.has(this.state.placeholderCase)) {
+			return this.state.placeholderCase;
+		}
+		return 'upper';
+	}
+	onConnect() {
+		this.syncFilledFlag();
+		// House API is observe() — watchState does not exist on WebComponent.
+		this.observe('value', this.syncFilledFlag);
+	}
+	syncFilledFlag() {
+		const value = this.state.value;
+		this.toggleAttribute('data-filled', hasValue(value) && value !== '');
+	}
 	focus() {
 		this.refs.input?.focus();
 	}
@@ -65,26 +100,41 @@ export class UIInput extends WebComponent {
 	handleBlur() {
 		this.emit('input:blur', {});
 	}
+	renderTone() {
+		if (this.state.invalid) {
+			return 'error';
+		}
+		return this.state.tone;
+	}
 	render() {
 		this.html`
 			<div
 				class="field-shell"
-				data-tone=${this.state.tone}
+				data-tone=${this.renderTone}
 				data-size=${this.state.size}
 				?data-disabled=${this.state.disabled}
-				?data-readonly=${this.state.readonly}>
+				?data-readonly=${this.state.readonly}
+				?data-invalid=${this.state.invalid}>
 				<span class="field-leading"><slot name="leading"></slot></span>
 				<input #input
 					class="field-control"
+					data-type=${this.state.type}
+					data-placeholder-case=${this.placeholderCaseToken}
 					type=${this.state.type}
 					name=${this.state.name}
 					placeholder=${this.state.placeholder}
 					autocomplete=${this.state.autocomplete}
 					inputmode=${this.state.inputmode}
+					accept=${this.state.accept}
+					min=${this.state.min}
+					max=${this.state.max}
+					step=${this.state.step}
 					tooltip=${this.state.tooltip}
 					$value="value"
+					?multiple=${this.state.multiple}
 					?disabled=${this.state.disabled}
 					?readonly=${this.state.readonly}
+					aria-invalid=${this.state.invalid ? 'true' : 'false'}
 					spellcheck=${this.attrs.spellcheck}
 					@input=${this.handleInput}
 					@change=${this.handleChange}

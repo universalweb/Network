@@ -1,6 +1,7 @@
+import { resolveStores } from '../attrs/staticConfig.js';
 import { schedule } from '../lifecycle/scheduler.js';
 import { getValueAtPath, isArray } from '../utilities.js';
-import { globalState } from './globalState.js';
+import { globalState, Store } from './globalState.js';
 import { ComponentSubscriptionTracker, TrackedBundle } from './pathSubscriptions.js';
 import { ensureStateBus, StateKeyObserver } from './state.js';
 function toList(keys) {
@@ -119,4 +120,91 @@ export function observeGlobal(keys, callback) {
  */
 export function unobserveGlobal(key) {
 	this.globalUnsubs?.removeByKey(String(key ?? ''));
+}
+/**
+ * Resolve the store an `observeStore` call targets. A `Store` instance passes
+ * through (the escape hatch for a store not declared in `static stores` — tests,
+ * ad-hoc slices); a string name resolves against the component's chain-merged
+ * `static stores` table, the same channel `bind('stores.name.key')` uses, and an
+ * undeclared name throws with the component tag so the miss is loud at authoring.
+ * @returns {Store} The resolved store instance.
+ */
+function resolveObservedStore(component, storeOrName) {
+	if (Store.is(storeOrName)) {
+		return storeOrName;
+	}
+	const store = resolveStores(component.constructor)[storeOrName];
+	if (!store) {
+		throw new Error(`<${component.localName}> observes store "${storeOrName}" but declares no such store in static stores.`);
+	}
+	return store;
+}
+function observeStoreKey(component, store, callback, key, options) {
+	const statePath = String(key ?? '');
+	const previousValue = store.get(statePath);
+	const observer = new StateKeyObserver(component, callback, previousValue, options);
+	const subscription = store.bus.subscribe(statePath, StateKeyObserver.prototype.handle, observer);
+	observer.subscription = subscription;
+	/* `{ immediate: true }` seeds the callback now with the current value (no prior
+	 * value yet → previousValue undefined). It makes router start-order irrelevant:
+	 * a late subscriber reads the already-published route. The immediate fire COUNTS
+	 * toward `once`. */
+	if (options?.immediate === true) {
+		callback.call(component, previousValue, undefined, statePath);
+		if (options.once === true) {
+			subscription.unsubscribe();
+		}
+	}
+	return subscription;
+}
+/**
+ * Subscribe a component to a NAMED store's key(s) with a callback — the store
+ * twin of `observeGlobal`, filling the gap for side-effectful reactions to a
+ * `static stores` slice (a route change driving a data load, not a render read).
+ * `storeOrName` is a declared store name or a `Store` instance; `keys` is a key
+ * or array sharing one callback fired as `(nextValue, previousValue, changedPath)`
+ * with `this` bound to the component. `options` is `{ immediate, once }` — a
+ * deliberate superset of `observeGlobal`. Auto-cleaned on disconnect via a
+ * per-store tracker in `this.storeUnsubs` (per store, not one flat tracker, since
+ * a tracker buckets by path — two stores sharing a key name must stay independent).
+ * @returns {TrackedBundle} Handle whose unsubscribe() releases every created subscription.
+ */
+export function observeStore(storeOrName, keys, callback, options) {
+	const store = resolveObservedStore(this, storeOrName);
+	const keyList = toList(keys);
+	const keyListLength = keyList.length;
+	const subscriptions = new Array(keyListLength);
+	for (let keyIndex = 0; keyIndex < keyListLength; keyIndex += 1) {
+		subscriptions[keyIndex] = observeStoreKey(this, store, callback, keyList[keyIndex], options);
+	}
+	this.storeUnsubs ??= new Map();
+	let tracker = this.storeUnsubs.get(store);
+	if (!tracker) {
+		tracker = new ComponentSubscriptionTracker();
+		this.storeUnsubs.set(store, tracker);
+	}
+	return trackUnsubs(tracker, subscriptions);
+}
+/**
+ * Tear down every observer this component has on `key` of the named store. Same
+ * contract as `unobserveGlobal`, scoped to that store's tracker; other components
+ * (and this component's other stores) are untouched.
+ */
+export function unobserveStore(storeOrName, key) {
+	const store = resolveObservedStore(this, storeOrName);
+	this.storeUnsubs?.get(store)?.removeByKey(String(key ?? ''));
+}
+/**
+ * Disconnect sweep — unsubscribe every named-store observer across every store
+ * this component observed. A bare `this.storeUnsubs?.clear()` would empty the Map
+ * without unsubscribing, so the teardown walks each tracker.
+ */
+export function clearStoreObservers() {
+	if (!this.storeUnsubs) {
+		return;
+	}
+	for (const tracker of this.storeUnsubs.values()) {
+		tracker.clear();
+	}
+	this.storeUnsubs = null;
 }

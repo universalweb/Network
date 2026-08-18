@@ -16,7 +16,7 @@
 	─────────────────────────────────────────────────────────────────────
 */
 import { WebComponent } from 'webcomponent';
-import { UIToggleOption } from './toggle-option.js';
+import { UIToggleOption } from '../toggle-option/toggle-option.js';
 const SIZES = new Set([
 	'sm',
 	'md',

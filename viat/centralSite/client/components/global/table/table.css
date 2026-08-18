@@ -1,0 +1,90 @@
+:host {
+	display: block;
+	inline-size: 100%;
+}
+.tb {
+	position: relative;
+	inline-size: 100%;
+	max-inline-size: 100%;
+	overflow-x: auto;
+	overflow-y: visible;
+	border: 1px solid color-mix(in oklch, var(--text-muted) 18%, transparent);
+	border-radius: var(--radius-md, 0.5rem);
+	background: color-mix(in oklch, var(--bg-panel, transparent) 40%, transparent);
+	/* Density pad inherited into row shadow roots via custom property. */
+	--tb-cell-pad-block: 0.65rem;
+	--tb-cell-pad-inline: 0.85rem;
+}
+.tb-caption {
+	padding: 0.75rem 1rem;
+	font-weight: 600;
+	font-size: var(--text-sm);
+	border-block-end: 1px solid color-mix(in oklch, var(--text-muted) 14%, transparent);
+}
+.tb-table {
+	inline-size: 100%;
+	border-collapse: collapse;
+	font-size: var(--text-sm, 0.875rem);
+}
+.tb-th,
+.tb-td {
+	padding: 0.65rem 0.85rem;
+	text-align: start;
+	border-block-end: 1px solid color-mix(in oklch, var(--text-muted) 12%, transparent);
+}
+.tb-th {
+	font-weight: 550;
+	color: var(--text-muted);
+	font-size: 0.78em;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	background: color-mix(in oklch, var(--bg-panel) 50%, transparent);
+}
+.tb-td {
+	color: var(--text-main);
+}
+.tb-th[data-align='end'],
+.tb-td[data-align='end'] {
+	text-align: end;
+}
+.tb-th[data-align='center'],
+.tb-td[data-align='center'] {
+	text-align: center;
+}
+.tb-tr {
+	cursor: default;
+}
+.tb-body .tb-tr:hover {
+	background: color-mix(in oklch, var(--bg-panel) 55%, transparent);
+}
+.tb[data-density='sm'] {
+	--tb-cell-pad-block: 0.4rem;
+	--tb-cell-pad-inline: 0.65rem;
+}
+.tb[data-density='lg'] {
+	--tb-cell-pad-block: 0.9rem;
+	--tb-cell-pad-inline: 1.1rem;
+}
+.tb[data-density='sm'] .tb-th,
+.tb[data-density='sm'] .tb-td,
+.tb[data-density='lg'] .tb-th,
+.tb[data-density='lg'] .tb-td {
+	padding-block: var(--tb-cell-pad-block);
+	padding-inline: var(--tb-cell-pad-inline);
+}
+/* Ensure custom-element rows participate in the table layout box. */
+.tb-body {
+	display: table-row-group;
+}
+.tb-body ui-table-row {
+	display: table-row;
+}
+.tb-empty {
+	padding: 1.25rem;
+	text-align: center;
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+}
+.tb-empty[hidden] {
+	display: none;
+}

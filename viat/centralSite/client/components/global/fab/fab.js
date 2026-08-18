@@ -1,12 +1,9 @@
 /*
-	DESCRIPTION: ui-fab — a floating action button. A thin composition over ui-button
-	(NOT a reimplementation): it sets `--ui-btn-radius: 999px` (a custom property that
-	pierces the shadow boundary into the framework button sheet) for the circular
-	shape, adds elevation, and fixes the button to a viewport corner via an inner
-	`position: fixed` wrapper — so the host stays `display: contents` and no
-	imperative host-attribute reflection is needed. `extended` swaps the icon-only
-	circle for an icon+label pill. The icon is passed as `.leadicon=` so ui-button
-	renders it through the property accessor (a string `<ui-icon name=…>` would be blank).
+	DESCRIPTION: ui-fab — a floating action button. Thin composition over ui-button:
+	`.state.circle` for the icon-only disc (pill radius when extended), elevation,
+	and a viewport corner via an inner `position: fixed` wrapper — host stays
+	`display: contents`. `extended` swaps the icon-only circle for an icon+label
+	pill. Icon via `.leadicon=` (property channel — string `<ui-icon name=…>` is blank).
 	── EVENTS ───────────────────────────────────────────────────────────
 	  fab:click {} (emitter under event.detail.source)
 	── USAGE ────────────────────────────────────────────────────────────
@@ -47,6 +44,7 @@ export class UIFab extends WebComponent {
 					.state.variant=${'solid'}
 					.state.tone=${this.state.tone}
 					.state.size=${this.state.size}
+					.state.circle=${!this.state.extended}
 					.state.leadicon=${this.state.icon}
 					.state.label=${label}
 					.state.tooltip=${this.state.extended ? '' : this.state.label}

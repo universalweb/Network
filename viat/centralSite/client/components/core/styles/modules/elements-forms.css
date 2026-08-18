@@ -132,9 +132,11 @@
 
 	/* Universal button: themed via the per-theme --btn-* token set (the same
 	   tokens transmit and other action buttons read), so every bare <button>
-	   gets a polished, theme-consistent look for free. A component class in
-	   uwc.components still wins for bespoke buttons. */
-	button {
+	   gets a polished, theme-consistent look for free. EXCLUDE [data-variant]
+	   — those are owned by elements-buttons.css (solid/outline/ghost/link/icon).
+	   Applying hover color here to a solid primary/success would fight its
+	   contrast-text pair and flash the wrong glyph/label color. */
+	button:not([data-variant]) {
 		font-family: inherit;
 		font-size: var(--text-base);
 		letter-spacing: 0.04em;
@@ -153,7 +155,7 @@
 			color var(--transition-base),
 			transform var(--transition-base);
 	}
-	button:hover:not([disabled]) {
+	button:not([data-variant]):hover:not([disabled]) {
 		background: var(--btn-hover-bg, var(--btn-bg, transparent));
 		border-color: var(--btn-hover-border, var(--cyan));
 		box-shadow: var(--btn-hover-inset, var(--btn-inset, none)),
@@ -161,22 +163,22 @@
 		color: var(--btn-hover-color, var(--popup-text, var(--text-main)));
 		transform: translateY(-1px);
 	}
-	button:active:not([disabled]) {
+	button:not([data-variant]):active:not([disabled]) {
 		transform: translateY(0);
 	}
-	button:focus-visible {
+	button:not([data-variant]):focus-visible {
 		outline: 2px solid var(--focus-ring-color, var(--cyan));
 		outline-offset: 2px;
 	}
 	@media (prefers-reduced-motion: reduce) {
-		button {
+		button:not([data-variant]) {
 			transition:
 				background var(--transition-base),
 				border-color var(--transition-base),
 				box-shadow var(--transition-base),
 				color var(--transition-base);
 		}
-		button:hover:not([disabled]) {
+		button:not([data-variant]):hover:not([disabled]) {
 			transform: none;
 		}
 	}

@@ -42,7 +42,7 @@ export class UIMorphDrawer extends MorphSurface {
 				@click=${this.handleTriggerClick}>
 				<slot name="trigger">${this.state.label}</slot>
 			</button>
-			<div class="dr-overlay" #overlay>
+			<div class="dr-overlay" #overlay popover="manual">
 				<div class="dr-backdrop" @click=${this.handleBackdropClick}></div>
 				<aside class="dr-surface" #surface role="dialog" aria-label=${this.state.heading}>
 					<header class="dr-head">

@@ -14,7 +14,7 @@
 	inset-block-start: 1rem;
 	inset-inline: 1rem;
 	box-sizing: border-box;
-	z-index: 40;
+	z-index: var(--z-dock);
 	transition: inset 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .app-bar {

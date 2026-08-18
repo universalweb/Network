@@ -1,6 +1,9 @@
 :host {
 	display: block;
 	width: 100%;
+	/* UA date/color pickers follow this; themes set color-scheme on :root. */
+	color-scheme: inherit;
+	accent-color: var(--focus-ring-color, var(--teal, var(--cyan)));
 }
 .field-shell {
 	align-items: center;
@@ -33,10 +36,10 @@
 [data-size='lg'] { font-size: var(--text-lg);  min-height: 2.5rem; padding: 0 0.9rem; }
 /* Tones — data-tone attribute (immune to the uwc.util `.tone-*` text override). */
 .field-shell[data-tone='error'] {
-	border-color: var(--color-danger);
+	border-color: var(--input-error-border, var(--color-danger));
 }
 .field-shell[data-tone='error']:focus-within {
-	border-color: var(--color-danger);
+	border-color: var(--input-error-border, var(--color-danger));
 	box-shadow: 0 0 0 3px var(--input-error-glow, rgba(239, 68, 68, 0.22));
 }
 /* States */
@@ -81,10 +84,70 @@
 	width: 100%;
 }
 .field-control::placeholder {
-	color: var(--text-subtle);
+	color: var(--uwc-float-placeholder, var(--text-subtle));
+}
+.field-control[data-placeholder-case='upper']::placeholder {
+	text-transform: uppercase;
+}
+.field-control[data-placeholder-case='first']::placeholder {
+	text-transform: capitalize;
+}
+.field-control[data-placeholder-case='lower']::placeholder {
+	text-transform: lowercase;
+}
+.field-control[data-placeholder-case='none']::placeholder {
+	text-transform: none;
+}
+/*
+ * Picker types open a UA surface. appearance:none on .field-control hides the
+ * calendar/color chrome — restore auto, tint with accent-color, inherit
+ * color-scheme. ::picker / ::calendar-picker-icon when the engine has them.
+ */
+.field-control[data-type='date'],
+.field-control[data-type='datetime-local'],
+.field-control[data-type='time'],
+.field-control[data-type='month'],
+.field-control[data-type='week'],
+.field-control[data-type='color'] {
+	appearance: auto;
+	color-scheme: inherit;
+	accent-color: var(--focus-ring-color, var(--teal, var(--cyan)));
+}
+.field-control::-webkit-calendar-picker-indicator {
+	cursor: pointer;
+	opacity: 0.75;
+	border-radius: var(--radius-xs);
+}
+.field-control::-webkit-calendar-picker-indicator:hover {
+	opacity: 1;
+}
+@supports selector(::calendar-picker-icon) {
+	.field-control::calendar-picker-icon {
+		color: var(--text-muted, currentColor);
+		cursor: pointer;
+	}
+}
+@supports selector(::picker(select)) {
+	.field-control::picker(select) {
+		appearance: base-select;
+		color-scheme: inherit;
+		background: var(--popup-bg, var(--bg-panel));
+		color: var(--popup-text, var(--text-main));
+		border: 1px solid var(--popup-border, var(--surface-border));
+		border-radius: var(--radius-md, 8px);
+	}
 }
 .field-control:disabled {
 	cursor: not-allowed;
+}
+.field-control[data-type='color'] {
+	inline-size: 2.5rem;
+	min-block-size: 1.5rem;
+	padding: 0.15rem;
+	cursor: pointer;
+}
+.field-control[data-type='file'] {
+	font-size: 0.8em;
 }
 @media (prefers-reduced-motion: reduce) {
 	.field-shell { transition: none; }

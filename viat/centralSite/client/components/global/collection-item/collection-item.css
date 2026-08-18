@@ -1,0 +1,66 @@
+:host {
+	display: block;
+}
+.ci-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3, 0.75rem);
+	padding: 0.65rem 0.85rem;
+	border-radius: var(--radius-sm, 0.35rem);
+	border: 1px solid transparent;
+	background: transparent;
+	cursor: default;
+	transition: background 0.14s ease, border-color 0.14s ease;
+}
+.ci-row[data-selectable] {
+	cursor: pointer;
+}
+.ci-row[data-selectable]:hover {
+	background: color-mix(in oklch, var(--bg-panel, rgba(255, 255, 255, 0.04)) 80%, transparent);
+}
+/* Selected: whole row tint (independent of checkbox face paint). */
+.ci-row[data-checked],
+:host([data-checked]) .ci-row {
+	background: color-mix(in oklch, var(--cyan, oklch(0.72 0.12 200)) 12%, var(--bg-panel, transparent));
+	border-color: color-mix(in oklch, var(--cyan, oklch(0.72 0.12 200)) 28%, transparent);
+}
+.ci-row[data-disabled] {
+	opacity: 0.55;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+/* Order tokens inherited from <ui-collection> host (start = check first). */
+.ci-check {
+	flex: 0 0 auto;
+	order: var(--uic-check-order, 0);
+	display: flex;
+	align-items: center;
+}
+.ci-check[hidden] {
+	display: none;
+}
+.ci-body {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	order: var(--uic-body-order, 1);
+}
+.ci-label {
+	font-family: var(--font-display, system-ui, sans-serif);
+	font-size: var(--text-sm, 0.875rem);
+	font-weight: 500;
+	color: var(--text-main);
+	letter-spacing: -0.01em;
+}
+.ci-desc {
+	font-size: var(--text-xs, 0.75rem);
+	color: var(--text-muted);
+	line-height: 1.4;
+}
+@media (prefers-reduced-motion: reduce) {
+	.ci-row {
+		transition: none;
+	}
+}

@@ -1,0 +1,46 @@
+:host {
+	display: inline-flex;
+}
+.aima {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+}
+.aima-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--text-muted, rgba(255, 255, 255, 0.5));
+	cursor: pointer;
+	transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.aima-btn > * {
+	pointer-events: none;
+}
+.aima-btn:hover:not(:disabled) {
+	color: var(--text-main);
+	background: var(--bg-panel, rgba(255, 255, 255, 0.04));
+}
+.aima-btn:focus-visible {
+	outline: 2px solid var(--cyan, currentColor);
+	outline-offset: 1px;
+}
+.aima-btn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+.aima-btn[data-action='delete']:hover:not(:disabled) {
+	color: var(--color-danger, oklch(0.68 0.2 25));
+	border-color: color-mix(in oklab, var(--color-danger, oklch(0.68 0.2 25)) 30%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+	.aima-btn {
+		transition: none;
+	}
+}

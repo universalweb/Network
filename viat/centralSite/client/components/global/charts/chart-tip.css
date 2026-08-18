@@ -1,0 +1,75 @@
+/* Shared chart floating tooltip + hover affordance (import from each chart). */
+.chart-plot {
+	/* Compositor layer: live geometry tweens repaint here without thrashing siblings. */
+	position: relative;
+	inline-size: 100%;
+	contain: layout style;
+	transform: translateZ(0);
+	backface-visibility: hidden;
+}
+
+/* While a data tween is running, hint the layer for smoother SVG swaps. */
+.chart-plot[data-motion] {
+	will-change: transform, contents;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.chart-plot[data-motion] {
+		will-change: auto;
+	}
+}
+
+.chart-tip {
+	position: absolute;
+	z-index: 4;
+	padding: 0.3rem 0.5rem;
+	border-radius: var(--radius-sm, 0.25rem);
+	background: var(--surface-inverse, oklch(0.22 0.02 250));
+	color: var(--text-on-inverse, oklch(0.98 0.01 100));
+	font-size: 0.6875rem;
+	line-height: 1.25;
+	white-space: nowrap;
+	max-inline-size: min(16rem, 90%);
+	pointer-events: none;
+	translate: -50% calc(-100% - 0.35rem);
+	opacity: 0;
+	box-shadow: 0 0.15rem 0.45rem color-mix(in oklab, black 28%, transparent);
+	transition: opacity var(--dur-fast, 0.12s) ease;
+}
+
+.chart-tip[data-show='true'] {
+	opacity: 1;
+}
+
+/*
+	Legacy in-plot tip shell (bar/scatter/pie until migrated to framework tooltip=).
+	Line/radar point marks: this.partial + chart-layer-light.css (--chart-mark-color).
+*/
+.bc-bar,
+.pc-slice,
+.sc-dot,
+.gg-value {
+	cursor: pointer;
+	transition: filter var(--dur-fast, 0.12s) ease, opacity var(--dur-fast, 0.12s) ease;
+}
+
+.bc-bar:hover,
+.pc-slice:hover,
+.pc-slice.is-hover {
+	opacity: 0.92;
+}
+
+.sc-dot:hover {
+	stroke: oklch(0.98 0.01 100);
+	stroke-width: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.chart-tip,
+	.bc-bar,
+	.pc-slice,
+	.sc-dot,
+	.gg-value {
+		transition: none;
+	}
+}

@@ -1,0 +1,17 @@
+:host {
+	display: block;
+	min-inline-size: 0;
+}
+:host([hidden]) {
+	display: none;
+}
+.ms {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+	max-block-size: var(--ms-max, 18rem);
+	overflow: auto;
+	padding: 0.35rem 0.15rem;
+	overscroll-behavior: contain;
+	scrollbar-width: thin;
+}

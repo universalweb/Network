@@ -126,6 +126,9 @@ function hide() {
  * Pure JS memory. The DOM never holds the text. Updating here is one Map.set,
  * zero DOM mutation, zero invalidation. Reactive changes can flow at any rate.
  */
+export function getTooltipText(element) {
+	return tooltipText.get(element) || '';
+}
 export function setTooltipText(element, value) {
 	const text = value == null || value === false ? '' : String(value);
 	if (text) {

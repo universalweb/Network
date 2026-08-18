@@ -1,7 +1,7 @@
 import '../../global/icon/icon.js';
 import AppView from '../../../modules/app.js';
-import { html, WebComponent } from '../../core/index.js';
-import { COLLECTION_EVENT } from '../../global/ui-collection/ui-collection.js';
+import { html, routerStore, WebComponent } from '../../core/index.js';
+import { COLLECTION_EVENT } from '../../global/collection/collection.js';
 const SYSTEM_ADDRESS = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 const ROW_STYLES = new URL('./account-detail-rows.css', import.meta.url).href;
 function shortAddress(value) {
@@ -48,6 +48,19 @@ function labelForAddress(address) {
 function rowKey(item) {
 	return item.id;
 }
+function pageFromParams(params) {
+	const raw = Number(params?.page);
+	return Number.isFinite(raw) && raw >= 1 ? raw : 1;
+}
+function pageFromLoadOptions(_reset, cursor) {
+	if (cursor != null && cursor !== '') {
+		const page = Number(cursor);
+		if (Number.isFinite(page) && page >= 1) {
+			return page;
+		}
+	}
+	return 1;
+}
 /* Shape a chain tx into a self-contained row item (direction relative to the
    wallet computed here, so the row needs no page `this`). */
 function shapeTx(tx, address) {
@@ -72,8 +85,12 @@ export class AccountDetailPage extends WebComponent {
 	static styles = {
 		account: './account-detail-page.css',
 	};
+	static stores = {
+		router: routerStore,
+	};
 	static state = {
 		address: '',
+		startPage: 1,
 		account: null,
 		accountMissing: false,
 		rowStyles: ROW_STYLES,
@@ -90,29 +107,31 @@ export class AccountDetailPage extends WebComponent {
 		pageHref: (page) => {
 			return this.pageHref(page);
 		},
+		pageSize: 20,
 		itemNoun: 'transactions',
 		emptyMessage: 'No transactions found.',
 		loadingMessage: 'Loading transactions…',
 		pagingStyle: 'loadmore',
 	};
 	/* Route-driven, not pushed. Pages stay MOUNTED (the shell hides inactive ones
-	   with CSS), so the routeActiveView guard is what keeps this page inert while
+	   with CSS), so the router store's activeView guard keeps this page inert while
 	   another one is showing. */
 	onConnect() {
-		this.observeGlobal([
-			'routeActiveView',
-			'routeParams',
+		this.observeStore('router', [
+			'activeView',
+			'params',
 		], this.handleRoute);
 		this.handleRoute();
 	}
 	handleRoute() {
-		if (this.global.routeActiveView !== 'account') {
+		if (this.stores.router.activeView !== 'account') {
 			return;
 		}
-		const address = this.global.routeParams?.address;
+		const address = this.stores.router.params?.address;
 		if (address) {
 			this.setAddress(address);
 		}
+		this.setPage(pageFromParams(this.stores.router.params));
 	}
 	/* Address is the routed dimension. A new address reloads the one-shot header
 	   and asks the list to reload. */
@@ -122,6 +141,7 @@ export class AccountDetailPage extends WebComponent {
 			return;
 		}
 		this.state.address = next;
+		this.state.startPage = 1;
 		this.assignState({
 			account: null,
 			accountMissing: false,
@@ -131,6 +151,14 @@ export class AccountDetailPage extends WebComponent {
 		}
 		this.loadHeader(next);
 		this.emit(COLLECTION_EVENT.REFRESH);
+	}
+	setPage(page) {
+		const target = Number.isFinite(page) && page >= 1 ? page : 1;
+		if (target === this.state.startPage) {
+			return;
+		}
+		this.state.startPage = target;
+		this.emit(COLLECTION_EVENT.GO_TO_PAGE, target);
 	}
 	async loadHeader(address) {
 		const sdk = await AppView.ensureSDK();
@@ -155,7 +183,7 @@ export class AccountDetailPage extends WebComponent {
 				hasMore: false,
 			};
 		}
-		const page = reset ? 1 : (cursor ?? 1);
+		const page = pageFromLoadOptions(reset, cursor);
 		const sdk = await AppView.ensureSDK();
 		if (!sdk) {
 			return null;
@@ -273,6 +301,7 @@ export class AccountDetailPage extends WebComponent {
 					</div>
 					<ui-collection
 						.state=${this.listConfig}
+						.state.startPage=${this.state.startPage}
 						.importStyles=${this.state.rowStyles}
 						#list></ui-collection>
 				</div>
